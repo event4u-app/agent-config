@@ -33,23 +33,35 @@ git diff --name-only origin/{default}..HEAD | grep -E '\.(js|ts|tsx)$'  # → JS
 
 ### Prerequisite
 
-These commands are **only available** when the `galawork/php-quality` package is installed.
-Check `composer.json` for `galawork/php-quality` before running any quality command.
-If the package is not installed, these commands do not exist — do not attempt to run them.
+Check `composer.json` for available quality tools. At minimum one of:
+`phpstan/phpstan`, `larastan/larastan`, `rector/rector`, `symplify/easy-coding-standard`, or `galawork/php-quality`.
 
-### Execution — via Composer, Artisan, or vendor/bin
+See `quality-tools` skill for full detection logic and exact commands.
 
-- **PHPStan**: `php artisan quality:phpstan` or `composer quality:phpstan`
-- **Rector/ECS**: `php artisan quality:rector`, `php artisan quality:ecs`, `composer quality:refactor`
-- **Full pipeline**: `php artisan quality:finalize` or `composer quality:finalize`
+### Execution
 
-All commands run **inside the Docker container**.
+Detect commands from project (see `quality-tools` skill → Tool Detection):
+
+```bash
+# Native (default):
+vendor/bin/phpstan analyse             # PHPStan
+vendor/bin/rector process              # Rector (auto-fix)
+vendor/bin/ecs check --fix             # ECS (auto-fix)
+
+# With galawork/php-quality wrapper (if installed):
+php artisan quality:phpstan            # PHPStan
+php artisan quality:rector --fix       # Rector
+php artisan quality:ecs --fix          # ECS
+php artisan quality:finalize           # Full pipeline
+```
+
+All commands run **inside the Docker container** if Docker is used.
 
 ### Workflow
 
-1. `php artisan quality:phpstan` — Fix all type errors in code.
-2. `composer quality:refactor -- --fix` — Auto-fix style + refactoring (runs Rector + ECS).
-3. `php artisan quality:phpstan` — Verify Rector/ECS didn't introduce new issues.
+1. Run PHPStan — fix all type errors in code.
+2. Run Rector + ECS with auto-fix — auto-fix style + refactoring.
+3. Run PHPStan again — verify step 2 didn't introduce new issues.
 
 If step 3 finds errors → fix and repeat from step 2.
 
@@ -74,8 +86,8 @@ Config files live in the **project root**:
 |---|---|---|
 | `phpstan.neon` | PHPStan | Level, paths, extensions, ignoreErrors |
 | `phpstan-baseline.neon` | PHPStan | Baseline (auto-managed, do NOT edit) |
-| `ecs.php` | ECS | Code style rules via `EcsPreset` |
-| `rector.php` | Rector | Refactoring rules via `RectorPreset` |
+| `ecs.php` | ECS | Code style rules and skip list |
+| `rector.php` | Rector | Refactoring rules, PHP version sets, skip list |
 
 - **Baseline file** — NEVER edit manually. It is auto-managed.
 - **`phpstan.neon` `ignoreErrors`** — allowed for structural toolchain limitations (e.g., Pest runtime bindings that PHPStan can't resolve). NOT for individual code issues. **If unsure → ask the user.**

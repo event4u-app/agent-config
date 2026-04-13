@@ -27,21 +27,28 @@ git diff --name-only origin/{default}..HEAD | grep -E '\.(js|ts|tsx)$'
 
 ### Prerequisite
 
-Requires `galawork/php-quality` in `composer.json`. If not installed, commands don't exist.
+Check `composer.json` for quality tools. See `quality-tools` skill for detection and commands.
 
 ### Execution
 
-- **PHPStan**: `php artisan quality:phpstan` or `composer quality:phpstan`
-- **Rector/ECS**: `php artisan quality:rector`, `php artisan quality:ecs`, `composer quality:refactor`
-- **Full pipeline**: `php artisan quality:finalize` or `composer quality:finalize`
+```bash
+# Native (default):
+vendor/bin/phpstan analyse             # PHPStan
+vendor/bin/rector process              # Rector (auto-fix)
+vendor/bin/ecs check --fix             # ECS (auto-fix)
 
-All inside Docker container.
+# With galawork/php-quality wrapper (if installed):
+php artisan quality:phpstan            # PHPStan
+php artisan quality:finalize           # Full pipeline
+```
+
+All inside Docker container if used.
 
 ### Workflow
 
-1. `php artisan quality:phpstan` — fix type errors
-2. `composer quality:refactor -- --fix` — auto-fix style + refactoring
-3. `php artisan quality:phpstan` — verify no new issues
+1. Run PHPStan — fix type errors
+2. Run Rector + ECS with auto-fix
+3. Run PHPStan again — verify no new issues
 
 Step 3 errors → fix, repeat from step 2.
 
@@ -61,8 +68,8 @@ Step 3 errors → fix, repeat from step 2.
 |---|---|---|
 | `phpstan.neon` | PHPStan | Level, paths, extensions, ignoreErrors |
 | `phpstan-baseline.neon` | PHPStan | Baseline (auto-managed, do NOT edit) |
-| `ecs.php` | ECS | Code style rules via `EcsPreset` |
-| `rector.php` | Rector | Refactoring rules via `RectorPreset` |
+| `ecs.php` | ECS | Code style rules and skip list |
+| `rector.php` | Rector | Refactoring rules, PHP version sets, skip list |
 
 - `ignoreErrors`: structural toolchain limitations only. **Unsure → ask.**
 - Config files: don't modify without permission.

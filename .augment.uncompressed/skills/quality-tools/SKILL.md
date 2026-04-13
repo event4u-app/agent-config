@@ -34,172 +34,171 @@ If both PHP and JS/TS files changed → run **both** pipelines.
 
 # PHP Quality Tools
 
-## Prerequisite
+## Tool Detection
 
-All commands require the `galawork/php-quality` Composer package.
-Check `composer.json` for `galawork/php-quality` in `require` or `require-dev`.
-If the package is **not installed**, these commands do not exist — do not attempt to run them.
+Check `composer.json` to determine which tools are available and how to run them.
+Use the **first matching** command style:
 
-## How it works
+| `composer.json` contains | Command style | Example |
+|---|---|---|
+| `galawork/php-quality` | `php artisan quality:*` or `composer quality:*` | `php artisan quality:phpstan` |
+| `phpstan/phpstan` or `larastan/larastan` | `vendor/bin/phpstan` | `vendor/bin/phpstan analyse` |
+| `rector/rector` | `vendor/bin/rector` | `vendor/bin/rector process` |
+| `symplify/easy-coding-standard` | `vendor/bin/ecs` | `vendor/bin/ecs check --fix` |
 
-The `galawork/php-quality` package provides a CLI wrapper (`galawork-quality`) that:
+**Priority:** If `galawork/php-quality` is installed, always prefer its wrapper commands — they add
+git-aware execution, caching, automatic baseline regeneration, and memory management.
 
-1. **Detects changed files** via Git (only checks files changed since last commit by default)
-2. **Resolves config paths** automatically from `config-dev/php-quality/`
-3. **Manages caching** to speed up repeated runs
-4. **Regenerates baselines** automatically after successful PHPStan runs
-5. **Handles memory limits** and other runtime settings
+If none of the above is installed → skip quality checks, inform the user.
 
-The wrapper is exposed via Composer scripts or Laravel Artisan commands.
-**NEVER** call the underlying tools directly (`vendor/bin/phpstan`, `vendor/bin/ecs`, etc.).
-
-## Execution — ONLY via Composer or Artisan
-
-Detect the project type and use the correct wrapper:
-
-- **Laravel** (`artisan` exists): `php artisan quality:*`
-- **Composer** (no `artisan`): `composer quality:*`
-
-All commands run **inside the Docker container** (`make console` or `docker compose exec`).
+All commands run **inside the Docker container** if Docker is used (`docker compose exec` or `make console`).
 
 ## Commands
 
 ### PHPStan — Static Analysis
 
 ```bash
+# Native:
+vendor/bin/phpstan analyse                          # Analyse all configured paths
+vendor/bin/phpstan analyse --memory-limit=512M      # With memory limit
+vendor/bin/phpstan analyse --error-format=github    # CI-friendly format
+
+# With galawork/php-quality wrapper:
 php artisan quality:phpstan          # Laravel
 composer quality:phpstan             # Composer
 ```
 
-| Flag                      | Description                                                   |
-|---------------------------|---------------------------------------------------------------|
-| `--baseline`              | Generate and update the phpstan baseline file                 |
-| `--debug`                 | Activate debug mode                                           |
-| `--xdebug`                | Activate xdebug mode (must be installed)                      |
-| `--ignore-git`            | Skip Git check, analyse all files (cache still applies)       |
-| `--error-format[=FORMAT]` | Set error format: `table` (default), `github`, `gitlab`, etc. |
-| `--switch-pro`            | Toggle PHPStan Pro for this execution                         |
+**Native flags:**
+
+| Flag | Description |
+|---|---|
+| `--memory-limit=SIZE` | Set memory limit (e.g. `512M`, `1G`) |
+| `--debug` | Activate debug mode |
+| `--error-format=FORMAT` | Output format: `table` (default), `github`, `gitlab` |
+| `--pro` | Toggle PHPStan Pro |
+
+**Wrapper-only flags** (only with `galawork/php-quality`):
+
+| Flag | Description |
+|---|---|
+| `--baseline` | Generate/update phpstan baseline file |
+| `--ignore-git` | Skip Git check, analyse all files |
+| `--xdebug` | Activate Xdebug mode |
 
 ### ECS — Easy Coding Standard
 
 ```bash
-php artisan quality:ecs              # Laravel (dry-run)
-php artisan quality:ecs --fix        # Laravel (fix)
-composer quality:ecs                 # Composer (dry-run)
-composer quality:ecs -- --fix        # Composer (fix)
+# Native:
+vendor/bin/ecs check                  # Dry-run
+vendor/bin/ecs check --fix            # Auto-fix
+
+# With galawork/php-quality wrapper:
+php artisan quality:ecs --fix         # Laravel
+composer quality:ecs -- --fix         # Composer
 ```
 
-| Flag                       | Description                                           |
-|----------------------------|-------------------------------------------------------|
-| `--fix`                    | Fix errors automatically                              |
-| `--no-auto-fix`            | Do not fix errors automatically                       |
-| `--debug`                  | Activate debug mode                                   |
-| `--xdebug`                 | Activate xdebug mode (must be installed)              |
-| `--clear-cache`            | Clear the ECS cache                                   |
-| `--ignore-git`             | Skip Git check, check all files (cache still applies) |
-| `--paths-to-scan[=PATHS]`  | Custom paths, e.g. `--paths-to-scan='["./core"]'`     |
-| `--source-branch[=BRANCH]` | Source branch (default: HEAD)                         |
-| `--target-branch[=BRANCH]` | Target branch to compare against                      |
+**Native flags:**
+
+| Flag | Description |
+|---|---|
+| `--fix` | Fix errors automatically |
+| `--clear-cache` | Clear the ECS cache |
+
+**Wrapper-only flags** (only with `galawork/php-quality`):
+
+| Flag | Description |
+|---|---|
+| `--ignore-git` | Skip Git check, check all files |
+| `--paths-to-scan[=PATHS]` | Custom paths, e.g. `--paths-to-scan='["./core"]'` |
+| `--source-branch[=BRANCH]` | Source branch (default: HEAD) |
+| `--target-branch[=BRANCH]` | Target branch to compare against |
 
 ### Rector — Automated Refactoring
 
 ```bash
-php artisan quality:rector --fix     # Laravel
-composer quality:rector -- --fix     # Composer
+# Native:
+vendor/bin/rector process              # Auto-fix
+vendor/bin/rector process --dry-run    # Preview changes
+
+# With galawork/php-quality wrapper:
+php artisan quality:rector --fix       # Laravel
+composer quality:rector -- --fix       # Composer
 ```
 
-| Flag                       | Description                                           |
-|----------------------------|-------------------------------------------------------|
-| `--fix`                    | Apply refactorings (without this flag: dry-run only)  |
-| `--no-auto-fix`            | Do not fix errors automatically                       |
-| `--debug`                  | Activate debug mode                                   |
-| `--xdebug`                 | Activate xdebug mode (must be installed)              |
-| `--clear-cache`            | Clear the Rector cache                                |
-| `--ignore-git`             | Skip Git check, check all files (cache still applies) |
-| `--paths-to-scan[=PATHS]`  | Custom paths, e.g. `--paths-to-scan='["./core"]'`     |
-| `--source-branch[=BRANCH]` | Source branch (default: HEAD)                         |
-| `--target-branch[=BRANCH]` | Target branch to compare against                      |
+**Native flags:**
+
+| Flag | Description |
+|---|---|
+| `--dry-run` | Preview changes without applying |
+| `--clear-cache` | Clear the Rector cache |
+
+**Wrapper-only flags** (only with `galawork/php-quality`):
+
+| Flag | Description |
+|---|---|
+| `--ignore-git` | Skip Git check, check all files |
+| `--paths-to-scan[=PATHS]` | Custom paths |
+| `--source-branch[=BRANCH]` | Source branch (default: HEAD) |
+| `--target-branch[=BRANCH]` | Target branch to compare against |
 
 ### Combined Commands
 
-```bash
-# Refactor = Rector + ECS (fix mode)
-php artisan quality:refactor --fix   # Laravel
-composer quality:refactor -- --fix   # Composer
-
-# Finalize = Rector + ECS + PHPStan (full pipeline)
-php artisan quality:finalize         # Laravel
-composer quality:finalize            # Composer
-```
-
-### Passing extra flags (Composer)
-
-With Composer, use `--` to separate composer args from tool args:
+There is no native single command for running all three tools. Run them in sequence:
 
 ```bash
-composer quality:ecs -- --fix --clear-cache
-composer quality:phpstan -- --debug
-composer quality:refactor -- --fix --ignore-git
+# Full pipeline (native):
+vendor/bin/rector process && vendor/bin/ecs check --fix && vendor/bin/phpstan analyse
+
+# With galawork/php-quality wrapper:
+php artisan quality:refactor --fix     # Rector + ECS
+php artisan quality:finalize           # Rector + ECS + PHPStan (full pipeline)
 ```
 
 ## Workflow after code changes
 
-1. `composer quality:phpstan` — fix all errors in code
-2. `composer quality:refactor -- --fix` — auto-fix style + refactoring
-3. `composer quality:phpstan` — verify Rector/ECS didn't introduce new issues
+1. Run PHPStan — fix all errors
+2. Run Rector + ECS with auto-fix — fix style + refactoring
+3. Run PHPStan again — verify step 2 didn't introduce new issues
 
 If step 3 finds errors → fix and repeat from step 2.
 
+Detect commands from project (see Tool Detection above).
+
 ## Configuration
 
-All config files live in `config-dev/php-quality/`. Do NOT modify without explicit user permission.
+Config files are typically in the **project root**. Do NOT modify without explicit user permission.
 
-### Config file overview
+Detect config location:
+- Check project root first: `phpstan.neon`, `ecs.php`, `rector.php`
+- Some projects use `phpstan.neon.dist` instead of `phpstan.neon`
 
-| File                            | Tool    | Purpose                                                      |
-|---------------------------------|---------|--------------------------------------------------------------|
-| `phpstan.neon`                  | PHPStan | Level, paths, extensions, `ignoreErrors`, disallowed calls   |
-| `phpstan-baseline.neon`         | PHPStan | Baseline for existing errors (auto-managed, do NOT edit)     |
-| `phpstan-baseline-package.neon` | PHPStan | Package baseline (auto-managed, do NOT edit)                 |
-| `phpstan-rector.neon`           | PHPStan | Separate config used by Rector's PHPStan integration         |
-| `phpstan.php`                   | PHPStan | Bootstrap file for constants, autoloading                    |
-| `main.php`                      | Shared  | Shared bootstrap for PHP quality tools (loads common config) |
-| `ecs.php`                       | ECS     | Code style: rule sets, configured rules, skip list           |
-| `rector.php`                    | Rector  | Refactoring: rule sets, PHP version sets, skip list          |
+### Standard config files
 
-### PHPStan config (`phpstan.neon`)
+| File | Tool | Purpose |
+|---|---|---|
+| `phpstan.neon` | PHPStan | Level, paths, extensions, `ignoreErrors`, disallowed calls |
+| `phpstan-baseline.neon` | PHPStan | Baseline for existing errors (auto-managed, do NOT edit) |
+| `ecs.php` | ECS | Code style: rule sets, configured rules, skip list |
+| `rector.php` | Rector | Refactoring: rule sets, PHP version sets, skip list |
 
-- **Level 9** (strictest) with `checkMissingCallableSignature: true`
-- Includes baselines, PHPUnit extensions, disallowed-calls extension, ergebnis rules
-- `ignoreErrors` contains patterns for known legacy issues (mysqli, legacy classes, etc.)
-- `disallowedFunctionCalls` bans `var_dump()`, `print_r()`, `dd()`
-- `treatPhpDocTypesAsCertain: false` — PHPDoc types are not treated as certain
+### Understanding the project's config
 
-### ECS config (`ecs.php`)
+Read the actual config files to understand what rules are active:
 
-Returns a settings array with sections:
+- **phpstan.neon**: Check `level`, `paths`, `ignoreErrors`, `includes` (baselines, extensions)
+- **ecs.php**: Check which rule sets are active (PSR-12, PHP-CS-Fixer sets), skip list
+- **rector.php**: Check PHP version sets, active rule sets, skip list
 
-- `with-spacing` — indentation (spaces), line endings
-- `with-php-cs-fixer-sets` — PHP-CS-Fixer rule sets (PSR-1, PSR-2, PSR-12, PHP migration sets)
-- `with-prepared-sets` — PSR-12, common rules
-- `with-rules` — individual rules (TrailingCommaInMultiline, LineEnding)
-- `with-configured-rules` — rules with custom config (CastSpaces, PhpdocLineSpan, YodaStyle)
-- `with-skip-rules` — disabled rules (ClassAttributesSeparation, PhpdocToComment, etc.)
-
-### Rector config (`rector.php`)
-
-Returns a settings array with sections:
-
-- `with-php-sets` — PHP version migration sets (auto-detected from Dockerfile/composer.json)
-- `with-prepared-sets` — naming (enabled), others disabled by default
-- `with-rules` / `with-configured-rules` — custom rules
-- `with-skip-rules` — disabled rules (risky renames, etc.)
+Common patterns across projects:
+- PHPStan at high levels (8-9) with `disallowedFunctionCalls` banning `var_dump()`, `dd()`
+- ECS with PSR-12 base, trailing commas, Yoda style
+- Rector with PHP version migration sets and naming conventions
 
 ## Baseline policy
 
-- **NEVER** edit `phpstan-baseline.neon` or `phpstan-baseline-package.neon` by hand.
+- **NEVER** edit `phpstan-baseline.neon` by hand.
 - **NEVER** add errors, update counts, or regenerate manually.
-- The wrapper automatically regenerates the baseline after a clean PHPStan run.
+- If a wrapper tool (e.g. `galawork/php-quality`) is installed, it may regenerate the baseline automatically.
 
 ## PHPStan error handling
 
@@ -225,7 +224,7 @@ Adding `ignoreErrors` entries to `phpstan.neon` is allowed when:
 
 ### NEVER do these
 
-- Add entries to baseline files (`phpstan-baseline.neon`, `phpstan-baseline-package.neon`)
+- Add entries to baseline files (`phpstan-baseline.neon`)
 - Add `ignoreErrors` for individual files or specific code issues that should be fixed
 - Use `@phpstan-ignore-next-line` without a reason comment
 
