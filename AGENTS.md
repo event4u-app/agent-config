@@ -160,25 +160,10 @@ make test-synchron
 
 ### Test Guidelines
 
-- Do NOT use `readonly` or `final` on Pest test classes
-- Do NOT mark classes `final` if they need to be mocked via `Mockery::mock()`
 - Write clear, human-readable test names
 - Focus on meaningful tests over 100% coverage obsession
-
-### Pest-Specific Rules
-
-- Pest test files (without a `namespace` declaration) treat all PHP built-in classes as global.
-  Do **NOT** add `use` statements for global classes like `DateTimeImmutable`, `Exception`,
-  `stdClass`, etc. — PHP will warn: *"The use statement with non-compound name has no effect"*.
-- Only `use` statements for **namespaced** classes (e.g., `use App\Models\...`) are needed.
-
-### Avoiding Flaky Tests
-
-- **Time-dependent tests:** Use `$this->travel(5)->seconds()` (Laravel's time travel) to create
-  a clear gap between "before" and "after" timestamps. Never rely on `now()` being different
-  between two lines of code — on fast hardware, they can be identical.
-- **Database-dependent tests:** Don't assume column values are `null` just because the seeder
-  doesn't set them — previous tests in parallel may have modified the same record.
+- See `.augment/rules/php-coding.md` for Pest-specific rules (readonly, final, use statements)
+- See `.augment/skills/pest-testing/SKILL.md` for flaky test prevention and best practices
 
 ---
 

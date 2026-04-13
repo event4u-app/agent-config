@@ -35,50 +35,28 @@ This repository contains a Laravel backend application (Laravel 11, PHP 8.2, Pes
 
 ## ✅ PHP 8.2 Best Practices
 
-All code suggestions must remain compatible with PHP ^8.2 (the version targeted by `composer.json`), even if newer PHP features exist.
+All code must be compatible with PHP ^8.2. Use modern features:
 
-- Use **readonly properties** to enforce immutability where applicable.
-- Use **readonly classes** when all properties are readonly (PHP 8.2+).
-- Use **Enums** instead of string or integer constants.
-- Utilize **First-class callable syntax** for callbacks.
-- Leverage **Constructor Property Promotion**.
-- Use **Union Types**, **Intersection Types**, and **true/false return types** for strict typing.
-- Apply **Static Return Type** where needed.
-- Use the **Nullsafe Operator (?->)** for optional chaining.
-- Adopt **final classes** where extension is not intended.
-- Use **Named Arguments** for improved clarity when calling functions with multiple parameters.
+- **readonly** properties/classes for immutability (DTOs, Events, Value Objects)
+- **Enums** instead of string/integer constants
+- **Constructor Property Promotion**, **Union/Intersection Types**, **Nullsafe (?->)**
+- **final** classes where extension is not intended (Services, Controllers, Jobs, Events)
+- **Named Arguments** for multi-parameter calls
 
-### When to Use `readonly` and `final`
+### `readonly` and `final` exceptions
 
-**Use `readonly` classes when:**
-
-- All properties in the class are readonly
-- The class represents an immutable value object, DTO, or event
-- Example: Events, DTOs, Value Objects
-- **Exception:** Do NOT use `readonly` for Pest test classes
-
-**Use `final` classes when:**
-
-- The class is not designed to be extended
-- The class represents a specific implementation that should not be subclassed
-- Example: Events (business events should be unique), Services, Controllers, Jobs
-- **Exception:** Do NOT use `final` for Pest test classes
-- **Exception:** Do NOT use `final` for classes that need to be mocked in tests (e.g. Repository classes).
-  Mockery cannot mock `final` classes without `dg/bypass-finals`. If a class is injected as a dependency
-  and mocked via `Mockery::mock()` in unit tests, it must NOT be marked `final`.
-
-**Example:**
+- Do NOT use `readonly` or `final` on **Pest test classes**
+- Do NOT use `final` on classes that need **Mockery mocking** (e.g. Repositories) —
+  Mockery cannot mock `final` without `dg/bypass-finals`
 
 ```php
-// ✅ Event - readonly and final
+// ✅ Event — readonly + final
 final readonly class ReportCreated
 {
-    public function __construct(
-        private Report $report,
-    ) {}
+    public function __construct(private Report $report) {}
 }
 
-// ✅ Service - readonly (all dependencies are readonly)
+// ✅ Service — readonly
 readonly class ReportService
 {
     public function __construct(
@@ -86,20 +64,6 @@ readonly class ReportService
         private EventDispatcher $dispatcher,
     ) {}
 }
-
-// ✅ DTO - readonly
-readonly class ReportDto
-{
-    public function __construct(
-        public string $title,
-        public Carbon $date,
-    ) {}
-}
-
-// ✅ Pest test - no readonly, no final
-test('user can create report', function () {
-    // test code
-});
 ```
 
 ## ✅ Laravel Conventions
@@ -251,23 +215,12 @@ When a developer has replied to one of your review comments:
 
 ## ✅ Package Management
 
-- **Always use package managers** for installing, updating, or removing dependencies
-- **Never manually edit** package configuration files like `composer.json`
-    - If a dependency is required, always provide the exact composer command.
-- Use appropriate commands:
-    - `composer require package/name` to add dependencies
-    - `composer require --dev package/name` to add dev dependencies
-    - `composer remove package/name` to remove dependencies
-    - `composer update` to update dependencies
-- **Rationale:** Package managers automatically resolve correct versions, handle dependency conflicts, update lock files, and maintain
-  consistency across environments
-- Manual editing of package files often leads to version mismatches, dependency conflicts, and broken builds
+- **Always use `composer require`/`composer remove`** — never manually edit `composer.json`
+- Package managers resolve versions, handle conflicts, and update lock files automatically
 
 ## ✅ PHPStan Baseline
 
-- **Do NOT add entries to `phpstan-baseline.neon`** — always fix the actual error
-- If fixing is truly impossible, use an inline `@phpstan-ignore` comment with a clear reason
-- The baseline files are for pre-existing technical debt only
+- **Do NOT add entries to `phpstan-baseline.neon`** — always fix the actual error. Last resort: inline `@phpstan-ignore` with reason.
 
 
 ## ✅ Known Issues
