@@ -7,20 +7,7 @@ description: "Use when writing Laravel Flux UI components — the official Livew
 
 ## When to use
 
-Use this skill when:
-- Building UI with Flux components (buttons, modals, dropdowns, tables, forms, etc.)
-- Working on a project that uses `livewire/flux` or `flux-ui`
-- Creating Livewire views that should use Flux instead of raw HTML/Tailwind
-
-This skill extends `livewire` and `blade-ui`.
-
-## Before writing code
-
-1. **Confirm Flux is installed** — check `composer.json` for `livewire/flux`.
-2. **Check the Flux version** — API may differ between versions.
-3. **Read existing views** — check how Flux components are used in the project.
-4. **Check Flux docs** — https://fluxui.dev/docs for the latest component API.
-5. **Read project docs** — check `./agents/` for any Flux-specific conventions.
+Flux UI components in Livewire projects. Extends `livewire`, `blade-ui`. Before: confirm `livewire/flux`, version, existing views, https://fluxui.dev/docs, project docs.
 
 ## Core rules
 

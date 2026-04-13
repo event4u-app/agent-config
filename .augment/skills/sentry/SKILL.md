@@ -7,12 +7,7 @@ description: "Use when the user shares a Sentry URL, says "check Sentry", or wan
 
 ## When to use
 
-Use this skill when:
-- Investigating a Sentry error or issue URL
-- Analyzing error patterns, frequency, or affected users
-- Working with Sentry MCP tools for issue details
-- Adding error reporting or breadcrumbs to code
-- Configuring Sentry alerts or release tracking
+Sentry investigation, error patterns, MCP tools, error reporting/breadcrumbs, alerts.
 
 ## Available MCP tools
 
@@ -136,29 +131,8 @@ search_events(organizationSlug='my-org', naturalLanguageQuery='how many errors t
 search_events(organizationSlug='my-org', naturalLanguageQuery='count of database failures this week')
 ```
 
-## Related
+## Related: `logging-monitoring`, `bug-analyzer`, `/bug-investigate`, `config/sentry.php`.
 
-- **Skill:** `logging-monitoring` — full monitoring stack (Sentry + Grafana + Loki)
-- **Skill:** `bug-analyzer` — uses Sentry as input for bug investigation
-- **Command:** `/bug-investigate` — fetches Sentry details automatically
-- **Config:** `config/sentry.php` — Sentry DSN and configuration
+## Gotcha: same issue ≠ same root cause (check multiple events), check Events tab not just latest, UI link saves tokens over MCP.
 
-
-## Gotcha
-
-- Sentry groups errors by stacktrace — different root causes may appear as the same issue. Check multiple events.
-- The model tends to analyze only the latest event — check the "Events" tab for patterns across time.
-- Don't use Sentry MCP tools for simple lookups — use the Sentry web UI link instead (saves tokens).
-
-## Do NOT
-
-- Do NOT use Sentry SDK directly — use MonitoringHelper.
-- Do NOT ignore Sentry errors without investigating root cause.
-- Do NOT expose sensitive data in Sentry error context.
-
-## Auto-trigger keywords
-
-- Sentry
-- error tracking
-- issue investigation
-- error reporting
+## Do NOT: Sentry SDK directly (use MonitoringHelper), ignore errors, expose sensitive data in context.

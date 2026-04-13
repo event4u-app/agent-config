@@ -7,20 +7,9 @@ description: "Manages coding guidelines — understands the guideline structure,
 
 ## When to use
 
-Use this skill when:
-- Writing or reviewing code that should follow project conventions
-- Creating a new guideline for a pattern or convention
-- Checking which guidelines exist for a specific topic
+Project conventions, new guidelines, checking existing guidelines. NOT for: reading patterns directly, creating rules.
 
-
-Do NOT use when:
-- Looking up specific coding patterns (read the guideline files directly)
-- Creating new rules (rules live in `.augment/rules/`)
-
-## Concept
-
-**Guidelines** are detailed coding conventions and patterns for a specific language or framework.
-They describe **how** to write code — naming, structure, patterns, examples.
+Guidelines = coding conventions/patterns per language. **How** to write code.
 
 ### Guidelines vs. Rules vs. Skills
 
@@ -106,28 +95,9 @@ Each guideline file should follow this structure:
 - {Links to related guidelines, skills, or external docs}
 ```
 
-## When to create a new guideline
+## New guideline: repeating pattern, inconsistency, new tech. NOT for: one-off, rules, workflows.
 
-Create a new guideline when:
-- A **repeating pattern** emerges that needs standardization
-- A **code review** reveals inconsistency across the team
-- A **new technology** is introduced that needs conventions
-
-Do NOT create a guideline for:
-- One-off decisions (use a feature plan or context instead)
-- Behavior rules (use `.augment/rules/`)
-- Workflow instructions (use `.augment/commands/`)
-
-## Integration with other systems
-
-### Skills reference guidelines
-Skills like `coder`, `eloquent`, `laravel-validation` should reference specific guideline files:
-```
-See `.augment/guidelines/php/controllers.md` for controller conventions.
-```
-
-### Rules enforce guidelines
-Rules in `.augment/rules/` enforce critical guidelines automatically.
+Skills reference guidelines, rules enforce them.
 Guidelines provide the detailed explanation that rules summarize.
 
 ### Discovery

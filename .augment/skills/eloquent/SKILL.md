@@ -7,33 +7,15 @@ description: "Use when writing Eloquent models, relationships, scopes, queries, 
 
 ## When to use
 
-Use this skill for all Eloquent and database interaction work, especially when working with:
+Eloquent models, queries, relationships, scopes, migrations, transactions, eager loading, mass assignment.
 
-- Models (properties, casts, relationships, scopes, accessors, mutators)
-- Query Builder and Eloquent queries
-- Eager loading and N+1 prevention
-- Migrations and schema changes
-- Transactions
-- Pagination
-- Mass assignment and fillable/guarded
+Extends `coder` and `laravel`.
 
-This skill extends `coder` and `laravel`.
-
-## Before writing code
-
-1. **Read the base skills first** — apply `coder` and `laravel`.
-2. **Inspect existing models** — match property declarations, cast patterns, relationship style, and scope naming.
-3. **Check for repositories** — some projects use repository interfaces for data access. Check `./agents/` for conventions.
-4. **Understand the database schema** — check migrations and existing models for column names, types, and constraints.
-5. **Check for multi-tenancy** — some projects use multiple databases (API DB + customer DBs). Understand which connection to use.
+## Before: read base skills, inspect existing models, check for repositories, understand schema, check multi-tenancy.
 
 ## Model rules
 
-- Models should contain: relationships, scopes, getters, setters, casts, and `$fillable`/`$guarded`.
-- Models must NOT contain business logic, orchestration, or workflow decisions.
-- Use `$casts` (or `casts()` method in Laravel 11) for date, boolean, JSON, enum, and custom types.
-- Use typed properties where the project does so.
-- Use `$fillable` or `$guarded` — never leave mass assignment unprotected.
+Models contain: relationships, scopes, getters, setters, casts, `$fillable`/`$guarded`. NO business logic. Use `$casts`, typed properties, mass assignment protection.
 
 ## Attribute access style — read from `.agent-settings`
 
@@ -153,102 +135,18 @@ protected static function booted(): void
 
 See `.augment/guidelines/php/eloquent.md` for full details and examples.
 
-## Scope rules
+## Scopes: reusable query constraints, clear names (`scopeActive`), focused, prefer over repeated `where()`.
 
-- Use scopes for reusable query constraints.
-- Name scopes clearly: `scopeActive`, `scopeForCustomer`.
-- Keep scopes focused on one filtering concern.
-- Prefer scopes over repeating `where()` clauses across the codebase.
+## Queries: Eloquent over raw SQL, paginate large sets, `chunk()`/`lazy()` for bulk, `exists()` not `count() > 0`.
 
-```php
-public function scopeActive(Builder $query): Builder
-{
-    return $query->where('status', Status::Active);
-}
-```
+## Eager loading: always `with()` for accessed relations, `load()` post-query, `withCount()`, constrain with closure.
 
-## Query rules
+## Transactions: wrap multi-step writes, `DB::transaction()`, handle failures, understand savepoints.
 
-- Prefer Eloquent over raw SQL unless performance requires it.
-- Use Query Builder for complex queries that don't map well to Eloquent.
-- Always paginate large result sets — use `paginate()` or `cursorPaginate()`.
-- Use `chunk()` or `lazy()` for processing large datasets to avoid memory issues.
-- Select only needed columns when performance matters: `->select(['id', 'name'])`.
-- Use `exists()` instead of `count() > 0` when checking existence.
+## Migrations: focused, proper constraints (FK, index, not-null), `snake_case`, `decimal` not `float`, reversible.
 
-## Eager loading rules
+## Performance: filter/paginate always, indexes on WHERE/ORDER/JOIN, `explain()`, `pluck()`, bulk ops not loops.
 
-- Always eager load relationships that will be accessed — prevent N+1 queries.
-- Use `with()` for upfront loading, `load()` for post-query loading.
-- Use `withCount()` for counting related models without loading them.
-- Constrain eager loads when only a subset is needed:
-  ```php
-  User::with(['posts' => fn ($q) => $q->where('published', true)])->get();
-  ```
+## Gotcha: never magic property for relations (use getter), N+1 = #1 issue, `getAttribute()` returns mixed, no `booted()` (use Observers), check save() return.
 
-## Transaction rules
-
-- Wrap multi-step write operations in transactions.
-- Use `DB::transaction()` for simple cases.
-- Handle transaction failures explicitly.
-- Do not nest transactions without understanding savepoints.
-
-```php
-DB::transaction(function () use ($order, $items): void {
-    $order->save();
-    $order->items()->createMany($items);
-});
-```
-
-## Migration rules
-
-- Keep migrations focused — one logical change per migration.
-- Always add proper constraints: foreign keys, indexes, not-null, defaults.
-- Name columns in `snake_case`.
-- Use proper column types (never `float` for money — use `decimal`).
-- Make migrations reversible when possible (`down()` method).
-- Follow existing naming conventions for table prefixes and column names.
-
-## Performance rules
-
-- Avoid loading entire tables — always filter or paginate.
-- Use indexes for columns in `WHERE`, `ORDER BY`, and `JOIN` clauses.
-- Use `explain()` to analyze slow queries.
-- Prefer `pluck()` when only one column is needed.
-- Use `insertOrIgnore()`, `upsert()` for bulk operations when appropriate.
-- Avoid `$model->save()` in loops — use bulk operations.
-
-## What NOT to do
-
-- Do not put business logic in models.
-- Do not use raw SQL when Eloquent/Query Builder is sufficient.
-- Do not skip eager loading when relationships are accessed in loops.
-- Do not use `get()` on unbounded queries — always filter or paginate.
-- Do not use `float` columns for monetary values — use `decimal`.
-- Do not create N+1 queries by accessing relationships in loops without eager loading.
-- Do not mix model concerns with service/controller logic.
-
-
-## Gotcha
-
-- Never access relationships via magic properties (`$model->relation`) — always use the typed getter method.
-- The model forgets eager loading on list queries — N+1 queries are the #1 performance issue.
-- `getAttribute()` returns `mixed` — always cast or type-check the result.
-- Don't use `booted()` for lifecycle hooks — use Observers with `#[ObservedBy]` attribute.
-- `$model->save()` silently fails if the model has no fillable/guarded configuration — always check return value.
-
-## Do NOT
-
-- Do NOT put business logic in models — use services.
-- Do NOT use $model->save() with unvalidated data.
-- Do NOT access relationships in loops without eager loading.
-- Do NOT use Model::all() without pagination on list endpoints.
-
-## Auto-trigger keywords
-
-- Eloquent
-- model
-- relationship
-- scope
-- accessor
-- mutator
+## Do NOT: business logic in models, raw SQL when Eloquent works, skip eager loading, unbounded `get()`, float for money, relations in loops without eager loading.

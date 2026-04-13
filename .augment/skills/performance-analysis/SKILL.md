@@ -5,40 +5,13 @@ description: "ONLY when user explicitly requests: performance audit, bottleneck 
 
 # performance-analysis
 
-## Mission
-
-Find performance bottlenecks before they affect users. This skill is **proactive** — it
-analyzes code for performance issues, not just responds to "it's slow" reports.
-
-For writing performant code patterns (caching, eager loading, Redis), use the `performance` skill.
-For test suite performance, use `test-performance`.
-
 ## When to use
 
-Use this skill when:
+Proactive bottleneck analysis, code audit for perf, large datasets/loops/external calls, slow endpoint/job investigation. NOT for: writing perf code (`performance`), test speed (`test-performance`), bugs (`bug-analyzer`).
 
-- Auditing a codebase or flow for performance bottlenecks
-- `analysis-autonomous-mode` routes here after detecting slow patterns
-- Reviewing code that handles large datasets, loops, or external calls
-- Investigating why a specific endpoint or job is slow
+## Workflow
 
-Do NOT use when:
-
-- Writing new caching/optimization code → use `performance`
-- Optimizing test suite speed → use `test-performance`
-- Hunting for functional bugs → use `bug-analyzer` (proactive mode)
-
-## Analysis workflow
-
-### 1. Identify hotspots
-
-Focus on code paths with high execution frequency or large data volumes:
-
-- API endpoints called frequently (list endpoints, dashboards)
-- Queue jobs processing batches
-- Scheduled commands running on large datasets
-- Import/export operations
-- Report generation
+### 1. Hotspots: frequent endpoints, batch jobs, scheduled commands, imports, reports.
 
 ### 2. Database query analysis
 
@@ -65,53 +38,14 @@ Focus on code paths with high execution frequency or large data volumes:
 | **Serialization overhead** | Large models serialized to JSON unnecessarily |
 | **Loop inefficiency** | O(n²) patterns with nested loops or repeated array searches |
 
-### 4. Queue and job analysis
+### 4. Jobs: unbatched, missing chunk(), retry storms, long-held connections, missing WithoutOverlapping.
 
-- Jobs that should be batched but run individually
-- Missing `chunk()` for large dataset processing
-- Retry storms from failing jobs without backoff
-- Jobs that hold database connections too long
-- Missing `WithoutOverlapping` for idempotency-critical jobs
+### 5. Infra: missing Redis, CDN, response caching, connection pooling, worker concurrency limits.
 
-### 5. Infrastructure-level checks
+## Output: Issue, Location, Severity (Low-Critical), Impact, Evidence, Fix, Effort, Confidence.
 
-- Missing Redis for session/cache (using file/database driver)
-- Missing CDN for static assets
-- Missing response caching for read-heavy endpoints
-- Database connection pooling and limits
-- Queue worker concurrency vs database connection limits
+## Related: `analysis-autonomous-mode`, `performance`, `test-performance`, `bug-analyzer`, `database`.
 
-## Output format
+## Gotcha: numbers without context meaningless, DB queries > code optimization, dev ≠ prod profiling.
 
-For each bottleneck:
-
-- **Issue:** concise title
-- **Location:** file, line, or endpoint
-- **Severity:** Low / Medium / High / Critical
-- **Impact:** estimated effect (e.g., "adds ~500ms per request", "causes N+1 on 100+ records")
-- **Evidence:** code reference, query pattern, or measurement
-- **Fix:** concrete optimization
-- **Effort:** Low / Medium / High
-- **Confidence:** Low / Medium / High
-
-## Integration with other skills
-
-- **analysis-autonomous-mode** — routes here when performance concerns are detected
-- **performance** — complementary: performance is about writing fast code, this is about finding slow code
-- **test-performance** — for test suite speed specifically
-- **bug-analyzer** — some performance issues are actually bugs (N+1, infinite loops)
-- **database** — for deep DB optimization guidance
-
-## Gotcha
-
-- Don't present raw numbers without context — "200ms" means nothing without knowing the baseline.
-- The model tends to focus on code-level optimization when the bottleneck is a database query.
-- Profiling in development differs from production — different data volumes, different query plans.
-
-## Do NOT
-
-- Do NOT micro-optimize code that runs infrequently or on small datasets
-- Do NOT recommend caching without considering invalidation
-- Do NOT assume bottlenecks — measure or trace the actual code path
-- Do NOT confuse code style preferences with performance issues
-- Do NOT recommend infrastructure changes when code fixes would suffice
+## Do NOT: micro-optimize infrequent code, cache without invalidation plan, assume without measuring, confuse style with perf, infra changes when code suffices.

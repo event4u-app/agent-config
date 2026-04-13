@@ -7,8 +7,7 @@ description: "Use when writing tests for API endpoints — integration tests, co
 
 ## When to use
 
-Use this skill when writing or reviewing API endpoint tests — integration tests,
-contract validation, response structure checks, or external service mocking.
+API endpoint tests: integration, contracts, response structure, external mocking.
 
 ## Test structure (Laravel / Pest)
 
@@ -168,24 +167,6 @@ it('handles external API failure gracefully', function () {
 | **Side effects** | Database changes, events dispatched, jobs queued |
 | **Edge cases** | Empty results, large payloads, concurrent access |
 
-## Auto-trigger keywords
+## Gotcha: test YOUR rules not framework, explicit seed data, `Http::fake()` for externals, assert structure not just status.
 
-- API test
-- endpoint test
-- integration test
-- response validation
-- contract testing
-
-## Gotcha
-
-- Don't test framework internals (e.g., "does Laravel return 422 on validation error") — test YOUR validation rules.
-- Always seed test data explicitly — don't rely on data from other tests (parallel execution).
-- Mock external APIs with `Http::fake()` — never hit real services in tests.
-- The model forgets to assert response structure, only checking status codes — always check both.
-
-## Do NOT
-
-- Do not hardcode IDs or timestamps — use factories or seeders.
-- Do not skip auth tests — always test both authenticated and unauthenticated.
-- Do not assert entire JSON responses — assert only meaningful fields.
-- Do not use `Http::fake()` without also testing the real integration path.
+## Do NOT: hardcode IDs, skip auth tests, assert entire response, `Http::fake()` without also testing real path.

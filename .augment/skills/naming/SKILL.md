@@ -7,13 +7,7 @@ description: "Use when naming anything — PHP classes, routes, database columns
 
 ## When to use
 
-Use this skill when:
-- Creating new classes, services, controllers, or other PHP files
-- Naming database columns, tables, or migrations
-- Creating new skills, rules, commands, or guidelines
-- Naming branches, commits, or PRs
-- Naming routes, API endpoints, or URL segments
-- Unsure about the correct naming pattern for anything in the project
+Naming: classes, DB columns, agent files, branches, routes, anything.
 
 ## PHP Class Naming
 
@@ -189,28 +183,6 @@ Examples: `feat(DEV-1234): add notification preferences`, `fix(import): handle n
 | Route prefix | kebab-case | `import`, `client-software` |
 | Internal dirs | PascalCase | `App/`, `Routes/`, `Tests/` |
 
-## Related
+## Gotcha: consistency > cleverness, no abbreviations (`usr`→`user`), don't mix snake/camel/Pascal.
 
-- **Guideline:** `.augment/guidelines/php/controllers.md` — controller naming table
-- **Guideline:** `.augment/guidelines/php/git.md` — branch and commit naming
-- **Guideline:** `.augment/guidelines/php/resources.md` — resource naming variants
-- **Rule:** `.augment/rules/php-coding.md` — variable/array key conventions
-
-## Gotcha
-
-- Consistency beats cleverness — match existing naming patterns even if you'd name it differently.
-- The model tends to use abbreviations (`usr`, `msg`, `cfg`) — always spell out the full word.
-- Database columns are snake_case, PHP properties are camelCase, class names are PascalCase — don't mix them.
-
-## Do NOT
-
-- Do NOT use abbreviations that aren't universally understood.
-- Do NOT mix naming conventions within the same context.
-- Do NOT use generic names like Manager, Helper, Utils without specificity.
-
-## Auto-trigger keywords
-
-- naming convention
-- class naming
-- route naming
-- variable naming
+## Do NOT: abbreviations, mix conventions, generic names (Manager/Helper/Utils).

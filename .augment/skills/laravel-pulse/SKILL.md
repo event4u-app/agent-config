@@ -7,11 +7,7 @@ description: "Use when setting up Laravel Pulse monitoring — real-time dashboa
 
 ## When to use
 
-Use this skill when working with Laravel Pulse:
-- Setting up the Pulse monitoring dashboard
-- Configuring built-in recorders (slow queries, exceptions, queues, etc.)
-- Creating custom Pulse cards and recorders
-- Performance monitoring and alerting
+Pulse dashboard, recorders (slow queries, exceptions, queues), custom cards, performance monitoring.
 
 ## Installation
 

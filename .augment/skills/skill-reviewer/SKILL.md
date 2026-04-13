@@ -5,8 +5,7 @@ description: "Use when reviewing, auditing, or optimizing existing skills, or wh
 
 # Skill Reviewer
 
-Reviews skills against the **5 Skill Killers** — the most common anti-patterns
-that waste tokens, cause misfires, or degrade agent performance.
+Reviews skills against **5 Skill Killers** — anti-patterns wasting tokens/causing misfires.
 
 ## The 5 Skill Killers Checklist
 

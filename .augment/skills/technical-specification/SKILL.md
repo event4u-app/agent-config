@@ -7,15 +7,7 @@ description: "Use when the user says "write a spec", "create RFC", or "document 
 
 ## When to use
 
-Use this skill when:
-- Writing a technical specification for a new feature or system
-- Creating an architecture decision record (ADR)
-- Documenting a technical RFC (Request for Comments)
-- Planning a significant technical change that needs team review
-
-Do NOT use when:
-- Trivial changes (a good PR description is enough)
-- Implementation work (use `feature-planning` or `coder` skill)
+Specs, ADRs, RFCs for significant changes. NOT for: trivial (PR description enough), implementation (`feature-planning`/`coder`).
 
 ## Spec types
 
@@ -151,22 +143,6 @@ If a developer reads only this document, they should be able to build it.
 - **ADRs** are referenced from `AGENTS.md` or module docs for historical context.
 - **Sessions** link to the spec being implemented.
 
-## Auto-trigger keywords
+## Gotcha: no constraints = fiction, acknowledge existing code, don't spec trivial.
 
-- technical spec
-- RFC
-- ADR
-- architecture decision
-
-## Gotcha
-
-- A spec without constraints is fiction — always include technical limitations, timeline, and scope boundaries.
-- The model tends to write specs that describe the ideal solution without acknowledging existing code.
-- Don't write specs for trivial features — a spec is overhead that's only worth it for complex changes.
-
-## Do NOT
-
-- Do NOT write specs without researching the codebase first.
-- Do NOT present only one option — always consider alternatives.
-- Do NOT leave specs in "Draft" forever — push for a decision.
-- Do NOT implement before the spec is reviewed (for significant changes).
+## Do NOT: spec without codebase research, one option only, perpetual draft, implement before review.

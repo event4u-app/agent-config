@@ -7,17 +7,9 @@ description: "Use when writing JavaScript (ES2020+) — clean patterns, proper e
 
 ## When to use
 
-Use this skill when:
-- Writing `.js` or `.mjs` files
-- Working on frontend code without TypeScript
-- Writing Node.js scripts or tooling
-- Working with build configs (Vite, Webpack, ESLint, etc.)
+`.js`/`.mjs`, frontend without TS, Node.js scripts, build configs. TS projects → `typescript` skill.
 
-**If the project uses TypeScript**, prefer the `typescript` skill instead.
-
-## Before writing code
-
-1. **Check for TypeScript** — if `.ts` files exist, use TypeScript instead.
+## Before: check for TS files first.
 2. **Check ESLint / Biome config** — understand the linting rules.
 3. **Check `package.json`** — `"type": "module"` means ES modules, otherwise CommonJS.
 4. **Match existing patterns** — arrow functions vs function declarations, naming, etc.
@@ -91,35 +83,6 @@ When working with browser JavaScript:
 - Use `addEventListener` — never inline `onclick` attributes.
 - Clean up event listeners and intervals to prevent memory leaks.
 
-## What NOT to do
+## Gotcha: const/let not var, `===` not `==`, don't forget `await`, no `eval()`.
 
-- Do not use `var` — use `const` or `let`.
-- Do not use `==` — use `===` for strict comparison.
-- Do not use `arguments` object — use rest parameters.
-- Do not use `eval()` or `new Function()`.
-- Do not mutate function parameters — create new objects/arrays.
-- Do not ignore ESLint/Biome errors — fix them.
-- Do not mix ES modules and CommonJS in the same file.
-
-
-## Gotcha
-
-- Don't use `var` — always `const` or `let`. The model sometimes falls back to `var` in quick examples.
-- `===` not `==` — loose equality causes subtle bugs with type coercion.
-- The model tends to forget `await` on async functions — always check the return type.
-
-## Do NOT
-
-- Do NOT use var — use const or let.
-- Do NOT use == for comparison — use ===.
-- Do NOT use callbacks when async/await is available.
-- Do NOT mutate function arguments.
-
-## Auto-trigger keywords
-
-- JavaScript
-- ES2020
-- async/await
-- DOM
-- event handling
-- modules
+## Do NOT: var, ==, callbacks over async/await, mutate args, ignore ESLint/Biome, mix ESM/CJS.

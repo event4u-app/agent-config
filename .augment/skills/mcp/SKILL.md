@@ -7,11 +7,7 @@ description: "Use when working with MCP (Model Context Protocol) servers — the
 
 ## When to use
 
-Use this skill when:
-- Deciding which MCP tool to use for a task
-- Combining multiple MCP tools in a workflow
-- Troubleshooting MCP tool errors or unexpected results
-- Building commands or skills that reference MCP tools
+MCP tool selection, combining tools in workflows, troubleshooting, building commands/skills referencing MCP.
 
 ## Available MCP Servers
 
@@ -113,75 +109,14 @@ Structured problem-solving.
 
 **Use for:** Breaking down complex tasks, planning before implementation, multi-step reasoning.
 
-## Best Practices
+## Workflows: bug = Jira+Sentry+codebase. Feature = Jira+codebase+Context7. CI = GitHub+codebase+launch-process. PR = GitHub+Jira.
 
-### Tool selection
+## Errors: retry once, look up org/project slugs first, batch GitHub calls (rate limits).
 
-| Need | Tool |
-|---|---|
-| Error investigation | Sentry → `get_issue_details` |
-| Ticket context | Jira → `GET /issue/{key}` |
-| CI failure | GitHub → `actions/runs` + `actions/jobs/{id}` |
-| Library docs | Context7 → `resolve-library-id` + `query-docs` |
-| Web scraping | Playwright → `navigate` + `snapshot` |
-| Complex planning | Sequential Thinking |
+## Permissions: reads = safe. Writes (Jira tickets, GitHub PRs, comments) = ask user first.
 
-### Combining tools in workflows
+## Related: `sentry`, `jira`, `git-workflow`, `copilot`
 
-```
-Bug investigation:
-  Jira (ticket context) + Sentry (stacktrace) + codebase-retrieval (code)
+## Gotcha: MCP is token-expensive (prefer CLI), max 5 chained calls, handle connection failures, Sentry/Jira worth the cost.
 
-Feature planning:
-  Jira (requirements) + codebase-retrieval (existing code) + Context7 (library docs)
-
-CI fix:
-  GitHub (failure logs) + codebase-retrieval (failing code) + launch-process (run locally)
-
-PR creation:
-  GitHub (create PR) + Jira (transition to "In Review")
-```
-
-### Error handling
-
-- If an MCP tool returns an error, retry once with corrected parameters
-- If org/project slug is unknown, use `find_organizations` / `find_projects` first
-- Sentry and Jira tools need the correct org — don't guess, look it up
-- GitHub API has rate limits — batch related calls, avoid unnecessary requests
-
-### Permission boundaries
-
-- **Read operations** — always safe, use freely
-- **Write operations** — ask user permission first:
-  - Creating Jira tickets or changing status
-  - Creating GitHub PRs or pushing code
-  - Posting comments on issues/PRs
-
-## Related
-
-- **Skill:** `sentry` — Sentry-specific investigation patterns
-- **Skill:** `jira` — Jira-specific JQL and ticket management
-- **Skill:** `git-workflow` — GitHub PR and branch conventions
-- **Skill:** `copilot` — GitHub Copilot integration
-- **Rule:** `no-commit.md` — permission boundaries for write operations
-
-
-## Gotcha
-
-- MCP servers are token-expensive — prefer CLI equivalents when available (see rtk rule).
-- Don't chain 5+ MCP tool calls when a single CLI command could do the same thing.
-- MCP server availability varies — always handle connection failures gracefully.
-- Sentry and Jira MCP provide unique capabilities — those are worth the token cost.
-
-## Do NOT
-
-- Do NOT call MCP tools without understanding their side effects.
-- Do NOT use MCP tools when simpler alternatives exist.
-
-## Auto-trigger keywords
-
-- MCP
-- Model Context Protocol
-- MCP server
-- MCP tools
-- agent tools
+## Do NOT: call without understanding side effects, use when simpler alternatives exist.

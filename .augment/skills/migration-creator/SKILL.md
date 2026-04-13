@@ -7,12 +7,7 @@ description: "Use when the user says "create migration", "add column", or "new t
 
 ## When to use
 
-Use this skill when the user asks to create a database migration, add a column, create a table, or modify the schema.
-
-## Before creating a migration
-
-Read `./agents/` and `AGENTS.md` for project-specific database conventions (table prefixes,
-column naming, multi-tenant setup, dual-database architecture, etc.).
+DB migrations, columns, tables, schema. Before: `agents/` + AGENTS.md for conventions (prefixes, naming, multi-tenant).
 
 ## All projects
 
@@ -138,16 +133,4 @@ php artisan migrate:customers --fqdn=local.galawork.de  # single customer
 - Do NOT use `float` for money — use `decimal`.
 - Do NOT forget indexes on foreign keys and frequently filtered columns.
 
-## Adversarial review
-
-Before finalizing a migration, run the **`adversarial-review`** skill.
-Focus on the "Database migrations" attack questions: Can this destroy data? Is rollback possible?
-
-## Auto-trigger keywords
-
-- database migration
-- create migration
-- table prefix
-- column naming
-- add column
-- create table
+## Adversarial review: run before finalizing. Can this destroy data? Rollback possible?

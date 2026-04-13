@@ -9,66 +9,13 @@ description: "Use when the user types a slash command like "/create-pr" or "/com
 
 See `commands` rule (always loaded). Execute immediately, no questions.
 
-## What is a command?
+## Commands = files in `.augment/commands/`. Triggered by `/name`, `# name`, "run name", or pasting content. Always execute, never ask "what do you want?".
 
-A command is a user message that matches a file in `.augment/commands/`.
-Commands are predefined workflows with step-by-step instructions.
+## Execute: match → read → follow steps in order → ask only when command says to → show results.
 
-### How to recognize a command
+## Infer context: Jira from branch, default branch from git, project type from artisan/composer. Only ask if inference fails.
 
-A command can be triggered in multiple ways:
-
-| User message | Action |
-|---|---|
-| `/create-pr` | Slash command → execute immediately |
-| `# create-pr` followed by command content | User pasted the command file → execute immediately |
-| "run create-pr" or "execute create-pr" | Natural language → execute immediately |
-| Pasting the full content of a `.augment/commands/*.md` file | User wants it executed → execute immediately |
-
-**Key rule:** If the user's message contains the **content of a command file** (heading, steps, instructions),
-treat it as a command invocation — **not** as a request for feedback about the command.
-Never ask "what do you want to do with this?" when the user pastes a command.
-
-## How to execute
-
-1. **Match**: Find the command file in `.augment/commands/{name}.md`.
-2. **Read**: Read the command file to understand the steps.
-3. **Execute**: Follow the steps in order. Start immediately.
-4. **Ask only when required**: Some steps say "ask the user" — only then ask.
-   If a step says "ask the user (in their language)", ask in the user's language.
-5. **Show results**: Present output as the command specifies (tables, code blocks, etc.).
-
-## Inferring context
-
-Before asking the user for input, try to infer it:
-
-| Input needed | How to infer |
-|---|---|
-| Jira ticket | Extract from branch name (`fix/DEV-1234-...` → `DEV-1234`) |
-| Default branch | `git symbolic-ref refs/remotes/origin/HEAD` or assume `main` |
-| Project type | Check for `artisan` (Laravel) or `composer.json` (Composer) |
-| Module name | Extract from current working directory or file path |
-| Current branch | `git branch --show-current` |
-
-Only ask the user if inference fails and the command cannot proceed without the value.
-
-## Command locations
-
-| Location | Scope |
-|---|---|
-| `.augment/commands/` | Shared commands (work across projects) |
-| `agents/overrides/commands/` | Project-specific overrides of shared commands |
-
-If an override exists for a command, use the override instead of the original.
-
-## Cross-References
-
-| Skill | Relationship |
-|---|---|
-| `project-docs` | Commands may reference project docs — read them if the command says to |
-| `agent-docs` | Some commands create or update agent docs |
-| `git-workflow` | PR and branch commands follow git conventions |
-| `jira` | Ticket-related commands use Jira API |
+## Locations: `.augment/commands/` (shared), `agents/overrides/commands/` (override wins).
 
 
 ## GitHub API: Replying to PR review comments

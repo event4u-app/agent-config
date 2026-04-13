@@ -7,16 +7,7 @@ description: "Use when implementing WebSocket communication, real-time features,
 
 ## When to use
 
-Use this skill when implementing real-time features — WebSockets, Server-Sent Events,
-Laravel Broadcasting, or any persistent connection pattern.
-
-For **Reverb-specific** topics (server config, deployment, scaling, monitoring),
-see the [laravel-reverb](../laravel-reverb/SKILL.md) skill.
-
-Do NOT use when:
-- REST API endpoints (use `api-design` skill)
-- One-time HTTP requests that don't need real-time updates
-- Reverb server setup/deployment (use `laravel-reverb` skill)
+Real-time: WebSockets, SSE, Broadcasting, persistent connections. Reverb-specific → `laravel-reverb`. NOT for: REST (`api-design`), one-time HTTP.
 
 ## Laravel Broadcasting
 
@@ -175,24 +166,6 @@ Send periodic pings to detect dead connections:
 - **Handle offline gracefully** — queue messages, sync on reconnect.
 - **Broadcast specific data** — use `broadcastWith()` to control the payload.
 
-## Auto-trigger keywords
+## Gotcha: stateful connections (don't assume persistence), always reconnect with backoff, sensitive data → private/presence channels.
 
-- WebSocket
-- real-time
-- broadcasting
-- Laravel Echo
-- channel authorization
-- ShouldBroadcast
-
-## Gotcha
-
-- WebSocket connections are stateful — don't assume the connection persists after a page navigation.
-- The model forgets reconnection logic — always implement exponential backoff for dropped connections.
-- Don't broadcast sensitive data over public channels — use private/presence channels with authorization.
-
-## Do NOT
-
-- Do not send entire model objects — select only needed fields.
-- Do not rely on WebSocket delivery — it's not guaranteed (use acknowledgments).
-- Do not skip channel authorization for user-specific data.
-- Do not create too many channels — group related events.
+## Do NOT: send entire models (select fields), rely on delivery (use acks), skip channel auth, too many channels.

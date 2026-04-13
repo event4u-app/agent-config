@@ -7,8 +7,7 @@ description: "Use when writing GraphQL schemas, resolvers, or client queries. Co
 
 ## When to use
 
-Use this skill when working with GraphQL APIs — schema design, resolvers, client queries,
-or integrating with GraphQL services.
+GraphQL schema design, resolvers, client queries, service integration.
 
 ## Schema design
 
@@ -172,25 +171,6 @@ type PageInfo {
 - **Keep resolvers thin** — delegate to services/repositories.
 - **Use persisted queries** in production for security and performance.
 
-## Auto-trigger keywords
+## Gotcha: N+1 even worse in GraphQL (DataLoader!), opaque IDs, nullable where appropriate.
 
-- GraphQL
-- schema
-- resolver
-- query
-- mutation
-- DataLoader
-- N+1
-
-## Gotcha
-
-- N+1 queries are even worse in GraphQL than REST — always use DataLoader or eager loading.
-- Don't expose internal IDs as GraphQL IDs — use opaque identifiers.
-- The model tends to make all fields non-nullable — use nullable for fields that may legitimately be absent.
-
-## Do NOT
-
-- Do not allow unbounded queries — always require pagination limits.
-- Do not skip authentication/authorization in resolvers.
-- Do not put business logic in resolvers — use a service layer.
-- Do not use string interpolation in client queries — use variables.
+## Do NOT: unbounded queries, skip auth, logic in resolvers, string interpolation in queries.

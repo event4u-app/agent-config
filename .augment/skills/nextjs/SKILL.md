@@ -7,17 +7,7 @@ description: "Use when writing Next.js applications — App Router, Server Compo
 
 ## When to use
 
-Use this skill when working with Next.js projects — App Router, Pages Router,
-Server Components, API routes, or data fetching patterns.
-
-## Before writing code
-
-1. **Detect Next.js version** — check `package.json` for `next` version.
-2. **Detect router** — App Router (`app/`) or Pages Router (`pages/`).
-3. **Check TypeScript** — `.tsx` files, `tsconfig.json`.
-4. **Check styling** — Tailwind, CSS Modules, styled-components.
-5. **Check data fetching** — Server Components, `fetch()`, React Query, SWR.
-6. **Read project docs** — `./agents/`, `next.config.js`.
+Next.js App/Pages Router, Server Components, API routes, data fetching. Before: version, router type, TS, styling, data fetching pattern, project docs.
 
 ## App Router (Next.js 13+)
 
@@ -126,24 +116,6 @@ export async function generateMetadata({ params }) {
 - Handle **loading and error states** with `loading.tsx` and `error.tsx`.
 - Use **middleware** (`middleware.ts`) for auth, redirects, headers.
 
-## Auto-trigger keywords
+## Gotcha: Server Components can't use hooks/browser APIs, `use client` at file top, fetch in Server Components not Client.
 
-- Next.js
-- App Router
-- Server Components
-- SSR
-- ISR
-
-## Gotcha
-
-- Server Components can't use hooks or browser APIs — the model frequently forgets this distinction.
-- `use client` directive must be at the top of the file — not inside a component.
-- Don't fetch data in client components when a Server Component could do it — unnecessary client-side JavaScript.
-
-## Do NOT
-
-- Do not use `'use client'` on components that don't need browser APIs.
-- Do not use `<a>` tags — use `next/link`.
-- Do not use `<img>` tags — use `next/image`.
-- Do not put secrets in Client Components — they're exposed to the browser.
-- Do not use Pages Router patterns in App Router projects (or vice versa).
+## Do NOT: unnecessary `use client`, `<a>` (use next/link), `<img>` (use next/image), secrets in Client Components, mix Router patterns.

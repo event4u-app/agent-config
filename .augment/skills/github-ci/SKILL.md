@@ -7,13 +7,7 @@ description: "Use when working with GitHub Actions CI/CD — quality checks, tes
 
 ## When to use
 
-Use this skill when working with GitHub Actions workflows, CI pipeline configuration, or understanding the automated quality and deployment process.
-
-## Before making changes
-
-1. Read `.github/workflows/` to understand the full pipeline.
-2. Check `AGENTS.md` for quality tool commands and testing setup.
-3. Read `.augment/commands/fix-ci.md` for CI failure debugging workflow.
+GitHub Actions workflows, CI config, quality/deployment pipelines. Before: `.github/workflows/`, AGENTS.md, `.augment/commands/fix-ci.md`.
 
 ## Workflow overview
 
@@ -93,24 +87,6 @@ Check `.github/workflows/` for the runner types used. Common patterns:
 See `.augment/commands/fix-ci.md` for the full debugging workflow.
 
 
-## Auto-trigger keywords
+## Gotcha: Ubuntu not macOS, `--env=testing` for artisan in CI, case-sensitive secrets, no `continue-on-error: true`.
 
-- GitHub Actions
-- CI/CD
-- workflow
-- pipeline
-- quality checks
-
-## Gotcha
-
-- CI workflows run on Ubuntu, not macOS — don't assume macOS-specific tools are available.
-- The model forgets to add `--env=testing` to artisan commands in CI — tests will hit the wrong database.
-- Secret names are case-sensitive in GitHub Actions — double-check the casing.
-- Don't add `continue-on-error: true` to hide failures — fix the actual error.
-
-## Do NOT
-
-- Do NOT use unpinned action versions (e.g., `actions/checkout@v4`).
-- Do NOT hardcode PHP versions — always extract from Dockerfile.
-- Do NOT add new secrets without documenting them.
-- Do NOT change runner types without considering cost and architecture (ARM vs x86).
+## Do NOT: unpinned actions, hardcode PHP versions, undocumented secrets, runner type changes without cost check.

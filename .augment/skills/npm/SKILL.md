@@ -7,21 +7,7 @@ description: "Use when managing npm packages, scripts, or frontend build tooling
 
 ## When to use
 
-Use this skill when installing/removing npm packages, running npm scripts, or configuring frontend build tooling.
-
-Do NOT use when:
-- PHP/Composer dependencies (use `composer` skill)
-- Publishing packages (use `npm-packages` skill)
-
-## Before making changes
-
-1. Check `package.json` for existing scripts, dependencies, and configuration.
-2. Check which lock file exists to determine the package manager:
-   - `package-lock.json` → npm
-   - `yarn.lock` → Yarn
-   - `pnpm-lock.yaml` → pnpm
-   - `bun.lockb` → Bun
-3. Read existing scripts to understand the build pipeline.
+npm packages, scripts, frontend build tooling. NOT for: Composer (`composer`), publishing (`npm-packages`). Before: `package.json`, detect manager from lock file (npm/yarn/pnpm/bun), existing scripts.
 
 ## Package management
 
@@ -102,23 +88,6 @@ Some projects use Tailwind CSS:
 - Use `kebab-case` for script names: `build-storybook`, `biome:fix`.
 - Use `:` as namespace separator: `biome:fix`, `tailwind:build`.
 
-## Auto-trigger keywords
+## Gotcha: use commands not manual edits, `npm ci` in CI, `npx` over `-g`.
 
-- npm
-- frontend build
-- webpack
-- Vite
-- Biome
-- Tailwind setup
-
-## Gotcha
-
-- Don't manually edit `package.json` for dependencies — use `npm install`/`npm uninstall`.
-- `npm install` and `npm ci` are different — CI should always use `npm ci` for deterministic builds.
-- The model tends to suggest `npm install -g` — prefer local installs with `npx`.
-
-## Do NOT
-
-- Do NOT mix package managers (npm + yarn + pnpm) in the same project.
-- Do NOT commit `node_modules/`.
-- Do NOT remove the lock file unless explicitly asked.
+## Do NOT: mix package managers, commit node_modules, remove lock file.

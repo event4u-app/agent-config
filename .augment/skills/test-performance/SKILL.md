@@ -7,20 +7,9 @@ description: "Use when optimizing test suite performance — database setup, see
 
 ## When to use
 
-Use this skill when:
+Slow tests (local/CI), DB setup bottleneck, parallel testing, seeder perf, CI efficiency, flaky DB state.
 
-- Tests are running too slowly (locally or in CI)
-- Database setup/teardown is a bottleneck
-- Parallel testing needs optimization
-- Seeders need performance analysis
-- CI pipeline test jobs need to be faster
-- Investigating flaky tests caused by database state
-
-## Analysis Workflow
-
-### 1. Measure baseline
-
-Before optimizing, always measure:
+## Workflow: measure baseline first.
 
 ```bash
 # Count tests per suite

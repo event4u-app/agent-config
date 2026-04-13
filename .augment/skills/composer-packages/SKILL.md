@@ -7,19 +7,7 @@ description: "Use when developing or maintaining a Composer library package — 
 
 ## When to use
 
-Use this skill when creating, maintaining, or publishing Composer library packages — including Laravel packages with service providers, Artisan commands, and config publishing.
-
-## Before making changes
-
-1. Read the package's `composer.json` for structure and dependencies.
-2. Check if it's a Laravel package (look for `extra.laravel.providers`).
-3. Read the package's `README.md` and `CHANGELOG.md`.
-4. Check the `agents/` directory in the package for package-specific docs.
-
-## Known packages
-
-Check the project's `composer.json` for organization-specific packages.
-Check `agents/overrides/skills/composer-packages.md` for the package registry and known packages list.
+Composer library packages (Laravel packages, service providers, publishing). Before: package `composer.json`, Laravel check, README/CHANGELOG, package `agents/`. Known packages: `agents/overrides/skills/composer-packages.md`.
 
 ## Package structure
 
@@ -144,22 +132,6 @@ Packages are published to a private Composer registry. Check the organization's 
 - Include `agents/` directory for package-specific documentation.
 
 
-## Auto-trigger keywords
+## Gotcha: no `composer.lock` in libraries (.gitignore), explicit stability, `^` not `=` constraints.
 
-- Composer package
-- library development
-- package versioning
-
-## Gotcha
-
-- Don't add `composer.lock` to library packages — it should be in `.gitignore` for libraries (not apps).
-- Minimum stability must be explicit — don't assume `stable`.
-- The model tends to set overly restrictive version constraints — use `^` (caret) not `=` (exact).
-
-## Do NOT
-
-- Do NOT use `*` version constraints in library packages.
-- Do NOT require specific patch versions — use `^` or `||` ranges.
-- Do NOT include dev dependencies in `require` — use `require-dev`.
-- Do NOT forget to run `composer validate` before publishing.
-- Do NOT publish without updating the changelog and tagging.
+## Do NOT: `*` constraints, exact versions, dev deps in `require`, skip validate, publish without changelog+tag.

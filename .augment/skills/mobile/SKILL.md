@@ -7,17 +7,7 @@ description: "Use when writing mobile applications with React Native or Swift �
 
 ## When to use
 
-Use this skill when working with mobile applications — React Native or native iOS (Swift).
-
-## React Native
-
-### Before writing code
-
-1. **Check React Native version** — `package.json`.
-2. **Check navigation** — React Navigation, Expo Router.
-3. **Check state management** — Redux, Zustand, Context, React Query.
-4. **Check UI library** — NativeBase, React Native Paper, custom components.
-5. **Check Expo vs bare** — `app.json` (Expo) or `ios/`+`android/` (bare).
+React Native or Swift/SwiftUI. Before (RN): version, navigation, state mgmt, UI lib, Expo vs bare.
 
 ### Component structure
 
@@ -128,26 +118,6 @@ struct UserCard: View {
 - **App size** — minimize bundle size, lazy-load where possible.
 
 
-## Auto-trigger keywords
+## Gotcha: don't mix RN/Swift, check latest APIs, test both platforms.
 
-- React Native
-- Swift
-- SwiftUI
-- mobile app
-- iOS
-- Android
-
-## Gotcha
-
-- Don't mix React Native and Swift patterns — choose one per project.
-- The model tends to use deprecated React Native APIs — always check the latest docs.
-- iOS simulator and Android emulator behave differently — test on both platforms.
-
-## Do NOT
-
-- Do not use `ScrollView` + `.map()` for long lists — use `FlatList` (RN) or `List` (SwiftUI).
-- Do not ignore platform differences — test on both iOS and Android.
-- Do not store sensitive data in AsyncStorage/UserDefaults — use Keychain/EncryptedStorage.
-- Do not block the main thread with heavy computation.
-- Do not hardcode dimensions — use responsive layouts.
-- Do not skip accessibility labels on interactive elements.
+## Do NOT: ScrollView+map for lists (FlatList/List), ignore platform diffs, secrets in AsyncStorage, block main thread, hardcode dims, skip a11y.

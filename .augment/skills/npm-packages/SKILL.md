@@ -7,14 +7,7 @@ description: "Use when developing or maintaining npm packages — versioning, pu
 
 ## When to use
 
-Use this skill when creating, maintaining, or publishing npm packages — including TypeScript libraries, shared utilities, or internal packages.
-
-## Before making changes
-
-1. Check `package.json` for the current package configuration.
-2. Check if the package uses TypeScript (`tsconfig.json`).
-3. Check the publishing target (npm registry, GitHub Packages, private registry).
-4. Read the package's `README.md` and `CHANGELOG.md`.
+npm packages (TS libraries, shared utils, internal). Before: `package.json`, TS check, publishing target, README/CHANGELOG.
 
 ## Package structure
 
@@ -109,30 +102,8 @@ Configure in `.npmrc`:
 //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
 ```
 
-## Conventions
+## Conventions: `files` array (not `.npmignore`), include LICENSE/README/CHANGELOG, `prepublishOnly` for verification.
 
-- Use `files` array in `package.json` to whitelist published files (not `.npmignore`).
-- Include `LICENSE`, `README.md`, and `CHANGELOG.md` in published package.
-- Use `prepublishOnly` script for build verification.
-- Use `np` or `release-it` for automated release workflows.
+## Gotcha: no node_modules in published, generate `.d.ts`, semver strict (breaking = major).
 
-
-## Auto-trigger keywords
-
-- npm package
-- package publishing
-- TypeScript declarations
-
-## Gotcha
-
-- Don't include `node_modules` in the published package — check `.npmignore` or `files` in package.json.
-- The model forgets to generate TypeScript declarations (`d.ts` files) — consumers need them.
-- Semantic versioning is strict — breaking changes require a major version bump, no exceptions.
-
-## Do NOT
-
-- Do NOT publish `node_modules/`, `src/`, or test files.
-- Do NOT use `*` version ranges in dependencies.
-- Do NOT publish without running tests first.
-- Do NOT forget to update `CHANGELOG.md` before publishing.
-- Do NOT publish packages with `private: true` in `package.json`.
+## Do NOT: publish node_modules/src/tests, `*` version ranges, publish without tests, skip CHANGELOG, publish with `private: true`.

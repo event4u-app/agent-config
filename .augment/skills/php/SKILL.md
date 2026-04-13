@@ -7,16 +7,7 @@ description: "Use when writing modern PHP (8.2+) — strict typing, clean patter
 
 ## When to use
 
-Use this skill for all PHP code. It covers the **language itself** — syntax, typing, patterns.
-For project-specific conventions (architecture, naming, tools), see the `coder` skill.
-
-## PHP version detection
-
-Detect the project's PHP version from the **lowest version** found in:
-1. `composer.json` → `require.php` (e.g. `"^8.2"` → 8.2)
-2. `Dockerfile` → PHP image tag (e.g. `php:8.2-fpm` → 8.2)
-
-Do not use features from a higher PHP version than the project supports.
+All PHP. Language syntax/typing/patterns. Project conventions → `coder`. Detect version from `composer.json` + Dockerfile (use lowest).
 
 ## Strict typing
 
@@ -156,10 +147,4 @@ Only use when the project explicitly uses async patterns.
 - Do NOT use `var_dump()`, `print_r()`, or `dd()`.
 - Do NOT use `@` error suppression, `eval()`, `extract()`, or `global`.
 
-## Auto-trigger keywords
 
-- PHP
-- strict types
-- modern PHP
-- PHP 8.2
-- type safety

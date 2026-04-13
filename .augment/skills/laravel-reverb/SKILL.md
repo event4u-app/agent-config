@@ -7,14 +7,7 @@ description: "Use when configuring Laravel Reverb — the first-party WebSocket 
 
 ## When to use
 
-Use this skill for anything specific to **Laravel Reverb** as the WebSocket server:
-- Reverb installation, configuration, and environment setup
-- Reverb server deployment and scaling
-- Reverb-specific debugging and monitoring
-- Pusher protocol compatibility questions
-
-For **general WebSocket patterns**, broadcasting events, channel authorization,
-and Laravel Echo client setup, see the [websocket](../websocket/SKILL.md) skill.
+Reverb install/config/deploy/scaling/debug/monitoring. General WebSocket → `websocket` skill.
 
 ## What is Reverb
 
@@ -170,24 +163,6 @@ location /app {
 - **Pusher protocol** — any Pusher-compatible client works (Laravel Echo, pusher-js, etc.).
 - **Max request size** — default 10KB, increase for large payloads if needed.
 
-## Auto-trigger keywords
+## Gotcha: persistent process (no serverless), set REVERB_HOST/PORT, WebSocket bypasses middleware.
 
-- Reverb
-- reverb:start
-- WebSocket server
-- Reverb scaling
-- Reverb deployment
-- Reverb configuration
-
-## Gotcha
-
-- Reverb requires a persistent process — it's not compatible with serverless deployments.
-- The model forgets to configure the `REVERB_HOST` and `REVERB_PORT` environment variables.
-- WebSocket connections bypass middleware — don't rely on session auth for channel authorization.
-
-## Do NOT
-
-- Do NOT expose Reverb directly to the internet without a reverse proxy for TLS.
-- Do NOT run `reverb:start` without a process monitor in production.
-- Do NOT confuse Reverb config with Pusher SaaS — Reverb is self-hosted.
-- Do NOT skip Redis when running multiple Reverb instances.
+## Do NOT: expose without reverse proxy (TLS), no process monitor in prod, confuse with Pusher SaaS, skip Redis for multi-instance.

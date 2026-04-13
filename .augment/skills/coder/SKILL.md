@@ -7,16 +7,9 @@ description: "Writes PHP code following project coding guidelines, SOLID princip
 
 ## When to use
 
-This skill applies to ALL code generation and editing tasks. It defines how code should be written in this project. Every other skill (api-endpoint, php-service, etc.) builds on top of this one.
+ALL code generation/editing. Base skill for all others.
 
-## Before writing code
-
-1. **Read the guidelines** — check `AGENTS.md` and `.github/copilot-instructions.md` (if it exists) for project-specific rules.
-2. **Check module-level docs** — if working in a module (`app/Modules/*/`), check `app/Modules/{Module}/agents/` for module-specific docs and roadmaps.
-3. **Check existing patterns** — look at neighboring files in the same directory. Match the style.
-4. **Understand the architecture** — read the docs in `./agents/` for project-specific architecture.
-5. **Check ECS/Rector rules** — if `config-dev/ecs.php` or `config-dev/rector.php` exist, read them and code accordingly.
-6. **Check Makefile/Taskfile** — read `Makefile` or `Taskfile.yml` (if they exist) to discover available build/test/quality targets.
+## Before: AGENTS.md + copilot-instructions, module docs, neighboring files, `agents/` architecture, ECS/Rector configs, Makefile/Taskfile.
 
 ## Core principles
 
@@ -92,46 +85,6 @@ Detect the project type from the **repo name**, **directory**, or **project file
 - One docblock per method — never split into multiple `/** */` blocks.
 - Tag order: `@param` before `@return` before `@throws`.
 
-## JSON handling
+## JSON: validate before processing (`JSON_THROW_ON_ERROR`), fix malformed, pretty-print, decode to typed DTOs.
 
-When working with JSON data (API responses, config files, fixtures, test data):
-
-- **Always validate** JSON before processing — use `json_decode()` with error checking in PHP,
-  `JSON.parse()` with try/catch in JavaScript.
-- **Fix malformed JSON** — trailing commas, single quotes, unquoted keys, comments.
-  Clean before parsing, don't silently ignore errors.
-- **Pretty-print for readability** — `JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE` in PHP,
-  `JSON.stringify(data, null, 2)` in JavaScript.
-- **Type safety** — decode to typed DTOs or interfaces, not untyped arrays/objects.
-
-```php
-// ✅ Safe JSON decoding in PHP
-$data = json_decode($jsonString, true, 512, JSON_THROW_ON_ERROR);
-
-// ❌ Silent failure
-$data = json_decode($jsonString);
-```
-
-## What NOT to do
-
-- Never use `var_dump()`, `print_r()`, or `dd()` — disallowed by PHPStan config. Exception: legacy projects where these are already used and no alternative is feasible.
-- Never add to PHPStan baseline or ignoreErrors — fix the actual error.
-- Never use `float` for money — use `decimal` or `Math` helper.
-- Never introduce new patterns without being asked.
-- Never refactor code you're not working on.
-
-
-## Do NOT
-
-- Do NOT use float for money — use decimal or the project's Math helper (if available).
-- Do NOT use loose comparisons (== / !=) — use strict (=== / !==).
-- Do NOT skip type declarations on parameters, properties, and return types.
-- Do NOT use var_dump(), print_r(), or dd() in production code.
-
-## Auto-trigger keywords
-
-- PHP coding
-- coding standards
-- SOLID
-- clean code
-- best practices
+## Do NOT: `var_dump()`/`dd()`, add to PHPStan baseline, `float` for money, new patterns without request, refactor unrelated code, loose comparisons, skip types.

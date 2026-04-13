@@ -7,17 +7,9 @@ description: "Use when adding API versioning, deprecating endpoints, or managing
 
 ## When to use
 
-Use this skill when creating new API versions, deciding whether a change is breaking,
-managing deprecation, or working with the project's API fallback mechanism.
+New API versions, breaking change decisions, deprecation, fallback mechanism. NOT for: non-breaking (extend current), internal-only.
 
-
-Do NOT use when:
-- Non-breaking changes (just extend the current version)
-- Internal API changes that have no external consumers
-
-## Before making changes
-
-Read `agents/contexts/api-versioning.md` for the project-specific fallback mechanism.
+Before: read `agents/contexts/api-versioning.md`.
 
 ## Versioning strategies
 
@@ -122,22 +114,7 @@ Maintain a changelog in `docs/api-changelog.md` or equivalent:
 - Full CRUD for projects, customers, users
 ```
 
-## Core rules
-
-- **Never break existing versions** — add, don't modify.
-- **Check the project's versioning strategy** — URL-based is most common, but check existing routes/docs first.
-- **Use deprecation headers** when sunsetting endpoints.
-- **Document all breaking changes** in the changelog.
-- **Give clients time** — minimum 3 months between deprecation and removal.
-- **Test both versions** — ensure fallback still works correctly.
-
-
-## Auto-trigger keywords
-
-- API versioning
-- version fallback
-- deprecation
-- API changelog
+## Rules: never break existing, check project strategy, deprecation headers, changelog all changes, 3 months before removal, test both versions.
 - breaking changes
 
 ## Gotcha

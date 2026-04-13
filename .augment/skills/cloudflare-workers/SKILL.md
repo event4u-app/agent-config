@@ -7,14 +7,7 @@ description: "Use when building Cloudflare Workers, KV stores, D1 databases, R2 
 
 ## When to use
 
-Use this skill when working with Cloudflare Workers, Pages, or any Cloudflare edge services.
-
-## Before writing code
-
-1. **Check `wrangler.toml`** — bindings, routes, compatibility flags.
-2. **Detect framework** — plain Workers, Hono, itty-router, or Pages Functions.
-3. **Check bindings** — KV, D1, R2, Durable Objects, Queues, AI, Vectorize.
-4. **Check environment** — dev (`wrangler dev`), staging, production.
+Cloudflare Workers/Pages/edge services. Before: `wrangler.toml`, framework, bindings, environment.
 
 ## Worker structure
 
@@ -160,25 +153,6 @@ export default app
 - **Use TypeScript** — type your `Env` bindings for safety.
 
 
-## Auto-trigger keywords
+## Gotcha: 10ms CPU limit (free), KV eventually consistent, `fetch()` infinite loops possible.
 
-- Cloudflare Worker
-- KV
-- D1
-- R2
-- Durable Objects
-- edge computing
-
-## Gotcha
-
-- Workers have a 10ms CPU time limit on the free plan — don't write compute-heavy logic.
-- KV is eventually consistent — don't use it for data that needs immediate read-after-write consistency.
-- `fetch()` inside a Worker can create infinite loops if routing isn't configured correctly.
-
-## Do NOT
-
-- Do not use Node.js APIs — Workers use the Web Standards API (fetch, Request, Response).
-- Do not store secrets in code — use `wrangler secret put` or `wrangler.toml` vars.
-- Do not use KV for frequently updated data — it's eventually consistent.
-- Do not exceed CPU time limits (10ms free, 30ms paid per request).
-- Do not interpolate user input into D1 queries — always use `.bind()`.
+## Do NOT: Node.js APIs (use Web Standards), secrets in code, KV for frequent writes, exceed CPU limits, interpolate D1 queries.

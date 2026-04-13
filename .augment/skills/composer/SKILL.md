@@ -7,19 +7,7 @@ description: "Use when managing Composer packages, autoloading, scripts, or reso
 
 ## When to use
 
-Use this skill when:
-- Installing, updating, or removing Composer packages
-- Troubleshooting dependency conflicts
-- Configuring autoloading (PSR-4, classmap, files)
-- Working with Composer scripts
-- Publishing or developing Composer packages
-- Debugging version constraints or lock file issues
-
-## Core rules
-
-- **Always use Composer commands** — never manually edit `composer.json` for dependencies.
-- Run commands **inside the Docker container** (see `rules/docker-commands.md`).
-- Check `Makefile` / `Taskfile.yml` for convenience targets (e.g. `make composer-install`).
+Composer packages, autoloading, scripts, dependency conflicts, package development. Commands inside Docker. Check Makefile targets.
 
 ## Common operations
 
@@ -62,58 +50,9 @@ composer dump-autoload --optimize            # Optimized for production
 
 **Prefer `^` (caret)** for most dependencies — it allows minor/patch updates within semver.
 
-## PSR-4 autoloading
+## PSR-4: namespace = directory. Run `composer dump-autoload` after changes. Check scripts before raw vendor/bin.
 
-Standard structure in `composer.json`:
-
-```json
-{
-    "autoload": {
-        "psr-4": {
-            "App\\": "app/",
-            "App\\Modules\\": "app/Modules/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Tests\\": "tests/"
-        }
-    }
-}
-```
-
-**Rule:** Namespace must match directory structure exactly. After changing autoload config,
-run `composer dump-autoload`.
-
-## Composer scripts
-
-Projects often define scripts in `composer.json`:
-
-```json
-{
-    "scripts": {
-        "test": "vendor/bin/phpunit",
-        "quality:phpstan": "vendor/bin/phpstan analyse",
-        "quality:refactor": "vendor/bin/rector process"
-    }
-}
-```
-
-Check which scripts exist before running raw commands — they may include extra flags or setup.
-
-## Package development
-
-When working on a Composer package:
-
-- The package has its own `composer.json` with `require`, `autoload`, etc.
-- Use `composer.json` → `minimum-stability` and `prefer-stable` for dev versions.
-- For local development, the consuming project may use `path` repositories:
-  ```json
-  "repositories": [
-      { "type": "path", "url": "../packages/my-package" }
-  ]
-  ```
-- Always run `composer validate` before publishing.
+## Package dev: own composer.json, `path` repositories for local dev, `composer validate` before publishing.
 
 ## Troubleshooting
 
@@ -125,28 +64,6 @@ When working on a Composer package:
 | Lock file out of sync | `composer update --lock` to sync without changing code |
 | Memory issues | `COMPOSER_MEMORY_LIMIT=-1 composer ...` |
 
-## Rules
+## Gotcha: never manual edit for deps, `composer update` without package = updates ALL, Docker container only.
 
-- **Never manually edit `composer.json`** for adding/removing dependencies.
-- **Always commit `composer.lock`** — it ensures reproducible installs.
-- **Run `composer validate`** when modifying `composer.json` structure.
-- **Check `composer.json` scripts** before running raw vendor/bin commands.
-- Dev dependencies (`--dev`) are for: tests, static analysis, code style, debugging tools.
-
-## Gotcha
-
-- Never manually edit `composer.json` for adding/removing packages — use `composer require/remove`.
-- `composer update` without a package name updates EVERYTHING — always specify the package.
-- The model forgets to run commands inside the Docker container — all composer commands run in the PHP container.
-
-## Do NOT
-
-- Do NOT use dev-* versions in production branches.
-- Do NOT add dependencies without checking version constraints.
-
-## Auto-trigger keywords
-
-- Composer
-- dependency management
-- autoloading
-- composer scripts
+## Do NOT: dev-* in production, add without checking constraints.

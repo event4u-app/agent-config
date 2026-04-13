@@ -7,16 +7,7 @@ description: "Use when writing WordPress plugins, WooCommerce extensions, or fol
 
 ## When to use
 
-Use this skill when working with WordPress plugins, themes, WooCommerce extensions,
-or any WordPress-based project.
-
-## Before writing code
-
-1. **Detect project type** — plugin, theme, or WooCommerce extension.
-2. **Check WordPress version** — `readme.txt` or `style.css` for `Requires at least`.
-3. **Check PHP version** — `Requires PHP` in plugin/theme header.
-4. **Check coding standards** — WordPress Coding Standards (WPCS) or project-specific.
-5. **Check existing patterns** — hooks, filters, class structure, namespacing.
+WordPress plugins/themes/WooCommerce. Before: project type, WP version, PHP version, coding standards, existing patterns.
 
 ## Plugin structure
 
@@ -136,20 +127,7 @@ add_action('woocommerce_before_calculate_totals', function ($cart) {
 - **Use WordPress APIs** — don't reinvent what WordPress provides.
 
 
-## Auto-trigger keywords
-
-- WordPress
-- WooCommerce
-- plugin development
-- hooks
-- filters
-
-## Gotcha
-
-- WordPress hooks (`add_action`, `add_filter`) execute in registration order — priority matters.
-- The model tends to use direct database queries instead of WP_Query — always use the WordPress API.
-- Don't modify core files — all customizations go in plugins or themes.
-- `sanitize_*` for input, `esc_*` for output — the model frequently mixes these up.
+## Gotcha: hook priority matters, use WP_Query not direct DB, don't modify core, sanitize=input / esc=output.
 
 ## Do NOT
 

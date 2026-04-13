@@ -7,13 +7,7 @@ description: "Use when the user says "create service", "new service class", or n
 
 ## When to use
 
-Use this skill when the user asks to create a new service, extract business logic from a controller, or refactor logic into a service layer.
-
-
-Do NOT use when:
-- Controllers (use `laravel` skill)
-- DTOs (use `dto-creator` skill)
-- Models (use `eloquent` skill)
+New services, extract business logic, service layer. NOT for: controllers (`laravel`), DTOs (`dto-creator`), models (`eloquent`).
 
 ## Architecture
 
@@ -124,9 +118,4 @@ public function __invoke(
 - Do NOT use `new Service()` — always inject via constructor.
 - Do NOT add `static` methods for business logic — use instance methods.
 
-## Auto-trigger keywords
 
-- service class
-- business logic
-- service layer
-- dependency injection

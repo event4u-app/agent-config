@@ -7,20 +7,7 @@ description: "Use when writing Tailwind CSS — utility classes, responsive desi
 
 ## When to use
 
-Use this skill when:
-- Styling HTML/Blade/Vue/React components with Tailwind CSS
-- Building responsive layouts
-- Working with dark mode
-- Customizing Tailwind config
-- Creating reusable utility patterns
-
-## Before writing code
-
-1. **Detect Tailwind version** — check `package.json` for `tailwindcss` (v3 vs v4).
-2. **Check config** — read `tailwind.config.js` / `tailwind.config.ts` for custom theme, plugins, content paths.
-3. **Check for CSS framework** — is Tailwind used standalone or with Flux, DaisyUI, Headless UI, etc.?
-4. **Match existing patterns** — look at neighboring templates for class ordering, spacing scale, color usage.
-5. **Check dark mode** — is `darkMode: 'class'` or `'media'` configured?
+Tailwind styling, responsive layouts, dark mode, config customization. Before: detect version (v3/v4), check config, CSS framework, match existing patterns, dark mode config.
 
 ## Core rules
 
@@ -108,72 +95,8 @@ If the project uses Tailwind v4:
 }
 ```
 
-## Design system patterns
+## A11y: `sr-only`, `focus-visible:` over `focus:`, contrast, `motion-reduce:`.
 
-### Consistent component classes
+## Gotcha: no excessive `@apply`, no conflicting classes, dark mode alongside light.
 
-Define reusable patterns for common UI elements:
-
-```html
-<!-- Button variants — keep consistent across the project -->
-<!-- Primary -->
-<button class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark">
-<!-- Secondary -->
-<button class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-<!-- Danger -->
-<button class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
-```
-
-### Spacing scale discipline
-
-Stick to the spacing scale — don't mix arbitrary values:
-
-```html
-<!-- ✅ Consistent spacing -->
-<div class="space-y-4 p-6">
-  <div class="mb-2">...</div>
-</div>
-
-<!-- ❌ Inconsistent — mixing arbitrary and scale values -->
-<div class="space-y-[18px] p-6">
-  <div class="mb-[7px]">...</div>
-</div>
-```
-
-### Accessibility with Tailwind
-
-- Use `sr-only` for screen-reader-only text.
-- Use `focus-visible:` instead of `focus:` for keyboard-only focus styles.
-- Ensure sufficient contrast — test with browser dev tools.
-- Use `motion-reduce:` for users who prefer reduced motion.
-
-## What NOT to do
-
-- Do not use inline `style` attributes when Tailwind classes exist.
-- Do not create custom CSS classes for things Tailwind handles natively.
-- Do not use arbitrary values (`[17px]`) when a scale value is close enough.
-- Do not mix Tailwind with another CSS framework unless the project already does.
-- Do not ignore dark mode when the project supports it.
-- Do not introduce new color values — use the configured palette.
-- Do not use `focus:` when `focus-visible:` is more appropriate.
-- Do not skip responsive testing — always check mobile, tablet, desktop.
-
-
-## Gotcha
-
-- Don't use `@apply` excessively — it defeats the purpose of utility-first CSS. Use components instead.
-- The model tends to add classes that conflict (e.g., `w-full` and `w-64`) — last one wins, but it's confusing.
-- Dark mode classes (`dark:`) must be defined alongside the light variant — don't put them in separate files.
-
-## Do NOT
-
-- Do NOT use inline style attributes when Tailwind classes exist.
-- Do NOT use arbitrary values when a scale value is close enough.
-- Do NOT introduce new color values — use the configured palette.
-
-## Auto-trigger keywords
-
-- Tailwind CSS
-- utility classes
-- responsive design
-- dark mode
+## Do NOT: inline styles, arbitrary values when scale works, new colors, skip responsive testing, ignore dark mode.

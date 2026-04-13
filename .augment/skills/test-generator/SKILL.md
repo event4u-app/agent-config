@@ -7,40 +7,13 @@ description: "Use when the user says "write tests", "generate tests", or "test t
 
 ## When to use
 
-Use this skill when the user asks to write tests, create test coverage, or when a command like `tests-create` is invoked.
+Write/generate tests. NOT for: reviewing tests (`pest-testing`), E2E (`api-testing`/`playwright-testing`).
 
+Detect: `pestphp/pest` → Pest, else PHPUnit. Match existing style.
 
-Do NOT use when:
-- Reviewing existing tests (use `pest-testing` skill)
-- Integration/E2E tests (use `api-testing` or `playwright-testing` skill)
+## Test: business logic, edge cases, error paths, code branches. NOT: trivial getters, method existence, framework internals, private methods.
 
-## Framework detection
-
-1. Check if `pestphp/pest` is in `composer.json` → write **Pest** tests.
-2. Otherwise → write **PHPUnit** tests.
-3. Match the style of existing tests in the project.
-
-## What to test
-
-- **Business logic**: calculations, status transitions, validation rules, data transformations.
-- **Edge cases**: null, empty string, zero, negative numbers, boundary values, max length.
-- **Error paths**: invalid input, missing dependencies, exception handling.
-- **Different code branches**: if/else, early returns, fallback behavior.
-
-## What NOT to test
-
-- Trivial getters/setters without logic.
-- Parameter counts, method existence, class names.
-- Framework internals (Eloquent, routing).
-- Private methods directly — test through public API.
-
-## Test quality rules
-
-- Use descriptive names: `it returns fallback status when input is empty`.
-- Use data providers for multiple input/output combinations.
-- Mock external dependencies (DB, HTTP, filesystem).
-- One assertion concept per test — but multiple related assertions are fine.
-- **Quality over quantity** — 5 meaningful tests beat 20 trivial ones.
+## Quality: descriptive names, data providers, mock externals, one concept per test, quality > quantity.
 
 ## Test suites
 
@@ -154,9 +127,4 @@ it('validates status transitions', function (string $from, string $to, bool $all
 - Do NOT use `readonly` or `final` on test classes.
 - Do NOT mark classes `final` if they need to be mocked via Mockery.
 
-## Auto-trigger keywords
 
-- test generation
-- generate tests
-- test coverage
-- test scenarios

@@ -144,35 +144,8 @@ For content-driven sites using `@nuxt/content`:
 
 Content lives in `content/` as Markdown, YAML, or JSON files.
 
-## Core rules
+## Core: auto-imports, `useFetch`, file-based routing, server routes, `useHead`/`useSeoMeta`, TypeScript.
 
-- Use **auto-imports** — don't manually import Vue APIs or Nuxt composables.
-- Use **`useFetch`** for data fetching — not raw `fetch()` or `axios`.
-- Use **file-based routing** — don't configure routes manually.
-- Use **server routes** for backend logic — not external API servers for simple cases.
-- Use **`useHead`** or **`useSeoMeta`** for SEO — not manual `<meta>` tags.
-- Use **TypeScript** for all new files.
+## Gotcha: naming conflicts with auto-imports, `useAsyncData` needs unique keys, server routes run in Nitro (no Vue composables).
 
-
-## Auto-trigger keywords
-
-- Nuxt
-- auto-imports
-- file-based routing
-- server routes
-- useFetch
-
-## Gotcha
-
-- Auto-imports can cause naming conflicts — if a component name clashes, use explicit imports.
-- The model tends to use `useAsyncData` without a unique key — duplicate keys cause caching bugs.
-- Server routes (`server/api/`) run in Nitro, not Vue — don't use Vue composables there.
-
-## Do NOT
-
-- Do not manually import auto-imported composables or components.
-- Do not use `axios` or raw `fetch()` when `useFetch` works.
-- Do not create manual route configurations — use file-based routing.
-- Do not put client-side logic in `server/` directory.
-- Do not use `process.env` — use `useRuntimeConfig()`.
-- Do not skip SSR considerations — test with SSR enabled.
+## Do NOT: manual imports for auto-imported, axios/fetch when useFetch works, manual routes, client logic in server/, `process.env` (use `useRuntimeConfig()`), skip SSR testing.

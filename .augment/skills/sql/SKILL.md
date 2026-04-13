@@ -7,8 +7,7 @@ description: "Use when writing raw SQL — MariaDB/MySQL syntax, parameterizatio
 
 ## When to use
 
-Use this skill when writing or reviewing raw SQL queries, database migrations with raw statements,
-seeders with raw SQL, or any code that constructs SQL strings.
+Raw SQL, migrations with raw statements, seeders, SQL string construction.
 
 ## The Iron Law
 
@@ -137,26 +136,6 @@ When possible, always prefer Laravel's query builder over raw SQL:
 | **Yes** | Full-text search with MATCH ... AGAINST |
 
 
-## Auto-trigger keywords
+## Gotcha: MariaDB ≠ MySQL, `$variable` → `?`/`:named`, `ONLY_FULL_GROUP_BY` requires all non-aggregated columns.
 
-- raw SQL
-- SQL query
-- parameterized query
-- MariaDB syntax
-- SQL injection
-
-## Gotcha
-
-- MariaDB and MySQL have subtle syntax differences — don't assume identical behavior.
-- Never use PHP variable interpolation in SQL — always use parameterized queries.
-- The model tends to write `$variable` in SQL strings instead of `?` or `:named` placeholders.
-- `GROUP BY` in MariaDB with `ONLY_FULL_GROUP_BY` requires all non-aggregated columns — the model frequently forgets this.
-
-## Do NOT
-
-- Do NOT interpolate PHP variables into SQL strings — always parameterize.
-- Do NOT use PHP syntax (arrays, booleans, null) in raw SQL — use SQL equivalents.
-- Do NOT use `float` for money in SQL — use `DECIMAL(10, 2)`.
-- Do NOT forget backtick quoting for reserved words used as column names.
-- Do NOT use `OFFSET` for pagination on large tables — use cursor pagination.
-- Do NOT write raw SQL when the query builder can express the same thing clearly.
+## Do NOT: interpolate PHP, PHP syntax in SQL (use SQL equivalents), float for money (DECIMAL), skip backtick quoting, OFFSET for large tables, raw SQL when query builder works.

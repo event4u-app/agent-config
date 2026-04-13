@@ -7,17 +7,7 @@ description: "Use when the user says "check Jira", "create ticket", "update issu
 
 ## When to use
 
-Use this skill when:
-- Reading a Jira ticket for context (bug reports, feature requests)
-- Creating new Jira issues from discovered bugs or planned work
-- Transitioning ticket status (e.g., "In Progress" → "In Review")
-- Writing JQL queries to find related issues
-- Linking branches or PRs to Jira tickets
-
-
-Do NOT use when:
-- GitHub Issues (use `github-api` tool directly)
-- Linear or other issue trackers
+Jira tickets, JQL, transitions, branch-ticket linking. NOT for: GitHub Issues, Linear.
 
 ## Available MCP tools
 
@@ -140,32 +130,8 @@ When creating PRs, include the Jira ticket in:
 - **PR title:** `feat(DEV-1234): description`
 - **PR description:** Link to the ticket
 
-## Related
+## Related: `bug-analyzer`, `feature-planning`, `/bug-investigate`, `/feature-plan`.
 
-- **Skill:** `bug-analyzer` — uses Jira as input source for bug investigation
-- **Skill:** `feature-planning` — uses Jira for feature context
-- **Command:** `/bug-investigate` — auto-detects Jira tickets from branch
-- **Command:** `/feature-plan` — auto-detects Jira tickets from branch
-- **Rule:** `no-commit.md` — never change ticket status without permission
+## Gotcha: JQL case-sensitive, search before creating (no duplicates), ADF not Markdown for descriptions, `accountId` for assignee.
 
-
-## Gotcha
-
-- Jira field names are case-sensitive in JQL — `status` works, `Status` doesn't.
-- Don't create duplicate tickets — always search first with JQL before creating.
-- The model tends to forget that Jira description uses ADF (Atlassian Document Format), not Markdown.
-- `accountId` is required for assignee — display name alone doesn't work in the API.
-
-## Do NOT
-
-- Do NOT change ticket status without explicit user permission.
-- Do NOT create tickets without checking for duplicates.
-
-## Auto-trigger keywords
-
-- Jira
-- ticket
-- issue
-- JQL
-- workflow transition
-- sprint
+## Do NOT: change status without permission, create without duplicate check.

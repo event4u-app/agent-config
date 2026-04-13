@@ -7,223 +7,62 @@ description: "Use when the user shares a Sentry error, Jira bug ticket, or error
 
 ## When to use
 
-**Reactive mode:** User reports a bug, shares a Sentry issue, or asks to investigate an error.
-**Proactive mode:** User asks to audit code for hidden bugs, edge cases, or risky patterns.
+**Reactive:** bug report, Sentry issue, error investigation.
+**Proactive:** audit for hidden bugs, edge cases, risky patterns.
 
-Do NOT use when:
-- Feature development (use `feature-planning` skill)
-- Code style or refactoring (use `refactorer` skill)
-- Performance issues (use `performance-analysis` skill)
-- Security vulnerabilities (use `security-audit` skill)
+NOT for: features (`feature-planning`), refactoring (`refactorer`), performance (`performance-analysis`), security (`security-audit`).
 
 ## Input sources
 
-Bugs can come from multiple sources — gather as many as available:
-
-| Source | What it provides |
+| Source | Provides |
 |---|---|
-| **Branch name** | Auto-detected ticket ID (e.g., `fix/DEV-1234/...`) |
-| **Jira ticket** | Description, acceptance criteria, comments, priority |
-| **Sentry issue URL** | Stacktrace, affected users/environments, frequency, tags |
-| **Sentry event ID** | Specific occurrence with full context |
-| **Error message** | String to search in codebase |
-| **User description** | Reproduction steps, expected vs. actual behavior |
+| Branch name | Auto-detect ticket ID (`[A-Z]+-[0-9]+`) |
+| Jira ticket | Description, AC, comments |
+| Sentry URL | Stacktrace, environments, frequency |
+| Error message | Search string for codebase |
+| User description | Repro steps, expected vs actual |
 
-### Branch ticket detection
+Branch detection: `git branch --show-current` → extract ticket ID → auto-fetch + confirm.
 
-Always check the current branch for ticket IDs:
+## Iron Law: NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST
 
-```
-git branch --show-current
-```
+Red flags: "quick fix", "probably X", "just try", proposing solutions before tracing data flow, 2+ failed attempts.
 
-Pattern matching:
-- `fix/DEV-1234/description` → extract `DEV-1234`
-- `fix/PROJ-567-some-bug` → extract `PROJ-567`
-- `hotfix/DEV-999` → extract `DEV-999`
-- Regex: `[A-Z]+-[0-9]+`
-
-If found, auto-fetch the ticket and confirm with the user.
-
-## The Iron Law
-
-```
-NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST
-```
-
-If you haven't completed Phase 1, you cannot propose fixes. Random fixes waste time and
-create new bugs. Quick patches mask underlying issues.
-
-### Red flags — STOP immediately
-
-- "Quick fix for now, investigate later"
-- "Just try changing X and see if it works"
-- "It's probably X, let me fix that"
-- Proposing solutions before tracing data flow
-- "One more fix attempt" (when already tried 2+)
-
-## Analysis process (4 phases)
+## 4 Phases
 
 ### Phase 1: Root Cause Investigation
 
-Gather all available evidence before forming any hypothesis:
+Gather ALL evidence before any hypothesis: Sentry (stacktrace, tags, frequency), Jira (description, comments), error message (search codebase), stacktrace (top frame → entry point), `codebase-retrieval`, call chain files, context docs.
 
-- **Sentry URL** → use `get_issue_details` to fetch stacktrace, tags, environments, frequency.
-- **Sentry issue** → use `get_issue_tag_values` for browser, URL, environment distribution.
-- **Jira ticket** → fetch via Jira API, read description, comments, linked issues.
-- **Error message** → search the codebase for the message string.
-- **Branch name** → auto-detect ticket ID, fetch if found.
-- **Stacktrace** → start from top frame (crash site), trace down to entry point.
-- Use `codebase-retrieval` to find the relevant code.
-- Read each file in the call chain to understand the data flow.
-- Check existing context docs (`agents/contexts/`) for the affected area.
-
-#### Multi-component diagnostics
-
-When the system has multiple layers (Controller → Service → Repository → DB, or multi-tenant
-DB switching), add diagnostic instrumentation **before** proposing fixes:
-
-```
-For EACH component boundary:
-  - Log what data enters the component
-  - Log what data exits the component
-  - Verify environment/config propagation (e.g. DB connection, tenant context)
-  - Check state at each layer
-
-Run once → gather evidence → identify WHICH layer breaks → investigate that layer.
-```
-
-This is especially important for:
-- Multi-tenant database switching (wrong DB selected)
-- Queue jobs that lose tenant context
-- API → Service → Repository chains with data transformation
-- External service integrations (ProBauS, GPS, etc.)
+**Multi-component:** log data at each boundary (Controller→Service→Repo→DB). Especially: multi-tenant switching, queue tenant context, external integrations.
 
 ### Phase 2: Pattern Analysis
 
-- Find **working examples** of similar code paths in the codebase.
-- Compare the broken path against the working reference.
-- Identify the **specific difference** that causes the failure.
-- Check if the issue is isolated or part of a broader pattern.
+Find working examples of similar paths. Compare broken vs working. Identify specific difference.
 
-### Phase 3: Hypothesis and Testing
+### Phase 3: Hypothesis
 
-- Form a **single hypothesis** based on evidence from Phase 1 and 2.
-- Test the hypothesis minimally — don't change multiple things at once.
-- If the hypothesis is wrong, go back to Phase 1 with new evidence.
-- **3-Strikes Rule:** If 3+ fix attempts fail, STOP. This signals an architectural problem,
-  not a bug. Discuss with the user before attempting more fixes. Signs:
-  - Each fix reveals new shared state or coupling in a different place.
-  - Fixes require "massive refactoring" to implement.
-  - Each fix creates new symptoms elsewhere.
-- Common root causes in this project:
-  - **Missing validation** on external sync data (CSV, XML, JSON imports).
-  - **Null values** from optional DB columns not handled.
-  - **Type mismatches** between legacy DB columns and PHP code.
-  - **Race conditions** in multi-tenant database switching.
-  - **Missing fallbacks** when external services are unavailable.
+Single hypothesis from evidence. Test minimally. Wrong → back to Phase 1. **3-Strikes:** 3+ failures = architectural problem → discuss with user.
+
+Common root causes: missing validation on imports, null from optional columns, type mismatches, race conditions in tenant switching, missing fallbacks.
 
 ### Phase 4: Implementation
 
-- Present the root cause and proposed fix **before implementing**.
-- Create a **failing test** that reproduces the bug.
-- Implement a **single, focused fix** — not multiple changes.
-- Consider side effects — does the fix affect other code paths?
-- Check if similar patterns exist elsewhere that need the same fix.
-- Add validation/monitoring (e.g. `MonitoringHelper::captureException()`) for data quality issues.
-- Verify the fix with the test from step 1.
+Present root cause + fix before implementing. Failing test → single focused fix → check side effects → check similar patterns → verify.
 
 ## Proactive mode (bug hunting)
 
-When asked to audit code for hidden bugs, use this workflow instead of the 4 phases above:
+1. **Trace** execution path: data flow, state mutations, swallowed exceptions, unvalidated assumptions
+2. **Edge cases:** null/empty, boundaries (0, negative, max), type coercion, timing/races, state, external failures
+3. **PHP/Laravel patterns:** N+1, missing `->fresh()`, lazy loading in jobs, timezone, missing FKs, transaction+side effects, model events in seeding, off-by-one, silent catch, float money
+4. **Output:** Bug → Location → Severity → Root Cause → Trigger → Fix → Confidence
 
-### 1. Execution tracing
+## Commands: `bug-investigate` (analyze), `bug-fix` (implement+verify)
 
-Trace the actual code path step by step:
-- Follow data through each function call
-- Track state mutations and side effects
-- Note where exceptions are caught or swallowed
-- Identify where assumptions are made but not validated
+## Project awareness: Read `AGENTS.md`, `agents/`, detect project, check `agents/contexts/`.
 
-### 2. Edge case analysis
+## Before fix: run `adversarial-review` — root cause or symptom? Fix breaks something else?
 
-For each code path, test these scenarios mentally:
+## Gotcha: stacktrace = symptom not cause (trace backwards), Sentry groups errors (check latest event), verify fix doesn't break other paths.
 
-| Category | What to check |
-|---|---|
-| **Null/empty** | Null inputs, empty arrays, empty strings, missing keys |
-| **Boundaries** | Zero, negative, max int, first/last element |
-| **Type coercion** | String "0" vs int 0, loose comparison bugs |
-| **Timing** | Race conditions, stale cache, concurrent writes |
-| **State** | Uninitialized state, partial updates, rollback failures |
-| **External** | Network timeout, API errors, malformed responses |
-
-### 3. Known bug patterns (PHP/Laravel)
-
-- N+1 queries hidden in loops or accessors
-- Missing `->fresh()` after update when using same instance
-- Eloquent lazy loading in queued jobs (serialization issues)
-- `now()` timezone mismatches
-- Missing FK constraints allowing orphaned records
-- `DB::transaction()` with external side effects (emails, API calls)
-- Model events firing during seeding or migration
-- Off-by-one errors in pagination or date ranges
-- Silent exception swallowing (`catch (\Exception $e) {}`)
-- Floating point comparison for money/quantities
-
-### 4. Output format (proactive mode)
-
-For each bug found: **Bug** → **Location** → **Severity** → **Root Cause** → **Trigger** → **Fix** → **Confidence**
-
-## Commands
-
-| Command | Purpose |
-|---|---|
-| `bug-investigate` | Gather context from all sources, analyze, identify root cause |
-| `bug-fix` | Plan the fix, implement, verify with tests and quality tools |
-
-## Project awareness
-
-Read `AGENTS.md` and `./agents/` for project-specific architecture, business rules, and domain docs.
-Detect the project from the repo name (see `rules/architecture.md`).
-Check for existing contexts in `agents/contexts/` or module `agents/contexts/`.
-
-
-## Adversarial review
-
-Before implementing a fix, run the **`adversarial-review`** skill.
-Focus on the "Bug fixes" attack questions: Is this the root cause or a symptom? Will the fix break something else?
-
-## Auto-trigger keywords
-
-- bug investigation
-- error analysis
-- Sentry error
-- stacktrace
-- root cause
-
-## Rationalization prevention
-
-| Excuse | Reality |
-|---|---|
-| "Should work now" | RUN the verification — confidence ≠ evidence |
-| "It's probably X, let me fix that" | "Probably" = guessing. Complete Phase 1 first |
-| "Quick fix for now" | Quick fixes mask root causes and create technical debt |
-| "I'll investigate later" | Later never comes. Investigate now |
-| "One more fix attempt" (after 2+) | 3+ failures = architectural problem. Stop and discuss |
-| "Issue is simple, don't need process" | Simple issues have root causes too. Process is fast for simple bugs |
-| "Emergency, no time for process" | Systematic debugging is FASTER than guess-and-check thrashing |
-
-## Gotcha
-
-- Don't assume the stacktrace shows the root cause — it often shows the symptom. Trace backwards.
-- Sentry groups similar errors — check if the "latest event" is actually representative of the issue.
-- The model tends to suggest fixes without verifying the fix doesn't break other code paths.
-
-## Do NOT
-
-- Do NOT start fixing before understanding the root cause.
-- Do NOT commit or push without permission.
-- Do NOT ignore Sentry data if available — it provides real-world context.
-- Do NOT fix only the symptom — trace to the root cause.
-- Do NOT attempt fix #4 without discussing the architecture with the user.
+## Do NOT: fix before root cause, commit/push without permission, ignore Sentry data, fix symptom only, attempt fix #4 without discussing architecture.

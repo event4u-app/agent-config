@@ -7,11 +7,7 @@ description: "Use when configuring Laravel task scheduling — cron expressions,
 
 ## When to use
 
-Use this skill when scheduling recurring tasks:
-- Artisan command scheduling
-- Job dispatching on a schedule
-- Closure-based scheduled tasks
-- Overlap prevention and maintenance mode handling
+Recurring tasks: command scheduling, job dispatch, closures, overlap prevention.
 
 ## Defining schedules
 
@@ -132,24 +128,6 @@ Schedule::command('reports:weekly')->weeklyOn(1, '07:00');
 - **Monitor failures** — use `emailOutputOnFailure()` or Horizon for queued jobs.
 - **One cron entry** — only `schedule:run` goes in crontab, everything else in Laravel.
 
-## Auto-trigger keywords
+## Gotcha: cache lock clear = overlapping, `runInBackground()` for long tasks, no per-minute unless needed.
 
-- schedule
-- cron
-- scheduled task
-- recurring job
-- schedule:run
-- withoutOverlapping
-
-## Gotcha
-
-- `withoutOverlapping()` uses cache locks — if the cache is cleared, overlapping can still happen.
-- The model forgets `runInBackground()` for long-running tasks — without it, one task blocks the next.
-- Don't schedule tasks every minute unless absolutely necessary — it wastes server resources.
-
-## Do NOT
-
-- Do NOT add multiple cron entries — use Laravel's scheduler for everything.
-- Do NOT schedule heavy work directly — dispatch a queued job instead.
-- Do NOT forget `withoutOverlapping()` for tasks that may run longer than their interval.
-- Do NOT hardcode times — use environment-based config when schedules vary per environment.
+## Do NOT: multiple cron entries, heavy work directly (queue it), skip withoutOverlapping, hardcode times.
