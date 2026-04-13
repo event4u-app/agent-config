@@ -22,10 +22,13 @@ DB migrations, columns, tables, schema. Before: `agents/` + AGENTS.md for conven
 
 This project uses two database connections:
 
-| Connection | Location | Command |
-|---|---|---|
-| `api_database` | `database/migrations/` | `php artisan migrate` |
-| `customer_database` | `database/migrations-customer/` | `php artisan migrate:customers` |
+Some projects use multiple database connections. Check `config/database.php` for connections.
+
+| Check | How |
+|---|---|
+| Available connections | `config/database.php` → `'connections'` array |
+| Migration directories | `database/migrations/` (default), check for additional directories |
+| Custom migrate commands | `php artisan list migrate` — look for project-specific commands |
 
 **Always determine which database the table belongs to before creating a migration.**
 
@@ -94,14 +97,12 @@ return new class extends Migration {
 ### Running migrations
 
 ```bash
-# API database
+# Default connection
 php artisan migrate                           # development
 php artisan migrate --env=testing             # testing
 
-# Customer databases
-php artisan migrate:customers                 # all customers
-php artisan migrate:customers --active        # active only
-php artisan migrate:customers --fqdn=local.galawork.de  # single customer
+# Multi-tenant / custom — check AGENTS.md or module docs for project-specific commands
+# Example: php artisan migrate:tenants, php artisan migrate --database=tenant
 ```
 
 ## Composer / legacy projects

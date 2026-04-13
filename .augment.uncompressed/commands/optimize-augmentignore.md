@@ -80,7 +80,7 @@ If many exist in specific dirs, add the directory pattern.
 ### 6. Whitelist own packages
 
 Check `composer.json` for the project's own organization namespace:
-- Look at `name` field (e.g., `galawork/galawork-api` → org is `galawork`)
+- Look at `name` field (e.g., `your-org/project-name` → org is `your-org`)
 - Look at `repositories` for private packages from the same org
 - Add negation pattern: `!vendor/{org}/` to keep own packages in the retrieval index
 

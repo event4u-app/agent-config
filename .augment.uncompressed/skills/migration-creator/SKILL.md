@@ -23,14 +23,15 @@ column naming, multi-tenant setup, dual-database architecture, etc.).
 
 ## Laravel projects
 
-### Dual-database architecture
+### Multi-database architecture
 
-This project uses two database connections:
+Some projects use multiple database connections. Check `config/database.php` for connections.
 
-| Connection | Location | Command |
-|---|---|---|
-| `api_database` | `database/migrations/` | `php artisan migrate` |
-| `customer_database` | `database/migrations-customer/` | `php artisan migrate:customers` |
+| Check | How |
+|---|---|
+| Available connections | `config/database.php` → `'connections'` array |
+| Migration directories | `database/migrations/` (default), check for additional directories |
+| Custom migrate commands | `php artisan list migrate` — look for project-specific commands |
 
 **Always determine which database the table belongs to before creating a migration.**
 
@@ -76,21 +77,21 @@ php artisan make:migration:customer AddWeatherColumn --table=cl_lv_weather
 
 Customer database tables use the `cl_` prefix (e.g. `cl_user`, `cl_lv_weather`).
 
-### Adding a column (API database)
+### Adding a column (with explicit connection)
 
 ```php
 return new class extends Migration {
     public function up(): void
     {
-        Schema::connection('api_database')->table('customer_databases', function (Blueprint $table): void {
-            $table->unsignedInteger('redis_db_index')->after('db_password');
+        Schema::connection('my_connection')->table('example', function (Blueprint $table): void {
+            $table->unsignedInteger('new_column')->after('existing_column');
         });
     }
 
     public function down(): void
     {
-        Schema::connection('api_database')->table('customer_databases', function (Blueprint $table): void {
-            $table->dropColumn('redis_db_index');
+        Schema::connection('my_connection')->table('example', function (Blueprint $table): void {
+            $table->dropColumn('new_column');
         });
     }
 };
@@ -99,14 +100,12 @@ return new class extends Migration {
 ### Running migrations
 
 ```bash
-# API database
+# Default connection
 php artisan migrate                           # development
 php artisan migrate --env=testing             # testing
 
-# Customer databases
-php artisan migrate:customers                 # all customers
-php artisan migrate:customers --active        # active only
-php artisan migrate:customers --fqdn=local.galawork.de  # single customer
+# Multi-tenant / custom — check AGENTS.md or module docs for project-specific commands
+# Example: php artisan migrate:tenants, php artisan migrate --database=tenant
 ```
 
 ## Composer / legacy projects
@@ -131,8 +130,8 @@ php artisan migrate:customers --fqdn=local.galawork.de  # single customer
 
 ## Do NOT
 
-- Do NOT create migrations without specifying the correct connection (`api_database` or `customer_database`).
-- Do NOT create customer database tables without the `cl_` prefix (check existing tables first).
+- Do NOT create migrations without specifying the correct connection when multiple databases exist.
+- Do NOT create tables without checking the project's naming conventions (prefixes, casing).
 - Do NOT use raw SQL in migrations when Schema builder works.
 - Do NOT forget to make migrations reversible (down method).
 - Do NOT use `float` for money — use `decimal`.
