@@ -213,6 +213,116 @@ class TestListMdFiles(unittest.TestCase):
         self.assertEqual(len(files), 0)
 
 
+class TestFileHash(unittest.TestCase):
+    """Test file_hash() — SHA-256 of file content."""
+
+    def test_returns_consistent_hash(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
+            f.write("hello world")
+            f.flush()
+            path = Path(f.name)
+        try:
+            h1 = compress.file_hash(path)
+            h2 = compress.file_hash(path)
+            self.assertEqual(h1, h2)
+            self.assertEqual(len(h1), 64)  # SHA-256 hex length
+        finally:
+            path.unlink()
+
+    def test_different_content_different_hash(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
+            f.write("content a")
+            path_a = Path(f.name)
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
+            f.write("content b")
+            path_b = Path(f.name)
+        try:
+            self.assertNotEqual(compress.file_hash(path_a), compress.file_hash(path_b))
+        finally:
+            path_a.unlink()
+            path_b.unlink()
+
+
+class TestHashTracking(unittest.TestCase):
+    """Test load_hashes, save_hashes, mark_done, mark_all_done, list_changed_md."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.source = Path(self.tmpdir) / "source"
+        self.source.mkdir()
+        self.hash_file = Path(self.tmpdir) / "hashes.json"
+        # Patch globals
+        self._orig_hash_file = compress.HASH_FILE
+        self._orig_source_dir = compress.SOURCE_DIR
+        compress.HASH_FILE = self.hash_file
+        compress.SOURCE_DIR = self.source
+
+    def tearDown(self):
+        compress.HASH_FILE = self._orig_hash_file
+        compress.SOURCE_DIR = self._orig_source_dir
+        shutil.rmtree(self.tmpdir)
+
+    def test_load_hashes_empty_when_no_file(self):
+        self.assertEqual(compress.load_hashes(), {})
+
+    def test_save_and_load_roundtrip(self):
+        data = {"rules/a.md": "abc123"}
+        compress.save_hashes(data)
+        self.assertEqual(compress.load_hashes(), data)
+
+    def test_load_hashes_handles_corrupt_json(self):
+        self.hash_file.write_text("not valid json{{{")
+        self.assertEqual(compress.load_hashes(), {})
+
+    def test_list_changed_detects_new_file(self):
+        (self.source / "rules").mkdir()
+        (self.source / "rules" / "new.md").write_text("# New rule")
+        changed = compress.list_changed_md(self.source)
+        self.assertEqual(changed, ["rules/new.md"])
+
+    def test_list_changed_detects_modified_file(self):
+        (self.source / "rules").mkdir()
+        f = self.source / "rules" / "a.md"
+        f.write_text("version 1")
+        compress.save_hashes({"rules/a.md": compress.file_hash(f)})
+        f.write_text("version 2")
+        changed = compress.list_changed_md(self.source)
+        self.assertEqual(changed, ["rules/a.md"])
+
+    def test_list_changed_ignores_unchanged(self):
+        (self.source / "rules").mkdir()
+        f = self.source / "rules" / "a.md"
+        f.write_text("unchanged")
+        compress.save_hashes({"rules/a.md": compress.file_hash(f)})
+        changed = compress.list_changed_md(self.source)
+        self.assertEqual(changed, [])
+
+    def test_list_changed_ignores_non_md(self):
+        (self.source / "scripts").mkdir()
+        (self.source / "scripts" / "scan.php").write_text("<?php")
+        changed = compress.list_changed_md(self.source)
+        self.assertEqual(changed, [])
+
+    def test_mark_all_done_stores_all_hashes(self):
+        (self.source / "rules").mkdir()
+        (self.source / "rules" / "a.md").write_text("rule a")
+        (self.source / "rules" / "b.md").write_text("rule b")
+        (self.source / "scripts").mkdir()
+        (self.source / "scripts" / "x.php").write_text("<?php")
+        compress.mark_all_done()
+        hashes = compress.load_hashes()
+        self.assertIn("rules/a.md", hashes)
+        self.assertIn("rules/b.md", hashes)
+        self.assertNotIn("scripts/x.php", hashes)  # non-.md excluded
+
+    def test_mark_all_done_then_nothing_changed(self):
+        (self.source / "rules").mkdir()
+        (self.source / "rules" / "a.md").write_text("rule a")
+        compress.mark_all_done()
+        changed = compress.list_changed_md(self.source)
+        self.assertEqual(changed, [])
+
+
 class TestCheckSync(unittest.TestCase):
     """Test check_sync() — detects missing and stale files."""
 

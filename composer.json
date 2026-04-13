@@ -20,10 +20,11 @@
     "archive": {
         "exclude": [
             "/.augment.uncompressed",
+            "/.compression-hashes.json",
             "/agents",
             "/scripts",
             "/tests",
-            "/Makefile",
+            "/Taskfile.yml",
             "/.github",
             "/.idea"
         ]

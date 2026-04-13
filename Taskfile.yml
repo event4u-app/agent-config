@@ -1,0 +1,30 @@
+version: '3'
+
+tasks:
+  sync:
+    desc: Sync non-.md files from .augment.uncompressed/ to .augment/ + cleanup stale
+    cmd: bash scripts/compress.sh --sync
+
+  sync-list:
+    desc: List ALL .md files (regardless of change status)
+    cmd: bash scripts/compress.sh --list
+
+  sync-changed:
+    desc: List .md files changed since last compression (hash-based)
+    cmd: bash scripts/compress.sh --changed
+
+  sync-check:
+    desc: Check if .augment/ is in sync with .augment.uncompressed/ (for CI)
+    cmd: bash scripts/compress.sh --check
+
+  sync-mark-done:
+    desc: Mark a single file as compressed (updates hash)
+    cmd: bash scripts/compress.sh --mark-done {{.CLI_ARGS}}
+
+  sync-mark-all-done:
+    desc: Mark ALL .md files as compressed (run after initial full compression)
+    cmd: bash scripts/compress.sh --mark-all-done
+
+  install-hooks:
+    desc: Install git hooks (pre-push sync check)
+    cmd: bash scripts/install-hooks.sh

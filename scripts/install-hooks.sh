@@ -20,7 +20,7 @@ python3 scripts/compress.py --check
 if [ $? -ne 0 ]; then
     echo ""
     echo "❌  Push blocked — .augment/ is out of sync."
-    echo "   Run 'make sync' and compress changed .md files, then commit."
+    echo "   Run 'task sync' and compress changed .md files, then commit."
     exit 1
 fi
 EOF
