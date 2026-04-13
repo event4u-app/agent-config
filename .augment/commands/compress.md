@@ -7,54 +7,49 @@ description: Compress .md files from .augment.uncompressed/ into caveman format 
 
 Compress `.md` files from `.augment.uncompressed/` → token-efficient format → `.augment/`.
 
-## Step 1: Scope
+Uses SHA-256 hashes to track which files changed since last compression.
 
-Ask: `1. All` (`make sync-list`) / `2. Changed` (`git diff --name-only .augment.uncompressed/`) / `3. Specific path`
-
-## Step 2: Sync non-.md files first
+## Step 1: Sync non-.md files
 
 ```bash
-make sync
+task sync
 ```
 
-This copies non-`.md` files (`.php`, etc.) and deletes stale files.
+Copies non-`.md` files, deletes stale files, shows changed `.md` count.
 
-## Step 3: Compress each .md file
+## Step 2: Get changed files
 
-Per `.md` file:
+```bash
+task sync-changed
+```
+
+If no files changed → done. Otherwise continue with the listed files.
+
+## Step 3: Compress each changed .md file
+
+Per file:
 
 1. Read from `.augment.uncompressed/{path}`
 2. Compress prose: remove articles/filler/hedging, shorten phrases, fragments OK, merge redundant bullets
 3. **NEVER modify:** code blocks, inline code, URLs, headings, tables, YAML frontmatter, technical terms, dates
 4. Write to `.augment/{path}`
 5. Show: `{orig} → {comp} words ({saved}%)`
+6. Mark as done: `task sync-mark-done -- {path}`
 
-Batches of ~10, show progress per batch.
+Batches of ~10, mark each file done after writing.
 
-## Step 4: Verify sync
+## Step 4: Verify
 
 ```bash
-make sync-check
+task sync-check
 ```
 
-Must pass with ✅ before finishing.
+Must pass with ✅.
 
-## Step 5: Summary
-
-Show a summary table:
-
-```
-| Category   | Files | Avg savings |
-|------------|------:|------------:|
-| rules      |    20 |        45%  |
-| skills     |   100 |        38%  |
-| commands   |    40 |        42%  |
-| guidelines |    20 |        35%  |
-| contexts   |     5 |        40%  |
-| templates  |     5 |        30%  |
-| **Total**  | **190** | **40%** |
-```
+## Step 5: Summary table with per-category stats.
 
 ## Rules
 
-- No commit/push. Never modify `.augment.uncompressed/`. Only write to `.augment/`. Preserve all technical content + YAML.
+- No commit/push. Never modify `.augment.uncompressed/`. Only write to `.augment/`.
+- Preserve all technical content + YAML.
+- **Always run `task sync-mark-done`** after writing each compressed file — this updates the hash so the file won't show as changed next time.
