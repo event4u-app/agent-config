@@ -91,9 +91,9 @@ When refactoring touches controllers, requests, resources, or routes:
 
 Run quality tools after each significant step — do NOT batch everything to the end:
 
-- PHPStan (detect from project: `php artisan quality:phpstan` or `composer quality:phpstan`).
+- Run PHPStan: `vendor/bin/phpstan analyse` (see `quality-tools` skill for detection).
 - If PHPStan finds new errors from the refactoring → fix immediately before continuing.
-- Run Rector: `php artisan quality:refactor --fix` (auto-fix code style).
+- Run Rector + ECS: `vendor/bin/rector process && vendor/bin/ecs check --fix`.
 - Run PHPStan again after Rector (Rector can introduce issues).
 
 ### Step 6: Run tests

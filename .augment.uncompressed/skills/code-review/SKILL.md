@@ -93,7 +93,7 @@ Use this skill when:
 
 ## Before creating a PR
 
-1. Run quality checks: `php artisan quality:finalize` (or project equivalent)
+1. Run quality pipeline: PHPStan → Rector → ECS → PHPStan (see `quality-tools` skill for commands)
 2. Run tests: `make test` (or project equivalent)
 3. Ensure CI passes on the branch.
 4. Self-review the diff: `git diff origin/main..HEAD`

@@ -69,9 +69,10 @@ Per change: read file → `str-replace-editor` → check downstream (`codebase-r
 ### 4. Quality checks
 
 ```bash
-php artisan quality:phpstan          # 1. Check for type errors
-php artisan quality:rector --fix     # 2. Auto-fix code style
-php artisan quality:phpstan          # 3. Re-check after Rector
+vendor/bin/phpstan analyse           # 1. Check for type errors
+vendor/bin/rector process            # 2. Auto-fix refactoring
+vendor/bin/ecs check --fix           # 3. Auto-fix code style
+vendor/bin/phpstan analyse           # 4. Re-check after Rector/ECS
 ```
 
 Fix any issues.

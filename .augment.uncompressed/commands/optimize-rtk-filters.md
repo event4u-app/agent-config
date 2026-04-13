@@ -104,7 +104,7 @@ Show a summary table:
 ```
 | # | Filter | Match | Max Lines |
 |---|---|---|---|
-| 1 | phpstan | phpstan\|quality:phpstan | 80 |
+| 1 | phpstan | phpstan\|quality:phpstan\|vendor/bin/phpstan | 80 |
 | 2 | pest | pest\|phpunit\|artisan test | 60 |
 | ... | ... | ... | ... |
 ```

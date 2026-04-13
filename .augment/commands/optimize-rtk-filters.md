@@ -23,7 +23,7 @@ which rtk
 | `composer.json` contains `pestphp/pest` or `phpunit/phpunit` | Pest / PHPUnit |
 | `composer.json` contains `symplify/easy-coding-standard` | ECS |
 | `composer.json` contains `rector/rector` | Rector |
-| `composer.json` contains scripts like `quality:phpstan` | Artisan quality commands |
+| `composer.json` contains `galawork/php-quality` or scripts like `quality:phpstan` | Artisan quality wrapper |
 | `package.json` contains `playwright` | Playwright |
 | `package.json` contains `vitest` or `jest` | JS test runner |
 | `package.json` contains `biome` or `eslint` | JS linter |
@@ -70,7 +70,7 @@ Rules: `strip_ansi = true` always. `max_lines`: linters 80, tests 60, builds 40,
 ```
 | # | Filter | Match | Max Lines |
 |---|---|---|---|
-| 1 | phpstan | phpstan\|quality:phpstan | 80 |
+| 1 | phpstan | phpstan\|quality:phpstan\|vendor/bin/phpstan | 80 |
 | 2 | pest | pest\|phpunit\|artisan test | 60 |
 | ... | ... | ... | ... |
 ```

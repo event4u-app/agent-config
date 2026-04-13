@@ -73,7 +73,7 @@ Mindset: thorough but pragmatic, understand intent first, check full picture, as
 | **Assertions** | Meaningful assertions. Not just "no exception thrown". |
 | **Flaky risks** | Time-dependent tests use `travel()`. No reliance on execution speed. |
 
-## Before PR: `quality:finalize` → tests → CI → self-review diff.
+## Before PR: quality pipeline (PHPStan → Rector → ECS → PHPStan) → tests → CI → self-review diff.
 
 ## Receiving feedback
 

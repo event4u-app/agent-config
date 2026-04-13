@@ -162,9 +162,9 @@ When updating `.github/copilot-instructions.md`:
 | **Copilot** | IDE suggestions + PR reviews | `.github/copilot-instructions.md` |
 | **Augment** | Agent workflows + deep analysis | `.augment/` + `agents/` |
 | **Greptile** | PR review bot (if enabled) | Separate config |
-| **ECS** | Code style auto-fix | `config-dev/php-quality/ecs.php` |
-| **Rector** | Code refactoring auto-fix | `config-dev/php-quality/rector.php` |
-| **PHPStan** | Static analysis | `config-dev/php-quality/phpstan.neon` |
+| **ECS** | Code style auto-fix | `ecs.php` (project root) |
+| **Rector** | Code refactoring auto-fix | `rector.php` (project root) |
+| **PHPStan** | Static analysis | `phpstan.neon` (project root) |
 
 Copilot and Augment complement each other:
 - **Copilot** handles real-time suggestions and automated PR reviews

@@ -27,8 +27,10 @@ git diff --name-only origin/{default}..HEAD
 
 - All commands run **inside the PHP container** (e.g. `docker compose exec -T <service> ...`).
 - Detect the project type:
-  - `artisan` exists → `php artisan quality:phpstan` / `php artisan quality:rector --fix`
-  - Otherwise → `composer quality:phpstan` / `composer quality:refactor -- --fix`
+  - `galawork/php-quality` installed → `php artisan quality:phpstan` / `php artisan quality:rector --fix`
+  - `phpstan/phpstan` installed → `vendor/bin/phpstan analyse`
+  - `rector/rector` installed → `vendor/bin/rector process`
+  - `symplify/easy-coding-standard` installed → `vendor/bin/ecs check --fix`
 
 ### Step 1: PHPStan — fix all errors
 

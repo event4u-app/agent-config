@@ -16,22 +16,24 @@ Read `docker-compose.yml` / `compose.yaml` for PHP service name (varies per proj
 ## Tooling Detection
 
 Check `artisan` in project root:
-- **Laravel**: `php artisan quality:phpstan`, `php artisan test`
-- **Composer**: `composer quality:phpstan`, `vendor/bin/phpunit`
+- **Laravel**: `php artisan test`, `vendor/bin/phpstan analyse`, `vendor/bin/rector process`
+- **Composer**: `vendor/bin/phpunit`, `vendor/bin/phpstan analyse`, `vendor/bin/rector process`
 
 ## Examples (Laravel)
 
 ```bash
-docker compose exec -T <php-service> php artisan quality:phpstan
-docker compose exec -T <php-service> php artisan quality:rector --fix
+docker compose exec -T <php-service> vendor/bin/phpstan analyse
+docker compose exec -T <php-service> vendor/bin/rector process
+docker compose exec -T <php-service> vendor/bin/ecs check --fix
 docker compose exec -T <php-service> php artisan test
 ```
 
 ## Examples (Composer)
 
 ```bash
-docker compose exec -T php bash -c "composer quality:phpstan"
-docker compose exec -T php bash -c "composer quality:refactor -- --fix"
+docker compose exec -T php vendor/bin/phpstan analyse
+docker compose exec -T php vendor/bin/rector process
+docker compose exec -T php vendor/bin/ecs check --fix
 docker compose exec -T php bash -c "vendor/bin/phpunit"
 ```
 

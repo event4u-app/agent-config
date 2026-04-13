@@ -86,7 +86,7 @@ The project uses a PR template (`.github/pull_request_template.md`) with:
 4. **Checklist:**
    - Documentation added/updated or not needed
    - Rebased onto main
-   - Quality tools executed (`quality:finalize`)
+   - Quality pipeline executed (PHPStan + Rector + ECS)
    - Review requested (Jira + Slack)
    - Tests added/updated or not needed
    - Changes tested by QA/PO/Support (if needed)
@@ -95,7 +95,7 @@ The project uses a PR template (`.github/pull_request_template.md`) with:
 
 ### Before opening a PR
 
-1. Run quality tools: `php artisan quality:finalize`.
+1. Run quality pipeline: PHPStan → Rector → ECS → PHPStan (see `quality-tools` skill).
 2. Run tests: `php artisan test`.
 3. Rebase onto `main`.
 4. Fill in the PR template completely.

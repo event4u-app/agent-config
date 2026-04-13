@@ -19,23 +19,25 @@ Use `make console` to enter the container interactively (if available).
 
 Check if `artisan` exists in the project root:
 
-- **Laravel** (`artisan` exists): `php artisan quality:phpstan`, `php artisan quality:rector --fix`, `php artisan test`
-- **Composer** (no `artisan`): `composer quality:phpstan`, `composer quality:refactor -- --fix`, `vendor/bin/phpunit`
+- **Laravel** (`artisan` exists): `php artisan test`, `vendor/bin/phpstan analyse`, `vendor/bin/rector process`
+- **Composer** (no `artisan`): `vendor/bin/phpunit`, `vendor/bin/phpstan analyse`, `vendor/bin/rector process`
 
 ## Examples (Laravel project)
 
 ```bash
-docker compose exec -T <php-service> php artisan quality:phpstan
-docker compose exec -T <php-service> php artisan quality:rector --fix
+docker compose exec -T <php-service> vendor/bin/phpstan analyse
+docker compose exec -T <php-service> vendor/bin/rector process
+docker compose exec -T <php-service> vendor/bin/ecs check --fix
 docker compose exec -T <php-service> php artisan test
 ```
 
 ## Examples (Composer project)
 
 ```bash
-docker compose exec -T php bash -c "composer quality:phpstan"
-docker compose exec -T php bash -c "composer quality:refactor -- --fix"
-docker compose exec -T php bash -c "vendor/bin/phpunit"
+docker compose exec -T php vendor/bin/phpstan analyse
+docker compose exec -T php vendor/bin/rector process
+docker compose exec -T php vendor/bin/ecs check --fix
+docker compose exec -T php vendor/bin/phpunit
 ```
 
 ## Build / Task Runner

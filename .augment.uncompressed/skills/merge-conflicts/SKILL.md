@@ -55,7 +55,7 @@ For each conflicted file:
 
 - After resolving, check that `use` statements are correct (no duplicates, no missing imports).
 - Verify the resolved code compiles: `php -l filename.php`
-- Run PHPStan on the file: `php artisan quality:phpstan`
+- Run PHPStan on the file: `vendor/bin/phpstan analyse` (see `quality-tools` skill)
 
 #### Migrations
 
@@ -100,7 +100,7 @@ grep -rn "<<<<<<< \|======= \|>>>>>>> " --include="*.php" --include="*.js" --inc
 find . -name "*.php" -newer .git/MERGE_HEAD -exec php -l {} \;
 
 # 3. Run quality tools
-php artisan quality:phpstan
+vendor/bin/phpstan analyse
 
 # 4. Run tests
 php artisan test

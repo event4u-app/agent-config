@@ -28,10 +28,11 @@ Every roadmap must pass these before it is considered done:
 Run the project's quality pipeline and test suite. Common commands:
 
 ```bash
-# Laravel projects (inside Docker container)
-php artisan quality:phpstan          # Static analysis
-php artisan quality:rector --fix     # Auto-fix code style + refactoring
-php artisan test                     # All tests must pass
+# PHP projects (inside Docker container if applicable)
+vendor/bin/phpstan analyse           # Static analysis
+vendor/bin/rector process            # Auto-fix refactoring
+vendor/bin/ecs check --fix           # Auto-fix code style
+php artisan test                     # Tests (or: vendor/bin/phpunit)
 
 # Non-Laravel projects — check Makefile/Taskfile for quality commands
 ```

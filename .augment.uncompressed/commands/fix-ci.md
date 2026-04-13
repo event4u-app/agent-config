@@ -28,8 +28,8 @@ description: Fetch CI errors from GitHub Actions and fix them
 - Detect the project type: if `artisan` exists → Laravel, otherwise → Composer (see `rules/docker-commands.md`).
 - Common CI failures:
   - **PHPStan errors** — fix the code, do NOT add to baseline or ignoreErrors.
-  - **ECS (coding standard) errors** — Laravel: `php artisan quality:ecs --fix` / Composer: `composer quality:ecs -- --fix`.
-  - **Rector changes** — Laravel: `php artisan quality:refactor --fix` / Composer: `composer quality:refactor -- --fix`.
+  - **ECS (coding standard) errors** — run `vendor/bin/ecs check --fix` (auto-fix).
+  - **Rector changes** — run `vendor/bin/rector process` (auto-fix).
   - **Test failures** — read the failing test, understand the assertion, fix the code or test.
   - **Biome / TypeScript errors** — run `npm run biome:fix` or `npm run tscheck` and fix.
 - Fix errors in the local codebase.

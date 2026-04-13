@@ -27,7 +27,7 @@ Only run the full quality pipeline when you are about to finish all work in the 
 **The sequence at the end:**
 1. All code changes are done
 2. Run tests — targeted first (`--filter`), full suite only if targeted passes
-3. Run quality pipeline (`quality:finalize` or PHPStan → Rector → ECS → PHPStan)
+3. Run quality pipeline (PHPStan → Rector → ECS → PHPStan)
 4. Fix any issues from step 2-3
 5. ONLY THEN claim completion or suggest commit/push/PR
 
@@ -64,10 +64,9 @@ Skip any step = the claim is unverified.
 ### Laravel projects (inside Docker container)
 ```bash
 php artisan test                     # Tests
-php artisan quality:phpstan          # Static analysis
-php artisan quality:rector --fix     # Rector
-php artisan quality:ecs              # Code style
-php artisan quality:finalize         # Full pipeline
+vendor/bin/phpstan analyse                # Static analysis (or: php artisan quality:phpstan)
+vendor/bin/rector process                 # Rector (or: php artisan quality:rector --fix)
+vendor/bin/ecs check --fix                # Code style (or: php artisan quality:ecs --fix)
 ```
 
 ### Frontend projects

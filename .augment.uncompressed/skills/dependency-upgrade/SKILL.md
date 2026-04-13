@@ -77,8 +77,9 @@ After upgrading, run the full verification pipeline:
 
 ```bash
 # PHP/Laravel
-php artisan quality:phpstan          # Check for type errors
-php artisan quality:refactor --fix   # Auto-fix code style
+vendor/bin/phpstan analyse           # Check for type errors
+vendor/bin/rector process            # Auto-fix refactoring
+vendor/bin/ecs check --fix           # Auto-fix code style
 php artisan test                     # Run all tests
 
 # JavaScript
