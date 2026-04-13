@@ -1,5 +1,9 @@
 # .augment — Agent Infrastructure
 
+> **⚠️ DO NOT edit files in `.augment/` directly.**
+> The source of truth is `.augment.uncompressed/`. Edit there, then run `task sync` + compress.
+> See `agents/roadmaps/caveman-compress-integration.md` for the full workflow.
+
 This directory contains the shared agent infrastructure: skills, commands, rules, guidelines,
 templates, and contexts that power the AI coding assistant across all projects.
 

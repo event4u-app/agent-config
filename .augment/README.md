@@ -1,7 +1,9 @@
 # .augment — Agent Infrastructure
 
-This directory contains the shared agent infrastructure: skills, commands, rules, guidelines,
-templates, and contexts that power the AI coding assistant across all projects.
+> **⚠️ DO NOT edit files in `.augment/` directly.**
+> Source of truth: `.augment.uncompressed/`. Edit there, then `task sync` + compress.
+
+Shared agent infrastructure: skills, commands, rules, guidelines, templates, contexts.
 
 ## Directory Structure
 
