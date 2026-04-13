@@ -7,43 +7,17 @@ description: Self-review local changes before creating a PR
 
 ## Instructions
 
-Review all uncommitted and committed-but-not-pushed changes against the default branch (`main`).
+Review uncommitted + committed-not-pushed changes vs `main`.
 
-### 1. Gather the diff
+### 1. Gather diff — `git diff origin/main..HEAD` + `git diff` (unstaged)
 
-- Run `git diff origin/main..HEAD --stat` to get an overview of changed files.
-- Run `git diff origin/main..HEAD` for the full diff.
-- Also check `git diff --stat` and `git diff` for any unstaged changes.
+### 2. PHP syntax — `php -l` on changed `.php` files
 
-### 2. PHP syntax check
+### 3. PHPDoc — duplicate tags, split docblocks, wrong order, conflicting types, `@phpstan-ignore` in strings
 
-- Run `php -l` on every changed `.php` file.
-- Report any syntax errors immediately.
+### 4. Code quality — hardcoded values, `Math` helper, `strict_types`, type hints, logic bugs, duplication
 
-### 3. PHPDoc review
-
-Check all changed files for common PHPDoc issues:
-- **Duplicate tags** — `@param` or `@return` appearing twice for the same parameter/method.
-- **Split docblocks** — multiple `/** */` blocks before a single method. Must be one block.
-- **Wrong tag order** — correct order is `@param` before `@return` before `@throws`.
-- **Conflicting types** — PHPDoc type contradicts the method signature.
-- **`@phpstan-ignore` inside string literals** — this breaks SQL queries. Use PHP tokenizer to detect.
-
-### 4. Code quality review
-
-- Are there any hardcoded values that should be constants or config?
-- Is `Math` helper used for all calculations (not raw PHP arithmetic)?
-- Are new files missing `declare(strict_types=1)`?
-- Are there proper type hints on parameters, return types, and properties?
-- Any obvious logic bugs (e.g. variable used before assignment in a branch)?
-- Any duplicated code that should be extracted?
-
-### 5. Report
-
-Summarize findings as a table:
-- File, line, issue, severity (🔴 must fix / 🟡 should fix / 🟢 suggestion)
-
-Fix 🔴 issues automatically. Ask before fixing 🟡 issues.
+### 5. Report table (file, line, issue, severity 🔴/🟡/🟢). Fix 🔴 auto, ask for 🟡.
 
 ### 6. Quality tools (optional)
 
@@ -56,8 +30,5 @@ After the review, ask the user:
 
 If yes → execute the `quality-fix` command workflow (see `.augment/commands/quality-fix.md`).
 
-### Rules
-
-- **Do NOT commit or push.**
-- **Do NOT modify files beyond what the review finds.** No drive-by refactoring.
+### Rules — No commit/push. No drive-by refactoring.
 

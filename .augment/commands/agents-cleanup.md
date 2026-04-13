@@ -56,20 +56,16 @@ Which phase to work on?
 
 ### 3. Execute actions
 
-For each action, follow the appropriate workflow:
-
-**Move file:**
+**Move:**
 ```
 📁 Move: {source} → {target}
 Reason: {why}
 
 Confirm? (y/n)
 ```
-- Move the file.
-- Update all references in other docs that link to the old path.
-- Check `.augment/skills/` and `.augment/commands/` for references.
+Move + update all references.
 
-**Merge files:**
+**Merge:**
 ```
 🔗 Merge:
   {file1} + {file2} → {target}
@@ -77,12 +73,9 @@ Reason: {why — what overlaps}
 
 Confirm? (y/n)
 ```
-- Read both files.
-- Show the proposed merged content.
-- Create the merged file, delete the originals.
-- Update references.
+Show merged content → confirm → create + delete originals + update refs.
 
-**Delete file:**
+**Delete:**
 ```
 🗑️  Delete: {file}
 Reason: {why — what's obsolete}
@@ -92,10 +85,9 @@ Content (preview):
 
 Confirm? (y/n)
 ```
-- Delete the file.
-- Check for and remove references in other docs.
+Delete + remove refs.
 
-**Update file:**
+**Update:**
 ```
 ✏️  Update: {file}
 Reason: {what's outdated}
@@ -107,10 +99,6 @@ Changes:
 
 Confirm? (y/n)
 ```
-- Read the file.
-- Make the changes.
-- Show a summary of what changed.
-
 **Create context:**
 ```
 📄 Create context: {area}
@@ -119,13 +107,9 @@ Reason: {why it's needed}
 > 1. Yes — start /context-create
 > 2. Skip
 ```
-- Transition to `/context-create` with the area pre-selected.
-
 ### 4. Update roadmap progress
 
-After each action:
-- Mark the step as `[x]` in the roadmap file.
-- Show progress:
+Per action: mark `[x]` in roadmap.
 
 ```
 ✅  Action complete: {description}
@@ -138,8 +122,6 @@ Progress Phase {n}: [{completed}/{total}]
 ```
 
 ### 5. Summary
-
-After completing a phase or all actions:
 
 ```
 ═══════════════════════════════════════════════
@@ -159,10 +141,5 @@ After completing a phase or all actions:
 
 ### Rules
 
-- **Do NOT commit or push.**
-- **Always confirm before each destructive action** (delete, merge, move).
-- **Always update references** when moving or renaming files.
-- **Update the roadmap** after each completed action.
-- **Show file content** before deleting — the user should see what's being removed.
-- **Check `.augment/` references too** — skills and commands may link to agents docs.
+- No commit/push. Confirm before destructive actions. Update references + roadmap. Show content before delete.
 

@@ -1,28 +1,21 @@
 # Eloquent Model Guidelines
 
-> Project-specific Eloquent conventions. Getter/setter pattern, casts, fillable, defaults.
-
-**Related Skills:** `eloquent`, `database`, `migration-creator`
-**Related Guidelines:** [patterns/repositories.md](patterns/repositories.md)
+**Skills:** `eloquent`, `database` | **Guidelines:** [patterns/repositories.md](patterns/repositories.md)
 
 ## Core Rules
 
-- Add `$attributes` array for all columns with database defaults
-- Use `$casts` for type casting (encrypted, arrays, enums, dates, booleans)
-- Every model attribute MUST have a **getter** and a **fluent setter**
-- Fluent setters: prefer `static` as return type (preserves subclass types). Use `self` when the class is `final` or when `self` is intentionally more precise.
+- `$attributes` for all columns with DB defaults
+- `$casts` for type casting
+- Every attribute MUST have getter + fluent setter
+- Fluent setters: `static` return (preserves subclass). `self` only for `final` or intentional
 
 ## Getter/Setter Architecture
 
-There are **two layers** — inside the model vs. outside the model. Never mix them up.
+Two layers — inside vs outside model. Never mix.
 
-### Inside the model (implementing getters/setters)
+### Inside model
 
-**ALWAYS** use `getAttribute()` / `setAttribute()` — these are the Eloquent internals
-that respect `$casts`, accessors, and mutators. **NEVER** use `$this->column_name`
-magic property access inside the model — not for attributes, not for relationships.
-
-**Cast the return value** when the attribute is NOT in `$casts`:
+ALWAYS `getAttribute()`/`setAttribute()`. NEVER `$this->column_name`. Cast when NOT in `$casts`:
 
 ```php
 // ✅ Good — getAttribute() with explicit cast (attribute NOT in $casts)
@@ -62,9 +55,7 @@ public function setUserId(?int $userId): static
 }
 ```
 
-### Outside the model (calling code: services, controllers, jobs, tests, etc.)
-
-**Always use getters and setters. Never use `getAttribute()` / `setAttribute()` directly.**
+### Outside model — always getters/setters, never `getAttribute()`
 
 ```php
 // ✅ Good — use getters/setters
@@ -81,13 +72,7 @@ $config->is_paused;
 $config->is_paused = true;
 ```
 
-**Why:** Getters/setters provide type safety, IDE autocompletion, and a stable API.
-If the underlying column changes, only the model internals need updating.
-
-## Relationship Getters
-
-Every relationship MUST have a **typed getter method** placed directly **above** the relationship method.
-Outside the model, always use the getter — never access the magic property.
+## Relationship Getters — typed getter ABOVE relationship method, always use getter outside model
 
 ```php
 // ✅ Good — getter uses getAttribute(), placed above the relationship method
@@ -114,7 +99,7 @@ public function getEquipment(): ?Equipment
 $equipment = $repair->equipment;
 ```
 
-When checking if a relationship result exists, use `instanceof` instead of `null ===`:
+`instanceof` over `null ===`:
 
 ```php
 // ✅ Good — type-safe check
@@ -128,28 +113,7 @@ if (null === $equipment) {
 }
 ```
 
-## Observers over `booted()`
-
-Do NOT use `booted()` / `boot()` for model lifecycle hooks (`saving`, `saved`, `deleted`, etc.).
-Use a dedicated **Observer** class registered via the `#[ObservedBy]` attribute.
-
-```php
-// ✅ Good — Observer registered via attribute
-#[ObservedBy([RepairObserver::class])]
-class Repair extends Model { /* ... */ }
-
-// ❌ Bad — lifecycle logic in booted()
-class Repair extends Model
-{
-    protected static function booted(): void
-    {
-        static::saving(static function (Repair $repair): void { /* ... */ });
-    }
-}
-```
-
-**Why:** Observers keep models slim, make lifecycle logic testable and discoverable,
-and follow the established project pattern (all other models use `#[ObservedBy]`).
+## Observers over `booted()` — Observer via `#[ObservedBy]`, no `booted()`/`boot()`
 
 ## Default Attributes
 
@@ -161,9 +125,7 @@ protected $attributes = [
 ];
 ```
 
-### Expressive Setters
-
-Prefer expressive method names over generic setters when they improve readability:
+### Expressive Setters — prefer `activate()` over `setActive(true)`
 
 ```php
 // ✅ Better — intent is clear
@@ -173,9 +135,7 @@ $model->activate();
 $model->setActive(true);
 ```
 
-## Model Updates
-
-Always use validated data — never `$request->all()`:
+## Model Updates — `$request->validated()`, never `$request->all()`
 
 ```php
 // ✅ Good
@@ -185,10 +145,7 @@ $model->update($request->validated());
 $model->update($request->all());
 ```
 
-## Prefer Model Casts — No Redundant Manual Casting
-
-When an attribute is defined in `$casts` (or `casts()` method), do **not** manually cast it again
-in getters. The model already handles the conversion.
+## No Redundant Casting — attribute in `$casts` → trust the cast, don't re-cast
 
 ```php
 // ✅ Good — no manual cast needed, model handles it

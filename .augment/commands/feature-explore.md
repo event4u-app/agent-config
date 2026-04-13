@@ -7,24 +7,19 @@ description: Brainstorm and explore a feature idea before committing to a full p
 
 ## Instructions
 
-This is a **lightweight, conversational** exploration — no structured output yet.
-The goal is to help the user think through an idea and decide if it's worth planning.
+Lightweight conversational exploration. Help user think through idea.
 
-### 1. Start the conversation
+### 1. Start
 
-If the user provided an idea in their message, acknowledge it and start exploring.
-If not, ask:
+Idea provided → explore. Otherwise ask:
 
 ```
 💡 What's your idea? Describe it briefly — one sentence is enough to start.
 ```
 
-### 2. Gather external context
+### 2. External context
 
-**Auto-detect ticket from branch:**
-Run `git branch --show-current` and extract ticket IDs (pattern: `[A-Z]+-[0-9]+`).
-
-If a ticket ID is found:
+`git branch --show-current` → extract ticket. If found:
 ```
 🔀 Branch: {branch-name}
 🎫 Ticket detected: {TICKET-ID} — Load the ticket? (y/n)
@@ -40,17 +35,7 @@ Gibt es weitere Quellen?
 4. ❌ Nein — ohne weitere Quellen starten
 ```
 
-If the user provides ticket keys:
-- Fetch each ticket via Jira API (`/issue/{key}`).
-- For Epics: also fetch child issues (`/search/jql` with `"Epic Link" = {key}` or `parent = {key}`).
-- Extract and summarize:
-  - **Title & description** — the original requirement
-  - **Acceptance criteria** — if defined
-  - **Comments** — relevant discussion or decisions
-  - **Status & priority** — current state
-  - **Linked issues** — related tickets
-
-Show a summary:
+Tickets → fetch Jira API (Epics: include children). Show summary:
 
 ```
 📋 Jira context loaded:
@@ -63,34 +48,20 @@ Show a summary:
   Linked issues: {list or "none"}
 ```
 
-Use this as **input for the exploration** — challenge it, validate it against the codebase, identify gaps.
+Use as input — challenge, validate against codebase, identify gaps.
 
-### 3. Understand the idea
+### 3. Understand
 
-Listen for and gently probe:
-
-- **Problem:** What pain point does this solve? Who is affected?
-- **Vision:** What would the ideal outcome look like?
-- **Scope:** Is this a small tweak or a major feature?
-- **Context:** Is this for a specific customer, internal tooling, or the platform?
-
-If Jira context was loaded, use it to pre-fill understanding and ask targeted follow-ups:
+Probe: Problem, Vision, Scope, Context. Jira context → pre-fill + follow-ups:
 ```
 Based on the ticket, this is about {summary}. Is that still accurate, or has the requirement changed?
 ```
 
-**Be conversational, not interrogative.** Ask 1–2 follow-up questions at a time, not a checklist.
+1-2 follow-ups at a time, not a checklist.
 
-### 4. Research the codebase
+### 4. Research codebase
 
-While exploring, proactively research:
-
-- Use `codebase-retrieval` to find related code, existing patterns, and affected areas.
-- Check `agents/features/` for existing feature plans that might overlap.
-- Check the module structure (`app/Modules/`) for where this would live.
-- Look for existing services, models, or endpoints that could be extended.
-
-**Share findings naturally:**
+`codebase-retrieval` → related code, `agents/features/` → overlap, `app/Modules/` → location. Share naturally:
 
 ```
 I looked at the code — there's already an `ImportService` with
@@ -100,16 +71,9 @@ What do you think?
 
 ### 5. Challenge and refine
 
-Your role is **thought partner**, not yes-machine:
+Thought partner: challenge scope, suggest alternatives, identify risks, defer complexity.
 
-- **Challenge scope:** "This sounds like a big feature. What would be the absolute minimum that already delivers value?"
-- **Suggest alternatives:** "Instead of building this from scratch — could we extend the existing X?"
-- **Identify risks:** "This would affect the Y table, which depends on Z. We need to keep that in mind."
-- **Defer complexity:** "We can do the automation in Phase 2. Manual first?"
-
-### 6. Summarize and decide
-
-After 3–8 exchanges, summarize what you've learned:
+### 6. Summarize (after 3-8 exchanges)
 
 ```
 ───────────────────────────────────────────────
@@ -145,10 +109,7 @@ What's next?
 
 ### Rules
 
-- **Do NOT create a full feature plan** — that's `/feature-plan`'s job.
-- **Do NOT commit or push.**
-- **Do NOT skip codebase research** — always check what exists.
-- **Be honest about feasibility** — if something is hard, say so.
-- **Keep it conversational** — this is brainstorming, not a formal process.
-- **Max 1 file created** (optional idea note). No roadmaps, no implementation.
+- No full feature plan (→ `/feature-plan`), no commit/push
+- Always research codebase. Be honest. Conversational.
+- Max 1 file (optional idea note).
 

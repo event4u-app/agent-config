@@ -1,17 +1,6 @@
 # Repository Pattern
 
-> Only use when it solves a real problem. Eloquent already has many repository-like features built in.
-
-## Purpose
-
-Repositories encapsulate **complex or reusable** database queries. They keep controllers and
-services clean by hiding query details behind expressive method names.
-
-## Rule of Thumb
-
-- **CRUD app** → usually no separate repository needed
-- **Complex business app** → use selectively where it adds value
-- **Never** create a repository automatically for every model
+Only when it solves real problems. CRUD → no repo. Complex business → selective. Never auto-create per model.
 
 ## When to Use a Repository
 
@@ -49,8 +38,7 @@ $repository->findOverdueAppointmentsByCustomer($customerId);
 
 ## When NOT to Use a Repository
 
-❌ **Thin CRUD wrappers** — wrapping `findById`, `create`, `update`, `delete` around
-Eloquent adds a layer with zero value. Eloquent already provides all of this:
+❌ **Thin CRUD wrappers** — zero value over Eloquent:
 
 ```php
 // ❌ Overengineering — don't do this
@@ -67,21 +55,14 @@ $user = User::where('email', $email)->first();
 $activeUsers = User::where('is_active', true)->get();
 ```
 
-❌ **Single-use queries** — if a query is only used in one place and is not complex,
-keep it inline in the service or controller.
+❌ **Single-use queries** — keep inline.
 
-## Better Alternatives for Simple Cases
-
-Instead of a repository for every model, prefer:
-
-- **Query Scopes** — reusable query fragments on the model itself
-- **Services / Actions** — business logic with inline queries
-- **Specialized query classes** — for one complex, reusable query
+## Alternatives — Query Scopes, Services/Actions, specialized query classes
 
 ## Structure
 
 - Namespace: `App\Repositories\{Domain}\` or `App\Modules\{Module}\App\Repositories\`
-- Use an **interface** (contract) when the repository is injected via DI and may need mocking:
+Interface when DI + mocking needed:
 
 ```php
 // Contract
@@ -100,10 +81,7 @@ class DatabaseUserRepository implements UserRepositoryContract
 }
 ```
 
-- Bind interface → implementation in a ServiceProvider
-- Do **NOT** mark repository classes `final` — they may need to be mocked in tests
-
-## Naming
+Bind in ServiceProvider. NOT `final` (mocking). Naming:
 
 | Pattern                    | Example                              |
 |----------------------------|--------------------------------------|
@@ -113,10 +91,5 @@ class DatabaseUserRepository implements UserRepositoryContract
 
 ## Rules
 
-- Return **typed** results: `Collection<int, Model>`, `?Model`, `Model`
-- Throw domain exceptions (e.g., `EntityNotFoundException`) instead of returning `null`
-  when the caller expects a result
-- Use `@param` and `@return` DocBlocks for generic collection types
-- Keep repositories focused — one repository per model/aggregate, not one giant "query bag"
-- Prefer Eloquent/Query Builder over raw SQL
+- Typed returns. Domain exceptions > `null`. DocBlocks for generics. One per model/aggregate. Eloquent > raw SQL.
 

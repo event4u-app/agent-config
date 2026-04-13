@@ -5,34 +5,24 @@ skills: [file-editor]
 
 # /config-agent-settings
 
-Creates or updates `.agent-settings` in the project root by syncing with the template
-in `.augment/templates/agent-settings.md`.
+Sync `.agent-settings` with template `.augment/templates/agent-settings.md`.
 
 ## Steps
 
-### 1. Read the template
+### 1. Read template
 
-Read `.augment/templates/agent-settings.md` and extract the template block (between the ``` markers).
-Parse all `key=value` pairs and `# comment` lines in order.
+Parse `key=value` pairs and `# comment` lines from template block.
 
-### 2. Read existing settings (if any)
+### 2. Read existing settings
 
-Read `.agent-settings` from the project root (if it exists).
-Parse all `key=value` pairs into a map of `{key: value}`.
+Parse `.agent-settings` if exists → `{key: value}` map.
 
-### 3. Merge settings
+### 3. Merge
 
-For each line in the template (in template order):
-
-- **Comment line** (`# ...`) → keep as-is from template.
-- **Key=value line** → check if the key exists in the user's current settings:
-  - **Key exists** → use the user's current value (preserve).
-  - **Key missing** → use the default value from the template.
-
-This ensures:
-- **Template order** is always applied.
-- **Existing values** are never overwritten.
-- **New keys** get their default value automatically.
+Per template line (in template order):
+- Comments → keep from template
+- Key exists in user settings → preserve user value
+- Key missing → use template default
 
 ### 4. Write the file
 
@@ -68,8 +58,6 @@ Run /config-agent-settings again to change values, or edit .agent-settings direc
 
 ### 6. Interactive setup for empty values
 
-If any required setting has an empty value (e.g. `ide=`), offer to configure it:
-
 ```
 > Setting `ide` is empty. Which IDE do you use?
 >
@@ -78,29 +66,16 @@ If any required setting has an empty value (e.g. `ide=`), offer to configure it:
 > 3. Skip — I'll set it later
 ```
 
-For `ide`, also try auto-detection first:
-
-```bash
-ps aux | grep -iE '(Visual Studio Code|Code Helper|phpstorm)' | grep -v grep
-```
-
-- If detected → confirm with the user before setting.
-- If not detected → ask.
+For `ide`: try auto-detect first (`ps aux | grep -iE '(Visual Studio Code|Code Helper|phpstorm)'`), confirm if found.
 
 ### 7. Verify IDE command
 
-If `ide` was set and `open_edited_files=true`, verify the CLI command works:
-
-```bash
-{ide} --version 2>/dev/null
-```
-
-Warn if it fails and suggest how to install the CLI.
+If `ide` set + `open_edited_files=true`: `{ide} --version 2>/dev/null`. Warn if fails.
 
 ## Rules
 
-- **Do NOT commit `.agent-settings`** — it's in `.gitignore`.
-- **Never overwrite existing values** — only add missing keys with defaults.
-- **Always use template order** — reorder keys to match the template.
-- **Template is the source of truth** for which keys exist and their defaults.
+- Do NOT commit `.agent-settings` (`.gitignore`)
+- Never overwrite existing values
+- Template order always applied
+- Template = source of truth
 

@@ -15,9 +15,7 @@ which rtk
 
 - If **not installed** → stop. This command requires rtk. Suggest running the install flow from the `rtk` rule.
 
-### 2. Detect the project toolchain
-
-Scan the project to determine which CLI tools are used:
+### 2. Detect toolchain
 
 | Check | Tool detected |
 |---|---|
@@ -35,18 +33,9 @@ Scan the project to determine which CLI tools are used:
 | `Cargo.toml` exists | Rust / Cargo |
 | `go.mod` exists | Go |
 
-### 3. Read existing filters
+### 3. Read existing filters (preserve custom entries)
 
-```bash
-cat .rtk/filters.toml 2>/dev/null || echo "NO_FILTERS_FILE"
-```
-
-- If file exists → read it, preserve custom entries the user may have added.
-- If file does not exist → create `.rtk/` directory.
-
-### 4. Generate optimized filters
-
-For each detected tool, create a filter entry following this template:
+### 4. Generate filters per detected tool
 
 ```toml
 [filters.<tool-name>]
@@ -57,16 +46,7 @@ strip_lines_matching = [<patterns for noise lines>]
 max_lines = <appropriate limit>
 ```
 
-**Filter design rules:**
-
-- `strip_ansi = true` — always, ANSI codes waste tokens.
-- `strip_lines_matching` — target empty lines, progress bars, framework boilerplate, download indicators.
-- `max_lines` — set based on typical output size:
-  - Linters/static analysis: 80
-  - Test runners: 60
-  - Build tools: 40
-  - Status commands: 30
-- `match_command` — use regex that matches both direct invocation and artisan/npm wrappers.
+Rules: `strip_ansi = true` always. `max_lines`: linters 80, tests 60, builds 40, status 30. `match_command`: match both direct + wrapper invocations.
 
 **Common noise patterns per tool:**
 
@@ -81,25 +61,11 @@ max_lines = <appropriate limit>
 | Playwright | Browser download progress |
 | cargo | Compiling lines (keep errors), download progress |
 
-### 5. Write the filters file
+### 5. Write `.rtk/filters.toml` — `schema_version = 1`, preserve custom entries
 
-Save to `.rtk/filters.toml` in the project root.
+### 6. Verify: `rtk config 2>&1 | tail -5`
 
-- Always start with `schema_version = 1` and a header comment.
-- Include a comment referencing the project name.
-- Preserve any existing custom filters the user added manually.
-
-### 6. Verify
-
-Run a quick test to confirm rtk picks up the filters:
-
-```bash
-rtk config 2>&1 | tail -5
-```
-
-### 7. Present results
-
-Show a summary table:
+### 7. Summary table
 
 ```
 | # | Filter | Match | Max Lines |
@@ -111,8 +77,4 @@ Show a summary table:
 
 ### Rules
 
-- **Do NOT delete** existing custom filter entries — only add or update.
-- **Do NOT commit or push** — the user decides when to commit.
-- Always set `strip_ansi = true` — there is no reason to keep ANSI in LLM context.
-- If unsure about a tool's noise patterns, check recent command output or ask the user.
-- The `.rtk/` directory should be versioned in Git (not in `.gitignore`).
+- Don't delete custom entries. No commit/push. Always `strip_ansi = true`. `.rtk/` versioned in Git.

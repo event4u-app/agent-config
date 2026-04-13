@@ -5,9 +5,7 @@ description: Scan seeder data files for broken foreign key references — find c
 
 # fix-seeder
 
-Scans all `PhpDataSeeder` data files for foreign key references that use raw seeder constants
-instead of `getReference()`. Raw constants don't trigger lazy initialization of the referenced
-seeder, causing "items not available" errors when seeders run in unpredictable order.
+Scan `PhpDataSeeder` data files for raw seeder constants (should use `getReference()`). Raw constants = no lazy init = order-dependent errors.
 
 ## The Rule
 
@@ -38,36 +36,11 @@ Run the automated scanner inside the Docker container:
 docker compose exec -T <php-service> php .augment/scripts/scan-seeder-violations.php
 ```
 
-The script (``.augment/scripts/scan-seeder-violations.php``) automatically:
-1. Finds all `PhpDataSeeder` / `JsonDataSeeder` classes and their `$dataFile` paths
-2. Scans each data file for foreign seeder constants used without `getReference()`
-3. Distinguishes PHP files (auto-fixable) from JSON files (manual fix needed)
+Script auto: finds seeders + data files, scans for violations, distinguishes PHP (auto-fix) / JSON (manual).
 
-### What the scanner flags
+**Violation** = `Seeder::CONSTANT` without `getReference()` where seeder ≠ data file owner. Correct usages not flagged.
 
-**Violation** = a `Seeder::CONSTANT` used directly (not via `getReference()`)
-where the seeder class is NOT the owner of the data file.
-
-**Not flagged:**
-- `OtherSeeder::getReference(...)` — correct
-- `OtherSeeder::getReferences()` — correct
-- `OwnSeeder::CONSTANT` — own primary key, correct
-- Known exceptions (circular dependencies) — configured in the scanner script
-
-### Known Exceptions
-
-Currently there are **no exceptions**. All circular dependencies have been resolved.
-
-**Pattern for resolving circular dependencies:** Use two-phase seeding. The data file seeds
-records with placeholder values (e.g., empty arrays). The Seeder's `run()` method then updates
-records with the real values using `getReference()`. Since `run()` is called after all seeders
-are initialized, the circular dependency is broken.
-
-Example: `UserWageTypeRuleSeeder` seeds `lohnart_lv` as empty arrays in the data file,
-then populates them with project numbers via `ProjectSeeder::getReference()` in `run()`.
-
-If a new exception is truly needed, add it to `.augment/scripts/scan-seeder-violations.php`
-in the `$exceptions` array. Format: `'OwnerSeeder' => ['AllowedForeignSeeder']`.
+**No exceptions** currently. Circular deps resolved via two-phase seeding (placeholders in data, real values in `run()`).
 
 ## Step 2: Report findings
 
@@ -101,17 +74,7 @@ For each violation, replace the raw constant with a `getReference()` call:
 )->getId(),
 ```
 
-### Choosing the getter method
-
-- Default: `->getId()` (most foreign keys are IDs)
-- If the column name suggests a different attribute, use the appropriate getter
-  (e.g., `'name' => ...` might need `->getName()`)
-- If unsure, check the referenced model's primary key or the column definition
-
-### Extract to variable when referenced multiple times
-
-If the same `getReference()` call would appear multiple times in one data file,
-extract it to a variable at the top of the file:
+Default `->getId()`. Column suggests other attribute → use matching getter. Multiple refs → extract to variable:
 
 ```php
 $category = MaterialDeliveryBillCategorySeeder::getReference(
@@ -128,18 +91,9 @@ return [
 
 ## Step 4: Verify
 
-After fixing, run the seeder to verify:
-
-```bash
-docker compose exec -T <php-service> php artisan db:seed --env=testing
-```
-
-If it fails, investigate and fix the remaining issues.
+`docker compose exec -T <php-service> php artisan db:seed --env=testing`
 
 ## Rules
 
-- **Do NOT commit or push.** Only apply local changes.
-- **Do NOT change the seeder classes** — only the data files.
-- **Do NOT change the DataSeeder framework** — only fix data file references.
-- When in doubt about the getter method, check the model class.
+- No commit/push. Only data files. No seeder class or framework changes.
 

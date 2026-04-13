@@ -18,22 +18,13 @@ description: Explore the application and create a structured E2E test plan in Ma
 - Read the Playwright guideline: `.augment/guidelines/e2e/playwright.md`
 - Check for existing test plans in `specs/` or `tests/e2e/specs/`.
 
-### 2. Explore the application
+### 2. Explore application
 
-- Use Playwright MCP tools to navigate the target URL.
-- Take a browser snapshot to understand the page structure.
-- Identify all interactive elements: forms, buttons, links, modals, navigation.
-- Map primary user journeys and critical paths.
-- Consider different user roles and their typical behaviors.
+Playwright MCP → navigate, snapshot, identify interactive elements, map user journeys.
 
-### 3. Design test scenarios
+### 3. Design scenarios
 
-For each discovered flow, create scenarios covering:
-
-- **Happy path** — normal user behavior, expected outcomes
-- **Edge cases** — boundary values, empty states, long inputs
-- **Error handling** — validation errors, server errors, network failures
-- **Negative tests** — unauthorized access, invalid data
+Per flow: happy path, edge cases, error handling, negative tests.
 
 ### 4. Write the test plan
 
@@ -67,17 +58,8 @@ Brief description of the page/feature and its core functionality.
 ...
 ```
 
-### 5. Review with user
-
-- Present a summary of discovered flows and scenario count.
-- Ask if any flows are missing or should be excluded.
-- Wait for the user's confirmation before finalizing.
+### 5. Review — present summary, ask for missing/excluded flows, confirm.
 
 ### Rules
 
-- **Do NOT generate test code** — this command only creates the plan.
-- **Do NOT modify existing test files.**
-- Each scenario must be independent — no shared state assumptions.
-- Steps must be specific enough for any tester (human or agent) to follow.
-- Always include both the action and the expected result.
-- Reference seed files if test data setup is needed.
+- Plan only, no test code. No modifying tests. Independent scenarios. Specific steps with expected results.

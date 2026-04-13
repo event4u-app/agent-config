@@ -1,9 +1,6 @@
 # PHP Guidelines
 
-> PHP conventions and coding standards.
-
-**Related Skills:** `php`, `coder`, `php-service`
-**Related Rules:** `php-coding.md`
+**Skills:** `php`, `coder` | **Rules:** `php-coding.md`
 
 ## Quick Reference
 
@@ -17,18 +14,11 @@
 | Comparisons     | Always `===` / `!==`, Yoda style (`null === $var`)    |
 | Types           | Explicit types for properties, parameters, returns    |
 
-## Naming
+## Naming — expressive, no abbreviations
 
-- Method names must be **expressive**, not declarative. No abbreviations.
-- Boolean checks: `isValid()`, `hasPermission()` — not `valid()`, `check()`
-- Retrieving: `getUser()`, `fetchUserData()` — not `user()`, `userData()`
-- Actions: `sendEmail()`, `processPayment()` — not `email()`, `payment()`
+- Boolean: `isValid()`, `hasPermission()`. Retrieval: `getUser()`. Actions: `sendEmail()`
 
-## Strings
-
-- Single quotes when no interpolation: `$table = 'users';`
-- Prefer concatenation with `.` operator: `'Hi ' . $name . '!'`
-- Use `sprintf()` only when concatenation becomes unreadable (many placeholders, formatting): `sprintf('There are %d items in %s', $count, $location)`
+## Strings — single quotes, `.` concatenation, `sprintf()` for complex only
 
 ## Control Structures
 
@@ -69,11 +59,7 @@ $data = ['id' => 1, 'name' => 'John'];
 createUser(...$data);
 ```
 
-## DocBlocks
-
-- **Only** use DocBlocks to explain complex logic or when type hints are insufficient
-- **Must** add DocBlock for iterable types: `@param array<int, MyObject> $items`
-- Do NOT add DocBlocks that just repeat the type signature
+## DocBlocks — only when type hints insufficient (`@param array<int, MyObject>`). No signature repetition.
 
 ## Arrays
 
@@ -87,10 +73,7 @@ createUser(...$data);
 - Cases must be **UPPERCASE**: `case MONDAY;`
 - Use [backed enums](https://www.php.net/manual/en/language.enumerations.backed.php) for database values
 
-## Operator Precedence — Always Use Parentheses
-
-When mixing `?:` (ternary/elvis), `??` (null coalessce), or `.` (concatenation),
-**always use explicit parentheses** to make the intended evaluation order unambiguous.
+## Operator Precedence — explicit parentheses when mixing `?:`, `??`, `.`
 
 ```php
 // ❌ Bad — ambiguous: is it ($a ?: 'index ') . $i  or  $a ?: ('index ' . $i)?
@@ -106,14 +89,7 @@ $value = $a ?: $b ?: $c . $d;
 $value = $a ?: ($b ?: ($c . $d));
 ```
 
-This applies to **any** combination of operators where precedence is not immediately obvious.
-When in doubt, add parentheses — readability beats brevity.
-
-## Performance Tips
-
-### ❌  Avoid `array_merge()` in Loops
-
-`array_merge()` inside a loop copies the entire array each iteration → **O(n²)**.
+## Performance — avoid `array_merge()` in loops (O(n²))
 
 ```php
 // ❌ Bad — O(n²)
@@ -144,11 +120,7 @@ use TraitB;
 - Namespace: `App\Contracts` (grouped in subfolders)
 - No `Interface` suffix: `SmsProvider`, not `SmsProviderInterface`
 
-## Return Types — `static` vs `self`
-
-- **Prefer `static`** for fluent methods (setters, builders, chainable methods) — it preserves the actual class type in subclasses.
-- **Use `self`** when it is intentionally more precise — e.g., `final` classes, named constructors, or when you explicitly want to lock the return type to the declaring class.
-- This is especially important for Eloquent models, DTOs, and any class that may be extended.
+## Return Types — `static` for fluent (preserves subclass), `self` for `final`/intentional
 
 ```php
 // ✅ Preferred — preserves subclass type
@@ -169,8 +141,5 @@ final class Config
 }
 ```
 
-## Constructor Property Promotion
-
-- Each property on a separate line, trailing comma on last property
-- Preferred over manual assignment in constructor body
+## Constructor Property Promotion — separate lines, trailing comma
 

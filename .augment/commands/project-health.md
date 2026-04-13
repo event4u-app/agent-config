@@ -7,18 +7,11 @@ description: Quick project health check — show status of docs, modules, contex
 
 ## Instructions
 
-This is a **quick, read-only** health check. No documents are created or modified.
+Quick read-only health check.
 
-### 1. Gather data
+### 1. Gather data (parallel)
 
-Run in parallel:
-- `composer.json` → framework, PHP version
-- `git branch --show-current` → current branch
-- `git log --oneline -3` → recent activity
-- Count files in `agents/` (docs, features, roadmaps, contexts)
-- Count files in `app/Modules/*/agents/` (per module)
-- Check `app/Modules/` for module list
-- Count test files
+`composer.json`, `git branch`, `git log -3`, file counts in `agents/`, `app/Modules/*/agents/`, tests.
 
 ### 2. Display health report
 
@@ -86,9 +79,5 @@ GAPS:
 
 ### Rules
 
-- **Do NOT create or modify any files** — this is read-only.
-- **Do NOT commit or push.**
-- **Keep it fast** — no deep code analysis, just file counts and metadata.
-- **Show gaps clearly** — the user should see what's missing at a glance.
-- **Suggest `/project-analyze`** if significant gaps are found.
+- Read-only. No commit/push. Fast (file counts only). Show gaps clearly. Suggest `/project-analyze` for deep analysis.
 

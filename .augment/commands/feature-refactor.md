@@ -9,11 +9,7 @@ description: Refine and update an existing feature plan through interactive disc
 
 ### 1. Find the feature
 
-- List all feature plans in `agents/features/`.
-- Also check module-level `app/Modules/*/agents/features/` directories.
-
-If only one feature exists, load it directly.
-If multiple exist, show a list:
+List `agents/features/` + `app/Modules/*/agents/features/`. One → load. Multiple → list:
 
 ```
 📂 Existing feature plans:
@@ -33,10 +29,7 @@ If no features exist:
 ```
 Stop.
 
-### 2. Load and display the feature
-
-- Read the selected feature file completely.
-- Display a summary:
+### 2. Load and display
 
 ```
 ═══════════════════════════════════════════════
@@ -88,63 +81,17 @@ What do you want to adjust?
 
 ### 4. Interactive refinement
 
-Based on the user's choice, start a focused conversation:
+Per option: show current → discuss → research codebase if needed → update.
 
-**Problem/Proposal (Option 1):**
-- Show current text.
-- Ask what changed or what's wrong.
-- Research codebase if new context is needed.
-- Rewrite the section together.
+- **1 Problem/Proposal**: show, ask what changed, rewrite together
+- **2 Scope**: add/remove/move items, challenge additions
+- **3 Technical**: research new patterns, update Options Considered
+- **4 Open Questions**: answer via research, mark `[x]`, add new
+- **5 Jira**: link tickets, fetch API, incorporate new requirements if user wants
+- **6 Status**: change, `❌ Rejected` needs reason
+- **7 Reject**: confirm → set `❌ Rejected` + reason
 
-**Scope (Option 2):**
-- Show current In Scope / Out of Scope.
-- Ask what to add, remove, or move between lists.
-- Challenge additions: "Do we really need this for the first version?"
-- Validate removals: "Wenn wir X weglassen, funktioniert Y dann noch?"
-
-**Technical Approach (Option 3):**
-- Show current approach and options considered.
-- Research codebase for new patterns or constraints.
-- Present new options if the landscape changed.
-- Update the Options Considered table.
-
-**Open Questions (Option 4):**
-- Go through each open question.
-- Research codebase to help answer them.
-- Mark resolved questions as `[x]`.
-- Add new questions if they come up.
-
-**Jira-Tickets (Option 5):**
-- Show currently linked Jira tickets (from the feature's `Jira` field).
-- Ask: "Ticket-Key(s) zum Verlinken? (z.B. DEV-1234, DEV-5678)"
-- Fetch each ticket via Jira API and show a summary.
-- For Epics: also fetch child issues and show their status.
-- Add the ticket links to the feature's `Jira` field.
-- If the ticket contains new requirements or acceptance criteria, ask:
-  ```
-  > The ticket contains new requirements. What to do?
-  > 1. Incorporate — add requirements to the feature
-  > 2. Ignore — just link the ticket
-  ```
-- If yes, update Problem, Scope, or Acceptance Criteria accordingly.
-
-**Status (Option 6):**
-- Show current status and available statuses (from template).
-- Ask for new status.
-- If changing to `❌ Rejected`, ask for reason and add to Notes.
-
-**Reject (Option 7):**
-- Confirm with numbered options:
-  ```
-  > 1. Yes — mark feature as ❌ Rejected
-  > 2. Cancel
-  ```
-- If confirmed: Set status to `❌ Rejected`, add reason to Notes.
-
-### 5. Update the feature file
-
-- Apply all changes to the feature file.
-- Show a diff summary of what changed:
+### 5. Update + show diff summary
 
 ```
 ───────────────────────────────────────────────
@@ -171,10 +118,6 @@ What's next?
 
 ### Rules
 
-- **Do NOT commit or push.**
-- **Do NOT modify roadmaps** — that's `/feature-roadmap`'s job.
-- **Do NOT delete feature files** — mark as `❌ Rejected` instead.
-- **Research the codebase** when technical questions come up.
-- **Show changes clearly** — the user should know exactly what was modified.
-- **Preserve history** — don't silently remove decisions or notes.
+- No commit/push. No roadmap changes (→ `/feature-roadmap`).
+- Don't delete features → `❌ Rejected`. Research codebase. Show changes clearly. Preserve history.
 

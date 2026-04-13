@@ -6,9 +6,7 @@ skills: [skill-reviewer]
 
 # /optimize-skills
 
-Full audit and optimization of all skills in `.augment/skills/`.
-Runs the 5 Skill Killers checks, finds duplicates and merge candidates,
-and cleans up redundancies. Present findings first, then apply.
+Full skill audit: 5 Skill Killers checks, duplicates, merge candidates, redundancies. Present findings first.
 
 ## Steps
 
@@ -29,19 +27,8 @@ done | sort -rn | head -15
 
 ### 2. Find duplicates and merge candidates
 
-Scan ALL skill descriptions and content for:
-
-**Duplicates** (nearly identical purpose):
-- Compare every skill's description with every other skill's description.
-- Flag pairs where >70% of the description words overlap.
-- Flag skills whose `## When to use` sections describe the same scenarios.
-
-**Merge candidates** (related but separate):
-- Skills that cover the same tool/area from different angles (e.g., `composer` + `composer-packages`).
-- Skills where one is a strict subset of the other.
-- Small skills (<50 lines) that could be a section in a larger skill.
-
-Present findings:
+**Duplicates**: >70% description overlap, same `## When to use` scenarios.
+**Merge candidates**: same tool/area, strict subset, <50 lines → section in larger skill.
 
 ```
 ## Duplicate/Merge Analysis
@@ -53,7 +40,7 @@ Present findings:
 | 3 | skill-e ↔ skill-f | Related but distinct | Keep both, clarify descriptions to avoid overlap |
 ```
 
-**Ask the user before proceeding:**
+Ask user:
 
 ```
 > 1. Apply all merge/delete recommendations
@@ -61,12 +48,9 @@ Present findings:
 > 3. Skip — keep all skills as-is, proceed with optimization
 ```
 
-For approved deletions: remove the skill folder and update `contexts/augment-infrastructure.md`.
-For approved merges: combine content, remove the absorbed skill, update docs.
+Deletions → remove folder + update docs. Merges → combine + remove + update.
 
 ### 3. Killer 1 — Fix descriptions
-
-Scan all skills for description format:
 
 ```bash
 # Find skills NOT starting with "Use when" or "ONLY when"
@@ -79,29 +63,17 @@ for f in .augment/skills/*/SKILL.md; do
 done
 ```
 
-For each failing skill, rewrite the description following these rules:
-- Start with `"Use when..."` or `"ONLY when user explicitly requests: ..."`.
-- Include 2-3 trigger phrases users actually say.
-- End with 1 sentence describing what the skill does.
-- Keep under 200 chars.
+Rewrite: `"Use when..."` / `"ONLY when..."` + 2-3 trigger phrases + 1 sentence purpose. <200 chars.
 
-### 4. Killer 2 — Check for over-defining
+### 4. Killer 2 — Over-defining
 
-Scan the top 20 largest skills:
-- Count numbered steps — flag if >15 sequential steps.
-- Check if the skill prescribes HOW to think vs guiding WHAT to do.
-- Report findings but don't auto-fix — ask the user.
+Top 20: >15 steps? HOW vs WHAT? Report, don't auto-fix.
 
-### 5. Killer 3 — Check for obvious content
+### 5. Killer 3 — Obvious content
 
-For each skill, check if paragraphs explain things the model already knows:
-- Basic language features (what `strict_types` does, how `match` works).
-- Framework fundamentals (how middleware works, what a controller is).
-- General programming concepts (what DI is, what SOLID means).
+Flag paragraphs restating model knowledge (language features, framework basics, SOLID). Present for review.
 
-Flag sections that restate model knowledge. Present for review — don't auto-delete.
-
-### 6. Killer 4 — Add missing Gotcha sections
+### 6. Killer 4 — Missing Gotchas
 
 ```bash
 for f in .augment/skills/*/SKILL.md; do
@@ -110,21 +82,11 @@ for f in .augment/skills/*/SKILL.md; do
 done
 ```
 
-For each skill missing a `## Gotcha` section:
-- Read the skill's purpose and Do NOT list.
-- Write 2-4 concrete failure patterns in format:
-  - `"The model tends to X — do Y instead."`
-  - `"Don't assume X — check Y first because Z."`
-  - `"Edge case: when A happens, do B instead of C."`
-- Insert `## Gotcha` section BEFORE the `## Do NOT` section.
+Per missing skill: write 2-4 concrete failure patterns. Insert before `## Do NOT`.
 
 ### 7. Deduplicate Gotcha vs Do NOT
 
-For each skill that has BOTH `## Gotcha` AND `## Do NOT`:
-- Compare every Do NOT entry with every Gotcha entry.
-- If a Do NOT entry says the same thing as a Gotcha entry (just without the explanation),
-  remove the Do NOT entry — the Gotcha already covers it with more context.
-- Keep Do NOT entries that are genuinely different from all Gotcha entries.
+Do NOT entry same as Gotcha? → remove Do NOT (Gotcha has more context). Keep genuinely different entries.
 
 ### 8. Killer 5 — Check sizes
 
@@ -136,13 +98,11 @@ for f in .augment/skills/*/SKILL.md; do
 done
 ```
 
-For oversized skills: suggest extracting reference tables, templates, or
-examples into separate files in the skill's folder.
+Oversized → extract reference tables/templates/examples into separate files.
 
 ### 9. Update docs
 
-After all changes:
-- Update skill count and category tables in `contexts/augment-infrastructure.md`.
+Update `contexts/augment-infrastructure.md` counts/tables.
 
 ### 10. Present results
 
@@ -162,28 +122,16 @@ After all changes:
 
 ## Rules
 
-### Destructive actions — ALWAYS ask first
+### Destructive — ALWAYS ask
 
-- **NEVER delete a skill** without explicit user approval (step 2).
-- **NEVER merge skills** without explicit user approval (step 2).
-- **NEVER compress a skill below its functional minimum** — if a skill has command references,
-  config tables, workflow steps, or "Do NOT" lists, those are load-bearing content.
-  A 400-line skill compressed to 86 lines is NOT optimized — it's broken.
-- **NEVER strip strong language** — "Do NOT", "NEVER", "MUST" exist because the model
-  ignores weaker phrasing. "Avoid X" does NOT equal "NEVER do X".
-- **NEVER remove examples or code blocks** — they are the most actionable content.
-  Removing them to save lines degrades skill quality.
+- NEVER delete/merge without approval
+- NEVER compress below functional minimum (400→86 = broken)
+- NEVER strip strong language or remove examples
 
-### Safe actions — can be auto-applied
+### Safe — auto-apply
 
-- **Descriptions** — rewriting to "Use when..." format is safe (additive).
-- **Gotcha sections** — adding missing Gotchas is safe (additive).
-- **Do NOT deduplication** — removing a Do NOT entry that's already covered by a Gotcha is safe.
-- **Frontmatter quotes** — adding quotes around descriptions is safe.
+- Description rewrites, Gotcha additions, Do NOT deduplication, frontmatter quotes
 
-### Process rules
+### Process
 
-- **Killer 3 (obvious content) requires review** — don't auto-delete, the user decides.
-- **Quality over tokens** — if a change would lose clarity, don't make it.
-- **Always show before/after** so the user sees the impact.
-- **Present findings first** — no silent changes to skill content.
+- Killer 3 requires review. Quality > tokens. Show before/after. No silent changes.

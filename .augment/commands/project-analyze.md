@@ -7,8 +7,7 @@ description: Full project analysis — detect stack, inventory modules, audit do
 
 ## Instructions
 
-This is a **multi-phase, interactive analysis**. Walk through each phase, show findings,
-and ask before creating any documents.
+Multi-phase interactive analysis. Show findings per phase, ask before creating docs.
 
 ### Phase 1: Project detection
 
@@ -69,7 +68,7 @@ LEGACY CHECK (indicators):
 ═══════════════════════════════════════════════
 ```
 
-Ask the user with numbered options:
+Ask:
 
 ```
 > 1. Continue with Phase 2 — architecture analysis
@@ -78,14 +77,7 @@ Ask the user with numbered options:
 
 ### Phase 2: Architecture mapping
 
-Analyze the directory structure:
-
-- Map top-level directories with file counts
-- Identify pattern: MVC, modules, services, repositories, DTOs
-- Count: Models, Controllers, Services, Jobs, Commands, Events, Policies
-- Detect: multi-tenancy, API versioning, queue usage
-
-Display:
+Map dirs, count components, detect patterns/multi-tenancy/API versioning:
 
 ```
 ───────────────────────────────────────────────
@@ -114,9 +106,7 @@ CODE INVENTORY:
 ═══════════════════════════════════════════════
 ```
 
-### Phase 3: Module inventory (if modules exist)
-
-If `app/Modules/` exists, analyze each module:
+### Phase 3: Module inventory (if `app/Modules/` exists)
 
 ```
 ───────────────────────────────────────────────
@@ -135,8 +125,6 @@ MODULES:
 ```
 
 ### Phase 4: Agent docs audit
-
-Scan all existing agent docs:
 
 ```
 ───────────────────────────────────────────────
@@ -163,8 +151,7 @@ AGENT DOCS AUDIT:
 
 ### Phase 5: Business domains
 
-Identify domains from models, services, routes, and directory structure.
-For each domain: map models → services → controllers → jobs → events.
+Identify domains, map models → services → controllers → jobs → events:
 
 ```
 ───────────────────────────────────────────────
@@ -186,19 +173,9 @@ BUSINESS DOMAINS:
 ═══════════════════════════════════════════════
 ```
 
-Ask the user with numbered options:
-
-```
-> 1. Yes — create domain analysis files
-> 2. Skip — continue with next phase
-```
-
-For each confirmed domain, create `agents/analysis/domains/{domain}.md` using the template
-from the `project-analyzer` skill.
+Ask: create domain files? For confirmed → `agents/analysis/domains/{domain}.md`.
 
 ### Phase 6: API surface & service map
-
-List all endpoints per version. Map all services with dependencies.
 
 ```
 ───────────────────────────────────────────────
@@ -220,39 +197,11 @@ SERVICE MAP:
 ═══════════════════════════════════════════════
 ```
 
-Ask the user with numbered options:
+Ask: create API/service files? (`endpoints-v1.md`, `endpoints-v2.md`, `contracts.md`, `service-map.md`)
 
-```
-> 1. Yes — create API and service analysis files
-> 2. Skip — continue with next phase
-```
+### Phase 7: Write remaining analysis files
 
-Create:
-- `agents/analysis/api/endpoints-v1.md`
-- `agents/analysis/api/endpoints-v2.md`
-- `agents/analysis/api/contracts.md`
-- `agents/analysis/services/service-map.md`
-
-### Phase 7: Write analysis files
-
-Write all remaining analysis files that haven't been created yet:
-
-- `agents/analysis/overview.md` — project profile, tech stack summary
-- `agents/analysis/architecture/database.md` — schema, connections, multi-tenancy
-- `agents/analysis/architecture/api.md` — versioning, routes, middleware, auth
-- `agents/analysis/architecture/infrastructure.md` — Docker, CI/CD, deployment
-- `agents/analysis/architecture/patterns.md` — design patterns used
-- `agents/analysis/models/api-database.md` — all api_database models
-- `agents/analysis/models/customer-database.md` — all customer_database models
-- `agents/analysis/modules/{module}.md` — one per module
-- `agents/analysis/testing/test-map.md` — test suites, coverage, strategy
-
-For each file, ask with numbered options:
-
-```
-> 1. Create — {filename}
-> 2. Skip
-```
+Per file ask create/skip: `overview.md`, `architecture/{database,api,infrastructure,patterns}.md`, `models/{api,customer}-database.md`, `modules/{module}.md`, `testing/test-map.md`
 
 ### Phase 8: Gap analysis & action plan
 
@@ -273,27 +222,15 @@ Priority 3 — Cleanup:
 ───────────────────────────────────────────────
 ```
 
-Ask the user (in their language) what they want to do next:
-
-```
-1. 📄 Create missing analysis files
-2. ✏️  Review and update existing docs
-3. 🗑️  Cleanup (stale docs, completed roadmaps)
-4. 📋 Save everything as a roadmap (for later)
-5. ✅ Done
-```
+Ask: `1. Create missing` / `2. Review existing` / `3. Cleanup` / `4. Save as roadmap` / `5. Done`
 
 ### Rules
 
-- **Do NOT commit or push.**
-- **Do NOT create documents without asking** — always confirm before each creation.
-- **Do NOT modify code** — this is analysis only.
-- **Do NOT analyze `vendor/` or `node_modules/`.**
-- **Present findings incrementally** — don't dump everything at once.
-- **Be honest about gaps** — flag missing docs and outdated references.
-- **Respect existing docs** — don't overwrite, offer to update.
-- **Reference existing `agents/docs/` and `agents/contexts/`** — don't duplicate their content
-  in analysis files. Link to them instead.
-- **Analysis files should be self-contained enough to rebuild** — include actual table names,
-  column names, class names, method signatures. Not just "see the code".
+- Do NOT commit/push or modify code — analysis only
+- Confirm before each creation
+- Skip `vendor/` and `node_modules/`
+- Present incrementally, flag gaps honestly
+- Don't overwrite existing docs — offer updates
+- Reference `agents/docs/`, `agents/contexts/` — don't duplicate
+- Analysis files must include actual names/signatures, not "see code"
 

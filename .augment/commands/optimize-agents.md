@@ -6,14 +6,13 @@ skills: [copilot-agents-optimizer, agents-audit, agent-docs, quality-tools]
 
 # /optimize-agents
 
-Full analysis and optimization of the agent infrastructure. Goal: minimize token consumption
-without losing quality. Present findings, ask before making changes.
+Full agent infrastructure analysis/optimization. Minimize tokens, preserve quality. Present findings, ask before changes.
 
 ## Steps
 
 ### 1. Measure baseline
 
-Count lines for everything that affects token consumption:
+Count lines affecting token consumption:
 
 ```bash
 # Always-loaded (per chat)
@@ -55,16 +54,11 @@ Report totals:
 
 ### 2. Check rules
 
-For each rule:
-
-- **Frontmatter**: Does it have `type: "always"` or `type: "auto"` with a `description`?
-- **always vs auto**: Should this rule really be always-loaded? Could it be `auto` without risk?
-- **Size**: Always-loaded rules > 150 lines — check if truly necessary. Prefer quality over compression.
-  Only move detail to a context file if it's rarely needed. Do NOT strip actionable content.
-- **Redundancy**: Does this rule duplicate content from another rule, AGENTS.md, or a skill?
-- **Merge candidates**: Are there small rules (< 15 lines) that belong in another rule?
-- **Duplicate triggers**: Do any two auto-loaded rules share the exact same `description`?
-  If yes, both load simultaneously — fix by making descriptions unique.
+- **Frontmatter**: `type: "always"` or `type: "auto"` with `description`?
+- **always vs auto**: Could it be `auto`? Always > 150 lines → check necessity
+- **Redundancy**: Duplicates with other rules, AGENTS.md, skills?
+- **Merge candidates**: Small rules (< 15 lines) belonging elsewhere?
+- **Duplicate triggers**: Same `description` → both load simultaneously
 
 ```bash
 # Check for duplicate rule triggers
@@ -74,36 +68,23 @@ for f in .augment/rules/*.md; do
 done | sort | awk -F' \\| ' '{descs[$1]=descs[$1] " " $2} END {for (d in descs) {n=split(descs[d], a, " "); if (n>1) print "⚠️  " d " →" descs[d]}}'
 ```
 
-### 3. Check skills
+### 3. Check skills (top 20 by size)
 
-For each skill (focus on the 20 largest):
+- **Description**: specific enough? Analysis skills MUST start with `"ONLY when user explicitly requests: ..."`
+- **Redundancy with rules**: repeats "Do NOT" lists? → `"See {rule} rule."`
+- **Overlap**: nearly identical skills?
+- **Size**: >300 lines → compressible?
 
-- **Description precision**: Is it specific enough to avoid false-positive matching?
-  Analysis/research/audit skills MUST start with `"ONLY when user explicitly requests: ..."`
-- **Redundancy with rules**: Does the skill repeat "Do NOT" lists or policies from rules?
-  If yes → replace with `"See {rule} rule."` reference.
-- **Overlap with other skills**: Are there skills that do nearly the same thing?
-- **Size**: Skills > 300 lines — can sections be compressed?
+### 4. Check commands (top 10)
 
-### 4. Check commands
+- Redundancy with skills, correct `skills:` frontmatter, consistent structure
 
-For each command (focus on the 10 largest):
+### 5. Check AGENTS.md + copilot-instructions.md
 
-- **Redundancy**: Does the command duplicate workflow steps from a skill?
-- **Skills reference**: Does it declare the right `skills:` in frontmatter?
-- **Consistency**: Do all commands follow the same structure (Steps, Rules sections)?
-
-### 5. Check AGENTS.md and copilot-instructions.md
-
-Run the checks from `/copilot-agents-optimize`:
-
-- **Line budget**: AGENTS.md ≤ 500 ideal. copilot-instructions.md ≤ 500 ideal.
-- **Quality over tokens**: AGENTS.md MUST contain full detail for Dev Setup, Testing, and Quality Tools.
-  These sections are critical for correct behavior. Do NOT compress them into one-liners.
-  Add `→ Full details: agents/docs/{file}.md` references as ADDITIONS, not replacements.
-- **Duplication**: Only flag content that is TRULY redundant (word-for-word identical in two places).
-  Having a summary in AGENTS.md + detail in agents/docs/ is NOT duplication — it's layered context.
-- **Freshness**: Do file paths, command names, and tool references match reality?
+- **Budget**: ≤500 lines each
+- **Quality**: Dev Setup, Testing, Quality Tools need full detail — don't compress to one-liners
+- **Duplication**: only word-for-word identical. Summary + detail = layered context, NOT duplication
+- **Freshness**: paths, commands, references match reality?
 
 ```bash
 # Measure AGENTS.md size and compare with target
@@ -114,14 +95,11 @@ echo "AGENTS.md: $lines lines, $bytes bytes (~$((bytes / 4)) tokens)"
 
 ### 6. Check .agent-settings template
 
-- Compare `.augment/templates/agent-settings.md` with actual `.agent-settings`.
-- Are all settings documented in the template?
-- Are all template settings referenced by at least one rule, skill, or command?
+Compare template with actual. All settings documented? All referenced by rule/skill/command?
 
 ### 7. Check docs sync
 
-- Does `contexts/augment-infrastructure.md` list all rules with correct count?
-- Does `contexts/augment-infrastructure.md` list all rules?
+Counts and lists in `contexts/augment-infrastructure.md` correct?
 
 ### 8. Present findings
 
@@ -144,52 +122,31 @@ Ask the user:
 
 ### 9. Apply approved changes
 
-Apply the approved optimizations. After all changes:
+Apply approved changes → update `contexts/augment-infrastructure.md` → re-run baseline → show before/after.
 
-- Update `contexts/augment-infrastructure.md` counts and tables
-- Update `contexts/augment-infrastructure.md` rule table
-- Re-run the baseline measurement from step 1
-- Show before/after comparison
+## Rules — Iron Laws of Optimization
 
-## Rules — The Iron Laws of Optimization
-
-These rules exist because previous optimization runs caused severe damage.
-They are NON-NEGOTIABLE. Violating any of them is a critical failure.
+NON-NEGOTIABLE. Previous runs caused severe damage.
 
 ### Content preservation
 
-- **NEVER strip strong language** — "Do NOT", "NEVER", "MUST", "CRITICAL" are load-bearing words.
-  They exist because the model ignores weaker phrasing. Replacing "NEVER do X" with "Prefer Y"
-  or "Only do X when..." is NOT optimization — it's sabotage.
-- **NEVER remove examples** — code examples, option blocks, and sample output are NOT fluff.
-  They are the most actionable part of a rule. Removing them to save lines degrades quality.
-- **NEVER compress detail sections into one-liners** — a 400-line skill compressed to 86 lines
-  loses critical command references, config details, and workflow instructions.
-  If a section exists, it exists for a reason. Ask before removing.
-- **NEVER delete files without explicit user approval** — not skills, not commands, not templates,
-  not contexts. Even if they seem unused. Always ask first.
-- **NEVER remove cross-references to existing systems** — if an override system, template system,
-  or context system exists in the project, its references MUST stay in all related files.
+- **NEVER strip strong language** — "Do NOT", "NEVER", "MUST" are load-bearing. Weaker phrasing = sabotage.
+- **NEVER remove examples** — most actionable part. Removing = quality loss.
+- **NEVER compress to one-liners** — 400→86 lines loses critical content. Ask before removing sections.
+- **NEVER delete files** without explicit user approval.
+- **NEVER remove cross-references** to existing systems (overrides, templates, contexts).
 
-### What optimization IS
+### Optimization IS
 
-- Switching a rule from `always` to `auto` (with a good trigger description)
-- Deduplicating word-for-word identical content between two files
-- Adding missing frontmatter (`type`, `description`)
-- Improving a description to be more trigger-specific
-- Moving rarely-needed reference tables into a context file (keeping a summary + link)
+- `always` → `auto` (with good trigger), deduplication, missing frontmatter, better descriptions, moving rarely-needed tables to context
 
-### What optimization is NOT
+### Optimization is NOT
 
-- Replacing "Do NOT" with passive voice
-- Removing example blocks to save lines
-- Deleting sections because "the model already knows this"
-- Merging files to reduce count (unless truly redundant)
-- Stripping detail from commands, skills, or configs
+- "Do NOT" → passive voice, removing examples, deleting "obvious" sections, merging for count reduction
 
-### Process rules
+### Process
 
-- **Always show before/after line counts** so the user sees the impact.
-- **Quality over tokens** — if compression would lose clarity, don't compress.
-- **Present findings first, apply after approval** — no silent changes.
-- **One category at a time** — don't batch all changes into one massive commit.
+- Show before/after counts
+- Quality > tokens
+- Findings first, apply after approval
+- One category at a time

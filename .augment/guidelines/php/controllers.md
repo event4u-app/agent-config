@@ -1,16 +1,13 @@
 # Controller Guidelines
 
-> Project-specific controller conventions. Thin controllers, single-action pattern, OpenAPI annotations.
-
-**Related Skills:** `api-endpoint`, `laravel`, `openapi`
-**Related Guidelines:** [validations.md](validations.md), [resources.md](resources.md)
+**Skills:** `laravel`, `openapi` | **Guidelines:** [validations.md](validations.md), [resources.md](resources.md)
 
 ## Core Rules
 
 - **Single Action Controllers** only (`__invoke()`) — no Resource Controllers
 - Each controller must have: FormRequest, OpenAPI schema attributes
-- Use Resource responses where applicable (not all controllers return JSON — e.g. Delete returns an empty response, file downloads return a file stream)
-- Thin controllers — business logic in Services/Actions
+- Resources where applicable (Delete = empty, downloads = stream)
+- Thin — business logic in Services/Actions
 
 ## Naming Schema
 
@@ -52,15 +49,9 @@ class CreateLinkController extends Controller
 }
 ```
 
-**Key points:**
-- Use `$request->validated()` — never `$request->all()`
-- Use `Resource::make()` instead of `new Resource()` (easier to test)
-- Simple CRUD can live directly in the controller
-- Complex logic → Service class / Repository
+`$request->validated()` only. `Resource::make()`. Simple CRUD inline, complex → Service.
 
-## Filters & Ordering
-
-Use the `pipeline` / `paginatedPipeline` macros with filter classes:
+## Filters — `paginatedPipeline` with filter classes
 
 ```php
 $links = Link::query()
@@ -71,13 +62,7 @@ $links = Link::query()
     ]);
 ```
 
-## OpenAPI Documentation
-
-- Always extend `{Action}ResourceRequestSchema` for Create/Update/List (keeps controllers clean)
-- Show/Delete/Restore use the base schema classes directly
-- No per-endpoint auth/permission error schemas (documented globally)
-- **`ValidationErrorResponse`** must be added to **every** controller that accepts input (Create, Update, etc.)
-- **`ResourceNotFoundResponse`** must be added to every controller that queries a single entity (Show, Update, Delete, Restore)
+## OpenAPI — extend `{Action}ResourceRequestSchema`. `ValidationErrorResponse` for input, `ResourceNotFoundResponse` for single entity.
 
 | Action  | Request Schema           | Response Schema            | Error Responses                                    |
 |---------|--------------------------|----------------------------|----------------------------------------------------|

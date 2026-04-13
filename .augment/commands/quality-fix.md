@@ -25,79 +25,29 @@ git diff --name-only origin/{default}..HEAD
 
 ### Prerequisites
 
-- All commands run **inside the PHP container** (e.g. `docker compose exec -T <service> ...`).
-- Detect the project type:
-  - `artisan` exists → `php artisan quality:phpstan` / `php artisan quality:rector --fix`
-  - Otherwise → `composer quality:phpstan` / `composer quality:refactor -- --fix`
+Inside PHP container. `artisan` → artisan commands. Otherwise → composer.
 
-### Step 1: PHPStan — fix all errors
+### Step 1: PHPStan → fix all errors in code. No baseline/ignore additions. Repeat until 0.
 
-1. Run PHPStan and capture the full output.
-2. For each error, **fix it in code**. Resolve the root cause.
-3. **Do NOT add errors to the baseline or phpstan.neon ignore lists.**
-4. If truly impossible (confirmed false positive), use inline ignore with reason.
-5. After fixing, run PHPStan again.
-6. Repeat until **0 errors**.
+### Step 2: Rector with `--fix`. May introduce new PHPStan errors. Repeat until no changes.
 
-### Step 2: Rector — apply automated refactoring
-
-1. Run Rector with the fix flag.
-2. Review what Rector changed — it may introduce new PHPStan errors.
-3. Run Rector again to verify no further changes are applied.
-4. Repeat until Rector produces no more changes.
-
-### Step 3: Final PHPStan verification
-
-1. Run PHPStan one more time.
-2. If new errors appeared (e.g. from Rector changes), fix them as in Step 1.
-3. If fixes were needed, go back to Step 2.
-4. Done when PHPStan reports **0 errors** and Rector has **no changes**.
+### Step 3: PHPStan again. Errors → fix → back to Step 2. Done when 0 errors + no Rector changes.
 
 ---
 
 ## JS/TS Pipeline
 
-### Prerequisites
+### Prerequisites — check `package.json` for tools/scripts. Host or Node container.
 
-- Check `package.json` for available tools and scripts.
-- Determine execution environment: host, Node container, or Makefile targets.
+### Step 4: Biome fix (`npm run biome:fix`). No Biome → ESLint+Prettier.
 
-### Step 4: Biome — auto-fix formatting + linting
+### Step 5: TypeScript (`npm run tscheck`). Fix in code, no `@ts-ignore`. Re-run Biome after fixes.
 
-1. Run Biome with auto-fix (prefer npm script if available):
-   ```bash
-   npm run biome:fix          # or: npx biome check --write .
-   ```
-2. Review what changed — especially import reordering and formatting.
-3. If no Biome is installed, check for ESLint + Prettier and use those instead.
-
-### Step 5: TypeScript — fix type errors
-
-1. Run the type checker:
-   ```bash
-   npm run tscheck            # or: npx tsc --noEmit
-   ```
-2. For each error, **fix it in code**. Do NOT use `@ts-ignore`.
-3. If truly impossible, use `@ts-expect-error` with a reason comment.
-4. After fixing, re-run Biome (Step 4) — fixes may need reformatting.
-5. Repeat until **0 type errors**.
-
-### Step 6: Tests — verify nothing is broken
-
-1. Run the test suite:
-   ```bash
-   npm test
-   ```
-2. If tests fail, fix the failing tests or the code that broke them.
-3. After fixing, re-run Steps 4–5 to ensure quality is maintained.
+### Step 6: Tests (`npm test`). Failures → fix → re-run Steps 4-5.
 
 ---
 
 ## Rules
 
-- **Do NOT commit or push.** Only apply local changes.
-- **Do NOT modify baseline files** (`phpstan-baseline.neon`) or config files (`biome.json`, `tsconfig.json`).
-- **Do NOT add entries to `ignoreErrors`** in `phpstan.neon`.
-- Inline ignores (`@phpstan-ignore`, `@ts-expect-error`, `biome-ignore`) are a last resort.
-- Run `php -l` on modified PHP files if you made significant structural changes.
+- No commit/push. No baseline/config changes. Inline ignores = last resort. `php -l` for structural changes.
 

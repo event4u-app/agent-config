@@ -9,8 +9,8 @@ description: Plan and implement a bug fix — based on investigation, with quali
 
 ### 1. Check for prior investigation
 
-- Check if `/bug-investigate` was run in this conversation (context should be loaded).
-- If not, ask:
+- Check if `/bug-investigate` was run (context loaded).
+- If not:
 
 ```
 ⚠️  Has the bug already been analyzed?
@@ -23,8 +23,6 @@ description: Plan and implement a bug fix — based on investigation, with quali
 If option 3, ask for a brief description of the root cause and affected files.
 
 ### 2. Plan the fix
-
-Based on the root cause analysis, create a fix plan:
 
 ```
 ═══════════════════════════════════════════════
@@ -66,16 +64,9 @@ RISIKO-CHECK:
 
 ### 3. Implement the fix
 
-For each change:
-
-1. **Read the file** before modifying.
-2. **Make the change** using `str-replace-editor`.
-3. **Check for downstream effects** — use `codebase-retrieval` to find callers.
-4. **Update related code** if signatures or behavior changed.
+Per change: read file → `str-replace-editor` → check downstream (`codebase-retrieval`) → update related code.
 
 ### 4. Quality checks
-
-After all changes, run quality tools:
 
 ```bash
 php artisan quality:phpstan          # 1. Check for type errors
@@ -83,11 +74,9 @@ php artisan quality:rector --fix     # 2. Auto-fix code style
 php artisan quality:phpstan          # 3. Re-check after Rector
 ```
 
-Show results and fix any issues.
+Fix any issues.
 
 ### 5. Tests
-
-Check for existing tests that cover the affected code:
 
 ```
 🧪 Existing tests:
@@ -100,9 +89,7 @@ Check for existing tests that cover the affected code:
 > 4. Skip tests for now
 ```
 
-- **Run affected tests** to verify the fix doesn't break anything.
-- **Write new tests** if the bug scenario isn't covered.
-- **Run all tests** at the end.
+Run affected tests → write new if scenario uncovered → run all at end.
 
 ### 6. Show result
 
@@ -145,11 +132,9 @@ What next?
 
 ### Rules
 
-- **Do NOT commit or push** without permission.
-- **Always run PHPStan** after changes.
-- **Always run affected tests** before declaring the fix done.
-- **Check for similar patterns** — if the bug exists in one place, it likely exists elsewhere.
-- **Present the fix plan** before implementing — let the user confirm.
-- **Update existing tests** that are affected by the change.
-- **Write new tests** for the specific bug scenario (regression test).
+- Do NOT commit/push without permission
+- Run PHPStan + affected tests before declaring done
+- Check for similar patterns elsewhere
+- Present fix plan before implementing
+- Write regression test for bug scenario
 

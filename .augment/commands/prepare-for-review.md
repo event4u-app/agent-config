@@ -11,12 +11,7 @@ The user provides a PR number or ticket number (e.g. `DEV-1234` or `#42`).
 
 ### PR detection
 
-1. If the user provides a GitHub PR URL or PR number → use that PR directly.
-2. If the user provides a Jira ticket number (e.g. `DEV-1234`) → search for an open PR linked to that ticket:
-   - Search via GitHub API for an open PR whose branch name contains the ticket number.
-   - If exactly one PR is found → confirm with the user: "I found PR #{number} on branch `{branch}`. Is that the one?"
-   - If none or multiple found → ask the user for the PR number or URL.
-3. **Never** reuse a PR number from earlier in the conversation without confirmation.
+PR URL/number → direct. Jira ticket → search GitHub for PR with matching branch. Never reuse old PR numbers.
 
 ## Instructions
 
@@ -24,13 +19,9 @@ The user provides a PR number or ticket number (e.g. `DEV-1234` or `#42`).
 
 - Use the GitHub API to get the PR details: base branch, head branch, and title.
 
-### 2. Build the branch chain
+### 2. Build branch chain
 
-- If **base branch is `main`** → chain is: `main → {head branch}`
-- If **base branch is NOT `main`** → the base branch itself may have a non-main base.
-  - Recursively fetch the PR for the base branch (search for an open PR with that head branch).
-  - Keep going until you reach `main`.
-  - Build the full ordered chain, e.g.: `main → feature/base → feature/sub → feature/target`
+Base = `main` → simple. Base ≠ `main` → recursively fetch PRs until `main`. Chain: `main → ... → target`.
 
 ### 3. Update main
 
@@ -53,18 +44,7 @@ This ensures the branches exist locally and are up to date, even in a fresh clon
 
 ### 5. Merge chain bottom-up
 
-For each consecutive pair in the chain (starting from `main` upward):
-
-```bash
-git checkout {child-branch}
-git merge {parent-branch} --no-edit
-```
-
-- If a **merge conflict** occurs at any point:
-  - Run `git merge --abort`
-  - Abort the entire process immediately
-  - Report to the user exactly which branches conflicted
-  - Do NOT proceed further
+Per pair (main upward): `git checkout {child}` → `git merge {parent} --no-edit`. Conflict → `git merge --abort` → report → abort entirely.
 
 ### 6. Check out the target branch
 
@@ -74,17 +54,9 @@ Once all merges succeed:
 git checkout {head-branch-of-target-PR}
 ```
 
-### 7. Report
-
-Inform the user:
-- Which branch chain was processed (in order)
-- That the target branch is now checked out and up to date
-- Any warnings (e.g. branch was already up to date)
+### 7. Report — chain processed, target checked out, warnings.
 
 ## Rules
 
-- **Do NOT push** any branch — only local merges.
-- **Do NOT create manual commits** — only `git merge` may create merge commits as part of this workflow.
-- **Abort immediately** on any conflict — do not try to resolve conflicts.
-- **Always fetch fresh PR data** — never reuse stale data from earlier in the conversation.
+- No push. Only `git merge` commits. Abort on conflict. Fresh PR data always.
 

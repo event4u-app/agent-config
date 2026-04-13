@@ -9,7 +9,7 @@ description: Analyze a codebase area and create a structured context document
 
 ### 1. Ask what to document
 
-If the user provided a topic, use it. Otherwise ask:
+Topic provided → use. Otherwise:
 
 ```
 📄 What area do you want to document?
@@ -22,9 +22,7 @@ Examples:
 - Infrastructure (e.g. "Queue system with Horizon")
 ```
 
-### 2. Determine scope (module vs. project-wide)
-
-Check if `app/Modules/` exists. If yes, ask:
+### 2. Scope (module vs project-wide)
 
 ```
 Should the context be created in a module or in the project root?
@@ -33,15 +31,9 @@ Should the context be created in a module or in the project root?
 2. 🌐 Project root → agents/contexts/
 ```
 
-If module:
-- List available modules and ask which one.
-- Target: `app/Modules/{Module}/agents/contexts/`
-- Create directory if it doesn't exist.
+Module → `app/Modules/{Module}/agents/contexts/`. Project → `agents/contexts/`.
 
-If project-wide:
-- Target: `agents/contexts/`
-
-### 3. Determine context type
+### 3. Context type
 
 ```
 What type of context is this?
@@ -53,37 +45,11 @@ What type of context is this?
 5. 🏗️ Infrastructure — DevOps, infrastructure
 ```
 
-### 4. Analyze the code
+### 4. Analyze code
 
-Based on the type, analyze the relevant code area:
+Per type: **Module** → dirs, services, controllers, models, routes, tests. **Domain** → cross-module, data flow, models. **Service** → class, deps, call chain. **Integration** → API clients, config, error handling. **Infrastructure** → config, Docker, monitoring.
 
-**Module context:**
-- List all directories and file counts
-- Read key services, controllers, models
-- Analyze route files
-- Check for tests, agent docs
-
-**Domain context:**
-- Search across modules for related code
-- Trace data flow through services
-- Identify all models and tables involved
-
-**Service context:**
-- Read the service class and its dependencies
-- Trace call chain (who calls it, what it calls)
-- Identify configuration and env dependencies
-
-**Integration context:**
-- Find API client classes, HTTP calls
-- Read config for credentials/URLs
-- Identify error handling and retry logic
-
-**Infrastructure context:**
-- Read config files, Docker setup
-- Identify services and their connections
-- Check monitoring/logging setup
-
-**Share findings as you go:**
+Share findings:
 ```
 🔍 Ich analysiere den Code...
 
@@ -96,23 +62,11 @@ Gefunden:
 Should I investigate any specific areas in more detail?
 ```
 
-### 5. Interactive refinement
+### 5. Discuss findings — ask about deps, coverage, issues, gaps
 
-After analysis, discuss findings:
+### 6. Create context
 
-- "I noticed {Service} depends on {Dependency}. Is that correct?"
-- "There are {count} endpoints — should all be documented?"
-- "Are there known issues or technical debt in this area?"
-- "Anything I missed?"
-
-### 6. Create the context document
-
-- Read `.augment/templates/contexts.md` for the structure.
-- Create the context file in the target directory.
-- Fill in all applicable sections from the analysis.
-- Set `Last Updated` to today's date.
-
-**Ask for the filename:**
+Template: `.augment/templates/contexts.md`. Fill sections, set `Last Updated`. Ask filename:
 ```
 Context name?
 
@@ -158,9 +112,5 @@ What's next?
 
 ### Rules
 
-- **Do NOT commit or push.**
-- **Always analyze the code first** — never guess or assume.
-- **Be factual** — document what IS, not what SHOULD be.
-- **Ask the user** about unclear areas or business context.
-- **Link to specific files** — not vague descriptions.
+- No commit/push. Analyze code first. Be factual. Link to specific files.
 

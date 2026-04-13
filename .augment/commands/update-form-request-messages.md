@@ -13,27 +13,13 @@ description: Sync the messages() method of a FormRequest class — add missing e
 
 ## Step 1: Resolve the FormRequest class
 
-**If the user attached a file or mentioned a class name explicitly** → use it.
-
-**Otherwise, ask:**
-
-> Which FormRequest class should I update?
-> Please provide the class name (e.g. `UpdateSuperUserRequest`), its namespace, or the file path.
-
-Once provided, locate the file:
-- Try `codebase-retrieval` or a `find` command to resolve the file path.
-- If multiple matches exist, list them and ask the user to pick one (numbered options).
-- If no match is found, tell the user and stop.
-
-Read the full file content.
+File attached or class name → use it. Otherwise ask. Locate via `codebase-retrieval` / `find`. Multiple matches → numbered options. Not found → stop. Read file.
 
 ---
 
 ## Step 2: Check for rules()
 
-Scan the file for a `rules()` method.
-
-- **If no `rules()` method exists** → inform the user:
+No `rules()` method →
 
   > ⚠️  No `rules()` method found in `{ClassName}`. Nothing was changed.
 
@@ -43,9 +29,7 @@ Scan the file for a `rules()` method.
 
 ## Step 3: Parse rules()
 
-Extract every `field → rules` pair from the `rules()` array.
-
-For each field, collect all rules and resolve their **rule names**:
+Extract `field → rules` pairs, resolve rule names:
 
 | Rule type | Example | Extracted name |
 |---|---|---|
@@ -56,81 +40,46 @@ For each field, collect all rules and resolve their **rule names**:
 | New object instance | `new Enum(...)` | `enum` (class basename, lowercased) |
 | Closure / `fn()` | `function(...) {}` | **skip** — closures call `$fail()` themselves |
 
-**Also skip these modifier rules** that never produce validation errors:
-`nullable`, `sometimes`, `bail`
-
-Build a flat list of `(field, rule_name)` pairs:
-e.g. `[('username', 'required'), ('username', 'string'), ('username', 'unique'), ...]`
+Skip modifiers: `nullable`, `sometimes`, `bail`. Build flat `(field, rule_name)` pairs.
 
 ---
 
 ## Step 4: Determine the language key domain prefix
 
-Derive the domain prefix from the class name:
-1. Strip common verb prefixes: `Create`, `Update`, `Delete`, `List`, `Get`, `Send`, `Show`, `Store`, `Filter`, `Index`
-2. Strip the `Request` suffix
-3. Convert to `snake_case`
-
-Example: `UpdateSuperUserRequest` → `SuperUser` → `super_user`
-
-Present the result and ask to confirm:
+Strip verb prefix (`Create`/`Update`/`Delete`/etc.) + `Request` suffix → `snake_case`.
+Example: `UpdateSuperUserRequest` → `super_user`. Confirm:
 
 > The language key prefix will be `{derived_prefix}` (e.g. `validation.{derived_prefix}.field.rule`).
 > 1. Use `{derived_prefix}` ✓
 > 2. Enter a different prefix
 
-Wait for confirmation before continuing.
+---
+
+## Step 5: Build required entries
+
+Key: `{field}.{rule_name}` → Lang: `validation.{domain}.{field}.{rule_name}` (wildcards preserved).
 
 ---
 
-## Step 5: Build the required message entries
+## Step 6: Read existing messages()
 
-For each `(field, rule_name)` pair:
-
-- **messages() key:** `{field}.{rule_name}` (e.g. `'username.required'`)
-- **Lang key:** `validation.{domain}.{field}.{rule_name}`
-  - Wildcard fields keep their notation: `recipients.*.user_id.required`
-  - Example: `validation.super_user.username.required`
+Parse existing `key => __('...')` entries. Track covered keys.
 
 ---
 
-## Step 6: Read existing messages() method (if any)
+## Step 7: Add missing entries
 
-- If a `messages()` method exists, parse all its `key => __('...')` entries.
-- Keep track of which `(field.rule_name)` keys are already covered.
-- Note the lang key referenced in each existing `__('...')` call.
-
----
-
-## Step 7: Add missing message entries
-
-For each required `(field, rule_name)` pair **not yet covered** by an existing messages() entry:
-
-1. **Check if the lang key already exists** in both `lang/de/validation.php` and `lang/en/validation.php`.
-2. If missing in either → generate a meaningful message:
-   - **English:** e.g. `'The email address is required.'` or `'The email address has already been taken.'`
-   - **German:** e.g. `'Die E-Mail-Adresse ist erforderlich.'` oder `'Diese E-Mail-Adresse ist bereits vergeben.'`
-   - Do **not** write `{field_label}` or `{rule_name}` literally into the lang file — replace them with the actual derived values.
-   - You may use Laravel's standard placeholders (`:attribute`, `:max`, `:min`, etc.) instead of embedding the label directly.
-   - Adapt the message text to fit the specific rule (e.g. `required` → "is required", `unique` → "has already been taken", `max` → "may not exceed :max characters")
-   - Use sensible human-readable field labels (derive from the field name: `snake_case` → "Title Case")
-3. Add the new lang key to `lang/de/validation.php` and `lang/en/validation.php` following the flat dot-notation format from `lang-files` rule.
-   - If a domain section comment exists for `{domain}`, insert near it. Otherwise append at the end.
-4. Add the entry to the `messages()` method: `'{field}.{rule_name}' => __('validation.{domain}.{field}.{rule_name}'),`
+Per uncovered pair:
+1. Check lang key in both `lang/de/` + `lang/en/`
+2. Missing → generate meaningful messages (EN + DE), use `:attribute`/`:max`/`:min` placeholders, adapt per rule
+3. Add to both lang files (flat dot-notation)
+4. Add to `messages()`: `'{field}.{rule_name}' => __('validation.{domain}.{field}.{rule_name}'),`
 
 ---
 
-## Step 8: Clean up stale messages() entries
+## Step 8: Cleanup stale entries
 
-Find all keys in `messages()` where `{field}.{rule_name}` is **no longer valid**:
-- The field no longer exists in `rules()`, OR
-- The rule no longer applies to that field
-
-For each stale entry:
-1. Extract the lang key from the `__('...')` call.
-2. **Search the relevant source directories** for that exact lang key string, excluding `vendor/` and `node_modules/` (e.g. `grep -r "validation.super_user.username.old_rule" app lang resources routes config`).
-3. If the lang key is **used nowhere else** → remove it from both `lang/de/validation.php` and `lang/en/validation.php`.
-4. Remove the stale key from `messages()`.
+Field/rule no longer in `rules()` → grep for lang key in codebase. Unused → remove from both lang files + `messages()`.
 
 ---
 
