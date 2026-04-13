@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Install git hooks for this repository.
+# Run once: bash scripts/install-hooks.sh
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+HOOKS_DIR="$PROJECT_ROOT/.git/hooks"
+
+mkdir -p "$HOOKS_DIR"
+
+cat > "$HOOKS_DIR/pre-push" << 'EOF'
+#!/usr/bin/env bash
+# Pre-push hook: verify .augment/ is in sync with .augment.uncompressed/
+
+echo "🔍 Checking .augment/ sync..."
+python3 scripts/compress.py --check
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌  Push blocked — .augment/ is out of sync."
+    echo "   Run 'make sync' and compress changed .md files, then commit."
+    exit 1
+fi
+EOF
+
+chmod +x "$HOOKS_DIR/pre-push"
+echo "✅  Pre-push hook installed."

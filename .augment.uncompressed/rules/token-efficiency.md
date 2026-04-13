@@ -1,0 +1,223 @@
+---
+type: "always"
+---
+
+# Token Efficiency
+
+## The Iron Laws
+
+```
+NEVER load full command output into context. Redirect → read summary → targeted details.
+```
+
+```
+NEVER call the same tool more than 2 times in a row with similar parameters.
+If you catch yourself repeating a tool call — STOP, rethink, try a different approach, or ask the user.
+```
+
+### Anti-loop: Sequential Thinking
+
+Do NOT use `sequentialthinking` for simple tasks like viewing files, running commands, or
+making straightforward edits. It is ONLY for genuinely complex multi-step reasoning.
+If you find yourself calling `sequentialthinking` more than once per task — you are looping.
+Stop immediately and act directly instead.
+
+### Anti-loop: "CRITICAL INSTRUCTION" and self-prompting
+
+If you find yourself generating text that starts with "CRITICAL INSTRUCTION", "I need to",
+"Let me think", "Related tools:", or similar self-directed reasoning inside a tool call
+or as a preamble before acting — **you are in a loop**. This happens after connection errors
+or when the user says something like "continue" / "mach weiter".
+
+**Immediate action:**
+
+1. STOP generating self-instructions.
+2. Read the last user message — what did they actually ask?
+3. Do that ONE thing directly. No planning monologue, no tool selection reasoning.
+4. If you don't know what the user wanted, ask: "Wo waren wir stehen geblieben?"
+
+## Fresh Output Over Memory
+
+**CRITICAL**: When a tool or command returns a value (branch name, file path, PR number),
+use that EXACT value in subsequent API calls. NEVER substitute a value from earlier in
+the conversation. Context decay causes silent mismatches — fresh output is the only source of truth.
+
+## Conversation Freshness
+
+Monitor the conversation for **context decay** — long conversations and topic switches
+degrade output quality and waste tokens on stale context.
+
+**Suggest a new chat when:**
+
+- The conversation exceeds **~20 user messages** (rough estimate — count your responses)
+- The user's topic **changes completely** (e.g., from "optimize skills" to "fix database migration")
+- You notice yourself re-reading files you already read earlier in the conversation
+- The task list has **15+ completed tasks** and the user starts a new unrelated topic
+- The branch has changed since the conversation started
+- At least ~24 hours have passed since the conversation started
+
+**Repeat the suggestion** at every multiple of the threshold:
+
+- Messages: 20, 40, 60, 80, ... (every 20)
+- Completed tasks: 15, 30, 45, 60, ... (every 15)
+
+**ONLY suggest at exact thresholds.** If current count is 43, the next suggestion is at 60 — NOT at 43, 44, or 59.
+Between thresholds: no suggestion, no question, no hint. Silence.
+
+**How to suggest:**
+
+Estimate the conversation history token cost: count your responses × ~1,500 tokens average.
+Show this in the suggestion — the user should understand the cost.
+
+```
+> ⚡ This conversation has ~{N} messages (~{N×1500} tokens history cost — charged on EVERY request).
+> A fresh chat saves ~{N×1500} input tokens per request.
+>
+> 1. Start fresh — I'll run /agent-handoff
+> 2. Continue here
+```
+
+**If the user picks 1:** Run `/agent-handoff`.
+
+## Conversation Efficiency
+
+### Act, skip narration
+
+- **Skip repeating the user's request.** They know what they asked.
+- **Just do it** — skip announcing what you're about to do.
+- **Skip explaining obvious tool calls.** Reading a file needs no justification.
+- **Report only outcomes** — skip intermediate step summaries unless the user needs them.
+
+**This rule NEVER overrides user-interaction or command rules.**
+Token efficiency means fewer *unnecessary* words — NOT skipping required questions,
+numbered options, or command steps. When a rule or command says "ask the user", you ask.
+
+### Stop early — max 2 retries
+
+- **Command fails twice with same error** → stop, rethink. Try a different approach.
+- **grep/search returns nothing after 2 attempts** → switch approach or ask the user.
+- **Max 3 diagnostic commands** per error. Read the error, think, act.
+- **One hypothesis at a time.** Pick the most likely, try it. If it fails, ask.
+
+### Keep intermediate output minimal
+
+Read `minimal_output` from `.agent-settings` (default: `true`).
+
+When `true`:
+
+- **During multi-step work:** short bullet points only, no paragraphs.
+- **No thinking out loud** — the user doesn't need your reasoning process.
+- **Play-by-play**: Read `play_by_play` from `.agent-settings` (default: `false`).
+  When `false`: don't narrate each tool call result. Silently investigate, then report the conclusion.
+  When `true`: briefly share intermediate findings as you go.
+    - ❌  (when false) "Hmm, exit code 1. Let me check... 18 errors. The errors are about method_exists..."
+    - ✅  (when false) *(silently investigate, then report the conclusion)*
+- **At the end:** concise summary — just what changed and what the user needs to know.
+
+### Don't re-read what you already know
+
+- Edited a file → `str-replace-editor` showed the result. Don't `view` again.
+- Ran a command → you have the output. Don't re-run to "verify".
+- File in context from recent messages → don't reload.
+- Found a symbol → don't search again in a different way.
+
+### Search before reading
+
+- **Search first** — `codebase-retrieval`, `search_query_regex`, or `grep`.
+- **Don't load entire files** when you only need a few lines.
+- **Small files** (< 50 lines) — OK to read fully.
+
+### Minimize tool calls
+
+- **Parallel reads** — don't read 5 files sequentially.
+- **`search_query_regex`** over full file reads.
+- **`view_range`** when you know the exact lines.
+- **One `codebase-retrieval` call** with all symbols — not 5 separate calls.
+
+### Right-size responses
+
+- Short question → short answer.
+- Code change → show what changed, not the entire file.
+- Error fix → what was wrong, what you did. No history lesson.
+- Summary tables → only for 3+ items.
+
+## Pattern: Redirect, Summarize, Target
+
+Every command that MAY produce more than ~30 lines of output:
+
+### Step 1: Redirect to file
+
+```bash
+docker compose exec -T <service> <command> 2>&1 > /tmp/<tool>-output.txt
+echo "EXIT=$?"
+```
+
+### Step 2: Read ONLY the summary
+
+```bash
+tail -5 /tmp/<tool>-output.txt
+```
+
+### Step 3: If errors exist, read ONLY what you need to fix
+
+```bash
+# Read specific error lines
+grep "ERROR\|error\|✏️" /tmp/<tool>-output.txt | head -20
+
+# Read a specific file's errors
+grep "app/Services/MyService.php" /tmp/<tool>-output.txt
+```
+
+**NEVER** do:
+
+- `cat /tmp/<tool>-output.txt` (loads everything)
+- Read the full output of a passing command (waste)
+- Read diffs you don't plan to act on
+
+## General Rules
+
+For tool-specific commands and workflows → see the `quality-workflow` rule.
+
+1. **ECS and Rector are trusted tools** — their configs define exactly what they do.
+   Run with `--fix`, don't read diffs, don't review changes. Trust the config.
+   The only verification needed is PHPStan + tests afterwards.
+
+2. **Both ECS and Rector always run with `--fix`** — dry-run diffs are a waste of tokens.
+   The workflow is: fix → verify (PHPStan + tests) → fix issues if any.
+
+3. **Exit code first**: Check `$?` before reading ANY output. If 0, you're done — don't read.
+
+4. **Summary line**: Most tools print a summary as the last few lines. That's all you need.
+
+5. **Targeted grep**: When you need details, `grep` for the specific file or error type.
+   Never read the full output "just in case".
+
+6. **Don't re-read**: Once you've read output and acted on it, don't read it again.
+   The file is still there if you need it, but don't re-load it into context.
+
+7. **Iterative fixing**: Fix one error at a time, re-run, check exit code.
+   Don't try to fix all errors from a single output read — the output becomes stale after each fix.
+
+## Exceptions
+
+- **Small output** (< 30 lines): Read directly, no need to redirect.
+- **Debugging a specific failure**: OK to read more context around that one error.
+- **PHPStan error you don't understand**: Read more context (5-10 lines around the error).
+- **User explicitly asks** to see the full output: Show it.
+
+## Ignored Skills Recovery
+
+Skills excluded via `.augmentignore` don't appear in `<available_skills>`.
+When you need expertise from an ignored skill during a task:
+
+1. **Read the SKILL.md directly** — `.augmentignore` only hides from the system prompt,
+   not from `view`. Use `view .augment/skills/{name}/SKILL.md` to load it on demand.
+2. **Continue working** — apply the skill's guidance for the current task.
+3. **After the task**, ask the user:
+
+```
+> 💡 I loaded the `{name}` skill manually — it's currently ignored in `.augmentignore`.
+>
+> 1. Remove from ignore — this skill is relevant for the project
+> 2. Keep ignored — this was a one-off
+```
