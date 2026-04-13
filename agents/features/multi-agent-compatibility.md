@@ -11,16 +11,19 @@
 
 ## Problem
 
-The `galawork/agent-config` package currently only works with **Augment Code**. Other AI coding tools (Claude Code, Cursor, Copilot, Windsurf, Cline, Codex, Gemini CLI) each expect their own config files in specific locations. Teams using multiple tools get no benefit from the 24 curated rules, and maintaining separate copies per tool would be unsustainable.
+The `event4u/agent-config` package currently only works with **Augment Code**. Other AI coding tools (Claude Code, Cursor, Copilot, Windsurf, Cline, Codex, Gemini CLI) each expect their own config files in specific locations. Teams using multiple tools get no benefit from the 24 curated rules, ~60 skills, and ~50 commands. Maintaining separate copies per tool would be unsustainable.
 
 ## Proposal
 
 1. Classify rules as **universal** (~17) vs **Augment-only** (~7)
 2. Make universal rules tool-agnostic (remove Augment-specific tool references)
-3. Create **symlinks** from tool-specific directories (`.claude/rules/`, `.cursor/rules/`, `.clinerules/`) → `.augment/rules/`
-4. **Generate** single-file configs (`.windsurfrules`, `GEMINI.md`) by concatenating key rules
-5. Extend the Composer plugin to create symlinks in target projects
-6. Unify YAML frontmatter so one file works for all tools
+3. Create **symlinks** from tool-specific directories → `.augment/rules/`
+4. **Generate** single-file configs (`.windsurfrules`, `GEMINI.md`)
+5. Add **Agent Skills standard** (agentskills.io) frontmatter to all SKILL.md files
+6. Port **skills** to `.claude/skills/` via symlinks (30+ tools support the standard)
+7. Port **commands** to Claude Code Skills with `disable-model-invocation: true`
+8. Extend the Composer plugin to create symlinks in target projects
+9. Unify YAML frontmatter so one file works for all tools
 
 ## Scope
 
@@ -29,35 +32,42 @@ The `galawork/agent-config` package currently only works with **Augment Code**. 
 - Refactor `token-efficiency.md` and `rtk.md` to be tool-agnostic
 - Classify all 24 rules (universal vs Augment-only)
 - Unify frontmatter format (add `alwaysApply` for Cursor compatibility)
-- Create symlink directories: `.claude/rules/`, `.cursor/rules/`, `.clinerules/`
+- Create rule symlink directories: `.claude/rules/`, `.cursor/rules/`, `.clinerules/`
 - Generate `.windsurfrules` from concatenated universal rules
 - Symlink `GEMINI.md` → `AGENTS.md`
-- Extend `AgentConfigPlugin` to create symlinks in target projects
+- **Add Agent Skills frontmatter** (`name`, `description`) to all SKILL.md files
+- **Create `.claude/skills/`** with symlinks to universal skills
+- **Convert commands** to Claude Code Skills format (`disable-model-invocation: true`)
+- Classify skills and commands (universal vs Augment-only)
+- Extend `AgentConfigPlugin` to create rules + skills symlinks in target projects
 - Update `composer.json` archive to include new directories/files
-- Update `scripts/compress.py` to generate tool-specific outputs
-- Tests for symlink creation and plugin changes
+- Update `scripts/compress.py` to generate rules, skills, and commands outputs
+- Tests for all generation and plugin logic
 
 ### Out of Scope (deferred)
 
-- Shipping **skills** to other tools (only rules for now)
-- Shipping **commands** to other tools (Augment-specific concept)
 - Per-file glob scoping for Cursor/Claude (all rules load always for now)
 - Custom `.cursorrules` legacy format (deprecated by Cursor)
 - Tool-specific rule compression (same compressed file for all tools)
+- Skills delivery to tools other than Claude Code (future: Cursor, Copilot when paths are confirmed)
 
 ## Affected Areas
 
 | Area | Impact |
 |---|---|
 | `.augment.uncompressed/rules/` | Refactor 2 files, add frontmatter to all 24 |
+| `.augment.uncompressed/skills/` | Add YAML frontmatter to all ~60 SKILL.md files |
 | `.augment/rules/` | Compressed versions get new frontmatter |
-| `.claude/rules/` | New directory with symlinks |
-| `.cursor/rules/` | New directory with symlinks |
-| `.clinerules/` | New directory with symlinks |
+| `.augment/skills/` | Compressed versions get new frontmatter |
+| `.claude/rules/` | New directory with rule symlinks |
+| `.claude/skills/` | New directory with skill symlinks + converted commands |
+| `.cursor/rules/` | New directory with rule symlinks |
+| `.clinerules/` | New directory with rule symlinks |
 | `.windsurfrules` | New generated file |
 | `GEMINI.md` | New symlink → `AGENTS.md` |
-| `src/AgentConfigPlugin.php` | New symlink creation method |
-| `scripts/compress.py` | New `--generate-tools` mode |
+| `src/AgentConfigPlugin.php` | New symlink creation for rules + skills |
+| `scripts/compress.py` | New `--generate-tools` mode for rules, skills, commands |
+| `config/` | New config files for universal rules, skills, commands |
 | `composer.json` | Update archive.exclude |
 | `Taskfile.yml` | New tasks for generation |
 
@@ -109,8 +119,11 @@ Fallback: if symlink creation fails (Windows, restricted filesystem), copy files
 - [x] Which rules are universal vs Augment-only? → Classified (17 universal, 7 Augment-only)
 - [x] Can frontmatter be unified? → Yes, tools ignore unknown fields
 - [x] Symlinks or copies in target projects? → Symlinks with copy fallback
+- [x] Can skills be shipped to other tools? → Yes, via Agent Skills standard (agentskills.io)
+- [x] Can commands be ported? → Yes, as Claude Code Skills with `disable-model-invocation: true`
 - [ ] Windows symlink support — does Composer plugin need admin rights?
 - [ ] Should `CLAUDE.md` remain a separate file or become a symlink to `AGENTS.md`?
+- [ ] Exact paths for Cursor/Copilot/Gemini skills directories (confirmed for Claude Code only)
 
 ## Dependencies
 
@@ -119,13 +132,25 @@ Fallback: if symlink creation fails (Windows, restricted filesystem), copy files
 
 ## Acceptance Criteria
 
+### Rules
 - [ ] 17 universal rules available in `.claude/rules/`, `.cursor/rules/`, `.clinerules/`
 - [ ] `.windsurfrules` generated with all universal rules
 - [ ] `GEMINI.md` symlinked to `AGENTS.md`
 - [ ] `token-efficiency.md` and `rtk.md` are tool-agnostic
-- [ ] Composer plugin creates symlinks in target projects (with copy fallback)
-- [ ] All existing tests pass + new tests for symlink/generation logic
-- [ ] No content duplication — single source in `.augment/rules/`
+
+### Skills (Agent Skills Standard)
+- [ ] All SKILL.md files have `name` + `description` YAML frontmatter
+- [ ] Universal skills available in `.claude/skills/` via symlinks
+- [ ] Augment Code still loads skills correctly (backward compatible)
+
+### Commands
+- [ ] Universal commands converted to `.claude/skills/*/SKILL.md` format
+- [ ] All converted commands have `disable-model-invocation: true`
+
+### Infrastructure
+- [ ] Composer plugin creates rules + skills symlinks in target projects (copy fallback)
+- [ ] All existing tests pass + new tests for all generation logic
+- [ ] No content duplication — single source in `.augment/`
 
 ## Roadmaps
 
@@ -133,6 +158,9 @@ Fallback: if symlink creation fails (Windows, restricted filesystem), copy files
 
 ## Notes
 
-- Cline natively reads `.cursorrules`, `.windsurfrules`, AND `AGENTS.md` — so Cline gets rules from multiple sources automatically
-- AGENTS.md is emerging as the universal standard (backed by OpenAI Codex, supported by Cursor, Copilot, and others)
+- Cline natively reads `.cursorrules`, `.windsurfrules`, AND `AGENTS.md` — triple coverage
+- AGENTS.md is emerging as the universal standard (backed by OpenAI Codex, Cursor, Copilot)
 - Claude Code docs explicitly state "symlinks are resolved normally"
+- **Agent Skills standard** (agentskills.io) supported by 30+ tools including Claude Code, Cursor, GitHub Copilot, Gemini CLI, Kiro, OpenAI Codex, Roo Code, TRAE, Junie
+- Augment ignores YAML frontmatter in SKILL.md — adding it is fully backward-compatible
+- Our SKILL.md directory structure (`skill-name/SKILL.md`) already matches the standard
