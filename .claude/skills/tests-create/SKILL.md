@@ -1,8 +1,7 @@
 ---
 name: tests-create
-description: "Create tests for business logic with proper coverage"
+description: "tests-create"
 disable-model-invocation: true
-argument-hint: "[class or feature]"
 ---
 
 # tests-create

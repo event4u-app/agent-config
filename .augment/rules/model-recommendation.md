@@ -1,5 +1,6 @@
 ---
 type: "always"
+source: package
 ---
 
 # Model Recommendation

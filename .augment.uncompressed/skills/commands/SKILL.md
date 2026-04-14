@@ -1,6 +1,7 @@
 ---
 name: commands
 description: "Use when the user types a slash command like "/create-pr" or "/commit". Executes the command immediately without asking questions or giving opinions."
+source: package
 ---
 
 # commands

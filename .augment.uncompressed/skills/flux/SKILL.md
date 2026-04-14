@@ -1,6 +1,7 @@
 ---
 name: flux
 description: "Use when writing Laravel Flux UI components — the official Livewire component library by the Laravel team. Covers components, slots, and variants."
+source: package
 ---
 
 # flux

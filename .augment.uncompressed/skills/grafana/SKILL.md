@@ -1,6 +1,7 @@
 ---
 name: grafana
 description: "Use when creating Grafana dashboards, writing Loki log queries, configuring alerting rules, or building monitoring panels."
+source: package
 ---
 
 # Grafana Skill

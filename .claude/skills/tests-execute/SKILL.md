@@ -1,6 +1,6 @@
 ---
 name: tests-execute
-description: "Execute tests with proper environment setup"
+description: "tests-execute"
 disable-model-invocation: true
 ---
 

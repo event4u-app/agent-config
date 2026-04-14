@@ -1,6 +1,7 @@
 ---
 name: universal-project-analysis
 description: "ONLY when user explicitly requests: full project analysis, deep codebase audit, or comprehensive architecture review. NOT for regular bug fixes or feature work."
+source: package
 ---
 
 # universal-project-analysis

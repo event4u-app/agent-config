@@ -1,6 +1,6 @@
 ---
 name: optimize-augmentignore
-description: "Optimize Augmentignore"
+description: "/optimize-augmentignore"
 disable-model-invocation: true
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: php-debugging
 description: "Use when debugging PHP with Xdebug — dual-container architecture, IDE configuration, header-based routing, or debugging workflows."
+source: package
 ---
 
 # php-debugging

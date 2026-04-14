@@ -1,6 +1,7 @@
 ---
 name: javascript
 description: "Use when writing JavaScript (ES2020+) — clean patterns, proper error handling, and alignment with project conventions."
+source: package
 ---
 
 # javascript

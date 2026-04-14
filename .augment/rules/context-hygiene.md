@@ -2,6 +2,7 @@
 type: "auto"
 alwaysApply: false
 description: "3-failure rule for debugging and fixing errors — stop after 3 consecutive failed attempts, dump state, and recommend a fresh session"
+source: package
 ---
 
 # Context Hygiene

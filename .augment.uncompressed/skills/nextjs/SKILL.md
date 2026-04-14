@@ -1,6 +1,7 @@
 ---
 name: nextjs
 description: "Use when writing Next.js applications — App Router, Server Components, data fetching, and modern patterns."
+source: package
 ---
 
 # nextjs

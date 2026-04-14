@@ -1,6 +1,7 @@
 ---
 name: database
 description: "Use when working with database architecture, MariaDB optimization, indexing strategies, query performance, or multi-connection patterns."
+source: package
 ---
 
 # database

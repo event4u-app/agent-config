@@ -1,6 +1,7 @@
 ---
 name: nuxt
 description: "Use when writing Nuxt applications — auto-imports, file-based routing, server routes, SEO, or content modules."
+source: package
 ---
 
 # nuxt

@@ -1,6 +1,7 @@
 ---
 name: microservices
 description: "Use when designing microservice architectures — service boundaries, API contracts, event-driven patterns, or inter-service communication."
+source: package
 ---
 
 # microservices

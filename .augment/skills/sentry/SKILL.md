@@ -1,6 +1,7 @@
 ---
 name: sentry
 description: "Use when the user shares a Sentry URL, says "check Sentry", or wants to investigate production errors. Uses Sentry MCP tools for deep analysis."
+source: package
 ---
 
 # Sentry Skill

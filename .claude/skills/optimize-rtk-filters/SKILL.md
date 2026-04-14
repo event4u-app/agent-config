@@ -1,6 +1,6 @@
 ---
 name: optimize-rtk-filters
-description: "Optimize Rtk Filters"
+description: "optimize-rtk-filters"
 disable-model-invocation: true
 ---
 

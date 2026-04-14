@@ -1,8 +1,7 @@
 ---
 name: feature-dev
-description: "Full 7-phase feature development workflow"
+description: "/feature-dev"
 disable-model-invocation: true
-argument-hint: "[description]"
 ---
 
 # /feature-dev

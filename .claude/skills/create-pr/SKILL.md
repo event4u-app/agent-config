@@ -1,6 +1,6 @@
 ---
 name: create-pr
-description: "Create a pull request with description via GitHub API"
+description: "create-pr"
 disable-model-invocation: true
 ---
 

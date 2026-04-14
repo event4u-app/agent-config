@@ -1,6 +1,6 @@
 ---
 name: context-refactor
-description: "Context Refactor"
+description: "context-refactor"
 disable-model-invocation: true
 ---
 

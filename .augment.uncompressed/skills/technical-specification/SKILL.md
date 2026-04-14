@@ -1,6 +1,7 @@
 ---
 name: technical-specification
 description: "Use when the user says "write a spec", "create RFC", or "document this decision". Writes technical specifications, RFCs, and ADRs with clear structure."
+source: package
 ---
 
 # technical-specification

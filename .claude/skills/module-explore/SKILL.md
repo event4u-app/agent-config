@@ -1,6 +1,6 @@
 ---
 name: module-explore
-description: "Explore a module structure and understand its architecture"
+description: "module-explore"
 disable-model-invocation: true
 ---
 

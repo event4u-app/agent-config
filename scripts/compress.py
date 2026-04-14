@@ -196,7 +196,6 @@ def check_sync(source_dir: Path, target_dir: Path) -> tuple:
 
 # ── Multi-agent tool generation ──────────────────────────────────────
 
-CONFIG_DIR = PROJECT_ROOT / "config"
 RULES_SOURCE = PROJECT_ROOT / ".augment" / "rules"
 
 TOOL_DIRS = {
@@ -208,15 +207,6 @@ TOOL_DIRS = {
 SKILLS_SOURCE = PROJECT_ROOT / ".augment" / "skills"
 COMMANDS_SOURCE = PROJECT_ROOT / ".augment" / "commands"
 CLAUDE_SKILLS_DIR = PROJECT_ROOT / ".claude" / "skills"
-
-
-def load_config(name: str) -> dict:
-    """Load a JSON config file from config/."""
-    path = CONFIG_DIR / name
-    if not path.exists():
-        print(f"❌  Config not found: {path}")
-        sys.exit(1)
-    return json.loads(path.read_text())
 
 
 def strip_frontmatter(content: str) -> str:
@@ -231,11 +221,7 @@ def strip_frontmatter(content: str) -> str:
 def generate_rule_symlinks() -> int:
     """Create symlink directories for rules (.claude/rules/, .cursor/rules/, .clinerules/).
 
-    In the package repo itself: symlinks ALL rules (including Augment-specific ones),
-    because anyone working on the package needs the full rule set regardless of their tool.
-
-    The Composer plugin uses config/universal-rules.json to deliver only universal rules
-    to target projects that install this package.
+    Symlinks ALL .md files from .augment/rules/ into tool-specific directories.
     """
     # All .md files in .augment/rules/ — not just universal ones
     rules = sorted([f.name for f in RULES_SOURCE.glob("*.md")])
@@ -263,9 +249,6 @@ def generate_rule_symlinks() -> int:
 
 def generate_windsurfrules() -> None:
     """Generate .windsurfrules by concatenating all rules (no frontmatter).
-
-    In the package repo: includes ALL rules. The Composer plugin generates
-    .windsurfrules with only universal rules for target projects.
     """
     rules = sorted([f.name for f in RULES_SOURCE.glob("*.md")])
     parts = ["# Auto-generated from .augment/rules/ — do not edit directly\n"]
@@ -291,9 +274,6 @@ def generate_gemini_md() -> None:
 
 def generate_claude_skills() -> None:
     """Create .claude/skills/ symlinks for ALL skills in .augment/skills/.
-
-    In the package repo: includes ALL skills. The Composer plugin uses
-    config/universal-skills.json to deliver only universal skills to target projects.
     """
     if not SKILLS_SOURCE.exists():
         print("  ⚠️  .augment/skills/ not found — skipping skills")
@@ -325,27 +305,25 @@ def generate_claude_skills() -> None:
     print(f"  ✅  Created {count} skill symlinks in .claude/skills/")
 
 
+def extract_description_from_md(content: str) -> str:
+    """Extract description from first # heading or first non-empty line."""
+    for line in content.strip().split("\n"):
+        line = line.strip()
+        if line.startswith("# "):
+            return line[2:].strip()
+        if line and not line.startswith("#"):
+            return line[:120]
+    return ""
+
+
 def generate_claude_commands() -> None:
     """Convert ALL Augment commands to Claude Code Skills format.
 
-    In the package repo: converts ALL commands from .augment/commands/.
-    Metadata (description, argument-hint) is read from config/universal-commands.json
-    if available; otherwise a default description is derived from the filename.
-
-    The Composer plugin uses config/universal-commands.json to deliver only
-    universal commands to target projects.
+    Description is extracted from the first # heading in each command file.
     """
     if not COMMANDS_SOURCE.exists():
         print("  ⚠️  .augment/commands/ not found — skipping commands")
         return
-
-    # Build metadata lookup from config (if exists)
-    metadata: dict[str, dict] = {}
-    config_path = CONFIG_DIR / "universal-commands.json"
-    if config_path.exists():
-        config = load_config("universal-commands.json")
-        for cmd in config.get("commands", []):
-            metadata[cmd["name"]] = cmd
 
     CLAUDE_SKILLS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -353,12 +331,9 @@ def generate_claude_commands() -> None:
     for source_file in sorted(COMMANDS_SOURCE.glob("*.md")):
         name = source_file.stem
 
-        content = source_file.read_text()
-        content = strip_frontmatter(content)
-
-        # Get metadata from config or derive from filename
-        cmd_meta = metadata.get(name, {})
-        description = cmd_meta.get("description", name.replace("-", " ").title())
+        raw_content = source_file.read_text()
+        content = strip_frontmatter(raw_content)
+        description = extract_description_from_md(content) or name.replace("-", " ").title()
 
         # Build frontmatter
         fm_parts = [
@@ -366,10 +341,8 @@ def generate_claude_commands() -> None:
             f"name: {name}",
             f"description: \"{description}\"",
             "disable-model-invocation: true",
+            "---",
         ]
-        if "argument-hint" in cmd_meta:
-            fm_parts.append(f"argument-hint: \"{cmd_meta['argument-hint']}\"")
-        fm_parts.append("---")
 
         full_content = "\n".join(fm_parts) + "\n\n" + content.strip() + "\n"
 

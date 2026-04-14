@@ -1,6 +1,7 @@
 ---
 type: "auto"
 description: "Keeping .augment/ contexts, counts, and cross-references in sync when creating, renaming, or deleting skills, commands, rules, guidelines, or templates"
+source: package
 ---
 
 # Docs Sync

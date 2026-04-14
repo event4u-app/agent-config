@@ -2,6 +2,7 @@
 type: "auto"
 alwaysApply: false
 description: "Running CLI commands that produce verbose output — git, tests, linters, docker, build tools"
+source: package
 ---
 
 # Development Efficiency

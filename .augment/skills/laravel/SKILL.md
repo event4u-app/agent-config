@@ -1,6 +1,7 @@
 ---
 name: laravel
 description: "Writes Laravel code following framework conventions, project architecture, and modern best practices for controllers, requests, services, jobs, events, policies, and application structure."
+source: package
 ---
 
 # laravel

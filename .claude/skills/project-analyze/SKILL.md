@@ -1,6 +1,6 @@
 ---
 name: project-analyze
-description: "Multi-phase interactive project analysis"
+description: "project-analyze"
 disable-model-invocation: true
 ---
 

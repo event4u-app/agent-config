@@ -1,6 +1,7 @@
 ---
 name: composer
 description: "Use when managing Composer packages, autoloading, scripts, or resolving dependency conflicts in PHP applications or library packages."
+source: package
 ---
 
 # composer

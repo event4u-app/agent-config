@@ -1,6 +1,7 @@
 ---
 name: eloquent
 description: "Use when writing Eloquent models, relationships, scopes, queries, or database interactions. Covers eager loading, type safety, getter/setter conventions, and performance."
+source: package
 ---
 
 # eloquent

@@ -1,6 +1,7 @@
 ---
 name: php
 description: "Use when writing modern PHP (8.2+) — strict typing, clean patterns, proper error handling, and best practices."
+source: package
 ---
 
 # php

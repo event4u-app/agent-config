@@ -1,6 +1,6 @@
 ---
 name: module-create
-description: "Create a new Laravel module from template"
+description: "module-create"
 disable-model-invocation: true
 ---
 

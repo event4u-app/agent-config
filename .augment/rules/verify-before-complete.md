@@ -2,6 +2,7 @@
 type: "always"
 description: "Verify before completion — run tests and quality tools before claiming done"
 alwaysApply: true
+source: package
 ---
 
 # Verify Before Completion

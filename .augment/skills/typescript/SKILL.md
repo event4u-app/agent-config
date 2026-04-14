@@ -1,6 +1,7 @@
 ---
 name: typescript
 description: "Use when writing TypeScript — strict typing, proper interfaces, generics, and modern patterns for frontend and Node.js projects."
+source: package
 ---
 
 # typescript

@@ -396,25 +396,16 @@ class TestGenerateRuleSymlinks(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.project_root = Path(self.tmpdir)
-        # Create config
-        config_dir = self.project_root / "config"
-        config_dir.mkdir()
-        (config_dir / "universal-rules.json").write_text(
-            '{"rules": ["ask-when-uncertain.md", "scope-control.md"]}'
-        )
-        # Create augment rules
         rules_dir = self.project_root / ".augment" / "rules"
         rules_dir.mkdir(parents=True)
         (rules_dir / "ask-when-uncertain.md").write_text("# Ask When Uncertain")
         (rules_dir / "scope-control.md").write_text("# Scope Control")
-        # Patch globals
-        self._orig = (compress.PROJECT_ROOT, compress.CONFIG_DIR, compress.RULES_SOURCE)
+        self._orig = (compress.PROJECT_ROOT, compress.RULES_SOURCE)
         compress.PROJECT_ROOT = self.project_root
-        compress.CONFIG_DIR = config_dir
         compress.RULES_SOURCE = rules_dir
 
     def tearDown(self):
-        compress.PROJECT_ROOT, compress.CONFIG_DIR, compress.RULES_SOURCE = self._orig
+        compress.PROJECT_ROOT, compress.RULES_SOURCE = self._orig
         shutil.rmtree(self.tmpdir)
 
     def test_creates_symlinks_in_all_tool_dirs(self):
@@ -439,22 +430,16 @@ class TestGenerateWindsurfrules(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.project_root = Path(self.tmpdir)
-        config_dir = self.project_root / "config"
-        config_dir.mkdir()
-        (config_dir / "universal-rules.json").write_text(
-            '{"rules": ["rule-a.md", "rule-b.md"]}'
-        )
         rules_dir = self.project_root / ".augment" / "rules"
         rules_dir.mkdir(parents=True)
         (rules_dir / "rule-a.md").write_text('---\ntype: "always"\n---\n\n# Rule A\n\nContent A.')
         (rules_dir / "rule-b.md").write_text('---\ntype: "auto"\n---\n\n# Rule B\n\nContent B.')
-        self._orig = (compress.PROJECT_ROOT, compress.CONFIG_DIR, compress.RULES_SOURCE)
+        self._orig = (compress.PROJECT_ROOT, compress.RULES_SOURCE)
         compress.PROJECT_ROOT = self.project_root
-        compress.CONFIG_DIR = config_dir
         compress.RULES_SOURCE = rules_dir
 
     def tearDown(self):
-        compress.PROJECT_ROOT, compress.CONFIG_DIR, compress.RULES_SOURCE = self._orig
+        compress.PROJECT_ROOT, compress.RULES_SOURCE = self._orig
         shutil.rmtree(self.tmpdir)
 
     def test_generates_windsurfrules(self):
@@ -479,27 +464,21 @@ class TestGenerateClaudeSkills(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.project_root = Path(self.tmpdir)
-        config_dir = self.project_root / "config"
-        config_dir.mkdir()
-        (config_dir / "universal-skills.json").write_text(
-            '{"skills": ["api-design", "database"]}'
-        )
         skills_dir = self.project_root / ".augment" / "skills"
         (skills_dir / "api-design").mkdir(parents=True)
         (skills_dir / "api-design" / "SKILL.md").write_text("---\nname: api-design\n---\n# API")
         (skills_dir / "database").mkdir(parents=True)
         (skills_dir / "database" / "SKILL.md").write_text("---\nname: database\n---\n# DB")
         self._orig = (
-            compress.PROJECT_ROOT, compress.CONFIG_DIR,
+            compress.PROJECT_ROOT,
             compress.SKILLS_SOURCE, compress.CLAUDE_SKILLS_DIR,
         )
         compress.PROJECT_ROOT = self.project_root
-        compress.CONFIG_DIR = config_dir
         compress.SKILLS_SOURCE = skills_dir
         compress.CLAUDE_SKILLS_DIR = self.project_root / ".claude" / "skills"
 
     def tearDown(self):
-        (compress.PROJECT_ROOT, compress.CONFIG_DIR,
+        (compress.PROJECT_ROOT,
          compress.SKILLS_SOURCE, compress.CLAUDE_SKILLS_DIR) = self._orig
         shutil.rmtree(self.tmpdir)
 
@@ -522,27 +501,20 @@ class TestGenerateClaudeCommands(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.project_root = Path(self.tmpdir)
-        config_dir = self.project_root / "config"
-        config_dir.mkdir()
-        (config_dir / "universal-commands.json").write_text(
-            '{"commands": [{"name": "commit", "description": "Create a commit"}, '
-            '{"name": "feature-dev", "description": "Feature dev", "argument-hint": "[desc]"}]}'
-        )
         commands_dir = self.project_root / ".augment" / "commands"
         commands_dir.mkdir(parents=True)
         (commands_dir / "commit.md").write_text("# commit\n\n## Instructions\n\nDo the commit.")
         (commands_dir / "feature-dev.md").write_text("---\nold: data\n---\n\n# feature-dev\n\nDevelop.")
         self._orig = (
-            compress.PROJECT_ROOT, compress.CONFIG_DIR,
+            compress.PROJECT_ROOT,
             compress.COMMANDS_SOURCE, compress.CLAUDE_SKILLS_DIR,
         )
         compress.PROJECT_ROOT = self.project_root
-        compress.CONFIG_DIR = config_dir
         compress.COMMANDS_SOURCE = commands_dir
         compress.CLAUDE_SKILLS_DIR = self.project_root / ".claude" / "skills"
 
     def tearDown(self):
-        (compress.PROJECT_ROOT, compress.CONFIG_DIR,
+        (compress.PROJECT_ROOT,
          compress.COMMANDS_SOURCE, compress.CLAUDE_SKILLS_DIR) = self._orig
         shutil.rmtree(self.tmpdir)
 
@@ -568,10 +540,15 @@ class TestGenerateClaudeCommands(unittest.TestCase):
         self.assertNotIn("old: data", content)
         self.assertIn("disable-model-invocation: true", content)
 
-    def test_command_with_argument_hint(self):
+    def test_command_description_from_heading(self):
+        compress.generate_claude_commands()
+        content = (self.project_root / ".claude" / "skills" / "commit" / "SKILL.md").read_text()
+        self.assertIn('description: "commit"', content)
+
+    def test_command_description_from_heading_after_frontmatter(self):
         compress.generate_claude_commands()
         content = (self.project_root / ".claude" / "skills" / "feature-dev" / "SKILL.md").read_text()
-        self.assertIn('argument-hint: "[desc]"', content)
+        self.assertIn('description: "feature-dev"', content)
 
 
 class TestCleanTools(unittest.TestCase):

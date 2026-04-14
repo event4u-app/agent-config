@@ -1,6 +1,6 @@
 ---
 name: optimize-skills
-description: "Optimize Skills"
+description: "/optimize-skills"
 disable-model-invocation: true
 ---
 

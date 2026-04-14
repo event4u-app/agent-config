@@ -1,6 +1,7 @@
 ---
 name: blade-ui
 description: "Use when creating or editing Blade views, components, partials, or view logic. Covers clean separation of concerns and reusable UI structure."
+source: package
 ---
 
 # blade-ui

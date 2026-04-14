@@ -1,6 +1,6 @@
 ---
 name: agents-cleanup
-description: "Agents Cleanup"
+description: "agents-cleanup"
 disable-model-invocation: true
 ---
 

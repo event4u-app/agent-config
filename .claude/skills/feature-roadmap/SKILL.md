@@ -1,6 +1,6 @@
 ---
 name: feature-roadmap
-description: "Create a roadmap for a feature from its plan"
+description: "feature-roadmap"
 disable-model-invocation: true
 ---
 

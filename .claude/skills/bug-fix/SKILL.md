@@ -1,6 +1,6 @@
 ---
 name: bug-fix
-description: "Investigate and fix a bug, optionally from a Jira ticket"
+description: "bug-fix"
 disable-model-invocation: true
 ---
 

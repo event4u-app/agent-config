@@ -1,6 +1,7 @@
 ---
 name: dashboard-design
 description: "Use when designing monitoring dashboards — visualization selection, layout principles, observability strategies (RED/USE/Golden Signals), and data storytelling."
+source: package
 ---
 
 # Dashboard Design Skill

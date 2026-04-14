@@ -1,6 +1,7 @@
 ---
 name: aws-infrastructure
 description: "Use when working with AWS resources — ECS Fargate, ECR, EFS, Secrets Manager, gomplate templates, or multi-environment deployment setup."
+source: package
 ---
 
 # aws-infrastructure

@@ -1,6 +1,7 @@
 ---
 name: naming
 description: "Use when naming anything — PHP classes, routes, database columns, agent files, branches, or config keys. Provides consistent naming conventions across the project."
+source: package
 ---
 
 # Naming Skill

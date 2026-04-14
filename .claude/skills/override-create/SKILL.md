@@ -1,6 +1,6 @@
 ---
 name: override-create
-description: "Override Create"
+description: "/override-create"
 disable-model-invocation: true
 ---
 

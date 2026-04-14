@@ -1,6 +1,7 @@
 ---
 name: adversarial-review
 description: "ONLY when user explicitly requests: adversarial review, devil's advocate analysis, or critical challenge of a plan. NOT for regular code review."
+source: package
 ---
 
 # Adversarial Review

@@ -1,6 +1,7 @@
 ---
 name: laravel-validation
 description: "Use when writing validation logic — Form Requests, rules, custom rule objects, and request-boundary design with strong correctness."
+source: package
 ---
 
 # laravel-validation

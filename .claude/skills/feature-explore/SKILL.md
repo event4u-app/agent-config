@@ -1,6 +1,6 @@
 ---
 name: feature-explore
-description: "Explore and think through a feature idea conversationally"
+description: "feature-explore"
 disable-model-invocation: true
 ---
 

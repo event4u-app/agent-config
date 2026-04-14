@@ -1,6 +1,6 @@
 ---
 name: roadmap-execute
-description: "Roadmap Execute"
+description: "roadmap-execute"
 disable-model-invocation: true
 ---
 

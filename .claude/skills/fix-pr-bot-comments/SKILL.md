@@ -1,6 +1,6 @@
 ---
 name: fix-pr-bot-comments
-description: "Fix bot review comments on a pull request"
+description: "fix-pr-bot-comments"
 disable-model-invocation: true
 ---
 

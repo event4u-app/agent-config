@@ -1,6 +1,7 @@
 ---
 name: guidelines
 description: "Manages coding guidelines — understands the guideline structure, when to read/create/update guidelines, and how they differ from rules and skills."
+source: package
 ---
 
 # guidelines

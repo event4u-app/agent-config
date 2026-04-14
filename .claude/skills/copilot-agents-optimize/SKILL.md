@@ -1,6 +1,6 @@
 ---
 name: copilot-agents-optimize
-description: "Copilot Agents Optimize"
+description: "/copilot-agents-optimize"
 disable-model-invocation: true
 ---
 

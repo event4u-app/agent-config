@@ -1,6 +1,7 @@
 ---
 name: dependency-upgrade
 description: "Use when upgrading dependencies — "update Laravel", "bump PHP version", or "upgrade packages". Covers changelog review, breaking change detection, and verification."
+source: package
 ---
 
 # dependency-upgrade

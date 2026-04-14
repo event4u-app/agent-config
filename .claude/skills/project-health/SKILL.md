@@ -1,6 +1,6 @@
 ---
 name: project-health
-description: "Quick read-only project health check"
+description: "project-health"
 disable-model-invocation: true
 ---
 

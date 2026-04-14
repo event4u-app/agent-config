@@ -1,6 +1,6 @@
 ---
 name: fix-pr-developer-comments
-description: "Fix developer review comments on a pull request"
+description: "fix-pr-developer-comments"
 disable-model-invocation: true
 ---
 

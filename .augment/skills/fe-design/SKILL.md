@@ -1,6 +1,7 @@
 ---
 name: fe-design
 description: "Use when designing frontend interfaces — component architecture, layout patterns, form design, table patterns, responsive strategies, and UX principles for Blade/Livewire/Flux/Tailwind."
+source: package
 ---
 
 # Frontend Design Skill

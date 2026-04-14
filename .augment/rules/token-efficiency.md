@@ -2,6 +2,7 @@
 type: "always"
 description: "Token efficiency — redirect output, minimize tool calls, keep responses concise"
 alwaysApply: true
+source: package
 ---
 
 # Token Efficiency

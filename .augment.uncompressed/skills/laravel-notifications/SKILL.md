@@ -1,6 +1,7 @@
 ---
 name: laravel-notifications
 description: "Use when sending notifications via mail, Slack, database, or custom channels — with queuing, on-demand recipients, and notification preferences."
+source: package
 ---
 
 # laravel-notifications

@@ -1,6 +1,6 @@
 ---
 name: jira-ticket
-description: "Work on a Jira ticket — load context and start implementation"
+description: "jira-ticket"
 disable-model-invocation: true
 ---
 

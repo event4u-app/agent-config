@@ -1,6 +1,6 @@
 ---
 name: review-changes
-description: "Review uncommitted and committed-not-pushed changes"
+description: "review-changes"
 disable-model-invocation: true
 ---
 

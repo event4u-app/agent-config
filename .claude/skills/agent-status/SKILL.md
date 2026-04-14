@@ -1,6 +1,6 @@
 ---
 name: agent-status
-description: "Agent Status"
+description: "/agent-status"
 disable-model-invocation: true
 ---
 

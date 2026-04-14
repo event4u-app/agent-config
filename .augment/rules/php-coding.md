@@ -2,6 +2,7 @@
 type: "always"
 description: "PHP coding standards — strict types, naming, comparisons, early returns, Eloquent conventions"
 alwaysApply: true
+source: package
 ---
 
 # PHP Coding Rules

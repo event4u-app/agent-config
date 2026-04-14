@@ -1,6 +1,6 @@
 ---
 name: context-create
-description: "Context Create"
+description: "context-create"
 disable-model-invocation: true
 ---
 

@@ -1,6 +1,7 @@
 ---
 type: "auto"
 description: "Reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md"
+source: package
 ---
 
 # Agent Documentation

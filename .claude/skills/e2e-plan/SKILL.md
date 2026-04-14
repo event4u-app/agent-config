@@ -1,6 +1,6 @@
 ---
 name: e2e-plan
-description: "Plan E2E test coverage for a page or feature"
+description: "e2e-plan"
 disable-model-invocation: true
 ---
 

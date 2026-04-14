@@ -1,6 +1,7 @@
 ---
 name: analysis-autonomous-mode
 description: "ONLY when user explicitly requests: autonomous analysis, deep investigation, or multi-step research workflow. NOT for regular tasks."
+source: package
 ---
 
 # analysis-autonomous-mode

@@ -1,6 +1,7 @@
 ---
 name: openapi
 description: "Use when writing OpenAPI/Swagger documentation — PHP attributes, project annotation patterns, or spec validation with Redocly."
+source: package
 ---
 
 # openapi

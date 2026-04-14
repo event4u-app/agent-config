@@ -1,6 +1,6 @@
 ---
 name: agent-handoff
-description: "Agent Handoff"
+description: "/agent-handoff"
 disable-model-invocation: true
 ---
 

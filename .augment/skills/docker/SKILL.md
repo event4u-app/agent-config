@@ -1,6 +1,7 @@
 ---
 name: docker
 description: "Use when working with Docker — Dockerfile changes, docker-compose services, container management, or the dual-container architecture (fast + Xdebug)."
+source: package
 ---
 
 # docker

@@ -24,7 +24,7 @@
             "/agents",
             "/scripts",
             "/tests",
-            "/config",
+
             "/Taskfile.yml",
             "/.github",
             "/.idea",

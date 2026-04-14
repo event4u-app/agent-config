@@ -2,6 +2,7 @@
 type: "always"
 description: "User interaction — numbered options, progress indicators, summaries"
 alwaysApply: true
+source: package
 ---
 
 # User Interaction

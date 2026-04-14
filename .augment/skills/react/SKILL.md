@@ -1,6 +1,7 @@
 ---
 name: react
 description: "Use when writing React components — TypeScript, hooks, clean state management, and modern patterns."
+source: package
 ---
 
 # react

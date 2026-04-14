@@ -1,6 +1,7 @@
 ---
 name: coder
 description: "Writes PHP code following project coding guidelines, SOLID principles, modern PHP best practices, and established patterns — for both legacy and Laravel projects."
+source: package
 ---
 
 # coder

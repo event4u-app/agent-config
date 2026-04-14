@@ -2,6 +2,7 @@
 type: "auto"
 alwaysApply: false
 description: "Using rtk (Rust Token Killer) to wrap CLI commands for token-efficient output filtering"
+source: package
 ---
 
 # rtk (Rust Token Killer)

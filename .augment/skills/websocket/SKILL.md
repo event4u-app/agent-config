@@ -1,6 +1,7 @@
 ---
 name: websocket
 description: "Use when implementing WebSocket communication, real-time features, broadcasting patterns, or connection management."
+source: package
 ---
 
 # websocket

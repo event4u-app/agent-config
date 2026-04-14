@@ -169,19 +169,25 @@ class AgentConfigPlugin implements PluginInterface, EventSubscriberInterface
     }
 
     /**
-     * Creates symlinks for universal rules in tool-specific directories.
+     * Creates symlinks for ALL rules in .augment/rules/ to tool-specific directories.
+     * Reads directly from the project's .augment/rules/ (which includes package + project rules).
      * Falls back to copy if symlink creation fails.
      */
     private function createToolSymlinks(string $packageDir, string $projectRoot): void
     {
-        $configPath = $packageDir . '/config/universal-rules.json';
-        if (!file_exists($configPath)) {
+        $rulesDir = $projectRoot . '/.augment/rules';
+        if (!is_dir($rulesDir)) {
             return;
         }
 
-        /** @var array{rules: array<int, string>} $config */
-        $config = json_decode((string) file_get_contents($configPath), true);
-        $rules = $config['rules'] ?? [];
+        // Collect all .md files from .augment/rules/
+        $rules = array_map(
+            static fn (\SplFileInfo $f): string => $f->getFilename(),
+            array_filter(
+                iterator_to_array(new \DirectoryIterator($rulesDir)),
+                static fn (\SplFileInfo $f): bool => $f->isFile() && $f->getExtension() === 'md',
+            ),
+        );
 
         $toolDirs = [
             '.claude/rules' => '../../.augment/rules',
@@ -209,7 +215,7 @@ class AgentConfigPlugin implements PluginInterface, EventSubscriberInterface
 
                 if (!@symlink($target, $link)) {
                     // Fallback: copy
-                    $sourcePath = $packageDir . '/.augment/rules/' . $rule;
+                    $sourcePath = $rulesDir . '/' . $rule;
                     if (file_exists($sourcePath)) {
                         copy($sourcePath, $link);
                     }
@@ -222,16 +228,25 @@ class AgentConfigPlugin implements PluginInterface, EventSubscriberInterface
      * Creates symlinks for universal skills in .claude/skills/.
      * Falls back to copy if symlink creation fails.
      */
+    /**
+     * Creates .claude/skills/ symlinks for ALL skill directories in .augment/skills/.
+     * Reads directly from the project's .augment/skills/ (package + project skills).
+     */
     private function createSkillSymlinks(string $packageDir, string $projectRoot): void
     {
-        $configPath = $packageDir . '/config/universal-skills.json';
-        if (!file_exists($configPath)) {
+        $skillsDir = $projectRoot . '/.augment/skills';
+        if (!is_dir($skillsDir)) {
             return;
         }
 
-        /** @var array{skills: array<int, string>} $config */
-        $config = json_decode((string) file_get_contents($configPath), true);
-        $skills = $config['skills'] ?? [];
+        // Collect all skill directories
+        $skills = array_map(
+            static fn (\SplFileInfo $f): string => $f->getFilename(),
+            array_filter(
+                iterator_to_array(new \DirectoryIterator($skillsDir)),
+                static fn (\SplFileInfo $f): bool => $f->isDir() && !$f->isDot(),
+            ),
+        );
 
         $targetDir = $projectRoot . '/.claude/skills';
         if (!is_dir($targetDir)) {
@@ -250,7 +265,7 @@ class AgentConfigPlugin implements PluginInterface, EventSubscriberInterface
 
             if (!@symlink($target, $link)) {
                 // Fallback: copy SKILL.md
-                $sourcePath = $packageDir . '/.augment/skills/' . $skill . '/SKILL.md';
+                $sourcePath = $skillsDir . '/' . $skill . '/SKILL.md';
                 if (file_exists($sourcePath)) {
                     if (!is_dir($link)) {
                         mkdir($link, 0755, true);
@@ -264,26 +279,22 @@ class AgentConfigPlugin implements PluginInterface, EventSubscriberInterface
     /**
      * Generates .windsurfrules by concatenating all universal rules.
      */
+    /**
+     * Generates .windsurfrules from ALL .md files in .augment/rules/.
+     */
     private function generateWindsurfrules(string $packageDir, string $projectRoot): void
     {
-        $configPath = $packageDir . '/config/universal-rules.json';
-        if (!file_exists($configPath)) {
+        $rulesDir = $projectRoot . '/.augment/rules';
+        if (!is_dir($rulesDir)) {
             return;
         }
 
-        /** @var array{rules: array<int, string>} $config */
-        $config = json_decode((string) file_get_contents($configPath), true);
-        $rules = $config['rules'] ?? [];
-
-        $parts = ["# Auto-generated from .augment/rules/ — do not edit directly\n"];
+        $rules = glob($rulesDir . '/*.md') ?: [];
         sort($rules);
 
-        foreach ($rules as $rule) {
-            $path = $projectRoot . '/.augment/rules/' . $rule;
-            if (!file_exists($path)) {
-                continue;
-            }
+        $parts = ["# Auto-generated from .augment/rules/ — do not edit directly\n"];
 
+        foreach ($rules as $path) {
             $content = (string) file_get_contents($path);
             // Strip frontmatter
             if (str_starts_with($content, '---')) {

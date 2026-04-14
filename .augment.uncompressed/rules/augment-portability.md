@@ -1,6 +1,7 @@
 ---
 type: "auto"
 description: "Editing or creating files inside .augment/ directory — skills, rules, commands, templates, contexts must be project-agnostic"
+source: package
 ---
 
 # .augment/ Portability

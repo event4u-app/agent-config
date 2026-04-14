@@ -1,6 +1,7 @@
 ---
 name: wordpress
 description: "Use when writing WordPress plugins, WooCommerce extensions, or following WordPress coding standards."
+source: package
 ---
 
 # wordpress

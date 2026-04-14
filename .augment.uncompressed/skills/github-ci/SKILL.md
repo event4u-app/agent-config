@@ -1,6 +1,7 @@
 ---
 name: github-ci
 description: "Use when working with GitHub Actions CI/CD — quality checks, test workflows, deployment triggers, or reusable workflow modules."
+source: package
 ---
 
 # github-ci

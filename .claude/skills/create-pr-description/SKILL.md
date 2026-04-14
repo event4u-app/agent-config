@@ -1,6 +1,6 @@
 ---
 name: create-pr-description
-description: "Generate or update a PR description from commits and changes"
+description: "create-pr-description"
 disable-model-invocation: true
 ---
 

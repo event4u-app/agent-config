@@ -1,6 +1,7 @@
 ---
 name: livewire
 description: "Use when writing Livewire components — reactive state, events, lifecycle hooks, and clean separation between component logic and Blade templates."
+source: package
 ---
 
 # livewire

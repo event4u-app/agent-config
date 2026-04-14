@@ -1,6 +1,7 @@
 ---
 name: context
 description: "Use when the user says "create context", "document this area", or wants a structured snapshot of a codebase area for agent orientation."
+source: package
 ---
 
 # context

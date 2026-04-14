@@ -1,6 +1,6 @@
 ---
 name: e2e-heal
-description: "Run E2E tests and fix failing ones"
+description: "e2e-heal"
 disable-model-invocation: true
 ---
 

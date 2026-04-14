@@ -1,6 +1,7 @@
 ---
 name: merge-conflicts
 description: "Use when the user has merge conflicts or says "resolve conflicts". Understands conflict markers, resolution strategies, and verification workflow."
+source: package
 ---
 
 # merge-conflicts

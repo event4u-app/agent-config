@@ -1,6 +1,7 @@
 ---
 name: project-analysis-laravel
 description: "ONLY when user explicitly requests: Laravel project analysis, upgrade readiness check, or full codebase health audit. NOT for regular bug fixes or feature work."
+source: package
 ---
 
 # Project Analysis — Laravel & PHP Packages

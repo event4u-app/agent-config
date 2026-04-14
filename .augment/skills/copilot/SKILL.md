@@ -1,6 +1,7 @@
 ---
 name: copilot
 description: "Use when configuring GitHub Copilot behavior, managing copilot-instructions.md, PR review patterns, or optimizing Copilot output for the project."
+source: package
 ---
 
 # Copilot Skill

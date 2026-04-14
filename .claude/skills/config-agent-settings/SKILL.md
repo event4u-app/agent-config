@@ -1,6 +1,6 @@
 ---
 name: config-agent-settings
-description: "Config Agent Settings"
+description: "/config-agent-settings"
 disable-model-invocation: true
 ---
 

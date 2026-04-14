@@ -1,6 +1,7 @@
 ---
 name: design-review
 description: "Use when the user says "review the design", "check the UI", or wants a comprehensive UI/UX review. Uses a 7-phase methodology covering interaction, responsiveness, accessibility, and more."
+source: package
 ---
 
 # design-review

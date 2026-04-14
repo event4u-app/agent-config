@@ -1,6 +1,7 @@
 ---
 name: skill-reviewer
 description: "Use when reviewing, auditing, or optimizing existing skills, or when creating a new skill and wanting to validate it before saving. Also triggers on \"check this skill\", \"audit skills\", \"optimize skill descriptions\", \"run the 5 killers check\", or \"is this skill well-written\". Evaluates skills against the 5 Skill Killers checklist and produces actionable fix recommendations."
+source: package
 ---
 
 # Skill Reviewer

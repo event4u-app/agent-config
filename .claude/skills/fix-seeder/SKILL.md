@@ -1,6 +1,6 @@
 ---
 name: fix-seeder
-description: "Fix database seeder data files to use proper references"
+description: "fix-seeder"
 disable-model-invocation: true
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: composer-packages
 description: "Use when developing or maintaining a Composer library package — versioning, Laravel integration, autoloading, and publishing to private registries."
+source: package
 ---
 
 # composer-packages

@@ -1,6 +1,7 @@
 ---
 name: vue
 description: "Use when writing Vue.js components — Composition API, TypeScript, reactive state, and clean component architecture."
+source: package
 ---
 
 # vue

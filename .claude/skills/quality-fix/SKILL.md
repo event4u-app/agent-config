@@ -1,6 +1,6 @@
 ---
 name: quality-fix
-description: "Run quality pipeline on changed files and fix issues"
+description: "quality-fix"
 disable-model-invocation: true
 ---
 

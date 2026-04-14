@@ -1,6 +1,7 @@
 ---
 name: cloudflare-workers
 description: "Use when building Cloudflare Workers, KV stores, D1 databases, R2 storage, Durable Objects, Queues, or edge computing logic."
+source: package
 ---
 
 # cloudflare-workers

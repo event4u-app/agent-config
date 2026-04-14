@@ -1,6 +1,7 @@
 ---
 name: jira
 description: "Use when the user says "check Jira", "create ticket", "update issue", or needs JQL queries, ticket transitions, or branch-to-ticket linking."
+source: package
 ---
 
 # Jira Skill

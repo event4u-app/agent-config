@@ -1,6 +1,7 @@
 ---
 name: mobile
 description: "Use when writing mobile applications with React Native or Swift — platform conventions, navigation patterns, and best practices."
+source: package
 ---
 
 # mobile

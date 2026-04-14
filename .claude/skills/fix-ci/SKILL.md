@@ -1,6 +1,6 @@
 ---
 name: fix-ci
-description: "Fix CI failures on the current branch"
+description: "fix-ci"
 disable-model-invocation: true
 ---
 

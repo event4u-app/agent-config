@@ -1,6 +1,7 @@
 ---
 name: devcontainer
 description: "Use when setting up or modifying DevContainers, GitHub Codespaces, custom images, secrets management, or workspace configuration."
+source: package
 ---
 
 # devcontainer

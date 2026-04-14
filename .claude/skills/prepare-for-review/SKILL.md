@@ -1,6 +1,6 @@
 ---
 name: prepare-for-review
-description: "Prepare code for review — quality checks, test run, self-review"
+description: "prepare-for-review"
 disable-model-invocation: true
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: api-design
 description: "Use when designing a new API, planning endpoints, or discussing REST conventions. Covers versioning, pagination, filtering, error responses, and resource structure."
+source: package
 ---
 
 # api-design

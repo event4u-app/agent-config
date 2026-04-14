@@ -1,6 +1,7 @@
 ---
 name: api-testing
 description: "Use when writing tests for API endpoints — integration tests, contract validation, response structure verification, and mocked external services."
+source: package
 ---
 
 # api-testing

@@ -1,6 +1,7 @@
 ---
 name: git-workflow
 description: "Use when working with Git — branch naming, commit messages, PR conventions, rebasing, or the code review process."
+source: package
 ---
 
 # git-workflow

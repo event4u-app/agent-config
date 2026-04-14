@@ -1,6 +1,7 @@
 ---
 type: "auto"
 description: "Creating, editing, or modifying files inside .augment/ directory — the source of truth is .augment.uncompressed/, never edit .augment/ directly"
+source: package
 ---
 
 # .augment/ Source of Truth

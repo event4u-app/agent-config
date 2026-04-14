@@ -1,6 +1,7 @@
 ---
 name: quality-tools
 description: "Use when running code quality checks — \"run PHPStan\", \"fix code style\", \"run Rector\". Knows all commands, parameters, execution rules, and language detection for PHP and JS/TS."
+source: package
 ---
 
 # quality-tools

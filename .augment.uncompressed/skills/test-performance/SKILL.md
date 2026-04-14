@@ -1,6 +1,7 @@
 ---
 name: test-performance
 description: "Use when optimizing test suite performance — database setup, seeder optimization, parallel testing, CI pipeline efficiency, or RefreshDatabase alternatives."
+source: package
 ---
 
 # test-performance

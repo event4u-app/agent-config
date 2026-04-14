@@ -1,6 +1,7 @@
 ---
 name: roadmap-manager
 description: "Use when the user says "create roadmap", "show roadmap", or "execute roadmap". Creates, reads, and manages roadmap files with phase tracking."
+source: package
 ---
 
 # roadmap-manager

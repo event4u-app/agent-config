@@ -1,6 +1,7 @@
 ---
 name: sql
 description: "Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, or preventing common mistakes like PHP notation in SQL."
+source: package
 ---
 
 # sql

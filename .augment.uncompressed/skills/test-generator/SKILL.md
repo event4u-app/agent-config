@@ -1,6 +1,7 @@
 ---
 name: test-generator
 description: "Use when the user says "write tests", "generate tests", or "test this code". Generates meaningful PHP tests focusing on business logic, edge cases, and real-world scenarios."
+source: package
 ---
 
 # test-generator

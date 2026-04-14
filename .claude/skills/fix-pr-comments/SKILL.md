@@ -1,6 +1,6 @@
 ---
 name: fix-pr-comments
-description: "Fix all PR comments (bot + developer)"
+description: "fix-pr-comments"
 disable-model-invocation: true
 ---
 

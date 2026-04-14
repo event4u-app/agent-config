@@ -1,6 +1,7 @@
 ---
 name: laravel-horizon
 description: "Use when configuring Laravel Horizon — queue dashboard, worker supervision, job metrics, balancing strategies, or production tuning."
+source: package
 ---
 
 # laravel-horizon

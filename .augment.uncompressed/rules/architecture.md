@@ -2,6 +2,7 @@
 type: "auto"
 alwaysApply: false
 description: "Architecture rules for creating new files, classes, controllers, modules, or making structural decisions about project organization"
+source: package
 ---
 
 # Architecture Rules

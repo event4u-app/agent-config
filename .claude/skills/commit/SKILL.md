@@ -1,6 +1,6 @@
 ---
 name: commit
-description: "Create a conventional commit with proper message format"
+description: "commit"
 disable-model-invocation: true
 ---
 

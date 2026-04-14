@@ -1,6 +1,7 @@
 ---
 name: npm
 description: "Use when managing npm packages, scripts, or frontend build tooling — webpack, Vite, Biome, TypeScript, or Tailwind CSS."
+source: package
 ---
 
 # npm

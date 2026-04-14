@@ -1,6 +1,7 @@
 ---
 name: code-review
 description: "Use when the user says "review this", "check my code", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards."
+source: package
 ---
 
 # code-review

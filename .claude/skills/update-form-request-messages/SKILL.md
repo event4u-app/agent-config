@@ -1,8 +1,7 @@
 ---
 name: update-form-request-messages
-description: "Update FormRequest validation messages"
+description: "update-form-request-messages"
 disable-model-invocation: true
-argument-hint: "[ClassName or path]"
 ---
 
 # update-form-request-messages

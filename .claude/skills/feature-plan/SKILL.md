@@ -1,8 +1,7 @@
 ---
 name: feature-plan
-description: "Create a structured feature plan"
+description: "feature-plan"
 disable-model-invocation: true
-argument-hint: "[description]"
 ---
 
 # feature-plan

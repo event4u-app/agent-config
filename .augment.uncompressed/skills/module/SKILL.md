@@ -1,6 +1,7 @@
 ---
 name: module
 description: "Use when the user says "create module", "explore module", or works within app/Modules/. Understands module structure, auto-loading, route registration, and namespace conventions."
+source: package
 ---
 
 # module

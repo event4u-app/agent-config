@@ -1,6 +1,7 @@
 ---
 name: terraform
 description: "Use when writing Terraform configurations — AWS modules, resources, variables, outputs, state management, and project conventions."
+source: package
 ---
 
 # terraform

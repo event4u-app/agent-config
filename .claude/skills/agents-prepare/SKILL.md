@@ -1,6 +1,6 @@
 ---
 name: agents-prepare
-description: "Agents Prepare"
+description: "agents-prepare"
 disable-model-invocation: true
 ---
 

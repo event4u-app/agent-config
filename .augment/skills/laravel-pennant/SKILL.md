@@ -1,6 +1,7 @@
 ---
 name: laravel-pennant
 description: "Use when managing feature flags with Laravel Pennant — gradual rollouts, A/B testing, scope-based flags, or database/array drivers."
+source: package
 ---
 
 # laravel-pennant

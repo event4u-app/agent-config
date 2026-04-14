@@ -1,6 +1,7 @@
 ---
 name: tailwind
 description: "Use when writing Tailwind CSS — utility classes, responsive design, dark mode support, and project conventions."
+source: package
 ---
 
 # tailwind

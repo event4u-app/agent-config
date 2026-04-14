@@ -1,6 +1,7 @@
 ---
 name: laravel-mail
 description: "Use when creating Laravel Mailables — templates, Markdown emails, queued sending, attachments, or mail testing."
+source: package
 ---
 
 # laravel-mail

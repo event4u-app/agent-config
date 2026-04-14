@@ -1,6 +1,6 @@
 ---
 name: bug-investigate
-description: "Investigate a bug from branch name or Jira ticket, gather context before fixing"
+description: "bug-investigate"
 disable-model-invocation: true
 ---
 

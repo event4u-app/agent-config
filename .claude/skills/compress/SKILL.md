@@ -1,6 +1,6 @@
 ---
 name: compress
-description: "Compress"
+description: "compress"
 disable-model-invocation: true
 ---
 

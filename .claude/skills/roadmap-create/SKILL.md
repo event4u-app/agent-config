@@ -1,6 +1,6 @@
 ---
 name: roadmap-create
-description: "Roadmap Create"
+description: "roadmap-create"
 disable-model-invocation: true
 ---
 

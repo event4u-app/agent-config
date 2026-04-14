@@ -1,6 +1,7 @@
 ---
 name: refactorer
 description: "Use when the user says "refactor this", "rename class", or "move method". Safely refactors PHP code — finds all callers, updates downstream dependencies, and verifies with quality tools."
+source: package
 ---
 
 # refactorer

@@ -1,6 +1,6 @@
 ---
 name: override-manage
-description: "Override Manage"
+description: "/override-manage"
 disable-model-invocation: true
 ---
 

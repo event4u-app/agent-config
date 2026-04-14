@@ -1,6 +1,6 @@
 ---
 name: feature-refactor
-description: "Refactor an existing feature based on its plan"
+description: "feature-refactor"
 disable-model-invocation: true
 ---
 

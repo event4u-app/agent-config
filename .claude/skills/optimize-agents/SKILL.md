@@ -1,6 +1,6 @@
 ---
 name: optimize-agents
-description: "Optimize Agents"
+description: "/optimize-agents"
 disable-model-invocation: true
 ---
 

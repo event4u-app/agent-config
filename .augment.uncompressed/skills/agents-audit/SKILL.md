@@ -1,6 +1,7 @@
 ---
 name: agents-audit
 description: "Use when the user says "audit agents", "clean up agents/", or wants to find duplicates and outdated docs. Audits the agents/ directory and creates an improvement roadmap."
+source: package
 ---
 
 # agents-audit

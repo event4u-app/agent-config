@@ -1,6 +1,7 @@
 ---
 name: logging-monitoring
 description: "Use when working with logging or monitoring — Sentry error tracking, Grafana/Loki log aggregation, structured logging channels, or monitoring helpers."
+source: package
 ---
 
 # logging-monitoring

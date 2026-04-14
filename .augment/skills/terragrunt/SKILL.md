@@ -1,6 +1,7 @@
 ---
 name: terragrunt
 description: "Use when writing Terragrunt configurations — DRY multi-environment configs, dependency management, and remote state orchestration."
+source: package
 ---
 
 # terragrunt

@@ -1,6 +1,7 @@
 ---
 name: api-versioning
 description: "Use when adding API versioning, deprecating endpoints, or managing version fallback. Covers URL-based versioning, deprecation workflow, and changelog management."
+source: package
 ---
 
 # api-versioning

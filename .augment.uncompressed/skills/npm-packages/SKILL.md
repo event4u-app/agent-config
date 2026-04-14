@@ -1,6 +1,7 @@
 ---
 name: npm-packages
 description: "Use when developing or maintaining npm packages — versioning, publishing, TypeScript declarations, or package.json configuration."
+source: package
 ---
 
 # npm-packages

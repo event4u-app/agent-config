@@ -1,6 +1,7 @@
 ---
 name: graphql
 description: "Use when writing GraphQL schemas, resolvers, or client queries. Covers proper typing, N+1 prevention, and error handling."
+source: package
 ---
 
 # graphql

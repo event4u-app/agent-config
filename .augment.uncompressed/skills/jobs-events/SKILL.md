@@ -1,6 +1,7 @@
 ---
 name: jobs-events
 description: "Use when creating Laravel jobs, queued workflows, events, or listeners. Covers clear responsibilities, safe serialization, and retry/failure handling."
+source: package
 ---
 
 # jobs-events

@@ -2,6 +2,7 @@
 type: "always"
 description: "Ask when uncertain — don't guess, assume, or improvise"
 alwaysApply: true
+source: package
 ---
 
 # Ask When Uncertain
