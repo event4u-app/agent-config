@@ -571,20 +571,20 @@ A runnable base project with clean local development setup.
 
 ### Checklist
 
-- [ ] Initialize repository
-- [ ] Add Docker / dev container setup
-- [ ] Configure Postgres with pgvector
-- [ ] Set up DB migrations
-- [ ] Create `.env.example`
-- [ ] Integrate logging (structured, JSON)
-- [ ] Define error handling and structured error codes
+- [x] Initialize repository → `event4u/agent-memory`
+- [x] Add Docker / dev container setup → `docker-compose.yml` (Postgres dev + test)
+- [x] Configure Postgres with pgvector → `pgvector/pgvector:pg17` image
+- [x] Set up DB migrations → `src/db/migrations/001_initial.ts` (7 tables)
+- [x] Create `.env.example`
+- [x] Integrate logging (structured, JSON) → pino logger
+- [x] Define error handling and structured error codes → `InvalidTransitionError`
 - [ ] Implement circuit breaker for external dependencies (embedding APIs, etc.)
-- [ ] Implement health monitoring (`memory health` command)
+- [x] Implement health monitoring (`memory health` command) → CLI stub
 - [ ] Implement self-healing: auto-recovery from transient failures, provider fallback
-- [ ] Provide healthcheck endpoint
-- [ ] Create baseline README
-- [ ] Stub CLI commands: `memory ingest`, `memory retrieve`, `memory validate`, `memory invalidate`
-- [ ] Configure embedding provider fallback chain (local → Gemini → OpenAI → BM25-only)
+- [x] Provide healthcheck endpoint → `healthCheck()` in `db/connection.ts`
+- [x] Create baseline README
+- [x] Stub CLI commands → 8 commands: ingest, retrieve, validate, invalidate, poison, verify, health, diagnose
+- [x] Configure embedding provider fallback chain → config with 5 provider options
 
 ### Acceptance Criteria
 
