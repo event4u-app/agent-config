@@ -1,5 +1,8 @@
 # Roadmap: Augment + Agent Memory Hybrid
 
+> **⚠️ SUPERSEDED** by `agents/roadmaps/agent-memory-hybrid.md`
+> This German version is kept for historical reference. The active roadmap is agent-agnostic and in English.
+
 ## Zielbild
 
 Wir bauen ein eigenes **"Augment + Agent Memory Hybrid"**-System, das die Stärken von zwei Welten kombiniert:
