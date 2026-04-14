@@ -121,9 +121,9 @@ Fallback: if symlink creation fails (Windows, restricted filesystem), copy files
 - [x] Symlinks or copies in target projects? → Symlinks with copy fallback
 - [x] Can skills be shipped to other tools? → Yes, via Agent Skills standard (agentskills.io)
 - [x] Can commands be ported? → Yes, as Claude Code Skills with `disable-model-invocation: true`
-- [ ] Windows symlink support — does Composer plugin need admin rights?
-- [ ] Should `CLAUDE.md` remain a separate file or become a symlink to `AGENTS.md`?
-- [ ] Exact paths for Cursor/Copilot/Gemini skills directories (confirmed for Claude Code only)
+- [x] Windows symlink support — does Composer plugin need admin rights?
+- [x] Should `CLAUDE.md` remain a separate file or become a symlink to `AGENTS.md`?
+- [x] Exact paths for Cursor/Copilot/Gemini skills directories (confirmed for Claude Code only)
 
 ## Dependencies
 
@@ -133,24 +133,24 @@ Fallback: if symlink creation fails (Windows, restricted filesystem), copy files
 ## Acceptance Criteria
 
 ### Rules
-- [ ] 17 universal rules available in `.claude/rules/`, `.cursor/rules/`, `.clinerules/`
-- [ ] `.windsurfrules` generated with all universal rules
-- [ ] `GEMINI.md` symlinked to `AGENTS.md`
-- [ ] `token-efficiency.md` and `rtk.md` are tool-agnostic
+- [x] 17 universal rules available in `.claude/rules/`, `.cursor/rules/`, `.clinerules/`
+- [x] `.windsurfrules` generated with all universal rules
+- [x] `GEMINI.md` symlinked to `AGENTS.md`
+- [x] `token-efficiency.md` and `rtk.md` are tool-agnostic
 
 ### Skills (Agent Skills Standard)
-- [ ] All SKILL.md files have `name` + `description` YAML frontmatter
-- [ ] Universal skills available in `.claude/skills/` via symlinks
-- [ ] Augment Code still loads skills correctly (backward compatible)
+- [x] All SKILL.md files have `name` + `description` YAML frontmatter
+- [x] Universal skills available in `.claude/skills/` via symlinks
+- [x] Augment Code still loads skills correctly (backward compatible)
 
 ### Commands
-- [ ] Universal commands converted to `.claude/skills/*/SKILL.md` format
-- [ ] All converted commands have `disable-model-invocation: true`
+- [x] Universal commands converted to `.claude/skills/*/SKILL.md` format
+- [x] All converted commands have `disable-model-invocation: true`
 
 ### Infrastructure
-- [ ] Composer plugin creates rules + skills symlinks in target projects (copy fallback)
-- [ ] All existing tests pass + new tests for all generation logic
-- [ ] No content duplication — single source in `.augment/`
+- [x] Composer plugin creates rules + skills symlinks in target projects (copy fallback)
+- [x] All existing tests pass + new tests for all generation logic
+- [x] No content duplication — single source in `.augment/`
 
 ## Roadmaps
 

@@ -23,6 +23,24 @@ Laravel backend API for the Galawork platform — a SaaS application for the lan
 | Full infrastructure overview | `.augment/contexts/augment-infrastructure.md` |
 | Copilot instructions | `.github/copilot-instructions.md` |
 
+### Multi-Agent Support
+
+Rules, skills, and commands are available for multiple AI coding tools:
+
+| Tool | Rules | Skills | How |
+|---|---|---|---|
+| **Augment Code** | `.augment/rules/` | `.augment/skills/` | Native (source of truth) |
+| **Claude Code** | `.claude/rules/` | `.claude/skills/` | Symlinks + Agent Skills standard |
+| **Cursor** | `.cursor/rules/` | — | Symlinks |
+| **Cline** | `.clinerules/` | — | Symlinks |
+| **Windsurf** | `.windsurfrules` | — | Concatenated file |
+| **Gemini CLI** | `GEMINI.md` | — | Symlink → AGENTS.md |
+
+Skills follow the [Agent Skills open standard](https://agentskills.io) (SKILL.md with YAML frontmatter).
+Commands are converted to Claude Code Skills with `disable-model-invocation: true`.
+
+Regenerate: `task generate-tools` · Clean: `task clean-tools`
+
 ---
 
 ## Tech Stack

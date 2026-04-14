@@ -88,19 +88,19 @@ our SKILL.md files lack YAML frontmatter (`name`, `description`).
 Source: `.augment.uncompressed/rules/token-efficiency.md`
 
 Changes:
-- [ ] **Line 20-23**: Replace `sequentialthinking` → "extended reasoning / chain-of-thought tools". Keep the anti-loop guidance.
-- [ ] **Line 37**: Replace `"Wo waren wir stehen geblieben?"` → `"Where were we?"` (English in .md rule)
-- [ ] **Line 76**: Replace `/agent-handoff` → "start a fresh session / hand off context"
-- [ ] **Line 80**: Replace "Run `/agent-handoff`" → "Initiate a session handoff or start fresh"
+- [x] **Line 20-23**: Replace `sequentialthinking` → "extended reasoning / chain-of-thought tools". Keep the anti-loop guidance.
+- [x] **Line 37**: Replace `"Wo waren wir stehen geblieben?"` → `"Where were we?"` (English in .md rule)
+- [x] **Line 76**: Replace `/agent-handoff` → "start a fresh session / hand off context"
+- [x] **Line 80**: Replace "Run `/agent-handoff`" → "Initiate a session handoff or start fresh"
 
-- [ ] **Line 104/110**: Replace `.agent-settings` references → "project settings file (e.g. `.agent-settings`)"
-- [ ] **Line 119**: Replace `str-replace-editor` → "the editor tool / edit tool"
-- [ ] **Line 126-135**: Replace Augment tool names (`codebase-retrieval`, `search_query_regex`, `view_range`) → generic descriptions:
+- [x] **Line 104/110**: Replace `.agent-settings` references → "project settings file (e.g. `.agent-settings`)"
+- [x] **Line 119**: Replace `str-replace-editor` → "the editor tool / edit tool"
+- [x] **Line 126-135**: Replace Augment tool names (`codebase-retrieval`, `search_query_regex`, `view_range`) → generic descriptions:
   - `codebase-retrieval` → "codebase search tools"
   - `search_query_regex` → "regex search in files"
   - `view_range` → "view specific line ranges"
   - Keep the behavior guidance identical, just remove tool-specific names
-- [ ] **Line 208-223**: Extract "Ignored Skills Recovery" section into new **Augment-only block** at the end:
+- [x] **Line 208-223**: Extract "Ignored Skills Recovery" section into new **Augment-only block** at the end:
   ```
   ## Augment-specific
 
@@ -109,24 +109,24 @@ Changes:
   ### Ignored Skills Recovery
   {existing content}
   ```
-- [ ] Compress updated file → `.augment/rules/token-efficiency.md`
+- [x] Compress updated file → `.augment/rules/token-efficiency.md`
 
 ### Step 1.2: Refactor `rtk.md`
 
 Source: `.augment.uncompressed/rules/rtk.md`
 
 Changes:
-- [ ] **Line 33**: Replace `.agent-settings` check → "project settings file"
-- [ ] **Line 39**: Remove "recommended by Matze" (personal reference)
-- [ ] **Line 50**: Replace `/optimize-rtk-filters` → "generate project-local filters (see Post-Install Setup)"
-- [ ] **Line 52**: Replace `.agent-settings` → "project settings file"
-- [ ] Compress updated file → `.augment/rules/rtk.md`
+- [x] **Line 33**: Replace `.agent-settings` check → "project settings file"
+- [x] **Line 39**: Remove "recommended by Matze" (personal reference)
+- [x] **Line 50**: Replace `/optimize-rtk-filters` → "generate project-local filters (see Post-Install Setup)"
+- [x] **Line 52**: Replace `.agent-settings` → "project settings file"
+- [x] Compress updated file → `.augment/rules/rtk.md`
 
 ### Step 1.3: Verify no quality loss
 
-- [ ] Diff original vs refactored — every behavioral instruction must be preserved
-- [ ] Only tool-name references and personal references change
-- [ ] Augment-specific sections must be clearly separated, not removed
+- [x] Diff original vs refactored — every behavioral instruction must be preserved
+- [x] Only tool-name references and personal references change
+- [x] Augment-specific sections must be clearly separated, not removed
 
 ---
 
@@ -161,31 +161,31 @@ Notes:
 
 ### Step 2.2: Update all 17 universal rules
 
-- [ ] `ask-when-uncertain.md` — add `description` + `alwaysApply: true`
-- [ ] `architecture.md` — add `alwaysApply: false` (keep auto)
-- [ ] `commit-conventions.md` — add `alwaysApply: false`
-- [ ] `context-hygiene.md` — add `alwaysApply: false`
-- [ ] `dev-efficiency.md` — add `alwaysApply: false`
-- [ ] `docker-commands.md` — add `alwaysApply: false`
-- [ ] `downstream-changes.md` — add `alwaysApply: false`
-- [ ] `e2e-testing.md` — add `alwaysApply: false`
-- [ ] `guidelines.md` — add `description` + `alwaysApply: true`
-- [ ] `lang-files.md` — add `alwaysApply: false`
-- [ ] `language-and-tone.md` — add `description` + `alwaysApply: true`
-- [ ] `php-coding.md` — add `description` + `alwaysApply: true`
-- [ ] `quality-workflow.md` — add `alwaysApply: false`
-- [ ] `rtk.md` — add `alwaysApply: false`
-- [ ] `scope-control.md` — add `description` + `alwaysApply: true`
-- [ ] `token-efficiency.md` — add `description` + `alwaysApply: true`
-- [ ] `user-interaction.md` — add `description` + `alwaysApply: true`
-- [ ] `verify-before-complete.md` — add `description` + `alwaysApply: true`
+- [x] `ask-when-uncertain.md` — add `description` + `alwaysApply: true`
+- [x] `architecture.md` — add `alwaysApply: false` (keep auto)
+- [x] `commit-conventions.md` — add `alwaysApply: false`
+- [x] `context-hygiene.md` — add `alwaysApply: false`
+- [x] `dev-efficiency.md` — add `alwaysApply: false`
+- [x] `docker-commands.md` — add `alwaysApply: false`
+- [x] `downstream-changes.md` — add `alwaysApply: false`
+- [x] `e2e-testing.md` — add `alwaysApply: false`
+- [x] `guidelines.md` — add `description` + `alwaysApply: true`
+- [x] `lang-files.md` — add `alwaysApply: false`
+- [x] `language-and-tone.md` — add `description` + `alwaysApply: true`
+- [x] `php-coding.md` — add `description` + `alwaysApply: true`
+- [x] `quality-workflow.md` — add `alwaysApply: false`
+- [x] `rtk.md` — add `alwaysApply: false`
+- [x] `scope-control.md` — add `description` + `alwaysApply: true`
+- [x] `token-efficiency.md` — add `description` + `alwaysApply: true`
+- [x] `user-interaction.md` — add `description` + `alwaysApply: true`
+- [x] `verify-before-complete.md` — add `description` + `alwaysApply: true`
 
 ### Step 2.3: Compress all updated rules
 
-- [ ] Run `task sync` to copy non-.md changes
-- [ ] Compress all 17 modified rules to `.augment/rules/`
-- [ ] `task sync-mark-all-done` to update hashes
-- [ ] Verify: `python3 scripts/compress.py --check` passes
+- [x] Run `task sync` to copy non-.md changes
+- [x] Compress all 17 modified rules to `.augment/rules/`
+- [x] `task sync-mark-all-done` to update hashes
+- [x] Verify: `python3 scripts/compress.py --check` passes
 
 ---
 
@@ -200,10 +200,10 @@ Add `--generate-tools` mode that:
 3. Removes stale symlinks in each directory
 4. Creates relative symlinks: e.g. `.claude/rules/php-coding.md` → `../../.augment/rules/php-coding.md`
 
-- [ ] Implement `generate_tool_dirs()` function
-- [ ] Add `--generate-tools` CLI flag
-- [ ] Add stale symlink cleanup (remove links to rules no longer in UNIVERSAL_RULES)
-- [ ] Add `--clean-tools` flag to remove all generated directories
+- [x] Implement `generate_tool_dirs()` function
+- [x] Add `--generate-tools` CLI flag
+- [x] Add stale symlink cleanup (remove links to rules no longer in UNIVERSAL_RULES)
+- [x] Add `--clean-tools` flag to remove all generated directories
 
 ### Step 3.2: Generate `.windsurfrules`
 
@@ -215,20 +215,20 @@ Part of `--generate-tools`:
 4. Prepend header: `# Auto-generated from .augment/rules/ — do not edit directly`
 5. Write to `.windsurfrules`
 
-- [ ] Implement `generate_windsurfrules()` function
-- [ ] Strip YAML frontmatter before concatenation
-- [ ] Add header comment
+- [x] Implement `generate_windsurfrules()` function
+- [x] Strip YAML frontmatter before concatenation
+- [x] Add header comment
 
 ### Step 3.3: Create `GEMINI.md` symlink
 
-- [ ] Create `GEMINI.md` → `AGENTS.md` symlink in project root
-- [ ] Verify git stores it correctly (`git ls-files -s GEMINI.md` shows symlink mode `120000`)
+- [x] Create `GEMINI.md` → `AGENTS.md` symlink in project root
+- [x] Verify git stores it correctly (`git ls-files -s GEMINI.md` shows symlink mode `120000`)
 
 ### Step 3.4: Add Taskfile targets
 
-- [ ] Add `task generate-tools` → `python3 scripts/compress.py --generate-tools`
-- [ ] Add `task clean-tools` → `python3 scripts/compress.py --clean-tools`
-- [ ] Update `task sync` to also run `--generate-tools` after sync
+- [x] Add `task generate-tools` → `python3 scripts/compress.py --generate-tools`
+- [x] Add `task clean-tools` → `python3 scripts/compress.py --clean-tools`
+- [x] Update `task sync` to also run `--generate-tools` after sync
 
 ### Step 3.5: Update `composer.json`
 
@@ -240,7 +240,7 @@ Ensure the following are **NOT** in `archive.exclude`:
 - `GEMINI.md`
 - `config/`
 
-- [ ] Update `composer.json` archive.exclude list
+- [x] Update `composer.json` archive.exclude list
 
 ---
 
@@ -264,9 +264,9 @@ description: "Use when running code quality checks — PHPStan, Rector, ECS. Kno
 Augment Code ignores YAML frontmatter in SKILL.md — it reads descriptions from `<available_skills>`
 in the system prompt. So adding frontmatter is backward-compatible.
 
-- [ ] Add `name` + `description` frontmatter to all ~60 SKILL.md files in `.augment.uncompressed/skills/`
-- [ ] Verify Augment still loads skills correctly (frontmatter is ignored)
-- [ ] Compress all updated SKILL.md files to `.augment/skills/`
+- [x] Add `name` + `description` frontmatter to all ~60 SKILL.md files in `.augment.uncompressed/skills/`
+- [x] Verify Augment still loads skills correctly (frontmatter is ignored)
+- [x] Compress all updated SKILL.md files to `.augment/skills/`
 
 ### Step 3b.2: Classify skills for cross-tool delivery
 
@@ -284,8 +284,8 @@ Not all skills should ship to other tools. Classify:
 - `skill-reviewer` (Augment skill system internals)
 - `sequential-thinking` (Augment-specific tool reference)
 
-- [ ] Create `config/universal-skills.json` listing all universal skill names
-- [ ] ~45-50 universal, ~10-15 Augment-only (exact count after classification)
+- [x] Create `config/universal-skills.json` listing all universal skill names
+- [x] ~45-50 universal, ~10-15 Augment-only (exact count after classification)
 
 ### Step 3b.3: Skill directory structure with supporting files
 
@@ -316,8 +316,8 @@ Reference from `SKILL.md` so the agent knows when to load them:
 Key: `${CLAUDE_SKILL_DIR}` variable resolves to the skill directory at runtime,
 so scripts can be referenced as `${CLAUDE_SKILL_DIR}/scripts/detect-tools.sh`.
 
-- [ ] Document the supporting files pattern in skill template
-- [ ] Ensure generation script symlinks entire skill directories (not just SKILL.md)
+- [x] Document the supporting files pattern in skill template
+- [x] Ensure generation script symlinks entire skill directories (not just SKILL.md)
 
 ### Step 3b.4: Generate `.claude/skills/` symlinks
 
@@ -329,9 +329,9 @@ Part of `--generate-tools`:
    (This automatically includes SKILL.md + any scripts, templates, examples)
 3. Remove stale skill symlinks on re-run
 
-- [ ] Implement `generate_skill_symlinks()` function in `compress.py`
-- [ ] Symlink entire directories (not individual files) for future-proofing
-- [ ] Add stale cleanup for removed skills
+- [x] Implement `generate_skill_symlinks()` function in `compress.py`
+- [x] Symlink entire directories (not individual files) for future-proofing
+- [x] Add stale cleanup for removed skills
 
 ---
 
@@ -368,9 +368,9 @@ Key frontmatter for commands:
 - `disable-model-invocation: true` — only user can invoke (same as Augment commands)
 - `$ARGUMENTS` placeholder where Augment commands expect user input
 
-- [ ] Create transformation script or template
-- [ ] Classify which commands are universal vs Augment-only
-- [ ] Transform ~30 universal commands to `.claude/skills/` format
+- [x] Create transformation script or template
+- [x] Classify which commands are universal vs Augment-only
+- [x] Transform ~30 universal commands to `.claude/skills/` format
 
 ### Step 3c.2: Handle command arguments
 
@@ -384,9 +384,9 @@ Augment commands use inline prompts for user input. Claude Code uses `$ARGUMENTS
 For commands that don't need arguments (most of ours): no change needed.
 For commands with variable input: add `$ARGUMENTS` and `argument-hint`.
 
-- [ ] Audit all commands for argument patterns
-- [ ] Add `argument-hint` frontmatter where appropriate
-- [ ] Add `$ARGUMENTS` substitution in command body where needed
+- [x] Audit all commands for argument patterns
+- [x] Add `argument-hint` frontmatter where appropriate
+- [x] Add `$ARGUMENTS` substitution in command body where needed
 
 ### Step 3c.3: Create `config/universal-commands.json`
 
@@ -404,9 +404,9 @@ For commands with variable input: add `$ARGUMENTS` and `argument-hint`.
 }
 ```
 
-- [ ] Classify commands: universal vs Augment-only
-- [ ] Create config file
-- [ ] Add to generation script
+- [x] Classify commands: universal vs Augment-only
+- [x] Create config file
+- [x] Add to generation script
 
 ---
 
@@ -419,10 +419,10 @@ Extend `--generate-tools` to also handle:
 1. Skills: read `config/universal-skills.json`, create `.claude/skills/` symlinks
 2. Commands: read `config/universal-commands.json`, generate `.claude/skills/` with transformed content
 
-- [ ] Add `generate_claude_skills()` function
-- [ ] Add `generate_claude_commands()` function
-- [ ] Add command transformation logic (add frontmatter, replace argument patterns)
-- [ ] Update `--clean-tools` to also clean skills and commands
+- [x] Add `generate_claude_skills()` function
+- [x] Add `generate_claude_commands()` function
+- [x] Add command transformation logic (add frontmatter, replace argument patterns)
+- [x] Update `--clean-tools` to also clean skills and commands
 
 ### Step 3d.2: Handle Augment ↔ Claude Code coexistence
 
@@ -432,8 +432,8 @@ Both `.augment/skills/` and `.claude/skills/` will exist. Ensure:
 - Commands only exist in `.claude/skills/` (Augment reads from `.augment/commands/`)
 - No name collisions between skills and converted commands
 
-- [ ] Verify no naming conflicts
-- [ ] Document the dual-directory strategy
+- [x] Verify no naming conflicts
+- [x] Document the dual-directory strategy
 
 ---
 
@@ -450,11 +450,11 @@ New method `createToolSymlinks(string $packageDir, string $projectRoot)`:
    c. Create relative symlinks from `{tool-dir}/{rule}.md` → `../../.augment/rules/{rule}.md`
    d. Fallback: if `symlink()` fails → `copy()` instead + log warning
 
-- [ ] Implement `createToolSymlinks()` method
-- [ ] Implement `getUniversalRules()` — reads from `config/universal-rules.json`
-- [ ] Implement `getRelativePath()` helper for calculating relative symlink targets
-- [ ] Implement Windows fallback (copy instead of symlink, log warning)
-- [ ] Call from `install()` method after `syncDirectory()`
+- [x] Implement `createToolSymlinks()` method
+- [x] Implement `getUniversalRules()` — reads from `config/universal-rules.json`
+- [x] Implement `getRelativePath()` helper for calculating relative symlink targets
+- [x] Implement Windows fallback (copy instead of symlink, log warning)
+- [x] Call from `install()` method after `syncDirectory()`
 
 ### Step 4.2: Add skills and commands symlink creation
 
@@ -465,18 +465,18 @@ New method `createSkillSymlinks(string $packageDir, string $projectRoot)`:
 3. For each universal skill: symlink entire skill directory
 4. For converted commands: copy transformed SKILL.md files
 
-- [ ] Implement `createSkillSymlinks()` method
-- [ ] Handle skill directories with supporting files
-- [ ] Create `.claude/skills/{command}/SKILL.md` for converted commands
-- [ ] Call from `install()` method after rule symlinks
+- [x] Implement `createSkillSymlinks()` method
+- [x] Handle skill directories with supporting files
+- [x] Create `.claude/skills/{command}/SKILL.md` for converted commands
+- [x] Call from `install()` method after rule symlinks
 
 ### Step 4.3: Add `.windsurfrules` and `GEMINI.md` sync
 
 In `install()` method, after existing syncs:
 
-- [ ] `.windsurfrules` → always overwrite (auto-generated, not user-editable)
-- [ ] `GEMINI.md` → create symlink to `AGENTS.md` if not exists, copy fallback
-- [ ] Keep `CLAUDE.md` as `copyIfMissing` (users may have customized it)
+- [x] `.windsurfrules` → always overwrite (auto-generated, not user-editable)
+- [x] `GEMINI.md` → create symlink to `AGENTS.md` if not exists, copy fallback
+- [x] Keep `CLAUDE.md` as `copyIfMissing` (users may have customized it)
 
 ### Step 4.3: Create `config/universal-rules.json`
 
@@ -507,9 +507,9 @@ Single source of truth for which rules are universal:
 }
 ```
 
-- [ ] Create `config/universal-rules.json`
-- [ ] Both `compress.py` and `AgentConfigPlugin.php` read from this single source
-- [ ] Ensure `config/` is NOT in `composer.json` archive.exclude
+- [x] Create `config/universal-rules.json`
+- [x] Both `compress.py` and `AgentConfigPlugin.php` read from this single source
+- [x] Ensure `config/` is NOT in `composer.json` archive.exclude
 
 ---
 
@@ -518,37 +518,37 @@ Single source of truth for which rules are universal:
 ### Step 5.1: Python tests (extend `tests/test_compress.py`)
 
 Rules generation:
-- [ ] Test `generate_tool_dirs()`: creates symlinks for all 17 universal rules
-- [ ] Test `generate_tool_dirs()`: does NOT create symlinks for Augment-only rules (7)
-- [ ] Test `generate_tool_dirs()`: cleans stale symlinks on re-run
-- [ ] Test `generate_windsurfrules()`: concatenates all rules, strips frontmatter
-- [ ] Test `generate_windsurfrules()`: output starts with header comment
-- [ ] Test `generate_windsurfrules()`: rules separated by `---`
-- [ ] Test GEMINI.md symlink creation and target
+- [x] Test `generate_tool_dirs()`: creates symlinks for all 17 universal rules
+- [x] Test `generate_tool_dirs()`: does NOT create symlinks for Augment-only rules (7)
+- [x] Test `generate_tool_dirs()`: cleans stale symlinks on re-run
+- [x] Test `generate_windsurfrules()`: concatenates all rules, strips frontmatter
+- [x] Test `generate_windsurfrules()`: output starts with header comment
+- [x] Test `generate_windsurfrules()`: rules separated by `---`
+- [x] Test GEMINI.md symlink creation and target
 
 Skills generation:
-- [ ] Test `generate_claude_skills()`: creates symlinks for universal skills
-- [ ] Test `generate_claude_skills()`: does NOT create symlinks for Augment-only skills
-- [ ] Test `generate_claude_skills()`: symlinks supporting files in skill directories
-- [ ] Test `generate_claude_skills()`: cleans stale skill symlinks on re-run
+- [x] Test `generate_claude_skills()`: creates symlinks for universal skills
+- [x] Test `generate_claude_skills()`: does NOT create symlinks for Augment-only skills
+- [x] Test `generate_claude_skills()`: symlinks supporting files in skill directories
+- [x] Test `generate_claude_skills()`: cleans stale skill symlinks on re-run
 
 Commands generation:
-- [ ] Test `generate_claude_commands()`: creates SKILL.md with correct frontmatter
-- [ ] Test `generate_claude_commands()`: `disable-model-invocation: true` in all generated files
-- [ ] Test `generate_claude_commands()`: preserves original Markdown content
-- [ ] Test `generate_claude_commands()`: adds `$ARGUMENTS` where configured
+- [x] Test `generate_claude_commands()`: creates SKILL.md with correct frontmatter
+- [x] Test `generate_claude_commands()`: `disable-model-invocation: true` in all generated files
+- [x] Test `generate_claude_commands()`: preserves original Markdown content
+- [x] Test `generate_claude_commands()`: adds `$ARGUMENTS` where configured
 
 ### Step 5.2: PHP tests for Composer plugin
 
 File: `tests/AgentConfigPluginTest.php`
 
-- [ ] Test `createToolSymlinks()`: creates `.claude/rules/`, `.cursor/rules/`, `.clinerules/`
-- [ ] Test `createSkillSymlinks()`: creates `.claude/skills/` with correct structure
-- [ ] Test symlinks point to correct relative paths (resolve and check target exists)
-- [ ] Test stale symlink cleanup on re-run
-- [ ] Test copy fallback when symlink fails (mock `symlink()` failure)
-- [ ] Test `.windsurfrules` is always overwritten on update
-- [ ] Test `GEMINI.md` symlink creation
+- [x] Test `createToolSymlinks()`: creates `.claude/rules/`, `.cursor/rules/`, `.clinerules/`
+- [x] Test `createSkillSymlinks()`: creates `.claude/skills/` with correct structure
+- [x] Test symlinks point to correct relative paths (resolve and check target exists)
+- [x] Test stale symlink cleanup on re-run
+- [x] Test copy fallback when symlink fails (mock `symlink()` failure)
+- [x] Test `.windsurfrules` is always overwritten on update
+- [x] Test `GEMINI.md` symlink creation
 
 ---
 
@@ -556,12 +556,12 @@ File: `tests/AgentConfigPluginTest.php`
 
 ### Step 6.1: Update documentation
 
-- [ ] `AGENTS.md`: add section "Multi-Agent Support" listing supported tools and Agent Skills standard
-- [ ] `.augment.uncompressed/README.md`: mention generated tool directories and skills
-- [ ] Create `.claude/rules/README.md`: "Auto-generated symlinks — see .augment/rules/"
-- [ ] Create `.claude/skills/README.md`: "Auto-generated from .augment/skills/ and .augment/commands/"
-- [ ] Create `.cursor/rules/README.md`: same as .claude
-- [ ] Create `.clinerules/README.md`: same
+- [x] `AGENTS.md`: add section "Multi-Agent Support" listing supported tools and Agent Skills standard
+- [x] `.augment.uncompressed/README.md`: mention generated tool directories and skills
+- [x] Create `.claude/rules/README.md`: "Auto-generated symlinks — see .augment/rules/"
+- [x] Create `.claude/skills/README.md`: "Auto-generated from .augment/skills/ and .augment/commands/"
+- [x] Create `.cursor/rules/README.md`: same as .claude
+- [x] Create `.clinerules/README.md`: same
 
 ### Step 6.2: Commit plan
 
@@ -578,46 +578,46 @@ File: `tests/AgentConfigPluginTest.php`
 
 ### Step 6.3: Final verification
 
-- [ ] `python3 scripts/compress.py --check` passes
-- [ ] `python3 -m pytest tests/` all green
-- [ ] `ls -la .claude/rules/` — 17 symlinks, all resolve
-- [ ] `ls -la .claude/skills/` — universal skills + converted commands present
-- [ ] `ls -la .cursor/rules/` — 17 symlinks, all resolve
-- [ ] `ls -la .clinerules/` — 17 symlinks, all resolve
-- [ ] `cat .windsurfrules | head -3` — starts with header, no frontmatter
-- [ ] `readlink GEMINI.md` → `AGENTS.md`
-- [ ] Augment Code works as before (no regression in `.augment/` loading)
-- [ ] Claude Code can discover and invoke skills via `/skill-name`
+- [x] `python3 scripts/compress.py --check` passes
+- [x] `python3 -m pytest tests/` all green
+- [x] `ls -la .claude/rules/` — 17 symlinks, all resolve
+- [x] `ls -la .claude/skills/` — universal skills + converted commands present
+- [x] `ls -la .cursor/rules/` — 17 symlinks, all resolve
+- [x] `ls -la .clinerules/` — 17 symlinks, all resolve
+- [x] `cat .windsurfrules | head -3` — starts with header, no frontmatter
+- [x] `readlink GEMINI.md` → `AGENTS.md`
+- [x] Augment Code works as before (no regression in `.augment/` loading)
+- [x] Claude Code can discover and invoke skills via `/skill-name`
 
 ---
 
 ## Acceptance Criteria
 
 ### Rules (Phase 1-3)
-- [ ] 17 universal rules available via symlinks in `.claude/rules/`, `.cursor/rules/`, `.clinerules/`
-- [ ] `.windsurfrules` auto-generated with all universal rules, no YAML frontmatter
-- [ ] `GEMINI.md` symlinks to `AGENTS.md`
-- [ ] `token-efficiency.md` and `rtk.md` are tool-agnostic (no Augment-specific tool names)
-- [ ] Augment-specific content clearly separated in `## Augment-specific` sections
-- [ ] `config/universal-rules.json` is single source of truth for rule classification
+- [x] 17 universal rules available via symlinks in `.claude/rules/`, `.cursor/rules/`, `.clinerules/`
+- [x] `.windsurfrules` auto-generated with all universal rules, no YAML frontmatter
+- [x] `GEMINI.md` symlinks to `AGENTS.md`
+- [x] `token-efficiency.md` and `rtk.md` are tool-agnostic (no Augment-specific tool names)
+- [x] Augment-specific content clearly separated in `## Augment-specific` sections
+- [x] `config/universal-rules.json` is single source of truth for rule classification
 
 ### Skills (Phase 3b)
-- [ ] All SKILL.md files have `name` + `description` YAML frontmatter (agentskills.io compliant)
-- [ ] Universal skills available in `.claude/skills/` via symlinks
-- [ ] `config/universal-skills.json` classifies skills as universal/Augment-only
-- [ ] Augment Code still loads skills correctly (backward compatible)
+- [x] All SKILL.md files have `name` + `description` YAML frontmatter (agentskills.io compliant)
+- [x] Universal skills available in `.claude/skills/` via symlinks
+- [x] `config/universal-skills.json` classifies skills as universal/Augment-only
+- [x] Augment Code still loads skills correctly (backward compatible)
 
 ### Commands (Phase 3c)
-- [ ] Universal commands converted to `.claude/skills/*/SKILL.md` format
-- [ ] All converted commands have `disable-model-invocation: true` frontmatter
-- [ ] `$ARGUMENTS` substitution works for commands that need input
-- [ ] `config/universal-commands.json` lists converted commands
+- [x] Universal commands converted to `.claude/skills/*/SKILL.md` format
+- [x] All converted commands have `disable-model-invocation: true` frontmatter
+- [x] `$ARGUMENTS` substitution works for commands that need input
+- [x] `config/universal-commands.json` lists converted commands
 
 ### Infrastructure (Phase 4-6)
-- [ ] Composer plugin creates rules + skills symlinks in target projects (copy fallback)
-- [ ] All tests pass (Python + PHP)
-- [ ] No content duplication — single source in `.augment/`
-- [ ] Documentation covers Agent Skills standard and multi-tool support
+- [x] Composer plugin creates rules + skills symlinks in target projects (copy fallback)
+- [x] All tests pass (Python + PHP)
+- [x] No content duplication — single source in `.augment/`
+- [x] Documentation covers Agent Skills standard and multi-tool support
 
 ## Notes
 
