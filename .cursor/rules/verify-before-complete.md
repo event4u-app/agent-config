@@ -1,0 +1,1 @@
+../../.augment/rules/verify-before-complete.md

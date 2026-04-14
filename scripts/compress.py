@@ -194,6 +194,206 @@ def check_sync(source_dir: Path, target_dir: Path) -> tuple:
     return missing, stale
 
 
+# ── Multi-agent tool generation ──────────────────────────────────────
+
+CONFIG_DIR = PROJECT_ROOT / "config"
+RULES_SOURCE = PROJECT_ROOT / ".augment" / "rules"
+
+TOOL_DIRS = {
+    ".claude/rules": "../../.augment/rules",
+    ".cursor/rules": "../../.augment/rules",
+    ".clinerules": "../.augment/rules",
+}
+
+SKILLS_SOURCE = PROJECT_ROOT / ".augment" / "skills"
+COMMANDS_SOURCE = PROJECT_ROOT / ".augment" / "commands"
+CLAUDE_SKILLS_DIR = PROJECT_ROOT / ".claude" / "skills"
+
+
+def load_config(name: str) -> dict:
+    """Load a JSON config file from config/."""
+    path = CONFIG_DIR / name
+    if not path.exists():
+        print(f"❌  Config not found: {path}")
+        sys.exit(1)
+    return json.loads(path.read_text())
+
+
+def strip_frontmatter(content: str) -> str:
+    """Remove YAML frontmatter (between --- markers) from content."""
+    if content.startswith("---"):
+        end = content.find("---", 3)
+        if end != -1:
+            content = content[end + 3:].lstrip("\n")
+    return content
+
+
+def generate_rule_symlinks() -> int:
+    """Create symlink directories for rules (.claude/rules/, .cursor/rules/, .clinerules/)."""
+    rules = load_config("universal-rules.json")["rules"]
+    total = 0
+    for tool_dir, rel_prefix in TOOL_DIRS.items():
+        target_dir = PROJECT_ROOT / tool_dir
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        # Clean stale symlinks
+        for item in target_dir.iterdir():
+            if item.is_symlink() and item.name not in rules and item.name != "README.md":
+                item.unlink()
+
+        for rule in rules:
+            link = target_dir / rule
+            target = Path(rel_prefix) / rule
+            if link.exists() or link.is_symlink():
+                link.unlink()
+            link.symlink_to(target)
+            total += 1
+
+    print(f"  ✅  Created {total} rule symlinks across {len(TOOL_DIRS)} tool directories")
+    return total
+
+
+def generate_windsurfrules() -> None:
+    """Generate .windsurfrules by concatenating all universal rules (no frontmatter)."""
+    rules = load_config("universal-rules.json")["rules"]
+    parts = ["# Auto-generated from .augment/rules/ — do not edit directly\n"]
+
+    for rule in sorted(rules):
+        path = RULES_SOURCE / rule
+        if path.exists():
+            content = strip_frontmatter(path.read_text())
+            parts.append(f"---\n\n{content.strip()}\n")
+
+    output = PROJECT_ROOT / ".windsurfrules"
+    output.write_text("\n".join(parts) + "\n")
+    print(f"  ✅  Generated .windsurfrules ({len(rules)} rules)")
+
+
+def generate_gemini_md() -> None:
+    """Create GEMINI.md symlink to AGENTS.md."""
+    link = PROJECT_ROOT / "GEMINI.md"
+    if link.exists() or link.is_symlink():
+        link.unlink()
+    link.symlink_to("AGENTS.md")
+    print("  ✅  Created GEMINI.md → AGENTS.md symlink")
+
+
+def generate_claude_skills() -> None:
+    """Create .claude/skills/ symlinks for universal skills."""
+    config_path = CONFIG_DIR / "universal-skills.json"
+    if not config_path.exists():
+        print("  ⚠️  config/universal-skills.json not found — skipping skills")
+        return
+
+    skills = load_config("universal-skills.json")["skills"]
+    CLAUDE_SKILLS_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Clean stale symlinks
+    for item in CLAUDE_SKILLS_DIR.iterdir():
+        if item.is_symlink():
+            # Check if it's a skill (not a converted command)
+            if item.name not in skills:
+                commands_config = CONFIG_DIR / "universal-commands.json"
+                if commands_config.exists():
+                    cmds = load_config("universal-commands.json").get("commands", [])
+                    if item.name not in cmds:
+                        item.unlink()
+                else:
+                    item.unlink()
+
+    count = 0
+    for skill in skills:
+        link = CLAUDE_SKILLS_DIR / skill
+        source = SKILLS_SOURCE / skill
+        if not source.exists():
+            print(f"  ⚠️  Skill source not found: {source}")
+            continue
+        if link.exists() or link.is_symlink():
+            link.unlink()
+        # Symlink entire directory
+        rel_target = Path("../../.augment/skills") / skill
+        link.symlink_to(rel_target)
+        count += 1
+
+    print(f"  ✅  Created {count} skill symlinks in .claude/skills/")
+
+
+def generate_claude_commands() -> None:
+    """Convert Augment commands to Claude Code Skills format."""
+    config_path = CONFIG_DIR / "universal-commands.json"
+    if not config_path.exists():
+        print("  ⚠️  config/universal-commands.json not found — skipping commands")
+        return
+
+    config = load_config("universal-commands.json")
+    commands = config.get("commands", [])
+    CLAUDE_SKILLS_DIR.mkdir(parents=True, exist_ok=True)
+
+    count = 0
+    for cmd_config in commands:
+        name = cmd_config["name"]
+        source_file = COMMANDS_SOURCE / f"{name}.md"
+        if not source_file.exists():
+            print(f"  ⚠️  Command source not found: {source_file}")
+            continue
+
+        content = source_file.read_text()
+        content = strip_frontmatter(content)
+
+        # Build frontmatter
+        fm_parts = [
+            "---",
+            f"name: {name}",
+            f"description: \"{cmd_config.get('description', '')}\"",
+            "disable-model-invocation: true",
+        ]
+        if "argument-hint" in cmd_config:
+            fm_parts.append(f"argument-hint: \"{cmd_config['argument-hint']}\"")
+        fm_parts.append("---")
+
+        full_content = "\n".join(fm_parts) + "\n\n" + content.strip() + "\n"
+
+        # Create skill directory
+        skill_dir = CLAUDE_SKILLS_DIR / name
+        skill_dir.mkdir(parents=True, exist_ok=True)
+        (skill_dir / "SKILL.md").write_text(full_content)
+        count += 1
+
+    print(f"  ✅  Generated {count} command skills in .claude/skills/")
+
+
+def generate_tools() -> None:
+    """Generate all tool-specific directories and files."""
+    print("🔧  Generating multi-agent tool directories...\n")
+    generate_rule_symlinks()
+    generate_windsurfrules()
+    generate_gemini_md()
+    generate_claude_skills()
+    generate_claude_commands()
+    print("\n✅  All tool directories generated")
+
+
+def clean_tools() -> None:
+    """Remove all generated tool directories and files."""
+    import shutil as _shutil
+    targets = [
+        PROJECT_ROOT / ".claude",
+        PROJECT_ROOT / ".cursor",
+        PROJECT_ROOT / ".clinerules",
+        PROJECT_ROOT / ".windsurfrules",
+        PROJECT_ROOT / "GEMINI.md",
+    ]
+    for t in targets:
+        if t.is_dir():
+            _shutil.rmtree(t)
+            print(f"  🗑️  Removed {t.relative_to(PROJECT_ROOT)}")
+        elif t.exists() or t.is_symlink():
+            t.unlink()
+            print(f"  🗑️  Removed {t.relative_to(PROJECT_ROOT)}")
+    print("✅  All generated tool files cleaned")
+
+
+
 def main() -> None:
     if not SOURCE_DIR.exists():
         print(f"❌  Source directory not found: {SOURCE_DIR}")
@@ -263,8 +463,14 @@ def main() -> None:
         else:
             print(f"✅  All .md files are up to date")
 
+    elif arg == "--generate-tools":
+        generate_tools()
+
+    elif arg == "--clean-tools":
+        clean_tools()
+
     else:
-        print("Usage: python scripts/compress.py [--sync|--list|--changed|--check|--mark-done <path>|--mark-all-done]")
+        print("Usage: python scripts/compress.py [--sync|--list|--changed|--check|--mark-done <path>|--mark-all-done|--generate-tools|--clean-tools]")
         sys.exit(1)
 
 

@@ -1,0 +1,1 @@
+../../.augment/rules/php-coding.md

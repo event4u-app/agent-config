@@ -1,0 +1,1 @@
+../../.augment/rules/context-hygiene.md

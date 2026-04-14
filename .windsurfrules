@@ -1,0 +1,1213 @@
+# Auto-generated from .augment/rules/ — do not edit directly
+
+---
+
+# Architecture Rules
+
+## General Principles
+
+- **Thin controllers** — no business logic, delegate to services
+- **Single Action Controllers only** — `__invoke()`. No multi-action/resource controllers. See `.augment/guidelines/php/controllers.md`
+- **Every controller needs FormRequest** — never `$request->validate()` inline
+- **Services** = business logic (calculations, orchestration, validation)
+- **Models** = relationships, scopes, accessors/mutators only
+- Check existing directory structure before creating files
+- Modern standards for **new** code only — respect existing patterns
+
+## Project Detection
+
+Detect project type from Git remote, directory name, or project files:
+- `composer.json` → framework (Laravel, Symfony, standalone)
+- `artisan` exists → Laravel
+- `package.json` → frontend framework
+- `AGENTS.md` / `agents/` → project docs
+
+## Project-Specific Architecture
+
+Read `./agents/` and `AGENTS.md` before structural decisions. Don't rely on this rule for project-specific layouts.
+
+## Module-Level Documentation
+
+Modules (`app/Modules/`) may have docs in `app/Modules/*/agents/`. Check module-level agent docs first.
+
+## Packages
+
+Packages may use `./agents/` for docs/roadmaps. Treat like projects.
+
+## Build / Task Runner Detection
+
+Check for `Makefile` or `Taskfile.yml`:
+- `Makefile` → `make <target>`
+- `Taskfile.yml` → `task <target>`
+
+Prefer these over raw `docker compose exec`.
+
+---
+
+# Ask When Uncertain
+
+**When in doubt, ask.** Don't guess, assume, or improvise.
+One question too many > one wrong assumption.
+
+## When to ask
+
+- Ambiguous requirement
+- Unsure which approach is correct
+- About to touch unfamiliar code
+- Multiple valid approaches
+- Fix "works" but can't explain why
+
+## How to ask
+
+- Be specific about what's unclear
+- Present numbered options (per `user-interaction` rule)
+- Keep short
+
+---
+
+# Commit Conventions
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
+
+## Format
+
+- With scope: `<type>(<scope>): <description>`
+- Without scope: `<type>: <description>`
+- Always English, imperative mood, max 72 chars first line
+
+## Types
+
+| Type | When |
+|---|---|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `refactor` | Code change (no new feature, no bug fix) |
+| `docs` | Documentation only |
+| `test` | Adding or updating tests |
+| `chore` | Maintenance (deps, configs, tooling) |
+| `style` | Code style (formatting, no logic change) |
+| `perf` | Performance improvement |
+
+## Scope
+
+- **Jira ticket ID** as scope when branch contains one (e.g. `DEV-1234`)
+- Otherwise short module/area name
+- Optional but recommended
+
+## Examples
+
+```
+feat(DEV-1234): add absence type filter to working time report
+fix(DEV-1234): handle null value in equipment import
+test(DEV-1234): add component test for working time controller
+refactor: extract user sync logic into dedicated service
+chore: update PHP quality package to 2.1.0
+```
+
+---
+
+# Context Hygiene
+
+## 3-Failure Rule
+
+After **3 consecutive failed attempts** at same task:
+
+1. **STOP** — no 4th attempt
+2. **State dump** — what was tried, what failed, what's known
+3. **Recommend fresh start** — suggest new session with state dump, or ask for different approach
+
+After 3 failures, context is polluted. Fresh session with clean dump > 7th attempt in polluted context.
+
+## What counts as failure
+
+- Code change doesn't fix problem
+- Test still fails after fix
+- Quality check still errors after fix
+- Build/deploy fails after config change
+
+## Tool Loop Detection
+
+Same tool called **2+ times** with similar parameters = loop. Critical failure mode.
+
+1. **STOP** all tool calls
+2. Do task directly
+3. If stuck → ask user
+
+`sequentialthinking`: max **once** per task. NEVER for simple file ops/commands/edits.
+
+## Counter rules
+
+- Unrelated tasks don't reset counter
+- User providing new info = course correction, not failure
+
+## State dump format
+
+```
+## State Dump: [Task Description]
+
+### What was tried
+1. [Approach 1] → [Why it failed]
+2. [Approach 2] → [Why it failed]
+3. [Approach 3] → [Why it failed]
+
+### What is known
+- [Fact 1]
+- [Fact 2]
+
+### Hypothesis
+- [Best hypothesis for root cause]
+
+### Recommendation
+- [Suggested next approach for a fresh session]
+```
+
+Use `/agent-handoff` to generate context summary for fresh conversation.
+
+---
+
+# Development Efficiency
+
+For communication/response style → `token-efficiency` rule.
+
+## Codebase Navigation
+
+### Use what you have
+
+- Edited file → `str-replace-editor` showed result. Skip re-reading.
+- Ran command → have output. Skip re-running.
+- File in recent context → skip reloading.
+- Found symbol → use it. Skip re-searching.
+
+### Search before reading
+
+- Search first — `codebase-retrieval`, `search_query_regex`, `grep`
+- `view_range` or `search_query_regex` over full files
+- Small files (< 50 lines) — OK to read fully
+
+### `.augmentignore`
+
+- `vendor/`, `node_modules/`, locks excluded from `codebase-retrieval`
+- Need vendor details → `view` specific file (bypasses ignore)
+
+### Minimize tool calls
+
+- Parallel reads — batch, not sequential
+- `search_query_regex` over full file reads
+- `view_range` for known lines
+- One `codebase-retrieval` call with all symbols
+
+## Pattern: Redirect, Summarize, Target
+
+Commands producing >30 lines:
+
+### Step 1: Redirect
+```bash
+docker compose exec -T <service> <command> 2>&1 > /tmp/<tool>-output.txt
+echo "EXIT=$?"
+```
+
+### Step 2: Summary only
+```bash
+tail -5 /tmp/<tool>-output.txt
+```
+
+### Step 3: Targeted details
+```bash
+grep "ERROR\|error\|✏️" /tmp/<tool>-output.txt | head -20
+grep "app/Services/MyService.php" /tmp/<tool>-output.txt
+```
+
+**NEVER:** `cat` full output, read passing command output, read unactionable diffs.
+
+## General Rules
+
+1. **Exit code first** — if 0, skip reading
+2. **Summary line** — last few lines suffice
+3. **Targeted grep** — specific file/error type
+4. **Read once, act, move on** — don't re-read
+5. **Iterative fixing** — fix one, re-run, check exit code
+
+## CLI Over MCP
+
+CLI > MCP (significantly fewer tokens):
+- Git, files, APIs, database → CLI
+- Exception: MCPs with unique capabilities (Sentry, Playwright, Jira)
+
+## Exceptions
+
+- Small output (< 30 lines) → read directly
+- Debugging → more context OK
+- User asks for full output → show it
+
+---
+
+# Docker Container Commands
+
+All PHP commands run **inside Docker container**, not host.
+
+## Container Detection
+
+Read `docker-compose.yml` / `compose.yaml` for PHP service name (varies per project).
+- Non-interactive: `docker compose exec -T <service> ...`
+- Interactive: `make console` (if available)
+
+## Tooling Detection
+
+Check `artisan` in project root:
+- **Laravel**: `php artisan test`, `vendor/bin/phpstan analyse`, `vendor/bin/rector process`
+- **Composer**: `vendor/bin/phpunit`, `vendor/bin/phpstan analyse`, `vendor/bin/rector process`
+
+## Examples (Laravel)
+
+```bash
+docker compose exec -T <php-service> vendor/bin/phpstan analyse
+docker compose exec -T <php-service> vendor/bin/rector process
+docker compose exec -T <php-service> vendor/bin/ecs check --fix
+docker compose exec -T <php-service> php artisan test
+```
+
+## Examples (Composer)
+
+```bash
+docker compose exec -T php vendor/bin/phpstan analyse
+docker compose exec -T php vendor/bin/rector process
+docker compose exec -T php vendor/bin/ecs check --fix
+docker compose exec -T php bash -c "vendor/bin/phpunit"
+```
+
+## Build / Task Runner
+
+Check `Makefile` / `Taskfile.yml` first for shortcuts:
+- `Makefile` → `make console`, `make test`, `make phpstan`
+- `Taskfile.yml` → `task console`, `task test`, `task phpstan`
+
+Frontend commands run on host or node container.
+
+---
+
+# Downstream Changes
+
+After EVERY edit, find **ALL downstream changes**. Missing caller/test/import = critical failure.
+
+## What to check
+
+| What | How to find | What to update |
+|---|---|---|
+| **Callers / call sites** | `codebase-retrieval` + `grep` for changed method/class | Signatures, parameters, return type handling |
+| **Interface implementations** | `implements {Interface}` / `extends {Class}` | Match new signatures in all implementations |
+| **Subclasses** | `extends {Class}` | Override/implement changed methods |
+| **Tests** | Search test dirs for changed class/method | Assertions, mocks, method calls |
+| **Imports** | `use {Old\Namespace}` | Update namespace after moves/renames |
+| **Type definitions** | Type hints referencing changed class | Parameter types, return types, PHPDoc |
+| **Config / bindings** | Service providers, config files | Class references in DI bindings |
+| **API schemas / OpenAPI** | Controller attributes | Response structure changes |
+| **Routes** | `routes/` controller references | After controller rename/move |
+| **Documentation** | `agents/`, `docs/` references | Behavior or API changes |
+
+## Breaking changes — ask first
+
+- Removing/renaming public method/class
+- Changing method signature (required params, return type)
+- Changing API response structure
+- Removing DB column/table
+- Changing event payload
+- Renaming frontend-used route name
+
+## Non-breaking — proceed
+
+- New optional parameter with default
+- New method (additive)
+- New API response field (additive)
+- Internal refactoring (same public interface)
+- Bug fix
+
+## Verification
+
+1. No broken imports — PHPStan catches these
+2. No broken tests
+3. No broken types — PHPStan Level 9
+4. No stale references — grep old name confirms zero results
+
+```
+Every edit is incomplete until all downstream changes are made.
+```
+
+---
+
+# E2E Testing
+
+## Before writing
+
+1. Read `.augment/guidelines/e2e/playwright.md`
+2. Check existing tests — match structure, fixtures, Page Objects
+3. Check `playwright.config.ts` — base URL, browsers, timeouts
+
+## Locators
+
+- Prefer: `getByRole` > `getByLabel` > `getByText` > `getByTestId` > CSS
+- Never: auto-generated classes, dynamic IDs, XPath
+- No semantic locator → add `data-testid`
+
+## Assertions
+
+- Web-first assertions only (`toBeVisible`, `toHaveText`, `toHaveURL`)
+- Never `expect(await ...)` — no auto-retry
+- Never `page.waitForTimeout()` — wait for condition
+
+## Test structure
+
+- One test = one workflow/behavior
+- Fully isolated — no shared state, no order dependency
+- Page Objects = actions only, no assertions
+- Fixtures for reusable setup
+- API calls for test data (not UI)
+
+## CI
+
+- `workers: 1`, `retries: 2` (CI) / `0` (local)
+- `forbidOnly: !!process.env.CI`
+- `trace: 'on-first-retry'`
+- Install only needed browsers
+- Upload `playwright-report/` as artifact
+
+## Quality checks
+
+1. All tests pass: `npx playwright test`
+2. No `waitForTimeout`
+3. No CSS/XPath where semantic locators work
+4. No `.only` left
+5. Page Objects have no assertions
+
+---
+
+# Guidelines
+
+Coding guidelines live in `.augment/guidelines/` organized by language.
+**Always check the relevant guideline** before writing or reviewing code.
+
+## Available Guidelines
+
+### PHP (`.augment/guidelines/php/`)
+
+| File | Topic |
+|---|---|
+| `php.md` | General PHP style — strict types, naming, comparisons, early returns |
+| `controllers.md` | Thin controllers, single responsibility, delegation to services |
+| `eloquent.md` | Model conventions, relationships, scopes, accessors/mutators |
+| `validations.md` | FormRequest patterns, custom rules, validation structure |
+| `resources.md` | API Resource conventions, response structure |
+| `jobs.md` | Queue job patterns, serialization, retry strategies |
+| `git.md` | Branch naming, commit messages, PR conventions |
+| `patterns.md` | Design patterns index (links to `patterns/` subdirectory) |
+
+### PHP Patterns (`.augment/guidelines/php/patterns/`)
+
+| File | Pattern |
+|---|---|
+| `service-layer.md` | Service classes, business logic encapsulation |
+| `repositories.md` | Repository pattern, query encapsulation |
+| `dtos.md` | Data Transfer Objects, SimpleDto conventions |
+| `dependency-injection.md` | Constructor injection, service container |
+| `events.md` | Event/Listener patterns, dispatching |
+| `policies.md` | Authorization policies, gate definitions |
+| `factory.md` | Factory pattern usage |
+| `pipelines.md` | Laravel Pipeline pattern |
+| `strategy.md` | Strategy pattern implementation |
+
+### E2E (`.augment/guidelines/e2e/`)
+
+Playwright best practices, Page Objects, fixtures, CI.
+
+## How guidelines work
+
+- **Guidelines** = coding conventions (read on demand)
+- **Rules** = behavior constraints (auto-loaded)
+- **Skills** = capabilities/workflows (topic-matched)
+
+## Adding new guidelines
+
+New language/framework → create `.augment/guidelines/{language}/`. Follow PHP structure as template.
+Read specific file on demand — don't memorize full list.
+
+---
+
+# Laravel Language Files
+
+## Key format — flat dot notation only
+
+**Correct** (`lang/en/report.php`):
+```php
+return [
+    'type.daily_report' => 'Daily Report',
+    'type.care_report'  => 'Care Report',
+];
+```
+
+**Wrong** — nested arrays forbidden:
+```php
+return [
+    'type' => [
+        'daily_report' => 'Daily Report',
+        'care_report'  => 'Care Report',
+    ],
+];
+```
+
+## Both languages mandatory
+
+Every key **must exist in both** `lang/de/` and `lang/en/`. Add to both simultaneously.
+Missing translations = bug.
+
+## Usage
+
+```php
+__('report.type.daily_report')
+__('email.report.created.subject', ['number' => $number])
+```
+
+Never hardcode user-visible strings — always use language files.
+
+---
+
+# Language and Tone
+
+## Personalization
+
+Read `user_name` from `.agent-settings`. If empty, ask for first name, save it. Use naturally — not every sentence.
+
+## Language
+
+- Informal German "Du" (not "Sie")
+- German unless user writes in English
+- Code comments: English
+- `.md` files: English. German files → translate when touched
+- Two spaces after ❌, ✅, ⚠️ in CLI output. One space for other icons
+- No double/triple blank lines — one is enough
+- Every file ends with exactly one newline
+
+## `.md` files ALWAYS English
+
+All text in `.md` files in `.augment/` and `agents/`: English only.
+Includes: headings, bullets, example labels, prompts, templates, ASCII labels, tables.
+
+Agent translates at runtime. `.md` = English blueprint.
+
+**Wrong** (German in `.md`):
+```
+> 1. Interaktiv — bei jedem Kommentar nachfragen
+> 2. Automatisch — alle selbstständig abarbeiten
+```
+
+**Correct** (English in `.md`):
+```
+> 1. Interactive — ask before each comment
+> 2. Automatic — handle all independently
+```
+
+---
+
+# PHP Coding Rules
+
+- `declare(strict_types=1)` in every **new** PHP file. Not required for existing files without it.
+- Project `Math` helper for ALL business calculations. Never native arithmetic (`+`, `-`, `*`, `/`) for business math.
+- Never `var_dump()`, `print_r()`, `dd()` — disallowed by PHPStan.
+- Never `float` for money — `decimal` or `Math` helper.
+- Strict comparison `===`/`!==`, Yoda style: `null === $var`.
+- Early return over nested if/else.
+- No one-liner if statements.
+- Single quotes without interpolation. `sprintf()` for complex strings.
+- Variables: `camelCase`. Array keys: `snake_case`. Constants: `UPPER_SNAKE_CASE`.
+- Typed properties, parameters, return types — always.
+- Constructor property promotion where sensible.
+
+## Eloquent — Attribute Access
+
+Read `eloquent_access_style` from `.agent-settings`. Default: `getters_setters`. See `eloquent` skill.
+
+- **`getters_setters`**: Typed getter + fluent setter per attribute. Inside model: `getAttribute('col')`/`setAttribute('col', $val)`. Outside: getters/setters only.
+- **`get_attribute`**: `getAttribute()`/`setAttribute()` everywhere.
+- **`magic_properties`**: `$model->column_name` everywhere.
+
+### Relationship Getters
+
+- Every relationship MUST have typed getter **above** relationship method
+- Inside getter: `$this->getAttribute('relationship_name')`, NEVER `$this->relationship_name`
+- Outside model: ALWAYS getter (`$model->getEquipment()`), NEVER magic property
+- `instanceof` checks over `null ===` for relationships
+
+## Observers over `booted()`
+
+- No `booted()`/`boot()` for lifecycle hooks
+- Dedicated **Observer** via `#[ObservedBy]` attribute
+
+## PHPStan
+
+- Fix root cause. NEVER add to `phpstan-baseline.neon`.
+- `ignoreErrors` in `phpstan.neon`: only for **structural toolchain limitations**. Not individual issues. **Unsure → ask.**
+- Last resort (confirmed false positive):
+  ```php
+  // @phpstan-ignore-next-line — false positive: reason here
+  ```
+
+## Testing
+
+- **Pest** syntax, not PHPUnit — unless explicitly asked.
+- `tests/Unit/` auto-uses `UnitTestCase` (via `tests/Pest.php`).
+
+## PHPDoc
+
+- Only when type hints insufficient (e.g. `@param array<int, MyObject> $items`)
+- Never repeat method signature
+- One docblock per method
+- Order: `@param` → `@return` → `@throws`
+
+---
+
+# Quality Workflow
+
+Run quality tools **ONCE at the end** — not after each edit.
+See `verify-before-complete` rule for timing. Full command reference → `quality-tools` skill.
+
+## Language detection
+
+| Files changed | Pipeline |
+|---|---|
+| `.php` | PHP (PHPStan → Rector → PHPStan) |
+| `.js`, `.ts`, `.tsx`, `.jsx` | JS/TS (Biome → TSC → Tests) |
+| Both | Run **both** |
+
+```bash
+git diff --name-only origin/{default}..HEAD | grep -E '\.(php)$'
+git diff --name-only origin/{default}..HEAD | grep -E '\.(js|ts|tsx)$'
+```
+
+---
+
+## PHP Pipeline
+
+### Prerequisite
+
+Check `composer.json` for quality tools. See `quality-tools` skill for detection and commands.
+
+### Execution
+
+```bash
+# Native (default):
+vendor/bin/phpstan analyse             # PHPStan
+vendor/bin/rector process              # Rector (auto-fix)
+vendor/bin/ecs check --fix             # ECS (auto-fix)
+
+# With galawork/php-quality wrapper (if installed):
+php artisan quality:phpstan            # PHPStan
+php artisan quality:finalize           # Full pipeline
+```
+
+All inside Docker container if used.
+
+### Workflow
+
+1. Run PHPStan — fix type errors
+2. Run Rector + ECS with auto-fix
+3. Run PHPStan again — verify no new issues
+
+Step 3 errors → fix, repeat from step 2.
+
+### Baseline — NEVER touch
+
+- NEVER edit `phpstan-baseline.neon` manually
+- Auto-regenerated after successful PHPStan run (0 new errors)
+
+### Error handling
+
+- Fix actual code — don't suppress/ignore/baseline
+- Last resort: `// @phpstan-ignore-next-line — false positive: reason here`
+
+### Config files
+
+| File | Tool | Purpose |
+|---|---|---|
+| `phpstan.neon` | PHPStan | Level, paths, extensions, ignoreErrors |
+| `phpstan-baseline.neon` | PHPStan | Baseline (auto-managed, do NOT edit) |
+| `ecs.php` | ECS | Code style rules and skip list |
+| `rector.php` | Rector | Refactoring rules, PHP version sets, skip list |
+
+- `ignoreErrors`: structural toolchain limitations only. **Unsure → ask.**
+- Config files: don't modify without permission.
+
+### Git-aware execution
+
+Default: only changed files. `--ignore-git` = all files. `--clear-cache` = fresh. Both = complete re-check.
+
+---
+
+## JS/TS Pipeline
+
+### Prerequisite
+
+Check `package.json`: `@biomejs/biome`, `typescript`, `jest`/`vitest`.
+
+### Execution
+
+```bash
+npm run biome:fix      # Auto-fix formatting + linting
+npm run tscheck        # Type check
+npm test               # Tests
+
+# Fallback
+npx biome check --write .
+npx tsc --noEmit
+npx jest
+```
+
+Host or Node container — check `Makefile` / `docker-compose.yml`.
+
+### Workflow
+
+1. `npm run biome:fix` — formatting, linting, imports
+2. `npm run tscheck` — type safety
+3. `npm test`
+
+Step 2 errors → fix, re-run step 1.
+
+### Error handling
+
+- Fix type errors in code. No `@ts-ignore`/`@ts-expect-error` without reason.
+- Fix Biome errors, don't `biome-ignore` unless confirmed false positive.
+- Don't modify config files without permission.
+
+---
+
+# rtk (Rust Token Killer)
+
+CLI proxy reducing LLM token consumption 60-90% via intelligent output filtering. Single Rust binary, <10ms overhead.
+
+**Docs:** https://www.mintlify.com/rtk-ai/rtk
+**Repo:** https://github.com/rtk-ai/rtk
+
+## Usage
+
+```bash
+rtk git status        # 80-92% savings
+rtk git log           # compact log output
+rtk cargo test        # 90% savings — only failures shown
+rtk npm test          # same for JS/TS
+rtk docker compose ps # compact container status
+```
+
+## Detection & Installation
+
+Before verbose CLI commands, check rtk:
+
+1. `which rtk` (silent)
+2. **Installed** → prefix with `rtk` for >30 line output
+3. **Not installed** → check project settings file for `rtk_last_asked`:
+   - Missing or before today → prompt user
+   - Today → skip, use normal commands
+
+**Prompt:**
+
+> 💡 **rtk** (Rust Token Killer) is not installed.
+> Reduces token consumption 60-90%.
+>
+> 1. Install via Homebrew — `brew install rtk` (recommended on macOS)
+> 2. Install via Cargo — `cargo install rtk`
+> 3. Skip for now — I'll ask again tomorrow
+
+**On response:**
+- **1/2** → install, then: `rtk --version`, `rtk init --global`, Post-Install Setup, generate project-local filters, save `rtk_installed=true` in project settings
+- **3** → save `rtk_last_asked=YYYY-MM-DD` in project settings, use normal commands
+
+## Post-Install Setup (mandatory)
+
+### 1. Disable telemetry
+
+Telemetry enabled by default (opt-out).
+
+```bash
+# Add BOTH — env var (immediate) + config (persistent)
+echo 'export RTK_TELEMETRY_DISABLED=1' >> ~/.zshrc
+
+mkdir -p ~/.config/rtk
+# In ~/.config/rtk/config.toml:
+# [telemetry]
+# enabled = false
+```
+
+### 2. Enable tee recovery
+
+Saves raw unfiltered output on failures. Auto-cleans (max 20 files).
+
+```toml
+# In ~/.config/rtk/config.toml:
+[tee]
+enabled = true
+mode = "failures"
+max_files = 20
+max_file_size = 1048576
+```
+
+### 3. Enable hook audit logging
+
+```bash
+echo 'export RTK_HOOK_AUDIT=1' >> ~/.zshrc
+```
+
+### Reference config (`~/.config/rtk/config.toml`)
+
+```toml
+[telemetry]
+enabled = false
+
+[tracking]
+enabled = true
+history_days = 30
+
+[tee]
+enabled = true
+mode = "failures"
+max_files = 20
+max_file_size = 1048576
+
+[display]
+colors = true
+emoji = true
+max_width = 120
+```
+
+## When to use rtk
+
+| Command | Use rtk? |
+|---|---|
+| `git status/log` | ✅ Always |
+| `git push/pull` | ✅ Always |
+| Test runners (`cargo test`, `npm test`, `phpunit`) | ✅ Always |
+| Linters (`phpstan`, `eslint`, `tsc`) | ✅ Always |
+| `docker compose ps/logs` | ✅ Always |
+| Short commands (< 5 lines expected) | ❌ No overhead benefit |
+| Commands piped to `grep`/`tail` already | ❌ Already filtered |
+
+## Never use rtk for
+
+| Command | Why |
+|---|---|
+| `git diff` | ⛔ Silent truncation at ~50 changes — LLM decides on incomplete data (Issue #827) |
+| `rtk read` | ⛔ Same truncation risk — use `cat`/`view` instead |
+| Any command where **completeness matters** | ⛔ rtk may strip context needed for correct decisions |
+
+Debugging/reviewing diffs → raw command, no rtk.
+
+## Project-Local Filters
+
+`.rtk/filters.toml` (project root, Git-versioned). Overrides global filters.
+Covered: PHPStan, Pest, ECS, Rector, Docker Compose, Artisan, Composer.
+
+---
+
+# Scope Control
+
+- Do NOT introduce architectural changes unless explicitly requested.
+- Do NOT replace existing patterns with alternatives.
+- Do NOT refactor existing code solely to comply with current rules.
+- Do NOT suggest new libraries unless explicitly requested.
+- Existing code should only be modified if directly related to the current change, required for bug fixes, security, or explicitly requested.
+- New or newly modified code MUST follow all coding rules.
+- Stay within the established project structure and conventions.
+- When unsure about the scope, ask the user.
+- NEVER commit, push, merge, rebase, or force-push without explicit user permission.
+
+---
+
+# Token Efficiency
+
+## The Iron Laws
+
+```
+NEVER load full command output into context. Redirect → read summary → targeted details.
+```
+
+```
+NEVER call the same tool more than 2 times in a row with similar parameters.
+If you catch yourself repeating a tool call — STOP, rethink, try a different approach, or ask the user.
+```
+
+### Anti-loop: Extended Reasoning
+
+Do NOT use extended reasoning / chain-of-thought tools for simple tasks like viewing files,
+running commands, or making straightforward edits. They are ONLY for genuinely complex
+multi-step reasoning. If you find yourself calling such tools more than once per task —
+you are looping. Stop immediately and act directly instead.
+
+### Anti-loop: "CRITICAL INSTRUCTION" and self-prompting
+
+If you find yourself generating text that starts with "CRITICAL INSTRUCTION", "I need to",
+"Let me think", "Related tools:", or similar self-directed reasoning inside a tool call
+or as a preamble before acting — **you are in a loop**. This happens after connection errors
+or when the user says something like "continue" / "mach weiter".
+
+**Immediate action:**
+
+1. STOP generating self-instructions.
+2. Read the last user message — what did they actually ask?
+3. Do that ONE thing directly. No planning monologue, no tool selection reasoning.
+4. If you don't know what the user wanted, ask: "Where were we?"
+
+## Fresh Output Over Memory
+
+**CRITICAL**: When tool/command returns value (branch name, file path, PR number),
+use EXACT value in subsequent calls. NEVER substitute from earlier conversation.
+Context decay causes silent mismatches — fresh output is only source of truth.
+
+## Conversation Freshness
+
+Monitor for **context decay** — long conversations degrade quality.
+
+**Suggest new chat when:**
+
+- Conversation exceeds **~20 user messages**
+- Topic **changes completely**
+- Re-reading files already in context
+- **15+ completed tasks** and new unrelated topic
+- Branch changed since start
+- ~24 hours passed
+
+**Repeat** at multiples: messages 20/40/60, tasks 15/30/45.
+**ONLY at exact thresholds.** Between: silence.
+
+**How to suggest:**
+
+Estimate token cost: responses × ~1,500 tokens.
+
+```
+> ⚡ This conversation has ~{N} messages (~{N×1500} tokens history cost — charged on EVERY request).
+> A fresh chat saves ~{N×1500} input tokens per request.
+>
+> 1. Start fresh — I'll initiate a session handoff
+> 2. Continue here
+```
+
+**If the user picks 1:** Initiate a session handoff or start fresh.
+
+## Conversation Efficiency
+
+### Act, skip narration
+
+- Skip repeating user's request — they know what they asked
+- Just do it — skip announcing intentions
+- Skip explaining obvious tool calls
+- Report only outcomes
+
+**This rule NEVER overrides user-interaction or command rules.**
+Token efficiency means fewer *unnecessary* words — NOT skipping required questions,
+numbered options, or command steps. When a rule or command says "ask the user", you ask.
+
+### Stop early — max 2 retries
+
+- Command fails twice → stop, rethink, different approach
+- grep/search empty 2× → switch approach or ask
+- Max 3 diagnostic commands per error
+- One hypothesis at a time
+
+### Keep intermediate output minimal
+
+Read `minimal_output` from the project settings file (default: `true`).
+
+When `true`:
+
+- **During multi-step work:** short bullet points only, no paragraphs.
+- **No thinking out loud** — the user doesn't need your reasoning process.
+- **Play-by-play**: Read `play_by_play` from the project settings file (default: `false`).
+  When `false`: don't narrate each tool call result. Silently investigate, then report the conclusion.
+  When `true`: briefly share intermediate findings as you go.
+    - ❌  (when false) "Hmm, exit code 1. Let me check... 18 errors. The errors are about method_exists..."
+    - ✅  (when false) *(silently investigate, then report the conclusion)*
+- **At the end:** concise summary — just what changed and what the user needs to know.
+
+### Don't re-read what you already know
+
+- Edited a file → the edit tool showed the result. Don't re-read the file.
+- Ran a command → you have the output. Don't re-run to "verify".
+- File in context from recent messages → don't reload.
+- Found a symbol → don't search again in a different way.
+
+### Search before reading
+
+- **Search first** — use codebase search tools, regex search in files, or `grep`.
+- **Don't load entire files** when you only need a few lines.
+- **Small files** (< 50 lines) — OK to read fully.
+
+### Minimize tool calls
+
+- **Parallel reads** — don't read 5 files sequentially.
+- **Regex search** over full file reads when possible.
+- **View specific line ranges** when you know the exact location.
+- **One codebase search call** with all symbols — not 5 separate calls.
+
+### Right-size responses
+
+- Short question → short answer.
+- Code change → show what changed, not the entire file.
+- Error fix → what was wrong, what you did. No history lesson.
+- Summary tables → only for 3+ items.
+
+## Pattern: Redirect, Summarize, Target
+
+## Pattern: Redirect, Summarize, Target
+
+Every command that MAY produce more than ~30 lines of output:
+
+### Step 1: Redirect to file
+
+```bash
+docker compose exec -T <service> <command> 2>&1 > /tmp/<tool>-output.txt
+echo "EXIT=$?"
+```
+
+### Step 2: Read ONLY the summary
+
+```bash
+tail -5 /tmp/<tool>-output.txt
+```
+
+### Step 3: If errors exist, read ONLY what you need to fix
+
+```bash
+# Read specific error lines
+grep "ERROR\|error\|✏️" /tmp/<tool>-output.txt | head -20
+
+# Read a specific file's errors
+grep "app/Services/MyService.php" /tmp/<tool>-output.txt
+```
+
+**NEVER** do:
+
+- `cat /tmp/<tool>-output.txt` (loads everything)
+- Read the full output of a passing command (waste)
+- Read diffs you don't plan to act on
+
+## General Rules
+
+For tool-specific commands → see the `quality-workflow` rule.
+
+1. **ECS and Rector are trusted tools** — their configs define exactly what they do.
+   Run with `--fix`, don't read diffs, don't review changes. Trust the config.
+   The only verification needed is PHPStan + tests afterwards.
+
+2. **Both ECS and Rector always run with `--fix`** — dry-run diffs are a waste of tokens.
+   The workflow is: fix → verify (PHPStan + tests) → fix issues if any.
+
+3. **Exit code first**: Check `$?` before reading ANY output. If 0, you're done — don't read.
+
+4. **Summary line**: Most tools print a summary as the last few lines. That's all you need.
+
+5. **Targeted grep**: When you need details, `grep` for the specific file or error type.
+   Never read the full output "just in case".
+
+6. **Don't re-read**: Once you've read output and acted on it, don't read it again.
+   The file is still there if you need it, but don't re-load it into context.
+
+7. **Iterative fixing**: Fix one error at a time, re-run, check exit code.
+   Don't try to fix all errors from a single output read — the output becomes stale after each fix.
+
+## Exceptions
+
+- **Small output** (< 30 lines): Read directly, no redirect needed.
+- **Debugging**: OK to read more context around that one error.
+- **User explicitly asks** to see the full output: Show it.
+
+## Augment-specific
+
+_The following section applies only to Augment Code._
+
+### Ignored Skills Recovery
+
+Skills excluded via `.augmentignore` don't appear in `<available_skills>`.
+When you need expertise from an ignored skill during a task:
+
+1. **Read the SKILL.md directly** — `.augmentignore` only hides from the system prompt,
+   not from `view`. Use `view .augment/skills/{name}/SKILL.md` to load it on demand.
+2. **Continue working** — apply the skill's guidance for the current task.
+3. **After the task**, ask the user:
+
+```
+> 💡 I loaded the `{name}` skill manually — it's currently ignored in `.augmentignore`.
+>
+> 1. Remove from ignore — this skill is relevant for the project
+> 2. Keep ignored — this was a one-off
+```
+
+---
+
+# User Interaction
+
+## Numbered Options — Always
+
+When asking the user a question with predefined choices, **always present numbered options**.
+The user should be able to reply with just a number (e.g., `1`) instead of typing a sentence.
+
+### Format
+
+```
+> 1. First option — brief explanation
+> 2. Second option — brief explanation
+> 3. Third option — brief explanation
+```
+
+### Rules
+
+- **Every question with choices** must use numbered options — no exceptions.
+- **Keep options short** — one line each, with a brief explanation after the dash.
+- **Always include a "skip" or "no change" option** when applicable.
+- **Default/recommended option** can be marked: `1. Do X (recommended)`.
+- **Use the user's language** for the question and options.
+- **Accept both** the number and a natural language answer (e.g., "1" or "the first one").
+
+### Examples
+
+**Binary choice:**
+```
+> 1. Interactive — ask before each comment
+> 2. Automatic — handle all independently
+```
+
+**Multiple choice with skip:**
+```
+> 1. Fix the code
+> 2. Fix the test
+> 3. Skip
+```
+
+**Confirmation with context:**
+```
+> Found PR #1399 on branch `chore/refactor-agent-setup-2`.
+>
+> 1. Yes, that's the right PR
+> 2. No, different PR — I'll provide the URL
+```
+
+### When NOT to use numbered options
+
+- **Open-ended questions** where the answer is free text (e.g., "What should the class be named?").
+- **Simple yes/no** can use numbered options OR accept "ja"/"nein" directly.
+  Even for yes/no, prefer numbered options if there's additional context to show.
+
+## Progress Indicators
+
+When processing multiple items (e.g., review comments, test failures), show progress:
+
+```
+**Comment 3/7** — `filename.php:42`
+```
+
+## Summaries
+
+After completing a batch of actions, provide a summary table:
+
+```
+| # | File | Action |
+|---|---|---|
+| 1 | `file.php` | Fixed null check |
+| 2 | `test.php` | Updated assertion |
+| 3 | `config.php` | Skipped (intentional) |
+```
+
+---
+
+# Verify Before Completion
+
+## The Iron Law
+
+```
+NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
+```
+
+If you haven't run the verification command **in this message**, you cannot claim it passes.
+
+## When to run what — timing matters
+
+**Quality tools (PHPStan, Rector, ECS) run ONCE at the very end** — not after every edit.
+Do NOT run quality checks between tasks if you have more work to do.
+Only run the full quality pipeline when you are about to finish all work in the current conversation.
+
+**Tests: as targeted as possible, as little as necessary.**
+- During work: run ONLY the specific test class or test case affected by the change.
+  Use `--filter=ClassName` or `--filter=test_name` — NEVER the full suite mid-work.
+- Only run tests when you genuinely need to verify behavior (not "just to be safe").
+- Full test suite: ONCE at the very end, before quality tools.
+
+**The sequence at the end:**
+1. All code changes are done
+2. Run tests — targeted first (`--filter`), full suite only if targeted passes
+3. Run quality pipeline (PHPStan → Rector → ECS → PHPStan)
+4. Fix any issues from step 2-3
+5. ONLY THEN claim completion or suggest commit/push/PR
+
+## The Gate
+
+Before claiming ANY work is complete:
+
+1. **IDENTIFY** — What command proves this claim? (tests, PHPStan, build, etc.)
+2. **RUN** — Execute the full command (fresh, complete, not cached)
+3. **READ** — Full output, check exit code, count failures
+4. **VERIFY** — Does the output actually confirm the claim?
+5. **ONLY THEN** — Make the claim
+
+Skip any step = the claim is unverified.
+
+## When this applies
+
+- About to claim **all work is done** (not after individual edits)
+- About to say "done" or "complete"
+- Before suggesting to commit, push, or create a PR
+- Any statement implying all work is finished
+
+## Red flags — STOP immediately
+
+- Using "should pass", "probably works", "seems fine"
+- Expressing satisfaction before running verification
+- About to commit/push without running tests + quality
+- Trusting a previous run from earlier in the conversation
+- Relying on partial verification (ran tests but not PHPStan)
+- ANY wording implying success without fresh evidence
+
+## Common verification commands
+
+### Laravel projects (inside Docker container)
+```bash
+php artisan test                     # Tests
+vendor/bin/phpstan analyse                # Static analysis (or: php artisan quality:phpstan)
+vendor/bin/rector process                 # Rector (or: php artisan quality:rector --fix)
+vendor/bin/ecs check --fix                # Code style (or: php artisan quality:ecs --fix)
+```
+
+### Frontend projects
+```bash
+npm test          # or: bun test
+npm run build     # or: bun run build
+npm run lint      # or: bun run lint
+npx tsc --noEmit  # TypeScript check
+```
+
+For tool-specific commands → see the `quality-workflow` rule.
+
+## Minimum verification per task type
+
+| Task | Required evidence |
+|---|---|
+| Code change | Tests + PHPStan (command output with exit code) |
+| New feature | Tests + PHPStan + manual smoke test |
+| Bug fix | Regression test + full test suite |
+| Refactoring | Full test suite + PHPStan + Rector |
+| Config change | Relevant tests or verification command output |
+| API endpoint | curl/HTTP response output |
+| UI change | Screenshot or browser verification |
+| Migration | Migration run + rollback test |
+| Documentation only | No verification needed |
+
+**Never accept** these as proof:
+- "It should work"
+- "Looks correct"
+- "I've done similar before"
+- "The logic is sound"
+
+If you can't produce captured output, it's not verified.
+

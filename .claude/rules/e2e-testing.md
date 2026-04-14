@@ -1,0 +1,1 @@
+../../.augment/rules/e2e-testing.md

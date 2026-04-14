@@ -25,6 +25,14 @@ tasks:
     desc: Mark ALL .md files as compressed (run after initial full compression)
     cmd: bash scripts/compress.sh --mark-all-done
 
+  generate-tools:
+    desc: Generate tool-specific directories (.claude/, .cursor/, .clinerules/, .windsurfrules, GEMINI.md)
+    cmd: python3 scripts/compress.py --generate-tools
+
+  clean-tools:
+    desc: Remove all generated tool directories and files
+    cmd: python3 scripts/compress.py --clean-tools
+
   install-hooks:
     desc: Install git hooks (pre-push sync check)
     cmd: bash scripts/install-hooks.sh
