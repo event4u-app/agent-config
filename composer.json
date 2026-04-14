@@ -3,10 +3,6 @@
     "description": "Shared agent configuration — skills, rules, commands, guidelines, and templates for AI coding tools",
     "type": "library",
     "license": "proprietary",
-    "scripts": {
-        "post-install-cmd": "bash vendor/event4u/agent-config/scripts/install.sh --quiet",
-        "post-update-cmd": "bash vendor/event4u/agent-config/scripts/install.sh --quiet"
-    },
     "archive": {
         "exclude": [
             "/.augment.uncompressed",

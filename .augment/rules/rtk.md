@@ -28,7 +28,7 @@ Before verbose CLI commands, check rtk:
 
 1. `which rtk` (silent)
 2. **Installed** → prefix with `rtk` for >30 line output
-3. **Not installed** → check project settings file for `rtk_last_asked`:
+3. **Not installed** → check `.agent-settings` for `rtk_last_asked`:
    - Missing or before today → prompt user
    - Today → skip, use normal commands
 
@@ -42,8 +42,8 @@ Before verbose CLI commands, check rtk:
 > 3. Skip for now — I'll ask again tomorrow
 
 **On response:**
-- **1/2** → install, then: `rtk --version`, `rtk init --global`, Post-Install Setup, generate project-local filters, save `rtk_installed=true` in project settings
-- **3** → save `rtk_last_asked=YYYY-MM-DD` in project settings, use normal commands
+- **1/2** → install, then: `rtk --version`, `rtk init --global`, Post-Install Setup, generate project-local filters, save `rtk_installed=true` in `.agent-settings`
+- **3** → save `rtk_last_asked=YYYY-MM-DD` in `.agent-settings`, use normal commands
 
 ## Post-Install Setup (mandatory)
 
