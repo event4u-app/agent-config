@@ -33,23 +33,25 @@ tasks:
     desc: Remove all generated tool directories and files
     cmd: python3 scripts/compress.py --clean-tools
 
+  install:
+    desc: Run install.sh to sync agent-config to a target project
+    cmd: bash scripts/install.sh {{.CLI_ARGS}}
+
   install-hooks:
     desc: Install git hooks (pre-push sync check)
     cmd: bash scripts/install-hooks.sh
 
 
   test:
-    desc: Run all tests (PHP + Python) in Docker
-    cmd: docker compose run --rm test
+    desc: Run all tests (bash + Python)
+    cmds:
+      - bash tests/test_install.sh
+      - python3 -m unittest tests.test_compress -v
 
-  test-php:
-    desc: Run PHP tests in Docker
-    cmd: docker compose run --rm test sh -c "composer install --quiet && vendor/bin/phpunit"
+  test-install:
+    desc: Run install.sh integration tests
+    cmd: bash tests/test_install.sh
 
   test-python:
-    desc: Run Python tests in Docker
-    cmd: docker compose run --rm test sh -c "python3 -m unittest tests.test_compress -v"
-
-  test-build:
-    desc: Build test Docker image
-    cmd: docker compose build test
+    desc: Run Python compress tests
+    cmd: python3 -m unittest tests.test_compress -v

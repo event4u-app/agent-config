@@ -1,0 +1,10 @@
+{
+    "name": "@event4u/agent-config",
+    "version": "1.0.0",
+    "description": "Shared agent configuration — skills, rules, commands, guidelines, and templates for AI coding tools",
+    "license": "UNLICENSED",
+    "private": true,
+    "scripts": {
+        "postinstall": "bash node_modules/@event4u/agent-config/scripts/install.sh --quiet"
+    }
+}
