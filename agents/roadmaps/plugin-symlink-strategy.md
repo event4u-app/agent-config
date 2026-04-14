@@ -1,5 +1,9 @@
 # Roadmap: Plugin Symlink Strategy — copy rules, symlink everything else
 
+> **⚠️ SUPERSEDED** by `agents/roadmaps/shell-based-installer.md`
+> The PHP Composer Plugin has been replaced by a portable shell script (`scripts/install.sh`).
+> This roadmap is kept for historical reference only.
+
 > Refactor `AgentConfigPlugin` to use file-level symlinks for all `.augment/` content except rules, which must be real copies because Augment cannot load symlinked rules.
 
 ## Prerequisites

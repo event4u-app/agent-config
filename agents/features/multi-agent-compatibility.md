@@ -22,7 +22,7 @@ The `event4u/agent-config` package currently only works with **Augment Code**. O
 5. Add **Agent Skills standard** (agentskills.io) frontmatter to all SKILL.md files
 6. Port **skills** to `.claude/skills/` via symlinks (30+ tools support the standard)
 7. Port **commands** to Claude Code Skills with `disable-model-invocation: true`
-8. Extend the Composer plugin to create symlinks in target projects
+8. Create portable `install.sh` to create symlinks in target projects
 9. Unify YAML frontmatter so one file works for all tools
 
 ## Scope
@@ -38,10 +38,10 @@ The `event4u/agent-config` package currently only works with **Augment Code**. O
 - **Create `.claude/skills/`** with symlinks to universal skills
 - **Convert commands** to Claude Code Skills format (`disable-model-invocation: true`)
 - Classify skills and commands (universal vs Augment-only)
-- Extend `AgentConfigPlugin` to create rules + skills symlinks in target projects
+- Portable `install.sh` creates rules + skills symlinks in target projects
 - Update `composer.json` archive to include new directories/files
 - Update `scripts/compress.py` to generate rules, skills, and commands outputs
-- Tests for all generation and plugin logic
+- Tests for all generation and install logic
 
 ### Out of Scope (deferred)
 
@@ -64,9 +64,8 @@ The `event4u/agent-config` package currently only works with **Augment Code**. O
 | `.clinerules/` | New directory with rule symlinks |
 | `.windsurfrules` | New generated file |
 | `GEMINI.md` | New symlink → `AGENTS.md` |
-| `src/AgentConfigPlugin.php` | New symlink creation for rules + skills |
+| `scripts/install.sh` | Portable installer: hybrid sync, symlinks, gitignore management |
 | `scripts/compress.py` | New `--generate-tools` mode for rules, skills, commands |
-| `src/AgentConfigPlugin.php` | Reads directly from `.augment/` dirs (no config files) |
 | `composer.json` | Update archive.exclude |
 | `Taskfile.yml` | New tasks for generation |
 
@@ -99,9 +98,9 @@ Each tool reads only the fields it understands, ignores the rest. Verified: Clau
 `.windsurfrules`: concatenate all universal rules into one file, separated by `---`.
 `GEMINI.md`: symlink → `AGENTS.md` (same content).
 
-### Composer Plugin: symlink creation
+### Install script: symlink creation
 
-The plugin creates **relative symlinks** in target projects. Advantage over copying: when `.augment/rules/` is updated via `composer update`, symlinks automatically point to the new content.
+The `install.sh` script creates **relative symlinks** in target projects. Advantage over copying: when `.augment/rules/` is updated via `composer update` or `npm update`, symlinks automatically point to the new content. Works with any package manager (Composer, npm, manual).
 
 Fallback: if symlink creation fails (Windows, restricted filesystem), copy files instead.
 
@@ -109,7 +108,7 @@ Fallback: if symlink creation fails (Windows, restricted filesystem), copy files
 
 | Option | Pros | Cons | Decision |
 |---|---|---|---|
-| Symlinks from tool dirs → .augment/rules/ | Zero duplication, auto-updates | Needs plugin changes, Windows compat | ✅ Chosen |
+| Symlinks from tool dirs → .augment/rules/ | Zero duplication, auto-updates | Windows compat | ✅ Chosen |
 | Copy files to each tool dir | Simple, no symlink issues | N×duplication, stale copies | ❌ Rejected |
 | Single AGENTS.md for all tools | Minimal effort | No tool-specific features (globs, etc.) | ❌ Rejected |
 
@@ -120,7 +119,7 @@ Fallback: if symlink creation fails (Windows, restricted filesystem), copy files
 - [x] Symlinks or copies in target projects? → Symlinks with copy fallback
 - [x] Can skills be shipped to other tools? → Yes, via Agent Skills standard (agentskills.io)
 - [x] Can commands be ported? → Yes, as Claude Code Skills with `disable-model-invocation: true`
-- [x] Windows symlink support — does Composer plugin need admin rights?
+- [x] Windows symlink support — WSL/Git Bash as fallback, PowerShell script deferred
 - [x] Should `CLAUDE.md` remain a separate file or become a symlink to `AGENTS.md`?
 - [x] Exact paths for Cursor/Copilot/Gemini skills directories (confirmed for Claude Code only)
 
@@ -147,8 +146,8 @@ Fallback: if symlink creation fails (Windows, restricted filesystem), copy files
 - [x] All converted commands have `disable-model-invocation: true`
 
 ### Infrastructure
-- [x] Composer plugin creates rules + skills symlinks in target projects (copy fallback)
-- [x] All existing tests pass + new tests for all generation logic
+- [x] Portable `install.sh` creates rules + skills symlinks in target projects (copy fallback)
+- [x] All tests pass: 32 bash integration + 49 Python generation tests
 - [x] No content duplication — single source in `.augment/`
 
 ## Roadmaps

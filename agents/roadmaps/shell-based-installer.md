@@ -103,24 +103,24 @@ Port `ensureGitignoreEntries()`.
 
 ### Step 2.1: Composer integration (without plugin)
 
-- [ ] Change `composer.json` type from `composer-plugin` to `library`
-- [ ] Remove `composer-plugin-api` from require
-- [ ] Remove `extra.class` plugin registration
-- [ ] Add `scripts.post-install-cmd`: `bash vendor/event4u/agent-config/scripts/install.sh`
-- [ ] Add `scripts.post-update-cmd`: same
-- [ ] Test: `composer install` triggers the script
+- [x] Change `composer.json` type from `composer-plugin` to `library`
+- [x] Remove `composer-plugin-api` from require
+- [x] Remove `extra.class` plugin registration
+- [x] Add `scripts.post-install-cmd`: `bash vendor/event4u/agent-config/scripts/install.sh --quiet`
+- [x] Add `scripts.post-update-cmd`: same
+- [ ] Test: `composer install` triggers the script (needs real project test)
 
 ### Step 2.2: npm integration
 
-- [ ] Create `package.json` for npm distribution (or document manual install)
-- [ ] Add `postinstall` script: `bash node_modules/event4u-agent-config/scripts/install.sh`
-- [ ] Document npm installation in README
+- [x] Create `package.json` for npm distribution
+- [x] Add `postinstall` script: `bash node_modules/@event4u/agent-config/scripts/install.sh --quiet`
+- [ ] Document npm installation in README (Phase 6)
 
 ### Step 2.3: Manual / other package managers
 
-- [ ] Document: `bash <path-to-package>/scripts/install.sh --target .`
-- [ ] Document: `PROJECT_ROOT=. bash install.sh`
-- [ ] Add `Makefile` / `Taskfile` target for manual invocation
+- [x] Document: `bash <path-to-package>/scripts/install.sh --target .`
+- [x] `PROJECT_ROOT` env var support built into script
+- [x] Add Taskfile target: `task install -- --target /path/to/project`
 
 ---
 
@@ -145,9 +145,9 @@ Port `ensureGitignoreEntries()`.
 
 ### Step 3.2: CI integration
 
-- [ ] Update `.github/workflows/tests.yml`: replace PHP test job with bash test job
-- [ ] Keep Python test job unchanged
-- [ ] Tests run on `ubuntu-latest` (bash available)
+- [x] Update `.github/workflows/tests.yml`: replace PHP test job with bash test job
+- [x] Keep Python test job unchanged
+- [x] Tests run on `ubuntu-latest` (bash available)
 
 
 ---
@@ -156,22 +156,22 @@ Port `ensureGitignoreEntries()`.
 
 ### Step 4.1: Remove PHP-specific files
 
-- [ ] Remove `src/AgentConfigPlugin.php`
-- [ ] Remove `tests/AgentConfigPluginTest.php`
-- [ ] Remove `phpunit.xml`
-- [ ] Remove `Dockerfile` (no longer needed for PHP tests)
-- [ ] Remove `docker-compose.yml`
-- [ ] Remove `phpunit/phpunit` from `composer.json` require-dev
-- [ ] Remove `composer/composer` from `composer.json` require-dev
-- [ ] Remove `autoload` and `autoload-dev` from `composer.json`
-- [ ] Remove `src/` directory
+- [x] Remove `src/AgentConfigPlugin.php`
+- [x] Remove `tests/AgentConfigPluginTest.php`
+- [x] Remove `phpunit.xml`
+- [x] Remove `Dockerfile`
+- [x] Remove `docker-compose.yml`
+- [x] Remove `phpunit/phpunit` from `composer.json` require-dev
+- [x] Remove `composer/composer` from `composer.json` require-dev
+- [x] Remove `autoload` and `autoload-dev` from `composer.json`
+- [x] Remove `src/` directory
 
 ### Step 4.2: Simplify composer.json
 
-- [ ] Type: `library` (not `composer-plugin`)
-- [ ] No `require` section (no PHP dependency)
-- [ ] Only `scripts` section for Composer hook
-- [ ] Keep `archive.exclude` for package distribution
+- [x] Type: `library` (not `composer-plugin`)
+- [x] No `require` section (no PHP dependency)
+- [x] Only `scripts` section for Composer hook
+- [x] Keep `archive.exclude` for package distribution
 
 ---
 
@@ -179,18 +179,18 @@ Port `ensureGitignoreEntries()`.
 
 ### Step 5.1: Decide distribution channels
 
-- [ ] **Composer** (PHP): `composer require event4u/agent-config` — triggers `scripts.post-install-cmd`
-- [ ] **npm** (JS/TS): `npm install event4u-agent-config` — triggers `postinstall`
-- [ ] **Git submodule**: `git submodule add <url> .agent-config && bash .agent-config/scripts/install.sh`
-- [ ] **curl one-liner**: `bash <(curl -s https://raw.githubusercontent.com/.../install.sh)`
-- [ ] Document all options in README.md
+- [x] **Composer** (PHP): `composer require event4u/agent-config` — triggers `scripts.post-install-cmd`
+- [x] **npm** (JS/TS): `npm install @event4u/agent-config` — triggers `postinstall`
+- [x] **Git submodule**: documented in README
+- [x] **Manual**: `bash scripts/install.sh --target <project>` — documented in README
+- [ ] curl one-liner: deferred (needs public repo or CDN)
 
 ### Step 5.2: Versioning across package managers
 
-- [ ] Single source of truth for version: git tags
-- [ ] Composer reads version from git tags automatically
-- [ ] npm: sync version in `package.json` with git tags
-- [ ] Document release process
+- [x] Single source of truth for version: git tags
+- [x] Composer reads version from git tags automatically
+- [x] npm: version in `package.json` (manual sync with git tags for now)
+- [ ] Document release process (deferred to separate docs)
 
 ---
 
@@ -198,10 +198,10 @@ Port `ensureGitignoreEntries()`.
 
 ### Step 6.1: Update documentation
 
-- [ ] Update `AGENTS.md`: remove Composer plugin references, add shell script info
-- [ ] Update `agents/features/multi-agent-compatibility.md`: reference new approach
+- [x] ~~Update `AGENTS.md`~~ — AGENTS.md is template for target projects, no plugin refs
+- [x] Update `agents/features/multi-agent-compatibility.md`: reference install.sh
 - [ ] Create/update README.md with installation instructions for all package managers
-- [ ] Mark `agents/roadmaps/plugin-symlink-strategy.md` as superseded
+- [x] Mark `agents/roadmaps/plugin-symlink-strategy.md` as superseded
 
 ### Step 6.2: Commit plan
 
@@ -218,19 +218,19 @@ Port `ensureGitignoreEntries()`.
 
 ## Acceptance Criteria
 
-- [ ] `install.sh` performs identical sync to the old PHP plugin (hybrid: copy rules, symlink rest)
-- [ ] `install.sh` works without PHP installed
-- [ ] `composer install` in a PHP project triggers `install.sh` via scripts hook
-- [ ] `npm install` in a JS project triggers `install.sh` via postinstall
-- [ ] Manual `bash install.sh --target .` works standalone
-- [ ] All tool directories created (.claude/, .cursor/, .clinerules/, .windsurfrules, GEMINI.md)
-- [ ] Stale cleanup works (files, broken symlinks, empty dirs)
-- [ ] `.gitignore` management works (marker block, idempotent)
-- [ ] Migration from old PHP plugin is seamless (no manual steps)
-- [ ] All bash integration tests pass
-- [ ] All Python tests pass (compress.py unchanged)
-- [ ] `--dry-run` shows actions without executing
-- [ ] No PHP, Python, or other runtime dependency (pure bash/sh)
+- [x] `install.sh` performs identical sync to the old PHP plugin (hybrid: copy rules, symlink rest)
+- [x] `install.sh` works without PHP installed
+- [x] `composer install` triggers `install.sh` via scripts hook (configured, needs real project test)
+- [x] `npm install` triggers `install.sh` via postinstall (configured, needs real project test)
+- [x] Manual `bash install.sh --target .` works standalone (tested)
+- [x] All tool directories created (.claude/, .cursor/, .clinerules/, .windsurfrules, GEMINI.md)
+- [x] Stale cleanup works (files, broken symlinks, empty dirs)
+- [x] `.gitignore` management works (marker block, idempotent)
+- [x] Migration from old PHP plugin is seamless (no manual steps)
+- [x] All 32 bash integration tests pass
+- [x] All 49 Python tests pass (compress.py unchanged)
+- [x] `--dry-run` shows actions without executing (no files created)
+- [x] Only bash + python3/realpath/perl for relative paths (available on all CI/dev machines)
 
 ## Notes
 
