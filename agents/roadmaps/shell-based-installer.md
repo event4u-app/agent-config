@@ -69,7 +69,7 @@ Port `createToolSymlinks()` — symlinks in .claude/rules/, .cursor/rules/, .cli
 - [x] Iterate all `*.md` files in `<target>/.augment/rules/`
 - [x] Create symlinks in `.claude/rules/`, `.cursor/rules/`, `.clinerules/`
 - [x] Relative paths: e.g. `../../.augment/rules/php-coding.md`
-- [ ] Clean stale symlinks in tool dirs (TODO: not yet implemented)
+- [x] Clean stale symlinks in tool dirs
 
 ### Step 1.5: Skill symlinks
 
@@ -78,7 +78,7 @@ Port `createSkillSymlinks()` — directory symlinks in .claude/skills/.
 - [x] Iterate all directories in `<target>/.augment/skills/`
 - [x] Create directory symlinks in `.claude/skills/`
 - [x] Relative paths: e.g. `../../.augment/skills/coder`
-- [ ] Clean stale skill symlinks (TODO: not yet implemented)
+- [x] Clean stale skill symlinks
 
 ### Step 1.6: Generated files
 
@@ -108,13 +108,13 @@ Port `ensureGitignoreEntries()`.
 - [x] Remove `extra.class` plugin registration
 - [x] Add `scripts.post-install-cmd`: `bash vendor/event4u/agent-config/scripts/install.sh --quiet`
 - [x] Add `scripts.post-update-cmd`: same
-- [ ] Test: `composer install` triggers the script (needs real project test)
+- [-] Test: `composer install` triggers the script (deferred: needs real project)
 
 ### Step 2.2: npm integration
 
 - [x] Create `package.json` for npm distribution
 - [x] Add `postinstall` script: `bash node_modules/@event4u/agent-config/scripts/install.sh --quiet`
-- [ ] Document npm installation in README (Phase 6)
+- [x] Document npm installation in README
 
 ### Step 2.3: Manual / other package managers
 
@@ -183,14 +183,14 @@ Port `ensureGitignoreEntries()`.
 - [x] **npm** (JS/TS): `npm install @event4u/agent-config` — triggers `postinstall`
 - [x] **Git submodule**: documented in README
 - [x] **Manual**: `bash scripts/install.sh --target <project>` — documented in README
-- [ ] curl one-liner: deferred (needs public repo or CDN)
+- [-] curl one-liner: deferred (needs public repo or CDN)
 
 ### Step 5.2: Versioning across package managers
 
 - [x] Single source of truth for version: git tags
 - [x] Composer reads version from git tags automatically
 - [x] npm: version in `package.json` (manual sync with git tags for now)
-- [ ] Document release process (deferred to separate docs)
+- [-] Document release process (deferred to separate docs)
 
 ---
 
@@ -200,7 +200,7 @@ Port `ensureGitignoreEntries()`.
 
 - [x] ~~Update `AGENTS.md`~~ — AGENTS.md is template for target projects, no plugin refs
 - [x] Update `agents/features/multi-agent-compatibility.md`: reference install.sh
-- [ ] Create/update README.md with installation instructions for all package managers
+- [x] Create README.md with installation instructions for all package managers
 - [x] Mark `agents/roadmaps/plugin-symlink-strategy.md` as superseded
 
 ### Step 6.2: Commit plan
