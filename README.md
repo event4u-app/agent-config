@@ -10,9 +10,14 @@ Works with **Augment Code**, **Claude Code**, **Cursor**, **Cline**, **Windsurf*
 
 ```bash
 composer require event4u/agent-config
+
+# One-time setup: adds post-install/update hooks to your composer.json
+bash vendor/event4u/agent-config/scripts/setup.sh
 ```
 
-The `post-install-cmd` hook automatically runs `scripts/install.sh` to sync configuration.
+After setup, `install.sh` runs automatically on every `composer install` / `composer update`.
+
+The setup script is **idempotent** — safe to run multiple times. It requires `jq`.
 
 ### npm (JavaScript/TypeScript projects)
 
