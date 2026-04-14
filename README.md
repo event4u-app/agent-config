@@ -17,7 +17,7 @@ bash vendor/event4u/agent-config/scripts/setup.sh
 
 After setup, `install.sh` runs automatically on every `composer install` / `composer update`.
 
-The setup script is **idempotent** — safe to run multiple times. It requires `jq`.
+The setup script is **idempotent** — safe to run multiple times. It auto-detects a JSON tool (`php → node → jq → python3`).
 
 ### npm (JavaScript/TypeScript projects)
 
