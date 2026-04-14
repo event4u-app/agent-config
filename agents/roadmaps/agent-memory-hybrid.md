@@ -21,6 +21,19 @@ The memory system is **not** a replacement for code understanding. It's a **veri
 - **Feature:** `agents/features/multi-agent-compatibility.md`
 - **Jira:** none
 
+### Inspiration & Prior Art
+
+This roadmap builds on analysis of two existing open-source agent memory systems:
+
+| Project | Stars | License | Key Contribution to Our Design |
+|---|---|---|---|
+| [agentmemory](https://github.com/rohitg00/agentmemory) | 1.4k | Apache-2.0 | 4-tier consolidation, Ebbinghaus decay, RRF fusion, token budgets, privacy filters, self-healing |
+| [claude-mem](https://github.com/thedotmack/claude-mem) | 54k | AGPL-3.0 | Progressive disclosure (3-layer retrieval), lifecycle hooks, observation-first storage |
+
+**What we adopt:** consolidation pipeline, decay model, retrieval fusion, progressive disclosure, token budgets, privacy filters, embedding fallback, self-healing.
+
+**What neither has (our unique safety model):** quarantine status, contradiction detection, impact levels, post-task extraction guard, poison + cascade review, semantic drift detection, hard trust threshold.
+
 ---
 
 ## Core Principles
@@ -245,6 +258,41 @@ Ephemeral. Current task plan, session to-dos, temporary hypotheses. Discarded af
 
 ---
 
+## Memory Consolidation Pipeline
+
+Inspired by [agentmemory](https://github.com/rohitg00/agentmemory)'s 4-tier model (analogous to human sleep consolidation):
+
+```
+Raw Observation → Working Memory → Episodic Memory → Semantic Memory → Procedural Memory
+```
+
+| Tier | What | Analogy | Lifecycle |
+|---|---|---|---|
+| **Working** | Raw tool observations, file reads, errors | Short-term memory | Auto-captured during session, deduped (SHA-256, 5-min window) |
+| **Episodic** | Compressed session summaries | "What happened" | Generated at session end, links to observations |
+| **Semantic** | Extracted facts, patterns, decisions | "What I know" | Extracted from episodic, enters quarantine |
+| **Procedural** | Proven workflows, decision patterns | "How to do it" | Promoted from semantic after repeated validation |
+
+### Consolidation Rules
+
+- Working → Episodic: **automatic** at session end (compress observations into summary)
+- Episodic → Semantic: **agent-triggered** or **scheduled** (extract stable knowledge from summaries)
+- Semantic → Procedural: **only after 3+ successful validations** (proven pattern, not just observed once)
+- Each tier has its own TTL multiplier: Working (1d) → Episodic (7d) → Semantic (30d) → Procedural (90d)
+
+### Ebbinghaus Decay Model
+
+Instead of flat TTL expiry, memory strength follows an access-frequency curve:
+
+- **Every retrieval strengthens** the memory (increases trust score, extends effective TTL)
+- **Lack of access weakens** the memory (trust score slowly decays toward stale threshold)
+- **Decay rate varies by knowledge class:** Evergreen decays slowest, Volatile decays fastest
+- **Hard floor:** Even frequently accessed memories must be revalidated when evidence changes
+
+This means: a frequently-used architecture decision stays strong indefinitely (until code contradicts it), while a rarely-accessed bugfix note fades naturally.
+
+---
+
 ## Trust & Validation
 
 ### Trust Statuses
@@ -307,13 +355,37 @@ poisoned → archived          (after dependent decisions reviewed)
 
 ## Retrieval Strategy
 
-Hybrid retrieval pipeline:
+### Triple-Stream Retrieval (inspired by [agentmemory](https://github.com/rohitg00/agentmemory))
 
-1. **Lexical search** — keyword matching
-2. **Vector search** — semantic similarity via embeddings
-3. **Metadata filters** — repository, module, type, trust status
-4. **Freshness check** — validate against current git state
-5. **Ranking** — relevance + trust score + freshness
+Three parallel search streams, fused with Reciprocal Rank Fusion (RRF, k=60):
+
+| Stream | What | When |
+|---|---|---|
+| **BM25 (Lexical)** | Stemmed keyword matching with synonym expansion | Always on |
+| **Vector** | Cosine similarity over dense embeddings | When embedding provider configured |
+| **Knowledge Graph** | Entity matching + BFS traversal | When entities detected in query (V2) |
+
+Pipeline:
+
+1. Run all streams in parallel
+2. Apply **metadata filters** (repository, module, type, trust status)
+3. **Freshness check** — validate against current git state, auto-stale expired entries
+4. **RRF Fusion** — combine rankings from all streams
+5. **Session diversification** — max 3 results per source session (prevents one session dominating)
+6. **Trust threshold** — filter out entries below 0.6 trust score
+7. **Token budget** — cap total response at configurable token limit (default: 2000)
+
+### Progressive Disclosure (inspired by [claude-mem](https://github.com/thedotmack/claude-mem))
+
+3-layer retrieval for ~10x token savings:
+
+| Layer | What | Tokens/result | When |
+|---|---|---|---|
+| **1. Index** | Compact list: ID, title, trust score, type | ~50-100 | Always (default) |
+| **2. Timeline** | Chronological context around selected entries | ~200-300 | On demand |
+| **3. Full Details** | Complete entry with evidence, scope, metadata | ~500-1000 | Only for filtered IDs |
+
+Agents query Layer 1 first, review the index, then fetch Layer 3 only for relevant entries. This prevents loading 20 full entries when only 3 are needed.
 
 ### Ranking Signals
 
@@ -322,6 +394,29 @@ Hybrid retrieval pipeline:
 - Same domain / bounded context
 - Relevance to current diff
 - Trust status and last validation time
+- Access frequency (Ebbinghaus strength)
+- Consolidation tier (Procedural > Semantic > Episodic)
+
+### Token Budget
+
+Every retrieval respects a configurable token budget (default: 2000 tokens):
+
+- Layer 1 index entries are always within budget
+- Layer 3 full entries counted against budget — system stops when budget exceeded
+- Agent can override with explicit `--budget <tokens>` flag
+- Budget prevents memory context from overwhelming the agent's context window
+
+### Embedding Provider Fallback Chain (inspired by [agentmemory](https://github.com/rohitg00/agentmemory))
+
+Auto-detect available providers, prefer free/local:
+
+| Priority | Provider | Cost | Notes |
+|---|---|---|---|
+| 1 | **Local** (`all-MiniLM-L6-v2`) | Free | Offline, no API key needed |
+| 2 | Gemini (`text-embedding-004`) | Free tier | 1500 RPM |
+| 3 | OpenAI (`text-embedding-3-small`) | $0.02/1M | Highest quality |
+| 4 | Voyage AI (`voyage-code-3`) | Paid | Optimized for code |
+| Fallback | BM25 only | Free | No embeddings, lexical only |
 
 ---
 
@@ -340,28 +435,60 @@ Hybrid retrieval pipeline:
 
 ---
 
+## Pre-Storage Privacy Filter
+
+Before ANY data enters storage (inspired by [agentmemory](https://github.com/rohitg00/agentmemory)):
+
+1. **Strip secrets** — API keys, tokens, passwords, connection strings (regex + entropy detection)
+2. **Strip PII** — emails, phone numbers, names (configurable per project)
+3. **Honor `<private>` tags** — content wrapped in `<private>...</private>` is never stored
+4. **Sanitize file paths** — normalize to relative paths, strip home directory
+5. **Redact environment variables** — `.env` content never stored verbatim
+
+This runs BEFORE embedding creation, BEFORE storage, BEFORE any processing. Non-negotiable.
+
+---
+
 ## Agent Workflow Integration
+
+### Lifecycle Hooks (inspired by [claude-mem](https://github.com/thedotmack/claude-mem))
+
+| Hook | Trigger | Memory Action |
+|---|---|---|
+| **SessionStart** | Agent session begins | Retrieve relevant context (Layer 1 index), inject within token budget |
+| **PreToolUse** | Before file read/edit | Enrich with file-specific memories |
+| **PostToolUse** | After tool execution | Capture raw observation (Working Memory tier) |
+| **PostToolUseFailure** | Tool error | Capture error context (may become bug_pattern) |
+| **Stop** | Task complete | Trigger post-task extraction (with guard checks) |
+| **SessionEnd** | Session closes | Consolidate Working → Episodic, run dedup |
 
 ### Pre-Task
 
 1. Agent receives task
 2. Agent (or tool) identifies affected modules/files
-3. Memory system retrieves relevant entries
+3. Memory system retrieves relevant entries (Layer 1 index, within token budget)
 4. Top entries validated against current code/git
 5. Only validated or explicitly-marked-stale entries passed to agent
+6. Stale entries include `⚠️ STALE` marker — agent decides whether to use
 
 ### During Task
 
+- Raw observations captured automatically via PostToolUse hook (Working Memory)
+- SHA-256 dedup with 5-minute window prevents duplicate observations
 - Agent uses its own code understanding (codebase search, context window, etc.)
 - Memory serves as supplementary context, never overriding fresh code
-- Session notes kept separate from persistent memory
+- Session notes kept in Working Memory tier (ephemeral)
+- Agent can explicitly `memory save` important decisions mid-task
 
 ### Post-Task
 
-1. Analyze diffs from completed work
-2. Extract new stable knowledge (architecture decisions, conventions discovered)
-3. Update or invalidate affected existing entries
-4. Discard session notes
+1. **Guard check:** tests must pass, no quality regressions (extraction blocked otherwise)
+2. Consolidate Working → Episodic (compress observations into session summary)
+3. Extract Semantic entries from Episodic (stable knowledge enters quarantine)
+4. Analyze diffs — update or invalidate affected existing entries
+5. Run contradiction detection against new entries
+6. Privacy filter on all new entries before final storage
+7. Discard Working Memory (raw observations) after consolidation
 
 ---
 
@@ -370,22 +497,37 @@ Hybrid retrieval pipeline:
 ### In V1
 
 - Memory entries with evidence + trust status
-- Hybrid retrieval (lexical + vector)
+- 4-tier consolidation pipeline (Working → Episodic → Semantic → Procedural)
+- Ebbinghaus decay model (access-frequency based)
+- Triple-stream retrieval (BM25 + Vector, RRF fusion)
+- Progressive disclosure (3-layer: Index → Timeline → Full)
+- Token budget for context injection
+- Pre-storage privacy filter
+- Embedding provider fallback chain (local-first, free default)
 - File-level git-diff invalidation
+- Lifecycle hooks (SessionStart, PostToolUse, Stop, SessionEnd)
+- SHA-256 dedup with time window
 - Manual + agent-triggered ingestion
 - CLI commands + MCP server interface
 - Trust scoring and status transitions
+- Self-healing / circuit breaker
 - Basic ingestion from code, docs, git history
 
 ### NOT in V1
 
-- Full knowledge graph (Neo4j)
+- Full knowledge graph with traversal (Neo4j / graph queries)
 - Automatic symbol-level dependency graphs
-- Complex multi-agent orchestration
+- Complex multi-agent orchestration (leases, signals)
 - Fully autonomous decision systems
 - IDE extensions / VS Code plugins
 - PR / ticket integration
 - Branch-specific temporary memory
+- Team memory (namespaced shared/private)
+- Real-time web viewer
+- MEMORY.md bridge (bi-directional sync with file-based memory)
+- Action system (frontier, next, work item tracking)
+- Git-based memory snapshots (version, rollback, diff)
+- Endless mode (biomimetic memory for extended sessions)
 
 ---
 
@@ -434,11 +576,15 @@ A runnable base project with clean local development setup.
 - [ ] Configure Postgres with pgvector
 - [ ] Set up DB migrations
 - [ ] Create `.env.example`
-- [ ] Integrate logging
+- [ ] Integrate logging (structured, JSON)
 - [ ] Define error handling and structured error codes
+- [ ] Implement circuit breaker for external dependencies (embedding APIs, etc.)
+- [ ] Implement health monitoring (`memory health` command)
+- [ ] Implement self-healing: auto-recovery from transient failures, provider fallback
 - [ ] Provide healthcheck endpoint
 - [ ] Create baseline README
-- [ ] Stub CLI commands: `memory:ingest`, `memory:retrieve`, `memory:validate`, `memory:invalidate`
+- [ ] Stub CLI commands: `memory ingest`, `memory retrieve`, `memory validate`, `memory invalidate`
+- [ ] Configure embedding provider fallback chain (local → Gemini → OpenAI → BM25-only)
 
 ### Acceptance Criteria
 
@@ -456,18 +602,23 @@ Store, load, and version memory entries in a structured way.
 
 ### Checklist
 
-- [ ] Create `memory_entries` table (with `impact_level`, `knowledge_class`, `expires_at`)
+- [ ] Create `memory_entries` table (with `impact_level`, `knowledge_class`, `consolidation_tier`, `expires_at`, `access_count`, `last_accessed_at`)
+- [ ] Create `memory_observations` table (Working Memory — raw tool observations)
+- [ ] Create `memory_episodes` table (Episodic — session summaries linking to observations)
 - [ ] Create `memory_evidence` table
 - [ ] Create `memory_links` table (file, symbol, module, signature associations)
 - [ ] Create `memory_status_history` table (full audit trail)
 - [ ] Create `memory_contradictions` table (pairs of conflicting entries)
 - [ ] Add vector column for embeddings
 - [ ] Add `created_in_task` for traceability
+- [ ] Add `observation_hash` column (SHA-256 for dedup)
 - [ ] Implement status transition rules (enforce valid transitions only)
 - [ ] Implement TTL expiry check (auto-stale on query if expired)
+- [ ] Implement Ebbinghaus decay: access_count increments on retrieval, last_accessed_at updated
 - [ ] Implement repository / DAO layer
 - [ ] Write unit tests for CRUD operations
 - [ ] Write unit tests for status transition enforcement
+- [ ] Write unit tests for consolidation tier promotion rules
 
 ### Acceptance Criteria
 
@@ -486,27 +637,42 @@ Find relevant knowledge snippets for the current task.
 
 ### Checklist
 
-- [ ] Implement lexical search
-- [ ] Implement vector search
-- [ ] Implement filters by repository / module / type / trust / status
-- [ ] Implement ranking function (relevance + trust + freshness)
+- [ ] Implement BM25 lexical search (stemmed keyword matching)
+- [ ] Implement vector search (cosine similarity over embeddings)
+- [ ] Implement RRF fusion (Reciprocal Rank Fusion, k=60) combining both streams
+- [ ] Implement session diversification (max 3 results per source session)
+- [ ] Implement filters by repository / module / type / trust / status / consolidation tier
+- [ ] Implement ranking function (relevance + trust + freshness + access frequency + tier)
+- [ ] Implement Progressive Disclosure:
+  - [ ] Layer 1: Index response (~50-100 tokens/result) — ID, title, trust, type
+  - [ ] Layer 2: Timeline response (~200-300 tokens/result) — chronological context
+  - [ ] Layer 3: Full response (~500-1000 tokens/result) — complete entry with evidence
+- [ ] Implement token budget (default: 2000, configurable via `--budget`)
+- [ ] Implement embedding provider auto-detection + fallback chain
 - [ ] Enforce hard trust threshold — entries below 0.6 never returned by default
 - [ ] Implement explicit low-trust mode (0.3 min, with `⚠️ LOW TRUST` marker)
 - [ ] Filter out `quarantine`, `invalidated`, `rejected`, `poisoned`, `archived` statuses
 - [ ] Check TTL on every retrieval — auto-stale expired entries before ranking
-- [ ] Include trust status + evidence count in response format
+- [ ] Factor Ebbinghaus strength into ranking (access_count + last_accessed_at)
+- [ ] Update access_count and last_accessed_at on every retrieval hit
+- [ ] Include trust status + evidence count + tier in response format
 - [ ] Provide query API and CLI command
 - [ ] Define agent-friendly response format (always includes trust metadata)
 - [ ] Write tests: ensure stale entries are not returned without warning
 - [ ] Write tests: ensure quarantined entries are never returned
+- [ ] Write tests: progressive disclosure returns correct detail levels
+- [ ] Write tests: token budget is respected
 - [ ] Write tests with realistic queries
 
 ### Acceptance Criteria
 
 - For real coding tasks, relevant memory entries are found
+- RRF fusion produces better results than either stream alone
+- Progressive disclosure reduces token usage by ~10x vs always returning full entries
+- Token budget is enforced — response never exceeds configured limit
 - Stale entries are only returned with explicit warning
 - Quarantined / invalidated / poisoned entries are NEVER returned
-- Trust score and status visible in every response
+- Trust score, status, and tier visible in every response
 
 ---
 
@@ -566,28 +732,50 @@ Generate memory candidates from code, docs, and git history.
 
 ### Checklist
 
+**Observation capture (Working Memory):**
+
+- [ ] Implement PostToolUse hook — capture raw observations automatically
+- [ ] Implement SHA-256 dedup with 5-minute time window (prevent duplicate observations)
+- [ ] Run pre-storage privacy filter on every observation
+- [ ] Store observations in `memory_observations` table with session ID + timestamp
+
+**Consolidation (Working → Episodic → Semantic):**
+
+- [ ] Implement Working → Episodic consolidation (compress observations into session summary)
+- [ ] Implement Episodic → Semantic extraction (stable knowledge from summaries)
+- [ ] Implement Semantic → Procedural promotion (after 3+ successful validations)
+- [ ] Implement session-end trigger for consolidation
+
+**Source scanners:**
+
 - [ ] Implement file scanner
 - [ ] Integrate symbol extraction (including function signatures for semantic drift detection)
 - [ ] Integrate documentation reader
 - [ ] Integrate git commit reader
 - [ ] Define candidate model
 - [ ] Define heuristics for relevant knowledge extraction
-- [ ] Implement deduplication strategy
-- [ ] Implement contradiction check on ingestion (compare with existing entries)
-- [ ] Integrate embedding creation
+
+**Safety gates:**
+
+- [ ] Implement contradiction check on ingestion (compare with existing entries in overlapping scope)
+- [ ] Integrate embedding creation (using fallback provider chain)
 - [ ] Implement post-task extraction guard:
   - [ ] Check test results before allowing extraction
   - [ ] Check quality tool results (if available)
   - [ ] Block extraction if tests fail or quality degrades
-  - [ ] All new entries enter quarantine (never directly validated)
+  - [ ] All new Semantic entries enter quarantine (never directly validated)
 - [ ] Assign impact level automatically based on memory type
 - [ ] Assign knowledge class automatically (evergreen/semi-stable/volatile)
-- [ ] Calculate and set TTL based on knowledge class
+- [ ] Assign consolidation tier based on source (observation=working, extraction=semantic)
+- [ ] Calculate and set TTL based on knowledge class + Ebbinghaus base
 
 ### Acceptance Criteria
 
-- System generates meaningful memory candidates from a real repository
-- All new entries start in quarantine status
+- Raw observations captured automatically during sessions
+- SHA-256 dedup prevents duplicate observations within 5-minute window
+- Privacy filter runs before any storage (secrets, PII, `<private>` tags stripped)
+- Consolidation pipeline compresses observations → summaries → entries
+- All new Semantic/Procedural entries start in quarantine status
 - Post-task extraction is blocked when tests fail
 - Contradictions detected during ingestion
 - Noise is manageable
@@ -639,13 +827,34 @@ Make memory practically usable from any AI coding agent via MCP protocol.
 
 ### Checklist
 
-- [ ] Implement MCP server with tools: `memory_retrieve`, `memory_ingest`, `memory_validate`, `memory_invalidate`
+**MCP tools:**
+
+- [ ] `memory_retrieve` — query with progressive disclosure (Layer 1/2/3), token budget
+- [ ] `memory_retrieve_details` — Layer 3 full details for specific entry IDs
+- [ ] `memory_ingest` — manual entry creation (enters quarantine)
+- [ ] `memory_validate` — trigger validation for specific entry
+- [ ] `memory_invalidate` — mark entry as stale/invalidated
+- [ ] `memory_poison` — mark entry as confirmed wrong (triggers cascade)
+- [ ] `memory_verify` — trace entry back to source evidence (citation provenance)
+- [ ] `memory_health` — show system health + quality metrics
+- [ ] `memory_diagnose` — identify issues (stale entries, low trust, contradictions)
+
+**Lifecycle hooks:**
+
+- [ ] Implement SessionStart hook — inject relevant context (Layer 1, within token budget)
+- [ ] Implement PostToolUse hook — capture observation to Working Memory
+- [ ] Implement PostToolUseFailure hook — capture error context
+- [ ] Implement Stop hook — trigger post-task extraction (with guard checks)
+- [ ] Implement SessionEnd hook — consolidate Working → Episodic, run dedup
+
+**Workflow integration:**
+
 - [ ] Define standard task workflow (pre-task retrieval, post-task extraction)
-- [ ] Integrate retrieval into pre-task flow
+- [ ] Integrate retrieval into pre-task flow (auto-inject on session start)
 - [ ] Integrate validation before usage
-- [ ] Integrate post-task knowledge extraction
+- [ ] Integrate post-task knowledge extraction (with guard: tests must pass)
 - [ ] Define memory update flow after merge
-- [ ] Separate session notes from persistent memory
+- [ ] Separate Working Memory (session) from persistent Semantic/Procedural Memory
 - [ ] Test with at least 2 different agents (e.g., Claude Code + Augment)
 
 ### Acceptance Criteria
@@ -653,6 +862,9 @@ Make memory practically usable from any AI coding agent via MCP protocol.
 - Workflow is usable without manual special logic
 - Knowledge grows in a controlled way with each completed task
 - Any MCP-capable agent can interact with memory
+- Lifecycle hooks capture observations automatically
+- Token budget respected on session start injection
+- Post-task extraction blocked when tests fail
 
 ---
 
@@ -735,7 +947,22 @@ Prove the system on a real project.
 
 ## V2 Possibilities (Out of Scope for V1)
 
-- Graph memory (Neo4j)
+### From agentmemory
+
+- **Team Memory** — namespaced shared + private across team members (`memory_team_share`, `memory_team_feed`)
+- **Multi-Agent Coordination** — exclusive action leases, inter-agent signals, sentinels
+- **Real-Time Web Viewer** — live observation stream, session explorer, knowledge graph visualization
+- **Git-Based Memory Snapshots** — version, rollback, and diff memory state
+- **Action System** — work items with dependencies, `memory_frontier` (unblocked by priority), `memory_next`
+- **Knowledge Graph Traversal** — entity extraction + BFS traversal as third retrieval stream
+
+### From claude-mem
+
+- **MEMORY.md Bridge** — bi-directional sync between file-based memory (built-in) and database memory
+- **Endless Mode** — biomimetic memory architecture for extended sessions (prevents context overflow)
+
+### Our own
+
 - Symbol-level dependency graph
 - PR and ticket integration (Jira, GitHub Issues)
 - IDE commands / VS Code extension
