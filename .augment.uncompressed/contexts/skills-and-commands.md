@@ -143,6 +143,8 @@ Commands often chain together. Here are the main workflows:
 | "Where was I?" | `/agent-handoff` (start fresh chat with context) |
 | "Clean up agent docs" | `/agents-audit` |
 | "I need to customize a skill" | `/override-create` |
+| "Test a local package" | `/package-test` |
+| "Remove local package link" | `/package-reset` |
 
 ## Related
 

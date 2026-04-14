@@ -113,6 +113,7 @@ Commands organized by workflow:
 | **Agents** | `agents-prepare`, `agents-audit`, `agents-cleanup`, `copilot-agents-optimize`, `agent-handoff`, `agent-status`, `optimize-agents`, `optimize-augmentignore`, `optimize-skills`, `optimize-rtk-filters` |
 | **Overrides** | `override-create`, `override-manage` |
 | **Config** | `config-agent-settings`, `commit` |
+| **Packages** | `package-test`, `package-reset` |
 | **Project** | `project-analyze`, `project-health`, `jira-ticket` |
 
 ### Guidelines (`.augment/guidelines/`)
