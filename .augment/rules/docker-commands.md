@@ -36,7 +36,7 @@ docker compose exec -T <php-service> php artisan test
 docker compose exec -T <php-service> vendor/bin/phpstan analyse
 docker compose exec -T <php-service> vendor/bin/rector process
 docker compose exec -T <php-service> vendor/bin/ecs check --fix
-docker compose exec -T <php-service> bash -c "vendor/bin/phpunit"
+docker compose exec -T <php-service> vendor/bin/phpunit
 ```
 
 ## Build / Task Runner
