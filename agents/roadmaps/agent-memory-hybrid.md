@@ -602,22 +602,22 @@ Store, load, and version memory entries in a structured way.
 
 ### Checklist
 
-- [ ] Create `memory_entries` table (with `impact_level`, `knowledge_class`, `consolidation_tier`, `expires_at`, `access_count`, `last_accessed_at`)
-- [ ] Create `memory_observations` table (Working Memory — raw tool observations)
-- [ ] Create `memory_episodes` table (Episodic — session summaries linking to observations)
-- [ ] Create `memory_evidence` table
-- [ ] Create `memory_links` table (file, symbol, module, signature associations)
-- [ ] Create `memory_status_history` table (full audit trail)
-- [ ] Create `memory_contradictions` table (pairs of conflicting entries)
-- [ ] Add vector column for embeddings
-- [ ] Add `created_in_task` for traceability
-- [ ] Add `observation_hash` column (SHA-256 for dedup)
-- [ ] Implement status transition rules (enforce valid transitions only)
+- [x] Create `memory_entries` table → `001_initial.ts`
+- [x] Create `memory_observations` table → `001_initial.ts`
+- [x] Create `memory_episodes` table → `001_initial.ts`
+- [x] Create `memory_evidence` table → `001_initial.ts`
+- [x] Create `memory_links` table → `001_initial.ts`
+- [x] Create `memory_status_history` table → `001_initial.ts`
+- [x] Create `memory_contradictions` table → `001_initial.ts`
+- [x] Add vector column for embeddings → `embedding vector(384)`
+- [x] Add `created_in_task` for traceability
+- [x] Add `observation_hash` column → SHA-256 dedup in ObservationRepository
+- [x] Implement status transition rules → `trust/transitions.ts`
 - [ ] Implement TTL expiry check (auto-stale on query if expired)
-- [ ] Implement Ebbinghaus decay: access_count increments on retrieval, last_accessed_at updated
-- [ ] Implement repository / DAO layer
-- [ ] Write unit tests for CRUD operations
-- [ ] Write unit tests for status transition enforcement
+- [x] Implement Ebbinghaus decay → `recordAccess()` in MemoryEntryRepository
+- [x] Implement repository / DAO layer → 4 repositories
+- [x] Write unit tests for CRUD operations → 26 tests
+- [x] Write unit tests for status transition enforcement → 15 tests
 - [ ] Write unit tests for consolidation tier promotion rules
 
 ### Acceptance Criteria
