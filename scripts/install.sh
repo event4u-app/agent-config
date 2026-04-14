@@ -286,6 +286,24 @@ create_tool_symlinks() {
         done
     done
 
+    # Clean stale symlinks in tool dirs
+    for i in "${!tool_dirs[@]}"; do
+        local dir="${tool_dirs[$i]}"
+        local target_dir="$project_root/$dir"
+        [[ -d "$target_dir" ]] || continue
+
+        for entry in "$target_dir"/*; do
+            [[ -L "$entry" ]] || continue
+            local entry_name
+            entry_name="$(basename "$entry")"
+            # If no matching source rule exists, remove the stale symlink
+            if [[ ! -f "$rules_dir/$entry_name" ]]; then
+                $DRY_RUN || rm -f "$entry"
+                log_verbose "Removed stale tool symlink: $dir/$entry_name"
+            fi
+        done
+    done
+
     log_info "Created $count rule symlinks across ${#tool_dirs[@]} tool directories"
 }
 
@@ -325,6 +343,17 @@ create_skill_symlinks() {
             }
         fi
         ((count++)) || true
+    done
+
+    # Clean stale skill symlinks
+    for entry in "$target_dir"/*; do
+        [[ -L "$entry" ]] || continue
+        local entry_name
+        entry_name="$(basename "$entry")"
+        if [[ ! -d "$skills_dir/$entry_name" ]]; then
+            $DRY_RUN || rm -f "$entry"
+            log_verbose "Removed stale skill symlink: .claude/skills/$entry_name"
+        fi
     done
 
     log_info "Created $count skill symlinks in .claude/skills/"

@@ -164,6 +164,26 @@ test_tool_symlinks_created() {
     teardown
 }
 
+test_stale_tool_symlinks_removed() {
+    setup; run_install
+    # Add a stale symlink to .claude/rules/
+    ln -sf "../../.augment/rules/nonexistent.md" "$TMPDIR/.claude/rules/nonexistent.md"
+    assert_true "stale symlink exists" test -L "$TMPDIR/.claude/rules/nonexistent.md"
+    run_install
+    assert_false "stale tool symlink removed" test -L "$TMPDIR/.claude/rules/nonexistent.md"
+    teardown
+}
+
+test_stale_skill_symlinks_removed() {
+    setup; run_install
+    # Add a stale symlink to .claude/skills/
+    ln -sf "../../.augment/skills/nonexistent" "$TMPDIR/.claude/skills/nonexistent"
+    assert_true "stale skill symlink exists" test -L "$TMPDIR/.claude/skills/nonexistent"
+    run_install
+    assert_false "stale skill symlink removed" test -L "$TMPDIR/.claude/skills/nonexistent"
+    teardown
+}
+
 test_skill_symlinks_in_claude() {
     setup; run_install
     assert_true ".claude/skills/coder is symlink" test -L "$TMPDIR/.claude/skills/coder"
@@ -227,7 +247,9 @@ test_gitignore_marker_added
 test_gitignore_idempotent
 test_gitignore_not_created_if_missing
 test_tool_symlinks_created
+test_stale_tool_symlinks_removed
 test_skill_symlinks_in_claude
+test_stale_skill_symlinks_removed
 test_windsurfrules_generated
 test_gemini_md_created
 test_dry_run_no_files
