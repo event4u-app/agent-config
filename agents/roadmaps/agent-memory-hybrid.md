@@ -571,7 +571,7 @@ A runnable base project with clean local development setup.
 
 ### Checklist
 
-- [x] Initialize repository → `event4u/agent-memory`
+- [x] Initialize repository → [`event4u-app/agent-memory`](https://github.com/event4u-app/agent-memory)
 - [x] Add Docker / dev container setup → `docker-compose.yml` (Postgres dev + test)
 - [x] Configure Postgres with pgvector → `pgvector/pgvector:pg17` image
 - [x] Set up DB migrations → `src/db/migrations/001_initial.ts` (7 tables)

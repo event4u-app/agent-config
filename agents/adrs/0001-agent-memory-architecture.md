@@ -163,7 +163,7 @@ Extraction proceeds to quarantine when:
 
 ## Decision 14: Project Location
 
-**Path:** `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-memory/`
+**Repository:** [`event4u-app/agent-memory`](https://github.com/event4u-app/agent-memory)
 
 **Rationale:** Sibling package in the `event4u` family, same pattern as `agent-config`, `data-helpers`, `strict-laravel-models`. Can be published independently to npm.
 
