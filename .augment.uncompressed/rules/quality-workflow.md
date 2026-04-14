@@ -1,5 +1,6 @@
 ---
 type: "auto"
+alwaysApply: false
 description: "Quality workflow for running PHPStan, Rector, and ECS code quality checks"
 ---
 

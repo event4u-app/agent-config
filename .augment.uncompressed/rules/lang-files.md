@@ -1,5 +1,6 @@
 ---
 type: "auto"
+alwaysApply: false
 description: "Laravel language files, translations, i18n, lang/de, lang/en, __() helper, localization, multilingual text"
 ---
 

@@ -1,5 +1,6 @@
 ---
 type: "auto"
+alwaysApply: false
 description: "Git commit message format, branch naming, conventional commits, committing, pushing, or creating pull requests"
 ---
 

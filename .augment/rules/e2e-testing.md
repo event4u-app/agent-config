@@ -1,5 +1,6 @@
 ---
 type: "auto"
+alwaysApply: false
 description: "Playwright E2E tests — locators, assertions, Page Objects, fixtures, CI, and flaky test prevention"
 ---
 

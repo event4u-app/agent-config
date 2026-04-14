@@ -1,5 +1,7 @@
 ---
 type: "always"
+description: "Coding guidelines — check relevant guideline before writing or reviewing code"
+alwaysApply: true
 ---
 
 # Guidelines

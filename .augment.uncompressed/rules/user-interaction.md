@@ -1,5 +1,7 @@
 ---
 type: "always"
+description: "User interaction — numbered options, progress indicators, summaries"
+alwaysApply: true
 ---
 
 # User Interaction

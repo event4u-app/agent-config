@@ -1,5 +1,7 @@
 ---
 type: "always"
+description: "Ask when uncertain — don't guess, assume, or improvise"
+alwaysApply: true
 ---
 
 # Ask When Uncertain

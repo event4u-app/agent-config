@@ -1,5 +1,6 @@
 ---
 type: "auto"
+alwaysApply: false
 description: "After EVERY code edit, find ALL downstream changes needed to existing files, including callers, tests, imports, types, and documentation"
 ---
 

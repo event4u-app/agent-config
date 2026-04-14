@@ -1,5 +1,7 @@
 ---
 type: "always"
+description: "Language and tone — informal German Du, English code comments, .md files always English"
+alwaysApply: true
 ---
 
 # Language and Tone
