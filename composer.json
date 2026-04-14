@@ -24,9 +24,15 @@
             "/agents",
             "/scripts",
             "/tests",
+            "/config",
             "/Taskfile.yml",
             "/.github",
-            "/.idea"
+            "/.idea",
+            "/.claude",
+            "/.cursor",
+            "/.clinerules",
+            "/.windsurfrules",
+            "/GEMINI.md"
         ]
     }
 }

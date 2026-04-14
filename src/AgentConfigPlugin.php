@@ -40,8 +40,12 @@ class AgentConfigPlugin implements PluginInterface, EventSubscriberInterface
         $this->syncDirectory($packageDir . '/.augment', $projectRoot . '/.augment');
         $this->copyIfMissing($packageDir . '/AGENTS.md', $projectRoot . '/AGENTS.md');
         $this->copyIfMissing($packageDir . '/.github/copilot-instructions.md', $projectRoot . '/.github/copilot-instructions.md');
+        $this->createToolSymlinks($packageDir, $projectRoot);
+        $this->createSkillSymlinks($packageDir, $projectRoot);
+        $this->generateWindsurfrules($packageDir, $projectRoot);
+        $this->createGeminiMd($projectRoot);
 
-        $this->io->write('<info>galawork/agent-config: agent configuration installed.</info>');
+        $this->io->write('<info>event4u/agent-config: agent configuration installed.</info>');
     }
 
     /**
@@ -162,5 +166,159 @@ class AgentConfigPlugin implements PluginInterface, EventSubscriberInterface
         }
 
         copy($source, $dest);
+    }
+
+    /**
+     * Creates symlinks for universal rules in tool-specific directories.
+     * Falls back to copy if symlink creation fails.
+     */
+    private function createToolSymlinks(string $packageDir, string $projectRoot): void
+    {
+        $configPath = $packageDir . '/config/universal-rules.json';
+        if (!file_exists($configPath)) {
+            return;
+        }
+
+        /** @var array{rules: array<int, string>} $config */
+        $config = json_decode((string) file_get_contents($configPath), true);
+        $rules = $config['rules'] ?? [];
+
+        $toolDirs = [
+            '.claude/rules' => '../../.augment/rules',
+            '.cursor/rules' => '../../.augment/rules',
+            '.clinerules' => '../.augment/rules',
+        ];
+
+        foreach ($toolDirs as $dir => $relPrefix) {
+            $targetDir = $projectRoot . '/' . $dir;
+            if (!is_dir($targetDir)) {
+                mkdir($targetDir, 0755, true);
+            }
+
+            foreach ($rules as $rule) {
+                $link = $targetDir . '/' . $rule;
+                $target = $relPrefix . '/' . $rule;
+
+                if (is_link($link) || file_exists($link)) {
+                    if (is_link($link)) {
+                        unlink($link);
+                    } else {
+                        continue; // Don't overwrite real files
+                    }
+                }
+
+                if (!@symlink($target, $link)) {
+                    // Fallback: copy
+                    $sourcePath = $packageDir . '/.augment/rules/' . $rule;
+                    if (file_exists($sourcePath)) {
+                        copy($sourcePath, $link);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Creates symlinks for universal skills in .claude/skills/.
+     * Falls back to copy if symlink creation fails.
+     */
+    private function createSkillSymlinks(string $packageDir, string $projectRoot): void
+    {
+        $configPath = $packageDir . '/config/universal-skills.json';
+        if (!file_exists($configPath)) {
+            return;
+        }
+
+        /** @var array{skills: array<int, string>} $config */
+        $config = json_decode((string) file_get_contents($configPath), true);
+        $skills = $config['skills'] ?? [];
+
+        $targetDir = $projectRoot . '/.claude/skills';
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0755, true);
+        }
+
+        foreach ($skills as $skill) {
+            $link = $targetDir . '/' . $skill;
+            $target = '../../.augment/skills/' . $skill;
+
+            if (is_link($link)) {
+                unlink($link);
+            } elseif (is_dir($link)) {
+                continue; // Don't overwrite real directories
+            }
+
+            if (!@symlink($target, $link)) {
+                // Fallback: copy SKILL.md
+                $sourcePath = $packageDir . '/.augment/skills/' . $skill . '/SKILL.md';
+                if (file_exists($sourcePath)) {
+                    if (!is_dir($link)) {
+                        mkdir($link, 0755, true);
+                    }
+                    copy($sourcePath, $link . '/SKILL.md');
+                }
+            }
+        }
+    }
+
+    /**
+     * Generates .windsurfrules by concatenating all universal rules.
+     */
+    private function generateWindsurfrules(string $packageDir, string $projectRoot): void
+    {
+        $configPath = $packageDir . '/config/universal-rules.json';
+        if (!file_exists($configPath)) {
+            return;
+        }
+
+        /** @var array{rules: array<int, string>} $config */
+        $config = json_decode((string) file_get_contents($configPath), true);
+        $rules = $config['rules'] ?? [];
+
+        $parts = ["# Auto-generated from .augment/rules/ — do not edit directly\n"];
+        sort($rules);
+
+        foreach ($rules as $rule) {
+            $path = $projectRoot . '/.augment/rules/' . $rule;
+            if (!file_exists($path)) {
+                continue;
+            }
+
+            $content = (string) file_get_contents($path);
+            // Strip frontmatter
+            if (str_starts_with($content, '---')) {
+                $end = strpos($content, '---', 3);
+                if (false !== $end) {
+                    $content = ltrim(substr($content, $end + 3), "\n");
+                }
+            }
+
+            $parts[] = "---\n\n" . trim($content) . "\n";
+        }
+
+        file_put_contents($projectRoot . '/.windsurfrules', implode("\n", $parts) . "\n");
+    }
+
+    /**
+     * Creates GEMINI.md symlink to AGENTS.md.
+     */
+    private function createGeminiMd(string $projectRoot): void
+    {
+        $link = $projectRoot . '/GEMINI.md';
+        if (file_exists($link) && !is_link($link)) {
+            return; // Don't overwrite real files
+        }
+
+        if (is_link($link)) {
+            unlink($link);
+        }
+
+        if (!@symlink('AGENTS.md', $link)) {
+            // Fallback: copy
+            $source = $projectRoot . '/AGENTS.md';
+            if (file_exists($source)) {
+                copy($source, $link);
+            }
+        }
     }
 }
