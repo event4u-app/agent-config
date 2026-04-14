@@ -229,8 +229,16 @@ def strip_frontmatter(content: str) -> str:
 
 
 def generate_rule_symlinks() -> int:
-    """Create symlink directories for rules (.claude/rules/, .cursor/rules/, .clinerules/)."""
-    rules = load_config("universal-rules.json")["rules"]
+    """Create symlink directories for rules (.claude/rules/, .cursor/rules/, .clinerules/).
+
+    In the package repo itself: symlinks ALL rules (including Augment-specific ones),
+    because anyone working on the package needs the full rule set regardless of their tool.
+
+    The Composer plugin uses config/universal-rules.json to deliver only universal rules
+    to target projects that install this package.
+    """
+    # All .md files in .augment/rules/ — not just universal ones
+    rules = sorted([f.name for f in RULES_SOURCE.glob("*.md")])
     total = 0
     for tool_dir, rel_prefix in TOOL_DIRS.items():
         target_dir = PROJECT_ROOT / tool_dir
@@ -254,15 +262,18 @@ def generate_rule_symlinks() -> int:
 
 
 def generate_windsurfrules() -> None:
-    """Generate .windsurfrules by concatenating all universal rules (no frontmatter)."""
-    rules = load_config("universal-rules.json")["rules"]
+    """Generate .windsurfrules by concatenating all rules (no frontmatter).
+
+    In the package repo: includes ALL rules. The Composer plugin generates
+    .windsurfrules with only universal rules for target projects.
+    """
+    rules = sorted([f.name for f in RULES_SOURCE.glob("*.md")])
     parts = ["# Auto-generated from .augment/rules/ — do not edit directly\n"]
 
-    for rule in sorted(rules):
+    for rule in rules:
         path = RULES_SOURCE / rule
-        if path.exists():
-            content = strip_frontmatter(path.read_text())
-            parts.append(f"---\n\n{content.strip()}\n")
+        content = strip_frontmatter(path.read_text())
+        parts.append(f"---\n\n{content.strip()}\n")
 
     output = PROJECT_ROOT / ".windsurfrules"
     output.write_text("\n".join(parts) + "\n")
@@ -279,38 +290,34 @@ def generate_gemini_md() -> None:
 
 
 def generate_claude_skills() -> None:
-    """Create .claude/skills/ symlinks for universal skills."""
-    config_path = CONFIG_DIR / "universal-skills.json"
-    if not config_path.exists():
-        print("  ⚠️  config/universal-skills.json not found — skipping skills")
+    """Create .claude/skills/ symlinks for ALL skills in .augment/skills/.
+
+    In the package repo: includes ALL skills. The Composer plugin uses
+    config/universal-skills.json to deliver only universal skills to target projects.
+    """
+    if not SKILLS_SOURCE.exists():
+        print("  ⚠️  .augment/skills/ not found — skipping skills")
         return
 
-    skills = load_config("universal-skills.json")["skills"]
+    # All skill directories in .augment/skills/
+    skills = sorted([d.name for d in SKILLS_SOURCE.iterdir() if d.is_dir()])
+    # All command names (to protect from stale cleanup)
+    command_names = set()
+    if COMMANDS_SOURCE.exists():
+        command_names = {f.stem for f in COMMANDS_SOURCE.glob("*.md")}
+
     CLAUDE_SKILLS_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Clean stale symlinks
+    # Clean stale symlinks (but not converted commands or README)
     for item in CLAUDE_SKILLS_DIR.iterdir():
-        if item.is_symlink():
-            # Check if it's a skill (not a converted command)
-            if item.name not in skills:
-                commands_config = CONFIG_DIR / "universal-commands.json"
-                if commands_config.exists():
-                    cmds = load_config("universal-commands.json").get("commands", [])
-                    if item.name not in cmds:
-                        item.unlink()
-                else:
-                    item.unlink()
+        if item.is_symlink() and item.name not in skills and item.name not in command_names and item.name != "README.md":
+            item.unlink()
 
     count = 0
     for skill in skills:
         link = CLAUDE_SKILLS_DIR / skill
-        source = SKILLS_SOURCE / skill
-        if not source.exists():
-            print(f"  ⚠️  Skill source not found: {source}")
-            continue
         if link.exists() or link.is_symlink():
             link.unlink()
-        # Symlink entire directory
         rel_target = Path("../../.augment/skills") / skill
         link.symlink_to(rel_target)
         count += 1
@@ -319,36 +326,49 @@ def generate_claude_skills() -> None:
 
 
 def generate_claude_commands() -> None:
-    """Convert Augment commands to Claude Code Skills format."""
-    config_path = CONFIG_DIR / "universal-commands.json"
-    if not config_path.exists():
-        print("  ⚠️  config/universal-commands.json not found — skipping commands")
+    """Convert ALL Augment commands to Claude Code Skills format.
+
+    In the package repo: converts ALL commands from .augment/commands/.
+    Metadata (description, argument-hint) is read from config/universal-commands.json
+    if available; otherwise a default description is derived from the filename.
+
+    The Composer plugin uses config/universal-commands.json to deliver only
+    universal commands to target projects.
+    """
+    if not COMMANDS_SOURCE.exists():
+        print("  ⚠️  .augment/commands/ not found — skipping commands")
         return
 
-    config = load_config("universal-commands.json")
-    commands = config.get("commands", [])
+    # Build metadata lookup from config (if exists)
+    metadata: dict[str, dict] = {}
+    config_path = CONFIG_DIR / "universal-commands.json"
+    if config_path.exists():
+        config = load_config("universal-commands.json")
+        for cmd in config.get("commands", []):
+            metadata[cmd["name"]] = cmd
+
     CLAUDE_SKILLS_DIR.mkdir(parents=True, exist_ok=True)
 
     count = 0
-    for cmd_config in commands:
-        name = cmd_config["name"]
-        source_file = COMMANDS_SOURCE / f"{name}.md"
-        if not source_file.exists():
-            print(f"  ⚠️  Command source not found: {source_file}")
-            continue
+    for source_file in sorted(COMMANDS_SOURCE.glob("*.md")):
+        name = source_file.stem
 
         content = source_file.read_text()
         content = strip_frontmatter(content)
+
+        # Get metadata from config or derive from filename
+        cmd_meta = metadata.get(name, {})
+        description = cmd_meta.get("description", name.replace("-", " ").title())
 
         # Build frontmatter
         fm_parts = [
             "---",
             f"name: {name}",
-            f"description: \"{cmd_config.get('description', '')}\"",
+            f"description: \"{description}\"",
             "disable-model-invocation: true",
         ]
-        if "argument-hint" in cmd_config:
-            fm_parts.append(f"argument-hint: \"{cmd_config['argument-hint']}\"")
+        if "argument-hint" in cmd_meta:
+            fm_parts.append(f"argument-hint: \"{cmd_meta['argument-hint']}\"")
         fm_parts.append("---")
 
         full_content = "\n".join(fm_parts) + "\n\n" + content.strip() + "\n"

@@ -2,6 +2,51 @@
 
 ---
 
+# Agent Documentation
+
+## When to read
+
+**Before ANY work**, read relevant docs:
+
+1. `AGENTS.md` (project root) — project-level setup/conventions
+2. `./agents/` — project-specific architecture, guidelines, domain docs
+3. `agents/contexts/domain/` — domain contexts relevant to current work
+4. `app/Modules/{Module}/agents/` — module-specific docs (incl. `agents/contexts/`)
+5. Package `./agents/` directory
+6. Existing roadmap for current work → follow its steps
+
+## When to update
+
+After changes, check if docs need updating:
+
+- New module → create `app/Modules/{Module}/agents/`
+- Schema changed → update `agents/docs/database-setup.md`
+- New service/pattern → update relevant guidelines
+- Roadmap step done → mark `[x]`
+- Structural changes → update affected docs
+
+If unsure → **ask the user**.
+
+## Roadmaps
+
+For significant multi-step/multi-session changes:
+- Ask user about creating roadmap in `agents/roadmaps/`
+- Use `roadmap-create` command
+- Ensures continuity across sessions/agents
+
+## Documentation language
+
+- All `.md` files in **English**
+- German/other language files → translate when touched
+
+## Do NOT
+
+- Create docs without real need
+- Duplicate info from `AGENTS.md` or `.github/copilot-instructions.md`
+- Write docs to document what you did — only what others need to know
+
+---
+
 # Architecture Rules
 
 ## General Principles
@@ -62,6 +107,71 @@ One question too many > one wrong assumption.
 - Be specific about what's unclear
 - Present numbered options (per `user-interaction` rule)
 - Keep short
+
+---
+
+# .augment/ Portability
+
+Everything in `.augment/` MUST be **project-agnostic**.
+
+- NEVER reference specific project, repo name, domain, or tech stack
+- NEVER hardcode project-specific paths, class names, or conventions
+- Content must work as **reusable package** across any project
+- Project-specific behavior → `.agent-settings`, `AGENTS.md`, or `agents/`
+- Need project input → read from `.agent-settings` or accept as parameter
+- Test: "Would this make sense in a completely different project?"
+
+---
+
+# .augment/ Source of Truth
+
+`.augment.uncompressed/` = **single source of truth**. `.augment/` = compressed copies.
+
+## Iron Rule
+
+```
+NEVER create or edit files in .augment/ directly.
+ALWAYS work in .augment.uncompressed/ — then compress.
+```
+
+## Workflow
+
+1. Create/edit in `.augment.uncompressed/{path}`
+2. Compress prose → `.augment/{path}`
+3. `task sync-mark-done -- {path}`
+
+Non-.md files: `task sync` copies automatically.
+
+## Compression = remove filler/articles/hedging, shorten phrases, fragments OK, merge redundant bullets
+
+## NEVER change: code blocks, inline code, URLs, headings, tables, YAML, technical terms, strong language
+
+## Quick reference
+
+| Task | Command |
+|---|---|
+| Edit/create `.md` | Edit `.augment.uncompressed/`, compress to `.augment/` |
+| Create non-`.md` | Create in `.augment.uncompressed/`, `task sync` |
+| Delete | Both directories |
+| What needs compression? | `task sync-changed` |
+| Mark compressed | `task sync-mark-done -- {path}` |
+| Verify sync | `task sync-check` |
+
+---
+
+# Commands
+
+When user types command (`/create-pr`, `# create-pr`, or pastes command file),
+**execute immediately**. No questions, opinions, summaries, confirmations.
+
+- Match command file in `.augment/commands/` (or `agents/overrides/commands/`)
+- Read it, follow steps in order
+- Ask only when command says "ask the user"
+- Pasted command content = invocation, NOT question
+- **NEVER** "looks good" or "shall I execute?" — execute
+- **NEVER** "this is the current version" — execute
+- **NEVER** treat pasted content as review request — ALWAYS invocation
+- Exception: user explicitly says "update this command" or "review this command"
 
 ---
 
@@ -285,6 +395,68 @@ Frontend commands run on host or node container.
 
 ---
 
+# Docs Sync
+
+## Rule
+
+**ZERO TOLERANCE:** When `.augment/` file is **created, renamed, or deleted** (or name/description/scope/counts change), all related files **must be updated in same response**.
+
+New rule/skill/command without index entry + count update + context update = **incomplete work**.
+
+**Mandatory sequence:**
+1. Create/delete file
+2. **Immediately** update `contexts/augment-infrastructure.md` (counts + tables)
+3. Check cross-references and routing hints
+
+Steps 2–3 NOT optional. Don't present result until done.
+
+**Modes:**
+- **Reactive** (auto): add/remove/rename → sync counts, contexts, cross-refs
+- **Proactive** (on demand): full audit → duplicates, thin skills, redundancy → fix/merge. Ask before destructive actions.
+
+## What to update
+
+| Change | Files to update |
+|---|---|
+| Skill/command/rule count changes | `contexts/augment-infrastructure.md` (count + table) |
+| New skill category | `contexts/augment-infrastructure.md` + `contexts/skills-and-commands.md` |
+| New workflow chain | `contexts/skills-and-commands.md` (workflow chains) |
+
+## Cross-reference updates
+
+| What | Where to check |
+|---|---|
+| Inline routing hints | "see X skill" / "use X instead" in other skills |
+| Guideline cross-refs | Guidelines referencing changed skill |
+| Command skill refs | Commands using changed skill |
+
+## Settings template sync
+
+When skill/rule/command reads new setting from `.agent-settings` not in `templates/agent-settings.md`:
+1. Add key with default to template
+2. Add row to Settings Reference table
+3. Add comment explaining key
+
+## Content consistency
+
+**MANDATORY:** When rule/skill/guideline **content** changes, search all files covering same topic:
+
+```bash
+grep -rl "TOPIC" .augment/rules/ .augment/skills/ .augment/guidelines/ --include="*.md"
+```
+
+Contradictions → **update in same response**. Inconsistent docs worse than no docs.
+
+## Do NOT
+
+- Rewrite entire files — only affected entries
+- Ask permission — automatic maintenance
+- Skip cross-reference updates
+- Present new file without completed sync
+- Defer sync to follow-up
+
+---
+
 # Downstream Changes
 
 After EVERY edit, find **ALL downstream changes**. Missing caller/test/import = critical failure.
@@ -503,6 +675,61 @@ Agent translates at runtime. `.md` = English blueprint.
 > 1. Interactive — ask before each comment
 > 2. Automatic — handle all independently
 ```
+
+---
+
+# Model Recommendation
+
+Detect model from system prompt identity ("Claude Opus" → `opus`, "Claude Sonnet" → `sonnet`, "GPT" → `gpt`, "Gemini" → `gemini`).
+
+If `gemini` → immediately trigger Gemini warning (below).
+
+## When to act
+
+**BEFORE any work**, classify task:
+
+- **opus**: refactoring, architecture, complex debugging, code review, multi-file changes
+- **sonnet**: daily coding, bug fixes, tests, simple features, quality checks, PRs, commits, config
+- **gpt**: complex agent flows, automations, research
+
+**MANDATORY check** — runs on:
+- First user message
+- Every clear topic/task change
+- **Command invocations** (e.g., `/create-pr` → sonnet task)
+
+**⚠️ COMMAND INVOCATIONS ARE TASK CHANGES.** `/create-pr`, `/commit`, `/fix-pr-comments` = sonnet tasks even if previous task was opus. Most commonly missed check.
+
+**Priority over commands rule**: model check runs BEFORE `commands` rule. Show suggestion first, wait for response, then execute.
+
+**Ambiguous** → default **sonnet**.
+
+If recommended ≠ detected, suggest switching:
+
+```
+> 💡 This looks like {task type} — best suited for **{recommended model}**.
+> You're currently on **{detected model}**.
+>
+> 1. I've switched to {recommended} — continue
+> 2. Stay on {detected model}
+```
+
+**⛔ STOP AND WAIT.** Response ENDS after options. No files, no tasks, no coding. Wait for pick.
+
+→ Full mapping: `.augment/contexts/model-recommendations.md`
+
+## Switch confirmation
+
+- **1** → accept, continue. No follow-up.
+- **2** → accept. Don't ask again until task type changes.
+- Never ask more than once per task.
+
+## Downgrade after Opus
+
+After opus phase complete → suggest switching to sonnet for implementation. Same options.
+
+## Gemini warning
+
+`gemini` detected → warn not recommended. Suggest best model for task. Same options. Repeat once if dismissed.
 
 ---
 
