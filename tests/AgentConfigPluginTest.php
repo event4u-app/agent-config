@@ -161,7 +161,6 @@ class AgentConfigPluginTest extends TestCase
         $this->callPrivate('syncHybrid', $package, $project);
 
         // Add a stale file to project
-        file_put_contents($project . '/skills/old-skill/SKILL.md', 'stale');
         mkdir($project . '/skills/old-skill', 0755, true);
         file_put_contents($project . '/skills/old-skill/SKILL.md', 'stale');
 
@@ -256,6 +255,59 @@ class AgentConfigPluginTest extends TestCase
 
         $this->assertFalse(is_link($project . '/rules/php-coding.md'), 'Rule symlink should become a real copy');
         $this->assertSame('# PHP Coding', file_get_contents($project . '/rules/php-coding.md'));
+    }
+
+    // --- ensureGitignoreEntries() ---
+
+    public function testGitignoreAddsMarkerBlock(): void
+    {
+        $projectRoot = $this->tmpDir . '/project';
+        mkdir($projectRoot, 0755, true);
+        file_put_contents($projectRoot . '/.gitignore', "/vendor/\n");
+
+        $this->callPrivate('ensureGitignoreEntries', $projectRoot);
+
+        $content = file_get_contents($projectRoot . '/.gitignore');
+        $this->assertStringContainsString('# galawork/agent-config', $content);
+        $this->assertStringContainsString('.augment/skills/', $content);
+        $this->assertStringContainsString('# .augment/rules/', $content);
+    }
+
+    public function testGitignoreIsIdempotent(): void
+    {
+        $projectRoot = $this->tmpDir . '/project';
+        mkdir($projectRoot, 0755, true);
+        file_put_contents($projectRoot . '/.gitignore', "/vendor/\n");
+
+        $this->callPrivate('ensureGitignoreEntries', $projectRoot);
+        $firstContent = file_get_contents($projectRoot . '/.gitignore');
+
+        $this->callPrivate('ensureGitignoreEntries', $projectRoot);
+        $secondContent = file_get_contents($projectRoot . '/.gitignore');
+
+        $this->assertSame($firstContent, $secondContent, 'Second run should not duplicate the block');
+    }
+
+    public function testGitignoreNotCreatedIfMissing(): void
+    {
+        $projectRoot = $this->tmpDir . '/project';
+        mkdir($projectRoot, 0755, true);
+
+        $this->callPrivate('ensureGitignoreEntries', $projectRoot);
+
+        $this->assertFileDoesNotExist($projectRoot . '/.gitignore');
+    }
+
+    public function testGitignorePreservesExistingContent(): void
+    {
+        $projectRoot = $this->tmpDir . '/project';
+        mkdir($projectRoot, 0755, true);
+        file_put_contents($projectRoot . '/.gitignore', "/vendor/\n.env\n");
+
+        $this->callPrivate('ensureGitignoreEntries', $projectRoot);
+
+        $content = file_get_contents($projectRoot . '/.gitignore');
+        $this->assertStringStartsWith("/vendor/\n.env\n", $content);
     }
 
     // --- Helpers ---
