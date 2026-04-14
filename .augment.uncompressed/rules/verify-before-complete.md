@@ -67,9 +67,10 @@ Skip any step = the claim is unverified.
 ### Laravel projects (inside Docker container)
 ```bash
 php artisan test                          # Tests
-vendor/bin/phpstan analyse                # Static analysis (or: php artisan quality:phpstan)
+vendor/bin/phpstan analyse                # Static analysis (1st run)
 vendor/bin/rector process                 # Rector (or: php artisan quality:rector --fix)
 vendor/bin/ecs check --fix                # Code style (or: php artisan quality:ecs --fix)
+vendor/bin/phpstan analyse                # Static analysis (final — verify Rector/ECS didn't break anything)
 ```
 
 ### Frontend projects

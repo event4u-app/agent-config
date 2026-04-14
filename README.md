@@ -9,7 +9,7 @@ Works with **Augment Code**, **Claude Code**, **Cursor**, **Cline**, **Windsurf*
 ### Composer (PHP projects)
 
 ```bash
-composer require --dev event4u/agent-config --dev
+composer require --dev event4u/agent-config
 
 # One-time setup: adds post-install/update hooks to your composer.json
 bash vendor/event4u/agent-config/scripts/setup.sh
@@ -18,6 +18,8 @@ bash vendor/event4u/agent-config/scripts/setup.sh
 After setup, `install.sh` runs automatically on every `composer install` / `composer update`.
 
 The setup script is **idempotent** — safe to run multiple times. It auto-detects a JSON tool (`php → node → jq → python3`).
+
+> **Note:** `.augment/` content (rules, skills, commands) depends on `composer install` / `npm install` having been executed. After a fresh clone, run your package manager before expecting agent tools to work. CI pipelines should install dependencies before any agent-related steps.
 
 ### npm (JavaScript/TypeScript projects)
 

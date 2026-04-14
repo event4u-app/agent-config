@@ -15,6 +15,10 @@ set -euo pipefail
 COPY_DIRS="rules"  # Subdirectories where files must be real copies (space-separated)
 GITIGNORE_MARKER="# galawork/agent-config"
 
+# Rules that are internal to the agent-config package and should NOT be shipped to consumers.
+# These are only relevant when developing the agent-config package itself.
+EXCLUDE_RULES="augment-source-of-truth.md augment-portability.md docs-sync.md"
+
 # --- Globals ---
 SOURCE_DIR=""
 TARGET_DIR=""
@@ -179,6 +183,20 @@ create_symlink() {
 
 # --- Core functions ---
 
+# Check if a relative path matches an excluded rule
+is_excluded_rule() {
+    local rel_path="$1"
+    local filename
+    filename="$(basename "$rel_path")"
+
+    for excluded in $EXCLUDE_RULES; do
+        if [[ "$filename" == "$excluded" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 # Hybrid sync: copy COPY_DIRS files, symlink everything else
 sync_hybrid() {
     local source_augment="$1"
@@ -197,6 +215,13 @@ sync_hybrid() {
     # Sync each file
     while IFS= read -r rel_path; do
         [[ -z "$rel_path" ]] && continue
+
+        # Skip package-internal rules that should not be shipped to consumers
+        if is_excluded_rule "$rel_path"; then
+            log_verbose "skip (internal): $rel_path"
+            continue
+        fi
+
         local source_file="$source_augment/$rel_path"
         local target_file="$target_augment/$rel_path"
 
@@ -238,10 +263,10 @@ clean_stale() {
     local target_entries
     target_entries=$(cd "$target_dir" && find . \( -type f -o -type l \) | sed 's|^\./||' | sort)
 
-    # Remove stale entries (in target but not in source)
+    # Remove stale entries (in target but not in source) and excluded rules
     while IFS= read -r entry; do
         [[ -z "$entry" ]] && continue
-        if ! echo "$source_manifest" | grep -qxF "$entry"; then
+        if is_excluded_rule "$entry" || ! echo "$source_manifest" | grep -qxF "$entry"; then
             local path="$target_dir/$entry"
             if $DRY_RUN; then
                 log_verbose "remove stale: $entry"
