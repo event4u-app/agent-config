@@ -539,21 +539,21 @@ Lock down all foundational decisions before writing code.
 
 ### Checklist
 
-- [ ] Define V1 goal in writing
-- [ ] Decide: TypeScript or Python as core language
-- [ ] Decide: Postgres + pgvector or alternative vector DB
-- [ ] Define first 5 memory types for V1
-- [ ] Define trust statuses (`quarantine`, `validated`, `stale`, `invalidated`, `rejected`, `poisoned`, `archived`)
-- [ ] Define revalidation triggers
-- [ ] Define TTL per knowledge class (evergreen: 90d, semi-stable: 30d, volatile: 7d)
-- [ ] Define hard trust threshold (0.6 default, 0.3 explicit low-trust)
-- [ ] Define impact levels and min evidence requirements per level
-- [ ] Define quarantine → validation flow
-- [ ] Define contradiction detection strategy
-- [ ] Define post-task extraction guard rules (tests must pass)
-- [ ] Decide: CLI-first or service-first approach
-- [ ] Choose example repository for development
-- [ ] Create architecture ADR documenting the above decisions
+- [x] Define V1 goal in writing → ADR-0001
+- [x] Decide: TypeScript → ADR-0001 Decision 1
+- [x] Decide: Postgres + pgvector → ADR-0001 Decision 2
+- [x] Define first 5 memory types → ADR-0001 Decision 3
+- [x] Define trust statuses → ADR-0001 Decision 4
+- [x] Define revalidation triggers → ADR-0001 Decision 5
+- [x] Define TTL per knowledge class → ADR-0001 Decision 6
+- [x] Define hard trust threshold → ADR-0001 Decision 7
+- [x] Define impact levels and min evidence → ADR-0001 Decision 8
+- [x] Define quarantine → validation flow → ADR-0001 Decision 9
+- [x] Define contradiction detection strategy → ADR-0001 Decision 10
+- [x] Define post-task extraction guard rules → ADR-0001 Decision 11
+- [x] Decide: CLI-first → ADR-0001 Decision 12
+- [x] Choose example repository (agent-config) → ADR-0001 Decision 13
+- [x] Create architecture ADR → `agents/adrs/0001-agent-memory-architecture.md`
 
 ### Acceptance Criteria
 
