@@ -9,7 +9,7 @@ Works with **Augment Code**, **Claude Code**, **Cursor**, **Cline**, **Windsurf*
 ### Composer (PHP projects)
 
 ```bash
-composer require event4u/agent-config
+composer require --dev event4u/agent-config --dev
 
 # One-time setup: adds post-install/update hooks to your composer.json
 bash vendor/event4u/agent-config/scripts/setup.sh
