@@ -1,5 +1,7 @@
 ---
 type: "always"
+description: "Token efficiency — redirect output, minimize tool calls, keep responses concise"
+alwaysApply: true
 ---
 
 # Token Efficiency
@@ -15,12 +17,12 @@ NEVER call the same tool more than 2 times in a row with similar parameters.
 If you catch yourself repeating a tool call — STOP, rethink, try a different approach, or ask the user.
 ```
 
-### Anti-loop: Sequential Thinking
+### Anti-loop: Extended Reasoning
 
-Do NOT use `sequentialthinking` for simple tasks like viewing files, running commands, or
-making straightforward edits. It is ONLY for genuinely complex multi-step reasoning.
-If you find yourself calling `sequentialthinking` more than once per task — you are looping.
-Stop immediately and act directly instead.
+Do NOT use extended reasoning / chain-of-thought tools for simple tasks like viewing files,
+running commands, or making straightforward edits. They are ONLY for genuinely complex
+multi-step reasoning. If you find yourself calling such tools more than once per task —
+you are looping. Stop immediately and act directly instead.
 
 ### Anti-loop: "CRITICAL INSTRUCTION" and self-prompting
 
@@ -34,7 +36,7 @@ or when the user says something like "continue" / "mach weiter".
 1. STOP generating self-instructions.
 2. Read the last user message — what did they actually ask?
 3. Do that ONE thing directly. No planning monologue, no tool selection reasoning.
-4. If you don't know what the user wanted, ask: "Wo waren wir stehen geblieben?"
+4. If you don't know what the user wanted, ask: "Where were we?"
 
 ## Fresh Output Over Memory
 
@@ -73,11 +75,11 @@ Show this in the suggestion — the user should understand the cost.
 > ⚡ This conversation has ~{N} messages (~{N×1500} tokens history cost — charged on EVERY request).
 > A fresh chat saves ~{N×1500} input tokens per request.
 >
-> 1. Start fresh — I'll run /agent-handoff
+> 1. Start fresh — I'll initiate a session handoff
 > 2. Continue here
 ```
 
-**If the user picks 1:** Run `/agent-handoff`.
+**If the user picks 1:** Initiate a session handoff or start fresh.
 
 ## Conversation Efficiency
 
@@ -101,13 +103,13 @@ numbered options, or command steps. When a rule or command says "ask the user", 
 
 ### Keep intermediate output minimal
 
-Read `minimal_output` from `.agent-settings` (default: `true`).
+Read `minimal_output` from the project settings file (default: `true`).
 
 When `true`:
 
 - **During multi-step work:** short bullet points only, no paragraphs.
 - **No thinking out loud** — the user doesn't need your reasoning process.
-- **Play-by-play**: Read `play_by_play` from `.agent-settings` (default: `false`).
+- **Play-by-play**: Read `play_by_play` from the project settings file (default: `false`).
   When `false`: don't narrate each tool call result. Silently investigate, then report the conclusion.
   When `true`: briefly share intermediate findings as you go.
     - ❌  (when false) "Hmm, exit code 1. Let me check... 18 errors. The errors are about method_exists..."
@@ -116,23 +118,23 @@ When `true`:
 
 ### Don't re-read what you already know
 
-- Edited a file → `str-replace-editor` showed the result. Don't `view` again.
+- Edited a file → the edit tool showed the result. Don't re-read the file.
 - Ran a command → you have the output. Don't re-run to "verify".
 - File in context from recent messages → don't reload.
 - Found a symbol → don't search again in a different way.
 
 ### Search before reading
 
-- **Search first** — `codebase-retrieval`, `search_query_regex`, or `grep`.
+- **Search first** — use codebase search tools, regex search in files, or `grep`.
 - **Don't load entire files** when you only need a few lines.
 - **Small files** (< 50 lines) — OK to read fully.
 
 ### Minimize tool calls
 
 - **Parallel reads** — don't read 5 files sequentially.
-- **`search_query_regex`** over full file reads.
-- **`view_range`** when you know the exact lines.
-- **One `codebase-retrieval` call** with all symbols — not 5 separate calls.
+- **Regex search** over full file reads when possible.
+- **View specific line ranges** when you know the exact location.
+- **One codebase search call** with all symbols — not 5 separate calls.
 
 ### Right-size responses
 
@@ -205,7 +207,11 @@ For tool-specific commands and workflows → see the `quality-workflow` rule.
 - **PHPStan error you don't understand**: Read more context (5-10 lines around the error).
 - **User explicitly asks** to see the full output: Show it.
 
-## Ignored Skills Recovery
+## Augment-specific
+
+_The following section applies only to Augment Code._
+
+### Ignored Skills Recovery
 
 Skills excluded via `.augmentignore` don't appear in `<available_skills>`.
 When you need expertise from an ignored skill during a task:

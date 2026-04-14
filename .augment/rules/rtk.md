@@ -1,5 +1,6 @@
 ---
 type: "auto"
+alwaysApply: false
 description: "Using rtk (Rust Token Killer) to wrap CLI commands for token-efficient output filtering"
 ---
 
@@ -26,22 +27,22 @@ Before verbose CLI commands, check rtk:
 
 1. `which rtk` (silent)
 2. **Installed** → prefix with `rtk` for >30 line output
-3. **Not installed** → check `.agent-settings` `rtk_last_asked`:
+3. **Not installed** → check project settings file for `rtk_last_asked`:
    - Missing or before today → prompt user
    - Today → skip, use normal commands
 
 **Prompt:**
 
 > 💡 **rtk** (Rust Token Killer) is not installed.
-> Reduces token consumption 60-90% — recommended by Matze.
+> Reduces token consumption 60-90%.
 >
 > 1. Install via Homebrew — `brew install rtk` (recommended on macOS)
 > 2. Install via Cargo — `cargo install rtk`
 > 3. Skip for now — I'll ask again tomorrow
 
 **On response:**
-- **1/2** → install, then: `rtk --version`, `rtk init --global`, Post-Install Setup, `/optimize-rtk-filters`, save `rtk_installed=true`
-- **3** → save `rtk_last_asked=YYYY-MM-DD`, use normal commands
+- **1/2** → install, then: `rtk --version`, `rtk init --global`, Post-Install Setup, generate project-local filters, save `rtk_installed=true` in project settings
+- **3** → save `rtk_last_asked=YYYY-MM-DD` in project settings, use normal commands
 
 ## Post-Install Setup (mandatory)
 

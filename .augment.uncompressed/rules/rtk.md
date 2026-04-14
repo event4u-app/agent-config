@@ -1,5 +1,6 @@
 ---
 type: "auto"
+alwaysApply: false
 description: "Using rtk (Rust Token Killer) to wrap CLI commands for token-efficient output filtering"
 ---
 
@@ -29,14 +30,14 @@ rtk docker compose ps # compact container status
 
 1. Run `which rtk` (silent, no output to user).
 2. **If installed** → prefix commands with `rtk` when output may exceed ~30 lines.
-3. **If NOT installed** → check `.agent-settings` for `rtk_last_asked`:
+3. **If NOT installed** → check the project settings file for `rtk_last_asked`:
    - If missing or date is **before today** → prompt the user (see below).
    - If date is **today** → skip, don't ask again. Use normal commands.
 
 **Prompt template** (translate to user's language):
 
 > 💡 **rtk** (Rust Token Killer) is not installed on your system.
-> It reduces token consumption by 60-90% on common CLI commands — recommended by Matze.
+> It reduces token consumption by 60-90% on common CLI commands.
 >
 > 1. Install via Homebrew — `brew install rtk` (recommended on macOS)
 > 2. Install via Cargo — `cargo install rtk`
@@ -47,9 +48,9 @@ rtk docker compose ps # compact container status
   1. `rtk --version` to verify installation.
   2. `rtk init --global` to enable auto-rewrite hooks.
   3. Apply **Post-Install Setup** (see below) — telemetry, tee, audit logging.
-  4. Run `/optimize-rtk-filters` to create project-local filters.
-  5. Save `rtk_installed=true` in `.agent-settings`.
-- **3** → Save `rtk_last_asked=YYYY-MM-DD` (today) in `.agent-settings`. Use normal commands.
+  4. Generate project-local filters (see Post-Install Setup).
+  5. Save `rtk_installed=true` in the project settings file.
+- **3** → Save `rtk_last_asked=YYYY-MM-DD` (today) in the project settings file. Use normal commands.
 
 ## Post-Install Setup (mandatory)
 
