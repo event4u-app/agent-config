@@ -114,10 +114,37 @@ get_relative_path() {
 
     if command -v python3 &>/dev/null; then
         python3 -c "import os.path; print(os.path.relpath('$to_file', '$from_dir'))"
-    elif command -v realpath &>/dev/null; then
+    elif command -v realpath &>/dev/null && realpath --relative-to=/ / &>/dev/null 2>&1; then
         realpath --relative-to="$from_dir" "$to_file"
-    else
+    elif command -v perl &>/dev/null; then
         perl -e 'use File::Spec; print File::Spec->abs2rel($ARGV[1], $ARGV[0])' "$from_dir" "$to_file"
+    else
+        # Pure bash fallback: compute relative path
+        _bash_relpath "$from_dir" "$to_file"
+    fi
+}
+
+# Pure bash relative path calculation (no external tools needed)
+_bash_relpath() {
+    local from="$1" to="$2"
+    local common_part="$from" result=""
+
+    while [[ "${to#"$common_part"}" == "${to}" ]]; do
+        common_part="$(dirname "$common_part")"
+        result="../${result}"
+    done
+
+    local forward="${to#"$common_part"}"
+    forward="${forward#/}"
+
+    if [[ -n "$result" ]] && [[ -n "$forward" ]]; then
+        echo "${result}${forward}"
+    elif [[ -n "$result" ]]; then
+        echo "${result%/}"
+    elif [[ -n "$forward" ]]; then
+        echo "$forward"
+    else
+        echo "."
     fi
 }
 
