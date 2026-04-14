@@ -13,6 +13,10 @@
 .DS_Store
 Thumbs.db
 
+# PHP
+.phpunit.cache/
+composer.lock
+
 # Python
 __pycache__/
 *.pyc

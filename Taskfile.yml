@@ -36,3 +36,20 @@ tasks:
   install-hooks:
     desc: Install git hooks (pre-push sync check)
     cmd: bash scripts/install-hooks.sh
+
+
+  test:
+    desc: Run all tests (PHP + Python) in Docker
+    cmd: docker compose run --rm test
+
+  test-php:
+    desc: Run PHP tests in Docker
+    cmd: docker compose run --rm test sh -c "composer install --quiet && vendor/bin/phpunit"
+
+  test-python:
+    desc: Run Python tests in Docker
+    cmd: docker compose run --rm test sh -c "python3 -m unittest tests.test_compress -v"
+
+  test-build:
+    desc: Build test Docker image
+    cmd: docker compose build test
