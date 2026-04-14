@@ -51,9 +51,23 @@ parse_args() {
         SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
     fi
 
-    # Auto-detect target: PROJECT_ROOT env var, or cwd
+    # Auto-detect target: PROJECT_ROOT env var, or derive from source location
     if [[ -z "$TARGET_DIR" ]]; then
-        TARGET_DIR="${PROJECT_ROOT:-$(pwd)}"
+        if [[ -n "${PROJECT_ROOT:-}" ]]; then
+            TARGET_DIR="$PROJECT_ROOT"
+        elif [[ "$SOURCE_DIR" == */vendor/event4u/agent-config ]]; then
+            # Composer: vendor/event4u/agent-config → project root is 3 levels up
+            TARGET_DIR="$(cd "$SOURCE_DIR/../../.." && pwd)"
+        elif [[ "$SOURCE_DIR" == */node_modules/@event4u/agent-config ]]; then
+            # npm (scoped): node_modules/@event4u/agent-config → project root is 3 levels up
+            TARGET_DIR="$(cd "$SOURCE_DIR/../../.." && pwd)"
+        elif [[ "$SOURCE_DIR" == */node_modules/*/agent-config ]]; then
+            # npm (unscoped fallback)
+            TARGET_DIR="$(cd "$SOURCE_DIR/../../.." && pwd)"
+        else
+            # Fallback: cwd (manual invocation or local development)
+            TARGET_DIR="$(pwd)"
+        fi
     fi
 
     # Validate

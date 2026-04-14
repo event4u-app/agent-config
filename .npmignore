@@ -1,0 +1,27 @@
+# Development files — not shipped to consumers
+.augment.uncompressed/
+.idea/
+.vscode/
+.phpunit.cache/
+__pycache__/
+*.pyc
+*.swp
+*.swo
+*~
+tmp/
+
+# Agent infrastructure for this package itself
+agents/
+.agent-settings
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# PHP dev
+composer.lock
+vendor/
