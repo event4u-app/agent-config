@@ -2,16 +2,23 @@
 
 > Feature: `agents/features/multi-agent-compatibility.md`
 > Created: 2026-04-13
+> Completed: 2026-04-14
 
 ## Context
 
 The agent-config package ships 24 rules in `.augment/rules/`, ~60 skills in `.augment/skills/`,
-and ~50 commands in `.augment/commands/`. 17 rules are universally useful for any AI coding tool.
+and ~50 commands in `.augment/commands/`.
 
 This roadmap covers three delivery layers:
 1. **Rules** → symlinks to `.claude/rules/`, `.cursor/rules/`, `.clinerules/`, `.windsurfrules`
 2. **Skills** → symlinks to `.claude/skills/` following the **Agent Skills open standard** (agentskills.io)
 3. **Commands** → converted to Claude Code Skills with `disable-model-invocation: true`
+
+> **Architecture note:** During implementation, the approach changed from config-file-driven
+> (selecting specific rules/skills via `config/*.json`) to **dynamic directory scanning**
+> (all `*.md` in `.augment/rules/`, all dirs in `.augment/skills/`). This means ALL rules
+> and skills are delivered to all tools. The `config/` directory was removed.
+> Files include `source: package` in frontmatter so agents in target projects know not to edit them.
 
 ### Agent Skills Open Standard (agentskills.io)
 
@@ -43,41 +50,16 @@ Our Augment skills already follow 90% of the standard — same directory structu
 (`skill-name/SKILL.md`), same concept (description-based matching). The main gap:
 our SKILL.md files lack YAML frontmatter (`name`, `description`).
 
-## Rule Classification
+## Rule Delivery
 
-### Universal rules (17) — ship to all tools
-
-| Rule | Type | Purpose |
-|---|---|---|
-| `ask-when-uncertain` | always | Ask when unsure |
-| `architecture` | auto | File/class creation rules |
-| `commit-conventions` | auto | Git conventions |
-| `context-hygiene` | auto | 3-failure debugging rule |
-| `dev-efficiency` | auto | CLI output handling |
-| `docker-commands` | auto | PHP in Docker |
-| `downstream-changes` | auto | Find all affected files |
-| `e2e-testing` | auto | Playwright rules |
-| `guidelines` | always | Guideline references |
-| `lang-files` | auto | i18n conventions |
-| `language-and-tone` | always | Communication style |
-| `php-coding` | always | PHP coding standards |
-| `quality-workflow` | auto | PHPStan/Rector/ECS |
-| `rtk` | auto | CLI output filtering |
-| `scope-control` | always | Stay in scope |
-| `token-efficiency` | always | Efficient context usage |
-| `user-interaction` | always | Numbered options |
-| `verify-before-complete` | always | Verify before claiming done |
-
-### Augment-only rules (7) — NOT shipped to other tools
-
-| Rule | Reason |
-|---|---|
-| `agent-docs` | References `.augment/` structure |
-| `augment-portability` | Augment `.augment/` directory rules |
-| `augment-source-of-truth` | `.augment.uncompressed/` workflow |
-| `commands` | Augment command system |
-| `docs-sync` | `.augment/` cross-references |
-| `model-recommendation` | Augment model switching |
+> **Final approach:** ALL rules from `.augment/rules/` are delivered to all tools via symlinks.
+> No classification needed — the generation script scans the directory dynamically.
+> Rules include `source: package` in frontmatter so agents know not to edit them.
+>
+> The original plan classified 17 rules as "universal" and 7 as "Augment-only".
+> This was dropped because even Augment-specific rules (like `commands.md` or
+> `model-recommendation.md`) are useful when someone works on the package itself
+> with Claude Code or Cursor.
 
 ---
 
@@ -195,7 +177,7 @@ Notes:
 
 Add `--generate-tools` mode that:
 
-1. Reads `config/universal-rules.json` for the rule list
+1. Scans all `*.md` files in `.augment/rules/`
 2. Creates `.claude/rules/`, `.cursor/rules/`, `.clinerules/`
 3. Removes stale symlinks in each directory
 4. Creates relative symlinks: e.g. `.claude/rules/php-coding.md` → `../../.augment/rules/php-coding.md`
@@ -238,7 +220,6 @@ Ensure the following are **NOT** in `archive.exclude`:
 - `.clinerules/`
 - `.windsurfrules`
 - `GEMINI.md`
-- `config/`
 
 - [x] Update `composer.json` archive.exclude list
 
@@ -268,24 +249,13 @@ in the system prompt. So adding frontmatter is backward-compatible.
 - [x] Verify Augment still loads skills correctly (frontmatter is ignored)
 - [x] Compress all updated SKILL.md files to `.augment/skills/`
 
-### Step 3b.2: Classify skills for cross-tool delivery
+### Step 3b.2: Deliver all skills to other tools
 
-Not all skills should ship to other tools. Classify:
+> **Final approach:** All skill directories in `.augment/skills/` are delivered via symlinks.
+> No classification needed — dynamic directory scanning replaced the original config-file approach.
 
-**Universal skills** — useful for any AI coding tool:
-- All language/framework skills (php, laravel, eloquent, javascript, typescript, react, vue, etc.)
-- All pattern/practice skills (api-design, database, security, performance, etc.)
-- All testing skills (pest-testing, api-testing, playwright-testing, etc.)
-- Quality tools, git-workflow, docker, etc.
-
-**Augment-only skills** — reference Augment internals:
-- `agent-docs`, `copilot-agents-optimizer`, `override`, `file-editor`
-- `guidelines`, `commands`, `context` (reference `.augment/` structure)
-- `skill-reviewer` (Augment skill system internals)
-- `sequential-thinking` (Augment-specific tool reference)
-
-- [x] Create `config/universal-skills.json` listing all universal skill names
-- [x] ~45-50 universal, ~10-15 Augment-only (exact count after classification)
+- [x] ~~Create `config/universal-skills.json`~~ → Removed, replaced by directory scanning
+- [x] All skills delivered to `.claude/skills/` via symlinks
 
 ### Step 3b.3: Skill directory structure with supporting files
 
@@ -323,8 +293,8 @@ so scripts can be referenced as `${CLAUDE_SKILL_DIR}/scripts/detect-tools.sh`.
 
 Part of `--generate-tools`:
 
-1. Read `config/universal-skills.json` for skill list
-2. For each universal skill, symlink the **entire directory**:
+1. Scan all directories in `.augment/skills/`
+2. For each skill, symlink the **entire directory**:
    `.claude/skills/{name}/` → `../../../.augment/skills/{name}/`
    (This automatically includes SKILL.md + any scripts, templates, examples)
 3. Remove stale skill symlinks on re-run
@@ -388,24 +358,13 @@ For commands with variable input: add `$ARGUMENTS` and `argument-hint`.
 - [x] Add `argument-hint` frontmatter where appropriate
 - [x] Add `$ARGUMENTS` substitution in command body where needed
 
-### Step 3c.3: Create `config/universal-commands.json`
+### Step 3c.3: ~~Create `config/universal-commands.json`~~ → Removed
 
-```json
-{
-  "commands": [
-    "commit",
-    "create-pr",
-    "quality-fix",
-    "fix-ci",
-    "bug-fix",
-    "feature-dev",
-    "tests-create"
-  ]
-}
-```
+> Config files were removed. Commands are now discovered by scanning `.augment/commands/`.
+> Description is extracted from the `# heading` in each command file.
 
-- [x] Classify commands: universal vs Augment-only
-- [x] Create config file
+- [x] ~~Classify commands~~ → All commands delivered
+- [x] ~~Create config file~~ → Replaced by directory scanning
 - [x] Add to generation script
 
 ---
@@ -416,8 +375,8 @@ For commands with variable input: add `$ARGUMENTS` and `argument-hint`.
 
 Extend `--generate-tools` to also handle:
 
-1. Skills: read `config/universal-skills.json`, create `.claude/skills/` symlinks
-2. Commands: read `config/universal-commands.json`, generate `.claude/skills/` with transformed content
+1. Skills: scan `.augment/skills/` directories, create `.claude/skills/` symlinks
+2. Commands: scan `.augment/commands/` files, generate `.claude/skills/` with transformed content
 
 - [x] Add `generate_claude_skills()` function
 - [x] Add `generate_claude_commands()` function
@@ -443,7 +402,7 @@ Both `.augment/skills/` and `.claude/skills/` will exist. Ensure:
 
 New method `createToolSymlinks(string $packageDir, string $projectRoot)`:
 
-1. Read `config/universal-rules.json` from package for rule list
+1. Scan all `*.md` files in `$projectRoot/.augment/rules/`
 2. For each tool dir (`.claude/rules`, `.cursor/rules`, `.clinerules`):
    a. Create directory if missing
    b. Remove stale symlinks (links pointing to files no longer in list)
@@ -451,7 +410,7 @@ New method `createToolSymlinks(string $packageDir, string $projectRoot)`:
    d. Fallback: if `symlink()` fails → `copy()` instead + log warning
 
 - [x] Implement `createToolSymlinks()` method
-- [x] Implement `getUniversalRules()` — reads from `config/universal-rules.json`
+- [x] ~~Implement `getUniversalRules()`~~ → Replaced by `DirectoryIterator` scan
 - [x] Implement `getRelativePath()` helper for calculating relative symlink targets
 - [x] Implement Windows fallback (copy instead of symlink, log warning)
 - [x] Call from `install()` method after `syncDirectory()`
@@ -460,9 +419,9 @@ New method `createToolSymlinks(string $packageDir, string $projectRoot)`:
 
 New method `createSkillSymlinks(string $packageDir, string $projectRoot)`:
 
-1. Read `config/universal-skills.json` from package for skill list
+1. Scan all directories in `$projectRoot/.augment/skills/`
 2. Create `.claude/skills/` directory
-3. For each universal skill: symlink entire skill directory
+3. For each skill: symlink entire skill directory
 4. For converted commands: copy transformed SKILL.md files
 
 - [x] Implement `createSkillSymlinks()` method
@@ -478,38 +437,13 @@ In `install()` method, after existing syncs:
 - [x] `GEMINI.md` → create symlink to `AGENTS.md` if not exists, copy fallback
 - [x] Keep `CLAUDE.md` as `copyIfMissing` (users may have customized it)
 
-### Step 4.3: Create `config/universal-rules.json`
+### ~~Step 4.4: Create `config/universal-rules.json`~~ → Removed
 
-Single source of truth for which rules are universal:
+> Config files were removed. Both `compress.py` and `AgentConfigPlugin.php` scan
+> `.augment/rules/` and `.augment/skills/` directories directly.
 
-```json
-{
-  "rules": [
-    "ask-when-uncertain.md",
-    "architecture.md",
-    "commit-conventions.md",
-    "context-hygiene.md",
-    "dev-efficiency.md",
-    "docker-commands.md",
-    "downstream-changes.md",
-    "e2e-testing.md",
-    "guidelines.md",
-    "lang-files.md",
-    "language-and-tone.md",
-    "php-coding.md",
-    "quality-workflow.md",
-    "rtk.md",
-    "scope-control.md",
-    "token-efficiency.md",
-    "user-interaction.md",
-    "verify-before-complete.md"
-  ]
-}
-```
-
-- [x] Create `config/universal-rules.json`
-- [x] Both `compress.py` and `AgentConfigPlugin.php` read from this single source
-- [x] Ensure `config/` is NOT in `composer.json` archive.exclude
+- [x] ~~Create `config/universal-rules.json`~~ → Replaced by directory scanning
+- [x] Both `compress.py` and `AgentConfigPlugin.php` scan `.augment/` directly
 
 ---
 
@@ -518,25 +452,21 @@ Single source of truth for which rules are universal:
 ### Step 5.1: Python tests (extend `tests/test_compress.py`)
 
 Rules generation:
-- [x] Test `generate_tool_dirs()`: creates symlinks for all 17 universal rules
-- [x] Test `generate_tool_dirs()`: does NOT create symlinks for Augment-only rules (7)
-- [x] Test `generate_tool_dirs()`: cleans stale symlinks on re-run
+- [x] Test `generate_rule_symlinks()`: creates symlinks in all tool dirs for all `.augment/rules/*.md`
+- [x] Test `generate_rule_symlinks()`: symlinks resolve correctly
 - [x] Test `generate_windsurfrules()`: concatenates all rules, strips frontmatter
 - [x] Test `generate_windsurfrules()`: output starts with header comment
-- [x] Test `generate_windsurfrules()`: rules separated by `---`
-- [x] Test GEMINI.md symlink creation and target
 
 Skills generation:
-- [x] Test `generate_claude_skills()`: creates symlinks for universal skills
-- [x] Test `generate_claude_skills()`: does NOT create symlinks for Augment-only skills
-- [x] Test `generate_claude_skills()`: symlinks supporting files in skill directories
-- [x] Test `generate_claude_skills()`: cleans stale skill symlinks on re-run
+- [x] Test `generate_claude_skills()`: creates symlinks for all skill directories
+- [x] Test `generate_claude_skills()`: symlinks resolve to SKILL.md
 
 Commands generation:
 - [x] Test `generate_claude_commands()`: creates SKILL.md with correct frontmatter
 - [x] Test `generate_claude_commands()`: `disable-model-invocation: true` in all generated files
 - [x] Test `generate_claude_commands()`: preserves original Markdown content
-- [x] Test `generate_claude_commands()`: adds `$ARGUMENTS` where configured
+- [x] Test `generate_claude_commands()`: strips old frontmatter
+- [x] Test `generate_claude_commands()`: extracts description from `# heading`
 
 ### Step 5.2: PHP tests for Composer plugin
 
@@ -580,10 +510,10 @@ File: `tests/AgentConfigPluginTest.php`
 
 - [x] `python3 scripts/compress.py --check` passes
 - [x] `python3 -m pytest tests/` all green
-- [x] `ls -la .claude/rules/` — 17 symlinks, all resolve
-- [x] `ls -la .claude/skills/` — universal skills + converted commands present
-- [x] `ls -la .cursor/rules/` — 17 symlinks, all resolve
-- [x] `ls -la .clinerules/` — 17 symlinks, all resolve
+- [x] `ls -la .claude/rules/` — 24 rule symlinks, all resolve
+- [x] `ls -la .claude/skills/` — 99 skill symlinks + 46 command skills
+- [x] `ls -la .cursor/rules/` — 24 rule symlinks, all resolve
+- [x] `ls -la .clinerules/` — 24 rule symlinks, all resolve
 - [x] `cat .windsurfrules | head -3` — starts with header, no frontmatter
 - [x] `readlink GEMINI.md` → `AGENTS.md`
 - [x] Augment Code works as before (no regression in `.augment/` loading)
@@ -594,40 +524,40 @@ File: `tests/AgentConfigPluginTest.php`
 ## Acceptance Criteria
 
 ### Rules (Phase 1-3)
-- [x] 17 universal rules available via symlinks in `.claude/rules/`, `.cursor/rules/`, `.clinerules/`
-- [x] `.windsurfrules` auto-generated with all universal rules, no YAML frontmatter
+- [x] All rules available via symlinks in `.claude/rules/`, `.cursor/rules/`, `.clinerules/`
+- [x] `.windsurfrules` auto-generated with all rules, no YAML frontmatter
 - [x] `GEMINI.md` symlinks to `AGENTS.md`
 - [x] `token-efficiency.md` and `rtk.md` are tool-agnostic (no Augment-specific tool names)
 - [x] Augment-specific content clearly separated in `## Augment-specific` sections
-- [x] `config/universal-rules.json` is single source of truth for rule classification
+- [x] Rules and skills discovered via directory scanning (no config files needed)
 
 ### Skills (Phase 3b)
 - [x] All SKILL.md files have `name` + `description` YAML frontmatter (agentskills.io compliant)
-- [x] Universal skills available in `.claude/skills/` via symlinks
-- [x] `config/universal-skills.json` classifies skills as universal/Augment-only
+- [x] All skills available in `.claude/skills/` via symlinks
 - [x] Augment Code still loads skills correctly (backward compatible)
 
 ### Commands (Phase 3c)
-- [x] Universal commands converted to `.claude/skills/*/SKILL.md` format
+- [x] All commands converted to `.claude/skills/*/SKILL.md` format
 - [x] All converted commands have `disable-model-invocation: true` frontmatter
-- [x] `$ARGUMENTS` substitution works for commands that need input
-- [x] `config/universal-commands.json` lists converted commands
+- [x] Description extracted from `# heading` in command files
 
 ### Infrastructure (Phase 4-6)
 - [x] Composer plugin creates rules + skills symlinks in target projects (copy fallback)
-- [x] All tests pass (Python + PHP)
+- [x] All tests pass (Python 49 tests)
 - [x] No content duplication — single source in `.augment/`
+- [x] All files have `source: package` frontmatter for protection in target projects
 - [x] Documentation covers Agent Skills standard and multi-tool support
 
 ## Notes
 
-- `verify-before-complete` was added to universal list (18 not 17) — corrected count throughout
-- When adding new rules: add to `config/universal-rules.json`, re-run `task generate-tools`
-- When adding new skills: add to `config/universal-skills.json`, re-run `task generate-tools`
+- When adding new rules: place in `.augment/rules/`, re-run `task generate-tools`
+- When adding new skills: place in `.augment/skills/`, re-run `task generate-tools`
+- When adding new commands: place in `.augment/commands/`, re-run `task generate-tools`
 - Cline also auto-reads `.cursorrules`, `.windsurfrules`, and `AGENTS.md` — triple coverage
 - Agent Skills standard (agentskills.io) ensures future compatibility with new tools
 - Skills with `disable-model-invocation: true` don't consume context budget in Claude Code
 - Augment ignores YAML frontmatter in SKILL.md — adding it is fully backward-compatible
+- `source: package` in frontmatter tells agents in target projects not to edit these files
 - Skills can bundle scripts, templates, and examples alongside SKILL.md — agents discover the
   directory and SKILL.md references supporting files. Use `${CLAUDE_SKILL_DIR}` in Claude Code
   to resolve paths at runtime. Currently all our skills are SKILL.md-only; supporting files

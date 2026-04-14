@@ -2,22 +2,22 @@
 
 > Ship agent-config rules to all major AI coding tools via symlinks and generated files, so every tool benefits from our rules without content duplication.
 
-**Status:** 📋 Planned
+**Status:** ✅ Completed
 **Created:** 2026-04-13
+**Completed:** 2026-04-14
 **Author:** matze4u
 **Jira:** none
 **Module:** project-wide
-**Context:** `agents/roadmaps/caveman-compress-integration.md`
+**Context:** `agents/roadmaps/multi-agent-compatibility.md`
 
 ## Problem
 
-The `event4u/agent-config` package currently only works with **Augment Code**. Other AI coding tools (Claude Code, Cursor, Copilot, Windsurf, Cline, Codex, Gemini CLI) each expect their own config files in specific locations. Teams using multiple tools get no benefit from the 24 curated rules, ~60 skills, and ~50 commands. Maintaining separate copies per tool would be unsustainable.
+The `event4u/agent-config` package currently only works with **Augment Code**. Other AI coding tools (Claude Code, Cursor, Copilot, Windsurf, Cline, Codex, Gemini CLI) each expect their own config files in specific locations. Teams using multiple tools get no benefit from the curated rules, ~60 skills, and ~50 commands. Maintaining separate copies per tool would be unsustainable.
 
 ## Proposal
 
-1. Classify rules as **universal** (~17) vs **Augment-only** (~7)
-2. Make universal rules tool-agnostic (remove Augment-specific tool references)
-3. Create **symlinks** from tool-specific directories → `.augment/rules/`
+1. Make rules tool-agnostic (remove Augment-specific tool references)
+2. Create **symlinks** from tool-specific directories → `.augment/rules/` (all rules)
 4. **Generate** single-file configs (`.windsurfrules`, `GEMINI.md`)
 5. Add **Agent Skills standard** (agentskills.io) frontmatter to all SKILL.md files
 6. Port **skills** to `.claude/skills/` via symlinks (30+ tools support the standard)
@@ -30,10 +30,9 @@ The `event4u/agent-config` package currently only works with **Augment Code**. O
 ### In Scope
 
 - Refactor `token-efficiency.md` and `rtk.md` to be tool-agnostic
-- Classify all 24 rules (universal vs Augment-only)
-- Unify frontmatter format (add `alwaysApply` for Cursor compatibility)
-- Create rule symlink directories: `.claude/rules/`, `.cursor/rules/`, `.clinerules/`
-- Generate `.windsurfrules` from concatenated universal rules
+- Unify frontmatter format (add `alwaysApply` for Cursor compatibility, `source: package`)
+- Create rule symlink directories: `.claude/rules/`, `.cursor/rules/`, `.clinerules/` (all rules)
+- Generate `.windsurfrules` from concatenated rules
 - Symlink `GEMINI.md` → `AGENTS.md`
 - **Add Agent Skills frontmatter** (`name`, `description`) to all SKILL.md files
 - **Create `.claude/skills/`** with symlinks to universal skills
@@ -67,7 +66,7 @@ The `event4u/agent-config` package currently only works with **Augment Code**. O
 | `GEMINI.md` | New symlink → `AGENTS.md` |
 | `src/AgentConfigPlugin.php` | New symlink creation for rules + skills |
 | `scripts/compress.py` | New `--generate-tools` mode for rules, skills, commands |
-| `config/` | New config files for universal rules, skills, commands |
+| `src/AgentConfigPlugin.php` | Reads directly from `.augment/` dirs (no config files) |
 | `composer.json` | Update archive.exclude |
 | `Taskfile.yml` | New tasks for generation |
 
@@ -81,7 +80,7 @@ The `event4u/agent-config` package currently only works with **Augment Code**. O
 .clinerules/php-coding.md   → ../../.augment/rules/php-coding.md
 ```
 
-Only universal rules get symlinked. Augment-only rules are excluded.
+All rules from `.augment/rules/` get symlinked. Rules marked with `source: package` are read-only in target projects.
 
 ### Unified frontmatter
 
@@ -116,7 +115,7 @@ Fallback: if symlink creation fails (Windows, restricted filesystem), copy files
 
 ## Open Questions
 
-- [x] Which rules are universal vs Augment-only? → Classified (17 universal, 7 Augment-only)
+- [x] Which rules to ship? → All rules from `.augment/rules/` (dynamic scan, no config needed)
 - [x] Can frontmatter be unified? → Yes, tools ignore unknown fields
 - [x] Symlinks or copies in target projects? → Symlinks with copy fallback
 - [x] Can skills be shipped to other tools? → Yes, via Agent Skills standard (agentskills.io)
@@ -133,8 +132,8 @@ Fallback: if symlink creation fails (Windows, restricted filesystem), copy files
 ## Acceptance Criteria
 
 ### Rules
-- [x] 17 universal rules available in `.claude/rules/`, `.cursor/rules/`, `.clinerules/`
-- [x] `.windsurfrules` generated with all universal rules
+- [x] All rules available in `.claude/rules/`, `.cursor/rules/`, `.clinerules/` via symlinks
+- [x] `.windsurfrules` generated with all rules (frontmatter stripped)
 - [x] `GEMINI.md` symlinked to `AGENTS.md`
 - [x] `token-efficiency.md` and `rtk.md` are tool-agnostic
 
