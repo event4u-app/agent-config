@@ -4,7 +4,7 @@
 
 ## Prerequisites
 
-- [ ] Read `src/AgentConfigPlugin.php` — understand what gets shipped
+- [x] ~~Read `src/AgentConfigPlugin.php`~~ — replaced by `scripts/install.sh`
 - [x] Read `.augment/skills/quality-tools/SKILL.md` — current quality tool docs
 - [x] Read `.augment/rules/quality-workflow.md` — current workflow rules
 
@@ -344,14 +344,14 @@ Acceptable remaining: `galawork/php-quality` as ONE option in quality-tools dete
 ### Step 6.4: Verify quality stays identical
 
 **For galawork projects** (with `galawork/php-quality`):
-- [ ] Wrapper commands still fully documented as preferred option
-- [ ] All wrapper flags still documented
-- [ ] Workflow sequence identical
+- [x] Wrapper commands still fully documented as preferred option
+- [x] All wrapper flags still documented (`--ignore-git`, `--clear-cache`, `--source-branch`, etc.)
+- [x] Workflow sequence identical (PHPStan → Rector → ECS → PHPStan)
 
 **For non-galawork projects:**
-- [ ] Native commands documented and correct
-- [ ] Detection logic works (check composer.json)
-- [ ] Workflow identical, just different commands
+- [x] Native commands documented and correct (`vendor/bin/phpstan`, `vendor/bin/rector`, `vendor/bin/ecs`)
+- [x] Detection logic works (check composer.json for installed packages)
+- [x] Workflow identical, just different commands
 
 ---
 
