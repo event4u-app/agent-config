@@ -6,7 +6,7 @@
 
 - [x] Read `src/AgentConfigPlugin.php` — current PHP implementation
 - [x] Read `agents/roadmaps/plugin-symlink-strategy.md` — hybrid sync logic
-- [ ] Read existing `scripts/compress.py` — understand the generation pipeline
+- [x] Read existing `scripts/compress.py` — understand the generation pipeline
 
 ## Context
 
@@ -33,69 +33,69 @@ Port all logic from `AgentConfigPlugin.php` to a self-contained bash script.
 
 ### Step 1.1: Script skeleton and argument parsing
 
-- [ ] Create `scripts/install.sh` with shebang, `set -euo pipefail`
-- [ ] Accept arguments: `--source <dir>` (package location), `--target <dir>` (project root)
-- [ ] Auto-detect source: script's own directory (`dirname "$0"/..`)
-- [ ] Auto-detect target: current working directory (or `$PROJECT_ROOT` env var)
-- [ ] Add `--help` output
-- [ ] Add `--dry-run` flag (show what would happen, don't execute)
-- [ ] Add `--verbose` / `--quiet` flags
+- [x] Create `scripts/install.sh` with shebang, `set -euo pipefail`
+- [x] Accept arguments: `--source <dir>` (package location), `--target <dir>` (project root)
+- [x] Auto-detect source: script's own directory (`dirname "$0"/..`)
+- [x] Auto-detect target: current working directory (or `$PROJECT_ROOT` env var)
+- [x] Add `--help` output
+- [x] Add `--dry-run` flag (show what would happen, don't execute)
+- [x] Add `--verbose` / `--quiet` flags
 
 ### Step 1.2: Hybrid sync function
 
 Port `syncHybrid()` — copy rules, symlink everything else.
 
-- [ ] `sync_hybrid <source_augment> <target_augment>` function
-- [ ] `should_copy <relative_path>` — returns 0 for rules/, 1 for everything else
-- [ ] Copy files in `COPY_DIRS` (rules/) — overwrite existing
-- [ ] Create relative symlinks for all other files
-- [ ] Handle existing symlinks: remove and recreate (idempotent)
-- [ ] Handle existing real files in symlink dirs: replace with symlinks (migration)
-- [ ] Copy fallback: if `ln -s` fails, copy instead + warn
+- [x] `sync_hybrid <source_augment> <target_augment>` function
+- [x] `should_copy <relative_path>` — returns 0 for rules/, 1 for everything else
+- [x] Copy files in `COPY_DIRS` (rules/) — overwrite existing
+- [x] Create relative symlinks for all other files
+- [x] Handle existing symlinks: remove and recreate (idempotent)
+- [x] Handle existing real files in symlink dirs: replace with symlinks (migration)
+- [x] Copy fallback: if `ln -s` fails, copy instead + warn
 
 ### Step 1.3: Stale cleanup
 
 Port `cleanStaleEntries()` and broken symlink detection.
 
-- [ ] Find files in target that don't exist in source → remove
-- [ ] Find broken symlinks → remove
-- [ ] Remove empty directories after cleanup
-- [ ] Log removed files (when verbose)
+- [x] Find files in target that don't exist in source → remove
+- [x] Find broken symlinks → remove
+- [x] Remove empty directories after cleanup
+- [x] Log removed files (when verbose)
 
 ### Step 1.4: Tool symlinks
 
 Port `createToolSymlinks()` — symlinks in .claude/rules/, .cursor/rules/, .clinerules/.
 
-- [ ] Iterate all `*.md` files in `<target>/.augment/rules/`
-- [ ] Create symlinks in `.claude/rules/`, `.cursor/rules/`, `.clinerules/`
-- [ ] Relative paths: e.g. `../../.augment/rules/php-coding.md`
-- [ ] Clean stale symlinks in tool dirs
+- [x] Iterate all `*.md` files in `<target>/.augment/rules/`
+- [x] Create symlinks in `.claude/rules/`, `.cursor/rules/`, `.clinerules/`
+- [x] Relative paths: e.g. `../../.augment/rules/php-coding.md`
+- [ ] Clean stale symlinks in tool dirs (TODO: not yet implemented)
 
 ### Step 1.5: Skill symlinks
 
 Port `createSkillSymlinks()` — directory symlinks in .claude/skills/.
 
-- [ ] Iterate all directories in `<target>/.augment/skills/`
-- [ ] Create directory symlinks in `.claude/skills/`
-- [ ] Relative paths: e.g. `../../.augment/skills/coder`
-- [ ] Clean stale skill symlinks
+- [x] Iterate all directories in `<target>/.augment/skills/`
+- [x] Create directory symlinks in `.claude/skills/`
+- [x] Relative paths: e.g. `../../.augment/skills/coder`
+- [ ] Clean stale skill symlinks (TODO: not yet implemented)
 
 ### Step 1.6: Generated files
 
 Port `.windsurfrules` generation and `GEMINI.md` symlink.
 
-- [ ] `generate_windsurfrules` — concatenate all rules, strip YAML frontmatter
-- [ ] Create `GEMINI.md` → `AGENTS.md` symlink
-- [ ] `copy_if_missing` for `AGENTS.md` and `.github/copilot-instructions.md`
+- [x] `generate_windsurfrules` — concatenate all rules, strip YAML frontmatter
+- [x] Create `GEMINI.md` → `AGENTS.md` symlink
+- [x] `copy_if_missing` for `AGENTS.md` and `.github/copilot-instructions.md`
 
 ### Step 1.7: Gitignore management
 
 Port `ensureGitignoreEntries()`.
 
-- [ ] Check for `# galawork/agent-config` marker in `.gitignore`
-- [ ] If missing and `.gitignore` exists: append symlinked dirs block
-- [ ] Idempotent: don't duplicate on re-run
-- [ ] Don't create `.gitignore` if it doesn't exist
+- [x] Check for `# galawork/agent-config` marker in `.gitignore`
+- [x] If missing and `.gitignore` exists: append symlinked dirs block
+- [x] Idempotent: don't duplicate on re-run
+- [x] Don't create `.gitignore` if it doesn't exist
 
 ---
 
@@ -128,20 +128,20 @@ Port `ensureGitignoreEntries()`.
 
 ### Step 3.1: Bash integration tests
 
-- [ ] Create `tests/test_install.sh` using simple bash assertions
-- [ ] Test: rules are real copies (`! -L` and `-f`)
-- [ ] Test: skills are symlinks (`-L`)
-- [ ] Test: symlinks resolve correctly (content readable)
-- [ ] Test: stale files removed on re-run
-- [ ] Test: broken symlinks removed
-- [ ] Test: idempotent (run twice, same result)
-- [ ] Test: migration (real files → symlinks for non-rules)
-- [ ] Test: gitignore marker added
-- [ ] Test: gitignore idempotent
-- [ ] Test: tool symlinks created (.claude/rules/, .cursor/rules/, .clinerules/)
-- [ ] Test: windsurfrules generated
-- [ ] Test: GEMINI.md symlink created
-- [ ] Test: dry-run produces no changes
+- [x] Create `tests/test_install.sh` using simple bash assertions
+- [x] Test: rules are real copies (`! -L` and `-f`)
+- [x] Test: skills are symlinks (`-L`)
+- [x] Test: symlinks resolve correctly (content readable)
+- [x] Test: stale files removed on re-run
+- [x] Test: broken symlinks removed
+- [x] Test: idempotent (run twice, same result)
+- [x] Test: migration (real files → symlinks for non-rules)
+- [x] Test: gitignore marker added
+- [x] Test: gitignore idempotent
+- [x] Test: tool symlinks created (.claude/rules/, .cursor/rules/, .clinerules/)
+- [x] Test: windsurfrules generated
+- [x] Test: GEMINI.md symlink created
+- [x] Test: dry-run produces no file changes
 
 ### Step 3.2: CI integration
 
