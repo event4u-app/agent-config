@@ -35,6 +35,87 @@ The memory system is **not** a replacement for code understanding. It's a **veri
 
 ---
 
+## Safety Rules (Iron Laws)
+
+These rules are non-negotiable. They exist to prevent stale or wrong memory from causing real coding errors.
+
+### 1. Mandatory Expiry (TTL)
+
+Every memory entry has a **maximum age without revalidation**:
+
+| Knowledge Class | Max age before forced staleness |
+|---|---|
+| Evergreen | 90 days |
+| Semi-Stable | 30 days |
+| Volatile | 7 days |
+
+After this period, the entry is **automatically** set to `stale` — even if no code change triggered invalidation. Stale entries require revalidation before being served to agents.
+
+### 2. Hard Trust Threshold
+
+Entries below a minimum trust score are **never returned** to agents:
+
+| Retrieval mode | Minimum trust score |
+|---|---|
+| Default (agent query) | 0.6 |
+| Explicit low-trust search | 0.3 (with mandatory `⚠️ LOW TRUST` marker) |
+| Below 0.3 | Never returned, only visible in admin/review |
+
+### 3. Quarantine for New Entries
+
+New entries created by agents start in `quarantine` status — NOT `validated`:
+
+```
+agent creates entry → quarantine → validation check → validated OR rejected
+```
+
+Quarantined entries are **never served** to other agents until validated. Validation requires:
+- At least one evidence link (file, commit, test) verified against current code
+- No contradiction with existing validated entries
+
+### 4. Impact-Level Determines Trust Requirements
+
+| Impact Level | Example Types | Min Evidence | Review Required |
+|---|---|---|---|
+| **Critical** | `architecture_decision`, `domain_rule` | 2+ evidence links | Human review recommended |
+| **High** | `integration_constraint`, `deployment_warning` | 1+ evidence link | Automated validation |
+| **Normal** | `bug_pattern`, `refactoring_note`, `test_strategy` | 1 evidence link | Automated validation |
+| **Low** | `coding_convention`, `glossary_entry` | Optional | None |
+
+Critical entries with only 1 evidence link get a **trust score cap of 0.7** — they cannot reach "fully trusted" without strong evidence.
+
+### 5. Contradiction Detection
+
+On every ingestion and retrieval:
+- Check new entries against existing entries with overlapping scope (same files, symbols, modules)
+- If contradiction detected → **both entries flagged** for review
+- Neither is served to agents until conflict is resolved
+
+### 6. Post-Task Extraction Guard
+
+Knowledge extraction after task completion is only allowed when:
+- All tests pass (if tests exist for affected area)
+- No quality tool errors introduced
+- Diff is reviewed (by agent or human)
+
+If tests fail or quality degrades → extraction is **blocked**, not just warned.
+
+### 7. Audit Trail with Traceability
+
+Every memory entry that influences agent decisions must be traceable:
+- Entry ID is included in agent output / commit metadata
+- If wrong code is produced, the contributing memory entries can be identified
+- Rollback: mark entry as `poisoned` → triggers re-review of all dependent decisions
+
+### 8. Semantic Drift Detection
+
+Beyond file-level invalidation:
+- Track **function signatures** and **return types** of watched symbols
+- If a function's behavior changes (different return type, renamed params, different side effects) but the file name stays the same → trigger invalidation
+- V1 minimum: flag entries when watched files have large diffs (>50% of lines changed)
+
+---
+
 ## Architecture Overview
 
 ```
@@ -99,17 +180,23 @@ Every memory entry contains:
     {"kind": "adr", "ref": "docs/adr/0007-order-total-policy.md"}
   ],
   "embedding_text": "...",
+  "impact_level": "critical",
+  "knowledge_class": "semi_stable",
   "trust": {
     "status": "validated",
     "score": 0.91,
-    "validated_at": "2026-04-13T10:00:00Z"
+    "validated_at": "2026-04-13T10:00:00Z",
+    "expires_at": "2026-05-13T10:00:00Z",
+    "min_evidence_count": 2
   },
   "invalidation": {
     "strategy": "file_symbol_dependency_based",
     "watched_files": ["src/Billing/OrderTotalService.ts"],
-    "watched_symbols": ["OrderTotalService::recalculate"]
+    "watched_symbols": ["OrderTotalService::recalculate"],
+    "watched_signatures": ["recalculate(order: Order): Money"]
   },
   "created_by": "agent",
+  "created_in_task": "task_abc123",
   "updated_at": "2026-04-13T10:00:00Z"
 }
 ```
@@ -163,14 +250,26 @@ Ephemeral. Current task plan, session to-dos, temporary hypotheses. Discarded af
 ### Trust Statuses
 
 ```
-new → validated
-new → stale
-validated → stale
-stale → validated (revalidated)
-validated → invalidated
-stale → invalidated
-invalidated → archived
+quarantine → validated       (evidence verified, no contradictions)
+quarantine → rejected        (evidence invalid or contradicts existing entries)
+validated → stale            (TTL expired or evidence weakened)
+stale → validated            (revalidated successfully)
+validated → invalidated      (hard invalidation — symbol deleted, evidence gone)
+stale → invalidated          (hard invalidation while already stale)
+invalidated → archived       (no longer relevant, kept for audit)
+any → poisoned               (confirmed wrong — triggers cascade review)
+poisoned → archived          (after dependent decisions reviewed)
 ```
+
+| Status | Served to agents? | Meaning |
+|---|---|---|
+| `quarantine` | ❌ Never | New, unverified — awaiting validation |
+| `validated` | ✅ Yes | Evidence verified, trust score above threshold |
+| `stale` | ⚠️ With warning | TTL expired or evidence weakened — needs revalidation |
+| `invalidated` | ❌ Never | Hard-invalidated — evidence gone or contradicted |
+| `rejected` | ❌ Never | Failed quarantine validation |
+| `poisoned` | ❌ Never | Confirmed wrong — triggers review of dependent entries |
+| `archived` | ❌ Never | Historical record only |
 
 ### Trust Signals
 
@@ -197,8 +296,12 @@ invalidated → archived
 
 | Mode | When | Effect |
 |---|---|---|
-| **Soft invalidate** | Evidence weakened but entry may still be useful | Status → `stale`, requires review before use |
-| **Hard invalidate** | Core symbol deleted, evidence gone, contradicted | Status → `invalidated`, archived |
+| **TTL expiry** | Max age reached without revalidation | Status → `stale`, blocked until revalidated |
+| **Soft invalidate** | Evidence weakened (file changed, small diff) | Status → `stale`, served with warning |
+| **Hard invalidate** | Core symbol deleted, evidence gone | Status → `invalidated`, never served |
+| **Contradiction** | New entry contradicts existing one | Both entries flagged, neither served until resolved |
+| **Poison** | Entry confirmed to have caused wrong code | Status → `poisoned`, cascade review of dependents |
+| **Semantic drift** | Watched symbol signature/behavior changed significantly | Status → `stale`, higher revalidation priority |
 
 ---
 
@@ -298,8 +401,14 @@ Lock down all foundational decisions before writing code.
 - [ ] Decide: TypeScript or Python as core language
 - [ ] Decide: Postgres + pgvector or alternative vector DB
 - [ ] Define first 5 memory types for V1
-- [ ] Define trust statuses (`new`, `validated`, `stale`, `invalidated`, `archived`)
+- [ ] Define trust statuses (`quarantine`, `validated`, `stale`, `invalidated`, `rejected`, `poisoned`, `archived`)
 - [ ] Define revalidation triggers
+- [ ] Define TTL per knowledge class (evergreen: 90d, semi-stable: 30d, volatile: 7d)
+- [ ] Define hard trust threshold (0.6 default, 0.3 explicit low-trust)
+- [ ] Define impact levels and min evidence requirements per level
+- [ ] Define quarantine → validation flow
+- [ ] Define contradiction detection strategy
+- [ ] Define post-task extraction guard rules (tests must pass)
 - [ ] Decide: CLI-first or service-first approach
 - [ ] Choose example repository for development
 - [ ] Create architecture ADR documenting the above decisions
@@ -308,6 +417,7 @@ Lock down all foundational decisions before writing code.
 
 - Anyone can explain in 5 minutes what Memory stores and what it doesn't
 - V1 scope exists with clear boundaries
+- Safety rules documented and non-negotiable
 
 ---
 
@@ -346,19 +456,25 @@ Store, load, and version memory entries in a structured way.
 
 ### Checklist
 
-- [ ] Create `memory_entries` table
+- [ ] Create `memory_entries` table (with `impact_level`, `knowledge_class`, `expires_at`)
 - [ ] Create `memory_evidence` table
-- [ ] Create `memory_links` table (file, symbol, module associations)
-- [ ] Create `memory_status_history` table
+- [ ] Create `memory_links` table (file, symbol, module, signature associations)
+- [ ] Create `memory_status_history` table (full audit trail)
+- [ ] Create `memory_contradictions` table (pairs of conflicting entries)
 - [ ] Add vector column for embeddings
-- [ ] Define JSON fields for flexible metadata
+- [ ] Add `created_in_task` for traceability
+- [ ] Implement status transition rules (enforce valid transitions only)
+- [ ] Implement TTL expiry check (auto-stale on query if expired)
 - [ ] Implement repository / DAO layer
 - [ ] Write unit tests for CRUD operations
+- [ ] Write unit tests for status transition enforcement
 
 ### Acceptance Criteria
 
-- Entries can be stored with evidence and trust status
-- Status change history is traceable
+- Entries can be stored with evidence, trust status, impact level, and knowledge class
+- Status change history is traceable (who, when, why)
+- Invalid status transitions are rejected
+- TTL expiry is enforced on read
 
 ---
 
@@ -374,14 +490,23 @@ Find relevant knowledge snippets for the current task.
 - [ ] Implement vector search
 - [ ] Implement filters by repository / module / type / trust / status
 - [ ] Implement ranking function (relevance + trust + freshness)
+- [ ] Enforce hard trust threshold — entries below 0.6 never returned by default
+- [ ] Implement explicit low-trust mode (0.3 min, with `⚠️ LOW TRUST` marker)
+- [ ] Filter out `quarantine`, `invalidated`, `rejected`, `poisoned`, `archived` statuses
+- [ ] Check TTL on every retrieval — auto-stale expired entries before ranking
+- [ ] Include trust status + evidence count in response format
 - [ ] Provide query API and CLI command
-- [ ] Define agent-friendly response format
+- [ ] Define agent-friendly response format (always includes trust metadata)
+- [ ] Write tests: ensure stale entries are not returned without warning
+- [ ] Write tests: ensure quarantined entries are never returned
 - [ ] Write tests with realistic queries
 
 ### Acceptance Criteria
 
 - For real coding tasks, relevant memory entries are found
-- Obviously irrelevant entries don't rank high
+- Stale entries are only returned with explicit warning
+- Quarantined / invalidated / poisoned entries are NEVER returned
+- Trust score and status visible in every response
 
 ---
 
@@ -393,20 +518,34 @@ Memory must not be blindly trusted. Relevant entries must be validated before us
 
 ### Checklist
 
-- [ ] Define trust model (scores, thresholds)
+- [ ] Define trust model (scores, thresholds, caps per impact level)
+- [ ] Implement quarantine flow (new entries start in quarantine)
+- [ ] Implement quarantine → validated transition (evidence check + no contradictions)
+- [ ] Implement quarantine → rejected transition
 - [ ] Create validator interfaces
 - [ ] Build file-exists validator
-- [ ] Build symbol-exists validator
+- [ ] Build symbol-exists validator (including signature comparison)
 - [ ] Build diff-impact validator
-- [ ] Optional: build test-linked validator
-- [ ] Implement trust score calculation
-- [ ] Document status transitions
+- [ ] Build test-linked validator (check if related tests still pass)
+- [ ] Implement contradiction detection (overlapping scope, opposing claims)
+- [ ] Implement contradiction resolution flow (flag both, block both)
+- [ ] Implement impact-level trust score cap (critical with 1 evidence → max 0.7)
+- [ ] Implement trust score calculation (evidence count × type weight × freshness)
+- [ ] Implement TTL enforcement per knowledge class
+- [ ] Implement `poisoned` status + cascade review trigger
+- [ ] Document all status transitions with validation rules
 - [ ] Connect trust with retrieval ranking
+- [ ] Write tests: quarantined entry never bypasses validation
+- [ ] Write tests: contradiction blocks both entries
+- [ ] Write tests: TTL expiry correctly triggers staleness
 
 ### Acceptance Criteria
 
 - Every returned entry has a traceable trust status
 - Outdated entries are visibly downgraded
+- New entries must pass quarantine before being served
+- Contradictions are detected and both entries blocked
+- Poisoning an entry triggers review of all dependent entries
 
 ---
 
@@ -428,17 +567,29 @@ Generate memory candidates from code, docs, and git history.
 ### Checklist
 
 - [ ] Implement file scanner
-- [ ] Integrate symbol extraction
+- [ ] Integrate symbol extraction (including function signatures for semantic drift detection)
 - [ ] Integrate documentation reader
 - [ ] Integrate git commit reader
 - [ ] Define candidate model
 - [ ] Define heuristics for relevant knowledge extraction
 - [ ] Implement deduplication strategy
+- [ ] Implement contradiction check on ingestion (compare with existing entries)
 - [ ] Integrate embedding creation
+- [ ] Implement post-task extraction guard:
+  - [ ] Check test results before allowing extraction
+  - [ ] Check quality tool results (if available)
+  - [ ] Block extraction if tests fail or quality degrades
+  - [ ] All new entries enter quarantine (never directly validated)
+- [ ] Assign impact level automatically based on memory type
+- [ ] Assign knowledge class automatically (evergreen/semi-stable/volatile)
+- [ ] Calculate and set TTL based on knowledge class
 
 ### Acceptance Criteria
 
 - System generates meaningful memory candidates from a real repository
+- All new entries start in quarantine status
+- Post-task extraction is blocked when tests fail
+- Contradictions detected during ingestion
 - Noise is manageable
 
 ---
@@ -453,17 +604,30 @@ Automatically react to code changes and update memory trust status.
 
 - [ ] Implement git diff reader
 - [ ] Implement file-based watch rules
-- [ ] Implement symbol-based watch rules
+- [ ] Implement symbol-based watch rules (including signature comparison)
+- [ ] Implement semantic drift detection:
+  - [ ] Track function signatures of watched symbols
+  - [ ] Flag entries when >50% of watched file lines changed
+  - [ ] Detect renamed symbols (heuristic: same file, similar signature, different name)
 - [ ] Add dependency-based invalidation
-- [ ] Build soft-invalidate flow
-- [ ] Build hard-invalidate flow
-- [ ] Introduce revalidation jobs
-- [ ] Create audit log for invalidation events
+- [ ] Build TTL expiry job (scheduled, auto-stales expired entries)
+- [ ] Build soft-invalidate flow (→ `stale`)
+- [ ] Build hard-invalidate flow (→ `invalidated`)
+- [ ] Build poison flow (→ `poisoned`, cascade to dependents)
+- [ ] Implement rollback mechanism:
+  - [ ] Track which entries influenced which tasks
+  - [ ] When entry is poisoned, list all tasks that used it
+  - [ ] Provide `memory rollback <entry-id>` command for investigation
+- [ ] Introduce revalidation jobs (prioritize high-impact entries)
+- [ ] Create audit log for all invalidation events (who, when, trigger, old/new status)
 
 ### Acceptance Criteria
 
 - When relevant files change, memory system reacts correctly
-- Stale knowledge doesn't stay silently active
+- TTL expiry runs on schedule and stales expired entries
+- Semantic drift detected for significant symbol changes
+- Poisoned entries trigger cascade review of dependents
+- Full audit trail for every status change
 
 ---
 
@@ -500,16 +664,28 @@ Memory must remain useful over weeks and months.
 
 ### Checklist
 
-- [ ] Define metrics: retrieval precision, stale rate, duplicate rate, revalidation success rate
+- [ ] Define metrics:
+  - [ ] Stale detection accuracy (target: >95% for critical/high impact)
+  - [ ] Retrieval precision (relevant entries / total returned)
+  - [ ] Contradiction detection rate
+  - [ ] Quarantine rejection rate (how many new entries fail validation)
+  - [ ] Poisoned entry count (should trend toward zero)
+  - [ ] TTL compliance (% of expired entries caught on time)
+  - [ ] False positive rate (valid entries incorrectly invalidated)
 - [ ] Build review command for questionable entries
 - [ ] Build duplicate merge mechanism
-- [ ] Define archival strategy
+- [ ] Build contradiction resolution interface
+- [ ] Define archival strategy (invalidated → archived after 30d)
 - [ ] Introduce scheduled cleanup job
+- [ ] Build `memory health` command showing all metrics
+- [ ] Build `memory audit <entry-id>` showing full history of an entry
 
 ### Acceptance Criteria
 
-- System quality is measurable
+- System quality is measurable with concrete numbers
+- Stale detection accuracy >95% for critical/high-impact entries
 - Bad knowledge doesn't accumulate indefinitely
+- Health dashboard shows actionable metrics
 
 ---
 
@@ -627,11 +803,20 @@ V1 is reached when:
 
 ## Acceptance Criteria (Roadmap)
 
-- [ ] All Phase 0 decisions documented
+- [ ] All Phase 0 decisions documented as ADR
+- [ ] All Safety Rules implemented and enforced (no bypass)
 - [ ] Working CLI + MCP server
+- [ ] Quarantine flow works — no entry goes directly to `validated`
+- [ ] TTL expiry enforced — expired entries auto-stale
+- [ ] Contradiction detection active on ingestion + retrieval
+- [ ] Post-task extraction blocked when tests fail
+- [ ] Audit trail complete — every status change traceable
+- [ ] Trust threshold enforced — below 0.6 never returned to agents
 - [ ] 10+ real tasks completed with memory support
-- [ ] Stale detection accuracy > 80%
-- [ ] At least 2 different agents tested
+- [ ] Stale detection accuracy >95% for critical/high-impact entries
+- [ ] Zero poisoned entries remain active (all caught and cascaded)
+- [ ] At least 2 different agents tested via MCP
+- [ ] `memory health` shows all quality metrics green
 
 ## Notes
 
