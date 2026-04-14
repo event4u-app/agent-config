@@ -7,22 +7,15 @@ on:
     branches: [main, master]
 
 jobs:
-  php-tests:
-    name: PHP Tests
+  install-tests:
+    name: Install Script Tests
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-
-      - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist
-
-      - name: Run PHPUnit
-        run: vendor/bin/phpunit
+      - name: Run install.sh integration tests
+        run: bash tests/test_install.sh
 
   python-tests:
     name: Python Tests
