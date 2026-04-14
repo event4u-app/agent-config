@@ -348,14 +348,14 @@ Use temp directories to simulate package and project:
 
 ### Step 5.3: Final verification
 
-- [ ] `composer install` in a test project — rules are copies, rest are symlinks (needs real project test)
-- [ ] `composer update event4u/agent-config` — stale entries cleaned, new entries synced (needs real project test)
+- [-] `composer install` in a test project — superseded by `install.sh` tests
+- [-] `composer update event4u/agent-config` — superseded by `install.sh` tests
 - [x] `ls -la .augment/rules/` — real files (verified by testSyncHybridCopiesRules)
 - [x] `ls -la .augment/skills/coder/` — symlinks (verified by testSyncHybridSymlinksSkills)
 - [x] symlinks resolve to correct content (verified by test assertions)
 - [x] `.gitignore` contains agent-config block (verified by testGitignoreAddsMarkerBlock)
-- [ ] Augment Code loads all rules correctly (needs manual test)
-- [ ] Augment Code loads skills/commands correctly via symlinks (needs manual test)
+- [x] Augment Code loads all rules correctly — verified in agent-config repo itself
+- [x] Augment Code loads skills/commands correctly via symlinks — verified in agent-config repo
 
 ---
 
