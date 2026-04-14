@@ -13,6 +13,9 @@ use Composer\Script\ScriptEvents;
 
 class AgentConfigPlugin implements PluginInterface, EventSubscriberInterface
 {
+    /** Subdirectories where files must be real copies (not symlinks). */
+    private const COPY_DIRS = ['rules'];
+
     private IOInterface $io;
 
     public function activate(Composer $composer, IOInterface $io): void
@@ -37,13 +40,16 @@ class AgentConfigPlugin implements PluginInterface, EventSubscriberInterface
         $packageDir = dirname(__DIR__);
         $projectRoot = dirname($event->getComposer()->getConfig()->get('vendor-dir'));
 
-        $this->syncDirectory($packageDir . '/.augment', $projectRoot . '/.augment');
+        // Hybrid sync: copy rules, symlink everything else
+        $this->syncHybrid($packageDir . '/.augment', $projectRoot . '/.augment');
+
         $this->copyIfMissing($packageDir . '/AGENTS.md', $projectRoot . '/AGENTS.md');
         $this->copyIfMissing($packageDir . '/.github/copilot-instructions.md', $projectRoot . '/.github/copilot-instructions.md');
         $this->createToolSymlinks($packageDir, $projectRoot);
         $this->createSkillSymlinks($packageDir, $projectRoot);
         $this->generateWindsurfrules($packageDir, $projectRoot);
         $this->createGeminiMd($projectRoot);
+        $this->ensureGitignoreEntries($projectRoot);
 
         $this->io->write('<info>event4u/agent-config: agent configuration installed.</info>');
     }
@@ -150,6 +156,173 @@ class AgentConfigPlugin implements PluginInterface, EventSubscriberInterface
     }
 
     /**
+     * Hybrid sync: copies files in COPY_DIRS, symlinks everything else.
+     * Cleans stale files, broken symlinks, and empty directories.
+     */
+    private function syncHybrid(string $packageAugment, string $projectAugment): void
+    {
+        if (!is_dir($packageAugment)) {
+            return;
+        }
+
+        if (!is_dir($projectAugment)) {
+            mkdir($projectAugment, 0755, true);
+        }
+
+        $sourceFiles = $this->collectFiles($packageAugment);
+
+        foreach ($sourceFiles as $relative) {
+            $source = $packageAugment . '/' . $relative;
+            $target = $projectAugment . '/' . $relative;
+            $targetDir = dirname($target);
+
+            if (!is_dir($targetDir)) {
+                mkdir($targetDir, 0755, true);
+            }
+
+            if ($this->shouldCopy($relative)) {
+                // Remove existing symlink before copying
+                if (is_link($target)) {
+                    unlink($target);
+                }
+
+                copy($source, $target);
+            } else {
+                $this->createFileSymlink($source, $target);
+            }
+        }
+
+        $this->cleanStaleEntries($projectAugment, $sourceFiles);
+        $this->removeEmptyDirectories($projectAugment);
+    }
+
+    /**
+     * Determines if a file should be copied (true) or symlinked (false).
+     */
+    private function shouldCopy(string $relativePath): bool
+    {
+        $firstSegment = strstr($relativePath, '/', true);
+
+        if (false === $firstSegment) {
+            // Root-level file (e.g. README.md) — symlink
+            return false;
+        }
+
+        return in_array($firstSegment, self::COPY_DIRS, true);
+    }
+
+    /**
+     * Creates a relative symlink from $link pointing to $target.
+     * Falls back to copy if symlink creation fails.
+     */
+    private function createFileSymlink(string $targetAbsolute, string $linkAbsolute): bool
+    {
+        $linkDir = dirname($linkAbsolute);
+
+        if (!is_dir($linkDir)) {
+            mkdir($linkDir, 0755, true);
+        }
+
+        // Remove existing file/symlink at link location
+        if (file_exists($linkAbsolute) || is_link($linkAbsolute)) {
+            unlink($linkAbsolute);
+        }
+
+        $relativePath = $this->getRelativePath($linkDir, $targetAbsolute);
+
+        if (!@symlink($relativePath, $linkAbsolute)) {
+            copy($targetAbsolute, $linkAbsolute);
+            $this->io->write(sprintf('<comment>  Symlink failed, copied: %s</comment>', basename($linkAbsolute)));
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Calculates a relative path from $from directory to $to file.
+     */
+    private function getRelativePath(string $from, string $to): string
+    {
+        $from = rtrim((string) realpath($from), '/');
+        $to = (string) realpath($to);
+
+        $fromParts = explode('/', $from);
+        $toParts = explode('/', $to);
+
+        // Find common prefix length
+        $common = 0;
+        $max = min(count($fromParts), count($toParts));
+
+        while ($common < $max && $fromParts[$common] === $toParts[$common]) {
+            $common++;
+        }
+
+        // Number of levels to go up from $from
+        $ups = count($fromParts) - $common;
+        $remaining = array_slice($toParts, $common);
+
+        return str_repeat('../', $ups) . implode('/', $remaining);
+    }
+
+    /**
+     * Removes stale files, symlinks, and broken symlinks from project directory.
+     */
+    private function cleanStaleEntries(string $projectDir, array $sourceManifest): void
+    {
+        $projectEntries = $this->collectEntries($projectDir);
+        $stale = array_diff($projectEntries, $sourceManifest);
+
+        foreach ($stale as $relative) {
+            $path = $projectDir . '/' . $relative;
+
+            if (is_file($path) || is_link($path)) {
+                unlink($path);
+                $this->io->write(sprintf('<comment>  Removed stale: %s</comment>', $relative));
+            }
+        }
+
+        // Also remove broken symlinks that are still in the manifest
+        foreach ($projectEntries as $relative) {
+            $path = $projectDir . '/' . $relative;
+
+            if (is_link($path) && !file_exists($path)) {
+                unlink($path);
+                $this->io->write(sprintf('<comment>  Removed broken symlink: %s</comment>', $relative));
+            }
+        }
+    }
+
+    /**
+     * Collects all entries (files + symlinks) relative to $dir.
+     *
+     * @return array<int, string>
+     */
+    private function collectEntries(string $dir): array
+    {
+        if (!is_dir($dir)) {
+            return [];
+        }
+
+        $entries = [];
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
+        );
+
+        foreach ($iterator as $item) {
+            $path = (string) $item;
+
+            if ($item->isFile() || is_link($path)) {
+                $entries[] = substr($path, strlen($dir) + 1);
+            }
+        }
+
+        return $entries;
+    }
+
+
+    /**
      * Copies $source to $dest only if $dest does not exist yet.
      * This preserves project-specific customizations.
      */
@@ -225,10 +398,6 @@ class AgentConfigPlugin implements PluginInterface, EventSubscriberInterface
     }
 
     /**
-     * Creates symlinks for universal skills in .claude/skills/.
-     * Falls back to copy if symlink creation fails.
-     */
-    /**
      * Creates .claude/skills/ symlinks for ALL skill directories in .augment/skills/.
      * Reads directly from the project's .augment/skills/ (package + project skills).
      */
@@ -276,9 +445,6 @@ class AgentConfigPlugin implements PluginInterface, EventSubscriberInterface
         }
     }
 
-    /**
-     * Generates .windsurfrules by concatenating all universal rules.
-     */
     /**
      * Generates .windsurfrules from ALL .md files in .augment/rules/.
      */
@@ -332,4 +498,43 @@ class AgentConfigPlugin implements PluginInterface, EventSubscriberInterface
             }
         }
     }
+
+    /**
+     * Ensures .gitignore in the target project contains entries for symlinked dirs.
+     * Uses a marker comment to prevent duplicate blocks. Does nothing if no .gitignore exists.
+     */
+    private function ensureGitignoreEntries(string $projectRoot): void
+    {
+        $gitignore = $projectRoot . '/.gitignore';
+        $marker = '# galawork/agent-config';
+
+        if (!file_exists($gitignore)) {
+            return;
+        }
+
+        $content = (string) file_get_contents($gitignore);
+
+        if (str_contains($content, $marker)) {
+            return;
+        }
+
+        $entries = [
+            '',
+            $marker,
+            '# Agent config — symlinked from vendor (auto-managed)',
+            '.augment/skills/',
+            '.augment/commands/',
+            '.augment/guidelines/',
+            '.augment/templates/',
+            '.augment/contexts/',
+            '.augment/scripts/',
+            '.augment/README.md',
+            '',
+            '# Agent config — NOT ignored (real copies, may contain project overrides)',
+            '# .augment/rules/',
+        ];
+
+        file_put_contents($gitignore, $content . implode("\n", $entries) . "\n");
+    }
+
 }
