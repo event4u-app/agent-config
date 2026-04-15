@@ -8,22 +8,21 @@ source: project
 
 ## When to use
 
-* Creating a new README.md
-* Improving an existing README
+* Creating new README.md
+* Improving existing README
 * Documenting setup, usage, or architecture
 
 Do not use for module-specific agent docs (use agent-docs) or markdown templates (use markdown-template-generator).
 
 ## Goal
 
-* Clear, structured, developer-friendly README files
+* Clear, structured, developer-friendly README
 * Fast onboarding with copyable commands
 
 ## Preconditions
 
 * Project context known (tech stack, purpose)
-* Commands must be executable
-* Output must be copy-paste safe
+* Commands must be executable and copy-paste safe
 
 ## Decision hints
 
@@ -33,22 +32,34 @@ Do not use for module-specific agent docs (use agent-docs) or markdown templates
 
 ## Procedure
 
+### 0. Inspect
+
+* README exists? Tech stack? Target audience?
+
+### 1. Structure
+
 1. Project title + short description
 2. Installation/setup steps
 3. Usage examples
 4. Configuration notes
 5. Troubleshooting or FAQ
 
+### 2. Validate
+
+* All commands executable as-is
+* No missing prerequisites
+* Self-contained for new developer
+
 ## Output format
 
-1. Title + description → Setup → Usage → Optional sections (config, troubleshooting)
+1. Title + description → Setup → Usage → Optional (config, troubleshooting)
+2. All commands copyable
 
 ## Core rules
 
 * Concise but complete
 * Clear headings
-* Commands must work as-is
-* Copyable instructions
+* Commands work as-is
 
 ## Gotchas
 
@@ -65,3 +76,14 @@ Do not use for module-specific agent docs (use agent-docs) or markdown templates
 ## Auto-trigger keywords
 
 * README, project documentation, setup guide, installation guide, onboarding
+
+## Anti-patterns
+
+* Wall of text without headings
+* Commands requiring unstated prerequisites
+* README without tech stack mention
+
+## Examples
+
+Good: Title → Tech stack → Setup (docker, env, migrate) → Usage → Config
+Bad: Title → wall of text without headings or commands

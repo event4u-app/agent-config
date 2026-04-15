@@ -13,19 +13,18 @@ source: project
 * Building SKILL.md, README.md, or config templates
 * Output must be directly copyable
 
-Do not use when writing regular documentation (not a template) or only inline code.
+Do not use for regular documentation (not a template) or inline code only.
 
 ## Goal
 
-* Generate clean, reusable markdown templates
-* Ensure copy/paste works without breaking formatting
-* Avoid markdown rendering issues
+* Clean, reusable markdown templates
+* Copy/paste works without breaking formatting
 
 ## Preconditions
 
 * Output is markdown
 * Template may include code or commands
-* Must be stable across ChatGPT, GitHub, VSCode
+* Stable across ChatGPT, GitHub, VSCode
 
 ## Decision hints
 
@@ -35,22 +34,41 @@ Do not use when writing regular documentation (not a template) or only inline co
 
 ## Procedure
 
-1. Define structure (headings, sections)
-2. Add placeholders ([value], {VAR}, etc.)
-3. Insert examples WITHOUT unsafe code blocks
-4. Keep formatting simple and robust
-5. Validate copy/paste safety
+### 0. Inspect requirements
+
+* Template type? (skill, readme, config)
+* Needs code examples?
+* Target audience?
+
+### 1. Define structure
+
+Headings, sections, logical flow.
+
+### 2. Add placeholders
+
+Use [value], {VAR}, or {description} consistently.
+
+### 3. Insert examples safely
+
+WITHOUT nested backtick fences. Use indentation or ~~~ if needed.
+
+### 4. Validate
+
+* No nested triple backticks
+* Entire content fully selectable
+* No broken rendering in plain markdown view
 
 ## Output format
 
-1. Full template — no broken markdown — clean headings/sections
+1. Template only — no explanations unless requested
+2. Fully copyable — no prose around template
 
 ## Core rules
 
 * Never nest triple backticks
-* Prefer plain text for commands
+* Plain text for commands
 * Consistent section structure
-* Keep templates minimal and reusable
+* Templates minimal and reusable
 
 ## Gotchas
 
@@ -61,9 +79,25 @@ Do not use when writing regular documentation (not a template) or only inline co
 ## Do NOT
 
 * Do NOT use nested backtick fences
-* Do NOT mix multiple markdown styles inconsistently
+* Do NOT mix markdown styles inconsistently
 * Do NOT generate non-copyable templates
 
 ## Auto-trigger keywords
 
 * template, markdown template, README template, docs template, generate template
+
+## Anti-patterns
+
+* Template wrapped in triple backtick fence
+* Placeholders without consistent format
+* Missing sections with no indication to fill in
+
+## Examples
+
+Good:
+
+    ## When to use
+    * {scenario 1}
+    * {scenario 2}
+
+Bad: template with nested triple backtick fences → broken when copied

@@ -10,17 +10,17 @@ source: project
 
 * Generating markdown with code blocks
 * Creating templates/files for copy/paste
-* Writing docs with multiple code examples
+* Docs with multiple code examples
 * Embedding code inside markdown examples
-* User complains about broken/uncopyable code blocks
+* User reports broken/uncopyable blocks
 
-Do not use when only inline code is involved.
+Do not use when only inline code involved.
 
 ## Goal
 
-* Ensure all markdown is fully copyable
-* Prevent broken rendering from nested backticks
-* Stable formatting across ChatGPT, GitHub, VSCode
+* All markdown fully copyable
+* No broken rendering from nested backticks
+* Stable across ChatGPT, GitHub, VSCode
 
 ## Preconditions
 
@@ -30,53 +30,53 @@ Do not use when only inline code is involved.
 
 ## Decision hints
 
-* Code contains triple backticks → DO NOT wrap in triple backticks again
-* Nesting required → use alternative formatting
-* Unsure → prefer plain text over markdown fences
+* Content contains triple backticks → DO NOT wrap in triple backticks again
+* Nesting required → alternative formatting
+* Unsure → plain text over markdown fences
 * Stability over "pretty formatting"
 
 ## Procedure
 
-### 1. Detect nested code blocks
+### 0. Inspect content
 
-Check if content contains triple backticks, markdown fences, or multi-language snippets.
+* Contains triple backticks or markdown fences?
+* Will output be nested inside another markdown file?
 
-### 2. Choose safe output format
+### 1. Choose safe output format
 
 A) Plain text blocks (preferred) → no backtick fences
 B) Replace inner backticks → indentation or placeholders
 C) Alternative fences → ~~~ instead of backtick fences
 
-### 3. Generate safely
+### 2. Generate safely
 
     Safe example:
     php artisan route:list --json
 
-### 4. Validate
+### 3. Validate
 
-* No broken markdown rendering
+* No nested triple backticks
 * No prematurely closed blocks
-* Entire content selectable & copyable
+* Entire content selectable & copyable in plain markdown view
 
 ## Output format
 
-1. Fully copyable content
-2. No broken markdown
-3. No nested triple backticks
-4. Clean formatting over fancy formatting
+1. Fully copyable content only
+2. No explanations unless requested
+3. Clean formatting over fancy
 
 ## Core rules
 
 * NEVER nest triple backticks inside triple backticks
-* Prefer plain text over markdown if unsure
+* Plain text over markdown if unsure
 * Avoid mixing markdown + code fences in templates
-* Robust across platforms — simpler is safer
+* Simpler is safer
 
 ## Gotchas
 
 * ChatGPT often breaks markdown when nesting backtick fences
-* GitHub may render differently than ChatGPT
-* VSCode preview may hide errors users see when copying
+* GitHub renders differently than ChatGPT
+* VSCode preview hides errors users see when copying
 * Syntax highlighting less important than correctness
 
 ## Do NOT
@@ -84,14 +84,29 @@ C) Alternative fences → ~~~ instead of backtick fences
 * Do NOT nest backtick fences inside backtick fences
 * Do NOT generate partially closed code blocks
 * Do NOT prioritize formatting over usability
-* Do NOT assume the renderer will "fix it"
+* Do NOT assume renderer will "fix it"
 
 ## Auto-trigger keywords
 
 * markdown, code block, copy paste, broken formatting
 * backticks, triple backticks, template generation
 
+## Anti-patterns
+
+* Wrapping markdown examples in triple backtick fences
+* Relying on renderer to handle nested fences
+* Syntax highlighting over correctness
+
+## Examples
+
+Safe:
+
+    Command:
+    php artisan route:list --json
+
+Unsafe: nested triple backticks inside markdown blocks → broken, not copyable
+
 ## Environment notes
 
 Works in: ChatGPT UI, Claude, GitHub markdown, VSCode preview.
-Always optimize for copy/paste reliability.
+Optimize for copy/paste reliability.

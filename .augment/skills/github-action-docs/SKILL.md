@@ -17,12 +17,12 @@ Do not use for editing workflow YAML (use github-ci) or general project docs (us
 ## Goal
 
 * Clearly explain workflow purpose and steps
-* Make CI behavior understandable
-* Provide reproducible examples
+* CI behavior understandable
+* Reproducible examples
 
 ## Preconditions
 
-* GitHub Actions workflow exists or is being created
+* GitHub Actions workflow exists or being created
 * YAML config involved
 * Output readable and copyable
 
@@ -34,21 +34,35 @@ Do not use for editing workflow YAML (use github-ci) or general project docs (us
 
 ## Procedure
 
-1. Explain purpose of workflow
-2. Describe triggers (push, PR, etc.)
-3. Break down jobs and steps
-4. Highlight important commands
-5. Mention required secrets or env vars
+### 0. Inspect workflow
+
+* Read YAML first
+* Identify triggers, jobs, steps, secrets
+* Note dependencies between jobs
+
+### 1. Document
+
+1. Purpose
+2. Triggers (push, PR, etc.)
+3. Jobs and steps breakdown
+4. Important commands
+5. Required secrets/env vars
+
+### 2. Validate
+
+* All referenced secrets documented
+* Trigger conditions match intended behavior
+* No hidden dependencies unexplained
 
 ## Output format
 
-1. Short explanation → workflow breakdown → important commands → config notes
+1. Short explanation → workflow breakdown (jobs → steps) → commands → secrets → config notes
 
 ## Core rules
 
 * Simple, structured explanations
-* Focus on what the workflow does
-* Avoid unnecessary YAML complexity in docs
+* Focus on what workflow does
+* Avoid unnecessary YAML complexity
 * Commands must be understandable
 
 ## Gotchas
@@ -59,10 +73,21 @@ Do not use for editing workflow YAML (use github-ci) or general project docs (us
 
 ## Do NOT
 
-* Do NOT paste large YAML blocks without explanation
+* Do NOT paste large YAML without explanation
 * Do NOT assume CI knowledge
 * Do NOT omit required environment variables
 
 ## Auto-trigger keywords
 
 * github actions, CI/CD, workflow, pipeline, automation
+
+## Anti-patterns
+
+* Raw YAML dump without explanation
+* Documenting only happy path
+* Missing secrets/env vars list
+
+## Examples
+
+Good: Purpose → trigger (on PR) → jobs (lint, test, deploy) → secrets (AWS_KEY) → notes
+Bad: raw YAML dump without explanation
