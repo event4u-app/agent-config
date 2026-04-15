@@ -43,6 +43,13 @@ Focus on: attack surface, trusting user input, authorization gaps.
 
 → See guideline `php/security.md` for auth, SQL injection, XSS, CSRF, headers, session, mass assignment.
 
+### Validate
+
+- Verify all user input is validated via FormRequest before use.
+- Confirm authorization check exists (Policy or Gate) for every state-changing action.
+- Check that no raw user input reaches SQL, HTML output, or shell commands.
+- Run PHPStan — must pass (catches type-safety issues that enable injection).
+
 ## Gotcha
 
 - Validation ensures format, not intent — don't trust input after validation alone.

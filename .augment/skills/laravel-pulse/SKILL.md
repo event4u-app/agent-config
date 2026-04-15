@@ -16,6 +16,13 @@ Use this skill when working with Laravel Pulse:
 
 ## Procedure: Set up Pulse
 
+1. **Install** — `composer require laravel/pulse`, publish config, run migrations.
+2. **Configure** — Set up recorders in `config/pulse.php`.
+3. **Add dashboard** — Register route and authorize access.
+4. **Verify** — Visit `/pulse` dashboard, confirm data is being recorded.
+
+### Installation
+
 ```bash
 composer require laravel/pulse
 php artisan vendor:publish --provider="Laravel\Pulse\PulseServiceProvider"

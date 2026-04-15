@@ -19,9 +19,10 @@ Do NOT use when:
 
 ## Procedure: Open files in IDE
 
-When the agent edits files, the user often wants to see them in their IDE immediately.
-This skill reads the user's preferences from `.agent-settings` and opens files automatically
-via the IDE's CLI command.
+1. **Read settings** — Check `open_edited_files` and `ide` in `.agent-settings`.
+2. **Skip if disabled** — If `open_edited_files` is `false`, do nothing.
+3. **Open files** — Use the IDE CLI command to open each edited file.
+4. **Verify** — Confirm the command succeeded (exit code 0).
 
 ## Settings file
 

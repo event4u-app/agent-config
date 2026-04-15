@@ -56,6 +56,13 @@ Read `eloquent_access_style` from `.agent-settings`. Default: `getters_setters`.
 → See guideline `php/eloquent.md` for getter/setter examples, relationship getters, observers, casts.
 → See guideline `php/database.md` for indexing, transactions, migrations.
 
+### Validate
+
+- Run PHPStan on model — must pass.
+- Verify no N+1: check that all relationship access in loops uses eager loading.
+- Confirm typed getters exist for every relationship.
+- Run affected tests — must pass.
+
 ## Gotcha
 
 - Never access relationships via magic properties — always use typed getter.

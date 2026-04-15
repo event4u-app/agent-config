@@ -19,6 +19,13 @@ Use Mailables when you need full control over the email template.
 
 ## Procedure: Create a Mailable
 
+1. **Generate class** — `php artisan make:mail InvoiceMail --markdown=emails.invoice`.
+2. **Configure** — Set subject, from, attachments, queuing (`ShouldQueue`).
+3. **Create template** — Markdown template in `resources/views/emails/`.
+4. **Verify** — Send test email, confirm rendering and delivery.
+
+### Example
+
 ```bash
 php artisan make:mail InvoiceMail --markdown=emails.invoice
 ```

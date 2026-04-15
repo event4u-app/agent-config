@@ -13,6 +13,14 @@ contract validation, response structure checks, or external service mocking.
 
 ## Procedure: Write API tests
 
+1. **Identify endpoint** — Route, method, auth requirements, expected status codes.
+2. **Set up test data** — Use seeders (preferred) or factories. Mock external services with `Http::fake()`.
+3. **Write test cases** — Cover success, validation errors, authorization failures, edge cases.
+4. **Assert response** — Check status code, JSON structure, data values. Use `assertJsonStructure()`.
+5. **Verify** — Run the test. Must pass. Check no flaky assertions (no time-dependent, no random ordering).
+
+### Example
+
 ```php
 describe('GET /api/v1/projects', function () {
     it('returns paginated projects for authenticated user', function () {

@@ -81,6 +81,13 @@ Config required: `allow_embedding = true`, `cookie_samesite = none` (cross-origi
 - `$dispatch('refresh-stats')` for cross-widget updates
 - Cache expensive aggregations, refresh on schedule
 
+### Validate
+
+- Verify each panel answers exactly one question.
+- Confirm time ranges are explicit, not "last X" without context.
+- Check that critical KPIs are visible without scrolling.
+- Ensure no chart mixes unrelated metrics on the same axis.
+
 ## Gotcha
 
 - Max 8 panels per dashboard — cognitive overload kills usability.

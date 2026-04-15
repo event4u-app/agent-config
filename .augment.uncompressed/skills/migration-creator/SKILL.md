@@ -12,8 +12,10 @@ Use this skill when the user asks to create a database migration, add a column, 
 
 ## Procedure: Create a migration
 
-Read `./agents/` and `AGENTS.md` for project-specific database conventions (table prefixes,
-column naming, multi-tenant setup, dual-database architecture, etc.).
+1. **Read conventions** — Check `./agents/` and `AGENTS.md` for table prefixes, column naming, multi-tenant setup.
+2. **Generate migration** — `php artisan make:migration create_xyz_table` (or add_column, etc.).
+3. **Write schema** — Follow naming conventions, add indexes for WHERE/JOIN columns, use `decimal` for money.
+4. **Verify** — Run migration (`php artisan migrate`), then rollback (`php artisan migrate:rollback`) to confirm reversibility.
 
 ## All projects
 

@@ -66,6 +66,13 @@ The `service` label differentiates log types in Grafana queries.
 
 → See guideline `php/logging.md` for log levels, structured context, what to log, Sentry patterns.
 
+### Validate
+
+- Verify log level matches severity (no `Log::error()` for info-level events).
+- Confirm structured context is passed (not string interpolation).
+- Check that no sensitive data (passwords, tokens, PII) appears in log output.
+- Verify Sentry captures include relevant context for debugging.
+
 ## Gotcha
 
 - Sentry has 200KB event size limit — large context gets truncated.

@@ -16,6 +16,13 @@ Use this skill when working with HTTP middleware:
 
 ## Procedure: Create middleware
 
+1. **Generate class** — `php artisan make:middleware EnsureCustomerIsActive`.
+2. **Implement logic** — Handle request in `handle()`, return response or pass to next.
+3. **Register** — Add to route group or global middleware stack.
+4. **Verify** — Run tests covering both allowed and blocked request scenarios.
+
+### Example
+
 ```bash
 php artisan make:middleware EnsureCustomerIsActive
 ```

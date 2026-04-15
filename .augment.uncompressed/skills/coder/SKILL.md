@@ -44,6 +44,13 @@ Do NOT use when:
 - **DRY** — extract shared logic. Don't abstract prematurely.
 - **SOLID** — single responsibility, depend on abstractions, small interfaces.
 
+### Validate
+
+- Run PHPStan on changed files — must pass at level 9.
+- Run affected tests — must pass.
+- Verify strict types, typed properties, return types on all new code.
+- Check that no `dd()`, `var_dump()`, `print_r()` remain.
+
 ## Gotcha
 
 - Don't introduce new patterns without being asked.

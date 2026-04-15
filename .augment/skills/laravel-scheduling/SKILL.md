@@ -142,6 +142,12 @@ Schedule::command('reports:weekly')->weeklyOn(1, '07:00');
 - schedule:run
 - withoutOverlapping
 
+### Validate
+
+- Verify schedule runs correctly: `php artisan schedule:list` shows the task.
+- Confirm `withoutOverlapping()` is set for long-running tasks.
+- Check that maintenance mode handling is configured if needed (`evenInMaintenanceMode()`).
+
 ## Gotcha
 
 - `withoutOverlapping()` uses cache locks — if the cache is cleared, overlapping can still happen.

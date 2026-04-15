@@ -16,6 +16,13 @@ Use this skill when working with feature flags:
 
 ## Procedure: Set up feature flags
 
+1. **Install** — `composer require laravel/pennant`, publish config, run migrations.
+2. **Define feature** — Create feature class or use closure-based definition.
+3. **Check feature** — Use `Feature::active('feature-name')` in code.
+4. **Verify** — Confirm feature is active/inactive for correct scopes. Run tests.
+
+### Installation
+
 ```bash
 composer require laravel/pennant
 php artisan vendor:publish --provider="Laravel\Pennant\PennantServiceProvider"

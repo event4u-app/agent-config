@@ -65,6 +65,13 @@ public function __invoke(
 
 → See guideline `php/patterns/service-layer.md` for full service layer conventions.
 
+### Validate
+
+- Run PHPStan on the service — must pass at level 9.
+- Verify single responsibility: service does one thing, no mixed concerns.
+- Confirm all dependencies are constructor-injected (no `app()` or facades in service).
+- Run affected tests — must pass.
+
 ## Gotcha
 
 - Don't create "god services" with 10+ methods — split by responsibility.

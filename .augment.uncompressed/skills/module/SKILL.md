@@ -128,6 +128,13 @@ app/Modules/{Module}/agents/
 - module creation
 - module namespace
 
+### Validate
+
+- Verify namespace follows `App\Modules\{Name}\App\{Layer}` pattern.
+- Confirm `ModuleServiceProvider` auto-discovers the new module's routes and providers.
+- Run PHPStan on the module — must pass.
+- Run module tests — must pass.
+
 ## Gotcha
 
 - Module namespace is `App\Modules\{Name}\App\{Layer}` — don't forget the extra `App` segment.

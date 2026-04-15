@@ -159,6 +159,12 @@ If a developer reads only this document, they should be able to build it.
 - ADR
 - architecture decision
 
+### Validate
+
+- Verify every section of the spec template is filled in (no placeholders left).
+- Confirm constraints and limitations are explicit, not implied.
+- Check that the spec answers: What, Why, How, What not, and When.
+
 ## Gotcha
 
 - A spec without constraints is fiction — always include technical limitations, timeline, and scope boundaries.

@@ -18,6 +18,12 @@ Use this skill when:
 
 ## Procedure: Design a frontend interface
 
+1. **Understand requirements** — What data is shown? What actions are available? Who is the user?
+2. **Choose technology** — Pick from the project stack (see table below).
+3. **Design layout** — Mobile-first, component-based, consistent spacing.
+4. **Implement** — Build with Blade components, Livewire for interactivity, Flux for UI primitives.
+5. **Verify** — Check accessibility (labels, focus, contrast), responsive behavior, loading states.
+
 This project uses a server-rendered stack:
 
 | Layer | Technology | Skill |

@@ -146,6 +146,11 @@ Override templates are in `.augment/templates/overrides/`:
 - **Skill:** `agent-docs` (documentation hierarchy)
 - **Templates:** `.augment/templates/overrides/`
 
+### Validate
+
+- Verify the override file exists at the correct path in `agents/overrides/`.
+- Confirm the override actually takes effect (test the behavior it modifies).
+- Check that the original in `.augment/` is not modified.
 
 ## Gotcha
 

@@ -21,6 +21,11 @@ Do NOT use when:
 
 ## Procedure: Manage contexts
 
+1. **Identify scope** — Which area of the codebase needs a context document?
+2. **Research** — Use codebase-retrieval to understand the area (files, patterns, dependencies).
+3. **Write or update** — Create/update the context doc following the template below.
+4. **Verify** — Confirm all referenced files exist and descriptions match current code.
+
 A **context document** is a structured snapshot of a codebase area:
 - What it does, why it exists
 - Key files, classes, and patterns

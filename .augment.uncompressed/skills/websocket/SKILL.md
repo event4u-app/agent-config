@@ -41,6 +41,13 @@ Use Laravel Echo to listen on the channel. Wire up reconnection with exponential
 
 → See guideline `php/websocket.md` for broadcasting setup, channel types, connection management, Echo.
 
+### Validate
+
+- Verify private/presence channels have authorization in `routes/channels.php`.
+- Confirm event implements `ShouldBroadcast` (or `ShouldBroadcastNow`).
+- Check that no sensitive data is broadcast on public channels.
+- Test client receives event — use browser console or Echo debug mode.
+
 ## Gotcha
 
 - Connections are stateful — don't assume they persist after page navigation.

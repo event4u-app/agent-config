@@ -22,6 +22,11 @@ Do NOT use when:
 
 ## Procedure: Work with Jira
 
+1. **Identify action** — Search, read, create, update, or transition a ticket?
+2. **Use the correct endpoint** — See API table below.
+3. **Execute** — Make the API call with required fields.
+4. **Verify** — Confirm the response contains expected data or the ticket was updated.
+
 | Tool | Purpose |
 |---|---|
 | `jira` (GET `/search/jql`) | Search issues with JQL |

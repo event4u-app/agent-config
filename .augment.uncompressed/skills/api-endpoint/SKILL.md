@@ -17,8 +17,12 @@ Do NOT use when:
 
 ## Procedure: Create an API endpoint
 
-Read the project-specific docs in `./agents/` and `AGENTS.md` for controller conventions,
-API resource patterns, validation rules, and routing.
+1. **Read project docs** — Check `./agents/` and `AGENTS.md` for controller conventions, resource patterns, routing.
+2. **Create route** — Add to the correct `routes/api.php` or module route file.
+3. **Create controller** — Thin controller, delegate logic to service.
+4. **Create FormRequest** — Validate all input at the boundary.
+5. **Create Resource** — Transform model output via API Resource.
+6. **Verify** — Run PHPStan, run tests, confirm response shape matches conventions.
 
 ## Laravel projects
 

@@ -277,6 +277,12 @@ traefik
 - **Skill:** `dashboard-design` — Grafana embedding requires same-origin/HTTPS
 - **Rule:** `docker-commands.md` — all commands run inside Docker containers
 
+### Validate
+
+- Verify Traefik dashboard is accessible and shows all expected services.
+- Confirm HTTPS works with trusted certificates (no browser warnings).
+- Check that each service has correct Docker labels for routing.
+- Test DNS resolution: `curl -I https://your-domain.localhost` should return 200.
 
 ## Gotcha
 

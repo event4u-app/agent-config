@@ -39,6 +39,12 @@ Use when unsure about the correct naming pattern for any element in the project.
 - Spell out full words — no abbreviations (`usr`, `msg`, `cfg`).
 - Don't mix conventions: DB = snake_case, PHP = camelCase, classes = PascalCase.
 
+### Validate
+
+- Verify the name matches the convention for its element type (see table above).
+- Check that neighboring files/columns/routes use the same pattern.
+- Confirm no abbreviations or acronyms unless already established in the codebase.
+
 ## Do NOT
 
 - Do NOT use abbreviations that aren't universally understood.

@@ -37,6 +37,7 @@ ArtifactType = Literal["skill", "rule", "unknown"]
 REQUIRED_SKILL_SECTIONS = [
     "When to use",
     "Gotcha",
+    "Procedure",
 ]
 
 # Aliases: linter accepts any of these as matching the required section
@@ -46,7 +47,6 @@ SECTION_ALIASES = {
 }
 
 RECOMMENDED_SKILL_SECTIONS = [
-    "Procedure",
     "Do NOT",
 ]
 
@@ -160,7 +160,12 @@ def has_validation_step(procedure_block: str) -> bool:
     lowered = procedure_block.lower()
     if "validate" in lowered or "validation" in lowered:
         return True
-    good_signals = ["expected", "status code", "no errors", "appears in", "exact check", "concrete checks"]
+    good_signals = [
+        "expected", "status code", "no errors", "appears in", "exact check", "concrete checks",
+        "verify", "confirm", "must pass", "must fail", "assert", "check that", "ensure",
+        "run test", "run phpstan", "run ecs", "run rector", "lint", "passes",
+        "exit code", "should return", "should contain", "must contain", "must return",
+    ]
     return any(signal in lowered for signal in good_signals)
 
 
@@ -264,12 +269,14 @@ def lint_skill(path: Path, text: str) -> LintResult:
             has_ordered = ORDERED_STEP_PATTERN.search(procedure_block)
             has_subheadings = bool(re.search(r"^###\s+", procedure_block, re.MULTILINE))
             if not has_ordered and not has_subheadings:
-                issues.append(Issue("warning", "unordered_procedure", "Procedure has no ordered steps or sub-headings"))
+                issues.append(Issue("error", "unordered_procedure", "Procedure has no ordered steps or sub-headings"))
             meaningful_steps = len(ORDERED_STEP_PATTERN.findall(procedure_block))
             if meaningful_steps < 3:
                 issues.append(Issue("warning", "short_procedure", "Procedure has fewer than 3 ordered steps"))
-            if not has_validation_step(procedure_block):
-                issues.append(Issue("warning", "missing_validation", "Procedure lacks a concrete validation step"))
+            # Check validation in procedure block OR in the full skill text
+            # (some skills have ### Validate under a sibling ## section)
+            if not has_validation_step(procedure_block) and not has_validation_step(text):
+                issues.append(Issue("error", "missing_validation", "Skill lacks a concrete validation step"))
             vague_hits = find_vague_validation(procedure_block)
             for hit in vague_hits:
                 issues.append(Issue("error", "vague_validation", f"Vague validation detected: {hit}"))

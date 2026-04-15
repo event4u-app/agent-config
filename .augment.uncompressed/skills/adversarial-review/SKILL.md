@@ -111,6 +111,12 @@ Only surface trade-offs or concerns that need the user's input.
 - review my approach
 - sanity check
 
+### Validate
+
+- Confirm each identified risk has a concrete mitigation or explicit acceptance.
+- Verify the review produced at least one actionable finding (or explicit "no issues found").
+- Check that the review did not just restate the plan — it must challenge assumptions.
+
 ## Gotcha
 
 - Don't use this on trivial changes — it adds overhead without value on simple renames or config tweaks.

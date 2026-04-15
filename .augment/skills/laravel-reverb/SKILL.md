@@ -19,6 +19,12 @@ and Laravel Echo client setup, see the [websocket](../websocket/SKILL.md) skill.
 
 ## Procedure: Set up Reverb
 
+1. **Install** — `php artisan install:broadcasting` or manual setup (see below).
+2. **Configure** — Set environment variables for Reverb host, port, app credentials.
+3. **Start server** — `php artisan reverb:start`.
+4. **Connect client** — Configure Laravel Echo with Reverb credentials.
+5. **Verify** — Confirm WebSocket connection in browser console, test event delivery.
+
 Laravel Reverb is Laravel's first-party, blazing-fast WebSocket server. It uses the
 **Pusher protocol**, making it compatible with Laravel Echo and any Pusher-compatible client.
 A single Reverb server can handle thousands of concurrent connections.

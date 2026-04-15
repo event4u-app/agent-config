@@ -18,6 +18,14 @@ For **Mailables** (complex email templates, attachments), see [laravel-mail](../
 
 ## Procedure: Create a notification
 
+1. **Generate class** — `php artisan make:notification InvoiceCreated`.
+2. **Choose channels** — Mail, database, Slack, or custom. Implement `via()`.
+3. **Build content** — Implement `toMail()`, `toArray()`, etc. for each channel.
+4. **Queue it** — Add `ShouldQueue` interface for non-blocking delivery.
+5. **Verify** — Send test notification, confirm delivery on all channels.
+
+### Example
+
 ```bash
 php artisan make:notification InvoiceCreated
 ```

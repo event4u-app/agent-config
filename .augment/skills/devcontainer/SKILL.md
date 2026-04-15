@@ -88,6 +88,12 @@ Read `devcontainer.json` for the actual secret definitions and requirements.
 - dev environment
 - container setup
 
+### Validate
+
+- Verify the DevContainer builds successfully (`devcontainer build`).
+- Confirm all required extensions and features are installed.
+- Check that port forwarding and volume mounts work as expected.
+
 ## Gotcha
 
 - DevContainer rebuilds are slow — test configuration changes incrementally, not all at once.

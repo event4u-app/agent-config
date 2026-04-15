@@ -12,6 +12,11 @@ Triggered when user invokes a slash command. The `commands` rule (always loaded)
 
 ## Procedure: Execute a command
 
+1. **Match command** — Find the command file in `.augment/commands/` or `agents/overrides/commands/`.
+2. **Infer inputs** — Before asking the user, try to infer values (see table below).
+3. **Execute steps** — Follow the command steps in exact order.
+4. **Verify output** — Confirm expected result was produced (commit, PR, file change, etc.).
+
 Before asking the user for input, try to infer it:
 
 | Input needed | How to infer |
@@ -56,6 +61,12 @@ Read `pr_comment_bot_icon` from `.agent-settings`:
 - `data` must be clean JSON with ONLY required API fields — no `summary` or extra params.
 - Each reply is a separate API call — do NOT batch.
 - On first success with `auto` → update `.agent-settings` to the method that worked.
+
+### Validate
+
+1. Verify all command steps were executed in order.
+2. Confirm expected output was produced (commit, PR, file change, etc.).
+3. Check that no step was skipped or improvised.
 
 ## Gotcha
 

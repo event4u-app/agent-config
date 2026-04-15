@@ -21,6 +21,11 @@ Do NOT use when:
 
 ## Procedure: Manage a roadmap
 
+1. **Identify need** — Is this a multi-step change that spans sessions or agents?
+2. **Create or locate** — Create new roadmap in `agents/roadmaps/` or find existing one.
+3. **Update progress** — Mark completed steps with `[x]`, add notes for blockers.
+4. **Verify** — Confirm all steps reflect current state, no stale information.
+
 A roadmap is a structured `.md` file in `agents/roadmaps/` that describes a multi-step change
 (refactoring, feature, migration). It ensures work can be picked up across sessions and by
 different agents.

@@ -157,6 +157,11 @@ When starting work, read documentation in this order:
 
 ## Procedure: Create or update agent docs
 
+1. **Identify trigger** — What changed? (see table below)
+2. **Locate target** — Find the correct file in the documentation hierarchy.
+3. **Update content** — Edit or create the doc. English only in `.md` files.
+4. **Verify** — Confirm the doc is consistent with surrounding files and cross-references are valid.
+
 | Trigger | Action |
 |---|---|
 | New module created | Create `app/Modules/{Module}/agents/` with module description |

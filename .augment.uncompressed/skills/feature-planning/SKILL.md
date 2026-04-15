@@ -19,6 +19,11 @@ Do NOT use when:
 
 ## Procedure: Plan a feature
 
+1. **Gather requirements** — What problem does this solve? Who benefits? What's the expected outcome?
+2. **Analyze scope** — Which modules, routes, models, services are affected?
+3. **Write the plan** — Create a feature plan document (see template below).
+4. **Verify** — Confirm all affected areas are identified, no missing dependencies.
+
 A **feature plan** captures the "what and why" of a feature:
 - Problem it solves, who benefits, expected outcome
 - Scope, affected modules, technical approach
