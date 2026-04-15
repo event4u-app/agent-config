@@ -538,8 +538,8 @@ Reviewer/linter must fail or warn clearly when:
 - [x] Add CI consistency check — `consistency.yml`
 - [x] Strengthen `analysis-skill-routing` — routing quality gate
 - [x] Add compression-preservation check — `--compression-quality` in linter
-- [x] Refactor `optimize-skills` — already well-structured, updated linter call
-- [x] Refactor `optimize-agents` — already well-structured, updated linter call
+- [x] Refactor `optimize-skills` — uses `.augment.uncompressed/`, preservation gate, defers quality to linter, suggest-only
+- [x] Refactor `optimize-agents` — uses `.augment.uncompressed/`, safety gate for always→auto, preservation gate, suggest-only
 - [x] Add merge-preservation checklist — `skill-quality.md` rule
 - [x] Add minimum-sharpness rule — `skill-quality.md` rule
 - [x] Fix `broad_scope` false positives — narrowed heuristic to description + "When to use" only
