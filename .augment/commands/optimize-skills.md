@@ -1,137 +1,119 @@
 ---
 name: optimize-skills
-description: Audits and optimizes all skills — deduplicates, merges related skills, fixes descriptions, adds Gotcha sections, removes Do NOT dupes, enforces the 5 Skill Killers checklist.
+description: Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply.
 skills: [skill-reviewer]
 ---
 
 # /optimize-skills
 
-Full skill audit: 5 Skill Killers checks, duplicates, merge candidates, redundancies. Present findings first.
+Skill audit: measure, find duplicates/merge candidates, run linter, present findings. **Suggest only — never auto-apply.**
+
+**Source of truth:** `.augment.uncompressed/` — never read or edit `.augment/` directly.
 
 ## Steps
 
 ### 1. Measure baseline
 
 ```bash
-total=$(ls -d .augment/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
-total_lines=$(cat .augment/skills/*/SKILL.md | wc -l | tr -d ' ')
+total=$(ls -d .augment.uncompressed/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+total_lines=$(cat .augment.uncompressed/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
 echo "Skills: $total, Total lines: $total_lines"
 
 # Top 15 by size
-for f in .augment/skills/*/SKILL.md; do
+for f in .augment.uncompressed/skills/*/SKILL.md; do
   name=$(basename $(dirname "$f"))
   lines=$(wc -l < "$f" | tr -d ' ')
   echo "$lines $name"
 done | sort -rn | head -15
 ```
 
-### 2. Find duplicates and merge candidates
+### 2. Run skill linter
+
+```bash
+python3 scripts/skill_linter.py .augment.uncompressed/skills/*/SKILL.md 2>&1 | tail -20
+```
+
+Report FAIL/WARN counts. Do NOT fix linter issues here — that's the linter's or `skill-reviewer`'s job.
+
+### 3. Find duplicates and merge candidates
 
 **Duplicates**: >70% description overlap, same `## When to use` scenarios.
 **Merge candidates**: same tool/area, strict subset, <50 lines → section in larger skill.
 
-```
-## Duplicate/Merge Analysis
+Present as table:
 
 | # | Skills | Relationship | Recommendation |
 |---|---|---|---|
-| 1 | skill-a ↔ skill-b | Near-duplicate — both cover X | Delete skill-b, merge unique parts into skill-a |
-| 2 | skill-c ↔ skill-d | skill-c is subset of skill-d | Merge skill-c into skill-d, delete skill-c |
-| 3 | skill-e ↔ skill-f | Related but distinct | Keep both, clarify descriptions to avoid overlap |
+| 1 | skill-a ↔ skill-b | Near-duplicate | Merge unique parts into skill-a |
+| 2 | skill-c ↔ skill-d | Strict subset | Merge skill-c into skill-d |
+| 3 | skill-e ↔ skill-f | Related but distinct | Keep both, clarify descriptions |
+
+### 4. Find description overlap
+
+Skills with overlapping trigger descriptions that might load simultaneously:
+
+```bash
+for f in .augment.uncompressed/skills/*/SKILL.md; do
+  name=$(basename $(dirname "$f"))
+  desc=$(grep 'description:' "$f" | head -1 | sed 's/.*"\(.*\)"/\1/')
+  echo "$name | $desc"
+done | sort -t'|' -k2
+```
+
+Flag pairs where descriptions target the same scenario.
+
+### 5. Check sizes
+
+```bash
+for f in .augment.uncompressed/skills/*/SKILL.md; do
+  name=$(basename $(dirname "$f"))
+  lines=$(wc -l < "$f" | tr -d ' ')
+  [ "$lines" -gt 300 ] && echo "⚠️  $name — $lines lines"
+done
+```
+
+Oversized → suggest extracting reference tables into separate files or splitting.
+
+### 6. Present findings
+
+```
+## Skill Audit Results
+
+| Metric | Value |
+|---|---|
+| Total skills | X |
+| Total lines | X |
+| Linter FAIL | X |
+| Linter WARN | X |
+| Duplicate/merge candidates | X |
+| Oversized (>300 lines) | X |
 ```
 
 Ask user:
 
 ```
-> 1. Apply all merge/delete recommendations
-> 2. Go through one by one — ask before each change
-> 3. Skip — keep all skills as-is, proceed with optimization
+> 1. Go through merge candidates one by one
+> 2. Fix linter issues (delegates to skill-reviewer)
+> 3. Skip — report only
 ```
 
-Deletions → remove folder + update docs. Merges → combine + remove + update.
+## Preservation gate — MANDATORY before any change
 
-### 3. Killer 1 — Fix descriptions
+Before suggesting ANY modification to a skill, verify:
 
-```bash
-# Find skills NOT starting with "Use when" or "ONLY when"
-for f in .augment/skills/*/SKILL.md; do
-  name=$(basename $(dirname "$f"))
-  desc=$(grep 'description:' "$f" | head -1)
-  if ! echo "$desc" | grep -qi 'Use when\|ONLY when'; then
-    echo "❌ $name"
-  fi
-done
-```
+- [ ] Does the skill lose a concrete `### Validate` section? → **REJECT**
+- [ ] Does the skill lose a real example or code snippet? → **REJECT**
+- [ ] Does the skill lose a failure pattern from `## Gotcha`? → **REJECT**
+- [ ] Does the skill lose a `## Do NOT` entry? → **REJECT**
+- [ ] Does strong language get weakened ("MUST" → "should", "NEVER" → "avoid")? → **REJECT**
+- [ ] Does the linter still pass after the change? → **REJECT if FAIL**
 
-Rewrite: `"Use when..."` / `"ONLY when..."` + 2-3 trigger phrases + 1 sentence purpose. <200 chars.
+If any check fails: do NOT suggest the change.
 
-### 4. Killer 2 — Over-defining
+## What this command does NOT do
 
-Top 20: >15 steps? HOW vs WHAT? Report, don't auto-fix.
-
-### 5. Killer 3 — Obvious content
-
-Flag paragraphs restating model knowledge (language features, framework basics, SOLID). Present for review.
-
-### 6. Killer 4 — Missing Gotchas
-
-```bash
-for f in .augment/skills/*/SKILL.md; do
-  name=$(basename $(dirname "$f"))
-  grep -q "^## Gotcha" "$f" || echo "❌ $name — missing Gotcha"
-done
-```
-
-Per missing skill: write 2-4 concrete failure patterns. Insert before `## Do NOT`.
-
-### 7. Deduplicate Gotcha vs Do NOT
-
-Do NOT entry same as Gotcha? → remove Do NOT (Gotcha has more context). Keep genuinely different entries.
-
-### 8. Killer 5 — Check sizes
-
-```bash
-for f in .augment/skills/*/SKILL.md; do
-  name=$(basename $(dirname "$f"))
-  lines=$(wc -l < "$f" | tr -d ' ')
-  [ "$lines" -gt 500 ] && echo "⚠️  $name — $lines lines (>500)"
-done
-```
-
-Oversized → extract reference tables/templates/examples into separate files.
-
-### 9. Update docs
-
-Update `contexts/augment-infrastructure.md` counts/tables.
-
-### 10. Present results
-
-```
-## Optimization Results
-
-| Metric | Before | After | Δ |
-|---|---|---|---|
-| Total skills | X | Y | -Z |
-| Total lines | X | Y | -Z |
-| Skills with "Use when" desc | X% | 100% | +Z% |
-| Skills with Gotcha section | X% | 100% | +Z% |
-| Do NOT duplicates removed | — | Z | — |
-| Merges performed | — | Z | — |
-| Skills deleted | — | Z | — |
-```
-
-## Rules
-
-### Destructive — ALWAYS ask
-
-- NEVER delete/merge without approval
-- NEVER compress below functional minimum (400→86 = broken)
-- NEVER strip strong language or remove examples
-
-### Safe — auto-apply
-
-- Description rewrites, Gotcha additions, Do NOT deduplication, frontmatter quotes
-
-### Process
-
-- Killer 3 requires review. Quality > tokens. Show before/after. No silent changes.
+- **No quality judgments** — the skill linter and `skill-reviewer` handle that
+- **No auto-fixes** — all changes require explicit user approval
+- **No "make it shorter"** — compression is done by Caveman Compression, not here
+- **No Killer checks** — replaced by the skill linter (`scripts/skill_linter.py`)
+- **No edits to `.augment/`** — always edit `.augment.uncompressed/`, then sync

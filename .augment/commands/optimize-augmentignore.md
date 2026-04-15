@@ -6,7 +6,11 @@ description: Creates or updates .augmentignore based on the project's actual tec
 
 # /optimize-augmentignore
 
-Scan project for token-wasting files → create/update `.augmentignore`. Also exclude irrelevant skills/rules from system prompt.
+Scans the project to find files that waste tokens in Augment's retrieval index
+and creates/updates `.augmentignore` accordingly. Also identifies irrelevant
+`.augment/skills/` and `.augment/rules/` to exclude them from the system prompt.
+
+**Source of truth for skills/rules:** `.augment.uncompressed/` — scan there, not `.augment/`.
 
 ## Steps
 
@@ -36,7 +40,9 @@ find . -type f \( -name "*.php" -o -name "*.md" -o -name "*.json" -o -name "*.ya
   -size +50k -exec wc -c {} + 2>/dev/null | sort -rn | head -30
 ```
 
-Per file: source code (keep) or generated/fixture (ignore)?
+For each large file, decide: is this **source code** (keep) or **generated/fixture/config** (ignore)?
+
+**Common ignore candidates:**
 
 | Pattern | Reason |
 |---|---|
@@ -58,36 +64,61 @@ Per file: source code (keep) or generated/fixture (ignore)?
 find app/Modules -path "*/agents/roadmaps/*" -exec md5 -r {} \; 2>/dev/null | sort | awk '{print $1}' | uniq -d
 ```
 
-Identical files → ignore all but one copy.
+If identical files exist in multiple modules, ignore all but one copy.
 
-### 4. Find binary/media files
+### 4. Find binary and media files
 
 ```bash
 find . -maxdepth 3 \( -name "*.png" -o -name "*.jpg" -o -name "*.gif" -o -name "*.svg" -o -name "*.ico" -o -name "*.woff" -o -name "*.woff2" -o -name "*.ttf" -o -name "*.eot" -o -name "*.pdf" \) -not -path "*/vendor/*" -not -path "*/node_modules/*" | head -20
 ```
 
-Many in specific dirs → add directory pattern.
+If many exist in specific dirs, add the directory pattern.
 
 ### 5. Check existing .augmentignore
 
-Exists → preserve custom entries, add missing. Not exists → create.
+- If file exists: read it, preserve custom entries, add missing patterns.
+- If file does not exist: create from scratch.
 
 ### 6. Whitelist own packages
 
-From `composer.json` `name` + `repositories` → add `!vendor/{org}/` to keep own packages indexed.
+Check `composer.json` for the project's own organization namespace:
+- Look at `name` field (e.g., `your-org/project-name` → org is `your-org`)
+- Look at `repositories` for private packages from the same org
+- Add negation pattern: `!vendor/{org}/` to keep own packages in the retrieval index
+
+This ensures the agent can find code in own packages via `codebase-retrieval`,
+while still excluding the thousands of third-party vendor files.
 
 ### 7. Cross-reference with .gitignore
 
-`.gitignore` entries → also in `.augmentignore`. Plus: lock files, IDE helpers, OpenAPI specs (tracked but useless for retrieval).
+Read `.gitignore` — most entries there should also be in `.augmentignore`.
+But `.augmentignore` should ALSO include:
+- Lock files (`composer.lock`, `package-lock.json`) — tracked in Git but useless for retrieval.
+- IDE helpers (`_ide_helper.php`) — tracked in Git but huge generated files.
+- OpenAPI specs — tracked but too large for context.
 
 ### 8. Analyze irrelevant agent skills
 
-Remove irrelevant skills from system prompt (~3 lines saved per skill per request).
+**Goal:** Remove skills from the `<available_skills>` system prompt list that the project will never use.
+Each ignored skill saves ~3 lines of system prompt tokens per request.
 
-1. `AGENTS.md` → tech stack. 2. `composer.json` → packages. 3. `package.json` → frontend. 4. `ls .augment/skills/` 5. Per skill: relevant?
+**How:**
+
+1. Read `AGENTS.md` — extract tech stack (framework, language, DB, frontend, infra).
+2. Read `composer.json` — extract `require` and `require-dev` packages.
+3. Read `package.json` (if exists) — extract frontend dependencies.
+4. List all skills: `ls .augment/skills/`
+5. For each skill, decide: **is this relevant to the detected stack?**
+
+**Decision matrix — ignore when ALL conditions are true:**
 
 | Skill | Ignore when... |
 |---|---|
+| `project-analysis-react` | No React in package.json |
+| `project-analysis-nextjs` | No Next.js in package.json |
+| `project-analysis-symfony` | No Symfony in composer.json |
+| `project-analysis-zend-laminas` | No Zend/Laminas in composer.json |
+| `project-analysis-node-express` | No Express/Node.js backend in project |
 | `react`, `nextjs` | No React/Next.js in package.json |
 | `vue`, `nuxt` | No Vue/Nuxt in package.json |
 | `wordpress` | No WordPress in composer.json |
@@ -101,7 +132,11 @@ Remove irrelevant skills from system prompt (~3 lines saved per skill per reques
 | `traefik` | No Traefik in docker-compose |
 | `microservices` | Single-app monolith (no service mesh config) |
 
-**Conservative:** doubt → keep. Skills used by others/commands → never ignore. Meta skills → never ignore.
+**Conservative approach:**
+- When in doubt, **keep** the skill — false negatives are worse than false positives.
+- Skills used by other skills or commands should **never** be ignored.
+- Meta/agent-system skills (`agent-docs`, `commands`, `context`, etc.) are **never** ignored.
+- **Always keep** skills matching the detected stack, even if not actively used yet.
 
 **Output format in `.augmentignore`:**
 
@@ -115,14 +150,20 @@ Remove irrelevant skills from system prompt (~3 lines saved per skill per reques
 
 ### 9. Analyze irrelevant agent rules
 
-Remove auto-loaded rules that can't trigger. Only rules with `description` frontmatter. **Never ignore always-active rules.**
+**Goal:** Remove auto-loaded rules that will never trigger for this project.
+Only consider rules with a `description` frontmatter (auto-loaded by topic match).
+**Never ignore always-active rules** (no description frontmatter = always loaded).
+
+**Decision matrix:**
 
 | Rule | Ignore when... |
 |---|---|
 | `e2e-testing.md` | No Playwright / no E2E tests in project |
 | `lang-files.md` | No `lang/` directory in project |
 
-Most rules are universal. Only ignore when trigger topic **cannot occur**.
+**Conservative approach:**
+- Most rules are universal and should stay.
+- Only ignore rules where the trigger topic **cannot occur** in this project.
 
 ### 10. Check for duplicate rule triggers
 
@@ -134,9 +175,12 @@ for f in .augment/rules/*.md; do
 done | sort | awk -F' \\| ' '{descs[$1]=descs[$1] " " $2} END {for (d in descs) {n=split(descs[d], a, " "); if (n>1) print "⚠️  DUPLICATE: " d " →" descs[d]}}'
 ```
 
-Same description = both load → fix by making unique.
+If two rules share the **exact same description**, both load simultaneously — wasting tokens.
+Fix by making each description unique and specific to that rule's content.
 
-### 11. Present changes
+### 11. Present changes to user
+
+Before writing, show the user what will change:
 
 ```
 ## Proposed .augmentignore changes
@@ -195,14 +239,23 @@ done < .augmentignore
 echo "Total: ~$total lines excluded from retrieval index"
 ```
 
-Also count ignored skills/rules and show savings.
+Also count ignored skills and estimate system prompt savings:
+
+```
+skills_count=$(grep -c '.augment/skills/' .augmentignore 2>/dev/null || echo 0)
+rules_count=$(grep -c '.augment/rules/' .augmentignore 2>/dev/null || echo 0)
+echo "Skills ignored: $skills_count (~$((skills_count * 3)) system prompt lines saved per request)"
+echo "Rules ignored: $rules_count"
+```
 
 ## Rules
 
-- Preserve existing custom entries
-- Never ignore source code, tests, config, docs
-- Lock files + IDE helpers → always ignore
-- Doubt on files → ignore (easy to fix)
-- Doubt on skills → keep (bad output > wasted 3 lines)
-- Never ignore always-active rules or meta skills
-- Restore ignored skills when stack changes
+- **Always preserve** existing custom entries in `.augmentignore`.
+- **Never ignore** source code, test files, config files, or documentation.
+- **Lock files are always ignored** — they're huge and provide zero code insight.
+- **IDE helpers are always ignored** — generated, 20k+ lines, stale quickly.
+- **When in doubt, ignore files** — false positive is easy to fix, false negative wastes tokens silently.
+- **When in doubt, keep skills** — ignoring a needed skill causes bad output, keeping an unneeded one just wastes ~3 lines.
+- **Never ignore always-active rules** — only auto-loaded rules (those with `description` frontmatter) may be ignored.
+- **Never ignore meta/agent-system skills** — `agent-docs`, `commands`, `context`, `override`, `guidelines`, `project-docs`, `roadmap-manager`, `naming`, `skill-reviewer`, `file-editor`, `copilot`, `copilot-agents-optimizer`.
+- **Restore previously ignored skills** when the stack changes (e.g., Vue added to project → restore `vue` skill).

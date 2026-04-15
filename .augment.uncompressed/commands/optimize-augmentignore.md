@@ -10,6 +10,8 @@ Scans the project to find files that waste tokens in Augment's retrieval index
 and creates/updates `.augmentignore` accordingly. Also identifies irrelevant
 `.augment/skills/` and `.augment/rules/` to exclude them from the system prompt.
 
+**Source of truth for skills/rules:** `.augment.uncompressed/` — scan there, not `.augment/`.
+
 ## Steps
 
 ### 1. Detect tech stack
@@ -112,6 +114,11 @@ Each ignored skill saves ~3 lines of system prompt tokens per request.
 
 | Skill | Ignore when... |
 |---|---|
+| `project-analysis-react` | No React in package.json |
+| `project-analysis-nextjs` | No Next.js in package.json |
+| `project-analysis-symfony` | No Symfony in composer.json |
+| `project-analysis-zend-laminas` | No Zend/Laminas in composer.json |
+| `project-analysis-node-express` | No Express/Node.js backend in project |
 | `react`, `nextjs` | No React/Next.js in package.json |
 | `vue`, `nuxt` | No Vue/Nuxt in package.json |
 | `wordpress` | No WordPress in composer.json |
