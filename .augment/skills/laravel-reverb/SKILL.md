@@ -186,6 +186,11 @@ location /app {
 - Reverb deployment
 - Reverb configuration
 
+## Output format
+
+1. Reverb configuration with server and scaling settings
+2. Broadcasting channel definitions and client integration
+
 ## Gotcha
 
 - Reverb requires a persistent process — it's not compatible with serverless deployments.

@@ -92,6 +92,11 @@ Always check `composer.json` for DTO-related packages before choosing the approa
 - **`declare(strict_types=1)`** in every new file.
 
 
+## Output format
+
+1. DTO class extending SimpleDto with typed properties
+2. Static factory method(s) for construction from common sources
+
 ## Gotcha
 
 - DTOs must extend `SimpleDto` — don't create plain PHP classes as DTOs.

@@ -185,6 +185,12 @@ it('handles external API failure gracefully', function () {
 - response validation
 - contract testing
 
+## Output format
+
+1. Pest test file covering happy path, validation, auth, and edge cases
+2. Test names as readable sentences describing expected behavior
+3. Mocked external services where applicable
+
 ## Gotcha
 
 - Don't test framework internals (e.g., "does Laravel return 422 on validation error") — test YOUR validation rules.

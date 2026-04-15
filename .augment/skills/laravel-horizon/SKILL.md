@@ -152,6 +152,11 @@ public function tags(): array
 - supervisor
 - queue balancing
 
+## Output format
+
+1. Updated Horizon configuration with supervisor and queue settings
+2. Environment-specific balancing strategy rationale
+
 ## Gotcha
 
 - Horizon config changes require `php artisan horizon:terminate` and restart — they don't hot-reload.

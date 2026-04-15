@@ -208,6 +208,11 @@ Do NOT auto-update docs without the user's knowledge. Flag what needs updating a
 - Do NOT write docs just to document what you did — only document things others need to know.
 - If unsure whether a doc needs updating, **ask the user**.
 
+## Output format
+
+1. Created or updated documentation file(s) in the correct location
+2. Summary of what changed and why
+
 ## Gotcha
 
 - Don't create documentation files unless explicitly requested — the scope-control rule overrides this skill.

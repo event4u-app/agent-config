@@ -53,6 +53,11 @@ Do NOT use when:
 
 → See guideline `php/livewire.md` for state management, forms, performance, Alpine.js, templates.
 
+## Output format
+
+1. Livewire component class with typed properties and actions
+2. Blade view with wire: bindings and Flux components
+
 ## Gotcha
 
 - Public properties serialize between requests — don't put large objects in state.

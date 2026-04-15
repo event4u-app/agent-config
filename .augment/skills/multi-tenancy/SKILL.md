@@ -107,6 +107,11 @@ Check the project for the actual connection names and namespace conventions.
 - customer database
 - FQDN routing
 
+## Output format
+
+1. Tenant-aware code with correct DB connection switching
+2. Verification that tenant isolation is maintained
+
 ## Gotcha
 
 - Always verify which database connection is active before running queries — cross-tenant data leaks are critical bugs.

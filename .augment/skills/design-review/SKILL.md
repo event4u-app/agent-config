@@ -207,6 +207,12 @@ This is especially useful when the user provides a screenshot or Figma export as
 - WCAG
 - responsive
 
+## Output format
+
+1. Design review report following the Report structure section
+2. Severity-rated findings (blocker, suggestion, nit)
+3. Accessibility and responsive compliance summary
+
 ## Gotcha
 
 - Don't review design without understanding the user's constraints (time, resources, scope).

@@ -169,6 +169,11 @@ Feature::for($users)->load(['new-dashboard', 'advanced-reporting']);
 - A/B test
 - feature gate
 
+## Output format
+
+1. Feature flag definition with scope and resolve logic
+2. Integration in controllers/services using Feature::active()
+
 ## Gotcha
 
 - Feature flags in database driver require migration — don't forget `php artisan pennant:purge` for cleanup.

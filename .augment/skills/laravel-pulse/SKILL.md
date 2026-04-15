@@ -141,6 +141,11 @@ Pulse::record('api_call', 'stripe', 250)  // type, key, value
 - application monitoring
 - performance dashboard
 
+## Output format
+
+1. Pulse configuration with recorders and dashboard cards
+2. Custom recorder class if needed
+
 ## Gotcha
 
 - Pulse stores data in the same database by default — configure a separate connection for production.

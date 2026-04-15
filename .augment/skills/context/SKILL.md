@@ -133,6 +133,11 @@ When working on the agent infrastructure itself (skills, commands, rules), check
 - orientation doc
 - context creation
 
+## Output format
+
+1. Context document in the correct location with structured sections
+2. Cross-references to related contexts updated
+
 ## Gotcha
 
 - Context docs become stale — always check the actual code before trusting a context document.

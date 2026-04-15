@@ -215,6 +215,12 @@ Focus on the "Bug fixes" attack questions: Is this the root cause or a symptom? 
 | "Issue is simple, don't need process" | Simple issues have root causes too. Process is fast for simple bugs |
 | "Emergency, no time for process" | Systematic debugging is FASTER than guess-and-check thrashing |
 
+## Output format
+
+1. Root cause analysis with evidence trail
+2. Fix implementation or fix plan with specific files and changes
+3. Regression test covering the failure scenario
+
 ## Gotcha
 
 - Don't assume the stacktrace shows the root cause — it often shows the symptom. Trace backwards.

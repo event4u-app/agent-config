@@ -131,6 +131,12 @@ See the `terraform` and `terragrunt` skills for general IaC conventions.
 - Secrets Manager
 - deployment
 
+## Output format
+
+1. Modified infrastructure config/template files
+2. Environment-specific changes clearly separated
+3. Summary of what changed and which environments are affected
+
 ## Gotcha
 
 - Never hardcode AWS credentials — always use Secrets Manager or environment variables.

@@ -52,6 +52,12 @@ Do NOT use when:
 
 → See guideline `php/artisan-commands.md` for full conventions.
 
+## Output format
+
+1. Artisan command class with signature, description, and handle method
+2. Registration in service provider or auto-discovery
+3. Example usage shown in a code comment
+
 ## Gotcha
 
 - `$this->info()` is suppressed in quiet mode — use `$this->line()` for critical info.

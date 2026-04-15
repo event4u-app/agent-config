@@ -102,6 +102,11 @@ See `.augment/commands/fix-ci.md` for the full debugging workflow.
 - pipeline
 - quality checks
 
+## Output format
+
+1. Modified workflow YAML file(s) in `.github/workflows/`
+2. Summary of pipeline changes and affected triggers
+
 ## Gotcha
 
 - CI workflows run on Ubuntu, not macOS — don't assume macOS-specific tools are available.

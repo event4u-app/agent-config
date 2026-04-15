@@ -159,6 +159,11 @@ make rebuild-php-all      # Rebuild both PHP containers
 - Do not forget to check path mappings when breakpoints are silently skipped.
 
 
+## Output format
+
+1. Xdebug configuration or debugging session setup
+2. Root cause identified with evidence from debugger output
+
 ## Gotcha
 
 - Xdebug runs in a separate container — don't confuse the fast container (port 80) with the debug container (port 8080).

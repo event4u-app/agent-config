@@ -385,6 +385,11 @@ JS/TS commands run on the **host** or in a **Node container**, depending on the 
 - type check
 - tscheck
 
+## Output format
+
+1. Tool exit code and error count summary
+2. Fixed issues or remaining errors to address
+
 ## Gotcha
 
 - Always check exit code first — if 0, don't read output (saves tokens).

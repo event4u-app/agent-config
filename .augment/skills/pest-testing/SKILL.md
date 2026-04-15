@@ -275,6 +275,11 @@ When generating Pest tests:
 - keep tests readable, isolated, and maintainable
 
 
+## Output format
+
+1. Pest test file with descriptive test names and clear assertions
+2. Tests organized by happy path, validation, edge cases
+
 ## Gotcha
 
 - Don't use `readonly` or `final` on Pest test helper classes — it breaks mocking.

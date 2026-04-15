@@ -71,6 +71,11 @@ The project uses `.github/pull_request_template.md`:
 - `main` is default/production branch.
 - Merge strategy: merge commits (not squash).
 
+## Output format
+
+1. Commits following conventional commit format
+2. PR description with structured sections (if creating PR)
+
 ## Gotcha
 
 - Never commit/push/merge without explicit user permission.

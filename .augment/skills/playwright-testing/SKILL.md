@@ -222,6 +222,11 @@ await page.route('**/api/users', route =>
 - visual regression
 - end-to-end
 
+## Output format
+
+1. Playwright test file with Page Object pattern
+2. Reliable locators using role/label selectors over CSS
+
 ## Gotcha
 
 - Don't use `page.waitForTimeout()` as a fix — it masks the real problem and makes tests flaky.

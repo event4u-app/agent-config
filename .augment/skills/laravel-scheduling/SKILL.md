@@ -148,6 +148,11 @@ Schedule::command('reports:weekly')->weeklyOn(1, '07:00');
 - Confirm `withoutOverlapping()` is set for long-running tasks.
 - Check that maintenance mode handling is configured if needed (`evenInMaintenanceMode()`).
 
+## Output format
+
+1. Schedule definition in console kernel or schedule method
+2. Overlap prevention and maintenance mode configuration
+
 ## Gotcha
 
 - `withoutOverlapping()` uses cache locks — if the cache is cleared, overlapping can still happen.

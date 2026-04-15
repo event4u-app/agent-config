@@ -139,6 +139,11 @@ git add .
 - branch behind main
 - update branch
 
+## Output format
+
+1. Resolved conflict with both sides' intent preserved
+2. Summary of resolution strategy per file
+
 ## Gotcha
 
 - Never resolve conflicts by deleting code you don't understand — ask the user.

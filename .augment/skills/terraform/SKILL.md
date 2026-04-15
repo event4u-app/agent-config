@@ -118,6 +118,11 @@ Each environment has a GitHub IAM role with:
 - resources
 - state management
 
+## Output format
+
+1. Terraform configuration files (.tf) with proper module structure
+2. Variables, outputs, and state management config
+
 ## Gotcha
 
 - `terraform apply` without `-auto-approve` requires interactive confirmation — don't use in CI without the flag.

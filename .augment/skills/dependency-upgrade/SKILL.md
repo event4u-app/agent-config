@@ -184,6 +184,12 @@ When `composer require` or `npm install` fails with conflicts:
 - breaking changes
 - changelog review
 
+## Output format
+
+1. Updated dependency with version constraint change
+2. Breaking changes addressed with code modifications
+3. Test results confirming compatibility
+
 ## Gotcha
 
 - Don't upgrade multiple major versions at once — one major version per upgrade cycle.

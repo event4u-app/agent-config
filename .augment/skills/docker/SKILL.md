@@ -214,6 +214,12 @@ RUN --mount=type=cache,target=/root/.npm \
 - Dockerfile
 - PHP container
 
+## Output format
+
+1. Modified Docker configuration files (Dockerfile, docker-compose.yml)
+2. Updated Makefile targets if applicable
+3. Rebuild/restart instructions for affected containers
+
 ## Gotcha
 
 - All PHP commands (artisan, composer, phpunit) must run INSIDE the PHP container — never on the host.

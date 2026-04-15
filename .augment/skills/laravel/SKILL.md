@@ -173,6 +173,11 @@ When generating Laravel code:
 - Do NOT use facades in service classes — use dependency injection.
 - Do NOT skip middleware for route groups that need authentication.
 
+## Output format
+
+1. Laravel code following framework conventions and project architecture
+2. All related files (controller, service, request, resource, test) as needed
+
 ## Gotcha
 
 - `env()` only works in config files — use `config()` everywhere else.

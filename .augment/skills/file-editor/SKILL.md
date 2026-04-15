@@ -106,6 +106,11 @@ code app/Models/User.php
 - file editor settings
 - configure IDE
 
+## Output format
+
+1. Files opened in the configured IDE (if enabled)
+2. No output if `open_edited_files` is disabled
+
 ## Gotcha
 
 - Check `.agent-settings` for `open_edited_files` before opening anything — the user may have disabled it.

@@ -147,6 +147,11 @@ When picking up a roadmap in a new session:
 - phase tracking
 - step completion
 
+## Output format
+
+1. Roadmap file in agents/roadmaps/ with ordered phases and tasks
+2. Progress tracking with checkbox status
+
 ## Gotcha
 
 - Roadmap files go in `agents/roadmaps/` — don't create them in other directories.

@@ -155,6 +155,11 @@ When creating PRs, include the Jira ticket in:
 - **Rule:** `no-commit.md` — never change ticket status without permission
 
 
+## Output format
+
+1. Jira ticket data presented in structured format
+2. Ticket key, summary, status, and relevant fields
+
 ## Gotcha
 
 - Jira field names are case-sensitive in JQL — `status` works, `Status` doesn't.

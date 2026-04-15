@@ -152,6 +152,11 @@ Override templates are in `.augment/templates/overrides/`:
 - Confirm the override actually takes effect (test the behavior it modifies).
 - Check that the original in `.augment/` is not modified.
 
+## Output format
+
+1. Override file in agents/overrides/ matching the original's structure
+2. Summary of what was overridden and why
+
 ## Gotcha
 
 - Overrides are invisible to other projects — only the current project sees them.

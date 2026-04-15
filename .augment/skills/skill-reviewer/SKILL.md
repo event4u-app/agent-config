@@ -70,6 +70,11 @@ The highest-signal content in a skill. Documents failure patterns.
 **Check:** Does the skill have a `## Gotcha` or `## Common Mistakes` section?
 **Fix:** Add one with real failure patterns:
 ```markdown
+## Output format
+
+1. Review report with pass/fail per checklist item
+2. Prioritized fix recommendations
+
 ## Gotcha
 
 - Don't assume X — check Y first because Z

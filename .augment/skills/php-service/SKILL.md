@@ -72,6 +72,11 @@ public function __invoke(
 - Confirm all dependencies are constructor-injected (no `app()` or facades in service).
 - Run affected tests — must pass.
 
+## Output format
+
+1. Service class with constructor injection and single responsibility
+2. Repository dependency if data access is needed
+
 ## Gotcha
 
 - Don't create "god services" with 10+ methods — split by responsibility.

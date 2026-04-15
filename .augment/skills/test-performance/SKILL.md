@@ -151,6 +151,11 @@ Replace dynamic `getPdo()` probing with explicit config:
 - `agents/roadmaps/test-performance-refactor.md` — active roadmap for this project
 - `agents/docs/seeders.md` — seeder conventions (if exists)
 
+## Output format
+
+1. Optimized test configuration or seeder with timing comparison
+2. Parallelization or caching improvements applied
+
 ## Gotcha
 
 - Don't use RefreshDatabase when DatabaseTransactions suffices — full refresh is 10x slower.

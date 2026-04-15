@@ -204,6 +204,12 @@ Implementation details belong in roadmaps.
 - feature roadmap
 - requirements
 
+## Output format
+
+1. Feature plan document following the template structure
+2. Decision log with rationale for key choices
+3. Implementation roadmap with ordered tasks
+
 ## Gotcha
 
 - Don't plan features without understanding the business context — ask the user before assuming.

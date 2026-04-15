@@ -318,6 +318,12 @@ Each module gets its own file in `agents/analysis/modules/`. Format:
 - codebase analysis
 - architecture analysis
 
+## Output format
+
+1. Structured analysis document in agents/analysis/
+2. Tech stack inventory with versions and dependencies
+3. Architecture diagram or module map
+
 ## Gotcha
 
 - Full project analysis can take several minutes — warn the user about the time investment.

@@ -47,6 +47,11 @@ DB::select("SELECT * FROM users WHERE email = '{$email}'");
 3. Run EXPLAIN on complex queries to check index usage.
 4. Check that no PHP variable interpolation (`"$var"`, `'{$var}'`) appears in SQL strings.
 
+## Output format
+
+1. Parameterized SQL query using MariaDB/MySQL syntax
+2. EXPLAIN output for performance-critical queries
+
 ## Gotcha
 
 - MariaDB and MySQL have subtle syntax differences.

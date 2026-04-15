@@ -166,6 +166,11 @@ Route::middleware(['auth', EnsureCustomerIsActive::class])->group(function () {
 - terminable
 - middleware group
 
+## Output format
+
+1. Middleware class with handle method and typed request/response
+2. Registration in bootstrap or route group
+
 ## Gotcha
 
 - Middleware execution order matters — registered order in the kernel defines the pipeline sequence.

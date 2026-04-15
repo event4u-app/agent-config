@@ -131,6 +131,11 @@ When the API uses URL-based versioning (e.g., `/api/v1/`, `/api/v2/`):
 - PHP attributes
 - Redocly
 
+## Output format
+
+1. OpenAPI annotations as PHP attributes on controllers/models
+2. Spec validation passing via Redocly
+
 ## Gotcha
 
 - OpenAPI attributes must match the actual endpoint behavior — stale docs are worse than no docs.

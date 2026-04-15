@@ -142,6 +142,12 @@ When optimizing either file, check:
 - **Context:** `augment-infrastructure.md` — full `.augment/` overview
 
 
+## Output format
+
+1. Optimized file(s) with deduplication applied and line budget respected
+2. Summary of what was removed, moved, or consolidated
+3. Line count before/after for each file
+
 ## Gotcha
 
 - AGENTS.md is read by GitHub Copilot and other tools — changes affect all AI assistants, not just Augment.

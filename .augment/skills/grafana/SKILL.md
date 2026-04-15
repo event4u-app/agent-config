@@ -140,6 +140,12 @@ When adding new log entries for Grafana visualization:
 - **Config:** `config/grafana.php`, `config/logging.php` (if applicable)
 
 
+## Output format
+
+1. Grafana dashboard JSON or LogQL/PromQL queries
+2. Panel configuration with data source and thresholds
+3. Alert rule definitions where applicable
+
 ## Gotcha
 
 - Loki queries use LogQL, not PromQL — the syntax is different despite looking similar.

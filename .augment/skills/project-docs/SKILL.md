@@ -114,6 +114,11 @@ Do NOT hardcode a mapping — always **list the directory** and pick by relevanc
 | `module` | Module-specific docs in module `agents/` directories |
 
 
+## Output format
+
+1. Relevant doc paths and their key content summarized
+2. Recommendation for which docs to read for the current task
+
 ## Gotcha
 
 - Project docs are NOT the same as agent docs — project docs describe the codebase, agent docs describe agent behavior.

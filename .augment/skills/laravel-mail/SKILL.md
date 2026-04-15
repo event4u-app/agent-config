@@ -173,6 +173,12 @@ Route::get('/mail-preview', function () {
 - markdown email
 - mail attachment
 
+## Output format
+
+1. Mailable class with envelope, content, and attachments
+2. Blade/Markdown email template
+3. Queued mail dispatch integration
+
 ## Gotcha
 
 - Always queue emails (`ShouldQueue`) — synchronous sending blocks the request.

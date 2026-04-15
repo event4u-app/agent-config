@@ -126,6 +126,11 @@ Explore alternatives when:
 - reasoning
 - decomposition
 
+## Output format
+
+1. Numbered reasoning steps with conclusions
+2. Final answer or recommendation with confidence level
+
 ## Gotcha
 
 - Don't use sequential thinking for simple tasks — it adds latency without value.

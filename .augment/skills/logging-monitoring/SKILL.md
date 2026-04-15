@@ -73,6 +73,11 @@ The `service` label differentiates log types in Grafana queries.
 - Check that no sensitive data (passwords, tokens, PII) appears in log output.
 - Verify Sentry captures include relevant context for debugging.
 
+## Output format
+
+1. Logging configuration or structured log statements
+2. Sentry integration with proper context and breadcrumbs
+
 ## Gotcha
 
 - Sentry has 200KB event size limit — large context gets truncated.

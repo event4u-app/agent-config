@@ -117,6 +117,12 @@ Only surface trade-offs or concerns that need the user's input.
 - Verify the review produced at least one actionable finding (or explicit "no issues found").
 - Check that the review did not just restate the plan — it must challenge assumptions.
 
+## Output format
+
+1. Improved plan/code incorporating adversarial findings
+2. Risk summary — top concerns discovered and how they were addressed
+3. Remaining open risks (if any) with severity rating
+
 ## Gotcha
 
 - Don't use this on trivial changes — it adds overhead without value on simple renames or config tweaks.

@@ -51,6 +51,11 @@ Do NOT use when:
 - Verify strict types, typed properties, return types on all new code.
 - Check that no `dd()`, `var_dump()`, `print_r()` remain.
 
+## Output format
+
+1. Code following project guidelines and existing patterns
+2. All downstream changes (callers, tests, imports) included
+
 ## Gotcha
 
 - Don't introduce new patterns without being asked.

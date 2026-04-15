@@ -196,6 +196,11 @@ devbox run d           # terragrunt destroy
 - DRY config
 - remote state
 
+## Output format
+
+1. Terragrunt HCL files with DRY environment configuration
+2. Dependency graph and remote state references
+
 ## Gotcha
 
 - Terragrunt `dependency` blocks create implicit ordering — circular dependencies cause cryptic errors.

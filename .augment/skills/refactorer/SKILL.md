@@ -173,6 +173,12 @@ After the code changes are verified, update all affected documentation:
 | `openapi` | OpenAPI schema attribute patterns |
 
 
+## Output format
+
+1. Refactored code with clear separation of changes
+2. Before/after comparison for key changes
+3. Test verification confirming no behavior change
+
 ## Gotcha
 
 - Always find ALL callers before renaming — the model frequently misses usages in tests and config files.

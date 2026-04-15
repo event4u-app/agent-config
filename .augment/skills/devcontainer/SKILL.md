@@ -94,6 +94,11 @@ Read `devcontainer.json` for the actual secret definitions and requirements.
 - Confirm all required extensions and features are installed.
 - Check that port forwarding and volume mounts work as expected.
 
+## Output format
+
+1. Updated devcontainer.json or related configuration files
+2. Summary of changes and rebuild requirements
+
 ## Gotcha
 
 - DevContainer rebuilds are slow — test configuration changes incrementally, not all at once.

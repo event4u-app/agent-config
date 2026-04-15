@@ -76,6 +76,11 @@ Do not use when:
 * Refactoring scope instead of structure
 * Removing gotchas because they "look verbose"
 
+## Output format
+
+1. Updated skill file(s) passing linter with 0 FAIL
+2. Before/after line count comparison
+
 ## Gotchas
 
 * Over-compression removes important nuance

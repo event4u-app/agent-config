@@ -165,6 +165,12 @@ If a developer reads only this document, they should be able to build it.
 - Confirm constraints and limitations are explicit, not implied.
 - Check that the spec answers: What, Why, How, What not, and When.
 
+## Output format
+
+1. Technical specification document with architecture decisions
+2. API contracts, data models, and sequence diagrams
+3. Implementation plan with dependencies
+
 ## Gotcha
 
 - A spec without constraints is fiction — always include technical limitations, timeline, and scope boundaries.

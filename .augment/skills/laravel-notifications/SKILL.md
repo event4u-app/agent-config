@@ -151,6 +151,11 @@ public function via(object $notifiable): array
 - SlackMessage
 - database notification
 
+## Output format
+
+1. Notification class with via() and channel-specific methods
+2. Queued dispatch with proper serialization
+
 ## Gotcha
 
 - Don't send notifications synchronously in request lifecycle — always queue them.

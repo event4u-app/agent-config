@@ -135,6 +135,11 @@ app/Modules/{Module}/agents/
 - Run PHPStan on the module — must pass.
 - Run module tests — must pass.
 
+## Output format
+
+1. Module directory structure following template conventions
+2. ServiceProvider, routes, and agent docs scaffolded
+
 ## Gotcha
 
 - Module namespace is `App\Modules\{Name}\App\{Layer}` — don't forget the extra `App` segment.
