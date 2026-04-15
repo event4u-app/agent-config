@@ -75,6 +75,13 @@ ORDERED_STEP_PATTERN = re.compile(r"^\s*(\d+)\.\s+", re.MULTILINE)
 SECTION_PATTERN = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 FRONTMATTER_PATTERN = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
 DESCRIPTION_PATTERN = re.compile(r'^description:\s*"?(.*?)"?\s*$', re.MULTILINE)
+TYPE_PATTERN = re.compile(r'^type:\s*"?(always|auto)"?\s*$', re.MULTILINE)
+SOURCE_PATTERN = re.compile(r'^source:\s*"?(package|project)"?\s*$', re.MULTILINE)
+H1_PATTERN = re.compile(r"^# .+", re.MULTILINE)
+DOUBLE_BLANK_PATTERN = re.compile(r"\n{3,}")
+
+VALID_RULE_TYPES = {"always", "auto"}
+VALID_RULE_SOURCES = {"package", "project"}
 
 
 @dataclass
@@ -268,19 +275,72 @@ def lint_skill(path: Path, text: str) -> LintResult:
     )
 
 
+def extract_frontmatter(text: str) -> Optional[str]:
+    match = FRONTMATTER_PATTERN.search(text)
+    return match.group(1) if match else None
+
+
+def extract_frontmatter_field(frontmatter: str, pattern: re.Pattern[str]) -> Optional[str]:
+    match = pattern.search(frontmatter)
+    return match.group(1).strip() if match else None
+
+
 def lint_rule(path: Path, text: str) -> LintResult:
     issues: List[Issue] = []
     suggestions: List[str] = []
 
+    # --- Frontmatter checks ---
+    frontmatter = extract_frontmatter(text)
+    if frontmatter is None:
+        issues.append(Issue("error", "missing_frontmatter", "Rule is missing YAML frontmatter (--- block)"))
+    else:
+        # type field
+        rule_type = extract_frontmatter_field(frontmatter, TYPE_PATTERN)
+        if rule_type is None:
+            issues.append(Issue("error", "missing_type", "Frontmatter missing 'type' field (must be 'always' or 'auto')"))
+        elif rule_type not in VALID_RULE_TYPES:
+            issues.append(Issue("error", "invalid_type", f"Invalid type '{rule_type}'; must be 'always' or 'auto'"))
+
+        # source field
+        rule_source = extract_frontmatter_field(frontmatter, SOURCE_PATTERN)
+        if rule_source is None:
+            issues.append(Issue("error", "missing_source", "Frontmatter missing 'source' field (must be 'package' or 'project')"))
+        elif rule_source not in VALID_RULE_SOURCES:
+            issues.append(Issue("error", "invalid_source", f"Invalid source '{rule_source}'; must be 'package' or 'project'"))
+
+        # description required for auto rules
+        if rule_type == "auto":
+            description = extract_description(text)
+            if not description:
+                issues.append(Issue("error", "auto_missing_description", "Auto rules require a 'description' field for matching"))
+
+    # --- Structure checks ---
+    # H1 heading
+    if not H1_PATTERN.search(text):
+        issues.append(Issue("error", "missing_h1", "Rule is missing an H1 heading (# Title)"))
+
+    # File must end with exactly one newline
+    if not text.endswith("\n"):
+        issues.append(Issue("error", "no_trailing_newline", "File must end with exactly one newline"))
+    elif text.endswith("\n\n"):
+        issues.append(Issue("warning", "extra_trailing_newlines", "File ends with multiple newlines; should be exactly one"))
+
+    # No double/triple blank lines in content
+    if DOUBLE_BLANK_PATTERN.search(text):
+        issues.append(Issue("warning", "double_blank_lines", "File contains double or triple blank lines"))
+
+    # --- Content checks (existing) ---
     line_count = len([line for line in text.splitlines() if line.strip()])
-    if line_count > 25:
-        issues.append(Issue("warning", "long_rule", "Rule is quite long; rules should usually stay short"))
+    if line_count > 50:
+        issues.append(Issue("warning", "long_rule", f"Rule has {line_count} non-empty lines; rules should be concise"))
 
     for bad_sign in RULE_BAD_SIGNS:
         if bad_sign in text:
             issues.append(Issue("error", "rule_looks_like_skill", f"Rule contains skill-like section: {bad_sign}"))
 
-    if re.search(r"\b(step|procedure|workflow)\b", text, re.IGNORECASE):
+    # Exclude frontmatter from procedural check (frontmatter may contain "type")
+    body = text.split("---", 2)[-1] if frontmatter else text
+    if re.search(r"\b(procedure|workflow)\b", body, re.IGNORECASE):
         issues.append(Issue("warning", "procedural_rule", "Rule looks procedural; consider a skill instead"))
 
     return LintResult(
