@@ -101,8 +101,7 @@ Counts and lists in `contexts/augment-infrastructure.md` correct?
 ### 6. Run linters
 
 ```bash
-python3 scripts/skill_linter.py .augment.uncompressed/skills/*/SKILL.md 2>&1 | grep "Summary:"
-python3 scripts/skill_linter.py .augment.uncompressed/rules/*.md 2>&1 | grep "Summary:"
+python3 scripts/skill_linter.py --all --pairs --duplicates 2>&1 | grep "Summary:"
 ```
 
 Report FAIL/WARN counts. Do NOT fix here — delegate to linter/skill-reviewer.
