@@ -183,16 +183,34 @@ Use `skill-writing` → `skill-validator` → `skill-caveman-compression` for ea
 ### From Audit
 - [ ] Additional skills discovered during Phase 1 audit (added dynamically)
 
-## Phase 5: Final Validation & Cleanup
+## Phase 5: Post-Merge Consistency Sweep
+
+Immediately after merging this PR, verify ALL skills meet the minimum standard
+established by the upgraded skills in this PR.
+
+### Minimum standard per skill (non-negotiable)
+
+Every skill must have:
+- [ ] Step 0: Inspect (check current state before acting)
+- [ ] Concrete validation step (not "check if it works")
+- [ ] Anti-patterns section (at least 1 real failure pattern)
+- [ ] Examples section (good/bad contrast, 2-4 lines)
+- [ ] "Do not use when" boundary in "When to use"
+- [ ] Environment notes (local / Docker / CI as relevant)
+
+### Verification procedure
 
 - [ ] **Step 1:** Run `task lint-skills-strict` — 0 errors, minimal warnings
-- [ ] **Step 2:** Verify source-of-truth:
+- [ ] **Step 2:** Compare each remaining skill against the 4 content skills upgraded in this PR
+  (`markdown-safe-codeblocks`, `markdown-template-generator`, `readme-generator`, `github-action-docs`)
+  as reference examples for the minimum standard
+- [ ] **Step 3:** Verify source-of-truth:
   - Every skill has uncompressed + compressed version
   - Compressed is derived from uncompressed
-- [ ] **Step 3:** Run `task generate-tools` — all symlinks current
-- [ ] **Step 4:** Update AGENTS.md with final skill/rule inventory
-- [ ] **Step 5:** Update `.augmentignore`
-- [ ] **Step 6:** Run `/compress` on any remaining unsynced files
+- [ ] **Step 4:** Run `task generate-tools` — all symlinks current
+- [ ] **Step 5:** Update AGENTS.md with final skill/rule inventory
+- [ ] **Step 6:** Update `.augmentignore`
+- [ ] **Step 7:** Run `/compress` on any remaining unsynced files
 
 ## Acceptance Criteria
 

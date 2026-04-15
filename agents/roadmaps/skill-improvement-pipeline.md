@@ -63,8 +63,22 @@
 - [ ] **Step 1:** Create skill `skill-improvement-pipeline`
   - Full pipeline workflow using existing component skills:
     1. **Capture** — `post-task-learning-capture` (extract 1-3 learnings)
-    2. **Promotion Gate** — check criteria (see `controlled-self-optimization.md` Phase 2.1)
-       - Repeated or generalizable? Impact? Non-duplicate? Reject if not.
+    2. **Promotion Gate** — hard decision, no exceptions:
+
+       | Learning is... | Action |
+       |---|---|
+       | One-off, never seen before | **Reject** — do nothing |
+       | Occurred once, but clearly generalizable | **Note** — remember, act on second occurrence |
+       | Occurred 2+ times | **Promote** — continue to step 3 |
+       | Already covered by existing rule/skill | **Update existing** — skip to step 4 with refactor |
+       | Vague ("be more careful") | **Reject** — not actionable |
+
+       ALL of these must be YES to promote:
+       - Repeated or clearly generalizable?
+       - Prevents a real observed failure?
+       - No existing guidance covers it?
+       - Actionable (concrete constraint or workflow)?
+
     3. **Classify** — `learning-to-rule-or-skill` (rule vs skill vs update vs skip)
     4. **Create/Update** — `skill-writing` or `skill-refactor`
     5. **Validate** — `skill-validator` / `task lint-skills`

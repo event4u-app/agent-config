@@ -111,19 +111,27 @@ Add YAML frontmatter field:
 
 ## Phase 2.4: Upstream Contribution Guard
 
-### Requirements for upstream PR
+An improvement may be submitted upstream ONLY if ALL of these pass:
 
-| Requirement | Check |
-|---|---|
-| Passed promotion gate | All criteria YES |
-| Passed linter | `task lint-skills` — 0 errors |
-| Not project-specific | No domain assumptions |
-| Tested locally | Applied and validated |
-| Improves general behavior | Benefits all package consumers |
+| # | Gate | Criterion | Hard fail if... |
+|---|---|---|---|
+| 1 | Promotion | All promotion criteria passed | Any gate = NO |
+| 2 | Linter | `task lint-skills` — 0 errors | Exit code ≠ 0 |
+| 3 | Universality | No project-specific assumptions | Contains domain logic, local paths, or FQDN-specific behavior |
+| 4 | Local proof | Applied locally AND validated in real usage | Only theoretical, never tested |
+| 5 | Package benefit | Improves behavior for ALL consumers | Only benefits one project |
+| 6 | Completeness | Both uncompressed + compressed versions present | Missing either file |
+| 7 | Non-regression | Does not break or weaken existing guidance | Removes constraints without replacement |
+
+**Reject immediately if:**
+- Learning occurred only once and is not clearly generalizable
+- Similar rule/skill already exists (update instead)
+- Contains project-specific conventions, domain terms, or local paths
+- Compressed version drops validation, gotchas, or trigger clarity
 
 ### Implementation
-- [ ] **Step 1:** Add upstream checklist to pipeline skill
-- [ ] **Step 2:** Create PR template `.github/PULL_REQUEST_TEMPLATE/agent-improvement.md`
+- [ ] **Step 1:** Add upstream checklist (above table) to pipeline skill as mandatory pre-PR step
+- [ ] **Step 2:** Create PR template `.github/PULL_REQUEST_TEMPLATE/agent-improvement.md` with checklist
 - [ ] **Step 3:** Add CI check on upstream repo
 
 ## Phase 2.5: CI Integration Summary
