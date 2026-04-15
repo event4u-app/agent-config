@@ -1,6 +1,6 @@
 ---
 name: learning-to-rule-or-skill
-description: "Use when a repeated learning, mistake, or successful pattern should be turned into a new rule or skill."
+description: "Use when a repeated learning, mistake, or successful pattern should be turned into a new rule or skill. Also use after completing a task to capture learnings from the work."
 source: project
 ---
 
@@ -8,118 +8,167 @@ source: project
 
 ## When to use
 
-* Repeated mistake across multiple tasks
-* Successful pattern to reuse
-* New constraint or workflow to capture permanently
-* Post-task retrospectives
-* Deciding: rule vs skill vs update
+Use this skill when:
 
-Do not use for one-off problems, vague issues, or content already covered by existing guidance.
+* A repeated mistake appears across multiple tasks
+* A successful pattern should be reused in the future
+* A new constraint or workflow should be captured permanently
+* Reviewing post-task learnings or retrospectives
+* Deciding whether a learning belongs in a rule or a skill
+* After completing a task — reflecting on what worked or caused friction
+
+Do not use this skill when:
+
+* The learning is one-off and unlikely to repeat
+* The issue is too vague to turn into guidance
+* The content already exists in an equivalent rule or skill
 
 ## Goal
 
-* Turn repeated learnings into reusable guidance
-* Decide correctly: rule, skill, or update
-* Prevent same mistakes recurring
-* Keep system small and non-duplicative
+* Turn repeated learnings into reusable project guidance
+* Decide correctly between rule, skill, or update to an existing one
+* Prevent the same mistakes from happening again
+* Keep the system small, clear, and non-duplicative
 
 ## Preconditions
 
-* Concrete learning exists (statable in 1-2 sentences)
-* Existing rules/skills can be checked for overlap
+* A concrete learning, mistake, or successful pattern exists
+* The learning can be stated clearly in one or two sentences
+* Existing rules and skills can be checked for overlap
 
 ## Decision hints
 
-* Always-apply constraint → rule
-* Repeatable workflow with steps → skill
-* Refines existing guidance → update, not new file
-* One-off or too narrow → no action
-* Same issue appeared 2+ times → codify
+* Always-apply constraint → create or update a rule
+* Repeatable workflow with steps → create or update a skill
+* Only refines existing rule/skill → update instead of new file
+* One-off or too narrow → do not create anything yet
+* Same issue appeared at least twice → strongly consider codifying
 
 ## Procedure
 
-### 1. State learning clearly
+### 1. State the learning clearly
 
-Good: "Nested triple backticks break copyability in generated markdown"
-Bad: "Markdown is annoying"
+Write as a concrete sentence.
 
-### 2. Classify pattern type
+Good:
+* Nested triple backticks break copyability in generated markdown
+* Route inspection is more reliable via JSON and jq than text parsing
 
-Constraint / Workflow / Anti-pattern / Quality check / Environment convention
+Bad:
+* Markdown is annoying
+* Routing was confusing
 
-### 3. Decide target
+### 2. Identify the pattern type
 
-New rule / Update rule / New skill / Update skill / No action
+Classify:
+* Constraint
+* Workflow
+* Anti-pattern
+* Quality check
+* Environment-specific convention
 
-### 4. Check overlap
+### 3. Decide the target
 
-Similar rule exists? Similar skill? Small update better than new file?
+Choose one:
+* New rule
+* Update existing rule
+* New skill
+* Update existing skill
+* No action
 
-### 5. Draft content
+### 4. Check for overlap
 
-Rule: short, durable constraint — general, always applicable
-Skill: focused workflow with When to use, Procedure, Output format, Gotchas, Do NOT
+* Does a similar rule already exist?
+* Does a similar skill already exist?
+* Would a small update be better than a new file?
+
+### 5. Draft the content
+
+If rule:
+* Short, durable constraint
+* General, clear, always applicable
+
+If skill:
+* Focused workflow
+* Include: When to use, Procedure, Output format, Gotchas, Do NOT
 
 ### 6. Validate usefulness
 
-* Improves future outputs?
+* Will this improve future outputs?
 * Specific enough to act on?
-* Different from existing?
-* Matters more than once?
+* Different from existing guidance?
+* Likely to matter more than once?
 
-### 7. Smallest effective change
+### 7. Keep only the smallest effective change
 
-Update over duplicate. Small skill over broad. Short rule over long.
+Prefer:
+* Update over duplicate
+* Small focused skill over broad skill
+* Short rule over long rule
 
 ## Output format
 
 1. Learning summary
-2. Decision: rule / skill / update / no action
-3. Rationale (1-3 lines)
+2. Decision: rule, skill, update, or no action
+3. Rationale in one to three lines
 4. Proposed content
 5. Optional: target filename
 
 ## Core rules
 
 * Capture repeated patterns, not random observations
-* Update existing over creating duplicates
-* Rules = durable constraints
-* Skills = repeatable workflows
-* Smallest possible guidance
+* Prefer updating existing guidance over creating duplicates
+* Rules are for durable constraints
+* Skills are for repeatable workflows
+* Keep new guidance as small and focused as possible
 
 ## Gotchas
 
-* Model creates new files when small update suffices
-* Vague frustrations become bad guidance
-* Documentation instead of reusable instructions
-* Over-capturing weak learnings = noise
+* Model tends to create new files when a small update is enough
+* Model tends to turn vague frustrations into bad guidance
+* Model may write documentation instead of reusable instructions
+* Over-capturing weak learnings creates noise and reduces quality
 
 ## Do NOT
 
-* Do NOT create for one-off problems
+* Do NOT create a rule or skill for one-off problems
 * Do NOT duplicate existing guidance
-* Do NOT create broad catch-all skills
-* Do NOT write vague learnings without concrete consequence
+* Do NOT create broad "catch-all" skills
+* Do NOT write vague learnings without a concrete behavioral consequence
 
 ## Auto-trigger keywords
 
-* learning, retrospective, repeated mistake, recurring issue
-* create rule from learning, create skill from learning
-* codify this, capture this pattern
+* learning
+* retrospective
+* repeated mistake
+* recurring issue
+* create rule from learning
+* create skill from learning
+* codify this
+* capture this pattern
+* after task
+* what did we learn
+* post-mortem
 
 ## Anti-patterns
 
-* Skill for every minor annoyance
-* Rule saying "be careful" without concrete constraint
-* Duplicate with slightly different wording
-* Capturing before it has repeated
+* Creating a skill for every minor annoyance
+* Rule that says "be careful" without concrete constraint
+* Skill that duplicates an existing one with slightly different wording
+* Capturing a learning before it has repeated
 
 ## Examples
 
-"Nested backticks broke copyability twice" → Update markdown rule + add skill if missing
-"Route checks fail with text parsing" → Create focused route-inspection skill
-"Forgot PHPStan once" → No action — one-off, already covered
+Learning: "Nested triple backticks broke markdown copyability twice this week."
+Decision: Update existing markdown rule + add markdown-safe skill if none exists.
+
+Learning: "Route checks keep failing when done via text parsing."
+Decision: Create focused skill for Laravel route inspection via JSON and jq.
+
+Learning: "I forgot to run PHPStan once."
+Decision: No action — one-off, already covered by verify-before-complete rule.
 
 ## Environment notes
 
-Prefer updating existing. New files only for clearly distinct patterns.
+Prefer updating existing rule/skill when possible.
+Create new files only when the learning introduces a clearly distinct pattern.
