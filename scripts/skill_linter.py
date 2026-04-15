@@ -318,19 +318,34 @@ def gather_all_candidate_files(root: Path) -> list[Path]:
 
 
 def gather_changed_candidate_files(root: Path) -> list[Path]:
+    """Find changed skill/rule files using git diff.
+
+    Tries multiple strategies:
+    1. CI: diff against origin/main (PR changes)
+    2. Local: staged changes (git diff --cached)
+    3. Fallback: unstaged changes (git diff HEAD)
+    """
+    diff_commands = [
+        ["git", "diff", "--name-only", "origin/main...HEAD"],
+        ["git", "diff", "--name-only", "--cached", "HEAD"],
+        ["git", "diff", "--name-only", "HEAD"],
+    ]
     try:
-        result = subprocess.run(
-            ["git", "diff", "--name-only", "--cached", "HEAD"],
-            cwd=root, text=True, capture_output=True, check=False,
-        )
-        if result.returncode != 0:
+        raw_lines: list[str] = []
+        for cmd in diff_commands:
             result = subprocess.run(
-                ["git", "diff", "--name-only", "HEAD"],
-                cwd=root, text=True, capture_output=True, check=False,
+                cmd, cwd=root, text=True, capture_output=True, check=False,
             )
+            if result.returncode == 0 and result.stdout.strip():
+                raw_lines = result.stdout.splitlines()
+                break
+
         files = []
-        for raw in result.stdout.splitlines():
-            path = root / raw.strip()
+        for raw in raw_lines:
+            raw = raw.strip()
+            if not raw:
+                continue
+            path = root / raw
             if not path.exists():
                 continue
             if path.name == "SKILL.md" or "/rules/" in raw.replace("\\", "/"):

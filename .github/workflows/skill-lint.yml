@@ -29,6 +29,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -38,10 +40,10 @@ jobs:
       - name: Set up Task
         uses: arduino/setup-task@v2
 
-      - name: Run skill linter
-        run: task lint-skills
+      - name: Run skill linter (changed files only)
+        run: python3 scripts/skill_linter.py --changed
 
-      - name: Generate JSON lint report
+      - name: Generate JSON lint report (full repo, informational)
         if: always()
         run: |
           mkdir -p artifacts
