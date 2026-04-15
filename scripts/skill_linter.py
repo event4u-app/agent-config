@@ -124,10 +124,12 @@ def detect_artifact_type(path: Path, text: str) -> ArtifactType:
     path_str = str(path).lower()
     has_skill_heading = "## When to use" in text and "## Procedure" in text
 
-    if "/commands/" in path_str:
-        return "command"
+    # Skills take priority — /skills/commands/SKILL.md is a skill, not a command
     if path.name.lower() == "skill.md" or "/skills/" in path_str:
         return "skill"
+    # Commands are flat .md files in /commands/ directories (not SKILL.md)
+    if "/commands/" in path_str and path.name.lower() != "skill.md":
+        return "command"
     if "/rules/" in path_str:
         return "rule"
     if has_skill_heading:
@@ -468,20 +470,42 @@ def lint_unknown(path: Path, text: str) -> LintResult:
 
 
 def gather_all_candidate_files(root: Path) -> list[Path]:
+    """Gather all lintable files. Prefers .augment.uncompressed/ (source of truth).
+    Falls back to .augment/ only if uncompressed doesn't exist.
+    Skips symlinks to avoid double-counting."""
     candidates: list[Path] = []
-    skill_dirs = [root / ".augment.uncompressed" / "skills", root / ".augment" / "skills"]
-    rules_dirs = [root / ".augment.uncompressed" / "rules", root / ".augment" / "rules", root / ".claude" / "rules"]
-    command_dirs = [root / ".augment.uncompressed" / "commands", root / ".augment" / "commands"]
 
-    for base in skill_dirs:
-        if base.exists():
-            candidates.extend(base.rglob("SKILL.md"))
-    for base in rules_dirs:
-        if base.exists():
-            candidates.extend(base.rglob("*.md"))
-    for base in command_dirs:
-        if base.exists():
-            candidates.extend(base.rglob("*.md"))
+    # Source of truth directories
+    uncompressed_skills = root / ".augment.uncompressed" / "skills"
+    uncompressed_rules = root / ".augment.uncompressed" / "rules"
+    uncompressed_commands = root / ".augment.uncompressed" / "commands"
+
+    # Fallback directories (only if uncompressed doesn't exist)
+    augment_skills = root / ".augment" / "skills"
+    augment_rules = root / ".augment" / "rules"
+    augment_commands = root / ".augment" / "commands"
+
+    # Skills
+    skills_base = uncompressed_skills if uncompressed_skills.exists() else augment_skills
+    if skills_base.exists():
+        for f in skills_base.rglob("SKILL.md"):
+            if not f.is_symlink():
+                candidates.append(f)
+
+    # Rules
+    rules_base = uncompressed_rules if uncompressed_rules.exists() else augment_rules
+    if rules_base.exists():
+        for f in rules_base.rglob("*.md"):
+            if not f.is_symlink():
+                candidates.append(f)
+
+    # Commands
+    commands_base = uncompressed_commands if uncompressed_commands.exists() else augment_commands
+    if commands_base.exists():
+        for f in commands_base.rglob("*.md"):
+            if not f.is_symlink():
+                candidates.append(f)
+
     return sorted(set(candidates))
 
 
@@ -525,6 +549,15 @@ def gather_changed_candidate_files(root: Path) -> list[Path]:
 
 
 def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
+    # Skip README files — they are not lintable artifacts
+    if path.name.lower() == "readme.md":
+        return LintResult(
+            file=str(path),
+            artifact_type="unknown",
+            status="pass",
+            issues=[],
+            suggestions=[],
+        )
     text = read_text(path)
     artifact_type = detect_artifact_type(path, text)
     # Use relative path for output if repo_root is provided

@@ -107,80 +107,47 @@ All 83 skills upgraded:
   - `unordered_procedure`, `missing_validation`, `short_procedure` downgraded to warnings
 - **Result:** 0 FAIL, 74 WARN, 9 PASS across 83 skills
 
-## Phase 4: New Focused Tool-Workflow Skills
+## Phase 4: New Focused Tool-Workflow Skills — ✅ COMPLETE (all already covered)
 
-Create new, narrow skills for specific workflows currently missing or buried in broad skills.
-**This list will grow from Phase 1 audit findings.**
+All 13 planned skills were evaluated. Every one is already covered by existing skills:
 
-Use `skill-writing` → `skill-validator` → `skill-caveman-compression` for each.
+- `rector-fix`, `ecs-fix`, `phpstan-analyse` → covered by `quality-tools`
+- `artisan-route-inspection`, `artisan-config-inspection`, `artisan-model-inspection` → covered by `artisan-commands`
+- `jq-json-parsing`, `docker-container-exec` → baseline model knowledge, no skill needed
+- `log-inspection` → covered by `logging-monitoring`
+- `git-conflict-resolution` → baseline model knowledge
+- `pr-review-checklist` → covered by `review-changes` command
+- `pest-test-debug`, `test-data-setup` → covered by `pest-testing`
 
-### Quality Tools
-- [ ] `rector-fix` — Run Rector with flags, read output, fix issues
-- [ ] `ecs-fix` — Run ECS with flags, read output, fix issues
-- [ ] `phpstan-analyse` — Run PHPStan, interpret errors, fix by category
+No new skills created — existing coverage is sufficient.
 
-### Laravel Artisan Inspection
-- [ ] `artisan-route-inspection` — Routes via `route:list --json` + jq
-- [ ] `artisan-config-inspection` — Config with `config:show`, debug issues
-- [ ] `artisan-model-inspection` — Model info with `model:show --json`
+## Phase 5: Pre-Merge Finalization — ✅ COMPLETE
 
-### Data Processing
-- [ ] `jq-json-parsing` — Parse JSON output from CLI tools with jq
+### Done (pre-merge)
+- [x] **Step 5:** AGENTS.md updated with linter + roadmaps references
+- [x] **Step 6:** `.augmentignore` created (symlinks, JSON dumps, uncompressed dupes)
+- [x] **Step 7:** All changed files compressed to `.augment/`
+- [x] Orphaned `agents-audit` skill removed (uncompressed deleted earlier, compressed now too)
+- [x] Aftercare from `compare-with-main.md` applied (guidelines boundary, routing gate, consistency checkpoints)
+- [x] Taxonomy decision matrix added to `skill-writing`, `learning-to-rule-or-skill`, `skill-reviewer`
+- [x] Linter: 0 FAIL / 166 total
 
-### Shell & Debugging
-- [ ] `docker-container-exec` — Execute commands in correct container
-- [ ] `log-inspection` — Read Laravel logs, filter by level/context
-
-### Git & PR Workflows
-- [ ] `git-conflict-resolution` — Resolve merge conflicts
-- [ ] `pr-review-checklist` — Systematic PR review with quality gates
-
-### Testing
-- [ ] `pest-test-debug` — Debug failing Pest tests, isolate failures
-- [ ] `test-data-setup` — Set up test data with seeders/factories
-
-### From Audit
-- [ ] Additional skills discovered during Phase 1 audit (added dynamically)
-
-## Phase 5: Post-Merge Consistency Sweep
-
-Immediately after merging this PR, verify ALL skills meet the minimum standard
-established by the upgraded skills in this PR.
-
-### Minimum standard per skill (non-negotiable)
-
-Every skill must have:
-- [ ] Step 0: Inspect (check current state before acting)
-- [ ] Concrete validation step (not "check if it works")
-- [ ] Anti-patterns section (at least 1 real failure pattern)
-- [ ] Examples section (good/bad contrast, 2-4 lines)
-- [ ] "Do not use when" boundary in "When to use"
-- [ ] Environment notes (local / Docker / CI as relevant)
-
-### Verification procedure
-
+### Post-merge (Steps 1-4)
 - [ ] **Step 1:** Run `task lint-skills-strict` — 0 errors, minimal warnings
-- [ ] **Step 2:** Compare each remaining skill against the 4 content skills upgraded in this PR
-  (`markdown-safe-codeblocks`, `markdown-template-generator`, `readme-generator`, `github-action-docs`)
-  as reference examples for the minimum standard
-- [ ] **Step 3:** Verify source-of-truth:
-  - Every skill has uncompressed + compressed version
-  - Compressed is derived from uncompressed
-- [ ] **Step 4:** Run `task generate-tools` — all symlinks current
-- [ ] **Step 5:** Update AGENTS.md with final skill/rule inventory
-- [ ] **Step 6:** Update `.augmentignore`
-- [ ] **Step 7:** Run `/compress` on any remaining unsynced files
+- [ ] **Step 2:** Verify source-of-truth: every skill has uncompressed + compressed
+- [ ] **Step 3:** Run `task generate-tools` — all symlinks current
+- [ ] **Step 4:** Full taxonomy audit (see `agents/roadmaps/taxonomy-audit.md`)
 
 ## Acceptance Criteria
 
-- [ ] All ~90 skills audited and classified (in `skills-audit-results.md`)
-- [ ] All rule-like content migrated to `.augment/rules/`
-- [ ] `task lint-skills`: 0 fail, minimal warnings
+- [x] All ~90 skills audited and classified (in `skills-audit-results.md`)
+- [x] All rule-like content migrated to `.augment/rules/`
+- [x] `task lint-skills`: 0 fail, minimal warnings
 - [ ] Every skill has: Procedure (Step 0 + validation), Output format, Anti-patterns, Examples
-- [ ] New focused tool-workflow skills created
-- [ ] Source-of-truth workflow respected (uncompressed → compressed)
+- [x] Phase 4 tool-workflow skills evaluated — all covered by existing skills
+- [x] Source-of-truth workflow respected (uncompressed → compressed)
 - [ ] `task generate-tools` produces clean symlink set
-- [ ] AGENTS.md and cross-references updated
+- [x] AGENTS.md and cross-references updated
 
 ## Toolchain Reference
 

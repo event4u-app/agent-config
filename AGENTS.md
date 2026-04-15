@@ -211,3 +211,5 @@ See `.augment/rules/quality-workflow.md` for full workflow and policies.
 | `.augment/contexts/override-system.md` | How project overrides work |
 | `app/Modules/README.md` | Module system documentation |
 | `docs/creating-a-new-module.md` | Step-by-step module creation guide |
+| `scripts/skill_linter.py` | Skill/rule/command linter (0 FAIL required) |
+| `agents/roadmaps/` | Active roadmaps for agent infrastructure work |
