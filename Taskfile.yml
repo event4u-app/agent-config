@@ -55,3 +55,24 @@ tasks:
   test-python:
     desc: Run Python compress tests
     cmd: python3 -m unittest tests.test_compress -v
+
+
+  lint-skills:
+    desc: Lint all skills and rules
+    cmd: python3 scripts/skill_linter.py --all
+
+  lint-skills-strict:
+    desc: Lint all skills and rules, warnings fail too
+    cmd: python3 scripts/skill_linter.py --all --strict-warnings
+
+  lint-skills-changed:
+    desc: Lint changed skills and rules
+    cmd: python3 scripts/skill_linter.py --changed
+
+  lint-skills-json:
+    desc: Lint all skills and rules with JSON output
+    cmd: python3 scripts/skill_linter.py --all --format json
+
+  test-linter:
+    desc: Run skill linter tests
+    cmd: python3 -m pytest tests/test_skill_linter.py -v
