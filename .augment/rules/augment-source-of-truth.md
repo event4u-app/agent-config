@@ -86,6 +86,18 @@ Before review or PR, verify derived outputs are not stale:
 3. Before merge: verify `.augment/` and `.claude/skills/` are regenerated
 4. Do NOT leave `.augment/` stale across review cycles
 
+## Multi-agent symlink mapping
+
+`.claude/skills/` has symlinks to BOTH `.augment/skills/` AND `.augment/commands/`.
+Claude Code treats both as "skills" — different artifact types in our taxonomy.
+
+| Symlink target | Actual type |
+|---|---|
+| `.augment/skills/{name}/SKILL.md` | **Skill** |
+| `.augment/commands/{name}.md` | **Command** (`disable-model-invocation: true`) |
+
+Always check symlink target to determine actual type.
+
 ## Quick reference
 
 | Task | What to do |

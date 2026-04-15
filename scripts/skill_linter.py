@@ -720,6 +720,61 @@ def check_compression_pairs(root: Path) -> list[LintResult]:
     return results
 
 
+def check_compression_quality(root: Path) -> list[LintResult]:
+    """Check that compressed skills preserve key content from their uncompressed source."""
+    results: list[LintResult] = []
+    uncompressed_dir = root / ".augment.uncompressed" / "skills"
+    compressed_dir = root / ".augment" / "skills"
+
+    if not uncompressed_dir.exists() or not compressed_dir.exists():
+        return results
+
+    # Sections that MUST exist in compressed if they exist in uncompressed
+    preserved_sections = ["When to use", "Procedure", "Gotcha", "Gotchas", "Do NOT", "Output format", "Output"]
+
+    for skill_dir in sorted(uncompressed_dir.iterdir()):
+        src = skill_dir / "SKILL.md"
+        dst = compressed_dir / skill_dir.name / "SKILL.md"
+        if not src.exists() or not dst.exists():
+            continue
+
+        src_text = read_text(src)
+        dst_text = read_text(dst)
+        src_sections = extract_sections(src_text)
+        dst_sections = extract_sections(dst_text)
+
+        issues: list[Issue] = []
+        suggestions: list[str] = []
+
+        # Check required sections survived compression
+        for section in preserved_sections:
+            if section_matches(section, src_sections) and not section_matches(section, dst_sections):
+                issues.append(Issue("warning", "compression_lost_section",
+                                    f"Compressed version lost '{section}' section"))
+
+        # Check validation keywords survived
+        src_proc = find_procedure_block(src_text) or ""
+        dst_proc = find_procedure_block(dst_text) or ""
+        validation_patterns = [r"\bverif", r"\bcheck\b", r"\bconfirm\b", r"\bvalidat", r"\binspect"]
+        src_has_validation = any(re.search(p, src_proc, re.IGNORECASE) for p in validation_patterns)
+        dst_has_validation = any(re.search(p, dst_proc, re.IGNORECASE) for p in validation_patterns)
+        if src_has_validation and not dst_has_validation:
+            issues.append(Issue("warning", "compression_lost_validation",
+                                "Compressed procedure lost validation keywords present in uncompressed"))
+
+        if issues:
+            rel_path = f".augment/skills/{skill_dir.name}/SKILL.md"
+            results.append(LintResult(
+                file=rel_path,
+                artifact_type="skill",
+                status="pass_with_warnings",
+                issues=issues,
+                suggestions=suggestions or ["Re-compress to preserve lost content"],
+            ))
+
+    return results
+
+
 def check_duplication(root: Path) -> list[LintResult]:
     """Detect skills with highly similar names or descriptions."""
     results: list[LintResult] = []
@@ -780,6 +835,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
     parser.add_argument("--pairs", action="store_true", help="Check compression pairs (uncompressed vs compressed)")
     parser.add_argument("--duplicates", action="store_true", help="Detect skills with similar descriptions")
+    parser.add_argument("--compression-quality", action="store_true", help="Check compressed skills preserve key content")
     parser.add_argument("--strict-warnings", action="store_true", help="Return non-zero on warnings")
     parser.add_argument("--repo-root", default=".", help="Repository root")
     return parser.parse_args()
@@ -812,6 +868,8 @@ def main() -> int:
             results.extend(check_compression_pairs(root))
         if args.duplicates:
             results.extend(check_duplication(root))
+        if args.compression_quality:
+            results.extend(check_compression_quality(root))
 
         if args.format == "json":
             print(format_json(results))
