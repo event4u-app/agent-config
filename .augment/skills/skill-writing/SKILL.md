@@ -150,7 +150,8 @@ Example:
 * K2: Not over-defined
 * K3: No obvious content
 * K4: Contains gotchas
-* K5: Under 500 lines
+* K5: Has Output format (numbered, 2-4 deliverables)
+* K6: Under 500 lines
 
 ## Output format
 
