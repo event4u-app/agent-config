@@ -347,6 +347,18 @@ def lint_skill(path: Path, text: str) -> LintResult:
     if total_lines > 500:
         issues.append(Issue("warning", "skill_too_large", f"Skill has {total_lines} lines (limit: 500); consider splitting"))
 
+    # --- Pointer-only skill detection ---
+    procedure_block = find_procedure_block(text)
+    if procedure_block:
+        proc_lines = [line.strip() for line in procedure_block.splitlines() if line.strip()]
+        guideline_refs = sum(1 for line in proc_lines
+                           if re.search(r"(?:see|read|check|follow|refer to)\s+.*guideline", line, re.IGNORECASE))
+        if len(proc_lines) < 8 and guideline_refs >= 2:
+            issues.append(Issue("warning", "pointer_only_skill",
+                               f"Procedure has {len(proc_lines)} lines but {guideline_refs} guideline references — "
+                               f"skill may be outsourcing its workflow to guidelines"))
+            suggestions.append("Ensure the skill has its own executable workflow independent of guidelines")
+
     return LintResult(
         file=str(path),
         artifact_type="skill",
