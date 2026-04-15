@@ -1,0 +1,1 @@
+../../.augment/rules/analysis-skill-routing.md

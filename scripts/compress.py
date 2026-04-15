@@ -317,9 +317,11 @@ def extract_description_from_md(content: str) -> str:
 
 
 def generate_claude_commands() -> None:
-    """Convert ALL Augment commands to Claude Code Skills format.
+    """Create .claude/skills/{name}/SKILL.md symlinks for ALL Augment commands.
 
-    Description is extracted from the first # heading in each command file.
+    Commands in .augment/commands/ are the single source of truth.
+    They must include name: and disable-model-invocation: true in frontmatter
+    (added once, then maintained as part of the command file).
     """
     if not COMMANDS_SOURCE.exists():
         print("  ⚠️  .augment/commands/ not found — skipping commands")
@@ -331,28 +333,20 @@ def generate_claude_commands() -> None:
     for source_file in sorted(COMMANDS_SOURCE.glob("*.md")):
         name = source_file.stem
 
-        raw_content = source_file.read_text()
-        content = strip_frontmatter(raw_content)
-        description = extract_description_from_md(content) or name.replace("-", " ").title()
-
-        # Build frontmatter
-        fm_parts = [
-            "---",
-            f"name: {name}",
-            f"description: \"{description}\"",
-            "disable-model-invocation: true",
-            "---",
-        ]
-
-        full_content = "\n".join(fm_parts) + "\n\n" + content.strip() + "\n"
-
-        # Create skill directory
+        # Create skill directory (real dir, symlinked SKILL.md inside)
         skill_dir = CLAUDE_SKILLS_DIR / name
         skill_dir.mkdir(parents=True, exist_ok=True)
-        (skill_dir / "SKILL.md").write_text(full_content)
+
+        skill_file = skill_dir / "SKILL.md"
+        if skill_file.exists() or skill_file.is_symlink():
+            skill_file.unlink()
+
+        # Symlink: .claude/skills/{name}/SKILL.md → ../../../.augment/commands/{name}.md
+        rel_target = Path("../../../.augment/commands") / source_file.name
+        skill_file.symlink_to(rel_target)
         count += 1
 
-    print(f"  ✅  Generated {count} command skills in .claude/skills/")
+    print(f"  ✅  Created {count} command symlinks in .claude/skills/")
 
 
 def generate_tools() -> None:
