@@ -38,17 +38,19 @@ REQUIRED_SKILL_SECTIONS = [
     "When to use",
     "Gotcha",
     "Procedure",
+    "Output format",
+    "Do NOT",
 ]
 
 # Aliases: linter accepts any of these as matching the required section
 SECTION_ALIASES = {
     "Gotcha": {"Gotcha", "Gotchas"},
     "Procedure": set(),  # prefix-matched separately
+    "Do NOT": {"Do NOT", "Do not", "Anti-patterns"},
+    "Output format": {"Output format", "Output"},
 }
 
-RECOMMENDED_SKILL_SECTIONS = [
-    "Do NOT",
-]
+RECOMMENDED_SKILL_SECTIONS: list[str] = []
 
 RULE_BAD_SIGNS = [
     "## Procedure",

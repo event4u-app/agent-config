@@ -85,6 +85,11 @@ source: project
 
 * Something breaks
 
+## Output format
+
+1. Summary of changes
+2. Files modified
+
 ## Do NOT
 
 * Do NOT skip checks
