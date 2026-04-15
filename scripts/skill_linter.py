@@ -603,6 +603,9 @@ def gather_changed_candidate_files(root: Path) -> list[Path]:
             path = root / raw
             if not path.exists():
                 continue
+            # Skip symlinks to avoid double-counting (e.g. .claude/skills/ → .augment/commands/)
+            if path.is_symlink():
+                continue
             norm = raw.replace("\\", "/")
             if path.name == "SKILL.md" or "/rules/" in norm or "/commands/" in norm:
                 files.append(path)

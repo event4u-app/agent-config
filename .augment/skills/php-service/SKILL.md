@@ -83,6 +83,11 @@ public function __invoke(
 - Don't inject `Request` into services — pass specific data.
 - Services are framework-agnostic — no HTTP/request logic.
 
+## Do NOT
+
+- Do NOT inject `Request` or `Controller` into services — services are framework-agnostic.
+- Do NOT create services with more than one responsibility — split them.
+
 ## Auto-trigger keywords
 
 - service class
