@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Iterable, List, Literal, Optional
 
 Severity = Literal["error", "warning", "info"]
-ArtifactType = Literal["skill", "rule", "unknown"]
+ArtifactType = Literal["skill", "rule", "command", "unknown"]
 
 
 REQUIRED_SKILL_SECTIONS = [
@@ -116,10 +116,16 @@ def extract_description(text: str) -> Optional[str]:
     return description.group(1).strip() if description else None
 
 
+NAME_PATTERN = re.compile(r'^name:\s*"?(.*?)"?\s*$', re.MULTILINE)
+DISABLE_MODEL_PATTERN = re.compile(r'^disable-model-invocation:\s*"?(true|false)"?\s*$', re.MULTILINE)
+
+
 def detect_artifact_type(path: Path, text: str) -> ArtifactType:
     path_str = str(path).lower()
     has_skill_heading = "## When to use" in text and "## Procedure" in text
 
+    if "/commands/" in path_str:
+        return "command"
     if path.name.lower() == "skill.md" or "/skills/" in path_str:
         return "skill"
     if "/rules/" in path_str:
@@ -396,14 +402,68 @@ def lint_rule(path: Path, text: str) -> LintResult:
     )
 
 
+def lint_command(path: Path, text: str) -> LintResult:
+    issues: List[Issue] = []
+    suggestions: List[str] = []
+
+    # --- Frontmatter checks ---
+    frontmatter = extract_frontmatter(text)
+    if frontmatter is None:
+        issues.append(Issue("error", "missing_frontmatter", "Command is missing YAML frontmatter (--- block)"))
+    else:
+        # name field
+        name_match = NAME_PATTERN.search(frontmatter)
+        if not name_match or not name_match.group(1).strip():
+            issues.append(Issue("error", "missing_name", "Frontmatter missing 'name' field"))
+
+        # disable-model-invocation field
+        dmi_match = DISABLE_MODEL_PATTERN.search(frontmatter)
+        if not dmi_match:
+            issues.append(Issue("error", "missing_disable_model_invocation",
+                                "Frontmatter missing 'disable-model-invocation: true' (required for Claude Code)"))
+        elif dmi_match.group(1) != "true":
+            issues.append(Issue("warning", "disable_model_invocation_false",
+                                "disable-model-invocation should be 'true' for commands"))
+
+        # description field
+        description = extract_description(text)
+        if not description:
+            issues.append(Issue("warning", "missing_description", "Frontmatter description is missing"))
+
+    # --- Structure checks ---
+    if not H1_PATTERN.search(text):
+        issues.append(Issue("error", "missing_h1", "Command is missing an H1 heading (# Title)"))
+
+    # Must have at least one ## section with steps
+    sections = extract_sections(text)
+    has_steps = any(s.lower().startswith("step") for s in sections)
+    has_numbered = bool(re.search(r"^###?\s+\d+\.\s+", text, re.MULTILINE))
+    if not has_steps and not has_numbered:
+        issues.append(Issue("warning", "no_steps", "Command has no Steps section or numbered sub-headings"))
+
+    # File must end with exactly one newline
+    if not text.endswith("\n"):
+        issues.append(Issue("error", "no_trailing_newline", "File must end with exactly one newline"))
+    elif text.endswith("\n\n"):
+        issues.append(Issue("warning", "extra_trailing_newlines", "File ends with multiple newlines; should be exactly one"))
+
+    return LintResult(
+        file=str(path),
+        artifact_type="command",
+        status=classify_status(issues),
+        issues=issues,
+        suggestions=dedupe_preserve_order(suggestions),
+    )
+
+
 def lint_unknown(path: Path, text: str) -> LintResult:
-    issues = [Issue("error", "unknown_artifact", "Could not detect whether file is a skill or rule")]
+    issues = [Issue("error", "unknown_artifact", "Could not detect whether file is a skill, rule, or command")]
     return LintResult(
         file=str(path),
         artifact_type="unknown",
         status="fail",
         issues=issues,
-        suggestions=["Move the file into a recognized skills/ or rules/ path or add recognizable structure"],
+        suggestions=["Move the file into a recognized skills/, rules/, or commands/ path"],
     )
 
 
@@ -411,11 +471,15 @@ def gather_all_candidate_files(root: Path) -> list[Path]:
     candidates: list[Path] = []
     skill_dirs = [root / ".augment.uncompressed" / "skills", root / ".augment" / "skills"]
     rules_dirs = [root / ".augment.uncompressed" / "rules", root / ".augment" / "rules", root / ".claude" / "rules"]
+    command_dirs = [root / ".augment.uncompressed" / "commands", root / ".augment" / "commands"]
 
     for base in skill_dirs:
         if base.exists():
             candidates.extend(base.rglob("SKILL.md"))
     for base in rules_dirs:
+        if base.exists():
+            candidates.extend(base.rglob("*.md"))
+    for base in command_dirs:
         if base.exists():
             candidates.extend(base.rglob("*.md"))
     return sorted(set(candidates))
@@ -452,7 +516,8 @@ def gather_changed_candidate_files(root: Path) -> list[Path]:
             path = root / raw
             if not path.exists():
                 continue
-            if path.name == "SKILL.md" or "/rules/" in raw.replace("\\", "/"):
+            norm = raw.replace("\\", "/")
+            if path.name == "SKILL.md" or "/rules/" in norm or "/commands/" in norm:
                 files.append(path)
         return sorted(set(files))
     except Exception:
@@ -473,6 +538,8 @@ def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
         return lint_skill(display_path, text)
     if artifact_type == "rule":
         return lint_rule(display_path, text)
+    if artifact_type == "command":
+        return lint_command(display_path, text)
     return lint_unknown(display_path, text)
 
 

@@ -51,6 +51,32 @@ This avoids interruptions when work is still in progress.
 - Technical terms, library names, API names
 - Strong language: "NEVER", "MUST", "Do NOT" — these are load-bearing
 
+## Commands workflow
+
+Commands live in `.augment.uncompressed/commands/{name}.md` (single source of truth).
+Claude Code reads them via symlinks in `.claude/skills/{name}/SKILL.md`.
+
+**Required frontmatter for commands:**
+
+```yaml
+name: {command-name}
+description: {what it does}
+disable-model-invocation: true
+```
+
+- `name` and `disable-model-invocation: true` are required for Claude Code compatibility
+- Augment ignores unknown frontmatter fields — no conflict
+- Template: `.augment.uncompressed/templates/command.md`
+
+**Creating a new command:**
+
+1. Create `.augment.uncompressed/commands/{name}.md` (use template)
+2. Run `python3 scripts/skill_linter.py` — must be 0 FAIL
+3. Sync: `cp` to `.augment/commands/`
+4. Run `task generate-tools` — creates Claude symlink automatically
+
+**Never** create `.claude/skills/{name}/SKILL.md` manually for commands — always use the symlink workflow.
+
 ## Quick reference
 
 | Task | What to do |
@@ -58,6 +84,7 @@ This avoids interruptions when work is still in progress.
 | Edit existing file | Edit in `.augment.uncompressed/`, compress to `.augment/` |
 | Create new `.md` | Create in `.augment.uncompressed/`, compress to `.augment/` |
 | Create new non-`.md` | Create in `.augment.uncompressed/`, run `task sync` |
+| Create new command | Create in `.augment.uncompressed/commands/`, sync, `task generate-tools` |
 | Delete a file | Delete from both directories |
 | Check what needs compression | `task sync-changed` |
 | Mark file as compressed | `task sync-mark-done -- {path}` |
