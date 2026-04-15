@@ -1,6 +1,6 @@
 ---
 name: api-design
-description: "Use when designing a new API, planning endpoints, discussing REST conventions, adding API versions, or managing deprecation. Covers versioning, pagination, filtering, error responses, resource structure, and deprecation workflow."
+description: "Use when designing a new API, planning endpoints, discussing REST conventions, adding API versions, or managing deprecation."
 source: package
 ---
 

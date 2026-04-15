@@ -8,9 +8,20 @@ source: package
 
 ## When to use
 
-Slow tests (local/CI), DB setup bottleneck, parallel testing, seeder perf, CI efficiency, flaky DB state.
+Use this skill when:
 
-## Workflow: measure baseline first.
+- Tests are running too slowly (locally or in CI)
+- Database setup/teardown is a bottleneck
+- Parallel testing needs optimization
+- Seeders need performance analysis
+- CI pipeline test jobs need to be faster
+- Investigating flaky tests caused by database state
+
+## Analysis Workflow
+
+### 1. Measure baseline
+
+Before optimizing, always measure:
 
 ```bash
 # Count tests per suite
@@ -146,3 +157,11 @@ Replace dynamic `getPdo()` probing with explicit config:
 - The model forgets that parallel tests share the database — use unique identifiers in test data.
 - Seeder optimization has the highest ROI — a 2s seeder running 100 times = 200s wasted.
 - Don't add indexes to test databases just for test performance — the real fix is better test design.
+
+
+## Do NOT
+
+- Do NOT use RefreshDatabase when DatabaseTransactions works — 10x slower.
+- Do NOT run full test suite on every code change — use `--filter`.
+- Do NOT add test-only indexes — fix test design instead.
+- Do NOT disable parallel testing to "fix" flaky tests — fix the root cause.

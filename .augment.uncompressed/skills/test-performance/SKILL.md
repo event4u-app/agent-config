@@ -157,3 +157,11 @@ Replace dynamic `getPdo()` probing with explicit config:
 - The model forgets that parallel tests share the database — use unique identifiers in test data.
 - Seeder optimization has the highest ROI — a 2s seeder running 100 times = 200s wasted.
 - Don't add indexes to test databases just for test performance — the real fix is better test design.
+
+
+## Do NOT
+
+- Do NOT use RefreshDatabase when DatabaseTransactions works — 10x slower.
+- Do NOT run full test suite on every code change — use `--filter`.
+- Do NOT add test-only indexes — fix test design instead.
+- Do NOT disable parallel testing to "fix" flaky tests — fix the root cause.

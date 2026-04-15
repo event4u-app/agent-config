@@ -48,12 +48,6 @@ SECTION_ALIASES = {
 RECOMMENDED_SKILL_SECTIONS = [
     "Procedure",
     "Do NOT",
-    "Output format",
-    "Preconditions",
-    "Decision hints",
-    "Anti-patterns",
-    "Examples",
-    "Environment notes",
 ]
 
 RULE_BAD_SIGNS = [

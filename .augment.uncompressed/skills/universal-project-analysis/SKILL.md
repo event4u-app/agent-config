@@ -1,6 +1,6 @@
 ---
 name: universal-project-analysis
-description: "ONLY when user explicitly requests: full project analysis, deep codebase audit, Laravel project analysis, upgrade readiness check, or comprehensive architecture review. NOT for regular bug fixes or feature work."
+description: "ONLY when user explicitly requests: full project analysis, deep codebase audit, or comprehensive architecture review. NOT for regular feature work."
 source: package
 ---
 

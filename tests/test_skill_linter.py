@@ -58,7 +58,8 @@ source: project
     assert not any(issue.severity == "error" for issue in result.issues)
 
 
-def test_missing_output_format_warns(tmp_path: Path) -> None:
+def test_complete_skill_passes(tmp_path: Path) -> None:
+    """A skill with all required and recommended sections should pass cleanly."""
     path = write_file(
         tmp_path,
         ".augment.uncompressed/skills/example/SKILL.md",
@@ -91,8 +92,7 @@ source: project
     )
 
     result = lint_file(path)
-    assert result.status == "pass_with_warnings"
-    assert any(issue.code == "missing_recommended_section" for issue in result.issues)
+    assert result.status == "pass"
 
 
 def test_vague_validation_fails(tmp_path: Path) -> None:

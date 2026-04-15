@@ -1,10 +1,14 @@
 ---
 name: skill-reviewer
-description: "Use when reviewing, auditing, or optimizing existing skills, or when creating a new skill and wanting to validate it before saving. Also triggers on \"check this skill\", \"audit skills\", \"optimize skill descriptions\", \"run the 5 killers check\", or \"is this skill well-written\". Evaluates skills against the 5 Skill Killers checklist and produces actionable fix recommendations."
+description: "Use when reviewing, auditing, or optimizing skills — validates against the 5 Skill Killers checklist and produces fix recommendations."
 source: package
 ---
 
 # Skill Reviewer
+
+## When to use
+
+Use when reviewing, auditing, or optimizing existing skills — checking quality against the 5 Skill Killers checklist. Also for validating a new skill before saving.
 
 Reviews skills against the **5 Skill Killers** — the most common anti-patterns
 that waste tokens, cause misfires, or degrade agent performance.
@@ -139,3 +143,10 @@ Before scoring the 5 Killers, verify structure:
   If the model consistently gets something wrong, it's NOT obvious — keep it.
 - Skills under 50 lines rarely have Killer 5 problems — skip that check.
 - Flag any "Related skills" section — the agent discovers skills via `<available_skills>` descriptions. Cross-links waste tokens and create maintenance burden. Recommend removal.
+
+
+## Do NOT
+
+- Do NOT rewrite skills that pass all 5 killers — leave them alone.
+- Do NOT add "Related skills" cross-links — the agent discovers via descriptions.
+- Do NOT force Gotcha entries — seed naturally from real failures.
