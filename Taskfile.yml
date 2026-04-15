@@ -76,3 +76,9 @@ tasks:
   test-linter:
     desc: Run skill linter tests
     cmd: python3 -m pytest tests/test_skill_linter.py -v
+
+  ci:
+    desc: Run all CI checks locally
+    cmds:
+      - task: test
+      - task: lint-skills

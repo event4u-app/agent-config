@@ -76,10 +76,10 @@ Extend the existing linter script (`scripts/skill_linter.py`) with CI enforcemen
 - [ ] **Step 2:** Add duplication detection improvements
   - Cross-skill name + description similarity
   - Warn on high overlap
-- [ ] **Step 3:** Create GitHub Actions workflow `.github/workflows/lint-agent-config.yml`
-  - Trigger: PRs touching `.augment/` or `.augment.uncompressed/`
-  - Runs `task lint-skills`
-  - Required check (blocks merge on errors)
+- [x] **Step 3:** Create GitHub Actions workflow `.github/workflows/skill-lint.yml`
+  - PR job: `task lint-skills` + JSON artifact upload
+  - Main job: `task lint-skills-strict` (warnings = errors)
+  - Path-filtered triggers for `.augment/`, `.augment.uncompressed/`, `.claude/`, scripts, tests
 - [ ] **Step 4:** Add compression consistency check to CI
   - `task sync-changed` — verify no unsynced files
 - [ ] **Step 5:** More tests for edge cases + pair mode
@@ -130,7 +130,7 @@ Add YAML frontmatter field:
 
 ### Required checks (block merge)
 - [x] `task lint-skills` — script + Taskfile exist
-- [ ] GitHub Actions workflow to run on PRs
+- [x] GitHub Actions workflow (`.github/workflows/skill-lint.yml`)
 - [ ] `task sync-changed` — compression consistency in CI
 - [ ] Duplicate detection in linter
 

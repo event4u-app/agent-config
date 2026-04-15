@@ -1,0 +1,74 @@
+name: Skill Lint
+
+on:
+  pull_request:
+    paths:
+      - ".augment.uncompressed/**"
+      - ".augment/**"
+      - ".claude/**"
+      - "scripts/skill_linter.py"
+      - "tests/**"
+      - "Taskfile.yml"
+      - ".github/workflows/skill-lint.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - ".augment.uncompressed/**"
+      - ".augment/**"
+      - ".claude/**"
+      - "scripts/skill_linter.py"
+      - "tests/**"
+      - "Taskfile.yml"
+      - ".github/workflows/skill-lint.yml"
+
+jobs:
+  skill-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Task
+        uses: arduino/setup-task@v2
+
+      - name: Run skill linter
+        run: task lint-skills
+
+      - name: Generate JSON lint report
+        if: always()
+        run: |
+          mkdir -p artifacts
+          python3 scripts/skill_linter.py --all --format json > artifacts/skill-lint-report.json || true
+
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skill-lint-report
+          path: artifacts/skill-lint-report.json
+
+  skill-lint-strict:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Task
+        uses: arduino/setup-task@v2
+
+      - name: Run strict skill linter
+        run: task lint-skills-strict
