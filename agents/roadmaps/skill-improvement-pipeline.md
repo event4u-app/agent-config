@@ -77,12 +77,17 @@
        > 2. Project-specific — apply locally only (agents/overrides/)
        > 3. Review first — show me the changes before deciding
        ```
-    8. **Apply locally** — write to `.augment.uncompressed/` + `.augment/` (or `agents/overrides/`)
+    8. **Apply locally** — dual-write workflow (see `override-system.md`):
+       - **New content**: write to `.augment.uncompressed/` + `.augment/`
+       - **Improving existing shared rule/skill**: create override in `agents/overrides/{type}/{name}.md` (mode `replace`, full version) for immediate local benefit
     9. **PR upstream** (if universal — must pass upstream contribution guard):
+       - PR must contain **both** complete uncompressed + compressed versions
        - Create branch `{prefix}{learning-slug}` from `main`
-       - Commit changes
+       - Commit changes to `.augment.uncompressed/` AND `.augment/`
        - Create PR against `upstream_repo`
-       - Link back to task context
+       - Must pass `task lint-skills`
+    10. **After upstream merge** — remove local override from `agents/overrides/`
+        (package update delivers the improvement to all projects)
 - [ ] **Step 2:** Compress skill
 
 ## Phase 4: PR Template & Automation

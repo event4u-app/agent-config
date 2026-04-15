@@ -119,6 +119,46 @@ Agents **must** check for overrides before applying any shared resource:
 | Shared resource has a bug | Fix the original (in the `.augment/` package repo) |
 | Temporary experiment | Use branch-specific notes, not overrides |
 | New capability not in any shared resource | Create new skill/command in `.augment/` |
+| Project wants to improve a shared rule/skill | Override locally + PR upstream (see below) |
+
+## Improving Shared Rules/Skills from a Project
+
+When a project using this package wants to **optimize** a shared rule or skill:
+
+### Dual-write workflow
+
+1. **Apply locally as override** — create `agents/overrides/{type}/{name}.md` with mode `replace`
+   containing the full improved version. This gives the project the benefit immediately.
+
+2. **Create PR against upstream** — submit the improvement to `event4u-app/agent-config`.
+   The PR must contain:
+   - **Uncompressed version** in `.augment.uncompressed/{type}/{name}`
+   - **Compressed version** in `.augment/{type}/{name}`
+   - Both files must be the complete, updated file (not a diff or partial)
+
+3. **After PR is merged upstream** — remove the local override from `agents/overrides/`.
+   The next package update delivers the improvement to all projects.
+
+### Why both?
+
+- The **override** gives the project immediate benefit without waiting for upstream merge
+- The **PR** ensures the improvement flows back to all projects using the package
+- After merge, the override becomes redundant and must be removed to avoid drift
+
+### Rules for upstream PRs
+
+- The PR must contain **both** uncompressed and compressed versions (complete files)
+- The compressed version must be derived from the uncompressed version
+- Changes must pass the skill linter (`task lint-skills`)
+- Changes must not be project-specific (no domain assumptions)
+- Changes must pass the promotion gate (see `controlled-self-optimization.md`)
+
+### Anti-patterns
+
+- Keeping the override after upstream merge → causes drift
+- Submitting only the compressed version → breaks source-of-truth workflow
+- Submitting project-specific behavior as universal improvement
+- Forgetting to create the PR → improvement stays siloed
 
 ## Commands
 

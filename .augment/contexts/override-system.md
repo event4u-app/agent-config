@@ -119,6 +119,22 @@ Agents **must** check for overrides before applying any shared resource:
 | Shared resource has a bug | Fix the original (in the `.augment/` package repo) |
 | Temporary experiment | Use branch-specific notes, not overrides |
 | New capability not in any shared resource | Create new skill/command in `.augment/` |
+| Project wants to improve a shared rule/skill | Override locally + PR upstream (see below) |
+
+## Improving Shared Rules/Skills from a Project
+
+When a project wants to **optimize** a shared rule or skill:
+
+1. **Override locally** — `agents/overrides/{type}/{name}.md` mode `replace`, full improved version
+2. **PR upstream** — submit to `event4u-app/agent-config` with:
+   - Complete uncompressed version (`.augment.uncompressed/`)
+   - Complete compressed version (`.augment/`)
+   - Must pass `task lint-skills`
+3. **After merge** — remove local override (package update delivers improvement)
+
+**Why both:** Override = immediate benefit. PR = flows to all projects. After merge, override = redundant → remove.
+
+**Anti-patterns:** Keeping override after merge (drift) · Only submitting compressed (breaks source-of-truth) · Project-specific behavior as universal
 
 ## Commands
 
