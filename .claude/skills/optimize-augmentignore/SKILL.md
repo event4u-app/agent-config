@@ -8,6 +8,8 @@ disable-model-invocation: true
 
 Scan project for token-wasting files → create/update `.augmentignore`. Also exclude irrelevant skills/rules from system prompt.
 
+**Source of truth for skills/rules:** `.augment.uncompressed/` — scan there, not `.augment/`.
+
 ## Steps
 
 ### 1. Detect tech stack
@@ -88,6 +90,11 @@ Remove irrelevant skills from system prompt (~3 lines saved per skill per reques
 
 | Skill | Ignore when... |
 |---|---|
+| `project-analysis-react` | No React in package.json |
+| `project-analysis-nextjs` | No Next.js in package.json |
+| `project-analysis-symfony` | No Symfony in composer.json |
+| `project-analysis-zend-laminas` | No Zend/Laminas in composer.json |
+| `project-analysis-node-express` | No Express/Node.js backend in project |
 | `react`, `nextjs` | No React/Next.js in package.json |
 | `vue`, `nuxt` | No Vue/Nuxt in package.json |
 | `wordpress` | No WordPress in composer.json |
