@@ -99,6 +99,8 @@ Look at: package manifests, lock files, bootstrap files, Docker/CI config, READM
 * Symfony → `project-analysis-symfony`
 * Zend/Laminas → `project-analysis-zend-laminas`
 * Node/Express → `project-analysis-node-express`
+* React → `project-analysis-react`
+* Next.js → `project-analysis-nextjs`
 
 ### 4. Chain specialists where needed
 
@@ -133,6 +135,8 @@ Check:
 * `project-analysis-symfony`
 * `project-analysis-zend-laminas`
 * `project-analysis-node-express`
+* `project-analysis-react`
+* `project-analysis-nextjs`
 
 ### Optional downstream specialists
 
