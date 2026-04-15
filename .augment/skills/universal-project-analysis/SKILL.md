@@ -315,25 +315,141 @@ When the project uses Laravel, extend the standard workflow with:
 - Model events in unexpected contexts (seeding, migration, queue)
 - Route model binding (implicit vs explicit, soft deletes, wrong connection)
 
-### Symfony
+### Symfony (extended investigation)
 
-- Service definitions and autowiring conflicts
-- Env configs vs parameter bags
-- Event system ordering
-- Security firewall configuration
+When the project uses Symfony, extend the standard workflow with:
 
-### Zend / Laminas
+**Boot analysis:**
+- Kernel bootstrap: `Kernel::boot()`, bundle registration order, compiler passes
+- Environment-specific config: `config/packages/{env}/`, `.env.local` override chain
+- Service container: autowiring, autoconfigure, manual definitions in `services.yaml`
+- Cache warmup: `cache:warmup`, compiled container, router, annotation cache
 
-- Legacy service manager patterns
-- Config merge order
-- Module system conflicts
+**Request-to-response trace:**
+- Route → EventListener (kernel.request) → Controller → Service → Repository → Doctrine → Response
+- Verify: ParamConverter, security voters/firewalls, form validation, serializer groups
 
-### Node / Express
+**Dependency injection deep issues:**
+- Autowiring conflicts (multiple implementations of same interface without alias)
+- Service decoration chains (wrong decorator order, missing `#[AsDecorator]`)
+- Lazy services vs eager loading (circular dependency symptoms)
+- Tagged services with wrong priority or missing tag
+- Private services accessed directly instead of through container
 
-- Async/await pitfalls (unhandled rejections, missing awaits)
-- Middleware order and error propagation
-- Memory leaks in closures and event listeners
-- Module resolution issues
+**Doctrine ORM analysis:**
+- Entity mapping vs schema reality (run `doctrine:schema:validate`)
+- Lifecycle callbacks vs event subscribers (performance, order)
+- Lazy loading and proxy objects (N+1, uninitialized proxies)
+- DQL vs QueryBuilder vs native SQL (when each is appropriate)
+- Migrations: diff-generated vs manual, version conflicts
+
+**Security analysis:**
+- Firewall configuration: multiple firewalls, context sharing, stateless APIs
+- Voters vs AccessDecisionManager strategy (unanimous, affirmative, consensus)
+- Authentication: custom authenticators, guard system, token handling
+- CSRF protection on forms, API token validation
+
+**Messenger (async) analysis:**
+- Transport configuration (AMQP, Redis, Doctrine)
+- Message handlers: routing, middleware, retry strategy
+- Failed message handling: `messenger:failed:show`, requeue vs reject
+- Serialization issues (non-serializable objects in messages)
+
+**Common deep issues:**
+- `env()` in config files vs `%env()%` parameter syntax — mixing causes runtime failures
+- Event subscriber priority conflicts (two subscribers fighting over same event)
+- Doctrine proxy issues (lazy-loaded entities returned from cache without hydration)
+- Bundle config not merged correctly (missing `Configuration` class or wrong tree builder)
+- Twig extension performance (filter called in loop without caching)
+- Console command not registered (missing autoconfigure, wrong namespace)
+
+### Zend / Laminas (extended investigation)
+
+When the project uses Zend Framework or Laminas, extend the standard workflow with:
+
+**Boot analysis:**
+- Application bootstrap: `Application::init()`, module loading order
+- Config merge: module config → autoload/global → autoload/local → environment
+- Service Manager: factories, abstract factories, delegators, initializers
+- Module dependencies: `getModuleConfig()`, `Module.php` lifecycle methods
+
+**Request-to-response trace:**
+- Route → RouteMatch → DispatchListener → Controller → Service → TableGateway/Hydrator → Response
+- Verify: input filters, guard/ACL authorization, view model rendering
+
+**Service Manager deep issues:**
+- Factory vs abstract factory resolution order (abstract factories are slow fallbacks)
+- Shared vs non-shared services (default: shared — stateful services cause cross-request contamination)
+- Delegator chains: execution order, missing delegator factories
+- Peering: child service locator inheritance from parent (deprecated in Laminas)
+- Initializers: performance trap (runs on EVERY service instantiation)
+
+**Database layer analysis:**
+- TableGateway patterns vs Doctrine (many Zend projects mix both)
+- Hydrators: ClassMethods vs ObjectProperty vs custom — type coercion issues
+- ResultSet: buffered vs unbuffered, memory issues with large datasets
+- SQL abstraction: `Sql` object vs raw queries, platform-specific SQL leaks
+
+**Migration from Zend to Laminas:**
+- Namespace changes: `Zend\*` → `Laminas\*` (automated via `laminas-migration`)
+- Config key changes (some renamed, some restructured)
+- Removed/replaced components (check laminas migration guide per component)
+- Hidden `Zend\*` references in serialized data, database, cache
+
+**Common deep issues:**
+- Config merge order surprises (local override not loading because of glob pattern)
+- Event Manager: shared vs local, listener aggregate attachment order
+- View helpers with implicit dependencies on MVC context (break in CLI)
+- Input filter vs form validation inconsistencies (filter applied but not validated)
+- Module.php `onBootstrap()` doing too much work (slows every request)
+
+### Node / Express (extended investigation)
+
+When the project uses Node.js with Express (or similar frameworks), extend the standard workflow with:
+
+**Boot analysis:**
+- Entry point: `server.js`/`app.js`/`index.js`, environment loading (`dotenv`, `config`)
+- Middleware registration order in `app.use()` (order matters — first match wins)
+- Database connections: connection pooling, startup vs lazy init
+- Graceful shutdown: `SIGTERM`/`SIGINT` handlers, connection draining
+
+**Request-to-response trace:**
+- Route → Middleware chain → Controller/Handler → Service → DB/ORM → Response
+- Verify: input validation (Joi, Zod, express-validator), auth middleware, error middleware
+
+**Async/await deep issues:**
+- Unhandled promise rejections (crash the process in Node 15+ without handler)
+- Missing `await` in async middleware (request completes before async work finishes)
+- `Promise.all()` vs sequential: error handling differences, partial failure states
+- Event loop blocking: CPU-heavy sync code, large JSON parsing, regex backtracking
+- Stream backpressure: reading faster than writing, memory accumulation
+
+**Express-specific analysis:**
+- Error middleware: must have 4 parameters `(err, req, res, next)` — otherwise skipped
+- Router-level vs app-level middleware (scope and execution order)
+- `res.json()` called after `res.end()` — silent "headers already sent" errors
+- Path parameter injection: `req.params` are strings, not numbers (type coercion bugs)
+- CORS: `cors()` middleware must come before route handlers
+
+**Database layer (Sequelize, TypeORM, Prisma, Knex):**
+- Connection pool exhaustion (queries not released, transactions left open)
+- N+1 queries (especially Sequelize eager loading with `include`)
+- Migration drift: model definitions vs actual schema
+- Transaction handling: auto-commit vs explicit, nested transaction support varies
+
+**Auth and security:**
+- JWT: secret rotation, token expiry, refresh token flow
+- Passport.js: strategy configuration, session serialization
+- Rate limiting: per-user vs per-IP, distributed state (Redis)
+- Input sanitization: XSS via template rendering, SQL injection in raw queries
+
+**Common deep issues:**
+- `require()` caching: module is singleton, shared state across requests
+- Memory leaks: closures holding request references, event listeners not removed
+- `node_modules` version conflicts: hoisting issues, multiple versions of same package
+- TypeScript: runtime type safety is lost after compilation — `as` casts hide bugs
+- Environment variables: `process.env.X` is always string — `"false"` is truthy
+- Circular dependencies: partial module exports, `undefined` at import time
 
 ---
 
