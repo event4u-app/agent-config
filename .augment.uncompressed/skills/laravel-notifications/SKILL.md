@@ -16,7 +16,7 @@ Use this skill when sending notifications to users or external systems:
 
 For **Mailables** (complex email templates, attachments), see [laravel-mail](../laravel-mail/SKILL.md).
 
-## Creating notifications
+## Procedure: Create a notification
 
 ```bash
 php artisan make:notification InvoiceCreated

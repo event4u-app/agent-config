@@ -14,7 +14,7 @@ Do NOT use when:
 - Writing Grafana queries/JSON (use `grafana` skill)
 - Building Livewire components (use `livewire` skill)
 
-## Dashboard Domains
+## Procedure: Design a dashboard
 
 | Domain | Technology | Purpose |
 |---|---|---|
@@ -87,6 +87,12 @@ Config required: `allow_embedding = true`, `cookie_samesite = none` (cross-origi
 - Simple table often beats fancy visualization.
 - Always scope to customer/tenant — no unfiltered admin views.
 - Always define time range explicitly.
+
+## Do NOT
+
+- Do NOT create dashboards with more than 8 panels — cognitive overload.
+- Do NOT mix ops metrics with business KPIs on the same dashboard.
+- Do NOT show admin data without tenant scoping.
 
 ## Auto-trigger keywords
 

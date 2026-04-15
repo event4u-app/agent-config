@@ -15,7 +15,7 @@ Do NOT use when:
 - Production deployment (use `aws-infrastructure` skill)
 - Codespaces setup (use `devcontainer` skill)
 
-## Before making changes
+## Procedure: Modify Docker setup
 
 1. Read project-specific Docker docs in `agents/` or `Docs/` if they exist.
 2. Check `Makefile` or `Taskfile.yml` for available container management targets.

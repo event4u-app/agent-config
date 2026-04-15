@@ -17,7 +17,7 @@ Do NOT use when:
 - Running commands or tests
 - The `open_edited_files` setting is `false`
 
-## Concept
+## Procedure: Open files in IDE
 
 When the agent edits files, the user often wants to see them in their IDE immediately.
 This skill reads the user's preferences from `.agent-settings` and opens files automatically

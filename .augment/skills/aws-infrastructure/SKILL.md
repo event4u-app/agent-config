@@ -8,9 +8,18 @@ source: package
 
 ## When to use
 
-AWS infra, deployment, ECS tasks, env-specific settings. NOT for: local dev (`docker`), app code.
+Use this skill when working with AWS infrastructure, deployment configurations, ECS task definitions, or environment-specific settings.
 
-## Before: `.aws/` dir, CI workflows, vars files, project overrides (`agents/overrides/skills/aws-infrastructure.md`).
+Do NOT use when:
+- Local development setup (use `docker` skill)
+- Application code changes
+
+## Procedure: Modify AWS infrastructure
+
+1. Read the `.aws/` directory (or equivalent) for environment configs and templates.
+2. Read CI/CD workflows (e.g., `.github/workflows/`) for the deployment pipeline.
+3. Check the environment-specific vars files.
+4. **Read project-level overrides** — check `agents/overrides/skills/aws-infrastructure.md` for project-specific service names, prefixes, and infrastructure details.
 
 ## Architecture overview
 
@@ -69,12 +78,69 @@ Template variables:
 - `{{ .Env.CommitHash }}` — Git commit SHA
 - `{{ (ds "Vars").AWS.* }}` — Values from the vars file
 
-## Deploy: Stage/Prod = Build→ECR→Migrations(one-shot)→Deploy. Review = Build→ECR→Single service→PR comment.
+## Deployment flow
 
-## Auth: OIDC (no long-lived creds). Tags: `sha-<sha>` + `latest`/`<review-name>`. Secrets: AWS Secrets Manager (`<GlobalPrefix>-dotenv`). Platform: check arch (arm64/amd64).
+### Standard (Stage/Production)
 
-## IaC: Terraform+Terragrunt in separate repo. See `terraform`/`terragrunt` skills.
+1. **Build**: Docker image → ECR (tag: SHA + `latest`)
+2. **Migrations**: Run as ECS task (one-shot), wait for completion
+3. **Deploy Services**: Update ECS services with new task definitions
 
-## Gotcha: no hardcoded credentials, ECS task defs are immutable, gomplate `{{ }}` conflicts with other template engines.
+### Review environments
 
-## Do NOT: change VPC/subnet/SG without approval, modify IAM roles, hardcode account IDs, change GlobalPrefix, switch architecture without updating everything.
+1. **Build**: Docker image → ECR (tag: SHA + branch-hash)
+2. **Deploy**: Create or update single ECS service (combined task)
+3. **Comment**: Post deployment URL on PR
+
+## Conventions
+
+### Authentication
+
+- GitHub Actions uses **OIDC** (no long-lived AWS credentials).
+- Role ARN is per-environment in the vars file.
+- `aws-actions/configure-aws-credentials` handles the OIDC exchange.
+
+### Image tagging
+
+- Primary tag: `sha-<full-commit-sha>` (immutable)
+- Secondary tag: `latest` (Stage/Production) or `<review-env-name>` (Review)
+
+### Secrets
+
+- `.env` files are stored in **AWS Secrets Manager**.
+- Naming convention: `<GlobalPrefix>-dotenv`.
+
+### Platform
+
+- Check the project's architecture target (`linux/arm64` for Graviton, `linux/amd64` for x86).
+- Ensure CI runners match the target architecture.
+
+## Infrastructure as Code
+
+The underlying AWS resources (ECS clusters, ALBs, RDS, Redis, IAM roles, security groups, etc.)
+are typically managed via **Terraform + Terragrunt** in a separate infrastructure repository.
+
+See the `terraform` and `terragrunt` skills for general IaC conventions.
+
+## Auto-trigger keywords
+
+- AWS
+- ECS Fargate
+- ECR
+- EFS
+- Secrets Manager
+- deployment
+
+## Gotcha
+
+- Never hardcode AWS credentials — always use Secrets Manager or environment variables.
+- ECS task definitions are immutable — you create new revisions, not edit existing ones.
+- gomplate templates use `{{ }}` which conflicts with other template engines — escape carefully.
+
+## Do NOT
+
+- Do NOT change VPC/subnet/security group IDs without infrastructure team approval.
+- Do NOT modify IAM role ARNs — they are managed via Terraform.
+- Do NOT hardcode AWS account IDs in templates.
+- Do NOT change the `GlobalPrefix` — it's used for resource naming across AWS.
+- Do NOT switch platform architecture without updating all runners and ECS configs.

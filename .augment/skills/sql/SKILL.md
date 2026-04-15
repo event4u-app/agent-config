@@ -14,7 +14,7 @@ Do NOT use when:
 - Eloquent/Query Builder queries (use `eloquent` or `database` skill)
 - Schema design (use `database` skill)
 
-## Iron Law
+## Procedure: Write raw SQL
 
 ```
 NEVER build SQL strings with PHP variable interpolation or concatenation.
@@ -41,6 +41,12 @@ DB::select("SELECT * FROM users WHERE email = '{$email}'");
 - The model writes `$variable` in SQL strings instead of `?` placeholders.
 - `GROUP BY` with `ONLY_FULL_GROUP_BY` requires all non-aggregated columns.
 - Use SQL types (`NULL`, `1/0`, `JSON_ARRAY()`) — not PHP equivalents.
+
+## Do NOT
+
+- Do NOT interpolate PHP variables into SQL strings — always parameterize.
+- Do NOT use PHP syntax (arrays, booleans, null) in raw SQL — use SQL equivalents.
+- Do NOT write raw SQL when the query builder can express the same thing clearly.
 
 ## Auto-trigger keywords
 

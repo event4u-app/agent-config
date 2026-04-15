@@ -155,7 +155,7 @@ php artisan quality:refactor --fix     # Rector + ECS
 php artisan quality:finalize           # Rector + ECS + PHPStan (full pipeline)
 ```
 
-## Workflow after code changes
+## Procedure: Run quality checks
 
 1. Run PHPStan — fix all errors
 2. Run Rector + ECS with auto-fix — fix style + refactoring

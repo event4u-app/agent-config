@@ -8,9 +8,18 @@ source: package
 
 ## When to use
 
-Grafana dashboards, Loki LogQL, alerting, Grafana module, log debugging.
+Use this skill when:
+- Creating or editing Grafana dashboards (JSON provisioning)
+- Writing Loki LogQL queries for log analysis
+- Configuring alerting rules or contact points
+- Working on a Grafana module (if the project has one)
+- Debugging log-based issues using Loki data
 
-## Setup: check for Grafana module or Docker config. Structure:
+## Procedure: Create Grafana dashboard
+
+### Project setup
+
+Check if the project has a dedicated Grafana module or Docker config. Typical structure:
 
 ```
 {grafana-location}/
@@ -131,6 +140,23 @@ When adding new log entries for Grafana visualization:
 - **Config:** `config/grafana.php`, `config/logging.php` (if applicable)
 
 
-## Gotcha: LogQL ≠ PromQL, alerts need notification channel, >7 days queries timeout (downsample).
+## Gotcha
 
-## Do NOT: panels without units/labels, alerts without channel, hardcode datasource names.
+- Loki queries use LogQL, not PromQL — the syntax is different despite looking similar.
+- Don't create alerts without a clear notification channel — silent alerts are useless.
+- Dashboard panels that query too much data (>7 days at full resolution) will timeout — use downsampling.
+
+## Do NOT
+
+- Do NOT create panels without proper units and labels.
+- Do NOT use alerting rules without a notification channel.
+- Do NOT hardcode datasource names — use variables.
+
+## Auto-trigger keywords
+
+- Grafana
+- Loki
+- dashboard
+- log query
+- alerting
+- monitoring panel

@@ -10,7 +10,7 @@ source: package
 
 Use this skill when working with GitHub Actions workflows, CI pipeline configuration, or understanding the automated quality and deployment process.
 
-## Before making changes
+## Procedure: Modify CI workflows
 
 1. Read `.github/workflows/` to understand the full pipeline.
 2. Check `AGENTS.md` for quality tool commands and testing setup.

@@ -63,7 +63,7 @@ create new bugs. Quick patches mask underlying issues.
 - Proposing solutions before tracing data flow
 - "One more fix attempt" (when already tried 2+)
 
-## Analysis process (4 phases)
+## Procedure: Analyze a bug
 
 ### Phase 1: Root Cause Investigation
 

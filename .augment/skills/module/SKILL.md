@@ -8,7 +8,13 @@ source: package
 
 ## When to use
 
-Working in `app/Modules/`. Before: `app/Modules/README.md`, `ModuleServiceProvider.php`, module `agents/`.
+Use this skill when creating, exploring, or working within a module in `app/Modules/`.
+
+## Procedure: Work with modules
+
+1. Read `app/Modules/README.md` for the full module documentation.
+2. Check `app/Providers/ModuleServiceProvider.php` for auto-loading behavior.
+3. If module-level agent docs exist (`app/Modules/{Module}/agents/`), read them.
 
 ## Detection
 
@@ -115,6 +121,22 @@ app/Modules/{Module}/agents/
 └── contexts/       # Module-scoped context documents
 ```
 
-## Gotcha: namespace `App\Modules\{Name}\App\{Layer}` (extra `App`), auto-registered routes, shared code → `app/`.
+## Auto-trigger keywords
 
-## Do NOT: manual route registration, lowercase dirs, logic in controllers, module for trivial functionality.
+- Laravel module
+- module structure
+- module creation
+- module namespace
+
+## Gotcha
+
+- Module namespace is `App\Modules\{Name}\App\{Layer}` — don't forget the extra `App` segment.
+- Routes in modules auto-register via `ModuleServiceProvider` — don't register them manually.
+- Don't put shared code in a module — shared code belongs in `app/` not `app/Modules/`.
+
+## Do NOT
+
+- Do NOT manually register module routes — `ModuleServiceProvider` handles this.
+- Do NOT use lowercase directory names (`routes/`, `app/`) — use `Routes/`, `App/`.
+- Do NOT put business logic in controllers — use module services.
+- Do NOT create a module for trivial functionality — only when logical separation is needed.

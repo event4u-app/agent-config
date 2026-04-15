@@ -58,6 +58,12 @@ Do NOT use when:
 - Always add `--force` for destructive commands — never delete data without confirmation.
 - Add environment checks for production commands.
 
+## Do NOT
+
+- Do NOT run destructive operations without `--force` confirmation.
+- Do NOT use `$this->ask()` for non-interactive commands (cron/queue).
+- Do NOT put business logic in commands — delegate to services.
+
 ## Auto-trigger keywords
 
 - artisan command

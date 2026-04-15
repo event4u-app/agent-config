@@ -17,7 +17,7 @@ Use this skill for anything related to Laravel Horizon:
 
 For **writing queue jobs** themselves, see [jobs-events](../jobs-events/SKILL.md).
 
-## Configuration
+## Procedure: Configure Horizon
 
 ### config/horizon.php
 

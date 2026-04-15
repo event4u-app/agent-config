@@ -14,7 +14,7 @@ Do NOT use when:
 - Local development setup (use `docker` skill)
 - Application code changes
 
-## Before making changes
+## Procedure: Modify AWS infrastructure
 
 1. Read the `.aws/` directory (or equivalent) for environment configs and templates.
 2. Read CI/CD workflows (e.g., `.github/workflows/`) for the deployment pipeline.

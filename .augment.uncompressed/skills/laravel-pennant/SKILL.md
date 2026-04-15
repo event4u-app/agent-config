@@ -14,7 +14,7 @@ Use this skill when working with feature flags:
 - A/B testing with feature variants
 - Environment-based feature gating
 
-## Installation
+## Procedure: Set up feature flags
 
 ```bash
 composer require laravel/pennant

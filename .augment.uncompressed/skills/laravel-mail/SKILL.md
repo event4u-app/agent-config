@@ -17,7 +17,7 @@ Use this skill when building email functionality:
 For **simple notification emails** (one-off messages), see [laravel-notifications](../laravel-notifications/SKILL.md).
 Use Mailables when you need full control over the email template.
 
-## Creating Mailables
+## Procedure: Create a Mailable
 
 ```bash
 php artisan make:mail InvoiceMail --markdown=emails.invoice

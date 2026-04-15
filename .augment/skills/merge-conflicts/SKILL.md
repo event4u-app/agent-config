@@ -8,14 +8,37 @@ source: package
 
 ## When to use
 
-Merge/rebase conflicts, "resolve conflicts", CI behind main, `prepare-for-review` conflicts.
+Use this skill when:
+- A merge or rebase produces conflicts
+- The user asks to "resolve conflicts", "fix merge", or "update branch"
+- CI fails because the branch is behind main
+- The `prepare-for-review` command encounters conflicts
 
-## Workflow
+## Procedure: Resolve merge conflicts
 
-1. **Understand:** `git diff --name-only --diff-filter=U`, check HEAD vs MERGE_HEAD/REBASE_HEAD
-2. **Read both sides:** full context, understand ours + theirs, check if both needed
+### 1. Understand the situation
 
-### Strategies
+Before touching any conflict:
+
+```bash
+# What files have conflicts?
+git diff --name-only --diff-filter=U
+
+# What branch are we merging from/into?
+git log --oneline -1 HEAD
+git log --oneline -1 MERGE_HEAD   # or REBASE_HEAD for rebase
+```
+
+### 2. Read both sides
+
+For each conflicted file:
+
+1. **Read the full conflict** — not just the markers, but the surrounding context.
+2. **Understand "ours"** — what does the current branch intend?
+3. **Understand "theirs"** — what does the incoming branch intend?
+4. **Check if both changes are needed** — often both sides added different things.
+
+### 3. Resolution strategies
 
 | Situation | Strategy |
 |---|---|
@@ -27,17 +50,85 @@ Merge/rebase conflicts, "resolve conflicts", CI behind main, `prepare-for-review
 | Auto-generated files (OpenAPI spec, baselines) | **Regenerate** — resolve source, then regenerate the output |
 | Formatting-only conflicts | **Accept either** — then run quality tools to normalize |
 
-### File types
+### 4. File-type specific rules
 
-**PHP:** check `use` statements, `php -l`, PHPStan. **Migrations:** keep both, adjust timestamps. **Config:** resolve then `composer update --lock`/`npm install`. **Tests:** keep all, combine modified.
+#### PHP files
 
-### Ask user: same business logic changed differently, deletion vs modification, auth/security, unsure. Resolve silently: non-overlapping additions, lock files, imports, formatting.
+- After resolving, check that `use` statements are correct (no duplicates, no missing imports).
+- Verify the resolved code compiles: `php -l filename.php`
+- Run PHPStan on the file: `vendor/bin/phpstan analyse` (see `quality-tools` skill)
 
-### Verify: `grep -rn "<<<<<<< "` (no markers left), `php -l`, PHPStan, tests. `git add .` — don't commit.
+#### Migrations
 
-## Pitfalls: never accept blindly, always grep for markers, check imports, compare with originals, regenerate lock files.
+- Never merge two migrations that modify the same table into one.
+- If both branches added migrations, keep both — adjust timestamps if they collide.
+- After resolving, run migrations to verify: `php artisan migrate --env=testing`
 
-## Merge (default, preserves history) vs Rebase (only when asked). **Never rebase without permission.**
+#### Config files
+
+- `composer.json` — resolve, then run `composer update --lock` to regenerate `composer.lock`.
+- `package.json` — resolve, then run `npm install` to regenerate `package-lock.json`.
+- `.env.example` — keep all new entries from both sides.
+
+#### Test files
+
+- If both sides added tests to the same file, keep all tests.
+- If both sides modified the same test, understand what each test is verifying and combine.
+
+### 5. When to ask the user
+
+**Always ask** when:
+- Both sides changed the **same business logic** differently (semantic conflict)
+- A deletion conflicts with a modification (intent is unclear)
+- The conflict involves **authorization or security** logic
+- You're unsure which side is "correct"
+
+**Resolve without asking** when:
+- Both sides added different, non-overlapping code
+- Lock file / auto-generated file conflicts
+- Import statement ordering
+- Formatting-only differences
+
+### 6. Verify after resolution
+
+After resolving ALL conflicts:
+
+```bash
+# 1. Check no conflict markers remain
+grep -rn "<<<<<<< \|======= \|>>>>>>> " --include="*.php" --include="*.js" --include="*.ts" .
+
+# 2. Syntax check PHP files
+find . -name "*.php" -newer .git/MERGE_HEAD -exec php -l {} \;
+
+# 3. Run quality tools
+vendor/bin/phpstan analyse
+
+# 4. Run tests
+php artisan test
+
+# 5. Complete the merge/rebase
+git add .
+# Don't commit — let the user decide when to commit
+```
+
+## Common pitfalls
+
+| Pitfall | Prevention |
+|---|---|
+| Accepting "ours" blindly | Always read both sides first |
+| Missing a conflict marker | Run `grep -rn "<<<<<<< "` after resolving |
+| Breaking imports | Check `use` statements after merge |
+| Losing new code | Compare the resolved file with both original versions |
+| Forgetting to regenerate lock files | Always run package manager after resolving `*.json` |
+
+## Rebase vs Merge
+
+| Approach | When to use |
+|---|---|
+| `git merge main` | Default — preserves history, safer for shared branches |
+| `git rebase main` | Only when explicitly asked — rewrites history, cleaner log |
+
+**Never rebase without explicit permission** (per `no-commit` rule).
 
 ## Auto-trigger keywords
 

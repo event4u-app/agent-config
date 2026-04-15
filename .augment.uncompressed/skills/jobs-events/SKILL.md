@@ -66,6 +66,12 @@ Do NOT use when:
 - Listener exceptions block the event chain — queue heavy listeners.
 - Set `$tries` and `$backoff` — unlimited retries overwhelm the queue.
 
+## Do NOT
+
+- Do NOT serialize Eloquent models with loaded relations into queued jobs.
+- Do NOT ignore idempotency — retries must not create duplicates.
+- Do NOT hide critical business flows behind deep listener chains.
+
 ## Auto-trigger keywords
 
 - Laravel job

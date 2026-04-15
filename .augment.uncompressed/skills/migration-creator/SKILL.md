@@ -10,7 +10,7 @@ source: package
 
 Use this skill when the user asks to create a database migration, add a column, create a table, or modify the schema.
 
-## Before creating a migration
+## Procedure: Create a migration
 
 Read `./agents/` and `AGENTS.md` for project-specific database conventions (table prefixes,
 column naming, multi-tenant setup, dual-database architecture, etc.).

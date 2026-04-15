@@ -8,7 +8,13 @@ source: package
 
 ## When to use
 
-Terragrunt `.hcl`, environment configs, multi-module deployments. Before: `root.hcl`, sibling configs, module `variables.tf`.
+Use this skill when working with Terragrunt configurations (`.hcl` files), managing environment-specific settings, or orchestrating multi-module deployments.
+
+## Procedure: Write Terragrunt config
+
+1. Read the `root.hcl` in the target environment (`environments/pro/root.hcl` or `environments/sta/root.hcl`).
+2. Check existing `terragrunt.hcl` files in sibling directories for patterns.
+3. Read the target module's `variables.tf` to understand required inputs.
 
 ## Project structure
 
@@ -124,10 +130,83 @@ inputs = merge(
 )
 ```
 
-## Conventions: YAML files for variables (named after module), `dependency` blocks, merge outputs+locals in `inputs`. Extra providers via `generate` blocks.
+## Conventions
 
-## Tools: devbox (`terragrunt`, `awscli2`, `terraform`). Taskfile: `task versions/check:awscli/cache:clear`. devbox: `i`=init, `p`=plan, `a`=apply, `d`=destroy.
+### Variable files
 
-## Gotcha: circular deps = cryptic errors, don't duplicate vars (use `inputs`), DRY via `include`.
+- Use **YAML files** (not HCL) for module-specific variables.
+- Name them after the module (e.g., `my-service.yaml`).
+- Keep them in the same directory as `terragrunt.hcl`.
 
-## Do NOT: OpenTofu (`terraform_binary = "terraform"`), hardcode credentials, commit `.env.local.yaml`, modify `root.hcl` carelessly, remove `dependency` blocks, use `terraform` directly.
+### Dependencies
+
+- Use `dependency` blocks to reference other modules.
+- Core module outputs (VPC, DNS zones, etc.) are passed via `dependency.core.outputs`.
+- Merge dependency outputs with local variables in `inputs`.
+
+### Additional providers
+
+Some modules need extra providers (e.g., New Relic). Generate them in the module's `terragrunt.hcl`:
+
+```hcl
+generate "provider_newrelic" {
+  path      = "provider-newrelic.tf"
+  if_exists = "overwrite_terragrunt"
+  contents  = <<EOF
+provider "newrelic" {
+  account_id = "${include.locals.env.newrelic_account_id}"
+  api_key    = "${get_env("TF_VAR_newrelic_api_key", include.locals.env.newrelic_api_key)}"
+}
+EOF
+}
+```
+
+## Development tools
+
+The project uses **devbox** for tool management:
+
+```json
+{
+  "packages": ["terragrunt", "awscli2", "terraform@latest"]
+}
+```
+
+### Taskfile commands
+
+```bash
+task versions          # Show awscli, Terraform, Terragrunt versions
+task check:awscli      # Verify AWS CLI is configured
+task cache:clear       # Clear .terraform and .terragrunt-cache dirs
+```
+
+### Quick commands (devbox scripts)
+
+```bash
+devbox run i           # terragrunt init
+devbox run p           # terragrunt plan
+devbox run a           # terragrunt apply
+devbox run d           # terragrunt destroy
+```
+
+
+## Auto-trigger keywords
+
+- Terragrunt
+- multi-environment
+- DRY config
+- remote state
+
+## Gotcha
+
+- Terragrunt `dependency` blocks create implicit ordering — circular dependencies cause cryptic errors.
+- Don't duplicate Terraform variables in terragrunt.hcl — use `inputs` to pass them through.
+- The model tends to hardcode values that should come from `include` blocks — use DRY patterns.
+
+## Do NOT
+
+- Do NOT switch to OpenTofu — the project explicitly uses `terraform_binary = "terraform"`.
+- Do NOT hardcode AWS credentials — use AWS profiles from `.env.yaml`.
+- Do NOT commit `.env.local.yaml` — it contains local AWS profile overrides.
+- Do NOT modify `root.hcl` without understanding the impact on all modules.
+- Do NOT remove `dependency` blocks — they ensure correct apply order.
+- Do NOT use `terraform` commands directly — always use `terragrunt` as the wrapper.

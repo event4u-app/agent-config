@@ -8,7 +8,17 @@ source: package
 
 ## When to use
 
-New API endpoint/route/controller. NOT for: modifying existing (`refactorer`), design decisions (`api-design`). Before: `agents/` docs, AGENTS.md.
+Use this skill when the user asks to create a new API endpoint, REST route, or controller action.
+
+
+Do NOT use when:
+- Modifying existing endpoints (use `refactorer` skill)
+- API design decisions (use `api-design` skill)
+
+## Procedure: Create an API endpoint
+
+Read the project-specific docs in `./agents/` and `AGENTS.md` for controller conventions,
+API resource patterns, validation rules, and routing.
 
 ## Laravel projects
 
@@ -140,6 +150,26 @@ Controllers use PHP 8 attributes for OpenAPI spec generation from `App\OpenApi\S
 - `ShowResourceResponseSchema`, `ListResourceResponseSchema`, `CreateResourceResponseSchema`
 - `ResourceNotFoundResponse`, `ValidationErrorResponse`
 
-## Gotcha: register route too, check for duplicates, FormRequest↔OpenAPI sync, return type on `toArray()`.
+## Gotcha
 
-## Do NOT: logic in controllers, skip FormRequest, raw models, skip auth, multi-action controllers, `response()->json()`.
+- Don't forget to register the route — creating the controller without the route is a common miss.
+- Always check if a similar endpoint already exists — duplicates cause confusion.
+- FormRequest validation rules must match the OpenAPI schema — keep them in sync.
+- The model tends to forget the `return` type on Resource `toArray()` methods.
+
+## Do NOT
+
+- Do NOT put business logic in controllers — delegate to services.
+- Do NOT skip FormRequest validation — every controller needs a FormRequest.
+- Do NOT return raw Eloquent models — always use API Resources.
+- Do NOT create routes without proper authorization (Policy in FormRequest or middleware).
+- Do NOT create multi-action controllers — only single-action with `__invoke()`.
+- Do NOT use `response()->json()` — use `Resource::make()`.
+
+## Auto-trigger keywords
+
+- create endpoint
+- new API route
+- controller creation
+- form request
+- API resource

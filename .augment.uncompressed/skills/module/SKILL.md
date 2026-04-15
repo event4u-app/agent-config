@@ -10,7 +10,7 @@ source: package
 
 Use this skill when creating, exploring, or working within a module in `app/Modules/`.
 
-## Before making changes
+## Procedure: Work with modules
 
 1. Read `app/Modules/README.md` for the full module documentation.
 2. Check `app/Providers/ModuleServiceProvider.php` for auto-loading behavior.

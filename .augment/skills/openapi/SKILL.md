@@ -8,7 +8,13 @@ source: package
 
 ## When to use
 
-OpenAPI docs, annotations, spec validation. Before: `agents/docs/controller.md`, `agents/contexts/api-versioning.md`, existing annotations.
+Use this skill when adding or updating API documentation, writing OpenAPI annotations on controllers, or validating API specs.
+
+## Procedure: Add OpenAPI documentation
+
+1. Read `agents/docs/controller.md` for OpenAPI attribute patterns used in controllers.
+2. Read `agents/contexts/api-versioning.md` for how versions are reflected in the API docs.
+3. Check existing controllers for annotation examples.
 
 ## OpenAPI attributes
 
@@ -107,8 +113,34 @@ npx @redocly/cli preview-docs openapi.yaml
 
 Check for `.redocly.yaml` or `redocly.yaml` config in the project root.
 
-## Versioned: prefix in server URL, new docs for v2 (don't modify v1), `deprecated: true`.
+## Versioned documentation
 
-## Gotcha: match actual behavior (stale > none), response schemas ↔ Resource class, no internal endpoints in public spec.
+When the API uses URL-based versioning (e.g., `/api/v1/`, `/api/v2/`):
 
-## Do NOT: skip docs for new endpoints, document internal, docblock `@OA\` when project uses attributes, real customer data in examples, docs ≠ implementation.
+- The version prefix is typically part of the **server URL**, not the individual endpoint paths.
+- Check the OpenAPI server configuration to understand what prefix is already included.
+- When creating a v2 endpoint, add new documentation — don't modify v1 docs.
+- Mark deprecated endpoints with `deprecated: true`.
+
+
+## Auto-trigger keywords
+
+- OpenAPI
+- Swagger
+- API documentation
+- PHP attributes
+- Redocly
+
+## Gotcha
+
+- OpenAPI attributes must match the actual endpoint behavior — stale docs are worse than no docs.
+- The model tends to define response schemas that don't match the Resource class output.
+- Don't document internal endpoints in the public API spec.
+
+## Do NOT
+
+- Do NOT skip OpenAPI documentation when creating new endpoints.
+- Do NOT document internal/private endpoints that are not part of the public API.
+- Do NOT use docblock `@OA\` annotations when the project uses PHP 8 attributes.
+- Do NOT hardcode example values that contain real customer data.
+- Do NOT create documentation that contradicts the actual implementation.

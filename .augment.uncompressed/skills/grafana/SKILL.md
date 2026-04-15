@@ -15,7 +15,7 @@ Use this skill when:
 - Working on a Grafana module (if the project has one)
 - Debugging log-based issues using Loki data
 
-## Project setup
+## Procedure: Create Grafana dashboard
 
 ### Project setup
 

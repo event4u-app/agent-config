@@ -45,6 +45,12 @@ Do NOT use when:
 - Flux has built-in validation display — don't add manual error rendering alongside it.
 - Don't mix Flux with raw HTML form elements in the same form.
 
+## Do NOT
+
+- Do NOT use raw `<input>`, `<select>`, `<button>` when Flux equivalents exist.
+- Do NOT override Flux styles with conflicting Tailwind — use variants or slots.
+- Do NOT skip the `label` prop on form fields — accessibility.
+
 ## Auto-trigger keywords
 
 - Flux UI

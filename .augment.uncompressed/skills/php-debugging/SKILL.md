@@ -17,7 +17,7 @@ Use this skill when:
 
 This skill extends `coder` and `php`.
 
-## Before debugging
+## Procedure: Debug with Xdebug
 
 1. **Detect the project's debug setup** — check `docker-compose.yml` / `compose.yaml` for Xdebug containers.
 2. **Check Dockerfile** — look for a `dev-xdebug` build stage or Xdebug installation.

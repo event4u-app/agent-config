@@ -19,7 +19,7 @@ Use this skill when:
 **Guideline:** `.augment/guidelines/e2e/playwright.md` — full conventions, config templates, CI setup.
 **Rule:** `.augment/rules/e2e-testing.md` — constraints enforced during E2E test work.
 
-## Before writing tests
+## Procedure: Write Playwright tests
 
 1. **Read the guideline** — `.augment/guidelines/e2e/playwright.md` for detailed conventions.
 2. **Check Playwright config** — `playwright.config.ts` for browsers, base URL, timeouts.

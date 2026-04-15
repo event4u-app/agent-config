@@ -8,62 +8,56 @@ source: project
 
 ## When to use
 
+Use this skill when:
+
 * Documenting GitHub Actions workflows
 * Explaining CI/CD pipelines
 * Describing automation steps
 
-Do not use for editing workflow YAML (use github-ci) or general project docs (use readme-generator).
+Do not use this skill when:
+
+* Writing or editing the workflow YAML itself (use github-ci skill)
+* General project documentation (use readme-generator)
 
 ## Goal
 
 * Clearly explain workflow purpose and steps
-* CI behavior understandable
-* Reproducible examples
+* Make CI behavior understandable
+* Provide reproducible examples
 
 ## Preconditions
 
-* GitHub Actions workflow exists or being created
-* YAML config involved
-* Output readable and copyable
+* GitHub Actions workflow exists or is being created
+* YAML config is involved
+* Output must be readable and copyable
 
 ## Decision hints
 
-* Complex workflow → break into steps
-* Multiple jobs → explain each separately
-* Environment variables → document clearly
+* If workflow is complex → break into steps
+* If multiple jobs → explain each job separately
+* If environment variables used → document them clearly
 
 ## Procedure
 
-### 0. Inspect workflow
-
-* Read YAML first
-* Identify triggers, jobs, steps, secrets
-* Note dependencies between jobs
-
-### 1. Document
-
-1. Purpose
-2. Triggers (push, PR, etc.)
-3. Jobs and steps breakdown
-4. Important commands
-5. Required secrets/env vars
-
-### 2. Validate
-
-* All referenced secrets documented
-* Trigger conditions match intended behavior
-* No hidden dependencies unexplained
+1. Explain purpose of the workflow
+2. Describe triggers (push, PR, etc.)
+3. Break down jobs and steps
+4. Highlight important commands
+5. Mention required secrets or env vars
 
 ## Output format
 
-1. Short explanation → workflow breakdown (jobs → steps) → commands → secrets → config notes
+1. Short explanation
+2. Workflow breakdown
+3. Important commands or steps
+4. Notes on configuration
 
 ## Core rules
 
-* Simple, structured explanations
-* Focus on what workflow does
-* Avoid unnecessary YAML complexity
-* Commands must be understandable
+* Keep explanations simple and structured
+* Focus on what the workflow actually does
+* Avoid unnecessary YAML complexity in docs
+* Ensure commands are understandable
 
 ## Gotchas
 
@@ -73,21 +67,14 @@ Do not use for editing workflow YAML (use github-ci) or general project docs (us
 
 ## Do NOT
 
-* Do NOT paste large YAML without explanation
+* Do NOT paste large YAML blocks without explanation
 * Do NOT assume CI knowledge
 * Do NOT omit required environment variables
 
 ## Auto-trigger keywords
 
-* github actions, CI/CD, workflow, pipeline, automation
-
-## Anti-patterns
-
-* Raw YAML dump without explanation
-* Documenting only happy path
-* Missing secrets/env vars list
-
-## Examples
-
-Good: Purpose → trigger (on PR) → jobs (lint, test, deploy) → secrets (AWS_KEY) → notes
-Bad: raw YAML dump without explanation
+* github actions
+* CI/CD
+* workflow
+* pipeline
+* automation

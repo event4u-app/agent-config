@@ -52,6 +52,12 @@ Do NOT use when:
 - Custom Rule objects must return `$fail` callback, not throw exceptions.
 - Don't validate data you already trust (e.g., from a verified internal service).
 
+## Do NOT
+
+- Do NOT validate in controllers — use FormRequest classes.
+- Do NOT use `$request->all()` — use `$request->validated()`.
+- Do NOT put business logic in validation classes.
+
 ## Auto-trigger keywords
 
 - validation

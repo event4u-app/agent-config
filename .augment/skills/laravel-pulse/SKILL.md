@@ -8,9 +8,13 @@ source: package
 
 ## When to use
 
-Pulse dashboard, recorders (slow queries, exceptions, queues), custom cards, performance monitoring.
+Use this skill when working with Laravel Pulse:
+- Setting up the Pulse monitoring dashboard
+- Configuring built-in recorders (slow queries, exceptions, queues, etc.)
+- Creating custom Pulse cards and recorders
+- Performance monitoring and alerting
 
-## Installation
+## Procedure: Set up Pulse
 
 ```bash
 composer require laravel/pulse

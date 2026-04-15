@@ -14,7 +14,7 @@ Use this skill when working with Laravel Pulse:
 - Creating custom Pulse cards and recorders
 - Performance monitoring and alerting
 
-## Installation
+## Procedure: Set up Pulse
 
 ```bash
 composer require laravel/pulse

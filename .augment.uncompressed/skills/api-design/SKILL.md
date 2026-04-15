@@ -14,7 +14,7 @@ Do NOT use when:
 - Implementing an already-designed endpoint (use `api-endpoint` skill)
 - Writing tests for APIs (use `api-testing` skill)
 
-## Before making changes
+## Procedure: Design an API
 
 1. Read `agents/contexts/api-versioning.md` for versioning and fallback mechanism.
 2. Read `agents/docs/api-resources.md` for response transformation patterns.
@@ -77,6 +77,12 @@ Focus on: Breaking changes? Consistency? Error responses?
 - Don't version internal APIs only your own frontend consumes.
 - Deprecation without migration path is useless — always provide the replacement.
 - Don't duplicate controllers for new versions — use fallback logic.
+
+## Do NOT
+
+- Do NOT introduce a new response format in an established API — match existing patterns.
+- Do NOT create v2 endpoints without a deprecation plan for v1.
+- Do NOT skip pagination on list endpoints.
 
 ## Auto-trigger keywords
 

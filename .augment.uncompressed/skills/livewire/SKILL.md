@@ -59,6 +59,12 @@ Do NOT use when:
 - `wire:model` is deferred by default in v3 — use `wire:model.live` for real-time.
 - `$this->redirect()` + `$this->dispatch()` in same method — only redirect executes.
 
+## Do NOT
+
+- Do NOT put heavy computation in `render()` — it runs on every update.
+- Do NOT nest Livewire components deeply — keep the tree shallow.
+- Do NOT expose sensitive data as public properties.
+
 ## Auto-trigger keywords
 
 - Livewire

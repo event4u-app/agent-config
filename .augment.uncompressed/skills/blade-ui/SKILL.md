@@ -55,6 +55,12 @@ Do NOT use when:
 - Always use Tailwind utility classes — not inline styles.
 - Don't put business logic in templates — use view composers or Livewire.
 
+## Do NOT
+
+- Do NOT use `{!! !!}` with user input — XSS risk.
+- Do NOT put business logic in Blade templates — use Livewire or view composers.
+- Do NOT use inline styles — use Tailwind utility classes.
+
 ## Auto-trigger keywords
 
 - Blade template

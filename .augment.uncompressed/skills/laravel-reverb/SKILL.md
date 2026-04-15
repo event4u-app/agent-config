@@ -17,7 +17,7 @@ Use this skill for anything specific to **Laravel Reverb** as the WebSocket serv
 For **general WebSocket patterns**, broadcasting events, channel authorization,
 and Laravel Echo client setup, see the [websocket](../websocket/SKILL.md) skill.
 
-## What is Reverb
+## Procedure: Set up Reverb
 
 Laravel Reverb is Laravel's first-party, blazing-fast WebSocket server. It uses the
 **Pusher protocol**, making it compatible with Laravel Echo and any Pusher-compatible client.

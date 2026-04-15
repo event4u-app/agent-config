@@ -8,9 +8,22 @@ source: package
 
 ## When to use
 
-Create/execute/check/update roadmaps. NOT for: small tasks, one-off fixes.
+Use this skill when:
+- Creating a new roadmap (`roadmap-create` command)
+- Executing a roadmap (`roadmap-execute` command)
+- Checking roadmap progress
+- Updating roadmap status after completing work
 
-Roadmap = structured `.md` in `agents/roadmaps/` for multi-step work (refactoring, feature, migration). Resumable across sessions.
+
+Do NOT use when:
+- Small tasks that don't span multiple steps
+- One-off questions or fixes
+
+## Procedure: Manage a roadmap
+
+A roadmap is a structured `.md` file in `agents/roadmaps/` that describes a multi-step change
+(refactoring, feature, migration). It ensures work can be picked up across sessions and by
+different agents.
 
 ## Roadmap locations
 
@@ -113,8 +126,32 @@ Every roadmap implicitly includes these gates (run after each step that changes 
 5. After implementation: mark `[x]`, run quality gates.
 6. Move to the next step.
 
-### Resuming: read full roadmap → check `[x]` progress → summarize → continue from next open.
+### Resuming a roadmap
 
-## Gotcha: only in `agents/roadmaps/`, verify before marking done, every phase must be completed.
+When picking up a roadmap in a new session:
+1. Read the roadmap to understand the full context.
+2. Check which steps are already completed (`[x]`).
+3. Summarize progress to the user.
+4. Continue from the next open step.
 
-## Do NOT: skip quality gates, mark undone steps done, modify completed steps, roadmaps for trivial changes, commit/push.
+
+## Auto-trigger keywords
+
+- roadmap
+- roadmap creation
+- phase tracking
+- step completion
+
+## Gotcha
+
+- Roadmap files go in `agents/roadmaps/` — don't create them in other directories.
+- Don't mark phases complete without running verification (tests, quality checks) — the verify-before-complete rule applies.
+- The model tends to skip phases it deems "simple" — every phase must be explicitly completed.
+
+## Do NOT
+
+- Do NOT skip quality gates between steps.
+- Do NOT mark steps as done without actually completing them.
+- Do NOT modify completed steps (only add notes if needed).
+- Do NOT create roadmaps for trivial changes (single-file fixes don't need a roadmap).
+- Do NOT commit or push — only local changes.

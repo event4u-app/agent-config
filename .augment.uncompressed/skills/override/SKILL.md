@@ -25,7 +25,7 @@ It customizes shared behavior for a particular codebase **without modifying the 
 **Critical rule:** Never edit files in `.augment/` to fix a project-specific need.
 Changes to `.augment/` affect ALL projects. Use overrides instead.
 
-## Override Mechanism
+## Procedure: Create an override
 
 When loading any skill, rule, or command:
 

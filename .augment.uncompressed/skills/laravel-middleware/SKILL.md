@@ -14,7 +14,7 @@ Use this skill when working with HTTP middleware:
 - Terminable middleware (post-response processing)
 - Route-level and global middleware assignment
 
-## Creating middleware
+## Procedure: Create middleware
 
 ```bash
 php artisan make:middleware EnsureCustomerIsActive

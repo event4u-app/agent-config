@@ -14,7 +14,7 @@ Use this skill when:
 - Troubleshooting MCP tool errors or unexpected results
 - Building commands or skills that reference MCP tools
 
-## Available MCP Servers
+## Procedure: Use MCP tools
 
 ### Sentry (`augment-partner-remote-mcp-sentry`)
 

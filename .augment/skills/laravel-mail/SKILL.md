@@ -8,9 +8,16 @@ source: package
 
 ## When to use
 
-Mailables, templates, queued sending, attachments, testing. Simple notifications → `laravel-notifications`.
+Use this skill when building email functionality:
+- Mailable classes with HTML/Blade or Markdown templates
+- Queued email sending
+- Attachments and inline images
+- Mail testing and previewing
 
-## Creating Mailables
+For **simple notification emails** (one-off messages), see [laravel-notifications](../laravel-notifications/SKILL.md).
+Use Mailables when you need full control over the email template.
+
+## Procedure: Create a Mailable
 
 ```bash
 php artisan make:mail InvoiceMail --markdown=emails.invoice

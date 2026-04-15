@@ -16,7 +16,7 @@ Use this skill when:
 - Reviewing UI for accessibility and usability
 - Deciding how to structure Livewire components
 
-## Tech Stack Context
+## Procedure: Design a frontend interface
 
 This project uses a server-rendered stack:
 

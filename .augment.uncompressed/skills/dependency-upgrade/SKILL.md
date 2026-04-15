@@ -14,7 +14,7 @@ Do NOT use when:
 - Installing new dependencies for the first time
 - Routine code changes unrelated to package versions
 
-## The upgrade workflow
+## Procedure: Upgrade a dependency
 
 ### 1. Assess
 

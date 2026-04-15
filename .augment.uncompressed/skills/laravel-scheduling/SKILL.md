@@ -14,7 +14,7 @@ Use this skill when scheduling recurring tasks:
 - Closure-based scheduled tasks
 - Overlap prevention and maintenance mode handling
 
-## Defining schedules
+## Procedure: Create a scheduled task
 
 ### In routes/console.php (Laravel 11+)
 

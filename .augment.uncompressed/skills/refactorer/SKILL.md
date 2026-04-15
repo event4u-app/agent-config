@@ -26,7 +26,7 @@ Do NOT use when:
 4. **Map the impact** — create a list of all files that will need changes.
 5. **Present the plan** — show the user what will be affected before starting.
 
-## Refactoring workflow
+## Procedure: Refactor code
 
 ### Step 1: Make the core change
 

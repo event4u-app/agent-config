@@ -29,7 +29,7 @@ One of the following browser automation tools:
 
 A **live preview URL** is required for testing.
 
-## The 7-Phase Methodology
+## Procedure: Design review
 
 ### Phase 0: Preparation
 

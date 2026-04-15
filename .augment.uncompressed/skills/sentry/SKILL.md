@@ -38,7 +38,7 @@ Use this skill when:
 | `find_projects` | Find project slug |
 | `find_releases` | Check recent releases and deploy timing |
 
-## Investigation workflow
+## Procedure: Investigate a Sentry error
 
 ### 1. Get issue details
 

@@ -8,9 +8,13 @@ source: package
 
 ## When to use
 
-Feature flags: gradual rollouts, per-user/tenant toggling, A/B testing, env gating.
+Use this skill when working with feature flags:
+- Gradual feature rollouts (percentage-based)
+- Per-user or per-tenant feature toggling
+- A/B testing with feature variants
+- Environment-based feature gating
 
-## Installation
+## Procedure: Set up feature flags
 
 ```bash
 composer require laravel/pennant
@@ -149,6 +153,24 @@ Feature::for($users)->load(['new-dashboard', 'advanced-reporting']);
 - **Use `array` driver in tests** — prevents test pollution.
 - **Clean up old flags** — feature flags are temporary, not permanent config.
 
-## Gotcha: DB driver needs migration, always pass scope, don't nest flag checks.
+## Auto-trigger keywords
 
-## Do NOT: leave flags forever, flags for permanent config, loops without eager loading, skip purge on logic change.
+- feature flag
+- feature toggle
+- Pennant
+- gradual rollout
+- A/B test
+- feature gate
+
+## Gotcha
+
+- Feature flags in database driver require migration — don't forget `php artisan pennant:purge` for cleanup.
+- The model tends to check flags without a scope — always pass the authenticated user or a default scope.
+- Don't nest feature flag checks — it makes the logic impossible to reason about.
+
+## Do NOT
+
+- Do NOT leave feature flags forever — remove them after full rollout.
+- Do NOT use feature flags for permanent configuration — use config files.
+- Do NOT check features in tight loops without eager loading.
+- Do NOT forget to purge stored values when changing the resolve logic.

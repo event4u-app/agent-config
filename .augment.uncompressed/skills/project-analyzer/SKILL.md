@@ -21,7 +21,7 @@ Do NOT use when:
 - Small, focused code changes
 - Regular feature development
 
-## Concept
+## Procedure: Analyze a project
 
 A **project analysis** is a systematic walkthrough of the entire codebase that:
 

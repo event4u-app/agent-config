@@ -19,7 +19,7 @@ Do NOT use when:
 - Small tasks that don't span multiple steps
 - One-off questions or fixes
 
-## What is a roadmap?
+## Procedure: Manage a roadmap
 
 A roadmap is a structured `.md` file in `agents/roadmaps/` that describes a multi-step change
 (refactoring, feature, migration). It ensures work can be picked up across sessions and by

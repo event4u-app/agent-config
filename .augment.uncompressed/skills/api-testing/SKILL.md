@@ -11,7 +11,7 @@ source: package
 Use this skill when writing or reviewing API endpoint tests — integration tests,
 contract validation, response structure checks, or external service mocking.
 
-## Test structure (Laravel / Pest)
+## Procedure: Write API tests
 
 ```php
 describe('GET /api/v1/projects', function () {

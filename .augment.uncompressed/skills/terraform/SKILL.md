@@ -10,7 +10,7 @@ source: package
 
 Use this skill when writing or modifying Terraform configurations (`.tf` files), creating new infrastructure modules, or understanding AWS resource definitions.
 
-## Before writing code
+## Procedure: Write Terraform config
 
 1. Read the infrastructure repo structure (check `agents/overrides/skills/terraform.md` for the repo location).
 2. Check existing modules in `modules/` for patterns and conventions.

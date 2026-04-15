@@ -51,6 +51,12 @@ Do NOT use when:
 - Use `Math` helper for ALL calculations — never raw PHP arithmetic.
 - `MonitoringHelper::captureException()` for Sentry reporting.
 
+## Do NOT
+
+- Do NOT use native arithmetic (`+`, `-`, `*`, `/`) for business calculations — use `Math` helper.
+- Do NOT refactor code you're not actively working on.
+- Do NOT use `var_dump()`, `print_r()`, `dd()` — disallowed by PHPStan.
+
 ## Auto-trigger keywords
 
 - PHP coding

@@ -78,6 +78,12 @@ The project uses `.github/pull_request_template.md`:
 - Don't rebase shared branches.
 - `git stash` can lose work — prefer WIP commits.
 
+## Do NOT
+
+- Do NOT commit directly to `main`.
+- Do NOT push without running quality tools first.
+- Do NOT force-push to shared branches.
+
 ## Auto-trigger keywords
 
 - Git workflow

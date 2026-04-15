@@ -47,6 +47,12 @@ Use Laravel Echo to listen on the channel. Wire up reconnection with exponential
 - Always implement reconnection with exponential backoff.
 - Don't broadcast sensitive data on public channels — use private/presence.
 
+## Do NOT
+
+- Do NOT send entire model objects — select only needed fields.
+- Do NOT skip channel authorization for user-specific data.
+- Do NOT rely on WebSocket delivery — use acknowledgments for critical messages.
+
 ## Auto-trigger keywords
 
 - WebSocket

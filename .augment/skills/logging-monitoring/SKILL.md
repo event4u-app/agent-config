@@ -14,7 +14,7 @@ Do NOT use when:
 - Creating Grafana dashboards (use `grafana` skill)
 - Dashboard design decisions (use `dashboard-design` skill)
 
-## Before making changes
+## Procedure: Add logging or monitoring
 
 1. Read `config/logging.php` for available channels.
 2. Check for Grafana module: `app/Modules/Grafana/`.
@@ -71,6 +71,12 @@ The `service` label differentiates log types in Grafana queries.
 - Sentry has 200KB event size limit — large context gets truncated.
 - Structured logging keys must be `snake_case`.
 - Don't create Loki channels without corresponding Grafana dashboard query.
+
+## Do NOT
+
+- Do NOT use Sentry SDK directly — use `MonitoringHelper`.
+- Do NOT interpolate variables into log messages — use context array.
+- Do NOT log at `error` level for expected/handled conditions.
 
 ## Auto-trigger keywords
 

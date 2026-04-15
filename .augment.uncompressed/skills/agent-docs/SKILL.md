@@ -155,7 +155,7 @@ When starting work, read documentation in this order:
 7. `agents/features/` or module `agents/features/` — if related feature plan exists
 8. `agents/roadmaps/` or module `agents/roadmaps/` — if continuing existing work
 
-## When to create documentation
+## Procedure: Create or update agent docs
 
 | Trigger | Action |
 |---|---|

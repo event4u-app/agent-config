@@ -17,7 +17,7 @@ Use this skill when:
 - CI pipeline test jobs need to be faster
 - Investigating flaky tests caused by database state
 
-## Analysis Workflow
+## Procedure: Analyze test performance
 
 ### 1. Measure baseline
 

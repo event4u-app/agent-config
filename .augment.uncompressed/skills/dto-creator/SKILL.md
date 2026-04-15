@@ -10,7 +10,7 @@ source: package
 
 Use this skill when creating a new DTO for data transfer between layers (DB ↔ PHP, API ↔ Service, etc.).
 
-## Before creating a DTO
+## Procedure: Create a DTO
 
 1. **Read the project's DTO docs** — check `agents/docs/dto.md` (if it exists) for project-specific conventions.
 2. **Check the base class** — search for the DTO base class in the project (e.g., `SimpleDto`, `LiteDto`, or a custom base).

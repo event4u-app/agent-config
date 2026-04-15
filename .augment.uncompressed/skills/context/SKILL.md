@@ -19,7 +19,7 @@ Do NOT use when:
 - Writing code or features
 - Creating roadmaps (use `roadmap-manager` skill)
 
-## Concept
+## Procedure: Manage contexts
 
 A **context document** is a structured snapshot of a codebase area:
 - What it does, why it exists

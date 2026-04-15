@@ -50,7 +50,7 @@ When multiple approaches seem viable:
 4. **Choose** the best path with reasoning.
 5. **Document** why alternatives were rejected.
 
-## The process
+## Procedure: Sequential thinking
 
 ### Step 1: Frame the problem
 

@@ -14,7 +14,7 @@ Use this skill when:
 - CI fails because the branch is behind main
 - The `prepare-for-review` command encounters conflicts
 
-## Conflict resolution workflow
+## Procedure: Resolve merge conflicts
 
 ### 1. Understand the situation
 

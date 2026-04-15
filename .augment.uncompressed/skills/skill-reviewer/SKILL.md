@@ -112,7 +112,7 @@ Before scoring the 5 Killers, verify structure:
 - Single workflow per file (multiple workflows → split)
 - Update existing preferred over creating new file
 
-## How to Review
+## Procedure: Review a skill
 
 ### Single skill
 1. Validate structure (required sections present)

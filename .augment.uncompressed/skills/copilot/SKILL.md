@@ -19,7 +19,7 @@ Do NOT use when:
 - Augment-specific behavior (use Augment rules and skills)
 - Writing application code
 
-## How Copilot Works in This Project
+## Procedure: Configure Copilot
 
 ### Configuration File
 

@@ -10,7 +10,7 @@ source: package
 
 Triggered when user invokes a slash command. The `commands` rule (always loaded) handles core behavior — this skill adds context inference and GitHub API patterns.
 
-## Inferring context
+## Procedure: Execute a command
 
 Before asking the user for input, try to infer it:
 
@@ -62,6 +62,12 @@ Read `pr_comment_bot_icon` from `.agent-settings`:
 - Don't ask questions when executing a command unless the command says "ask the user".
 - Don't add opinions during execution — follow steps exactly.
 - If a step fails, stop and report — don't improvise.
+
+## Do NOT
+
+- Do NOT ask questions during command execution unless the command says "ask the user".
+- Do NOT add opinions or summaries — execute steps exactly as written.
+- Do NOT improvise when a step fails — stop and report.
 
 ## Auto-trigger keywords
 

@@ -10,7 +10,7 @@ source: package
 
 Use this skill when adding or updating API documentation, writing OpenAPI annotations on controllers, or validating API specs.
 
-## Before making changes
+## Procedure: Add OpenAPI documentation
 
 1. Read `agents/docs/controller.md` for OpenAPI attribute patterns used in controllers.
 2. Read `agents/contexts/api-versioning.md` for how versions are reflected in the API docs.

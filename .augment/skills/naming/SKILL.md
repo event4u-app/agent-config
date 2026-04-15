@@ -39,6 +39,12 @@ Use when unsure about the correct naming pattern for any element in the project.
 - Spell out full words — no abbreviations (`usr`, `msg`, `cfg`).
 - Don't mix conventions: DB = snake_case, PHP = camelCase, classes = PascalCase.
 
+## Do NOT
+
+- Do NOT use abbreviations that aren't universally understood.
+- Do NOT mix naming conventions within the same context.
+- Do NOT use generic names (Manager, Helper, Utils) without specificity.
+
 ## Auto-trigger keywords
 
 - naming convention

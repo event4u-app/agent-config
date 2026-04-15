@@ -18,7 +18,7 @@ Do not use when:
 * Creating a new skill from scratch (use `skill-writing`)
 * Reviewing/validating a skill (use `skill-reviewer`)
 
-## Modes
+## Procedure: Manage a skill
 
 ### Mode: Compress
 **Trigger:** "compress skill", "shorten skill", "make skill sharper"

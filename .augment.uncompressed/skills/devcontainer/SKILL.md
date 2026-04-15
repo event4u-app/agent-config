@@ -14,7 +14,7 @@ Do NOT use when:
 - Local Docker setup without Codespaces (use `docker` skill)
 - Production deployment (use `aws-infrastructure` skill)
 
-## Before making changes
+## Procedure: Modify DevContainer
 
 1. Read `.devcontainer/devcontainer.json` for the current configuration.
 2. Check `.devcontainer/` for onboarding documentation and environment variables.

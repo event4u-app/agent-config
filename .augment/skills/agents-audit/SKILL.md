@@ -1,201 +1,167 @@
 ---
 name: agents-audit
-description: "/agents-audit"
-disable-model-invocation: true
+description: "Use when the user says "audit agents", "clean up agents/", or wants to find duplicates and outdated docs. Audits the agents/ directory and creates an improvement roadmap."
+source: package
 ---
 
-# /agents-audit
+# agents-audit
 
-Audit all agent docs: root `agents/`, module `app/Modules/*/agents/`, `agents/overrides/`.
+## When to use
 
-## Steps
+Use this skill when:
+- The `agents/` or `app/Modules/*/agents/` directories need cleanup
+- Docs may be outdated, duplicated, or poorly organized
+- You want to align the structure with current skills, commands, and templates
+- After major refactoring or module changes
+- A new module was created and needs agent docs
+- Module agent docs are inconsistent across modules
 
-### 1. Inventory all agent docs
+Do NOT use when:
+- Writing new code or features
+- Regular documentation updates (use `agent-docs` skill)
 
+## Procedure: Audit skills
+
+### Scope
+
+| Directory | Audited | Notes |
+|---|---|---|
+| `agents/*.md` | ✅ | Root-level docs (architecture, conventions, domain) |
+| `.augment/guidelines/**` | ✅ | Coding guidelines and patterns |
+| `agents/features/` | ✅ | Feature plans |
+| `agents/contexts/` | ✅ | Context documents |
+| `agents/overrides/` | ✅ | Override files — check for orphans, validity |
+| `agents/roadmaps/` | ❌ | Excluded — roadmaps have their own lifecycle |
+| `app/Modules/*/agents/` | ✅ | Module-level docs, features, contexts, roadmaps |
+| `app/Modules/*/agents/features/` | ✅ | Module feature plans |
+| `app/Modules/*/agents/contexts/` | ✅ | Module context documents |
+| `app/Modules/*/agents/roadmaps/` | ❌ | Excluded — same as root roadmaps |
+
+### What to check
+
+#### 1. Structural issues
+
+- **Misplaced files:** Docs in wrong directories (e.g., a guideline in root instead of `guidelines/`)
+- **Missing directories:** Expected dirs that don't exist (features, contexts, etc.)
+- **Orphaned files:** Docs that don't fit any category
+- **Naming inconsistency:** Mixed naming patterns (kebab-case vs. other)
+
+#### 2. Content quality
+
+- **Outdated references:** Docs referencing deleted files, classes, or methods
+- **Stale information:** Docs that haven't been updated after code changes
+- **Duplicated content:** Same information in multiple files
+- **Overlap with `.augment/`:** Content that belongs in skills/rules, not agents/
+
+#### 3. Coverage gaps
+
+- **Undocumented modules:** Modules without any `agents/` directory
+- **Missing contexts:** Complex areas without context documents
+- **Incomplete guidelines:** Guidelines that reference patterns not yet documented
+- **Missing module docs:** Modules with code but no description, features, or roadmaps
+
+#### 4. Alignment with skills
+
+Cross-reference `agents/` docs with `.augment/skills/`:
+- Does the skill reference an agents doc that doesn't exist?
+- Does an agents doc cover something already in a skill?
+- Are there agents docs that should become contexts instead?
+
+#### 5. Module agent docs
+
+For each module in `app/Modules/*/`:
+
+**Existence check:**
 ```bash
-# Root-level docs
-find agents/ -maxdepth 1 -name '*.md' | sort
-
-# Subdirectories
-find agents/features/ agents/contexts/ -name '*.md' 2>/dev/null | sort
-
-# Overrides
-find agents/overrides/ -name '*.md' -not -name '.gitkeep' 2>/dev/null | sort
-
-# Guidelines
-find .augment/guidelines/ -name '*.md' | sort
-
-# Module-level docs (excluding roadmaps)
-find app/Modules/*/agents/ -name '*.md' -not -path '*/roadmaps/*' 2>/dev/null | sort
-```
-
-Per file: filename, path, first heading, size, last git date (`git log -1 --format='%ai' -- {file}`)
-
-### 2. Scan module agents coverage
-
-```bash
-for dir in app/Modules/*/; do
-  name=$(basename "$dir")
-  if [ -d "$dir/agents" ]; then
-    count=$(find "$dir/agents" -name '*.md' | wc -l | tr -d ' ')
-    echo "✅  $name — $count docs"
-  else
-    echo "❌  $name — no agents/ dir"
-  fi
+find app/Modules -maxdepth 1 -mindepth 1 -type d | while read m; do
+  name=$(basename "$m")
+  if [ ! -d "$m/agents" ]; then echo "❌  $name — no agents/ dir"
+  else echo "✅  $name — agents/ exists"; fi
 done
 ```
 
-Per module WITH agents:
+**Structure check per module:**
 
 | Check | Expected | Severity |
 |---|---|---|
-| Description file | `agents/{name}.md` or `agents/README.md` | 🟡 Warning |
-| Features dir | `agents/features/` | 🔵 Info |
-| Contexts dir | `agents/contexts/` | 🔵 Info |
-| Consistent format | Same heading structure | 🔵 Info |
+| `agents/` directory exists | At least for active modules | 🟡 Warning |
+| Module description file | `agents/{module-name}.md` or `agents/README.md` | 🟡 Warning |
+| Features dir (if planned work) | `agents/features/` | 🔵 Info |
+| Roadmaps dir (if multi-step work) | `agents/roadmaps/` | 🔵 Info |
+| Contexts dir (if complex domain) | `agents/contexts/` | 🔵 Info |
+| No stale roadmaps | All steps either done or still relevant | 🟡 Warning |
 
-### 3. Scan overrides
+**Consistency check across modules:**
 
-```bash
-find agents/overrides/ -name '*.md' -not -name '.gitkeep' | while read f; do
-  # Extract Mode and Original path from header
-  mode=$(grep -m1 'Mode:' "$f" | sed 's/.*`\(.*\)`.*/\1/')
-  original=$(grep -m1 'Original:' "$f" | sed 's/.*`\(.*\)`.*/\1/')
-  # Check if original exists
-  if [ -f "$original" ]; then
-    echo "✅  $f → $original ($mode)"
-  else
-    echo "❌  $f → $original (ORPHANED — original missing)"
-  fi
-done
-```
+- Are module descriptions in a consistent format?
+- Do all modules use the same directory structure?
+- Are there module docs that duplicate root-level `agents/` docs?
+- Are there module docs that should be root-level (cross-module concern)?
 
-| Check | Severity |
-|---|---|
-| Override has valid `Mode` header (`extend` or `replace`) | 🔴 Critical if missing |
-| Override has valid `Original` path | 🔴 Critical if missing |
-| Original file exists | 🟡 Warning if orphaned |
-| Override content is not empty (beyond template) | 🟡 Warning if empty |
+## Classification
 
-### 4. Classify documents
+Every doc in `agents/` should fit one of these categories:
 
-Categories: Architecture, Convention, Pattern, Feature plan, Context, Module doc, Override, Unclear
+| Category | Where it belongs | Example |
+|---|---|---|
+| **Architecture** | `agents/{topic}.md` | `database-setup.md`, `customer-switch.md` |
+| **Convention** | `.augment/guidelines/php/{topic}.md` | `controllers.md`, `eloquent.md` |
+| **Pattern** | `.augment/guidelines/php/patterns/{pattern}.md` | `service-layer.md`, `repositories.md` |
+| **Feature plan** | `agents/features/{name}.md` | `import-csv-validation.md` |
+| **Context** | `agents/contexts/{name}.md` | `client-software.md` |
+| **Module doc** | `app/Modules/{M}/agents/{topic}.md` | `backoff-module.md` |
+| **Obsolete** | Should be deleted or archived | Docs referencing removed code |
 
-### 5. Check for issues
+Docs that don't fit any category are candidates for:
+- Moving to the correct directory
+- Merging into another doc
+- Converting to a context document
+- Deletion
 
-**Structural:** wrong directories, missing dirs, naming inconsistencies (not kebab-case), module/root misplacement
+## Audit output
 
-**Content:** extract referenced paths/classes/methods → verify against codebase → flag broken references
+The audit produces:
+1. **Inventory** — complete list of all docs with classification
+2. **Issues** — problems found, categorized by severity
+3. **Recommendations** — specific actions (move, merge, delete, update, create)
+4. **Roadmap** — generated in `agents/roadmaps/` for execution
 
-**Duplication:** topic overlap between `agents/` ↔ `.augment/skills/`, `agents/` ↔ `.augment/guidelines/`, module ↔ root
+## Severity levels
 
-**Gaps:** active modules without docs, complex areas without documentation, orphaned override sections
+| Level | Meaning | Example |
+|---|---|---|
+| 🔴 Critical | Actively misleading or broken | Doc references deleted class as current |
+| 🟡 Warning | Outdated or misplaced | Doc in wrong directory, stale content |
+| 🔵 Info | Improvement opportunity | Could be merged, better organized |
+| ⚪ Clean | No issues found | Up-to-date, well-placed |
 
-### 6. Display audit report
+## Auto-trigger keywords
 
-```
-═══════════════════════════════════════════════
-  🔍  AGENTS AUDIT
-═══════════════════════════════════════════════
+- audit agents
+- documentation audit
+- duplicate docs
+- outdated docs
+- cleanup
 
-📁  Scanned: {total} files in {dirs} directories
+## Gotcha
 
-───────────────────────────────────────────────
-INVENTAR
-───────────────────────────────────────────────
+- Don't delete docs without asking the user first — some "outdated" docs are intentionally kept for reference.
+- The audit may find false positives in cross-references — verify before flagging as broken.
+- Module agents/ dirs may be intentionally empty if the module is new.
 
-  Category         Count   Files
-  ───────────────  ──────  ────────────────────────────
-  Architecture     {n}     database-setup.md, ...
-  Convention       {n}     guidelines/controllers.md, ...
-  Pattern          {n}     guidelines/patterns/service-layer.md, ...
-  Feature          {n}     {or "keine"}
-  Context          {n}     {or "keine"}
-  Module Doc       {n}     Import/agents/import.md, ...
-  Override         {n}     overrides/skills/eloquent.md, ...
-  Unklar           {n}     {files that don't fit}
+## Do NOT
 
-───────────────────────────────────────────────
-MODULE AGENTS
-───────────────────────────────────────────────
+- Do NOT delete files without confirmation — always present the plan first.
+- Do NOT modify roadmaps — they're excluded from the audit scope.
+- Do NOT commit or push without permission.
+- Do NOT audit `vendor/`, `node_modules/`, or `.augment/` (skills/rules are separate).
+- Do NOT rewrite docs just for style — focus on structural and factual issues.
+- Do NOT create module agent dirs for every module — only for active/complex ones.
 
-  Module             Status  Docs  Description   Features  Contexts
-  ─────────────────  ──────  ────  ────────────  ────────  ────────
-  Import             ✅      3     ✅            ✅        ❌
-  Backoff            ✅      1     ✅            ❌        ❌
-  Grafana            ✅      2     ✅            ❌        ❌
-  ClientSoftware     ❌      0     ❌            ❌        ❌
-  ...
+## Related
 
-───────────────────────────────────────────────
-OVERRIDES
-───────────────────────────────────────────────
-
-  Override                          Mode     Original  Status
-  ────────────────────────────────  ───────  ────────  ──────
-  {or "No overrides found"}
-
-───────────────────────────────────────────────
-ISSUES
-───────────────────────────────────────────────
-
-🔴  Kritisch ({count}):
-  •  {file} — {issue description}
-
-🟡  Warnung ({count}):
-  •  {file} — {issue description}
-
-🔵  Info ({count}):
-  •  {file} — {improvement suggestion}
-
-⚪  Clean ({count} files without issues)
-
-───────────────────────────────────────────────
-DUPLICATES / OVERLAPS
-───────────────────────────────────────────────
-
-  •  {file1} ↔ {file2} — {what overlaps}
-
-───────────────────────────────────────────────
-GAPS
-───────────────────────────────────────────────
-
-  ⚠️  Modules without docs: {list}
-  ⚠️  Missing contexts: {list}
-  ⚠️  Orphaned overrides: {list}
-
-═══════════════════════════════════════════════
-```
-
-### 7. Create improvement roadmap
-
-```
-Create an improvement roadmap?
-
-1. ✅  Yes — create roadmap in agents/roadmaps/agents-cleanup.md
-2. 📋  Show recommendations only (no file creation)
-3. ❌  No — the audit was all that was needed
-```
-
-**Option 1:** Roadmap via `.augment/templates/roadmaps.md` — Phase 1: Critical fixes, Phase 2: Structural cleanup, Phase 3: Module docs, Phase 4: Cleanup
-
-**Option 2:** Inline recommendations.
-
-### 8. Offer next steps
-
-```
-What next?
-
-1. 🧹  Start cleanup → /agents-cleanup
-2. 📄  Update a specific doc → /context-refactor
-3. ✅  Done
-```
-
-## Rules
-
-- Analysis only — do NOT modify/delete files
-- Do NOT commit or push
-- Skip `agents/roadmaps/` and `.augment/` (separate lifecycle)
-- Verify references against codebase — don't guess
-- Be specific: name file, reference, issue
-- Skip tiny/inactive modules
+- **Skill:** `agent-docs` — documentation hierarchy and reading order
+- **Skill:** `override` — override system (audited for orphans)
+- **Skill:** `module` — module system and structure
+- **Command:** `/agents-audit` — runs the audit
+- **Command:** `/agents-cleanup` — applies audit recommendations

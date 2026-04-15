@@ -18,7 +18,7 @@ Do NOT use when:
 - Trivial changes (a good PR description is enough)
 - Implementation work (use `feature-planning` or `coder` skill)
 
-## Spec types
+## Procedure: Write a spec
 
 ### Technical Specification (full)
 

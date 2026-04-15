@@ -92,7 +92,7 @@ Merge all specialist findings into ONE prioritized output:
 
 Never dump isolated observations without synthesis.
 
-## Autonomous investigation loop
+## Procedure: Autonomous investigation loop
 
 When running a broad investigation, repeat until confident:
 

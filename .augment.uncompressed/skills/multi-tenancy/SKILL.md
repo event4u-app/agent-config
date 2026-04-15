@@ -15,7 +15,7 @@ Do NOT use when:
 - Single-database applications
 - Frontend-only changes
 
-## Before making changes
+## Procedure: Work with multi-tenancy
 
 1. Read project-specific docs in `agents/docs/` for the multi-tenant architecture details.
 2. Read `config/database.php` for connection definitions.

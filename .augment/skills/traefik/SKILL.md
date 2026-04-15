@@ -8,13 +8,56 @@ source: package
 
 ## When to use
 
-Local reverse proxy: real domains, HTTPS (mkcert/ACME), multi-project routing, Grafana embedding.
+Use this skill when:
+- Setting up local development with real domain names and trusted HTTPS
+- Configuring SSL certificates (self-signed, mkcert, ACME via Namecheap/AWS)
+- Routing multiple Docker projects through a single reverse proxy
+- Embedding external services (Grafana, etc.) that require HTTPS/same-origin
 
-## Overview: Browser → DNS (127.0.0.1) → Traefik (443) → Docker container (via labels).
+## Procedure: Set up Traefik
 
-## DNS: `/etc/hosts` (simple) or dnsmasq (wildcard, preferred: `address=/.local.example.dev/127.0.0.1`).
+Traefik acts as a **local reverse proxy** that:
+1. Resolves real domains (e.g., `local.example.dev`, `app.test`) to `127.0.0.1`
+2. Terminates HTTPS with trusted certificates
+3. Auto-discovers Docker services via labels (no manual config per service)
+4. Routes requests to the correct container based on hostname
 
-## Certs: self-signed (openssl), mkcert (easiest), ACME/Namecheap (lego DNS-01), ACME/Route53.
+```
+Browser → https://app.example.com
+    → DNS resolves to 127.0.0.1 (via /etc/hosts or dnsmasq)
+    → Traefik (port 443) picks up the request
+    → Routes to app container (based on Docker labels)
+```
+
+## DNS Resolution (domains → 127.0.0.1)
+
+**Option A: `/etc/hosts` (simple, per-domain)**
+
+```
+127.0.0.1  local.example.dev
+127.0.0.1  grafana.local.example.dev
+```
+
+**Option B: dnsmasq (wildcard, all subdomains — preferred)**
+
+```bash
+brew install dnsmasq
+echo 'address=/.local.example.dev/127.0.0.1' >> /opt/homebrew/etc/dnsmasq.conf
+sudo brew services restart dnsmasq
+sudo mkdir -p /etc/resolver
+echo 'nameserver 127.0.0.1' | sudo tee /etc/resolver/local.example.dev
+```
+
+## Certificate Strategies
+
+Choose based on project needs:
+
+| Strategy | Tool | Trust | Use when |
+|---|---|---|---|
+| **Self-signed** | openssl | Manual trust via keychain | Quick local dev, no external deps |
+| **mkcert** | mkcert | Auto-trusted local CA | Local dev, easiest setup |
+| **ACME (Namecheap)** | lego + DNS-01 | Real CA (Let's Encrypt) | Real domain, Namecheap DNS |
+| **ACME (AWS Route53)** | lego + DNS-01 | Real CA (Let's Encrypt) | Real domain, AWS DNS |
 
 ### Self-signed (openssl)
 
@@ -174,12 +217,82 @@ horizon:
     - "traefik.http.routers.horizon-secure.rule=Host(`${CERT_HOST}`) && PathPrefix(`/horizon`)"
 ```
 
-## Integration: with NGINX (Traefik→NGINX→PHP-FPM), standalone (Traefik→app), multi-project (shared `traefik-public` network).
+## Integration Patterns
 
-## Middleware: rate limiting, basic auth, CORS — via Docker labels.
+### With NGINX
 
-## Related: `docker`, `devcontainer`, `grafana`, `dashboard-design`
+Traefik sits **in front of** NGINX — does NOT replace it:
 
-## Gotcha: missing label = no routing, mkcert needs `mkcert -install`, must add Traefik network to services.
+```
+Traefik (443) → NGINX (80 internal) → PHP-FPM
+```
 
-## Do NOT: expose without auth, self-signed when mkcert available.
+NGINX keeps: PHP-FPM routing, Xdebug header detection, static files.
+Traefik adds: real domains, HTTPS, multi-service routing.
+
+### Standalone
+
+Traefik routes directly to the app container:
+
+```
+Traefik (443) → App container (80 internal)
+```
+
+### Multi-project (shared Traefik)
+
+One Traefik instance routes to multiple projects via shared network:
+
+```yaml
+networks:
+  traefik-public:
+    external: true   # docker network create traefik-public
+```
+
+```
+traefik
+├── local.example.dev      → api-service
+├── grafana.local.example.dev → grafana
+├── other.local.example.dev → other-service
+└── app.test               → frontend
+```
+
+## Middleware Examples
+
+```yaml
+# Rate limiting
+- "traefik.http.middlewares.rate-limit.ratelimit.average=100"
+
+# Basic auth
+- "traefik.http.middlewares.auth.basicauth.users=admin:$$apr1$$..."
+
+# CORS
+- "traefik.http.middlewares.cors.headers.accesscontrolalloworiginlist=*"
+```
+
+## Related
+
+- **Skill:** `docker` — Docker setup, compose services, container architecture
+- **Skill:** `devcontainer` — DevContainer and Codespaces setup
+- **Skill:** `grafana` — Grafana dashboards (benefits from HTTPS for embedding)
+- **Skill:** `dashboard-design` — Grafana embedding requires same-origin/HTTPS
+- **Rule:** `docker-commands.md` — all commands run inside Docker containers
+
+
+## Gotcha
+
+- Traefik requires Docker labels on each service — a missing label means the service isn't routed.
+- mkcert certificates must be trusted by the OS — `mkcert -install` is a one-time setup step.
+- The model forgets to add the Traefik network to docker-compose services — no network = no routing.
+
+## Do NOT
+
+- Do NOT expose internal services without authentication.
+- Do NOT use self-signed certificates when mkcert is available.
+
+## Auto-trigger keywords
+
+- Traefik
+- reverse proxy
+- local domains
+- HTTPS
+- mkcert

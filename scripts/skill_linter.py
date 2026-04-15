@@ -260,8 +260,11 @@ def lint_skill(path: Path, text: str) -> LintResult:
         if not procedure_block:
             issues.append(Issue("error", "empty_procedure", "Procedure section is empty"))
         else:
-            if not ORDERED_STEP_PATTERN.search(procedure_block):
-                issues.append(Issue("error", "unordered_procedure", "Procedure has no ordered steps"))
+            # Check for ordered steps OR sub-headings as structural indicators
+            has_ordered = ORDERED_STEP_PATTERN.search(procedure_block)
+            has_subheadings = bool(re.search(r"^###\s+", procedure_block, re.MULTILINE))
+            if not has_ordered and not has_subheadings:
+                issues.append(Issue("warning", "unordered_procedure", "Procedure has no ordered steps or sub-headings"))
             meaningful_steps = len(ORDERED_STEP_PATTERN.findall(procedure_block))
             if meaningful_steps < 3:
                 issues.append(Issue("warning", "short_procedure", "Procedure has fewer than 3 ordered steps"))

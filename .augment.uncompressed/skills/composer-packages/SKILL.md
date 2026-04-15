@@ -10,7 +10,7 @@ source: package
 
 Use this skill when creating, maintaining, or publishing Composer library packages — including Laravel packages with service providers, Artisan commands, and config publishing.
 
-## Before making changes
+## Procedure: Work with Composer packages
 
 1. Read the package's `composer.json` for structure and dependencies.
 2. Check if it's a Laravel package (look for `extra.laravel.providers`).

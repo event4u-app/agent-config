@@ -18,7 +18,7 @@ Do NOT use when:
 - The user explicitly asked for a quick/rough draft.
 - You're exploring options, not committing to one yet.
 
-## The 3-step process
+## Procedure: Adversarial review
 
 ### Step 1: Attack (Grumpy Senior Engineer)
 

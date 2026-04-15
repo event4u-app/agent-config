@@ -23,7 +23,7 @@ Use this skill for all Laravel-specific code generation and editing tasks, espec
 
 This skill extends the base `coder` skill and applies Laravel conventions on top of the project's general PHP rules.
 
-## Before writing code
+## Procedure: Write Laravel code
 
 → **First apply the `coder` skill** — it handles project docs, module docs, patterns, and quality tools.
 

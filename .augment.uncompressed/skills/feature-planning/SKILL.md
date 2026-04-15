@@ -17,7 +17,7 @@ Do NOT use when:
 - Bug fixes (use `bug-analyzer` skill)
 - Simple, well-understood changes that don't need planning
 
-## Concept
+## Procedure: Plan a feature
 
 A **feature plan** captures the "what and why" of a feature:
 - Problem it solves, who benefits, expected outcome

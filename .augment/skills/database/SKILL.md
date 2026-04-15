@@ -70,6 +70,12 @@ Re-run `EXPLAIN` and confirm improved plan.
 - `EXPLAIN` output varies between MariaDB and MySQL.
 - Don't use `TEXT` in WHERE without prefix index.
 
+## Do NOT
+
+- Do NOT guess table/column names — verify against migrations or models first.
+- Do NOT add indexes without checking existing ones — duplicates waste write performance.
+- Do NOT use `float` for money — use `decimal`.
+
 ## Auto-trigger keywords
 
 - database

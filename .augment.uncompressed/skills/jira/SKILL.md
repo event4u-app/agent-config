@@ -20,7 +20,7 @@ Do NOT use when:
 - GitHub Issues (use `github-api` tool directly)
 - Linear or other issue trackers
 
-## Available MCP tools
+## Procedure: Work with Jira
 
 | Tool | Purpose |
 |---|---|

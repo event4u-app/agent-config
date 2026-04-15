@@ -15,7 +15,7 @@ Do NOT use when:
 - Modifying existing endpoints (use `refactorer` skill)
 - API design decisions (use `api-design` skill)
 
-## Before generating code
+## Procedure: Create an API endpoint
 
 Read the project-specific docs in `./agents/` and `AGENTS.md` for controller conventions,
 API resource patterns, validation rules, and routing.

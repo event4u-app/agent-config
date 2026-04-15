@@ -49,6 +49,12 @@ Re-measure after fix. Check that cache invalidation works correctly.
 - Don't cache Eloquent collections with loaded relations — too large.
 - Always include tenant ID in cache keys (multi-tenant).
 
+## Do NOT
+
+- Do NOT cache without tenant isolation in multi-tenant contexts.
+- Do NOT use `get()` or `all()` on large tables — paginate or chunk.
+- Do NOT add indexes blindly — analyze query patterns first.
+
 ## Auto-trigger keywords
 
 - performance

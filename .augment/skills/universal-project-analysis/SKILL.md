@@ -75,7 +75,7 @@ Used when the system works but is inefficient. Goal: improve performance, reduce
 
 ---
 
-## Mandatory analysis workflow
+## Procedure: Full project analysis
 
 ### 1. Project discovery
 

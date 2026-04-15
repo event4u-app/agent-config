@@ -19,7 +19,7 @@ Do NOT use when:
 - Writing application code
 - Creating new skills or commands
 
-## The Two Files
+## Procedure: Optimize copilot/agents files
 
 ### `AGENTS.md` — Project Entry Point for AI Agents
 

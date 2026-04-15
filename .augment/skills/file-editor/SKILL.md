@@ -8,9 +8,25 @@ source: package
 
 ## When to use
 
-Auto-triggers on file create/edit. NOT for: read-only, commands, `open_edited_files=false`.
+This skill applies **automatically** whenever:
+- The agent creates or edits a file using `save-file` or `str-replace-editor`
+- The agent wants to show the user a file they should review
 
-Opens edited files in user's IDE via CLI. Settings in `.agent-settings` (git-ignored).
+Do NOT use when:
+- Only reading files (no edits)
+- Running commands or tests
+- The `open_edited_files` setting is `false`
+
+## Procedure: Open files in IDE
+
+When the agent edits files, the user often wants to see them in their IDE immediately.
+This skill reads the user's preferences from `.agent-settings` and opens files automatically
+via the IDE's CLI command.
+
+## Settings file
+
+Settings are stored in `.agent-settings` (project root, git-ignored).
+See `.augment/templates/agent-settings.md` for the full settings reference.
 
 Relevant settings for this skill:
 

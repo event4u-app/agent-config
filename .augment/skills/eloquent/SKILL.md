@@ -63,6 +63,13 @@ Read `eloquent_access_style` from `.agent-settings`. Default: `getters_setters`.
 - `getAttribute()` returns `mixed` — cast or type-check the result.
 - `$model->save()` can silently fail without fillable/guarded config.
 
+## Do NOT
+
+- Do NOT put business logic in models — delegate to services.
+- Do NOT access relationships in loops without eager loading.
+- Do NOT use `Model::all()` without pagination on list endpoints.
+- Do NOT use `booted()` for lifecycle hooks — use Observers with `#[ObservedBy]`.
+
 ## Auto-trigger keywords
 
 - Eloquent

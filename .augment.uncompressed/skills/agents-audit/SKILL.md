@@ -20,7 +20,7 @@ Do NOT use when:
 - Writing new code or features
 - Regular documentation updates (use `agent-docs` skill)
 
-## What gets audited
+## Procedure: Audit skills
 
 ### Scope
 

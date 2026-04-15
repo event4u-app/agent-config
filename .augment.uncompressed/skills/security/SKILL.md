@@ -50,6 +50,13 @@ Focus on: attack surface, trusting user input, authorization gaps.
 - Rate limiting: ALL public endpoints, not just login.
 - Never log passwords, tokens, or API keys.
 
+## Do NOT
+
+- Do NOT bypass FormRequest validation in controllers.
+- Do NOT use `$request->all()` for mass assignment — use `$request->validated()`.
+- Do NOT store plaintext passwords or secrets in the database.
+- Do NOT expose internal error details in production API responses.
+
 ## Auto-trigger keywords
 
 - security

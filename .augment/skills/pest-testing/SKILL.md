@@ -22,7 +22,7 @@ Use this skill for all Laravel testing tasks, especially when working with:
 
 This skill extends `coder`, `laravel`, and `eloquent`.
 
-## Before writing tests
+## Procedure: Write Pest tests
 
 1. **Read the base skills first** — apply `coder`, `laravel`, and `eloquent` where relevant.
 2. **Check the project's test framework** — confirm Pest is used and inspect existing tests.
