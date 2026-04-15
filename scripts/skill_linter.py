@@ -644,6 +644,107 @@ def format_json(results: list[LintResult]) -> str:
     return json.dumps(payload, indent=2, ensure_ascii=False)
 
 
+def check_compression_pairs(root: Path) -> list[LintResult]:
+    """Check that every uncompressed skill/rule/command has a compressed counterpart and vice versa."""
+    results: list[LintResult] = []
+
+    pairs = [
+        ("skills", "SKILL.md", True),   # (subdir, filename, is_nested)
+        ("rules", "*.md", False),
+        ("commands", "*.md", False),
+    ]
+
+    for subdir, pattern, is_nested in pairs:
+        uncompressed_dir = root / ".augment.uncompressed" / subdir
+        compressed_dir = root / ".augment" / subdir
+
+        if not uncompressed_dir.exists():
+            continue
+
+        # Collect names from uncompressed
+        if is_nested:
+            uncompressed_names = {d.name for d in uncompressed_dir.iterdir() if d.is_dir() and (d / pattern).exists()}
+        else:
+            uncompressed_names = {f.name for f in uncompressed_dir.glob(pattern) if f.is_file()}
+
+        # Collect names from compressed
+        if compressed_dir.exists():
+            if is_nested:
+                compressed_names = {d.name for d in compressed_dir.iterdir() if d.is_dir() and (d / pattern).exists()}
+            else:
+                compressed_names = {f.name for f in compressed_dir.glob(pattern) if f.is_file()}
+        else:
+            compressed_names = set()
+
+        # Missing compressed
+        for name in sorted(uncompressed_names - compressed_names):
+            path_str = f".augment/{subdir}/{name}/{pattern}" if is_nested else f".augment/{subdir}/{name}"
+            results.append(LintResult(
+                file=path_str,
+                artifact_type=subdir.rstrip("s"),
+                status="fail",
+                issues=[Issue("error", "missing_compressed", f"Uncompressed exists but compressed version is missing")],
+                suggestions=[f"Run /compress to generate .augment/{subdir}/{name}"],
+            ))
+
+        # Orphaned compressed (no source)
+        for name in sorted(compressed_names - uncompressed_names):
+            path_str = f".augment/{subdir}/{name}/{pattern}" if is_nested else f".augment/{subdir}/{name}"
+            results.append(LintResult(
+                file=path_str,
+                artifact_type=subdir.rstrip("s"),
+                status="fail",
+                issues=[Issue("error", "orphaned_compressed", f"Compressed exists but uncompressed source is missing")],
+                suggestions=[f"Delete orphaned file or restore uncompressed source"],
+            ))
+
+    return results
+
+
+def check_duplication(root: Path) -> list[LintResult]:
+    """Detect skills with highly similar names or descriptions."""
+    results: list[LintResult] = []
+    skills_dir = root / ".augment.uncompressed" / "skills"
+    if not skills_dir.exists():
+        return results
+
+    # Collect all skill names and descriptions
+    skill_data: list[tuple[str, str, Path]] = []
+    for skill_dir in sorted(skills_dir.iterdir()):
+        skill_file = skill_dir / "SKILL.md"
+        if not skill_file.exists():
+            continue
+        text = read_text(skill_file)
+        desc = extract_description(text) or ""
+        skill_data.append((skill_dir.name, desc.lower(), skill_file))
+
+    # Check for name prefix overlap (e.g. "laravel" and "laravel-validation")
+    # Only flag if descriptions are also similar
+    for i, (name_a, desc_a, path_a) in enumerate(skill_data):
+        for name_b, desc_b, path_b in skill_data[i + 1:]:
+            # Skip known patterns: skill-X and skill-X-subtype is intentional
+            if name_a == name_b:
+                continue
+            # Check description word overlap
+            if desc_a and desc_b:
+                words_a = set(desc_a.split())
+                words_b = set(desc_b.split())
+                if len(words_a) > 3 and len(words_b) > 3:
+                    overlap = len(words_a & words_b) / min(len(words_a), len(words_b))
+                    if overlap > 0.7:
+                        rel_a = f".augment.uncompressed/skills/{name_a}/SKILL.md"
+                        results.append(LintResult(
+                            file=rel_a,
+                            artifact_type="skill",
+                            status="pass_with_warnings",
+                            issues=[Issue("warning", "similar_description",
+                                         f"Description highly similar to '{name_b}' ({overlap:.0%} word overlap)")],
+                            suggestions=[f"Consider merging with '{name_b}' or differentiating descriptions"],
+                        ))
+
+    return results
+
+
 def compute_exit_code(results: list[LintResult], strict_warnings: bool) -> int:
     if any(r.status == "fail" for r in results):
         return 2
@@ -658,6 +759,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--all", action="store_true", help="Lint all skills/rules in the repo")
     parser.add_argument("--changed", action="store_true", help="Lint changed skills/rules")
     parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
+    parser.add_argument("--pairs", action="store_true", help="Check compression pairs (uncompressed vs compressed)")
+    parser.add_argument("--duplicates", action="store_true", help="Detect skills with similar descriptions")
     parser.add_argument("--strict-warnings", action="store_true", help="Return non-zero on warnings")
     parser.add_argument("--repo-root", default=".", help="Repository root")
     return parser.parse_args()
@@ -684,6 +787,12 @@ def main() -> int:
             return 0
 
         results = [lint_file(path, repo_root=root) for path in paths]
+
+        # Additional checks
+        if args.pairs:
+            results.extend(check_compression_pairs(root))
+        if args.duplicates:
+            results.extend(check_duplication(root))
 
         if args.format == "json":
             print(format_json(results))
