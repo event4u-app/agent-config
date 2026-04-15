@@ -77,11 +77,14 @@ FRONTMATTER_PATTERN = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
 DESCRIPTION_PATTERN = re.compile(r'^description:\s*"?(.*?)"?\s*$', re.MULTILINE)
 TYPE_PATTERN = re.compile(r'^type:\s*"?(always|auto)"?\s*$', re.MULTILINE)
 SOURCE_PATTERN = re.compile(r'^source:\s*"?(package|project)"?\s*$', re.MULTILINE)
+STATUS_PATTERN = re.compile(r'^status:\s*"?(active|deprecated|superseded)"?\s*$', re.MULTILINE)
+REPLACED_BY_PATTERN = re.compile(r'^replaced_by:\s*"?([\w-]+)"?\s*$', re.MULTILINE)
 H1_PATTERN = re.compile(r"^# .+", re.MULTILINE)
 DOUBLE_BLANK_PATTERN = re.compile(r"\n{3,}")
 
 VALID_RULE_TYPES = {"always", "auto"}
 VALID_RULE_SOURCES = {"package", "project"}
+VALID_STATUSES = {"active", "deprecated", "superseded"}
 
 
 @dataclass
@@ -267,6 +270,25 @@ def lint_skill(path: Path, text: str) -> LintResult:
                 break
     else:
         issues.append(Issue("warning", "missing_description", "Frontmatter description is missing or unreadable"))
+
+    # --- Status lifecycle check ---
+    frontmatter = extract_frontmatter(text)
+    if frontmatter:
+        status_match = STATUS_PATTERN.search(frontmatter)
+        if status_match:
+            status = status_match.group(1)
+            if status == "deprecated":
+                replaced_by = extract_frontmatter_field(frontmatter, REPLACED_BY_PATTERN)
+                msg = f"Skill is deprecated"
+                if replaced_by:
+                    msg += f" (replaced by: {replaced_by})"
+                issues.append(Issue("warning", "deprecated_skill", msg))
+            elif status == "superseded":
+                replaced_by = extract_frontmatter_field(frontmatter, REPLACED_BY_PATTERN)
+                msg = f"Skill is superseded — should be removed"
+                if replaced_by:
+                    msg += f" (replaced by: {replaced_by})"
+                issues.append(Issue("warning", "superseded_skill", msg))
 
     procedure_block = find_procedure_block(text)
     if procedure_block is not None:

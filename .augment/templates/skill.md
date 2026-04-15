@@ -16,6 +16,7 @@
 ---
 name: {skill-name}
 description: "Use when {trigger situation — what the user says or does}. {What the skill does in 1 sentence}."
+status: active
 ---
 
 <!-- DESCRIPTION RULES (delete this comment when done):

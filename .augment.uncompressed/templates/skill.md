@@ -16,7 +16,16 @@
 ---
 name: {skill-name}
 description: "Use when {trigger situation — what the user says or does}. {What the skill does in 1 sentence}."
+status: active
 ---
+
+<!-- STATUS VALUES (delete this comment when done):
+  - active: default, skill is in use
+  - deprecated: better alternative exists (add replaced_by if applicable)
+  - superseded: fully replaced by another skill (add replaced_by)
+  Example: status: deprecated
+           replaced_by: other-skill-name
+-->
 
 <!-- DESCRIPTION RULES (delete this comment when done):
   - Start with "Use when..." — this is a TRIGGER, not a summary
