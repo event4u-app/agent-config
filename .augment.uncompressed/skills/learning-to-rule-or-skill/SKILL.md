@@ -1,6 +1,6 @@
 ---
 name: learning-to-rule-or-skill
-description: "Use when a repeated learning, mistake, or successful pattern should be turned into a new rule or skill."
+description: "Use when a repeated learning, mistake, or successful pattern should be turned into a new rule or skill. Also use after completing a task to capture learnings from the work."
 source: project
 ---
 
@@ -15,6 +15,7 @@ Use this skill when:
 * A new constraint or workflow should be captured permanently
 * Reviewing post-task learnings or retrospectives
 * Deciding whether a learning belongs in a rule or a skill
+* After completing a task — reflecting on what worked or caused friction
 
 Do not use this skill when:
 
@@ -145,6 +146,9 @@ Prefer:
 * create skill from learning
 * codify this
 * capture this pattern
+* after task
+* what did we learn
+* post-mortem
 
 ## Anti-patterns
 

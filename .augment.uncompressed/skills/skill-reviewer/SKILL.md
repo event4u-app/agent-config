@@ -81,12 +81,40 @@ Everything in one file, >500 lines.
 **Fix:** Extract reference tables, templates, and examples into separate files
 in the skill folder. SKILL.md stays under 500 lines.
 
+## Structural Validation (pre-review)
+
+Before scoring the 5 Killers, verify structure:
+
+**Skills** — required sections:
+- When to use (with "Do not use when")
+- Procedure (numbered steps, Step 0: Inspect, concrete validation at end)
+- Output format
+- Gotchas
+- Do NOT
+
+**Rules** — must be:
+- Short and directive
+- Always-applicable (no situational triggers)
+- Not procedural (no numbered steps — that's a skill)
+
+**Compression safety** (if compressed version exists):
+- Trigger clarity preserved
+- Decision hints or equivalent present
+- Concrete validation still present
+- Gotchas/anti-failure protection retained
+
+**Scope check:**
+- No overlap with existing skill or rule (name + description)
+- Single workflow per file (multiple workflows → split)
+- Update existing preferred over creating new file
+
 ## How to Review
 
 ### Single skill
-1. Read the SKILL.md
+1. Validate structure (required sections present)
 2. Score each killer: ✅ Pass / ⚠️ Weak / ❌ Fail
-3. Produce a verdict table + specific fix suggestions
+3. Check compression safety (if applicable)
+4. Produce a verdict table + specific fix suggestions
 
 ### Batch audit
 1. Scan all skills in `.augment/skills/`

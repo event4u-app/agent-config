@@ -1,6 +1,6 @@
 ---
 name: api-design
-description: "Use when designing a new API, planning endpoints, or discussing REST conventions. Covers versioning, pagination, filtering, error responses, and resource structure."
+description: "Use when designing a new API, planning endpoints, discussing REST conventions, adding API versions, or managing deprecation. Covers versioning, pagination, filtering, error responses, resource structure, and deprecation workflow."
 source: package
 ---
 
@@ -38,11 +38,35 @@ If a route doesn't exist in the requested version, the system falls back to the 
 ],
 ```
 
-### When to create a v2 endpoint
+### When to create a new version
 
-- **Breaking change** in request or response format → new v2 endpoint.
-- **Non-breaking addition** (new optional field) → extend existing endpoint.
-- **Read `agents/contexts/api-versioning.md`** for the full decision matrix.
+| Change type | Action | Example |
+|---|---|---|
+| Add optional field | Extend current version | Add `?include=comments` |
+| Add new endpoint | Add to current version | `GET /api/v1/reports` |
+| Remove field | New version | Remove `legacy_id` from response |
+| Rename field | New version | `name` → `full_name` |
+| Change field type | New version | `id: int` → `id: string` |
+| Change validation | New version | Required field becomes optional |
+
+> If an existing client would break without code changes → **new version required**.
+
+Read `agents/contexts/api-versioning.md` for the full decision matrix.
+
+### Deprecation workflow
+
+1. **Mark as deprecated** — add deprecation headers:
+   ```php
+   return response()->json($data)
+       ->header('Deprecation', 'true')
+       ->header('Sunset', '2026-06-01')
+       ->header('Link', '</api/v2/projects>; rel="successor-version"');
+   ```
+2. **Document** — add to API changelog with sunset date
+3. **Monitor usage** — track which clients still use deprecated endpoints
+4. **Remove** — after sunset date, remove route + controller + update docs
+
+Give clients minimum 3 months between deprecation and removal.
 
 ## Response format
 
@@ -190,6 +214,9 @@ Focus on the "API design" attack questions: Breaking changes? Consistency? Error
 - endpoint design
 - resource structure
 - response format
+- API versioning
+- deprecation
+- breaking changes
 
 ## Gotcha
 
@@ -197,6 +224,9 @@ Focus on the "API design" attack questions: Breaking changes? Consistency? Error
 - The model often forgets pagination on list endpoints — always include it.
 - Don't use nested resources beyond 2 levels — `/users/{id}/orders/{id}` is the max depth.
 - Error response format must match the existing project convention, not RFC 7807 or other standards.
+- Don't version internal APIs that only your own frontend consumes — versioning adds complexity.
+- Deprecation without a migration path is useless — always provide the replacement endpoint.
+- The model tends to duplicate entire controllers for a new version instead of using fallback logic.
 
 ## Do NOT
 

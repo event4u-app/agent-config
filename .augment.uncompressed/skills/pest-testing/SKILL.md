@@ -1,6 +1,6 @@
 ---
 name: pest-testing
-description: "Use when writing Pest tests for Laravel — clear intent, good coverage, maintainable structure, and alignment with project testing conventions."
+description: "Use when writing, generating, or improving Pest tests for Laravel — clear intent, good coverage, maintainable structure, and alignment with project testing conventions."
 source: package
 ---
 
@@ -287,6 +287,22 @@ When generating Pest tests:
 - Do NOT mark classes final if they need to be mocked via Mockery.
 - Do NOT use PHPUnit class-based syntax — use Pest syntax.
 
+## What to test (generation checklist)
+
+When generating new tests, focus on:
+- **Business logic**: calculations, status transitions, validation rules, data transformations
+- **Edge cases**: null, empty string, zero, negative numbers, boundary values, max length
+- **Error paths**: invalid input, missing dependencies, exception handling
+- **Different code branches**: if/else, early returns, fallback behavior
+
+What NOT to test:
+- Trivial getters/setters without logic
+- Parameter counts, method existence, class names
+- Framework internals (Eloquent, routing)
+- Private methods directly — test through public API
+
+**Quality over quantity** — 5 meaningful tests beat 20 trivial ones.
+
 ## Auto-trigger keywords
 
 - Pest test
@@ -294,3 +310,7 @@ When generating Pest tests:
 - test writing
 - test quality
 - TDD
+- generate tests
+- write tests
+- test coverage
+- test scenarios

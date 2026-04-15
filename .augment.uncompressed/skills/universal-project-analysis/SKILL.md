@@ -1,6 +1,6 @@
 ---
 name: universal-project-analysis
-description: "ONLY when user explicitly requests: full project analysis, deep codebase audit, or comprehensive architecture review. NOT for regular bug fixes or feature work."
+description: "ONLY when user explicitly requests: full project analysis, deep codebase audit, Laravel project analysis, upgrade readiness check, or comprehensive architecture review. NOT for regular bug fixes or feature work."
 source: package
 ---
 
@@ -34,7 +34,7 @@ Do NOT use when:
 
 - You only need small isolated code snippets
 - You already fully understand the system
-- A framework-specific skill exists (use `project-analysis-laravel` for Laravel)
+- Simple isolated code changes or regular feature work
 
 ## Core principles
 
@@ -278,8 +278,34 @@ Issues rarely exist in isolation. Always check interactions between:
 
 ## Framework deep knowledge
 
-### Laravel
+### Laravel (extended investigation)
 
+When the project uses Laravel, extend the standard workflow with:
+
+**Boot analysis:**
+- Service providers and registration order
+- Environment-specific config loading, cache/config/route compilation
+- Middleware stack and route grouping
+- Queue, cache, mail, broadcast, session, and filesystem drivers
+
+**Request-to-response trace:**
+- Route → Middleware → FormRequest → Controller → Service → Model → Events → Response
+- Verify: validation correctness, authorization/policy coverage, transaction boundaries,
+  N+1/eager loading, hidden state changes in observers
+
+**Data and schema analysis:**
+- Migrations vs model relationships vs code assumptions
+- Index usage, soft delete behavior, nullable mismatches, enum/cast/JSON columns
+
+**Async and infrastructure flows:**
+- Queued jobs (serialization, idempotency, retry loops)
+- Scheduled commands, broadcasting, cache invalidation, external HTTP integrations
+
+**Test posture:**
+- Presence/quality of feature/unit/integration tests
+- Factories, seeders, fakes/mocks; missing tests around critical paths
+
+**Common deep issues:**
 - Service Container misuse (binding in wrong provider method, singleton vs transient)
 - Facade overuse (hiding dependencies, making testing harder)
 - Eloquent N+1 queries (missing `with()`, lazy loading in loops)
@@ -369,7 +395,6 @@ What to check, fix, or investigate next. Which specialist skills to chain.
 ## Integration with other skills
 
 - **analysis-autonomous-mode** — routes here for broad understanding, switches to specialists as needed
-- **project-analysis-laravel** — use instead for deep Laravel-specific analysis (boot flow, Eloquent, queues)
 - **bug-analyzer** — chain when bugs are found during analysis (reactive or proactive mode)
 - **performance-analysis** — chain when bottlenecks are found
 - **security-audit** — chain when vulnerabilities are found
