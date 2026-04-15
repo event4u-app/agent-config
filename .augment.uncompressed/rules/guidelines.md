@@ -64,6 +64,13 @@ Playwright best practices, Page Objects, fixtures, CI.
 Guidelines are the "how to write code" docs. Rules enforce critical subsets automatically.
 Skills reference guidelines when performing related tasks.
 
+## Boundary: Guidelines vs Skills
+
+- Guidelines contain **conventions and reference knowledge**. Skills contain **executable workflows**.
+- A skill may reference a guideline for conventions, but must NOT outsource its core execution steps to a guideline.
+- Do NOT move a skill's operational core (procedure, validation, decision logic) into a guideline.
+- If a skill becomes "go read the guideline", it has lost its purpose — restore the workflow.
+
 ## Adding new guidelines
 
 When a new language or framework is introduced, create a directory:

@@ -77,6 +77,15 @@ disable-model-invocation: true
 
 **Never** create `.claude/skills/{name}/SKILL.md` manually for commands — always use the symlink workflow.
 
+## Pre-review consistency checkpoints
+
+Before asking for review or creating a PR, verify derived outputs are not stale:
+
+1. Run `task sync-changed` — check if `.augment.uncompressed/` has changes not yet compressed
+2. If stale files exist: run `/compress` before pushing
+3. Before merge: verify derived outputs (`.augment/`, `.claude/skills/`) are regenerated
+4. Do NOT leave `.augment/` stale across review cycles
+
 ## Quick reference
 
 | Task | What to do |

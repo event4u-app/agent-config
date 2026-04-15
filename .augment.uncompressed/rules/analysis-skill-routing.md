@@ -36,3 +36,13 @@ If the stack is unclear:
 
 * start broad
 * then narrow quickly
+
+## Routing quality gate
+
+Only route to the narrower skill if it still has:
+
+* executable workflow (concrete procedure steps)
+* concrete validation (specific checks, not "verify it works")
+* real decision power (not just "read the guideline")
+
+If the narrow skill is too weak or hollowed out, route through the broader skill and note the gap.
