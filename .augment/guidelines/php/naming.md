@@ -2,7 +2,7 @@
 
 > Naming conventions — PHP classes, database, routes, variables, modules, agent infrastructure.
 
-**Related Skills:** `naming`
+**Related Skills:** none (naming is a convention — use this guideline directly)
 **Related Guidelines:** [controllers.md](controllers.md), [resources.md](resources.md)
 
 ## PHP Classes
