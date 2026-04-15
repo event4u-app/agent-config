@@ -80,8 +80,9 @@ Extend the existing linter script (`scripts/skill_linter.py`) with CI enforcemen
   - PR job: `task lint-skills` + JSON artifact upload
   - Main job: `task lint-skills-strict` (warnings = errors)
   - Path-filtered triggers for `.augment/`, `.augment.uncompressed/`, `.claude/`, scripts, tests
-- [ ] **Step 4:** Add compression consistency check to CI
-  - `task sync-changed` — verify no unsynced files
+- [x] **Step 4:** Add consistency check to CI
+  - `.github/workflows/consistency.yml` — sync + generate-tools + git diff
+  - Taskfile: `task consistency` (local), `task consistency-fix` (regenerate)
 - [ ] **Step 5:** More tests for edge cases + pair mode
 
 ## Phase 2.3: Lifecycle Management (Cleanup Layer)
@@ -139,7 +140,7 @@ An improvement may be submitted upstream ONLY if ALL of these pass:
 ### Required checks (block merge)
 - [x] `task lint-skills` — script + Taskfile exist
 - [x] GitHub Actions workflow (`.github/workflows/skill-lint.yml`)
-- [ ] `task sync-changed` — compression consistency in CI
+- [x] Consistency check (`.github/workflows/consistency.yml` + `task consistency`)
 - [ ] Duplicate detection in linter
 
 ### Optional checks (warn only)

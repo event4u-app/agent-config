@@ -77,8 +77,23 @@ tasks:
     desc: Run skill linter tests
     cmd: python3 -m pytest tests/test_skill_linter.py -v
 
+  consistency:
+    desc: Verify sync + generated tool outputs are clean
+    cmds:
+      - task: sync-check
+      - task: sync
+      - task: generate-tools
+      - git diff --quiet
+
+  consistency-fix:
+    desc: Regenerate all derived outputs from source-of-truth
+    cmds:
+      - task: sync
+      - task: generate-tools
+
   ci:
-    desc: Run all CI checks locally
+    desc: Run core CI checks locally
     cmds:
       - task: test
       - task: lint-skills
+      - task: consistency
