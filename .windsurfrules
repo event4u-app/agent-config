@@ -80,6 +80,16 @@ If the stack is unclear:
 * start broad
 * then narrow quickly
 
+## Routing quality gate
+
+Only route to narrower skill if it has:
+
+* executable workflow (concrete procedure steps)
+* concrete validation (specific checks, not "verify it works")
+* real decision power (not just "read the guideline")
+
+If narrow skill is too weak or hollowed out, route through broader skill and note the gap.
+
 ---
 
 # Architecture Rules
@@ -230,6 +240,15 @@ disable-model-invocation: true
 4. Run `task generate-tools` — creates Claude symlink automatically
 
 **Never** create `.claude/skills/{name}/SKILL.md` manually for commands — always use the symlink workflow.
+
+## Pre-review consistency checkpoints
+
+Before review or PR, verify derived outputs are not stale:
+
+1. Run `task sync-changed` — check for uncompressed changes
+2. If stale: run `/compress` before pushing
+3. Before merge: verify `.augment/` and `.claude/skills/` are regenerated
+4. Do NOT leave `.augment/` stale across review cycles
 
 ## Quick reference
 
@@ -728,6 +747,13 @@ Playwright best practices, Page Objects, fixtures, CI.
 
 Guidelines are the "how to write code" docs. Rules enforce critical subsets automatically.
 Skills reference guidelines when performing related tasks.
+
+## Boundary: Guidelines vs Skills
+
+- Guidelines contain **conventions and reference knowledge**. Skills contain **executable workflows**.
+- Skills may reference guidelines but must NOT outsource core execution steps to guidelines.
+- Do NOT move a skill's operational core (procedure, validation, decision logic) into a guideline.
+- If a skill becomes "go read the guideline" → restore the workflow.
 
 ## Adding new guidelines
 
