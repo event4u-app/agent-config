@@ -452,14 +452,21 @@ def gather_changed_candidate_files(root: Path) -> list[Path]:
         return []
 
 
-def lint_file(path: Path) -> LintResult:
+def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
     text = read_text(path)
     artifact_type = detect_artifact_type(path, text)
+    # Use relative path for output if repo_root is provided
+    display_path = path
+    if repo_root:
+        try:
+            display_path = path.relative_to(repo_root)
+        except ValueError:
+            pass
     if artifact_type == "skill":
-        return lint_skill(path, text)
+        return lint_skill(display_path, text)
     if artifact_type == "rule":
-        return lint_rule(path, text)
-    return lint_unknown(path, text)
+        return lint_rule(display_path, text)
+    return lint_unknown(display_path, text)
 
 
 def format_text(results: list[LintResult]) -> str:
@@ -547,7 +554,7 @@ def main() -> int:
             print("No matching skill/rule files found.", file=sys.stderr)
             return 0
 
-        results = [lint_file(path) for path in paths]
+        results = [lint_file(path, repo_root=root) for path in paths]
 
         if args.format == "json":
             print(format_json(results))
