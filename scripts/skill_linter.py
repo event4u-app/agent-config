@@ -354,16 +354,32 @@ def lint_skill(path: Path, text: str) -> LintResult:
         issues.append(Issue("warning", "skill_too_large", f"Skill has {total_lines} lines (limit: 500); consider splitting"))
 
     # --- Pointer-only skill detection ---
-    procedure_block = find_procedure_block(text)
     if procedure_block:
         proc_lines = [line.strip() for line in procedure_block.splitlines() if line.strip()]
-        guideline_refs = sum(1 for line in proc_lines
-                           if re.search(r"(?:see|read|check|follow|refer to)\s+.*guideline", line, re.IGNORECASE))
-        if len(proc_lines) < 8 and guideline_refs >= 2:
+        # Count delegation patterns ("see guideline", "refer to", "check X docs")
+        delegation_patterns = re.findall(
+            r"(?:see|read|check|follow|refer\s+to|consult|per)\s+.*(?:guideline|skill|rule|doc)",
+            procedure_block, re.IGNORECASE)
+        delegation_count = len(delegation_patterns)
+        # Count action verbs that indicate own workflow
+        action_verbs = re.findall(
+            r"\b(?:run|execute|create|write|validate|verify|inspect|check|ensure|test|build|"
+            r"generate|compare|extract|parse|detect|fix|update|add|remove|install|configure|deploy)\b",
+            procedure_block, re.IGNORECASE)
+        action_count = len(set(v.lower() for v in action_verbs))
+        # Heuristics:
+        # 1. Many delegation refs + few own steps = pointer skill
+        # 2. Few action verbs + many delegations = pointer skill
+        if delegation_count >= 2 and len(proc_lines) < 8:
             issues.append(Issue("warning", "pointer_only_skill",
-                               f"Procedure has {len(proc_lines)} lines but {guideline_refs} guideline references — "
-                               f"skill may be outsourcing its workflow to guidelines"))
+                               f"Procedure has {len(proc_lines)} lines but {delegation_count} delegation references — "
+                               f"skill may be outsourcing its workflow"))
             suggestions.append("Ensure the skill has its own executable workflow independent of guidelines")
+        elif delegation_count >= 3 and action_count < 3:
+            issues.append(Issue("warning", "pointer_only_skill",
+                               f"Procedure has {delegation_count} delegation references but only {action_count} unique action verbs — "
+                               f"skill may lack its own executable steps"))
+            suggestions.append("Add concrete action steps (run, validate, inspect, create) instead of pointing to other docs")
 
     return LintResult(
         file=str(path),

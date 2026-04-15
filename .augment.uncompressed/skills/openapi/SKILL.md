@@ -12,9 +12,12 @@ Use this skill when adding or updating API documentation, writing OpenAPI annota
 
 ## Procedure: Add OpenAPI documentation
 
-1. Read `agents/docs/controller.md` for OpenAPI attribute patterns used in controllers.
-2. Read `agents/contexts/api-versioning.md` for how versions are reflected in the API docs.
-3. Check existing controllers for annotation examples.
+1. **Gather context** — read `agents/docs/controller.md` for OpenAPI patterns, `agents/contexts/api-versioning.md` for versioning, and check 2-3 existing controllers for annotation style.
+2. **Detect tooling** — check `composer.json` for `l5-swagger` or `laravel-openapi`, look for `@OA\` vs `#[OA\` syntax in existing controllers, find the config file.
+3. **Write annotations** — add `#[OA\...]` attributes to the controller method. Include path, summary, tags, all parameters, and all response codes (200, 401, 403, 404, 422).
+4. **Define schemas** — create or reuse `#[OA\Schema]` for request/response types. Use `$ref` for shared types.
+5. **Validate** — run the spec validation (`npx @redocly/cli lint` or `php artisan l5-swagger:generate`). Fix any errors.
+6. **Verify accuracy** — compare the documented request/response with the actual controller + FormRequest + Resource to ensure they match.
 
 ## OpenAPI attributes
 
