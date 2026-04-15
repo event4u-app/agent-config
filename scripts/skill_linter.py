@@ -340,6 +340,11 @@ def lint_skill(path: Path, text: str) -> LintResult:
         issues.append(Issue("warning", "broad_scope", "Skill scope appears broad and may need splitting"))
         suggestions.append("Narrow the trigger or split unrelated workflows")
 
+    # --- Size check ---
+    total_lines = len(text.splitlines())
+    if total_lines > 500:
+        issues.append(Issue("warning", "skill_too_large", f"Skill has {total_lines} lines (limit: 500); consider splitting"))
+
     return LintResult(
         file=str(path),
         artifact_type="skill",

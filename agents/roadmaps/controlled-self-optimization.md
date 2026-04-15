@@ -86,7 +86,7 @@ Add YAML frontmatter field:
 - [x] **Step 1:** `status` field added to skill template (active/deprecated/superseded + replaced_by)
 - [x] ~~Step 2: `lifecycle-management.md` rule — not needed, linter enforces lifecycle~~
 - [x] **Step 3:** Linter detects deprecated and superseded skills with warnings
-- [ ] **Step 4:** Periodic cleanup task (quarterly review) — process, not an artifact
+- [x] ~~Step 4: Periodic cleanup task — process, handled via taxonomy-audit roadmap~~
 
 ## Phase 2.4: Upstream Contribution Guard
 
@@ -111,7 +111,7 @@ An improvement may be submitted upstream ONLY if ALL of these pass:
 ### Implementation — ✅ COMPLETE
 - [x] **Step 1:** Upstream checklist documented in PR template
 - [x] **Step 2:** PR template `.github/pull_request_template.md` with 4-gate checklist
-- [ ] **Step 3:** CI check on upstream repo (deferred — needs upstream repo setup)
+- [x] ~~Step 3: CI check on upstream repo — deferred, needs upstream repo setup~~
 
 ## Phase 2.5: CI Integration Summary
 
@@ -119,11 +119,11 @@ An improvement may be submitted upstream ONLY if ALL of these pass:
 - [x] `task lint-skills` — script + Taskfile exist
 - [x] GitHub Actions workflow (`.github/workflows/skill-lint.yml`)
 - [x] Consistency check (`.github/workflows/consistency.yml` + `task consistency`)
-- [ ] Duplicate detection in linter
+- [x] Duplicate detection in linter (`--duplicates` mode)
 
 ### Optional checks (warn only)
-- [ ] Size limits (skill > 500 lines)
-- [ ] Deprecated usage detection
+- [x] Size limits (skill > 500 lines warning)
+- [x] Deprecated/superseded usage detection (lifecycle status check)
 
 ## Acceptance Criteria
 
