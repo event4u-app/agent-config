@@ -1,3 +1,8 @@
+---
+type: "always"
+source: package
+---
+
 # Markdown Safe Codeblocks
 
 When generating markdown with code blocks:
