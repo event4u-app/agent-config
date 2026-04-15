@@ -137,10 +137,19 @@ ALWAYS work in .augment.uncompressed/ — then compress.
 ## Workflow
 
 1. Create/edit in `.augment.uncompressed/{path}`
-2. Compress prose → `.augment/{path}`
-3. `task sync-mark-done -- {path}`
+2. **Do NOT auto-compress.** Continue working.
+3. **Before commit/push:** Check `task sync-changed`. If files need compression, ask:
+   ```
+   > 📦 {N} .augment files need compression before commit.
+   >
+   > 1. Compress now — run /compress
+   > 2. Later — commit without compression
+   ```
+4. If compressing: `/compress`, then `task sync-mark-done -- {path}`
 
 Non-.md files: `task sync` copies automatically.
+
+**Compression happens once before commit/push — not after every edit.**
 
 ## Compression = remove filler/articles/hedging, shorten phrases, fragments OK, merge redundant bullets
 
@@ -156,6 +165,37 @@ Non-.md files: `task sync` copies automatically.
 | What needs compression? | `task sync-changed` |
 | Mark compressed | `task sync-mark-done -- {path}` |
 | Verify sync | `task sync-check` |
+
+---
+
+# Capture Learnings
+
+When a repeated mistake, successful pattern, or new constraint appears,
+evaluate whether to capture as **rule** or **skill**.
+
+## Capture
+
+- Mistake that happened 2+ times
+- Pattern that improved outcome and should be reused
+- Missing constraint that caused issues
+
+## Do NOT capture
+
+- One-off problems
+- Vague frustrations without concrete consequence
+- Content already covered by existing guidance
+
+## Rule vs Skill
+
+- **Rule** → always-apply constraint ("never X", "always Y")
+- **Skill** → repeatable workflow with steps ("when X, do 1-5")
+- **Update** → existing guidance covers topic → extend, don't duplicate
+
+## How
+
+- Smallest effective change
+- Update existing over creating duplicates
+- Full workflow: `learning-to-rule-or-skill` skill
 
 ---
 
@@ -379,10 +419,10 @@ docker compose exec -T <php-service> php artisan test
 ## Examples (Composer)
 
 ```bash
-docker compose exec -T php vendor/bin/phpstan analyse
-docker compose exec -T php vendor/bin/rector process
-docker compose exec -T php vendor/bin/ecs check --fix
-docker compose exec -T php bash -c "vendor/bin/phpunit"
+docker compose exec -T <php-service> vendor/bin/phpstan analyse
+docker compose exec -T <php-service> vendor/bin/rector process
+docker compose exec -T <php-service> vendor/bin/ecs check --fix
+docker compose exec -T <php-service> vendor/bin/phpunit
 ```
 
 ## Build / Task Runner
@@ -927,7 +967,7 @@ Before verbose CLI commands, check rtk:
 
 1. `which rtk` (silent)
 2. **Installed** → prefix with `rtk` for >30 line output
-3. **Not installed** → check project settings file for `rtk_last_asked`:
+3. **Not installed** → check `.agent-settings` for `rtk_last_asked`:
    - Missing or before today → prompt user
    - Today → skip, use normal commands
 
@@ -941,8 +981,8 @@ Before verbose CLI commands, check rtk:
 > 3. Skip for now — I'll ask again tomorrow
 
 **On response:**
-- **1/2** → install, then: `rtk --version`, `rtk init --global`, Post-Install Setup, generate project-local filters, save `rtk_installed=true` in project settings
-- **3** → save `rtk_last_asked=YYYY-MM-DD` in project settings, use normal commands
+- **1/2** → install, then: `rtk --version`, `rtk init --global`, Post-Install Setup, generate project-local filters, save `rtk_installed=true` in `.agent-settings`
+- **3** → save `rtk_last_asked=YYYY-MM-DD` in `.agent-settings`, use normal commands
 
 ## Post-Install Setup (mandatory)
 
@@ -1211,9 +1251,43 @@ grep "app/Services/MyService.php" /tmp/<tool>-output.txt
 - Read the full output of a passing command (waste)
 - Read diffs you don't plan to act on
 
+## Targeted Operations
+
+Minimize scope. Never fetch more than you need.
+
+### Queries
+- Single item over list: query directly, don't fetch list to find one entry
+- Filtered queries: always filter when listing unavoidable
+- Specific fields: request only needed fields
+- JSON + jq: use JSON output + `jq` to extract exactly what you need
+
+### Testing
+- During work: ONLY the specific test affected (`--filter=ClassName`)
+- Broader scope: only if change could affect other tests
+- Full suite: only at the very end
+- Decision: changed method → method's test · changed class → class tests · changed shared service → all consumers · changed config → full suite
+
+### API calls
+- Targeted endpoints over list endpoints
+- Small page sizes, stop after finding what you need
+- Don't re-fetch what you just received
+
+## Tool-First, Script-Last
+
+**Prefer skills with CLI tools over custom scripts.**
+
+1. **Existing skill** — use directly
+2. **Skill + CLI tool** (jq, grep, awk, sed) — compose
+3. **Python/Bash script** — only when no skill/tool combination exists
+
+Scripts allowed only when: no skill covers it, no CLI tool achieves it, operation needs programmatic logic, script is reusable.
+Scripts NOT allowed when: skill exists, `jq` can extract it, `grep` + `head` can filter it.
+
+**Learning trigger:** When you write a script because no skill exists → capture learning → propose skill that replaces the script.
+
 ## General Rules
 
-For tool-specific commands → see the `quality-workflow` rule.
+For tool-specific commands → see `quality-workflow` rule.
 
 1. **ECS and Rector are trusted tools** — their configs define exactly what they do.
    Run with `--fix`, don't read diffs, don't review changes. Trust the config.
@@ -1400,10 +1474,11 @@ Skip any step = the claim is unverified.
 
 ### Laravel projects (inside Docker container)
 ```bash
-php artisan test                     # Tests
-vendor/bin/phpstan analyse                # Static analysis (or: php artisan quality:phpstan)
+php artisan test                          # Tests
+vendor/bin/phpstan analyse                # Static analysis (1st run)
 vendor/bin/rector process                 # Rector (or: php artisan quality:rector --fix)
 vendor/bin/ecs check --fix                # Code style (or: php artisan quality:ecs --fix)
+vendor/bin/phpstan analyse                # Static analysis (final — verify Rector/ECS didn't break anything)
 ```
 
 ### Frontend projects
