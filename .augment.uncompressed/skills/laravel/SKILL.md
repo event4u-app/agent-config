@@ -173,6 +173,13 @@ When generating Laravel code:
 - Do NOT use facades in service classes — use dependency injection.
 - Do NOT skip middleware for route groups that need authentication.
 
+## Gotcha
+
+- `env()` only works in config files — use `config()` everywhere else.
+- Don't mix `Route::resource()` with single-action controllers — pick the project's convention.
+- Don't return Eloquent models directly — always use API Resources.
+- Don't bypass existing middleware stacks when adding new routes.
+
 ## Auto-trigger keywords
 
 - Laravel

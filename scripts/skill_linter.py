@@ -77,7 +77,7 @@ TRIGGER_WARNING_PATTERNS = [
     r"\beverything about\b",
 ]
 
-ORDERED_STEP_PATTERN = re.compile(r"^\s*(\d+)\.\s+", re.MULTILINE)
+ORDERED_STEP_PATTERN = re.compile(r"^(?:\s*|\#{1,4}\s*)(\d+)\.\s+", re.MULTILINE)
 SECTION_PATTERN = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 FRONTMATTER_PATTERN = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
 DESCRIPTION_PATTERN = re.compile(r'^description:\s*"?(.*?)"?\s*$', re.MULTILINE)

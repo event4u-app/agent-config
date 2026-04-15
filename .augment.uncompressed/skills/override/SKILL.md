@@ -6,6 +6,14 @@ source: package
 
 # Override Skill
 
+## When to use
+
+Use when creating or managing project-level overrides for shared skills, rules, commands, or guidelines — customizing `.augment/` content without modifying originals.
+
+Do NOT use when:
+- Changing shared content that should affect all projects (edit `.augment.uncompressed/` directly)
+- Creating new skills from scratch (use `skill-writing` skill)
+
 ## Purpose
 
 The `.augment/` directory is delivered as a **Composer package** and is **read-only** at project level.
@@ -138,6 +146,12 @@ Override templates are in `.augment/templates/overrides/`:
 - **Skill:** `agent-docs` (documentation hierarchy)
 - **Templates:** `.augment/templates/overrides/`
 
+
+## Gotcha
+
+- Overrides are invisible to other projects — only the current project sees them.
+- Replace mode discards the original entirely — use extend mode unless you need a full rewrite.
+- If the override stops working after a package update, the original's structure likely changed.
 
 ## Do NOT
 

@@ -93,7 +93,7 @@ Good:
 
 Bad:
 
-* Check if it works
+* Vague statements like "see if outcome is correct" (no concrete command or assertion)
 
 ### 4. Add safe/unsafe example
 

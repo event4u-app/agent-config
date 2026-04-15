@@ -385,6 +385,13 @@ JS/TS commands run on the **host** or in a **Node container**, depending on the 
 - type check
 - tscheck
 
+## Gotcha
+
+- Always check exit code first — if 0, don't read output (saves tokens).
+- Rector + ECS can introduce PHPStan errors — always re-run PHPStan after fixing.
+- The wrapper (`galawork/php-quality`) has different flags than native tools.
+- Docker commands need `-T` flag to avoid TTY issues in non-interactive mode.
+
 ## Do NOT
 
 - Do NOT run `vendor/bin/phpstan` or `vendor/bin/ecs` directly — use the wrapper.

@@ -6,6 +6,10 @@ source: package
 
 # Skill Reviewer
 
+## When to use
+
+Use when reviewing, auditing, or optimizing existing skills — checking quality against the 5 Skill Killers checklist. Also for validating a new skill before saving.
+
 Reviews skills against the **5 Skill Killers** — the most common anti-patterns
 that waste tokens, cause misfires, or degrade agent performance.
 
