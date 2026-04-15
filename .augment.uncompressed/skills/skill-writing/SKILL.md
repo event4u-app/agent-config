@@ -143,9 +143,11 @@ Example:
 ## Gotchas
 
 * Model writes documentation instead of steps
-* Model skips validation
+* Model skips validation — every Procedure MUST end with a concrete verify/confirm step
 * Model includes obvious knowledge
 * Description too long or not a trigger
+* Renaming an existing heading to "Procedure:" without adding ordered steps creates false structure — the linter requires numbered steps or `###` sub-headings
+* **Always run `python3 scripts/skill_linter.py` on the new skill** — must be 0 FAIL before saving
 
 ## Do NOT
 

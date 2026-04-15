@@ -32,6 +32,7 @@ Do not use when:
 7. Validate — compressed version must be: easier to scan, easier to trigger, at least as safe
 
 **Iron rule:** Compression must NOT weaken validation or remove decision hints that prevent mistakes.
+**Linter gate:** After compression, run `python3 scripts/skill_linter.py` on the file — must be 0 FAIL.
 
 ### Mode: Decompress
 **Trigger:** "expand skill", "decompress skill", "make skill clearer"
@@ -45,6 +46,7 @@ Do not use when:
 7. Validate — expanded version must be: clearer, still executable, not noisy
 
 **Iron rule:** Expansion must NOT turn skills into documentation. Add context, not prose.
+**Linter gate:** After expansion, run `python3 scripts/skill_linter.py` on the file — must be 0 FAIL.
 
 ### Mode: Refactor
 **Trigger:** "refactor skill", "improve skill", "fix skill structure"
@@ -55,6 +57,8 @@ Do not use when:
 4. Remove noise — delete obvious/redundant content, merge duplicate bullets
 5. Refine scope — ensure single responsibility, split if multiple workflows
 6. Compare before/after — must be clearer, at least as executable, not broader
+
+**Linter gate:** After refactoring, run `python3 scripts/skill_linter.py` on the file — must be 0 FAIL.
 
 **Decision hints:**
 * Too long → compress or split
@@ -79,6 +83,8 @@ Do not use when:
 * Shorter is not better if trigger quality drops
 * Changing intent instead of improving structure
 * Compressed versions must be derived from uncompressed source, not the other way around
+* **Validation steps are non-negotiable** — every Procedure must end with a concrete verify/confirm step. Skills without validation pass the linter today but cause failures when the linter is tightened.
+* **Renaming headings to "Procedure:" without adding steps** creates false structure — the linter now requires ordered steps or sub-headings inside Procedure blocks.
 
 ## Do NOT
 

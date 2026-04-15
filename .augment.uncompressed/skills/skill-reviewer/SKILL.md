@@ -91,10 +91,12 @@ Before scoring the 5 Killers, verify structure:
 
 **Skills** — required sections:
 - When to use (with "Do not use when")
-- Procedure (numbered steps, Step 0: Inspect, concrete validation at end)
-- Output format
+- Procedure (numbered steps OR `###` sub-headings — NOT just a renamed heading with prose)
+- Concrete validation step inside Procedure (must contain: verify, confirm, must pass, run test, etc.)
 - Gotchas
 - Do NOT
+
+**Linter:** Run `python3 scripts/skill_linter.py` on any skill after review — must be 0 FAIL.
 
 **Rules** — must be:
 - Short and directive
