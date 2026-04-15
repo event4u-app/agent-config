@@ -529,19 +529,20 @@ Reviewer/linter must fail or warn clearly when:
 
 ## Do now
 
-- [ ] Make `Procedure` required again
-- [ ] Make `missing_validation` an error again
-- [ ] Require concrete validation, not symbolic validation
-- [ ] Add explicit guideline-vs-skill boundary
-- [ ] Add reviewer check for pointer-only skills
-- [ ] Add `task sync-changed` pre-review rule
-- [ ] Add CI consistency check
-- [ ] Strengthen `analysis-skill-routing`
-- [ ] Add compression-preservation check
-- [ ] Refactor `optimize-skills`
-- [ ] Refactor `optimize-agents`
-- [ ] Add merge-preservation checklist
-- [ ] Add minimum-sharpness rule
+- [x] Make `Procedure` required again — `REQUIRED_SKILL_SECTIONS` in linter
+- [x] Make `missing_validation` an error again — line 309 in linter
+- [x] Require concrete validation, not symbolic validation — `vague_validation` check
+- [x] Add explicit guideline-vs-skill boundary — `guidelines.md` "Boundary" section
+- [x] Add reviewer check for pointer-only skills — linter `pointer_only_skill` heuristic
+- [x] Add `task sync-changed` pre-review rule — `augment-source-of-truth.md`
+- [x] Add CI consistency check — `consistency.yml`
+- [x] Strengthen `analysis-skill-routing` — routing quality gate
+- [x] Add compression-preservation check — `--compression-quality` in linter
+- [x] Refactor `optimize-skills` — already well-structured, updated linter call
+- [x] Refactor `optimize-agents` — already well-structured, updated linter call
+- [x] Add merge-preservation checklist — `skill-quality.md` rule
+- [x] Add minimum-sharpness rule — `skill-quality.md` rule
+- [x] Fix `broad_scope` false positives — narrowed heuristic to description + "When to use" only
 
 ---
 

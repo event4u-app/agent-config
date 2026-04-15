@@ -197,11 +197,17 @@ def find_vague_validation(text: str) -> list[str]:
 
 
 def is_probably_too_broad(text: str, description: Optional[str]) -> bool:
-    haystacks = [text.lower()]
+    # Only check description and "When to use" for broad signals — not the entire text
+    haystacks: list[str] = []
     if description:
         haystacks.append(description.lower())
+    when_block = extract_section_block(text, "When to use")
+    if when_block:
+        haystacks.append(when_block.lower())
+    if not haystacks:
+        return False
     combined = "\n".join(haystacks)
-    broad_signals = ["everything about", "general", "all laravel", "all markdown", "helper for everything"]
+    broad_signals = ["everything about", "general purpose", "general-purpose", "all markdown", "helper for everything"]
     return any(signal in combined for signal in broad_signals)
 
 
