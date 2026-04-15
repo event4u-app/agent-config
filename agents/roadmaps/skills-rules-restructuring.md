@@ -1,145 +1,237 @@
 # Roadmap: Skills & Rules Restructuring
 
-> Restructure all ~90 agent skills — migrate "always apply" content into rules, upgrade remaining skills to a standardized template with Procedure/Output format, and create new focused tool-workflow skills.
+> Audit all ~90 agent skills — extract rule-like content into rules, upgrade remaining skills to the standardized template, split broad skills into focused tool-workflow skills, and validate everything with the new meta-skill toolchain.
 
 ## Prerequisites
 
 - [ ] Read `AGENTS.md` and `.augment/rules/` overview
-- [ ] Read `.augment/skills/` directory listing
-- [ ] Skill template is saved as `.augment/templates/skill-template.md`
+- [ ] Read meta-skills: `skill-writing`, `skill-validator`, `skill-caveman-compression`, `skill-refactor`
+- [ ] Read `.augment.uncompressed/skills/skill-writing/SKILL.md` (gold standard reference)
+- [ ] Read `capture-learnings` rule and `learning-to-rule-or-skill` skill
 
 ## Context
 
-The current skill library (~90 skills) has grown organically. Many skills contain a mix of:
-- **Rule-like content** (always-apply conventions, Do/Don'ts, style rules) that should be rules
-- **Procedural workflows** that are correctly skills but lack structure (no Procedure, no Output format)
-- **Broad framework knowledge** (e.g. "Laravel general") that the model already knows
+The skill library (~90 skills) has grown organically. External review and internal audit identified:
 
-This roadmap restructures the library into a clean separation:
-- **Rules** = how to always work (style, architecture, conventions)
-- **Skills** = how to do a specific job (step-by-step, tool-specific, repeatable)
-
-External review identified key gaps in existing skills:
-- Missing `Procedure` (step sequences)
-- Missing `Output format`
-- Missing `Preconditions`
-- Missing `Decision hints`
-- Incomplete auto-trigger keywords
+**Structural issues:**
+- Skills mixing rule-like content ("always do X") with procedural workflows
+- Broad "framework" skills (e.g. "Laravel general") that the model already knows
+- Missing sections: Procedure, Output format, Preconditions, Decision hints, Validation
+- No "Do not use" boundaries → false triggers
 - Missing container/Docker environment context
-- Some skills too broad (should be split)
+
+**What we now have (built in this session):**
+- Standardized skill template with all required sections
+- Meta-skill toolchain: writing → validating → refactoring → compressing → decompressing
+- Learning capture loop: rule + 2 skills
+- Updated compress workflow with enrichment and quality gates
+- Source-of-truth workflow: always edit `.augment.uncompressed/`, compress before commit
+
+**Clean separation target:**
+- **Rules** = always-apply constraints (short, hard, no procedures)
+- **Skills** = repeatable workflows (step-by-step, one job, executable)
 
 - **Feature:** none
 - **Jira:** none
+- **Related:** `agents/roadmaps/skill-improvement-pipeline.md`
 
-## Phase 1: Foundation — Skill Template & Audit Spreadsheet
+## Phase 1: Foundation — Template & Audit
 
-- [ ] **Step 1:** Save the standardized skill template to `.augment/templates/skill-template.md`
-  - Reference example: `.augment/skills/markdown-safe-codeblocks/SKILL.md` (already follows new format)
-  - Required sections: When to use, Goal, Preconditions, Decision hints, Procedure, Output format, Core rules, Gotchas, Do NOT, Auto-trigger keywords, Examples, Environment notes
-- [ ] **Step 2:** Audit every skill in `.augment/skills/` and classify into one of:
-  - **→ RULE**: Content is primarily "always apply" conventions → migrate to `.augment/rules/`
-  - **→ KEEP**: Already a good procedural workflow → upgrade to new template in Phase 3
-  - **→ SPLIT**: Contains both rule + procedure content → extract rules, keep/refine skill
-  - **→ MERGE**: Overlapping with another skill → combine into one
-  - **→ REMOVE**: Too generic, redundant, or model already knows this → delete
-- [ ] **Step 3:** Document audit results in `agents/roadmaps/skills-audit-results.md` as a table:
-  | Skill | Classification | Target | Notes |
+### Step 1: Save skill template
 
-## Phase 2: Rules Extraction
+Save the standardized template to `.augment.uncompressed/templates/skill-template.md`.
 
-- [ ] **Step 1:** For each skill classified as **→ RULE**:
-  - Identify which existing rule file the content belongs to (or create a new one)
-  - Migrate the rule-like content into `.augment/rules/{name}.md`
-  - Delete the original skill directory
-- [ ] **Step 2:** For each skill classified as **→ SPLIT**:
-  - Extract rule-portions into the appropriate `.augment/rules/` file
-  - Keep the procedural portion as the skill
-- [ ] **Step 3:** For each skill classified as **→ MERGE**:
-  - Combine overlapping skills into one
-  - Delete the redundant skill directory
-- [ ] **Step 4:** For each skill classified as **→ REMOVE**:
-  - Verify it is truly redundant
-  - Delete the skill directory
-- [ ] **Step 5:** Update `.augmentignore` if needed
-- [ ] **Step 6:** Update skill descriptions in any cross-references (AGENTS.md, contexts, etc.)
+Required sections (from `skill-writing` gold standard):
+- When to use (with "Do not use when")
+- Goal
+- Preconditions
+- Decision hints
+- Procedure (with Step 0: Inspect + numbered steps + concrete validation)
+- Output format (numbered expectations)
+- Core rules
+- Gotchas
+- Do NOT
+- Auto-trigger keywords
+- Anti-patterns
+- Examples (good/bad contrast)
+- Environment notes (local / Docker / CI)
+
+### Step 2: Audit all skills
+
+For each skill in `.augment/skills/`, read the uncompressed source and classify:
+
+| Classification | Criteria | Action |
+|---|---|---|
+| **→ RULE** | Primarily "always do X" constraints | Migrate to `.augment/rules/` |
+| **→ KEEP** | Already a good procedural workflow | Upgrade in Phase 3 |
+| **→ SPLIT** | Mix of rule + procedure | Extract rules, refine skill |
+| **→ MERGE** | Overlaps with another skill | Combine, delete redundant |
+| **→ NARROW** | Too broad (e.g. "Laravel general") | Split into focused variants |
+| **→ REMOVE** | Too generic, model already knows | Delete |
+
+**Use `skill-validator` on each skill** to identify missing sections and anti-patterns.
+
+### Step 3: Document audit results
+
+Save to `agents/roadmaps/skills-audit-results.md`:
+
+| Skill | Classification | Target | Missing Sections | Notes |
+|---|---|---|---|---|
+
+### Batch approach
+
+- Process 5-10 skills per session
+- Use `/agent-handoff` between batches
+- Run `skill-validator` on each skill before classifying
+- Mark audited skills in the results table immediately
+
+## Phase 2: Rules Extraction & Cleanup
+
+For each classification, use the appropriate workflow:
+
+### → RULE skills
+1. Identify target rule file (existing or new)
+2. Write rule in `.augment.uncompressed/rules/{name}.md` (short, hard constraints)
+3. Compress to `.augment/rules/{name}.md`
+4. Delete original skill directory (both uncompressed + compressed)
+
+### → SPLIT skills
+1. Extract rule-portions → `.augment.uncompressed/rules/`
+2. Refactor remaining skill using `skill-refactor`
+
+### → MERGE skills
+1. Identify which skill is stronger → keep that one
+2. Merge unique content from the weaker skill
+3. Refactor merged skill using `skill-refactor`
+4. Validate → compress → delete redundant
+
+### → NARROW skills (too broad)
+1. Identify distinct workflows within the skill
+2. Create new focused skills using `skill-writing` (one per workflow)
+3. Add to Phase 4 new skills list
+4. Delete or reduce original broad skill
+
+### → REMOVE skills
+1. Verify content is truly generic/redundant (check: does the model already know this?)
+2. Check for unique gotchas or anti-patterns worth preserving elsewhere
+3. Delete skill directory (both uncompressed + compressed)
+
+### Cross-references update
+- Update `.augmentignore` if skills removed/renamed
+- Update AGENTS.md skill references
+- Update any context files that reference deleted skills
+- Run `task sync` if needed
 
 ## Phase 3: Skill Quality Upgrade
 
-Upgrade every remaining skill to the standardized template structure.
+Upgrade every remaining skill to the standardized template. Per skill:
 
-- [ ] **Step 1:** For each remaining skill, ensure it has ALL of these sections:
-  - `When to use` (with "Do not use when")
-  - `Goal`
-  - `Preconditions`
-  - `Decision hints`
-  - `Procedure` (numbered steps with commands/code)
-  - `Output format` (1-5 ordered expectations)
-  - `Core rules`
-  - `Gotchas`
-  - `Do NOT`
-  - `Auto-trigger keywords` (comprehensive)
-  - `Examples` (real user request → good answer shape)
-  - `Environment notes` (local / Docker / CI)
-- [ ] **Step 2:** Add container/Docker context where relevant
-- [ ] **Step 3:** Expand auto-trigger keywords for better matching
-- [ ] **Step 4:** Add Decision hints for skills where the model needs to choose approaches
-- [ ] **Step 5:** Validate each upgraded skill against the template checklist
+### Procedure (use `skill-refactor`)
+
+1. **Read uncompressed source** — always edit `.augment.uncompressed/`
+2. **Run `skill-validator`** — identify missing sections and anti-patterns
+3. **Add missing sections:**
+   - Step 0: Inspect (inspect before acting)
+   - "Do not use when" boundary (prevent false triggers)
+   - Concrete validation step (not "check if it works")
+   - Anti-patterns section
+   - Examples (good/bad contrast)
+   - Environment notes (local / Docker / CI)
+4. **Sharpen existing sections:**
+   - Decision hints: one-line if/then choices
+   - Output format: numbered expectations controlling verbosity
+   - Auto-trigger keywords: comprehensive coverage
+5. **Validate with `skill-validator`** — must pass
+6. **Compress with `skill-caveman-compression`:**
+   - Apply enrichment rules (concretize validation, add examples if missing)
+   - Compare before/after — compressed must be at least as executable
+   - Follow NEVER-remove list (triggers, decisions, validation, gotchas)
+
+### Batch approach
+
+- 5-10 skills per session
+- Validate each individually, not in bulk
+- Compress once per batch (not after every edit)
+- `/agent-handoff` between batches
 
 ## Phase 4: New Focused Tool-Workflow Skills
 
-Create new, narrow skills for specific tool workflows that are currently missing or buried in broad skills.
+Create new, narrow skills for specific workflows currently missing or buried in broad skills.
+**This list will grow from Phase 1 audit findings.**
+
+Use `skill-writing` for each. Validate with `skill-validator`. Compress with `skill-caveman-compression`.
 
 ### Quality Tools
-- [ ] `rector-fix` — Run Rector with proper flags, read output, fix issues
-- [ ] `ecs-fix` — Run ECS with proper flags, read output, fix issues
+- [ ] `rector-fix` — Run Rector with flags, read output, fix issues
+- [ ] `ecs-fix` — Run ECS with flags, read output, fix issues
 - [ ] `phpstan-analyse` — Run PHPStan, interpret errors, fix by category
 
 ### Laravel Artisan Inspection
-- [ ] `artisan-route-inspection` — Read routes with `route:list --json`, filter with jq
-- [ ] `artisan-config-inspection` — Read config with `config:show`, debug config issues
-- [ ] `artisan-model-inspection` — Read model info with `model:show --json`
+- [ ] `artisan-route-inspection` — Routes via `route:list --json` + jq
+- [ ] `artisan-config-inspection` — Config with `config:show`, debug issues
+- [ ] `artisan-model-inspection` — Model info with `model:show --json`
 
 ### Data Processing
 - [ ] `jq-json-parsing` — Parse JSON output from CLI tools with jq
 
-
 ### Shell & Debugging
-- [ ] `docker-container-exec` — Execute commands in the right container, handle output
-- [ ] `log-inspection` — Read Laravel/application logs, filter by level/context
+- [ ] `docker-container-exec` — Execute commands in correct container
+- [ ] `log-inspection` — Read Laravel logs, filter by level/context
 - [ ] `xdebug-session` — Start/stop Xdebug debugging sessions
 
 ### Git & PR Workflows
-- [ ] `git-conflict-resolution` — Resolve merge conflicts with specific strategies
+- [ ] `git-conflict-resolution` — Resolve merge conflicts
 - [ ] `pr-review-checklist` — Systematic PR review with quality gates
 
 ### Testing
-- [ ] `pest-test-debug` — Debug failing Pest tests, read output, isolate failures
-- [ ] `test-data-setup` — Set up test data with seeders/factories for specific scenarios
+- [ ] `pest-test-debug` — Debug failing Pest tests, isolate failures
+- [ ] `test-data-setup` — Set up test data with seeders/factories
 
-### Documentation
-- [ ] Additional skills based on audit findings in Phase 1
+### From Audit
+- [ ] Additional skills discovered during Phase 1 audit (added here dynamically)
 
-**Note:** This list will grow based on Phase 1 audit results. Skills discovered during audit that are "too broad" will be split into focused variants here.
+## Phase 5: Final Validation & Documentation
+
+- [ ] **Step 1:** Run `skill-validator` on ALL remaining skills (full sweep)
+- [ ] **Step 2:** Verify all skills follow source-of-truth workflow:
+  - Uncompressed version exists in `.augment.uncompressed/skills/`
+  - Compressed version exists in `.augment/skills/`
+  - Compressed is derived from uncompressed (not the other way)
+- [ ] **Step 3:** Update AGENTS.md with final skill/rule inventory
+- [ ] **Step 4:** Update `.augmentignore` — remove deleted, add new where needed
+- [ ] **Step 5:** Run `/compress` on any remaining unsynced files
 
 ## Acceptance Criteria
 
-- [ ] All ~90 skills have been audited and classified
-- [ ] Audit results documented in `agents/roadmaps/skills-audit-results.md`
-- [ ] Skill template saved as `.augment/templates/skill-template.md`
+- [ ] All ~90 skills audited and classified (results in `skills-audit-results.md`)
 - [ ] All rule-like content migrated to `.augment/rules/`
-- [ ] All remaining skills follow the standardized template
-- [ ] Every skill has: Procedure, Output format, Preconditions, Decision hints
+- [ ] All remaining skills pass `skill-validator` checks
+- [ ] Every skill has: Procedure (with Step 0 + validation), Output format, Anti-patterns, Examples
 - [ ] New focused tool-workflow skills created and validated
+- [ ] Source-of-truth workflow respected (uncompressed → compressed)
 - [ ] AGENTS.md and cross-references updated
-- [ ] `.augmentignore` updated if skills were removed/renamed
+- [ ] `.augmentignore` current
+
+## Toolchain Reference
+
+| Task | Skill to use |
+|---|---|
+| Create new skill | `skill-writing` |
+| Validate skill quality | `skill-validator` |
+| Refactor existing skill | `skill-refactor` |
+| Compress for runtime | `skill-caveman-compression` |
+| Expand for maintenance | `skill-decompression` |
+| Capture learning → rule/skill | `learning-to-rule-or-skill` |
+| Post-task retrospective | `post-task-learning-capture` |
 
 ## Notes
 
-- **Execution approach:** Process skills in batches (5-10 per session) to keep context fresh
-- **Do NOT change skill behavior** — only restructure and improve documentation/format
-- **Skill template** is the single source of truth for skill structure
-- **Rules stay short and hard** — no procedures, no examples, just constraints
+- **Always edit `.augment.uncompressed/`** — never edit `.augment/` directly
+- **Compress before commit/push** — not after every edit (per `augment-source-of-truth` rule)
+- **Process in batches** (5-10 per session) to keep context fresh
+- **Do NOT change skill behavior** — only restructure and improve structure/format
+- **Rules stay short and hard** — constraints only, no procedures
 - **Skills stay focused** — one job, clear trigger, executable steps
 - **Portability:** All skills remain in `.augment/skills/` (shared, not project-specific)
-- **Session handoff:** Use `/agent-handoff` between batches to keep context clean
-- **Priority within phases:** No specific order — process alphabetically or by dependency
+- **Session handoff:** Use `/agent-handoff` between batches
+- **Pipeline integration:** After restructuring, enable `skill-improvement-pipeline` for continuous improvement (see `agents/roadmaps/skill-improvement-pipeline.md`)
