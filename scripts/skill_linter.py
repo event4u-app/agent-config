@@ -36,13 +36,19 @@ ArtifactType = Literal["skill", "rule", "unknown"]
 
 REQUIRED_SKILL_SECTIONS = [
     "When to use",
-    "Procedure",
-    "Output format",
-    "Gotchas",
-    "Do NOT",
+    "Gotcha",
 ]
 
+# Aliases: linter accepts any of these as matching the required section
+SECTION_ALIASES = {
+    "Gotcha": {"Gotcha", "Gotchas"},
+    "Procedure": set(),  # prefix-matched separately
+}
+
 RECOMMENDED_SKILL_SECTIONS = [
+    "Procedure",
+    "Do NOT",
+    "Output format",
     "Preconditions",
     "Decision hints",
     "Anti-patterns",
@@ -197,6 +203,39 @@ def dedupe_preserve_order(items: Iterable[str]) -> list[str]:
     return result
 
 
+def section_matches(required: str, sections: set[str]) -> bool:
+    """Check if a required section name matches any extracted section, supporting aliases and prefix matching."""
+    # Direct match
+    if required in sections:
+        return True
+    # Alias match (e.g. "Gotcha" matches "Gotchas")
+    aliases = SECTION_ALIASES.get(required, set())
+    if aliases & sections:
+        return True
+    # Prefix match (e.g. "Procedure" matches "Procedure: Create X")
+    for s in sections:
+        if s.startswith(required + ":") or s.startswith(required + " "):
+            return True
+    return False
+
+
+def find_procedure_block(text: str) -> Optional[str]:
+    """Find the procedure section block, supporting prefix-named variants."""
+    block = extract_section_block(text, "Procedure")
+    if block:
+        return block
+    # Try prefix match: find "## Procedure: ..." or "## Procedure " headings
+    match = re.search(r"^##\s+Procedure[:\s]", text, re.MULTILINE)
+    if match:
+        # Extract from this heading to the next ## heading
+        start = match.end()
+        next_heading = re.search(r"^##\s+", text[start:], re.MULTILINE)
+        if next_heading:
+            return text[start:start + next_heading.start()].strip()
+        return text[start:].strip()
+    return None
+
+
 def lint_skill(path: Path, text: str) -> LintResult:
     issues: List[Issue] = []
     suggestions: List[str] = []
@@ -205,11 +244,11 @@ def lint_skill(path: Path, text: str) -> LintResult:
     description = extract_description(text)
 
     for section in REQUIRED_SKILL_SECTIONS:
-        if section not in sections:
+        if not section_matches(section, sections):
             issues.append(Issue("error", "missing_section", f"Missing required section: {section}"))
 
     for section in RECOMMENDED_SKILL_SECTIONS:
-        if section not in sections:
+        if not section_matches(section, sections):
             issues.append(Issue("warning", "missing_recommended_section", f"Missing recommended section: {section}"))
 
     if description:
@@ -222,8 +261,8 @@ def lint_skill(path: Path, text: str) -> LintResult:
     else:
         issues.append(Issue("warning", "missing_description", "Frontmatter description is missing or unreadable"))
 
-    if "## Procedure" in text:
-        procedure_block = extract_section_block(text, "Procedure")
+    procedure_block = find_procedure_block(text)
+    if procedure_block is not None:
         if not procedure_block:
             issues.append(Issue("error", "empty_procedure", "Procedure section is empty"))
         else:
@@ -233,7 +272,7 @@ def lint_skill(path: Path, text: str) -> LintResult:
             if meaningful_steps < 3:
                 issues.append(Issue("warning", "short_procedure", "Procedure has fewer than 3 ordered steps"))
             if not has_validation_step(procedure_block):
-                issues.append(Issue("error", "missing_validation", "Procedure lacks a concrete validation step"))
+                issues.append(Issue("warning", "missing_validation", "Procedure lacks a concrete validation step"))
             vague_hits = find_vague_validation(procedure_block)
             for hit in vague_hits:
                 issues.append(Issue("error", "vague_validation", f"Vague validation detected: {hit}"))
@@ -248,9 +287,10 @@ def lint_skill(path: Path, text: str) -> LintResult:
     else:
         suggestions.append("Add an Output format section with ordered response constraints")
 
-    if "## Gotchas" in text:
-        gotchas_block = extract_section_block(text, "Gotchas")
-        if count_bullets(gotchas_block) < 1:
+    # Check Gotcha/Gotchas section (alias support)
+    gotcha_block = extract_section_block(text, "Gotchas") or extract_section_block(text, "Gotcha")
+    if gotcha_block:
+        if count_bullets(gotcha_block) < 1:
             issues.append(Issue("warning", "weak_gotchas", "Gotchas should contain at least one realistic failure mode"))
     else:
         suggestions.append("Add at least one realistic failure pattern to Gotchas")

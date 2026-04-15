@@ -146,10 +146,20 @@
 ### Impact Summary
 
 - **Skills after restructuring (estimated):** ~65 (61 KEEP + ~4 from SPLIT procedures)
-- **Skills to remove:** 18 (generic framework knowledge the model already has)
-- **Skills to merge:** 10 → ~4 target skills (reducing ~6 redundant skills)
-- **Skills to split:** 20 (extract conventions → guidelines/rules, keep procedures)
+- **Skills to remove:** 18 (generic framework knowledge the model already has) ✅ Done
+- **Skills to merge:** 10 → ~4 target skills (reducing ~6 redundant skills) ✅ Done
+- **Skills to split:** 20 (extract conventions → guidelines/rules, keep procedures) ✅ Done
 - **Net reduction:** ~40-45 skills eliminated or merged
+
+### Phase 3 Results: SPLIT (20 skills)
+
+**Completed.** All 20 SPLIT skills processed:
+- **Skills trimmed to procedures:** 20 skills reduced from ~3750 → 1379 lines (-63%)
+- **New guidelines created:** 12 files (1103 lines)
+  - `api-design.md`, `artisan-commands.md`, `blade-ui.md`, `database.md`, `flux.md`
+  - `livewire.md`, `logging.md`, `naming.md`, `performance.md`, `security.md`, `sql.md`, `websocket.md`
+- **Existing guidelines extended:** `php.md` (JSON handling), `jobs.md` (events, serialization, idempotency), `validations.md` (custom rules, nested validation, API patterns)
+- **Guidelines rule updated** with all 16 new entries
 
 ### Merge Targets
 

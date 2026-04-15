@@ -78,42 +78,18 @@ Save to `agents/roadmaps/skills-audit-results.md`:
 - Process 10-15 skills per session (linter pre-screens, so faster than manual)
 - Start with `fail` skills (219), then `warn` (65), then `pass` (13)
 
-## Phase 2: Rules Extraction & Cleanup
+## Phase 2: Rules Extraction & Cleanup ✅ COMPLETE
 
-For each classification, use the appropriate workflow:
+**REMOVE:** 18 skills deleted (-2700 lines)
+**MERGE:** 10 skills → 5 targets (-1200 lines), `skill-management` created
+**RULE:** `markdown-safe-codeblocks` migrated to rule
 
-### → RULE skills
-1. Identify target rule file (existing or new)
-2. Write rule in `.augment.uncompressed/rules/{name}.md` (short, hard constraints)
-3. Compress to `.augment/rules/{name}.md`
-4. Delete original skill directory (both uncompressed + compressed)
+### → SPLIT skills ✅ COMPLETE (Phase 3)
 
-### → SPLIT skills
-1. Extract rule-portions → `.augment.uncompressed/rules/`
-2. Refactor remaining skill using `skill-refactor`
-3. Validate with `skill-validator` (or `task lint-skills`)
-4. Compress with `skill-caveman-compression`
-
-### → MERGE skills
-1. Identify which skill is stronger → keep that one
-2. Merge unique content from the weaker skill
-3. Refactor merged skill using `skill-refactor`
-4. Validate → compress → delete redundant
-
-### → NARROW skills (too broad)
-1. Identify distinct workflows within the skill
-2. Create new focused skills using `skill-writing` (one per workflow)
-3. Delete or reduce original broad skill
-
-### → REMOVE skills
-1. Verify content is truly generic/redundant (does the model already know this?)
-2. Check for unique gotchas worth preserving elsewhere
-3. Delete skill directory (both uncompressed + compressed)
-
-### Cross-references update (after each batch)
-- Update `.augmentignore` if skills removed/renamed
-- Run `task generate-tools` to regenerate symlinks for Claude/Cursor/etc.
-- Update AGENTS.md if significant changes
+20 skills split: conventions extracted → 12 new guidelines + 3 existing guidelines extended.
+Skills trimmed to procedures only: ~3750 → 1379 lines (-63%).
+New guidelines: 1103 lines in `php/` directory.
+Guidelines rule updated with all new entries.
 
 ## Phase 3: Skill Quality Upgrade
 

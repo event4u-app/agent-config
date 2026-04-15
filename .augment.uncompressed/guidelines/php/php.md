@@ -174,3 +174,18 @@ final class Config
 - Each property on a separate line, trailing comma on last property
 - Preferred over manual assignment in constructor body
 
+## JSON Handling
+
+- **Always validate** — `json_decode()` with `JSON_THROW_ON_ERROR`, never silent failure.
+- **Fix malformed JSON** — trailing commas, single quotes, unquoted keys. Clean before parsing.
+- **Pretty-print** — `JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE` for readability.
+- **Type safety** — decode to typed DTOs or interfaces, not untyped arrays/objects.
+
+```php
+// ✅ Safe JSON decoding
+$data = json_decode($jsonString, true, 512, JSON_THROW_ON_ERROR);
+
+// ❌ Silent failure
+$data = json_decode($jsonString);
+```
+
