@@ -68,11 +68,13 @@ The pipeline distinguishes:
 - [ ] **Step 1:** Create skill `skill-improvement-pipeline` in `.augment.uncompressed/skills/`
   - Full pipeline workflow:
     1. **Capture** — run `post-task-learning-capture` (extract 1-3 learnings)
-    2. **Classify** — run `learning-to-rule-or-skill` (rule vs skill vs update vs skip)
-    3. **Create/Update** — run `skill-writing` or `skill-refactor` as needed
-    4. **Validate** — run `skill-validator`
-    5. **Compress** — run `skill-caveman-compression`
-    6. **Decide scope** — ask user:
+    2. **Promotion Gate** — check criteria (see `controlled-self-optimization.md` Phase 2.1)
+       - Repeated or generalizable? Impact? Non-duplicate? Reject if not.
+    3. **Classify** — run `learning-to-rule-or-skill` (rule vs skill vs update vs skip)
+    4. **Create/Update** — run `skill-writing` or `skill-refactor` as needed
+    5. **Validate** — run `skill-validator` (or `task lint-skills` when CI available)
+    6. **Compress** — run `skill-caveman-compression`
+    7. **Decide scope** — ask user:
        ```
        > 📦 Improvement ready: {description}
        >
@@ -80,8 +82,8 @@ The pipeline distinguishes:
        > 2. Project-specific — apply locally only (agents/overrides/)
        > 3. Review first — show me the changes before deciding
        ```
-    7. **Apply locally** — write files to `.augment.uncompressed/` + `.augment/` (or `agents/overrides/`)
-    8. **PR upstream** (if universal):
+    8. **Apply locally** — write files to `.augment.uncompressed/` + `.augment/` (or `agents/overrides/`)
+    9. **PR upstream** (if universal — must pass upstream contribution guard):
        - Create branch `{prefix}{learning-slug}` from `main`
        - Commit changes
        - Create PR against `upstream_repo` with description explaining the learning

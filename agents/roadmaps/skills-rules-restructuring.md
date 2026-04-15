@@ -235,3 +235,4 @@ Use `skill-writing` for each. Validate with `skill-validator`. Compress with `sk
 - **Portability:** All skills remain in `.augment/skills/` (shared, not project-specific)
 - **Session handoff:** Use `/agent-handoff` between batches
 - **Pipeline integration:** After restructuring, enable `skill-improvement-pipeline` for continuous improvement (see `agents/roadmaps/skill-improvement-pipeline.md`)
+- **Phase 2:** After Phase 1, add control layers: promotion gate, CI linter, lifecycle management (see `agents/roadmaps/controlled-self-optimization.md`)
