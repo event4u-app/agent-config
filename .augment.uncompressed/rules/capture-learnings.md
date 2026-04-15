@@ -7,29 +7,48 @@ source: package
 
 # Capture Learnings
 
-When a repeated mistake, successful pattern, or new constraint appears during work,
-evaluate whether it should be captured as a **rule** or **skill**.
+When a repeated mistake, successful pattern, or new constraint appears,
+evaluate whether to capture as **rule** or **skill**.
 
-## What to capture
+## Promotion Gate
 
-- A mistake that happened at least twice
-- A pattern that improved outcome and should be reused
-- A constraint that was missing and caused issues
+A learning may be promoted to rule/skill ONLY if ALL gates pass:
 
-## What NOT to capture
+| Gate | Question | Must be YES |
+|---|---|---|
+| Repetition | Occurred at least twice OR clearly generalizable? | ✅ |
+| Impact | Improves correctness, reliability, or consistency? | ✅ |
+| Failure pattern | Prevents a real, observed failure? | ✅ |
+| Non-duplication | No existing rule/skill/guideline covers this? | ✅ |
+| Scope fit | Fits rule (constraint), skill (workflow), or guideline (convention)? | ✅ |
+| Minimal | Update existing preferred over creation? | Checked |
 
-- One-off problems unlikely to repeat
+**Reject immediately if:**
+- Occurred only once and is not clearly generalizable
+- Similar guidance already exists (update instead)
+- Baseline model knowledge or standard tool usage
+- Vague frustration without concrete failure pattern
+
+## Capture
+
+- Mistake that happened 2+ times
+- Pattern that improved outcome and should be reused
+- Missing constraint that caused issues
+
+## Do NOT capture
+
+- One-off problems
 - Vague frustrations without concrete consequence
-- Content already covered by existing rules or skills
+- Content already covered by existing guidance
 
 ## Rule vs Skill
 
-- **Rule** → durable, always-apply constraint ("never X", "always Y", "prefer Z")
-- **Skill** → repeatable workflow with concrete steps ("when X, do steps 1-5")
-- **Update** → if existing rule/skill covers the topic, extend it instead of creating a new file
+- **Rule** → always-apply constraint ("never X", "always Y")
+- **Skill** → repeatable workflow with steps ("when X, do 1-5")
+- **Update** → existing guidance covers topic → extend, don't duplicate
 
-## How to act
+## How
 
-- Prefer the smallest effective change
-- Prefer updating existing guidance over creating duplicates
-- Use the `learning-to-rule-or-skill` skill for the full workflow
+- Smallest effective change
+- Update existing over creating duplicates
+- Full workflow: `learning-to-rule-or-skill` skill

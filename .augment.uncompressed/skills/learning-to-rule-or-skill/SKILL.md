@@ -55,6 +55,22 @@ Do not use this skill when:
 
 ## Procedure
 
+### 0. Promotion Gate (mandatory)
+
+Before proceeding, the learning MUST pass all gates:
+
+| Gate | Question |
+|---|---|
+| Repetition | Occurred 2+ times OR clearly generalizable? |
+| Impact | Improves correctness, reliability, or consistency? |
+| Failure pattern | Prevents a real, observed failure? |
+| Non-duplication | No existing rule/skill/guideline covers this? |
+| Scope fit | Fits rule, skill, or guideline? |
+| Minimal | Update existing preferred over creation? |
+
+If ANY gate fails → **stop**. Do not create or update anything.
+→ See `capture-learnings` rule for rejection criteria.
+
 ### 1. State the learning clearly
 
 Write as a concrete sentence.
