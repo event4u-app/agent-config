@@ -177,6 +177,12 @@ When `composer require` or `npm install` fails with conflicts:
 3. **Use `--dry-run`** first — `composer require vendor/pkg --dry-run`.
 4. **Never use `--ignore-platform-reqs`** in production — only for investigation.
 
+## Output format
+
+1. Updated dependency with version constraint change
+2. Breaking changes addressed with code modifications
+3. Test results confirming compatibility
+
 ## Auto-trigger keywords
 
 - dependency upgrade

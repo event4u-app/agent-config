@@ -81,6 +81,11 @@ Read `devcontainer.json` for the actual secret definitions and requirements.
 - Secrets go in `.devcontainer/.secrets/` (gitignored).
 - Do NOT hardcode secrets in `devcontainer.json`.
 
+## Output format
+
+1. Updated devcontainer.json or related configuration files
+2. Summary of changes and rebuild requirements
+
 ## Auto-trigger keywords
 
 - DevContainer

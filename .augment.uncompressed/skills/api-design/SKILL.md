@@ -69,6 +69,12 @@ Minimum 3 months between deprecation and removal.
 Before presenting an API design, run the **`adversarial-review`** skill.
 Focus on: Breaking changes? Consistency? Error responses?
 
+## Output format
+
+1. Endpoint specification — method, path, request/response structure
+2. Versioning decision with rationale
+3. Error response format following existing project patterns
+
 ## Gotcha
 
 - Consistency beats "better" design — check existing patterns first.

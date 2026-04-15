@@ -49,6 +49,11 @@ Do NOT use when:
 
 → See guideline `php/blade-ui.md` for full conventions.
 
+## Output format
+
+1. Blade view or component file(s) following project conventions
+2. Component class (if applicable) with typed props
+
 ## Gotcha
 
 - `@include` shares parent scope — components don't. Know the difference.

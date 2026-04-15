@@ -165,7 +165,7 @@ gh api repos/{owner}/{repo}/pulls/comments/{comment_id}/replies \
   -f body="Fixed in latest commit."
 ```
 
-## Review output format
+## Output format
 
 When reviewing code, structure feedback by severity:
 

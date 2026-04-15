@@ -157,6 +157,11 @@ Route::middleware(['auth', EnsureCustomerIsActive::class])->group(function () {
 - **Type-hint dependencies** — use constructor injection.
 - **Keep middleware thin** — delegate complex logic to services.
 
+## Output format
+
+1. Middleware class with handle method and typed request/response
+2. Registration in bootstrap or route group
+
 ## Auto-trigger keywords
 
 - middleware

@@ -63,6 +63,11 @@ Read `eloquent_access_style` from `.agent-settings`. Default: `getters_setters`.
 - Confirm typed getters exist for every relationship.
 - Run affected tests — must pass.
 
+## Output format
+
+1. Model class with typed getters/setters, relationships, and observer
+2. Migration file if schema changes are needed
+
 ## Gotcha
 
 - Never access relationships via magic properties — always use typed getter.

@@ -48,6 +48,11 @@ Use Laravel Echo to listen on the channel. Wire up reconnection with exponential
 - Check that no sensitive data is broadcast on public channels.
 - Test client receives event — use browser console or Echo debug mode.
 
+## Output format
+
+1. Event class with broadcastOn() and channel definitions
+2. Client-side listener integration code
+
 ## Gotcha
 
 - Connections are stateful — don't assume they persist after page navigation.

@@ -42,6 +42,11 @@ Re-measure after fix. Check that cache invalidation works correctly.
 
 → See guideline `php/performance.md` for caching patterns, Redis, response time targets.
 
+## Output format
+
+1. Optimized code with before/after performance comparison
+2. Caching strategy or query optimization applied
+
 ## Gotcha
 
 - Cache invalidation bugs are worse than slow queries — don't add caching everywhere.

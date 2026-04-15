@@ -206,6 +206,12 @@ RUN --mount=type=cache,target=/root/.npm \
 3. `RUN install` — cached if dependency files unchanged
 4. Source code (`COPY . .`) — changes often, last layer
 
+## Output format
+
+1. Modified Docker configuration files (Dockerfile, docker-compose.yml)
+2. Updated Makefile targets if applicable
+3. Rebuild/restart instructions for affected containers
+
 ## Auto-trigger keywords
 
 - Docker

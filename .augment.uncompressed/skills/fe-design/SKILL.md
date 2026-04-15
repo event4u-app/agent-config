@@ -196,6 +196,12 @@ Step indicator (1 — 2 — 3)
 - **Skill:** `dashboard-design` — Monitoring dashboard design (different domain)
 
 
+## Output format
+
+1. Component structure with layout, data flow, and interaction patterns
+2. Responsive behavior for mobile/tablet/desktop breakpoints
+3. Accessibility annotations (ARIA, keyboard navigation)
+
 ## Gotcha
 
 - Don't design components without checking existing Flux/Livewire components first — avoid reinventing.

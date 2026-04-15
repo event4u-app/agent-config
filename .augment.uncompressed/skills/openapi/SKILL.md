@@ -123,6 +123,11 @@ When the API uses URL-based versioning (e.g., `/api/v1/`, `/api/v2/`):
 - Mark deprecated endpoints with `deprecated: true`.
 
 
+## Output format
+
+1. OpenAPI annotations as PHP attributes on controllers/models
+2. Spec validation passing via Redocly
+
 ## Auto-trigger keywords
 
 - OpenAPI

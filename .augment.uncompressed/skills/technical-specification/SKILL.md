@@ -152,6 +152,12 @@ If a developer reads only this document, they should be able to build it.
 - **ADRs** are referenced from `AGENTS.md` or module docs for historical context.
 - **Sessions** link to the spec being implemented.
 
+## Output format
+
+1. Technical specification document with architecture decisions
+2. API contracts, data models, and sequence diagrams
+3. Implementation plan with dependencies
+
 ## Auto-trigger keywords
 
 - technical spec

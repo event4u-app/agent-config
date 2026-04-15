@@ -68,6 +68,11 @@ Read `pr_comment_bot_icon` from `.agent-settings`:
 2. Confirm expected output was produced (commit, PR, file change, etc.).
 3. Check that no step was skipped or improvised.
 
+## Output format
+
+1. Command executed — all steps completed in order
+2. Final result or summary as defined by the command
+
 ## Gotcha
 
 - Don't ask questions when executing a command unless the command says "ask the user".

@@ -167,6 +167,11 @@ When generating Laravel code:
 - prefer explicit, readable code over clever abstractions
 - integrate with existing requests, resources, services, policies, and tests
 
+## Output format
+
+1. Laravel code following framework conventions and project architecture
+2. All related files (controller, service, request, resource, test) as needed
+
 ## Do NOT
 
 - Do NOT put business logic in controllers — delegate to services.

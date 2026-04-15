@@ -124,6 +124,11 @@ php artisan migrate --env=testing             # testing
 - Always use `unsignedBigInteger` for foreign keys referencing `id()` columns
 - Use `->after('column')` to place new columns logically
 
+## Output format
+
+1. Migration file with up() and down() methods
+2. Model updates if columns or relationships changed
+
 ## Gotcha
 
 - Always check if the table/column already exists before creating the migration — the model doesn't always check.

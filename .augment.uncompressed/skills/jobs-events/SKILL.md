@@ -59,6 +59,11 @@ Do NOT use when:
 
 → See guideline `php/jobs.md` for full conventions (serialization, idempotency, events, dispatching).
 
+## Output format
+
+1. Job/Event/Listener class(es) with proper serialization and retry config
+2. Event registration in EventServiceProvider if needed
+
 ## Gotcha
 
 - Without `ShouldQueue`, jobs run synchronously.

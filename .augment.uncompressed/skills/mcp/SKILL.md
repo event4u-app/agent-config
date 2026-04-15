@@ -167,6 +167,11 @@ PR creation:
 - **Rule:** `no-commit.md` — permission boundaries for write operations
 
 
+## Output format
+
+1. MCP server configuration or tool integration code
+2. Tool capability mapping for the agent workflow
+
 ## Gotcha
 
 - MCP servers are token-expensive — prefer CLI equivalents when available (see rtk rule).

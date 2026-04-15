@@ -372,6 +372,11 @@ JS/TS commands run on the **host** or in a **Node container**, depending on the 
 2. Check if `docker-compose.yml` has a Node service.
 3. If neither → run on the host directly.
 
+## Output format
+
+1. Tool exit code and error count summary
+2. Fixed issues or remaining errors to address
+
 ## Auto-trigger keywords
 
 - quality check

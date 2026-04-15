@@ -177,6 +177,11 @@ location /app {
 - **Pusher protocol** — any Pusher-compatible client works (Laravel Echo, pusher-js, etc.).
 - **Max request size** — default 10KB, increase for large payloads if needed.
 
+## Output format
+
+1. Reverb configuration with server and scaling settings
+2. Broadcasting channel definitions and client integration
+
 ## Auto-trigger keywords
 
 - Reverb

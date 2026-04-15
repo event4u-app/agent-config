@@ -142,6 +142,11 @@ public function via(object $notifiable): array
 - **On-demand for external recipients** — use `Notification::route()` for non-user targets.
 - **Database notifications for in-app** — use the notifications table for in-app notification centers.
 
+## Output format
+
+1. Notification class with via() and channel-specific methods
+2. Queued dispatch with proper serialization
+
 ## Auto-trigger keywords
 
 - notification

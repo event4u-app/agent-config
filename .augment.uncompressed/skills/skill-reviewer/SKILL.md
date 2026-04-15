@@ -151,6 +151,11 @@ Before scoring the 5 Killers, verify structure:
 | dto-creator | ❌ | ✅ | ✅ | ⚠️ | ✅ | Fix description |
 ```
 
+## Output format
+
+1. Review report with pass/fail per checklist item
+2. Prioritized fix recommendations
+
 ## Gotcha
 
 - Don't rewrite skills unnecessarily — only fix actual killer violations.

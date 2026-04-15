@@ -88,6 +88,12 @@ Config required: `allow_embedding = true`, `cookie_samesite = none` (cross-origi
 - Check that critical KPIs are visible without scrolling.
 - Ensure no chart mixes unrelated metrics on the same axis.
 
+## Output format
+
+1. Dashboard layout with panel placement and visualization types
+2. Data source mapping — which metrics/queries feed each panel
+3. Alerting thresholds where applicable
+
 ## Gotcha
 
 - Max 8 panels per dashboard — cognitive overload kills usability.

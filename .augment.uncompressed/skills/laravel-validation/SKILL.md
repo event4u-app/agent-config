@@ -46,6 +46,11 @@ Do NOT use when:
 
 → See guideline `php/validations.md` for array syntax, route params, property mapping, custom rules.
 
+## Output format
+
+1. FormRequest class with rules, messages, and authorization
+2. Custom Rule object if validation logic is complex
+
 ## Gotcha
 
 - `required` ≠ not `nullable` — `required` means present, `nullable` means value can be null.

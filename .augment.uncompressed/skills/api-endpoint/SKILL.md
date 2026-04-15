@@ -154,6 +154,12 @@ Controllers use PHP 8 attributes for OpenAPI spec generation from `App\OpenApi\S
 - `ShowResourceResponseSchema`, `ListResourceResponseSchema`, `CreateResourceResponseSchema`
 - `ResourceNotFoundResponse`, `ValidationErrorResponse`
 
+## Output format
+
+1. Generated files — controller, route registration, FormRequest, Resource, Policy
+2. Test file with happy path and validation error cases
+3. Summary of created files and their locations
+
 ## Gotcha
 
 - Don't forget to register the route — creating the controller without the route is a common miss.

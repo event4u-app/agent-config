@@ -214,6 +214,11 @@ await page.route('**/api/users', route =>
 )
 ```
 
+## Output format
+
+1. Playwright test file with Page Object pattern
+2. Reliable locators using role/label selectors over CSS
+
 ## Auto-trigger keywords
 
 - Playwright

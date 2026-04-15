@@ -198,6 +198,12 @@ When implementing from a design mockup or screenshot:
 
 This is especially useful when the user provides a screenshot or Figma export as a reference.
 
+## Output format
+
+1. Design review report following the Report structure section
+2. Severity-rated findings (blocker, suggestion, nit)
+3. Accessibility and responsive compliance summary
+
 ## Auto-trigger keywords
 
 - design review

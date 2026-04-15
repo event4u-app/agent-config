@@ -126,6 +126,11 @@ When working on the agent infrastructure itself (skills, commands, rules), check
 | `context-refactor` | Revisit, update, and extend an existing context |
 
 
+## Output format
+
+1. Context document in the correct location with structured sections
+2. Cross-references to related contexts updated
+
 ## Auto-trigger keywords
 
 - context document

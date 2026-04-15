@@ -63,6 +63,11 @@ Re-run `EXPLAIN` and confirm improved plan.
 
 → See guideline `php/database.md` for indexing, transactions, migrations, multi-connection patterns.
 
+## Output format
+
+1. Migration file or query change with EXPLAIN analysis
+2. Index recommendations with rationale
+
 ## Gotcha
 
 - Check existing indexes before adding — duplicates waste write performance.

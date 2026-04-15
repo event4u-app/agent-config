@@ -284,6 +284,11 @@ traefik
 - Check that each service has correct Docker labels for routing.
 - Test DNS resolution: `curl -I https://your-domain.localhost` should return 200.
 
+## Output format
+
+1. Traefik configuration with routing rules and TLS setup
+2. Docker labels or dynamic config for service discovery
+
 ## Gotcha
 
 - Traefik requires Docker labels on each service — a missing label means the service isn't routed.

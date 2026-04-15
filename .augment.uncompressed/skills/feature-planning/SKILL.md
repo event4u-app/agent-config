@@ -197,6 +197,12 @@ Before creating a feature plan, always:
 Feature plans are decision documents, not implementation guides.
 Implementation details belong in roadmaps.
 
+## Output format
+
+1. Feature plan document following the template structure
+2. Decision log with rationale for key choices
+3. Implementation roadmap with ordered tasks
+
 ## Auto-trigger keywords
 
 - feature planning

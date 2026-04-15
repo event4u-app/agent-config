@@ -39,6 +39,11 @@ Do NOT use when:
 
 → See guideline `php/flux.md` for component reference, variants, forms, icons.
 
+## Output format
+
+1. Blade view using Flux components with correct props and slots
+2. Livewire component class if interactive behavior is needed
+
 ## Gotcha
 
 - The model tends to use old Flux API syntax — always check latest docs.

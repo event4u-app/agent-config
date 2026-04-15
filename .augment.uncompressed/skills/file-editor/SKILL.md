@@ -98,6 +98,11 @@ code app/Models/User.php
 | VS Code | `code {file}` | Shell Command: Install 'code' in PATH |
 | PhpStorm | `phpstorm {file}` | JetBrains Toolbox CLI or `Create command-line launcher` in PhpStorm |
 
+## Output format
+
+1. Files opened in the configured IDE (if enabled)
+2. No output if `open_edited_files` is disabled
+
 ## Auto-trigger keywords
 
 - open file

@@ -140,6 +140,11 @@ When picking up a roadmap in a new session:
 4. Continue from the next open step.
 
 
+## Output format
+
+1. Roadmap file in agents/roadmaps/ with ordered phases and tasks
+2. Progress tracking with checkbox status
+
 ## Auto-trigger keywords
 
 - roadmap

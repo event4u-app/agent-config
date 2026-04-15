@@ -100,6 +100,11 @@ Check the project for the actual connection names and namespace conventions.
 | Migration on wrong connection | Specify `--database=customer_database` or set `$connection` in migration |
 
 
+## Output format
+
+1. Tenant-aware code with correct DB connection switching
+2. Verification that tenant isolation is maintained
+
 ## Auto-trigger keywords
 
 - multi-tenant

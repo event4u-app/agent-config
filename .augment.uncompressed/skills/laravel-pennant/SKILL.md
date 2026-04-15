@@ -160,6 +160,11 @@ Feature::for($users)->load(['new-dashboard', 'advanced-reporting']);
 - **Use `array` driver in tests** — prevents test pollution.
 - **Clean up old flags** — feature flags are temporary, not permanent config.
 
+## Output format
+
+1. Feature flag definition with scope and resolve logic
+2. Integration in controllers/services using Feature::active()
+
 ## Auto-trigger keywords
 
 - feature flag

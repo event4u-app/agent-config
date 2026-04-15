@@ -145,6 +145,12 @@ Packages are published to a private Composer registry. Check the organization's 
 - Include `agents/` directory for package-specific documentation.
 
 
+## Output format
+
+1. Package files following standard Composer structure
+2. Updated composer.json with correct autoloading and dependencies
+3. Service provider and config publishing (if Laravel package)
+
 ## Auto-trigger keywords
 
 - Composer package

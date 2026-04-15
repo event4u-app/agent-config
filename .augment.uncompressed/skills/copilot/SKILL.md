@@ -179,6 +179,11 @@ Copilot and Augment complement each other:
 - **Skill:** `code-review` — PR review process and conventions
 
 
+## Output format
+
+1. Updated copilot-instructions.md or related config file
+2. Summary of changes and which Copilot behavior is affected
+
 ## Gotcha
 
 - copilot-instructions.md is for GitHub Copilot, NOT for Augment — don't mix audiences.

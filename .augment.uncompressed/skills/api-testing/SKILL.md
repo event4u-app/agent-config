@@ -177,6 +177,12 @@ it('handles external API failure gracefully', function () {
 | **Side effects** | Database changes, events dispatched, jobs queued |
 | **Edge cases** | Empty results, large payloads, concurrent access |
 
+## Output format
+
+1. Pest test file covering happy path, validation, auth, and edge cases
+2. Test names as readable sentences describing expected behavior
+3. Mocked external services where applicable
+
 ## Auto-trigger keywords
 
 - API test

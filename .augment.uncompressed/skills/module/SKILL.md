@@ -121,6 +121,11 @@ app/Modules/{Module}/agents/
 └── contexts/       # Module-scoped context documents
 ```
 
+## Output format
+
+1. Module directory structure following template conventions
+2. ServiceProvider, routes, and agent docs scaffolded
+
 ## Auto-trigger keywords
 
 - Laravel module

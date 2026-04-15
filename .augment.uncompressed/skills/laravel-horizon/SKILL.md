@@ -143,6 +143,11 @@ public function tags(): array
 - **Set `maxJobs`** — recycles workers after N jobs to prevent memory bloat.
 - **Tag jobs** — makes debugging and filtering in the dashboard much easier.
 
+## Output format
+
+1. Updated Horizon configuration with supervisor and queue settings
+2. Environment-specific balancing strategy rationale
+
 ## Auto-trigger keywords
 
 - Horizon

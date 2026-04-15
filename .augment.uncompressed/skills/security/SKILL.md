@@ -50,6 +50,11 @@ Focus on: attack surface, trusting user input, authorization gaps.
 - Check that no raw user input reaches SQL, HTML output, or shell commands.
 - Run PHPStan — must pass (catches type-safety issues that enable injection).
 
+## Output format
+
+1. Security-hardened code with auth, validation, and sanitization
+2. Policy class for authorization if needed
+
 ## Gotcha
 
 - Validation ensures format, not intent — don't trust input after validation alone.

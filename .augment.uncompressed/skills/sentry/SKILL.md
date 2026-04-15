@@ -145,6 +145,11 @@ search_events(organizationSlug='my-org', naturalLanguageQuery='count of database
 - **Config:** `config/sentry.php` — Sentry DSN and configuration
 
 
+## Output format
+
+1. Sentry integration code with proper context and breadcrumbs
+2. Error grouping configuration if needed
+
 ## Gotcha
 
 - Sentry groups errors by stacktrace — different root causes may appear as the same issue. Check multiple events.
