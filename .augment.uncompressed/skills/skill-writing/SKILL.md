@@ -1,6 +1,6 @@
 ---
 name: skill-writing
-description: "Use when creating or improving agent skills. Covers structure, quality checklist, and the gold-standard format for SKILL.md files."
+description: "Use when creating or improving agent skills. Covers structure, quality checklist, and best practices."
 source: project
 ---
 
@@ -23,118 +23,137 @@ Typical examples:
 
 Do not use this skill when:
 
-* Writing rules (rules are short constraints, not workflows)
-* Writing commands (commands are step-by-step invocations)
+* Writing rules (rules are constraints, not workflows)
+* Writing commands (commands are direct invocations)
 
 ## Goal
 
-* Create skills that are executable, not just informative
-* Ensure every skill answers: When? How? What does good output look like?
-* Prevent common mistakes: too broad, too generic, missing procedure
+* Create executable skills, not documentation
+* Ensure every skill answers: When? How? What output?
+* Prevent common mistakes: too broad, too generic, missing validation
 
 ## Preconditions
 
-* Clear understanding of what the skill should do
-* Know the difference: rules = always-apply constraints, skills = repeatable workflows
-* Template available at `.augment/templates/skill-template.md`
+* Clear understanding of the intended task
+* Distinction: rules = always apply, skills = triggered workflows
+* Access to a skill template or existing reference skill
 
 ## Decision hints
 
 * If content is "always do X" → rule, not skill
 * If content is "when user asks Y, do steps 1-5" → skill
-* If content is general framework knowledge the model already knows → don't write it
-* If a skill exceeds 500 lines → split into multiple skills
-* If two skills overlap significantly → merge them
+* If content is generic framework knowledge → skip it
+* If skill > 500 lines → split
+* If multiple workflows exist → split into multiple skills
+* If two skills overlap heavily → merge
 
 ## Procedure
 
+### 0. Inspect the input
+
+* What exactly is being requested?
+* Does a similar skill already exist?
+* Is the scope too broad or unclear?
+
 ### 1. Define the trigger
 
-Write the `When to use` section first. Be specific:
+Write "When to use" first.
 
-Good: "Use when creating Laravel middleware for request filtering"
-Bad: "Use when working with Laravel"
+Good:
+Use when creating Laravel middleware for request filtering
+
+Bad:
+Use when working with Laravel
 
 ### 2. Write the procedure
 
-Numbered steps with concrete commands or actions. Each step should be independently verifiable.
+Use numbered, verifiable steps.
 
 Good:
+
 1. Check if middleware exists
-2. Create with `php artisan make:middleware X`
-3. Implement handle()
+2. Create with artisan command
+3. Implement logic
 4. Register in route or kernel
 
 Bad:
+
 1. Create middleware
 2. Add logic
-3. Done
 
-### 3. Add validation to the last step
+### 3. Add validation
 
-Always end the procedure with a validation step that has concrete checks:
+End with concrete validation.
 
 Good:
-5. Validate
-   - Route responds with expected status code
-   - Middleware appears in `php artisan route:list --json | jq`
-   - No PHPStan errors
+
+* Route returns expected status
+* Appears in route list
+* No static analysis errors
 
 Bad:
-5. Check if it works
 
-### 4. Add a safe/unsafe example
+* Check if it works
 
-One minimal example showing the difference:
+### 4. Add safe/unsafe example
 
-Good output: middleware with typed parameters, registered in route group
-Bad output: middleware with business logic, registered globally
+Show minimal contrast.
 
-### 5. Sharpen the output format
+Good:
 
-Define what the agent should respond with — prevents chatty answers:
+* Typed middleware, correctly registered
 
-Good: "1. Code snippet 2. Registration location 3. Gotcha if relevant"
-Bad: "Explain everything about middleware"
+Bad:
 
-### 6. Validate against the 5 Skill Killers
+* Business logic inside middleware
 
-- K1: Description is a trigger (starts with "Use when...")
-- K2: Not over-defined (guides, doesn't railroad)
-- K3: No obvious content (model already knows)
-- K4: Has Gotcha section (real failure patterns)
-- K5: Under 500 lines
+### 5. Define output format
+
+Control response structure.
+
+Example:
+
+1. Code snippet
+2. Registration location
+3. Gotcha (if relevant)
+
+### 6. Validate against quality checklist
+
+* K1: Description is a trigger ("Use when...")
+* K2: Not over-defined
+* K3: No obvious content
+* K4: Contains gotchas
+* K5: Under 500 lines
 
 ## Output format
 
-1. Skill file with all required sections
-2. No unnecessary prose
-3. Every section earns its place — delete empty or obvious sections
-4. Concrete examples over abstract descriptions
+1. Complete SKILL.md file
+2. No explanations outside the file
+3. Fully copyable
+4. No empty sections
 
 ## Core rules
 
-* Skills are executable thinking processes — not documentation
-* Every skill must have: When to use, Procedure, Output format, Gotchas, Do NOT
-* Procedure steps must be independently verifiable
-* Validation step must have concrete checks, not "verify it works"
-* One skill = one job. Not "everything about Laravel"
-* Examples beat explanations
+* Skills are executable thinking processes
+* Always include: When to use, Procedure, Output format, Gotchas, Do NOT
+* Steps must be verifiable
+* Validation must be concrete
+* One skill = one job
 
 ## Gotchas
 
-* The model tends to write documentation instead of executable steps — always ask "can I follow this step by step?"
-* The model tends to skip validation — always end with concrete checks
-* The model tends to write obvious content like "Laravel is a PHP framework" — only write what the model wouldn't know from training
-* Description field is loaded into every conversation — keep it under 200 chars and make it a trigger, not a summary
+* Model writes documentation instead of steps
+* Model skips validation
+* Model includes obvious knowledge
+* Description too long or not a trigger
 
 ## Do NOT
 
-* Do NOT write skills that are just framework documentation
-* Do NOT skip the Procedure section
-* Do NOT write validation as "check if it works" — be specific
-* Do NOT exceed 500 lines — split instead
-* Do NOT duplicate content from rules or guidelines
+* Do NOT write documentation-style skills
+* Do NOT skip Procedure
+* Do NOT use vague validation
+* Do NOT exceed 500 lines
+* Do NOT duplicate rules
 
 ## Auto-trigger keywords
 
@@ -142,28 +161,36 @@ Bad: "Explain everything about middleware"
 * write skill
 * improve skill
 * skill template
-* skill quality
 * SKILL.md
-* new skill
+
+## Anti-patterns
+
+* "Laravel skill" (too broad)
+* Missing procedure
+* Missing validation
+* Pure explanation without actions
 
 ## Examples
 
-Example request: "Create a skill for database migrations"
+Request:
+"Create a skill for database migrations"
 
-Good skill structure:
-- When: "Use when creating or running Laravel migrations"
-- Procedure: 1. Check existing migrations 2. Create with artisan 3. Define schema 4. Run migrate 5. Validate with `php artisan migrate:status`
-- Output: Migration file + confirmation of successful run
-- Gotcha: "Model tends to forget foreign key constraints on delete"
+Good:
 
-Bad skill structure:
-- When: "Use for database stuff"
-- Procedure: 1. Create migration 2. Run it
-- Output: (missing)
-- Gotcha: (missing)
+* Clear trigger
+* Concrete procedure
+* Validation with commands
+
+Bad:
+
+* Generic description
+* No validation
+* Missing output format
 
 ## Environment notes
 
-Skills live in `.augment.uncompressed/skills/{name}/SKILL.md` (source of truth).
-Compressed copies in `.augment/skills/{name}/SKILL.md`.
-Compression happens before commit/push via `/compress`.
+Skills live in:
+.augment.uncompressed/skills/{name}/SKILL.md
+
+Compressed:
+.augment/skills/{name}/SKILL.md
