@@ -85,6 +85,21 @@ Everything in one file, >500 lines.
 **Fix:** Extract reference tables, templates, and examples into separate files
 in the skill folder. SKILL.md stays under 500 lines.
 
+## Pre-check: Should this be a skill at all?
+
+Before scoring 5 Killers, ask: **Does this belong as a skill?**
+
+| If content is... | Verdict |
+|---|---|
+| Standard tool usage (jq, docker exec, git commands) | ❌ Not a skill — baseline knowledge |
+| Single-command ops without decision logic | ❌ Not a skill — too thin |
+| Always-true constraint ("never X", "always Y") | ❌ Not a skill → Rule |
+| Coding conventions / reference material | ❌ Not a skill → Guideline |
+| Step-by-step workflow with decisions and validation | ✅ Skill — proceed |
+| Error-prone process models get wrong without guidance | ✅ Skill — even if steps seem simple |
+
+Fails pre-check → recommend: migrate (rule/guideline), absorb (into existing skill), or delete.
+
 ## Structural Validation (pre-review)
 
 Before scoring the 5 Killers, verify structure:

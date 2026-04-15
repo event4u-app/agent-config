@@ -36,13 +36,22 @@ Do not use this skill when:
 * The learning can be stated clearly in one or two sentences
 * Existing rules and skills can be checked for overlap
 
-## Decision hints
+## Decision matrix
 
-* Always-apply constraint → create or update a rule
-* Repeatable workflow with steps → create or update a skill
-* Only refines existing rule/skill → update instead of new file
+| If learning is... | Then... | Action |
+|---|---|---|
+| Always-true constraint ("never X", "always Y") | **Rule** | Create/update rule |
+| Repeatable workflow with steps and validation | **Skill** | Create/update skill |
+| Coding convention or reference material | **Guideline** | Create/update guideline |
+| Baseline model knowledge or standard tool usage | **Nothing** | Do not create anything |
+| Refinement of existing guidance | **Update** | Extend existing file |
+
+### Decision hints
+
+* Same issue 2+ times → strongly consider codifying
 * One-off or too narrow → do not create anything yet
-* Same issue appeared at least twice → strongly consider codifying
+* Standard tool knowledge (jq, docker, git basics) → **Nothing**
+* Unsure skill vs guideline: needs step-by-step decisions? → Skill. Just conventions? → Guideline
 
 ## Procedure
 
@@ -70,11 +79,13 @@ Classify:
 ### 3. Decide the target
 
 Choose one:
-* New rule
+* New rule (always-true constraint)
 * Update existing rule
-* New skill
+* New skill (step-by-step workflow)
 * Update existing skill
-* No action
+* New guideline (coding convention / reference)
+* Update existing guideline
+* **Nothing** (baseline knowledge, standard tool usage, one-off)
 
 ### 4. Check for overlap
 

@@ -38,14 +38,41 @@ Do not use this skill when:
 * Distinction: rules = always apply, skills = triggered workflows
 * Access to a skill template or existing reference skill
 
-## Decision hints
+## Decision matrix: What goes where?
 
-* If content is "always do X" → rule, not skill
-* If content is "when user asks Y, do steps 1-5" → skill
-* If content is generic framework knowledge → skip it
-* If skill > 500 lines → split
-* If multiple workflows exist → split into multiple skills
-* If two skills overlap heavily → merge
+Before creating anything, classify:
+
+| If content is... | Then... | Action |
+|---|---|---|
+| Always-true constraint ("never X", "always Y") | **Rule** | Create/update `.augment/rules/` |
+| Step-by-step workflow with decisions and validation | **Skill** | Create/update `.augment/skills/` |
+| Coding convention or reference material | **Guideline** | Create/update `.augment/guidelines/` |
+| Baseline model knowledge (how jq works, what `docker exec` does) | **Nothing** | Do not create anything |
+| Simple tool usage without complex workflow | **Nothing** | Do not create anything |
+| Already covered by existing skill/rule/guideline | **Update** | Extend existing file |
+
+### Critical test
+
+Ask: **"Does the model need this to do its job correctly?"**
+
+* Model already knows it → **Nothing**
+* Model knows it but does it wrong in THIS project → **Rule or Guideline**
+* Model needs multi-step workflow to get it right → **Skill**
+
+### When "Nothing" is the right answer
+
+Do NOT create skill or rule for:
+* Standard tool usage (jq, grep, docker exec, git commands)
+* Framework basics the model already knows
+* Single-command operations without decision logic
+* Knowledge that belongs in a skill's procedure as a step, not its own skill
+
+### Size and structure hints
+
+* Skill > 500 lines → split
+* Multiple workflows → split into multiple skills
+* Two skills overlap heavily → merge
+* Skill becomes "read the guideline" → lost its purpose, restore workflow
 
 ## Procedure
 
