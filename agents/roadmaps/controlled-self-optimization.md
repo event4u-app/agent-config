@@ -171,3 +171,4 @@ Controlled self-optimizing when:
 - **CI linter second** — automates what already works locally
 - **Lifecycle third** — needs enough skills to matter
 - **Do not automate prematurely** — manual first, CI second
+- **Tool-first, script-last** — linter script is the exception; all agent-side guidance uses skills + CLI tools, not custom scripts (see `token-efficiency` rule)

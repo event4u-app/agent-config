@@ -146,3 +146,5 @@ PR → event4u-app/agent-config
 - **PRs go to `event4u-app/agent-config`** — the shared package
 - **Local changes always happen first** — PR is additional
 - **Do not automate prematurely** — manual flow first, then CLI tooling
+- **Tool-first, script-last** — pipeline skills use CLI tools (jq, grep), not custom scripts. Scripts only when no tool exists → then capture as learning to create a skill (see `token-efficiency` rule)
+- **Targeted operations** — single queries over lists, filtered tests over full suites, minimal token consumption at every step

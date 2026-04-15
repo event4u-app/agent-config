@@ -172,9 +172,43 @@ grep "app/Services/MyService.php" /tmp/<tool>-output.txt
 - Read the full output of a passing command (waste)
 - Read diffs you don't plan to act on
 
+## Targeted Operations
+
+Minimize scope. Never fetch more than you need.
+
+### Queries
+- Single item over list: query directly, don't fetch list to find one entry
+- Filtered queries: always filter when listing unavoidable
+- Specific fields: request only needed fields
+- JSON + jq: use JSON output + `jq` to extract exactly what you need
+
+### Testing
+- During work: ONLY the specific test affected (`--filter=ClassName`)
+- Broader scope: only if change could affect other tests
+- Full suite: only at the very end
+- Decision: changed method → method's test · changed class → class tests · changed shared service → all consumers · changed config → full suite
+
+### API calls
+- Targeted endpoints over list endpoints
+- Small page sizes, stop after finding what you need
+- Don't re-fetch what you just received
+
+## Tool-First, Script-Last
+
+**Prefer skills with CLI tools over custom scripts.**
+
+1. **Existing skill** — use directly
+2. **Skill + CLI tool** (jq, grep, awk, sed) — compose
+3. **Python/Bash script** — only when no skill/tool combination exists
+
+Scripts allowed only when: no skill covers it, no CLI tool achieves it, operation needs programmatic logic, script is reusable.
+Scripts NOT allowed when: skill exists, `jq` can extract it, `grep` + `head` can filter it.
+
+**Learning trigger:** When you write a script because no skill exists → capture learning → propose skill that replaces the script.
+
 ## General Rules
 
-For tool-specific commands → see the `quality-workflow` rule.
+For tool-specific commands → see `quality-workflow` rule.
 
 1. **ECS and Rector are trusted tools** — their configs define exactly what they do.
    Run with `--fix`, don't read diffs, don't review changes. Trust the config.

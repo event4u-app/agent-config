@@ -177,6 +177,77 @@ grep "app/Services/MyService.php" /tmp/<tool>-output.txt
 - Read the full output of a passing command (waste)
 - Read diffs you don't plan to act on
 
+## Targeted Operations
+
+Minimize scope at every level. Never fetch more than you need.
+
+### Queries and lookups
+
+- **Single item over list**: If you know which item you need, query it directly.
+  Don't fetch a list to find one entry. `GET /issue/SOF-42` not `GET /search?jql=...`.
+- **Filtered queries**: When listing is unavoidable, always filter. `--filter=ClassName` not `--all`.
+- **Specific fields**: Request only the fields you need. `--fields=status,summary` not full payload.
+- **JSON + jq**: When CLI tools support JSON output, use it with `jq` to extract exactly what you need.
+  `php artisan route:list --json | jq '.[] | select(.uri == "/api/users")'` not parsing table output.
+
+### Testing
+
+- **During work**: Run ONLY the specific test affected by the change. `--filter=ClassName` or `--filter=test_name`.
+- **After targeted pass**: Run the next broader scope only if the change could affect other tests.
+- **Full suite**: Only at the very end, before claiming completion.
+- **Decision tree**:
+  1. Changed one method → run that method's test
+  2. Changed a class → run that class's test file
+  3. Changed a shared service → run tests for all consumers
+  4. Changed config/infrastructure → full suite
+
+### API calls
+
+- **Targeted endpoints**: `GET /repos/{owner}/{repo}/pulls/{number}` not `GET /repos/{owner}/{repo}/pulls?state=all`.
+- **Pagination**: Small page sizes. Stop after finding what you need.
+- **Caching awareness**: Don't re-fetch what you just received.
+
+## Tool-First, Script-Last
+
+**Prefer skills with CLI tools over custom scripts.**
+
+### Hierarchy
+
+1. **Existing skill** — use it directly
+2. **Skill + CLI tool** (jq, grep, awk, sed, curl) — compose from available tools
+3. **Python/Bash script** — only when no skill/tool combination exists
+
+### When scripts are allowed
+
+- No existing skill covers the workflow
+- No CLI tool combination achieves the goal
+- The operation is complex enough to need programmatic logic (loops, conditions, error handling)
+- The script is reusable (not a one-off throwaway)
+
+### When scripts are NOT allowed
+
+- A skill already exists for this workflow
+- `jq` can extract what you need from JSON output
+- `grep` + `head` can filter CLI output
+- The "script" is just wrapping a single command
+
+### Learning trigger
+
+When you write a script because no skill exists:
+
+1. Complete the task using the script
+2. Capture as a learning: "No skill exists for {workflow}"
+3. Propose a new skill that wraps the tool/script into reusable guidance
+4. The goal is to make the script unnecessary for the next agent
+
+### Why
+
+- Skills are reusable across sessions and agents
+- Skills are auditable, lintable, compressible
+- Scripts consume tokens on every invocation (code generation + output parsing)
+- CLI tools are already optimized for token-efficient output
+- `jq` output is smaller than Python script output
+
 ## General Rules
 
 For tool-specific commands and workflows → see the `quality-workflow` rule.

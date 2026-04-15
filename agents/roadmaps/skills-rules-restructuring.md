@@ -228,6 +228,8 @@ Use `skill-writing` → `skill-validator` → `skill-caveman-compression` for ea
 - **Do NOT change skill behavior** — only restructure and improve structure/format
 - **Rules stay short and hard** — constraints only, no procedures
 - **Skills stay focused** — one job, clear trigger, executable steps
+- **Tool-first, script-last** — skills with CLI tools (jq, grep) over Python scripts. If a script is needed, capture as learning → create skill (see `token-efficiency` rule)
+- **Targeted operations** — single item over list, filtered queries, `--filter=ClassName` over full suite (see `token-efficiency` rule)
 - **Session handoff:** Use `/agent-handoff` between batches
 - **After restructuring:** Enable `skill-improvement-pipeline` for continuous improvement
 - **Phase 2 control layers:** See `agents/roadmaps/controlled-self-optimization.md`
