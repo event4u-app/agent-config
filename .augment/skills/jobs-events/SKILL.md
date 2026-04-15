@@ -8,26 +8,69 @@ source: package
 
 ## When to use
 
-Laravel jobs, queued workflows, events, listeners, subscribers, background processing, retry/failure handling. Extends `coder` and `laravel`.
+Use when creating jobs, events, listeners, or queued workflows.
 
-## Before: base skills, inspect existing jobs/events/listeners, understand sync vs async, check queue config, check event patterns, inspect tests.
+Do NOT use when:
+- Artisan commands (use `artisan-commands` skill)
+- Scheduling configuration (use `laravel-scheduling` skill)
 
-## Jobs: one responsibility, minimal constructor payload (IDs/DTOs over models), delegate to services. Queue: slow/retryable/non-blocking work only. Check queue driver (`.env`/`config/queue.php`) and Horizon config.
+## Procedure: Create a Job
 
-## Serialization: careful with Eloquent (models may change between dispatch/execution). Prefer IDs. No closures/services/large structures.
+### Step 0: Inspect
 
-## Idempotency: assume multiple runs. Guard against duplicate emails, API calls, payments, record creation.
+1. Check existing jobs — match naming, queue config, retry strategy, failure handling.
+2. Determine sync vs. async — only queue work that is slow, retryable, or non-blocking.
+3. Check queue driver: `.env` / `config/queue.php` (Redis, database, sync).
+4. Check Horizon: `config/horizon.php` for queue names, supervisors, balancing.
 
-## Failures: follow conventions (retry attempts, backoff, logging). Surface failures. No silent swallowing.
+### Step 1: Create the job class
 
-## Events: meaningful occurrences, past-tense names (`OrderPlaced`). Laravel 11+: automatic discovery, no manual registration. Focused payloads.
+1. Pass IDs or compact DTOs in constructor — not full models with relations.
+2. Set queue via `$this->onQueue(Queue::NAME->value)`.
+3. Add `tags()` for Horizon filtering.
+4. Set `$maxExceptions`, `backoff()`, `$uniqueFor` as needed.
 
-## Listeners: one event, one reaction, side-effect oriented. Large logic → delegate to service. No deep hidden chains.
+### Step 2: Implement handle()
 
-## Dispatching: match project style. Explicit sync/async/after-response. Don't casually change behavior.
+1. Keep focused and readable.
+2. Delegate complex logic to services/actions.
+3. Design for idempotency — retries must not create duplicates.
 
-## Testing: `Bus::fake()`, `Queue::fake()`, `Event::fake()`. Test side effects, not just dispatching.
+### Step 3: Test
 
-## Gotcha: serialized args (no loaded relations), `ShouldQueue` required for async, listener exceptions block chain (use ShouldQueue), always set `$tries`/`$backoff`.
+- `Bus::fake()`, `Queue::fake()`, `Event::fake()`.
+- Test side effects, not just dispatch assertions.
 
-## Do NOT: complex logic in listeners, sync jobs for long tasks, skip `failed()` method, workflows in controllers, events for trivial steps, silent failures.
+## Procedure: Create an Event + Listener
+
+### Step 1: Create event
+
+- Past-tense naming: `OrderPlaced`, `ImportCompleted`.
+- Keep payload focused.
+- Laravel 11+: automatic discovery — no manual registration.
+
+### Step 2: Create listener
+
+- One responsibility per listener.
+- Delegate large logic to services.
+- Use `ShouldQueue` on listeners that do heavy work.
+
+## Conventions
+
+→ See guideline `php/jobs.md` for full conventions (serialization, idempotency, events, dispatching).
+
+## Gotcha
+
+- Without `ShouldQueue`, jobs run synchronously.
+- Queued jobs serialize constructor args — don't pass loaded models.
+- Listener exceptions block the event chain — queue heavy listeners.
+- Set `$tries` and `$backoff` — unlimited retries overwhelm the queue.
+
+## Auto-trigger keywords
+
+- Laravel job
+- queue
+- event
+- listener
+- dispatch
+- serialization

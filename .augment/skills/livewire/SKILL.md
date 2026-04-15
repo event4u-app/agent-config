@@ -8,53 +8,61 @@ source: package
 
 ## When to use
 
-Livewire components, reactive UI, forms/modals/tables, Alpine.js integration. Extends `coder`, `laravel`, `blade-ui`.
+Use when creating or editing Livewire components — reactive state, forms, tables, real-time updates.
 
-## Before: detect version (3.x: attributes, 2.x: properties/methods), existing components (`app/Livewire/`), views (`resources/views/livewire/`), project docs.
+Do NOT use when:
+- Static Blade views (use `blade-ui` skill)
+- Flux UI components (use `flux` skill)
 
-## Component structure (Livewire 3.x)
+## Procedure: Create a Livewire component
 
-```php
-<?php
+### Step 0: Inspect
 
-declare(strict_types=1);
+1. Detect Livewire version — `composer.json` for `livewire/livewire`.
+   - v3: `#[Layout]`, `#[Title]`, property attributes.
+   - v2: `$layout`, `$listeners`, method-based hooks.
+2. Check existing components — `app/Livewire/` or `app/Http/Livewire/`.
+3. Check views — `resources/views/livewire/`.
 
-namespace App\Livewire;
+### Step 1: Create component class
 
-use Livewire\Component;
-use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
+1. `declare(strict_types=1)`, `final` class.
+2. Typed public properties for state — keep minimal.
+3. `#[Locked]` for tamper-proof properties.
+4. `#[Url]` for URL-synced properties.
 
-#[Layout('layouts.app')]
-#[Title('User List')]
-final class UserList extends Component
-{
-    public string $search = '';
+### Step 2: Implement actions
 
-    public function updatedSearch(): void
-    {
-        // Runs when $search changes
-    }
+1. Public methods callable from frontend.
+2. Validate before processing: `$this->validate()`.
+3. `$this->dispatch()` for cross-component communication (v3).
 
-    public function render(): \Illuminate\View\View
-    {
-        return view('livewire.user-list', [
-            'users' => User::query()
-                ->where('name', 'like', '%' . $this->search . '%')
-                ->paginate(20),
-        ]);
-    }
-}
-```
+### Step 3: Create view
 
-## Rules
+1. One root element (`<div>`).
+2. `wire:key` on dynamic lists.
+3. `wire:loading` for user feedback.
+4. `wire:model.live` for real-time updates (v3 default is deferred).
 
-**State:** typed public properties, minimal, `#[Locked]` (tamper-proof), `#[Url]` (query sync). **Actions:** public methods, `$this->validate()`, `$this->dispatch()` (v3) / `$this->emit()` (v2). **Forms:** Form Objects (v3), `wire:model`, `wire:model.live` (real-time). **Performance:** `wire:key`, `#[Computed]`, paginate, `wire:loading`. **Alpine:** `@entangle`, `$wire`, client-only interactions.
+### Step 4: Test
 
-## Blade: one root element, `wire:key` on lists, `wire:loading`.
+- `Livewire::test(ComponentClass::class)`
+- `->set()`, `->call()`, `->assertSee()`, `->assertHasNoErrors()`
 
-## Testing: `Livewire::test()` → `set()`/`call()` → `assertSet()`/`assertSee()`/`assertHasNoErrors()`.
+## Conventions
 
-## Gotcha: public props serialize between requests (no large objects), `wire:model` deferred by default (use `.live`), no `redirect()` + `dispatch()` in same method.
+→ See guideline `php/livewire.md` for state management, forms, performance, Alpine.js, templates.
 
-## Do NOT: heavy logic in components (→ services), Livewire for static (→ Blade), sensitive data as public props, heavy render(), skip wire:key.
+## Gotcha
+
+- Public properties serialize between requests — don't put large objects in state.
+- `wire:model` is deferred by default in v3 — use `wire:model.live` for real-time.
+- `$this->redirect()` + `$this->dispatch()` in same method — only redirect executes.
+
+## Auto-trigger keywords
+
+- Livewire
+- reactive component
+- wire:model
+- lifecycle
+- real-time UI

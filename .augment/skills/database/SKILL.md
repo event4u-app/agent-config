@@ -8,47 +8,73 @@ source: package
 
 ## When to use
 
-Query optimization, schema design, indexes, connections, DB performance.
+Use when designing schemas, optimizing queries, adding indexes, or troubleshooting database performance.
 
-## Before: project docs (`agents/docs/`), `config/database.php`, existing migrations.
+Do NOT use when:
+- Writing Eloquent models (use `eloquent` skill)
+- Creating migrations only (use `migration-creator` skill)
 
-## Engine: detect from config/`.env`/docker-compose (MySQL, MariaDB, PostgreSQL, SQLite).
+## Procedure: Optimize a query
 
-## Multi-connection: specify `$connection` on models, explicit connection in migrations (see `multi-tenancy` skill).
+### Step 0: Inspect
 
-## Indexing
+1. Read project docs in `agents/docs/` for database architecture.
+2. Check `config/database.php` for connection definitions.
+3. Detect engine: check `.env` driver and `docker-compose.yml`.
 
-**Add:** WHERE columns, JOIN conditions, ORDER BY (pagination), FK columns.
-**Don't add:** low-selectivity booleans, small tables (<1000 rows), frequently updated columns.
+### Step 1: Diagnose
 
-### Composite indexes
+Run `EXPLAIN` / `EXPLAIN ANALYZE`:
 
-Order matters — put the most selective column first:
-
-```php
-$table->index(['customer_id', 'created_at']);  // customer_id is more selective
+```sql
+EXPLAIN ANALYZE SELECT * FROM projects WHERE customer_id = 42 AND status = 'active';
 ```
 
-## Query optimization
+Check for: full table scans (`type=ALL`), missing indexes (`key=NULL`), filesort, temporary tables.
 
-**EXPLAIN:** `type=ALL` (full scan → need index), `key=NULL` (no index), `Using filesort` (add ORDER BY index). Good: `ref`, `eq_ref`, `const`, `Using index`.
+### Step 2: Fix
 
-**N+1:** Use `with()` at query level, `load()` post-query. Never `$with` property (always loads).
+- Add missing indexes (most selective column first in composites)
+- Rewrite anti-patterns (subquery → JOIN, `OFFSET` → cursor, `SELECT *` → specific columns)
+- Add eager loading for N+1 queries
+- Always paginate list endpoints
 
-**Pagination:** Always paginate lists. `cursorPaginate()` for large tables (no OFFSET). Never `get()` unbounded.
+### Step 3: Verify
 
-**Performance:** `select()` needed columns, `chunk(500)` for bulk processing, `exists()` not `count() > 0`.
+Re-run `EXPLAIN` and confirm improved plan.
 
-**Anti-patterns:** `SELECT *`, `LIKE '%...'`, large OFFSET, subquery in WHERE (→ JOIN), `ORDER BY RAND()`.
+## Schema awareness (anti-hallucination)
 
-## Migrations: `decimal` for money, FK with `constrained()`, indexes for searchable columns, explicit `Schema::connection()` for multi-DB.
+**Never guess table or column names.** Verify before writing queries/migrations:
 
-## Transactions: explicit connection `DB::connection('x')->transaction()`. Cross-connection: manual begin/commit/rollback.
+1. **Read migrations** — source of truth
+2. **Read models** — `$table`, `$connection`, `$fillable`, `$casts`, relationships
+3. **Run schema queries** — `php artisan tinker --execute="Schema::getColumnListing('table')"`
+4. **Check project docs** — `agents/docs/` for conventions
 
-## Money: `Math` helper if exists, `decimal(10, 2)` columns. Never `float`.
+| Trap | Reality |
+|---|---|
+| Assuming column exists | Check migration/model first |
+| Wrong table prefix | Customer tables may have prefixes |
+| Wrong connection | `api_database` vs `customer_database` — verify |
+| Inventing pivot tables | Check if they actually exist |
 
-## Schema awareness: NEVER guess names. Verify: migrations → models → tinker → project docs. Common traps: assumed columns, wrong prefix, wrong connection, invented pivots.
+## Conventions
 
-## Gotcha: check existing indexes before adding, consider multi-tenant scoping, EXPLAIN differs MariaDB vs MySQL, no TEXT in WHERE without prefix index.
+→ See guideline `php/database.md` for indexing, transactions, migrations, multi-connection patterns.
 
-## Do NOT: raw SQL with user input, float for money, skip FK indexes, unbounded get()/all(), default connection for tenant models.
+## Gotcha
+
+- Check existing indexes before adding — duplicates waste write performance.
+- Consider multi-tenant implications — queries may need customer DB scoping.
+- `EXPLAIN` output varies between MariaDB and MySQL.
+- Don't use `TEXT` in WHERE without prefix index.
+
+## Auto-trigger keywords
+
+- database
+- MariaDB
+- MySQL
+- migration
+- indexing
+- query optimization

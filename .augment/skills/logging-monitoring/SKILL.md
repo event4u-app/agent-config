@@ -8,26 +8,75 @@ source: package
 
 ## When to use
 
-Logging, error tracking, monitoring, Sentry/Grafana/Loki. Before: `config/logging.php`, `app/Modules/Grafana/`, module docs.
+Use when adding logging, configuring monitoring stack, or integrating Sentry/Grafana/Loki.
 
-## Stack: Sentry (errors, `sentry/sentry-laravel`), Grafana (dashboards), Loki (logs, `itspire/monolog-loki`), Slack (alerts).
+Do NOT use when:
+- Creating Grafana dashboards (use `grafana` skill)
+- Dashboard design decisions (use `dashboard-design` skill)
 
-## Sentry: `MonitoringHelper::captureException()` (NEVER `\Sentry\captureException()`). Context auto-set by tenant switching. Breadcrumbs: `BreadcrumbType`/`BreadcrumbLevel` enums. Context keys: `ContextName` enum.
+## Before making changes
 
-## Channels: `stack_without_slack` (daily+errorlog), `slack` (alerts), `loki` (Loki), `loki_import_*` (import-specific), `daily` (rotating). Loki labels: `app`, `service`, `env` — distinct `service` per domain.
+1. Read `config/logging.php` for available channels.
+2. Check for Grafana module: `app/Modules/Grafana/`.
+3. Read `agents/` docs for module-specific logging.
 
-## Conventions: `Log::info('message', ['context' => $val])`. Always structured context (second arg), never interpolate. `Log::channel('loki')->info(...)` for channel-specific.
+## Monitoring stack
 
-Env flags: `LOG_CLIENT_SOFTWARE_REQUESTS`, `LOG_EXTERNAL_API_REQUESTS`, `LOG_WEBHOOK_REQUESTS`, `LOG_CHANNEL_IMPORT`.
+| Tool | Purpose | Integration |
+|---|---|---|
+| **Sentry** | Error tracking | `sentry/sentry-laravel`, `MonitoringHelper` |
+| **Grafana** | Dashboards | Connected to Loki |
+| **Loki** | Log aggregation | `itspire/monolog-loki` via Monolog |
+| **Slack** | Alert notifications | Webhook for error-level |
 
-## Grafana: hide Loki metadata columns, correct service labels, column names match semantics.
+## Log channels
 
-## Levels: emergency (system down) → critical (immediate action) → error (investigation) → warning (attention) → info (business events) → debug (dev only).
+| Channel | Purpose |
+|---|---|
+| `stack_without_slack` | Daily file + errorlog (no Slack) |
+| `slack` | Error alerts to Slack |
+| `loki` | Send logs to Grafana Loki |
+| `loki_import_*` | Import-specific Loki with custom labels |
+| `daily` | Rotating file logs |
 
-Log: business events, error context, external interactions, performance markers. DON'T log: passwords/tokens/PII, full bodies (summary only), expected conditions at error level, loop iterations.
+### Loki labels
 
-Use correlation IDs for multi-step operations.
+```php
+'globalLabels' => ['app' => '{project}', 'service' => '{service}', 'env' => $env],
+```
 
-## Gotcha: no sensitive data, appropriate levels (not debug everywhere), Sentry 200KB limit, snake_case keys.
+The `service` label differentiates log types in Grafana queries.
 
-## Do NOT: var_dump/dd, Sentry SDK directly (use MonitoringHelper), hardcode channel names, new Loki channels without Grafana query, error level for expected conditions, interpolate in messages.
+### Config flags
+
+| Env Variable | Purpose | Default |
+|---|---|---|
+| `LOG_CLIENT_SOFTWARE_REQUESTS` | Log incoming API requests to DB | `false` |
+| `LOG_EXTERNAL_API_REQUESTS` | Log outgoing external API requests | `true` |
+| `LOG_WEBHOOK_REQUESTS` | Log webhook requests to DB | `false` |
+| `LOG_CHANNEL_IMPORT` | Channel for import logs | `daily` |
+
+## Grafana/Loki dashboard rules
+
+- Hide Loki metadata columns: `labelTypes`, `traceID`, `traceID (field)`.
+- Use correct Loki service labels: `import_result` for final states, `import_snapshot` for cron.
+- Verify column names match data semantics.
+
+## Conventions
+
+→ See guideline `php/logging.md` for log levels, structured context, what to log, Sentry patterns.
+
+## Gotcha
+
+- Sentry has 200KB event size limit — large context gets truncated.
+- Structured logging keys must be `snake_case`.
+- Don't create Loki channels without corresponding Grafana dashboard query.
+
+## Auto-trigger keywords
+
+- logging
+- monitoring
+- Sentry
+- Grafana
+- structured logging
+- log levels

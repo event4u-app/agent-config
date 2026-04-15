@@ -1,27 +1,39 @@
 ---
 name: commands
-description: "Use when the user types a slash command like "/create-pr" or "/commit". Executes the command immediately without asking questions or giving opinions."
+description: "Use when the user types a slash command like '/create-pr' or '/commit'. Extends the commands rule with context inference and GitHub API patterns."
 source: package
 ---
 
 # commands
 
-## Core Rule
+## When to use
 
-See `commands` rule (always loaded). Execute immediately, no questions.
+Triggered when user invokes a slash command. The `commands` rule (always loaded) handles core behavior — this skill adds context inference and GitHub API patterns.
 
-## Commands = files in `.augment/commands/`. Triggered by `/name`, `# name`, "run name", or pasting content. Always execute, never ask "what do you want?".
+## Inferring context
 
-## Execute: match → read → follow steps in order → ask only when command says to → show results.
+Before asking the user for input, try to infer it:
 
-## Infer context: Jira from branch, default branch from git, project type from artisan/composer. Only ask if inference fails.
+| Input needed | How to infer |
+|---|---|
+| Jira ticket | Extract from branch name (`fix/DEV-1234-...` → `DEV-1234`) |
+| Default branch | `git symbolic-ref refs/remotes/origin/HEAD` or assume `main` |
+| Project type | Check for `artisan` (Laravel) or `composer.json` (Composer) |
+| Module name | Extract from current working directory or file path |
+| Current branch | `git branch --show-current` |
 
-## Locations: `.augment/commands/` (shared), `agents/overrides/commands/` (override wins).
+Only ask the user if inference fails and the command cannot proceed without the value.
 
+## Command locations
+
+| Location | Scope |
+|---|---|
+| `.augment/commands/` | Shared commands (work across projects) |
+| `agents/overrides/commands/` | Project-specific overrides (used instead of original) |
 
 ## GitHub API: Replying to PR review comments
 
-When commands reply to PR review comments (e.g. `/fix-pr-bot-comments`), follow this pattern:
+When commands reply to PR review comments (e.g. `/fix-pr-bot-comments`):
 
 ### 1. Read the setting
 
@@ -36,42 +48,20 @@ Read `github_pr_reply_method` from `.agent-settings`:
 ### 2. Bot icon prefix
 
 Read `pr_comment_bot_icon` from `.agent-settings`:
+- `true` → prefix reply body with `🤖 `.
+- `false` or not set → no prefix.
 
-- If `true` → prefix every reply body with `🤖 ` (icon + space).
-- If `false` or not set → no prefix.
+### 3. API call rules
 
-Example with `pr_comment_bot_icon=true`:
-```
-{"body": "🤖 Fixed — removed the unused variable."}
-```
-
-Example with `pr_comment_bot_icon=false`:
-```
-{"body": "Fixed — removed the unused variable."}
-```
-
-### 3. Make the API call
-
-**Critical:** The `data` parameter must be a clean JSON object with ONLY the required API fields:
-
-Do NOT include `summary` or any other non-API parameters inside `data`.
-Each reply is a separate API call — do NOT batch them.
-
-### 4. On first success with `auto`
-
-If `github_pr_reply_method=auto` and the first reply succeeds, update `.agent-settings`
-to the method that worked (e.g. `replies_endpoint`). This prevents re-detection on every run.
+- `data` must be clean JSON with ONLY required API fields — no `summary` or extra params.
+- Each reply is a separate API call — do NOT batch.
+- On first success with `auto` → update `.agent-settings` to the method that worked.
 
 ## Gotcha
 
-- Don't ask questions when executing a command unless the command itself says "ask the user".
-- Don't add opinions or suggestions during command execution — follow the steps exactly.
-- If a command step fails, stop and report — don't improvise alternative steps.
-
-## Do NOT
-
-- Do NOT interpret a command as a question about the command.
-- Do NOT add your own questions beyond what the command specifies.
+- Don't ask questions when executing a command unless the command says "ask the user".
+- Don't add opinions during execution — follow steps exactly.
+- If a step fails, stop and report — don't improvise.
 
 ## Auto-trigger keywords
 

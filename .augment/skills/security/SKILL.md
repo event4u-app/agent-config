@@ -8,32 +8,53 @@ source: package
 
 ## When to use
 
-Auth, authorization, input validation, security-sensitive code.
+Use when implementing authentication, authorization, or any security-sensitive functionality.
 
-## Before: `agents/authentication.md`, `agents/gates.md`, `agents/middleware.md`, existing policies in `app/Policies/`.
+Do NOT use when:
+- Validation logic only (use `laravel-validation` skill)
+- Full security audit (use `security-audit` skill)
 
-## Authentication
+## Procedure: Implement security for a feature
 
-Detect: `tymon/jwt-auth` or `laravel/sanctum` in composer.json, `config/auth.php`, `agents/authentication.md`. API: JWT/API keys → Authenticate middleware → customer identification (see `multi-tenancy`).
+### Step 0: Inspect
 
-## Authorization (Policies)
+1. Read `agents/authentication.md` for auth flow.
+2. Read `agents/gates.md` for gate/policy patterns.
+3. Check existing policies in `app/Policies/`.
 
-Policies in `app/Policies/`, register in AuthServiceProvider (or auto-discovery). Use in FormRequest (`$this->user()->can()`) or Controller (`$this->authorize()`). Gates: `agents/gates.md`.
+### Step 1: Authentication
 
-## Validation: FormRequests always, specific rules (`email:rfc,dns`, `decimal:0,2`), never trust client-side.
+- Check auth setup: `tymon/jwt-auth` or `laravel/sanctum`.
+- Check `config/auth.php` for guards and providers.
+- Customer identification happens after auth — see `multi-tenancy` skill.
 
-## SQL injection: Eloquent/Query Builder. Never concatenate user input. `DB::raw()` only for expressions.
+### Step 2: Authorization
 
-## XSS: `{{ }}` (escaped) in Blade, API Resources. Never `{!! !!}` with user input.
+1. Create policy in `app/Policies/` if needed.
+2. Use in FormRequest `authorize()` or controller `$this->authorize()`.
+3. Check `agents/gates.md` for non-model gates.
 
-## CSRF: API excluded (token auth), web auto-protected. Rate limiting: auth endpoints + sensitive routes.
+### Step 3: Review for adversarial
 
-## Sensitive data: never log secrets, `encrypt()`/`decrypt()`, env vars. Headers: nosniff, DENY/SAMEORIGIN, HSTS, CSP. Sessions: httpOnly, secure, SameSite, regenerate after login.
+For security-sensitive changes, run `adversarial-review` skill.
+Focus on: attack surface, trusting user input, authorization gaps.
 
-## Mass assignment: `$request->validated()` only. Never `$request->all()`.
+## Conventions
 
-## Security changes: run `adversarial-review`.
+→ See guideline `php/security.md` for auth, SQL injection, XSS, CSRF, headers, session, mass assignment.
 
-## Gotcha: never log secrets, validation ≠ intent, `authorize()` throws vs `allows()` returns bool, rate limit ALL public endpoints.
+## Gotcha
 
-## Do NOT: bypass FormRequest, `$request->all()`, disable CSRF, plaintext secrets, expose internal errors, trust X-Forwarded-For, skip headers, md5/sha1 for passwords, localStorage for tokens.
+- Validation ensures format, not intent — don't trust input after validation alone.
+- `Gate::authorize()` throws, `Gate::allows()` returns bool — choose based on error handling.
+- Rate limiting: ALL public endpoints, not just login.
+- Never log passwords, tokens, or API keys.
+
+## Auto-trigger keywords
+
+- security
+- authentication
+- authorization
+- CSRF
+- XSS
+- policy

@@ -4,112 +4,94 @@ description: "Use when designing monitoring dashboards — visualization selecti
 source: package
 ---
 
-# Dashboard Design Skill
+# dashboard-design
 
 ## When to use
 
-Planning/designing dashboards (Grafana or app), visualization selection, Grafana embedding, dashboard review.
+Use when designing a new Grafana or admin dashboard, deciding what goes where (Grafana vs. app), or embedding Grafana panels in the Laravel app.
+
+Do NOT use when:
+- Writing Grafana queries/JSON (use `grafana` skill)
+- Building Livewire components (use `livewire` skill)
 
 ## Dashboard Domains
 
-| Domain | Tech | Purpose |
+| Domain | Technology | Purpose |
 |---|---|---|
-| **Monitoring** | Grafana + Loki | Infra health, errors, logs, SLAs |
-| **Business/Admin** | Laravel + Livewire + Tailwind | Customer KPIs, imports, usage |
+| **Monitoring** | Grafana + Loki | Infrastructure health, error rates, logs, SLAs |
+| **Business/Admin** | Laravel + Livewire + Tailwind | Customer KPIs, import stats, usage metrics |
 
-**Grafana:** server metrics, error rates, latency, logs, SLA. **App:** customer KPIs, tenant-scoped stats, user activity.
+### Decision: What goes where?
+
+| Data | Where |
+|---|---|
+| Server metrics, error rates, latency | Grafana |
+| Log analysis, traces | Grafana (Loki) |
+| SLA/uptime tracking | Grafana |
+| Customer-facing KPIs | App dashboard |
+| Import statistics per customer | App dashboard (+ Grafana embed) |
+| User activity, usage metrics | App dashboard |
 
 ### Grafana Embedding
 
-**iframe embedding:**
 ```html
 <iframe
   src="https://grafana.example.com/d-solo/{dashboard-uid}/{panel-id}?orgId=1&from=now-24h&to=now&var-fqdn={{ $customer->fqdn }}&theme=light"
-  width="100%"
-  height="300"
-  frameborder="0"
+  width="100%" height="300" frameborder="0"
 ></iframe>
 ```
 
-Config: `allow_embedding = true`, `cookie_samesite = none` (cross-origin), pass tenant vars via URL params, `&theme=light`/`dark`.
+Config required: `allow_embedding = true`, `cookie_samesite = none` (cross-origin), anonymous access/auth proxy, tenant variables via URL params, `&theme=light|dark`.
 
-Embed for quick KPIs. Link for detailed investigation. Build in app for customer-facing (UX control).
+| Scenario | Approach |
+|---|---|
+| Quick KPI overview | Embed Grafana stat panels |
+| Detailed investigation | Link to full Grafana dashboard |
+| Customer-facing | Build in app (full UX control) |
 
-## Observability Strategies
+## Admin Dashboard Design (Laravel)
 
-### RED Method (services/APIs)
+### Widget types
 
-| Signal | Measures | Visualization | Example |
-|---|---|---|---|
-| **R**ate | Requests per second | Time series (line) | `sum(rate(http_requests_total[$__interval]))` |
-| **E**rrors | Failed requests per second | Time series + stat | Error rate as % of total |
-| **D**uration | Latency distribution | Histogram / heatmap | p50, p95, p99 response times |
+| Widget | Implementation |
+|---|---|
+| Stat card | Livewire + Tailwind |
+| Trend card | Stat + sparkline (Chart.js / Grafana embed) |
+| Table widget | Livewire table with pagination |
+| Chart widget | Chart.js / Grafana embed |
+| Status list | Blade component with color indicators |
+| Activity feed | Livewire with polling/streaming |
 
-### USE Method (infrastructure — CPU, memory, disk, network)
-
-| Signal | Measures | Visualization | Example |
-|---|---|---|---|
-| **U**tilization | % of resource used | Gauge / time series | CPU usage %, memory usage % |
-| **S**aturation | Queue depth, backlog | Time series | Queue length, pending jobs |
-| **E**rrors | Error count | Stat / time series | Disk I/O errors, network drops |
-
-### Golden Signals (SRE): Latency (success vs error), Traffic (req/sec), Errors (5xx/exceptions), Saturation (CPU/memory/queue depth)
-
-## Visualization Selection
-
-| Data type | Best visualization | Avoid |
-|---|---|---|
-| Single current value | **Stat** panel | Table (overkill) |
-| Value over time | **Time series** (line) | Pie chart |
-| Comparison of categories | **Bar chart** | Line chart |
-| Distribution / percentiles | **Histogram** or **heatmap** | Single stat |
-| Status (up/down) | **State timeline** or **stat** with thresholds | Time series |
-| Tabular data (logs, events) | **Table** | Any chart |
-| Proportions of a whole | **Pie chart** (sparingly) | Bar chart |
-| Geographic data | **Geomap** | Table |
-
-Current value → Stat. Over time → Time series. Breakdown → Bar/pie. Outliers → Histogram/heatmap. Health → Stat + thresholds. Events → Table.
-
-## Layout (F-pattern)
+### Layout: F-pattern
 
 ```
-┌─────────────────────────────────────────────┐
-│  KPIs / Health Summary (Stats)              │  ← Eye lands here first
-├─────────────────────────────────────────────┤
-│  Primary metrics (Time series)              │  ← Main story
-│                                             │
-├──────────────────────┬──────────────────────┤
-│  Detail A (Table)    │  Detail B (Chart)    │  ← Supporting data
-└──────────────────────┴──────────────────────┘
+┌──────────┬──────────┬──────────┬──────────┐
+│ Stat     │ Stat     │ Stat     │ Stat     │  ← KPI row
+├──────────┴──────────┼──────────┴──────────┤
+│ Chart (trend)       │ Chart (breakdown)   │  ← Viz row
+├─────────────────────┼─────────────────────┤
+│ Table (recent)      │ Activity feed       │  ← Detail row
+└─────────────────────┴─────────────────────┘
 ```
 
-Top = KPIs (stats). Middle = trends (time series). Bottom = details (tables). Left = general, right = specific. Max 3-4 rows. Consistent widths.
+### Livewire patterns
 
-## Colors: 🟢 healthy, 🟡 warning, 🔴 critical, 🔵 info, ⚪ no data. Use sparingly, consistent meaning, add yellow for accessibility.
+- `wire:poll.30s` for auto-refresh
+- `wire:init` for lazy loading expensive queries
+- `$dispatch('refresh-stats')` for cross-widget updates
+- Cache expensive aggregations, refresh on schedule
 
-## Dashboard Types
+## Gotcha
 
-| Type | Purpose | Strategy | Example |
-|---|---|---|---|
-| **Overview** | Health at a glance | Golden Signals / RED | "API Health" |
-| **Service** | Deep dive into one service | RED + detailed metrics | "Import Service" |
-| **Infrastructure** | Resource monitoring | USE method | "Server Resources" |
-| **Business** | Business KPIs | Custom metrics | "Daily Imports by Customer" |
-| **Investigation** | Ad-hoc debugging | Logs + traces | "Error Investigation" |
-| **SLA/SLO** | Compliance tracking | Error budgets, uptime | "SLA Dashboard" |
+- Max 8 panels per dashboard — cognitive overload kills usability.
+- Simple table often beats fancy visualization.
+- Always scope to customer/tenant — no unfiltered admin views.
+- Always define time range explicitly.
 
-## Admin Dashboard (Laravel)
+## Auto-trigger keywords
 
-Widgets: stat cards (Livewire+Tailwind), trend cards (sparkline), tables (pagination), charts (Chart.js/Grafana), status list, activity feed.
-
-Layout: 4 stat cards → charts → table + feed.
-
-Livewire: `wire:poll.30s`, `wire:init` (lazy), `$dispatch('refresh-stats')`, cache aggregations.
-
-## Anti-patterns: wall of numbers (→ group), rainbow (→ consistent colors), too many panels (→ split), no context (→ thresholds), stale data (→ auto-refresh), mixing domains (→ separate), no tenant scoping.
-
-## Related: `grafana`, `logging-monitoring`, `fe-design`, `livewire`, `tailwind`
-
-## Gotcha: max 8 panels, prefer simple table over fancy viz, explicit time ranges.
-
-## Do NOT: dashboards without clear KPIs, pie charts >5 categories, mix too many viz types.
+- dashboard
+- monitoring dashboard
+- visualization
+- KPI
+- metrics display
