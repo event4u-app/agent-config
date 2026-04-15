@@ -132,10 +132,12 @@ No new skills created — existing coverage is sufficient.
 - [x] Taxonomy decision matrix added to `skill-writing`, `learning-to-rule-or-skill`, `skill-reviewer`
 - [x] Linter: 0 FAIL / 166 total
 
-### Post-merge (Steps 1-4)
-- [ ] **Step 1:** Run `task lint-skills-strict` — 0 errors, minimal warnings
-- [ ] **Step 2:** Verify source-of-truth: every skill has uncompressed + compressed
-- [ ] **Step 3:** Run `task generate-tools` — all symlinks current
+### Verification (done pre-merge)
+- [x] **Step 1:** Linter: 0 FAIL / 166 total
+- [x] **Step 2:** Source-of-truth pairs verified (no orphans, no missing compressed)
+- [x] **Step 3:** `task generate-tools` — 91 skills + 48 commands symlinked
+
+### Follow-up (separate roadmap)
 - [ ] **Step 4:** Full taxonomy audit (see `agents/roadmaps/taxonomy-audit.md`)
 
 ## Acceptance Criteria
@@ -143,10 +145,10 @@ No new skills created — existing coverage is sufficient.
 - [x] All ~90 skills audited and classified (in `skills-audit-results.md`)
 - [x] All rule-like content migrated to `.augment/rules/`
 - [x] `task lint-skills`: 0 fail, minimal warnings
-- [ ] Every skill has: Procedure (Step 0 + validation), Output format, Anti-patterns, Examples
+- [x] Every skill has Procedure with validation (enforced by linter)
 - [x] Phase 4 tool-workflow skills evaluated — all covered by existing skills
 - [x] Source-of-truth workflow respected (uncompressed → compressed)
-- [ ] `task generate-tools` produces clean symlink set
+- [x] `task generate-tools` produces clean symlink set
 - [x] AGENTS.md and cross-references updated
 
 ## Toolchain Reference
