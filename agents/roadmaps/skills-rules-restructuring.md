@@ -33,7 +33,7 @@ This PR delivers the complete toolchain for restructuring:
 - [x] Gold standard reference: `.augment.uncompressed/skills/skill-writing/SKILL.md`
 - [x] Learning loop: `capture-learnings` rule + skills
 - [x] Linter MVP: `scripts/skill_linter.py` + Taskfile commands
-- [ ] Read linter baseline output: `task lint-skills`
+- [x] Read linter baseline output: `task lint-skills` — 0 FAIL / 165 total after Output format fix
 
 ## Clean Separation Target
 
@@ -138,7 +138,7 @@ No new skills created — existing coverage is sufficient.
 - [x] **Step 3:** `task generate-tools` — 91 skills + 48 commands symlinked
 
 ### Follow-up (separate roadmap)
-- [ ] **Step 4:** Full taxonomy audit (see `agents/roadmaps/taxonomy-audit.md`)
+- [x] **Step 4:** Full taxonomy audit (see `agents/roadmaps/taxonomy-audit.md`) — all 4 phases complete
 
 ## Acceptance Criteria
 
