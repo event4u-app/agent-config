@@ -19,10 +19,21 @@ ALWAYS work in .augment.uncompressed/ — then compress.
 ## Workflow
 
 1. **Create or edit** the file in `.augment.uncompressed/{path}`
-2. **Compress** the prose into `.augment/{path}` (remove filler, shorten, fragments OK)
-3. **Mark as done:** `task sync-mark-done -- {path}`
+2. **Do NOT auto-compress.** Continue working.
+3. **Before commit/push:** Check if compression is needed (`task sync-changed`).
+   If files need compression, ask the user:
+   ```
+   > 📦 {N} .augment files need compression before commit.
+   >
+   > 1. Compress now — run /compress
+   > 2. Later — commit without compression
+   ```
+4. If compressing: run `/compress` command, then `task sync-mark-done -- {path}`
 
 For new non-.md files (`.php`, configs): `task sync` copies them automatically.
+
+**Key change:** Compression happens once before commit/push — not after every edit.
+This avoids interruptions when work is still in progress.
 
 ## What "compress" means
 
