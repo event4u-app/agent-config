@@ -1,6 +1,8 @@
 ---
+name: feature-explore
 skills: [laravel]
 description: Brainstorm and explore a feature idea before committing to a full plan
+disable-model-invocation: true
 ---
 
 # feature-explore

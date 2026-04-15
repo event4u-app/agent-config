@@ -1,6 +1,8 @@
 ---
+name: module-explore
 skills: [laravel]
 description: Explore a module — load its structure, docs, and context into the current conversation
+disable-model-invocation: true
 ---
 
 # module-explore
@@ -9,9 +11,17 @@ description: Explore a module — load its structure, docs, and context into the
 
 ### 1. Check for modules
 
-Laravel: `app/Modules/`. Composer/packages: `./agents/` or `src/`. None → stop.
+- **Laravel projects**: Check if `app/Modules/` exists.
+- **Composer projects / packages**: Check `./agents/` or `src/` for domain directories.
+- If neither exists:
+  ```
+  ⚠️  No module system found (no app/Modules/ directory).
+  ```
+  Stop.
 
-### 2. List modules (skip `.module-template`)
+### 2. List available modules
+
+Scan `app/Modules/` and show all modules (skip `.module-template` and hidden dirs):
 
 ```
 📦 Available modules:
@@ -26,9 +36,32 @@ Laravel: `app/Modules/`. Composer/packages: `./agents/` or `src/`. None → stop
 Which module do you want to explore? (number or name)
 ```
 
-### 3. Analyze (parallel)
+### 3. Analyze the module
 
-**Structure**: dirs (2 levels), PHP file counts, routes. **Code**: `codebase-retrieval`, README, agent docs, Docs/. **Tests**: per suite. **Roadmaps**: progress + next step. **Context**: existing docs + features.
+For the selected module, gather in parallel:
+
+**Structure:**
+- List all directories and files (2 levels deep)
+- Count PHP files per directory (Controllers, Services, Models, Jobs, Commands, etc.)
+- List route files and their contents
+
+**Code:**
+- Use `codebase-retrieval` to understand the module's purpose and key classes
+- Read `README.md` if it exists
+- Read agent docs (`agents/`) if they exist — including features, roadmaps, contexts
+- Read `Docs/` if it exists (human-facing documentation)
+
+**Tests:**
+- Count test files per suite (Unit, Component, Integration)
+
+**Roadmaps:**
+- Check `agents/roadmaps/*.md` for active roadmaps
+- For each: count completed vs total steps (e.g. "3/7 steps done")
+- Highlight the next open step
+
+**Context:**
+- Check `agents/contexts/` for existing context docs (project-root and module-level)
+- Check `agents/features/` for related feature plans
 
 ### 4. Display module overview
 
@@ -118,5 +151,8 @@ What would you like to do?
 
 ### Rules
 
-- Read-only. No commit/push. Load context for conversation. Remember module for follow-ups.
+- **Do NOT modify any code** — this command is read-only.
+- **Do NOT commit or push.**
+- **Load the module context** into your understanding for the rest of the conversation.
+- **Remember the module** for follow-up commands (feature-plan, context-create, etc.).
 

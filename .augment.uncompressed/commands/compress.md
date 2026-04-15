@@ -1,6 +1,8 @@
 ---
+name: compress
 skills: []
 description: Compress .md files from .augment.uncompressed/ into caveman format and write to .augment/
+disable-model-invocation: true
 ---
 
 # compress

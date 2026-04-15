@@ -1,6 +1,8 @@
 ---
+name: config-agent-settings
 description: Create or update .agent-settings — syncs with template, preserves existing values, adds new defaults
 skills: [file-editor]
+disable-model-invocation: true
 ---
 
 # /config-agent-settings

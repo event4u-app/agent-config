@@ -1,34 +1,65 @@
 ---
+name: create-pr
 skills: [git-workflow]
 description: Create a GitHub PR with structured description from Jira ticket and code changes
+disable-model-invocation: true
 ---
 
 # create-pr
 
-Uses `/create-pr-description` → creates PR via GitHub API.
+Uses `/create-pr-description` to generate the PR content, then creates the PR via GitHub API.
 
 ## Instructions
 
-### 1. Prerequisites
+### 1. Check prerequisites
 
-Not default branch. `git status` (warn uncommitted). `git log origin/{default}..HEAD --oneline` (verify commits). Push if needed (ask).
+- Verify the current branch is NOT the default branch (`main` / `master`).
+- Run `git status` — warn if there are uncommitted changes.
+- Run `git log origin/{default}..HEAD --oneline` to verify there are commits to push.
+- If the branch has not been pushed yet, ask the user (in their language) whether to push.
 
 ### 2. Generate PR content
 
-Run `/create-pr-description`. **MUST use PR template.** User reviews.
+Run `/create-pr-description` to generate the PR title and body.
+This handles: Jira ticket extraction, diff analysis, commit messages, **PR template filling**.
 
-### 3. Create PR
+**CRITICAL**: The PR body MUST use the project's PR template (`.github/pull_request_template.md`).
+Read the template file and fill in its sections. If the template does not exist, use the
+fallback structure defined in `/create-pr-description`. NEVER invent a custom body structure.
 
-Head: EXACT `git branch --show-current` (NEVER reuse). Base: default branch. Ask:
+The user reviews and adjusts the content in that step.
+
+### 3. Create the PR
+
+Once the user approves the content from step 2:
+
+- **Head branch**: Use the EXACT output of `git branch --show-current` from step 1.
+  **NEVER** reuse a branch name from earlier in the conversation — always use the fresh value.
+- **Base branch**: Default branch (`main` / `master`).
+- Ask the user:
   ```
   > 1. Create as draft
   > 2. Create as ready for review
   ```
-Draft: Option 1 → `true`, Option 2 → `false`. Verify `draft: false` actually applied (`gh pr view {number} --json isDraft`). Fix with `gh pr ready {number}`.
+- Create the PR via GitHub API with the approved title and body.
+- **CRITICAL**: Set the `draft` parameter based on the user's choice:
+  - Option 1 → `"draft": true`
+  - Option 2 → `"draft": false`
+  - Do NOT default to draft. The user's choice is the ONLY factor.
+- **After creating with `draft: false`**: The GitHub REST API sometimes ignores
+  `draft: false` and creates a draft anyway. Always verify by running:
+  ```bash
+  gh pr view {number} --json isDraft --jq '.isDraft'
+  ```
+  If it returns `true`, fix it immediately:
+  ```bash
+  gh pr ready {number}
+  ```
 
 ### 4. After creation
 
-Show PR URL. Jira linked → ask:
+- Show the PR URL.
+- If a Jira ticket was linked, ask:
   ```
   > Transition Jira ticket {TICKET-ID} to "In Review"?
   >
@@ -38,6 +69,9 @@ Show PR URL. Jira linked → ask:
 
 ### Rules
 
-- Always use PR template. Show content before creating. Push first if needed.
-- Only create, never merge. Commit/push only with permission.
+- **Always use the PR template** from `.github/pull_request_template.md` — read it, fill its sections.
+- **Always show the PR content before creating it** — never create blindly.
+- **Push the branch first** if it hasn't been pushed (with user permission).
+- Only create the PR — never merge it.
+- Only commit or push with explicit user permission.
 

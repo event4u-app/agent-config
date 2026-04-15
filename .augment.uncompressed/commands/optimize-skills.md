@@ -2,6 +2,7 @@
 name: optimize-skills
 description: Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply.
 skills: [skill-reviewer]
+disable-model-invocation: true
 ---
 
 # /optimize-skills

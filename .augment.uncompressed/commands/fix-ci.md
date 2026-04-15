@@ -1,6 +1,8 @@
 ---
+name: fix-ci
 skills: [github-ci, quality-tools]
 description: Fetch CI errors from GitHub Actions and fix them
+disable-model-invocation: true
 ---
 
 # fix-ci

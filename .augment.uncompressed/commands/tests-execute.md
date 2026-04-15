@@ -1,6 +1,8 @@
 ---
+name: tests-execute
 skills: [pest-testing]
 description: Run PHP tests inside the Docker container
+disable-model-invocation: true
 ---
 
 # tests-execute

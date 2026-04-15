@@ -1,6 +1,8 @@
 ---
+name: project-analyze
 skills: [project-analyzer]
 description: Full project analysis — detect stack, inventory modules, audit docs, create missing contexts
+disable-model-invocation: true
 ---
 
 # project-analyze

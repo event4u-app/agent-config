@@ -2,6 +2,7 @@
 skills: [agent-docs]
 name: optimize-augmentignore
 description: Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules.
+disable-model-invocation: true
 ---
 
 # /optimize-augmentignore

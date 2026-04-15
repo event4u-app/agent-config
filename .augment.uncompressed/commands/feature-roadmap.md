@@ -1,6 +1,8 @@
 ---
+name: feature-roadmap
 skills: [agent-docs]
 description: Generate implementation roadmap(s) from a feature plan and link them
+disable-model-invocation: true
 ---
 
 # feature-roadmap

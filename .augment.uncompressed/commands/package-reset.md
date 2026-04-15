@@ -1,6 +1,8 @@
 ---
+name: package-reset
 skills: [composer, npm]
 description: /package-reset
+disable-model-invocation: true
 ---
 
 # package-reset

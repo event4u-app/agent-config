@@ -1,6 +1,8 @@
 ---
+name: fix-seeder
 skills: [eloquent]
 description: Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them
+disable-model-invocation: true
 ---
 
 # fix-seeder

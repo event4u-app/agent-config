@@ -1,6 +1,8 @@
 ---
+name: package-test
 skills: [composer, npm]
 description: /package-test
+disable-model-invocation: true
 ---
 
 # package-test

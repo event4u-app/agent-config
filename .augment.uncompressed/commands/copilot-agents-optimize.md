@@ -2,6 +2,7 @@
 name: copilot-agents-optimize
 description: Analyzes and refactors AGENTS.md and copilot-instructions.md — removes duplications, enforces line budgets, and ensures both files are optimized for their audience.
 skills: [copilot-agents-optimizer, copilot, agent-docs]
+disable-model-invocation: true
 ---
 
 # /copilot-agents-optimize

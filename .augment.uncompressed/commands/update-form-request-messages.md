@@ -1,6 +1,8 @@
 ---
+name: update-form-request-messages
 skills: [laravel-validation]
 description: Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones
+disable-model-invocation: true
 ---
 
 # update-form-request-messages
