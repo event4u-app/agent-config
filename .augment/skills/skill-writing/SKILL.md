@@ -140,6 +140,17 @@ Example:
 * Validation must be concrete
 * One skill = one job
 
+### When to create a `project-analysis-*` skill
+
+A framework gets its own analysis skill ONLY if:
+
+* it has its own lifecycle that creates unique debugging patterns
+* it produces failure classes that `project-analysis-core` cannot explain
+* debugging it requires framework-specific mental models
+
+✅ Qualifies: Laravel, Symfony, Express, React, Next.js
+❌ Does NOT qualify: Tailwind, utility libs, CSS frameworks, simple state managers
+
 ## Gotchas
 
 * Model writes documentation instead of steps

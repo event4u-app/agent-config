@@ -140,6 +140,17 @@ Check:
 * `performance-analysis`
 * `security-audit`
 
+## When to add a new framework analysis skill
+
+A framework gets its own `project-analysis-*` skill ONLY if:
+
+* it has its own lifecycle that creates unique debugging patterns
+* it produces failure classes that `project-analysis-core` cannot explain
+* debugging it requires framework-specific mental models (not just API knowledge)
+
+Examples that qualify: Laravel, Symfony, Express, React, Next.js.
+Examples that do NOT qualify: Tailwind, small utility libraries, CSS frameworks, simple state libs.
+
 ## Output format
 
 1. Investigation summary
