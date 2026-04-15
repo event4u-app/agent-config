@@ -10,7 +10,7 @@ source: package
 
 Use this skill when:
 
-* The user explicitly requests full project analysis
+* The user explicitly requests a full project analysis
 * The user wants a deep codebase audit
 * The user wants a comprehensive architecture review
 * The system is large, unclear, or spans multiple layers
@@ -18,32 +18,37 @@ Use this skill when:
 
 Do NOT use when:
 
-* The task is a normal feature implementation
-* Only a small isolated file or snippet needs review
-* The issue is already narrow and should go directly to a specialist skill
+* The task is normal feature work
+* Only a small isolated code area needs review
+* The issue is already narrow enough for a specialist skill
+* A framework-specific analysis skill can be called directly
 
 ## Mission
 
-Act as the top-level investigation router for deep project understanding.
+Act as the top-level router for deep project investigation.
 
-This skill does NOT perform every deep-dive itself.
+This skill must:
 
-It does this:
+* confirm whether full-project analysis is justified
+* identify the stack and framework
+* choose the correct analysis mode
+* route to the right specialist analysis skills
+* define the required output for broad project investigations
 
-* determines whether a full-project analysis is justified
-* chooses the right analysis mode
-* detects the stack and framework
-* routes to the correct specialist analysis skills
-* defines the required output for deep investigations
+This skill must NOT become:
+
+* a giant framework encyclopedia
+* a shallow pointer-only file
+* a replacement for framework-specific deep-dive skills
 
 ## Core principles
 
 1. Never assume — verify against code, config, docs, and evidence
 2. Version dictates behavior
-3. Packages are external systems — research them, do not guess
-4. Full analysis must be hypothesis-aware
-5. Broad understanding comes before narrow conclusions
-6. Use specialist skills when framework or problem shape is clear
+3. Broad understanding comes before narrow conclusions
+4. Use framework-specific skills once the stack is known
+5. Use hypothesis-driven analysis when root cause is unclear
+6. Mark uncertainty explicitly
 
 ## Thinking model
 
@@ -61,45 +66,41 @@ Always think in this order:
 ### Exploration mode
 
 Use when the system is unknown.
-Goal: understand structure, identify major components, find investigation paths, detect where specialist skills are needed.
+Goal: understand structure, identify major components, detect investigation paths, choose the next specialist skill.
 
 ### Investigation mode
 
 Use when there is a concrete issue inside a large or unclear system.
-Goal: isolate the affected area, route into deeper hypothesis-driven analysis, validate likely root causes.
+Goal: isolate the affected area, route into root-cause analysis, verify likely causes with evidence.
 
 ### Optimization mode
 
 Use when the system works but may be inefficient or over-complex.
-Goal: map hot paths, identify expensive boundaries, chain into performance or architecture specialists.
+Goal: identify hot paths, find expensive boundaries, route into architecture or performance specialists.
 
 ## Procedure
 
-### 1. Confirm full-project scope
+### 1. Confirm scope
 
-Check whether the request really needs broad analysis.
-Use this skill only if the user wants: full project understanding, architecture reconstruction, deep multi-layer debugging, broad audit across modules or systems.
-If not: route to the narrower specialist skill instead.
+Check whether full-project analysis is really needed.
+Use this skill only if the user wants: broad system understanding, architecture reconstruction, deep multi-layer debugging, broad audit across modules or runtime boundaries.
+If not: route to the narrower specialist skill directly.
 
 ### 2. Discover the project
 
 Identify: language, framework, runtime environment, package managers, major entrypoints, documentation locations.
-Look at: package manifests, lock files, bootstrap files, Docker/CI config, README/AGENTS/docs folders.
+Look at: package manifests, lock files, bootstrap files, Docker/CI config, README/AGENTS/docs.
 
-### 3. Choose the primary path
-
-Route based on what you find:
+### 3. Choose the primary route
 
 * unknown or mixed system → `project-analysis-core`
-* issue/root-cause heavy situation → `project-analysis-hypothesis-driven`
+* concrete root-cause problem → `project-analysis-hypothesis-driven`
 * Laravel → `project-analysis-laravel`
 * Symfony → `project-analysis-symfony`
 * Zend/Laminas → `project-analysis-zend-laminas`
 * Node/Express → `project-analysis-node-express`
 
-### 4. Chain specialist skills
-
-Add specialist skills only where needed:
+### 4. Chain specialists where needed
 
 * bottleneck found → `performance-analysis`
 * security concern found → `security-audit`
@@ -107,17 +108,37 @@ Add specialist skills only where needed:
 
 ### 5. Consolidate findings
 
-Combine: system overview, routed specialist findings, verified risks, validated conclusions, next investigation steps.
+Combine: system overview, framework-specific findings, verified risks, explicit uncertainties, next investigation steps.
 
 ### 6. Validate analysis quality
 
 Check:
 
-* full-project analysis was actually necessary
-* stack/framework detection is explicit
-* routed skills match the discovered system
-* uncertain points are marked clearly
+* full-project analysis was actually justified
+* framework detection is explicit
+* chosen specialist skills match the discovered stack
+* uncertainties are marked
 * conclusions are evidence-based
+
+## Routing map
+
+### Universal analysis skills
+
+* `project-analysis-core`
+* `project-analysis-hypothesis-driven`
+
+### Framework-specific deep dives
+
+* `project-analysis-laravel`
+* `project-analysis-symfony`
+* `project-analysis-zend-laminas`
+* `project-analysis-node-express`
+
+### Optional downstream specialists
+
+* `bug-analyzer`
+* `performance-analysis`
+* `security-audit`
 
 ## Output format
 
@@ -128,32 +149,16 @@ Check:
 5. Consolidated findings
 6. Risks and next steps
 
-## Integration with other skills
-
-Primary downstream skills:
-
-* `project-analysis-core`
-* `project-analysis-hypothesis-driven`
-* `project-analysis-laravel`
-* `project-analysis-symfony`
-* `project-analysis-zend-laminas`
-* `project-analysis-node-express`
-
-Optional specialist chaining:
-
-* `bug-analyzer`
-* `performance-analysis`
-* `security-audit`
-
 ## Gotcha
 
-* This skill must remain a real router, not a giant framework encyclopedia.
-* Do not keep long framework-specific deep dives here.
-* Do not use full-project analysis for normal feature work.
+* This skill must remain a real orchestration skill.
+* Do not move long framework-specific deep dives back into this file.
+* Do not let this skill become a generic "analyze everything" bucket.
 
 ## Do NOT
 
 * Do NOT analyze everything here directly if a specialist skill exists
-* Do NOT skip stack/framework detection
+* Do NOT skip framework detection
 * Do NOT present broad guesses as conclusions
-* Do NOT turn this skill into a useless pointer-only file
+* Do NOT turn this into a shallow pointer-only file
+* Do NOT duplicate framework-specific deep-dive content here
