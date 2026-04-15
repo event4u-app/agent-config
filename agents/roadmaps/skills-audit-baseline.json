@@ -7,7 +7,7 @@
   },
   "results": [
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/agent-docs.md",
+      "file": ".augment/rules/agent-docs.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -25,7 +25,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/architecture.md",
+      "file": ".augment/rules/architecture.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -38,21 +38,21 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/ask-when-uncertain.md",
+      "file": ".augment/rules/ask-when-uncertain.md",
       "artifact_type": "rule",
       "status": "pass",
       "issues": [],
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/augment-portability.md",
+      "file": ".augment/rules/augment-portability.md",
       "artifact_type": "rule",
       "status": "pass",
       "issues": [],
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/augment-source-of-truth.md",
+      "file": ".augment/rules/augment-source-of-truth.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -70,7 +70,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/capture-learnings.md",
+      "file": ".augment/rules/capture-learnings.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -83,14 +83,14 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/commands.md",
+      "file": ".augment/rules/commands.md",
       "artifact_type": "rule",
       "status": "pass",
       "issues": [],
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/commit-conventions.md",
+      "file": ".augment/rules/commit-conventions.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -103,7 +103,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/context-hygiene.md",
+      "file": ".augment/rules/context-hygiene.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -116,38 +116,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/dev-efficiency.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        },
-        {
-          "severity": "warning",
-          "code": "procedural_rule",
-          "message": "Rule looks procedural; consider a skill instead"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/docker-commands.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/docs-sync.md",
+      "file": ".augment/rules/dev-efficiency.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -165,7 +134,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/downstream-changes.md",
+      "file": ".augment/rules/docker-commands.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -178,90 +147,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/e2e-testing.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        },
-        {
-          "severity": "warning",
-          "code": "procedural_rule",
-          "message": "Rule looks procedural; consider a skill instead"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/guidelines.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/lang-files.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/language-and-tone.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/model-recommendation.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/php-coding.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/quality-workflow.md",
+      "file": ".augment/rules/docs-sync.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -279,7 +165,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/rtk.md",
+      "file": ".augment/rules/downstream-changes.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -292,14 +178,128 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/scope-control.md",
+      "file": ".augment/rules/e2e-testing.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        },
+        {
+          "severity": "warning",
+          "code": "procedural_rule",
+          "message": "Rule looks procedural; consider a skill instead"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".augment/rules/guidelines.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".augment/rules/lang-files.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".augment/rules/language-and-tone.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".augment/rules/model-recommendation.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".augment/rules/php-coding.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".augment/rules/quality-workflow.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        },
+        {
+          "severity": "warning",
+          "code": "procedural_rule",
+          "message": "Rule looks procedural; consider a skill instead"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".augment/rules/rtk.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".augment/rules/scope-control.md",
       "artifact_type": "rule",
       "status": "pass",
       "issues": [],
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/token-efficiency.md",
+      "file": ".augment/rules/token-efficiency.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -317,7 +317,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/user-interaction.md",
+      "file": ".augment/rules/user-interaction.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -330,7 +330,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/rules/verify-before-complete.md",
+      "file": ".augment/rules/verify-before-complete.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -348,7 +348,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/adversarial-review/SKILL.md",
+      "file": ".augment/skills/adversarial-review/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -409,7 +409,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/agent-docs/SKILL.md",
+      "file": ".augment/skills/agent-docs/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -470,7 +470,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/agents-audit/SKILL.md",
+      "file": ".augment/skills/agents-audit/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -532,7 +532,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/analysis-autonomous-mode/SKILL.md",
+      "file": ".augment/skills/analysis-autonomous-mode/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -598,7 +598,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/api-design/SKILL.md",
+      "file": ".augment/skills/api-design/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -659,7 +659,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/api-endpoint/SKILL.md",
+      "file": ".augment/skills/api-endpoint/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -720,7 +720,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/api-testing/SKILL.md",
+      "file": ".augment/skills/api-testing/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -781,7 +781,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/api-versioning/SKILL.md",
+      "file": ".augment/skills/api-versioning/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -832,68 +832,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/artisan-commands/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Do NOT"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        },
-        {
-          "severity": "warning",
-          "code": "weak_do_not",
-          "message": "Do NOT should contain at least one enforceable constraint"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/aws-infrastructure/SKILL.md",
+      "file": ".augment/skills/artisan-commands/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -954,7 +893,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/blade-ui/SKILL.md",
+      "file": ".augment/skills/aws-infrastructure/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -1015,7 +954,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/bug-analyzer/SKILL.md",
+      "file": ".augment/skills/blade-ui/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -1076,7 +1015,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/cloudflare-workers/SKILL.md",
+      "file": ".augment/skills/bug-analyzer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -1137,7 +1076,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/code-review/SKILL.md",
+      "file": ".augment/skills/cloudflare-workers/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -1198,7 +1137,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/coder/SKILL.md",
+      "file": ".augment/skills/code-review/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -1259,7 +1198,68 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/commands/SKILL.md",
+      "file": ".augment/skills/coder/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Do NOT"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        },
+        {
+          "severity": "warning",
+          "code": "weak_do_not",
+          "message": "Do NOT should contain at least one enforceable constraint"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".augment/skills/commands/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -1315,7 +1315,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/composer/SKILL.md",
+      "file": ".augment/skills/composer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -1376,7 +1376,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/composer-packages/SKILL.md",
+      "file": ".augment/skills/composer-packages/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -1437,7 +1437,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/context/SKILL.md",
+      "file": ".augment/skills/context/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -1498,7 +1498,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/copilot/SKILL.md",
+      "file": ".augment/skills/copilot/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -1559,7 +1559,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/copilot-agents-optimizer/SKILL.md",
+      "file": ".augment/skills/copilot-agents-optimizer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -1620,7 +1620,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/dashboard-design/SKILL.md",
+      "file": ".augment/skills/dashboard-design/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -1687,7 +1687,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/database/SKILL.md",
+      "file": ".augment/skills/database/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -1748,7 +1748,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/dependency-upgrade/SKILL.md",
+      "file": ".augment/skills/dependency-upgrade/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -1809,7 +1809,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/design-review/SKILL.md",
+      "file": ".augment/skills/design-review/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -1870,7 +1870,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/devcontainer/SKILL.md",
+      "file": ".augment/skills/devcontainer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -1921,119 +1921,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/docker/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Do NOT"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        },
-        {
-          "severity": "warning",
-          "code": "weak_do_not",
-          "message": "Do NOT should contain at least one enforceable constraint"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/dto-creator/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/eloquent/SKILL.md",
+      "file": ".augment/skills/docker/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -2094,7 +1982,58 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/fe-design/SKILL.md",
+      "file": ".augment/skills/dto-creator/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".augment/skills/eloquent/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -2155,7 +2094,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/feature-planning/SKILL.md",
+      "file": ".augment/skills/fe-design/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -2216,109 +2155,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/file-editor/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/flux/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/git-workflow/SKILL.md",
+      "file": ".augment/skills/feature-planning/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -2379,7 +2216,170 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/github-action-docs/SKILL.md",
+      "file": ".augment/skills/file-editor/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".augment/skills/flux/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".augment/skills/git-workflow/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Do NOT"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        },
+        {
+          "severity": "warning",
+          "code": "weak_do_not",
+          "message": "Do NOT should contain at least one enforceable constraint"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".augment/skills/github-action-docs/SKILL.md",
       "artifact_type": "skill",
       "status": "pass_with_warnings",
       "issues": [
@@ -2405,7 +2405,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/github-ci/SKILL.md",
+      "file": ".augment/skills/github-ci/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -2466,7 +2466,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/grafana/SKILL.md",
+      "file": ".augment/skills/grafana/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -2527,7 +2527,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/graphql/SKILL.md",
+      "file": ".augment/skills/graphql/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -2588,7 +2588,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/guidelines/SKILL.md",
+      "file": ".augment/skills/guidelines/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -2640,7 +2640,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/javascript/SKILL.md",
+      "file": ".augment/skills/javascript/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -2701,7 +2701,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/jira/SKILL.md",
+      "file": ".augment/skills/jira/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -2762,7 +2762,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/jobs-events/SKILL.md",
+      "file": ".augment/skills/jobs-events/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -2823,7 +2823,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/laravel/SKILL.md",
+      "file": ".augment/skills/laravel/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -2884,7 +2884,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/laravel-horizon/SKILL.md",
+      "file": ".augment/skills/laravel-horizon/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -2945,7 +2945,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/laravel-mail/SKILL.md",
+      "file": ".augment/skills/laravel-mail/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -2996,7 +2996,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/laravel-middleware/SKILL.md",
+      "file": ".augment/skills/laravel-middleware/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -3047,7 +3047,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/laravel-notifications/SKILL.md",
+      "file": ".augment/skills/laravel-notifications/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -3098,7 +3098,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/laravel-pennant/SKILL.md",
+      "file": ".augment/skills/laravel-pennant/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -3159,7 +3159,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/laravel-pulse/SKILL.md",
+      "file": ".augment/skills/laravel-pulse/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -3210,7 +3210,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/laravel-reverb/SKILL.md",
+      "file": ".augment/skills/laravel-reverb/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -3277,7 +3277,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/laravel-scheduling/SKILL.md",
+      "file": ".augment/skills/laravel-scheduling/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -3338,7 +3338,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/laravel-validation/SKILL.md",
+      "file": ".augment/skills/laravel-validation/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -3399,7 +3399,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/learning-to-rule-or-skill/SKILL.md",
+      "file": ".augment/skills/learning-to-rule-or-skill/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -3429,7 +3429,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/livewire/SKILL.md",
+      "file": ".augment/skills/livewire/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -3490,7 +3490,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/logging-monitoring/SKILL.md",
+      "file": ".augment/skills/logging-monitoring/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -3551,7 +3551,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/markdown-safe-codeblocks/SKILL.md",
+      "file": ".augment/skills/markdown-safe-codeblocks/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -3576,7 +3576,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/markdown-template-generator/SKILL.md",
+      "file": ".augment/skills/markdown-template-generator/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -3599,7 +3599,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/mcp/SKILL.md",
+      "file": ".augment/skills/mcp/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -3660,7 +3660,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/merge-conflicts/SKILL.md",
+      "file": ".augment/skills/merge-conflicts/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -3711,119 +3711,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/microservices/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Do NOT"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        },
-        {
-          "severity": "warning",
-          "code": "weak_do_not",
-          "message": "Do NOT should contain at least one enforceable constraint"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/migration-creator/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/mobile/SKILL.md",
+      "file": ".augment/skills/microservices/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -3884,7 +3772,58 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/module/SKILL.md",
+      "file": ".augment/skills/migration-creator/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".augment/skills/mobile/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -3945,7 +3884,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/multi-tenancy/SKILL.md",
+      "file": ".augment/skills/module/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -4006,7 +3945,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/naming/SKILL.md",
+      "file": ".augment/skills/multi-tenancy/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -4067,7 +4006,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/nextjs/SKILL.md",
+      "file": ".augment/skills/naming/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -4128,7 +4067,68 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/npm/SKILL.md",
+      "file": ".augment/skills/nextjs/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Do NOT"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        },
+        {
+          "severity": "warning",
+          "code": "weak_do_not",
+          "message": "Do NOT should contain at least one enforceable constraint"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".augment/skills/npm/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -4195,7 +4195,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/npm-packages/SKILL.md",
+      "file": ".augment/skills/npm-packages/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -4256,7 +4256,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/nuxt/SKILL.md",
+      "file": ".augment/skills/nuxt/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -4317,7 +4317,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/openapi/SKILL.md",
+      "file": ".augment/skills/openapi/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -4378,7 +4378,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/override/SKILL.md",
+      "file": ".augment/skills/override/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -4444,7 +4444,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/performance/SKILL.md",
+      "file": ".augment/skills/performance/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -4505,7 +4505,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/performance-analysis/SKILL.md",
+      "file": ".augment/skills/performance-analysis/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -4566,7 +4566,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/pest-testing/SKILL.md",
+      "file": ".augment/skills/pest-testing/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -4633,7 +4633,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/php/SKILL.md",
+      "file": ".augment/skills/php/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -4684,119 +4684,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/php-debugging/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Do NOT"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        },
-        {
-          "severity": "warning",
-          "code": "weak_do_not",
-          "message": "Do NOT should contain at least one enforceable constraint"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/php-service/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/playwright-testing/SKILL.md",
+      "file": ".augment/skills/php-debugging/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -4857,7 +4745,119 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/post-task-learning-capture/SKILL.md",
+      "file": ".augment/skills/php-service/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".augment/skills/playwright-testing/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Do NOT"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        },
+        {
+          "severity": "warning",
+          "code": "weak_do_not",
+          "message": "Do NOT should contain at least one enforceable constraint"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".augment/skills/post-task-learning-capture/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -4875,7 +4875,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/project-analysis-laravel/SKILL.md",
+      "file": ".augment/skills/project-analysis-laravel/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -4926,7 +4926,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/project-analyzer/SKILL.md",
+      "file": ".augment/skills/project-analyzer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -4987,7 +4987,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/project-docs/SKILL.md",
+      "file": ".augment/skills/project-docs/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5038,7 +5038,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/quality-tools/SKILL.md",
+      "file": ".augment/skills/quality-tools/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5089,7 +5089,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/react/SKILL.md",
+      "file": ".augment/skills/react/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5150,7 +5150,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/readme-generator/SKILL.md",
+      "file": ".augment/skills/readme-generator/SKILL.md",
       "artifact_type": "skill",
       "status": "pass_with_warnings",
       "issues": [
@@ -5163,7 +5163,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/refactorer/SKILL.md",
+      "file": ".augment/skills/refactorer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5224,7 +5224,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/roadmap-manager/SKILL.md",
+      "file": ".augment/skills/roadmap-manager/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5285,7 +5285,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/security/SKILL.md",
+      "file": ".augment/skills/security/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5346,7 +5346,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/security-audit/SKILL.md",
+      "file": ".augment/skills/security-audit/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5407,7 +5407,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/sentry/SKILL.md",
+      "file": ".augment/skills/sentry/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5468,7 +5468,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/sequential-thinking/SKILL.md",
+      "file": ".augment/skills/sequential-thinking/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5529,7 +5529,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/skill-caveman-compression/SKILL.md",
+      "file": ".augment/skills/skill-caveman-compression/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5552,7 +5552,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/skill-decompression/SKILL.md",
+      "file": ".augment/skills/skill-decompression/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5575,7 +5575,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/skill-linter/SKILL.md",
+      "file": ".augment/skills/skill-linter/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5593,7 +5593,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/skill-refactor/SKILL.md",
+      "file": ".augment/skills/skill-refactor/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5623,7 +5623,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/skill-reviewer/SKILL.md",
+      "file": ".augment/skills/skill-reviewer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5690,7 +5690,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/skill-validator/SKILL.md",
+      "file": ".augment/skills/skill-validator/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5718,7 +5718,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/skill-writing/SKILL.md",
+      "file": ".augment/skills/skill-writing/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5731,7 +5731,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/sql/SKILL.md",
+      "file": ".augment/skills/sql/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5792,7 +5792,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/tailwind/SKILL.md",
+      "file": ".augment/skills/tailwind/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5853,7 +5853,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/technical-specification/SKILL.md",
+      "file": ".augment/skills/technical-specification/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5914,7 +5914,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/terraform/SKILL.md",
+      "file": ".augment/skills/terraform/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -5975,7 +5975,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/terragrunt/SKILL.md",
+      "file": ".augment/skills/terragrunt/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -6036,7 +6036,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/test-generator/SKILL.md",
+      "file": ".augment/skills/test-generator/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -6087,7 +6087,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/test-performance/SKILL.md",
+      "file": ".augment/skills/test-performance/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -6144,7 +6144,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/traefik/SKILL.md",
+      "file": ".augment/skills/traefik/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -6205,7 +6205,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/typescript/SKILL.md",
+      "file": ".augment/skills/typescript/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -6266,7 +6266,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/universal-project-analysis/SKILL.md",
+      "file": ".augment/skills/universal-project-analysis/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -6322,7 +6322,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/vue/SKILL.md",
+      "file": ".augment/skills/vue/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -6373,7 +6373,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/websocket/SKILL.md",
+      "file": ".augment/skills/websocket/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -6434,7 +6434,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment/skills/wordpress/SKILL.md",
+      "file": ".augment/skills/wordpress/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -6491,7 +6491,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/agent-docs.md",
+      "file": ".augment.uncompressed/rules/agent-docs.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6509,7 +6509,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/architecture.md",
+      "file": ".augment.uncompressed/rules/architecture.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6522,21 +6522,21 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/ask-when-uncertain.md",
+      "file": ".augment.uncompressed/rules/ask-when-uncertain.md",
       "artifact_type": "rule",
       "status": "pass",
       "issues": [],
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/augment-portability.md",
+      "file": ".augment.uncompressed/rules/augment-portability.md",
       "artifact_type": "rule",
       "status": "pass",
       "issues": [],
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/augment-source-of-truth.md",
+      "file": ".augment.uncompressed/rules/augment-source-of-truth.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6554,7 +6554,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/capture-learnings.md",
+      "file": ".augment.uncompressed/rules/capture-learnings.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6567,14 +6567,14 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/commands.md",
+      "file": ".augment.uncompressed/rules/commands.md",
       "artifact_type": "rule",
       "status": "pass",
       "issues": [],
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/commit-conventions.md",
+      "file": ".augment.uncompressed/rules/commit-conventions.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6587,7 +6587,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/context-hygiene.md",
+      "file": ".augment.uncompressed/rules/context-hygiene.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6600,38 +6600,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/dev-efficiency.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        },
-        {
-          "severity": "warning",
-          "code": "procedural_rule",
-          "message": "Rule looks procedural; consider a skill instead"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/docker-commands.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/docs-sync.md",
+      "file": ".augment.uncompressed/rules/dev-efficiency.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6649,7 +6618,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/downstream-changes.md",
+      "file": ".augment.uncompressed/rules/docker-commands.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6662,90 +6631,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/e2e-testing.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        },
-        {
-          "severity": "warning",
-          "code": "procedural_rule",
-          "message": "Rule looks procedural; consider a skill instead"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/guidelines.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/lang-files.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/language-and-tone.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/model-recommendation.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/php-coding.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/quality-workflow.md",
+      "file": ".augment.uncompressed/rules/docs-sync.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6763,7 +6649,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/rtk.md",
+      "file": ".augment.uncompressed/rules/downstream-changes.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6776,14 +6662,128 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/scope-control.md",
+      "file": ".augment.uncompressed/rules/e2e-testing.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        },
+        {
+          "severity": "warning",
+          "code": "procedural_rule",
+          "message": "Rule looks procedural; consider a skill instead"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".augment.uncompressed/rules/guidelines.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".augment.uncompressed/rules/lang-files.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".augment.uncompressed/rules/language-and-tone.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".augment.uncompressed/rules/model-recommendation.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".augment.uncompressed/rules/php-coding.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".augment.uncompressed/rules/quality-workflow.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        },
+        {
+          "severity": "warning",
+          "code": "procedural_rule",
+          "message": "Rule looks procedural; consider a skill instead"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".augment.uncompressed/rules/rtk.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".augment.uncompressed/rules/scope-control.md",
       "artifact_type": "rule",
       "status": "pass",
       "issues": [],
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/token-efficiency.md",
+      "file": ".augment.uncompressed/rules/token-efficiency.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6801,7 +6801,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/user-interaction.md",
+      "file": ".augment.uncompressed/rules/user-interaction.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6814,7 +6814,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/rules/verify-before-complete.md",
+      "file": ".augment.uncompressed/rules/verify-before-complete.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6832,7 +6832,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/adversarial-review/SKILL.md",
+      "file": ".augment.uncompressed/skills/adversarial-review/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -6883,7 +6883,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/agent-docs/SKILL.md",
+      "file": ".augment.uncompressed/skills/agent-docs/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -6934,7 +6934,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/agents-audit/SKILL.md",
+      "file": ".augment.uncompressed/skills/agents-audit/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -6985,7 +6985,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/analysis-autonomous-mode/SKILL.md",
+      "file": ".augment.uncompressed/skills/analysis-autonomous-mode/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7036,7 +7036,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/api-design/SKILL.md",
+      "file": ".augment.uncompressed/skills/api-design/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7087,7 +7087,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/api-endpoint/SKILL.md",
+      "file": ".augment.uncompressed/skills/api-endpoint/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7138,7 +7138,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/api-testing/SKILL.md",
+      "file": ".augment.uncompressed/skills/api-testing/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7189,7 +7189,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/api-versioning/SKILL.md",
+      "file": ".augment.uncompressed/skills/api-versioning/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7240,7 +7240,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/artisan-commands/SKILL.md",
+      "file": ".augment.uncompressed/skills/artisan-commands/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7291,7 +7291,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/aws-infrastructure/SKILL.md",
+      "file": ".augment.uncompressed/skills/aws-infrastructure/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7348,7 +7348,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/blade-ui/SKILL.md",
+      "file": ".augment.uncompressed/skills/blade-ui/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7399,7 +7399,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/bug-analyzer/SKILL.md",
+      "file": ".augment.uncompressed/skills/bug-analyzer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7450,7 +7450,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/cloudflare-workers/SKILL.md",
+      "file": ".augment.uncompressed/skills/cloudflare-workers/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7501,7 +7501,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/code-review/SKILL.md",
+      "file": ".augment.uncompressed/skills/code-review/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7552,7 +7552,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/coder/SKILL.md",
+      "file": ".augment.uncompressed/skills/coder/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7603,7 +7603,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/commands/SKILL.md",
+      "file": ".augment.uncompressed/skills/commands/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7659,7 +7659,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/composer/SKILL.md",
+      "file": ".augment.uncompressed/skills/composer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7710,7 +7710,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/composer-packages/SKILL.md",
+      "file": ".augment.uncompressed/skills/composer-packages/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7761,7 +7761,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/context/SKILL.md",
+      "file": ".augment.uncompressed/skills/context/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7812,7 +7812,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/copilot/SKILL.md",
+      "file": ".augment.uncompressed/skills/copilot/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7863,7 +7863,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/copilot-agents-optimizer/SKILL.md",
+      "file": ".augment.uncompressed/skills/copilot-agents-optimizer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7914,7 +7914,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/dashboard-design/SKILL.md",
+      "file": ".augment.uncompressed/skills/dashboard-design/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7971,7 +7971,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/database/SKILL.md",
+      "file": ".augment.uncompressed/skills/database/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8022,7 +8022,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/dependency-upgrade/SKILL.md",
+      "file": ".augment.uncompressed/skills/dependency-upgrade/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8073,7 +8073,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/design-review/SKILL.md",
+      "file": ".augment.uncompressed/skills/design-review/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8124,7 +8124,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/devcontainer/SKILL.md",
+      "file": ".augment.uncompressed/skills/devcontainer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8175,7 +8175,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/docker/SKILL.md",
+      "file": ".augment.uncompressed/skills/docker/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8226,7 +8226,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/dto-creator/SKILL.md",
+      "file": ".augment.uncompressed/skills/dto-creator/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8277,7 +8277,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/eloquent/SKILL.md",
+      "file": ".augment.uncompressed/skills/eloquent/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8328,7 +8328,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/fe-design/SKILL.md",
+      "file": ".augment.uncompressed/skills/fe-design/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8379,7 +8379,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/feature-planning/SKILL.md",
+      "file": ".augment.uncompressed/skills/feature-planning/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8430,7 +8430,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/file-editor/SKILL.md",
+      "file": ".augment.uncompressed/skills/file-editor/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8481,7 +8481,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/flux/SKILL.md",
+      "file": ".augment.uncompressed/skills/flux/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8532,7 +8532,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/git-workflow/SKILL.md",
+      "file": ".augment.uncompressed/skills/git-workflow/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8583,7 +8583,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/github-action-docs/SKILL.md",
+      "file": ".augment.uncompressed/skills/github-action-docs/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8623,7 +8623,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/github-ci/SKILL.md",
+      "file": ".augment.uncompressed/skills/github-ci/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8674,7 +8674,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/grafana/SKILL.md",
+      "file": ".augment.uncompressed/skills/grafana/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8725,7 +8725,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/graphql/SKILL.md",
+      "file": ".augment.uncompressed/skills/graphql/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8776,7 +8776,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/guidelines/SKILL.md",
+      "file": ".augment.uncompressed/skills/guidelines/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8828,7 +8828,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/javascript/SKILL.md",
+      "file": ".augment.uncompressed/skills/javascript/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8879,7 +8879,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/jira/SKILL.md",
+      "file": ".augment.uncompressed/skills/jira/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8930,7 +8930,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/jobs-events/SKILL.md",
+      "file": ".augment.uncompressed/skills/jobs-events/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8981,370 +8981,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/laravel/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        },
-        {
-          "severity": "warning",
-          "code": "broad_scope",
-          "message": "Skill scope appears broad and may need splitting"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas",
-        "Narrow the trigger or split unrelated workflows"
-      ]
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/laravel-horizon/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/laravel-mail/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/laravel-middleware/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/laravel-notifications/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/laravel-pennant/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/laravel-pulse/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/laravel-reverb/SKILL.md",
+      "file": ".augment.uncompressed/skills/laravel/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9401,7 +9038,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/laravel-scheduling/SKILL.md",
+      "file": ".augment.uncompressed/skills/laravel-horizon/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9452,7 +9089,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/laravel-validation/SKILL.md",
+      "file": ".augment.uncompressed/skills/laravel-mail/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9503,7 +9140,370 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/learning-to-rule-or-skill/SKILL.md",
+      "file": ".augment.uncompressed/skills/laravel-middleware/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".augment.uncompressed/skills/laravel-notifications/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".augment.uncompressed/skills/laravel-pennant/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".augment.uncompressed/skills/laravel-pulse/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".augment.uncompressed/skills/laravel-reverb/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        },
+        {
+          "severity": "warning",
+          "code": "broad_scope",
+          "message": "Skill scope appears broad and may need splitting"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas",
+        "Narrow the trigger or split unrelated workflows"
+      ]
+    },
+    {
+      "file": ".augment.uncompressed/skills/laravel-scheduling/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".augment.uncompressed/skills/laravel-validation/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".augment.uncompressed/skills/learning-to-rule-or-skill/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9528,7 +9528,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/livewire/SKILL.md",
+      "file": ".augment.uncompressed/skills/livewire/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9579,7 +9579,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/logging-monitoring/SKILL.md",
+      "file": ".augment.uncompressed/skills/logging-monitoring/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9630,7 +9630,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/markdown-safe-codeblocks/SKILL.md",
+      "file": ".augment.uncompressed/skills/markdown-safe-codeblocks/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9665,7 +9665,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/markdown-template-generator/SKILL.md",
+      "file": ".augment.uncompressed/skills/markdown-template-generator/SKILL.md",
       "artifact_type": "skill",
       "status": "pass_with_warnings",
       "issues": [
@@ -9693,7 +9693,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/mcp/SKILL.md",
+      "file": ".augment.uncompressed/skills/mcp/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9744,7 +9744,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/merge-conflicts/SKILL.md",
+      "file": ".augment.uncompressed/skills/merge-conflicts/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9795,7 +9795,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/microservices/SKILL.md",
+      "file": ".augment.uncompressed/skills/microservices/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9846,7 +9846,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/migration-creator/SKILL.md",
+      "file": ".augment.uncompressed/skills/migration-creator/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9897,7 +9897,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/mobile/SKILL.md",
+      "file": ".augment.uncompressed/skills/mobile/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9948,7 +9948,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/module/SKILL.md",
+      "file": ".augment.uncompressed/skills/module/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9999,7 +9999,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/multi-tenancy/SKILL.md",
+      "file": ".augment.uncompressed/skills/multi-tenancy/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10050,7 +10050,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/naming/SKILL.md",
+      "file": ".augment.uncompressed/skills/naming/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10101,7 +10101,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/nextjs/SKILL.md",
+      "file": ".augment.uncompressed/skills/nextjs/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10152,7 +10152,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/npm/SKILL.md",
+      "file": ".augment.uncompressed/skills/npm/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10209,7 +10209,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/npm-packages/SKILL.md",
+      "file": ".augment.uncompressed/skills/npm-packages/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10260,7 +10260,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/nuxt/SKILL.md",
+      "file": ".augment.uncompressed/skills/nuxt/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10311,7 +10311,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/openapi/SKILL.md",
+      "file": ".augment.uncompressed/skills/openapi/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10362,7 +10362,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/override/SKILL.md",
+      "file": ".augment.uncompressed/skills/override/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10418,7 +10418,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/performance/SKILL.md",
+      "file": ".augment.uncompressed/skills/performance/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10469,7 +10469,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/performance-analysis/SKILL.md",
+      "file": ".augment.uncompressed/skills/performance-analysis/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10520,7 +10520,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/pest-testing/SKILL.md",
+      "file": ".augment.uncompressed/skills/pest-testing/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10577,7 +10577,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/php/SKILL.md",
+      "file": ".augment.uncompressed/skills/php/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10628,7 +10628,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/php-debugging/SKILL.md",
+      "file": ".augment.uncompressed/skills/php-debugging/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10679,7 +10679,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/php-service/SKILL.md",
+      "file": ".augment.uncompressed/skills/php-service/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10730,7 +10730,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/playwright-testing/SKILL.md",
+      "file": ".augment.uncompressed/skills/playwright-testing/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10781,7 +10781,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/post-task-learning-capture/SKILL.md",
+      "file": ".augment.uncompressed/skills/post-task-learning-capture/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10799,7 +10799,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/project-analysis-laravel/SKILL.md",
+      "file": ".augment.uncompressed/skills/project-analysis-laravel/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10850,7 +10850,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/project-analyzer/SKILL.md",
+      "file": ".augment.uncompressed/skills/project-analyzer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10901,7 +10901,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/project-docs/SKILL.md",
+      "file": ".augment.uncompressed/skills/project-docs/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10958,7 +10958,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/quality-tools/SKILL.md",
+      "file": ".augment.uncompressed/skills/quality-tools/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11009,7 +11009,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/react/SKILL.md",
+      "file": ".augment.uncompressed/skills/react/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11060,7 +11060,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/readme-generator/SKILL.md",
+      "file": ".augment.uncompressed/skills/readme-generator/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11093,7 +11093,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/refactorer/SKILL.md",
+      "file": ".augment.uncompressed/skills/refactorer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11144,7 +11144,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/roadmap-manager/SKILL.md",
+      "file": ".augment.uncompressed/skills/roadmap-manager/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11195,7 +11195,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/security/SKILL.md",
+      "file": ".augment.uncompressed/skills/security/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11246,7 +11246,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/security-audit/SKILL.md",
+      "file": ".augment.uncompressed/skills/security-audit/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11297,7 +11297,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/sentry/SKILL.md",
+      "file": ".augment.uncompressed/skills/sentry/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11348,7 +11348,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/sequential-thinking/SKILL.md",
+      "file": ".augment.uncompressed/skills/sequential-thinking/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11394,7 +11394,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/skill-caveman-compression/SKILL.md",
+      "file": ".augment.uncompressed/skills/skill-caveman-compression/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11407,7 +11407,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/skill-decompression/SKILL.md",
+      "file": ".augment.uncompressed/skills/skill-decompression/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11420,7 +11420,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/skill-linter/SKILL.md",
+      "file": ".augment.uncompressed/skills/skill-linter/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11438,7 +11438,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/skill-refactor/SKILL.md",
+      "file": ".augment.uncompressed/skills/skill-refactor/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11461,7 +11461,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/skill-reviewer/SKILL.md",
+      "file": ".augment.uncompressed/skills/skill-reviewer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11528,7 +11528,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/skill-validator/SKILL.md",
+      "file": ".augment.uncompressed/skills/skill-validator/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11556,7 +11556,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/skill-writing/SKILL.md",
+      "file": ".augment.uncompressed/skills/skill-writing/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11569,7 +11569,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/sql/SKILL.md",
+      "file": ".augment.uncompressed/skills/sql/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11620,7 +11620,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/tailwind/SKILL.md",
+      "file": ".augment.uncompressed/skills/tailwind/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11671,7 +11671,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/technical-specification/SKILL.md",
+      "file": ".augment.uncompressed/skills/technical-specification/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11722,7 +11722,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/terraform/SKILL.md",
+      "file": ".augment.uncompressed/skills/terraform/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11773,7 +11773,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/terragrunt/SKILL.md",
+      "file": ".augment.uncompressed/skills/terragrunt/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11824,7 +11824,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/test-generator/SKILL.md",
+      "file": ".augment.uncompressed/skills/test-generator/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11875,7 +11875,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/test-performance/SKILL.md",
+      "file": ".augment.uncompressed/skills/test-performance/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11932,7 +11932,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/traefik/SKILL.md",
+      "file": ".augment.uncompressed/skills/traefik/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11983,7 +11983,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/typescript/SKILL.md",
+      "file": ".augment.uncompressed/skills/typescript/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -12034,7 +12034,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/universal-project-analysis/SKILL.md",
+      "file": ".augment.uncompressed/skills/universal-project-analysis/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -12090,7 +12090,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/vue/SKILL.md",
+      "file": ".augment.uncompressed/skills/vue/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -12141,7 +12141,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/websocket/SKILL.md",
+      "file": ".augment.uncompressed/skills/websocket/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -12192,7 +12192,7 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.augment.uncompressed/skills/wordpress/SKILL.md",
+      "file": ".augment.uncompressed/skills/wordpress/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -12249,14 +12249,14 @@
       ]
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/README.md",
+      "file": ".claude/rules/README.md",
       "artifact_type": "rule",
       "status": "pass",
       "issues": [],
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/agent-docs.md",
+      "file": ".claude/rules/agent-docs.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -12274,7 +12274,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/architecture.md",
+      "file": ".claude/rules/architecture.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -12287,21 +12287,21 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/ask-when-uncertain.md",
+      "file": ".claude/rules/ask-when-uncertain.md",
       "artifact_type": "rule",
       "status": "pass",
       "issues": [],
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/augment-portability.md",
+      "file": ".claude/rules/augment-portability.md",
       "artifact_type": "rule",
       "status": "pass",
       "issues": [],
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/augment-source-of-truth.md",
+      "file": ".claude/rules/augment-source-of-truth.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -12319,7 +12319,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/capture-learnings.md",
+      "file": ".claude/rules/capture-learnings.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -12332,14 +12332,14 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/commands.md",
+      "file": ".claude/rules/commands.md",
       "artifact_type": "rule",
       "status": "pass",
       "issues": [],
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/commit-conventions.md",
+      "file": ".claude/rules/commit-conventions.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -12352,7 +12352,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/context-hygiene.md",
+      "file": ".claude/rules/context-hygiene.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -12365,38 +12365,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/dev-efficiency.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        },
-        {
-          "severity": "warning",
-          "code": "procedural_rule",
-          "message": "Rule looks procedural; consider a skill instead"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/docker-commands.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/docs-sync.md",
+      "file": ".claude/rules/dev-efficiency.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -12414,7 +12383,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/downstream-changes.md",
+      "file": ".claude/rules/docker-commands.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -12427,90 +12396,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/e2e-testing.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        },
-        {
-          "severity": "warning",
-          "code": "procedural_rule",
-          "message": "Rule looks procedural; consider a skill instead"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/guidelines.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/lang-files.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/language-and-tone.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/model-recommendation.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/php-coding.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/quality-workflow.md",
+      "file": ".claude/rules/docs-sync.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -12528,7 +12414,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/rtk.md",
+      "file": ".claude/rules/downstream-changes.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -12541,14 +12427,128 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/scope-control.md",
+      "file": ".claude/rules/e2e-testing.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        },
+        {
+          "severity": "warning",
+          "code": "procedural_rule",
+          "message": "Rule looks procedural; consider a skill instead"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".claude/rules/guidelines.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".claude/rules/lang-files.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".claude/rules/language-and-tone.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".claude/rules/model-recommendation.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".claude/rules/php-coding.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".claude/rules/quality-workflow.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        },
+        {
+          "severity": "warning",
+          "code": "procedural_rule",
+          "message": "Rule looks procedural; consider a skill instead"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".claude/rules/rtk.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".claude/rules/scope-control.md",
       "artifact_type": "rule",
       "status": "pass",
       "issues": [],
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/token-efficiency.md",
+      "file": ".claude/rules/token-efficiency.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -12566,7 +12566,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/user-interaction.md",
+      "file": ".claude/rules/user-interaction.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -12579,7 +12579,7 @@
       "suggestions": []
     },
     {
-      "file": "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/.claude/rules/verify-before-complete.md",
+      "file": ".claude/rules/verify-before-complete.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
