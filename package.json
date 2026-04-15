@@ -5,6 +5,6 @@
     "license": "UNLICENSED",
     "private": true,
     "scripts": {
-        "postinstall": "bash node_modules/@event4u/agent-config/scripts/install.sh --quiet"
+        "postinstall": "bash scripts/install.sh --quiet || true"
     }
 }
