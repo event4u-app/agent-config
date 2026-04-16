@@ -67,6 +67,9 @@ jobs:
       - name: Check package portability
         run: python3 scripts/check_portability.py
 
+      - name: Check compression quality
+        run: python3 scripts/check_compression.py
+
       - name: Check for unexpected changes
         run: |
           if ! git diff --quiet; then

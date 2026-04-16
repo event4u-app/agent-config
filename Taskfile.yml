@@ -111,6 +111,10 @@ tasks:
     desc: Check package portability (no project-specific references)
     cmd: python3 scripts/check_portability.py
 
+  check-compression:
+    desc: Check compression quality (headings, code blocks, frontmatter, word count)
+    cmd: python3 scripts/check_compression.py
+
   ci:
     desc: Run core CI checks locally
     cmds:
@@ -118,4 +122,5 @@ tasks:
       - task: lint-skills
       - task: check-refs
       - task: check-portability
+      - task: check-compression
       - task: consistency
