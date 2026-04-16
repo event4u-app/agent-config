@@ -12,12 +12,24 @@ source: package
 ## The Iron Rule
 
 ```
-NEVER create or edit files in .augment/ directly.
-ALWAYS work in .augment.uncompressed/ — then use /compress command.
+NEVER create or edit files in .augment/ directly — not even "just a small fix".
+ALWAYS work in .augment.uncompressed/ — then compress via /compress command.
 ```
 
-**Compression is ONLY done via the `/compress` command.** Never manually edit compressed files.
-The command handles hashing, sync verification, and quality checks automatically.
+**There are ZERO exceptions to this rule.** Even if:
+
+- You "know" the compressed content is correct
+- It's "just adding a missing section"
+- It's "faster to edit the compressed file directly"
+- The fix is "trivially obvious"
+
+**STOP. Edit `.augment.uncompressed/` first. Always.**
+
+Direct edits to `.augment/` break compression hashes, cause CI failures
+("Verify compression hashes" step), and create drift between source and output.
+
+**Compression is ONLY done via the `/compress` command.** The command handles
+hashing, sync verification, and quality checks automatically.
 
 ## Workflow
 

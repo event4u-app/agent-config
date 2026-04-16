@@ -46,6 +46,14 @@ Read all PR commits → identify net effect → write single Conventional Commit
 - `refactor` = NO behavior change — if behavior changes, use `feat`/`fix`
 - Squash title = net effect, not internal details
 
+## Do NOT
+
+- Do NOT use vague messages: `update stuff`, `fix bug`, `changes`
+- Do NOT use `refactor` for bug fixes
+- Do NOT use `chore` for meaningful behavior changes
+- Do NOT hide multiple unrelated concerns in one message
+- Do NOT omit breaking-change markers when compatibility changes
+
 ## References
 
 - Rule: `commit-conventions` — format, types, scope
