@@ -18,6 +18,8 @@ Ensure the new systems are used consistently — not just documented.
 - [ ] Verify `task sync-check` catches ALL derived output drift (compressed files, symlinks, .windsurfrules, GEMINI.md)
 - [ ] Add `task sync-check` as pre-push hook recommendation in AGENTS.md or contributing guide
 - [ ] Ensure consistency workflow blocks merge on failure (not just warning)
+- [ ] Stale hash cleanup: `--check-hashes` should also warn about hashes for deleted source files
+- [ ] Add `--clean-hashes` subcommand for standalone stale hash removal (currently only in `--sync`)
 
 ### 1.3 Linter Coverage Expansion
 - [ ] Add linter check for command size limits (>1000 words = warning)
@@ -87,11 +89,46 @@ Prevent the three identified drift patterns.
 - [ ] Run linter on ALL rules (not just --changed) — flag any >100 lines
 - [ ] Create split plan for any that exceed limits
 
+## Phase 5: Rule Compliance Hardening
+
+Problem: Agents (colleagues' AI tools) silently ignore rules — especially auto-rules
+with weak trigger descriptions. Rules are only effective if they reliably activate.
+
+### 5.1 Audit rule trigger quality
+- [ ] Review all auto-rule descriptions: would a model reliably match them to user intent?
+- [ ] Test: for each auto-rule, write 3 sample prompts that SHOULD trigger it — does the description match?
+- [ ] Fix weak descriptions (too vague, too short, missing keywords)
+- [ ] Document trigger-testing methodology in skill-reviewer or rule-type-governance
+
+### 5.2 Add rule-compliance smoke tests
+- [ ] Script: `scripts/check_rule_triggers.py` — given a sample prompt, list which rules WOULD trigger
+- [ ] Build a test matrix: sample prompts × expected rules → verify coverage
+- [ ] Add to CI as optional (informational, not blocking)
+
+### 5.3 Strengthen critical rules against being ignored
+- [ ] Identify top 5 most-ignored rules (from experience/observation)
+- [ ] For each: add redundant reinforcement points (AGENTS.md mention, skill cross-reference)
+- [ ] For `always` rules: verify they are short enough to be reliably followed (< 60 lines ideal)
+- [ ] For `auto` rules: verify description contains the exact keywords users would type
+
+### 5.4 Multi-agent consistency
+- [ ] Verify `.cursor/rules/`, `.clinerules/`, `.windsurfrules` contain the same constraints
+- [ ] Check symlink integrity: all tool-specific rule files point to correct `.augment/` sources
+- [ ] Add to `task generate-tools` verification: rule count matches across all tool directories
+- [ ] Consider: should critical rules be duplicated into AGENTS.md as fallback for tools that ignore rule files?
+
+### 5.5 Observability
+- [ ] Add `/rule-compliance-audit` command: agent reviews own behavior against all active rules
+- [ ] Track which rules were activated in a session (self-report at end of conversation)
+- [ ] Identify rules that are never activated — candidates for rewording or removal
+
 ## Priority Order
 
 1. **Phase 1.1** — Skill-guideline boundary is the highest risk from the review
-2. **Phase 3.1** — Roadmap cleanup reduces cognitive overhead immediately
-3. **Phase 1.3** — Linter expansion catches more issues automatically
-4. **Phase 2** — Optimize commands ensure ongoing quality
-5. **Phase 3.2–3.3** — Cross-reference and token monitoring
-6. **Phase 4** — Ongoing maintenance checks
+2. **Phase 5.1–5.3** — Rule compliance directly impacts all agent work quality
+3. **Phase 3.1** — Roadmap cleanup reduces cognitive overhead immediately
+4. **Phase 1.3** — Linter expansion catches more issues automatically
+5. **Phase 2** — Optimize commands ensure ongoing quality
+6. **Phase 3.2–3.3** — Cross-reference and token monitoring
+7. **Phase 4** — Ongoing maintenance checks
+8. **Phase 5.4–5.5** — Multi-agent consistency and observability
