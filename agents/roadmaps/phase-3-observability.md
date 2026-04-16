@@ -1,24 +1,32 @@
-# Phase 3 Roadmap — 9.2 → 9.8
+# Phase 3 Roadmap — 9.2 → 9.8 — ✅ COMPLETE
 
 ## Goal
 
 Upgrade the package from a **production-ready agent config framework** to a **high-observability, safely evolving, nearly self-optimizing agent system**.
 
-Current strengths:
+## Status: COMPLETE
 
-* strong structure
-* strong skill/rule separation
-* good linting and CI
-* self-improvement foundations
-* good maintainability
+All items implemented. See `phase-3-pr-plan.md` for implementation details.
 
-Remaining gaps:
+Summary of what was delivered:
 
-* weak observability
-* limited feedback aggregation
-* unsafe or outdated optimize commands
-* no quality scoring / trend visibility
-* no strong preservation guard for compression and merges
+* ✅ Observability layer (lint reports, per-file quality, regression detection)
+* ✅ Safe optimization commands (were already safe, verified)
+* ✅ Compression preservation guard (new rule + linter checks)
+* ✅ Quality score / review report (per-file breakdown in --report)
+* ✅ Feedback aggregation loop (category tags in pipeline)
+* ❌ Execution memory (intentionally skipped — no runtime consumer)
+* ✅ PR comment / artifact reporting (CI summary + regression report)
+
+---
+
+Previously identified gaps (now resolved):
+
+* ~~weak observability~~ → lint reports, regression detection, quality scoring
+* ~~limited feedback aggregation~~ → category tags in improvement pipeline
+* ~~unsafe or outdated optimize commands~~ → verified safe, synced
+* ~~no quality scoring / trend visibility~~ → per-file quality report + regression delta
+* ~~no strong preservation guard~~ → preservation-guard rule + compression-aware linting
 
 ---
 
