@@ -1,24 +1,24 @@
 ---
 type: "always"
-description: "Capture repeated learnings as rules or skills — don't let the same mistake happen twice"
-alwaysApply: true
+description: "After completing a task where a repeated mistake or successful pattern appeared — capture as rule or skill"
+alwaysApply: false
 source: package
 ---
 
 # Capture Learnings
 
-When a repeated mistake, successful pattern, or new constraint appears,
+When repeated mistake, successful pattern, or new constraint appears,
 evaluate whether to capture as **rule** or **skill**.
 
 ## Promotion Gate
 
-A learning may be promoted ONLY if ALL gates pass:
+Promote ONLY if ALL gates pass:
 
 | Gate | Question | Must be YES |
 |---|---|---|
 | Repetition | Occurred 2+ times OR clearly generalizable? | ✅ |
 | Impact | Improves correctness, reliability, or consistency? | ✅ |
-| Failure pattern | Prevents a real, observed failure? | ✅ |
+| Failure pattern | Prevents real, observed failure? | ✅ |
 | Non-duplication | No existing rule/skill/guideline covers this? | ✅ |
 | Scope fit | Fits rule (constraint), skill (workflow), or guideline (convention)? | ✅ |
 | Minimal | Update existing preferred over creation? | Checked |

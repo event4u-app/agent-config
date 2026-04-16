@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "Coding guidelines — check relevant guideline before writing or reviewing code"
-alwaysApply: true
+type: "auto"
+description: "Writing or reviewing code — check relevant guideline before writing or reviewing code"
+alwaysApply: false
 source: package
 ---
 
@@ -54,6 +54,12 @@ Coding guidelines live in `.augment/guidelines/` organized by language.
 ### E2E (`.augment/guidelines/e2e/`)
 
 Playwright best practices, Page Objects, fixtures, CI.
+
+### Agent Infrastructure (`.augment/guidelines/agent-infra/`)
+
+| File | Topic |
+|---|---|
+| `size-and-scope.md` | Size limits and scope boundaries for rules, skills, commands, guidelines, AGENTS.md, copilot-instructions.md |
 
 ## How guidelines work
 

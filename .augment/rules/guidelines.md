@@ -1,14 +1,14 @@
 ---
-type: "always"
-description: "Coding guidelines — check relevant guideline before writing or reviewing code"
-alwaysApply: true
+type: "auto"
+description: "Writing or reviewing code — check relevant guideline before writing or reviewing code"
+alwaysApply: false
 source: package
 ---
 
 # Guidelines
 
 Coding guidelines live in `.augment/guidelines/` organized by language.
-**Always check the relevant guideline** before writing or reviewing code.
+**Check relevant guideline** before writing or reviewing code.
 
 ## Available Guidelines
 
@@ -55,29 +55,25 @@ Coding guidelines live in `.augment/guidelines/` organized by language.
 
 Playwright best practices, Page Objects, fixtures, CI.
 
+### Agent Infrastructure (`.augment/guidelines/agent-infra/`)
+
+| File | Topic |
+|---|---|
+| `size-and-scope.md` | Size limits and scope boundaries for rules, skills, commands, guidelines, AGENTS.md, copilot-instructions.md |
+
 ## How guidelines work
 
-- **Guidelines** = detailed coding conventions (reference material, read on demand)
-- **Rules** = always-active behavior constraints (auto-loaded every conversation)
-- **Skills** = agent capabilities and workflows (matched by topic)
-
-Guidelines are the "how to write code" docs. Rules enforce critical subsets automatically.
-Skills reference guidelines when performing related tasks.
+- **Guidelines** = coding conventions (reference, on demand)
+- **Rules** = behavior constraints (auto-loaded)
+- **Skills** = workflows (matched by topic)
 
 ## Boundary: Guidelines vs Skills
 
-- Guidelines contain **conventions and reference knowledge**. Skills contain **executable workflows**.
-- Skills may reference guidelines but must NOT outsource core execution steps to guidelines.
-- Do NOT move a skill's operational core (procedure, validation, decision logic) into a guideline.
-- If a skill becomes "go read the guideline" → restore the workflow.
+- Guidelines = **conventions and reference**. Skills = **executable workflows**.
+- Skills may reference guidelines but MUST NOT outsource core execution to them.
+- If skill becomes "go read guideline" → restore workflow.
 
 ## Adding new guidelines
 
-When a new language or framework is introduced, create a directory:
-```
-.augment/guidelines/{language}/
-```
-
-Follow the existing PHP structure as a template.
-
-Read the specific guideline file on demand — don't memorize the full list.
+New language/framework → create `.augment/guidelines/{language}/`.
+Follow PHP structure as template. Read on demand — don't memorize.

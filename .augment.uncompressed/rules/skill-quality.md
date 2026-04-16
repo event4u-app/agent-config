@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "Minimum quality standard for skills — every skill must be executable, validated, and self-contained"
-alwaysApply: true
+type: "auto"
+description: "Creating, editing, or reviewing skills — minimum quality standard, every skill must be executable, validated, and self-contained"
+alwaysApply: false
 source: package
 ---
 

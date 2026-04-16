@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "Minimum quality standard for skills — every skill must be executable, validated, and self-contained"
-alwaysApply: true
+type: "auto"
+description: "Creating, editing, or reviewing skills — minimum quality standard, every skill must be executable, validated, and self-contained"
+alwaysApply: false
 source: package
 ---
 
@@ -9,7 +9,7 @@ source: package
 
 ## Minimum Sharpness
 
-Every skill must answer four questions. If ANY answer is weak, the skill is not done.
+Every skill must answer four questions. If ANY weak → not done.
 
 | # | Question | Section | Standard |
 |---|---|---|---|
@@ -24,9 +24,13 @@ Every skill MUST have: `When to use`, `Procedure`, `Gotcha`, `Output format`, `D
 
 ## Skill Independence
 
-- Skills MAY reference guidelines for conventions
-- Skills MUST NOT outsource core workflow to guidelines
-- If removing guideline references makes skill useless → skill is too weak
+Skill must be useful **without opening any guideline**.
+
+- MAY reference guidelines for conventions
+- MUST NOT outsource core workflow to guidelines
+- If removing guideline refs makes skill useless → skill too weak
+
+Test: Cover guideline references. Is Procedure still executable? If not → fix skill.
 
 ## Merge Preservation
 
@@ -36,11 +40,11 @@ Merged result MUST preserve:
 3. Strongest anti-pattern from each source
 4. All concrete decision criteria
 
-Merge invalid if: validation weaker, examples lost, anti-patterns decreased, result became umbrella doc.
+Invalid if: validation weaker, examples lost, anti-patterns decreased, result became umbrella doc.
 
 ## Compression Preservation
 
-Compressed MUST preserve: triggers, decision steps, validation checks, gotchas, strongest example.
+MUST preserve: triggers, decision steps, validation checks, gotchas, strongest example.
 May remove: verbose explanations, redundant examples, non-execution commentary.
 
 ## Refactor Safety

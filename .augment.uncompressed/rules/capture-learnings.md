@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "Capture repeated learnings as rules or skills — don't let the same mistake happen twice"
-alwaysApply: true
+type: "auto"
+description: "After completing a task where a repeated mistake or successful pattern appeared — capture as rule or skill"
+alwaysApply: false
 source: package
 ---
 

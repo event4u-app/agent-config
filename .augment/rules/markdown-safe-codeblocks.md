@@ -1,5 +1,7 @@
 ---
-type: "always"
+type: "auto"
+description: "Generating markdown output that contains code blocks — prevent broken nesting"
+alwaysApply: false
 source: package
 ---
 
