@@ -44,6 +44,9 @@ jobs:
       - name: Set up Task
         uses: arduino/setup-task@v2
 
+      - name: Install Python dependencies
+        run: pip install pytest
+
       - name: Show tool versions
         run: |
           python3 --version
