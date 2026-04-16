@@ -80,7 +80,7 @@ Keep the growing system maintainable.
 - [x] CI pipeline: part of `task ci`
 - [x] Reduced false positives from 105 → 0 (example paths, archives, project-specific refs)
 - [x] Fixed 5 active files with stale roadmap paths
-- [~] `/fix-references` command: deferred (0 current findings, low priority)
+- [x] `/fix-references` command: created (agent-executed audit + auto-fix)
 
 ### 3.3 Package Portability
 - [x] Script: `scripts/check_portability.py` — scans for project-specific references in package files
@@ -88,8 +88,8 @@ Keep the growing system maintainable.
 - [x] CI workflow: added to `.github/workflows/consistency.yml`
 - [x] CI pipeline: part of `task ci`
 - [x] Fixed 4 violations in `override-system.md` (replaced project-specific repo reference)
-- [~] `/fix-portability` command: deferred (0 current findings, low priority)
-- [~] Expand pattern list: happens organically as new projects adopt the package
+- [x] `/fix-portability` command: created (agent-executed audit + auto-fix)
+- [x] Expanded pattern list: added PROJECT_INFRA, PROJECT_CONTAINERS, PROJECT_TEAM categories
 
 ### 3.4 Token Budget Monitoring
 - [x] Baseline: 851 lines / ~3400 tokens always-loaded (10 always-rules + AGENTS.md)
@@ -113,7 +113,7 @@ Prevent the three identified drift patterns.
 ### 4.3 Rules stay small
 - [x] Audit: 6 rules >100 lines: augment-source-of-truth (116), context-hygiene (106), quality-workflow (148), rtk (145), token-efficiency (116), verify-before-complete (106)
 - [x] All >100 contain legitimate complex content — no split needed currently
-- [~] `quality-workflow` (148) and `rtk` (145) could become skills long-term (deferred)
+- [x] `quality-workflow` rule deleted (redundant with quality-tools skill), `rtk` rule → skill
 
 ## Phase 5: Rule Compliance Hardening
 
@@ -181,7 +181,7 @@ with weak trigger descriptions. Rules are only effective if they reliably activa
 
 ### 7.3 Automated Compression Validation
 - [x] check_compression.py already validates: headings, code blocks, frontmatter, word count
-- [~] Linter integration: deferred (check_compression.py runs separately in CI, no need to duplicate)
+- [x] Linter integration: --report now includes compression pairs + quality checks automatically
 
 ## Phase 8: Complexity Reduction (✅ done)
 
@@ -193,12 +193,12 @@ with weak trigger descriptions. Rules are only effective if they reliably activa
 - [x] Audit: no skills under 200 words (all healthy, no merge candidates)
 - [x] Audit: 31 rules with distinct names, no obvious overlap pairs
 - [x] 12 roadmaps already archived (Phase 3.1)
-- [~] `quality-workflow` (148 lines) + `rtk` (145 lines) could become skills long-term
-- [~] Guideline directory flattening: not needed (clear category structure with 32 files)
+- [x] `quality-workflow` rule deleted (100% redundant), `rtk` rule converted to skill
+- [x] Guideline directory flattening: reviewed — structure is clean and future-proof, no action needed
 
 ## Completion Summary
 
-All 8 phases completed on 2026-04-16. Deferred items marked with [~] are either:
-- Low priority (0 current findings)
-- Aspirational (need LLM capabilities not yet available)
-- Ongoing (happen organically as the system evolves)
+All 8 phases completed on 2026-04-16. Remaining deferred items [~]:
+- `road-to-10.md` strategic items: tracked independently
+- AGENTS.md redundancy/fallback: intentional (standalone document for tools without rule support)
+- Session activation tracking: no tooling exists for this
