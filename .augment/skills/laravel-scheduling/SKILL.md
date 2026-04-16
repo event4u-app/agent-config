@@ -133,6 +133,11 @@ Schedule::command('reports:weekly')->weeklyOn(1, '07:00');
 - **Monitor failures** — use `emailOutputOnFailure()` or Horizon for queued jobs.
 - **One cron entry** — only `schedule:run` goes in crontab, everything else in Laravel.
 
+## Output format
+
+1. Schedule definition in console kernel or schedule method
+2. Overlap prevention and maintenance mode configuration
+
 ## Auto-trigger keywords
 
 - schedule
@@ -147,11 +152,6 @@ Schedule::command('reports:weekly')->weeklyOn(1, '07:00');
 - Verify schedule runs correctly: `php artisan schedule:list` shows the task.
 - Confirm `withoutOverlapping()` is set for long-running tasks.
 - Check that maintenance mode handling is configured if needed (`evenInMaintenanceMode()`).
-
-## Output format
-
-1. Schedule definition in console kernel or schedule method
-2. Overlap prevention and maintenance mode configuration
 
 ## Gotcha
 

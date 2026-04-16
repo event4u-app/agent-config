@@ -16,11 +16,11 @@ Do NOT use when:
 
 ## Procedure: Modify DevContainer
 
-1. **Gather context** — read `.devcontainer/devcontainer.json`, check `.devcontainer/` for env files and docs, check `agents/overrides/skills/devcontainer.md` for project overrides.
+1. **Gather context** — read `.devcontainer/devcontainer.json`, check `.devcontainer/` for env files and docs, check `agents/overrides/skills/devcontainer.md` for project-specific overrides.
 2. **Identify change type** — classify: image change, feature addition, secret addition, extension change, or env var change.
-3. **Make change** — edit `devcontainer.json` (or related files). Follow conventions below for secrets, features, environment variables.
-4. **Build and verify** — run `devcontainer build` to confirm container builds. Check extensions load and ports forward.
-5. **Document** — if adding new secret or dependency, update onboarding docs in `.devcontainer/`.
+3. **Make the change** — edit `devcontainer.json` (or related files). Follow conventions below for secrets, features, and environment variables.
+4. **Build and verify** — run `devcontainer build` to confirm the container builds. Check that extensions load and ports forward correctly.
+5. **Document** — if adding a new secret or dependency, update the onboarding docs in `.devcontainer/`.
 
 ## Architecture
 
@@ -83,6 +83,11 @@ Read `devcontainer.json` for the actual secret definitions and requirements.
 - Secrets go in `.devcontainer/.secrets/` (gitignored).
 - Do NOT hardcode secrets in `devcontainer.json`.
 
+## Output format
+
+1. Updated devcontainer.json or related configuration files
+2. Summary of changes and rebuild requirements
+
 ## Auto-trigger keywords
 
 - DevContainer
@@ -95,11 +100,6 @@ Read `devcontainer.json` for the actual secret definitions and requirements.
 - Verify the DevContainer builds successfully (`devcontainer build`).
 - Confirm all required extensions and features are installed.
 - Check that port forwarding and volume mounts work as expected.
-
-## Output format
-
-1. Updated devcontainer.json or related configuration files
-2. Summary of changes and rebuild requirements
 
 ## Gotcha
 

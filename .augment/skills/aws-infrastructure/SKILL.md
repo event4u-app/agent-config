@@ -122,6 +122,12 @@ are typically managed via **Terraform + Terragrunt** in a separate infrastructur
 
 See the `terraform` and `terragrunt` skills for general IaC conventions.
 
+## Output format
+
+1. Modified infrastructure config/template files
+2. Environment-specific changes clearly separated
+3. Summary of what changed and which environments are affected
+
 ## Auto-trigger keywords
 
 - AWS
@@ -130,12 +136,6 @@ See the `terraform` and `terragrunt` skills for general IaC conventions.
 - EFS
 - Secrets Manager
 - deployment
-
-## Output format
-
-1. Modified infrastructure config/template files
-2. Environment-specific changes clearly separated
-3. Summary of what changed and which environments are affected
 
 ## Gotcha
 

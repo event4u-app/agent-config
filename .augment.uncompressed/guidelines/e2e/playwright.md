@@ -4,7 +4,7 @@
 > Applies to all projects using Playwright (API, web, or hybrid).
 
 **Related Skills:** `playwright-testing`, `pest-testing`
-**Related Guidelines:** [php.md](../php/php.md)
+**Related Guidelines:** [php.md](../php/general.md)
 
 ## Project Structure
 

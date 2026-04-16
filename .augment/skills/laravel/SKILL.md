@@ -21,11 +21,11 @@ Use this skill for all Laravel-specific code generation and editing tasks, espec
 - Console Commands
 - Config, Routing, and Application Structure
 
-This skill extends the base `coder` skill and applies Laravel conventions on top of the project's general PHP rules.
+This skill extends the base `php-coder` skill and applies Laravel conventions on top of the project's general PHP rules.
 
 ## Procedure: Write Laravel code
 
-→ **First apply the `coder` skill** — it handles project docs, module docs, patterns, and quality tools.
+→ **First apply the `php-coder` skill** — it handles project docs, module docs, patterns, and quality tools.
 
 Then add these **Laravel-specific** checks:
 
@@ -167,16 +167,16 @@ When generating Laravel code:
 - prefer explicit, readable code over clever abstractions
 - integrate with existing requests, resources, services, policies, and tests
 
+## Output format
+
+1. Laravel code following framework conventions and project architecture
+2. All related files (controller, service, request, resource, test) as needed
+
 ## Do NOT
 
 - Do NOT put business logic in controllers — delegate to services.
 - Do NOT use facades in service classes — use dependency injection.
 - Do NOT skip middleware for route groups that need authentication.
-
-## Output format
-
-1. Laravel code following framework conventions and project architecture
-2. All related files (controller, service, request, resource, test) as needed
 
 ## Gotcha
 

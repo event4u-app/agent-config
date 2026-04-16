@@ -110,6 +110,11 @@ Each environment has a GitHub IAM role with:
 - OIDC trust policy (scoped to repo + environment)
 - Policies for ECR push/pull, ECS deployment, Secrets Manager read, CloudWatch logs
 
+## Output format
+
+1. Terraform configuration files (.tf) with proper module structure
+2. Variables, outputs, and state management config
+
 ## Auto-trigger keywords
 
 - Terraform
@@ -117,11 +122,6 @@ Each environment has a GitHub IAM role with:
 - modules
 - resources
 - state management
-
-## Output format
-
-1. Terraform configuration files (.tf) with proper module structure
-2. Variables, outputs, and state management config
 
 ## Gotcha
 

@@ -16,13 +16,13 @@ Do NOT use when:
 
 ## Procedure: Design an API
 
-1. **Gather context** — read `agents/contexts/api-versioning.md`, `agents/docs/api-resources.md`, `agents/docs/query-filter.md`, `agents/docs/controller.md`, guideline `php/api-design.md`.
-2. **Identify resource** — determine domain entity, attributes, relationships. Check existing models/resources for naming patterns.
-3. **Define endpoints** — list each endpoint with HTTP method, URL path, request body, query params, response structure. Follow existing route patterns.
-4. **Decide versioning** — determine if this extends current version or requires new one (see decision table below).
-5. **Design error responses** — define 4xx/5xx responses matching project's error format.
-6. **Validate against existing** — compare with 2-3 similar existing endpoints. Flag inconsistencies.
-7. **Adversarial review** — use `adversarial-review` skill for breaking changes, consistency issues, missing error cases.
+1. **Gather context** — read `agents/contexts/api-versioning.md`, `agents/docs/api-resources.md`, `agents/docs/query-filter.md`, `agents/docs/controller.md`, and guideline `php/api-design.md`.
+2. **Identify the resource** — determine the domain entity, its attributes, and relationships. Check existing models and resources for field naming patterns.
+3. **Define endpoints** — list each endpoint with HTTP method, URL path, request body, query parameters, and response structure. Follow existing route file patterns.
+4. **Decide versioning** — determine whether this extends the current version or requires a new version (see decision table below).
+5. **Design error responses** — define 4xx/5xx responses matching the project's existing error format.
+6. **Validate against existing patterns** — compare your design with 2-3 similar existing endpoints. Flag any inconsistencies.
+7. **Run adversarial review** — use `adversarial-review` skill to check for breaking changes, consistency issues, and missing error cases.
 
 ## Versioning decisions
 

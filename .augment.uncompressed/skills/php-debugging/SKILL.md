@@ -15,7 +15,7 @@ Use this skill when:
 - Running code coverage
 - Helping users configure their IDE for debugging
 
-This skill extends `coder` and `php`.
+This skill extends `php-coder` and `php`.
 
 ## Procedure: Debug with Xdebug
 

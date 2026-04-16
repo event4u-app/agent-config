@@ -9,17 +9,17 @@ source: package
 
 - Split by responsibility, not by length.
 
-- Rules: short, constraint-only, easy to scan.
-- Skills: executable with clear workflow + validation.
-- Commands: orchestrate, not implement.
-- Guidelines: must not replace skill execution.
-- AGENTS.md: high-level, no workflows.
-- copilot-instructions.md: short, behavioral.
+- Rules must stay short, constraint-only, and easy to scan.
+- Skills must remain executable with clear workflow and validation.
+- Commands must orchestrate, not implement detailed workflows.
+- Guidelines must not replace skill execution.
+- AGENTS.md must stay high-level and not contain workflows.
+- copilot-instructions.md must stay short and behavioral.
 
-- Component grows too large, mixes responsibilities, or hard to scan → split or refactor.
+- If a component grows too large, mixes responsibilities, or becomes hard to scan → split or refactor.
 
 - Prefer small files:
-  - Rules and system instructions: well below 200 lines
-  - Smaller (≈60 lines) strongly preferred
+  - Rules and system instructions should stay well below 200 lines
+  - Smaller (≈60 lines) is strongly preferred
 
-→ Full limits: `.augment/guidelines/agent-infra/size-and-scope.md`
+→ Size limits and details: `.augment/guidelines/agent-infra/size-and-scope.md`

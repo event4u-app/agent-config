@@ -9,7 +9,7 @@ Goal: Consistent, precise, self-documenting names across all layers.
 2. **No collisions across layers.** A rule and skill must NOT share the same name.
 3. **Consistent prefixes** for related items: `project-analysis-*`, `laravel-*`, `feature-*`.
 4. **Consistent suffixes** for similar roles: `-creator`, `-integration`, `-config`.
-5. **No bare nouns** — `jira` says nothing, `jira-integration` says everything.
+5. **No bare nouns** — `jira-integration` says nothing, `jira-integration` says everything.
 
 ## Impact Assessment
 
@@ -41,28 +41,28 @@ Renaming affects: folder names, SKILL.md `name:` field, compressed copies, symli
 
 | Current | Rename to | Reason |
 |---|---|---|
-| `context` | `context-document` | Creates context documents, not "context" in general |
-| `module` | `module-management` | Manages modules (create, explore, work within) |
-| `override` | `override-management` | Creates and manages overrides |
-| `coder` | `php-coder` | Writes PHP code specifically |
-| `jira` | `jira-integration` | Jira API usage, queries, transitions |
-| `sentry` | `sentry-integration` | Sentry error investigation via MCP |
-| `copilot` | `copilot-config` | Configures Copilot behavior |
-| `sql` | `sql-writing` | Writes raw SQL queries |
+| `context-create` | `context-document` | Creates context documents, not "context" in general |
+| `module-management` | `module-management` | Manages modules (create, explore, work within) |
+| `override-management` | `override-management` | Creates and manages overrides |
+| `php-coder` | `php-coder` | Writes PHP code specifically |
+| `jira-integration` | `jira-integration` | Jira API usage, queries, transitions |
+| `sentry-integration` | `sentry-integration` | Sentry error investigation via MCP |
+| `copilot-config` | `copilot-config` | Configures Copilot behavior |
+| `sql-writing` | `sql-writing` | Writes raw SQL queries |
 
 ### Rules
 
 | Current | Rename to | Reason |
 |---|---|---|
 | `rtk` | `rtk-output-filtering` | Abbreviation alone is meaningless |
-| `dev-efficiency` | `cli-output-handling` | Actually about CLI output redirect/efficiency |
-| `lang-files` | `laravel-translations` | About Laravel i18n files specifically |
+| `cli-output-handling` | `cli-output-handling` | Actually about CLI output redirect/efficiency |
+| `laravel-translations` | `laravel-translations` | About Laravel i18n files specifically |
 
 ### Guidelines
 
 | Current | Rename to | Reason |
 |---|---|---|
-| `php/php.md` | `php/general.md` | `php/php.md` is redundant |
+| `php/general.md` | `php/general.md` | `php/general.md` is redundant |
 
 ## Phase 3: Inconsistent Patterns (LOW — cosmetic but worth fixing)
 

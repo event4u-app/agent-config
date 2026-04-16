@@ -181,7 +181,7 @@ Override templates in `.augment/templates/overrides/`:
 
 ## Related
 
-- **Skill:** `override` — full override system documentation
+- **Skill:** `override-management` — full override system documentation
 - **Context:** `augment-infrastructure.md` — overall `.augment/` structure
 - **Context:** `documentation-hierarchy.md` — where overrides fit in the layer model
 

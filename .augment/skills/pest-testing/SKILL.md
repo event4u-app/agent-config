@@ -20,11 +20,11 @@ Use this skill for all Laravel testing tasks, especially when working with:
 - Database interaction tests
 - Factories, fakes, mocks, and test setup
 
-This skill extends `coder`, `laravel`, and `eloquent`.
+This skill extends `php-coder`, `laravel`, and `eloquent`.
 
 ## Procedure: Write Pest tests
 
-1. **Read the base skills first** — apply `coder`, `laravel`, and `eloquent` where relevant.
+1. **Read the base skills first** — apply `php-coder`, `laravel`, and `eloquent` where relevant.
 2. **Check the project's test framework** — confirm Pest is used and inspect existing tests.
 3. **Match the current test style** — naming, helpers, datasets, expectations, setup, traits, and folder structure.
 4. **Check available factories and seeders** — reuse existing test data patterns.

@@ -1,6 +1,6 @@
 ---
 name: feature-refactor
-skills: [laravel, coder]
+skills: [laravel, php-coder]
 description: Refine and update an existing feature plan through interactive discussion
 disable-model-invocation: true
 ---

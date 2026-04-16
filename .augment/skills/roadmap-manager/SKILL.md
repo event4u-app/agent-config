@@ -117,7 +117,7 @@ Every roadmap implicitly includes these gates (run after each step that changes 
 
 ### Creating a roadmap
 
-1. Ask the user for goal, context, and phases.
+1. Ask the user for goal, context-create, and phases.
 2. Use the template structure from `.augment/templates/roadmaps.md`.
 3. Review with the user iteratively until approved.
 4. Save with a kebab-case filename (e.g. `optimize-webhook-jobs.md`).

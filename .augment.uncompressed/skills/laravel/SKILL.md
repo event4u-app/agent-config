@@ -21,11 +21,11 @@ Use this skill for all Laravel-specific code generation and editing tasks, espec
 - Console Commands
 - Config, Routing, and Application Structure
 
-This skill extends the base `coder` skill and applies Laravel conventions on top of the project's general PHP rules.
+This skill extends the base `php-coder` skill and applies Laravel conventions on top of the project's general PHP rules.
 
 ## Procedure: Write Laravel code
 
-→ **First apply the `coder` skill** — it handles project docs, module docs, patterns, and quality tools.
+→ **First apply the `php-coder` skill** — it handles project docs, module docs, patterns, and quality tools.
 
 Then add these **Laravel-specific** checks:
 

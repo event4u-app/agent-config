@@ -119,17 +119,17 @@ Explore alternatives when:
 | **Scope creep** | Problem keeps expanding during analysis | Re-frame and constrain |
 
 
+## Output format
+
+1. Numbered reasoning steps with conclusions
+2. Final answer or recommendation with confidence level
+
 ## Auto-trigger keywords
 
 - problem solving
 - step-by-step
 - reasoning
 - decomposition
-
-## Output format
-
-1. Numbered reasoning steps with conclusions
-2. Final answer or recommendation with confidence level
 
 ## Gotcha
 

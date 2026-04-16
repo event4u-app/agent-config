@@ -1,6 +1,6 @@
 ---
 name: bug-investigate
-skills: [bug-analyzer, sentry]
+skills: [bug-analyzer, sentry-integration]
 description: Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause
 disable-model-invocation: true
 ---

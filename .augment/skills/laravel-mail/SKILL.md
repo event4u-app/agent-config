@@ -164,6 +164,12 @@ Route::get('/mail-preview', function () {
 - **Test with `Mail::fake()`** — verify recipients, content, and queuing.
 - **Keep Mailables focused** — one Mailable per email type.
 
+## Output format
+
+1. Mailable class with envelope, content, and attachments
+2. Blade/Markdown email template
+3. Queued mail dispatch integration
+
 ## Auto-trigger keywords
 
 - Mailable
@@ -172,12 +178,6 @@ Route::get('/mail-preview', function () {
 - Mail::to
 - markdown email
 - mail attachment
-
-## Output format
-
-1. Mailable class with envelope, content, and attachments
-2. Blade/Markdown email template
-3. Queued mail dispatch integration
 
 ## Gotcha
 

@@ -113,7 +113,7 @@ Prevent the three identified drift patterns.
 ### 4.3 Rules stay small
 - [x] Audit: 6 rules >100 lines: augment-source-of-truth (116), context-hygiene (106), quality-workflow (148), rtk (145), token-efficiency (116), verify-before-complete (106)
 - [x] All >100 contain legitimate complex content — no split needed currently
-- [x] Deleted rule quality-workflow (redundant with `quality-tools` skill), converted rule rtk → `rtk` skill
+- [x] Deleted rule quality-workflow (redundant with `quality-tools` skill), converted rule rtk → `rtk-output-filtering` skill
 
 ## Phase 5: Rule Compliance Hardening
 
@@ -193,7 +193,7 @@ with weak trigger descriptions. Rules are only effective if they reliably activa
 - [x] Audit: no skills under 200 words (all healthy, no merge candidates)
 - [x] Audit: 31 rules with distinct names, no obvious overlap pairs
 - [x] 12 roadmaps already archived (Phase 3.1)
-- [x] Deleted rule quality-workflow (100% redundant), converted rule rtk → `rtk` skill
+- [x] Deleted rule quality-workflow (100% redundant), converted rule rtk → `rtk-output-filtering` skill
 - [x] Guideline directory flattening: reviewed — structure is clean and future-proof, no action needed
 
 ## Completion Summary

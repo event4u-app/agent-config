@@ -141,21 +141,21 @@ Packages are published to a private Composer registry. Check the organization's 
 - Follow the organization's namespace convention (check existing packages).
 - Use `declare(strict_types=1)` in all PHP files.
 - Use typed properties, parameters, and return types.
-- Follow the same coding standards as the main projects (see `coder` skill).
+- Follow the same coding standards as the main projects (see `php-coder` skill).
 - Include `agents/` directory for package-specific documentation.
 
-
-## Auto-trigger keywords
-
-- Composer package
-- library development
-- package versioning
 
 ## Output format
 
 1. Package files following standard Composer structure
 2. Updated composer.json with correct autoloading and dependencies
 3. Service provider and config publishing (if Laravel package)
+
+## Auto-trigger keywords
+
+- Composer package
+- library development
+- package versioning
 
 ## Gotcha
 

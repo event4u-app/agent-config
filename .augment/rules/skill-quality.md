@@ -9,7 +9,7 @@ source: package
 
 ## Minimum Sharpness
 
-Every skill must answer four questions. If ANY weak → not done.
+Every skill must answer four questions. If ANY answer is weak, the skill is not done.
 
 | # | Question | Section | Standard |
 |---|---|---|---|
@@ -28,31 +28,49 @@ Every skill MUST have: `When to use`, `Procedure`, `Gotcha`, `Output format`, `D
 If a skill is not executable without opening a guideline, it is broken.
 ```
 
-- MAY reference guidelines for conventions
-- MUST NOT outsource core workflow to guidelines
-- If removing guideline refs makes skill useless → skill too weak
+- Skills MAY reference guidelines for detailed conventions
+- Skills MUST NOT outsource their core workflow to guidelines
+- If removing guideline references makes the skill useless → the skill is too weak
 
-**Litmus test:** Cover guideline references. Is Procedure still executable? If not → fix skill.
+**Litmus test:** Cover all guideline references in the Procedure. Is it still executable?
+If not → the skill needs more own steps, decisions, and validation — not more guideline links.
 
 ## Merge Preservation
 
-Merged result MUST preserve:
-1. Strongest validation from each source
-2. Strongest example from each source
-3. Strongest anti-pattern from each source
-4. All concrete decision criteria
+When merging or refactoring skills, the merged result MUST preserve:
 
-Invalid if: validation weaker, examples lost, anti-patterns decreased, result became umbrella doc.
+1. **Strongest validation** from each source skill
+2. **Strongest example** (good/bad contrast) from each source
+3. **Strongest anti-pattern** from each source
+4. **All concrete decision criteria** that differ between sources
+
+A merge is invalid if:
+- Validation got weaker than the strongest source
+- Examples were lost without replacement
+- Anti-pattern coverage decreased
+- The merged skill became a generic umbrella doc
 
 ## Compression Preservation
 
-MUST preserve: triggers, decision steps, validation checks, gotchas, strongest example.
-May remove: verbose explanations, redundant examples, non-execution commentary.
+When compressing a skill, the compressed version MUST preserve:
+
+- Trigger quality (description + When to use)
+- All procedure steps that contain decisions
+- All concrete validation checks
+- All gotchas and anti-patterns
+- Strongest example (at minimum one good/bad contrast)
+
+Compression may remove:
+- Verbose explanations
+- Redundant examples (keep the strongest)
+- Commentary that doesn't affect execution
 
 ## Refactor Safety
+
+When refactoring or optimizing skills:
 
 - NEVER weaken validation to pass linter
 - NEVER remove anti-patterns to reduce size
 - NEVER replace concrete checks with "verify it works"
-- NEVER merge if result broader than either source
+- NEVER merge skills if the result is broader than either source
 - ALWAYS run linter before and after — fail count must not increase

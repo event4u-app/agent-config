@@ -25,7 +25,7 @@ If questions are simple binary or small choices — ask multiple at once, number
 
 ### Complex questions
 
-If questions require thinking, context, or explanation:
+If questions require thinking, context-create, or explanation:
 
 - Ask ONE question at a time
 - Wait for answer before continuing

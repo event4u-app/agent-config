@@ -130,6 +130,11 @@ git add .
 
 **Never rebase without explicit permission** (per `no-commit` rule).
 
+## Output format
+
+1. Resolved conflict with both sides' intent preserved
+2. Summary of resolution strategy per file
+
 ## Auto-trigger keywords
 
 - merge conflict
@@ -138,11 +143,6 @@ git add .
 - conflict markers
 - branch behind main
 - update branch
-
-## Output format
-
-1. Resolved conflict with both sides' intent preserved
-2. Summary of resolution strategy per file
 
 ## Gotcha
 

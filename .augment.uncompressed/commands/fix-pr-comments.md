@@ -1,6 +1,6 @@
 ---
 name: fix-pr-comments
-skills: [coder]
+skills: [php-coder]
 description: Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR
 disable-model-invocation: true
 ---

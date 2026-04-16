@@ -116,7 +116,7 @@ For each required `(field, rule_name)` pair **not yet covered** by an existing m
    - You may use Laravel's standard placeholders (`:attribute`, `:max`, `:min`, etc.) instead of embedding the label directly.
    - Adapt the message text to fit the specific rule (e.g. `required` → "is required", `unique` → "has already been taken", `max` → "may not exceed :max characters")
    - Use sensible human-readable field labels (derive from the field name: `snake_case` → "Title Case")
-3. Add the new lang key to `lang/de/validation.php` and `lang/en/validation.php` following the flat dot-notation format from `lang-files` rule.
+3. Add the new lang key to `lang/de/validation.php` and `lang/en/validation.php` following the flat dot-notation format from `laravel-translations` rule.
    - If a domain section comment exists for `{domain}`, insert near it. Otherwise append at the end.
 4. Add the entry to the `messages()` method: `'{field}.{rule_name}' => __('validation.{domain}.{field}.{rule_name}'),`
 

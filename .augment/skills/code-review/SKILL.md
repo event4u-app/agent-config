@@ -165,7 +165,7 @@ gh api repos/{owner}/{repo}/pulls/comments/{comment_id}/replies \
   -f body="Fixed in latest commit."
 ```
 
-## Review output format
+## Output format
 
 When reviewing code, structure feedback by severity:
 
@@ -197,24 +197,6 @@ Focus on the "Code changes / Refactoring" attack questions.
 - review feedback
 - review changes
 - check my code
-
-## Output format
-
-When reviewing code, structure feedback by severity:
-
-```
-🔴 **Blocker** — must fix before merge
-Description of the issue and why it's critical.
-
-🟡 **Suggestion** — should fix, improves quality
-Description and suggested improvement.
-
-🟢 **Nit** — optional, minor improvement
-Description.
-```
-
-Group related findings. Don't repeat what linters/PHPStan already catch — focus on
-logic, architecture, and things tools can't detect.
 
 ## Gotcha
 

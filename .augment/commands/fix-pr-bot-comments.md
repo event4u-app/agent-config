@@ -1,6 +1,6 @@
 ---
 name: fix-pr-bot-comments
-skills: [coder, quality-tools]
+skills: [php-coder, quality-tools]
 description: Fix and reply to bot review comments (Copilot, Augment, Greptile, etc.) on a GitHub PR
 disable-model-invocation: true
 ---

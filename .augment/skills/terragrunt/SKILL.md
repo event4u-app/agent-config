@@ -189,17 +189,17 @@ devbox run d           # terragrunt destroy
 ```
 
 
+## Output format
+
+1. Terragrunt HCL files with DRY environment configuration
+2. Dependency graph and remote state references
+
 ## Auto-trigger keywords
 
 - Terragrunt
 - multi-environment
 - DRY config
 - remote state
-
-## Output format
-
-1. Terragrunt HCL files with DRY environment configuration
-2. Dependency graph and remote state references
 
 ## Gotcha
 

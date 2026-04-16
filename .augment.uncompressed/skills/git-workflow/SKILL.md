@@ -11,7 +11,7 @@ source: package
 Use when preparing PRs, finishing branches, or following the team's Git workflow.
 
 Do NOT use when:
-- Code writing or review (use `coder` or `code-review` skill)
+- Code writing or review (use `php-coder` or `code-review` skill)
 - CI/CD pipeline changes (use `github-ci` skill)
 
 ## Conventions

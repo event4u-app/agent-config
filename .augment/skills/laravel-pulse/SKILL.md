@@ -132,6 +132,11 @@ Pulse::record('api_call', 'stripe', 250)  // type, key, value
 - **Restrict access** — always gate the dashboard behind authentication.
 - **Monitor what matters** — don't enable all recorders if you don't need them.
 
+## Output format
+
+1. Pulse configuration with recorders and dashboard cards
+2. Custom recorder class if needed
+
 ## Auto-trigger keywords
 
 - Pulse
@@ -140,11 +145,6 @@ Pulse::record('api_call', 'stripe', 250)  // type, key, value
 - slow requests
 - application monitoring
 - performance dashboard
-
-## Output format
-
-1. Pulse configuration with recorders and dashboard cards
-2. Custom recorder class if needed
 
 ## Gotcha
 

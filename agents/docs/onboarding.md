@@ -55,7 +55,7 @@ These 5 rules have the highest impact on quality:
 | Skill | When |
 |---|---|
 | `developer-like-execution` | Any code work (think → analyze → verify → execute) |
-| `coder` | Writing PHP code following project guidelines |
+| `php-coder` | Writing PHP code following project guidelines |
 | `laravel` | Laravel-specific code and patterns |
 | `pest-testing` | Writing tests |
 | `quality-tools` | Running PHPStan, Rector, ECS |

@@ -7,44 +7,47 @@ source: package
 
 # E2E Testing
 
-## Before writing
+## Before writing E2E tests
 
-1. Read `.augment/guidelines/e2e/playwright.md`
-2. Check existing tests — match structure, fixtures, Page Objects
-3. Check `playwright.config.ts` — base URL, browsers, timeouts
+1. **Read the guideline** — `.augment/guidelines/e2e/playwright.md` for all conventions and patterns.
+2. **Check existing tests** — match the project's structure, fixtures, and Page Object patterns.
+3. **Check `playwright.config.ts`** — base URL, browsers, timeouts, projects.
 
-## Locators
+## Locator rules
 
-- Prefer: `getByRole` > `getByLabel` > `getByText` > `getByTestId` > CSS
-- Never: auto-generated classes, dynamic IDs, XPath
-- No semantic locator → add `data-testid`
+- **Always prefer semantic locators**: `getByRole` > `getByLabel` > `getByText` > `getByTestId` > CSS.
+- Never use auto-generated class names, dynamic IDs, or XPath.
+- If no semantic locator works, add a `data-testid` to the component.
 
-## Assertions
+## Assertion rules
 
-- Web-first assertions only (`toBeVisible`, `toHaveText`, `toHaveURL`)
-- Never `expect(await ...)` — no auto-retry
-- Never `page.waitForTimeout()` — wait for condition
+- **Always use web-first assertions** (`toBeVisible`, `toHaveText`, `toHaveURL`).
+- Never use `expect(await ...)` pattern — it doesn't auto-retry.
+- Never use `page.waitForTimeout()` — wait for a condition instead.
 
-## Test structure
+## Test structure rules
 
-- One test = one workflow/behavior
-- Fully isolated — no shared state, no order dependency
-- Page Objects = actions only, no assertions
-- Fixtures for reusable setup
-- API calls for test data (not UI)
+- One test = one user workflow or behavior.
+- Tests must be **fully isolated** — no shared state, no execution order dependency.
+- Page Objects contain **actions only**, never assertions.
+- Use **fixtures** for reusable setup (auth, page objects, test data).
+- Use **API calls** for test data setup — faster and more reliable than UI interactions.
 
-## CI
+## CI rules
 
-- `workers: 1`, `retries: 2` (CI) / `0` (local)
-- `forbidOnly: !!process.env.CI`
-- `trace: 'on-first-retry'`
-- Install only needed browsers
-- Upload `playwright-report/` as artifact
+- Set `workers: 1` in CI for stability.
+- Set `retries: 2` in CI, `0` locally.
+- Set `forbidOnly: !!process.env.CI` to prevent `.only` in CI.
+- Collect `trace: 'on-first-retry'` — not on every run.
+- Only install browsers you need (`npx playwright install chromium --with-deps`).
+- Upload `playwright-report/` as CI artifact.
 
 ## Quality checks
 
-1. All tests pass: `npx playwright test`
-2. No `waitForTimeout`
-3. No CSS/XPath where semantic locators work
-4. No `.only` left
-5. Page Objects have no assertions
+Before claiming E2E tests are complete:
+
+1. All tests pass locally: `npx playwright test`
+2. No `waitForTimeout` calls in the code.
+3. No CSS/XPath selectors where semantic locators work.
+4. No `.only` left in test files.
+5. Page Objects have no assertions.

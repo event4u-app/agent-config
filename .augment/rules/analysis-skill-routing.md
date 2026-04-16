@@ -39,10 +39,10 @@ If the stack is unclear:
 
 ## Routing quality gate
 
-Only route to narrower skill if it has:
+Only route to the narrower skill if it still has:
 
 * executable workflow (concrete procedure steps)
 * concrete validation (specific checks, not "verify it works")
 * real decision power (not just "read the guideline")
 
-If narrow skill is too weak or hollowed out, route through broader skill and note the gap.
+If the narrow skill is too weak or hollowed out, route through the broader skill and note the gap.

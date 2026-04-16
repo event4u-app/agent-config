@@ -7,13 +7,18 @@ source: package
 
 # Commit Conventions
 
-Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
+All commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
 ## Format
 
+Valid formats:
+
 - With scope: `<type>(<scope>): <description>`
-- Without scope: `<type>: <description>`
-- Always English, imperative mood, max 72 chars first line
+- Without scope: `<type>: <description>` (omit parentheses when no scope is used)
+
+- **Commit messages are always in English** — regardless of the user's language.
+- **Description in imperative mood** ("add feature", not "added feature").
+- **First line max 72 characters.**
 
 ## Types
 
@@ -30,9 +35,9 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
 ## Scope
 
-- **Jira ticket ID** as scope when branch contains one (e.g. `DEV-1234`)
-- Otherwise short module/area name
-- Optional but recommended
+- Use the **Jira ticket ID** as scope when the branch contains one (e.g. `DEV-1234`).
+- Otherwise use a short module or area name.
+- Scope is optional but recommended.
 
 ## Examples
 

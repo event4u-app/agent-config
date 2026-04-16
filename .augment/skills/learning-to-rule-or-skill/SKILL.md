@@ -38,26 +38,26 @@ Do not use this skill when:
 
 ## Decision matrix
 
-| If learning is... | Then... | Action |
+| If the learning is... | Then... | Action |
 |---|---|---|
-| Always-true constraint ("never X", "always Y") | **Rule** | Create/update rule |
-| Repeatable workflow with steps and validation | **Skill** | Create/update skill |
-| Coding convention or reference material | **Guideline** | Create/update guideline |
+| An always-true constraint ("never X", "always Y") | **Rule** | Create/update rule |
+| A repeatable workflow with steps and validation | **Skill** | Create/update skill |
+| A coding convention or reference material | **Guideline** | Create/update guideline |
 | Baseline model knowledge or standard tool usage | **Nothing** | Do not create anything |
-| Refinement of existing guidance | **Update** | Extend existing file |
+| A refinement of existing guidance | **Update** | Extend the existing file |
 
 ### Decision hints
 
-* Same issue 2+ times → strongly consider codifying
+* Same issue appeared at least twice → strongly consider codifying
 * One-off or too narrow → do not create anything yet
-* Standard tool knowledge (jq, docker, git basics) → **Nothing**
-* Unsure skill vs guideline: needs step-by-step decisions? → Skill. Just conventions? → Guideline
+* Standard tool knowledge (jq, docker, git basics) → **Nothing** — the model knows this
+* If unsure between skill and guideline: does it need step-by-step decisions? → Skill. Just conventions? → Guideline
 
 ## Procedure
 
 ### 0. Promotion Gate (mandatory)
 
-Learning MUST pass all gates before proceeding:
+Before proceeding, the learning MUST pass all gates:
 
 | Gate | Question |
 |---|---|
@@ -68,7 +68,8 @@ Learning MUST pass all gates before proceeding:
 | Scope fit | Fits rule, skill, or guideline? |
 | Minimal | Update existing preferred over creation? |
 
-ANY gate fails → **stop**. See `capture-learnings` rule for rejection criteria.
+If ANY gate fails → **stop**. Do not create or update anything.
+→ See `capture-learnings` rule for rejection criteria.
 
 ### 1. State the learning clearly
 

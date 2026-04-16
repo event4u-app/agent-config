@@ -1,6 +1,10 @@
 # Playwright E2E Guidelines
 
-**Skills:** `playwright-testing` | **Guidelines:** [php.md](../php/php.md)
+> Best practices for writing end-to-end tests with Playwright.
+> Applies to all projects using Playwright (API, web, or hybrid).
+
+**Related Skills:** `playwright-testing`, `pest-testing`
+**Related Guidelines:** [php.md](../php/general.md)
 
 ## Project Structure
 
@@ -19,9 +23,11 @@ tests/
 playwright.config.ts    # Root config
 ```
 
-Group by feature area. One spec per workflow. POs in `pages/`, fixtures in `fixtures/`.
+- Group specs by **feature area**, not by page.
+- One spec file per user workflow or feature.
+- Keep Page Objects in `pages/`, fixtures in `fixtures/`.
 
-## Locator Strategy
+## Locator Strategy (Priority Order)
 
 | Priority | Locator | Example | When |
 |---|---|---|---|
@@ -32,9 +38,16 @@ Group by feature area. One spec per workflow. POs in `pages/`, fixtures in `fixt
 | 5 | **Test ID** | `getByTestId('submit-btn')` | When no semantic locator works |
 | 6 | **CSS/XPath** | `page.locator('.class')` | **Avoid** — brittle, breaks on UI changes |
 
-Prefer semantic > `data-testid` > CSS. Chain to narrow scope. Never auto-generated IDs.
+### Rules
 
-## Assertions (web-first, auto-retrying)
+- **Always prefer semantic locators** (`getByRole`, `getByLabel`) over CSS.
+- Use `data-testid` as a stable fallback — add it to the component, not the test.
+- Chain and filter locators to narrow scope: `page.getByRole('listitem').filter({ hasText: 'Product' })`.
+- Never use auto-generated class names or dynamic IDs as selectors.
+
+## Assertions
+
+### Always use web-first assertions
 
 ```ts
 // ✅ Auto-retrying — waits until condition is met
@@ -47,7 +60,7 @@ const text = await page.textContent('.message')
 expect(text).toBe('Success')
 ```
 
-### Soft assertions
+### Use soft assertions for non-critical checks
 
 ```ts
 await expect.soft(page.getByTestId('status')).toHaveText('Active')
@@ -66,7 +79,9 @@ await expect(page.getByText('Loaded')).toBeVisible()
 await page.waitForTimeout(3000)
 ```
 
-Never `waitForTimeout()`. Trust auto-waiting. `networkidle` sparingly.
+- **Never use `waitForTimeout()`** — use auto-retrying assertions or `waitForResponse`.
+- Trust Playwright's auto-waiting for actions (click, fill, etc.).
+- Use `networkidle` sparingly — prefer waiting for specific elements.
 
 ## Page Object Model
 
@@ -97,9 +112,15 @@ export class LoginPage {
 }
 ```
 
-One PO per page/component. Locators in constructor. Methods = user actions.
+### Rules
 
-## Test Data (API-based preferred)
+- One Page Object per page or major component.
+- Locators are **defined in the constructor**, not inline in methods.
+- Methods represent **user actions**, not DOM manipulations.
+
+## Test Data Management
+
+### API-based setup (preferred)
 
 ```ts
 test.beforeEach(async ({ request }) => {
@@ -112,9 +133,16 @@ test.afterEach(async ({ request }) => {
 })
 ```
 
-API > UI for setup. Seeded accounts. No cross-test data deps.
+### Rules
+
+- **Prefer API calls** over UI interactions for test data setup — faster and more reliable.
+- Use seeded test accounts with known credentials.
+- Never depend on data created by another test.
+- For database-backed apps: use a dedicated test database or transactional rollback.
 
 ## Configuration
+
+### `playwright.config.ts` essentials
 
 ```ts
 import { defineConfig, devices } from '@playwright/test'
@@ -199,7 +227,10 @@ steps:
   - run: npx playwright test --shard=${{ matrix.shard }}/4
 ```
 
-Only install needed browsers. Linux runners. Upload reports. Shard when >5min.
+- **Only install browsers you need** — `npx playwright install chromium --with-deps` not `npx playwright install`.
+- Use **Linux runners** in CI — cheapest and most stable.
+- Upload `playwright-report/` as artifact for failure debugging.
+- Use **sharding** when suite exceeds ~5 minutes.
 
 ## Visual Regression
 
@@ -213,7 +244,10 @@ test('dashboard layout', async ({ page }) => {
 })
 ```
 
-Baselines in VCS. Update: `--update-snapshots`. Pin OS+browser in CI.
+- Store baselines in version control.
+- Update with `npx playwright test --update-snapshots`.
+- Pin OS + browser version in CI — visual diffs are platform-sensitive.
+- Use `maxDiffPixelRatio` or `maxDiffPixels` for tolerance.
 
 ## Avoiding Flaky Tests
 
@@ -246,7 +280,9 @@ npx playwright show-report
 npx playwright codegen http://localhost:3000
 ```
 
-## Unfixable Tests — use `test.fixme()`
+## Handling Unfixable Tests
+
+When a test fails and the failure is in the **application** (not the test), use `test.fixme()`:
 
 ```ts
 test.fixme('should display user avatar', async ({ page }) => {
@@ -257,11 +293,23 @@ test.fixme('should display user avatar', async ({ page }) => {
 })
 ```
 
-`test.fixme()` for app bugs. `test.skip()` only for env-specific. Comment explaining behavior. Link ticket.
+### Rules
 
-## Healer Workflow
+- Use `test.fixme()` — **not** `test.skip()` — for tests that should work but don't due to app bugs.
+- Use `test.skip()` only for **environment-specific** skips (e.g., `test.skip(process.env.CI, 'requires local GPU')`).
+- Always add a **comment before the failing step** explaining the current behavior vs. expected.
+- Link to an issue tracker ticket if available.
 
-Run → Debug (`--debug`/trace) → Investigate (selectors? timing? data? app change?) → Fix → Verify → Iterate
+## Healer Workflow (Debugging Failing Tests)
+
+When tests fail, follow this systematic approach:
+
+1. **Run** — Execute the failing test(s) to see current errors
+2. **Debug** — Use `--debug` mode or trace viewer to inspect state at failure point
+3. **Investigate** — Check: selectors changed? Timing issue? Data dependency? App change?
+4. **Fix** — Update the test code (one fix at a time)
+5. **Verify** — Re-run the specific test to confirm the fix
+6. **Iterate** — Repeat until all tests pass
 
 ### Common failure patterns
 
@@ -273,11 +321,33 @@ Run → Debug (`--debug`/trace) → Investigate (selectors? timing? data? app ch
 | Intermittent pass/fail | Race condition | Add proper waits, remove shared state |
 | Works locally, fails in CI | Environment difference | Check `baseURL`, headless mode, viewport |
 
-3 failed attempts → `test.fixme()` + comment + bug ticket.
+### When to give up
 
-## Agent Pipeline
+If a test **consistently fails** despite correct test logic (confirmed by manual inspection):
+- Mark with `test.fixme()` + detailed comment
+- File a bug ticket for the underlying application issue
+- Move on — don't spend more than 3 attempts fixing a single test
 
-**Plan** → explore, document scenarios. **Generate** → Playwright files from plans. **Heal** → run, debug, fix/fixme, verify.
+## Agent-Driven Test Pipeline
+
+For AI-assisted E2E workflows, follow this pipeline:
+
+### Phase 1: Plan
+- Explore the application (navigate pages, identify flows)
+- Document test scenarios in Markdown with numbered steps
+- Include: happy path, edge cases, error handling, validation
+
+### Phase 2: Generate
+- Convert Markdown plans into Playwright test files
+- Follow all conventions from this guideline
+- One test file per scenario group
+- Add step comments before each action
+
+### Phase 3: Heal
+- Run all generated tests
+- Debug failures systematically (see Healer Workflow above)
+- Fix or mark as `test.fixme()` if the app is broken
+- Verify all fixes, iterate until green
 
 ## Do NOT
 

@@ -291,8 +291,8 @@ Each module gets its own file in `agents/analysis/modules/`. Format:
 | Skill              | How it's used                                               |
 |--------------------|-------------------------------------------------------------|
 | `project-docs`     | Read existing docs before analyzing each area               |
-| `module`           | Detect and inventory modules                                |
-| `context`          | Create/update context documents                             |
+| `module-management`           | Detect and inventory modules                                |
+| `context-create`          | Create/update context documents                             |
 | `feature-planning` | Identify planned but undocumented features                  |
 | `agent-docs-writing`       | Audit and maintain agent documentation                      |
 | `roadmap-manager`  | Review roadmap status                                       |

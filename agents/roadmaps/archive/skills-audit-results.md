@@ -21,13 +21,13 @@
 | 12 | `bug-analyzer` | fail | 3 | 5 | KEEP | Upgrade to template — strong 4-phase procedural skill with iron law, proactive/reactive modes |
 | 13 | `cloudflare-workers` | fail | 3 | 5 | REMOVE | Generic framework reference — model already knows CF Workers APIs; no project-specific content or procedures |
 | 14 | `code-review` | fail | 3 | 5 | KEEP | Upgrade to template — strong procedural skill with review order, checklist, and feedback response pattern |
-| 15 | `coder` | fail | 3 | 5 | SPLIT | Heavy overlap with `php-coding` rule and `copilot-instructions.md`; extract unique "before writing code" checklist as procedure, merge redundant conventions into existing rules |
+| 15 | `php-coder` | fail | 3 | 5 | SPLIT | Heavy overlap with `php-coding` rule and `copilot-instructions.md`; extract unique "before writing code" checklist as procedure, merge redundant conventions into existing rules |
 | 16 | `commands` | fail | 4 | 5 | SPLIT | Core "execute immediately" behavior already in `commands` rule; extract GitHub API reply pattern + context inference as separate concern; remove duplicate rule content from skill |
 | 17 | `composer-packages` | fail | 3 | 5 | KEEP | Upgrade to template — clear procedural skill for creating/maintaining Composer packages with pre-publish checklist |
 | 18 | `composer` | fail | 3 | 5 | REMOVE | Generic Composer knowledge the model already has; only project-specific rule ("run inside Docker") is already in `docker-commands` rule |
-| 19 | `context` | fail | 3 | 5 | KEEP | Upgrade to template — procedural skill for creating context documents with clear workflow and file structure |
+| 19 | `context-create` | fail | 3 | 5 | KEEP | Upgrade to template — procedural skill for creating context documents with clear workflow and file structure |
 | 20 | `copilot-agents-optimizer` | fail | 3 | 5 | KEEP | Upgrade to template — clear optimization checklist, deduplication strategy, and line budgets for AGENTS.md/copilot-instructions.md |
-| 21 | `copilot` | fail | 3 | 5 | KEEP | Upgrade to template — valuable project-specific knowledge: what Copilot can/cannot read, false positive table, PR comment handling |
+| 21 | `copilot-config` | fail | 3 | 5 | KEEP | Upgrade to template — valuable project-specific knowledge: what Copilot can/cannot read, false positive table, PR comment handling |
 | 22 | `dashboard-design` | fail | 3 | 6 | SPLIT | Extract Grafana embedding patterns → `grafana` skill; remove generic visualization/observability reference (RED/USE/Golden Signals) the model already knows; keep only project-specific patterns |
 | 23 | `database` | fail | 3 | 5 | SPLIT | Heavy overlap with `eloquent` skill; extract project-specific conventions (multi-connection, Math helper) to rules/guidelines; merge query optimization into `eloquent`; remove generic DB knowledge |
 | 24 | `dependency-upgrade` | fail | 3 | 5 | KEEP | Upgrade to template — clear 5-step procedural workflow (Assess → Plan → Execute → Verify → Document) |
@@ -47,7 +47,7 @@
 | 38 | `graphql` | fail | 3 | 5 | REMOVE | Generic GraphQL knowledge (schema design, DataLoader, Relay pagination) — model already knows all of this; no project-specific content |
 | 39 | `guidelines` | fail | 3 | 5 | REMOVE | Meta-skill about guideline structure; `guidelines` rule already handles discovery; agents discover `.augment/guidelines/` automatically |
 | 40 | `javascript` | fail | 3 | 5 | REMOVE | Generic JS knowledge (ES2020+ syntax, async/await, DOM) — model already knows all of this; no project-specific patterns |
-| 41 | `jira` | fail | 3 | 5 | KEEP | Upgrade to template — project-specific Jira workflow with MCP tool usage, branch-to-ticket detection, ADF format reference |
+| 41 | `jira-integration` | fail | 3 | 5 | KEEP | Upgrade to template — project-specific Jira workflow with MCP tool usage, branch-to-ticket detection, ADF format reference |
 | 42 | `jobs-events` | fail | 3 | 5 | SPLIT | Mix of conventions (naming, serialization, idempotency rules) and procedure; extract conventions → guideline `php/jobs.md`; keep focused job/event creation workflow |
 | 43 | `laravel-horizon` | fail | 3 | 5 | KEEP | Upgrade to template — domain-specific Horizon reference: config, balancing, deployment, monitoring |
 | 44 | `laravel-mail` | fail | 3 | 5 | KEEP | Upgrade to template — clear procedural skill for creating Mailables with Envelope+Content pattern and testing |
@@ -69,7 +69,7 @@
 | 60 | `microservices` | fail | 3 | 5 | REMOVE | Generic microservices knowledge (boundaries, patterns, resilience) — model already knows all of this; no project-specific content |
 | 61 | `migration-creator` | fail | 3 | 5 | **KEEP** | Clear creation workflow with multi-tenant awareness and connection-specific patterns |
 | 62 | `mobile` | fail | 3 | 5 | **REMOVE** | Generic React Native/Swift knowledge, no project-specific patterns |
-| 63 | `module` | fail | 3 | 5 | **KEEP** | Project-specific module structure, namespace conventions, existing modules list |
+| 63 | `module-management` | fail | 3 | 5 | **KEEP** | Project-specific module structure, namespace conventions, existing modules list |
 | 64 | `multi-tenancy` | fail | 3 | 5 | **KEEP** | Critical domain-specific dual-database architecture reference |
 | 65 | `naming` | fail | 3 | 5 | **SPLIT** | Conventions → Guideline `php/naming.md`; decision workflow stays as skill |
 | 66 | `nextjs` | fail | 3 | 5 | **REMOVE** | Generic Next.js knowledge, model knows App Router/Server Components |
@@ -77,7 +77,7 @@
 | 68 | `npm` | fail | 3 | 6 | **REMOVE** | Generic npm/build tooling knowledge, model already knows |
 | 69 | `nuxt` | fail | 3 | 5 | **REMOVE** | Generic Nuxt knowledge, model already knows auto-imports/file-routing |
 | 70 | `openapi` | fail | 3 | 5 | **KEEP** | Project-specific OpenAPI attribute patterns and versioning conventions |
-| 71 | `override` | fail | 4 | 5 | **KEEP** | Essential infrastructure skill for project override mechanism |
+| 71 | `override-management` | fail | 4 | 5 | **KEEP** | Essential infrastructure skill for project override mechanism |
 | 72 | `performance-analysis` | fail | 2 | 6 | **KEEP** | Strong analysis workflow with structured output format |
 | 73 | `performance` | fail | 3 | 5 | **SPLIT** | Overlap with `database` skill on eager loading; caching conventions → guideline |
 | 74 | `pest-testing` | fail | 3 | 6 | **KEEP** | Essential testing skill with project-specific patterns (coduo/php-matcher, snapshots) |
@@ -96,7 +96,7 @@
 | 87 | `roadmap-manager` | fail | 3 | 5 | **KEEP** | Upgrade to template — clear roadmap CRUD workflow with checkpoint rules and template reference |
 | 88 | `security-audit` | fail | 2 | 6 | **KEEP** | Upgrade to template — structured audit workflow with OWASP categories and evidence-based output format |
 | 89 | `security` | fail | 3 | 5 | **SPLIT** | Mix of conventions (input validation, mass assignment, headers) and procedure; extract conventions → guideline `php/security.md`; keep auth/policy creation workflow |
-| 90 | `sentry` | fail | 3 | 5 | **KEEP** | Upgrade to template — project-specific MCP tools, MonitoringHelper convention, investigation workflow |
+| 90 | `sentry-integration` | fail | 3 | 5 | **KEEP** | Upgrade to template — project-specific MCP tools, MonitoringHelper convention, investigation workflow |
 | 91 | `sequential-thinking` | fail | 3 | 4 | **KEEP** | Upgrade to template — clear reasoning framework with revision tracking and branch exploration; distinct meta-skill |
 | 92 | `skill-caveman-compression` | fail | 1 | 0 | **MERGE** | Merge into single `skill-management` skill — compression is one step of skill lifecycle, not standalone workflow |
 | 93 | `skill-decompression` | fail | 1 | 0 | **MERGE** | Merge into single `skill-management` skill — decompression is one step of skill lifecycle |
@@ -105,7 +105,7 @@
 | 96 | `skill-reviewer` | fail | 5 | 6 | **KEEP** | Upgrade to template — 5 Killers checklist is unique and actionable; absorb `skill-linter` and `skill-validator` |
 | 97 | `skill-validator` | fail | 1 | 3 | **MERGE** | Merge into `skill-reviewer` — validation is a subset of review; nearly identical checklist |
 | 98 | `skill-writing` | fail | 1 | 0 | **KEEP** | Upgrade to template — clear skill creation workflow with quality checklist; distinct from review |
-| 99 | `sql` | fail | 3 | 5 | **SPLIT** | Iron Law (parameterized queries) → `php-coding` rule or guideline; keep MariaDB-specific patterns and raw SQL reference |
+| 99 | `sql-writing` | fail | 3 | 5 | **SPLIT** | Iron Law (parameterized queries) → `php-coding` rule or guideline; keep MariaDB-specific patterns and raw SQL reference |
 | 100 | `tailwind` | fail | 3 | 5 | **REMOVE** | Generic Tailwind knowledge (class ordering, responsive, dark mode) — model already knows; no project-specific config |
 | 101 | `technical-specification` | fail | 3 | 5 | **KEEP** | Upgrade to template — clear spec/ADR/RFC templates with writing guidelines; procedural document creation |
 | 102 | `terraform` | fail | 3 | 5 | **KEEP** | Upgrade to template — project-specific conventions (naming, state, lifecycle, OIDC) for infrastructure repo |

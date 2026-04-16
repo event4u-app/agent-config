@@ -16,8 +16,8 @@ NEVER create or edit files in .augment/ directly.
 ALWAYS work in .augment.uncompressed/ — then use /compress command.
 ```
 
-**Compression ONLY via `/compress` command.** Never manually edit compressed files.
-Command handles hashing, sync verification, and quality checks automatically.
+**Compression is ONLY done via the `/compress` command.** Never manually edit compressed files.
+The command handles hashing, sync verification, and quality checks automatically.
 
 ## Workflow
 
@@ -82,24 +82,25 @@ disable-model-invocation: true
 
 ## Pre-review consistency checkpoints
 
-Before review or PR, verify derived outputs are not stale:
+Before asking for review or creating a PR, verify derived outputs are not stale:
 
-1. Run `task sync-changed` — check for uncompressed changes
-2. If stale: run `/compress` before pushing
-3. Before merge: verify `.augment/` and `.claude/skills/` are regenerated
+1. Run `task sync-changed` — check if `.augment.uncompressed/` has changes not yet compressed
+2. If stale files exist: run `/compress` before pushing
+3. Before merge: verify derived outputs (`.augment/`, `.claude/skills/`) are regenerated
 4. Do NOT leave `.augment/` stale across review cycles
 
 ## Multi-agent symlink mapping
 
-`.claude/skills/` has symlinks to BOTH `.augment/skills/` AND `.augment/commands/`.
-Claude Code treats both as "skills" — different artifact types in our taxonomy.
+`.claude/skills/` contains symlinks to **both** `.augment/skills/` and `.augment/commands/`.
+Claude Code treats both as "skills" — but they are different artifact types in our taxonomy.
 
-| Symlink target | Actual type |
+| `.claude/skills/{name}/SKILL.md` points to... | Actual type |
 |---|---|
-| `.augment/skills/{name}/SKILL.md` | **Skill** |
-| `.augment/commands/{name}.md` | **Command** (`disable-model-invocation: true`) |
+| `.augment/skills/{name}/SKILL.md` | **Skill** (workflow) |
+| `.augment/commands/{name}.md` | **Command** (slash-invoked procedure) |
 
-Always check symlink target to determine actual type.
+Always check the symlink target to determine the actual artifact type.
+Commands have `disable-model-invocation: true` in their frontmatter.
 
 ## Quick reference
 

@@ -17,11 +17,11 @@ Do NOT use when:
 
 ## Procedure: Work with multi-tenancy
 
-1. **Gather context** — read `agents/docs/` for multi-tenant architecture, `config/database.php` for connection definitions, search for tenant switching service.
-2. **Identify connection** — determine whether code touches central, tenant, or both databases. Set `$connection` explicitly on new models.
-3. **Implement** — use correct connection. Use tenant switching service for cross-tenant operations. Never mix connections in single query.
-4. **Verify isolation** — inspect for tenant leaks: global scopes, missing `$connection`, shared caches, job serialization without tenant context.
-5. **Test** — write test exercising tenant boundary: seed tenant-specific data, switch context, verify correct data returned and other tenants' data invisible.
+1. **Gather context** — read `agents/docs/` for multi-tenant architecture, `config/database.php` for connection definitions, and search for the tenant switching service.
+2. **Identify connection** — determine whether the code touches central, tenant, or both databases. Set `$connection` explicitly on any new model.
+3. **Implement** — write the feature using the correct connection. Use the tenant switching service for cross-tenant operations. Never mix connections in a single query.
+4. **Verify isolation** — inspect the code for tenant leaks: global scopes, missing `$connection`, shared caches, or job serialization without tenant context.
+5. **Test** — write a test that exercises the tenant boundary: seed tenant-specific data, switch context, verify correct data is returned and other tenants' data is invisible.
 
 ## Architecture overview
 
@@ -102,17 +102,17 @@ Check the project for the actual connection names and namespace conventions.
 | Migration on wrong connection | Specify `--database=customer_database` or set `$connection` in migration |
 
 
+## Output format
+
+1. Tenant-aware code with correct DB connection switching
+2. Verification that tenant isolation is maintained
+
 ## Auto-trigger keywords
 
 - multi-tenant
 - tenant isolation
 - customer database
 - FQDN routing
-
-## Output format
-
-1. Tenant-aware code with correct DB connection switching
-2. Verification that tenant isolation is maintained
 
 ## Gotcha
 

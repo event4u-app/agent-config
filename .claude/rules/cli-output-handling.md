@@ -1,0 +1,1 @@
+../../.augment/rules/cli-output-handling.md

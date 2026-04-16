@@ -94,6 +94,11 @@ Check `.github/workflows/` for the runner types used. Common patterns:
 See `.augment/commands/fix-ci.md` for the full debugging workflow.
 
 
+## Output format
+
+1. Modified workflow YAML file(s) in `.github/workflows/`
+2. Summary of pipeline changes and affected triggers
+
 ## Auto-trigger keywords
 
 - GitHub Actions
@@ -101,11 +106,6 @@ See `.augment/commands/fix-ci.md` for the full debugging workflow.
 - workflow
 - pipeline
 - quality checks
-
-## Output format
-
-1. Modified workflow YAML file(s) in `.github/workflows/`
-2. Summary of pipeline changes and affected triggers
 
 ## Gotcha
 

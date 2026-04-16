@@ -36,9 +36,9 @@ Error tracking and performance monitoring.
 | `analyze_issue_with_seer` | AI root cause analysis | When stacktrace alone isn't enough |
 
 **Key pattern:** Always get org slug first → then use other tools.
-**See:** `sentry` skill for investigation workflow.
+**See:** `sentry-integration` skill for investigation workflow.
 
-### Jira (`jira`)
+### Jira (`jira-integration`)
 
 Issue tracking and project management.
 
@@ -55,7 +55,7 @@ Issue tracking and project management.
 | `GET /field` | List available fields | Before writing JQL |
 
 **Key pattern:** Check fields (`GET /field`) before writing JQL. Check transitions before changing status.
-**See:** `jira` skill for JQL patterns and ADF format.
+**See:** `jira-integration` skill for JQL patterns and ADF format.
 
 ### GitHub (`github-api`)
 
@@ -160,10 +160,10 @@ PR creation:
 
 ## Related
 
-- **Skill:** `sentry` — Sentry-specific investigation patterns
-- **Skill:** `jira` — Jira-specific JQL and ticket management
+- **Skill:** `sentry-integration` — Sentry-specific investigation patterns
+- **Skill:** `jira-integration` — Jira-specific JQL and ticket management
 - **Skill:** `git-workflow` — GitHub PR and branch conventions
-- **Skill:** `copilot` — GitHub Copilot integration
+- **Skill:** `copilot-config` — GitHub Copilot integration
 - **Rule:** `no-commit.md` — permission boundaries for write operations
 
 
@@ -174,7 +174,7 @@ PR creation:
 
 ## Gotcha
 
-- MCP servers are token-expensive — prefer CLI equivalents when available (see `rtk` skill).
+- MCP servers are token-expensive — prefer CLI equivalents when available (see `rtk-output-filtering` skill).
 - Don't chain 5+ MCP tool calls when a single CLI command could do the same thing.
 - MCP server availability varies — always handle connection failures gracefully.
 - Sentry and Jira MCP provide unique capabilities — those are worth the token cost.

@@ -16,7 +16,7 @@ Use this skill when:
 
 Do NOT use when:
 - Trivial changes (a good PR description is enough)
-- Implementation work (use `feature-planning` or `coder` skill)
+- Implementation work (use `feature-planning` or `php-coder` skill)
 
 ## Procedure: Write a spec
 

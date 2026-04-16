@@ -2,7 +2,7 @@
 
 > Raw SQL conventions — parameterization, MariaDB/MySQL syntax, common mistakes.
 
-**Related Skills:** `sql`, `database`
+**Related Skills:** `sql-writing`, `database`
 **Related Guidelines:** [database.md](database.md)
 
 ## Iron Law
