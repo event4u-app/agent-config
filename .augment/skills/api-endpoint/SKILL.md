@@ -12,7 +12,7 @@ Use this skill when the user asks to create a new API endpoint, REST route, or c
 
 
 Do NOT use when:
-- Modifying existing endpoints (use `refactorer` skill)
+- Modifying existing endpoints (use `code-refactoring` skill)
 - API design decisions (use `api-design` skill)
 
 ## Procedure: Create an API endpoint

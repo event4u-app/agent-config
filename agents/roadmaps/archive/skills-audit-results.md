@@ -26,7 +26,7 @@
 | 17 | `composer-packages` | fail | 3 | 5 | KEEP | Upgrade to template — clear procedural skill for creating/maintaining Composer packages with pre-publish checklist |
 | 18 | `composer` | fail | 3 | 5 | REMOVE | Generic Composer knowledge the model already has; only project-specific rule ("run inside Docker") is already in `docker-commands` rule |
 | 19 | `context-create` | fail | 3 | 5 | KEEP | Upgrade to template — procedural skill for creating context documents with clear workflow and file structure |
-| 20 | `copilot-agents-optimizer` | fail | 3 | 5 | KEEP | Upgrade to template — clear optimization checklist, deduplication strategy, and line budgets for AGENTS.md/copilot-instructions.md |
+| 20 | `copilot-agents-optimization` | fail | 3 | 5 | KEEP | Upgrade to template — clear optimization checklist, deduplication strategy, and line budgets for AGENTS.md/copilot-instructions.md |
 | 21 | `copilot-config` | fail | 3 | 5 | KEEP | Upgrade to template — valuable project-specific knowledge: what Copilot can/cannot read, false positive table, PR comment handling |
 | 22 | `dashboard-design` | fail | 3 | 6 | SPLIT | Extract Grafana embedding patterns → `grafana` skill; remove generic visualization/observability reference (RED/USE/Golden Signals) the model already knows; keep only project-specific patterns |
 | 23 | `database` | fail | 3 | 5 | SPLIT | Heavy overlap with `eloquent` skill; extract project-specific conventions (multi-connection, Math helper) to rules/guidelines; merge query optimization into `eloquent`; remove generic DB knowledge |
@@ -92,8 +92,8 @@
 | 83 | `quality-tools` | fail | 3 | 5 | **KEEP** | Upgrade to template — critical reference for all quality tool commands, flags, detection logic; complements `quality-workflow` rule |
 | 84 | `react` | fail | 3 | 5 | **REMOVE** | Generic React knowledge (hooks, components, state) — model already knows; no project-specific patterns |
 | 85 | `readme-generator` | fail | 1 | 4 | **REMOVE** | Too generic — model already knows how to write READMEs; no unique procedure beyond obvious steps |
-| 86 | `refactorer` | fail | 3 | 5 | **KEEP** | Upgrade to template — strong procedural skill with downstream dependency tracking, test approval workflow, API layer checklist |
-| 87 | `roadmap-manager` | fail | 3 | 5 | **KEEP** | Upgrade to template — clear roadmap CRUD workflow with checkpoint rules and template reference |
+| 86 | `code-refactoring` | fail | 3 | 5 | **KEEP** | Upgrade to template — strong procedural skill with downstream dependency tracking, test approval workflow, API layer checklist |
+| 87 | `roadmap-management` | fail | 3 | 5 | **KEEP** | Upgrade to template — clear roadmap CRUD workflow with checkpoint rules and template reference |
 | 88 | `security-audit` | fail | 2 | 6 | **KEEP** | Upgrade to template — structured audit workflow with OWASP categories and evidence-based output format |
 | 89 | `security` | fail | 3 | 5 | **SPLIT** | Mix of conventions (input validation, mass assignment, headers) and procedure; extract conventions → guideline `php/security.md`; keep auth/policy creation workflow |
 | 90 | `sentry-integration` | fail | 3 | 5 | **KEEP** | Upgrade to template — project-specific MCP tools, MonitoringHelper convention, investigation workflow |

@@ -88,8 +88,8 @@ Skills organized by domain:
 | **Jobs/Events** | `jobs-events`, `logging-monitoring`, `grafana`, `websocket` |
 | **Packages** | `composer`, `composer-packages`, `npm`, `npm-packages` |
 | **Design** | `dashboard-design`, `design-review`, `fe-design` |
-| **Agent System** | `agent-docs-writing`, `agents-audit`, `context-create`, `commands`, `copilot-config`, `copilot-agents-optimizer`, `feature-planning`, `file-editor`, `guidelines`, `mcp`, `override-management`, `project-docs`, `roadmap-manager`, `module-management`, `naming`, `project-analyzer`, `sequential-thinking`, `skill-reviewer` |
-| **Workflow** | `git-workflow`, `merge-conflicts`, `code-review`, `refactorer`, `bug-analyzer`, `security`, `adversarial-review`, `dependency-upgrade`, `quality-tools` |
+| **Agent System** | `agent-docs-writing`, `agents-audit`, `context-create`, `commands`, `copilot-config`, `copilot-agents-optimization`, `feature-planning`, `file-editor`, `guidelines`, `mcp`, `override-management`, `project-docs`, `roadmap-management`, `module-management`, `naming`, `project-analyzer`, `sequential-thinking`, `skill-reviewer` |
+| **Workflow** | `git-workflow`, `merge-conflicts`, `code-review`, `code-refactoring`, `bug-analyzer`, `security`, `adversarial-review`, `dependency-upgrade`, `quality-tools` |
 | **Other** | `graphql`, `jira-integration`, `mobile`, `sentry-integration`, `wordpress`, `microservices`, `technical-specification` |
 
 ### Commands (`.augment/commands/`)

@@ -70,10 +70,10 @@ Renaming affects: folder names, SKILL.md `name:` field, compressed copies, symli
 
 | Current | Rename to | Pattern |
 |---|---|---|
-| `refactorer` | `code-refactoring` | `-ing` for activity skills, not `-er` for agents |
+| `code-refactoring` | `code-refactoring` | `-ing` for activity skills, not `-er` for agents |
 | `feature-planning` | `feature-planning` (keep) | Already matches; commands use short forms which is OK |
-| `roadmap-manager` | `roadmap-management` | Match `module-management`, `override-management` |
-| `copilot-agents-optimizer` | `copilot-agents-optimization` | Match pattern |
+| `roadmap-management` | `roadmap-management` | Match `module-management`, `override-management` |
+| `copilot-agents-optimization` | `copilot-agents-optimization` | Match pattern |
 | `dependency-upgrade` | `dependency-upgrade` (keep) | Already clear |
 
 ### Command alignment

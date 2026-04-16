@@ -35,7 +35,7 @@ Commands often chain together. Here are the main workflows:
   Brainstorm        Structure         Phases/Steps        Implement
 ```
 
-**Skills used:** `feature-planning`, `agent-docs-writing`, `roadmap-manager`
+**Skills used:** `feature-planning`, `agent-docs-writing`, `roadmap-management`
 
 ### Bug Investigation & Fix
 
@@ -45,7 +45,7 @@ Commands often chain together. Here are the main workflows:
   Root cause        Implement + verify
 ```
 
-**Skills used:** `bug-analyzer`, `php-coder`, `refactorer`, `pest-testing`
+**Skills used:** `bug-analyzer`, `php-coder`, `code-refactoring`, `pest-testing`
 
 ### Module Work
 
@@ -65,7 +65,7 @@ Commands often chain together. Here are the main workflows:
   PHPStan/Rector  Self-review     Open PR       Address feedback
 ```
 
-**Skills used:** `refactorer`, `code-review`, `git-workflow`
+**Skills used:** `code-refactoring`, `code-review`, `git-workflow`
 
 ### Agent Infrastructure
 
@@ -115,7 +115,7 @@ Commands often chain together. Here are the main workflows:
 | `commands` | Slash command handling |
 | `context-create` | Context document creation and maintenance |
 | `copilot-config` | GitHub Copilot behavior management |
-| `copilot-agents-optimizer` | AGENTS.md and copilot-instructions optimization |
+| `copilot-agents-optimization` | AGENTS.md and copilot-instructions optimization |
 | `feature-planning` | Feature plan structure and workflow |
 | `file-editor` | Auto-open files in user's IDE |
 | `guidelines` | Coding guideline management |
@@ -124,7 +124,7 @@ Commands often chain together. Here are the main workflows:
 | `override-management` | Override system for project customization |
 | `project-analyzer` | Full project analysis orchestration |
 | `project-docs` | Project-specific documentation mapping |
-| `roadmap-manager` | Roadmap structure and execution |
+| `roadmap-management` | Roadmap structure and execution |
 | `sequential-thinking` | Structured problem-solving |
 | `skill-reviewer` | Skill quality auditing (5 Killers checklist) |
 

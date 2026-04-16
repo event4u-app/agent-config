@@ -17,7 +17,7 @@ Use this skill when:
 
 Do NOT use when:
 - Writing code or features
-- Creating roadmaps (use `roadmap-manager` skill)
+- Creating roadmaps (use `roadmap-management` skill)
 
 ## Procedure: Manage contexts
 

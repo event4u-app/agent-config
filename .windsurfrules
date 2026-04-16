@@ -4,46 +4,48 @@
 
 # Agent Documentation
 
-## When to read
+## When to read agent docs
 
-**Before ANY work**, read relevant docs:
+**Before starting ANY work**, read the relevant documentation:
 
-1. `AGENTS.md` (project root) — project-level setup/conventions
-2. `./agents/` — project-specific architecture, guidelines, domain docs
-3. `agents/contexts/domain/` — domain contexts relevant to current work
-4. `app/Modules/{Module}/agents/` — module-specific docs (incl. `agents/contexts/`)
-5. Package `./agents/` directory
-6. Existing roadmap for current work → follow its steps
+1. **Always read** `AGENTS.md` (if it exists in the project root) for project-level setup and conventions.
+2. **Always read** `./agents/` for project-specific architecture, guidelines, and domain docs.
+3. **If domain contexts exist** (`agents/contexts/domain/`) → read any that are relevant to the current work area.
+4. **If working on a module** → also read `app/Modules/{Module}/agents/` for module-specific docs,
+   including `agents/contexts/` within the module if it exists.
+5. **If working on a package** → read the package's `./agents/` directory.
+6. **If a roadmap exists** for the current work → read it first and follow its steps.
 
-## When to update
+## When to update agent docs
 
-After changes, check if docs need updating:
+After making changes, check if any agent docs need to be updated:
 
-- New module → create `app/Modules/{Module}/agents/`
-- Schema changed → update `agents/docs/database-setup.md`
-- New service/pattern → update relevant guidelines
-- Roadmap step done → mark `[x]`
-- Structural changes → update affected docs
+- **New module created** → create `app/Modules/{Module}/agents/` with at least a module description.
+- **Database schema changed** → update `agents/docs/database-setup.md` or equivalent.
+- **New service/pattern introduced** → update relevant guideline docs.
+- **Roadmap step completed** → mark it as done in the roadmap file (`[x]`).
+- **Structural changes** (new conventions, renamed classes, moved files) → update affected docs.
 
-If unsure → **ask the user**.
+If unsure whether a doc needs updating, **ask the user**.
 
-## Roadmaps
+## When to create roadmaps
 
-For significant multi-step/multi-session changes:
-- Ask user about creating roadmap in `agents/roadmaps/`
-- Use `roadmap-create` command
-- Ensures continuity across sessions/agents
+When working on a **significant change** that spans multiple steps or sessions:
+
+- Ask the user whether to create a roadmap in `agents/roadmaps/`.
+- Use the `roadmap-create` command if yes.
+- This ensures future sessions (and other agents) can pick up the work.
 
 ## Documentation language
 
-- All `.md` files in **English**
-- German/other language files → translate when touched
+- All `.md` files must be written in **English**.
+- If an existing file is in German or another language, translate it to English when you touch it.
 
 ## Do NOT
 
-- Create docs without real need
-- Duplicate info from `AGENTS.md` or `.github/copilot-instructions.md`
-- Write docs to document what you did — only what others need to know
+- Do NOT create docs unless there's a real need (new module, significant change, etc.).
+- Do NOT duplicate information that's already in `AGENTS.md` or `.github/copilot-instructions.md`.
+- Do NOT write docs just to document what you did — only document things others need to know.
 
 ---
 
@@ -82,13 +84,13 @@ If the stack is unclear:
 
 ## Routing quality gate
 
-Only route to narrower skill if it has:
+Only route to the narrower skill if it still has:
 
 * executable workflow (concrete procedure steps)
 * concrete validation (specific checks, not "verify it works")
 * real decision power (not just "read the guideline")
 
-If narrow skill is too weak or hollowed out, route through broader skill and note the gap.
+If the narrow skill is too weak or hollowed out, route through the broader skill and note the gap.
 
 ---
 
@@ -96,41 +98,57 @@ If narrow skill is too weak or hollowed out, route through broader skill and not
 
 ## General Principles
 
-- **Thin controllers** — no business logic, delegate to services
-- **Single Action Controllers only** — `__invoke()`. No multi-action/resource controllers. See `.augment/guidelines/php/controllers.md`
-- **Every controller needs FormRequest** — never `$request->validate()` inline
-- **Services** = business logic (calculations, orchestration, validation)
-- **Models** = relationships, scopes, accessors/mutators only
-- Check existing directory structure before creating files
-- Modern standards for **new** code only — respect existing patterns
+- **Controllers are thin** — no business logic, delegate to services.
+- **Only Single Action Controllers** — every new controller MUST use `__invoke()`. No multi-action / resource controllers. See `.augment/guidelines/php/controllers.md` for naming conventions.
+- **Every controller needs a FormRequest** — never validate inline with `$request->validate()`. Use a dedicated `FormRequest` subclass.
+- **Services contain business logic** — calculations, orchestration, validation.
+- **Models have no business logic** — only relationships, scopes, accessors/mutators.
+- Always check the existing directory structure before creating new files.
+- Respect existing patterns — apply modern standards to **new** code only.
 
 ## Project Detection
 
-Detect project type from Git remote, directory name, or project files:
-- `composer.json` → framework (Laravel, Symfony, standalone)
-- `artisan` exists → Laravel
-- `package.json` → frontend framework
-- `AGENTS.md` / `agents/` → project docs
+Detect the current project type from the **Git remote URL**, **directory name**, or **project files**:
+
+- Check `composer.json` for framework (Laravel, Symfony, standalone).
+- Check if `artisan` exists → Laravel project.
+- Check `package.json` for frontend framework (React, Vue, Next.js, etc.).
+- Check `AGENTS.md` or `agents/` for project-specific documentation.
+
+For tooling detection (artisan vs composer), check if `artisan` exists in the project root.
 
 ## Project-Specific Architecture
 
-Read `./agents/` and `AGENTS.md` before structural decisions. Don't rely on this rule for project-specific layouts.
+Each project documents its own architecture in `./agents/` and/or `AGENTS.md`.
+**Always read those files** before making structural decisions. Do not rely on this rule file
+for project-specific directory layouts, database conventions, or module systems.
 
 ## Module-Level Documentation
 
-Modules (`app/Modules/`) may have docs in `app/Modules/*/agents/`. Check module-level agent docs first.
+Some projects use a module system (e.g. `app/Modules/` in Laravel projects).
+Modules may have their own agent docs in `app/Modules/*/agents/` with:
+
+- Module descriptions and feature docs
+- Module-specific roadmaps (`agents/roadmaps/`)
+- Module-specific documentation (`Docs/`)
+
+When working on a module, **always check for module-level agent docs** first.
 
 ## Packages
 
-Packages may use `./agents/` for docs/roadmaps. Treat like projects.
+Packages (Composer, npm, etc.) may also use `./agents/` in their root
+for package-specific docs and roadmaps. Treat them the same way as projects.
 
 ## Build / Task Runner Detection
 
-Check for `Makefile` or `Taskfile.yml`:
-- `Makefile` → `make <target>`
-- `Taskfile.yml` → `task <target>`
+Projects use either `Makefile` or `Taskfile.yml` (or both) for common commands.
+**Always check which one exists** and read it to discover available targets for
+testing, quality checks, container access, migrations, etc.
 
-Prefer these over raw `docker compose exec`.
+- `Makefile` → use `make <target>`
+- `Taskfile.yml` → use `task <target>`
+
+Prefer these targets over raw `docker compose exec` commands when available.
 
 ---
 
@@ -163,14 +181,14 @@ Asking one question too many is always better than a wrong assumption.
 
 # .augment/ Portability
 
-Everything in `.augment/` MUST be **project-agnostic**.
+Everything inside `.augment/` (skills, rules, commands, templates, contexts) MUST be **project-agnostic**.
 
-- NEVER reference specific project, repo name, domain, or tech stack
-- NEVER hardcode project-specific paths, class names, or conventions
-- Content must work as **reusable package** across any project
-- Project-specific behavior → `.agent-settings`, `AGENTS.md`, or `agents/`
-- Need project input → read from `.agent-settings` or accept as parameter
-- Test: "Would this make sense in a completely different project?"
+- NEVER reference a specific project, repo name, domain, or tech stack directly.
+- NEVER hardcode project-specific paths, class names, or conventions.
+- Write content so it works as a **reusable package** across any project.
+- Project-specific behavior belongs in `.agent-settings`, `AGENTS.md`, or `agents/` — not in `.augment/`.
+- If a skill or rule needs project-specific input, read it from `.agent-settings` or accept it as a parameter.
+- When reviewing or editing `.augment/` files, always ask: "Would this still make sense in a completely different project?"
 
 ---
 
@@ -186,8 +204,8 @@ NEVER create or edit files in .augment/ directly.
 ALWAYS work in .augment.uncompressed/ — then use /compress command.
 ```
 
-**Compression ONLY via `/compress` command.** Never manually edit compressed files.
-Command handles hashing, sync verification, and quality checks automatically.
+**Compression is ONLY done via the `/compress` command.** Never manually edit compressed files.
+The command handles hashing, sync verification, and quality checks automatically.
 
 ## Workflow
 
@@ -252,24 +270,25 @@ disable-model-invocation: true
 
 ## Pre-review consistency checkpoints
 
-Before review or PR, verify derived outputs are not stale:
+Before asking for review or creating a PR, verify derived outputs are not stale:
 
-1. Run `task sync-changed` — check for uncompressed changes
-2. If stale: run `/compress` before pushing
-3. Before merge: verify `.augment/` and `.claude/skills/` are regenerated
+1. Run `task sync-changed` — check if `.augment.uncompressed/` has changes not yet compressed
+2. If stale files exist: run `/compress` before pushing
+3. Before merge: verify derived outputs (`.augment/`, `.claude/skills/`) are regenerated
 4. Do NOT leave `.augment/` stale across review cycles
 
 ## Multi-agent symlink mapping
 
-`.claude/skills/` has symlinks to BOTH `.augment/skills/` AND `.augment/commands/`.
-Claude Code treats both as "skills" — different artifact types in our taxonomy.
+`.claude/skills/` contains symlinks to **both** `.augment/skills/` and `.augment/commands/`.
+Claude Code treats both as "skills" — but they are different artifact types in our taxonomy.
 
-| Symlink target | Actual type |
+| `.claude/skills/{name}/SKILL.md` points to... | Actual type |
 |---|---|
-| `.augment/skills/{name}/SKILL.md` | **Skill** |
-| `.augment/commands/{name}.md` | **Command** (`disable-model-invocation: true`) |
+| `.augment/skills/{name}/SKILL.md` | **Skill** (workflow) |
+| `.augment/commands/{name}.md` | **Command** (slash-invoked procedure) |
 
-Always check symlink target to determine actual type.
+Always check the symlink target to determine the actual artifact type.
+Commands have `disable-model-invocation: true` in their frontmatter.
 
 ## Quick reference
 
@@ -429,13 +448,18 @@ Exception: MCPs with **unique capabilities** (Sentry, Playwright, Jira).
 
 # Commit Conventions
 
-Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
+All commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
 ## Format
 
+Valid formats:
+
 - With scope: `<type>(<scope>): <description>`
-- Without scope: `<type>: <description>`
-- Always English, imperative mood, max 72 chars first line
+- Without scope: `<type>: <description>` (omit parentheses when no scope is used)
+
+- **Commit messages are always in English** — regardless of the user's language.
+- **Description in imperative mood** ("add feature", not "added feature").
+- **First line max 72 characters.**
 
 ## Types
 
@@ -452,9 +476,9 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
 ## Scope
 
-- **Jira ticket ID** as scope when branch contains one (e.g. `DEV-1234`)
-- Otherwise short module/area name
-- Optional but recommended
+- Use the **Jira ticket ID** as scope when the branch contains one (e.g. `DEV-1234`).
+- Otherwise use a short module or area name.
+- Scope is optional but recommended.
 
 ## Examples
 
@@ -556,21 +580,24 @@ If you need an ignored skill: read its SKILL.md directly, apply guidance, then a
 
 # Docker Container Commands
 
-All PHP commands run **inside Docker container**, not host.
+All PHP commands (PHPStan, Rector, Composer, PHPUnit, Artisan) must be executed **inside the Docker container**, not on the host.
 
 ## Container Detection
 
-Read `docker-compose.yml` / `compose.yaml` for PHP service name (varies per project).
-- Non-interactive: `docker compose exec -T <service> ...`
-- Interactive: `make console` (if available)
+Detect the correct PHP container service name from `docker-compose.yml` / `compose.yaml`.
+Read the compose file to find the PHP service name — it varies per project.
+
+Use `docker compose exec -T <service> ...` for non-interactive commands (scripts, CI).
+Use `make console` to enter the container interactively (if available).
 
 ## Tooling Detection
 
-Check `artisan` in project root:
-- **Laravel**: `php artisan test`, `vendor/bin/phpstan analyse`, `vendor/bin/rector process`
-- **Composer**: `vendor/bin/phpunit`, `vendor/bin/phpstan analyse`, `vendor/bin/rector process`
+Check if `artisan` exists in the project root:
 
-## Examples (Laravel)
+- **Laravel** (`artisan` exists): `php artisan test`, `vendor/bin/phpstan analyse`, `vendor/bin/rector process`
+- **Composer** (no `artisan`): `vendor/bin/phpunit`, `vendor/bin/phpstan analyse`, `vendor/bin/rector process`
+
+## Examples (Laravel project)
 
 ```bash
 docker compose exec -T <php-service> vendor/bin/phpstan analyse
@@ -579,7 +606,7 @@ docker compose exec -T <php-service> vendor/bin/ecs check --fix
 docker compose exec -T <php-service> php artisan test
 ```
 
-## Examples (Composer)
+## Examples (Composer project)
 
 ```bash
 docker compose exec -T <php-service> vendor/bin/phpstan analyse
@@ -590,11 +617,15 @@ docker compose exec -T <php-service> vendor/bin/phpunit
 
 ## Build / Task Runner
 
-Check `Makefile` / `Taskfile.yml` first for shortcuts:
-- `Makefile` → `make console`, `make test`, `make phpstan`
-- `Taskfile.yml` → `task console`, `task test`, `task phpstan`
+Before using raw `docker compose exec` commands, check if a `Makefile` or `Taskfile.yml` exists.
+These often provide convenient shortcuts for common operations:
 
-Frontend commands run on host or node container.
+- `Makefile` → `make console`, `make test`, `make phpstan`, etc.
+- `Taskfile.yml` → `task console`, `task test`, `task phpstan`, etc.
+
+**Always read the Makefile/Taskfile first** to discover available targets.
+
+Frontend commands (npm, webpack) run on the host or in the node container.
 
 ---
 
@@ -602,163 +633,194 @@ Frontend commands run on host or node container.
 
 ## Rule
 
-**ZERO TOLERANCE:** When `.augment/` file is **created, renamed, or deleted** (or name/description/scope/counts change), all related files **must be updated in same response**.
+**CRITICAL — ZERO TOLERANCE:** When a file in `.augment/` is **created, renamed, or deleted**,
+or its **name, description, scope, or counts change**, all related files **must be updated
+in the same response** — not later, not in a follow-up, not when reminded.
 
-New rule/skill/command without index entry + count update + context update = **incomplete work**.
+A new rule/skill/command without its index entry, count update, and context update is **incomplete work**.
 
-**Mandatory sequence:**
-1. Create/delete file
-2. **Immediately** update `contexts/augment-infrastructure.md` (counts + tables)
-3. Check cross-references and routing hints
+**Mandatory sequence when creating/deleting any `.augment/` file:**
+1. Create/delete the file
+2. **Immediately** update `contexts/augment-infrastructure.md` (counts + category tables)
+3. Check cross-references in contexts and routing hints (inline "see X skill" references)
 
-Steps 2–3 NOT optional. Don't present result until done.
+Steps 2–3 are NOT optional. Do NOT present the result to the user until all steps are done.
 
-**Modes:**
-- **Reactive** (auto): add/remove/rename → sync counts, contexts, cross-refs
-- **Proactive** (on demand): full audit → duplicates, thin skills, redundancy → fix/merge. Ask before destructive actions.
+**Two modes:**
+- **Reactive** (automatic): Triggered by add/remove/rename or scope/description/count changes → sync counts, contexts, cross-references.
+- **Proactive** (on demand): Full audit → find duplicates, thin skills, redundancy, stale content → fix or merge. Ask before destructive actions.
 
 ## What to update
 
+When a file is **added, removed, or renamed**:
+
 | Change | Files to update |
 |---|---|
-| Skill/command/rule count changes | `contexts/augment-infrastructure.md` (count + table) |
+| Skill/command/rule count changes | `contexts/augment-infrastructure.md` (count + category table) |
 | New skill category | `contexts/augment-infrastructure.md` + `contexts/skills-and-commands.md` |
-| New workflow chain | `contexts/skills-and-commands.md` (workflow chains) |
+| New workflow chain | `contexts/skills-and-commands.md` (workflow chains section) |
 
 ## Cross-reference updates
 
+When a skill is **added or its scope changes**, check and update:
+
 | What | Where to check |
 |---|---|
-| Inline routing hints | "see X skill" / "use X instead" in other skills |
-| Guideline cross-refs | Guidelines referencing changed skill |
-| Command skill refs | Commands using changed skill |
+| Inline routing hints | "see X skill" or "use X instead" references in other skills |
+| Guideline cross-references | Guidelines that reference the changed skill |
+| Command skill references | Commands that use the changed skill |
 
 ## Settings template sync
 
-When skill/rule/command reads new setting from `.agent-settings` not in `templates/agent-settings.md`:
-1. Add key with default to template
-2. Add row to Settings Reference table
-3. Add comment explaining key
+When a skill, rule, or command **reads a new setting** from `.agent-settings` that does not yet
+exist in `.augment/templates/agent-settings.md`:
+
+1. **Add the key** with its default value to the template block.
+2. **Add a row** to the Settings Reference table.
+3. **Add a comment** above the key explaining what it does.
 
 ## Content consistency
 
-**MANDATORY:** When rule/skill/guideline **content** changes, search all files covering same topic:
+**CRITICAL — MANDATORY CHECK:** When a rule, skill, or guideline's **content** is changed
+(not just metadata), you MUST search for **all other rules, skills, and guidelines that cover
+the same topic** and verify they are consistent.
 
 ```bash
 grep -rl "TOPIC" .augment/rules/ .augment/skills/ .augment/guidelines/ --include="*.md"
 ```
 
-Contradictions → **update in same response**. Inconsistent docs worse than no docs.
+If any file contradicts or is missing the updated information → **update it in the same response**.
+Inconsistent documentation is worse than no documentation.
 
 ## Do NOT
 
-- Rewrite entire files — only affected entries
-- Ask permission — automatic maintenance
-- Skip cross-reference updates
-- Present new file without completed sync
-- Defer sync to follow-up
+- Do NOT rewrite entire files — only update the affected entries.
+- Do NOT ask the user for permission — this is an automatic maintenance step, like updating imports.
+- Do NOT skip cross-reference updates — stale links are worse than no links.
+- Do NOT present a new `.augment/` file to the user without having completed all sync steps first.
+- Do NOT defer sync to a "follow-up" — it must happen in the same response as the creation/deletion.
 
 ---
 
 # Downstream Changes
 
-After EVERY edit, find **ALL downstream changes**. Missing caller/test/import = critical failure.
+## Rule
+
+After EVERY code edit, find **ALL downstream changes** needed. Missing a caller, a test,
+or an import is a critical failure — it leaves the codebase in a broken state.
 
 ## What to check
 
+After editing any file, search for **all** of these:
+
 | What | How to find | What to update |
 |---|---|---|
-| **Callers / call sites** | `codebase-retrieval` + `grep` for changed method/class | Signatures, parameters, return type handling |
-| **Interface implementations** | `implements {Interface}` / `extends {Class}` | Match new signatures in all implementations |
-| **Subclasses** | `extends {Class}` | Override/implement changed methods |
-| **Tests** | Search test dirs for changed class/method | Assertions, mocks, method calls |
-| **Imports** | `use {Old\Namespace}` | Update namespace after moves/renames |
-| **Type definitions** | Type hints referencing changed class | Parameter types, return types, PHPDoc |
-| **Config / bindings** | Service providers, config files | Class references in DI bindings |
-| **API schemas / OpenAPI** | Controller attributes | Response structure changes |
-| **Routes** | `routes/` controller references | After controller rename/move |
-| **Documentation** | `agents/`, `docs/` references | Behavior or API changes |
+| **Callers / call sites** | `codebase-retrieval` + `grep` for the changed method/class name | Update signatures, parameters, return type handling |
+| **Interface implementations** | Search for `implements {Interface}` or `extends {Class}` | Match new method signatures in all implementations |
+| **Subclasses** | Search for `extends {Class}` | Override or implement changed methods |
+| **Tests** | Search test directories for the changed class/method name | Update assertions, mocks, method calls |
+| **Imports / use statements** | Search for `use {Old\Namespace}` | Update to new namespace after moves/renames |
+| **Type definitions** | Search for type hints referencing the changed class | Update parameter types, return types, PHPDoc |
+| **Config / bindings** | Search service providers, config files | Update class references in DI bindings |
+| **API schemas / OpenAPI** | Check controller attributes | Update if response structure changed |
+| **Routes** | Search `routes/` for controller references | Update after controller rename/move |
+| **Documentation** | Search `agents/`, `docs/` for references | Update if behavior or API changed |
 
-## Breaking changes — ask first
+## Breaking changes
 
-- Removing/renaming public method/class
-- Changing method signature (required params, return type)
-- Changing API response structure
-- Removing DB column/table
-- Changing event payload
-- Renaming frontend-used route name
+Before making a change that affects a **public API** (endpoint response, service method signature,
+event payload, job constructor), assess the impact:
 
-## Non-breaking — proceed
+### Always ask the user first when:
 
-- New optional parameter with default
-- New method (additive)
-- New API response field (additive)
-- Internal refactoring (same public interface)
-- Bug fix
+- Removing or renaming a public method/class
+- Changing a method signature (new required params, changed return type)
+- Changing an API response structure (new/removed fields, changed types)
+- Removing a database column or table
+- Changing an event payload that listeners depend on
+- Renaming a route name that the frontend uses
+
+### Proceed without asking when:
+
+- Adding a new optional parameter with a default value
+- Adding a new method (doesn't break existing callers)
+- Adding a new field to an API response (additive, non-breaking)
+- Internal refactoring that doesn't change the public interface
+- Fixing a bug (the current behavior is wrong)
 
 ## Verification
 
-1. No broken imports — PHPStan catches these
-2. No broken tests
-3. No broken types — PHPStan Level 9
-4. No stale references — grep old name confirms zero results
+After completing all downstream changes:
+
+1. **No broken imports** — `php -l` or PHPStan catches these
+2. **No broken tests** — run the test suite
+3. **No broken types** — PHPStan Level 9 catches signature mismatches
+4. **No stale references** — grep for the old name/namespace to confirm zero results
+
+## The iron law
 
 ```
 Every edit is incomplete until all downstream changes are made.
 ```
 
+Do NOT move on to the next task, claim completion, or suggest committing
+until every caller, test, import, and reference is updated.
+
 ---
 
 # E2E Testing
 
-## Before writing
+## Before writing E2E tests
 
-1. Read `.augment/guidelines/e2e/playwright.md`
-2. Check existing tests — match structure, fixtures, Page Objects
-3. Check `playwright.config.ts` — base URL, browsers, timeouts
+1. **Read the guideline** — `.augment/guidelines/e2e/playwright.md` for all conventions and patterns.
+2. **Check existing tests** — match the project's structure, fixtures, and Page Object patterns.
+3. **Check `playwright.config.ts`** — base URL, browsers, timeouts, projects.
 
-## Locators
+## Locator rules
 
-- Prefer: `getByRole` > `getByLabel` > `getByText` > `getByTestId` > CSS
-- Never: auto-generated classes, dynamic IDs, XPath
-- No semantic locator → add `data-testid`
+- **Always prefer semantic locators**: `getByRole` > `getByLabel` > `getByText` > `getByTestId` > CSS.
+- Never use auto-generated class names, dynamic IDs, or XPath.
+- If no semantic locator works, add a `data-testid` to the component.
 
-## Assertions
+## Assertion rules
 
-- Web-first assertions only (`toBeVisible`, `toHaveText`, `toHaveURL`)
-- Never `expect(await ...)` — no auto-retry
-- Never `page.waitForTimeout()` — wait for condition
+- **Always use web-first assertions** (`toBeVisible`, `toHaveText`, `toHaveURL`).
+- Never use `expect(await ...)` pattern — it doesn't auto-retry.
+- Never use `page.waitForTimeout()` — wait for a condition instead.
 
-## Test structure
+## Test structure rules
 
-- One test = one workflow/behavior
-- Fully isolated — no shared state, no order dependency
-- Page Objects = actions only, no assertions
-- Fixtures for reusable setup
-- API calls for test data (not UI)
+- One test = one user workflow or behavior.
+- Tests must be **fully isolated** — no shared state, no execution order dependency.
+- Page Objects contain **actions only**, never assertions.
+- Use **fixtures** for reusable setup (auth, page objects, test data).
+- Use **API calls** for test data setup — faster and more reliable than UI interactions.
 
-## CI
+## CI rules
 
-- `workers: 1`, `retries: 2` (CI) / `0` (local)
-- `forbidOnly: !!process.env.CI`
-- `trace: 'on-first-retry'`
-- Install only needed browsers
-- Upload `playwright-report/` as artifact
+- Set `workers: 1` in CI for stability.
+- Set `retries: 2` in CI, `0` locally.
+- Set `forbidOnly: !!process.env.CI` to prevent `.only` in CI.
+- Collect `trace: 'on-first-retry'` — not on every run.
+- Only install browsers you need (`npx playwright install chromium --with-deps`).
+- Upload `playwright-report/` as CI artifact.
 
 ## Quality checks
 
-1. All tests pass: `npx playwright test`
-2. No `waitForTimeout`
-3. No CSS/XPath where semantic locators work
-4. No `.only` left
-5. Page Objects have no assertions
+Before claiming E2E tests are complete:
+
+1. All tests pass locally: `npx playwright test`
+2. No `waitForTimeout` calls in the code.
+3. No CSS/XPath selectors where semantic locators work.
+4. No `.only` left in test files.
+5. Page Objects have no assertions.
 
 ---
 
 # Guidelines
 
 Coding guidelines live in `.augment/guidelines/` organized by language.
-**Check relevant guideline** before writing or reviewing code.
+**Always check the relevant guideline** before writing or reviewing code.
 
 ## Available Guidelines
 
@@ -814,20 +876,30 @@ Playwright best practices, Page Objects, fixtures, CI.
 
 ## How guidelines work
 
-- **Guidelines** = coding conventions (reference, on demand)
-- **Rules** = behavior constraints (auto-loaded)
-- **Skills** = workflows (matched by topic)
+- **Guidelines** = detailed coding conventions (reference material, read on demand)
+- **Rules** = always-active behavior constraints (auto-loaded every conversation)
+- **Skills** = agent capabilities and workflows (matched by topic)
+
+Guidelines are the "how to write code" docs. Rules enforce critical subsets automatically.
+Skills reference guidelines when performing related tasks.
 
 ## Boundary: Guidelines vs Skills
 
-- Guidelines = **conventions and reference**. Skills = **executable workflows**.
-- Skills may reference guidelines but MUST NOT outsource core execution to them.
-- If skill becomes "go read guideline" → restore workflow.
+- Guidelines contain **conventions and reference knowledge**. Skills contain **executable workflows**.
+- A skill may reference a guideline for conventions, but must NOT outsource its core execution steps to a guideline.
+- Do NOT move a skill's operational core (procedure, validation, decision logic) into a guideline.
+- If a skill becomes "go read the guideline", it has lost its purpose — restore the workflow.
 
 ## Adding new guidelines
 
-New language/framework → create `.augment/guidelines/{language}/`.
-Follow PHP structure as template. Read on demand — don't memorize.
+When a new language or framework is introduced, create a directory:
+```
+.augment/guidelines/{language}/
+```
+
+Follow the existing PHP structure as a template.
+
+Read the specific guideline file on demand — don't memorize the full list.
 
 ---
 
@@ -835,24 +907,34 @@ Follow PHP structure as template. Read on demand — don't memorize.
 
 ## Personalization
 
-Read `user_name` from `.agent-settings`. If empty, ask for first name, save it. Use naturally — not every sentence.
+Read `user_name` from `.agent-settings`. If empty, ask the user for their first name at the
+start of the first interaction, save it, and use it from then on. Address the user by name
+where it feels natural — not in every sentence.
 
 ## Language
 
-- Informal German "Du" (not "Sie")
-- German unless user writes in English
-- Code comments: English
-- `.md` files: English. German files → translate when touched
-- Two spaces after ❌, ✅, ⚠️ in CLI output. One space for other icons
-- No double/triple blank lines — one is enough
-- Every file ends with exactly one newline
+- Use informal German "Du" (not "Sie").
+- Respond in German unless the user writes in English.
+- All code comments must be in English.
+- All `.md` documentation files must be in English. If an existing file is in German, translate it when you touch it.
+- Use two spaces after icons like ❌, ✅, ⚠️ in CLI output. One space is not enough. For other icons, one space is fine.
+- Avoid double and triple blank lines in code and output — one blank line is enough.
+- Every file MUST end with exactly one newline — no trailing blank lines.
 
-## `.md` files ALWAYS English
+## `.md` files are ALWAYS English — no exceptions
 
-All text in `.md` files in `.augment/` and `agents/`: English only.
-Includes: headings, bullets, example labels, prompts, templates, ASCII labels, tables.
+**Every** piece of text inside `.md` files in `.augment/` and `agents/` must be in English.
+This includes:
 
-Agent translates at runtime. `.md` = English blueprint.
+- Headings, paragraphs, and bullet points
+- **Example option labels** (e.g., `> 1. Yes — start implementing`, NOT `> 1. Ja — mit der Umsetzung starten`)
+- **Example prompts and questions** (e.g., `"Found X unresolved comments."`, NOT `"X offene Kommentare gefunden."`)
+- **Template placeholders and sample output** (e.g., `Progress:`, NOT `Fortschritt:`)
+- **ASCII art labels** in formatted output blocks (e.g., `CHANGES:`, NOT `ÄNDERUNGEN:`)
+- **Table headers and content**
+
+The agent translates to the user's language **at runtime** when presenting options.
+The `.md` source files are the English blueprint — they define WHAT to say, not in which language.
 
 **Wrong** (German in `.md`):
 ```
@@ -994,58 +1076,60 @@ Show the same numbered options as above. Repeat once if dismissed — then accep
 
 # PHP Coding Rules
 
-- `declare(strict_types=1)` in every **new** PHP file. Not required for existing files without it.
-- Project `Math` helper for ALL business calculations. Never native arithmetic (`+`, `-`, `*`, `/`) for business math.
-- Never `var_dump()`, `print_r()`, `dd()` — disallowed by PHPStan.
-- Never `float` for money — `decimal` or `Math` helper.
-- Strict comparison `===`/`!==`, Yoda style: `null === $var`.
+- Use `declare(strict_types=1)` in every **new** PHP file. Not required when modifying existing files that don't have it.
+- If the project has a `Math` helper class, use it for ALL business calculations. Never use native PHP arithmetic operators (`+`, `-`, `*`, `/`) for business calculations. Search for the `Math` class in the project.
+- Never use `var_dump()`, `print_r()`, or `dd()` — they are disallowed by PHPStan config. Exception: legacy projects where these are already used and no alternative is feasible.
+- Never use `float` for money — use `decimal` or the `Math` helper.
+- Always use `===` / `!==` (strict comparison), Yoda style: `null === $var`.
 - Early return over nested if/else.
 - No one-liner if statements.
-- Single quotes without interpolation. `sprintf()` for complex strings.
+- Single quotes for strings without interpolation. `sprintf()` for complex strings.
 - Variables: `camelCase`. Array keys: `snake_case`. Constants: `UPPER_SNAKE_CASE`.
-- Typed properties, parameters, return types — always.
-- Constructor property promotion where sensible.
+- Typed properties, parameters, and return types — always.
+- Constructor property promotion where it makes sense.
 
-## Eloquent — Attribute Access
+## Eloquent Models — Attribute Access
 
-Read `eloquent_access_style` from `.agent-settings`. Default: `getters_setters`. See `eloquent` skill.
+Read `eloquent_access_style` from `.agent-settings` to determine the preferred style.
+Default: `getters_setters`. See the `eloquent` skill for the full reference table and examples.
 
-- **`getters_setters`**: Typed getter + fluent setter per attribute. Inside model: `getAttribute('col')`/`setAttribute('col', $val)`. Outside: getters/setters only.
-- **`get_attribute`**: `getAttribute()`/`setAttribute()` everywhere.
-- **`magic_properties`**: `$model->column_name` everywhere.
+- **`getters_setters`** (strict): Every attribute has a typed getter + fluent setter. Inside the model: `getAttribute('column_name')`/`setAttribute('column_name', $value)`. Outside: always getters/setters. If a getter doesn't exist yet, create it first.
+- **`get_attribute`**: Use `getAttribute('column_name')`/`setAttribute('column_name', $value)` everywhere, no getters/setters needed.
+- **`magic_properties`**: Laravel default `$model->column_name` everywhere.
 
 ### Relationship Getters
 
-- Every relationship MUST have typed getter **above** relationship method
-- Inside getter: `$this->getAttribute('relationship_name')`, NEVER `$this->relationship_name`
-- Outside model: ALWAYS getter (`$model->getEquipment()`), NEVER magic property
-- `instanceof` checks over `null ===` for relationships
+- Every relationship MUST have a typed getter method **above** the relationship method.
+- **Inside the getter:** use `$this->getAttribute('relationship_name')`, NEVER `$this->relationship_name`.
+- **Outside the model:** ALWAYS use the getter (`$model->getEquipment()`), NEVER access the magic property (`$model->equipment`).
+- Use `instanceof` checks instead of `null ===` when checking relationship results.
 
-## Observers over `booted()`
+## Eloquent Models — Observers over `booted()`
 
-- No `booted()`/`boot()` for lifecycle hooks
-- Dedicated **Observer** via `#[ObservedBy]` attribute
+- Do NOT use `booted()` / `boot()` for model lifecycle hooks (saving, saved, deleted, etc.).
+- Use a dedicated **Observer** class registered via `#[ObservedBy]` attribute.
+- This keeps models slim and lifecycle logic testable and discoverable.
 
 ## PHPStan
 
-- Fix root cause. NEVER add to `phpstan-baseline.neon`.
-- `ignoreErrors` in `phpstan.neon`: only for **structural toolchain limitations**. Not individual issues. **Unsure → ask.**
-- Last resort (confirmed false positive):
+- Always fix the root cause. Do NOT add entries to `phpstan-baseline.neon`.
+- Adding `ignoreErrors` to `phpstan.neon` is allowed for **structural toolchain limitations** (e.g., Pest runtime bindings). NOT for individual code issues. **If unsure → ask the user.**
+- If a fix is truly impossible (confirmed false positive), use an inline ignore as last resort:
   ```php
   // @phpstan-ignore-next-line — false positive: reason here
   ```
 
 ## Testing
 
-- **Pest** syntax, not PHPUnit — unless explicitly asked.
-- `tests/Unit/` auto-uses `UnitTestCase` (via `tests/Pest.php`).
+- Always write tests in **Pest**, not PHPUnit class syntax — unless the user explicitly asks for PHPUnit.
+- Pest tests in `tests/Unit/` automatically use `UnitTestCase` as the base class (configured in `tests/Pest.php`).
 
 ## PHPDoc
 
-- Only when type hints insufficient (e.g. `@param array<int, MyObject> $items`)
-- Never repeat method signature
-- One docblock per method
-- Order: `@param` → `@return` → `@throws`
+- Only add PHPDoc when type hints are insufficient (e.g. generic arrays: `@param array<int, MyObject> $items`).
+- Do NOT add PHPDoc that just repeats the method signature.
+- One docblock per method — never split into multiple `/** */` blocks.
+- Tag order: `@param` → `@return` → `@throws`.
 
 ---
 
@@ -1053,7 +1137,7 @@ Read `eloquent_access_style` from `.agent-settings`. Default: `getters_setters`.
 
 ## `always` = loaded every conversation
 
-Use ONLY when rule applies to virtually every interaction:
+Use ONLY when the rule applies to virtually every interaction:
 
 - Universal agent behavior (language, tone, interaction style)
 - Safety constraints (scope control, verification before completion)
@@ -1064,29 +1148,29 @@ Use ONLY when rule applies to virtually every interaction:
 
 Use for everything else:
 
-- Language-specific (PHP, JS, SQL)
-- Tool-specific (Docker, Git, quality tools)
-- Workflow-specific (commands, skill creation, E2E testing)
-- Domain-specific (translations, architecture)
+- Language-specific rules (PHP, JS, SQL)
+- Tool-specific rules (Docker, Git, quality tools)
+- Workflow-specific rules (commands, skill creation, E2E testing)
+- Domain-specific rules (translations, architecture)
 
 ## Decision test
 
-> "Does this rule need to be active when user asks a simple question, reviews a PR, or discusses architecture?"
+> "Does this rule need to be active when the user asks a simple question, reviews a PR, or discusses architecture?"
 
 - Yes → `always`
-- No → `auto` with clear trigger description
+- No → `auto` with a clear trigger description
 
 ## Auto description quality
 
-`description` field IS the trigger. Must describe **when** rule applies, not **what** it contains.
+The `description` field IS the trigger. It must describe **when** the rule applies, not **what** it contains.
 
-- ❌  `"PHP coding standards"` — too vague
+- ❌  `"PHP coding standards"` — too vague, won't match reliably
 - ✅  `"Writing or reviewing PHP code — strict types, naming, Eloquent conventions"`
 
 ## Hard constraint
 
 - Default to `auto`. Justify `always`.
-- If >50% of conversations don't need rule → must be `auto`.
+- If >50% of conversations don't need a rule → it must be `auto`.
 - `optimize-agents` command checks this and suggests changes.
 
 ---
@@ -1109,20 +1193,20 @@ Use for everything else:
 
 - Split by responsibility, not by length.
 
-- Rules: short, constraint-only, easy to scan.
-- Skills: executable with clear workflow + validation.
-- Commands: orchestrate, not implement.
-- Guidelines: must not replace skill execution.
-- AGENTS.md: high-level, no workflows.
-- copilot-instructions.md: short, behavioral.
+- Rules must stay short, constraint-only, and easy to scan.
+- Skills must remain executable with clear workflow and validation.
+- Commands must orchestrate, not implement detailed workflows.
+- Guidelines must not replace skill execution.
+- AGENTS.md must stay high-level and not contain workflows.
+- copilot-instructions.md must stay short and behavioral.
 
-- Component grows too large, mixes responsibilities, or hard to scan → split or refactor.
+- If a component grows too large, mixes responsibilities, or becomes hard to scan → split or refactor.
 
 - Prefer small files:
-  - Rules and system instructions: well below 200 lines
-  - Smaller (≈60 lines) strongly preferred
+  - Rules and system instructions should stay well below 200 lines
+  - Smaller (≈60 lines) is strongly preferred
 
-→ Full limits: `.augment/guidelines/agent-infra/size-and-scope.md`
+→ Size limits and details: `.augment/guidelines/agent-infra/size-and-scope.md`
 
 ---
 
@@ -1130,7 +1214,7 @@ Use for everything else:
 
 ## Minimum Sharpness
 
-Every skill must answer four questions. If ANY weak → not done.
+Every skill must answer four questions. If ANY answer is weak, the skill is not done.
 
 | # | Question | Section | Standard |
 |---|---|---|---|
@@ -1149,33 +1233,51 @@ Every skill MUST have: `When to use`, `Procedure`, `Gotcha`, `Output format`, `D
 If a skill is not executable without opening a guideline, it is broken.
 ```
 
-- MAY reference guidelines for conventions
-- MUST NOT outsource core workflow to guidelines
-- If removing guideline refs makes skill useless → skill too weak
+- Skills MAY reference guidelines for detailed conventions
+- Skills MUST NOT outsource their core workflow to guidelines
+- If removing guideline references makes the skill useless → the skill is too weak
 
-**Litmus test:** Cover guideline references. Is Procedure still executable? If not → fix skill.
+**Litmus test:** Cover all guideline references in the Procedure. Is it still executable?
+If not → the skill needs more own steps, decisions, and validation — not more guideline links.
 
 ## Merge Preservation
 
-Merged result MUST preserve:
-1. Strongest validation from each source
-2. Strongest example from each source
-3. Strongest anti-pattern from each source
-4. All concrete decision criteria
+When merging or refactoring skills, the merged result MUST preserve:
 
-Invalid if: validation weaker, examples lost, anti-patterns decreased, result became umbrella doc.
+1. **Strongest validation** from each source skill
+2. **Strongest example** (good/bad contrast) from each source
+3. **Strongest anti-pattern** from each source
+4. **All concrete decision criteria** that differ between sources
+
+A merge is invalid if:
+- Validation got weaker than the strongest source
+- Examples were lost without replacement
+- Anti-pattern coverage decreased
+- The merged skill became a generic umbrella doc
 
 ## Compression Preservation
 
-MUST preserve: triggers, decision steps, validation checks, gotchas, strongest example.
-May remove: verbose explanations, redundant examples, non-execution commentary.
+When compressing a skill, the compressed version MUST preserve:
+
+- Trigger quality (description + When to use)
+- All procedure steps that contain decisions
+- All concrete validation checks
+- All gotchas and anti-patterns
+- Strongest example (at minimum one good/bad contrast)
+
+Compression may remove:
+- Verbose explanations
+- Redundant examples (keep the strongest)
+- Commentary that doesn't affect execution
 
 ## Refactor Safety
+
+When refactoring or optimizing skills:
 
 - NEVER weaken validation to pass linter
 - NEVER remove anti-patterns to reduce size
 - NEVER replace concrete checks with "verify it works"
-- NEVER merge if result broader than either source
+- NEVER merge skills if the result is broader than either source
 - ALWAYS run linter before and after — fail count must not increase
 
 ---

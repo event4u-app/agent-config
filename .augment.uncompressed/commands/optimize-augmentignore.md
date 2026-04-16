@@ -258,5 +258,5 @@ echo "Rules ignored: $rules_count"
 - **When in doubt, ignore files** — false positive is easy to fix, false negative wastes tokens silently.
 - **When in doubt, keep skills** — ignoring a needed skill causes bad output, keeping an unneeded one just wastes ~3 lines.
 - **Never ignore always-active rules** — only auto-loaded rules (those with `description` frontmatter) may be ignored.
-- **Never ignore meta/agent-system skills** — `agent-docs-writing-writing`, `commands`, `context-create`, `override-management`, `guidelines`, `project-docs`, `roadmap-manager`, `naming`, `skill-reviewer`, `file-editor`, `copilot-config`, `copilot-agents-optimizer`.
+- **Never ignore meta/agent-system skills** — `agent-docs-writing-writing`, `commands`, `context-create`, `override-management`, `guidelines`, `project-docs`, `roadmap-management`, `naming`, `skill-reviewer`, `file-editor`, `copilot-config`, `copilot-agents-optimization`.
 - **Restore previously ignored skills** when the stack changes (e.g., Vue added to project → restore `vue` skill).

@@ -13,7 +13,7 @@ source: package
 
 Do NOT use when:
 - Feature development (use `feature-planning` skill)
-- Code style or refactoring (use `refactorer` skill)
+- Code style or refactoring (use `code-refactoring` skill)
 - Performance issues (use `performance-analysis` skill)
 - Security vulnerabilities (use `security-audit` skill)
 

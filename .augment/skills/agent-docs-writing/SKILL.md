@@ -28,7 +28,7 @@ The documentation is organized in layers, from cross-project to module-specific:
 .augment/
 ├── rules/          ← Always-active rules (coding, docker, scope, language, etc.)
 ├── commands/       ← Slash commands (fix-ci, create-pr, quality-fix, etc.)
-├── skills/         ← Reusable skill definitions (coder, refactorer, etc.)
+├── skills/         ← Reusable skill definitions (coder, code-refactoring, etc.)
 ├── contexts/       ← Shared contexts about the agent system itself
 ├── templates/      ← Templates for features, roadmaps, contexts
 └── guidelines/     ← Coding guidelines by language
