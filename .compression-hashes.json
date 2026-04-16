@@ -8,7 +8,7 @@
   "commands/bug-fix.md": "5d9508eb8c88f468412588bfe093b06329b4bfbb134b0cc2aad28f50d0da66f2",
   "commands/bug-investigate.md": "43c14dc7f590f362a930e26c0ae79e8db18430ef3e2b97796faf328af406112a",
   "commands/commit.md": "fb2d45846c1a1205bee16d02a1c253ec3dad71784148c637467af7d11665250d",
-  "commands/compress.md": "36ef889f1fb97e97f8a3846ecee7f715852d039e69d0d9f12427c91bb21673c1",
+  "commands/compress.md": "826f2865a97505e102ee50f3d896294e7b73a2b6c5c72a6431d397dac19470d1",
   "commands/config-agent-settings.md": "4c6da508096359ced927f19c20d1601012f4f021e9d2349d8872232be8afd58a",
   "commands/context-create.md": "bb903a72fde19db01b4fce7bd4749270ce55b28d4e80d2258946cf56f6ea0c60",
   "commands/context-refactor.md": "f86401d1a62e38e262b4a034e41614bafa5de4cdab5f7262741fe4e873d43ac8",

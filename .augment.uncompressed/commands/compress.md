@@ -50,15 +50,18 @@ For each changed `.md` file:
    - **Drop:** "you should", "make sure to", "remember to" — state action directly
    - **Merge** redundant bullets that say the same thing differently
    - **Prefer** bullets over prose, direct instructions over explanatory paragraphs, one-line decisions over paragraphs
-3. **NEVER modify:**
-   - Code blocks (``` fenced or indented)
-   - Inline code (`backtick content`)
-   - URLs, links, file paths, commands
-   - Headings (exact text preserved)
-   - Tables (structure preserved, compress cell text)
-   - YAML frontmatter
-   - Technical terms, library names, API names
-   - Dates, version numbers, numeric values
+3. **Copy-paste first, compress second:**
+   Before compressing ANY prose, extract and set aside these elements from the source.
+   They go into the compressed output **unchanged, byte-for-byte**:
+   - **All code blocks** (``` fenced or indented) — copy EVERY code block from source to output FIRST
+   - **YAML frontmatter** — copy verbatim
+   - **All inline code** (`backtick content`)
+   - **All URLs, links, file paths, commands**
+   - **All H1/H2 headings** — exact text preserved
+   - **Tables** (structure preserved, compress cell text only)
+   - **Technical terms, library names, API names**
+   - **Dates, version numbers, numeric values**
+   Then compress ONLY the prose around these preserved elements.
 4. **NEVER remove (even if verbose):**
    - Trigger clarity (When to use / description)
    - Decision hints that prevent mistakes
@@ -78,13 +81,23 @@ For each changed `.md` file:
      But don't add unrelated sections.
    - **Do NOT compress weak skills.** If the source has no procedure or no validation, fix structure first.
    - **Reference skill:** See `.augment.uncompressed/skills/skill-writing/SKILL.md` for the gold standard
-6. **Compare before and after:** The compressed version must be at least as safe and
-   executable as the original. If compression removed critical guidance, revise.
-7. Write the compressed output to `.augment/{path}`
+6. Write the compressed output to `.augment/{path}`
+7. **MANDATORY: Run compression quality check on this file:**
+
+```bash
+python3 scripts/check_compression.py --format text 2>&1 | grep "{path}"
+```
+
+If the output contains 🔴 (error) for this file: **STOP. Fix the compressed file before continuing.**
+Common errors and how to fix them:
+- `lost_code_blocks` → You dropped a code block. Copy ALL code blocks from source.
+- `modified_code_block` → Code block content changed. Replace with exact source content.
+- `frontmatter_mismatch` → YAML frontmatter differs. Copy verbatim from source.
+
+**Do NOT call `mark-done` until this file has zero 🔴 errors.**
+
 8. Show word count: `{original} → {compressed} words ({saved}% saved)`
 9. **Mark as done:** `task sync-mark-done -- {path}`
-
-This updates the stored hash so the file won't appear as changed next time.
 
 ### Batch processing
 
@@ -95,13 +108,22 @@ Mark each file done after writing it. After each batch, show a progress summary:
 Batch 1/5 complete: 10 files, avg 42% saved
 ```
 
-## Step 4: Verify sync
+## Step 4: Final verification gate
+
+Run BOTH checks. Both must pass before finishing.
 
 ```bash
 task sync-check
 ```
 
-Must pass with ✅ before finishing.
+Must show ✅ (hashes in sync).
+
+```bash
+python3 scripts/check_compression.py
+```
+
+Must show **zero 🔴 errors**. Warnings (🟡) are acceptable.
+If any 🔴 errors remain: go back and fix those files before finishing.
 
 ## Step 5: Summary
 
