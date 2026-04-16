@@ -200,12 +200,16 @@ Everything inside `.augment/` (skills, rules, commands, templates, contexts) MUS
 ## The Iron Rule
 
 ```
-NEVER create or edit files in .augment/ directly.
-ALWAYS work in .augment.uncompressed/ — then use /compress command.
+NEVER create or edit files in .augment/ directly — not even "just a small fix".
+ALWAYS work in .augment.uncompressed/ — then compress via /compress command.
 ```
 
-**Compression is ONLY done via the `/compress` command.** Never manually edit compressed files.
-The command handles hashing, sync verification, and quality checks automatically.
+**ZERO exceptions.** Even if the fix is obvious, small, or "faster" — STOP.
+Edit `.augment.uncompressed/` first. Always.
+
+Direct edits to `.augment/` break compression hashes, cause CI failures, and create drift.
+
+**Compression ONLY via `/compress` command.** Handles hashing, sync, and quality checks.
 
 ## Workflow
 
@@ -448,37 +452,47 @@ Exception: MCPs with **unique capabilities** (Sentry, Playwright, Jira).
 
 # Commit Conventions
 
-All commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
+All commit messages and squash/merge titles follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
 ## Format
 
-Valid formats:
-
 - With scope: `<type>(<scope>): <description>`
-- Without scope: `<type>: <description>` (omit parentheses when no scope is used)
-
-- **Commit messages are always in English** — regardless of the user's language.
-- **Description in imperative mood** ("add feature", not "added feature").
-- **First line max 72 characters.**
+- Without scope: `<type>: <description>`
+- Always English. Imperative mood. Max 72 chars first line.
 
 ## Types
 
 | Type | When |
 |---|---|
-| `feat` | New feature |
+| `feat` | New user-facing functionality |
 | `fix` | Bug fix |
-| `refactor` | Code change (no new feature, no bug fix) |
+| `refactor` | Structure change, no behavior change |
 | `docs` | Documentation only |
-| `test` | Adding or updating tests |
-| `chore` | Maintenance (deps, configs, tooling) |
-| `style` | Code style (formatting, no logic change) |
+| `test` | Tests only |
+| `chore` | Maintenance, deps, cleanup |
+| `ci` | CI/CD, workflows |
+| `style` | Formatting only |
 | `perf` | Performance improvement |
+| `build` | Build tooling, packaging |
 
 ## Scope
 
-- Use the **Jira ticket ID** as scope when the branch contains one (e.g. `DEV-1234`).
-- Otherwise use a short module or area name.
-- Scope is optional but recommended.
+- Jira ticket ID when branch has one: `DEV-1234`
+- Otherwise short area name: `api`, `auth`, `skills`
+- Optional — only add when it improves clarity.
+
+## Breaking changes
+
+Mark with `!` or `BREAKING CHANGE:` footer:
+
+```
+feat(api)!: rename invoice status values
+refactor(auth)!: remove legacy session flow
+```
+
+## Commit splitting
+
+Mixed concerns → split into multiple commits. Don't hide unrelated changes in one.
 
 ## Examples
 
@@ -488,7 +502,11 @@ fix(DEV-1234): handle null value in equipment import
 test(DEV-1234): add component test for working time controller
 refactor: extract user sync logic into dedicated service
 chore: update PHP quality package to 2.1.0
+ci(lint): add skill-lint workflow
+docs(roadmap): add phase 3 implementation plan
 ```
+
+→ Type selection rules, anti-patterns, decision checklist: `guidelines/php/git.md`
 
 ---
 
@@ -1130,6 +1148,31 @@ Default: `getters_setters`. See the `eloquent` skill for the full reference tabl
 - Do NOT add PHPDoc that just repeats the method signature.
 - One docblock per method — never split into multiple `/** */` blocks.
 - Tag order: `@param` → `@return` → `@throws`.
+
+---
+
+# Preservation Guard
+
+Transformations (merge, refactor, compress, split) must produce output **at least as strong** as input.
+
+## Checklist — verify before completing
+
+- [ ] Strongest validation step preserved
+- [ ] Strongest example preserved
+- [ ] Strongest anti-pattern / "Do NOT" preserved
+- [ ] Essential decision hints (if/when/unless) preserved
+- [ ] Required sections preserved
+- [ ] Single clear responsibility preserved
+- [ ] Strong language ("MUST"/"NEVER") not weakened
+
+## Reject if
+
+- Validation, example, or anti-pattern removed without replacement
+- Decision logic weakened
+- Scope broadened by merging unrelated concerns
+- Strong language downgraded
+
+→ Skills: `skill-management`, `skill-reviewer` · Command: `/compress` · Linter: `check_compression_quality()`
 
 ---
 
