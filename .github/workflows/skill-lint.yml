@@ -43,18 +43,66 @@ jobs:
       - name: Run skill linter (changed files only)
         run: python3 scripts/skill_linter.py --changed
 
-      - name: Generate JSON lint report (full repo, informational)
+      - name: Generate lint reports (full repo, informational)
         if: always()
         run: |
           mkdir -p artifacts
           python3 scripts/skill_linter.py --all --format json > artifacts/skill-lint-report.json || true
+          python3 scripts/skill_linter.py --all --report > artifacts/skill-quality-report.md || true
 
-      - name: Upload lint report
+      - name: Upload lint reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: skill-lint-report
-          path: artifacts/skill-lint-report.json
+          name: skill-lint-reports
+          path: |
+            artifacts/skill-lint-report.json
+            artifacts/skill-quality-report.md
+
+      - name: Generate PR summary
+        if: github.event_name == 'pull_request' && always()
+        run: |
+          python3 scripts/skill_linter.py --changed --format json > /tmp/changed-lint.json 2>/dev/null || true
+          python3 -c "
+          import json, sys
+          try:
+              data = json.load(open('/tmp/changed-lint.json'))
+          except Exception:
+              print('⚠️ Could not parse lint results.'); sys.exit(0)
+          results = data.get('results', [])
+          summary = data.get('summary', {})
+          p = summary.get('pass', 0)
+          w = summary.get('warn', 0)
+          f = summary.get('fail', 0)
+          lines = ['## 🔍 Skill Lint Summary', '']
+          lines.append(f'| Pass | Warn | Fail | Total |')
+          lines.append(f'|---|---|---|---|')
+          lines.append(f'| {p} | {w} | {f} | {p+w+f} |')
+          if f > 0:
+              lines.extend(['', '### ❌ Failures', ''])
+              for r in results:
+                  for i in r.get('issues', []):
+                      if i.get('severity') == 'error':
+                          lines.append(f'- \`{r[\"file\"]}\`: {i[\"message\"]}')
+          if w > 0:
+              warn_files = [r['file'] for r in results if any(i.get('severity') == 'warning' for i in r.get('issues', []))]
+              if warn_files:
+                  lines.extend(['', '### ⚠️ Top warnings', ''])
+                  for wf in warn_files[:5]:
+                      lines.append(f'- \`{wf}\`')
+                  if len(warn_files) > 5:
+                      lines.append(f'- ... and {len(warn_files) - 5} more')
+          if f == 0 and w == 0:
+              lines.extend(['', '✅ All changed files pass cleanly.'])
+          lines.extend(['', '---', '*Full report available as artifact.*'])
+          print('\n'.join(lines))
+          " > /tmp/pr-summary.md
+
+      - name: Post PR comment
+        if: github.event_name == 'pull_request' && always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: /tmp/pr-summary.md
 
   skill-lint-strict:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
