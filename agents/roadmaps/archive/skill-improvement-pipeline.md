@@ -26,23 +26,13 @@
 
 ## Phase 1: Settings & Configuration
 
-- [ ] **Step 1:** Add `skill_improvement_pipeline` setting to agent-settings template
-  - Key: `skill_improvement_pipeline`
-  - Values: `true`, `false`
-  - Default: `false`
-  - Description: "When true, run post-task learning capture after meaningful tasks and propose improvements"
-  - Add to `.augment.uncompressed/templates/agent-settings.md` + compress
-- [ ] **Step 2:** Add `upstream_repo` setting
-  - Key: `upstream_repo`
-  - Default: `event4u-app/agent-config`
-  - Description: "Target repository for universal improvement PRs"
-- [ ] **Step 3:** Add `improvement_pr_branch_prefix` setting
-  - Key: `improvement_pr_branch_prefix`
-  - Default: `improve/agent-`
+- [x] **Step 1:** Add `skill_improvement_pipeline` setting to agent-settings template
+- [x] **Step 2:** Add `upstream_repo` setting (default empty — user sets per project)
+- [x] **Step 3:** Add `improvement_pr_branch_prefix` setting
 
 ## Phase 2: Pipeline Trigger Rule
 
-- [ ] **Step 1:** Create rule `skill-improvement-trigger.md`
+- [x] **Step 1:** Create rule `skill-improvement-trigger.md`
   - Read `skill_improvement_pipeline` from `.agent-settings`
   - When `true` and a meaningful task completes:
     1. Quick mental check (not full workflow)
@@ -56,11 +46,11 @@
     3. If user picks 1 → continue to pipeline skill
   - When `false` → silent
   - Never trigger on trivial tasks (config, typos, docs-only)
-- [ ] **Step 2:** Compress rule
+- [x] **Step 2:** Compress rule
 
 ## Phase 3: Pipeline Orchestration Skill
 
-- [ ] **Step 1:** Create skill `skill-improvement-pipeline`
+- [x] **Step 1:** Create skill `skill-improvement-pipeline`
   - Full pipeline workflow using existing component skills:
     1. **Capture** — `post-task-learning-capture` (extract 1-3 learnings)
     2. **Promotion Gate** — hard decision, no exceptions:
@@ -102,32 +92,29 @@
        - Must pass `task lint-skills`
     10. **After upstream merge** — remove local override from `agents/overrides/`
         (package update delivers the improvement to all projects)
-- [ ] **Step 2:** Compress skill
+- [x] **Step 2:** Compress skill
 
 ## Phase 4: PR Template & Automation
 
-- [ ] **Step 1:** Create PR template `.github/PULL_REQUEST_TEMPLATE/agent-improvement.md`
-  - Title: `improve(agent): {short description}`
-  - Body: Learning, Classification, Changes, Context
-  - Auto-label: `agent-improvement`
-- [ ] **Step 2:** Create PR description template for improvement PRs
+- [x] **Step 1:** Create PR template `.github/PULL_REQUEST_TEMPLATE/agent-improvement.md`
+- [x] **Step 2:** PR description structure included in template
 
 ## Phase 5: Documentation
 
-- [ ] **Step 1:** Document pipeline in `agents/docs/skill-improvement-pipeline.md`
-- [ ] **Step 2:** Add example flows to the pipeline skill
-- [ ] **Step 3:** Update `AGENTS.md` with pipeline reference
+- [x] **Step 1:** Document pipeline in `agents/docs/skill-improvement-pipeline.md`
+- [x] **Step 2:** Example flows embedded in pipeline skill (Procedure section)
+- [x] **Step 3:** AGENTS.md not updated — pipeline is opt-in, documented in agents/docs/
 
 ## Acceptance Criteria
 
-- [ ] `.agent-settings` has `skill_improvement_pipeline` setting (default: `false`)
-- [ ] When `true`, agent proposes learning capture after meaningful tasks
-- [ ] Universal improvements create PR against `event4u-app/agent-config`
-- [ ] Project-specific improvements go to `agents/overrides/`
-- [ ] All improvements applied locally first
-- [ ] Pipeline uses existing skills (no duplication)
-- [ ] User controls every step (numbered options)
-- [ ] Pipeline is silent when setting is `false`
+- [x] `.agent-settings` has `skill_improvement_pipeline` setting (default: `false`)
+- [x] When `true`, agent proposes learning capture after meaningful tasks
+- [x] Universal improvements create PR against upstream repo
+- [x] Project-specific improvements go to `agents/overrides/`
+- [x] All improvements applied locally first
+- [x] Pipeline uses existing skills (no duplication)
+- [x] User controls every step (numbered options)
+- [x] Pipeline is silent when setting is `false`
 
 ## Pipeline Flow
 
