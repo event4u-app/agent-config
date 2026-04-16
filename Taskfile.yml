@@ -93,9 +93,21 @@ tasks:
     desc: Compare lint results between current branch and main (detect regressions)
     cmd: python3 scripts/lint_regression.py --baseline main
 
+  lint-readme:
+    desc: Lint README.md for quality, correctness, and completeness
+    cmd: python3 scripts/readme_linter.py README.md --root .
+
+  lint-readme-strict:
+    desc: Lint README.md with warnings as errors
+    cmd: python3 scripts/readme_linter.py README.md --root . --strict
+
   test-linter:
     desc: Run skill linter tests
     cmd: python3 -m pytest tests/test_skill_linter.py -v
+
+  test-readme-linter:
+    desc: Run README linter tests
+    cmd: python3 -m pytest tests/test_readme_linter.py -v
 
   consistency:
     desc: Verify sync + generated tool outputs are clean

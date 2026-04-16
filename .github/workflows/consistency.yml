@@ -70,6 +70,12 @@ jobs:
       - name: Check compression quality
         run: python3 scripts/check_compression.py
 
+      - name: Lint README
+        run: python3 scripts/readme_linter.py README.md --root .
+
+      - name: Run README linter tests
+        run: python3 -m pytest tests/test_readme_linter.py -v
+
       - name: Check for unexpected changes
         run: |
           if ! git diff --quiet; then
