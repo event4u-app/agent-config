@@ -266,7 +266,15 @@ def generate_rule_symlinks() -> int:
             link.symlink_to(target)
             total += 1
 
-    print(f"  ✅  Created {total} rule symlinks across {len(TOOL_DIRS)} tool directories")
+    # Verify counts match across all tool directories
+    source_count = len(rules)
+    for tool_dir in TOOL_DIRS:
+        target_dir = PROJECT_ROOT / tool_dir
+        tool_count = len([f for f in target_dir.iterdir() if f.is_symlink() and f.suffix == ".md"])
+        if tool_count != source_count:
+            print(f"  ⚠️  {tool_dir}: {tool_count} rules (expected {source_count})")
+
+    print(f"  ✅  Created {total} rule symlinks across {len(TOOL_DIRS)} tool directories ({source_count} rules each)")
     return total
 
 

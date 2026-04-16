@@ -154,11 +154,53 @@ def format_text(issues: List[Issue]) -> str:
     return "\n".join(lines)
 
 
+def scan_summary(root: Path) -> str:
+    """Generate per-category compression summary stats."""
+    source_dir = root / SOURCE_DIR
+    target_dir = root / TARGET_DIR
+    if not source_dir.exists() or not target_dir.exists():
+        return "No source/target directories found."
+
+    categories: dict[str, list[tuple[int, int]]] = {}
+    for source_file in sorted(source_dir.rglob("*.md")):
+        rel = source_file.relative_to(source_dir)
+        target_file = target_dir / rel
+        if not target_file.exists() or str(rel).startswith("commands/"):
+            continue
+        src_words = len(source_file.read_text(encoding="utf-8").split())
+        cmp_words = len(target_file.read_text(encoding="utf-8").split())
+        parts = str(rel).split("/")
+        cat = parts[0] if len(parts) > 1 else "root"
+        categories.setdefault(cat, []).append((src_words, cmp_words))
+
+    lines = ["Category         | Files | Avg Source | Avg Compressed | Avg Reduction",
+             "---              | ---   | ---        | ---            | ---"]
+    total_src = total_cmp = total_files = 0
+    for cat in sorted(categories):
+        pairs = categories[cat]
+        n = len(pairs)
+        avg_src = sum(s for s, _ in pairs) // n
+        avg_cmp = sum(c for _, c in pairs) // n
+        reduction = (1 - avg_cmp / avg_src) * 100 if avg_src > 0 else 0
+        lines.append(f"{cat:<17}| {n:>5} | {avg_src:>10} | {avg_cmp:>14} | {reduction:>5.0f}%")
+        total_src += sum(s for s, _ in pairs)
+        total_cmp += sum(c for _, c in pairs)
+        total_files += n
+    overall = (1 - total_cmp / total_src) * 100 if total_src > 0 else 0
+    lines.append(f"{'TOTAL':<17}| {total_files:>5} | {total_src // max(total_files, 1):>10} | {total_cmp // max(total_files, 1):>14} | {overall:>5.0f}%")
+    return "\n".join(lines)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Check compression quality")
     parser.add_argument("--format", choices=["text", "json"], default="text")
+    parser.add_argument("--summary", action="store_true", help="Show per-category compression stats")
     parser.add_argument("--root", type=Path, default=Path("."))
     args = parser.parse_args()
+
+    if args.summary:
+        print(scan_summary(args.root))
+        return 0
 
     try:
         issues = scan_all(args.root)
