@@ -64,26 +64,28 @@ done | sort | awk -F' \\| ' '{descs[$1]=descs[$1] " " $2} END {for (d in descs) 
 - **Redundancy**: Duplicates between rules, AGENTS.md, skills?
 - **Merge candidates**: Small rules (< 15 lines) that belong elsewhere?
 
-### 3. Check always → auto candidates (with safety gate)
+### 3. Check always → auto candidates
 
-For each always-loaded rule, ask:
+Apply `rule-type-governance` rule criteria:
 
-1. Does it apply to EVERY conversation? → keep `always`
-2. Can it be triggered by a specific topic? → candidate for `auto`
-3. Is it a core behavior constraint (scope-control, verify-before-complete, token-efficiency)? → **NEVER change to auto**
+1. Applies to EVERY conversation? → keep `always`
+2. Triggered by specific topic? → candidate for `auto`
+3. Core behavior constraint (scope-control, verify-before-complete, token-efficiency)? → **NEVER change to auto**
+
+**Decision test:** "Does this rule need to be active when user asks a simple question, reviews a PR, or discusses architecture?" No → `auto`.
 
 **Safety gate for always → auto:**
 
 - [ ] Rule is NOT a core behavior constraint
-- [ ] A clear, specific trigger description exists
-- [ ] The trigger won't miss conversations where the rule matters
-- [ ] The skill linter still passes after the change
+- [ ] Clear, specific trigger description exists
+- [ ] Trigger won't miss conversations where rule matters
 
-Present candidates with explicit justification. **Never auto-apply.**
+Present candidates with justification. **Never auto-apply.**
 
 ### 4. Check AGENTS.md + copilot-instructions.md
 
-- **Budget**: ≤500 lines each
+- **Budget**: AGENTS.md target ≤800 words (max ~1200). copilot-instructions.md < 60 lines (max ~150).
+  See `guidelines/agent-infra/size-and-scope.md` for all limits.
 - **Quality**: Dev Setup, Testing, Quality Tools need full detail — don't compress to one-liners
 - **Duplication**: only word-for-word identical. Summary + detail = layered context, NOT duplication
 - **Freshness**: paths, commands, references match reality?
@@ -91,7 +93,7 @@ Present candidates with explicit justification. **Never auto-apply.**
 ```bash
 lines=$(wc -l < AGENTS.md); bytes=$(wc -c < AGENTS.md)
 echo "AGENTS.md: $lines lines, $bytes bytes (~$((bytes / 4)) tokens)"
-[ "$lines" -gt 500 ] && echo "⚠️  Over 500-line target"
+[ "$lines" -gt 300 ] && echo "⚠️  Over 300-line target (review size-and-scope guideline)"
 ```
 
 ### 5. Check docs sync

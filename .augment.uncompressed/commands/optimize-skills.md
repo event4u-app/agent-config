@@ -73,7 +73,8 @@ for f in .augment.uncompressed/skills/*/SKILL.md; do
 done
 ```
 
-Oversized → suggest extracting reference tables into separate files or splitting.
+Oversized → suggest splitting by responsibility or extracting reference material.
+Size limits: see `guidelines/agent-infra/size-and-scope.md`.
 
 ### 6. Present findings
 

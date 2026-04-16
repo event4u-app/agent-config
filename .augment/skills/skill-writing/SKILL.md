@@ -69,7 +69,9 @@ Do NOT create skill or rule for:
 
 ### Size and structure hints
 
-* Skill > 500 lines → split
+→ See `guidelines/agent-infra/size-and-scope.md` for full limits.
+
+* Target: 300–900 words. Review for split above 1200 words. Strongly consider split above 1500 words.
 * Multiple workflows → split into multiple skills
 * Two skills overlap heavily → merge
 * Skill becomes "read the guideline" → lost its purpose, restore workflow
@@ -151,7 +153,7 @@ Example:
 * K3: No obvious content
 * K4: Contains gotchas
 * K5: Has Output format (numbered, 2-4 deliverables)
-* K6: Under 500 lines
+* K6: Within size limits (see size-and-scope guideline)
 
 ## Output format
 
@@ -193,7 +195,7 @@ A framework gets its own analysis skill ONLY if:
 * Do NOT write documentation-style skills
 * Do NOT skip Procedure
 * Do NOT use vague validation
-* Do NOT exceed 500 lines
+* Do NOT exceed size limits (see `guidelines/agent-infra/size-and-scope.md`)
 * Do NOT duplicate rules
 
 ## Auto-trigger keywords

@@ -84,11 +84,11 @@ The highest-signal content in a skill. Documents failure patterns.
 
 ### Killer 5: Monolithic Blob
 
-Everything in one file, >500 lines.
+Skill exceeds size limits (see `guidelines/agent-infra/size-and-scope.md`).
 
-**Check:** Line count > 500?
-**Fix:** Extract reference tables, templates, and examples into separate files
-in the skill folder. SKILL.md stays under 500 lines.
+**Check:** Review at >300 lines. Strongly consider split at >1200 words / >1500 words.
+**Fix:** Extract reference tables, templates, examples into separate files
+in skill folder, or split by responsibility.
 
 ## Pre-check: Should this be a skill at all?
 
