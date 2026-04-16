@@ -1,0 +1,1 @@
+../.augment/rules/think-before-action.md

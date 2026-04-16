@@ -177,8 +177,11 @@ Everything in `.augment/` MUST be **project-agnostic**.
 
 ```
 NEVER create or edit files in .augment/ directly.
-ALWAYS work in .augment.uncompressed/ — then compress.
+ALWAYS work in .augment.uncompressed/ — then use /compress command.
 ```
+
+**Compression ONLY via `/compress` command.** Never manually edit compressed files.
+Command handles hashing, sync verification, and quality checks automatically.
 
 ## Workflow
 
@@ -1368,13 +1371,15 @@ Every skill MUST have: `When to use`, `Procedure`, `Gotcha`, `Output format`, `D
 
 ## Skill Independence
 
-Skill must be useful **without opening any guideline**.
+```
+If a skill is not executable without opening a guideline, it is broken.
+```
 
 - MAY reference guidelines for conventions
 - MUST NOT outsource core workflow to guidelines
 - If removing guideline refs makes skill useless → skill too weak
 
-Test: Cover guideline references. Is Procedure still executable? If not → fix skill.
+**Litmus test:** Cover guideline references. Is Procedure still executable? If not → fix skill.
 
 ## Merge Preservation
 
@@ -1398,6 +1403,18 @@ May remove: verbose explanations, redundant examples, non-execution commentary.
 - NEVER replace concrete checks with "verify it works"
 - NEVER merge if result broader than either source
 - ALWAYS run linter before and after — fail count must not increase
+
+---
+
+# think-before-action
+
+- Always analyze before coding or modifying anything
+- Never guess behavior — verify using code, data, or tools
+- Prefer targeted inspection over brute-force trial-and-error
+- Use efficient tooling (e.g. jq, debugger, logs) instead of loading full data
+- Always verify results after changes (API calls, UI tests, etc.)
+
+If analysis is skipped → results are unreliable.
 
 ---
 
