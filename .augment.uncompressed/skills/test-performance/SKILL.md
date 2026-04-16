@@ -17,7 +17,7 @@ Use this skill when:
 - CI pipeline test jobs need to be faster
 - Investigating flaky tests caused by database state
 
-## Analysis Workflow
+## Procedure: Analyze test performance
 
 ### 1. Measure baseline
 
@@ -151,9 +151,22 @@ Replace dynamic `getPdo()` probing with explicit config:
 - `agents/roadmaps/test-performance-refactor.md` — active roadmap for this project
 - `agents/docs/seeders.md` — seeder conventions (if exists)
 
+## Output format
+
+1. Optimized test configuration or seeder with timing comparison
+2. Parallelization or caching improvements applied
+
 ## Gotcha
 
 - Don't use RefreshDatabase when DatabaseTransactions suffices — full refresh is 10x slower.
 - The model forgets that parallel tests share the database — use unique identifiers in test data.
 - Seeder optimization has the highest ROI — a 2s seeder running 100 times = 200s wasted.
 - Don't add indexes to test databases just for test performance — the real fix is better test design.
+
+
+## Do NOT
+
+- Do NOT use RefreshDatabase when DatabaseTransactions works — 10x slower.
+- Do NOT run full test suite on every code change — use `--filter`.
+- Do NOT add test-only indexes — fix test design instead.
+- Do NOT disable parallel testing to "fix" flaky tests — fix the root cause.

@@ -1,137 +1,119 @@
 ---
 name: project-analysis-laravel
-description: "ONLY when user explicitly requests: Laravel project analysis, upgrade readiness check, or full codebase health audit. NOT for regular bug fixes or feature work."
+description: "Use for deep Laravel project analysis: boot flow, request lifecycle, container usage, Eloquent/data flow, async systems, and Laravel-specific failure patterns."
 source: package
 ---
 
-# Project Analysis — Laravel & PHP Packages
+# project-analysis-laravel
 
 ## When to use
 
-- Deep analysis of project/package/module/monorepo for bugs, broken patterns, risks, upgrade blockers
-- Codebase uses Laravel/Symfony/Composer packages needing understanding before changes
-- Third-party package docs/changelog/source must be read for correct usage
-- Root-cause analysis for runtime errors, queue/config/auth/cache/event/test failures
-- Compatibility review before upgrading Laravel/PHP/key packages
+Use this skill when:
 
-NOT when: small isolated feature, purely visual/UI critique, superficial repo summary.
+* The project uses Laravel
+* A deep Laravel-specific architecture or runtime analysis is needed
+* `universal-project-analysis` routes here after framework detection
+* A broad issue spans routes, middleware, services, models, queues, config, or infrastructure
+
+Do NOT use when:
+
+* The task is a small isolated Laravel coding change
+* The issue is already narrowed to a specific specialist skill
+* The project is not actually Laravel
 
 ## Core principles
 
-1. **Understand before judging** — no fixes before understanding structure/flow/version. Evidence from code/config/tests/logs over assumptions. No README? Search `.md` files across project.
-2. **Detect versions first** — exact Laravel/PHP/dependency versions. `composer.lock` = source of truth. Fallback: `composer.json`, lock files, Dockerfile, CI, bootstrap.
-3. **Read docs on demand** — official Laravel docs for INSTALLED version. Package docs/changelog/source for exact version. Official > blog posts.
-4. **Trace actual paths** — routes → middleware → controllers → services → models → DB. Packages: providers, config, facades, contracts, macros.
-5. **Focus on root causes** — distinguish symptoms from causes. Explain what/why/where/confidence/evidence.
-6. **Rank by severity** — Critical/High/Medium/Low/Observation. Prioritize: user-facing failures, data corruption, security, queue/mail/cache misconfig, silent bugs.
+* Installed Laravel version controls behavior
+* Boot order matters
+* Middleware order matters
+* Container behavior must be traced, not assumed
+* Eloquent behavior often hides real execution cost
+* Async boundaries create hidden state problems
 
-## Before writing code
+## Procedure
 
-### 1. Map repository
-App type: Laravel app, package, monorepo, hybrid, legacy, multi-service.
-Key files: `composer.json/lock`, `artisan`, `bootstrap/app.php`, `config/*.php`, `routes/*.php`, `app/Providers/*`, `phpunit.xml`/`pest.php`, `README*`, `UPGRADE*`, `CHANGELOG*`, `Dockerfile*`, CI.
+### 1. Confirm Laravel version and runtime
 
-### 2. Technology matrix
-PHP version, Laravel version, first-party packages (Horizon, Octane, Sanctum, Livewire, Nova, Filament, Scout, Cashier, Reverb, Pennant, Pulse, Telescope), important third-party packages, frontend tooling.
+Check: `composer.lock`, `composer.json`, `artisan --version`, PHP version and runtime environment.
+Validate: Laravel version is explicit, major supporting packages are identified, deployment/runtime shape is known.
 
-### 3. Local guidance
-Read: project docs, architecture notes, `CLAUDE.md`, `AGENTS.md`, `README`, conventions, module docs. Respect unless causing defects.
+### 2. Analyze boot and configuration
 
-### 4. Analysis mode
-Bug investigation / Architecture audit / Package review / Upgrade readiness / Test reliability / Performance review / Security flow review.
+Inspect: service providers, provider registration order, config files, cached config/route state, middleware registration, route groups and prefixes, env/config interaction.
 
-## Laravel investigation workflow
+Check:
 
-### 1) Boot analysis
+* config caching risks
+* `env()` usage outside config
+* provider misuse
+* route cache assumptions
+* driver choices for queue/cache/mail/session/filesystem
 
-**Check:** Laravel+PHP compatibility, provider registration order, env-specific config, cache/config/route compilation, middleware stack, queue/cache/mail/broadcast/session/filesystem drivers.
+### 3. Trace request-to-response flow
 
-**Look for:** Framework-version assumption errors, config read too early/cached wrong, env drift, route model binding surprises, global scopes/casts/observers side effects.
+Trace: route → middleware → FormRequest/validation → controller → service/action → model/repository/query → events/observers → response transformation.
 
-### 2) Request-to-response trace
+Validate: authorization path is visible, validation path is visible, transaction boundaries are visible, hidden side effects are identified.
 
-Trace: Route → Middleware → FormRequest → Controller → Service → Model/Query/Transaction → Events/Jobs/Listeners → Response/Resource.
+### 4. Analyze data and Eloquent flow
 
-Verify: validation, authorization/policy, transaction boundaries, error handling/rollback, N+1, hidden state changes in observers.
+Inspect: migrations, model relationships, casts/enums/json usage, soft deletes, nullable assumptions, eager/lazy loading, indexes and query shape.
 
-### 3) Data & schema
+Check:
 
-**Inspect:** Migrations, relationships, indexes, soft deletes, defaults/nullables, enum/cast/JSON columns.
-**Look for:** Code↔schema mismatch, unsafe cascading, missing indexes, data integrity hidden by app logic.
+* N+1 risks
+* mismatches between schema and model assumptions
+* unexpected model event behavior
+* wrong relationship direction or ownership
 
-### 4) Async & infrastructure
+### 5. Analyze async and infrastructure flow
 
-**Inspect:** Queued jobs, failed jobs, Horizon/Supervisor, scheduled commands, broadcasting, cache invalidation, mail/notifications, HTTP integrations.
-**Look for:** Invalid serialization, missing idempotency, retry duplication, timezone errors, stale cache keys.
+Inspect: queued jobs, event listeners, scheduled commands, broadcasting, cache invalidation, mail/notification side effects, external HTTP integrations.
 
-### 5) Test posture
+Check:
 
-**Check:** Feature/unit/integration test quality, factories/seeders, RefreshDatabase/transactions/fakes/mocks, missing critical path tests.
-**Look for:** Brittle implementation-coupled tests, over-mocking false confidence, missing regression coverage.
+* serialization risks
+* tenant/user context loss
+* idempotency
+* retry loops
+* stale cache / eventual consistency
+* side effects inside transactions
 
-## Package analysis workflow
+### 6. Analyze test posture
 
-Per package affecting behavior:
-1. **Identify** exact version from `composer.lock` + transitive deps
-2. **Read** official docs, upgrade guide, changelog, source, published config/provider
-3. **Map** project usage: facades, contracts, traits, macros, config keys, middleware, bindings, events
-4. **Validate** integration matches documented lifecycle/version. Check outdated examples, breaking changes.
-5. **Explain** precisely: project misuse vs outdated docs vs version mismatch vs missing setup vs package limitation
+Check: feature tests, unit tests, integration coverage, factories/seeders/fakes, missing tests on critical paths.
+Validate: risky paths have test coverage, async behavior has meaningful tests, infrastructure assumptions are testable.
 
-## Doc lookup rules
+### 7. Validate Laravel analysis quality
 
-**Laravel:** Detect installed major version first. Read matching docs. Check upgrade guide for deprecated patterns. Note behavior changes across versions.
+Check:
 
-**Third-party:** Official docs/GitHub/release notes for installed version. If unavailable, closest version + mark uncertainty.
-
-**Research:** Web search when package behavior/version compat/updates affect correctness. Primary sources preferred.
+* boot flow is explicit
+* request/data/async boundaries are mapped
+* Laravel version-specific behavior was considered
+* hidden framework side effects are identified
+* next specialist skill is clear where needed
 
 ## Output format
 
-### 1) Executive summary
-What analyzed, main conclusion, highest-risk issues, confidence.
-
-### 2) Environment matrix
-PHP version, Laravel version, key packages+versions, runtime details.
-
-### 3) Findings
-Per finding: **Severity**, **Title**, **Why it matters**, **Evidence**, **Root cause**, **Fix**, **Confidence**.
-
-### 4) Package & framework notes
-Docs consulted, version constraints, upgrade/compat concerns.
-
-### 5) Uncertainty
-What unverified, remaining assumptions, next inspection steps.
-
-## Common mistakes
-
-| Mistake | Prevention |
-|---|---|
-| Assume latest Laravel docs | Detect version from lockfiles first |
-| Misread package behavior | Read docs/changelog/source for installed version |
-| Report symptoms not causes | Trace route→domain→data, find first broken assumption |
-| Ignore boot/config | Inspect providers, config, env, cache, drivers |
-| Miss package customization | Search project for config overrides, macros, bindings |
-| Weak recommendations | Include impact, evidence, root cause, concrete fix |
-
-## Integration
-
-- **analysis-autonomous-mode** — routes here for Laravel deep dives
-- **universal-project-analysis** — non-Laravel or multi-framework
-- **bug-analyzer** — chain when bugs found
-- **performance-analysis** — chain for bottlenecks
-- **security-audit** — chain for auth/input/trust boundary issues
+1. Laravel version and runtime summary
+2. Boot/config findings
+3. Request-to-response flow
+4. Data/Eloquent findings
+5. Async/infrastructure findings
+6. Test posture
+7. Key risks and next steps
 
 ## Gotcha
 
-- Full analysis expensive — only for initial orientation, not every conversation
-- Results = snapshot — note date, goes stale
-- No architectural changes without business context
+* Laravel hides complexity behind convenient abstractions.
+* Middleware, observers, facades, and Eloquent can make execution flow look simpler than it is.
+* Cached config/routes can make the real runtime differ from the source code.
 
 ## Do NOT
 
-- Give Laravel advice without checking installed version
-- Judge package behavior before reading docs/source
-- Present guesses as facts
-- Skip config/providers/queues/caches/env differences
-- Recommend sweeping rewrites when targeted fix suffices
+* Do NOT assume Laravel behavior without version context
+* Do NOT stop at controller/service level if observers, jobs, or events are involved
+* Do NOT ignore middleware order
+* Do NOT ignore config/cache/runtime differences
+* Do NOT treat Eloquent convenience as proof of correctness or performance

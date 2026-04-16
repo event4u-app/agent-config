@@ -1,12 +1,15 @@
 ---
 name: optimize-agents
-description: Analyzes and optimizes the entire agent setup — rules, skills, commands, AGENTS.md, copilot-instructions, .agent-settings — for token efficiency and quality.
-skills: [copilot-agents-optimizer, agents-audit, agent-docs, quality-tools]
+description: Audits agent infrastructure — measures token overhead, checks rule triggers, verifies AGENTS.md. Suggest only, never auto-apply.
+skills: [copilot-agents-optimization, agents-audit, agent-docs-writing, quality-tools]
+disable-model-invocation: true
 ---
 
 # /optimize-agents
 
-Full agent infrastructure analysis/optimization. Minimize tokens, preserve quality. Present findings, ask before changes.
+Agent infrastructure audit: measure token overhead, check rule triggers, verify AGENTS.md, find stale references. **Suggest only — never auto-apply.**
+
+**Source of truth:** `.augment.uncompressed/` — never read or edit `.augment/` directly.
 
 ## Steps
 
@@ -16,7 +19,7 @@ Count lines affecting token consumption:
 
 ```bash
 # Always-loaded (per chat)
-for f in .augment/rules/*.md; do
+for f in .augment.uncompressed/rules/*.md; do
   type=$(head -5 "$f" | grep 'type:' | sed 's/.*"\(.*\)"/\1/')
   [ "$type" = "auto" ] && continue
   lines=$(wc -l < "$f"); echo "always | $lines | $(basename "$f")"
@@ -24,22 +27,17 @@ done | sort -t'|' -k2 -rn
 agents=$(wc -l < AGENTS.md); echo "always | $agents | AGENTS.md"
 
 # Auto-loaded rules
-for f in .augment/rules/*.md; do
+for f in .augment.uncompressed/rules/*.md; do
   type=$(head -5 "$f" | grep 'type:' | sed 's/.*"\(.*\)"/\1/')
   [ "$type" != "auto" ] && continue
   lines=$(wc -l < "$f"); echo "auto | $lines | $(basename "$f")"
 done | sort -t'|' -k2 -rn
 
 # Skills (top 20 by size)
-for f in .augment/skills/*/SKILL.md; do
-  name=$(echo "$f" | sed 's|.augment/skills/||;s|/SKILL.md||')
+for f in .augment.uncompressed/skills/*/SKILL.md; do
+  name=$(echo "$f" | sed 's|.augment.uncompressed/skills/||;s|/SKILL.md||')
   lines=$(wc -l < "$f"); echo "$lines | $name"
 done | sort -rn | head -20
-
-# Commands (top 10 by size)
-for f in .augment/commands/*.md; do
-  lines=$(wc -l < "$f"); echo "$lines | $(basename "$f")"
-done | sort -rn | head -10
 ```
 
 Report totals:
@@ -49,104 +47,93 @@ Report totals:
 | Always-loaded rules + AGENTS.md | {n} | {n} |
 | Auto-loaded rules | {n} | {n} |
 | Skills (total) | {n} | {n} |
-| Commands (total) | {n} | {n} |
 | **TOTAL** | {n} | {n} |
 
 ### 2. Check rules
 
 - **Frontmatter**: `type: "always"` or `type: "auto"` with `description`?
-- **always vs auto**: Could it be `auto`? Always > 150 lines → check necessity
-- **Redundancy**: Duplicates with other rules, AGENTS.md, skills?
-- **Merge candidates**: Small rules (< 15 lines) belonging elsewhere?
 - **Duplicate triggers**: Same `description` → both load simultaneously
 
 ```bash
-# Check for duplicate rule triggers
-for f in .augment/rules/*.md; do
+for f in .augment.uncompressed/rules/*.md; do
   desc=$(head -5 "$f" | grep 'description:' | sed 's/.*"\(.*\)"/\1/')
   [ -n "$desc" ] && echo "$desc | $(basename "$f")"
 done | sort | awk -F' \\| ' '{descs[$1]=descs[$1] " " $2} END {for (d in descs) {n=split(descs[d], a, " "); if (n>1) print "⚠️  " d " →" descs[d]}}'
 ```
 
-### 3. Check skills (top 20 by size)
+- **Redundancy**: Duplicates between rules, AGENTS.md, skills?
+- **Merge candidates**: Small rules (< 15 lines) that belong elsewhere?
 
-- **Description**: specific enough? Analysis skills MUST start with `"ONLY when user explicitly requests: ..."`
-- **Redundancy with rules**: repeats "Do NOT" lists? → `"See {rule} rule."`
-- **Overlap**: nearly identical skills?
-- **Size**: >300 lines → compressible?
+### 3. Check always → auto candidates
 
-### 4. Check commands (top 10)
+Apply the `rule-type-governance` rule criteria:
 
-- Redundancy with skills, correct `skills:` frontmatter, consistent structure
+1. Does it apply to EVERY conversation? → keep `always`
+2. Can it be triggered by a specific topic? → candidate for `auto`
+3. Is it a core behavior constraint (scope-control, verify-before-complete, token-efficiency)? → **NEVER change to auto**
 
-### 5. Check AGENTS.md + copilot-instructions.md
+**Decision test:** "Does this rule need to be active when the user asks a simple question, reviews a PR, or discusses architecture?" No → `auto`.
 
-- **Budget**: ≤500 lines each
+**Safety gate for always → auto:**
+
+- [ ] Rule is NOT a core behavior constraint
+- [ ] A clear, specific trigger description exists
+- [ ] The trigger won't miss conversations where the rule matters
+
+Present candidates with explicit justification. **Never auto-apply.**
+
+### 4. Check AGENTS.md + copilot-instructions.md
+
+- **Budget**: AGENTS.md target ≤800 words (max ~1200). copilot-instructions.md < 60 lines (max ~150).
+  See `guidelines/agent-infra/size-and-scope.md` for all limits.
 - **Quality**: Dev Setup, Testing, Quality Tools need full detail — don't compress to one-liners
 - **Duplication**: only word-for-word identical. Summary + detail = layered context, NOT duplication
 - **Freshness**: paths, commands, references match reality?
 
 ```bash
-# Measure AGENTS.md size and compare with target
 lines=$(wc -l < AGENTS.md); bytes=$(wc -c < AGENTS.md)
 echo "AGENTS.md: $lines lines, $bytes bytes (~$((bytes / 4)) tokens)"
-[ "$lines" -gt 500 ] && echo "⚠️  Over 500-line target — check for unnecessary verbosity"
+[ "$lines" -gt 300 ] && echo "⚠️  Over 300-line target (review size-and-scope guideline)"
 ```
 
-### 6. Check .agent-settings template
-
-Compare template with actual. All settings documented? All referenced by rule/skill/command?
-
-### 7. Check docs sync
+### 5. Check docs sync
 
 Counts and lists in `contexts/augment-infrastructure.md` correct?
 
-### 8. Present findings
+### 6. Run linters
 
-Present a summary table:
+```bash
+python3 scripts/skill_linter.py --all --pairs --duplicates 2>&1 | grep "Summary:"
+```
+
+Report FAIL/WARN counts. Do NOT fix here — delegate to linter/skill-reviewer.
+
+### 7. Present findings
 
 | # | Category | Finding | Impact | Suggestion |
 |---|---|---|---|---|
-| 1 | Rule | `{name}` could be `auto` | ~{n} lines saved per chat | Switch to auto |
-| 2 | Skill | `{name}` description too broad | May load unnecessarily | Restrict description |
+| 1 | Rule | `{name}` duplicate trigger | Both load simultaneously | Fix trigger description |
+| 2 | Rule | `{name}` could be `auto` | ~{n} lines saved/chat | Switch (with safety gate) |
 | ... | | | | |
 
 Ask the user:
 
 ```
-> 1. Apply all suggestions
-> 2. Go through one by one — ask before each change
-> 3. Apply only high-impact changes (saves > 50 lines)
-> 4. Skip — just show the report
+> 1. Go through suggestions one by one
+> 2. Apply only high-impact changes (saves > 50 lines)
+> 3. Skip — report only
 ```
 
-### 9. Apply approved changes
+## Preservation gate — MANDATORY before any change
 
-Apply approved changes → update `contexts/augment-infrastructure.md` → re-run baseline → show before/after.
+- [ ] Does a rule lose strong enforcement language? → **REJECT**
+- [ ] Does a rule lose a concrete example? → **REJECT**
+- [ ] Does an always → auto switch risk missing relevant conversations? → **REJECT**
+- [ ] Does the linter still pass after the change? → **REJECT if FAIL**
 
-## Rules — Iron Laws of Optimization
+## What this command does NOT do
 
-NON-NEGOTIABLE. Previous runs caused severe damage.
-
-### Content preservation
-
-- **NEVER strip strong language** — "Do NOT", "NEVER", "MUST" are load-bearing. Weaker phrasing = sabotage.
-- **NEVER remove examples** — most actionable part. Removing = quality loss.
-- **NEVER compress to one-liners** — 400→86 lines loses critical content. Ask before removing sections.
-- **NEVER delete files** without explicit user approval.
-- **NEVER remove cross-references** to existing systems (overrides, templates, contexts).
-
-### Optimization IS
-
-- `always` → `auto` (with good trigger), deduplication, missing frontmatter, better descriptions, moving rarely-needed tables to context
-
-### Optimization is NOT
-
-- "Do NOT" → passive voice, removing examples, deleting "obvious" sections, merging for count reduction
-
-### Process
-
-- Show before/after counts
-- Quality > tokens
-- Findings first, apply after approval
-- One category at a time
+- **No quality judgments on skills** — use `/optimize-skills` or `skill-reviewer`
+- **No auto-fixes** — all changes require explicit user approval
+- **No "make it shorter"** — compression is done by Caveman Compression
+- **No edits to `.augment/`** — always edit `.augment.uncompressed/`, then sync

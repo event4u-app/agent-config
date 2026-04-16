@@ -1,6 +1,8 @@
 ---
-skills: [coder, quality-tools]
+name: fix-pr-bot-comments
+skills: [php-coder, quality-tools]
 description: Fix and reply to bot review comments (Copilot, Augment, Greptile, etc.) on a GitHub PR
+disable-model-invocation: true
 ---
 
 # fix-pr-bot-comments
@@ -135,7 +137,7 @@ If `false` or `.agent-settings` doesn't exist, do NOT add the prefix.
 ## Replying via GitHub API
 
 Read `github_pr_reply_method` from `.agent-settings` to determine the correct endpoint.
-See the `commands` skill → "GitHub API: Replying to PR review comments" for full details.
+See the `command-routing` skill → "GitHub API: Replying to PR review comments" for full details.
 
 ## After all comments
 

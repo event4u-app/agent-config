@@ -1,6 +1,6 @@
 ---
 name: php-service
-description: "Use when the user says "create service", "new service class", or needs a PHP service following SOLID principles with proper DI and repository usage."
+description: "Use when the user says 'create service', 'new service class', or needs a PHP service following SOLID principles with proper DI and repository usage."
 source: package
 ---
 
@@ -8,115 +8,89 @@ source: package
 
 ## When to use
 
-New services, extract business logic, service layer. NOT for: controllers (`laravel`), DTOs (`dto-creator`), models (`eloquent`).
+Use when creating a new service, extracting business logic from a controller, or refactoring into a service layer.
 
-## Architecture
+Do NOT use when:
+- Controllers (use `laravel` skill)
+- DTOs (use `dto-creator` skill)
+- Models (use `eloquent` skill)
 
-```
-Controller → Service → (optional) Repository (interface) → Database implementation
-                ↓
-              Model (Eloquent)
-```
+## When to create a service
 
-- Services contain **business logic** — calculations, orchestration, validation, side effects.
-- Services may use **repository interfaces** for data access when they add value (e.g., complex/reusable queries, multiple data sources), or use Eloquent/query scopes directly when simpler and consistent with repository guidelines.
-- Services are injected via **constructor injection**.
+✅ Multiple steps needing orchestration (save + calculate + notify)
+✅ Business rules beyond FormRequest
+✅ Logic reused across controllers, jobs, commands
+✅ Complex calculations or transformations
 
-## Project-specific conventions
+❌ Simple CRUD — `$model->update($request->validated())` stays in controller
+❌ One-liner logic — no class for a single Eloquent call
 
-Read `./agents/` and `AGENTS.md` for service and repository conventions.
+## Procedure: Create a service
 
-### Laravel projects
+### Step 0: Inspect
 
-- Services live in `app/Services/{Domain}/` or `app/Modules/{Module}/App/Services/`.
-- Constructor inject dependencies (repositories, other services).
-- Methods should be focused — one responsibility per method.
-- Use DTOs for structured data transfer between layers.
-- For repository patterns, check `.augment/guidelines/php/patterns/repositories.md`.
+1. Read `./agents/` and `AGENTS.md` for service conventions.
+2. Check existing services — match naming, structure, DI patterns.
+3. Check for repositories — see `php/patterns/repositories.md` guideline.
 
-### Example service
+### Step 1: Create the class
 
-```php
-declare(strict_types=1);
+1. Location: `app/Services/{Domain}/` or `app/Modules/{Module}/App/Services/`.
+2. `declare(strict_types=1)`, proper namespace.
+3. Constructor inject dependencies (repositories, other services).
+4. Max 4 constructor dependencies — if more, split the service.
 
-namespace App\Services\Project;
+### Step 2: Implement methods
 
-use App\DTO\Project\UpdateProjectDTO;
-use App\Models\ExternalCustomerDatabase\Project\Project;
-use App\Repositories\Project\ProjectRepository;
+1. One responsibility per method.
+2. Delegate data access to repositories.
+3. Use DTOs for structured data.
+4. Use `Math` helper for calculations — never raw arithmetic.
 
-class ProjectService
-{
-    public function __construct(
-        private readonly ProjectRepository $projectRepository,
-        private readonly ProjectCalculationService $calculationService,
-    ) {}
-
-    public function update(Project $project, UpdateProjectDTO $dto): Project
-    {
-        $project->setName($dto->name);
-        $project->setStatus($dto->status);
-
-        $this->projectRepository->save($project);
-
-        if ($dto->recalculate) {
-            $this->calculationService->recalculate($project);
-        }
-
-        return $project;
-    }
-}
-```
-
-### Service from controller
+### Step 3: Wire up
 
 ```php
+// Controller
 public function __invoke(
     UpdateProjectRequest $request,
     Project $project,
     ProjectService $projectService,
 ): ProjectResource {
     $dto = UpdateProjectDTO::fromRequest($request);
-    $project = $projectService->update($project, $dto);
-
-    return ProjectResource::make($project);
+    return ProjectResource::make($projectService->update($project, $dto));
 }
 ```
 
-### Composer / legacy projects
+## Conventions
 
-- Services typically live in `core/Services/` organized by domain.
-- Repositories in `core/Repository/`.
-- Follow existing patterns in the same domain folder.
+→ See guideline `php/patterns/service-layer.md` for full service layer conventions.
 
-### All projects
+### Validate
 
-- Use `Math` helper for ALL business calculations — never raw PHP arithmetic (`+`, `-`, `*`, `/`).
-- New files must have `declare(strict_types=1)` and proper type hints.
-- Use getters/setters on models — never magic properties.
+- Run PHPStan on the service — must pass at level 9.
+- Verify single responsibility: service does one thing, no mixed concerns.
+- Confirm all dependencies are constructor-injected (no `app()` or facades in service).
+- Run affected tests — must pass.
 
-## When to create a service
+## Output format
 
-✅ Multiple steps that need orchestration (save + calculate + notify)
-✅ Business rules / validation beyond FormRequest
-✅ Logic reused across controllers, jobs, or commands
-✅ Complex calculations or data transformations
-
-❌ Simple CRUD — `$model->update($request->validated())` can stay in the controller
-❌ One-liner logic — don't create a class for a single Eloquent call
+1. Service class with constructor injection and single responsibility
+2. Repository dependency if data access is needed
 
 ## Gotcha
 
-- Services must not depend on other services directly — use dependency injection via interfaces.
-- The model tends to create "god services" with 10+ methods — split by responsibility.
-- Don't inject the `Request` object into services — pass the specific data the service needs.
+- Don't create "god services" with 10+ methods — split by responsibility.
+- Don't inject `Request` into services — pass specific data.
+- Services are framework-agnostic — no HTTP/request logic.
 
 ## Do NOT
 
-- Do NOT inject too many dependencies — if >4, consider splitting the service.
-- Do NOT call other services' repositories directly — go through the service.
-- Do NOT put HTTP/request logic in services — services are framework-agnostic.
-- Do NOT use `new Service()` — always inject via constructor.
-- Do NOT add `static` methods for business logic — use instance methods.
+- Do NOT inject `Request` or `Controller` into services — services are framework-agnostic.
+- Do NOT create services with more than one responsibility — split them.
 
+## Auto-trigger keywords
 
+- service class
+- business logic
+- service layer
+- dependency injection

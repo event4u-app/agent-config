@@ -10,7 +10,7 @@ source: package
 
 Use this skill when working with Terragrunt configurations (`.hcl` files), managing environment-specific settings, or orchestrating multi-module deployments.
 
-## Before writing code
+## Procedure: Write Terragrunt config
 
 1. Read the `root.hcl` in the target environment (`environments/pro/root.hcl` or `environments/sta/root.hcl`).
 2. Check existing `terragrunt.hcl` files in sibling directories for patterns.
@@ -188,6 +188,11 @@ devbox run a           # terragrunt apply
 devbox run d           # terragrunt destroy
 ```
 
+
+## Output format
+
+1. Terragrunt HCL files with DRY environment configuration
+2. Dependency graph and remote state references
 
 ## Auto-trigger keywords
 

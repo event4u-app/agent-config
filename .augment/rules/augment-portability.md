@@ -6,11 +6,11 @@ source: package
 
 # .augment/ Portability
 
-Everything in `.augment/` MUST be **project-agnostic**.
+Everything inside `.augment/` (skills, rules, commands, templates, contexts) MUST be **project-agnostic**.
 
-- NEVER reference specific project, repo name, domain, or tech stack
-- NEVER hardcode project-specific paths, class names, or conventions
-- Content must work as **reusable package** across any project
-- Project-specific behavior → `.agent-settings`, `AGENTS.md`, or `agents/`
-- Need project input → read from `.agent-settings` or accept as parameter
-- Test: "Would this make sense in a completely different project?"
+- NEVER reference a specific project, repo name, domain, or tech stack directly.
+- NEVER hardcode project-specific paths, class names, or conventions.
+- Write content so it works as a **reusable package** across any project.
+- Project-specific behavior belongs in `.agent-settings`, `AGENTS.md`, or `agents/` — not in `.augment/`.
+- If a skill or rule needs project-specific input, read it from `.agent-settings` or accept it as a parameter.
+- When reviewing or editing `.augment/` files, always ask: "Would this still make sense in a completely different project?"

@@ -11,7 +11,15 @@ source: package
 Use this skill when writing or reviewing API endpoint tests — integration tests,
 contract validation, response structure checks, or external service mocking.
 
-## Test structure (Laravel / Pest)
+## Procedure: Write API tests
+
+1. **Identify endpoint** — Route, method, auth requirements, expected status codes.
+2. **Set up test data** — Use seeders (preferred) or factories. Mock external services with `Http::fake()`.
+3. **Write test cases** — Cover success, validation errors, authorization failures, edge cases.
+4. **Assert response** — Check status code, JSON structure, data values. Use `assertJsonStructure()`.
+5. **Verify** — Run the test. Must pass. Check no flaky assertions (no time-dependent, no random ordering).
+
+### Example
 
 ```php
 describe('GET /api/v1/projects', function () {
@@ -168,6 +176,12 @@ it('handles external API failure gracefully', function () {
 | **Response** | JSON structure, field types, pagination meta |
 | **Side effects** | Database changes, events dispatched, jobs queued |
 | **Edge cases** | Empty results, large payloads, concurrent access |
+
+## Output format
+
+1. Pest test file covering happy path, validation, auth, and edge cases
+2. Test names as readable sentences describing expected behavior
+3. Mocked external services where applicable
 
 ## Auto-trigger keywords
 

@@ -1,6 +1,8 @@
 ---
+name: module-create
 skills: [laravel]
 description: Create a new module from .module-template with interactive setup
+disable-model-invocation: true
 ---
 
 # module-create

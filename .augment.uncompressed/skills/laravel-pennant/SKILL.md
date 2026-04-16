@@ -14,7 +14,14 @@ Use this skill when working with feature flags:
 - A/B testing with feature variants
 - Environment-based feature gating
 
-## Installation
+## Procedure: Set up feature flags
+
+1. **Install** — `composer require laravel/pennant`, publish config, run migrations.
+2. **Define feature** — Create feature class or use closure-based definition.
+3. **Check feature** — Use `Feature::active('feature-name')` in code.
+4. **Verify** — Confirm feature is active/inactive for correct scopes. Run tests.
+
+### Installation
 
 ```bash
 composer require laravel/pennant
@@ -152,6 +159,11 @@ Feature::for($users)->load(['new-dashboard', 'advanced-reporting']);
 - **Purge after full rollout** — remove the flag once 100% of users have the feature.
 - **Use `array` driver in tests** — prevents test pollution.
 - **Clean up old flags** — feature flags are temporary, not permanent config.
+
+## Output format
+
+1. Feature flag definition with scope and resolve logic
+2. Integration in controllers/services using Feature::active()
 
 ## Auto-trigger keywords
 

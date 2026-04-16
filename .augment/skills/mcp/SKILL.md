@@ -8,9 +8,13 @@ source: package
 
 ## When to use
 
-MCP tool selection, combining tools in workflows, troubleshooting, building commands/skills referencing MCP.
+Use this skill when:
+- Deciding which MCP tool to use for a task
+- Combining multiple MCP tools in a workflow
+- Troubleshooting MCP tool errors or unexpected results
+- Building commands or skills that reference MCP tools
 
-## Available MCP Servers
+## Procedure: Use MCP tools
 
 ### Sentry (`augment-partner-remote-mcp-sentry`)
 
@@ -32,9 +36,9 @@ Error tracking and performance monitoring.
 | `analyze_issue_with_seer` | AI root cause analysis | When stacktrace alone isn't enough |
 
 **Key pattern:** Always get org slug first → then use other tools.
-**See:** `sentry` skill for investigation workflow.
+**See:** `sentry-integration` skill for investigation workflow.
 
-### Jira (`jira`)
+### Jira (`jira-integration`)
 
 Issue tracking and project management.
 
@@ -51,7 +55,7 @@ Issue tracking and project management.
 | `GET /field` | List available fields | Before writing JQL |
 
 **Key pattern:** Check fields (`GET /field`) before writing JQL. Check transitions before changing status.
-**See:** `jira` skill for JQL patterns and ADF format.
+**See:** `jira-integration` skill for JQL patterns and ADF format.
 
 ### GitHub (`github-api`)
 
@@ -110,14 +114,80 @@ Structured problem-solving.
 
 **Use for:** Breaking down complex tasks, planning before implementation, multi-step reasoning.
 
-## Workflows: bug = Jira+Sentry+codebase. Feature = Jira+codebase+Context7. CI = GitHub+codebase+launch-process. PR = GitHub+Jira.
+## Best Practices
 
-## Errors: retry once, look up org/project slugs first, batch GitHub calls (rate limits).
+### Tool selection
 
-## Permissions: reads = safe. Writes (Jira tickets, GitHub PRs, comments) = ask user first.
+| Need | Tool |
+|---|---|
+| Error investigation | Sentry → `get_issue_details` |
+| Ticket context | Jira → `GET /issue/{key}` |
+| CI failure | GitHub → `actions/runs` + `actions/jobs/{id}` |
+| Library docs | Context7 → `resolve-library-id` + `query-docs` |
+| Web scraping | Playwright → `navigate` + `snapshot` |
+| Complex planning | Sequential Thinking |
 
-## Related: `sentry`, `jira`, `git-workflow`, `copilot`
+### Combining tools in workflows
 
-## Gotcha: MCP is token-expensive (prefer CLI), max 5 chained calls, handle connection failures, Sentry/Jira worth the cost.
+```
+Bug investigation:
+  Jira (ticket context) + Sentry (stacktrace) + codebase-retrieval (code)
 
-## Do NOT: call without understanding side effects, use when simpler alternatives exist.
+Feature planning:
+  Jira (requirements) + codebase-retrieval (existing code) + Context7 (library docs)
+
+CI fix:
+  GitHub (failure logs) + codebase-retrieval (failing code) + launch-process (run locally)
+
+PR creation:
+  GitHub (create PR) + Jira (transition to "In Review")
+```
+
+### Error handling
+
+- If an MCP tool returns an error, retry once with corrected parameters
+- If org/project slug is unknown, use `find_organizations` / `find_projects` first
+- Sentry and Jira tools need the correct org — don't guess, look it up
+- GitHub API has rate limits — batch related calls, avoid unnecessary requests
+
+### Permission boundaries
+
+- **Read operations** — always safe, use freely
+- **Write operations** — ask user permission first:
+  - Creating Jira tickets or changing status
+  - Creating GitHub PRs or pushing code
+  - Posting comments on issues/PRs
+
+## Related
+
+- **Skill:** `sentry-integration` — Sentry-specific investigation patterns
+- **Skill:** `jira-integration` — Jira-specific JQL and ticket management
+- **Skill:** `git-workflow` — GitHub PR and branch conventions
+- **Skill:** `copilot-config` — GitHub Copilot integration
+- **Rule:** `no-commit.md` — permission boundaries for write operations
+
+
+## Output format
+
+1. MCP server configuration or tool integration code
+2. Tool capability mapping for the agent workflow
+
+## Gotcha
+
+- MCP servers are token-expensive — prefer CLI equivalents when available (see `rtk-output-filtering` skill).
+- Don't chain 5+ MCP tool calls when a single CLI command could do the same thing.
+- MCP server availability varies — always handle connection failures gracefully.
+- Sentry and Jira MCP provide unique capabilities — those are worth the token cost.
+
+## Do NOT
+
+- Do NOT call MCP tools without understanding their side effects.
+- Do NOT use MCP tools when simpler alternatives exist.
+
+## Auto-trigger keywords
+
+- MCP
+- Model Context Protocol
+- MCP server
+- MCP tools
+- agent tools

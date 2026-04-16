@@ -1,15 +1,22 @@
 ---
-skills: [agent-docs]
+name: context-refactor
+skills: [agent-docs-writing]
 description: Analyze, update, and extend an existing context document
+disable-model-invocation: true
 ---
 
 # context-refactor
 
 ## Instructions
 
-### 1. Find context
+### 1. Find the context
 
-List `agents/contexts/` + `app/Modules/*/agents/contexts/`. One → confirm. Multiple → list:
+- List all context documents in `agents/contexts/`.
+- Also check module-level `app/Modules/*/agents/contexts/`.
+
+If only one context exists, ask if that's the one to refactor.
+If the user has a context file open in their editor, use that one.
+If multiple exist, show a list:
 
 ```
 📂 Existing context documents:
@@ -23,9 +30,16 @@ List `agents/contexts/` + `app/Modules/*/agents/contexts/`. One → confirm. Mul
 Which context do you want to update? (number or name)
 ```
 
-None → `ℹ️ No contexts. Use /context-create.` Stop.
+If no contexts exist:
+```
+ℹ️  No context documents found. Create one first with /context-create.
+```
+Stop.
 
-### 2. Load and display
+### 2. Load and display the context
+
+- Read the selected context file completely.
+- Display a summary:
 
 ```
 ═══════════════════════════════════════════════
@@ -49,9 +63,16 @@ CURRENT CONTENT:
 ═══════════════════════════════════════════════
 ```
 
-### 3. Re-analyze code
+### 3. Re-analyze the code
 
-Check: files still exist? New undocumented files? Tables/endpoints accurate? New tests?
+Re-analyze the documented area to find changes:
+
+- Check if documented files still exist.
+- Look for new files/classes that aren't documented.
+- Verify database tables and endpoints are still accurate.
+- Check for new tests.
+
+**Show findings:**
 
 ```
 🔍 Re-analysis complete:
@@ -84,8 +105,14 @@ What do you want to adjust?
 5. 💬 Something else
 ```
 
-**Option 1** — Auto: remove deleted, add new, update changed (confirm before applying).
-**Option 2** — Manual: show sections:
+**Option 1 — Auto-update:**
+- Remove entries for deleted files/classes.
+- Add entries for new files/classes.
+- Update changed entries.
+- Show all changes for confirmation before applying.
+
+**Option 2 — Manual edit:**
+Show section list:
 ```
 Which section?
 
@@ -100,9 +127,16 @@ Which section?
 9. Notes
 ```
 
-**Option 3** — Ask, analyze, add.
+**Option 3 — Add new areas:**
+- Ask what to add.
+- Analyze the relevant code.
+- Add new sections or entries.
 
-### 5. Apply changes + update `Last Updated`
+### 5. Apply changes
+
+- Update the context file.
+- Update `Last Updated` to today's date.
+- Show a diff summary:
 
 ```
 ───────────────────────────────────────────────
@@ -125,9 +159,13 @@ Anything else to add?
 3. ✅ No, done
 ```
 
-1/2 → loop back.
+If option 1 or 2 → loop back to analysis and update.
 
 ### Rules
 
-- No commit/push. Re-analyze before updating. Show changes before applying. Preserve user notes. Update `Last Updated`.
+- **Do NOT commit or push.**
+- **Always re-analyze the code** before updating — don't just edit text.
+- **Show changes before applying** — the user should confirm.
+- **Preserve user-written notes and context** — don't overwrite manual additions.
+- **Update `Last Updated`** after every change.
 

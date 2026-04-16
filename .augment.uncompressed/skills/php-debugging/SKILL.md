@@ -15,9 +15,9 @@ Use this skill when:
 - Running code coverage
 - Helping users configure their IDE for debugging
 
-This skill extends `coder` and `php`.
+This skill extends `php-coder` and `php`.
 
-## Before debugging
+## Procedure: Debug with Xdebug
 
 1. **Detect the project's debug setup** — check `docker-compose.yml` / `compose.yaml` for Xdebug containers.
 2. **Check Dockerfile** — look for a `dev-xdebug` build stage or Xdebug installation.
@@ -158,6 +158,11 @@ make rebuild-php-all      # Rebuild both PHP containers
 - Do not run performance benchmarks against the Xdebug container.
 - Do not forget to check path mappings when breakpoints are silently skipped.
 
+
+## Output format
+
+1. Xdebug configuration or debugging session setup
+2. Root cause identified with evidence from debugger output
 
 ## Gotcha
 

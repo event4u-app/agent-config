@@ -14,7 +14,14 @@ Use this skill when working with HTTP middleware:
 - Terminable middleware (post-response processing)
 - Route-level and global middleware assignment
 
-## Creating middleware
+## Procedure: Create middleware
+
+1. **Generate class** — `php artisan make:middleware EnsureCustomerIsActive`.
+2. **Implement logic** — Handle request in `handle()`, return response or pass to next.
+3. **Register** — Add to route group or global middleware stack.
+4. **Verify** — Run tests covering both allowed and blocked request scenarios.
+
+### Example
 
 ```bash
 php artisan make:middleware EnsureCustomerIsActive
@@ -149,6 +156,11 @@ Route::middleware(['auth', EnsureCustomerIsActive::class])->group(function () {
 - **Use terminable** for logging/metrics — don't block the response.
 - **Type-hint dependencies** — use constructor injection.
 - **Keep middleware thin** — delegate complex logic to services.
+
+## Output format
+
+1. Middleware class with handle method and typed request/response
+2. Registration in bootstrap or route group
 
 ## Auto-trigger keywords
 

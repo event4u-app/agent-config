@@ -100,6 +100,29 @@ def list_changed_md(source_dir: Path) -> list:
     return changed
 
 
+def find_stale_hashes(source_dir: Path) -> list:
+    """Find hashes stored for source files that no longer exist."""
+    hashes = load_hashes()
+    stale = []
+    for relative in sorted(hashes.keys()):
+        source_file = source_dir / relative
+        if not source_file.exists():
+            stale.append(relative)
+    return stale
+
+
+def clean_stale_hashes(source_dir: Path) -> int:
+    """Remove hashes for source files that no longer exist. Returns count removed."""
+    stale = find_stale_hashes(source_dir)
+    if not stale:
+        return 0
+    hashes = load_hashes()
+    for relative in stale:
+        del hashes[relative]
+    save_hashes(hashes)
+    return len(stale)
+
+
 
 def should_compress(filepath: Path) -> bool:
     """Check if file should be compressed (is .md and not in copy-as-is list)."""
@@ -243,7 +266,15 @@ def generate_rule_symlinks() -> int:
             link.symlink_to(target)
             total += 1
 
-    print(f"  ✅  Created {total} rule symlinks across {len(TOOL_DIRS)} tool directories")
+    # Verify counts match across all tool directories
+    source_count = len(rules)
+    for tool_dir in TOOL_DIRS:
+        target_dir = PROJECT_ROOT / tool_dir
+        tool_count = len([f for f in target_dir.iterdir() if f.is_symlink() and f.suffix == ".md"])
+        if tool_count != source_count:
+            print(f"  ⚠️  {tool_dir}: {tool_count} rules (expected {source_count})")
+
+    print(f"  ✅  Created {total} rule symlinks across {len(TOOL_DIRS)} tool directories ({source_count} rules each)")
     return total
 
 
@@ -317,9 +348,11 @@ def extract_description_from_md(content: str) -> str:
 
 
 def generate_claude_commands() -> None:
-    """Convert ALL Augment commands to Claude Code Skills format.
+    """Create .claude/skills/{name}/SKILL.md symlinks for ALL Augment commands.
 
-    Description is extracted from the first # heading in each command file.
+    Commands in .augment/commands/ are the single source of truth.
+    They must include name: and disable-model-invocation: true in frontmatter
+    (added once, then maintained as part of the command file).
     """
     if not COMMANDS_SOURCE.exists():
         print("  ⚠️  .augment/commands/ not found — skipping commands")
@@ -331,28 +364,20 @@ def generate_claude_commands() -> None:
     for source_file in sorted(COMMANDS_SOURCE.glob("*.md")):
         name = source_file.stem
 
-        raw_content = source_file.read_text()
-        content = strip_frontmatter(raw_content)
-        description = extract_description_from_md(content) or name.replace("-", " ").title()
-
-        # Build frontmatter
-        fm_parts = [
-            "---",
-            f"name: {name}",
-            f"description: \"{description}\"",
-            "disable-model-invocation: true",
-            "---",
-        ]
-
-        full_content = "\n".join(fm_parts) + "\n\n" + content.strip() + "\n"
-
-        # Create skill directory
+        # Create skill directory (real dir, symlinked SKILL.md inside)
         skill_dir = CLAUDE_SKILLS_DIR / name
         skill_dir.mkdir(parents=True, exist_ok=True)
-        (skill_dir / "SKILL.md").write_text(full_content)
+
+        skill_file = skill_dir / "SKILL.md"
+        if skill_file.exists() or skill_file.is_symlink():
+            skill_file.unlink()
+
+        # Symlink: .claude/skills/{name}/SKILL.md → ../../../.augment/commands/{name}.md
+        rel_target = Path("../../../.augment/commands") / source_file.name
+        skill_file.symlink_to(rel_target)
         count += 1
 
-    print(f"  ✅  Generated {count} command skills in .claude/skills/")
+    print(f"  ✅  Created {count} command symlinks in .claude/skills/")
 
 
 def generate_tools() -> None:
@@ -456,6 +481,39 @@ def main() -> None:
         else:
             print(f"✅  All .md files are up to date")
 
+    elif arg == "--check-hashes":
+        has_issues = False
+        changed = list_changed_md(SOURCE_DIR)
+        stale = find_stale_hashes(SOURCE_DIR)
+
+        if stale:
+            has_issues = True
+            print(f"⚠️  {len(stale)} stale hash(es) for deleted source files:\n")
+            for f in stale:
+                print(f"  {f}")
+            print(f"\nRun 'task sync-clean-hashes' to remove them.\n")
+
+        if changed:
+            has_issues = True
+            print(f"❌  {len(changed)} .md file(s) need recompression:\n")
+            for f in changed:
+                stored = load_hashes().get(f)
+                reason = "no hash stored" if stored is None else "hash mismatch"
+                print(f"  {f}  ({reason})")
+            print(f"\nRun '/compress' command to recompress these files.")
+
+        if not has_issues:
+            print("✅  All compression hashes are clean (no stale, no mismatches)")
+            sys.exit(0)
+        sys.exit(1)
+
+    elif arg == "--clean-hashes":
+        count = clean_stale_hashes(SOURCE_DIR)
+        if count:
+            print(f"✅  Removed {count} stale hash(es)")
+        else:
+            print("✅  No stale hashes found")
+
     elif arg == "--generate-tools":
         generate_tools()
 
@@ -463,7 +521,7 @@ def main() -> None:
         clean_tools()
 
     else:
-        print("Usage: python scripts/compress.py [--sync|--list|--changed|--check|--mark-done <path>|--mark-all-done|--generate-tools|--clean-tools]")
+        print("Usage: python scripts/compress.py [--sync|--list|--changed|--check|--check-hashes|--clean-hashes|--mark-done <path>|--mark-all-done|--generate-tools|--clean-tools]")
         sys.exit(1)
 
 

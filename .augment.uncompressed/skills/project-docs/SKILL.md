@@ -29,7 +29,7 @@ understanding project-specific patterns, legacy conventions, or architectural de
 - When an agent is unsure about project conventions for a specific domain
 - When creating or modifying code in areas covered by these docs
 
-## How to Use
+## Procedure: Find project documentation
 
 1. Identify the work area from the user's request.
 2. Look up the relevant docs in the mapping table below.
@@ -109,10 +109,15 @@ Do NOT hardcode a mapping — always **list the directory** and pick by relevanc
 
 | Skill | Relationship |
 |---|---|
-| `agent-docs` | When to read/create/update agent docs in general |
-| `context` | How to create new context documents |
-| `module` | Module-specific docs in module `agents/` directories |
+| `agent-docs-writing` | When to read/create/update agent docs in general |
+| `context-create` | How to create new context documents |
+| `module-management` | Module-specific docs in module `agents/` directories |
 
+
+## Output format
+
+1. Relevant doc paths and their key content summarized
+2. Recommendation for which docs to read for the current task
 
 ## Gotcha
 

@@ -27,7 +27,7 @@ If both PHP and JS/TS files changed → run **both** pipelines.
 
 ## Related rules and guidelines
 
-- `quality-workflow` rule — enforced workflow, baseline policy, execution rules (auto-loaded)
+- `verify-before-complete` rule — timing: run quality tools ONCE at the end, not after each edit
 - `php-coding` rule → PHPStan section — inline ignores, PHPDoc rules
 - `verify-before-complete` rule — must run quality checks before claiming work is done
 
@@ -155,7 +155,7 @@ php artisan quality:refactor --fix     # Rector + ECS
 php artisan quality:finalize           # Rector + ECS + PHPStan (full pipeline)
 ```
 
-## Workflow after code changes
+## Procedure: Run quality checks
 
 1. Run PHPStan — fix all errors
 2. Run Rector + ECS with auto-fix — fix style + refactoring
@@ -372,6 +372,11 @@ JS/TS commands run on the **host** or in a **Node container**, depending on the 
 2. Check if `docker-compose.yml` has a Node service.
 3. If neither → run on the host directly.
 
+## Output format
+
+1. Tool exit code and error count summary
+2. Fixed issues or remaining errors to address
+
 ## Auto-trigger keywords
 
 - quality check
@@ -384,6 +389,13 @@ JS/TS commands run on the **host** or in a **Node container**, depending on the 
 - Biome
 - type check
 - tscheck
+
+## Gotcha
+
+- Always check exit code first — if 0, don't read output (saves tokens).
+- Rector + ECS can introduce PHPStan errors — always re-run PHPStan after fixing.
+- The wrapper (`galawork/php-quality`) has different flags than native tools.
+- Docker commands need `-T` flag to avoid TTY issues in non-interactive mode.
 
 ## Do NOT
 

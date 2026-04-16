@@ -1,15 +1,21 @@
 ---
-skills: [agent-docs]
+name: agents-prepare
+skills: [agent-docs-writing]
 description: Scaffold the agents/ directory structure with all required subdirectories and .gitkeep files
+disable-model-invocation: true
 ---
 
 # agents-prepare
 
 ## Instructions
 
-### 1. Check project root (composer.json, artisan, package.json)
+### 1. Check project root
 
-### 2. Create directory structure (`.gitkeep` in empty dirs only)
+Verify you're in the project root (look for `composer.json`, `artisan`, or `package.json`).
+
+### 2. Create directory structure
+
+Create the following directories if they don't exist, with a `.gitkeep` in each **empty** directory:
 
 ```
 agents/
@@ -21,7 +27,7 @@ agents/
     └── .gitkeep
 ```
 
-Also:
+Also create the guidelines directory in `.augment/` if it doesn't exist:
 
 ```
 .augment/guidelines/
@@ -29,9 +35,17 @@ Also:
     └── .gitkeep
 ```
 
-### 3. Module support
+**Rules:**
+- Only add `.gitkeep` to directories that have **no other files** in them.
+- Do NOT overwrite existing files.
+- Do NOT create directories that already exist with content.
 
-`app/Modules/` exists → per module:
+### 3. Check for module support
+
+Check if the project has a module system (`app/Modules/` directory):
+
+- If `app/Modules/` exists → list all modules.
+- For each module, create the agent directories if they don't exist:
 
 ```
 app/Modules/{Module}/agents/
@@ -43,7 +57,9 @@ app/Modules/{Module}/agents/
 │   └── .gitkeep
 ```
 
-### 4. Verify templates
+### 4. Verify templates exist
+
+Check that `.augment/templates/` contains the required templates:
 
 ```
 .augment/templates/
@@ -52,7 +68,7 @@ app/Modules/{Module}/agents/
 └── contexts.md    # Context document template
 ```
 
-Missing → warn:
+If any template is missing, warn:
 
 ```
 ⚠️  Missing templates in .augment/templates/:
@@ -63,6 +79,8 @@ These templates are required by the Feature/Roadmap commands.
 
 ### 5. Clean up old templates
 
+Check for **old template files** in the agents directories and offer to remove them:
+
 ```
 agents/features/template.md
 agents/roadmaps/template.md
@@ -70,7 +88,7 @@ app/Modules/*/agents/roadmaps/template.md
 app/Modules/*/agents/features/template.md
 ```
 
-Found →
+If any are found:
 
 ```
 ℹ️  Old template files found (now in .augment/templates/):
@@ -81,7 +99,9 @@ Found →
 Delete these? (y/n)
 ```
 
-### 6. Summary
+If yes → delete them.
+
+### 6. Show summary
 
 ```
 ═══════════════════════════════════════════════
@@ -111,5 +131,8 @@ Delete these? (y/n)
 
 ### Rules
 
-- No commit/push. No overwrite. No `.gitkeep` in non-empty dirs. Ask before delete.
+- **Do NOT commit or push.**
+- **Do NOT overwrite existing files.**
+- **Do NOT create `.gitkeep` in directories that already have files.**
+- **Always ask before deleting** old template files.
 

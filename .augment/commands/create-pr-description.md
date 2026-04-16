@@ -1,36 +1,58 @@
 ---
+name: create-pr-description
 skills: [git-workflow]
 description: Generate a PR description as a copyable markdown block — used standalone or by create-pr
+disable-model-invocation: true
 ---
 
 # create-pr-description
 
 ## Input
 
-PR URL or auto-detect (branch → GitHub API → confirm). Never reuse old PR numbers.
+The user may or may not provide a PR URL or branch name.
 
 ## Instructions
 
 ### 1. Detect PR / Branch
 
-PR URL → use API. No URL → `git branch --show-current` → search GitHub → use PR or branch diff.
+1. If the user provides a GitHub PR URL → use that PR to get the changed files via API.
+2. If no URL → **auto-detect:**
+   - Get current branch (`git branch --show-current`).
+   - Search for an open PR on that branch via GitHub API
+     (`GET /repos/{owner}/{repo}/pulls?head={owner}:{branch}&state=open`).
+   - If exactly one PR found → use it (get files via `/pulls/{number}/files`).
+   - If no PR found → use `git diff origin/{default}..HEAD --stat` for the branch diff.
+3. **Never** reuse a PR number from earlier in the conversation.
 
 ### 2. Gather context
 
-- **Jira**: extract from branch, fetch API. Not found → ask.
-- **Diff**: `git diff origin/{default}..HEAD --stat`
-- **Commits**: `git log origin/{default}..HEAD --format="%s"`
-- **PR template**: **MUST** read `.github/pull_request_template.md`
-- Read key changed files (migrations, new classes, services, routes)
-- Check roadmap/agent docs
+- **Jira ticket**: Extract ticket ID from branch name (e.g. `fix/DEV-4673-description` → `DEV-4673`).
+  - If found → fetch via Jira API (`GET /issue/{ticketId}`).
+  - If not found → ask the user for a ticket number. Proceed without if none.
+- **Diff summary**: `git diff origin/{default}..HEAD --stat` for changed files.
+- **Commit messages**: `git log origin/{default}..HEAD --format="%s"` for what was done.
+- **PR template**: **MUST** read `.github/pull_request_template.md`. This is mandatory, not optional.
+- **Read key changed files** to understand what was done — look for migrations, new classes,
+  modified services, route changes, config changes.
+- **Check roadmap/agent docs** that describe the feature intent (if they exist).
 
-### 3. PR title
+### 3. Build the PR title
 
-Format: `{TICKET-ID}: {summary}`. Use Jira summary or derive from commits.
+- Format: `{TICKET-ID}: {summary}` (e.g. `DEV-4673: Fix absence working time calculation`).
+- Use the Jira ticket summary if available, otherwise derive from commits.
+- If no ticket: use the most descriptive commit message or ask the user.
 
-### 4. PR body
+### 4. Build the PR body
 
-**ALWAYS** use PR template. Fill: Jira badge, description (2-5 sentences), type of change, links. Checklist: leave as-is.
+**ALWAYS** use the PR template (`.github/pull_request_template.md`). Fill in its sections:
+
+- **Jira badge**: Replace `{TICKET-NUMBER}` with the actual ticket ID.
+- **Description**: Summarize the changes in 2-5 sentences. Explain *what* changed and *why*.
+  Use the Jira ticket description and commit messages as input.
+- **Type of change**: Check the appropriate checkbox(es) based on the changes.
+- **Checklist**: Leave as-is (the developer fills this in).
+- **Links**: Replace `{TICKET-NUMBER}` with the actual ticket ID.
+- **Screenshots**: Leave as `...` unless the user provides screenshots.
 
 If no PR template exists, use this structure:
 
@@ -67,14 +89,25 @@ Show the **title** and **body** separately, each in a fenced code block so the u
 ```
 ```
 
-### 6. Feedback
+### 6. Ask for feedback
 
-`1. Looks good` / `2. Adjust`
+Ask with numbered options:
+
+```
+> 1. Looks good — done
+> 2. Adjust — I'll tell you what to change
+```
+
 
 ### Rules
 
-- Output in user's language, PR body in **English**
-- Show result before further action — never create PR from this command
-- Always use PR template. Be concise. Group related changes.
-- Mark breaking changes. Highlight things needing reviewer attention.
+- **All output in the user's language** — but the PR body itself is in **English**.
+- **Always show the result before any further action** — never create a PR directly from this command.
+- **Always use the PR template** — read `.github/pull_request_template.md` and fill its sections. NEVER invent a custom structure.
+- **Be concise** in the description — no filler text, no restating the ticket title as a sentence.
+- **Group related changes** in the description — don't list every file, list logical changes.
+- **Mark breaking changes** clearly if the diff shows API contract changes (new/removed fields,
+  changed endpoints, changed response structure).
+- **Mention file/class names** where helpful, but don't list every single file.
+- **Highlight things reviewers should pay attention to** — complex logic, edge cases, trade-offs.
 

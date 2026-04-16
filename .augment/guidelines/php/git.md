@@ -2,8 +2,8 @@
 
 > Project-specific Git conventions. Branch naming, commit messages, PR workflow.
 
-**Related Skills:** `git-workflow`, `code-review`
-**Related Rules:** `no-commit.md`
+**Related Skills:** `git-workflow`, `conventional-commits-writing`
+**Related Rules:** `commit-conventions.md`
 
 ## Branch Naming
 
@@ -11,16 +11,7 @@
 {type}/{ticket-id}/{short-description}
 ```
 
-| Type | When |
-|---|---|
-| `feat/` | New feature |
-| `fix/` | Bug fix |
-| `hotfix/` | Urgent production fix |
-| `chore/` | Maintenance, refactoring, tooling |
-| `docs/` | Documentation changes |
-| `test/` | Test additions/changes |
-
-### Examples
+Types: `feat/`, `fix/`, `hotfix/`, `chore/`, `docs/`, `test/`
 
 ```
 feat/DEV-1234/user-notification-preferences
@@ -29,51 +20,77 @@ chore/refactor-agent-setup
 hotfix/DEV-999/critical-payment-bug
 ```
 
-### Rules
-
-- Always include the Jira ticket ID when one exists
-- Use kebab-case for the description part
-- Keep branch names short but descriptive
-
 ## Commit Messages
 
-Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/):
+See `commit-conventions` rule for base format. Key type selection:
+
+- `feat` — new capability. `fix` — bug/regression. `refactor` — structure only, NO behavior change.
+- `docs` — docs only. `test` — tests only. `ci` — CI/workflows. `chore` — maintenance/cleanup.
+- `perf` — performance. `build` — build tooling. `style` — formatting only.
+
+**Scope:** Jira ID or area name (`api`, `auth`, `skills`). Only add when it improves clarity.
+
+**Description:** Intent, not implementation. Imperative mood. Max 72 chars. No generic filler.
+
+**Breaking:** `!` after type/scope or `BREAKING CHANGE:` footer.
 
 ```
-<type>[optional scope]: <description>
+feat(api)!: rename invoice status values
+refactor(auth)!: remove legacy session flow
 ```
 
-### Types
+**Splitting:** Mixed concerns → split commits. Don't hide unrelated changes in one.
 
-| Type | Description |
-|---|---|
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `refactor` | Code change (no new feature, no bug fix) |
-| `docs` | Documentation only |
-| `test` | Adding or updating tests |
-| `chore` | Maintenance (deps, configs, tooling) |
-| `style` | Code style (formatting, no logic change) |
-| `perf` | Performance improvement |
+```
+refactor(skills): remove duplicate routing helpers
+ci(lint): add skill-lint workflow
+docs(readme): document new lint tasks
+```
 
-### Examples
+**Squash merge titles:** Conventional Commit format, describe net effect, not every internal commit.
+
+### Anti-patterns
+
+- `update stuff` / `fix bug` / `changes`
+- `refactor` for bug fixes, `chore` for behavior changes
+- Multiple unrelated concerns in one commit
+
+### Decision checklist
+
+1. Behavior changed? → `feat` or `fix`
+2. Structure only? → `refactor`
+3. Only docs/tests/CI? → `docs`/`test`/`ci`
+4. Scope useful or noise?
+5. Multiple commits hiding in one?
+
+### Examples by area
 
 ```bash
+# Features
 feat(DEV-2133): send email to customer when product is shipped
+
+# Bug fixes
 fix(import): handle null values in equipment JSON
+
+# Refactoring
 refactor: extract user sync logic into dedicated service
+
+# Skills / Rules / Agent config
+refactor(skills): merge duplicate analysis skills
+feat(rules): add analysis routing quality gate
+fix(skills): restore concrete validation in skill reviewer
+
+# CI / Tooling
+ci(lint): add skill linter workflow
+feat(linter): detect pointer-only skills
+
+# Docs
+docs(roadmap): add phase 3 implementation plan
+docs(readme): clarify source-of-truth workflow
 ```
-
-### Rules
-
-- Scope is optional but recommended (Jira ticket ID or module name)
-- Description in imperative mood ("add feature", not "added feature")
-- Keep the first line under 72 characters
 
 ## Pull Requests
 
-- PR title follows commit message format: `feat(DEV-1234): short description`
-- Fill in the PR template (checklist, description, testing notes)
-- Link the Jira ticket in the PR description
-- Ensure all quality gates pass before requesting review
+- PR title: Conventional Commit format — `feat(DEV-1234): short description`
+- Fill PR template, link Jira ticket, ensure quality gates pass
 

@@ -14,7 +14,7 @@ Use this skill when:
 - Responding to review feedback on your PR
 - The user asks to "review", "check", or "look at" code changes
 
-## Review approach
+## Procedure: Review code
 
 ### Mindset
 
@@ -165,7 +165,7 @@ gh api repos/{owner}/{repo}/pulls/comments/{comment_id}/replies \
   -f body="Fixed in latest commit."
 ```
 
-## Review output format
+## Output format
 
 When reviewing code, structure feedback by severity:
 

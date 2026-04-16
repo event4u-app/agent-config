@@ -1,7 +1,8 @@
 ---
 name: override-create
 description: Creates a project-level override for a shared skill, rule, or command.
-skills: [override, agent-docs]
+skills: [override-management, agent-docs-writing]
+disable-model-invocation: true
 ---
 
 # /override-create
@@ -40,15 +41,58 @@ Check if `agents/overrides/{type}/{name}.md` already exists.
 - If yes → inform the user and ask if they want to edit the existing one instead
 - If no → continue
 
-### 4. Read original — show summary + sections
+### 4. Read the original
 
-### 5. Mode: **extend** (add/change parts) or **replace** (ignore original)
+Read the full content of the original file. Present a brief summary:
 
-### 6. What to change — extend: pick sections. Replace: describe.
+> **Original:** `.augment/skills/eloquent/SKILL.md`
+> **Summary:** Writes Eloquent models with getter/setter pattern, eager loading, type safety...
+> **Sections:** Core Rules, Relationships, Scopes, Query Patterns, ...
 
-### 7. Create override
+### 5. Ask: Mode
 
-Template from `.augment/templates/overrides/{type}.md`. Path: `agents/overrides/{type}/{name}.md`. Never modify `.augment/` directly.
+> How should the override work?
+> - **extend** — The original stays active, your override adds or changes parts of it
+> - **replace** — Das Original wird komplett ignoriert, dein Override ist die einzige Quelle
 
-### 8. Verify — read back, confirm with user.
+### 6. Ask: What to change
+
+Based on mode:
+
+- **extend:** "Which sections do you want to change or add?"
+  - List the original's section headings
+  - User picks sections or describes changes
+- **replace:** "Describe what the override should do instead."
+
+### 7. Create the override file
+
+Use the appropriate template from `.augment/templates/overrides/{type}.md`.
+
+Fill in:
+- The correct `Mode` and `Original` path
+- The user's changes/additions
+- Remove template comments
+
+**File path:** `agents/overrides/{type}/{name}.md`
+
+- **Rules:** `agents/overrides/rules/{rule-name}.md`
+- **Skills:** `agents/overrides/skills/{skill-name}.md`
+- **Commands:** `agents/overrides/commands/{command-name}.md`
+- **Guidelines:** `agents/overrides/guidelines/{lang}-{filename}.md` (e.g., `php-controllers.md`)
+- **Templates:** `agents/overrides/templates/{template-name}.md`
+
+**Important:** `.augment/` is a shared package — never modify files there for project-specific needs.
+
+### 8. Verify
+
+- Read the created file back
+- Confirm with the user:
+
+> ✅ Override created: `agents/overrides/skills/eloquent.md` (Mode: extend)
+>
+> Der Agent wird ab jetzt:
+> 1. Load the original (`.augment/skills/eloquent/SKILL.md`)
+> 2. Layer your override on top
+>
+> Anything else to adjust?
 

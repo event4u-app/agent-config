@@ -29,7 +29,7 @@ Do NOT use when:
 - Optimizing test suite speed → use `test-performance`
 - Hunting for functional bugs → use `bug-analyzer` (proactive mode)
 
-## Analysis workflow
+## Procedure: Performance analysis
 
 ### 1. Identify hotspots
 

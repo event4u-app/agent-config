@@ -8,7 +8,14 @@ source: package
 
 ## When to use
 
-Terraform `.tf` files, infra modules, AWS resources. Before: repo structure (overrides), existing modules, `variables.tf`, `versions.tf`.
+Use this skill when writing or modifying Terraform configurations (`.tf` files), creating new infrastructure modules, or understanding AWS resource definitions.
+
+## Procedure: Write Terraform config
+
+1. Read the infrastructure repo structure (check `agents/overrides/skills/terraform.md` for the repo location).
+2. Check existing modules in `modules/` for patterns and conventions.
+3. Read `variables.tf` of the target module to understand required inputs.
+4. Check `versions.tf` for provider version constraints.
 
 ## Project structure (typical)
 
@@ -103,7 +110,28 @@ Each environment has a GitHub IAM role with:
 - OIDC trust policy (scoped to repo + environment)
 - Policies for ECR push/pull, ECS deployment, Secrets Manager read, CloudWatch logs
 
-## Gotcha: `-auto-approve` needed in CI, always plan before apply, never commit state files.
+## Output format
 
-## Do NOT: `*` in IAM ARNs, remove deletion_protection, change provider versions without Stage test.
+1. Terraform configuration files (.tf) with proper module structure
+2. Variables, outputs, and state management config
+
+## Auto-trigger keywords
+
+- Terraform
+- AWS infrastructure
+- modules
+- resources
+- state management
+
+## Gotcha
+
+- `terraform apply` without `-auto-approve` requires interactive confirmation — don't use in CI without the flag.
+- The model forgets to run `terraform plan` before `apply` — always plan first, review changes.
+- State files contain sensitive data — never commit them to Git. Use remote state (S3 + DynamoDB).
+
+## Do NOT
+
+- Do NOT use `*` in IAM resource ARNs unless absolutely necessary.
+- Do NOT remove `deletion_protection` from databases.
+- Do NOT change provider versions without testing in Stage first.
 - Do NOT hardcode AWS account IDs — use `data.aws_caller_identity.current`.

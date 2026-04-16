@@ -8,146 +8,85 @@ source: package
 
 ## When to use
 
-Eloquent models, queries, relationships, scopes, migrations, transactions, eager loading, mass assignment.
+Use when creating/modifying Eloquent models, relationships, scopes, or writing database queries.
 
-Extends `coder` and `laravel`.
+Do NOT use when:
+- Schema design or query optimization (use `database` skill)
+- Creating migrations only (use `migration-creator` skill)
 
-## Before: read base skills, inspect existing models, check for repositories, understand schema, check multi-tenancy.
+## Procedure: Create or modify a model
 
-## Model rules
+### Step 0: Inspect
 
-Models contain: relationships, scopes, getters, setters, casts, `$fillable`/`$guarded`. NO business logic. Use `$casts`, typed properties, mass assignment protection.
+1. Check existing models — match property declarations, cast patterns, relationship style, scope naming.
+2. Check for repositories — some projects use repository interfaces.
+3. Understand the schema — check migrations for column names, types, constraints.
+4. Check for multi-tenancy — which `$connection` to use?
 
-## Attribute access style — read from `.agent-settings`
+### Step 1: Read attribute access style
 
 Read `eloquent_access_style` from `.agent-settings`. Default: `getters_setters`.
 
 | Value | Inside model | Outside model |
 |---|---|---|
-| `getters_setters` | `$this->getAttribute()` / `$this->setAttribute()` | Typed getters/setters (`$model->getName()`, `$model->setName()`) |
-| `get_attribute` | `$this->getAttribute()` / `$this->setAttribute()` | `$model->getAttribute()` / `$model->setAttribute()` |
-| `magic_properties` | `$this->column_name` (Laravel default) | `$model->column_name` |
+| `getters_setters` | `getAttribute()` / `setAttribute()` | Typed getters/setters |
+| `get_attribute` | `getAttribute()` / `setAttribute()` | Same |
+| `magic_properties` | `$this->column` | `$model->column` |
 
----
+→ See guideline `php/eloquent.md` and `php-coding` rule for full conventions.
 
-### Style: `getters_setters` (strict — recommended)
+### Step 2: Build the model
 
-Every model attribute **must** have a typed getter and a fluent setter.
+1. Set `$connection`, `$table`, `$fillable`/`$guarded`, `$casts`, `$attributes` (defaults).
+2. Add typed getters + fluent setters for each attribute (if `getters_setters` style).
+3. Add relationship getter above each relationship method.
+4. Add scopes for reusable query constraints.
+5. Register Observer via `#[ObservedBy]` — never use `booted()`.
 
-- **Inside the model:** ALWAYS use `$this->getAttribute('column_name')` / `$this->setAttribute('column_name', $value)`. NEVER use `$this->column_name` magic property access.
-- **Inside getters:** cast the return value when the attribute is NOT in `$casts` (e.g. `(bool)`, `(int)`, `(string)`). If the attribute IS in `$casts`, trust the cast — do not re-cast.
-- **Outside the model (services, controllers, jobs, Livewire, Filament, tests, etc.):** ALWAYS call getters/setters.
-  **NEVER** call `getAttribute()` / `setAttribute()` from outside the model.
-  **NEVER** use direct property access (`$model->column_name`).
-- **If a getter/setter doesn't exist yet:** Create it in the model FIRST, then use it from outside.
-  Do NOT use `getAttribute()` as a shortcut because the getter is missing — that defeats the purpose.
+### Step 3: Write queries
 
-```php
-// ✅ Calling code (service, controller, job, test, etc.)
-$name = $customer->getName();
-$customer->setName('Acme')->save();
+- Always eager load relationships accessed in loops: `->with(['customer'])`.
+- Always paginate list queries: `->paginate(15)`.
+- Use `exists()` over `count() > 0`.
+- Use `chunk()` / `lazy()` for large datasets.
+- Constrain eager loads when only a subset is needed.
 
-// ❌ WRONG — getAttribute/setAttribute from outside the model
-$name = $customer->getAttribute('name');
-$customer->setAttribute('name', 'Acme')->save();
+## Conventions
 
-// ❌ WRONG — direct property access
-$name = $customer->name;
-$customer->name = 'Acme';
-```
+→ See guideline `php/eloquent.md` for getter/setter examples, relationship getters, observers, casts.
+→ See guideline `php/database.md` for indexing, transactions, migrations.
 
-### Style: `get_attribute`
+### Validate
 
-No getters/setters required. Use `getAttribute()` / `setAttribute()` everywhere.
+- Run PHPStan on model — must pass.
+- Verify no N+1: check that all relationship access in loops uses eager loading.
+- Confirm typed getters exist for every relationship.
+- Run affected tests — must pass.
 
-```php
-// ✅ Inside and outside the model
-$name = $customer->getAttribute('name');
-$customer->setAttribute('name', 'Acme')->save();
+## Output format
 
-// ❌ WRONG — direct property access
-$name = $customer->name;
-```
+1. Model class with typed getters/setters, relationships, and observer
+2. Migration file if schema changes are needed
 
-### Style: `magic_properties`
+## Gotcha
 
-Laravel default. Direct property access everywhere.
+- Never access relationships via magic properties — always use typed getter.
+- N+1 queries are the #1 performance issue — always eager load.
+- `getAttribute()` returns `mixed` — cast or type-check the result.
+- `$model->save()` can silently fail without fillable/guarded config.
 
-```php
-// ✅ Inside and outside the model
-$name = $customer->name;
-$customer->name = 'Acme';
-$customer->save();
-```
+## Do NOT
 
----
+- Do NOT put business logic in models — delegate to services.
+- Do NOT access relationships in loops without eager loading.
+- Do NOT use `Model::all()` without pagination on list endpoints.
+- Do NOT use `booted()` for lifecycle hooks — use Observers with `#[ObservedBy]`.
 
-See `.augment/guidelines/php/eloquent.md` for full details and examples.
+## Auto-trigger keywords
 
-## Relationship rules
-
-- Define relationships with explicit return types.
-- Name relationships clearly — match the related model or domain concept.
-- Use relationship methods, not raw joins, for standard associations.
-- Eager load relationships to prevent N+1 queries.
-- Every relationship MUST have a **typed getter** placed directly **above** the relationship method.
-- Outside the model: ALWAYS use the getter (`$model->getCustomer()`), NEVER the magic property (`$model->customer`).
-- Use `instanceof` checks instead of `null ===` when checking relationship results.
-
-```php
-// ✅ Good — getter uses getAttribute(), placed above relationship
-public function getCustomer(): ?Customer
-{
-    return $this->getAttribute('customer');
-}
-
-public function customer(): BelongsTo
-{
-    return $this->belongsTo(Customer::class);
-}
-
-// ❌ Bad — magic property inside getter
-public function getCustomer(): ?Customer
-{
-    return $this->customer;  // NEVER do this
-}
-
-// Load with eager loading
-$orders = Order::with(['customer', 'items'])->get();
-```
-
-## Observer rules — CRITICAL
-
-- Do NOT use `booted()` / `boot()` for model lifecycle hooks (`saving`, `saved`, `deleted`, etc.).
-- Use a dedicated **Observer** class registered via `#[ObservedBy]` attribute.
-- This keeps models slim and lifecycle logic testable and discoverable.
-
-```php
-// ✅ Good — Observer via attribute
-#[ObservedBy([RepairObserver::class])]
-class Repair extends Model { /* ... */ }
-
-// ❌ Bad — lifecycle logic in booted()
-protected static function booted(): void
-{
-    static::saving(static function (Repair $repair): void { /* ... */ });
-}
-```
-
-See `.augment/guidelines/php/eloquent.md` for full details and examples.
-
-## Scopes: reusable query constraints, clear names (`scopeActive`), focused, prefer over repeated `where()`.
-
-## Queries: Eloquent over raw SQL, paginate large sets, `chunk()`/`lazy()` for bulk, `exists()` not `count() > 0`.
-
-## Eager loading: always `with()` for accessed relations, `load()` post-query, `withCount()`, constrain with closure.
-
-## Transactions: wrap multi-step writes, `DB::transaction()`, handle failures, understand savepoints.
-
-## Migrations: focused, proper constraints (FK, index, not-null), `snake_case`, `decimal` not `float`, reversible.
-
-## Performance: filter/paginate always, indexes on WHERE/ORDER/JOIN, `explain()`, `pluck()`, bulk ops not loops.
-
-## Gotcha: never magic property for relations (use getter), N+1 = #1 issue, `getAttribute()` returns mixed, no `booted()` (use Observers), check save() return.
-
-## Do NOT: business logic in models, raw SQL when Eloquent works, skip eager loading, unbounded `get()`, float for money, relations in loops without eager loading.
+- Eloquent
+- model
+- relationship
+- scope
+- accessor
+- mutator

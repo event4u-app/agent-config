@@ -1,6 +1,8 @@
 ---
-skills: [agent-docs]
+name: agents-cleanup
+skills: [agent-docs-writing]
 description: Execute cleanup actions from an agents-audit — move, merge, delete, and update agent docs
+disable-model-invocation: true
 ---
 
 # agents-cleanup
@@ -56,16 +58,20 @@ Which phase to work on?
 
 ### 3. Execute actions
 
-**Move:**
+For each action, follow the appropriate workflow:
+
+**Move file:**
 ```
 📁 Move: {source} → {target}
 Reason: {why}
 
 Confirm? (y/n)
 ```
-Move + update all references.
+- Move the file.
+- Update all references in other docs that link to the old path.
+- Check `.augment/skills/` and `.augment/commands/` for references.
 
-**Merge:**
+**Merge files:**
 ```
 🔗 Merge:
   {file1} + {file2} → {target}
@@ -73,9 +79,12 @@ Reason: {why — what overlaps}
 
 Confirm? (y/n)
 ```
-Show merged content → confirm → create + delete originals + update refs.
+- Read both files.
+- Show the proposed merged content.
+- Create the merged file, delete the originals.
+- Update references.
 
-**Delete:**
+**Delete file:**
 ```
 🗑️  Delete: {file}
 Reason: {why — what's obsolete}
@@ -85,9 +94,10 @@ Content (preview):
 
 Confirm? (y/n)
 ```
-Delete + remove refs.
+- Delete the file.
+- Check for and remove references in other docs.
 
-**Update:**
+**Update file:**
 ```
 ✏️  Update: {file}
 Reason: {what's outdated}
@@ -99,6 +109,10 @@ Changes:
 
 Confirm? (y/n)
 ```
+- Read the file.
+- Make the changes.
+- Show a summary of what changed.
+
 **Create context:**
 ```
 📄 Create context: {area}
@@ -107,9 +121,13 @@ Reason: {why it's needed}
 > 1. Yes — start /context-create
 > 2. Skip
 ```
+- Transition to `/context-create` with the area pre-selected.
+
 ### 4. Update roadmap progress
 
-Per action: mark `[x]` in roadmap.
+After each action:
+- Mark the step as `[x]` in the roadmap file.
+- Show progress:
 
 ```
 ✅  Action complete: {description}
@@ -122,6 +140,8 @@ Progress Phase {n}: [{completed}/{total}]
 ```
 
 ### 5. Summary
+
+After completing a phase or all actions:
 
 ```
 ═══════════════════════════════════════════════
@@ -141,5 +161,10 @@ Progress Phase {n}: [{completed}/{total}]
 
 ### Rules
 
-- No commit/push. Confirm before destructive actions. Update references + roadmap. Show content before delete.
+- **Do NOT commit or push.**
+- **Always confirm before each destructive action** (delete, merge, move).
+- **Always update references** when moving or renaming files.
+- **Update the roadmap** after each completed action.
+- **Show file content** before deleting — the user should see what's being removed.
+- **Check `.augment/` references too** — skills and commands may link to agents docs.
 

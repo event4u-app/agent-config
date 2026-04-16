@@ -1,6 +1,8 @@
 ---
+name: e2e-heal
 skills: [playwright-testing]
 description: Find, debug, and fix failing Playwright E2E tests
+disable-model-invocation: true
 ---
 
 # e2e-heal

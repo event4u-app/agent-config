@@ -17,6 +17,14 @@ tasks:
     desc: Check if .augment/ is in sync with .augment.uncompressed/ (for CI)
     cmd: bash scripts/compress.sh --check
 
+  sync-check-hashes:
+    desc: Check if all compressed .md files match their source hashes (for CI)
+    cmd: bash scripts/compress.sh --check-hashes
+
+  sync-clean-hashes:
+    desc: Remove stale hashes for deleted source files
+    cmd: bash scripts/compress.sh --clean-hashes
+
   sync-mark-done:
     desc: Mark a single file as compressed (updates hash)
     cmd: bash scripts/compress.sh --mark-done {{.CLI_ARGS}}
@@ -55,3 +63,92 @@ tasks:
   test-python:
     desc: Run Python compress tests
     cmd: python3 -m unittest tests.test_compress -v
+
+
+  lint-skills:
+    desc: Lint all skills and rules
+    cmd: python3 scripts/skill_linter.py --all
+
+  lint-skills-strict:
+    desc: Lint all skills and rules, warnings fail too
+    cmd: python3 scripts/skill_linter.py --all --strict-warnings
+
+  lint-skills-changed:
+    desc: Lint changed skills and rules
+    cmd: python3 scripts/skill_linter.py --changed
+
+  lint-skills-json:
+    desc: Lint all skills and rules with JSON output
+    cmd: python3 scripts/skill_linter.py --all --format json
+
+  lint-skills-report:
+    desc: Generate quality report for all skills and rules
+    cmd: python3 scripts/skill_linter.py --all --report
+
+  lint-skills-pairs:
+    desc: Check compression quality between uncompressed and compressed pairs
+    cmd: python3 scripts/skill_linter.py --all --pairs --compression-quality
+
+  lint-skills-regression:
+    desc: Compare lint results between current branch and main (detect regressions)
+    cmd: python3 scripts/lint_regression.py --baseline main
+
+  lint-readme:
+    desc: Lint README.md for quality, correctness, and completeness
+    cmd: python3 scripts/readme_linter.py README.md --root .
+
+  lint-readme-strict:
+    desc: Lint README.md with warnings as errors
+    cmd: python3 scripts/readme_linter.py README.md --root . --strict
+
+  test-linter:
+    desc: Run skill linter tests
+    cmd: python3 -m pytest tests/test_skill_linter.py -v
+
+  test-readme-linter:
+    desc: Run README linter tests
+    cmd: python3 -m pytest tests/test_readme_linter.py -v
+
+  consistency:
+    desc: Verify sync + generated tool outputs are clean
+    cmds:
+      - task: sync-check
+      - task: sync
+      - task: generate-tools
+      - git diff --quiet
+
+  consistency-fix:
+    desc: Regenerate all derived outputs from source-of-truth
+    cmds:
+      - task: sync
+      - task: generate-tools
+
+  check-refs:
+    desc: Check for broken cross-references in .md files
+    cmd: python3 scripts/check_references.py
+
+  check-refs-json:
+    desc: Check for broken cross-references (JSON output)
+    cmd: python3 scripts/check_references.py --format json
+
+  check-portability:
+    desc: Check package portability (no project-specific references)
+    cmd: python3 scripts/check_portability.py
+
+  check-compression:
+    desc: Check compression quality (headings, code blocks, frontmatter, word count)
+    cmd: python3 scripts/check_compression.py
+
+  quality-report:
+    desc: Generate quality score report (per artifact type)
+    cmd: python3 scripts/skill_linter.py --report
+
+  ci:
+    desc: Run core CI checks locally
+    cmds:
+      - task: test
+      - task: lint-skills
+      - task: check-refs
+      - task: check-portability
+      - task: check-compression
+      - task: consistency

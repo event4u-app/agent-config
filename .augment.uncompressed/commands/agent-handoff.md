@@ -1,6 +1,8 @@
 ---
-skills: [agent-docs]
+name: agent-handoff
+skills: [agent-docs-writing]
 description: Generate a context summary for continuing work in a fresh chat. Replaces the session system.
+disable-model-invocation: true
 ---
 
 # /agent-handoff

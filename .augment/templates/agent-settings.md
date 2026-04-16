@@ -47,6 +47,17 @@ play_by_play=false
 
 # User's first name — used to address the user personally
 user_name=
+
+# Skill improvement pipeline (true, false)
+# true = after meaningful tasks, propose learning capture and improvements
+# false = silent, no post-task analysis
+skill_improvement_pipeline=false
+
+# Target repository for universal improvement PRs
+upstream_repo=
+
+# Branch prefix for improvement PRs
+improvement_pr_branch_prefix=improve/agent-
 ```
 
 ## Settings Reference
@@ -61,6 +72,9 @@ user_name=
 | `minimal_output` | `true`, `false` | `true` | When `true`: short bullet points during work, concise summary at end. When `false`: verbose explanations. |
 | `play_by_play` | `true`, `false` | `false` | When `true`: share intermediate findings during investigation. When `false`: work silently, report only the conclusion. |
 | `user_name` | first name | _(empty)_ | User's first name. Agent asks on first interaction if empty, then addresses user by name. |
+| `skill_improvement_pipeline` | `true`, `false` | `false` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. |
+| `upstream_repo` | `org/repo` | _(empty)_ | Target repository for universal improvement PRs (e.g., `org/agent-config`). |
+| `improvement_pr_branch_prefix` | string | `improve/agent-` | Branch prefix for agent improvement PRs. |
 
 ## Sync rules
 

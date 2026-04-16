@@ -1,7 +1,8 @@
 ---
 name: override-create
 description: Creates a project-level override for a shared skill, rule, or command.
-skills: [override, agent-docs]
+skills: [override-management, agent-docs-writing]
+disable-model-invocation: true
 ---
 
 # /override-create

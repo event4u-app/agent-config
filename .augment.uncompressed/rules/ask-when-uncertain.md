@@ -23,3 +23,9 @@ Asking one question too many is always better than a wrong assumption.
 - Be specific about what is unclear
 - Present numbered options (per `user-interaction` rule)
 - Keep it short — don't write an essay
+
+## Question batching
+
+- **Simple decisions** (binary, small choices): ask multiple at once, numbered
+- **Complex questions** (need context/thinking): ask ONE at a time, wait for answer
+- **Handoff questions** (model switch, deeper analysis): ask LAST, after all domain questions

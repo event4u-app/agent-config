@@ -1,5 +1,7 @@
 ---
 type: "always"
+description: "Model recommendation — detect task complexity, suggest optimal model (Opus/Sonnet/GPT), check on task changes and command invocations"
+alwaysApply: true
 source: package
 ---
 
@@ -28,7 +30,7 @@ If the detected model is `gemini`, immediately trigger the Gemini warning (see b
 `/commit`, `/fix-pr-comments` are sonnet tasks — even if the previous task was opus-level.
 This is the most commonly missed check. Do NOT skip it.
 
-**Priority over commands rule**: This check runs BEFORE the `commands` rule. If a model switch
+**Priority over commands rule**: This check runs BEFORE the `slash-commands` rule. If a model switch
 is recommended, show the suggestion first. Only after the user responds, execute the command.
 
 **If ambiguous** (could be opus or sonnet): default to **sonnet** — cheaper, and the user can escalate.

@@ -8,7 +8,19 @@ source: package
 
 ## When to use
 
-Composer library packages (Laravel packages, service providers, publishing). Before: package `composer.json`, Laravel check, README/CHANGELOG, package `agents/`. Known packages: `agents/overrides/skills/composer-packages.md`.
+Use this skill when creating, maintaining, or publishing Composer library packages — including Laravel packages with service providers, Artisan commands, and config publishing.
+
+## Procedure: Work with Composer packages
+
+1. Read the package's `composer.json` for structure and dependencies.
+2. Check if it's a Laravel package (look for `extra.laravel.providers`).
+3. Read the package's `README.md` and `CHANGELOG.md`.
+4. Check the `agents/` directory in the package for package-specific docs.
+
+## Known packages
+
+Check the project's `composer.json` for organization-specific packages.
+Check `agents/overrides/skills/composer-packages.md` for the package registry and known packages list.
 
 ## Package structure
 
@@ -129,10 +141,32 @@ Packages are published to a private Composer registry. Check the organization's 
 - Follow the organization's namespace convention (check existing packages).
 - Use `declare(strict_types=1)` in all PHP files.
 - Use typed properties, parameters, and return types.
-- Follow the same coding standards as the main projects (see `coder` skill).
+- Follow the same coding standards as the main projects (see `php-coder` skill).
 - Include `agents/` directory for package-specific documentation.
 
 
-## Gotcha: no `composer.lock` in libraries (.gitignore), explicit stability, `^` not `=` constraints.
+## Output format
 
-## Do NOT: `*` constraints, exact versions, dev deps in `require`, skip validate, publish without changelog+tag.
+1. Package files following standard Composer structure
+2. Updated composer.json with correct autoloading and dependencies
+3. Service provider and config publishing (if Laravel package)
+
+## Auto-trigger keywords
+
+- Composer package
+- library development
+- package versioning
+
+## Gotcha
+
+- Don't add `composer.lock` to library packages — it should be in `.gitignore` for libraries (not apps).
+- Minimum stability must be explicit — don't assume `stable`.
+- The model tends to set overly restrictive version constraints — use `^` (caret) not `=` (exact).
+
+## Do NOT
+
+- Do NOT use `*` version constraints in library packages.
+- Do NOT require specific patch versions — use `^` or `||` ranges.
+- Do NOT include dev dependencies in `require` — use `require-dev`.
+- Do NOT forget to run `composer validate` before publishing.
+- Do NOT publish without updating the changelog and tagging.

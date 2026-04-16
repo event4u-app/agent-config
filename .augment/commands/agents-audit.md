@@ -1,16 +1,20 @@
 ---
 name: agents-audit
 description: Audits agents/ and module agents/ directories — finds outdated docs, structural issues, duplicates, orphaned overrides, and creates an improvement roadmap.
-skills: [agents-audit, agent-docs, override, module]
+skills: [agents-audit, agent-docs-writing, override-management, module-management]
+disable-model-invocation: true
 ---
 
 # /agents-audit
 
-Audit all agent docs: root `agents/`, module `app/Modules/*/agents/`, `agents/overrides/`.
+Audits all agent documentation across the project — root `agents/`, module `app/Modules/*/agents/`,
+and `agents/overrides/`.
 
 ## Steps
 
 ### 1. Inventory all agent docs
+
+Scan all directories:
 
 ```bash
 # Root-level docs
@@ -29,9 +33,14 @@ find .augment/guidelines/ -name '*.md' | sort
 find app/Modules/*/agents/ -name '*.md' -not -path '*/roadmaps/*' 2>/dev/null | sort
 ```
 
-Per file: filename, path, first heading, size, last git date (`git log -1 --format='%ai' -- {file}`)
+For each file, extract:
+- Filename and path
+- First heading (title)
+- File size and last git modification date (`git log -1 --format='%ai' -- {file}`)
 
 ### 2. Scan module agents coverage
+
+Check every module for agent docs:
 
 ```bash
 for dir in app/Modules/*/; do
@@ -45,16 +54,19 @@ for dir in app/Modules/*/; do
 done
 ```
 
-Per module WITH agents:
+For each module WITH agents, check structure:
 
 | Check | Expected | Severity |
 |---|---|---|
-| Description file | `agents/{name}.md` or `agents/README.md` | 🟡 Warning |
-| Features dir | `agents/features/` | 🔵 Info |
-| Contexts dir | `agents/contexts/` | 🔵 Info |
-| Consistent format | Same heading structure | 🔵 Info |
+| Module description file exists | `agents/{name}.md` or `agents/README.md` | 🟡 Warning |
+
+| Features dir (if planned work) | `agents/features/` | 🔵 Info |
+| Contexts dir (if complex domain) | `agents/contexts/` | 🔵 Info |
+| Consistent format across modules | Same heading structure, same sections | 🔵 Info |
 
 ### 3. Scan overrides
+
+For each override in `agents/overrides/`:
 
 ```bash
 find agents/overrides/ -name '*.md' -not -name '.gitkeep' | while read f; do
@@ -77,19 +89,43 @@ done
 | Original file exists | 🟡 Warning if orphaned |
 | Override content is not empty (beyond template) | 🟡 Warning if empty |
 
-### 4. Classify documents
+### 4. Classify each document
 
-Categories: Architecture, Convention, Pattern, Feature plan, Context, Module doc, Override, Unclear
+For each doc, determine its category:
+
+- **Architecture** — project-level architecture docs (DB, auth, tenancy)
+- **Convention** — coding guidelines and standards
+- **Pattern** — design pattern documentation
+- **Feature plan** — planned features
+- **Context** — codebase area snapshots
+- **Module doc** — module-specific documentation
+- **Override** — project-level override of shared resource
+- **Unclear** — doesn't fit a clear category
 
 ### 5. Check for issues
 
-**Structural:** wrong directories, missing dirs, naming inconsistencies (not kebab-case), module/root misplacement
+**Structural issues:**
+- Files in wrong directories (e.g., a guideline in `agents/` root)
+- Missing expected directories
+- Naming inconsistencies (not kebab-case)
+- Module docs that should be root-level (cross-module concern)
+- Root docs that should be module-level (single-module concern)
 
-**Content:** extract referenced paths/classes/methods → verify against codebase → flag broken references
+**Content issues (for each doc):**
+- Read the file and extract referenced file paths, class names, method names
+- Use `codebase-retrieval` or file checks to verify references still exist
+- Flag references to deleted/renamed code
 
-**Duplication:** topic overlap between `agents/` ↔ `.augment/skills/`, `agents/` ↔ `.augment/guidelines/`, module ↔ root
+**Duplication:**
+- Compare doc topics — are two docs covering the same thing?
+- Check overlap between `agents/` docs and `.augment/skills/` content
+- Check overlap between root docs and `.augment/guidelines/` docs
+- Check overlap between module docs and root docs
 
-**Gaps:** active modules without docs, complex areas without documentation, orphaned override sections
+**Coverage gaps:**
+- Active modules without any agent docs
+- Complex areas (many files, many services) without documentation
+- Overrides that reference sections no longer in the original
 
 ### 6. Display audit report
 
@@ -177,9 +213,14 @@ Create an improvement roadmap?
 3. ❌  No — the audit was all that was needed
 ```
 
-**Option 1:** Roadmap via `.augment/templates/roadmaps.md` — Phase 1: Critical fixes, Phase 2: Structural cleanup, Phase 3: Module docs, Phase 4: Cleanup
+**Option 1:** Create a roadmap using `.augment/templates/roadmaps.md` with phases:
 
-**Option 2:** Inline recommendations.
+- **Phase 1: Critical fixes** — orphaned overrides, broken references, broken structure
+- **Phase 2: Structural cleanup** — move misplaced files, merge duplicates
+- **Phase 3: Module docs** — create missing module descriptions and contexts
+- **Phase 4: Cleanup** — delete obsolete docs, clean up naming, align formats
+
+**Option 2:** Show recommendations inline without creating a file.
 
 ### 8. Offer next steps
 
@@ -193,10 +234,11 @@ What next?
 
 ## Rules
 
-- Analysis only — do NOT modify/delete files
-- Do NOT commit or push
-- Skip `agents/roadmaps/` and `.augment/` (separate lifecycle)
-- Verify references against codebase — don't guess
-- Be specific: name file, reference, issue
-- Skip tiny/inactive modules
+- **Do NOT modify or delete any files** — this command is analysis only.
+- **Do NOT commit or push.**
+- **Do NOT audit `agents/roadmaps/` or `app/Modules/*/agents/roadmaps/`** — roadmaps have their own lifecycle.
+- **Do NOT audit `.augment/`** — skills and rules are managed separately.
+- **Verify references against the actual codebase** — don't guess.
+- **Be specific about issues** — name the file, the reference, and what's wrong.
+- **Don't flag missing module docs for tiny/inactive modules** — only for active modules with significant code.
 

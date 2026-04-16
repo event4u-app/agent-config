@@ -1,5 +1,7 @@
 ---
-skills: [laravel, coder]
+name: feature-dev
+skills: [laravel, php-coder]
+disable-model-invocation: true
 ---
 # /feature-dev
 

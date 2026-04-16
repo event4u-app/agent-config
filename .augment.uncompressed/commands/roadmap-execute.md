@@ -1,6 +1,8 @@
 ---
-skills: [agent-docs]
+name: roadmap-execute
+skills: [agent-docs-writing]
 description: Read and interactively execute a roadmap from agents/roadmaps/
+disable-model-invocation: true
 ---
 
 # roadmap-execute
@@ -53,6 +55,7 @@ For each open step:
 
 - Summarize total progress: steps completed, steps remaining.
 - Update the roadmap file with the current status.
+- **If ALL steps are done** → trigger the completion & archiving workflow from the `roadmap-management` skill.
 
 ### Rules
 

@@ -8,7 +8,15 @@ source: package
 
 ## When to use
 
-New DTOs for layer transfer (DB↔PHP, API↔Service). Before: `agents/docs/dto.md`, base class (SimpleDto/LiteDto), existing DTOs, model properties.
+Use this skill when creating a new DTO for data transfer between layers (DB ↔ PHP, API ↔ Service, etc.).
+
+## Procedure: Create a DTO
+
+1. **Read the project's DTO docs** — check `agents/docs/dto.md` (if it exists) for project-specific conventions.
+2. **Check the base class** — search for the DTO base class in the project (e.g., `SimpleDto`, `LiteDto`, or a custom base).
+   Check `composer.json` for DTO-related packages.
+3. **Check existing DTOs** — look at neighboring DTOs in the same directory to match the style.
+4. **Understand the model** — if the DTO maps to a Model, read the model's properties and DB columns.
 
 ## DTO conventions
 
@@ -84,6 +92,11 @@ Always check `composer.json` for DTO-related packages before choosing the approa
 - **`declare(strict_types=1)`** in every new file.
 
 
+## Output format
+
+1. DTO class extending SimpleDto with typed properties
+2. Static factory method(s) for construction from common sources
+
 ## Gotcha
 
 - DTOs must extend `SimpleDto` — don't create plain PHP classes as DTOs.
@@ -96,4 +109,9 @@ Always check `composer.json` for DTO-related packages before choosing the approa
 - Do NOT use arrays when a DTO can provide type safety.
 - Do NOT skip validation when creating DTOs from external input.
 
+## Auto-trigger keywords
 
+- DTO
+- data transfer object
+- SimpleDto
+- attribute mapping

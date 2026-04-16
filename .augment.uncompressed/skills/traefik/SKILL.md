@@ -14,7 +14,7 @@ Use this skill when:
 - Routing multiple Docker projects through a single reverse proxy
 - Embedding external services (Grafana, etc.) that require HTTPS/same-origin
 
-## Overview
+## Procedure: Set up Traefik
 
 Traefik acts as a **local reverse proxy** that:
 1. Resolves real domains (e.g., `local.example.dev`, `app.test`) to `127.0.0.1`
@@ -277,6 +277,17 @@ traefik
 - **Skill:** `dashboard-design` — Grafana embedding requires same-origin/HTTPS
 - **Rule:** `docker-commands.md` — all commands run inside Docker containers
 
+### Validate
+
+- Verify Traefik dashboard is accessible and shows all expected services.
+- Confirm HTTPS works with trusted certificates (no browser warnings).
+- Check that each service has correct Docker labels for routing.
+- Test DNS resolution: `curl -I https://your-domain.localhost` should return 200.
+
+## Output format
+
+1. Traefik configuration with routing rules and TLS setup
+2. Docker labels or dynamic config for service discovery
 
 ## Gotcha
 

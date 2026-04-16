@@ -1,6 +1,8 @@
 ---
+name: jira-ticket
 skills: [laravel]
 description: Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug
+disable-model-invocation: true
 ---
 
 # jira-ticket

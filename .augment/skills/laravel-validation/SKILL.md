@@ -8,24 +8,64 @@ source: package
 
 ## When to use
 
-FormRequests, rules, custom rules, auth, nested/conditional/API/file validation. Extends `coder`, `laravel`.
+Use when creating FormRequests, validation rules, or custom rule objects.
 
-## Before: base skills, inspect existing FormRequests, understand input boundary, check custom rules, error style, tests.
+Do NOT use when:
+- Authorization logic only (use `security` skill)
+- API response format (use `api-design` skill)
 
-## Principles: validation at request boundary, FormRequests for non-trivial, explicit rules, separate from business logic.
+## Procedure: Create a FormRequest
 
-## FormRequests: `authorize()` per convention, `rules()` focused, `prepareForValidation()` only when necessary. No business workflows.
+### Step 0: Inspect
 
-## Rules: explicit over clever, reuse built-in, group logically, extract custom objects when complex/reusable. Inline only for truly small cases.
+1. Check existing FormRequests — match style, naming, authorization, rule structure.
+2. Check existing custom rules — reuse before creating new ones.
+3. Check API error response format — match it.
 
-## Conditional: readable conditions, avoid tangled sets. Nested: explicit keys, validate structure+values. Files: type/size/presence, don't trust client metadata. Custom rules: validation only, no side effects.
+### Step 1: Create the class
 
-## Normalization: only for correctness, predictable, no business decisions. Auth boundary: separate from validation.
+1. Name: `{Action}{Entity}Request` — e.g. `CreateProjectRequest`.
+2. Implement `authorize()` using Policies.
+3. Implement `rules()` with array syntax — never pipe-separated.
+4. Use `prepareForValidation()` only when normalization is truly necessary.
 
-## API: match existing error response structure, consistent across endpoints.
+### Step 2: Rules
 
-## Testing: required fields, invalid formats, boundaries, conditionals, auth. Focused tests.
+1. Use Laravel's `Illuminate\Validation\Rules` classes where possible.
+2. Keep rules explicit — prefer clarity over cleverness.
+3. For nested arrays: validate structure AND leaf values.
+4. Extract custom rule objects for complex/reusable logic.
 
-## Gotcha: `required` ≠ opposite of `nullable`, FormRequests not controllers, custom rules use `$fail` not exceptions, don't validate trusted data.
+### Step 3: Test
 
-## Do NOT: validate in controllers, `$request->all()`, skip API validation, business logic in validation, custom rules when built-in works.
+- Test required fields, invalid formats, boundary conditions, conditional rules.
+- Test authorization where relevant.
+- Use focused tests per validation concern.
+
+## Conventions
+
+→ See guideline `php/validations.md` for array syntax, route params, property mapping, custom rules.
+
+## Output format
+
+1. FormRequest class with rules, messages, and authorization
+2. Custom Rule object if validation logic is complex
+
+## Gotcha
+
+- `required` ≠ not `nullable` — `required` means present, `nullable` means value can be null.
+- Custom Rule objects must return `$fail` callback, not throw exceptions.
+- Don't validate data you already trust (e.g., from a verified internal service).
+
+## Do NOT
+
+- Do NOT validate in controllers — use FormRequest classes.
+- Do NOT use `$request->all()` — use `$request->validated()`.
+- Do NOT put business logic in validation classes.
+
+## Auto-trigger keywords
+
+- validation
+- Form Request
+- validation rules
+- custom rule

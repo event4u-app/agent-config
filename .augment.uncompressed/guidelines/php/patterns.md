@@ -11,8 +11,8 @@
 |---|---|---|
 | [Service Layer / Actions](patterns/service-layer.md) | `php-service` | Business logic that doesn't belong in controllers |
 | [Dependency Injection](patterns/dependency-injection.md) | `php-service` | Decouple classes from concrete implementations |
-| [Strategy](patterns/strategy.md) | `coder` | Multiple interchangeable algorithms at runtime |
-| [Factory](patterns/factory.md) | `coder` | Complex object creation |
+| [Strategy](patterns/strategy.md) | `php-coder` | Multiple interchangeable algorithms at runtime |
+| [Factory](patterns/factory.md) | `php-coder` | Complex object creation |
 | [DTOs / Value Objects](patterns/dtos.md) | `dto-creator` | Structured data instead of untyped arrays |
 | [Policies](patterns/policies.md) | `security` | Centralized authorization logic |
 | [Events / Listeners](patterns/events.md) | `jobs-events` | Decoupled side effects (mails, logs, syncs) |

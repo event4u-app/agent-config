@@ -41,48 +41,18 @@ or when the user says something like "continue" / "mach weiter".
 
 ## Fresh Output Over Memory
 
-**CRITICAL**: When tool/command returns value (branch name, file path, PR number),
-use EXACT value in subsequent calls. NEVER substitute from earlier conversation.
-Context decay causes silent mismatches — fresh output is only source of truth.
-
-## Conversation Freshness
-
-Monitor for **context decay** — long conversations degrade quality.
-
-**Suggest new chat when:**
-
-- Conversation exceeds **~20 user messages**
-- Topic **changes completely**
-- Re-reading files already in context
-- **15+ completed tasks** and new unrelated topic
-- Branch changed since start
-- ~24 hours passed
-
-**Repeat** at multiples: messages 20/40/60, tasks 15/30/45.
-**ONLY at exact thresholds.** Between: silence.
-
-**How to suggest:**
-
-Estimate token cost: responses × ~1,500 tokens.
-
-```
-> ⚡ This conversation has ~{N} messages (~{N×1500} tokens history cost — charged on EVERY request).
-> A fresh chat saves ~{N×1500} input tokens per request.
->
-> 1. Start fresh — I'll initiate a session handoff
-> 2. Continue here
-```
-
-**If the user picks 1:** Initiate a session handoff or start fresh.
+**CRITICAL**: When a tool or command returns a value (branch name, file path, PR number),
+use that EXACT value in subsequent API calls. NEVER substitute a value from earlier in
+the conversation. Context decay causes silent mismatches — fresh output is the only source of truth.
 
 ## Conversation Efficiency
 
 ### Act, skip narration
 
-- Skip repeating user's request — they know what they asked
-- Just do it — skip announcing intentions
-- Skip explaining obvious tool calls
-- Report only outcomes
+- **Skip repeating the user's request.** They know what they asked.
+- **Just do it** — skip announcing what you're about to do.
+- **Skip explaining obvious tool calls.** Reading a file needs no justification.
+- **Report only outcomes** — skip intermediate step summaries unless the user needs them.
 
 **This rule NEVER overrides user-interaction or command rules.**
 Token efficiency means fewer *unnecessary* words — NOT skipping required questions,
@@ -90,135 +60,39 @@ numbered options, or command steps. When a rule or command says "ask the user", 
 
 ### Stop early — max 2 retries
 
-- Command fails twice → stop, rethink, different approach
-- grep/search empty 2× → switch approach or ask
-- Max 3 diagnostic commands per error
-- One hypothesis at a time
+- **Command fails twice with same error** → stop, rethink. Try a different approach.
+- **grep/search returns nothing after 2 attempts** → switch approach or ask the user.
+- **Max 3 diagnostic commands** per error. Read the error, think, act.
+- **One hypothesis at a time.** Pick the most likely, try it. If it fails, ask.
 
 ### Keep intermediate output minimal
 
-Read `minimal_output` from the project settings file (default: `true`).
+Read `minimal_output` (default: `true`) and `play_by_play` (default: `false`) from project settings.
 
-When `true`:
-
-- **During multi-step work:** short bullet points only, no paragraphs.
-- **No thinking out loud** — the user doesn't need your reasoning process.
-- **Play-by-play**: Read `play_by_play` from the project settings file (default: `false`).
-  When `false`: don't narrate each tool call result. Silently investigate, then report the conclusion.
-  When `true`: briefly share intermediate findings as you go.
-    - ❌  (when false) "Hmm, exit code 1. Let me check... 18 errors. The errors are about method_exists..."
-    - ✅  (when false) *(silently investigate, then report the conclusion)*
-- **At the end:** concise summary — just what changed and what the user needs to know.
+When `minimal_output=true`:
+- Multi-step work: short bullet points only, no paragraphs.
+- No thinking out loud — user doesn't need your reasoning.
+- When `play_by_play=false`: silently investigate, report conclusion only.
+- When `play_by_play=true`: briefly share intermediate findings.
+- At the end: concise summary — what changed, what user needs to know.
 
 ### Don't re-read what you already know
 
-- Edited a file → the edit tool showed the result. Don't re-read the file.
-- Ran a command → you have the output. Don't re-run to "verify".
+- Edited a file → edit tool showed result. Don't re-read.
+- Ran a command → you have output. Don't re-run to "verify".
 - File in context from recent messages → don't reload.
-- Found a symbol → don't search again in a different way.
-
-### Search before reading
-
-- **Search first** — use codebase search tools, regex search in files, or `grep`.
-- **Don't load entire files** when you only need a few lines.
-- **Small files** (< 50 lines) — OK to read fully.
 
 ### Minimize tool calls
 
-- **Parallel reads** — don't read 5 files sequentially.
-- **Regex search** over full file reads when possible.
-- **View specific line ranges** when you know the exact location.
-- **One codebase search call** with all symbols — not 5 separate calls.
+- Parallel reads — don't read 5 files sequentially.
+- Regex search over full file reads. View specific line ranges.
+- One codebase search call with all symbols — not 5 separate.
+- Short question → short answer. Summary tables only for 3+ items.
 
-### Right-size responses
+### Exceptions
 
-- Short question → short answer.
-- Code change → show what changed, not the entire file.
-- Error fix → what was wrong, what you did. No history lesson.
-- Summary tables → only for 3+ items.
+- Small output (< 30 lines): read directly.
+- Debugging: OK to read more context around one error.
+- User explicitly asks for full output: show it.
 
-## Pattern: Redirect, Summarize, Target
-
-## Pattern: Redirect, Summarize, Target
-
-Every command that MAY produce more than ~30 lines of output:
-
-### Step 1: Redirect to file
-
-```bash
-docker compose exec -T <service> <command> 2>&1 > /tmp/<tool>-output.txt
-echo "EXIT=$?"
-```
-
-### Step 2: Read ONLY the summary
-
-```bash
-tail -5 /tmp/<tool>-output.txt
-```
-
-### Step 3: If errors exist, read ONLY what you need to fix
-
-```bash
-# Read specific error lines
-grep "ERROR\|error\|✏️" /tmp/<tool>-output.txt | head -20
-
-# Read a specific file's errors
-grep "app/Services/MyService.php" /tmp/<tool>-output.txt
-```
-
-**NEVER** do:
-
-- `cat /tmp/<tool>-output.txt` (loads everything)
-- Read the full output of a passing command (waste)
-- Read diffs you don't plan to act on
-
-## General Rules
-
-For tool-specific commands → see the `quality-workflow` rule.
-
-1. **ECS and Rector are trusted tools** — their configs define exactly what they do.
-   Run with `--fix`, don't read diffs, don't review changes. Trust the config.
-   The only verification needed is PHPStan + tests afterwards.
-
-2. **Both ECS and Rector always run with `--fix`** — dry-run diffs are a waste of tokens.
-   The workflow is: fix → verify (PHPStan + tests) → fix issues if any.
-
-3. **Exit code first**: Check `$?` before reading ANY output. If 0, you're done — don't read.
-
-4. **Summary line**: Most tools print a summary as the last few lines. That's all you need.
-
-5. **Targeted grep**: When you need details, `grep` for the specific file or error type.
-   Never read the full output "just in case".
-
-6. **Don't re-read**: Once you've read output and acted on it, don't read it again.
-   The file is still there if you need it, but don't re-load it into context.
-
-7. **Iterative fixing**: Fix one error at a time, re-run, check exit code.
-   Don't try to fix all errors from a single output read — the output becomes stale after each fix.
-
-## Exceptions
-
-- **Small output** (< 30 lines): Read directly, no redirect needed.
-- **Debugging**: OK to read more context around that one error.
-- **User explicitly asks** to see the full output: Show it.
-
-## Augment-specific
-
-_The following section applies only to Augment Code._
-
-### Ignored Skills Recovery
-
-Skills excluded via `.augmentignore` don't appear in `<available_skills>`.
-When you need expertise from an ignored skill during a task:
-
-1. **Read the SKILL.md directly** — `.augmentignore` only hides from the system prompt,
-   not from `view`. Use `view .augment/skills/{name}/SKILL.md` to load it on demand.
-2. **Continue working** — apply the skill's guidance for the current task.
-3. **After the task**, ask the user:
-
-```
-> 💡 I loaded the `{name}` skill manually — it's currently ignored in `.augmentignore`.
->
-> 1. Remove from ignore — this skill is relevant for the project
-> 2. Keep ignored — this was a one-off
-```
+→ Detailed patterns: `guidelines/agent-infra/output-patterns.md`

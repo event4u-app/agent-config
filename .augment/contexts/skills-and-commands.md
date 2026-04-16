@@ -35,7 +35,7 @@ Commands often chain together. Here are the main workflows:
   Brainstorm        Structure         Phases/Steps        Implement
 ```
 
-**Skills used:** `feature-planning`, `agent-docs`, `roadmap-manager`
+**Skills used:** `feature-planning`, `agent-docs-writing`, `roadmap-management`
 
 ### Bug Investigation & Fix
 
@@ -45,7 +45,7 @@ Commands often chain together. Here are the main workflows:
   Root cause        Implement + verify
 ```
 
-**Skills used:** `bug-analyzer`, `coder`, `refactorer`, `pest-testing`
+**Skills used:** `bug-analyzer`, `php-coder`, `code-refactoring`, `pest-testing`
 
 ### Module Work
 
@@ -55,7 +55,7 @@ Commands often chain together. Here are the main workflows:
   Understand        Document
 ```
 
-**Skills used:** `module`, `context`, `feature-planning`
+**Skills used:** `module-management`, `context-create`, `feature-planning`
 
 ### Quality & PR
 
@@ -65,7 +65,7 @@ Commands often chain together. Here are the main workflows:
   PHPStan/Rector  Self-review     Open PR       Address feedback
 ```
 
-**Skills used:** `refactorer`, `code-review`, `git-workflow`
+**Skills used:** `code-refactoring`, `code-review`, `git-workflow`
 
 ### Agent Infrastructure
 
@@ -78,7 +78,7 @@ Commands often chain together. Here are the main workflows:
 ```
 ```
 
-**Skills used:** `agents-audit`, `agent-docs`
+**Skills used:** `agents-audit`, `agent-docs-writing`
 
 ## Skill Categories
 
@@ -86,21 +86,21 @@ Commands often chain together. Here are the main workflows:
 
 | Skill | Why |
 |---|---|
-| `coder` | Core PHP coding behavior |
+| `php-coder` | Core PHP coding behavior |
 | `laravel` | Framework conventions |
-| `agent-docs` | Documentation awareness |
+| `agent-docs-writing` | Documentation awareness |
 
 ### Domain-Specific (loaded when working in that area)
 
 | Area | Skills |
 |---|---|
 | API endpoints | `api-endpoint`, `api-design`, `api-versioning`, `api-testing`, `openapi`, `laravel-validation` |
-| Database | `eloquent`, `database`, `migration-creator`, `multi-tenancy`, `sql` |
+| Database | `eloquent`, `database`, `migration-creator`, `multi-tenancy`, `sql-writing` |
 | Background jobs | `jobs-events`, `laravel-horizon`, `laravel-scheduling`, `performance` |
 | Email/Notifications | `laravel-mail`, `laravel-notifications` |
 | Middleware/Auth | `laravel-middleware`, `security` |
 | Feature flags | `laravel-pennant` |
-| Monitoring | `laravel-pulse`, `logging-monitoring`, `grafana`, `sentry` |
+| Monitoring | `laravel-pulse`, `logging-monitoring`, `grafana`, `sentry-integration` |
 | Real-time | `laravel-reverb`, `websocket` |
 | Testing | `pest-testing`, `test-generator`, `playwright-testing` |
 | Frontend | `livewire`, `flux`, `blade-ui`, `tailwind`, `vue`, `react`, `fe-design` |
@@ -110,21 +110,21 @@ Commands often chain together. Here are the main workflows:
 
 | Skill | Purpose |
 |---|---|
-| `agent-docs` | Documentation hierarchy and reading order |
+| `agent-docs-writing` | Documentation hierarchy and reading order |
 | `agents-audit` | Agent docs quality and cleanup |
 | `commands` | Slash command handling |
-| `context` | Context document creation and maintenance |
-| `copilot` | GitHub Copilot behavior management |
-| `copilot-agents-optimizer` | AGENTS.md and copilot-instructions optimization |
+| `context-create` | Context document creation and maintenance |
+| `copilot-config` | GitHub Copilot behavior management |
+| `copilot-agents-optimization` | AGENTS.md and copilot-instructions optimization |
 | `feature-planning` | Feature plan structure and workflow |
 | `file-editor` | Auto-open files in user's IDE |
 | `guidelines` | Coding guideline management |
-| `module` | Module system understanding |
+| `module-management` | Module system understanding |
 | `naming` | Consistent naming conventions |
-| `override` | Override system for project customization |
+| `override-management` | Override system for project customization |
 | `project-analyzer` | Full project analysis orchestration |
 | `project-docs` | Project-specific documentation mapping |
-| `roadmap-manager` | Roadmap structure and execution |
+| `roadmap-management` | Roadmap structure and execution |
 | `sequential-thinking` | Structured problem-solving |
 | `skill-reviewer` | Skill quality auditing (5 Killers checklist) |
 

@@ -8,11 +8,24 @@ source: package
 
 ## When to use
 
-E2E tests, browser automation, visual regression, Playwright MCP, flaky tests, CI config.
+Use this skill when:
+- Writing end-to-end tests with Playwright
+- Automating browser interactions for testing
+- Setting up visual regression testing
+- Using Playwright MCP for design reviews
+- Debugging flaky E2E tests
+- Configuring Playwright for CI/CD
 
-See: `.augment/guidelines/e2e/playwright.md` (conventions), `.augment/rules/e2e-testing.md` (constraints).
+**Guideline:** `.augment/guidelines/e2e/playwright.md` — full conventions, config templates, CI setup.
+**Rule:** `.augment/rules/e2e-testing.md` — constraints enforced during E2E test work.
 
-## Before: guideline, `playwright.config.ts`, existing tests, utilities/page objects, CI setup.
+## Procedure: Write Playwright tests
+
+1. **Read the guideline** — `.augment/guidelines/e2e/playwright.md` for detailed conventions.
+2. **Check Playwright config** — `playwright.config.ts` for browsers, base URL, timeouts.
+3. **Check existing tests** — match patterns in `tests/e2e/` or `e2e/`.
+4. **Check test utilities** — look for page objects, fixtures, helpers.
+5. **Check CI setup** — how are E2E tests run in the pipeline?
 
 ## Test structure
 
@@ -201,6 +214,31 @@ await page.route('**/api/users', route =>
 )
 ```
 
-## Gotcha: no `waitForTimeout` (masks problems), semantic locators over CSS, `test.fixme()` = app bugs / `test.skip()` = env, 3 failures → `test.fixme()`.
+## Output format
 
-## Do NOT: skip assertions, share state, hardcode URLs, test implementation, assertions in Page Objects, commit `.only`.
+1. Playwright test file with Page Object pattern
+2. Reliable locators using role/label selectors over CSS
+
+## Auto-trigger keywords
+
+- Playwright
+- E2E test
+- browser automation
+- visual regression
+- end-to-end
+
+## Gotcha
+
+- Don't use `page.waitForTimeout()` as a fix — it masks the real problem and makes tests flaky.
+- The model tends to use CSS selectors instead of semantic locators — always prefer `getByRole`, `getByLabel`.
+- `test.fixme()` is for app bugs, `test.skip()` is for environment constraints — don't confuse them.
+- After 3 failed fix attempts on one test, mark it `test.fixme()` and move on.
+
+## Do NOT
+
+- Do NOT skip assertions — every test must verify something meaningful.
+- Do NOT share state between tests — each test should be independent.
+- Do NOT hardcode URLs — use `baseURL` from config.
+- Do NOT test implementation details — test user-visible behavior.
+- Do NOT put assertions in Page Objects — assertions belong in test files.
+- Do NOT commit `.only` — enforce via `forbidOnly: !!process.env.CI`.

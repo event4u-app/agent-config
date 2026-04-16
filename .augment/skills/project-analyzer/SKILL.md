@@ -8,15 +8,35 @@ source: package
 
 ## When to use
 
-Unfamiliar project, onboarding, agent docs audit, baseline understanding, knowledge transfer.
+Use this skill when:
 
-NOT for: small changes, regular feature dev.
+- Starting work on an unfamiliar project
+- Onboarding to a new codebase
+- Auditing the current state of agent docs, contexts, and features
+- Creating a baseline understanding of the project for future work
+- Generating comprehensive project documentation for knowledge transfer
 
-## Concept
 
-Systematic codebase walkthrough: detect stack → inventory modules/services/models → analyze domains/flows/contracts → document to `agents/analysis/` → assess gaps/debt.
+Do NOT use when:
+- Small, focused code changes
+- Regular feature development
 
-Goal: **rebuild the project from these documents alone.**
+## Procedure: Analyze a project
+
+A **project analysis** is a systematic walkthrough of the entire codebase that:
+
+1. **Detects** — framework, language, tech stack, patterns, legacy vs. modern
+2. **Inventories** — modules, services, models, endpoints, tests
+3. **Analyzes** — business domains, data flows, API contracts, dependencies
+4. **Documents** — writes structured analysis files to `agents/analysis/`
+5. **Assesses** — identifies gaps, technical debt, missing docs
+
+It orchestrates other skills and commands to produce a comprehensive picture.
+
+## Analysis output
+
+All analysis results are written to `agents/analysis/` in a structured directory layout.
+The goal: **someone could rebuild the project from these documents alone.**
 
 ### Directory structure
 
@@ -47,13 +67,106 @@ agents/analysis/
     └── test-map.md              ← Test suites, coverage areas, test data strategy
 ```
 
-### Domain files (`agents/analysis/domains/`)
+### Domain analysis files
 
-One per business domain. Only create for domains that exist. Contains: Purpose, Models (table), Services (table), Controllers/Endpoints (table), Jobs & Events, Business Rules, Data Flow, Dependencies.
+Each business domain gets its own file in `agents/analysis/domains/`. A domain groups
+related models, services, controllers, jobs, and events around a business concept:
 
-### Module files (`agents/analysis/modules/`)
+| Domain             | What it covers                                           |
+|--------------------|----------------------------------------------------------|
+| `projects.md`      | Construction sites, positions, project status, geocoding |
+| `planning.md`      | Appointments, crew assignments, capacity planning        |
+| `users.md`         | Employees, roles, permissions, authentication            |
+| `equipment.md`     | Machines, vehicles, repairs, time registration           |
+| `working-times.md` | Time tracking, absences, wage types, logs                |
+| `reports.md`       | Daily reports, images, measured quantities               |
+| `files.md`         | File uploads, file links, storage                        |
+| `customers.md`     | Tenant management, customer config, modules              |
+| `webhooks.md`      | Webhook dispatching, retry logic                         |
+| `imports.md`       | Client software imports (cross-reference with module)    |
+| `gps.md`           | GPS tracking, geofencing                                 |
+| `notifications.md` | Email, push, private messages, Slack                     |
+| `dashboard.md`     | Dashboard widgets, statistics                            |
 
-One per module. Contains: Purpose, Structure, Public API, Internal Components, Configuration, Testing.
+Not every project has all domains. Only create files for domains that actually exist.
+
+### Domain file template
+
+Each domain file should contain:
+
+```markdown
+# Domain: {Name}
+
+## Purpose
+
+{What this domain does in 2-3 sentences}
+
+## Models
+
+| Model | Table | Connection | Key Relationships |
+|---|---|---|---|
+
+## Services
+
+| Service | Purpose | Key Methods |
+|---|---|---|
+
+## Controllers (API Endpoints)
+
+| Endpoint | Controller | Request | Resource |
+|---|---|---|---|
+
+## Jobs & Events
+
+| Class | Type | Trigger | What it does |
+|---|---|---|---|
+
+## Business Rules
+
+- {Rule 1: e.g. "A project can only be deleted if it has no working times"}
+- {Rule 2}
+
+## Data Flow
+
+{Describe how data moves through this domain — from input to storage to output}
+
+## Dependencies
+
+- Depends on: {other domains}
+- Depended on by: {other domains}
+```
+
+### Module analysis files
+
+Each module gets its own file in `agents/analysis/modules/`. Format:
+
+```markdown
+# Module: {Name}
+
+## Purpose
+
+{What this module does}
+
+## Structure
+
+{Directory tree with key files}
+
+## Public API
+
+{What other parts of the app use from this module: Services, Events, Models}
+
+## Internal Components
+
+{Controllers, Jobs, Commands, Listeners that are module-internal}
+
+## Configuration
+
+{Config files, .env variables, feature flags}
+
+## Testing
+
+{Test suites, test data, stubs}
+```
 
 ## Detection checklist
 
@@ -99,29 +212,130 @@ One per module. Contains: Purpose, Structure, Public API, Internal Components, C
 | Editor config | `.editorconfig`                                           |
 | Code review   | `CODEOWNERS`, PR templates                                |
 
-## Phases
+## Analysis phases
 
-1. **Overview** — AGENTS.md, README, framework, version, stack → `overview.md`
-2. **Architecture** — dir structure, patterns, multi-tenancy, counts → `architecture/*.md`
-3. **Data layer** — models, schema, multi-tenant split → `models/*.md`
-4. **Business domains** — models→services→controllers→jobs→events, rules, flows → `domains/{domain}.md`
-5. **API surface** — endpoints, contracts, version diffs → `api/*.md`
-6. **Service map** — services, deps, god services → `services/service-map.md`
-7. **Modules** (if exist) — structure, public API, tests → `modules/{module}.md`
-8. **Infrastructure & testing** — Docker, CI, test suites → `architecture/infrastructure.md`, `testing/test-map.md`
-9. **Agent docs audit** — existing docs, outdated refs, undocumented areas
-10. **Gap analysis** — missing docs → offer creation, stale roadmaps → suggest archiving
+### Phase 1: Project overview
 
-## Integration: `project-docs`, `module`, `context`, `feature-planning`, `agent-docs`, `roadmap-manager`, `api-endpoint`, `database`
+- Read `AGENTS.md`, `.github/copilot-instructions.md`, `README.md`
+- Detect framework, version, tech stack
+- Identify build tools and quality tooling
+- Classify: legacy vs. modern, monolith vs. modular
+- **Output:** `agents/analysis/overview.md`
+
+### Phase 2: Architecture
+
+- Map directory structure (top 3 levels)
+- Identify architectural patterns (MVC, modules, services, repositories)
+- Detect multi-tenancy, queue system, caching
+- Count: models, controllers, services, jobs, commands
+- **Output:** `agents/analysis/architecture/*.md`
+
+### Phase 3: Data layer
+
+- List all models with their connections, tables, and key relationships
+- Map database schema: tables, foreign keys, indexes
+- Document multi-tenant split (which tables in which DB)
+- **Output:** `agents/analysis/models/api-database.md`, `customer-database.md`
+
+### Phase 4: Business domains
+
+- Identify domains from models, services, routes, and directory structure
+- For each domain: map models → services → controllers → jobs → events
+- Document business rules and data flows
+- Document inter-domain dependencies
+- **Output:** `agents/analysis/domains/{domain}.md` (one per domain)
+
+### Phase 5: API surface
+
+- List all endpoints with controller, request, resource, OpenAPI attributes
+- Document request/response contracts (field names, types, validation rules)
+- Map version differences (v1 vs v2)
+- **Output:** `agents/analysis/api/endpoints-v1.md`, `endpoints-v2.md`, `contracts.md`
+
+### Phase 6: Service map
+
+- List all services with purpose, key methods, and dependencies
+- Map service → repository → model relationships
+- Identify God services (too many responsibilities)
+- **Output:** `agents/analysis/services/service-map.md`
+
+### Phase 7: Module inventory (if modules exist)
+
+- List all modules with purpose
+- For each module: structure, public API, internal components, tests
+- Check for module-level agent docs
+- **Output:** `agents/analysis/modules/{module}.md` (one per module)
+
+### Phase 8: Infrastructure & testing
+
+- Docker setup, CI/CD pipelines, deployment
+- Test suites, coverage areas, test data strategy
+- **Output:** `agents/analysis/architecture/infrastructure.md`, `agents/analysis/testing/test-map.md`
+
+### Phase 9: Agent docs audit
+
+- List all existing docs in `agents/docs/`, `agents/contexts/`, module `agents/`
+- Check for outdated docs (reference deleted files/classes)
+- Identify undocumented areas
+- Check for stale roadmaps
+
+### Phase 10: Gap analysis & action plan
+
+- Modules without context docs → offer `/context-create`
+- Complex services without docs → offer `/context-create`
+- Existing docs that reference deleted code → offer `/context-refactor`
+- Stale roadmaps (all steps done) → suggest archiving
+
+## Integration with other skills
+
+| Skill              | How it's used                                               |
+|--------------------|-------------------------------------------------------------|
+| `project-docs`     | Read existing docs before analyzing each area               |
+| `module-management`           | Detect and inventory modules                                |
+| `context-create`          | Create/update context documents                             |
+| `feature-planning` | Identify planned but undocumented features                  |
+| `agent-docs-writing`       | Audit and maintain agent documentation                      |
+| `roadmap-management`  | Review roadmap status                                       |
+| `api-endpoint`     | Understand endpoint structure for API analysis              |
+| `database`         | Understand schema and multi-tenancy for data layer analysis |
 
 ## Workflow
 
-1. Ask scope (full or specific area)
-2. Run phases incrementally — show findings, ask before continuing
-3. Write files after each phase
-4. Ask before creating each file (numbered options)
-5. Update existing files on re-run
+1. **Ask scope**: Full analysis or specific area (e.g. only domains, only API)?
+2. **Run phases incrementally** — show findings after each phase, ask before continuing.
+3. **Write files after each phase** — don't batch all writing to the end.
+4. **Ask before creating each file** with numbered options:
+   ```
+   > 1. Create — {filename}
+   > 2. Skip
+   ```
+5. **Update existing files** if re-running analysis — don't create duplicates.
 
-## Gotcha: takes minutes (warn user), respect scope, output to `agents/analysis/`
 
-## Do NOT: create without asking, modify code, commit/push, analyze vendor/node_modules, duplicate existing docs
+## Output format
+
+1. Structured analysis document in agents/analysis/
+2. Tech stack inventory with versions and dependencies
+3. Architecture diagram or module map
+
+## Auto-trigger keywords
+
+- project analysis
+- codebase analysis
+- architecture analysis
+
+## Gotcha
+
+- Full project analysis can take several minutes — warn the user about the time investment.
+- Don't analyze parts of the codebase that the user hasn't asked about — respect scope.
+- Analysis documents go in `agents/analysis/`, not in `.augment/`.
+
+## Do NOT
+
+- Do NOT create analysis files without asking — always confirm each creation.
+- Do NOT modify existing code — this is analysis only.
+- Do NOT commit or push.
+- Do NOT overwhelm the user — present findings incrementally, one phase at a time.
+- Do NOT analyze third-party code in `vendor/` or `node_modules/`.
+- Do NOT duplicate content that already exists in `agents/docs/` or `agents/contexts/` —
+  reference it instead. Analysis files complement existing docs, they don't replace them.

@@ -1,6 +1,8 @@
 ---
-skills: [agent-docs]
+name: agent-status
+skills: [agent-docs-writing]
 description: Show current conversation stats — message count, token costs, task progress, next freshness check.
+disable-model-invocation: true
 ---
 
 # /agent-status

@@ -10,10 +10,12 @@ source: package
 
 Use this skill when the user asks to create a database migration, add a column, create a table, or modify the schema.
 
-## Before creating a migration
+## Procedure: Create a migration
 
-Read `./agents/` and `AGENTS.md` for project-specific database conventions (table prefixes,
-column naming, multi-tenant setup, dual-database architecture, etc.).
+1. **Read conventions** — Check `./agents/` and `AGENTS.md` for table prefixes, column naming, multi-tenant setup.
+2. **Generate migration** — `php artisan make:migration create_xyz_table` (or add_column, etc.).
+3. **Write schema** — Follow naming conventions, add indexes for WHERE/JOIN columns, use `decimal` for money.
+4. **Verify** — Run migration (`php artisan migrate`), then rollback (`php artisan migrate:rollback`) to confirm reversibility.
 
 ## All projects
 
@@ -121,6 +123,11 @@ php artisan migrate --env=testing             # testing
 - Dates: descriptive suffix (e.g. `upload_date`, `deleted_at`)
 - Always use `unsignedBigInteger` for foreign keys referencing `id()` columns
 - Use `->after('column')` to place new columns logically
+
+## Output format
+
+1. Migration file with up() and down() methods
+2. Model updates if columns or relationships changed
 
 ## Gotcha
 

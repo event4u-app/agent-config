@@ -1,6 +1,8 @@
 ---
-skills: [bug-analyzer, sentry]
+name: bug-investigate
+skills: [bug-analyzer, sentry-integration]
 description: Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause
+disable-model-invocation: true
 ---
 
 # bug-investigate
@@ -9,8 +11,12 @@ description: Investigate a bug — auto-detect ticket from branch, gather Jira/S
 
 ### 1. Auto-detect ticket from branch
 
-`git branch --show-current` → extract `[A-Z]+-[0-9]+` pattern.
-If found:
+Run `git branch --show-current` and extract ticket IDs:
+
+- Match pattern: `[A-Z]+-[0-9]+` (e.g., `DEV-1234`, `PROJ-567`)
+- Common branch formats: `fix/DEV-1234/description`, `hotfix/DEV-999`, `fix/bug-description`
+
+If a ticket ID is found:
 
 ```
 🔀 Branch: {branch-name}
@@ -19,6 +25,9 @@ If found:
 > 1. Yes — load ticket
 > 2. No — skip
 ```
+
+If yes → fetch via Jira API and show summary (see step 2).
+If no ticket found → continue to step 2.
 
 ### 2. Ask for bug sources
 
@@ -33,11 +42,14 @@ What information do you have? (multiple allowed)
 4. 📋 Error message — paste error message or stacktrace
 ```
 
-Accept multiple sources.
+Accept **multiple sources** — the more context, the better.
 
-### 3. Gather context
+### 3. Gather context from each source
 
-**Jira ticket:** Fetch `/issue/{key}` → title, description, priority, status, comments, Sentry links.
+**Jira ticket (if provided):**
+- Fetch via Jira API (`/issue/{key}`).
+- Extract: title, description, priority, status, comments, linked issues.
+- Check for linked Sentry issues in comments or description.
 
 ```
 🎫 Jira: {KEY} — {title}
@@ -48,7 +60,9 @@ Accept multiple sources.
   Sentry links: {extracted URLs or "none found"}
 ```
 
-**Sentry issue:** `get_issue_details` + `get_issue_tag_values`.
+**Sentry issue (if provided):**
+- Use `get_issue_details` with the URL or issue ID.
+- Use `get_issue_tag_values` for environment, browser, URL distribution.
 
 ```
 🔴 Sentry: {issue-title}
@@ -59,13 +73,24 @@ Accept multiple sources.
   Stacktrace:  {top 3-5 frames}
 ```
 
-**Error message:** Search codebase for exact string → show files + lines.
+**Error message (if provided):**
+- Search codebase for the exact message string.
+- Show matching files and line numbers.
 
-**User description:** Note repro steps, expected vs actual.
+**User description (if provided):**
+- Note reproduction steps and expected vs. actual behavior.
 
 ### 4. Analyze the code
 
-1. Read stacktrace (top down) 2. `codebase-retrieval` for related code 3. Read call chain 4. Check context docs 5. Trace data flow
+Based on gathered context:
+
+1. **Read the stacktrace** (if available) — trace from top frame down.
+2. **Use `codebase-retrieval`** to find related code.
+3. **Read each file** in the call chain.
+4. **Check for context docs** — `agents/contexts/` or module `agents/contexts/`.
+5. **Identify the data flow** — where does the bad data/state come from?
+
+**Share findings as you go:**
 
 ```
 🔍 Code-Analyse:
@@ -131,10 +156,11 @@ What's next?
 
 ### Rules
 
-- Do NOT commit/push or start fixing before presenting root cause
-- Check branch for ticket IDs first
-- Combine all sources — more context = better
-- Trace to root cause, not symptom
-- Check for similar patterns
-- Use Sentry tools when URLs available
+- **Do NOT commit or push.**
+- **Do NOT start fixing before presenting the root cause.**
+- **Always check the branch** for ticket IDs first.
+- **Combine all sources** — Jira + Sentry + description give the best picture.
+- **Trace to the root cause** — don't just describe the symptom.
+- **Check for similar patterns** elsewhere in the codebase.
+- **Use Sentry tools** (`get_issue_details`, `get_issue_tag_values`) when URLs are available.
 

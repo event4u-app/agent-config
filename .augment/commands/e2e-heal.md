@@ -1,6 +1,8 @@
 ---
+name: e2e-heal
 skills: [playwright-testing]
 description: Find, debug, and fix failing Playwright E2E tests
+disable-model-invocation: true
 ---
 
 # e2e-heal
@@ -9,19 +11,29 @@ description: Find, debug, and fix failing Playwright E2E tests
 
 ### 1. Identify failing tests
 
+- Ask the user:
+
 > 1. Run all E2E tests and fix whatever fails
 > 2. Fix a specific test file — which one?
 > 3. Fix tests that failed in CI — provide the CI run URL or error output
 
-Read `.augment/guidelines/e2e/playwright.md`.
+- Read the Playwright guideline: `.augment/guidelines/e2e/playwright.md`
 
 ### 2. Run failing tests
+
+- Execute the test(s) to see current errors:
   ```bash
   npx playwright test [file] --reporter=list 2>&1 | tail -30
   ```
-All pass → stop. Otherwise per failure:
+- If all tests pass → report success and stop.
+- List all failing tests with their error messages.
 
-### 3. Debug each failure
+### 3. Debug each failure (one at a time)
+
+For each failing test:
+
+1. **Read the error** — understand what's expected vs. actual.
+2. **Classify the failure**:
 
 | Type | Symptom | Action |
 |---|---|---|
@@ -32,13 +44,17 @@ All pass → stop. Otherwise per failure:
 | Data dependency | Missing test data | Fix seed/setup |
 | Environment issue | Works locally, fails in CI | Check config, viewport, baseURL |
 
-Smallest fix → verify:
+3. **Fix the test** — make the smallest change that resolves the issue.
+4. **Verify** — re-run only the fixed test:
    ```bash
    npx playwright test [file] -g "test name"
    ```
-Pass → next. 3 failed attempts → `test.fixme()`.
+5. **If it passes** → move to next failure.
+6. **If it still fails** → try one more approach. After 3 failed attempts on the same test, mark as `test.fixme()`.
 
-### 4. Unfixable tests (app bug)
+### 4. Handle unfixable tests
+
+If a test fails because the **application** is broken (not the test):
 
 ```ts
 test.fixme('should display avatar', async ({ page }) => {
@@ -49,13 +65,20 @@ test.fixme('should display avatar', async ({ page }) => {
 })
 ```
 
-Add comment explaining behavior. Ask about bug ticket.
+- Always add a comment explaining current vs. expected behavior.
+- Ask the user if a bug ticket should be created.
 
 ### 5. Final verification
+
+- Run all tests once more to confirm everything passes (or is properly marked `fixme`):
   ```bash
   npx playwright test --reporter=list
   ```
+- Report results to the user.
+
 ### 6. Summary
+
+Present a table:
 
 ```
 | # | Test | Status | Action |
@@ -67,5 +90,9 @@ Add comment explaining behavior. Ask about bug ticket.
 
 ### Rules
 
-- One at a time. Max 3 attempts → `test.fixme()`. No `waitForTimeout()`.
-- Prefer locator updates. No commit/push unless asked. No deleting tests.
+- **Fix one test at a time** — don't batch fixes.
+- **Max 3 attempts per test** — then mark `test.fixme()` and move on.
+- **Never use `waitForTimeout()`** as a fix — always find the proper wait condition.
+- **Prefer updating locators** over adding retries.
+- **Do NOT commit or push** unless the user asks.
+- **Do NOT delete failing tests** — fix them or mark as `fixme`.

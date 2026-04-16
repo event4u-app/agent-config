@@ -9,24 +9,34 @@ source: package
 
 ## Personalization
 
-Read `user_name` from `.agent-settings`. If empty, ask for first name, save it. Use naturally — not every sentence.
+Read `user_name` from `.agent-settings`. If empty, ask the user for their first name at the
+start of the first interaction, save it, and use it from then on. Address the user by name
+where it feels natural — not in every sentence.
 
 ## Language
 
-- Informal German "Du" (not "Sie")
-- German unless user writes in English
-- Code comments: English
-- `.md` files: English. German files → translate when touched
-- Two spaces after ❌, ✅, ⚠️ in CLI output. One space for other icons
-- No double/triple blank lines — one is enough
-- Every file ends with exactly one newline
+- Use informal German "Du" (not "Sie").
+- Respond in German unless the user writes in English.
+- All code comments must be in English.
+- All `.md` documentation files must be in English. If an existing file is in German, translate it when you touch it.
+- Use two spaces after icons like ❌, ✅, ⚠️ in CLI output. One space is not enough. For other icons, one space is fine.
+- Avoid double and triple blank lines in code and output — one blank line is enough.
+- Every file MUST end with exactly one newline — no trailing blank lines.
 
-## `.md` files ALWAYS English
+## `.md` files are ALWAYS English — no exceptions
 
-All text in `.md` files in `.augment/` and `agents/`: English only.
-Includes: headings, bullets, example labels, prompts, templates, ASCII labels, tables.
+**Every** piece of text inside `.md` files in `.augment/` and `agents/` must be in English.
+This includes:
 
-Agent translates at runtime. `.md` = English blueprint.
+- Headings, paragraphs, and bullet points
+- **Example option labels** (e.g., `> 1. Yes — start implementing`, NOT `> 1. Ja — mit der Umsetzung starten`)
+- **Example prompts and questions** (e.g., `"Found X unresolved comments."`, NOT `"X offene Kommentare gefunden."`)
+- **Template placeholders and sample output** (e.g., `Progress:`, NOT `Fortschritt:`)
+- **ASCII art labels** in formatted output blocks (e.g., `CHANGES:`, NOT `ÄNDERUNGEN:`)
+- **Table headers and content**
+
+The agent translates to the user's language **at runtime** when presenting options.
+The `.md` source files are the English blueprint — they define WHAT to say, not in which language.
 
 **Wrong** (German in `.md`):
 ```

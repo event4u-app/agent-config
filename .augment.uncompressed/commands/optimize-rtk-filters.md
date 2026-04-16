@@ -1,6 +1,8 @@
 ---
-skills: [agent-docs]
+name: optimize-rtk-filters
+skills: [agent-docs-writing]
 description: Create or optimize project-local rtk filters based on the actual toolchain
+disable-model-invocation: true
 ---
 
 # optimize-rtk-filters
@@ -13,7 +15,7 @@ description: Create or optimize project-local rtk filters based on the actual to
 which rtk
 ```
 
-- If **not installed** → stop. This command requires rtk. Suggest running the install flow from the `rtk` rule.
+- If **not installed** → stop. This command requires rtk. Suggest running the install flow from the `rtk-output-filtering` skill.
 
 ### 2. Detect the project toolchain
 

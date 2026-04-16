@@ -1,63 +1,90 @@
 ---
-type: "auto"
-alwaysApply: false
+type: "always"
+alwaysApply: true
 description: "3-failure rule for debugging and fixing errors — stop after 3 consecutive failed attempts, dump state, and recommend a fresh session"
 source: package
 ---
 
 # Context Hygiene
 
-## 3-Failure Rule
+## Conversation Freshness
 
-After **3 consecutive failed attempts** at same task:
+Monitor for **context decay** — long conversations degrade quality and waste tokens.
 
-1. **STOP** — no 4th attempt
-2. **State dump** — what was tried, what failed, what's known
-3. **Recommend fresh start** — suggest new session with state dump, or ask for different approach
+**Suggest a new chat when:**
 
-After 3 failures, context is polluted. Fresh session with clean dump > 7th attempt in polluted context.
+- Conversation exceeds **~20 user messages**
+- Topic **changes completely**
+- Re-reading files already in context
+- **15+ completed tasks** and new unrelated topic
+- Branch changed since start
+- ~24 hours passed
 
-## What counts as failure
+**Repeat** at multiples: messages 20/40/60, tasks 15/30/45.
+**ONLY at exact thresholds.** Between: silence.
 
-- Code change doesn't fix problem
-- Test still fails after fix
-- Quality check still errors after fix
-- Build/deploy fails after config change
+**How to suggest:**
+
+Estimate token cost: responses × ~1,500 tokens.
+
+```
+> ⚡ This conversation has ~{N} messages (~{N×1500} tokens history cost — charged on EVERY request).
+> A fresh chat saves ~{N×1500} input tokens per request.
+>
+> 1. Start fresh — I'll initiate a session handoff
+> 2. Continue here
+```
+
+**If the user picks 1:** Initiate a session handoff or start fresh.
+
+## The 3-Failure Rule
+
+When **3 consecutive attempts** at the same task fail (code fix, test fix, config change, etc.):
+
+1. **STOP** — do not attempt a 4th fix.
+2. **State dump** — summarize what was tried, what failed, and what you know so far.
+3. **Recommend fresh start** — suggest a fresh session with the state dump as context, or ask for a different approach.
+
+**What counts as a failure:**
+
+- Code change that doesn't fix the problem
+- Test that still fails after the fix
+- Quality check (PHPStan, ECS) that still errors
+- Build/deploy that fails after config change
+
+**Does NOT reset the counter:** Unrelated tasks. User providing new information (course correction).
 
 ## Tool Loop Detection
 
-Same tool called **2+ times** with similar parameters = loop. Critical failure mode.
+Calling the **same tool** more than **2 times in a row** with similar parameters = loop.
 
-1. **STOP** all tool calls
-2. Do task directly
-3. If stuck → ask user
+**Immediate action:**
+1. **STOP** all tool calls.
+2. **Do the task directly** — write the code, run the command, answer the question.
+3. If you can't proceed — ask the user for help.
 
-`sequentialthinking`: max **once** per task. NEVER for simple file ops/commands/edits.
-
-## Counter rules
-
-- Unrelated tasks don't reset counter
-- User providing new info = course correction, not failure
+`sequentialthinking` is especially prone to loops. Use at most **once** per task,
+NEVER for simple file operations, command execution, or straightforward edits.
 
 ## State dump format
 
 ```
-## State Dump: [Task Description]
-
-### What was tried
-1. [Approach 1] → [Why it failed]
-2. [Approach 2] → [Why it failed]
-3. [Approach 3] → [Why it failed]
-
-### What is known
-- [Fact 1]
-- [Fact 2]
-
-### Hypothesis
-- [Best hypothesis for root cause]
-
-### Recommendation
-- [Suggested next approach for a fresh session]
+## State Dump: [Task]
+### Tried: 1. [Approach] → [Why failed] 2. ... 3. ...
+### Known: [Key facts]
+### Hypothesis: [Best guess for root cause]
+### Recommendation: [Next approach for fresh session]
 ```
 
-Use `/agent-handoff` to generate context summary for fresh conversation.
+Use `/agent-handoff` to generate a context summary for a fresh conversation.
+
+## Augment-specific: Ignored Skills Recovery
+
+Skills excluded via `.augmentignore` don't appear in `<available_skills>`.
+If you need an ignored skill: read its SKILL.md directly, apply guidance, then ask:
+
+```
+> 💡 I loaded `{name}` manually — currently ignored in `.augmentignore`.
+> 1. Remove from ignore — relevant for this project
+> 2. Keep ignored — one-off
+```

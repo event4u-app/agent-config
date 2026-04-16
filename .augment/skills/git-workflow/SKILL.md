@@ -8,109 +8,91 @@ source: package
 
 ## When to use
 
-Branches, commits, PRs, Git workflow. NOT for: coding (`coder`), review (`code-review`), CI (`github-ci`).
+Use when preparing PRs, finishing branches, or following the team's Git workflow.
 
-## Branch naming
+Do NOT use when:
+- Code writing or review (use `php-coder` or `code-review` skill)
+- CI/CD pipeline changes (use `github-ci` skill)
 
-Based on observed patterns in the repository:
+## Conventions
 
-```
-{type}/{ticket}/{description}
+→ See guideline `guidelines/php/git.md` for branch naming, commit messages, PR conventions.
+→ See `commit-conventions` rule for commit format, types, and scope rules.
+→ Use `conventional-commits-writing` skill for generating/reviewing commit messages.
 
-Examples:
-feat/DEV-5967/delete-material-delivery-bill
-fix/admin-permission-removal
-chore/enhance-import-logging
-chore/optimize-create-working-times-endpoint-refactor
-refactor/DEV-1234/improve-service-layer
-```
-
-### Types
-
-| Prefix | When to use |
-|---|---|
-| `feat/` | New feature |
-| `fix/` | Bug fix |
-| `chore/` | Maintenance, cleanup, tooling |
-| `refactor/` | Code refactoring |
-| `docs/` | Documentation only |
-| `test/` | Test additions or changes |
-
-### Rules
-
-- Include the **Jira ticket ID** when available: `feat/DEV-1234/description`.
-- Use **kebab-case** for the description.
-- Keep it short but descriptive.
-
-## Commit messages
-
-### Format
-
-```
-{type}: {description}
-
-Examples:
-feat: add material delivery bill deletion
-fix: remove admin permissions without logout
-chore: enhance customer software import logging
-refactor(DEV-5967): override
-```
-
-### Conventional commits
-
-| Type | Description |
-|---|---|
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `chore` | Maintenance, tooling |
-| `refactor` | Code refactoring |
-| `docs` | Documentation |
-| `test` | Tests |
-| `ci` | CI/CD changes |
-
-### Rules
-
-- Use lowercase for the type prefix.
-- Use imperative mood: "add feature" not "added feature".
-- Include ticket ID in scope when relevant: `refactor(DEV-5967): description`.
-- Keep the first line under 72 characters.
-
-## Pull requests
-
-### PR template
-
-The project uses a PR template (`.github/pull_request_template.md`) with:
-
-1. **Jira ticket link** — badge linking to the ticket.
-2. **Description** — what changed and why.
-3. **Type of change** — bug fix, refactoring, new feature, breaking change, docs.
-4. **Checklist:**
-   - Documentation added/updated or not needed
-   - Rebased onto main
-   - Quality pipeline executed (PHPStan + Rector + ECS)
-   - Review requested (Jira + Slack)
-   - Tests added/updated or not needed
-   - Changes tested by QA/PO/Support (if needed)
-5. **Links** — Jira ticket URL.
-6. **Screenshots** — if applicable.
-
-### Before opening a PR
+## Procedure: Before opening a PR
 
 1. Run quality pipeline: PHPStan → Rector → ECS → PHPStan (see `quality-tools` skill).
 2. Run tests: `php artisan test`.
 3. Rebase onto `main`.
-4. Fill in the PR template completely.
+4. Fill in PR template completely.
 
-## Review: see `code-review` skill. CODEOWNERS, size-based review points, backend reviews for PHP.
+## Procedure: Finish a branch
 
-## Default: `main`. Merge commits (not squash).
+When implementation is complete and all tests pass:
 
-## Finishing: 1. Push+PR (quality→tests→push→`gh pr create`) | 2. Keep as-is | 3. Discard (confirm first).
+```
+Work complete. What would you like to do?
 
-Never: failing tests, discard without confirmation, push/PR without explicit request.
+1. Push and create a Pull Request
+2. Keep the branch as-is (I'll handle it later)
+3. Discard this work
+```
 
-## NEVER commit/push/merge/rebase/force-push without explicit permission.
+### Option 1: Push and create PR
 
-## Gotcha: scope-control overrides, subject <72 chars, no rebase on shared branches, stash can lose work.
+1. Run quality pipeline + tests.
+2. `git push -u origin <branch>`.
+3. `gh pr create` using PR template.
 
-## Do NOT: commit to main, push without quality tools, PR without template, merge without reviews, force-push shared.
+### Option 2: Keep as-is
+
+Report: "Branch `<name>` preserved locally." — do nothing.
+
+### Option 3: Discard
+
+**Confirm first** — list branch name and commit count.
+Wait for explicit confirmation. Then:
+```bash
+git checkout main
+git branch -D <feature-branch>
+```
+
+## PR template
+
+The project uses `.github/pull_request_template.md`:
+1. Jira ticket link (badge)
+2. Description — what and why
+3. Type of change
+4. Checklist (docs, rebase, quality, review, tests, QA)
+5. Links + screenshots
+
+## Default branch
+
+- `main` is default/production branch.
+- Merge strategy: merge commits (not squash).
+
+## Output format
+
+1. Commits following conventional commit format
+2. PR description with structured sections (if creating PR)
+
+## Gotcha
+
+- Never commit/push/merge without explicit user permission.
+- Keep subject line under 72 chars.
+- Don't rebase shared branches.
+- `git stash` can lose work — prefer WIP commits.
+
+## Do NOT
+
+- Do NOT commit directly to `main`.
+- Do NOT push without running quality tools first.
+- Do NOT force-push to shared branches.
+
+## Auto-trigger keywords
+
+- Git workflow
+- branch naming
+- commit message
+- PR convention

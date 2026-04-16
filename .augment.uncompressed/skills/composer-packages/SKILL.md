@@ -10,7 +10,7 @@ source: package
 
 Use this skill when creating, maintaining, or publishing Composer library packages — including Laravel packages with service providers, Artisan commands, and config publishing.
 
-## Before making changes
+## Procedure: Work with Composer packages
 
 1. Read the package's `composer.json` for structure and dependencies.
 2. Check if it's a Laravel package (look for `extra.laravel.providers`).
@@ -141,9 +141,15 @@ Packages are published to a private Composer registry. Check the organization's 
 - Follow the organization's namespace convention (check existing packages).
 - Use `declare(strict_types=1)` in all PHP files.
 - Use typed properties, parameters, and return types.
-- Follow the same coding standards as the main projects (see `coder` skill).
+- Follow the same coding standards as the main projects (see `php-coder` skill).
 - Include `agents/` directory for package-specific documentation.
 
+
+## Output format
+
+1. Package files following standard Composer structure
+2. Updated composer.json with correct autoloading and dependencies
+3. Service provider and config publishing (if Laravel package)
 
 ## Auto-trigger keywords
 

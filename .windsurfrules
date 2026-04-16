@@ -4,46 +4,93 @@
 
 # Agent Documentation
 
-## When to read
+## When to read agent docs
 
-**Before ANY work**, read relevant docs:
+**Before starting ANY work**, read the relevant documentation:
 
-1. `AGENTS.md` (project root) — project-level setup/conventions
-2. `./agents/` — project-specific architecture, guidelines, domain docs
-3. `agents/contexts/domain/` — domain contexts relevant to current work
-4. `app/Modules/{Module}/agents/` — module-specific docs (incl. `agents/contexts/`)
-5. Package `./agents/` directory
-6. Existing roadmap for current work → follow its steps
+1. **Always read** `AGENTS.md` (if it exists in the project root) for project-level setup and conventions.
+2. **Always read** `./agents/` for project-specific architecture, guidelines, and domain docs.
+3. **If domain contexts exist** (`agents/contexts/domain/`) → read any that are relevant to the current work area.
+4. **If working on a module** → also read `app/Modules/{Module}/agents/` for module-specific docs,
+   including `agents/contexts/` within the module if it exists.
+5. **If working on a package** → read the package's `./agents/` directory.
+6. **If a roadmap exists** for the current work → read it first and follow its steps.
 
-## When to update
+## When to update agent docs
 
-After changes, check if docs need updating:
+After making changes, check if any agent docs need to be updated:
 
-- New module → create `app/Modules/{Module}/agents/`
-- Schema changed → update `agents/docs/database-setup.md`
-- New service/pattern → update relevant guidelines
-- Roadmap step done → mark `[x]`
-- Structural changes → update affected docs
+- **New module created** → create `app/Modules/{Module}/agents/` with at least a module description.
+- **Database schema changed** → update `agents/docs/database-setup.md` or equivalent.
+- **New service/pattern introduced** → update relevant guideline docs.
+- **Roadmap step completed** → mark it as done in the roadmap file (`[x]`).
+- **Structural changes** (new conventions, renamed classes, moved files) → update affected docs.
 
-If unsure → **ask the user**.
+If unsure whether a doc needs updating, **ask the user**.
 
-## Roadmaps
+## When to create roadmaps
 
-For significant multi-step/multi-session changes:
-- Ask user about creating roadmap in `agents/roadmaps/`
-- Use `roadmap-create` command
-- Ensures continuity across sessions/agents
+When working on a **significant change** that spans multiple steps or sessions:
+
+- Ask the user whether to create a roadmap in `agents/roadmaps/`.
+- Use the `roadmap-create` command if yes.
+- This ensures future sessions (and other agents) can pick up the work.
 
 ## Documentation language
 
-- All `.md` files in **English**
-- German/other language files → translate when touched
+- All `.md` files must be written in **English**.
+- If an existing file is in German or another language, translate it to English when you touch it.
 
 ## Do NOT
 
-- Create docs without real need
-- Duplicate info from `AGENTS.md` or `.github/copilot-instructions.md`
-- Write docs to document what you did — only what others need to know
+- Do NOT create docs unless there's a real need (new module, significant change, etc.).
+- Do NOT duplicate information that's already in `AGENTS.md` or `.github/copilot-instructions.md`.
+- Do NOT write docs just to document what you did — only document things others need to know.
+
+---
+
+# Analysis Skill Routing
+
+When choosing an analysis skill, always route to the narrowest skill that still matches the actual problem shape.
+
+Use `universal-project-analysis` only for:
+
+* full project analysis
+* deep architecture review
+* broad multi-layer debugging
+* unclear systems where the stack or boundaries must first be discovered
+
+Use framework-specific project-analysis skills only after the framework is known.
+
+Use root-cause analysis skills when the problem is concrete and hypothesis-driven.
+
+Do not use broad analysis skills for:
+
+* small isolated code questions
+* normal feature work
+* obvious local fixes
+* framework-specific issues that already have a dedicated skill
+
+Prefer:
+
+* narrow specialist skill over broad analysis skill
+* framework-specific skill over universal router when the framework is already explicit
+* root-cause skill over full-project analysis when the issue is already localized
+
+If the stack is unclear:
+
+* start broad
+* then narrow quickly
+
+## Routing quality gate
+
+Only route to the narrower skill if it still has:
+
+* executable workflow (concrete procedure steps)
+* concrete validation (specific checks, not "verify it works")
+* real decision power (not just "read the guideline")
+
+If the narrow skill is too weak or hollowed out, route through the broader skill and note the gap.
 
 ---
 
@@ -51,158 +98,401 @@ For significant multi-step/multi-session changes:
 
 ## General Principles
 
-- **Thin controllers** — no business logic, delegate to services
-- **Single Action Controllers only** — `__invoke()`. No multi-action/resource controllers. See `.augment/guidelines/php/controllers.md`
-- **Every controller needs FormRequest** — never `$request->validate()` inline
-- **Services** = business logic (calculations, orchestration, validation)
-- **Models** = relationships, scopes, accessors/mutators only
-- Check existing directory structure before creating files
-- Modern standards for **new** code only — respect existing patterns
+- **Controllers are thin** — no business logic, delegate to services.
+- **Only Single Action Controllers** — every new controller MUST use `__invoke()`. No multi-action / resource controllers. See `.augment/guidelines/php/controllers.md` for naming conventions.
+- **Every controller needs a FormRequest** — never validate inline with `$request->validate()`. Use a dedicated `FormRequest` subclass.
+- **Services contain business logic** — calculations, orchestration, validation.
+- **Models have no business logic** — only relationships, scopes, accessors/mutators.
+- Always check the existing directory structure before creating new files.
+- Respect existing patterns — apply modern standards to **new** code only.
 
 ## Project Detection
 
-Detect project type from Git remote, directory name, or project files:
-- `composer.json` → framework (Laravel, Symfony, standalone)
-- `artisan` exists → Laravel
-- `package.json` → frontend framework
-- `AGENTS.md` / `agents/` → project docs
+Detect the current project type from the **Git remote URL**, **directory name**, or **project files**:
+
+- Check `composer.json` for framework (Laravel, Symfony, standalone).
+- Check if `artisan` exists → Laravel project.
+- Check `package.json` for frontend framework (React, Vue, Next.js, etc.).
+- Check `AGENTS.md` or `agents/` for project-specific documentation.
+
+For tooling detection (artisan vs composer), check if `artisan` exists in the project root.
 
 ## Project-Specific Architecture
 
-Read `./agents/` and `AGENTS.md` before structural decisions. Don't rely on this rule for project-specific layouts.
+Each project documents its own architecture in `./agents/` and/or `AGENTS.md`.
+**Always read those files** before making structural decisions. Do not rely on this rule file
+for project-specific directory layouts, database conventions, or module systems.
 
 ## Module-Level Documentation
 
-Modules (`app/Modules/`) may have docs in `app/Modules/*/agents/`. Check module-level agent docs first.
+Some projects use a module system (e.g. `app/Modules/` in Laravel projects).
+Modules may have their own agent docs in `app/Modules/*/agents/` with:
+
+- Module descriptions and feature docs
+- Module-specific roadmaps (`agents/roadmaps/`)
+- Module-specific documentation (`Docs/`)
+
+When working on a module, **always check for module-level agent docs** first.
 
 ## Packages
 
-Packages may use `./agents/` for docs/roadmaps. Treat like projects.
+Packages (Composer, npm, etc.) may also use `./agents/` in their root
+for package-specific docs and roadmaps. Treat them the same way as projects.
 
 ## Build / Task Runner Detection
 
-Check for `Makefile` or `Taskfile.yml`:
-- `Makefile` → `make <target>`
-- `Taskfile.yml` → `task <target>`
+Projects use either `Makefile` or `Taskfile.yml` (or both) for common commands.
+**Always check which one exists** and read it to discover available targets for
+testing, quality checks, container access, migrations, etc.
 
-Prefer these over raw `docker compose exec`.
+- `Makefile` → use `make <target>`
+- `Taskfile.yml` → use `task <target>`
+
+Prefer these targets over raw `docker compose exec` commands when available.
 
 ---
 
 # Ask When Uncertain
 
-**When in doubt, ask.** Don't guess, assume, or improvise.
-One question too many > one wrong assumption.
+**When in doubt, ask the user.** Do not guess, assume, or improvise.
+Asking one question too many is always better than a wrong assumption.
 
 ## When to ask
 
-- Ambiguous requirement
-- Unsure which approach is correct
-- About to touch unfamiliar code
-- Multiple valid approaches
-- Fix "works" but can't explain why
+- Requirement is ambiguous or could be interpreted multiple ways
+- Not 100% sure which approach is correct
+- About to touch code you haven't fully understood
+- Choosing between multiple valid approaches
+- A fix "seems to work" but you can't explain why
 
 ## How to ask
 
-- Be specific about what's unclear
+- Be specific about what is unclear
 - Present numbered options (per `user-interaction` rule)
-- Keep short
+- Keep it short — don't write an essay
+
+## Question batching
+
+- **Simple decisions** (binary, small choices): ask multiple at once, numbered
+- **Complex questions** (need context/thinking): ask ONE at a time, wait for answer
+- **Handoff questions** (model switch, deeper analysis): ask LAST, after all domain questions
 
 ---
 
 # .augment/ Portability
 
-Everything in `.augment/` MUST be **project-agnostic**.
+Everything inside `.augment/` (skills, rules, commands, templates, contexts) MUST be **project-agnostic**.
 
-- NEVER reference specific project, repo name, domain, or tech stack
-- NEVER hardcode project-specific paths, class names, or conventions
-- Content must work as **reusable package** across any project
-- Project-specific behavior → `.agent-settings`, `AGENTS.md`, or `agents/`
-- Need project input → read from `.agent-settings` or accept as parameter
-- Test: "Would this make sense in a completely different project?"
+- NEVER reference a specific project, repo name, domain, or tech stack directly.
+- NEVER hardcode project-specific paths, class names, or conventions.
+- Write content so it works as a **reusable package** across any project.
+- Project-specific behavior belongs in `.agent-settings`, `AGENTS.md`, or `agents/` — not in `.augment/`.
+- If a skill or rule needs project-specific input, read it from `.agent-settings` or accept it as a parameter.
+- When reviewing or editing `.augment/` files, always ask: "Would this still make sense in a completely different project?"
 
 ---
 
 # .augment/ Source of Truth
 
-`.augment.uncompressed/` = **single source of truth**. `.augment/` = compressed copies.
+`.augment.uncompressed/` is the **single source of truth** for all `.augment/` content.
+`.augment/` contains compressed (token-optimized) copies — never edit them directly.
 
-## Iron Rule
+## The Iron Rule
 
 ```
-NEVER create or edit files in .augment/ directly.
-ALWAYS work in .augment.uncompressed/ — then compress.
+NEVER create or edit files in .augment/ directly — not even "just a small fix".
+ALWAYS work in .augment.uncompressed/ — then compress via /compress command.
 ```
+
+**ZERO exceptions.** Even if the fix is obvious, small, or "faster" — STOP.
+Edit `.augment.uncompressed/` first. Always.
+
+Direct edits to `.augment/` break compression hashes, cause CI failures, and create drift.
+
+**Compression ONLY via `/compress` command.** Handles hashing, sync, and quality checks.
 
 ## Workflow
 
-1. Create/edit in `.augment.uncompressed/{path}`
-2. Compress prose → `.augment/{path}`
-3. `task sync-mark-done -- {path}`
+1. **Create or edit** the file in `.augment.uncompressed/{path}`
+2. **Do NOT auto-compress.** Continue working.
+3. **Before commit/push:** Check if compression is needed (`task sync-changed`).
+   If files need compression, ask the user:
+   ```
+   > 📦 {N} .augment files need compression before commit.
+   >
+   > 1. Compress now — run /compress
+   > 2. Later — commit without compression
+   ```
+4. If compressing: run `/compress` command, then `task sync-mark-done -- {path}`
 
-Non-.md files: `task sync` copies automatically.
+For new non-.md files (`.php`, configs): `task sync` copies them automatically.
 
-## Compression = remove filler/articles/hedging, shorten phrases, fragments OK, merge redundant bullets
+**Key change:** Compression happens once before commit/push — not after every edit.
+This avoids interruptions when work is still in progress.
 
-## NEVER change: code blocks, inline code, URLs, headings, tables, YAML, technical terms, strong language
+## What "compress" means
+
+- Remove articles (a, an, the), filler, hedging, connective fluff
+- Shorten phrases: "in order to" → "to", "make sure to" → "ensure"
+- Fragments OK: "Run tests before commit" not "You should always run tests before committing"
+- Merge redundant bullets
+
+## What NEVER changes during compression
+
+- Code blocks, inline code, URLs, file paths, commands
+- Headings (exact text preserved)
+- Tables (structure preserved, compress cell text only)
+- YAML frontmatter
+- Technical terms, library names, API names
+- Strong language: "NEVER", "MUST", "Do NOT" — these are load-bearing
+
+## Commands workflow
+
+Commands live in `.augment.uncompressed/commands/{name}.md` (single source of truth).
+Claude Code reads them via symlinks in `.claude/skills/{name}/SKILL.md`.
+
+**Required frontmatter for commands:**
+
+```yaml
+name: {command-name}
+description: {what it does}
+disable-model-invocation: true
+```
+
+- `name` and `disable-model-invocation: true` are required for Claude Code compatibility
+- Augment ignores unknown frontmatter fields — no conflict
+- Template: `.augment.uncompressed/templates/command.md`
+
+**Creating a new command:**
+
+1. Create `.augment.uncompressed/commands/{name}.md` (use template)
+2. Run `python3 scripts/skill_linter.py` — must be 0 FAIL
+3. Sync: `cp` to `.augment/commands/`
+4. Run `task generate-tools` — creates Claude symlink automatically
+
+**Never** create `.claude/skills/{name}/SKILL.md` manually for commands — always use the symlink workflow.
+
+## Pre-review consistency checkpoints
+
+Before asking for review or creating a PR, verify derived outputs are not stale:
+
+1. Run `task sync-changed` — check if `.augment.uncompressed/` has changes not yet compressed
+2. If stale files exist: run `/compress` before pushing
+3. Before merge: verify derived outputs (`.augment/`, `.claude/skills/`) are regenerated
+4. Do NOT leave `.augment/` stale across review cycles
+
+## Multi-agent symlink mapping
+
+`.claude/skills/` contains symlinks to **both** `.augment/skills/` and `.augment/commands/`.
+Claude Code treats both as "skills" — but they are different artifact types in our taxonomy.
+
+| `.claude/skills/{name}/SKILL.md` points to... | Actual type |
+|---|---|
+| `.augment/skills/{name}/SKILL.md` | **Skill** (workflow) |
+| `.augment/commands/{name}.md` | **Command** (slash-invoked procedure) |
+
+Always check the symlink target to determine the actual artifact type.
+Commands have `disable-model-invocation: true` in their frontmatter.
 
 ## Quick reference
 
-| Task | Command |
+| Task | What to do |
 |---|---|
-| Edit/create `.md` | Edit `.augment.uncompressed/`, compress to `.augment/` |
-| Create non-`.md` | Create in `.augment.uncompressed/`, `task sync` |
-| Delete | Both directories |
-| What needs compression? | `task sync-changed` |
-| Mark compressed | `task sync-mark-done -- {path}` |
-| Verify sync | `task sync-check` |
+| Edit existing file | Edit in `.augment.uncompressed/`, compress to `.augment/` |
+| Create new `.md` | Create in `.augment.uncompressed/`, compress to `.augment/` |
+| Create new non-`.md` | Create in `.augment.uncompressed/`, run `task sync` |
+| Create new command | Create in `.augment.uncompressed/commands/`, sync, `task generate-tools` |
+| Delete a file | Delete from both directories |
+| Check what needs compression | `task sync-changed` |
+| Mark file as compressed | `task sync-mark-done -- {path}` |
+| Verify everything is in sync | `task sync-check` |
 
 ---
 
-# Commands
+# Capture Learnings
 
-When user types command (`/create-pr`, `# create-pr`, or pastes command file),
-**execute immediately**. No questions, opinions, summaries, confirmations.
+When a repeated mistake, successful pattern, or new constraint appears,
+evaluate whether to capture as **rule** or **skill**.
 
-- Match command file in `.augment/commands/` (or `agents/overrides/commands/`)
-- Read it, follow steps in order
-- Ask only when command says "ask the user"
-- Pasted command content = invocation, NOT question
-- **NEVER** "looks good" or "shall I execute?" — execute
-- **NEVER** "this is the current version" — execute
-- **NEVER** treat pasted content as review request — ALWAYS invocation
-- Exception: user explicitly says "update this command" or "review this command"
+## Promotion Gate
+
+A learning may be promoted to rule/skill ONLY if ALL gates pass:
+
+| Gate | Question | Must be YES |
+|---|---|---|
+| Repetition | Occurred at least twice OR clearly generalizable? | ✅ |
+| Impact | Improves correctness, reliability, or consistency? | ✅ |
+| Failure pattern | Prevents a real, observed failure? | ✅ |
+| Non-duplication | No existing rule/skill/guideline covers this? | ✅ |
+| Scope fit | Fits rule (constraint), skill (workflow), or guideline (convention)? | ✅ |
+| Minimal | Update existing preferred over creation? | Checked |
+
+**Reject immediately if:**
+- Occurred only once and is not clearly generalizable
+- Similar guidance already exists (update instead)
+- Baseline model knowledge or standard tool usage
+- Vague frustration without concrete failure pattern
+
+## Triggers
+
+- Mistake that happened 2+ times
+- Pattern that improved outcome and should be reused
+- Missing constraint that caused issues
+- **User frustration or complaint** — extract the underlying failure pattern, don't ignore or defend
+
+## Do NOT capture
+
+- One-off problems
+- Vague frustrations without concrete consequence
+- Content already covered by existing guidance
+
+## Rule vs Skill
+
+- **Rule** → always-apply constraint ("never X", "always Y")
+- **Skill** → repeatable workflow with steps ("when X, do 1-5")
+- **Update** → existing guidance covers topic → extend, don't duplicate
+
+## How
+
+- Smallest effective change
+- Update existing over creating duplicates
+- Full workflow: `learning-to-rule-or-skill` skill
+
+---
+
+# Development Efficiency
+
+Loaded when actively working with code, tests, quality tools, CLI, or analysis.
+For communication and response style rules → see the always-loaded `token-efficiency` rule.
+
+## Codebase Navigation
+
+### Use what you already have
+
+- Edited a file → `str-replace-editor` showed the result. Skip re-reading.
+- Ran a command → you have the output. Skip re-running to "verify".
+- File in context from recent messages → skip reloading.
+- Found a symbol → use it. Skip searching again differently.
+
+### Search before reading
+
+- **Search first** — `codebase-retrieval`, `search_query_regex`, or `grep`.
+- **Load only what you need** — use `view_range` or `search_query_regex`, not full files.
+- **Small files** (< 50 lines) — OK to read fully.
+
+### Ignored files (`.augmentignore`)
+
+- `vendor/`, `node_modules/`, lock files, and generated files are excluded from `codebase-retrieval`.
+- When you need to understand a vendor package (base class, interface, API), **read the specific file** with `view`. This bypasses the ignore.
+- Load only the file you need — never browse entire vendor directories.
+
+### Minimize tool calls
+
+- **Parallel reads** — read multiple files in one batch, not sequentially.
+- **`search_query_regex`** over full file reads.
+- **`view_range`** when you know the exact lines.
+- **One `codebase-retrieval` call** with all symbols — batch, not 5 separate calls.
+
+## Pattern: Redirect, Summarize, Target
+
+Every command that MAY produce more than ~30 lines of output:
+
+### Step 1: Redirect to file
+```bash
+docker compose exec -T <service> <command> 2>&1 > /tmp/<tool>-output.txt
+echo "EXIT=$?"
+```
+
+### Step 2: Read ONLY the summary
+```bash
+tail -5 /tmp/<tool>-output.txt
+```
+
+### Step 3: If errors exist, read ONLY what you need to fix
+```bash
+grep "ERROR\|error\|✏️" /tmp/<tool>-output.txt | head -20
+grep "app/Services/MyService.php" /tmp/<tool>-output.txt
+```
+
+**NEVER** do:
+- `cat /tmp/<tool>-output.txt` (loads everything)
+- Read the full output of a passing command (waste)
+- Read diffs you don't plan to act on
+
+## General Rules
+
+For tool-specific commands → see the `quality-tools` skill.
+
+1. **Exit code first**: Check `$?` before reading ANY output. If 0, you're done — skip reading.
+2. **Summary line**: Most tools print a summary as the last few lines. That's all you need.
+3. **Targeted grep**: When you need details, `grep` for the specific file or error type.
+4. **Read once, act, move on**: Once you've read output and acted on it, skip re-reading.
+5. **Iterative fixing**: Fix one error at a time, re-run, check exit code.
+   Output becomes stale after each fix — always re-run before reading again.
+
+## CLI Over MCP
+
+MCP servers are **significantly more token-expensive** than CLI equivalents.
+When both options exist, prefer the CLI tool.
+
+- **Git**: `git` CLI, not Git MCP
+- **Files**: shell commands, not filesystem MCP
+- **APIs**: `curl`/`httpie`, not HTTP MCP
+- **Database**: `mysql`/`psql` CLI, not DB MCP
+
+Exception: MCPs with **unique capabilities** (Sentry, Playwright, Jira).
+
+## Exceptions
+
+- **Small output** (< 30 lines): Read directly, no redirect needed.
+- **Debugging**: OK to read more context around the specific error.
+- **User asks** for full output: Show it.
 
 ---
 
 # Commit Conventions
 
-Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
+All commit messages and squash/merge titles follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
 ## Format
 
 - With scope: `<type>(<scope>): <description>`
 - Without scope: `<type>: <description>`
-- Always English, imperative mood, max 72 chars first line
+- Always English. Imperative mood. Max 72 chars first line.
 
 ## Types
 
 | Type | When |
 |---|---|
-| `feat` | New feature |
+| `feat` | New user-facing functionality |
 | `fix` | Bug fix |
-| `refactor` | Code change (no new feature, no bug fix) |
+| `refactor` | Structure change, no behavior change |
 | `docs` | Documentation only |
-| `test` | Adding or updating tests |
-| `chore` | Maintenance (deps, configs, tooling) |
-| `style` | Code style (formatting, no logic change) |
+| `test` | Tests only |
+| `chore` | Maintenance, deps, cleanup |
+| `ci` | CI/CD, workflows |
+| `style` | Formatting only |
 | `perf` | Performance improvement |
+| `build` | Build tooling, packaging |
 
 ## Scope
 
-- **Jira ticket ID** as scope when branch contains one (e.g. `DEV-1234`)
-- Otherwise short module/area name
-- Optional but recommended
+- Jira ticket ID when branch has one: `DEV-1234`
+- Otherwise short area name: `api`, `auth`, `skills`
+- Optional — only add when it improves clarity.
+
+## Breaking changes
+
+Mark with `!` or `BREAKING CHANGE:` footer:
+
+```
+feat(api)!: rename invoice status values
+refactor(auth)!: remove legacy session flow
+```
+
+## Commit splitting
+
+Mixed concerns → split into multiple commits. Don't hide unrelated changes in one.
 
 ## Examples
 
@@ -212,162 +502,120 @@ fix(DEV-1234): handle null value in equipment import
 test(DEV-1234): add component test for working time controller
 refactor: extract user sync logic into dedicated service
 chore: update PHP quality package to 2.1.0
+ci(lint): add skill-lint workflow
+docs(roadmap): add phase 3 implementation plan
 ```
+
+→ Type selection rules, anti-patterns, decision checklist: `guidelines/php/git.md`
 
 ---
 
 # Context Hygiene
 
-## 3-Failure Rule
+## Conversation Freshness
 
-After **3 consecutive failed attempts** at same task:
+Monitor for **context decay** — long conversations degrade quality and waste tokens.
 
-1. **STOP** — no 4th attempt
-2. **State dump** — what was tried, what failed, what's known
-3. **Recommend fresh start** — suggest new session with state dump, or ask for different approach
+**Suggest a new chat when:**
 
-After 3 failures, context is polluted. Fresh session with clean dump > 7th attempt in polluted context.
+- Conversation exceeds **~20 user messages**
+- Topic **changes completely**
+- Re-reading files already in context
+- **15+ completed tasks** and new unrelated topic
+- Branch changed since start
+- ~24 hours passed
 
-## What counts as failure
+**Repeat** at multiples: messages 20/40/60, tasks 15/30/45.
+**ONLY at exact thresholds.** Between: silence.
 
-- Code change doesn't fix problem
-- Test still fails after fix
-- Quality check still errors after fix
-- Build/deploy fails after config change
+**How to suggest:**
+
+Estimate token cost: responses × ~1,500 tokens.
+
+```
+> ⚡ This conversation has ~{N} messages (~{N×1500} tokens history cost — charged on EVERY request).
+> A fresh chat saves ~{N×1500} input tokens per request.
+>
+> 1. Start fresh — I'll initiate a session handoff
+> 2. Continue here
+```
+
+**If the user picks 1:** Initiate a session handoff or start fresh.
+
+## The 3-Failure Rule
+
+When **3 consecutive attempts** at the same task fail (code fix, test fix, config change, etc.):
+
+1. **STOP** — do not attempt a 4th fix.
+2. **State dump** — summarize what was tried, what failed, and what you know so far.
+3. **Recommend fresh start** — suggest a fresh session with the state dump as context, or ask for a different approach.
+
+**What counts as a failure:**
+
+- Code change that doesn't fix the problem
+- Test that still fails after the fix
+- Quality check (PHPStan, ECS) that still errors
+- Build/deploy that fails after config change
+
+**Does NOT reset the counter:** Unrelated tasks. User providing new information (course correction).
 
 ## Tool Loop Detection
 
-Same tool called **2+ times** with similar parameters = loop. Critical failure mode.
+Calling the **same tool** more than **2 times in a row** with similar parameters = loop.
 
-1. **STOP** all tool calls
-2. Do task directly
-3. If stuck → ask user
+**Immediate action:**
+1. **STOP** all tool calls.
+2. **Do the task directly** — write the code, run the command, answer the question.
+3. If you can't proceed — ask the user for help.
 
-`sequentialthinking`: max **once** per task. NEVER for simple file ops/commands/edits.
-
-## Counter rules
-
-- Unrelated tasks don't reset counter
-- User providing new info = course correction, not failure
+`sequentialthinking` is especially prone to loops. Use at most **once** per task,
+NEVER for simple file operations, command execution, or straightforward edits.
 
 ## State dump format
 
 ```
-## State Dump: [Task Description]
-
-### What was tried
-1. [Approach 1] → [Why it failed]
-2. [Approach 2] → [Why it failed]
-3. [Approach 3] → [Why it failed]
-
-### What is known
-- [Fact 1]
-- [Fact 2]
-
-### Hypothesis
-- [Best hypothesis for root cause]
-
-### Recommendation
-- [Suggested next approach for a fresh session]
+## State Dump: [Task]
+### Tried: 1. [Approach] → [Why failed] 2. ... 3. ...
+### Known: [Key facts]
+### Hypothesis: [Best guess for root cause]
+### Recommendation: [Next approach for fresh session]
 ```
 
-Use `/agent-handoff` to generate context summary for fresh conversation.
+Use `/agent-handoff` to generate a context summary for a fresh conversation.
 
----
+## Augment-specific: Ignored Skills Recovery
 
-# Development Efficiency
+Skills excluded via `.augmentignore` don't appear in `<available_skills>`.
+If you need an ignored skill: read its SKILL.md directly, apply guidance, then ask:
 
-For communication/response style → `token-efficiency` rule.
-
-## Codebase Navigation
-
-### Use what you have
-
-- Edited file → `str-replace-editor` showed result. Skip re-reading.
-- Ran command → have output. Skip re-running.
-- File in recent context → skip reloading.
-- Found symbol → use it. Skip re-searching.
-
-### Search before reading
-
-- Search first — `codebase-retrieval`, `search_query_regex`, `grep`
-- `view_range` or `search_query_regex` over full files
-- Small files (< 50 lines) — OK to read fully
-
-### `.augmentignore`
-
-- `vendor/`, `node_modules/`, locks excluded from `codebase-retrieval`
-- Need vendor details → `view` specific file (bypasses ignore)
-
-### Minimize tool calls
-
-- Parallel reads — batch, not sequential
-- `search_query_regex` over full file reads
-- `view_range` for known lines
-- One `codebase-retrieval` call with all symbols
-
-## Pattern: Redirect, Summarize, Target
-
-Commands producing >30 lines:
-
-### Step 1: Redirect
-```bash
-docker compose exec -T <service> <command> 2>&1 > /tmp/<tool>-output.txt
-echo "EXIT=$?"
 ```
-
-### Step 2: Summary only
-```bash
-tail -5 /tmp/<tool>-output.txt
+> 💡 I loaded `{name}` manually — currently ignored in `.augmentignore`.
+> 1. Remove from ignore — relevant for this project
+> 2. Keep ignored — one-off
 ```
-
-### Step 3: Targeted details
-```bash
-grep "ERROR\|error\|✏️" /tmp/<tool>-output.txt | head -20
-grep "app/Services/MyService.php" /tmp/<tool>-output.txt
-```
-
-**NEVER:** `cat` full output, read passing command output, read unactionable diffs.
-
-## General Rules
-
-1. **Exit code first** — if 0, skip reading
-2. **Summary line** — last few lines suffice
-3. **Targeted grep** — specific file/error type
-4. **Read once, act, move on** — don't re-read
-5. **Iterative fixing** — fix one, re-run, check exit code
-
-## CLI Over MCP
-
-CLI > MCP (significantly fewer tokens):
-- Git, files, APIs, database → CLI
-- Exception: MCPs with unique capabilities (Sentry, Playwright, Jira)
-
-## Exceptions
-
-- Small output (< 30 lines) → read directly
-- Debugging → more context OK
-- User asks for full output → show it
 
 ---
 
 # Docker Container Commands
 
-All PHP commands run **inside Docker container**, not host.
+All PHP commands (PHPStan, Rector, Composer, PHPUnit, Artisan) must be executed **inside the Docker container**, not on the host.
 
 ## Container Detection
 
-Read `docker-compose.yml` / `compose.yaml` for PHP service name (varies per project).
-- Non-interactive: `docker compose exec -T <service> ...`
-- Interactive: `make console` (if available)
+Detect the correct PHP container service name from `docker-compose.yml` / `compose.yaml`.
+Read the compose file to find the PHP service name — it varies per project.
+
+Use `docker compose exec -T <service> ...` for non-interactive commands (scripts, CI).
+Use `make console` to enter the container interactively (if available).
 
 ## Tooling Detection
 
-Check `artisan` in project root:
-- **Laravel**: `php artisan test`, `vendor/bin/phpstan analyse`, `vendor/bin/rector process`
-- **Composer**: `vendor/bin/phpunit`, `vendor/bin/phpstan analyse`, `vendor/bin/rector process`
+Check if `artisan` exists in the project root:
 
-## Examples (Laravel)
+- **Laravel** (`artisan` exists): `php artisan test`, `vendor/bin/phpstan analyse`, `vendor/bin/rector process`
+- **Composer** (no `artisan`): `vendor/bin/phpunit`, `vendor/bin/phpstan analyse`, `vendor/bin/rector process`
+
+## Examples (Laravel project)
 
 ```bash
 docker compose exec -T <php-service> vendor/bin/phpstan analyse
@@ -376,22 +624,26 @@ docker compose exec -T <php-service> vendor/bin/ecs check --fix
 docker compose exec -T <php-service> php artisan test
 ```
 
-## Examples (Composer)
+## Examples (Composer project)
 
 ```bash
-docker compose exec -T php vendor/bin/phpstan analyse
-docker compose exec -T php vendor/bin/rector process
-docker compose exec -T php vendor/bin/ecs check --fix
-docker compose exec -T php bash -c "vendor/bin/phpunit"
+docker compose exec -T <php-service> vendor/bin/phpstan analyse
+docker compose exec -T <php-service> vendor/bin/rector process
+docker compose exec -T <php-service> vendor/bin/ecs check --fix
+docker compose exec -T <php-service> vendor/bin/phpunit
 ```
 
 ## Build / Task Runner
 
-Check `Makefile` / `Taskfile.yml` first for shortcuts:
-- `Makefile` → `make console`, `make test`, `make phpstan`
-- `Taskfile.yml` → `task console`, `task test`, `task phpstan`
+Before using raw `docker compose exec` commands, check if a `Makefile` or `Taskfile.yml` exists.
+These often provide convenient shortcuts for common operations:
 
-Frontend commands run on host or node container.
+- `Makefile` → `make console`, `make test`, `make phpstan`, etc.
+- `Taskfile.yml` → `task console`, `task test`, `task phpstan`, etc.
+
+**Always read the Makefile/Taskfile first** to discover available targets.
+
+Frontend commands (npm, webpack) run on the host or in the node container.
 
 ---
 
@@ -399,156 +651,187 @@ Frontend commands run on host or node container.
 
 ## Rule
 
-**ZERO TOLERANCE:** When `.augment/` file is **created, renamed, or deleted** (or name/description/scope/counts change), all related files **must be updated in same response**.
+**CRITICAL — ZERO TOLERANCE:** When a file in `.augment/` is **created, renamed, or deleted**,
+or its **name, description, scope, or counts change**, all related files **must be updated
+in the same response** — not later, not in a follow-up, not when reminded.
 
-New rule/skill/command without index entry + count update + context update = **incomplete work**.
+A new rule/skill/command without its index entry, count update, and context update is **incomplete work**.
 
-**Mandatory sequence:**
-1. Create/delete file
-2. **Immediately** update `contexts/augment-infrastructure.md` (counts + tables)
-3. Check cross-references and routing hints
+**Mandatory sequence when creating/deleting any `.augment/` file:**
+1. Create/delete the file
+2. **Immediately** update `contexts/augment-infrastructure.md` (counts + category tables)
+3. Check cross-references in contexts and routing hints (inline "see X skill" references)
 
-Steps 2–3 NOT optional. Don't present result until done.
+Steps 2–3 are NOT optional. Do NOT present the result to the user until all steps are done.
 
-**Modes:**
-- **Reactive** (auto): add/remove/rename → sync counts, contexts, cross-refs
-- **Proactive** (on demand): full audit → duplicates, thin skills, redundancy → fix/merge. Ask before destructive actions.
+**Two modes:**
+- **Reactive** (automatic): Triggered by add/remove/rename or scope/description/count changes → sync counts, contexts, cross-references.
+- **Proactive** (on demand): Full audit → find duplicates, thin skills, redundancy, stale content → fix or merge. Ask before destructive actions.
 
 ## What to update
 
+When a file is **added, removed, or renamed**:
+
 | Change | Files to update |
 |---|---|
-| Skill/command/rule count changes | `contexts/augment-infrastructure.md` (count + table) |
+| Skill/command/rule count changes | `contexts/augment-infrastructure.md` (count + category table) |
 | New skill category | `contexts/augment-infrastructure.md` + `contexts/skills-and-commands.md` |
-| New workflow chain | `contexts/skills-and-commands.md` (workflow chains) |
+| New workflow chain | `contexts/skills-and-commands.md` (workflow chains section) |
 
 ## Cross-reference updates
 
+When a skill is **added or its scope changes**, check and update:
+
 | What | Where to check |
 |---|---|
-| Inline routing hints | "see X skill" / "use X instead" in other skills |
-| Guideline cross-refs | Guidelines referencing changed skill |
-| Command skill refs | Commands using changed skill |
+| Inline routing hints | "see X skill" or "use X instead" references in other skills |
+| Guideline cross-references | Guidelines that reference the changed skill |
+| Command skill references | Commands that use the changed skill |
 
 ## Settings template sync
 
-When skill/rule/command reads new setting from `.agent-settings` not in `templates/agent-settings.md`:
-1. Add key with default to template
-2. Add row to Settings Reference table
-3. Add comment explaining key
+When a skill, rule, or command **reads a new setting** from `.agent-settings` that does not yet
+exist in `.augment/templates/agent-settings.md`:
+
+1. **Add the key** with its default value to the template block.
+2. **Add a row** to the Settings Reference table.
+3. **Add a comment** above the key explaining what it does.
 
 ## Content consistency
 
-**MANDATORY:** When rule/skill/guideline **content** changes, search all files covering same topic:
+**CRITICAL — MANDATORY CHECK:** When a rule, skill, or guideline's **content** is changed
+(not just metadata), you MUST search for **all other rules, skills, and guidelines that cover
+the same topic** and verify they are consistent.
 
 ```bash
 grep -rl "TOPIC" .augment/rules/ .augment/skills/ .augment/guidelines/ --include="*.md"
 ```
 
-Contradictions → **update in same response**. Inconsistent docs worse than no docs.
+If any file contradicts or is missing the updated information → **update it in the same response**.
+Inconsistent documentation is worse than no documentation.
 
 ## Do NOT
 
-- Rewrite entire files — only affected entries
-- Ask permission — automatic maintenance
-- Skip cross-reference updates
-- Present new file without completed sync
-- Defer sync to follow-up
+- Do NOT rewrite entire files — only update the affected entries.
+- Do NOT ask the user for permission — this is an automatic maintenance step, like updating imports.
+- Do NOT skip cross-reference updates — stale links are worse than no links.
+- Do NOT present a new `.augment/` file to the user without having completed all sync steps first.
+- Do NOT defer sync to a "follow-up" — it must happen in the same response as the creation/deletion.
 
 ---
 
 # Downstream Changes
 
-After EVERY edit, find **ALL downstream changes**. Missing caller/test/import = critical failure.
+## Rule
+
+After EVERY code edit, find **ALL downstream changes** needed. Missing a caller, a test,
+or an import is a critical failure — it leaves the codebase in a broken state.
 
 ## What to check
 
+After editing any file, search for **all** of these:
+
 | What | How to find | What to update |
 |---|---|---|
-| **Callers / call sites** | `codebase-retrieval` + `grep` for changed method/class | Signatures, parameters, return type handling |
-| **Interface implementations** | `implements {Interface}` / `extends {Class}` | Match new signatures in all implementations |
-| **Subclasses** | `extends {Class}` | Override/implement changed methods |
-| **Tests** | Search test dirs for changed class/method | Assertions, mocks, method calls |
-| **Imports** | `use {Old\Namespace}` | Update namespace after moves/renames |
-| **Type definitions** | Type hints referencing changed class | Parameter types, return types, PHPDoc |
-| **Config / bindings** | Service providers, config files | Class references in DI bindings |
-| **API schemas / OpenAPI** | Controller attributes | Response structure changes |
-| **Routes** | `routes/` controller references | After controller rename/move |
-| **Documentation** | `agents/`, `docs/` references | Behavior or API changes |
+| **Callers / call sites** | `codebase-retrieval` + `grep` for the changed method/class name | Update signatures, parameters, return type handling |
+| **Interface implementations** | Search for `implements {Interface}` or `extends {Class}` | Match new method signatures in all implementations |
+| **Subclasses** | Search for `extends {Class}` | Override or implement changed methods |
+| **Tests** | Search test directories for the changed class/method name | Update assertions, mocks, method calls |
+| **Imports / use statements** | Search for `use {Old\Namespace}` | Update to new namespace after moves/renames |
+| **Type definitions** | Search for type hints referencing the changed class | Update parameter types, return types, PHPDoc |
+| **Config / bindings** | Search service providers, config files | Update class references in DI bindings |
+| **API schemas / OpenAPI** | Check controller attributes | Update if response structure changed |
+| **Routes** | Search `routes/` for controller references | Update after controller rename/move |
+| **Documentation** | Search `agents/`, `docs/` for references | Update if behavior or API changed |
 
-## Breaking changes — ask first
+## Breaking changes
 
-- Removing/renaming public method/class
-- Changing method signature (required params, return type)
-- Changing API response structure
-- Removing DB column/table
-- Changing event payload
-- Renaming frontend-used route name
+Before making a change that affects a **public API** (endpoint response, service method signature,
+event payload, job constructor), assess the impact:
 
-## Non-breaking — proceed
+### Always ask the user first when:
 
-- New optional parameter with default
-- New method (additive)
-- New API response field (additive)
-- Internal refactoring (same public interface)
-- Bug fix
+- Removing or renaming a public method/class
+- Changing a method signature (new required params, changed return type)
+- Changing an API response structure (new/removed fields, changed types)
+- Removing a database column or table
+- Changing an event payload that listeners depend on
+- Renaming a route name that the frontend uses
+
+### Proceed without asking when:
+
+- Adding a new optional parameter with a default value
+- Adding a new method (doesn't break existing callers)
+- Adding a new field to an API response (additive, non-breaking)
+- Internal refactoring that doesn't change the public interface
+- Fixing a bug (the current behavior is wrong)
 
 ## Verification
 
-1. No broken imports — PHPStan catches these
-2. No broken tests
-3. No broken types — PHPStan Level 9
-4. No stale references — grep old name confirms zero results
+After completing all downstream changes:
+
+1. **No broken imports** — `php -l` or PHPStan catches these
+2. **No broken tests** — run the test suite
+3. **No broken types** — PHPStan Level 9 catches signature mismatches
+4. **No stale references** — grep for the old name/namespace to confirm zero results
+
+## The iron law
 
 ```
 Every edit is incomplete until all downstream changes are made.
 ```
 
+Do NOT move on to the next task, claim completion, or suggest committing
+until every caller, test, import, and reference is updated.
+
 ---
 
 # E2E Testing
 
-## Before writing
+## Before writing E2E tests
 
-1. Read `.augment/guidelines/e2e/playwright.md`
-2. Check existing tests — match structure, fixtures, Page Objects
-3. Check `playwright.config.ts` — base URL, browsers, timeouts
+1. **Read the guideline** — `.augment/guidelines/e2e/playwright.md` for all conventions and patterns.
+2. **Check existing tests** — match the project's structure, fixtures, and Page Object patterns.
+3. **Check `playwright.config.ts`** — base URL, browsers, timeouts, projects.
 
-## Locators
+## Locator rules
 
-- Prefer: `getByRole` > `getByLabel` > `getByText` > `getByTestId` > CSS
-- Never: auto-generated classes, dynamic IDs, XPath
-- No semantic locator → add `data-testid`
+- **Always prefer semantic locators**: `getByRole` > `getByLabel` > `getByText` > `getByTestId` > CSS.
+- Never use auto-generated class names, dynamic IDs, or XPath.
+- If no semantic locator works, add a `data-testid` to the component.
 
-## Assertions
+## Assertion rules
 
-- Web-first assertions only (`toBeVisible`, `toHaveText`, `toHaveURL`)
-- Never `expect(await ...)` — no auto-retry
-- Never `page.waitForTimeout()` — wait for condition
+- **Always use web-first assertions** (`toBeVisible`, `toHaveText`, `toHaveURL`).
+- Never use `expect(await ...)` pattern — it doesn't auto-retry.
+- Never use `page.waitForTimeout()` — wait for a condition instead.
 
-## Test structure
+## Test structure rules
 
-- One test = one workflow/behavior
-- Fully isolated — no shared state, no order dependency
-- Page Objects = actions only, no assertions
-- Fixtures for reusable setup
-- API calls for test data (not UI)
+- One test = one user workflow or behavior.
+- Tests must be **fully isolated** — no shared state, no execution order dependency.
+- Page Objects contain **actions only**, never assertions.
+- Use **fixtures** for reusable setup (auth, page objects, test data).
+- Use **API calls** for test data setup — faster and more reliable than UI interactions.
 
-## CI
+## CI rules
 
-- `workers: 1`, `retries: 2` (CI) / `0` (local)
-- `forbidOnly: !!process.env.CI`
-- `trace: 'on-first-retry'`
-- Install only needed browsers
-- Upload `playwright-report/` as artifact
+- Set `workers: 1` in CI for stability.
+- Set `retries: 2` in CI, `0` locally.
+- Set `forbidOnly: !!process.env.CI` to prevent `.only` in CI.
+- Collect `trace: 'on-first-retry'` — not on every run.
+- Only install browsers you need (`npx playwright install chromium --with-deps`).
+- Upload `playwright-report/` as CI artifact.
 
 ## Quality checks
 
-1. All tests pass: `npx playwright test`
-2. No `waitForTimeout`
-3. No CSS/XPath where semantic locators work
-4. No `.only` left
-5. Page Objects have no assertions
+Before claiming E2E tests are complete:
+
+1. All tests pass locally: `npx playwright test`
+2. No `waitForTimeout` calls in the code.
+3. No CSS/XPath selectors where semantic locators work.
+4. No `.only` left in test files.
+5. Page Objects have no assertions.
 
 ---
 
@@ -563,13 +846,25 @@ Coding guidelines live in `.augment/guidelines/` organized by language.
 
 | File | Topic |
 |---|---|
-| `php.md` | General PHP style — strict types, naming, comparisons, early returns |
+| `php.md` | General PHP style — strict types, naming, comparisons, early returns, JSON handling |
 | `controllers.md` | Thin controllers, single responsibility, delegation to services |
 | `eloquent.md` | Model conventions, relationships, scopes, accessors/mutators |
 | `validations.md` | FormRequest patterns, custom rules, validation structure |
 | `resources.md` | API Resource conventions, response structure |
 | `jobs.md` | Queue job patterns, serialization, retry strategies |
 | `git.md` | Branch naming, commit messages, PR conventions |
+| `api-design.md` | API conventions — response format, status codes, pagination, error handling |
+| `artisan-commands.md` | Console command conventions — naming, structure, safety, scheduling |
+| `blade-ui.md` | Blade template conventions — views, components, forms, escaping |
+| `database.md` | Database conventions — indexing, query optimization, migrations, transactions |
+| `flux.md` | Flux UI component conventions — usage, variants, forms, Livewire integration |
+| `livewire.md` | Livewire component conventions — state, actions, forms, performance, Alpine.js |
+| `logging.md` | Logging conventions — levels, structured context, Sentry patterns |
+| `naming.md` | Naming conventions — classes, database, routes, variables, modules, agent infra |
+| `performance.md` | Performance conventions — caching, Redis, eager loading, response time targets |
+| `security.md` | Security conventions — auth, authorization, SQL injection, XSS, CSRF, headers |
+| `sql.md` | Raw SQL conventions — parameterization, MariaDB syntax, common mistakes |
+| `websocket.md` | WebSocket conventions — Broadcasting, channel types, connection management |
 | `patterns.md` | Design patterns index (links to `patterns/` subdirectory) |
 
 ### PHP Patterns (`.augment/guidelines/php/patterns/`)
@@ -590,54 +885,39 @@ Coding guidelines live in `.augment/guidelines/` organized by language.
 
 Playwright best practices, Page Objects, fixtures, CI.
 
+### Agent Infrastructure (`.augment/guidelines/agent-infra/`)
+
+| File | Topic |
+|---|---|
+| `size-and-scope.md` | Size limits and scope boundaries for rules, skills, commands, guidelines, AGENTS.md, copilot-instructions.md |
+| `output-patterns.md` | Redirect/Summarize/Target pattern, targeted operations, tool-first policy, general CLI rules |
+
 ## How guidelines work
 
-- **Guidelines** = coding conventions (read on demand)
-- **Rules** = behavior constraints (auto-loaded)
-- **Skills** = capabilities/workflows (topic-matched)
+- **Guidelines** = detailed coding conventions (reference material, read on demand)
+- **Rules** = always-active behavior constraints (auto-loaded every conversation)
+- **Skills** = agent capabilities and workflows (matched by topic)
+
+Guidelines are the "how to write code" docs. Rules enforce critical subsets automatically.
+Skills reference guidelines when performing related tasks.
+
+## Boundary: Guidelines vs Skills
+
+- Guidelines contain **conventions and reference knowledge**. Skills contain **executable workflows**.
+- A skill may reference a guideline for conventions, but must NOT outsource its core execution steps to a guideline.
+- Do NOT move a skill's operational core (procedure, validation, decision logic) into a guideline.
+- If a skill becomes "go read the guideline", it has lost its purpose — restore the workflow.
 
 ## Adding new guidelines
 
-New language/framework → create `.augment/guidelines/{language}/`. Follow PHP structure as template.
-Read specific file on demand — don't memorize full list.
-
----
-
-# Laravel Language Files
-
-## Key format — flat dot notation only
-
-**Correct** (`lang/en/report.php`):
-```php
-return [
-    'type.daily_report' => 'Daily Report',
-    'type.care_report'  => 'Care Report',
-];
+When a new language or framework is introduced, create a directory:
+```
+.augment/guidelines/{language}/
 ```
 
-**Wrong** — nested arrays forbidden:
-```php
-return [
-    'type' => [
-        'daily_report' => 'Daily Report',
-        'care_report'  => 'Care Report',
-    ],
-];
-```
+Follow the existing PHP structure as a template.
 
-## Both languages mandatory
-
-Every key **must exist in both** `lang/de/` and `lang/en/`. Add to both simultaneously.
-Missing translations = bug.
-
-## Usage
-
-```php
-__('report.type.daily_report')
-__('email.report.created.subject', ['number' => $number])
-```
-
-Never hardcode user-visible strings — always use language files.
+Read the specific guideline file on demand — don't memorize the full list.
 
 ---
 
@@ -645,24 +925,34 @@ Never hardcode user-visible strings — always use language files.
 
 ## Personalization
 
-Read `user_name` from `.agent-settings`. If empty, ask for first name, save it. Use naturally — not every sentence.
+Read `user_name` from `.agent-settings`. If empty, ask the user for their first name at the
+start of the first interaction, save it, and use it from then on. Address the user by name
+where it feels natural — not in every sentence.
 
 ## Language
 
-- Informal German "Du" (not "Sie")
-- German unless user writes in English
-- Code comments: English
-- `.md` files: English. German files → translate when touched
-- Two spaces after ❌, ✅, ⚠️ in CLI output. One space for other icons
-- No double/triple blank lines — one is enough
-- Every file ends with exactly one newline
+- Use informal German "Du" (not "Sie").
+- Respond in German unless the user writes in English.
+- All code comments must be in English.
+- All `.md` documentation files must be in English. If an existing file is in German, translate it when you touch it.
+- Use two spaces after icons like ❌, ✅, ⚠️ in CLI output. One space is not enough. For other icons, one space is fine.
+- Avoid double and triple blank lines in code and output — one blank line is enough.
+- Every file MUST end with exactly one newline — no trailing blank lines.
 
-## `.md` files ALWAYS English
+## `.md` files are ALWAYS English — no exceptions
 
-All text in `.md` files in `.augment/` and `agents/`: English only.
-Includes: headings, bullets, example labels, prompts, templates, ASCII labels, tables.
+**Every** piece of text inside `.md` files in `.augment/` and `agents/` must be in English.
+This includes:
 
-Agent translates at runtime. `.md` = English blueprint.
+- Headings, paragraphs, and bullet points
+- **Example option labels** (e.g., `> 1. Yes — start implementing`, NOT `> 1. Ja — mit der Umsetzung starten`)
+- **Example prompts and questions** (e.g., `"Found X unresolved comments."`, NOT `"X offene Kommentare gefunden."`)
+- **Template placeholders and sample output** (e.g., `Progress:`, NOT `Fortschritt:`)
+- **ASCII art labels** in formatted output blocks (e.g., `CHANGES:`, NOT `ÄNDERUNGEN:`)
+- **Table headers and content**
+
+The agent translates to the user's language **at runtime** when presenting options.
+The `.md` source files are the English blueprint — they define WHAT to say, not in which language.
 
 **Wrong** (German in `.md`):
 ```
@@ -678,32 +968,95 @@ Agent translates at runtime. `.md` = English blueprint.
 
 ---
 
+# Laravel Language Files
+
+## Key format — always inline (dot notation)
+
+Language lines **must always use flat dot-notation keys**. Never use nested arrays.
+
+**Correct** (`lang/en/report.php`):
+```php
+return [
+    'type.daily_report' => 'Daily Report',
+    'type.care_report'  => 'Care Report',
+];
+```
+
+**Wrong** — nested arrays are forbidden:
+```php
+return [
+    'type' => [
+        'daily_report' => 'Daily Report',
+        'care_report'  => 'Care Report',
+    ],
+];
+```
+
+## Both languages are mandatory
+
+Every language line **must exist in both** `lang/de/` and `lang/en/`.
+When you add a key to one file, immediately add the translated key to the other.
+
+Missing translations are a bug — the app ships to both German and English users.
+
+## Referencing language lines
+
+Use the `__()` helper with the dot-notation key:
+
+```php
+__('report.type.daily_report')
+__('email.report.created.subject', ['number' => $number])
+```
+
+Never hardcode user-visible strings in PHP — always use language files.
+
+---
+
+# Markdown Safe Codeblocks
+
+When generating markdown with code blocks:
+
+- **NEVER** nest triple backticks inside triple backticks — this breaks rendering and copy/paste.
+- If content already contains triple backticks, use one of:
+  - Plain text blocks (indented by 4 spaces) — **preferred**
+  - `~~~` fences instead of backtick fences
+  - Four backticks (``````) as outer fence
+- Prefer stability over pretty formatting.
+- Always validate: no broken rendering, no prematurely closed blocks, entire content is selectable and copyable.
+
+---
+
 # Model Recommendation
 
-Detect model from system prompt identity ("Claude Opus" → `opus`, "Claude Sonnet" → `sonnet`, "GPT" → `gpt`, "Gemini" → `gemini`).
+Detect the current model from your system prompt identity (e.g., "Claude Opus" → `opus`,
+"Claude Sonnet" → `sonnet`, "GPT" → `gpt`, "Gemini" → `gemini`).
 
-If `gemini` → immediately trigger Gemini warning (below).
+If the detected model is `gemini`, immediately trigger the Gemini warning (see below).
 
 ## When to act
 
-**BEFORE any work**, classify task:
+**BEFORE starting any work**, classify the task the user is asking for:
 
 - **opus**: refactoring, architecture, complex debugging, code review, multi-file changes
 - **sonnet**: daily coding, bug fixes, tests, simple features, quality checks, PRs, commits, config
 - **gpt**: complex agent flows, automations, research
 
-**MANDATORY check** — runs on:
-- First user message
-- Every clear topic/task change
-- **Command invocations** (e.g., `/create-pr` → sonnet task)
+**This check is MANDATORY** — not optional, not "nice to have". It runs:
+- On the **first user message** of a conversation
+- On **every clear topic/task change** (e.g., from refactoring to "create PR")
+- **When a command is invoked** (e.g., `/create-pr` → sonnet task)
 
-**⚠️ COMMAND INVOCATIONS ARE TASK CHANGES.** `/create-pr`, `/commit`, `/fix-pr-comments` = sonnet tasks even if previous task was opus. Most commonly missed check.
+**⚠️ COMMAND INVOCATIONS ARE TASK CHANGES.** When the user invokes a command (e.g., `/create-pr`,
+`/commit`, `/fix-ci`), ALWAYS re-evaluate the model before executing. Commands like `/create-pr`,
+`/commit`, `/fix-pr-comments` are sonnet tasks — even if the previous task was opus-level.
+This is the most commonly missed check. Do NOT skip it.
 
-**Priority over commands rule**: model check runs BEFORE `commands` rule. Show suggestion first, wait for response, then execute.
+**Priority over commands rule**: This check runs BEFORE the `slash-commands` rule. If a model switch
+is recommended, show the suggestion first. Only after the user responds, execute the command.
 
-**Ambiguous** → default **sonnet**.
+**If ambiguous** (could be opus or sonnet): default to **sonnet** — cheaper, and the user can escalate.
 
-If recommended ≠ detected, suggest switching:
+If the recommended model ≠ detected model, suggest switching **before doing any work**:
 
 ```
 > 💡 This looks like {task type} — best suited for **{recommended model}**.
@@ -713,320 +1066,155 @@ If recommended ≠ detected, suggest switching:
 > 2. Stay on {detected model}
 ```
 
-**⛔ STOP AND WAIT.** Response ENDS after options. No files, no tasks, no coding. Wait for pick.
+**⛔ STOP AND WAIT.** After showing this suggestion, your response ENDS.
+Do NOT read files, create tasks, start coding, or do anything else in the same response.
+The ONLY content after the numbered options is the end of your message.
+Wait for the user to pick 1 or 2 before proceeding.
 
-→ Full mapping: `.augment/contexts/model-recommendations.md`
+→ Full mapping and heuristics: `.augment/contexts/model-recommendations.md`
 
 ## Switch confirmation
 
-- **1** → accept, continue. No follow-up.
-- **2** → accept. Don't ask again until task type changes.
-- Never ask more than once per task.
+- If user picks **1**: accept and continue. No follow-up question.
+- If user picks **2**: accept. Don't ask again until the task type changes.
+- **Never ask more than once per task** unless the task type changes significantly.
 
 ## Downgrade after Opus
 
-After opus phase complete → suggest switching to sonnet for implementation. Same options.
+After completing an opus-level phase (architecture done, root cause found, refactoring plan ready),
+suggest switching back to sonnet for implementation. Same numbered options.
 
 ## Gemini warning
 
-`gemini` detected → warn not recommended. Suggest best model for task. Same options. Repeat once if dismissed.
+If detected model is `gemini`: warn that Gemini is **not recommended** for this project.
+Suggest switching to the best model for the current task (opus/sonnet/gpt).
+Show the same numbered options as above. Repeat once if dismissed — then accept.
 
 ---
 
 # PHP Coding Rules
 
-- `declare(strict_types=1)` in every **new** PHP file. Not required for existing files without it.
-- Project `Math` helper for ALL business calculations. Never native arithmetic (`+`, `-`, `*`, `/`) for business math.
-- Never `var_dump()`, `print_r()`, `dd()` — disallowed by PHPStan.
-- Never `float` for money — `decimal` or `Math` helper.
-- Strict comparison `===`/`!==`, Yoda style: `null === $var`.
+- Use `declare(strict_types=1)` in every **new** PHP file. Not required when modifying existing files that don't have it.
+- If the project has a `Math` helper class, use it for ALL business calculations. Never use native PHP arithmetic operators (`+`, `-`, `*`, `/`) for business calculations. Search for the `Math` class in the project.
+- Never use `var_dump()`, `print_r()`, or `dd()` — they are disallowed by PHPStan config. Exception: legacy projects where these are already used and no alternative is feasible.
+- Never use `float` for money — use `decimal` or the `Math` helper.
+- Always use `===` / `!==` (strict comparison), Yoda style: `null === $var`.
 - Early return over nested if/else.
 - No one-liner if statements.
-- Single quotes without interpolation. `sprintf()` for complex strings.
+- Single quotes for strings without interpolation. `sprintf()` for complex strings.
 - Variables: `camelCase`. Array keys: `snake_case`. Constants: `UPPER_SNAKE_CASE`.
-- Typed properties, parameters, return types — always.
-- Constructor property promotion where sensible.
+- Typed properties, parameters, and return types — always.
+- Constructor property promotion where it makes sense.
 
-## Eloquent — Attribute Access
+## Eloquent Models — Attribute Access
 
-Read `eloquent_access_style` from `.agent-settings`. Default: `getters_setters`. See `eloquent` skill.
+Read `eloquent_access_style` from `.agent-settings` to determine the preferred style.
+Default: `getters_setters`. See the `eloquent` skill for the full reference table and examples.
 
-- **`getters_setters`**: Typed getter + fluent setter per attribute. Inside model: `getAttribute('col')`/`setAttribute('col', $val)`. Outside: getters/setters only.
-- **`get_attribute`**: `getAttribute()`/`setAttribute()` everywhere.
-- **`magic_properties`**: `$model->column_name` everywhere.
+- **`getters_setters`** (strict): Every attribute has a typed getter + fluent setter. Inside the model: `getAttribute('column_name')`/`setAttribute('column_name', $value)`. Outside: always getters/setters. If a getter doesn't exist yet, create it first.
+- **`get_attribute`**: Use `getAttribute('column_name')`/`setAttribute('column_name', $value)` everywhere, no getters/setters needed.
+- **`magic_properties`**: Laravel default `$model->column_name` everywhere.
 
 ### Relationship Getters
 
-- Every relationship MUST have typed getter **above** relationship method
-- Inside getter: `$this->getAttribute('relationship_name')`, NEVER `$this->relationship_name`
-- Outside model: ALWAYS getter (`$model->getEquipment()`), NEVER magic property
-- `instanceof` checks over `null ===` for relationships
+- Every relationship MUST have a typed getter method **above** the relationship method.
+- **Inside the getter:** use `$this->getAttribute('relationship_name')`, NEVER `$this->relationship_name`.
+- **Outside the model:** ALWAYS use the getter (`$model->getEquipment()`), NEVER access the magic property (`$model->equipment`).
+- Use `instanceof` checks instead of `null ===` when checking relationship results.
 
-## Observers over `booted()`
+## Eloquent Models — Observers over `booted()`
 
-- No `booted()`/`boot()` for lifecycle hooks
-- Dedicated **Observer** via `#[ObservedBy]` attribute
+- Do NOT use `booted()` / `boot()` for model lifecycle hooks (saving, saved, deleted, etc.).
+- Use a dedicated **Observer** class registered via `#[ObservedBy]` attribute.
+- This keeps models slim and lifecycle logic testable and discoverable.
 
 ## PHPStan
 
-- Fix root cause. NEVER add to `phpstan-baseline.neon`.
-- `ignoreErrors` in `phpstan.neon`: only for **structural toolchain limitations**. Not individual issues. **Unsure → ask.**
-- Last resort (confirmed false positive):
+- Always fix the root cause. Do NOT add entries to `phpstan-baseline.neon`.
+- Adding `ignoreErrors` to `phpstan.neon` is allowed for **structural toolchain limitations** (e.g., Pest runtime bindings). NOT for individual code issues. **If unsure → ask the user.**
+- If a fix is truly impossible (confirmed false positive), use an inline ignore as last resort:
   ```php
   // @phpstan-ignore-next-line — false positive: reason here
   ```
 
 ## Testing
 
-- **Pest** syntax, not PHPUnit — unless explicitly asked.
-- `tests/Unit/` auto-uses `UnitTestCase` (via `tests/Pest.php`).
+- Always write tests in **Pest**, not PHPUnit class syntax — unless the user explicitly asks for PHPUnit.
+- Pest tests in `tests/Unit/` automatically use `UnitTestCase` as the base class (configured in `tests/Pest.php`).
 
 ## PHPDoc
 
-- Only when type hints insufficient (e.g. `@param array<int, MyObject> $items`)
-- Never repeat method signature
-- One docblock per method
-- Order: `@param` → `@return` → `@throws`
+- Only add PHPDoc when type hints are insufficient (e.g. generic arrays: `@param array<int, MyObject> $items`).
+- Do NOT add PHPDoc that just repeats the method signature.
+- One docblock per method — never split into multiple `/** */` blocks.
+- Tag order: `@param` → `@return` → `@throws`.
 
 ---
 
-# Quality Workflow
+# Preservation Guard
 
-Run quality tools **ONCE at the end** — not after each edit.
-See `verify-before-complete` rule for timing. Full command reference → `quality-tools` skill.
+Transformations (merge, refactor, compress, split) must produce output **at least as strong** as input.
 
-## Language detection
+## Checklist — verify before completing
 
-| Files changed | Pipeline |
-|---|---|
-| `.php` | PHP (PHPStan → Rector → PHPStan) |
-| `.js`, `.ts`, `.tsx`, `.jsx` | JS/TS (Biome → TSC → Tests) |
-| Both | Run **both** |
+- [ ] Strongest validation step preserved
+- [ ] Strongest example preserved
+- [ ] Strongest anti-pattern / "Do NOT" preserved
+- [ ] Essential decision hints (if/when/unless) preserved
+- [ ] Required sections preserved
+- [ ] Single clear responsibility preserved
+- [ ] Strong language ("MUST"/"NEVER") not weakened
 
-```bash
-git diff --name-only origin/{default}..HEAD | grep -E '\.(php)$'
-git diff --name-only origin/{default}..HEAD | grep -E '\.(js|ts|tsx)$'
-```
+## Reject if
 
----
+- Validation, example, or anti-pattern removed without replacement
+- Decision logic weakened
+- Scope broadened by merging unrelated concerns
+- Strong language downgraded
 
-## PHP Pipeline
-
-### Prerequisite
-
-Check `composer.json` for quality tools. See `quality-tools` skill for detection and commands.
-
-### Execution
-
-```bash
-# Native (default):
-vendor/bin/phpstan analyse             # PHPStan
-vendor/bin/rector process              # Rector (auto-fix)
-vendor/bin/ecs check --fix             # ECS (auto-fix)
-
-# With galawork/php-quality wrapper (if installed):
-php artisan quality:phpstan            # PHPStan
-php artisan quality:finalize           # Full pipeline
-```
-
-All inside Docker container if used.
-
-### Workflow
-
-1. Run PHPStan — fix type errors
-2. Run Rector + ECS with auto-fix
-3. Run PHPStan again — verify no new issues
-
-Step 3 errors → fix, repeat from step 2.
-
-### Baseline — NEVER touch
-
-- NEVER edit `phpstan-baseline.neon` manually
-- Auto-regenerated after successful PHPStan run (0 new errors)
-
-### Error handling
-
-- Fix actual code — don't suppress/ignore/baseline
-- Last resort: `// @phpstan-ignore-next-line — false positive: reason here`
-
-### Config files
-
-| File | Tool | Purpose |
-|---|---|---|
-| `phpstan.neon` | PHPStan | Level, paths, extensions, ignoreErrors |
-| `phpstan-baseline.neon` | PHPStan | Baseline (auto-managed, do NOT edit) |
-| `ecs.php` | ECS | Code style rules and skip list |
-| `rector.php` | Rector | Refactoring rules, PHP version sets, skip list |
-
-- `ignoreErrors`: structural toolchain limitations only. **Unsure → ask.**
-- Config files: don't modify without permission.
-
-### Git-aware execution
-
-Default: only changed files. `--ignore-git` = all files. `--clear-cache` = fresh. Both = complete re-check.
+→ Skills: `skill-management`, `skill-reviewer` · Command: `/compress` · Linter: `check_compression_quality()`
 
 ---
 
-## JS/TS Pipeline
+# rule-type-governance
 
-### Prerequisite
+## `always` = loaded every conversation
 
-Check `package.json`: `@biomejs/biome`, `typescript`, `jest`/`vitest`.
+Use ONLY when the rule applies to virtually every interaction:
 
-### Execution
+- Universal agent behavior (language, tone, interaction style)
+- Safety constraints (scope control, verification before completion)
+- Token/efficiency constraints
+- First-message checks that cannot wait for auto-trigger
 
-```bash
-npm run biome:fix      # Auto-fix formatting + linting
-npm run tscheck        # Type check
-npm test               # Tests
+## `auto` = loaded on demand by description match
 
-# Fallback
-npx biome check --write .
-npx tsc --noEmit
-npx jest
-```
+Use for everything else:
 
-Host or Node container — check `Makefile` / `docker-compose.yml`.
+- Language-specific rules (PHP, JS, SQL)
+- Tool-specific rules (Docker, Git, quality tools)
+- Workflow-specific rules (commands, skill creation, E2E testing)
+- Domain-specific rules (translations, architecture)
 
-### Workflow
+## Decision test
 
-1. `npm run biome:fix` — formatting, linting, imports
-2. `npm run tscheck` — type safety
-3. `npm test`
+> "Does this rule need to be active when the user asks a simple question, reviews a PR, or discusses architecture?"
 
-Step 2 errors → fix, re-run step 1.
+- Yes → `always`
+- No → `auto` with a clear trigger description
 
-### Error handling
+## Auto description quality
 
-- Fix type errors in code. No `@ts-ignore`/`@ts-expect-error` without reason.
-- Fix Biome errors, don't `biome-ignore` unless confirmed false positive.
-- Don't modify config files without permission.
+The `description` field IS the trigger. It must describe **when** the rule applies, not **what** it contains.
 
----
+- ❌  `"PHP coding standards"` — too vague, won't match reliably
+- ✅  `"Writing or reviewing PHP code — strict types, naming, Eloquent conventions"`
 
-# rtk (Rust Token Killer)
+## Hard constraint
 
-CLI proxy reducing LLM token consumption 60-90% via intelligent output filtering. Single Rust binary, <10ms overhead.
-
-**Docs:** https://www.mintlify.com/rtk-ai/rtk
-**Repo:** https://github.com/rtk-ai/rtk
-
-## Usage
-
-```bash
-rtk git status        # 80-92% savings
-rtk git log           # compact log output
-rtk cargo test        # 90% savings — only failures shown
-rtk npm test          # same for JS/TS
-rtk docker compose ps # compact container status
-```
-
-## Detection & Installation
-
-Before verbose CLI commands, check rtk:
-
-1. `which rtk` (silent)
-2. **Installed** → prefix with `rtk` for >30 line output
-3. **Not installed** → check project settings file for `rtk_last_asked`:
-   - Missing or before today → prompt user
-   - Today → skip, use normal commands
-
-**Prompt:**
-
-> 💡 **rtk** (Rust Token Killer) is not installed.
-> Reduces token consumption 60-90%.
->
-> 1. Install via Homebrew — `brew install rtk` (recommended on macOS)
-> 2. Install via Cargo — `cargo install rtk`
-> 3. Skip for now — I'll ask again tomorrow
-
-**On response:**
-- **1/2** → install, then: `rtk --version`, `rtk init --global`, Post-Install Setup, generate project-local filters, save `rtk_installed=true` in project settings
-- **3** → save `rtk_last_asked=YYYY-MM-DD` in project settings, use normal commands
-
-## Post-Install Setup (mandatory)
-
-### 1. Disable telemetry
-
-Telemetry enabled by default (opt-out).
-
-```bash
-# Add BOTH — env var (immediate) + config (persistent)
-echo 'export RTK_TELEMETRY_DISABLED=1' >> ~/.zshrc
-
-mkdir -p ~/.config/rtk
-# In ~/.config/rtk/config.toml:
-# [telemetry]
-# enabled = false
-```
-
-### 2. Enable tee recovery
-
-Saves raw unfiltered output on failures. Auto-cleans (max 20 files).
-
-```toml
-# In ~/.config/rtk/config.toml:
-[tee]
-enabled = true
-mode = "failures"
-max_files = 20
-max_file_size = 1048576
-```
-
-### 3. Enable hook audit logging
-
-```bash
-echo 'export RTK_HOOK_AUDIT=1' >> ~/.zshrc
-```
-
-### Reference config (`~/.config/rtk/config.toml`)
-
-```toml
-[telemetry]
-enabled = false
-
-[tracking]
-enabled = true
-history_days = 30
-
-[tee]
-enabled = true
-mode = "failures"
-max_files = 20
-max_file_size = 1048576
-
-[display]
-colors = true
-emoji = true
-max_width = 120
-```
-
-## When to use rtk
-
-| Command | Use rtk? |
-|---|---|
-| `git status/log` | ✅ Always |
-| `git push/pull` | ✅ Always |
-| Test runners (`cargo test`, `npm test`, `phpunit`) | ✅ Always |
-| Linters (`phpstan`, `eslint`, `tsc`) | ✅ Always |
-| `docker compose ps/logs` | ✅ Always |
-| Short commands (< 5 lines expected) | ❌ No overhead benefit |
-| Commands piped to `grep`/`tail` already | ❌ Already filtered |
-
-## Never use rtk for
-
-| Command | Why |
-|---|---|
-| `git diff` | ⛔ Silent truncation at ~50 changes — LLM decides on incomplete data (Issue #827) |
-| `rtk read` | ⛔ Same truncation risk — use `cat`/`view` instead |
-| Any command where **completeness matters** | ⛔ rtk may strip context needed for correct decisions |
-
-Debugging/reviewing diffs → raw command, no rtk.
-
-## Project-Local Filters
-
-`.rtk/filters.toml` (project root, Git-versioned). Overrides global filters.
-Covered: PHPStan, Pest, ECS, Rector, Docker Compose, Artisan, Composer.
+- Default to `auto`. Justify `always`.
+- If >50% of conversations don't need a rule → it must be `auto`.
+- `optimize-agents` command checks this and suggests changes.
 
 ---
 
@@ -1041,6 +1229,185 @@ Covered: PHPStan, Pest, ECS, Rector, Docker Compose, Artisan, Composer.
 - Stay within the established project structure and conventions.
 - When unsure about the scope, ask the user.
 - NEVER commit, push, merge, rebase, or force-push without explicit user permission.
+
+---
+
+# size-enforcement
+
+- Split by responsibility, not by length.
+
+- Rules must stay short, constraint-only, and easy to scan.
+- Skills must remain executable with clear workflow and validation.
+- Commands must orchestrate, not implement detailed workflows.
+- Guidelines must not replace skill execution.
+- AGENTS.md must stay high-level and not contain workflows.
+- copilot-instructions.md must stay short and behavioral.
+
+- If a component grows too large, mixes responsibilities, or becomes hard to scan → split or refactor.
+
+- Prefer small files:
+  - Rules and system instructions should stay well below 200 lines
+  - Smaller (≈60 lines) is strongly preferred
+
+→ Size limits and details: `.augment/guidelines/agent-infra/size-and-scope.md`
+
+---
+
+# Skill Improvement Trigger
+
+## When to activate
+
+Read `skill_improvement_pipeline` from `.agent-settings`.
+
+- **If `false` or missing** → do nothing. Stop here.
+- **If `true`** → continue.
+
+## What counts as "meaningful task"
+
+Trigger after completing tasks that involve:
+- Debugging a non-trivial bug (root cause wasn't obvious)
+- Implementing a feature that required learning something new
+- A pattern that worked well and should be remembered
+- A mistake that cost >5 minutes to diagnose
+- A workaround for a tool limitation
+
+## What does NOT trigger
+
+- Config changes, typos, docs-only edits
+- Routine tasks with no surprises
+- Tasks where the agent is just following instructions step by step
+- Tasks shorter than 3 messages
+
+## Trigger behavior
+
+After completing a qualifying task, do a **quick mental check** (not a full workflow):
+
+1. Was there a concrete, actionable learning?
+2. Is it generalizable (not project-specific one-off)?
+3. Is it NOT already covered by an existing rule or skill?
+
+If all 3 are YES → propose to the user:
+
+```
+> 💡 Learning detected: "{one-sentence summary}"
+>
+> 1. Capture & improve — run the improvement pipeline
+> 2. Skip — not worth capturing
+```
+
+If user picks 1 → invoke the `skill-improvement-pipeline` skill.
+If user picks 2 → stop, do not ask again for this task.
+
+## Important
+
+- **Never auto-run the pipeline** — always ask first.
+- **Max 1 trigger per task** — don't ask repeatedly.
+- **Be honest** — if the learning is vague ("be more careful"), skip it silently.
+- **Do not interrupt the user's flow** — only trigger AFTER the task is done.
+
+---
+
+# Skill Quality
+
+## Minimum Sharpness
+
+Every skill must answer four questions. If ANY answer is weak, the skill is not done.
+
+| # | Question | Section | Standard |
+|---|---|---|---|
+| 1 | When should I use this? | `When to use` | Concrete trigger, not generic |
+| 2 | What exactly do I do? | `Procedure` | Executable steps with decisions |
+| 3 | How do I verify it worked? | `Procedure` (validation step) | Concrete checks, not "verify it works" |
+| 4 | What common failure must I avoid? | `Gotcha` + `Do NOT` | Real failure patterns, not platitudes |
+
+## Required Sections
+
+Every skill MUST have: `When to use`, `Procedure`, `Gotcha`, `Output format`, `Do NOT`.
+
+## Skill Independence
+
+```
+If a skill is not executable without opening a guideline, it is broken.
+```
+
+- Skills MAY reference guidelines for detailed conventions
+- Skills MUST NOT outsource their core workflow to guidelines
+- If removing guideline references makes the skill useless → the skill is too weak
+
+**Litmus test:** Cover all guideline references in the Procedure. Is it still executable?
+If not → the skill needs more own steps, decisions, and validation — not more guideline links.
+
+## Merge Preservation
+
+When merging or refactoring skills, the merged result MUST preserve:
+
+1. **Strongest validation** from each source skill
+2. **Strongest example** (good/bad contrast) from each source
+3. **Strongest anti-pattern** from each source
+4. **All concrete decision criteria** that differ between sources
+
+A merge is invalid if:
+- Validation got weaker than the strongest source
+- Examples were lost without replacement
+- Anti-pattern coverage decreased
+- The merged skill became a generic umbrella doc
+
+## Compression Preservation
+
+When compressing a skill, the compressed version MUST preserve:
+
+- Trigger quality (description + When to use)
+- All procedure steps that contain decisions
+- All concrete validation checks
+- All gotchas and anti-patterns
+- Strongest example (at minimum one good/bad contrast)
+
+Compression may remove:
+- Verbose explanations
+- Redundant examples (keep the strongest)
+- Commentary that doesn't affect execution
+
+## Refactor Safety
+
+When refactoring or optimizing skills:
+
+- NEVER weaken validation to pass linter
+- NEVER remove anti-patterns to reduce size
+- NEVER replace concrete checks with "verify it works"
+- NEVER merge skills if the result is broader than either source
+- ALWAYS run linter before and after — fail count must not increase
+
+---
+
+# Commands
+
+When the user types a command (`/create-pr`, `# create-pr`, or pastes a command file),
+**execute it immediately**. No questions, no opinions, no summaries, no confirmations.
+
+- Match the command file in `.augment/commands/` (or `agents/overrides/commands/`).
+- Read it, follow the steps in order.
+- Ask only when the command itself says "ask the user".
+- If the user pastes the **content** of a command file, treat it as an invocation — not a question.
+- **NEVER** respond with "looks good" or ask "shall I execute?" — just execute.
+- **NEVER** respond with "this is the current version" or "do you want to change something?" — just execute.
+- **NEVER** treat pasted command content as a review request — it's ALWAYS an invocation.
+- The only exception: the user's message contains an explicit instruction about the command
+  (e.g., "update this command" or "review this command"). In that case, follow the instruction instead.
+
+---
+
+# think-before-action
+
+- Always analyze before coding or modifying anything
+- Never guess behavior — verify using code, data, or tools
+- Prefer targeted inspection over brute-force trial-and-error
+- Use efficient tooling (e.g. jq, debugger, logs) instead of loading full data
+- Always verify results after changes (API calls, UI tests, etc.)
+- When behavior can be defined, prefer test-first or test-driven work
+- If requirements are unclear, ask a precise clarification question instead of making hidden assumptions
+- Refactors must preserve behavior, validation, examples, and anti-failure guidance unless there is an explicit reason to change them
+
+If analysis is skipped → results are unreliable.
 
 ---
 
@@ -1080,48 +1447,18 @@ or when the user says something like "continue" / "mach weiter".
 
 ## Fresh Output Over Memory
 
-**CRITICAL**: When tool/command returns value (branch name, file path, PR number),
-use EXACT value in subsequent calls. NEVER substitute from earlier conversation.
-Context decay causes silent mismatches — fresh output is only source of truth.
-
-## Conversation Freshness
-
-Monitor for **context decay** — long conversations degrade quality.
-
-**Suggest new chat when:**
-
-- Conversation exceeds **~20 user messages**
-- Topic **changes completely**
-- Re-reading files already in context
-- **15+ completed tasks** and new unrelated topic
-- Branch changed since start
-- ~24 hours passed
-
-**Repeat** at multiples: messages 20/40/60, tasks 15/30/45.
-**ONLY at exact thresholds.** Between: silence.
-
-**How to suggest:**
-
-Estimate token cost: responses × ~1,500 tokens.
-
-```
-> ⚡ This conversation has ~{N} messages (~{N×1500} tokens history cost — charged on EVERY request).
-> A fresh chat saves ~{N×1500} input tokens per request.
->
-> 1. Start fresh — I'll initiate a session handoff
-> 2. Continue here
-```
-
-**If the user picks 1:** Initiate a session handoff or start fresh.
+**CRITICAL**: When a tool or command returns a value (branch name, file path, PR number),
+use that EXACT value in subsequent API calls. NEVER substitute a value from earlier in
+the conversation. Context decay causes silent mismatches — fresh output is the only source of truth.
 
 ## Conversation Efficiency
 
 ### Act, skip narration
 
-- Skip repeating user's request — they know what they asked
-- Just do it — skip announcing intentions
-- Skip explaining obvious tool calls
-- Report only outcomes
+- **Skip repeating the user's request.** They know what they asked.
+- **Just do it** — skip announcing what you're about to do.
+- **Skip explaining obvious tool calls.** Reading a file needs no justification.
+- **Report only outcomes** — skip intermediate step summaries unless the user needs them.
 
 **This rule NEVER overrides user-interaction or command rules.**
 Token efficiency means fewer *unnecessary* words — NOT skipping required questions,
@@ -1129,138 +1466,42 @@ numbered options, or command steps. When a rule or command says "ask the user", 
 
 ### Stop early — max 2 retries
 
-- Command fails twice → stop, rethink, different approach
-- grep/search empty 2× → switch approach or ask
-- Max 3 diagnostic commands per error
-- One hypothesis at a time
+- **Command fails twice with same error** → stop, rethink. Try a different approach.
+- **grep/search returns nothing after 2 attempts** → switch approach or ask the user.
+- **Max 3 diagnostic commands** per error. Read the error, think, act.
+- **One hypothesis at a time.** Pick the most likely, try it. If it fails, ask.
 
 ### Keep intermediate output minimal
 
-Read `minimal_output` from the project settings file (default: `true`).
+Read `minimal_output` (default: `true`) and `play_by_play` (default: `false`) from project settings.
 
-When `true`:
-
-- **During multi-step work:** short bullet points only, no paragraphs.
-- **No thinking out loud** — the user doesn't need your reasoning process.
-- **Play-by-play**: Read `play_by_play` from the project settings file (default: `false`).
-  When `false`: don't narrate each tool call result. Silently investigate, then report the conclusion.
-  When `true`: briefly share intermediate findings as you go.
-    - ❌  (when false) "Hmm, exit code 1. Let me check... 18 errors. The errors are about method_exists..."
-    - ✅  (when false) *(silently investigate, then report the conclusion)*
-- **At the end:** concise summary — just what changed and what the user needs to know.
+When `minimal_output=true`:
+- Multi-step work: short bullet points only, no paragraphs.
+- No thinking out loud — user doesn't need your reasoning.
+- When `play_by_play=false`: silently investigate, report conclusion only.
+- When `play_by_play=true`: briefly share intermediate findings.
+- At the end: concise summary — what changed, what user needs to know.
 
 ### Don't re-read what you already know
 
-- Edited a file → the edit tool showed the result. Don't re-read the file.
-- Ran a command → you have the output. Don't re-run to "verify".
+- Edited a file → edit tool showed result. Don't re-read.
+- Ran a command → you have output. Don't re-run to "verify".
 - File in context from recent messages → don't reload.
-- Found a symbol → don't search again in a different way.
-
-### Search before reading
-
-- **Search first** — use codebase search tools, regex search in files, or `grep`.
-- **Don't load entire files** when you only need a few lines.
-- **Small files** (< 50 lines) — OK to read fully.
 
 ### Minimize tool calls
 
-- **Parallel reads** — don't read 5 files sequentially.
-- **Regex search** over full file reads when possible.
-- **View specific line ranges** when you know the exact location.
-- **One codebase search call** with all symbols — not 5 separate calls.
+- Parallel reads — don't read 5 files sequentially.
+- Regex search over full file reads. View specific line ranges.
+- One codebase search call with all symbols — not 5 separate.
+- Short question → short answer. Summary tables only for 3+ items.
 
-### Right-size responses
+### Exceptions
 
-- Short question → short answer.
-- Code change → show what changed, not the entire file.
-- Error fix → what was wrong, what you did. No history lesson.
-- Summary tables → only for 3+ items.
+- Small output (< 30 lines): read directly.
+- Debugging: OK to read more context around one error.
+- User explicitly asks for full output: show it.
 
-## Pattern: Redirect, Summarize, Target
-
-## Pattern: Redirect, Summarize, Target
-
-Every command that MAY produce more than ~30 lines of output:
-
-### Step 1: Redirect to file
-
-```bash
-docker compose exec -T <service> <command> 2>&1 > /tmp/<tool>-output.txt
-echo "EXIT=$?"
-```
-
-### Step 2: Read ONLY the summary
-
-```bash
-tail -5 /tmp/<tool>-output.txt
-```
-
-### Step 3: If errors exist, read ONLY what you need to fix
-
-```bash
-# Read specific error lines
-grep "ERROR\|error\|✏️" /tmp/<tool>-output.txt | head -20
-
-# Read a specific file's errors
-grep "app/Services/MyService.php" /tmp/<tool>-output.txt
-```
-
-**NEVER** do:
-
-- `cat /tmp/<tool>-output.txt` (loads everything)
-- Read the full output of a passing command (waste)
-- Read diffs you don't plan to act on
-
-## General Rules
-
-For tool-specific commands → see the `quality-workflow` rule.
-
-1. **ECS and Rector are trusted tools** — their configs define exactly what they do.
-   Run with `--fix`, don't read diffs, don't review changes. Trust the config.
-   The only verification needed is PHPStan + tests afterwards.
-
-2. **Both ECS and Rector always run with `--fix`** — dry-run diffs are a waste of tokens.
-   The workflow is: fix → verify (PHPStan + tests) → fix issues if any.
-
-3. **Exit code first**: Check `$?` before reading ANY output. If 0, you're done — don't read.
-
-4. **Summary line**: Most tools print a summary as the last few lines. That's all you need.
-
-5. **Targeted grep**: When you need details, `grep` for the specific file or error type.
-   Never read the full output "just in case".
-
-6. **Don't re-read**: Once you've read output and acted on it, don't read it again.
-   The file is still there if you need it, but don't re-load it into context.
-
-7. **Iterative fixing**: Fix one error at a time, re-run, check exit code.
-   Don't try to fix all errors from a single output read — the output becomes stale after each fix.
-
-## Exceptions
-
-- **Small output** (< 30 lines): Read directly, no redirect needed.
-- **Debugging**: OK to read more context around that one error.
-- **User explicitly asks** to see the full output: Show it.
-
-## Augment-specific
-
-_The following section applies only to Augment Code._
-
-### Ignored Skills Recovery
-
-Skills excluded via `.augmentignore` don't appear in `<available_skills>`.
-When you need expertise from an ignored skill during a task:
-
-1. **Read the SKILL.md directly** — `.augmentignore` only hides from the system prompt,
-   not from `view`. Use `view .augment/skills/{name}/SKILL.md` to load it on demand.
-2. **Continue working** — apply the skill's guidance for the current task.
-3. **After the task**, ask the user:
-
-```
-> 💡 I loaded the `{name}` skill manually — it's currently ignored in `.augmentignore`.
->
-> 1. Remove from ignore — this skill is relevant for the project
-> 2. Keep ignored — this was a one-off
-```
+→ Detailed patterns: `guidelines/agent-infra/output-patterns.md`
 
 ---
 
@@ -1396,45 +1637,22 @@ Skip any step = the claim is unverified.
 - Relying on partial verification (ran tests but not PHPStan)
 - ANY wording implying success without fresh evidence
 
-## Common verification commands
+## Verification commands
 
-### Laravel projects (inside Docker container)
-```bash
-php artisan test                     # Tests
-vendor/bin/phpstan analyse                # Static analysis (or: php artisan quality:phpstan)
-vendor/bin/rector process                 # Rector (or: php artisan quality:rector --fix)
-vendor/bin/ecs check --fix                # Code style (or: php artisan quality:ecs --fix)
-```
-
-### Frontend projects
-```bash
-npm test          # or: bun test
-npm run build     # or: bun run build
-npm run lint      # or: bun run lint
-npx tsc --noEmit  # TypeScript check
-```
-
-For tool-specific commands → see the `quality-workflow` rule.
+For specific commands → see the `quality-tools` skill.
 
 ## Minimum verification per task type
 
 | Task | Required evidence |
 |---|---|
-| Code change | Tests + PHPStan (command output with exit code) |
-| New feature | Tests + PHPStan + manual smoke test |
-| Bug fix | Regression test + full test suite |
-| Refactoring | Full test suite + PHPStan + Rector |
-| Config change | Relevant tests or verification command output |
+| Code change | Tests + PHPStan |
+| New feature | Tests + PHPStan + smoke test |
+| Bug fix | Regression test + full suite |
+| Refactoring | Full suite + PHPStan + Rector |
+| Config/migration | Relevant tests or command output |
 | API endpoint | curl/HTTP response output |
-| UI change | Screenshot or browser verification |
-| Migration | Migration run + rollback test |
 | Documentation only | No verification needed |
 
-**Never accept** these as proof:
-- "It should work"
-- "Looks correct"
-- "I've done similar before"
-- "The logic is sound"
-
-If you can't produce captured output, it's not verified.
+**Never accept** as proof: "should work", "looks correct", "logic is sound".
+No captured output = not verified.
 

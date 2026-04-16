@@ -14,7 +14,7 @@ Do NOT use when:
 - Installing new dependencies for the first time
 - Routine code changes unrelated to package versions
 
-## The upgrade workflow
+## Procedure: Upgrade a dependency
 
 ### 1. Assess
 
@@ -176,6 +176,12 @@ When `composer require` or `npm install` fails with conflicts:
 2. **Check if other packages need updating** — `composer why vendor/conflicting-pkg`.
 3. **Use `--dry-run`** first — `composer require vendor/pkg --dry-run`.
 4. **Never use `--ignore-platform-reqs`** in production — only for investigation.
+
+## Output format
+
+1. Updated dependency with version constraint change
+2. Breaking changes addressed with code modifications
+3. Test results confirming compatibility
 
 ## Auto-trigger keywords
 

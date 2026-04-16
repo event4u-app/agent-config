@@ -1,13 +1,16 @@
 # Controller Guidelines
 
-**Skills:** `laravel`, `openapi` | **Guidelines:** [validations.md](validations.md), [resources.md](resources.md)
+> Project-specific controller conventions. Thin controllers, single-action pattern, OpenAPI annotations.
+
+**Related Skills:** `api-endpoint`, `laravel`, `openapi`
+**Related Guidelines:** [validations.md](validations.md), [resources.md](resources.md)
 
 ## Core Rules
 
 - **Single Action Controllers** only (`__invoke()`) — no Resource Controllers
 - Each controller must have: FormRequest, OpenAPI schema attributes
-- Resources where applicable (Delete = empty, downloads = stream)
-- Thin — business logic in Services/Actions
+- Use Resource responses where applicable (not all controllers return JSON — e.g. Delete returns an empty response, file downloads return a file stream)
+- Thin controllers — business logic in Services/Actions
 
 ## Naming Schema
 
@@ -49,9 +52,15 @@ class CreateLinkController extends Controller
 }
 ```
 
-`$request->validated()` only. `Resource::make()`. Simple CRUD inline, complex → Service.
+**Key points:**
+- Use `$request->validated()` — never `$request->all()`
+- Use `Resource::make()` instead of `new Resource()` (easier to test)
+- Simple CRUD can live directly in the controller
+- Complex logic → Service class / Repository
 
-## Filters — `paginatedPipeline` with filter classes
+## Filters & Ordering
+
+Use the `pipeline` / `paginatedPipeline` macros with filter classes:
 
 ```php
 $links = Link::query()
@@ -62,7 +71,13 @@ $links = Link::query()
     ]);
 ```
 
-## OpenAPI — extend `{Action}ResourceRequestSchema`. `ValidationErrorResponse` for input, `ResourceNotFoundResponse` for single entity.
+## OpenAPI Documentation
+
+- Always extend `{Action}ResourceRequestSchema` for Create/Update/List (keeps controllers clean)
+- Show/Delete/Restore use the base schema classes directly
+- No per-endpoint auth/permission error schemas (documented globally)
+- **`ValidationErrorResponse`** must be added to **every** controller that accepts input (Create, Update, etc.)
+- **`ResourceNotFoundResponse`** must be added to every controller that queries a single entity (Show, Update, Delete, Restore)
 
 | Action  | Request Schema           | Response Schema            | Error Responses                                    |
 |---------|--------------------------|----------------------------|----------------------------------------------------|

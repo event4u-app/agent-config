@@ -1,0 +1,1 @@
+../../.augment/rules/preservation-guard.md

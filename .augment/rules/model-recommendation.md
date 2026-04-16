@@ -1,34 +1,41 @@
 ---
 type: "always"
+description: "Model recommendation — detect task complexity, suggest optimal model (Opus/Sonnet/GPT), check on task changes and command invocations"
+alwaysApply: true
 source: package
 ---
 
 # Model Recommendation
 
-Detect model from system prompt identity ("Claude Opus" → `opus`, "Claude Sonnet" → `sonnet`, "GPT" → `gpt`, "Gemini" → `gemini`).
+Detect the current model from your system prompt identity (e.g., "Claude Opus" → `opus`,
+"Claude Sonnet" → `sonnet`, "GPT" → `gpt`, "Gemini" → `gemini`).
 
-If `gemini` → immediately trigger Gemini warning (below).
+If the detected model is `gemini`, immediately trigger the Gemini warning (see below).
 
 ## When to act
 
-**BEFORE any work**, classify task:
+**BEFORE starting any work**, classify the task the user is asking for:
 
 - **opus**: refactoring, architecture, complex debugging, code review, multi-file changes
 - **sonnet**: daily coding, bug fixes, tests, simple features, quality checks, PRs, commits, config
 - **gpt**: complex agent flows, automations, research
 
-**MANDATORY check** — runs on:
-- First user message
-- Every clear topic/task change
-- **Command invocations** (e.g., `/create-pr` → sonnet task)
+**This check is MANDATORY** — not optional, not "nice to have". It runs:
+- On the **first user message** of a conversation
+- On **every clear topic/task change** (e.g., from refactoring to "create PR")
+- **When a command is invoked** (e.g., `/create-pr` → sonnet task)
 
-**⚠️ COMMAND INVOCATIONS ARE TASK CHANGES.** `/create-pr`, `/commit`, `/fix-pr-comments` = sonnet tasks even if previous task was opus. Most commonly missed check.
+**⚠️ COMMAND INVOCATIONS ARE TASK CHANGES.** When the user invokes a command (e.g., `/create-pr`,
+`/commit`, `/fix-ci`), ALWAYS re-evaluate the model before executing. Commands like `/create-pr`,
+`/commit`, `/fix-pr-comments` are sonnet tasks — even if the previous task was opus-level.
+This is the most commonly missed check. Do NOT skip it.
 
-**Priority over commands rule**: model check runs BEFORE `commands` rule. Show suggestion first, wait for response, then execute.
+**Priority over commands rule**: This check runs BEFORE the `slash-commands` rule. If a model switch
+is recommended, show the suggestion first. Only after the user responds, execute the command.
 
-**Ambiguous** → default **sonnet**.
+**If ambiguous** (could be opus or sonnet): default to **sonnet** — cheaper, and the user can escalate.
 
-If recommended ≠ detected, suggest switching:
+If the recommended model ≠ detected model, suggest switching **before doing any work**:
 
 ```
 > 💡 This looks like {task type} — best suited for **{recommended model}**.
@@ -38,20 +45,26 @@ If recommended ≠ detected, suggest switching:
 > 2. Stay on {detected model}
 ```
 
-**⛔ STOP AND WAIT.** Response ENDS after options. No files, no tasks, no coding. Wait for pick.
+**⛔ STOP AND WAIT.** After showing this suggestion, your response ENDS.
+Do NOT read files, create tasks, start coding, or do anything else in the same response.
+The ONLY content after the numbered options is the end of your message.
+Wait for the user to pick 1 or 2 before proceeding.
 
-→ Full mapping: `.augment/contexts/model-recommendations.md`
+→ Full mapping and heuristics: `.augment/contexts/model-recommendations.md`
 
 ## Switch confirmation
 
-- **1** → accept, continue. No follow-up.
-- **2** → accept. Don't ask again until task type changes.
-- Never ask more than once per task.
+- If user picks **1**: accept and continue. No follow-up question.
+- If user picks **2**: accept. Don't ask again until the task type changes.
+- **Never ask more than once per task** unless the task type changes significantly.
 
 ## Downgrade after Opus
 
-After opus phase complete → suggest switching to sonnet for implementation. Same options.
+After completing an opus-level phase (architecture done, root cause found, refactoring plan ready),
+suggest switching back to sonnet for implementation. Same numbered options.
 
 ## Gemini warning
 
-`gemini` detected → warn not recommended. Suggest best model for task. Same options. Repeat once if dismissed.
+If detected model is `gemini`: warn that Gemini is **not recommended** for this project.
+Suggest switching to the best model for the current task (opus/sonnet/gpt).
+Show the same numbered options as above. Repeat once if dismissed — then accept.

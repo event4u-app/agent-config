@@ -1,29 +1,67 @@
 ---
-skills: [agent-docs]
+name: roadmap-execute
+skills: [agent-docs-writing]
 description: Read and interactively execute a roadmap from agents/roadmaps/
+disable-model-invocation: true
 ---
 
 # roadmap-execute
 
 ## Instructions
 
-### 1. Find roadmap
+### 1. Find the roadmap
 
-List `agents/roadmaps/*.md` + `app/Modules/*/agents/roadmaps/*.md` (exclude `template.md`). One → confirm. Multiple → list. None → suggest `/roadmap-create`.
+- List all roadmap files: `agents/roadmaps/*.md` (project root) and `app/Modules/*/agents/roadmaps/*.md` (modules).
+- Exclude `template.md`.
+- If only one roadmap exists → use it (confirm with user).
+- If multiple exist → present a numbered list and let the user choose.
+- If none exist → tell the user and suggest running `roadmap-create`.
 
-### 2. Read + summarize — phases, progress, next open step
+### 2. Read and understand the roadmap
+
+- Read the full roadmap file.
+- Identify the **phases** and **steps/tasks** within each phase.
+- Determine which steps are already completed (look for checkboxes `[x]`, status markers, or "done" notes).
+- Present a summary to the user:
+  > "Roadmap: {title}"
+  > "Phase 1: {name} — 3/5 Schritte erledigt"
+  > "Phase 2: {name} — noch nicht begonnen"
+  > "Next open step: {step description}"
 
 ### 3. Execute step by step
 
-Per step: summarize → analyze codebase → plan → ask confirm. Yes → implement + quality + mark `[x]`. No → skip. Stop → summarize.
+For each open step:
 
-### 4. After each step — update roadmap, quality checks, "continue?"
+1. **Summarize** what needs to be done (in the user's language).
+2. **Analyze** the codebase to understand what's needed for this step.
+3. **Present a plan** — what files to change, what approach to take.
+4. **Ask for confirmation**: "Should I implement this step?"
+   - If yes → implement, run quality checks, mark step as done in the roadmap file.
+   - If no / skip → move to the next step.
+   - If the user wants to stop → stop and summarize progress.
 
-### 5. After phase — summarize, "continue Phase N+1?"
+### 4. After each step
 
-### 6. Done/stopped — progress summary, update file
+- Update the roadmap file: mark the completed step (e.g. `[x]` or add a completion note).
+- Run quality tools if code was changed (PHPStan at minimum).
+- Ask: "Continue with the next step?"
+
+### 5. After all steps in a phase
+
+- Summarize what was accomplished in the phase.
+- Ask: "Phase {N} complete. Continue with Phase {N+1}?"
+
+### 6. When done (or stopped)
+
+- Summarize total progress: steps completed, steps remaining.
+- Update the roadmap file with the current status.
+- **If ALL steps are done** → trigger the completion & archiving workflow from the `roadmap-management` skill.
 
 ### Rules
 
-- No commit/push. Ask before implementing. Quality checks. Break down large steps. Flag uncovered problems.
+- **Do NOT commit or push** — only apply local changes and update the roadmap file.
+- **Always ask before implementing** a step — never auto-execute.
+- **Run quality checks** after each code change.
+- If a step is unclear or too large, suggest breaking it down further.
+- If a step reveals a problem not covered in the roadmap, flag it to the user.
 

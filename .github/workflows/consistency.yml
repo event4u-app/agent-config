@@ -1,0 +1,111 @@
+name: Consistency
+
+on:
+  pull_request:
+    paths:
+      - ".augment.uncompressed/**"
+      - ".augment/**"
+      - "agents/**"
+      - "scripts/compress.py"
+      - "scripts/compress.sh"
+      - "scripts/check_references.py"
+      - "tests/**"
+      - "Taskfile.yml"
+      - ".github/workflows/consistency.yml"
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - ".augment.uncompressed/**"
+      - ".augment/**"
+      - "agents/**"
+      - "scripts/compress.py"
+      - "scripts/compress.sh"
+      - "scripts/check_references.py"
+      - "tests/**"
+      - "Taskfile.yml"
+      - ".github/workflows/consistency.yml"
+
+jobs:
+  consistency:
+    name: Sync + Generate Tools Consistency
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Task
+        uses: arduino/setup-task@v2
+
+      - name: Install Python dependencies
+        run: pip install pytest
+
+      - name: Show tool versions
+        run: |
+          python3 --version
+          task --version
+
+      - name: Verify current sync state
+        run: task sync-check
+
+      - name: Verify compression hashes
+        run: task sync-check-hashes
+
+      - name: Regenerate .augment from source
+        run: task sync
+
+      - name: Regenerate tool-specific outputs
+        run: task generate-tools
+
+      - name: Check cross-references
+        run: python3 scripts/check_references.py
+
+      - name: Check package portability
+        run: python3 scripts/check_portability.py
+
+      - name: Check compression quality
+        run: python3 scripts/check_compression.py
+
+      - name: Lint README
+        run: python3 scripts/readme_linter.py README.md --root .
+
+      - name: Run README linter tests
+        run: python3 -m pytest tests/test_readme_linter.py -v
+
+      - name: Check for unexpected changes
+        run: |
+          if ! git diff --quiet; then
+            echo "::error::Generated files are out of sync with source-of-truth."
+            echo
+            echo "Please run:"
+            echo "  task sync"
+            echo "  task generate-tools"
+            echo
+            echo "Changed files:"
+            git status --short
+            echo
+            echo "Diff:"
+            git diff --stat
+            exit 1
+          fi
+
+      - name: Upload diff artifact on failure
+        if: failure()
+        run: |
+          mkdir -p artifacts
+          git status --short > artifacts/status.txt || true
+          git diff > artifacts/consistency.diff || true
+
+      - name: Upload consistency artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: consistency-artifacts
+          path: artifacts/

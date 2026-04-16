@@ -1,6 +1,6 @@
 ---
 name: pest-testing
-description: "Use when writing Pest tests for Laravel — clear intent, good coverage, maintainable structure, and alignment with project testing conventions."
+description: "Use when writing, generating, or improving Pest tests for Laravel — clear intent, good coverage, maintainable structure, and alignment with project testing conventions."
 source: package
 ---
 
@@ -20,11 +20,11 @@ Use this skill for all Laravel testing tasks, especially when working with:
 - Database interaction tests
 - Factories, fakes, mocks, and test setup
 
-This skill extends `coder`, `laravel`, and `eloquent`.
+This skill extends `php-coder`, `laravel`, and `eloquent`.
 
-## Before writing tests
+## Procedure: Write Pest tests
 
-1. **Read the base skills first** — apply `coder`, `laravel`, and `eloquent` where relevant.
+1. **Read the base skills first** — apply `php-coder`, `laravel`, and `eloquent` where relevant.
 2. **Check the project's test framework** — confirm Pest is used and inspect existing tests.
 3. **Match the current test style** — naming, helpers, datasets, expectations, setup, traits, and folder structure.
 4. **Check available factories and seeders** — reuse existing test data patterns.
@@ -275,6 +275,11 @@ When generating Pest tests:
 - keep tests readable, isolated, and maintainable
 
 
+## Output format
+
+1. Pest test file with descriptive test names and clear assertions
+2. Tests organized by happy path, validation, edge cases
+
 ## Gotcha
 
 - Don't use `readonly` or `final` on Pest test helper classes — it breaks mocking.
@@ -287,6 +292,22 @@ When generating Pest tests:
 - Do NOT mark classes final if they need to be mocked via Mockery.
 - Do NOT use PHPUnit class-based syntax — use Pest syntax.
 
+## What to test (generation checklist)
+
+When generating new tests, focus on:
+- **Business logic**: calculations, status transitions, validation rules, data transformations
+- **Edge cases**: null, empty string, zero, negative numbers, boundary values, max length
+- **Error paths**: invalid input, missing dependencies, exception handling
+- **Different code branches**: if/else, early returns, fallback behavior
+
+What NOT to test:
+- Trivial getters/setters without logic
+- Parameter counts, method existence, class names
+- Framework internals (Eloquent, routing)
+- Private methods directly — test through public API
+
+**Quality over quantity** — 5 meaningful tests beat 20 trivial ones.
+
 ## Auto-trigger keywords
 
 - Pest test
@@ -294,3 +315,7 @@ When generating Pest tests:
 - test writing
 - test quality
 - TDD
+- generate tests
+- write tests
+- test coverage
+- test scenarios

@@ -1,0 +1,1 @@
+../../.augment/rules/laravel-translations.md

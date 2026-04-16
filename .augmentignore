@@ -1,0 +1,13 @@
+# Generated symlinks — Augment reads .augment/ directly
+.claude/skills/
+.claude/rules/
+.cursor/rules/
+.clinerules/
+.windsurfrules
+
+# Audit artifacts
+agents/roadmaps/*.json
+
+# Duplicates — Augment reads .augment/ (compressed), not .augment.uncompressed/
+# Keeping both indexed would double-count every skill/rule/command
+.augment.uncompressed/

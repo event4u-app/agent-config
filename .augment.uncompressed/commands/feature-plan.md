@@ -1,6 +1,8 @@
 ---
+name: feature-plan
 skills: [feature-planning]
 description: Interactively plan a feature — research, discuss, and create a structured feature document
+disable-model-invocation: true
 ---
 
 # feature-plan

@@ -1,23 +1,32 @@
 ---
-skills: [agent-docs]
+name: agent-status
+skills: [agent-docs-writing]
 description: Show current conversation stats — message count, token costs, task progress, next freshness check.
+disable-model-invocation: true
 ---
 
 # /agent-status
 
-Dashboard of conversation health and token costs.
+Displays a dashboard of the current conversation's health and token costs.
 
 ## Steps
 
 ### 1. Count messages
 
-Count responses (estimate, each ≈ 1 user message).
+Count your own responses in this conversation (each response ≈ 1 user message).
+This is an estimate — you cannot access exact counts.
 
 ### 2. Count tasks
 
-`view_tasklist` → count total, completed, in-progress, not started.
+Run `view_tasklist` and count:
+- Total tasks
+- Completed tasks
+- In-progress tasks
+- Not started tasks
 
 ### 3. Estimate token costs
+
+Calculate based on these estimates:
 
 | Component | How to estimate | Tokens |
 |---|---|---|
@@ -68,7 +77,7 @@ If history cost exceeds ~50,000: add a ⚠️ recommendation to start a fresh ch
 
 ## Rules
 
-- Estimates only — no real token counts
-- Markdown tables, no ASCII box art
-- Bold history cost as biggest variable
-- Always show savings
+- **Estimates only** — no access to real token counts, make that clear.
+- **Markdown tables** — never use ASCII box art, it breaks in chat UIs.
+- **History cost is the key insight** — bold it as the biggest variable cost.
+- **Always show the savings** — "Fresh chat saves X tokens/request" drives the point home.

@@ -6,43 +6,45 @@ source: package
 
 # Agent Documentation
 
-## When to read
+## When to read agent docs
 
-**Before ANY work**, read relevant docs:
+**Before starting ANY work**, read the relevant documentation:
 
-1. `AGENTS.md` (project root) — project-level setup/conventions
-2. `./agents/` — project-specific architecture, guidelines, domain docs
-3. `agents/contexts/domain/` — domain contexts relevant to current work
-4. `app/Modules/{Module}/agents/` — module-specific docs (incl. `agents/contexts/`)
-5. Package `./agents/` directory
-6. Existing roadmap for current work → follow its steps
+1. **Always read** `AGENTS.md` (if it exists in the project root) for project-level setup and conventions.
+2. **Always read** `./agents/` for project-specific architecture, guidelines, and domain docs.
+3. **If domain contexts exist** (`agents/contexts/domain/`) → read any that are relevant to the current work area.
+4. **If working on a module** → also read `app/Modules/{Module}/agents/` for module-specific docs,
+   including `agents/contexts/` within the module if it exists.
+5. **If working on a package** → read the package's `./agents/` directory.
+6. **If a roadmap exists** for the current work → read it first and follow its steps.
 
-## When to update
+## When to update agent docs
 
-After changes, check if docs need updating:
+After making changes, check if any agent docs need to be updated:
 
-- New module → create `app/Modules/{Module}/agents/`
-- Schema changed → update `agents/docs/database-setup.md`
-- New service/pattern → update relevant guidelines
-- Roadmap step done → mark `[x]`
-- Structural changes → update affected docs
+- **New module created** → create `app/Modules/{Module}/agents/` with at least a module description.
+- **Database schema changed** → update `agents/docs/database-setup.md` or equivalent.
+- **New service/pattern introduced** → update relevant guideline docs.
+- **Roadmap step completed** → mark it as done in the roadmap file (`[x]`).
+- **Structural changes** (new conventions, renamed classes, moved files) → update affected docs.
 
-If unsure → **ask the user**.
+If unsure whether a doc needs updating, **ask the user**.
 
-## Roadmaps
+## When to create roadmaps
 
-For significant multi-step/multi-session changes:
-- Ask user about creating roadmap in `agents/roadmaps/`
-- Use `roadmap-create` command
-- Ensures continuity across sessions/agents
+When working on a **significant change** that spans multiple steps or sessions:
+
+- Ask the user whether to create a roadmap in `agents/roadmaps/`.
+- Use the `roadmap-create` command if yes.
+- This ensures future sessions (and other agents) can pick up the work.
 
 ## Documentation language
 
-- All `.md` files in **English**
-- German/other language files → translate when touched
+- All `.md` files must be written in **English**.
+- If an existing file is in German or another language, translate it to English when you touch it.
 
 ## Do NOT
 
-- Create docs without real need
-- Duplicate info from `AGENTS.md` or `.github/copilot-instructions.md`
-- Write docs to document what you did — only what others need to know
+- Do NOT create docs unless there's a real need (new module, significant change, etc.).
+- Do NOT duplicate information that's already in `AGENTS.md` or `.github/copilot-instructions.md`.
+- Do NOT write docs just to document what you did — only document things others need to know.

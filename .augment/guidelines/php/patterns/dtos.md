@@ -12,7 +12,10 @@ Structured, immutable data container for passing data between layers.
 ✅ Returning structured data from a service
 ✅ Replacing `array<string, mixed>` in method signatures
 
-### Prefer project's DTO base class — check `composer.json` for DTO packages
+### Prefer a DTO base class (if available)
+
+If the project uses a DTO package with attribute-based mapping (e.g., `SimpleDto`, `spatie/data-transfer-object`),
+new DTOs **should extend the project's base class**. Check `composer.json` for DTO-related packages.
 
 #### Attribute-based DTO Example
 
@@ -75,7 +78,16 @@ class EquipmentDto extends SimpleDto
 }
 ```
 
-#### Attributes: `#[Map]` (column mapping), `#[Length]`, `#[Decimal]`, `#[Unsigned]`, `#[DateTimeFormat]`, `#[Email]`, `#[ConvertEmptyToNull]`, `#[HasModel]` (Eloquent link)
+#### Key attribute-based DTO features
+
+- **`#[Map('db_column')]`** — Maps a readable property name to a database column or API field name
+- **`#[Length(n)]`** — Validates max string length
+- **`#[Decimal(precision, scale)]`** — Validates decimal format
+- **`#[Unsigned]`** — Validates non-negative values
+- **`#[DateTimeFormat('Y-m-d H:i:s')]`** — Casts to/from Carbon with the given format
+- **`#[Email]`** — Validates email format
+- **`#[ConvertEmptyToNull]`** — Class-level: converts empty strings to `null`
+- **`#[HasModel(Model::class)]`** — Links the DTO to an Eloquent model for `fromModel()` / `toModel()`
 
 #### Creating and using DTOs
 
@@ -96,9 +108,21 @@ $model = $dto->toModel(Equipment::class);
 $dtos = EquipmentDto::collection($arrayOfData);
 ```
 
-Extend base class, constructor promotion, `#[Map]` for field names, validation attributes. No business logic.
+#### Attribute-based DTO rules
 
-### Plain DTO (fallback — no package or simple value transfer)
+- Extend the project's DTO base class
+- Use constructor property promotion with public properties
+- Use `#[Map('column_name')]` to map properties to database/API field names
+- Use validation attributes (`#[Length]`, `#[Decimal]`, `#[Email]`, etc.) for constraints
+- Use `#[ConvertEmptyToNull]` at class level when empty strings should become `null`
+- Use `#[HasModel(Model::class)]` when the DTO maps to an Eloquent model
+- No business logic — just data and mapping
+- Check if the base class requires mutable or immutable properties
+
+### Plain DTO (Fallback)
+
+When no DTO package is available or attribute-based mapping is not suitable (e.g. for very simple
+value transfer between methods), a plain readonly DTO is acceptable:
 
 ```php
 final readonly class CreateOrderDTO
@@ -123,9 +147,22 @@ final readonly class CreateOrderDTO
 }
 ```
 
-`final readonly class`, constructor promotion, static factory. No logic.
+#### Plain DTO Rules
 
-## Value Object — domain concept with validation + equality (`Money`, `Email`, `DateRange`)
+- Always `final readonly class`
+- Constructor property promotion
+- Static factory method `fromRequest()`, `fromArray()`, etc.
+- No business logic — just data
+
+## Value Object
+
+Represents a domain concept with validation and equality semantics.
+
+### When to Use
+
+✅ Domain concepts: `Money`, `Email`, `DateRange`, `Coordinates`
+✅ Value needs validation on creation
+✅ Two instances with same values should be considered equal
 
 ### Example
 

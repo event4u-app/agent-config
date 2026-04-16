@@ -16,7 +16,15 @@ Use this skill when sending notifications to users or external systems:
 
 For **Mailables** (complex email templates, attachments), see [laravel-mail](../laravel-mail/SKILL.md).
 
-## Creating notifications
+## Procedure: Create a notification
+
+1. **Generate class** — `php artisan make:notification InvoiceCreated`.
+2. **Choose channels** — Mail, database, Slack, or custom. Implement `via()`.
+3. **Build content** — Implement `toMail()`, `toArray()`, etc. for each channel.
+4. **Queue it** — Add `ShouldQueue` interface for non-blocking delivery.
+5. **Verify** — Send test notification, confirm delivery on all channels.
+
+### Example
 
 ```bash
 php artisan make:notification InvoiceCreated
@@ -133,6 +141,11 @@ public function via(object $notifiable): array
 - **Use `via()` for channel logic** — don't hardcode channels, respect user preferences.
 - **On-demand for external recipients** — use `Notification::route()` for non-user targets.
 - **Database notifications for in-app** — use the notifications table for in-app notification centers.
+
+## Output format
+
+1. Notification class with via() and channel-specific methods
+2. Queued dispatch with proper serialization
 
 ## Auto-trigger keywords
 

@@ -1,6 +1,8 @@
 ---
+name: review-changes
 skills: [code-review]
 description: Self-review local changes before creating a PR
+disable-model-invocation: true
 ---
 
 # review-changes

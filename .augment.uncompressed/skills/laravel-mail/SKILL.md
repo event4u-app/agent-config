@@ -17,7 +17,14 @@ Use this skill when building email functionality:
 For **simple notification emails** (one-off messages), see [laravel-notifications](../laravel-notifications/SKILL.md).
 Use Mailables when you need full control over the email template.
 
-## Creating Mailables
+## Procedure: Create a Mailable
+
+1. **Generate class** — `php artisan make:mail InvoiceMail --markdown=emails.invoice`.
+2. **Configure** — Set subject, from, attachments, queuing (`ShouldQueue`).
+3. **Create template** — Markdown template in `resources/views/emails/`.
+4. **Verify** — Send test email, confirm rendering and delivery.
+
+### Example
 
 ```bash
 php artisan make:mail InvoiceMail --markdown=emails.invoice
@@ -156,6 +163,12 @@ Route::get('/mail-preview', function () {
 - **Use Envelope + Content** pattern (Laravel 11+) — not the old `build()` method.
 - **Test with `Mail::fake()`** — verify recipients, content, and queuing.
 - **Keep Mailables focused** — one Mailable per email type.
+
+## Output format
+
+1. Mailable class with envelope, content, and attachments
+2. Blade/Markdown email template
+3. Queued mail dispatch integration
 
 ## Auto-trigger keywords
 

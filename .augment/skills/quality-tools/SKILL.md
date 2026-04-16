@@ -8,22 +8,28 @@ source: package
 
 ## When to use
 
-Running/configuring code quality tools:
-- **PHP**: PHPStan, Rector, ECS
-- **JS/TS**: Biome, TypeScript, Jest/Vitest
+Use this skill whenever running or configuring code quality tools:
+
+- **PHP**: PHPStan (static analysis), Rector (automated refactoring), ECS (coding standards)
+- **JS/TS**: Biome (linting + formatting), TypeScript compiler (type checking), Jest/Vitest (tests)
 
 ## Language detection
 
-Detect by changed file extensions:
+Detect which tools to run based on **what files were changed**:
 
 ```bash
+# Check changed file extensions (diff against base branch)
 git diff --name-only origin/main..HEAD | grep -E '\.(php)$'       # → PHP tools
 git diff --name-only origin/main..HEAD | grep -E '\.(js|ts|tsx)$'  # → JS/TS tools
 ```
 
-Both changed → run both pipelines.
+If both PHP and JS/TS files changed → run **both** pipelines.
 
-## Related: `quality-workflow` rule, `php-coding` rule (PHPStan), `verify-before-complete` rule
+## Related rules and guidelines
+
+- `verify-before-complete` rule — timing: run quality tools ONCE at the end, not after each edit
+- `php-coding` rule → PHPStan section — inline ignores, PHPDoc rules
+- `verify-before-complete` rule — must run quality checks before claiming work is done
 
 ---
 
@@ -31,7 +37,8 @@ Both changed → run both pipelines.
 
 ## Tool Detection
 
-Check `composer.json` for installed tools. Use first matching command style:
+Check `composer.json` to determine which tools are available and how to run them.
+Use the **first matching** command style:
 
 | `composer.json` contains | Command style | Example |
 |---|---|---|
@@ -40,9 +47,12 @@ Check `composer.json` for installed tools. Use first matching command style:
 | `rector/rector` | `vendor/bin/rector` | `vendor/bin/rector process` |
 | `symplify/easy-coding-standard` | `vendor/bin/ecs` | `vendor/bin/ecs check --fix` |
 
-**Priority:** `galawork/php-quality` wrapper wins if installed (adds git-aware execution, caching, baseline mgmt).
+**Priority:** If `galawork/php-quality` is installed, always prefer its wrapper commands — they add
+git-aware execution, caching, automatic baseline regeneration, and memory management.
 
-None installed → skip quality checks, inform user. All commands inside Docker if used.
+If none of the above is installed → skip quality checks, inform the user.
+
+All commands run **inside the Docker container** if Docker is used (`docker compose exec` or `make console`).
 
 ## Commands
 
@@ -50,106 +60,193 @@ None installed → skip quality checks, inform user. All commands inside Docker 
 
 ```bash
 # Native:
-vendor/bin/phpstan analyse
-vendor/bin/phpstan analyse --memory-limit=512M
+vendor/bin/phpstan analyse                          # Analyse all configured paths
+vendor/bin/phpstan analyse --memory-limit=512M      # With memory limit
+vendor/bin/phpstan analyse --error-format=github    # CI-friendly format
 
-# Wrapper (galawork/php-quality):
+# With galawork/php-quality wrapper:
 php artisan quality:phpstan          # Laravel
 composer quality:phpstan             # Composer
 ```
 
-**Native flags:** `--memory-limit=SIZE`, `--debug`, `--error-format=FORMAT`, `--pro`
-**Wrapper-only flags:** `--baseline`, `--ignore-git`, `--xdebug`
+**Native flags:**
+
+| Flag | Description |
+|---|---|
+| `--memory-limit=SIZE` | Set memory limit (e.g. `512M`, `1G`) |
+| `--debug` | Activate debug mode |
+| `--error-format=FORMAT` | Output format: `table` (default), `github`, `gitlab` |
+| `--pro` | Toggle PHPStan Pro |
+
+**Wrapper-only flags** (only with `galawork/php-quality`):
+
+| Flag | Description |
+|---|---|
+| `--baseline` | Generate/update phpstan baseline file |
+| `--ignore-git` | Skip Git check, analyse all files |
+| `--xdebug` | Activate Xdebug mode |
 
 ### ECS — Easy Coding Standard
 
 ```bash
 # Native:
-vendor/bin/ecs check                 # Dry-run
-vendor/bin/ecs check --fix           # Auto-fix
+vendor/bin/ecs check                  # Dry-run
+vendor/bin/ecs check --fix            # Auto-fix
 
-# Wrapper (galawork/php-quality):
-php artisan quality:ecs --fix        # Laravel
-composer quality:ecs -- --fix        # Composer
+# With galawork/php-quality wrapper:
+php artisan quality:ecs --fix         # Laravel
+composer quality:ecs -- --fix         # Composer
 ```
 
-**Native flags:** `--fix`, `--clear-cache`
-**Wrapper-only flags:** `--ignore-git`, `--paths-to-scan`, `--source-branch`, `--target-branch`
+**Native flags:**
+
+| Flag | Description |
+|---|---|
+| `--fix` | Fix errors automatically |
+| `--clear-cache` | Clear the ECS cache |
+
+**Wrapper-only flags** (only with `galawork/php-quality`):
+
+| Flag | Description |
+|---|---|
+| `--ignore-git` | Skip Git check, check all files |
+| `--paths-to-scan[=PATHS]` | Custom paths, e.g. `--paths-to-scan='["./core"]'` |
+| `--source-branch[=BRANCH]` | Source branch (default: HEAD) |
+| `--target-branch[=BRANCH]` | Target branch to compare against |
 
 ### Rector — Automated Refactoring
 
 ```bash
 # Native:
-vendor/bin/rector process            # Auto-fix
-vendor/bin/rector process --dry-run  # Preview
+vendor/bin/rector process              # Auto-fix
+vendor/bin/rector process --dry-run    # Preview changes
 
-# Wrapper (galawork/php-quality):
-php artisan quality:rector --fix     # Laravel
-composer quality:rector -- --fix     # Composer
+# With galawork/php-quality wrapper:
+php artisan quality:rector --fix       # Laravel
+composer quality:rector -- --fix       # Composer
 ```
 
-**Native flags:** `--dry-run`, `--clear-cache`
-**Wrapper-only flags:** `--ignore-git`, `--paths-to-scan`, `--source-branch`, `--target-branch`
+**Native flags:**
+
+| Flag | Description |
+|---|---|
+| `--dry-run` | Preview changes without applying |
+| `--clear-cache` | Clear the Rector cache |
+
+**Wrapper-only flags** (only with `galawork/php-quality`):
+
+| Flag | Description |
+|---|---|
+| `--ignore-git` | Skip Git check, check all files |
+| `--paths-to-scan[=PATHS]` | Custom paths |
+| `--source-branch[=BRANCH]` | Source branch (default: HEAD) |
+| `--target-branch[=BRANCH]` | Target branch to compare against |
 
 ### Combined Commands
 
-No native single command. Run in sequence:
+There is no native single command for running all three tools. Run them in sequence:
 
 ```bash
-# Native:
+# Full pipeline (native):
 vendor/bin/rector process && vendor/bin/ecs check --fix && vendor/bin/phpstan analyse
 
-# Wrapper:
-php artisan quality:finalize         # Rector + ECS + PHPStan
+# With galawork/php-quality wrapper:
+php artisan quality:refactor --fix     # Rector + ECS
+php artisan quality:finalize           # Rector + ECS + PHPStan (full pipeline)
 ```
 
-## Workflow after code changes
+## Procedure: Run quality checks
 
-1. Run PHPStan → fix errors
-2. Run Rector + ECS with auto-fix
-3. Run PHPStan again → verify no new issues. Errors → repeat from 2.
+1. Run PHPStan — fix all errors
+2. Run Rector + ECS with auto-fix — fix style + refactoring
+3. Run PHPStan again — verify step 2 didn't introduce new issues
+
+If step 3 finds errors → fix and repeat from step 2.
 
 Detect commands from project (see Tool Detection above).
 
 ## Configuration
 
-Configs typically in project root. Do NOT modify without user permission.
-Detect: check root for `phpstan.neon`, `ecs.php`, `rector.php`.
+Config files are typically in the **project root**. Do NOT modify without explicit user permission.
+
+Detect config location:
+- Check project root first: `phpstan.neon`, `ecs.php`, `rector.php`
+- Some projects use `phpstan.neon.dist` instead of `phpstan.neon`
+
+### Standard config files
 
 | File | Tool | Purpose |
 |---|---|---|
-| `phpstan.neon` | PHPStan | Level, paths, extensions, ignoreErrors, disallowed calls |
-| `phpstan-baseline.neon` | PHPStan | Baseline (auto-managed, do NOT edit) |
-| `ecs.php` | ECS | Rule sets, configured rules, skip list |
-| `rector.php` | Rector | Rule sets, PHP version sets, skip list |
+| `phpstan.neon` | PHPStan | Level, paths, extensions, `ignoreErrors`, disallowed calls |
+| `phpstan-baseline.neon` | PHPStan | Baseline for existing errors (auto-managed, do NOT edit) |
+| `ecs.php` | ECS | Code style: rule sets, configured rules, skip list |
+| `rector.php` | Rector | Refactoring: rule sets, PHP version sets, skip list |
 
-Read actual config files for active rules. Common patterns: PHPStan at high levels (8-9) with disallowed calls, ECS with PSR-12, Rector with PHP version sets.
+### Understanding the project's config
+
+Read the actual config files to understand what rules are active:
+
+- **phpstan.neon**: Check `level`, `paths`, `ignoreErrors`, `includes` (baselines, extensions)
+- **ecs.php**: Check which rule sets are active (PSR-12, PHP-CS-Fixer sets), skip list
+- **rector.php**: Check PHP version sets, active rule sets, skip list
+
+Common patterns across projects:
+- PHPStan at high levels (8-9) with `disallowedFunctionCalls` banning `var_dump()`, `dd()`
+- ECS with PSR-12 base, trailing commas, Yoda style
+- Rector with PHP version migration sets and naming conventions
 
 ## Baseline policy
 
-**NEVER** edit baseline files by hand. If a wrapper tool is installed, it may auto-regenerate after clean run.
+- **NEVER** edit `phpstan-baseline.neon` by hand.
+- **NEVER** add errors, update counts, or regenerate manually.
+- If a wrapper tool (e.g. `galawork/php-quality`) is installed, it may regenerate the baseline automatically.
 
 ## PHPStan error handling
 
-Priority: 1. Fix code → 2. Add type hints/PHPDoc → 3. Inline ignore (last resort, confirmed false positives only):
-```php
-// @phpstan-ignore-next-line — false positive: reason here
-```
+Priority order for dealing with PHPStan errors:
 
-`ignoreErrors` in `phpstan.neon` allowed ONLY for structural toolchain limitations (broad patterns, not individual files). Unsure → ask user.
+1. **Fix the code** — always the first choice. Fix the actual type issue.
+2. **Add type hints / PHPDoc** — if the code is correct but PHPStan can't infer the type.
+3. **Inline ignore (last resort)** — only for confirmed false positives:
+   ```php
+   // @phpstan-ignore-next-line — false positive: reason here
+   ```
 
-**NEVER:** add to baselines, ignore individual issues, omit reason comment.
+### When `phpstan.neon` changes ARE allowed
 
-## Testing: Always Pest (not PHPUnit). `tests/Unit/` auto-uses `UnitTestCase`.
+Adding `ignoreErrors` entries to `phpstan.neon` is allowed when:
+
+- The error is a **structural limitation** of the toolchain (e.g., Pest tests bind `$this` at runtime, PHPStan can't resolve `artisan()`,
+  `get()`, etc. on `PHPUnit\Framework\TestCase`)
+- The pattern applies **broadly** to a category of files (e.g., all test files), not just one specific line
+- The fix would require abandoning the project's conventions (e.g., rewriting Pest tests as PHPUnit classes)
+
+**If unsure whether a `phpstan.neon` change is appropriate → ask the user before making the change.**
+
+### NEVER do these
+
+- Add entries to baseline files (`phpstan-baseline.neon`)
+- Add `ignoreErrors` for individual files or specific code issues that should be fixed
+- Use `@phpstan-ignore-next-line` without a reason comment
+
+See also: `php-coding` rule → PHPStan section.
+
+## Testing framework
+
+- **Always write tests in Pest**, not PHPUnit class syntax — unless the user explicitly asks for PHPUnit.
+- Pest tests in `tests/Unit/` automatically use `UnitTestCase` as the base class (configured in `tests/Pest.php`).
+- PHPStan cannot fully resolve Pest's runtime bindings — this is handled via `ignoreErrors` patterns in `phpstan.neon`.
 
 ## Git-aware execution
 
-| Flag | Effect |
-|---|---|
-| (default) | Only changed files |
-| `--ignore-git` | All files (cache applies) |
-| `--clear-cache` | Changed files, no cache |
-| `--ignore-git --clear-cache` | Complete fresh run |
+By default, all tools only check files changed since the last commit.
+
+| Flag                         | Effect                                        |
+|------------------------------|-----------------------------------------------|
+| (default)                    | Only changed files (fast, for iterative work) |
+| `--ignore-git`               | All files (cache still applies)               |
+| `--clear-cache`              | Changed files, but ignore cache               |
+| `--ignore-git --clear-cache` | Complete fresh run of all files               |
 
 ---
 
@@ -157,11 +254,26 @@ Priority: 1. Fix code → 2. Add type hints/PHPDoc → 3. Inline ignore (last re
 
 ## Detection
 
-Check `package.json` devDependencies: `@biomejs/biome` (Biome), `typescript` (TS), `jest`/`vitest` (tests), `eslint`/`prettier` (legacy — check if Biome replaces).
+Check `package.json` for available tools:
 
-## Biome — Linting + Formatting (replaces ESLint + Prettier)
+| Indicator                             | Tool                                                          |
+|---------------------------------------|---------------------------------------------------------------|
+| `@biomejs/biome` in devDependencies   | **Biome** — linting + formatting                              |
+| `typescript` in devDependencies       | **TypeScript** — type checking                                |
+| `jest` or `vitest` in devDependencies | **Test runner**                                               |
+| `eslint` in devDependencies           | **ESLint** — legacy linting (check if Biome replaces it)      |
+| `prettier` in devDependencies         | **Prettier** — legacy formatting (check if Biome replaces it) |
 
-Config: `biome.json` / `biome.jsonc` — formatter, linter rules, import sorting.
+## Biome — Linting + Formatting
+
+Biome replaces ESLint + Prettier in one tool.
+
+### Config
+
+- Config file: `biome.json` or `biome.jsonc`
+- Includes formatter settings (indent style, line width, trailing commas)
+- Includes linter rules (recommended + custom overrides)
+- Includes import sorting (via `assist.actions.source.organizeImports`)
 
 ### Commands
 
@@ -179,24 +291,116 @@ npx biome format --write .
 npx biome lint .
 ```
 
-Prefer npm scripts (`npm run biome`, `npm run biome:fix`) over raw `npx` when they exist.
+### Via npm scripts (preferred)
 
-## TypeScript — `npx tsc --noEmit` or `npm run tscheck`. Config: `tsconfig.json`, `strict: true`.
+Check `package.json` scripts — projects typically define:
 
-## Jest/Vitest — `npm test`, `npx jest path/to/test.spec.ts`, `--coverage`, `--watch`.
+```bash
+npm run biome          # Check (dry-run)
+npm run biome:fix      # Auto-fix
+```
 
-## JS/TS Workflow
+Always prefer npm scripts over raw `npx` commands when they exist.
 
-1. `npx biome check --write .` → auto-fix
-2. `npx tsc --noEmit` → type check
-3. `npm test` → tests. Type errors → fix, re-run step 1.
+## TypeScript — Type Checking
 
-## Execution: PHP inside Docker. JS/TS on host or Node container (check Makefile/Taskfile/docker-compose).
+### Commands
+
+```bash
+# Type check without emitting files
+npx tsc --noEmit
+
+# Via npm script (preferred)
+npm run tscheck
+```
+
+### Config
+
+- Config file: `tsconfig.json` (may have `tsconfig.app.json`, `tsconfig.node.json` for different targets)
+- `strict: true` should be enabled in all projects
+- Check `compilerOptions.paths` for import aliases
+
+## Jest / Vitest — Testing
+
+### Commands
+
+```bash
+# Run all tests
+npm test
+
+# Run specific test file
+npx jest path/to/test.spec.ts
+
+# Run with coverage
+npx jest --coverage
+
+# Watch mode
+npx jest --watch
+```
+
+## JS/TS Quality Workflow
+
+After JS/TS code changes, run this sequence:
+
+```
+1. npx biome check --write .     → Auto-fix formatting + linting
+2. npx tsc --noEmit              → Verify type safety
+3. npm test                      → Run test suite
+```
+
+Or via npm scripts:
+
+```
+1. npm run biome:fix             → Auto-fix
+2. npm run tscheck               → Type check
+3. npm test                      → Tests
+```
+
+If step 2 finds type errors → fix them in code, then re-run step 1 (Biome may reformat).
+
+## Execution environment
+
+### PHP tools
+
+All PHP commands run **inside the Docker container** (`make console` or `docker compose exec`).
+
+### JS/TS tools
+
+JS/TS commands run on the **host** or in a **Node container**, depending on the project setup:
+
+1. Check if a `Makefile` / `Taskfile.yml` has targets for linting/testing.
+2. Check if `docker-compose.yml` has a Node service.
+3. If neither → run on the host directly.
+
+## Output format
+
+1. Tool exit code and error count summary
+2. Fixed issues or remaining errors to address
+
+## Auto-trigger keywords
+
+- quality check
+- quality fix
+- PHPStan
+- Rector
+- ECS
+- code style
+- lint
+- Biome
+- type check
+- tscheck
+
+## Gotcha
+
+- Always check exit code first — if 0, don't read output (saves tokens).
+- Rector + ECS can introduce PHPStan errors — always re-run PHPStan after fixing.
+- The wrapper (`galawork/php-quality`) has different flags than native tools.
+- Docker commands need `-T` flag to avoid TTY issues in non-interactive mode.
 
 ## Do NOT
 
-- Run `vendor/bin/phpstan`/`vendor/bin/ecs` directly — use wrapper
-- Edit `phpstan-baseline.neon` — auto-managed
-- Skip `tsc --noEmit` for TS projects
-- Run Biome without `--write` when fixing
-- Mix ESLint + Biome in same project
+- Do NOT run `vendor/bin/phpstan` or `vendor/bin/ecs` directly — use the wrapper.
+- Do NOT manually edit `phpstan-baseline.neon` — it's auto-managed.
+- Do NOT skip type checking (`tsc --noEmit`) for TypeScript projects.
+- Do NOT run Biome without `--write` if the intent is to fix (otherwise it's dry-run only).
+- Do NOT mix ESLint + Biome in the same project — check which one is active.

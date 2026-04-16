@@ -1,6 +1,8 @@
 ---
-skills: [agent-docs]
+name: optimize-rtk-filters
+skills: [agent-docs-writing]
 description: Create or optimize project-local rtk filters based on the actual toolchain
+disable-model-invocation: true
 ---
 
 # optimize-rtk-filters
@@ -13,9 +15,11 @@ description: Create or optimize project-local rtk filters based on the actual to
 which rtk
 ```
 
-- If **not installed** → stop. This command requires rtk. Suggest running the install flow from the `rtk` rule.
+- If **not installed** → stop. This command requires rtk. Suggest running the install flow from the `rtk-output-filtering` skill.
 
-### 2. Detect toolchain
+### 2. Detect the project toolchain
+
+Scan the project to determine which CLI tools are used:
 
 | Check | Tool detected |
 |---|---|
@@ -23,7 +27,7 @@ which rtk
 | `composer.json` contains `pestphp/pest` or `phpunit/phpunit` | Pest / PHPUnit |
 | `composer.json` contains `symplify/easy-coding-standard` | ECS |
 | `composer.json` contains `rector/rector` | Rector |
-| `composer.json` contains `galawork/php-quality` or scripts like `quality:phpstan` | Artisan quality wrapper |
+| `composer.json` contains scripts like `quality:phpstan` | Artisan quality commands |
 | `package.json` contains `playwright` | Playwright |
 | `package.json` contains `vitest` or `jest` | JS test runner |
 | `package.json` contains `biome` or `eslint` | JS linter |
@@ -33,9 +37,18 @@ which rtk
 | `Cargo.toml` exists | Rust / Cargo |
 | `go.mod` exists | Go |
 
-### 3. Read existing filters (preserve custom entries)
+### 3. Read existing filters
 
-### 4. Generate filters per detected tool
+```bash
+cat .rtk/filters.toml 2>/dev/null || echo "NO_FILTERS_FILE"
+```
+
+- If file exists → read it, preserve custom entries the user may have added.
+- If file does not exist → create `.rtk/` directory.
+
+### 4. Generate optimized filters
+
+For each detected tool, create a filter entry following this template:
 
 ```toml
 [filters.<tool-name>]
@@ -46,7 +59,16 @@ strip_lines_matching = [<patterns for noise lines>]
 max_lines = <appropriate limit>
 ```
 
-Rules: `strip_ansi = true` always. `max_lines`: linters 80, tests 60, builds 40, status 30. `match_command`: match both direct + wrapper invocations.
+**Filter design rules:**
+
+- `strip_ansi = true` — always, ANSI codes waste tokens.
+- `strip_lines_matching` — target empty lines, progress bars, framework boilerplate, download indicators.
+- `max_lines` — set based on typical output size:
+  - Linters/static analysis: 80
+  - Test runners: 60
+  - Build tools: 40
+  - Status commands: 30
+- `match_command` — use regex that matches both direct invocation and artisan/npm wrappers.
 
 **Common noise patterns per tool:**
 
@@ -61,11 +83,25 @@ Rules: `strip_ansi = true` always. `max_lines`: linters 80, tests 60, builds 40,
 | Playwright | Browser download progress |
 | cargo | Compiling lines (keep errors), download progress |
 
-### 5. Write `.rtk/filters.toml` — `schema_version = 1`, preserve custom entries
+### 5. Write the filters file
 
-### 6. Verify: `rtk config 2>&1 | tail -5`
+Save to `.rtk/filters.toml` in the project root.
 
-### 7. Summary table
+- Always start with `schema_version = 1` and a header comment.
+- Include a comment referencing the project name.
+- Preserve any existing custom filters the user added manually.
+
+### 6. Verify
+
+Run a quick test to confirm rtk picks up the filters:
+
+```bash
+rtk config 2>&1 | tail -5
+```
+
+### 7. Present results
+
+Show a summary table:
 
 ```
 | # | Filter | Match | Max Lines |
@@ -77,4 +113,8 @@ Rules: `strip_ansi = true` always. `max_lines`: linters 80, tests 60, builds 40,
 
 ### Rules
 
-- Don't delete custom entries. No commit/push. Always `strip_ansi = true`. `.rtk/` versioned in Git.
+- **Do NOT delete** existing custom filter entries — only add or update.
+- **Do NOT commit or push** — the user decides when to commit.
+- Always set `strip_ansi = true` — there is no reason to keep ANSI in LLM context.
+- If unsure about a tool's noise patterns, check recent command output or ask the user.
+- The `.rtk/` directory should be versioned in Git (not in `.gitignore`).
