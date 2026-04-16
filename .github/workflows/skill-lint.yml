@@ -83,19 +83,21 @@ jobs:
           lines.append(f'|---|---|---|---|')
           lines.append(f'| {p} | {w} | {f} | {p+w+f} |')
           if f > 0:
-              lines.extend(['', '### ❌ Failures', ''])
+              lines.extend(['', '<details>', '<summary>❌ Failures</summary>', ''])
               for r in results:
                   for i in r.get('issues', []):
                       if i.get('severity') == 'error':
                           lines.append(f'- \`{r[\"file\"]}\`: {i[\"message\"]}')
+              lines.extend(['', '</details>'])
           if w > 0:
               warn_files = [r['file'] for r in results if any(i.get('severity') == 'warning' for i in r.get('issues', []))]
               if warn_files:
-                  lines.extend(['', '### ⚠️ Top warnings', ''])
-                  for wf in warn_files[:5]:
+                  lines.extend(['', '<details>', '<summary>⚠️ Warnings ({} files)</summary>'.format(len(warn_files)), ''])
+                  for wf in warn_files[:10]:
                       lines.append(f'- \`{wf}\`')
-                  if len(warn_files) > 5:
-                      lines.append(f'- ... and {len(warn_files) - 5} more')
+                  if len(warn_files) > 10:
+                      lines.append(f'- ... and {len(warn_files) - 10} more')
+                  lines.extend(['', '</details>'])
           if f == 0 and w == 0:
               lines.extend(['', '✅ All changed files pass cleanly.'])
           lines.extend(['', '---', '*Full report available as artifact.*'])
@@ -120,6 +122,7 @@ jobs:
         if: github.event_name == 'pull_request' && always()
         uses: marocchino/sticky-pull-request-comment@v2
         with:
+          header: skill-lint-report
           path: /tmp/pr-comment.md
 
   skill-lint-strict:

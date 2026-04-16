@@ -149,22 +149,44 @@ def format_markdown(delta: dict) -> str:
         lines.append("✅ No regressions detected.")
     else:
         if delta["regressions"]:
-            lines.extend(["### ❌ Regressions", "", "| File | Was | Now | New Issues |", "|---|---|---|---|"])
+            n = len(delta["regressions"])
+            lines.extend([
+                "<details>",
+                f"<summary>❌ {n} Regression{'s' if n != 1 else ''}</summary>",
+                "",
+                "| File | Was | Now | New Issues |",
+                "|---|---|---|---|",
+            ])
             for r in delta["regressions"]:
                 codes = ", ".join(r["new_codes"]) if r["new_codes"] else "—"
                 lines.append(f"| `{r['file']}` | {r['was']} | {r['now']} | {codes} |")
-            lines.append("")
+            lines.extend(["", "</details>", ""])
 
         if delta["new_files"]:
-            lines.extend(["### ⚠️ New Files with Issues", "", "| File | Status | Issues |", "|---|---|---|"])
+            n = len(delta["new_files"])
+            lines.extend([
+                "<details>",
+                f"<summary>⚠️ {n} New file{'s' if n != 1 else ''} with issues</summary>",
+                "",
+                "| File | Status | Issues |",
+                "|---|---|---|",
+            ])
             for nf in delta["new_files"]:
                 lines.append(f"| `{nf['file']}` | {nf['status']} | {', '.join(nf['codes'])} |")
-            lines.append("")
+            lines.extend(["", "</details>", ""])
 
     if delta["improvements"]:
-        lines.extend(["### ✅ Improvements", "", "| File | Was | Now |", "|---|---|---|"])
+        n = len(delta["improvements"])
+        lines.extend([
+            "<details>",
+            f"<summary>✅ {n} Improvement{'s' if n != 1 else ''}</summary>",
+            "",
+            "| File | Was | Now |",
+            "|---|---|---|",
+        ])
         for imp in delta["improvements"]:
             lines.append(f"| `{imp['file']}` | {imp['was']} | {imp['now']} |")
+        lines.extend(["", "</details>"])
 
     return "\n".join(lines)
 
