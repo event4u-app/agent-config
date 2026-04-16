@@ -52,6 +52,9 @@ jobs:
       - name: Verify current sync state
         run: task sync-check
 
+      - name: Verify compression hashes
+        run: task sync-check-hashes
+
       - name: Regenerate .augment from source
         run: task sync
 

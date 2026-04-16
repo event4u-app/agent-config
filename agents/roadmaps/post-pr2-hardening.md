@@ -13,6 +13,8 @@ Ensure the new systems are used consistently — not just documented.
 - [ ] Add anti-pattern to skill-reviewer: "guideline-dependent skill"
 
 ### 1.2 Consistency CI Hardening
+- [x] `task sync-check-hashes` — CI check that source hash matches stored hash (fails if /compress not run)
+- [x] Added to `.github/workflows/consistency.yml` as separate step
 - [ ] Verify `task sync-check` catches ALL derived output drift (compressed files, symlinks, .windsurfrules, GEMINI.md)
 - [ ] Add `task sync-check` as pre-push hook recommendation in AGENTS.md or contributing guide
 - [ ] Ensure consistency workflow blocks merge on failure (not just warning)

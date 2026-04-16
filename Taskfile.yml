@@ -17,6 +17,10 @@ tasks:
     desc: Check if .augment/ is in sync with .augment.uncompressed/ (for CI)
     cmd: bash scripts/compress.sh --check
 
+  sync-check-hashes:
+    desc: Check if all compressed .md files match their source hashes (for CI)
+    cmd: bash scripts/compress.sh --check-hashes
+
   sync-mark-done:
     desc: Mark a single file as compressed (updates hash)
     cmd: bash scripts/compress.sh --mark-done {{.CLI_ARGS}}

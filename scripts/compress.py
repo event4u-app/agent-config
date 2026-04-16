@@ -450,6 +450,23 @@ def main() -> None:
         else:
             print(f"✅  All .md files are up to date")
 
+    elif arg == "--check-hashes":
+        changed = list_changed_md(SOURCE_DIR)
+        if not changed:
+            print("✅  All compressed .md files match their source hashes")
+            sys.exit(0)
+        print(f"❌  {len(changed)} .md file(s) need recompression (source changed, hash mismatch):\n")
+        for f in changed:
+            source = SOURCE_DIR / f
+            stored = load_hashes().get(f)
+            if stored is None:
+                reason = "no hash stored"
+            else:
+                reason = "hash mismatch"
+            print(f"  {f}  ({reason})")
+        print(f"\nRun '/compress' command to recompress these files.")
+        sys.exit(1)
+
     elif arg == "--generate-tools":
         generate_tools()
 
@@ -457,7 +474,7 @@ def main() -> None:
         clean_tools()
 
     else:
-        print("Usage: python scripts/compress.py [--sync|--list|--changed|--check|--mark-done <path>|--mark-all-done|--generate-tools|--clean-tools]")
+        print("Usage: python scripts/compress.py [--sync|--list|--changed|--check|--check-hashes|--mark-done <path>|--mark-all-done|--generate-tools|--clean-tools]")
         sys.exit(1)
 
 
