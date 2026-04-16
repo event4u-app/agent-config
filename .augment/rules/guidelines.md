@@ -60,6 +60,7 @@ Playwright best practices, Page Objects, fixtures, CI.
 | File | Topic |
 |---|---|
 | `size-and-scope.md` | Size limits and scope boundaries for rules, skills, commands, guidelines, AGENTS.md, copilot-instructions.md |
+| `output-patterns.md` | Redirect/Summarize/Target pattern, targeted operations, tool-first policy, general CLI rules |
 
 ## How guidelines work
 

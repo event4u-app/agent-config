@@ -1,0 +1,1 @@
+../../.augment/rules/rule-type-governance.md
