@@ -11,7 +11,7 @@ and strengthening the areas with the largest remaining score gaps.
 | Commands/Tooling | 7.8 | 1.7 | Phase 6 |
 | Guidelines Overuse Risk | 7.5 (risk) | — | Phase 1.1, 4.1 |
 | Complexity/Onboarding | 7.0 | 2.5 | Phase 3 |
-| Compression Quality | not checked | — | Phase 7 |
+| Compression Quality | ✅ checked | — | Phase 7 (done) |
 | Rule Compliance | ~7.0 (est.) | 2.5 | Phase 5 |
 
 ## Phase 1: Guardrail Enforcement
@@ -31,16 +31,17 @@ Core principle: **A skill must remain executable without opening a guideline.**
 ### 1.2 Consistency CI Hardening
 - [x] `task sync-check-hashes` — CI check that source hash matches stored hash (fails if /compress not run)
 - [x] Added to `.github/workflows/consistency.yml` as separate step
+- [x] Stale hash cleanup: `--check-hashes` now warns about hashes for deleted source files
+- [x] `--clean-hashes` subcommand for standalone stale hash removal
 - [ ] Verify `task sync-check` catches ALL derived output drift (compressed files, symlinks, .windsurfrules, GEMINI.md)
 - [ ] Add `task sync-check` as pre-push hook recommendation in AGENTS.md or contributing guide
 - [ ] Ensure consistency workflow blocks merge on failure (not just warning)
-- [ ] Stale hash cleanup: `--check-hashes` should also warn about hashes for deleted source files
-- [ ] Add `--clean-hashes` subcommand for standalone stale hash removal (currently only in `--sync`)
 
 ### 1.3 Linter Coverage Expansion
-- [ ] Add linter check for command size limits (>1000 words = warning)
-- [ ] Add linter check for guideline size (>1500 words = info)
-- [ ] Add linter check for rule `type` correctness (flag always-rules that look like auto candidates)
+- [x] Command size check: warn if >1000 words
+- [x] Guideline size check: info if >1500 words
+- [x] Rule type check: info if always-rule has topic-specific description (auto candidate)
+- [x] Guidelines now linted alongside skills/rules/commands
 - [ ] Add linter check for command frontmatter (required fields, valid structure)
 - [ ] Add linter check for skill `Procedure` section presence and minimum quality
 
@@ -64,8 +65,8 @@ Adapt optimize commands to use all new rules and guardrails.
 Keep the growing system maintainable.
 
 ### 3.1 Roadmap Hygiene
-- [ ] Archive completed roadmaps: fix-this-now-checklist, skills-rules-restructuring, taxonomy-audit, compare-with-main
-- [ ] Review remaining roadmaps for overlap and merge candidates
+- [x] Archived 12 completed/superseded roadmaps to `agents/roadmaps/archive/`
+- [x] Active roadmaps: post-pr2-hardening, road-to-10, naming-consistency, skill-improvement-pipeline
 - [ ] Add "last reviewed" dates to active roadmaps
 
 ### 3.2 Cross-Reference Integrity
@@ -73,8 +74,8 @@ Keep the growing system maintainable.
 - [x] Taskfile: `task check-refs` target added
 - [x] CI workflow: added to `.github/workflows/consistency.yml`
 - [x] CI pipeline: part of `task ci`
-- [ ] Reduce false positives in check_references.py: skip example paths in commands, skip `.json`/non-`.md` refs
-- [ ] Fix existing broken references found by initial scan (~89 items, many are example paths)
+- [x] Reduced false positives from 105 → 0 (example paths, archives, project-specific refs)
+- [x] Fixed 5 active files with stale roadmap paths
 - [ ] Add `/fix-references` command for interactive broken ref resolution
 
 ### 3.3 Package Portability
@@ -82,7 +83,7 @@ Keep the growing system maintainable.
 - [x] Taskfile: `task check-portability` target
 - [x] CI workflow: added to `.github/workflows/consistency.yml`
 - [x] CI pipeline: part of `task ci`
-- [ ] Fix 4 existing violations in `override-system.md` (references `event4u-app/agent-config`)
+- [x] Fixed 4 violations in `override-system.md` (replaced project-specific repo reference)
 - [ ] Add `/fix-portability` command for interactive violation resolution
 - [ ] Expand pattern list as new projects adopt the package
 
@@ -113,9 +114,9 @@ Problem: Agents (colleagues' AI tools) silently ignore rules — especially auto
 with weak trigger descriptions. Rules are only effective if they reliably activate.
 
 ### 5.1 Audit rule trigger quality
-- [ ] Review all auto-rule descriptions: would a model reliably match them to user intent?
+- [x] Reviewed all 22 auto-rule descriptions for trigger quality
+- [x] Fixed 2 weak descriptions: dev-efficiency (added keywords), docs-sync (broadened scope)
 - [ ] Test: for each auto-rule, write 3 sample prompts that SHOULD trigger it — does the description match?
-- [ ] Fix weak descriptions (too vague, too short, missing keywords)
 - [ ] Document trigger-testing methodology in skill-reviewer or rule-type-governance
 
 ### 5.2 Add rule-compliance smoke tests
@@ -130,8 +131,9 @@ with weak trigger descriptions. Rules are only effective if they reliably activa
 - [ ] For `auto` rules: verify description contains the exact keywords users would type
 
 ### 5.4 Multi-agent consistency
-- [ ] Verify `.cursor/rules/`, `.clinerules/`, `.windsurfrules` contain the same constraints
-- [ ] Check symlink integrity: all tool-specific rule files point to correct `.augment/` sources
+- [x] Verified: 0 broken symlinks across .cursor/, .claude/, .clinerules/
+- [x] Verified: rule counts match across all tool directories (30 augment, 30 cursor, 30 claude, 30 cline)
+- [x] Verified: .windsurfrules and GEMINI.md exist and are up-to-date
 - [ ] Add to `task generate-tools` verification: rule count matches across all tool directories
 - [ ] Consider: should critical rules be duplicated into AGENTS.md as fallback for tools that ignore rule files?
 
@@ -166,21 +168,22 @@ Weakness: "Commands still not linter-aware" — biggest structural gap after CI.
 Weakness: "Compression quality not yet verified" — compressed files may lose meaning.
 
 ### 7.1 Compression Diff Audit
-- [ ] Script: compare uncompressed vs compressed — flag files where sections were lost
-- [ ] Check: all headings in source present in compressed version
-- [ ] Check: all code blocks preserved exactly (byte-compare fenced blocks)
-- [ ] Check: YAML frontmatter identical between source and compressed
+- [x] Script: `scripts/check_compression.py` — compares source vs compressed
+- [x] Check: H1/H2 headings in source present in compressed
+- [x] Check: code blocks preserved exactly (byte-compare)
+- [x] Check: YAML frontmatter identical
+- [x] `task check-compression` target
+- [x] CI workflow: added to `.github/workflows/consistency.yml`
+- [x] Part of `task ci` pipeline
 
 ### 7.2 Compression Quality Metrics
-- [ ] Calculate word-count ratio per file (target: 20-50% reduction)
-- [ ] Flag files with >60% reduction (likely lost content)
-- [ ] Flag files with <10% reduction (compression not effective)
-- [ ] Add to `task ci` as informational report
+- [x] Word-count ratio per file: warn if >60% reduction, info if <5%
+- [ ] Generate summary report: files by reduction %, avg reduction per category
+- [ ] Add to `task quality-report` (future Phase 5 of road-to-10)
 
 ### 7.3 Automated Compression Validation
 - [ ] Add to linter: compare section headings between source and compressed
 - [ ] Add to linter: verify no inline code was modified during compression
-- [ ] Add to CI: `task check-compression-quality` target
 
 ## Phase 8: Complexity Reduction (Score: 7.0 → target 8.5)
 
