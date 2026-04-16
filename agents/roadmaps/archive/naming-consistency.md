@@ -85,9 +85,9 @@ Renaming affects: folder names, SKILL.md `name:` field, compressed copies, symli
 
 ## Phase 4: Naming Guideline (ensure future consistency)
 
-- [ ] Add naming conventions to `guidelines/agent-infra/` or `php/naming.md`
-- [ ] Cover: skills, rules, commands, guidelines folder/file naming
-- [ ] Add linter check: warn on bare-noun skill names (single word without qualifier)
+- [x] Add naming conventions to `guidelines/agent-infra/naming.md`
+- [x] Cover: skills, rules, commands, guidelines folder/file naming
+- [x] Add linter check: warn on bare-noun skill names (single word without qualifier)
 
 ---
 

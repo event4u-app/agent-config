@@ -281,6 +281,17 @@ def lint_skill(path: Path, text: str) -> LintResult:
     else:
         issues.append(Issue("warning", "missing_description", "Frontmatter description is missing or unreadable"))
 
+    # --- Bare-noun name check ---
+    skill_name = path.parent.name if path.name == "SKILL.md" else path.stem
+    if skill_name and "-" not in skill_name and len(skill_name) >= 3:
+        # Single word without qualifier — likely too generic
+        ALLOWED_BARE_NOUNS = {"database", "devcontainer", "docker", "eloquent", "flux", "grafana",
+                              "laravel", "livewire", "mcp", "openapi", "performance", "security",
+                              "terraform", "terragrunt", "traefik", "websocket"}
+        if skill_name.lower() not in ALLOWED_BARE_NOUNS:
+            issues.append(Issue("warning", "bare_noun_name",
+                                f"Bare-noun skill name `{skill_name}` — consider adding a qualifier (e.g., `{skill_name}-management`)"))
+
     # --- Status lifecycle check ---
     frontmatter = extract_frontmatter(text)
     if frontmatter:

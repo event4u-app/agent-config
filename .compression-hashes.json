@@ -57,6 +57,7 @@
   "contexts/override-system.md": "2a19744795711cc1a2aa1c81fa6cbd04ebcecd5a9503da815404e941f48b3cc5",
   "contexts/skills-and-commands.md": "5343df8781a72a3f6172808c4f1d36ed81f313b4960b49dd7e6fa8d23af5b12e",
   "guidelines/agent-infra/agent-interaction-and-decision-quality.md": "398c232d5c465f41e8b92b28332e76524233fa397dd24aa53f8cb4e0057bf9b3",
+  "guidelines/agent-infra/naming.md": "f82b491d7c0da30d6053b60511b48b8c29a2887dfa6ff947d339a96092bb1d9b",
   "guidelines/agent-infra/output-patterns.md": "c55be9bb176ac10372050133dc3f455d61f9e5f8a85676c59095ef36e07a00d8",
   "guidelines/agent-infra/size-and-scope.md": "c87b5df5ec706d167eb66b1e7fbde010a0a6209ab5cb44eb5a3cb3c850bcf4f1",
   "guidelines/e2e/playwright.md": "d3cf2c3b30c3b802595f6545b61a635d1d480dcc2718f1822d45ad1900038534",
