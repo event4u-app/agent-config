@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Iterable, List, Literal, Optional
 
 Severity = Literal["error", "warning", "info"]
-ArtifactType = Literal["skill", "rule", "command", "unknown"]
+ArtifactType = Literal["skill", "rule", "command", "guideline", "unknown"]
 
 
 REQUIRED_SKILL_SECTIONS = [
@@ -137,6 +137,8 @@ def detect_artifact_type(path: Path, text: str) -> ArtifactType:
         return "command"
     if "/rules/" in path_str:
         return "rule"
+    if "/guidelines/" in path_str:
+        return "guideline"
     if has_skill_heading:
         return "skill"
     return "unknown"
@@ -441,6 +443,19 @@ def lint_rule(path: Path, text: str) -> LintResult:
             if not description:
                 issues.append(Issue("error", "auto_missing_description", "Auto rules require a 'description' field for matching"))
 
+        # always-rules that look like auto candidates (rule-type-governance check)
+        if rule_type == "always":
+            description = extract_description(text) or ""
+            # If description contains topic-specific keywords, it might be an auto candidate
+            topic_keywords = re.findall(
+                r"\b(?:PHP|Laravel|Docker|Git|E2E|Playwright|SQL|Blade|Livewire|"
+                r"Terraform|Jira|Sentry|translations|i18n)\b",
+                description, re.IGNORECASE)
+            if len(topic_keywords) >= 2:
+                issues.append(Issue("info", "always_auto_candidate",
+                                    f"Always-rule with topic-specific description ({', '.join(topic_keywords)}) — "
+                                    f"consider auto type per rule-type-governance"))
+
     # --- Structure checks ---
     # H1 heading
     if not H1_PATTERN.search(text):
@@ -523,6 +538,11 @@ def lint_command(path: Path, text: str) -> LintResult:
     if not has_steps and not has_numbered:
         issues.append(Issue("warning", "no_steps", "Command has no Steps section or numbered sub-headings"))
 
+    # --- Size check (see guidelines/agent-infra/size-and-scope.md) ---
+    word_count = len(text.split())
+    if word_count > 1000:
+        issues.append(Issue("warning", "large_command", f"Command has {word_count} words (target: 200-600, max ~1000)"))
+
     # File must end with exactly one newline
     if not text.endswith("\n"):
         issues.append(Issue("error", "no_trailing_newline", "File must end with exactly one newline"))
@@ -549,6 +569,32 @@ def lint_unknown(path: Path, text: str) -> LintResult:
     )
 
 
+def lint_guideline(path: Path, text: str) -> LintResult:
+    """Lint a guideline .md file (size + structure checks)."""
+    issues: List[Issue] = []
+
+    # H1 heading
+    if not H1_PATTERN.search(text):
+        issues.append(Issue("warning", "missing_h1", "Guideline is missing an H1 heading"))
+
+    # Size check (guidelines/agent-infra/size-and-scope.md: target 400-1500 words)
+    word_count = len(text.split())
+    if word_count > 1500:
+        issues.append(Issue("info", "large_guideline", f"Guideline has {word_count} words (target: 400-1500)"))
+
+    # Trailing newline
+    if not text.endswith("\n"):
+        issues.append(Issue("warning", "no_trailing_newline", "File must end with exactly one newline"))
+
+    return LintResult(
+        file=str(path),
+        artifact_type="guideline",
+        status=classify_status(issues),
+        issues=issues,
+        suggestions=[],
+    )
+
+
 def gather_all_candidate_files(root: Path) -> list[Path]:
     """Gather all lintable files. Prefers .augment.uncompressed/ (source of truth).
     Falls back to .augment/ only if uncompressed doesn't exist.
@@ -559,11 +605,13 @@ def gather_all_candidate_files(root: Path) -> list[Path]:
     uncompressed_skills = root / ".augment.uncompressed" / "skills"
     uncompressed_rules = root / ".augment.uncompressed" / "rules"
     uncompressed_commands = root / ".augment.uncompressed" / "commands"
+    uncompressed_guidelines = root / ".augment.uncompressed" / "guidelines"
 
     # Fallback directories (only if uncompressed doesn't exist)
     augment_skills = root / ".augment" / "skills"
     augment_rules = root / ".augment" / "rules"
     augment_commands = root / ".augment" / "commands"
+    augment_guidelines = root / ".augment" / "guidelines"
 
     # Skills
     skills_base = uncompressed_skills if uncompressed_skills.exists() else augment_skills
@@ -583,6 +631,13 @@ def gather_all_candidate_files(root: Path) -> list[Path]:
     commands_base = uncompressed_commands if uncompressed_commands.exists() else augment_commands
     if commands_base.exists():
         for f in commands_base.rglob("*.md"):
+            if not f.is_symlink():
+                candidates.append(f)
+
+    # Guidelines
+    guidelines_base = uncompressed_guidelines if uncompressed_guidelines.exists() else augment_guidelines
+    if guidelines_base.exists():
+        for f in guidelines_base.rglob("*.md"):
             if not f.is_symlink():
                 candidates.append(f)
 
@@ -656,6 +711,8 @@ def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
         return lint_rule(display_path, text)
     if artifact_type == "command":
         return lint_command(display_path, text)
+    if artifact_type == "guideline":
+        return lint_guideline(display_path, text)
     return lint_unknown(display_path, text)
 
 
