@@ -124,11 +124,11 @@ with weak trigger descriptions. Rules are only effective if they reliably activa
 - [x] Reviewed all 21 auto-rule descriptions for trigger quality
 - [x] Fixed 2 weak descriptions: dev-efficiency (added keywords), docs-sync (broadened scope)
 - [x] Verified: all 21 descriptions contain exact keywords users would type
-- [~] Full trigger-testing script: deferred (descriptions already strong, marginal gain)
+- [x] `/rule-compliance-audit` command: agent-executed audit (trigger quality, simulation, overlap, always-rule health)
 
 ### 5.2 Add rule-compliance smoke tests
-- [~] `check_rule_triggers.py` script: deferred (would need LLM to simulate trigger matching — out of scope for static checks)
-- [~] Test matrix: deferred (same reason)
+- [x] `/rule-compliance-audit` command covers trigger simulation and test matrix (agent-executed, not static script)
+- [x] Test matrix: included in command step 3 (trigger simulation with 3 prompts per rule)
 
 ### 5.3 Strengthen critical rules against being ignored
 - [x] Always rules: 5/10 are <60 lines (ideal), all <148 lines (acceptable)
@@ -144,9 +144,9 @@ with weak trigger descriptions. Rules are only effective if they reliably activa
 - [~] AGENTS.md fallback: not needed — all tools read rule files
 
 ### 5.5 Observability
-- [~] `/rule-compliance-audit` command: deferred (aspirational, needs LLM self-reflection)
+- [x] `/rule-compliance-audit` command: created (agent-executed audit with 6 analysis steps)
 - [~] Session activation tracking: deferred (no tooling exists for this)
-- [~] Never-activated rules: handled by periodic manual review
+- [x] Never-activated rules: covered by `/rule-compliance-audit` step 3 (trigger simulation)
 
 ## Phase 6: Command Quality (Score: 7.8 → target 9.0)
 

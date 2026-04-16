@@ -45,6 +45,7 @@
   "commands/review-changes.md": "3020893107b7e050669925c73a1aa249b11a7c5e4e652c2527799a597ffad87e",
   "commands/roadmap-create.md": "3eaa9c6e61154357239100752816e2cc9f164f2458198835be22ff64abacea2b",
   "commands/roadmap-execute.md": "4b3b60560adbf334f15968ebc879cef744fc9621a44f0de825c5c4930cca79e5",
+  "commands/rule-compliance-audit.md": "83dbf6ab86703f5bfc945f1b7d800743dff91117952c99da4f7586b74375945c",
   "commands/tests-create.md": "98323fa5611fa6bec30b58bfaba420c59da623137af93c1f131e2e04964bf815",
   "commands/tests-execute.md": "45a872c1571cdebda538240a2c42b96703711177878dada465c3b22ccaaf7fbe",
   "commands/update-form-request-messages.md": "fed784d67b7965075996e9d1856fca3bad77061331bb6ea7582503d85f7fd56c",
