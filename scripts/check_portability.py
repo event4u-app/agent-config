@@ -68,6 +68,28 @@ PROJECT_PATHS = [
     r"app/Models/\w{3,}",            # e.g. app/Models/Customer — specific model
 ]
 
+# Database / infrastructure names
+PROJECT_INFRA = [
+    r"\bgalawork_\w+",              # e.g. galawork_api, galawork_testing
+    r"\bevent4u_\w+",               # e.g. event4u_db
+]
+
+# Docker container / service names
+PROJECT_CONTAINERS = [
+    r"galawork-php",                # Docker container names
+    r"galawork-nginx",
+    r"galawork-redis",
+    r"galawork-mariadb",
+    r"galawork-horizon",
+]
+
+# Team / org specific identifiers
+PROJECT_TEAM = [
+    r"\b@galawork\b",              # GitHub org mention
+    r"\b@event4u\b",
+    r"event4u-app/",               # GitHub org slug
+]
+
 # ── Allowed patterns (NOT violations even if they match above) ──────────
 # Generic Laravel/framework patterns that are NOT project-specific
 ALLOWLIST = [
@@ -107,6 +129,12 @@ def _compile_patterns() -> list[tuple[re.Pattern, str, Severity]]:
         patterns.append((re.compile(p), "project-repo", "error"))
     for p in PROJECT_PATHS:
         patterns.append((re.compile(p), "project-path", "warning"))
+    for p in PROJECT_INFRA:
+        patterns.append((re.compile(p, re.IGNORECASE), "project-infra", "error"))
+    for p in PROJECT_CONTAINERS:
+        patterns.append((re.compile(p, re.IGNORECASE), "project-container", "warning"))
+    for p in PROJECT_TEAM:
+        patterns.append((re.compile(p, re.IGNORECASE), "project-team", "error"))
     return patterns
 
 

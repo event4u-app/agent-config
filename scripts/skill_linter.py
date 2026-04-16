@@ -1123,11 +1123,11 @@ def main() -> int:
         results = [lint_file(path, repo_root=root) for path in paths]
 
         # Additional checks
-        if args.pairs:
+        if args.pairs or args.report:
             results.extend(check_compression_pairs(root))
         if args.duplicates:
             results.extend(check_duplication(root))
-        if args.compression_quality:
+        if args.compression_quality or args.report:
             results.extend(check_compression_quality(root))
 
         if args.report:
