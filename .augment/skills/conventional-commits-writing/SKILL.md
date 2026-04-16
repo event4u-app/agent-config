@@ -22,7 +22,12 @@ NOT: explaining standard (reference rule), git workflow (use `git-workflow`)
 2. **Mixed concerns?** — split into multiple commits or choose dominant net effect for squash title.
 3. **Scope** — Jira ID or area name. Only if it adds clarity.
 4. **Description** — intent, not implementation. Imperative. Max 72 chars. No generic filler.
-5. **Breaking?** — add `!` or `BREAKING CHANGE:` footer.
+5. **Breaking?** — add `!` or `BREAKING CHANGE:` footer:
+
+```
+feat(api)!: rename invoice status values
+```
+
 6. **Validate** — type matches intent? scope useful? not hiding multiple concerns?
 
 ## Procedure: Review

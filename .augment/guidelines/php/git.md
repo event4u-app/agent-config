@@ -7,9 +7,18 @@
 
 ## Branch Naming
 
-`{type}/{ticket-id}/{short-description}` — kebab-case, include Jira ID when exists.
+```
+{type}/{ticket-id}/{short-description}
+```
 
 Types: `feat/`, `fix/`, `hotfix/`, `chore/`, `docs/`, `test/`
+
+```
+feat/DEV-1234/user-notification-preferences
+fix/DEV-5678/null-pointer-in-import
+chore/refactor-agent-setup
+hotfix/DEV-999/critical-payment-bug
+```
 
 ## Commit Messages
 
@@ -25,7 +34,18 @@ See `commit-conventions` rule for base format. Key type selection:
 
 **Breaking:** `!` after type/scope or `BREAKING CHANGE:` footer.
 
+```
+feat(api)!: rename invoice status values
+refactor(auth)!: remove legacy session flow
+```
+
 **Splitting:** Mixed concerns → split commits. Don't hide unrelated changes in one.
+
+```
+refactor(skills): remove duplicate routing helpers
+ci(lint): add skill-lint workflow
+docs(readme): document new lint tasks
+```
 
 **Squash merge titles:** Conventional Commit format, describe net effect, not every internal commit.
 
@@ -43,14 +63,30 @@ See `commit-conventions` rule for base format. Key type selection:
 4. Scope useful or noise?
 5. Multiple commits hiding in one?
 
-### Examples
+### Examples by area
 
-```
-feat(DEV-1234): add absence type filter to working time report
+```bash
+# Features
+feat(DEV-2133): send email to customer when product is shipped
+
+# Bug fixes
 fix(import): handle null values in equipment JSON
+
+# Refactoring
+refactor: extract user sync logic into dedicated service
+
+# Skills / Rules / Agent config
 refactor(skills): merge duplicate analysis skills
-ci(lint): add skill-lint workflow
+feat(rules): add analysis routing quality gate
+fix(skills): restore concrete validation in skill reviewer
+
+# CI / Tooling
+ci(lint): add skill linter workflow
+feat(linter): detect pointer-only skills
+
+# Docs
 docs(roadmap): add phase 3 implementation plan
+docs(readme): clarify source-of-truth workflow
 ```
 
 ## Pull Requests

@@ -38,7 +38,12 @@ All commit messages and squash/merge titles follow [Conventional Commits](https:
 
 ## Breaking changes
 
-Mark with `!` or `BREAKING CHANGE:` footer: `feat(api)!: rename status values`
+Mark with `!` or `BREAKING CHANGE:` footer:
+
+```
+feat(api)!: rename invoice status values
+refactor(auth)!: remove legacy session flow
+```
 
 ## Commit splitting
 
@@ -49,8 +54,11 @@ Mixed concerns → split into multiple commits. Don't hide unrelated changes in 
 ```
 feat(DEV-1234): add absence type filter to working time report
 fix(DEV-1234): handle null value in equipment import
+test(DEV-1234): add component test for working time controller
 refactor: extract user sync logic into dedicated service
+chore: update PHP quality package to 2.1.0
 ci(lint): add skill-lint workflow
+docs(roadmap): add phase 3 implementation plan
 ```
 
 → Type selection rules, anti-patterns, decision checklist: `guidelines/php/git.md`
