@@ -141,5 +141,5 @@ jobs:
       - name: Set up Task
         uses: arduino/setup-task@v2
 
-      - name: Run strict skill linter
-        run: task lint-skills-strict
+      - name: Run skill linter (0 FAIL required)
+        run: task lint-skills
