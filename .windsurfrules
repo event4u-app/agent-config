@@ -400,7 +400,7 @@ chore: update PHP quality package to 2.1.0
 
 Monitor for **context decay** — long conversations degrade quality and waste tokens.
 
-**Suggest new chat when:**
+**Suggest a new chat when:**
 
 - Conversation exceeds **~20 user messages**
 - Topic **changes completely**
@@ -424,143 +424,149 @@ Estimate token cost: responses × ~1,500 tokens.
 > 2. Continue here
 ```
 
-**If user picks 1:** Initiate session handoff or start fresh.
+**If the user picks 1:** Initiate a session handoff or start fresh.
 
-## 3-Failure Rule
+## The 3-Failure Rule
 
-After **3 consecutive failed attempts** at same task:
+When **3 consecutive attempts** at the same task fail (code fix, test fix, config change, etc.):
 
-1. **STOP** — no 4th attempt
-2. **State dump** — what was tried, what failed, what's known
-3. **Recommend fresh start** — suggest new session with state dump, or different approach
+1. **STOP** — do not attempt a 4th fix.
+2. **State dump** — summarize what was tried, what failed, and what you know so far.
+3. **Recommend fresh start** — suggest a fresh session with the state dump as context, or ask for a different approach.
 
-**Counts as failure:** code change doesn't fix, test still fails, quality check errors, build fails.
-**Does NOT reset:** unrelated tasks, user providing new info (course correction).
+**What counts as a failure:**
+
+- Code change that doesn't fix the problem
+- Test that still fails after the fix
+- Quality check (PHPStan, ECS) that still errors
+- Build/deploy that fails after config change
+
+**Does NOT reset the counter:** Unrelated tasks. User providing new information (course correction).
 
 ## Tool Loop Detection
 
-Same tool called **2+ times** with similar params = loop.
+Calling the **same tool** more than **2 times in a row** with similar parameters = loop.
 
-1. **STOP** all tool calls
-2. Do task directly
-3. If stuck → ask user
+**Immediate action:**
+1. **STOP** all tool calls.
+2. **Do the task directly** — write the code, run the command, answer the question.
+3. If you can't proceed — ask the user for help.
 
-`sequentialthinking`: max **once** per task. NEVER for simple file ops/commands/edits.
+`sequentialthinking` is especially prone to loops. Use at most **once** per task,
+NEVER for simple file operations, command execution, or straightforward edits.
 
 ## State dump format
 
 ```
-## State Dump: [Task Description]
-
-### What was tried
-1. [Approach 1] → [Why it failed]
-2. [Approach 2] → [Why it failed]
-3. [Approach 3] → [Why it failed]
-
-### What is known
-- [Fact 1]
-- [Fact 2]
-
-### Hypothesis
-- [Best hypothesis for root cause]
-
-### Recommendation
-- [Suggested next approach for a fresh session]
+## State Dump: [Task]
+### Tried: 1. [Approach] → [Why failed] 2. ... 3. ...
+### Known: [Key facts]
+### Hypothesis: [Best guess for root cause]
+### Recommendation: [Next approach for fresh session]
 ```
 
-Use `/agent-handoff` for context summary for fresh conversation.
+Use `/agent-handoff` to generate a context summary for a fresh conversation.
 
 ## Augment-specific: Ignored Skills Recovery
 
 Skills excluded via `.augmentignore` don't appear in `<available_skills>`.
-When you need expertise from an ignored skill:
-
-1. **Read SKILL.md directly** — `.augmentignore` only hides from system prompt, not `view`.
-2. **Continue working** — apply skill's guidance.
-3. **After task**, ask:
+If you need an ignored skill: read its SKILL.md directly, apply guidance, then ask:
 
 ```
-> 💡 I loaded the `{name}` skill manually — it's currently ignored in `.augmentignore`.
->
-> 1. Remove from ignore — this skill is relevant for the project
-> 2. Keep ignored — this was a one-off
+> 💡 I loaded `{name}` manually — currently ignored in `.augmentignore`.
+> 1. Remove from ignore — relevant for this project
+> 2. Keep ignored — one-off
 ```
 
 ---
 
 # Development Efficiency
 
-For communication/response style → `token-efficiency` rule.
+Loaded when actively working with code, tests, quality tools, CLI, or analysis.
+For communication and response style rules → see the always-loaded `token-efficiency` rule.
 
 ## Codebase Navigation
 
-### Use what you have
+### Use what you already have
 
-- Edited file → `str-replace-editor` showed result. Skip re-reading.
-- Ran command → have output. Skip re-running.
-- File in recent context → skip reloading.
-- Found symbol → use it. Skip re-searching.
+- Edited a file → `str-replace-editor` showed the result. Skip re-reading.
+- Ran a command → you have the output. Skip re-running to "verify".
+- File in context from recent messages → skip reloading.
+- Found a symbol → use it. Skip searching again differently.
 
 ### Search before reading
 
-- Search first — `codebase-retrieval`, `search_query_regex`, `grep`
-- `view_range` or `search_query_regex` over full files
-- Small files (< 50 lines) — OK to read fully
+- **Search first** — `codebase-retrieval`, `search_query_regex`, or `grep`.
+- **Load only what you need** — use `view_range` or `search_query_regex`, not full files.
+- **Small files** (< 50 lines) — OK to read fully.
 
-### `.augmentignore`
+### Ignored files (`.augmentignore`)
 
-- `vendor/`, `node_modules/`, locks excluded from `codebase-retrieval`
-- Need vendor details → `view` specific file (bypasses ignore)
+- `vendor/`, `node_modules/`, lock files, and generated files are excluded from `codebase-retrieval`.
+- When you need to understand a vendor package (base class, interface, API), **read the specific file** with `view`. This bypasses the ignore.
+- Load only the file you need — never browse entire vendor directories.
 
 ### Minimize tool calls
 
-- Parallel reads — batch, not sequential
-- `search_query_regex` over full file reads
-- `view_range` for known lines
-- One `codebase-retrieval` call with all symbols
+- **Parallel reads** — read multiple files in one batch, not sequentially.
+- **`search_query_regex`** over full file reads.
+- **`view_range`** when you know the exact lines.
+- **One `codebase-retrieval` call** with all symbols — batch, not 5 separate calls.
 
 ## Pattern: Redirect, Summarize, Target
 
-Commands producing >30 lines:
+Every command that MAY produce more than ~30 lines of output:
 
-### Step 1: Redirect
+### Step 1: Redirect to file
 ```bash
 docker compose exec -T <service> <command> 2>&1 > /tmp/<tool>-output.txt
 echo "EXIT=$?"
 ```
 
-### Step 2: Summary only
+### Step 2: Read ONLY the summary
 ```bash
 tail -5 /tmp/<tool>-output.txt
 ```
 
-### Step 3: Targeted details
+### Step 3: If errors exist, read ONLY what you need to fix
 ```bash
 grep "ERROR\|error\|✏️" /tmp/<tool>-output.txt | head -20
 grep "app/Services/MyService.php" /tmp/<tool>-output.txt
 ```
 
-**NEVER:** `cat` full output, read passing command output, read unactionable diffs.
+**NEVER** do:
+- `cat /tmp/<tool>-output.txt` (loads everything)
+- Read the full output of a passing command (waste)
+- Read diffs you don't plan to act on
 
 ## General Rules
 
-1. **Exit code first** — if 0, skip reading
-2. **Summary line** — last few lines suffice
-3. **Targeted grep** — specific file/error type
-4. **Read once, act, move on** — don't re-read
-5. **Iterative fixing** — fix one, re-run, check exit code
+For tool-specific commands → see the `quality-tools` skill.
+
+1. **Exit code first**: Check `$?` before reading ANY output. If 0, you're done — skip reading.
+2. **Summary line**: Most tools print a summary as the last few lines. That's all you need.
+3. **Targeted grep**: When you need details, `grep` for the specific file or error type.
+4. **Read once, act, move on**: Once you've read output and acted on it, skip re-reading.
+5. **Iterative fixing**: Fix one error at a time, re-run, check exit code.
+   Output becomes stale after each fix — always re-run before reading again.
 
 ## CLI Over MCP
 
-CLI > MCP (significantly fewer tokens):
-- Git, files, APIs, database → CLI
-- Exception: MCPs with unique capabilities (Sentry, Playwright, Jira)
+MCP servers are **significantly more token-expensive** than CLI equivalents.
+When both options exist, prefer the CLI tool.
+
+- **Git**: `git` CLI, not Git MCP
+- **Files**: shell commands, not filesystem MCP
+- **APIs**: `curl`/`httpie`, not HTTP MCP
+- **Database**: `mysql`/`psql` CLI, not DB MCP
+
+Exception: MCPs with **unique capabilities** (Sentry, Playwright, Jira).
 
 ## Exceptions
 
-- Small output (< 30 lines) → read directly
-- Debugging → more context OK
-- User asks for full output → show it
+- **Small output** (< 30 lines): Read directly, no redirect needed.
+- **Debugging**: OK to read more context around the specific error.
+- **User asks** for full output: Show it.
 
 ---
 
@@ -932,30 +938,35 @@ When generating markdown with code blocks:
 
 # Model Recommendation
 
-Detect model from system prompt identity ("Claude Opus" → `opus`, "Claude Sonnet" → `sonnet`, "GPT" → `gpt`, "Gemini" → `gemini`).
+Detect the current model from your system prompt identity (e.g., "Claude Opus" → `opus`,
+"Claude Sonnet" → `sonnet`, "GPT" → `gpt`, "Gemini" → `gemini`).
 
-If `gemini` → immediately trigger Gemini warning (below).
+If the detected model is `gemini`, immediately trigger the Gemini warning (see below).
 
 ## When to act
 
-**BEFORE any work**, classify task:
+**BEFORE starting any work**, classify the task the user is asking for:
 
 - **opus**: refactoring, architecture, complex debugging, code review, multi-file changes
 - **sonnet**: daily coding, bug fixes, tests, simple features, quality checks, PRs, commits, config
 - **gpt**: complex agent flows, automations, research
 
-**MANDATORY check** — runs on:
-- First user message
-- Every clear topic/task change
-- **Command invocations** (e.g., `/create-pr` → sonnet task)
+**This check is MANDATORY** — not optional, not "nice to have". It runs:
+- On the **first user message** of a conversation
+- On **every clear topic/task change** (e.g., from refactoring to "create PR")
+- **When a command is invoked** (e.g., `/create-pr` → sonnet task)
 
-**⚠️ COMMAND INVOCATIONS ARE TASK CHANGES.** `/create-pr`, `/commit`, `/fix-pr-comments` = sonnet tasks even if previous task was opus. Most commonly missed check.
+**⚠️ COMMAND INVOCATIONS ARE TASK CHANGES.** When the user invokes a command (e.g., `/create-pr`,
+`/commit`, `/fix-ci`), ALWAYS re-evaluate the model before executing. Commands like `/create-pr`,
+`/commit`, `/fix-pr-comments` are sonnet tasks — even if the previous task was opus-level.
+This is the most commonly missed check. Do NOT skip it.
 
-**Priority over commands rule**: model check runs BEFORE `commands` rule. Show suggestion first, wait for response, then execute.
+**Priority over commands rule**: This check runs BEFORE the `commands` rule. If a model switch
+is recommended, show the suggestion first. Only after the user responds, execute the command.
 
-**Ambiguous** → default **sonnet**.
+**If ambiguous** (could be opus or sonnet): default to **sonnet** — cheaper, and the user can escalate.
 
-If recommended ≠ detected, suggest switching:
+If the recommended model ≠ detected model, suggest switching **before doing any work**:
 
 ```
 > 💡 This looks like {task type} — best suited for **{recommended model}**.
@@ -965,23 +976,29 @@ If recommended ≠ detected, suggest switching:
 > 2. Stay on {detected model}
 ```
 
-**⛔ STOP AND WAIT.** Response ENDS after options. No files, no tasks, no coding. Wait for pick.
+**⛔ STOP AND WAIT.** After showing this suggestion, your response ENDS.
+Do NOT read files, create tasks, start coding, or do anything else in the same response.
+The ONLY content after the numbered options is the end of your message.
+Wait for the user to pick 1 or 2 before proceeding.
 
-→ Full mapping: `.augment/contexts/model-recommendations.md`
+→ Full mapping and heuristics: `.augment/contexts/model-recommendations.md`
 
 ## Switch confirmation
 
-- **1** → accept, continue. No follow-up.
-- **2** → accept. Don't ask again until task type changes.
-- Never ask more than once per task.
+- If user picks **1**: accept and continue. No follow-up question.
+- If user picks **2**: accept. Don't ask again until the task type changes.
+- **Never ask more than once per task** unless the task type changes significantly.
 
 ## Downgrade after Opus
 
-After opus phase complete → suggest switching to sonnet for implementation. Same options.
+After completing an opus-level phase (architecture done, root cause found, refactoring plan ready),
+suggest switching back to sonnet for implementation. Same numbered options.
 
 ## Gemini warning
 
-`gemini` detected → warn not recommended. Suggest best model for task. Same options. Repeat once if dismissed.
+If detected model is `gemini`: warn that Gemini is **not recommended** for this project.
+Suggest switching to the best model for the current task (opus/sonnet/gpt).
+Show the same numbered options as above. Repeat once if dismissed — then accept.
 
 ---
 
@@ -1039,246 +1056,6 @@ Read `eloquent_access_style` from `.agent-settings`. Default: `getters_setters`.
 - Never repeat method signature
 - One docblock per method
 - Order: `@param` → `@return` → `@throws`
-
----
-
-# Quality Workflow
-
-Run quality tools **ONCE at the end** — not after each edit.
-See `verify-before-complete` rule for timing. Full command reference → `quality-tools` skill.
-
-## Language detection
-
-| Files changed | Pipeline |
-|---|---|
-| `.php` | PHP (PHPStan → Rector → PHPStan) |
-| `.js`, `.ts`, `.tsx`, `.jsx` | JS/TS (Biome → TSC → Tests) |
-| Both | Run **both** |
-
-```bash
-git diff --name-only origin/{default}..HEAD | grep -E '\.(php)$'
-git diff --name-only origin/{default}..HEAD | grep -E '\.(js|ts|tsx)$'
-```
-
----
-
-## PHP Pipeline
-
-### Prerequisite
-
-Check `composer.json` for quality tools. See `quality-tools` skill for detection and commands.
-
-### Execution
-
-```bash
-# Native (default):
-vendor/bin/phpstan analyse             # PHPStan
-vendor/bin/rector process              # Rector (auto-fix)
-vendor/bin/ecs check --fix             # ECS (auto-fix)
-
-# With galawork/php-quality wrapper (if installed):
-php artisan quality:phpstan            # PHPStan
-php artisan quality:finalize           # Full pipeline
-```
-
-All inside Docker container if used.
-
-### Workflow
-
-1. Run PHPStan — fix type errors
-2. Run Rector + ECS with auto-fix
-3. Run PHPStan again — verify no new issues
-
-Step 3 errors → fix, repeat from step 2.
-
-### Baseline — NEVER touch
-
-- NEVER edit `phpstan-baseline.neon` manually
-- Auto-regenerated after successful PHPStan run (0 new errors)
-
-### Error handling
-
-- Fix actual code — don't suppress/ignore/baseline
-- Last resort: `// @phpstan-ignore-next-line — false positive: reason here`
-
-### Config files
-
-| File | Tool | Purpose |
-|---|---|---|
-| `phpstan.neon` | PHPStan | Level, paths, extensions, ignoreErrors |
-| `phpstan-baseline.neon` | PHPStan | Baseline (auto-managed, do NOT edit) |
-| `ecs.php` | ECS | Code style rules and skip list |
-| `rector.php` | Rector | Refactoring rules, PHP version sets, skip list |
-
-- `ignoreErrors`: structural toolchain limitations only. **Unsure → ask.**
-- Config files: don't modify without permission.
-
-### Git-aware execution
-
-Default: only changed files. `--ignore-git` = all files. `--clear-cache` = fresh. Both = complete re-check.
-
----
-
-## JS/TS Pipeline
-
-### Prerequisite
-
-Check `package.json`: `@biomejs/biome`, `typescript`, `jest`/`vitest`.
-
-### Execution
-
-```bash
-npm run biome:fix      # Auto-fix formatting + linting
-npm run tscheck        # Type check
-npm test               # Tests
-
-# Fallback
-npx biome check --write .
-npx tsc --noEmit
-npx jest
-```
-
-Host or Node container — check `Makefile` / `docker-compose.yml`.
-
-### Workflow
-
-1. `npm run biome:fix` — formatting, linting, imports
-2. `npm run tscheck` — type safety
-3. `npm test`
-
-Step 2 errors → fix, re-run step 1.
-
-### Error handling
-
-- Fix type errors in code. No `@ts-ignore`/`@ts-expect-error` without reason.
-- Fix Biome errors, don't `biome-ignore` unless confirmed false positive.
-- Don't modify config files without permission.
-
----
-
-# rtk (Rust Token Killer)
-
-CLI proxy reducing LLM token consumption 60-90% via intelligent output filtering. Single Rust binary, <10ms overhead.
-
-**Docs:** https://www.mintlify.com/rtk-ai/rtk
-**Repo:** https://github.com/rtk-ai/rtk
-
-## Usage
-
-```bash
-rtk git status        # 80-92% savings
-rtk git log           # compact log output
-rtk cargo test        # 90% savings — only failures shown
-rtk npm test          # same for JS/TS
-rtk docker compose ps # compact container status
-```
-
-## Detection & Installation
-
-Before verbose CLI commands, check rtk:
-
-1. `which rtk` (silent)
-2. **Installed** → prefix with `rtk` for >30 line output
-3. **Not installed** → check `.agent-settings` for `rtk_last_asked`:
-   - Missing or before today → prompt user
-   - Today → skip, use normal commands
-
-**Prompt:**
-
-> 💡 **rtk** (Rust Token Killer) is not installed.
-> Reduces token consumption 60-90%.
->
-> 1. Install via Homebrew — `brew install rtk` (recommended on macOS)
-> 2. Install via Cargo — `cargo install rtk`
-> 3. Skip for now — I'll ask again tomorrow
-
-**On response:**
-- **1/2** → install, then: `rtk --version`, `rtk init --global`, Post-Install Setup, generate project-local filters, save `rtk_installed=true` in `.agent-settings`
-- **3** → save `rtk_last_asked=YYYY-MM-DD` in `.agent-settings`, use normal commands
-
-## Post-Install Setup (mandatory)
-
-### 1. Disable telemetry
-
-Telemetry enabled by default (opt-out).
-
-```bash
-# Add BOTH — env var (immediate) + config (persistent)
-echo 'export RTK_TELEMETRY_DISABLED=1' >> ~/.zshrc
-
-mkdir -p ~/.config/rtk
-# In ~/.config/rtk/config.toml:
-# [telemetry]
-# enabled = false
-```
-
-### 2. Enable tee recovery
-
-Saves raw unfiltered output on failures. Auto-cleans (max 20 files).
-
-```toml
-# In ~/.config/rtk/config.toml:
-[tee]
-enabled = true
-mode = "failures"
-max_files = 20
-max_file_size = 1048576
-```
-
-### 3. Enable hook audit logging
-
-```bash
-echo 'export RTK_HOOK_AUDIT=1' >> ~/.zshrc
-```
-
-### Reference config (`~/.config/rtk/config.toml`)
-
-```toml
-[telemetry]
-enabled = false
-
-[tracking]
-enabled = true
-history_days = 30
-
-[tee]
-enabled = true
-mode = "failures"
-max_files = 20
-max_file_size = 1048576
-
-[display]
-colors = true
-emoji = true
-max_width = 120
-```
-
-## When to use rtk
-
-| Command | Use rtk? |
-|---|---|
-| `git status/log` | ✅ Always |
-| `git push/pull` | ✅ Always |
-| Test runners (`cargo test`, `npm test`, `phpunit`) | ✅ Always |
-| Linters (`phpstan`, `eslint`, `tsc`) | ✅ Always |
-| `docker compose ps/logs` | ✅ Always |
-| Short commands (< 5 lines expected) | ❌ No overhead benefit |
-| Commands piped to `grep`/`tail` already | ❌ Already filtered |
-
-## Never use rtk for
-
-| Command | Why |
-|---|---|
-| `git diff` | ⛔ Silent truncation at ~50 changes — LLM decides on incomplete data (Issue #827) |
-| `rtk read` | ⛔ Same truncation risk — use `cat`/`view` instead |
-| Any command where **completeness matters** | ⛔ rtk may strip context needed for correct decisions |
-
-Debugging/reviewing diffs → raw command, no rtk.
-
-## Project-Local Filters
-
-`.rtk/filters.toml` (project root, Git-versioned). Overrides global filters.
-Covered: PHPStan, Pest, ECS, Rector, Docker Compose, Artisan, Composer.
 
 ---
 
@@ -1444,96 +1221,81 @@ If you catch yourself repeating a tool call — STOP, rethink, try a different a
 ### Anti-loop: Extended Reasoning
 
 Do NOT use extended reasoning / chain-of-thought tools for simple tasks like viewing files,
-running commands, or making straightforward edits. ONLY for genuinely complex
-multi-step reasoning. Calling such tools more than once per task = looping. Stop and act directly.
+running commands, or making straightforward edits. They are ONLY for genuinely complex
+multi-step reasoning. If you find yourself calling such tools more than once per task —
+you are looping. Stop immediately and act directly instead.
 
 ### Anti-loop: "CRITICAL INSTRUCTION" and self-prompting
 
-Generating "CRITICAL INSTRUCTION", "I need to", "Let me think", "Related tools:" inside a tool call
-or as preamble = **loop**. Happens after connection errors or "continue" / "mach weiter".
+If you find yourself generating text that starts with "CRITICAL INSTRUCTION", "I need to",
+"Let me think", "Related tools:", or similar self-directed reasoning inside a tool call
+or as a preamble before acting — **you are in a loop**. This happens after connection errors
+or when the user says something like "continue" / "mach weiter".
 
 **Immediate action:**
 
 1. STOP generating self-instructions.
-2. Read last user message — what did they actually ask?
-3. Do that ONE thing directly. No planning monologue.
-4. If unknown, ask: "Where were we?"
+2. Read the last user message — what did they actually ask?
+3. Do that ONE thing directly. No planning monologue, no tool selection reasoning.
+4. If you don't know what the user wanted, ask: "Where were we?"
 
 ## Fresh Output Over Memory
 
-**CRITICAL**: When tool/command returns value (branch name, file path, PR number),
-use EXACT value in subsequent calls. NEVER substitute from earlier conversation.
-Context decay causes silent mismatches — fresh output is only source of truth.
+**CRITICAL**: When a tool or command returns a value (branch name, file path, PR number),
+use that EXACT value in subsequent API calls. NEVER substitute a value from earlier in
+the conversation. Context decay causes silent mismatches — fresh output is the only source of truth.
 
 ## Conversation Efficiency
 
 ### Act, skip narration
 
-- Skip repeating user's request — they know what they asked
-- Just do it — skip announcing intentions
-- Skip explaining obvious tool calls
-- Report only outcomes
+- **Skip repeating the user's request.** They know what they asked.
+- **Just do it** — skip announcing what you're about to do.
+- **Skip explaining obvious tool calls.** Reading a file needs no justification.
+- **Report only outcomes** — skip intermediate step summaries unless the user needs them.
 
 **This rule NEVER overrides user-interaction or command rules.**
-Token efficiency = fewer *unnecessary* words — NOT skipping required questions,
-numbered options, or command steps. When a rule says "ask the user", you ask.
+Token efficiency means fewer *unnecessary* words — NOT skipping required questions,
+numbered options, or command steps. When a rule or command says "ask the user", you ask.
 
 ### Stop early — max 2 retries
 
-- Command fails twice → stop, rethink, different approach
-- grep/search empty 2× → switch approach or ask
-- Max 3 diagnostic commands per error
-- One hypothesis at a time
+- **Command fails twice with same error** → stop, rethink. Try a different approach.
+- **grep/search returns nothing after 2 attempts** → switch approach or ask the user.
+- **Max 3 diagnostic commands** per error. Read the error, think, act.
+- **One hypothesis at a time.** Pick the most likely, try it. If it fails, ask.
 
 ### Keep intermediate output minimal
 
-Read `minimal_output` from project settings (default: `true`).
+Read `minimal_output` (default: `true`) and `play_by_play` (default: `false`) from project settings.
 
-When `true`:
-
-- **Multi-step work:** short bullet points only, no paragraphs.
-- **No thinking out loud** — user doesn't need your reasoning process.
-- **Play-by-play**: Read `play_by_play` from settings (default: `false`).
-  When `false`: silently investigate, report conclusion.
-  When `true`: briefly share intermediate findings.
-    - ❌  "Hmm, exit code 1. Let me check... 18 errors..."
-    - ✅  *(silently investigate, then report conclusion)*
-- **At the end:** concise summary — what changed, what user needs to know.
+When `minimal_output=true`:
+- Multi-step work: short bullet points only, no paragraphs.
+- No thinking out loud — user doesn't need your reasoning.
+- When `play_by_play=false`: silently investigate, report conclusion only.
+- When `play_by_play=true`: briefly share intermediate findings.
+- At the end: concise summary — what changed, what user needs to know.
 
 ### Don't re-read what you already know
 
-- Edited file → edit tool showed result. Don't re-read.
-- Ran command → you have output. Don't re-run to "verify".
+- Edited a file → edit tool showed result. Don't re-read.
+- Ran a command → you have output. Don't re-run to "verify".
 - File in context from recent messages → don't reload.
-- Found symbol → don't search again differently.
-
-### Search before reading
-
-- Search first — codebase search, regex, `grep`.
-- Don't load entire files when you only need few lines.
-- Small files (< 50 lines) — OK to read fully.
 
 ### Minimize tool calls
 
 - Parallel reads — don't read 5 files sequentially.
-- Regex search over full file reads when possible.
-- View specific line ranges when you know location.
-- One codebase search call with all symbols — not 5 separate calls.
+- Regex search over full file reads. View specific line ranges.
+- One codebase search call with all symbols — not 5 separate.
+- Short question → short answer. Summary tables only for 3+ items.
 
-### Right-size responses
+### Exceptions
 
-- Short question → short answer.
-- Code change → show what changed, not entire file.
-- Error fix → what was wrong, what you did. No history lesson.
-- Summary tables → only for 3+ items.
+- Small output (< 30 lines): read directly.
+- Debugging: OK to read more context around one error.
+- User explicitly asks for full output: show it.
 
-## Exceptions
-
-- **Small output** (< 30 lines): Read directly, no redirect needed.
-- **Debugging**: OK to read more context around that one error.
-- **User explicitly asks** to see full output: Show it.
-
-→ Output patterns, targeted operations, tool-first policy: see `guidelines/agent-infra/output-patterns.md`
+→ Detailed patterns: `guidelines/agent-infra/output-patterns.md`
 
 ---
 
@@ -1669,46 +1431,22 @@ Skip any step = the claim is unverified.
 - Relying on partial verification (ran tests but not PHPStan)
 - ANY wording implying success without fresh evidence
 
-## Common verification commands
+## Verification commands
 
-### Laravel projects (inside Docker container)
-```bash
-php artisan test                          # Tests
-vendor/bin/phpstan analyse                # Static analysis (1st run)
-vendor/bin/rector process                 # Rector (or: php artisan quality:rector --fix)
-vendor/bin/ecs check --fix                # Code style (or: php artisan quality:ecs --fix)
-vendor/bin/phpstan analyse                # Static analysis (final — verify Rector/ECS didn't break anything)
-```
-
-### Frontend projects
-```bash
-npm test          # or: bun test
-npm run build     # or: bun run build
-npm run lint      # or: bun run lint
-npx tsc --noEmit  # TypeScript check
-```
-
-For tool-specific commands → see the `quality-workflow` rule.
+For specific commands → see the `quality-tools` skill.
 
 ## Minimum verification per task type
 
 | Task | Required evidence |
 |---|---|
-| Code change | Tests + PHPStan (command output with exit code) |
-| New feature | Tests + PHPStan + manual smoke test |
-| Bug fix | Regression test + full test suite |
-| Refactoring | Full test suite + PHPStan + Rector |
-| Config change | Relevant tests or verification command output |
+| Code change | Tests + PHPStan |
+| New feature | Tests + PHPStan + smoke test |
+| Bug fix | Regression test + full suite |
+| Refactoring | Full suite + PHPStan + Rector |
+| Config/migration | Relevant tests or command output |
 | API endpoint | curl/HTTP response output |
-| UI change | Screenshot or browser verification |
-| Migration | Migration run + rollback test |
 | Documentation only | No verification needed |
 
-**Never accept** these as proof:
-- "It should work"
-- "Looks correct"
-- "I've done similar before"
-- "The logic is sound"
-
-If you can't produce captured output, it's not verified.
+**Never accept** as proof: "should work", "looks correct", "logic is sound".
+No captured output = not verified.
 

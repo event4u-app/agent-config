@@ -64,7 +64,7 @@ Skip any step = the claim is unverified.
 
 ## Verification commands
 
-For specific commands → see `quality-workflow` rule.
+For specific commands → see the `quality-tools` skill.
 
 ## Minimum verification per task type
 

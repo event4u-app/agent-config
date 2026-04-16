@@ -99,7 +99,7 @@ When you write a script because no skill exists → capture learning → propose
 
 ## General Rules
 
-For tool-specific commands → see `quality-workflow` rule.
+For tool-specific commands → see the `quality-tools` skill.
 
 1. **ECS and Rector are trusted tools** — run with `--fix`, don't read diffs. Trust the config.
    Verification: PHPStan + tests afterwards.

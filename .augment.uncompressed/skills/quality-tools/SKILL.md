@@ -27,7 +27,7 @@ If both PHP and JS/TS files changed → run **both** pipelines.
 
 ## Related rules and guidelines
 
-- `quality-workflow` rule — enforced workflow, baseline policy, execution rules (auto-loaded)
+- `verify-before-complete` rule — timing: run quality tools ONCE at the end, not after each edit
 - `php-coding` rule → PHPStan section — inline ignores, PHPDoc rules
 - `verify-before-complete` rule — must run quality checks before claiming work is done
 

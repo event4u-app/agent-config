@@ -15,7 +15,7 @@ disable-model-invocation: true
 which rtk
 ```
 
-- If **not installed** → stop. This command requires rtk. Suggest running the install flow from the `rtk` rule.
+- If **not installed** → stop. This command requires rtk. Suggest running the install flow from the `rtk` skill.
 
 ### 2. Detect the project toolchain
 

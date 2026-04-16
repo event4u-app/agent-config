@@ -174,7 +174,7 @@ PR creation:
 
 ## Gotcha
 
-- MCP servers are token-expensive — prefer CLI equivalents when available (see rtk rule).
+- MCP servers are token-expensive — prefer CLI equivalents when available (see `rtk` skill).
 - Don't chain 5+ MCP tool calls when a single CLI command could do the same thing.
 - MCP server availability varies — always handle connection failures gracefully.
 - Sentry and Jira MCP provide unique capabilities — those are worth the token cost.

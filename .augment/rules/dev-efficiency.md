@@ -7,74 +7,88 @@ source: package
 
 # Development Efficiency
 
-For communication/response style → `token-efficiency` rule.
+Loaded when actively working with code, tests, quality tools, CLI, or analysis.
+For communication and response style rules → see the always-loaded `token-efficiency` rule.
 
 ## Codebase Navigation
 
-### Use what you have
+### Use what you already have
 
-- Edited file → `str-replace-editor` showed result. Skip re-reading.
-- Ran command → have output. Skip re-running.
-- File in recent context → skip reloading.
-- Found symbol → use it. Skip re-searching.
+- Edited a file → `str-replace-editor` showed the result. Skip re-reading.
+- Ran a command → you have the output. Skip re-running to "verify".
+- File in context from recent messages → skip reloading.
+- Found a symbol → use it. Skip searching again differently.
 
 ### Search before reading
 
-- Search first — `codebase-retrieval`, `search_query_regex`, `grep`
-- `view_range` or `search_query_regex` over full files
-- Small files (< 50 lines) — OK to read fully
+- **Search first** — `codebase-retrieval`, `search_query_regex`, or `grep`.
+- **Load only what you need** — use `view_range` or `search_query_regex`, not full files.
+- **Small files** (< 50 lines) — OK to read fully.
 
-### `.augmentignore`
+### Ignored files (`.augmentignore`)
 
-- `vendor/`, `node_modules/`, locks excluded from `codebase-retrieval`
-- Need vendor details → `view` specific file (bypasses ignore)
+- `vendor/`, `node_modules/`, lock files, and generated files are excluded from `codebase-retrieval`.
+- When you need to understand a vendor package (base class, interface, API), **read the specific file** with `view`. This bypasses the ignore.
+- Load only the file you need — never browse entire vendor directories.
 
 ### Minimize tool calls
 
-- Parallel reads — batch, not sequential
-- `search_query_regex` over full file reads
-- `view_range` for known lines
-- One `codebase-retrieval` call with all symbols
+- **Parallel reads** — read multiple files in one batch, not sequentially.
+- **`search_query_regex`** over full file reads.
+- **`view_range`** when you know the exact lines.
+- **One `codebase-retrieval` call** with all symbols — batch, not 5 separate calls.
 
 ## Pattern: Redirect, Summarize, Target
 
-Commands producing >30 lines:
+Every command that MAY produce more than ~30 lines of output:
 
-### Step 1: Redirect
+### Step 1: Redirect to file
 ```bash
 docker compose exec -T <service> <command> 2>&1 > /tmp/<tool>-output.txt
 echo "EXIT=$?"
 ```
 
-### Step 2: Summary only
+### Step 2: Read ONLY the summary
 ```bash
 tail -5 /tmp/<tool>-output.txt
 ```
 
-### Step 3: Targeted details
+### Step 3: If errors exist, read ONLY what you need to fix
 ```bash
 grep "ERROR\|error\|✏️" /tmp/<tool>-output.txt | head -20
 grep "app/Services/MyService.php" /tmp/<tool>-output.txt
 ```
 
-**NEVER:** `cat` full output, read passing command output, read unactionable diffs.
+**NEVER** do:
+- `cat /tmp/<tool>-output.txt` (loads everything)
+- Read the full output of a passing command (waste)
+- Read diffs you don't plan to act on
 
 ## General Rules
 
-1. **Exit code first** — if 0, skip reading
-2. **Summary line** — last few lines suffice
-3. **Targeted grep** — specific file/error type
-4. **Read once, act, move on** — don't re-read
-5. **Iterative fixing** — fix one, re-run, check exit code
+For tool-specific commands → see the `quality-tools` skill.
+
+1. **Exit code first**: Check `$?` before reading ANY output. If 0, you're done — skip reading.
+2. **Summary line**: Most tools print a summary as the last few lines. That's all you need.
+3. **Targeted grep**: When you need details, `grep` for the specific file or error type.
+4. **Read once, act, move on**: Once you've read output and acted on it, skip re-reading.
+5. **Iterative fixing**: Fix one error at a time, re-run, check exit code.
+   Output becomes stale after each fix — always re-run before reading again.
 
 ## CLI Over MCP
 
-CLI > MCP (significantly fewer tokens):
-- Git, files, APIs, database → CLI
-- Exception: MCPs with unique capabilities (Sentry, Playwright, Jira)
+MCP servers are **significantly more token-expensive** than CLI equivalents.
+When both options exist, prefer the CLI tool.
+
+- **Git**: `git` CLI, not Git MCP
+- **Files**: shell commands, not filesystem MCP
+- **APIs**: `curl`/`httpie`, not HTTP MCP
+- **Database**: `mysql`/`psql` CLI, not DB MCP
+
+Exception: MCPs with **unique capabilities** (Sentry, Playwright, Jira).
 
 ## Exceptions
 
-- Small output (< 30 lines) → read directly
-- Debugging → more context OK
-- User asks for full output → show it
+- **Small output** (< 30 lines): Read directly, no redirect needed.
+- **Debugging**: OK to read more context around the specific error.
+- **User asks** for full output: Show it.

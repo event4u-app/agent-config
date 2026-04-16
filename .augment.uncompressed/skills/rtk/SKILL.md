@@ -1,13 +1,20 @@
 ---
-type: "auto"
-alwaysApply: false
-description: "Using rtk (Rust Token Killer) to wrap CLI commands for token-efficient output filtering"
+name: rtk
+description: "Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns."
 source: package
 ---
 
 # rtk (Rust Token Killer)
 
-**What:** High-performance CLI proxy that reduces LLM token consumption by 60-90%
+## When to use
+
+- Before running any CLI command expected to produce >30 lines of output
+- When setting up rtk on a new machine or project
+- When creating/optimizing project-local rtk filters
+
+## What
+
+High-performance CLI proxy that reduces LLM token consumption by 60-90%
 on common dev commands through intelligent output filtering (whitespace, boilerplate,
 comments, duplicate log messages). Single Rust binary, <10ms startup overhead.
 
@@ -25,7 +32,19 @@ rtk npm test          # same for JS/TS
 rtk docker compose ps # compact container status
 ```
 
-## Detection & Installation Prompt
+## Procedure: Wrap commands with rtk
+
+1. Run `which rtk` (silent) — check if installed.
+2. **If installed** → prefix commands with `rtk` when output >30 lines expected.
+3. **If NOT installed** → check `.agent-settings` for `rtk_last_asked`. If not today → prompt user (see Installation below).
+4. After wrapping: verify output is useful (not truncated on completeness-critical commands).
+
+## Output format
+
+1. Wrapped command with `rtk` prefix
+2. Token savings estimate (if first use in conversation)
+
+## Detection & Installation
 
 **Before using CLI commands that produce verbose output**, check if rtk is available:
 
@@ -143,3 +162,19 @@ Custom filters for the project's PHP/Laravel toolchain live in `.rtk/filters.tom
 (project root, versioned in Git). These override global filters for matching commands.
 
 Covered: PHPStan, Pest, ECS, Rector, Docker Compose, Artisan, Composer.
+
+To generate or update project-local filters → use the `/optimize-rtk-filters` command.
+
+## Gotcha
+
+- `rtk git diff` silently truncates at ~50 changes — you'll make decisions on incomplete data
+- `rtk read` has the same truncation risk — always use `cat`/`view` instead
+- Telemetry is enabled by default — always disable it during installation
+- The tee recovery (`mode = "failures"`) is your safety net — without it, re-run is the only option
+
+## Do NOT
+
+- Do NOT use `rtk` for `git diff` or any command where completeness matters
+- Do NOT skip the post-install setup (telemetry, tee, audit logging)
+- Do NOT use rtk for commands already piped through `grep`/`tail`
+- Do NOT use rtk for short commands (< 5 lines expected output)

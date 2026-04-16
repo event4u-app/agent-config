@@ -66,7 +66,7 @@ grep "app/Services/MyService.php" /tmp/<tool>-output.txt
 
 ## General Rules
 
-For tool-specific commands → see the `quality-workflow` rule.
+For tool-specific commands → see the `quality-tools` skill.
 
 1. **Exit code first**: Check `$?` before reading ANY output. If 0, you're done — skip reading.
 2. **Summary line**: Most tools print a summary as the last few lines. That's all you need.
