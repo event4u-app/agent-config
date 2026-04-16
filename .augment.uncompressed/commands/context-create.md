@@ -1,6 +1,6 @@
 ---
 name: context-create
-skills: [agent-docs]
+skills: [agent-docs-writing]
 description: Analyze a codebase area and create a structured context document
 disable-model-invocation: true
 ---

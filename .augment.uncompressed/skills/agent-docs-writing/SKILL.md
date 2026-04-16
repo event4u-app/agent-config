@@ -1,5 +1,5 @@
 ---
-name: agent-docs
+name: agent-docs-writing
 description: "Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure."
 source: package
 ---

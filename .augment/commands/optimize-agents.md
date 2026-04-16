@@ -1,7 +1,7 @@
 ---
 name: optimize-agents
 description: Audits agent infrastructure — measures token overhead, checks rule triggers, verifies AGENTS.md. Suggest only, never auto-apply.
-skills: [copilot-agents-optimizer, agents-audit, agent-docs, quality-tools]
+skills: [copilot-agents-optimizer, agents-audit, agent-docs-writing, quality-tools]
 disable-model-invocation: true
 ---
 
@@ -66,21 +66,21 @@ done | sort | awk -F' \\| ' '{descs[$1]=descs[$1] " " $2} END {for (d in descs) 
 
 ### 3. Check always → auto candidates
 
-Apply `rule-type-governance` rule criteria:
+Apply the `rule-type-governance` rule criteria:
 
-1. Applies to EVERY conversation? → keep `always`
-2. Triggered by specific topic? → candidate for `auto`
-3. Core behavior constraint (scope-control, verify-before-complete, token-efficiency)? → **NEVER change to auto**
+1. Does it apply to EVERY conversation? → keep `always`
+2. Can it be triggered by a specific topic? → candidate for `auto`
+3. Is it a core behavior constraint (scope-control, verify-before-complete, token-efficiency)? → **NEVER change to auto**
 
-**Decision test:** "Does this rule need to be active when user asks a simple question, reviews a PR, or discusses architecture?" No → `auto`.
+**Decision test:** "Does this rule need to be active when the user asks a simple question, reviews a PR, or discusses architecture?" No → `auto`.
 
 **Safety gate for always → auto:**
 
 - [ ] Rule is NOT a core behavior constraint
-- [ ] Clear, specific trigger description exists
-- [ ] Trigger won't miss conversations where rule matters
+- [ ] A clear, specific trigger description exists
+- [ ] The trigger won't miss conversations where the rule matters
 
-Present candidates with justification. **Never auto-apply.**
+Present candidates with explicit justification. **Never auto-apply.**
 
 ### 4. Check AGENTS.md + copilot-instructions.md
 

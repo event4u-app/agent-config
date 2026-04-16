@@ -337,22 +337,6 @@ A learning may be promoted to rule/skill ONLY if ALL gates pass:
 
 ---
 
-# Commands
-
-When user types command (`/create-pr`, `# create-pr`, or pastes command file),
-**execute immediately**. No questions, opinions, summaries, confirmations.
-
-- Match command file in `.augment/commands/` (or `agents/overrides/commands/`)
-- Read it, follow steps in order
-- Ask only when command says "ask the user"
-- Pasted command content = invocation, NOT question
-- **NEVER** "looks good" or "shall I execute?" — execute
-- **NEVER** "this is the current version" — execute
-- **NEVER** treat pasted content as review request — ALWAYS invocation
-- Exception: user explicitly says "update this command" or "review this command"
-
----
-
 # Commit Conventions
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
@@ -961,7 +945,7 @@ If the detected model is `gemini`, immediately trigger the Gemini warning (see b
 `/commit`, `/fix-pr-comments` are sonnet tasks — even if the previous task was opus-level.
 This is the most commonly missed check. Do NOT skip it.
 
-**Priority over commands rule**: This check runs BEFORE the `commands` rule. If a model switch
+**Priority over commands rule**: This check runs BEFORE the `slash-commands` rule. If a model switch
 is recommended, show the suggestion first. Only after the user responds, execute the command.
 
 **If ambiguous** (could be opus or sonnet): default to **sonnet** — cheaper, and the user can escalate.
@@ -1187,6 +1171,23 @@ May remove: verbose explanations, redundant examples, non-execution commentary.
 - NEVER replace concrete checks with "verify it works"
 - NEVER merge if result broader than either source
 - ALWAYS run linter before and after — fail count must not increase
+
+---
+
+# Commands
+
+When the user types a command (`/create-pr`, `# create-pr`, or pastes a command file),
+**execute it immediately**. No questions, no opinions, no summaries, no confirmations.
+
+- Match the command file in `.augment/commands/` (or `agents/overrides/commands/`).
+- Read it, follow the steps in order.
+- Ask only when the command itself says "ask the user".
+- If the user pastes the **content** of a command file, treat it as an invocation — not a question.
+- **NEVER** respond with "looks good" or ask "shall I execute?" — just execute.
+- **NEVER** respond with "this is the current version" or "do you want to change something?" — just execute.
+- **NEVER** treat pasted command content as a review request — it's ALWAYS an invocation.
+- The only exception: the user's message contains an explicit instruction about the command
+  (e.g., "update this command" or "review this command"). In that case, follow the instruction instead.
 
 ---
 

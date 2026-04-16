@@ -143,7 +143,7 @@ If `false` or `.agent-settings` doesn't exist, do NOT add the prefix.
 ## Replying via GitHub API
 
 Read `github_pr_reply_method` from `.agent-settings` to determine the correct endpoint.
-See the `commands` skill → "GitHub API: Replying to PR review comments" for full details.
+See the `command-routing` skill → "GitHub API: Replying to PR review comments" for full details.
 
 ## After all comments
 

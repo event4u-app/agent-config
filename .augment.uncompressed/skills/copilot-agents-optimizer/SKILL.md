@@ -138,7 +138,7 @@ When optimizing either file, check:
 
 - **Command:** `/copilot-agents-optimize`
 - **Skill:** `copilot` — Copilot behavior and PR review patterns
-- **Skill:** `agent-docs` — documentation hierarchy
+- **Skill:** `agent-docs-writing` — documentation hierarchy
 - **Context:** `augment-infrastructure.md` — full `.augment/` overview
 
 

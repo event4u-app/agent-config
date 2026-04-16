@@ -8,7 +8,7 @@
 | # | Skill | Status | Errors | Warns | Classification | Action |
 |---|---|---|---|---|---|---|
 | 1 | `adversarial-review` | fail | 3 | 5 | KEEP | Upgrade to template — good 3-step procedural workflow (Attack/Defend/Revise), clear trigger |
-| 2 | `agent-docs` | fail | 3 | 5 | KEEP | Upgrade to template — documentation hierarchy is essential reference knowledge; some constraints overlap with scope-control rule |
+| 2 | `agent-docs-writing` | fail | 3 | 5 | KEEP | Upgrade to template — documentation hierarchy is essential reference knowledge; some constraints overlap with scope-control rule |
 | 3 | `agents-audit` | fail | 3 | 5 | KEEP | Upgrade to template — clear procedural audit workflow with checklist and output format |
 | 4 | `analysis-autonomous-mode` | fail | 2 | 6 | KEEP | Upgrade to template — procedural coordination workflow with routing matrix and escalation rules |
 | 5 | `api-design` | fail | 3 | 5 | SPLIT | Extract conventions (status codes, response format, pagination) → guideline `php/api-design.md`; keep design decision workflow as skill |
@@ -88,7 +88,7 @@
 | 79 | `post-task-learning-capture` | fail | 1 | 1 | **MERGE** | Heavy overlap with `learning-to-rule-or-skill`; merge unique "post-task reflection" trigger into that skill |
 | 80 | `project-analysis-laravel` | fail | 2 | 6 | **MERGE** | Heavy overlap with `universal-project-analysis`; merge Laravel-specific sections (boot analysis, Eloquent, queues) into universal skill as a "Laravel mode" |
 | 81 | `project-analyzer` | fail | 3 | 5 | **KEEP** | Upgrade to template — clear phased workflow for generating `agents/analysis/` docs; distinct from investigation skills |
-| 82 | `project-docs` | fail | 3 | 6 | **KEEP** | Upgrade to template — essential doc discovery workflow; maps work areas to docs; distinct from `agent-docs` |
+| 82 | `project-docs` | fail | 3 | 6 | **KEEP** | Upgrade to template — essential doc discovery workflow; maps work areas to docs; distinct from `agent-docs-writing` |
 | 83 | `quality-tools` | fail | 3 | 5 | **KEEP** | Upgrade to template — critical reference for all quality tool commands, flags, detection logic; complements `quality-workflow` rule |
 | 84 | `react` | fail | 3 | 5 | **REMOVE** | Generic React knowledge (hooks, components, state) — model already knows; no project-specific patterns |
 | 85 | `readme-generator` | fail | 1 | 4 | **REMOVE** | Too generic — model already knows how to write READMEs; no unique procedure beyond obvious steps |

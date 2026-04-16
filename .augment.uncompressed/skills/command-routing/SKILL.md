@@ -1,5 +1,5 @@
 ---
-name: commands
+name: command-routing
 description: "Use when the user types a slash command like '/create-pr' or '/commit'. Extends the commands rule with context inference and GitHub API patterns."
 source: package
 ---
@@ -8,7 +8,7 @@ source: package
 
 ## When to use
 
-Triggered when user invokes a slash command. The `commands` rule (always loaded) handles core behavior — this skill adds context inference and GitHub API patterns.
+Triggered when user invokes a slash command. The `slash-commands` rule (always loaded) handles core behavior — this skill adds context inference and GitHub API patterns.
 
 ## Procedure: Execute a command
 

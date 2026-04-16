@@ -35,7 +35,7 @@ Commands often chain together. Here are the main workflows:
   Brainstorm        Structure         Phases/Steps        Implement
 ```
 
-**Skills used:** `feature-planning`, `agent-docs`, `roadmap-manager`
+**Skills used:** `feature-planning`, `agent-docs-writing`, `roadmap-manager`
 
 ### Bug Investigation & Fix
 
@@ -78,7 +78,7 @@ Commands often chain together. Here are the main workflows:
 ```
 ```
 
-**Skills used:** `agents-audit`, `agent-docs`
+**Skills used:** `agents-audit`, `agent-docs-writing`
 
 ## Skill Categories
 
@@ -88,7 +88,7 @@ Commands often chain together. Here are the main workflows:
 |---|---|
 | `coder` | Core PHP coding behavior |
 | `laravel` | Framework conventions |
-| `agent-docs` | Documentation awareness |
+| `agent-docs-writing` | Documentation awareness |
 
 ### Domain-Specific (loaded when working in that area)
 
@@ -110,7 +110,7 @@ Commands often chain together. Here are the main workflows:
 
 | Skill | Purpose |
 |---|---|
-| `agent-docs` | Documentation hierarchy and reading order |
+| `agent-docs-writing` | Documentation hierarchy and reading order |
 | `agents-audit` | Agent docs quality and cleanup |
 | `commands` | Slash command handling |
 | `context` | Context document creation and maintenance |

@@ -138,5 +138,5 @@ Overrides in `agents/overrides/` customize shared behavior per project.
 - **Context:** `augment-infrastructure.md` — `.augment/` directory details
 - **Context:** `override-system.md` — override naming and format
 - **Context:** `skills-and-commands.md` — skill/command inventory
-- **Skill:** `agent-docs` — canonical reading order and creation rules
+- **Skill:** `agent-docs-writing` — canonical reading order and creation rules
 

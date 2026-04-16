@@ -1,6 +1,6 @@
 ---
 name: agents-prepare
-skills: [agent-docs]
+skills: [agent-docs-writing]
 description: Scaffold the agents/ directory structure with all required subdirectories and .gitkeep files
 disable-model-invocation: true
 ---

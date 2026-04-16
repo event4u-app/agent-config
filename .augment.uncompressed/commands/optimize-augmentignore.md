@@ -1,5 +1,5 @@
 ---
-skills: [agent-docs]
+skills: [agent-docs-writing]
 name: optimize-augmentignore
 description: Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules.
 disable-model-invocation: true
@@ -136,7 +136,7 @@ Each ignored skill saves ~3 lines of system prompt tokens per request.
 **Conservative approach:**
 - When in doubt, **keep** the skill — false negatives are worse than false positives.
 - Skills used by other skills or commands should **never** be ignored.
-- Meta/agent-system skills (`agent-docs`, `commands`, `context`, etc.) are **never** ignored.
+- Meta/agent-system skills (`agent-docs-writing-writing`, `commands`, `context`, etc.) are **never** ignored.
 - **Always keep** skills matching the detected stack, even if not actively used yet.
 
 **Output format in `.augmentignore`:**
@@ -258,5 +258,5 @@ echo "Rules ignored: $rules_count"
 - **When in doubt, ignore files** — false positive is easy to fix, false negative wastes tokens silently.
 - **When in doubt, keep skills** — ignoring a needed skill causes bad output, keeping an unneeded one just wastes ~3 lines.
 - **Never ignore always-active rules** — only auto-loaded rules (those with `description` frontmatter) may be ignored.
-- **Never ignore meta/agent-system skills** — `agent-docs`, `commands`, `context`, `override`, `guidelines`, `project-docs`, `roadmap-manager`, `naming`, `skill-reviewer`, `file-editor`, `copilot`, `copilot-agents-optimizer`.
+- **Never ignore meta/agent-system skills** — `agent-docs-writing-writing`, `commands`, `context`, `override`, `guidelines`, `project-docs`, `roadmap-manager`, `naming`, `skill-reviewer`, `file-editor`, `copilot`, `copilot-agents-optimizer`.
 - **Restore previously ignored skills** when the stack changes (e.g., Vue added to project → restore `vue` skill).

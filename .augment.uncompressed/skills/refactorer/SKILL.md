@@ -166,7 +166,7 @@ After the code changes are verified, update all affected documentation:
 | Skill | Relationship |
 |---|---|
 | `project-docs` | Which docs to read before refactoring a specific area |
-| `agent-docs` | When to create/update agent documentation |
+| `agent-docs-writing` | When to create/update agent documentation |
 | `api-endpoint` | Full API endpoint structure (controller + request + resource + schema) |
 | `coder` | PHP coding conventions to follow in refactored code |
 | `pest-testing` | Test conventions when adapting tests |

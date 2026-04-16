@@ -1,6 +1,6 @@
 ---
 name: optimize-rtk-filters
-skills: [agent-docs]
+skills: [agent-docs-writing]
 description: Create or optimize project-local rtk filters based on the actual toolchain
 disable-model-invocation: true
 ---

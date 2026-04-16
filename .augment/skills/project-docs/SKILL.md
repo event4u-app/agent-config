@@ -109,7 +109,7 @@ Do NOT hardcode a mapping — always **list the directory** and pick by relevanc
 
 | Skill | Relationship |
 |---|---|
-| `agent-docs` | When to read/create/update agent docs in general |
+| `agent-docs-writing` | When to read/create/update agent docs in general |
 | `context` | How to create new context documents |
 | `module` | Module-specific docs in module `agents/` directories |
 

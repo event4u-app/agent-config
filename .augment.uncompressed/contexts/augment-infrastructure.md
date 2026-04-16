@@ -88,7 +88,7 @@ Skills organized by domain:
 | **Jobs/Events** | `jobs-events`, `logging-monitoring`, `grafana`, `websocket` |
 | **Packages** | `composer`, `composer-packages`, `npm`, `npm-packages` |
 | **Design** | `dashboard-design`, `design-review`, `fe-design` |
-| **Agent System** | `agent-docs`, `agents-audit`, `context`, `commands`, `copilot`, `copilot-agents-optimizer`, `feature-planning`, `file-editor`, `guidelines`, `mcp`, `override`, `project-docs`, `roadmap-manager`, `module`, `naming`, `project-analyzer`, `sequential-thinking`, `skill-reviewer` |
+| **Agent System** | `agent-docs-writing`, `agents-audit`, `context`, `commands`, `copilot`, `copilot-agents-optimizer`, `feature-planning`, `file-editor`, `guidelines`, `mcp`, `override`, `project-docs`, `roadmap-manager`, `module`, `naming`, `project-analyzer`, `sequential-thinking`, `skill-reviewer` |
 | **Workflow** | `git-workflow`, `merge-conflicts`, `code-review`, `refactorer`, `bug-analyzer`, `security`, `adversarial-review`, `dependency-upgrade`, `quality-tools` |
 | **Other** | `graphql`, `jira`, `mobile`, `sentry`, `wordpress`, `microservices`, `technical-specification` |
 

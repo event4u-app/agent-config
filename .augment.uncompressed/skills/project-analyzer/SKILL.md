@@ -294,7 +294,7 @@ Each module gets its own file in `agents/analysis/modules/`. Format:
 | `module`           | Detect and inventory modules                                |
 | `context`          | Create/update context documents                             |
 | `feature-planning` | Identify planned but undocumented features                  |
-| `agent-docs`       | Audit and maintain agent documentation                      |
+| `agent-docs-writing`       | Audit and maintain agent documentation                      |
 | `roadmap-manager`  | Review roadmap status                                       |
 | `api-endpoint`     | Understand endpoint structure for API analysis              |
 | `database`         | Understand schema and multi-tenancy for data layer analysis |

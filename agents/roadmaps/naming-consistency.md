@@ -30,8 +30,8 @@ Renaming affects: folder names, SKILL.md `name:` field, compressed copies, symli
 
 | Current | Layer | Rename to | Reason |
 |---|---|---|---|
-| `agent-docs` | rule | `agent-docs` (keep) | Rule triggers on agent doc editing |
-| `agent-docs` | skill | `agent-docs-writing` | Skill is the "how to write" workflow |
+| `agent-docs-writing` | rule | `agent-docs-writing` (keep) | Rule triggers on agent doc editing |
+| `agent-docs-writing` | skill | `agent-docs-writing` | Skill is the "how to write" workflow |
 | `commands` | rule | `slash-commands` | Rule is about slash command execution |
 | `commands` | skill | `command-routing` | Skill routes and extends command execution |
 

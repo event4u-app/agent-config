@@ -1,6 +1,6 @@
 ---
 name: roadmap-create
-skills: [agent-docs]
+skills: [agent-docs-writing]
 description: Interactively create a new roadmap file in agents/roadmaps/
 disable-model-invocation: true
 ---

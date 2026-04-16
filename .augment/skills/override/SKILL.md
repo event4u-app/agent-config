@@ -143,7 +143,7 @@ Override templates are in `.augment/templates/overrides/`:
 ## Related
 
 - **Commands:** `/override-create`, `/override-manage`
-- **Skill:** `agent-docs` (documentation hierarchy)
+- **Skill:** `agent-docs-writing` (documentation hierarchy)
 - **Templates:** `.augment/templates/overrides/`
 
 ### Validate

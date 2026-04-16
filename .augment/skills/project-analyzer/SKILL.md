@@ -294,7 +294,7 @@ Each module gets its own file in `agents/analysis/modules/`. Format:
 | `module`           | Detect and inventory modules                                |
 | `context`          | Create/update context documents                             |
 | `feature-planning` | Identify planned but undocumented features                  |
-| `agent-docs`       | Audit and maintain agent documentation                      |
+| `agent-docs-writing`       | Audit and maintain agent documentation                      |
 | `roadmap-manager`  | Review roadmap status                                       |
 | `api-endpoint`     | Understand endpoint structure for API analysis              |
 | `database`         | Understand schema and multi-tenancy for data layer analysis |
@@ -312,17 +312,17 @@ Each module gets its own file in `agents/analysis/modules/`. Format:
 5. **Update existing files** if re-running analysis — don't create duplicates.
 
 
-## Auto-trigger keywords
-
-- project analysis
-- codebase analysis
-- architecture analysis
-
 ## Output format
 
 1. Structured analysis document in agents/analysis/
 2. Tech stack inventory with versions and dependencies
 3. Architecture diagram or module map
+
+## Auto-trigger keywords
+
+- project analysis
+- codebase analysis
+- architecture analysis
 
 ## Gotcha
 
