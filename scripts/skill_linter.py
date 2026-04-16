@@ -348,10 +348,10 @@ def lint_skill(path: Path, text: str) -> LintResult:
         issues.append(Issue("warning", "broad_scope", "Skill scope appears broad and may need splitting"))
         suggestions.append("Narrow the trigger or split unrelated workflows")
 
-    # --- Size check ---
+    # --- Size check (see guidelines/agent-infra/size-and-scope.md) ---
     total_lines = len(text.splitlines())
-    if total_lines > 500:
-        issues.append(Issue("warning", "skill_too_large", f"Skill has {total_lines} lines (limit: 500); consider splitting"))
+    if total_lines > 300:
+        issues.append(Issue("warning", "skill_too_large", f"Skill has {total_lines} lines; review for split (see size-and-scope guideline)"))
 
     # --- Pointer-only skill detection ---
     if procedure_block:
@@ -444,9 +444,14 @@ def lint_rule(path: Path, text: str) -> LintResult:
     if DOUBLE_BLANK_PATTERN.search(text):
         issues.append(Issue("warning", "double_blank_lines", "File contains double or triple blank lines"))
 
-    # --- Content checks (existing) ---
+    # --- Content checks (see guidelines/agent-infra/size-and-scope.md) ---
     line_count = len([line for line in text.splitlines() if line.strip()])
-    if line_count > 50:
+    total_lines = len(text.splitlines())
+    if total_lines > 200:
+        issues.append(Issue("error", "rule_too_large", f"Rule has {total_lines} lines (hard limit: 200); must split or move to guideline"))
+    elif line_count > 60:
+        issues.append(Issue("warning", "long_rule", f"Rule has {line_count} non-empty lines; prefer < 60 (see size-and-scope guideline)"))
+    elif line_count > 40:
         issues.append(Issue("warning", "long_rule", f"Rule has {line_count} non-empty lines; rules should be concise"))
 
     for bad_sign in RULE_BAD_SIGNS:
