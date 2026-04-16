@@ -60,6 +60,16 @@ Skills follow the [Agent Skills open standard](https://agentskills.io).
 
 ---
 
+## Requirements
+
+- **Bash** (for install scripts)
+- **Python 3.10+** (for linter, compression, and quality tools)
+- [Task](https://taskfile.dev/) (task runner — for development only)
+
+No runtime dependencies — this package provides static configuration files only.
+
+---
+
 ## Installation
 
 ### Composer (PHP projects)
