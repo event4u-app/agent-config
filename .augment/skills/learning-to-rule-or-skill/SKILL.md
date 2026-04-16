@@ -85,12 +85,14 @@ Bad:
 
 ### 2. Identify the pattern type
 
-Classify:
+Classify by type:
 * Constraint
 * Workflow
 * Anti-pattern
 * Quality check
 * Environment-specific convention
+
+Tag with category: `skill-weakness` | `rule-weakness` | `routing-issue` | `assumption-issue` | `verification-gap` | `optimization-overreach`
 
 ### 3. Decide the target
 

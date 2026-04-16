@@ -49,6 +49,7 @@ For each learning, apply ALL of these checks. ALL must be YES to promote:
 Show the user:
 ```
 > Learning: "{summary}"
+> Category: {category-tag}
 > Repeated: {yes/no} | Prevents failure: {yes/no} | Not covered: {yes/no} | Actionable: {yes/no}
 >
 > → {Promote / Reject / Note / Update existing}
@@ -56,7 +57,9 @@ Show the user:
 
 ### Step 3: Classify
 
-Decide what to create:
+**Category tag:** `skill-weakness` | `rule-weakness` | `routing-issue` | `assumption-issue` | `verification-gap` | `optimization-overreach`
+
+**Artifact type:**
 
 | Learning type | Create |
 |---|---|

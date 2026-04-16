@@ -85,12 +85,20 @@ Bad:
 
 ### 2. Identify the pattern type
 
-Classify:
+Classify by type:
 * Constraint
 * Workflow
 * Anti-pattern
 * Quality check
 * Environment-specific convention
+
+Tag with feedback category (for tracking/aggregation):
+* `skill-weakness` — skill gave wrong or incomplete guidance
+* `rule-weakness` — rule was too vague or missed a case
+* `routing-issue` — wrong skill was selected
+* `assumption-issue` — agent made bad assumptions
+* `verification-gap` — verification step was missing or weak
+* `optimization-overreach` — optimize command suggested harmful change
 
 ### 3. Decide the target
 

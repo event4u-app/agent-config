@@ -49,12 +49,28 @@ For each learning, apply ALL of these checks. ALL must be YES to promote:
 Show the user:
 ```
 > Learning: "{summary}"
+> Category: {category-tag}
 > Repeated: {yes/no} | Prevents failure: {yes/no} | Not covered: {yes/no} | Actionable: {yes/no}
 >
 > → {Promote / Reject / Note / Update existing}
 ```
 
 ### Step 3: Classify
+
+#### Category tag
+
+Tag each learning with one category for tracking:
+
+| Category | When |
+|---|---|
+| `skill-weakness` | Skill gave wrong or incomplete guidance |
+| `rule-weakness` | Rule was too vague or missed a case |
+| `routing-issue` | Wrong skill was selected for the task |
+| `assumption-issue` | Agent made bad assumptions instead of asking |
+| `verification-gap` | Verification step was missing or weak |
+| `optimization-overreach` | Optimize command suggested harmful change |
+
+#### Artifact type
 
 Decide what to create:
 
