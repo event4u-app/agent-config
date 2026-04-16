@@ -161,7 +161,8 @@ Example:
 * K3: No obvious content
 * K4: Contains gotchas
 * K5: Has Output format (numbered, 2-4 deliverables)
-* K6: Created with analysis (not blind, not pointer-only, expected behavior defined)
+* K6: Not pointer-only (executable without opening guidelines)
+* K7: Created with analysis (not blind, expected behavior defined)
 * Size: Within limits (see size-and-scope guideline)
 
 ## Output format

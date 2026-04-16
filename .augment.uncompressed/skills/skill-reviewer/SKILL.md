@@ -1,6 +1,6 @@
 ---
 name: skill-reviewer
-description: "Use when reviewing, auditing, or optimizing skills — validates against the 6 Skill Killers checklist and produces fix recommendations."
+description: "Use when reviewing, auditing, or optimizing skills — validates against the 7 Skill Killers checklist and produces fix recommendations."
 source: package
 ---
 
@@ -10,10 +10,10 @@ source: package
 
 Use when reviewing, auditing, or optimizing existing skills — checking quality against the 6 Skill Killers checklist. Also for validating a new skill before saving.
 
-Reviews skills against the **6 Skill Killers** — the most common anti-patterns
+Reviews skills against the **7 Skill Killers** — the most common anti-patterns
 that waste tokens, cause misfires, or degrade agent performance.
 
-## The 6 Skill Killers Checklist
+## The 7 Skill Killers Checklist
 
 ### Killer 1: Vague or Quiet Description
 
@@ -85,7 +85,22 @@ Skill exceeds size limits (see `guidelines/agent-infra/size-and-scope.md`).
 **Fix:** Extract reference tables, templates, and examples into separate files
 in the skill folder, or split by responsibility.
 
-### Killer 6: Created Without Analysis
+### Killer 6: Guideline-Dependent (Pointer-Only)
+
+The skill delegates to guidelines instead of containing its own executable workflow.
+
+**Iron Rule:** If a skill is not executable without opening a guideline, it is broken.
+
+**Check:** Cover all guideline references in the skill — is the Procedure still executable?
+**Litmus test:** Remove `→ See guideline ...` lines. Does the skill still tell the agent what to do?
+
+**Fail if:** ≥3 guideline delegations AND ≤1 action verb AND <3 procedure steps
+**Warn if:** ≥2 guideline delegations AND ≤2 action verbs AND <3 procedure steps
+
+**Fix:** Inline the essential workflow steps from the guideline. Keep the guideline reference
+for deep-dive details, but the Procedure must work standalone.
+
+### Killer 7: Created Without Analysis
 
 The skill/rule/command was written without inspecting existing state or defining expected behavior.
 
@@ -165,9 +180,9 @@ Before scoring the 5 Killers, verify structure:
 ## Output Format
 
 ```markdown
-| Skill | K1 Desc | K2 Over | K3 Obvious | K4 Gotcha | K5 Size | K6 Analysis | Verdict |
-|---|---|---|---|---|---|---|---|
-| dto-creator | ❌ | ✅ | ✅ | ⚠️ | ✅ | ✅ | Fix description |
+| Skill | K1 Desc | K2 Over | K3 Obvious | K4 Gotcha | K5 Size | K6 Pointer | K7 Analysis | Verdict |
+|---|---|---|---|---|---|---|---|---|
+| dto-creator | ❌ | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | Fix description |
 ```
 
 ## Output format
@@ -188,6 +203,6 @@ Before scoring the 5 Killers, verify structure:
 
 ## Do NOT
 
-- Do NOT rewrite skills that pass all 5 killers — leave them alone.
+- Do NOT rewrite skills that pass all 7 killers — leave them alone.
 - Do NOT add "Related skills" cross-links — the agent discovers via descriptions.
 - Do NOT force Gotcha entries — seed naturally from real failures.

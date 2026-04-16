@@ -60,10 +60,14 @@ Do not use when:
 
 **Linter gate:** After refactoring, run `python3 scripts/skill_linter.py` on the file — must be 0 FAIL.
 
+**Independence check:** After refactoring, verify the skill is still executable without opening any guideline.
+If the refactor introduced guideline delegations ("see guideline X"), ensure the Procedure still works standalone.
+
 **Decision hints:**
 * Too long → compress or split
 * Too generic → narrow scope
 * Missing validation → add it
+* Too dependent on guidelines → inline essential steps
 * Multiple workflows → split into separate skills
 
 ## Common anti-patterns

@@ -115,6 +115,10 @@ tasks:
     desc: Check compression quality (headings, code blocks, frontmatter, word count)
     cmd: python3 scripts/check_compression.py
 
+  quality-report:
+    desc: Generate quality score report (per artifact type)
+    cmd: python3 scripts/skill_linter.py --report
+
   ci:
     desc: Run core CI checks locally
     cmds:

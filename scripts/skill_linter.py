@@ -1043,8 +1043,61 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--duplicates", action="store_true", help="Detect skills with similar descriptions")
     parser.add_argument("--compression-quality", action="store_true", help="Check compressed skills preserve key content")
     parser.add_argument("--strict-warnings", action="store_true", help="Return non-zero on warnings")
+    parser.add_argument("--report", action="store_true", help="Output quality score report")
     parser.add_argument("--repo-root", default=".", help="Repository root")
     return parser.parse_args()
+
+
+def format_report(results: list[LintResult]) -> str:
+    """Generate a quality score report grouped by artifact type."""
+    lines = ["# Quality Report", ""]
+
+    # Group by artifact type
+    by_type: dict[str, list[LintResult]] = {}
+    for r in results:
+        by_type.setdefault(r.artifact_type, []).append(r)
+
+    # Summary table
+    lines.append("| Type | Total | Pass | Warn | Fail | Score |")
+    lines.append("|---|---|---|---|---|---|")
+    total_score = 0.0
+    total_count = 0
+    for atype in sorted(by_type):
+        items = by_type[atype]
+        n = len(items)
+        n_pass = sum(1 for r in items if r.status == "pass")
+        n_warn = sum(1 for r in items if r.status in ("warn", "pass_with_warnings"))
+        n_fail = sum(1 for r in items if r.status == "fail")
+        # Score: pass=10, warn=8, fail=3
+        type_score = (n_pass * 10 + n_warn * 8 + n_fail * 3) / max(n, 1)
+        total_score += type_score * n
+        total_count += n
+        lines.append(f"| {atype} | {n} | {n_pass} | {n_warn} | {n_fail} | {type_score:.1f}/10 |")
+    overall = total_score / max(total_count, 1)
+    lines.append(f"| **TOTAL** | **{total_count}** | | | | **{overall:.1f}/10** |")
+
+    # Top issues
+    issue_counts: dict[str, int] = {}
+    for r in results:
+        for i in r.issues:
+            issue_counts[i.code] = issue_counts.get(i.code, 0) + 1
+    if issue_counts:
+        lines.extend(["", "## Top Issues", ""])
+        lines.append("| Issue | Count | Severity |")
+        lines.append("|---|---|---|")
+        for code, count in sorted(issue_counts.items(), key=lambda x: -x[1])[:15]:
+            # Find severity from first occurrence
+            sev = "?"
+            for r in results:
+                for i in r.issues:
+                    if i.code == code:
+                        sev = i.severity
+                        break
+                if sev != "?":
+                    break
+            lines.append(f"| `{code}` | {count} | {sev} |")
+
+    return "\n".join(lines)
 
 
 def main() -> int:
@@ -1053,7 +1106,7 @@ def main() -> int:
 
     try:
         paths: list[Path] = []
-        if args.all:
+        if args.all or args.report:
             paths.extend(gather_all_candidate_files(root))
         if args.changed:
             paths.extend(gather_changed_candidate_files(root))
@@ -1077,7 +1130,9 @@ def main() -> int:
         if args.compression_quality:
             results.extend(check_compression_quality(root))
 
-        if args.format == "json":
+        if args.report:
+            print(format_report(results))
+        elif args.format == "json":
             print(format_json(results))
         else:
             print(format_text(results))
