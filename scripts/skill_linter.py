@@ -686,6 +686,104 @@ def gather_changed_candidate_files(root: Path) -> list[Path]:
         return []
 
 
+# --- Interaction quality checks (keyword-based, for meta/interaction artifacts only) ---
+
+# File name patterns that indicate an interaction/meta artifact (strict — avoids false positives)
+_INTERACTION_NAME_PATTERNS = re.compile(
+    r"skill-router|handoff|analysis-skill|skill-writing|skill-reviewer|"
+    r"model-recommendation|developer-like-execution|universal-project-analysis|"
+    r"interaction|autonomous-mode|feature-planning",
+    re.IGNORECASE,
+)
+_INTERACTION_CONTENT_KEYWORDS = {"handoff", "model switch", "clarification", "ask the user", "framework choice", "requirements are unclear"}
+
+
+def _is_interaction_artifact(path: Path, text: str) -> bool:
+    """Check if file is an interaction/meta artifact that should get question-quality checks."""
+    name = str(path).lower()
+    # Strict name match — only truly interaction-focused artifacts
+    if _INTERACTION_NAME_PATTERNS.search(name):
+        return True
+    # Content match needs 3+ keywords to avoid false positives on analysis/coding skills
+    text_lower = text.lower()
+    matches = sum(1 for kw in _INTERACTION_CONTENT_KEYWORDS if kw in text_lower)
+    return matches >= 3
+
+
+def lint_interaction_quality(path: Path, text: str) -> List[Issue]:
+    """Check interaction/meta artifacts for question strategy, handoff order, etc."""
+    if not _is_interaction_artifact(path, text):
+        return []
+
+    issues: List[Issue] = []
+    text_lower = text.lower()
+
+    # Only check files that explicitly discuss user questioning strategy
+    has_question_context = any(kw in text_lower for kw in (
+        "ask the user", "ask clarification", "numbered options", "present options",
+        "question strategy", "ask before",
+    ))
+
+    # Check 1: Question strategy — distinguishes simple grouped vs complex sequential
+    if has_question_context:
+        has_simple = any(kw in text_lower for kw in ("simple", "binary", "independent"))
+        has_complex = any(kw in text_lower for kw in ("complex", "one at a time", "one question"))
+        if not (has_simple and has_complex):
+            issues.append(Issue("warning", "question_strategy_missing",
+                                "Interaction guidance does not distinguish simple grouped questions "
+                                "from complex sequential questions"))
+
+    # Check 2: Handoff ordering — handoff/model-switch questions should come last
+    has_handoff = any(kw in text_lower for kw in ("handoff", "model switch", "model-switch"))
+    if has_handoff:
+        has_ordering = any(kw in text_lower for kw in (
+            "last", "after context", "after clarification", "after all",
+        ))
+        if not has_ordering:
+            issues.append(Issue("warning", "handoff_order_missing",
+                                "Handoff/model-switch guidance does not specify asking handoff "
+                                "questions AFTER context/domain questions"))
+
+    # Check 3: Framework choice guard — only when file explicitly discusses choosing between systems
+    has_impl = any(kw in text_lower for kw in ("implement", "component", "ui component", "ui framework"))
+    has_multi = any(kw in text_lower for kw in ("multiple frameworks", "multiple systems", "competing", "which framework"))
+    if has_impl and has_multi:
+        has_guard = any(kw in text_lower for kw in (
+            "ask which", "ask before", "do not implement blindly", "analyze what exists",
+            "do not pick", "clarif",
+        ))
+        if not has_guard:
+            issues.append(Issue("warning", "framework_choice_guard_missing",
+                                "Discusses implementation choices but does not require clarification "
+                                "when multiple frameworks/patterns exist"))
+
+    # Check 4: Clarification guard — only for files with explicit interaction/execution guidance
+    has_execution_guidance = any(kw in text_lower for kw in ("procedure", "workflow", "step 1", "### 1."))
+    if has_execution_guidance:
+        has_clarification = any(kw in text_lower for kw in (
+            "requirements are unclear", "ask clarification", "do not assume",
+            "clarification question", "missing instructions", "incomplete",
+        ))
+        if not has_clarification:
+            issues.append(Issue("info", "clarification_guard_missing",
+                                "Contains action guidance but no explicit clarification behavior "
+                                "for incomplete requirements"))
+
+    # Check 5: Feedback learning — meta/reviewer artifacts should support learning
+    is_meta = any(kw in str(path).lower() for kw in ("review", "improve", "learn", "audit", "optim"))
+    if is_meta:
+        has_learning = any(kw in text_lower for kw in (
+            "learning", "feedback", "frustration", "capture", "improve the system",
+            "rule / skill", "rule/skill",
+        ))
+        if not has_learning:
+            issues.append(Issue("info", "feedback_learning_missing",
+                                "Meta/reviewer artifact does not mention learning from negative "
+                                "feedback or converting failures into system improvements"))
+
+    return issues
+
+
 def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
     # Skip README files — they are not lintable artifacts
     if path.name.lower() == "readme.md":
@@ -706,14 +804,23 @@ def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
         except ValueError:
             pass
     if artifact_type == "skill":
-        return lint_skill(display_path, text)
-    if artifact_type == "rule":
-        return lint_rule(display_path, text)
-    if artifact_type == "command":
-        return lint_command(display_path, text)
-    if artifact_type == "guideline":
-        return lint_guideline(display_path, text)
-    return lint_unknown(display_path, text)
+        result = lint_skill(display_path, text)
+    elif artifact_type == "rule":
+        result = lint_rule(display_path, text)
+    elif artifact_type == "command":
+        result = lint_command(display_path, text)
+    elif artifact_type == "guideline":
+        result = lint_guideline(display_path, text)
+    else:
+        return lint_unknown(display_path, text)
+
+    # Post-processing: interaction quality checks (warnings/info only)
+    interaction_issues = lint_interaction_quality(display_path, text)
+    if interaction_issues:
+        result.issues.extend(interaction_issues)
+        result.status = classify_status(result.issues)
+
+    return result
 
 
 def format_text(results: list[LintResult]) -> str:
