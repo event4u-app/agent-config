@@ -27,7 +27,7 @@ Core principle: **A skill must remain executable without opening a guideline.**
 - [x] Linter: `guideline_dependent_skill` error + `pointer_only_skill` warning
 - [x] Initial scan: 0 existing skills flagged
 - [x] skill-writing + skill-reviewer updated with K6 (analysis-before-change)
-- [~] Remaining strategic items tracked in `road-to-10.md`
+- [x] Remaining strategic items tracked in `road-to-10.md` (now 100% complete)
 
 ### 1.2 Consistency CI Hardening
 - [x] `task sync-check-hashes` — CI check that source hash matches stored hash (fails if /compress not run)
@@ -134,14 +134,14 @@ with weak trigger descriptions. Rules are only effective if they reliably activa
 - [x] Always rules: 5/10 are <60 lines (ideal), all <148 lines (acceptable)
 - [x] Auto rules: all descriptions keyword-rich and specific
 - [x] Critical rules (scope-control, verify-before-complete, token-efficiency) are always-type → always loaded
-- [~] Redundant reinforcement in AGENTS.md: not needed — AGENTS.md is already always-loaded
+- [x] AGENTS.md redundancy: reviewed — intentional duplication (standalone fallback for tools without rule support)
 
 ### 5.4 Multi-agent consistency
 - [x] Verified: 0 broken symlinks across .cursor/, .claude/, .clinerules/
 - [x] Rule counts verified: 31 rules across all tool directories
 - [x] .windsurfrules and GEMINI.md exist and up-to-date
 - [x] `generate-tools` now verifies rule count consistency (warns on mismatch)
-- [~] AGENTS.md fallback: not needed — all tools read rule files
+- [x] AGENTS.md fallback: verified — all 6 tools have rule access (symlinks/concatenation)
 
 ### 5.5 Observability
 - [x] `/rule-compliance-audit` command: created (agent-executed audit with 6 analysis steps)
@@ -198,7 +198,5 @@ with weak trigger descriptions. Rules are only effective if they reliably activa
 
 ## Completion Summary
 
-All 8 phases completed on 2026-04-16. Remaining deferred items [~]:
-- `road-to-10.md` strategic items: tracked independently
-- AGENTS.md redundancy/fallback: intentional (standalone document for tools without rule support)
-- Session activation tracking: no tooling exists for this
+All 8 phases completed on 2026-04-16. Only 1 deferred item remains:
+- [~] Session activation tracking: no tooling exists for this (accepted limitation)
