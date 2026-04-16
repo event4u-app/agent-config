@@ -8,12 +8,14 @@ source: package
 
 ## When to use
 
-- Creating a new README
+- Creating a new README for an **application, CLI tool, internal tool, template, or framework**
 - Rewriting an outdated or weak README
-- Improving after major repo changes (new tooling, restructure, package release)
-- Adapting README for a different audience
+- Improving after major repo changes (new tooling, restructure)
 
-Do NOT use for minor typos, single-section updates, or reference docs that belong in separate files.
+Do NOT use for:
+
+- **Packages/libraries** → use `readme-writing-package` instead
+- Minor typos, single-section updates, reference docs in separate files
 
 ## Goal
 
