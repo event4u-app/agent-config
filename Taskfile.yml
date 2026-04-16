@@ -99,10 +99,15 @@ tasks:
     desc: Check for broken cross-references (JSON output)
     cmd: python3 scripts/check_references.py --format json
 
+  check-portability:
+    desc: Check package portability (no project-specific references)
+    cmd: python3 scripts/check_portability.py
+
   ci:
     desc: Run core CI checks locally
     cmds:
       - task: test
       - task: lint-skills
       - task: check-refs
+      - task: check-portability
       - task: consistency

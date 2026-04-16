@@ -49,11 +49,20 @@ Keep the growing system maintainable.
 ### 3.2 Cross-Reference Integrity
 - [x] Script: `scripts/check_references.py` — scans all .md for broken paths, skill/rule name refs
 - [x] Taskfile: `task check-refs` target added
-- [x] CI integration: added to `task ci` pipeline
-- [ ] Reduce false positives: skip example paths in commands, skip `.json`/non-`.md` refs
-- [ ] Add to CI workflow (`.github/workflows/consistency.yml`) as separate job
+- [x] CI workflow: added to `.github/workflows/consistency.yml`
+- [x] CI pipeline: part of `task ci`
+- [ ] Reduce false positives in check_references.py: skip example paths in commands, skip `.json`/non-`.md` refs
 - [ ] Fix existing broken references found by initial scan (~89 items, many are example paths)
 - [ ] Add `/fix-references` command for interactive broken ref resolution
+
+### 3.3 Package Portability
+- [x] Script: `scripts/check_portability.py` — scans for project-specific references in package files
+- [x] Taskfile: `task check-portability` target
+- [x] CI workflow: added to `.github/workflows/consistency.yml`
+- [x] CI pipeline: part of `task ci`
+- [ ] Fix 4 existing violations in `override-system.md` (references `event4u-app/agent-config`)
+- [ ] Add `/fix-portability` command for interactive violation resolution
+- [ ] Expand pattern list as new projects adopt the package
 
 ### 3.3 Token Budget Monitoring
 - [ ] Count total always-loaded tokens (all always-rules + AGENTS.md overhead)
