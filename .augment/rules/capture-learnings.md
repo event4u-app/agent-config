@@ -1,5 +1,5 @@
 ---
-type: "always"
+type: "auto"
 description: "After completing a task where a repeated mistake or successful pattern appeared — capture as rule or skill"
 alwaysApply: false
 source: package
@@ -7,33 +7,34 @@ source: package
 
 # Capture Learnings
 
-When repeated mistake, successful pattern, or new constraint appears,
+When a repeated mistake, successful pattern, or new constraint appears,
 evaluate whether to capture as **rule** or **skill**.
 
 ## Promotion Gate
 
-Promote ONLY if ALL gates pass:
+A learning may be promoted to rule/skill ONLY if ALL gates pass:
 
 | Gate | Question | Must be YES |
 |---|---|---|
-| Repetition | Occurred 2+ times OR clearly generalizable? | ✅ |
+| Repetition | Occurred at least twice OR clearly generalizable? | ✅ |
 | Impact | Improves correctness, reliability, or consistency? | ✅ |
-| Failure pattern | Prevents real, observed failure? | ✅ |
+| Failure pattern | Prevents a real, observed failure? | ✅ |
 | Non-duplication | No existing rule/skill/guideline covers this? | ✅ |
 | Scope fit | Fits rule (constraint), skill (workflow), or guideline (convention)? | ✅ |
 | Minimal | Update existing preferred over creation? | Checked |
 
 **Reject immediately if:**
-- Occurred only once, not generalizable
+- Occurred only once and is not clearly generalizable
 - Similar guidance already exists (update instead)
 - Baseline model knowledge or standard tool usage
 - Vague frustration without concrete failure pattern
 
-## Capture
+## Triggers
 
 - Mistake that happened 2+ times
 - Pattern that improved outcome and should be reused
 - Missing constraint that caused issues
+- **User frustration or complaint** — extract the underlying failure pattern, don't ignore or defend
 
 ## Do NOT capture
 

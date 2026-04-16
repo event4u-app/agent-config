@@ -29,11 +29,12 @@ A learning may be promoted to rule/skill ONLY if ALL gates pass:
 - Baseline model knowledge or standard tool usage
 - Vague frustration without concrete failure pattern
 
-## Capture
+## Triggers
 
 - Mistake that happened 2+ times
 - Pattern that improved outcome and should be reused
 - Missing constraint that caused issues
+- **User frustration or complaint** — extract the underlying failure pattern, don't ignore or defend
 
 ## Do NOT capture
 
