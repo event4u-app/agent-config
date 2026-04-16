@@ -1,6 +1,8 @@
 ---
+name: tests-create
 skills: [pest-testing]
 description: Write meaningful tests for the changes in the current branch
+disable-model-invocation: true
 ---
 
 # tests-create

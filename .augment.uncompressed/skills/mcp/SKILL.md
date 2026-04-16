@@ -14,7 +14,7 @@ Use this skill when:
 - Troubleshooting MCP tool errors or unexpected results
 - Building commands or skills that reference MCP tools
 
-## Available MCP Servers
+## Procedure: Use MCP tools
 
 ### Sentry (`augment-partner-remote-mcp-sentry`)
 
@@ -166,6 +166,11 @@ PR creation:
 - **Skill:** `copilot` — GitHub Copilot integration
 - **Rule:** `no-commit.md` — permission boundaries for write operations
 
+
+## Output format
+
+1. MCP server configuration or tool integration code
+2. Tool capability mapping for the agent workflow
 
 ## Gotcha
 

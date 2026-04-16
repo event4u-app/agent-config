@@ -1,6 +1,8 @@
 ---
+name: roadmap-execute
 skills: [agent-docs]
 description: Read and interactively execute a roadmap from agents/roadmaps/
+disable-model-invocation: true
 ---
 
 # roadmap-execute

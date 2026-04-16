@@ -1,6 +1,6 @@
 ---
 name: api-design
-description: "Use when designing a new API, planning endpoints, or discussing REST conventions. Covers versioning, pagination, filtering, error responses, and resource structure."
+description: "Use when designing a new API, planning endpoints, discussing REST conventions, adding API versions, or managing deprecation."
 source: package
 ---
 
@@ -8,26 +8,97 @@ source: package
 
 ## When to use
 
-API design, endpoint planning, response formats, versioning, pagination, error handling.
+Use this skill when designing new API endpoints, restructuring existing APIs, or deciding about versioning and deprecation.
 
-## Before: `agents/contexts/api-versioning.md`, `agents/docs/api-resources.md`, `agents/docs/query-filter.md`, `agents/docs/controller.md`.
+Do NOT use when:
+- Implementing an already-designed endpoint (use `api-endpoint` skill)
+- Writing tests for APIs (use `api-testing` skill)
 
-## Versioning: URL prefix `/api/v1/`, `/api/v2/`. Auto-fallback to older version if route missing (`config/app.php`). Breaking change → new version. Non-breaking → extend.
+## Procedure: Design an API
 
-## Responses: API Resource classes always. Single: `{ "data": {...} }`. Collection: `{ "data": [...], "meta": {...} }`. Status: 200/201/204/400/401/403/404/422/429/500.
+1. **Gather context** — read `agents/contexts/api-versioning.md`, `agents/docs/api-resources.md`, `agents/docs/query-filter.md`, `agents/docs/controller.md`, guideline `php/api-design.md`.
+2. **Identify resource** — determine domain entity, attributes, relationships. Check existing models/resources for naming patterns.
+3. **Define endpoints** — list each endpoint with HTTP method, URL path, request body, query params, response structure. Follow existing route patterns.
+4. **Decide versioning** — determine if this extends current version or requires new one (see decision table below).
+5. **Design error responses** — define 4xx/5xx responses matching project's error format.
+6. **Validate against existing** — compare with 2-3 similar existing endpoints. Flag inconsistencies.
+7. **Adversarial review** — use `adversarial-review` skill for breaking changes, consistency issues, missing error cases.
 
-## Pagination: `paginate(per_page: 15)`. Filter pipeline pattern (`query-filter.md`). Sort via `sort` param.
+## Versioning decisions
 
-## Errors: 422 = `{ message, errors: { field: [...] } }`. App errors: `{ message }`.
+### URL-based versioning
 
-## Rate limiting: `RateLimiter::for('api', ...)`, `throttle:api` middleware. Headers: X-RateLimit-Limit/Remaining, Retry-After.
+Routes versioned via URL prefix: `/api/v1/...`, `/api/v2/...`
 
-## Idempotency: POST with `Idempotency-Key` header.
+```
+routes/api/v1/projects.php  → /api/v1/projects
+routes/api/v2/projects.php  → /api/v2/projects
+```
 
-## Routes: dot notation (`v1.projects.index`), kebab-case prefixes, singular controllers, implicit model binding, max 2 nesting levels.
+### Automatic fallback
 
-## Before presenting: run `adversarial-review`.
+If a route doesn't exist in the requested version, the system falls back to the next older version. Configured in `config/app.php`:
 
-## Gotcha: check existing patterns (consistency > better), always paginate, max 2 nested levels, match existing error format.
+```php
+'api_versioning' => [
+    'versions' => 'v2,v1',  // newest first
+],
+```
 
-## Do NOT: raw models (use Resources), business logic in controllers, break existing versions, inconsistent responses, expose internals, skip rate limiting on auth.
+### When to create a new version
+
+| Change type | Action |
+|---|---|
+| Add optional field | Extend current version |
+| Add new endpoint | Add to current version |
+| Remove/rename field | New version |
+| Change field type | New version |
+| Change validation rules | New version |
+
+> If an existing client would break without code changes → **new version required**.
+
+### Deprecation workflow
+
+1. **Mark as deprecated** — add headers: `Deprecation: true`, `Sunset: YYYY-MM-DD`, `Link: <successor>`
+2. **Document** — add to API changelog with sunset date
+3. **Monitor usage** — track clients still using deprecated endpoints
+4. **Remove** — after sunset date, remove route + controller + docs
+
+Minimum 3 months between deprecation and removal.
+
+## Design review
+
+Before presenting an API design, run the **`adversarial-review`** skill.
+Focus on: Breaking changes? Consistency? Error responses?
+
+## Output format
+
+1. Endpoint specification — method, path, request/response structure
+2. Versioning decision with rationale
+3. Error response format following existing project patterns
+
+## Gotcha
+
+- Consistency beats "better" design — check existing patterns first.
+- Always include pagination on list endpoints.
+- Max nesting depth: 2 levels (`/users/{id}/orders/{id}`).
+- Don't version internal APIs only your own frontend consumes.
+- Deprecation without migration path is useless — always provide the replacement.
+- Don't duplicate controllers for new versions — use fallback logic.
+
+## Do NOT
+
+- Do NOT introduce a new response format in an established API — match existing patterns.
+- Do NOT create v2 endpoints without a deprecation plan for v1.
+- Do NOT skip pagination on list endpoints.
+
+## Auto-trigger keywords
+
+- API design
+- REST API
+- endpoint design
+- resource structure
+- response format
+- API versioning
+- deprecation
+- breaking changes

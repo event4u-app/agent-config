@@ -1,0 +1,1 @@
+../.augment/rules/skill-quality.md

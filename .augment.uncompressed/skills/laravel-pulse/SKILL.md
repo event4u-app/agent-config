@@ -14,7 +14,14 @@ Use this skill when working with Laravel Pulse:
 - Creating custom Pulse cards and recorders
 - Performance monitoring and alerting
 
-## Installation
+## Procedure: Set up Pulse
+
+1. **Install** — `composer require laravel/pulse`, publish config, run migrations.
+2. **Configure** — Set up recorders in `config/pulse.php`.
+3. **Add dashboard** — Register route and authorize access.
+4. **Verify** — Visit `/pulse` dashboard, confirm data is being recorded.
+
+### Installation
 
 ```bash
 composer require laravel/pulse
@@ -124,6 +131,11 @@ Pulse::record('api_call', 'stripe', 250)  // type, key, value
 - **Separate database** — consider a dedicated DB connection for Pulse data.
 - **Restrict access** — always gate the dashboard behind authentication.
 - **Monitor what matters** — don't enable all recorders if you don't need them.
+
+## Output format
+
+1. Pulse configuration with recorders and dashboard cards
+2. Custom recorder class if needed
 
 ## Auto-trigger keywords
 

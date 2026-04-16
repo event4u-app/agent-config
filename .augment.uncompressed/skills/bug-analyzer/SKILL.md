@@ -63,7 +63,7 @@ create new bugs. Quick patches mask underlying issues.
 - Proposing solutions before tracing data flow
 - "One more fix attempt" (when already tried 2+)
 
-## Analysis process (4 phases)
+## Procedure: Analyze a bug
 
 ### Phase 1: Root Cause Investigation
 
@@ -214,6 +214,12 @@ Focus on the "Bug fixes" attack questions: Is this the root cause or a symptom? 
 | "One more fix attempt" (after 2+) | 3+ failures = architectural problem. Stop and discuss |
 | "Issue is simple, don't need process" | Simple issues have root causes too. Process is fast for simple bugs |
 | "Emergency, no time for process" | Systematic debugging is FASTER than guess-and-check thrashing |
+
+## Output format
+
+1. Root cause analysis with evidence trail
+2. Fix implementation or fix plan with specific files and changes
+3. Regression test covering the failure scenario
 
 ## Gotcha
 

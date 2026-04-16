@@ -26,7 +26,7 @@ Do NOT use when:
 4. **Map the impact** — create a list of all files that will need changes.
 5. **Present the plan** — show the user what will be affected before starting.
 
-## Refactoring workflow
+## Procedure: Refactor code
 
 ### Step 1: Make the core change
 
@@ -172,6 +172,12 @@ After the code changes are verified, update all affected documentation:
 | `pest-testing` | Test conventions when adapting tests |
 | `openapi` | OpenAPI schema attribute patterns |
 
+
+## Output format
+
+1. Refactored code with clear separation of changes
+2. Before/after comparison for key changes
+3. Test verification confirming no behavior change
 
 ## Gotcha
 

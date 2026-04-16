@@ -1,5 +1,7 @@
 ---
+name: feature-dev
 skills: [laravel, coder]
+disable-model-invocation: true
 ---
 # /feature-dev
 
@@ -31,30 +33,79 @@ Do NOT use for single-line fixes, trivial changes, or urgent hotfixes.
 
 ### Phase 2: Codebase Exploration
 
-`codebase-retrieval` → similar features, patterns, key files. Module docs + contexts. Present findings.
+1. Use `codebase-retrieval` to find:
+   - Similar features already implemented
+   - Architecture patterns in the affected area
+   - Key files, services, models, routes involved
+2. Read identified files to build deep understanding.
+3. Check module docs (`app/Modules/*/agents/`) if applicable.
+4. Check existing contexts (`agents/contexts/`) for the affected area.
+5. Present findings with file references.
 
 ### Phase 3: Clarifying Questions
 
-Review findings vs request. Identify: edge cases, integration points, backward compat, perf, auth. **STOP — wait for answers.**
+1. Review codebase findings against the feature request.
+2. Identify underspecified aspects:
+   - Edge cases and error handling
+   - Integration points with existing code
+   - Backward compatibility concerns
+   - Performance requirements
+   - Authorization and security
+3. Present all questions in an organized list.
+4. **STOP — Wait for answers before proceeding.**
 
 ### Phase 4: Architecture Design
 
-2-3 approaches: minimal, clean, pragmatic. Per approach: files, new classes, pros/cons. Recommend one. **STOP — ask preference.**
+1. Design 2-3 implementation approaches:
+   - **Minimal changes** — smallest change, maximum reuse of existing code
+   - **Clean architecture** — best maintainability, elegant abstractions
+   - **Pragmatic balance** — speed + quality tradeoff
+2. For each approach, describe:
+   - Files to create/modify
+   - New classes, services, or patterns introduced
+   - Pros and cons
+3. Present comparison and recommend one approach.
+4. **STOP — Ask which approach the user prefers.**
 
 ### Phase 5: Implementation
 
-Wait for approval. Task list. Follow chosen architecture + conventions. Tests alongside.
+1. **Wait for explicit approval** before writing code.
+2. Create a task list with all implementation steps.
+3. Follow chosen architecture from Phase 4.
+4. Follow codebase conventions strictly (read guidelines).
+5. Update task list as progress is made.
+6. Write tests alongside the implementation.
 
 ### Phase 6: Quality Review
 
-Review: simplicity, correctness, conventions. Run PHPStan + tests + style. **Ask what to fix now vs defer.**
+1. Review the implementation for:
+   - **Simplicity & DRY** — is the code as simple as possible?
+   - **Correctness** — are there logic errors or missing edge cases?
+   - **Conventions** — does it follow project patterns?
+2. Run quality tools:
+   - PHPStan (or equivalent)
+   - Tests
+   - Code style
+3. Present findings with severity levels.
+4. **Ask what to fix now vs. defer.**
 
 ### Phase 7: Summary
 
-What was built, decisions, files changed. Next steps: tests, docs, follow-ups. Update feature plan if exists.
+1. Summarize:
+   - What was built
+   - Key decisions made (and why)
+   - Files created/modified
+2. Suggest next steps:
+   - Additional tests needed
+   - Documentation updates
+   - Follow-up features or improvements
+3. If a feature plan exists, update it.
 
 ## Rules
 
-- Never skip phases. Wait at Phase 3 + 4 gates.
-- English for docs, German with user. Use task management.
+- **Never skip phases** — each phase builds on the previous one.
+- **Always wait for user input** at Phase 3 and Phase 4 gates.
+- **All output in English** for documentation; speak German with the user.
+- **Use task management** to track progress through phases.
+- **Reference the `feature-planning` skill** for feature plan format.
 

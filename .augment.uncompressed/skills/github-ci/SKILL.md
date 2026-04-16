@@ -10,7 +10,7 @@ source: package
 
 Use this skill when working with GitHub Actions workflows, CI pipeline configuration, or understanding the automated quality and deployment process.
 
-## Before making changes
+## Procedure: Modify CI workflows
 
 1. Read `.github/workflows/` to understand the full pipeline.
 2. Check `AGENTS.md` for quality tool commands and testing setup.
@@ -93,6 +93,11 @@ Check `.github/workflows/` for the runner types used. Common patterns:
 
 See `.augment/commands/fix-ci.md` for the full debugging workflow.
 
+
+## Output format
+
+1. Modified workflow YAML file(s) in `.github/workflows/`
+2. Summary of pipeline changes and affected triggers
 
 ## Auto-trigger keywords
 

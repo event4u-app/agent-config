@@ -8,9 +8,22 @@ source: package
 
 ## When to use
 
-Xdebug setup/troubleshooting, breakpoints, performance, coverage, IDE config. Extends `coder`, `php`.
+Use this skill when:
+- Setting up or troubleshooting Xdebug
+- Debugging PHP code with breakpoints
+- Investigating performance issues
+- Running code coverage
+- Helping users configure their IDE for debugging
 
-## Before: docker-compose for containers, Dockerfile for build stage, NGINX config for routing, project docs, `.env` for XDEBUG_MODE/PORT.
+This skill extends `coder` and `php`.
+
+## Procedure: Debug with Xdebug
+
+1. **Detect the project's debug setup** — check `docker-compose.yml` / `compose.yaml` for Xdebug containers.
+2. **Check Dockerfile** — look for a `dev-xdebug` build stage or Xdebug installation.
+3. **Check NGINX config** — look for header-based routing to a debug container.
+4. **Read project docs** — check `Docs/XDEBUG_SETUP.md` or `docs/` for setup instructions.
+5. **Check `.env`** — look for `DOCKER_XDEBUG_MODE` and `DOCKER_XDEBUG_PORT`.
 
 ## Dual-container architecture
 
@@ -137,6 +150,35 @@ make rebuild-php-xdebug   # Rebuild Xdebug container only
 make rebuild-php-all      # Rebuild both PHP containers
 ```
 
-## Gotcha: separate containers (fast≠debug), no dd()/var_dump() (PHPStan), need XDEBUG_SESSION header, hyphens not underscores.
+## What NOT to do
 
-## Do NOT: Xdebug in production, debug code in commits, debug in fast container, host port for PhpStorm server (use internal 80).
+- Do not leave Xdebug enabled in production containers.
+- Do not use underscores in debug headers (`XDEBUG_SESSION` fails — use `XDEBUG-SESSION`).
+- Do not set PhpStorm server port to the host port (e.g. 8002) — use the internal port (80).
+- Do not run performance benchmarks against the Xdebug container.
+- Do not forget to check path mappings when breakpoints are silently skipped.
+
+
+## Output format
+
+1. Xdebug configuration or debugging session setup
+2. Root cause identified with evidence from debugger output
+
+## Gotcha
+
+- Xdebug runs in a separate container — don't confuse the fast container (port 80) with the debug container (port 8080).
+- The model tends to suggest `dd()` or `var_dump()` — they're forbidden by PHPStan config. Use Xdebug breakpoints.
+- Step-debugging over HTTP requires the `XDEBUG_SESSION` cookie/header — without it, breakpoints don't trigger.
+
+## Do NOT
+
+- Do NOT leave breakpoints or debug code in committed files.
+- Do NOT use var_dump() or dd() — use Xdebug breakpoints.
+- Do NOT debug in the fast container — switch to the Xdebug container.
+
+## Auto-trigger keywords
+
+- Xdebug
+- PHP debugging
+- breakpoint
+- step debugging

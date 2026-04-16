@@ -1,6 +1,6 @@
 ---
 name: learning-to-rule-or-skill
-description: "Use when a repeated learning, mistake, or successful pattern should be turned into a new rule or skill."
+description: "Use when a repeated learning, mistake, or successful pattern should be turned into a new rule or skill. Also use after completing a task to capture learnings from the work."
 source: project
 ---
 
@@ -15,6 +15,7 @@ Use this skill when:
 * A new constraint or workflow should be captured permanently
 * Reviewing post-task learnings or retrospectives
 * Deciding whether a learning belongs in a rule or a skill
+* After completing a task — reflecting on what worked or caused friction
 
 Do not use this skill when:
 
@@ -35,15 +36,40 @@ Do not use this skill when:
 * The learning can be stated clearly in one or two sentences
 * Existing rules and skills can be checked for overlap
 
-## Decision hints
+## Decision matrix
 
-* Always-apply constraint → create or update a rule
-* Repeatable workflow with steps → create or update a skill
-* Only refines existing rule/skill → update instead of new file
-* One-off or too narrow → do not create anything yet
+| If the learning is... | Then... | Action |
+|---|---|---|
+| An always-true constraint ("never X", "always Y") | **Rule** | Create/update rule |
+| A repeatable workflow with steps and validation | **Skill** | Create/update skill |
+| A coding convention or reference material | **Guideline** | Create/update guideline |
+| Baseline model knowledge or standard tool usage | **Nothing** | Do not create anything |
+| A refinement of existing guidance | **Update** | Extend the existing file |
+
+### Decision hints
+
 * Same issue appeared at least twice → strongly consider codifying
+* One-off or too narrow → do not create anything yet
+* Standard tool knowledge (jq, docker, git basics) → **Nothing** — the model knows this
+* If unsure between skill and guideline: does it need step-by-step decisions? → Skill. Just conventions? → Guideline
 
 ## Procedure
+
+### 0. Promotion Gate (mandatory)
+
+Before proceeding, the learning MUST pass all gates:
+
+| Gate | Question |
+|---|---|
+| Repetition | Occurred 2+ times OR clearly generalizable? |
+| Impact | Improves correctness, reliability, or consistency? |
+| Failure pattern | Prevents a real, observed failure? |
+| Non-duplication | No existing rule/skill/guideline covers this? |
+| Scope fit | Fits rule, skill, or guideline? |
+| Minimal | Update existing preferred over creation? |
+
+If ANY gate fails → **stop**. Do not create or update anything.
+→ See `capture-learnings` rule for rejection criteria.
 
 ### 1. State the learning clearly
 
@@ -69,11 +95,13 @@ Classify:
 ### 3. Decide the target
 
 Choose one:
-* New rule
+* New rule (always-true constraint)
 * Update existing rule
-* New skill
+* New skill (step-by-step workflow)
 * Update existing skill
-* No action
+* New guideline (coding convention / reference)
+* Update existing guideline
+* **Nothing** (baseline knowledge, standard tool usage, one-off)
 
 ### 4. Check for overlap
 
@@ -145,6 +173,9 @@ Prefer:
 * create skill from learning
 * codify this
 * capture this pattern
+* after task
+* what did we learn
+* post-mortem
 
 ## Anti-patterns
 

@@ -8,9 +8,17 @@ source: package
 
 ## When to use
 
-Specs, ADRs, RFCs for significant changes. NOT for: trivial (PR description enough), implementation (`feature-planning`/`coder`).
+Use this skill when:
+- Writing a technical specification for a new feature or system
+- Creating an architecture decision record (ADR)
+- Documenting a technical RFC (Request for Comments)
+- Planning a significant technical change that needs team review
 
-## Spec types
+Do NOT use when:
+- Trivial changes (a good PR description is enough)
+- Implementation work (use `feature-planning` or `coder` skill)
+
+## Procedure: Write a spec
 
 ### Technical Specification (full)
 
@@ -144,6 +152,34 @@ If a developer reads only this document, they should be able to build it.
 - **ADRs** are referenced from `AGENTS.md` or module docs for historical context.
 - **Sessions** link to the spec being implemented.
 
-## Gotcha: no constraints = fiction, acknowledge existing code, don't spec trivial.
+## Auto-trigger keywords
 
-## Do NOT: spec without codebase research, one option only, perpetual draft, implement before review.
+- technical spec
+- RFC
+- ADR
+- architecture decision
+
+### Validate
+
+- Verify every section of the spec template is filled in (no placeholders left).
+- Confirm constraints and limitations are explicit, not implied.
+- Check that the spec answers: What, Why, How, What not, and When.
+
+## Output format
+
+1. Technical specification document with architecture decisions
+2. API contracts, data models, and sequence diagrams
+3. Implementation plan with dependencies
+
+## Gotcha
+
+- A spec without constraints is fiction — always include technical limitations, timeline, and scope boundaries.
+- The model tends to write specs that describe the ideal solution without acknowledging existing code.
+- Don't write specs for trivial features — a spec is overhead that's only worth it for complex changes.
+
+## Do NOT
+
+- Do NOT write specs without researching the codebase first.
+- Do NOT present only one option — always consider alternatives.
+- Do NOT leave specs in "Draft" forever — push for a decision.
+- Do NOT implement before the spec is reviewed (for significant changes).

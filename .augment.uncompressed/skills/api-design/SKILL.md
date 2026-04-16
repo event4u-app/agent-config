@@ -1,6 +1,6 @@
 ---
 name: api-design
-description: "Use when designing a new API, planning endpoints, or discussing REST conventions. Covers versioning, pagination, filtering, error responses, and resource structure."
+description: "Use when designing a new API, planning endpoints, discussing REST conventions, adding API versions, or managing deprecation."
 source: package
 ---
 
@@ -8,20 +8,27 @@ source: package
 
 ## When to use
 
-Use this skill when designing new API endpoints, restructuring existing APIs, or making decisions about response formats, versioning, pagination, or error handling.
+Use this skill when designing new API endpoints, restructuring existing APIs, or deciding about versioning and deprecation.
 
-## Before making changes
+Do NOT use when:
+- Implementing an already-designed endpoint (use `api-endpoint` skill)
+- Writing tests for APIs (use `api-testing` skill)
 
-1. Read `agents/contexts/api-versioning.md` for the versioning and fallback mechanism.
-2. Read `agents/docs/api-resources.md` for response transformation patterns.
-3. Read `agents/docs/query-filter.md` for list endpoint filtering.
-4. Read `agents/docs/controller.md` for controller conventions.
+## Procedure: Design an API
 
-## API versioning
+1. **Gather context** — read `agents/contexts/api-versioning.md`, `agents/docs/api-resources.md`, `agents/docs/query-filter.md`, `agents/docs/controller.md`, and guideline `php/api-design.md`.
+2. **Identify the resource** — determine the domain entity, its attributes, and relationships. Check existing models and resources for field naming patterns.
+3. **Define endpoints** — list each endpoint with HTTP method, URL path, request body, query parameters, and response structure. Follow existing route file patterns.
+4. **Decide versioning** — determine whether this extends the current version or requires a new version (see decision table below).
+5. **Design error responses** — define 4xx/5xx responses matching the project's existing error format.
+6. **Validate against existing patterns** — compare your design with 2-3 similar existing endpoints. Flag any inconsistencies.
+7. **Run adversarial review** — use `adversarial-review` skill to check for breaking changes, consistency issues, and missing error cases.
+
+## Versioning decisions
 
 ### URL-based versioning
 
-Routes are versioned via URL prefix: `/api/v1/...`, `/api/v2/...`
+Routes versioned via URL prefix: `/api/v1/...`, `/api/v2/...`
 
 ```
 routes/api/v1/projects.php  → /api/v1/projects
@@ -38,150 +45,52 @@ If a route doesn't exist in the requested version, the system falls back to the 
 ],
 ```
 
-### When to create a v2 endpoint
+### When to create a new version
 
-- **Breaking change** in request or response format → new v2 endpoint.
-- **Non-breaking addition** (new optional field) → extend existing endpoint.
-- **Read `agents/contexts/api-versioning.md`** for the full decision matrix.
-
-## Response format
-
-### API Resources
-
-Always use API Resource classes for JSON responses:
-
-```php
-// Single resource
-return new ProjectResource($project);
-
-// Collection with pagination
-return ProjectResource::collection($projects->paginate());
-```
-
-### Consistent structure
-
-Responses follow a consistent envelope:
-- **Single item:** `{ "data": { ... } }`
-- **Collection:** `{ "data": [ ... ], "meta": { ... }, "links": { ... } }`
-
-### HTTP status codes
-
-| Code | When |
+| Change type | Action |
 |---|---|
-| `200` | Successful GET, PUT, PATCH |
-| `201` | Successful POST (resource created) |
-| `204` | Successful DELETE (no content) |
-| `400` | Bad request (malformed input) |
-| `401` | Unauthenticated |
-| `403` | Unauthorized (forbidden) |
-| `404` | Resource not found |
-| `422` | Validation error |
-| `429` | Rate limited |
-| `500` | Server error |
+| Add optional field | Extend current version |
+| Add new endpoint | Add to current version |
+| Remove/rename field | New version |
+| Change field type | New version |
+| Change validation rules | New version |
 
-## Pagination
+> If an existing client would break without code changes → **new version required**.
 
-### Standard pagination
+### Deprecation workflow
 
-Use Laravel's built-in pagination for list endpoints:
+1. **Mark as deprecated** — add headers: `Deprecation: true`, `Sunset: YYYY-MM-DD`, `Link: <successor>`
+2. **Document** — add to API changelog with sunset date
+3. **Monitor usage** — track clients still using deprecated endpoints
+4. **Remove** — after sunset date, remove route + controller + docs
 
-```php
-$projects = Project::query()
-    ->filter($filters)
-    ->paginate(perPage: $request->integer('per_page', 15));
-```
+Minimum 3 months between deprecation and removal.
 
-### Pagination parameters
-
-| Parameter | Default | Description |
-|---|---|---|
-| `page` | 1 | Current page number |
-| `per_page` | 15 | Items per page |
-
-## Filtering and sorting
-
-- Use the project's **filter pipeline** pattern (see `agents/docs/query-filter.md`).
-- Filter classes are dedicated, testable units — not inline query logic.
-- Sorting is typically handled via a `sort` query parameter.
-
-## Error responses
-
-### Validation errors (422)
-
-Laravel's default validation response format:
-
-```json
-{
-    "message": "The given data was invalid.",
-    "errors": {
-        "field": ["The field is required."]
-    }
-}
-```
-
-### Application errors
-
-Use consistent error responses:
-
-```json
-{
-    "message": "Human-readable error description."
-}
-```
-
-## Rate limiting
-
-### Define rate limiters
-
-```php
-// bootstrap/app.php or RouteServiceProvider
-RateLimiter::for('api', function (Request $request) {
-    return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
-});
-
-RateLimiter::for('auth', function (Request $request) {
-    return Limit::perMinute(5)->by($request->ip());
-});
-```
-
-### Apply to routes
-
-```php
-Route::middleware('throttle:api')->group(function () { ... });
-Route::post('/login', LoginController::class)->middleware('throttle:auth');
-```
-
-### Rate limit headers
-
-Include in responses: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `Retry-After` (on 429).
-
-## Idempotency
-
-For non-idempotent operations (POST), support idempotency keys:
-
-```
-POST /api/v1/orders
-Idempotency-Key: unique-client-generated-uuid
-```
-
-This prevents duplicate resource creation on retries.
-
-## Route naming
-
-- Use dot notation: `v1.projects.index`, `v1.projects.show`
-- Route prefixes in kebab-case: `/api/v1/client-software`
-- Controllers in singular: `ProjectController`
-
-## Route model binding
-
-- Use implicit route model binding where possible.
-- Scope bindings for nested resources.
-- Check `agents/docs/controller.md` for binding patterns.
-
-## Adversarial review
+## Design review
 
 Before presenting an API design, run the **`adversarial-review`** skill.
-Focus on the "API design" attack questions: Breaking changes? Consistency? Error responses?
+Focus on: Breaking changes? Consistency? Error responses?
+
+## Output format
+
+1. Endpoint specification — method, path, request/response structure
+2. Versioning decision with rationale
+3. Error response format following existing project patterns
+
+## Gotcha
+
+- Consistency beats "better" design — check existing patterns first.
+- Always include pagination on list endpoints.
+- Max nesting depth: 2 levels (`/users/{id}/orders/{id}`).
+- Don't version internal APIs only your own frontend consumes.
+- Deprecation without migration path is useless — always provide the replacement.
+- Don't duplicate controllers for new versions — use fallback logic.
+
+## Do NOT
+
+- Do NOT introduce a new response format in an established API — match existing patterns.
+- Do NOT create v2 endpoints without a deprecation plan for v1.
+- Do NOT skip pagination on list endpoints.
 
 ## Auto-trigger keywords
 
@@ -190,20 +99,6 @@ Focus on the "API design" attack questions: Breaking changes? Consistency? Error
 - endpoint design
 - resource structure
 - response format
-
-## Gotcha
-
-- Don't design endpoints without checking existing patterns in the project — consistency beats "better" design.
-- The model often forgets pagination on list endpoints — always include it.
-- Don't use nested resources beyond 2 levels — `/users/{id}/orders/{id}` is the max depth.
-- Error response format must match the existing project convention, not RFC 7807 or other standards.
-
-## Do NOT
-
-- Do NOT return raw Eloquent models — always use API Resources.
-- Do NOT put business logic in controllers — delegate to services.
-- Do NOT create breaking changes in existing versions — create a new version.
-- Do NOT use inconsistent response formats between endpoints.
-- Do NOT expose internal IDs or database column names that should be hidden.
-- Do NOT skip rate limiting on authentication endpoints.
-- Do NOT return different error formats from different endpoints.
+- API versioning
+- deprecation
+- breaking changes

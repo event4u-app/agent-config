@@ -16,7 +16,13 @@ Use this skill when:
 - Reviewing UI for accessibility and usability
 - Deciding how to structure Livewire components
 
-## Tech Stack Context
+## Procedure: Design a frontend interface
+
+1. **Understand requirements** — What data is shown? What actions are available? Who is the user?
+2. **Choose technology** — Pick from the project stack (see table below).
+3. **Design layout** — Mobile-first, component-based, consistent spacing.
+4. **Implement** — Build with Blade components, Livewire for interactivity, Flux for UI primitives.
+5. **Verify** — Check accessibility (labels, focus, contrast), responsive behavior, loading states.
 
 This project uses a server-rendered stack:
 
@@ -189,6 +195,12 @@ Step indicator (1 — 2 — 3)
 - **Skill:** `tailwind` — Tailwind CSS utility patterns
 - **Skill:** `dashboard-design` — Monitoring dashboard design (different domain)
 
+
+## Output format
+
+1. Component structure with layout, data flow, and interaction patterns
+2. Responsive behavior for mobile/tablet/desktop breakpoints
+3. Accessibility annotations (ARIA, keyboard navigation)
 
 ## Gotcha
 

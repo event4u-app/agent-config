@@ -17,7 +17,12 @@ Do NOT use when:
 - Bug fixes (use `bug-analyzer` skill)
 - Simple, well-understood changes that don't need planning
 
-## Concept
+## Procedure: Plan a feature
+
+1. **Gather requirements** — What problem does this solve? Who benefits? What's the expected outcome?
+2. **Analyze scope** — Which modules, routes, models, services are affected?
+3. **Write the plan** — Create a feature plan document (see template below).
+4. **Verify** — Confirm all affected areas are identified, no missing dependencies.
 
 A **feature plan** captures the "what and why" of a feature:
 - Problem it solves, who benefits, expected outcome
@@ -191,6 +196,12 @@ Before creating a feature plan, always:
 
 Feature plans are decision documents, not implementation guides.
 Implementation details belong in roadmaps.
+
+## Output format
+
+1. Feature plan document following the template structure
+2. Decision log with rationale for key choices
+3. Implementation roadmap with ordered tasks
 
 ## Auto-trigger keywords
 

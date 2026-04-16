@@ -50,7 +50,7 @@ When multiple approaches seem viable:
 4. **Choose** the best path with reasoning.
 5. **Document** why alternatives were rejected.
 
-## The process
+## Procedure: Sequential thinking
 
 ### Step 1: Frame the problem
 
@@ -118,6 +118,11 @@ Explore alternatives when:
 | **Linear-only thinking** | Never considering alternatives | Branch at key decision points |
 | **Scope creep** | Problem keeps expanding during analysis | Re-frame and constrain |
 
+
+## Output format
+
+1. Numbered reasoning steps with conclusions
+2. Final answer or recommendation with confidence level
 
 ## Auto-trigger keywords
 

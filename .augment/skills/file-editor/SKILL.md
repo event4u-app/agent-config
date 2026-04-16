@@ -8,9 +8,26 @@ source: package
 
 ## When to use
 
-Auto-triggers on file create/edit. NOT for: read-only, commands, `open_edited_files=false`.
+This skill applies **automatically** whenever:
+- The agent creates or edits a file using `save-file` or `str-replace-editor`
+- The agent wants to show the user a file they should review
 
-Opens edited files in user's IDE via CLI. Settings in `.agent-settings` (git-ignored).
+Do NOT use when:
+- Only reading files (no edits)
+- Running commands or tests
+- The `open_edited_files` setting is `false`
+
+## Procedure: Open files in IDE
+
+1. **Read settings** — Check `open_edited_files` and `ide` in `.agent-settings`.
+2. **Skip if disabled** — If `open_edited_files` is `false`, do nothing.
+3. **Open files** — Use the IDE CLI command to open each edited file.
+4. **Verify** — Confirm the command succeeded (exit code 0).
+
+## Settings file
+
+Settings are stored in `.agent-settings` (project root, git-ignored).
+See `.augment/templates/agent-settings.md` for the full settings reference.
 
 Relevant settings for this skill:
 
@@ -88,6 +105,11 @@ code app/Models/User.php
 - show in IDE
 - file editor settings
 - configure IDE
+
+## Output format
+
+1. Files opened in the configured IDE (if enabled)
+2. No output if `open_edited_files` is disabled
 
 ## Gotcha
 

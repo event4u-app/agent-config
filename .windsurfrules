@@ -47,6 +47,51 @@ For significant multi-step/multi-session changes:
 
 ---
 
+# Analysis Skill Routing
+
+When choosing an analysis skill, always route to the narrowest skill that still matches the actual problem shape.
+
+Use `universal-project-analysis` only for:
+
+* full project analysis
+* deep architecture review
+* broad multi-layer debugging
+* unclear systems where the stack or boundaries must first be discovered
+
+Use framework-specific project-analysis skills only after the framework is known.
+
+Use root-cause analysis skills when the problem is concrete and hypothesis-driven.
+
+Do not use broad analysis skills for:
+
+* small isolated code questions
+* normal feature work
+* obvious local fixes
+* framework-specific issues that already have a dedicated skill
+
+Prefer:
+
+* narrow specialist skill over broad analysis skill
+* framework-specific skill over universal router when the framework is already explicit
+* root-cause skill over full-project analysis when the issue is already localized
+
+If the stack is unclear:
+
+* start broad
+* then narrow quickly
+
+## Routing quality gate
+
+Only route to narrower skill if it has:
+
+* executable workflow (concrete procedure steps)
+* concrete validation (specific checks, not "verify it works")
+* real decision power (not just "read the guideline")
+
+If narrow skill is too weak or hollowed out, route through broader skill and note the gap.
+
+---
+
 # Architecture Rules
 
 ## General Principles
@@ -125,9 +170,10 @@ Everything in `.augment/` MUST be **project-agnostic**.
 
 # .augment/ Source of Truth
 
-`.augment.uncompressed/` = **single source of truth**. `.augment/` = compressed copies.
+`.augment.uncompressed/` is the **single source of truth** for all `.augment/` content.
+`.augment/` contains compressed (token-optimized) copies — never edit them directly.
 
-## Iron Rule
+## The Iron Rule
 
 ```
 NEVER create or edit files in .augment/ directly.
@@ -136,35 +182,98 @@ ALWAYS work in .augment.uncompressed/ — then compress.
 
 ## Workflow
 
-1. Create/edit in `.augment.uncompressed/{path}`
+1. **Create or edit** the file in `.augment.uncompressed/{path}`
 2. **Do NOT auto-compress.** Continue working.
-3. **Before commit/push:** Check `task sync-changed`. If files need compression, ask:
+3. **Before commit/push:** Check if compression is needed (`task sync-changed`).
+   If files need compression, ask the user:
    ```
    > 📦 {N} .augment files need compression before commit.
    >
    > 1. Compress now — run /compress
    > 2. Later — commit without compression
    ```
-4. If compressing: `/compress`, then `task sync-mark-done -- {path}`
+4. If compressing: run `/compress` command, then `task sync-mark-done -- {path}`
 
-Non-.md files: `task sync` copies automatically.
+For new non-.md files (`.php`, configs): `task sync` copies them automatically.
 
-**Compression happens once before commit/push — not after every edit.**
+**Key change:** Compression happens once before commit/push — not after every edit.
+This avoids interruptions when work is still in progress.
 
-## Compression = remove filler/articles/hedging, shorten phrases, fragments OK, merge redundant bullets
+## What "compress" means
 
-## NEVER change: code blocks, inline code, URLs, headings, tables, YAML, technical terms, strong language
+- Remove articles (a, an, the), filler, hedging, connective fluff
+- Shorten phrases: "in order to" → "to", "make sure to" → "ensure"
+- Fragments OK: "Run tests before commit" not "You should always run tests before committing"
+- Merge redundant bullets
+
+## What NEVER changes during compression
+
+- Code blocks, inline code, URLs, file paths, commands
+- Headings (exact text preserved)
+- Tables (structure preserved, compress cell text only)
+- YAML frontmatter
+- Technical terms, library names, API names
+- Strong language: "NEVER", "MUST", "Do NOT" — these are load-bearing
+
+## Commands workflow
+
+Commands live in `.augment.uncompressed/commands/{name}.md` (single source of truth).
+Claude Code reads them via symlinks in `.claude/skills/{name}/SKILL.md`.
+
+**Required frontmatter for commands:**
+
+```yaml
+name: {command-name}
+description: {what it does}
+disable-model-invocation: true
+```
+
+- `name` and `disable-model-invocation: true` are required for Claude Code compatibility
+- Augment ignores unknown frontmatter fields — no conflict
+- Template: `.augment.uncompressed/templates/command.md`
+
+**Creating a new command:**
+
+1. Create `.augment.uncompressed/commands/{name}.md` (use template)
+2. Run `python3 scripts/skill_linter.py` — must be 0 FAIL
+3. Sync: `cp` to `.augment/commands/`
+4. Run `task generate-tools` — creates Claude symlink automatically
+
+**Never** create `.claude/skills/{name}/SKILL.md` manually for commands — always use the symlink workflow.
+
+## Pre-review consistency checkpoints
+
+Before review or PR, verify derived outputs are not stale:
+
+1. Run `task sync-changed` — check for uncompressed changes
+2. If stale: run `/compress` before pushing
+3. Before merge: verify `.augment/` and `.claude/skills/` are regenerated
+4. Do NOT leave `.augment/` stale across review cycles
+
+## Multi-agent symlink mapping
+
+`.claude/skills/` has symlinks to BOTH `.augment/skills/` AND `.augment/commands/`.
+Claude Code treats both as "skills" — different artifact types in our taxonomy.
+
+| Symlink target | Actual type |
+|---|---|
+| `.augment/skills/{name}/SKILL.md` | **Skill** |
+| `.augment/commands/{name}.md` | **Command** (`disable-model-invocation: true`) |
+
+Always check symlink target to determine actual type.
 
 ## Quick reference
 
-| Task | Command |
+| Task | What to do |
 |---|---|
-| Edit/create `.md` | Edit `.augment.uncompressed/`, compress to `.augment/` |
-| Create non-`.md` | Create in `.augment.uncompressed/`, `task sync` |
-| Delete | Both directories |
-| What needs compression? | `task sync-changed` |
-| Mark compressed | `task sync-mark-done -- {path}` |
-| Verify sync | `task sync-check` |
+| Edit existing file | Edit in `.augment.uncompressed/`, compress to `.augment/` |
+| Create new `.md` | Create in `.augment.uncompressed/`, compress to `.augment/` |
+| Create new non-`.md` | Create in `.augment.uncompressed/`, run `task sync` |
+| Create new command | Create in `.augment.uncompressed/commands/`, sync, `task generate-tools` |
+| Delete a file | Delete from both directories |
+| Check what needs compression | `task sync-changed` |
+| Mark file as compressed | `task sync-mark-done -- {path}` |
+| Verify everything is in sync | `task sync-check` |
 
 ---
 
@@ -172,6 +281,25 @@ Non-.md files: `task sync` copies automatically.
 
 When a repeated mistake, successful pattern, or new constraint appears,
 evaluate whether to capture as **rule** or **skill**.
+
+## Promotion Gate
+
+A learning may be promoted ONLY if ALL gates pass:
+
+| Gate | Question | Must be YES |
+|---|---|---|
+| Repetition | Occurred 2+ times OR clearly generalizable? | ✅ |
+| Impact | Improves correctness, reliability, or consistency? | ✅ |
+| Failure pattern | Prevents a real, observed failure? | ✅ |
+| Non-duplication | No existing rule/skill/guideline covers this? | ✅ |
+| Scope fit | Fits rule (constraint), skill (workflow), or guideline (convention)? | ✅ |
+| Minimal | Update existing preferred over creation? | Checked |
+
+**Reject immediately if:**
+- Occurred only once, not generalizable
+- Similar guidance already exists (update instead)
+- Baseline model knowledge or standard tool usage
+- Vague frustration without concrete failure pattern
 
 ## Capture
 
@@ -603,13 +731,25 @@ Coding guidelines live in `.augment/guidelines/` organized by language.
 
 | File | Topic |
 |---|---|
-| `php.md` | General PHP style — strict types, naming, comparisons, early returns |
+| `php.md` | General PHP style — strict types, naming, comparisons, early returns, JSON handling |
 | `controllers.md` | Thin controllers, single responsibility, delegation to services |
 | `eloquent.md` | Model conventions, relationships, scopes, accessors/mutators |
 | `validations.md` | FormRequest patterns, custom rules, validation structure |
 | `resources.md` | API Resource conventions, response structure |
 | `jobs.md` | Queue job patterns, serialization, retry strategies |
 | `git.md` | Branch naming, commit messages, PR conventions |
+| `api-design.md` | API conventions — response format, status codes, pagination, error handling |
+| `artisan-commands.md` | Console command conventions — naming, structure, safety, scheduling |
+| `blade-ui.md` | Blade template conventions — views, components, forms, escaping |
+| `database.md` | Database conventions — indexing, query optimization, migrations, transactions |
+| `flux.md` | Flux UI component conventions — usage, variants, forms, Livewire integration |
+| `livewire.md` | Livewire component conventions — state, actions, forms, performance, Alpine.js |
+| `logging.md` | Logging conventions — levels, structured context, Sentry patterns |
+| `naming.md` | Naming conventions — classes, database, routes, variables, modules, agent infra |
+| `performance.md` | Performance conventions — caching, Redis, eager loading, response time targets |
+| `security.md` | Security conventions — auth, authorization, SQL injection, XSS, CSRF, headers |
+| `sql.md` | Raw SQL conventions — parameterization, MariaDB syntax, common mistakes |
+| `websocket.md` | WebSocket conventions — Broadcasting, channel types, connection management |
 | `patterns.md` | Design patterns index (links to `patterns/` subdirectory) |
 
 ### PHP Patterns (`.augment/guidelines/php/patterns/`)
@@ -632,14 +772,30 @@ Playwright best practices, Page Objects, fixtures, CI.
 
 ## How guidelines work
 
-- **Guidelines** = coding conventions (read on demand)
-- **Rules** = behavior constraints (auto-loaded)
-- **Skills** = capabilities/workflows (topic-matched)
+- **Guidelines** = detailed coding conventions (reference material, read on demand)
+- **Rules** = always-active behavior constraints (auto-loaded every conversation)
+- **Skills** = agent capabilities and workflows (matched by topic)
+
+Guidelines are the "how to write code" docs. Rules enforce critical subsets automatically.
+Skills reference guidelines when performing related tasks.
+
+## Boundary: Guidelines vs Skills
+
+- Guidelines contain **conventions and reference knowledge**. Skills contain **executable workflows**.
+- Skills may reference guidelines but must NOT outsource core execution steps to guidelines.
+- Do NOT move a skill's operational core (procedure, validation, decision logic) into a guideline.
+- If a skill becomes "go read the guideline" → restore the workflow.
 
 ## Adding new guidelines
 
-New language/framework → create `.augment/guidelines/{language}/`. Follow PHP structure as template.
-Read specific file on demand — don't memorize full list.
+When a new language or framework is introduced, create a directory:
+```
+.augment/guidelines/{language}/
+```
+
+Follow the existing PHP structure as a template.
+
+Read the specific guideline file on demand — don't memorize the full list.
 
 ---
 
@@ -715,6 +871,20 @@ Agent translates at runtime. `.md` = English blueprint.
 > 1. Interactive — ask before each comment
 > 2. Automatic — handle all independently
 ```
+
+---
+
+# Markdown Safe Codeblocks
+
+When generating markdown with code blocks:
+
+- **NEVER** nest triple backticks inside triple backticks — this breaks rendering and copy/paste.
+- If content already contains triple backticks, use one of:
+  - Plain text blocks (indented by 4 spaces) — **preferred**
+  - `~~~` fences instead of backtick fences
+  - Four backticks (``````) as outer fence
+- Prefer stability over pretty formatting.
+- Always validate: no broken rendering, no prematurely closed blocks, entire content is selectable and copyable.
 
 ---
 
@@ -1081,6 +1251,54 @@ Covered: PHPStan, Pest, ECS, Rector, Docker Compose, Artisan, Composer.
 - Stay within the established project structure and conventions.
 - When unsure about the scope, ask the user.
 - NEVER commit, push, merge, rebase, or force-push without explicit user permission.
+
+---
+
+# Skill Quality
+
+## Minimum Sharpness
+
+Every skill must answer four questions. If ANY answer is weak, the skill is not done.
+
+| # | Question | Section | Standard |
+|---|---|---|---|
+| 1 | When should I use this? | `When to use` | Concrete trigger, not generic |
+| 2 | What exactly do I do? | `Procedure` | Executable steps with decisions |
+| 3 | How do I verify it worked? | `Procedure` (validation step) | Concrete checks, not "verify it works" |
+| 4 | What common failure must I avoid? | `Gotcha` + `Do NOT` | Real failure patterns, not platitudes |
+
+## Required Sections
+
+Every skill MUST have: `When to use`, `Procedure`, `Gotcha`, `Output format`, `Do NOT`.
+
+## Skill Independence
+
+- Skills MAY reference guidelines for conventions
+- Skills MUST NOT outsource core workflow to guidelines
+- If removing guideline references makes skill useless → skill is too weak
+
+## Merge Preservation
+
+Merged result MUST preserve:
+1. Strongest validation from each source
+2. Strongest example from each source
+3. Strongest anti-pattern from each source
+4. All concrete decision criteria
+
+Merge invalid if: validation weaker, examples lost, anti-patterns decreased, result became umbrella doc.
+
+## Compression Preservation
+
+Compressed MUST preserve: triggers, decision steps, validation checks, gotchas, strongest example.
+May remove: verbose explanations, redundant examples, non-execution commentary.
+
+## Refactor Safety
+
+- NEVER weaken validation to pass linter
+- NEVER remove anti-patterns to reduce size
+- NEVER replace concrete checks with "verify it works"
+- NEVER merge if result broader than either source
+- ALWAYS run linter before and after — fail count must not increase
 
 ---
 

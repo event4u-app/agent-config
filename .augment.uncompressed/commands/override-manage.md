@@ -2,6 +2,7 @@
 name: override-manage
 description: Reviews, updates, and refactors existing project-level overrides.
 skills: [override, agent-docs]
+disable-model-invocation: true
 ---
 
 # /override-manage

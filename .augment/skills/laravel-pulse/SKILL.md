@@ -8,9 +8,20 @@ source: package
 
 ## When to use
 
-Pulse dashboard, recorders (slow queries, exceptions, queues), custom cards, performance monitoring.
+Use this skill when working with Laravel Pulse:
+- Setting up the Pulse monitoring dashboard
+- Configuring built-in recorders (slow queries, exceptions, queues, etc.)
+- Creating custom Pulse cards and recorders
+- Performance monitoring and alerting
 
-## Installation
+## Procedure: Set up Pulse
+
+1. **Install** — `composer require laravel/pulse`, publish config, run migrations.
+2. **Configure** — Set up recorders in `config/pulse.php`.
+3. **Add dashboard** — Register route and authorize access.
+4. **Verify** — Visit `/pulse` dashboard, confirm data is being recorded.
+
+### Installation
 
 ```bash
 composer require laravel/pulse
@@ -129,6 +140,11 @@ Pulse::record('api_call', 'stripe', 250)  // type, key, value
 - slow requests
 - application monitoring
 - performance dashboard
+
+## Output format
+
+1. Pulse configuration with recorders and dashboard cards
+2. Custom recorder class if needed
 
 ## Gotcha
 

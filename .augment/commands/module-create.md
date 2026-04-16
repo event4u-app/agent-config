@@ -1,15 +1,33 @@
 ---
+name: module-create
 skills: [laravel]
 description: Create a new module from .module-template with interactive setup
+disable-model-invocation: true
 ---
 
 # module-create
 
 ## Instructions
 
-### 1. Check modules + template
+### 1. Check for module support
 
-`app/Modules/` not found → ask to create. `.module-template/` not found → create manually.
+- Check if `app/Modules/` exists.
+- If not:
+  ```
+  ⚠️  No module system found (no app/Modules/ directory).
+  Should I set up the module structure? (y/n)
+  ```
+  If yes → create `app/Modules/` and check if `ModuleServiceProvider` is registered.
+  If no → stop.
+
+### 2. Check for template
+
+- Check if `app/Modules/.module-template/` exists.
+- If not:
+  ```
+  ⚠️  No module template found (.module-template/).
+  I'll create the module manually based on the standard structure.
+  ```
 
 ### 3. Ask for module details
 
@@ -19,7 +37,12 @@ description: Create a new module from .module-template with interactive setup
 1. Module name (PascalCase, e.g. UserProfile, Reporting):
 ```
 
-Validate: PascalCase, unique, no special chars. Then ask:
+Wait for name. Validate:
+- Must be PascalCase
+- Must not already exist in `app/Modules/`
+- Must not contain special characters
+
+Then ask:
 
 ```
 2. Route-Prefix (kebab-case, z.B. user-profile, reporting):
@@ -33,9 +56,17 @@ Validate: PascalCase, unique, no special chars. Then ask:
    [x] Console Routes (Routes/console.php)
 ```
 
-### 4. Create
+### 4. Create the module
 
-Copy `.module-template/` → replace `[MODULE_NAME]`/`[module-prefix]` → update README → remove unchecked routes → create agent dirs:
+Copy `.module-template/` to `app/Modules/{ModuleName}/`:
+
+1. Copy all files and directories.
+2. Replace placeholders in all files:
+   - `[MODULE_NAME]` → `{ModuleName}`
+   - `[module-prefix]` → `{route-prefix}`
+3. Update `README.md` with the module description.
+4. Remove unchecked route files.
+5. Create agent directories:
    ```
    app/Modules/{ModuleName}/agents/
    ├── features/.gitkeep
@@ -43,7 +74,16 @@ Copy `.module-template/` → replace `[MODULE_NAME]`/`[module-prefix]` → updat
    └── contexts/.gitkeep
    ```
 
-### 5. Verify PSR-4 namespace. If not configured:
+### 5. Verify namespace
+
+Check that PSR-4 autoloading is configured for the new module:
+
+```php
+// composer.json → autoload → psr-4
+"App\\Modules\\{ModuleName}\\": "app/Modules/{ModuleName}/"
+```
+
+If not configured, warn:
 ```
 ⚠️  PSR-4 autoloading not configured for App\Modules\{ModuleName}.
 Please run `composer dump-autoload` or check if a wildcard mapping exists.
@@ -69,9 +109,25 @@ Please run `composer dump-autoload` or check if a wildcard mapping exists.
 ═══════════════════════════════════════════════
 ```
 
-### 7. Next: `1. /context-create` / `2. /feature-plan` / `3. Done`
+### 7. Offer context and feature creation
+
+```
+What would you like to do next?
+
+1. 📄 Create module context → /context-create (documents structure & purpose)
+2. 📋 Plan first feature → /feature-plan (Module: {ModuleName})
+3. ✅ Done for now — continue later
+```
+
+- **Option 1:** Transition to `/context-create` with the module pre-selected.
+- **Option 2:** Transition to `/feature-plan` with the module pre-selected.
+- **Option 3:** Remind about `composer dump-autoload` if needed, then stop.
 
 ### Rules
 
-- No commit/push. No existing modules. Suggest (don't run) `composer dump-autoload`. PascalCase. Agent dirs with `.gitkeep`.
+- **Do NOT commit or push.**
+- **Do NOT modify existing modules.**
+- **Do NOT run `composer dump-autoload`** — only suggest it.
+- **Always use PascalCase** for module names.
+- **Always create agent directories** with `.gitkeep`.
 

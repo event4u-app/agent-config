@@ -155,7 +155,12 @@ When starting work, read documentation in this order:
 7. `agents/features/` or module `agents/features/` — if related feature plan exists
 8. `agents/roadmaps/` or module `agents/roadmaps/` — if continuing existing work
 
-## When to create documentation
+## Procedure: Create or update agent docs
+
+1. **Identify trigger** — What changed? (see table below)
+2. **Locate target** — Find the correct file in the documentation hierarchy.
+3. **Update content** — Edit or create the doc. English only in `.md` files.
+4. **Verify** — Confirm the doc is consistent with surrounding files and cross-references are valid.
 
 | Trigger | Action |
 |---|---|
@@ -202,6 +207,11 @@ Do NOT auto-update docs without the user's knowledge. Flag what needs updating a
 - Do NOT duplicate content that's already in `AGENTS.md` or `.github/copilot-instructions.md`.
 - Do NOT write docs just to document what you did — only document things others need to know.
 - If unsure whether a doc needs updating, **ask the user**.
+
+## Output format
+
+1. Created or updated documentation file(s) in the correct location
+2. Summary of what changed and why
 
 ## Gotcha
 

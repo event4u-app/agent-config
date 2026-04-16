@@ -8,9 +8,20 @@ source: package
 
 ## When to use
 
-Tenant data, customer DB connections, dual-database architecture. NOT for: single-DB, frontend-only.
+Use this skill when working with tenant-specific data, customer database connections, or any code that touches the dual-database architecture.
 
-## Before: `agents/docs/` for architecture, `config/database.php` for connections, search tenant switching service.
+
+Do NOT use when:
+- Single-database applications
+- Frontend-only changes
+
+## Procedure: Work with multi-tenancy
+
+1. **Gather context** — read `agents/docs/` for multi-tenant architecture, `config/database.php` for connection definitions, search for tenant switching service.
+2. **Identify connection** — determine whether code touches central, tenant, or both databases. Set `$connection` explicitly on new models.
+3. **Implement** — use correct connection. Use tenant switching service for cross-tenant operations. Never mix connections in single query.
+4. **Verify isolation** — inspect for tenant leaks: global scopes, missing `$connection`, shared caches, job serialization without tenant context.
+5. **Test** — write test exercising tenant boundary: seed tenant-specific data, switch context, verify correct data returned and other tenants' data invisible.
 
 ## Architecture overview
 
@@ -35,7 +46,15 @@ The tenant connection starts **empty** and is configured dynamically per request
 
 Projects may have additional connections for admin operations, provisioning, or monitoring. Check `config/database.php`.
 
-## Tenant switching: stores context → loads config → sets monitoring → reconfigures DB → binds services.
+## Core tenant switching service
+
+Search the codebase for the service responsible for tenant switching. Typical responsibilities:
+
+1. Store tenant context (e.g., in Laravel Context or a singleton)
+2. Load tenant configuration
+3. Set monitoring context (tenant ID, name, domain)
+4. Reconfigure the database connection with tenant credentials
+5. Bind tenant-specific services via the container
 
 ## Model conventions
 
@@ -59,9 +78,19 @@ class Project extends Model
 
 Check the project for the actual connection names and namespace conventions.
 
-## Isolation: never query before tenant set, never mix connections, always set `$connection`, transactions per connection, artisan commands need tenant trait.
+## Tenant isolation rules
 
-## Testing: dedicated tenant seeders, testing DB may consolidate connections, never assume tenant state.
+- **Never query the tenant connection before the tenant is set.**
+- **Never mix connections in a single query** — use explicit joins or separate queries.
+- **Always specify `$connection`** on new models — never rely on the default.
+- **Use transactions per connection** — `DB::connection('tenant_database')->transaction(...)`.
+- **Artisan commands** that need tenant access must use the appropriate trait (search for it in the project).
+
+## Testing with tenants
+
+- Tests use dedicated tenant seeders (check `agents/docs/` for seeder conventions).
+- The testing database may consolidate multiple connections into a single DB for simplicity.
+- Use `RefreshDatabase` or manual seeding — never assume a specific tenant state from previous tests.
 
 ## Common pitfalls
 
@@ -80,6 +109,21 @@ Check the project for the actual connection names and namespace conventions.
 - customer database
 - FQDN routing
 
-## Gotcha: cross-tenant leaks are critical, switch back after tenant ops, restore tenant context in jobs, use switching helpers not raw `DB::connection()`.
+## Output format
 
-## Do NOT: hardcode DB names, assume customer_database in early boot, tenant data before customer identification, credentials in code.
+1. Tenant-aware code with correct DB connection switching
+2. Verification that tenant isolation is maintained
+
+## Gotcha
+
+- Always verify which database connection is active before running queries — cross-tenant data leaks are critical bugs.
+- The model forgets to switch back to the main connection after tenant operations.
+- Queue jobs serialize the connection state — ensure the tenant context is restored when the job runs.
+- Don't use `DB::connection()` directly — use the tenant switching helpers.
+
+## Do NOT
+
+- Do NOT hardcode database names — always use connection names.
+- Do NOT assume `customer_database` is available in service providers or early boot.
+- Do NOT access tenant data in global middleware that runs before customer identification.
+- Do NOT store tenant DB credentials in code — they come from the `customer_databases` table.

@@ -8,35 +8,67 @@ source: package
 
 ## When to use
 
-Artisan commands, maintenance scripts, imports/exports, batch processing, scheduled tasks. Extends `coder`, `laravel`.
+Use when creating or modifying Laravel Artisan commands — maintenance scripts, imports/exports, batch processing, repair/cleanup, scheduled tasks, developer utilities.
 
-## Before: base skills, existing commands, who runs it (dev/ops/cron), interactive vs automated, related services, scheduler safety.
+Do NOT use when:
+- Writing queue jobs (use `jobs-events` skill)
+- Writing scheduled task config (use `laravel-scheduling` skill)
 
-## Principles: orchestrate (don't own logic), useful concise output, intentional interactivity, safe for automation.
+## Procedure: Create an Artisan command
 
-## Naming: `{domain}:{action}` (`users:cleanup`). Explicit args/options, meaningful descriptions.
+### Step 0: Inspect
 
-## Structure: `handle()` = accept input → validate → orchestrate services → report. Heavy logic → services.
+1. Check existing commands — match naming, signature style, output format.
+2. Determine audience: developer, support, operations, cron, or scheduler.
+3. Determine if interactive or automated.
+4. Identify related services — commands orchestrate, not own business logic.
 
-## Input: args=required, options=toggles/filters. Validate before destructive work. Safe defaults. `--force` for destructive.
+### Step 1: Scaffold
 
-## Output: info/warn/error/table/progress. Readable for humans+logs. No noisy output.
+1. Create command class in `app/Console/Commands/` or module `App/Commands/`.
+2. Name: `{domain}:{action}` — e.g. `users:cleanup`, `orders:sync`.
+3. Define arguments (required) and options (toggles/filters) explicitly.
 
-## Interactive: confirmations for destructive only. No prompts in scheduled/CI commands.
+### Step 2: Implement handle()
 
-## Batch: chunking/cursors, progress reporting, handle partial failures, don't load all in memory.
+1. Validate preconditions (environment, input, dependencies).
+2. Call service/action for business logic.
+3. Report progress and results via console output.
+4. Return appropriate exit code.
 
-## Safety: high-risk commands (cleanup/sync/delete) get safeguards, dry-run support, no silent irreversible work.
+### Step 3: Safety checks
 
-## Scheduling: non-interactive, idempotent, log status, fail loudly.
+- Destructive? → Add `--force` flag + confirmation.
+- Scheduled? → Ensure non-interactive, idempotent, loud failures.
+- Long-running? → Use chunking/cursors, progress bar.
+- Production? → Add environment check if needed.
 
-## Errors: meaningful messages, exit codes, no swallowed exceptions.
+### Step 4: Test
 
-## Testing: exit codes, output, side effects, option behavior.
+- Assert exit codes, console output, side effects, option behavior.
+- Use `$this->artisan()` in Pest tests.
 
-## Gotcha: `$this->info()` suppressed in quiet mode (use `$this->line()`), `--force` for destructive, environment checks for production.
+## Conventions
 
-## Do NOT: business logic in commands, dd()/var_dump(), skip input validation, interactive prompts in scheduled commands.
+→ See guideline `php/artisan-commands.md` for full conventions.
+
+## Output format
+
+1. Artisan command class with signature, description, and handle method
+2. Registration in service provider or auto-discovery
+3. Example usage shown in a code comment
+
+## Gotcha
+
+- `$this->info()` is suppressed in quiet mode — use `$this->line()` for critical info.
+- Always add `--force` for destructive commands — never delete data without confirmation.
+- Add environment checks for production commands.
+
+## Do NOT
+
+- Do NOT run destructive operations without `--force` confirmation.
+- Do NOT use `$this->ask()` for non-interactive commands (cron/queue).
+- Do NOT put business logic in commands — delegate to services.
 
 ## Auto-trigger keywords
 

@@ -16,6 +16,7 @@
 ---
 name: {skill-name}
 description: "Use when {trigger situation — what the user says or does}. {What the skill does in 1 sentence}."
+status: active
 ---
 
 <!-- DESCRIPTION RULES (delete this comment when done):
@@ -47,26 +48,37 @@ Do NOT use when:
 2. **Check {convention}** — read {reference}.
 3. **Read project docs** — `./agents/`, module-specific docs if applicable.
 
-## {Main content section}
+## Procedure: {skill-name}
 
-<!-- The core of the skill. Structure depends on the topic:
-  - For coding skills: patterns, code examples, conventions
-  - For process skills: workflow phases, checklists
-  - For tool skills: commands, configuration, integration
+<!-- REQUIRED — The core workflow. Use "Procedure" or "Procedure: {name}" as heading.
+  - Numbered steps with concrete commands or actions
+  - Each step independently verifiable
+  - End with a validation/verification step
+  - For coding skills: include code examples in steps
+  - For process skills: workflow phases with decision points
+  - For tool skills: commands with expected output -->
 
-  Use tables for comparisons:
-  | Pattern | When to use | Example |
-  |---|---|---|
+### Step 0: Inspect
 
-  Use code blocks for examples:
-  ```php
-  // ✅ Correct
-  $result = doTheThing();
+1. {What to check before starting — existing code, conventions, project docs}
 
-  // ❌ Wrong
-  $result = doTheWrongThing();
-  ```
--->
+### Step 1: {action}
+
+1. {Concrete step}
+2. {Concrete step}
+
+### Step 2: Validate
+
+1. {Concrete check — command output, test result, or assertion}
+2. {Second check}
+
+## Output format
+
+<!-- REQUIRED — What the skill produces. Use numbered list with 2-4 items.
+  Describe the deliverables, not the process. -->
+
+1. {Primary deliverable — file, config, report}
+2. {Secondary deliverable or verification result}
 
 ## Gotcha
 
@@ -94,7 +106,8 @@ Before considering a skill complete, verify it passes all 5 checks:
 - [ ] **K2: Not over-defined** — guides rather than railroads; tight for fragile ops, loose for creative tasks; <15 numbered steps
 - [ ] **K3: No obvious content** — doesn't teach the model what it already knows; only project-specific conventions and non-obvious patterns
 - [ ] **K4: Has Gotcha section** — documents real failure patterns, not theoretical advice; seeded with 2-3 entries
-- [ ] **K5: Under 500 lines** — if larger, extract reference tables or templates into separate files in the skill folder
+- [ ] **K5: Has Output format** — numbered list with 2-4 deliverables describing what the skill produces
+- [ ] **K6: Under 500 lines** — if larger, extract reference tables or templates into separate files in the skill folder
 - [ ] **English only** — all content in English
 - [ ] **No duplication** — doesn't repeat rules or guidelines that are already enforced elsewhere
 - [ ] **No "Related skills" section** — the agent discovers skills via `<available_skills>` descriptions; cross-links waste tokens and create maintenance burden

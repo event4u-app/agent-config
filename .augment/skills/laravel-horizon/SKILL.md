@@ -8,9 +8,16 @@ source: package
 
 ## When to use
 
-Horizon config, dashboard, metrics, balancing, production. For writing jobs → `jobs-events`.
+Use this skill for anything related to Laravel Horizon:
+- Queue worker configuration and supervision
+- Horizon dashboard setup and access control
+- Job metrics, throughput, and failure monitoring
+- Balancing strategies and scaling workers
+- Production tuning and deployment
 
-## Configuration
+For **writing queue jobs** themselves, see [jobs-events](../jobs-events/SKILL.md).
+
+## Procedure: Configure Horizon
 
 ### config/horizon.php
 
@@ -136,6 +143,27 @@ public function tags(): array
 - **Set `maxJobs`** — recycles workers after N jobs to prevent memory bloat.
 - **Tag jobs** — makes debugging and filtering in the dashboard much easier.
 
-## Gotcha: `horizon:terminate` needed for config changes, maxProcesses = DB connections, Redis-only.
+## Auto-trigger keywords
 
-## Do NOT: Horizon without Supervisor, exposed dashboard without access control.
+- Horizon
+- queue worker
+- queue dashboard
+- job monitoring
+- supervisor
+- queue balancing
+
+## Output format
+
+1. Updated Horizon configuration with supervisor and queue settings
+2. Environment-specific balancing strategy rationale
+
+## Gotcha
+
+- Horizon config changes require `php artisan horizon:terminate` and restart — they don't hot-reload.
+- Don't set `maxProcesses` too high — each process holds a DB connection. Monitor your connection pool.
+- The model forgets that Horizon only works with Redis queues — not database or SQS.
+
+## Do NOT
+
+- Do NOT run Horizon without Supervisor/systemd in production.
+- Do NOT expose the Horizon dashboard without access control.

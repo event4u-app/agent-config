@@ -1,6 +1,8 @@
 ---
+name: context-refactor
 skills: [agent-docs]
 description: Analyze, update, and extend an existing context document
+disable-model-invocation: true
 ---
 
 # context-refactor

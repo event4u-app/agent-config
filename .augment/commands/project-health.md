@@ -1,17 +1,26 @@
 ---
+name: project-health
 skills: [quality-tools]
 description: Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything
+disable-model-invocation: true
 ---
 
 # project-health
 
 ## Instructions
 
-Quick read-only health check.
+This is a **quick, read-only** health check. No documents are created or modified.
 
-### 1. Gather data (parallel)
+### 1. Gather data
 
-`composer.json`, `git branch`, `git log -3`, file counts in `agents/`, `app/Modules/*/agents/`, tests.
+Run in parallel:
+- `composer.json` → framework, PHP version
+- `git branch --show-current` → current branch
+- `git log --oneline -3` → recent activity
+- Count files in `agents/` (docs, features, roadmaps, contexts)
+- Count files in `app/Modules/*/agents/` (per module)
+- Check `app/Modules/` for module list
+- Count test files
 
 ### 2. Display health report
 
@@ -79,5 +88,9 @@ GAPS:
 
 ### Rules
 
-- Read-only. No commit/push. Fast (file counts only). Show gaps clearly. Suggest `/project-analyze` for deep analysis.
+- **Do NOT create or modify any files** — this is read-only.
+- **Do NOT commit or push.**
+- **Keep it fast** — no deep code analysis, just file counts and metadata.
+- **Show gaps clearly** — the user should see what's missing at a glance.
+- **Suggest `/project-analyze`** if significant gaps are found.
 

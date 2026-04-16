@@ -1,6 +1,8 @@
 ---
+name: commit
 skills: [git-workflow]
 description: Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits
+disable-model-invocation: true
 ---
 
 # commit

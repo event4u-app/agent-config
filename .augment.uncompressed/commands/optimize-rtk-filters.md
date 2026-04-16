@@ -1,6 +1,8 @@
 ---
+name: optimize-rtk-filters
 skills: [agent-docs]
 description: Create or optimize project-local rtk filters based on the actual toolchain
+disable-model-invocation: true
 ---
 
 # optimize-rtk-filters

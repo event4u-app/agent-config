@@ -8,24 +8,62 @@ source: package
 
 ## When to use
 
-Slow endpoints, caching, query performance, Redis, queues. Before: identify bottleneck (measure first), check existing cache services, `config/horizon.php`, `config/cache.php`.
+Use when optimizing slow endpoints, designing caching, or improving query performance.
 
-## Caching
+Do NOT use when:
+- Database schema design (use `database` skill)
+- Queue job creation (use `jobs-events` skill)
 
-Redis primary (cache + queues + sessions). `Cache::remember('key', TTL, fn)`, `Cache::forever()`, `Cache::forget()`. Search existing cache services first.
+## Procedure: Optimize performance
 
-Invalidation: event-driven (model events), cache tags, short TTLs for frequent changes. **Multi-tenant: always include tenant ID in keys** (`customer:{$id}:...`).
+### Step 0: Identify the bottleneck
 
-## Eager loading: `with()` at query (not `$with`), `withCount()`, `load()` post-query. See `database` skill.
+1. Don't optimize prematurely — measure first.
+2. Use `DB::enableQueryLog()` or Telescope to find slow queries.
+3. Check for N+1 queries on list endpoints.
+4. Search for existing cache services in the project.
 
-## Query: `count()`, `exists()`, `pluck()`, `sum()` — avoid loading models. Telescope/`DB::enableQueryLog()` for N+1 detection.
+### Step 1: Apply the right fix
 
-## Jobs: queue emails, API calls, heavy computation, imports. Redis + Horizon. Idempotent, minimal serialization, `failed()` method. Batching for multi-step.
+| Bottleneck | Fix |
+|---|---|
+| N+1 queries | Eager loading with `with()` |
+| Slow queries | Add indexes, optimize (see `database` skill) |
+| Repeated expensive queries | Cache with TTL |
+| Blocking API calls | Queue as background job |
+| Large datasets | Paginate, chunk, cursor |
+| Missing counts | `withCount()` instead of loading relations |
 
-## Redis: cache, queues (Horizon), rate limiting, distributed locks (`Cache::lock()`).
+### Step 2: Verify
 
-## Targets: API <200ms (simple), <500ms (complex). Always paginate lists.
+Re-measure after fix. Check that cache invalidation works correctly.
 
-## Gotcha: measure before optimizing, cache invalidation bugs > slow queries, N+1 = #1 win, don't cache entire collections.
+## Conventions
 
-## Do NOT: cache without tenant isolation, unbounded get()/all(), sync heavy compute, blind indexes, sleep() in requests.
+→ See guideline `php/performance.md` for caching patterns, Redis, response time targets.
+
+## Output format
+
+1. Optimized code with before/after performance comparison
+2. Caching strategy or query optimization applied
+
+## Gotcha
+
+- Cache invalidation bugs are worse than slow queries — don't add caching everywhere.
+- Eager loading N+1 is the #1 win — always check list endpoints.
+- Don't cache Eloquent collections with loaded relations — too large.
+- Always include tenant ID in cache keys (multi-tenant).
+
+## Do NOT
+
+- Do NOT cache without tenant isolation in multi-tenant contexts.
+- Do NOT use `get()` or `all()` on large tables — paginate or chunk.
+- Do NOT add indexes blindly — analyze query patterns first.
+
+## Auto-trigger keywords
+
+- performance
+- caching
+- eager loading
+- query optimization
+- Redis

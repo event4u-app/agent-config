@@ -8,9 +8,32 @@ source: package
 
 ## When to use
 
-Document module/service/integration, explore unfamiliar code, prep multi-area features. NOT for: coding, roadmaps.
+Use this skill when:
+- Documenting a module, service, or integration for future reference
+- Exploring an unfamiliar area of the codebase
+- Preparing for a feature that touches multiple areas
+- Onboarding to a new part of the codebase
 
-Context = present-focused snapshot (what/why, key files, DB/API, deps, issues). Unlike features (future) or roadmaps (tasks).
+
+Do NOT use when:
+- Writing code or features
+- Creating roadmaps (use `roadmap-manager` skill)
+
+## Procedure: Manage contexts
+
+1. **Identify scope** — Which area of the codebase needs a context document?
+2. **Research** — Use codebase-retrieval to understand the area (files, patterns, dependencies).
+3. **Write or update** — Create/update the context doc following the template below.
+4. **Verify** — Confirm all referenced files exist and descriptions match current code.
+
+A **context document** is a structured snapshot of a codebase area:
+- What it does, why it exists
+- Key files, classes, and patterns
+- Database tables and API endpoints
+- Dependencies and known issues
+
+Unlike feature plans (future-focused) or roadmaps (task-focused), contexts are
+**present-focused** — they describe the current state of the code.
 
 ## File structure
 
@@ -80,10 +103,51 @@ When customizing a shared skill or command, read `.augment/contexts/override-sys
 When working on the agent infrastructure itself (skills, commands, rules), check
 `.augment/contexts/` for existing documentation about the system.
 
-## Rules: analyze code first (factual, specific), update `Last Updated` on changes. Commands: `context-create`, `context-refactor`.
+## Behavior rules
 
-## Gotcha: docs become stale (verify code), don't create for fast-changing areas, factual not aspirational.
+### Creating contexts
 
-## Do NOT: create without analysis, guess (verify), duplicate AGENTS.md.
+1. **Always analyze the code first** — use `codebase-retrieval`, `view`, and file listing.
+2. **Be factual** — describe what IS, not what SHOULD be.
+3. **Be specific** — link to files, name classes, reference tables.
+4. **Ask the user** about anything unclear.
+
+### Maintaining contexts
+
+- Update `Last Updated` when modifying.
+- When code changes affect a context, update it.
+- `/context-refactor` is the dedicated command for this.
+
+## Commands
+
+| Command | Purpose |
+|---|---|
+| `context-create` | Analyze an area and create a new context document |
+| `context-refactor` | Revisit, update, and extend an existing context |
+
+
+## Auto-trigger keywords
+
+- context document
+- codebase context
+- orientation doc
+- context creation
+
+## Output format
+
+1. Context document in the correct location with structured sections
+2. Cross-references to related contexts updated
+
+## Gotcha
+
+- Context docs become stale — always check the actual code before trusting a context document.
+- Don't create context docs for areas that change weekly — they'll be outdated immediately.
+- Keep context docs factual, not aspirational — document what IS, not what should be.
+
+## Do NOT
+
+- Do NOT create contexts without analyzing the code first.
+- Do NOT guess about architecture — verify by reading the code.
+- Do NOT duplicate information from `AGENTS.md` — reference it instead.
 - Do NOT commit or push without permission.
 - Do NOT create contexts for trivial areas — only when the knowledge is worth persisting.

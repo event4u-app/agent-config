@@ -1,6 +1,8 @@
 ---
+name: agents-cleanup
 skills: [agent-docs]
 description: Execute cleanup actions from an agents-audit — move, merge, delete, and update agent docs
+disable-model-invocation: true
 ---
 
 # agents-cleanup

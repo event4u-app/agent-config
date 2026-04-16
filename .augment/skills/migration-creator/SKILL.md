@@ -8,7 +8,14 @@ source: package
 
 ## When to use
 
-DB migrations, columns, tables, schema. Before: `agents/` + AGENTS.md for conventions (prefixes, naming, multi-tenant).
+Use this skill when the user asks to create a database migration, add a column, create a table, or modify the schema.
+
+## Procedure: Create a migration
+
+1. **Read conventions** — Check `./agents/` and `AGENTS.md` for table prefixes, column naming, multi-tenant setup.
+2. **Generate migration** — `php artisan make:migration create_xyz_table` (or add_column, etc.).
+3. **Write schema** — Follow naming conventions, add indexes for WHERE/JOIN columns, use `decimal` for money.
+4. **Verify** — Run migration (`php artisan migrate`), then rollback (`php artisan migrate:rollback`) to confirm reversibility.
 
 ## All projects
 
@@ -19,9 +26,7 @@ DB migrations, columns, tables, schema. Before: `agents/` + AGENTS.md for conven
 
 ## Laravel projects
 
-### Dual-database architecture
-
-This project uses two database connections:
+### Multi-database architecture
 
 Some projects use multiple database connections. Check `config/database.php` for connections.
 
@@ -75,21 +80,21 @@ php artisan make:migration:customer AddWeatherColumn --table=cl_lv_weather
 
 Customer database tables use the `cl_` prefix (e.g. `cl_user`, `cl_lv_weather`).
 
-### Adding a column (API database)
+### Adding a column (with explicit connection)
 
 ```php
 return new class extends Migration {
     public function up(): void
     {
-        Schema::connection('api_database')->table('customer_databases', function (Blueprint $table): void {
-            $table->unsignedInteger('redis_db_index')->after('db_password');
+        Schema::connection('my_connection')->table('example', function (Blueprint $table): void {
+            $table->unsignedInteger('new_column')->after('existing_column');
         });
     }
 
     public function down(): void
     {
-        Schema::connection('api_database')->table('customer_databases', function (Blueprint $table): void {
-            $table->dropColumn('redis_db_index');
+        Schema::connection('my_connection')->table('example', function (Blueprint $table): void {
+            $table->dropColumn('new_column');
         });
     }
 };
@@ -119,6 +124,11 @@ php artisan migrate --env=testing             # testing
 - Always use `unsignedBigInteger` for foreign keys referencing `id()` columns
 - Use `->after('column')` to place new columns logically
 
+## Output format
+
+1. Migration file with up() and down() methods
+2. Model updates if columns or relationships changed
+
 ## Gotcha
 
 - Always check if the table/column already exists before creating the migration — the model doesn't always check.
@@ -128,11 +138,23 @@ php artisan migrate --env=testing             # testing
 
 ## Do NOT
 
-- Do NOT create migrations without specifying the correct connection (`api_database` or `customer_database`).
-- Do NOT create customer database tables without the `cl_` prefix (check existing tables first).
+- Do NOT create migrations without specifying the correct connection when multiple databases exist.
+- Do NOT create tables without checking the project's naming conventions (prefixes, casing).
 - Do NOT use raw SQL in migrations when Schema builder works.
 - Do NOT forget to make migrations reversible (down method).
 - Do NOT use `float` for money — use `decimal`.
 - Do NOT forget indexes on foreign keys and frequently filtered columns.
 
-## Adversarial review: run before finalizing. Can this destroy data? Rollback possible?
+## Adversarial review
+
+Before finalizing a migration, run the **`adversarial-review`** skill.
+Focus on the "Database migrations" attack questions: Can this destroy data? Is rollback possible?
+
+## Auto-trigger keywords
+
+- database migration
+- create migration
+- table prefix
+- column naming
+- add column
+- create table

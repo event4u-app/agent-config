@@ -19,7 +19,7 @@ Do NOT use when:
 - Writing application code
 - Creating new skills or commands
 
-## The Two Files
+## Procedure: Optimize copilot/agents files
 
 ### `AGENTS.md` — Project Entry Point for AI Agents
 
@@ -141,6 +141,12 @@ When optimizing either file, check:
 - **Skill:** `agent-docs` — documentation hierarchy
 - **Context:** `augment-infrastructure.md` — full `.augment/` overview
 
+
+## Output format
+
+1. Optimized file(s) with deduplication applied and line budget respected
+2. Summary of what was removed, moved, or consolidated
+3. Line count before/after for each file
 
 ## Gotcha
 

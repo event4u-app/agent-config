@@ -8,7 +8,21 @@ source: package
 
 ## When to use
 
-New API endpoint/route/controller. NOT for: modifying existing (`refactorer`), design decisions (`api-design`). Before: `agents/` docs, AGENTS.md.
+Use this skill when the user asks to create a new API endpoint, REST route, or controller action.
+
+
+Do NOT use when:
+- Modifying existing endpoints (use `refactorer` skill)
+- API design decisions (use `api-design` skill)
+
+## Procedure: Create an API endpoint
+
+1. **Read project docs** — Check `./agents/` and `AGENTS.md` for controller conventions, resource patterns, routing.
+2. **Create route** — Add to the correct `routes/api.php` or module route file.
+3. **Create controller** — Thin controller, delegate logic to service.
+4. **Create FormRequest** — Validate all input at the boundary.
+5. **Create Resource** — Transform model output via API Resource.
+6. **Verify** — Run PHPStan, run tests, confirm response shape matches conventions.
 
 ## Laravel projects
 
@@ -140,6 +154,32 @@ Controllers use PHP 8 attributes for OpenAPI spec generation from `App\OpenApi\S
 - `ShowResourceResponseSchema`, `ListResourceResponseSchema`, `CreateResourceResponseSchema`
 - `ResourceNotFoundResponse`, `ValidationErrorResponse`
 
-## Gotcha: register route too, check for duplicates, FormRequest↔OpenAPI sync, return type on `toArray()`.
+## Output format
 
-## Do NOT: logic in controllers, skip FormRequest, raw models, skip auth, multi-action controllers, `response()->json()`.
+1. Generated files — controller, route registration, FormRequest, Resource, Policy
+2. Test file with happy path and validation error cases
+3. Summary of created files and their locations
+
+## Gotcha
+
+- Don't forget to register the route — creating the controller without the route is a common miss.
+- Always check if a similar endpoint already exists — duplicates cause confusion.
+- FormRequest validation rules must match the OpenAPI schema — keep them in sync.
+- The model tends to forget the `return` type on Resource `toArray()` methods.
+
+## Do NOT
+
+- Do NOT put business logic in controllers — delegate to services.
+- Do NOT skip FormRequest validation — every controller needs a FormRequest.
+- Do NOT return raw Eloquent models — always use API Resources.
+- Do NOT create routes without proper authorization (Policy in FormRequest or middleware).
+- Do NOT create multi-action controllers — only single-action with `__invoke()`.
+- Do NOT use `response()->json()` — use `Resource::make()`.
+
+## Auto-trigger keywords
+
+- create endpoint
+- new API route
+- controller creation
+- form request
+- API resource

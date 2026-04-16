@@ -17,11 +17,12 @@ Do NOT use when:
 - Running commands or tests
 - The `open_edited_files` setting is `false`
 
-## Concept
+## Procedure: Open files in IDE
 
-When the agent edits files, the user often wants to see them in their IDE immediately.
-This skill reads the user's preferences from `.agent-settings` and opens files automatically
-via the IDE's CLI command.
+1. **Read settings** — Check `open_edited_files` and `ide` in `.agent-settings`.
+2. **Skip if disabled** — If `open_edited_files` is `false`, do nothing.
+3. **Open files** — Use the IDE CLI command to open each edited file.
+4. **Verify** — Confirm the command succeeded (exit code 0).
 
 ## Settings file
 
@@ -96,6 +97,11 @@ code app/Models/User.php
 |---|---|---|
 | VS Code | `code {file}` | Shell Command: Install 'code' in PATH |
 | PhpStorm | `phpstorm {file}` | JetBrains Toolbox CLI or `Create command-line launcher` in PhpStorm |
+
+## Output format
+
+1. Files opened in the configured IDE (if enabled)
+2. No output if `open_edited_files` is disabled
 
 ## Auto-trigger keywords
 

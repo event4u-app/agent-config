@@ -29,7 +29,7 @@ One of the following browser automation tools:
 
 A **live preview URL** is required for testing.
 
-## The 7-Phase Methodology
+## Procedure: Design review
 
 ### Phase 0: Preparation
 
@@ -197,6 +197,12 @@ When implementing from a design mockup or screenshot:
 4. **Flag deviations** — spacing, colors, typography, alignment differences.
 
 This is especially useful when the user provides a screenshot or Figma export as a reference.
+
+## Output format
+
+1. Design review report following the Report structure section
+2. Severity-rated findings (blocker, suggestion, nit)
+3. Accessibility and responsive compliance summary
 
 ## Auto-trigger keywords
 

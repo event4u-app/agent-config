@@ -1,6 +1,8 @@
 ---
+name: create-pr
 skills: [git-workflow]
 description: Create a GitHub PR with structured description from Jira ticket and code changes
+disable-model-invocation: true
 ---
 
 # create-pr

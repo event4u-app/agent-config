@@ -28,7 +28,7 @@ Do NOT use when:
 - Hunting for functional bugs → use `bug-analyzer` (proactive mode)
 - Investigating performance → use `performance-analysis`
 
-## Audit workflow
+## Procedure: Security audit
 
 ### 1. Map attack surface
 

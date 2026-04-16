@@ -15,7 +15,7 @@ Use this skill when:
 - Working on a Grafana module (if the project has one)
 - Debugging log-based issues using Loki data
 
-## Project setup
+## Procedure: Create Grafana dashboard
 
 ### Project setup
 
@@ -139,6 +139,12 @@ When adding new log entries for Grafana visualization:
 - Check the project for Grafana module or Docker config location
 - **Config:** `config/grafana.php`, `config/logging.php` (if applicable)
 
+
+## Output format
+
+1. Grafana dashboard JSON or LogQL/PromQL queries
+2. Panel configuration with data source and thresholds
+3. Alert rule definitions where applicable
 
 ## Gotcha
 

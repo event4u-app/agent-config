@@ -8,9 +8,22 @@ source: package
 
 ## When to use
 
-Reverb install/config/deploy/scaling/debug/monitoring. General WebSocket → `websocket` skill.
+Use this skill for anything specific to **Laravel Reverb** as the WebSocket server:
+- Reverb installation, configuration, and environment setup
+- Reverb server deployment and scaling
+- Reverb-specific debugging and monitoring
+- Pusher protocol compatibility questions
 
-## What is Reverb
+For **general WebSocket patterns**, broadcasting events, channel authorization,
+and Laravel Echo client setup, see the [websocket](../websocket/SKILL.md) skill.
+
+## Procedure: Set up Reverb
+
+1. **Install** — `php artisan install:broadcasting` or manual setup (see below).
+2. **Configure** — Set environment variables for Reverb host, port, app credentials.
+3. **Start server** — `php artisan reverb:start`.
+4. **Connect client** — Configure Laravel Echo with Reverb credentials.
+5. **Verify** — Confirm WebSocket connection in browser console, test event delivery.
 
 Laravel Reverb is Laravel's first-party, blazing-fast WebSocket server. It uses the
 **Pusher protocol**, making it compatible with Laravel Echo and any Pusher-compatible client.
@@ -164,6 +177,29 @@ location /app {
 - **Pusher protocol** — any Pusher-compatible client works (Laravel Echo, pusher-js, etc.).
 - **Max request size** — default 10KB, increase for large payloads if needed.
 
-## Gotcha: persistent process (no serverless), set REVERB_HOST/PORT, WebSocket bypasses middleware.
+## Auto-trigger keywords
 
-## Do NOT: expose without reverse proxy (TLS), no process monitor in prod, confuse with Pusher SaaS, skip Redis for multi-instance.
+- Reverb
+- reverb:start
+- WebSocket server
+- Reverb scaling
+- Reverb deployment
+- Reverb configuration
+
+## Output format
+
+1. Reverb configuration with server and scaling settings
+2. Broadcasting channel definitions and client integration
+
+## Gotcha
+
+- Reverb requires a persistent process — it's not compatible with serverless deployments.
+- The model forgets to configure the `REVERB_HOST` and `REVERB_PORT` environment variables.
+- WebSocket connections bypass middleware — don't rely on session auth for channel authorization.
+
+## Do NOT
+
+- Do NOT expose Reverb directly to the internet without a reverse proxy for TLS.
+- Do NOT run `reverb:start` without a process monitor in production.
+- Do NOT confuse Reverb config with Pusher SaaS — Reverb is self-hosted.
+- Do NOT skip Redis when running multiple Reverb instances.

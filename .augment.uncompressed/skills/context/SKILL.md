@@ -19,7 +19,12 @@ Do NOT use when:
 - Writing code or features
 - Creating roadmaps (use `roadmap-manager` skill)
 
-## Concept
+## Procedure: Manage contexts
+
+1. **Identify scope** — Which area of the codebase needs a context document?
+2. **Research** — Use codebase-retrieval to understand the area (files, patterns, dependencies).
+3. **Write or update** — Create/update the context doc following the template below.
+4. **Verify** — Confirm all referenced files exist and descriptions match current code.
 
 A **context document** is a structured snapshot of a codebase area:
 - What it does, why it exists
@@ -120,6 +125,11 @@ When working on the agent infrastructure itself (skills, commands, rules), check
 | `context-create` | Analyze an area and create a new context document |
 | `context-refactor` | Revisit, update, and extend an existing context |
 
+
+## Output format
+
+1. Context document in the correct location with structured sections
+2. Cross-references to related contexts updated
 
 ## Auto-trigger keywords
 

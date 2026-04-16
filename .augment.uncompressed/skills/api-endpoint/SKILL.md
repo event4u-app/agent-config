@@ -15,10 +15,14 @@ Do NOT use when:
 - Modifying existing endpoints (use `refactorer` skill)
 - API design decisions (use `api-design` skill)
 
-## Before generating code
+## Procedure: Create an API endpoint
 
-Read the project-specific docs in `./agents/` and `AGENTS.md` for controller conventions,
-API resource patterns, validation rules, and routing.
+1. **Read project docs** — Check `./agents/` and `AGENTS.md` for controller conventions, resource patterns, routing.
+2. **Create route** — Add to the correct `routes/api.php` or module route file.
+3. **Create controller** — Thin controller, delegate logic to service.
+4. **Create FormRequest** — Validate all input at the boundary.
+5. **Create Resource** — Transform model output via API Resource.
+6. **Verify** — Run PHPStan, run tests, confirm response shape matches conventions.
 
 ## Laravel projects
 
@@ -149,6 +153,12 @@ Controllers use PHP 8 attributes for OpenAPI spec generation from `App\OpenApi\S
 - `ShowResourceRequestSchema`, `ListResourceRequestSchema`, `CreateResourceRequestSchema`
 - `ShowResourceResponseSchema`, `ListResourceResponseSchema`, `CreateResourceResponseSchema`
 - `ResourceNotFoundResponse`, `ValidationErrorResponse`
+
+## Output format
+
+1. Generated files — controller, route registration, FormRequest, Resource, Policy
+2. Test file with happy path and validation error cases
+3. Summary of created files and their locations
 
 ## Gotcha
 

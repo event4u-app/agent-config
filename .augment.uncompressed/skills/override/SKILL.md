@@ -6,6 +6,14 @@ source: package
 
 # Override Skill
 
+## When to use
+
+Use when creating or managing project-level overrides for shared skills, rules, commands, or guidelines — customizing `.augment/` content without modifying originals.
+
+Do NOT use when:
+- Changing shared content that should affect all projects (edit `.augment.uncompressed/` directly)
+- Creating new skills from scratch (use `skill-writing` skill)
+
 ## Purpose
 
 The `.augment/` directory is delivered as a **Composer package** and is **read-only** at project level.
@@ -17,7 +25,7 @@ It customizes shared behavior for a particular codebase **without modifying the 
 **Critical rule:** Never edit files in `.augment/` to fix a project-specific need.
 Changes to `.augment/` affect ALL projects. Use overrides instead.
 
-## Override Mechanism
+## Procedure: Create an override
 
 When loading any skill, rule, or command:
 
@@ -138,6 +146,22 @@ Override templates are in `.augment/templates/overrides/`:
 - **Skill:** `agent-docs` (documentation hierarchy)
 - **Templates:** `.augment/templates/overrides/`
 
+### Validate
+
+- Verify the override file exists at the correct path in `agents/overrides/`.
+- Confirm the override actually takes effect (test the behavior it modifies).
+- Check that the original in `.augment/` is not modified.
+
+## Output format
+
+1. Override file in agents/overrides/ matching the original's structure
+2. Summary of what was overridden and why
+
+## Gotcha
+
+- Overrides are invisible to other projects — only the current project sees them.
+- Replace mode discards the original entirely — use extend mode unless you need a full rewrite.
+- If the override stops working after a package update, the original's structure likely changed.
 
 ## Do NOT
 

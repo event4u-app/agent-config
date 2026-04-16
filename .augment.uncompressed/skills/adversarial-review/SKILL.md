@@ -18,7 +18,7 @@ Do NOT use when:
 - The user explicitly asked for a quick/rough draft.
 - You're exploring options, not committing to one yet.
 
-## The 3-step process
+## Procedure: Adversarial review
 
 ### Step 1: Attack (Grumpy Senior Engineer)
 
@@ -110,6 +110,18 @@ Only surface trade-offs or concerns that need the user's input.
 - challenge plan
 - review my approach
 - sanity check
+
+### Validate
+
+- Confirm each identified risk has a concrete mitigation or explicit acceptance.
+- Verify the review produced at least one actionable finding (or explicit "no issues found").
+- Check that the review did not just restate the plan — it must challenge assumptions.
+
+## Output format
+
+1. Improved plan/code incorporating adversarial findings
+2. Risk summary — top concerns discovered and how they were addressed
+3. Remaining open risks (if any) with severity rating
 
 ## Gotcha
 

@@ -14,7 +14,7 @@ Do NOT use when:
 - Local development setup (use `docker` skill)
 - Application code changes
 
-## Before making changes
+## Procedure: Modify AWS infrastructure
 
 1. Read the `.aws/` directory (or equivalent) for environment configs and templates.
 2. Read CI/CD workflows (e.g., `.github/workflows/`) for the deployment pipeline.
@@ -121,6 +121,12 @@ The underlying AWS resources (ECS clusters, ALBs, RDS, Redis, IAM roles, securit
 are typically managed via **Terraform + Terragrunt** in a separate infrastructure repository.
 
 See the `terraform` and `terragrunt` skills for general IaC conventions.
+
+## Output format
+
+1. Modified infrastructure config/template files
+2. Environment-specific changes clearly separated
+3. Summary of what changed and which environments are affected
 
 ## Auto-trigger keywords
 

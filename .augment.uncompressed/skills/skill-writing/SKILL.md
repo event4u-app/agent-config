@@ -38,14 +38,42 @@ Do not use this skill when:
 * Distinction: rules = always apply, skills = triggered workflows
 * Access to a skill template or existing reference skill
 
-## Decision hints
+## Decision matrix: What goes where?
 
-* If content is "always do X" → rule, not skill
-* If content is "when user asks Y, do steps 1-5" → skill
-* If content is generic framework knowledge → skip it
+Before creating anything, classify the content:
+
+| If the content is... | Then it is... | Action |
+|---|---|---|
+| An always-true constraint ("never X", "always Y") | **Rule** | Create/update `.augment/rules/` |
+| A step-by-step workflow with decisions and validation | **Skill** | Create/update `.augment/skills/` |
+| A coding convention or reference material | **Guideline** | Create/update `.augment/guidelines/` |
+| Baseline model knowledge (how jq works, what `docker exec` does) | **Nothing** | Do not create anything |
+| Simple tool usage without complex workflow | **Nothing** | Do not create anything |
+| Already covered by an existing skill/rule/guideline | **Update** | Extend the existing file |
+
+### The critical test
+
+Ask: **"Does the model need this to do its job correctly?"**
+
+* If the model already knows it → **Nothing**
+* If the model knows it but does it wrong in THIS project → **Rule or Guideline**
+* If the model needs a multi-step workflow to get it right → **Skill**
+
+### When "Nothing" is the right answer
+
+Do NOT create a skill or rule for:
+
+* Standard tool usage (jq, grep, docker exec, git commands)
+* Framework basics the model already knows
+* Single-command operations without decision logic
+* Knowledge that belongs in a skill's procedure as a step, not as its own skill
+
+### Size and structure hints
+
 * If skill > 500 lines → split
 * If multiple workflows exist → split into multiple skills
 * If two skills overlap heavily → merge
+* If a skill becomes "read the guideline" → it lost its purpose, restore the workflow
 
 ## Procedure
 
@@ -93,7 +121,7 @@ Good:
 
 Bad:
 
-* Check if it works
+* Vague statements like "see if outcome is correct" (no concrete command or assertion)
 
 ### 4. Add safe/unsafe example
 
@@ -123,7 +151,8 @@ Example:
 * K2: Not over-defined
 * K3: No obvious content
 * K4: Contains gotchas
-* K5: Under 500 lines
+* K5: Has Output format (numbered, 2-4 deliverables)
+* K6: Under 500 lines
 
 ## Output format
 
@@ -140,12 +169,25 @@ Example:
 * Validation must be concrete
 * One skill = one job
 
+### When to create a `project-analysis-*` skill
+
+A framework gets its own analysis skill ONLY if:
+
+* it has its own lifecycle that creates unique debugging patterns
+* it produces failure classes that `project-analysis-core` cannot explain
+* debugging it requires framework-specific mental models
+
+✅ Qualifies: Laravel, Symfony, Express, React, Next.js
+❌ Does NOT qualify: Tailwind, utility libs, CSS frameworks, simple state managers
+
 ## Gotchas
 
 * Model writes documentation instead of steps
-* Model skips validation
+* Model skips validation — every Procedure MUST end with a concrete verify/confirm step
 * Model includes obvious knowledge
 * Description too long or not a trigger
+* Renaming an existing heading to "Procedure:" without adding ordered steps creates false structure — the linter requires numbered steps or `###` sub-headings
+* **Always run `python3 scripts/skill_linter.py` on the new skill** — must be 0 FAIL before saving
 
 ## Do NOT
 

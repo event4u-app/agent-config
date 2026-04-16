@@ -1,6 +1,8 @@
 ---
+name: module-explore
 skills: [laravel]
 description: Explore a module — load its structure, docs, and context into the current conversation
+disable-model-invocation: true
 ---
 
 # module-explore

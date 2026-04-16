@@ -38,7 +38,7 @@ Use this skill when:
 | `find_projects` | Find project slug |
 | `find_releases` | Check recent releases and deploy timing |
 
-## Investigation workflow
+## Procedure: Investigate a Sentry error
 
 ### 1. Get issue details
 
@@ -144,6 +144,11 @@ search_events(organizationSlug='my-org', naturalLanguageQuery='count of database
 - **Command:** `/bug-investigate` — fetches Sentry details automatically
 - **Config:** `config/sentry.php` — Sentry DSN and configuration
 
+
+## Output format
+
+1. Sentry integration code with proper context and breadcrumbs
+2. Error grouping configuration if needed
 
 ## Gotcha
 

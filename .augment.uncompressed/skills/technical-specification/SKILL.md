@@ -18,7 +18,7 @@ Do NOT use when:
 - Trivial changes (a good PR description is enough)
 - Implementation work (use `feature-planning` or `coder` skill)
 
-## Spec types
+## Procedure: Write a spec
 
 ### Technical Specification (full)
 
@@ -152,12 +152,24 @@ If a developer reads only this document, they should be able to build it.
 - **ADRs** are referenced from `AGENTS.md` or module docs for historical context.
 - **Sessions** link to the spec being implemented.
 
+## Output format
+
+1. Technical specification document with architecture decisions
+2. API contracts, data models, and sequence diagrams
+3. Implementation plan with dependencies
+
 ## Auto-trigger keywords
 
 - technical spec
 - RFC
 - ADR
 - architecture decision
+
+### Validate
+
+- Verify every section of the spec template is filled in (no placeholders left).
+- Confirm constraints and limitations are explicit, not implied.
+- Check that the spec answers: What, Why, How, What not, and When.
 
 ## Gotcha
 

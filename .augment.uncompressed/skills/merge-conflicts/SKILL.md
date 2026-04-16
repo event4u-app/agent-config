@@ -14,7 +14,7 @@ Use this skill when:
 - CI fails because the branch is behind main
 - The `prepare-for-review` command encounters conflicts
 
-## Conflict resolution workflow
+## Procedure: Resolve merge conflicts
 
 ### 1. Understand the situation
 
@@ -129,6 +129,11 @@ git add .
 | `git rebase main` | Only when explicitly asked — rewrites history, cleaner log |
 
 **Never rebase without explicit permission** (per `no-commit` rule).
+
+## Output format
+
+1. Resolved conflict with both sides' intent preserved
+2. Summary of resolution strategy per file
 
 ## Auto-trigger keywords
 

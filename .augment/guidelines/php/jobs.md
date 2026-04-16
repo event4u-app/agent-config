@@ -71,8 +71,41 @@ public function middleware(): array
 }
 ```
 
+## Serialization
+
+- Pass IDs or compact DTOs — not full Eloquent models with loaded relations.
+- Model may change between dispatch and execution — design for this.
+- Never serialize closures, service instances, or large nested structures.
+
+## Idempotency
+
+- Assume queued jobs may run more than once.
+- Design handlers so retries don't create duplicate side effects.
+- Especially careful with: emails, external APIs, payments, imports, record creation.
+- Add explicit guards when duplicate execution would be harmful.
+
+## Events
+
+- Use events for meaningful occurrences, not every internal method call.
+- Past-tense naming: `OrderPlaced`, `InvoicePaid`, `UserRegistered`.
+- Keep event payloads focused.
+- **Laravel 11+:** automatic event/listener discovery — no manual registration.
+
+## Listeners
+
+- One responsibility per listener.
+- Delegate large business logic to services.
+- Avoid deep hidden chains of listeners.
+
+## Dispatching
+
+- Be explicit: immediately, after response, or on queue.
+- Don't change sync/async behavior casually in existing flows.
+
 ## General
 
 - Avoid batches unless truly needed (relies on MySQL)
 - Use Service classes for complex business logic inside `handle()`
+- `ShouldQueue` is required for queued execution — without it, runs synchronously
+- Set `$tries` and `$backoff` — unlimited retries can overwhelm the queue
 

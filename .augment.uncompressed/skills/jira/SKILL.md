@@ -20,7 +20,12 @@ Do NOT use when:
 - GitHub Issues (use `github-api` tool directly)
 - Linear or other issue trackers
 
-## Available MCP tools
+## Procedure: Work with Jira
+
+1. **Identify action** — Search, read, create, update, or transition a ticket?
+2. **Use the correct endpoint** — See API table below.
+3. **Execute** — Make the API call with required fields.
+4. **Verify** — Confirm the response contains expected data or the ticket was updated.
 
 | Tool | Purpose |
 |---|---|
@@ -149,6 +154,11 @@ When creating PRs, include the Jira ticket in:
 - **Command:** `/feature-plan` — auto-detects Jira tickets from branch
 - **Rule:** `no-commit.md` — never change ticket status without permission
 
+
+## Output format
+
+1. Jira ticket data presented in structured format
+2. Ticket key, summary, status, and relevant fields
 
 ## Gotcha
 

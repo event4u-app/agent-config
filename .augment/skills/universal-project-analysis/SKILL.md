@@ -1,250 +1,179 @@
 ---
 name: universal-project-analysis
-description: "ONLY when user explicitly requests: full project analysis, deep codebase audit, or comprehensive architecture review. NOT for regular bug fixes or feature work."
+description: "ONLY when user explicitly requests: full project analysis, deep codebase audit, or comprehensive architecture review. Routes to core and framework-specific analysis skills."
 source: package
 ---
 
 # universal-project-analysis
 
-## Mission
-
-Staff+ Engineer reconstructing reality. NOT shallow code scanner.
-
-You:
-- Build complete mental model of system
-- Generate + test competing hypotheses
-- Validate every assumption against code/docs/evidence
-- Eliminate uncertainty systematically
-- Explain root causes with confidence + evidence
-
 ## When to use
 
-- Need full understanding of project/codebase
-- Working with unknown frameworks/packages
-- Analyzing architecture, bad practices, hidden problems
-- Debugging complex multi-layer issues
-- `analysis-autonomous-mode` routes here
+Use this skill when:
 
-NOT when: small isolated snippets, already understand system, framework-specific skill exists (use `project-analysis-laravel` for Laravel).
+* The user explicitly requests a full project analysis
+* The user wants a deep codebase audit
+* The user wants a comprehensive architecture review
+* The system is large, unclear, or spans multiple layers
+* `analysis-autonomous-mode` routes here for broad understanding
+
+Do NOT use when:
+
+* The task is normal feature work
+* Only a small isolated code area needs review
+* The issue is already narrow enough for a specialist skill
+* A framework-specific analysis skill can be called directly
+
+## Mission
+
+Act as the top-level router for deep project investigation.
+
+This skill must:
+
+* confirm whether full-project analysis is justified
+* identify the stack and framework
+* choose the correct analysis mode
+* route to the right specialist analysis skills
+* define the required output for broad project investigations
+
+This skill must NOT become:
+
+* a giant framework encyclopedia
+* a shallow pointer-only file
+* a replacement for framework-specific deep-dive skills
 
 ## Core principles
 
-1. **Never assume** — verify against code/config/docs
-2. **Version dictates behavior** — wrong version = wrong analysis
-3. **Packages = external systems** — research, not guess
-4. **Real-world issues matter** — search GitHub Issues, SO, changelogs
-5. **Code without context meaningless** — understand execution flow first
-6. **Multiple hypotheses always** — never stop at first explanation
-7. **Evidence over intuition** — code/docs beat memory/assumptions
+1. Never assume — verify against code, config, docs, and evidence
+2. Version dictates behavior
+3. Broad understanding comes before narrow conclusions
+4. Use framework-specific skills once the stack is known
+5. Use hypothesis-driven analysis when root cause is unclear
+6. Mark uncertainty explicitly
 
 ## Thinking model
 
-1. **Observe** — what exists (code, config, structure)
-2. **Understand** — how it works (execution flow, lifecycle)
-3. **Verify** — correct? (docs, version-specific behavior)
-4. **Hypothesize** — what could be wrong (multiple options)
-5. **Validate** — test each (code + docs + real-world)
-6. **Conclude** — only proven facts, mark uncertainty
+Always think in this order:
+
+1. Observe
+2. Understand
+3. Verify
+4. Route
+5. Investigate
+6. Conclude
 
 ## Analysis modes
 
-- **Exploration** — system unknown → understand structure, identify risks
-- **Investigation** — specific issue → find root cause, validate hypotheses
-- **Optimization** — system works but inefficient → improve performance/complexity
+### Exploration mode
 
----
+Use when the system is unknown.
+Goal: understand structure, identify major components, detect investigation paths, choose the next specialist skill.
 
-## Mandatory workflow
+### Investigation mode
 
-### 1. Project discovery
+Use when there is a concrete issue inside a large or unclear system.
+Goal: isolate the affected area, route into root-cause analysis, verify likely causes with evidence.
 
-Identify language, framework, runtime, package managers.
+### Optimization mode
 
-Sources: `composer.json`, `package.json`, config files, bootstrap, `Dockerfile`, CI, `AGENTS.md`, `README.md`.
+Use when the system works but may be inefficient or over-complex.
+Goal: identify hot paths, find expensive boundaries, route into architecture or performance specialists.
 
-No README? Search `.md` files across root, `docs/`, `agents/`, subdirs. Check `AGENTS.md`, `app/Modules/*/agents/`, `.github/copilot-instructions.md`.
+## Procedure
 
-### 2. Version resolution (CRITICAL)
+### 1. Confirm scope
 
-**Unknown version = unreliable analysis.**
+Check whether full-project analysis is really needed.
+Use this skill only if the user wants: broad system understanding, architecture reconstruction, deep multi-layer debugging, broad audit across modules or runtime boundaries.
+If not: route to the narrower specialist skill directly.
 
-Priority: lock files → constraint files → CI/Dockerfile → framework bootstrap.
+### 2. Discover the project
 
-Behavior changes between major AND minor versions. Docs must match installed version.
+Identify: language, framework, runtime environment, package managers, major entrypoints, documentation locations.
+Look at: package manifests, lock files, bootstrap files, Docker/CI config, README/AGENTS/docs.
 
-### 3. Documentation loading (MANDATORY)
+### 3. Choose the primary route
 
-Per detected system:
+* unknown or mixed system → `project-analysis-core`
+* concrete root-cause problem → `project-analysis-hypothesis-driven`
+* Laravel → `project-analysis-laravel`
+* Symfony → `project-analysis-symfony`
+* Zend/Laminas → `project-analysis-zend-laminas`
+* Node/Express → `project-analysis-node-express`
+* React → `project-analysis-react`
+* Next.js → `project-analysis-nextjs`
 
-**Framework:** Load version-specific docs (INSTALLED version, not latest). Validate assumptions. Check upgrade guides.
+### 4. Chain specialists where needed
 
-**Packages:** Identify exact version. Read official docs/changelog/upgrade guide/source. Understand usage/lifecycle/config/edge cases. Distinguish defaults from customizations.
+* bottleneck found → `performance-analysis`
+* security concern found → `security-audit`
+* bug isolated → `bug-analyzer`
 
-### 4. Architecture mapping
+### 5. Consolidate findings
 
-- **Entrypoints:** routes, CLI, workers, scheduled tasks, webhooks
-- **Dependency flow:** request → middleware → controller → service → repo → DB
-- **Container/DI:** providers, bindings, singletons
-- **Module boundaries:** code interaction paths
-- **Domain structure:** models, services, events
-- **State:** sessions, cache, DB, filesystem, external services
+Combine: system overview, framework-specific findings, verified risks, explicit uncertainties, next investigation steps.
 
-### 5. Execution model
+### 6. Validate analysis quality
 
-Trace actual flow: Request/CLI/Queue/Event → service → DB → response/output/side effects.
+Check:
 
-Identify sync↔async boundaries, transaction boundaries, external calls.
+* full-project analysis was actually justified
+* framework detection is explicit
+* chosen specialist skills match the discovered stack
+* uncertainties are marked
+* conclusions are evidence-based
 
-### 6. Package deep dive
+## Routing map
 
-Per critical package:
-1. Where used?
-2. Used per docs?
-3. Known issues for version?
-4. Config correct?
-5. Breaking changes vs tutorials?
-6. `composer why <package>` — dependencies?
+### Universal analysis skills
 
-### 7. Real-world research (MANDATORY)
+* `project-analysis-core`
+* `project-analysis-hypothesis-driven`
 
-Search: exact error messages, stack traces, package+version+"issue", framework+unusual patterns.
+### Framework-specific deep dives
 
-Sources by authority: official docs → GitHub Issues → SO (verified) → vendor source → blog posts (skepticism).
+* `project-analysis-laravel`
+* `project-analysis-symfony`
+* `project-analysis-zend-laminas`
+* `project-analysis-node-express`
+* `project-analysis-react`
+* `project-analysis-nextjs`
 
----
+### Optional downstream specialists
 
-## Hypothesis-driven analysis
+* `bug-analyzer`
+* `performance-analysis`
+* `security-audit`
 
-### Hypothesis tree
+## When to add a new framework analysis skill
 
-For ANY issue, generate MULTIPLE competing explanations:
+A framework gets its own `project-analysis-*` skill ONLY if:
 
-```
-Root Problem
-├── H1: Config issue (wrong env, cached stale config)
-├── H2: Version mismatch (package expects different framework version)
-├── H3: Package misuse (wrong API, wrong lifecycle hook)
-├── H4: Async/timing (race condition, stale cache, job ordering)
-├── H5: Data inconsistency (null unexpected, type mismatch)
-└── H6: Architecture flaw (wrong abstraction, hidden coupling)
-```
+* it has its own lifecycle that creates unique debugging patterns
+* it produces failure classes that `project-analysis-core` cannot explain
+* debugging it requires framework-specific mental models (not just API knowledge)
 
-### Prioritize by
+Examples that qualify: Laravel, Symfony, Express, React, Next.js.
+Examples that do NOT qualify: Tailwind, small utility libraries, CSS frameworks, simple state libs.
 
-1. **Likelihood** — explains observed behavior?
-2. **Impact** — how serious?
-3. **Testability** — quick to confirm/reject?
+## Output format
 
-### Validation loop
-
-Per hypothesis: check code → check docs → check real-world → mark ✅ Confirmed / ❌ Rejected / ❓ Uncertain.
-
-### Reality check
-
-- Fully explains behavior?
-- Anything unexplained?
-- Multiple interacting causes?
-- Senior engineer would agree?
-
-Unexplained → continue. Do NOT present partial as complete.
-
----
-
-## Cross-system interactions
-
-| System A | ↔ | System B | Risk |
-|---|---|---|---|
-| Framework | ↔ | Package | Version mismatch, lifecycle hook, config conflict |
-| Sync | ↔ | Async | Lost context, stale data, race conditions |
-| Config | ↔ | Runtime | Cached config mismatch, env() outside config |
-| Cache | ↔ | Database | Stale reads, inconsistent state |
-| Auth | ↔ | Middleware | Order-dependent, missing guards |
-| Model events | ↔ | Queue jobs | Fire during seeding/migration, serialization |
-| Transaction | ↔ | External calls | Side effects can't rollback |
-
----
-
-## Anti-pattern detection
-
-**Architecture:** tight coupling, god classes (20+ methods/500+ lines), hidden side effects (observers), unclear responsibilities, circular dependencies.
-
-**Framework misuse:** wrong lifecycle, abusing features (cache as DB, events as sync calls), ignoring conventions, `env()` outside config.
-
-**Package:** wrong config for version, outdated tutorial patterns, breaking changes, undocumented APIs.
-
-**Hidden:** race conditions, silent failures (empty catch), state problems (stale refs, partial updates), implicit dependencies, memory leaks.
-
----
-
-## Framework knowledge
-
-**Laravel:** Container misuse (wrong provider method, singleton vs transient), facade overuse, N+1 queries, queue serialization/tenant context, config caching, middleware order, model events in seeding/migration, route model binding.
-
-**Symfony:** Autowiring conflicts, env vs parameter bags, event ordering, firewall config.
-
-**Zend/Laminas:** Legacy service manager, config merge order, module conflicts.
-
-**Node/Express:** Async/await pitfalls, middleware order, memory leaks in closures, module resolution.
-
----
-
-## Output format (STRICT)
-
-### Investigation summary
-What analyzed, system+version, execution flow, mode.
-
-### System model
-Stack diagram, key entrypoints, packages+roles.
-
-### Hypothesis tree
-All hypotheses with status (confirmed/rejected/uncertain).
-
-### Confirmed findings
-Per finding: **Issue** (title), **Severity** (Low/Medium/High/Critical), **Context** (where/when), **Root Cause** (deep WHY), **Evidence** (code/doc/issue ref), **Fix** (concrete), **Confidence** (Low/Medium/High).
-
-### Rejected hypotheses
-What considered, disproven, WHY. Prevents re-investigation.
-
-### Risk areas
-Unverified suspicious parts. What evidence missing, what would confirm/reject.
-
-### Priority fix plan
-1. Critical root cause → 2. Stabilize → 3. Optimize → 4. Clean architecture.
-
-### Next steps
-What to check/fix/investigate. Which specialist skills to chain.
-
----
-
-## Integration
-
-- **analysis-autonomous-mode** — routes here, switches to specialists
-- **project-analysis-laravel** — Laravel-specific deep analysis
-- **bug-analyzer** — chain when bugs found
-- **performance-analysis** — chain for bottlenecks
-- **security-audit** — chain for vulnerabilities
-
-## Decision rules
-
-- Unclear → broaden (more context)
-- Pattern match → narrow quickly
-- Multiple causes → separate concerns
-- Evidence missing → do NOT conclude (mark uncertain)
-- First explanation too easy → challenge it
+1. Investigation summary
+2. Detected stack and framework
+3. Chosen analysis mode
+4. Routed specialist skills
+5. Consolidated findings
+6. Risks and next steps
 
 ## Gotcha
 
-- Full analysis expensive — only when explicitly requested
-- Model spends too much time on trivial findings — focus high-impact
-- Analysis docs must note date — point-in-time snapshot
+* This skill must remain a real orchestration skill.
+* Do not move long framework-specific deep dives back into this file.
+* Do not let this skill become a generic "analyze everything" bucket.
 
 ## Do NOT
 
-- Assume framework behavior — verify against version-specific docs
-- Skip doc lookup for important packages
-- Ignore versions — behavior changes between releases
-- Give generic advice — specific code refs + evidence
-- Stop at first explanation — test multiple hypotheses
-- Present guesses as facts — mark confidence
-- Trust tutorials over official docs
-- Ignore contradictory evidence
+* Do NOT analyze everything here directly if a specialist skill exists
+* Do NOT skip framework detection
+* Do NOT present broad guesses as conclusions
+* Do NOT turn this into a shallow pointer-only file
+* Do NOT duplicate framework-specific deep-dive content here

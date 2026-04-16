@@ -10,7 +10,7 @@ source: package
 
 Use this skill when creating, exploring, or working within a module in `app/Modules/`.
 
-## Before making changes
+## Procedure: Work with modules
 
 1. Read `app/Modules/README.md` for the full module documentation.
 2. Check `app/Providers/ModuleServiceProvider.php` for auto-loading behavior.
@@ -121,12 +121,24 @@ app/Modules/{Module}/agents/
 └── contexts/       # Module-scoped context documents
 ```
 
+## Output format
+
+1. Module directory structure following template conventions
+2. ServiceProvider, routes, and agent docs scaffolded
+
 ## Auto-trigger keywords
 
 - Laravel module
 - module structure
 - module creation
 - module namespace
+
+### Validate
+
+- Verify namespace follows `App\Modules\{Name}\App\{Layer}` pattern.
+- Confirm `ModuleServiceProvider` auto-discovers the new module's routes and providers.
+- Run PHPStan on the module — must pass.
+- Run module tests — must pass.
 
 ## Gotcha
 

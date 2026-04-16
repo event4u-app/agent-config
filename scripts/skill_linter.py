@@ -31,24 +31,26 @@ from pathlib import Path
 from typing import Iterable, List, Literal, Optional
 
 Severity = Literal["error", "warning", "info"]
-ArtifactType = Literal["skill", "rule", "unknown"]
+ArtifactType = Literal["skill", "rule", "command", "unknown"]
 
 
 REQUIRED_SKILL_SECTIONS = [
     "When to use",
+    "Gotcha",
     "Procedure",
     "Output format",
-    "Gotchas",
     "Do NOT",
 ]
 
-RECOMMENDED_SKILL_SECTIONS = [
-    "Preconditions",
-    "Decision hints",
-    "Anti-patterns",
-    "Examples",
-    "Environment notes",
-]
+# Aliases: linter accepts any of these as matching the required section
+SECTION_ALIASES = {
+    "Gotcha": {"Gotcha", "Gotchas"},
+    "Procedure": set(),  # prefix-matched separately
+    "Do NOT": {"Do NOT", "Do not", "Anti-patterns"},
+    "Output format": {"Output format", "Output"},
+}
+
+RECOMMENDED_SKILL_SECTIONS: list[str] = []
 
 RULE_BAD_SIGNS = [
     "## Procedure",
@@ -71,10 +73,20 @@ TRIGGER_WARNING_PATTERNS = [
     r"\beverything about\b",
 ]
 
-ORDERED_STEP_PATTERN = re.compile(r"^\s*(\d+)\.\s+", re.MULTILINE)
+ORDERED_STEP_PATTERN = re.compile(r"^(?:\s*|\#{1,4}\s*)(\d+)\.\s+", re.MULTILINE)
 SECTION_PATTERN = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 FRONTMATTER_PATTERN = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
 DESCRIPTION_PATTERN = re.compile(r'^description:\s*"?(.*?)"?\s*$', re.MULTILINE)
+TYPE_PATTERN = re.compile(r'^type:\s*"?(always|auto)"?\s*$', re.MULTILINE)
+SOURCE_PATTERN = re.compile(r'^source:\s*"?(package|project)"?\s*$', re.MULTILINE)
+STATUS_PATTERN = re.compile(r'^status:\s*"?(active|deprecated|superseded)"?\s*$', re.MULTILINE)
+REPLACED_BY_PATTERN = re.compile(r'^replaced_by:\s*"?([\w-]+)"?\s*$', re.MULTILINE)
+H1_PATTERN = re.compile(r"^# .+", re.MULTILINE)
+DOUBLE_BLANK_PATTERN = re.compile(r"\n{3,}")
+
+VALID_RULE_TYPES = {"always", "auto"}
+VALID_RULE_SOURCES = {"package", "project"}
+VALID_STATUSES = {"active", "deprecated", "superseded"}
 
 
 @dataclass
@@ -109,12 +121,20 @@ def extract_description(text: str) -> Optional[str]:
     return description.group(1).strip() if description else None
 
 
+NAME_PATTERN = re.compile(r'^name:\s*"?(.*?)"?\s*$', re.MULTILINE)
+DISABLE_MODEL_PATTERN = re.compile(r'^disable-model-invocation:\s*"?(true|false)"?\s*$', re.MULTILINE)
+
+
 def detect_artifact_type(path: Path, text: str) -> ArtifactType:
     path_str = str(path).lower()
     has_skill_heading = "## When to use" in text and "## Procedure" in text
 
+    # Skills take priority — /skills/commands/SKILL.md is a skill, not a command
     if path.name.lower() == "skill.md" or "/skills/" in path_str:
         return "skill"
+    # Commands are flat .md files in /commands/ directories (not SKILL.md)
+    if "/commands/" in path_str and path.name.lower() != "skill.md":
+        return "command"
     if "/rules/" in path_str:
         return "rule"
     if has_skill_heading:
@@ -153,7 +173,12 @@ def has_validation_step(procedure_block: str) -> bool:
     lowered = procedure_block.lower()
     if "validate" in lowered or "validation" in lowered:
         return True
-    good_signals = ["expected", "status code", "no errors", "appears in", "exact check", "concrete checks"]
+    good_signals = [
+        "expected", "status code", "no errors", "appears in", "exact check", "concrete checks",
+        "verify", "confirm", "must pass", "must fail", "assert", "check that", "ensure",
+        "run test", "run phpstan", "run ecs", "run rector", "lint", "passes",
+        "exit code", "should return", "should contain", "must contain", "must return",
+    ]
     return any(signal in lowered for signal in good_signals)
 
 
@@ -172,11 +197,17 @@ def find_vague_validation(text: str) -> list[str]:
 
 
 def is_probably_too_broad(text: str, description: Optional[str]) -> bool:
-    haystacks = [text.lower()]
+    # Only check description and "When to use" for broad signals — not the entire text
+    haystacks: list[str] = []
     if description:
         haystacks.append(description.lower())
+    when_block = extract_section_block(text, "When to use")
+    if when_block:
+        haystacks.append(when_block.lower())
+    if not haystacks:
+        return False
     combined = "\n".join(haystacks)
-    broad_signals = ["everything about", "general", "all laravel", "all markdown", "helper for everything"]
+    broad_signals = ["everything about", "general purpose", "general-purpose", "all markdown", "helper for everything"]
     return any(signal in combined for signal in broad_signals)
 
 
@@ -190,6 +221,39 @@ def dedupe_preserve_order(items: Iterable[str]) -> list[str]:
     return result
 
 
+def section_matches(required: str, sections: set[str]) -> bool:
+    """Check if a required section name matches any extracted section, supporting aliases and prefix matching."""
+    # Direct match
+    if required in sections:
+        return True
+    # Alias match (e.g. "Gotcha" matches "Gotchas")
+    aliases = SECTION_ALIASES.get(required, set())
+    if aliases & sections:
+        return True
+    # Prefix match (e.g. "Procedure" matches "Procedure: Create X")
+    for s in sections:
+        if s.startswith(required + ":") or s.startswith(required + " "):
+            return True
+    return False
+
+
+def find_procedure_block(text: str) -> Optional[str]:
+    """Find the procedure section block, supporting prefix-named variants."""
+    block = extract_section_block(text, "Procedure")
+    if block:
+        return block
+    # Try prefix match: find "## Procedure: ..." or "## Procedure " headings
+    match = re.search(r"^##\s+Procedure[:\s]", text, re.MULTILINE)
+    if match:
+        # Extract from this heading to the next ## heading
+        start = match.end()
+        next_heading = re.search(r"^##\s+", text[start:], re.MULTILINE)
+        if next_heading:
+            return text[start:start + next_heading.start()].strip()
+        return text[start:].strip()
+    return None
+
+
 def lint_skill(path: Path, text: str) -> LintResult:
     issues: List[Issue] = []
     suggestions: List[str] = []
@@ -198,11 +262,11 @@ def lint_skill(path: Path, text: str) -> LintResult:
     description = extract_description(text)
 
     for section in REQUIRED_SKILL_SECTIONS:
-        if section not in sections:
+        if not section_matches(section, sections):
             issues.append(Issue("error", "missing_section", f"Missing required section: {section}"))
 
     for section in RECOMMENDED_SKILL_SECTIONS:
-        if section not in sections:
+        if not section_matches(section, sections):
             issues.append(Issue("warning", "missing_recommended_section", f"Missing recommended section: {section}"))
 
     if description:
@@ -215,18 +279,42 @@ def lint_skill(path: Path, text: str) -> LintResult:
     else:
         issues.append(Issue("warning", "missing_description", "Frontmatter description is missing or unreadable"))
 
-    if "## Procedure" in text:
-        procedure_block = extract_section_block(text, "Procedure")
+    # --- Status lifecycle check ---
+    frontmatter = extract_frontmatter(text)
+    if frontmatter:
+        status_match = STATUS_PATTERN.search(frontmatter)
+        if status_match:
+            status = status_match.group(1)
+            if status == "deprecated":
+                replaced_by = extract_frontmatter_field(frontmatter, REPLACED_BY_PATTERN)
+                msg = f"Skill is deprecated"
+                if replaced_by:
+                    msg += f" (replaced by: {replaced_by})"
+                issues.append(Issue("warning", "deprecated_skill", msg))
+            elif status == "superseded":
+                replaced_by = extract_frontmatter_field(frontmatter, REPLACED_BY_PATTERN)
+                msg = f"Skill is superseded — should be removed"
+                if replaced_by:
+                    msg += f" (replaced by: {replaced_by})"
+                issues.append(Issue("warning", "superseded_skill", msg))
+
+    procedure_block = find_procedure_block(text)
+    if procedure_block is not None:
         if not procedure_block:
             issues.append(Issue("error", "empty_procedure", "Procedure section is empty"))
         else:
-            if not ORDERED_STEP_PATTERN.search(procedure_block):
-                issues.append(Issue("error", "unordered_procedure", "Procedure has no ordered steps"))
+            # Check for ordered steps OR sub-headings as structural indicators
+            has_ordered = ORDERED_STEP_PATTERN.search(procedure_block)
+            has_subheadings = bool(re.search(r"^###\s+", procedure_block, re.MULTILINE))
+            if not has_ordered and not has_subheadings:
+                issues.append(Issue("error", "unordered_procedure", "Procedure has no ordered steps or sub-headings"))
             meaningful_steps = len(ORDERED_STEP_PATTERN.findall(procedure_block))
             if meaningful_steps < 3:
                 issues.append(Issue("warning", "short_procedure", "Procedure has fewer than 3 ordered steps"))
-            if not has_validation_step(procedure_block):
-                issues.append(Issue("error", "missing_validation", "Procedure lacks a concrete validation step"))
+            # Check validation in procedure block OR in the full skill text
+            # (some skills have ### Validate under a sibling ## section)
+            if not has_validation_step(procedure_block) and not has_validation_step(text):
+                issues.append(Issue("error", "missing_validation", "Skill lacks a concrete validation step"))
             vague_hits = find_vague_validation(procedure_block)
             for hit in vague_hits:
                 issues.append(Issue("error", "vague_validation", f"Vague validation detected: {hit}"))
@@ -241,9 +329,10 @@ def lint_skill(path: Path, text: str) -> LintResult:
     else:
         suggestions.append("Add an Output format section with ordered response constraints")
 
-    if "## Gotchas" in text:
-        gotchas_block = extract_section_block(text, "Gotchas")
-        if count_bullets(gotchas_block) < 1:
+    # Check Gotcha/Gotchas section (alias support)
+    gotcha_block = extract_section_block(text, "Gotchas") or extract_section_block(text, "Gotcha")
+    if gotcha_block:
+        if count_bullets(gotcha_block) < 1:
             issues.append(Issue("warning", "weak_gotchas", "Gotchas should contain at least one realistic failure mode"))
     else:
         suggestions.append("Add at least one realistic failure pattern to Gotchas")
@@ -259,6 +348,39 @@ def lint_skill(path: Path, text: str) -> LintResult:
         issues.append(Issue("warning", "broad_scope", "Skill scope appears broad and may need splitting"))
         suggestions.append("Narrow the trigger or split unrelated workflows")
 
+    # --- Size check ---
+    total_lines = len(text.splitlines())
+    if total_lines > 500:
+        issues.append(Issue("warning", "skill_too_large", f"Skill has {total_lines} lines (limit: 500); consider splitting"))
+
+    # --- Pointer-only skill detection ---
+    if procedure_block:
+        proc_lines = [line.strip() for line in procedure_block.splitlines() if line.strip()]
+        # Count delegation patterns ("see guideline", "refer to", "check X docs")
+        delegation_patterns = re.findall(
+            r"(?:see|read|check|follow|refer\s+to|consult|per)\s+.*(?:guideline|skill|rule|doc)",
+            procedure_block, re.IGNORECASE)
+        delegation_count = len(delegation_patterns)
+        # Count action verbs that indicate own workflow
+        action_verbs = re.findall(
+            r"\b(?:run|execute|create|write|validate|verify|inspect|check|ensure|test|build|"
+            r"generate|compare|extract|parse|detect|fix|update|add|remove|install|configure|deploy)\b",
+            procedure_block, re.IGNORECASE)
+        action_count = len(set(v.lower() for v in action_verbs))
+        # Heuristics:
+        # 1. Many delegation refs + few own steps = pointer skill
+        # 2. Few action verbs + many delegations = pointer skill
+        if delegation_count >= 2 and len(proc_lines) < 8:
+            issues.append(Issue("warning", "pointer_only_skill",
+                               f"Procedure has {len(proc_lines)} lines but {delegation_count} delegation references — "
+                               f"skill may be outsourcing its workflow"))
+            suggestions.append("Ensure the skill has its own executable workflow independent of guidelines")
+        elif delegation_count >= 3 and action_count < 3:
+            issues.append(Issue("warning", "pointer_only_skill",
+                               f"Procedure has {delegation_count} delegation references but only {action_count} unique action verbs — "
+                               f"skill may lack its own executable steps"))
+            suggestions.append("Add concrete action steps (run, validate, inspect, create) instead of pointing to other docs")
+
     return LintResult(
         file=str(path),
         artifact_type="skill",
@@ -268,19 +390,72 @@ def lint_skill(path: Path, text: str) -> LintResult:
     )
 
 
+def extract_frontmatter(text: str) -> Optional[str]:
+    match = FRONTMATTER_PATTERN.search(text)
+    return match.group(1) if match else None
+
+
+def extract_frontmatter_field(frontmatter: str, pattern: re.Pattern[str]) -> Optional[str]:
+    match = pattern.search(frontmatter)
+    return match.group(1).strip() if match else None
+
+
 def lint_rule(path: Path, text: str) -> LintResult:
     issues: List[Issue] = []
     suggestions: List[str] = []
 
+    # --- Frontmatter checks ---
+    frontmatter = extract_frontmatter(text)
+    if frontmatter is None:
+        issues.append(Issue("error", "missing_frontmatter", "Rule is missing YAML frontmatter (--- block)"))
+    else:
+        # type field
+        rule_type = extract_frontmatter_field(frontmatter, TYPE_PATTERN)
+        if rule_type is None:
+            issues.append(Issue("error", "missing_type", "Frontmatter missing 'type' field (must be 'always' or 'auto')"))
+        elif rule_type not in VALID_RULE_TYPES:
+            issues.append(Issue("error", "invalid_type", f"Invalid type '{rule_type}'; must be 'always' or 'auto'"))
+
+        # source field
+        rule_source = extract_frontmatter_field(frontmatter, SOURCE_PATTERN)
+        if rule_source is None:
+            issues.append(Issue("error", "missing_source", "Frontmatter missing 'source' field (must be 'package' or 'project')"))
+        elif rule_source not in VALID_RULE_SOURCES:
+            issues.append(Issue("error", "invalid_source", f"Invalid source '{rule_source}'; must be 'package' or 'project'"))
+
+        # description required for auto rules
+        if rule_type == "auto":
+            description = extract_description(text)
+            if not description:
+                issues.append(Issue("error", "auto_missing_description", "Auto rules require a 'description' field for matching"))
+
+    # --- Structure checks ---
+    # H1 heading
+    if not H1_PATTERN.search(text):
+        issues.append(Issue("error", "missing_h1", "Rule is missing an H1 heading (# Title)"))
+
+    # File must end with exactly one newline
+    if not text.endswith("\n"):
+        issues.append(Issue("error", "no_trailing_newline", "File must end with exactly one newline"))
+    elif text.endswith("\n\n"):
+        issues.append(Issue("warning", "extra_trailing_newlines", "File ends with multiple newlines; should be exactly one"))
+
+    # No double/triple blank lines in content
+    if DOUBLE_BLANK_PATTERN.search(text):
+        issues.append(Issue("warning", "double_blank_lines", "File contains double or triple blank lines"))
+
+    # --- Content checks (existing) ---
     line_count = len([line for line in text.splitlines() if line.strip()])
-    if line_count > 25:
-        issues.append(Issue("warning", "long_rule", "Rule is quite long; rules should usually stay short"))
+    if line_count > 50:
+        issues.append(Issue("warning", "long_rule", f"Rule has {line_count} non-empty lines; rules should be concise"))
 
     for bad_sign in RULE_BAD_SIGNS:
         if bad_sign in text:
             issues.append(Issue("error", "rule_looks_like_skill", f"Rule contains skill-like section: {bad_sign}"))
 
-    if re.search(r"\b(step|procedure|workflow)\b", text, re.IGNORECASE):
+    # Exclude frontmatter from procedural check (frontmatter may contain "type")
+    body = text.split("---", 2)[-1] if frontmatter else text
+    if re.search(r"\b(procedure|workflow)\b", body, re.IGNORECASE):
         issues.append(Issue("warning", "procedural_rule", "Rule looks procedural; consider a skill instead"))
 
     return LintResult(
@@ -292,28 +467,108 @@ def lint_rule(path: Path, text: str) -> LintResult:
     )
 
 
+def lint_command(path: Path, text: str) -> LintResult:
+    issues: List[Issue] = []
+    suggestions: List[str] = []
+
+    # --- Frontmatter checks ---
+    frontmatter = extract_frontmatter(text)
+    if frontmatter is None:
+        issues.append(Issue("error", "missing_frontmatter", "Command is missing YAML frontmatter (--- block)"))
+    else:
+        # name field
+        name_match = NAME_PATTERN.search(frontmatter)
+        if not name_match or not name_match.group(1).strip():
+            issues.append(Issue("error", "missing_name", "Frontmatter missing 'name' field"))
+
+        # disable-model-invocation field
+        dmi_match = DISABLE_MODEL_PATTERN.search(frontmatter)
+        if not dmi_match:
+            issues.append(Issue("error", "missing_disable_model_invocation",
+                                "Frontmatter missing 'disable-model-invocation: true' (required for Claude Code)"))
+        elif dmi_match.group(1) != "true":
+            issues.append(Issue("warning", "disable_model_invocation_false",
+                                "disable-model-invocation should be 'true' for commands"))
+
+        # description field
+        description = extract_description(text)
+        if not description:
+            issues.append(Issue("warning", "missing_description", "Frontmatter description is missing"))
+
+    # --- Structure checks ---
+    if not H1_PATTERN.search(text):
+        issues.append(Issue("error", "missing_h1", "Command is missing an H1 heading (# Title)"))
+
+    # Must have at least one ## section with steps
+    sections = extract_sections(text)
+    has_steps = any(s.lower().startswith("step") for s in sections)
+    has_numbered = bool(re.search(r"^###?\s+\d+\.\s+", text, re.MULTILINE))
+    if not has_steps and not has_numbered:
+        issues.append(Issue("warning", "no_steps", "Command has no Steps section or numbered sub-headings"))
+
+    # File must end with exactly one newline
+    if not text.endswith("\n"):
+        issues.append(Issue("error", "no_trailing_newline", "File must end with exactly one newline"))
+    elif text.endswith("\n\n"):
+        issues.append(Issue("warning", "extra_trailing_newlines", "File ends with multiple newlines; should be exactly one"))
+
+    return LintResult(
+        file=str(path),
+        artifact_type="command",
+        status=classify_status(issues),
+        issues=issues,
+        suggestions=dedupe_preserve_order(suggestions),
+    )
+
+
 def lint_unknown(path: Path, text: str) -> LintResult:
-    issues = [Issue("error", "unknown_artifact", "Could not detect whether file is a skill or rule")]
+    issues = [Issue("error", "unknown_artifact", "Could not detect whether file is a skill, rule, or command")]
     return LintResult(
         file=str(path),
         artifact_type="unknown",
         status="fail",
         issues=issues,
-        suggestions=["Move the file into a recognized skills/ or rules/ path or add recognizable structure"],
+        suggestions=["Move the file into a recognized skills/, rules/, or commands/ path"],
     )
 
 
 def gather_all_candidate_files(root: Path) -> list[Path]:
+    """Gather all lintable files. Prefers .augment.uncompressed/ (source of truth).
+    Falls back to .augment/ only if uncompressed doesn't exist.
+    Skips symlinks to avoid double-counting."""
     candidates: list[Path] = []
-    skill_dirs = [root / ".augment.uncompressed" / "skills", root / ".augment" / "skills"]
-    rules_dirs = [root / ".augment.uncompressed" / "rules", root / ".augment" / "rules", root / ".claude" / "rules"]
 
-    for base in skill_dirs:
-        if base.exists():
-            candidates.extend(base.rglob("SKILL.md"))
-    for base in rules_dirs:
-        if base.exists():
-            candidates.extend(base.rglob("*.md"))
+    # Source of truth directories
+    uncompressed_skills = root / ".augment.uncompressed" / "skills"
+    uncompressed_rules = root / ".augment.uncompressed" / "rules"
+    uncompressed_commands = root / ".augment.uncompressed" / "commands"
+
+    # Fallback directories (only if uncompressed doesn't exist)
+    augment_skills = root / ".augment" / "skills"
+    augment_rules = root / ".augment" / "rules"
+    augment_commands = root / ".augment" / "commands"
+
+    # Skills
+    skills_base = uncompressed_skills if uncompressed_skills.exists() else augment_skills
+    if skills_base.exists():
+        for f in skills_base.rglob("SKILL.md"):
+            if not f.is_symlink():
+                candidates.append(f)
+
+    # Rules
+    rules_base = uncompressed_rules if uncompressed_rules.exists() else augment_rules
+    if rules_base.exists():
+        for f in rules_base.rglob("*.md"):
+            if not f.is_symlink():
+                candidates.append(f)
+
+    # Commands
+    commands_base = uncompressed_commands if uncompressed_commands.exists() else augment_commands
+    if commands_base.exists():
+        for f in commands_base.rglob("*.md"):
+            if not f.is_symlink():
+                candidates.append(f)
+
     return sorted(set(candidates))
 
 
@@ -348,21 +603,43 @@ def gather_changed_candidate_files(root: Path) -> list[Path]:
             path = root / raw
             if not path.exists():
                 continue
-            if path.name == "SKILL.md" or "/rules/" in raw.replace("\\", "/"):
+            # Skip symlinks to avoid double-counting (e.g. .claude/skills/ → .augment/commands/)
+            if path.is_symlink():
+                continue
+            norm = raw.replace("\\", "/")
+            if path.name == "SKILL.md" or "/rules/" in norm or "/commands/" in norm:
                 files.append(path)
         return sorted(set(files))
     except Exception:
         return []
 
 
-def lint_file(path: Path) -> LintResult:
+def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
+    # Skip README files — they are not lintable artifacts
+    if path.name.lower() == "readme.md":
+        return LintResult(
+            file=str(path),
+            artifact_type="unknown",
+            status="pass",
+            issues=[],
+            suggestions=[],
+        )
     text = read_text(path)
     artifact_type = detect_artifact_type(path, text)
+    # Use relative path for output if repo_root is provided
+    display_path = path
+    if repo_root:
+        try:
+            display_path = path.relative_to(repo_root)
+        except ValueError:
+            pass
     if artifact_type == "skill":
-        return lint_skill(path, text)
+        return lint_skill(display_path, text)
     if artifact_type == "rule":
-        return lint_rule(path, text)
-    return lint_unknown(path, text)
+        return lint_rule(display_path, text)
+    if artifact_type == "command":
+        return lint_command(display_path, text)
+    return lint_unknown(display_path, text)
 
 
 def format_text(results: list[LintResult]) -> str:
@@ -411,6 +688,162 @@ def format_json(results: list[LintResult]) -> str:
     return json.dumps(payload, indent=2, ensure_ascii=False)
 
 
+def check_compression_pairs(root: Path) -> list[LintResult]:
+    """Check that every uncompressed skill/rule/command has a compressed counterpart and vice versa."""
+    results: list[LintResult] = []
+
+    pairs = [
+        ("skills", "SKILL.md", True),   # (subdir, filename, is_nested)
+        ("rules", "*.md", False),
+        ("commands", "*.md", False),
+    ]
+
+    for subdir, pattern, is_nested in pairs:
+        uncompressed_dir = root / ".augment.uncompressed" / subdir
+        compressed_dir = root / ".augment" / subdir
+
+        if not uncompressed_dir.exists():
+            continue
+
+        # Collect names from uncompressed
+        if is_nested:
+            uncompressed_names = {d.name for d in uncompressed_dir.iterdir() if d.is_dir() and (d / pattern).exists()}
+        else:
+            uncompressed_names = {f.name for f in uncompressed_dir.glob(pattern) if f.is_file()}
+
+        # Collect names from compressed
+        if compressed_dir.exists():
+            if is_nested:
+                compressed_names = {d.name for d in compressed_dir.iterdir() if d.is_dir() and (d / pattern).exists()}
+            else:
+                compressed_names = {f.name for f in compressed_dir.glob(pattern) if f.is_file()}
+        else:
+            compressed_names = set()
+
+        # Missing compressed
+        for name in sorted(uncompressed_names - compressed_names):
+            path_str = f".augment/{subdir}/{name}/{pattern}" if is_nested else f".augment/{subdir}/{name}"
+            results.append(LintResult(
+                file=path_str,
+                artifact_type=subdir.rstrip("s"),
+                status="fail",
+                issues=[Issue("error", "missing_compressed", f"Uncompressed exists but compressed version is missing")],
+                suggestions=[f"Run /compress to generate .augment/{subdir}/{name}"],
+            ))
+
+        # Orphaned compressed (no source)
+        for name in sorted(compressed_names - uncompressed_names):
+            path_str = f".augment/{subdir}/{name}/{pattern}" if is_nested else f".augment/{subdir}/{name}"
+            results.append(LintResult(
+                file=path_str,
+                artifact_type=subdir.rstrip("s"),
+                status="fail",
+                issues=[Issue("error", "orphaned_compressed", f"Compressed exists but uncompressed source is missing")],
+                suggestions=[f"Delete orphaned file or restore uncompressed source"],
+            ))
+
+    return results
+
+
+def check_compression_quality(root: Path) -> list[LintResult]:
+    """Check that compressed skills preserve key content from their uncompressed source."""
+    results: list[LintResult] = []
+    uncompressed_dir = root / ".augment.uncompressed" / "skills"
+    compressed_dir = root / ".augment" / "skills"
+
+    if not uncompressed_dir.exists() or not compressed_dir.exists():
+        return results
+
+    # Sections that MUST exist in compressed if they exist in uncompressed
+    preserved_sections = ["When to use", "Procedure", "Gotcha", "Gotchas", "Do NOT", "Output format", "Output"]
+
+    for skill_dir in sorted(uncompressed_dir.iterdir()):
+        src = skill_dir / "SKILL.md"
+        dst = compressed_dir / skill_dir.name / "SKILL.md"
+        if not src.exists() or not dst.exists():
+            continue
+
+        src_text = read_text(src)
+        dst_text = read_text(dst)
+        src_sections = extract_sections(src_text)
+        dst_sections = extract_sections(dst_text)
+
+        issues: list[Issue] = []
+        suggestions: list[str] = []
+
+        # Check required sections survived compression
+        for section in preserved_sections:
+            if section_matches(section, src_sections) and not section_matches(section, dst_sections):
+                issues.append(Issue("warning", "compression_lost_section",
+                                    f"Compressed version lost '{section}' section"))
+
+        # Check validation keywords survived
+        src_proc = find_procedure_block(src_text) or ""
+        dst_proc = find_procedure_block(dst_text) or ""
+        validation_patterns = [r"\bverif", r"\bcheck\b", r"\bconfirm\b", r"\bvalidat", r"\binspect"]
+        src_has_validation = any(re.search(p, src_proc, re.IGNORECASE) for p in validation_patterns)
+        dst_has_validation = any(re.search(p, dst_proc, re.IGNORECASE) for p in validation_patterns)
+        if src_has_validation and not dst_has_validation:
+            issues.append(Issue("warning", "compression_lost_validation",
+                                "Compressed procedure lost validation keywords present in uncompressed"))
+
+        if issues:
+            rel_path = f".augment/skills/{skill_dir.name}/SKILL.md"
+            results.append(LintResult(
+                file=rel_path,
+                artifact_type="skill",
+                status="pass_with_warnings",
+                issues=issues,
+                suggestions=suggestions or ["Re-compress to preserve lost content"],
+            ))
+
+    return results
+
+
+def check_duplication(root: Path) -> list[LintResult]:
+    """Detect skills with highly similar names or descriptions."""
+    results: list[LintResult] = []
+    skills_dir = root / ".augment.uncompressed" / "skills"
+    if not skills_dir.exists():
+        return results
+
+    # Collect all skill names and descriptions
+    skill_data: list[tuple[str, str, Path]] = []
+    for skill_dir in sorted(skills_dir.iterdir()):
+        skill_file = skill_dir / "SKILL.md"
+        if not skill_file.exists():
+            continue
+        text = read_text(skill_file)
+        desc = extract_description(text) or ""
+        skill_data.append((skill_dir.name, desc.lower(), skill_file))
+
+    # Check for name prefix overlap (e.g. "laravel" and "laravel-validation")
+    # Only flag if descriptions are also similar
+    for i, (name_a, desc_a, path_a) in enumerate(skill_data):
+        for name_b, desc_b, path_b in skill_data[i + 1:]:
+            # Skip known patterns: skill-X and skill-X-subtype is intentional
+            if name_a == name_b:
+                continue
+            # Check description word overlap
+            if desc_a and desc_b:
+                words_a = set(desc_a.split())
+                words_b = set(desc_b.split())
+                if len(words_a) > 3 and len(words_b) > 3:
+                    overlap = len(words_a & words_b) / min(len(words_a), len(words_b))
+                    if overlap > 0.7:
+                        rel_a = f".augment.uncompressed/skills/{name_a}/SKILL.md"
+                        results.append(LintResult(
+                            file=rel_a,
+                            artifact_type="skill",
+                            status="pass_with_warnings",
+                            issues=[Issue("warning", "similar_description",
+                                         f"Description highly similar to '{name_b}' ({overlap:.0%} word overlap)")],
+                            suggestions=[f"Consider merging with '{name_b}' or differentiating descriptions"],
+                        ))
+
+    return results
+
+
 def compute_exit_code(results: list[LintResult], strict_warnings: bool) -> int:
     if any(r.status == "fail" for r in results):
         return 2
@@ -425,6 +858,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--all", action="store_true", help="Lint all skills/rules in the repo")
     parser.add_argument("--changed", action="store_true", help="Lint changed skills/rules")
     parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
+    parser.add_argument("--pairs", action="store_true", help="Check compression pairs (uncompressed vs compressed)")
+    parser.add_argument("--duplicates", action="store_true", help="Detect skills with similar descriptions")
+    parser.add_argument("--compression-quality", action="store_true", help="Check compressed skills preserve key content")
     parser.add_argument("--strict-warnings", action="store_true", help="Return non-zero on warnings")
     parser.add_argument("--repo-root", default=".", help="Repository root")
     return parser.parse_args()
@@ -450,7 +886,15 @@ def main() -> int:
             print("No matching skill/rule files found.", file=sys.stderr)
             return 0
 
-        results = [lint_file(path) for path in paths]
+        results = [lint_file(path, repo_root=root) for path in paths]
+
+        # Additional checks
+        if args.pairs:
+            results.extend(check_compression_pairs(root))
+        if args.duplicates:
+            results.extend(check_duplication(root))
+        if args.compression_quality:
+            results.extend(check_compression_quality(root))
 
         if args.format == "json":
             print(format_json(results))

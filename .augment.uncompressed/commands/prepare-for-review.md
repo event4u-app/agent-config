@@ -1,6 +1,8 @@
 ---
+name: prepare-for-review
 skills: [git-workflow, quality-tools]
 description: Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date
+disable-model-invocation: true
 ---
 
 # prepare-for-review

@@ -30,33 +30,29 @@ Do NOT use when:
 - A small isolated code change with fully known context
 - Writing code, tests, or documentation (use the appropriate skill)
 
-## Available specialist skills
+## Routing
 
-| Skill | Purpose | When to route |
-|---|---|---|
-| `universal-project-analysis` | Understand any codebase — architecture, packages, versions, patterns | Unknown system, broad understanding needed |
-| `project-analysis-laravel` | Deep Laravel/PHP-specific analysis — boot flow, Eloquent, queues, packages | Laravel project, framework-specific issue |
-| `bug-analyzer` | Bug investigation (reactive + proactive) — Sentry errors, Jira tickets, code audits, hidden bugs | Known error, stacktrace, OR proactive bug hunting |
-| `performance-analysis` | Find bottlenecks — queries, loops, caching, I/O, scaling | Slow system, heavy queries, scaling pain |
-| `security-audit` | Find vulnerabilities — injection, auth bypass, input handling | Security concern, trust boundary analysis |
-| `project-analyzer` | Generate structured documentation — domain maps, service maps | Onboarding, knowledge transfer, documentation |
+**Always use `analysis-skill-router` first** to decide which analysis skill handles the request.
 
-## Routing decision matrix
+The router selects by scope, framework, and problem shape. Key routes:
 
-### Phase 1 — Classify the request
+| Scope | Route to |
+|---|---|
+| Unknown system / full audit | `universal-project-analysis` |
+| Discovery-focused | `project-analysis-core` |
+| Root-cause / multi-hypothesis | `project-analysis-hypothesis-driven` |
+| Laravel | `project-analysis-laravel` |
+| Symfony | `project-analysis-symfony` |
+| Zend/Laminas | `project-analysis-zend-laminas` |
+| Node/Express | `project-analysis-node-express` |
+| React | `project-analysis-react` |
+| Next.js | `project-analysis-nextjs` |
+| Bug-focused | `bug-analyzer` |
+| Performance bottleneck | `performance-analysis` |
+| Security concern | `security-audit` |
+| Documentation | `project-analyzer` |
 
-| Situation | Primary skill | Secondary skills |
-|---|---|---|
-| "Understand this project" | `universal-project-analysis` | then branch based on findings |
-| "Analyze this Laravel app" | `project-analysis-laravel` | `bug-analyzer`, `performance-analysis` |
-| "Find bugs in this code" | `bug-analyzer` (proactive mode) | `universal-project-analysis` for context |
-| "This endpoint crashes" | `bug-analyzer` (reactive mode) | `universal-project-analysis` if context missing |
-| "Why is this slow?" | `performance-analysis` | `bug-analyzer` if logic is also broken |
-| "Is this secure?" | `security-audit` | `universal-project-analysis` for package context |
-| "Inspect everything" | `universal-project-analysis` | route to all relevant specialists |
-| "Document this project" | `project-analyzer` | `universal-project-analysis` for understanding |
-
-**Rule:** If the problem category is unclear, start with `universal-project-analysis`.
+**Rule:** Route to the narrowest matching skill. Do NOT default to `universal-project-analysis`.
 
 ### Phase 2 — Establish context before specializing
 
@@ -92,7 +88,7 @@ Merge all specialist findings into ONE prioritized output:
 
 Never dump isolated observations without synthesis.
 
-## Autonomous investigation loop
+## Procedure: Autonomous investigation loop
 
 When running a broad investigation, repeat until confident:
 
