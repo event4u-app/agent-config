@@ -1,7 +1,7 @@
 # Skill Linter Script Design
 
 > Planning document for the automated skill/rule linter. Implements the `skill-linter` skill as a CLI tool.
-> Referenced by: `agents/roadmaps/controlled-self-optimization.md` (Phase 2.2)
+> Referenced by: `agents/roadmaps/archive/controlled-self-optimization.md` (Phase 2.2, archived)
 
 ## Purpose
 

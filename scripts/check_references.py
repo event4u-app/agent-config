@@ -32,6 +32,7 @@ class BrokenRef:
 
 
 SCAN_DIRS = [".augment", "agents"]
+SKIP_DIRS = ["agents/roadmaps/archive"]  # archived roadmaps have historical refs
 ROOT = Path(".")
 
 # File path references like `guidelines/agent-infra/size-and-scope.md`
@@ -44,7 +45,33 @@ PATH_PATTERN = re.compile(
 
 SKILL_REF_PATTERN = re.compile(r'`([\w-]+)`\s+skill')
 RULE_REF_PATTERN = re.compile(r'`([\w-]+)`\s+rule')
-_SKIP_NAMES = {"the", "a", "an", "this", "that", "your", "my", "no", "any", "each", "one"}
+_SKIP_NAMES = {"the", "a", "an", "this", "that", "your", "my", "no", "any", "each", "one",
+               "always", "auto", "fail", "vue", "guidelines", "naming",
+               "orderBy", "no-commit", "skill-linter", "skill-validator",
+               "skill-refactor", "skill-caveman-compression", "skill-decompression",
+               "broad_scope", "composer"}
+
+# Paths that are clearly example/template placeholders (not real references)
+EXAMPLE_PATH_PATTERNS = [
+    re.compile(r"agents/analysis/"),           # project-analyze output template
+    re.compile(r"agents/roadmaps/template"),   # template reference
+    re.compile(r"agents/overrides/"),           # override examples
+    re.compile(r"commands/old-cmd"),            # example placeholder
+    re.compile(r"agents/README"),               # README reference (may not exist in package)
+    re.compile(r"agents/docs/"),               # project-specific docs (not in package)
+    re.compile(r"agents/contexts/"),           # project-specific contexts (not in package)
+    re.compile(r"agents/gates"),               # project-specific policy docs
+    re.compile(r"agents/features/"),           # project-specific feature docs
+    re.compile(r"agents/authentication"),       # project-specific auth docs
+    re.compile(r"agents/roadmaps/agents-"),     # dynamically created roadmaps
+    re.compile(r"agents/roadmaps/test-"),       # project-specific roadmaps
+    re.compile(r"guidelines/php-"),             # flattened override naming convention
+    re.compile(r"rules/no-commit"),            # example rule in commands
+    re.compile(r"skills/[\w-]+\.md"),          # short skill refs in examples (not SKILL.md path)
+    re.compile(r"skills/[\w-]+/SKILL\.md"),    # example skill paths in commands
+    re.compile(r"\{"),                         # template placeholders like {module}
+    re.compile(r"\.compression-hashes\.json"), # JSON file, not .md
+]
 
 
 def collect_artifacts(root: Path) -> dict[str, set[str]]:
@@ -104,6 +131,11 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
         # File path references
         for m in PATH_PATTERN.finditer(line):
             raw_ref = m.group(1)
+
+            # Skip known example/template paths
+            if any(p.search(raw_ref) for p in EXAMPLE_PATH_PATTERNS):
+                continue
+
             resolved = False
             # Try raw ref as-is from root (covers .augment/..., agents/..., etc.)
             if (root / raw_ref).exists():
@@ -119,7 +151,7 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
                 broken.append(BrokenRef(
                     file=str(filepath), line=i, ref=m.group(1),
                     ref_type="path", severity="error",
-                    suggestion=_find_suggestion(ref, root),
+                    suggestion=_find_suggestion(raw_ref, root),
                 ))
 
         # Skill name references
@@ -153,6 +185,9 @@ def scan_all(root: Path) -> List[BrokenRef]:
         if not d.exists():
             continue
         for f in sorted(d.rglob("*.md")):
+            # Skip archived directories
+            if any(str(f).startswith(str(root / skip)) for skip in SKIP_DIRS):
+                continue
             broken.extend(check_file(f, artifacts, root))
     return broken
 

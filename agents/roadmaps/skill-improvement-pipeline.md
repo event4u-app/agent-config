@@ -22,7 +22,7 @@
 
 - **Feature:** none
 - **Jira:** none
-- **Related:** `agents/roadmaps/skills-rules-restructuring.md` (Phase 1), `agents/roadmaps/controlled-self-optimization.md` (Phase 2)
+- **Related:** `agents/roadmaps/archive/skills-rules-restructuring.md` (Phase 1, archived), `agents/roadmaps/archive/controlled-self-optimization.md` (Phase 2, archived)
 
 ## Phase 1: Settings & Configuration
 

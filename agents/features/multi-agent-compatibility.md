@@ -8,7 +8,7 @@
 **Author:** matze4u
 **Jira:** none
 **Module:** project-wide
-**Context:** `agents/roadmaps/multi-agent-compatibility.md`
+**Context:** `agents/roadmaps/archive/multi-agent-compatibility.md` (archived)
 
 ## Problem
 
@@ -152,7 +152,7 @@ Fallback: if symlink creation fails (Windows, restricted filesystem), copy files
 
 ## Roadmaps
 
-→ `agents/roadmaps/multi-agent-compatibility.md`
+→ `agents/roadmaps/archive/multi-agent-compatibility.md` (archived)
 
 ## Notes
 
