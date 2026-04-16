@@ -17,9 +17,12 @@ Do NOT use when:
 
 ## Procedure: Modify Docker setup
 
-1. Read project-specific Docker docs in `agents/` or `Docs/` if they exist.
-2. Check `Makefile` or `Taskfile.yml` for available container management targets.
-3. Read `docker-compose.yml` / `compose.yaml` to understand the service layout.
+1. **Gather context** — read project Docker docs in `agents/`/`Docs/`, check `Makefile`/`Taskfile.yml` for targets, read `docker-compose.yml`/`compose.yaml` for service layout.
+2. **Identify scope** — determine which service(s) affected (PHP, NGINX, worker, scheduler, database).
+3. **Inspect current state** — run `docker compose ps` to see running containers and health.
+4. **Make change** — edit relevant file (Dockerfile, compose file, NGINX config, Makefile target). Follow conventions in reference sections below.
+5. **Rebuild** — `docker compose build <service>` (add `--no-cache` if base layers changed).
+6. **Verify** — `docker compose up -d`, check `docker compose ps` for healthy status, run smoke test.
 
 ## Project architecture
 

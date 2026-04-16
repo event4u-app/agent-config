@@ -16,11 +16,13 @@ Do NOT use when:
 
 ## Procedure: Design an API
 
-1. Read `agents/contexts/api-versioning.md` for versioning and fallback mechanism.
-2. Read `agents/docs/api-resources.md` for response transformation patterns.
-3. Read `agents/docs/query-filter.md` for list endpoint filtering.
-4. Read `agents/docs/controller.md` for controller conventions.
-5. Read guideline `php/api-design.md` for conventions (status codes, pagination, error format).
+1. **Gather context** — read `agents/contexts/api-versioning.md`, `agents/docs/api-resources.md`, `agents/docs/query-filter.md`, `agents/docs/controller.md`, guideline `php/api-design.md`.
+2. **Identify resource** — determine domain entity, attributes, relationships. Check existing models/resources for naming patterns.
+3. **Define endpoints** — list each endpoint with HTTP method, URL path, request body, query params, response structure. Follow existing route patterns.
+4. **Decide versioning** — determine if this extends current version or requires new one (see decision table below).
+5. **Design error responses** — define 4xx/5xx responses matching project's error format.
+6. **Validate against existing** — compare with 2-3 similar existing endpoints. Flag inconsistencies.
+7. **Adversarial review** — use `adversarial-review` skill for breaking changes, consistency issues, missing error cases.
 
 ## Versioning decisions
 

@@ -17,9 +17,11 @@ Do NOT use when:
 
 ## Procedure: Work with multi-tenancy
 
-1. Read project-specific docs in `agents/docs/` for the multi-tenant architecture details.
-2. Read `config/database.php` for connection definitions.
-3. Search for the tenant switching service in the codebase.
+1. **Gather context** — read `agents/docs/` for multi-tenant architecture, `config/database.php` for connection definitions, search for tenant switching service.
+2. **Identify connection** — determine whether code touches central, tenant, or both databases. Set `$connection` explicitly on new models.
+3. **Implement** — use correct connection. Use tenant switching service for cross-tenant operations. Never mix connections in single query.
+4. **Verify isolation** — inspect for tenant leaks: global scopes, missing `$connection`, shared caches, job serialization without tenant context.
+5. **Test** — write test exercising tenant boundary: seed tenant-specific data, switch context, verify correct data returned and other tenants' data invisible.
 
 ## Architecture overview
 

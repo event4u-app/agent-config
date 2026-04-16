@@ -16,9 +16,11 @@ Do NOT use when:
 
 ## Procedure: Modify DevContainer
 
-1. Read `.devcontainer/devcontainer.json` for the current configuration.
-2. Check `.devcontainer/` for onboarding documentation and environment variables.
-3. **Read project-level overrides** — check `agents/overrides/skills/devcontainer.md` for project-specific image URLs, secrets, and container names.
+1. **Gather context** — read `.devcontainer/devcontainer.json`, check `.devcontainer/` for env files and docs, check `agents/overrides/skills/devcontainer.md` for project overrides.
+2. **Identify change type** — classify: image change, feature addition, secret addition, extension change, or env var change.
+3. **Make change** — edit `devcontainer.json` (or related files). Follow conventions below for secrets, features, environment variables.
+4. **Build and verify** — run `devcontainer build` to confirm container builds. Check extensions load and ports forward.
+5. **Document** — if adding new secret or dependency, update onboarding docs in `.devcontainer/`.
 
 ## Architecture
 
