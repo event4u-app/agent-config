@@ -103,6 +103,7 @@ If the refactor introduced guideline delegations ("see guideline X"), ensure the
 * Do NOT merge unrelated workflows to save space
 * Do NOT expand everything blindly — only where it helps execution
 * Do NOT rewrite without understanding original intent
+* Do NOT skip the `preservation-guard` rule checklist before completing any transformation
 
 ## Auto-trigger keywords
 

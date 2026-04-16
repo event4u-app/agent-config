@@ -158,6 +158,12 @@ Before scoring the 5 Killers, verify structure:
 - Concrete validation still present
 - Gotchas/anti-failure protection retained
 
+**Merge/refactor safety** (if reviewing a merge, refactor, or restructuring):
+- Apply `preservation-guard` rule checklist
+- Strongest validation, example, and anti-pattern must survive
+- Scope must not broaden from merging unrelated concerns
+- Strong language must not be weakened
+
 **Scope check:**
 - No overlap with existing skill or rule (name + description)
 - Single workflow per file (multiple workflows → split)

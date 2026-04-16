@@ -117,6 +117,8 @@ Show a summary table with per-category stats (files compressed, avg savings).
 
 ## Compression quality checklist
 
+**Also apply the `preservation-guard` rule** — strongest validation, example, anti-pattern, and decision hints must survive compression.
+
 After compressing each file, verify:
 
 - [ ] All code blocks preserved exactly (no content changes)
