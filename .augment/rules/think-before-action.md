@@ -16,4 +16,13 @@ source: package
 - If requirements are unclear, ask a precise clarification question instead of making hidden assumptions
 - Refactors must preserve behavior, validation, examples, and anti-failure guidance unless there is an explicit reason to change them
 
+## Open files are context, not intent
+
+The editor may report an open file. This is **background context only** — NOT the user's intent.
+
+- **User's message determines intent** — not which file is open.
+- User has `README.md` open + types `/compress` → intent is compress, not README.
+- User has `UserController.php` open + asks "how do tests work?" → intent is testing, not the controller.
+- Only treat open file as relevant when the user explicitly references it ("fix this file", "what does this do?").
+
 If analysis is skipped → results are unreliable.
