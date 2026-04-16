@@ -51,6 +51,7 @@
   "commands/tests-create.md": "f2756f22b56685e8c917e814c33c7632eb64a4d51ac6a4e12bc4cd4cfa0d6560",
   "commands/tests-execute.md": "d63934bf16c15b20a141eaed42667882e77093262bd50e5d59f7d05ddd2ad27e",
   "commands/update-form-request-messages.md": "f743ac6362fedc0042663814ccd16205db20b95b192cc2b652ea1e8ad1011eda",
+  "commands/upstream-contribute.md": "f834bd56ae48c94c471dafacbe1c219d3aee6911b976f59f96f21fe2bf247563",
   "contexts/augment-infrastructure.md": "4ad84421e90715ade1874af2fda1b6bd2e2ca7561f63ebb6008415bebaacb91b",
   "contexts/documentation-hierarchy.md": "89088ae20880282c75064d0b4ee3421b4c200e2080d6fa8de630ed404eab769a",
   "contexts/model-recommendations.md": "f55a85144280730ac837a263306cf92463162047319890111fd225b7ed2c0f8f",
