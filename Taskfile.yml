@@ -91,9 +91,18 @@ tasks:
       - task: sync
       - task: generate-tools
 
+  check-refs:
+    desc: Check for broken cross-references in .md files
+    cmd: python3 scripts/check_references.py
+
+  check-refs-json:
+    desc: Check for broken cross-references (JSON output)
+    cmd: python3 scripts/check_references.py --format json
+
   ci:
     desc: Run core CI checks locally
     cmds:
       - task: test
       - task: lint-skills
+      - task: check-refs
       - task: consistency

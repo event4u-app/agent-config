@@ -1,0 +1,194 @@
+#!/usr/bin/env python3
+"""
+Cross-reference checker for agent-config repositories.
+
+Scans .md files in .augment/ and agents/ for internal references
+(file paths, skill names, rule names) and reports broken ones.
+
+Exit codes: 0 = clean, 1 = broken refs found, 3 = internal error
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+from dataclasses import dataclass, asdict
+from pathlib import Path
+from typing import List, Literal
+
+Severity = Literal["error", "warning"]
+
+
+@dataclass
+class BrokenRef:
+    file: str
+    line: int
+    ref: str
+    ref_type: str
+    severity: Severity
+    suggestion: str = ""
+
+
+SCAN_DIRS = [".augment", "agents"]
+ROOT = Path(".")
+
+# File path references like `guidelines/agent-infra/size-and-scope.md`
+PATH_PATTERN = re.compile(
+    r'[`"\s]'
+    r'(\.?(?:augment|agents|guidelines|rules|skills|commands|contexts|templates|patterns)'
+    r'(?:/[\w._-]+)+\.(?:md|php|py|yml|yaml|json|sh))'
+    r'[`"\s,;)\]]'
+)
+
+SKILL_REF_PATTERN = re.compile(r'`([\w-]+)`\s+skill')
+RULE_REF_PATTERN = re.compile(r'`([\w-]+)`\s+rule')
+_SKIP_NAMES = {"the", "a", "an", "this", "that", "your", "my", "no", "any", "each", "one"}
+
+
+def collect_artifacts(root: Path) -> dict[str, set[str]]:
+    """Build lookup sets for skills, rules, commands, guidelines."""
+    arts: dict[str, set[str]] = {"skills": set(), "rules": set(), "commands": set(), "guidelines": set()}
+    augment = root / ".augment"
+    if not augment.exists():
+        return arts
+    for d in (augment / "skills").iterdir() if (augment / "skills").exists() else []:
+        if d.is_dir() and (d / "SKILL.md").exists():
+            arts["skills"].add(d.name)
+    for f in (augment / "rules").glob("*.md") if (augment / "rules").exists() else []:
+        arts["rules"].add(f.stem)
+    for f in (augment / "commands").glob("*.md") if (augment / "commands").exists() else []:
+        arts["commands"].add(f.stem)
+    gdir = augment / "guidelines"
+    if gdir.exists():
+        for f in gdir.rglob("*.md"):
+            arts["guidelines"].add(str(f.relative_to(augment)))
+    return arts
+
+
+def _find_suggestion(path: str, root: Path) -> str:
+    name = Path(path).name
+    for d in [root / ".augment", root / ".augment.uncompressed", root / "agents"]:
+        if d.exists():
+            for f in d.rglob(name):
+                return str(f.relative_to(root))
+    return ""
+
+
+def _closest_match(name: str, candidates: set[str]) -> str:
+    for c in sorted(candidates):
+        if name in c or c in name:
+            return c
+    return ""
+
+
+
+def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> List[BrokenRef]:
+    """Check a single .md file for broken references."""
+    broken: List[BrokenRef] = []
+    try:
+        text = filepath.read_text(encoding="utf-8")
+    except Exception:
+        return broken
+
+    in_code_block = False
+    for i, line in enumerate(text.splitlines(), 1):
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            in_code_block = not in_code_block
+            continue
+        if in_code_block:
+            continue
+
+        # File path references
+        for m in PATH_PATTERN.finditer(line):
+            raw_ref = m.group(1)
+            resolved = False
+            # Try raw ref as-is from root (covers .augment/..., agents/..., etc.)
+            if (root / raw_ref).exists():
+                resolved = True
+            else:
+                # Strip leading ./ and try with prefixes
+                ref = raw_ref.lstrip("./")
+                for prefix in [root, root / ".augment", root / ".augment.uncompressed"]:
+                    if (prefix / ref).exists():
+                        resolved = True
+                        break
+            if not resolved:
+                broken.append(BrokenRef(
+                    file=str(filepath), line=i, ref=m.group(1),
+                    ref_type="path", severity="error",
+                    suggestion=_find_suggestion(ref, root),
+                ))
+
+        # Skill name references
+        for m in SKILL_REF_PATTERN.finditer(line):
+            name = m.group(1)
+            if name not in artifacts["skills"] and name not in _SKIP_NAMES:
+                broken.append(BrokenRef(
+                    file=str(filepath), line=i, ref=name,
+                    ref_type="skill", severity="warning",
+                    suggestion=_closest_match(name, artifacts["skills"]),
+                ))
+
+        # Rule name references
+        for m in RULE_REF_PATTERN.finditer(line):
+            name = m.group(1)
+            if name not in artifacts["rules"] and name not in _SKIP_NAMES:
+                broken.append(BrokenRef(
+                    file=str(filepath), line=i, ref=name,
+                    ref_type="rule", severity="warning",
+                    suggestion=_closest_match(name, artifacts["rules"]),
+                ))
+
+    return broken
+
+
+def scan_all(root: Path) -> List[BrokenRef]:
+    artifacts = collect_artifacts(root)
+    broken: List[BrokenRef] = []
+    for scan_dir in SCAN_DIRS:
+        d = root / scan_dir
+        if not d.exists():
+            continue
+        for f in sorted(d.rglob("*.md")):
+            broken.extend(check_file(f, artifacts, root))
+    return broken
+
+
+def format_text(broken: List[BrokenRef]) -> str:
+    if not broken:
+        return "✅  No broken references found."
+    lines = [f"❌  Found {len(broken)} broken reference(s):\n"]
+    for b in broken:
+        icon = "🔴" if b.severity == "error" else "🟡"
+        line = f"  {icon} {b.file}:{b.line} — {b.ref_type} `{b.ref}`"
+        if b.suggestion:
+            line += f" → did you mean `{b.suggestion}`?"
+        lines.append(line)
+    return "\n".join(lines)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Check for broken cross-references in agent config")
+    parser.add_argument("--format", choices=["text", "json"], default="text")
+    parser.add_argument("--root", type=Path, default=Path("."), help="Repository root")
+    args = parser.parse_args()
+
+    try:
+        broken = scan_all(args.root)
+    except Exception as e:
+        print(f"Internal error: {e}", file=sys.stderr)
+        return 3
+
+    if args.format == "json":
+        print(json.dumps([asdict(b) for b in broken], indent=2))
+    else:
+        print(format_text(broken))
+
+    return 1 if broken else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
