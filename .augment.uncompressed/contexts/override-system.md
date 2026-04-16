@@ -130,7 +130,7 @@ When a project using this package wants to **optimize** a shared rule or skill:
 1. **Apply locally as override** — create `agents/overrides/{type}/{name}.md` with mode `replace`
    containing the full improved version. This gives the project the benefit immediately.
 
-2. **Create PR against upstream** — submit the improvement to `event4u-app/agent-config`.
+2. **Create PR against upstream** — submit the improvement to the shared `agent-config` package repository.
    The PR must contain:
    - **Uncompressed version** in `.augment.uncompressed/{type}/{name}`
    - **Compressed version** in `.augment/{type}/{name}`

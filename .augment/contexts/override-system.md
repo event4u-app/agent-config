@@ -126,7 +126,7 @@ Agents **must** check for overrides before applying any shared resource:
 When a project wants to **optimize** a shared rule or skill:
 
 1. **Override locally** — `agents/overrides/{type}/{name}.md` mode `replace`, full improved version
-2. **PR upstream** — submit to `event4u-app/agent-config` with:
+2. **PR upstream** — submit to shared `agent-config` package repository with:
    - Complete uncompressed version (`.augment.uncompressed/`)
    - Complete compressed version (`.augment/`)
    - Must pass `task lint-skills`
