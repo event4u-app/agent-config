@@ -89,6 +89,10 @@ tasks:
     desc: Check compression quality between uncompressed and compressed pairs
     cmd: python3 scripts/skill_linter.py --all --pairs --compression-quality
 
+  lint-skills-regression:
+    desc: Compare lint results between current branch and main (detect regressions)
+    cmd: python3 scripts/lint_regression.py --baseline main
+
   test-linter:
     desc: Run skill linter tests
     cmd: python3 -m pytest tests/test_skill_linter.py -v

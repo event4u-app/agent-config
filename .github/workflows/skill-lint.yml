@@ -98,11 +98,25 @@ jobs:
           print('\n'.join(lines))
           " > /tmp/pr-summary.md
 
+      - name: Generate regression report
+        if: github.event_name == 'pull_request' && always()
+        run: |
+          python3 scripts/lint_regression.py --baseline origin/main --format markdown > /tmp/regression-report.md 2>/dev/null || true
+          if [ -f /tmp/pr-summary.md ] && [ -f /tmp/regression-report.md ]; then
+            cat /tmp/pr-summary.md > /tmp/pr-comment.md
+            echo "" >> /tmp/pr-comment.md
+            cat /tmp/regression-report.md >> /tmp/pr-comment.md
+          elif [ -f /tmp/pr-summary.md ]; then
+            cp /tmp/pr-summary.md /tmp/pr-comment.md
+          else
+            echo "⚠️ Could not generate PR summary." > /tmp/pr-comment.md
+          fi
+
       - name: Post PR comment
         if: github.event_name == 'pull_request' && always()
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          path: /tmp/pr-summary.md
+          path: /tmp/pr-comment.md
 
   skill-lint-strict:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
