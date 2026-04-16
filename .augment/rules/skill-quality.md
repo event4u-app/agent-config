@@ -24,13 +24,15 @@ Every skill MUST have: `When to use`, `Procedure`, `Gotcha`, `Output format`, `D
 
 ## Skill Independence
 
-Skill must be useful **without opening any guideline**.
+```
+If a skill is not executable without opening a guideline, it is broken.
+```
 
 - MAY reference guidelines for conventions
 - MUST NOT outsource core workflow to guidelines
 - If removing guideline refs makes skill useless → skill too weak
 
-Test: Cover guideline references. Is Procedure still executable? If not → fix skill.
+**Litmus test:** Cover guideline references. Is Procedure still executable? If not → fix skill.
 
 ## Merge Preservation
 
