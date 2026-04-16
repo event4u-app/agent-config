@@ -2,78 +2,59 @@
 
 > Project-specific Git conventions. Branch naming, commit messages, PR workflow.
 
-**Related Skills:** `git-workflow`, `code-review`
-**Related Rules:** `no-commit.md`
+**Related Skills:** `git-workflow`, `conventional-commits-writing`
+**Related Rules:** `commit-conventions.md`
 
 ## Branch Naming
 
-```
-{type}/{ticket-id}/{short-description}
-```
+`{type}/{ticket-id}/{short-description}` — kebab-case, include Jira ID when exists.
 
-| Type | When |
-|---|---|
-| `feat/` | New feature |
-| `fix/` | Bug fix |
-| `hotfix/` | Urgent production fix |
-| `chore/` | Maintenance, refactoring, tooling |
-| `docs/` | Documentation changes |
-| `test/` | Test additions/changes |
-
-### Examples
-
-```
-feat/DEV-1234/user-notification-preferences
-fix/DEV-5678/null-pointer-in-import
-chore/refactor-agent-setup
-hotfix/DEV-999/critical-payment-bug
-```
-
-### Rules
-
-- Always include the Jira ticket ID when one exists
-- Use kebab-case for the description part
-- Keep branch names short but descriptive
+Types: `feat/`, `fix/`, `hotfix/`, `chore/`, `docs/`, `test/`
 
 ## Commit Messages
 
-Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/):
+See `commit-conventions` rule for base format. Key type selection:
 
-```
-<type>[optional scope]: <description>
-```
+- `feat` — new capability. `fix` — bug/regression. `refactor` — structure only, NO behavior change.
+- `docs` — docs only. `test` — tests only. `ci` — CI/workflows. `chore` — maintenance/cleanup.
+- `perf` — performance. `build` — build tooling. `style` — formatting only.
 
-### Types
+**Scope:** Jira ID or area name (`api`, `auth`, `skills`). Only add when it improves clarity.
 
-| Type | Description |
-|---|---|
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `refactor` | Code change (no new feature, no bug fix) |
-| `docs` | Documentation only |
-| `test` | Adding or updating tests |
-| `chore` | Maintenance (deps, configs, tooling) |
-| `style` | Code style (formatting, no logic change) |
-| `perf` | Performance improvement |
+**Description:** Intent, not implementation. Imperative mood. Max 72 chars. No generic filler.
+
+**Breaking:** `!` after type/scope or `BREAKING CHANGE:` footer.
+
+**Splitting:** Mixed concerns → split commits. Don't hide unrelated changes in one.
+
+**Squash merge titles:** Conventional Commit format, describe net effect, not every internal commit.
+
+### Anti-patterns
+
+- `update stuff` / `fix bug` / `changes`
+- `refactor` for bug fixes, `chore` for behavior changes
+- Multiple unrelated concerns in one commit
+
+### Decision checklist
+
+1. Behavior changed? → `feat` or `fix`
+2. Structure only? → `refactor`
+3. Only docs/tests/CI? → `docs`/`test`/`ci`
+4. Scope useful or noise?
+5. Multiple commits hiding in one?
 
 ### Examples
 
-```bash
-feat(DEV-2133): send email to customer when product is shipped
-fix(import): handle null values in equipment JSON
-refactor: extract user sync logic into dedicated service
 ```
-
-### Rules
-
-- Scope is optional but recommended (Jira ticket ID or module name)
-- Description in imperative mood ("add feature", not "added feature")
-- Keep the first line under 72 characters
+feat(DEV-1234): add absence type filter to working time report
+fix(import): handle null values in equipment JSON
+refactor(skills): merge duplicate analysis skills
+ci(lint): add skill-lint workflow
+docs(roadmap): add phase 3 implementation plan
+```
 
 ## Pull Requests
 
-- PR title follows commit message format: `feat(DEV-1234): short description`
-- Fill in the PR template (checklist, description, testing notes)
-- Link the Jira ticket in the PR description
-- Ensure all quality gates pass before requesting review
+- PR title: Conventional Commit format — `feat(DEV-1234): short description`
+- Fill PR template, link Jira ticket, ensure quality gates pass
 

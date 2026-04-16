@@ -16,8 +16,9 @@ Do NOT use when:
 
 ## Conventions
 
-→ See guideline `php/git.md` for branch naming, commit message format, PR conventions.
-→ See `commit-conventions` rule (always loaded) for commit format.
+→ See guideline `guidelines/php/git.md` for branch naming, commit messages, PR conventions.
+→ See `commit-conventions` rule for commit format, types, and scope rules.
+→ Use `conventional-commits-writing` skill for generating/reviewing commit messages.
 
 ## Procedure: Before opening a PR
 
