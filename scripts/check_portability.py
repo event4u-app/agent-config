@@ -34,68 +34,117 @@ class Violation:
     context: str  # the full line for review
 
 
-# ── Project-specific patterns (FORBIDDEN in package files) ──────────────
-# Add project names, domains, repo slugs, team names, customer names here.
-# These are checked case-insensitively.
+# ── Auto-detected project identifiers ────────────────────────────────────
+# Instead of hardcoding project names, we auto-detect them from:
+# 1. Git remote URL (org name, repo name)
+# 2. composer.json / package.json (package name)
+# 3. Directory name (workspace root)
+# This makes the checker portable across ANY project.
 
-PROJECT_NAMES = [
-    r"\bgalawork\b",
-    r"\bevent4u\b",
-    r"\bgala-web\b",
-    r"\bgala-api\b",
-    r"\bgalawork-api\b",
-    r"\bgalawork-web\b",
-    r"\bgalawork-packages\b",
-]
 
-PROJECT_DOMAINS = [
-    r"\bgalawork\.de\b",
-    r"\bgalawork\.com\b",
-    r"\bevent4u\.app\b",
-    r"\bevent4u\.de\b",
-    r"\blocal\.galawork\b",
-]
+def _detect_project_identifiers(root: Path) -> set[str]:
+    """Auto-detect project-specific identifiers from the project context."""
+    identifiers: set[str] = set()
 
-PROJECT_REPOS = [
-    r"event4u-app/",
-    r"galawork/galawork",
-    r"galawork-packages/",
-]
+    # 1. Git remote URL
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["git", "remote", "get-url", "origin"],
+            capture_output=True, text=True, cwd=root, timeout=5,
+        )
+        if result.returncode == 0:
+            url = result.stdout.strip()
+            # Extract from SSH: git@github.com:org/repo.git
+            # Extract from HTTPS: https://github.com/org/repo.git
+            parts = re.split(r"[:/]", url.replace(".git", ""))
+            # Last 2 parts are typically org and repo
+            for part in parts[-2:]:
+                part = part.strip()
+                if part and part not in ("git", "github.com", "gitlab.com", "bitbucket.org", "com"):
+                    identifiers.add(part)
+                    # Also add sub-parts split by hyphen (e.g., "event4u-app" → "event4u")
+                    for sub in part.split("-"):
+                        if len(sub) >= 3:
+                            identifiers.add(sub)
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pass
 
-PROJECT_PATHS = [
-    # Specific project file references (not generic patterns)
-    r"app/Services/\w{3,}Service",   # e.g. app/Services/CustomerService — specific class
-    r"app/Models/\w{3,}",            # e.g. app/Models/Customer — specific model
-]
+    # 2. composer.json
+    composer = root / "composer.json"
+    if composer.exists():
+        try:
+            data = json.loads(composer.read_text(encoding="utf-8"))
+            name = data.get("name", "")
+            if "/" in name:
+                vendor, pkg = name.split("/", 1)
+                identifiers.add(vendor)
+                identifiers.add(pkg)
+                for sub in pkg.split("-"):
+                    if len(sub) >= 3:
+                        identifiers.add(sub)
+        except (json.JSONDecodeError, ValueError):
+            pass
 
-# Database / infrastructure names
-PROJECT_INFRA = [
-    r"\bgalawork_\w+",              # e.g. galawork_api, galawork_testing
-    r"\bevent4u_\w+",               # e.g. event4u_db
-]
+    # 3. package.json
+    pkgjson = root / "package.json"
+    if pkgjson.exists():
+        try:
+            data = json.loads(pkgjson.read_text(encoding="utf-8"))
+            name = data.get("name", "").lstrip("@")
+            if "/" in name:
+                scope, pkg = name.split("/", 1)
+                identifiers.add(scope)
+                identifiers.add(pkg)
+            elif name:
+                identifiers.add(name)
+        except (json.JSONDecodeError, ValueError):
+            pass
 
-# Docker container / service names
-PROJECT_CONTAINERS = [
-    r"galawork-php",                # Docker container names
-    r"galawork-nginx",
-    r"galawork-redis",
-    r"galawork-mariadb",
-    r"galawork-horizon",
-]
+    # 4. Directory name (parent directories of .augment/)
+    augment_dir = root / ".augment"
+    if augment_dir.exists():
+        dir_name = root.name
+        if len(dir_name) >= 3:
+            identifiers.add(dir_name)
+        # Also check parent (often the org/group directory)
+        parent_name = root.parent.name
+        if len(parent_name) >= 3 and parent_name not in ("projects", "src", "code", "repos", "home", "Users"):
+            identifiers.add(parent_name)
 
-# Team / org specific identifiers
-PROJECT_TEAM = [
-    r"\b@galawork\b",              # GitHub org mention
-    r"\b@event4u\b",
-    r"event4u-app/",               # GitHub org slug
-]
+    # Filter out generic terms that would cause false positives
+    generic = {"app", "api", "web", "src", "lib", "pkg", "core", "main", "test",
+               "config", "agent", "tools", "packages", "server", "client", "common"}
+    identifiers -= generic
+
+    return identifiers
+
+
+def _build_patterns(root: Path) -> tuple[list[tuple[re.Pattern, str, Severity]], list[str]]:
+    """Build regex patterns from auto-detected project identifiers."""
+    identifiers = _detect_project_identifiers(root)
+    patterns: list[tuple[re.Pattern, str, Severity]] = []
+    detected: list[str] = sorted(identifiers)
+
+    for ident in identifiers:
+        escaped = re.escape(ident)
+        # Word boundary match (case-insensitive)
+        patterns.append((re.compile(rf"\b{escaped}\b", re.IGNORECASE), "project-name", "error"))
+        # As prefix with separator (db names, container names, env vars)
+        patterns.append((re.compile(rf"\b{escaped}[-_]\w+", re.IGNORECASE), "project-derivative", "warning"))
+        # Domain patterns (name.tld)
+        patterns.append((re.compile(rf"\b{escaped}\.\w{{2,6}}\b", re.IGNORECASE), "project-domain", "error"))
+        # GitHub org/user patterns
+        patterns.append((re.compile(rf"@{escaped}\b", re.IGNORECASE), "project-org", "error"))
+
+    return patterns, detected
 
 # ── Allowed patterns (NOT violations even if they match above) ──────────
 # Generic Laravel/framework patterns that are NOT project-specific
 ALLOWLIST = [
     r"\.agent-settings",           # config file reference
     r"agents/overrides/",          # override system
-    r"app/Modules/",               # generic Laravel module pattern (used in commands/skills as template)
+    r"app/Modules/",               # generic Laravel module pattern
     r"`App\\",                     # namespace pattern explanation
     r"app/Http/Controllers/",      # generic Laravel path pattern
     r"app/Repositories/",          # generic pattern in skills/guidelines
@@ -104,8 +153,9 @@ ALLOWLIST = [
     r"app/Services/MyService",     # example placeholder
     r"app/Models/\{",              # template placeholder like {Model}
     r"app/Services/\{",            # template placeholder like {Service}
-    r"galawork/php-quality",       # Composer package name (allowed)
-    r"quality-workflow",           # rule name context
+    r"agent-config",               # refers to the package concept, not a specific project
+    r"shared.*package",            # "shared package" concept
+    r"package repository",         # "package repository" concept
 ]
 
 # Directories to scan (only package files, not project-specific agents/)
@@ -119,23 +169,9 @@ SKIP_PATTERNS = [
 ]
 
 
-def _compile_patterns() -> list[tuple[re.Pattern, str, Severity]]:
-    patterns = []
-    for p in PROJECT_NAMES:
-        patterns.append((re.compile(p, re.IGNORECASE), "project-name", "error"))
-    for p in PROJECT_DOMAINS:
-        patterns.append((re.compile(p, re.IGNORECASE), "project-domain", "error"))
-    for p in PROJECT_REPOS:
-        patterns.append((re.compile(p), "project-repo", "error"))
-    for p in PROJECT_PATHS:
-        patterns.append((re.compile(p), "project-path", "warning"))
-    for p in PROJECT_INFRA:
-        patterns.append((re.compile(p, re.IGNORECASE), "project-infra", "error"))
-    for p in PROJECT_CONTAINERS:
-        patterns.append((re.compile(p, re.IGNORECASE), "project-container", "warning"))
-    for p in PROJECT_TEAM:
-        patterns.append((re.compile(p, re.IGNORECASE), "project-team", "error"))
-    return patterns
+def _compile_patterns(root: Path) -> tuple[list[tuple[re.Pattern, str, Severity]], list[str]]:
+    """Build patterns from auto-detected project identifiers."""
+    return _build_patterns(root)
 
 
 def _compile_allowlist() -> list[re.Pattern]:
@@ -178,8 +214,9 @@ def check_file(filepath: Path, patterns: list, allowlist: list) -> List[Violatio
     return violations
 
 
-def scan_all(root: Path) -> List[Violation]:
-    patterns = _compile_patterns()
+def scan_all(root: Path) -> tuple[List[Violation], list[str]]:
+    """Scan all package files for portability violations. Returns (violations, detected_identifiers)."""
+    patterns, detected = _compile_patterns(root)
     allowlist = _compile_allowlist()
     violations: List[Violation] = []
 
@@ -190,14 +227,15 @@ def scan_all(root: Path) -> List[Violation]:
         for f in sorted(d.rglob("*.md")):
             violations.extend(check_file(f, patterns, allowlist))
 
-    return violations
+    return violations, detected
 
 
 
-def format_text(violations: List[Violation]) -> str:
+def format_text(violations: List[Violation], detected: list[str]) -> str:
+    header = f"Auto-detected identifiers: {', '.join(detected)}\n" if detected else ""
     if not violations:
-        return "✅  No portability violations found."
-    lines = [f"❌  Found {len(violations)} portability violation(s):\n"]
+        return f"{header}✅  No portability violations found."
+    lines = [f"{header}❌  Found {len(violations)} portability violation(s):\n"]
     for v in violations:
         icon = "🔴" if v.severity == "error" else "🟡"
         lines.append(f"  {icon} {v.file}:{v.line} — [{v.pattern_name}] `{v.match}`")
@@ -212,15 +250,16 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        violations = scan_all(args.root)
+        violations, detected = scan_all(args.root)
     except Exception as e:
         print(f"Internal error: {e}", file=sys.stderr)
         return 3
 
     if args.format == "json":
-        print(json.dumps([asdict(v) for v in violations], indent=2))
+        payload = {"detected": detected, "violations": [asdict(v) for v in violations]}
+        print(json.dumps(payload, indent=2))
     else:
-        print(format_text(violations))
+        print(format_text(violations, detected))
 
     return 1 if violations else 0
 
