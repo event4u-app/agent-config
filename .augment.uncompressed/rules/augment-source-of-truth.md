@@ -13,8 +13,11 @@ source: package
 
 ```
 NEVER create or edit files in .augment/ directly.
-ALWAYS work in .augment.uncompressed/ — then compress.
+ALWAYS work in .augment.uncompressed/ — then use /compress command.
 ```
+
+**Compression is ONLY done via the `/compress` command.** Never manually edit compressed files.
+The command handles hashing, sync verification, and quality checks automatically.
 
 ## Workflow
 
