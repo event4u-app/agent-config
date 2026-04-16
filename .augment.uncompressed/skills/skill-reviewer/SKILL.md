@@ -1,6 +1,6 @@
 ---
 name: skill-reviewer
-description: "Use when reviewing, auditing, or optimizing skills — validates against the 5 Skill Killers checklist and produces fix recommendations."
+description: "Use when reviewing, auditing, or optimizing skills — validates against the 6 Skill Killers checklist and produces fix recommendations."
 source: package
 ---
 
@@ -8,12 +8,12 @@ source: package
 
 ## When to use
 
-Use when reviewing, auditing, or optimizing existing skills — checking quality against the 5 Skill Killers checklist. Also for validating a new skill before saving.
+Use when reviewing, auditing, or optimizing existing skills — checking quality against the 6 Skill Killers checklist. Also for validating a new skill before saving.
 
-Reviews skills against the **5 Skill Killers** — the most common anti-patterns
+Reviews skills against the **6 Skill Killers** — the most common anti-patterns
 that waste tokens, cause misfires, or degrade agent performance.
 
-## The 5 Skill Killers Checklist
+## The 6 Skill Killers Checklist
 
 ### Killer 1: Vague or Quiet Description
 
@@ -85,6 +85,25 @@ Skill exceeds size limits (see `guidelines/agent-infra/size-and-scope.md`).
 **Fix:** Extract reference tables, templates, and examples into separate files
 in the skill folder, or split by responsibility.
 
+### Killer 6: Created Without Analysis
+
+The skill/rule/command was written without inspecting existing state or defining expected behavior.
+
+**Check:** Was the artifact created based on:
+- Reading the existing implementation or related artifacts?
+- Comparing with current behavior, tests, or requirements?
+- Defining expected behavior before writing?
+- Using targeted tools for investigation?
+
+**Fail or warn if:**
+- No evidence of inspecting existing state before creating/refactoring
+- Looks like blind trial-and-error or copy-paste-and-hope
+- Expected behavior is only implied, never explicitly stated
+- Refactor made artifact cleaner but weaker (lost validation, examples, or gotchas)
+- Requirements were ambiguous but no clarification was sought
+
+**Fix:** Add analysis step, define expected outcome, verify with linter/tests, restore any lost content.
+
 ## Pre-check: Should this be a skill at all?
 
 Before scoring the 5 Killers, ask: **Does this belong as a skill?**
@@ -146,9 +165,9 @@ Before scoring the 5 Killers, verify structure:
 ## Output Format
 
 ```markdown
-| Skill | K1 Desc | K2 Over | K3 Obvious | K4 Gotcha | K5 Size | Verdict |
-|---|---|---|---|---|---|---|
-| dto-creator | ❌ | ✅ | ✅ | ⚠️ | ✅ | Fix description |
+| Skill | K1 Desc | K2 Over | K3 Obvious | K4 Gotcha | K5 Size | K6 Analysis | Verdict |
+|---|---|---|---|---|---|---|---|
+| dto-creator | ❌ | ✅ | ✅ | ⚠️ | ✅ | ✅ | Fix description |
 ```
 
 ## Output format

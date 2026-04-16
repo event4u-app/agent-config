@@ -14,5 +14,6 @@ source: package
 - Always verify results after changes (API calls, UI tests, etc.)
 - When behavior can be defined, prefer test-first or test-driven work
 - If requirements are unclear, ask a precise clarification question instead of making hidden assumptions
+- Refactors must preserve behavior, validation, examples, and anti-failure guidance unless there is an explicit reason to change them
 
 If analysis is skipped → results are unreliable.

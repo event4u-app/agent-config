@@ -79,11 +79,18 @@ Do NOT create a skill or rule for:
 
 ## Procedure
 
-### 0. Inspect the input
+### 0. Analyze before creating
+
+Before writing anything:
 
 * What exactly is being requested?
-* Does a similar skill already exist?
+* Does a similar skill already exist? Search `.augment/skills/` and `.augment/rules/`
 * Is the scope too broad or unclear?
+* Read existing related artifacts — compare against current behavior
+* If requirements are ambiguous, ask a clarification question first
+* Define expected outcome: what should the skill enable that isn't possible today?
+
+This step is mandatory — skipping analysis leads to duplicate, weak, or pointer-only skills.
 
 ### 1. Define the trigger
 
@@ -154,7 +161,8 @@ Example:
 * K3: No obvious content
 * K4: Contains gotchas
 * K5: Has Output format (numbered, 2-4 deliverables)
-* K6: Within size limits (see size-and-scope guideline)
+* K6: Created with analysis (not blind, not pointer-only, expected behavior defined)
+* Size: Within limits (see size-and-scope guideline)
 
 ## Output format
 

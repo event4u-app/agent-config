@@ -40,49 +40,57 @@ Do not use this skill when:
 
 ## Decision matrix: What goes where?
 
-Before creating anything, classify:
+Before creating anything, classify the content:
 
-| If content is... | Then... | Action |
+| If the content is... | Then it is... | Action |
 |---|---|---|
-| Always-true constraint ("never X", "always Y") | **Rule** | Create/update `.augment/rules/` |
-| Step-by-step workflow with decisions and validation | **Skill** | Create/update `.augment/skills/` |
-| Coding convention or reference material | **Guideline** | Create/update `.augment/guidelines/` |
+| An always-true constraint ("never X", "always Y") | **Rule** | Create/update `.augment/rules/` |
+| A step-by-step workflow with decisions and validation | **Skill** | Create/update `.augment/skills/` |
+| A coding convention or reference material | **Guideline** | Create/update `.augment/guidelines/` |
 | Baseline model knowledge (how jq works, what `docker exec` does) | **Nothing** | Do not create anything |
 | Simple tool usage without complex workflow | **Nothing** | Do not create anything |
-| Already covered by existing skill/rule/guideline | **Update** | Extend existing file |
+| Already covered by an existing skill/rule/guideline | **Update** | Extend the existing file |
 
-### Critical test
+### The critical test
 
 Ask: **"Does the model need this to do its job correctly?"**
 
-* Model already knows it → **Nothing**
-* Model knows it but does it wrong in THIS project → **Rule or Guideline**
-* Model needs multi-step workflow to get it right → **Skill**
+* If the model already knows it → **Nothing**
+* If the model knows it but does it wrong in THIS project → **Rule or Guideline**
+* If the model needs a multi-step workflow to get it right → **Skill**
 
 ### When "Nothing" is the right answer
 
-Do NOT create skill or rule for:
+Do NOT create a skill or rule for:
+
 * Standard tool usage (jq, grep, docker exec, git commands)
 * Framework basics the model already knows
 * Single-command operations without decision logic
-* Knowledge that belongs in a skill's procedure as a step, not its own skill
+* Knowledge that belongs in a skill's procedure as a step, not as its own skill
 
 ### Size and structure hints
 
 → See `guidelines/agent-infra/size-and-scope.md` for full limits.
 
 * Target: 300–900 words. Review for split above 1200 words. Strongly consider split above 1500 words.
-* Multiple workflows → split into multiple skills
-* Two skills overlap heavily → merge
-* Skill becomes "read the guideline" → lost its purpose, restore workflow
+* If multiple workflows exist → split into multiple skills
+* If two skills overlap heavily → merge
+* If a skill becomes "read the guideline" → it lost its purpose, restore the workflow
 
 ## Procedure
 
-### 0. Inspect the input
+### 0. Analyze before creating
+
+Before writing anything:
 
 * What exactly is being requested?
-* Does a similar skill already exist?
+* Does a similar skill already exist? Search `.augment/skills/` and `.augment/rules/`
 * Is the scope too broad or unclear?
+* Read existing related artifacts — compare against current behavior
+* If requirements are ambiguous, ask a clarification question first
+* Define expected outcome: what should the skill enable that isn't possible today?
+
+This step is mandatory — skipping analysis leads to duplicate, weak, or pointer-only skills.
 
 ### 1. Define the trigger
 
@@ -153,7 +161,8 @@ Example:
 * K3: No obvious content
 * K4: Contains gotchas
 * K5: Has Output format (numbered, 2-4 deliverables)
-* K6: Within size limits (see size-and-scope guideline)
+* K6: Created with analysis (not blind, not pointer-only, expected behavior defined)
+* Size: Within limits (see size-and-scope guideline)
 
 ## Output format
 
