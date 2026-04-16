@@ -100,6 +100,29 @@ def list_changed_md(source_dir: Path) -> list:
     return changed
 
 
+def find_stale_hashes(source_dir: Path) -> list:
+    """Find hashes stored for source files that no longer exist."""
+    hashes = load_hashes()
+    stale = []
+    for relative in sorted(hashes.keys()):
+        source_file = source_dir / relative
+        if not source_file.exists():
+            stale.append(relative)
+    return stale
+
+
+def clean_stale_hashes(source_dir: Path) -> int:
+    """Remove hashes for source files that no longer exist. Returns count removed."""
+    stale = find_stale_hashes(source_dir)
+    if not stale:
+        return 0
+    hashes = load_hashes()
+    for relative in stale:
+        del hashes[relative]
+    save_hashes(hashes)
+    return len(stale)
+
+
 
 def should_compress(filepath: Path) -> bool:
     """Check if file should be compressed (is .md and not in copy-as-is list)."""
@@ -451,21 +474,37 @@ def main() -> None:
             print(f"✅  All .md files are up to date")
 
     elif arg == "--check-hashes":
+        has_issues = False
         changed = list_changed_md(SOURCE_DIR)
-        if not changed:
-            print("✅  All compressed .md files match their source hashes")
+        stale = find_stale_hashes(SOURCE_DIR)
+
+        if stale:
+            has_issues = True
+            print(f"⚠️  {len(stale)} stale hash(es) for deleted source files:\n")
+            for f in stale:
+                print(f"  {f}")
+            print(f"\nRun 'task sync-clean-hashes' to remove them.\n")
+
+        if changed:
+            has_issues = True
+            print(f"❌  {len(changed)} .md file(s) need recompression:\n")
+            for f in changed:
+                stored = load_hashes().get(f)
+                reason = "no hash stored" if stored is None else "hash mismatch"
+                print(f"  {f}  ({reason})")
+            print(f"\nRun '/compress' command to recompress these files.")
+
+        if not has_issues:
+            print("✅  All compression hashes are clean (no stale, no mismatches)")
             sys.exit(0)
-        print(f"❌  {len(changed)} .md file(s) need recompression (source changed, hash mismatch):\n")
-        for f in changed:
-            source = SOURCE_DIR / f
-            stored = load_hashes().get(f)
-            if stored is None:
-                reason = "no hash stored"
-            else:
-                reason = "hash mismatch"
-            print(f"  {f}  ({reason})")
-        print(f"\nRun '/compress' command to recompress these files.")
         sys.exit(1)
+
+    elif arg == "--clean-hashes":
+        count = clean_stale_hashes(SOURCE_DIR)
+        if count:
+            print(f"✅  Removed {count} stale hash(es)")
+        else:
+            print("✅  No stale hashes found")
 
     elif arg == "--generate-tools":
         generate_tools()
@@ -474,7 +513,7 @@ def main() -> None:
         clean_tools()
 
     else:
-        print("Usage: python scripts/compress.py [--sync|--list|--changed|--check|--check-hashes|--mark-done <path>|--mark-all-done|--generate-tools|--clean-tools]")
+        print("Usage: python scripts/compress.py [--sync|--list|--changed|--check|--check-hashes|--clean-hashes|--mark-done <path>|--mark-all-done|--generate-tools|--clean-tools]")
         sys.exit(1)
 
 

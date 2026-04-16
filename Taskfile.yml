@@ -21,6 +21,10 @@ tasks:
     desc: Check if all compressed .md files match their source hashes (for CI)
     cmd: bash scripts/compress.sh --check-hashes
 
+  sync-clean-hashes:
+    desc: Remove stale hashes for deleted source files
+    cmd: bash scripts/compress.sh --clean-hashes
+
   sync-mark-done:
     desc: Mark a single file as compressed (updates hash)
     cmd: bash scripts/compress.sh --mark-done {{.CLI_ARGS}}
