@@ -139,6 +139,41 @@ When picking up a roadmap in a new session:
 3. Summarize progress to the user.
 4. Continue from the next open step.
 
+### Completing & archiving a roadmap
+
+After the last step of a roadmap is done, check completion status:
+
+1. **Scan the file** for all checkbox markers: `- [x]`, `- [ ]`, `- [~]`, `- [-]`.
+2. **Classify:**
+   - `[x]` = completed
+   - `[ ]` = open (not done)
+   - `[~]` = deferred / skipped
+   - `[-]` = cancelled
+
+3. **If ALL items are `[x]`** (nothing open, nothing deferred, nothing cancelled):
+   → **Auto-archive.** Move the file to `agents/roadmaps/archive/` silently.
+   Show: `✅  Roadmap archived → agents/roadmaps/archive/{filename}`
+
+4. **If any items are `[ ]`, `[~]`, or `[-]`:**
+   → **Ask the user.** Show what's incomplete and why:
+
+   ```
+   📋 Roadmap completion check:
+
+     ✅  Completed: {count_x}
+     ⬜  Open:      {count_open}  — {list of open items, 1 line each}
+     ⏭️  Deferred:  {count_skip}  — {list of deferred items, 1 line each}
+     ❌  Cancelled: {count_cancel} — {list of cancelled items, 1 line each}
+
+   > 1. Archive anyway — remaining items are intentionally unfinished
+   > 2. Keep active — I want to finish the open items
+   > 3. Mark open items as deferred [~] and archive
+   ```
+
+5. **Archive = move file** to `agents/roadmaps/archive/`:
+   ```bash
+   mv agents/roadmaps/{file} agents/roadmaps/archive/{file}
+   ```
 
 ## Output format
 
@@ -157,6 +192,8 @@ When picking up a roadmap in a new session:
 - Roadmap files go in `agents/roadmaps/` — don't create them in other directories.
 - Don't mark phases complete without running verification (tests, quality checks) — the verify-before-complete rule applies.
 - The model tends to skip phases it deems "simple" — every phase must be explicitly completed.
+- Auto-archive only when ALL checkboxes are `[x]`. Even one `[~]` or `[-]` requires user confirmation.
+- The archive directory is `agents/roadmaps/archive/` — create it if it doesn't exist.
 
 ## Do NOT
 
@@ -165,3 +202,5 @@ When picking up a roadmap in a new session:
 - Do NOT modify completed steps (only add notes if needed).
 - Do NOT create roadmaps for trivial changes (single-file fixes don't need a roadmap).
 - Do NOT commit or push — only local changes.
+- Do NOT archive roadmaps with open `[ ]` items without asking the user.
+- Do NOT delete roadmaps — always archive (move to archive/).

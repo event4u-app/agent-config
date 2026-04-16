@@ -55,6 +55,7 @@ For each open step:
 
 - Summarize total progress: steps completed, steps remaining.
 - Update the roadmap file with the current status.
+- **If ALL steps are done** → trigger the completion & archiving workflow from the `roadmap-manager` skill.
 
 ### Rules
 
