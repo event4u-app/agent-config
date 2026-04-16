@@ -22,15 +22,11 @@ Ensure the new systems are used consistently — not just documented.
 
 Core principle: **A skill must remain executable without opening a guideline.**
 
-- [x] Linter: `guideline_dependent_skill` (error) — ≥3 delegations, ≤1 action verb, <3 steps
-- [x] Linter: `pointer_only_skill` (warning) — ≥2 delegations, ≤2 action verbs, <3 steps
-- [x] Initial scan: 0 existing skills flagged (current skills are clean)
-- [ ] Update `skill-writing` SKILL.md: add guideline-independence as explicit quality criterion
-- [ ] Update `skill-reviewer` SKILL.md: add "pointer-only" to the 5 Skill Killers checklist
-- [ ] Update `skill-management` / refactor skills: verify independence principle on every refactor
-- [ ] Add to `/compress` command: during compression, flag if compressed skill lost own workflow
-- [ ] Periodic audit: run `python3 scripts/skill_linter.py --all | grep pointer` after each batch of skill changes
-- [ ] Document the boundary rule clearly in `guidelines/agent-infra/size-and-scope.md` (expand existing mention)
+→ Detailed items in `road-to-10.md` Phase 1 + Phase 2 + Phase 4.
+
+- [x] Linter: `guideline_dependent_skill` error + `pointer_only_skill` warning
+- [x] Initial scan: 0 existing skills flagged
+- [ ] Remaining items tracked in `road-to-10.md` (skill-writing, skill-reviewer, merge preservation, compression quality)
 
 ### 1.2 Consistency CI Hardening
 - [x] `task sync-check-hashes` — CI check that source hash matches stored hash (fails if /compress not run)
