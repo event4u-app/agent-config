@@ -1,5 +1,7 @@
 ---
 type: "always"
+description: "Model recommendation — detect task complexity, suggest optimal model (Opus/Sonnet/GPT), check on task changes and command invocations"
+alwaysApply: true
 source: package
 ---
 

@@ -69,22 +69,11 @@ NEVER for simple file operations, command execution, or straightforward edits.
 ## State dump format
 
 ```
-## State Dump: [Task Description]
-
-### What was tried
-1. [Approach 1] → [Why it failed]
-2. [Approach 2] → [Why it failed]
-3. [Approach 3] → [Why it failed]
-
-### What is known
-- [Fact 1]
-- [Fact 2]
-
-### Hypothesis
-- [Best hypothesis for root cause]
-
-### Recommendation
-- [Suggested next approach for a fresh session]
+## State Dump: [Task]
+### Tried: 1. [Approach] → [Why failed] 2. ... 3. ...
+### Known: [Key facts]
+### Hypothesis: [Best guess for root cause]
+### Recommendation: [Next approach for fresh session]
 ```
 
 Use `/agent-handoff` to generate a context summary for a fresh conversation.
@@ -92,15 +81,10 @@ Use `/agent-handoff` to generate a context summary for a fresh conversation.
 ## Augment-specific: Ignored Skills Recovery
 
 Skills excluded via `.augmentignore` don't appear in `<available_skills>`.
-When you need expertise from an ignored skill:
-
-1. **Read the SKILL.md directly** — `.augmentignore` only hides from system prompt, not from `view`.
-2. **Continue working** — apply the skill's guidance.
-3. **After the task**, ask the user:
+If you need an ignored skill: read its SKILL.md directly, apply guidance, then ask:
 
 ```
-> 💡 I loaded the `{name}` skill manually — it's currently ignored in `.augmentignore`.
->
-> 1. Remove from ignore — this skill is relevant for the project
-> 2. Keep ignored — this was a one-off
+> 💡 I loaded `{name}` manually — currently ignored in `.augmentignore`.
+> 1. Remove from ignore — relevant for this project
+> 2. Keep ignored — one-off
 ```

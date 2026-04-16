@@ -67,50 +67,32 @@ numbered options, or command steps. When a rule or command says "ask the user", 
 
 ### Keep intermediate output minimal
 
-Read `minimal_output` from the project settings file (default: `true`).
+Read `minimal_output` (default: `true`) and `play_by_play` (default: `false`) from project settings.
 
-When `true`:
-
-- **During multi-step work:** short bullet points only, no paragraphs.
-- **No thinking out loud** — the user doesn't need your reasoning process.
-- **Play-by-play**: Read `play_by_play` from the project settings file (default: `false`).
-  When `false`: don't narrate each tool call result. Silently investigate, then report the conclusion.
-  When `true`: briefly share intermediate findings as you go.
-    - ❌  (when false) "Hmm, exit code 1. Let me check... 18 errors. The errors are about method_exists..."
-    - ✅  (when false) *(silently investigate, then report the conclusion)*
-- **At the end:** concise summary — just what changed and what the user needs to know.
+When `minimal_output=true`:
+- Multi-step work: short bullet points only, no paragraphs.
+- No thinking out loud — user doesn't need your reasoning.
+- When `play_by_play=false`: silently investigate, report conclusion only.
+- When `play_by_play=true`: briefly share intermediate findings.
+- At the end: concise summary — what changed, what user needs to know.
 
 ### Don't re-read what you already know
 
-- Edited a file → the edit tool showed the result. Don't re-read the file.
-- Ran a command → you have the output. Don't re-run to "verify".
+- Edited a file → edit tool showed result. Don't re-read.
+- Ran a command → you have output. Don't re-run to "verify".
 - File in context from recent messages → don't reload.
-- Found a symbol → don't search again in a different way.
-
-### Search before reading
-
-- **Search first** — use codebase search tools, regex search in files, or `grep`.
-- **Don't load entire files** when you only need a few lines.
-- **Small files** (< 50 lines) — OK to read fully.
 
 ### Minimize tool calls
 
-- **Parallel reads** — don't read 5 files sequentially.
-- **Regex search** over full file reads when possible.
-- **View specific line ranges** when you know the exact location.
-- **One codebase search call** with all symbols — not 5 separate calls.
+- Parallel reads — don't read 5 files sequentially.
+- Regex search over full file reads. View specific line ranges.
+- One codebase search call with all symbols — not 5 separate.
+- Short question → short answer. Summary tables only for 3+ items.
 
-### Right-size responses
+### Exceptions
 
-- Short question → short answer.
-- Code change → show what changed, not the entire file.
-- Error fix → what was wrong, what you did. No history lesson.
-- Summary tables → only for 3+ items.
+- Small output (< 30 lines): read directly.
+- Debugging: OK to read more context around one error.
+- User explicitly asks for full output: show it.
 
-## Exceptions
-
-- **Small output** (< 30 lines): Read directly, no need to redirect.
-- **Debugging a specific failure**: OK to read more context around that one error.
-- **User explicitly asks** to see the full output: Show it.
-
-→ Output patterns, targeted operations, tool-first policy: see `guidelines/agent-infra/output-patterns.md`
+→ Detailed patterns: `guidelines/agent-infra/output-patterns.md`

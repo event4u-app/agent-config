@@ -62,45 +62,21 @@ Skip any step = the claim is unverified.
 - Relying on partial verification (ran tests but not PHPStan)
 - ANY wording implying success without fresh evidence
 
-## Common verification commands
+## Verification commands
 
-### Laravel projects (inside Docker container)
-```bash
-php artisan test                          # Tests
-vendor/bin/phpstan analyse                # Static analysis (1st run)
-vendor/bin/rector process                 # Rector (or: php artisan quality:rector --fix)
-vendor/bin/ecs check --fix                # Code style (or: php artisan quality:ecs --fix)
-vendor/bin/phpstan analyse                # Static analysis (final — verify Rector/ECS didn't break anything)
-```
-
-### Frontend projects
-```bash
-npm test          # or: bun test
-npm run build     # or: bun run build
-npm run lint      # or: bun run lint
-npx tsc --noEmit  # TypeScript check
-```
-
-For tool-specific commands → see the `quality-workflow` rule.
+For specific commands → see `quality-workflow` rule.
 
 ## Minimum verification per task type
 
 | Task | Required evidence |
 |---|---|
-| Code change | Tests + PHPStan (command output with exit code) |
-| New feature | Tests + PHPStan + manual smoke test |
-| Bug fix | Regression test + full test suite |
-| Refactoring | Full test suite + PHPStan + Rector |
-| Config change | Relevant tests or verification command output |
+| Code change | Tests + PHPStan |
+| New feature | Tests + PHPStan + smoke test |
+| Bug fix | Regression test + full suite |
+| Refactoring | Full suite + PHPStan + Rector |
+| Config/migration | Relevant tests or command output |
 | API endpoint | curl/HTTP response output |
-| UI change | Screenshot or browser verification |
-| Migration | Migration run + rollback test |
 | Documentation only | No verification needed |
 
-**Never accept** these as proof:
-- "It should work"
-- "Looks correct"
-- "I've done similar before"
-- "The logic is sound"
-
-If you can't produce captured output, it's not verified.
+**Never accept** as proof: "should work", "looks correct", "logic is sound".
+No captured output = not verified.
