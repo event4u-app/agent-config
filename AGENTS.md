@@ -1,6 +1,6 @@
 # Galawork API
 
-Laravel backend API for the Galawork platform — a SaaS application for the landscaping industry.
+**A governed AI development layer** for the Galawork platform — a Laravel SaaS application for the landscaping industry.
 
 ## Agent Infrastructure
 
