@@ -81,6 +81,14 @@ tasks:
     desc: Lint all skills and rules with JSON output
     cmd: python3 scripts/skill_linter.py --all --format json
 
+  lint-skills-report:
+    desc: Generate quality report for all skills and rules
+    cmd: python3 scripts/skill_linter.py --all --report
+
+  lint-skills-pairs:
+    desc: Check compression quality between uncompressed and compressed pairs
+    cmd: python3 scripts/skill_linter.py --all --pairs --compression-quality
+
   test-linter:
     desc: Run skill linter tests
     cmd: python3 -m pytest tests/test_skill_linter.py -v

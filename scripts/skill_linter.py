@@ -979,6 +979,22 @@ def check_compression_quality(root: Path) -> list[LintResult]:
             issues.append(Issue("warning", "compression_lost_validation",
                                 "Compressed procedure lost validation keywords present in uncompressed"))
 
+        # Check code blocks / examples survived
+        src_code_blocks = len(re.findall(r"```", src_text))  # pairs of ``` = blocks
+        dst_code_blocks = len(re.findall(r"```", dst_text))
+        if src_code_blocks > 0 and dst_code_blocks < src_code_blocks // 2:
+            issues.append(Issue("warning", "compression_lost_example",
+                                f"Compressed version has fewer code blocks "
+                                f"({dst_code_blocks // 2} vs {src_code_blocks // 2} in source)"))
+
+        # Check anti-pattern / "Do NOT" bullets survived
+        src_donot = len(re.findall(r"(?:Do NOT|NEVER|MUST NOT)\b", src_text))
+        dst_donot = len(re.findall(r"(?:Do NOT|NEVER|MUST NOT)\b", dst_text))
+        if src_donot > 0 and dst_donot < src_donot // 2:
+            issues.append(Issue("warning", "compression_lost_antipattern",
+                                f"Compressed version lost anti-pattern constraints "
+                                f"({dst_donot} vs {src_donot} in source)"))
+
         if issues:
             rel_path = f".augment/skills/{skill_dir.name}/SKILL.md"
             results.append(LintResult(
@@ -1107,6 +1123,62 @@ def format_report(results: list[LintResult]) -> str:
                 if sev != "?":
                     break
             lines.append(f"| `{code}` | {count} | {sev} |")
+
+    # Files with most issues (top 10)
+    files_with_issues = [
+        (r.file, len(r.issues), r.status)
+        for r in results
+        if r.issues
+    ]
+    files_with_issues.sort(key=lambda x: -x[1])
+    if files_with_issues:
+        lines.extend(["", "## Files with Most Issues (Top 10)", ""])
+        lines.append("| File | Issues | Status |")
+        lines.append("|---|---|---|")
+        for fpath, count, status in files_with_issues[:10]:
+            short = fpath.replace(".augment.uncompressed/", "")
+            lines.append(f"| `{short}` | {count} | {status} |")
+
+    # Per-file quality breakdown (skills only)
+    skill_results = [r for r in results if r.artifact_type == "skill" and "/pair-check/" not in r.file]
+    if skill_results:
+        lines.extend(["", "## Per-File Quality (Skills)", ""])
+        lines.append("| Skill | Structure | Validation | Scope | Dependency | Lines |")
+        lines.append("|---|---|---|---|---|---|")
+        for r in sorted(skill_results, key=lambda x: x.file):
+            short = r.file.replace(".augment.uncompressed/skills/", "").replace(".augment/skills/", "").replace("/SKILL.md", "")
+            codes = {i.code for i in r.issues}
+
+            # Structure: fail if missing required sections
+            struct = "❌" if codes & {"missing_section", "empty_procedure", "unordered_procedure"} else "✅"
+
+            # Validation: weak if missing or vague
+            if codes & {"missing_validation", "vague_validation"}:
+                valid = "❌ weak"
+            elif codes & {"missing_inspect_step"}:
+                valid = "⚠️ partial"
+            else:
+                valid = "✅ strong"
+
+            # Scope: broad if flagged
+            scope = "⚠️ broad" if "broad_scope" in codes else "✅ focused"
+
+            # Guideline dependency
+            if "guideline_dependent_skill" in codes:
+                dep = "❌ high"
+            elif "pointer_only_skill" in codes:
+                dep = "⚠️ medium"
+            else:
+                dep = "✅ low"
+
+            # Line count
+            total_lines = 0
+            try:
+                total_lines = Path(r.file).read_text(encoding="utf-8").count("\n")
+            except OSError:
+                pass
+
+            lines.append(f"| `{short}` | {struct} | {valid} | {scope} | {dep} | {total_lines} |")
 
     return "\n".join(lines)
 
