@@ -1,6 +1,11 @@
 # event4u/agent-config
 
-Shared agent configuration for AI coding tools — skills, rules, commands, guidelines, and templates.
+**A governed AI development layer** — skills, rules, commands, guidelines, and templates for AI coding agents.
+
+> A governed, observable, self-improving agent configuration system with safe evolution paths.
+
+Observable quality scoring, compression preservation guards, feedback-driven improvement loops,
+and safe optimization commands — not just a prompt collection, but a framework that evolves safely at scale.
 
 Works with **Augment Code**, **Claude Code**, **Cursor**, **Cline**, **Windsurf**, and **Gemini CLI**.
 
