@@ -89,4 +89,3 @@ Inform the user:
 - **Do NOT create manual commits** — only `git merge` may create merge commits as part of this workflow.
 - **Abort immediately** on any conflict — do not try to resolve conflicts.
 - **Always fetch fresh PR data** — never reuse stale data from earlier in the conversation.
-

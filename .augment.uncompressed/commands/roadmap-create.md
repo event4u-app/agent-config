@@ -103,4 +103,3 @@ If yes → switch to the `roadmap-execute` command workflow with the newly creat
 - **Write the roadmap in English** (per project convention for `.md` files).
 - Follow the roadmap template from `.augment/templates/roadmaps.md`.
 - Keep the file focused: 500–1000 lines max. If larger, suggest splitting.
-

@@ -74,4 +74,3 @@ Once the user approves the content from step 2:
 - **Push the branch first** if it hasn't been pushed (with user permission).
 - Only create the PR — never merge it.
 - Only commit or push with explicit user permission.
-

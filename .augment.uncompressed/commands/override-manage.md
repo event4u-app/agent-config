@@ -94,4 +94,3 @@ When an original has changed and the override needs updating:
 2. Ask if the override needs adjustment
 3. Apply changes to the override
 4. Verify the result
-

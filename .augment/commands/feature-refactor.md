@@ -179,4 +179,3 @@ What's next?
 - **Research the codebase** when technical questions come up.
 - **Show changes clearly** — the user should know exactly what was modified.
 - **Preserve history** — don't silently remove decisions or notes.
-

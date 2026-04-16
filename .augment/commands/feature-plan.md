@@ -274,4 +274,3 @@ What's next?
 - **Be collaborative** — ask questions, don't assume.
 - **Challenge scope** — suggest what can be deferred.
 - **Reference existing code** — link to files and patterns found in research.
-

@@ -178,4 +178,3 @@ What's next?
 - **Reference specific files** in roadmap tasks — not vague descriptions.
 - **Include quality gates** (PHPStan, Rector, tests) in every phase.
 - **Research the codebase** to make tasks concrete and realistic.
-

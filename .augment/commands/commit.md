@@ -104,4 +104,3 @@ Show a summary:
 - **Never modify files** — only stage and commit existing changes.
 - **Do NOT add untracked files** unless they are clearly part of the change (check with `git status`).
 - **Follow commit conventions** as defined in `.augment/rules/commit-conventions.md`.
-

@@ -143,4 +143,3 @@ See the `command-routing` skill → "GitHub API: Replying to PR review comments"
 
 1. Run a PHP syntax check (`php -l`) on all modified files to verify nothing is broken.
 2. **Do NOT commit or push.** Just apply the fixes locally and reply to all comments on GitHub.
-

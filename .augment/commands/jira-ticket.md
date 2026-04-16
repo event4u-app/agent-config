@@ -65,4 +65,3 @@ disable-model-invocation: true
 - **Always ask before implementing** — present the plan first.
 - If the ticket is unclear or missing information, ask the user for clarification.
 - If the Sentry issue reveals a different/bigger problem than the ticket describes, flag it.
-

@@ -130,4 +130,3 @@ What would you like to do next?
 - **Do NOT run `composer dump-autoload`** — only suggest it.
 - **Always use PascalCase** for module names.
 - **Always create agent directories** with `.gitkeep`.
-

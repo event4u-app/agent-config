@@ -67,4 +67,3 @@ disable-model-invocation: true
 - **Quality over quantity** — 5 meaningful tests beat 20 trivial ones.
 - If a class is hard to test (too many dependencies, global state), flag it and suggest a refactoring approach instead of writing brittle
   tests.
-

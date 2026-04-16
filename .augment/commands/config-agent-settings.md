@@ -105,4 +105,3 @@ Warn if it fails and suggest how to install the CLI.
 - **Never overwrite existing values** — only add missing keys with defaults.
 - **Always use template order** — reorder keys to match the template.
 - **Template is the source of truth** for which keys exist and their defaults.
-

@@ -56,4 +56,3 @@ Use the same PR and mode.
 2. Report a final summary: how many bot comments handled, how many developer comments handled,
    how many files modified.
 3. **Do NOT commit or push.** Just apply the fixes locally and reply to all comments on GitHub.
-

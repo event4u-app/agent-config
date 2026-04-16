@@ -144,4 +144,3 @@ If it fails, investigate and fix the remaining issues.
 - **Do NOT change the seeder classes** — only the data files.
 - **Do NOT change the DataSeeder framework** — only fix data file references.
 - When in doubt about the getter method, check the model class.
-

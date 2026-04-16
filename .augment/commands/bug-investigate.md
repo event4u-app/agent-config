@@ -163,4 +163,3 @@ What's next?
 - **Trace to the root cause** — don't just describe the symptom.
 - **Check for similar patterns** elsewhere in the codebase.
 - **Use Sentry tools** (`get_issue_details`, `get_issue_tag_values`) when URLs are available.
-

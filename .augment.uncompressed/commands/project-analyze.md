@@ -298,4 +298,3 @@ Ask the user (in their language) what they want to do next:
   in analysis files. Link to them instead.
 - **Analysis files should be self-contained enough to rebuild** — include actual table names,
   column names, class names, method signatures. Not just "see the code".
-

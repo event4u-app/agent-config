@@ -167,4 +167,3 @@ After completing a phase or all actions:
 - **Update the roadmap** after each completed action.
 - **Show file content** before deleting — the user should see what's being removed.
 - **Check `.augment/` references too** — skills and commands may link to agents docs.
-

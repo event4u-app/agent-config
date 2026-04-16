@@ -110,4 +110,3 @@ Ask with numbered options:
   changed endpoints, changed response structure).
 - **Mention file/class names** where helpful, but don't list every single file.
 - **Highlight things reviewers should pay attention to** — complex logic, edge cases, trade-offs.
-

@@ -104,4 +104,3 @@ git diff --name-only origin/{default}..HEAD
 - **Do NOT add entries to `ignoreErrors`** in `phpstan.neon`.
 - Inline ignores (`@phpstan-ignore`, `@ts-expect-error`, `biome-ignore`) are a last resort.
 - Run `php -l` on modified PHP files if you made significant structural changes.
-

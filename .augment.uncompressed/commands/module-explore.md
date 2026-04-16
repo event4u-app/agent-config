@@ -155,4 +155,3 @@ What would you like to do?
 - **Do NOT commit or push.**
 - **Load the module context** into your understanding for the rest of the conversation.
 - **Remember the module** for follow-up commands (feature-plan, context-create, etc.).
-

@@ -93,4 +93,3 @@ GAPS:
 - **Keep it fast** — no deep code analysis, just file counts and metadata.
 - **Show gaps clearly** — the user should see what's missing at a glance.
 - **Suggest `/project-analyze`** if significant gaps are found.
-

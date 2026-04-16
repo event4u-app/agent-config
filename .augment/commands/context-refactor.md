@@ -168,4 +168,3 @@ If option 1 or 2 → loop back to analysis and update.
 - **Show changes before applying** — the user should confirm.
 - **Preserve user-written notes and context** — don't overwrite manual additions.
 - **Update `Last Updated`** after every change.
-

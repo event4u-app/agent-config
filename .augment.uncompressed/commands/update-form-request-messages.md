@@ -187,4 +187,3 @@ LANG FILES UPDATED:
 - **Lang keys use flat dot-notation** — never nested arrays in lang files.
 - **Do NOT commit or push.** Only apply local changes.
 - **Do NOT remove lang keys** that are still referenced anywhere else in the codebase.
-

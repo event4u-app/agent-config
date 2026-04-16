@@ -108,4 +108,3 @@ Do NOT use for single-line fixes, trivial changes, or urgent hotfixes.
 - **All output in English** for documentation; speak German with the user.
 - **Use task management** to track progress through phases.
 - **Reference the `feature-planning` skill** for feature plan format.
-

@@ -155,4 +155,3 @@ What next?
 - **Present the fix plan** before implementing — let the user confirm.
 - **Update existing tests** that are affected by the change.
 - **Write new tests** for the specific bug scenario (regression test).
-

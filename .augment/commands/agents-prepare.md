@@ -135,4 +135,3 @@ If yes → delete them.
 - **Do NOT overwrite existing files.**
 - **Do NOT create `.gitkeep` in directories that already have files.**
 - **Always ask before deleting** old template files.
-

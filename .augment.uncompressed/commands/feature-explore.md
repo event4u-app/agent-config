@@ -153,4 +153,3 @@ What's next?
 - **Be honest about feasibility** — if something is hard, say so.
 - **Keep it conversational** — this is brainstorming, not a formal process.
 - **Max 1 file created** (optional idea note). No roadmaps, no implementation.
-

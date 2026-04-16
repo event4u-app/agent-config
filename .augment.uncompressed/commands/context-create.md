@@ -165,4 +165,3 @@ What's next?
 - **Be factual** — document what IS, not what SHOULD be.
 - **Ask the user** about unclear areas or business context.
 - **Link to specific files** — not vague descriptions.
-
