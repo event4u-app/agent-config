@@ -1,6 +1,6 @@
 ---
 name: developer-like-execution
-description: "Use when implementing, debugging, or modifying code. Enforces think → analyze → verify → execute workflow with real developer behavior."
+description: "Use when implementing, debugging, refactoring, or reviewing code, skills, rules, or configs. Enforces think → analyze → verify → execute workflow."
 source: package
 ---
 
@@ -12,21 +12,51 @@ source: package
 - Fixing bugs
 - Refactoring code
 - Analyzing unexpected behavior
+- Debugging backend or frontend issues
+- Creating or refactoring skills, rules, commands, or agent docs
 - Working with APIs, frontend, or backend logic
 
-Do NOT use when only explaining concepts or writing documentation without execution.
+Do NOT use when only explaining concepts or writing pure reference documentation without execution.
 
 ## Goal
 
-Act like a real developer: think before acting, analyze before coding, verify before concluding. Avoid unnecessary trial-and-error.
+Act like a real developer: think before acting, analyze before coding, verify before concluding.
+Avoid unnecessary trial-and-error. Minimize output, token usage, and irrelevant data.
+Develop against expected behavior, ideally test-first.
 
 ## Core principles
 
-- Never start coding without understanding the system
+- Never start coding before understanding the affected system
 - Prefer analysis over guessing
-- Avoid unnecessary loops and retries
-- Minimize data and tool usage for efficiency
-- Always validate changes with real execution when possible
+- Prefer targeted queries over large output dumps
+- Avoid unnecessary loops, retries, and blind experimentation
+- Always verify behavior with real execution when possible
+- Prefer tests first when expected behavior can be defined
+- If requirements are unclear, ask a precise question instead of filling gaps with assumptions
+
+## Tool priority
+
+Use the smallest, most targeted tool that gives the needed evidence.
+
+### Prefer targeted output
+
+- `jq` for JSON extraction
+- `grep`, `rg`, `awk`, `sed` for targeted text filtering
+- `head`, `tail`, `cut`, `sort`, `uniq` for narrowing results
+- `curl` for API calls
+- `artisan` / framework CLIs with filtering
+- Debugger (e.g. Xdebug) when flow tracing is needed
+- Playwright for frontend verification
+- Logs only when targeted and scoped
+
+### Avoid large output by default
+
+Do NOT:
+
+- Dump full JSON if one field is enough
+- Load full route lists when filtering one route is enough
+- Inspect full log files when one request id or timestamp can isolate the case
+- Re-run broad commands repeatedly without narrowing
 
 ## Procedure
 
@@ -34,83 +64,138 @@ Act like a real developer: think before acting, analyze before coding, verify be
 
 - Read the request carefully
 - Identify expected outcome
-- Identify affected parts of the system
+- Identify affected system area
+- Identify whether the task is implementation, debugging, refactoring, or analysis
 
-### 2. Analyze BEFORE acting
+### 2. Check whether requirements are complete
 
-- Inspect relevant code
-- Check existing logic and data flow
-- Compare with requirements, tickets, existing behavior
-- Identify possible root causes or implementation paths
+Before acting, verify:
 
-### 3. Form a plan
+- Expected behavior is clear
+- Acceptance criteria are clear
+- Edge cases are known
+- Affected user flow or API contract is known
 
-- Define minimal steps needed
-- Avoid unnecessary changes
-- Prefer simplest correct solution
+If important information is missing:
 
-### 4. Use tools like a real developer
+- Stop execution planning
+- Output a precise clarification request
+- Do NOT silently assume missing requirements
 
-When available:
+### 3. Analyze BEFORE acting
 
-- Use debugger (e.g. Xdebug) for tracing
-- Use logs instead of guessing
-- Use CLI tools to inspect data
+- Read the affected files
+- Trace data flow and execution path
+- Compare with requirements, tickets, current behavior, tests, existing patterns
+- Identify likely cause and smallest correct change
 
-Efficiency rules:
+### 4. Define expected behavior first
 
-- Use `jq` to extract relevant JSON parts
-- Avoid loading full datasets when partial is enough
-- Avoid unnecessary loops or brute force exploration
+Prefer test-driven or test-first development whenever practical.
 
-### 5. Implement
+Before changing code, define:
+
+- What should happen
+- What should not happen
+- How success will be verified
+
+Prefer: write or update failing test first → implement against it → run tests again.
+
+If full TDD is not practical: at least write down the expected output before coding.
+
+### 5. Use targeted tools like a real developer
+
+#### Backend examples
+
+```bash
+# Laravel route lookup — targeted, not full dump
+php artisan route:list --json | jq '.[] | select(.uri == "api/users") | {method, uri, name, action, middleware}'
+php artisan route:list | grep "users.index"
+
+# Config/debug
+php artisan config:show app | grep env
+
+# API inspection
+curl -s http://localhost/api/users | jq '.[0] | {id, email, status}'
+
+# Logs — scoped
+rg "request_id=abc123|OrderFailed" storage/logs
+tail -n 200 storage/logs/laravel.log | rg "payment|timeout"
+```
+
+#### Frontend examples
+
+Use Playwright or browser-level checks when UI is affected:
+rendered state, interaction result, errors in console/network.
+
+#### General shell filtering
+
+Use `rg` over broad grep, `jq` for JSON, `cut`/`awk`/`sort`/`uniq` to reduce noise.
+
+### 6. Form a plan
+
+- What will be changed
+- What will not be changed
+- Which test or verification proves success
+- Which tool gives the smallest useful evidence
+
+### 7. Implement
 
 - Apply focused changes only
-- Do not rewrite unrelated code
 - Follow existing patterns
+- Avoid unrelated rewrites
+- Keep changes scoped to the actual problem
 
-### 6. Verify (MANDATORY)
+### 8. Write or update tests
 
-Backend:
+Tests are mandatory when behavior changes or bugs are fixed.
 
-- Call endpoints using `curl` or similar
-- Use Postman collection if available
+Prefer: failing test first → implementation → passing test.
 
-Frontend:
+Test types: unit (isolated logic), feature/integration (behavior), UI (frontend), regression (bugs).
 
-- Use Playwright or browser testing
-- Verify real UI behavior
+If a test cannot be added: state exactly why and explain what verification replaces it.
 
-General:
+### 9. Verify with real execution (MANDATORY)
 
-- Confirm expected output
-- Check for regressions
+- Backend/API: `curl`, Postman, response shape and behavior
+- Frontend: Playwright, user-visible behavior
+- CLI/jobs: command execution, side effects, exit code
+- Skills/rules/agent docs: lint, structure, trigger verification
 
-### 7. Validate
+### 10. Validate
 
-- Does the result match the requirement?
-- Are edge cases handled?
-- Is the solution minimal and correct?
+- Result matches requirement
+- Edge cases handled
+- Test coverage sufficient
+- No unnecessary output, retries, or brute force used
+- No important assumption remains hidden
 
 ## Output format
 
-1. Short explanation of what was done
-2. Code changes (if applicable)
-3. Verification result (what was tested and how)
-4. Any risks or follow-ups
+1. Task understanding
+2. Analysis summary
+3. Planned change
+4. Test strategy
+5. Implemented change
+6. Verification result
+7. Risks, open questions, or follow-up
 
 ## Gotchas
 
 - The model tends to start coding too early → always analyze first
-- The model tends to brute-force → prefer targeted inspection
-- The model tends to over-fetch data → use selective extraction (e.g. jq)
-- The model may skip verification → always test changes
+- The model tends to over-fetch data → always reduce output first
+- The model tends to brute-force retries → prefer targeted inspection
+- The model may skip tests if the fix looks obvious → do not skip them
+- The model may fill unclear requirements with assumptions → ask instead
 
 ## Do NOT
 
-- Start coding without understanding the codebase
+- Start coding without understanding the affected system
 - Guess behavior without verifying
-- Load full datasets when not needed
-- Rely on trial-and-error loops
-- Skip verification steps
+- Load full datasets when partial extraction is enough
+- Rely on long trial-and-error loops
+- Skip tests when behavior changes
+- Skip real verification after changes
 - Modify unrelated parts of the system
+- Hide requirement gaps behind assumptions
