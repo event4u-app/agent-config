@@ -109,6 +109,46 @@ tasks:
     desc: Run README linter tests
     cmd: python3 -m pytest tests/test_readme_linter.py -v
 
+  test-runtime:
+    desc: Run runtime registry and dispatcher tests
+    cmd: python3 -m pytest tests/test_runtime_registry.py tests/test_runtime_dispatcher.py -v
+
+  runtime-list:
+    desc: List all runtime-capable skills
+    cmd: python3 scripts/runtime_registry.py
+
+  runtime-list-json:
+    desc: List all runtime-capable skills (JSON output)
+    cmd: python3 scripts/runtime_registry.py --format json
+
+  runtime-validate:
+    desc: Validate runtime registry consistency
+    cmd: python3 scripts/runtime_registry.py --validate
+
+  tool-list:
+    desc: List all registered tools
+    cmd: python3 scripts/tool_registry.py
+
+  tool-validate:
+    desc: Validate tool declarations
+    cmd: python3 scripts/tool_registry.py --validate-tools {{.CLI_ARGS}}
+
+  test-tools:
+    desc: Run tool registry and adapter tests
+    cmd: python3 -m pytest tests/test_tool_registry.py tests/test_tool_adapters.py -v
+
+  test-runtime-all:
+    desc: Run all runtime, tools, observability, feedback, and lifecycle tests
+    cmd: python3 -m pytest tests/test_runtime_registry.py tests/test_runtime_dispatcher.py tests/test_runtime_execute.py tests/test_runtime_errors.py tests/test_runtime_hooks.py tests/test_observability.py tests/test_feedback_collector.py tests/test_skill_lifecycle.py tests/test_tool_registry.py tests/test_tool_adapters.py -v
+
+  lifecycle-report:
+    desc: Generate skill lifecycle report
+    cmd: python3 scripts/skill_lifecycle.py
+
+  lifecycle-health:
+    desc: Show skill health scores
+    cmd: python3 scripts/skill_lifecycle.py --health
+
   consistency:
     desc: Verify sync + generated tool outputs are clean
     cmds:
