@@ -8,18 +8,34 @@ source: package
 
 ## When to use
 
-- New skill/rule created in a project that should be shared
-- Rule or skill improvement that benefits all consumers
-- Bug found in shared skill, rule, or command
-- Override was created locally and should become the new default
+- A new skill was created in a project that should be shared across all projects
+- A rule or skill improvement was discovered that benefits all consumers
+- A bug was found in a shared skill, rule, or command
+- The `learning-to-rule-or-skill` skill identified something worth upstreaming
+- An override was created locally and should become the new default
 
-Do NOT use for project-specific changes or one-off learnings.
+Do NOT use when:
+
+- The change is project-specific (domain logic, local paths, project conventions)
+- The learning is one-off and unlikely to repeat in other projects
+- The content already exists in the shared package
 
 ## Goal
 
-Contribute a learning back to `event4u-app/agent-config` — correct file placement, quality gates, PR.
+Contribute a learning, skill, rule, or fix from a consumer project back to the
+shared `agent-config` package — with correct file placement, quality gates, and PR structure.
+
+## Core principles
+
+- **Universality first** — the contribution must work for ALL consumers, not just one project
+- **Evidence-based** — learnings must have occurred 2+ times or be clearly generalizable
+- **Complete pairs** — both uncompressed and compressed versions required
+- **Quality verified** — must pass linter before PR creation
+- **Local benefit immediately** — use override for instant project benefit while PR is pending
 
 ## Package repository
+
+The shared agent-config package lives at:
 
 ```
 git@github.com:event4u-app/agent-config.git
@@ -33,113 +49,146 @@ GitHub: `https://github.com/event4u-app/agent-config`
 
 | Type | Uncompressed path | Compressed path |
 |---|---|---|
-| **Skill** | `.augment.uncompressed/skills/{name}/SKILL.md` | `.augment/skills/{name}/SKILL.md` |
-| **Rule** | `.augment.uncompressed/rules/{name}.md` | `.augment/rules/{name}.md` |
-| **Command** | `.augment.uncompressed/commands/{name}.md` | `.augment/commands/{name}.md` |
-| **Guideline** | `.augment.uncompressed/guidelines/{cat}/{name}.md` | `.augment/guidelines/{cat}/{name}.md` |
+| **New skill** | `.augment.uncompressed/skills/{name}/SKILL.md` | `.augment/skills/{name}/SKILL.md` |
+| **New rule** | `.augment.uncompressed/rules/{name}.md` | `.augment/rules/{name}.md` |
+| **New command** | `.augment.uncompressed/commands/{name}.md` | `.augment/commands/{name}.md` |
+| **New guideline** | `.augment.uncompressed/guidelines/{category}/{name}.md` | `.augment/guidelines/{category}/{name}.md` |
+| **Update to existing** | Same path as original | Same path as original |
 
-### 2. Apply locally as override (optional, for immediate benefit)
+### 2. Apply locally as override (immediate benefit)
+
+Create an override so the project benefits immediately:
 
 ```
 agents/overrides/{type}/{name}.md
 ```
 
+With frontmatter:
+
 ```yaml
 ---
 overrides: {type}/{name}
-mode: replace
+mode: replace  # or extend
 ---
 ```
 
-### 3. Get access to package repo
+This step is optional if the change is low-urgency.
 
-Ask the user:
+### 3. Prepare the upstream contribution
+
+The agent needs access to the package repository. Ask the user:
 
 ```
 > The improvement should go to the shared agent-config package.
+> I need to create a PR in `event4u-app/agent-config`.
 >
-> 1. I have the repo cloned — tell me the path
-> 2. Clone it for me into /tmp/agent-config-upstream
+> 1. I have the package repo cloned locally — tell me the path
+> 2. Clone it for me into a temp directory
 > 3. I'll handle the PR manually — just give me the files
 ```
 
-Option 2:
+**Option 1:** User provides path → work directly in that repo.
+
+**Option 2:** Clone into temp directory:
 
 ```bash
 git clone git@github.com:event4u-app/agent-config.git /tmp/agent-config-upstream
 cd /tmp/agent-config-upstream
 ```
 
+**Option 3:** Output the file contents as copyable blocks for the user.
+
 ### 4. Create branch and files
 
 ```bash
 cd {package-repo-path}
 git checkout main && git pull
-git checkout -b feat/skills/{name}
+git checkout -b feat/skills/{name}  # or fix/rules/{name}, etc.
 ```
 
-Create BOTH:
+Create both files:
 
-- **Uncompressed** → `.augment.uncompressed/{type}/{name}` (verbose, human-readable)
-- **Compressed** → `.augment/{type}/{name}` (token-efficient, 40-60% shorter for skills)
+- **Uncompressed version** → `.augment.uncompressed/{type}/{name}` (full, verbose, human-readable)
+- **Compressed version** → `.augment/{type}/{name}` (token-efficient, preserving all code blocks,
+  headings, frontmatter, validation, gotchas)
 
-Rules and commands: usually copied 1:1.
+For skills, the compressed version should be 40-60% shorter than uncompressed.
+For rules and commands, they are usually copied 1:1 (no compression).
 
-Frontmatter must have `source: package` (not `project`).
+### 5. Ensure file quality
 
-### 5. Quality gates
+The files must:
+
+- Have correct YAML frontmatter (`name`, `description`, `source: package`)
+- NOT contain project-specific references (no domain names, local paths, FQDNs)
+- Follow the skill/rule/command template structure
+- Have exactly one trailing newline
+
+### 6. Run quality gates (if working in the package repo)
 
 ```bash
 task lint-skills                    # 0 FAIL required
-task check-compression              # No errors
+task check-compression              # No errors for this file
 task generate-tools                 # Regenerate symlinks
 task consistency                    # Everything in sync
 ```
 
-### 6. Commit and PR
+If not in the package repo, note that these checks will run in CI after the PR is created.
 
-Branch: `feat/skills/{name}`, `fix/rules/{name}`, `feat/commands/{name}`
+### 7. Commit and create PR
+
+Branch naming: `feat/skills/{name}`, `fix/rules/{name}`, `feat/commands/{name}`
+
+Commit message format:
 
 ```
 feat(skills): add {name} skill
 fix(rules): improve {name} rule — {what changed}
+feat(commands): add {name} command
 ```
 
-PR must pass these gates:
+PR title: Same as commit message.
 
-- **Promotion** — 2+ occurrences or clearly generalizable
-- **Quality** — linter passes, tests pass
-- **Universality** — no project-specific assumptions
-- **Completeness** — both versions, symlinks regenerated
+PR body must use the package's PR template with these gates:
 
-### 7. After merge — clean up
+- **Promotion Gate** — learning occurred 2+ times, improves correctness, prevents real failure
+- **Quality Gate** — linter passes, tests pass
+- **Universality Gate** — no project-specific assumptions, benefits all consumers
+- **Completeness Gate** — both versions present, symlinks regenerated
+
+### 8. After merge — clean up override
+
+Once the PR is merged and the package is updated in the project:
 
 ```bash
+# In the consumer project
 rm agents/overrides/{type}/{name}.md
 composer update event4u/agent-config  # or npm update
 ```
 
+The shared version now replaces the local override.
+
 ## Output format
 
-1. Summary: type, name, why
-2. File contents for both versions
-3. If in package repo: branch, commit message, PR title
-4. If Option 3: copyable file blocks
-5. Reminder to clean up override after merge
+1. Summary of what is being contributed (type, name, why)
+2. File contents for both uncompressed and compressed versions
+3. If working in the package repo: branch name, commit message, PR title
+4. If Option 3: copyable file blocks for the user to paste
+5. Reminder to clean up local override after upstream merge
 
 ## Gotcha
 
 - Agent in consumer project doesn't know the package repo URL — this skill provides it
-- Agent may try to edit `.augment/` in consumer project — that's read-only (symlinked)
+- Agent may try to edit `.augment/` in the consumer project — that's read-only (symlinked)
 - Agent may forget the compressed version — both are mandatory
-- Agent may include project-specific references — must be universal
-- `source` in frontmatter must be `package`, not `project`
-- Agent may not have git access — Option 3 handles this gracefully
+- Agent may include project-specific references in the skill — must be universal
+- The `source` field in frontmatter must be `package`, not `project`
+- Agent may not have git access to the package repo — Option 3 handles this gracefully
 
 ## Do NOT
 
-- Do NOT edit `.augment/` in the consumer project
-- Do NOT submit project-specific content as universal
-- Do NOT skip the compressed version
-- Do NOT forget to clean up override after upstream merge
-- Do NOT bypass quality gates
+- Do NOT edit `.augment/` in the consumer project — it's managed by the package
+- Do NOT submit project-specific content as universal improvement
+- Do NOT skip the compressed version — both files are mandatory
+- Do NOT forget to clean up the local override after upstream merge
+- Do NOT bypass quality gates — they exist for a reason
