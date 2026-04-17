@@ -354,7 +354,7 @@ one-line description. We should show the best ones.
 
 ### Tasks
 
-- [ ] Add "Featured Skills" section to README with 10-15 top skills
+- [x] Add "Featured Skills" section to README with 10-15 top skills
   - Table format: | Skill | What it does |
   - Examples:
     - `laravel` — Writes Laravel code following framework conventions and project architecture
@@ -370,7 +370,7 @@ one-line description. We should show the best ones.
     - `security` — Auth, policies, CSRF, rate limiting, secure coding
     - `api-design` — REST conventions, versioning, deprecation
     - `database` — MariaDB optimization, indexing, query performance
-- [ ] Add "Featured Commands" section with 8-10 top commands
+- [x] Add "Featured Commands" section with 8-10 top commands
   - Table format: | Command | What it does |
   - Examples:
     - `/commit` — Stage and commit with Conventional Commits
@@ -382,7 +382,7 @@ one-line description. We should show the best ones.
     - `/review-changes` — Self-review before creating a PR
     - `/jira-ticket` — Read ticket from branch, implement feature
 - [ ] Link each skill/command name to its SKILL.md for browsability (like GitHub/awesome-copilot)
-- [ ] Add "→ Browse all 93 skills" link at the bottom of the table
+- [x] Add "→ Browse all 93 skills" link at the bottom of the table
 
 ---
 

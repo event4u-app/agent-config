@@ -125,7 +125,7 @@ Personal and project settings come from `config/agent-settings.template.ini` (me
 - [x] Profile switching without reinstall (just change `cost_profile=` in `.agent-settings`)
 - [ ] Implement matrix resolution in agent runtime (read `cost_profile`, apply matrix, honour overrides)
 - [ ] Profile auto-detection: if runtime package installed → suggest `balanced`
-- [ ] Add profile section to README (already drafted in current README "Modes" section)
+- [x] Add profile section to README (see "You don't need everything" section with Minimal/Balanced/Full table)
 
 ### Success metric
 New user installs, does NOT configure anything, and gets a good experience.
