@@ -23,6 +23,14 @@ npm install @event4u/agent-config
 
 Done. Your agent now follows your team's standards. [More install options →](docs/installation.md)
 
+Then try the guided first-run experience:
+
+```bash
+task first-run
+```
+
+→ [Full getting started guide](docs/getting-started.md)
+
 ---
 
 ## How it works
@@ -123,6 +131,7 @@ Skills follow the [Agent Skills open standard](https://agentskills.io).
 
 | Document | Content |
 |---|---|
+| [**Getting Started**](docs/getting-started.md) | First run, 3-test experience, profiles, next steps |
 | [**Installation**](docs/installation.md) | Plugin setup, Composer/npm, Git submodule, install.sh details |
 | [**Architecture**](docs/architecture.md) | System layers, content pipeline, tool support matrix |
 | [**Development**](docs/development.md) | Prerequisites, editing workflow, all `task` commands, project structure |
