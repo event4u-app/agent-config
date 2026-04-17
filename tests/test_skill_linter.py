@@ -97,7 +97,9 @@ source: project
     )
 
     result = lint_file(path)
-    assert result.status == "pass"
+    # bare_noun_name warning for "example" is expected
+    assert result.status in ("pass", "pass_with_warnings")
+    assert not any(issue.severity == "error" for issue in result.issues)
 
 
 def test_vague_validation_fails(tmp_path: Path) -> None:
@@ -535,3 +537,183 @@ source: project
     result = lint_file(path)
     assert not any(issue.code == "pointer_only_skill" for issue in result.issues)
     assert not any(issue.code == "guideline_dependent_skill" for issue in result.issues)
+
+
+
+# --- Execution quality checks ---
+
+
+def test_execution_skill_without_analysis_fails(tmp_path: Path) -> None:
+    """Execution skill with implementation language but no analysis signals → ERROR."""
+    path = write_file(
+        tmp_path,
+        ".augment/skills/developer-execution/SKILL.md",
+        """\
+---
+name: developer-execution
+description: "Implement changes efficiently"
+source: package
+---
+
+# developer-execution
+
+## When to use
+
+When implementing and fixing code.
+
+## Procedure
+
+1. Implement the change
+2. Modify the tests
+3. Fix any issues
+4. Validate the result
+5. Refactor if needed
+""",
+    )
+
+    result = lint_file(path)
+    assert any(issue.code == "missing_analysis_before_action" for issue in result.issues)
+
+
+def test_execution_skill_with_analysis_passes(tmp_path: Path) -> None:
+    """Execution skill that includes analysis signals → no error."""
+    path = write_file(
+        tmp_path,
+        ".augment/skills/developer-execution/SKILL.md",
+        """\
+---
+name: developer-execution
+description: "Implement changes with analysis first"
+source: package
+---
+
+# developer-execution
+
+## When to use
+
+When implementing and fixing code.
+
+## Procedure
+
+1. Analyze the existing code and understand the current behavior
+2. Inspect the relevant files and trace the data flow
+3. Implement the change
+4. Verify with real execution using curl or Playwright
+5. Do not retry blindly — analyze errors first
+6. If requirements are unclear, ask for clarification
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(issue.code == "missing_analysis_before_action" for issue in result.issues)
+    assert not any(issue.code == "missing_real_verification" for issue in result.issues)
+
+
+def test_execution_skill_without_verification_fails(tmp_path: Path) -> None:
+    """Execution skill without verification signals → ERROR."""
+    path = write_file(
+        tmp_path,
+        ".augment/skills/developer-action/SKILL.md",
+        """\
+---
+name: developer-action
+description: "Implement code changes"
+source: package
+---
+
+# developer-action
+
+## When to use
+
+When implementing code changes.
+
+## Procedure
+
+1. Analyze the existing code
+2. Understand the current behavior
+3. Implement the changes
+4. Review the code
+""",
+    )
+
+    result = lint_file(path)
+    assert any(issue.code == "missing_real_verification" for issue in result.issues)
+
+
+def test_non_execution_skill_skips_checks(tmp_path: Path) -> None:
+    """Non-execution skills should not trigger execution quality checks."""
+    path = write_file(
+        tmp_path,
+        ".augment/skills/api-design/SKILL.md",
+        """\
+---
+name: api-design
+description: "Design REST APIs"
+source: package
+---
+
+# api-design
+
+## When to use
+
+When designing API endpoints.
+
+## Procedure
+
+1. Define the resource
+2. Choose HTTP methods
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(issue.code == "missing_analysis_before_action" for issue in result.issues)
+    assert not any(issue.code == "missing_real_verification" for issue in result.issues)
+
+
+def test_commands_excluded_from_execution_checks(tmp_path: Path) -> None:
+    """Commands should be excluded from execution quality checks entirely."""
+    path = write_file(
+        tmp_path,
+        ".augment/commands/fix-something.md",
+        """\
+---
+name: fix-something
+description: "Fix implementation issues"
+---
+
+# /fix-something
+
+## Steps
+
+### 1. Implement the fix
+
+Modify the code and fix the issues.
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(issue.code == "missing_analysis_before_action" for issue in result.issues)
+
+
+def test_guidelines_excluded_from_execution_checks(tmp_path: Path) -> None:
+    """Guidelines should be excluded from execution quality checks."""
+    path = write_file(
+        tmp_path,
+        ".augment/guidelines/php/testing.md",
+        """\
+---
+description: "Testing patterns"
+---
+
+# Testing Guidelines
+
+## Patterns
+
+- Implement tests using Pest
+- Fix flaky tests by analyzing timing
+- Validate behavior before committing
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(issue.code == "missing_analysis_before_action" for issue in result.issues)

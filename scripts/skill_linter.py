@@ -795,6 +795,158 @@ def lint_interaction_quality(path: Path, text: str) -> List[Issue]:
     return issues
 
 
+# --- Execution quality checks ---
+
+# File name signals for execution-oriented artifacts
+_EXEC_FILE_SIGNALS = (
+    "execution", "debug", "implement", "developer", "action",
+    "validation", "testing", "coder", "bug", "fix",
+)
+
+# Content signals that indicate execution-oriented artifact
+_EXEC_CONTENT_SIGNALS = (
+    "implement", "debug", "refactor", "modify", "fix",
+    "verify", "validate", "runtime", "test", "coding",
+    "before acting", "before coding", "before changing",
+)
+
+
+def _is_execution_artifact(path: Path, text: str) -> bool:
+    """Detect if artifact is execution/implementation oriented.
+
+    Only skills and rules qualify — commands and guidelines are excluded
+    because commands are workflows (not execution guidance) and guidelines
+    are coding patterns (not developer workflow enforcement).
+    """
+    path_lower = str(path).lower()
+    text_lower = text.lower()
+
+    # Exclude commands and guidelines — they are not execution-oriented
+    if "/commands/" in path_lower or "/guidelines/" in path_lower:
+        return False
+
+    # File name match — strong signal
+    if any(sig in path_lower for sig in _EXEC_FILE_SIGNALS):
+        return True
+
+    # Content match — need at least 5 signals to avoid false positives
+    # (many artifacts mention "implement" or "fix" without being execution-focused)
+    matches = sum(1 for sig in _EXEC_CONTENT_SIGNALS if sig in text_lower)
+    return matches >= 5
+
+
+def lint_execution_quality(path: Path, text: str) -> List[Issue]:
+    """Check execution-oriented artifacts for developer workflow quality."""
+    if not _is_execution_artifact(path, text):
+        return []
+
+    issues: List[Issue] = []
+    text_lower = text.lower()
+    path_lower = str(path).lower()
+
+    # Strong match = file name signal; weak match = content-only signal
+    is_strong_match = any(sig in path_lower for sig in _EXEC_FILE_SIGNALS)
+
+    # --- Signal groups ---
+    analysis_signals = (
+        "analyze", "inspect", "understand", "read relevant",
+        "review existing", "trace flow", "read affected",
+        "check current", "before acting", "before coding",
+    )
+
+    verification_signals = (
+        "verify", "validate", "test", "real execution",
+        "run endpoint", "playwright", "curl", "postman",
+        "debugger", "run tests", "hit the endpoint",
+    )
+
+    verification_tool_signals = (
+        "playwright", "curl", "postman", "xdebug",
+        "browser", "http::fake",
+    )
+
+    debug_runtime_signals = (
+        "debugger", "xdebug", "mcp debugger", "runtime inspection",
+        "trace execution", "breakpoint", "step through",
+    )
+
+    efficient_tooling_signals = (
+        "jq", " rg ", "grep", "filter", "selective",
+        "extract", "targeted", "--json", "--filter",
+    )
+
+    anti_bruteforce_signals = (
+        "avoid retr", "do not brute", "do not guess",
+        "do not retry blind", "analyze before retry",
+        "blind retr", "trial-and-error", "trial and error",
+        "max 2 retries", "stop and rethink",
+    )
+
+    clarification_signals = (
+        "ask", "clarif", "unclear", "missing information",
+        "do not assume", "don't assume", "instead of assuming",
+    )
+
+    # Helper
+    def has_any(signals: tuple[str, ...]) -> bool:
+        return any(s in text_lower for s in signals)
+
+    # Detect implementation/change language
+    change_signals = ("implement", "modify", "fix", "refactor", "change", "update", "code")
+    has_change_language = any(s in text_lower for s in change_signals)
+
+    # --- Check 1: Missing analysis-before-action (ERROR, skills only) ---
+    # Rules describe constraints, not workflows — they don't need analysis sections
+    is_skill = "/skills/" in str(path).lower()
+    if is_skill and has_change_language and not has_any(analysis_signals):
+        issues.append(Issue("error", "missing_analysis_before_action",
+                            "Execution-oriented skill encourages implementation "
+                            "without requiring prior analysis of existing system"))
+
+    # --- Check 2: Missing real verification (ERROR, skills with strong match) ---
+    if is_skill and is_strong_match and has_change_language and not has_any(verification_signals):
+        issues.append(Issue("error", "missing_real_verification",
+                            "Implementation/debugging skill does not require "
+                            "real verification after changes"))
+
+    # Checks 3-7 only apply to strong matches (file name signal) to avoid noise
+    # on generic skills that happen to mention "implement" or "fix"
+    if is_strong_match:
+        # --- Check 3: Missing verification tool mapping (WARNING) ---
+        if has_any(verification_signals) and not has_any(verification_tool_signals):
+            issues.append(Issue("warning", "missing_verification_tool_mapping",
+                                "Verification is generic — does not reference concrete "
+                                "tools (Playwright, curl, Postman, Xdebug)"))
+
+        # --- Check 4: Missing runtime debug guidance (WARNING) ---
+        debug_context = any(s in text_lower for s in ("debug", "execution flow", "trace", "unexpected behavior"))
+        if debug_context and not has_any(debug_runtime_signals):
+            issues.append(Issue("warning", "missing_runtime_debug_guidance",
+                                "Debugging/execution artifact does not mention "
+                                "runtime debug tools (Xdebug, debugger, breakpoints)"))
+
+        # --- Check 5: Missing efficient tooling guidance (WARNING) ---
+        data_context = any(s in text_lower for s in ("api", "log", "json", "response", "output", "data"))
+        if data_context and not has_any(efficient_tooling_signals):
+            issues.append(Issue("warning", "missing_efficient_tooling_guidance",
+                                "Artifact does not encourage targeted filtering tools "
+                                "(jq, rg, grep) for reducing output"))
+
+        # --- Check 6: Missing anti-bruteforce guidance (WARNING, skills only) ---
+        if is_skill and has_change_language and not has_any(anti_bruteforce_signals):
+            issues.append(Issue("warning", "missing_anti_bruteforce_guidance",
+                                "Execution guidance lacks explicit anti-retry / "
+                                "anti-bruteforce behavior"))
+
+        # --- Check 7: Missing clarification guard (WARNING, skills only) ---
+        if is_skill and has_change_language and not has_any(clarification_signals):
+            issues.append(Issue("warning", "missing_clarification_guard",
+                                "Implementation guidance does not require clarification "
+                                "when requirements are incomplete"))
+
+    return issues
+
+
 def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
     # Skip README files — they are not lintable artifacts
     if path.name.lower() == "readme.md":
@@ -829,6 +981,12 @@ def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
     interaction_issues = lint_interaction_quality(display_path, text)
     if interaction_issues:
         result.issues.extend(interaction_issues)
+        result.status = classify_status(result.issues)
+
+    # Post-processing: execution quality checks (errors/warnings)
+    execution_issues = lint_execution_quality(display_path, text)
+    if execution_issues:
+        result.issues.extend(execution_issues)
         result.status = classify_status(result.issues)
 
     return result
