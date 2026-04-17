@@ -6,18 +6,20 @@ description: "When a skill declares execution metadata — enforce safety constr
 
 # Runtime Safety
 
-Execution extends skills, not replaces reasoning or review.
+## Core principle
+
+Execution is an extension of skills, not a replacement for reasoning or review.
 
 ## Constraints
 
-- Default type `manual` — no execution block = instructional only
-- `assisted` must produce proposal, never execute silently
-- `automated` requires:
+- Default execution type is `manual` — skills without an execution block are instructional only
+- `assisted` execution must produce a proposal, never execute silently
+- `automated` execution requires:
   - `handler` ≠ `none`
   - `safety_mode: strict`
-  - Explicit `allowed_tools` (can be `[]`)
-  - Verification path in procedure
-- No arbitrary code execution — handlers are allowlisted only
+  - Explicit `allowed_tools` declaration (can be empty `[]`)
+  - A verification step defined in the skill's steps
+- No arbitrary code execution — handlers are allowlisted values only
 - No bypass of rules, linter, or reviewer standards
 - No execution without declared intent in frontmatter
 
@@ -25,15 +27,16 @@ Execution extends skills, not replaces reasoning or review.
 
 `none`, `shell`, `php`, `node`, `internal`
 
-Other values → linter error.
+Any other value is a linter error.
 
 ## Escalation
 
+If a skill's execution type or handler is unclear:
 1. Default to `manual`
-2. Ask user before assuming `assisted` or `automated`
+2. Ask the user before assuming `assisted` or `automated`
 
-## Not covered
+## What this rule does NOT cover
 
-- Tool registry/permissions (tool-integration)
-- Runtime hooks/error handling (runtime hooks)
-- Async execution (not in scope)
+- Tool registry and permissions (see tool-integration roadmap)
+- Runtime hooks and error handling (see runtime hooks PR)
+- Async execution (not in scope for this phase)

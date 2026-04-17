@@ -18,7 +18,7 @@ Execution is an extension of skills, not a replacement for reasoning or review.
   - `handler` ≠ `none`
   - `safety_mode: strict`
   - Explicit `allowed_tools` declaration (can be empty `[]`)
-  - A verification path in the skill's procedure
+  - A verification step defined in the skill's steps
 - No arbitrary code execution — handlers are allowlisted values only
 - No bypass of rules, linter, or reviewer standards
 - No execution without declared intent in frontmatter
