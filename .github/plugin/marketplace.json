@@ -10,8 +10,8 @@
   },
   "plugins": [
     {
-      "name": "governed-agent-system",
-      "description": "Full governed agent system with rules, skills, commands, guidelines, and runtime tooling.",
+      "name": "agent-config",
+      "description": "Governed agent system — rules, skills, commands, and guidelines for AI-assisted development.",
       "version": "1.0.0",
       "source": ".",
       "category": "governance",

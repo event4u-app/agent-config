@@ -8,19 +8,19 @@ instead of copying files via `install.sh`.
 ### Augment CLI
 
 1. Add marketplace: `auggie plugin marketplace add event4u-app/agent-config`
-2. Install plugin: `auggie plugin install governed-agent-system@event4u-agent-config`
+2. Install plugin: `auggie plugin install agent-conf@event4u`
 3. Optional: Copy `augment-settings.json` into your project's `.augment/settings.json` to auto-recommend for your team.
 
 ### Claude Code
 
 1. Add marketplace: `claude plugin marketplace add event4u-app/agent-config`
-2. Install plugin: `claude plugin install governed-agent-system@event4u-agent-config`
+2. Install plugin: `claude plugin install agent-conf@event4u`
 3. Optional: Copy `claude-settings.json` into your project's `.claude/settings.json`.
 
 ### Copilot CLI
 
 1. Add marketplace: `copilot plugin marketplace add event4u-app/agent-config`
-2. Install plugin: `copilot plugin install governed-agent-system@event4u-agent-config`
+2. Install plugin: `copilot plugin install agent-conf@event4u`
 3. Optional: Copy `copilot-settings.json` into your project's `.github/copilot/settings.json`.
 
 ### Cursor / Cline / Windsurf / Augment VSCode

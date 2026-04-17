@@ -1,12 +1,12 @@
 {
   "// Instructions": "Copy this into your project's .augment/settings.json to auto-recommend the agent-config marketplace.",
   "// After install": "Run: auggie plugin marketplace add event4u-app/agent-config",
-  "// Then enable": "Run: auggie plugin install governed-agent-system@event4u-agent-config",
+  "// Then enable": "Run: auggie plugin install agent-conf@event4u",
 
   "recommendedMarketplaces": [
     "event4u-app/agent-config"
   ],
   "enabledPlugins": {
-    "governed-agent-system@event4u-agent-config": true
+    "agent-conf@event4u": true
   }
 }

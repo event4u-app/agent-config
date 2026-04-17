@@ -4,6 +4,6 @@
   "// Install marketplace": "Run: claude plugin marketplace add event4u-app/agent-config",
 
   "enabledPlugins": {
-    "governed-agent-system@event4u-agent-config": true
+    "agent-conf@event4u": true
   }
 }
