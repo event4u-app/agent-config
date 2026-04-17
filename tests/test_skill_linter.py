@@ -965,3 +965,45 @@ When working with API endpoints and controllers.
 
     result = lint_file(path)
     assert not any(issue.code == "missing_backend_verification_example" for issue in result.issues)
+
+
+# --- Governance checks ---
+
+
+def test_uncompressed_without_compressed_warns(tmp_path: Path) -> None:
+    """Uncompressed file without compressed variant → warning."""
+    path = write_file(
+        tmp_path,
+        ".augment.uncompressed/rules/orphan-rule.md",
+        """\
+---
+description: "When orphan behavior occurs"
+---
+
+# orphan-rule
+
+- Do not leave orphans
+""",
+    )
+
+    result = lint_file(path, repo_root=tmp_path)
+    assert any(issue.code == "compressed_variant_missing" for issue in result.issues)
+
+
+def test_uncompressed_with_compressed_passes(tmp_path: Path) -> None:
+    """Uncompressed file with matching compressed variant → no warning."""
+    content = """\
+---
+description: "When paired behavior occurs"
+---
+
+# paired-rule
+
+- Always have a pair
+"""
+    write_file(tmp_path, ".augment.uncompressed/rules/paired-rule.md", content)
+    write_file(tmp_path, ".augment/rules/paired-rule.md", content)
+
+    path = tmp_path / ".augment.uncompressed" / "rules" / "paired-rule.md"
+    result = lint_file(path, repo_root=tmp_path)
+    assert not any(issue.code == "compressed_variant_missing" for issue in result.issues)

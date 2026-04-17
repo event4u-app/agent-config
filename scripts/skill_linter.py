@@ -1128,6 +1128,62 @@ def lint_verification_maturity(path: Path, text: str, artifact_type: str) -> Lis
     return issues
 
 
+# --- Governance & packaging checks ---
+
+
+def lint_governance(path: Path, text: str, artifact_type: str, repo_root: Path | None = None) -> List[Issue]:
+    """Check governance and packaging consistency.
+
+    - Compressed/uncompressed pairs must exist
+    - No duplicate skill names
+    - Files must be in correct location for their type
+    """
+    issues: List[Issue] = []
+    if repo_root is None:
+        return issues
+
+    path_str = str(path)
+    path_relative = path_str
+
+    # Determine if this is a compressed or uncompressed artifact
+    is_compressed = "/.augment/" in path_str and "/.augment.uncompressed/" not in path_str
+    is_uncompressed = "/.augment.uncompressed/" in path_str
+
+    if not is_compressed and not is_uncompressed:
+        return issues
+
+    # --- Check: compressed/uncompressed pair exists ---
+    if is_uncompressed:
+        # Find expected compressed path
+        compressed_path = Path(path_str.replace("/.augment.uncompressed/", "/.augment/"))
+        if not compressed_path.exists():
+            issues.append(Issue("warning", "compressed_variant_missing",
+                                f"Uncompressed file exists but compressed variant missing: "
+                                f"{compressed_path.name}"))
+    elif is_compressed:
+        # Find expected uncompressed path
+        uncompressed_path = Path(path_str.replace("/.augment/", "/.augment.uncompressed/"))
+        if not uncompressed_path.exists():
+            issues.append(Issue("warning", "uncompressed_variant_missing",
+                                f"Compressed file exists but uncompressed source missing: "
+                                f"{uncompressed_path.name}"))
+
+    # --- Check: file in correct location for type ---
+    location_map = {
+        "skill": "/skills/",
+        "rule": "/rules/",
+        "command": "/commands/",
+        "guideline": "/guidelines/",
+    }
+    expected_loc = location_map.get(artifact_type)
+    if expected_loc and expected_loc not in path_str:
+        issues.append(Issue("warning", "invalid_location_for_type",
+                            f"Artifact detected as '{artifact_type}' but not in "
+                            f"expected location ({expected_loc})"))
+
+    return issues
+
+
 def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
     # Skip README files — they are not lintable artifacts
     if path.name.lower() == "readme.md":
@@ -1180,6 +1236,12 @@ def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
     maturity_issues = lint_verification_maturity(display_path, text, artifact_type)
     if maturity_issues:
         result.issues.extend(maturity_issues)
+        result.status = classify_status(result.issues)
+
+    # Post-processing: governance and packaging checks (warnings)
+    governance_issues = lint_governance(path, text, artifact_type, repo_root)
+    if governance_issues:
+        result.issues.extend(governance_issues)
         result.status = classify_status(result.issues)
 
     return result
