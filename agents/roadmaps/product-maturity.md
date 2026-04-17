@@ -237,67 +237,216 @@ Cool for maintainers. Invisible and irrelevant to most users.
 
 ---
 
-## Gap 5: No clear user journey
+## Gap 5: No clear user journey — First 5 Minutes Experience
 
-**Problem:** This is the biggest UX gap.
+**Core UX principle:** The user must not understand the system — they must **experience** it.
+No theory first. No settings discussion. User acts, sees the difference, then (optionally) learns why.
 
 **Current experience:**
 1. Install → works
 2. ... now what? Understand the system?
 3. Configure settings?
-4. Hope it works? 😄
+4. Hope it works?
 
 **Target experience:**
 1. Install → works immediately (minimal profile, zero config)
-2. Use agent → agent behaves differently (analyzes first, validates, follows standards)
-3. See value → "wow, this is better" (before/after is visible)
-4. Extend → add runtime, add tools for GitHub/Jira integration
+2. Use agent → agent behaves noticeably differently
+3. See value → "this is better than before"
+4. Understand why → optional, after the aha-moment
+5. Extend → add runtime, tools, observability when ready
 
-### First 5 Minutes Experience
+### The First 5 Minutes — Detailed UX Flow
 
-**Minute 0-1:** Install
+#### Minute 0-1: Installation
+
+User does exactly ONE thing:
+
 ```bash
 composer require --dev event4u/agent-config-core
 bash vendor/event4u/agent-config-core/scripts/setup.sh
-# Output: "✅ agent-config installed. Profile: minimal. Your agent now follows team standards."
 ```
 
-**Minute 1-2:** First interaction — agent analyzes first, checks patterns, proposes structured changes.
-The difference should be **noticeable without explanation**.
+Output:
+```
+✅ agent-config installed. Profile: minimal.
+Your agent now analyzes before coding and follows your team's standards.
 
-**Minute 2-3:** Agent demonstrates value — asks clarifying questions instead of guessing,
-validates changes against existing code, mentions running quality checks.
+Try it: ask your agent to "refactor this function".
+```
 
-**Minute 3-5:** Discovery — user asks "what can you do?" → agent lists available skills and commands.
+What happens in the background:
+- Rules active (think-before-action, ask-when-uncertain, improve-before-implement, etc.)
+- Core skills active (30 skills)
+- Core commands active (20 commands)
+- No runtime overhead, no reports, no token explosion
+- System is light but effective
+
+#### Minute 1-2: First real interaction (AHA MOMENT #1)
+
+User follows the prompt from install output:
+
+```
+"Refactor this function"
+```
+
+**Expected agent behavior (different from vanilla):**
+- Does NOT immediately start coding
+- Analyzes the function first
+- Checks existing patterns in the codebase
+- May ask clarifying questions
+- Proposes structured changes with reasoning
+
+**The aha-moment:** "Oh — the agent thinks first."
+
+#### Minute 2-3: Vague request test (AHA MOMENT #2)
+
+User gives an intentionally vague request:
+
+```
+"Add caching to this"
+```
+
+**Expected agent behavior:**
+- Does NOT guess what "this" means
+- Asks: "Which layer? Redis? Application cache? Query cache?"
+- Validates against existing caching patterns
+- Proposes approach before implementing
+
+**The aha-moment:** "It doesn't just do random stuff."
+
+#### Minute 3-4: Feature implementation test (AHA MOMENT #3)
+
+User requests a real feature:
+
+```
+"Implement this feature"
+```
+
+**Expected agent behavior:**
+- Reads existing code patterns
+- Follows project conventions (naming, structure, testing)
+- Considers existing architecture
+- Does NOT build isolated new structure that ignores what's there
+
+**The aha-moment:** "It works like a developer, not like ChatGPT."
+
+#### Minute 4-5: Explainer + optional upgrade
+
+NOW (and only now) the user gets context:
+
+```
+What you just experienced:
+- Agent analyzes before acting (think-before-action rule)
+- Agent asks instead of guessing (ask-when-uncertain rule)
+- Agent respects existing code (improve-before-implement rule)
+
+This is enforced automatically. No configuration needed.
+
+Want more? Set profile=balanced in .agent-settings to enable:
+- Runtime execution layer
+- Better validation
+- Limited observability
+Still cost-controlled.
+```
+
+### Three tests, three aha-moments
+
+| Test | What it shows | User thinks |
+|---|---|---|
+| "Refactor this function" | Agent analyzes first | "Oh, it thinks before acting" |
+| "Add caching to this" | Agent asks instead of guessing | "It doesn't just make stuff up" |
+| "Implement this feature" | Agent respects existing code | "It works like a real developer" |
+
+### What must work for this flow
+
+**Must be active (in minimal profile):**
+- `think-before-action` rule — agent analyzes before coding
+- `ask-when-uncertain` rule — agent asks instead of guessing
+- `improve-before-implement` rule — agent validates before building
+- `scope-control` rule — agent doesn't over-engineer
+- `verify-before-complete` rule — agent verifies with real execution
+- Core skills for the user's domain (Laravel, PHP, testing, etc.)
+
+**Must NOT happen:**
+- No runtime overhead visible
+- No JSON files created
+- No extra prompting about settings or profiles
+- No "understanding the system" required
+
+### Anti-patterns to avoid in UX design
+
+- ❌ **Explaining before testing** — kills the aha-moment
+- ❌ **Settings first** — overwhelms immediately
+- ❌ **No concrete example** — user doesn't know what to do
+- ❌ **Too many options** — decision fatigue
+- ❌ **"Read the docs to get started"** — install must work without reading anything
+
+### Optional: CLI support for guided first run
+
+```bash
+task first-run
+```
+
+Output:
+```
+🚀 First Run Guide
+
+Your agent-config is active with profile: minimal
+
+Try these 3 things to see the difference:
+
+1. Ask: "Refactor this function"
+   → Watch: agent analyzes before coding
+
+2. Ask: "Add caching to this"
+   → Watch: agent asks clarifying questions
+
+3. Ask: "Implement this feature"
+   → Watch: agent respects your existing codebase
+
+After that, check docs/getting-started.md for next steps.
+```
 
 ### Tasks
 
-- [ ] Design the "first 5 minutes" flow
-- [ ] install.sh prints clear success message with profile info
-- [ ] Agent's first interaction demonstrates governance value
-- [ ] Consider: `/status` command that lists available skills
-- [ ] Consider: post-install guide (3 things to try)
-- [ ] Create docs/getting-started.md with guided first experience
+- [ ] Design install.sh success output with try-it prompt
+- [ ] Create `docs/getting-started.md` with the 3-test flow
+- [ ] Verify: think-before-action, ask-when-uncertain, improve-before-implement
+  rules produce noticeably different behavior in minimal profile
+- [ ] Consider: `task first-run` CLI guide
+- [ ] Consider: `/status` command showing active profile and available skills
+- [ ] Add "What you just experienced" section to getting-started.md
+- [ ] Test the flow with a fresh project: is the difference obvious in 5 minutes?
 
 ---
 
 ## Gap 6: Minimal mode must feel magical
 
+**The most important sentence:**
+> The user must not understand the system — they must **experience** it.
+
 **Target:** User installs `core` with `minimal` profile and feels:
 > "This agent is better. It thinks before acting, catches mistakes,
 > and follows conventions I didn't even know I had."
+
+### What "magical" means concretely
+
+After install, without ANY configuration, the agent:
+1. Analyzes code before changing it (visible: agent reads files, traces flow)
+2. Asks when requirements are unclear (visible: numbered options, specific questions)
+3. Follows coding standards (visible: consistent naming, patterns, structure)
+4. Writes structured commits (visible: Conventional Commits format)
+5. Validates before claiming done (visible: runs tests, quality checks)
+
+These 5 behaviors should be **immediately noticeable** to any developer.
 
 ### Tasks
 
 - [ ] Audit every rule in core: does it improve the first experience?
 - [ ] Remove/disable rules that add friction without visible value in minimal
-- [ ] Ensure immediately noticeable behaviors:
-  - Analyzes before editing
-  - Asks instead of guessing
-  - Validates changes
-  - Follows coding standards
-  - Writes structured commits
-- [ ] Test: minimal-mode agent vs vanilla agent on same task. Is difference obvious?
+- [ ] Test: minimal-mode agent vs vanilla agent on same task — is the difference obvious?
+- [ ] Create comparison document: "vanilla agent output" vs "governed agent output" for 3 tasks
+- [ ] Ensure install output includes a concrete "try this" prompt
 
 ---
 
