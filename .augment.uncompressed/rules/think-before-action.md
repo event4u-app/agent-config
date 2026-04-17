@@ -16,6 +16,50 @@ source: package
 - If requirements are unclear, ask a precise clarification question instead of making hidden assumptions
 - Refactors must preserve behavior, validation, examples, and anti-failure guidance unless there is an explicit reason to change them
 
+## The Developer Workflow
+
+Work like a real developer — not a text generator. Follow this order strictly:
+
+1. **Understand** — Read the task, ticket, acceptance criteria. If unclear: ask, don't assume.
+2. **Analyze** — Read affected code, trace data flow, compare with requirements and existing patterns.
+3. **Plan** — Decide what to change, what NOT to change, and how to verify success.
+4. **Implement** — Make focused changes. Follow existing patterns. No unrelated rewrites.
+5. **Verify** — Run tests, hit the endpoint, check the UI. Real execution, not "should work".
+
+Skipping steps 1-3 is the #1 cause of wrong implementations and wasted retries.
+
+## Verify with real tools
+
+Always verify changes with actual execution — not by reading code and assuming it works.
+
+| What changed | How to verify |
+|---|---|
+| **Backend/API** | `curl`, Postman (or Postman MCP if available), test endpoint |
+| **Frontend/UI** | Playwright MCP or browser — check rendered state, interactions |
+| **Logic/flow** | Xdebug (or Xdebug MCP if available) — trace execution, inspect variables |
+| **CLI/Jobs** | Run the command, check side effects, verify exit code |
+| **Database** | Query the result, check migrations ran correctly |
+
+If a debugging/testing tool is available as MCP server — prefer it over manual alternatives.
+
+## Reduce output — targeted tools over full dumps
+
+Never load full datasets into context. Extract what you need:
+
+- `jq` for JSON: `curl -s /api/users | jq '.[0] | {id, email}'` — not the full response
+- `rg` / `grep` for text: search specific patterns, not full files
+- `head`, `tail`, `cut`, `sort`, `uniq` for narrowing results
+- `--filter`, `--json`, `--format` flags on CLI tools — use them
+- Laravel: `route:list --json | jq` over raw `route:list` dump
+- Logs: filter by request ID, timestamp, or error type — not full log files
+
+## No blind retries
+
+- If something fails: **read the error**, analyze the cause, then fix it
+- Do NOT retry the same approach hoping for a different result
+- Do NOT loop through trial-and-error when one targeted inspection would reveal the cause
+- Max 2 retries for the same approach — then stop and rethink
+
 ## Open files are context, not intent
 
 The editor may report that the user has a file open. This is **background context only** —

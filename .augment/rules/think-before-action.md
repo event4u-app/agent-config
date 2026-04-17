@@ -16,6 +16,47 @@ source: package
 - If requirements are unclear, ask a precise clarification question instead of making hidden assumptions
 - Refactors must preserve behavior, validation, examples, and anti-failure guidance unless there is an explicit reason to change them
 
+## The Developer Workflow
+
+Work like a real developer. Follow this order strictly:
+
+1. **Understand** — Read task, ticket, acceptance criteria. Unclear? Ask, don't assume.
+2. **Analyze** — Read affected code, trace data flow, compare with requirements.
+3. **Plan** — What to change, what NOT to change, how to verify.
+4. **Implement** — Focused changes. Follow existing patterns. No unrelated rewrites.
+5. **Verify** — Run tests, hit endpoint, check UI. Real execution, not "should work".
+
+Skipping steps 1-3 = #1 cause of wrong implementations and wasted retries.
+
+## Verify with real tools
+
+| What changed | How to verify |
+|---|---|
+| **Backend/API** | `curl`, Postman (or Postman MCP), test endpoint |
+| **Frontend/UI** | Playwright MCP or browser — rendered state, interactions |
+| **Logic/flow** | Xdebug (or Xdebug MCP) — trace execution, inspect variables |
+| **CLI/Jobs** | Run command, check side effects, exit code |
+| **Database** | Query result, check migrations |
+
+If debugging/testing tool available as MCP server — prefer it.
+
+## Reduce output — targeted tools over full dumps
+
+Never load full datasets into context. Extract what you need:
+
+- `jq` for JSON: `curl -s /api/users | jq '.[0] | {id, email}'`
+- `rg` / `grep` for text — specific patterns, not full files
+- `head`, `tail`, `cut`, `sort`, `uniq` to narrow results
+- `--filter`, `--json`, `--format` flags on CLI tools
+- Logs: filter by request ID, timestamp, error type — not full files
+
+## No blind retries
+
+- Fail? **Read the error**, analyze cause, then fix
+- Do NOT retry same approach hoping for different result
+- Do NOT loop trial-and-error when one inspection reveals the cause
+- Max 2 retries same approach — then stop and rethink
+
 ## Open files are context, not intent
 
 The editor may report an open file. This is **background context only** — NOT the user's intent.
