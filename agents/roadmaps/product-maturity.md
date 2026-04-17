@@ -452,7 +452,7 @@ power each test and what might need adjustment.
 | `think-before-action` rule (always) | ✅ Yes | Strong. Developer Workflow (Understand → Analyze → Plan → Implement → Verify) |
 | `scope-control` rule (always) | ✅ Yes | "Stay within established project structure" |
 | `developer-like-execution` skill | ✅ Yes | Think → analyze → verify → execute workflow |
-| Dedicated `structured-refactoring` skill | ❌ No | **Consider creating.** GPT suggested this — a skill specifically for structured, safe refactoring with analysis → goals → approach → apply → validate steps. |
+| Dedicated "structured-refactoring" skill | ❌ No | **Consider creating.** GPT suggested this — a skill specifically for structured, safe refactoring with analysis → goals → approach → apply → validate steps. |
 
 **Potential gap:** No dedicated refactoring skill. The rules enforce analysis-first behavior,
 but a refactoring-specific skill would ensure the OUTPUT is consistently structured
@@ -464,7 +464,7 @@ but a refactoring-specific skill would ensure the OUTPUT is consistently structu
 |---|---|---|
 | `ask-when-uncertain` rule (always) | ✅ Yes | Good, but triggers could be more explicit |
 | `improve-before-implement` rule (auto) | ✅ Yes | "Is the request clear?" check |
-| Dedicated `handle-vague-request` skill | ❌ No | **Consider creating.** A skill for detecting ambiguity, identifying missing info, and asking targeted clarification questions. |
+| Dedicated "handle-vague-request" skill | ❌ No | **Consider creating.** A skill for detecting ambiguity, identifying missing info, and asking targeted clarification questions. |
 
 **Potential gap:** `ask-when-uncertain` says "when in doubt, ask" but doesn't explicitly
 list vague-request patterns. Consider adding explicit triggers:
@@ -480,7 +480,7 @@ Agent MUST ask if request matches: "improve", "optimize", "add caching",
 | `improve-before-implement` rule (auto) | ✅ Yes | "Does it fit existing architecture?" check |
 | `scope-control` rule (always) | ✅ Yes | "Don't replace existing patterns" |
 | `validate-feature-fit` skill | ✅ Yes | Check for duplicates, contradictions, scope creep |
-| Dedicated `respect-existing-codebase` rule | ❌ No | **Not needed.** Already covered by scope-control + improve-before-implement. |
+| Dedicated "respect-existing-codebase" rule | ❌ No | **Not needed.** Already covered by scope-control + improve-before-implement. |
 
 **No gap.** This test should already work well with existing rules.
 
@@ -489,10 +489,10 @@ Agent MUST ask if request matches: "improve", "optimize", "add caching",
 | Change | Type | Priority | Effort |
 |---|---|---|---|
 | Strengthen `ask-when-uncertain` with vague-request triggers | Rule update | High | Low |
-| Consider `structured-refactoring` skill | New skill | Medium | Medium |
-| Consider `handle-vague-request` skill | New skill | Medium | Medium |
-| `respect-existing-codebase` rule | NOT needed | — | — |
-| `enforce-analysis-gate` rule | NOT needed | — | — |
+| Consider "structured-refactoring" skill | New skill | Medium | Medium |
+| Consider "handle-vague-request" skill | New skill | Medium | Medium |
+| "respect-existing-codebase" rule | NOT needed | — | — |
+| "enforce-analysis-gate" rule | NOT needed | — | — |
 
 Note: Our existing rules (`think-before-action`, `ask-when-uncertain`, `improve-before-implement`,
 `scope-control`) are already MORE detailed and stronger than GPT's suggested replacements.
@@ -502,8 +502,8 @@ The gap is not in rule content but in skill-level guidance for specific scenario
 
 - [ ] Audit every rule in core: does it improve the first experience?
 - [ ] Strengthen `ask-when-uncertain`: add explicit vague-request pattern triggers
-- [ ] Evaluate: create `structured-refactoring` skill (analysis → goals → approach → validate)
-- [ ] Evaluate: create `handle-vague-request` skill (detect ambiguity → ask targeted questions)
+- [ ] Evaluate: create "structured-refactoring" skill (analysis → goals → approach → validate)
+- [ ] Evaluate: create "handle-vague-request" skill (detect ambiguity → ask targeted questions)
 - [ ] Remove/disable rules that add friction without visible value in minimal
 - [ ] Test: minimal-mode agent vs vanilla agent on same task — is difference obvious?
 - [ ] Create comparison document: "vanilla agent output" vs "governed agent output" for 3 tasks
