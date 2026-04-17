@@ -2,8 +2,8 @@
     "name": "@event4u/agent-config",
     "version": "1.3.3",
     "description": "Shared agent configuration — skills, rules, commands, guidelines, and templates for AI coding tools",
-    "license": "UNLICENSED",
-    "private": true,
+    "license": "MIT",
+    "private": false,
     "scripts": {
         "postinstall": "bash scripts/postinstall.sh"
     }

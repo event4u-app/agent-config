@@ -208,3 +208,7 @@ task lint-skills   # Lint skills, rules, commands
 - [Task](https://taskfile.dev/) (development only)
 
 No runtime dependencies — static configuration files only.
+
+## License
+
+[MIT](LICENSE) — you can use, fork, and redistribute this freely.

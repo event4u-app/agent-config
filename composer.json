@@ -2,7 +2,7 @@
     "name": "event4u/agent-config",
     "description": "Shared agent configuration — skills, rules, commands, guidelines, and templates for AI coding tools",
     "type": "library",
-    "license": "proprietary",
+    "license": "MIT",
     "require": {
         "php": ">=8.0"
     },
