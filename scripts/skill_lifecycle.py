@@ -89,7 +89,7 @@ class LifecycleReport:
 def discover_skills(root: Path) -> List[Path]:
     """Find all SKILL.md files."""
     uncompressed = root / ".agent-src.uncompressed" / "skills"
-    compressed = root / ".augment" / "skills"
+    compressed = root / ".agent-src" / "skills"
     base = uncompressed if uncompressed.exists() else compressed
     if not base.exists():
         return []

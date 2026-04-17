@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # install.sh — Portable agent-config installer
-# Syncs .augment/ to target project: copies rules, symlinks everything else.
+# Reads from vendor's .agent-src/ (fallback: .augment/ for pre-2.0 packages) and
+# writes the target project's .augment/ tree: copies rules, symlinks everything else.
 # Creates tool-specific directories for Claude Code, Cursor, Cline, Windsurf, Gemini.
 #
 # Usage:
@@ -74,9 +75,13 @@ parse_args() {
         fi
     fi
 
-    # Validate
-    if [[ ! -d "$SOURCE_DIR/.augment" ]]; then
-        log_error "Source directory not found: $SOURCE_DIR/.augment"
+    # Resolve source layout: prefer .agent-src/ (v2.0+), fallback to .augment/ (pre-2.0).
+    if [[ -d "$SOURCE_DIR/.agent-src" ]]; then
+        SOURCE_PAYLOAD="$SOURCE_DIR/.agent-src"
+    elif [[ -d "$SOURCE_DIR/.augment" ]]; then
+        SOURCE_PAYLOAD="$SOURCE_DIR/.augment"
+    else
+        log_error "Source payload not found: $SOURCE_DIR/.agent-src (or .augment)"
         exit 1
     fi
 }
@@ -643,17 +648,17 @@ main() {
     $DRY_RUN && ! $QUIET && echo "    Mode: DRY RUN"
     echo ""
 
-    # 1. Hybrid sync .augment/
-    sync_hybrid "$SOURCE_DIR/.augment" "$TARGET_DIR/.augment"
+    # 1. Hybrid sync payload → target/.augment/
+    sync_hybrid "$SOURCE_PAYLOAD" "$TARGET_DIR/.augment"
     log_info "Synced .augment/ (rules copied, rest symlinked)"
 
     # 2. Copy standalone files from templates if missing on the target.
-    #    We copy from .augment/templates/ (generic placeholders), NOT from the
-    #    package's own root AGENTS.md / copilot-instructions.md — those are
-    #    meta docs about the package itself and would leak package-specific
-    #    content into consumer projects.
-    copy_if_missing "$SOURCE_DIR/.augment/templates/AGENTS.md" "$TARGET_DIR/AGENTS.md"
-    copy_if_missing "$SOURCE_DIR/.augment/templates/copilot-instructions.md" "$TARGET_DIR/.github/copilot-instructions.md"
+    #    We copy from templates/ (generic placeholders), NOT from the package's
+    #    own root AGENTS.md / copilot-instructions.md — those are meta docs
+    #    about the package itself and would leak package-specific content
+    #    into consumer projects.
+    copy_if_missing "$SOURCE_PAYLOAD/templates/AGENTS.md" "$TARGET_DIR/AGENTS.md"
+    copy_if_missing "$SOURCE_PAYLOAD/templates/copilot-instructions.md" "$TARGET_DIR/.github/copilot-instructions.md"
 
     # 3. Create tool-specific symlinks
     create_tool_symlinks "$TARGET_DIR"

@@ -2,7 +2,7 @@
 """
 Compression quality checker for agent-config packages.
 
-Compares .agent-src.uncompressed/ source files with their .augment/ compressed versions.
+Compares .agent-src.uncompressed/ source files with their .agent-src/ compressed versions.
 Checks that compression preserved structural integrity:
 - All headings from source present in compressed
 - All code blocks preserved exactly
@@ -25,7 +25,7 @@ from typing import List, Literal
 Severity = Literal["error", "warning", "info"]
 
 SOURCE_DIR = Path(".agent-src.uncompressed")
-TARGET_DIR = Path(".augment")
+TARGET_DIR = Path(".agent-src")
 
 
 @dataclass

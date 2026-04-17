@@ -2,8 +2,12 @@ version: '3'
 
 tasks:
   sync:
-    desc: Sync non-.md files from .agent-src.uncompressed/ to .augment/ + cleanup stale
+    desc: Sync .agent-src.uncompressed/ → .agent-src/, then project → .augment/
     cmd: bash scripts/compress.sh --sync
+
+  project-augment:
+    desc: Rebuild the .augment/ projection from .agent-src/ (copies rules, symlinks rest)
+    cmd: python3 scripts/compress.py --project-augment
 
   sync-list:
     desc: List ALL .md files (regardless of change status)
@@ -14,7 +18,7 @@ tasks:
     cmd: bash scripts/compress.sh --changed
 
   sync-check:
-    desc: Check if .augment/ is in sync with .agent-src.uncompressed/ (for CI)
+    desc: Check if .agent-src/ is in sync with .agent-src.uncompressed/ (for CI)
     cmd: bash scripts/compress.sh --check
 
   sync-check-hashes:

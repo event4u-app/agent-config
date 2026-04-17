@@ -26,3 +26,6 @@ __pycache__/
 
 # Ignore the agent settings
 .agent-settings
+
+# Generated Augment Code projection of .agent-src/ (rebuilt by `task sync`)
+/.augment/
