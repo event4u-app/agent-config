@@ -54,17 +54,17 @@ tasks:
     desc: Run all tests (bash + Python)
     cmds:
       - bash tests/test_install.sh
-      - python3 -m unittest tests.test_compress tests.test_install_py -v
+      - python3 -m pytest tests/ -v
 
   test-install:
     desc: Run install.sh + install.py tests
     cmds:
       - bash tests/test_install.sh
-      - python3 -m unittest tests.test_install_py -v
+      - python3 -m pytest tests/test_install_py.py -v
 
   test-python:
-    desc: Run Python unit tests (compress + install)
-    cmd: python3 -m unittest tests.test_compress tests.test_install_py -v
+    desc: Run all Python unit tests (pytest-discovered)
+    cmd: python3 -m pytest tests/ -v
 
   generate-catalog:
     desc: Regenerate llms.txt and docs/skills-catalog.md from SKILL.md frontmatter

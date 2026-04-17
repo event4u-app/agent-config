@@ -40,5 +40,10 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install test deps
+        run: pip install pytest
+
       - name: Run Python tests
-        run: python3 -m unittest tests.test_compress -v
+        # pytest discovers every test module in tests/. Prevents new test
+        # files from silently missing CI coverage.
+        run: python3 -m pytest tests/ -v
