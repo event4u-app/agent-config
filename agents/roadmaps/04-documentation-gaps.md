@@ -348,9 +348,9 @@ This package follows Semantic Versioning (semver.org).
 
 | Problem | Status | Branch |
 |---------|--------|--------|
-| CHANGELOG erstellen | ⬜ Offen | — |
-| README-Behauptungen korrigieren | ⬜ Offen | — |
-| CONTRIBUTING.md erstellen | ⬜ Offen | — |
-| Troubleshooting-Doku erstellen | ⬜ Offen | — |
-| Portability-Check erweitern | ⬜ Offen | — |
-| Versioning-Strategie dokumentieren | ⬜ Offen | — |
+| CHANGELOG erstellen | ✅ Erledigt (`CHANGELOG.md`, 14 Releases) | `feat/improve-agent-setup-2` |
+| README-Behauptungen korrigieren | ✅ Erledigt (Tool-Support-Legende, Requirements, "What your agent is asked to do") | `feat/improve-agent-setup-2` |
+| CONTRIBUTING.md erstellen | ✅ Erledigt (`CONTRIBUTING.md` inkl. SemVer-Policy) | `feat/improve-agent-setup-2` |
+| Troubleshooting-Doku erstellen | ✅ Erledigt (`docs/troubleshooting.md`) | `feat/improve-agent-setup-2` |
+| Portability-Check erweitern | ✅ Erledigt (Root-Dateien + Identifier-Blocklist, galawork hardcoding entfernt) | `feat/improve-agent-setup` + `feat/improve-agent-setup-2` |
+| Versioning-Strategie dokumentieren | ✅ Erledigt (CONTRIBUTING.md Versioning-Policy-Abschnitt) | `feat/improve-agent-setup-2` |

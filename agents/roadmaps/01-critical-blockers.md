@@ -253,6 +253,6 @@ Das ist nützlich, aber nicht der volle Funktionsumfang.
 
 | Problem | Status | Branch |
 |---------|--------|--------|
-| AGENTS.md Template trennen | ⬜ Offen | — |
-| Lizenz klären und dokumentieren | ⬜ Offen | — |
-| README Tool-Support ehrlich beschreiben | ⬜ Offen | — |
+| AGENTS.md Template trennen | ✅ Erledigt | `feat/improve-agent-setup` + `feat/improve-agent-setup-2` |
+| Lizenz klären und dokumentieren | ✅ Erledigt — MIT | `feat/improve-agent-setup-2` |
+| README Tool-Support ehrlich beschreiben | ✅ Erledigt | `feat/improve-agent-setup-2` |

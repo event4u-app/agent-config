@@ -255,8 +255,8 @@ mit den Kern-Layern dargestellt. Das ist misleading.
 
 | Problem | Status | Branch |
 |---------|--------|--------|
-| Installer canonical klären | ⬜ Offen | — |
-| Repository-Struktur aufräumen | ⬜ Offen | — |
-| PHP-Version in composer.json | ⬜ Offen | — |
-| Augment-Root-Konflikt lösen | ⬜ Offen | — |
-| Observability-Doku vereinfachen | ⬜ Offen | — |
+| Installer canonical klären | ✅ Erledigt (docs/installation.md Canonical-Box, Wrapper-Hinweise) | `feat/improve-agent-setup-2` |
+| Repository-Struktur aufräumen | ⬜ Offen (Follow-up: `.gitattributes export-ignore`, npm `files` whitelist) | — |
+| PHP-Version in composer.json | ⬜ Offen — bewusst `>=8.0`; später evtl. anheben | — |
+| Augment-Root-Konflikt lösen | ✅ Erledigt — `.augmentignore` schließt `.augment.uncompressed/` und Tool-Mirrors aus | `feat/improve-agent-setup-2` |
+| Observability-Doku vereinfachen | ⬜ Offen — Experimental-Hinweis steht im README, separates Opt-in-Doc nachziehen | — |

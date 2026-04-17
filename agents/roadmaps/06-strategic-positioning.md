@@ -191,3 +191,15 @@ Das ist ein legitimer Zustand — aber er sollte bewusst gewählt sein, nicht de
 
 Das Paket hat das Potenzial, das beste öffentlich verfügbare Agent-Setup für PHP/Laravel-Teams zu sein.
 Es ist noch nicht dort. Aber der Weg dorthin ist nicht lang.
+
+---
+
+## Status-Tracking
+
+| Entscheidung / Aktion | Status | Branch |
+|---|---|---|
+| Szenario-Wahl (A/B/C) | ✅ Szenario B gewählt (MIT + öffentlich + Zielgruppe PHP/Laravel) | — |
+| MIT-Lizenz | ✅ Erledigt | `feat/improve-agent-setup` |
+| Zielgruppe im README benannt ("Who this is for") | ✅ Erledigt | `feat/improve-agent-setup-2` |
+| Opinionated Defaults (`language: de`, `ide: cursor`) | ⬜ Offen — Follow-up | — |
+| Community/Contributor-Kanal | ⬜ Offen — aktuell nur Issue-Templates + CONTRIBUTING | — |
