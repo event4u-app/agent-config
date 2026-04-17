@@ -113,6 +113,7 @@ tasks:
     desc: Verify sync + generated tool outputs are clean
     cmds:
       - task: sync-check
+      - task: sync-check-hashes
       - task: sync
       - task: generate-tools
       - git diff --quiet
@@ -144,11 +145,12 @@ tasks:
     cmd: python3 scripts/skill_linter.py --report
 
   ci:
-    desc: Run core CI checks locally
+    desc: Run ALL CI checks locally (must pass before push)
     cmds:
-      - task: test
-      - task: lint-skills
+      - task: consistency
+      - task: check-compression
       - task: check-refs
       - task: check-portability
-      - task: check-compression
-      - task: consistency
+      - task: lint-skills
+      - task: test
+      - task: lint-readme
