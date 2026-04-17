@@ -273,6 +273,156 @@ This means: internal package split → external plugin generation. Clean separat
 
 ---
 
+## Composer-first Project Discovery
+
+**The real-world scenario:** A team installs agent-config via Composer into their project.
+The goal is NOT "every developer installs their own setup" but:
+
+> **The project installs it once. Tools discover it locally. Developers just open their editor.**
+
+### Architecture: Composer-installed, Project-configured, Tool-discovered
+
+After `composer require event4u/agent-config`, the project contains:
+- The package in `vendor/event4u/agent-config/`
+- A small set of **project bridge files** that point tools to the package
+- A shared `.agent-settings`
+- Tool-specific discovery hints
+
+### Two layers
+
+**Layer A — Package content** (in vendor/, never committed by consumer):
+```
+vendor/event4u/agent-config/
+  plugin/
+    agent-config/
+      plugin.json          ← canonical plugin definition
+      .augment/             ← rules, skills, commands
+  templates/
+    consumer-settings/
+      .agent-settings.minimal
+      .agent-settings.balanced
+    project-bridge/
+      .vscode.settings.json
+      .augment.settings.json
+      .github.plugin.marketplace.json
+  integration/
+    vscode/               ← VS Code specific integration helpers
+    augment/              ← Augment specific integration helpers
+    copilot/              ← Copilot CLI specific integration helpers
+```
+
+**Layer B — Project bridge** (committed by team, tiny files):
+```
+.agent-settings                        ← profile=minimal
+.vscode/settings.json                  ← chat.pluginLocations → vendor path
+.augment/settings.json                 ← enabledPlugins → agent-config
+.github/plugin/marketplace.json        ← local marketplace → vendor path
+```
+
+### How tools discover the package
+
+**VS Code / Copilot:**
+VS Code supports `chat.pluginLocations` in workspace settings — local plugin paths.
+```json
+{
+  "chat.pluginLocations": {
+    "./vendor/event4u/agent-config/plugin/agent-config": true
+  }
+}
+```
+This means: Composer installs → `.vscode/settings.json` committed → plugin just works.
+
+**Augment:**
+Augment supports `enabledPlugins` in project settings, merged with user settings.
+```json
+{
+  "enabledPlugins": {
+    "agent-config@event4u": true
+  }
+}
+```
+Project-level activation — no per-developer install needed.
+
+**Copilot CLI:**
+Copilot CLI reads `.github/plugin/marketplace.json` for local/repo marketplaces.
+The marketplace points to the vendor path. One marketplace registration → done.
+
+### Trust boundaries (honest assessment)
+
+Not every tool allows fully invisible auto-activation of third-party plugins.
+
+| Tool | Auto-discovery | Trust step needed |
+|---|---|---|
+| VS Code/Copilot | `chat.pluginLocations` in workspace settings | May show trust prompt for new plugins |
+| Augment | `enabledPlugins` in project settings | Marketplace must be known |
+| Copilot CLI | `.github/plugin/marketplace.json` | Marketplace add step |
+| Cursor/Cline/Windsurf | N/A (use install.sh symlinks) | None (file-based) |
+
+**Realistic promise:**
+> Composer installation makes the package project-wide available.
+> Supported tools can discover it locally with minimal additional effort.
+
+NOT: "install Composer and everything works for everyone automatically."
+
+### Project bridge generation
+
+The project bridge files should be **generated once** during initial setup:
+
+Option A — `setup.sh` (current approach):
+```bash
+bash vendor/event4u/agent-config/scripts/setup.sh
+```
+
+Option B — Composer script (more natural for PHP teams):
+```json
+{
+  "scripts": {
+    "agent-config:setup": "php vendor/event4u/agent-config/bin/setup.php"
+  }
+}
+```
+
+Both should:
+- Copy `.agent-settings` from template (if not exists)
+- Generate `.vscode/settings.json` plugin entry (if VS Code detected)
+- Generate `.augment/settings.json` (if Augment detected)
+- Generate `.github/plugin/marketplace.json` (if Copilot detected)
+- Be idempotent (safe to run multiple times)
+- Never overwrite existing user configs
+
+### What the team commits
+
+After initial setup, the team commits:
+```
+.agent-settings                    ← shared profile (e.g., profile=balanced)
+.vscode/settings.json              ← pluginLocations entry (if VS Code)
+.augment/settings.json             ← enabledPlugins entry (if Augment)
+.github/plugin/marketplace.json    ← local marketplace (if Copilot)
+```
+
+New team members: `composer install` → open editor → plugin is discovered.
+No per-developer setup. No manual plugin installation.
+
+### Tasks
+
+- [ ] Design project bridge file templates in `templates/project-bridge/`
+- [ ] Extend `setup.sh` to generate bridge files per detected tool
+- [ ] Consider: `bin/setup.php` as Composer-native alternative
+- [ ] Document: "What the team should commit" in docs/installation.md
+- [ ] Test: fresh project → composer require → setup → VS Code discovers plugin
+- [ ] Test: fresh project → composer require → setup → Augment activates plugin
+- [ ] Test: fresh project → composer require → setup → Copilot CLI reads marketplace
+- [ ] Depends on: stable plugin path formats per tool
+
+### Key insight
+
+> The project installs once. Tools discover locally. Developers just code.
+
+This is fundamentally different from "every developer installs a plugin".
+For teams, project-level discovery > individual plugin installation.
+
+---
+
 ## Target Directory Structure
 
 ```
@@ -344,6 +494,20 @@ agent-config/                          ← Monorepo root (current repo)
 │
 ├── .augment.uncompressed/             ← Source of truth (stays at root)
 ├── .augment/                          ← Compressed output (stays at root for dev)
+├── plugin/
+│   └── agent-config/
+│       ├── plugin.json                ← Canonical plugin definition
+│       └── .augment/                  ← Symlink or copy of compressed output
+├── templates/
+│   ├── consumer-settings/             ← .agent-settings templates per profile
+│   └── project-bridge/                ← Tool-specific bridge file templates
+│       ├── .vscode.settings.json
+│       ├── .augment.settings.json
+│       └── .github.plugin.marketplace.json
+├── integration/                       ← Tool-specific integration helpers
+│   ├── vscode/
+│   ├── augment/
+│   └── copilot/
 ├── docs/                              ← Package documentation
 ├── agents/                            ← Dev documentation
 ├── scripts/                           ← Shared dev scripts (compress, lint, CI)
