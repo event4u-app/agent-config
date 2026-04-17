@@ -410,6 +410,20 @@ one-line description. We should show the best ones.
 | First-run separated from install | ✅ Done |
 | Consumer repo stays clean | ✅ Done (plugin = zero local files) |
 | "No Task / No Make required" explicitly stated | ✅ Done |
+| Profile quick-reference in docs/installation.md | ✅ Done |
+| "First test" section directly after install in docs | ✅ Done |
+| `task first-run` clearly optional | ✅ Done |
+
+### GPT final validation (April 2026)
+
+GPT confirmed the installation is now on the right track. Key feedback:
+- Plugin-first strategy: ✅ correct approach
+- No build-tool dependency: ✅ confirmed as critical
+- First-run as optional: ✅ confirmed ("only if optional")
+- Fallback available: ✅ confirmed
+
+GPT suggested speculative install commands (`claude plugins install <url>`, Augment JSON config)
+that don't match real CLI syntax. **Ignored** — we use actual plugin commands.
 
 ---
 

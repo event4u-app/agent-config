@@ -98,6 +98,42 @@ Point it to `https://github.com/event4u-app/agent-config`.
 
 ---
 
+## After installation: choose a profile
+
+The system works immediately with sensible defaults. Optionally, create `.agent-settings`
+to choose a profile:
+
+```ini
+profile=minimal
+```
+
+| Profile | What's active | For whom |
+|---|---|---|
+| `minimal` (default) | Rules + Skills only, zero overhead | New users, solo devs |
+| `balanced` | + Runtime, limited observability | Most teams |
+| `full` | + Tool audit, lifecycle reports | Platform teams |
+| `enterprise` | + Strict governance, max reporting | Large teams |
+
+No profile configured = `minimal` behavior. → [Full profile details](customization.md)
+
+---
+
+## First test
+
+After installation, try these 3 prompts with your agent:
+
+1. `"Refactor this function"` → agent should analyze first, not jump into code
+2. `"Add caching to this"` → agent should ask clarifying questions
+3. `"Implement this feature"` → agent should respect your existing codebase
+
+If the agent behaves differently than before — it's working.
+
+**Optional:** Run `task first-run` for a guided walkthrough (requires [Task](https://taskfile.dev/)).
+
+→ [Full getting started guide](getting-started.md)
+
+---
+
 ## How install.sh works
 
 ### Hybrid sync strategy
