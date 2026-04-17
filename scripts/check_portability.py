@@ -173,13 +173,19 @@ SKIP_PATTERNS = [
     ".agent-settings",   # project config
 ]
 
-# Hardcoded blocklist of identifiers from past/adjacent projects that must
+# Optional blocklist of identifiers from past/adjacent projects that must
 # never appear anywhere in the shared package, even when the auto-detector
-# would not flag them (e.g. because the repo was renamed or split). Add
-# entries here when legacy leakage is fixed to prevent regressions.
-FORBIDDEN_IDENTIFIERS: list[str] = [
-    "galawork",
-]
+# would not flag them (e.g. because the repo was renamed or split). The
+# list is loaded from the environment variable AGENT_CONFIG_BLOCKLIST
+# (comma-separated) so the package itself ships without hardcoding any
+# consumer-specific names. Maintainers of a fork with legacy debt can set
+# the variable in their CI to catch regressions.
+def _load_forbidden_identifiers() -> list[str]:
+    raw = __import__("os").environ.get("AGENT_CONFIG_BLOCKLIST", "")
+    return [part.strip() for part in raw.split(",") if part.strip()]
+
+
+FORBIDDEN_IDENTIFIERS: list[str] = _load_forbidden_identifiers()
 
 
 def _compile_patterns(root: Path) -> tuple[list[tuple[re.Pattern, str, Severity]], list[str]]:
@@ -248,9 +254,9 @@ def scan_all(root: Path) -> tuple[List[Violation], list[str]]:
        `.augment.uncompressed/` only. The package's own root AGENTS.md and
        copilot-instructions.md are meta docs ABOUT the package, so the
        detector's own hits (e.g. "event4u", "agent-config") are expected.
-    2. Hardcoded FORBIDDEN_IDENTIFIERS — applied to every scanned file,
-       including the root files. Catches leakage from renamed/adjacent
-       projects (e.g. legacy "galawork" references).
+    2. Optional FORBIDDEN_IDENTIFIERS from AGENT_CONFIG_BLOCKLIST —
+       applied to every scanned file, including the root files. Catches
+       leakage from renamed or adjacent projects in downstream forks.
     """
     patterns, detected = _compile_patterns(root)
     forbidden = _compile_forbidden_patterns()

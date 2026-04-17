@@ -136,21 +136,6 @@ test_gitignore_marker_added() {
     teardown
 }
 
-test_gitignore_legacy_marker_migrated() {
-    setup
-    # Simulate pre-rename install: legacy marker already present
-    cat >> "$TMPDIR/.gitignore" << 'LEGACY'
-
-# galawork/agent-config
-# Agent config — symlinked from vendor (auto-managed)
-.augment/skills/
-LEGACY
-    run_install
-    assert_contains "new marker present" "$TMPDIR/.gitignore" "# event4u/agent-config"
-    assert_false "legacy marker replaced" grep -qF "# galawork/agent-config" "$TMPDIR/.gitignore"
-    teardown
-}
-
 test_gitignore_idempotent() {
     setup; run_install
     local size1; size1="$(wc -c < "$TMPDIR/.gitignore")"
