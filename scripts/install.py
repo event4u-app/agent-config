@@ -289,10 +289,15 @@ def main(argv: list[str]) -> int:
         print()
         success("Done.")
         print()
+        print("  Try these 3 prompts with your agent:")
+        print('    1. "Refactor this function"   → agent analyzes first')
+        print('    2. "Add caching to this"      → agent asks instead of guessing')
+        print('    3. "Implement this feature"   → agent respects your codebase')
+        print()
         print("  Next steps:")
-        print('  1. Open your agent and try: "Refactor this function"')
-        print("  2. Commit .agent-settings and bridge files to your repo")
-        print("  3. New team members just run composer install / npm install — done")
+        print("    • Commit .agent-settings and bridge files to your repo")
+        print("    • New team members just run composer install / npm install — done")
+        print("    • Full walkthrough: https://github.com/event4u-app/agent-config/blob/main/docs/getting-started.md")
         print()
     return 0
 

@@ -491,7 +491,7 @@ The gap is not in rule content but in skill-level guidance for specific scenario
 - [ ] Remove/disable rules that add friction without visible value in minimal
 - [ ] Test: minimal-mode agent vs vanilla agent on same task — is difference obvious?
 - [ ] Create comparison document: "vanilla agent output" vs "governed agent output" for 3 tasks
-- [ ] Ensure install output includes a concrete "try this" prompt
+- [x] Ensure install output includes a concrete "try this" prompt (3 aha-moment prompts + getting-started link in scripts/install.py)
 
 ---
 
