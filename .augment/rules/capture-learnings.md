@@ -35,6 +35,8 @@ A learning may be promoted to rule/skill ONLY if ALL gates pass:
 - Pattern that improved outcome and should be reused
 - Missing constraint that caused issues
 - **User frustration or complaint** — extract the underlying failure pattern, don't ignore or defend
+- **New skill/rule/guideline created** — evaluate if it should be contributed upstream (→ `upstream-proposal` rule)
+- **Significant improvement to existing skill/rule** — consider upstream contribution
 
 ## Do NOT capture
 
