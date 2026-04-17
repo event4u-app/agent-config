@@ -439,7 +439,7 @@ Option B — Composer script (more natural for PHP teams):
 Both should:
 - Copy `.agent-settings` from template (if not exists)
 - Generate `.vscode/settings.json` plugin entry (if VS Code detected)
-- Generate `.augment/settings.json` (if Augment detected)
+- Generate Augment settings JSON (if Augment detected)
 - Generate `.github/plugin/marketplace.json` (if Copilot detected)
 - Be idempotent (safe to run multiple times)
 - Never overwrite existing user configs
