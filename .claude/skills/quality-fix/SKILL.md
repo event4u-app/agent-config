@@ -1,1 +1,1 @@
-../../../.augment/commands/quality-fix.md
+../../../.agent-src/commands/quality-fix.md

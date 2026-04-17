@@ -1,1 +1,1 @@
-../../.augment/rules/upstream-proposal.md
+../../.agent-src/rules/upstream-proposal.md

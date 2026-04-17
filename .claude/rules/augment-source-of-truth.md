@@ -1,1 +1,1 @@
-../../.augment/rules/augment-source-of-truth.md
+../../.agent-src/rules/augment-source-of-truth.md

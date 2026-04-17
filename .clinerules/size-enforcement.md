@@ -1,1 +1,1 @@
-../.augment/rules/size-enforcement.md
+../.agent-src/rules/size-enforcement.md

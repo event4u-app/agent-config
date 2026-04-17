@@ -1,1 +1,1 @@
-../../../.augment/commands/package-reset.md
+../../../.agent-src/commands/package-reset.md

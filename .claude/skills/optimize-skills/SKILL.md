@@ -1,1 +1,1 @@
-../../../.augment/commands/optimize-skills.md
+../../../.agent-src/commands/optimize-skills.md

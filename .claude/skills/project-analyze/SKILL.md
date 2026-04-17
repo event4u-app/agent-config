@@ -1,1 +1,1 @@
-../../../.augment/commands/project-analyze.md
+../../../.agent-src/commands/project-analyze.md

@@ -1,1 +1,1 @@
-../.augment/rules/package-ci-checks.md
+../.agent-src/rules/package-ci-checks.md

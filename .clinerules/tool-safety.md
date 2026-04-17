@@ -1,1 +1,1 @@
-../.augment/rules/tool-safety.md
+../.agent-src/rules/tool-safety.md

@@ -1,1 +1,1 @@
-../../../.augment/commands/bug-investigate.md
+../../../.agent-src/commands/bug-investigate.md

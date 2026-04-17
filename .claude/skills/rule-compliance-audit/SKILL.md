@@ -1,1 +1,1 @@
-../../../.augment/commands/rule-compliance-audit.md
+../../../.agent-src/commands/rule-compliance-audit.md

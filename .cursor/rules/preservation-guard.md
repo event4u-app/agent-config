@@ -1,1 +1,1 @@
-../../.augment/rules/preservation-guard.md
+../../.agent-src/rules/preservation-guard.md

@@ -1,1 +1,1 @@
-../../.augment/rules/slash-commands.md
+../../.agent-src/rules/slash-commands.md

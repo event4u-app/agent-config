@@ -1,1 +1,1 @@
-../../.augment/rules/think-before-action.md
+../../.agent-src/rules/think-before-action.md

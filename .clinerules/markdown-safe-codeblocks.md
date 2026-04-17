@@ -1,1 +1,1 @@
-../.augment/rules/markdown-safe-codeblocks.md
+../.agent-src/rules/markdown-safe-codeblocks.md

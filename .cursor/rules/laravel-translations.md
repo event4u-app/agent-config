@@ -1,1 +1,1 @@
-../../.augment/rules/laravel-translations.md
+../../.agent-src/rules/laravel-translations.md

@@ -1,1 +1,1 @@
-../../.augment/rules/capture-learnings.md
+../../.agent-src/rules/capture-learnings.md

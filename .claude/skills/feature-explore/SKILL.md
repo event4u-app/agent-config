@@ -1,1 +1,1 @@
-../../../.augment/commands/feature-explore.md
+../../../.agent-src/commands/feature-explore.md

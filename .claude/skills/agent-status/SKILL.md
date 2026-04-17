@@ -1,1 +1,1 @@
-../../../.augment/commands/agent-status.md
+../../../.agent-src/commands/agent-status.md

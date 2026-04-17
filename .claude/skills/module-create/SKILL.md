@@ -1,1 +1,1 @@
-../../../.augment/commands/module-create.md
+../../../.agent-src/commands/module-create.md

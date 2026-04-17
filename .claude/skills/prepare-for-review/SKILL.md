@@ -1,1 +1,1 @@
-../../../.augment/commands/prepare-for-review.md
+../../../.agent-src/commands/prepare-for-review.md

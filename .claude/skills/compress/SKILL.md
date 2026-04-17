@@ -1,1 +1,1 @@
-../../../.augment/commands/compress.md
+../../../.agent-src/commands/compress.md

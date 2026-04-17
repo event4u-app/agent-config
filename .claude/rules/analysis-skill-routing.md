@@ -1,1 +1,1 @@
-../../.augment/rules/analysis-skill-routing.md
+../../.agent-src/rules/analysis-skill-routing.md

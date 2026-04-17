@@ -1,1 +1,1 @@
-../../.augment/rules/model-recommendation.md
+../../.agent-src/rules/model-recommendation.md

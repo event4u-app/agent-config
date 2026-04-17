@@ -1,1 +1,1 @@
-../.augment/rules/rule-type-governance.md
+../.agent-src/rules/rule-type-governance.md

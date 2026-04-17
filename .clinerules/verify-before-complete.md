@@ -1,1 +1,1 @@
-../.augment/rules/verify-before-complete.md
+../.agent-src/rules/verify-before-complete.md

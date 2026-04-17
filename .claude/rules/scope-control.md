@@ -1,1 +1,1 @@
-../../.augment/rules/scope-control.md
+../../.agent-src/rules/scope-control.md

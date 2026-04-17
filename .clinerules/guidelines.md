@@ -1,1 +1,1 @@
-../.augment/rules/guidelines.md
+../.agent-src/rules/guidelines.md

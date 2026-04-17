@@ -1,1 +1,1 @@
-../../.augment/rules/token-efficiency.md
+../../.agent-src/rules/token-efficiency.md

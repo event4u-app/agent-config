@@ -1,1 +1,1 @@
-../../../.augment/commands/feature-plan.md
+../../../.agent-src/commands/feature-plan.md

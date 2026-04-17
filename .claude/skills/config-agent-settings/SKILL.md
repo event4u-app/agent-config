@@ -1,1 +1,1 @@
-../../../.augment/commands/config-agent-settings.md
+../../../.agent-src/commands/config-agent-settings.md

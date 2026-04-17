@@ -1,1 +1,1 @@
-../../../.augment/commands/create-pr-description.md
+../../../.agent-src/commands/create-pr-description.md

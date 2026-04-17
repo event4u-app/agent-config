@@ -1,1 +1,1 @@
-../../../.augment/commands/optimize-rtk-filters.md
+../../../.agent-src/commands/optimize-rtk-filters.md

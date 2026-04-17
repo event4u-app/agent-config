@@ -1,1 +1,1 @@
-../../.augment/rules/skill-improvement-trigger.md
+../../.agent-src/rules/skill-improvement-trigger.md

@@ -1,1 +1,1 @@
-../.augment/rules/downstream-changes.md
+../.agent-src/rules/downstream-changes.md

@@ -1,1 +1,1 @@
-../../.augment/rules/context-hygiene.md
+../../.agent-src/rules/context-hygiene.md
