@@ -117,29 +117,24 @@ should_copy() {
     return 1
 }
 
+# Resolve a path to its canonical form (cached per session)
+# Uses pwd -P to avoid subprocess overhead of realpath
+_resolve_path() {
+    if [[ -d "$1" ]]; then
+        (cd "$1" && pwd -P)
+    elif [[ -f "$1" ]]; then
+        echo "$(cd "$(dirname "$1")" && pwd -P)/$(basename "$1")"
+    else
+        echo "$1"
+    fi
+}
+
 # Calculate relative path from $1 (directory) to $2 (file)
 get_relative_path() {
     local from_dir to_file
-
-    # Resolve both paths to canonical form (handles /var → /private/var on macOS)
-    if command -v realpath &>/dev/null; then
-        from_dir="$(realpath "$1")"
-        to_file="$(realpath "$2")"
-    else
-        from_dir="$(cd "$1" && pwd -P)"
-        to_file="$(cd "$(dirname "$2")" && pwd -P)/$(basename "$2")"
-    fi
-
-    if command -v python3 &>/dev/null; then
-        python3 -c "import os.path; print(os.path.relpath('$to_file', '$from_dir'))"
-    elif command -v realpath &>/dev/null && realpath --relative-to=/ / &>/dev/null 2>&1; then
-        realpath --relative-to="$from_dir" "$to_file"
-    elif command -v perl &>/dev/null; then
-        perl -e 'use File::Spec; print File::Spec->abs2rel($ARGV[1], $ARGV[0])' "$from_dir" "$to_file"
-    else
-        # Pure bash fallback: compute relative path
-        _bash_relpath "$from_dir" "$to_file"
-    fi
+    from_dir="$(_resolve_path "$1")"
+    to_file="$(_resolve_path "$2")"
+    _bash_relpath "$from_dir" "$to_file"
 }
 
 # Pure bash relative path calculation (no external tools needed)
@@ -222,6 +217,15 @@ sync_hybrid() {
 
     $DRY_RUN || mkdir -p "$target_augment"
 
+    # Resolve canonical paths ONCE (avoids per-file subprocess)
+    local source_canonical target_canonical
+    source_canonical="$(_resolve_path "$source_augment")"
+    target_canonical="$(_resolve_path "$target_augment")"
+
+    # Pre-compute base relative path (target → source at the same depth)
+    local base_rel
+    base_rel="$(_bash_relpath "$target_canonical" "$source_canonical")"
+
     # Collect all source files (relative paths)
     local source_files
     source_files=$(cd "$source_augment" && find . -type f | sed 's|^\./||' | sort)
@@ -238,8 +242,10 @@ sync_hybrid() {
 
         local source_file="$source_augment/$rel_path"
         local target_file="$target_augment/$rel_path"
+        local target_dir
+        target_dir="$(dirname "$target_file")"
 
-        mkdir -p "$(dirname "$target_file")"
+        mkdir -p "$target_dir"
 
         if should_copy "$rel_path"; then
             # Remove existing symlink before copying
@@ -252,7 +258,34 @@ sync_hybrid() {
                 cp "$source_file" "$target_file"
             fi
         else
-            create_symlink "$source_file" "$target_file"
+            # Fast symlink: compute relative path from depth offset instead of per-file resolution
+            local rel_dir
+            rel_dir="$(dirname "$rel_path")"
+            local depth_prefix=""
+            if [[ "$rel_dir" != "." ]]; then
+                # Count directory depth and prepend ../ for each level
+                local depth
+                depth=$(echo "$rel_dir" | tr '/' '\n' | wc -l | tr -d ' ')
+                local i
+                for ((i=0; i<depth; i++)); do
+                    depth_prefix="../$depth_prefix"
+                done
+            fi
+            local sym_target="${depth_prefix}${base_rel}/${rel_path}"
+
+            # Remove existing file/symlink
+            if [[ -L "$target_file" ]] || [[ -f "$target_file" ]]; then
+                $DRY_RUN || rm -f "$target_file"
+            fi
+
+            if $DRY_RUN; then
+                log_verbose "symlink $target_file → $sym_target"
+            else
+                if ! ln -s "$sym_target" "$target_file" 2>/dev/null; then
+                    cp "$source_file" "$target_file"
+                    log_warn "Symlink failed, copied: $(basename "$target_file")"
+                fi
+            fi
         fi
     done <<< "$source_files"
 
