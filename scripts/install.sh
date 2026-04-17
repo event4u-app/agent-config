@@ -664,9 +664,13 @@ main() {
     sync_hybrid "$SOURCE_DIR/.augment" "$TARGET_DIR/.augment"
     log_info "Synced .augment/ (rules copied, rest symlinked)"
 
-    # 2. Copy standalone files if missing
-    copy_if_missing "$SOURCE_DIR/AGENTS.md" "$TARGET_DIR/AGENTS.md"
-    copy_if_missing "$SOURCE_DIR/.github/copilot-instructions.md" "$TARGET_DIR/.github/copilot-instructions.md"
+    # 2. Copy standalone files from templates if missing on the target.
+    #    We copy from .augment/templates/ (generic placeholders), NOT from the
+    #    package's own root AGENTS.md / copilot-instructions.md — those are
+    #    meta docs about the package itself and would leak package-specific
+    #    content into consumer projects.
+    copy_if_missing "$SOURCE_DIR/.augment/templates/AGENTS.md" "$TARGET_DIR/AGENTS.md"
+    copy_if_missing "$SOURCE_DIR/.augment/templates/copilot-instructions.md" "$TARGET_DIR/.github/copilot-instructions.md"
 
     # 3. Create tool-specific symlinks
     create_tool_symlinks "$TARGET_DIR"
