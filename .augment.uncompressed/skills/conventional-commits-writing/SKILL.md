@@ -2,6 +2,10 @@
 name: conventional-commits-writing
 description: "Use when generating, reviewing, or correcting Conventional Commit messages or squash merge titles."
 source: package
+execution:
+  type: assisted
+  handler: internal
+  allowed_tools: []
 ---
 
 # conventional-commits-writing

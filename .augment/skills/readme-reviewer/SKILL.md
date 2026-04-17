@@ -2,6 +2,10 @@
 name: readme-reviewer
 description: "Use when reviewing a README for accuracy, usability, and alignment with the actual repository. Detects invented content, broken setup steps, and structural issues."
 source: package
+execution:
+  type: assisted
+  handler: internal
+  allowed_tools: []
 ---
 
 # readme-reviewer

@@ -2,6 +2,10 @@
 name: skill-reviewer
 description: "Use when reviewing, auditing, or optimizing skills — validates against the 7 Skill Killers checklist and produces fix recommendations."
 source: package
+execution:
+  type: assisted
+  handler: internal
+  allowed_tools: []
 ---
 
 # Skill Reviewer

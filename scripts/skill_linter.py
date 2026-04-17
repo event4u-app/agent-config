@@ -472,6 +472,15 @@ def parse_execution_block(frontmatter: str) -> Optional[dict]:
             if value == '[]':
                 result[key] = []
                 result['_current_list'] = key
+            elif re.match(r'^\[.*\]$', value):
+                # Inline YAML/JSON array like [github] or ["github", "jira"]
+                inner = value[1:-1].strip()
+                if inner:
+                    items = [item.strip().strip('"').strip("'") for item in inner.split(',')]
+                    result[key] = items
+                else:
+                    result[key] = []
+                result['_current_list'] = key
             elif value == '':
                 # Could be a list starting on next line
                 result[key] = []

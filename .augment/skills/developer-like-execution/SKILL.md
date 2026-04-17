@@ -2,6 +2,10 @@
 name: developer-like-execution
 description: "Use when implementing, debugging, refactoring, or reviewing code, skills, rules, or configs. Enforces think → analyze → verify → execute workflow."
 source: package
+execution:
+  type: assisted
+  handler: internal
+  allowed_tools: []
 ---
 
 # developer-like-execution

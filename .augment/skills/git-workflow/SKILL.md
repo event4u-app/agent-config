@@ -2,6 +2,10 @@
 name: git-workflow
 description: "Use when working with Git — branch naming, commit messages, PR conventions, rebasing, or the code review process."
 source: package
+execution:
+  type: assisted
+  handler: internal
+  allowed_tools: ["github"]
 ---
 
 # git-workflow
