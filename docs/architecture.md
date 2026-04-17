@@ -97,7 +97,7 @@ health scoring, migration suggestions, and lifecycle reports.
 
 Metrics, reports, and feedback are collected and persisted but **NOT automatically injected
 into agent context**. All features are gated by settings with `cost_profile` support
-(`cheap`, `balanced`, `full`).
+(`minimal`, `balanced`, `full`, `custom`).
 
 ---
 

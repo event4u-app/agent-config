@@ -41,26 +41,28 @@ User asks: "What should I enable?" and finds no answer.
 
 ### Priority logic (resolution order)
 
-1. Load profile defaults (from `profile=` in `.agent-settings`)
-2. Read `.agent-settings` for explicit overrides
-3. Apply user overrides on top of profile defaults
+1. Load matrix defaults from `cost_profile=` in `.agent-settings`
+2. Read `.agent-settings` for explicit matrix overrides
+3. Apply explicit overrides on top of profile defaults
 
-This ensures profiles aren't too rigid — users can deviate on any single setting.
+This ensures profiles aren't too rigid — users can deviate on any single matrix value.
 
 ### Settings matrix
 
-| Setting | `minimal` | `balanced` | `full` | `enterprise` |
-|---|---|---|---|---|
-| `runtime_enabled` | false | true | true | true |
-| `observability_reports` | false | true | true | true |
-| `feedback_collection` | false | true | true | true |
-| `ci_summary_enabled` | false | true | true | true |
-| `tool_audit_enabled` | false | false | true | true |
-| `lifecycle_report_enabled` | false | false | true | true |
-| `feedback_suggestions_enabled` | false | true | true | true |
-| `runtime_auto_read_reports` | false | false | false | false |
-| `max_report_lines` | 20 | 40 | 75 | 100 |
-| `minimal_runtime_context` | true | true | true | false |
+Authoritative matrix lives in `.augment/templates/agent-settings.md`. Snapshot here for
+roadmap context:
+
+| Setting | `minimal` | `balanced` | `full` |
+|---|---|---|---|
+| `runtime_enabled` | false | true | true |
+| `observability_reports` | false | true | true |
+| `feedback_collection` | false | true | true |
+| `runtime_auto_read_reports` | false | false | true |
+| `max_report_lines` | 30 | 50 | 100 |
+| `minimal_runtime_context` | true | true | false |
+| `ci_summary_enabled` | false | false | true |
+| `feedback_suggestions_in_chat` | false | false | true |
+| `skill_improvement_pipeline` | false | false | true |
 
 ### Profile descriptions
 
@@ -68,59 +70,42 @@ This ensures profiles aren't too rigid — users can deviate on any single setti
 - For: new users, solo devs, first-time adoption
 - Active: rules + skills + commands only
 - Token cost: zero additional overhead
-- Default for: `agent-config-core` installs
+- Default for all installs
 
 **`balanced`** — recommended for most teams
 - For: small-medium teams wanting good quality with controlled overhead
-- Active: + runtime, limited observability, feedback
+- Active: + runtime, limited observability, feedback persisted locally
 - Token cost: low
-- Default for: most team installations
 
-**`full`** — all major features enabled
-- For: platform teams, internal standard installations
-- Active: + tool audit, lifecycle reports
+**`full`** — everything on
+- For: platform teams, agent infrastructure work, debugging
+- Active: reports auto-read, CI summaries, feedback in chat, skill improvement pipeline
 - Token cost: moderate
-- Note: `runtime_auto_read_reports` still false — opt-in only
 
-**`enterprise`** — strict governance, maximum visibility
-- For: large teams, governance/enablement focus
-- Active: like full, but `minimal_runtime_context=false` for richer context
-- Token cost: moderate-high
-- Note: still cost-controlled — no unguarded auto-injection
+**`custom`** — opt out of the profile
+- Every matrix value must be set explicitly in `.agent-settings`
+- No profile defaults applied
 
 ### Guardrails (hard rules)
 
-1. **`runtime_auto_read_reports=false` in ALL profiles** — prevents silent prompt bloating
-2. **`minimal_runtime_context=true` in minimal, balanced, full** — runtime helps, doesn't bloat
-3. **`tool_audit_enabled=false` in minimal, balanced** — audit is for advanced setups
-4. **`lifecycle_report_enabled=false` in minimal, balanced** — lifecycle is for maintainers
+1. **`runtime_auto_read_reports=false` in minimal + balanced** — prevents silent prompt bloating
+2. **`minimal_runtime_context=true` in minimal + balanced** — runtime helps, doesn't bloat
+3. **`ci_summary_enabled`, `feedback_suggestions_in_chat`, `skill_improvement_pipeline` opt-in only** — active only in `full`
 
-### Profile files
+### Profile files (done)
 
-Profiles live as `.profile.ini` files (for tooling) and as documentation:
+Profiles live as slim `.ini` files containing only the profile marker. The full matrix
+is defined in `.augment/templates/agent-settings.md`.
 
 ```
-profiles/
-├── minimal.profile.ini
-├── balanced.profile.ini
-├── full.profile.ini
-└── enterprise.profile.ini
+config/profiles/
+├── minimal.ini   (cost_profile=minimal)
+├── balanced.ini  (cost_profile=balanced)
+└── full.ini      (cost_profile=full)
 ```
 
-Example `minimal.profile.ini`:
-```ini
-profile=minimal
-runtime_enabled=false
-observability_reports=false
-feedback_collection=false
-ci_summary_enabled=false
-tool_audit_enabled=false
-lifecycle_report_enabled=false
-feedback_suggestions_enabled=false
-runtime_auto_read_reports=false
-max_report_lines=20
-minimal_runtime_context=true
-```
+Personal and project settings come from `config/agent-settings.template.ini` (merged by
+`bin/install.php` with the chosen profile into `.agent-settings`).
 
 ### Recommended defaults
 
@@ -128,20 +113,19 @@ minimal_runtime_context=true
 |---|---|
 | New users / first install | `minimal` |
 | Most teams | `balanced` |
-| Internal standard (our projects) | `full` |
-| Governance-heavy teams | `enterprise` |
+| Platform teams / agent infra | `full` |
 
 ### Tasks
 
-- [ ] Create profile .ini files in `profiles/` directory
-- [ ] Implement profile loading in `.agent-settings` resolution
-- [ ] `setup.sh` sets `profile=minimal` by default
+- [x] Create profile .ini files in `config/profiles/` directory (slim, marker-only)
+- [x] `bin/install.php` sets `cost_profile=minimal` by default via `config/agent-settings.template.ini`
+- [x] Create `.agent-settings` template with `cost_profile=minimal` as default
+- [x] Validate: unknown profile name → error with list of valid profiles
+- [x] Document profiles in `.augment/templates/agent-settings.md` with full matrix
+- [x] Profile switching without reinstall (just change `cost_profile=` in `.agent-settings`)
+- [ ] Implement matrix resolution in agent runtime (read `cost_profile`, apply matrix, honour overrides)
 - [ ] Profile auto-detection: if runtime package installed → suggest `balanced`
-- [ ] Document profiles in docs/customization.md with full settings matrix
 - [ ] Add profile section to README (already drafted in current README "Modes" section)
-- [ ] Profile switching without reinstall (just change `.agent-settings`)
-- [ ] Validate: unknown profile name → error with list of valid profiles
-- [ ] Create `.agent-settings` template with `profile=minimal` as default
 
 ### Success metric
 New user installs, does NOT configure anything, and gets a good experience.
@@ -165,15 +149,15 @@ Define **who** consumes feedback and **how**:
 | **CI pipeline** | Regression data, failure patterns | ci_summary.py reads feedback.json → PR comment | ✅ Already works |
 | **Skill linter** | Health scores, usage frequency | Linter reads metrics → warns on unhealthy skills | ✅ Partially works |
 | **Agent (on request)** | Past failures, improvement suggestions | Agent reads feedback ONLY when asked or when `cost_profile=full` | 🟡 Not yet |
-| **Agent (automatic)** | Pattern detection, repeated failures | Auto-inject ONLY at `enterprise` profile | 🔴 Not yet |
+| **Agent (automatic)** | Pattern detection, repeated failures | Opt-in via explicit overrides on `full` (no dedicated tier) | 🔴 Not yet |
 | **Developer (reports)** | Dashboard, lifecycle, health | `task report-stdout` reads all data | ✅ Works |
 
 ### Tasks
 
 - [ ] Define feedback consumption rules per profile
 - [ ] `minimal` + `balanced`: feedback stored, never auto-injected
-- [ ] `full`: feedback available on request ("show me recent failures")
-- [ ] `enterprise`: feedback auto-injected for repeated failure patterns
+- [ ] `full`: feedback available on request ("show me recent failures") and suggestions in chat
+- [ ] Pattern auto-injection: explicit opt-in via override, not a separate profile tier
 - [ ] Document: "feedback.json exists for CI and reports, not for the agent by default"
 - [ ] Consider: should feedback influence skill selection? (e.g., "this skill failed 3x → suggest alternative")
 
@@ -342,7 +326,7 @@ What you just experienced:
 
 This is enforced automatically. No configuration needed.
 
-Want more? Set profile=balanced in .agent-settings to enable:
+Want more? Set cost_profile=balanced in .agent-settings to enable:
 - Runtime execution layer
 - Better validation
 - Limited observability

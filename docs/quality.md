@@ -87,7 +87,7 @@ The system collects structured data for debugging and improvement:
 
 > **Important:** These files are collected but **never auto-injected** into agent context
 > unless `runtime_auto_read_reports: true` is set in `.agent-settings`.
-> Default `cost_profile` is `cheap` — zero token overhead.
+> Default `cost_profile` is `minimal` — zero token overhead.
 
 ### Reports
 

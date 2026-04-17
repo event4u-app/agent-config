@@ -212,7 +212,7 @@ You do NOT need Runtime, Observability, or Lifecycle to get value.
 - Rules are always active (no config needed)
 - Skills are used when relevant (agent decides)
 - No hidden execution
-- No automatic context expansion (cost_profile=cheap by default)
+- No automatic context expansion (cost_profile=minimal by default)
 ```
 
 ---
@@ -230,8 +230,11 @@ Not more features, not more docs — just: install → see the difference.
 ### Priority 2: Minimal mode / explicit progression (addresses W1, W3, O4)
 Offer clear modes: Minimal → Balanced → Full.
 Minimal = governance only, zero overhead. New users start here.
-The `cost_profile=cheap` setting is a foundation, but needs to be more visible.
-→ Not started. Consider: `install.sh --minimal`, starter docs, mode badges.
+The `cost_profile=minimal` setting is a foundation, but needs to be more visible.
+→ **Partially done.** Profile system consolidated: `cost_profile` canonical, `minimal`
+is default, matrix documented in `.augment/templates/agent-settings.md`, `bin/install.php`
+accepts `--profile=<minimal|balanced|full>`. Remaining: README quickstart integration,
+mode badges, explicit progression callout.
 
 ### Priority 3: Plugin distribution (addresses W2, O1, T2)
 Real plugin/marketplace distribution. Biggest lever for frictionless install.
@@ -287,7 +290,7 @@ No competitor has this. Double down — make it visible in README and marketing.
   - Rules: always active (no config)
   - Skills: used when relevant (agent decides)
   - No hidden execution, no automatic context expansion
-  - Default: `cost_profile=cheap` — zero token overhead
+  - Default: `cost_profile=minimal` — zero token overhead
 - [ ] Add explicit mode progression: Minimal → Balanced → Full
   - Table format with what's active in each mode
   - Recommend "Minimal" for new users
@@ -465,7 +468,7 @@ Checks per environment:
 - Plugin enabled in tool config?
 
 **Key requirement:** Must produce actionable output, not just "FAIL".
-Example: `FAIL: .agent-settings missing → Create with: profile=minimal`
+Example: `FAIL: .agent-settings missing → Create with: cost_profile=minimal`
 
 Tasks:
 - [ ] Design check logic per tool
