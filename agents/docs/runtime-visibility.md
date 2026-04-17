@@ -1,6 +1,6 @@
 # Runtime Visibility — Design
 
-Addresses **Gap 3** from `agents/roadmaps/product-maturity.md`: runtime is active but
+Addresses **Gap 3** from `agents/roadmaps/archive/product-maturity.md`: runtime is active but
 invisible. User doesn't notice when it runs, what it does, or what value it delivers.
 
 ## Principle

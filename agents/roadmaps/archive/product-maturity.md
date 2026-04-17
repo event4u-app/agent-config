@@ -1,5 +1,11 @@
 # Product Maturity Roadmap
 
+> **Status: Archived (completed).** All mechanically executable items are
+> done. Remaining `[ ]` checkboxes in Gaps 1, 5, and 6 were moved to
+> [`deferred-followups.md`](../deferred-followups.md) because they depend on
+> the skipped multi-package split or on manual validation with a fresh
+> consumer project.
+
 Source: GPT system-level review of PR #6 (April 2026).
 **Rating: 8.8/10** — technically strong, but user experience lags behind system quality.
 

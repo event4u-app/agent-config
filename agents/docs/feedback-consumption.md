@@ -1,6 +1,6 @@
 # Feedback Consumption — Design
 
-Addresses **Gap 2** from `agents/roadmaps/product-maturity.md`: feedback is collected
+Addresses **Gap 2** from `agents/roadmaps/archive/product-maturity.md`: feedback is collected
 but never consumed — invisible to users and agent alike.
 
 ## Principle

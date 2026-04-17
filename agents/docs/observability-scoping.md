@@ -1,6 +1,6 @@
 # Observability Scoping — Design
 
-Addresses **Gap 4** from `agents/roadmaps/product-maturity.md`: observability features
+Addresses **Gap 4** from `agents/roadmaps/archive/product-maturity.md`: observability features
 (metrics, events, audit, feedback, reports) are useful for maintainers but irrelevant
 — and visible — to end users. Risk: "why are there 5 JSON files I never look at?"
 

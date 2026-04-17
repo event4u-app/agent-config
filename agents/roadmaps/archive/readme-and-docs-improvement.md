@@ -1,5 +1,12 @@
 # README & Docs Improvement Roadmap
 
+> **Status: Archived (completed).** All 11 Success Criteria are met and every
+> phase is marked ✅ DONE. Remaining `[ ]` items in Phase 1 (badges), Phase 4b
+> (installation maturity), and Phase 6 (logo) were moved to
+> [`deferred-followups.md`](../deferred-followups.md) — they depend on future
+> ecosystem states or on creative design work that is out of scope for
+> mechanical execution.
+
 Source: GPT competitive analysis + SWOT (April 2026) comparing agent-config against
 anthropics/skills, cloudflare/skills, github/awesome-copilot, hoodini/ai-agents-skills.
 

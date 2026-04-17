@@ -216,7 +216,7 @@ cost_profile=minimal   # or balanced, full, custom
 ### Full profile specification
 
 The complete profile system specification — settings matrix, guardrails, priority logic,
-profile files, and implementation tasks — lives in **`product-maturity.md` → Gap 1**.
+profile files, and implementation tasks — lives in **`archive/product-maturity.md` → Gap 1**.
 
 Key points:
 - 11 settings per profile (runtime, observability, feedback, audit, lifecycle, etc.)
