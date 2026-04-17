@@ -147,9 +147,9 @@ Works across all your projects. Auto-updates via marketplace.
 
 | Tool | Rules | Skills | Commands | Install |
 |---|---|---|---|---|
-| **Augment CLI** | ✅ | ✅ | ✅ | `auggie plugin install ...` |
-| **Claude Code** | ✅ | ✅ | ✅ | `claude plugin install ...` |
-| **Copilot CLI** | ✅ | ✅ | ✅ | `copilot plugin install ...` |
+| **Augment CLI** | ✅ | ✅ | ✅ | [Install →](docs/installation.md#augment-cli) |
+| **Claude Code** | ✅ | ✅ | ✅ | [Install →](docs/installation.md#claude-code) |
+| **Copilot CLI** | ✅ | ✅ | ✅ | [Install →](docs/installation.md#copilot-cli) |
 
 Skills follow the [Agent Skills open standard](https://agentskills.io).
 
