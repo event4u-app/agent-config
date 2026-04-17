@@ -66,6 +66,10 @@ tasks:
     desc: Run Python unit tests (compress + install)
     cmd: python3 -m unittest tests.test_compress tests.test_install_py -v
 
+  generate-catalog:
+    desc: Regenerate llms.txt and docs/skills-catalog.md from SKILL.md frontmatter
+    cmd: python3 scripts/generate_catalog.py
+
 
   lint-skills:
     desc: Lint all skills and rules

@@ -79,3 +79,7 @@ agents/
 ```
 
 Module-level documentation goes into `app/Modules/*/agents/`.
+
+---
+
+← [Back to README](../README.md)

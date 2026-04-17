@@ -256,3 +256,7 @@ Options:
   --verbose        Show detailed output
   --quiet          Suppress all output except errors
 ```
+
+---
+
+← [Back to README](../README.md)

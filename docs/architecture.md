@@ -115,3 +115,7 @@ into agent context**. All features are gated by settings with `cost_profile` sup
 | **Gemini CLI** | ✅ | — | — | — | install.sh (symlink → AGENTS.md) |
 
 Skills follow the [Agent Skills open standard](https://agentskills.io).
+
+---
+
+← [Back to README](../README.md)

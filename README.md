@@ -10,7 +10,9 @@ Teach your AI agents Laravel, PHP, testing, Git workflows, and **90+ more skills
 
 ---
 
-## Installation
+## Quickstart
+
+Two minutes from `composer require` to a better-behaved agent.
 
 ### For teams (recommended)
 
@@ -58,16 +60,17 @@ Install directly in your agent for global, cross-project use:
 
 ---
 
-## How it works
+## What your agent learns
 
 | Without agent-config | With agent-config |
 |---|---|
-| Agent guesses and edits blindly | Analyzes code before changing it |
+| Guesses and edits blindly | Analyzes code before changing it — no blind edits |
 | Inconsistent code style | Follows your PHP/Laravel coding standards |
+| Skips or invents tests | Writes Pest tests following your project conventions |
 | Generic commit messages | Conventional Commits with scope and Jira links |
 | No quality checks | Runs PHPStan, Rector, ECS — fixes errors automatically |
 | PRs without context | Structured PR descriptions from Jira tickets |
-| No verification | Verifies with real execution before claiming "done" |
+| Claims "done" without proof | Verifies with real execution before claiming "done" |
 
 ---
 
@@ -78,8 +81,8 @@ Start with **Rules + Skills**. Everything else is optional.
 | Mode | What's active | Token overhead |
 |---|---|---|
 | **Minimal** (default) | Rules, Skills, Commands | Zero |
-| **Balanced** | + Runtime, limited observability | Low |
-| **Full** | + Feedback, lifecycle, metrics | Moderate |
+| **Balanced** | + Runtime execution, local data collection | Low |
+| **Full** | + Reports, suggestions in chat, CI summaries | Moderate |
 
 Nothing runs automatically without your control. [Configure modes →](docs/customization.md)
 
@@ -104,7 +107,7 @@ Nothing runs automatically without your control. [Configure modes →](docs/cust
 | [`api-design`](.augment/skills/api-design/SKILL.md) | REST conventions, versioning, deprecation |
 | [`database`](.augment/skills/database/SKILL.md) | MariaDB optimization, indexing, query performance |
 
-→ [Browse all 93 skills](.augment/skills/)
+→ [Browse all skills](docs/skills-catalog.md) · [llms.txt](llms.txt)
 
 ---
 
@@ -163,7 +166,7 @@ Skills follow the [Agent Skills open standard](https://agentskills.io).
 - **Verify with real execution** — no "should work"
 - **Challenge to improve** — agents are thought partners, not yes-machines
 - **Strict by design** — quality over flexibility
-- **Zero overhead by default** — data collection ≠ context injection
+- **Zero overhead by default** — nothing runs until you ask for it
 
 ---
 

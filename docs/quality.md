@@ -96,3 +96,7 @@ task report-stdout       # Health dashboard to stdout
 task lifecycle-report    # Skill lifecycle states
 task lifecycle-health    # Skill health scores
 ```
+
+---
+
+← [Back to README](../README.md)
