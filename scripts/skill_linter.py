@@ -372,6 +372,19 @@ def lint_skill(path: Path, text: str) -> LintResult:
         issues.append(Issue("warning", "broad_scope", "Skill scope appears broad and may need splitting"))
         suggestions.append("Narrow the trigger or split unrelated workflows")
 
+    # --- Developer judgment check for assisted skills ---
+    fm = extract_frontmatter(text)
+    exec_block = parse_execution_block(fm) if fm else None
+    exec_type = exec_block.get("type", "") if exec_block else ""
+    if exec_type == "assisted" and procedure_block:
+        validation_terms = ["validat", "check", "verify", "confirm", "challenge",
+                          "existing", "duplicate", "contradict", "fit", "misfit"]
+        has_validation = any(term in procedure_block.lower() for term in validation_terms)
+        if not has_validation:
+            issues.append(Issue("warning", "missing_validation_step",
+                              "Assisted skill has no validation/challenge step in procedure"))
+            suggestions.append("Add a requirement-checking or validation step before implementation")
+
     # --- Size check (see guidelines/agent-infra/size-and-scope.md) ---
     total_lines = len(text.splitlines())
     if total_lines > 300:
