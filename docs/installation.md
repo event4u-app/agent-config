@@ -101,19 +101,19 @@ This is additional to project-installed mode, not a replacement.
 ### Augment CLI
 
 ```bash
-auggie plugin install governed-agent-system@event4u-agent-config
+auggie plugin install governed-agent-system@event4u
 ```
 
 ### Claude Code
 
 ```bash
-claude plugin install governed-agent-system@event4u-agent-config
+claude plugin install governed-agent-system@event4u
 ```
 
 ### Copilot CLI
 
 ```bash
-copilot plugin install governed-agent-system@event4u-agent-config
+copilot plugin install governed-agent-system@event4u
 ```
 
 ### When to use plugin mode
@@ -131,13 +131,13 @@ For marketplace registration (required once before `plugin install`):
 
 ```bash
 # Augment CLI
-auggie plugin marketplace add event4u-app/agent-config
+auggie marketplace add event4u-app/agent-config
 
 # Claude Code
-claude plugin marketplace add event4u-app/agent-config
+claude marketplace add event4u-app/agent-config
 
 # Copilot CLI
-copilot plugin marketplace add event4u-app/agent-config
+copilot marketplace add event4u-app/agent-config
 ```
 
 ---
