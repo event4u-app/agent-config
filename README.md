@@ -89,20 +89,20 @@ Nothing runs automatically without your control. [Configure modes →](docs/cust
 
 | Skill | What your agent learns |
 |---|---|
-| `laravel` | Write Laravel code following framework conventions and project architecture |
-| `pest-testing` | Write Pest tests with clear intent, good coverage, and project conventions |
-| `eloquent` | Eloquent models, relationships, scopes, eager loading, type safety |
-| `create-pr` | Create GitHub PRs with structured descriptions from Jira tickets |
-| `commit` | Stage and commit changes following Conventional Commits |
-| `fix-ci` | Fetch CI errors from GitHub Actions and fix them |
-| `fix-pr-comments` | Fix and reply to all open review comments on a PR |
-| `quality-fix` | Run PHPStan/Rector/ECS and fix all errors |
-| `bug-analyzer` | Root cause analysis from Sentry errors or Jira tickets |
-| `improve-before-implement` | Challenge weak requirements before coding |
-| `docker` | Dockerfile, docker-compose, container management |
-| `security` | Auth, policies, CSRF, rate limiting, secure coding |
-| `api-design` | REST conventions, versioning, deprecation |
-| `database` | MariaDB optimization, indexing, query performance |
+| [`laravel`](.augment/skills/laravel/SKILL.md) | Write Laravel code following framework conventions and project architecture |
+| [`pest-testing`](.augment/skills/pest-testing/SKILL.md) | Write Pest tests with clear intent, good coverage, and project conventions |
+| [`eloquent`](.augment/skills/eloquent/SKILL.md) | Eloquent models, relationships, scopes, eager loading, type safety |
+| [`create-pr`](.augment/commands/create-pr.md) | Create GitHub PRs with structured descriptions from Jira tickets |
+| [`commit`](.augment/commands/commit.md) | Stage and commit changes following Conventional Commits |
+| [`fix-ci`](.augment/commands/fix-ci.md) | Fetch CI errors from GitHub Actions and fix them |
+| [`fix-pr-comments`](.augment/commands/fix-pr-comments.md) | Fix and reply to all open review comments on a PR |
+| [`quality-fix`](.augment/commands/quality-fix.md) | Run PHPStan/Rector/ECS and fix all errors |
+| [`bug-analyzer`](.augment/skills/bug-analyzer/SKILL.md) | Root cause analysis from Sentry errors or Jira tickets |
+| [`improve-before-implement`](.augment/rules/improve-before-implement.md) | Challenge weak requirements before coding |
+| [`docker`](.augment/skills/docker/SKILL.md) | Dockerfile, docker-compose, container management |
+| [`security`](.augment/skills/security/SKILL.md) | Auth, policies, CSRF, rate limiting, secure coding |
+| [`api-design`](.augment/skills/api-design/SKILL.md) | REST conventions, versioning, deprecation |
+| [`database`](.augment/skills/database/SKILL.md) | MariaDB optimization, indexing, query performance |
 
 → [Browse all 93 skills](.augment/skills/)
 
@@ -112,14 +112,14 @@ Nothing runs automatically without your control. [Configure modes →](docs/cust
 
 | Command | What it does |
 |---|---|
-| `/commit` | Stage and commit with Conventional Commits |
-| `/create-pr` | Create PR with Jira-linked description |
-| `/fix-ci` | Fetch and fix GitHub Actions failures |
-| `/fix-pr-comments` | Fix and reply to review comments |
-| `/quality-fix` | Run and fix all quality checks |
-| `/review-changes` | Self-review before creating a PR |
-| `/jira-ticket` | Read ticket from branch, implement feature |
-| `/compress` | Compress skills for token efficiency |
+| [`/commit`](.augment/commands/commit.md) | Stage and commit with Conventional Commits |
+| [`/create-pr`](.augment/commands/create-pr.md) | Create PR with Jira-linked description |
+| [`/fix-ci`](.augment/commands/fix-ci.md) | Fetch and fix GitHub Actions failures |
+| [`/fix-pr-comments`](.augment/commands/fix-pr-comments.md) | Fix and reply to review comments |
+| [`/quality-fix`](.augment/commands/quality-fix.md) | Run and fix all quality checks |
+| [`/review-changes`](.augment/commands/review-changes.md) | Self-review before creating a PR |
+| [`/jira-ticket`](.augment/commands/jira-ticket.md) | Read ticket from branch, implement feature |
+| [`/compress`](.augment/commands/compress.md) | Compress skills for token efficiency |
 
 → [Browse all 51 commands](.augment/commands/)
 

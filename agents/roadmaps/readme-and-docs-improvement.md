@@ -345,7 +345,7 @@ Observability). A visitor wants to know: "What will my agent be able to do?"
 
 ---
 
-## Phase 3: Featured Skills & Commands Table
+## Phase 3: Featured Skills & Commands Table ✅ DONE
 
 **SWOT link:** W1 (entry barrier), W4 (external examples), O5 (developer judgment visibility)
 
@@ -381,7 +381,7 @@ one-line description. We should show the best ones.
     - `/quality-fix` — Run and fix all quality checks
     - `/review-changes` — Self-review before creating a PR
     - `/jira-ticket` — Read ticket from branch, implement feature
-- [ ] Link each skill/command name to its SKILL.md for browsability (like GitHub/awesome-copilot)
+- [x] Link each skill/command name to its SKILL.md for browsability (like GitHub/awesome-copilot)
 - [x] Add "→ Browse all 93 skills" link at the bottom of the table
 
 ---
