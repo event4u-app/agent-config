@@ -121,3 +121,41 @@ Phase 4 is complete when:
 - [ ] Tool adapter calls are audited and observable
 - [ ] `improve-before-implement` rule is active and triggers on feature requests
 - [ ] At least 2 reference skills have explicit validation/challenge steps
+- [ ] Observability data drives automated decisions (deprecation, refactoring candidates)
+
+## Recommended next steps (post-merge)
+
+After merging PR #5, prioritize in this order:
+
+### Step 1: Observability → Decisions (Roadmap 3, PR 4)
+
+The biggest value unlock. Observability is only valuable when it **drives decisions**,
+not just when it collects data.
+
+Build automated derivation from collected data:
+
+- Which skills have high failure rates → flag as `needs_review`
+- Which skills are never used → candidate for deprecation
+- Which skills produce repeated warnings → candidate for refactoring
+- Which tool adapters fail consistently → needs hardening
+
+This turns passive data into **actionable governance**.
+See `03-consumable-output-roadmap.md` → PR 4 (Feedback Governance).
+
+### Step 2: Developer Judgment (Roadmap 4)
+
+The next big quality lever. The `improve-before-implement` rule ensures the agent
+**improves weak requests before coding**, instead of blindly executing.
+
+This is the shift from "efficient executor" to "thoughtful developer":
+
+- Challenge vague or contradictory requirements
+- Validate feature fit against existing architecture
+- Suggest better approaches when the requested one has known problems
+- Respect the user's final decision — challenge ≠ refuse
+
+See `04-developer-judgment-roadmap.md` for the full plan (5 PRs).
+
+**Why this order:** Observability → Decisions gives you the data foundation.
+Developer Judgment gives you the behavioral foundation. Together they make the
+agent both **informed** (data-driven) and **thoughtful** (judgment-driven).
