@@ -60,6 +60,21 @@ Every event emitted by the pipeline **must** follow this shape:
 | `agents/reports/tool-audit.json` | Tool call log | Tool adapters | Audit report |
 | `agents/reports/health-dashboard.md` | Markdown summary | Report generator | User (CLI/CI) |
 
+## Token cost awareness
+
+All outputs in this roadmap are gated by `.agent-settings`:
+
+| Output | Gated by | Default |
+|---|---|---|
+| Report generation | `observability_reports` | `false` |
+| Report auto-read into context | `runtime_auto_read_reports` | `false` |
+| Report line limit | `max_report_lines` | `30` |
+| CI PR summaries | `ci_summary_enabled` | `false` |
+| Feedback suggestions in chat | `feedback_suggestions_in_chat` | `false` |
+| Feedback persistence | `feedback_collection` | `false` |
+
+**Design rule:** Persist locally first. Only inject into agent context or CI when the user explicitly enables it.
+
 ## PR series
 
 ### PR 1: Persistence layer + event schema
@@ -100,6 +115,8 @@ Generate reports that directly answer the 6 key questions defined above.
 **Acceptance:**
 - `task report` generates all three reports
 - Each report section maps to one of the 6 key questions
+- Reports respect `max_report_lines` setting (truncate with "... truncated" marker)
+- Agent only auto-reads reports when `runtime_auto_read_reports=true`
 - Empty data produces "no data yet" message, not errors
 
 ---
@@ -120,7 +137,8 @@ Generate observability summaries for CI (GitHub Actions).
 
 **Acceptance:**
 - PR CI run produces a summary visible in GitHub Actions
-- Summary is concise (< 50 lines) and actionable
+- Summary only generated when `ci_summary_enabled=true` in settings
+- Summary is concise (respects `max_report_lines`) and actionable
 - Failed lint or health issues are highlighted
 
 ---
@@ -145,6 +163,7 @@ Define where feedback suggestions go and how they become governance actions.
 
 **Acceptance:**
 - `task feedback-apply` reads suggestions and produces concrete action proposals
+- Suggestions only shown in chat when `feedback_suggestions_in_chat=true`
 - Actions are proposals only — never auto-applied without human confirmation
 - Each action references the evidence (error counts, failure rates)
 - Governance guideline documents the full flow

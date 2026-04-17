@@ -82,6 +82,32 @@ observability_reports=false
 # true = record execution outcomes, generate improvement suggestions
 # false = no feedback collected, no suggestions generated
 feedback_collection=false
+
+# --- Token / output control ---
+
+# Auto-read reports into agent context (true, false)
+# true = agent automatically loads reports when relevant (costs tokens)
+# false = reports only read on explicit user request (saves tokens)
+runtime_auto_read_reports=false
+
+# Maximum lines per generated report section
+# Limits report size to prevent unbounded token consumption
+max_report_lines=30
+
+# Minimal runtime context (true, false)
+# true = only essential runtime metadata flows into agent context
+# false = full runtime metadata available (more context, more tokens)
+minimal_runtime_context=true
+
+# CI summary on PRs (true, false)
+# true = generate observability summary as CI artifact / PR comment
+# false = no CI summaries generated
+ci_summary_enabled=false
+
+# Feedback suggestions in chat (true, false)
+# true = improvement suggestions appear in agent chat after tasks
+# false = suggestions only persist locally, never shown in chat
+feedback_suggestions_in_chat=false
 ```
 
 ## Settings Reference
@@ -104,6 +130,11 @@ feedback_collection=false
 | `runtime_enabled` | `true`, `false` | `false` | Enable runtime pipeline (dispatch, execution proposals, hooks). When `false`: zero overhead. |
 | `observability_reports` | `true`, `false` | `false` | Generate reports, CI summaries, and structured logging from pipeline runs. |
 | `feedback_collection` | `true`, `false` | `false` | Record execution outcomes and generate improvement suggestions. |
+| `runtime_auto_read_reports` | `true`, `false` | `false` | When `true`: agent auto-loads reports into context (costs tokens). When `false`: reports only on explicit request. |
+| `max_report_lines` | number | `30` | Maximum lines per generated report section. Limits token consumption from reports. |
+| `minimal_runtime_context` | `true`, `false` | `true` | When `true`: only essential runtime metadata in agent context. Saves tokens. |
+| `ci_summary_enabled` | `true`, `false` | `false` | Generate observability summary as CI artifact or PR comment. |
+| `feedback_suggestions_in_chat` | `true`, `false` | `false` | When `true`: suggestions appear in chat. When `false`: persist locally only. |
 
 ## Sync rules
 

@@ -77,6 +77,28 @@ Step 6: CI + Governance + Skill Integration (Roadmap 3, PRs 3-4)
 Roadmap 4 (Developer Judgment) can run **in parallel** with Steps 2-6 — it has no hard
 dependency on the other roadmaps.
 
+## Token cost control
+
+Phase 4 features are the primary token-cost drivers. All outputs respect `.agent-settings`:
+
+**Pipeline-level controls (already present):**
+- `runtime_enabled` — entire runtime dormant when `false`
+- `observability_reports` — no reports generated when `false`
+- `feedback_collection` — no outcomes recorded when `false`
+
+**Granular output controls (new):**
+- `runtime_auto_read_reports=false` — reports never auto-loaded into agent context
+- `max_report_lines=30` — caps report size to prevent unbounded token growth
+- `minimal_runtime_context=true` — only essential metadata in agent context
+- `ci_summary_enabled=false` — no CI summaries on PRs
+- `feedback_suggestions_in_chat=false` — suggestions persist locally, never shown in chat
+
+**Design principle:** Collect locally → persist to disk → consume only on explicit request.
+The agent never auto-reads reports or injects runtime data into chat unless the user opts in.
+All defaults are `false`/conservative — zero token overhead out of the box.
+
+Every PR in Phase 4 that produces output must check the relevant setting before emitting.
+
 ## Success criteria
 
 Phase 4 is complete when:
