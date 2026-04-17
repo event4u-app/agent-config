@@ -440,11 +440,72 @@ After install, without ANY configuration, the agent:
 
 These 5 behaviors should be **immediately noticeable** to any developer.
 
+### Rules & Skills alignment for the 3 aha-moments
+
+The 3 tests in the First 5 Minutes flow MUST work reliably. Here's which rules/skills
+power each test and what might need adjustment.
+
+**Test 1: "Refactor this function" → agent analyzes first**
+
+| What powers this | Already exists | Status |
+|---|---|---|
+| `think-before-action` rule (always) | ✅ Yes | Strong. Developer Workflow (Understand → Analyze → Plan → Implement → Verify) |
+| `scope-control` rule (always) | ✅ Yes | "Stay within established project structure" |
+| `developer-like-execution` skill | ✅ Yes | Think → analyze → verify → execute workflow |
+| Dedicated `structured-refactoring` skill | ❌ No | **Consider creating.** GPT suggested this — a skill specifically for structured, safe refactoring with analysis → goals → approach → apply → validate steps. |
+
+**Potential gap:** No dedicated refactoring skill. The rules enforce analysis-first behavior,
+but a refactoring-specific skill would ensure the OUTPUT is consistently structured
+(short analysis → explanation → improved code → validation).
+
+**Test 2: "Add caching to this" → agent asks instead of guessing**
+
+| What powers this | Already exists | Status |
+|---|---|---|
+| `ask-when-uncertain` rule (always) | ✅ Yes | Good, but triggers could be more explicit |
+| `improve-before-implement` rule (auto) | ✅ Yes | "Is the request clear?" check |
+| Dedicated `handle-vague-request` skill | ❌ No | **Consider creating.** A skill for detecting ambiguity, identifying missing info, and asking targeted clarification questions. |
+
+**Potential gap:** `ask-when-uncertain` says "when in doubt, ask" but doesn't explicitly
+list vague-request patterns. Consider adding explicit triggers:
+```
+Agent MUST ask if request matches: "improve", "optimize", "add caching",
+"make it better", "clean up", "fix this" (without specifying what's broken).
+```
+
+**Test 3: "Implement this feature" → agent respects existing code**
+
+| What powers this | Already exists | Status |
+|---|---|---|
+| `improve-before-implement` rule (auto) | ✅ Yes | "Does it fit existing architecture?" check |
+| `scope-control` rule (always) | ✅ Yes | "Don't replace existing patterns" |
+| `validate-feature-fit` skill | ✅ Yes | Check for duplicates, contradictions, scope creep |
+| Dedicated `respect-existing-codebase` rule | ❌ No | **Not needed.** Already covered by scope-control + improve-before-implement. |
+
+**No gap.** This test should already work well with existing rules.
+
+### Summary of needed changes
+
+| Change | Type | Priority | Effort |
+|---|---|---|---|
+| Strengthen `ask-when-uncertain` with vague-request triggers | Rule update | High | Low |
+| Consider `structured-refactoring` skill | New skill | Medium | Medium |
+| Consider `handle-vague-request` skill | New skill | Medium | Medium |
+| `respect-existing-codebase` rule | NOT needed | — | — |
+| `enforce-analysis-gate` rule | NOT needed | — | — |
+
+Note: Our existing rules (`think-before-action`, `ask-when-uncertain`, `improve-before-implement`,
+`scope-control`) are already MORE detailed and stronger than GPT's suggested replacements.
+The gap is not in rule content but in skill-level guidance for specific scenarios.
+
 ### Tasks
 
 - [ ] Audit every rule in core: does it improve the first experience?
+- [ ] Strengthen `ask-when-uncertain`: add explicit vague-request pattern triggers
+- [ ] Evaluate: create `structured-refactoring` skill (analysis → goals → approach → validate)
+- [ ] Evaluate: create `handle-vague-request` skill (detect ambiguity → ask targeted questions)
 - [ ] Remove/disable rules that add friction without visible value in minimal
-- [ ] Test: minimal-mode agent vs vanilla agent on same task — is the difference obvious?
+- [ ] Test: minimal-mode agent vs vanilla agent on same task — is difference obvious?
 - [ ] Create comparison document: "vanilla agent output" vs "governed agent output" for 3 tasks
 - [ ] Ensure install output includes a concrete "try this" prompt
 
