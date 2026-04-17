@@ -130,24 +130,168 @@ All three focus on **"what you get"** (benefit). Our README currently focuses on
 
 ---
 
-## Strategic Priorities (from SWOT)
+## Onboarding Gap Analysis
 
-These are the 3 highest-impact moves, derived from the SWOT analysis:
+**Key insight:** The problem is NOT installation — it's **onboarding**.
 
-### Priority 1: Plugin distribution (addresses W2, O1, T2)
-Build real plugin/marketplace distribution. Biggest lever for adoption.
+| Area | Status | Assessment |
+|---|---|---|
+| Installation | Good | Plugin manifests exist, Composer/npm hooks work |
+| System quality | Very good | Governance, linter, CI, runtime — all strong |
+| Onboarding | Medium | No quickstart, no visible quick win, no "aha moment" |
+| Adoption | Needs work | Entry barrier too high, no minimal mode |
+
+### Why entry barrier is high (root causes)
+
+**1. Too many concepts at once** — A new user sees: Rules, Skills, Commands, Guidelines,
+Runtime, Execution Metadata, Tool Layer, Observability, Feedback, Lifecycle, Cost Control.
+For us: logical architecture. For newcomers: overload.
+
+**2. No clear starting point** — User asks "what do I do now?" and gets "understand the system"
+instead of "step 1 → step 2 → step 3 → you see the difference".
+
+**3. Too much system language** — "governed system", "lifecycle", "execution metadata",
+"feedback loop" are correct but not onboarding-friendly.
+
+**4. No visible quick win** — Other repos say "install → you can immediately do X".
+We say "here's a system that improves agent behavior". Stronger — but less directly tangible.
+
+**5. Target audience not explicit** — Perfect for teams and processes, but individual devs
+ask "is this for me?" and don't find a clear answer.
+
+**Important:** This is NOT a flaw — it's the price of quality, governance, and system thinking.
+The fix: **simplify the entry, not the system.**
+
+### What's missing for "best-in-class" installation
+
+**1. "1-minute setup" experience** — Top systems: copy → paste → works.
+We are still: understand → configure → activate.
+
+**2. No "default mode"** — User doesn't know: what's minimally useful? What's recommended?
+What's advanced?
+
+**3. No "hello world" moment** — Missing: "do this → you immediately see the difference".
+
+**4. Plugin ≠ automatically understood** — Even with better installation, users don't
+automatically understand: what's active, what happens, why it's better.
+
+### Concrete onboarding improvements needed
+
+**Quickstart section in README** (biggest lever) — Must go to the very top:
+```
+## Quickstart (2 minutes)
+1. Install: <one command>
+2. That's it. Your agent now:
+   - Analyzes code before changing it
+   - Follows your team's coding standards
+   - Runs quality checks automatically
+   - Creates structured PRs from Jira tickets
+```
+
+**Explicit modes** — Make the progression crystal clear:
+```
+Minimal (recommended to start): governance only, no runtime, lowest tokens
+Balanced: runtime enabled, limited observability
+Full: all features, full feedback + lifecycle
+```
+
+**Before/After comparison** — Instant "why should I care":
+```
+Without: agent guesses, inconsistent output, no validation
+With: analyzes first, validates changes, follows team standards
+```
+
+**"You don't need everything" message** — Explicitly state:
+```
+Start with Rules + Skills. Everything else is optional.
+You do NOT need Runtime, Observability, or Lifecycle to get value.
+```
+
+**"What happens automatically?" transparency** — Build trust:
+```
+- Rules are always active (no config needed)
+- Skills are used when relevant (agent decides)
+- No hidden execution
+- No automatic context expansion (cost_profile=cheap by default)
+```
+
+---
+
+## Strategic Priorities (from SWOT + Onboarding Analysis)
+
+These are the 4 highest-impact moves:
+
+### Priority 1: Perfect Quickstart (addresses W1, W3, Onboarding)
+**If you improve only ONE thing, improve this.**
+Build a 2-minute quickstart that delivers an "aha moment".
+Not more features, not more docs — just: install → see the difference.
+→ Not started. This is the #1 lever for adoption.
+
+### Priority 2: Minimal mode / explicit progression (addresses W1, W3, O4)
+Offer clear modes: Minimal → Balanced → Full.
+Minimal = governance only, zero overhead. New users start here.
+The `cost_profile=cheap` setting is a foundation, but needs to be more visible.
+→ Not started. Consider: `install.sh --minimal`, starter docs, mode badges.
+
+### Priority 3: Plugin distribution (addresses W2, O1, T2)
+Real plugin/marketplace distribution. Biggest lever for frictionless install.
 Currently: "install system" → Target: "install plugin".
 → Partially done (plugin manifests exist), needs real marketplace registration.
 
-### Priority 2: Minimal mode / starter config (addresses W1, W3, O4)
-Offer a light version: 10 core rules, 15 core skills, zero overhead.
-Entry point for small teams. The `cost_profile=cheap` setting is a starting point.
-→ Not started. Consider: `install.sh --minimal` or a separate `starter/` directory.
-
-### Priority 3: Developer Judgment as USP (addresses O5, S1)
+### Priority 4: Developer Judgment as USP (addresses O5, S1)
 The `improve-before-implement` and `validate-feature-fit` skills are unique.
 No competitor has this. Double down — make it visible in README and marketing.
 → Partially done (skills exist), not visible to outsiders.
+
+---
+
+## Phase 0: Quickstart & Onboarding (NEW — highest priority)
+
+**SWOT link:** W1 (entry barrier), W3 (no minimal mode), Onboarding gap
+**Priority:** 1 — single biggest lever for adoption
+
+### Tasks
+
+- [ ] Add "Quickstart (2 minutes)" section at the TOP of README, before everything else
+  - Must be the first thing a visitor reads after the tagline
+  - Format: numbered steps, max 5 lines of code, immediate payoff visible
+  - Draft:
+    ```
+    ## Quickstart (2 minutes)
+
+    **Composer:**
+    composer require --dev event4u/agent-config && bash vendor/event4u/agent-config/scripts/setup.sh
+
+    **Plugin:**
+    auggie plugin marketplace add event4u-app/agent-config
+
+    Done. Your agent now analyzes before coding, follows team standards,
+    and runs quality checks automatically.
+    ```
+- [ ] Add "What changes immediately" section right after quickstart
+  - Before/After comparison — concrete, not abstract
+  - Draft:
+    ```
+    | Without agent-config | With agent-config |
+    |---|---|
+    | Agent guesses and edits blindly | Analyzes code before changing it |
+    | Inconsistent code style | Follows your PHP/Laravel coding standards |
+    | Generic commit messages | Conventional Commits with Jira links |
+    | No quality checks | Runs PHPStan, Rector, ECS automatically |
+    | PRs without context | Structured PR descriptions from tickets |
+    ```
+- [ ] Add "You don't need everything" callout
+  - Explicitly say: "Start with Rules + Skills. Everything else is optional."
+  - Mention: Runtime, Observability, Lifecycle are opt-in. Zero overhead by default.
+- [ ] Add "What happens automatically?" transparency block
+  - Rules: always active (no config)
+  - Skills: used when relevant (agent decides)
+  - No hidden execution, no automatic context expansion
+  - Default: `cost_profile=cheap` — zero token overhead
+- [ ] Add explicit mode progression: Minimal → Balanced → Full
+  - Table format with what's active in each mode
+  - Recommend "Minimal" for new users
+  - Link to docs/customization.md for details
 
 ---
 
@@ -330,11 +474,15 @@ cross-linking improvements.
 
 After all phases:
 
-- [ ] A new visitor understands what they get within 10 seconds
-- [ ] Installation takes 2 lines of code (primary path)
-- [ ] Top skills are visible without clicking any links
+- [ ] New visitor has "aha moment" within 2 minutes of reading README
+- [ ] Quickstart is the first section after the tagline
+- [ ] Before/After comparison makes value immediately visible
+- [ ] "You don't need everything" is explicitly stated
+- [ ] Modes (Minimal/Balanced/Full) are clearly documented
+- [ ] Installation takes 1-2 lines of code (primary path)
+- [ ] Top 15 skills are visible without clicking any links
 - [ ] No internal jargon in README — all system details live in docs/
-- [ ] README is under 120 lines
+- [ ] README is under 150 lines (slightly more for quickstart + before/after)
 - [ ] All docs pages are cross-linked and navigable
 - [ ] README linter passes with 0 warnings
 
@@ -355,6 +503,15 @@ After all phases:
 **What we are:** Governed Agent OS for Development Teams.
 **What we are NOT:** A skill collection, a prompt pack, or a plugin marketplace.
 
-**Biggest gap to close:** Distribution & adoption — everything else is already strong.
+**Core insight:** The problem is NOT installation — it's **onboarding**.
+Installation is technically good. But users don't understand what they get, why it matters,
+or how to start. The fix: simplify the entry, not the system.
+
+**#1 priority:** Perfect Quickstart — 2 minutes to "aha moment".
+**#2 priority:** Explicit modes (Minimal → Balanced → Full) — reduce perceived complexity.
+**#3 priority:** Plugin distribution — frictionless install for CLI tools.
+**#4 priority:** Developer Judgment visibility — show our unique differentiator.
+
+**Biggest gap to close:** Onboarding & adoption — everything else is already strong.
 **Biggest risk:** Overengineering (T3) — adding complexity without simplifying entry.
-**Biggest opportunity:** Plugin ecosystem (O1) + Minimal mode (W3) = accessible AND powerful.
+**Biggest opportunity:** Quickstart + Minimal mode = accessible AND powerful.
