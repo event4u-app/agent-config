@@ -137,7 +137,9 @@ into agent context**. All features are gated by settings with `cost_profile` sup
 | **Windsurf** | ✅ | — | — | — | install.sh (concatenated) |
 | **Gemini CLI** | ✅ | — | — | — | install.sh (symlink → AGENTS.md) |
 
-Skills follow the [Agent Skills open standard](https://agentskills.io).
+Skills use a `SKILL.md` format with YAML frontmatter, compatible with the
+[Agent Skills](https://agentskills.io) community spec and with Claude Code's
+Agent Skills specification.
 
 ---
 
