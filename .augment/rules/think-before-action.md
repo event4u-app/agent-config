@@ -15,6 +15,7 @@ source: package
 - When behavior can be defined, prefer test-first or test-driven work
 - If requirements are unclear, ask a precise clarification question instead of making hidden assumptions
 - Refactors must preserve behavior, validation, examples, and anti-failure guidance unless there is an explicit reason to change them
+- Do NOT modify code you do not fully understand — read it first, trace the flow, then change it
 
 ## The Developer Workflow
 
@@ -39,6 +40,8 @@ Skipping steps 1-3 = #1 cause of wrong implementations and wasted retries.
 | **Database** | Query result, check migrations |
 
 If debugging/testing tool available as MCP server — prefer it.
+
+If verification not possible: state what is missing and how change should be tested.
 
 ## Reduce output — targeted tools over full dumps
 
