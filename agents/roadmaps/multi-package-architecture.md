@@ -127,24 +127,177 @@ like Laravel/Symfony: developed together, distributed separately.
 
 ---
 
+## What belongs in core (strategic)
+
+`core` must be the **best first experience** — not just "something small".
+
+### Rules for core
+- think-before-action
+- ask-when-uncertain
+- scope-control
+- verify-before-complete
+- improve-before-implement (this is a unique differentiator — must be in core)
+- All other always-active rules
+
+### Skills for core (~30)
+- **Coding:** laravel, php-coder, eloquent, livewire, blade-ui, artisan-commands
+- **Testing:** pest-testing, api-testing
+- **Quality:** quality-tools, laravel-validation, sql-writing
+- **Git/PR:** git-workflow, conventional-commits-writing, command-routing
+- **Infrastructure:** docker, database, composer-packages, multi-tenancy
+- **Design:** api-design, security, performance, fe-design
+- **Analysis:** developer-like-execution, improve-before-implement, validate-feature-fit,
+  bug-analyzer, sequential-thinking, project-docs
+- **Writing:** readme-writing, skill-writing, agent-docs-writing
+
+### What does NOT belong in core
+- GitHub/Jira-specific adapters → `tools`
+- Runtime registry, dispatcher, pipeline → `runtime`
+- Lifecycle reports, health scoring → `observability`
+- Feedback collection and governance proposals → `observability`
+- Audit logging → `observability`
+- Heavy packaging/compression logic → stays in dev scripts at root
+
+`core` must be **light, fast, clear**.
+
+---
+
+## Package Manifest Format
+
+Every package includes a `package.manifest.json` defining identity, dependencies, and profiles.
+
+**Example: core**
+```json
+{
+  "name": "agent-config-core",
+  "version": "1.0.0",
+  "description": "Core governance package — rules, skills, commands, guidelines",
+  "depends_on": [],
+  "includes": ["rules", "skills", "commands", "guidelines", "templates", "contexts"],
+  "profiles": ["minimal", "balanced", "full", "enterprise"]
+}
+```
+
+**Example: full (aggregator)**
+```json
+{
+  "name": "agent-config-full",
+  "version": "1.0.0",
+  "description": "Full governed agent system — all packages bundled",
+  "depends_on": [
+    "agent-config-core",
+    "agent-config-runtime",
+    "agent-config-tools",
+    "agent-config-observability"
+  ],
+  "includes": ["bundles", "profiles"],
+  "profiles": ["balanced", "full", "enterprise"]
+}
+```
+
+---
+
 ## Profiles (orthogonal to packages)
 
-Profiles control what's ACTIVE, packages control what's INSTALLED.
+**Packages** control what's INSTALLED. **Profiles** control what's ACTIVE.
 
 | Profile | Active packages | Token overhead | Target user |
 |---|---|---|---|
 | `minimal` | core (rules + skills only) | Zero | Solo devs, new users |
 | `balanced` | core + runtime | Low | Small teams |
 | `full` | core + runtime + tools + observability | Moderate | Platform teams |
+| `enterprise` | full + stricter rules + more reporting | Moderate-High | Governance teams |
 
 Profiles are configured via `.agent-settings`:
 ```ini
-cost_profile=minimal   # or balanced, full
+cost_profile=minimal   # or balanced, full, enterprise
 ```
+
+### Profile definitions as JSON
+
+Profiles live in `packages/full/profiles/` and define exactly what's active:
+
+**minimal.profile.json:**
+```json
+{
+  "name": "minimal",
+  "packages": ["agent-config-core"],
+  "settings": {
+    "runtime_enabled": false,
+    "observability_reports": false,
+    "feedback_collection": false,
+    "ci_summary_enabled": false,
+    "tool_audit_enabled": false,
+    "runtime_auto_read_reports": false
+  }
+}
+```
+
+**full.profile.json:**
+```json
+{
+  "name": "full",
+  "packages": ["agent-config-core", "agent-config-runtime", "agent-config-tools", "agent-config-observability"],
+  "settings": {
+    "runtime_enabled": true,
+    "observability_reports": true,
+    "feedback_collection": true,
+    "ci_summary_enabled": true,
+    "tool_audit_enabled": true,
+    "runtime_auto_read_reports": false
+  }
+}
+```
+
+Note: Even in `full` profile, `runtime_auto_read_reports` defaults to `false` to avoid
+unnecessary token injection. Users opt in explicitly.
 
 Core always activates rules + skills. Runtime, tools, and observability only activate
 when their package is installed AND the profile enables them.
 
+
+---
+
+## Release Strategy
+
+**Phase 1: Shared versioning** — all packages share one version number.
+Example: core 1.4.0, runtime 1.4.0, full 1.4.0.
+Simpler, less version drift, correct for our team size.
+
+**Phase 2 (later): Independent versions** — only when we have many external consumers
+and packages evolve at different speeds. Not needed initially.
+
+---
+
+## Distribution Model
+
+### For development
+Everything lives in the monorepo. One CI, one test suite, one release process.
+
+### For users — three paths
+
+| Path | Install command | Who |
+|---|---|---|
+| **Core only** | `composer require --dev event4u/agent-config-core` | New users, solo devs |
+| **Full bundle** | `composer require --dev event4u/agent-config` | Teams wanting everything |
+| **Compose** | `composer require --dev event4u/agent-config-core event4u/agent-config-runtime` | Teams picking modules |
+
+### For plugin marketplaces
+
+The build step generates plugin packages from `packages/`:
+
+```
+dist/
+  plugins/
+    core/
+      plugin.json
+      .augment/              ← core rules, skills, commands only
+    full/
+      plugin.json
+      .augment/              ← everything
+```
+
+This means: internal package split → external plugin generation. Clean separation.
 
 ---
 
@@ -156,6 +309,7 @@ agent-config/                          ← Monorepo root (current repo)
 │   ├── core/
 │   │   ├── composer.json              ← "event4u/agent-config-core"
 │   │   ├── package.json               ← "@event4u/agent-config-core"
+│   │   ├── package.manifest.json      ← Package identity, deps, profiles
 │   │   ├── .augment/
 │   │   │   ├── rules/                 ← ALL rules
 │   │   │   ├── skills/                ← Core skills (~30)
@@ -208,7 +362,13 @@ agent-config/                          ← Monorepo root (current repo)
 │   │
 │   └── full/
 │       ├── composer.json              ← "event4u/agent-config" (aggregator)
-│       └── package.json               ← "@event4u/agent-config"
+│       ├── package.json               ← "@event4u/agent-config"
+│       ├── package.manifest.json      ← Aggregator manifest
+│       └── profiles/
+│           ├── minimal.profile.json
+│           ├── balanced.profile.json
+│           ├── full.profile.json
+│           └── enterprise.profile.json
 │
 ├── .augment.uncompressed/             ← Source of truth (stays at root)
 ├── .augment/                          ← Compressed output (stays at root for dev)
