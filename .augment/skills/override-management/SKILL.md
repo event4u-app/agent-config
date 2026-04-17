@@ -27,6 +27,12 @@ Changes to `.augment/` affect ALL projects. Use overrides instead.
 
 ## Procedure: Create an override
 
+Before creating, understand the original:
+
+1. **Read the original** from `.augment/{type}/{name}` — understand purpose and behavior
+2. **Check existing overrides** in `agents/overrides/{type}/` — avoid duplicates
+3. **Identify what needs changing** — only override specific behavior that differs
+
 When loading any skill, rule, or command:
 
 1. **Load the original** from `.augment/{type}/{name}`

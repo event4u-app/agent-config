@@ -848,31 +848,51 @@ def lint_execution_quality(path: Path, text: str) -> List[Issue]:
     is_strong_match = any(sig in path_lower for sig in _EXEC_FILE_SIGNALS)
 
     # --- Signal groups ---
+    # Each group uses broad synonyms to reduce false negatives.
+    # Skills often express analysis/verification concepts without using
+    # the exact words "analyze" or "verify".
     analysis_signals = (
         "analyze", "inspect", "understand", "read relevant",
         "review existing", "trace flow", "read affected",
         "check current", "before acting", "before coding",
+        # Synonyms added in Phase 2b
+        "examine", "study", "investigate", "check existing",
+        "gather context", "read project", "read the changelog",
+        "identify break", "assess", "before upgrading",
+        "before changing", "before creating", "before modifying",
+        "read docs", "read module", "read agents",
     )
 
     verification_signals = (
         "verify", "validate", "test", "real execution",
         "run endpoint", "playwright", "curl", "postman",
         "debugger", "run tests", "hit the endpoint",
+        # Synonyms added in Phase 2b
+        "confirm", "assert", "check result", "observe",
+        "run phpstan", "run rector", "build and verify",
+        "must pass", "response shape",
     )
 
     verification_tool_signals = (
         "playwright", "curl", "postman", "xdebug",
         "browser", "http::fake",
+        # Synonyms added in Phase 2b
+        "phpstan", "rector", "phpunit", "pest",
+        "devcontainer build",
     )
 
     debug_runtime_signals = (
         "debugger", "xdebug", "mcp debugger", "runtime inspection",
         "trace execution", "breakpoint", "step through",
+        # Synonyms added in Phase 2b
+        "runtime", "stack trace", "dump", "dd(",
     )
 
     efficient_tooling_signals = (
         "jq", " rg ", "grep", "filter", "selective",
         "extract", "targeted", "--json", "--filter",
+        # Synonyms added in Phase 2b
+        "narrow", "scoped", "specific field", "only relevant",
     )
 
     anti_bruteforce_signals = (
@@ -880,11 +900,17 @@ def lint_execution_quality(path: Path, text: str) -> List[Issue]:
         "do not retry blind", "analyze before retry",
         "blind retr", "trial-and-error", "trial and error",
         "max 2 retries", "stop and rethink",
+        # Synonyms added in Phase 2b
+        "diagnose", "root cause", "targeted fix",
+        "do not blindly", "never guess",
     )
 
     clarification_signals = (
         "ask", "clarif", "unclear", "missing information",
         "do not assume", "don't assume", "instead of assuming",
+        # Synonyms added in Phase 2b
+        "confirm with user", "verify requirement", "ambiguous",
+        "if unsure", "when in doubt",
     )
 
     # Helper
