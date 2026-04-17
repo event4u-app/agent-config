@@ -97,6 +97,11 @@ Phase 4 features are the primary token-cost drivers. All outputs respect `.agent
 The agent never auto-reads reports or injects runtime data into chat unless the user opts in.
 All defaults are `false`/conservative — zero token overhead out of the box.
 
+**Prompt safety:** Reports, metrics, feedback, and audit logs must NOT be automatically
+injected into the agent context. They are only used on explicit request, in targeted
+analysis tasks, or in bounded summaries (respecting `max_report_lines`).
+Data collection does NOT imply automatic usage by the agent.
+
 Every PR in Phase 4 that produces output must check the relevant setting before emitting.
 
 ## Success criteria

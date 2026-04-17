@@ -84,6 +84,12 @@ observability_reports=false
 feedback_collection=false
 
 # --- Token / output control ---
+#
+# IMPORTANT: Data collection (metrics, reports, feedback) does NOT imply
+# automatic usage by the agent. Reports, metrics, feedback, and audit logs
+# must NOT be automatically injected into the agent context.
+# They are only used: on explicit request, in targeted analysis tasks,
+# or in bounded summaries (respecting max_report_lines).
 
 # Auto-read reports into agent context (true, false)
 # true = agent automatically loads reports when relevant (costs tokens)
