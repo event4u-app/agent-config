@@ -17,7 +17,7 @@ The linter gained execution quality checks in Phase 1. This roadmap covers
 Phases 2-5: fixing failing artifacts, hardening heuristics, enforcing type
 boundaries, and adding CI governance.
 
-- **Feature:** [`agents/features/linter-execution-governance.md`](../features/linter-execution-governance.md)
+- **Feature:** [`agents/features/linter-execution-governance.md`](../../features/linter-execution-governance.md)
 - **Linter:** `scripts/skill_linter.py`
 - **Tests:** `tests/test_skill_linter.py`
 
