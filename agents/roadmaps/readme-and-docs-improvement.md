@@ -383,27 +383,33 @@ one-line description. We should show the best ones.
 
 ---
 
-## Phase 4: Simplify Installation Section
+## Phase 4: Simplify Installation Section ✅ DONE
 
 **SWOT link:** W2 (distribution), O1 (plugin model)
+**Status:** Implemented in PR #6.
 
-**Problem:** Installation currently shows 6 code blocks. Cloudflare uses expandable sections
-or tabs. We should show the simplest path first, details behind a link.
+**Principle:** Install natively, onboard optionally, explain later.
 
-### Tasks
+### What was done
 
-- [ ] Show ONE primary installation path prominently (Composer — our main audience is PHP)
-  ```
-  composer require --dev event4u/agent-config
-  bash vendor/event4u/agent-config/scripts/setup.sh
-  ```
-- [ ] Show other methods as a compact list with links:
-  - npm: `npm install @event4u/agent-config`
-  - Plugin (Augment/Claude/Copilot): → docs/installation.md
-  - Git Submodule: → docs/installation.md
-  - Manual: → docs/installation.md
-- [ ] Remove the 3 plugin code blocks from README — they're in docs/installation.md already
-- [ ] Keep the "→ Full details: docs/installation.md" link
+- [x] README shows one-line install per tool in a compact table
+- [x] No build-tool dependency for install (no Task, Make, npm, Composer required)
+- [x] docs/installation.md restructured: recommended path per tool → alternatives as fallback
+- [x] `first-run` clearly marked as optional (not part of install path)
+- [x] 3 test prompts shown directly in README (no tools required to try them)
+- [x] Consumer settings templates referenced in installation docs
+- [x] "Install from Git URL" added as VS Code/Copilot alternative
+
+### Installation maturity criteria (from GPT review)
+
+| Criterion | Status |
+|---|---|
+| One recommended install path per tool | ✅ Done |
+| No build-tool dependency for install | ✅ Done |
+| One copy-paste block per tool | ✅ Done |
+| First-run separated from install | ✅ Done |
+| Consumer repo stays clean | ✅ Done (plugin = zero local files) |
+| "No Task / No Make required" explicitly stated | ✅ Done |
 
 ---
 

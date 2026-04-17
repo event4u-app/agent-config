@@ -12,22 +12,23 @@ Teach your AI agents Laravel, PHP, testing, Git workflows, and **90+ more skills
 
 ## Installation
 
-```bash
-# Composer (PHP)
-composer require --dev event4u/agent-config
-bash vendor/event4u/agent-config/scripts/setup.sh
+Pick your tool — one command, done:
 
-# npm (JavaScript/TypeScript)
-npm install @event4u/agent-config
-```
+| Tool | Install |
+|---|---|
+| **Augment CLI** | `auggie plugin install governed-agent-system@event4u-agent-config` |
+| **Claude Code** | `claude plugin install governed-agent-system@event4u-agent-config` |
+| **Copilot CLI** | `copilot plugin install governed-agent-system@event4u-agent-config` |
+| **Composer** | `composer require --dev event4u/agent-config` |
+| **npm** | `npm install @event4u/agent-config` |
 
-Done. Your agent now follows your team's standards. [More install options →](docs/installation.md)
+No Task, no Make, no build tools required. → [All install options](docs/installation.md)
 
-Then try the guided first-run experience:
+**Then open your agent and try these 3 prompts:**
 
-```bash
-task first-run
-```
+1. `"Refactor this function"` → watch: agent analyzes first
+2. `"Add caching to this"` → watch: agent asks instead of guessing
+3. `"Implement this feature"` → watch: agent respects your codebase
 
 → [Full getting started guide](docs/getting-started.md)
 

@@ -15,11 +15,9 @@ That's it. Your agent now follows your team's standards.
 
 ## First Run
 
-```bash
-task first-run
-```
+Open your agent and try the 3 tests below. That's it — no additional tools needed.
 
-This shows your active profile and gives you 3 prompts to test immediately.
+**Optional:** For a guided walkthrough, run `task first-run` (requires [Task](https://taskfile.dev/)).
 
 ---
 

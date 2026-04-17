@@ -1,54 +1,42 @@
 # Installation
 
-## Plugin (recommended for CLI tools)
-
-The package works as a native plugin for **Augment CLI**, **Claude Code**, and **Copilot CLI**.
-No file copying needed — the plugin system handles loading and auto-updating.
-
-### Augment CLI
-
-```bash
-auggie plugin marketplace add event4u-app/agent-config
-auggie plugin install governed-agent-system@event4u-agent-config
-```
-
-### Claude Code
-
-```bash
-claude plugin marketplace add event4u-app/agent-config
-claude plugin install governed-agent-system@event4u-agent-config
-```
-
-### Copilot CLI
-
-```bash
-copilot plugin marketplace add event4u-app/agent-config
-copilot plugin install governed-agent-system@event4u-agent-config
-```
-
-### Team auto-setup
-
-To auto-recommend the plugin for your team, add the marketplace to your project settings.
-See [`templates/consumer-settings/`](../templates/consumer-settings/) for ready-to-use config templates.
-
-> **Note:** Cursor, Cline, Windsurf, and Augment VSCode/IntelliJ do not support plugins yet.
-> Use `install.sh` below.
+**Principle:** Install natively, onboard optionally, explain later.
+No Task, no Make, no build tools required for installation.
 
 ---
 
-## Composer (PHP projects)
+## Recommended: one command per tool
+
+Each tool has **one recommended install path**. Pick yours:
+
+### Augment CLI (plugin)
+
+```bash
+auggie plugin install governed-agent-system@event4u-agent-config
+```
+
+### Claude Code (plugin)
+
+```bash
+claude plugin install governed-agent-system@event4u-agent-config
+```
+
+### Copilot CLI (plugin)
+
+```bash
+copilot plugin install governed-agent-system@event4u-agent-config
+```
+
+### Composer (PHP projects)
 
 ```bash
 composer require --dev event4u/agent-config
-
-# One-time setup: adds post-install/update hooks
-bash vendor/event4u/agent-config/scripts/setup.sh
 ```
 
-After setup, `install.sh` runs automatically on every `composer install` / `composer update`.
-The setup script is **idempotent** and auto-detects a JSON tool (`php → node → jq → python3`).
+The `postinstall` hook runs `scripts/install.sh` automatically via `setup.sh`.
+For first-time setup: `bash vendor/event4u/agent-config/scripts/setup.sh`
 
-## npm (JavaScript/TypeScript projects)
+### npm (JavaScript/TypeScript projects)
 
 ```bash
 npm install @event4u/agent-config
@@ -56,21 +44,57 @@ npm install @event4u/agent-config
 
 The `postinstall` hook runs `scripts/install.sh` automatically.
 
-## Git Submodule
+### Cursor / Cline / Windsurf / Gemini CLI / Augment VSCode
+
+These tools don't support plugins yet. Use Composer or npm above —
+`install.sh` creates the correct symlinks and configs for all of them.
+
+---
+
+## Team auto-setup
+
+To auto-recommend the plugin for your team, add the marketplace to your project settings.
+See [`templates/consumer-settings/`](../templates/consumer-settings/) for ready-to-use config templates per tool.
+
+For marketplace registration (required once before `plugin install`):
+
+```bash
+# Augment CLI
+auggie plugin marketplace add event4u-app/agent-config
+
+# Claude Code
+claude plugin marketplace add event4u-app/agent-config
+
+# Copilot CLI
+copilot plugin marketplace add event4u-app/agent-config
+```
+
+---
+
+## Alternative install methods
+
+These are fallbacks when the recommended paths above don't work.
+
+### Git Submodule
 
 ```bash
 git submodule add git@github.com:event4u-app/agent-config.git .agent-config
 bash .agent-config/scripts/install.sh --target .
 ```
 
-## Manual
+### Manual
 
 ```bash
 bash path/to/agent-config/scripts/install.sh --target /path/to/your/project
 ```
 
-> **Note:** `.augment/` content depends on `composer install` / `npm install` having been executed.
-> After a fresh clone, run your package manager before expecting agent tools to work.
+### Install from Git URL (VS Code / Copilot)
+
+VS Code can install plugins directly from a Git repository URL.
+Point it to `https://github.com/event4u-app/agent-config`.
+
+> **Note:** `.augment/` content depends on the package manager having been executed.
+> After a fresh clone, run `composer install` or `npm install` first.
 
 ---
 
