@@ -31,20 +31,121 @@ User asks: "What should I enable?" and finds no answer.
 
 **Risk:** Wrong settings → wrong expectations → frustration.
 
-**Solution:** Profile system (partially designed in multi-package-architecture roadmap).
+**Solution:** Profile system — predefined, documented settings combinations.
+
+### Design principles
+
+1. **Profiles set defaults** — a profile is just a named settings combination
+2. **User overrides stay possible** — individual settings in `.agent-settings` override the profile
+3. **Profiles are not magic** — they are transparent and documented
+
+### Priority logic (resolution order)
+
+1. Load profile defaults (from `profile=` in `.agent-settings`)
+2. Read `.agent-settings` for explicit overrides
+3. Apply user overrides on top of profile defaults
+
+This ensures profiles aren't too rigid — users can deviate on any single setting.
+
+### Settings matrix
+
+| Setting | `minimal` | `balanced` | `full` | `enterprise` |
+|---|---|---|---|---|
+| `runtime_enabled` | false | true | true | true |
+| `observability_reports` | false | true | true | true |
+| `feedback_collection` | false | true | true | true |
+| `ci_summary_enabled` | false | true | true | true |
+| `tool_audit_enabled` | false | false | true | true |
+| `lifecycle_report_enabled` | false | false | true | true |
+| `feedback_suggestions_enabled` | false | true | true | true |
+| `runtime_auto_read_reports` | false | false | false | false |
+| `max_report_lines` | 20 | 40 | 75 | 100 |
+| `minimal_runtime_context` | true | true | true | false |
+
+### Profile descriptions
+
+**`minimal`** — governance only, zero overhead
+- For: new users, solo devs, first-time adoption
+- Active: rules + skills + commands only
+- Token cost: zero additional overhead
+- Default for: `agent-config-core` installs
+
+**`balanced`** — recommended for most teams
+- For: small-medium teams wanting good quality with controlled overhead
+- Active: + runtime, limited observability, feedback
+- Token cost: low
+- Default for: most team installations
+
+**`full`** — all major features enabled
+- For: platform teams, internal standard installations
+- Active: + tool audit, lifecycle reports
+- Token cost: moderate
+- Note: `runtime_auto_read_reports` still false — opt-in only
+
+**`enterprise`** — strict governance, maximum visibility
+- For: large teams, governance/enablement focus
+- Active: like full, but `minimal_runtime_context=false` for richer context
+- Token cost: moderate-high
+- Note: still cost-controlled — no unguarded auto-injection
+
+### Guardrails (hard rules)
+
+1. **`runtime_auto_read_reports=false` in ALL profiles** — prevents silent prompt bloating
+2. **`minimal_runtime_context=true` in minimal, balanced, full** — runtime helps, doesn't bloat
+3. **`tool_audit_enabled=false` in minimal, balanced** — audit is for advanced setups
+4. **`lifecycle_report_enabled=false` in minimal, balanced** — lifecycle is for maintainers
+
+### Profile files
+
+Profiles live as `.profile.ini` files (for tooling) and as documentation:
+
+```
+profiles/
+├── minimal.profile.ini
+├── balanced.profile.ini
+├── full.profile.ini
+└── enterprise.profile.ini
+```
+
+Example `minimal.profile.ini`:
+```ini
+profile=minimal
+runtime_enabled=false
+observability_reports=false
+feedback_collection=false
+ci_summary_enabled=false
+tool_audit_enabled=false
+lifecycle_report_enabled=false
+feedback_suggestions_enabled=false
+runtime_auto_read_reports=false
+max_report_lines=20
+minimal_runtime_context=true
+```
+
+### Recommended defaults
+
+| Audience | Recommended profile |
+|---|---|
+| New users / first install | `minimal` |
+| Most teams | `balanced` |
+| Internal standard (our projects) | `full` |
+| Governance-heavy teams | `enterprise` |
 
 ### Tasks
 
-- [ ] Implement profile presets: `minimal`, `balanced`, `full`, `enterprise`
-- [ ] Profile selection during `setup.sh` or first agent interaction
-- [ ] Default profile: `minimal` — zero configuration needed
+- [ ] Create profile .ini files in `profiles/` directory
+- [ ] Implement profile loading in `.agent-settings` resolution
+- [ ] `setup.sh` sets `profile=minimal` by default
 - [ ] Profile auto-detection: if runtime package installed → suggest `balanced`
-- [ ] Clear documentation: what each profile activates, what it costs (tokens)
+- [ ] Document profiles in docs/customization.md with full settings matrix
+- [ ] Add profile section to README (already drafted in current README "Modes" section)
 - [ ] Profile switching without reinstall (just change `.agent-settings`)
+- [ ] Validate: unknown profile name → error with list of valid profiles
+- [ ] Create `.agent-settings` template with `profile=minimal` as default
 
 ### Success metric
 New user installs, does NOT configure anything, and gets a good experience.
-That's `minimal` profile working silently.
+That's `minimal` profile working silently. No JSON files created, no overhead, just better agent behavior.
 
 ---
 

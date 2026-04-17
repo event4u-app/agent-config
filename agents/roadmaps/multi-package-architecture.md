@@ -213,44 +213,16 @@ Profiles are configured via `.agent-settings`:
 cost_profile=minimal   # or balanced, full, enterprise
 ```
 
-### Profile definitions as JSON
+### Full profile specification
 
-Profiles live in `packages/full/profiles/` and define exactly what's active:
+The complete profile system specification — settings matrix, guardrails, priority logic,
+profile files, and implementation tasks — lives in **`product-maturity.md` → Gap 1**.
 
-**minimal.profile.json:**
-```json
-{
-  "name": "minimal",
-  "packages": ["agent-config-core"],
-  "settings": {
-    "runtime_enabled": false,
-    "observability_reports": false,
-    "feedback_collection": false,
-    "ci_summary_enabled": false,
-    "tool_audit_enabled": false,
-    "runtime_auto_read_reports": false
-  }
-}
-```
-
-**full.profile.json:**
-```json
-{
-  "name": "full",
-  "packages": ["agent-config-core", "agent-config-runtime", "agent-config-tools", "agent-config-observability"],
-  "settings": {
-    "runtime_enabled": true,
-    "observability_reports": true,
-    "feedback_collection": true,
-    "ci_summary_enabled": true,
-    "tool_audit_enabled": true,
-    "runtime_auto_read_reports": false
-  }
-}
-```
-
-Note: Even in `full` profile, `runtime_auto_read_reports` defaults to `false` to avoid
-unnecessary token injection. Users opt in explicitly.
+Key points:
+- 11 settings per profile (runtime, observability, feedback, audit, lifecycle, etc.)
+- `runtime_auto_read_reports=false` in ALL profiles (hard guardrail)
+- Profile files as `.profile.ini` in `profiles/` directory
+- Resolution: profile defaults → `.agent-settings` overrides → user wins
 
 Core always activates rules + skills. Runtime, tools, and observability only activate
 when their package is installed AND the profile enables them.
