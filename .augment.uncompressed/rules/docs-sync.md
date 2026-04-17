@@ -53,6 +53,13 @@ exist in `.augment/templates/agent-settings.md`:
 1. **Add the key** with its default value to the template block.
 2. **Add a row** to the Settings Reference table.
 3. **Add a comment** above the key explaining what it does.
+4. **Update the local `.agent-settings`** — add the new key with its default value.
+   Preserve all existing values, apply template order and comments.
+   This is identical to what `/config-agent-settings` does, but happens inline
+   so the user benefits immediately without running a separate command.
+
+**This step is mandatory.** If the template gains a new key but the local `.agent-settings`
+is not updated, the user cannot discover the new setting exists.
 
 ## Content consistency
 

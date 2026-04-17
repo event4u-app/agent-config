@@ -16,6 +16,16 @@ Use this skill when:
 
 ## Procedure: Set up Traefik
 
+### 0. Understand current setup
+
+Before changing routing:
+
+1. Check existing proxy — `docker ps | grep traefik`
+2. Review docker-compose for existing labels and network config
+3. Check `/etc/hosts` or dnsmasq for existing domain mappings
+
+### Architecture
+
 Traefik acts as a **local reverse proxy** that:
 1. Resolves real domains (e.g., `local.example.dev`, `app.test`) to `127.0.0.1`
 2. Terminates HTTPS with trusted certificates

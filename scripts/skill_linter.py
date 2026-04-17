@@ -795,6 +795,395 @@ def lint_interaction_quality(path: Path, text: str) -> List[Issue]:
     return issues
 
 
+# --- Execution quality checks ---
+
+# File name signals for execution-oriented artifacts
+_EXEC_FILE_SIGNALS = (
+    "execution", "debug", "implement", "developer", "action",
+    "validation", "testing", "coder", "bug", "fix",
+)
+
+# Content signals that indicate execution-oriented artifact
+_EXEC_CONTENT_SIGNALS = (
+    "implement", "debug", "refactor", "modify", "fix",
+    "verify", "validate", "runtime", "test", "coding",
+    "before acting", "before coding", "before changing",
+)
+
+
+def _is_execution_artifact(path: Path, text: str) -> bool:
+    """Detect if artifact is execution/implementation oriented.
+
+    Only skills and rules qualify — commands and guidelines are excluded
+    because commands are workflows (not execution guidance) and guidelines
+    are coding patterns (not developer workflow enforcement).
+    """
+    path_lower = str(path).lower()
+    text_lower = text.lower()
+
+    # Exclude commands and guidelines — they are not execution-oriented
+    if "/commands/" in path_lower or "/guidelines/" in path_lower:
+        return False
+
+    # File name match — strong signal
+    if any(sig in path_lower for sig in _EXEC_FILE_SIGNALS):
+        return True
+
+    # Content match — need at least 5 signals to avoid false positives
+    # (many artifacts mention "implement" or "fix" without being execution-focused)
+    matches = sum(1 for sig in _EXEC_CONTENT_SIGNALS if sig in text_lower)
+    return matches >= 5
+
+
+def lint_execution_quality(path: Path, text: str) -> List[Issue]:
+    """Check execution-oriented artifacts for developer workflow quality."""
+    if not _is_execution_artifact(path, text):
+        return []
+
+    issues: List[Issue] = []
+    text_lower = text.lower()
+    path_lower = str(path).lower()
+
+    # Strong match = file name signal; weak match = content-only signal
+    is_strong_match = any(sig in path_lower for sig in _EXEC_FILE_SIGNALS)
+
+    # --- Signal groups ---
+    # Each group uses broad synonyms to reduce false negatives.
+    # Skills often express analysis/verification concepts without using
+    # the exact words "analyze" or "verify".
+    analysis_signals = (
+        "analyze", "inspect", "understand", "read relevant",
+        "review existing", "trace flow", "read affected",
+        "check current", "before acting", "before coding",
+        # Synonyms added in Phase 2b
+        "examine", "study", "investigate", "check existing",
+        "gather context", "read project", "read the changelog",
+        "identify break", "assess", "before upgrading",
+        "before changing", "before creating", "before modifying",
+        "read docs", "read module", "read agents",
+    )
+
+    verification_signals = (
+        "verify", "validate", "test", "real execution",
+        "run endpoint", "playwright", "curl", "postman",
+        "debugger", "run tests", "hit the endpoint",
+        # Synonyms added in Phase 2b
+        "confirm", "assert", "check result", "observe",
+        "run phpstan", "run rector", "build and verify",
+        "must pass", "response shape",
+    )
+
+    verification_tool_signals = (
+        "playwright", "curl", "postman", "xdebug",
+        "browser", "http::fake",
+        # Synonyms added in Phase 2b
+        "phpstan", "rector", "phpunit", "pest",
+        "devcontainer build",
+    )
+
+    debug_runtime_signals = (
+        "debugger", "xdebug", "mcp debugger", "runtime inspection",
+        "trace execution", "breakpoint", "step through",
+        # Synonyms added in Phase 2b
+        "runtime", "stack trace", "dump", "dd(",
+    )
+
+    efficient_tooling_signals = (
+        "jq", " rg ", "grep", "filter", "selective",
+        "extract", "targeted", "--json", "--filter",
+        # Synonyms added in Phase 2b
+        "narrow", "scoped", "specific field", "only relevant",
+    )
+
+    anti_bruteforce_signals = (
+        "avoid retr", "do not brute", "do not guess",
+        "do not retry blind", "analyze before retry",
+        "blind retr", "trial-and-error", "trial and error",
+        "max 2 retries", "stop and rethink",
+        # Synonyms added in Phase 2b
+        "diagnose", "root cause", "targeted fix",
+        "do not blindly", "never guess",
+    )
+
+    clarification_signals = (
+        "ask", "clarif", "unclear", "missing information",
+        "do not assume", "don't assume", "instead of assuming",
+        # Synonyms added in Phase 2b
+        "confirm with user", "verify requirement", "ambiguous",
+        "if unsure", "when in doubt",
+    )
+
+    # Helper
+    def has_any(signals: tuple[str, ...]) -> bool:
+        return any(s in text_lower for s in signals)
+
+    # --- Section-based detection (complement to keyword matching) ---
+    # Detects structural signals: sections whose names imply analysis or verification.
+    import re
+    section_headers = re.findall(r'^#{1,4}\s+(.+)$', text, re.MULTILINE)
+    section_headers_lower = [h.lower() for h in section_headers]
+
+    # Section names that imply analysis-before-action
+    has_analysis_section = any(
+        any(kw in h for kw in ("understand", "analyze", "assess", "context", "review",
+                                "current setup", "current state", "before"))
+        for h in section_headers_lower
+    )
+
+    # Section names that imply verification
+    has_verification_section = any(
+        any(kw in h for kw in ("verify", "validat", "test", "acceptance", "quality gate"))
+        for h in section_headers_lower
+    )
+
+    # Section names that imply anti-patterns / gotchas
+    has_antipattern_section = any(
+        any(kw in h for kw in ("do not", "don't", "gotcha", "anti-pattern", "avoid"))
+        for h in section_headers_lower
+    )
+
+    # Detect implementation/change language
+    change_signals = ("implement", "modify", "fix", "refactor", "change", "update", "code")
+    has_change_language = any(s in text_lower for s in change_signals)
+
+    # Combine keyword + section signals
+    has_analysis = has_any(analysis_signals) or has_analysis_section
+    has_verification = has_any(verification_signals) or has_verification_section
+
+    # --- Check 1: Missing analysis-before-action (ERROR, skills only) ---
+    # Rules describe constraints, not workflows — they don't need analysis sections
+    is_skill = "/skills/" in str(path).lower()
+    if is_skill and has_change_language and not has_analysis:
+        issues.append(Issue("error", "missing_analysis_before_action",
+                            "Execution-oriented skill encourages implementation "
+                            "without requiring prior analysis of existing system"))
+
+    # --- Check 2: Missing real verification (ERROR, skills with strong match) ---
+    if is_skill and is_strong_match and has_change_language and not has_verification:
+        issues.append(Issue("error", "missing_real_verification",
+                            "Implementation/debugging skill does not require "
+                            "real verification after changes"))
+
+    # Checks 3-7 only apply to strong matches (file name signal) to avoid noise
+    # on generic skills that happen to mention "implement" or "fix"
+    if is_strong_match:
+        # --- Check 3: Missing verification tool mapping (WARNING) ---
+        if has_any(verification_signals) and not has_any(verification_tool_signals):
+            issues.append(Issue("warning", "missing_verification_tool_mapping",
+                                "Verification is generic — does not reference concrete "
+                                "tools (Playwright, curl, Postman, Xdebug)"))
+
+        # --- Check 4: Missing runtime debug guidance (WARNING) ---
+        debug_context = any(s in text_lower for s in ("debug", "execution flow", "trace", "unexpected behavior"))
+        if debug_context and not has_any(debug_runtime_signals):
+            issues.append(Issue("warning", "missing_runtime_debug_guidance",
+                                "Debugging/execution artifact does not mention "
+                                "runtime debug tools (Xdebug, debugger, breakpoints)"))
+
+        # --- Check 5: Missing efficient tooling guidance (WARNING) ---
+        data_context = any(s in text_lower for s in ("api", "log", "json", "response", "output", "data"))
+        if data_context and not has_any(efficient_tooling_signals):
+            issues.append(Issue("warning", "missing_efficient_tooling_guidance",
+                                "Artifact does not encourage targeted filtering tools "
+                                "(jq, rg, grep) for reducing output"))
+
+        # --- Check 6: Missing anti-bruteforce guidance (WARNING, skills only) ---
+        if is_skill and has_change_language and not has_any(anti_bruteforce_signals):
+            issues.append(Issue("warning", "missing_anti_bruteforce_guidance",
+                                "Execution guidance lacks explicit anti-retry / "
+                                "anti-bruteforce behavior"))
+
+        # --- Check 7: Missing clarification guard (WARNING, skills only) ---
+        if is_skill and has_change_language and not has_any(clarification_signals):
+            issues.append(Issue("warning", "missing_clarification_guard",
+                                "Implementation guidance does not require clarification "
+                                "when requirements are incomplete"))
+
+    return issues
+
+
+# --- Type boundary checks ---
+
+
+def lint_type_boundaries(path: Path, text: str, artifact_type: str) -> List[Issue]:
+    """Check that artifacts respect their type boundaries.
+
+    - Guidelines should not contain executable procedures
+    - Commands should reference skills
+    - Skills should have concrete validation (not vague)
+    """
+    issues: List[Issue] = []
+    text_lower = text.lower()
+    import re
+
+    # --- Guideline: should not have executable procedures ---
+    if artifact_type == "guideline":
+        # Count numbered steps (1. 2. 3. etc.) — guidelines shouldn't have >5
+        numbered_steps = re.findall(r'^\d+\.\s+\*?\*?(?:Step|Run|Create|Execute|Implement)',
+                                     text, re.MULTILINE | re.IGNORECASE)
+        if len(numbered_steps) >= 5:
+            issues.append(Issue("warning", "guideline_contains_executable_procedure",
+                                f"Guideline has {len(numbered_steps)} executable numbered steps — "
+                                "consider extracting into a skill or command"))
+
+    # --- Command: should reference skills ---
+    if artifact_type == "command":
+        # Check frontmatter skills field
+        frontmatter = extract_frontmatter(text)
+        has_skills_field = False
+        if frontmatter:
+            skills_match = re.search(r'skills:\s*\[(.+)\]', frontmatter)
+            has_skills_field = bool(skills_match and skills_match.group(1).strip())
+
+        # Also check body for skill references
+        has_skill_ref = bool(re.search(r'skill|SKILL\.md', text))
+
+        if not has_skills_field and not has_skill_ref:
+            issues.append(Issue("warning", "command_missing_skill_references",
+                                "Command does not reference any skills — "
+                                "commands should orchestrate skills, not contain domain logic"))
+
+    # --- Skill: validation should be concrete, not vague ---
+    if artifact_type == "skill":
+        # Find validation/verify sections
+        validation_section = re.search(
+            r'(?:^#{1,4}\s+(?:Validat|Verif|Quality|Accept).+?\n)((?:.*\n)*?)(?=^#{1,4}\s|\Z)',
+            text, re.MULTILINE | re.IGNORECASE
+        )
+        if validation_section:
+            validation_text = validation_section.group(1).lower()
+            vague_patterns = ("check if it works", "make sure it's correct",
+                              "verify it works", "should work", "looks correct")
+            concrete_patterns = ("run ", "curl ", "phpstan", "rector", "pest",
+                                 "playwright", "assert", "exit code", "must pass",
+                                 "0 fail", "0 error")
+            has_vague = any(p in validation_text for p in vague_patterns)
+            has_concrete = any(p in validation_text for p in concrete_patterns)
+            if has_vague and not has_concrete:
+                issues.append(Issue("warning", "skill_validation_too_generic",
+                                    "Validation section uses vague language — "
+                                    "add concrete checks (commands, expected output, conditions)"))
+
+    return issues
+
+
+# --- Verification maturity checks ---
+
+# Task type detection signals
+_TASK_TYPE_SIGNALS = {
+    "backend": ("api", "endpoint", "controller", "route", "service", "repository",
+                "eloquent", "migration", "artisan", "middleware", "job", "queue"),
+    "frontend": ("blade", "livewire", "component", "view", "ui", "frontend",
+                 "tailwind", "flux", "css", "template"),
+    "cli": ("artisan command", "cli", "console", "schedule", "cron"),
+    "database": ("migration", "database", "schema", "index", "query", "sql",
+                 "mariadb", "mysql", "seeder"),
+    "debugging": ("debug", "xdebug", "error", "exception", "sentry", "trace",
+                  "breakpoint", "log"),
+}
+
+# Expected verification tools per task type
+_VERIFICATION_TOOLS = {
+    "backend": ("curl", "postman", "http::fake", "actingas", "api/"),
+    "frontend": ("playwright", "browser", "screenshot", "snapshot", "livewire test"),
+    "cli": ("exit code", "command output", "artisan test", "expectsoutput"),
+    "database": ("query", "assertdatabase", "migration", "seedandassert", "table"),
+    "debugging": ("xdebug", "breakpoint", "dump", "dd(", "stack trace", "log"),
+}
+
+
+def lint_verification_maturity(path: Path, text: str, artifact_type: str) -> List[Issue]:
+    """Check that verification matches the skill's task type."""
+    if artifact_type != "skill":
+        return []
+
+    # Only check skills with strong execution signals
+    path_lower = str(path).lower()
+    if not any(sig in path_lower for sig in _EXEC_FILE_SIGNALS):
+        return []
+
+    issues: List[Issue] = []
+    text_lower = text.lower()
+
+    # Detect task types present in the skill
+    detected_types: list[str] = []
+    for task_type, signals in _TASK_TYPE_SIGNALS.items():
+        matches = sum(1 for s in signals if s in text_lower)
+        if matches >= 2:  # Need at least 2 signals to classify
+            detected_types.append(task_type)
+
+    if not detected_types:
+        return []
+
+    # Check if appropriate verification tools are mentioned
+    for task_type in detected_types:
+        tools = _VERIFICATION_TOOLS.get(task_type, ())
+        has_tool = any(t in text_lower for t in tools)
+        if not has_tool:
+            issues.append(Issue("warning", f"missing_{task_type}_verification_example",
+                                f"Skill covers {task_type} tasks but does not mention "
+                                f"verification tools for that context "
+                                f"(e.g. {', '.join(tools[:3])})"))
+
+    return issues
+
+
+# --- Governance & packaging checks ---
+
+
+def lint_governance(path: Path, text: str, artifact_type: str, repo_root: Path | None = None) -> List[Issue]:
+    """Check governance and packaging consistency.
+
+    - Compressed/uncompressed pairs must exist
+    - No duplicate skill names
+    - Files must be in correct location for their type
+    """
+    issues: List[Issue] = []
+    if repo_root is None:
+        return issues
+
+    path_str = str(path)
+    path_relative = path_str
+
+    # Determine if this is a compressed or uncompressed artifact
+    is_compressed = "/.augment/" in path_str and "/.augment.uncompressed/" not in path_str
+    is_uncompressed = "/.augment.uncompressed/" in path_str
+
+    if not is_compressed and not is_uncompressed:
+        return issues
+
+    # --- Check: compressed/uncompressed pair exists ---
+    if is_uncompressed:
+        # Find expected compressed path
+        compressed_path = Path(path_str.replace("/.augment.uncompressed/", "/.augment/"))
+        if not compressed_path.exists():
+            issues.append(Issue("warning", "compressed_variant_missing",
+                                f"Uncompressed file exists but compressed variant missing: "
+                                f"{compressed_path.name}"))
+    elif is_compressed:
+        # Find expected uncompressed path
+        uncompressed_path = Path(path_str.replace("/.augment/", "/.augment.uncompressed/"))
+        if not uncompressed_path.exists():
+            issues.append(Issue("warning", "uncompressed_variant_missing",
+                                f"Compressed file exists but uncompressed source missing: "
+                                f"{uncompressed_path.name}"))
+
+    # --- Check: file in correct location for type ---
+    location_map = {
+        "skill": "/skills/",
+        "rule": "/rules/",
+        "command": "/commands/",
+        "guideline": "/guidelines/",
+    }
+    expected_loc = location_map.get(artifact_type)
+    if expected_loc and expected_loc not in path_str:
+        issues.append(Issue("warning", "invalid_location_for_type",
+                            f"Artifact detected as '{artifact_type}' but not in "
+                            f"expected location ({expected_loc})"))
+
+    return issues
+
+
 def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
     # Skip README files — they are not lintable artifacts
     if path.name.lower() == "readme.md":
@@ -829,6 +1218,30 @@ def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
     interaction_issues = lint_interaction_quality(display_path, text)
     if interaction_issues:
         result.issues.extend(interaction_issues)
+        result.status = classify_status(result.issues)
+
+    # Post-processing: execution quality checks (errors/warnings)
+    execution_issues = lint_execution_quality(display_path, text)
+    if execution_issues:
+        result.issues.extend(execution_issues)
+        result.status = classify_status(result.issues)
+
+    # Post-processing: type boundary checks (warnings)
+    boundary_issues = lint_type_boundaries(display_path, text, artifact_type)
+    if boundary_issues:
+        result.issues.extend(boundary_issues)
+        result.status = classify_status(result.issues)
+
+    # Post-processing: verification maturity checks (warnings)
+    maturity_issues = lint_verification_maturity(display_path, text, artifact_type)
+    if maturity_issues:
+        result.issues.extend(maturity_issues)
+        result.status = classify_status(result.issues)
+
+    # Post-processing: governance and packaging checks (warnings)
+    governance_issues = lint_governance(path, text, artifact_type, repo_root)
+    if governance_issues:
+        result.issues.extend(governance_issues)
         result.status = classify_status(result.issues)
 
     return result

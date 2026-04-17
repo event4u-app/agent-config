@@ -360,9 +360,20 @@ def generate_claude_commands() -> None:
 
     CLAUDE_SKILLS_DIR.mkdir(parents=True, exist_ok=True)
 
+    # Collect skill names to avoid overwriting real skills with same-name commands
+    skill_names = set()
+    if SKILLS_SOURCE.exists():
+        skill_names = {d.name for d in SKILLS_SOURCE.iterdir() if d.is_dir()}
+
     count = 0
+    skipped = 0
     for source_file in sorted(COMMANDS_SOURCE.glob("*.md")):
         name = source_file.stem
+
+        # Skip if a real skill with the same name exists — skill takes priority
+        if name in skill_names:
+            skipped += 1
+            continue
 
         # Create skill directory (real dir, symlinked SKILL.md inside)
         skill_dir = CLAUDE_SKILLS_DIR / name
@@ -377,7 +388,10 @@ def generate_claude_commands() -> None:
         skill_file.symlink_to(rel_target)
         count += 1
 
-    print(f"  ✅  Created {count} command symlinks in .claude/skills/")
+    msg = f"  ✅  Created {count} command symlinks in .claude/skills/"
+    if skipped:
+        msg += f" ({skipped} skipped — same-name skill exists)"
+    print(msg)
 
 
 def generate_tools() -> None:

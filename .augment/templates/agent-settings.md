@@ -48,6 +48,13 @@ play_by_play=false
 # User's first name — used to address the user personally
 user_name=
 
+# Path to the PR template file (relative to project root)
+pr_template=.github/pull_request_template.md
+
+# rtk (Rust Token Killer) installed for output filtering (true, false)
+# Agent will auto-detect and ask once, then store the result
+rtk_installed=false
+
 # Skill improvement pipeline (true, false)
 # true = after meaningful tasks, propose learning capture and improvements
 # false = silent, no post-task analysis
@@ -72,6 +79,8 @@ improvement_pr_branch_prefix=improve/agent-
 | `minimal_output` | `true`, `false` | `true` | When `true`: short bullet points during work, concise summary at end. When `false`: verbose explanations. |
 | `play_by_play` | `true`, `false` | `false` | When `true`: share intermediate findings during investigation. When `false`: work silently, report only the conclusion. |
 | `user_name` | first name | _(empty)_ | User's first name. Agent asks on first interaction if empty, then addresses user by name. |
+| `pr_template` | file path | `.github/pull_request_template.md` | Path to PR template file. Read this instead of searching for it. |
+| `rtk_installed` | `true`, `false` | `false` | Whether rtk (Rust Token Killer) is installed. Agent auto-detects once and stores the result. |
 | `skill_improvement_pipeline` | `true`, `false` | `false` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. |
 | `upstream_repo` | `org/repo` | _(empty)_ | Target repository for universal improvement PRs (e.g., `org/agent-config`). |
 | `improvement_pr_branch_prefix` | string | `improve/agent-` | Branch prefix for agent improvement PRs. |

@@ -97,7 +97,9 @@ source: project
     )
 
     result = lint_file(path)
-    assert result.status == "pass"
+    # bare_noun_name warning for "example" is expected
+    assert result.status in ("pass", "pass_with_warnings")
+    assert not any(issue.severity == "error" for issue in result.issues)
 
 
 def test_vague_validation_fails(tmp_path: Path) -> None:
@@ -535,3 +537,473 @@ source: project
     result = lint_file(path)
     assert not any(issue.code == "pointer_only_skill" for issue in result.issues)
     assert not any(issue.code == "guideline_dependent_skill" for issue in result.issues)
+
+
+
+# --- Execution quality checks ---
+
+
+def test_execution_skill_without_analysis_fails(tmp_path: Path) -> None:
+    """Execution skill with implementation language but no analysis signals → ERROR."""
+    path = write_file(
+        tmp_path,
+        ".augment/skills/developer-execution/SKILL.md",
+        """\
+---
+name: developer-execution
+description: "Implement changes efficiently"
+source: package
+---
+
+# developer-execution
+
+## When to use
+
+When implementing and fixing code.
+
+## Procedure
+
+1. Implement the change
+2. Modify the tests
+3. Fix any issues
+4. Validate the result
+5. Refactor if needed
+""",
+    )
+
+    result = lint_file(path)
+    assert any(issue.code == "missing_analysis_before_action" for issue in result.issues)
+
+
+def test_execution_skill_with_analysis_passes(tmp_path: Path) -> None:
+    """Execution skill that includes analysis signals → no error."""
+    path = write_file(
+        tmp_path,
+        ".augment/skills/developer-execution/SKILL.md",
+        """\
+---
+name: developer-execution
+description: "Implement changes with analysis first"
+source: package
+---
+
+# developer-execution
+
+## When to use
+
+When implementing and fixing code.
+
+## Procedure
+
+1. Analyze the existing code and understand the current behavior
+2. Inspect the relevant files and trace the data flow
+3. Implement the change
+4. Verify with real execution using curl or Playwright
+5. Do not retry blindly — analyze errors first
+6. If requirements are unclear, ask for clarification
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(issue.code == "missing_analysis_before_action" for issue in result.issues)
+    assert not any(issue.code == "missing_real_verification" for issue in result.issues)
+
+
+def test_execution_skill_with_analysis_section_passes(tmp_path: Path) -> None:
+    """Execution skill with analysis section header (not keywords) → no error."""
+    path = write_file(
+        tmp_path,
+        ".augment/skills/developer-validation/SKILL.md",
+        """\
+---
+name: developer-validation
+description: "Validate developer workflows"
+source: package
+---
+
+# developer-validation
+
+## When to use
+
+When implementing validation changes.
+
+## Procedure
+
+### Understand current setup
+
+Check how validation currently works in the project.
+
+### Implement changes
+
+Make the required modifications.
+
+### Verify results
+
+Run the test suite to confirm behavior.
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(issue.code == "missing_analysis_before_action" for issue in result.issues)
+    assert not any(issue.code == "missing_real_verification" for issue in result.issues)
+
+
+def test_execution_skill_without_verification_fails(tmp_path: Path) -> None:
+    """Execution skill without verification signals → ERROR."""
+    path = write_file(
+        tmp_path,
+        ".augment/skills/developer-action/SKILL.md",
+        """\
+---
+name: developer-action
+description: "Implement code changes"
+source: package
+---
+
+# developer-action
+
+## When to use
+
+When implementing code changes.
+
+## Procedure
+
+1. Analyze the existing code
+2. Understand the current behavior
+3. Implement the changes
+4. Review the code
+""",
+    )
+
+    result = lint_file(path)
+    assert any(issue.code == "missing_real_verification" for issue in result.issues)
+
+
+def test_non_execution_skill_skips_checks(tmp_path: Path) -> None:
+    """Non-execution skills should not trigger execution quality checks."""
+    path = write_file(
+        tmp_path,
+        ".augment/skills/api-design/SKILL.md",
+        """\
+---
+name: api-design
+description: "Design REST APIs"
+source: package
+---
+
+# api-design
+
+## When to use
+
+When designing API endpoints.
+
+## Procedure
+
+1. Define the resource
+2. Choose HTTP methods
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(issue.code == "missing_analysis_before_action" for issue in result.issues)
+    assert not any(issue.code == "missing_real_verification" for issue in result.issues)
+
+
+def test_commands_excluded_from_execution_checks(tmp_path: Path) -> None:
+    """Commands should be excluded from execution quality checks entirely."""
+    path = write_file(
+        tmp_path,
+        ".augment/commands/fix-something.md",
+        """\
+---
+name: fix-something
+description: "Fix implementation issues"
+---
+
+# /fix-something
+
+## Steps
+
+### 1. Implement the fix
+
+Modify the code and fix the issues.
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(issue.code == "missing_analysis_before_action" for issue in result.issues)
+
+
+def test_guidelines_excluded_from_execution_checks(tmp_path: Path) -> None:
+    """Guidelines should be excluded from execution quality checks."""
+    path = write_file(
+        tmp_path,
+        ".augment/guidelines/php/testing.md",
+        """\
+---
+description: "Testing patterns"
+---
+
+# Testing Guidelines
+
+## Patterns
+
+- Implement tests using Pest
+- Fix flaky tests by analyzing timing
+- Validate behavior before committing
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(issue.code == "missing_analysis_before_action" for issue in result.issues)
+
+
+# --- Type boundary checks ---
+
+
+def test_guideline_with_executable_procedure_warns(tmp_path: Path) -> None:
+    """Guideline with 5+ executable numbered steps → warning."""
+    path = write_file(
+        tmp_path,
+        ".augment/guidelines/php/testing.md",
+        """\
+---
+description: "Testing workflow"
+---
+
+# Testing Workflow
+
+1. Run the migrations
+2. Create the test file
+3. Implement the test cases
+4. Execute the test suite
+5. Run PHPStan checks
+6. Create the PR
+""",
+    )
+
+    result = lint_file(path)
+    assert any(issue.code == "guideline_contains_executable_procedure" for issue in result.issues)
+
+
+def test_guideline_without_procedure_passes(tmp_path: Path) -> None:
+    """Guideline without executable steps → no warning."""
+    path = write_file(
+        tmp_path,
+        ".augment/guidelines/php/naming.md",
+        """\
+---
+description: "Naming conventions"
+---
+
+# Naming Conventions
+
+- Use camelCase for variables
+- Use PascalCase for classes
+- Use snake_case for database columns
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(issue.code == "guideline_contains_executable_procedure" for issue in result.issues)
+
+
+def test_command_without_skill_references_warns(tmp_path: Path) -> None:
+    """Command that doesn't reference any skills → warning."""
+    path = write_file(
+        tmp_path,
+        ".augment/commands/do-stuff.md",
+        """\
+---
+name: do-stuff
+description: "Do some stuff"
+---
+
+# /do-stuff
+
+## Steps
+
+### 1. Do the thing
+
+Run some commands and make changes.
+
+### 2. Done
+
+Show results.
+""",
+    )
+
+    result = lint_file(path)
+    assert any(issue.code == "command_missing_skill_references" for issue in result.issues)
+
+
+def test_command_with_skill_references_passes(tmp_path: Path) -> None:
+    """Command that references skills → no warning."""
+    path = write_file(
+        tmp_path,
+        ".augment/commands/deploy.md",
+        """\
+---
+name: deploy
+skills: [quality-tools, git-workflow]
+description: "Deploy the application"
+---
+
+# /deploy
+
+## Steps
+
+### 1. Quality check
+
+Use the quality-tools skill to run all checks.
+
+### 2. Push
+
+Push to remote.
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(issue.code == "command_missing_skill_references" for issue in result.issues)
+
+
+def test_skill_with_vague_validation_warns(tmp_path: Path) -> None:
+    """Skill with vague validation → warning."""
+    path = write_file(
+        tmp_path,
+        ".augment/skills/example-task/SKILL.md",
+        """\
+---
+name: example-task
+description: "Do example tasks"
+source: package
+---
+
+# example-task
+
+## When to use
+
+When doing example tasks.
+
+## Procedure
+
+1. Do the thing
+
+## Validation
+
+Check if it works and make sure it's correct.
+
+## Gotcha
+
+Something might break.
+""",
+    )
+
+    result = lint_file(path)
+    assert any(issue.code == "skill_validation_too_generic" for issue in result.issues)
+
+
+# --- Verification maturity checks ---
+
+
+def test_backend_skill_without_backend_verification_warns(tmp_path: Path) -> None:
+    """Backend execution skill without curl/postman → warning."""
+    path = write_file(
+        tmp_path,
+        ".augment/skills/api-validation/SKILL.md",
+        """\
+---
+name: api-validation
+description: "Validate API endpoints"
+source: package
+---
+
+# api-validation
+
+## When to use
+
+When working with API endpoints and controllers.
+
+## Procedure
+
+1. Analyze the route and controller
+2. Check the middleware and service layer
+3. Implement changes
+4. Review the code
+""",
+    )
+
+    result = lint_file(path)
+    assert any(issue.code == "missing_backend_verification_example" for issue in result.issues)
+
+
+def test_backend_skill_with_curl_passes(tmp_path: Path) -> None:
+    """Backend execution skill mentioning curl → no backend verification warning."""
+    path = write_file(
+        tmp_path,
+        ".augment/skills/api-validation/SKILL.md",
+        """\
+---
+name: api-validation
+description: "Validate API endpoints"
+source: package
+---
+
+# api-validation
+
+## When to use
+
+When working with API endpoints and controllers.
+
+## Procedure
+
+1. Analyze the route and controller
+2. Implement changes
+3. Verify with curl: `curl -s /api/endpoint | jq '.status'`
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(issue.code == "missing_backend_verification_example" for issue in result.issues)
+
+
+# --- Governance checks ---
+
+
+def test_uncompressed_without_compressed_warns(tmp_path: Path) -> None:
+    """Uncompressed file without compressed variant → warning."""
+    path = write_file(
+        tmp_path,
+        ".augment.uncompressed/rules/orphan-rule.md",
+        """\
+---
+description: "When orphan behavior occurs"
+---
+
+# orphan-rule
+
+- Do not leave orphans
+""",
+    )
+
+    result = lint_file(path, repo_root=tmp_path)
+    assert any(issue.code == "compressed_variant_missing" for issue in result.issues)
+
+
+def test_uncompressed_with_compressed_passes(tmp_path: Path) -> None:
+    """Uncompressed file with matching compressed variant → no warning."""
+    content = """\
+---
+description: "When paired behavior occurs"
+---
+
+# paired-rule
+
+- Always have a pair
+"""
+    write_file(tmp_path, ".augment.uncompressed/rules/paired-rule.md", content)
+    write_file(tmp_path, ".augment/rules/paired-rule.md", content)
+
+    path = tmp_path / ".augment.uncompressed" / "rules" / "paired-rule.md"
+    result = lint_file(path, repo_root=tmp_path)
+    assert not any(issue.code == "compressed_variant_missing" for issue in result.issues)

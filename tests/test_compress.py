@@ -508,14 +508,18 @@ class TestGenerateClaudeCommands(unittest.TestCase):
         self._orig = (
             compress.PROJECT_ROOT,
             compress.COMMANDS_SOURCE, compress.CLAUDE_SKILLS_DIR,
+            compress.SKILLS_SOURCE,
         )
         compress.PROJECT_ROOT = self.project_root
         compress.COMMANDS_SOURCE = commands_dir
         compress.CLAUDE_SKILLS_DIR = self.project_root / ".claude" / "skills"
+        # Point SKILLS_SOURCE to empty dir so no real skills interfere
+        compress.SKILLS_SOURCE = self.project_root / ".augment" / "skills"
 
     def tearDown(self):
         (compress.PROJECT_ROOT,
-         compress.COMMANDS_SOURCE, compress.CLAUDE_SKILLS_DIR) = self._orig
+         compress.COMMANDS_SOURCE, compress.CLAUDE_SKILLS_DIR,
+         compress.SKILLS_SOURCE) = self._orig
         shutil.rmtree(self.tmpdir)
 
     def test_creates_command_skills(self):
@@ -524,31 +528,38 @@ class TestGenerateClaudeCommands(unittest.TestCase):
         self.assertTrue((claude_skills / "commit" / "SKILL.md").exists())
         self.assertTrue((claude_skills / "feature-dev" / "SKILL.md").exists())
 
-    def test_command_has_disable_model_invocation(self):
+    def test_command_is_symlink(self):
+        """Command SKILL.md should be a symlink to the source command file."""
         compress.generate_claude_commands()
-        content = (self.project_root / ".claude" / "skills" / "commit" / "SKILL.md").read_text()
-        self.assertIn("disable-model-invocation: true", content)
+        skill_file = self.project_root / ".claude" / "skills" / "commit" / "SKILL.md"
+        self.assertTrue(skill_file.is_symlink())
 
     def test_command_preserves_content(self):
+        """Symlinked command file should contain the original content."""
         compress.generate_claude_commands()
         content = (self.project_root / ".claude" / "skills" / "commit" / "SKILL.md").read_text()
         self.assertIn("Do the commit.", content)
 
-    def test_command_strips_old_frontmatter(self):
+    def test_command_symlink_points_to_source(self):
+        """Symlink should point to the .augment/commands/ source file."""
         compress.generate_claude_commands()
-        content = (self.project_root / ".claude" / "skills" / "feature-dev" / "SKILL.md").read_text()
-        self.assertNotIn("old: data", content)
-        self.assertIn("disable-model-invocation: true", content)
+        skill_file = self.project_root / ".claude" / "skills" / "feature-dev" / "SKILL.md"
+        target = str(skill_file.resolve())
+        self.assertIn("feature-dev.md", target)
 
-    def test_command_description_from_heading(self):
-        compress.generate_claude_commands()
-        content = (self.project_root / ".claude" / "skills" / "commit" / "SKILL.md").read_text()
-        self.assertIn('description: "commit"', content)
+    def test_command_skips_same_name_skill(self):
+        """Commands with same name as a skill should be skipped."""
+        # Create a skill with same name as 'commit' command
+        skills_dir = self.project_root / ".augment" / "skills" / "commit"
+        skills_dir.mkdir(parents=True)
+        (skills_dir / "SKILL.md").write_text("# commit skill")
+        compress.SKILLS_SOURCE = self.project_root / ".augment" / "skills"
 
-    def test_command_description_from_heading_after_frontmatter(self):
         compress.generate_claude_commands()
-        content = (self.project_root / ".claude" / "skills" / "feature-dev" / "SKILL.md").read_text()
-        self.assertIn('description: "feature-dev"', content)
+        # Only feature-dev should exist, not commit (skill takes priority)
+        claude_skills = self.project_root / ".claude" / "skills"
+        self.assertFalse((claude_skills / "commit" / "SKILL.md").is_symlink())
+        self.assertTrue((claude_skills / "feature-dev" / "SKILL.md").is_symlink())
 
 
 class TestCleanTools(unittest.TestCase):

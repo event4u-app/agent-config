@@ -37,17 +37,50 @@ Develop against expected behavior, ideally test-first.
 ## Tool priority
 
 Use the smallest, most targeted tool that gives the needed evidence.
+If a tool is available as MCP server, prefer it over manual alternatives.
+
+### Verification tool mapping
+
+| What changed | Primary tool | MCP alternative |
+|---|---|---|
+| **Backend/API endpoint** | `curl -s \| jq` | Postman MCP (if configured) |
+| **Frontend/UI** | Manual browser check | Playwright MCP (`navigate` + `snapshot`) |
+| **Execution flow/debugging** | Print statements, logs | Xdebug MCP (breakpoints, variable inspection) |
+| **CLI commands/jobs** | Run command, check exit code | — |
+| **Database** | SQL query, migration status | — |
+| **External APIs** | `Http::fake()` in tests | Postman MCP for manual checks |
+
+### Xdebug workflow (when available)
+
+If Xdebug is available (as MCP or IDE integration):
+
+1. Set breakpoints at the suspected code path
+2. Trigger the request (curl, browser, test)
+3. Inspect variables at breakpoint — don't guess values from reading code
+4. Step through to verify actual execution flow vs. assumed flow
+5. Check: is the data what you expected? Is the branch taken what you expected?
+
+Use Xdebug **before** adding print statements or debug logging.
+It's faster and leaves no cleanup work.
+
+### Playwright for frontend verification
+
+When UI changes are involved:
+
+1. Navigate to the affected page
+2. Take a snapshot of the rendered state
+3. Verify the expected elements are present and interactive
+4. Check console/network for errors
+5. Compare before/after if refactoring
 
 ### Prefer targeted output
 
-- `jq` for JSON extraction
-- `grep`, `rg`, `awk`, `sed` for targeted text filtering
+- `jq` for JSON: `curl -s /api/users | jq '.[0] | {id, email}'` — never the full response
+- `rg`, `grep` for text: specific patterns, not full files
 - `head`, `tail`, `cut`, `sort`, `uniq` for narrowing results
-- `curl` for API calls
-- `artisan` / framework CLIs with filtering
-- Debugger (e.g. Xdebug) when flow tracing is needed
-- Playwright for frontend verification
-- Logs only when targeted and scoped
+- `--filter`, `--json`, `--format` flags on CLI tools — always use them
+- Laravel: `route:list --json | jq '.[] | select(.uri | test("users"))'`
+- Logs: `rg "request_id=abc123" storage/logs` — never `cat storage/logs/laravel.log`
 
 ### Avoid large output by default
 
@@ -55,8 +88,9 @@ Do NOT:
 
 - Dump full JSON if one field is enough
 - Load full route lists when filtering one route is enough
-- Inspect full log files when one request id or timestamp can isolate the case
+- Inspect full log files when one request ID or timestamp can isolate the case
 - Re-run broad commands repeatedly without narrowing
+- Load full database tables when a WHERE clause is enough
 
 ## Procedure
 
@@ -110,27 +144,47 @@ If full TDD is not practical: at least write down the expected output before cod
 ```bash
 # Laravel route lookup — targeted, not full dump
 php artisan route:list --json | jq '.[] | select(.uri == "api/users") | {method, uri, name, action, middleware}'
-php artisan route:list | grep "users.index"
 
 # Config/debug
 php artisan config:show app | grep env
 
-# API inspection
+# API inspection — extract only what you need
 curl -s http://localhost/api/users | jq '.[0] | {id, email, status}'
+curl -s http://localhost/api/users/1 | jq '{id, name, roles: [.roles[].name]}'
 
-# Logs — scoped
+# Logs — scoped by request ID, timestamp, or error type
 rg "request_id=abc123|OrderFailed" storage/logs
 tail -n 200 storage/logs/laravel.log | rg "payment|timeout"
+
+# Database — targeted queries, not full table dumps
+php artisan tinker --execute="User::where('email', 'test@example.com')->first(['id','email','status'])"
 ```
 
-#### Frontend examples
+#### Debugging with Xdebug
 
-Use Playwright or browser-level checks when UI is affected:
-rendered state, interaction result, errors in console/network.
+When available (MCP or IDE), prefer over print/log debugging:
+
+```
+1. Set breakpoint at suspected method
+2. Trigger request: curl -s http://localhost/api/endpoint
+3. Inspect variables at breakpoint
+4. Step through execution to verify actual flow
+5. Remove breakpoint when done — zero cleanup
+```
+
+#### Frontend verification with Playwright
+
+When UI is affected, verify with Playwright (MCP or direct):
+
+- Navigate to affected page
+- Snapshot the rendered state
+- Check: correct elements visible? Interactions work? Console errors?
+- Compare before/after for refactoring
 
 #### General shell filtering
 
 Use `rg` over broad grep, `jq` for JSON, `cut`/`awk`/`sort`/`uniq` to reduce noise.
+Never load full output into context when a filter gives you the answer.
 
 ### 6. Form a plan
 
@@ -158,10 +212,18 @@ If a test cannot be added: state exactly why and explain what verification repla
 
 ### 9. Verify with real execution (MANDATORY)
 
-- Backend/API: `curl`, Postman, response shape and behavior
-- Frontend: Playwright, user-visible behavior
-- CLI/jobs: command execution, side effects, exit code
-- Skills/rules/agent docs: lint, structure, trigger verification
+Never trust "it should work" — execute and observe.
+
+| What | How | MCP alternative |
+|---|---|---|
+| Backend/API | `curl -s \| jq`, test endpoint | Postman MCP |
+| Frontend/UI | Browser check | Playwright MCP (navigate + snapshot) |
+| Execution flow | Logs, print debug | Xdebug MCP (breakpoints, step-through) |
+| CLI/Jobs | Run command, check exit code | — |
+| Database | Query result, migration status | — |
+| Skills/rules | Lint, structure check | — |
+
+If a debugging/testing tool is available as MCP server — **prefer it** over manual alternatives.
 
 ### 10. Validate
 

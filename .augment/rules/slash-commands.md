@@ -19,3 +19,12 @@ When the user types a command (`/create-pr`, `# create-pr`, or pastes a command 
 - **NEVER** treat pasted command content as a review request — it's ALWAYS an invocation.
 - The only exception: the user's message contains an explicit instruction about the command
   (e.g., "update this command" or "review this command"). In that case, follow the instruction instead.
+
+## Open files are irrelevant for command detection
+
+Editor may report an open file (e.g., "user has `compress.md` open"). **Irrelevant** for commands.
+
+- `/compress` typed → **run** compress command — even if `compress.md` is open in editor.
+- Command content in context + open file → **command invocation takes priority**.
+- Do NOT confuse "file is open" with "user wants to discuss this file".
+- User's typed message determines intent — not editor state.

@@ -21,6 +21,17 @@ Do NOT use when:
 
 ## Procedure: Optimize copilot/agents files
 
+### 0. Analyze current state
+
+Before changing anything:
+
+1. Read `AGENTS.md` — content, line count, what's duplicated vs. unique
+2. Read `.github/copilot-instructions.md` — same analysis
+3. Scan `.augment/` — which skills/rules already cover topics from above
+4. Identify duplication — what exists in both AGENTS.md and `.augment/`?
+
+Only after this analysis, proceed with optimization.
+
 ### `AGENTS.md` — Project Entry Point for AI Agents
 
 | Property | Value |
