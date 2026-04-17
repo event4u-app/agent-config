@@ -132,12 +132,14 @@ Every developer gets the same behavior. No per-user setup needed.
 | Tool | Rules | Skills | Commands | How it works |
 |---|---|---|---|---|
 | **Augment VSCode/IntelliJ** | ✅ | ✅ | ✅ | Reads `.augment/` from project |
-| **Claude Code** | ✅ | ✅ | ✅ | Reads `.claude/` from project |
-| **Cursor** | ✅ | — | — | Reads `.cursor/rules/` from project |
-| **Cline** | ✅ | — | — | Reads `.clinerules/` from project |
-| **Windsurf** | ✅ | — | — | Reads `.windsurfrules` from project |
-| **Gemini CLI** | ✅ | — | — | Reads `GEMINI.md` from project |
-| **GitHub Copilot** | ✅ | — | — | Reads `.github/copilot-instructions.md` |
+| **Claude Code** | ✅ | ✅ | ✅ | Reads `.claude/` (skills + commands as skills) |
+| **Cursor** | ✅ | — | 📄 | Reads `.cursor/rules/` + commands via AGENTS.md |
+| **Cline** | ✅ | — | 📄 | Reads `.clinerules/` + commands via AGENTS.md |
+| **Windsurf** | ✅ | — | 📄 | Reads `.windsurfrules` + commands via AGENTS.md |
+| **Gemini CLI** | ✅ | — | 📄 | Reads `GEMINI.md` (includes commands reference) |
+| **GitHub Copilot** | ✅ | — | 📄 | Reads `.github/copilot-instructions.md` (includes commands) |
+
+✅ = native support &nbsp; 📄 = available via documentation (AGENTS.md)
 
 ### Plugin-installed (optional, for global use)
 
