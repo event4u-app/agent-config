@@ -66,6 +66,17 @@ upstream_repo=
 # Branch prefix for improvement PRs
 improvement_pr_branch_prefix=improve/agent-
 
+# --- Cost profile ---
+#
+# Controls token consumption by setting multiple settings at once.
+# Individual settings below can still override the profile.
+#
+# cheap    = minimal tokens — runtime off, no reports, no feedback in chat
+# balanced = runtime + local persistence — reports on demand, no auto-read
+# full     = everything on — reports auto-read, CI summaries, feedback in chat
+# custom   = ignore profile, use individual settings below as-is
+cost_profile=cheap
+
 # --- Runtime features ---
 
 # Runtime pipeline (true, false)
@@ -133,6 +144,7 @@ feedback_suggestions_in_chat=false
 | `skill_improvement_pipeline` | `true`, `false` | `false` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. |
 | `upstream_repo` | `org/repo` | _(empty)_ | Target repository for universal improvement PRs (e.g., `org/agent-config`). |
 | `improvement_pr_branch_prefix` | string | `improve/agent-` | Branch prefix for agent improvement PRs. |
+| `cost_profile` | `cheap`, `balanced`, `full`, `custom` | `cheap` | Controls multiple token-related settings at once. See Cost Profiles section. |
 | `runtime_enabled` | `true`, `false` | `false` | Enable runtime pipeline (dispatch, execution proposals, hooks). When `false`: zero overhead. |
 | `observability_reports` | `true`, `false` | `false` | Generate reports, CI summaries, and structured logging from pipeline runs. |
 | `feedback_collection` | `true`, `false` | `false` | Record execution outcomes and generate improvement suggestions. |
@@ -141,6 +153,52 @@ feedback_suggestions_in_chat=false
 | `minimal_runtime_context` | `true`, `false` | `true` | When `true`: only essential runtime metadata in agent context. Saves tokens. |
 | `ci_summary_enabled` | `true`, `false` | `false` | Generate observability summary as CI artifact or PR comment. |
 | `feedback_suggestions_in_chat` | `true`, `false` | `false` | When `true`: suggestions appear in chat. When `false`: persist locally only. |
+
+## Cost profiles
+
+The `cost_profile` setting controls multiple token-related settings at once.
+Individual settings can still override the profile — set `cost_profile=custom` to use
+your own combination.
+
+### Profile matrix
+
+| Setting | `cheap` | `balanced` | `full` |
+|---|---|---|---|
+| `runtime_enabled` | `false` | `true` | `true` |
+| `observability_reports` | `false` | `true` | `true` |
+| `feedback_collection` | `false` | `true` | `true` |
+| `runtime_auto_read_reports` | `false` | `false` | `true` |
+| `max_report_lines` | `30` | `50` | `100` |
+| `minimal_runtime_context` | `true` | `true` | `false` |
+| `ci_summary_enabled` | `false` | `false` | `true` |
+| `feedback_suggestions_in_chat` | `false` | `false` | `true` |
+| `skill_improvement_pipeline` | `false` | `false` | `true` |
+
+### Profile descriptions
+
+**cheap** (default) — Zero additional token overhead. Runtime dormant, no reports generated,
+no feedback collected, no suggestions in chat. Best for daily coding where cost matters most.
+
+**balanced** — Runtime active, data collected and persisted locally. Reports generated on demand
+(`task report`) but never auto-loaded into agent context. Good for teams that want observability
+without paying per-request token costs.
+
+**full** — Everything active. Reports auto-read, CI summaries on PRs, feedback suggestions in chat,
+skill improvement pipeline active. Best for agent infrastructure development or debugging.
+
+### How profiles work
+
+1. Agent reads `cost_profile` from `.agent-settings`
+2. If `cost_profile` is `cheap`, `balanced`, or `full` → apply the profile matrix values
+3. Individual settings in the file **override** profile values (explicit > profile)
+4. If `cost_profile=custom` → profile is ignored, all individual settings used as-is
+
+### Example: balanced with CI summaries
+
+```
+cost_profile=balanced
+ci_summary_enabled=true    # override: enable CI summaries despite balanced profile
+```
 
 ## Sync rules
 
