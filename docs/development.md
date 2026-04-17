@@ -8,7 +8,7 @@
 
 ## Editing content
 
-1. **Always edit in `.agent-src.uncompressed/`** — never in `.augment/` directly
+1. **Always edit in `.agent-src.uncompressed/`** — never in `.agent-src/` or `.augment/` directly
 2. Run `task sync` to copy non-`.md` files
 3. Use the `/compress` command to compress changed `.md` files
 4. Run `task ci` to verify everything passes before pushing
@@ -30,9 +30,9 @@ task consistency-fix           # Regenerate all derived outputs from source
 ### Sync & Compression
 
 ```bash
-task sync                      # Sync non-.md files: .agent-src.uncompressed/ → .augment/
+task sync                      # .agent-src.uncompressed/ → .agent-src/, then project → .augment/
 task sync-changed              # List .md files changed since last compression
-task sync-check                # Check if .augment/ is in sync (for CI)
+task sync-check                # Check if .agent-src/ is in sync (for CI)
 task sync-check-hashes         # Verify compressed .md hashes match source
 task sync-mark-done <file>     # Mark a single file as compressed
 task sync-mark-all-done        # Mark ALL files as compressed
@@ -151,8 +151,12 @@ templates/consumer-settings/   ← Settings templates for consumer projects
 ├── templates/                 ← Document scaffolds
 └── contexts/                  ← System knowledge documents
 
-.augment/                      ← Compressed output (token-efficient)
+.agent-src/                    ← Compressed output (token-efficient, shipped)
 ├── (same structure)           ← Compressed .md + copied non-.md files
+
+.augment/                      ← Local projection for Augment Code (gitignored)
+├── rules/                     ← Real file copies (Augment cannot load symlinked rules)
+└── skills/, commands/, ...    ← Symlinks → ../.agent-src/<sub>
 ```
 
 ---

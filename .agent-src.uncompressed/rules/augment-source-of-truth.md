@@ -1,18 +1,27 @@
 ---
 type: "auto"
-description: "Creating, editing, or modifying files inside .augment/ directory — the source of truth is .agent-src.uncompressed/, never edit .augment/ directly"
+description: "Creating, editing, or modifying files inside .agent-src/ or .augment/ — the source of truth is .agent-src.uncompressed/, never edit the generated directories directly"
 source: package
 ---
 
-# .augment/ Source of Truth
+# Source of Truth
 
-`.agent-src.uncompressed/` is the **single source of truth** for all `.augment/` content.
-`.augment/` contains compressed (token-optimized) copies — never edit them directly.
+`.agent-src.uncompressed/` is the **single source of truth**. The compressed
+output ships as `.agent-src/`. In the package repo, `.augment/` is a local
+projection of `.agent-src/` for Augment Code (rules copied, rest symlinked).
+Consumer projects still see `.augment/` as the installed runtime tree.
+
+Never edit any of these generated layers directly:
+
+- `.agent-src/` — compressed output shipped in the package
+- `.augment/` — local projection (gitignored in the package repo; installer
+  output in consumer projects)
+- `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules` — tool projections
 
 ## The Iron Rule
 
 ```
-NEVER create or edit files in .augment/ directly — not even "just a small fix".
+NEVER create or edit files in .agent-src/ or .augment/ directly — not even "just a small fix".
 ALWAYS work in .agent-src.uncompressed/ — then compress via /compress command.
 ```
 
@@ -25,7 +34,7 @@ ALWAYS work in .agent-src.uncompressed/ — then compress via /compress command.
 
 **STOP. Edit `.agent-src.uncompressed/` first. Always.**
 
-Direct edits to `.augment/` break compression hashes, cause CI failures
+Direct edits to `.agent-src/` break compression hashes, cause CI failures
 ("Verify compression hashes" step), and create drift between source and output.
 
 **Compression is ONLY done via the `/compress` command.** The command handles
@@ -38,7 +47,7 @@ hashing, sync verification, and quality checks automatically.
 3. **Before commit/push:** Check if compression is needed (`task sync-changed`).
    If files need compression, ask the user:
    ```
-   > 📦 {N} .augment files need compression before commit.
+   > 📦 {N} .agent-src files need compression before commit.
    >
    > 1. Compress now — run /compress
    > 2. Later — commit without compression
@@ -87,7 +96,7 @@ disable-model-invocation: true
 
 1. Create `.agent-src.uncompressed/commands/{name}.md` (use template)
 2. Run `python3 scripts/skill_linter.py` — must be 0 FAIL
-3. Sync: `cp` to `.augment/commands/`
+3. Compress via `/compress`, which writes to `.agent-src/commands/`
 4. Run `task generate-tools` — creates Claude symlink automatically
 
 **Never** create `.claude/skills/{name}/SKILL.md` manually for commands — always use the symlink workflow.
@@ -98,18 +107,18 @@ Before asking for review or creating a PR, verify derived outputs are not stale:
 
 1. Run `task sync-changed` — check if `.agent-src.uncompressed/` has changes not yet compressed
 2. If stale files exist: run `/compress` before pushing
-3. Before merge: verify derived outputs (`.augment/`, `.claude/skills/`) are regenerated
-4. Do NOT leave `.augment/` stale across review cycles
+3. Before merge: verify derived outputs (`.agent-src/`, `.augment/`, `.claude/skills/`) are regenerated
+4. Do NOT leave `.agent-src/` stale across review cycles
 
 ## Multi-agent symlink mapping
 
-`.claude/skills/` contains symlinks to **both** `.augment/skills/` and `.augment/commands/`.
+`.claude/skills/` contains symlinks to **both** `.agent-src/skills/` and `.agent-src/commands/`.
 Claude Code treats both as "skills" — but they are different artifact types in our taxonomy.
 
 | `.claude/skills/{name}/SKILL.md` points to... | Actual type |
 |---|---|
-| `.augment/skills/{name}/SKILL.md` | **Skill** (workflow) |
-| `.augment/commands/{name}.md` | **Command** (slash-invoked procedure) |
+| `.agent-src/skills/{name}/SKILL.md` | **Skill** (workflow) |
+| `.agent-src/commands/{name}.md` | **Command** (slash-invoked procedure) |
 
 Always check the symlink target to determine the actual artifact type.
 Commands have `disable-model-invocation: true` in their frontmatter.
@@ -118,11 +127,11 @@ Commands have `disable-model-invocation: true` in their frontmatter.
 
 | Task | What to do |
 |---|---|
-| Edit existing file | Edit in `.agent-src.uncompressed/`, compress to `.augment/` |
-| Create new `.md` | Create in `.agent-src.uncompressed/`, compress to `.augment/` |
+| Edit existing file | Edit in `.agent-src.uncompressed/`, compress to `.agent-src/` |
+| Create new `.md` | Create in `.agent-src.uncompressed/`, compress to `.agent-src/` |
 | Create new non-`.md` | Create in `.agent-src.uncompressed/`, run `task sync` |
 | Create new command | Create in `.agent-src.uncompressed/commands/`, sync, `task generate-tools` |
-| Delete a file | Delete from both directories |
+| Delete a file | Delete from `.agent-src.uncompressed/` and `.agent-src/` |
 | Check what needs compression | `task sync-changed` |
 | Mark file as compressed | `task sync-mark-done -- {path}` |
 | Verify everything is in sync | `task sync-check` |

@@ -10,6 +10,16 @@ versioning policy is documented in [CONTRIBUTING.md](CONTRIBUTING.md#versioning-
 ## [Unreleased]
 
 ### Added
+- **`.agent-src/` replaces `.augment/` as the canonical compressed directory
+  shipped in the package.** The new name is tool-agnostic. The installer on
+  the consumer side still writes into `.augment/`, unchanged.
+- `.augment/` is now a **local projection** of `.agent-src/` for Augment Code
+  (gitignored in this repo, rebuilt by `task sync`). Rules are copied (Augment
+  Code cannot load symlinked rules); everything else is symlinked to save
+  space.
+- `scripts/install.sh` and `scripts/install.py` now read from vendor's
+  `.agent-src/` with automatic fallback to `.augment/` for pre-2.0 packages.
+- `task project-augment` — rebuild the `.augment/` projection from `.agent-src/`.
 - MIT License file in the repository root (previously `license: proprietary` in
   `composer.json` with no `LICENSE` file).
 - Root-level package docs (`AGENTS.md`, `.github/copilot-instructions.md`) are

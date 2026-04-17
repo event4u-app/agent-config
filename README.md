@@ -131,20 +131,20 @@ can prioritize the right skills for extraction.
 
 | Skill | What your agent learns |
 |---|---|
-| [`laravel`](.augment/skills/laravel/SKILL.md) | Write Laravel code following framework conventions and project architecture |
-| [`pest-testing`](.augment/skills/pest-testing/SKILL.md) | Write Pest tests with clear intent, good coverage, and project conventions |
-| [`eloquent`](.augment/skills/eloquent/SKILL.md) | Eloquent models, relationships, scopes, eager loading, type safety |
-| [`create-pr`](.augment/commands/create-pr.md) | Create GitHub PRs with structured descriptions from Jira tickets |
-| [`commit`](.augment/commands/commit.md) | Stage and commit changes following Conventional Commits |
-| [`fix-ci`](.augment/commands/fix-ci.md) | Fetch CI errors from GitHub Actions and fix them |
-| [`fix-pr-comments`](.augment/commands/fix-pr-comments.md) | Fix and reply to all open review comments on a PR |
-| [`quality-fix`](.augment/commands/quality-fix.md) | Run PHPStan/Rector/ECS and fix all errors |
-| [`bug-analyzer`](.augment/skills/bug-analyzer/SKILL.md) | Root cause analysis from Sentry errors or Jira tickets |
-| [`improve-before-implement`](.augment/rules/improve-before-implement.md) | Challenge weak requirements before coding |
-| [`docker`](.augment/skills/docker/SKILL.md) | Dockerfile, docker-compose, container management |
-| [`security`](.augment/skills/security/SKILL.md) | Auth, policies, CSRF, rate limiting, secure coding |
-| [`api-design`](.augment/skills/api-design/SKILL.md) | REST conventions, versioning, deprecation |
-| [`database`](.augment/skills/database/SKILL.md) | MariaDB optimization, indexing, query performance |
+| [`laravel`](.agent-src/skills/laravel/SKILL.md) | Write Laravel code following framework conventions and project architecture |
+| [`pest-testing`](.agent-src/skills/pest-testing/SKILL.md) | Write Pest tests with clear intent, good coverage, and project conventions |
+| [`eloquent`](.agent-src/skills/eloquent/SKILL.md) | Eloquent models, relationships, scopes, eager loading, type safety |
+| [`create-pr`](.agent-src/commands/create-pr.md) | Create GitHub PRs with structured descriptions from Jira tickets |
+| [`commit`](.agent-src/commands/commit.md) | Stage and commit changes following Conventional Commits |
+| [`fix-ci`](.agent-src/commands/fix-ci.md) | Fetch CI errors from GitHub Actions and fix them |
+| [`fix-pr-comments`](.agent-src/commands/fix-pr-comments.md) | Fix and reply to all open review comments on a PR |
+| [`quality-fix`](.agent-src/commands/quality-fix.md) | Run PHPStan/Rector/ECS and fix all errors |
+| [`bug-analyzer`](.agent-src/skills/bug-analyzer/SKILL.md) | Root cause analysis from Sentry errors or Jira tickets |
+| [`improve-before-implement`](.agent-src/rules/improve-before-implement.md) | Challenge weak requirements before coding |
+| [`docker`](.agent-src/skills/docker/SKILL.md) | Dockerfile, docker-compose, container management |
+| [`security`](.agent-src/skills/security/SKILL.md) | Auth, policies, CSRF, rate limiting, secure coding |
+| [`api-design`](.agent-src/skills/api-design/SKILL.md) | REST conventions, versioning, deprecation |
+| [`database`](.agent-src/skills/database/SKILL.md) | MariaDB optimization, indexing, query performance |
 
 → [Browse all skills](docs/skills-catalog.md) · [llms.txt](llms.txt)
 
@@ -154,16 +154,16 @@ can prioritize the right skills for extraction.
 
 | Command | What it does |
 |---|---|
-| [`/commit`](.augment/commands/commit.md) | Stage and commit with Conventional Commits |
-| [`/create-pr`](.augment/commands/create-pr.md) | Create PR with Jira-linked description |
-| [`/fix-ci`](.augment/commands/fix-ci.md) | Fetch and fix GitHub Actions failures |
-| [`/fix-pr-comments`](.augment/commands/fix-pr-comments.md) | Fix and reply to review comments |
-| [`/quality-fix`](.augment/commands/quality-fix.md) | Run and fix all quality checks |
-| [`/review-changes`](.augment/commands/review-changes.md) | Self-review before creating a PR |
-| [`/jira-ticket`](.augment/commands/jira-ticket.md) | Read ticket from branch, implement feature |
-| [`/compress`](.augment/commands/compress.md) | Compress skills for token efficiency |
+| [`/commit`](.agent-src/commands/commit.md) | Stage and commit with Conventional Commits |
+| [`/create-pr`](.agent-src/commands/create-pr.md) | Create PR with Jira-linked description |
+| [`/fix-ci`](.agent-src/commands/fix-ci.md) | Fetch and fix GitHub Actions failures |
+| [`/fix-pr-comments`](.agent-src/commands/fix-pr-comments.md) | Fix and reply to review comments |
+| [`/quality-fix`](.agent-src/commands/quality-fix.md) | Run and fix all quality checks |
+| [`/review-changes`](.agent-src/commands/review-changes.md) | Self-review before creating a PR |
+| [`/jira-ticket`](.agent-src/commands/jira-ticket.md) | Read ticket from branch, implement feature |
+| [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
 
-→ [Browse all 51 commands](.augment/commands/)
+→ [Browse all 51 commands](.agent-src/commands/)
 
 ---
 

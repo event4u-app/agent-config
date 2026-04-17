@@ -22,9 +22,10 @@ profiles and they are explicit about being no-ops today.
 ```
 .agent-src.uncompressed/          ← Source of truth (verbose, human-readable)
     ↓ /compress command
-.augment/                       ← Compressed output (token-efficient, agent-optimized)
-    ↓ Plugin system (Augment CLI, Claude Code, Copilot CLI)
-    ↓ install.sh (Cursor, Cline, Windsurf, Augment VSCode)
+.agent-src/                     ← Compressed output (token-efficient, shipped in the package)
+    ↓ project_to_augment() — copies rules, symlinks rest
+.augment/                       ← Local projection for Augment Code (gitignored)
+    ↓ install.sh (Cursor, Cline, Windsurf, Augment VSCode) / plugin system
 .claude/ .cursor/ .clinerules/  ← Tool-specific symlinks/copies (auto-generated)
 .windsurfrules  GEMINI.md
 ```

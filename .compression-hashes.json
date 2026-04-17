@@ -100,7 +100,7 @@
   "rules/architecture.md": "06d41ea39242ec1b2cf459b04d776433f0cbece31e3e13406c0e8df387c2dfbd",
   "rules/ask-when-uncertain.md": "08189b8b08cee0b0fea35d11deed09ca58f53246a5964bd051fcfbce7aba8a8e",
   "rules/augment-portability.md": "6a5fc45726164c7b3fe6d1fe1b922b3605e8e2f00fea29b992d48b3b9c0679a9",
-  "rules/augment-source-of-truth.md": "607861b9fbc42d53022b4a5d4bf353f9adb4bf437c39a52c24958939f4608f1b",
+  "rules/augment-source-of-truth.md": "cddfeb5b120e18891282023940584f491f42e9ba28e0ad345edcfde11927ceb0",
   "rules/capture-learnings.md": "c27c822ce6d5de53aec080f5bf6d32f6151ccb1c54c58e31b40b58a85056f046",
   "rules/cli-output-handling.md": "89ec1e01cccedbe1b17fa8b06dc37a60fd55268c4120ea21ee222fceef6e1926",
   "rules/commit-conventions.md": "a39f1158c57dbe6fe8f2a4d574d2c8bcb4227e3c1b31a60a86ba5702019d42ea",
