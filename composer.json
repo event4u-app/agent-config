@@ -3,6 +3,9 @@
     "description": "Shared agent configuration — skills, rules, commands, guidelines, and templates for AI coding tools",
     "type": "library",
     "license": "proprietary",
+    "require": {
+        "php": ">=8.0"
+    },
     "bin": [
         "bin/install.php"
     ],

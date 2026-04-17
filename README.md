@@ -24,14 +24,16 @@ composer require --dev event4u/agent-config
 npm install --save-dev @event4u/agent-config
 ```
 
-Then generate project bridge files (optional but recommended):
+Bridge files (`.agent-settings`, `.vscode/settings.json`, `.augment/settings.json`, …)
+are generated automatically by the post-install hook. To re-run or pick a profile:
 
 ```bash
-php vendor/bin/install.php                    # minimal profile (default)
-php vendor/bin/install.php --profile=balanced  # for teams
+python3 scripts/install.py --profile=balanced   # any environment
+php vendor/bin/install.php --profile=balanced   # PHP wrapper (Composer)
 ```
 
-No Task, no Make, no build tools required. The package makes rules, skills, and commands
+No Task, no Make, no build tools required — only **Python 3** (stdlib only, pre-installed
+on macOS 12.3+ and all major Linux distros). The package makes rules, skills, and commands
 available project-locally for all supported AI tools.
 
 ### For individual use (optional)

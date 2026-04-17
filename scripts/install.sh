@@ -19,6 +19,10 @@ GITIGNORE_MARKER="# galawork/agent-config"
 # These are only relevant when developing the agent-config package itself.
 EXCLUDE_RULES="augment-source-of-truth.md augment-portability.md docs-sync.md"
 
+# Files inside target/.augment/ that are NOT managed by sync (created by the bridge installer).
+# Never remove them in clean_stale even though they are absent in the source manifest.
+PRESERVE_TARGET="settings.json"
+
 # --- Globals ---
 SOURCE_DIR=""
 TARGET_DIR=""
@@ -206,6 +210,17 @@ is_excluded_rule() {
     return 1
 }
 
+# Check if a target entry must never be removed by clean_stale
+is_preserved_target() {
+    local rel_path="$1"
+    for preserved in $PRESERVE_TARGET; do
+        if [[ "$rel_path" == "$preserved" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 # Hybrid sync: copy COPY_DIRS files, symlink everything else
 sync_hybrid() {
     local source_augment="$1"
@@ -313,6 +328,10 @@ clean_stale() {
     # Remove stale entries (in target but not in source) and excluded rules
     while IFS= read -r entry; do
         [[ -z "$entry" ]] && continue
+        if is_preserved_target "$entry"; then
+            log_verbose "preserve: $entry"
+            continue
+        fi
         if is_excluded_rule "$entry" || ! echo "$source_manifest" | grep -qxF "$entry"; then
             local path="$target_dir/$entry"
             if $DRY_RUN; then
@@ -537,10 +556,12 @@ ensure_gitignore() {
     local project_root="$1"
     local gitignore="$project_root/.gitignore"
 
-    [[ -f "$gitignore" ]] || return
+    if [[ ! -f "$gitignore" ]]; then
+        return 0
+    fi
 
     if grep -qF "$GITIGNORE_MARKER" "$gitignore"; then
-        return  # Already present
+        return 0  # Already present
     fi
 
     if $DRY_RUN; then
@@ -563,6 +584,53 @@ ensure_gitignore() {
 # Agent config — NOT ignored (real copies, may contain project overrides)
 # .augment/rules/
 BLOCK
+}
+
+# Detect python3 (or python, if it is Python 3) — returns the binary path or empty
+find_python() {
+    local candidate
+    for candidate in python3 python; do
+        local path
+        path="$(command -v "$candidate" 2>/dev/null || true)"
+        [[ -z "$path" ]] && continue
+        if "$path" -c 'import sys; exit(0 if sys.version_info[0] >= 3 else 1)' 2>/dev/null; then
+            echo "$path"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Render .agent-settings + JSON bridges using the Python installer
+run_bridge_installer() {
+    local source_dir="$1"
+    local target_dir="$2"
+    local installer="$source_dir/scripts/install.py"
+
+    if [[ ! -f "$installer" ]]; then
+        log_verbose "Skipping bridge installer (not found): $installer"
+        return
+    fi
+
+    local python_bin
+    if ! python_bin="$(find_python)"; then
+        log_warn "Python 3 not found — skipping .agent-settings and bridge files."
+        log_warn "Install python3 and re-run, or: python3 $installer"
+        return
+    fi
+
+    if $DRY_RUN; then
+        log_verbose "would run: $python_bin $installer --project $target_dir"
+        return
+    fi
+
+    if $QUIET; then
+        "$python_bin" "$installer" --project "$target_dir" --package "$source_dir" --quiet || \
+            log_warn "Bridge installer exited with errors (continuing)."
+    else
+        "$python_bin" "$installer" --project "$target_dir" --package "$source_dir" || \
+            log_warn "Bridge installer exited with errors (continuing)."
+    fi
 }
 
 # --- Main ---
@@ -593,6 +661,9 @@ main() {
 
     # 5. Manage .gitignore
     ensure_gitignore "$TARGET_DIR"
+
+    # 6. Render .agent-settings + JSON bridges via Python installer
+    run_bridge_installer "$SOURCE_DIR" "$TARGET_DIR"
 
     echo ""
     $QUIET || echo "✅  agent-config installed successfully."
