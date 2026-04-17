@@ -2,7 +2,8 @@
 
 ## Current state after Phase 3
 
-Phase 3 delivered five infrastructure layers. Phase 4 connects them into a working system.
+Phase 3 delivered five infrastructure layers. Phase 4 connects them into a working system
+and activates developer judgment.
 
 ## Gap analysis
 
@@ -11,59 +12,85 @@ Phase 3 delivered five infrastructure layers. Phase 4 connects them into a worki
 | Execution metadata schema | ✅ Schema, linter validation | | |
 | Runtime registry + dispatcher | ✅ Discover, dispatch, block | | End-to-end execution flow |
 | Runtime hooks + errors | ✅ Before/after chains, error classification | | Hook wiring into real skill execution |
-| Tool registry + adapter contract | ✅ Schema, base adapter | Scaffold adapters (no real API calls) | Production-ready adapters with retries |
+| Tool registry + adapter contract | ✅ Schema, base adapter | Scaffold adapters (no real API calls) | Production-ready adapters with auth, retries, timeouts |
 | Tool permissions + audit | ✅ Validation logic | | Audit log persistence, tool-call tracing |
-| Structured events | ✅ Event types, emitter | | No emission from real processes yet |
+| Structured events | ✅ Event types, emitter | | No emission from real processes, no mandatory schema |
 | Metrics aggregation | ✅ Counters, timers | | No data collection in real workflows |
 | Structured logger | ✅ JSON logger | | Not wired into any process |
 | Feedback collector | ✅ Outcome classification, suggestions | | No real data, no governance target |
 | Skill lifecycle | ✅ Health scores, migrations | | Not integrated with feedback/observability |
-| Skills with execution blocks | | 0 of ~80 skills tagged | Classification + tagging |
+| Skills with execution blocks | | 0 of ~80 skills tagged | Classification standard + tagging |
 | Rule/skill boundary | | `procedural_rule` warning on runtime-safety | Boundary cleanup |
 | End-to-end integration | | Components exist separately | Reference workflow connecting all layers |
 | Consumable reports | | | CLI views, markdown summaries, CI artifacts |
 | Feedback → governance loop | | | Suggestions → issues/backlog/lifecycle |
+| Developer judgment | | | Agent challenges weak requests before implementing |
+| Execution classification | | | No criteria for manual/assisted/automated decisions |
 
 ## What Phase 4 delivers
 
-Three roadmaps that turn infrastructure into a working system:
+Four roadmaps that turn infrastructure into a working system:
 
-### Roadmap 1: End-to-End Integration (4 PRs)
+### Roadmap 1: E2E Integration + Tool Adapters (5 PRs)
 
 Wire all components into a single reference flow:
 Skill → Dispatcher → Tool Adapter → Events/Metrics → Feedback → Lifecycle impact.
 
-This is the highest priority — without it, the components remain disconnected.
+Harden tool adapters in stages: read-only first → observability → skill integration.
+This prevents mixing adapter bugs with skill bugs during integration.
 
 ### Roadmap 2: Skill Activation + Boundary Hygiene (4 PRs)
 
-Tag existing skills with execution metadata.
-Fix the `procedural_rule` boundary issue.
-Verify the full registry with real skill data.
+**Starts with a Classification Standard** — clear criteria for manual/assisted/automated
+before tagging any skills. Includes explicit guardrails for `automated` (6 mandatory criteria).
+
+Tag existing skills, fix boundary violations.
 
 ### Roadmap 3: Consumable Output + Feedback Governance (4 PRs)
 
-Make observability visible: CLI reports, CI summaries, markdown dashboards.
-Close the feedback loop: suggestions → governance actions (issues, lifecycle flags, skill backlog).
+Make observability **decision-enabling**: define key questions first, then build reports
+that answer them. Mandatory event schema, persistent artifacts, CI summaries.
+Close the feedback loop: suggestions → governance actions.
 
-## Dependency order
+### Roadmap 4: Developer Judgment (5 PRs) ← NEW
+
+Activate the agent's ability to challenge and improve requests before implementing.
+`improve-before-implement` rule, `validate-feature-fit` skill, linter heuristics,
+reference skill updates, and documentation.
+
+## Recommended execution order
 
 ```
-Roadmap 1 (E2E Integration)
-    ↓
-Roadmap 2 (Skill Activation)  ←  needs working E2E flow to verify
-    ↓
-Roadmap 3 (Reports + Feedback Governance)  ←  needs real data from tagged skills
+Step 1: Execution Classification Standard (Roadmap 2, PR 1)
+  ↓
+Step 2: Skill Tagging (Roadmap 2, PRs 2-4)
+  ↓  ← can start Roadmap 4 in parallel from here
+Step 3: E2E Pipeline + Events (Roadmap 1, PRs 1-3)
+  ↓
+Step 4: Observability operationalization (Roadmap 3, PRs 1-2)
+  ↓
+Step 5: Tool Adapter activation (Roadmap 1, PRs 4-5)
+  ↓
+Step 6: CI + Governance + Skill Integration (Roadmap 3, PRs 3-4)
 ```
+
+Roadmap 4 (Developer Judgment) can run **in parallel** with Steps 2-6 — it has no hard
+dependency on the other roadmaps.
 
 ## Success criteria
 
 Phase 4 is complete when:
 
+- [ ] Execution Classification Standard exists with concrete, testable criteria
 - [ ] `task runtime-list` shows ≥20 tagged skills with correct execution metadata
+- [ ] No skill tagged `automated` without passing all 6 automated criteria
 - [ ] A reference skill runs through the full E2E flow (dispatch → execute → event → feedback)
 - [ ] `task lifecycle-health` produces a meaningful report from real data
+- [ ] All events conform to the mandatory event schema
 - [ ] CI generates observability summaries on PR
 - [ ] Feedback suggestions have a defined governance target (backlog, lifecycle, or issue)
 - [ ] 0 `procedural_rule` warnings in linter output
 - [ ] All tool adapters support at least read-only operations with real API calls
+- [ ] Tool adapter calls are audited and observable
+- [ ] `improve-before-implement` rule is active and triggers on feature requests
+- [ ] At least 2 reference skills have explicit validation/challenge steps
