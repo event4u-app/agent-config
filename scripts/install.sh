@@ -13,11 +13,16 @@ set -euo pipefail
 
 # --- Configuration ---
 COPY_DIRS="rules"  # Subdirectories where files must be real copies (space-separated)
-GITIGNORE_MARKER="# galawork/agent-config"
+GITIGNORE_MARKER="# event4u/agent-config"
+GITIGNORE_MARKER_LEGACY="# galawork/agent-config"  # pre-rename; migrated in place
 
 # Rules that are internal to the agent-config package and should NOT be shipped to consumers.
 # These are only relevant when developing the agent-config package itself.
 EXCLUDE_RULES="augment-source-of-truth.md augment-portability.md docs-sync.md"
+
+# Files inside target/.augment/ that are NOT managed by sync (created by the bridge installer).
+# Never remove them in clean_stale even though they are absent in the source manifest.
+PRESERVE_TARGET="settings.json"
 
 # --- Globals ---
 SOURCE_DIR=""
@@ -206,6 +211,17 @@ is_excluded_rule() {
     return 1
 }
 
+# Check if a target entry must never be removed by clean_stale
+is_preserved_target() {
+    local rel_path="$1"
+    for preserved in $PRESERVE_TARGET; do
+        if [[ "$rel_path" == "$preserved" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 # Hybrid sync: copy COPY_DIRS files, symlink everything else
 sync_hybrid() {
     local source_augment="$1"
@@ -313,6 +329,10 @@ clean_stale() {
     # Remove stale entries (in target but not in source) and excluded rules
     while IFS= read -r entry; do
         [[ -z "$entry" ]] && continue
+        if is_preserved_target "$entry"; then
+            log_verbose "preserve: $entry"
+            continue
+        fi
         if is_excluded_rule "$entry" || ! echo "$source_manifest" | grep -qxF "$entry"; then
             local path="$target_dir/$entry"
             if $DRY_RUN; then
@@ -537,10 +557,28 @@ ensure_gitignore() {
     local project_root="$1"
     local gitignore="$project_root/.gitignore"
 
-    [[ -f "$gitignore" ]] || return
+    if [[ ! -f "$gitignore" ]]; then
+        return 0
+    fi
 
     if grep -qF "$GITIGNORE_MARKER" "$gitignore"; then
-        return  # Already present
+        return 0  # Already present
+    fi
+
+    # Migrate legacy marker in place so existing installs pick up the rename
+    # without duplicating the block. Kept for a few releases; safe to drop later.
+    if grep -qF "$GITIGNORE_MARKER_LEGACY" "$gitignore"; then
+        if $DRY_RUN; then
+            log_verbose "migrate legacy .gitignore marker"
+            return
+        fi
+        # Portable sed on macOS + GNU: write to temp, move back
+        local tmp
+        tmp="$(mktemp)"
+        awk -v old="$GITIGNORE_MARKER_LEGACY" -v new="$GITIGNORE_MARKER" \
+            '{ if ($0 == old) print new; else print $0 }' "$gitignore" > "$tmp"
+        mv "$tmp" "$gitignore"
+        return 0
     fi
 
     if $DRY_RUN; then
@@ -550,7 +588,7 @@ ensure_gitignore() {
 
     cat >> "$gitignore" << 'BLOCK'
 
-# galawork/agent-config
+# event4u/agent-config
 # Agent config — symlinked from vendor (auto-managed)
 .augment/skills/
 .augment/commands/
@@ -563,6 +601,53 @@ ensure_gitignore() {
 # Agent config — NOT ignored (real copies, may contain project overrides)
 # .augment/rules/
 BLOCK
+}
+
+# Detect python3 (or python, if it is Python 3) — returns the binary path or empty
+find_python() {
+    local candidate
+    for candidate in python3 python; do
+        local path
+        path="$(command -v "$candidate" 2>/dev/null || true)"
+        [[ -z "$path" ]] && continue
+        if "$path" -c 'import sys; exit(0 if sys.version_info[0] >= 3 else 1)' 2>/dev/null; then
+            echo "$path"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Render .agent-settings + JSON bridges using the Python installer
+run_bridge_installer() {
+    local source_dir="$1"
+    local target_dir="$2"
+    local installer="$source_dir/scripts/install.py"
+
+    if [[ ! -f "$installer" ]]; then
+        log_verbose "Skipping bridge installer (not found): $installer"
+        return
+    fi
+
+    local python_bin
+    if ! python_bin="$(find_python)"; then
+        log_warn "Python 3 not found — skipping .agent-settings and bridge files."
+        log_warn "Install python3 and re-run, or: python3 $installer"
+        return
+    fi
+
+    if $DRY_RUN; then
+        log_verbose "would run: $python_bin $installer --project $target_dir"
+        return
+    fi
+
+    if $QUIET; then
+        "$python_bin" "$installer" --project "$target_dir" --package "$source_dir" --quiet || \
+            log_warn "Bridge installer exited with errors (continuing)."
+    else
+        "$python_bin" "$installer" --project "$target_dir" --package "$source_dir" || \
+            log_warn "Bridge installer exited with errors (continuing)."
+    fi
 }
 
 # --- Main ---
@@ -579,9 +664,13 @@ main() {
     sync_hybrid "$SOURCE_DIR/.augment" "$TARGET_DIR/.augment"
     log_info "Synced .augment/ (rules copied, rest symlinked)"
 
-    # 2. Copy standalone files if missing
-    copy_if_missing "$SOURCE_DIR/AGENTS.md" "$TARGET_DIR/AGENTS.md"
-    copy_if_missing "$SOURCE_DIR/.github/copilot-instructions.md" "$TARGET_DIR/.github/copilot-instructions.md"
+    # 2. Copy standalone files from templates if missing on the target.
+    #    We copy from .augment/templates/ (generic placeholders), NOT from the
+    #    package's own root AGENTS.md / copilot-instructions.md — those are
+    #    meta docs about the package itself and would leak package-specific
+    #    content into consumer projects.
+    copy_if_missing "$SOURCE_DIR/.augment/templates/AGENTS.md" "$TARGET_DIR/AGENTS.md"
+    copy_if_missing "$SOURCE_DIR/.augment/templates/copilot-instructions.md" "$TARGET_DIR/.github/copilot-instructions.md"
 
     # 3. Create tool-specific symlinks
     create_tool_symlinks "$TARGET_DIR"
@@ -593,6 +682,9 @@ main() {
 
     # 5. Manage .gitignore
     ensure_gitignore "$TARGET_DIR"
+
+    # 6. Render .agent-settings + JSON bridges via Python installer
+    run_bridge_installer "$SOURCE_DIR" "$TARGET_DIR"
 
     echo ""
     $QUIET || echo "✅  agent-config installed successfully."

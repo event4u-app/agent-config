@@ -49,7 +49,7 @@ The `.agent-settings` file in the consumer project configures agent behavior.
 | `play_by_play` | `false` | Share intermediate findings during analysis |
 | `auto_open_files` | `true` | Open edited files in IDE |
 | `ide` | `cursor` | IDE for file opening (`cursor`, `code`, `phpstorm`) |
-| `cost_profile` | `cheap` | Token budget (`cheap`, `balanced`, `full`) |
+| `cost_profile` | `minimal` | Token budget (`minimal`, `balanced`, `full`, `custom`) |
 | `runtime_auto_read_reports` | `false` | Auto-inject reports into context |
 | `skill_improvement_pipeline` | `false` | Enable post-task learning capture |
 | `language` | `de` | Response language (`de`, `en`) |
@@ -58,9 +58,10 @@ The `.agent-settings` file in the consumer project configures agent behavior.
 
 | Profile | Description |
 |---|---|
-| `cheap` | Zero token overhead. Reports persisted but never auto-read. |
+| `minimal` | Zero token overhead. Reports persisted but never auto-read. |
 | `balanced` | Light context injection. Key metrics available on request. |
 | `full` | Full observability. Reports, metrics, and feedback in context. |
+| `custom` | Ignore profile — every matrix value must be set explicitly. |
 
 ---
 
@@ -78,3 +79,7 @@ agents/
 ```
 
 Module-level documentation goes into `app/Modules/*/agents/`.
+
+---
+
+← [Back to README](../README.md)

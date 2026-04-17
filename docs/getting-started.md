@@ -88,12 +88,11 @@ The system supports four configuration profiles:
 | `minimal` | Rules + Skills only | Zero | New users, solo devs |
 | `balanced` | + Runtime, limited observability | Low | Most teams |
 | `full` | + Tool audit, lifecycle reports | Moderate | Platform teams |
-| `enterprise` | + Strict governance, max reporting | Moderate-high | Large teams |
 
 Set your profile in `.agent-settings`:
 
 ```ini
-profile=minimal
+cost_profile=minimal
 ```
 
 You can override any individual setting. See [Customization](customization.md) for details.

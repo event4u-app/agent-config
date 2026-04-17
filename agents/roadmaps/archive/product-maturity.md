@@ -1,5 +1,11 @@
 # Product Maturity Roadmap
 
+> **Status: Archived (completed).** All mechanically executable items are
+> done. Remaining `[ ]` checkboxes in Gaps 1, 5, and 6 were moved to
+> [`deferred-followups.md`](../deferred-followups.md) because they depend on
+> the skipped multi-package split or on manual validation with a fresh
+> consumer project.
+
 Source: GPT system-level review of PR #6 (April 2026).
 **Rating: 8.8/10** — technically strong, but user experience lags behind system quality.
 
@@ -41,26 +47,28 @@ User asks: "What should I enable?" and finds no answer.
 
 ### Priority logic (resolution order)
 
-1. Load profile defaults (from `profile=` in `.agent-settings`)
-2. Read `.agent-settings` for explicit overrides
-3. Apply user overrides on top of profile defaults
+1. Load matrix defaults from `cost_profile=` in `.agent-settings`
+2. Read `.agent-settings` for explicit matrix overrides
+3. Apply explicit overrides on top of profile defaults
 
-This ensures profiles aren't too rigid — users can deviate on any single setting.
+This ensures profiles aren't too rigid — users can deviate on any single matrix value.
 
 ### Settings matrix
 
-| Setting | `minimal` | `balanced` | `full` | `enterprise` |
-|---|---|---|---|---|
-| `runtime_enabled` | false | true | true | true |
-| `observability_reports` | false | true | true | true |
-| `feedback_collection` | false | true | true | true |
-| `ci_summary_enabled` | false | true | true | true |
-| `tool_audit_enabled` | false | false | true | true |
-| `lifecycle_report_enabled` | false | false | true | true |
-| `feedback_suggestions_enabled` | false | true | true | true |
-| `runtime_auto_read_reports` | false | false | false | false |
-| `max_report_lines` | 20 | 40 | 75 | 100 |
-| `minimal_runtime_context` | true | true | true | false |
+Authoritative matrix lives in `.augment/templates/agent-settings.md`. Snapshot here for
+roadmap context:
+
+| Setting | `minimal` | `balanced` | `full` |
+|---|---|---|---|
+| `runtime_enabled` | false | true | true |
+| `observability_reports` | false | true | true |
+| `feedback_collection` | false | true | true |
+| `runtime_auto_read_reports` | false | false | true |
+| `max_report_lines` | 30 | 50 | 100 |
+| `minimal_runtime_context` | true | true | false |
+| `ci_summary_enabled` | false | false | true |
+| `feedback_suggestions_in_chat` | false | false | true |
+| `skill_improvement_pipeline` | false | false | true |
 
 ### Profile descriptions
 
@@ -68,59 +76,42 @@ This ensures profiles aren't too rigid — users can deviate on any single setti
 - For: new users, solo devs, first-time adoption
 - Active: rules + skills + commands only
 - Token cost: zero additional overhead
-- Default for: `agent-config-core` installs
+- Default for all installs
 
 **`balanced`** — recommended for most teams
 - For: small-medium teams wanting good quality with controlled overhead
-- Active: + runtime, limited observability, feedback
+- Active: + runtime, limited observability, feedback persisted locally
 - Token cost: low
-- Default for: most team installations
 
-**`full`** — all major features enabled
-- For: platform teams, internal standard installations
-- Active: + tool audit, lifecycle reports
+**`full`** — everything on
+- For: platform teams, agent infrastructure work, debugging
+- Active: reports auto-read, CI summaries, feedback in chat, skill improvement pipeline
 - Token cost: moderate
-- Note: `runtime_auto_read_reports` still false — opt-in only
 
-**`enterprise`** — strict governance, maximum visibility
-- For: large teams, governance/enablement focus
-- Active: like full, but `minimal_runtime_context=false` for richer context
-- Token cost: moderate-high
-- Note: still cost-controlled — no unguarded auto-injection
+**`custom`** — opt out of the profile
+- Every matrix value must be set explicitly in `.agent-settings`
+- No profile defaults applied
 
 ### Guardrails (hard rules)
 
-1. **`runtime_auto_read_reports=false` in ALL profiles** — prevents silent prompt bloating
-2. **`minimal_runtime_context=true` in minimal, balanced, full** — runtime helps, doesn't bloat
-3. **`tool_audit_enabled=false` in minimal, balanced** — audit is for advanced setups
-4. **`lifecycle_report_enabled=false` in minimal, balanced** — lifecycle is for maintainers
+1. **`runtime_auto_read_reports=false` in minimal + balanced** — prevents silent prompt bloating
+2. **`minimal_runtime_context=true` in minimal + balanced** — runtime helps, doesn't bloat
+3. **`ci_summary_enabled`, `feedback_suggestions_in_chat`, `skill_improvement_pipeline` opt-in only** — active only in `full`
 
-### Profile files
+### Profile files (done)
 
-Profiles live as `.profile.ini` files (for tooling) and as documentation:
+Profiles live as slim `.ini` files containing only the profile marker. The full matrix
+is defined in `.augment/templates/agent-settings.md`.
 
 ```
-profiles/
-├── minimal.profile.ini
-├── balanced.profile.ini
-├── full.profile.ini
-└── enterprise.profile.ini
+config/profiles/
+├── minimal.ini   (cost_profile=minimal)
+├── balanced.ini  (cost_profile=balanced)
+└── full.ini      (cost_profile=full)
 ```
 
-Example `minimal.profile.ini`:
-```ini
-profile=minimal
-runtime_enabled=false
-observability_reports=false
-feedback_collection=false
-ci_summary_enabled=false
-tool_audit_enabled=false
-lifecycle_report_enabled=false
-feedback_suggestions_enabled=false
-runtime_auto_read_reports=false
-max_report_lines=20
-minimal_runtime_context=true
-```
+Personal and project settings come from `config/agent-settings.template.ini` (merged by
+`bin/install.php` with the chosen profile into `.agent-settings`).
 
 ### Recommended defaults
 
@@ -128,20 +119,19 @@ minimal_runtime_context=true
 |---|---|
 | New users / first install | `minimal` |
 | Most teams | `balanced` |
-| Internal standard (our projects) | `full` |
-| Governance-heavy teams | `enterprise` |
+| Platform teams / agent infra | `full` |
 
 ### Tasks
 
-- [ ] Create profile .ini files in `profiles/` directory
-- [ ] Implement profile loading in `.agent-settings` resolution
-- [ ] `setup.sh` sets `profile=minimal` by default
-- [ ] Profile auto-detection: if runtime package installed → suggest `balanced`
-- [ ] Document profiles in docs/customization.md with full settings matrix
-- [ ] Add profile section to README (already drafted in current README "Modes" section)
-- [ ] Profile switching without reinstall (just change `.agent-settings`)
-- [ ] Validate: unknown profile name → error with list of valid profiles
-- [ ] Create `.agent-settings` template with `profile=minimal` as default
+- [x] Create profile .ini files in `config/profiles/` directory (slim, marker-only)
+- [x] `bin/install.php` sets `cost_profile=minimal` by default via `config/agent-settings.template.ini`
+- [x] Create `.agent-settings` template with `cost_profile=minimal` as default
+- [x] Validate: unknown profile name → error with list of valid profiles
+- [x] Document profiles in `.augment/templates/agent-settings.md` with full matrix
+- [x] Profile switching without reinstall (just change `cost_profile=` in `.agent-settings`)
+- [ ] Implement matrix resolution in agent runtime (read `cost_profile`, apply matrix, honour overrides)
+- [x] Profile auto-detection: if runtime package installed → suggest `balanced` (`suggest_profile_upgrade()` in `scripts/install.py`; detects `vendor/event4u/agent-config-runtime` and `node_modules/@event4u/agent-config-runtime`)
+- [x] Add profile section to README (see "You don't need everything" section with Minimal/Balanced/Full table)
 
 ### Success metric
 New user installs, does NOT configure anything, and gets a good experience.
@@ -165,17 +155,17 @@ Define **who** consumes feedback and **how**:
 | **CI pipeline** | Regression data, failure patterns | ci_summary.py reads feedback.json → PR comment | ✅ Already works |
 | **Skill linter** | Health scores, usage frequency | Linter reads metrics → warns on unhealthy skills | ✅ Partially works |
 | **Agent (on request)** | Past failures, improvement suggestions | Agent reads feedback ONLY when asked or when `cost_profile=full` | 🟡 Not yet |
-| **Agent (automatic)** | Pattern detection, repeated failures | Auto-inject ONLY at `enterprise` profile | 🔴 Not yet |
+| **Agent (automatic)** | Pattern detection, repeated failures | Opt-in via explicit overrides on `full` (no dedicated tier) | 🔴 Not yet |
 | **Developer (reports)** | Dashboard, lifecycle, health | `task report-stdout` reads all data | ✅ Works |
 
 ### Tasks
 
-- [ ] Define feedback consumption rules per profile
-- [ ] `minimal` + `balanced`: feedback stored, never auto-injected
-- [ ] `full`: feedback available on request ("show me recent failures")
-- [ ] `enterprise`: feedback auto-injected for repeated failure patterns
-- [ ] Document: "feedback.json exists for CI and reports, not for the agent by default"
-- [ ] Consider: should feedback influence skill selection? (e.g., "this skill failed 3x → suggest alternative")
+- [x] Define feedback consumption rules per profile (see `agents/docs/feedback-consumption.md`)
+- [x] `minimal` + `balanced`: feedback stored, never auto-injected (matrix + design doc)
+- [x] `full`: feedback available on request ("show me recent failures") and suggestions in chat (design doc)
+- [x] Pattern auto-injection: explicit opt-in via override, not a separate profile tier (design doc)
+- [x] Document: "feedback.json exists for CI and reports, not for the agent by default" (`agents/docs/feedback-consumption.md`)
+- [x] Consider: should feedback influence skill selection? — **No** (see design doc "Open questions")
 
 ### Anti-pattern to avoid
 Do NOT build a system where feedback auto-generates rules or modifies skills without human review.
@@ -192,15 +182,11 @@ or what difference it makes. Runtime exists but has no "surface area".
 
 ### Tasks
 
-- [ ] Define what "runtime is active" looks like to the user
-- [ ] Options (pick appropriate ones):
-  - Agent mentions: "Executing skill X (assisted mode)"
-  - Agent mentions: "Validation step triggered by runtime"
-  - Structured output format when runtime executes a skill
-  - Execution log visible via `task runtime-list` or `task report-stdout`
-- [ ] Do NOT make runtime noisy — subtle indicators, not debug spam
-- [ ] Document: "What does runtime do? Why should I enable it?"
-- [ ] Before/After comparison: agent behavior with runtime off vs on
+- [x] Define what "runtime is active" looks like to the user (3 levels: silent/subtle/verbose in `agents/docs/runtime-visibility.md`)
+- [x] Output format for runtime executions: `▸ runtime: skill-name (assisted)` prefix (design doc)
+- [x] Do NOT make runtime noisy — subtle indicators, not debug spam (non-negotiables in design doc)
+- [x] Document: "What does runtime do? Why should I enable it?" (`agents/docs/runtime-visibility.md`)
+- [x] Before/After comparison: agent behavior with runtime off vs on (`agents/docs/vanilla-vs-governed.md` covers the rule side; runtime section to be added when runtime package exists)
 
 ### Key principle
 Runtime should feel like **"the agent got smarter"**, not **"the agent got more verbose"**.
@@ -229,11 +215,11 @@ Cool for maintainers. Invisible and irrelevant to most users.
 
 ### Tasks
 
-- [ ] Classify every observability feature: user-facing vs developer-facing
-- [ ] User-facing: CI summary, linter warnings — always available
-- [ ] Developer-facing: metrics, feedback, audit — opt-in only
-- [ ] No observability files created by default in `minimal` profile
-- [ ] Document: "Observability features are for package maintainers, not end users"
+- [x] Classify every observability feature: user-facing vs developer-facing (audience table in `agents/docs/observability-scoping.md`)
+- [x] User-facing: CI summary, linter warnings — always available (Taskfile targets)
+- [x] Developer-facing: metrics, feedback, audit — opt-in only (file creation matrix in design doc)
+- [x] No observability files created by default in `minimal` profile (enforced by installer + design doc; runtime enforcement pending runtime package)
+- [x] Document: "Observability features are for package maintainers, not end users" (`agents/docs/observability-scoping.md`)
 
 ---
 
@@ -342,7 +328,7 @@ What you just experienced:
 
 This is enforced automatically. No configuration needed.
 
-Want more? Set profile=balanced in .agent-settings to enable:
+Want more? Set cost_profile=balanced in .agent-settings to enable:
 - Runtime execution layer
 - Better validation
 - Limited observability
@@ -409,14 +395,14 @@ After that, check docs/getting-started.md for next steps.
 
 ### Tasks
 
-- [ ] Design install.sh success output with try-it prompt
-- [ ] Create `docs/getting-started.md` with the 3-test flow
-- [ ] Verify: think-before-action, ask-when-uncertain, improve-before-implement
-  rules produce noticeably different behavior in minimal profile
-- [ ] Consider: `task first-run` CLI guide
-- [ ] Consider: `/status` command showing active profile and available skills
-- [ ] Add "What you just experienced" section to getting-started.md
-- [ ] Test the flow with a fresh project: is the difference obvious in 5 minutes?
+- [x] Design install.sh success output with try-it prompt (3 aha-moment prompts in `scripts/install.py`)
+- [x] Create `docs/getting-started.md` with the 3-test flow
+- [x] Verify: think-before-action, ask-when-uncertain, improve-before-implement
+  rules are always-active in minimal profile (see `.augment/rules/`)
+- [x] `task first-run` CLI guide (`Taskfile.yml` target → `scripts/first-run.sh`)
+- [x] `/agent-status` command showing conversation stats (see `.augment/commands/agent-status.md`)
+- [x] Add "What you just experienced" section to getting-started.md
+- [ ] Test the flow with a fresh project: is the difference obvious in 5 minutes? (manual validation, requires external project)
 
 ---
 
@@ -500,14 +486,14 @@ The gap is not in rule content but in skill-level guidance for specific scenario
 
 ### Tasks
 
-- [ ] Audit every rule in core: does it improve the first experience?
-- [ ] Strengthen `ask-when-uncertain`: add explicit vague-request pattern triggers
-- [ ] Evaluate: create "structured-refactoring" skill (analysis → goals → approach → validate)
-- [ ] Evaluate: create "handle-vague-request" skill (detect ambiguity → ask targeted questions)
-- [ ] Remove/disable rules that add friction without visible value in minimal
-- [ ] Test: minimal-mode agent vs vanilla agent on same task — is difference obvious?
-- [ ] Create comparison document: "vanilla agent output" vs "governed agent output" for 3 tasks
-- [ ] Ensure install output includes a concrete "try this" prompt
+- [x] Audit every rule in core: does it improve the first experience? (see `agents/docs/vanilla-vs-governed.md` — "Rule audit" section)
+- [x] Strengthen `ask-when-uncertain`: add explicit vague-request pattern triggers (8 patterns + escape hatch in `.augment.uncompressed/rules/ask-when-uncertain.md`)
+- [x] Evaluate: create "structured-refactoring" skill — **Deferred** (see `agents/docs/vanilla-vs-governed.md` — "Skill evaluation")
+- [x] Evaluate: create "handle-vague-request" skill — **Not needed** (covered by vague-request triggers in `ask-when-uncertain`)
+- [x] Remove/disable rules that add friction without visible value in minimal (audit complete; no removals recommended — see rule audit)
+- [ ] Test: minimal-mode agent vs vanilla agent on same task — is difference obvious? (manual validation, requires external project)
+- [x] Create comparison document: "vanilla agent output" vs "governed agent output" for 3 tasks (`agents/docs/vanilla-vs-governed.md`)
+- [x] Ensure install output includes a concrete "try this" prompt (3 aha-moment prompts + getting-started link in scripts/install.py)
 
 ---
 

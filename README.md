@@ -10,7 +10,9 @@ Teach your AI agents Laravel, PHP, testing, Git workflows, and **90+ more skills
 
 ---
 
-## Installation
+## Quickstart
+
+Two minutes from `composer require` to a better-behaved agent.
 
 ### For teams (recommended)
 
@@ -24,14 +26,16 @@ composer require --dev event4u/agent-config
 npm install --save-dev @event4u/agent-config
 ```
 
-Then generate project bridge files (optional but recommended):
+Bridge files (`.agent-settings`, `.vscode/settings.json`, `.augment/settings.json`, …)
+are generated automatically by the post-install hook. To re-run or pick a profile:
 
 ```bash
-php vendor/bin/install.php                    # minimal profile (default)
-php vendor/bin/install.php --profile=balanced  # for teams
+python3 scripts/install.py --profile=balanced   # any environment
+php vendor/bin/install.php --profile=balanced   # PHP wrapper (Composer)
 ```
 
-No Task, no Make, no build tools required. The package makes rules, skills, and commands
+No Task, no Make, no build tools required — only **Python 3** (stdlib only, pre-installed
+on macOS 12.3+ and all major Linux distros). The package makes rules, skills, and commands
 available project-locally for all supported AI tools.
 
 ### For individual use (optional)
@@ -56,16 +60,17 @@ Install directly in your agent for global, cross-project use:
 
 ---
 
-## How it works
+## What your agent learns
 
 | Without agent-config | With agent-config |
 |---|---|
-| Agent guesses and edits blindly | Analyzes code before changing it |
+| Guesses and edits blindly | Analyzes code before changing it — no blind edits |
 | Inconsistent code style | Follows your PHP/Laravel coding standards |
+| Skips or invents tests | Writes Pest tests following your project conventions |
 | Generic commit messages | Conventional Commits with scope and Jira links |
 | No quality checks | Runs PHPStan, Rector, ECS — fixes errors automatically |
 | PRs without context | Structured PR descriptions from Jira tickets |
-| No verification | Verifies with real execution before claiming "done" |
+| Claims "done" without proof | Verifies with real execution before claiming "done" |
 
 ---
 
@@ -76,10 +81,15 @@ Start with **Rules + Skills**. Everything else is optional.
 | Mode | What's active | Token overhead |
 |---|---|---|
 | **Minimal** (default) | Rules, Skills, Commands | Zero |
-| **Balanced** | + Runtime, limited observability | Low |
-| **Full** | + Feedback, lifecycle, metrics | Moderate |
+| **Balanced** | + Runtime scaffolding, local data collection (experimental) | Low |
+| **Full** | + Reports, suggestions in chat, CI summaries (experimental) | Moderate |
 
 Nothing runs automatically without your control. [Configure modes →](docs/customization.md)
+
+> **Experimental modules:** the runtime, tool-adapter, and observability
+> layers are scaffold implementations — structure, data model, and tests
+> exist, but most operations are no-ops by design. The `minimal` profile
+> (which 99% of users should pick) is unaffected.
 
 ---
 
@@ -87,22 +97,22 @@ Nothing runs automatically without your control. [Configure modes →](docs/cust
 
 | Skill | What your agent learns |
 |---|---|
-| `laravel` | Write Laravel code following framework conventions and project architecture |
-| `pest-testing` | Write Pest tests with clear intent, good coverage, and project conventions |
-| `eloquent` | Eloquent models, relationships, scopes, eager loading, type safety |
-| `create-pr` | Create GitHub PRs with structured descriptions from Jira tickets |
-| `commit` | Stage and commit changes following Conventional Commits |
-| `fix-ci` | Fetch CI errors from GitHub Actions and fix them |
-| `fix-pr-comments` | Fix and reply to all open review comments on a PR |
-| `quality-fix` | Run PHPStan/Rector/ECS and fix all errors |
-| `bug-analyzer` | Root cause analysis from Sentry errors or Jira tickets |
-| `improve-before-implement` | Challenge weak requirements before coding |
-| `docker` | Dockerfile, docker-compose, container management |
-| `security` | Auth, policies, CSRF, rate limiting, secure coding |
-| `api-design` | REST conventions, versioning, deprecation |
-| `database` | MariaDB optimization, indexing, query performance |
+| [`laravel`](.augment/skills/laravel/SKILL.md) | Write Laravel code following framework conventions and project architecture |
+| [`pest-testing`](.augment/skills/pest-testing/SKILL.md) | Write Pest tests with clear intent, good coverage, and project conventions |
+| [`eloquent`](.augment/skills/eloquent/SKILL.md) | Eloquent models, relationships, scopes, eager loading, type safety |
+| [`create-pr`](.augment/commands/create-pr.md) | Create GitHub PRs with structured descriptions from Jira tickets |
+| [`commit`](.augment/commands/commit.md) | Stage and commit changes following Conventional Commits |
+| [`fix-ci`](.augment/commands/fix-ci.md) | Fetch CI errors from GitHub Actions and fix them |
+| [`fix-pr-comments`](.augment/commands/fix-pr-comments.md) | Fix and reply to all open review comments on a PR |
+| [`quality-fix`](.augment/commands/quality-fix.md) | Run PHPStan/Rector/ECS and fix all errors |
+| [`bug-analyzer`](.augment/skills/bug-analyzer/SKILL.md) | Root cause analysis from Sentry errors or Jira tickets |
+| [`improve-before-implement`](.augment/rules/improve-before-implement.md) | Challenge weak requirements before coding |
+| [`docker`](.augment/skills/docker/SKILL.md) | Dockerfile, docker-compose, container management |
+| [`security`](.augment/skills/security/SKILL.md) | Auth, policies, CSRF, rate limiting, secure coding |
+| [`api-design`](.augment/skills/api-design/SKILL.md) | REST conventions, versioning, deprecation |
+| [`database`](.augment/skills/database/SKILL.md) | MariaDB optimization, indexing, query performance |
 
-→ [Browse all 93 skills](.augment/skills/)
+→ [Browse all skills](docs/skills-catalog.md) · [llms.txt](llms.txt)
 
 ---
 
@@ -110,14 +120,14 @@ Nothing runs automatically without your control. [Configure modes →](docs/cust
 
 | Command | What it does |
 |---|---|
-| `/commit` | Stage and commit with Conventional Commits |
-| `/create-pr` | Create PR with Jira-linked description |
-| `/fix-ci` | Fetch and fix GitHub Actions failures |
-| `/fix-pr-comments` | Fix and reply to review comments |
-| `/quality-fix` | Run and fix all quality checks |
-| `/review-changes` | Self-review before creating a PR |
-| `/jira-ticket` | Read ticket from branch, implement feature |
-| `/compress` | Compress skills for token efficiency |
+| [`/commit`](.augment/commands/commit.md) | Stage and commit with Conventional Commits |
+| [`/create-pr`](.augment/commands/create-pr.md) | Create PR with Jira-linked description |
+| [`/fix-ci`](.augment/commands/fix-ci.md) | Fetch and fix GitHub Actions failures |
+| [`/fix-pr-comments`](.augment/commands/fix-pr-comments.md) | Fix and reply to review comments |
+| [`/quality-fix`](.augment/commands/quality-fix.md) | Run and fix all quality checks |
+| [`/review-changes`](.augment/commands/review-changes.md) | Self-review before creating a PR |
+| [`/jira-ticket`](.augment/commands/jira-ticket.md) | Read ticket from branch, implement feature |
+| [`/compress`](.augment/commands/compress.md) | Compress skills for token efficiency |
 
 → [Browse all 51 commands](.augment/commands/)
 
@@ -161,7 +171,7 @@ Skills follow the [Agent Skills open standard](https://agentskills.io).
 - **Verify with real execution** — no "should work"
 - **Challenge to improve** — agents are thought partners, not yes-machines
 - **Strict by design** — quality over flexibility
-- **Zero overhead by default** — data collection ≠ context injection
+- **Zero overhead by default** — nothing runs until you ask for it
 
 ---
 
@@ -198,3 +208,7 @@ task lint-skills   # Lint skills, rules, commands
 - [Task](https://taskfile.dev/) (development only)
 
 No runtime dependencies — static configuration files only.
+
+## License
+
+[MIT](LICENSE) — you can use, fork, and redistribute this freely.

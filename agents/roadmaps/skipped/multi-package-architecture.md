@@ -174,7 +174,7 @@ Every package includes a `package.manifest.json` defining identity, dependencies
   "description": "Core governance package — rules, skills, commands, guidelines",
   "depends_on": [],
   "includes": ["rules", "skills", "commands", "guidelines", "templates", "contexts"],
-  "profiles": ["minimal", "balanced", "full", "enterprise"]
+  "profiles": ["minimal", "balanced", "full"]
 }
 ```
 
@@ -191,7 +191,7 @@ Every package includes a `package.manifest.json` defining identity, dependencies
     "agent-config-observability"
   ],
   "includes": ["bundles", "profiles"],
-  "profiles": ["balanced", "full", "enterprise"]
+  "profiles": ["balanced", "full"]
 }
 ```
 
@@ -205,18 +205,18 @@ Every package includes a `package.manifest.json` defining identity, dependencies
 |---|---|---|---|
 | `minimal` | core (rules + skills only) | Zero | Solo devs, new users |
 | `balanced` | core + runtime | Low | Small teams |
-| `full` | core + runtime + tools + observability | Moderate | Platform teams |
-| `enterprise` | full + stricter rules + more reporting | Moderate-High | Governance teams |
+| `full` | core + runtime + tools + observability | Moderate | Platform teams, agent infra |
+| `custom` | user-controlled matrix | varies | Advanced users with specific requirements |
 
 Profiles are configured via `.agent-settings`:
 ```ini
-cost_profile=minimal   # or balanced, full, enterprise
+cost_profile=minimal   # or balanced, full, custom
 ```
 
 ### Full profile specification
 
 The complete profile system specification — settings matrix, guardrails, priority logic,
-profile files, and implementation tasks — lives in **`product-maturity.md` → Gap 1**.
+profile files, and implementation tasks — lives in **`archive/product-maturity.md` → Gap 1**.
 
 Key points:
 - 11 settings per profile (runtime, observability, feedback, audit, lifecycle, etc.)
@@ -367,7 +367,7 @@ vendor/event4u/agent-config/
 
 **Layer B — Project bridge** (committed by team, tiny files):
 ```
-.agent-settings                        ← profile=minimal
+.agent-settings                        ← cost_profile=minimal
 .vscode/settings.json                  ← chat.pluginLocations → vendor path
 .augment/settings.json                 ← enabledPlugins → agent-config
 .github/plugin/marketplace.json        ← local marketplace → vendor path
@@ -448,7 +448,7 @@ Both should:
 
 After initial setup, the team commits:
 ```
-.agent-settings                    ← shared profile (e.g., profile=balanced)
+.agent-settings                    ← shared profile (e.g., cost_profile=balanced)
 .vscode/settings.json              ← pluginLocations entry (if VS Code)
 .augment/settings.json             ← enabledPlugins entry (if Augment)
 .github/plugin/marketplace.json    ← local marketplace (if Copilot)
@@ -543,8 +543,7 @@ agent-config/                          ← Monorepo root (current repo)
 │       └── profiles/
 │           ├── minimal.profile.json
 │           ├── balanced.profile.json
-│           ├── full.profile.json
-│           └── enterprise.profile.json
+│           └── full.profile.json
 │
 ├── .augment.uncompressed/             ← Source of truth (stays at root)
 ├── .augment/                          ← Compressed output (stays at root for dev)

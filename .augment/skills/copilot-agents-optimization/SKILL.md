@@ -134,10 +134,48 @@ both. Instead, reference with a table:
 4. **Remove ECS/Rector-enforced rules** — From copilot-instructions.md (auto-fixed anyway)
 5. **Move examples to guidelines** — Detailed code examples belong in `.augment/guidelines/`
 
+## Portability and Stack Coherence
+
+Duplication is not the only way these files go wrong. They also **lie
+about the project** over time:
+
+- **Legacy identifiers** — references to a former repo name, a sibling
+  project in the same monorepo, or content that was copied from another
+  codebase as a starting template and never adapted.
+- **Stack drift** — the file claims "Laravel 11 + MariaDB" but the repo
+  was converted to a Python library; or it names Docker services that
+  no longer exist.
+- **Dead commands** — `make start` in the docs, but `Makefile` no
+  longer has that target.
+
+Before deduplicating, run three scans:
+
+1. **Legacy identifier scan** — compare both files against the package's
+   `FORBIDDEN_IDENTIFIERS` blocklist (see `scripts/check_portability.py`)
+   plus any project names from `agents/` module docs that don't match
+   the current project.
+2. **Stack coherence scan** — auto-detect the actual stack from
+   `composer.json` / `package.json` / `pyproject.toml` / etc. and flag
+   any claim that no longer matches reality.
+3. **Dead-command scan** — verify every `make X`, `task X`, `composer X`,
+   `php artisan X`, or `npm X` still resolves.
+
+Every hit from scan 1 is a 🔴 blocker: leaking another project's name
+into a consumer's own docs is the failure mode this skill exists to
+prevent. Fix or remove those BEFORE any dedup/compress work — there's
+no point deduplicating content that is about to be rewritten.
+
+When the drift is severe (whole sections are wrong), recommend
+`/copilot-agents-init` to scaffold a clean replacement rather than
+patching forever.
+
 ## Optimization Checklist
 
 When optimizing either file, check:
 
+- [ ] No identifiers from other projects (FORBIDDEN_IDENTIFIERS blocklist)?
+- [ ] Tech stack claims match actual project dependencies?
+- [ ] All referenced commands/targets exist (Makefile, composer scripts, artisan, task)?
 - [ ] Line count within budget?
 - [ ] No content duplicated with `.augment/rules/`?
 - [ ] No content duplicated with `.augment/guidelines/`?

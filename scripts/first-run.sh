@@ -13,23 +13,23 @@ echo ""
 if [ -f "$SETTINGS_FILE" ]; then
   echo "✅  Found $SETTINGS_FILE"
   echo ""
-  CURRENT_PROFILE=$(grep -E '^profile=' "$SETTINGS_FILE" 2>/dev/null | head -n1 | cut -d'=' -f2 || true)
+  CURRENT_PROFILE=$(grep -E '^cost_profile=' "$SETTINGS_FILE" 2>/dev/null | head -n1 | cut -d'=' -f2 || true)
 
   if [ -n "${CURRENT_PROFILE:-}" ]; then
-    echo "Active profile: $CURRENT_PROFILE"
+    echo "Active cost_profile: $CURRENT_PROFILE"
   else
-    echo "No profile configured yet."
+    echo "No cost_profile configured yet."
     echo ""
     echo "Recommended: add this to $SETTINGS_FILE:"
     echo ""
-    echo "  profile=minimal"
+    echo "  cost_profile=minimal"
   fi
 else
   echo "❌  No $SETTINGS_FILE found."
   echo ""
   echo "Create one with:"
   echo ""
-  echo "  profile=minimal"
+  echo "  cost_profile=minimal"
   echo ""
 fi
 
@@ -79,8 +79,8 @@ echo "  Next steps"
 echo "========================================"
 echo ""
 echo "Stay on minimal?  → Lightest setup, governance only"
-echo "Ready for more?   → Set profile=balanced in $SETTINGS_FILE"
-echo "Want everything?  → Set profile=full"
+echo "Ready for more?   → Set cost_profile=balanced in $SETTINGS_FILE"
+echo "Want everything?  → Set cost_profile=full"
 echo ""
 echo "Full docs: docs/getting-started.md"
 echo ""

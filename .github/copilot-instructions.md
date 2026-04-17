@@ -1,234 +1,126 @@
-# Copilot Repository Instructions
+# Copilot Repository Instructions — event4u/agent-config
 
-This repository contains a Laravel backend application (Laravel 11, PHP 8.2, Pest).
+This repository is the **event4u/agent-config** package: shared agent configuration
+(skills, rules, commands, guidelines, templates) for AI coding tools. It is a
+distribution package, not a Laravel/PHP application.
 
-> **For Copilot Chat users:** This project has extensive agent documentation in `.augment/`
-> (skills, rules, guidelines, commands) and `agents/` (project docs). Ask Copilot Chat to
-> read those files for deeper context. The instructions below are self-contained for
-> Copilot Code Review, which cannot read other files.
+> **For Copilot Chat users:** Rich context lives in `.augment/` (rules, skills,
+> guidelines) and `AGENTS.md` at the repo root. Ask Copilot Chat to read those
+> files. The instructions below are self-contained for Copilot Code Review,
+> which cannot follow links.
+
+## ✅ What this repo contains
+
+- **Bash** scripts under `scripts/install.sh`, `scripts/compress.sh`, and the
+  `postinstall.sh` wrapper.
+- **Python 3.10+** tooling under `scripts/` — compression driver, linters
+  (skills, references, portability, readme), installer bridge.
+- **Markdown** content under `.augment.uncompressed/` (authoring layer) and
+  `.augment/` (generated output). Edit the former, never the latter.
+- **pytest** test suite under `tests/`.
+
+No PHP source files, no Laravel code, no JavaScript runtime deps. If you see
+Laravel-specific suggestions in a PR touching this repo, they are wrong.
 
 ## ✅ Scope Control
 
 - Do not introduce architectural changes unless explicitly requested.
-- Do not replace existing patterns with alternative patterns.
+- Do not replace existing patterns with alternatives.
 - Do not suggest new libraries unless explicitly requested.
-- Stay within the established project structure and conventions.
+- Stay within the established structure.
 
-## ✅ Architecture
+## ✅ Portability rules for this package
 
-- Controllers must be thin and contain no business logic
-- Business logic belongs in service classes
-- Models must not contain domain workflow or business process logic.
-  Simple accessors, mutators, scopes, and state-check methods are allowed.
-- Validation must be done via FormRequest classes
-- Authorization must be handled via Policies
+- **Never reference a specific consumer project** (project names, domains,
+  internal tools, customers) in `.augment/`, `.augment.uncompressed/`, root
+  `AGENTS.md`, or `.github/copilot-instructions.md`. Everything here must work
+  in **any** consumer project.
+- Project-specific behavior belongs in a consumer's own `.agent-settings`,
+  `AGENTS.md`, or `agents/` directory — not in this package.
+- The portability checker (`scripts/check_portability.py`) enforces this in CI.
 
-## ✅ General Coding Standards
+## ✅ Editing `.augment/` — source-of-truth rule
 
-- **PSR-4 autoloading:** Exactly **one class/interface/trait/enum per file**. The filename must match the
-  class name. Test helper classes (fakes, stubs) go in `Tests/Utils/` with the correct namespace.
-- New PHP files must declare `declare(strict_types=1);` (**exception:** migration files).
-- Use typed properties, parameters, and return types. Constructor property promotion preferred.
-- Only add PHPDoc when type hints are insufficient (e.g., `@param array<int, MyObject> $items`).
-- Avoid magic numbers or hard-coded strings; use constants or config files.
-- Code style (PSR-12, formatting, trailing commas) is auto-enforced by **ECS** — don't nitpick style.
+- **Never edit files under `.augment/` directly.** It is generated output.
+- Edit `.augment.uncompressed/` and run `task sync` (or `task ci`).
+- Never edit generated tool outputs: `.claude/`, `.cursor/`, `.clinerules/`,
+  `.windsurfrules`, `GEMINI.md`.
 
-## ✅ PHP 8.2 Best Practices
+## ✅ Python coding standards
 
-All code must be compatible with PHP ^8.2. Use modern features:
+- Python 3.10+ syntax. Use `from __future__ import annotations`, `|` unions,
+  built-in generics (`list[str]`, `dict[str, Any]`).
+- Type hints on public functions and dataclass fields.
+- Prefer `dataclasses` or `typing.NamedTuple` over untyped dicts.
+- Use `pathlib.Path`, not string paths.
+- No third-party runtime dependencies in `scripts/` — stdlib only. Tests MAY
+  use pytest; pytest is the only dev dependency.
+- Keep linters exit-code driven (0 = clean, 1 = violations, 3 = internal error).
 
-- **readonly** properties/classes for immutability (DTOs, Events, Value Objects)
-- **Enums** instead of string/integer constants
-- **Constructor Property Promotion**, **Union/Intersection Types**, **Nullsafe (?->)**
-- **final** classes where extension is not intended (Services, Controllers, Jobs, Events)
-- **Named Arguments** for multi-parameter calls
+## ✅ Bash coding standards
 
-### `readonly` and `final` exceptions
+- Start every script with `set -euo pipefail`.
+- Quote variables: `"$var"`, not `$var`.
+- Use `[[ … ]]` for tests (bash builtin), not `[ … ]`.
+- Prefer functions with local variables over global state.
+- Check for required tools up front and exit with an actionable hint if missing.
 
-- Do NOT use `readonly` or `final` on **Pest test classes**
-- Do NOT use `final` on classes that need **Mockery mocking** (e.g. Repositories) —
-  Mockery cannot mock `final` without `dg/bypass-finals`
+## ✅ Markdown / content standards
 
-```php
-// ✅ Event — readonly + final
-final readonly class ReportCreated
-{
-    public function __construct(private Report $report) {}
-}
+- Every `.md` file under `.augment.uncompressed/` authoring layer.
+- Skills must declare YAML frontmatter (`name`, `description`, optionally
+  `source`, `disable-model-invocation`, `skills`).
+- Size budgets enforced by linter: skills compact, rules focused, commands
+  step-by-step.
+- Skill descriptions must use trigger words that help routing — "Use when …".
+- All `.md` files in `.augment/` must be English.
 
-// ✅ Service — readonly
-readonly class ReportService
-{
-    public function __construct(
-        private ReportRepository $repository,
-        private EventDispatcher $dispatcher,
-    ) {}
-}
-```
+## ✅ Testing
 
-## ✅ Laravel Conventions
+- `pytest tests/` for Python. Aim for fast, isolated tests — no network, no
+  filesystem side effects outside `tmp_path`.
+- `bash tests/test_install.sh` for installer end-to-end.
+- Every new script under `scripts/` should come with a test file
+  `tests/test_<name>.py`.
 
-- New features go into `app/Modules/` (modular structure). Legacy code lives in `app/`.
-- **Controllers:** Thin, single-action (`__invoke()`), use FormRequests + Resource responses.
-- **Business logic:** Service classes, Action classes, or Jobs — never in controllers or models.
-- **Models:** Relationships, scopes, accessors/mutators only — no business logic.
-- **Authorization:** Policies (not Gates). Every FormRequest has `authorize()`.
-- **Eloquent:** Use `$casts`, eager loading, transactions for multi-step writes. Avoid raw SQL.
-- **API:** Resource classes for JSON, route model binding, proper HTTP status codes, versioned routes.
-- **Testing:** Pest framework, seeders for test data, `Http::fake()` for external services.
-- **Performance:** Eager load to avoid N+1, paginate large datasets, queue long-running tasks.
+## ✅ CI checks (must all pass)
 
-## ✅ Calculations
+`task ci` runs: sync-check, sync-check-hashes, sync, generate-tools, consistency
+(git clean), check-compression, check-refs, check-portability, lint-skills, test
+(bash + pytest), lint-readme.
 
-- **CRITICAL:** Always use the `Math` helper class (`app/Services/Helper/Math.php`) for **all** financial and business calculations
-- This ensures high precision using BCMath and prevents floating-point rounding errors
-- Never use native PHP arithmetic operators (`+`, `-`, `*`, `/`) for business-critical calculations
-- The Math helper provides:
-    - `Math::add()` - Addition with precision
-    - `Math::subtract()` - Subtraction with precision
-    - `Math::multiply()` - Multiplication with precision
-    - `Math::divide()` - Division with precision and division-by-zero handling
-    - `Math::round()` - Proper rounding
-    - `Math::sum()` - Sum of arrays with precision
-- **Example:**
-  ```php
-  // ❌ Wrong - floating point errors
-  $total = $price * $quantity;
+If Copilot reviews a PR that fails any of these, reference the specific task.
 
-  // ✅ Correct - precise calculation
-  $total = Math::multiply($price, $quantity);
-  ```
+## ✅ Commit and PR behavior
 
-## ✅ Environment Checks
-
-- Always use the `AppEnvironment` enum (`App\Enums\AppEnvironment`) or `EnvHelper` (`App\Helpers\EnvHelper`)
-  to check the current environment
-- Never use raw `app()->environment('...')` calls or hardcoded `env('APP_ENV') === '...'` comparisons
-- **Application code** (Services, Middleware, Controllers, Jobs): use the `AppEnvironment` enum
-- **Config files** (`config/*.php`): use `EnvHelper` (app container is not yet available)
-- **Example:**
-  ```php
-  // ❌ Wrong
-  if (app()->environment('testing')) { ... }
-
-  // ✅ Correct — application code
-  if (AppEnvironment::TESTING->isActive()) { ... }
-
-  // ✅ Correct — config files
-  $isTesting = EnvHelper::isEnvironment(AppEnvironment::TESTING);
-  ```
-- See `agents/docs/env-helper.md` and `agents/docs/environments.md` for full documentation
-
-## ✅ Copilot Behavior
-
-- Generate **strictly typed** PHP 8.2 / Laravel 11 code only — avoid features from newer versions.
-- Prioritize **readable, clean, maintainable** code over cleverness.
-- Default to **immutability**, **dependency injection**, and **encapsulation**.
-- Be direct and concise — no "Sure!", "You're right!" or similar phrases.
-
-## ✅ Legacy / Existing Code Handling
-
-- Do NOT refactor existing code solely to comply with these rules.
-- Only modify existing code if directly related to the current change, bug fix, security, or explicitly requested.
-- New or newly modified code MUST follow all rules in this document.
-
-## ✅ Session Files
-
-`agents/sessions/current.md` is an **agent work session file** that tracks progress,
-decisions, and next steps for the current branch. It is committed intentionally so
-that other developers or agents can pick up the work.
-
-- **Draft PRs:** Do NOT comment on session files. The session is still active.
-- **Ready-for-review PRs:** If `agents/sessions/current.md` exists in the diff,
-  add a **single** general PR comment (not on a specific line):
-  > ⚠️ `agents/sessions/current.md` should be deleted before merging.
-  Only post this **once per PR** — do not duplicate it.
-- Do NOT review the content of session files — they are not application code.
+- Conventional Commits: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `ci`.
+- Squash-merge title must also follow Conventional Commits.
+- Do NOT commit regenerated files (`.claude/`, `.cursor/`, `.windsurfrules`,
+  `GEMINI.md`) as separate commits — they belong with the source change.
 
 ## ✅ Code Review Scope
 
-- When reviewing code changes, **only review the actually modified lines** and their **direct dependencies**
-- Do NOT review or suggest changes to unmodified code in the same file
-- **Direct dependencies** include:
-    - Functions or methods that are called by the modified code
-    - Functions or methods that call the modified code
-    - Classes or interfaces that are directly used or implemented by the modified code
-    - Properties or constants that are directly accessed by the modified code
-- **Do NOT review:**
-    - Unmodified code in the same file that is not directly related to the change
-    - Code style issues in unmodified lines
-    - Architectural patterns in unmodified code
-    - Other methods or functions in the same class that are not called by or calling the modified code
-- **Example:**
-    - If a single line in a 500-line file is changed, only review that line and its direct dependencies
-    - Do NOT suggest improvements to the other 499 lines unless they are directly affected by the change
+- Review only the **actually modified lines** and their direct dependencies.
+- Do NOT suggest improvements to unmodified code in the same file.
+- Do NOT nitpick style issues that linters / formatters auto-fix.
 
-## ✅ Code Review Comment Behavior
+## ✅ Comment Behavior
 
-### Before Creating a Comment
+- Never create duplicate comments — one comment per concern per location.
+- Never re-raise rejected suggestions.
+- Answer questions concisely; do not argue.
+- Resolve conversations once the issue is addressed.
 
-Before posting a new review comment, **always check the existing PR conversation first**:
+## ✅ Language
 
-1. **Check if you already commented on the same line or issue** — if a comment from you (Copilot) already
-   exists for the same code location or the same concern, do NOT create a duplicate comment.
-2. **Check if the issue was already discussed** — if another reviewer (human or bot) already raised the
-   same point, do not repeat it.
+- Code comments: English.
+- Commit messages: English, Conventional Commits.
+- User-facing prose in `.augment.uncompressed/` `.md` files: English.
+- PR comments: English.
 
-### Handling Replies to Your Comments
+## ✅ Known non-issues
 
-When a developer has replied to one of your review comments:
-
-- **If the developer accepted your suggestion:** Acknowledge briefly (e.g., "Looks good, thanks!") or
-  resolve the conversation. Do NOT re-raise the same point.
-- **If the developer rejected your suggestion with a reason:** Accept the decision. Do NOT re-post the
-  same suggestion. If you believe the rejection is based on a misunderstanding, you may provide
-  **one** follow-up with additional analysis — but respect the final decision.
-- **If the developer asked a question:** Provide a helpful, concise answer with code examples if needed.
-  Engage in a constructive discussion.
-- **If the developer dismissed without explanation:** Do NOT re-raise the comment. Move on.
-
-### Rules
-
-- **Never create duplicate comments** — one comment per concern per location is enough.
-- **Never re-raise rejected suggestions** — if the developer said no, accept it.
-- **Engage constructively with replies** — answer questions, provide analysis, but don't argue.
-- **Resolve conversations** when the issue is addressed or the discussion is concluded.
-- **Prioritize actionable feedback** — avoid nitpicking on style issues that ECS/Rector will auto-fix.
-
-## ✅ Language Rules
-
-- All **code comments** must be written in **English**
-- All **parameter names**, **variable names**, **method names**, and **class names** must be in **English**
-- User-facing texts (labels, messages, validation messages) must be managed via **Laravel language files**
-  (`lang/de/`, `lang/en/`) — never hardcode user-visible strings in PHP code
-- For GitHub comments (PR reviews, issue discussions), provide bilingual comments:
-    - Write the main comment in **English** first
-    - Add a German translation below, prefixed with "🇩🇪 " or separated by a horizontal line
-
-**Example for GitHub comments:**
-
-> This change improves performance by reducing database queries.
->
-> ---
->
-> 🇩🇪 Diese Änderung verbessert die Performance durch Reduzierung der Datenbankabfragen.
-
-## ✅ Package Management
-
-- **Always use `composer require`/`composer remove`** — never manually edit `composer.json`
-- Package managers resolve versions, handle conflicts, and update lock files automatically
-
-## ✅ PHPStan Baseline
-
-- **Do NOT add entries to `phpstan-baseline.neon`** — always fix the actual error. Last resort: inline `@phpstan-ignore` with reason.
-
-
-## ✅ Known Issues
-
-- When `is_string($var)` is used, Copilot often suggests adding `null !== $var`.
-  This is incorrect. The `is_string()` function already ensures that the variable is of type string.
-  Adding an additional null check is redundant and should not be done.
-- Since Laravel 11, events and subscribers do not need to be manually registered
-  in `AppServiceProvider` or `EventServiceProvider`.
-  They are typically registered via event discovery configured in `bootstrap/app.php`.
-
+- `source: package` in skill frontmatter is required — do not remove.
+- `disable-model-invocation: true` on commands is required — do not remove.
+- Symlinks in `.claude/`, `.cursor/` etc. point to `.augment/` — that is
+  intentional, do not "fix" broken-looking paths.

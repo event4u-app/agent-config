@@ -1,0 +1,1 @@
+../../../.augment/commands/copilot-agents-init.md

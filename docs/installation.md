@@ -21,19 +21,18 @@ The package is versioned with the project. Settings are committed once.
 composer require --dev event4u/agent-config
 ```
 
-The `postinstall` hook runs `scripts/install.sh` automatically via `setup.sh`.
+The `postinstall` hook runs `scripts/install.sh` automatically. It syncs `.augment/`
+and then runs the bridge installer (`scripts/install.py`) to create `.agent-settings`
+and the tool-specific JSON bridges.
 
-Then generate the project bridge files:
-
-```bash
-php vendor/bin/install.php
-```
-
-Or with a specific profile:
+To re-run manually or pick a non-default profile:
 
 ```bash
 php vendor/bin/install.php --profile=balanced
 ```
+
+`bin/install.php` is a thin wrapper that calls `scripts/install.py`. The `--profile`
+flag controls the initial `cost_profile` value written to `.agent-settings`.
 
 ### npm (JavaScript/TypeScript projects)
 
@@ -41,17 +40,25 @@ php vendor/bin/install.php --profile=balanced
 npm install --save-dev @event4u/agent-config
 ```
 
-The `postinstall` hook runs `scripts/install.sh` automatically.
+The `postinstall` hook runs `scripts/install.sh` automatically (which calls the
+Python bridge installer at the end).
 
-### Generate bridge files (PHP installer)
+### Generate bridge files (Python installer)
 
-The PHP installer creates `.agent-settings` and tool-specific bridge files:
+The bridge installer creates `.agent-settings` and tool-specific bridge files. It runs
+automatically via `install.sh`, but you can invoke it directly:
 
 ```bash
-php vendor/bin/install.php                        # defaults to profile=minimal
-php vendor/bin/install.php --profile=balanced      # specific profile
-php vendor/bin/install.php --force                 # overwrite existing files
-php vendor/bin/install.php --skip-bridges          # only create .agent-settings
+python3 scripts/install.py                     # defaults to cost_profile=minimal
+python3 scripts/install.py --profile=balanced  # specific profile
+python3 scripts/install.py --force             # overwrite existing files
+python3 scripts/install.py --skip-bridges      # only create .agent-settings
+```
+
+PHP users can use the wrapper:
+
+```bash
+php vendor/bin/install.php --profile=balanced
 ```
 
 This creates:
@@ -60,7 +67,10 @@ This creates:
 - `.augment/settings.json` — Augment plugin activation
 - `.github/plugin/marketplace.json` — Copilot CLI marketplace
 
-No Task, no Make, no build tools required. Just PHP (which you already have).
+No Task, no Make, no build tools required. **Python 3** (standard library only) must be
+available — it is pre-installed on macOS 12.3+ and virtually every Linux distribution.
+If Python 3 is missing, `install.sh` warns and continues; re-run the bridge installer
+after installing it.
 
 ### What happens after install
 
@@ -81,7 +91,7 @@ regardless of which AI tool they use.** No per-developer plugin installation nee
 After initial setup, commit these files:
 
 ```
-.agent-settings                    ← shared profile (e.g., profile=minimal)
+.agent-settings                    ← shared profile (e.g., cost_profile=minimal)
 .augment/                          ← rules, skills, commands (symlinks)
 .cursor/rules/                     ← Cursor rules (symlinks)
 .claude/                           ← Claude rules, skills (symlinks)
@@ -175,7 +185,7 @@ The system works immediately with sensible defaults. Optionally, create `.agent-
 to choose a profile:
 
 ```ini
-profile=minimal
+cost_profile=minimal
 ```
 
 | Profile | What's active | For whom |
@@ -183,7 +193,6 @@ profile=minimal
 | `minimal` (default) | Rules + Skills only, zero overhead | New users, solo devs |
 | `balanced` | + Runtime, limited observability | Most teams |
 | `full` | + Tool audit, lifecycle reports | Platform teams |
-| `enterprise` | + Strict governance, max reporting | Large teams |
 
 No profile configured = `minimal` behavior. → [Full profile details](customization.md)
 
@@ -247,3 +256,7 @@ Options:
   --verbose        Show detailed output
   --quiet          Suppress all output except errors
 ```
+
+---
+
+← [Back to README](../README.md)

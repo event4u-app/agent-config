@@ -3,14 +3,19 @@
 ## System overview
 
 ```
-Rules → Behavior enforcement (always active)
-Skills → Execution logic (on-demand expertise)
-Runtime → Execution system (dispatcher, handlers, hooks)
-Tools → External integrations (GitHub, Jira)
-Observability → Signals & metrics
-Feedback → Improvement loop
-Lifecycle → Evolution & health
+Rules         → Behavior enforcement (always active)         ← stable
+Skills        → Execution logic (on-demand expertise)        ← stable
+Runtime       → Execution system (dispatcher, hooks)         ← experimental
+Tools         → External integrations (GitHub, Jira)         ← experimental
+Observability → Signals & metrics                            ← experimental
+Feedback      → Improvement loop                             ← experimental
+Lifecycle     → Evolution & health                           ← experimental
 ```
+
+**Stable** = shipped, documented, exercised by the default (`minimal`) profile.
+**Experimental** = scaffold with tests and data model, but no real execution
+wired up yet. These layers activate only under the `balanced` / `full`
+profiles and they are explicit about being no-ops today.
 
 ## Content pipeline
 
@@ -48,7 +53,12 @@ Lifecycle → Evolution & health
 
 Ensures: no guessing, analysis before action, real verification, consistent outputs.
 
-### 2. Execution Layer (Runtime)
+### 2. Execution Layer (Runtime) — experimental
+
+> **Status: scaffold.** Registry, dispatcher, pipeline, hooks and an error
+> taxonomy exist and have tests, but no real execution happens yet. See
+> `scripts/runtime_dispatcher.py` — its module docstring states
+> *"No real execution happens — this is a scaffold for future phases."*
 
 Skills can optionally define execution metadata:
 
@@ -61,9 +71,15 @@ execution:
   safety_mode: strict
 ```
 
-The runtime layer provides: skill execution registry, dispatcher, execution handlers, safety controls.
+Planned scope: skill execution registry, dispatcher, execution handlers,
+safety controls.
 
-### 3. Tool Integration
+### 3. Tool Integration — experimental
+
+> **Status: scaffold + read-only GitHub calls.** With a `GITHUB_TOKEN` the
+> GitHub adapter performs real read calls; without one it returns scaffold
+> data. Write operations (`create_pr`, `comment`, etc.) are scaffold only.
+> The Jira adapter is scaffold throughout.
 
 Controlled integration via adapters:
 
@@ -72,7 +88,7 @@ Controlled integration via adapters:
 - Tool registry with safety rules for execution
 - Structured responses with error classification
 
-### 4. Observability
+### 4. Observability — experimental
 
 The system emits structured data (events, metrics, execution logs) persisted as:
 
@@ -81,12 +97,19 @@ The system emits structured data (events, metrics, execution logs) persisted as:
 - `tool-audit.json` — tool adapter results
 - Lifecycle reports and CI summaries
 
-### 5. Feedback System
+### 5. Feedback System — experimental
+
+> **Status: data model + collector, no auto-consumption.** Feedback is
+> persisted to local JSON but never injected into agent context
+> automatically; see [`agents/docs/feedback-consumption.md`](../agents/docs/feedback-consumption.md).
 
 The system captures outcomes (success, failure, partial, blocked, timeout) and generates:
 improvement suggestions, failure pattern detection, skill health insights.
 
-### 6. Lifecycle Management
+### 6. Lifecycle Management — experimental
+
+> **Status: tracking + scoring, no enforcement.** Lifecycle state is
+> recorded and reported but does not block or gate skill usage.
 
 Each skill has a lifecycle (active → deprecated → superseded) with:
 health scoring, migration suggestions, and lifecycle reports.
@@ -97,7 +120,7 @@ health scoring, migration suggestions, and lifecycle reports.
 
 Metrics, reports, and feedback are collected and persisted but **NOT automatically injected
 into agent context**. All features are gated by settings with `cost_profile` support
-(`cheap`, `balanced`, `full`).
+(`minimal`, `balanced`, `full`, `custom`).
 
 ---
 
@@ -115,3 +138,7 @@ into agent context**. All features are gated by settings with `cost_profile` sup
 | **Gemini CLI** | ✅ | — | — | — | install.sh (symlink → AGENTS.md) |
 
 Skills follow the [Agent Skills open standard](https://agentskills.io).
+
+---
+
+← [Back to README](../README.md)

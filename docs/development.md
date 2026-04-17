@@ -154,3 +154,7 @@ templates/consumer-settings/   ← Settings templates for consumer projects
 .augment/                      ← Compressed output (token-efficient)
 ├── (same structure)           ← Compressed .md + copied non-.md files
 ```
+
+---
+
+← [Back to README](../README.md)
