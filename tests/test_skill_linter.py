@@ -756,3 +756,148 @@ description: "Testing patterns"
 
     result = lint_file(path)
     assert not any(issue.code == "missing_analysis_before_action" for issue in result.issues)
+
+
+# --- Type boundary checks ---
+
+
+def test_guideline_with_executable_procedure_warns(tmp_path: Path) -> None:
+    """Guideline with 5+ executable numbered steps → warning."""
+    path = write_file(
+        tmp_path,
+        ".augment/guidelines/php/testing.md",
+        """\
+---
+description: "Testing workflow"
+---
+
+# Testing Workflow
+
+1. Run the migrations
+2. Create the test file
+3. Implement the test cases
+4. Execute the test suite
+5. Run PHPStan checks
+6. Create the PR
+""",
+    )
+
+    result = lint_file(path)
+    assert any(issue.code == "guideline_contains_executable_procedure" for issue in result.issues)
+
+
+def test_guideline_without_procedure_passes(tmp_path: Path) -> None:
+    """Guideline without executable steps → no warning."""
+    path = write_file(
+        tmp_path,
+        ".augment/guidelines/php/naming.md",
+        """\
+---
+description: "Naming conventions"
+---
+
+# Naming Conventions
+
+- Use camelCase for variables
+- Use PascalCase for classes
+- Use snake_case for database columns
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(issue.code == "guideline_contains_executable_procedure" for issue in result.issues)
+
+
+def test_command_without_skill_references_warns(tmp_path: Path) -> None:
+    """Command that doesn't reference any skills → warning."""
+    path = write_file(
+        tmp_path,
+        ".augment/commands/do-stuff.md",
+        """\
+---
+name: do-stuff
+description: "Do some stuff"
+---
+
+# /do-stuff
+
+## Steps
+
+### 1. Do the thing
+
+Run some commands and make changes.
+
+### 2. Done
+
+Show results.
+""",
+    )
+
+    result = lint_file(path)
+    assert any(issue.code == "command_missing_skill_references" for issue in result.issues)
+
+
+def test_command_with_skill_references_passes(tmp_path: Path) -> None:
+    """Command that references skills → no warning."""
+    path = write_file(
+        tmp_path,
+        ".augment/commands/deploy.md",
+        """\
+---
+name: deploy
+skills: [quality-tools, git-workflow]
+description: "Deploy the application"
+---
+
+# /deploy
+
+## Steps
+
+### 1. Quality check
+
+Use the quality-tools skill to run all checks.
+
+### 2. Push
+
+Push to remote.
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(issue.code == "command_missing_skill_references" for issue in result.issues)
+
+
+def test_skill_with_vague_validation_warns(tmp_path: Path) -> None:
+    """Skill with vague validation → warning."""
+    path = write_file(
+        tmp_path,
+        ".augment/skills/example-task/SKILL.md",
+        """\
+---
+name: example-task
+description: "Do example tasks"
+source: package
+---
+
+# example-task
+
+## When to use
+
+When doing example tasks.
+
+## Procedure
+
+1. Do the thing
+
+## Validation
+
+Check if it works and make sure it's correct.
+
+## Gotcha
+
+Something might break.
+""",
+    )
+
+    result = lint_file(path)
+    assert any(issue.code == "skill_validation_too_generic" for issue in result.issues)

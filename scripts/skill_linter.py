@@ -1002,6 +1002,71 @@ def lint_execution_quality(path: Path, text: str) -> List[Issue]:
     return issues
 
 
+# --- Type boundary checks ---
+
+
+def lint_type_boundaries(path: Path, text: str, artifact_type: str) -> List[Issue]:
+    """Check that artifacts respect their type boundaries.
+
+    - Guidelines should not contain executable procedures
+    - Commands should reference skills
+    - Skills should have concrete validation (not vague)
+    """
+    issues: List[Issue] = []
+    text_lower = text.lower()
+    import re
+
+    # --- Guideline: should not have executable procedures ---
+    if artifact_type == "guideline":
+        # Count numbered steps (1. 2. 3. etc.) — guidelines shouldn't have >5
+        numbered_steps = re.findall(r'^\d+\.\s+\*?\*?(?:Step|Run|Create|Execute|Implement)',
+                                     text, re.MULTILINE | re.IGNORECASE)
+        if len(numbered_steps) >= 5:
+            issues.append(Issue("warning", "guideline_contains_executable_procedure",
+                                f"Guideline has {len(numbered_steps)} executable numbered steps — "
+                                "consider extracting into a skill or command"))
+
+    # --- Command: should reference skills ---
+    if artifact_type == "command":
+        # Check frontmatter skills field
+        frontmatter = extract_frontmatter(text)
+        has_skills_field = False
+        if frontmatter:
+            skills_match = re.search(r'skills:\s*\[(.+)\]', frontmatter)
+            has_skills_field = bool(skills_match and skills_match.group(1).strip())
+
+        # Also check body for skill references
+        has_skill_ref = bool(re.search(r'skill|SKILL\.md', text))
+
+        if not has_skills_field and not has_skill_ref:
+            issues.append(Issue("warning", "command_missing_skill_references",
+                                "Command does not reference any skills — "
+                                "commands should orchestrate skills, not contain domain logic"))
+
+    # --- Skill: validation should be concrete, not vague ---
+    if artifact_type == "skill":
+        # Find validation/verify sections
+        validation_section = re.search(
+            r'(?:^#{1,4}\s+(?:Validat|Verif|Quality|Accept).+?\n)((?:.*\n)*?)(?=^#{1,4}\s|\Z)',
+            text, re.MULTILINE | re.IGNORECASE
+        )
+        if validation_section:
+            validation_text = validation_section.group(1).lower()
+            vague_patterns = ("check if it works", "make sure it's correct",
+                              "verify it works", "should work", "looks correct")
+            concrete_patterns = ("run ", "curl ", "phpstan", "rector", "pest",
+                                 "playwright", "assert", "exit code", "must pass",
+                                 "0 fail", "0 error")
+            has_vague = any(p in validation_text for p in vague_patterns)
+            has_concrete = any(p in validation_text for p in concrete_patterns)
+            if has_vague and not has_concrete:
+                issues.append(Issue("warning", "skill_validation_too_generic",
+                                    "Validation section uses vague language — "
+                                    "add concrete checks (commands, expected output, conditions)"))
+
+    return issues
+
+
 def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
     # Skip README files — they are not lintable artifacts
     if path.name.lower() == "readme.md":
@@ -1042,6 +1107,12 @@ def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
     execution_issues = lint_execution_quality(display_path, text)
     if execution_issues:
         result.issues.extend(execution_issues)
+        result.status = classify_status(result.issues)
+
+    # Post-processing: type boundary checks (warnings)
+    boundary_issues = lint_type_boundaries(display_path, text, artifact_type)
+    if boundary_issues:
+        result.issues.extend(boundary_issues)
         result.status = classify_status(result.issues)
 
     return result
