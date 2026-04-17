@@ -427,6 +427,94 @@ that don't match real CLI syntax. **Ignored** — we use actual plugin commands.
 
 ---
 
+## Phase 4b: Installation Maturity — Next Level (future)
+
+**Status:** Not started. Depends on plugin/marketplace ecosystem maturity.
+
+These concepts were suggested by GPT analysis and are valid architectural ideas,
+but require stable plugin APIs before implementation. Tracked here for when the
+ecosystem is ready.
+
+### Concept 1: Auto-detection (for consumer projects)
+
+Detect which agent tool the CONSUMER uses and show the right install path.
+
+Detection signals (in consumer project, not our repo):
+- `.vscode/settings.json` with plugin configs → VS Code/Copilot
+- Augment settings with enabledPlugins → Augment
+- Claude config files → Claude Code
+- None of the above → generic fallback
+
+**Caution:** Detection must run in the consumer's project context, not in our repo.
+The GPT-suggested `detect-agent.sh` assumed our repo context — needs redesign for consumers.
+
+Tasks:
+- [ ] Design detection logic for consumer project context
+- [ ] Implement `scripts/detect-agent.sh` (runs in consumer project)
+- [ ] Implement `scripts/show-install-guide.sh` (context-aware recommendations)
+- [ ] Wire into `task install-guide` (optional)
+- [ ] Depends on: stable plugin API formats for all 3 tools
+
+### Concept 2: Install checker (for consumer projects)
+
+Validate whether agent-config is correctly installed in a consumer project.
+
+Checks per environment:
+- Plugin manifest present and referenced?
+- `.agent-settings` present? Profile set?
+- Plugin enabled in tool config?
+
+**Key requirement:** Must produce actionable output, not just "FAIL".
+Example: `FAIL: .agent-settings missing → Create with: profile=minimal`
+
+Tasks:
+- [ ] Design check logic per tool
+- [ ] Implement `scripts/install-check.sh`
+- [ ] Wire into `task install-check` (optional)
+- [ ] Consider: run as post-install hook?
+- [ ] Depends on: stable plugin config formats
+
+### Concept 3: Centralized plugin definition
+
+Instead of maintaining separate manifests in `.augment-plugin/`, `.claude-plugin/`,
+`.github/plugin/`, define ONE canonical plugin in `plugin/agent-config/plugin.json`
+and have tool-specific manifests reference it.
+
+```
+plugin/
+  agent-config/
+    plugin.json        ← canonical definition
+    agents/
+    skills/
+    commands/
+
+.augment-plugin/plugin.json   → references plugin/agent-config
+.claude-plugin/plugin.json    → references plugin/agent-config
+.github/plugin/marketplace.json → references plugin/agent-config
+```
+
+**Benefit:** Single source of truth for plugin identity, version, components.
+**Risk:** Plugin formats may not support cross-references. Speculative until APIs stabilize.
+
+Tasks:
+- [ ] Investigate: do plugin formats support source/reference paths?
+- [ ] If yes: create `plugin/agent-config/plugin.json` as canonical
+- [ ] If no: keep tool-specific manifests, sync via build script
+- [ ] Depends on: stable plugin API formats
+
+### Installation maturity success criteria (next level)
+
+| Criterion | Status |
+|---|---|
+| Auto-detection of consumer environment | Not started |
+| Install checker with actionable output | Not started |
+| One canonical plugin ID across all tools | Partially (manifests exist, not centralized) |
+| Post-install validation hook | Not started |
+| Consumer install in under 30 seconds | ✅ Done (plugin path) |
+| Consumer install with zero build tools | ✅ Done |
+
+---
+
 ## Phase 5: Reduce Jargon in README
 
 **SWOT link:** W1 (entry barrier), W5 (over-governance perception), T3 (overengineering)
