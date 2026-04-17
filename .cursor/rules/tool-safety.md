@@ -1,0 +1,1 @@
+../../.augment/rules/tool-safety.md

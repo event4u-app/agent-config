@@ -72,7 +72,7 @@ cross-file dependency checks, baseline/ratchet mode for CI.
 
 ## Roadmaps
 
-- [`agents/roadmaps/linter-execution-governance.md`](../roadmaps/archive/linter-execution-governance.md) — Implementation roadmap
+- [`agents/roadmaps/archive/linter-execution-governance.md`](../roadmaps/archive/linter-execution-governance.md) — Implementation roadmap (archived)
 
 ## Out of Scope (V1)
 

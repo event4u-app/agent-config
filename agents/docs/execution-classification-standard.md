@@ -101,7 +101,7 @@ These skills are CLI-based but fail one or more automated criteria:
 - Valid values: `github`, `jira` (from tool registry)
 - Empty `[]` for skills that don't use external tools
 - Never declare tools "just in case"
-- `automated` skills MUST have `allowed_tools: []`
+- Automated skills MUST have `allowed_tools: []`
 
 ---
 

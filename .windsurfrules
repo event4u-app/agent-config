@@ -339,6 +339,8 @@ A learning may be promoted to rule/skill ONLY if ALL gates pass:
 - Pattern that improved outcome and should be reused
 - Missing constraint that caused issues
 - **User frustration or complaint** — extract the underlying failure pattern, don't ignore or defend
+- **New skill/rule/guideline created** — evaluate if it should be contributed upstream (→ `upstream-proposal` rule)
+- **Significant improvement to existing skill/rule** — consider upstream contribution
 
 ## Do NOT capture
 
@@ -922,6 +924,89 @@ Read the specific guideline file on demand — don't memorize the full list.
 
 ---
 
+# Improve Before Implement
+
+## When to activate
+
+Before implementing:
+
+- New features
+- Refactoring or architectural changes
+- Module or service creation
+- Significant code changes that alter behavior
+
+**Does NOT activate for:**
+
+- Bug fixes (the problem is already defined)
+- Config changes, documentation, quality fixes
+- Tasks where the user said "just do it" or "skip validation"
+- Trivial changes (rename, typo, formatting)
+
+## What to check
+
+Before coding, quickly verify:
+
+### 1. Is the request clear?
+
+- Are acceptance criteria defined or derivable?
+- Is the scope bounded? (not "make it better" but "add X to Y")
+- Are edge cases considered?
+
+**If unclear** → ask ONE focused question. Max 2 questions, never an interrogation.
+
+### 2. Does it fit the existing architecture?
+
+- Does similar functionality already exist?
+- Does it follow established patterns in the codebase?
+- Does it contradict existing conventions?
+
+**If misfit** → show evidence (file references), propose alternative.
+
+### 3. Is the approach sound?
+
+- Is there a simpler way to achieve the same result?
+- Are there known problems with the requested approach?
+- Does the scope match the stated goal? (not over-engineered, not under-specified)
+
+**If problematic** → explain the concern, propose a better approach.
+
+## How to challenge
+
+- **Be concise** — one sentence per concern, not paragraphs
+- **Show evidence** — reference existing code, patterns, or conventions
+- **Offer alternatives** — don't just say "this is wrong"
+- **Use numbered options** — let the user choose quickly
+- **Respect "just do it"** — if the user insists after your challenge, execute immediately
+
+Example:
+
+```
+> ⚠️ `UserService` already has a `deactivate()` method that covers this case.
+>
+> 1. Use existing method — extend with new parameter
+> 2. Create new method anyway — I'll explain the overlap in a comment
+> 3. Skip validation — implement as requested
+```
+
+## The golden rule
+
+**Challenge to improve, never to refuse.**
+
+The agent is a thought partner, not a gatekeeper. After presenting concerns:
+- User picks an option → execute immediately
+- User says "just do it" → execute immediately
+- Never argue twice about the same point
+- Never block work — delay is only justified if it prevents a clear mistake
+
+## Scope limits
+
+- **Max 1-2 challenges per task** — not every request needs validation
+- **Max 1 minute of analysis** — if the check takes longer, skip it
+- **Never validate simple tasks** — only features, architecture, significant changes
+- **Never validate after the user already explained their reasoning**
+
+---
+
 # Language and Tone
 
 ## Personalization
@@ -1295,6 +1380,45 @@ The `description` field IS the trigger. It must describe **when** the rule appli
 
 ---
 
+# Runtime Safety
+
+## Core principle
+
+Execution is an extension of skills, not a replacement for reasoning or review.
+
+## Constraints
+
+- Default execution type is `manual` — skills without an execution block are instructional only
+- `assisted` execution must produce a proposal, never execute silently
+- `automated` execution requires:
+  - `handler` ≠ `none`
+  - `safety_mode: strict`
+  - Explicit `allowed_tools` declaration (can be empty `[]`)
+  - A verification step defined in the skill's steps
+- No arbitrary code execution — handlers are allowlisted values only
+- No bypass of rules, linter, or reviewer standards
+- No execution without declared intent in frontmatter
+
+## Allowed handler values
+
+`none`, `shell`, `php`, `node`, `internal`
+
+Any other value is a linter error.
+
+## Escalation
+
+If a skill's execution type or handler is unclear:
+1. Default to `manual`
+2. Ask the user before assuming `assisted` or `automated`
+
+## What this rule does NOT cover
+
+- Tool registry and permissions (see tool-integration roadmap)
+- Runtime hooks and error handling (see runtime hooks PR)
+- Async execution (not in scope for this phase)
+
+---
+
 # Scope Control
 
 - Do NOT introduce architectural changes unless explicitly requested.
@@ -1641,6 +1765,111 @@ When `minimal_output=true`:
 - User explicitly asks for full output: show it.
 
 → Detailed patterns: `guidelines/agent-infra/output-patterns.md`
+
+---
+
+# Tool Safety
+
+Tools are permissions, not abilities. Every tool access must be declared and reviewable.
+
+## Constraints
+
+- **Deny by default** — no access unless in `allowed_tools`
+- **Allowlist only** — names must match tool registry
+- **Read-first** — write requires explicit approval
+- **No hidden credentials** — no API keys in skill files
+- **No arbitrary execution** — adapters have fixed interfaces
+- **Audit trail** — tool usage must be observable
+
+## When this applies
+
+- Skills declaring `allowed_tools`
+- Skills referencing external APIs (GitHub, Jira)
+- Runtime execution accessing external services
+
+## Escalation
+
+1. Do NOT use unregistered tools
+2. Flag as registry extension suggestion
+3. Tool must be added to registry before use
+
+## Not covered
+
+- Internal agent capabilities (not external tools)
+- MCP server configuration (`mcp` skill)
+- Credential management (environment config)
+
+---
+
+# Upstream Proposal
+
+## When to activate
+
+After the agent **creates or significantly improves** any of these in a consumer project:
+
+- Skill (new or major update)
+- Rule (new or major update)
+- Guideline (new or major update)
+- Command (new or major update)
+
+**Also activate when:**
+
+- A project-specific skill/rule could be **generalized** to benefit all consumers
+- An override was created that improves on the shared version
+- A learning was captured that produced a high-quality new artifact
+
+**Do NOT activate when:**
+
+- Working inside the agent-config package itself (no self-referential proposals)
+- The change is a trivial fix (typo, formatting)
+- The user already declined upstream for this exact item in this conversation
+
+## Consent check
+
+**⛔ MANDATORY: Always ask the user. Never skip this step.**
+
+After completing the creation/improvement, evaluate:
+
+1. **Is this universal?** Could other projects benefit from this?
+2. **Is this generalizable?** Even if project-specific, can it be abstracted?
+3. **Is this high-quality?** Does it pass the promotion gate from `capture-learnings`?
+
+If ANY of these is YES → propose to the user:
+
+### For universal content (directly applicable):
+
+```
+> 🔄 The [skill/rule/guideline] `{name}` you just created could benefit all projects
+> using the shared agent-config package.
+>
+> 1. Yes — contribute upstream via PR
+> 2. No — keep project-local only
+```
+
+### For project-specific content (needs generalization):
+
+```
+> 🔄 The [skill/rule/guideline] `{name}` is project-specific, but I could generalize
+> it for the shared package. [Brief explanation of what would change]
+>
+> 1. Yes — generalize and contribute upstream
+> 2. No — keep project-local only
+```
+
+## After user response
+
+- **User picks 1** → invoke `upstream-contribute` skill (which has its own consent gate for repo access)
+- **User picks 2** → stop. Do NOT ask again for this item.
+- **Max 1 proposal per created artifact** — never nag.
+
+## Important
+
+- **Consent is non-negotiable** — the user decides, always.
+- **Do NOT batch proposals** — ask for each artifact separately.
+- **Do NOT interrupt flow** — only propose AFTER the creation/improvement is complete.
+- **Do NOT propose for trivial changes** — formatting, typos, comment updates.
+- **Respect "no"** — if the user declines, do not revisit unless they bring it up.
+- **Token efficiency** — this rule costs zero tokens when not triggered (auto type).
 
 ---
 
