@@ -12,6 +12,7 @@
   "commands/config-agent-settings.md": "b7cf690ca7e13b57a4a451aab500983bcc9c2fd28871601c71a15e6b31315f2a",
   "commands/context-create.md": "3a914e87bbc0d8f8dbe52e969cb0a375117cf73553d6d039cf69a9b0d5c7f4e3",
   "commands/context-refactor.md": "3a65336ee8aea4cb10be7da29e015f64dce9e79f4745ad493bc930ad8cbdd06c",
+  "commands/copilot-agents-init.md": "5f2245441d283645a57f71990addc5d1ba0433583b2c659a6dd62d258d0cb037",
   "commands/copilot-agents-optimize.md": "447ba568c4c17adff9d74c20028a941b21483d86002d476d33976c4d0b4f2e20",
   "commands/create-pr-description.md": "604ea56885458b98ffa41a3c132e299eac556f0eef0af46c880a1be82ae36bec",
   "commands/create-pr.md": "87d17ca21b7d19b2489089801b0e77de73a760418bcc01ebd06e44dc898aa4df",
