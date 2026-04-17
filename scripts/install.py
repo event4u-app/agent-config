@@ -59,6 +59,11 @@ def fail(msg: str) -> "None":
     sys.exit(1)
 
 
+def hint(msg: str) -> None:
+    if not QUIET:
+        print(f"  💡  {msg}")
+
+
 # --- Package detection ---
 
 def detect_package_root(project_root: Path) -> Path:
@@ -203,6 +208,32 @@ def ensure_augment_bridge(project_root: Path, force: bool) -> None:
     merge_json_file(project_root / ".augment" / "settings.json", bridge, force, ".augment/settings.json")
 
 
+def detect_runtime_package(project_root: Path) -> bool:
+    """Return True if a runtime-capable package is present in the project.
+
+    Checks for future multi-package structure (agent-config-runtime as a
+    separate Composer/npm package). Used to suggest a profile upgrade when
+    the current profile is `minimal` but runtime is available.
+    """
+    candidates = [
+        project_root / "vendor" / "event4u" / "agent-config-runtime",
+        project_root / "node_modules" / "@event4u" / "agent-config-runtime",
+    ]
+    return any(c.exists() for c in candidates)
+
+
+def suggest_profile_upgrade(project_root: Path, profile: str) -> None:
+    """Print a subtle hint if runtime is available but profile is minimal."""
+    if profile != "minimal":
+        return
+    if not detect_runtime_package(project_root):
+        return
+    hint(
+        "Runtime package detected. Consider `cost_profile=balanced` in "
+        ".agent-settings to enable runtime features."
+    )
+
+
 def ensure_copilot_bridge(project_root: Path, force: bool) -> None:
     target = project_root / ".github" / "plugin" / "marketplace.json"
 
@@ -284,6 +315,8 @@ def main(argv: list[str]) -> int:
         ensure_vscode_bridge(project_root, package_type, opts.force)
         ensure_augment_bridge(project_root, opts.force)
         ensure_copilot_bridge(project_root, opts.force)
+
+    suggest_profile_upgrade(project_root, opts.profile)
 
     if not QUIET:
         print()

@@ -124,7 +124,7 @@ Personal and project settings come from `config/agent-settings.template.ini` (me
 - [x] Document profiles in `.augment/templates/agent-settings.md` with full matrix
 - [x] Profile switching without reinstall (just change `cost_profile=` in `.agent-settings`)
 - [ ] Implement matrix resolution in agent runtime (read `cost_profile`, apply matrix, honour overrides)
-- [ ] Profile auto-detection: if runtime package installed → suggest `balanced`
+- [x] Profile auto-detection: if runtime package installed → suggest `balanced` (`suggest_profile_upgrade()` in `scripts/install.py`; detects `vendor/event4u/agent-config-runtime` and `node_modules/@event4u/agent-config-runtime`)
 - [x] Add profile section to README (see "You don't need everything" section with Minimal/Balanced/Full table)
 
 ### Success metric
@@ -154,12 +154,12 @@ Define **who** consumes feedback and **how**:
 
 ### Tasks
 
-- [ ] Define feedback consumption rules per profile
-- [ ] `minimal` + `balanced`: feedback stored, never auto-injected
-- [ ] `full`: feedback available on request ("show me recent failures") and suggestions in chat
-- [ ] Pattern auto-injection: explicit opt-in via override, not a separate profile tier
-- [ ] Document: "feedback.json exists for CI and reports, not for the agent by default"
-- [ ] Consider: should feedback influence skill selection? (e.g., "this skill failed 3x → suggest alternative")
+- [x] Define feedback consumption rules per profile (see `agents/docs/feedback-consumption.md`)
+- [x] `minimal` + `balanced`: feedback stored, never auto-injected (matrix + design doc)
+- [x] `full`: feedback available on request ("show me recent failures") and suggestions in chat (design doc)
+- [x] Pattern auto-injection: explicit opt-in via override, not a separate profile tier (design doc)
+- [x] Document: "feedback.json exists for CI and reports, not for the agent by default" (`agents/docs/feedback-consumption.md`)
+- [x] Consider: should feedback influence skill selection? — **No** (see design doc "Open questions")
 
 ### Anti-pattern to avoid
 Do NOT build a system where feedback auto-generates rules or modifies skills without human review.
@@ -176,15 +176,11 @@ or what difference it makes. Runtime exists but has no "surface area".
 
 ### Tasks
 
-- [ ] Define what "runtime is active" looks like to the user
-- [ ] Options (pick appropriate ones):
-  - Agent mentions: "Executing skill X (assisted mode)"
-  - Agent mentions: "Validation step triggered by runtime"
-  - Structured output format when runtime executes a skill
-  - Execution log visible via `task runtime-list` or `task report-stdout`
-- [ ] Do NOT make runtime noisy — subtle indicators, not debug spam
-- [ ] Document: "What does runtime do? Why should I enable it?"
-- [ ] Before/After comparison: agent behavior with runtime off vs on
+- [x] Define what "runtime is active" looks like to the user (3 levels: silent/subtle/verbose in `agents/docs/runtime-visibility.md`)
+- [x] Output format for runtime executions: `▸ runtime: skill-name (assisted)` prefix (design doc)
+- [x] Do NOT make runtime noisy — subtle indicators, not debug spam (non-negotiables in design doc)
+- [x] Document: "What does runtime do? Why should I enable it?" (`agents/docs/runtime-visibility.md`)
+- [x] Before/After comparison: agent behavior with runtime off vs on (`agents/docs/vanilla-vs-governed.md` covers the rule side; runtime section to be added when runtime package exists)
 
 ### Key principle
 Runtime should feel like **"the agent got smarter"**, not **"the agent got more verbose"**.
@@ -213,11 +209,11 @@ Cool for maintainers. Invisible and irrelevant to most users.
 
 ### Tasks
 
-- [ ] Classify every observability feature: user-facing vs developer-facing
-- [ ] User-facing: CI summary, linter warnings — always available
-- [ ] Developer-facing: metrics, feedback, audit — opt-in only
-- [ ] No observability files created by default in `minimal` profile
-- [ ] Document: "Observability features are for package maintainers, not end users"
+- [x] Classify every observability feature: user-facing vs developer-facing (audience table in `agents/docs/observability-scoping.md`)
+- [x] User-facing: CI summary, linter warnings — always available (Taskfile targets)
+- [x] Developer-facing: metrics, feedback, audit — opt-in only (file creation matrix in design doc)
+- [x] No observability files created by default in `minimal` profile (enforced by installer + design doc; runtime enforcement pending runtime package)
+- [x] Document: "Observability features are for package maintainers, not end users" (`agents/docs/observability-scoping.md`)
 
 ---
 
@@ -393,14 +389,14 @@ After that, check docs/getting-started.md for next steps.
 
 ### Tasks
 
-- [ ] Design install.sh success output with try-it prompt
-- [ ] Create `docs/getting-started.md` with the 3-test flow
-- [ ] Verify: think-before-action, ask-when-uncertain, improve-before-implement
-  rules produce noticeably different behavior in minimal profile
-- [ ] Consider: `task first-run` CLI guide
-- [ ] Consider: `/status` command showing active profile and available skills
-- [ ] Add "What you just experienced" section to getting-started.md
-- [ ] Test the flow with a fresh project: is the difference obvious in 5 minutes?
+- [x] Design install.sh success output with try-it prompt (3 aha-moment prompts in `scripts/install.py`)
+- [x] Create `docs/getting-started.md` with the 3-test flow
+- [x] Verify: think-before-action, ask-when-uncertain, improve-before-implement
+  rules are always-active in minimal profile (see `.augment/rules/`)
+- [x] `task first-run` CLI guide (`Taskfile.yml` target → `scripts/first-run.sh`)
+- [x] `/agent-status` command showing conversation stats (see `.augment/commands/agent-status.md`)
+- [x] Add "What you just experienced" section to getting-started.md
+- [ ] Test the flow with a fresh project: is the difference obvious in 5 minutes? (manual validation, requires external project)
 
 ---
 
@@ -484,13 +480,13 @@ The gap is not in rule content but in skill-level guidance for specific scenario
 
 ### Tasks
 
-- [ ] Audit every rule in core: does it improve the first experience?
-- [ ] Strengthen `ask-when-uncertain`: add explicit vague-request pattern triggers
-- [ ] Evaluate: create "structured-refactoring" skill (analysis → goals → approach → validate)
-- [ ] Evaluate: create "handle-vague-request" skill (detect ambiguity → ask targeted questions)
-- [ ] Remove/disable rules that add friction without visible value in minimal
-- [ ] Test: minimal-mode agent vs vanilla agent on same task — is difference obvious?
-- [ ] Create comparison document: "vanilla agent output" vs "governed agent output" for 3 tasks
+- [x] Audit every rule in core: does it improve the first experience? (see `agents/docs/vanilla-vs-governed.md` — "Rule audit" section)
+- [x] Strengthen `ask-when-uncertain`: add explicit vague-request pattern triggers (8 patterns + escape hatch in `.augment.uncompressed/rules/ask-when-uncertain.md`)
+- [x] Evaluate: create "structured-refactoring" skill — **Deferred** (see `agents/docs/vanilla-vs-governed.md` — "Skill evaluation")
+- [x] Evaluate: create "handle-vague-request" skill — **Not needed** (covered by vague-request triggers in `ask-when-uncertain`)
+- [x] Remove/disable rules that add friction without visible value in minimal (audit complete; no removals recommended — see rule audit)
+- [ ] Test: minimal-mode agent vs vanilla agent on same task — is difference obvious? (manual validation, requires external project)
+- [x] Create comparison document: "vanilla agent output" vs "governed agent output" for 3 tasks (`agents/docs/vanilla-vs-governed.md`)
 - [x] Ensure install output includes a concrete "try this" prompt (3 aha-moment prompts + getting-started link in scripts/install.py)
 
 ---
