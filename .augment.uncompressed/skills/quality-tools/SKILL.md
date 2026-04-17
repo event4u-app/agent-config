@@ -46,13 +46,14 @@ Use the **first matching** command style:
 
 | `composer.json` contains | Command style | Example |
 |---|---|---|
-| `galawork/php-quality` | `php artisan quality:*` or `composer quality:*` | `php artisan quality:phpstan` |
+| A project-specific quality wrapper (exposes `quality:*` commands) | `php artisan quality:*` or `composer quality:*` | `php artisan quality:phpstan` |
 | `phpstan/phpstan` or `larastan/larastan` | `vendor/bin/phpstan` | `vendor/bin/phpstan analyse` |
 | `rector/rector` | `vendor/bin/rector` | `vendor/bin/rector process` |
 | `symplify/easy-coding-standard` | `vendor/bin/ecs` | `vendor/bin/ecs check --fix` |
 
-**Priority:** If `galawork/php-quality` is installed, always prefer its wrapper commands — they add
-git-aware execution, caching, automatic baseline regeneration, and memory management.
+**Priority:** If a project ships a `quality:*` wrapper (Artisan or Composer script), always prefer it —
+wrappers typically add git-aware execution, caching, automatic baseline regeneration, and memory
+management on top of the native tools.
 
 If none of the above is installed → skip quality checks, inform the user.
 
@@ -68,7 +69,7 @@ vendor/bin/phpstan analyse                          # Analyse all configured pat
 vendor/bin/phpstan analyse --memory-limit=512M      # With memory limit
 vendor/bin/phpstan analyse --error-format=github    # CI-friendly format
 
-# With galawork/php-quality wrapper:
+# With a project-specific quality wrapper:
 php artisan quality:phpstan          # Laravel
 composer quality:phpstan             # Composer
 ```
@@ -82,7 +83,7 @@ composer quality:phpstan             # Composer
 | `--error-format=FORMAT` | Output format: `table` (default), `github`, `gitlab` |
 | `--pro` | Toggle PHPStan Pro |
 
-**Wrapper-only flags** (only with `galawork/php-quality`):
+**Wrapper-only flags** (typical of a `quality:*` wrapper — verify in the project):
 
 | Flag | Description |
 |---|---|
@@ -97,7 +98,7 @@ composer quality:phpstan             # Composer
 vendor/bin/ecs check                  # Dry-run
 vendor/bin/ecs check --fix            # Auto-fix
 
-# With galawork/php-quality wrapper:
+# With a project-specific quality wrapper:
 php artisan quality:ecs --fix         # Laravel
 composer quality:ecs -- --fix         # Composer
 ```
@@ -109,7 +110,7 @@ composer quality:ecs -- --fix         # Composer
 | `--fix` | Fix errors automatically |
 | `--clear-cache` | Clear the ECS cache |
 
-**Wrapper-only flags** (only with `galawork/php-quality`):
+**Wrapper-only flags** (typical of a `quality:*` wrapper — verify in the project):
 
 | Flag | Description |
 |---|---|
@@ -125,7 +126,7 @@ composer quality:ecs -- --fix         # Composer
 vendor/bin/rector process              # Auto-fix
 vendor/bin/rector process --dry-run    # Preview changes
 
-# With galawork/php-quality wrapper:
+# With a project-specific quality wrapper:
 php artisan quality:rector --fix       # Laravel
 composer quality:rector -- --fix       # Composer
 ```
@@ -137,7 +138,7 @@ composer quality:rector -- --fix       # Composer
 | `--dry-run` | Preview changes without applying |
 | `--clear-cache` | Clear the Rector cache |
 
-**Wrapper-only flags** (only with `galawork/php-quality`):
+**Wrapper-only flags** (typical of a `quality:*` wrapper — verify in the project):
 
 | Flag | Description |
 |---|---|
@@ -154,7 +155,7 @@ There is no native single command for running all three tools. Run them in seque
 # Full pipeline (native):
 vendor/bin/rector process && vendor/bin/ecs check --fix && vendor/bin/phpstan analyse
 
-# With galawork/php-quality wrapper:
+# With a project-specific quality wrapper (if it ships these combined commands):
 php artisan quality:refactor --fix     # Rector + ECS
 php artisan quality:finalize           # Rector + ECS + PHPStan (full pipeline)
 ```
@@ -203,7 +204,7 @@ Common patterns across projects:
 
 - **NEVER** edit `phpstan-baseline.neon` by hand.
 - **NEVER** add errors, update counts, or regenerate manually.
-- If a wrapper tool (e.g. `galawork/php-quality`) is installed, it may regenerate the baseline automatically.
+- If the project ships a quality wrapper (exposing `quality:*` commands), it may regenerate the baseline automatically.
 
 ## PHPStan error handling
 
@@ -398,7 +399,7 @@ JS/TS commands run on the **host** or in a **Node container**, depending on the 
 
 - Always check exit code first — if 0, don't read output (saves tokens).
 - Rector + ECS can introduce PHPStan errors — always re-run PHPStan after fixing.
-- The wrapper (`galawork/php-quality`) has different flags than native tools.
+- A project-specific `quality:*` wrapper may expose different flags than the native tools — check the project's wrapper before assuming flags.
 - Docker commands need `-T` flag to avoid TTY issues in non-interactive mode.
 
 ## Do NOT

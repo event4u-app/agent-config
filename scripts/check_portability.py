@@ -161,17 +161,43 @@ ALLOWLIST = [
 # Directories to scan (only package files, not project-specific agents/)
 SCAN_DIRS = [".augment", ".augment.uncompressed"]
 
+# Additional root-level files shipped by the package that must also stay
+# portable. These are read by agents working on the package itself and —
+# for AGENTS.md and copilot-instructions.md — serve as meta docs about
+# the package. They must never leak consumer-project identifiers.
+SCAN_ROOT_FILES = ["AGENTS.md", ".github/copilot-instructions.md"]
+
 # Skip these subdirectories (they ARE allowed to be project-specific)
 SKIP_PATTERNS = [
     "agents/",           # project-specific by design
     ".agent-settings",   # project config
-    "AGENTS.md",         # project entrypoint
+]
+
+# Hardcoded blocklist of identifiers from past/adjacent projects that must
+# never appear anywhere in the shared package, even when the auto-detector
+# would not flag them (e.g. because the repo was renamed or split). Add
+# entries here when legacy leakage is fixed to prevent regressions.
+FORBIDDEN_IDENTIFIERS: list[str] = [
+    "galawork",
 ]
 
 
 def _compile_patterns(root: Path) -> tuple[list[tuple[re.Pattern, str, Severity]], list[str]]:
     """Build patterns from auto-detected project identifiers."""
     return _build_patterns(root)
+
+
+def _compile_forbidden_patterns() -> list[tuple[re.Pattern, str, Severity]]:
+    """Build regex patterns for hardcoded FORBIDDEN_IDENTIFIERS.
+
+    These apply to every scanned file regardless of auto-detection. They
+    catch leakage from renamed or adjacent projects.
+    """
+    patterns: list[tuple[re.Pattern, str, Severity]] = []
+    for ident in FORBIDDEN_IDENTIFIERS:
+        escaped = re.escape(ident)
+        patterns.append((re.compile(rf"\b{escaped}\b", re.IGNORECASE), "forbidden-identifier", "error"))
+    return patterns
 
 
 def _compile_allowlist() -> list[re.Pattern]:
@@ -215,17 +241,35 @@ def check_file(filepath: Path, patterns: list, allowlist: list) -> List[Violatio
 
 
 def scan_all(root: Path) -> tuple[List[Violation], list[str]]:
-    """Scan all package files for portability violations. Returns (violations, detected_identifiers)."""
+    """Scan all package files for portability violations. Returns (violations, detected_identifiers).
+
+    Scanning has two layers:
+    1. Auto-detected identifiers — applied to `.augment/` and
+       `.augment.uncompressed/` only. The package's own root AGENTS.md and
+       copilot-instructions.md are meta docs ABOUT the package, so the
+       detector's own hits (e.g. "event4u", "agent-config") are expected.
+    2. Hardcoded FORBIDDEN_IDENTIFIERS — applied to every scanned file,
+       including the root files. Catches leakage from renamed/adjacent
+       projects (e.g. legacy "galawork" references).
+    """
     patterns, detected = _compile_patterns(root)
+    forbidden = _compile_forbidden_patterns()
     allowlist = _compile_allowlist()
     violations: List[Violation] = []
 
+    # Layer 1 + 2: full package content
     for scan_dir in SCAN_DIRS:
         d = root / scan_dir
         if not d.exists():
             continue
         for f in sorted(d.rglob("*.md")):
-            violations.extend(check_file(f, patterns, allowlist))
+            violations.extend(check_file(f, patterns + forbidden, allowlist))
+
+    # Layer 2 only: root files (auto-detected identifiers are expected here)
+    for rel in SCAN_ROOT_FILES:
+        f = root / rel
+        if f.is_file():
+            violations.extend(check_file(f, forbidden, allowlist))
 
     return violations, detected
 
