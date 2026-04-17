@@ -12,7 +12,7 @@
   },
   "plugins": [
     {
-      "name": "governed-agent-system",
+      "name": "agent-config",
       "description": "Full governed agent system — rules, skills, commands, guidelines, and runtime tooling.",
       "version": "1.0.0",
       "source": ".",

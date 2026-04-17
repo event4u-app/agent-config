@@ -101,19 +101,19 @@ This is additional to project-installed mode, not a replacement.
 ### Augment CLI
 
 ```bash
-auggie plugin install governed-agent-system@event4u
+auggie plugin install agent-config@event4u
 ```
 
 ### Claude Code
 
 ```bash
-claude plugin install governed-agent-system@event4u
+claude plugin install agent-config@event4u
 ```
 
 ### Copilot CLI
 
 ```bash
-copilot plugin install governed-agent-system@event4u
+copilot plugin install agent-config@event4u
 ```
 
 ### When to use plugin mode

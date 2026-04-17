@@ -9,6 +9,6 @@
     }
   ],
   "enabledPlugins": {
-    "governed-agent-system@event4u-agent-config": true
+    "agent-conf@event4u": true
   }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "governed-agent-system",
+  "name": "agent-config",
   "description": "A governed skill framework for AI agents — runtime execution, tooling, observability, feedback, and lifecycle management.",
   "version": "1.0.0",
   "author": {

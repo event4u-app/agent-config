@@ -40,9 +40,9 @@ Install directly in your agent for global, cross-project use:
 
 | Tool | Install |
 |---|---|
-| **Augment CLI** | `auggie plugin install governed-agent-system@event4u` |
-| **Claude Code** | `claude plugin install governed-agent-system@event4u` |
-| **Copilot CLI** | `copilot plugin install governed-agent-system@event4u` |
+| **Augment CLI** | `auggie plugin install agent-config@event4u` |
+| **Claude Code** | `claude plugin install agent-config@event4u` |
+| **Copilot CLI** | `copilot plugin install agent-config@event4u` |
 
 → [All install options & project bridge setup](docs/installation.md)
 
