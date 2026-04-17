@@ -1,15 +1,15 @@
 # Command Template
 
-> Template for creating new commands in `.augment.uncompressed/commands/{command-name}.md`.
+> Template for creating new commands in `.agent-src.uncompressed/commands/{command-name}.md`.
 
 ## Instructions
 
-1. Create file: `.augment.uncompressed/commands/{command-name}.md`
+1. Create file: `.agent-src.uncompressed/commands/{command-name}.md`
 2. Copy the template below
 3. Replace all `{placeholders}` with actual content
 4. Remove all `<!-- comments -->` when done
-5. Run: `python3 scripts/skill_linter.py .augment.uncompressed/commands/{command-name}.md`
-6. Sync: `cp .augment.uncompressed/commands/{command-name}.md .augment/commands/{command-name}.md`
+5. Run: `python3 scripts/skill_linter.py .agent-src.uncompressed/commands/{command-name}.md`
+6. Sync: `cp .agent-src.uncompressed/commands/{command-name}.md .augment/commands/{command-name}.md`
 7. Generate Claude symlink: `task generate-tools` (or manually create symlink)
 
 ## Template
@@ -33,7 +33,7 @@ skills: [{optional-skill-1}, {optional-skill-2}]
 
 {One-line summary of what this command does.}
 
-**Source of truth:** `.augment.uncompressed/` — never read or edit `.augment/` directly.
+**Source of truth:** `.agent-src.uncompressed/` — never read or edit `.augment/` directly.
 
 ## Steps
 
@@ -76,7 +76,7 @@ Before considering a command complete:
 
 - [ ] **Frontmatter**: has `name`, `description`, `disable-model-invocation: true`
 - [ ] **Steps**: numbered sub-headings (`### 1.`, `### 2.`, ...)
-- [ ] **Source of truth**: works on `.augment.uncompressed/`, not `.augment/`
+- [ ] **Source of truth**: works on `.agent-src.uncompressed/`, not `.augment/`
 - [ ] **No auto-apply**: presents findings, asks before destructive changes
 - [ ] **Linter passes**: `python3 scripts/skill_linter.py` reports 0 FAIL
 - [ ] **English only**: all content in English

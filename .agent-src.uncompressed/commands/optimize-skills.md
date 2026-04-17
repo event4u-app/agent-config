@@ -9,19 +9,19 @@ disable-model-invocation: true
 
 Skill audit: measure, find duplicates/merge candidates, run linter, present findings. **Suggest only — never auto-apply.**
 
-**Source of truth:** `.augment.uncompressed/` — never read or edit `.augment/` directly.
+**Source of truth:** `.agent-src.uncompressed/` — never read or edit `.augment/` directly.
 
 ## Steps
 
 ### 1. Measure baseline
 
 ```bash
-total=$(ls -d .augment.uncompressed/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
-total_lines=$(cat .augment.uncompressed/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+total=$(ls -d .agent-src.uncompressed/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+total_lines=$(cat .agent-src.uncompressed/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
 echo "Skills: $total, Total lines: $total_lines"
 
 # Top 15 by size
-for f in .augment.uncompressed/skills/*/SKILL.md; do
+for f in .agent-src.uncompressed/skills/*/SKILL.md; do
   name=$(basename $(dirname "$f"))
   lines=$(wc -l < "$f" | tr -d ' ')
   echo "$lines $name"
@@ -31,7 +31,7 @@ done | sort -rn | head -15
 ### 2. Run skill linter
 
 ```bash
-python3 scripts/skill_linter.py --pairs --duplicates .augment.uncompressed/skills/*/SKILL.md 2>&1 | tail -20
+python3 scripts/skill_linter.py --pairs --duplicates .agent-src.uncompressed/skills/*/SKILL.md 2>&1 | tail -20
 ```
 
 Report FAIL/WARN counts. Do NOT fix linter issues here — that's the linter's or `skill-reviewer`'s job.
@@ -54,7 +54,7 @@ Present as table:
 Skills with overlapping trigger descriptions that might load simultaneously:
 
 ```bash
-for f in .augment.uncompressed/skills/*/SKILL.md; do
+for f in .agent-src.uncompressed/skills/*/SKILL.md; do
   name=$(basename $(dirname "$f"))
   desc=$(grep 'description:' "$f" | head -1 | sed 's/.*"\(.*\)"/\1/')
   echo "$name | $desc"
@@ -66,7 +66,7 @@ Flag pairs where descriptions target the same scenario.
 ### 5. Check sizes
 
 ```bash
-for f in .augment.uncompressed/skills/*/SKILL.md; do
+for f in .agent-src.uncompressed/skills/*/SKILL.md; do
   name=$(basename $(dirname "$f"))
   lines=$(wc -l < "$f" | tr -d ' ')
   [ "$lines" -gt 300 ] && echo "⚠️  $name — $lines lines"
@@ -118,4 +118,4 @@ If any check fails: do NOT suggest the change.
 - **No auto-fixes** — all changes require explicit user approval
 - **No "make it shorter"** — compression is done by Caveman Compression, not here
 - **No Killer checks** — replaced by the skill linter (`scripts/skill_linter.py`)
-- **No edits to `.augment/`** — always edit `.augment.uncompressed/`, then sync
+- **No edits to `.augment/`** — always edit `.agent-src.uncompressed/`, then sync

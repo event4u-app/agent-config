@@ -545,7 +545,7 @@ agent-config/                          ← Monorepo root (current repo)
 │           ├── balanced.profile.json
 │           └── full.profile.json
 │
-├── .augment.uncompressed/             ← Source of truth (stays at root)
+├── .agent-src.uncompressed/             ← Source of truth (stays at root)
 ├── .augment/                          ← Compressed output (stays at root for dev)
 ├── plugin/
 │   └── agent-config/
@@ -571,7 +571,7 @@ agent-config/                          ← Monorepo root (current repo)
 
 ### Key decisions in this structure
 
-1. **Source of truth stays at root** — `.augment.uncompressed/` is NOT split.
+1. **Source of truth stays at root** — `.agent-src.uncompressed/` is NOT split.
    Compression produces per-package outputs into `packages/*/`.
 2. **Rules are NOT split** — all rules go into `core`. Rules are the foundation.
 3. **Skills are split by package** — each package owns its domain-specific skills.
@@ -672,7 +672,7 @@ Rules:
 - [ ] Each package gets only its own compressed content
 - [ ] Skill linter validates per-package completeness
 - [ ] CI checks per-package integrity
-- [ ] Source of truth (`.augment.uncompressed/`) stays at root — never split
+- [ ] Source of truth (`.agent-src.uncompressed/`) stays at root — never split
 
 **Output:** Compression pipeline that feeds per-package distributions.
 **Risk:** Medium — compression scripts need significant changes.
@@ -761,7 +761,7 @@ composer require --dev event4u/agent-config
 - **Don't create too many packages** — 4 + aggregator is enough. Resist the urge to go finer.
 - **Don't move to multi-repo** — monorepo is the right model for our team size and workflow.
 - **Don't break existing installs** — `event4u/agent-config` stays, becomes full aggregator.
-- **Don't duplicate content** — each file exists once in `.augment.uncompressed/`, compression distributes.
+- **Don't duplicate content** — each file exists once in `.agent-src.uncompressed/`, compression distributes.
 - **Don't split lifecycle separately** — keep it in observability (not enough content for own package).
 
 ---

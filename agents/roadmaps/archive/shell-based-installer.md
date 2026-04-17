@@ -235,7 +235,7 @@ Port `ensureGitignoreEntries()`.
 ## Notes
 
 - The `scripts/compress.py` pipeline stays as-is — it's a development tool for managing
-  the `.augment.uncompressed/` → `.augment/` compression. Only runs in this repo, not in target projects.
+  the `.agent-src.uncompressed/` → `.augment/` compression. Only runs in this repo, not in target projects.
 - `install.sh` is what runs in **target projects** — it syncs from the package to the project.
 - Composer `scripts` hooks run from project root with `vendor/` accessible — the script
   auto-detects its own location via `dirname "$0"` to find the package source.

@@ -96,7 +96,7 @@ def collect_artifacts(root: Path) -> dict[str, set[str]]:
 
 def _find_suggestion(path: str, root: Path) -> str:
     name = Path(path).name
-    for d in [root / ".augment", root / ".augment.uncompressed", root / "agents"]:
+    for d in [root / ".augment", root / ".agent-src.uncompressed", root / "agents"]:
         if d.exists():
             for f in d.rglob(name):
                 return str(f.relative_to(root))
@@ -143,7 +143,7 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
             else:
                 # Strip leading ./ and try with prefixes
                 ref = raw_ref.lstrip("./")
-                for prefix in [root, root / ".augment", root / ".augment.uncompressed"]:
+                for prefix in [root, root / ".augment", root / ".agent-src.uncompressed"]:
                     if (prefix / ref).exists():
                         resolved = True
                         break

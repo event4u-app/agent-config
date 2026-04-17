@@ -8,7 +8,7 @@
 
 ## Editing content
 
-1. **Always edit in `.augment.uncompressed/`** — never in `.augment/` directly
+1. **Always edit in `.agent-src.uncompressed/`** — never in `.augment/` directly
 2. Run `task sync` to copy non-`.md` files
 3. Use the `/compress` command to compress changed `.md` files
 4. Run `task ci` to verify everything passes before pushing
@@ -30,7 +30,7 @@ task consistency-fix           # Regenerate all derived outputs from source
 ### Sync & Compression
 
 ```bash
-task sync                      # Sync non-.md files: .augment.uncompressed/ → .augment/
+task sync                      # Sync non-.md files: .agent-src.uncompressed/ → .augment/
 task sync-changed              # List .md files changed since last compression
 task sync-check                # Check if .augment/ is in sync (for CI)
 task sync-check-hashes         # Verify compressed .md hashes match source
@@ -143,7 +143,7 @@ tests/
 └── consistency.yml            ← Sync + hash + tool verification
 templates/consumer-settings/   ← Settings templates for consumer projects
 
-.augment.uncompressed/         ← Source of truth (human-readable, verbose)
+.agent-src.uncompressed/         ← Source of truth (human-readable, verbose)
 ├── rules/                     ← Behavior rules
 ├── skills/                    ← Skill definitions (SKILL.md per skill)
 ├── commands/                  ← Slash command definitions

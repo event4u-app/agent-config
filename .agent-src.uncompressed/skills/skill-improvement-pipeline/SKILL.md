@@ -86,8 +86,8 @@ Decide what to create:
 
 ### Step 4: Create or Update
 
-- **New rule** → create in `.augment.uncompressed/rules/`, follow rule conventions
-- **New skill** → use `skill-writing` skill, create in `.augment.uncompressed/skills/`
+- **New rule** → create in `.agent-src.uncompressed/rules/`, follow rule conventions
+- **New skill** → use `skill-writing` skill, create in `.agent-src.uncompressed/skills/`
 - **Update existing** → use `skill-management` skill
 
 After creation:
@@ -118,7 +118,7 @@ Ask the user:
 1. Read `upstream_repo` and `improvement_pr_branch_prefix` from `.agent-settings`
 2. If `upstream_repo` is empty → ask user for the target repo
 3. Create branch: `{prefix}{learning-slug}` from `main`
-4. Commit changes to `.augment.uncompressed/` AND `.augment/`
+4. Commit changes to `.agent-src.uncompressed/` AND `.augment/`
 5. Push branch
 6. Create PR with title: `improve(agent): {short description}`
 7. Use the agent-improvement PR template if it exists
@@ -142,5 +142,5 @@ Ask the user:
 - Do NOT skip the promotion gate — it prevents skill/rule bloat
 - Do NOT create both a rule AND a skill for the same learning
 - Do NOT auto-push without user permission
-- Do NOT create project-specific content in `.augment.uncompressed/`
+- Do NOT create project-specific content in `.agent-src.uncompressed/`
 - Do NOT run this pipeline for trivial learnings

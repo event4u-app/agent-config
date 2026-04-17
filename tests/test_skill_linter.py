@@ -19,7 +19,7 @@ def write_file(tmp_path: Path, relative: str, content: str) -> Path:
 def test_valid_skill_passes(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".augment.uncompressed/skills/example/SKILL.md",
+        ".agent-src.uncompressed/skills/example/SKILL.md",
         """---
 name: example
 description: "Use when testing a concrete workflow."
@@ -62,7 +62,7 @@ def test_complete_skill_passes(tmp_path: Path) -> None:
     """A skill with all required and recommended sections should pass cleanly."""
     path = write_file(
         tmp_path,
-        ".augment.uncompressed/skills/example/SKILL.md",
+        ".agent-src.uncompressed/skills/example/SKILL.md",
         """---
 name: example
 description: "Use when testing."
@@ -105,7 +105,7 @@ source: project
 def test_vague_validation_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".augment.uncompressed/skills/example/SKILL.md",
+        ".agent-src.uncompressed/skills/example/SKILL.md",
         """---
 name: example
 description: "Use when testing."
@@ -366,7 +366,7 @@ def test_pointer_only_skill_warns(tmp_path: Path) -> None:
     """A skill that delegates most work to guidelines should trigger pointer_only_skill warning."""
     path = write_file(
         tmp_path,
-        ".augment.uncompressed/skills/delegator/SKILL.md",
+        ".agent-src.uncompressed/skills/delegator/SKILL.md",
         """---
 name: delegator
 description: "Use when delegating to guidelines."
@@ -407,7 +407,7 @@ def test_guideline_dependent_skill_errors(tmp_path: Path) -> None:
     """A skill that is effectively just pointers should trigger guideline_dependent_skill error."""
     path = write_file(
         tmp_path,
-        ".augment.uncompressed/skills/pure-pointer/SKILL.md",
+        ".agent-src.uncompressed/skills/pure-pointer/SKILL.md",
         """---
 name: pure-pointer
 description: "Use when pointing to docs."
@@ -450,7 +450,7 @@ def test_strong_self_contained_skill_no_pointer_warning(tmp_path: Path) -> None:
     """A skill with concrete actions should NOT trigger pointer warnings."""
     path = write_file(
         tmp_path,
-        ".augment.uncompressed/skills/concrete-worker/SKILL.md",
+        ".agent-src.uncompressed/skills/concrete-worker/SKILL.md",
         """---
 name: concrete-worker
 description: "Use when running a concrete analysis workflow."
@@ -497,7 +497,7 @@ def test_guideline_heavy_but_acceptable_skill(tmp_path: Path) -> None:
     """A skill that references guidelines but has enough own actions should not warn."""
     path = write_file(
         tmp_path,
-        ".augment.uncompressed/skills/mixed-worker/SKILL.md",
+        ".agent-src.uncompressed/skills/mixed-worker/SKILL.md",
         """---
 name: mixed-worker
 description: "Use when reviewing code with guideline references."
@@ -974,7 +974,7 @@ def test_uncompressed_without_compressed_warns(tmp_path: Path) -> None:
     """Uncompressed file without compressed variant → warning."""
     path = write_file(
         tmp_path,
-        ".augment.uncompressed/rules/orphan-rule.md",
+        ".agent-src.uncompressed/rules/orphan-rule.md",
         """\
 ---
 description: "When orphan behavior occurs"
@@ -1001,10 +1001,10 @@ description: "When paired behavior occurs"
 
 - Always have a pair
 """
-    write_file(tmp_path, ".augment.uncompressed/rules/paired-rule.md", content)
+    write_file(tmp_path, ".agent-src.uncompressed/rules/paired-rule.md", content)
     write_file(tmp_path, ".augment/rules/paired-rule.md", content)
 
-    path = tmp_path / ".augment.uncompressed" / "rules" / "paired-rule.md"
+    path = tmp_path / ".agent-src.uncompressed" / "rules" / "paired-rule.md"
     result = lint_file(path, repo_root=tmp_path)
     assert not any(issue.code == "compressed_variant_missing" for issue in result.issues)
 
@@ -1045,7 +1045,7 @@ source: project
 
 * Do NOT skip validation
 """
-    return write_file(tmp_path, ".augment.uncompressed/skills/test-runtime/SKILL.md", content)
+    return write_file(tmp_path, ".agent-src.uncompressed/skills/test-runtime/SKILL.md", content)
 
 
 def test_execution_manual_type_passes(tmp_path: Path) -> None:

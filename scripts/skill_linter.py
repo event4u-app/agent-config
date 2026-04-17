@@ -764,16 +764,16 @@ def lint_guideline(path: Path, text: str) -> LintResult:
 
 
 def gather_all_candidate_files(root: Path) -> list[Path]:
-    """Gather all lintable files. Prefers .augment.uncompressed/ (source of truth).
+    """Gather all lintable files. Prefers .agent-src.uncompressed/ (source of truth).
     Falls back to .augment/ only if uncompressed doesn't exist.
     Skips symlinks to avoid double-counting."""
     candidates: list[Path] = []
 
     # Source of truth directories
-    uncompressed_skills = root / ".augment.uncompressed" / "skills"
-    uncompressed_rules = root / ".augment.uncompressed" / "rules"
-    uncompressed_commands = root / ".augment.uncompressed" / "commands"
-    uncompressed_guidelines = root / ".augment.uncompressed" / "guidelines"
+    uncompressed_skills = root / ".agent-src.uncompressed" / "skills"
+    uncompressed_rules = root / ".agent-src.uncompressed" / "rules"
+    uncompressed_commands = root / ".agent-src.uncompressed" / "commands"
+    uncompressed_guidelines = root / ".agent-src.uncompressed" / "guidelines"
 
     # Fallback directories (only if uncompressed doesn't exist)
     augment_skills = root / ".augment" / "skills"
@@ -1303,8 +1303,8 @@ def lint_governance(path: Path, text: str, artifact_type: str, repo_root: Path |
     path_relative = path_str
 
     # Determine if this is a compressed or uncompressed artifact
-    is_compressed = "/.augment/" in path_str and "/.augment.uncompressed/" not in path_str
-    is_uncompressed = "/.augment.uncompressed/" in path_str
+    is_compressed = "/.augment/" in path_str and "/.agent-src.uncompressed/" not in path_str
+    is_uncompressed = "/.agent-src.uncompressed/" in path_str
 
     if not is_compressed and not is_uncompressed:
         return issues
@@ -1312,14 +1312,14 @@ def lint_governance(path: Path, text: str, artifact_type: str, repo_root: Path |
     # --- Check: compressed/uncompressed pair exists ---
     if is_uncompressed:
         # Find expected compressed path
-        compressed_path = Path(path_str.replace("/.augment.uncompressed/", "/.augment/"))
+        compressed_path = Path(path_str.replace("/.agent-src.uncompressed/", "/.augment/"))
         if not compressed_path.exists():
             issues.append(Issue("warning", "compressed_variant_missing",
                                 f"Uncompressed file exists but compressed variant missing: "
                                 f"{compressed_path.name}"))
     elif is_compressed:
         # Find expected uncompressed path
-        uncompressed_path = Path(path_str.replace("/.augment/", "/.augment.uncompressed/"))
+        uncompressed_path = Path(path_str.replace("/.augment/", "/.agent-src.uncompressed/"))
         if not uncompressed_path.exists():
             issues.append(Issue("warning", "uncompressed_variant_missing",
                                 f"Compressed file exists but uncompressed source missing: "
@@ -1461,7 +1461,7 @@ def check_compression_pairs(root: Path) -> list[LintResult]:
     ]
 
     for subdir, pattern, is_nested in pairs:
-        uncompressed_dir = root / ".augment.uncompressed" / subdir
+        uncompressed_dir = root / ".agent-src.uncompressed" / subdir
         compressed_dir = root / ".augment" / subdir
 
         if not uncompressed_dir.exists():
@@ -1510,7 +1510,7 @@ def check_compression_pairs(root: Path) -> list[LintResult]:
 def check_compression_quality(root: Path) -> list[LintResult]:
     """Check that compressed skills preserve key content from their uncompressed source."""
     results: list[LintResult] = []
-    uncompressed_dir = root / ".augment.uncompressed" / "skills"
+    uncompressed_dir = root / ".agent-src.uncompressed" / "skills"
     compressed_dir = root / ".augment" / "skills"
 
     if not uncompressed_dir.exists() or not compressed_dir.exists():
@@ -1581,7 +1581,7 @@ def check_compression_quality(root: Path) -> list[LintResult]:
 def check_duplication(root: Path) -> list[LintResult]:
     """Detect skills with highly similar names or descriptions."""
     results: list[LintResult] = []
-    skills_dir = root / ".augment.uncompressed" / "skills"
+    skills_dir = root / ".agent-src.uncompressed" / "skills"
     if not skills_dir.exists():
         return results
 
@@ -1609,7 +1609,7 @@ def check_duplication(root: Path) -> list[LintResult]:
                 if len(words_a) > 3 and len(words_b) > 3:
                     overlap = len(words_a & words_b) / min(len(words_a), len(words_b))
                     if overlap > 0.7:
-                        rel_a = f".augment.uncompressed/skills/{name_a}/SKILL.md"
+                        rel_a = f".agent-src.uncompressed/skills/{name_a}/SKILL.md"
                         results.append(LintResult(
                             file=rel_a,
                             artifact_type="skill",
@@ -1706,7 +1706,7 @@ def format_report(results: list[LintResult]) -> str:
         lines.append("| File | Issues | Status |")
         lines.append("|---|---|---|")
         for fpath, count, status in files_with_issues[:10]:
-            short = fpath.replace(".augment.uncompressed/", "")
+            short = fpath.replace(".agent-src.uncompressed/", "")
             lines.append(f"| `{short}` | {count} | {status} |")
 
     # Per-file quality breakdown (skills only)
@@ -1716,7 +1716,7 @@ def format_report(results: list[LintResult]) -> str:
         lines.append("| Skill | Structure | Validation | Scope | Dependency | Lines |")
         lines.append("|---|---|---|---|---|---|")
         for r in sorted(skill_results, key=lambda x: x.file):
-            short = r.file.replace(".augment.uncompressed/skills/", "").replace(".augment/skills/", "").replace("/SKILL.md", "")
+            short = r.file.replace(".agent-src.uncompressed/skills/", "").replace(".augment/skills/", "").replace("/SKILL.md", "")
             codes = {i.code for i in r.issues}
 
             # Structure: fail if missing required sections

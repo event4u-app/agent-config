@@ -170,7 +170,7 @@ External contributions are [welcome / not accepted at this time].
 
 ## Editing Skills
 
-Skills live in `.augment.uncompressed/skills/`. Edit there, then:
+Skills live in `.agent-src.uncompressed/skills/`. Edit there, then:
 ```bash
 task compress   # Compress to .augment/
 task ci         # Verify everything passes

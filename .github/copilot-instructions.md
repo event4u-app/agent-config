@@ -15,7 +15,7 @@ distribution package, not a Laravel/PHP application.
   `postinstall.sh` wrapper.
 - **Python 3.10+** tooling under `scripts/` — compression driver, linters
   (skills, references, portability, readme), installer bridge.
-- **Markdown** content under `.augment.uncompressed/` (authoring layer) and
+- **Markdown** content under `.agent-src.uncompressed/` (authoring layer) and
   `.augment/` (generated output). Edit the former, never the latter.
 - **pytest** test suite under `tests/`.
 
@@ -32,7 +32,7 @@ Laravel-specific suggestions in a PR touching this repo, they are wrong.
 ## ✅ Portability rules for this package
 
 - **Never reference a specific consumer project** (project names, domains,
-  internal tools, customers) in `.augment/`, `.augment.uncompressed/`, root
+  internal tools, customers) in `.augment/`, `.agent-src.uncompressed/`, root
   `AGENTS.md`, or `.github/copilot-instructions.md`. Everything here must work
   in **any** consumer project.
 - Project-specific behavior belongs in a consumer's own `.agent-settings`,
@@ -42,7 +42,7 @@ Laravel-specific suggestions in a PR touching this repo, they are wrong.
 ## ✅ Editing `.augment/` — source-of-truth rule
 
 - **Never edit files under `.augment/` directly.** It is generated output.
-- Edit `.augment.uncompressed/` and run `task sync` (or `task ci`).
+- Edit `.agent-src.uncompressed/` and run `task sync` (or `task ci`).
 - Never edit generated tool outputs: `.claude/`, `.cursor/`, `.clinerules/`,
   `.windsurfrules`, `GEMINI.md`.
 
@@ -67,7 +67,7 @@ Laravel-specific suggestions in a PR touching this repo, they are wrong.
 
 ## ✅ Markdown / content standards
 
-- Every `.md` file under `.augment.uncompressed/` authoring layer.
+- Every `.md` file under `.agent-src.uncompressed/` authoring layer.
 - Skills must declare YAML frontmatter (`name`, `description`, optionally
   `source`, `disable-model-invocation`, `skills`).
 - Size budgets enforced by linter: skills compact, rules focused, commands
@@ -115,7 +115,7 @@ If Copilot reviews a PR that fails any of these, reference the specific task.
 
 - Code comments: English.
 - Commit messages: English, Conventional Commits.
-- User-facing prose in `.augment.uncompressed/` `.md` files: English.
+- User-facing prose in `.agent-src.uncompressed/` `.md` files: English.
 - PR comments: English.
 
 ## ✅ Known non-issues

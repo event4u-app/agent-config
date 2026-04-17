@@ -9,7 +9,7 @@ disable-model-invocation: true
 
 Agent infrastructure audit: measure token overhead, check rule triggers, verify AGENTS.md, find stale references. **Suggest only — never auto-apply.**
 
-**Source of truth:** `.augment.uncompressed/` — never read or edit `.augment/` directly.
+**Source of truth:** `.agent-src.uncompressed/` — never read or edit `.augment/` directly.
 
 ## Steps
 
@@ -19,7 +19,7 @@ Count lines affecting token consumption:
 
 ```bash
 # Always-loaded (per chat)
-for f in .augment.uncompressed/rules/*.md; do
+for f in .agent-src.uncompressed/rules/*.md; do
   type=$(head -5 "$f" | grep 'type:' | sed 's/.*"\(.*\)"/\1/')
   [ "$type" = "auto" ] && continue
   lines=$(wc -l < "$f"); echo "always | $lines | $(basename "$f")"
@@ -27,15 +27,15 @@ done | sort -t'|' -k2 -rn
 agents=$(wc -l < AGENTS.md); echo "always | $agents | AGENTS.md"
 
 # Auto-loaded rules
-for f in .augment.uncompressed/rules/*.md; do
+for f in .agent-src.uncompressed/rules/*.md; do
   type=$(head -5 "$f" | grep 'type:' | sed 's/.*"\(.*\)"/\1/')
   [ "$type" != "auto" ] && continue
   lines=$(wc -l < "$f"); echo "auto | $lines | $(basename "$f")"
 done | sort -t'|' -k2 -rn
 
 # Skills (top 20 by size)
-for f in .augment.uncompressed/skills/*/SKILL.md; do
-  name=$(echo "$f" | sed 's|.augment.uncompressed/skills/||;s|/SKILL.md||')
+for f in .agent-src.uncompressed/skills/*/SKILL.md; do
+  name=$(echo "$f" | sed 's|.agent-src.uncompressed/skills/||;s|/SKILL.md||')
   lines=$(wc -l < "$f"); echo "$lines | $name"
 done | sort -rn | head -20
 ```
@@ -55,7 +55,7 @@ Report totals:
 - **Duplicate triggers**: Same `description` → both load simultaneously
 
 ```bash
-for f in .augment.uncompressed/rules/*.md; do
+for f in .agent-src.uncompressed/rules/*.md; do
   desc=$(head -5 "$f" | grep 'description:' | sed 's/.*"\(.*\)"/\1/')
   [ -n "$desc" ] && echo "$desc | $(basename "$f")"
 done | sort | awk -F' \\| ' '{descs[$1]=descs[$1] " " $2} END {for (d in descs) {n=split(descs[d], a, " "); if (n>1) print "⚠️  " d " →" descs[d]}}'
@@ -136,4 +136,4 @@ Ask the user:
 - **No quality judgments on skills** — use `/optimize-skills` or `skill-reviewer`
 - **No auto-fixes** — all changes require explicit user approval
 - **No "make it shorter"** — compression is done by Caveman Compression
-- **No edits to `.augment/`** — always edit `.augment.uncompressed/`, then sync
+- **No edits to `.augment/`** — always edit `.agent-src.uncompressed/`, then sync

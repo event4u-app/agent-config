@@ -36,7 +36,7 @@ content into any of them pollutes downstream projects or misleads agents.
 
 ## Enforcement
 
-`scripts/check_portability.py` scans `.augment/`, `.augment.uncompressed/`,
+`scripts/check_portability.py` scans `.augment/`, `.agent-src.uncompressed/`,
 and the package repo's root `AGENTS.md` + `.github/copilot-instructions.md`
 for forbidden identifiers. It is part of `task ci` and must pass before
 any PR.

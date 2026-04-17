@@ -54,8 +54,8 @@ The `event4u/agent-config` package currently only works with **Augment Code**. O
 
 | Area | Impact |
 |---|---|
-| `.augment.uncompressed/rules/` | Refactor 2 files, add frontmatter to all 24 |
-| `.augment.uncompressed/skills/` | Add YAML frontmatter to all ~60 SKILL.md files |
+| `.agent-src.uncompressed/rules/` | Refactor 2 files, add frontmatter to all 24 |
+| `.agent-src.uncompressed/skills/` | Add YAML frontmatter to all ~60 SKILL.md files |
 | `.augment/rules/` | Compressed versions get new frontmatter |
 | `.augment/skills/` | Compressed versions get new frontmatter |
 | `.claude/rules/` | New directory with rule symlinks |

@@ -18,7 +18,7 @@ NEVER push without running ALL CI checks locally first.
 ### 1. Sync
 
 ```bash
-task sync-check            # .augment/ matches .augment.uncompressed/
+task sync-check            # .augment/ matches .agent-src.uncompressed/
 task sync-check-hashes     # compression hashes are clean
 ```
 
@@ -60,7 +60,7 @@ python3 -m pytest tests/ --tb=short && \
 python3 scripts/readme_linter.py README.md --root .
 ```
 
-## After editing skills/rules in .augment.uncompressed/
+## After editing skills/rules in .agent-src.uncompressed/
 
 1. Edit uncompressed file
 2. Edit compressed file in `.augment/` to match

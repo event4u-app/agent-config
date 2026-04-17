@@ -28,7 +28,7 @@ All checks must pass before a PR is merged:
 
 ## Source of truth
 
-- **Edit** `.augment.uncompressed/` — the authoring layer with verbose content.
+- **Edit** `.agent-src.uncompressed/` — the authoring layer with verbose content.
 - **Do not edit** `.augment/` directly — it is generated from the uncompressed
   layer by `task sync` / `task compress`.
 - **Do not edit** `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules` —
@@ -37,7 +37,7 @@ All checks must pass before a PR is merged:
 Helper commands:
 
 ```bash
-task sync             # Regenerate .augment/ from .augment.uncompressed/
+task sync             # Regenerate .augment/ from .agent-src.uncompressed/
 task generate-tools   # Regenerate .claude/, .cursor/, .clinerules/, .windsurfrules
 task compress         # Rebuild .augment/ with compression
 task test             # pytest tests/ + tests/test_install.sh
@@ -57,13 +57,13 @@ task lint-skills      # python3 scripts/skill_linter.py --all
 
 ## Adding or editing skills, rules, and commands
 
-- Skills, rules, and commands live in `.augment.uncompressed/`.
+- Skills, rules, and commands live in `.agent-src.uncompressed/`.
 - Each skill must pass `task lint-skills` — frontmatter, structure, size
   budgets, and self-containment are enforced by the linter.
 - Size budgets are enforced by the `size-enforcement` rule and the linter.
   See [`.augment/rules/size-enforcement.md`](.augment/rules/size-enforcement.md)
   for the current limits.
-- After editing content under `.augment.uncompressed/`, run `task sync` so
+- After editing content under `.agent-src.uncompressed/`, run `task sync` so
   `.augment/` and the tool-specific projections stay in sync.
 - Skills must remain project-agnostic. Nothing in `.augment/` may reference a
   specific consumer project, domain, or stack. The

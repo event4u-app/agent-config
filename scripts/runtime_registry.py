@@ -57,8 +57,8 @@ class SkillRuntime:
 
 
 def discover_skills(root: Path) -> List[Path]:
-    """Find all SKILL.md files, preferring .augment.uncompressed/."""
-    uncompressed = root / ".augment.uncompressed" / "skills"
+    """Find all SKILL.md files, preferring .agent-src.uncompressed/."""
+    uncompressed = root / ".agent-src.uncompressed" / "skills"
     compressed = root / ".augment" / "skills"
     base = uncompressed if uncompressed.exists() else compressed
     if not base.exists():

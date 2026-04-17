@@ -15,7 +15,7 @@ execution:
 Use when creating or managing project-level overrides for shared skills, rules, commands, or guidelines — customizing `.augment/` content without modifying originals.
 
 Do NOT use when:
-- Changing shared content that should affect all projects (edit `.augment.uncompressed/` directly)
+- Changing shared content that should affect all projects (edit `.agent-src.uncompressed/` directly)
 - Creating new skills from scratch (use `skill-writing` skill)
 
 ## Purpose

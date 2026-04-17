@@ -12,7 +12,7 @@ mkdir -p "$HOOKS_DIR"
 
 cat > "$HOOKS_DIR/pre-push" << 'EOF'
 #!/usr/bin/env bash
-# Pre-push hook: verify .augment/ is in sync with .augment.uncompressed/
+# Pre-push hook: verify .augment/ is in sync with .agent-src.uncompressed/
 
 echo "🔍 Checking .augment/ sync..."
 python3 scripts/compress.py --check

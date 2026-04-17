@@ -10,7 +10,7 @@ task ci
 
 This runs, in order:
 
-1. **Sync check** — `.augment/` matches `.augment.uncompressed/` (non-`.md` files)
+1. **Sync check** — `.augment/` matches `.agent-src.uncompressed/` (non-`.md` files)
 2. **Compression hashes** — Compressed `.md` hashes match source
 3. **Reference check** — No broken cross-references between files
 4. **Portability check** — No project-specific paths in shared files
@@ -47,11 +47,11 @@ The linter (`scripts/skill_linter.py`) validates:
 
 ## Compression System
 
-Content flows from verbose (`.augment.uncompressed/`) to compressed (`.augment/`).
+Content flows from verbose (`.agent-src.uncompressed/`) to compressed (`.augment/`).
 
 ### Rules
 
-- Source of truth is **always** `.augment.uncompressed/`
+- Source of truth is **always** `.agent-src.uncompressed/`
 - Never edit `.augment/` directly
 - The `/compress` command produces token-efficient output
 - Compression hashes track which files have been compressed

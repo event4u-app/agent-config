@@ -132,7 +132,7 @@ Convert to:
 
 Must:
 
-* read from `.augment.uncompressed/`
+* read from `.agent-src.uncompressed/`
 * respect linter output
 * never weaken automatically
 * produce suggestions only
@@ -148,7 +148,7 @@ Convert to:
 
 Must:
 
-* read from `.augment.uncompressed/`
+* read from `.agent-src.uncompressed/`
 * never silently weaken rules
 * never suggest `always -> auto` without explicit proof
 

@@ -56,7 +56,7 @@ The package already provides:
 
 These apply to all five roadmaps:
 
-- Source of truth remains `.augment.uncompressed/`
+- Source of truth remains `.agent-src.uncompressed/`
 - Skills remain governance-first, not free-form automation
 - New power must be allowlisted and reviewable
 - CI must expand as quality rules expand

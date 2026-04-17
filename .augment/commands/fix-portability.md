@@ -71,7 +71,7 @@ Present a summary:
 
 ### 5. Apply fixes
 
-Edit files in `.augment.uncompressed/`, then copy to `.augment/`.
+Edit files in `.agent-src.uncompressed/`, then copy to `.augment/`.
 
 After all fixes, re-run:
 
@@ -89,7 +89,7 @@ python3 scripts/compress.py --mark-done "{relative_path}"
 
 ## Rules
 
-- **Always fix in `.augment.uncompressed/`** — never edit `.augment/` directly.
+- **Always fix in `.agent-src.uncompressed/`** — never edit `.augment/` directly.
 - **Copy to `.augment/`** after fixing.
 - **Do NOT commit or push.**
 - **`agents/` directory is allowed** to have project-specific references — skip it.

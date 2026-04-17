@@ -72,9 +72,9 @@ task sync-check      # Source ↔ compressed sync
 
 ## Editing Rules/Skills
 
-**NEVER edit `.augment/` directly.** The source of truth is `.augment.uncompressed/`.
+**NEVER edit `.augment/` directly.** The source of truth is `.agent-src.uncompressed/`.
 
-1. Edit the file in `.augment.uncompressed/`
+1. Edit the file in `.agent-src.uncompressed/`
 2. Copy (or compress) to `.augment/`
 3. Run `python3 scripts/compress.py --mark-done {path}`
 4. Run `python3 scripts/compress.py --generate-tools`

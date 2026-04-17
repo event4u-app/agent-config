@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Augment Sync — sync .augment.uncompressed/ → .augment/
+Augment Sync — sync .agent-src.uncompressed/ → .augment/
 
 Copies non-.md files as-is. Lists .md files that need compression (done by the
 Augment agent interactively). Tracks SHA-256 hashes of source files to detect
@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-SOURCE_DIR = PROJECT_ROOT / ".augment.uncompressed"
+SOURCE_DIR = PROJECT_ROOT / ".agent-src.uncompressed"
 TARGET_DIR = PROJECT_ROOT / ".augment"
 HASH_FILE = PROJECT_ROOT / ".compression-hashes.json"
 
@@ -460,7 +460,7 @@ def main() -> None:
     elif arg == "--check":
         missing, stale = check_sync(SOURCE_DIR, TARGET_DIR)
         if not missing and not stale:
-            print("✅  .augment/ is in sync with .augment.uncompressed/")
+            print("✅  .augment/ is in sync with .agent-src.uncompressed/")
             sys.exit(0)
         if missing:
             print(f"❌  Missing in .augment/ ({len(missing)}):")

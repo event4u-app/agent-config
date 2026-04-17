@@ -16,7 +16,7 @@ from runtime_registry import (
 
 def write_skill(tmp_path: Path, name: str, frontmatter: str) -> Path:
     """Helper to create a skill file."""
-    skill_dir = tmp_path / ".augment.uncompressed" / "skills" / name
+    skill_dir = tmp_path / ".agent-src.uncompressed" / "skills" / name
     skill_dir.mkdir(parents=True, exist_ok=True)
     path = skill_dir / "SKILL.md"
     content = f"""---

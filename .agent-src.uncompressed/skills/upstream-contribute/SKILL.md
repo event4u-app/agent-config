@@ -76,10 +76,10 @@ Before ANY upstream work (branch, files, PR), ask the user:
 
 | Type | Uncompressed path | Compressed path |
 |---|---|---|
-| **New skill** | `.augment.uncompressed/skills/{name}/SKILL.md` | `.augment/skills/{name}/SKILL.md` |
-| **New rule** | `.augment.uncompressed/rules/{name}.md` | `.augment/rules/{name}.md` |
-| **New command** | `.augment.uncompressed/commands/{name}.md` | `.augment/commands/{name}.md` |
-| **New guideline** | `.augment.uncompressed/guidelines/{category}/{name}.md` | `.augment/guidelines/{category}/{name}.md` |
+| **New skill** | `.agent-src.uncompressed/skills/{name}/SKILL.md` | `.augment/skills/{name}/SKILL.md` |
+| **New rule** | `.agent-src.uncompressed/rules/{name}.md` | `.augment/rules/{name}.md` |
+| **New command** | `.agent-src.uncompressed/commands/{name}.md` | `.augment/commands/{name}.md` |
+| **New guideline** | `.agent-src.uncompressed/guidelines/{category}/{name}.md` | `.augment/guidelines/{category}/{name}.md` |
 | **Update to existing** | Same path as original | Same path as original |
 
 ### 2. Apply locally as override (immediate benefit)
@@ -146,7 +146,7 @@ git checkout -b feat/skills/{name}  # or fix/rules/{name}, etc.
 
 Create both files:
 
-- **Uncompressed version** → `.augment.uncompressed/{type}/{name}` (full, verbose, human-readable)
+- **Uncompressed version** → `.agent-src.uncompressed/{type}/{name}` (full, verbose, human-readable)
 - **Compressed version** → `.augment/{type}/{name}` (token-efficient, preserving all code blocks,
   headings, frontmatter, validation, gotchas)
 

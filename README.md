@@ -234,7 +234,7 @@ Code's Agent Skills specification.
 
 ## Development
 
-Edit in `.augment.uncompressed/`, compress, verify:
+Edit in `.agent-src.uncompressed/`, compress, verify:
 
 ```bash
 task sync          # Sync non-.md files

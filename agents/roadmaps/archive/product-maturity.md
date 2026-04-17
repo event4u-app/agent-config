@@ -487,7 +487,7 @@ The gap is not in rule content but in skill-level guidance for specific scenario
 ### Tasks
 
 - [x] Audit every rule in core: does it improve the first experience? (see `agents/docs/vanilla-vs-governed.md` — "Rule audit" section)
-- [x] Strengthen `ask-when-uncertain`: add explicit vague-request pattern triggers (8 patterns + escape hatch in `.augment.uncompressed/rules/ask-when-uncertain.md`)
+- [x] Strengthen `ask-when-uncertain`: add explicit vague-request pattern triggers (8 patterns + escape hatch in `.agent-src.uncompressed/rules/ask-when-uncertain.md`)
 - [x] Evaluate: create "structured-refactoring" skill — **Deferred** (see `agents/docs/vanilla-vs-governed.md` — "Skill evaluation")
 - [x] Evaluate: create "handle-vague-request" skill — **Not needed** (covered by vague-request triggers in `ask-when-uncertain`)
 - [x] Remove/disable rules that add friction without visible value in minimal (audit complete; no removals recommended — see rule audit)

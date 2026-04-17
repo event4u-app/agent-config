@@ -1,23 +1,23 @@
 ---
 type: "auto"
-description: "Creating, editing, or modifying files inside .augment/ directory — the source of truth is .augment.uncompressed/, never edit .augment/ directly"
+description: "Creating, editing, or modifying files inside .augment/ directory — the source of truth is .agent-src.uncompressed/, never edit .augment/ directly"
 source: package
 ---
 
 # .augment/ Source of Truth
 
-`.augment.uncompressed/` is the **single source of truth** for all `.augment/` content.
+`.agent-src.uncompressed/` is the **single source of truth** for all `.augment/` content.
 `.augment/` contains compressed (token-optimized) copies — never edit them directly.
 
 ## The Iron Rule
 
 ```
 NEVER create or edit files in .augment/ directly — not even "just a small fix".
-ALWAYS work in .augment.uncompressed/ — then compress via /compress command.
+ALWAYS work in .agent-src.uncompressed/ — then compress via /compress command.
 ```
 
 **ZERO exceptions.** Even if the fix is obvious, small, or "faster" — STOP.
-Edit `.augment.uncompressed/` first. Always.
+Edit `.agent-src.uncompressed/` first. Always.
 
 Direct edits to `.augment/` break compression hashes, cause CI failures, and create drift.
 
@@ -25,7 +25,7 @@ Direct edits to `.augment/` break compression hashes, cause CI failures, and cre
 
 ## Workflow
 
-1. **Create or edit** the file in `.augment.uncompressed/{path}`
+1. **Create or edit** the file in `.agent-src.uncompressed/{path}`
 2. **Do NOT auto-compress.** Continue working.
 3. **Before commit/push:** Check if compression is needed (`task sync-changed`).
    If files need compression, ask the user:
@@ -60,7 +60,7 @@ This avoids interruptions when work is still in progress.
 
 ## Commands workflow
 
-Commands live in `.augment.uncompressed/commands/{name}.md` (single source of truth).
+Commands live in `.agent-src.uncompressed/commands/{name}.md` (single source of truth).
 Claude Code reads them via symlinks in `.claude/skills/{name}/SKILL.md`.
 
 **Required frontmatter for commands:**
@@ -73,11 +73,11 @@ disable-model-invocation: true
 
 - `name` and `disable-model-invocation: true` are required for Claude Code compatibility
 - Augment ignores unknown frontmatter fields — no conflict
-- Template: `.augment.uncompressed/templates/command.md`
+- Template: `.agent-src.uncompressed/templates/command.md`
 
 **Creating a new command:**
 
-1. Create `.augment.uncompressed/commands/{name}.md` (use template)
+1. Create `.agent-src.uncompressed/commands/{name}.md` (use template)
 2. Run `python3 scripts/skill_linter.py` — must be 0 FAIL
 3. Sync: `cp` to `.augment/commands/`
 4. Run `task generate-tools` — creates Claude symlink automatically
@@ -88,7 +88,7 @@ disable-model-invocation: true
 
 Before asking for review or creating a PR, verify derived outputs are not stale:
 
-1. Run `task sync-changed` — check if `.augment.uncompressed/` has changes not yet compressed
+1. Run `task sync-changed` — check if `.agent-src.uncompressed/` has changes not yet compressed
 2. If stale files exist: run `/compress` before pushing
 3. Before merge: verify derived outputs (`.augment/`, `.claude/skills/`) are regenerated
 4. Do NOT leave `.augment/` stale across review cycles
@@ -110,10 +110,10 @@ Commands have `disable-model-invocation: true` in their frontmatter.
 
 | Task | What to do |
 |---|---|
-| Edit existing file | Edit in `.augment.uncompressed/`, compress to `.augment/` |
-| Create new `.md` | Create in `.augment.uncompressed/`, compress to `.augment/` |
-| Create new non-`.md` | Create in `.augment.uncompressed/`, run `task sync` |
-| Create new command | Create in `.augment.uncompressed/commands/`, sync, `task generate-tools` |
+| Edit existing file | Edit in `.agent-src.uncompressed/`, compress to `.augment/` |
+| Create new `.md` | Create in `.agent-src.uncompressed/`, compress to `.augment/` |
+| Create new non-`.md` | Create in `.agent-src.uncompressed/`, run `task sync` |
+| Create new command | Create in `.agent-src.uncompressed/commands/`, sync, `task generate-tools` |
 | Delete a file | Delete from both directories |
 | Check what needs compression | `task sync-changed` |
 | Mark file as compressed | `task sync-mark-done -- {path}` |

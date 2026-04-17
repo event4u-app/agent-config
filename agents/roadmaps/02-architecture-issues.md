@@ -79,7 +79,7 @@ scripts/              ← Teils lieferbar
 
 **Rolle 2: Entwicklungstools für das Paket**
 ```
-.augment.uncompressed/ ← Entwicklung (ausgeschlossen via archive.exclude)
+.agent-src.uncompressed/ ← Entwicklung (ausgeschlossen via archive.exclude)
 tests/                ← Entwicklung (ausgeschlossen)
 Taskfile.yml          ← Entwicklung (ausgeschlossen)
 ```
@@ -108,7 +108,7 @@ agent-config/
 │   ├── claude-plugin/
 │   └── templates/               ← AGENTS.md Template, consumer-settings
 ├── source/                      ← Unkomprimierte Entwicklungsquellen
-│   └── augment/                 ← (bisher: .augment.uncompressed/)
+│   └── augment/                 ← (bisher: .agent-src.uncompressed/)
 ├── bin/                         ← CLI-Tools
 ├── scripts/                     ← Installationsskripte
 ├── tests/                       ← Tests
@@ -169,7 +169,7 @@ Wenn `bin/install.php` PHP 8.2-Features nutzt: `"^8.2"`.
 
 ### Diagnose
 
-Das Repository enthält `.augment/`, `.augment.uncompressed/`, und `.augment-plugin/`
+Das Repository enthält `.augment/`, `.agent-src.uncompressed/`, und `.augment-plugin/`
 im Root. Wenn Augment Code dieses Repository öffnet (z.B. wenn jemand das Paket
 weiterentwickeln will), interpretiert es die `.augment/`-Dateien als
 Projekt-Konfiguration des Repositories selbst.
@@ -258,5 +258,5 @@ mit den Kern-Layern dargestellt. Das ist misleading.
 | Installer canonical klären | ✅ Erledigt (docs/installation.md Canonical-Box, Wrapper-Hinweise) | `feat/improve-agent-setup-2` |
 | Repository-Struktur aufräumen | ⬜ Offen (Follow-up: `.gitattributes export-ignore`, npm `files` whitelist) | — |
 | PHP-Version in composer.json | ⬜ Offen — bewusst `>=8.0`; später evtl. anheben | — |
-| Augment-Root-Konflikt lösen | ✅ Erledigt — `.augmentignore` schließt `.augment.uncompressed/` und Tool-Mirrors aus | `feat/improve-agent-setup-2` |
+| Augment-Root-Konflikt lösen | ✅ Erledigt — `.augmentignore` schließt `.agent-src.uncompressed/` und Tool-Mirrors aus | `feat/improve-agent-setup-2` |
 | Observability-Doku vereinfachen | ⬜ Offen — Experimental-Hinweis steht im README, separates Opt-in-Doc nachziehen | — |

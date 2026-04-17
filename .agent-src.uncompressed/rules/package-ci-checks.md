@@ -27,7 +27,7 @@ Run all of these before pushing — they match the GitHub Actions workflows exac
 ### 1. Sync check
 
 ```bash
-task sync-check            # .augment/ matches .augment.uncompressed/
+task sync-check            # .augment/ matches .agent-src.uncompressed/
 task sync-check-hashes     # compression hashes are clean
 ```
 
@@ -81,7 +81,7 @@ python3 scripts/readme_linter.py README.md --root .
 
 ## After editing skills/rules
 
-When you edit a file in `.augment.uncompressed/`:
+When you edit a file in `.agent-src.uncompressed/`:
 
 1. Edit the uncompressed file
 2. Edit the compressed file in `.augment/` to match

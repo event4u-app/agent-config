@@ -1,13 +1,13 @@
 ---
 name: compress
 skills: []
-description: Compress .md files from .augment.uncompressed/ into caveman format and write to .augment/
+description: Compress .md files from .agent-src.uncompressed/ into caveman format and write to .augment/
 disable-model-invocation: true
 ---
 
 # compress
 
-Compress agent config `.md` files from `.augment.uncompressed/` into token-efficient caveman format
+Compress agent config `.md` files from `.agent-src.uncompressed/` into token-efficient caveman format
 and write the compressed output to `.augment/`.
 
 Uses SHA-256 hashes to track which source files changed since last compression.
@@ -40,7 +40,7 @@ A compressed file should be easier to scan, easier to trigger, and easier to exe
 
 For each changed `.md` file:
 
-1. Read the source from `.augment.uncompressed/{path}`
+1. Read the source from `.agent-src.uncompressed/{path}`
 2. Compress the prose using these rules:
    - **Remove:** articles (a, an, the), filler (just, really, basically, actually, simply, essentially),
      pleasantries, hedging, connective fluff (however, furthermore, additionally),
@@ -80,7 +80,7 @@ For each changed `.md` file:
      "validate copy/paste safety", you can add "Check: no nested backticks, fully selectable".
      But don't add unrelated sections.
    - **Do NOT compress weak skills.** If the source has no procedure or no validation, fix structure first.
-   - **Reference skill:** See `.augment.uncompressed/skills/skill-writing/SKILL.md` for the gold standard
+   - **Reference skill:** See `.agent-src.uncompressed/skills/skill-writing/SKILL.md` for the gold standard
 6. Write the compressed output to `.augment/{path}`
 7. **MANDATORY: Run compression quality check on this file:**
 
@@ -170,7 +170,7 @@ Unsafe (DO NOT do this):
 ## Rules
 
 - **Do NOT commit or push.** Only write files.
-- **Do NOT modify `.augment.uncompressed/`** — it is the source of truth.
+- **Do NOT modify `.agent-src.uncompressed/`** — it is the source of truth.
 - **Only write to `.augment/`** — the compressed output directory.
 - **Preserve ALL technical content** — only compress natural language prose.
 - **YAML frontmatter** in command/skill files must be preserved exactly.

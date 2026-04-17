@@ -107,7 +107,7 @@ Categories:
 - **Agent infra:** `agent-docs-writing`, `project-docs`, `copilot-config`, `mcp`, `sequential-thinking`
 - **Other:** `database`, `logging-monitoring`, `websocket`, `openapi`, `sql-writing`, etc.
 
-Full list: see `ls .augment.uncompressed/skills/` — any skill not listed in Automated
+Full list: see `ls .agent-src.uncompressed/skills/` — any skill not listed in Automated
 or Assisted tables above is Manual.
 
 ## Summary

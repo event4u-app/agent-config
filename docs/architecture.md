@@ -20,7 +20,7 @@ profiles and they are explicit about being no-ops today.
 ## Content pipeline
 
 ```
-.augment.uncompressed/          ← Source of truth (verbose, human-readable)
+.agent-src.uncompressed/          ← Source of truth (verbose, human-readable)
     ↓ /compress command
 .augment/                       ← Compressed output (token-efficient, agent-optimized)
     ↓ Plugin system (Augment CLI, Claude Code, Copilot CLI)

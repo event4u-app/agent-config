@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 ### 1. Inventory all rules
 
-Read every `.md` file in `.augment.uncompressed/rules/`. For each rule, extract:
+Read every `.md` file in `.agent-src.uncompressed/rules/`. For each rule, extract:
 
 - **Name** (filename without `.md`)
 - **Type** (`always` or `auto`)

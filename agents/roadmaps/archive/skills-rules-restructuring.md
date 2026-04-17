@@ -10,7 +10,7 @@ This PR delivers the complete toolchain for restructuring:
 - Meta-skill toolchain: `skill-writing`, `skill-validator`, `skill-refactor`, `skill-caveman-compression`, `skill-decompression`, `skill-linter`
 - Learning capture loop: `capture-learnings` rule + `learning-to-rule-or-skill` + `post-task-learning-capture`
 - Compress workflow with enrichment rules and quality gates
-- Source-of-truth rule (always edit `.augment.uncompressed/`, compress before commit)
+- Source-of-truth rule (always edit `.agent-src.uncompressed/`, compress before commit)
 - Skill linter MVP script (`scripts/skill_linter.py`) with 5 passing tests
 - Taskfile commands: `task lint-skills`, `task lint-skills-strict`, `task lint-skills-changed`, `task test-linter`
 - 4 content skills re-compressed as proof of concept
@@ -30,7 +30,7 @@ This PR delivers the complete toolchain for restructuring:
 ## Prerequisites
 
 - [x] Meta-skills: `skill-writing`, `skill-validator`, `skill-caveman-compression`, `skill-refactor`
-- [x] Gold standard reference: `.augment.uncompressed/skills/skill-writing/SKILL.md`
+- [x] Gold standard reference: `.agent-src.uncompressed/skills/skill-writing/SKILL.md`
 - [x] Learning loop: `capture-learnings` rule + skills
 - [x] Linter MVP: `scripts/skill_linter.py` + Taskfile commands
 - [x] Read linter baseline output: `task lint-skills` — 0 FAIL / 165 total after Output format fix
@@ -167,7 +167,7 @@ No new skills created — existing coverage is sufficient.
 
 ## Notes
 
-- **Always edit `.augment.uncompressed/`** — never edit `.augment/` directly
+- **Always edit `.agent-src.uncompressed/`** — never edit `.augment/` directly
 - **Compress before commit/push** — not after every edit
 - **Linter is the primary audit tool** — use its output to prioritize work
 - **Process `fail` first, `warn` second, `pass` last** — highest impact first

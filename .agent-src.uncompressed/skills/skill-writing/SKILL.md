@@ -261,7 +261,7 @@ Bad:
 ## Environment notes
 
 Skills live in:
-.augment.uncompressed/skills/{name}/SKILL.md
+.agent-src.uncompressed/skills/{name}/SKILL.md
 
 Compressed:
 .augment/skills/{name}/SKILL.md

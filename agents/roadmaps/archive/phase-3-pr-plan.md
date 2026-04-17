@@ -29,14 +29,14 @@ The uncompressed sources still contain dangerous legacy logic.
 
 ## Files to change
 
-* `.augment.uncompressed/commands/optimize-skills.md` — sync to match compressed version's safe design
-* `.augment.uncompressed/commands/optimize-agents.md` — sync to match compressed version's safe design
+* `.agent-src.uncompressed/commands/optimize-skills.md` — sync to match compressed version's safe design
+* `.agent-src.uncompressed/commands/optimize-agents.md` — sync to match compressed version's safe design
 
 ## Specific problems in uncompressed versions
 
 ### `optimize-skills.md` (uncompressed)
 
-* Still references `.augment/skills/` instead of `.augment.uncompressed/`
+* Still references `.augment/skills/` instead of `.agent-src.uncompressed/`
 * Contains Killer 1–5 checks that duplicate the linter (`scripts/skill_linter.py`)
 * Has auto-apply options ("Apply all merge/delete recommendations")
 * Adds Gotcha sections and rewrites descriptions — should be audit-only
@@ -52,7 +52,7 @@ The uncompressed sources still contain dangerous legacy logic.
 For both files: rewrite uncompressed source to match the safe compressed version's structure:
 
 * advisory only, never auto-apply
-* read from `.augment.uncompressed/`
+* read from `.agent-src.uncompressed/`
 * preservation gate mandatory before any suggestion
 * delegate quality checks to linter and skill-reviewer
 * add `disable-model-invocation: true` to frontmatter
@@ -174,16 +174,16 @@ since both target the same concern: quality loss during transformation.
 
 ### New rule
 
-* `.augment.uncompressed/rules/preservation-guard.md` — single rule covering both merge and compression preservation
+* `.agent-src.uncompressed/rules/preservation-guard.md` — single rule covering both merge and compression preservation
 
 ### Skills to update
 
-* `.augment.uncompressed/skills/skill-reviewer/SKILL.md` — add merge preservation checks
-* `.augment.uncompressed/skills/skill-management/SKILL.md` — reference new rule
+* `.agent-src.uncompressed/skills/skill-reviewer/SKILL.md` — add merge preservation checks
+* `.agent-src.uncompressed/skills/skill-management/SKILL.md` — reference new rule
 
 ### Existing compression docs to strengthen
 
-* `.augment.uncompressed/commands/compress.md` — reference new rule from quality checklist
+* `.agent-src.uncompressed/commands/compress.md` — reference new rule from quality checklist
 
 ## Changes
 
@@ -273,12 +273,12 @@ Add structured categories to the existing feedback capture system.
 
 ## Files to change
 
-* `.augment.uncompressed/skills/skill-improvement-pipeline/SKILL.md` — add category enum to capture phase
-* `.augment.uncompressed/skills/learning-to-rule-or-skill/SKILL.md` — add category tags to classification step
+* `.agent-src.uncompressed/skills/skill-improvement-pipeline/SKILL.md` — add category enum to capture phase
+* `.agent-src.uncompressed/skills/learning-to-rule-or-skill/SKILL.md` — add category tags to classification step
 
 ### Optional new file
 
-* `.augment.uncompressed/contexts/feedback-categories.md` — reference document for category definitions
+* `.agent-src.uncompressed/contexts/feedback-categories.md` — reference document for category definitions
 
 ## Changes
 
