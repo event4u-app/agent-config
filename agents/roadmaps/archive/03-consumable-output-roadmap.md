@@ -1,5 +1,7 @@
 # Consumable Output + Feedback Governance Roadmap
 
+> **Status: ✅ COMPLETED** (2026-04-17)
+
 ## Problem
 
 - Observability exists but produces no visible output — no reports, no CI summaries, no dashboards

@@ -1,5 +1,7 @@
 # Skill Activation + Boundary Hygiene Roadmap
 
+> **Status: ✅ COMPLETED** (2026-04-17)
+
 ## Problem
 
 - 0 of ~80 skills have an `execution:` block — the runtime infrastructure has nothing to work with
