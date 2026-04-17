@@ -65,6 +65,23 @@ upstream_repo=
 
 # Branch prefix for improvement PRs
 improvement_pr_branch_prefix=improve/agent-
+
+# --- Runtime features ---
+
+# Runtime pipeline (true, false)
+# true = runtime dispatch, execution proposals, hook chains active
+# false = runtime infrastructure exists but is dormant — zero token overhead
+runtime_enabled=false
+
+# Observability reports (true, false)
+# true = generate reports after pipeline runs, CI summaries, structured logging
+# false = no reports generated, no events emitted
+observability_reports=false
+
+# Feedback collection (true, false)
+# true = record execution outcomes, generate improvement suggestions
+# false = no feedback collected, no suggestions generated
+feedback_collection=false
 ```
 
 ## Settings Reference
@@ -84,6 +101,9 @@ improvement_pr_branch_prefix=improve/agent-
 | `skill_improvement_pipeline` | `true`, `false` | `false` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. |
 | `upstream_repo` | `org/repo` | _(empty)_ | Target repository for universal improvement PRs (e.g., `org/agent-config`). |
 | `improvement_pr_branch_prefix` | string | `improve/agent-` | Branch prefix for agent improvement PRs. |
+| `runtime_enabled` | `true`, `false` | `false` | Enable runtime pipeline (dispatch, execution proposals, hooks). When `false`: zero overhead. |
+| `observability_reports` | `true`, `false` | `false` | Generate reports, CI summaries, and structured logging from pipeline runs. |
+| `feedback_collection` | `true`, `false` | `false` | Record execution outcomes and generate improvement suggestions. |
 
 ## Sync rules
 
