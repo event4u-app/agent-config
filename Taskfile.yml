@@ -139,7 +139,19 @@ tasks:
 
   test-runtime-all:
     desc: Run all runtime, tools, observability, feedback, and lifecycle tests
-    cmd: python3 -m pytest tests/test_runtime_registry.py tests/test_runtime_dispatcher.py tests/test_runtime_execute.py tests/test_runtime_errors.py tests/test_runtime_hooks.py tests/test_observability.py tests/test_feedback_collector.py tests/test_skill_lifecycle.py tests/test_tool_registry.py tests/test_tool_adapters.py -v
+    cmd: python3 -m pytest tests/test_runtime_registry.py tests/test_runtime_dispatcher.py tests/test_runtime_execute.py tests/test_runtime_errors.py tests/test_runtime_hooks.py tests/test_observability.py tests/test_feedback_collector.py tests/test_skill_lifecycle.py tests/test_tool_registry.py tests/test_tool_adapters.py tests/test_runtime_pipeline.py tests/test_persistence.py tests/test_report_generator.py -v
+
+  runtime-execute:
+    desc: Run a skill through the full pipeline
+    cmd: python3 scripts/runtime_pipeline.py --skill {{.CLI_ARGS}} --root .
+
+  report:
+    desc: Generate health dashboard from observability data
+    cmd: python3 scripts/report_generator.py --root . --output agents/reports/health-dashboard.md
+
+  report-stdout:
+    desc: Print health dashboard to stdout
+    cmd: python3 scripts/report_generator.py --root .
 
   lifecycle-report:
     desc: Generate skill lifecycle report
