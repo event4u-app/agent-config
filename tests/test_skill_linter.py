@@ -1007,3 +1007,138 @@ description: "When paired behavior occurs"
     path = tmp_path / ".augment.uncompressed" / "rules" / "paired-rule.md"
     result = lint_file(path, repo_root=tmp_path)
     assert not any(issue.code == "compressed_variant_missing" for issue in result.issues)
+
+
+# --- Runtime execution metadata tests ---
+
+
+def _make_skill(tmp_path: Path, frontmatter_extra: str = "") -> Path:
+    """Helper to create a minimal valid skill with optional frontmatter."""
+    content = f"""---
+name: test-runtime
+description: "Use when testing runtime execution metadata."
+source: project
+{frontmatter_extra}---
+
+# test-runtime
+
+## When to use
+
+* Testing execution metadata
+
+## Procedure
+
+1. Inspect current state
+2. Apply change
+3. Validate result
+
+## Output format
+
+1. Result
+2. Next step
+
+## Gotchas
+
+* Missing validation causes weak skills
+
+## Do NOT
+
+* Do NOT skip validation
+"""
+    return write_file(tmp_path, ".augment.uncompressed/skills/test-runtime/SKILL.md", content)
+
+
+def test_execution_manual_type_passes(tmp_path: Path) -> None:
+    """Skill with execution.type: manual should pass."""
+    path = _make_skill(tmp_path, "execution:\n  type: manual\n")
+    result = lint_file(path)
+    exec_errors = [i for i in result.issues if i.code.startswith("invalid_execution") or i.code.startswith("automated_")]
+    assert len(exec_errors) == 0
+
+
+def test_execution_assisted_type_passes(tmp_path: Path) -> None:
+    """Skill with execution.type: assisted should pass."""
+    path = _make_skill(tmp_path, "execution:\n  type: assisted\n  handler: internal\n")
+    result = lint_file(path)
+    exec_errors = [i for i in result.issues if i.code.startswith("invalid_execution") or i.code.startswith("automated_")]
+    assert len(exec_errors) == 0
+
+
+def test_execution_automated_valid_passes(tmp_path: Path) -> None:
+    """Fully valid automated execution block should pass."""
+    path = _make_skill(tmp_path, "execution:\n  type: automated\n  handler: shell\n  timeout_seconds: 120\n  safety_mode: strict\n  allowed_tools: []\n")
+    result = lint_file(path)
+    exec_errors = [i for i in result.issues if i.severity == "error" and "execution" in i.code or "automated" in i.code or "safety" in i.code]
+    assert len(exec_errors) == 0
+
+
+def test_execution_invalid_type_fails(tmp_path: Path) -> None:
+    """Invalid execution.type should produce an error."""
+    path = _make_skill(tmp_path, "execution:\n  type: dangerous\n")
+    result = lint_file(path)
+    assert any(i.code == "invalid_execution_type" for i in result.issues)
+
+
+def test_execution_invalid_handler_fails(tmp_path: Path) -> None:
+    """Invalid execution.handler should produce an error."""
+    path = _make_skill(tmp_path, "execution:\n  type: manual\n  handler: bash\n")
+    result = lint_file(path)
+    assert any(i.code == "invalid_execution_handler" for i in result.issues)
+
+
+def test_execution_automated_without_handler_fails(tmp_path: Path) -> None:
+    """Automated without handler should produce an error."""
+    path = _make_skill(tmp_path, "execution:\n  type: automated\n  safety_mode: strict\n  allowed_tools: []\n")
+    result = lint_file(path)
+    assert any(i.code == "automated_missing_handler" for i in result.issues)
+
+
+def test_execution_automated_handler_none_fails(tmp_path: Path) -> None:
+    """Automated with handler: none should produce an error."""
+    path = _make_skill(tmp_path, "execution:\n  type: automated\n  handler: none\n  safety_mode: strict\n  allowed_tools: []\n")
+    result = lint_file(path)
+    assert any(i.code == "automated_missing_handler" for i in result.issues)
+
+
+def test_execution_automated_without_safety_mode_fails(tmp_path: Path) -> None:
+    """Automated without safety_mode should produce an error."""
+    path = _make_skill(tmp_path, "execution:\n  type: automated\n  handler: shell\n  allowed_tools: []\n")
+    result = lint_file(path)
+    assert any(i.code == "automated_missing_safety_mode" for i in result.issues)
+
+
+def test_execution_automated_without_allowed_tools_warns(tmp_path: Path) -> None:
+    """Automated without allowed_tools should produce a warning."""
+    path = _make_skill(tmp_path, "execution:\n  type: automated\n  handler: shell\n  safety_mode: strict\n")
+    result = lint_file(path)
+    assert any(i.code == "automated_missing_allowed_tools" for i in result.issues)
+
+
+def test_execution_unknown_field_warns(tmp_path: Path) -> None:
+    """Unknown field in execution block should produce a warning."""
+    path = _make_skill(tmp_path, "execution:\n  type: manual\n  foobar: yes\n")
+    result = lint_file(path)
+    assert any(i.code == "unknown_execution_field" for i in result.issues)
+
+
+def test_execution_missing_type_fails(tmp_path: Path) -> None:
+    """Execution block without type should produce an error."""
+    path = _make_skill(tmp_path, "execution:\n  handler: shell\n")
+    result = lint_file(path)
+    assert any(i.code == "missing_execution_type" for i in result.issues)
+
+
+def test_no_execution_block_still_valid(tmp_path: Path) -> None:
+    """Skill without execution block should remain valid (backward compatibility)."""
+    path = _make_skill(tmp_path)
+    result = lint_file(path)
+    exec_issues = [i for i in result.issues if "execution" in i.code or "automated" in i.code or "safety" in i.code or "handler" in i.code]
+    assert len(exec_issues) == 0
+
+
+def test_execution_with_allowed_tools_list(tmp_path: Path) -> None:
+    """Execution block with allowed_tools list should parse correctly."""
+    path = _make_skill(tmp_path, "execution:\n  type: assisted\n  handler: internal\n  allowed_tools:\n    - github\n    - jira\n")
+    result = lint_file(path)
+    exec_errors = [i for i in result.issues if i.severity == "error" and ("execution" in i.code or "allowed_tools" in i.code)]
+    assert len(exec_errors) == 0
