@@ -2,6 +2,10 @@
 name: upstream-contribute
 description: "Use when a learning, new skill, rule improvement, or bug fix from a consumer project should be contributed back to the shared agent-config package."
 source: package
+execution:
+  type: assisted
+  handler: internal
+  allowed_tools: ["github"]
 ---
 
 # upstream-contribute
@@ -13,12 +17,14 @@ source: package
 - A bug was found in a shared skill, rule, or command
 - The `learning-to-rule-or-skill` skill identified something worth upstreaming
 - An override was created locally and should become the new default
+- A project-specific skill/rule could be **generalized** to benefit all consumers
+- The `upstream-proposal` rule suggested a contribution and user agreed
 
 Do NOT use when:
 
-- The change is project-specific (domain logic, local paths, project conventions)
-- The learning is one-off and unlikely to repeat in other projects
+- **The user has NOT given explicit consent** — this is the #1 rule
 - The content already exists in the shared package
+- The learning is truly one-off and cannot be generalized
 
 ## Goal
 
@@ -27,7 +33,9 @@ shared `agent-config` package — with correct file placement, quality gates, an
 
 ## Core principles
 
+- **⛔ Consent first** — NEVER create a PR, branch, or any upstream action without explicit user approval
 - **Universality first** — the contribution must work for ALL consumers, not just one project
+- **Generalize when possible** — project-specific content CAN become universal with adaptation
 - **Evidence-based** — learnings must have occurred 2+ times or be clearly generalizable
 - **Complete pairs** — both uncompressed and compressed versions required
 - **Quality verified** — must pass linter before PR creation
@@ -44,6 +52,25 @@ git@github.com:event4u-app/agent-config.git
 GitHub: `https://github.com/event4u-app/agent-config`
 
 ## Procedure
+
+### 0. Mandatory consent gate
+
+**This step is NON-NEGOTIABLE. No exceptions.**
+
+Before ANY upstream work (branch, files, PR), ask the user:
+
+```
+> 🔄 This [skill/rule/guideline] could improve the shared agent-config package.
+> [Brief explanation of what would be contributed and why it's valuable]
+>
+> 1. Yes — create an upstream PR
+> 2. No — keep it project-local only
+```
+
+- **If user picks 2** → STOP. Do not mention upstream again for this item.
+- **If user picks 1** → continue with the procedure below.
+- **If `upstream_repo` is empty in `.agent-settings`** → ask the user to configure it first.
+- **NEVER skip this step**, even if the user previously agreed to other contributions.
 
 ### 1. Determine contribution type
 
@@ -73,6 +100,17 @@ mode: replace  # or extend
 ```
 
 This step is optional if the change is low-urgency.
+
+### 2b. Generalize project-specific content (if needed)
+
+If the content is project-specific but could be made universal:
+
+1. **Identify project-specific parts** — domain names, local paths, project conventions
+2. **Abstract them** — replace with generic patterns, configurable values, or examples
+3. **Show the user the diff** — original vs. generalized version
+4. **Get approval** — user must confirm the generalized version is correct
+
+Example: A project-specific "import-csv" skill → generic "file-import" skill with configurable format.
 
 ### 3. Prepare the upstream contribution
 
@@ -187,8 +225,10 @@ The shared version now replaces the local override.
 
 ## Do NOT
 
+- **Do NOT create any upstream artifact without explicit user consent** — this is the #1 rule
 - Do NOT edit `.augment/` in the consumer project — it's managed by the package
-- Do NOT submit project-specific content as universal improvement
+- Do NOT submit project-specific content without generalizing it first
 - Do NOT skip the compressed version — both files are mandatory
 - Do NOT forget to clean up the local override after upstream merge
 - Do NOT bypass quality gates — they exist for a reason
+- Do NOT assume consent from a previous contribution — ask every time

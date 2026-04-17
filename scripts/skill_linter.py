@@ -88,6 +88,12 @@ VALID_RULE_TYPES = {"always", "auto"}
 VALID_RULE_SOURCES = {"package", "project"}
 VALID_STATUSES = {"active", "deprecated", "superseded"}
 
+# --- Runtime execution metadata constants ---
+VALID_EXECUTION_TYPES = {"manual", "assisted", "automated"}
+VALID_EXECUTION_HANDLERS = {"none", "shell", "php", "node", "internal"}
+VALID_EXECUTION_SAFETY_MODES = {"strict"}
+VALID_EXECUTION_FIELDS = {"type", "handler", "timeout_seconds", "safety_mode", "allowed_tools"}
+
 
 @dataclass
 class Issue:
@@ -311,6 +317,11 @@ def lint_skill(path: Path, text: str) -> LintResult:
                     msg += f" (replaced by: {replaced_by})"
                 issues.append(Issue("warning", "superseded_skill", msg))
 
+        # --- Execution metadata check ---
+        execution = parse_execution_block(frontmatter)
+        if execution is not None:
+            issues.extend(lint_execution_metadata(execution))
+
     procedure_block = find_procedure_block(text)
     if procedure_block is not None:
         if not procedure_block:
@@ -360,6 +371,19 @@ def lint_skill(path: Path, text: str) -> LintResult:
     if is_probably_too_broad(text, description):
         issues.append(Issue("warning", "broad_scope", "Skill scope appears broad and may need splitting"))
         suggestions.append("Narrow the trigger or split unrelated workflows")
+
+    # --- Developer judgment check for assisted skills ---
+    fm = extract_frontmatter(text)
+    exec_block = parse_execution_block(fm) if fm else None
+    exec_type = exec_block.get("type", "") if exec_block else ""
+    if exec_type == "assisted" and procedure_block:
+        validation_terms = ["validat", "check", "verify", "confirm", "challenge",
+                          "existing", "duplicate", "contradict", "fit", "misfit"]
+        has_validation = any(term in procedure_block.lower() for term in validation_terms)
+        if not has_validation:
+            issues.append(Issue("warning", "missing_validation_step",
+                              "Assisted skill has no validation/challenge step in procedure"))
+            suggestions.append("Add a requirement-checking or validation step before implementation")
 
     # --- Size check (see guidelines/agent-infra/size-and-scope.md) ---
     total_lines = len(text.splitlines())
@@ -423,6 +447,139 @@ def extract_frontmatter(text: str) -> Optional[str]:
 def extract_frontmatter_field(frontmatter: str, pattern: re.Pattern[str]) -> Optional[str]:
     match = pattern.search(frontmatter)
     return match.group(1).strip() if match else None
+
+
+def parse_execution_block(frontmatter: str) -> Optional[dict]:
+    """Parse the execution block from YAML frontmatter.
+
+    Uses simple line-based parsing to avoid requiring PyYAML.
+    Returns None if no execution block is present.
+    """
+    lines = frontmatter.splitlines()
+    exec_start = None
+    for i, line in enumerate(lines):
+        if re.match(r'^execution:\s*$', line):
+            exec_start = i
+            break
+    if exec_start is None:
+        return None
+
+    result: dict = {}
+    for line in lines[exec_start + 1:]:
+        # Stop at next top-level key (no indentation)
+        if line and not line[0].isspace():
+            break
+        stripped = line.strip()
+        if not stripped or stripped.startswith('#'):
+            continue
+        # Handle list items (for allowed_tools)
+        if stripped.startswith('- '):
+            if '_current_list' in result:
+                result[result['_current_list']].append(stripped[2:].strip().strip('"').strip("'"))
+            continue
+        # Handle key: value pairs
+        match = re.match(r'^(\w+):\s*(.*?)\s*$', stripped)
+        if match:
+            key = match.group(1)
+            value = match.group(2).strip('"').strip("'")
+            if value == '[]':
+                result[key] = []
+                result['_current_list'] = key
+            elif re.match(r'^\[.*\]$', value):
+                # Inline YAML/JSON array like [github] or ["github", "jira"]
+                inner = value[1:-1].strip()
+                if inner:
+                    items = [item.strip().strip('"').strip("'") for item in inner.split(',')]
+                    result[key] = items
+                else:
+                    result[key] = []
+                result['_current_list'] = key
+            elif value == '':
+                # Could be a list starting on next line
+                result[key] = []
+                result['_current_list'] = key
+            else:
+                # Try to parse as int
+                try:
+                    result[key] = int(value)
+                except ValueError:
+                    result[key] = value
+                result.pop('_current_list', None)
+
+    result.pop('_current_list', None)
+    return result
+
+
+def lint_execution_metadata(execution: dict) -> List[Issue]:
+    """Validate the execution block of a skill."""
+    issues: List[Issue] = []
+
+    # Validate type
+    exec_type = execution.get("type")
+    if exec_type is not None:
+        if exec_type not in VALID_EXECUTION_TYPES:
+            issues.append(Issue("error", "invalid_execution_type",
+                                f"Invalid execution.type '{exec_type}'; "
+                                f"must be one of: {', '.join(sorted(VALID_EXECUTION_TYPES))}"))
+    else:
+        issues.append(Issue("error", "missing_execution_type",
+                            "Execution block present but missing 'type' field"))
+
+    # Validate handler
+    handler = execution.get("handler")
+    if handler is not None:
+        if handler not in VALID_EXECUTION_HANDLERS:
+            issues.append(Issue("error", "invalid_execution_handler",
+                                f"Invalid execution.handler '{handler}'; "
+                                f"must be one of: {', '.join(sorted(VALID_EXECUTION_HANDLERS))}"))
+
+    # Automated-specific checks
+    if exec_type == "automated":
+        if handler is None or handler == "none":
+            issues.append(Issue("error", "automated_missing_handler",
+                                "Automated execution requires a handler other than 'none'"))
+        safety_mode = execution.get("safety_mode")
+        if safety_mode is None:
+            issues.append(Issue("error", "automated_missing_safety_mode",
+                                "Automated execution requires 'safety_mode: strict'"))
+        elif safety_mode not in VALID_EXECUTION_SAFETY_MODES:
+            issues.append(Issue("error", "invalid_safety_mode",
+                                f"Invalid safety_mode '{safety_mode}'; must be 'strict'"))
+        if "allowed_tools" not in execution:
+            issues.append(Issue("warning", "automated_missing_allowed_tools",
+                                "Automated execution should declare 'allowed_tools' (use [] for none)"))
+
+    # Validate safety_mode if present (even for non-automated)
+    safety_mode = execution.get("safety_mode")
+    if safety_mode is not None and safety_mode not in VALID_EXECUTION_SAFETY_MODES:
+        issues.append(Issue("error", "invalid_safety_mode",
+                            f"Invalid safety_mode '{safety_mode}'; must be 'strict'"))
+
+    # Validate timeout_seconds
+    timeout = execution.get("timeout_seconds")
+    if timeout is not None:
+        if not isinstance(timeout, int) or timeout <= 0:
+            issues.append(Issue("warning", "invalid_timeout",
+                                f"timeout_seconds should be a positive integer, got '{timeout}'"))
+
+    # Validate allowed_tools is a list of strings
+    allowed_tools = execution.get("allowed_tools")
+    if allowed_tools is not None:
+        if not isinstance(allowed_tools, list):
+            issues.append(Issue("error", "invalid_allowed_tools",
+                                "allowed_tools must be a list"))
+        elif not all(isinstance(t, str) for t in allowed_tools):
+            issues.append(Issue("error", "invalid_allowed_tools_entries",
+                                "All entries in allowed_tools must be strings"))
+
+    # Check for unknown fields
+    known_fields = VALID_EXECUTION_FIELDS
+    unknown = set(execution.keys()) - known_fields
+    for field in sorted(unknown):
+        issues.append(Issue("warning", "unknown_execution_field",
+                            f"Unknown field in execution block: '{field}'"))
+
+    return issues
 
 
 def lint_rule(path: Path, text: str) -> LintResult:

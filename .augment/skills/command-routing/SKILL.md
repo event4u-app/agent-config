@@ -2,6 +2,10 @@
 name: command-routing
 description: "Use when the user types a slash command like '/create-pr' or '/commit'. Extends the commands rule with context inference and GitHub API patterns."
 source: package
+execution:
+  type: assisted
+  handler: internal
+  allowed_tools: []
 ---
 
 # commands

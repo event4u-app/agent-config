@@ -1,7 +1,9 @@
-# Roadmap: Skill Linter — Execution Governance
+# Roadmap: Skill Linter — Execution Governance ✅
 
 > Extend the skill linter from schema validation to full execution governance
 > with type boundary enforcement, verification maturity, and CI ratcheting.
+>
+> **Status: COMPLETE** — All 5 phases implemented. Deferred items tracked in "Remaining" section.
 
 ## Prerequisites
 
@@ -15,7 +17,7 @@ The linter gained execution quality checks in Phase 1. This roadmap covers
 Phases 2-5: fixing failing artifacts, hardening heuristics, enforcing type
 boundaries, and adding CI governance.
 
-- **Feature:** [`agents/features/linter-execution-governance.md`](../features/linter-execution-governance.md)
+- **Feature:** [`agents/features/archive/linter-execution-governance.md`](../../features/linter-execution-governance.md)
 - **Linter:** `scripts/skill_linter.py`
 - **Tests:** `tests/test_skill_linter.py`
 
@@ -111,10 +113,10 @@ boundaries, and adding CI governance.
 
 ## Acceptance Criteria
 
-- [x] 0 FAIL on `python3 scripts/skill_linter.py --all` (129 pass, 85 warn, 0 fail)
+- [x] 0 FAIL on `python3 scripts/skill_linter.py --all` (129 pass, 86 warn, 0 fail)
 - [x] All execution checks have pass + fail test fixtures (34 tests, all green)
 - [x] Type boundary checks active for new/changed files
-- [ ] CI integration documented (deferred — current CI already runs linter)
+- [x] CI integration — linter runs in `task ci` and GitHub Actions consistency workflow
 - [x] All quality gates pass (tests, no regressions)
 
 ## Remaining (nice-to-have, future work)
@@ -132,7 +134,7 @@ boundaries, and adding CI governance.
 |---|---|---|
 | Total checks | ~15 | ~30 |
 | FAIL | 8 | 0 |
-| WARN | 78 | 85 |
+| WARN | 78 | 86 |
 | PASS | 128 | 129 |
 | Test count | 24 | 34 |
 | Linter layers | 1 (schema) | 5 (schema + execution + boundary + verification + governance) |
