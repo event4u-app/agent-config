@@ -1,0 +1,27 @@
+{
+  "name": "event4u-agent-config",
+  "owner": {
+    "name": "event4u",
+    "email": "dev@event4u.app"
+  },
+  "metadata": {
+    "description": "Governed agent system — skills, rules, commands, and guidelines for AI-assisted development.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "governed-agent-system",
+      "description": "Full governed agent system with rules, skills, commands, guidelines, and runtime tooling.",
+      "version": "1.0.0",
+      "source": ".",
+      "category": "governance",
+      "tags": [
+        "governance",
+        "skills",
+        "rules",
+        "commands",
+        "guidelines"
+      ]
+    }
+  ]
+}

@@ -196,6 +196,10 @@ tasks:
     desc: Generate quality score report (per artifact type)
     cmd: python3 scripts/skill_linter.py --report
 
+  first-run:
+    desc: Show the recommended first-run experience for new users
+    cmd: bash scripts/first-run.sh
+
   ci:
     desc: Run ALL CI checks locally (must pass before push)
     cmds:

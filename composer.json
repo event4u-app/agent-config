@@ -3,6 +3,9 @@
     "description": "Shared agent configuration — skills, rules, commands, guidelines, and templates for AI coding tools",
     "type": "library",
     "license": "proprietary",
+    "bin": [
+        "bin/install.php"
+    ],
     "archive": {
         "exclude": [
             "/.augment.uncompressed",

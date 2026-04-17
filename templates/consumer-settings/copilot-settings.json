@@ -1,0 +1,14 @@
+{
+  "// Instructions": "Copy this into your project's .github/copilot/settings.json to auto-recommend the agent-config plugin.",
+  "// After setup": "Copilot CLI will auto-install the marketplace and enable the plugin on startup.",
+
+  "extraKnownMarketplaces": [
+    {
+      "name": "event4u-agent-config",
+      "source": "event4u-app/agent-config"
+    }
+  ],
+  "enabledPlugins": {
+    "governed-agent-system@event4u-agent-config": true
+  }
+}

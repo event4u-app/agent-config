@@ -1,0 +1,32 @@
+{
+  "name": "event4u-agent-config",
+  "description": "Governed agent system — skills, rules, commands, and guidelines for AI-assisted development.",
+  "version": "1.0.0",
+  "owner": {
+    "name": "event4u",
+    "email": "dev@event4u.app"
+  },
+  "metadata": {
+    "description": "A policy-driven execution system that enforces quality, consistency, and developer-like behavior for AI agents.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "governed-agent-system",
+      "description": "Full governed agent system — rules, skills, commands, guidelines, and runtime tooling.",
+      "version": "1.0.0",
+      "source": ".",
+      "category": "governance",
+      "tags": [
+        "governance",
+        "skills",
+        "rules",
+        "commands",
+        "guidelines",
+        "laravel",
+        "php",
+        "quality"
+      ]
+    }
+  ]
+}
