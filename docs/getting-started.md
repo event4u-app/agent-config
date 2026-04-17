@@ -8,7 +8,7 @@ composer require --dev event4u/agent-config
 bash vendor/event4u/agent-config/scripts/setup.sh
 
 # npm (JavaScript/TypeScript)
-npm install @event4u/agent-config
+npm install --save-dev @event4u/agent-config
 ```
 
 That's it. Your agent now follows your team's standards.

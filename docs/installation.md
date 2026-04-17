@@ -1,31 +1,19 @@
 # Installation
 
-**Principle:** Install natively, onboard optionally, explain later.
+**Principle:** Project-installed by default, plugin-enhanced when available.
 No Task, no Make, no build tools required for installation.
+
+| Mode | Best for | Scope |
+|---|---|---|
+| **Project-installed** (recommended) | Teams, shared standards | Repository-wide |
+| **Plugin-installed** | Individual users, global use | User-wide |
 
 ---
 
-## Recommended: one command per tool
+## Project-installed mode (recommended for teams)
 
-Each tool has **one recommended install path**. Pick yours:
-
-### Augment CLI (plugin)
-
-```bash
-auggie plugin install governed-agent-system@event4u-agent-config
-```
-
-### Claude Code (plugin)
-
-```bash
-claude plugin install governed-agent-system@event4u-agent-config
-```
-
-### Copilot CLI (plugin)
-
-```bash
-copilot plugin install governed-agent-system@event4u-agent-config
-```
+Install once in the project — available to everyone working on it.
+The package is versioned with the project. Settings are committed once.
 
 ### Composer (PHP projects)
 
@@ -39,21 +27,74 @@ For first-time setup: `bash vendor/event4u/agent-config/scripts/setup.sh`
 ### npm (JavaScript/TypeScript projects)
 
 ```bash
-npm install @event4u/agent-config
+npm install --save-dev @event4u/agent-config
 ```
 
 The `postinstall` hook runs `scripts/install.sh` automatically.
 
-### Cursor / Cline / Windsurf / Gemini CLI / Augment VSCode
+### What happens after install
 
-These tools don't support plugins yet. Use Composer or npm above —
-`install.sh` creates the correct symlinks and configs for all of them.
+`install.sh` creates project-local content for all supported tools:
+- `.augment/rules/`, `.augment/skills/`, `.augment/commands/` — for Augment
+- `.cursor/rules/` — for Cursor
+- `.clinerules/` — for Cline
+- `.windsurfrules` — for Windsurf
+- `.claude/rules/`, `.claude/skills/` — for Claude Code
+- `AGENTS.md`, `GEMINI.md` — for Copilot and Gemini CLI
+- `.github/copilot-instructions.md` — for GitHub Copilot
+
+This means: **every developer who opens the project gets the same agent behavior,
+regardless of which AI tool they use.** No per-developer plugin installation needed.
+
+### What the team commits
+
+After initial setup, commit these files:
+
+```
+.agent-settings                    ← shared profile (e.g., profile=minimal)
+.augment/                          ← rules, skills, commands (symlinks)
+.cursor/rules/                     ← Cursor rules (symlinks)
+.claude/                           ← Claude rules, skills (symlinks)
+AGENTS.md                          ← Copilot/Gemini instructions
+.github/copilot-instructions.md   ← GitHub Copilot instructions
+```
+
+New team members: run `composer install` (or `npm install`) → open editor → done.
 
 ---
 
-## Team auto-setup
+## Plugin-installed mode (optional, for individual use)
 
-To auto-recommend the plugin for your team, add the marketplace to your project settings.
+Install directly in your agent for global, cross-project use.
+This is additional to project-installed mode, not a replacement.
+
+### Augment CLI
+
+```bash
+auggie plugin install governed-agent-system@event4u-agent-config
+```
+
+### Claude Code
+
+```bash
+claude plugin install governed-agent-system@event4u-agent-config
+```
+
+### Copilot CLI
+
+```bash
+copilot plugin install governed-agent-system@event4u-agent-config
+```
+
+### When to use plugin mode
+
+- You want agent-config behavior in ALL projects (not just one)
+- You want auto-updates via marketplace
+- You want plugin-specific features (hooks, MCP servers)
+
+### Team auto-setup for plugins
+
+To auto-recommend the plugin for your team, add the marketplace to project settings.
 See [`templates/consumer-settings/`](../templates/consumer-settings/) for ready-to-use config templates per tool.
 
 For marketplace registration (required once before `plugin install`):

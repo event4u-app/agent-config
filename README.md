@@ -12,19 +12,34 @@ Teach your AI agents Laravel, PHP, testing, Git workflows, and **90+ more skills
 
 ## Installation
 
-Pick your tool — one command, done:
+### For teams (recommended)
+
+Install once in the project — available to everyone who works on it:
+
+```bash
+# PHP
+composer require --dev event4u/agent-config
+
+# JavaScript/TypeScript
+npm install --save-dev @event4u/agent-config
+```
+
+No Task, no Make, no build tools required. The package makes rules, skills, and commands
+available project-locally for all supported AI tools.
+
+### For individual use (optional)
+
+Install directly in your agent for global, cross-project use:
 
 | Tool | Install |
 |---|---|
 | **Augment CLI** | `auggie plugin install governed-agent-system@event4u-agent-config` |
 | **Claude Code** | `claude plugin install governed-agent-system@event4u-agent-config` |
 | **Copilot CLI** | `copilot plugin install governed-agent-system@event4u-agent-config` |
-| **Composer** | `composer require --dev event4u/agent-config` |
-| **npm** | `npm install @event4u/agent-config` |
 
-No Task, no Make, no build tools required. → [All install options](docs/installation.md)
+→ [All install options & project bridge setup](docs/installation.md)
 
-**Then open your agent and try these 3 prompts:**
+**Open your agent and try these 3 prompts:**
 
 1. `"Refactor this function"` → watch: agent analyzes first
 2. `"Add caching to this"` → watch: agent asks instead of guessing
