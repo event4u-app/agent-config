@@ -180,6 +180,24 @@ Example:
 * Validation must be concrete
 * One skill = one job
 
+### Execution metadata (optional)
+
+Skills can optionally declare an `execution` block in frontmatter:
+
+```yaml
+execution:
+  type: manual | assisted | automated
+  handler: none | shell | php | node | internal
+  timeout_seconds: 30
+  safety_mode: strict
+  allowed_tools: []
+```
+
+* Default is `manual` — omitting the block means instructional only
+* `assisted` = prepares actions for human confirmation
+* `automated` = executes safely (requires handler, safety_mode, allowed_tools)
+* See `guidelines/agent-infra/runtime-layer.md` for full specification
+
 ### When to create a `project-analysis-*` skill
 
 A framework gets its own analysis skill ONLY if:
