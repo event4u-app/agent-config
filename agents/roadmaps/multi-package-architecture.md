@@ -275,18 +275,72 @@ This means: internal package split → external plugin generation. Clean separat
 
 ## Composer-first Project Discovery
 
+**Guiding principle:**
+> **Project-installed by default, plugin-enhanced when available.**
+
 **The real-world scenario:** A team installs agent-config via Composer into their project.
 The goal is NOT "every developer installs their own setup" but:
 
 > **The project installs it once. Tools discover it locally. Developers just open their editor.**
 
+### Two distribution modes (parallel, not either/or)
+
+**Mode A — Project mode (for teams):**
+Composer/npm installs the package. Project-local content (rules, skills, agents) is
+available to ALL developers who open the project, regardless of their tool.
+- 10 developers, 10 different tools, one shared behavior
+- Content is committed to the repo
+- Works because: project-local agents/skills have priority over plugins
+  (Copilot CLI explicitly documents this — local content overrides plugins)
+
+**Mode B — Plugin/Marketplace mode (for individuals or global use):**
+Plugin installed via Augment/Claude/Copilot marketplace. Works outside of projects.
+- Global agent behavior across all projects
+- Auto-updates via marketplace
+- Additional integration features (hooks, MCP servers, etc.)
+
+**The hybrid model:**
+Most teams use BOTH: project mode ensures everyone has the same base,
+plugin mode adds convenience features for developers who want them.
+
+### What project-local gives you automatically
+
+When content lives in project directories (`.augment/`, `.claude/`, `.cursor/`, etc.),
+it is available to ALL developers who open the project. This is the strongest guarantee:
+
+| Content type | Project-local availability | Needs tool config? |
+|---|---|---|
+| Rules (`.augment/rules/`, `.cursor/rules/`) | ✅ Automatic | No |
+| Skills (`.augment/skills/`, `.claude/skills/`) | ✅ Automatic | No |
+| Commands (`.augment/commands/`, `.claude/skills/`) | ✅ Automatic | No |
+| Guidelines (`.augment/guidelines/`) | ✅ Automatic | No |
+| AGENTS.md / copilot-instructions.md | ✅ Automatic | No |
+| Plugin features (hooks, MCP, marketplace) | ⚠️ Partial | Yes — see trust boundaries |
+
+**This is why install.sh copies/symlinks into project directories — it ensures
+project-local availability for ALL tools, regardless of plugin support.**
+
+### What requires additional tool configuration
+
+Plugin-specific features need a small per-tool setup. This is NOT a limitation of our
+package — it's how plugin trust/security works in these tools:
+
+| Tool | What's automatic (project-local) | What needs config |
+|---|---|---|
+| Augment VSCode/IntelliJ | Rules, skills from `.augment/` | `enabledPlugins` for plugin features |
+| Claude Code | Skills from `.claude/skills/` | Plugin registration for marketplace |
+| Copilot CLI | Agents from project dirs | `.github/plugin/marketplace.json` |
+| VS Code/Copilot | Rules from `.github/copilot-instructions.md` | `chat.pluginLocations` for plugin path |
+| Cursor/Cline/Windsurf | Rules from respective dirs | Nothing — file-based only |
+
 ### Architecture: Composer-installed, Project-configured, Tool-discovered
 
 After `composer require event4u/agent-config`, the project contains:
 - The package in `vendor/event4u/agent-config/`
-- A small set of **project bridge files** that point tools to the package
+- Project-local content via install.sh (rules, skills, commands in tool directories)
+- A small set of **project bridge files** that point tools to plugin features
 - A shared `.agent-settings`
-- Tool-specific discovery hints
+- Tool-specific discovery hints (optional, for plugin mode)
 
 ### Two layers
 
