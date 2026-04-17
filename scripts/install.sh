@@ -13,7 +13,8 @@ set -euo pipefail
 
 # --- Configuration ---
 COPY_DIRS="rules"  # Subdirectories where files must be real copies (space-separated)
-GITIGNORE_MARKER="# galawork/agent-config"
+GITIGNORE_MARKER="# event4u/agent-config"
+GITIGNORE_MARKER_LEGACY="# galawork/agent-config"  # pre-rename; migrated in place
 
 # Rules that are internal to the agent-config package and should NOT be shipped to consumers.
 # These are only relevant when developing the agent-config package itself.
@@ -564,6 +565,22 @@ ensure_gitignore() {
         return 0  # Already present
     fi
 
+    # Migrate legacy marker in place so existing installs pick up the rename
+    # without duplicating the block. Kept for a few releases; safe to drop later.
+    if grep -qF "$GITIGNORE_MARKER_LEGACY" "$gitignore"; then
+        if $DRY_RUN; then
+            log_verbose "migrate legacy .gitignore marker"
+            return
+        fi
+        # Portable sed on macOS + GNU: write to temp, move back
+        local tmp
+        tmp="$(mktemp)"
+        awk -v old="$GITIGNORE_MARKER_LEGACY" -v new="$GITIGNORE_MARKER" \
+            '{ if ($0 == old) print new; else print $0 }' "$gitignore" > "$tmp"
+        mv "$tmp" "$gitignore"
+        return 0
+    fi
+
     if $DRY_RUN; then
         log_verbose "append .gitignore block"
         return
@@ -571,7 +588,7 @@ ensure_gitignore() {
 
     cat >> "$gitignore" << 'BLOCK'
 
-# galawork/agent-config
+# event4u/agent-config
 # Agent config — symlinked from vendor (auto-managed)
 .augment/skills/
 .augment/commands/

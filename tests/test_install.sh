@@ -131,8 +131,23 @@ test_migration_real_to_symlink() {
 
 test_gitignore_marker_added() {
     setup; run_install
-    assert_contains "gitignore has marker" "$TMPDIR/.gitignore" "# galawork/agent-config"
+    assert_contains "gitignore has marker" "$TMPDIR/.gitignore" "# event4u/agent-config"
     assert_contains "gitignore has skills entry" "$TMPDIR/.gitignore" ".augment/skills/"
+    teardown
+}
+
+test_gitignore_legacy_marker_migrated() {
+    setup
+    # Simulate pre-rename install: legacy marker already present
+    cat >> "$TMPDIR/.gitignore" << 'LEGACY'
+
+# galawork/agent-config
+# Agent config — symlinked from vendor (auto-managed)
+.augment/skills/
+LEGACY
+    run_install
+    assert_contains "new marker present" "$TMPDIR/.gitignore" "# event4u/agent-config"
+    assert_false "legacy marker replaced" grep -qF "# galawork/agent-config" "$TMPDIR/.gitignore"
     teardown
 }
 
