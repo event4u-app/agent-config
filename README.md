@@ -118,16 +118,29 @@ Nothing runs automatically without your control. [Configure modes →](docs/cust
 
 ## Supported Tools
 
-| Tool | Rules | Skills | Commands | Plugin | Method |
-|---|---|---|---|---|---|
-| **Augment CLI** | ✅ | ✅ | ✅ | ✅ | Plugin (recommended) |
-| **Claude Code** | ✅ | ✅ | ✅ | ✅ | Plugin (recommended) |
-| **Copilot CLI** | ✅ | ✅ | ✅ | ✅ | Plugin (recommended) |
-| **Augment VSCode/IntelliJ** | ✅ | ✅ | ✅ | — | install.sh |
-| **Cursor** | ✅ | — | — | — | install.sh |
-| **Cline** | ✅ | — | — | — | install.sh |
-| **Windsurf** | ✅ | — | — | — | install.sh |
-| **Gemini CLI** | ✅ | — | — | — | install.sh |
+### Project-installed (Composer / npm)
+
+Every developer gets the same behavior. No per-user setup needed.
+
+| Tool | Rules | Skills | Commands | How it works |
+|---|---|---|---|---|
+| **Augment VSCode/IntelliJ** | ✅ | ✅ | ✅ | Reads `.augment/` from project |
+| **Claude Code** | ✅ | ✅ | ✅ | Reads `.claude/` from project |
+| **Cursor** | ✅ | — | — | Reads `.cursor/rules/` from project |
+| **Cline** | ✅ | — | — | Reads `.clinerules/` from project |
+| **Windsurf** | ✅ | — | — | Reads `.windsurfrules` from project |
+| **Gemini CLI** | ✅ | — | — | Reads `GEMINI.md` from project |
+| **GitHub Copilot** | ✅ | — | — | Reads `.github/copilot-instructions.md` |
+
+### Plugin-installed (optional, for global use)
+
+Works across all your projects. Auto-updates via marketplace.
+
+| Tool | Rules | Skills | Commands | Install |
+|---|---|---|---|---|
+| **Augment CLI** | ✅ | ✅ | ✅ | `auggie plugin install ...` |
+| **Claude Code** | ✅ | ✅ | ✅ | `claude plugin install ...` |
+| **Copilot CLI** | ✅ | ✅ | ✅ | `copilot plugin install ...` |
 
 Skills follow the [Agent Skills open standard](https://agentskills.io).
 
