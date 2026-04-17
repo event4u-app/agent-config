@@ -24,6 +24,13 @@ composer require --dev event4u/agent-config
 npm install --save-dev @event4u/agent-config
 ```
 
+Then generate project bridge files (optional but recommended):
+
+```bash
+php vendor/bin/install.php                    # minimal profile (default)
+php vendor/bin/install.php --profile=balanced  # for teams
+```
+
 No Task, no Make, no build tools required. The package makes rules, skills, and commands
 available project-locally for all supported AI tools.
 

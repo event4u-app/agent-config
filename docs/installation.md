@@ -22,7 +22,18 @@ composer require --dev event4u/agent-config
 ```
 
 The `postinstall` hook runs `scripts/install.sh` automatically via `setup.sh`.
-For first-time setup: `bash vendor/event4u/agent-config/scripts/setup.sh`
+
+Then generate the project bridge files:
+
+```bash
+php vendor/bin/install.php
+```
+
+Or with a specific profile:
+
+```bash
+php vendor/bin/install.php --profile=balanced
+```
 
 ### npm (JavaScript/TypeScript projects)
 
@@ -31,6 +42,25 @@ npm install --save-dev @event4u/agent-config
 ```
 
 The `postinstall` hook runs `scripts/install.sh` automatically.
+
+### Generate bridge files (PHP installer)
+
+The PHP installer creates `.agent-settings` and tool-specific bridge files:
+
+```bash
+php vendor/bin/install.php                        # defaults to profile=minimal
+php vendor/bin/install.php --profile=balanced      # specific profile
+php vendor/bin/install.php --force                 # overwrite existing files
+php vendor/bin/install.php --skip-bridges          # only create .agent-settings
+```
+
+This creates:
+- `.agent-settings` — profile configuration
+- `.vscode/settings.json` — VS Code/Copilot plugin discovery
+- `.augment/settings.json` — Augment plugin activation
+- `.github/plugin/marketplace.json` — Copilot CLI marketplace
+
+No Task, no Make, no build tools required. Just PHP (which you already have).
 
 ### What happens after install
 
