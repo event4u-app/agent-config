@@ -54,15 +54,17 @@ tasks:
     desc: Run all tests (bash + Python)
     cmds:
       - bash tests/test_install.sh
-      - python3 -m unittest tests.test_compress -v
+      - python3 -m unittest tests.test_compress tests.test_install_py -v
 
   test-install:
-    desc: Run install.sh integration tests
-    cmd: bash tests/test_install.sh
+    desc: Run install.sh + install.py tests
+    cmds:
+      - bash tests/test_install.sh
+      - python3 -m unittest tests.test_install_py -v
 
   test-python:
-    desc: Run Python compress tests
-    cmd: python3 -m unittest tests.test_compress -v
+    desc: Run Python unit tests (compress + install)
+    cmd: python3 -m unittest tests.test_compress tests.test_install_py -v
 
 
   lint-skills:
