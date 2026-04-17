@@ -609,6 +609,45 @@ When implementing and fixing code.
     assert not any(issue.code == "missing_real_verification" for issue in result.issues)
 
 
+def test_execution_skill_with_analysis_section_passes(tmp_path: Path) -> None:
+    """Execution skill with analysis section header (not keywords) → no error."""
+    path = write_file(
+        tmp_path,
+        ".augment/skills/developer-validation/SKILL.md",
+        """\
+---
+name: developer-validation
+description: "Validate developer workflows"
+source: package
+---
+
+# developer-validation
+
+## When to use
+
+When implementing validation changes.
+
+## Procedure
+
+### Understand current setup
+
+Check how validation currently works in the project.
+
+### Implement changes
+
+Make the required modifications.
+
+### Verify results
+
+Run the test suite to confirm behavior.
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(issue.code == "missing_analysis_before_action" for issue in result.issues)
+    assert not any(issue.code == "missing_real_verification" for issue in result.issues)
+
+
 def test_execution_skill_without_verification_fails(tmp_path: Path) -> None:
     """Execution skill without verification signals → ERROR."""
     path = write_file(

@@ -917,20 +917,49 @@ def lint_execution_quality(path: Path, text: str) -> List[Issue]:
     def has_any(signals: tuple[str, ...]) -> bool:
         return any(s in text_lower for s in signals)
 
+    # --- Section-based detection (complement to keyword matching) ---
+    # Detects structural signals: sections whose names imply analysis or verification.
+    import re
+    section_headers = re.findall(r'^#{1,4}\s+(.+)$', text, re.MULTILINE)
+    section_headers_lower = [h.lower() for h in section_headers]
+
+    # Section names that imply analysis-before-action
+    has_analysis_section = any(
+        any(kw in h for kw in ("understand", "analyze", "assess", "context", "review",
+                                "current setup", "current state", "before"))
+        for h in section_headers_lower
+    )
+
+    # Section names that imply verification
+    has_verification_section = any(
+        any(kw in h for kw in ("verify", "validat", "test", "acceptance", "quality gate"))
+        for h in section_headers_lower
+    )
+
+    # Section names that imply anti-patterns / gotchas
+    has_antipattern_section = any(
+        any(kw in h for kw in ("do not", "don't", "gotcha", "anti-pattern", "avoid"))
+        for h in section_headers_lower
+    )
+
     # Detect implementation/change language
     change_signals = ("implement", "modify", "fix", "refactor", "change", "update", "code")
     has_change_language = any(s in text_lower for s in change_signals)
 
+    # Combine keyword + section signals
+    has_analysis = has_any(analysis_signals) or has_analysis_section
+    has_verification = has_any(verification_signals) or has_verification_section
+
     # --- Check 1: Missing analysis-before-action (ERROR, skills only) ---
     # Rules describe constraints, not workflows — they don't need analysis sections
     is_skill = "/skills/" in str(path).lower()
-    if is_skill and has_change_language and not has_any(analysis_signals):
+    if is_skill and has_change_language and not has_analysis:
         issues.append(Issue("error", "missing_analysis_before_action",
                             "Execution-oriented skill encourages implementation "
                             "without requiring prior analysis of existing system"))
 
     # --- Check 2: Missing real verification (ERROR, skills with strong match) ---
-    if is_skill and is_strong_match and has_change_language and not has_any(verification_signals):
+    if is_skill and is_strong_match and has_change_language and not has_verification:
         issues.append(Issue("error", "missing_real_verification",
                             "Implementation/debugging skill does not require "
                             "real verification after changes"))
