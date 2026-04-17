@@ -1,6 +1,6 @@
 # README & Docs Improvement Roadmap
 
-Source: GPT competitive analysis (April 2026) comparing agent-config against
+Source: GPT competitive analysis + SWOT (April 2026) comparing agent-config against
 anthropics/skills, cloudflare/skills, github/awesome-copilot, hoodini/ai-agents-skills.
 
 **Overall score: 8.5/10** — strongest at governance, linter maturity, and multi-agent
@@ -11,7 +11,100 @@ distribution. Weakest at adoption friction, distribution elegance, and external 
 Transform README from "internal system documentation" into "compelling product page"
 that makes someone want to install this in 30 seconds. Move all system internals into docs/.
 
-## Competitor Learnings
+**Market position:** Not a skill collection — a **Governed Agent OS for Development Teams**.
+
+---
+
+## SWOT Analysis
+
+### Strengths
+
+| # | Strength | Detail |
+|---|---|---|
+| S1 | **Governance is our unfair advantage** | Rules + Skills + Commands + Linter + CI = enforced practices, not documented practices |
+| S2 | **System design, not collection** | Runtime, Tool Layer, Observability, Feedback Loop, Lifecycle — this is an OS |
+| S3 | **Multi-agent compatibility** | Augment, Claude Code, Copilot, Cursor, Cline, Windsurf, Gemini — tool-agnostic |
+| S4 | **Cost control (extremely rare)** | Settings + guards + default-off. Separation: collect vs inject. Almost no competitor has this |
+| S5 | **Team scalability** | CI-ready, structured skills, reproducible behavior — enterprise-ready, not dev-toy |
+
+### Weaknesses
+
+| # | Weakness | Detail |
+|---|---|---|
+| W1 | **Entry barrier too high** | Too many concepts (Rules, Skills, Runtime, Lifecycle...) — looks overengineered to newcomers |
+| W2 | **Distribution not optimal** | No 1-click install, no clear marketplace flow. "Install system" instead of "install plugin" |
+| W3 | **No clear minimal mode** | Everything is there → feels heavy. Missing: light version, starter config |
+| W4 | **Too few external examples** | No demo repos, case studies, or real workflow examples. Hard to understand concrete usage |
+| W5 | **Over-governance risk** | Too many rules → agent feels "strict". Risk: too much asking, too much analysis |
+
+### Opportunities
+
+| # | Opportunity | Detail |
+|---|---|---|
+| O1 | **Plugin/Marketplace model** | Biggest lever. Copilot + Augment + Claude plugins → gamechanger for adoption |
+| O2 | **"Agent OS for Teams" positioning** | Not "Skill Collection" but "Agent Operating System for Development Teams" |
+| O3 | **Cost-Aware AI as USP** | While others build more features, we control costs AND quality |
+| O4 | **Enterprise/Team adoption** | Perfect for teams, processes, standards — much stronger than solo-dev toys |
+| O5 | **Developer Judgment as differentiator** | `improve-before-implement` + `validate-feature-fit` = qualitative superiority |
+
+### Threats
+
+| # | Threat | Detail |
+|---|---|---|
+| T1 | **Big players (GitHub/Anthropic/OpenAI)** | If they combine governance + skills + plugins → they can overtake fast |
+| T2 | **Plugin ecosystem wins without us** | If we don't participate → lose installation, adoption, visibility |
+| T3 | **Overengineering** | If we keep stacking features → nobody uses it fully, too complex |
+| T4 | **Fragmentation** | Multi-agent is strength, but can become: too many targets, too much maintenance |
+
+---
+
+## Competitor Analysis
+
+### Summary
+
+| System | Their strength | Their weakness | vs us |
+|---|---|---|---|
+| **anthropics/skills** | Official reference, simple install | No governance, no linter, no lifecycle | We are clearly stronger |
+| **cloudflare/skills** | Clear domain focus, good examples | Not a generic platform, no governance | We are broader, they are clearer |
+| **awesome-copilot** | Huge collection, high visibility | No consistency, no quality assurance | We are much cleaner |
+| **hoodini/ai-agents-skills** | Multi-agent, easy to use | No governance, no runtime, no lifecycle | We are much deeper |
+| **Plugin marketplaces** | Simple install, standardized | Little governance, little depth | They win adoption, we win quality |
+
+### Detailed assessments
+
+**anthropics/skills** — Official reference repo for Agent Skills.
+- Good: official character, simple install, clear structure.
+- Missing: governance, linter, lifecycle, feedback system.
+- They are: canonical reference. We are: opinionated operating model.
+- **Winner: us** (system depth).
+
+**cloudflare/skills** — Domain-specific skill repo for Cloudflare products.
+- Good: clear focus, real use cases, good examples.
+- Missing: generic platform, governance layer.
+- They are: product skills. We are: platform.
+- **Winner: us** (strategically), **them** (clarity of purpose).
+
+**awesome-copilot** — Community collection of skills, agents, hooks, workflows.
+- Good: huge collection, high visibility, community-driven.
+- Missing: consistency, quality assurance, structure.
+- They are: inspiration. We are: execution system.
+- **Winner: us** (quality), **them** (reach).
+
+**hoodini/ai-agents-skills** — Curated multi-agent skill collection.
+- Good: multi-tool support, easy to use.
+- Missing: governance, linter, runtime, lifecycle.
+- They are: easy entry. We are: much more capable.
+- **Winner: us**.
+
+**Plugin/Marketplace ecosystems** — Native distribution channels.
+- Good: simple install, standardized, low entry barrier.
+- Missing: governance, depth.
+- They are: distribution king. We are: system king.
+- **Winner: them** (adoption), **us** (quality). **This is the gap to close.**
+
+---
+
+## Competitor README Learnings
 
 ### Cloudflare/skills — Goldstandard for scanability
 - Lists *concrete* skills with one-line descriptions as a table
@@ -37,7 +130,30 @@ All three focus on **"what you get"** (benefit). Our README currently focuses on
 
 ---
 
+## Strategic Priorities (from SWOT)
+
+These are the 3 highest-impact moves, derived from the SWOT analysis:
+
+### Priority 1: Plugin distribution (addresses W2, O1, T2)
+Build real plugin/marketplace distribution. Biggest lever for adoption.
+Currently: "install system" → Target: "install plugin".
+→ Partially done (plugin manifests exist), needs real marketplace registration.
+
+### Priority 2: Minimal mode / starter config (addresses W1, W3, O4)
+Offer a light version: 10 core rules, 15 core skills, zero overhead.
+Entry point for small teams. The `cost_profile=cheap` setting is a starting point.
+→ Not started. Consider: `install.sh --minimal` or a separate `starter/` directory.
+
+### Priority 3: Developer Judgment as USP (addresses O5, S1)
+The `improve-before-implement` and `validate-feature-fit` skills are unique.
+No competitor has this. Double down — make it visible in README and marketing.
+→ Partially done (skills exist), not visible to outsiders.
+
+---
+
 ## Phase 1: README Tagline & Hero Section
+
+**SWOT link:** W1 (entry barrier), O2 (positioning)
 
 **Problem:** "policy-driven execution system" is abstract jargon. No one searches for this.
 New visitors don't understand what they get within 5 seconds.
@@ -58,6 +174,8 @@ New visitors don't understand what they get within 5 seconds.
 ---
 
 ## Phase 2: "What You Get" Instead of "What's Inside"
+
+**SWOT link:** W1 (entry barrier), W4 (external examples), O2 (positioning)
 
 **Problem:** Current "What's inside" table lists system layers (Rules, Skills, Runtime, Tools,
 Observability). A visitor wants to know: "What will my agent be able to do?"
@@ -81,6 +199,8 @@ Observability). A visitor wants to know: "What will my agent be able to do?"
 ---
 
 ## Phase 3: Featured Skills & Commands Table
+
+**SWOT link:** W1 (entry barrier), W4 (external examples), O5 (developer judgment visibility)
 
 **Problem:** "93 Skills" is impressive but abstract. Cloudflare lists every skill with a
 one-line description. We should show the best ones.
@@ -121,6 +241,8 @@ one-line description. We should show the best ones.
 
 ## Phase 4: Simplify Installation Section
 
+**SWOT link:** W2 (distribution), O1 (plugin model)
+
 **Problem:** Installation currently shows 6 code blocks. Cloudflare uses expandable sections
 or tabs. We should show the simplest path first, details behind a link.
 
@@ -142,6 +264,8 @@ or tabs. We should show the simplest path first, details behind a link.
 ---
 
 ## Phase 5: Reduce Jargon in README
+
+**SWOT link:** W1 (entry barrier), W5 (over-governance perception), T3 (overengineering)
 
 **Problem:** GPT analysis flagged "Governed Agent System", "Lifecycle", "Feedback loop",
 "execution metadata", "cost profile" as internal jargon that raises adoption barriers.
@@ -166,6 +290,8 @@ or tabs. We should show the simplest path first, details behind a link.
 
 ## Phase 6: Add Discoverability Aids
 
+**SWOT link:** W4 (external examples), T2 (plugin ecosystem), O1 (marketplace)
+
 **Problem:** GitHub/awesome-copilot has website links, llms.txt, and browse links.
 We have none of these.
 
@@ -181,6 +307,8 @@ We have none of these.
 ---
 
 ## Phase 7: docs/ Structure Polish
+
+**SWOT link:** W1 (entry barrier), W4 (external examples)
 
 **Problem:** The 5 docs pages are good but could be tighter. Some content may need
 cross-linking improvements.
@@ -212,9 +340,21 @@ After all phases:
 
 ## Scoring Target
 
-| Area | Current | Target |
-|---|---|---|
-| Ökosystem-/Plugin-Reife | 6.5/10 | 8/10 |
-| Adoption / Installierbarkeit | 7/10 | 9/10 |
-| Klarheit der Positionierung | 8.5/10 | 9.5/10 |
-| **Gesamt** | **8.5/10** | **9.2/10** |
+| Area | Current | Target | Key SWOT driver |
+|---|---|---|---|
+| Strategic quality | 9/10 | 9.5/10 | S1, S2 (maintain) |
+| Governance/Linter maturity | 9.5/10 | 9.5/10 | S1 (maintain) |
+| Skill quality / Process maturity | 9/10 | 9.5/10 | S5, O5 |
+| Ecosystem/Plugin maturity | 6.5/10 | 8/10 | W2, O1, T2 |
+| Adoption / Installability | 7/10 | 9/10 | W1, W2, W3 |
+| Clarity of positioning | 8.5/10 | 9.5/10 | W1, O2 |
+| **Overall** | **8.5/10** | **9.2/10** | |
+
+## Final Assessment
+
+**What we are:** Governed Agent OS for Development Teams.
+**What we are NOT:** A skill collection, a prompt pack, or a plugin marketplace.
+
+**Biggest gap to close:** Distribution & adoption — everything else is already strong.
+**Biggest risk:** Overengineering (T3) — adding complexity without simplifying entry.
+**Biggest opportunity:** Plugin ecosystem (O1) + Minimal mode (W3) = accessible AND powerful.
