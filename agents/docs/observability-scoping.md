@@ -35,7 +35,7 @@ see these unless they opt in.
 
 | File | minimal | balanced | full |
 |---|---|---|---|
-| `.augment/settings.json` | ✅ (bridge, tiny) | ✅ | ✅ |
+| Augment bridge `settings.json` | ✅ (tiny) | ✅ | ✅ |
 | `.agent-settings` | ✅ (personal) | ✅ | ✅ |
 | `feedback.json` | ❌ | ✅ | ✅ |
 | `metrics.json` | ❌ | ❌ | ✅ |

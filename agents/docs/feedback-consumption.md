@@ -73,8 +73,9 @@ In `minimal`, none of these are created. User sees **zero** new files after inst
   discovery is deterministic, based on skill descriptions.
 - Should feedback influence skill **selection**? **No** — agent picks by fit, not by
   historical success rate. Historical success is reported, not enforced.
-- Should there be a `feedback-review` skill? **Maybe** — if users repeatedly ask "what
-  failed last week", a skill formalizes the pattern. Defer until demand is observed.
+- Should we add a dedicated skill for reviewing past feedback? **Maybe** — if users
+  repeatedly ask "what failed last week", a skill formalizes the pattern. Defer until
+  demand is observed.
 
 ## Related
 
