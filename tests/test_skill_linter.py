@@ -901,3 +901,67 @@ Something might break.
 
     result = lint_file(path)
     assert any(issue.code == "skill_validation_too_generic" for issue in result.issues)
+
+
+# --- Verification maturity checks ---
+
+
+def test_backend_skill_without_backend_verification_warns(tmp_path: Path) -> None:
+    """Backend execution skill without curl/postman → warning."""
+    path = write_file(
+        tmp_path,
+        ".augment/skills/api-validation/SKILL.md",
+        """\
+---
+name: api-validation
+description: "Validate API endpoints"
+source: package
+---
+
+# api-validation
+
+## When to use
+
+When working with API endpoints and controllers.
+
+## Procedure
+
+1. Analyze the route and controller
+2. Check the middleware and service layer
+3. Implement changes
+4. Review the code
+""",
+    )
+
+    result = lint_file(path)
+    assert any(issue.code == "missing_backend_verification_example" for issue in result.issues)
+
+
+def test_backend_skill_with_curl_passes(tmp_path: Path) -> None:
+    """Backend execution skill mentioning curl → no backend verification warning."""
+    path = write_file(
+        tmp_path,
+        ".augment/skills/api-validation/SKILL.md",
+        """\
+---
+name: api-validation
+description: "Validate API endpoints"
+source: package
+---
+
+# api-validation
+
+## When to use
+
+When working with API endpoints and controllers.
+
+## Procedure
+
+1. Analyze the route and controller
+2. Implement changes
+3. Verify with curl: `curl -s /api/endpoint | jq '.status'`
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(issue.code == "missing_backend_verification_example" for issue in result.issues)

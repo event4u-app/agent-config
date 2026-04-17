@@ -1067,6 +1067,67 @@ def lint_type_boundaries(path: Path, text: str, artifact_type: str) -> List[Issu
     return issues
 
 
+# --- Verification maturity checks ---
+
+# Task type detection signals
+_TASK_TYPE_SIGNALS = {
+    "backend": ("api", "endpoint", "controller", "route", "service", "repository",
+                "eloquent", "migration", "artisan", "middleware", "job", "queue"),
+    "frontend": ("blade", "livewire", "component", "view", "ui", "frontend",
+                 "tailwind", "flux", "css", "template"),
+    "cli": ("artisan command", "cli", "console", "schedule", "cron"),
+    "database": ("migration", "database", "schema", "index", "query", "sql",
+                 "mariadb", "mysql", "seeder"),
+    "debugging": ("debug", "xdebug", "error", "exception", "sentry", "trace",
+                  "breakpoint", "log"),
+}
+
+# Expected verification tools per task type
+_VERIFICATION_TOOLS = {
+    "backend": ("curl", "postman", "http::fake", "actingas", "api/"),
+    "frontend": ("playwright", "browser", "screenshot", "snapshot", "livewire test"),
+    "cli": ("exit code", "command output", "artisan test", "expectsoutput"),
+    "database": ("query", "assertdatabase", "migration", "seedandassert", "table"),
+    "debugging": ("xdebug", "breakpoint", "dump", "dd(", "stack trace", "log"),
+}
+
+
+def lint_verification_maturity(path: Path, text: str, artifact_type: str) -> List[Issue]:
+    """Check that verification matches the skill's task type."""
+    if artifact_type != "skill":
+        return []
+
+    # Only check skills with strong execution signals
+    path_lower = str(path).lower()
+    if not any(sig in path_lower for sig in _EXEC_FILE_SIGNALS):
+        return []
+
+    issues: List[Issue] = []
+    text_lower = text.lower()
+
+    # Detect task types present in the skill
+    detected_types: list[str] = []
+    for task_type, signals in _TASK_TYPE_SIGNALS.items():
+        matches = sum(1 for s in signals if s in text_lower)
+        if matches >= 2:  # Need at least 2 signals to classify
+            detected_types.append(task_type)
+
+    if not detected_types:
+        return []
+
+    # Check if appropriate verification tools are mentioned
+    for task_type in detected_types:
+        tools = _VERIFICATION_TOOLS.get(task_type, ())
+        has_tool = any(t in text_lower for t in tools)
+        if not has_tool:
+            issues.append(Issue("warning", f"missing_{task_type}_verification_example",
+                                f"Skill covers {task_type} tasks but does not mention "
+                                f"verification tools for that context "
+                                f"(e.g. {', '.join(tools[:3])})"))
+
+    return issues
+
+
 def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
     # Skip README files — they are not lintable artifacts
     if path.name.lower() == "readme.md":
@@ -1113,6 +1174,12 @@ def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
     boundary_issues = lint_type_boundaries(display_path, text, artifact_type)
     if boundary_issues:
         result.issues.extend(boundary_issues)
+        result.status = classify_status(result.issues)
+
+    # Post-processing: verification maturity checks (warnings)
+    maturity_issues = lint_verification_maturity(display_path, text, artifact_type)
+    if maturity_issues:
+        result.issues.extend(maturity_issues)
         result.status = classify_status(result.issues)
 
     return result
