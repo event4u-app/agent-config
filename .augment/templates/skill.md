@@ -27,6 +27,20 @@ status: active
            replaced_by: other-skill-name
 -->
 
+<!-- EXECUTION METADATA (optional — delete this comment when done):
+  Add if the skill supports controlled execution beyond instructional use.
+  Omit entirely for manual/instructional-only skills.
+
+  execution:
+    type: manual | assisted | automated
+    handler: none | shell | php | node | internal
+    timeout_seconds: 30
+    safety_mode: strict
+    allowed_tools: []
+
+  See guidelines/agent-infra/runtime-layer.md for details.
+-->
+
 <!-- DESCRIPTION RULES (delete this comment when done):
   - Start with "Use when..." — this is a TRIGGER, not a summary
   - Include 2-3 phrases users actually say: "create a DTO", "add column", "fix tests"

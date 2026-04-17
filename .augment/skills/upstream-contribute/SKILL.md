@@ -55,21 +55,22 @@ GitHub: `https://github.com/event4u-app/agent-config`
 
 ### 0. Mandatory consent gate
 
-**NON-NEGOTIABLE. No exceptions.**
+**This step is NON-NEGOTIABLE. No exceptions.**
 
-Before ANY upstream work, ask:
+Before ANY upstream work (branch, files, PR), ask the user:
 
 ```
 > 🔄 This [skill/rule/guideline] could improve the shared agent-config package.
-> [Brief explanation of what would be contributed and why]
+> [Brief explanation of what would be contributed and why it's valuable]
 >
 > 1. Yes — create an upstream PR
 > 2. No — keep it project-local only
 ```
 
-- **User picks 2** → STOP. Do not mention upstream again for this item.
-- **User picks 1** → continue below.
-- **`upstream_repo` empty** → ask user to configure it first.
+- **If user picks 2** → STOP. Do not mention upstream again for this item.
+- **If user picks 1** → continue with the procedure below.
+- **If `upstream_repo` is empty in `.agent-settings`** → ask the user to configure it first.
+- **NEVER skip this step**, even if the user previously agreed to other contributions.
 
 ### 1. Determine contribution type
 
@@ -102,12 +103,14 @@ This step is optional if the change is low-urgency.
 
 ### 2b. Generalize project-specific content (if needed)
 
-If project-specific but generalizable:
+If the content is project-specific but could be made universal:
 
-1. Identify project-specific parts (domain names, paths, conventions)
-2. Abstract them (generic patterns, configurable values, examples)
-3. Show user the diff — original vs. generalized
-4. Get approval before proceeding
+1. **Identify project-specific parts** — domain names, local paths, project conventions
+2. **Abstract them** — replace with generic patterns, configurable values, or examples
+3. **Show the user the diff** — original vs. generalized version
+4. **Get approval** — user must confirm the generalized version is correct
+
+Example: A project-specific "import-csv" skill → generic "file-import" skill with configurable format.
 
 ### 3. Prepare the upstream contribution
 
@@ -222,7 +225,7 @@ The shared version now replaces the local override.
 
 ## Do NOT
 
-- **Do NOT create any upstream artifact without explicit user consent** — #1 rule
+- **Do NOT create any upstream artifact without explicit user consent** — this is the #1 rule
 - Do NOT edit `.augment/` in the consumer project — it's managed by the package
 - Do NOT submit project-specific content without generalizing it first
 - Do NOT skip the compressed version — both files are mandatory

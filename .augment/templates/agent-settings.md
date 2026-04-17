@@ -156,7 +156,11 @@ feedback_suggestions_in_chat=false
 
 ## Cost profiles
 
-`cost_profile` controls multiple settings at once. Individual settings override the profile.
+The `cost_profile` setting controls multiple token-related settings at once.
+Individual settings can still override the profile — set `cost_profile=custom` to use
+your own combination.
+
+### Profile matrix
 
 | Setting | `cheap` | `balanced` | `full` |
 |---|---|---|---|
@@ -170,12 +174,31 @@ feedback_suggestions_in_chat=false
 | `feedback_suggestions_in_chat` | `false` | `false` | `true` |
 | `skill_improvement_pipeline` | `false` | `false` | `true` |
 
-- **cheap** — zero overhead, runtime dormant, daily coding
-- **balanced** — runtime active, persist locally, reports on demand only
-- **full** — everything on, auto-read, CI summaries, suggestions in chat
-- **custom** — profile ignored, individual settings as-is
+### Profile descriptions
 
-Profile resolution: read `cost_profile` → apply matrix → individual settings override.
+**cheap** (default) — Zero additional token overhead. Runtime dormant, no reports generated,
+no feedback collected, no suggestions in chat. Best for daily coding where cost matters most.
+
+**balanced** — Runtime active, data collected and persisted locally. Reports generated on demand
+(`task report`) but never auto-loaded into agent context. Good for teams that want observability
+without paying per-request token costs.
+
+**full** — Everything active. Reports auto-read, CI summaries on PRs, feedback suggestions in chat,
+skill improvement pipeline active. Best for agent infrastructure development or debugging.
+
+### How profiles work
+
+1. Agent reads `cost_profile` from `.agent-settings`
+2. If `cost_profile` is `cheap`, `balanced`, or `full` → apply the profile matrix values
+3. Individual settings in the file **override** profile values (explicit > profile)
+4. If `cost_profile=custom` → profile is ignored, all individual settings used as-is
+
+### Example: balanced with CI summaries
+
+```
+cost_profile=balanced
+ci_summary_enabled=true    # override: enable CI summaries despite balanced profile
+```
 
 ## Sync rules
 

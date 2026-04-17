@@ -1,10 +1,10 @@
 # Runtime Layer
 
-Defining and using execution metadata on skills.
+Guideline for defining and using execution metadata on skills.
 
 ## Execution block
 
-Optional `execution` block in YAML frontmatter:
+Skills can optionally declare an `execution` block in YAML frontmatter:
 
 ```yaml
 execution:
@@ -19,56 +19,71 @@ execution:
 
 | Type | Meaning | Default |
 |---|---|---|
-| `manual` | Instructional only — no automated actions | ✅ default |
-| `assisted` | Prepares actions for human confirmation | |
-| `automated` | Executes safely without confirmation | |
+| `manual` | Skill is instructional only — no automated actions | ✅ default |
+| `assisted` | Skill prepares actions for human confirmation | |
+| `automated` | Skill can execute safely without confirmation | |
 
-No `execution` block = `manual`.
+If no `execution` block is present, the skill is treated as `manual`.
 
 ## Handler types
 
 | Handler | When to use |
 |---|---|
-| `none` | Manual skills |
-| `shell` | Shell commands (linting, testing) |
-| `php` | PHP/artisan commands |
-| `node` | Node.js scripts |
-| `internal` | Internal agent capabilities only |
+| `none` | No handler needed (manual skills) |
+| `shell` | Executes shell commands (e.g., linting, testing) |
+| `php` | Executes PHP code (e.g., artisan commands) |
+| `node` | Executes Node.js scripts |
+| `internal` | Uses internal agent capabilities only |
 
 ## Safety mode
 
-Only `strict` allowed. All safety checks enforced, no bypass.
+| Mode | Meaning |
+|---|---|
+| `strict` | All safety checks enforced, no bypass allowed |
+
+Only `strict` is allowed in this phase. Future phases may introduce `relaxed` for trusted environments.
 
 ## Allowed tools
 
-Explicit list of external tool identifiers. `[]` = no tools.
-Names must match tool registry.
+An explicit list of external tool identifiers the skill may access during execution.
+Empty list (`[]`) means no external tools.
+
+```yaml
+allowed_tools:
+  - github
+  - jira
+```
+
+Tool names must match entries in the tool registry (see tool-integration roadmap).
 
 ## Rules for authors
 
-1. Default `manual` — omit block for instructional skills
-2. Prefer `assisted` over `automated`
-3. `automated` requires handler ≠ `none`
-4. `automated` requires `safety_mode: strict`
-5. Undeclared tool usage → linter error
-6. Timeout advisory only (not enforced this phase)
+1. **Default is manual** — omitting the execution block means the skill is manual.
+2. **Assisted before automated** — prefer `assisted` unless the skill is provably safe.
+3. **Handler must match type** — `automated` requires a handler other than `none`.
+4. **Safety mode is mandatory for automated** — `automated` without `safety_mode: strict` is invalid.
+5. **Allowed tools must be declared** — undeclared tool usage is a linter error.
+6. **Timeout is advisory** — used for planning, not hard enforcement in this phase.
 
 ## Migration
 
-Existing skills without execution block remain valid. Purely additive.
+Existing skills without an execution block remain valid.
+No migration is required — the execution block is purely additive.
 
-## Validation (linter)
+## Validation
 
-- `execution.type` ∈ {manual, assisted, automated}
-- `execution.handler` ∈ {none, shell, php, node, internal}
-- `automated` + `handler: none` → error
-- `automated` without `safety_mode: strict` → error
+The skill linter validates:
+
+- `execution.type` must be one of: `manual`, `assisted`, `automated`
+- `execution.handler` must be one of: `none`, `shell`, `php`, `node`, `internal`
+- `automated` type requires `handler` ≠ `none`
+- `automated` type requires `safety_mode: strict`
 - `allowed_tools` entries must be strings
-- Unknown execution fields → warning
+- Unknown fields inside `execution` block produce warnings
 
 ## Anti-patterns
 
-- `automated` on skills modifying files without verification
-- `shell` handler without specifying safe commands
-- `allowed_tools` without matching registry entry
-- `timeout_seconds: 0` (use positive value or omit)
+- Adding `automated` to skills that modify files without verification
+- Using `shell` handler without specifying which commands are safe
+- Declaring `allowed_tools` without a matching tool registry entry
+- Setting `timeout_seconds: 0` (use a positive value or omit)
