@@ -81,10 +81,15 @@ Start with **Rules + Skills**. Everything else is optional.
 | Mode | What's active | Token overhead |
 |---|---|---|
 | **Minimal** (default) | Rules, Skills, Commands | Zero |
-| **Balanced** | + Runtime execution, local data collection | Low |
-| **Full** | + Reports, suggestions in chat, CI summaries | Moderate |
+| **Balanced** | + Runtime scaffolding, local data collection (experimental) | Low |
+| **Full** | + Reports, suggestions in chat, CI summaries (experimental) | Moderate |
 
 Nothing runs automatically without your control. [Configure modes →](docs/customization.md)
+
+> **Experimental modules:** the runtime, tool-adapter, and observability
+> layers are scaffold implementations — structure, data model, and tests
+> exist, but most operations are no-ops by design. The `minimal` profile
+> (which 99% of users should pick) is unaffected.
 
 ---
 
