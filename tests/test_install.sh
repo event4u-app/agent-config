@@ -68,8 +68,8 @@ test_rules_are_real_copies() {
 
 test_skills_are_symlinks() {
     setup; run_install
-    assert_true "skills/coder/SKILL.md is a symlink" test -L "$TMPDIR/.augment/skills/coder/SKILL.md"
-    assert_true "skills/coder/SKILL.md resolves" test -e "$TMPDIR/.augment/skills/coder/SKILL.md"
+    assert_true "skills/php-coder/SKILL.md is a symlink" test -L "$TMPDIR/.augment/skills/php-coder/SKILL.md"
+    assert_true "skills/php-coder/SKILL.md resolves" test -e "$TMPDIR/.augment/skills/php-coder/SKILL.md"
     teardown
 }
 
@@ -84,7 +84,7 @@ test_commands_are_symlinks() {
 test_symlinks_resolve_correctly() {
     setup; run_install
     local content
-    content="$(head -1 "$TMPDIR/.augment/skills/coder/SKILL.md" 2>/dev/null || echo "")"
+    content="$(head -1 "$TMPDIR/.augment/skills/php-coder/SKILL.md" 2>/dev/null || echo "")"
     assert_true "skill symlink has readable content" test -n "$content"
     teardown
 }
@@ -114,18 +114,18 @@ test_broken_symlinks_removed() {
 test_idempotent() {
     setup; run_install; run_install
     assert_false "rules still real file after 2nd run" test -L "$TMPDIR/.augment/rules/php-coding.md"
-    assert_true "skills still symlink after 2nd run" test -L "$TMPDIR/.augment/skills/coder/SKILL.md"
+    assert_true "skills still symlink after 2nd run" test -L "$TMPDIR/.augment/skills/php-coder/SKILL.md"
     teardown
 }
 
 test_migration_real_to_symlink() {
     setup
     # Simulate old copy-based install
-    mkdir -p "$TMPDIR/.augment/skills/coder"
-    echo "old copy" > "$TMPDIR/.augment/skills/coder/SKILL.md"
-    assert_false "pre-check: is real file" test -L "$TMPDIR/.augment/skills/coder/SKILL.md"
+    mkdir -p "$TMPDIR/.augment/skills/php-coder"
+    echo "old copy" > "$TMPDIR/.augment/skills/php-coder/SKILL.md"
+    assert_false "pre-check: is real file" test -L "$TMPDIR/.augment/skills/php-coder/SKILL.md"
     run_install
-    assert_true "after install: is symlink" test -L "$TMPDIR/.augment/skills/coder/SKILL.md"
+    assert_true "after install: is symlink" test -L "$TMPDIR/.augment/skills/php-coder/SKILL.md"
     teardown
 }
 
@@ -186,8 +186,8 @@ test_stale_skill_symlinks_removed() {
 
 test_skill_symlinks_in_claude() {
     setup; run_install
-    assert_true ".claude/skills/coder is symlink" test -L "$TMPDIR/.claude/skills/coder"
-    assert_true ".claude/skills/coder resolves" test -d "$TMPDIR/.claude/skills/coder"
+    assert_true ".claude/skills/php-coder is symlink" test -L "$TMPDIR/.claude/skills/php-coder"
+    assert_true ".claude/skills/php-coder resolves" test -d "$TMPDIR/.claude/skills/php-coder"
     teardown
 }
 
