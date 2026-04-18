@@ -2,7 +2,7 @@
 
 > **Priorität:** 🟡 P2 — Blockiert Adoption durch externe Teams  
 > **Aufwand:** Groß (koordinierte Arbeit über mehrere Bereiche)  
-> **Abhängigkeiten:** 01-critical-blockers.md, 03-installer-system.md vollständig abgeschlossen
+> **Abhängigkeiten:** `archive/01-critical-blockers.md`, `archive/03-installer-system.md` vollständig abgeschlossen
 
 ---
 

@@ -257,6 +257,6 @@ mit den Kern-Layern dargestellt. Das ist misleading.
 |---------|--------|--------|
 | Installer canonical klären | ✅ Erledigt (docs/installation.md Canonical-Box, Wrapper-Hinweise) | `feat/improve-agent-setup-2` |
 | Repository-Struktur aufräumen | ✅ Erledigt — `.gitattributes export-ignore` + npm `files` whitelist; `composer archive` 1221→433 Dateien, `npm pack` 313 Dateien | `feat/improve-agent-setup-2` |
-| PHP-Version in composer.json | ⬜ Bewusst offen — `>=8.0` ist gesetzt; später evtl. anheben wenn `bin/install.php` neuere Features braucht | — |
+| PHP-Version in composer.json | ✅ Erledigt — `require.php: >=8.0` ist gesetzt. Tighter constraint (`^8.1`/`^8.2`) nur nötig, wenn `bin/install.php` neuere Features nutzt; aktuell nicht der Fall. | `feat/improve-agent-setup-2` |
 | Augment-Root-Konflikt lösen | ✅ Erledigt — `.augmentignore` schließt `.agent-src.uncompressed/` und Tool-Mirrors aus | `feat/improve-agent-setup-2` |
 | Observability-Doku vereinfachen | ✅ Erledigt — Layer 4–6 in `docs/observability.md` ausgelagert, `docs/architecture.md` verweist nur noch mit Opt-in-Hinweis | `feat/improve-agent-setup-2` |

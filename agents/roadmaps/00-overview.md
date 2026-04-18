@@ -22,14 +22,18 @@ das Paket auf das Niveau zu bringen, das es offensichtlich anstrebt.
 
 ## Roadmaps in diesem Review
 
-| Datei | Fokus | Priorität |
-|-------|-------|-----------|
-| `01-critical-blockers.md` | 3 Blocker, die sofort behoben werden müssen | 🔴 P0 |
-| `02-architecture-issues.md` | Strukturelle Probleme, die das Fundament betreffen | 🟠 P1 |
-| `03-installer-system.md` | Probleme mit Installation, Cleanup, Windows | 🟠 P1 |
-| `04-documentation-gaps.md` | Was in der Doku fehlt oder irreführt | 🟡 P2 |
-| `05-public-package-readiness.md` | Was nötig ist, damit fremde Teams das Paket nutzen können | 🟡 P2 |
-| `06-strategic-positioning.md` | Grundsätzliche Fragen zur Ausrichtung des Projekts | 🔵 P3 |
+| Datei | Fokus | Priorität | Status |
+|-------|-------|-----------|--------|
+| `archive/01-critical-blockers.md` | 3 Blocker, die sofort behoben werden müssen | 🔴 P0 | ✅ Archiviert |
+| `archive/02-architecture-issues.md` | Strukturelle Probleme, die das Fundament betreffen | 🟠 P1 | ✅ Archiviert |
+| `archive/03-installer-system.md` | Probleme mit Installation, Cleanup, Windows | 🟠 P1 | ✅ Archiviert |
+| `archive/04-documentation-gaps.md` | Was in der Doku fehlt oder irreführt | 🟡 P2 | ✅ Archiviert |
+| `05-public-package-readiness.md` | Was nötig ist, damit fremde Teams das Paket nutzen können | 🟡 P2 | 🟡 Teilweise — Bus-Factor offen |
+| `06-strategic-positioning.md` | Grundsätzliche Fragen zur Ausrichtung des Projekts | 🔵 P3 | 🟡 Teilweise — Community-Kanal offen |
+
+**Offene strategische Punkte** (brauchen Maintainer-Entscheidung statt Code-Arbeit):
+Bus-Factor-Plan (05) und Community-Kanal (06). Siehe jeweilige Roadmap
+und `deferred-followups.md` für Unblock-Bedingungen.
 
 ---
 
