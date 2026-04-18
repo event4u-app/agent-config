@@ -9,6 +9,10 @@ versioning policy is documented in [CONTRIBUTING.md](CONTRIBUTING.md#versioning-
 
 ## [Unreleased]
 
+_No unreleased changes yet._
+
+## [1.4.0] — 2026-04-18
+
 ### Added
 - **`.agent-src/` replaces `.augment/` as the canonical compressed directory
   shipped in the package.** The new name is tool-agnostic. The installer on
