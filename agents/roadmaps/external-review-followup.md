@@ -6,7 +6,7 @@ at 7.5/10 as internal tool, 5.5/10 as public OSS product.
 **Status: ✅ Done.** All mechanical fixes and the license decision landed
 across `feat/improve-agent-setup`, `feat/improve-agent-setup-2`, and
 `feat/improve-agent-setup-3`. Items that depend on external conditions
-(Windows user, consumer project) are tracked in `deferred-followups.md`.
+(Windows user, consumer project) are tracked in `archive/deferred-followups.md`.
 
 This file is kept (not archived) as an audit trail for future reviews —
 the original claims, how they validated, and the commits that resolved them.
@@ -59,7 +59,7 @@ Effect: the package.json / composer.json / LICENSE / repo visibility
 signals are now coherent with each other. Third parties can install,
 fork, and redistribute under MIT terms.
 
-## Items deferred — see `deferred-followups.md`
+## Items deferred — see `archive/deferred-followups.md`
 
 The following items from the review remain out of scope:
 
