@@ -31,8 +31,9 @@ das Paket auf das Niveau zu bringen, das es offensichtlich anstrebt.
 | `archive/05-public-package-readiness.md` | Was nötig ist, damit fremde Teams das Paket nutzen können | 🟡 P2 | ✅ Archiviert |
 | `archive/06-strategic-positioning.md` | Grundsätzliche Fragen zur Ausrichtung des Projekts | 🔵 P3 | ✅ Archiviert |
 
-Alle sechs Review-Roadmaps sind abgeschlossen.
-`external-review-followup.md` bleibt als Audit-Trail bestehen.
+Alle sechs Review-Roadmaps sind abgeschlossen und dieser Overview
+wurde mit-archiviert. `archive/external-review-followup.md` dokumentiert
+die 10 ursprünglichen Review-Claims und ihre Resolution-Commits.
 `archive/deferred-followups.md` listet Items, die auf externe Bedingungen
 warten (Consumer-Projekt, Plugin-API-Stabilität, kreative Design-Arbeit).
 
