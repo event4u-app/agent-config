@@ -1,0 +1,40 @@
+# .gitattributes — controls what ships in distribution archives.
+#
+# Packagist and GitHub release tarballs are built with `git archive`, which
+# honors `export-ignore`. Paths listed here are stripped from every tarball
+# a consumer ever sees (composer, Packagist, GitHub Releases).
+#
+# Rule of thumb:
+#   - Ship anything a consumer needs at install- or runtime.
+#   - Exclude authoring sources, dev tooling, tool mirrors, and CI files.
+
+# Authoring + dev tooling
+/.agent-src.uncompressed export-ignore
+/.compression-hashes.json export-ignore
+/.augmentignore          export-ignore
+/.agent-settings         export-ignore
+/agents                  export-ignore
+/tests                   export-ignore
+/Taskfile.yml            export-ignore
+
+# Tool mirrors — regenerated from `.agent-src/` by `task generate-tools`.
+# Consumers generate their own via the installer; shipping them is pure weight.
+/.augment                export-ignore
+/.claude                 export-ignore
+/.cursor                 export-ignore
+/.clinerules             export-ignore
+/.windsurfrules          export-ignore
+/CLAUDE.md               export-ignore
+/GEMINI.md               export-ignore
+
+# CI, IDE, caches
+/.github                 export-ignore
+/.idea                   export-ignore
+/.vscode                 export-ignore
+/.phpunit.cache          export-ignore
+/.pytest_cache           export-ignore
+
+# Git / npm metadata — not useful inside the vendored package
+/.gitattributes          export-ignore
+/.gitignore              export-ignore
+/.npmignore              export-ignore
