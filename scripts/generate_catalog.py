@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate llms.txt and docs/skills-catalog.md from SKILL.md frontmatter.
 
-Reads name + description from each `.augment/skills/*/SKILL.md` and writes:
+Reads name + description from each `.agent-src/skills/*/SKILL.md` and writes:
 
 - `llms.txt`            — machine-readable index (plain text)
 - `docs/skills-catalog.md` — human-readable catalog (markdown)
@@ -18,7 +18,7 @@ import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SKILLS_DIR = REPO_ROOT / ".augment" / "skills"
+SKILLS_DIR = REPO_ROOT / ".agent-src" / "skills"
 LLMS_TXT = REPO_ROOT / "llms.txt"
 CATALOG_MD = REPO_ROOT / "docs" / "skills-catalog.md"
 
@@ -61,7 +61,7 @@ def render_llms_txt(skills: list[tuple[str, str]]) -> str:
         "Machine-readable index of all skills in this package. Each line:",
         "  <skill-name>: <one-line description>",
         "",
-        "Source: .augment/skills/<name>/SKILL.md",
+        "Source: .agent-src/skills/<name>/SKILL.md",
         "Catalog: docs/skills-catalog.md",
         "",
     ]
@@ -85,7 +85,7 @@ def render_catalog_md(skills: list[tuple[str, str]]) -> str:
         "|---|---|",
     ]
     for name, desc in skills:
-        lines.append(f"| [`{name}`](../.augment/skills/{name}/SKILL.md) | {desc} |")
+        lines.append(f"| [`{name}`](../.agent-src/skills/{name}/SKILL.md) | {desc} |")
     lines.append("")
     lines.append("---")
     lines.append("")

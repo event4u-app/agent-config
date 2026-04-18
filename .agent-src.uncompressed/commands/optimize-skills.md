@@ -9,7 +9,7 @@ disable-model-invocation: true
 
 Skill audit: measure, find duplicates/merge candidates, run linter, present findings. **Suggest only — never auto-apply.**
 
-**Source of truth:** `.agent-src.uncompressed/` — never read or edit `.augment/` directly.
+**Source of truth:** `.agent-src.uncompressed/` — never read or edit `.agent-src/` or `.augment/` directly.
 
 ## Steps
 
@@ -118,4 +118,4 @@ If any check fails: do NOT suggest the change.
 - **No auto-fixes** — all changes require explicit user approval
 - **No "make it shorter"** — compression is done by Caveman Compression, not here
 - **No Killer checks** — replaced by the skill linter (`scripts/skill_linter.py`)
-- **No edits to `.augment/`** — always edit `.agent-src.uncompressed/`, then sync
+- **No edits to `.agent-src/` or `.augment/`** — always edit `.agent-src.uncompressed/`, then sync

@@ -71,7 +71,7 @@ Present a summary:
 
 ### 5. Apply fixes
 
-Edit files in `.agent-src.uncompressed/`, then copy to `.augment/`.
+Edit files in `.agent-src.uncompressed/`, then run `task sync` to regenerate `.agent-src/` and `.augment/`.
 
 After all fixes, re-run:
 

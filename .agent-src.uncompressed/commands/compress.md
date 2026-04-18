@@ -1,14 +1,14 @@
 ---
 name: compress
 skills: []
-description: Compress .md files from .agent-src.uncompressed/ into caveman format and write to .augment/
+description: Compress .md files from .agent-src.uncompressed/ into caveman format and write to .agent-src/
 disable-model-invocation: true
 ---
 
 # compress
 
 Compress agent config `.md` files from `.agent-src.uncompressed/` into token-efficient caveman format
-and write the compressed output to `.augment/`.
+and write the compressed output to `.agent-src/`.
 
 Uses SHA-256 hashes to track which source files changed since last compression.
 Only changed files need recompression — saving tokens and time.
@@ -81,7 +81,7 @@ For each changed `.md` file:
      But don't add unrelated sections.
    - **Do NOT compress weak skills.** If the source has no procedure or no validation, fix structure first.
    - **Reference skill:** See `.agent-src.uncompressed/skills/skill-writing/SKILL.md` for the gold standard
-6. Write the compressed output to `.augment/{path}`
+6. Write the compressed output to `.agent-src/{path}`
 7. **MANDATORY: Run compression quality check on this file:**
 
 ```bash

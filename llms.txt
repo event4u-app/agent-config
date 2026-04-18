@@ -3,7 +3,7 @@
 Machine-readable index of all skills in this package. Each line:
   <skill-name>: <one-line description>
 
-Source: .augment/skills/<name>/SKILL.md
+Source: .agent-src/skills/<name>/SKILL.md
 Catalog: docs/skills-catalog.md
 
 adversarial-review: ONLY when user explicitly requests: adversarial review, devil's advocate analysis, or critical challenge of a plan. NOT for regular code review.

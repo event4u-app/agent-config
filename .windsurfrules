@@ -1219,7 +1219,7 @@ NEVER push without running ALL CI checks locally first.
 ### 1. Sync
 
 ```bash
-task sync-check            # .augment/ matches .agent-src.uncompressed/
+task sync-check            # .agent-src/ matches .agent-src.uncompressed/
 task sync-check-hashes     # compression hashes are clean
 ```
 
@@ -1264,7 +1264,7 @@ python3 scripts/readme_linter.py README.md --root .
 ## After editing skills/rules in .agent-src.uncompressed/
 
 1. Edit uncompressed file
-2. Edit compressed file in `.augment/` to match
+2. Edit compressed file in `.agent-src/` to match
 3. `task sync-mark-done -- {relative-path}` — update hash
 4. `task sync-check-hashes` — verify
 

@@ -61,10 +61,10 @@ If project-specific content is found, ask:
 
 | Type | Uncompressed target | Compressed target |
 |---|---|---|
-| **Skill** | `.agent-src.uncompressed/skills/{name}/SKILL.md` | `.augment/skills/{name}/SKILL.md` |
-| **Rule** | `.agent-src.uncompressed/rules/{name}.md` | `.augment/rules/{name}.md` |
-| **Command** | `.agent-src.uncompressed/commands/{name}.md` | `.augment/commands/{name}.md` |
-| **Guideline** | `.agent-src.uncompressed/guidelines/{cat}/{name}.md` | `.augment/guidelines/{cat}/{name}.md` |
+| **Skill** | `.agent-src.uncompressed/skills/{name}/SKILL.md` | `.agent-src/skills/{name}/SKILL.md` |
+| **Rule** | `.agent-src.uncompressed/rules/{name}.md` | `.agent-src/rules/{name}.md` |
+| **Command** | `.agent-src.uncompressed/commands/{name}.md` | `.agent-src/commands/{name}.md` |
+| **Guideline** | `.agent-src.uncompressed/guidelines/{cat}/{name}.md` | `.agent-src/guidelines/{cat}/{name}.md` |
 
 ### 4. Get access to the package repo
 
@@ -131,7 +131,7 @@ Fix any issues before continuing.
 > ✅ Files created in {package-repo}:
 >
 > - `.agent-src.uncompressed/{type}/{name}` (uncompressed)
-> - `.augment/{type}/{name}` (compressed)
+> - `.agent-src/{type}/{name}` (compressed)
 >
 > Quality gates: {pass/fail summary}
 >
