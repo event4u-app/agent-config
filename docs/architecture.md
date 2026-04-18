@@ -7,15 +7,18 @@ Rules         → Behavior enforcement (always active)         ← stable
 Skills        → Execution logic (on-demand expertise)        ← stable
 Runtime       → Execution system (dispatcher, hooks)         ← experimental
 Tools         → External integrations (GitHub, Jira)         ← experimental
-Observability → Signals & metrics                            ← experimental
-Feedback      → Improvement loop                             ← experimental
-Lifecycle     → Evolution & health                           ← experimental
+Opt-in layers → Observability, feedback, lifecycle           ← experimental
 ```
 
 **Stable** = shipped, documented, exercised by the default (`minimal`) profile.
 **Experimental** = scaffold with tests and data model, but no real execution
 wired up yet. These layers activate only under the `balanced` / `full`
 profiles and they are explicit about being no-ops today.
+
+The opt-in layers (observability, feedback, lifecycle) are described in a
+separate document so the core architecture stays short. See
+[`docs/observability.md`](observability.md). If you have not opted in, you can
+safely ignore them.
 
 ## Content pipeline
 
@@ -89,33 +92,17 @@ Controlled integration via adapters:
 - Tool registry with safety rules for execution
 - Structured responses with error classification
 
-### 4. Observability — experimental
+### 4. Observability, feedback & lifecycle — experimental, opt-in
 
-The system emits structured data (events, metrics, execution logs) persisted as:
+The system has three further layers for measuring agent behavior, capturing
+outcomes, and tracking skill lifecycle. All three are **off by default**
+(`cost_profile: minimal`), none inject data back into agent context
+automatically, and most consumers of this package never need to enable them.
 
-- `metrics.json` — execution metrics
-- `feedback.json` — outcome data
-- `tool-audit.json` — tool adapter results
-- Lifecycle reports and CI summaries
+→ Details, data model, and current scaffold status:
+[`docs/observability.md`](observability.md).
 
-### 5. Feedback System — experimental
-
-> **Status: data model + collector, no auto-consumption.** Feedback is
-> persisted to local JSON but never injected into agent context
-> automatically; see [`agents/docs/feedback-consumption.md`](../agents/docs/feedback-consumption.md).
-
-The system captures outcomes (success, failure, partial, blocked, timeout) and generates:
-improvement suggestions, failure pattern detection, skill health insights.
-
-### 6. Lifecycle Management — experimental
-
-> **Status: tracking + scoring, no enforcement.** Lifecycle state is
-> recorded and reported but does not block or gate skill usage.
-
-Each skill has a lifecycle (active → deprecated → superseded) with:
-health scoring, migration suggestions, and lifecycle reports.
-
-### 7. Cost Control
+### 5. Cost Control
 
 > **Key principle:** Data collection ≠ automatic usage.
 
