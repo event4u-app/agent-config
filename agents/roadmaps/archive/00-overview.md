@@ -22,14 +22,20 @@ das Paket auf das Niveau zu bringen, das es offensichtlich anstrebt.
 
 ## Roadmaps in diesem Review
 
-| Datei | Fokus | Priorität |
-|-------|-------|-----------|
-| `01-critical-blockers.md` | 3 Blocker, die sofort behoben werden müssen | 🔴 P0 |
-| `02-architecture-issues.md` | Strukturelle Probleme, die das Fundament betreffen | 🟠 P1 |
-| `03-installer-system.md` | Probleme mit Installation, Cleanup, Windows | 🟠 P1 |
-| `04-documentation-gaps.md` | Was in der Doku fehlt oder irreführt | 🟡 P2 |
-| `05-public-package-readiness.md` | Was nötig ist, damit fremde Teams das Paket nutzen können | 🟡 P2 |
-| `06-strategic-positioning.md` | Grundsätzliche Fragen zur Ausrichtung des Projekts | 🔵 P3 |
+| Datei | Fokus | Priorität | Status |
+|-------|-------|-----------|--------|
+| `archive/01-critical-blockers.md` | 3 Blocker, die sofort behoben werden müssen | 🔴 P0 | ✅ Archiviert |
+| `archive/02-architecture-issues.md` | Strukturelle Probleme, die das Fundament betreffen | 🟠 P1 | ✅ Archiviert |
+| `archive/03-installer-system.md` | Probleme mit Installation, Cleanup, Windows | 🟠 P1 | ✅ Archiviert |
+| `archive/04-documentation-gaps.md` | Was in der Doku fehlt oder irreführt | 🟡 P2 | ✅ Archiviert |
+| `archive/05-public-package-readiness.md` | Was nötig ist, damit fremde Teams das Paket nutzen können | 🟡 P2 | ✅ Archiviert |
+| `archive/06-strategic-positioning.md` | Grundsätzliche Fragen zur Ausrichtung des Projekts | 🔵 P3 | ✅ Archiviert |
+
+Alle sechs Review-Roadmaps sind abgeschlossen und dieser Overview
+wurde mit-archiviert. `archive/external-review-followup.md` dokumentiert
+die 10 ursprünglichen Review-Claims und ihre Resolution-Commits.
+`archive/deferred-followups.md` listet Items, die auf externe Bedingungen
+warten (Consumer-Projekt, Plugin-API-Stabilität, kreative Design-Arbeit).
 
 ---
 
@@ -75,7 +81,7 @@ das Paket auf das Niveau zu bringen, das es offensichtlich anstrebt.
 | Dokumentation | **B** | Gut, aber Lücken an kritischen Stellen |
 | Installer/DX | **C** | Zu viel Magie, kein Cleanup |
 | Tool-Support-Breite | **C+** | Augment bekommt alles, andere bekommen wenig |
-| Community-Reife | **F** | 0 Stars, 0 Forks, Bus-Factor 1 |
+| Community-Reife | **D** | 0 Stars, 0 Forks bei Review; Maintainer-Team (4 Personen, Bus-Factor 2) + Discussions seit Release-Vorbereitung |
 
 ---
 

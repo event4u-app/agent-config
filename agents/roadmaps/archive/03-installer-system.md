@@ -349,4 +349,4 @@ aus der Vorlage, aber ohne opinionated Defaults.
 | Uninstall-Prozess implementieren | ✅ Dokumentation (manueller Cleanup in docs/installation.md); `--uninstall`-Flag zurückgestellt | `feat/improve-agent-setup-2` |
 | Windows-Kompatibilität dokumentieren | ✅ Erledigt — Windows-Sektion in docs/installation.md + README Requirements | `feat/improve-agent-setup-2` |
 | Update-Verhalten dokumentieren | ✅ Erledigt — Update-Abschnitt in docs/installation.md | `feat/improve-agent-setup-2` |
-| agent-settings Defaults überarbeiten | ⬜ Offen (Follow-up: `language: de` & andere opinionated Defaults überprüfen) | — |
+| agent-settings Defaults überarbeiten | ✅ Erledigt — `language:` nicht mehr im Template; `ide=phpstorm` → leerer Default (Consumer füllt selbst aus) | `feat/improve-agent-setup-3` |

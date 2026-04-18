@@ -1,9 +1,26 @@
 {
     "name": "@event4u/agent-config",
-    "version": "1.3.3",
+    "version": "1.4.0",
     "description": "Shared agent configuration — skills, rules, commands, guidelines, and templates for AI coding tools",
     "license": "MIT",
     "private": false,
+    "files": [
+        ".agent-src/",
+        ".augment-plugin/",
+        ".claude-plugin/",
+        "bin/",
+        "config/",
+        "docs/",
+        "scripts/",
+        "templates/",
+        "AGENTS.md",
+        "CHANGELOG.md",
+        "CONTRIBUTING.md",
+        "LICENSE",
+        "README.md",
+        "composer.json",
+        "llms.txt"
+    ],
     "scripts": {
         "postinstall": "bash scripts/postinstall.sh"
     }

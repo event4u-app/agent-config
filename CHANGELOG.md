@@ -9,6 +9,10 @@ versioning policy is documented in [CONTRIBUTING.md](CONTRIBUTING.md#versioning-
 
 ## [Unreleased]
 
+_No unreleased changes yet._
+
+## [1.4.0] — 2026-04-18
+
 ### Added
 - **`.agent-src/` replaces `.augment/` as the canonical compressed directory
   shipped in the package.** The new name is tool-agnostic. The installer on
@@ -40,6 +44,31 @@ versioning policy is documented in [CONTRIBUTING.md](CONTRIBUTING.md#versioning-
   `proprietary` / `UNLICENSED`).
 - Experimental layers (runtime, tool adapters, observability) are now clearly
   labeled in `README.md` and the architecture docs.
+- **Distribution slim-down.** Added `.gitattributes export-ignore` entries
+  and an explicit `files` whitelist in `package.json`. Composer archives
+  drop from 1221 to 433 files (4.45 MB → 1.79 MB); the npm tarball contains
+  313 files (483 kB packed). Dev-only directories (`tests/`, `agents/`,
+  `.agent-src.uncompressed/`, tool mirrors) no longer ship to consumers.
+- **Architecture docs restructured.** Layer 4–6 (observability, feedback,
+  lifecycle) moved out of `docs/architecture.md` into a dedicated opt-in
+  `docs/observability.md`. The main architecture page now focuses on the
+  stable Rules/Skills/Runtime layers.
+- **`ide` default neutralized** in `config/agent-settings.template.ini`:
+  was `ide=phpstorm`, now empty. Consumers fill it in if they want
+  auto-open behavior; empty means the file-editor skill stays inert.
+
+### CI
+- Test matrix expanded: Python 3.10 / 3.11 / 3.12 / 3.13 on `ubuntu-latest`
+  plus Python 3.12 on `macos-latest`. `install.sh` integration tests run on
+  both OS. Matrix enforces the "Python 3.10+, stdlib only" guarantee from
+  `CONTRIBUTING.md`. Documented under `docs/development.md#ci-test-matrix`.
+
+### Community
+- **Maintainer team documented.** `CONTRIBUTING.md` now lists the
+  event4u team (@matze4u lead, @h3xa2, @php-jesus, @phpjob) instead of
+  claiming "single author". Bus-factor is now 2 (Owner + Maintain role).
+- **GitHub Discussions** referenced from `CONTRIBUTING.md` as the channel
+  for scope questions; Issues remain for bugs and feature requests.
 
 ### Removed
 - Hardcoded `galawork` references removed from installer and portability

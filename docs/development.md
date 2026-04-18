@@ -59,6 +59,20 @@ task test-tools                # Tool registry + adapter tests
 task test-runtime-all          # All runtime, tools, observability, feedback, lifecycle tests
 ```
 
+#### CI test matrix
+
+GitHub Actions runs the suite on every push and PR across:
+
+| Runner | Python versions |
+|---|---|
+| `ubuntu-latest` | 3.10, 3.11, 3.12, 3.13 |
+| `macos-latest` | 3.12 |
+
+The matrix enforces the "Python 3.10+, stdlib only" guarantee from
+`CONTRIBUTING.md`. `install.sh` integration tests run on both Linux and
+macOS. Windows is not part of the matrix — consumers on Windows use WSL2
+(see [installation guide](installation.md#windows)).
+
 ### Linting
 
 ```bash
