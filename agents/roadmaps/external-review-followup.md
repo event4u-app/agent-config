@@ -3,8 +3,13 @@
 **Source:** External GitHub-based code review (April 2026) rating the public repo
 at 7.5/10 as internal tool, 5.5/10 as public OSS product.
 
-**Status: In progress.** Mechanical fixes are being executed in this session;
-items that need a product or legal decision are called out separately.
+**Status: ✅ Done.** All mechanical fixes and the license decision landed
+across `feat/improve-agent-setup`, `feat/improve-agent-setup-2`, and
+`feat/improve-agent-setup-3`. Items that depend on external conditions
+(Windows user, consumer project) are tracked in `deferred-followups.md`.
+
+This file is kept (not archived) as an audit trail for future reviews —
+the original claims, how they validated, and the commits that resolved them.
 
 ## Validation summary
 
@@ -23,15 +28,16 @@ The review made 10 concrete claims. Ground truth before starting work:
 | 9 | Split into core vs optional layers | ❌ Rejected — user already moved multi-package split to `skipped/` |
 | 10 | Windows support audit | Deferred — no Windows user to validate against |
 
-## Items fixed in this session
+## Items fixed
 
 | # | Task | Commit |
 |---|---|---|
-| 1 | Version sync `package.json` + `composer.json` → latest git tag | _to be filled_ |
-| 3 | Rename gitignore marker `galawork/agent-config` → `event4u/agent-config` with idempotent migration | _to be filled_ |
-| 4 | Add all 15 passing Python test files to `tests.yml` | _to be filled_ |
-| 5 | Postinstall no longer swallows errors; prints actionable message and exits 0 only when the fault is environmental (e.g. no Python) | _to be filled_ |
-| 6 | Runtime + tool-adapter modules now carry an explicit `EXPERIMENTAL` header; README section on what's executable gets a qualifier | _to be filled_ |
+| 1 | Version sync `package.json` + `composer.json` → latest git tag | `193a9e4` |
+| 3 | Rename gitignore marker `galawork/agent-config` → `event4u/agent-config` with idempotent migration (migration later dropped — no public release shipped the old marker) | `193a9e4` |
+| 4 | Add all 15 passing Python test files to `tests.yml` | `786b958` |
+| 5 | Postinstall no longer swallows errors; prints actionable message and exits 0 only when the fault is environmental (e.g. no Python) | `f32bedc` |
+| 6 | Runtime + tool-adapter modules now carry an explicit `EXPERIMENTAL` header; README section on what's executable gets a qualifier | `9368b16` |
+| 2 | License decision — MIT applied across metadata and docs | `ef37d19` |
 
 ## License decision — MIT
 
