@@ -28,12 +28,11 @@ das Paket auf das Niveau zu bringen, das es offensichtlich anstrebt.
 | `archive/02-architecture-issues.md` | Strukturelle Probleme, die das Fundament betreffen | 🟠 P1 | ✅ Archiviert |
 | `archive/03-installer-system.md` | Probleme mit Installation, Cleanup, Windows | 🟠 P1 | ✅ Archiviert |
 | `archive/04-documentation-gaps.md` | Was in der Doku fehlt oder irreführt | 🟡 P2 | ✅ Archiviert |
-| `05-public-package-readiness.md` | Was nötig ist, damit fremde Teams das Paket nutzen können | 🟡 P2 | 🟡 Teilweise — Bus-Factor offen |
-| `06-strategic-positioning.md` | Grundsätzliche Fragen zur Ausrichtung des Projekts | 🔵 P3 | 🟡 Teilweise — Community-Kanal offen |
+| `archive/05-public-package-readiness.md` | Was nötig ist, damit fremde Teams das Paket nutzen können | 🟡 P2 | ✅ Archiviert |
+| `archive/06-strategic-positioning.md` | Grundsätzliche Fragen zur Ausrichtung des Projekts | 🔵 P3 | ✅ Archiviert |
 
-**Offene strategische Punkte** (brauchen Maintainer-Entscheidung statt Code-Arbeit):
-Bus-Factor-Plan (05) und Community-Kanal (06). Siehe jeweilige Roadmap
-und `deferred-followups.md` für Unblock-Bedingungen.
+Alle sechs Review-Roadmaps sind abgeschlossen. Laufende Arbeit läuft über
+`deferred-followups.md` und `external-review-followup.md`.
 
 ---
 
@@ -79,7 +78,7 @@ und `deferred-followups.md` für Unblock-Bedingungen.
 | Dokumentation | **B** | Gut, aber Lücken an kritischen Stellen |
 | Installer/DX | **C** | Zu viel Magie, kein Cleanup |
 | Tool-Support-Breite | **C+** | Augment bekommt alles, andere bekommen wenig |
-| Community-Reife | **F** | 0 Stars, 0 Forks, Bus-Factor 1 |
+| Community-Reife | **D** | 0 Stars, 0 Forks bei Review; Maintainer-Team (4 Personen, Bus-Factor 2) + Discussions seit Release-Vorbereitung |
 
 ---
 

@@ -59,6 +59,13 @@ versioning policy is documented in [CONTRIBUTING.md](CONTRIBUTING.md#versioning-
   both OS. Matrix enforces the "Python 3.10+, stdlib only" guarantee from
   `CONTRIBUTING.md`. Documented under `docs/development.md#ci-test-matrix`.
 
+### Community
+- **Maintainer team documented.** `CONTRIBUTING.md` now lists the
+  event4u team (@matze4u lead, @h3xa2, @php-jesus, @phpjob) instead of
+  claiming "single author". Bus-factor is now 2 (Owner + Maintain role).
+- **GitHub Discussions** referenced from `CONTRIBUTING.md` as the channel
+  for scope questions; Issues remain for bugs and feature requests.
+
 ### Removed
 - Hardcoded `galawork` references removed from installer and portability
   checker. No public release ever shipped the legacy `# galawork/agent-config`

@@ -5,14 +5,20 @@ describes how to propose changes and what the package's conventions are.
 
 ## Status and scope
 
-The package is currently maintained by a single author. External
-contributions — bug reports, typo fixes, skill improvements, documentation
-PRs, and new skills / rules — are welcome. Larger changes (breaking changes,
-new architectural layers, new tool adapters) should start with an
-[issue](https://github.com/event4u-app/agent-config/issues) so we can align
-on direction before code is written.
+The package is maintained by a small team at event4u:
+[@matze4u](https://github.com/matze4u) (lead),
+[@h3xa2](https://github.com/h3xa2),
+[@php-jesus](https://github.com/php-jesus),
+and [@phpjob](https://github.com/phpjob).
 
-If you are unsure whether a change is in scope: open an issue first.
+External contributions — bug reports, typo fixes, skill improvements,
+documentation PRs, and new skills / rules — are welcome. Larger changes
+(breaking changes, new architectural layers, new tool adapters) should
+start with an [issue](https://github.com/event4u-app/agent-config/issues)
+or a [discussion](https://github.com/event4u-app/agent-config/discussions)
+so we can align on direction before code is written.
+
+If you are unsure whether a change is in scope: open a discussion first.
 
 ## Quick start for contributors
 

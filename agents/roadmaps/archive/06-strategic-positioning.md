@@ -202,4 +202,4 @@ Es ist noch nicht dort. Aber der Weg dorthin ist nicht lang.
 | MIT-Lizenz | ✅ Erledigt | `feat/improve-agent-setup` |
 | Zielgruppe im README benannt ("Who this is for") | ✅ Erledigt | `feat/improve-agent-setup-2` |
 | Opinionated Defaults (`language: de`, `ide: …`) | ✅ Erledigt — `language` nicht mehr im Template; `ide` Default ist leer; framework-spezifische Defaults (Eloquent) bleiben, weil sie nur greifen, wenn die passende Skill aktiv ist | `feat/improve-agent-setup-3` |
-| Community/Contributor-Kanal | ⬜ Offen — aktuell nur Issue-Templates + CONTRIBUTING | — |
+| Community/Contributor-Kanal | ✅ Erledigt — GitHub Discussions aktiviert; CONTRIBUTING verweist auf Discussions für Scope-Fragen, Issues für Bugs/Features | `feat/improve-agent-setup-3` |

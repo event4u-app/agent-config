@@ -286,5 +286,5 @@ Claude Code's skills specification.
 | Issue-Templates erstellen | ✅ Erledigt (bug/skill/new + config.yml) | `feat/improve-agent-setup-2` |
 | Test-Matrix dokumentieren | ✅ Erledigt — CI läuft Python 3.10/3.11/3.12/3.13 auf Ubuntu + 3.12 auf macOS; `install.sh` auf beiden OS; dokumentiert in `docs/development.md#ci-test-matrix` | `feat/improve-agent-setup-3` |
 | Zielgruppe klar kommunizieren | ✅ Erledigt ("Who this is for"-Abschnitt im README) | `feat/improve-agent-setup-2` |
-| Bus-Factor-Strategie | ⬜ Offen — CONTRIBUTING adressiert "single maintainer"-Status, aber Nachfolgeplan fehlt | — |
+| Bus-Factor-Strategie | ✅ Erledigt — Maintainer-Team dokumentiert in `CONTRIBUTING.md` (@matze4u lead, @h3xa2, @php-jesus, @phpjob); Bus-Factor = 2 (Owner + Maintain-Rolle) | `feat/improve-agent-setup-3` |
 | agentskills.io Referenz klären | ✅ Erledigt (README + docs/architecture.md + docs/github-topics.md auf "community spec" abgeschwächt) | `feat/improve-agent-setup-2` |
