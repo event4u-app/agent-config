@@ -1,1 +1,1 @@
-../../../.augment/commands/e2e-plan.md
+../../../.agent-src/commands/e2e-plan.md

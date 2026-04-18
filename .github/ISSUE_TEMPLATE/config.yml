@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Contribution guide
+    url: https://github.com/event4u-app/agent-config/blob/main/CONTRIBUTING.md
+    about: How to propose and land changes in this package.
+  - name: Troubleshooting
+    url: https://github.com/event4u-app/agent-config/blob/main/docs/troubleshooting.md
+    about: Common install and runtime problems and how to resolve them.

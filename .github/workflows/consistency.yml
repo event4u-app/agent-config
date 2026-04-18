@@ -3,7 +3,7 @@ name: Consistency
 on:
   pull_request:
     paths:
-      - ".augment.uncompressed/**"
+      - ".agent-src.uncompressed/**"
       - ".augment/**"
       - "agents/**"
       - "scripts/compress.py"
@@ -17,7 +17,7 @@ on:
       - main
       - master
     paths:
-      - ".augment.uncompressed/**"
+      - ".agent-src.uncompressed/**"
       - ".augment/**"
       - "agents/**"
       - "scripts/compress.py"

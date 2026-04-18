@@ -40,7 +40,7 @@ Goal: Close last structural quality gaps without adding complexity bloat.
 
 - [x] `optimize-agents`: references rule-type-governance, has preservation gate, advisory only
 - [x] `optimize-skills`: references size-and-scope, has preservation gate
-- [x] Both operate on `.augment.uncompressed/` only
+- [x] Both operate on `.agent-src.uncompressed/` only
 
 ---
 

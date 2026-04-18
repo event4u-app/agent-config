@@ -1,6 +1,6 @@
 # Roadmap: Integrate caveman-compress into agent-config package
 
-> Use `.augment.uncompressed/` as the human-readable source for all agent config files.
+> Use `.agent-src.uncompressed/` as the human-readable source for all agent config files.
 > Compress to `.augment/` using caveman-compress. Ship compressed `.augment/` to target projects
 > via Composer plugin, with automatic cleanup of stale files.
 
@@ -19,7 +19,7 @@ agent's system prompt on **every request** — uncompressed prose wastes ~40-50%
 **New directory layout:**
 
 ```
-.augment.uncompressed/   ← human-readable source (edit here)
+.agent-src.uncompressed/   ← human-readable source (edit here)
 .augment/                ← compressed output (auto-generated, shipped to projects)
 ```
 
@@ -36,15 +36,15 @@ from the package. This causes stale rules/skills to persist in target projects.
 
 ## Phase 1: Directory setup (done)
 
-- [x] **Step 1:** Copy `.augment/` → `.augment.uncompressed/` (identical content, human-readable source)
-- [x] **Step 2:** Both directories committed to git — `.augment.uncompressed/` is the source of truth
+- [x] **Step 1:** Copy `.augment/` → `.agent-src.uncompressed/` (identical content, human-readable source)
+- [x] **Step 2:** Both directories committed to git — `.agent-src.uncompressed/` is the source of truth
 
 ## Phase 2: Build infrastructure (done)
 
 - [x] **Step 1:** Created `scripts/compress.py` — Python sync tool with `--sync`, `--list`, `--check`, `--changed`, `--mark-done`, `--mark-all-done` modes
   - `--sync`: copies non-.md files, cleans up stale files
   - `--list`: lists .md files needing agent compression
-  - `--check`: verifies .augment/ is in sync with .augment.uncompressed/
+  - `--check`: verifies .augment/ is in sync with .agent-src.uncompressed/
   - `--changed`: lists only files whose source changed since last compression (SHA-256 hashes)
   - `--mark-done PATH`: registers hash for a single compressed file
   - `--mark-all-done`: registers hashes for all files (bulk)
@@ -56,12 +56,12 @@ from the package. This causes stale rules/skills to persist in target projects.
 ## Phase 3: Workflow definition (done)
 
 - [x] **Step 1:** Editing workflow defined:
-  1. Developer edits files in `.augment.uncompressed/` (the only place to make changes)
+  1. Developer edits files in `.agent-src.uncompressed/` (the only place to make changes)
   2. Runs `task sync` to copy non-.md files + cleanup stale
   3. Asks Augment agent to compress .md files (agent reads source, writes compressed to `.augment/`)
   4. Both directories are committed
-- [x] **Step 2:** Added "DO NOT EDIT" note to `.augment/README.md` and `.augment.uncompressed/README.md`
-- [x] **Step 3:** Created Augment command `.augment.uncompressed/commands/compress.md` for agent-driven compression
+- [x] **Step 2:** Added "DO NOT EDIT" note to `.augment/README.md` and `.agent-src.uncompressed/README.md`
+- [x] **Step 3:** Created Augment command `.agent-src.uncompressed/commands/compress.md` for agent-driven compression
 - [x] **Step 4:** Created rule `.augment/rules/augment-source-of-truth.md` — auto-loaded, enforces source-of-truth workflow
 
 ## Phase 4: Plugin enhancement — cleanup stale files (done)
@@ -71,10 +71,10 @@ from the package. This causes stale rules/skills to persist in target projects.
 - [x] **Step 3:** Logs deleted files via `$this->io->write()`
 - [x] **Step 4:** `removeEmptyDirectories()` cleans up after stale deletion
 
-## Phase 5: Exclude `.augment.uncompressed/` from distribution (done)
+## Phase 5: Exclude `.agent-src.uncompressed/` from distribution (done)
 
 - [x] **Step 1:** Added `archive.exclude` to `composer.json`
-  - Excludes: `.augment.uncompressed/`, `agents/`, `scripts/`, `tests/`, `Makefile`, `.github/`, `.idea/`
+  - Excludes: `.agent-src.uncompressed/`, `agents/`, `scripts/`, `tests/`, `Makefile`, `.github/`, `.idea/`
 
 ## Phase 6: Tests (done)
 
@@ -100,11 +100,11 @@ from the package. This causes stale rules/skills to persist in target projects.
 
 ## Acceptance Criteria
 
-- [x] `.augment.uncompressed/` is the single source of truth for all agent config
-- [x] `.augment/` is generated from `.augment.uncompressed/` via agent-driven compression (`task sync` + `/compress`)
-- [x] Stale files in `.augment/` are deleted when they no longer exist in `.augment.uncompressed/`
+- [x] `.agent-src.uncompressed/` is the single source of truth for all agent config
+- [x] `.augment/` is generated from `.agent-src.uncompressed/` via agent-driven compression (`task sync` + `/compress`)
+- [x] Stale files in `.augment/` are deleted when they no longer exist in `.agent-src.uncompressed/`
 - [x] `AgentConfigPlugin` syncs `.augment/` to target projects and cleans up stale files
-- [x] Target projects receive ONLY `.augment/` (no `.augment.uncompressed/`)
+- [x] Target projects receive ONLY `.augment/` (no `.agent-src.uncompressed/`)
 - [x] CI fails if `.augment/` is out of sync
 - [x] Target projects need NO extra dependencies (no Node.js, no caveman-compress)
 - [x] Token savings of ~40-50% on prose-heavy files confirmed — **46.2% achieved**

@@ -1,1 +1,1 @@
-../../.augment/rules/improve-before-implement.md
+../../.agent-src/rules/improve-before-implement.md

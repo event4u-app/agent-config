@@ -26,17 +26,27 @@ composer require --dev event4u/agent-config
 npm install --save-dev @event4u/agent-config
 ```
 
-Bridge files (`.agent-settings`, `.vscode/settings.json`, `.augment/settings.json`, …)
-are generated automatically by the post-install hook. To re-run or pick a profile:
+After installing the package, run the bridge installer to create
+`.agent-settings`, `.vscode/settings.json`, `.augment/settings.json`, and the
+tool-specific glue:
 
 ```bash
-python3 scripts/install.py --profile=balanced   # any environment
-php vendor/bin/install.php --profile=balanced   # PHP wrapper (Composer)
+# PHP / Composer projects — explicit step (Composer does not auto-run it):
+php vendor/bin/install.php
+# or directly (any environment):
+python3 vendor/event4u/agent-config/scripts/install.py
+
+# npm projects run the installer automatically via postinstall.
+# To re-run or override the default profile:
+python3 node_modules/@event4u/agent-config/scripts/install.py --profile=balanced
 ```
 
-No Task, no Make, no build tools required — only **Python 3** (stdlib only, pre-installed
-on macOS 12.3+ and all major Linux distros). The package makes rules, skills, and commands
-available project-locally for all supported AI tools.
+**To install the package:** no Task, no Make, no build tools required — only
+**Python 3** (stdlib only, pre-installed on macOS 12.3+ and all major Linux
+distros). The package makes rules, skills, and commands available
+project-locally for all supported AI tools. Task is required for
+*contributors* who want to rebuild the compressed content locally — see
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### For individual use (optional)
 
@@ -60,17 +70,21 @@ Install directly in your agent for global, cross-project use:
 
 ---
 
-## What your agent learns
+## What your agent is asked to do
 
-| Without agent-config | With agent-config |
+The package ships rules and skills that guide the agent toward these
+behaviors. The agent still decides in the moment, so the table is a
+description of intent — not a guarantee of output.
+
+| Default behavior | With agent-config (the agent is instructed to) |
 |---|---|
-| Guesses and edits blindly | Analyzes code before changing it — no blind edits |
-| Inconsistent code style | Follows your PHP/Laravel coding standards |
-| Skips or invents tests | Writes Pest tests following your project conventions |
-| Generic commit messages | Conventional Commits with scope and Jira links |
-| No quality checks | Runs PHPStan, Rector, ECS — fixes errors automatically |
-| PRs without context | Structured PR descriptions from Jira tickets |
-| Claims "done" without proof | Verifies with real execution before claiming "done" |
+| Guess and edit blindly | Analyze code before changing it — no blind edits |
+| Drift from project conventions | Follow the project's PHP/Laravel coding standards |
+| Skip or invent tests | Write Pest tests following the project's conventions |
+| Write generic commit messages | Use Conventional Commits with scope and Jira links |
+| Skip quality checks | Run PHPStan, Rector, ECS and fix reported errors |
+| Open PRs without context | Produce structured PR descriptions from Jira tickets |
+| Claim "done" without proof | Verify with real execution before claiming "done" |
 
 ---
 
@@ -93,24 +107,44 @@ Nothing runs automatically without your control. [Configure modes →](docs/cust
 
 ---
 
+## Who this is for
+
+The content is **built for PHP / Laravel teams** and is where the package
+is most useful out of the box. Skills, rules, and quality-tool integration
+assume a Laravel-style repository (Pest, PHPStan, Rector, ECS, Artisan,
+Composer workflows). You can install it on any project, but:
+
+| Stack | Fit |
+|---|---|
+| **Laravel / modern PHP** | ✅ Primary audience — most skills apply directly |
+| **Other PHP frameworks** (Symfony, Zend/Laminas) | ☑️ Deep-analysis skills apply; framework-specific ones do not |
+| **JavaScript / TypeScript / Next.js / Node** | ☑️ General skills + governance apply; PHP-specific skills are noise |
+| **Other stacks** | ⚠️ Cherry-pick rules/commands; expect to disable a lot |
+
+A language-agnostic core is on the roadmap but not yet extracted. If you
+adopt the package outside the primary audience, please open an issue so we
+can prioritize the right skills for extraction.
+
+---
+
 ## Featured Skills
 
 | Skill | What your agent learns |
 |---|---|
-| [`laravel`](.augment/skills/laravel/SKILL.md) | Write Laravel code following framework conventions and project architecture |
-| [`pest-testing`](.augment/skills/pest-testing/SKILL.md) | Write Pest tests with clear intent, good coverage, and project conventions |
-| [`eloquent`](.augment/skills/eloquent/SKILL.md) | Eloquent models, relationships, scopes, eager loading, type safety |
-| [`create-pr`](.augment/commands/create-pr.md) | Create GitHub PRs with structured descriptions from Jira tickets |
-| [`commit`](.augment/commands/commit.md) | Stage and commit changes following Conventional Commits |
-| [`fix-ci`](.augment/commands/fix-ci.md) | Fetch CI errors from GitHub Actions and fix them |
-| [`fix-pr-comments`](.augment/commands/fix-pr-comments.md) | Fix and reply to all open review comments on a PR |
-| [`quality-fix`](.augment/commands/quality-fix.md) | Run PHPStan/Rector/ECS and fix all errors |
-| [`bug-analyzer`](.augment/skills/bug-analyzer/SKILL.md) | Root cause analysis from Sentry errors or Jira tickets |
-| [`improve-before-implement`](.augment/rules/improve-before-implement.md) | Challenge weak requirements before coding |
-| [`docker`](.augment/skills/docker/SKILL.md) | Dockerfile, docker-compose, container management |
-| [`security`](.augment/skills/security/SKILL.md) | Auth, policies, CSRF, rate limiting, secure coding |
-| [`api-design`](.augment/skills/api-design/SKILL.md) | REST conventions, versioning, deprecation |
-| [`database`](.augment/skills/database/SKILL.md) | MariaDB optimization, indexing, query performance |
+| [`laravel`](.agent-src/skills/laravel/SKILL.md) | Write Laravel code following framework conventions and project architecture |
+| [`pest-testing`](.agent-src/skills/pest-testing/SKILL.md) | Write Pest tests with clear intent, good coverage, and project conventions |
+| [`eloquent`](.agent-src/skills/eloquent/SKILL.md) | Eloquent models, relationships, scopes, eager loading, type safety |
+| [`create-pr`](.agent-src/commands/create-pr.md) | Create GitHub PRs with structured descriptions from Jira tickets |
+| [`commit`](.agent-src/commands/commit.md) | Stage and commit changes following Conventional Commits |
+| [`fix-ci`](.agent-src/commands/fix-ci.md) | Fetch CI errors from GitHub Actions and fix them |
+| [`fix-pr-comments`](.agent-src/commands/fix-pr-comments.md) | Fix and reply to all open review comments on a PR |
+| [`quality-fix`](.agent-src/commands/quality-fix.md) | Run PHPStan/Rector/ECS and fix all errors |
+| [`bug-analyzer`](.agent-src/skills/bug-analyzer/SKILL.md) | Root cause analysis from Sentry errors or Jira tickets |
+| [`improve-before-implement`](.agent-src/rules/improve-before-implement.md) | Challenge weak requirements before coding |
+| [`docker`](.agent-src/skills/docker/SKILL.md) | Dockerfile, docker-compose, container management |
+| [`security`](.agent-src/skills/security/SKILL.md) | Auth, policies, CSRF, rate limiting, secure coding |
+| [`api-design`](.agent-src/skills/api-design/SKILL.md) | REST conventions, versioning, deprecation |
+| [`database`](.agent-src/skills/database/SKILL.md) | MariaDB optimization, indexing, query performance |
 
 → [Browse all skills](docs/skills-catalog.md) · [llms.txt](llms.txt)
 
@@ -120,16 +154,16 @@ Nothing runs automatically without your control. [Configure modes →](docs/cust
 
 | Command | What it does |
 |---|---|
-| [`/commit`](.augment/commands/commit.md) | Stage and commit with Conventional Commits |
-| [`/create-pr`](.augment/commands/create-pr.md) | Create PR with Jira-linked description |
-| [`/fix-ci`](.augment/commands/fix-ci.md) | Fetch and fix GitHub Actions failures |
-| [`/fix-pr-comments`](.augment/commands/fix-pr-comments.md) | Fix and reply to review comments |
-| [`/quality-fix`](.augment/commands/quality-fix.md) | Run and fix all quality checks |
-| [`/review-changes`](.augment/commands/review-changes.md) | Self-review before creating a PR |
-| [`/jira-ticket`](.augment/commands/jira-ticket.md) | Read ticket from branch, implement feature |
-| [`/compress`](.augment/commands/compress.md) | Compress skills for token efficiency |
+| [`/commit`](.agent-src/commands/commit.md) | Stage and commit with Conventional Commits |
+| [`/create-pr`](.agent-src/commands/create-pr.md) | Create PR with Jira-linked description |
+| [`/fix-ci`](.agent-src/commands/fix-ci.md) | Fetch and fix GitHub Actions failures |
+| [`/fix-pr-comments`](.agent-src/commands/fix-pr-comments.md) | Fix and reply to review comments |
+| [`/quality-fix`](.agent-src/commands/quality-fix.md) | Run and fix all quality checks |
+| [`/review-changes`](.agent-src/commands/review-changes.md) | Self-review before creating a PR |
+| [`/jira-ticket`](.agent-src/commands/jira-ticket.md) | Read ticket from branch, implement feature |
+| [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
 
-→ [Browse all 51 commands](.augment/commands/)
+→ [Browse all 51 commands](.agent-src/commands/)
 
 ---
 
@@ -149,7 +183,15 @@ Every developer gets the same behavior. No per-user setup needed.
 | **Gemini CLI** | ✅ | — | ☑️ | Reads `GEMINI.md` (includes commands reference) |
 | **GitHub Copilot** | ✅ | — | ☑️ | Reads `.github/copilot-instructions.md` (includes commands) |
 
-✅ = native support &nbsp; ☑️ = via documentation (AGENTS.md)
+✅ = native support &nbsp; — = not available &nbsp; ☑️ = text reference only
+(commands are listed in `AGENTS.md`, but the tool cannot invoke them as
+native slash-commands)
+
+> **What this means in practice:** Augment Code and Claude Code get the full
+> package (rules + 93 skills + 51 native commands). Cursor, Cline, Windsurf,
+> Gemini CLI, and GitHub Copilot only get the **rules** natively; skills and
+> commands are available to them as documentation the agent can read, not as
+> first-class features.
 
 ### Plugin-installed (optional, for global use)
 
@@ -161,7 +203,9 @@ Works across all your projects. Auto-updates via marketplace.
 | **Claude Code** | ✅ | ✅ | ✅ | [Install →](docs/installation.md#claude-code) |
 | **Copilot CLI** | ✅ | ✅ | ✅ | [Install →](docs/installation.md#copilot-cli) |
 
-Skills follow the [Agent Skills open standard](https://agentskills.io).
+Skills use a `SKILL.md` format with YAML frontmatter that is compatible with
+the [Agent Skills](https://agentskills.io) community spec and with Claude
+Code's Agent Skills specification.
 
 ---
 
@@ -190,7 +234,7 @@ Skills follow the [Agent Skills open standard](https://agentskills.io).
 
 ## Development
 
-Edit in `.augment.uncompressed/`, compress, verify:
+Edit in `.agent-src.uncompressed/`, compress, verify:
 
 ```bash
 task sync          # Sync non-.md files
@@ -203,11 +247,28 @@ task lint-skills   # Lint skills, rules, commands
 
 ## Requirements
 
-- **Bash** (install scripts)
-- **Python 3.10+** (linter, compression tools)
-- [Task](https://taskfile.dev/) (development only)
+**To install the package into a consumer project:**
 
-No runtime dependencies — static configuration files only.
+- **Python 3.10+** — canonical installer is `scripts/install.py`.
+  Pre-installed on macOS 12.3+ and all major Linux distros.
+- **Bash** — thin wrappers (`scripts/install.sh`, `scripts/postinstall.sh`)
+  around the Python installer. Available on macOS, Linux, and WSL.
+- **Composer or npm** — to pull the package itself.
+
+**Platform support:**
+
+| Platform | Status |
+|---|---|
+| macOS 12.3+ | ✅ Supported |
+| Linux (modern distros) | ✅ Supported |
+| Windows (WSL2) | ✅ Supported |
+| Windows (Git Bash) | ⚠️ Works; symlinks need Developer Mode |
+| Windows (native PowerShell/cmd) | ❌ Not supported |
+
+**For contributors only** (rebuilding `.augment/` locally):
+
+- [Task](https://taskfile.dev/) — runs the CI pipeline (`task ci`).
+- No runtime dependencies — the package ships static markdown files.
 
 ## License
 

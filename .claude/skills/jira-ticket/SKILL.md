@@ -1,1 +1,1 @@
-../../../.augment/commands/jira-ticket.md
+../../../.agent-src/commands/jira-ticket.md

@@ -139,7 +139,7 @@ Define when old skills can be removed or archived.
 
 ## Files to create/update
 
-- `.augment.uncompressed/rules/skill-lifecycle.md`
+- `.agent-src.uncompressed/rules/skill-lifecycle.md`
 - `docs/cleanup-policy.md`
 
 ## Policy examples

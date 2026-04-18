@@ -17,9 +17,9 @@ Goals:
 ## Scope
 
 Lint targets:
-- Uncompressed skills (`.augment.uncompressed/skills/`)
+- Uncompressed skills (`.agent-src.uncompressed/skills/`)
 - Compressed skills (`.augment/skills/`)
-- Rules (`.augment.uncompressed/rules/`, `.augment/rules/`)
+- Rules (`.agent-src.uncompressed/rules/`, `.augment/rules/`)
 - Optional: pair checks between uncompressed and compressed
 
 Supported modes:
@@ -39,7 +39,7 @@ Supported modes:
     skill-linter lint --changed
 
     # Compare source and compressed pair
-    skill-linter lint --pair .augment.uncompressed/skills/x/SKILL.md .augment/skills/x/SKILL.md
+    skill-linter lint --pair .agent-src.uncompressed/skills/x/SKILL.md .augment/skills/x/SKILL.md
 
     # JSON output for CI
     skill-linter lint --all --format json
@@ -122,7 +122,7 @@ CI default: warnings do not block unless `--strict` enabled.
 
 ### Text output
 
-    [FAIL] .augment.uncompressed/skills/example/SKILL.md
+    [FAIL] .agent-src.uncompressed/skills/example/SKILL.md
     - [error] Missing section: Output format
     - [error] Validation vague: "check if it works"
     - [warn] Overlap risk: markdown-safe-codeblocks

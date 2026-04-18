@@ -345,8 +345,8 @@ aus der Vorlage, aber ohne opinionated Defaults.
 
 | Problem | Status | Branch |
 |---------|--------|--------|
-| Postinstall-Hook Opt-in | ⬜ Offen | — |
-| Uninstall-Prozess implementieren | ⬜ Offen | — |
-| Windows-Kompatibilität dokumentieren | ⬜ Offen | — |
-| Update-Verhalten dokumentieren | ⬜ Offen | — |
-| agent-settings Defaults überarbeiten | ⬜ Offen | — |
+| Postinstall-Hook Opt-in | ✅ Erledigt — Composer hat keinen auto-Hook mehr; npm-Wrapper druckt bei Fehlern Retry-Befehl | `feat/improve-agent-setup-2` |
+| Uninstall-Prozess implementieren | ✅ Dokumentation (manueller Cleanup in docs/installation.md); `--uninstall`-Flag zurückgestellt | `feat/improve-agent-setup-2` |
+| Windows-Kompatibilität dokumentieren | ✅ Erledigt — Windows-Sektion in docs/installation.md + README Requirements | `feat/improve-agent-setup-2` |
+| Update-Verhalten dokumentieren | ✅ Erledigt — Update-Abschnitt in docs/installation.md | `feat/improve-agent-setup-2` |
+| agent-settings Defaults überarbeiten | ⬜ Offen (Follow-up: `language: de` & andere opinionated Defaults überprüfen) | — |

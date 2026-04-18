@@ -2,7 +2,7 @@
 """
 Cross-reference checker for agent-config repositories.
 
-Scans .md files in .augment/ and agents/ for internal references
+Scans .md files in .agent-src/ and agents/ for internal references
 (file paths, skill names, rule names) and reports broken ones.
 
 Exit codes: 0 = clean, 1 = broken refs found, 3 = internal error
@@ -31,7 +31,7 @@ class BrokenRef:
     suggestion: str = ""
 
 
-SCAN_DIRS = [".augment", "agents"]
+SCAN_DIRS = [".agent-src", "agents"]
 SKIP_DIRS = ["agents/roadmaps/archive"]  # archived roadmaps have historical refs
 ROOT = Path(".")
 
@@ -77,7 +77,7 @@ EXAMPLE_PATH_PATTERNS = [
 def collect_artifacts(root: Path) -> dict[str, set[str]]:
     """Build lookup sets for skills, rules, commands, guidelines."""
     arts: dict[str, set[str]] = {"skills": set(), "rules": set(), "commands": set(), "guidelines": set()}
-    augment = root / ".augment"
+    augment = root / ".agent-src"
     if not augment.exists():
         return arts
     for d in (augment / "skills").iterdir() if (augment / "skills").exists() else []:
@@ -96,7 +96,7 @@ def collect_artifacts(root: Path) -> dict[str, set[str]]:
 
 def _find_suggestion(path: str, root: Path) -> str:
     name = Path(path).name
-    for d in [root / ".augment", root / ".augment.uncompressed", root / "agents"]:
+    for d in [root / ".agent-src", root / ".agent-src.uncompressed", root / "agents"]:
         if d.exists():
             for f in d.rglob(name):
                 return str(f.relative_to(root))
@@ -137,13 +137,13 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
                 continue
 
             resolved = False
-            # Try raw ref as-is from root (covers .augment/..., agents/..., etc.)
+            # Try raw ref as-is from root (covers .agent-src/..., agents/..., etc.)
             if (root / raw_ref).exists():
                 resolved = True
             else:
                 # Strip leading ./ and try with prefixes
                 ref = raw_ref.lstrip("./")
-                for prefix in [root, root / ".augment", root / ".augment.uncompressed"]:
+                for prefix in [root, root / ".agent-src", root / ".agent-src.uncompressed"]:
                     if (prefix / ref).exists():
                         resolved = True
                         break

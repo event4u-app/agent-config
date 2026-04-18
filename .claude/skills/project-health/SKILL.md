@@ -1,1 +1,1 @@
-../../../.augment/commands/project-health.md
+../../../.agent-src/commands/project-health.md

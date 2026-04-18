@@ -20,11 +20,12 @@ profiles and they are explicit about being no-ops today.
 ## Content pipeline
 
 ```
-.augment.uncompressed/          ← Source of truth (verbose, human-readable)
+.agent-src.uncompressed/          ← Source of truth (verbose, human-readable)
     ↓ /compress command
-.augment/                       ← Compressed output (token-efficient, agent-optimized)
-    ↓ Plugin system (Augment CLI, Claude Code, Copilot CLI)
-    ↓ install.sh (Cursor, Cline, Windsurf, Augment VSCode)
+.agent-src/                     ← Compressed output (token-efficient, shipped in the package)
+    ↓ project_to_augment() — copies rules, symlinks rest
+.augment/                       ← Local projection for Augment Code (gitignored)
+    ↓ install.sh (Cursor, Cline, Windsurf, Augment VSCode) / plugin system
 .claude/ .cursor/ .clinerules/  ← Tool-specific symlinks/copies (auto-generated)
 .windsurfrules  GEMINI.md
 ```
@@ -137,7 +138,9 @@ into agent context**. All features are gated by settings with `cost_profile` sup
 | **Windsurf** | ✅ | — | — | — | install.sh (concatenated) |
 | **Gemini CLI** | ✅ | — | — | — | install.sh (symlink → AGENTS.md) |
 
-Skills follow the [Agent Skills open standard](https://agentskills.io).
+Skills use a `SKILL.md` format with YAML frontmatter, compatible with the
+[Agent Skills](https://agentskills.io) community spec and with Claude Code's
+Agent Skills specification.
 
 ---
 

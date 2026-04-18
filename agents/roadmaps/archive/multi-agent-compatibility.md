@@ -67,7 +67,7 @@ our SKILL.md files lack YAML frontmatter (`name`, `description`).
 
 ### Step 1.1: Refactor `token-efficiency.md`
 
-Source: `.augment.uncompressed/rules/token-efficiency.md`
+Source: `.agent-src.uncompressed/rules/token-efficiency.md`
 
 Changes:
 - [x] **Line 20-23**: Replace `sequentialthinking` → "extended reasoning / chain-of-thought tools". Keep the anti-loop guidance.
@@ -95,7 +95,7 @@ Changes:
 
 ### Step 1.2: Refactor `rtk.md`
 
-Source: `.augment.uncompressed/rules/rtk.md`
+Source: `.agent-src.uncompressed/rules/rtk.md`
 
 Changes:
 - [x] **Line 33**: Replace `.agent-settings` check → "project settings file"
@@ -229,7 +229,7 @@ Ensure the following are **NOT** in `archive.exclude`:
 
 ### Step 3b.1: Add YAML frontmatter to all SKILL.md files
 
-Our `.augment.uncompressed/skills/*/SKILL.md` files already follow the directory structure
+Our `.agent-src.uncompressed/skills/*/SKILL.md` files already follow the directory structure
 of the Agent Skills standard, but lack YAML frontmatter. Adding `name` and `description`
 makes them compliant with the agentskills.io spec.
 
@@ -245,7 +245,7 @@ description: "Use when running code quality checks — PHPStan, Rector, ECS. Kno
 Augment Code ignores YAML frontmatter in SKILL.md — it reads descriptions from `<available_skills>`
 in the system prompt. So adding frontmatter is backward-compatible.
 
-- [x] Add `name` + `description` frontmatter to all ~60 SKILL.md files in `.augment.uncompressed/skills/`
+- [x] Add `name` + `description` frontmatter to all ~60 SKILL.md files in `.agent-src.uncompressed/skills/`
 - [x] Verify Augment still loads skills correctly (frontmatter is ignored)
 - [x] Compress all updated SKILL.md files to `.augment/skills/`
 
@@ -487,7 +487,7 @@ File: `tests/AgentConfigPluginTest.php`
 ### Step 6.1: Update documentation
 
 - [x] `AGENTS.md`: add section "Multi-Agent Support" listing supported tools and Agent Skills standard
-- [x] `.augment.uncompressed/README.md`: mention generated tool directories and skills
+- [x] `.agent-src.uncompressed/README.md`: mention generated tool directories and skills
 - [x] Create `.claude/rules/README.md`: "Auto-generated symlinks — see .augment/rules/"
 - [x] Create `.claude/skills/README.md`: "Auto-generated from .augment/skills/ and .augment/commands/"
 - [x] Create `.cursor/rules/README.md`: same as .claude

@@ -27,14 +27,14 @@ agentskills-standard
 | Topic | Why |
 |---|---|
 | `ai-coding` | Primary category — discovered via "AI coding assistant" searches |
-| `agent-skills` | Aligns with the [Agent Skills open standard](https://agentskills.io) |
+| `agent-skills` | Aligns with the [Agent Skills](https://agentskills.io) community spec |
 | `agent-rules` | Complementary — rules govern behavior, skills provide expertise |
 | `governance` | Differentiates from prompt collections |
 | `laravel` | Primary domain — Laravel projects are the main audience |
 | `php` | Broader PHP audience |
 | `devcontainer` | One of our 4 core concerns |
 | `augment-agent`, `claude-code`, `copilot` | Tool-specific discovery |
-| `agentskills-standard` | Standard compliance — skills follow agentskills.io schema |
+| `agentskills-standard` | SKILL.md format is compatible with the agentskills.io spec |
 
 ## How to apply
 

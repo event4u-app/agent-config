@@ -1,1 +1,1 @@
-../../../.augment/commands/feature-refactor.md
+../../../.agent-src/commands/feature-refactor.md

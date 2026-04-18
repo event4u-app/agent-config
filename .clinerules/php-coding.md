@@ -1,1 +1,1 @@
-../.augment/rules/php-coding.md
+../.agent-src/rules/php-coding.md

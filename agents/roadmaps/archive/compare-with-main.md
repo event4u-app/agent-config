@@ -171,7 +171,7 @@ That boundary is implied in `main` and PR #3, but it should become explicit now 
 
 On `main`, the workflow says:
 
-1. edit in `.augment.uncompressed/`
+1. edit in `.agent-src.uncompressed/`
 2. compress into `.augment/`
 3. mark done
 
@@ -179,7 +179,7 @@ That means compression is expected immediately after the edit. ([GitHub][6])
 
 In PR #3, the workflow changes to:
 
-1. edit in `.augment.uncompressed/`
+1. edit in `.agent-src.uncompressed/`
 2. **do not auto-compress**
 3. before commit/push, check if compression is needed
 4. run `/compress` only then
@@ -239,7 +239,7 @@ Instead add:
 
 * a required `task sync-changed` check before review
 * a CI consistency workflow
-* a linter / reviewer note when `.augment.uncompressed/` changed but derived outputs were not regenerated
+* a linter / reviewer note when `.agent-src.uncompressed/` changed but derived outputs were not regenerated
 
 That preserves the better editing workflow while restoring the alignment guarantee that `main` enforced more aggressively.
 
@@ -441,9 +441,9 @@ What must be corrected is the **system around them**:
 PR #3 made the **rule layer better than `main`**, but to keep that gain, you now need to restore the **execution-quality guardrails** that stop stronger rules from being undermined by weaker skills. ([GitHub][1])
 
 [1]: https://github.com/event4u-app/agent-config/pull/3 "docs: add skills audit baseline and results template by matze4u · Pull Request #3 · event4u-app/agent-config · GitHub"
-[2]: https://raw.githubusercontent.com/event4u-app/agent-config/refs/pull/3/head/.augment.uncompressed/rules/analysis-skill-routing.md "raw.githubusercontent.com"
-[3]: https://raw.githubusercontent.com/event4u-app/agent-config/refs/pull/3/head/.augment.uncompressed/rules/markdown-safe-codeblocks.md "raw.githubusercontent.com"
-[4]: https://raw.githubusercontent.com/event4u-app/agent-config/main/.augment.uncompressed/rules/guidelines.md "raw.githubusercontent.com"
-[5]: https://raw.githubusercontent.com/event4u-app/agent-config/refs/pull/3/head/.augment.uncompressed/rules/guidelines.md "raw.githubusercontent.com"
-[6]: https://raw.githubusercontent.com/event4u-app/agent-config/main/.augment.uncompressed/rules/augment-source-of-truth.md "raw.githubusercontent.com"
-[7]: https://raw.githubusercontent.com/event4u-app/agent-config/refs/pull/3/head/.augment.uncompressed/rules/augment-source-of-truth.md "raw.githubusercontent.com"
+[2]: https://raw.githubusercontent.com/event4u-app/agent-config/refs/pull/3/head/.agent-src.uncompressed/rules/analysis-skill-routing.md "raw.githubusercontent.com"
+[3]: https://raw.githubusercontent.com/event4u-app/agent-config/refs/pull/3/head/.agent-src.uncompressed/rules/markdown-safe-codeblocks.md "raw.githubusercontent.com"
+[4]: https://raw.githubusercontent.com/event4u-app/agent-config/main/.agent-src.uncompressed/rules/guidelines.md "raw.githubusercontent.com"
+[5]: https://raw.githubusercontent.com/event4u-app/agent-config/refs/pull/3/head/.agent-src.uncompressed/rules/guidelines.md "raw.githubusercontent.com"
+[6]: https://raw.githubusercontent.com/event4u-app/agent-config/main/.agent-src.uncompressed/rules/augment-source-of-truth.md "raw.githubusercontent.com"
+[7]: https://raw.githubusercontent.com/event4u-app/agent-config/refs/pull/3/head/.agent-src.uncompressed/rules/augment-source-of-truth.md "raw.githubusercontent.com"

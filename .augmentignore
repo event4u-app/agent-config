@@ -8,6 +8,6 @@
 # Audit artifacts
 agents/roadmaps/*.json
 
-# Duplicates — Augment reads .augment/ (compressed), not .augment.uncompressed/
+# Duplicates — Augment reads .augment/ (compressed), not .agent-src.uncompressed/
 # Keeping both indexed would double-count every skill/rule/command
-.augment.uncompressed/
+.agent-src.uncompressed/

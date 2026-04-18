@@ -119,7 +119,7 @@ Add a linter check that flags skills missing validation/challenge guidance.
 ### PR 5: Documentation — when to challenge, when to proceed
 
 **Deliverable:**
-- New: `.augment.uncompressed/guidelines/agent-infra/developer-judgment.md`
+- New: `.agent-src.uncompressed/guidelines/agent-infra/developer-judgment.md`
 - Compressed: `.augment/guidelines/agent-infra/developer-judgment.md`
 
 **Content:**

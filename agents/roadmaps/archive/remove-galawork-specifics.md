@@ -52,7 +52,7 @@ Config file locations:
 
 Files referencing `quality:phpstan`, `quality:rector`, `quality:ecs`, `quality:finalize`, `quality:refactor`:
 
-| # | File (in `.augment.uncompressed/`) | References |
+| # | File (in `.agent-src.uncompressed/`) | References |
 |---|---|---|
 | 1 | `skills/quality-tools/SKILL.md` | **Primary source** — full command reference, config paths |
 | 2 | `rules/quality-workflow.md` | Workflow steps, prerequisite, commands |
@@ -110,7 +110,7 @@ Files referencing `config-dev/php-quality/`:
 
 This is the central file — all other files should reference it instead of duplicating commands.
 
-Source: `.augment.uncompressed/skills/quality-tools/SKILL.md`
+Source: `.agent-src.uncompressed/skills/quality-tools/SKILL.md`
 
 ### Step 1.1: Replace prerequisite section
 
@@ -180,7 +180,7 @@ Current flags table is all galawork/php-quality specific. Split into:
 
 ## Phase 2: Update quality-workflow rule
 
-Source: `.augment.uncompressed/rules/quality-workflow.md`
+Source: `.agent-src.uncompressed/rules/quality-workflow.md`
 
 ### Step 2.1: Replace prerequisite
 
@@ -264,7 +264,7 @@ Pattern for all: replace `quality:*` commands with generic + skill reference.
 
 ## Phase 4: Multi-tenant migration
 
-Source: `.augment.uncompressed/skills/migration-creator/SKILL.md`
+Source: `.agent-src.uncompressed/skills/migration-creator/SKILL.md`
 
 ### Step 4.1: Generalize multi-tenant section
 
@@ -293,7 +293,7 @@ Read `AGENTS.md` or module docs for project-specific multi-tenant commands.
 
 ## Phase 5: Package name example
 
-Source: `.augment.uncompressed/commands/optimize-augmentignore.md`
+Source: `.agent-src.uncompressed/commands/optimize-augmentignore.md`
 
 - [x] Replace `galawork/galawork-api` with generic `your-org/project-name`
 

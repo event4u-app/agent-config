@@ -19,7 +19,7 @@ def write_file(tmp_path: Path, relative: str, content: str) -> Path:
 def test_valid_skill_passes(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".augment.uncompressed/skills/example/SKILL.md",
+        ".agent-src.uncompressed/skills/example/SKILL.md",
         """---
 name: example
 description: "Use when testing a concrete workflow."
@@ -62,7 +62,7 @@ def test_complete_skill_passes(tmp_path: Path) -> None:
     """A skill with all required and recommended sections should pass cleanly."""
     path = write_file(
         tmp_path,
-        ".augment.uncompressed/skills/example/SKILL.md",
+        ".agent-src.uncompressed/skills/example/SKILL.md",
         """---
 name: example
 description: "Use when testing."
@@ -105,7 +105,7 @@ source: project
 def test_vague_validation_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".augment.uncompressed/skills/example/SKILL.md",
+        ".agent-src.uncompressed/skills/example/SKILL.md",
         """---
 name: example
 description: "Use when testing."
@@ -147,7 +147,7 @@ source: project
 def test_rule_with_skill_sections_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".augment/rules/bad-rule.md",
+        ".agent-src/rules/bad-rule.md",
         """---
 type: "always"
 source: package
@@ -174,7 +174,7 @@ source: package
 def test_valid_rule_passes(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".augment/rules/good-rule.md",
+        ".agent-src/rules/good-rule.md",
         """---
 type: "always"
 source: package
@@ -199,7 +199,7 @@ Always validate before commit.
 def test_rule_missing_frontmatter_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".augment/rules/no-frontmatter.md",
+        ".agent-src/rules/no-frontmatter.md",
         """# No Frontmatter Rule
 
 Just some directives.
@@ -214,7 +214,7 @@ Just some directives.
 def test_rule_missing_type_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".augment/rules/no-type.md",
+        ".agent-src/rules/no-type.md",
         """---
 source: package
 ---
@@ -233,7 +233,7 @@ Some directives.
 def test_rule_missing_source_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".augment/rules/no-source.md",
+        ".agent-src/rules/no-source.md",
         """---
 type: "always"
 ---
@@ -252,7 +252,7 @@ Some directives.
 def test_rule_invalid_type_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".augment/rules/bad-type.md",
+        ".agent-src/rules/bad-type.md",
         """---
 type: "manual"
 source: package
@@ -272,7 +272,7 @@ Some directives.
 def test_rule_auto_without_description_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".augment/rules/auto-no-desc.md",
+        ".agent-src/rules/auto-no-desc.md",
         """---
 type: "auto"
 source: project
@@ -292,7 +292,7 @@ Some directives.
 def test_rule_auto_with_description_passes(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".augment/rules/auto-with-desc.md",
+        ".agent-src/rules/auto-with-desc.md",
         """---
 type: "auto"
 source: project
@@ -312,7 +312,7 @@ Always run commands inside the container.
 def test_rule_missing_h1_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".augment/rules/no-heading.md",
+        ".agent-src/rules/no-heading.md",
         """---
 type: "always"
 source: package
@@ -330,7 +330,7 @@ Some directives without a heading.
 def test_rule_no_trailing_newline_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".augment/rules/no-newline.md",
+        ".agent-src/rules/no-newline.md",
         "---\ntype: \"always\"\nsource: package\n---\n\n# Rule\n\nContent.",
     )
 
@@ -341,7 +341,7 @@ def test_rule_no_trailing_newline_fails(tmp_path: Path) -> None:
 def test_rule_double_blank_lines_warns(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".augment/rules/double-blanks.md",
+        ".agent-src/rules/double-blanks.md",
         """---
 type: "always"
 source: package
@@ -366,7 +366,7 @@ def test_pointer_only_skill_warns(tmp_path: Path) -> None:
     """A skill that delegates most work to guidelines should trigger pointer_only_skill warning."""
     path = write_file(
         tmp_path,
-        ".augment.uncompressed/skills/delegator/SKILL.md",
+        ".agent-src.uncompressed/skills/delegator/SKILL.md",
         """---
 name: delegator
 description: "Use when delegating to guidelines."
@@ -407,7 +407,7 @@ def test_guideline_dependent_skill_errors(tmp_path: Path) -> None:
     """A skill that is effectively just pointers should trigger guideline_dependent_skill error."""
     path = write_file(
         tmp_path,
-        ".augment.uncompressed/skills/pure-pointer/SKILL.md",
+        ".agent-src.uncompressed/skills/pure-pointer/SKILL.md",
         """---
 name: pure-pointer
 description: "Use when pointing to docs."
@@ -450,7 +450,7 @@ def test_strong_self_contained_skill_no_pointer_warning(tmp_path: Path) -> None:
     """A skill with concrete actions should NOT trigger pointer warnings."""
     path = write_file(
         tmp_path,
-        ".augment.uncompressed/skills/concrete-worker/SKILL.md",
+        ".agent-src.uncompressed/skills/concrete-worker/SKILL.md",
         """---
 name: concrete-worker
 description: "Use when running a concrete analysis workflow."
@@ -497,7 +497,7 @@ def test_guideline_heavy_but_acceptable_skill(tmp_path: Path) -> None:
     """A skill that references guidelines but has enough own actions should not warn."""
     path = write_file(
         tmp_path,
-        ".augment.uncompressed/skills/mixed-worker/SKILL.md",
+        ".agent-src.uncompressed/skills/mixed-worker/SKILL.md",
         """---
 name: mixed-worker
 description: "Use when reviewing code with guideline references."
@@ -547,7 +547,7 @@ def test_execution_skill_without_analysis_fails(tmp_path: Path) -> None:
     """Execution skill with implementation language but no analysis signals → ERROR."""
     path = write_file(
         tmp_path,
-        ".augment/skills/developer-execution/SKILL.md",
+        ".agent-src/skills/developer-execution/SKILL.md",
         """\
 ---
 name: developer-execution
@@ -579,7 +579,7 @@ def test_execution_skill_with_analysis_passes(tmp_path: Path) -> None:
     """Execution skill that includes analysis signals → no error."""
     path = write_file(
         tmp_path,
-        ".augment/skills/developer-execution/SKILL.md",
+        ".agent-src/skills/developer-execution/SKILL.md",
         """\
 ---
 name: developer-execution
@@ -613,7 +613,7 @@ def test_execution_skill_with_analysis_section_passes(tmp_path: Path) -> None:
     """Execution skill with analysis section header (not keywords) → no error."""
     path = write_file(
         tmp_path,
-        ".augment/skills/developer-validation/SKILL.md",
+        ".agent-src/skills/developer-validation/SKILL.md",
         """\
 ---
 name: developer-validation
@@ -652,7 +652,7 @@ def test_execution_skill_without_verification_fails(tmp_path: Path) -> None:
     """Execution skill without verification signals → ERROR."""
     path = write_file(
         tmp_path,
-        ".augment/skills/developer-action/SKILL.md",
+        ".agent-src/skills/developer-action/SKILL.md",
         """\
 ---
 name: developer-action
@@ -683,7 +683,7 @@ def test_non_execution_skill_skips_checks(tmp_path: Path) -> None:
     """Non-execution skills should not trigger execution quality checks."""
     path = write_file(
         tmp_path,
-        ".augment/skills/api-design/SKILL.md",
+        ".agent-src/skills/api-design/SKILL.md",
         """\
 ---
 name: api-design
@@ -713,7 +713,7 @@ def test_commands_excluded_from_execution_checks(tmp_path: Path) -> None:
     """Commands should be excluded from execution quality checks entirely."""
     path = write_file(
         tmp_path,
-        ".augment/commands/fix-something.md",
+        ".agent-src/commands/fix-something.md",
         """\
 ---
 name: fix-something
@@ -738,7 +738,7 @@ def test_guidelines_excluded_from_execution_checks(tmp_path: Path) -> None:
     """Guidelines should be excluded from execution quality checks."""
     path = write_file(
         tmp_path,
-        ".augment/guidelines/php/testing.md",
+        ".agent-src/guidelines/php/testing.md",
         """\
 ---
 description: "Testing patterns"
@@ -765,7 +765,7 @@ def test_guideline_with_executable_procedure_warns(tmp_path: Path) -> None:
     """Guideline with 5+ executable numbered steps → warning."""
     path = write_file(
         tmp_path,
-        ".augment/guidelines/php/testing.md",
+        ".agent-src/guidelines/php/testing.md",
         """\
 ---
 description: "Testing workflow"
@@ -790,7 +790,7 @@ def test_guideline_without_procedure_passes(tmp_path: Path) -> None:
     """Guideline without executable steps → no warning."""
     path = write_file(
         tmp_path,
-        ".augment/guidelines/php/naming.md",
+        ".agent-src/guidelines/php/naming.md",
         """\
 ---
 description: "Naming conventions"
@@ -812,7 +812,7 @@ def test_command_without_skill_references_warns(tmp_path: Path) -> None:
     """Command that doesn't reference any skills → warning."""
     path = write_file(
         tmp_path,
-        ".augment/commands/do-stuff.md",
+        ".agent-src/commands/do-stuff.md",
         """\
 ---
 name: do-stuff
@@ -841,7 +841,7 @@ def test_command_with_skill_references_passes(tmp_path: Path) -> None:
     """Command that references skills → no warning."""
     path = write_file(
         tmp_path,
-        ".augment/commands/deploy.md",
+        ".agent-src/commands/deploy.md",
         """\
 ---
 name: deploy
@@ -871,7 +871,7 @@ def test_skill_with_vague_validation_warns(tmp_path: Path) -> None:
     """Skill with vague validation → warning."""
     path = write_file(
         tmp_path,
-        ".augment/skills/example-task/SKILL.md",
+        ".agent-src/skills/example-task/SKILL.md",
         """\
 ---
 name: example-task
@@ -910,7 +910,7 @@ def test_backend_skill_without_backend_verification_warns(tmp_path: Path) -> Non
     """Backend execution skill without curl/postman → warning."""
     path = write_file(
         tmp_path,
-        ".augment/skills/api-validation/SKILL.md",
+        ".agent-src/skills/api-validation/SKILL.md",
         """\
 ---
 name: api-validation
@@ -941,7 +941,7 @@ def test_backend_skill_with_curl_passes(tmp_path: Path) -> None:
     """Backend execution skill mentioning curl → no backend verification warning."""
     path = write_file(
         tmp_path,
-        ".augment/skills/api-validation/SKILL.md",
+        ".agent-src/skills/api-validation/SKILL.md",
         """\
 ---
 name: api-validation
@@ -974,7 +974,7 @@ def test_uncompressed_without_compressed_warns(tmp_path: Path) -> None:
     """Uncompressed file without compressed variant → warning."""
     path = write_file(
         tmp_path,
-        ".augment.uncompressed/rules/orphan-rule.md",
+        ".agent-src.uncompressed/rules/orphan-rule.md",
         """\
 ---
 description: "When orphan behavior occurs"
@@ -1001,10 +1001,10 @@ description: "When paired behavior occurs"
 
 - Always have a pair
 """
-    write_file(tmp_path, ".augment.uncompressed/rules/paired-rule.md", content)
-    write_file(tmp_path, ".augment/rules/paired-rule.md", content)
+    write_file(tmp_path, ".agent-src.uncompressed/rules/paired-rule.md", content)
+    write_file(tmp_path, ".agent-src/rules/paired-rule.md", content)
 
-    path = tmp_path / ".augment.uncompressed" / "rules" / "paired-rule.md"
+    path = tmp_path / ".agent-src.uncompressed" / "rules" / "paired-rule.md"
     result = lint_file(path, repo_root=tmp_path)
     assert not any(issue.code == "compressed_variant_missing" for issue in result.issues)
 
@@ -1045,7 +1045,7 @@ source: project
 
 * Do NOT skip validation
 """
-    return write_file(tmp_path, ".augment.uncompressed/skills/test-runtime/SKILL.md", content)
+    return write_file(tmp_path, ".agent-src.uncompressed/skills/test-runtime/SKILL.md", content)
 
 
 def test_execution_manual_type_passes(tmp_path: Path) -> None:

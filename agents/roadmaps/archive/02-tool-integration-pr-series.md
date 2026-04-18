@@ -26,8 +26,8 @@ Define how tools are represented before implementing adapters.
 
 ## Files to create
 
-- `.augment.uncompressed/guidelines/tool-integration.md`
-- `.augment.uncompressed/rules/tool-safety.md`
+- `.agent-src.uncompressed/guidelines/tool-integration.md`
+- `.agent-src.uncompressed/rules/tool-safety.md`
 - `schemas/tool.schema.json` (optional)
 - `scripts/tool_registry.py`
 - `tests/test_tool_registry.py`
@@ -141,7 +141,7 @@ Make tool access safe and reviewable.
 - `scripts/tool_audit.py`
 - `tests/test_tool_permissions.py`
 - `tests/test_tool_audit.py`
-- `.augment.uncompressed/rules/tool-safety.md`
+- `.agent-src.uncompressed/rules/tool-safety.md`
 
 ## Features
 

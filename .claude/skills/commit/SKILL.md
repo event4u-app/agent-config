@@ -1,1 +1,1 @@
-../../../.augment/commands/commit.md
+../../../.agent-src/commands/commit.md

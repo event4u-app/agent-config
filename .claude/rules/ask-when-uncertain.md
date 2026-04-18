@@ -1,1 +1,1 @@
-../../.augment/rules/ask-when-uncertain.md
+../../.agent-src/rules/ask-when-uncertain.md

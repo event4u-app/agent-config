@@ -1,1 +1,1 @@
-../../../.augment/commands/copilot-agents-optimize.md
+../../../.agent-src/commands/copilot-agents-optimize.md

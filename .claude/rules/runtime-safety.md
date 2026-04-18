@@ -1,1 +1,1 @@
-../../.augment/rules/runtime-safety.md
+../../.agent-src/rules/runtime-safety.md

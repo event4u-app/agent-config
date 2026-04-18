@@ -100,7 +100,7 @@ Apply the standard to all ~80 skills and tag the automated ones first.
 - Each gets: `execution: { type: automated, handler: shell|internal, safety_mode: strict, allowed_tools: [] }`
 
 **Acceptance:**
-- Every skill in `.augment.uncompressed/skills/` is classified in the matrix
+- Every skill in `.agent-src.uncompressed/skills/` is classified in the matrix
 - Rationale column references specific criteria from the standard
 - `task lint-skills` passes with 0 errors on modified skills
 - `task runtime-list` shows all tagged automated skills
@@ -133,7 +133,7 @@ Sharpen the boundary: rules declare constraints, skills describe procedures.
 - Run `task lint-skills --all` to verify 0 warnings
 
 **Files:**
-- Modified: `.augment.uncompressed/rules/runtime-safety.md`
+- Modified: `.agent-src.uncompressed/rules/runtime-safety.md`
 - Modified: `.augment/rules/runtime-safety.md` (compressed)
 - Potentially other rules if `procedural_rule` warnings exist
 

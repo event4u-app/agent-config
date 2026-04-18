@@ -1,1 +1,1 @@
-../.augment/rules/user-interaction.md
+../.agent-src/rules/user-interaction.md

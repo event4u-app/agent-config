@@ -1,1 +1,1 @@
-../../.augment/rules/e2e-testing.md
+../../.agent-src/rules/e2e-testing.md

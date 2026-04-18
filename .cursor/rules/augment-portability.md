@@ -1,1 +1,1 @@
-../../.augment/rules/augment-portability.md
+../../.agent-src/rules/augment-portability.md

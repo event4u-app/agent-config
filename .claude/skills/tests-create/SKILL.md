@@ -1,1 +1,1 @@
-../../../.augment/commands/tests-create.md
+../../../.agent-src/commands/tests-create.md

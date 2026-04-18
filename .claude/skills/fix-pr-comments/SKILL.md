@@ -1,1 +1,1 @@
-../../../.augment/commands/fix-pr-comments.md
+../../../.agent-src/commands/fix-pr-comments.md

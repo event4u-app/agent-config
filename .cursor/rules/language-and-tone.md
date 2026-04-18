@@ -1,1 +1,1 @@
-../../.augment/rules/language-and-tone.md
+../../.agent-src/rules/language-and-tone.md

@@ -1,1 +1,1 @@
-../../.augment/rules/docs-sync.md
+../../.agent-src/rules/docs-sync.md

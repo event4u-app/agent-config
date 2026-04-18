@@ -7,7 +7,7 @@ GitHub Copilot).
 This file is the AGENTS.md **of the package itself**. It gives an agent that is
 working **on this repository** (adding skills, fixing the installer, improving
 the linter) the context it needs. Consumer projects get their own AGENTS.md
-generated from [`.augment/templates/AGENTS.md`](.augment/templates/AGENTS.md)
+generated from [`.augment/templates/AGENTS.md`](.agent-src/templates/AGENTS.md)
 when they install the package.
 
 ## What this repo is
@@ -22,13 +22,14 @@ when they install the package.
 
 | Directory | Purpose | Editable? |
 |---|---|---|
-| `.augment.uncompressed/` | Authoring layer — full verbose content | ✅ Yes — edit here |
-| `.augment/` | Compressed output — consumed by agents | ❌ No — regenerated |
+| `.agent-src.uncompressed/` | Authoring layer — full verbose content | ✅ Yes — edit here |
+| `.agent-src/` | Compressed output — shipped in the package, consumed by agents | ❌ No — regenerated |
+| `.augment/` | Local projection of `.agent-src/` for Augment Code (gitignored) | ❌ No — regenerated |
 | `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules` | Tool-specific projections | ❌ No — regenerated |
 | `agents/` | Package's own roadmaps, contexts, sessions | ✅ Yes |
 
-**Never edit `.augment/` directly.** Edit `.augment.uncompressed/` and run
-`task sync` (or `task ci`) to compress + regenerate the tool directories.
+**Never edit `.agent-src/` or `.augment/` directly.** Edit `.agent-src.uncompressed/`
+and run `task sync` (or `task ci`) to compress + regenerate the tool directories.
 
 ## Tech stack of this package
 
@@ -46,7 +47,7 @@ No PHP, no Laravel, no JavaScript runtime dependencies. The `composer.json` /
 ## Working on this repo
 
 ```bash
-task sync          # Regenerate .augment/ from .augment.uncompressed/
+task sync          # .agent-src.uncompressed/ → .agent-src/, then project → .augment/
 task generate-tools # Regenerate .claude/, .cursor/, .clinerules/, .windsurfrules
 task test          # pytest tests/ + tests/test_install.sh
 task lint-skills   # python3 scripts/skill_linter.py --all
@@ -60,17 +61,17 @@ check-refs, check-portability, lint-skills, test, lint-readme.
 
 | Rule | File |
 |---|---|
-| `.augment/` must stay project-agnostic — no project names, domains, stacks | [`.augment/rules/augment-portability.md`](.augment/rules/augment-portability.md) |
-| Root AGENTS.md + copilot-instructions.md must stay project-agnostic too | [`.augment/rules/augment-portability.md`](.augment/rules/augment-portability.md) |
-| Edit `.augment.uncompressed/`, never `.augment/` | [`.augment/rules/augment-source-of-truth.md`](.augment/rules/augment-source-of-truth.md) |
-| Skills must declare frontmatter, be self-contained, pass the linter | [`.augment/rules/skill-quality.md`](.augment/rules/skill-quality.md) |
-| Size budgets for skills, rules, commands | [`.augment/rules/size-enforcement.md`](.augment/rules/size-enforcement.md) |
-| Keep `.augment/` / `agents/` cross-refs in sync on add/rename/delete | [`.augment/rules/docs-sync.md`](.augment/rules/docs-sync.md) |
+| `.agent-src/` must stay project-agnostic — no project names, domains, stacks | [`augment-portability`](.agent-src/rules/augment-portability.md) |
+| Root AGENTS.md + copilot-instructions.md must stay project-agnostic too | [`augment-portability`](.agent-src/rules/augment-portability.md) |
+| Edit `.agent-src.uncompressed/`, never `.agent-src/` or `.augment/` | [`augment-source-of-truth`](.agent-src/rules/augment-source-of-truth.md) |
+| Skills must declare frontmatter, be self-contained, pass the linter | [`skill-quality`](.agent-src/rules/skill-quality.md) |
+| Size budgets for skills, rules, commands | [`size-enforcement`](.agent-src/rules/size-enforcement.md) |
+| Keep `.agent-src/` / `agents/` cross-refs in sync on add/rename/delete | [`docs-sync`](.agent-src/rules/docs-sync.md) |
 
 ## Repository layout
 
 ```
-.augment.uncompressed/      ← edit here
+.agent-src.uncompressed/      ← edit here
   skills/       (93 skills)
   rules/        (31 rules)
   commands/     (51 commands)
@@ -78,7 +79,8 @@ check-refs, check-portability, lint-skills, test, lint-readme.
   templates/    (AGENTS.md, copilot-instructions.md, skill.md, …)
   contexts/
 
-.augment/                   ← generated, read-only
+.agent-src/                 ← compressed output shipped in the package
+.augment/                   ← local projection for Augment Code (gitignored)
 scripts/                    ← install.sh, install.py, compress.py, linters
 tests/                      ← pytest (324 tests) + test_install.sh
 agents/                     ← this package's own roadmaps / sessions / contexts
@@ -103,8 +105,8 @@ are converted to Claude Code Skills with `disable-model-invocation: true`.
 
 ## Contributing
 
-1. Edit inside `.augment.uncompressed/` or `scripts/` or `tests/` — never in
-   `.augment/`, `.claude/`, `.cursor/`, etc.
+1. Edit inside `.agent-src.uncompressed/` or `scripts/` or `tests/` — never in
+   `.agent-src/`, `.augment/`, `.claude/`, `.cursor/`, etc.
 2. Run `task ci` locally. It must exit 0.
 3. Commit in logical chunks with Conventional Commits.
 4. Open a PR against `main`.

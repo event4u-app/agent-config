@@ -3,7 +3,7 @@ name: Skill Lint
 on:
   pull_request:
     paths:
-      - ".augment.uncompressed/**"
+      - ".agent-src.uncompressed/**"
       - ".augment/**"
       - ".claude/**"
       - "scripts/skill_linter.py"
@@ -14,7 +14,7 @@ on:
     branches:
       - main
     paths:
-      - ".augment.uncompressed/**"
+      - ".agent-src.uncompressed/**"
       - ".augment/**"
       - ".claude/**"
       - "scripts/skill_linter.py"

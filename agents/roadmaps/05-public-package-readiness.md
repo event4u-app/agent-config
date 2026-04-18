@@ -283,8 +283,8 @@ Claude Code's skills specification.
 
 | Problem | Status | Branch |
 |---------|--------|--------|
-| Issue-Templates erstellen | ⬜ Offen | — |
-| Test-Matrix dokumentieren | ⬜ Offen | — |
-| Zielgruppe klar kommunizieren | ⬜ Offen | — |
-| Bus-Factor-Strategie | ⬜ Offen | — |
-| agentskills.io Referenz klären | ⬜ Offen | — |
+| Issue-Templates erstellen | ✅ Erledigt (bug/skill/new + config.yml) | `feat/improve-agent-setup-2` |
+| Test-Matrix dokumentieren | ⬜ Offen — CI-Matrix (Python-Versionen, OS) für spätere Iteration | — |
+| Zielgruppe klar kommunizieren | ✅ Erledigt ("Who this is for"-Abschnitt im README) | `feat/improve-agent-setup-2` |
+| Bus-Factor-Strategie | ⬜ Offen — CONTRIBUTING adressiert "single maintainer"-Status, aber Nachfolgeplan fehlt | — |
+| agentskills.io Referenz klären | ✅ Erledigt (README + docs/architecture.md + docs/github-topics.md auf "community spec" abgeschwächt) | `feat/improve-agent-setup-2` |

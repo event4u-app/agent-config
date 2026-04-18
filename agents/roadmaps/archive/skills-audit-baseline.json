@@ -6491,7 +6491,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/rules/agent-docs.md",
+      "file": ".agent-src.uncompressed/rules/agent-docs.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6509,7 +6509,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/rules/architecture.md",
+      "file": ".agent-src.uncompressed/rules/architecture.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6522,21 +6522,21 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/rules/ask-when-uncertain.md",
+      "file": ".agent-src.uncompressed/rules/ask-when-uncertain.md",
       "artifact_type": "rule",
       "status": "pass",
       "issues": [],
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/rules/augment-portability.md",
+      "file": ".agent-src.uncompressed/rules/augment-portability.md",
       "artifact_type": "rule",
       "status": "pass",
       "issues": [],
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/rules/augment-source-of-truth.md",
+      "file": ".agent-src.uncompressed/rules/augment-source-of-truth.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6554,7 +6554,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/rules/capture-learnings.md",
+      "file": ".agent-src.uncompressed/rules/capture-learnings.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6567,14 +6567,14 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/rules/commands.md",
+      "file": ".agent-src.uncompressed/rules/commands.md",
       "artifact_type": "rule",
       "status": "pass",
       "issues": [],
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/rules/commit-conventions.md",
+      "file": ".agent-src.uncompressed/rules/commit-conventions.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6587,7 +6587,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/rules/context-hygiene.md",
+      "file": ".agent-src.uncompressed/rules/context-hygiene.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6600,38 +6600,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/rules/dev-efficiency.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        },
-        {
-          "severity": "warning",
-          "code": "procedural_rule",
-          "message": "Rule looks procedural; consider a skill instead"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": ".augment.uncompressed/rules/docker-commands.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": ".augment.uncompressed/rules/docs-sync.md",
+      "file": ".agent-src.uncompressed/rules/dev-efficiency.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6649,7 +6618,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/rules/downstream-changes.md",
+      "file": ".agent-src.uncompressed/rules/docker-commands.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6662,90 +6631,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/rules/e2e-testing.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        },
-        {
-          "severity": "warning",
-          "code": "procedural_rule",
-          "message": "Rule looks procedural; consider a skill instead"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": ".augment.uncompressed/rules/guidelines.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": ".augment.uncompressed/rules/lang-files.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": ".augment.uncompressed/rules/language-and-tone.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": ".augment.uncompressed/rules/model-recommendation.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": ".augment.uncompressed/rules/php-coding.md",
-      "artifact_type": "rule",
-      "status": "pass_with_warnings",
-      "issues": [
-        {
-          "severity": "warning",
-          "code": "long_rule",
-          "message": "Rule is quite long; rules should usually stay short"
-        }
-      ],
-      "suggestions": []
-    },
-    {
-      "file": ".augment.uncompressed/rules/quality-workflow.md",
+      "file": ".agent-src.uncompressed/rules/docs-sync.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6763,7 +6649,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/rules/rtk.md",
+      "file": ".agent-src.uncompressed/rules/downstream-changes.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6776,14 +6662,128 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/rules/scope-control.md",
+      "file": ".agent-src.uncompressed/rules/e2e-testing.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        },
+        {
+          "severity": "warning",
+          "code": "procedural_rule",
+          "message": "Rule looks procedural; consider a skill instead"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".agent-src.uncompressed/rules/guidelines.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".agent-src.uncompressed/rules/lang-files.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".agent-src.uncompressed/rules/language-and-tone.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".agent-src.uncompressed/rules/model-recommendation.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".agent-src.uncompressed/rules/php-coding.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".agent-src.uncompressed/rules/quality-workflow.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        },
+        {
+          "severity": "warning",
+          "code": "procedural_rule",
+          "message": "Rule looks procedural; consider a skill instead"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".agent-src.uncompressed/rules/rtk.md",
+      "artifact_type": "rule",
+      "status": "pass_with_warnings",
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "long_rule",
+          "message": "Rule is quite long; rules should usually stay short"
+        }
+      ],
+      "suggestions": []
+    },
+    {
+      "file": ".agent-src.uncompressed/rules/scope-control.md",
       "artifact_type": "rule",
       "status": "pass",
       "issues": [],
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/rules/token-efficiency.md",
+      "file": ".agent-src.uncompressed/rules/token-efficiency.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6801,7 +6801,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/rules/user-interaction.md",
+      "file": ".agent-src.uncompressed/rules/user-interaction.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6814,7 +6814,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/rules/verify-before-complete.md",
+      "file": ".agent-src.uncompressed/rules/verify-before-complete.md",
       "artifact_type": "rule",
       "status": "pass_with_warnings",
       "issues": [
@@ -6832,7 +6832,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/skills/adversarial-review/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/adversarial-review/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -6883,7 +6883,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/agent-docs/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/agent-docs/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -6934,7 +6934,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/agents-audit/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/agents-audit/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -6985,7 +6985,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/analysis-autonomous-mode/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/analysis-autonomous-mode/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7036,7 +7036,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/api-design/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/api-design/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7087,7 +7087,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/api-endpoint/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/api-endpoint/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7138,7 +7138,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/api-testing/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/api-testing/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7189,7 +7189,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/api-versioning/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/api-versioning/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7240,7 +7240,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/artisan-commands/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/artisan-commands/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7291,7 +7291,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/aws-infrastructure/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/aws-infrastructure/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7348,7 +7348,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/blade-ui/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/blade-ui/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7399,7 +7399,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/bug-analyzer/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/bug-analyzer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7450,7 +7450,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/cloudflare-workers/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/cloudflare-workers/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7501,7 +7501,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/code-review/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/code-review/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7552,7 +7552,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/coder/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/coder/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7603,7 +7603,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/commands/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/commands/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7659,7 +7659,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/composer/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/composer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7710,7 +7710,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/composer-packages/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/composer-packages/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7761,7 +7761,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/context/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/context/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7812,7 +7812,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/copilot/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/copilot/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7863,7 +7863,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/copilot-agents-optimizer/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/copilot-agents-optimizer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7914,7 +7914,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/dashboard-design/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/dashboard-design/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -7971,7 +7971,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/database/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/database/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8022,7 +8022,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/dependency-upgrade/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/dependency-upgrade/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8073,7 +8073,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/design-review/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/design-review/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8124,7 +8124,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/devcontainer/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/devcontainer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8175,7 +8175,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/docker/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/docker/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8226,7 +8226,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/dto-creator/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/dto-creator/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8277,7 +8277,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/eloquent/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/eloquent/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8328,7 +8328,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/fe-design/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/fe-design/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8379,7 +8379,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/feature-planning/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/feature-planning/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8430,7 +8430,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/file-editor/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/file-editor/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8481,7 +8481,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/flux/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/flux/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8532,7 +8532,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/git-workflow/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/git-workflow/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8583,7 +8583,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/github-action-docs/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/github-action-docs/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8623,7 +8623,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/github-ci/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/github-ci/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8674,7 +8674,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/grafana/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/grafana/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8725,7 +8725,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/graphql/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/graphql/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8776,7 +8776,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/guidelines/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/guidelines/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8828,7 +8828,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/javascript/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/javascript/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8879,7 +8879,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/jira/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/jira/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8930,7 +8930,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/jobs-events/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/jobs-events/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -8981,370 +8981,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/laravel/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        },
-        {
-          "severity": "warning",
-          "code": "broad_scope",
-          "message": "Skill scope appears broad and may need splitting"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas",
-        "Narrow the trigger or split unrelated workflows"
-      ]
-    },
-    {
-      "file": ".augment.uncompressed/skills/laravel-horizon/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": ".augment.uncompressed/skills/laravel-mail/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": ".augment.uncompressed/skills/laravel-middleware/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": ".augment.uncompressed/skills/laravel-notifications/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": ".augment.uncompressed/skills/laravel-pennant/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": ".augment.uncompressed/skills/laravel-pulse/SKILL.md",
-      "artifact_type": "skill",
-      "status": "fail",
-      "issues": [
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Procedure"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Output format"
-        },
-        {
-          "severity": "error",
-          "code": "missing_section",
-          "message": "Missing required section: Gotchas"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Preconditions"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Decision hints"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Anti-patterns"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Examples"
-        },
-        {
-          "severity": "warning",
-          "code": "missing_recommended_section",
-          "message": "Missing recommended section: Environment notes"
-        }
-      ],
-      "suggestions": [
-        "Add an Output format section with ordered response constraints",
-        "Add at least one realistic failure pattern to Gotchas"
-      ]
-    },
-    {
-      "file": ".augment.uncompressed/skills/laravel-reverb/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/laravel/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9401,7 +9038,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/laravel-scheduling/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/laravel-horizon/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9452,7 +9089,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/laravel-validation/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/laravel-mail/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9503,7 +9140,370 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/learning-to-rule-or-skill/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/laravel-middleware/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".agent-src.uncompressed/skills/laravel-notifications/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".agent-src.uncompressed/skills/laravel-pennant/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".agent-src.uncompressed/skills/laravel-pulse/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".agent-src.uncompressed/skills/laravel-reverb/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        },
+        {
+          "severity": "warning",
+          "code": "broad_scope",
+          "message": "Skill scope appears broad and may need splitting"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas",
+        "Narrow the trigger or split unrelated workflows"
+      ]
+    },
+    {
+      "file": ".agent-src.uncompressed/skills/laravel-scheduling/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".agent-src.uncompressed/skills/laravel-validation/SKILL.md",
+      "artifact_type": "skill",
+      "status": "fail",
+      "issues": [
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Procedure"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Output format"
+        },
+        {
+          "severity": "error",
+          "code": "missing_section",
+          "message": "Missing required section: Gotchas"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Preconditions"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Decision hints"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Anti-patterns"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Examples"
+        },
+        {
+          "severity": "warning",
+          "code": "missing_recommended_section",
+          "message": "Missing recommended section: Environment notes"
+        }
+      ],
+      "suggestions": [
+        "Add an Output format section with ordered response constraints",
+        "Add at least one realistic failure pattern to Gotchas"
+      ]
+    },
+    {
+      "file": ".agent-src.uncompressed/skills/learning-to-rule-or-skill/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9528,7 +9528,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/livewire/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/livewire/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9579,7 +9579,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/logging-monitoring/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/logging-monitoring/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9630,7 +9630,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/markdown-safe-codeblocks/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/markdown-safe-codeblocks/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9665,7 +9665,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/markdown-template-generator/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/markdown-template-generator/SKILL.md",
       "artifact_type": "skill",
       "status": "pass_with_warnings",
       "issues": [
@@ -9693,7 +9693,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/skills/mcp/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/mcp/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9744,7 +9744,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/merge-conflicts/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/merge-conflicts/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9795,7 +9795,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/microservices/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/microservices/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9846,7 +9846,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/migration-creator/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/migration-creator/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9897,7 +9897,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/mobile/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/mobile/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9948,7 +9948,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/module/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/module/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -9999,7 +9999,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/multi-tenancy/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/multi-tenancy/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10050,7 +10050,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/naming/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/naming/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10101,7 +10101,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/nextjs/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/nextjs/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10152,7 +10152,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/npm/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/npm/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10209,7 +10209,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/npm-packages/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/npm-packages/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10260,7 +10260,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/nuxt/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/nuxt/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10311,7 +10311,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/openapi/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/openapi/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10362,7 +10362,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/override/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/override/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10418,7 +10418,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/performance/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/performance/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10469,7 +10469,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/performance-analysis/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/performance-analysis/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10520,7 +10520,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/pest-testing/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/pest-testing/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10577,7 +10577,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/php/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/php/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10628,7 +10628,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/php-debugging/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/php-debugging/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10679,7 +10679,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/php-service/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/php-service/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10730,7 +10730,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/playwright-testing/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/playwright-testing/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10781,7 +10781,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/post-task-learning-capture/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/post-task-learning-capture/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10799,7 +10799,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/skills/project-analysis-laravel/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/project-analysis-laravel/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10850,7 +10850,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/project-analyzer/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/project-analyzer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10901,7 +10901,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/project-docs/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/project-docs/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -10958,7 +10958,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/quality-tools/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/quality-tools/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11009,7 +11009,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/react/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/react/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11060,7 +11060,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/readme-generator/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/readme-generator/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11093,7 +11093,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/skills/refactorer/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/refactorer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11144,7 +11144,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/roadmap-manager/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/roadmap-manager/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11195,7 +11195,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/security/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/security/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11246,7 +11246,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/security-audit/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/security-audit/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11297,7 +11297,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/sentry/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/sentry/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11348,7 +11348,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/sequential-thinking/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/sequential-thinking/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11394,7 +11394,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/skill-caveman-compression/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/skill-caveman-compression/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11407,7 +11407,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/skills/skill-decompression/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/skill-decompression/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11420,7 +11420,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/skills/skill-linter/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/skill-linter/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11438,7 +11438,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/skills/skill-refactor/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/skill-refactor/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11461,7 +11461,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/skills/skill-reviewer/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/skill-reviewer/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11528,7 +11528,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/skill-validator/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/skill-validator/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11556,7 +11556,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/skills/skill-writing/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/skill-writing/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11569,7 +11569,7 @@
       "suggestions": []
     },
     {
-      "file": ".augment.uncompressed/skills/sql/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/sql/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11620,7 +11620,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/tailwind/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/tailwind/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11671,7 +11671,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/technical-specification/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/technical-specification/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11722,7 +11722,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/terraform/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/terraform/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11773,7 +11773,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/terragrunt/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/terragrunt/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11824,7 +11824,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/test-generator/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/test-generator/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11875,7 +11875,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/test-performance/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/test-performance/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11932,7 +11932,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/traefik/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/traefik/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -11983,7 +11983,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/typescript/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/typescript/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -12034,7 +12034,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/universal-project-analysis/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/universal-project-analysis/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -12090,7 +12090,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/vue/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/vue/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -12141,7 +12141,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/websocket/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/websocket/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [
@@ -12192,7 +12192,7 @@
       ]
     },
     {
-      "file": ".augment.uncompressed/skills/wordpress/SKILL.md",
+      "file": ".agent-src.uncompressed/skills/wordpress/SKILL.md",
       "artifact_type": "skill",
       "status": "fail",
       "issues": [

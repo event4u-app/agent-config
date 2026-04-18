@@ -1,1 +1,1 @@
-../.augment/rules/skill-quality.md
+../.agent-src/rules/skill-quality.md

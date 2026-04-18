@@ -1,1 +1,1 @@
-../.augment/rules/cli-output-handling.md
+../.agent-src/rules/cli-output-handling.md

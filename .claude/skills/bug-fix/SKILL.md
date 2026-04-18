@@ -1,1 +1,1 @@
-../../../.augment/commands/bug-fix.md
+../../../.agent-src/commands/bug-fix.md

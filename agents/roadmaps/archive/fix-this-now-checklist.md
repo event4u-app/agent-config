@@ -33,7 +33,7 @@ Compared to `main`, PR #3 is weaker or riskier in:
 - enforcement of concrete validation
 - risk of skills becoming too dependent on guidelines
 - risk of routing into weak but formally valid skills
-- risk of drift between `.augment.uncompressed/` and generated outputs
+- risk of drift between `.agent-src.uncompressed/` and generated outputs
 
 ---
 
@@ -311,7 +311,7 @@ Before review or PR:
 ### Acceptance criteria
 
 A PR should fail consistency checks if:
-- `.augment.uncompressed/` changed
+- `.agent-src.uncompressed/` changed
 - but derived files are not regenerated
 
 ---
@@ -411,7 +411,7 @@ Compression must preserve:
 `optimize-skills` still makes sense, but not in its current form.
 
 ### Risks
-- works on `.augment/` instead of `.augment.uncompressed/`
+- works on `.augment/` instead of `.agent-src.uncompressed/`
 - has its own quality logic
 - could recommend merges/deletions that weaken preserved sharpness
 
@@ -430,7 +430,7 @@ Remove or replace:
 ### Acceptance criteria
 
 `optimize-skills` must:
-- read `.augment.uncompressed/`
+- read `.agent-src.uncompressed/`
 - respect linter findings
 - propose only, never weaken automatically
 - include preservation check before merge recommendations
@@ -463,7 +463,7 @@ Remove or constrain:
 ### Acceptance criteria
 
 `optimize-agents` must:
-- use `.augment.uncompressed/`
+- use `.agent-src.uncompressed/`
 - never weaken rules blindly
 - never suggest `always -> auto` without explicit safety reasoning
 - defer quality judgment to linter/reviewer
@@ -538,8 +538,8 @@ Reviewer/linter must fail or warn clearly when:
 - [x] Add CI consistency check — `consistency.yml`
 - [x] Strengthen `analysis-skill-routing` — routing quality gate
 - [x] Add compression-preservation check — `--compression-quality` in linter
-- [x] Refactor `optimize-skills` — uses `.augment.uncompressed/`, preservation gate, defers quality to linter, suggest-only
-- [x] Refactor `optimize-agents` — uses `.augment.uncompressed/`, safety gate for always→auto, preservation gate, suggest-only
+- [x] Refactor `optimize-skills` — uses `.agent-src.uncompressed/`, preservation gate, defers quality to linter, suggest-only
+- [x] Refactor `optimize-agents` — uses `.agent-src.uncompressed/`, safety gate for always→auto, preservation gate, suggest-only
 - [x] Add merge-preservation checklist — `skill-quality.md` rule
 - [x] Add minimum-sharpness rule — `skill-quality.md` rule
 - [x] Fix `broad_scope` false positives — narrowed heuristic to description + "When to use" only

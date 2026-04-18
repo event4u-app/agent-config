@@ -1,1 +1,1 @@
-../../.augment/rules/agent-docs.md
+../../.agent-src/rules/agent-docs.md

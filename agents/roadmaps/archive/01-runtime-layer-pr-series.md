@@ -26,8 +26,8 @@ Define the runtime model before implementing anything executable.
 
 ## Files to create
 
-- `.augment.uncompressed/guidelines/runtime-layer.md`
-- `.augment.uncompressed/rules/runtime-safety.md`
+- `.agent-src.uncompressed/guidelines/runtime-layer.md`
+- `.agent-src.uncompressed/rules/runtime-safety.md`
 - `docs/runtime-schema.md` or `roadmaps/runtime-schema.md`
 - optional: `schemas/skill-execution.schema.json`
 
@@ -169,7 +169,7 @@ Introduce minimal automated execution under strict constraints.
 - `scripts/runtime_registry.py`
 - `scripts/skill_linter.py`
 - `tests/test_runtime_execute.py`
-- `.augment.uncompressed/rules/runtime-safety.md`
+- `.agent-src.uncompressed/rules/runtime-safety.md`
 
 ## Rules
 
@@ -208,7 +208,7 @@ Make runtime behavior operationally useful.
 - `scripts/runtime_errors.py`
 - `tests/test_runtime_hooks.py`
 - `tests/test_runtime_errors.py`
-- `.augment.uncompressed/guidelines/runtime-layer.md`
+- `.agent-src.uncompressed/guidelines/runtime-layer.md`
 
 ## Features
 

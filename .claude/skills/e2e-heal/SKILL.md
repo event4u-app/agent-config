@@ -1,1 +1,1 @@
-../../../.augment/commands/e2e-heal.md
+../../../.agent-src/commands/e2e-heal.md

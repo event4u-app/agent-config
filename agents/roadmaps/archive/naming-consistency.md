@@ -17,7 +17,7 @@ Renaming affects: folder names, SKILL.md `name:` field, compressed copies, symli
 `.augmentignore`, cross-references in other skills/rules/commands, AGENTS.md, copilot-instructions.md.
 
 **Process per rename:**
-1. Rename folder in `.augment.uncompressed/`
+1. Rename folder in `.agent-src.uncompressed/`
 2. Update `name:` in frontmatter
 3. Run `/compress` for changed file
 4. Run `task generate-tools` to regenerate symlinks

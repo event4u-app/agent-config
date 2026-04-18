@@ -1,1 +1,1 @@
-../../../.augment/commands/agents-audit.md
+../../../.agent-src/commands/agents-audit.md

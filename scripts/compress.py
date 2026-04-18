@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 """
-Augment Sync — sync .augment.uncompressed/ → .augment/
+Agent-config sync — compress .agent-src.uncompressed/ → .agent-src/
+and project .agent-src/ → .augment/ (copies for rules, symlinks for the rest).
 
 Copies non-.md files as-is. Lists .md files that need compression (done by the
 Augment agent interactively). Tracks SHA-256 hashes of source files to detect
 changes since last compression.
 
 Usage:
-    python scripts/compress.py              # sync all non-.md files + cleanup
+    python scripts/compress.py              # sync all non-.md files + cleanup + project
     python scripts/compress.py --list       # list .md files needing compression
     python scripts/compress.py --changed    # list only .md files changed since last compression
     python scripts/compress.py --check      # check if directories are in sync
     python scripts/compress.py --mark-done <relative-path>  # mark file as compressed (update hash)
     python scripts/compress.py --mark-all-done              # mark ALL .md files as compressed
+    python scripts/compress.py --project-augment            # rebuild .augment/ projection
 """
 
 import hashlib
@@ -22,8 +24,9 @@ import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-SOURCE_DIR = PROJECT_ROOT / ".augment.uncompressed"
-TARGET_DIR = PROJECT_ROOT / ".augment"
+SOURCE_DIR = PROJECT_ROOT / ".agent-src.uncompressed"
+TARGET_DIR = PROJECT_ROOT / ".agent-src"
+AUGMENT_DIR = PROJECT_ROOT / ".augment"
 HASH_FILE = PROJECT_ROOT / ".compression-hashes.json"
 
 # Files to copy as-is even if .md (not compressed by agent)
@@ -219,16 +222,16 @@ def check_sync(source_dir: Path, target_dir: Path) -> tuple:
 
 # ── Multi-agent tool generation ──────────────────────────────────────
 
-RULES_SOURCE = PROJECT_ROOT / ".augment" / "rules"
+RULES_SOURCE = PROJECT_ROOT / ".agent-src" / "rules"
 
 TOOL_DIRS = {
-    ".claude/rules": "../../.augment/rules",
-    ".cursor/rules": "../../.augment/rules",
-    ".clinerules": "../.augment/rules",
+    ".claude/rules": "../../.agent-src/rules",
+    ".cursor/rules": "../../.agent-src/rules",
+    ".clinerules": "../.agent-src/rules",
 }
 
-SKILLS_SOURCE = PROJECT_ROOT / ".augment" / "skills"
-COMMANDS_SOURCE = PROJECT_ROOT / ".augment" / "commands"
+SKILLS_SOURCE = PROJECT_ROOT / ".agent-src" / "skills"
+COMMANDS_SOURCE = PROJECT_ROOT / ".agent-src" / "commands"
 CLAUDE_SKILLS_DIR = PROJECT_ROOT / ".claude" / "skills"
 
 
@@ -244,9 +247,9 @@ def strip_frontmatter(content: str) -> str:
 def generate_rule_symlinks() -> int:
     """Create symlink directories for rules (.claude/rules/, .cursor/rules/, .clinerules/).
 
-    Symlinks ALL .md files from .augment/rules/ into tool-specific directories.
+    Symlinks ALL .md files from .agent-src/rules/ into tool-specific directories.
     """
-    # All .md files in .augment/rules/ — not just universal ones
+    # All .md files in .agent-src/rules/ — not just universal ones
     rules = sorted([f.name for f in RULES_SOURCE.glob("*.md")])
     total = 0
     for tool_dir, rel_prefix in TOOL_DIRS.items():
@@ -282,7 +285,7 @@ def generate_windsurfrules() -> None:
     """Generate .windsurfrules by concatenating all rules (no frontmatter).
     """
     rules = sorted([f.name for f in RULES_SOURCE.glob("*.md")])
-    parts = ["# Auto-generated from .augment/rules/ — do not edit directly\n"]
+    parts = ["# Auto-generated from .agent-src/rules/ — do not edit directly\n"]
 
     for rule in rules:
         path = RULES_SOURCE / rule
@@ -304,13 +307,13 @@ def generate_gemini_md() -> None:
 
 
 def generate_claude_skills() -> None:
-    """Create .claude/skills/ symlinks for ALL skills in .augment/skills/.
+    """Create .claude/skills/ symlinks for ALL skills in .agent-src/skills/.
     """
     if not SKILLS_SOURCE.exists():
-        print("  ⚠️  .augment/skills/ not found — skipping skills")
+        print("  ⚠️  .agent-src/skills/ not found — skipping skills")
         return
 
-    # All skill directories in .augment/skills/
+    # All skill directories in .agent-src/skills/
     skills = sorted([d.name for d in SKILLS_SOURCE.iterdir() if d.is_dir()])
     # All command names (to protect from stale cleanup)
     command_names = set()
@@ -329,7 +332,7 @@ def generate_claude_skills() -> None:
         link = CLAUDE_SKILLS_DIR / skill
         if link.exists() or link.is_symlink():
             link.unlink()
-        rel_target = Path("../../.augment/skills") / skill
+        rel_target = Path("../../.agent-src/skills") / skill
         link.symlink_to(rel_target)
         count += 1
 
@@ -350,12 +353,12 @@ def extract_description_from_md(content: str) -> str:
 def generate_claude_commands() -> None:
     """Create .claude/skills/{name}/SKILL.md symlinks for ALL Augment commands.
 
-    Commands in .augment/commands/ are the single source of truth.
+    Commands in .agent-src/commands/ are the single source of truth.
     They must include name: and disable-model-invocation: true in frontmatter
     (added once, then maintained as part of the command file).
     """
     if not COMMANDS_SOURCE.exists():
-        print("  ⚠️  .augment/commands/ not found — skipping commands")
+        print("  ⚠️  .agent-src/commands/ not found — skipping commands")
         return
 
     CLAUDE_SKILLS_DIR.mkdir(parents=True, exist_ok=True)
@@ -383,8 +386,8 @@ def generate_claude_commands() -> None:
         if skill_file.exists() or skill_file.is_symlink():
             skill_file.unlink()
 
-        # Symlink: .claude/skills/{name}/SKILL.md → ../../../.augment/commands/{name}.md
-        rel_target = Path("../../../.augment/commands") / source_file.name
+        # Symlink: .claude/skills/{name}/SKILL.md → ../../../.agent-src/commands/{name}.md
+        rel_target = Path("../../../.agent-src/commands") / source_file.name
         skill_file.symlink_to(rel_target)
         count += 1
 
@@ -403,6 +406,84 @@ def generate_tools() -> None:
     generate_claude_skills()
     generate_claude_commands()
     print("\n✅  All tool directories generated")
+
+
+# ── .augment/ projection ──────────────────────────────────────────────
+# The package uses .agent-src/ as the tool-agnostic compressed source of truth.
+# .augment/ is a generated projection so that Augment Code (which reads from
+# .augment/ and cannot follow symlinked rule files) works on the package repo
+# itself. Rules are copied (real files); everything else is symlinked.
+
+# Subdirectories of .agent-src/ that map into .augment/ as symlinks.
+AUGMENT_SYMLINK_DIRS = ("skills", "commands", "guidelines", "templates", "contexts", "scripts")
+# Top-level files to symlink into .augment/ (README, etc.)
+AUGMENT_SYMLINK_FILES = ("README.md",)
+
+
+def project_to_augment() -> None:
+    """Mirror .agent-src/ into .augment/. Copy rules, symlink everything else."""
+    if not TARGET_DIR.exists():
+        print(f"  ⚠️  {TARGET_DIR.name}/ not found — nothing to project")
+        return
+
+    AUGMENT_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Rules: copy each .md file (Augment Code cannot load symlinked rules)
+    src_rules = TARGET_DIR / "rules"
+    dst_rules = AUGMENT_DIR / "rules"
+    dst_rules.mkdir(parents=True, exist_ok=True)
+    existing = {f.name for f in dst_rules.iterdir() if f.is_file() or f.is_symlink()}
+    current = set()
+    copied = 0
+    if src_rules.exists():
+        for rule in sorted(src_rules.glob("*.md")):
+            target = dst_rules / rule.name
+            if target.is_symlink():
+                target.unlink()
+            shutil.copy2(rule, target)
+            current.add(rule.name)
+            copied += 1
+    # Remove stale rule files
+    removed_rules = 0
+    for name in existing - current:
+        (dst_rules / name).unlink()
+        removed_rules += 1
+    print(f"  ✅  Copied {copied} rules to .augment/rules/" + (f" ({removed_rules} stale removed)" if removed_rules else ""))
+
+    # Subdirectories: replace each with a symlink → ../.agent-src/<subdir>
+    for sub in AUGMENT_SYMLINK_DIRS:
+        dst = AUGMENT_DIR / sub
+        if dst.is_symlink() or dst.exists():
+            if dst.is_dir() and not dst.is_symlink():
+                shutil.rmtree(dst)
+            else:
+                dst.unlink()
+        src = TARGET_DIR / sub
+        if src.exists():
+            dst.symlink_to(Path("..") / ".agent-src" / sub, target_is_directory=True)
+            print(f"  ✅  Symlinked .augment/{sub} → ../.agent-src/{sub}")
+
+    # Top-level files: symlink
+    for name in AUGMENT_SYMLINK_FILES:
+        dst = AUGMENT_DIR / name
+        src = TARGET_DIR / name
+        if dst.is_symlink() or dst.exists():
+            dst.unlink()
+        if src.exists():
+            dst.symlink_to(Path("..") / ".agent-src" / name)
+            print(f"  ✅  Symlinked .augment/{name} → ../.agent-src/{name}")
+
+    # Cleanup: remove any stray top-level entries in .augment/ that are no longer projected
+    known = set(AUGMENT_SYMLINK_DIRS) | set(AUGMENT_SYMLINK_FILES) | {"rules"}
+    for item in AUGMENT_DIR.iterdir():
+        if item.name in known:
+            continue
+        if item.is_symlink() or item.is_file():
+            item.unlink()
+            print(f"  🗑️  Removed stale .augment/{item.name}")
+        elif item.is_dir():
+            shutil.rmtree(item)
+            print(f"  🗑️  Removed stale .augment/{item.name}/")
 
 
 def clean_tools() -> None:
@@ -460,14 +541,14 @@ def main() -> None:
     elif arg == "--check":
         missing, stale = check_sync(SOURCE_DIR, TARGET_DIR)
         if not missing and not stale:
-            print("✅  .augment/ is in sync with .augment.uncompressed/")
+            print("✅  .agent-src/ is in sync with .agent-src.uncompressed/")
             sys.exit(0)
         if missing:
-            print(f"❌  Missing in .augment/ ({len(missing)}):")
+            print(f"❌  Missing in .agent-src/ ({len(missing)}):")
             for f in missing:
                 print(f"  {f}")
         if stale:
-            print(f"❌  Stale in .augment/ ({len(stale)}):")
+            print(f"❌  Stale in .agent-src/ ({len(stale)}):")
             for f in stale:
                 print(f"  {f}")
         print(f"\nRun 'task sync' to fix non-.md files, then ask the agent to compress .md files.")
@@ -494,6 +575,8 @@ def main() -> None:
             print(f"📝  {len(changed)} .md files need compression (run --changed to see them)")
         else:
             print(f"✅  All .md files are up to date")
+        print(f"\n--- Projecting .agent-src/ → .augment/ ---")
+        project_to_augment()
 
     elif arg == "--check-hashes":
         has_issues = False
@@ -534,8 +617,11 @@ def main() -> None:
     elif arg == "--clean-tools":
         clean_tools()
 
+    elif arg == "--project-augment":
+        project_to_augment()
+
     else:
-        print("Usage: python scripts/compress.py [--sync|--list|--changed|--check|--check-hashes|--clean-hashes|--mark-done <path>|--mark-all-done|--generate-tools|--clean-tools]")
+        print("Usage: python scripts/compress.py [--sync|--list|--changed|--check|--check-hashes|--clean-hashes|--mark-done <path>|--mark-all-done|--generate-tools|--clean-tools|--project-augment]")
         sys.exit(1)
 
 

@@ -1,5 +1,5 @@
 # Development files — not shipped to consumers
-.augment.uncompressed/
+.agent-src.uncompressed/
 .idea/
 .vscode/
 .phpunit.cache/

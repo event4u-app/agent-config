@@ -1,1 +1,1 @@
-../../../.augment/commands/fix-references.md
+../../../.agent-src/commands/fix-references.md

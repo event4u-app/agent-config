@@ -3,6 +3,12 @@
 **Principle:** Project-installed by default, plugin-enhanced when available.
 No Task, no Make, no build tools required for installation.
 
+> **Canonical installer:** `scripts/install.py` (Python 3.10+, standard
+> library only). Everything else — `scripts/install.sh`, `bin/install.php`,
+> `scripts/postinstall.sh` — is a thin wrapper that eventually calls the
+> Python installer. Run it directly if you prefer:
+> `python3 scripts/install.py --help`.
+
 | Mode | Best for | Scope |
 |---|---|---|
 | **Project-installed** (recommended) | Teams, shared standards | Repository-wide |
@@ -19,20 +25,19 @@ The package is versioned with the project. Settings are committed once.
 
 ```bash
 composer require --dev event4u/agent-config
+php vendor/bin/install.php
 ```
 
-The `postinstall` hook runs `scripts/install.sh` automatically. It syncs `.augment/`
-and then runs the bridge installer (`scripts/install.py`) to create `.agent-settings`
-and the tool-specific JSON bridges.
-
-To re-run manually or pick a non-default profile:
+Composer does **not** run a post-install hook for this package — the
+bridge installer is an explicit step. `bin/install.php` is a thin
+wrapper that calls `scripts/install.py`. To pick a non-default profile:
 
 ```bash
 php vendor/bin/install.php --profile=balanced
 ```
 
-`bin/install.php` is a thin wrapper that calls `scripts/install.py`. The `--profile`
-flag controls the initial `cost_profile` value written to `.agent-settings`.
+The `--profile` flag controls the initial `cost_profile` value written
+to `.agent-settings`.
 
 ### npm (JavaScript/TypeScript projects)
 
@@ -40,8 +45,16 @@ flag controls the initial `cost_profile` value written to `.agent-settings`.
 npm install --save-dev @event4u/agent-config
 ```
 
-The `postinstall` hook runs `scripts/install.sh` automatically (which calls the
-Python bridge installer at the end).
+npm runs `scripts/postinstall.sh` automatically, which invokes
+`scripts/install.sh` (which in turn calls the Python bridge installer).
+
+If your setup disables install scripts (`npm config set ignore-scripts
+true` or similar), nothing happens and the command prints no warning.
+Re-run the installer manually in that case:
+
+```bash
+python3 node_modules/@event4u/agent-config/scripts/install.py
+```
 
 ### Generate bridge files (Python installer)
 
@@ -256,6 +269,67 @@ Options:
   --verbose        Show detailed output
   --quiet          Suppress all output except errors
 ```
+
+---
+
+## Updating
+
+When a new version of the package is published:
+
+```bash
+composer update event4u/agent-config
+php vendor/bin/install.php          # refresh bridges + symlinks
+```
+
+Or for npm projects:
+
+```bash
+npm update @event4u/agent-config
+python3 node_modules/@event4u/agent-config/scripts/install.py
+```
+
+The installer is idempotent — re-running it after an update refreshes
+the symlinks and regenerates derived files (`.windsurfrules`,
+`.github/copilot-instructions.md`). It does **not** overwrite
+`AGENTS.md` or anything in `agents/overrides/`.
+
+---
+
+## Windows
+
+Native Windows is not a first-class target. Use one of the following:
+
+- **WSL2** (recommended): clone and install inside a WSL distribution.
+- **Git Bash**: works for installation but symlinks require Windows
+  Developer Mode or admin privileges. Re-run the installer after each
+  update to refresh file copies if symlinks aren't available.
+- **PowerShell / cmd**: not supported.
+
+If you need full native Windows support, please open an issue — we
+cannot validate changes without access to a Windows setup.
+
+---
+
+## Uninstalling
+
+There is no dedicated uninstall command yet. To remove the package:
+
+```bash
+# 1. Remove the dependency
+composer remove event4u/agent-config
+# or
+npm uninstall @event4u/agent-config
+
+# 2. Remove generated project-local content
+rm -rf .augment .claude .cursor .clinerules .windsurfrules GEMINI.md
+rm -f .agent-settings
+rm -f .github/copilot-instructions.md
+```
+
+Remove the `# event4u/agent-config` block from `.gitignore` manually.
+Keep `AGENTS.md` if you customized it — it is yours, not the package's.
+
+See also: [docs/troubleshooting.md](troubleshooting.md).
 
 ---
 

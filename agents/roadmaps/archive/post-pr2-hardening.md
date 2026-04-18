@@ -34,7 +34,7 @@ Core principle: **A skill must remain executable without opening a guideline.**
 - [x] Added to `.github/workflows/consistency.yml` as separate step
 - [x] Stale hash cleanup: `--check-hashes` now warns about hashes for deleted source files
 - [x] `--clean-hashes` subcommand for standalone stale hash removal
-- [x] Verified: `task sync-check` checks .augment/ ↔ .augment.uncompressed/ file existence
+- [x] Verified: `task sync-check` checks .augment/ ↔ .agent-src.uncompressed/ file existence
 - [x] CI: `sync + generate-tools + git diff --quiet` catches ALL drift (symlinks, .windsurfrules, GEMINI.md, content)
 - [x] CI blocks merge on failure (exit 1 + error annotation)
 - [x] Pre-push: `task ci` covers full pipeline locally
@@ -56,7 +56,7 @@ Adapt optimize commands to use all new rules and guardrails.
 - [x] References `size-and-scope` for AGENTS.md + copilot-instructions.md limits (Step 4)
 - [x] Has preservation gate (MANDATORY before any change)
 - [x] Advisory only — never auto-applies
-- [x] Operates on `.augment.uncompressed/` only
+- [x] Operates on `.agent-src.uncompressed/` only
 
 ### 2.2 optimize-skills
 - [x] References `size-and-scope` for size checks (Step 5)

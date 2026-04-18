@@ -1,1 +1,1 @@
-../../../.augment/commands/package-test.md
+../../../.agent-src/commands/package-test.md

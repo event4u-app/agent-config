@@ -1,1 +1,1 @@
-../../.augment/rules/architecture.md
+../../.agent-src/rules/architecture.md

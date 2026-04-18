@@ -11,7 +11,7 @@
     ],
     "archive": {
         "exclude": [
-            "/.augment.uncompressed",
+            "/.agent-src.uncompressed",
             "/.compression-hashes.json",
             "/agents",
             "/tests",

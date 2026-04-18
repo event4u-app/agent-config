@@ -12,14 +12,14 @@ mkdir -p "$HOOKS_DIR"
 
 cat > "$HOOKS_DIR/pre-push" << 'EOF'
 #!/usr/bin/env bash
-# Pre-push hook: verify .augment/ is in sync with .augment.uncompressed/
+# Pre-push hook: verify .agent-src/ is in sync with .agent-src.uncompressed/
 
-echo "🔍 Checking .augment/ sync..."
+echo "🔍 Checking .agent-src/ sync..."
 python3 scripts/compress.py --check
 
 if [ $? -ne 0 ]; then
     echo ""
-    echo "❌  Push blocked — .augment/ is out of sync."
+    echo "❌  Push blocked — .agent-src/ is out of sync."
     echo "   Run 'task sync' and compress changed .md files, then commit."
     exit 1
 fi

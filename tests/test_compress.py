@@ -396,7 +396,7 @@ class TestGenerateRuleSymlinks(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.project_root = Path(self.tmpdir)
-        rules_dir = self.project_root / ".augment" / "rules"
+        rules_dir = self.project_root / ".agent-src" / "rules"
         rules_dir.mkdir(parents=True)
         (rules_dir / "ask-when-uncertain.md").write_text("# Ask When Uncertain")
         (rules_dir / "scope-control.md").write_text("# Scope Control")
@@ -430,7 +430,7 @@ class TestGenerateWindsurfrules(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.project_root = Path(self.tmpdir)
-        rules_dir = self.project_root / ".augment" / "rules"
+        rules_dir = self.project_root / ".agent-src" / "rules"
         rules_dir.mkdir(parents=True)
         (rules_dir / "rule-a.md").write_text('---\ntype: "always"\n---\n\n# Rule A\n\nContent A.')
         (rules_dir / "rule-b.md").write_text('---\ntype: "auto"\n---\n\n# Rule B\n\nContent B.')
@@ -464,7 +464,7 @@ class TestGenerateClaudeSkills(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.project_root = Path(self.tmpdir)
-        skills_dir = self.project_root / ".augment" / "skills"
+        skills_dir = self.project_root / ".agent-src" / "skills"
         (skills_dir / "api-design").mkdir(parents=True)
         (skills_dir / "api-design" / "SKILL.md").write_text("---\nname: api-design\n---\n# API")
         (skills_dir / "database").mkdir(parents=True)
@@ -501,7 +501,7 @@ class TestGenerateClaudeCommands(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.project_root = Path(self.tmpdir)
-        commands_dir = self.project_root / ".augment" / "commands"
+        commands_dir = self.project_root / ".agent-src" / "commands"
         commands_dir.mkdir(parents=True)
         (commands_dir / "commit.md").write_text("# commit\n\n## Instructions\n\nDo the commit.")
         (commands_dir / "feature-dev.md").write_text("---\nold: data\n---\n\n# feature-dev\n\nDevelop.")
@@ -514,7 +514,7 @@ class TestGenerateClaudeCommands(unittest.TestCase):
         compress.COMMANDS_SOURCE = commands_dir
         compress.CLAUDE_SKILLS_DIR = self.project_root / ".claude" / "skills"
         # Point SKILLS_SOURCE to empty dir so no real skills interfere
-        compress.SKILLS_SOURCE = self.project_root / ".augment" / "skills"
+        compress.SKILLS_SOURCE = self.project_root / ".agent-src" / "skills"
 
     def tearDown(self):
         (compress.PROJECT_ROOT,
@@ -541,7 +541,7 @@ class TestGenerateClaudeCommands(unittest.TestCase):
         self.assertIn("Do the commit.", content)
 
     def test_command_symlink_points_to_source(self):
-        """Symlink should point to the .augment/commands/ source file."""
+        """Symlink should point to the .agent-src/commands/ source file."""
         compress.generate_claude_commands()
         skill_file = self.project_root / ".claude" / "skills" / "feature-dev" / "SKILL.md"
         target = str(skill_file.resolve())
@@ -550,10 +550,10 @@ class TestGenerateClaudeCommands(unittest.TestCase):
     def test_command_skips_same_name_skill(self):
         """Commands with same name as a skill should be skipped."""
         # Create a skill with same name as 'commit' command
-        skills_dir = self.project_root / ".augment" / "skills" / "commit"
+        skills_dir = self.project_root / ".agent-src" / "skills" / "commit"
         skills_dir.mkdir(parents=True)
         (skills_dir / "SKILL.md").write_text("# commit skill")
-        compress.SKILLS_SOURCE = self.project_root / ".augment" / "skills"
+        compress.SKILLS_SOURCE = self.project_root / ".agent-src" / "skills"
 
         compress.generate_claude_commands()
         # Only feature-dev should exist, not commit (skill takes priority)
