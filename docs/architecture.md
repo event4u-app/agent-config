@@ -5,20 +5,17 @@
 ```
 Rules         → Behavior enforcement (always active)         ← stable
 Skills        → Execution logic (on-demand expertise)        ← stable
-Runtime       → Shell handler (real) · others (scaffold)     ← partial
+Runtime       → Dispatcher + shell handler (pilot skills)    ← partial
 Tools         → External integrations (GitHub, Jira)         ← experimental
-Opt-in layers → Observability, feedback, lifecycle           ← experimental
 ```
 
 **Stable** = shipped, documented, exercised by the default (`minimal`) profile.
 **Experimental** = scaffold with tests and data model, but no real execution
-wired up yet. These layers activate only under the `balanced` / `full`
-profiles and they are explicit about being no-ops today.
+wired up yet.
 
-The opt-in layers (observability, feedback, lifecycle) are described in a
-separate document so the core architecture stays short. See
-[`docs/observability.md`](observability.md). If you have not opted in, you can
-safely ignore them.
+> The previous "observability, feedback, lifecycle" layers were removed in
+> 1.5 — they were scaffolds without production consumers. See the
+> `road-to-9` roadmap, phase 4, for the rationale.
 
 ## Content pipeline
 
@@ -109,17 +106,7 @@ Controlled integration via adapters:
 - Tool registry with safety rules for execution
 - Structured responses with error classification
 
-### 4. Observability, feedback & lifecycle — experimental, opt-in
-
-The system has three further layers for measuring agent behavior, capturing
-outcomes, and tracking skill lifecycle. All three are **off by default**
-(`cost_profile: minimal`), none inject data back into agent context
-automatically, and most consumers of this package never need to enable them.
-
-→ Details, data model, and current scaffold status:
-[`docs/observability.md`](observability.md).
-
-### 5. Cost Control
+### 4. Cost Control
 
 > **Key principle:** Data collection ≠ automatic usage.
 

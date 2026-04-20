@@ -103,7 +103,6 @@ task runtime-validate          # Validate runtime registry consistency
 task runtime-e2e               # Dispatch each pilot skill (CI gate)
 task tool-list                 # List all registered tools
 task tool-validate             # Validate tool declarations
-task report-stdout             # Print health dashboard to stdout
 ```
 
 ### Installation
@@ -134,10 +133,7 @@ scripts/
 ├── lint_regression.py         ← Branch regression detection
 ├── generate_tools.sh          ← Generate tool-specific directories
 ├── check_references.py        ← Cross-reference validator
-├── event_schema.py            ← Structured event definitions
-├── persistence.py             ← JSON persistence layer
-├── report_generator.py        ← CLI health/metrics reports
-├── ci_summary.py              ← GitHub Actions job summary
+├── ci_summary.py              ← GitHub Actions job summary (dispatcher runs)
 └── tools/
     ├── base_adapter.py        ← Tool adapter contract
     ├── github_adapter.py      ← GitHub API adapter
@@ -147,8 +143,6 @@ tests/
 ├── test_install.sh            ← install.sh payload-sync integration tests
 ├── test_install_orchestrator.sh ← scripts/install end-to-end tests
 ├── test_skill_linter.py       ← Linter unit tests
-├── test_persistence.py        ← Persistence layer tests
-├── test_report_generator.py   ← Report generation tests
 └── test_ci_summary.py         ← CI summary tests
 
 .github/workflows/

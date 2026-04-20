@@ -159,21 +159,13 @@ tasks:
 
   test-runtime-all:
     desc: Run all runtime and tools tests
-    cmd: python3 -m pytest tests/test_runtime_registry.py tests/test_runtime_dispatcher.py tests/test_runtime_handler.py tests/test_tool_registry.py tests/test_tool_adapters.py tests/test_persistence.py tests/test_report_generator.py tests/test_ci_summary.py -v
+    cmd: python3 -m pytest tests/test_runtime_registry.py tests/test_runtime_dispatcher.py tests/test_runtime_handler.py tests/test_tool_registry.py tests/test_tool_adapters.py tests/test_ci_summary.py -v
 
   runtime-e2e:
     desc: End-to-end gate — dispatch each runnable pilot skill and fail on any non-zero exit
     cmds:
       - python3 scripts/runtime_dispatcher.py run --skill lint-skills
       - python3 scripts/runtime_dispatcher.py run --skill check-refs
-
-  report:
-    desc: Generate health dashboard from observability data
-    cmd: python3 scripts/report_generator.py --root . --output agents/reports/health-dashboard.md
-
-  report-stdout:
-    desc: Print health dashboard to stdout
-    cmd: python3 scripts/report_generator.py --root .
 
   consistency:
     desc: Verify sync + generated tool outputs are clean

@@ -103,10 +103,10 @@ Start with **Rules + Skills**. Everything else is optional.
 
 Nothing runs automatically without your control. [Configure modes →](docs/customization.md)
 
-> **Experimental modules:** the runtime, tool-adapter, and observability
-> layers are scaffold implementations — structure, data model, and tests
-> exist, but most operations are no-ops by design. The `minimal` profile
-> (which 99% of users should pick) is unaffected.
+> **Experimental modules:** the runtime and tool-adapter layers are still
+> partial — a dispatcher + shell handler run two pilot skills in CI, the
+> rest is scaffold. The `minimal` profile (which 99% of users should pick)
+> is unaffected.
 
 ---
 
@@ -231,7 +231,7 @@ Code's Agent Skills specification.
 | [**Architecture**](docs/architecture.md) | System layers, content pipeline, tool support matrix |
 | [**Development**](docs/development.md) | Prerequisites, editing workflow, all `task` commands, project structure |
 | [**Customization**](docs/customization.md) | Overrides, AGENTS.md, agent settings, cost profiles |
-| [**Quality & CI**](docs/quality.md) | Linting, CI pipeline, compression system, observability |
+| [**Quality & CI**](docs/quality.md) | Linting, CI pipeline, compression system |
 
 ---
 

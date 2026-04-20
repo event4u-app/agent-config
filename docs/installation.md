@@ -224,8 +224,8 @@ cost_profile=minimal
 | Profile | What's active | For whom |
 |---|---|---|
 | `minimal` (default) | Rules + Skills only, zero overhead | New users, solo devs |
-| `balanced` | + Runtime, limited observability | Most teams |
-| `full` | + Tool audit, lifecycle reports | Platform teams |
+| `balanced` | + Runtime dispatcher + shell handler | Most teams |
+| `full` | + Tool adapters (GitHub, Jira) | Platform teams |
 
 No profile configured = `minimal` behavior. → [Full profile details](customization.md)
 
