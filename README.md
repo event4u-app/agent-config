@@ -98,15 +98,15 @@ Start with **Rules + Skills**. Everything else is optional.
 | Mode | What's active | Token overhead |
 |---|---|---|
 | **Minimal** (default) | Rules, Skills, Commands | Zero |
-| **Balanced** | + Runtime scaffolding, local data collection (experimental) | Low |
-| **Full** | + Reports, suggestions in chat, CI summaries (experimental) | Moderate |
+| **Balanced** | + Runtime dispatcher for skills that declare a shell command | Low |
+| **Full** | + Tool adapters (GitHub / Jira read-only, opt-in) | Moderate |
 
 Nothing runs automatically without your control. [Configure modes →](docs/customization.md)
 
-> **Experimental modules:** the runtime and tool-adapter layers are still
-> partial — a dispatcher + shell handler run two pilot skills in CI, the
-> rest is scaffold. The `minimal` profile (which 99% of users should pick)
-> is unaffected.
+> **Experimental modules:** the runtime (dispatcher + shell handler) runs
+> two pilot skills in CI (`lint-skills`, `check-refs`). Other handlers
+> (`php`, `node`) and the tool registry are still scaffold. The `minimal`
+> profile — which most users should pick — is unaffected.
 
 ---
 
