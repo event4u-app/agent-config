@@ -10,7 +10,7 @@
 - [ ] Read [`agents/analysis/compare-composiohq-awesome-claude-skills.md`](../analysis/compare-composiohq-awesome-claude-skills.md)
 - [ ] Maintainer decisions recorded (1.a, 2.c, 3.d, 4.c, 5.a)
 - [ ] Phase 1 of [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) shipped (commit ec79750 — marketplace manifest canonical)
-- [ ] [`road-to-rule-quality-research.md`](road-to-rule-quality-research.md) exists as the empirical companion for rule/judge quality
+- [ ] [`archive/road-to-rule-quality-research.md`](archive/road-to-rule-quality-research.md) archived 2026-04-20; feasibility verdicts in [`agents/analysis/rule-quality-eval-feasibility.md`](../analysis/rule-quality-eval-feasibility.md)
 - [ ] [`road-to-trigger-evals.md`](road-to-trigger-evals.md) Phase 1 PoC available before Phase 2 of this roadmap
 
 ## Context
@@ -304,7 +304,7 @@ Do not inline the runtime build into this roadmap.
 | Dependency | Target roadmap | Nature |
 |---|---|---|
 | Judge-agent gate (Phase 2-3) | [`road-to-trigger-evals.md`](road-to-trigger-evals.md) Phase 2 | Judges are natural evaluators for trigger evals |
-| Judge quality research | [`road-to-rule-quality-research.md`](road-to-rule-quality-research.md) Problem 2 | Judges on always-rules is the research PoC |
+| Judge quality research | [`archive/road-to-rule-quality-research.md`](archive/road-to-rule-quality-research.md) Problem 2 (verdict: conditional go) | Judges on always-rules is the research PoC |
 | Marketplace distribution of new skills | [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) | Every new skill must land in `.claude-plugin/marketplace.json` |
 | Trim audit (optional) | `road-to-skill-catalog-trim.md` (future, Decision 2.c) | Non-blocking; opens after Phase 1 proves new skills ship clean |
 
@@ -354,5 +354,5 @@ task ci
 ## Related
 
 - Analysis: [`compare-composiohq-awesome-claude-skills.md`](../analysis/compare-composiohq-awesome-claude-skills.md)
-- Sibling roadmaps: [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md), [`road-to-trigger-evals.md`](road-to-trigger-evals.md), [`road-to-rule-quality-research.md`](road-to-rule-quality-research.md), [`road-to-drafting-protocol.md`](road-to-drafting-protocol.md)
+- Sibling roadmaps: [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md), [`road-to-trigger-evals.md`](road-to-trigger-evals.md), [`archive/road-to-rule-quality-research.md`](archive/road-to-rule-quality-research.md), [`road-to-drafting-protocol.md`](road-to-drafting-protocol.md)
 - Reference repos: `obra/superpowers`, `NeoLabHQ/context-engineering-kit`, `mhattingpete/claude-skills-marketplace`
