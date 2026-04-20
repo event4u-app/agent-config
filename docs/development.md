@@ -136,8 +136,6 @@ scripts/
 ├── lint_regression.py         ← Branch regression detection
 ├── generate_tools.sh          ← Generate tool-specific directories
 ├── check_references.py        ← Cross-reference validator
-├── runtime_pipeline.py        ← E2E execution pipeline
-├── runtime_session.py         ← Session + metrics tracking
 ├── event_schema.py            ← Structured event definitions
 ├── persistence.py             ← JSON persistence layer
 ├── report_generator.py        ← CLI health/metrics reports
@@ -152,7 +150,6 @@ tests/
 ├── test_install.sh            ← install.sh payload-sync integration tests
 ├── test_install_orchestrator.sh ← scripts/install end-to-end tests
 ├── test_skill_linter.py       ← Linter unit tests
-├── test_runtime_pipeline.py   ← Pipeline integration tests
 ├── test_persistence.py        ← Persistence layer tests
 ├── test_report_generator.py   ← Report generation tests
 └── test_ci_and_governance.py  ← CI summary + governance tests
