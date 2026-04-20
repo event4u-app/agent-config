@@ -5,6 +5,8 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 INSTALL="$SCRIPT_DIR/scripts/install"
+INSTALL_PHP="$SCRIPT_DIR/bin/install.php"
+POSTINSTALL="$SCRIPT_DIR/scripts/postinstall.sh"
 TMPDIR=""
 PASS=0
 FAIL=0
@@ -110,6 +112,38 @@ test_unknown_flag_errors() {
     assert_true "unknown flag exits non-zero (exit=$rc)" test $rc -ne 0
 }
 
+test_bin_install_php_routes_through_orchestrator() {
+    [[ -f "$INSTALL_PHP" ]] || { echo "  ⏭️  skip: bin/install.php missing"; return; }
+    command -v php >/dev/null 2>&1 || { echo "  ⏭️  skip: php not available"; return; }
+    setup
+    php "$INSTALL_PHP" --target "$TMPDIR" --quiet >/dev/null 2>&1
+    local rc=$?
+    assert_true "bin/install.php exit 0" test $rc -eq 0
+    assert_true "bin/install.php: payload synced" test -f "$TMPDIR/.augment/rules/php-coding.md"
+    assert_true "bin/install.php: bridges rendered" test -f "$TMPDIR/.agent-settings"
+    teardown
+}
+
+test_postinstall_exits_zero_even_on_failure() {
+    # Build a fake scripts dir with a broken orchestrator, invoke postinstall.sh,
+    # confirm it prints the loud block and exits 0.
+    local fake
+    fake="$(mktemp -d)"
+    cp "$POSTINSTALL" "$fake/postinstall.sh"
+    printf '#!/usr/bin/env bash\necho "boom" >&2\nexit 1\n' > "$fake/install"
+    chmod +x "$fake/install"
+    local out rc
+    out="$(bash "$fake/postinstall.sh" 2>&1)"
+    rc=$?
+    assert_true "postinstall exit 0 even on failure (got $rc)" test $rc -eq 0
+    if echo "$out" | grep -q "postinstall failed"; then
+        pass "postinstall prints loud failure block"
+    else
+        fail "postinstall missing loud failure block"
+    fi
+    rm -rf "$fake"
+}
+
 # --- Runner ---
 echo "🧪  Running scripts/install orchestrator tests..."
 echo ""
@@ -122,6 +156,8 @@ test_profile_forwarded_to_bridges
 test_idempotent
 test_help_flag
 test_unknown_flag_errors
+test_bin_install_php_routes_through_orchestrator
+test_postinstall_exits_zero_even_on_failure
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed ($(( PASS + FAIL )) total)"

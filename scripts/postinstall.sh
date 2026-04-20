@@ -1,23 +1,24 @@
 #!/usr/bin/env bash
-# postinstall.sh — npm postinstall wrapper for scripts/install.sh
+# postinstall.sh — npm postinstall wrapper for scripts/install
 #
-# Runs the real installer and decides on an exit strategy that is honest
+# Runs the orchestrator and decides on an exit strategy that is honest
 # without breaking `npm install` for unrelated reasons:
 #
 #   - Success        → exit 0, silent.
-#   - Soft failure   → exit 0, print actionable hint. install.sh already
-#                      handles environment issues (no python3) internally.
+#   - Soft failure   → exit 0, print actionable hint. The orchestrator
+#                      already handles environment issues (no python3)
+#                      internally and continues with the payload sync.
 #   - Hard failure   → print a loud error block, print the captured output,
 #                      exit 0. `npm install` keeps working; the developer
 #                      sees exactly what failed and the command to retry.
 #
-# Replaces the previous `bash scripts/install.sh --quiet || true` one-liner,
-# which silently discarded every kind of failure.
+# Delegates to scripts/install (the orchestrator). Never calls install.sh
+# or install.py directly.
 
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INSTALLER="$SCRIPT_DIR/install.sh"
+INSTALLER="$SCRIPT_DIR/install"
 
 if [[ ! -f "$INSTALLER" ]]; then
     # Nothing to do — shipping this wrapper without the installer would be a
@@ -43,10 +44,10 @@ cat >&2 <<EOF
 Output:
 $(sed 's/^/    /' "$LOG")
 
-The rest of \`npm install\` continues — but the agent-config bridge
-files were NOT installed. Re-run manually to see the full trace:
+The rest of \`npm install\` continues — but agent-config was NOT
+installed. Re-run manually to see the full trace:
 
-    bash node_modules/@event4u/agent-config/scripts/install.sh
+    bash node_modules/@event4u/agent-config/scripts/install
 
 If this keeps happening, please open an issue:
     https://github.com/event4u-app/agent-config/issues
