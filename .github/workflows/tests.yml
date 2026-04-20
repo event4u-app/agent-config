@@ -75,6 +75,18 @@ jobs:
         # `python3 scripts/runtime_dispatcher.py run --skill <name>`
         # still exits 0 for the two pilots. Kept narrow on purpose — add
         # a pilot to the matrix below only after it has unit coverage.
+        # Each run persists its ExecutionResult so the next step can
+        # render a job summary even if an individual skill fails.
         run: |
-          python3 scripts/runtime_dispatcher.py run --skill lint-skills
-          python3 scripts/runtime_dispatcher.py run --skill check-refs
+          mkdir -p agents/reports/runs
+          python3 scripts/runtime_dispatcher.py run --skill lint-skills \
+            --output agents/reports/runs/lint-skills.json
+          python3 scripts/runtime_dispatcher.py run --skill check-refs \
+            --output agents/reports/runs/check-refs.json
+
+      - name: CI summary (dispatcher runs)
+        # Renders a Markdown table of the runs above as a GitHub Step
+        # Summary. Runs on success AND failure so failing pilots still
+        # show up in the PR UI with their stderr tail.
+        if: always()
+        run: python3 scripts/ci_summary.py --runs agents/reports/runs

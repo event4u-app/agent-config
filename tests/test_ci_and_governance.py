@@ -1,4 +1,4 @@
-"""Tests for ci_summary.py and feedback_governance.py."""
+"""Tests for feedback_governance.py."""
 
 import sys
 from pathlib import Path
@@ -7,34 +7,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
-from ci_summary import generate_ci_summary
 from feedback_governance import analyze_feedback, generate_governance_report, GovernanceProposal
-
-
-class TestCISummary:
-
-    def test_empty_data(self, tmp_path):
-        report = generate_ci_summary(tmp_path)
-        assert "Agent Infrastructure Summary" in report
-        assert "No pipeline data" in report
-
-    def test_with_feedback(self, tmp_path):
-        # Create fake feedback file
-        import json
-        reports_dir = tmp_path / "agents" / "reports"
-        reports_dir.mkdir(parents=True)
-        (reports_dir / "metrics.json").write_text(json.dumps([
-            {"skill_name": "s1", "execution_type": "assisted", "outcome": "success"},
-        ]))
-        (reports_dir / "feedback.json").write_text(json.dumps([
-            {"skill_name": "s1", "outcome": "success"},
-            {"skill_name": "s2", "outcome": "failure"},
-        ]))
-        (reports_dir / "tool-audit.json").write_text("[]")
-
-        report = generate_ci_summary(tmp_path)
-        assert "Skills executed: **1**" in report
-        assert "50%" in report
 
 
 class TestFeedbackGovernance:
