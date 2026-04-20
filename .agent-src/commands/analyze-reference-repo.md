@@ -17,8 +17,8 @@ project the user admires) and produce a structured document that:
 - optionally generates a roadmap draft for the adopt items.
 
 **Not** for analyzing the current project — use `/project-analyze` for that.
-**Not** for importing external skills wholesale — that is the job of the
-external-sources CLI (see `road-to-ultimate.md` Phase 1).
+**Not** for importing external skills wholesale — out of scope for this
+package; fork the reference repo or maintain the content in your own.
 
 ## Inputs
 
@@ -179,8 +179,7 @@ Never create the roadmap without explicit confirmation.
 ## When **not** to use
 
 - Analyzing the current repo → `/project-analyze`.
-- Importing external skills → external-sources CLI (see
-  `agents/roadmaps/road-to-ultimate.md` Phase 1).
+- Importing external skills wholesale → out of scope; fork or maintain your own.
 - Security audit of a dependency → `security-audit` skill.
 - Framework migration → `project-analysis-*` skill family.
 
@@ -189,4 +188,4 @@ Never create the roadmap without explicit confirmation.
 - Skill: `project-analyzer` — base analysis workflow.
 - Skill: `learning-to-rule-or-skill` — turn adopt items into content.
 - Skill: `upstream-contribute` — push learnings back to this package.
-- Roadmap: `agents/roadmaps/road-to-ultimate.md` — consumer of findings.
+- Roadmaps: `agents/roadmaps/` — consumers of findings (e.g. `road-to-9.md`).
