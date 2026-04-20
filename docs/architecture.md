@@ -5,7 +5,7 @@
 ```
 Rules         → Behavior enforcement (always active)         ← stable
 Skills        → Execution logic (on-demand expertise)        ← stable
-Runtime       → Execution system (dispatcher, hooks)         ← experimental
+Runtime       → Shell handler (real) · others (scaffold)     ← partial
 Tools         → External integrations (GitHub, Jira)         ← experimental
 Opt-in layers → Observability, feedback, lifecycle           ← experimental
 ```
@@ -57,26 +57,43 @@ safely ignore them.
 
 Ensures: no guessing, analysis before action, real verification, consistent outputs.
 
-### 2. Execution Layer (Runtime) — experimental
+### 2. Execution Layer (Runtime) — partially real, partially scaffold
 
-> **Status: scaffold.** Registry, dispatcher, pipeline, hooks and an error
-> taxonomy exist and have tests, but no real execution happens yet. See
-> `scripts/runtime_dispatcher.py` — its module docstring states
-> *"No real execution happens — this is a scaffold for future phases."*
+> **Status:**
+> - **Real:** shell-handler path — skills that declare an `execution.command`
+>   argv are dispatched and executed by `scripts/runtime_handler.py`. A typed
+>   `ExecutionResult` (exit code, stdout, stderr, duration, artifacts) is
+>   returned. Pilots: `lint-skills`, `check-refs`.
+> - **Scaffold:** `php` and `node` handlers, pipeline, hooks, error taxonomy,
+>   tool registry — data model and tests exist, no real wiring yet.
 
-Skills can optionally define execution metadata:
+Skills opt into runtime by declaring execution metadata:
 
 ```yaml
 execution:
   type: manual | assisted | automated
-  handler: <runtime handler>
+  handler: shell | php | node | internal | none
+  command:                       # required for shell/php/node runtime paths
+    - python3
+    - scripts/skill_linter.py
+    - "--all"
+  timeout_seconds: 120
   allowed_tools: []
-  timeout: 30
-  safety_mode: strict
+  safety_mode: strict            # required for type=automated
 ```
 
-Planned scope: skill execution registry, dispatcher, execution handlers,
-safety controls.
+Invoke a runtime-capable skill end-to-end:
+
+```bash
+python3 scripts/runtime_dispatcher.py run --skill lint-skills
+```
+
+The dispatcher resolves the skill, enforces safety constraints, then hands
+off to the matching handler. Environment is scrubbed to an explicit
+allowlist; `subprocess.run` is invoked with `shell=False` (argv only).
+
+Planned scope (still to come): `php` / `node` handlers, tool-registry wiring
+for `allowed_tools`, streaming output, richer artifact capture.
 
 ### 3. Tool Integration — experimental
 

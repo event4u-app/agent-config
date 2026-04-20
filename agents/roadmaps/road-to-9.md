@@ -47,25 +47,51 @@ make it execute for real, end-to-end, with a proper result object and
 observable side effects. No plugin system, no multi-handler matrix — one
 working path.
 
-- [ ] **1.1** Choose the pilot skill. Candidates: `tests-execute`,
-      `quality-fix`, `commit`. Pick the one with the narrowest safe surface.
-- [ ] **1.2** Define the minimal `Executor` interface: accepts an
-      `ExecutionRequest`, dispatches to exactly one `Handler`, returns a
-      typed `Result` (exit code, stdout, stderr, duration, artifacts).
-- [ ] **1.3** Implement **one** `Handler` that shells out safely — timeout,
-      stdout/stderr capture, working directory, env allowlist. Reuse the
-      existing `runtime_safety` / `tool-safety` rules; do not reinvent them.
-- [ ] **1.4** Wire the pilot skill to the `Executor` via its frontmatter
-      `execution:` block. Agents invoking the skill get a real `Result`.
-- [ ] **1.5** End-to-end test: invoke the pilot skill through the dispatcher,
-      assert the `Result` matches reality (exit code, captured output,
-      non-zero duration, correct artifact paths).
-- [ ] **1.6** Update `docs/architecture.md` — the Execution Layer section
-      drops the *"scaffold"* label for this one path; everything else stays
-      marked experimental.
+- [x] **1.1** Pilot skills chosen. Roadmap-listed candidates (`tests-execute`,
+      `quality-fix`, `commit`) target Laravel/PHP/Docker consumer projects
+      and have no real execution surface inside this Python/Bash repo.
+      Re-evaluated and picked two narrow, safe, read-only pilots authored
+      for this repo's actual tooling: `lint-skills` (runs
+      `scripts/skill_linter.py --all`) and `check-refs` (runs
+      `scripts/check_references.py`). Both live in
+      `.agent-src.uncompressed/skills/`.
+- [x] **1.2** Added `command` to `VALID_EXECUTION_FIELDS` with argv-form
+      validation (list of strings, non-empty). Extended `SkillRuntime` with
+      a `command` field and an `is_runnable` property. Dispatcher and
+      registry now carry the command through the full chain.
+- [x] **1.3** `scripts/runtime_handler.py` — `execute_shell()` runs skills
+      via `subprocess.run(shell=False)` with `timeout_seconds`, scrubbed env
+      (explicit `DEFAULT_ENV_ALLOWLIST`, no secrets forwarded), explicit
+      `cwd`, captured stdout/stderr. Returns a typed `ExecutionResult`
+      (exit_code, stdout, stderr, duration_ms, status ∈
+      success/failure/timeout/error, timed_out, error, artifacts).
+- [x] **1.4** Pilot skills wired through frontmatter `execution:` blocks
+      (type: assisted, handler: shell, command: argv list). Registry
+      discovers them as `is_runnable: True`.
+- [x] **1.5** `python3 scripts/runtime_dispatcher.py run --skill <name>`
+      dispatches and executes end-to-end. Pytest suite
+      `tests/test_runtime_handler.py` (11 tests) covers success / non-zero
+      exit / stderr capture / timeout / command-not-found / empty-command
+      guard / non-runtime-handler guard / env scrub, plus two E2E tests
+      that run both pilots through the dispatcher and assert real
+      `ExecutionResult` fields.
+- [x] **1.6** `docs/architecture.md` layer 2 updated — the shell-handler path
+      is now labeled **real**; `php` / `node` handlers, pipeline, hooks,
+      error taxonomy, and tool registry remain labeled **scaffold**.
+      Top-of-file diagram reflects the split.
 
-**Acceptance:** `python3 -m scripts.runtime_dispatcher run <pilot-skill>`
-(or equivalent) produces a real `Result` and a green CI job that proves it.
+**Acceptance met:**
+
+```bash
+python3 scripts/runtime_dispatcher.py run --skill lint-skills
+# → status=success, exit_code=0, duration_ms>0, stdout contains
+#   "Summary: <n> pass, <n> warn, 0 fail, <n> total"
+python3 scripts/runtime_dispatcher.py run --skill check-refs
+# → status=success, exit_code=0, duration_ms>0
+```
+
+Full CI green (sync, compression, refs, portability, skill-lint,
+marketplace, 345 pytests, readme).
 
 ## Phase 2: One killer end-to-end use case
 
