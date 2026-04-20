@@ -275,6 +275,83 @@ actually delivered. The stack-fit table, experimental labels, and headline
 all agree. A fresh reader cannot point to a claim that isn't backed by
 shipped code.
 
+## Phase 6: Cost-profile matrix cleanup (template leak)
+
+**Problem:** Phase 4 removed the observability / feedback / lifecycle
+layers, but the cost-profile *documentation* and the installer presets
+still advertise them. Concretely, the matrix in
+`.agent-src.uncompressed/templates/agent-settings.md` still lists eight
+toggles (`runtime_enabled`, `observability_reports`, `feedback_collection`,
+`runtime_auto_read_reports`, `max_report_lines`, `minimal_runtime_context`,
+`ci_summary_enabled`, `feedback_suggestions_in_chat`) — **zero of which
+have a consumer in code anymore**. `config/agent-settings.template.ini`
+and the three `config/profiles/*.ini` presets repeat the same wording
+("runtime off", "reports auto-read", "feedback in chat"). Every fresh
+install of this package writes the stale promises straight into the
+consumer's `.agent-settings`.
+
+**Scope:** Bring the profile surface in line with the post-Phase-4 reality.
+No new profile system, no renames — just honest text and removing toggles
+that nothing reads.
+
+- [ ] **6.1** Authoring template
+      `.agent-src.uncompressed/templates/agent-settings.md`:
+      - Remove the entire "Matrix values" table (lines ~116–125) —
+        none of those keys are read by any shipped code.
+      - Collapse the "Profile matrix" table to the properties that
+        actually gate behavior today: `cost_profile` itself and
+        `skill_improvement_pipeline`. Anything else comes out.
+      - Rewrite the three profile descriptions (`minimal` / `balanced` /
+        `full`) to match `docs/customization.md`: minimal = rules+skills
+        +commands, balanced = + runtime dispatcher for skills with a
+        shell command, full = + tool adapters (GitHub/Jira, read-only,
+        opt-in).
+      - Drop the "balanced with CI summaries" example (it toggles
+        `ci_summary_enabled`, which is gone).
+- [ ] **6.2** Installer presets `config/`:
+      - `agent-settings.template.ini` header + profile comments:
+        replace `runtime_enabled, observability_reports, …` and the
+        three one-line profile descriptions with the wording from 6.1.
+      - `config/profiles/{minimal,balanced,full}.ini`: rewrite the
+        comment blocks; no functional change (the files still just set
+        `cost_profile=<name>`).
+- [ ] **6.3** User-visible scripts:
+      - `scripts/first-run.sh` "Next steps" block: drop the "reports
+        auto-read" / "feedback" language, point at `docs/customization.md`
+        for the authoritative profile description.
+      - `scripts/install.py`: `detect_runtime_package()` +
+        `suggest_profile_upgrade()` still reference a hypothetical
+        separate `agent-config-runtime` package. Either delete both
+        (simplest, matches current single-package reality) or mark
+        them clearly as "reserved for multi-package future" with a
+        TODO link to `agents/roadmaps/skipped/multi-package-architecture.md`.
+        Preference: delete.
+- [ ] **6.4** Downstream cross-references:
+      - `.agent-src.uncompressed/rules/docs-sync.md`,
+        `.agent-src.uncompressed/contexts/augment-infrastructure.md`,
+        `agents/docs/skill-classification.md` — grep for
+        `runtime_auto_read_reports`, `observability_reports`,
+        `feedback_collection`, `ci_summary_enabled`,
+        `feedback_suggestions_in_chat`, `max_report_lines`,
+        `minimal_runtime_context`, `runtime_enabled`. Any hit either
+        refers to an actual consumer (keep, add source link) or is
+        stale (remove).
+- [ ] **6.5** `task ci` green end-to-end, including
+      `tests/test_install_py.py` and `tests/test_install_orchestrator.sh`.
+      Spot-check by running `python3 scripts/install.py --project /tmp/foo`
+      on a scratch dir and reading the produced `.agent-settings` — it
+      must not contain the word "observability", "feedback", or
+      "reports auto-read".
+
+**Acceptance:** A fresh install produces a `.agent-settings` that only
+documents settings with a live consumer. The phrases "observability",
+"feedback collection", "runtime_auto_read_reports", and "CI summaries
+on PRs" no longer appear in any file shipped to consumers. The profile
+descriptions in the template, the installer ini files, and
+`docs/customization.md` all agree verbatim.
+
+**Target release:** 1.6.0 (together with the Phase-5 doc narrowing).
+
 ## Acceptance Criteria (overall)
 
 - [ ] Phase 1 ships in 1.5.0; Phases 2–5 ship in 1.6.0 at the latest.
