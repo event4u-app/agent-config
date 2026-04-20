@@ -118,33 +118,54 @@ demo-quality, fully documented vertical. Do not invent new commands.
 **Acceptance:** README shows exactly one end-to-end flow, backed by a
 recorded run and a runnable sample, and it reproduces on a clean clone.
 
-## Phase 3: Consolidate installer entry points
+## Phase 3: Consolidate installer entry points ✅
 
-**Problem:** `install.py`, `install.sh`, `postinstall*`, `bin/install.php` —
-four entry points, overlapping behavior, cross-language debugging surface.
-Single mental model is missing.
+**Status:** Done (2026-04-20).
 
-**Scope:** Declare `scripts/install.py` the **primary installer**. Everything
-else becomes a thin wrapper that shells into it. Nothing new is added.
+**Original problem:** `install.py`, `install.sh`, `postinstall*`,
+`bin/install.php` — four entry points, overlapping behavior, cross-language
+debugging surface, no single mental model.
 
-- [ ] **3.1** Audit each entry point. For each: what unique logic lives here
-      that is not in `install.py`? Record findings.
-- [ ] **3.2** Move any unique logic into `install.py` behind explicit flags.
-      Keep its public CLI surface stable.
-- [ ] **3.3** Trim `install.sh`, Composer `post-install-cmd`, and
-      `bin/install.php` to wrappers — each ≤ 30 lines, single `exec`/`shell`
-      to `install.py` with forwarded args.
-- [ ] **3.4** Document the hierarchy. `README.md` and `docs/installation.md`
-      both state: *"Primary installer: `python3 scripts/install.py`. All
-      others are compatibility wrappers."*
-- [ ] **3.5** Extend `tests/test_install.sh` to cover every wrapper path —
-      same expected output, same exit codes.
-- [ ] **3.6** Update `CHANGELOG.md` under 1.6.0: note the consolidation and
-      that no consumer-visible behavior changed.
+**Original plan:** Declare `scripts/install.py` the **primary installer**;
+everything else a thin wrapper that shells into it.
 
-**Acceptance:** All four entry points produce identical output on the test
-repo. `scripts/install.py --help` is the only installer docs surface anyone
-needs to read.
+**What actually happened:** The 3.1 audit showed the roadmap premise did
+not match the code. `install.sh` (681 LoC) owned the full payload sync
+(`.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`,
+`GEMINI.md`), while `install.py` (339 LoC) only handled bridge files
+(`.agent-settings`, VSCode / Augment / Copilot JSONs). `install.sh`
+tail-called `install.py`. `bin/install.php` only called `install.py`,
+which meant Composer users never received the payload sync at all — a
+latent bug the roadmap's port plan would have masked. Option 3 (a new
+bash orchestrator that keeps the two stages independent) was chosen.
+
+- [x] **3.1** Audit each entry point. Findings: `install.sh` =
+      payload sync, `install.py` = bridges, `postinstall.sh` = npm hook,
+      `bin/install.php` = Composer hook (missing sync stage).
+- [x] **3.2** (Revised) Extracted the bridge-installer call out of
+      `install.sh` instead of merging stages. Each stage is now
+      independently testable and independently invocable.
+- [x] **3.3** Introduced `scripts/install` as the primary bash
+      orchestrator. `bin/install.php` (56 → 66 LoC) and
+      `scripts/postinstall.sh` (59 → 70 LoC) now route through the
+      orchestrator. Both stay under 100 LoC and contain no business
+      logic beyond forwarding args.
+- [x] **3.4** Documented the two-stage pipeline in `README.md`,
+      `docs/installation.md`, `docs/troubleshooting.md`,
+      `docs/development.md`, `CONTRIBUTING.md`, and `CHANGELOG.md`.
+- [x] **3.5** Added `tests/test_install_orchestrator.sh` for the
+      orchestrator and the two wrappers (bin/install.php,
+      postinstall.sh). `tests/test_install.sh` continues to cover
+      payload sync. Both are wired into `task test` and
+      `task test-install`.
+- [x] **3.6** `CHANGELOG.md` under `[Unreleased]` records the
+      orchestrator addition, the `install.sh` refactor, and the
+      Composer sync-bug fix.
+
+**Acceptance:** `scripts/install` is the single mental model for
+consumers. Direct stage invocation (`install.sh` / `install.py`)
+remains available for advanced use and for CI. Composer users now
+receive the full payload sync — previously they did not.
 
 ## Phase 4: Resolve fake-depth experimental layers
 
