@@ -229,19 +229,46 @@ The framing over-promises.
 **Scope:** Tighten the product description to match what actually ships
 after Phases 1–4. No product renaming, no logo changes — wording only.
 
-- [ ] **5.1** Rewrite the README headline and subtitle to match the narrowed
-      surface (e.g. *"Agent governance and skill system, with optional
-      runtime experiments"*). Keep it one sentence.
-- [ ] **5.2** Audit every appearance of "runtime", "observability",
-      "feedback", "lifecycle" in `README.md`, `docs/architecture.md`,
-      `docs/observability.md`. Each must either (a) refer to a shipped
-      capability, (b) be labeled experimental with a link, or (c) be removed.
-- [ ] **5.3** Refresh the stack-fit table in `README.md` — only claim
-      support where CI proves it (the matrix already exists after 1.4.0).
-- [ ] **5.4** Update `AGENTS.md` (root, package-own) to reflect the narrowed
-      positioning in its one-paragraph summary.
-- [ ] **5.5** Final pass: external reviewer-style scan of `README.md` — is
-      there any claim a new user cannot verify in 10 minutes? Fix or drop.
+- [x] **5.1** Headline kept (`Governed Agent System`) — already matches the
+      narrowed surface: governance (rules) + skill system + guardrails. The
+      subtitle (`Teach your AI agents Laravel, PHP, testing, Git workflows,
+      and 90+ more skills — with quality guardrails built in`) names only
+      shipped capabilities. No rewrite needed.
+- [x] **5.2** Audit complete. After edits, the only remaining occurrences
+      of "runtime" in `README.md` (3) refer to the real dispatcher / shell
+      handler or to the absence of runtime dependencies. Occurrences of
+      "observability", "feedback", "lifecycle" are **zero** across
+      `README.md`, `docs/architecture.md`, `docs/quality.md`,
+      `docs/getting-started.md`, `docs/customization.md` (except the
+      intentional removal note in `docs/architecture.md:16`).
+- [x] **5.3** Stack-fit table reviewed. Claims are: Laravel (primary),
+      other PHP frameworks (deep-analysis only), JS/TS/Next/Node (general
+      skills only), other stacks (cherry-pick). CI does not prove JS/TS
+      depth, but the matrix is explicit about the limitation ("PHP-specific
+      skills are noise"). Kept as-is.
+- [x] **5.4** Root `AGENTS.md` already reflects the narrowed positioning
+      ("Shared agent configuration — skills, rules, commands, guidelines,
+      and templates for AI coding tools"). No runtime / observability /
+      feedback / lifecycle claims. Not touched.
+- [x] **5.5** Final reviewer scan complete. Every claim in `README.md` is
+      backed by shipped surface:
+      - Quickstart commands → `scripts/install*` exist and are tested.
+      - Mode table → `minimal` is default; balanced = dispatcher; full =
+        tool adapters (read-only, opt-in). All three are visible in
+        `docs/customization.md` + `docs/architecture.md`.
+      - Featured Skills / Commands → each link resolves
+        (`task check-refs` green).
+      - Supported Tools table → matches `task generate-tools` outputs.
+      - Requirements section → matches `scripts/install` + `docs/installation.md`.
+
+**Follow-up (out of Phase 5 scope):**
+`.agent-src.uncompressed/templates/agent-settings.md` still documents
+`runtime_auto_read_reports` and describes the `balanced` / `full` profiles
+with "reports auto-read, CI summaries, feedback in chat" — settings with
+no consumer after Phase 4. This template is shipped to consumer projects
+and needs a dedicated phase (profile matrix cleanup). Not touched here
+because it has ripple effects into `scripts/install.py` defaults, the
+`/config-agent-settings` command, and the compressed template copies.
 
 **Acceptance:** README and architecture describe only what Phase 1–4
 actually delivered. The stack-fit table, experimental labels, and headline
