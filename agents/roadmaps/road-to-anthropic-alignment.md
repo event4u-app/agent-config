@@ -22,6 +22,24 @@ makes our existing 95+ skills measurably better. No speculative scaffolding.
 
 ## Phase 1 — Claude Code Plugin Marketplace (v1.7.0)
 
+### Implementation notes (2026-04-20)
+
+Phase 1 shipped with these deltas from the original draft below:
+
+- **Bundle scope**: chose *all 98 skills* (Q1 option 3) rather than 7 agent-infra
+  skills. Plugin name is therefore `agent-config` (full catalog), not
+  `agent-infrastructure`.
+- **Skill paths**: `./.claude/skills/<name>` (canonical symlinks already in place)
+  rather than `./.agent-src/skills/<name>`. Either would work, the `.claude/`
+  path mirrors Anthropic's `./skills/` convention.
+- **Version source**: `package.json` (composer.json has no version field).
+- **Owner email**: `dev@event4u.app` (not the personal noreply).
+- **Rules + commands** are **not** part of `marketplace.json` — the Claude Code
+  Plugin schema only carries `skills[]`. Rules and commands continue to be
+  installed via `scripts/install.sh`. This matches Q2 option 1 after research.
+- **Removed** the pre-existing `.claude-plugin/plugin.json` — Anthropic's
+  canonical pattern uses `marketplace.json` only, no sibling plugin descriptor.
+
 ### 1.1 Add `.claude-plugin/marketplace.json`
 
 Format taken verbatim from anthropics/skills:
@@ -67,13 +85,20 @@ Add to `task ci` pipeline before `test`.
 
 ### 1.3 Document in README
 
-One paragraph after the "Multi-agent tool support" section:
+Install commands in the README's "individual use" table use the canonical
+`<plugin-name>@<marketplace-name>` syntax:
 
 ```
-> Try in Claude Code via the plugin marketplace:
-> /plugin marketplace add event4u/agent-config
-> /plugin install agent-infrastructure@event4u-agent-config
+claude plugin install agent-config@event4u-agent-config
 ```
+
+The marketplace itself is registered once per user via:
+
+```
+claude marketplace add event4u-app/agent-config
+```
+
+(Registration syntax takes the GitHub repo path, not the marketplace name.)
 
 ### Explicitly deferred
 

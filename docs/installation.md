@@ -124,19 +124,19 @@ This is additional to project-installed mode, not a replacement.
 ### Augment CLI
 
 ```bash
-auggie plugin install agent-config@event4u
+auggie plugin install agent-config@event4u-agent-config
 ```
 
 ### Claude Code
 
 ```bash
-claude plugin install agent-config@event4u
+claude plugin install agent-config@event4u-agent-config
 ```
 
 ### Copilot CLI
 
 ```bash
-copilot plugin install agent-config@event4u
+copilot plugin install agent-config@event4u-agent-config
 ```
 
 ### When to use plugin mode
