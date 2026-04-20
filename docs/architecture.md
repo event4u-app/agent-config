@@ -60,9 +60,12 @@ Ensures: no guessing, analysis before action, real verification, consistent outp
 > - **Real:** shell-handler path — skills that declare an `execution.command`
 >   argv are dispatched and executed by `scripts/runtime_handler.py`. A typed
 >   `ExecutionResult` (exit code, stdout, stderr, duration, artifacts) is
->   returned. Pilots: `lint-skills`, `check-refs`.
-> - **Scaffold:** `php` and `node` handlers, pipeline, hooks, error taxonomy,
->   tool registry — data model and tests exist, no real wiring yet.
+>   returned and can be persisted as JSON via `--output FILE`. Pilots:
+>   `lint-skills`, `check-refs`. Both run on every PR and appear in the
+>   GitHub Step Summary via `scripts/ci_summary.py`.
+> - **Scaffold:** `php` and `node` handlers — the frontmatter accepts them
+>   and the registry validates them, but no handler implementation exists
+>   yet.
 
 Skills opt into runtime by declaring execution metadata:
 
@@ -89,8 +92,8 @@ The dispatcher resolves the skill, enforces safety constraints, then hands
 off to the matching handler. Environment is scrubbed to an explicit
 allowlist; `subprocess.run` is invoked with `shell=False` (argv only).
 
-Planned scope (still to come): `php` / `node` handlers, tool-registry wiring
-for `allowed_tools`, streaming output, richer artifact capture.
+Planned scope (still to come): `php` / `node` handlers, tool-registry
+wiring for `allowed_tools`, streaming output.
 
 ### 3. Tool Integration — experimental
 
@@ -108,11 +111,13 @@ Controlled integration via adapters:
 
 ### 4. Cost Control
 
-> **Key principle:** Data collection ≠ automatic usage.
+> **Key principle:** Opt-in by default.
 
-Metrics, reports, and feedback are collected and persisted but **NOT automatically injected
-into agent context**. All features are gated by settings with `cost_profile` support
-(`minimal`, `balanced`, `full`, `custom`).
+The dispatcher and tool adapters activate only under the `balanced` or
+`full` profile. The default `minimal` profile ships rules, skills, and
+commands and nothing else. All settings and their profile defaults are
+documented in
+[`.agent-src.uncompressed/templates/agent-settings.md`](../.agent-src.uncompressed/templates/agent-settings.md).
 
 ---
 
