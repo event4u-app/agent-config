@@ -14,8 +14,8 @@ capability or removes an unfulfilled promise. No new experimental scaffolds.
 
 ## Prerequisites
 
-- [ ] Read `docs/architecture.md` (stable layers) and `docs/observability.md`
-      (experimental layers) — know exactly which surface is real today.
+- [ ] Read `docs/architecture.md` (stable layers) — know exactly which
+      surface is real today. (`docs/observability.md` was removed in Phase 4.)
 - [ ] Read `scripts/runtime_dispatcher.py` — confirm its current scaffold status.
 - [ ] Read the `jira-ticket` command and map the gaps vs. a full end-to-end flow.
 - [ ] Inventory installer entry points: `scripts/install.py`,
@@ -167,32 +167,58 @@ consumers. Direct stage invocation (`install.sh` / `install.py`)
 remains available for advanced use and for CI. Composer users now
 receive the full payload sync — previously they did not.
 
-## Phase 4: Resolve fake-depth experimental layers
+## Phase 4: Resolve fake-depth experimental layers ✅
 
-**Problem:** Observability, Feedback, and Lifecycle layers emit artifacts
-(`feedback.json`, lifecycle metrics) that nothing consumes. Complexity
-without return.
+**Status:** Done (2026-04-20).
 
-**Scope:** Per layer, make a binary decision — **(A) remove** or **(B) wire
-one real consumer**. No layer survives with zero consumers.
+**Original problem:** Observability, feedback, and lifecycle layers emitted
+artifacts nothing consumed. Complexity without return.
 
-- [ ] **4.1** Inventory: for Observability, Feedback, Lifecycle — list every
-      emitter, every artifact, every would-be consumer. Record in this file.
-- [ ] **4.2** Decide per layer. Default bias: **(A) remove**. Choose **(B)**
-      only if a consumer can ship in the same release.
-- [ ] **4.3 (A-branch)** For removed layers: delete code, delete docs in
-      `docs/observability.md`, delete tests, delete taskfile targets, note
-      the removal under 1.6.0 *"Removed"* in `CHANGELOG.md`.
-- [ ] **4.4 (B-branch)** For retained layers: ship the minimal consumer
-      loop. Candidate: feedback scores nudge `analysis-skill-router` skill
-      preference. Gate with a feature flag, keep the writer side unchanged.
-- [ ] **4.5** `docs/architecture.md` and `docs/observability.md` reflect the
-      final set of experimental layers. No layer is described without a
-      named consumer.
+**Original plan:** Per layer, decide **(A) remove** or **(B) wire one real
+consumer**. No layer survives with zero consumers.
 
-**Acceptance:** Every remaining experimental layer has a named consumer that
-actually reads its output. Removed layers leave no dead references in docs
-or code (`grep` clean).
+**What actually happened:** The 4.1 inventory showed that after Phase 1 the
+only real runtime path was the dispatcher + shell handler. A parallel
+"pipeline" system (`runtime_pipeline`, `runtime_session`, `runtime_execute`)
+existed only to feed observability (`runtime_metrics`, `runtime_events`,
+`runtime_logger`, `runtime_hooks`, `runtime_errors`), feedback
+(`feedback_collector`, `feedback_governance`), and lifecycle
+(`skill_lifecycle`). None of these had production consumers; even
+`report_generator`, `persistence`, and `event_schema` only existed to glue
+the scaffold together. Decision: **remove all of them**. The one useful
+output format (the CI summary) was refactored into a real consumer of the
+dispatcher.
+
+- [x] **4.1** Inventory complete. Five layers identified (pipeline,
+      observability, feedback, lifecycle, glue); one real consumer rescued
+      and rewired (`ci_summary.py`).
+- [x] **4.2** Decision: all five layers — remove. `ci_summary.py` kept with
+      a new implementation that consumes dispatcher output.
+- [x] **4.3 (A-branch)** Seven commits, ≈ 2 000 LoC of scripts + 600 LoC of
+      tests deleted, 6 Taskfile targets removed (`runtime-execute`,
+      `lifecycle-report`, `lifecycle-health`, `report`, `report-stdout`,
+      plus purged entries in `test-runtime-all`). Stale docs deleted:
+      `docs/observability.md`, `agents/docs/observability-scoping.md`,
+      `agents/docs/feedback-consumption.md`,
+      `agents/docs/runtime-visibility.md`. Removals recorded in
+      `CHANGELOG.md` under `[Unreleased]`.
+- [x] **4.4 (rescued consumer)** `scripts/runtime_dispatcher.py run` gained
+      `--output FILE` (persists `ExecutionResult` as JSON).
+      `scripts/ci_summary.py` was rewritten as a consumer of those files
+      and renders a GitHub Step Summary (Markdown table + failure details
+      with stderr tail). `tests.yml` writes runs to
+      `agents/reports/runs/` and the summary step runs with `if: always()`,
+      so failing pilot skills surface in the PR UI even when the job
+      itself fails.
+- [x] **4.5** `docs/architecture.md` and `README.md` / `docs/installation.md`
+      received minimal updates so no references point to deleted files.
+      Full Phase-5 narrowing of the prose (headline, stack-fit table,
+      experimental labels) is the scope of the next phase.
+
+**Acceptance met:** Every remaining layer has a named consumer.
+`scripts/check_references.py` is clean; `task ci` is green
+(sync, compression, refs, portability, skill-lint, runtime-e2e,
+239 pytests, readme).
 
 ## Phase 5: Narrow the vision in README and architecture
 

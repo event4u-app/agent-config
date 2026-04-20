@@ -39,6 +39,33 @@ versioning policy is documented in [CONTRIBUTING.md](CONTRIBUTING.md#versioning-
   directories, no `.windsurfrules`. This latent bug is fixed with the
   new routing.
 
+### Removed
+- **Observability, feedback, and lifecycle scaffolding.** Road-to-9
+  Phase 4 resolved the "fake depth" layers. Every module that had no
+  production consumer was removed; the dispatcher + shell handler
+  (Phase 1) stays as the only real runtime path. Deleted scripts:
+  `runtime_pipeline`, `runtime_session`, `runtime_execute`,
+  `runtime_errors`, `runtime_metrics`, `runtime_events`,
+  `runtime_logger`, `runtime_hooks`, `feedback_collector`,
+  `feedback_governance`, `skill_lifecycle`, `report_generator`,
+  `persistence`, `event_schema` (≈ 2 000 LoC) plus their tests and
+  Taskfile targets (`runtime-execute`, `lifecycle-report`,
+  `lifecycle-health`, `report`, `report-stdout`). The `lifecycle`
+  frontmatter field on individual skills is kept — it is still a lint
+  signal.
+- Stale design docs describing the removed layers:
+  `docs/observability.md`, `agents/docs/observability-scoping.md`,
+  `agents/docs/feedback-consumption.md`,
+  `agents/docs/runtime-visibility.md`.
+
+### Added (CI)
+- `scripts/runtime_dispatcher.py run` learned `--output FILE`,
+  persisting the `ExecutionResult` as JSON. `scripts/ci_summary.py` was
+  rewritten to consume those files and render a GitHub Step Summary
+  (Markdown table + failure details with stderr tail). `tests.yml`
+  wires the two together, so failing pilot skills now show up in the
+  PR UI even when the job itself fails.
+
 ## [1.4.0] — 2026-04-18
 
 ### Added
