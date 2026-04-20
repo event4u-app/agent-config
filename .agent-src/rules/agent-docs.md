@@ -38,6 +38,17 @@ When working on a **significant change** that spans multiple steps or sessions:
 - Use the `roadmap-create` command if yes.
 - This ensures future sessions (and other agents) can pick up the work.
 
+## Roadmap lifecycle
+
+Every roadmap ends in exactly one folder — never leave stale files in `agents/roadmaps/`:
+
+- `agents/roadmaps/` — active (in progress or planned)
+- `agents/roadmaps/archive/` — finished (work happened, fully or partially)
+- `agents/roadmaps/skipped/` — not pursued (typically 0 items `[x]`, scope rejected or superseded)
+
+The `roadmap-management` skill owns the trigger matrix and user-confirmation flow.
+Never delete a roadmap — always move it.
+
 ## Documentation language
 
 - All `.md` files must be written in **English**.

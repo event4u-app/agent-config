@@ -139,7 +139,15 @@ When picking up a roadmap in a new session:
 3. Summarize progress to the user.
 4. Continue from the next open step.
 
-### Completing & archiving a roadmap
+### Completing, archiving & skipping a roadmap
+
+Every roadmap ends in exactly one of three states:
+
+| State | Folder | Trigger |
+|---|---|---|
+| **Active** | `agents/roadmaps/` | Work in progress or planned |
+| **Archived** | `agents/roadmaps/archive/` | Work was done (fully or partially) and no more work is planned |
+| **Skipped** | `agents/roadmaps/skipped/` | Decision against pursuit — superseded, scope rejected, wrong direction. Typically **0 items `[x]`** |
 
 After the last step of a roadmap is done, check completion status:
 
@@ -147,8 +155,8 @@ After the last step of a roadmap is done, check completion status:
 2. **Classify:**
    - `[x]` = completed
    - `[ ]` = open (not done)
-   - `[~]` = deferred / skipped
-   - `[-]` = cancelled
+   - `[~]` = deferred (intentionally pushed out, may come back)
+   - `[-]` = cancelled (individual item dropped)
 
 3. **If ALL items are `[x]`** (nothing open, nothing deferred, nothing cancelled):
    → **Auto-archive.** Move the file to `agents/roadmaps/archive/` silently.
@@ -165,15 +173,38 @@ After the last step of a roadmap is done, check completion status:
      ⏭️  Deferred:  {count_skip}  — {list of deferred items, 1 line each}
      ❌  Cancelled: {count_cancel} — {list of cancelled items, 1 line each}
 
-   > 1. Archive anyway — remaining items are intentionally unfinished
+   > 1. Archive — work happened, remaining items are intentionally unfinished
    > 2. Keep active — I want to finish the open items
    > 3. Mark open items as deferred [~] and archive
+   > 4. Skip — move to skipped/ (no meaningful work done, not pursuing)
    ```
 
-5. **Archive = move file** to `agents/roadmaps/archive/`:
+   Option 4 is only appropriate when `count_x == 0` or the completed items were
+   trivial (e.g. prerequisites only). If the user picks 4 despite meaningful work
+   being done, confirm once — archive is usually the right choice.
+
+5. **Move the file** with `git mv` so history is preserved:
+
    ```bash
-   mv agents/roadmaps/{file} agents/roadmaps/archive/{file}
+   # Archive (work was done)
+   git mv agents/roadmaps/{file} agents/roadmaps/archive/{file}
+
+   # Skipped (not pursuing)
+   git mv agents/roadmaps/{file} agents/roadmaps/skipped/{file}
    ```
+
+### When to use `skipped/` vs `archive/`
+
+| Situation | Destination |
+|---|---|
+| Finished all phases | `archive/` |
+| Finished some phases, rest deferred/cancelled on purpose | `archive/` |
+| Never started, scope decision reversed | `skipped/` |
+| Superseded by another roadmap | `skipped/` — add a pointer line at the top: `> Superseded by agents/roadmaps/{other}.md` |
+| Research proved the direction wrong | `skipped/` — add a 1-line reason at the top |
+
+If in doubt: archive beats skipped. `skipped/` is reserved for roadmaps where
+no meaningful work was invested and the scope itself was rejected.
 
 ## Output format
 
@@ -193,7 +224,8 @@ After the last step of a roadmap is done, check completion status:
 - Don't mark phases complete without running verification (tests, quality checks) — the verify-before-complete rule applies.
 - The model tends to skip phases it deems "simple" — every phase must be explicitly completed.
 - Auto-archive only when ALL checkboxes are `[x]`. Even one `[~]` or `[-]` requires user confirmation.
-- The archive directory is `agents/roadmaps/archive/` — create it if it doesn't exist.
+- `archive/` and `skipped/` are distinct — `archive/` = work happened, `skipped/` = no meaningful work, not pursuing. Create either directory if it doesn't exist.
+- Use `git mv` (not `mv`) so history follows the file.
 
 ## Do NOT
 
@@ -203,4 +235,5 @@ After the last step of a roadmap is done, check completion status:
 - Do NOT create roadmaps for trivial changes (single-file fixes don't need a roadmap).
 - Do NOT commit or push — only local changes.
 - Do NOT archive roadmaps with open `[ ]` items without asking the user.
-- Do NOT delete roadmaps — always archive (move to archive/).
+- Do NOT delete roadmaps — always move to `archive/` or `skipped/`.
+- Do NOT use `skipped/` as a dumping ground for partially-finished work — that is what `archive/` with deferred items is for.

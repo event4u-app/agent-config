@@ -18,6 +18,12 @@ Templates for roadmap files stored in `agents/roadmaps/` or `app/Modules/{Module
    improvements if it doesn't.
 10. **Keep docs up to date:** If changes affect documented behavior, update the relevant agent docs.
 11. **One task per file.** Don't combine unrelated work.
+12. **Lifecycle:** Every roadmap ends in exactly one folder:
+    - `agents/roadmaps/` — active (in progress or planned)
+    - `agents/roadmaps/archive/` — work happened (fully or partially); no further work planned
+    - `agents/roadmaps/skipped/` — decision against pursuit; typically 0 items `[x]` (superseded, scope rejected)
+
+    See the `roadmap-management` skill for the exact trigger matrix and user-confirmation flow.
 
 ---
 

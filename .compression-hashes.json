@@ -96,7 +96,7 @@
   "guidelines/php/sql.md": "50be55ec21811010324373f485009d049146d92c281ba43f9dffed7708bac361",
   "guidelines/php/validations.md": "55fa212daab708feb0027bada573e74fcc19e25af43a51e1cc59c9e8b9aa2339",
   "guidelines/php/websocket.md": "b8fbc543d16dc9d68d781e885335f22c8bc5f6eb9dc4bc9ed77219b269d5003e",
-  "rules/agent-docs.md": "10fbf929d35638c8560cb368744ad19b3d86134794b53d2a0e0846efce275189",
+  "rules/agent-docs.md": "f729cba77b3209eef9082fb9d13909a4acf073bf994fa2e7ec216c061199b355",
   "rules/analysis-skill-routing.md": "a7a01ed6ed7c783b962ad6acfdf78269a3016de6956e73b1ab579a1200e90ce1",
   "rules/architecture.md": "06d41ea39242ec1b2cf459b04d776433f0cbece31e3e13406c0e8df387c2dfbd",
   "rules/ask-when-uncertain.md": "08189b8b08cee0b0fea35d11deed09ca58f53246a5964bd051fcfbce7aba8a8e",
@@ -210,7 +210,7 @@
   "skills/readme-reviewer/SKILL.md": "9a4275a85b84e0e63b5341d389e60caeb201d29466f70912d2105677b94cdaf6",
   "skills/readme-writing-package/SKILL.md": "b83f8448029fa34d5dca52bdf71221e3056a3b7566662f909f6343a7f3c41718",
   "skills/readme-writing/SKILL.md": "517114b2e82c54a695b66fb4a024949f8c0b4d5305f2c089d607302a925ff759",
-  "skills/roadmap-management/SKILL.md": "148c208bef0acb88d1415ca354c19be0db2cca098c32fbf8ebf6577e466d1079",
+  "skills/roadmap-management/SKILL.md": "a74044c1ae54feefe0d6d40eb94be22f70e631de3181e40bc127b4591b0aa15f",
   "skills/rtk-output-filtering/SKILL.md": "d75e39b188411096f9477eb44af4e7b0e8ed4477715553e27f1044f1378deb6a",
   "skills/security-audit/SKILL.md": "34736183b92b17ed40b0475a3da456574c66820faeede47f5c32db5b25e77400",
   "skills/security/SKILL.md": "8a62a8e71bce2aca00a8929d0b06e321db3af4e8516091c20548d4b12ecfa3a6",
@@ -241,6 +241,6 @@
   "templates/overrides/rule.md": "40446fc55fa19433a6c168b1db8fd02ceb09a8accdfca27701f3e0302ce4c2d9",
   "templates/overrides/skill.md": "f33bf139261c9691ac67a792ad2dedd437856092c63a77268b29de72ff4945c9",
   "templates/overrides/template.md": "8fdd7c1800f669b599e24e1812b3213f0fd8699ce6fbc3714a3b6c6a3e1f78c5",
-  "templates/roadmaps.md": "f5be881caac1e2f230039bbbba4587bee3dc2b00b7dcca186b91c0b0db445e04",
+  "templates/roadmaps.md": "9af657790adc32152197b0904f8b80c488340b736983367caae2881c507d63f7",
   "templates/skill.md": "de8d0ae6c4298ed8b88babcc8050e5fb7a5ecc8f5d7de85c6848a83d7d30653b"
 }
