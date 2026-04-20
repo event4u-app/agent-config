@@ -37,6 +37,9 @@ jobs:
       - name: Run install.sh integration tests
         run: bash tests/test_install.sh
 
+      - name: Run install orchestrator integration tests
+        run: bash tests/test_install_orchestrator.sh
+
   python-tests:
     name: Python Tests (${{ matrix.os }}, ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}

@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+# install — Primary entry point for agent-config installation.
+#
+# Orchestrates the two stages:
+#   1. scripts/install.sh  — payload sync (copy rules, symlink skills/commands)
+#   2. scripts/install.py  — bridge files (.agent-settings, VSCode/Augment JSONs)
+#
+# This is the only installer a consumer needs to invoke. The underlying
+# scripts remain callable directly for advanced use; see their --help.
+#
+# Usage:
+#   bash scripts/install [OPTIONS]
+#
+# Options:
+#   --source <dir>    Package source directory (default: auto-detect)
+#   --target <dir>    Target project root (default: cwd)
+#   --profile <name>  Cost profile for bridges (minimal|balanced|full)
+#   --force           Overwrite existing bridge files
+#   --dry-run         Show what payload sync would do (does not run bridges)
+#   --verbose         Detailed payload sync output
+#   --quiet           Suppress non-error output
+#   --skip-sync       Skip payload sync (install.sh)
+#   --skip-bridges    Skip bridge files (install.py)
+#   --help, -h        Show this help
+
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INSTALL_SH="$SCRIPT_DIR/install.sh"
+INSTALL_PY="$SCRIPT_DIR/install.py"
+
+SOURCE_DIR=""
+TARGET_DIR=""
+PROFILE=""
+FORCE=false
+DRY_RUN=false
+VERBOSE=false
+QUIET=false
+SKIP_SYNC=false
+SKIP_BRIDGES=false
+
+show_help() {
+    sed -n '3,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+}
+
+err() { echo "  ❌  $*" >&2; }
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --source)        SOURCE_DIR="$2"; shift 2 ;;
+        --source=*)      SOURCE_DIR="${1#*=}"; shift ;;
+        --target)        TARGET_DIR="$2"; shift 2 ;;
+        --target=*)      TARGET_DIR="${1#*=}"; shift ;;
+        --profile)       PROFILE="$2"; shift 2 ;;
+        --profile=*)     PROFILE="${1#*=}"; shift ;;
+        --force)         FORCE=true; shift ;;
+        --dry-run)       DRY_RUN=true; shift ;;
+        --verbose)       VERBOSE=true; shift ;;
+        --quiet)         QUIET=true; shift ;;
+        --skip-sync)     SKIP_SYNC=true; shift ;;
+        --skip-bridges)  SKIP_BRIDGES=true; shift ;;
+        --help|-h)       show_help; exit 0 ;;
+        *)               err "Unknown argument: $1"; show_help >&2; exit 1 ;;
+    esac
+done
+
+# Auto-detect source: directory above this script
+if [[ -z "$SOURCE_DIR" ]]; then
+    SOURCE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
+
+# Auto-detect target: PROJECT_ROOT env, or derive from vendor/node_modules path, else cwd
+if [[ -z "$TARGET_DIR" ]]; then
+    if [[ -n "${PROJECT_ROOT:-}" ]]; then
+        TARGET_DIR="$PROJECT_ROOT"
+    elif [[ "$SOURCE_DIR" == */vendor/event4u/agent-config ]]; then
+        TARGET_DIR="$(cd "$SOURCE_DIR/../../.." && pwd)"
+    elif [[ "$SOURCE_DIR" == */node_modules/@event4u/agent-config ]]; then
+        TARGET_DIR="$(cd "$SOURCE_DIR/../../.." && pwd)"
+    elif [[ "$SOURCE_DIR" == */node_modules/*/agent-config ]]; then
+        TARGET_DIR="$(cd "$SOURCE_DIR/../../.." && pwd)"
+    else
+        TARGET_DIR="$(pwd)"
+    fi
+fi
+
+# Find python3 for the bridges stage (optional until SKIP_BRIDGES=false)
+find_python() {
+    local candidate path
+    for candidate in python3 python; do
+        path="$(command -v "$candidate" 2>/dev/null || true)"
+        [[ -z "$path" ]] && continue
+        if "$path" -c 'import sys; exit(0 if sys.version_info[0] >= 3 else 1)' 2>/dev/null; then
+            echo "$path"
+            return 0
+        fi
+    done
+    return 1
+}
+
+run_sync() {
+    local args=(--source "$SOURCE_DIR" --target "$TARGET_DIR")
+    $DRY_RUN && args+=(--dry-run)
+    $VERBOSE && args+=(--verbose)
+    $QUIET   && args+=(--quiet)
+    bash "$INSTALL_SH" "${args[@]}"
+}
+
+run_bridges() {
+    local python_bin
+    if ! python_bin="$(find_python)"; then
+        $QUIET || echo "  ⚠️  Python 3 not found — skipping .agent-settings and bridge files." >&2
+        $QUIET || echo "      Install python3 and re-run: bash scripts/install --skip-sync" >&2
+        return 0
+    fi
+
+    if $DRY_RUN; then
+        $QUIET || echo "  ⏭️  Skipping bridges (--dry-run)"
+        return 0
+    fi
+
+    local args=(--project "$TARGET_DIR" --package "$SOURCE_DIR")
+    [[ -n "$PROFILE" ]] && args+=(--profile="$PROFILE")
+    $FORCE && args+=(--force)
+    $QUIET && args+=(--quiet)
+    "$python_bin" "$INSTALL_PY" "${args[@]}"
+}
+
+RC=0
+if ! $SKIP_SYNC; then
+    if [[ ! -f "$INSTALL_SH" ]]; then
+        err "Missing $INSTALL_SH"
+        exit 1
+    fi
+    run_sync || RC=$?
+fi
+
+if [[ $RC -ne 0 ]]; then
+    err "Payload sync failed (exit $RC); skipping bridges."
+    exit $RC
+fi
+
+if ! $SKIP_BRIDGES; then
+    if [[ ! -f "$INSTALL_PY" ]]; then
+        err "Missing $INSTALL_PY"
+        exit 1
+    fi
+    run_bridges || RC=$?
+fi
+
+exit $RC
