@@ -56,7 +56,7 @@ task test-linter               # Skill linter unit tests
 task test-readme-linter        # README linter unit tests
 task test-runtime              # Runtime registry + dispatcher tests
 task test-tools                # Tool registry + adapter tests
-task test-runtime-all          # All runtime, tools, observability, feedback, lifecycle tests
+task test-runtime-all          # All runtime, tools, feedback, lifecycle tests
 ```
 
 #### CI test matrix
