@@ -76,27 +76,17 @@ task consistency-fix     # Regenerate ALL derived outputs
 
 ---
 
-## Observability
+## Runtime artifacts
 
-The system collects structured data for debugging and improvement:
+Skills dispatched via `scripts/runtime_dispatcher.py run --skill NAME --output FILE`
+write a typed `ExecutionResult` JSON (exit code, stdout, stderr, duration,
+artifacts) to the given path. In CI, the two pilot skills `lint-skills`
+and `check-refs` write to `agents/reports/runs/` and
+`scripts/ci_summary.py` renders them into the GitHub Step Summary so
+failures are visible on the PR page.
 
-| File | Content |
-|---|---|
-| `metrics.json` | Execution timing, token counts, skill usage |
-| `feedback.json` | Outcome classification (success/failure/partial) |
-| `tool-audit.json` | Tool adapter calls and results |
-
-> **Important:** These files are collected but **never auto-injected** into agent context
-> unless `runtime_auto_read_reports: true` is set in `.agent-settings`.
-> Default `cost_profile` is `minimal` — zero token overhead.
-
-### Reports
-
-```bash
-task report-stdout       # Health dashboard to stdout
-task lifecycle-report    # Skill lifecycle states
-task lifecycle-health    # Skill health scores
-```
+No data is auto-injected into agent context and no persistent metrics,
+feedback, or audit logs are collected.
 
 ---
 
