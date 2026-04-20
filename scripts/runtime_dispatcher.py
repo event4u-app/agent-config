@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """
-Runtime Dispatcher — resolves execution type and produces execution requests.
+Runtime Dispatcher — resolves execution type and drives real handler execution.
 
-Responsibilities:
-- Resolve execution type for a given skill
-- Block unsupported automated execution
-- Produce structured execution request objects
-- Enforce safety policies
+Two modes:
 
-No real execution happens — this is a scaffold for future phases.
+- resolve (default): produce a structured execution request, enforce safety,
+  return dispatch metadata. No side effects.
+- run: dispatch the skill, then hand it to the matching runtime handler to
+  actually execute. Returns a typed ExecutionResult.
 
 Usage:
-    python3 scripts/runtime_dispatcher.py --skill SKILL_NAME [--root ROOT] [--format text|json]
+    python3 scripts/runtime_dispatcher.py --skill NAME [--format text|json]
+    python3 scripts/runtime_dispatcher.py resolve --skill NAME
+    python3 scripts/runtime_dispatcher.py run --skill NAME [--cwd PATH]
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ from typing import List, Optional
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from runtime_registry import SkillRuntime, build_registry
+from runtime_handler import ExecutionResult, HandlerError, execute_shell
 
 
 @dataclass
@@ -140,33 +142,109 @@ def dispatch(skill_name: str, registry: List[SkillRuntime]) -> DispatchResult:
     )
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description="Runtime Dispatcher — resolve skill execution")
-    parser.add_argument("--skill", required=True, help="Skill name to dispatch")
+def run(skill_name: str, registry: List[SkillRuntime], cwd: Path) -> ExecutionResult:
+    """Dispatch and execute a skill. Raises HandlerError on structural issues."""
+    dispatch_result = dispatch(skill_name, registry)
+    req = dispatch_result.request
+    if not req.is_ready:
+        raise HandlerError(
+            f"Skill '{skill_name}' is not ready to run: "
+            f"{req.status} — {req.reason or 'no reason given'}"
+        )
+
+    skill = next(s for s in registry if s.name == skill_name)
+    if skill.handler in {"shell", "php", "node"}:
+        return execute_shell(skill, cwd)
+    raise HandlerError(
+        f"Handler '{skill.handler}' has no executor yet — "
+        f"only 'shell' is implemented in this phase"
+    )
+
+
+def _print_dispatch(result: DispatchResult, fmt: str) -> None:
+    if fmt == "json":
+        print(json.dumps(asdict(result), indent=2))
+        return
+    req = result.request
+    print(f"Skill: {req.skill_name}")
+    print(f"Status: {req.status}")
+    if req.reason:
+        print(f"Reason: {req.reason}")
+    if req.is_ready:
+        print(f"Type: {req.execution_type}")
+        print(f"Handler: {req.handler}")
+        print(f"Timeout: {req.timeout_seconds}s")
+        tools = ", ".join(req.allowed_tools) if req.allowed_tools else "none"
+        print(f"Tools: {tools}")
+    for w in result.warnings:
+        print(f"WARNING: {w}")
+
+
+def _print_execution(result: ExecutionResult, fmt: str) -> None:
+    if fmt == "json":
+        print(json.dumps(asdict(result), indent=2))
+        return
+    print(f"Skill: {result.skill_name}")
+    print(f"Handler: {result.handler}")
+    print(f"Command: {' '.join(result.command)}")
+    print(f"Cwd: {result.cwd}")
+    print(f"Status: {result.status}")
+    print(f"Exit code: {result.exit_code}")
+    print(f"Duration: {result.duration_ms}ms")
+    if result.error:
+        print(f"Error: {result.error}")
+    if result.stdout:
+        print("--- stdout ---")
+        print(result.stdout.rstrip())
+    if result.stderr:
+        print("--- stderr ---")
+        print(result.stderr.rstrip())
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Runtime Dispatcher — resolve or run skill execution")
+    sub = parser.add_subparsers(dest="action")
+
+    # Legacy flat flags retained for backward compatibility.
+    parser.add_argument("--skill", help="Skill name to dispatch")
     parser.add_argument("--root", type=Path, default=Path("."), help="Repository root")
     parser.add_argument("--format", choices=["text", "json"], default="text")
+
+    resolve_p = sub.add_parser("resolve", help="Resolve skill and return dispatch metadata (no execution)")
+    resolve_p.add_argument("--skill", required=True)
+    resolve_p.add_argument("--root", type=Path, default=Path("."))
+    resolve_p.add_argument("--format", choices=["text", "json"], default="text")
+
+    run_p = sub.add_parser("run", help="Dispatch and execute the skill via its handler")
+    run_p.add_argument("--skill", required=True)
+    run_p.add_argument("--root", type=Path, default=Path("."))
+    run_p.add_argument("--cwd", type=Path, default=None, help="Working directory (default: --root)")
+    run_p.add_argument("--format", choices=["text", "json"], default="text")
+    return parser
+
+
+def main() -> int:
+    parser = _build_parser()
     args = parser.parse_args()
 
+    action = args.action or "resolve"
+    if action == "resolve" and not args.skill:
+        parser.error("--skill is required for resolve")
+
     registry = build_registry(args.root)
+
+    if action == "run":
+        cwd = args.cwd if args.cwd is not None else args.root
+        try:
+            result = run(args.skill, registry, cwd)
+        except HandlerError as exc:
+            print(f"HandlerError: {exc}", file=sys.stderr)
+            return 2
+        _print_execution(result, args.format)
+        return 0 if result.is_success else 1
+
     result = dispatch(args.skill, registry)
-
-    if args.format == "json":
-        print(json.dumps(asdict(result), indent=2))
-    else:
-        req = result.request
-        print(f"Skill: {req.skill_name}")
-        print(f"Status: {req.status}")
-        if req.reason:
-            print(f"Reason: {req.reason}")
-        if req.is_ready:
-            print(f"Type: {req.execution_type}")
-            print(f"Handler: {req.handler}")
-            print(f"Timeout: {req.timeout_seconds}s")
-            tools = ", ".join(req.allowed_tools) if req.allowed_tools else "none"
-            print(f"Tools: {tools}")
-        for w in result.warnings:
-            print(f"WARNING: {w}")
-
+    _print_dispatch(result, args.format)
     return 0 if result.request.is_ready or result.request.status == "blocked" else 1
 
 
