@@ -8,6 +8,8 @@ on:
       - "tests/**"
       - "Taskfile.yml"
       - "install.sh"
+      - ".agent-src.uncompressed/skills/lint-skills/**"
+      - ".agent-src.uncompressed/skills/check-refs/**"
       - ".github/workflows/tests.yml"
   push:
     branches: [main, master]
@@ -16,6 +18,8 @@ on:
       - "tests/**"
       - "Taskfile.yml"
       - "install.sh"
+      - ".agent-src.uncompressed/skills/lint-skills/**"
+      - ".agent-src.uncompressed/skills/check-refs/**"
       - ".github/workflows/tests.yml"
 
 jobs:
@@ -61,3 +65,13 @@ jobs:
         # pytest discovers every test module in tests/. Prevents new test
         # files from silently missing CI coverage.
         run: python3 -m pytest tests/ -v
+
+      - name: Runtime E2E (dispatch pilot skills via CLI)
+        # Guards the public dispatcher CLI contract for runnable skills.
+        # Pytest exercises the handler in-process; this step proves
+        # `python3 scripts/runtime_dispatcher.py run --skill <name>`
+        # still exits 0 for the two pilots. Kept narrow on purpose — add
+        # a pilot to the matrix below only after it has unit coverage.
+        run: |
+          python3 scripts/runtime_dispatcher.py run --skill lint-skills
+          python3 scripts/runtime_dispatcher.py run --skill check-refs

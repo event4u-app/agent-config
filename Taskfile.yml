@@ -163,6 +163,12 @@ tasks:
     desc: Run a skill through the full pipeline
     cmd: python3 scripts/runtime_pipeline.py --skill {{.CLI_ARGS}} --root .
 
+  runtime-e2e:
+    desc: End-to-end gate — dispatch each runnable pilot skill and fail on any non-zero exit
+    cmds:
+      - python3 scripts/runtime_dispatcher.py run --skill lint-skills
+      - python3 scripts/runtime_dispatcher.py run --skill check-refs
+
   report:
     desc: Generate health dashboard from observability data
     cmd: python3 scripts/report_generator.py --root . --output agents/reports/health-dashboard.md
@@ -228,4 +234,5 @@ tasks:
       - task: lint-skills
       - task: lint-marketplace
       - task: test
+      - task: runtime-e2e
       - task: lint-readme
