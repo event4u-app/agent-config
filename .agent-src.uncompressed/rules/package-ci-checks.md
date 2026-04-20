@@ -27,7 +27,7 @@ Run all of these before pushing — they match the GitHub Actions workflows exac
 ### 1. Sync check
 
 ```bash
-task sync-check            # .augment/ matches .agent-src.uncompressed/
+task sync-check            # .agent-src/ matches .agent-src.uncompressed/
 task sync-check-hashes     # compression hashes are clean
 ```
 
@@ -84,7 +84,7 @@ python3 scripts/readme_linter.py README.md --root .
 When you edit a file in `.agent-src.uncompressed/`:
 
 1. Edit the uncompressed file
-2. Edit the compressed file in `.augment/` to match
+2. Edit the compressed file in `.agent-src/` to match
 3. Run `task sync-mark-done -- {relative-path}` to update the hash
 4. Verify with `task sync-check-hashes`
 

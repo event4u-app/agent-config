@@ -66,7 +66,7 @@ Present a summary before applying:
 
 ### 5. Apply fixes
 
-Edit files in `.agent-src.uncompressed/` (source of truth), then copy to `.augment/`.
+Edit files in `.agent-src.uncompressed/` (source of truth). Regenerate `.agent-src/` and `.augment/` via `task sync`.
 
 After all fixes:
 
@@ -86,8 +86,8 @@ python3 scripts/compress.py --mark-done "{relative_path}"
 
 ## Rules
 
-- **Always fix in `.agent-src.uncompressed/`** — never edit `.augment/` directly.
-- **Copy to `.augment/`** after fixing.
+- **Always fix in `.agent-src.uncompressed/`** — never edit `.agent-src/` or `.augment/` directly.
+- **Run `task sync`** after fixing to regenerate `.agent-src/` and `.augment/`.
 - **Do NOT commit or push** — the user decides.
 - **Do NOT fix references in code blocks** — they are examples, not live refs.
 - **Do NOT auto-fix without showing the summary first.**

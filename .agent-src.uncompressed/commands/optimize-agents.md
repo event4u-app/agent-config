@@ -9,7 +9,7 @@ disable-model-invocation: true
 
 Agent infrastructure audit: measure token overhead, check rule triggers, verify AGENTS.md, find stale references. **Suggest only — never auto-apply.**
 
-**Source of truth:** `.agent-src.uncompressed/` — never read or edit `.augment/` directly.
+**Source of truth:** `.agent-src.uncompressed/` — never read or edit `.agent-src/` or `.augment/` directly.
 
 ## Steps
 
@@ -136,4 +136,4 @@ Ask the user:
 - **No quality judgments on skills** — use `/optimize-skills` or `skill-reviewer`
 - **No auto-fixes** — all changes require explicit user approval
 - **No "make it shorter"** — compression is done by Caveman Compression
-- **No edits to `.augment/`** — always edit `.agent-src.uncompressed/`, then sync
+- **No edits to `.agent-src/` or `.augment/`** — always edit `.agent-src.uncompressed/`, then sync

@@ -38,7 +38,7 @@ Before completing any transformation, verify:
 - Skill merges (combining two skills into one)
 - Skill splits (extracting part of a skill)
 - Refactoring (restructuring without behavior change)
-- Compression (`.agent-src.uncompressed/` → `.augment/`)
+- Compression (`.agent-src.uncompressed/` → `.agent-src/`)
 - Rule consolidation
 - Guideline restructuring
 

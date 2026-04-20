@@ -111,6 +111,10 @@ tasks:
     desc: Lint README.md with warnings as errors
     cmd: python3 scripts/readme_linter.py README.md --root . --strict
 
+  lint-marketplace:
+    desc: Lint .claude-plugin/marketplace.json against the Claude Code Plugin schema
+    cmd: python3 scripts/lint_marketplace.py
+
   test-linter:
     desc: Run skill linter tests
     cmd: python3 -m pytest tests/test_skill_linter.py -v
@@ -118,6 +122,10 @@ tasks:
   test-readme-linter:
     desc: Run README linter tests
     cmd: python3 -m pytest tests/test_readme_linter.py -v
+
+  test-marketplace-linter:
+    desc: Run marketplace linter tests
+    cmd: python3 -m pytest tests/test_lint_marketplace.py -v
 
   test-runtime:
     desc: Run runtime registry and dispatcher tests
@@ -218,5 +226,6 @@ tasks:
       - task: check-refs
       - task: check-portability
       - task: lint-skills
+      - task: lint-marketplace
       - task: test
       - task: lint-readme

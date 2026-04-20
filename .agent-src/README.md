@@ -1,16 +1,18 @@
-# .augment — Agent Infrastructure
+# Agent Infrastructure
 
-> **⚠️ DO NOT edit files in `.augment/` directly.**
-> The source of truth is `.agent-src.uncompressed/`. Edit there, then run `task sync` + compress.
-> Run `task sync` to synchronize. See `.agent-src.uncompressed/commands/compress.md` for the full workflow.
+> **⚠️ DO NOT edit files in `.agent-src/` or `.augment/` directly.**
+> The source of truth is `.agent-src.uncompressed/`. Edit there, then run `task sync`.
+> See `.agent-src.uncompressed/commands/compress.md` for the full workflow.
 
 This directory contains the shared agent infrastructure: skills, commands, rules, guidelines,
 templates, and contexts that power the AI coding assistant across all projects.
 
+In the package repo, this content lives in `.agent-src/` (shipped). Consumer projects install
+it as `.augment/` (local projection).
+
 ## Directory Structure
 
 ```
-.augment/
 ├── commands/       # Slash commands — executable workflows (/fix-pr-comments, /agent-handoff, ...)
 ├── contexts/       # Background context documents for the agent
 ├── guidelines/     # Coding guidelines by language (reference material)
