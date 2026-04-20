@@ -171,6 +171,14 @@ Rigorous A/B between two skill versions via an independent judge agent.
 Overkill for our scale — we iterate on skill content through human review,
 not automated arbitration.
 
+**Revised 2026-04-20: the interactive drafting front-end (originally lumped
+into this REJECT section) was reclassified to ADAPT.** See
+[`road-to-drafting-protocol.md`](../roadmaps/road-to-drafting-protocol.md).
+The valuable part is **Understand / Research / Draft** with numbered-option
+prompts at every step — agent proposes, human decides. The part that stays
+REJECT is the Claude→Claude auto-rewrite loop (`run_loop.py`), the blind
+judge agent, and `.skill` packaging. Distinguishing the two is the whole point.
+
 ### ALREADY
 
 - **Progressive disclosure with three levels** (metadata → body → bundled). Our
@@ -197,13 +205,16 @@ not automated arbitration.
 
 ## Proposed roadmap items
 
-Two roadmaps, split by scope:
+Three roadmaps, split by scope:
 
 - **[`agents/roadmaps/road-to-anthropic-alignment.md`](../roadmaps/road-to-anthropic-alignment.md)**
   — Phase 1 (Claude Code Plugin Marketplace, v1.7.0) + Phase 2 ("pushy
   description" pattern in `skill-quality` rule, v1.7.1).
 - **[`agents/roadmaps/road-to-trigger-evals.md`](../roadmaps/road-to-trigger-evals.md)**
   — empirical trigger measurement (v1.8.0, gated PoC → bounded rollout).
+- **[`agents/roadmaps/road-to-drafting-protocol.md`](../roadmaps/road-to-drafting-protocol.md)**
+  — Understand → Research → Draft protocol for skill/rule/command/guideline
+  creation (v1.8.0 rule + v1.8.1 writing skills). Agent proposes, human decides.
 
 ## Open questions for the maintainer
 
@@ -241,5 +252,6 @@ No clone, no execute, no credentials used.
 - Active roadmaps: [`road-to-9.md`](../roadmaps/road-to-9.md),
   [`road-to-mcp.md`](../roadmaps/road-to-mcp.md),
   [`road-to-anthropic-alignment.md`](../roadmaps/road-to-anthropic-alignment.md),
-  [`road-to-trigger-evals.md`](../roadmaps/road-to-trigger-evals.md).
+  [`road-to-trigger-evals.md`](../roadmaps/road-to-trigger-evals.md),
+  [`road-to-drafting-protocol.md`](../roadmaps/road-to-drafting-protocol.md).
 - Previous analyses: [`compare-kdcllc-agents-config.md`](compare-kdcllc-agents-config.md).
