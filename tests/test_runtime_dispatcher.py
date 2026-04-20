@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+import subprocess
 import sys
 from pathlib import Path
 from typing import List, Optional
@@ -10,6 +12,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 from runtime_registry import SkillRuntime
 from runtime_dispatcher import dispatch
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DISPATCHER = REPO_ROOT / "scripts" / "runtime_dispatcher.py"
 
 
 def _skill(name: str, exec_type: str = "manual", handler: str = "none",
@@ -80,3 +85,26 @@ def test_dispatch_returns_correct_timeout() -> None:
     )
     result = dispatch("timed", [skill])
     assert result.request.timeout_seconds == 120
+
+
+def test_run_writes_output_json(tmp_path: Path) -> None:
+    """`dispatcher run --output FILE` persists ExecutionResult as JSON."""
+    out = tmp_path / "runs" / "lint-skills.json"
+    result = subprocess.run(
+        [
+            sys.executable, str(DISPATCHER), "run",
+            "--skill", "lint-skills",
+            "--root", str(REPO_ROOT),
+            "--output", str(out),
+            "--format", "json",
+        ],
+        cwd=REPO_ROOT, capture_output=True, text=True, timeout=300,
+    )
+    # Exit code may be 0 or 1 depending on skill result; both are acceptable.
+    assert result.returncode in (0, 1), result.stderr
+    assert out.is_file(), f"expected {out} to exist"
+    data = json.loads(out.read_text(encoding="utf-8"))
+    assert data["skill_name"] == "lint-skills"
+    assert "status" in data
+    assert "exit_code" in data
+    assert "duration_ms" in data

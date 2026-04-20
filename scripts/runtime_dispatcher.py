@@ -12,7 +12,10 @@ Two modes:
 Usage:
     python3 scripts/runtime_dispatcher.py --skill NAME [--format text|json]
     python3 scripts/runtime_dispatcher.py resolve --skill NAME
-    python3 scripts/runtime_dispatcher.py run --skill NAME [--cwd PATH]
+    python3 scripts/runtime_dispatcher.py run --skill NAME [--cwd PATH] [--output FILE]
+
+`run --output FILE` persists the ExecutionResult as JSON to FILE. CI uses
+this to feed `scripts/ci_summary.py`.
 """
 
 from __future__ import annotations
@@ -220,6 +223,12 @@ def _build_parser() -> argparse.ArgumentParser:
     run_p.add_argument("--root", type=Path, default=Path("."))
     run_p.add_argument("--cwd", type=Path, default=None, help="Working directory (default: --root)")
     run_p.add_argument("--format", choices=["text", "json"], default="text")
+    run_p.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="Persist ExecutionResult as JSON to this path (parents created)",
+    )
     return parser
 
 
@@ -241,6 +250,10 @@ def main() -> int:
             print(f"HandlerError: {exc}", file=sys.stderr)
             return 2
         _print_execution(result, args.format)
+        output = getattr(args, "output", None)
+        if output is not None:
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(json.dumps(asdict(result), indent=2) + "\n", encoding="utf-8")
         return 0 if result.is_success else 1
 
     result = dispatch(args.skill, registry)
