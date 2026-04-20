@@ -69,9 +69,10 @@ GitHub Actions runs the suite on every push and PR across:
 | `macos-latest` | 3.12 |
 
 The matrix enforces the "Python 3.10+, stdlib only" guarantee from
-`CONTRIBUTING.md`. `install.sh` integration tests run on both Linux and
-macOS. Windows is not part of the matrix — consumers on Windows use WSL2
-(see [installation guide](installation.md#windows)).
+`CONTRIBUTING.md`. Installer integration tests (`test_install.sh`,
+`test_install_orchestrator.sh`) run on both Linux and macOS. Windows
+is not part of the matrix — consumers on Windows use WSL2 (see
+[installation guide](installation.md#windows)).
 
 ### Linting
 
@@ -110,7 +111,7 @@ task report-stdout             # Print health dashboard to stdout
 ### Installation
 
 ```bash
-task install -- --target <dir> # Run install.sh for a target project
+task install -- --target <dir> # Run the installer orchestrator on a target
 task install-hooks             # Install git hooks (pre-push sync check)
 ```
 
@@ -124,7 +125,10 @@ task install-hooks             # Install git hooks (pre-push sync check)
 .github/plugin/                ← Plugin manifest (Copilot CLI)
 
 scripts/
-├── install.sh                 ← Installer (hybrid sync to target project)
+├── install                    ← Primary installer (orchestrator)
+├── install.sh                 ← Payload sync stage (hybrid copy + symlink)
+├── install.py                 ← Bridge files stage (.agent-settings, JSONs)
+├── postinstall.sh             ← npm postinstall hook → scripts/install
 ├── setup.sh                   ← One-time Composer hook setup
 ├── compress.py                ← Compression hash management
 ├── check_compression.py       ← Compression quality checker
@@ -145,7 +149,8 @@ scripts/
     └── jira_adapter.py        ← Jira API adapter
 
 tests/
-├── test_install.sh            ← Install script integration tests
+├── test_install.sh            ← install.sh payload-sync integration tests
+├── test_install_orchestrator.sh ← scripts/install end-to-end tests
 ├── test_skill_linter.py       ← Linter unit tests
 ├── test_runtime_pipeline.py   ← Pipeline integration tests
 ├── test_persistence.py        ← Persistence layer tests

@@ -8,7 +8,7 @@ and include the output of:
 composer show event4u/agent-config            # or: npm ls @event4u/agent-config
 php --version
 python3 --version
-bash scripts/install.sh --verbose --dry-run
+bash scripts/install --verbose --dry-run
 ```
 
 ---
@@ -32,9 +32,9 @@ was interrupted. Re-run it:
 ```bash
 php vendor/bin/install.php --verbose
 # or
-python3 scripts/install.py --verbose
-# or, to regenerate everything (overwrites non-symlink files):
-python3 scripts/install.py --force
+bash scripts/install --verbose
+# or, to regenerate everything (overwrites existing bridge files):
+bash scripts/install --force
 ```
 
 ### Check 2: Does your agent actually read these directories?
@@ -76,9 +76,8 @@ manually:
 
 ```bash
 php vendor/bin/install.php          # for Composer
-# or
-node_modules/.bin/... (n/a)         # for npm — run the Python installer:
-python3 node_modules/@event4u/agent-config/scripts/install.py
+# or for npm — invoke the orchestrator directly:
+bash node_modules/@event4u/agent-config/scripts/install
 ```
 
 The [`scripts/postinstall.sh`](../scripts/postinstall.sh) wrapper prints a
@@ -95,7 +94,7 @@ vendor path may break. Re-run the installer — it is idempotent:
 ```bash
 php vendor/bin/install.php
 # or
-python3 scripts/install.py
+bash scripts/install
 ```
 
 The installer replaces stale symlinks with fresh ones pointing at the
@@ -165,4 +164,4 @@ Open an [issue](https://github.com/event4u-app/agent-config/issues) with:
 
 - your OS and shell,
 - PHP / Node / Python versions,
-- full output of `bash scripts/install.sh --verbose --dry-run`.
+- full output of `bash scripts/install --verbose --dry-run`.

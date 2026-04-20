@@ -9,7 +9,35 @@ versioning policy is documented in [CONTRIBUTING.md](CONTRIBUTING.md#versioning-
 
 ## [Unreleased]
 
-_No unreleased changes yet._
+### Added
+- `scripts/install` — a bash orchestrator that is now the **primary
+  installer entry point**. It chains the two real stages in order:
+  `scripts/install.sh` (payload sync) and `scripts/install.py` (bridge
+  files). The orchestrator exposes `--profile`, `--force`, `--dry-run`,
+  `--verbose`, `--quiet`, `--skip-sync`, and `--skip-bridges` and forwards
+  them correctly to each stage. Bridges are skipped gracefully when
+  Python 3 is unavailable; the payload sync still runs.
+- `tests/test_install_orchestrator.sh` — integration tests for the new
+  orchestrator, the Composer wrapper, and the npm postinstall hook.
+  Wired into `task test`, `task test-install`, and GitHub Actions.
+
+### Changed
+- `scripts/install.sh` no longer invokes the Python bridge installer
+  internally. It now handles payload sync exclusively. Direct callers
+  that relied on the side effect must run `scripts/install` or invoke
+  `scripts/install.py` themselves.
+- `scripts/postinstall.sh` (npm hook) routes through `scripts/install`
+  instead of `scripts/install.sh`. Exit-0-with-loud-error contract is
+  preserved.
+- `docs/installation.md` and `README.md` document the two-stage
+  pipeline and use `scripts/install` as the canonical invocation.
+
+### Fixed
+- `bin/install.php` now delegates to `scripts/install`. Previous
+  versions shelled into `scripts/install.py` only, which meant Composer
+  users never got the payload sync — no `.augment/` tree, no tool
+  directories, no `.windsurfrules`. This latent bug is fixed with the
+  new routing.
 
 ## [1.4.0] — 2026-04-18
 

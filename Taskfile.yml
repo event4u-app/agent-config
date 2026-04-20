@@ -46,8 +46,8 @@ tasks:
     cmd: python3 scripts/compress.py --clean-tools
 
   install:
-    desc: Run install.sh to sync agent-config to a target project
-    cmd: bash scripts/install.sh {{.CLI_ARGS}}
+    desc: Run the installer orchestrator (sync + bridges)
+    cmd: bash scripts/install {{.CLI_ARGS}}
 
   install-hooks:
     desc: Install git hooks (pre-push sync check)

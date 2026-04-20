@@ -26,24 +26,27 @@ composer require --dev event4u/agent-config
 npm install --save-dev @event4u/agent-config
 ```
 
-After installing the package, run the bridge installer to create
-`.agent-settings`, `.vscode/settings.json`, `.augment/settings.json`, and the
-tool-specific glue:
+After installing the package, run the installer to sync the payload and
+create `.agent-settings`, `.vscode/settings.json`, `.augment/settings.json`,
+and the tool-specific glue:
 
 ```bash
 # PHP / Composer projects — explicit step (Composer does not auto-run it):
 php vendor/bin/install.php
 # or directly (any environment):
-python3 vendor/event4u/agent-config/scripts/install.py
+bash vendor/event4u/agent-config/scripts/install
 
 # npm projects run the installer automatically via postinstall.
 # To re-run or override the default profile:
-python3 node_modules/@event4u/agent-config/scripts/install.py --profile=balanced
+bash node_modules/@event4u/agent-config/scripts/install --profile=balanced
 ```
 
-**To install the package:** no Task, no Make, no build tools required — only
-**Python 3** (stdlib only, pre-installed on macOS 12.3+ and all major Linux
-distros). The package makes rules, skills, and commands available
+**To install the package:** no Task, no Make, no build tools required.
+`scripts/install` orchestrates two stages: a bash payload sync and a
+Python bridge generator. **Python 3** (stdlib only, pre-installed on
+macOS 12.3+ and all major Linux distros) is required for the bridge
+stage; without it the orchestrator warns, runs the payload sync, and
+continues. The package makes rules, skills, and commands available
 project-locally for all supported AI tools. Task is required for
 *contributors* who want to rebuild the compressed content locally — see
 [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -224,7 +227,7 @@ Code's Agent Skills specification.
 | Document | Content |
 |---|---|
 | [**Getting Started**](docs/getting-started.md) | First run, 3-test experience, profiles, next steps |
-| [**Installation**](docs/installation.md) | Plugin setup, Composer/npm, Git submodule, install.sh details |
+| [**Installation**](docs/installation.md) | Plugin setup, Composer/npm, Git submodule, orchestrator details |
 | [**Architecture**](docs/architecture.md) | System layers, content pipeline, tool support matrix |
 | [**Development**](docs/development.md) | Prerequisites, editing workflow, all `task` commands, project structure |
 | [**Customization**](docs/customization.md) | Overrides, AGENTS.md, agent settings, cost profiles |
@@ -249,10 +252,12 @@ task lint-skills   # Lint skills, rules, commands
 
 **To install the package into a consumer project:**
 
-- **Python 3.10+** — canonical installer is `scripts/install.py`.
-  Pre-installed on macOS 12.3+ and all major Linux distros.
-- **Bash** — thin wrappers (`scripts/install.sh`, `scripts/postinstall.sh`)
-  around the Python installer. Available on macOS, Linux, and WSL.
+- **Bash** — primary installer is `scripts/install`, orchestrating
+  `scripts/install.sh` (payload sync) and `scripts/install.py` (bridges).
+  Available on macOS, Linux, and WSL.
+- **Python 3.10+** — required for the bridge stage only. Pre-installed
+  on macOS 12.3+ and all major Linux distros. If missing, the
+  orchestrator skips bridges and completes the payload sync.
 - **Composer or npm** — to pull the package itself.
 
 **Platform support:**

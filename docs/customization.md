@@ -27,7 +27,7 @@ Use the `/override-create` command to scaffold a new override.
 ## AGENTS.md
 
 Every consumer project should have an `AGENTS.md` at the project root.
-The `install.sh` script copies a default version if none exists.
+The installer copies a default version if none exists.
 
 `AGENTS.md` provides project-specific context to the agent: tech stack, conventions,
 module structure, test setup, and quality tooling.

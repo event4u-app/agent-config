@@ -3,11 +3,20 @@
 **Principle:** Project-installed by default, plugin-enhanced when available.
 No Task, no Make, no build tools required for installation.
 
-> **Canonical installer:** `scripts/install.py` (Python 3.10+, standard
-> library only). Everything else — `scripts/install.sh`, `bin/install.php`,
-> `scripts/postinstall.sh` — is a thin wrapper that eventually calls the
-> Python installer. Run it directly if you prefer:
-> `python3 scripts/install.py --help`.
+> **Primary installer:** `scripts/install` — a small bash orchestrator that
+> runs the two real installer stages in order:
+>
+> 1. `scripts/install.sh` — payload sync (copy rules, symlink skills and
+>    commands, create tool-specific directories).
+> 2. `scripts/install.py` — bridge files (`.agent-settings`, VSCode /
+>    Augment / Copilot JSON descriptors).
+>
+> `bin/install.php` and `scripts/postinstall.sh` are thin wrappers that
+> delegate to `scripts/install`. Both underlying stages remain callable
+> directly for advanced use; see their `--help`.
+>
+> Python 3.10+ is required for bridges. If it is missing, the orchestrator
+> prints a warning and continues with the payload sync only.
 
 | Mode | Best for | Scope |
 |---|---|---|
@@ -29,8 +38,9 @@ php vendor/bin/install.php
 ```
 
 Composer does **not** run a post-install hook for this package — the
-bridge installer is an explicit step. `bin/install.php` is a thin
-wrapper that calls `scripts/install.py`. To pick a non-default profile:
+installer is an explicit step. `bin/install.php` is a thin wrapper that
+calls `scripts/install` (the bash orchestrator). To pick a non-default
+profile:
 
 ```bash
 php vendor/bin/install.php --profile=balanced
@@ -46,48 +56,58 @@ npm install --save-dev @event4u/agent-config
 ```
 
 npm runs `scripts/postinstall.sh` automatically, which invokes
-`scripts/install.sh` (which in turn calls the Python bridge installer).
+`scripts/install` — the same orchestrator every other entry point uses.
 
 If your setup disables install scripts (`npm config set ignore-scripts
 true` or similar), nothing happens and the command prints no warning.
 Re-run the installer manually in that case:
 
 ```bash
-python3 node_modules/@event4u/agent-config/scripts/install.py
+bash node_modules/@event4u/agent-config/scripts/install
 ```
 
-### Generate bridge files (Python installer)
+### Installer orchestrator (`scripts/install`)
 
-The bridge installer creates `.agent-settings` and tool-specific bridge files. It runs
-automatically via `install.sh`, but you can invoke it directly:
+The orchestrator chains payload sync and bridge generation:
 
 ```bash
-python3 scripts/install.py                     # defaults to cost_profile=minimal
-python3 scripts/install.py --profile=balanced  # specific profile
-python3 scripts/install.py --force             # overwrite existing files
-python3 scripts/install.py --skip-bridges      # only create .agent-settings
+bash scripts/install                  # defaults to cost_profile=minimal
+bash scripts/install --profile=balanced
+bash scripts/install --force          # overwrite existing bridges
+bash scripts/install --skip-bridges   # payload only
+bash scripts/install --skip-sync      # bridges only
+bash scripts/install --dry-run        # show payload sync plan, skip bridges
 ```
 
-PHP users can use the wrapper:
+PHP users can use the Composer wrapper, which forwards all flags:
 
 ```bash
 php vendor/bin/install.php --profile=balanced
 ```
 
-This creates:
+Under the hood:
+
+- `scripts/install.sh` — payload sync (callable directly for sync-only runs).
+- `scripts/install.py` — bridge files (callable directly for bridge-only runs).
+
+A full run creates:
+
 - `.agent-settings` — profile configuration
-- `.vscode/settings.json` — VS Code/Copilot plugin discovery
+- `.vscode/settings.json` — VS Code / Copilot plugin discovery
 - `.augment/settings.json` — Augment plugin activation
 - `.github/plugin/marketplace.json` — Copilot CLI marketplace
+- `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`, `GEMINI.md`
+- `AGENTS.md`, `.github/copilot-instructions.md` (only if missing)
 
-No Task, no Make, no build tools required. **Python 3** (standard library only) must be
-available — it is pre-installed on macOS 12.3+ and virtually every Linux distribution.
-If Python 3 is missing, `install.sh` warns and continues; re-run the bridge installer
-after installing it.
+No Task, no Make, no build tools required. **Python 3** (standard library only)
+is required for bridges — it is pre-installed on macOS 12.3+ and virtually
+every Linux distribution. If Python 3 is missing, the orchestrator warns,
+runs the payload sync anyway, and asks you to re-run `scripts/install`
+after installing Python.
 
 ### What happens after install
 
-`install.sh` creates project-local content for all supported tools:
+`scripts/install` creates project-local content for all supported tools:
 - `.augment/rules/`, `.augment/skills/`, `.augment/commands/` — for Augment
 - `.cursor/rules/` — for Cursor
 - `.clinerules/` — for Cline
@@ -173,13 +193,13 @@ These are fallbacks when the recommended paths above don't work.
 
 ```bash
 git submodule add git@github.com:event4u-app/agent-config.git .agent-config
-bash .agent-config/scripts/install.sh --target .
+bash .agent-config/scripts/install --target .
 ```
 
 ### Manual
 
 ```bash
-bash path/to/agent-config/scripts/install.sh --target /path/to/your/project
+bash path/to/agent-config/scripts/install --target /path/to/your/project
 ```
 
 ### Install from Git URL (VS Code / Copilot)
@@ -227,9 +247,21 @@ If the agent behaves differently than before — it's working.
 
 ---
 
-## How install.sh works
+## How the installer works
 
-### Hybrid sync strategy
+### Two-stage pipeline
+
+`scripts/install` runs these stages in order:
+
+| Stage | Script | Output |
+|---|---|---|
+| 1. Payload sync | `scripts/install.sh` | `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`, `GEMINI.md` |
+| 2. Bridges     | `scripts/install.py` | `.agent-settings`, `.vscode/settings.json`, `.augment/settings.json`, `.github/plugin/marketplace.json` |
+
+Either stage can be skipped (`--skip-sync`, `--skip-bridges`) or invoked
+directly. Stage 2 is gracefully skipped when Python 3 is unavailable.
+
+### Hybrid sync strategy (stage 1)
 
 | Directory | Method | Reason |
 |---|---|---|
@@ -260,15 +292,23 @@ your-project/
 ### CLI options
 
 ```
-bash scripts/install.sh [OPTIONS]
+bash scripts/install [OPTIONS]
 
 Options:
-  --source <dir>   Package source directory (default: auto-detect)
-  --target <dir>   Target project root (default: $PROJECT_ROOT or cwd)
-  --dry-run        Show what would happen without making changes
-  --verbose        Show detailed output
-  --quiet          Suppress all output except errors
+  --source <dir>    Package source directory (default: auto-detect)
+  --target <dir>    Target project root (default: $PROJECT_ROOT or cwd)
+  --profile <name>  Cost profile for bridges (minimal|balanced|full)
+  --force           Overwrite existing bridge files
+  --dry-run         Show payload sync plan; skip bridges
+  --verbose         Detailed payload sync output
+  --quiet           Suppress non-error output
+  --skip-sync       Skip payload sync (install.sh)
+  --skip-bridges    Skip bridge files (install.py)
+  --help, -h        Show this help
 ```
+
+The underlying stages keep their own CLI surfaces:
+`bash scripts/install.sh --help` and `python3 scripts/install.py --help`.
 
 ---
 
@@ -285,7 +325,7 @@ Or for npm projects:
 
 ```bash
 npm update @event4u/agent-config
-python3 node_modules/@event4u/agent-config/scripts/install.py
+bash node_modules/@event4u/agent-config/scripts/install
 ```
 
 The installer is idempotent — re-running it after an update refreshes
