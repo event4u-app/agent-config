@@ -56,7 +56,7 @@ task test-linter               # Skill linter unit tests
 task test-readme-linter        # README linter unit tests
 task test-runtime              # Runtime registry + dispatcher tests
 task test-tools                # Tool registry + adapter tests
-task test-runtime-all          # All runtime, tools, and lifecycle tests
+task test-runtime-all          # All runtime and tools tests
 ```
 
 #### CI test matrix
@@ -100,11 +100,9 @@ task quality-report            # Per-artifact-type quality scores
 ```bash
 task runtime-list              # List all runtime-capable skills
 task runtime-validate          # Validate runtime registry consistency
-task runtime-execute -- <skill> # Run a skill through the full pipeline
+task runtime-e2e               # Dispatch each pilot skill (CI gate)
 task tool-list                 # List all registered tools
 task tool-validate             # Validate tool declarations
-task lifecycle-report          # Skill lifecycle report
-task lifecycle-health          # Skill health scores
 task report-stdout             # Print health dashboard to stdout
 ```
 

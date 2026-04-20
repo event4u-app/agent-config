@@ -158,8 +158,8 @@ tasks:
     cmd: python3 -m pytest tests/test_tool_registry.py tests/test_tool_adapters.py -v
 
   test-runtime-all:
-    desc: Run all runtime, tools, and lifecycle tests
-    cmd: python3 -m pytest tests/test_runtime_registry.py tests/test_runtime_dispatcher.py tests/test_runtime_handler.py tests/test_skill_lifecycle.py tests/test_tool_registry.py tests/test_tool_adapters.py tests/test_persistence.py tests/test_report_generator.py tests/test_ci_summary.py -v
+    desc: Run all runtime and tools tests
+    cmd: python3 -m pytest tests/test_runtime_registry.py tests/test_runtime_dispatcher.py tests/test_runtime_handler.py tests/test_tool_registry.py tests/test_tool_adapters.py tests/test_persistence.py tests/test_report_generator.py tests/test_ci_summary.py -v
 
   runtime-e2e:
     desc: End-to-end gate — dispatch each runnable pilot skill and fail on any non-zero exit
@@ -174,14 +174,6 @@ tasks:
   report-stdout:
     desc: Print health dashboard to stdout
     cmd: python3 scripts/report_generator.py --root .
-
-  lifecycle-report:
-    desc: Generate skill lifecycle report
-    cmd: python3 scripts/skill_lifecycle.py
-
-  lifecycle-health:
-    desc: Show skill health scores
-    cmd: python3 scripts/skill_lifecycle.py --health
 
   consistency:
     desc: Verify sync + generated tool outputs are clean
