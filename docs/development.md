@@ -56,7 +56,7 @@ task test-linter               # Skill linter unit tests
 task test-readme-linter        # README linter unit tests
 task test-runtime              # Runtime registry + dispatcher tests
 task test-tools                # Tool registry + adapter tests
-task test-runtime-all          # All runtime, tools, feedback, lifecycle tests
+task test-runtime-all          # All runtime, tools, and lifecycle tests
 ```
 
 #### CI test matrix
@@ -140,7 +140,6 @@ scripts/
 ├── persistence.py             ← JSON persistence layer
 ├── report_generator.py        ← CLI health/metrics reports
 ├── ci_summary.py              ← GitHub Actions job summary
-├── feedback_governance.py     ← Feedback → governance proposals
 └── tools/
     ├── base_adapter.py        ← Tool adapter contract
     ├── github_adapter.py      ← GitHub API adapter
@@ -152,7 +151,7 @@ tests/
 ├── test_skill_linter.py       ← Linter unit tests
 ├── test_persistence.py        ← Persistence layer tests
 ├── test_report_generator.py   ← Report generation tests
-└── test_ci_and_governance.py  ← CI summary + governance tests
+└── test_ci_summary.py         ← CI summary tests
 
 .github/workflows/
 ├── skill-lint.yml             ← Lint + PR comment workflow
