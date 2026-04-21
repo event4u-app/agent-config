@@ -105,6 +105,14 @@ tasks:
     desc: Compare lint results between current branch and main (detect regressions)
     cmd: python3 scripts/lint_regression.py --baseline main
 
+  audit-descriptions:
+    desc: Audit skill descriptions for pushy-description pattern compliance (worst 15)
+    cmd: python3 scripts/audit_skill_descriptions.py
+
+  audit-descriptions-full:
+    desc: Audit skill descriptions (full list of all flagged)
+    cmd: python3 scripts/audit_skill_descriptions.py --full
+
   lint-readme:
     desc: Lint README.md for quality, correctness, and completeness
     cmd: python3 scripts/readme_linter.py README.md --root .
