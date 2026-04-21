@@ -104,3 +104,18 @@ Show a summary:
 - **Never modify files** — only stage and commit existing changes.
 - **Do NOT add untracked files** unless they are clearly part of the change (check with `git status`).
 - **Follow commit conventions** as defined in `.augment/rules/commit-conventions.md`.
+
+## Optional: wrap in `/do-and-judge`
+
+If the user invoked `/commit` under `/do-and-judge` (or explicitly asked
+for judged commits), treat the planned commit list from step 5 as the
+implementer artifact:
+
+- Hand the commit plan + diff to the judge before step 6.
+- Judge verdict `apply` → proceed with step 6 unchanged.
+- Judge verdict `revise` → adjust grouping or messages per the issue
+  list, re-present the updated plan to the user, then re-judge.
+- Judge verdict `reject` → stop, report, do not commit.
+
+Two-revision ceiling applies per [`/do-and-judge`](do-and-judge.md).
+Outside the wrapper this section is a no-op.

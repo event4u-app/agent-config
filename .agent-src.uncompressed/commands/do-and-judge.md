@@ -78,6 +78,17 @@ Next step:  <commit / open PR / abandon>
 - Judge transcript contradicts the original task (off-task drift)
 - User interrupts mid-loop
 
+## Wrappable commands
+
+Commands that document an optional `/do-and-judge` integration block:
+
+- [`/commit`](commit.md) — judge reviews the commit plan + diff before
+  staging. Useful on large, mixed-intent diffs.
+
+Any command without an integration block is still wrappable in
+principle, but the judge lacks a structured artifact to grade — expect
+weaker verdicts.
+
 ## See also
 
 - [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md)
