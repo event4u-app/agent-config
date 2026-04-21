@@ -75,7 +75,7 @@ Your agent is now:
 - **Respecting your codebase** — no conflicting patterns
 - **Following standards** — consistent code quality
 
-This is enforced automatically by 31 rules. No configuration needed.
+This is enforced automatically by 36 rules. No configuration needed.
 
 ---
 
@@ -110,7 +110,7 @@ Your agent now understands slash commands:
 | `/fix-ci` | Fetch and fix GitHub Actions failures |
 | `/quality-fix` | Run and fix all quality checks |
 
-→ [Browse all 51 commands](../.agent-src/commands/)
+→ [Browse all 54 commands](../.agent-src/commands/)
 
 ---
 
