@@ -79,22 +79,23 @@ Do NOT create a skill or rule for:
 
 ## Procedure
 
-### 0. Analyze before creating
+### 0. Inspect, then run the Drafting Protocol
 
-Before writing anything:
+Before writing, **inspect** the landscape: grep
+`.agent-src.uncompressed/skills/` and `rules/` for duplicates or
+near-matches, and **analyze** 1–2 gold-standard peers (e.g. `pest-testing`,
+`php-coder`) to anchor shape and tone. If requirements are unclear or
+incomplete, stop and ask — do not assume.
 
-* What exactly is being requested?
-* Does a similar skill already exist? Search `.augment/skills/` and `.augment/rules/`
-* Is the scope too broad or unclear?
-* Read existing related artifacts — compare against current behavior
-* If requirements are ambiguous, ask a clarification question first
-* Define expected outcome: what should the skill enable that isn't possible today?
-
-This step is mandatory — skipping analysis leads to duplicate, weak, or pointer-only skills.
+Then run the Understand → Research → Draft sequence from the
+[`artifact-drafting-protocol`](../../rules/artifact-drafting-protocol.md)
+rule. Skip only on explicit *"just do it"* bypass or trivial edits
+(typo, link, single-line clarification).
 
 ### 1. Define the trigger
 
-Write "When to use" first — the in-body trigger for anyone reading the skill.
+Write "When to use" first. This is the in-body trigger — it documents the
+workflow's entry conditions for anyone reading the skill.
 
 Good:
 Use when creating Laravel middleware for request filtering
@@ -102,16 +103,17 @@ Use when creating Laravel middleware for request filtering
 Bad:
 Use when working with Laravel
 
-### 1b. Pushy frontmatter description
+### 1b. Write a pushy frontmatter description
 
 The `description:` field is what Claude reads at routing time. Polite or
 generic descriptions cause **undertriggering**. Normative source:
 `skill-quality` rule § *Description Triggering*.
 
-Three rules: 2+ triggers (domains, symptoms, user phrasing), tail
-`... even if they don't explicitly ask for \`<skill-name>\`.`, and
-**≤ 200 chars** (linter: `description_too_long`). Drop adjectives
-before dropping triggers or the tail.
+Three rules: name 2+ triggers (domains, symptoms, user phrasing), end with
+`... even if they don't explicitly ask for \`<skill-name>\`.`, and stay
+**≤ 200 characters** (`skill_linter.py` warns `description_too_long` above
+that). When trimming to fit, drop adjectives or the second example phrasing
+before you drop a trigger class or the `even if ...` tail.
 
 Canonical before/after (2026-04-21 audit baseline):
 
@@ -127,8 +129,58 @@ description: "Use when writing Playwright E2E tests — locators, assertions,
   doesn't say Playwright."
 ```
 
-Good routes on *"my E2E keeps flaking on CI"* without naming Playwright.
-Run `python3 scripts/audit_skill_descriptions.py`. If flagged, rewrite.
+The *good* version routes correctly on *"my E2E keeps flaking on CI"*
+without naming Playwright. Run `python3 scripts/audit_skill_descriptions.py`
+after writing; if flagged `too-short` or `no-trigger-prefix`, rewrite
+before commit.
+
+When iterating on phrasing with the user (e.g. "make this pushier",
+"will this ever fire"), delegate to the
+[`description-assist`](../description-assist/SKILL.md) skill — it runs the
+approval-gated propose / pick loop with at most two rounds.
+
+### 1c. Propose a trigger-eval stub (new skills only)
+
+When creating a new skill, propose a stub
+`.agent-src.uncompressed/skills/{name}/evals/triggers.json` before writing
+the body. Draw the queries from Phase A of the drafting protocol (the
+user's "should trigger" and "must not trigger" answers).
+
+Stub shape — 5 should-trigger + 5 should-not-trigger queries, first-person,
+single-sentence, **no leakage of the skill name** in the queries:
+
+```json
+{
+  "skill": "{name}",
+  "description": "5 should-trigger + 5 should-not-trigger queries. No query mentions '{name}' directly. Near-misses share domain vocabulary without being the actual task.",
+  "queries": [
+    {"q": "<phrasing from user Phase A that MUST route here>", "trigger": true},
+    {"q": "<another should-trigger phrasing>", "trigger": true},
+    {"q": "<...3 more>", "trigger": true},
+    {"q": "<near-miss sharing vocabulary but different task>", "trigger": false},
+    {"q": "<another near-miss>", "trigger": false},
+    {"q": "<...3 more>", "trigger": false}
+  ]
+}
+```
+
+Present the stub as a numbered-options prompt (per `user-interaction`):
+
+```
+> 1. Accept stub as drafted — commit alongside the skill
+> 2. Edit queries before commit
+> 3. Skip evals for now — create later
+```
+
+Nothing is committed without the user's pick. If the user picks *skip*,
+record it in the commit message (`Eval stub: deferred`). See
+[`road-to-trigger-evals.md`](../../../agents/roadmaps/road-to-trigger-evals.md)
+Phase 1 for the runner and expected format; peer examples:
+`php-coder/evals/triggers.json`, `eloquent/evals/triggers.json`,
+`skill-writing/evals/triggers.json`.
+
+Rules / commands / guidelines do **not** get eval stubs — only skills
+route through the top-level catalogue.
 
 ### 2. Write the procedure
 
@@ -210,86 +262,30 @@ Example:
 
 ### Execution metadata (optional)
 
-Skills can optionally declare an `execution` block in frontmatter:
-
-```yaml
-execution:
-  type: manual | assisted | automated
-  handler: none | shell | php | node | internal
-  timeout_seconds: 30
-  safety_mode: strict
-  allowed_tools: []
-```
-
-* Default is `manual` — omitting the block means instructional only
-* `assisted` = prepares actions for human confirmation
-* `automated` = executes safely (requires handler, safety_mode, allowed_tools)
-* See `guidelines/agent-infra/runtime-layer.md` for full specification
+Skills may declare an `execution` frontmatter block (`type`, `handler`,
+`timeout_seconds`, `safety_mode`, `allowed_tools`). Default is `manual`
+(instructional only). See `guidelines/agent-infra/runtime-layer.md` for
+the full specification and `assisted` / `automated` semantics.
 
 ### When to create a `project-analysis-*` skill
 
-A framework gets its own analysis skill ONLY if:
-
-* it has its own lifecycle that creates unique debugging patterns
-* it produces failure classes that `project-analysis-core` cannot explain
-* debugging it requires framework-specific mental models
-
-✅ Qualifies: Laravel, Symfony, Express, React, Next.js
-❌ Does NOT qualify: Tailwind, utility libs, CSS frameworks, simple state managers
+Only if the framework has its own lifecycle producing unique debugging
+patterns that `project-analysis-core` cannot explain (e.g. Laravel,
+Symfony, Express, React, Next.js). **Not** for Tailwind, CSS frameworks,
+utility libs, or simple state managers.
 
 ## Gotchas
 
-* Model writes documentation instead of steps
-* Model skips validation — every Procedure MUST end with a concrete verify/confirm step
-* Model includes obvious knowledge
+* Writing documentation instead of executable steps
+* Skipping validation — every Procedure MUST end with a concrete verify step
+* Including baseline knowledge the model already has
 * Description too long or not a trigger
-* Renaming an existing heading to "Procedure:" without adding ordered steps creates false structure — the linter requires numbered steps or `###` sub-headings
-* **Always run `python3 scripts/skill_linter.py` on the new skill** — must be 0 FAIL before saving
+* Renaming a heading to "Procedure:" without numbered steps or `###` sub-headings
+* **Always run `python3 scripts/skill_linter.py` before saving — 0 FAIL required**
 
 ## Do NOT
 
-* Do NOT write documentation-style skills
-* Do NOT skip Procedure
-* Do NOT use vague validation
-* Do NOT exceed size limits (see `guidelines/agent-infra/size-and-scope.md`)
-* Do NOT duplicate rules
-
-## Auto-trigger keywords
-
-* create skill
-* write skill
-* improve skill
-* skill template
-* SKILL.md
-
-## Anti-patterns
-
-* "Laravel skill" (too broad)
-* Missing procedure
-* Missing validation
-* Pure explanation without actions
-
-## Examples
-
-Request:
-"Create a skill for database migrations"
-
-Good:
-
-* Clear trigger
-* Concrete procedure
-* Validation with commands
-
-Bad:
-
-* Generic description
-* No validation
-* Missing output format
-
-## Environment notes
-
-Skills live in:
-.agent-src.uncompressed/skills/{name}/SKILL.md
-
-Compressed:
-.augment/skills/{name}/SKILL.md
+* Write documentation-style, pointer-only, or too-broad skills ("Laravel skill")
+* Skip Procedure or use vague validation
+* Exceed size limits (see `guidelines/agent-infra/size-and-scope.md`)
+* Duplicate rules

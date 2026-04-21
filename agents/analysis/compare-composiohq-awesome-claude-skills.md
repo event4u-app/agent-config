@@ -224,6 +224,7 @@ Cross-roadmap ties:
 | 3 | Judge model pairing | **3.d** — configurable per-project in `.agent-settings`; default one tier up | New settings keys `subagent_implementer_model`, `subagent_judge_model` |
 | 4 | Citations scope | **4.c** — selective retrofit of existing skills that match published patterns | ~5-10 skills affected (e.g. `analysis-autonomous-mode`, `review-changes`, `bug-analyzer`) |
 | 5 | AGENTS.md synthesis | **5.a** — roadmap first, AGENTS.md second | Roadmap delivers raw material; AGENTS.md distills vision in final phase |
+| 6 | Attribution for Phase-1 ports | **6.a** (2026-04-21) — inspired by, not ported from. Write fresh in event4u voice, no verbatim copy from obra/superpowers, no `## References` section, no THIRD-PARTY file. Industry-standard concepts (TDD, root-cause debugging) are not copyrightable | Roadmap Phase 1.1-1.3 rewritten accordingly; `obra/superpowers` reviewed as inspiration only (MIT, checked 2026-04-21) |
 
 ## References
 

@@ -3,15 +3,21 @@
 ## Installation
 
 ```bash
-# Composer (PHP)
+# Composer (PHP) — two steps: install, then run the orchestrator
 composer require --dev event4u/agent-config
-bash vendor/event4u/agent-config/scripts/setup.sh
+php vendor/bin/install.php
+# Equivalent: bash vendor/event4u/agent-config/scripts/install
 
-# npm (JavaScript/TypeScript)
+# npm (JavaScript/TypeScript) — the orchestrator runs via postinstall
 npm install --save-dev @event4u/agent-config
+# Re-run or pick a profile:
+# bash node_modules/@event4u/agent-config/scripts/install --profile=balanced
 ```
 
-That's it. Your agent now follows your team's standards.
+That's it. Your agent now follows your team's standards. The orchestrator
+runs a bash payload sync and a Python bridge generator (Python 3 is
+recommended; without it the payload sync still runs). No Task or Make
+required for end users.
 
 ## First Run
 
@@ -75,7 +81,7 @@ Your agent is now:
 - **Respecting your codebase** — no conflicting patterns
 - **Following standards** — consistent code quality
 
-This is enforced automatically by 31 rules. No configuration needed.
+This is enforced automatically by 37 rules. No configuration needed.
 
 ---
 
@@ -110,7 +116,7 @@ Your agent now understands slash commands:
 | `/fix-ci` | Fetch and fix GitHub Actions failures |
 | `/quality-fix` | Run and fix all quality checks |
 
-→ [Browse all 51 commands](../.agent-src/commands/)
+→ [Browse all 57 commands](../.agent-src/commands/)
 
 ---
 

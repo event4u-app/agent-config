@@ -1,6 +1,6 @@
 ---
 name: grafana
-description: "Use when creating Grafana dashboards, writing Loki log queries, configuring alerting rules, or building monitoring panels."
+description: "Use when working with Grafana — dashboards, Loki LogQL queries, alerting rules, monitoring panels — even when the user just says 'build me a dashboard' or 'query the logs' without naming Grafana."
 source: package
 ---
 

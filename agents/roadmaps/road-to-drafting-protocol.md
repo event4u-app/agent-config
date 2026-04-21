@@ -7,7 +7,7 @@
 
 - **Source inspiration:** [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) — the front-end (Understand/Research/Draft), stripped of the autopilot back-end (`run_loop.py`, `.skill` packaging, blind comparison)
 - **Source analysis:** [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) — revised scope after 2026-04-20 discussion
-- **Status:** Draft, 2026-04-20
+- **Status:** Phase 1 + 2 + 3 + 4 shipped, 2026-04-21 (branch `feat/improve-agent-setup-8`)
 - **Author:** Split out of the anthropic alignment track after narrow-rejection was revised
 
 ## Guiding principle
@@ -96,17 +96,17 @@ into `foo-basics` + `foo-advanced`."*
 
 ## Prerequisites
 
-- [ ] [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) Phase 2
+- [x] [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) Phase 2
       merged — `skill-quality` rule carries the "pushy description" pattern, so
       the Draft phase has authoritative guidance to cite.
-- [ ] `improve-before-implement` and `ask-when-uncertain` rules reviewed for
+- [x] `improve-before-implement` and `ask-when-uncertain` rules reviewed for
       scope overlap — this roadmap extends them for artifact creation; it must
       not duplicate them.
-- [ ] Branch off `main` after v1.7.1.
+- [x] Branch off `main` after v1.7.1.
 
-## Phase 1 — The protocol rule (v1.8.0)
+## Phase 1 — The protocol rule (v1.8.0) ✅ Shipped 2026-04-21
 
-### 1.1 New rule: `artifact-drafting-protocol.md`
+### 1.1 New rule: `artifact-drafting-protocol.md` ✅
 
 Location: `.agent-src.uncompressed/rules/artifact-drafting-protocol.md`.
 
@@ -122,54 +122,72 @@ The rule defines the three phases as **mandatory** for new-artifact creation
 and **opt-in** for significant rewrites. Triggered once per creation task,
 not once per edit.
 
-### 1.2 Integration with existing rules
+### 1.2 Integration with existing rules ✅
 
 - **`ask-when-uncertain`** — this rule extends it for artifact creation with
   a specific question template. No duplication; the new rule cross-links.
+  Cross-link added in `ask-when-uncertain.md` pointing to the protocol.
 - **`improve-before-implement`** — already says "validate the request against
   existing code". This roadmap operationalizes it for artifacts: the Research
-  phase *is* validation.
+  phase *is* validation. Cross-link added.
 - **`user-interaction`** — numbered-options requirement is reused verbatim.
 
-### 1.3 Size budget for the rule itself
+### 1.3 Size budget for the rule itself ✅
 
 Target: ≤120 lines. Artifact-type-agnostic, no code, just protocol.
+Shipped: 121 lines uncompressed / 104 lines compressed. `long_rule` linter
+warning is acceptable — protocol content is not compressible without losing
+the numbered trigger table.
 
-## Phase 2 — Writing skills (v1.8.1)
+### 1.4 Follow-ups (not in Phase 1 scope)
 
-### 2.1 Extend `skill-writing`
+- AGENTS.md table updated with new rule entry.
+- Roadmap moved to "shipped" status; Phase 2 (writing skills) remains
+  open for a future branch.
 
-Add two sections:
-- **Understand checklist** — 5 questions the agent must answer before drafting
-- **Research protocol** — which files to read, what to report back
+## Phase 2 — Writing skills (v1.8.1) ✅ shipped 2026-04-21
 
-No new skills added in this sub-phase; we only ensure `skill-writing` aligns.
+### 2.1 Extend `skill-writing` ✅
 
-### 2.2 Create a new skill: `rule-writing`
+Section 0 of the Procedure now points at
+`artifact-drafting-protocol` (Understand → Research → Draft) instead of the
+ad-hoc "Analyze before creating" checklist. No content duplicated; the
+protocol rule is the single normative source.
 
-New skill at `.agent-src.uncompressed/skills/rule-writing/SKILL.md`. Mirror
-`skill-writing`'s structure: trigger wording conventions, trigger phrase
-design, rule-type governance (always vs auto, per `rule-type-governance`
-rule), size budget. ~120 lines.
+### 2.2 Create a new skill: `rule-writing` ✅
 
-### 2.3 Create a new skill: `command-writing`
+New skill at `.agent-src.uncompressed/skills/rule-writing/SKILL.md`. Mirrors
+`skill-writing`'s structure: trigger wording conventions, `always` vs
+`auto` governance (cites `rule-type-governance`), size budget (cites
+`size-enforcement`), linter + CI validation gate. 143 lines uncompressed.
 
-New skill. Covers slash-command shape (frontmatter, purpose, inputs, steps,
-output location, safety, "when not to use"). ~120 lines.
+### 2.3 Create a new skill: `command-writing` ✅
 
-### 2.4 Create a new skill: `guideline-writing`
+New skill at `.agent-src.uncompressed/skills/command-writing/SKILL.md`.
+Covers slash-command shape: `disable-model-invocation` frontmatter, numbered
+steps, safety gates (no auto-apply of destructive actions), size budget,
+Claude symlink verification. 142 lines uncompressed.
 
-New skill. Covers guideline shape (scoped knowledge, referenced from skills,
-no direct triggers, link conventions). ~100 lines.
+### 2.4 Create a new skill: `guideline-writing` ✅
 
-Total new code: ~340 lines of markdown across three skills + ~30 lines
-extended in `skill-writing`.
+New skill at `.agent-src.uncompressed/skills/guideline-writing/SKILL.md`.
+Covers guideline shape: minimal frontmatter (no `type`, no routing), topic
+folder selection, inbound-link requirement (cites `preservation-guard`),
+relaxed size budget. 145 lines uncompressed.
 
-## Phase 3 — Description assist (agent proposes, human approves)
+Total new code shipped: 430 lines of markdown across three skills + 21 lines
+extended in `skill-writing`. Skill count 100 → 103.
+
+## Phase 3 — Description assist (agent proposes, human approves) ✅ shipped 2026-04-21
 
 This is the **bounded** version of anthropic's `run_loop.py`: the agent
 participates in description iteration, but every change is an approval-gated
 proposal. No Claude API calls. No silent edits.
+
+**Shipped as:** `.agent-src.uncompressed/skills/description-assist/SKILL.md`
+(143 lines). Cross-linked from all four writing skills
+(`skill-writing`, `rule-writing`, `command-writing`, `guideline-writing`).
+Skill count 103 → 104.
 
 ### 3.1 Behavior
 
@@ -198,24 +216,30 @@ Agent response (scripted by the rule, not by Claude API):
 Available for all four artifact types. Each type gets its own phrasing
 corpus in the writing skill (`skill-writing` / `rule-writing` / etc.).
 
-## Phase 4 — Integration with trigger evals (conditional)
+## Phase 4 — Integration with trigger evals ✅ shipped 2026-04-21
 
-Only runs **after** [`road-to-trigger-evals.md`](road-to-trigger-evals.md)
-Phase 1 lands.
+Unblocked once `road-to-trigger-evals.md` Phase 1 shipped (runner +
+mock router + pilot triggers). No API spend required — Phase 4 only
+**reads** last-run.json when it exists.
 
-### 4.1 Auto-scaffold trigger evals during skill creation
+### 4.1 Auto-scaffold trigger evals during skill creation ✅
 
-When the Drafting Protocol creates a new skill, the agent proposes a stub
-`evals/triggers.json` with 5 should-trigger + 5 should-not-trigger queries
-drawn from the user's answers in Phase A (the "when should this fire"
-question). Human reviews, edits, approves. Nothing committed without approval.
+Shipped as `skill-writing` § 1c and cross-referenced from
+`artifact-drafting-protocol` Phase C. When the Drafting Protocol creates
+a new skill, the agent proposes a stub `evals/triggers.json` with
+5 should-trigger + 5 should-not-trigger queries drawn from the user's
+Phase A answers. Numbered-options prompt: accept / edit / skip. Nothing
+committed without approval. Rules, commands, and guidelines skip this.
 
-### 4.2 Description-assist informed by eval results
+### 4.2 Description-assist informed by eval results ✅
 
-If the skill has `evals/triggers.json` and a last-run report, Phase 3's
-description-assist uses the report: *"Your current description failed 3 of 5
-should-trigger queries — the failures share the phrasing 'X'. Here's a variant
-that incorporates it."*
+Shipped as `description-assist` § 2b and § 3. If
+`.agent-src.uncompressed/skills/{name}/evals/last-run.json` exists, the
+assist extracts failure patterns and requires at least one variant in
+step 3 to address the dominant failure (labelled *"addresses eval
+failure: …"*). If no last-run exists, step 2b is silently skipped.
+The assist does **not** invoke the runner — eval execution stays a
+separate user action (token cost).
 
 Still proposal-gated. Still no autopilot.
 

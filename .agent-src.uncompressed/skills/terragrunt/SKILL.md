@@ -1,6 +1,6 @@
 ---
 name: terragrunt
-description: "Use when writing Terragrunt configurations — DRY multi-environment configs, dependency management, and remote state orchestration."
+description: "Use when working with Terragrunt — DRY multi-env configs, module dependencies, remote state orchestration — even when the user just says 'deploy this to staging and prod' without naming Terragrunt."
 source: package
 ---
 

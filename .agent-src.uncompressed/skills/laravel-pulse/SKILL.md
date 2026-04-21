@@ -1,6 +1,6 @@
 ---
 name: laravel-pulse
-description: "Use when setting up Laravel Pulse monitoring — real-time dashboard, built-in cards, custom recorders, or performance insights."
+description: "Use when setting up Laravel Pulse — real-time dashboard, built-in cards, custom recorders, performance insights — even when the user just says 'I need app monitoring' without naming Pulse."
 source: package
 ---
 

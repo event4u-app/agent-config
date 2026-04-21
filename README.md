@@ -5,7 +5,7 @@ Teach your AI agents Laravel, PHP, testing, Git workflows, and **90+ more skills
 > Your agent learns to write Laravel code, run tests, create PRs, fix CI — and follows your team's coding standards while doing it.
 
 <p align="center">
-  <strong>93 Skills</strong> · <strong>31 Rules</strong> · <strong>51 Commands</strong> · <strong>34 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>100 Skills</strong> · <strong>36 Rules</strong> · <strong>54 Commands</strong> · <strong>37 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -104,8 +104,9 @@ Start with **Rules + Skills**. Everything else is optional.
 Nothing runs automatically without your control. [Configure modes →](docs/customization.md)
 
 > **Experimental modules:** the runtime (dispatcher + shell handler) runs
-> two pilot skills in CI (`lint-skills`, `check-refs`). Other handlers
-> (`php`, `node`) and the tool registry are still scaffold. The `minimal`
+> two pilot skills in CI (`lint-skills`, `check-refs`). The tool registry
+> ships two read-only adapters (GitHub, Jira) behind the `full` profile.
+> Other handlers (`php`, `node`) are still scaffold. The `minimal`
 > profile — which most users should pick — is unaffected.
 
 ---
@@ -166,7 +167,7 @@ can prioritize the right skills for extraction.
 | [`/jira-ticket`](.agent-src/commands/jira-ticket.md) | Read ticket from branch, implement feature |
 | [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
 
-→ [Browse all 51 commands](.agent-src/commands/)
+→ [Browse all 57 commands](.agent-src/commands/)
 
 ---
 
@@ -191,7 +192,7 @@ Every developer gets the same behavior. No per-user setup needed.
 native slash-commands)
 
 > **What this means in practice:** Augment Code and Claude Code get the full
-> package (rules + 93 skills + 51 native commands). Cursor, Cline, Windsurf,
+> package (rules + 112 skills + 57 native commands). Cursor, Cline, Windsurf,
 > Gemini CLI, and GitHub Copilot only get the **rules** natively; skills and
 > commands are available to them as documentation the agent can read, not as
 > first-class features.
@@ -232,6 +233,11 @@ Code's Agent Skills specification.
 | [**Development**](docs/development.md) | Prerequisites, editing workflow, all `task` commands, project structure |
 | [**Customization**](docs/customization.md) | Overrides, AGENTS.md, agent settings, cost profiles |
 | [**Quality & CI**](docs/quality.md) | Linting, CI pipeline, compression system |
+
+Uninstalling: see
+[docs/installation.md#uninstalling](docs/installation.md#uninstalling) —
+there is no dedicated uninstall command; removal is a documented manual
+step (package manager + `rm -rf` of generated dirs).
 
 ---
 

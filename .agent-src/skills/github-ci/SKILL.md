@@ -1,6 +1,6 @@
 ---
 name: github-ci
-description: "Use when working with GitHub Actions CI/CD — quality checks, test workflows, deployment triggers, or reusable workflow modules."
+description: "Use when working with GitHub Actions — workflow YAML, quality gates, test matrices, deployment triggers, reusable workflows — even when the user just says 'my CI is failing' or 'add a check'."
 source: package
 ---
 

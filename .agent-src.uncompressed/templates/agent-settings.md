@@ -83,6 +83,17 @@ upstream_repo=
 
 # Branch prefix for improvement PRs
 improvement_pr_branch_prefix=improve/agent-
+
+# --- Subagent orchestration ---
+
+# Model for implementer subagents (empty = same tier as session model)
+subagent_implementer_model=
+
+# Model for judge subagents (empty = one tier above implementer)
+subagent_judge_model=
+
+# Maximum number of parallel subagent invocations (integer, default 3)
+subagent_max_parallel=3
 ```
 
 ## Settings Reference
@@ -105,6 +116,9 @@ Personal and project-level settings (written by `/config-agent-settings` and `bi
 | `skill_improvement_pipeline` | `true`, `false` | `false` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. |
 | `upstream_repo` | `org/repo` | _(empty)_ | Target repository for universal improvement PRs (e.g., `org/agent-config`). |
 | `improvement_pr_branch_prefix` | string | `improve/agent-` | Branch prefix for agent improvement PRs. |
+| `subagent_implementer_model` | model alias or empty | _(empty)_ | Model for implementer subagents. Empty = same tier as session model. See [subagent-configuration](../contexts/subagent-configuration.md). |
+| `subagent_judge_model` | model alias or empty | _(empty)_ | Model for judge subagents. Empty = one tier above implementer (opus if sonnet, sonnet if haiku). |
+| `subagent_max_parallel` | integer | `3` | Maximum parallel subagent invocations. `1` serializes. |
 
 ## Cost profiles
 
