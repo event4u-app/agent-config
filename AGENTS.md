@@ -67,15 +67,16 @@ check-refs, check-portability, lint-skills, test, lint-readme.
 | Skills must declare frontmatter, be self-contained, pass the linter | [`skill-quality`](.agent-src/rules/skill-quality.md) |
 | Size budgets for skills, rules, commands | [`size-enforcement`](.agent-src/rules/size-enforcement.md) |
 | Keep `.agent-src/` / `agents/` cross-refs in sync on add/rename/delete | [`docs-sync`](.agent-src/rules/docs-sync.md) |
+| Creating a new skill/rule/command/guideline runs Understand → Research → Draft | [`artifact-drafting-protocol`](.agent-src/rules/artifact-drafting-protocol.md) |
 
 ## Repository layout
 
 ```
 .agent-src.uncompressed/      ← edit here
-  skills/       (93 skills)
-  rules/        (31 rules)
-  commands/     (51 commands)
-  guidelines/   (34 guidelines)
+  skills/       (100 skills)
+  rules/        (37 rules)
+  commands/     (54 commands)
+  guidelines/   (37 guidelines)
   templates/    (AGENTS.md, copilot-instructions.md, skill.md, …)
   contexts/
 

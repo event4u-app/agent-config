@@ -7,7 +7,7 @@
 
 - **Source inspiration:** [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) — the front-end (Understand/Research/Draft), stripped of the autopilot back-end (`run_loop.py`, `.skill` packaging, blind comparison)
 - **Source analysis:** [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) — revised scope after 2026-04-20 discussion
-- **Status:** Draft, 2026-04-20
+- **Status:** Phase 1 shipped, 2026-04-21 (branch `feat/improve-agent-setup-8`)
 - **Author:** Split out of the anthropic alignment track after narrow-rejection was revised
 
 ## Guiding principle
@@ -96,17 +96,17 @@ into `foo-basics` + `foo-advanced`."*
 
 ## Prerequisites
 
-- [ ] [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) Phase 2
+- [x] [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) Phase 2
       merged — `skill-quality` rule carries the "pushy description" pattern, so
       the Draft phase has authoritative guidance to cite.
-- [ ] `improve-before-implement` and `ask-when-uncertain` rules reviewed for
+- [x] `improve-before-implement` and `ask-when-uncertain` rules reviewed for
       scope overlap — this roadmap extends them for artifact creation; it must
       not duplicate them.
-- [ ] Branch off `main` after v1.7.1.
+- [x] Branch off `main` after v1.7.1.
 
-## Phase 1 — The protocol rule (v1.8.0)
+## Phase 1 — The protocol rule (v1.8.0) ✅ Shipped 2026-04-21
 
-### 1.1 New rule: `artifact-drafting-protocol.md`
+### 1.1 New rule: `artifact-drafting-protocol.md` ✅
 
 Location: `.agent-src.uncompressed/rules/artifact-drafting-protocol.md`.
 
@@ -122,18 +122,28 @@ The rule defines the three phases as **mandatory** for new-artifact creation
 and **opt-in** for significant rewrites. Triggered once per creation task,
 not once per edit.
 
-### 1.2 Integration with existing rules
+### 1.2 Integration with existing rules ✅
 
 - **`ask-when-uncertain`** — this rule extends it for artifact creation with
   a specific question template. No duplication; the new rule cross-links.
+  Cross-link added in `ask-when-uncertain.md` pointing to the protocol.
 - **`improve-before-implement`** — already says "validate the request against
   existing code". This roadmap operationalizes it for artifacts: the Research
-  phase *is* validation.
+  phase *is* validation. Cross-link added.
 - **`user-interaction`** — numbered-options requirement is reused verbatim.
 
-### 1.3 Size budget for the rule itself
+### 1.3 Size budget for the rule itself ✅
 
 Target: ≤120 lines. Artifact-type-agnostic, no code, just protocol.
+Shipped: 121 lines uncompressed / 104 lines compressed. `long_rule` linter
+warning is acceptable — protocol content is not compressible without losing
+the numbered trigger table.
+
+### 1.4 Follow-ups (not in Phase 1 scope)
+
+- AGENTS.md table updated with new rule entry.
+- Roadmap moved to "shipped" status; Phase 2 (writing skills) remains
+  open for a future branch.
 
 ## Phase 2 — Writing skills (v1.8.1)
 
