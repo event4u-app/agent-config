@@ -1,6 +1,6 @@
 ---
 name: websocket
-description: "Use when implementing WebSocket communication, real-time features, broadcasting patterns, or connection management."
+description: "Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'."
 source: package
 ---
 

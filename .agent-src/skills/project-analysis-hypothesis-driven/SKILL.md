@@ -1,6 +1,6 @@
 ---
 name: project-analysis-hypothesis-driven
-description: "Use for deep root-cause analysis with multiple competing hypotheses, validation loops, and evidence-based conclusions."
+description: "Use when a bug has multiple plausible causes across layers — competing hypotheses, validation loops, evidence-based conclusions — even when the user just says 'why is this happening?'."
 source: package
 ---
 
