@@ -188,4 +188,4 @@ Never create the roadmap without explicit confirmation.
 - Skill: `project-analyzer` — base analysis workflow.
 - Skill: `learning-to-rule-or-skill` — turn adopt items into content.
 - Skill: `upstream-contribute` — push learnings back to this package.
-- Roadmaps: `agents/roadmaps/` — consumers of findings (e.g. `road-to-mcp.md`).
+- Roadmaps: `agents/roadmaps/` — consumers of findings (e.g. `road-to-anthropic-alignment.md`).

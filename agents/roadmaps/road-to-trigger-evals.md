@@ -6,8 +6,9 @@
 
 - **Source inspiration:** [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) — description-optimization loop
 - **Source analysis:** [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) (Finding §3 ADAPT)
-- **Status:** Draft, 2026-04-20
+- **Status:** Phase 1 shipped (runner + 3 pilot triggers.json + 22 tests); Phase 2 decision gate blocked on real API run
 - **Author:** Split out of `road-to-anthropic-alignment.md` on 2026-04-20 for focus
+- **Last updated:** 2026-04-21 — runner landed in PR #14 with dry-run only; live runs require `ANTHROPIC_API_KEY` + `TRIGGER_EVALS_CONFIRM=1`
 
 ## Guiding principle
 
@@ -112,21 +113,29 @@ continue to rollout.
 
 ## Prerequisites
 
-- [ ] [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) Phase 2
-      landed — so "pushy description" pattern is already in the `skill-quality`
-      rule and a handful of descriptions have been rewritten with the new style.
-      Evals measure the post-rewrite baseline, not the pre-rewrite one.
+- [x] [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) Phase 2
+      landed — pushy-description pattern in `skill-quality` rule, audit tool in
+      place, **6 descriptions rewritten** (the 3 pilots + `developer-like-execution`,
+      `git-workflow`, `conventional-commits-writing`) so the pilot evals measure
+      post-rewrite routing.
 - [ ] Claude API key with prepaid budget available (target: $50 ceiling across
-      all PoC + rollout runs combined).
+      all PoC + rollout runs combined). **Blocker for Phase 2 decision gate.**
 - [ ] Confirm current pricing of whichever model runs our sessions; use that
       exact model for trigger measurements (undertriggering is model-specific).
-- [ ] Branch off `main` after 1.7.1 merges.
+      *Default in runner: `claude-sonnet-4-5`; override with `--model`.*
+- [x] Branch off current feature branch (`feat/pushy-descriptions`, PR #14).
+      Originally said "off main after 1.7.1 merges" — working stacked instead to
+      keep pattern + runner in one release.
 
-## Phase 1 — Proof of Concept (3 skills only)
+## Phase 1 — Proof of Concept (3 skills only) ✅ shipped (wiring)
 
-### 1.1 Pick the 3 target skills
+Shipped in PR #14 on `feat/pushy-descriptions`. Execution against the live
+API is deferred until Phase 2 — the runner has a `--dry-run` mode that uses
+a `MockRouter` for wiring validation.
 
-Recommend: `php-coder`, `eloquent`, `skill-writing`.
+### 1.1 Pick the 3 target skills ✅
+
+Chose: `php-coder`, `eloquent`, `skill-writing` (per roadmap recommendation).
 
 Rationale:
 - `php-coder` — generic, broad description, likely to overtrigger. Tests precision.
@@ -134,31 +143,46 @@ Rationale:
 - `skill-writing` — meta-skill, activation only on agent-infrastructure work.
   Tests whether meta-skills route cleanly.
 
-### 1.2 Author `evals/triggers.json` per skill
+### 1.2 Author `evals/triggers.json` per skill ✅
 
-- 5 should-trigger queries: vary phrasing, include casual language, include
-  one concrete file path, include one indirect ask ("my form keeps letting
-  empty emails through").
-- 5 should-not-trigger queries: near-misses that share keywords; never use
-  the skill's name in the query.
-- Every query a single sentence, first-person, realistic.
+Shipped:
+- [`.agent-src.uncompressed/skills/php-coder/evals/triggers.json`](../../.agent-src.uncompressed/skills/php-coder/evals/triggers.json)
+- [`.agent-src.uncompressed/skills/eloquent/evals/triggers.json`](../../.agent-src.uncompressed/skills/eloquent/evals/triggers.json)
+- [`.agent-src.uncompressed/skills/skill-writing/evals/triggers.json`](../../.agent-src.uncompressed/skills/skill-writing/evals/triggers.json)
 
-### 1.3 Build `scripts/skill_trigger_eval.py`
+Each carries 5 should-trigger + 5 should-not-trigger queries, first-person,
+single-sentence, no skill-name leakage, near-miss should-not-trigger queries
+share domain vocabulary (Laravel, SQL, skill, SKILL.md) without being the
+actual task.
 
-Requirements:
+### 1.3 Build `scripts/skill_trigger_eval.py` ✅
 
-- **Input:** skill path + queries.json
-- **Behavior per query:** call Claude API with the full `available_skills` frontmatter
-  list (all 95+ skills) + the query as user message. Ask the API to return the
-  skills it would load for this query — structured output, not free text.
-- **Output:** per-skill `evals/last-run.json` with:
-  - Timestamp, model ID, total cost estimate
-  - Per-query: query text, expected, observed (skill loaded y/n), pass/fail
-  - Aggregate precision + recall
-- **CLI summary table** — one line per skill, colored pass/fail counts.
+Shipped [`scripts/skill_trigger_eval.py`](../../scripts/skill_trigger_eval.py)
+(~420 LoC, stdlib + optional `anthropic` SDK):
+
+- **Routers:** `TriggerRouter` Protocol with two implementations —
+  `MockRouter` (injectable `decide(query, skills) -> list[str]`) and
+  `AnthropicRouter` (wraps SDK, prompt sends the full 100-skill catalogue
+  and asks for `{"would_load": [...]}` structured JSON).
+- **Input:** `--skill <name>` + optional `--triggers <path>` (default:
+  `.agent-src.uncompressed/skills/<name>/evals/triggers.json`).
+- **Output:** `evals/last-run.json` — timestamp, model, router (mock vs
+  anthropic), per-query `{q, expected, observed, loaded_skills, passed}`,
+  aggregate metrics (TP/FP/TN/FN + precision + recall), token counts,
+  cost estimate.
+- **CLI summary:** skill / router / pass-fail count / precision / recall /
+  token totals / per-failure lines (FP or FN flagged).
+- **Dry-run:** `--dry-run` uses a self-confirming `MockRouter`; output is
+  labelled `router: mock` so no one mistakes it for a real eval.
 - **No HTML viewer, no dashboard.** JSON is the product.
-
-Dependencies: `anthropic` Python SDK. No framework. Single file under 300 LoC.
+- **Tests:** [`tests/test_skill_trigger_eval.py`](../../tests/test_skill_trigger_eval.py)
+  — 22 tests (frontmatter parsing, metrics math, cost estimate, MockRouter,
+  AnthropicRouter with injected fake client, code-fence tolerance, CLI smoke
+  run, exit codes). All green.
+- **Taskfile:** `task test-triggers -- <skill>` for dry-run;
+  `task test-triggers-live -- <skill>` refuses to launch unless
+  `TRIGGER_EVALS_CONFIRM=1` is set. Both documented inline.
+- **Gitignore:** `**/evals/last-run.json` — run outputs are not committed.
 
 ## Phase 2 — Decision Gate
 
@@ -233,5 +257,5 @@ and stop. Do not expand scope.
 
 - [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) — parent roadmap (Phases 1-2: marketplace + pushy descriptions)
 - [`archive/road-to-9.md`](archive/road-to-9.md) — archived sibling (runtime depth, closed 2026-04-21)
-- [`road-to-mcp.md`](road-to-mcp.md) — orthogonal (MCP config generation)
+- [`archive/road-to-mcp.md`](archive/road-to-mcp.md) — archived sibling (MCP config generation, closed 2026-04-21)
 - [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) — origin finding

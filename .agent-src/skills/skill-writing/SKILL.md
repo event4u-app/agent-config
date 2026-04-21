@@ -1,6 +1,6 @@
 ---
 name: skill-writing
-description: "Use when creating or improving agent skills. Covers structure, quality checklist, and best practices."
+description: "Use when creating, improving, or reviewing agent skills — SKILL.md files, frontmatter, procedure sections, or skill-vs-rule decisions — even when the user says 'write a skill' without naming it."
 source: project
 ---
 
@@ -94,13 +94,41 @@ This step is mandatory — skipping analysis leads to duplicate, weak, or pointe
 
 ### 1. Define the trigger
 
-Write "When to use" first.
+Write "When to use" first — the in-body trigger for anyone reading the skill.
 
 Good:
 Use when creating Laravel middleware for request filtering
 
 Bad:
 Use when working with Laravel
+
+### 1b. Pushy frontmatter description
+
+The `description:` field is what Claude reads at routing time. Polite or
+generic descriptions cause **undertriggering**. Normative source:
+`skill-quality` rule § *Description Triggering*.
+
+Three rules: 2+ triggers (domains, symptoms, user phrasing), tail
+`... even if they don't explicitly ask for \`<skill-name>\`.`, and
+**≤ 200 chars** (linter: `description_too_long`). Drop adjectives
+before dropping triggers or the tail.
+
+Canonical before/after (2026-04-21 audit baseline):
+
+```yaml
+# Bad (138 chars, polite, single trigger class):
+description: "Use when writing Playwright E2E tests — browser automation,
+  visual regression testing, Page Objects, fixtures, and reliable test
+  patterns."
+
+# Good (pushy, second trigger class, explicit tail):
+description: "Use when writing Playwright E2E tests — locators, assertions,
+  Page Objects, fixtures, CI, and flaky test prevention — even if the user
+  doesn't say Playwright."
+```
+
+Good routes on *"my E2E keeps flaking on CI"* without naming Playwright.
+Run `python3 scripts/audit_skill_descriptions.py`. If flagged, rewrite.
 
 ### 2. Write the procedure
 
