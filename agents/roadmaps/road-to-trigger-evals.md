@@ -232,6 +232,6 @@ and stop. Do not expand scope.
 ## Related
 
 - [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) — parent roadmap (Phases 1-2: marketplace + pushy descriptions)
-- [`road-to-9.md`](road-to-9.md) — orthogonal (runtime depth)
+- [`archive/road-to-9.md`](archive/road-to-9.md) — archived sibling (runtime depth, closed 2026-04-21)
 - [`road-to-mcp.md`](road-to-mcp.md) — orthogonal (MCP config generation)
 - [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) — origin finding

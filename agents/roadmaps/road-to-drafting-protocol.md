@@ -256,6 +256,6 @@ Still proposal-gated. Still no autopilot.
 
 - [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) — Phase 2 prerequisite (pushy description pattern)
 - [`road-to-trigger-evals.md`](road-to-trigger-evals.md) — integrated in Phase 4
-- [`road-to-9.md`](road-to-9.md) — orthogonal (runtime depth)
+- [`archive/road-to-9.md`](archive/road-to-9.md) — archived sibling (runtime depth, closed 2026-04-21)
 - [`road-to-mcp.md`](road-to-mcp.md) — orthogonal (MCP config generation)
 - [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) — origin finding (Finding §2 pushy description + §3 trigger evals + revised §7 interactive drafting)

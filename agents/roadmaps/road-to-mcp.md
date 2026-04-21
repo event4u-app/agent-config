@@ -22,7 +22,7 @@ for MCP servers, a UI, a secret vault — are not.
 
 ## Prerequisites
 
-- [ ] [`road-to-9.md`](road-to-9.md) Phase 1 landed (real minimal runtime).
+- [x] [`archive/road-to-9.md`](archive/road-to-9.md) Phase 1 landed (real minimal runtime, shipped in PR #11, 1.5.0).
 - [ ] Read [`.agent-src.uncompressed/skills/mcp/SKILL.md`](../../.agent-src.uncompressed/skills/mcp/SKILL.md) — current MCP surface.
 - [ ] Branch off `main` after 1.6.0.
 
@@ -72,4 +72,4 @@ loudly — never silent empty values.
 - Archived parent (explored & largely rejected): [`archive/road-to-ultimate.md`](archive/road-to-ultimate.md).
 - Substitution reference impl: https://github.com/kdcllc/agents_config/blob/master/app/agents_config/base.py
 - Source analysis: [`../analysis/compare-kdcllc-agents-config.md`](../analysis/compare-kdcllc-agents-config.md).
-- Sibling (depth): [`road-to-9.md`](road-to-9.md).
+- Archived sibling (depth): [`archive/road-to-9.md`](archive/road-to-9.md).

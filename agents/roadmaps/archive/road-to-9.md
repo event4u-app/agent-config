@@ -1,5 +1,11 @@
 # Roadmap: Road to 9/10 — Proof of Power
 
+> **Status:** Closed (2026-04-21) — archived after 1.6.0 closure.
+> Phases 1, 3, 4, 5, 6 shipped. Phase 2 (Killer Flow / `/jira-ticket` polish)
+> was **deferred** — it requires a Laravel/PHP consumer project to record the
+> end-to-end demo, which this Python/Bash package cannot host in isolation.
+> A follow-up roadmap owns that work when a host project is available.
+
 > Make **one thing completely real** instead of five things half-built:
 > a minimal but genuine runtime, one end-to-end killer flow, a single installer
 > entry point, honest experimental layers, and a tighter product positioning.
@@ -36,7 +42,9 @@ same window.
 - **Jira:** none
 - **Target releases:** 1.5.0 (Phases 1–2), 1.6.0 (Phases 3–5)
 
-## Phase 1: Real minimal runtime (P0)
+## Phase 1: Real minimal runtime (P0) ✅
+
+**Status:** Done (2026-04-19, commit range ending at `94c22e5`).
 
 **Problem:** `ExecutionRequest → Executor → Handler → Result` — only the
 request class exists. Everything downstream is a stub. The architecture
@@ -93,7 +101,23 @@ python3 scripts/runtime_dispatcher.py run --skill check-refs
 Full CI green (sync, compression, refs, portability, skill-lint,
 marketplace, 345 pytests, readme).
 
-## Phase 2: One killer end-to-end use case
+## Phase 2: One killer end-to-end use case ❌ DEFERRED
+
+**Status:** Deferred on 2026-04-21 — not executed in the 1.6.0 window.
+
+**Deferral reason:** The acceptance criterion (*"a cold-clone contributor
+follows the README section and reaches a green PR in under 10 minutes"*) and
+the deliverable (*asciinema/transcript of `/jira-ticket` → code change → tests
+→ PR on a sample repo*) both require a **Laravel/PHP consumer project** as
+the demo host. This repository is a Python/Bash distribution package; it can
+ship the `/jira-ticket` command but cannot host the end-to-end demo in
+isolation. Rather than produce a half-credible synthetic demo, the work is
+deferred until a real consumer project adopts the package and can host the
+screencast.
+
+**Follow-up:** When a suitable consumer project is available, create
+`agents/roadmaps/road-to-killer-flow.md` with sub-tasks 2.1–2.5 below as its
+single phase. No work lost — the gap analysis is still valid, just untouched.
 
 **Problem:** The README demos are generic ("refactor this function"). There
 is no reproducible "holy shit" flow that a new user can run in five minutes.
@@ -220,7 +244,10 @@ dispatcher.
 (sync, compression, refs, portability, skill-lint, runtime-e2e,
 239 pytests, readme).
 
-## Phase 5: Narrow the vision in README and architecture
+## Phase 5: Narrow the vision in README and architecture ✅
+
+**Status:** Done (2026-04-21, commits `88e4943`, `b13fe1b`, `2f72796`,
+`f881815`).
 
 **Problem:** README and architecture position the package as a broad "Agent
 Governance System". Real depth is in Rules / Skills / Commands / Installer.
@@ -349,16 +376,31 @@ in the template, the installer ini files, `scripts/first-run.sh`, and
 
 ## Acceptance Criteria (overall)
 
-- [ ] Phase 1 ships in 1.5.0; Phases 2–5 ship in 1.6.0 at the latest.
-- [ ] One skill executes end-to-end via the runtime with real side effects.
+- [x] Phase 1 ships in 1.5.0 — landed in PR #11 (`feat/improve-agent-setup-4`);
+      Phases 3, 4, 5, 6 ship in 1.6.0 via PR #12 (`feat/improve-agent-setup-5`).
+      Phase 2 deferred to a follow-up roadmap.
+- [x] One skill executes end-to-end via the runtime with real side effects —
+      `lint-skills` and `check-refs` run through
+      `python3 scripts/runtime_dispatcher.py run --skill <name>` with typed
+      `ExecutionResult` and real stdout/exit codes (Phase 1.3–1.5).
 - [ ] README has exactly one headline end-to-end flow, reproducible on a
-      clean clone in under 10 minutes.
-- [ ] `scripts/install.py` is the single documented installer; all other
-      entry points are thin wrappers covered by tests.
-- [ ] Every experimental layer has a named real consumer or is removed.
-- [ ] README, architecture docs, and CHANGELOG are mutually consistent with
-      the shipped surface.
-- [ ] `task ci` green on the final merge for each release.
+      clean clone in under 10 minutes. **Deferred with Phase 2** — requires a
+      consumer project to record the `/jira-ticket` demo.
+- [x] `scripts/install.py` is the single documented installer; all other
+      entry points are thin wrappers covered by tests — Phase 3 landed
+      `scripts/install` orchestrator; `bin/install.php` + `postinstall.sh`
+      call into it; `tests/test_install_py.py` + `tests/test_install_orchestrator.sh`
+      cover the full chain.
+- [x] Every experimental layer has a named real consumer or is removed —
+      Phase 4 removed observability / feedback / lifecycle scaffolding; Phase 6
+      removed the stale matrix keys from the shipped template.
+- [x] README, architecture docs, and CHANGELOG are mutually consistent with
+      the shipped surface — Phase 5 narrowing swept README, architecture.md,
+      quality.md, getting-started.md, customization.md; Phase 6 swept the
+      template + installer INI + first-run.sh.
+- [x] `task ci` green on the final merge for each release — PR #11 merged
+      clean; PR #12 head (9f04209) has all three workflows (Consistency,
+      Skill Lint, Tests × 7 matrix jobs) green.
 
 ## Non-Goals
 

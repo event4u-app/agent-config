@@ -15,7 +15,8 @@ wired up yet.
 
 > The previous "observability, feedback, lifecycle" layers were removed in
 > 1.5 — they were scaffolds without production consumers. See the
-> `road-to-9` roadmap, phase 4, for the rationale.
+> [`archive/road-to-9.md`](../agents/roadmaps/archive/road-to-9.md) roadmap,
+> phase 4, for the rationale.
 
 ## Content pipeline
 
