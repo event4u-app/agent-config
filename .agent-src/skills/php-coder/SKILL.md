@@ -1,6 +1,6 @@
 ---
 name: php-coder
-description: "Writes or edits PHP code — controllers, services, classes, type hints, interfaces, SOLID refactors, and modern idioms across legacy and Laravel projects — even when the user just says 'write this class' or 'fix this method' without naming PHP."
+description: "Writes or edits PHP code — controllers, services, classes, type hints, SOLID refactors, modern idioms, legacy or Laravel — even when the user says 'write this class' without naming PHP."
 source: package
 ---
 

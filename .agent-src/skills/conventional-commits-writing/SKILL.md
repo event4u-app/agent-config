@@ -1,6 +1,6 @@
 ---
 name: conventional-commits-writing
-description: "Use when writing, reviewing, or fixing commit messages and squash-merge titles — `feat:`, `fix:`, `chore:`, scopes, breaking-change markers — even when the user just says 'commit this' or 'good commit title?' without naming Conventional Commits."
+description: "Use when writing commit messages or squash-merge titles — `feat:`, `fix:`, `chore:`, scopes, breaking changes — even when the user just says 'commit this' without naming Conventional Commits."
 source: package
 execution:
   type: assisted
