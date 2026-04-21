@@ -231,22 +231,30 @@ Do not inline the runtime build into this roadmap.
 - [ ] One real task uses `/reflect` and produces a learning that lands as a rule or skill PR
 - [ ] `skill-improvement-pipeline` skill updated to document the new entry path
 
-## Phase 6: Parallel-work tooling
+## Phase 6: Parallel-work tooling ✅ (6.1 shipped 2026-04-21)
 
 > Depends on: nothing in this roadmap — can run any time after Phase 1.
 > Independent utility skill.
 
-### 6.1 New skill `using-git-worktrees`
+### 6.1 New skill `using-git-worktrees` ✅
 
-- [ ] Port `obra/superpowers/skills/using-git-worktrees`
-- [ ] Adapt to the multi-tool reality: mention Augment Code, Claude Code, Cursor working in parallel worktrees
-- [ ] Include the "when NOT to worktree" section (small fixes, linear branches)
-- [ ] Size budget: ≤120 lines
+- [x] Port `obra/superpowers/skills/using-git-worktrees` — rewritten in
+      project voice per the "inspired by" policy (no verbatim copy)
+- [x] Adapt to the multi-tool reality: mention Augment Code, Claude Code,
+      Cursor working in parallel worktrees — dedicated section
+- [x] Include the "Do NOT use when" section (small fixes, linear branches,
+      tiny repos, uncertain branch)
+- [x] Size budget: 148 lines uncompressed (target was ≤120; tables and
+      numbered steps pushed it slightly over — still well below the
+      200-line hard cap)
 
 ### 6.2 Phase-6 acceptance
 
-- [ ] Skill linter passes
-- [ ] One real multi-worktree scenario documented in `agents/contexts/` as case study
+- [x] Skill linter passes (warnings only: minimal compression reduction —
+      source already tight)
+- [ ] One real multi-worktree scenario documented in `agents/contexts/`
+      as case study — deferred; captured on first real parallel-agent
+      session
 
 ## Phase 7: MCP creation depth
 
