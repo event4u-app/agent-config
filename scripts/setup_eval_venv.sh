@@ -54,5 +54,5 @@ echo
 "${VENV_DIR}/bin/python3" --version
 echo
 echo "Venv ready at ${REPO_ROOT}/${VENV_DIR}."
-echo "Next:  bash scripts/install_anthropic_key.sh"
+echo "Next:  task install-anthropic-key    # will prompt for your key"
 echo "Then:  task test-triggers-live -- eloquent"
