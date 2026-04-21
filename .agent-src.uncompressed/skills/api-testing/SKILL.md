@@ -1,6 +1,6 @@
 ---
 name: api-testing
-description: "Use when writing tests for API endpoints — integration tests, contract validation, response structure verification, and mocked external services."
+description: "Use when writing API endpoint tests — integration tests, contract validation, response assertions, mocked external services — even when the user says 'test this route' without naming API testing."
 source: package
 ---
 
