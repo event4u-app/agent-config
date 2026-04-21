@@ -178,21 +178,34 @@ Do not inline the runtime build into this roadmap.
 
 ### 3.1 Split `review-changes`
 
-- [ ] Audit current `review-changes` command (location: `.agent-src.uncompressed/commands/review-changes.md`)
-- [ ] Extract four judge roles as **sub-skills** (not standalone commands):
-  - [ ] `judge-bug-hunter` — functional correctness, edge cases, null-safety
-  - [ ] `judge-security-auditor` — authz, injection, secrets, unsafe deserialization
-  - [ ] `judge-test-coverage` — missing assertions, coverage gaps, over-mocking
-  - [ ] `judge-code-quality` — naming, SRP, DRY, consistency with codebase conventions
-- [ ] `review-changes` command dispatches to all four sequentially (or in parallel via `/do-in-parallel` from Phase 2)
-- [ ] Each judge skill has a frontmatter system-prompt-style opening ("You are a judge specialized in …")
+- [x] Audit current `review-changes` command (location: `.agent-src.uncompressed/commands/review-changes.md`)
+- [x] Extract four judge roles as **sub-skills** (not standalone commands):
+  - [x] `judge-bug-hunter` — functional correctness, edge cases, null-safety
+  - [x] `judge-security-auditor` — authz, injection, secrets, unsafe deserialization
+  - [x] `judge-test-coverage` — missing assertions, coverage gaps, over-mocking
+  - [x] `judge-code-quality` — naming, SRP, DRY, consistency with codebase conventions
+- [x] `review-changes` command dispatches to all four sequentially (default) or in
+      parallel when `subagent_max_parallel >= 4` (delegates to `subagent-orchestration`'s
+      `do-in-parallel` pattern — safe because judges read the same diff and produce
+      independent reports)
+- [x] Each judge skill has a system-prompt-style opening under its top heading
+      ("You are a judge specialized in …") — see e.g.
+      [`judge-bug-hunter/SKILL.md`](../../.agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md)
 
 ### 3.2 Phase-3 acceptance
 
-- [ ] Running `/review-changes` on a real diff produces four distinct reports
-- [ ] Judge model defaults to `subagent_judge_model` from Phase 2.1
-- [ ] Citation added: `judge-bug-hunter` `## References` links to LLM-as-Judge paper (arxiv.org/abs/2306.05685)
-- [ ] Existing users unaffected: old `review-changes` invocation still works (backward compatible)
+- [x] Running `/review-changes` on a real diff produces four distinct reports
+      (the command's step 4 "Consolidate" keeps each judge's block separate,
+      tags findings by source judge, and highlights multi-judge findings)
+- [x] Judge model defaults to `subagent_judge_model` from Phase 2.1; step 2
+      "Resolve the judge model" in `/review-changes` and step "Resolve models"
+      in each judge's Do NOT block enforce this
+- [x] Citation added: `judge-bug-hunter`'s `## References` section links to
+      Zheng et al., "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena"
+      ([arxiv.org/abs/2306.05685](https://arxiv.org/abs/2306.05685))
+- [x] Existing users unaffected: `/review-changes` invocation is unchanged;
+      diff-gathering step is untouched; language-specific checks (e.g. `php -l`)
+      are now handed off to the optional quality-tools step rather than inlined
 
 ## Phase 4: Planning chain
 
