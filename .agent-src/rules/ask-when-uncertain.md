@@ -34,21 +34,16 @@ request matches one of these without further context, ask **before** touching co
 | "use best practices" | Whose? For what? | "Best practices for what specifically — testing, naming, structure?" |
 | "handle errors properly" | Which errors? How? Log, retry, propagate? | "For which failure modes, and what should happen on error?" |
 
-**Escape hatch:** If the surrounding context (ticket, open file, prior conversation) makes
-the answer unambiguous, proceed without asking — but state the assumption explicitly
-("Assuming you mean X because Y…").
+**Escape hatch:** If surrounding context (ticket, open file, prior conversation)
+makes the answer unambiguous, proceed — but state the assumption explicitly.
 
 ## How to ask
 
-- Be specific about what is unclear
-- Present numbered options (per `user-interaction` rule)
-- Keep it short — don't write an essay
+Be specific. Present numbered options (per `user-interaction`). Keep it short.
 
-## Question batching
-
-- **Simple decisions** (binary, small choices): ask multiple at once, numbered
-- **Complex questions** (need context/thinking): ask ONE at a time, wait for answer
-- **Handoff questions** (model switch, deeper analysis): ask LAST, after all domain questions
+- Simple (binary, small): multiple at once, numbered
+- Complex (needs thinking): one at a time, wait for answer
+- Handoff (model switch): ask LAST
 
 ## Creating new agent artifacts
 

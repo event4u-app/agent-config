@@ -40,8 +40,9 @@ Research → Draft from the
 
 * **Understand** — which agent behavior is wrong today? What should change?
   Can you point to a concrete incident or repeated pattern?
-* **Research** — grep `.agent-src.uncompressed/rules/` for overlap. Read
-  `rule-type-governance`, `size-enforcement`, `skill-quality` before drafting.
+* **Research** — **inspect** `.agent-src.uncompressed/rules/` for overlap
+  and **analyze** `rule-type-governance`, `size-enforcement`,
+  `skill-quality` before drafting.
 * **Draft** — propose frontmatter (`type`, `description`) first, wait for
   confirmation, then fill the body.
 

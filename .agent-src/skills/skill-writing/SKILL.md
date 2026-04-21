@@ -79,27 +79,18 @@ Do NOT create a skill or rule for:
 
 ## Procedure
 
-### 0. Run the Drafting Protocol
+### 0. Inspect, then run the Drafting Protocol
 
-Creating or significantly rewriting a skill **must** go through the
-Understand → Research → Draft sequence defined in the
-[`artifact-drafting-protocol`](../../rules/artifact-drafting-protocol.md) rule.
+Before writing, **inspect** the landscape: grep
+`.agent-src.uncompressed/skills/` and `rules/` for duplicates or
+near-matches, and **analyze** 1–2 gold-standard peers (e.g. `pest-testing`,
+`php-coder`) to anchor shape and tone. If requirements are unclear or
+incomplete, stop and ask — do not assume.
 
-Short version:
-
-* **Understand** — what problem, what outcome, what trigger phrases? If the
-  user said "create a skill for X" with no further context, ask 2–4 crisp
-  questions before touching a file.
-* **Research** — search `.agent-src.uncompressed/skills/` and `rules/` for
-  duplicates or near-matches. Read 1–2 gold-standard peer skills (e.g.
-  `pest-testing`, `php-coder`) to anchor shape and tone.
-* **Draft** — only now write the SKILL.md. Propose frontmatter
-  (`name`, `description`) to the user and get confirmation before filling the body.
-
-Skip the protocol only when the user gives an explicit "just do it" bypass,
-or for trivial edits (typo, link fix, single-line clarification).
-
-Skipping analysis leads to duplicate, weak, or pointer-only skills.
+Then run the Understand → Research → Draft sequence from the
+[`artifact-drafting-protocol`](../../rules/artifact-drafting-protocol.md)
+rule. Skip only on explicit *"just do it"* bypass or trivial edits
+(typo, link, single-line clarification).
 
 ### 1. Define the trigger
 
@@ -271,86 +262,30 @@ Example:
 
 ### Execution metadata (optional)
 
-Skills can optionally declare an `execution` block in frontmatter:
-
-```yaml
-execution:
-  type: manual | assisted | automated
-  handler: none | shell | php | node | internal
-  timeout_seconds: 30
-  safety_mode: strict
-  allowed_tools: []
-```
-
-* Default is `manual` — omitting the block means instructional only
-* `assisted` = prepares actions for human confirmation
-* `automated` = executes safely (requires handler, safety_mode, allowed_tools)
-* See `guidelines/agent-infra/runtime-layer.md` for full specification
+Skills may declare an `execution` frontmatter block (`type`, `handler`,
+`timeout_seconds`, `safety_mode`, `allowed_tools`). Default is `manual`
+(instructional only). See `guidelines/agent-infra/runtime-layer.md` for
+the full specification and `assisted` / `automated` semantics.
 
 ### When to create a `project-analysis-*` skill
 
-A framework gets its own analysis skill ONLY if:
-
-* it has its own lifecycle that creates unique debugging patterns
-* it produces failure classes that `project-analysis-core` cannot explain
-* debugging it requires framework-specific mental models
-
-✅ Qualifies: Laravel, Symfony, Express, React, Next.js
-❌ Does NOT qualify: Tailwind, utility libs, CSS frameworks, simple state managers
+Only if the framework has its own lifecycle producing unique debugging
+patterns that `project-analysis-core` cannot explain (e.g. Laravel,
+Symfony, Express, React, Next.js). **Not** for Tailwind, CSS frameworks,
+utility libs, or simple state managers.
 
 ## Gotchas
 
-* Model writes documentation instead of steps
-* Model skips validation — every Procedure MUST end with a concrete verify/confirm step
-* Model includes obvious knowledge
+* Writing documentation instead of executable steps
+* Skipping validation — every Procedure MUST end with a concrete verify step
+* Including baseline knowledge the model already has
 * Description too long or not a trigger
-* Renaming an existing heading to "Procedure:" without adding ordered steps creates false structure — the linter requires numbered steps or `###` sub-headings
-* **Always run `python3 scripts/skill_linter.py` on the new skill** — must be 0 FAIL before saving
+* Renaming a heading to "Procedure:" without numbered steps or `###` sub-headings
+* **Always run `python3 scripts/skill_linter.py` before saving — 0 FAIL required**
 
 ## Do NOT
 
-* Do NOT write documentation-style skills
-* Do NOT skip Procedure
-* Do NOT use vague validation
-* Do NOT exceed size limits (see `guidelines/agent-infra/size-and-scope.md`)
-* Do NOT duplicate rules
-
-## Auto-trigger keywords
-
-* create skill
-* write skill
-* improve skill
-* skill template
-* SKILL.md
-
-## Anti-patterns
-
-* "Laravel skill" (too broad)
-* Missing procedure
-* Missing validation
-* Pure explanation without actions
-
-## Examples
-
-Request:
-"Create a skill for database migrations"
-
-Good:
-
-* Clear trigger
-* Concrete procedure
-* Validation with commands
-
-Bad:
-
-* Generic description
-* No validation
-* Missing output format
-
-## Environment notes
-
-Skills live in:
-.agent-src.uncompressed/skills/{name}/SKILL.md
-
-Compressed:
-.augment/skills/{name}/SKILL.md
+* Write documentation-style, pointer-only, or too-broad skills ("Laravel skill")
+* Skip Procedure or use vague validation
+* Exceed size limits (see `guidelines/agent-infra/size-and-scope.md`)
+* Duplicate rules

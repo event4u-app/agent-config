@@ -40,9 +40,9 @@ Creating or materially rewriting a guideline **must** go through Understand
 
 * **Understand** — which skills or rules will cite this guideline? If the
   answer is "none", the guideline has no home — stop.
-* **Research** — grep `guidelines/` for overlap and `.agent-src.uncompressed/`
-  for pages that already cover the topic. Read 1–2 peer guidelines in the
-  same topic folder for tone.
+* **Research** — **inspect** `guidelines/` for overlap and grep
+  `.agent-src.uncompressed/` for pages that already cover the topic.
+  **Analyze** 1–2 peer guidelines in the same topic folder for tone.
 * **Draft** — propose location (topic folder + filename) and outline. Only
   fill bodies once the outline is confirmed.
 
