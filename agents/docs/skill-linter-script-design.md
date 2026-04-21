@@ -206,3 +206,53 @@ CI default: warnings do not block unless `--strict` enabled.
 - Scorecard per skill
 - Repo quality report
 - PR comment integration
+
+## Warning Policy (current baseline)
+
+As of the last cleanup pass, the full-repo run reports `135 pass, 92 warn,
+0 fail, 227 total`. CI stays green on warnings — **warnings are advisory,
+only `[FAIL]` breaks the build**. This section classifies what we tolerate
+and what belongs in the backlog, so drive-by fixes stay focused.
+
+### Tolerated — no action planned
+
+These warnings fire heuristically on content that is intentionally shaped
+differently from the target. Fixing them would make the artifact worse.
+
+| Warning | Count | Why tolerated |
+|---|---|---|
+| `procedural_rule` | 13 | Some rules are inherently procedural (`verify-before-complete`, `context-hygiene`, `downstream-changes`). Converting them to skills would hide always-on guardrails behind a trigger description. |
+| `long_rule` (42–101 lines) | 18 | The largest rules are meta-rules that govern whole workflows (`language-and-tone`, `token-efficiency`, `think-before-action`). They are policy documents, not recipes. |
+| `short_procedure` | 10 | Small commands (e.g. `agent-status`) and narrow skills do not need ≥3 ordered steps to be useful. |
+| `skill_too_large` (4 skills) | 4 | Flagged skills (`laravel`, `agent-docs-writing`, …) are reference compendia that consumers expect to read end-to-end. |
+
+### Backlog — fix opportunistically
+
+These are real gaps that should be closed the next time the affected
+artifact is touched for another reason. Do not open dedicated PRs.
+
+| Warning | Count | Fix |
+|---|---|---|
+| `missing_inspect_step` | 42 | Add an explicit inspect/check step to the procedure (usually `Read relevant file` or `Run grep/rg` before editing). |
+| `large_command` (6 commands) | 6 | Commands over ~1000 words (`agents-audit`, `compress`, `copilot-agents-optimize`, `optimize-augmentignore`, `project-analyze`, `rule-compliance-audit`). Split into sub-commands or move deep detail into a linked context doc. |
+| `weak_output_format` | 6 | Output format section needs ≥2 ordered requirements. |
+| `missing_efficient_tooling_guidance` | 5 | Mention targeted filters (jq, rg, grep) in CLI-heavy artifacts. |
+| `missing_anti_bruteforce_guidance` | 4 | Add "max N retries, then stop and ask" language to execution guidance. |
+| `no_steps` (3 commands) | 3 | Command needs a Steps section or numbered sub-headings. `feature-dev` also has `missing_description`. |
+| `missing_verification_tool_mapping` | 3 | Name concrete verification tools (curl, Playwright, Xdebug) instead of generic "test it". |
+| `missing_clarification_guard` | 3 | Add an ask-when-uncertain hook to implementation guidance. |
+| `command_missing_skill_references` | 3 | Command should orchestrate skills instead of embedding domain logic. |
+| `missing_backend_verification_example` | 3 | Backend skills should mention curl / Postman / http::fake. |
+| `missing_frontend_verification_example` | 2 | Frontend skills should mention Playwright / browser / screenshot. |
+| `missing_validation_step` | 2 | Assisted skills need a validation/challenge step. |
+| `missing_runtime_debug_guidance` | 2 | Debug skills should mention Xdebug / breakpoints. |
+| `question_strategy_missing` | 1 | Distinguish grouped vs sequential questions. |
+| `missing_cli_verification_example` | 1 | CLI skills should mention exit-code / command-output checks. |
+| `handoff_order_missing` | 1 | Handoff guidance should ask handoff questions last. |
+| `missing_description` | 1 | `feature-dev` needs frontmatter description. |
+
+### Review cadence
+
+Re-run `task lint-skills` at the end of every multi-skill cleanup batch.
+If a category drops to zero, move it out of the table. If a new category
+appears with ≥3 hits, add it here with a short rationale.
