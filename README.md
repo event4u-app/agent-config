@@ -104,8 +104,9 @@ Start with **Rules + Skills**. Everything else is optional.
 Nothing runs automatically without your control. [Configure modes →](docs/customization.md)
 
 > **Experimental modules:** the runtime (dispatcher + shell handler) runs
-> two pilot skills in CI (`lint-skills`, `check-refs`). Other handlers
-> (`php`, `node`) and the tool registry are still scaffold. The `minimal`
+> two pilot skills in CI (`lint-skills`, `check-refs`). The tool registry
+> ships two read-only adapters (GitHub, Jira) behind the `full` profile.
+> Other handlers (`php`, `node`) are still scaffold. The `minimal`
 > profile — which most users should pick — is unaffected.
 
 ---
@@ -166,7 +167,7 @@ can prioritize the right skills for extraction.
 | [`/jira-ticket`](.agent-src/commands/jira-ticket.md) | Read ticket from branch, implement feature |
 | [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
 
-→ [Browse all 54 commands](.agent-src/commands/)
+→ [Browse all 57 commands](.agent-src/commands/)
 
 ---
 
@@ -191,7 +192,7 @@ Every developer gets the same behavior. No per-user setup needed.
 native slash-commands)
 
 > **What this means in practice:** Augment Code and Claude Code get the full
-> package (rules + 100 skills + 54 native commands). Cursor, Cline, Windsurf,
+> package (rules + 112 skills + 57 native commands). Cursor, Cline, Windsurf,
 > Gemini CLI, and GitHub Copilot only get the **rules** natively; skills and
 > commands are available to them as documentation the agent can read, not as
 > first-class features.
