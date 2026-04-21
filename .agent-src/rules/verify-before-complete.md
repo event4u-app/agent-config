@@ -66,6 +66,10 @@ Skip any step = the claim is unverified.
 
 For specific commands → see the `quality-tools` skill.
 
+For the detailed evidence-gate playbook (claim→command mapping, output
+inspection, end-of-work sequence) → see the `verify-before-complete`
+skill.
+
 ## Minimum verification per task type
 
 | Task | Required evidence |
