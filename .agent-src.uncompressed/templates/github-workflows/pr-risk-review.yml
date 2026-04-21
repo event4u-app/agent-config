@@ -97,3 +97,25 @@ jobs:
               issue_number: prNumber,
               labels: [desired],
             });
+
+      - name: Classify review routing
+        id: routing
+        if: hashFiles('scripts/pr_review_routing.py') != ''
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 scripts/pr_review_routing.py \
+            --base "$BASE_SHA" \
+            --head "$HEAD_SHA" \
+            --ownership-map .github/ownership-map.yml \
+            --patterns .github/historical-bug-patterns.yml \
+            --output routing-report.md \
+            --level-file routing-level.txt
+
+      - name: Post or update routing sticky comment
+        if: steps.routing.outcome == 'success'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: pr-review-routing
+          path: routing-report.md

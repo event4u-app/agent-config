@@ -1,29 +1,44 @@
 # PR Risk Review — installation
 
-Heuristic PR risk classifier. Posts a sticky comment on every non-draft PR
-with a **low / medium / high** risk label and a list of matched hotspots,
-then applies a matching `risk:<level>` label.
+Heuristic PR risk classifier **and** review routing. Posts two sticky
+comments on every non-draft PR:
 
-The classifier is **informational**. It is a conversation starter for
-reviewers, not a merge gate. Add a separate required check if you want a
-hard stop on high-risk PRs.
+- **PR Risk** — `low / medium / high` label plus matched hotspots;
+  applies a `risk:<level>` label.
+- **Review Routing** — owner-mapped reviewer roles from
+  `ownership-map.yml` and any matched entries from
+  `historical-bug-patterns.yml`.
+
+Both are **informational** — conversation starters for reviewers, not
+merge gates. Add a separate required check if you want a hard stop on
+high-risk PRs.
 
 ## What gets installed
 
 | File in package | Copy to | Purpose |
 |---|---|---|
 | `templates/github-workflows/pr-risk-review.yml` | `.github/workflows/pr-risk-review.yml` | GitHub Actions workflow |
-| `templates/scripts/pr_risk_review.py` | `scripts/pr_risk_review.py` | The classifier (Python 3.10+, PyYAML) |
-| `templates/scripts/pr-risk-config.example.yml` | `.github/pr-risk-config.yml` | Per-project patterns (optional) |
+| `templates/scripts/pr_risk_review.py` | `scripts/pr_risk_review.py` | Risk classifier (Python 3.10+, PyYAML) |
+| `templates/scripts/pr_review_routing.py` | `scripts/pr_review_routing.py` | Routing classifier |
+| `templates/scripts/pr-risk-config.example.yml` | `.github/pr-risk-config.yml` | Risk patterns (optional) |
+| `templates/scripts/ownership-map.example.yml` | `.github/ownership-map.yml` | Ownership entries (optional) |
+| `templates/scripts/historical-bug-patterns.example.yml` | `.github/historical-bug-patterns.yml` | Registered failure modes (optional) |
 
 ## Install
 
 ```bash
 # from the consumer repo root
-cp .augment/templates/github-workflows/pr-risk-review.yml .github/workflows/
-cp .augment/templates/scripts/pr_risk_review.py          scripts/
-cp .augment/templates/scripts/pr-risk-config.example.yml .github/pr-risk-config.yml
+cp .augment/templates/github-workflows/pr-risk-review.yml    .github/workflows/
+cp .augment/templates/scripts/pr_risk_review.py              scripts/
+cp .augment/templates/scripts/pr_review_routing.py           scripts/
+cp .augment/templates/scripts/pr-risk-config.example.yml     .github/pr-risk-config.yml
+cp .augment/templates/scripts/ownership-map.example.yml      .github/ownership-map.yml
+cp .augment/templates/scripts/historical-bug-patterns.example.yml .github/historical-bug-patterns.yml
 ```
+
+The routing step in the workflow is **conditional** — it only runs if
+`scripts/pr_review_routing.py` exists, so risk classification alone works
+without routing being installed.
 
 Create the three labels once (or let them be auto-created on first run):
 
@@ -76,12 +91,36 @@ _Classifier is heuristic. Merge is not blocked by this check._
 The same comment is **updated** (not re-posted) on every new push thanks
 to `marocchino/sticky-pull-request-comment`.
 
+## Routing comment format
+
+```
+## 🔴 Review Routing: high
+
+_3 changed file(s), 2 historical pattern(s) matched._
+
+### Suggested reviewers (role-based)
+- primary:   finance-engineering — focus: tax calculation + idempotency
+- secondary: security            — focus: tax calculation + idempotency
+
+### Historical patterns matched
+- 🔴 queue-job-not-idempotent — Queue job without idempotency key
+    required test: assert a retried job does not double-write
+- 🔴 blade-unsafe-html        — Blade component renders user input with {!! !!}
+
+_Data source: ownership-map.yml + historical-bug-patterns.yml. …_
+```
+
+Curate `ownership-map.yml` and `historical-bug-patterns.yml` over time —
+see `.augment/guidelines/agent-infra/review-routing-data-format.md` for
+the full schema.
+
 ## Uninstall
 
 ```bash
 rm .github/workflows/pr-risk-review.yml
 rm scripts/pr_risk_review.py
-rm .github/pr-risk-config.yml  # if you created one
+rm scripts/pr_review_routing.py
+rm .github/pr-risk-config.yml .github/ownership-map.yml .github/historical-bug-patterns.yml
 gh label delete risk:low risk:medium risk:high
 ```
 
@@ -94,8 +133,14 @@ python3 scripts/pr_risk_review.py \
   --output /tmp/risk-report.md \
   --level-file /tmp/risk-level.txt
 
-cat /tmp/risk-report.md
-cat /tmp/risk-level.txt
+python3 scripts/pr_review_routing.py \
+  --base origin/main --head HEAD \
+  --ownership-map .github/ownership-map.yml \
+  --patterns .github/historical-bug-patterns.yml \
+  --output /tmp/routing-report.md \
+  --level-file /tmp/routing-level.txt
+
+cat /tmp/risk-report.md /tmp/routing-report.md
 ```
 
 ## Limitations
