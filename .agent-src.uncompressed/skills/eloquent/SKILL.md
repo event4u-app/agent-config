@@ -1,6 +1,6 @@
 ---
 name: eloquent
-description: "Use when writing Eloquent models, relationships, scopes, queries, or database interactions. Covers eager loading, type safety, getter/setter conventions, and performance."
+description: "Use when writing Eloquent models, relationships, scopes, queries, casts, accessors, or eager loading — any database read/write through Model:: — even when the user says 'fetch users with their orders' or 'add a scope' without naming Eloquent."
 source: package
 ---
 

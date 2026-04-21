@@ -1,6 +1,6 @@
 ---
 name: skill-writing
-description: "Use when creating or improving agent skills. Covers structure, quality checklist, and best practices."
+description: "Use when creating, improving, or reviewing agent skills — SKILL.md files, frontmatter descriptions, procedure sections, or skill-vs-rule decisions — even when the user says 'write a skill for X' or 'this skill needs work' without naming skill-writing."
 source: project
 ---
 

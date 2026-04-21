@@ -1,6 +1,6 @@
 ---
 name: developer-like-execution
-description: "Use when implementing, debugging, refactoring, or reviewing code, skills, rules, or configs. Enforces think → analyze → verify → execute workflow."
+description: "Use when implementing, debugging, refactoring, or reviewing code, skills, rules, or configs — enforces the think → analyze → verify → execute workflow — even when the user just says 'implement X' or 'fix this bug' without naming the workflow."
 source: package
 execution:
   type: assisted
