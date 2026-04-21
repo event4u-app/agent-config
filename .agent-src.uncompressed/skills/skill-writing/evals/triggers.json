@@ -1,0 +1,16 @@
+{
+  "skill": "skill-writing",
+  "description": "5 should-trigger + 5 should-not-trigger queries. No query mentions 'skill-writing' directly. Near-misses share 'skill' vocabulary but route to skill-management, lint-skills, or unrelated skills.",
+  "queries": [
+    {"q": "let's create a skill for database migrations", "trigger": true},
+    {"q": "this SKILL.md feels weak, can you tighten it?", "trigger": true},
+    {"q": "should this be a skill or a rule?", "trigger": true},
+    {"q": "the description says 'covers various things' — fix it", "trigger": true},
+    {"q": "add a proper procedure section to the graphql skill", "trigger": true},
+    {"q": "refactor my PHP controller", "trigger": false},
+    {"q": "run the skill linter on my branch", "trigger": false},
+    {"q": "compress this SKILL.md to half its length", "trigger": false},
+    {"q": "which skill handles git workflow?", "trigger": false},
+    {"q": "write a CONTRIBUTING.md for this repo", "trigger": false}
+  ]
+}

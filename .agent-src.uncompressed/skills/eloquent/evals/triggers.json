@@ -1,0 +1,16 @@
+{
+  "skill": "eloquent",
+  "description": "5 should-trigger + 5 should-not-trigger queries. No query mentions 'eloquent' directly. Near-misses share Laravel/database vocabulary (migration, seeder, model, SQL) without being Model:: read/write tasks.",
+  "queries": [
+    {"q": "fetch all users with their latest order eagerly", "trigger": true},
+    {"q": "add a scope to Product that filters by active and in-stock", "trigger": true},
+    {"q": "my blog model should cast the tags column to array", "trigger": true},
+    {"q": "write a relationship from Invoice to LineItems using hasMany", "trigger": true},
+    {"q": "this N+1 is killing me — how do I eager load nested relations?", "trigger": true},
+    {"q": "create a migration for adding an index on users.email", "trigger": false},
+    {"q": "write a Pest test for the UserService", "trigger": false},
+    {"q": "phpstan says mixed return type on my model method", "trigger": false},
+    {"q": "run the seeder with --class=ProductSeeder", "trigger": false},
+    {"q": "what SQL does chunk() generate under the hood?", "trigger": false}
+  ]
+}

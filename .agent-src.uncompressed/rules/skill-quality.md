@@ -22,6 +22,32 @@ Every skill must answer four questions. If ANY answer is weak, the skill is not 
 
 Every skill MUST have: `When to use`, `Procedure`, `Gotcha`, `Output format`, `Do NOT`.
 
+## Description Triggering
+
+Claude routes skills by reading the frontmatter `description`. Polite, generic,
+or hedged descriptions cause **undertriggering** — the skill never loads when it
+should, and the user never learns it exists.
+
+Make descriptions "pushy" — explicit about when to fire:
+
+- Start with a concrete verb phrase: `Use when ...`, `Creates ...`, `Reviews ...`.
+- Name 2+ concrete triggers — domains, symptoms, file types, user phrasing.
+- End with: `... even if they don't explicitly ask for \`<skill-name>\`.`
+- Avoid hedges: `may help with`, `can be useful for`, `covers various`.
+- **Keep it ≤ 200 characters.** `scripts/skill_linter.py` warns at
+  `description_too_long` above this. If the pushy tail pushes you over, cut
+  adjectives, drop the second example phrasing, or collapse a list — do
+  **not** drop the trigger vocabulary or the `even if ...` tail.
+
+Source: [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md)
+— description-optimization guidance adopted via
+[`agents/roadmaps/road-to-anthropic-alignment.md`](../../../agents/roadmaps/road-to-anthropic-alignment.md)
+Phase 2.
+
+**Litmus test:** Read the description cold, without the skill's body. If you
+cannot name at least two phrasings a user would realistically type that should
+route to this skill, the description is too polite. Rewrite it.
+
 ## Skill Independence
 
 ```

@@ -1,6 +1,6 @@
 ---
 name: php-coder
-description: "Writes PHP code following project coding guidelines, SOLID principles, modern PHP best practices, and established patterns — for both legacy and Laravel projects."
+description: "Writes or edits PHP code — controllers, services, classes, type hints, SOLID refactors, modern idioms, legacy or Laravel — even when the user says 'write this class' without naming PHP."
 source: package
 ---
 

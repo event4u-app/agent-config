@@ -1,0 +1,16 @@
+{
+  "skill": "php-coder",
+  "description": "5 should-trigger + 5 should-not-trigger queries. No query mentions 'php-coder' or 'php' directly as a skill name. Near-misses share PHP/Laravel vocabulary without being code-generation tasks.",
+  "queries": [
+    {"q": "my UserController is getting huge, split it into a service", "trigger": true},
+    {"q": "write a class for parsing CSV files with proper type hints", "trigger": true},
+    {"q": "refactor this foreach to use array_map but keep it readable", "trigger": true},
+    {"q": "add a __toString method to this DTO and make fields readonly", "trigger": true},
+    {"q": "this legacy controller mixes config and business logic, clean it up", "trigger": true},
+    {"q": "run phpstan on this file and show me all errors", "trigger": false},
+    {"q": "create a migration for adding a phone column to users", "trigger": false},
+    {"q": "set up docker-compose for this PHP project", "trigger": false},
+    {"q": "write a Pest test for the UserRepository", "trigger": false},
+    {"q": "explain what strict_types does in PHP", "trigger": false}
+  ]
+}
