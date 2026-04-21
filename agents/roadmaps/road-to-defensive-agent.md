@@ -141,6 +141,36 @@ and refuse offensive work. Unblocks every later wave.
 - [x] `systematic-debugging` + `bug-analyzer` have `route to data-flow-mapper` / `blast-radius-analyzer` links
 - [x] `security` + `security-audit` have `route to threat-modeling` / `route to authz-review` links
 
+## Boosts — incremental reinforcements between waves
+
+These ship **between Wave phases** when a real gap shows up before the next wave is due. Each boost is scoped to 3–10 artefacts, auditable in one PR, and never introduces new review surfaces that a later wave will rebuild.
+
+### Level-2 Boost — PR Risk Review (shipped in `bc602f6`)
+
+- [x] `templates/github-workflows/pr-risk-review.yml` — labels PRs by risk based on path globs
+- [x] `templates/scripts/pr_risk_review.py` + `pr-risk-config.example.yml` — consumer-configurable rules
+- [x] Confidence gating section in `rules/verify-before-complete.md`
+
+### Level-3 Boost — Review Routing + Break-Glass
+
+**Goal:** make PR review **owner-aware** and **history-aware**, and allow controlled emergency deviation from the minimal-safe-diff / verify-before-complete rules without silently dropping accountability.
+
+- [x] `rules/reviewer-awareness.md` — role-based reviewer selection, primary + secondary for medium/high risk
+- [x] `rules/review-routing-awareness.md` — consult ownership-map + historical-bug-patterns before claiming a change is safe
+- [x] `skills/review-routing/SKILL.md` + `commands/review-routing.md` — apply routing to a diff
+- [x] `guidelines/agent-infra/review-routing-data-format.md` — YAML schema for `agents/ownership-map.yml` + `agents/historical-bug-patterns.yml`
+- [x] `guidelines/agent-infra/break-glass-usage.md` — emergency-mode contract + follow-up requirement
+- [x] Break-glass exception folded into `rules/minimal-safe-diff.md` + `rules/verify-before-complete.md` (no new standalone rule)
+- [x] `templates/scripts/pr_review_routing.py` + `ownership-map.example.yml` + `historical-bug-patterns.example.yml` — CI integration
+- [x] `templates/github-workflows/pr-risk-review.yml` extended to invoke the routing script after risk labelling
+- [x] `scripts/check_references.py` — exempts consumer-project routing data files from broken-reference detection
+
+**Acceptance criteria:**
+
+- Ownership-map + historical-bug-patterns YAML files are optional — missing files produce a neutral report, not an error
+- Break-glass never auto-activates — requires explicit user flag (`break-glass: true`, "hotfix") and a documented follow-up commitment
+- `task ci` green after integration (sync · compression · refs · portability · skill-lint · tests · readme)
+
 ## Wave 2 — Sehr wertvoll (Review Depth)
 
 **Goal:** cover the remaining high-leverage review surfaces.

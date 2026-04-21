@@ -1308,7 +1308,31 @@ task scope · dependency bumps "because it was close to the cache".
 Ask. A minimal diff plus one follow-up is cheaper than a sprawling diff the
 reviewer has to untangle.
 
-See also: `scope-control` · `downstream-changes` · `think-before-action` · `preservation-guard`.
+## Break-glass exception
+
+This rule stays in force during production incidents. "Break-glass mode"
+narrows verification (see `verify-before-complete`) — it does **not**
+license drive-by edits.
+
+Allowed during break-glass:
+
+- The **smallest** change that stops the bleeding — one file, one
+  method, one guard — preferred over any refactor.
+- A fast revert to a known-good commit, even if it undoes unrelated
+  improvements shipped in the same PR.
+
+Not allowed, even in break-glass:
+
+- "While I'm in there" cleanups, reformatting, or dependency bumps.
+- Expanding the fix to neighboring modules without evidence they are
+  part of the incident.
+- Merging the hotfix with pending refactors from another branch.
+
+After the incident, open a **follow-up PR** for any scope that was
+intentionally deferred and reference the break-glass commit in its
+description.
+
+See also: `scope-control` · `downstream-changes` · `think-before-action` · `preservation-guard` · `verify-before-complete`.
 
 ---
 
@@ -1535,6 +1559,202 @@ Transformations (merge, refactor, compress, split) must produce output **at leas
 - Strong language downgraded
 
 → Skills: `skill-management`, `skill-reviewer` · Command: `/compress` · Linter: `check_compression_quality()`
+
+---
+
+# Review Routing Awareness
+
+Before suggesting reviewers or declaring a change safe, the agent consults
+two project-local data sources — if they exist — to ground the routing in
+the consumer's actual organizational memory:
+
+1. **Ownership map** — which roles/teams own which paths, with per-path
+   risk notes.
+2. **Historical bug patterns** — recurring failure modes or technical debt
+   the project has paid for before.
+
+Both live in the consumer repository (never in package-shipped files) and
+are optional. Absence is not an error — the agent falls back to
+generic, role-based suggestions from [`reviewer-awareness`](reviewer-awareness.md).
+
+## When this rule applies
+
+- The agent is classifying PR risk, suggesting reviewers, writing a PR
+  description, or producing a review plan.
+- The agent is reviewing its own diff before asking for human review.
+- The change modifies more than a trivial amount of code (≥ 1 file
+  outside docs).
+
+## Required behavior
+
+### 1. Check for project data
+
+Look, in order, for:
+
+- `.github/ownership-map.yml` (or `agents/ownership-map.yml`)
+- `.github/historical-bug-patterns.yml` (or
+  `agents/historical-bug-patterns.yml`)
+
+If neither file exists, skip this rule and rely on
+[`reviewer-awareness`](reviewer-awareness.md) defaults. **Do not invent
+owners or patterns** from context.
+
+### 2. Match the diff
+
+For every changed file, collect:
+
+- **Matching ownership entries** — each yields a role, optional focus
+  note, and optional risk hint.
+- **Matching historical patterns** — each yields a named prior failure
+  mode and the minimum control or test the project expects.
+
+Matching uses glob patterns (see
+[`review-routing-data-format`](../guidelines/review-routing-data-format.md)
+for the schema).
+
+### 3. Surface findings
+
+When producing a review plan, include:
+
+- **Owner-mapped roles** — explicitly preferred over generic roles. If
+  the ownership map says `app/Billing/**` is owned by `finance-engineering
+  + security`, use those, not "backend + security".
+- **Historical-pattern warnings** — list every matched pattern with a
+  short label and the required control, e.g. _"Pattern: N+1 on tenant
+  listings → add an eager-load regression test"_.
+- **Confidence note** — if the ownership map is stale (last updated > 6
+  months ago per the `updated` field), say so. Ownership maps rot.
+
+### 4. Do NOT overreach
+
+- **Never rename paths** or add ownership entries as a side effect of a
+  code change. Ownership map edits are a separate, explicit task.
+- **Never mark a change safe** only because no pattern matched. Pattern
+  absence means "no known hit", not "no risk".
+- **Never copy historical-pattern names into the diff** as code comments
+  or commit messages — they are routing metadata, not commentary.
+
+## Interaction with other rules
+
+- Feeds [`reviewer-awareness`](reviewer-awareness.md) — this rule
+  **resolves** owners; reviewer-awareness **formats** them.
+- Extends [`verify-before-complete`](verify-before-complete.md) — if a
+  historical pattern demands a regression test, the verification gate
+  requires that test before completion is claimed.
+- Does not override [`minimal-safe-diff`](minimal-safe-diff.md) — a
+  matched pattern is a reason to **add a test**, never a reason to
+  expand scope into unrelated refactors.
+
+## Anti-patterns — reject them
+
+- Suggesting owners "because this looks like billing code" without
+  consulting the ownership map when one exists.
+- Inventing historical patterns from general knowledge — patterns must
+  come from the project's own registry.
+- Downgrading a matched high-severity pattern because "the author said
+  it's fine" — the pattern was registered because it bit before.
+- Treating an out-of-date map as absent. Flag staleness; do not silently
+  skip.
+
+## See also
+
+- [`reviewer-awareness`](reviewer-awareness.md) — formatting reviewer
+  suggestions.
+- [`review-routing-data-format`](../guidelines/review-routing-data-format.md)
+  — YAML schemas for ownership-map and historical-bug-patterns.
+- [`review-routing`](../skills/review-routing/SKILL.md) — the skill
+  that produces the merged routing report.
+- [`judge-test-coverage`](../skills/judge-test-coverage/SKILL.md) —
+  consumes the "required test" output from historical patterns.
+
+---
+
+# Reviewer Awareness
+
+When a change is medium- or high-risk, the agent suggests reviewer **roles**
+(not individuals) based on what the diff actually touches — not who is
+loudest, most senior, or who "usually reviews this kind of thing".
+
+## When this rule applies
+
+- The agent is asked to suggest reviewers, draft a PR description, or
+  consolidate a review plan.
+- The change is classified medium or high risk by
+  [`review-routing`](../skills/review-routing/SKILL.md), the
+  `pr_risk_review.py` script, or explicit user judgment.
+- For **low-risk** changes, reviewer suggestions are optional and may be
+  omitted.
+
+## Required behavior
+
+1. **Anchor every suggestion in the diff.** Name the path or change that
+   triggered the role — "backend because `app/Services/PaymentGateway.php`
+   changed", not "backend because it's a code change".
+2. **Two roles minimum for medium/high risk** — one **primary** (the
+   domain most at risk) and one **secondary** (cross-cutting sanity:
+   security, infra, domain owner).
+3. **Explain the focus area** for each reviewer — what they should look
+   at, not just that they should look. "security: confirm the new
+   authorization boundary actually denies cross-tenant reads".
+4. **Prefer ownership-mapped owners** when an ownership map exists
+   (see [`review-routing-awareness`](review-routing-awareness.md)). Fall
+   back to generic roles only when no mapping matches.
+5. **Never name individual reviewers** in package-shipped artifacts.
+   The consumer repo's CODEOWNERS or ownership map does the mapping
+   role → person.
+
+## Reviewer roles
+
+The reference set — extend per project, but keep these as the common
+vocabulary:
+
+| Role | Typical focus |
+|---|---|
+| `backend` | business logic, validation, side effects, data integrity |
+| `frontend` | UX, accessibility, client-side state, rendering |
+| `security` | authz, secrets, trust boundaries, data exposure |
+| `infra` / `ops` | rollout, migration safety, observability, retries |
+| `database` | schema changes, indexes, query plans, rollback realism |
+| `domain owner` | business invariants, policy intent, edge-case correctness |
+| `qa` | test coverage, regression scenarios, flake risk |
+
+## Anti-patterns — reject them
+
+- "Reviewers: @alice, @bob" inside a shared package artifact — individuals
+  live in the consumer's CODEOWNERS, not in package output.
+- "Any senior engineer" — prestige is not a review strategy.
+- "Whoever reviewed this last time" — selection by habit, not by
+  current risk.
+- One role for a 🔴 high-risk change — single-reviewer risk, especially
+  when the change crosses an authorization or tenancy boundary.
+- Suggesting reviewers without naming what they should look at — a
+  rubber-stamp invitation.
+
+## Format
+
+When the agent proposes reviewers, use this block:
+
+```
+Suggested reviewers (role-based):
+  • primary:   <role> — focus: <one line, anchored in diff>
+  • secondary: <role> — focus: <one line, anchored in diff>
+  (optional) additional: <role> — focus: …
+```
+
+## Rationale
+
+The right reviewer reduces blind spots more than the loudest reviewer.
+Blind-spot reduction comes from role diversity (different angles on the
+same diff), not from seniority.
+
+## See also
+
+- [`review-routing-awareness`](review-routing-awareness.md) — how
+  ownership maps and historical patterns feed reviewer selection.
+- [`review-routing`](../skills/review-routing/SKILL.md) — the skill that
+  produces the reviewer block.
+- [`requesting-code-review`](../skills/requesting-code-review/SKILL.md) —
+  PR preparation and self-review before asking for reviewers.
 
 ---
 
@@ -2324,4 +2544,23 @@ State confidence explicitly before claiming completion on non-trivial work.
 For high-risk areas (auth, tenancy, migrations, queues, dependencies,
 external APIs, data exposure), "high" requires tests AND a cross-layer
 read — not inference from a single file.
+
+## Break-glass reduction
+
+During a live production incident the verification gate is **narrowed**,
+never skipped. Break-glass requires explicit user invocation (e.g.
+`break-glass: true`, "this is a hotfix"). Never enter it unilaterally.
+
+Minimum evidence:
+
+- **Targeted test(s)** covering the exact regression — zero tests is not
+  acceptable.
+- **Smoke check** of the fixed path (curl, manual trigger, log tail) with
+  output captured in the message.
+- **Explicit list of skipped validations** and a **follow-up commitment**
+  (ticket or PR line) to run them within 24h.
+
+Completion wording: _"hotfix applied, full verification deferred per
+break-glass"_ — never _"done"_ or _"verified"_. The normal gate resumes
+on the follow-up PR.
 
