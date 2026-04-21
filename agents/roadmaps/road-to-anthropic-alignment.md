@@ -132,9 +132,14 @@ claude marketplace add event4u-app/agent-config
       [`agents/analysis/skill-description-audit-baseline.md`](../analysis/skill-description-audit-baseline.md)
       — **60 of 100 skills flagged** (all for `too-short`; zero
       `no-trigger-prefix`, zero hedges). Top 15 candidates listed.
-- [ ] **Follow-up work (not in this PR):** rewrite the top 10–15 in small
-      PRs (3–5 skills each). Re-run the audit after each batch and expect
-      the row to drop off. Do **not** rewrite all 95+ at once.
+- [x] **Follow-up batches landed:** incremental rewrites on the top
+      candidates, re-audit after each batch. Flagged count dropped
+      **60 → 29 (of 110 skills)** across several small commits. Top
+      `no-trigger-prefix` cases (`requesting-code-review`,
+      `verify-before-complete`) fixed by swapping `Use before` → `Use when`;
+      top `too-short` cases extended with a second trigger class plus the
+      "even when the user just says X" tail. Remaining 29 are all
+      `too-short` only — queued for ongoing maintenance, not a blocker.
 
 ### 2.3 Update `skill-writing` skill ✅
 

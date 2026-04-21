@@ -1,6 +1,6 @@
 ---
 name: copilot-config
-description: "Use when configuring GitHub Copilot behavior, managing copilot-instructions.md, PR review patterns, or optimizing Copilot output for the project."
+description: "Use when configuring GitHub Copilot — copilot-instructions.md, PR review patterns, output optimization — even when the user just says 'tune Copilot' or 'why is Copilot commenting on X'."
 source: package
 ---
 

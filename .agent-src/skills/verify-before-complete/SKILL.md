@@ -1,6 +1,6 @@
 ---
 name: verify-before-complete
-description: "Use before claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims are backed by fresh output from this message."
+description: "Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs."
 source: package
 ---
 

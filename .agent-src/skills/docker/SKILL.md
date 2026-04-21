@@ -1,6 +1,6 @@
 ---
 name: docker
-description: "Use when working with Docker — Dockerfile changes, docker-compose services, container management, or the dual-container architecture (fast + Xdebug)."
+description: "Use when working with Docker — Dockerfile edits, docker-compose services, containers, or the dual-container (fast + Xdebug) setup — even when the user just says 'my container won't start'."
 source: package
 ---
 
