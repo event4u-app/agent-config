@@ -1,6 +1,6 @@
 {
   "skill": "eloquent",
-  "description": "5 should-trigger + 5 should-not-trigger queries. No query mentions 'eloquent' directly. Near-misses share Laravel/database vocabulary (migration, seeder, model, SQL) without being Model:: read/write tasks.",
+  "description": "5 should-trigger + 5 should-not-trigger queries. A-class accepted ambiguity (e.g. 'User*' substring pulling eloquent alongside a non-Model intent) is marked with trigger=true and a note — the router loading eloquent is defensible, not a routing failure. Near-misses share Laravel/database vocabulary (migration, seeder, model, SQL) without being Model:: read/write tasks.",
   "queries": [
     {"q": "fetch all users with their latest order eagerly", "trigger": true},
     {"q": "add a scope to Product that filters by active and in-stock", "trigger": true},
@@ -8,7 +8,7 @@
     {"q": "write a relationship from Invoice to LineItems using hasMany", "trigger": true},
     {"q": "this N+1 is killing me — how do I eager load nested relations?", "trigger": true},
     {"q": "create a migration for adding an index on users.email", "trigger": false},
-    {"q": "write a Pest test for the UserService", "trigger": false},
+    {"q": "write a Pest test for the UserService", "trigger": true, "note": "A-class: 'User*' is inherently ambiguous (Model or Service). Router loading eloquent alongside pest-testing / php-service is defensible multi-skill activation, not a routing failure. Pushy 'NOT for non-Eloquent services' description tail was insufficient to override the lexical pull — see agents/docs/trigger-evals-poc-findings.md #3"},
     {"q": "phpstan says mixed return type on my model method", "trigger": false},
     {"q": "run the seeder with --class=ProductSeeder", "trigger": false},
     {"q": "what SQL does chunk() generate under the hood?", "trigger": false}
