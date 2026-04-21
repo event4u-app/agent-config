@@ -355,24 +355,60 @@ def require_confirmation(
     stdin: IO[str] | None = None,
     stdout: IO[str] | None = None,
 ) -> None:
-    """Print `summary`, require exactly `yes` on the next stdin line.
+    """Print `summary`, require exactly `yes` from the controlling terminal.
 
-    Non-interactive stdin is a hard abort. `yes` is case-sensitive to
-    block accidents from auto-expanded `y`. Streams are injectable for
-    tests; production uses sys.stdin / sys.stdout.
+    Production path (stdin/stdout both None) reads from /dev/tty and
+    writes to /dev/tty, not from `sys.stdin` / `sys.stdout`. That makes
+    the gate immune to any wrapper that rebinds stdin (task runners,
+    nohup, sudo, agents) and guarantees every keystroke comes from the
+    user's real keyboard.
+
+    Tests inject explicit streams to bypass /dev/tty. When a test
+    passes an object, it must supply both `stdin` and `stdout` so the
+    isatty check covers the injected path too. `yes` is case-sensitive
+    to block accidents from auto-expanded `y`.
     """
-    s_in = stdin if stdin is not None else sys.stdin
-    s_out = stdout if stdout is not None else sys.stdout
-    tty = getattr(s_in, "isatty", lambda: False)()
-    if not tty:
-        raise ConfirmationAborted(
-            "Confirmation requires an interactive tty on stdin. "
-            "Refusing non-interactive, piped, or redirected input."
+    if stdin is None and stdout is None:
+        # Production path: controlling-terminal-only. If there is no
+        # /dev/tty (CI, cron, non-interactive agent) this is a hard
+        # abort before any API call.
+        try:
+            tty_in = open("/dev/tty", "r", encoding="utf-8")  # noqa: SIM115
+            tty_out = open("/dev/tty", "w", encoding="utf-8")  # noqa: SIM115
+        except OSError as exc:
+            raise ConfirmationAborted(
+                "Confirmation requires a controlling terminal (/dev/tty). "
+                "Refusing to run under automation."
+            ) from exc
+        try:
+            tty_out.write(summary + "\n")
+            tty_out.write(
+                "Proceed? [type 'yes' exactly to run, anything else aborts]: "
+            )
+            tty_out.flush()
+            answer = tty_in.readline().rstrip("\n")
+        finally:
+            tty_in.close()
+            tty_out.close()
+    else:
+        # Test path \u2014 both streams must be supplied.
+        assert stdin is not None and stdout is not None, (
+            "require_confirmation: stdin and stdout must both be supplied "
+            "when overriding defaults (test-only path)."
         )
-    s_out.write(summary + "\n")
-    s_out.write("Proceed? [type 'yes' exactly to run, anything else aborts]: ")
-    s_out.flush()
-    answer = s_in.readline().rstrip("\n")
+        tty = getattr(stdin, "isatty", lambda: False)()
+        if not tty:
+            raise ConfirmationAborted(
+                "Confirmation requires an interactive tty on stdin. "
+                "Refusing non-interactive, piped, or redirected input."
+            )
+        stdout.write(summary + "\n")
+        stdout.write(
+            "Proceed? [type 'yes' exactly to run, anything else aborts]: "
+        )
+        stdout.flush()
+        answer = stdin.readline().rstrip("\n")
+
     if answer != "yes":
         raise ConfirmationAborted(f"Aborted at confirmation (got {answer!r}).")
 

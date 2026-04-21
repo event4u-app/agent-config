@@ -19,20 +19,25 @@ set -euo pipefail
 TARGET_DIR="${HOME}/.config/agent-config"
 TARGET_FILE="${TARGET_DIR}/anthropic.key"
 
-# ── tty requirement ──────────────────────────────────────────────────────
-# Piped / redirected stdin would land the key in a shell-accessible
-# buffer. Refuse it explicitly; the key must come from a live prompt.
-if [[ ! -t 0 ]]; then
-    echo "❌  install_anthropic_key.sh requires an interactive tty on stdin." >&2
-    echo "    Piped or redirected input is refused — the key would land in" >&2
-    echo "    a shell buffer an automation could read." >&2
+# ── controlling-terminal requirement ─────────────────────────────────────
+# We read from /dev/tty directly (fd 3), not from stdin. This is the
+# stricter and more portable contract:
+#   - works under `task`, `script`, `sudo`, anything that reattaches stdin
+#   - forces every character to come from the user's real keyboard, so a
+#     pipe or redirected file cannot smuggle the key into the process
+#   - exits cleanly if there is no controlling terminal at all (e.g. CI,
+#     cron, agent automation)
+if ! exec 3</dev/tty 2>/dev/null; then
+    echo "❌  install_anthropic_key.sh requires a controlling terminal." >&2
+    echo "    /dev/tty not available \u2014 refusing to run under automation." >&2
     exit 2
 fi
 
 # ── overwrite confirmation ───────────────────────────────────────────────
 if [[ -e "${TARGET_FILE}" ]]; then
     echo "⚠️   ${TARGET_FILE} already exists."
-    read -r -p "Overwrite? [type 'yes' to replace, anything else aborts]: " answer
+    printf "Overwrite? [type 'yes' to replace, anything else aborts]: "
+    read -r -u 3 answer
     if [[ "${answer}" != "yes" ]]; then
         echo "Aborted. Existing key untouched."
         exit 0
@@ -42,7 +47,9 @@ fi
 # ── read key (no echo, no history) ───────────────────────────────────────
 echo "Paste your Anthropic API key (input is hidden, no echo)."
 echo "The key should start with 'sk-ant-'."
-read -r -s -p "Key: " API_KEY
+printf "Key: "
+# -s = silent (no echo), read from fd 3 = /dev/tty, not stdin.
+read -r -s -u 3 API_KEY
 echo
 
 if [[ -z "${API_KEY}" ]]; then
