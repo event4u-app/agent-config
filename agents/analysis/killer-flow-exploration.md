@@ -16,9 +16,9 @@ quietly gets better, but there is no single moment where the user
 would give a visible, measurable, demo-able win inside the first
 30 minutes of use.
 
-The two active roadmaps (`road-to-autonomous-agent`,
-`road-to-drafting-protocol`) improve **internal** quality — they do
-not produce that visible win by themselves.
+The active `road-to-autonomous-agent` roadmap (and the now-archived
+`road-to-drafting-protocol`, closed 2026-04-21) improve **internal**
+quality — they do not produce that visible win by themselves.
 
 ## Evaluation criteria
 

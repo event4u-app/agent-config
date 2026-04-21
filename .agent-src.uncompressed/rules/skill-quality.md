@@ -41,7 +41,7 @@ Make descriptions "pushy" — explicit about when to fire:
 
 Source: [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md)
 — description-optimization guidance adopted via
-[`agents/roadmaps/road-to-anthropic-alignment.md`](../../../agents/roadmaps/road-to-anthropic-alignment.md)
+[`agents/roadmaps/archive/road-to-anthropic-alignment.md`](../../../agents/roadmaps/archive/road-to-anthropic-alignment.md)
 Phase 2.
 
 **Litmus test:** Read the description cold, without the skill's body. If you

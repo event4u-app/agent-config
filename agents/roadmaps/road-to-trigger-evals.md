@@ -7,7 +7,7 @@
 - **Source inspiration:** [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) — description-optimization loop
 - **Source analysis:** [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) (Finding §3 ADAPT)
 - **Status:** Phase 1 shipped (runner + 3 pilot triggers.json + 22 tests); Phase 2 decision gate blocked on real API run
-- **Author:** Split out of `road-to-anthropic-alignment.md` on 2026-04-20 for focus
+- **Author:** Split out of `archive/road-to-anthropic-alignment.md` on 2026-04-20 for focus (parent archived 2026-04-21)
 - **Last updated:** 2026-04-21 — runner hardened for live use: on-disk key file (mode 0600) + pre-run cost preview + interactive `yes` confirmation. Env-var `ANTHROPIC_API_KEY` fallback and `TRIGGER_EVALS_CONFIRM=1` bypass were both removed in favour of the stricter gates.
 
 ## Guiding principle
@@ -113,7 +113,7 @@ continue to rollout.
 
 ## Prerequisites
 
-- [x] [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) Phase 2
+- [x] [`archive/road-to-anthropic-alignment.md`](archive/road-to-anthropic-alignment.md) Phase 2
       landed — pushy-description pattern in `skill-quality` rule, audit tool in
       place, **6 descriptions rewritten** (the 3 pilots + `developer-like-execution`,
       `git-workflow`, `conventional-commits-writing`) so the pilot evals measure
@@ -298,7 +298,7 @@ and stop. Do not expand scope.
 
 ## Related
 
-- [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) — parent roadmap (Phases 1-2: marketplace + pushy descriptions)
+- [`archive/road-to-anthropic-alignment.md`](archive/road-to-anthropic-alignment.md) — parent roadmap (Phases 1-2: marketplace + pushy descriptions; archived 2026-04-21)
 - [`archive/road-to-9.md`](archive/road-to-9.md) — archived sibling (runtime depth, closed 2026-04-21)
 - [`archive/road-to-mcp.md`](archive/road-to-mcp.md) — archived sibling (MCP config generation, closed 2026-04-21)
 - [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) — origin finding

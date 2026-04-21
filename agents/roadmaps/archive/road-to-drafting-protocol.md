@@ -1,12 +1,18 @@
 # Roadmap: Drafting Protocol
 
+> **Status:** Closed (2026-04-21) — archived after Phases 1–4 shipped on
+> `feat/improve-agent-setup-8`. The rule (`artifact-drafting-protocol`),
+> four writing skills (`skill-writing`, `rule-writing`, `command-writing`,
+> `guideline-writing`), the `description-assist` helper, and the Phase 4
+> eval integration are all in production.
+
 > When the user says *"build me a skill / rule / command / guideline for X"*, the
 > agent must follow a three-phase protocol — **Understand → Research → Draft** —
 > before writing a single line. The agent proposes actively; the human decides
 > everything. Zero autopilot, maximum collaboration.
 
 - **Source inspiration:** [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) — the front-end (Understand/Research/Draft), stripped of the autopilot back-end (`run_loop.py`, `.skill` packaging, blind comparison)
-- **Source analysis:** [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) — revised scope after 2026-04-20 discussion
+- **Source analysis:** [`agents/analysis/compare-anthropics-skills.md`](../../analysis/compare-anthropics-skills.md) — revised scope after 2026-04-20 discussion
 - **Status:** Phase 1 + 2 + 3 + 4 shipped, 2026-04-21 (branch `feat/improve-agent-setup-8`)
 - **Author:** Split out of the anthropic alignment track after narrow-rejection was revised
 
@@ -279,7 +285,7 @@ Still proposal-gated. Still no autopilot.
 ## Related
 
 - [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) — Phase 2 prerequisite (pushy description pattern)
-- [`road-to-trigger-evals.md`](road-to-trigger-evals.md) — integrated in Phase 4
-- [`archive/road-to-9.md`](archive/road-to-9.md) — archived sibling (runtime depth, closed 2026-04-21)
-- [`archive/road-to-mcp.md`](archive/road-to-mcp.md) — archived sibling (MCP config generation, closed 2026-04-21)
-- [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) — origin finding (Finding §2 pushy description + §3 trigger evals + revised §7 interactive drafting)
+- [`../road-to-trigger-evals.md`](../road-to-trigger-evals.md) — integrated in Phase 4
+- [`road-to-9.md`](road-to-9.md) — archived sibling (runtime depth, closed 2026-04-21)
+- [`road-to-mcp.md`](road-to-mcp.md) — archived sibling (MCP config generation, closed 2026-04-21)
+- [`agents/analysis/compare-anthropics-skills.md`](../../analysis/compare-anthropics-skills.md) — origin finding (Finding §2 pushy description + §3 trigger evals + revised §7 interactive drafting)

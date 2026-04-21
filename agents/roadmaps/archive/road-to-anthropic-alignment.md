@@ -1,11 +1,16 @@
 # Roadmap: Anthropic Alignment
 
+> **Status:** Closed (2026-04-21) — archived after Phase 2 shipped on
+> `feat/improve-agent-setup-8`. Marketplace distribution and the pushy
+> description pattern are both in production. Empirical trigger evaluation
+> lives in [`../road-to-trigger-evals.md`](../road-to-trigger-evals.md).
+
 > Adopt two proven patterns from [`anthropics/skills`](https://github.com/anthropics/skills):
 > Claude Code Plugin Marketplace distribution, and the "pushy description"
 > triggering pattern. Empirical trigger evaluation was split into its own
-> roadmap — see [`road-to-trigger-evals.md`](road-to-trigger-evals.md).
+> roadmap — see [`../road-to-trigger-evals.md`](../road-to-trigger-evals.md).
 
-- **Source analysis:** [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md)
+- **Source analysis:** [`agents/analysis/compare-anthropics-skills.md`](../../analysis/compare-anthropics-skills.md)
 - **Status:** Phase 1 shipped (v1.4.0, `.claude-plugin/marketplace.json`).
   Phase 2 shipped on `feat/pushy-descriptions` (2026-04-21) — rule, audit tool,
   skill guidance, baseline report. Follow-up work: incrementally rewrite the
@@ -18,7 +23,7 @@ makes our existing 95+ skills measurably better. No speculative scaffolding.
 
 ## Prerequisites
 
-- [x] [`archive/road-to-9.md`](archive/road-to-9.md) Phase 1 landed — real minimal runtime (shipped in PR #11, 1.5.0).
+- [x] [`road-to-9.md`](road-to-9.md) Phase 1 landed — real minimal runtime (shipped in PR #11, 1.5.0).
 - [x] Read [`skills/skill-creator/SKILL.md`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md)
       once more for Phase 2 reference.
 - [x] Branch off (Phase 2 branched off `feat/mcp-config-generation` for stacking;
@@ -115,7 +120,7 @@ claude marketplace add event4u-app/agent-config
 ### 2.1 Update `skill-quality` rule ✅
 
 - [x] New section *Description Triggering* in
-      [`.agent-src.uncompressed/rules/skill-quality.md`](../../.agent-src.uncompressed/rules/skill-quality.md)
+      [`.agent-src.uncompressed/rules/skill-quality.md`](../../../.agent-src.uncompressed/rules/skill-quality.md)
       and mirrored compressed copy. Cites `anthropics/skills/skills/skill-creator`.
 - [x] Pattern prescribes: concrete verb prefix, 2+ triggers, explicit
       `... even if they don't explicitly ask for \`<skill-name>\`.` tail,
@@ -129,7 +134,7 @@ claude marketplace add event4u-app/agent-config
       — flags `too-short` (< 150 chars), `very-short` (< 80), `no-trigger-prefix`,
       and known hedge phrases. Stdlib only, ~140 LoC.
 - [x] Baseline snapshot:
-      [`agents/analysis/skill-description-audit-baseline.md`](../analysis/skill-description-audit-baseline.md)
+      [`agents/analysis/skill-description-audit-baseline.md`](../../analysis/skill-description-audit-baseline.md)
       — **60 of 100 skills flagged** (all for `too-short`; zero
       `no-trigger-prefix`, zero hedges). Top 15 candidates listed.
 - [x] **Follow-up batches landed:** incremental rewrites on the top
@@ -147,7 +152,7 @@ claude marketplace add event4u-app/agent-config
 > not a guideline — the before/after example lives in the skill body.
 
 - [x] New section `### 1b. Pushy frontmatter description` in
-      [`.agent-src.uncompressed/skills/skill-writing/SKILL.md`](../../.agent-src.uncompressed/skills/skill-writing/SKILL.md)
+      [`.agent-src.uncompressed/skills/skill-writing/SKILL.md`](../../../.agent-src.uncompressed/skills/skill-writing/SKILL.md)
       and compressed copy.
 - [x] Canonical before/after uses the `playwright-testing` description
       (from the baseline report) — 138 chars polite → pushy with second
@@ -158,7 +163,7 @@ claude marketplace add event4u-app/agent-config
 
 Originally scoped in this roadmap, the empirical trigger-eval system is large
 enough to warrant its own roadmap with its own gate. See
-**[`road-to-trigger-evals.md`](road-to-trigger-evals.md)** — same source
+**[`../road-to-trigger-evals.md`](../road-to-trigger-evals.md)** — same source
 (skill-creator), same hard budgets, but described with the detail a real
 implementation requires. Phases 1 and 2 of this roadmap are prerequisites
 for that one: `skill-quality` must already carry the "pushy description"
@@ -177,9 +182,9 @@ pattern before we measure trigger rates.
 
 ## Related
 
-- [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) — findings
-- [`road-to-trigger-evals.md`](road-to-trigger-evals.md) — split-out child roadmap (trigger evaluation)
-- [`archive/road-to-9.md`](archive/road-to-9.md) — archived sibling (runtime depth, closed 2026-04-21)
-- [`archive/road-to-mcp.md`](archive/road-to-mcp.md) — archived sibling (MCP config generation, closed 2026-04-21)
-- [`../analysis/skill-description-audit-baseline.md`](../analysis/skill-description-audit-baseline.md) — Phase 2.2 baseline snapshot
-- [`archive/road-to-ultimate.md`](archive/road-to-ultimate.md) — rejected predecessor
+- [`agents/analysis/compare-anthropics-skills.md`](../../analysis/compare-anthropics-skills.md) — findings
+- [`../road-to-trigger-evals.md`](../road-to-trigger-evals.md) — split-out child roadmap (trigger evaluation)
+- [`road-to-9.md`](road-to-9.md) — archived sibling (runtime depth, closed 2026-04-21)
+- [`road-to-mcp.md`](road-to-mcp.md) — archived sibling (MCP config generation, closed 2026-04-21)
+- [`../../analysis/skill-description-audit-baseline.md`](../../analysis/skill-description-audit-baseline.md) — Phase 2.2 baseline snapshot
+- [`road-to-ultimate.md`](road-to-ultimate.md) — rejected predecessor
