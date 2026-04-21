@@ -27,8 +27,12 @@ __pycache__/
 # Temp
 /tmp/
 
-# Ignore the agent settings
+# Ignore the agent settings (YAML is the active format; flat legacy is
+# kept for the migration window and gets deleted by scripts/install once
+# the YAML file has been written)
+.agent-settings.yml
 .agent-settings
+.agent-settings.backup.key-value
 
 # Generated Augment Code projection of .agent-src/ (rebuilt by `task sync`)
 /.augment/

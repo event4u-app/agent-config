@@ -2,14 +2,20 @@
 """
 Agent Config — Project Bridge Installer (Python)
 
-Generates project bridge files (.agent-settings, .vscode/settings.json, etc.)
-so that supported AI tools can discover agent-config from the project.
+Generates project bridge files (.agent-settings.yml, .vscode/settings.json,
+etc.) so that supported AI tools can discover agent-config from the project.
+
+On first run in a project that still has the legacy flat-file
+`.agent-settings` (key=value), the installer migrates it to the new YAML
+format in `.agent-settings.yml`, leaves a one-shot backup as
+`.agent-settings.backup.key-value`, and deletes the legacy file. This runs
+exactly once; subsequent runs are idempotent.
 
 Usage:
   python3 scripts/install.py                     # defaults: cost_profile=minimal
   python3 scripts/install.py --profile=balanced  # set cost_profile=balanced
   python3 scripts/install.py --force             # overwrite existing files
-  python3 scripts/install.py --skip-bridges      # only create .agent-settings
+  python3 scripts/install.py --skip-bridges      # only create .agent-settings.yml
   python3 scripts/install.py --project <dir>     # override project root
 
 Idempotent — safe to run multiple times. Never overwrites files without --force.
@@ -22,12 +28,39 @@ import argparse
 import copy
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
 DEFAULT_PROFILE = "minimal"
 SUPPORTED_PROFILES = ("minimal", "balanced", "full")
 COST_PROFILE_PLACEHOLDER = "__COST_PROFILE__"
+
+SETTINGS_FILE = ".agent-settings.yml"
+LEGACY_SETTINGS_FILE = ".agent-settings"
+LEGACY_BACKUP_FILE = ".agent-settings.backup.key-value"
+
+# Maps legacy flat keys (.agent-settings, key=value) to the new dotted YAML
+# paths in .agent-settings.yml. Applied once during auto-migration.
+LEGACY_RENAME_MAP = {
+    "cost_profile": "cost_profile",
+    "ide": "personal.ide",
+    "open_edited_files": "personal.open_edited_files",
+    "user_name": "personal.user_name",
+    "rtk_installed": "personal.rtk_installed",
+    "minimal_output": "personal.minimal_output",
+    "play_by_play": "personal.play_by_play",
+    "pr_comment_bot_icon": "project.pr_comment_bot_icon",
+    "pr_template": "project.pr_template",
+    "upstream_repo": "project.upstream_repo",
+    "improvement_pr_branch_prefix": "project.improvement_pr_branch_prefix",
+    "github_pr_reply_method": "github.pr_reply_method",
+    "eloquent_access_style": "eloquent.access_style",
+    "skill_improvement_pipeline": "pipelines.skill_improvement",
+    "subagent_implementer_model": "subagents.implementer_model",
+    "subagent_judge_model": "subagents.judge_model",
+    "subagent_max_parallel": "subagents.max_parallel",
+}
 
 
 # --- Output helpers ---
@@ -162,29 +195,177 @@ def merge_json_file(path: Path, new_data: dict, force: bool, label: str) -> None
     success(f"{label} updated")
 
 
+# --- Legacy settings migration ---
+
+def _parse_legacy_settings(text: str) -> "tuple[dict, list]":
+    """Parse a legacy .agent-settings (key=value) file.
+
+    Returns (values, unknown) where values is a dict mapping legacy flat
+    keys to string values, and unknown is a list of keys NOT in
+    LEGACY_RENAME_MAP (preserved under `_legacy:` after migration).
+    """
+    values: dict = {}
+    unknown: list = []
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip()
+        if not key:
+            continue
+        values[key] = value
+        if key not in LEGACY_RENAME_MAP:
+            unknown.append(key)
+    return values, unknown
+
+
+def _yaml_scalar(value: str) -> str:
+    """Format a string value as a YAML scalar with minimal quoting.
+
+    Booleans and non-negative integers are emitted unquoted; everything
+    else is double-quoted so the migrated file is unambiguous.
+    """
+    if value == "":
+        return '""'
+    if value in ("true", "false"):
+        return value
+    if value.isdigit():
+        return value
+    # Escape backslashes and double-quotes, then wrap
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'
+
+
+def _replace_template_value(template: str, dotted_path: str, value: str) -> str:
+    """Replace the default value for a dotted-path key in the YAML template.
+
+    Strategy: walk the template lines, track the current top-level
+    section, and replace the first matching line. Comments and indentation
+    are preserved.
+    """
+    parts = dotted_path.split(".")
+    if len(parts) == 1:
+        section, key = None, parts[0]
+    elif len(parts) == 2:
+        section, key = parts[0], parts[1]
+    else:
+        return template  # deeper nesting not supported in current schema
+
+    lines = template.splitlines()
+    current_section: "str | None" = None
+    section_re = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*):\s*$")
+    scalar_top_re = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*):\s*.*$")
+    scalar_sub_re = re.compile(r"^(\s+)([A-Za-z_][A-Za-z0-9_]*):\s*.*$")
+
+    replacement = _yaml_scalar(value)
+    for idx, line in enumerate(lines):
+        # Top-level section header
+        m_section = section_re.match(line)
+        if m_section:
+            current_section = m_section.group(1)
+            continue
+        if section is None:
+            # Top-level scalar target
+            m_top = scalar_top_re.match(line)
+            if m_top and m_top.group(1) == key and not line.startswith((" ", "\t")):
+                lines[idx] = f"{key}: {replacement}"
+                return "\n".join(lines) + ("\n" if template.endswith("\n") else "")
+        else:
+            if current_section != section:
+                continue
+            m_sub = scalar_sub_re.match(line)
+            if m_sub and m_sub.group(2) == key:
+                indent = m_sub.group(1)
+                lines[idx] = f"{indent}{key}: {replacement}"
+                return "\n".join(lines) + ("\n" if template.endswith("\n") else "")
+    return template
+
+
+def _append_unknown_legacy(rendered: str, legacy_values: dict, unknown_keys: list) -> str:
+    if not unknown_keys:
+        return rendered
+    block = [
+        "",
+        "# Unknown keys from the legacy .agent-settings — review and drop.",
+        "_legacy:",
+    ]
+    for key in sorted(unknown_keys):
+        block.append(f"  {key}: {_yaml_scalar(legacy_values[key])}")
+    suffix = "\n".join(block) + "\n"
+    if rendered.endswith("\n"):
+        return rendered + suffix
+    return rendered + "\n" + suffix
+
+
+def _migrate_legacy_if_present(project_root: Path, template_body: str) -> "str | None":
+    """If a legacy .agent-settings exists, migrate it and return the new
+    YAML body. Returns None if no legacy file exists."""
+    legacy_target = project_root / LEGACY_SETTINGS_FILE
+    if not legacy_target.is_file():
+        return None
+
+    legacy_text = legacy_target.read_text(encoding="utf-8")
+    values, unknown = _parse_legacy_settings(legacy_text)
+
+    rendered = template_body
+    for flat_key, value in values.items():
+        if flat_key in LEGACY_RENAME_MAP:
+            rendered = _replace_template_value(rendered, LEGACY_RENAME_MAP[flat_key], value)
+    rendered = _append_unknown_legacy(rendered, values, unknown)
+
+    backup_target = project_root / LEGACY_BACKUP_FILE
+    backup_target.write_text(legacy_text, encoding="utf-8")
+    legacy_target.unlink()
+
+    info(f"Migrated legacy {LEGACY_SETTINGS_FILE} → {SETTINGS_FILE}")
+    info(f"Backup saved to {LEGACY_BACKUP_FILE}")
+    if unknown:
+        warn(f"Legacy keys not in rename map preserved under _legacy: {', '.join(sorted(unknown))}")
+    return rendered
+
+
 # --- Bridge generators ---
 
 def ensure_agent_settings(project_root: Path, package_root: Path, profile: str, force: bool) -> None:
-    target = project_root / ".agent-settings"
+    target = project_root / SETTINGS_FILE
     profile_source = package_root / "config" / "profiles" / f"{profile}.ini"
-    template_source = package_root / "config" / "agent-settings.template.ini"
+    template_source = package_root / "config" / "agent-settings.template.yml"
 
     if not profile_source.exists():
         fail(f"Missing profile preset: {profile_source}")
     if not template_source.exists():
         fail(f"Missing settings template: {template_source}")
 
-    if target.exists() and not force:
-        skip(".agent-settings already exists")
-        return
-
     template = template_source.read_text(encoding="utf-8")
     if COST_PROFILE_PLACEHOLDER not in template:
         fail(f"Template is missing placeholder {COST_PROFILE_PLACEHOLDER}")
+    template_body = template.replace(COST_PROFILE_PLACEHOLDER, profile)
 
-    rendered = template.replace(COST_PROFILE_PLACEHOLDER, profile)
-    write_file(target, rendered)
-    success(f".agent-settings created (cost_profile={profile})")
+    legacy_target = project_root / LEGACY_SETTINGS_FILE
+    if legacy_target.is_file() and target.exists():
+        warn(
+            f"Both {SETTINGS_FILE} and legacy {LEGACY_SETTINGS_FILE} exist. "
+            f"Skipping migration to avoid overwriting {SETTINGS_FILE}. "
+            f"Delete one of them manually and re-run."
+        )
+        return
+
+    migrated = _migrate_legacy_if_present(project_root, template_body)
+    if migrated is not None:
+        write_file(target, migrated)
+        success(f"{SETTINGS_FILE} migrated from legacy key=value")
+        return
+
+    if target.exists() and not force:
+        skip(f"{SETTINGS_FILE} already exists")
+        return
+
+    write_file(target, template_body)
+    success(f"{SETTINGS_FILE} created (cost_profile={profile})")
 
 
 def ensure_vscode_bridge(project_root: Path, package_type: str, force: bool) -> None:
@@ -240,7 +421,7 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
         help=f"cost_profile value ({'|'.join(SUPPORTED_PROFILES)}, default: {DEFAULT_PROFILE})",
     )
     parser.add_argument("--force", action="store_true", help="overwrite existing files")
-    parser.add_argument("--skip-bridges", action="store_true", help="only create .agent-settings")
+    parser.add_argument("--skip-bridges", action="store_true", help="only create .agent-settings.yml")
     parser.add_argument("--project", default=None, help="project root (default: cwd or PROJECT_ROOT env)")
     parser.add_argument("--package", default=None, help="package root (default: auto-detect under project)")
     parser.add_argument("--quiet", action="store_true", help="suppress info/success output (warnings/errors still shown)")
@@ -295,7 +476,7 @@ def main(argv: list[str]) -> int:
         print('    3. "Implement this feature"   → agent respects your codebase')
         print()
         print("  Next steps:")
-        print("    • Commit .agent-settings and bridge files to your repo")
+        print("    • Commit .agent-settings.yml and bridge files to your repo")
         print("    • New team members just run composer install / npm install — done")
         print("    • Full walkthrough: https://github.com/event4u-app/agent-config/blob/main/docs/getting-started.md")
         print()

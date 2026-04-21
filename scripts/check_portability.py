@@ -142,7 +142,8 @@ def _build_patterns(root: Path) -> tuple[list[tuple[re.Pattern, str, Severity]],
 # ── Allowed patterns (NOT violations even if they match above) ──────────
 # Generic Laravel/framework patterns that are NOT project-specific
 ALLOWLIST = [
-    r"\.agent-settings",           # config file reference
+    r"\.agent-settings\.yml",      # config file reference (YAML)
+    r"\.agent-settings\b",         # legacy reference (key=value, migration window)
     r"agents/overrides/",          # override system
     r"app/Modules/",               # generic Laravel module pattern
     r"`App\\",                     # namespace pattern explanation
@@ -169,8 +170,9 @@ SCAN_ROOT_FILES = ["AGENTS.md", ".github/copilot-instructions.md"]
 
 # Skip these subdirectories (they ARE allowed to be project-specific)
 SKIP_PATTERNS = [
-    "agents/",           # project-specific by design
-    ".agent-settings",   # project config
+    "agents/",              # project-specific by design
+    ".agent-settings.yml",  # project config (YAML)
+    ".agent-settings",      # legacy project config (migration window)
 ]
 
 # Optional blocklist of identifiers from past/adjacent projects that must
