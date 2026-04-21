@@ -148,6 +148,49 @@ When iterating on phrasing with the user (e.g. "make this pushier",
 [`description-assist`](../description-assist/SKILL.md) skill — it runs the
 approval-gated propose / pick loop with at most two rounds.
 
+### 1c. Propose a trigger-eval stub (new skills only)
+
+When creating a new skill, propose a stub
+`.agent-src.uncompressed/skills/{name}/evals/triggers.json` before writing
+the body. Draw the queries from Phase A of the drafting protocol (the
+user's "should trigger" and "must not trigger" answers).
+
+Stub shape — 5 should-trigger + 5 should-not-trigger queries, first-person,
+single-sentence, **no leakage of the skill name** in the queries:
+
+```json
+{
+  "skill": "{name}",
+  "description": "5 should-trigger + 5 should-not-trigger queries. No query mentions '{name}' directly. Near-misses share domain vocabulary without being the actual task.",
+  "queries": [
+    {"q": "<phrasing from user Phase A that MUST route here>", "trigger": true},
+    {"q": "<another should-trigger phrasing>", "trigger": true},
+    {"q": "<...3 more>", "trigger": true},
+    {"q": "<near-miss sharing vocabulary but different task>", "trigger": false},
+    {"q": "<another near-miss>", "trigger": false},
+    {"q": "<...3 more>", "trigger": false}
+  ]
+}
+```
+
+Present the stub as a numbered-options prompt (per `user-interaction`):
+
+```
+> 1. Accept stub as drafted — commit alongside the skill
+> 2. Edit queries before commit
+> 3. Skip evals for now — create later
+```
+
+Nothing is committed without the user's pick. If the user picks *skip*,
+record it in the commit message (`Eval stub: deferred`). See
+[`road-to-trigger-evals.md`](../../../agents/roadmaps/road-to-trigger-evals.md)
+Phase 1 for the runner and expected format; peer examples:
+`php-coder/evals/triggers.json`, `eloquent/evals/triggers.json`,
+`skill-writing/evals/triggers.json`.
+
+Rules / commands / guidelines do **not** get eval stubs — only skills
+route through the top-level catalogue.
+
 ### 2. Write the procedure
 
 Use numbered, verifiable steps.

@@ -7,7 +7,7 @@
 
 - **Source inspiration:** [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) — the front-end (Understand/Research/Draft), stripped of the autopilot back-end (`run_loop.py`, `.skill` packaging, blind comparison)
 - **Source analysis:** [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) — revised scope after 2026-04-20 discussion
-- **Status:** Phase 1 + 2 + 3 shipped, 2026-04-21 (branch `feat/improve-agent-setup-8`)
+- **Status:** Phase 1 + 2 + 3 + 4 shipped, 2026-04-21 (branch `feat/improve-agent-setup-8`)
 - **Author:** Split out of the anthropic alignment track after narrow-rejection was revised
 
 ## Guiding principle
@@ -216,24 +216,30 @@ Agent response (scripted by the rule, not by Claude API):
 Available for all four artifact types. Each type gets its own phrasing
 corpus in the writing skill (`skill-writing` / `rule-writing` / etc.).
 
-## Phase 4 — Integration with trigger evals (conditional)
+## Phase 4 — Integration with trigger evals ✅ shipped 2026-04-21
 
-Only runs **after** [`road-to-trigger-evals.md`](road-to-trigger-evals.md)
-Phase 1 lands.
+Unblocked once `road-to-trigger-evals.md` Phase 1 shipped (runner +
+mock router + pilot triggers). No API spend required — Phase 4 only
+**reads** last-run.json when it exists.
 
-### 4.1 Auto-scaffold trigger evals during skill creation
+### 4.1 Auto-scaffold trigger evals during skill creation ✅
 
-When the Drafting Protocol creates a new skill, the agent proposes a stub
-`evals/triggers.json` with 5 should-trigger + 5 should-not-trigger queries
-drawn from the user's answers in Phase A (the "when should this fire"
-question). Human reviews, edits, approves. Nothing committed without approval.
+Shipped as `skill-writing` § 1c and cross-referenced from
+`artifact-drafting-protocol` Phase C. When the Drafting Protocol creates
+a new skill, the agent proposes a stub `evals/triggers.json` with
+5 should-trigger + 5 should-not-trigger queries drawn from the user's
+Phase A answers. Numbered-options prompt: accept / edit / skip. Nothing
+committed without approval. Rules, commands, and guidelines skip this.
 
-### 4.2 Description-assist informed by eval results
+### 4.2 Description-assist informed by eval results ✅
 
-If the skill has `evals/triggers.json` and a last-run report, Phase 3's
-description-assist uses the report: *"Your current description failed 3 of 5
-should-trigger queries — the failures share the phrasing 'X'. Here's a variant
-that incorporates it."*
+Shipped as `description-assist` § 2b and § 3. If
+`.agent-src.uncompressed/skills/{name}/evals/last-run.json` exists, the
+assist extracts failure patterns and requires at least one variant in
+step 3 to address the dominant failure (labelled *"addresses eval
+failure: …"*). If no last-run exists, step 2b is silently skipped.
+The assist does **not** invoke the runner — eval execution stays a
+separate user action (token cost).
 
 Still proposal-gated. Still no autopilot.
 

@@ -93,6 +93,11 @@ Enforce the size budget live: *"Body is at 420/500 lines. Consider
 splitting into `foo-basics` + `foo-advanced`."* (Size budgets per
 `size-enforcement`.)
 
+**Skills also get an eval stub.** When the artifact is a new skill, the
+agent proposes an `evals/triggers.json` stub drawn from Phase A answers
+(5 should-trigger + 5 should-not-trigger queries). Accept / edit / skip
+is a numbered-options prompt. See `skill-writing` § 1c.
+
 ## Interaction with existing rules
 
 This rule **extends** — it does not replace:

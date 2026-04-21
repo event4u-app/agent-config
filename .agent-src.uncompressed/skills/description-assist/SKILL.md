@@ -52,14 +52,44 @@ Normative source: [`skill-quality`](../../rules/skill-quality.md) § *Descriptio
 
 Report which checks pass / fail in one compact line — **not** a long essay.
 
+### 2b. Check for trigger-eval evidence (skills only)
+
+If the target is a skill, check for a trigger-eval report:
+
+* `.agent-src.uncompressed/skills/{name}/evals/triggers.json` — the expected-trigger corpus
+* `evals/last-run.json` — the most recent runner output (see
+  [`scripts/skill_trigger_eval.py`](../../../scripts/skill_trigger_eval.py))
+
+If `last-run.json` exists and contains failed queries for this skill,
+extract the failure patterns and **use them to inform step 3 variants**.
+
+Example:
+
+```
+Eval evidence (evals/last-run.json, 2026-04-21, router=anthropic):
+  • 3/5 should-trigger passed
+  • failed queries share phrasing: "my E2E keeps flaking on CI"
+  • → one variant in step 3 should incorporate "flaky CI" vocabulary
+```
+
+If no `last-run.json` exists, skip this step silently. Do **not** run the
+evaluator from this skill — eval execution is a separate user action
+(costs API tokens, see `road-to-trigger-evals.md` Phase 2).
+
+For rules, commands, and guidelines: skip this step entirely — they do
+not have evals.
+
 ### 3. Propose 2–3 alternatives
 
 Each variant:
 
 * Fixes at least one failed check from step 2.
+* If eval evidence was found in step 2b, **at least one variant must
+  address the dominant failure pattern**. Label it *"addresses eval
+  failure: <pattern>"* in the rationale.
 * Stays under 200 characters.
 * Has a one-line rationale ("adds symptom trigger", "tightens length",
-  "adds undertrigger tail").
+  "adds undertrigger tail", "addresses eval failure: flaky CI").
 * Is numbered (per [`user-interaction`](../../rules/user-interaction.md) rule).
 
 Format:
@@ -101,9 +131,10 @@ and stop. Do not loop further.
 ## Output format
 
 1. One-line inspection verdict ("3/4 pass, missing undertrigger tail")
-2. 2–3 numbered variants with rationale + char count
-3. A "skip — keep current" option
-4. On apply: diff snippet + linter verdict
+2. Optional one-line eval evidence note if `last-run.json` was found
+3. 2–3 numbered variants with rationale + char count
+4. A "skip — keep current" option
+5. On apply: diff snippet + linter verdict
 
 ## Gotchas
 
@@ -121,6 +152,8 @@ and stop. Do not loop further.
 * Do NOT propose more than 3 variants in one turn
 * Do NOT change the skill name, body, or trigger phrases in the same turn
 * Do NOT silently strip or reword quotes inside the description value
+* Do NOT run `scripts/skill_trigger_eval.py` from inside this skill — eval
+  execution spends API tokens and is a separate user action
 
 ## Examples
 
