@@ -27,7 +27,7 @@ npm install --save-dev @event4u/agent-config
 ```
 
 After installing the package, run the installer to sync the payload and
-create `.agent-settings`, `.vscode/settings.json`, `.augment/settings.json`,
+create `.agent-settings.yml`, `.vscode/settings.json`, `.augment/settings.json`,
 and the tool-specific glue:
 
 ```bash

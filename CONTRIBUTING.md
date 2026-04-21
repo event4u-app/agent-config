@@ -99,8 +99,8 @@ the policy is interpreted as follows:
 
 | Bump | Triggers |
 |---|---|
-| **Major** (X.0.0) | Installer layout changes (files created/removed), breaking changes to `.agent-settings` keys, removal of rules or skills that downstream projects relied on, breaking changes to the compressed content format. |
-| **Minor** (x.X.0) | New skills, rules, commands, or guidelines. New tool support. New installer flags. New `.agent-settings` keys with safe defaults. |
+| **Major** (X.0.0) | Installer layout changes (files created/removed), breaking changes to `.agent-settings.yml` keys, removal of rules or skills that downstream projects relied on, breaking changes to the compressed content format. |
+| **Minor** (x.X.0) | New skills, rules, commands, or guidelines. New tool support. New installer flags. New `.agent-settings.yml` keys with safe defaults. |
 | **Patch** (x.x.X) | Wording fixes and improvements in existing skills, linter fixes, CI changes, documentation updates, internal refactors with no user-visible effect. |
 
 Every release must update [`CHANGELOG.md`](CHANGELOG.md). Unreleased work

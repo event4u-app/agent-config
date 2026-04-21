@@ -38,20 +38,21 @@ It is loaded by Claude Code, Augment Code, and Gemini CLI.
 
 ## Agent Settings
 
-The `.agent-settings` file in the consumer project configures agent behavior.
+The `.agent-settings.yml` file in the consumer project configures agent behavior.
+It is written as YAML with section-level grouping; dotted keys below reference
+those sections.
 
 ### Available settings
 
 | Setting | Default | Description |
 |---|---|---|
-| `user_name` | *(empty)* | User's first name for personalized responses |
-| `minimal_output` | `true` | Suppress intermediate output |
-| `play_by_play` | `false` | Share intermediate findings during analysis |
-| `auto_open_files` | `true` | Open edited files in IDE |
-| `ide` | `cursor` | IDE for file opening (`cursor`, `code`, `phpstorm`) |
 | `cost_profile` | `minimal` | Token budget (`minimal`, `balanced`, `full`, `custom`) |
-| `skill_improvement_pipeline` | `false` | Enable post-task learning capture |
-| `language` | `de` | Response language (`de`, `en`) |
+| `personal.user_name` | *(empty)* | User's first name for personalized responses |
+| `personal.minimal_output` | `true` | Suppress intermediate output |
+| `personal.play_by_play` | `false` | Share intermediate findings during analysis |
+| `personal.open_edited_files` | `false` | Open edited files in IDE |
+| `personal.ide` | *(empty)* | IDE for file opening (`cursor`, `code`, `phpstorm`) |
+| `pipelines.skill_improvement` | `false` | Enable post-task learning capture |
 
 ### Cost profiles
 

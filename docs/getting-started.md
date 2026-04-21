@@ -95,10 +95,10 @@ The system supports four configuration profiles:
 | `balanced` | + Runtime dispatcher (shell handler) | Low | Most teams |
 | `full` | + Tool adapters (GitHub / Jira, read-only) | Moderate | Platform teams |
 
-Set your profile in `.agent-settings`:
+Set your profile in `.agent-settings.yml`:
 
-```ini
-cost_profile=minimal
+```yaml
+cost_profile: minimal
 ```
 
 You can override any individual setting. See [Customization](customization.md) for details.
