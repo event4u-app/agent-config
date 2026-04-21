@@ -244,6 +244,13 @@ class TestEnsureAgentSettings(SilentTest):
         self.assertIn("cost_profile=balanced", content)
         self.assertNotIn(install.COST_PROFILE_PLACEHOLDER, content)
 
+    def test_seeds_subagent_keys(self) -> None:
+        install.ensure_agent_settings(self.project, self.package, "balanced", force=False)
+        content = (self.project / ".agent-settings").read_text(encoding="utf-8")
+        self.assertIn("subagent_implementer_model=", content)
+        self.assertIn("subagent_judge_model=", content)
+        self.assertIn("subagent_max_parallel=3", content)
+
     def test_skip_when_exists_without_force(self) -> None:
         target = self.project / ".agent-settings"
         target.write_text("cost_profile=custom\n", encoding="utf-8")

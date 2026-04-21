@@ -85,6 +85,18 @@ test_profile_forwarded_to_bridges() {
     teardown
 }
 
+test_subagent_keys_seeded() {
+    setup
+    bash "$INSTALL" --target "$TMPDIR" --quiet
+    assert_true "subagent_implementer_model seeded" \
+        grep -q "^subagent_implementer_model=" "$TMPDIR/.agent-settings"
+    assert_true "subagent_judge_model seeded" \
+        grep -q "^subagent_judge_model=" "$TMPDIR/.agent-settings"
+    assert_true "subagent_max_parallel=3 seeded" \
+        grep -q "^subagent_max_parallel=3" "$TMPDIR/.agent-settings"
+    teardown
+}
+
 test_idempotent() {
     setup
     bash "$INSTALL" --target "$TMPDIR" --quiet
@@ -153,6 +165,7 @@ test_skip_sync_runs_bridges_only
 test_skip_bridges_runs_sync_only
 test_dry_run_creates_no_files
 test_profile_forwarded_to_bridges
+test_subagent_keys_seeded
 test_idempotent
 test_help_flag
 test_unknown_flag_errors
