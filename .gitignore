@@ -32,3 +32,8 @@ __pycache__/
 
 # Dispatcher run results (produced by `dispatcher run --output …`, consumed by ci_summary)
 /agents/reports/runs/
+
+# Trigger-eval run outputs (produced by `scripts/skill_trigger_eval.py`;
+# triggers.json is tracked, last-run.json is per-run output)
+.agent-src.uncompressed/skills/*/evals/last-run.json
+.agent-src/skills/*/evals/last-run.json

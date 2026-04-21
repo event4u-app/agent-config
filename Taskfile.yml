@@ -113,6 +113,20 @@ tasks:
     desc: Audit skill descriptions (full list of all flagged)
     cmd: python3 scripts/audit_skill_descriptions.py --full
 
+  test-triggers:
+    desc: "Run trigger eval for one skill (MockRouter, no API call). Usage: task test-triggers -- eloquent"
+    cmd: python3 scripts/skill_trigger_eval.py --skill {{.CLI_ARGS}} --dry-run
+
+  test-triggers-live:
+    desc: "Run trigger eval against Claude API (needs ANTHROPIC_API_KEY + TRIGGER_EVALS_CONFIRM=1). Usage: task test-triggers-live -- eloquent"
+    cmd: |
+      if [ "${TRIGGER_EVALS_CONFIRM:-0}" != "1" ]; then
+        echo "❌  Refusing to hit the Claude API without TRIGGER_EVALS_CONFIRM=1"
+        echo "    Each run costs ~\$0.10. See agents/roadmaps/road-to-trigger-evals.md."
+        exit 2
+      fi
+      python3 scripts/skill_trigger_eval.py --skill {{.CLI_ARGS}}
+
   lint-readme:
     desc: Lint README.md for quality, correctness, and completeness
     cmd: python3 scripts/readme_linter.py README.md --root .
