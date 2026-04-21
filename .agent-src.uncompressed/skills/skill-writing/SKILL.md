@@ -79,18 +79,27 @@ Do NOT create a skill or rule for:
 
 ## Procedure
 
-### 0. Analyze before creating
+### 0. Run the Drafting Protocol
 
-Before writing anything:
+Creating or significantly rewriting a skill **must** go through the
+Understand → Research → Draft sequence defined in the
+[`artifact-drafting-protocol`](../../rules/artifact-drafting-protocol.md) rule.
 
-* What exactly is being requested?
-* Does a similar skill already exist? Search `.augment/skills/` and `.augment/rules/`
-* Is the scope too broad or unclear?
-* Read existing related artifacts — compare against current behavior
-* If requirements are ambiguous, ask a clarification question first
-* Define expected outcome: what should the skill enable that isn't possible today?
+Short version:
 
-This step is mandatory — skipping analysis leads to duplicate, weak, or pointer-only skills.
+* **Understand** — what problem, what outcome, what trigger phrases? If the
+  user said "create a skill for X" with no further context, ask 2–4 crisp
+  questions before touching a file.
+* **Research** — search `.agent-src.uncompressed/skills/` and `rules/` for
+  duplicates or near-matches. Read 1–2 gold-standard peer skills (e.g.
+  `pest-testing`, `php-coder`) to anchor shape and tone.
+* **Draft** — only now write the SKILL.md. Propose frontmatter
+  (`name`, `description`) to the user and get confirmation before filling the body.
+
+Skip the protocol only when the user gives an explicit "just do it" bypass,
+or for trivial edits (typo, link fix, single-line clarification).
+
+Skipping analysis leads to duplicate, weak, or pointer-only skills.
 
 ### 1. Define the trigger
 
