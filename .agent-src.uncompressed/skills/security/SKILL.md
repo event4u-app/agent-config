@@ -11,8 +11,13 @@ source: package
 Use when implementing authentication, authorization, or any security-sensitive functionality.
 
 Do NOT use when:
-- Validation logic only (use `laravel-validation` skill)
-- Full security audit (use `security-audit` skill)
+
+* Validation logic only — route to [`laravel-validation`](../laravel-validation/SKILL.md)
+* Full security audit — route to [`security-audit`](../security-audit/SKILL.md)
+* You need a pre-implementation threat model — route to
+  [`threat-modeling`](../threat-modeling/SKILL.md)
+* You need end-to-end authorization analysis — route to
+  [`authz-review`](../authz-review/SKILL.md)
 
 ## Procedure: Implement security for a feature
 

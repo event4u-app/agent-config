@@ -216,6 +216,16 @@ Phase 4, not as a blocker.
 - See [`road-to-stronger-skills.md`](road-to-stronger-skills.md) —
   Tier-based backport of the judge patterns across all 112 non-judge skills.
 
+### 3.4 Follow-up: defensive-agent skill & rule stack
+
+Parallel work adds 13 review-layer skills + 3 rules + knowledge templates so
+the agent behaves like a skeptical, security-minded staff engineer (defense
+only, no offensive cyber capability). New artifacts are authored
+pattern-compliant from day 1.
+
+- See [`road-to-defensive-agent.md`](road-to-defensive-agent.md) — three
+  waves (foundation · review depth · stack-specific + knowledge templates).
+
 ## Phase 4: Planning chain
 
 > Depends on: Phase 3 complete (judges are gates between stages)

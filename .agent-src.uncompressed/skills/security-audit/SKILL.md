@@ -24,9 +24,13 @@ Use this skill when:
 
 Do NOT use when:
 
-- Writing new auth/policy code → use `security`
-- Hunting for functional bugs → use `bug-analyzer` (proactive mode)
-- Investigating performance → use `performance-analysis`
+* Writing new auth/policy code — route to [`security`](../security/SKILL.md)
+* Hunting for functional bugs — route to [`bug-analyzer`](../bug-analyzer/SKILL.md) (proactive mode)
+* Investigating performance — route to [`performance-analysis`](../performance-analysis/SKILL.md)
+* You need a pre-implementation threat model for a new feature — route to
+  [`threat-modeling`](../threat-modeling/SKILL.md)
+* You need end-to-end authorization analysis for one route/action — route to
+  [`authz-review`](../authz-review/SKILL.md)
 
 ## Procedure: Security audit
 

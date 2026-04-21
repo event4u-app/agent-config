@@ -12,10 +12,15 @@ source: package
 **Proactive mode:** User asks to audit code for hidden bugs, edge cases, or risky patterns.
 
 Do NOT use when:
-- Feature development (use `feature-planning` skill)
-- Code style or refactoring (use `code-refactoring` skill)
-- Performance issues (use `performance-analysis` skill)
-- Security vulnerabilities (use `security-audit` skill)
+
+* Feature development — route to [`feature-planning`](../feature-planning/SKILL.md)
+* Code style or refactoring — route to [`code-refactoring`](../code-refactoring/SKILL.md)
+* Performance issues — route to [`performance-analysis`](../performance-analysis/SKILL.md)
+* Security vulnerabilities — route to [`security-audit`](../security-audit/SKILL.md)
+* You need to trace how one data element flows through the code — route to
+  [`data-flow-mapper`](../data-flow-mapper/SKILL.md)
+* You need to enumerate every call site / consumer affected by a planned fix —
+  route to [`blast-radius-analyzer`](../blast-radius-analyzer/SKILL.md)
 
 ## Input sources
 

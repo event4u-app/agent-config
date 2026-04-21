@@ -1253,6 +1253,65 @@ When generating markdown with code blocks:
 
 ---
 
+# Minimal Safe Diff
+
+A diff is **safe** when every line in it is traceable to the stated task.
+Every other line is scope creep and must be removed or moved to a separate
+change.
+
+## The rule
+
+- The diff contains the **smallest** change that solves the stated problem.
+- Every modified file must be **directly required** by the task — not
+  "while I was in there".
+- Never reformat, rename, or restructure untouched code in the same diff.
+- Never change dependencies, versions, or tooling "because it was outdated".
+- Never consolidate or split unrelated code paths as a side effect.
+- Never delete code that *looks* dead without proof it is unreachable.
+
+## Before writing the diff
+
+Ask yourself, in order:
+
+1. **What is the minimum set of files that must change for the stated task?**
+   If your answer includes files with no causal link to the task, stop and
+   remove them.
+2. **What is the minimum number of lines per file?** If you are editing a
+   method, edit the method — not the surrounding class.
+3. **Is any of this a refactor?** If yes, it belongs in its own commit or
+   PR, clearly labeled as a refactor, with no behavior change.
+
+## When the task seems to require a larger change
+
+- A rename, restructure, or framework upgrade that crosses the minimal-diff
+  line is a **separate, explicit** task — ask the user before expanding.
+- A bug fix that exposes a broader design problem stays a bug fix. Log the
+  design problem as a follow-up (ticket, note, TODO) and ship the fix alone.
+- A new feature that tempts you to "clean up" the module first: resist.
+  Add the feature, commit it, then propose the cleanup as a separate change.
+
+## Auto-formatter or linter rewrites unrelated code
+
+Revert those hunks before staging. The diff you present is the diff you own.
+If project policy forbids partial formatting, split into two commits:
+*format only* · *behavior change*.
+
+## Red flags in your own diff — reject them
+
+Files the task never mentioned · import reordering, whitespace, or comments
+outside the edited region · "small improvements" to neighboring methods ·
+test-only mixed with behavior changes in one commit · renames outside the
+task scope · dependency bumps "because it was close to the cache".
+
+## When in doubt
+
+Ask. A minimal diff plus one follow-up is cheaper than a sprawling diff the
+reviewer has to untangle.
+
+See also: `scope-control` · `downstream-changes` · `think-before-action` · `preservation-guard`.
+
+---
+
 # Model Recommendation
 
 Detect the current model from your system prompt identity (e.g., "Claude Opus" → `opus`,
@@ -1571,6 +1630,62 @@ If a skill's execution type or handler is unclear:
 - Stay within the established project structure and conventions.
 - When unsure about the scope, ask the user.
 - NEVER commit, push, merge, rebase, or force-push without explicit user permission.
+
+---
+
+# Security-Sensitive Stop Rule
+
+Before editing any file that matches a security-sensitive surface, **stop and
+run a threat analysis first**. Shipping a security-sensitive change without a
+prior threat pass is the #1 driver of authorization and data-exposure bugs.
+
+## What counts as security-sensitive
+
+A file or planned change is security-sensitive when **any** of the following
+is true:
+
+| Surface | Examples |
+|---|---|
+| Authentication | login, session, token issuance, password reset, 2FA, SSO |
+| Authorization | policies, gates, voters, middleware that gates actions, admin checks |
+| Tenancy | tenant scope / `tenant_id` / row-level security / per-tenant keys |
+| Billing / money | charge, refund, subscription, invoice, balance, credit |
+| Secrets | API keys, tokens, signing keys, `.env`, vault, KMS, OAuth client secrets |
+| File uploads | any endpoint that accepts user files or URLs for files |
+| External integrations | outbound HTTP to third parties, webhooks, queue consumers from external sources |
+| Public endpoints | any route with no auth gate (including health/status) |
+| Data exposure | API resources, serializers, exception renderers, log channels, admin panels |
+
+If the change touches any of these, the rule fires.
+
+## What to do when it fires
+
+STOP writing code. Run the matching analysis skill first:
+
+| Change type | Analysis skill |
+|---|---|
+| New or modified permission / tenant check | `authz-review` |
+| New feature touching any surface above | `threat-modeling` |
+| Data flows to logs / API / external | `data-flow-mapper` |
+| Wide refactor of security-sensitive code | `blast-radius-analyzer` |
+
+Capture the output (abuse cases, missing controls, required negative tests) —
+implement against that list, not against your first instinct. Never silently
+fall back to editing without the analysis; if it is blocked, ask the user.
+
+## When NOT to fire
+
+Typo/comment-only edits · test-only edits without behavior change · automated
+tooling output (lockfile, generated code) the user explicitly requested.
+These still deserve review, but do not require a full threat pass.
+
+## Rationale
+
+Authorization and tenancy bugs are often invisible in logs and fire silently
+until an auditor or attacker finds them. The cheapest moment to catch them
+is before the first edit — this rule makes that the default path.
+
+See also: `threat-modeling` · `authz-review` · `data-flow-mapper` · `minimal-safe-diff` · `think-before-action`.
 
 ---
 

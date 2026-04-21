@@ -24,6 +24,7 @@ backport** so every skill becomes sharper at its own job.
 - **Feature:** none (infrastructure roadmap)
 - **Jira:** none
 - **Related:** [`road-to-autonomous-agent.md`](road-to-autonomous-agent.md) Phase 3.1,
+  [`road-to-defensive-agent.md`](road-to-defensive-agent.md) (parallel — new skills ship pattern-compliant, no backport debt),
   [`.agent-src.uncompressed/rules/preservation-guard.md`](../../.agent-src.uncompressed/rules/preservation-guard.md)
 
 ## Definition of done

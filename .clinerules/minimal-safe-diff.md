@@ -1,0 +1,1 @@
+../.agent-src/rules/minimal-safe-diff.md
