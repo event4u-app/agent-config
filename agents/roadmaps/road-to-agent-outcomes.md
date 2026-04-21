@@ -1,122 +1,133 @@
-# Roadmap: Agent Outcomes — from governed behaviour to visible impact
+# Roadmap: Engineering OS for Agents — the master frame
 
-> Status: **stub / discussion input** — captures a strategic critique
-> raised during PR #17 review. Nothing here is decided. Existing skills,
-> rules, and commands are **not scheduled for removal** by this document.
+> **Enforce a senior working method. Don't try to boost the underlying
+> model.** This roadmap positions the package as an *Engineering
+> Operating System for Agents* and anchors three sub-roadmaps that
+> build the operating system itself.
 
-## Why this roadmap exists
+## Status
 
-By PR #17 the package has reached a point where reviewers describe it as
-"well-governed but without a flagship outcome":
+**Active frame, not a work plan.** This file sets vision, layers, and
+scope. The actual phased work lives in the three sub-roadmaps listed
+under "Sub-roadmaps" below.
 
-- **Quality** of skills, rules, commands, guidelines is strong
-- **Activation** (trigger sharpness) was improved in PR #15 + #16
-- **Defensive discipline** (Waves 1-3) is wired into CI
+## Prerequisites
 
-But external reviewers consistently name the same gap:
+- [x] [`road-to-defensive-agent.md`](road-to-defensive-agent.md) Waves 1-3 shipped — governance base is in place
+- [x] [`road-to-stronger-skills.md`](road-to-stronger-skills.md) tier system defined — content-quality base is in place
+- [x] [`road-to-trigger-evals.md`](road-to-trigger-evals.md) running — activation base is in place
+- [x] `preservation-guard`, `skill-quality`, `augment-portability` rules active
+- [x] PR #17 merged — path-fallback for ownership/patterns is consistent between docs and CI
 
-- The catalogue has no obvious **Top-5 entry point** for a new adopter
-- The implemented flows (`/jira-ticket`, `/bug-fix`, `/feature-plan`,
-  `/create-pr`, `/review-changes`) are effective but do **not** compose
-  into one visible "ticket → merged PR" storyline
-- There is no measurement of whether any flow actually solved the
-  incoming task — no outcome loop back into the evals
+## Principle — method over model
 
-This roadmap is the **place to discuss that gap** before deciding
-whether the next PR focuses on outcomes or on more governance work.
+The package does **not** promise:
 
-## Principle — preservation first
+- Turning a smaller model into a bigger one
+- Replacing a PO, a tester, or a senior engineer
+- Autonomous delivery from a single-sentence prompt
 
-Applied to every open question below:
+The package **does** promise:
 
-1. **No existing skill, rule, command, or guideline is removed** on the
-   argument "a review said so". Removal requires the same diligence as
-   creation (see [`preservation-guard`](../../.augment/rules/preservation-guard.md)).
-2. External reviews are **input**, not verdicts. Each point below is
-   marked as *verified*, *partially verified*, or *opinion* so the
-   signal-to-noise stays honest.
-3. Structural change only happens after we can **reproduce** the
-   reported issue from inside the package.
+- Enforcing a disciplined working method so a capable model behaves
+  like a structured staff engineer under that method
+- Making the method reproducible across models and projects
+- Carrying project-specific learnings forward as first-class input,
+  not as prompt tweaks
 
-## Open questions (not decisions)
+Every artefact under this roadmap is judged by that promise.
 
-### Q1. Discoverability — does the package need a "Top-5 for new teams" surface?
+## The four layers
 
-- Source: Claude review (PR #17), GPT review (PR #17)
-- Status: *partially verified* — `commands/` has 59 entries; no curated
-  starter list exists in README or `templates/AGENTS.md`
-- Candidate artefacts (if we decide yes — none exist yet):
-  - a new agent-infra guideline `starter-subset` listing the 5-10
-    flows new teams should adopt first, with reasoning
-  - README section "First week with event4u/agent-config"
-- What it is **not**: a reason to delete or demote the other 54 commands
+The package is organized as four layers. Every existing and future
+artefact maps to exactly one:
+
+| Layer | What it contains | Existing anchors |
+|---|---|---|
+| **1. Governance** | Always-rules, confidence gating, evidence requirements, break-glass, scope control | `.agent-src.uncompressed/rules/*` |
+| **2. Capability** | Skills, commands, guidelines — the how-to-do layer | `.agent-src.uncompressed/skills/*`, `commands/*`, `guidelines/*` |
+| **3. Memory** | Project-specific facts the agent consults: ownership, historical bugs, domain invariants, architecture decisions, incident learnings, product rules | `templates/agents/*.yml` (ownership-map, historical-bug-patterns today) |
+| **4. Execution** | CI gates, PR risk review, review routing, optional agent runtime hooks | `templates/github-workflows/*`, `templates/scripts/*` |
+
+The layer model is a **maintenance tool**, not a marketing label. Its
+job is to make "where does this new artefact belong?" answerable
+without a committee.
+
+## Sub-roadmaps
+
+Each of the three sub-roadmaps owns one lever of the working-method
+promise. None of them removes or replaces existing skills, rules, or
+commands.
+
+| Sub-roadmap | Layer focus | Lever |
+|---|---|---|
+| [`road-to-role-modes.md`](road-to-role-modes.md) | Capability + Governance | Explicit role modes (Developer, Reviewer, Tester, PO, Incident, Planner) with output contracts. Lets a smaller model stabilize its reasoning by loading the right frame instead of re-inventing it each task. |
+| [`road-to-engineering-memory.md`](road-to-engineering-memory.md) | Memory | Expands the memory layer beyond `ownership-map` and `historical-bug-patterns` to `domain-invariants`, `architecture-decisions`, `incident-learnings`, `product-rules` — with an explicit adoption and maintenance story, not more unused schemas. |
+| [`road-to-curated-self-improvement.md`](road-to-curated-self-improvement.md) | Governance + Capability | Closed-loop where the agent proposes rule/skill/pattern changes from project evidence, a human gate approves, and approved changes flow upstream via `upstream-contribute`. Replaces ad-hoc "I noticed this" with a reviewed pipeline. |
+
+## Non-goals (explicit)
+
+- **No** promise that Sonnet reaches Opus-level reasoning. The claim is
+  *disciplined senior-like behaviour under the method*, not raw model uplift.
+- **No** end-to-end "stakeholder prompt → merged PR" automation.
+  Human gates for goal clarity, priority, and sign-off stay.
+- **No** removal of existing skills, rules, or commands on the argument
+  "a review said so". Removal follows `preservation-guard`.
+- **No** bundled agent runtime. Execution layer hooks into the
+  consumer's runtime; it does not ship one.
+- **No** project-specific content in `.agent-src.uncompressed/`. Memory
+  layer ships *schemas and templates*, consumer projects own the data.
+
+## Open questions — carried forward from the PR #17 stub
+
+These remain unresolved and belong to whichever sub-roadmap picks them up:
+
+### Q1. Discoverability — "Top-5 for new teams"?
+
+- Source: Claude review, GPT review #1 (PR #17)
+- Status: *partially verified* — 59 commands, no curated starter list
+- Home: likely [`road-to-role-modes.md`](road-to-role-modes.md) (role-default command sets)
+- Not a reason to delete other commands
 
 ### Q2. Outcome measurement — how do we know a flow worked?
 
-- Source: GPT review (PR #17)
-- Status: *partially verified* — the eval system measures skill
-  activation, not task completion; `agents/sessions/` captures flow
-  traces but is not aggregated
-- Candidate artefacts (if we decide yes — none exist yet):
-  - a new `measure_outcomes` script under `scripts/` that reads closed
-    PRs + linked tickets and emits a success-rate report per flow
-  - a new agent-infra guideline `outcome-telemetry` defining the format
-    for flow success / failure markers in sessions
-- Explicit caveat: outcome attribution is hard; any number here is a
-  **heuristic**, not a KPI
+- Source: Opus review, GPT review #1 (PR #17)
+- Status: *partially verified* — activation is measured, task
+  completion is not
+- Home: referenced from both [`road-to-curated-self-improvement.md`](road-to-curated-self-improvement.md)
+  (improvement needs a success signal) and [`road-to-engineering-memory.md`](road-to-engineering-memory.md)
+  (incident-learnings need closure data)
+- Caveat: any number is a heuristic, not a KPI
 
 ### Q3. Killer-flow framing — is `/jira-ticket` underadvertised?
 
-- Source: GPT review (PR #17, "no killer flow exists")
-- Status: *opinion* — `/jira-ticket` already implements the flow GPT
-  describes (ticket → analysis → code → PR). The gap is framing and
-  adoption, not implementation
-- Candidate artefacts (if we decide yes):
-  - Rewrite of `commands/jira-ticket.md` intro to position it as the
-    primary entry point
-  - Walk-through docs with a real ticket
-- What it is **not**: a mandate to replace `/jira-ticket` with a new
-  mega-command
+- Source: GPT review #1 (PR #17)
+- Status: *opinion* — the flow exists; framing and adoption are the gap
+- Home: picked up by [`road-to-role-modes.md`](road-to-role-modes.md)
+  when defining role-default flows
+- Not a mandate for a mega-command
 
-### Q4. Runtime assumptions — which flows actually run autonomously?
+### Q4. Runtime assumptions — which flows run autonomously?
 
-- Source: GPT review (PR #17)
-- Status: *opinion* — the package is prompt-centric by design; how
-  autonomous a flow runs depends on the consumer's agent setup
-  (parallel subagents, tool permissions, MCP servers)
-- Candidate artefacts (if we decide yes — none exist yet):
-  - a new agent-infra guideline `runtime-expectations` that documents
-    what each flow needs (tools, permissions, parallelism) to run
-    end-to-end
-- What it is **not**: a plan to bundle an agent runtime into the
-  package
+- Source: GPT review #1 (PR #17)
+- Status: *opinion* — depends on consumer setup
+- Home: [`runtime-layer.md`](../../.agent-src.uncompressed/guidelines/agent-infra/runtime-layer.md)
+  guideline already covers part of this; extension belongs in the
+  Execution layer, not in a new roadmap
 
-## Out of scope for this roadmap
+## Acceptance criteria for this frame
 
-- Removing skills on "surface area" grounds
-- Replacing any existing rule with a new paradigm
-- Adopting any specific vendor agent runtime
-- Shipping project-specific content in `.agent-src.uncompressed/`
+The master frame is "holding" when:
 
-## Next step
-
-Before any artefact here is built, a **design session** produces:
-
-1. A go / no-go per question Q1-Q4 with rationale
-2. For each "go", a concrete artefact spec that passes
-   [`artifact-drafting-protocol`](../../.augment/rules/artifact-drafting-protocol.md)
-3. A sign-off from the maintainer that no existing artefact is
-   collateral damage
-
-Until that session happens, this file stays a stub — referenced from
-the PR #17 description so the critique is visible without committing
-the package to a direction.
+1. Every new artefact PR names its layer (Governance / Capability / Memory / Execution) in the description
+2. The three sub-roadmaps each have at least one shipped phase
+3. No PR is merged that contradicts the "method over model" principle
+4. The open questions Q1-Q4 are each either closed or explicitly
+   re-homed in a sub-roadmap
 
 ## See also
 
-- [`road-to-defensive-agent.md`](road-to-defensive-agent.md) — the
-  governance track this roadmap does **not** replace
-- [`road-to-stronger-skills.md`](road-to-stronger-skills.md) — the
-  content-quality track this roadmap does **not** replace
-- [`road-to-trigger-evals.md`](road-to-trigger-evals.md) — the
-  activation track this roadmap would extend into outcome evals
+- [`road-to-defensive-agent.md`](road-to-defensive-agent.md) — Governance base, not replaced
+- [`road-to-stronger-skills.md`](road-to-stronger-skills.md) — Capability-quality base, not replaced
+- [`road-to-trigger-evals.md`](road-to-trigger-evals.md) — Activation base, extended under Q2
+- [`road-to-autonomous-agent.md`](road-to-autonomous-agent.md) — Execution-layer history (judges, dispatchers)
