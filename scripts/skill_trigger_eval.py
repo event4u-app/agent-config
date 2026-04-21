@@ -26,14 +26,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import stat
 import sys
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable, Protocol
+from typing import Callable, IO, Protocol
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SKILLS_SOURCE = PROJECT_ROOT / ".agent-src.uncompressed" / "skills"
+RESULTS_DIR = PROJECT_ROOT / "evals" / "results"
 DEFAULT_MODEL = "claude-sonnet-4-5"
 
 # Approximate Anthropic API pricing (USD per 1M tokens). Used for the
@@ -41,6 +43,24 @@ DEFAULT_MODEL = "claude-sonnet-4-5"
 # once we run with a real key.
 PRICE_PER_MTOK_IN = {"claude-sonnet-4-5": 3.0, "claude-opus-4": 15.0}
 PRICE_PER_MTOK_OUT = {"claude-sonnet-4-5": 15.0, "claude-opus-4": 75.0}
+
+# On-disk key file. Companion: scripts/install_anthropic_key.sh writes it
+# with mode 0600; load_anthropic_key() refuses to read anything else.
+ANTHROPIC_KEY_PATH = Path.home() / ".config" / "agent-config" / "anthropic.key"
+# Token heuristics used for the *pre-run* cost preview. Real billing
+# comes from the API response once the user has confirmed.
+TOKENS_PER_CHAR = 0.25          # ~4 chars per token, industry rule of thumb.
+PROMPT_OVERHEAD_TOKENS = 200    # routing instructions above the catalogue.
+OUTPUT_TOKENS_PER_QUERY = 60    # JSON `{"would_load": [...]}` is short.
+
+
+class KeyGateError(RuntimeError):
+    """Raised when the on-disk key file fails any safety check."""
+
+
+class ConfirmationAborted(RuntimeError):
+    """Raised when the user declines at the confirmation prompt or stdin
+    is non-interactive."""
 
 
 @dataclass
@@ -237,6 +257,162 @@ def estimate_cost(model: str, in_tokens: int, out_tokens: int) -> float:
     return round(cost, 6)
 
 
+def pre_estimate_cost(
+    model: str,
+    skills: list[SkillMeta],
+    queries: list[Query],
+) -> tuple[int, int, float]:
+    """Pre-run token + cost estimate for the confirmation prompt.
+
+    Returns (input_tokens, output_tokens, cost_usd) — approximate,
+    because the real tokeniser runs server-side. Calibration is
+    deliberately slightly high so the prompt never understates cost.
+    """
+    catalogue_chars = sum(len(s.name) + len(s.description) + 6 for s in skills)
+    per_query_chars = catalogue_chars + PROMPT_OVERHEAD_TOKENS * 4
+    in_tokens_per_q = int(per_query_chars * TOKENS_PER_CHAR) + PROMPT_OVERHEAD_TOKENS
+    avg_query_chars = sum(len(q.q) for q in queries) // max(len(queries), 1)
+    in_tokens_per_q += int(avg_query_chars * TOKENS_PER_CHAR)
+    in_tokens = in_tokens_per_q * len(queries)
+    out_tokens = OUTPUT_TOKENS_PER_QUERY * len(queries)
+    return in_tokens, out_tokens, estimate_cost(model, in_tokens, out_tokens)
+
+
+# ── Key gate ─────────────────────────────────────────────────────────────
+#
+# No environment-variable fallback, no keychain fallback. The key only
+# ever comes from a 0600 file written by scripts/install_anthropic_key.sh.
+# Drift from that contract is a hard abort.
+
+def load_anthropic_key(path: Path = ANTHROPIC_KEY_PATH) -> str:
+    """Load an Anthropic key from `path` with strict safety checks.
+
+    Enforced invariants:
+    - File exists.
+    - Mode is exactly 0o600 (owner-only read/write).
+    - Content is non-empty after strip.
+    - Content starts with `sk-ant-`.
+    """
+    if not path.exists():
+        raise KeyGateError(
+            f"Anthropic key not found at {path}.\n"
+            f"    Install it with: bash scripts/install_anthropic_key.sh"
+        )
+    st = path.stat()
+    mode = stat.S_IMODE(st.st_mode)
+    if mode != 0o600:
+        raise KeyGateError(
+            f"Unsafe permissions on {path}: got {oct(mode)}, expected 0o600.\n"
+            f"    Fix:  chmod 600 {path}"
+        )
+    key = path.read_text(encoding="utf-8").strip()
+    if not key:
+        raise KeyGateError(f"{path} is empty.")
+    if not key.startswith("sk-ant-"):
+        raise KeyGateError(
+            f"{path} does not contain an Anthropic key "
+            f"(expected 'sk-ant-' prefix)."
+        )
+    return key
+
+
+# ── Confirmation gate ────────────────────────────────────────────────────
+#
+# Every live invocation must pass through this. No --force, no --yes,
+# no env-var bypass. Non-tty stdin is rejected outright so the runner
+# cannot be scheduled, piped, or wrapped by an agent.
+
+def build_confirmation_summary(
+    *,
+    model: str,
+    skill: str,
+    query_count: int,
+    catalogue_size: int,
+    input_tokens: int,
+    output_tokens: int,
+    cost_usd: float,
+    key_path: Path,
+) -> str:
+    bar = "═" * 56
+    return (
+        f"{bar}\n"
+        f"  Trigger Eval — Confirmation Required\n"
+        f"{bar}\n"
+        f"  Model:       {model}\n"
+        f"  Skill:       {skill}\n"
+        f"  Queries:     {query_count}\n"
+        f"  Catalogue:   {catalogue_size} skills in routing prompt\n"
+        f"  Est. tokens: in≈{input_tokens:,}  out≈{output_tokens:,}\n"
+        f"  Est. cost:   ~${cost_usd:.2f} USD (actual via API headers)\n"
+        f"  Key source:  {key_path}\n"
+        f"{bar}"
+    )
+
+
+def require_confirmation(
+    summary: str,
+    *,
+    stdin: IO[str] | None = None,
+    stdout: IO[str] | None = None,
+) -> None:
+    """Print `summary`, require exactly `yes` from the controlling terminal.
+
+    Production path (stdin/stdout both None) reads from /dev/tty and
+    writes to /dev/tty, not from `sys.stdin` / `sys.stdout`. That makes
+    the gate immune to any wrapper that rebinds stdin (task runners,
+    nohup, sudo, agents) and guarantees every keystroke comes from the
+    user's real keyboard.
+
+    Tests inject explicit streams to bypass /dev/tty. When a test
+    passes an object, it must supply both `stdin` and `stdout` so the
+    isatty check covers the injected path too. `yes` is case-sensitive
+    to block accidents from auto-expanded `y`.
+    """
+    if stdin is None and stdout is None:
+        # Production path: controlling-terminal-only. If there is no
+        # /dev/tty (CI, cron, non-interactive agent) this is a hard
+        # abort before any API call.
+        try:
+            tty_in = open("/dev/tty", "r", encoding="utf-8")  # noqa: SIM115
+            tty_out = open("/dev/tty", "w", encoding="utf-8")  # noqa: SIM115
+        except OSError as exc:
+            raise ConfirmationAborted(
+                "Confirmation requires a controlling terminal (/dev/tty). "
+                "Refusing to run under automation."
+            ) from exc
+        try:
+            tty_out.write(summary + "\n")
+            tty_out.write(
+                "Proceed? [type 'yes' exactly to run, anything else aborts]: "
+            )
+            tty_out.flush()
+            answer = tty_in.readline().rstrip("\n")
+        finally:
+            tty_in.close()
+            tty_out.close()
+    else:
+        # Test path \u2014 both streams must be supplied.
+        assert stdin is not None and stdout is not None, (
+            "require_confirmation: stdin and stdout must both be supplied "
+            "when overriding defaults (test-only path)."
+        )
+        tty = getattr(stdin, "isatty", lambda: False)()
+        if not tty:
+            raise ConfirmationAborted(
+                "Confirmation requires an interactive tty on stdin. "
+                "Refusing non-interactive, piped, or redirected input."
+            )
+        stdout.write(summary + "\n")
+        stdout.write(
+            "Proceed? [type 'yes' exactly to run, anything else aborts]: "
+        )
+        stdout.flush()
+        answer = stdin.readline().rstrip("\n")
+
+    if answer != "yes":
+        raise ConfirmationAborted(f"Aborted at confirmation (got {answer!r}).")
+
+
 def write_result(result: EvalResult, output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     payload = asdict(result)
@@ -292,20 +468,31 @@ class AnthropicRouter:
 
     name = "anthropic"
 
-    def __init__(self, model: str = DEFAULT_MODEL, client=None, max_tokens: int = 256):
+    def __init__(
+        self,
+        model: str = DEFAULT_MODEL,
+        client=None,
+        max_tokens: int = 256,
+        api_key: str | None = None,
+    ):
         self._model = model
         self._max_tokens = max_tokens
         if client is not None:
             self._client = client
-        else:
-            try:
-                import anthropic  # type: ignore[import-not-found]
-            except ImportError as exc:  # pragma: no cover - exercised only with real key
-                raise RuntimeError(
-                    "anthropic package not installed. "
-                    "`pip install anthropic` or run with --dry-run."
-                ) from exc
-            self._client = anthropic.Anthropic()
+            return
+        if api_key is None:
+            raise RuntimeError(
+                "AnthropicRouter requires an explicit api_key or an injected client. "
+                "Load the key with load_anthropic_key() — no env-var fallback."
+            )
+        try:
+            import anthropic  # type: ignore[import-not-found]
+        except ImportError as exc:  # pragma: no cover - exercised only with real key
+            raise RuntimeError(
+                "anthropic package not installed. "
+                "`pip install anthropic` or run with --dry-run."
+            ) from exc
+        self._client = anthropic.Anthropic(api_key=api_key)
 
     def route(self, query: str, skills: list[SkillMeta]) -> tuple[list[str], int, int]:
         catalogue = "\n".join(f"- {s.name} :: {s.description}" for s in skills)
@@ -364,7 +551,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "--output",
         type=Path,
         default=None,
-        help="Path to write last-run.json. Default: <triggers-dir>/last-run.json",
+        help=(
+            "Path to write the result. Default: evals/results/"
+            "<timestamp>-<skill>-<model>.json (live) or "
+            "<triggers-dir>/last-run.json (dry-run)."
+        ),
     )
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument(
@@ -372,11 +563,25 @@ def build_arg_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Use MockRouter (no API call). Returns the pilot skill only for should-trigger queries.",
     )
+    parser.add_argument(
+        "--key-path",
+        type=Path,
+        default=ANTHROPIC_KEY_PATH,
+        help=(
+            "Override the key file location. Default: "
+            "~/.config/agent-config/anthropic.key. Mode 0600 required."
+        ),
+    )
     return parser
 
 
 def _default_triggers_path(skill: str) -> Path:
     return SKILLS_SOURCE / skill / "evals" / "triggers.json"
+
+
+def _default_live_output(skill: str, model: str) -> Path:
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H%M%SZ")
+    return RESULTS_DIR / f"{ts}-{skill}-{model}.json"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -402,11 +607,38 @@ def main(argv: list[str] | None = None) -> int:
             return [args.skill] if expected.get(query, False) else []
 
         router: TriggerRouter = MockRouter(decide)
+        default_output = triggers_path.parent / "last-run.json"
     else:
-        router = AnthropicRouter(model=args.model)
+        # Live path: key gate → cost preview → confirmation → router.
+        # Any failure here aborts before a single API call is made.
+        try:
+            api_key = load_anthropic_key(args.key_path)
+        except KeyGateError as exc:
+            print(f"❌  {exc}", file=sys.stderr)
+            return 2
+
+        in_tok, out_tok, cost = pre_estimate_cost(args.model, skills, queries)
+        summary = build_confirmation_summary(
+            model=args.model,
+            skill=args.skill,
+            query_count=len(queries),
+            catalogue_size=len(skills),
+            input_tokens=in_tok,
+            output_tokens=out_tok,
+            cost_usd=cost,
+            key_path=args.key_path,
+        )
+        try:
+            require_confirmation(summary)
+        except ConfirmationAborted as exc:
+            print(f"⏹   {exc}", file=sys.stderr)
+            return 2
+
+        router = AnthropicRouter(model=args.model, api_key=api_key)
+        default_output = _default_live_output(args.skill, args.model)
 
     result = run_eval(args.skill, queries, router, skills, model=args.model)
-    output_path = args.output or triggers_path.parent / "last-run.json"
+    output_path = args.output or default_output
     write_result(result, output_path)
     print(format_summary(result))
     print(f"\nWrote: {output_path}")

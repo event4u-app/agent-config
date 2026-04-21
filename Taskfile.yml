@@ -117,15 +117,34 @@ tasks:
     desc: "Run trigger eval for one skill (MockRouter, no API call). Usage: task test-triggers -- eloquent"
     cmd: python3 scripts/skill_trigger_eval.py --skill {{.CLI_ARGS}} --dry-run
 
+  setup-evals:
+    desc: "Bootstrap .venv/ with the pinned anthropic SDK for live trigger evals (idempotent)."
+    cmd: bash scripts/setup_eval_venv.sh
+    interactive: true
+
+  install-anthropic-key:
+    desc: |
+      Install the Anthropic API key used by live trigger evals.
+      Interactive: key is read with no echo and stored in
+      ~/.config/agent-config/anthropic.key (mode 0600). Piped stdin is
+      refused. Rerun to rotate.
+    cmd: bash scripts/install_anthropic_key.sh
+    interactive: true
+
   test-triggers-live:
-    desc: "Run trigger eval against Claude API (needs ANTHROPIC_API_KEY + TRIGGER_EVALS_CONFIRM=1). Usage: task test-triggers-live -- eloquent"
-    cmd: |
-      if [ "${TRIGGER_EVALS_CONFIRM:-0}" != "1" ]; then
-        echo "❌  Refusing to hit the Claude API without TRIGGER_EVALS_CONFIRM=1"
-        echo "    Each run costs ~\$0.10. See agents/roadmaps/road-to-trigger-evals.md."
-        exit 2
-      fi
-      python3 scripts/skill_trigger_eval.py --skill {{.CLI_ARGS}}
+    desc: |
+      Run trigger eval against Claude API. The runner enforces:
+        1) key file ~/.config/agent-config/anthropic.key (mode 0600)
+        2) interactive tty stdin
+        3) explicit 'yes' at the pre-run cost preview
+      Bootstrap once:        task setup-evals
+      Install the key once:  task install-anthropic-key
+      Usage: task test-triggers-live -- eloquent
+    cmd: .venv/bin/python3 scripts/skill_trigger_eval.py --skill {{.CLI_ARGS}}
+    preconditions:
+      - sh: test -x .venv/bin/python3
+        msg: ".venv missing — run 'task setup-evals' first"
+    interactive: true
 
   lint-readme:
     desc: Lint README.md for quality, correctness, and completeness

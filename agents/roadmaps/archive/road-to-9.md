@@ -1,10 +1,14 @@
 # Roadmap: Road to 9/10 — Proof of Power
 
-> **Status:** Closed (2026-04-21) — archived after 1.6.0 closure.
-> Phases 1, 3, 4, 5, 6 shipped. Phase 2 (Killer Flow / `/jira-ticket` polish)
-> was **deferred** — it requires a Laravel/PHP consumer project to record the
-> end-to-end demo, which this Python/Bash package cannot host in isolation.
-> A follow-up roadmap owns that work when a host project is available.
+> **Status:** Closed (2026-04-21) — archived after 1.5.0 closure.
+> Phases 1, 3, 4, 5, 6 shipped together in 1.5.0 via PR #12
+> (`feat/improve-agent-setup-5`, merge commit `b6fe5c0`, head `9f04209`).
+> The plan split the work across 1.5.0 and 1.6.0; in practice every
+> shipped phase landed in 1.5.0 and no 1.6.0 tag was cut.
+> Phase 2 (Killer Flow / `/jira-ticket` polish) was **deferred** — it
+> requires a Laravel/PHP consumer project to record the end-to-end demo,
+> which this Python/Bash package cannot host in isolation. A follow-up
+> roadmap owns that work when a host project is available.
 
 > Make **one thing completely real** instead of five things half-built:
 > a minimal but genuine runtime, one end-to-end killer flow, a single installer
@@ -34,13 +38,15 @@ The 1.4.0 release closed the honesty gap (MIT license, `.agent-src/` rename,
 installer consolidation started, experimental layers labeled). What remains is
 the **capability gap**: the product reads like a system, but the runtime,
 feedback, and lifecycle layers are scaffolds with no real consumer. This
-roadmap spends two releases (1.5.0 and 1.6.0) turning one vertical slice from
-scaffold into product, and cutting everything that cannot be made real in the
-same window.
+roadmap was originally scoped across two releases (1.5.0 and 1.6.0) to turn
+one vertical slice from scaffold into product, and cut everything that cannot
+be made real in the same window.
 
 - **Feature:** none (strategic follow-up to the 1.4.0 external review)
 - **Jira:** none
-- **Target releases:** 1.5.0 (Phases 1–2), 1.6.0 (Phases 3–5)
+- **Target releases (as planned):** 1.5.0 (Phases 1–2), 1.6.0 (Phases 3–5)
+- **Actual shipping:** every shipped phase (1, 3, 4, 5, 6) landed together in
+  **1.5.0** via PR #12. No 1.6.0 release was cut. Phase 2 deferred.
 
 ## Phase 1: Real minimal runtime (P0) ✅
 
@@ -103,7 +109,8 @@ marketplace, 345 pytests, readme).
 
 ## Phase 2: One killer end-to-end use case ❌ DEFERRED
 
-**Status:** Deferred on 2026-04-21 — not executed in the 1.6.0 window.
+**Status:** Deferred on 2026-04-21 — not executed within the road-to-9
+window (1.5.0).
 
 **Deferral reason:** The acceptance criterion (*"a cold-clone contributor
 follows the README section and reaches a green PR in under 10 minutes"*) and
@@ -372,13 +379,16 @@ longer appear in any file shipped to consumers. The profile descriptions
 in the template, the installer ini files, `scripts/first-run.sh`, and
 `docs/customization.md` all agree verbatim.
 
-**Target release:** 1.6.0 (together with the Phase-5 doc narrowing).
+**Target release (as planned):** 1.6.0 (together with the Phase-5 doc
+narrowing). **Shipped:** 1.5.0 via PR #12, together with Phases 1, 3, 4, 5.
 
 ## Acceptance Criteria (overall)
 
-- [x] Phase 1 ships in 1.5.0 — landed in PR #11 (`feat/improve-agent-setup-4`);
-      Phases 3, 4, 5, 6 ship in 1.6.0 via PR #12 (`feat/improve-agent-setup-5`).
-      Phase 2 deferred to a follow-up roadmap.
+- [x] Phases 1, 3, 4, 5, 6 all shipped together in **1.5.0** via PR #12
+      (`feat/improve-agent-setup-5`, merge `b6fe5c0`, head `9f04209`).
+      Phase 2 deferred to a follow-up roadmap. (PR #11 /
+      `feat/improve-agent-setup-4` was unrelated scope — Marketplace,
+      language Iron Law, `/analyze-reference-repo`, roadmap lifecycle.)
 - [x] One skill executes end-to-end via the runtime with real side effects —
       `lint-skills` and `check-refs` run through
       `python3 scripts/runtime_dispatcher.py run --skill <name>` with typed
@@ -398,8 +408,8 @@ in the template, the installer ini files, `scripts/first-run.sh`, and
       the shipped surface — Phase 5 narrowing swept README, architecture.md,
       quality.md, getting-started.md, customization.md; Phase 6 swept the
       template + installer INI + first-run.sh.
-- [x] `task ci` green on the final merge for each release — PR #11 merged
-      clean; PR #12 head (9f04209) has all three workflows (Consistency,
+- [x] `task ci` green on the final merge — PR #12 head (`9f04209`,
+      merge commit `b6fe5c0`) has all three workflows (Consistency,
       Skill Lint, Tests × 7 matrix jobs) green.
 
 ## Non-Goals

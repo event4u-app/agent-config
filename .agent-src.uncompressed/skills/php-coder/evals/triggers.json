@@ -1,6 +1,6 @@
 {
   "skill": "php-coder",
-  "description": "5 should-trigger + 5 should-not-trigger queries. No query mentions 'php-coder' or 'php' directly as a skill name. Near-misses share PHP/Laravel vocabulary without being code-generation tasks.",
+  "description": "5 should-trigger + 5 should-not-trigger queries. Multi-skill co-activation (e.g. php-coder alongside pest-testing on a test query) is accepted as TP where writing PHP code is a legitimate sub-task. Near-misses share PHP/Laravel vocabulary without being code-generation tasks.",
   "queries": [
     {"q": "my UserController is getting huge, split it into a service", "trigger": true},
     {"q": "write a class for parsing CSV files with proper type hints", "trigger": true},
@@ -10,7 +10,7 @@
     {"q": "run phpstan on this file and show me all errors", "trigger": false},
     {"q": "create a migration for adding a phone column to users", "trigger": false},
     {"q": "set up docker-compose for this PHP project", "trigger": false},
-    {"q": "write a Pest test for the UserRepository", "trigger": false},
+    {"q": "write a Pest test for the UserRepository", "trigger": true, "note": "T-class: co-activation with pest-testing is accepted — Pest tests are PHP code, loading php-coder alongside pest-testing is legitimate multi-skill support"},
     {"q": "explain what strict_types does in PHP", "trigger": false}
   ]
 }

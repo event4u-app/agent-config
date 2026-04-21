@@ -1,0 +1,7 @@
+# Pinned requirements for the live trigger-eval runner.
+#
+# Installed into .venv/ by scripts/setup_eval_venv.sh. Not used by CI,
+# not used by any other script in this repo. If the SDK ever needs to
+# be upgraded, bump the version here and rerun the setup script.
+
+anthropic==0.96.0

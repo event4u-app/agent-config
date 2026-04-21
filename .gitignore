@@ -1,6 +1,9 @@
 # Dependencies
 /vendor/
 /node_modules/
+# Python virtualenv — used only for the live trigger-eval runner
+# (anthropic SDK). Never commit.
+/.venv/
 
 # IDE
 .idea/
@@ -37,3 +40,5 @@ __pycache__/
 # triggers.json is tracked, last-run.json is per-run output)
 .agent-src.uncompressed/skills/*/evals/last-run.json
 .agent-src/skills/*/evals/last-run.json
+# Live trigger-eval outputs — timestamped JSON per run, not committed.
+evals/results/

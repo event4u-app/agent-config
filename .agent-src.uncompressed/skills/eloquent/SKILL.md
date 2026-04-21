@@ -1,6 +1,6 @@
 ---
 name: eloquent
-description: "Use when writing Eloquent models, relationships, scopes, queries, or eager loading — DB read/write through Model:: — even when the user says 'fetch users with their orders' without naming Eloquent."
+description: "Use when writing Eloquent models, relationships, scopes, or queries via Model:: — 'fetch users with their orders'. NOT for PHPStan output, non-Eloquent services, or raw SQL questions."
 source: package
 ---
 
