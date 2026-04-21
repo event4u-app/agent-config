@@ -193,7 +193,7 @@ Shipped [`scripts/skill_trigger_eval.py`](../../scripts/skill_trigger_eval.py)
    pinned `anthropic` SDK. System Python stays untouched:
 
    ```bash
-   bash scripts/setup_eval_venv.sh
+   task setup-evals
    ```
 
    Idempotent — safe to rerun to refresh pins from
@@ -203,11 +203,12 @@ Shipped [`scripts/skill_trigger_eval.py`](../../scripts/skill_trigger_eval.py)
    echo, no history, no env-var:
 
    ```bash
-   bash scripts/install_anthropic_key.sh
+   task install-anthropic-key
    ```
 
-   The script writes `~/.config/agent-config/anthropic.key` with mode
-   `0600`. Piped stdin is rejected. Rerun to rotate; `rm` to remove.
+   Writes `~/.config/agent-config/anthropic.key` with mode `0600`.
+   Piped stdin is rejected. Rerun the same command to rotate;
+   `rm ~/.config/agent-config/anthropic.key` to remove.
 
 3. **Run the eval.** Each invocation prints a cost preview and waits for
    exactly `yes` on stdin before calling the API:
