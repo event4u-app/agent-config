@@ -206,6 +206,14 @@ tasks:
     desc: Show the recommended first-run experience for new users
     cmd: bash scripts/first-run.sh
 
+  mcp:render:
+    desc: "Render mcp.json → .cursor/mcp.json, .windsurf/mcp.json (add --claude-desktop for user-scope)"
+    cmd: python3 scripts/mcp_render.py {{.CLI_ARGS}}
+
+  mcp:check:
+    desc: "Check MCP targets are in sync with mcp.json (non-zero exit if stale)"
+    cmd: python3 scripts/mcp_render.py --check {{.CLI_ARGS}}
+
   ci:
     desc: Run ALL CI checks locally (must pass before push)
     cmds:

@@ -1,0 +1,20 @@
+{
+  "servers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${env:GH_TOKEN}"
+      }
+    },
+    "jira": {
+      "command": "docker",
+      "args": ["run", "--rm", "-i", "mcp/jira:latest"],
+      "env": {
+        "JIRA_TOKEN": "${env:JIRA_TOKEN}",
+        "JIRA_HOST": "example.atlassian.net"
+      },
+      "cwd": "/workspace"
+    }
+  }
+}
