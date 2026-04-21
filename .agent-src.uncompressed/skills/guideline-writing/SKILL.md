@@ -138,5 +138,5 @@ Good guideline name + description:
 
 Bad:
 
-> Path: `guidelines/stuff.md`
+> Path: **guidelines/stuff** (no topic folder, meaningless stem)
 > Description: "Things to know"

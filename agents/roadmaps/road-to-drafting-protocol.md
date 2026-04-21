@@ -7,7 +7,7 @@
 
 - **Source inspiration:** [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) — the front-end (Understand/Research/Draft), stripped of the autopilot back-end (`run_loop.py`, `.skill` packaging, blind comparison)
 - **Source analysis:** [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) — revised scope after 2026-04-20 discussion
-- **Status:** Phase 1 shipped, 2026-04-21 (branch `feat/improve-agent-setup-8`)
+- **Status:** Phase 1 + Phase 2 shipped, 2026-04-21 (branch `feat/improve-agent-setup-8`)
 - **Author:** Split out of the anthropic alignment track after narrow-rejection was revised
 
 ## Guiding principle
@@ -145,35 +145,38 @@ the numbered trigger table.
 - Roadmap moved to "shipped" status; Phase 2 (writing skills) remains
   open for a future branch.
 
-## Phase 2 — Writing skills (v1.8.1)
+## Phase 2 — Writing skills (v1.8.1) ✅ shipped 2026-04-21
 
-### 2.1 Extend `skill-writing`
+### 2.1 Extend `skill-writing` ✅
 
-Add two sections:
-- **Understand checklist** — 5 questions the agent must answer before drafting
-- **Research protocol** — which files to read, what to report back
+Section 0 of the Procedure now points at
+`artifact-drafting-protocol` (Understand → Research → Draft) instead of the
+ad-hoc "Analyze before creating" checklist. No content duplicated; the
+protocol rule is the single normative source.
 
-No new skills added in this sub-phase; we only ensure `skill-writing` aligns.
+### 2.2 Create a new skill: `rule-writing` ✅
 
-### 2.2 Create a new skill: `rule-writing`
+New skill at `.agent-src.uncompressed/skills/rule-writing/SKILL.md`. Mirrors
+`skill-writing`'s structure: trigger wording conventions, `always` vs
+`auto` governance (cites `rule-type-governance`), size budget (cites
+`size-enforcement`), linter + CI validation gate. 143 lines uncompressed.
 
-New skill at `.agent-src.uncompressed/skills/rule-writing/SKILL.md`. Mirror
-`skill-writing`'s structure: trigger wording conventions, trigger phrase
-design, rule-type governance (always vs auto, per `rule-type-governance`
-rule), size budget. ~120 lines.
+### 2.3 Create a new skill: `command-writing` ✅
 
-### 2.3 Create a new skill: `command-writing`
+New skill at `.agent-src.uncompressed/skills/command-writing/SKILL.md`.
+Covers slash-command shape: `disable-model-invocation` frontmatter, numbered
+steps, safety gates (no auto-apply of destructive actions), size budget,
+Claude symlink verification. 142 lines uncompressed.
 
-New skill. Covers slash-command shape (frontmatter, purpose, inputs, steps,
-output location, safety, "when not to use"). ~120 lines.
+### 2.4 Create a new skill: `guideline-writing` ✅
 
-### 2.4 Create a new skill: `guideline-writing`
+New skill at `.agent-src.uncompressed/skills/guideline-writing/SKILL.md`.
+Covers guideline shape: minimal frontmatter (no `type`, no routing), topic
+folder selection, inbound-link requirement (cites `preservation-guard`),
+relaxed size budget. 145 lines uncompressed.
 
-New skill. Covers guideline shape (scoped knowledge, referenced from skills,
-no direct triggers, link conventions). ~100 lines.
-
-Total new code: ~340 lines of markdown across three skills + ~30 lines
-extended in `skill-writing`.
+Total new code shipped: 430 lines of markdown across three skills + 21 lines
+extended in `skill-writing`. Skill count 100 → 103.
 
 ## Phase 3 — Description assist (agent proposes, human approves)
 
