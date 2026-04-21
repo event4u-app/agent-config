@@ -2310,3 +2310,18 @@ skill.
 **Never accept** as proof: "should work", "looks correct", "logic is sound".
 No captured output = not verified.
 
+## Confidence gating
+
+State confidence explicitly before claiming completion on non-trivial work.
+
+- **High** — runtime path read end-to-end, relevant tests inspected or run,
+  no hidden side-effects (queues/events/observers) unaccounted for.
+- **Medium** — main path verified but one gap remains; list the gap in the
+  completion message.
+- **Low** — broad implementation NOT allowed; switch to analysis, narrow
+  the scope, or ask the user before proceeding.
+
+For high-risk areas (auth, tenancy, migrations, queues, dependencies,
+external APIs, data exposure), "high" requires tests AND a cross-layer
+read — not inference from a single file.
+
