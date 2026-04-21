@@ -40,9 +40,9 @@ Research → Draft from the
 
 * **Understand** — what user-facing problem does `/{name}` solve in one
   session? What are the inputs, outputs, side effects?
-* **Research** — read `.agent-src.uncompressed/templates/command.md`, grep
-  `commands/` for overlap, skim 1–2 peer commands (e.g. `create-pr`,
-  `commit`).
+* **Research** — **inspect** `.agent-src.uncompressed/templates/command.md`,
+  grep `commands/` for overlap, and **analyze** 1–2 peer commands
+  (e.g. `create-pr`, `commit`).
 * **Draft** — propose frontmatter (`name`, `description`) first, then the
   step skeleton. Only fill bodies after both are confirmed.
 
