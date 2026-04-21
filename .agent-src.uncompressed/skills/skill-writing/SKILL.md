@@ -1,6 +1,6 @@
 ---
 name: skill-writing
-description: "Use when creating, improving, or reviewing agent skills — SKILL.md files, frontmatter, procedure sections, or skill-vs-rule decisions — even when the user says 'write a skill' without naming it."
+description: "Use when deciding 'should this be a skill or a rule?', creating/improving/reviewing agent skills, SKILL.md frontmatter, or procedure sections — even without saying 'skill-writing'."
 source: project
 ---
 
