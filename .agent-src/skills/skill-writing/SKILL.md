@@ -143,6 +143,11 @@ without naming Playwright. Run `python3 scripts/audit_skill_descriptions.py`
 after writing; if flagged `too-short` or `no-trigger-prefix`, rewrite
 before commit.
 
+When iterating on phrasing with the user (e.g. "make this pushier",
+"will this ever fire"), delegate to the
+[`description-assist`](../description-assist/SKILL.md) skill — it runs the
+approval-gated propose / pick loop with at most two rounds.
+
 ### 2. Write the procedure
 
 Use numbered, verifiable steps.

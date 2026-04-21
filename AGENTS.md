@@ -73,7 +73,7 @@ check-refs, check-portability, lint-skills, test, lint-readme.
 
 ```
 .agent-src.uncompressed/      ← edit here
-  skills/       (103 skills)
+  skills/       (104 skills)
   rules/        (37 rules)
   commands/     (54 commands)
   guidelines/   (37 guidelines)

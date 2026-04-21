@@ -7,7 +7,7 @@
 
 - **Source inspiration:** [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) — the front-end (Understand/Research/Draft), stripped of the autopilot back-end (`run_loop.py`, `.skill` packaging, blind comparison)
 - **Source analysis:** [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) — revised scope after 2026-04-20 discussion
-- **Status:** Phase 1 + Phase 2 shipped, 2026-04-21 (branch `feat/improve-agent-setup-8`)
+- **Status:** Phase 1 + 2 + 3 shipped, 2026-04-21 (branch `feat/improve-agent-setup-8`)
 - **Author:** Split out of the anthropic alignment track after narrow-rejection was revised
 
 ## Guiding principle
@@ -178,11 +178,16 @@ relaxed size budget. 145 lines uncompressed.
 Total new code shipped: 430 lines of markdown across three skills + 21 lines
 extended in `skill-writing`. Skill count 100 → 103.
 
-## Phase 3 — Description assist (agent proposes, human approves)
+## Phase 3 — Description assist (agent proposes, human approves) ✅ shipped 2026-04-21
 
 This is the **bounded** version of anthropic's `run_loop.py`: the agent
 participates in description iteration, but every change is an approval-gated
 proposal. No Claude API calls. No silent edits.
+
+**Shipped as:** `.agent-src.uncompressed/skills/description-assist/SKILL.md`
+(143 lines). Cross-linked from all four writing skills
+(`skill-writing`, `rule-writing`, `command-writing`, `guideline-writing`).
+Skill count 103 → 104.
 
 ### 3.1 Behavior
 

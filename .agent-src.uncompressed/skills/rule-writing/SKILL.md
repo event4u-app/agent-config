@@ -68,6 +68,10 @@ description: "PHP coding standards"
 description: "Writing or reviewing PHP code — strict types, naming, comparisons, early returns, Eloquent conventions"
 ```
 
+When iterating on phrasing, delegate to the
+[`description-assist`](../description-assist/SKILL.md) skill — approval-gated,
+no silent edits, max two rounds.
+
 ### 3. Write the rule body
 
 * Short, constraint-only, easy to scan.

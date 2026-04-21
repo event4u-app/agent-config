@@ -61,6 +61,10 @@ skills: [optional-skill-1]    # optional — skills this command delegates to
 ---
 ```
 
+When iterating on the description, delegate to the
+[`description-assist`](../description-assist/SKILL.md) skill — approval-gated,
+no silent edits, max two rounds.
+
 ### 2. Structure the body
 
 Required sections in this order:

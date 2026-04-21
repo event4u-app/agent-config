@@ -69,6 +69,11 @@ source: package     # or project for consumer-local guidelines
 ---
 ```
 
+If you do want to polish the description for a guideline whose summary
+gets surfaced to agents, delegate to the
+[`description-assist`](../description-assist/SKILL.md) skill — same
+approval-gated flow as for skills and rules.
+
 ### 3. Structure the body
 
 * Start with a single `#` heading that matches the filename.
