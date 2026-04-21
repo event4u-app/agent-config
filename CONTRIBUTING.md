@@ -47,7 +47,7 @@ Helper commands:
 ```bash
 task sync             # .agent-src.uncompressed/ → .agent-src/, then project → .augment/
 task generate-tools   # Regenerate .claude/, .cursor/, .clinerules/, .windsurfrules
-task test             # pytest tests/ + tests/test_install.sh
+task test             # pytest tests/ + installer integration tests
 task lint-skills      # python3 scripts/skill_linter.py --all
 ```
 
@@ -79,12 +79,17 @@ task lint-skills      # python3 scripts/skill_linter.py --all
 
 ## Installer and Python tooling
 
-- Canonical installer: `scripts/install.py`. `scripts/install.sh` and
-  `bin/install.php` are thin wrappers.
+- Primary installer entry point: `scripts/install` (bash orchestrator).
+  It chains `scripts/install.sh` (payload sync) and `scripts/install.py`
+  (bridge files). `bin/install.php` and `scripts/postinstall.sh` are
+  thin wrappers that route through the orchestrator.
+- Each stage stays independently callable (`bash scripts/install.sh`,
+  `python3 scripts/install.py`) and has its own CLI.
 - Python scripts must work on Python 3.10+ with only the standard library.
   No third-party runtime dependencies.
-- Add integration tests to `tests/test_install.sh` and Python unit tests
-  under `tests/`.
+- Add integration tests to `tests/test_install.sh` (payload sync) or
+  `tests/test_install_orchestrator.sh` (orchestrator + wrappers), and
+  Python unit tests under `tests/`.
 
 ## Versioning policy
 

@@ -1,6 +1,6 @@
 # Skills Catalog
 
-All **98 skills** available in this package, in alphabetical order.
+All **100 skills** available in this package, in alphabetical order.
 Click a skill name to open its SKILL.md and read the full guidance.
 
 > **Regenerate:** `python3 scripts/generate_catalog.py`
@@ -19,6 +19,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`aws-infrastructure`](../.agent-src/skills/aws-infrastructure/SKILL.md) | Use when working with AWS resources — ECS Fargate, ECR, EFS, Secrets Manager, gomplate templates, or multi-environment deployment setup. |
 | [`blade-ui`](../.agent-src/skills/blade-ui/SKILL.md) | Use when creating or editing Blade views, components, partials, or view logic. Covers clean separation of concerns and reusable UI structure. |
 | [`bug-analyzer`](../.agent-src/skills/bug-analyzer/SKILL.md) | Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs. |
+| [`check-refs`](../.agent-src/skills/check-refs/SKILL.md) | Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions. |
 | [`code-refactoring`](../.agent-src/skills/code-refactoring/SKILL.md) | Use when the user says "refactor this", "rename class", or "move method". Safely refactors PHP code — finds all callers, updates downstream dependencies, and verifies with quality tools. |
 | [`code-review`](../.agent-src/skills/code-review/SKILL.md) | Use when the user says "review this", "check my code", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards. |
 | [`command-routing`](../.agent-src/skills/command-routing/SKILL.md) | Use when the user types a slash command like '/create-pr' or '/commit'. Extends the commands rule with context inference and GitHub API patterns. |
@@ -56,6 +57,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`laravel-scheduling`](../.agent-src/skills/laravel-scheduling/SKILL.md) | Use when configuring Laravel task scheduling — cron expressions, frequency helpers, overlap prevention, maintenance mode, or output handling. |
 | [`laravel-validation`](../.agent-src/skills/laravel-validation/SKILL.md) | Use when writing validation logic — Form Requests, rules, custom rule objects, and request-boundary design with strong correctness. |
 | [`learning-to-rule-or-skill`](../.agent-src/skills/learning-to-rule-or-skill/SKILL.md) | Use when a repeated learning, mistake, or successful pattern should be turned into a new rule or skill. Also use after completing a task to capture learnings from the work. |
+| [`lint-skills`](../.agent-src/skills/lint-skills/SKILL.md) | Use when running the package's skill linter against all skills and rules to validate frontmatter, required sections, and execution metadata. |
 | [`livewire`](../.agent-src/skills/livewire/SKILL.md) | Use when writing Livewire components — reactive state, events, lifecycle hooks, and clean separation between component logic and Blade templates. |
 | [`logging-monitoring`](../.agent-src/skills/logging-monitoring/SKILL.md) | Use when working with logging or monitoring — Sentry error tracking, Grafana/Loki log aggregation, structured logging channels, or monitoring helpers. |
 | [`mcp`](../.agent-src/skills/mcp/SKILL.md) | Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows. |

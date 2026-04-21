@@ -92,7 +92,7 @@ VALID_STATUSES = {"active", "deprecated", "superseded"}
 VALID_EXECUTION_TYPES = {"manual", "assisted", "automated"}
 VALID_EXECUTION_HANDLERS = {"none", "shell", "php", "node", "internal"}
 VALID_EXECUTION_SAFETY_MODES = {"strict"}
-VALID_EXECUTION_FIELDS = {"type", "handler", "timeout_seconds", "safety_mode", "allowed_tools"}
+VALID_EXECUTION_FIELDS = {"type", "handler", "timeout_seconds", "safety_mode", "allowed_tools", "command"}
 
 
 @dataclass
@@ -571,6 +571,17 @@ def lint_execution_metadata(execution: dict) -> List[Issue]:
         elif not all(isinstance(t, str) for t in allowed_tools):
             issues.append(Issue("error", "invalid_allowed_tools_entries",
                                 "All entries in allowed_tools must be strings"))
+
+    # Validate command shape if present. Skills that declare `command` are
+    # runtime-executable; skills without it stay in proposal-only mode.
+    command = execution.get("command")
+    if command is not None:
+        if not isinstance(command, list) or not all(isinstance(c, str) for c in command):
+            issues.append(Issue("error", "invalid_command",
+                                "command must be a list of strings (argv form)"))
+        elif len(command) == 0:
+            issues.append(Issue("error", "empty_command",
+                                "command must not be empty"))
 
     # Check for unknown fields
     known_fields = VALID_EXECUTION_FIELDS

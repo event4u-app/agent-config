@@ -5,20 +5,18 @@
 ```
 Rules         → Behavior enforcement (always active)         ← stable
 Skills        → Execution logic (on-demand expertise)        ← stable
-Runtime       → Execution system (dispatcher, hooks)         ← experimental
+Runtime       → Dispatcher + shell handler (pilot skills)    ← partial
 Tools         → External integrations (GitHub, Jira)         ← experimental
-Opt-in layers → Observability, feedback, lifecycle           ← experimental
 ```
 
 **Stable** = shipped, documented, exercised by the default (`minimal`) profile.
 **Experimental** = scaffold with tests and data model, but no real execution
-wired up yet. These layers activate only under the `balanced` / `full`
-profiles and they are explicit about being no-ops today.
+wired up yet.
 
-The opt-in layers (observability, feedback, lifecycle) are described in a
-separate document so the core architecture stays short. See
-[`docs/observability.md`](observability.md). If you have not opted in, you can
-safely ignore them.
+> The previous "observability, feedback, lifecycle" layers were removed in
+> 1.5 — they were scaffolds without production consumers. See the
+> [`archive/road-to-9.md`](../agents/roadmaps/archive/road-to-9.md) roadmap,
+> phase 4, for the rationale.
 
 ## Content pipeline
 
@@ -57,26 +55,46 @@ safely ignore them.
 
 Ensures: no guessing, analysis before action, real verification, consistent outputs.
 
-### 2. Execution Layer (Runtime) — experimental
+### 2. Execution Layer (Runtime) — partially real, partially scaffold
 
-> **Status: scaffold.** Registry, dispatcher, pipeline, hooks and an error
-> taxonomy exist and have tests, but no real execution happens yet. See
-> `scripts/runtime_dispatcher.py` — its module docstring states
-> *"No real execution happens — this is a scaffold for future phases."*
+> **Status:**
+> - **Real:** shell-handler path — skills that declare an `execution.command`
+>   argv are dispatched and executed by `scripts/runtime_handler.py`. A typed
+>   `ExecutionResult` (exit code, stdout, stderr, duration, artifacts) is
+>   returned and can be persisted as JSON via `--output FILE`. Pilots:
+>   `lint-skills`, `check-refs`. Both run on every PR and appear in the
+>   GitHub Step Summary via `scripts/ci_summary.py`.
+> - **Scaffold:** `php` and `node` handlers — the frontmatter accepts them
+>   and the registry validates them, but no handler implementation exists
+>   yet.
 
-Skills can optionally define execution metadata:
+Skills opt into runtime by declaring execution metadata:
 
 ```yaml
 execution:
   type: manual | assisted | automated
-  handler: <runtime handler>
+  handler: shell | php | node | internal | none
+  command:                       # required for shell/php/node runtime paths
+    - python3
+    - scripts/skill_linter.py
+    - "--all"
+  timeout_seconds: 120
   allowed_tools: []
-  timeout: 30
-  safety_mode: strict
+  safety_mode: strict            # required for type=automated
 ```
 
-Planned scope: skill execution registry, dispatcher, execution handlers,
-safety controls.
+Invoke a runtime-capable skill end-to-end:
+
+```bash
+python3 scripts/runtime_dispatcher.py run --skill lint-skills
+```
+
+The dispatcher resolves the skill, enforces safety constraints, then hands
+off to the matching handler. Environment is scrubbed to an explicit
+allowlist; `subprocess.run` is invoked with `shell=False` (argv only).
+
+Planned scope (still to come): `php` / `node` handlers, tool-registry
+wiring for `allowed_tools`, streaming output.
 
 ### 3. Tool Integration — experimental
 
@@ -92,23 +110,15 @@ Controlled integration via adapters:
 - Tool registry with safety rules for execution
 - Structured responses with error classification
 
-### 4. Observability, feedback & lifecycle — experimental, opt-in
+### 4. Cost Control
 
-The system has three further layers for measuring agent behavior, capturing
-outcomes, and tracking skill lifecycle. All three are **off by default**
-(`cost_profile: minimal`), none inject data back into agent context
-automatically, and most consumers of this package never need to enable them.
+> **Key principle:** Opt-in by default.
 
-→ Details, data model, and current scaffold status:
-[`docs/observability.md`](observability.md).
-
-### 5. Cost Control
-
-> **Key principle:** Data collection ≠ automatic usage.
-
-Metrics, reports, and feedback are collected and persisted but **NOT automatically injected
-into agent context**. All features are gated by settings with `cost_profile` support
-(`minimal`, `balanced`, `full`, `custom`).
+The dispatcher and tool adapters activate only under the `balanced` or
+`full` profile. The default `minimal` profile ships rules, skills, and
+commands and nothing else. All settings and their profile defaults are
+documented in
+[`.agent-src.uncompressed/templates/agent-settings.md`](../.agent-src.uncompressed/templates/agent-settings.md).
 
 ---
 

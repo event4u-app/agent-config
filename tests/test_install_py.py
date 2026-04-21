@@ -311,56 +311,6 @@ class TestBridges(SilentTest):
         self.assertEqual(data["marketplace"]["name"], "custom")
 
 
-# --- Profile auto-detection ---
-
-class TestSuggestProfileUpgrade(SilentTest):
-    def setUp(self) -> None:
-        super().setUp()
-        self.tmpdir = Path(tempfile.mkdtemp())
-        self.project = self.tmpdir / "proj"
-        self.project.mkdir()
-
-    def tearDown(self) -> None:
-        super().tearDown()
-        shutil.rmtree(self.tmpdir)
-
-    def test_no_runtime_package_returns_false(self) -> None:
-        self.assertFalse(install.detect_runtime_package(self.project))
-
-    def test_composer_runtime_package_detected(self) -> None:
-        (self.project / "vendor" / "event4u" / "agent-config-runtime").mkdir(parents=True)
-        self.assertTrue(install.detect_runtime_package(self.project))
-
-    def test_npm_runtime_package_detected(self) -> None:
-        (self.project / "node_modules" / "@event4u" / "agent-config-runtime").mkdir(parents=True)
-        self.assertTrue(install.detect_runtime_package(self.project))
-
-    def test_suggest_silent_when_profile_not_minimal(self) -> None:
-        (self.project / "vendor" / "event4u" / "agent-config-runtime").mkdir(parents=True)
-        install.QUIET = False
-        buf = io.StringIO()
-        with redirect_stdout(buf):
-            install.suggest_profile_upgrade(self.project, "balanced")
-        self.assertEqual(buf.getvalue(), "")
-
-    def test_suggest_silent_without_runtime(self) -> None:
-        install.QUIET = False
-        buf = io.StringIO()
-        with redirect_stdout(buf):
-            install.suggest_profile_upgrade(self.project, "minimal")
-        self.assertEqual(buf.getvalue(), "")
-
-    def test_suggest_prints_hint_when_minimal_and_runtime_present(self) -> None:
-        (self.project / "vendor" / "event4u" / "agent-config-runtime").mkdir(parents=True)
-        install.QUIET = False
-        buf = io.StringIO()
-        with redirect_stdout(buf):
-            install.suggest_profile_upgrade(self.project, "minimal")
-        output = buf.getvalue()
-        self.assertIn("Runtime package detected", output)
-        self.assertIn("balanced", output)
-
-
 # --- main() integration ---
 
 class TestMainIntegration(unittest.TestCase):

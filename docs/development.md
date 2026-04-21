@@ -56,7 +56,7 @@ task test-linter               # Skill linter unit tests
 task test-readme-linter        # README linter unit tests
 task test-runtime              # Runtime registry + dispatcher tests
 task test-tools                # Tool registry + adapter tests
-task test-runtime-all          # All runtime, tools, observability, feedback, lifecycle tests
+task test-runtime-all          # All runtime and tools tests
 ```
 
 #### CI test matrix
@@ -69,9 +69,10 @@ GitHub Actions runs the suite on every push and PR across:
 | `macos-latest` | 3.12 |
 
 The matrix enforces the "Python 3.10+, stdlib only" guarantee from
-`CONTRIBUTING.md`. `install.sh` integration tests run on both Linux and
-macOS. Windows is not part of the matrix — consumers on Windows use WSL2
-(see [installation guide](installation.md#windows)).
+`CONTRIBUTING.md`. Installer integration tests (`test_install.sh`,
+`test_install_orchestrator.sh`) run on both Linux and macOS. Windows
+is not part of the matrix — consumers on Windows use WSL2 (see
+[installation guide](installation.md#windows)).
 
 ### Linting
 
@@ -99,18 +100,15 @@ task quality-report            # Per-artifact-type quality scores
 ```bash
 task runtime-list              # List all runtime-capable skills
 task runtime-validate          # Validate runtime registry consistency
-task runtime-execute -- <skill> # Run a skill through the full pipeline
+task runtime-e2e               # Dispatch each pilot skill (CI gate)
 task tool-list                 # List all registered tools
 task tool-validate             # Validate tool declarations
-task lifecycle-report          # Skill lifecycle report
-task lifecycle-health          # Skill health scores
-task report-stdout             # Print health dashboard to stdout
 ```
 
 ### Installation
 
 ```bash
-task install -- --target <dir> # Run install.sh for a target project
+task install -- --target <dir> # Run the installer orchestrator on a target
 task install-hooks             # Install git hooks (pre-push sync check)
 ```
 
@@ -124,7 +122,10 @@ task install-hooks             # Install git hooks (pre-push sync check)
 .github/plugin/                ← Plugin manifest (Copilot CLI)
 
 scripts/
-├── install.sh                 ← Installer (hybrid sync to target project)
+├── install                    ← Primary installer (orchestrator)
+├── install.sh                 ← Payload sync stage (hybrid copy + symlink)
+├── install.py                 ← Bridge files stage (.agent-settings, JSONs)
+├── postinstall.sh             ← npm postinstall hook → scripts/install
 ├── setup.sh                   ← One-time Composer hook setup
 ├── compress.py                ← Compression hash management
 ├── check_compression.py       ← Compression quality checker
@@ -132,25 +133,17 @@ scripts/
 ├── lint_regression.py         ← Branch regression detection
 ├── generate_tools.sh          ← Generate tool-specific directories
 ├── check_references.py        ← Cross-reference validator
-├── runtime_pipeline.py        ← E2E execution pipeline
-├── runtime_session.py         ← Session + metrics tracking
-├── event_schema.py            ← Structured event definitions
-├── persistence.py             ← JSON persistence layer
-├── report_generator.py        ← CLI health/metrics reports
-├── ci_summary.py              ← GitHub Actions job summary
-├── feedback_governance.py     ← Feedback → governance proposals
+├── ci_summary.py              ← GitHub Actions job summary (dispatcher runs)
 └── tools/
     ├── base_adapter.py        ← Tool adapter contract
     ├── github_adapter.py      ← GitHub API adapter
     └── jira_adapter.py        ← Jira API adapter
 
 tests/
-├── test_install.sh            ← Install script integration tests
+├── test_install.sh            ← install.sh payload-sync integration tests
+├── test_install_orchestrator.sh ← scripts/install end-to-end tests
 ├── test_skill_linter.py       ← Linter unit tests
-├── test_runtime_pipeline.py   ← Pipeline integration tests
-├── test_persistence.py        ← Persistence layer tests
-├── test_report_generator.py   ← Report generation tests
-└── test_ci_and_governance.py  ← CI summary + governance tests
+└── test_ci_summary.py         ← CI summary tests
 
 .github/workflows/
 ├── skill-lint.yml             ← Lint + PR comment workflow

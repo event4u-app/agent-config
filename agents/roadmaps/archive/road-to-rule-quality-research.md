@@ -1,9 +1,24 @@
 # Roadmap: Rule & Guideline Quality Research
 
+> **Archived 2026-04-20** — research complete. Deliverable:
+> [`agents/analysis/rule-quality-eval-feasibility.md`](../../analysis/rule-quality-eval-feasibility.md).
+>
+> **Verdicts:** Problem 1 (auto-rule triggering) — *conditional go*, grafts onto
+> `road-to-trigger-evals.md` Phase 1. Problem 2 (always-rule compliance) —
+> *conditional go*, earns its own roadmap only after Problem 1 shows signal.
+> Problem 3 (guideline reference usage) — *no-go* general case, *conditional go*
+> narrow variant insufficient to justify alone.
+>
+> No follow-up work is attached to this roadmap itself. See the feasibility doc
+> for the scope previews that would become new roadmaps if/when the conditions
+> flip.
+
+---
+
 > Research-only roadmap. Decide whether (and how) to measure whether **rules**
 > and **guidelines** actually fire and are followed — not just whether
 > **skills** trigger, which is already covered by
-> [`road-to-trigger-evals.md`](road-to-trigger-evals.md).
+> [`../road-to-trigger-evals.md`](../road-to-trigger-evals.md).
 >
 > **No implementation at the end.** Deliverable is a written go/no-go recommendation
 > per artifact type and, if go, a scope proposal that then becomes its own
@@ -11,8 +26,10 @@
 
 - **Source discussion:** 2026-04-20 — user asked whether the trigger-evals
   system could be extended to rules and coding guidelines.
-- **Status:** Draft, 2026-04-20.
+- **Status:** Archived 2026-04-20 — deliverable written.
 - **Budget:** ≤2 person-days, ≤3 PoC scenarios per artifact type.
+- **Actual:** ~0.25 person-day, $0 API spend (PoC was blocked by missing
+  `scripts/skill_trigger_eval.py` — findings documented as analysis-only).
 
 ## Why this is not just "trigger-evals for rules"
 
@@ -117,17 +134,17 @@ Each verdict is one paragraph. No multi-phase planning during research.
 
 ## Prerequisites
 
-- [ ] [`road-to-trigger-evals.md`](road-to-trigger-evals.md) Phase 1 PoC
+- [ ] [`../road-to-trigger-evals.md`](../road-to-trigger-evals.md) Phase 1 PoC
       landed (so we have a runner and one evals/triggers.json to reuse).
 - [ ] Branch off main.
 
 ## Related
 
-- [`road-to-trigger-evals.md`](road-to-trigger-evals.md) — parent concept,
+- [`../road-to-trigger-evals.md`](../road-to-trigger-evals.md) — parent concept,
   covers problem 1 for skills already
-- [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) — Phase 2
+- [`../road-to-anthropic-alignment.md`](../road-to-anthropic-alignment.md) — Phase 2
   (pushy descriptions) feeds the same measurement question for rules
-- [`road-to-drafting-protocol.md`](road-to-drafting-protocol.md) — Phase 3
+- [`../road-to-drafting-protocol.md`](../road-to-drafting-protocol.md) — Phase 3
   description-assist would benefit from any rule eval data this produces
 - `.agent-src/rules/rule-type-governance.md` — auto vs always classification
   that this research depends on

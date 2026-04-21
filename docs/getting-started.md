@@ -85,9 +85,9 @@ The system supports four configuration profiles:
 
 | Profile | What's active | Token overhead | Best for |
 |---|---|---|---|
-| `minimal` | Rules + Skills only | Zero | New users, solo devs |
-| `balanced` | + Runtime, limited observability | Low | Most teams |
-| `full` | + Tool audit, lifecycle reports | Moderate | Platform teams |
+| `minimal` | Rules + Skills + Commands | Zero | New users, solo devs |
+| `balanced` | + Runtime dispatcher (shell handler) | Low | Most teams |
+| `full` | + Tool adapters (GitHub / Jira, read-only) | Moderate | Platform teams |
 
 Set your profile in `.agent-settings`:
 
@@ -118,7 +118,7 @@ Your agent now understands slash commands:
 
 1. **Stay on `minimal`** — use it for a few days, see if the difference is noticeable
 2. **Try commands** — `/commit`, `/create-pr`, `/fix-ci` are great starting points
-3. **Upgrade when ready** — switch to `balanced` for runtime and observability
+3. **Upgrade when ready** — switch to `balanced` to let the runtime dispatcher execute skills that declare a shell command
 4. **Customize** — add [project overrides](customization.md) for your team's specific patterns
 
 → [Full documentation](../README.md#documentation)

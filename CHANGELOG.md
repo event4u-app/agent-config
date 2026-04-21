@@ -9,7 +9,62 @@ versioning policy is documented in [CONTRIBUTING.md](CONTRIBUTING.md#versioning-
 
 ## [Unreleased]
 
-_No unreleased changes yet._
+### Added
+- `scripts/install` — a bash orchestrator that is now the **primary
+  installer entry point**. It chains the two real stages in order:
+  `scripts/install.sh` (payload sync) and `scripts/install.py` (bridge
+  files). The orchestrator exposes `--profile`, `--force`, `--dry-run`,
+  `--verbose`, `--quiet`, `--skip-sync`, and `--skip-bridges` and forwards
+  them correctly to each stage. Bridges are skipped gracefully when
+  Python 3 is unavailable; the payload sync still runs.
+- `tests/test_install_orchestrator.sh` — integration tests for the new
+  orchestrator, the Composer wrapper, and the npm postinstall hook.
+  Wired into `task test`, `task test-install`, and GitHub Actions.
+
+### Changed
+- `scripts/install.sh` no longer invokes the Python bridge installer
+  internally. It now handles payload sync exclusively. Direct callers
+  that relied on the side effect must run `scripts/install` or invoke
+  `scripts/install.py` themselves.
+- `scripts/postinstall.sh` (npm hook) routes through `scripts/install`
+  instead of `scripts/install.sh`. Exit-0-with-loud-error contract is
+  preserved.
+- `docs/installation.md` and `README.md` document the two-stage
+  pipeline and use `scripts/install` as the canonical invocation.
+
+### Fixed
+- `bin/install.php` now delegates to `scripts/install`. Previous
+  versions shelled into `scripts/install.py` only, which meant Composer
+  users never got the payload sync — no `.augment/` tree, no tool
+  directories, no `.windsurfrules`. This latent bug is fixed with the
+  new routing.
+
+### Removed
+- **Observability, feedback, and lifecycle scaffolding.** Road-to-9
+  Phase 4 resolved the "fake depth" layers. Every module that had no
+  production consumer was removed; the dispatcher + shell handler
+  (Phase 1) stays as the only real runtime path. Deleted scripts:
+  `runtime_pipeline`, `runtime_session`, `runtime_execute`,
+  `runtime_errors`, `runtime_metrics`, `runtime_events`,
+  `runtime_logger`, `runtime_hooks`, `feedback_collector`,
+  `feedback_governance`, `skill_lifecycle`, `report_generator`,
+  `persistence`, `event_schema` (≈ 2 000 LoC) plus their tests and
+  Taskfile targets (`runtime-execute`, `lifecycle-report`,
+  `lifecycle-health`, `report`, `report-stdout`). The `lifecycle`
+  frontmatter field on individual skills is kept — it is still a lint
+  signal.
+- Stale design docs describing the removed layers:
+  `docs/observability.md`, `agents/docs/observability-scoping.md`,
+  `agents/docs/feedback-consumption.md`,
+  `agents/docs/runtime-visibility.md`.
+
+### Added (CI)
+- `scripts/runtime_dispatcher.py run` learned `--output FILE`,
+  persisting the `ExecutionResult` as JSON. `scripts/ci_summary.py` was
+  rewritten to consume those files and render a GitHub Step Summary
+  (Markdown table + failure details with stderr tail). `tests.yml`
+  wires the two together, so failing pilot skills now show up in the
+  PR UI even when the job itself fails.
 
 ## [1.4.0] — 2026-04-18
 

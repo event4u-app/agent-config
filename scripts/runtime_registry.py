@@ -18,7 +18,7 @@ import argparse
 import json
 import re
 import sys
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from pathlib import Path
 from typing import List, Optional
 
@@ -46,6 +46,7 @@ class SkillRuntime:
     timeout_seconds: int
     safety_mode: Optional[str]
     allowed_tools: List[str]
+    command: List[str] = field(default_factory=list)
 
     @property
     def is_executable(self) -> bool:
@@ -54,6 +55,11 @@ class SkillRuntime:
     @property
     def is_automated(self) -> bool:
         return self.execution_type == "automated"
+
+    @property
+    def is_runnable(self) -> bool:
+        """True when the skill declares an executable command for a real handler."""
+        return bool(self.command) and self.handler in {"shell", "php", "node"}
 
 
 def discover_skills(root: Path) -> List[Path]:
@@ -92,6 +98,7 @@ def parse_skill_runtime(path: Path) -> Optional[SkillRuntime]:
         timeout_seconds=execution.get("timeout_seconds", 30),
         safety_mode=execution.get("safety_mode"),
         allowed_tools=execution.get("allowed_tools", []),
+        command=execution.get("command", []),
     )
 
 

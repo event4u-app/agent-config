@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
-# install.sh — Portable agent-config installer
+# install.sh — Agent-config payload sync (one of two installer stages).
+#
 # Reads from vendor's .agent-src/ (fallback: .augment/ for pre-2.0 packages) and
 # writes the target project's .augment/ tree: copies rules, symlinks everything else.
 # Creates tool-specific directories for Claude Code, Cursor, Cline, Windsurf, Gemini.
+#
+# Does NOT render .agent-settings or bridge JSONs — that is the job of
+# scripts/install.py. The primary entry point scripts/install orchestrates both.
+# Running this script on its own installs the payload only.
 #
 # Usage:
 #   bash scripts/install.sh [--source <dir>] [--target <dir>] [--dry-run] [--verbose] [--quiet]
@@ -591,58 +596,11 @@ ensure_gitignore() {
 BLOCK
 }
 
-# Detect python3 (or python, if it is Python 3) — returns the binary path or empty
-find_python() {
-    local candidate
-    for candidate in python3 python; do
-        local path
-        path="$(command -v "$candidate" 2>/dev/null || true)"
-        [[ -z "$path" ]] && continue
-        if "$path" -c 'import sys; exit(0 if sys.version_info[0] >= 3 else 1)' 2>/dev/null; then
-            echo "$path"
-            return 0
-        fi
-    done
-    return 1
-}
-
-# Render .agent-settings + JSON bridges using the Python installer
-run_bridge_installer() {
-    local source_dir="$1"
-    local target_dir="$2"
-    local installer="$source_dir/scripts/install.py"
-
-    if [[ ! -f "$installer" ]]; then
-        log_verbose "Skipping bridge installer (not found): $installer"
-        return
-    fi
-
-    local python_bin
-    if ! python_bin="$(find_python)"; then
-        log_warn "Python 3 not found — skipping .agent-settings and bridge files."
-        log_warn "Install python3 and re-run, or: python3 $installer"
-        return
-    fi
-
-    if $DRY_RUN; then
-        log_verbose "would run: $python_bin $installer --project $target_dir"
-        return
-    fi
-
-    if $QUIET; then
-        "$python_bin" "$installer" --project "$target_dir" --package "$source_dir" --quiet || \
-            log_warn "Bridge installer exited with errors (continuing)."
-    else
-        "$python_bin" "$installer" --project "$target_dir" --package "$source_dir" || \
-            log_warn "Bridge installer exited with errors (continuing)."
-    fi
-}
-
 # --- Main ---
 main() {
     parse_args "$@"
 
-    $QUIET || echo "🔧  Installing agent-config..."
+    $QUIET || echo "🔧  Syncing agent-config payload..."
     $QUIET || echo "    Source: $SOURCE_DIR"
     $QUIET || echo "    Target: $TARGET_DIR"
     $DRY_RUN && ! $QUIET && echo "    Mode: DRY RUN"
@@ -671,11 +629,9 @@ main() {
     # 5. Manage .gitignore
     ensure_gitignore "$TARGET_DIR"
 
-    # 6. Render .agent-settings + JSON bridges via Python installer
-    run_bridge_installer "$SOURCE_DIR" "$TARGET_DIR"
-
     echo ""
-    $QUIET || echo "✅  agent-config installed successfully."
+    $QUIET || echo "✅  agent-config payload synced."
+    $QUIET || echo "    Run scripts/install (or python3 scripts/install.py) to render .agent-settings and bridges."
 }
 
 main "$@"

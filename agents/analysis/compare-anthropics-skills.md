@@ -249,9 +249,9 @@ No clone, no execute, no credentials used.
 
 - Command that produced this document:
   [`.agent-src.uncompressed/commands/analyze-reference-repo.md`](../../.agent-src.uncompressed/commands/analyze-reference-repo.md)
-- Active roadmaps: [`road-to-9.md`](../roadmaps/road-to-9.md),
-  [`road-to-mcp.md`](../roadmaps/road-to-mcp.md),
+- Active roadmaps: [`road-to-mcp.md`](../roadmaps/road-to-mcp.md),
   [`road-to-anthropic-alignment.md`](../roadmaps/road-to-anthropic-alignment.md),
   [`road-to-trigger-evals.md`](../roadmaps/road-to-trigger-evals.md),
   [`road-to-drafting-protocol.md`](../roadmaps/road-to-drafting-protocol.md).
+- Archived roadmaps: [`archive/road-to-9.md`](../roadmaps/archive/road-to-9.md).
 - Previous analyses: [`compare-kdcllc-agents-config.md`](compare-kdcllc-agents-config.md).

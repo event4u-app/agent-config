@@ -17,6 +17,7 @@ artisan-commands: Use when creating or modifying Artisan commands. Covers clear 
 aws-infrastructure: Use when working with AWS resources — ECS Fargate, ECR, EFS, Secrets Manager, gomplate templates, or multi-environment deployment setup.
 blade-ui: Use when creating or editing Blade views, components, partials, or view logic. Covers clean separation of concerns and reusable UI structure.
 bug-analyzer: Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs.
+check-refs: Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions.
 code-refactoring: Use when the user says "refactor this", "rename class", or "move method". Safely refactors PHP code — finds all callers, updates downstream dependencies, and verifies with quality tools.
 code-review: Use when the user says "review this", "check my code", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards.
 command-routing: Use when the user types a slash command like '/create-pr' or '/commit'. Extends the commands rule with context inference and GitHub API patterns.
@@ -54,6 +55,7 @@ laravel-reverb: Use when configuring Laravel Reverb — the first-party WebSocke
 laravel-scheduling: Use when configuring Laravel task scheduling — cron expressions, frequency helpers, overlap prevention, maintenance mode, or output handling.
 laravel-validation: Use when writing validation logic — Form Requests, rules, custom rule objects, and request-boundary design with strong correctness.
 learning-to-rule-or-skill: Use when a repeated learning, mistake, or successful pattern should be turned into a new rule or skill. Also use after completing a task to capture learnings from the work.
+lint-skills: Use when running the package's skill linter against all skills and rules to validate frontmatter, required sections, and execution metadata.
 livewire: Use when writing Livewire components — reactive state, events, lifecycle hooks, and clean separation between component logic and Blade templates.
 logging-monitoring: Use when working with logging or monitoring — Sentry error tracking, Grafana/Loki log aggregation, structured logging channels, or monitoring helpers.
 mcp: Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows.

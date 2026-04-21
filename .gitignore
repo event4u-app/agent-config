@@ -29,3 +29,6 @@ __pycache__/
 
 # Generated Augment Code projection of .agent-src/ (rebuilt by `task sync`)
 /.augment/
+
+# Dispatcher run results (produced by `dispatcher run --output …`, consumed by ci_summary)
+/agents/reports/runs/

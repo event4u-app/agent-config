@@ -15,7 +15,7 @@ makes our existing 95+ skills measurably better. No speculative scaffolding.
 
 ## Prerequisites
 
-- [ ] [`road-to-9.md`](road-to-9.md) Phase 1 landed — real minimal runtime.
+- [x] [`archive/road-to-9.md`](archive/road-to-9.md) Phase 1 landed — real minimal runtime (shipped in PR #11, 1.5.0).
 - [ ] Read [`skills/skill-creator/SKILL.md`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md)
       once more for Phase 2 reference.
 - [ ] Branch off `main` after current MCP work merges.
@@ -160,6 +160,6 @@ pattern before we measure trigger rates.
 
 - [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) — findings
 - [`road-to-trigger-evals.md`](road-to-trigger-evals.md) — split-out child roadmap (trigger evaluation)
-- [`road-to-9.md`](road-to-9.md) — orthogonal (runtime depth)
+- [`archive/road-to-9.md`](archive/road-to-9.md) — archived sibling (runtime depth, closed 2026-04-21)
 - [`road-to-mcp.md`](road-to-mcp.md) — orthogonal (MCP config generation)
 - [`archive/road-to-ultimate.md`](archive/road-to-ultimate.md) — rejected predecessor

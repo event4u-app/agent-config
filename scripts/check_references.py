@@ -147,6 +147,17 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
                     if (prefix / ref).exists():
                         resolved = True
                         break
+                # `.augment/` is a local projection of `.agent-src/` (gitignored).
+                # In CI the projection doesn't exist, so resolve `.augment/X`
+                # against the canonical source at `.agent-src/X` (and the
+                # uncompressed authoring tree as a fallback). Note: `raw_ref`
+                # keeps the leading dot; `ref` above was stripped via lstrip.
+                if not resolved and raw_ref.startswith(".augment/"):
+                    rel = raw_ref[len(".augment/") :]
+                    for prefix in [root / ".agent-src", root / ".agent-src.uncompressed"]:
+                        if (prefix / rel).exists():
+                            resolved = True
+                            break
             if not resolved:
                 broken.append(BrokenRef(
                     file=str(filepath), line=i, ref=m.group(1),

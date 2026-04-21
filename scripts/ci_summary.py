@@ -1,98 +1,129 @@
 #!/usr/bin/env python3
 """
-CI Summary — generate GitHub Actions job summary from pipeline data.
+CI Summary — render a GitHub Step Summary from dispatcher run results.
 
-Reads observability data and produces a concise markdown summary
-for GitHub Actions GITHUB_STEP_SUMMARY.
+Consumes JSON files produced by `scripts/runtime_dispatcher.py run
+--output FILE`. Each file is an ExecutionResult dump (see runtime_handler).
 
-Gated by ci_summary_enabled in .agent-settings.
+Usage:
+    python3 scripts/ci_summary.py --runs agents/reports/runs [--title TITLE]
+
+Writes to $GITHUB_STEP_SUMMARY if the environment variable is set,
+otherwise prints the markdown to stdout. Missing or empty run
+directories render a short "no runs" note and exit 0.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import os
-import sys
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from persistence import load_metrics, load_feedback, load_tool_audit
-from report_generator import generate_health_dashboard
+from typing import List, Dict
 
 
-def generate_ci_summary(root: Path, max_lines: int = 30) -> str:
-    """Generate a concise CI summary."""
-    metrics = load_metrics(root)
-    feedback = load_feedback(root)
-    tool_audit = load_tool_audit(root)
+def load_runs(runs_dir: Path) -> List[Dict]:
+    """Load every *.json in runs_dir as an ExecutionResult dict. Sorted by filename."""
+    if not runs_dir.is_dir():
+        return []
+    runs: List[Dict] = []
+    for path in sorted(runs_dir.glob("*.json")):
+        try:
+            runs.append(json.loads(path.read_text(encoding="utf-8")))
+        except (OSError, json.JSONDecodeError):
+            # Skip unreadable/malformed files — CI still reports the rest.
+            continue
+    return runs
 
-    lines = ["## 🤖 Agent Infrastructure Summary", ""]
 
-    # Quick stats
-    total_skills = len(set(m.get("skill_name") for m in metrics))
-    total_events = len(metrics)
-    failures = sum(1 for f in feedback if f.get("outcome") in ("failure", "FAILURE"))
-    successes = sum(1 for f in feedback if f.get("outcome") in ("success", "SUCCESS"))
+_STATUS_ICON = {
+    "success": "✅",
+    "failure": "❌",
+    "timeout": "⏱️",
+    "error": "⚠️",
+}
 
-    lines.append(f"- Skills executed: **{total_skills}**")
-    lines.append(f"- Pipeline events: **{total_events}**")
-    if successes + failures > 0:
-        rate = successes / (successes + failures) * 100
-        lines.append(f"- Success rate: **{rate:.0f}%** ({successes}/{successes + failures})")
+
+def render_summary(runs: List[Dict], title: str) -> str:
+    """Render a markdown summary for the given runs."""
+    lines: List[str] = [f"## {title}", ""]
+
+    if not runs:
+        lines.append("*No dispatcher runs recorded in this job.*")
+        lines.append("")
+        return "\n".join(lines)
+
+    total = len(runs)
+    passed = sum(1 for r in runs if r.get("status") == "success")
+    failed = total - passed
+
+    lines.append(f"- Runs: **{total}**  ·  Passed: **{passed}**  ·  Failed: **{failed}**")
     lines.append("")
-
-    # Failures (if any)
-    if failures > 0:
-        lines.append("### ❌ Failures")
-        from collections import Counter
-        fail_skills = Counter(
-            f.get("skill_name", "unknown")
-            for f in feedback
-            if f.get("outcome") in ("failure", "FAILURE")
+    lines.append("| Skill | Status | Exit | Duration |")
+    lines.append("|---|---|---:|---:|")
+    for r in runs:
+        status = str(r.get("status", "?"))
+        icon = _STATUS_ICON.get(status, "•")
+        duration_ms = r.get("duration_ms", 0) or 0
+        lines.append(
+            f"| `{r.get('skill_name', '?')}` "
+            f"| {icon} {status} "
+            f"| {r.get('exit_code', '?')} "
+            f"| {duration_ms} ms |"
         )
-        for skill, count in fail_skills.most_common(5):
-            lines.append(f"- `{skill}`: {count} failures")
+
+    failures = [r for r in runs if r.get("status") != "success"]
+    if failures:
         lines.append("")
+        lines.append("### Failure details")
+        for r in failures:
+            name = r.get("skill_name", "?")
+            lines.append(f"<details><summary><code>{name}</code></summary>")
+            err = r.get("error")
+            if err:
+                lines.append("")
+                lines.append(f"**Error:** {err}")
+            stderr = (r.get("stderr") or "").rstrip()
+            if stderr:
+                lines.append("")
+                lines.append("```")
+                lines.append(stderr[-1500:])
+                lines.append("```")
+            lines.append("</details>")
 
-    # Tool errors
-    tool_errors = [e for e in tool_audit if e.get("status") in ("error", "failure", "timeout")]
-    if tool_errors:
-        lines.append("### ⚠️ Tool Adapter Errors")
-        for entry in tool_errors[:5]:
-            lines.append(f"- `{entry.get('tool', '?')}` → {entry.get('status', '?')}")
-        lines.append("")
-
-    if not metrics and not feedback:
-        lines.append("*No pipeline data collected in this run.*")
-
-    return "\n".join(lines) + "\n"
+    lines.append("")
+    return "\n".join(lines)
 
 
-def write_github_summary(summary: str) -> bool:
-    """Write summary to GITHUB_STEP_SUMMARY if available."""
-    summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
-    if summary_path:
-        with open(summary_path, "a") as f:
-            f.write(summary)
-        return True
-    return False
+def write_output(summary: str) -> bool:
+    """Append to $GITHUB_STEP_SUMMARY if set; return True when the env path was used."""
+    path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not path:
+        return False
+    with open(path, "a", encoding="utf-8") as fh:
+        fh.write(summary)
+        if not summary.endswith("\n"):
+            fh.write("\n")
+    return True
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Generate CI summary")
-    parser.add_argument("--root", default=".", help="Project root")
-    parser.add_argument("--max-lines", type=int, default=30)
+    parser = argparse.ArgumentParser(description="Render CI summary from dispatcher runs")
+    parser.add_argument(
+        "--runs", type=Path, default=Path("agents/reports/runs"),
+        help="Directory containing ExecutionResult JSON files",
+    )
+    parser.add_argument(
+        "--title", default="🤖 Dispatcher runs",
+        help="Section title for the summary",
+    )
     args = parser.parse_args()
 
-    root = Path(args.root)
-    summary = generate_ci_summary(root, args.max_lines)
+    runs = load_runs(args.runs)
+    summary = render_summary(runs, args.title)
 
-    if write_github_summary(summary):
-        print("Summary written to GITHUB_STEP_SUMMARY")
-    else:
+    if not write_output(summary):
         print(summary)
-
     return 0
 
 
