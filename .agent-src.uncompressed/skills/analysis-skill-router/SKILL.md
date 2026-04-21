@@ -1,6 +1,6 @@
 ---
 name: analysis-skill-router
-description: "Use when deciding which analysis skill should handle a request. Routes by scope, framework, and problem shape."
+description: "Use when picking which analysis or project-analysis-* skill fits a request — routes by scope, framework, and symptom — even if the user just says 'analyze this' or 'dig into the codebase'."
 source: package
 ---
 

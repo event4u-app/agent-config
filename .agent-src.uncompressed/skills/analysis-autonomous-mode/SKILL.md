@@ -1,6 +1,6 @@
 ---
 name: analysis-autonomous-mode
-description: "ONLY when user explicitly requests: autonomous analysis, deep investigation, or multi-step research workflow. NOT for regular tasks."
+description: "ONLY when user explicitly requests autonomous analysis, deep investigation, multi-step research, or 'dig into this end-to-end without asking me each step' — NOT for normal feature work."
 source: package
 ---
 
