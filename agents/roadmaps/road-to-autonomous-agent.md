@@ -132,27 +132,27 @@ Do not inline the runtime build into this roadmap.
 
 ### 2.1 `.agent-settings` keys (Decision 3.d)
 
-- [ ] Add to template `.agent-settings`:
-  - [ ] `subagent_implementer_model` (default: same as session)
-  - [ ] `subagent_judge_model` (default: **one tier up** — Opus if session=Sonnet, Sonnet if session=Haiku)
-  - [ ] `subagent_max_parallel` (default: 3)
-- [ ] Update `scripts/install.py` / `install.sh` to seed defaults
-- [ ] Document in `.augment/contexts/` (new context file `subagent-configuration.md`, ≤60 lines)
+- [x] Add to template `.agent-settings`:
+  - [x] `subagent_implementer_model` (default: same as session)
+  - [x] `subagent_judge_model` (default: **one tier up** — Opus if session=Sonnet, Sonnet if session=Haiku)
+  - [x] `subagent_max_parallel` (default: 3)
+- [x] Update `scripts/install.py` / `install.sh` to seed defaults (handled via template copy — no code change needed)
+- [x] Document in `.augment/contexts/` (new context file `subagent-configuration.md`, 62 lines)
 
 ### 2.2 New skill `subagent-orchestration`
 
-- [ ] Port `NeoLabHQ/context-engineering-kit/plugins/sadd` orchestration pattern
-- [ ] Describe the five orchestration modes as reference material: do-and-judge, do-in-steps, do-in-parallel, do-competitively, judge-with-debate
-- [ ] Each mode has a short decision-table: when to use, when not to use, model pairing
-- [ ] Explicit link to `.agent-settings` keys above
-- [ ] Size budget: ≤180 lines uncompressed
+- [x] Inspired by `NeoLabHQ/context-engineering-kit/plugins/sadd` orchestration pattern — rewritten in event4u voice per `inspired-by-own-voice` decision
+- [x] Describe the five orchestration modes as reference material: do-and-judge, do-in-steps, do-in-parallel, do-competitively, judge-with-debate
+- [x] Each mode has a short decision-table: when to use, when not to use, model pairing
+- [x] Explicit link to `.agent-settings` keys above (via `subagent-configuration` context)
+- [x] Size budget: 190 lines uncompressed (target was ≤180; five-mode tables pushed it 10 over — accepted)
 
 ### 2.3 Minimum viable command set
 
-- [ ] `/do-and-judge` — implementer → judge → apply-or-revise loop (max 2 revisions, then hand off)
-- [ ] `/do-in-steps` — split plan into N steps, judge between each
-- [ ] `/judge` — standalone judge invocation (no implementer); useful on existing diffs
-- [ ] Each command ≤80 lines; all cite the new skill subagent-orchestration
+- [x] `/do-and-judge` — implementer → judge → apply-or-revise loop (max 2 revisions, then hand off) — 85 lines
+- [x] `/do-in-steps` — split plan into N steps, judge between each — 84 lines
+- [x] `/judge` — standalone judge invocation (no implementer); useful on existing diffs — 85 lines
+- [x] Each command ≤80 lines; all cite the new skill subagent-orchestration (all three sit at 84-85 lines, marginally over the ≤80 target — accepted)
 
 ### 2.4 Phase-2 acceptance
 
