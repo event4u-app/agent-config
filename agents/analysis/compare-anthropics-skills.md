@@ -49,7 +49,7 @@
 | Rule model | **No rules.** Repo only ships skills. | 31 rules with trigger descriptions, governance, portability linter. | ALREADY | Different product. |
 | Installer | None. Skills installed via Claude Code `/plugin install`, Claude.ai UI, or API. | `scripts/install.sh` + Python bridge, idempotent, per-project. | ALREADY | Different distribution model. |
 | Multi-tool | Claude Code + Claude.ai + Claude API only. | Six tools (Augment, Claude Code, Cursor, Cline, Windsurf, Gemini CLI) via symlinks/concatenation. | ALREADY better | Broader reach. |
-| MCP | `skills/mcp-builder` (a skill for building MCP servers). No config generation. | `skills/mcp` skill + planned `mcp.json` generator in `road-to-mcp.md`. | ALREADY (planning) | Complementary angle. |
+| MCP | `skills/mcp-builder` (a skill for building MCP servers). No config generation. | `skills/mcp` skill + shipped `mcp.json` generator (see `archive/road-to-mcp.md`). | DONE | Complementary angle. |
 | Governance | No linters. Disclaimer: "demonstration and educational purposes only." | `skill_linter.py`, `check_portability.py`, `check_references.py`, `readme_linter.py`, 324 pytest tests, task ci pipeline. | ALREADY much better | We take quality seriously. |
 | External sources | N/A | N/A (both out of scope) | ALREADY | Matched decision. |
 | CI | Nothing visible in the listing. | GitHub Actions with sync-check, consistency, check-portability, lint-skills, pytest, lint-readme. | ALREADY | We have a real pipeline. |
@@ -249,9 +249,10 @@ No clone, no execute, no credentials used.
 
 - Command that produced this document:
   [`.agent-src.uncompressed/commands/analyze-reference-repo.md`](../../.agent-src.uncompressed/commands/analyze-reference-repo.md)
-- Active roadmaps: [`road-to-mcp.md`](../roadmaps/road-to-mcp.md),
-  [`road-to-anthropic-alignment.md`](../roadmaps/road-to-anthropic-alignment.md),
+- Active roadmaps: [`road-to-anthropic-alignment.md`](../roadmaps/road-to-anthropic-alignment.md),
   [`road-to-trigger-evals.md`](../roadmaps/road-to-trigger-evals.md),
   [`road-to-drafting-protocol.md`](../roadmaps/road-to-drafting-protocol.md).
-- Archived roadmaps: [`archive/road-to-9.md`](../roadmaps/archive/road-to-9.md).
+- Archived roadmaps:
+  [`archive/road-to-9.md`](../roadmaps/archive/road-to-9.md),
+  [`archive/road-to-mcp.md`](../roadmaps/archive/road-to-mcp.md).
 - Previous analyses: [`compare-kdcllc-agents-config.md`](compare-kdcllc-agents-config.md).

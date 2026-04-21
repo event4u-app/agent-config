@@ -191,8 +191,8 @@ Fold into existing roadmaps — **no new roadmap needed**:
   https://github.com/kdcllc/agents_config/blob/master/PUBLISHING.md
 - Sibling roadmap (archived after scope review):
   [`agents/roadmaps/archive/road-to-ultimate.md`](../roadmaps/archive/road-to-ultimate.md)
-- Surviving roadmap:
-  [`agents/roadmaps/road-to-mcp.md`](../roadmaps/road-to-mcp.md)
+- Surviving roadmap (shipped, archived 2026-04-21):
+  [`agents/roadmaps/archive/road-to-mcp.md`](../roadmaps/archive/road-to-mcp.md)
 - Command that produced this document:
   [`.agent-src.uncompressed/commands/analyze-reference-repo.md`](../../.agent-src.uncompressed/commands/analyze-reference-repo.md)
 
@@ -203,7 +203,7 @@ After maintainer review of the three ADOPT findings above:
 | # | Finding | Original target | Status |
 |---|---|---|---|
 | 1 | PyPI Trusted Publishers (OIDC) | road-to-ultimate Phase 3.4 | **DROPPED** — Phase 3 (global PyPI CLI) rejected; no PyPI distribution means no OIDC needed. |
-| 2 | `${env:}` / `${ref:}` substitution | road-to-ultimate Phase 2.3 | **KEPT** — now tracked in [`road-to-mcp.md`](../roadmaps/road-to-mcp.md) step 1.2 as a small Python port of `kdcllc/agents_config/app/agents_config/base.py`. `${ref:}` deferred unless needed. |
+| 2 | `${env:}` / `${ref:}` substitution | road-to-ultimate Phase 2.3 | **SHIPPED** — tracked in [`archive/road-to-mcp.md`](../roadmaps/archive/road-to-mcp.md) step 1.2, delivered in `scripts/mcp_render.py` as a port of `kdcllc/agents_config/app/agents_config/base.py`. `${ref:}` deferred unless needed. |
 | 3 | Dedicated `PUBLISHING.md` | road-to-ultimate Phase 3.6 | **DROPPED** — depended on Phase 3. |
 
 The three ADAPT findings (Copilot chatmodes / instructions / prompts

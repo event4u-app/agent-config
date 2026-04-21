@@ -161,5 +161,5 @@ pattern before we measure trigger rates.
 - [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) — findings
 - [`road-to-trigger-evals.md`](road-to-trigger-evals.md) — split-out child roadmap (trigger evaluation)
 - [`archive/road-to-9.md`](archive/road-to-9.md) — archived sibling (runtime depth, closed 2026-04-21)
-- [`road-to-mcp.md`](road-to-mcp.md) — orthogonal (MCP config generation)
+- [`archive/road-to-mcp.md`](archive/road-to-mcp.md) — archived sibling (MCP config generation, closed 2026-04-21)
 - [`archive/road-to-ultimate.md`](archive/road-to-ultimate.md) — rejected predecessor
