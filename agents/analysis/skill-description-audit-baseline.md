@@ -92,15 +92,36 @@ python3 scripts/audit_skill_descriptions.py --json > /tmp/audit.json
 python3 scripts/audit_skill_descriptions.py --root .agent-src/skills
 ```
 
+## Progress log
+
+Rewrites land incrementally on feature branches. Audit re-runs capture the
+shift in the flagged count. History so far:
+
+| Date | Branch | Batches | Skills rewritten | Flagged before → after |
+|---|---|---|---|---|
+| 2026-04-21 | `feat/pushy-descriptions` | 2a / 2b / 2c | 9 | 60 → 47 |
+| 2026-04-21 | `feat/improve-agent-setup-8` | 3a–3e | 15 | 47 → 33 |
+
+**Deliberately skipped (not candidates for the pushy pattern):**
+
+- `performance-analysis`, `security-audit`, `adversarial-review`,
+  `analysis-autonomous-mode`, `sequential-thinking`, `universal-project-analysis`
+  — all use the intentional `"ONLY when user explicitly requests:"` prefix
+  and are opt-in by design. A pushy rewrite would cause over-triggering on
+  normal feature work.
+
 ## What's next
 
 - Phase 2.3 of the roadmap: the `skill-writing` skill now carries a canonical
   before/after example based on one of the rewrites.
-- Subsequent PRs: pick 3–5 rows from the top 15 above, rewrite their
+- Subsequent PRs: pick 3–5 rows from the remaining flagged list, rewrite their
   `SKILL.md` description, re-run the audit, verify the row drops off.
 - Do **not** rewrite to exactly 150 chars to "pass" the flag — the goal is
   two concrete triggers plus the "even if not explicitly asked" tail, not
   a character count.
+- Trigger-eval follow-up (see [`road-to-trigger-evals.md`](../roadmaps/road-to-trigger-evals.md))
+  will measure whether these rewrites actually change Claude's routing
+  behavior.
 
 ## Related
 
