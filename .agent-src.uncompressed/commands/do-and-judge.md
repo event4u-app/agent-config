@@ -18,10 +18,10 @@ target is clear.
 
 ### 2. Resolve model pairing
 
-Read `.agent-settings`:
+Read `.agent-settings.yml`:
 
-- `subagent_implementer_model` → empty = session model
-- `subagent_judge_model` → empty = one tier above implementer
+- `subagents.implementer_model` → empty = session model
+- `subagents.judge_model` → empty = one tier above implementer
 
 If the two resolve to the same model in the same context, **stop** and
 report per the `subagent-orchestration` Iron Law.

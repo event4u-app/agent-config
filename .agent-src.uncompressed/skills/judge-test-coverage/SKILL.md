@@ -82,7 +82,7 @@ Before finalizing your verdict, confirm:
 
 ```
 Judge:   judge-test-coverage
-Model:   <resolved from subagent_judge_model>
+Model:   <resolved from subagents.judge_model>
 Target:  <diff summary: N prod files, M test files>
 Verdict: apply | revise | reject
 
@@ -126,7 +126,7 @@ as a follow-up for the implementer — the judge does not execute tools.
   fail without the change
 * NEVER flag correctness, security, or style — out of scope
 * NEVER invent required tests for features the diff did not add
-* NEVER silently fall back to a different model than `subagent_judge_model`
+* NEVER silently fall back to a different model than `subagents.judge_model`
 * NEVER accept "tested manually" as a substitute for an automated assertion
 
 ## References
@@ -142,7 +142,7 @@ as a follow-up for the implementer — the judge does not execute tools.
   The properties (isolated, specific, fast, predictive) the judge asks
   of every new test — asserts on behavior, not coverage lines.
 - [`subagent-orchestration`](../subagent-orchestration/SKILL.md) —
-  model-pairing rules (`subagent_judge_model` one tier above implementer).
+  model-pairing rules (`subagents.judge_model` one tier above implementer).
 - [`test-driven-development`](../test-driven-development/SKILL.md) —
   the write-the-test-first workflow that prevents most findings this judge makes.
 - Sibling judges: [`judge-bug-hunter`](../judge-bug-hunter/SKILL.md),

@@ -87,7 +87,7 @@ Before finalizing your verdict, confirm:
 
 ```
 Judge:   judge-code-quality
-Model:   <resolved from subagent_judge_model>
+Model:   <resolved from subagents.judge_model>
 Target:  <diff summary>
 Verdict: apply | revise | reject
 
@@ -135,7 +135,7 @@ for the implementer — the judge does not execute tools.
 * NEVER flag correctness, security, or missing tests — out of scope
 * NEVER cite an external style guide over the codebase's own conventions
 * NEVER flag issues a configured formatter or linter would catch
-* NEVER silently fall back to a different model than `subagent_judge_model`
+* NEVER silently fall back to a different model than `subagents.judge_model`
 
 ## References
 
@@ -150,7 +150,7 @@ for the implementer — the judge does not execute tools.
   style, consistency) the judge applies — prioritizing codebase conventions
   over external style preferences.
 - [`subagent-orchestration`](../subagent-orchestration/SKILL.md) —
-  model-pairing rules (`subagent_judge_model` one tier above implementer).
+  model-pairing rules (`subagents.judge_model` one tier above implementer).
 - Sibling judges: [`judge-bug-hunter`](../judge-bug-hunter/SKILL.md),
   [`judge-security-auditor`](../judge-security-auditor/SKILL.md),
   [`judge-test-coverage`](../judge-test-coverage/SKILL.md) — dispatched

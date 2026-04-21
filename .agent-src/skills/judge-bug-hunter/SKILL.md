@@ -91,7 +91,7 @@ Before finalizing your verdict, confirm:
 
 ```
 Judge:   judge-bug-hunter
-Model:   <resolved from subagent_judge_model>
+Model:   <resolved from subagents.judge_model>
 Target:  <diff summary: N files, +X/-Y lines>
 Verdict: apply | revise | reject
 
@@ -140,7 +140,7 @@ the endpoint with an empty body") — the judge does not execute tools.
 * NEVER flag style, naming, or DRY — out of scope for this judge
 * NEVER flag missing tests — route to `judge-test-coverage`
 * NEVER invent issues; every finding must cite a concrete trigger
-* NEVER silently fall back to a different model than `subagent_judge_model`
+* NEVER silently fall back to a different model than `subagents.judge_model`
 
 ## References
 
@@ -150,7 +150,7 @@ the endpoint with an empty body") — the judge does not execute tools.
   model evaluates another model's output against a rubric, with
   position bias and self-consistency as known failure modes.
 - [`subagent-orchestration`](../subagent-orchestration/SKILL.md) —
-  model-pairing rules (`subagent_judge_model` one tier above implementer).
+  model-pairing rules (`subagents.judge_model` one tier above implementer).
 - [`judge-security-auditor`](../judge-security-auditor/SKILL.md),
   [`judge-test-coverage`](../judge-test-coverage/SKILL.md),
   [`judge-code-quality`](../judge-code-quality/SKILL.md) — sibling

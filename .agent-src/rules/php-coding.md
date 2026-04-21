@@ -21,7 +21,7 @@ source: package
 
 ## Eloquent Models — Attribute Access
 
-Read `eloquent_access_style` from `.agent-settings` to determine the preferred style.
+Read `eloquent.access_style` from `.agent-settings.yml` to determine the preferred style.
 Default: `getters_setters`. See the `eloquent` skill for the full reference table and examples.
 
 - **`getters_setters`** (strict): Every attribute has a typed getter + fluent setter. Inside the model: `getAttribute('column_name')`/`setAttribute('column_name', $value)`. Outside: always getters/setters. If a getter doesn't exist yet, create it first.

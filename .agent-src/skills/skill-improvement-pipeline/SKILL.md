@@ -102,8 +102,8 @@ Ask the user:
 - Done.
 
 **If universal (option 1):**
-1. Read `upstream_repo` and `improvement_pr_branch_prefix` from `.agent-settings`
-2. If `upstream_repo` is empty → ask user for the target repo
+1. Read `project.upstream_repo` and `project.improvement_pr_branch_prefix` from `.agent-settings.yml`
+2. If `project.upstream_repo` is empty → ask user for the target repo
 3. Create branch: `{prefix}{learning-slug}` from `main`
 4. Commit changes to `.agent-src.uncompressed/` AND `.augment/`
 5. Push branch

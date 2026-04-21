@@ -34,9 +34,9 @@ it, **stop** and ask.
 
 ### 3. Resolve the judge model
 
-Read `.agent-settings`:
+Read `.agent-settings.yml`:
 
-- `subagent_judge_model` → empty = one tier above session model
+- `subagents.judge_model` → empty = one tier above session model
 
 Unknown alias → stop. Silence is not a fallback.
 

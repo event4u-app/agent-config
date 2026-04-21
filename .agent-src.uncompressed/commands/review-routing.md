@@ -22,7 +22,7 @@ the output format and data handling.
 ### 1. Gather the diff
 
 - **Default** — use `git diff --name-only origin/main...HEAD` (or the
-  configured trunk branch from `.agent-settings`).
+  configured trunk branch from `.agent-settings.yml`).
 - **Explicit** — if the user provides a base and head ref, honour them.
 - **Empty diff** — stop with _"no changes, routing skipped"_.
 

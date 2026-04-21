@@ -40,7 +40,7 @@ rtk docker compose ps # compact container status
 
 1. Run `which rtk` (silent) — check if installed.
 2. **If installed** → prefix commands with `rtk` when output >30 lines expected.
-3. **If NOT installed** → check `.agent-settings` for `rtk_last_asked`. If not today → prompt user (see Installation below).
+3. **If NOT installed** → check `.agent-settings.yml` for `personal.rtk_last_asked`. If not today → prompt user (see Installation below).
 4. After wrapping: verify output is useful (not truncated on completeness-critical commands).
 
 ## Output format
@@ -54,7 +54,7 @@ rtk docker compose ps # compact container status
 
 1. Run `which rtk` (silent, no output to user).
 2. **If installed** → prefix commands with `rtk` when output may exceed ~30 lines.
-3. **If NOT installed** → check `.agent-settings` for `rtk_last_asked`:
+3. **If NOT installed** → check `.agent-settings.yml` for `personal.rtk_last_asked`:
    - If missing or date is **before today** → prompt the user (see below).
    - If date is **today** → skip, don't ask again. Use normal commands.
 
@@ -73,8 +73,8 @@ rtk docker compose ps # compact container status
   2. `rtk init --global` to enable auto-rewrite hooks.
   3. Apply **Post-Install Setup** (see below) — telemetry, tee, audit logging.
   4. Generate project-local filters (see Post-Install Setup).
-  5. Save `rtk_installed=true` in `.agent-settings`.
-- **3** → Save `rtk_last_asked=YYYY-MM-DD` (today) in `.agent-settings`. Use normal commands.
+  5. Save `personal.rtk_installed: true` in `.agent-settings.yml`.
+- **3** → Save `personal.rtk_last_asked: YYYY-MM-DD` (today) in `.agent-settings.yml`. Use normal commands.
 
 ## Post-Install Setup (mandatory)
 

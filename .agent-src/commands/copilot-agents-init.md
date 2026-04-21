@@ -134,7 +134,7 @@ Next steps:
 ### 7. Follow-ups
 
 If `agents/` directory does not exist, suggest running `/agents-prepare`.
-If `.agent-settings` does not exist, suggest running `/config-agent-settings`.
+If `.agent-settings.yml` does not exist, suggest running `/config-agent-settings`.
 
 ## Rules
 

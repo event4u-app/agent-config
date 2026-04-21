@@ -1,6 +1,6 @@
 ---
 type: "auto"
-description: "After completing a meaningful task — trigger post-task learning capture if skill_improvement_pipeline is enabled"
+description: "After completing a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled"
 alwaysApply: false
 source: package
 ---
@@ -9,7 +9,7 @@ source: package
 
 ## When to activate
 
-Read `skill_improvement_pipeline` from `.agent-settings`.
+Read `pipelines.skill_improvement` from `.agent-settings.yml`.
 
 - **If `false` or missing** → do nothing. Stop here.
 - **If `true`** → continue.

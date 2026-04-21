@@ -93,7 +93,7 @@ Before finalizing your verdict, confirm:
 
 ```
 Judge:   judge-security-auditor
-Model:   <resolved from subagent_judge_model>
+Model:   <resolved from subagents.judge_model>
 Target:  <diff summary>
 Verdict: apply | revise | reject
 
@@ -143,7 +143,7 @@ follow-up for the implementer, not the judge.
 * NEVER return `apply` without walking every trust boundary in the diff
 * NEVER flag style, naming, or performance
 * NEVER invent threat actors with unrealistic capabilities
-* NEVER silently fall back to a different model than `subagent_judge_model`
+* NEVER silently fall back to a different model than `subagents.judge_model`
 * NEVER report a finding without naming the concrete exploit path
 
 ## See also

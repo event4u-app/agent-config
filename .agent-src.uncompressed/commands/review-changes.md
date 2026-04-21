@@ -23,9 +23,9 @@ If both diffs are empty, **stop** — nothing to review.
 
 ### 2. Resolve the judge model
 
-Read `.agent-settings`:
+Read `.agent-settings.yml`:
 
-- `subagent_judge_model` → empty = one tier above the session model
+- `subagents.judge_model` → empty = one tier above the session model
 
 Unknown alias → stop. Never silently fall back.
 
@@ -45,7 +45,7 @@ Pick dispatch mode based on diff size and environment:
 
 - **Sequential** (default, simplest) — run bug-hunter → security-auditor
   → test-coverage → code-quality, collect each verdict
-- **Parallel** — if `subagent_max_parallel` in `.agent-settings` is
+- **Parallel** — if `subagents.max_parallel` in `.agent-settings.yml` is
   ≥ 4 and subagent dispatch is available, run all four concurrently
   following the `do-in-parallel` pattern in
   [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md);

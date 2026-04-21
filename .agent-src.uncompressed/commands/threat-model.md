@@ -45,8 +45,8 @@ change crosses an authorization boundary — when in doubt, run it.
 
 - **Sequential** (default) — `threat-modeling` first, then `authz-review` if
   applicable. The authz findings often reference abuse cases from step 1.
-- **Parallel** — allowed only if `subagent_max_parallel` ≥ 2 in
-  `.agent-settings` and both skills are available as subagents. Merge their
+- **Parallel** — allowed only if `subagents.max_parallel` ≥ 2 in
+  `.agent-settings.yml` and both skills are available as subagents. Merge their
   reports in step 4.
 
 Each skill produces its own structured output (abuse-case table, trust

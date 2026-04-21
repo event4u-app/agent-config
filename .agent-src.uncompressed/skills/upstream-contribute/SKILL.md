@@ -69,7 +69,7 @@ Before ANY upstream work (branch, files, PR), ask the user:
 
 - **If user picks 2** → STOP. Do not mention upstream again for this item.
 - **If user picks 1** → continue with the procedure below.
-- **If `upstream_repo` is empty in `.agent-settings`** → ask the user to configure it first.
+- **If `project.upstream_repo` is empty in `.agent-settings.yml`** → ask the user to configure it first.
 - **NEVER skip this step**, even if the user previously agreed to other contributions.
 
 ### 1. Determine contribution type

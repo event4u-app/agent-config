@@ -67,13 +67,14 @@ numbered options, or command steps. When a rule or command says "ask the user", 
 
 ### Keep intermediate output minimal
 
-Read `minimal_output` (default: `true`) and `play_by_play` (default: `false`) from project settings.
+Read `personal.minimal_output` (default: `true`) and `personal.play_by_play`
+(default: `false`) from `.agent-settings.yml`.
 
-When `minimal_output=true`:
+When `personal.minimal_output: true`:
 - Multi-step work: short bullet points only, no paragraphs.
 - No thinking out loud — user doesn't need your reasoning.
-- When `play_by_play=false`: silently investigate, report conclusion only.
-- When `play_by_play=true`: briefly share intermediate findings.
+- When `personal.play_by_play: false`: silently investigate, report conclusion only.
+- When `personal.play_by_play: true`: briefly share intermediate findings.
 - At the end: concise summary — what changed, what user needs to know.
 
 ### Don't re-read what you already know

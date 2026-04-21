@@ -82,7 +82,7 @@ Before finalizing your verdict, confirm:
 
 ```
 Judge:   judge-test-coverage
-Model:   <resolved from subagent_judge_model>
+Model:   <resolved from subagents.judge_model>
 Target:  <diff summary: N prod files, M test files>
 Verdict: apply | revise | reject
 
@@ -126,7 +126,7 @@ for the implementer, not the judge.
   fail without the change
 * NEVER flag correctness, security, or style — out of scope
 * NEVER invent required tests for features the diff did not add
-* NEVER silently fall back to a different model than `subagent_judge_model`
+* NEVER silently fall back to a different model than `subagents.judge_model`
 * NEVER accept "tested manually" as a substitute for an automated assertion
 
 ## See also

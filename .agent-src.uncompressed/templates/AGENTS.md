@@ -20,7 +20,7 @@
 | **Shared package** | `.augment/` | Skills, rules, commands, guidelines, templates — read-only |
 | **Project overrides** | `agents/overrides/` | Customizations of shared resources |
 | **Project docs** | `agents/` | Architecture, features, roadmaps, sessions, contexts |
-| **Agent settings** | `.agent-settings` | Project-specific config consumed by skills |
+| **Agent settings** | `.agent-settings.yml` | Project-specific config consumed by skills (YAML) |
 
 ### Key References
 
@@ -134,4 +134,4 @@ Regenerate: `task generate-tools` · Clean: `task clean-tools`
 | `.github/copilot-instructions.md` | Coding standards for GitHub Copilot (self-contained) |
 | `agents/` | Project-specific architecture docs and roadmaps |
 | `.augment/contexts/` | Shared cross-cutting concepts from the package |
-| `.agent-settings` | Project-specific agent configuration |
+| `.agent-settings.yml` | Project-specific agent configuration (YAML) |
