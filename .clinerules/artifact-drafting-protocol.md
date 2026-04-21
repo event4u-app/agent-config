@@ -1,0 +1,1 @@
+../.agent-src/rules/artifact-drafting-protocol.md
