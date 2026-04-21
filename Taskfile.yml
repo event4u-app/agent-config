@@ -2,8 +2,10 @@ version: '3'
 
 tasks:
   sync:
-    desc: Sync .agent-src.uncompressed/ → .agent-src/, then project → .augment/
-    cmd: bash scripts/compress.sh --sync
+    desc: Sync .agent-src.uncompressed/ → .agent-src/, then project → .augment/, then refresh doc counts
+    cmds:
+      - bash scripts/compress.sh --sync
+      - python3 scripts/update_counts.py
 
   project-augment:
     desc: Rebuild the .augment/ projection from .agent-src/ (copies rules, symlinks rest)
@@ -75,6 +77,14 @@ tasks:
   generate-catalog:
     desc: Regenerate llms.txt and docs/skills-catalog.md from SKILL.md frontmatter
     cmd: python3 scripts/generate_catalog.py
+
+  counts-update:
+    desc: Sync skill/rule/command/guideline counts in README.md, AGENTS.md, docs/getting-started.md
+    cmd: python3 scripts/update_counts.py
+
+  counts-check:
+    desc: Verify doc counts match reality (fails if stale)
+    cmd: python3 scripts/update_counts.py --check
 
 
   lint-skills:
@@ -259,6 +269,7 @@ tasks:
     desc: Run ALL CI checks locally (must pass before push)
     cmds:
       - task: consistency
+      - task: counts-check
       - task: check-compression
       - task: check-refs
       - task: check-portability
