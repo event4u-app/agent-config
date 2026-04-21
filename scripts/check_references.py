@@ -65,6 +65,8 @@ EXAMPLE_PATH_PATTERNS = [
     re.compile(r"agents/authentication"),       # project-specific auth docs
     re.compile(r"agents/roadmaps/agents-"),     # dynamically created roadmaps
     re.compile(r"agents/roadmaps/test-"),       # project-specific roadmaps
+    re.compile(r"agents/ownership-map\.yml"),   # consumer-project routing data
+    re.compile(r"agents/historical-bug-patterns\.yml"),  # consumer-project routing data
     re.compile(r"guidelines/php-"),             # flattened override naming convention
     re.compile(r"rules/no-commit"),            # example rule in commands
     re.compile(r"skills/[\w-]+\.md"),          # short skill refs in examples (not SKILL.md path)
