@@ -49,3 +49,9 @@ the answer unambiguous, proceed without asking — but state the assumption expl
 - **Simple decisions** (binary, small choices): ask multiple at once, numbered
 - **Complex questions** (need context/thinking): ask ONE at a time, wait for answer
 - **Handoff questions** (model switch, deeper analysis): ask LAST, after all domain questions
+
+## Creating new agent artifacts
+
+For skill/rule/command/guideline creation or major rewrite, follow
+[`artifact-drafting-protocol`](artifact-drafting-protocol.md) — structured
+Understand → Research → Draft. Don't improvise questions.

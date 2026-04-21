@@ -49,3 +49,11 @@ the answer unambiguous, proceed without asking — but state the assumption expl
 - **Simple decisions** (binary, small choices): ask multiple at once, numbered
 - **Complex questions** (need context/thinking): ask ONE at a time, wait for answer
 - **Handoff questions** (model switch, deeper analysis): ask LAST, after all domain questions
+
+## Special case: creating new agent artifacts
+
+When the user asks to create or significantly rewrite a skill, rule, command, or
+guideline, this rule's "ask when in doubt" policy is structured by
+[`artifact-drafting-protocol`](artifact-drafting-protocol.md) — a mandatory
+Understand → Research → Draft sequence with numbered-options prompts at each step.
+Don't improvise clarifying questions in that case; follow the protocol.

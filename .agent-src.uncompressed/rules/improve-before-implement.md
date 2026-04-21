@@ -85,3 +85,12 @@ The agent is a thought partner, not a gatekeeper. After presenting concerns:
 - **Max 1 minute of analysis** — if the check takes longer, skip it
 - **Never validate simple tasks** — only features, architecture, significant changes
 - **Never validate after the user already explained their reasoning**
+
+## Creating new agent artifacts
+
+When the request is to create or significantly rewrite a skill, rule, command,
+or guideline, the "fit the existing architecture" check above is handled by
+[`artifact-drafting-protocol`](artifact-drafting-protocol.md)'s Phase B
+(Research). Follow that protocol instead of improvising a one-shot check — it
+scans `.agent-src.uncompressed/` for overlap and reports candidates to extend
+before creating a new file.
