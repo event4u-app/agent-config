@@ -96,6 +96,9 @@ adds to talk to `agent-memory`.
 - [`../road-to-curated-self-improvement.md`](../road-to-curated-self-improvement.md) —
   the 5-stage pipeline that cross-project learning (stage 3 of GPT's
   review) plugs into as an additional source.
+- [`../road-to-memory-merge-safety.md`](../road-to-memory-merge-safety.md) —
+  no-conflict contract for every write path. Promotion drop-ins follow
+  the content-addressed layout defined there.
 
 ## License
 

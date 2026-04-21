@@ -116,6 +116,9 @@ Each produces a draft entry either in the operational store (when
 
 Signal shape and quarantine-to-semantic promotion live in
 [`agent-memory/road-to-promotion-flow.md`](agent-memory/road-to-promotion-flow.md).
+On-disk write format for signals in the `absent` path — append-only
+JSONL with `merge=union` — is specified in
+[`road-to-memory-merge-safety.md`](road-to-memory-merge-safety.md#agent-written-without-the-package).
 
 ## Commands and skills that consume memory
 
@@ -197,3 +200,4 @@ content.
 - [`agent-memory/road-to-decay-calibration.md`](agent-memory/road-to-decay-calibration.md) — 6→4 mapping detail
 - [`road-to-role-modes.md`](road-to-role-modes.md) — retrieval-key authority
 - [`road-to-curated-self-improvement.md`](road-to-curated-self-improvement.md) — pipeline that Stage-3-plugs into
+- [`road-to-memory-merge-safety.md`](road-to-memory-merge-safety.md) — no-conflict contract every write path must follow

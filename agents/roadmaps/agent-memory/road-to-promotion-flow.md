@@ -174,3 +174,5 @@ CLI, MCP, or library.
   Stage-3 upstream loop
 - [`../road-to-agent-memory-integration.md`](../road-to-agent-memory-integration.md) —
   agent-config side: commands and hooks that call this contract
+- [`../road-to-memory-merge-safety.md`](../road-to-memory-merge-safety.md#promotion-content-addressed-curated-files) —
+  how promoted entries land in the repo without merge conflicts

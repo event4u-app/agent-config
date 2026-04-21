@@ -88,6 +88,13 @@ entry carries the minimum metadata `id`, `status`, `confidence`,
 alongside its operational store; when absent, skills load them
 directly via the file-based lookup helper.
 
+**Merge safety.** The mechanics that guarantee parallel branches can
+write memory without producing git conflicts — append-only JSONL for
+intake, content-addressed filenames for curated drop-ins, `merge=union`
+driver — are defined in
+[`road-to-memory-merge-safety.md`](road-to-memory-merge-safety.md).
+Every write path covered by this roadmap MUST follow that contract.
+
 ## Minimum metadata on every entry
 
 Every entry in every shared file carries six mandatory fields; the
@@ -324,3 +331,4 @@ Details in [`road-to-agent-memory-integration.md`](road-to-agent-memory-integrat
 - [`road-to-trigger-evals.md`](road-to-trigger-evals.md) — promotion signal source
 - [`agent-memory/README.md`](agent-memory/README.md) — companion specs index
 - [`road-to-agent-memory-integration.md`](road-to-agent-memory-integration.md) — the agent-config side of the integration (next roadmap)
+- [`road-to-memory-merge-safety.md`](road-to-memory-merge-safety.md) — no-conflict contract for every memory write path
