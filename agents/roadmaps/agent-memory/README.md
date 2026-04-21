@@ -51,6 +51,7 @@ Three reasons:
 
 | Spec | Purpose |
 |---|---|
+| [`road-to-retrieval-contract.md`](road-to-retrieval-contract.md) | Versioned cross-repo contract for `retrieve()` and `health()` — request/response shape, partial-hit semantics, evolution rules. Blocks every other integration step |
 | [`road-to-promotion-flow.md`](road-to-promotion-flow.md) | When and how observations become quarantined → episodic → semantic entries; intra-project vs. cross-project promotion |
 | [`road-to-decay-calibration.md`](road-to-decay-calibration.md) | Default decay rates per memory type; mapping of the 6 content types onto the 4 cognitive tiers; override surface for teams |
 | [`road-to-cross-project-learning.md`](road-to-cross-project-learning.md) | Stage-3 loop — how `agent-memory` aggregates recurring signals across consumers and feeds proposals back into `agent-config` |
@@ -99,6 +100,9 @@ adds to talk to `agent-memory`.
 - [`../road-to-memory-merge-safety.md`](../road-to-memory-merge-safety.md) —
   no-conflict contract for every write path. Promotion drop-ins follow
   the content-addressed layout defined there.
+- [`../road-to-memory-self-consumption.md`](../road-to-memory-self-consumption.md) —
+  bidirectional-use architecture, no-circular-dependency clause,
+  conflict rule between repo and operational memory.
 
 ## License
 

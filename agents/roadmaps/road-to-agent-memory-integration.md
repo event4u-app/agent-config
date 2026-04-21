@@ -201,3 +201,5 @@ content.
 - [`road-to-role-modes.md`](road-to-role-modes.md) — retrieval-key authority
 - [`road-to-curated-self-improvement.md`](road-to-curated-self-improvement.md) — pipeline that Stage-3-plugs into
 - [`road-to-memory-merge-safety.md`](road-to-memory-merge-safety.md) — no-conflict contract every write path must follow
+- [`road-to-memory-self-consumption.md`](road-to-memory-self-consumption.md) — bidirectional-use, no-circular-dep clause, conflict rule
+- [`agent-memory/road-to-retrieval-contract.md`](agent-memory/road-to-retrieval-contract.md) — versioned cross-repo contract consumed here

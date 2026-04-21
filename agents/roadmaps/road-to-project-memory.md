@@ -332,3 +332,5 @@ Details in [`road-to-agent-memory-integration.md`](road-to-agent-memory-integrat
 - [`agent-memory/README.md`](agent-memory/README.md) — companion specs index
 - [`road-to-agent-memory-integration.md`](road-to-agent-memory-integration.md) — the agent-config side of the integration (next roadmap)
 - [`road-to-memory-merge-safety.md`](road-to-memory-merge-safety.md) — no-conflict contract for every memory write path
+- [`road-to-memory-self-consumption.md`](road-to-memory-self-consumption.md) — bidirectional-use, no-circular-dep, repo-vs-operational conflict rule
+- [`agent-memory/road-to-retrieval-contract.md`](agent-memory/road-to-retrieval-contract.md) — versioned cross-repo contract for retrieval

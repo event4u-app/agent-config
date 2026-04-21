@@ -86,6 +86,66 @@ developer execution.
 - Reader: `PO` role mode, `validate-feature-fit`, `laravel-validation`
 - Expiry: version-stamped; old versions archived on rule change
 
+## Redaction rules for sensitive memory types
+
+`incident-learnings.yml` and `product-rules.yml` surface material that
+is useful for future decisions **and** tempting to over-capture. The
+curated files are committed to the repo and readable by anyone with
+read access — including, in time, cross-project learning feeds. The
+following rules apply to every entry and are enforced by
+`scripts/check_memory.py`.
+
+### Hard rules — must never appear in any entry
+
+- **No secrets.** API keys, tokens, credentials, private URLs with
+  embedded auth, DSNs. The check rejects anything matching known
+  secret shapes.
+- **No personally identifying data.** Customer names, user emails,
+  full names of non-public employees, ticket IDs that link to
+  customer data, invoice numbers.
+- **No incident-specific detail that does not generalise.** A 500
+  error on a single customer's account is not a learning; the
+  **class** of error and the **guardrail** that prevents it is.
+- **No internal URLs** other than public repo / docs.
+
+### Shape rule — distil before storing
+
+Every entry is a **pattern + consequence + guardrail**, not a
+post-mortem excerpt. A good `incident-learnings` entry reads:
+
+> *"When rate limit X is crossed on path Y, queue worker Z starves
+> the primary DB connection pool. Guardrail: circuit-break at 80 % of
+> X; alert on sustained latency in Z."*
+
+A bad one reads:
+
+> *"On 2026-03-14 at 02:41, customer ACME (account #9182) hit a rate
+> limit spike and our Redis fell over; see Jira INC-1432."*
+
+The second belongs in the incident ticket system, never in repo memory.
+
+### Mechanism
+
+- Each schema under `agents/memory/schemas/<type>.schema.yml` declares
+  an optional `redaction_policy` block listing regex patterns that
+  MUST NOT match any string field in the entry.
+- `scripts/check_memory.py` runs the redaction policy on every
+  commit that touches the curated files — locally (pre-commit hook
+  shipped with the package) and in CI.
+- Violations block the commit. There is no opt-out at entry level;
+  the rule is structural.
+- The check is additive with the schema check: an entry passes only
+  when schema **and** redaction policy pass.
+
+### Consumer override
+
+Consumers may add project-specific patterns (e.g., "all IDs starting
+with `CUST-`") via
+`.agent-project-settings.memory.hygiene.redaction_extra` — extending,
+never weakening, the built-in rules. The layered-settings mechanism
+(see [`road-to-project-memory.md`](road-to-project-memory.md#two-layer-settings))
+marks the base patterns `locked: true` so no consumer can disable them.
+
 ## Phases
 
 ### Phase 1 — schemas and templates
@@ -159,4 +219,5 @@ reads it. The matching **where, how, and when** lives in:
 - [`road-to-project-memory.md`](road-to-project-memory.md) — infrastructure counterpart (settings + files)
 - [`road-to-agent-memory-integration.md`](road-to-agent-memory-integration.md) — optional operational layer
 - [`road-to-curated-self-improvement.md`](road-to-curated-self-improvement.md) — learnings that flow upstream, distinct from project memory
+- [`road-to-memory-self-consumption.md`](road-to-memory-self-consumption.md) — bidirectional use and the repo-vs-operational conflict rule that schemas assume
 - [`review-routing-data-format.md`](../../.agent-src.uncompressed/guidelines/agent-infra/review-routing-data-format.md) — existing format pattern the new schemas follow
