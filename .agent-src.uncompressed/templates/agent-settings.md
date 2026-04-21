@@ -12,10 +12,6 @@ Simple `key=value` format, one setting per line. Lines starting with `#` are com
 This block defines the personal and project-level settings that `/config-agent-settings`
 (and `bin/install.php` via `config/agent-settings.template.ini`) writes to `.agent-settings`.
 
-Matrix values controlled by `cost_profile` (`runtime_enabled`, `observability_reports`, …)
-are **not** part of this block — they live in the [Profile matrix](#profile-matrix) below
-and only need to appear in `.agent-settings` as explicit overrides.
-
 ```
 # Agent Settings
 # This file is git-ignored. Each developer has their own settings.
@@ -23,14 +19,13 @@ and only need to appear in `.agent-settings` as explicit overrides.
 
 # --- Cost profile ---
 #
-# Controls token consumption by setting multiple matrix values at once.
-# Matrix defaults live in .augment/templates/agent-settings.md — add a key
-# below only to override the profile for a single value.
+# Controls which agent surfaces are active. See `docs/customization.md` for
+# the authoritative description.
 #
-# minimal  = zero token overhead — runtime off, no reports, no feedback in chat
-# balanced = runtime + local persistence — reports on demand, no auto-read
-# full     = everything on — reports auto-read, CI summaries, feedback in chat
-# custom   = ignore profile, set every matrix value explicitly below
+# minimal  = rules, skills, and commands only (zero extra surface, default)
+# balanced = + runtime dispatcher for skills that declare a shell command
+# full     = + tool adapters (GitHub / Jira, read-only, opt-in)
+# custom   = ignore profile — every matrix value must be set explicitly
 cost_profile=minimal
 
 # --- Personal preferences ---
@@ -96,7 +91,7 @@ Personal and project-level settings (written by `/config-agent-settings` and `bi
 
 | Key | Values | Default | Description |
 |---|---|---|---|
-| `cost_profile` | `minimal`, `balanced`, `full`, `custom` | `minimal` | Controls multiple matrix values at once. See [Profile matrix](#profile-matrix). |
+| `cost_profile` | `minimal`, `balanced`, `full`, `custom` | `minimal` | Selects which agent surfaces are active. See [Cost profiles](#cost-profiles). |
 | `ide` | `code`, `phpstorm`, `cursor` | _(empty)_ | CLI command to open files in the IDE |
 | `open_edited_files` | `true`, `false` | `false` | Auto-open edited files in the IDE after edits |
 | `user_name` | first name | _(empty)_ | User's first name. Agent asks on first interaction if empty, then addresses user by name. |
@@ -111,64 +106,22 @@ Personal and project-level settings (written by `/config-agent-settings` and `bi
 | `upstream_repo` | `org/repo` | _(empty)_ | Target repository for universal improvement PRs (e.g., `org/agent-config`). |
 | `improvement_pr_branch_prefix` | string | `improve/agent-` | Branch prefix for agent improvement PRs. |
 
-Matrix values (not written to `.agent-settings` by default — only as explicit overrides):
-
-| Key | Values | Description |
-|---|---|---|
-| `runtime_enabled` | `true`, `false` | Enable runtime pipeline (dispatch, execution proposals, hooks). When `false`: zero overhead. |
-| `observability_reports` | `true`, `false` | Generate reports, CI summaries, and structured logging from pipeline runs. |
-| `feedback_collection` | `true`, `false` | Record execution outcomes and generate improvement suggestions. |
-| `runtime_auto_read_reports` | `true`, `false` | When `true`: agent auto-loads reports into context (costs tokens). When `false`: reports only on explicit request. |
-| `max_report_lines` | number | Maximum lines per generated report section. Limits token consumption from reports. |
-| `minimal_runtime_context` | `true`, `false` | When `true`: only essential runtime metadata in agent context. Saves tokens. |
-| `ci_summary_enabled` | `true`, `false` | Generate observability summary as CI artifact or PR comment. |
-| `feedback_suggestions_in_chat` | `true`, `false` | When `true`: suggestions appear in chat. When `false`: persist locally only. |
-
 ## Cost profiles
 
-The `cost_profile` setting is the single knob for token consumption. It activates a
-pre-defined set of matrix values. Individual matrix keys can still be overridden in
-`.agent-settings` — set `cost_profile=custom` to disable the profile entirely.
+The `cost_profile` setting selects which agent surfaces are active. See
+`docs/customization.md` for the authoritative description.
 
-### Profile matrix
+| Profile | Description |
+|---|---|
+| `minimal` | Rules, skills, and commands only. Zero extra surface. Default. |
+| `balanced` | + Runtime dispatcher for skills that declare a shell command. |
+| `full` | + Tool adapters (GitHub / Jira, read-only, opt-in). |
+| `custom` | Ignore profile — every matrix value must be set explicitly. |
 
-| Setting | `minimal` | `balanced` | `full` |
-|---|---|---|---|
-| `runtime_enabled` | `false` | `true` | `true` |
-| `observability_reports` | `false` | `true` | `true` |
-| `feedback_collection` | `false` | `true` | `true` |
-| `runtime_auto_read_reports` | `false` | `false` | `true` |
-| `max_report_lines` | `30` | `50` | `100` |
-| `minimal_runtime_context` | `true` | `true` | `false` |
-| `ci_summary_enabled` | `false` | `false` | `true` |
-| `feedback_suggestions_in_chat` | `false` | `false` | `true` |
-| `skill_improvement_pipeline` | `false` | `false` | `true` |
-
-### Profile descriptions
-
-**minimal** (default) — Zero additional token overhead. Runtime dormant, no reports generated,
-no feedback collected, no suggestions in chat. Best for daily coding where cost matters most.
-
-**balanced** — Runtime active, data collected and persisted locally. Reports generated on demand
-(`task report`) but never auto-loaded into agent context. Good for teams that want observability
-without paying per-request token costs.
-
-**full** — Everything active. Reports auto-read, CI summaries on PRs, feedback suggestions in chat,
-skill improvement pipeline active. Best for agent infrastructure development or debugging.
-
-### How profiles work
-
-1. Agent reads `cost_profile` from `.agent-settings`.
-2. If `cost_profile` is `minimal`, `balanced`, or `full` → apply the matrix defaults above.
-3. Keys present in `.agent-settings` **override** the matrix (explicit > profile).
-4. If `cost_profile=custom` → the matrix is ignored; every value must be set explicitly.
-
-### Example: balanced with CI summaries
-
-```
-cost_profile=balanced
-ci_summary_enabled=true    # override: enable CI summaries despite balanced profile
-```
+The only cross-profile toggle written to `.agent-settings` today is
+`skill_improvement_pipeline`. Other per-feature toggles may be added in
+future releases; when they land, they ship with a live consumer in code
+and get documented here, not before.
 
 ## Sync rules
 
