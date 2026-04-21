@@ -1,6 +1,9 @@
 # Dependencies
 /vendor/
 /node_modules/
+# Python virtualenv — used only for the live trigger-eval runner
+# (anthropic SDK). Never commit.
+/.venv/
 
 # IDE
 .idea/

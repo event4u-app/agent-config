@@ -123,9 +123,13 @@ tasks:
         1) key file ~/.config/agent-config/anthropic.key (mode 0600)
         2) interactive tty stdin
         3) explicit 'yes' at the pre-run cost preview
+      Bootstrap once: bash scripts/setup_eval_venv.sh
       Install the key once: bash scripts/install_anthropic_key.sh
       Usage: task test-triggers-live -- eloquent
-    cmd: python3 scripts/skill_trigger_eval.py --skill {{.CLI_ARGS}}
+    cmd: .venv/bin/python3 scripts/skill_trigger_eval.py --skill {{.CLI_ARGS}}
+    preconditions:
+      - sh: test -x .venv/bin/python3
+        msg: ".venv missing — run 'bash scripts/setup_eval_venv.sh' first"
     interactive: true
 
   lint-readme:

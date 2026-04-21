@@ -189,7 +189,17 @@ Shipped [`scripts/skill_trigger_eval.py`](../../scripts/skill_trigger_eval.py)
 
 ### How to run a live eval
 
-1. **Install the key once.** Paste it into the interactive prompt — no
+1. **Bootstrap the venv once.** Creates `.venv/` (gitignored) with the
+   pinned `anthropic` SDK. System Python stays untouched:
+
+   ```bash
+   bash scripts/setup_eval_venv.sh
+   ```
+
+   Idempotent — safe to rerun to refresh pins from
+   `scripts/requirements-evals.txt`.
+
+2. **Install the key once.** Paste it into the interactive prompt — no
    echo, no history, no env-var:
 
    ```bash
@@ -199,7 +209,7 @@ Shipped [`scripts/skill_trigger_eval.py`](../../scripts/skill_trigger_eval.py)
    The script writes `~/.config/agent-config/anthropic.key` with mode
    `0600`. Piped stdin is rejected. Rerun to rotate; `rm` to remove.
 
-2. **Run the eval.** Each invocation prints a cost preview and waits for
+3. **Run the eval.** Each invocation prints a cost preview and waits for
    exactly `yes` on stdin before calling the API:
 
    ```bash
@@ -211,7 +221,7 @@ Shipped [`scripts/skill_trigger_eval.py`](../../scripts/skill_trigger_eval.py)
    - non-tty stdin
    - answer is not literally `yes`
 
-3. **Read the result.** JSON lands in
+4. **Read the result.** JSON lands in
    `evals/results/<UTC-timestamp>-<skill>-<model>.json` with
    per-query `router_response`, `passed`, and aggregate
    `precision` / `recall` / `f1` metrics.
