@@ -33,6 +33,8 @@ Pushy descriptions:
 - Name 2+ concrete triggers (domains, symptoms, file types, user phrasing).
 - End with: `... even if they don't explicitly ask for \`<skill-name>\`.`
 - No hedges: `may help with`, `can be useful for`, `covers various`.
+- **≤ 200 chars** (linter: `description_too_long`). Cut adjectives or
+  collapse lists before dropping triggers or the `even if ...` tail.
 
 Source: [`skills/skill-creator`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md)
 via [`road-to-anthropic-alignment.md`](../../../agents/roadmaps/road-to-anthropic-alignment.md) Phase 2.

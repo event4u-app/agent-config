@@ -62,6 +62,32 @@ def test_audit_accepts_pushy_description(tmp_path: Path) -> None:
     assert findings[0]["flags"] == []
 
 
+def test_audit_flags_too_long_description(tmp_path: Path) -> None:
+    # 245 chars — well over the 200-char skill_linter.py threshold.
+    desc = (
+        "Use when writing, reviewing, or fixing commit messages and squash-merge "
+        "titles — `feat:`, `fix:`, `chore:`, scopes, breaking-change markers — "
+        "even when the user just says 'commit this' or 'good commit title?' "
+        "without naming Conventional Commits."
+    )
+    assert len(desc) > 200, "fixture must exceed MAX_LENGTH to be meaningful"
+    _write_skill(tmp_path, "verbose", desc)
+    findings = _run_json(tmp_path)
+    assert "too-long" in findings[0]["flags"]
+
+
+def test_audit_accepts_description_at_200_chars(tmp_path: Path) -> None:
+    # Exactly 200 chars — boundary: MAX_LENGTH is *exclusive upper bound* (> 200).
+    head = "Use when writing Eloquent models, relationships, scopes, queries — "
+    tail = " — even if the user doesn't say Eloquent."
+    filler = "x" * (200 - len(head) - len(tail))
+    desc = head + filler + tail
+    assert len(desc) == 200
+    _write_skill(tmp_path, "boundary", desc)
+    findings = _run_json(tmp_path)
+    assert "too-long" not in findings[0]["flags"]
+
+
 def test_audit_flags_hedge_phrase(tmp_path: Path) -> None:
     desc = (
         "Use when things happen. This may help with various Laravel "

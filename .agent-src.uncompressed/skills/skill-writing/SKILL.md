@@ -109,8 +109,11 @@ The `description:` field is what Claude reads at routing time. Polite or
 generic descriptions cause **undertriggering**. Normative source:
 `skill-quality` rule § *Description Triggering*.
 
-Two rules: name 2+ triggers (domains, symptoms, user phrasing), end with
-`... even if they don't explicitly ask for \`<skill-name>\`.`.
+Three rules: name 2+ triggers (domains, symptoms, user phrasing), end with
+`... even if they don't explicitly ask for \`<skill-name>\`.`, and stay
+**≤ 200 characters** (`skill_linter.py` warns `description_too_long` above
+that). When trimming to fit, drop adjectives or the second example phrasing
+before you drop a trigger class or the `even if ...` tail.
 
 Canonical before/after (2026-04-21 audit baseline):
 

@@ -3,7 +3,7 @@
 Audit skill descriptions for triggering quality.
 
 Flags descriptions that are:
-  - too short (< 150 chars)
+  - too short (< 150 chars) or too long (> 200 chars, the linter limit)
   - missing an explicit trigger verb prefix ("use when", "use if", "creates", ...)
   - containing hedge terms ("may help", "can be useful", "covers various", ...)
 
@@ -29,6 +29,8 @@ from typing import List
 
 DEFAULT_ROOT = Path(".agent-src.uncompressed/skills")
 MIN_LENGTH = 150
+# Mirrors scripts/skill_linter.py `description_too_long` threshold.
+MAX_LENGTH = 200
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 DESCRIPTION_RE = re.compile(r'^description:\s*"?(.*?)"?\s*$', re.MULTILINE)
@@ -97,6 +99,8 @@ def audit_description(description: str) -> List[str]:
         flags.append("very-short")
     elif length < MIN_LENGTH:
         flags.append("too-short")
+    if length > MAX_LENGTH:
+        flags.append("too-long")
     if not TRIGGER_PREFIX_RE.match(description):
         flags.append("no-trigger-prefix")
     lowered = description.lower()

@@ -108,8 +108,10 @@ The `description:` field is what Claude reads at routing time. Polite or
 generic descriptions cause **undertriggering**. Normative source:
 `skill-quality` rule § *Description Triggering*.
 
-Two rules: name 2+ triggers (domains, symptoms, user phrasing), end with
-`... even if they don't explicitly ask for \`<skill-name>\`.`.
+Three rules: 2+ triggers (domains, symptoms, user phrasing), tail
+`... even if they don't explicitly ask for \`<skill-name>\`.`, and
+**≤ 200 chars** (linter: `description_too_long`). Drop adjectives
+before dropping triggers or the tail.
 
 Canonical before/after (2026-04-21 audit baseline):
 

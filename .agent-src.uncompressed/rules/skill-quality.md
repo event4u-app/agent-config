@@ -34,6 +34,10 @@ Make descriptions "pushy" — explicit about when to fire:
 - Name 2+ concrete triggers — domains, symptoms, file types, user phrasing.
 - End with: `... even if they don't explicitly ask for \`<skill-name>\`.`
 - Avoid hedges: `may help with`, `can be useful for`, `covers various`.
+- **Keep it ≤ 200 characters.** `scripts/skill_linter.py` warns at
+  `description_too_long` above this. If the pushy tail pushes you over, cut
+  adjectives, drop the second example phrasing, or collapse a list — do
+  **not** drop the trigger vocabulary or the `even if ...` tail.
 
 Source: [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md)
 — description-optimization guidance adopted via
