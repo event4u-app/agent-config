@@ -1,6 +1,6 @@
 ---
 name: blade-ui
-description: "Use when creating or editing Blade views, components, partials, or view logic. Covers clean separation of concerns and reusable UI structure."
+description: "Use when creating or editing Blade views, components, partials, layouts, or view logic — even when the user says 'add a new page' or 'render this data' without naming Blade."
 source: package
 ---
 
