@@ -17,10 +17,14 @@ Config file formats — see:
 Usage:
     python3 pr_review_routing.py \\
         --base <sha> --head <sha> \\
-        --ownership-map .github/ownership-map.yml \\
-        --patterns .github/historical-bug-patterns.yml \\
         --output routing-report.md \\
         --level-file routing-level.txt
+
+If --ownership-map / --patterns are omitted, the script searches
+`.github/` first and falls back to `agents/` — matching what the
+review-routing-awareness rule and review-routing skill document.
+Missing data files are not an error; the script emits a generic
+fallback block.
 
 Exit codes: 0 = success, 2 = invalid arguments, 3 = git/config error.
 """
@@ -264,18 +268,55 @@ def render(
     return "\n".join(lines) + "\n"
 
 
+OWNERSHIP_CANDIDATES = (
+    Path(".github/ownership-map.yml"),
+    Path("agents/ownership-map.yml"),
+)
+PATTERN_CANDIDATES = (
+    Path(".github/historical-bug-patterns.yml"),
+    Path("agents/historical-bug-patterns.yml"),
+)
+
+
+def _first_existing(candidates: tuple[Path, ...]) -> Path | None:
+    for path in candidates:
+        if path.is_file():
+            return path
+    return None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base", required=True)
     parser.add_argument("--head", required=True)
-    parser.add_argument("--ownership-map", type=Path, default=None)
-    parser.add_argument("--patterns", type=Path, default=None)
+    parser.add_argument(
+        "--ownership-map",
+        type=Path,
+        default=None,
+        help=(
+            "Path to ownership-map.yml. If omitted, searches "
+            ".github/ownership-map.yml then agents/ownership-map.yml."
+        ),
+    )
+    parser.add_argument(
+        "--patterns",
+        type=Path,
+        default=None,
+        help=(
+            "Path to historical-bug-patterns.yml. If omitted, searches "
+            ".github/historical-bug-patterns.yml then "
+            "agents/historical-bug-patterns.yml."
+        ),
+    )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--level-file", type=Path, required=True)
     args = parser.parse_args()
 
-    ownership_cfg = _load_yaml(args.ownership_map)
-    patterns_cfg = _load_yaml(args.patterns)
+    ownership_path = args.ownership_map or _first_existing(OWNERSHIP_CANDIDATES)
+    patterns_path = args.patterns or _first_existing(PATTERN_CANDIDATES)
+
+    ownership_cfg = _load_yaml(ownership_path)
+    patterns_cfg = _load_yaml(patterns_path)
 
     files = changed_files(args.base, args.head)
     ownership_hits, fallback_roles, stale = match_ownership(files, ownership_cfg)
