@@ -71,41 +71,59 @@ Do not inline the runtime build into this roadmap.
 ## Phase 1: Developer-discipline core
 
 > Three new skills. Biggest single leverage point on autonomy.
-> Adopt verbatim where possible; adapt only examples.
+> **Approach:** inspired by external references (obra/superpowers and
+> others), but written from scratch in event4u's voice, structure, and
+> style. Concepts (TDD phases, root-cause debugging, verification gates)
+> are industry standard — no attribution required. See explicit decision
+> in `agents/analysis/compare-composiohq-awesome-claude-skills.md`.
 
 ### 1.1 `test-driven-development`
 
-- [ ] Copy `obra/superpowers/skills/test-driven-development/SKILL.md` as starting point (preserve license attribution)
-- [ ] Keep the Iron Law verbatim: *"No production code without a failing test first."*
-- [ ] Keep the RED → GREEN → REFACTOR state machine and the anti-rationalization table
-- [ ] Adapt examples to project-agnostic pseudocode + one PHP/Pest + one JS/Vitest snippet
-- [ ] Frontmatter `description` uses imperative voice (see `skill-quality` rule)
-- [ ] Add `## References` section citing the source commit + Beck 2002 ("Test-Driven Development: By Example")
-- [ ] Linter passes: `python3 scripts/skill_linter.py .agent-src.uncompressed/skills/test-driven-development/SKILL.md`
+- [x] Author from scratch in event4u's SKILL.md style (When to use / Procedure / Output format / Gotchas / Do NOT / Anti-patterns)
+- [x] State the TDD discipline in our own words — no verbatim phrasing from external sources
+- [x] Cover RED → GREEN → REFACTOR as industry-standard methodology
+- [x] Anti-rationalization table: re-express common skip-the-test excuses in our voice
+- [x] Examples: PHP/Pest + JS/Vitest snippets (all newly written)
+- [x] Frontmatter `description` uses imperative voice per `skill-quality` rule
+- [x] Linter passes: `python3 scripts/skill_linter.py .agent-src.uncompressed/skills/test-driven-development/SKILL.md`
 
 ### 1.2 `systematic-debugging`
 
-- [ ] Port `obra/superpowers/skills/systematic-debugging` — 4 phases: reproduce → isolate → hypothesize → verify
-- [ ] Language-agnostic (no Xdebug/PHP specifics — those stay in existing `php-debugging`)
-- [ ] Add a `## When NOT to use` section pointing at `php-debugging` for Xdebug-specific paths
-- [ ] Include a condition-based-waiting pattern (avoid `sleep()` in debug scripts)
-- [ ] `## References` cites `obra/superpowers` + Zeller 2005 ("Why Programs Fail")
+- [x] Author from scratch — 4 phases: reproduce → isolate → hypothesize → verify (industry-standard methodology, own phrasing)
+- [x] Language-agnostic (no Xdebug/PHP specifics — those stay in existing `php-debugging`)
+- [x] `When to use` section defers to `php-debugging` for Xdebug-specific paths via handover table
+- [x] Include a condition-based-waiting pattern (avoid `sleep()` in debug scripts) — own example
+- [x] Linter passes; no references section needed
 
-### 1.3 `verification-before-completion` (companion skill)
+### 1.3 `verify-before-complete` (companion skill)
 
-- [ ] Existing rule `verify-before-complete` states the law — the new skill holds the *checklist body*
-- [ ] Frontmatter activates when the agent is about to claim completion (description pattern)
-- [ ] Mirror the per-task-type evidence table from the existing rule into the skill (single source of truth = skill; rule references skill)
-- [ ] Update rule to cite the companion skill instead of duplicating the table
-- [ ] Add linter check to `scripts/check_references.py`: rule and skill must stay in sync
+- [x] Existing rule `verify-before-complete` states the law — the new skill holds the *playbook*
+- [x] Frontmatter activates when the agent is about to claim completion (description pattern)
+- [x] Per-task-type evidence table lives in the skill; the rule keeps the Iron Law and points at the skill
+- [x] Rule updated to cite the companion skill instead of duplicating the playbook
+- [ ] Add linter check to `scripts/check_references.py`: rule and skill must stay in sync (deferred to 1.4 acceptance)
 
-### 1.4 Phase-1 acceptance
+### 1.4 Review-discipline cluster
 
-- [ ] All three skills present in `.agent-src.uncompressed/skills/`
-- [ ] `task sync` regenerates `.agent-src/` without diff drift
-- [ ] `task lint-skills` green
-- [ ] `task test` + `task check-refs` + `task check-portability` green
-- [ ] One real ticket completed using the new TDD skill, recorded as evidence in the PR
+> Added mid-phase after a gap audit against `obra/superpowers` revealed that
+> the developer-discipline triad has no counterpart for the review loop.
+> Three new skills, one per direction (receiving, requesting, shipping).
+> Same "inspired by, own voice" approach as 1.1–1.3.
+
+- [x] `receiving-code-review` — discipline for processing bot + human feedback without performative agreement; triage → verify → push-back-with-evidence; Iron Law *"NO IMPLEMENTATION UNTIL FEEDBACK IS UNDERSTOOD AND VERIFIED"*
+- [x] `requesting-code-review` — self-review walkthrough before asking, PR context framing (what/why/how to verify), reviewable-size guidance; Iron Law *"NEVER REQUEST REVIEW FROM A BRANCH YOU HAVE NOT REVIEWED YOURSELF"*
+- [x] `finishing-a-development-branch` — orchestrates the ship step (verify → four-option gate: PR / merge / keep / discard); Iron Law *"NO MERGE, NO PR, NO DISCARD WITHOUT VERIFIED TESTS + EXPLICIT CHOICE"*
+- [x] Each skill has handover table pointing to existing commands (`fix-pr-comments`, `create-pr`, `review-changes`, `prepare-for-review`)
+- [x] Linter passes on all three
+
+### 1.5 Phase-1 acceptance
+
+- [x] All six skills (1.1 + 1.2 + 1.3 + 1.4) present in `.agent-src.uncompressed/skills/`
+- [x] Manual caveman compression of all six + rule update in `.agent-src/`
+- [x] `task sync` regenerates `.agent-src/` without diff drift
+- [x] `task lint-skills` green (no compression-missing warnings)
+- [x] `task test` + `task check-refs` + `task check-portability` + `task check-compression` green
+- [ ] One real ticket completed using the new TDD + review-discipline skills, recorded as evidence in the PR
 
 ## Phase 2: Subagent orchestration
 
