@@ -60,4 +60,28 @@ task scope · dependency bumps "because it was close to the cache".
 Ask. A minimal diff plus one follow-up is cheaper than a sprawling diff the
 reviewer has to untangle.
 
-See also: `scope-control` · `downstream-changes` · `think-before-action` · `preservation-guard`.
+## Break-glass exception
+
+This rule stays in force during production incidents. "Break-glass mode"
+narrows verification (see `verify-before-complete`) — it does **not**
+license drive-by edits.
+
+Allowed during break-glass:
+
+- The **smallest** change that stops the bleeding — one file, one
+  method, one guard — preferred over any refactor.
+- A fast revert to a known-good commit, even if it undoes unrelated
+  improvements shipped in the same PR.
+
+Not allowed, even in break-glass:
+
+- "While I'm in there" cleanups, reformatting, or dependency bumps.
+- Expanding the fix to neighboring modules without evidence they are
+  part of the incident.
+- Merging the hotfix with pending refactors from another branch.
+
+After the incident, open a **follow-up PR** for any scope that was
+intentionally deferred and reference the break-glass commit in its
+description.
+
+See also: `scope-control` · `downstream-changes` · `think-before-action` · `preservation-guard` · `verify-before-complete`.

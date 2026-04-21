@@ -99,3 +99,22 @@ State confidence explicitly before claiming completion on non-trivial work.
 For high-risk areas (auth, tenancy, migrations, queues, dependencies,
 external APIs, data exposure), "high" requires tests AND a cross-layer
 read — not inference from a single file.
+
+## Break-glass reduction
+
+During a live production incident the verification gate is **narrowed**,
+never skipped. Break-glass requires explicit user invocation (e.g.
+`break-glass: true`, "this is a hotfix"). Never enter it unilaterally.
+
+Minimum evidence:
+
+- **Targeted test(s)** covering the exact regression — zero tests is not
+  acceptable.
+- **Smoke check** of the fixed path (curl, manual trigger, log tail) with
+  output captured in the message.
+- **Explicit list of skipped validations** and a **follow-up commitment**
+  (ticket or PR line) to run them within 24h.
+
+Completion wording: _"hotfix applied, full verification deferred per
+break-glass"_ — never _"done"_ or _"verified"_. The normal gate resumes
+on the follow-up PR.
