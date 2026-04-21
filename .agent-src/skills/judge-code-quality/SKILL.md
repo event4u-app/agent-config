@@ -111,6 +111,10 @@ Required fields (ordered):
    change, and references a neighboring file when the claim rests on
    a codebase convention; omit only when verdict is `apply`
 
+If a finding needs runtime confirmation (running a formatter, linter,
+or static analyzer), note it as a follow-up for the implementer — the
+judge does not execute tools.
+
 ## Gotcha
 
 * **Stylistic preferences disguised as findings** — "I prefer X" is
@@ -133,10 +137,22 @@ Required fields (ordered):
 * NEVER flag issues a configured formatter or linter would catch
 * NEVER silently fall back to a different model than `subagents.judge_model`
 
-## See also
+## References
 
-- [`subagent-orchestration`](../subagent-orchestration/SKILL.md) — model pairing rules
+- **LLM-as-a-Judge foundations** — Zheng et al., "Judging LLM-as-a-Judge
+  with MT-Bench and Chatbot Arena" (2023),
+  [arxiv.org/abs/2306.05685](https://arxiv.org/abs/2306.05685).
+  Establishes the specialized-judge pattern and failure modes (position
+  bias, self-consistency) this skill defends against.
+- **Code-review rubric** — Google Engineering Practices, "The Standard
+  of Code Review" and "What to look for in a code review",
+  [google.github.io/eng-practices/review/reviewer](https://google.github.io/eng-practices/review/reviewer/).
+  The lenses (design, functionality, complexity, tests, naming, comments,
+  style, consistency) the judge applies — codebase conventions over
+  external style preferences.
+- [`subagent-orchestration`](../subagent-orchestration/SKILL.md) —
+  model-pairing rules (`subagents.judge_model` one tier above implementer).
 - Sibling judges: [`judge-bug-hunter`](../judge-bug-hunter/SKILL.md),
   [`judge-security-auditor`](../judge-security-auditor/SKILL.md),
-  [`judge-test-coverage`](../judge-test-coverage/SKILL.md)
-- [`/review-changes`](../../commands/review-changes.md) — dispatches all four judges
+  [`judge-test-coverage`](../judge-test-coverage/SKILL.md) — dispatched
+  together by [`/review-changes`](../../commands/review-changes.md).

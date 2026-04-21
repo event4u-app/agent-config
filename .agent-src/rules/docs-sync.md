@@ -51,9 +51,11 @@ When skill/rule/command reads new setting from `.agent-settings.yml` not in `tem
 
 1. Add key with default to template
 2. Add row to Settings Reference table
-3. Add comment explaining key
+3. Add comment above key explaining it
 4. **Update local `.agent-settings.yml`** — add new key with default, preserve existing values,
-   apply template order. **Mandatory** — user can't discover new settings otherwise.
+   apply template order and comments. Same behavior as `/config-agent-settings`, inline.
+
+**Mandatory** — without step 4, user can't discover new settings exist.
 
 ## Content consistency
 

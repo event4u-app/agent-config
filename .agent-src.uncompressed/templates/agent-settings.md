@@ -221,4 +221,3 @@ When adding a new setting:
 3. Update the relevant skill or command that reads this setting.
 4. The next time `/config-agent-settings` runs, it will add the new key
    automatically.
-

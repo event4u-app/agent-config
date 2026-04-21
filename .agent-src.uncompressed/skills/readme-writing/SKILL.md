@@ -115,7 +115,18 @@ A reader scanning the README should answer within 10 seconds:
 The first screen (before scrolling) must contain the title, summary,
 and either install command or quickstart. Everything else comes after.
 
-### 6. Validate
+### 6. Size and structure
+
+Keep the README scannable. If it grows past ~150 lines, add a Table of
+Contents; past ~300 lines, split deep content out to `/docs/` or
+`references/`. Use `<details>` only for secondary, bulky content (never
+for install, first example, or requirements).
+
+→ See `guidelines/docs/readme-size-and-splitting.md` for thresholds,
+splitting strategies (reference-split, deep-link tables, collapsibles),
+multi-audience handling, and anti-patterns.
+
+### 7. Validate
 
 After writing, verify:
 
@@ -125,6 +136,8 @@ After writing, verify:
 - [ ] First screen answers: what, why, how-to-start
 - [ ] No dead sections (heading with 1-2 trivial sentences)
 - [ ] Scope is right — deep content moved to dedicated docs, not crammed in
+- [ ] Size below the "overloaded" threshold, or splitting is in place (see size guideline)
+- [ ] ToC present if README > 150 lines or > 6 top-level sections
 - [ ] Matches existing tonality if repo has established voice
 - [ ] All file paths and references are valid
 

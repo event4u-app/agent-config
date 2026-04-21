@@ -118,8 +118,9 @@ Required fields (ordered):
 4. **Issues** — every finding names the attacker, the exploit path,
    and the missing protection; omit only when verdict is `apply`
 
-Runtime confirmation (e.g. reproducing an exploit with `curl`) is a
-follow-up for the implementer, not the judge.
+If a finding needs runtime confirmation (e.g. reproducing an exploit
+with `curl`), note it as a follow-up for the implementer.
+Runtime boundary: the judge does not execute tools.
 
 ## Gotcha
 
@@ -146,10 +147,21 @@ follow-up for the implementer, not the judge.
 * NEVER silently fall back to a different model than `subagents.judge_model`
 * NEVER report a finding without naming the concrete exploit path
 
-## See also
+## References
 
-- [`subagent-orchestration`](../subagent-orchestration/SKILL.md) — model pairing rules
-- [`security`](../security/SKILL.md) — broader security practices for implementers
+- **LLM-as-a-Judge foundations** — Zheng et al., "Judging LLM-as-a-Judge
+  with MT-Bench and Chatbot Arena" (2023),
+  [arxiv.org/abs/2306.05685](https://arxiv.org/abs/2306.05685).
+  Establishes the specialized-judge pattern and failure modes (position
+  bias, self-consistency) this skill defends against.
+- **Security rubric** — OWASP Application Security Verification Standard
+  (ASVS), [owasp.org/www-project-application-security-verification-standard](https://owasp.org/www-project-application-security-verification-standard/).
+  Finding categories (authentication, access control, validation,
+  cryptography, error handling) the judge walks on every diff.
+- [`subagent-orchestration`](../subagent-orchestration/SKILL.md) —
+  model-pairing rules (`subagents.judge_model` one tier above implementer).
+- [`security`](../security/SKILL.md) — broader security practices for implementers.
 - Sibling judges: [`judge-bug-hunter`](../judge-bug-hunter/SKILL.md),
   [`judge-test-coverage`](../judge-test-coverage/SKILL.md),
-  [`judge-code-quality`](../judge-code-quality/SKILL.md)
+  [`judge-code-quality`](../judge-code-quality/SKILL.md) — dispatched
+  together by [`/review-changes`](../../commands/review-changes.md).
