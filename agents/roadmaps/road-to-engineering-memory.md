@@ -138,9 +138,25 @@ Phase 1 is shipped when: four schemas exist as templates, four
 guidelines document them, `check_references.py` validates cross-refs,
 and each schema contains at least one populated example in this repo.
 
+## How this connects to the memory infrastructure
+
+This roadmap defines **what** each memory type captures and **who**
+reads it. The matching **where, how, and when** lives in:
+
+- [`road-to-project-memory.md`](road-to-project-memory.md) — settings
+  layering, repo-shared curated files, hygiene. Agent-config's own
+  baseline; works without any companion package.
+- [`road-to-agent-memory-integration.md`](road-to-agent-memory-integration.md) —
+  contract with the optional `@event4u/agent-memory` package:
+  detection, retrieval backend, signal producers, promotion.
+- [`agent-memory/`](agent-memory/) — specs for the memory package
+  itself (decay calibration, promotion flow, cross-project learning).
+
 ## See also
 
 - [`road-to-agent-outcomes.md`](road-to-agent-outcomes.md) — master frame, Memory layer
 - [`road-to-role-modes.md`](road-to-role-modes.md) — roles that consume memory
+- [`road-to-project-memory.md`](road-to-project-memory.md) — infrastructure counterpart (settings + files)
+- [`road-to-agent-memory-integration.md`](road-to-agent-memory-integration.md) — optional operational layer
 - [`road-to-curated-self-improvement.md`](road-to-curated-self-improvement.md) — learnings that flow upstream, distinct from project memory
 - [`review-routing-data-format.md`](../../.agent-src.uncompressed/guidelines/agent-infra/review-routing-data-format.md) — existing format pattern the new schemas follow

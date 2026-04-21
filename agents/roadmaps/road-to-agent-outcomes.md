@@ -62,7 +62,7 @@ commands.
 | Sub-roadmap | Layer focus | Lever |
 |---|---|---|
 | [`road-to-role-modes.md`](road-to-role-modes.md) | Capability + Governance | Explicit role modes (Developer, Reviewer, Tester, PO, Incident, Planner) with output contracts. Lets a smaller model stabilize its reasoning by loading the right frame instead of re-inventing it each task. |
-| [`road-to-engineering-memory.md`](road-to-engineering-memory.md) | Memory | Expands the memory layer beyond `ownership-map` and `historical-bug-patterns` to `domain-invariants`, `architecture-decisions`, `incident-learnings`, `product-rules` — with an explicit adoption and maintenance story, not more unused schemas. |
+| [`road-to-engineering-memory.md`](road-to-engineering-memory.md) | Memory | Expands the memory layer beyond `ownership-map` and `historical-bug-patterns` to `domain-invariants`, `architecture-decisions`, `incident-learnings`, `product-rules` — with an explicit adoption and maintenance story, not more unused schemas. Supported by [`road-to-project-memory.md`](road-to-project-memory.md) (settings + repo files, works standalone) and [`road-to-agent-memory-integration.md`](road-to-agent-memory-integration.md) (contract for the optional [`agent-memory/`](agent-memory/) package). |
 | [`road-to-curated-self-improvement.md`](road-to-curated-self-improvement.md) | Governance + Capability | Closed-loop where the agent proposes rule/skill/pattern changes from project evidence, a human gate approves, and approved changes flow upstream via `upstream-contribute`. Replaces ad-hoc "I noticed this" with a reviewed pipeline. |
 
 ## Non-goals (explicit)
