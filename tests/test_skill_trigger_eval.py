@@ -17,6 +17,8 @@ sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
 from skill_trigger_eval import (  # noqa: E402
     AnthropicRouter,
+    ConfirmationAborted,
+    KeyGateError,
     MockRouter,
     Query,
     QueryResult,
@@ -24,11 +26,15 @@ from skill_trigger_eval import (  # noqa: E402
     _extract_field,
     _parse_frontmatter,
     _parse_would_load,
+    build_confirmation_summary,
     compute_metrics,
     estimate_cost,
+    load_anthropic_key,
     load_skill_metas,
     load_triggers,
     main,
+    pre_estimate_cost,
+    require_confirmation,
     run_eval,
     write_result,
 )
@@ -267,3 +273,166 @@ def test_write_result_produces_valid_json(tmp_path: Path):
     write_result(result, out)
     assert out.exists()
     assert json.loads(out.read_text(encoding="utf-8"))["skill"] == "pilot"
+
+
+# -- key gate -------------------------------------------------------------
+#
+# These tests cover the on-disk contract that install_anthropic_key.sh
+# establishes and that load_anthropic_key() re-checks on every live run.
+
+def _write_key(path: Path, content: str, mode: int = 0o600) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+    path.chmod(mode)
+    return path
+
+
+def test_load_anthropic_key_happy_path(tmp_path: Path):
+    key_path = _write_key(tmp_path / "k", "sk-ant-test-abc\n")
+    assert load_anthropic_key(key_path) == "sk-ant-test-abc"
+
+
+def test_load_anthropic_key_missing_file(tmp_path: Path):
+    with pytest.raises(KeyGateError, match="not found"):
+        load_anthropic_key(tmp_path / "absent")
+
+
+def test_load_anthropic_key_rejects_group_readable(tmp_path: Path):
+    key_path = _write_key(tmp_path / "k", "sk-ant-test\n", mode=0o640)
+    with pytest.raises(KeyGateError, match="Unsafe permissions"):
+        load_anthropic_key(key_path)
+
+
+def test_load_anthropic_key_rejects_world_readable(tmp_path: Path):
+    key_path = _write_key(tmp_path / "k", "sk-ant-test\n", mode=0o644)
+    with pytest.raises(KeyGateError, match="Unsafe permissions"):
+        load_anthropic_key(key_path)
+
+
+def test_load_anthropic_key_rejects_empty(tmp_path: Path):
+    key_path = _write_key(tmp_path / "k", "   \n")
+    with pytest.raises(KeyGateError, match="empty"):
+        load_anthropic_key(key_path)
+
+
+def test_load_anthropic_key_rejects_wrong_prefix(tmp_path: Path):
+    key_path = _write_key(tmp_path / "k", "sk-foo-bar\n")
+    with pytest.raises(KeyGateError, match="sk-ant-"):
+        load_anthropic_key(key_path)
+
+
+# -- confirmation gate ----------------------------------------------------
+
+class _TTY:
+    """Fake stdin that reports as a tty and yields a canned line."""
+
+    def __init__(self, line: str):
+        self._line = line
+
+    def isatty(self) -> bool:
+        return True
+
+    def readline(self) -> str:
+        return self._line + "\n"
+
+
+class _NonTTY:
+    def isatty(self) -> bool:
+        return False
+
+    def readline(self) -> str:  # pragma: no cover - should never be called
+        raise AssertionError("readline on non-tty must never be reached")
+
+
+def test_require_confirmation_rejects_non_tty():
+    import io
+    with pytest.raises(ConfirmationAborted, match="interactive tty"):
+        require_confirmation("x", stdin=_NonTTY(), stdout=io.StringIO())
+
+
+def test_require_confirmation_rejects_wrong_answer():
+    import io
+    with pytest.raises(ConfirmationAborted, match="Aborted"):
+        require_confirmation("x", stdin=_TTY("y"), stdout=io.StringIO())
+
+
+def test_require_confirmation_rejects_empty():
+    import io
+    with pytest.raises(ConfirmationAborted):
+        require_confirmation("x", stdin=_TTY(""), stdout=io.StringIO())
+
+
+def test_require_confirmation_is_case_sensitive():
+    import io
+    with pytest.raises(ConfirmationAborted):
+        require_confirmation("x", stdin=_TTY("YES"), stdout=io.StringIO())
+
+
+def test_require_confirmation_accepts_exact_yes():
+    import io
+    out = io.StringIO()
+    # Returns None on success; any exception = failure.
+    require_confirmation("banner", stdin=_TTY("yes"), stdout=out)
+    assert "banner" in out.getvalue()
+
+
+# -- pre-estimate + summary -----------------------------------------------
+
+def test_pre_estimate_cost_shape():
+    skills = [SkillMeta(f"s{i}", f"desc {i} " * 5) for i in range(10)]
+    queries = [Query("q " * 10, True) for _ in range(5)]
+    in_tok, out_tok, cost = pre_estimate_cost("claude-sonnet-4-5", skills, queries)
+    assert in_tok > 0 and out_tok > 0 and cost > 0
+    # Linear in queries: doubling queries doubles both token counts.
+    in2, out2, _ = pre_estimate_cost("claude-sonnet-4-5", skills, queries * 2)
+    assert in2 == 2 * in_tok
+    assert out2 == 2 * out_tok
+
+
+def test_build_confirmation_summary_contains_key_fields(tmp_path: Path):
+    s = build_confirmation_summary(
+        model="claude-sonnet-4-5",
+        skill="pilot",
+        query_count=10,
+        catalogue_size=100,
+        input_tokens=12_345,
+        output_tokens=600,
+        cost_usd=0.04,
+        key_path=tmp_path / "anthropic.key",
+    )
+    assert "claude-sonnet-4-5" in s
+    assert "pilot" in s
+    assert "10" in s  # query count
+    assert "12,345" in s  # formatted tokens
+    assert "$0.04" in s
+    assert str(tmp_path / "anthropic.key") in s
+
+
+# -- AnthropicRouter API-key contract -------------------------------------
+
+def test_anthropic_router_requires_api_key_or_client():
+    with pytest.raises(RuntimeError, match="explicit api_key"):
+        AnthropicRouter(model="claude-sonnet-4-5")
+
+
+def test_anthropic_router_accepts_injected_client():
+    # Injected client path bypasses the api_key requirement. Used by
+    # unit tests that exercise routing logic without an SDK dependency.
+    class _FakeClient:
+        pass
+    router = AnthropicRouter(model="claude-sonnet-4-5", client=_FakeClient())
+    assert router is not None
+
+
+# -- main() live-path gates -----------------------------------------------
+
+def test_main_live_aborts_when_key_missing(tmp_path: Path, capsys):
+    """Live path (no --dry-run) must fail fast if the key file is absent,
+    before any router is instantiated or API call is attempted."""
+    exit_code = main([
+        "--skill", "eloquent",
+        "--key-path", str(tmp_path / "absent"),
+    ])
+    assert exit_code == 2
+    err = capsys.readouterr().err
+    assert "not found" in err

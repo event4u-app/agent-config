@@ -8,7 +8,7 @@
 - **Source analysis:** [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) (Finding §3 ADAPT)
 - **Status:** Phase 1 shipped (runner + 3 pilot triggers.json + 22 tests); Phase 2 decision gate blocked on real API run
 - **Author:** Split out of `road-to-anthropic-alignment.md` on 2026-04-20 for focus
-- **Last updated:** 2026-04-21 — runner landed in PR #14 with dry-run only; live runs require `ANTHROPIC_API_KEY` + `TRIGGER_EVALS_CONFIRM=1`
+- **Last updated:** 2026-04-21 — runner hardened for live use: on-disk key file (mode 0600) + pre-run cost preview + interactive `yes` confirmation. Env-var `ANTHROPIC_API_KEY` fallback and `TRIGGER_EVALS_CONFIRM=1` bypass were both removed in favour of the stricter gates.
 
 ## Guiding principle
 
@@ -176,13 +176,45 @@ Shipped [`scripts/skill_trigger_eval.py`](../../scripts/skill_trigger_eval.py)
   labelled `router: mock` so no one mistakes it for a real eval.
 - **No HTML viewer, no dashboard.** JSON is the product.
 - **Tests:** [`tests/test_skill_trigger_eval.py`](../../tests/test_skill_trigger_eval.py)
-  — 22 tests (frontmatter parsing, metrics math, cost estimate, MockRouter,
-  AnthropicRouter with injected fake client, code-fence tolerance, CLI smoke
-  run, exit codes). All green.
+  — 38 tests (frontmatter parsing, metrics math, cost estimate, MockRouter,
+  AnthropicRouter api-key contract, key-gate incl. mode/prefix/empty checks,
+  confirmation-gate incl. tty/case/empty checks, live-path abort on missing
+  key, code-fence tolerance, CLI smoke run, exit codes). All green.
 - **Taskfile:** `task test-triggers -- <skill>` for dry-run;
-  `task test-triggers-live -- <skill>` refuses to launch unless
-  `TRIGGER_EVALS_CONFIRM=1` is set. Both documented inline.
+  `task test-triggers-live -- <skill>` launches the live runner, which
+  itself enforces the key file + tty + `yes` gates.
 - **Gitignore:** `**/evals/last-run.json` — run outputs are not committed.
+  Live runs land in `evals/results/<timestamp>-<skill>-<model>.json`
+  (also gitignored).
+
+### How to run a live eval
+
+1. **Install the key once.** Paste it into the interactive prompt — no
+   echo, no history, no env-var:
+
+   ```bash
+   bash scripts/install_anthropic_key.sh
+   ```
+
+   The script writes `~/.config/agent-config/anthropic.key` with mode
+   `0600`. Piped stdin is rejected. Rerun to rotate; `rm` to remove.
+
+2. **Run the eval.** Each invocation prints a cost preview and waits for
+   exactly `yes` on stdin before calling the API:
+
+   ```bash
+   task test-triggers-live -- eloquent
+   ```
+
+   Abort paths (any of them exits non-zero, no API call):
+   - key file missing / wrong mode / wrong prefix / empty
+   - non-tty stdin
+   - answer is not literally `yes`
+
+3. **Read the result.** JSON lands in
+   `evals/results/<UTC-timestamp>-<skill>-<model>.json` with
+   per-query `router_response`, `passed`, and aggregate
+   `precision` / `recall` / `f1` metrics.
 
 ## Phase 2 — Decision Gate
 
@@ -204,8 +236,8 @@ and stop. Do not expand scope.
 - Add `evals/triggers.json` as optional file in the new-skill scaffold
   (`.agent-src.uncompressed/templates/skill.md` neighborhood)
 - `task test-triggers -- <skill>` runs the eval for one skill
-- `task test-triggers-all` runs the full set (cost-gated by default;
-  requires `TRIGGER_EVALS_CONFIRM=1` env var)
+- `task test-triggers-all` runs the full set (cost-gated by the same
+  key-file + per-skill confirmation gates as the single-skill runner)
 
 ### 3.2 CI policy
 
