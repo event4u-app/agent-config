@@ -156,9 +156,21 @@ Do not inline the runtime build into this roadmap.
 
 ### 2.4 Phase-2 acceptance
 
-- [ ] One existing command (e.g. `/commit`) optionally wrappable in `/do-and-judge`
-- [ ] `.agent-settings` migration tested on a fresh consumer install (`tests/test_install.sh`)
-- [ ] Cross-roadmap tie confirmed: judge outputs feed into `road-to-trigger-evals.md` Problem 2 PoC
+- [x] `/commit` optionally wrappable in `/do-and-judge` — integration
+      block in [`commands/commit.md`](../../.agent-src.uncompressed/commands/commit.md)
+      under "Optional: wrap in `/do-and-judge`"; cross-linked from
+      [`commands/do-and-judge.md`](../../.agent-src.uncompressed/commands/do-and-judge.md)
+      "Wrappable commands" section
+- [x] `.agent-settings` migration tested on a fresh consumer install —
+      `test_seeds_subagent_keys` (pytest, `tests/test_install_py.py`) +
+      `test_subagent_keys_seeded` (shell, `tests/test_install_orchestrator.sh`)
+      assert all three `subagent_*` keys end up in the rendered file
+- [x] Cross-roadmap tie confirmed: judges are the natural evaluator for
+      Problem 2 (always-rule compliance) in
+      [`archive/road-to-rule-quality-research.md`](archive/road-to-rule-quality-research.md)
+      and [`agents/analysis/rule-quality-eval-feasibility.md`](../analysis/rule-quality-eval-feasibility.md);
+      Phase 3 judge-sub-skills provide the graders that `road-to-compliance-evals.md`
+      (future, conditional on trigger-evals Phase 2 green light) would reuse
 
 ## Phase 3: Specialized judge agents
 
