@@ -233,6 +233,11 @@ Code's Agent Skills specification.
 | [**Customization**](docs/customization.md) | Overrides, AGENTS.md, agent settings, cost profiles |
 | [**Quality & CI**](docs/quality.md) | Linting, CI pipeline, compression system |
 
+Uninstalling: see
+[docs/installation.md#uninstalling](docs/installation.md#uninstalling) —
+there is no dedicated uninstall command; removal is a documented manual
+step (package manager + `rm -rf` of generated dirs).
+
 ---
 
 ## Development
