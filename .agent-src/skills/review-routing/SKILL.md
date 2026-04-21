@@ -1,6 +1,6 @@
 ---
 name: review-routing
-description: "Use when preparing a PR description, suggesting reviewers, or triaging risk on a diff — produces owner-mapped roles plus matched historical bug patterns from project-local YAML, with required tests called out."
+description: "Use when preparing a PR description, suggesting reviewers, or flagging risk — produces owner-mapped roles plus historical bug-pattern matches from project-local YAML."
 source: package
 ---
 
@@ -33,11 +33,11 @@ Do NOT use when:
 
 ## Procedure
 
-### 1. Collect the changed file list
+### 1. Identify the changed file list
 
-From git (`git diff --name-only <base>...<head>`) or from an explicit
-list supplied by the caller. If the list is empty, stop and report
-"no changes — routing skipped".
+Inspect the diff: from git (`git diff --name-only <base>...<head>`) or
+from an explicit list supplied by the caller. If the list is empty,
+stop and report "no changes — routing skipped".
 
 ### 2. Load project data (if present)
 
@@ -106,6 +106,22 @@ Before returning:
 5. If no data files exist, the output says so explicitly.
 
 ## Output format
+
+Every routing result must satisfy these requirements:
+
+1. **Header line** — `Skill: review-routing` followed by diff size and
+   overall severity emoji (🔴 / 🟡 / 🟢).
+2. **Ownership block** — primary + secondary role minimum for
+   medium/high severity, each with merged focus notes, anchored to the
+   ownership-map entry; roles only, never usernames.
+3. **Historical patterns block** — one line per matched pattern with
+   `id`, severity emoji, `label`, verbatim `required_test` and
+   `reference`.
+4. **Footer** — staleness note (or "none") and data source
+   (`ownership-map.yml + historical-bug-patterns.yml` or
+   `no project data — generic roles`).
+
+Canonical layout:
 
 ```
 Skill:    review-routing
