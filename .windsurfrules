@@ -1589,6 +1589,24 @@ Every skill must answer four questions. If ANY answer is weak, the skill is not 
 
 Every skill MUST have: `When to use`, `Procedure`, `Gotcha`, `Output format`, `Do NOT`.
 
+## Description Triggering
+
+Claude routes skills by the frontmatter `description`. Polite, generic, or
+hedged descriptions cause **undertriggering** — the skill never loads.
+
+Pushy descriptions:
+
+- Start with a concrete verb phrase: `Use when ...`, `Creates ...`, `Reviews ...`.
+- Name 2+ concrete triggers (domains, symptoms, file types, user phrasing).
+- End with: `... even if they don't explicitly ask for \`<skill-name>\`.`
+- No hedges: `may help with`, `can be useful for`, `covers various`.
+
+Source: [`skills/skill-creator`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md)
+via [`road-to-anthropic-alignment.md`](../../../agents/roadmaps/road-to-anthropic-alignment.md) Phase 2.
+
+**Litmus test:** Read the description cold. If you cannot name two phrasings a
+user would type that should route to this skill, rewrite it.
+
 ## Skill Independence
 
 ```

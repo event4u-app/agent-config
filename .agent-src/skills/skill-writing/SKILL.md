@@ -94,13 +94,39 @@ This step is mandatory — skipping analysis leads to duplicate, weak, or pointe
 
 ### 1. Define the trigger
 
-Write "When to use" first.
+Write "When to use" first — the in-body trigger for anyone reading the skill.
 
 Good:
 Use when creating Laravel middleware for request filtering
 
 Bad:
 Use when working with Laravel
+
+### 1b. Pushy frontmatter description
+
+The `description:` field is what Claude reads at routing time. Polite or
+generic descriptions cause **undertriggering**. Normative source:
+`skill-quality` rule § *Description Triggering*.
+
+Two rules: name 2+ triggers (domains, symptoms, user phrasing), end with
+`... even if they don't explicitly ask for \`<skill-name>\`.`.
+
+Canonical before/after (2026-04-21 audit baseline):
+
+```yaml
+# Bad (138 chars, polite, single trigger class):
+description: "Use when writing Playwright E2E tests — browser automation,
+  visual regression testing, Page Objects, fixtures, and reliable test
+  patterns."
+
+# Good (pushy, second trigger class, explicit tail):
+description: "Use when writing Playwright E2E tests — locators, assertions,
+  Page Objects, fixtures, CI, and flaky test prevention — even if the user
+  doesn't say Playwright."
+```
+
+Good routes on *"my E2E keeps flaking on CI"* without naming Playwright.
+Run `python3 scripts/audit_skill_descriptions.py`. If flagged, rewrite.
 
 ### 2. Write the procedure
 
