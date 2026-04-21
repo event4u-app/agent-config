@@ -207,6 +207,15 @@ Do not inline the runtime build into this roadmap.
       diff-gathering step is untouched; language-specific checks (e.g. `php -l`)
       are now handed off to the optional quality-tools step rather than inlined
 
+### 3.3 Follow-up: catalogue-wide pattern backport
+
+The eight patterns established by the four new judges are being backported to
+every skill in the catalogue via its own roadmap — runs in parallel with
+Phase 4, not as a blocker.
+
+- See [`road-to-stronger-skills.md`](road-to-stronger-skills.md) —
+  Tier-based backport of the judge patterns across all 112 non-judge skills.
+
 ## Phase 4: Planning chain
 
 > Depends on: Phase 3 complete (judges are gates between stages)
