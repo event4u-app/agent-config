@@ -349,73 +349,120 @@ impression is worse than no README rewrite at all.
 
   🛑 **Requires `artifact-drafting-protocol`** — Understand → Research
   → Draft with the maintainer. Do NOT silently draft this skill.
-  **Blocked by Q24** (persona architecture) — the seven lenses above
-  should be expressed as personas, not hardcoded prose, once Q24 is
-  resolved.
+  **Blocked by Q24 implementation** (persona files + linter).
+  Q24 direction is decided (Option 1, two-tier). The seven lenses
+  above must now be reconciled with Q24's Core-6:
+    - **Direct Core match:** Senior Engineer, Product Owner,
+      Critical Challenger, Developer (≈ Developer/User/DX).
+    - **Likely specialist or review-mode, not v1 Core:**
+      Maintainer (overlaps senior-engineer + challenger), New User
+      (review mode, not persona), Optimizer (review mode), Developer-
+      DX (may fold into Developer or remain a specialist).
+    - **Missing from Q23's original 7 but present in Core:**
+      Stakeholder, AI Agent. Add both to this skill's default set.
+  Pre-draft scoping work: decide whether `review` runs Core-6 by
+  default with Optimizer/New-User as review MODES (flags), or
+  promotes them to specialist personas.
   → No matching roadmap. High value, high overlap risk, needs
      explicit scoping decision first.
 
 - **Q24 — Personas as first-class reusable building block
-  (architecture, blocks Q23 + Q25).** Q23 hardcodes seven lenses. The
-  proposed refine-ticket skill (Q25) hardcodes another six.
-  Existing skills already carry implicit personas too:
-  `adversarial-review` = Critical Challenger, `judge-*` = specialist
-  reviewers, `receiving-code-review` = reviewee. Without a shared
-  primitive, every new multi-lens skill re-invents the taxonomy and
-  drifts. The architectural question: **introduce `personas/` as a
-  first-class artifact kind, or keep hardcoding per skill?**
+  (architecture, blocks Q23 + Q25). ✅ DIRECTION DECIDED — Option 1
+  + two-tier model.** Q23 hardcodes seven lenses. The proposed
+  refine-ticket skill (Q25) hardcodes another six. Existing skills
+  already carry implicit personas too: `adversarial-review` =
+  Critical Challenger, `judge-*` = specialist reviewers,
+  `receiving-code-review` = reviewee. Without a shared primitive,
+  every new multi-lens skill re-invents the taxonomy and drifts.
 
-  Options:
-    1. **Full persona primitive (`.agent-src.uncompressed/personas/`).**
-       Each persona is a small file — `senior-engineer.md`,
-       `product-owner.md`, `new-user.md`, `critical-challenger.md`,
-       `optimizer.md`, `stakeholder.md`, `ai-agent.md`, `maintainer.md`,
-       `developer-dx.md`, and one or two more. Each file defines the
-       persona's focus, questions-to-ask, style rules, and anti-
-       patterns. Skills reference personas by name in a
-       `personas: [senior-engineer, product-owner]` frontmatter key.
-       User invocation supports "one, several, or all personas" per
-       call: `/refine-ticket --personas=po,senior-engineer`. Compress,
-       linter, and docs-sync need extensions for the new artifact kind.
-    2. **Frontmatter tag only, no persona files.** Add
-       `personas: [...]` to skill frontmatter as pure documentation /
-       discovery tags. No reusable content, each skill still writes
-       its own perspective prose. Lightweight, but doesn't solve the
-       DRY problem — only the taxonomy problem.
-    3. **Status quo — hardcode per skill.** Accept duplication, document
-       a shared persona vocabulary in a new guideline under
-       `guidelines/agent-infra/` (exact filename TBD), skills cite the
-       guideline. Zero infra change.
+  **Decision (confirmed by maintainer):**
+    - Adopt **Option 1 — Full Persona Primitive** at
+      `.agent-src.uncompressed/personas/`. Each persona is a small
+      file. Skills reference personas by name in a
+      `personas: [senior-engineer, product-owner]` frontmatter key.
+      User invocation supports "one, several, or all personas":
+      `/refine-ticket --personas=po,senior-engineer`.
+    - **Two-tier model** (Core always available, Specialists opt-in).
+      Rejected: splitting into fine-grained developer variants
+      (frontend/backend) by default — creates overhead and overlap
+      without new signal.
 
-  Impact on existing artifacts if Option 1 lands:
-    - `adversarial-review` → becomes a thin wrapper that invokes
-      personas `[critical-challenger]` on an input.
+  **Core personas (v1 canon — always loaded by default):**
+    1. `developer` — implementation reality, ambiguity, edge cases.
+    2. `senior-engineer` — architecture impact, long-term risk,
+       trade-offs, over-/under-engineering.
+    3. `product-owner` — outcome, testable acceptance criteria,
+       scope boundaries.
+    4. `stakeholder` — business value, simplification, relevance.
+    5. `critical-challenger` — fake clarity, hidden complexity,
+       split-worthy scope, brutal honesty.
+    6. `ai-agent` — automation-readiness, reuse references, safe
+       execution by coding agents.
+
+  **Specialist personas (opt-in, add only when they ask questions
+  nobody else asks):**
+    - `qa` — testability, edge cases, failure scenarios. **Strong
+      recommendation** — produces unique signal.
+    - `security`, `performance` — candidates for v1.1+. Delegate to
+      existing `threat-modeling` / `performance-analysis` where a
+      dedicated skill already owns the lens.
+    - **Under review (maintainer unsure, leaning NO):**
+      `frontend-developer`, `backend-developer`, `devops`. Add ONLY
+      if they produce questions that the Core six don't. Decision
+      deferred to persona drafting.
+    - **Rejected for v1 canon:** `maintainer`, `new-user`,
+      `optimizer`, `developer-dx` — these were in Q23's lens list,
+      but either overlap with Core (maintainer ≈ senior-engineer +
+      challenger) or are better expressed as review MODES than as
+      personas (new-user, optimizer are question frames, not
+      stable recurring mindsets). Revisit if drafting reveals a gap.
+
+  **Canonical heuristic for every future persona proposal:**
+  > A persona is only worth adding if it asks questions that none
+  > of the existing personas ask. No unique questions → no persona.
+
+  **Smart activation (deferred, v1.1+):** agent auto-adds specialist
+  personas based on ticket/PR content — "UI" → `frontend`, "API" →
+  `backend`, "auth/payment" → `security`. Out of scope for v1.
+
+  **Impact on existing artifacts:**
+    - `adversarial-review` → thin wrapper invoking personas
+      `[critical-challenger]` on an input.
     - `judge-bug-hunter` / `judge-security-auditor` /
       `judge-test-coverage` / `judge-code-quality` → reframed as
-      specialist personas, with `review-changes` dispatching to them
-      via the same persona contract.
+      specialist personas. `review-changes` dispatches via the same
+      persona contract.
     - `receiving-code-review`, `requesting-code-review` → persona-
-      driven variants become possible (e.g. review from `new-user`
-      lens for docs changes).
+      driven variants become possible.
 
-  Open decisions:
-    1. Adopt the primitive (Option 1), lightweight tags (Option 2),
-       or stay as-is (Option 3)?
-    2. If Option 1: which ~10 personas are in the v1 canon? Is there
-       a project-local override mechanism for teams to add their own?
-    3. Compression semantics — does each persona compress separately,
-       or only as part of the skills that cite them?
-    4. Do personas get triggers/descriptions (like skills), or are
-       they passive reference content?
-    5. How does `.agent-settings.yml` interact? A
-       `personas.enabled: [senior-engineer, po, ...]` key for default
-       lens selection?
+  **Open implementation decisions (for `road-to-personas.md`):**
+    1. Persona file schema — frontmatter fields, required sections
+       (Focus / Mindset / Questions / Output Expectations /
+       Anti-Patterns), size budget.
+    2. Compression semantics — each persona compresses separately
+       (symmetric with skills/rules), OR only via the skills that
+       cite them? Open.
+    3. Do personas get triggers/descriptions (like skills), or are
+       they passive reference content loaded on demand? Leaning
+       passive — they're invoked BY skills, not by triggers.
+    4. `.agent-settings.yml` interaction — a
+       `personas.enabled: [...]` key for default lens selection? A
+       `personas.specialists: [qa]` key to auto-include QA on
+       every run?
+    5. Project-local override mechanism — `.agent-src/personas/`
+       in consumer repos for team-specific personas (same pattern
+       as skills/rules)?
+    6. Linter rules — every persona must validate, every skill
+       `personas:` entry must resolve, unknown persona = CI fail.
+    7. Compatibility with `.augmentignore` — can a user ignore a
+       persona the same way as a skill?
 
   🛑 **Requires `artifact-drafting-protocol`** — new artifact kind =
-  new linter rules, new compression handling, new cross-ref semantics.
-  Decide BEFORE drafting Q23 or Q25 so both land on the same
-  primitive.
-  → Likely needs its own `road-to-personas.md` if Option 1 wins.
+  new linter rules, new compression handling, new cross-ref
+  semantics. Draft `road-to-personas.md` BEFORE writing Core files
+  so Q23 and Q25 land on the finalized primitive.
+  → Needs its own `road-to-personas.md`. Creation blocks Q23 + Q25
+     implementation; direction above unblocks scoping work on both.
 
 - **Q25 — New skill proposal: refine-ticket (Jira/Linear ticket
   refinement from Dev/Arch/PO/Stakeholder/Challenger/AI lenses).**
@@ -459,9 +506,18 @@ impression is worse than no README rewrite at all.
   `refine-ticket` focused on quality + clarity; split estimation into
   a sibling to avoid bloat.
 
+  **Persona alignment with Q24:** the six perspectives above map
+  1:1 to the Q24 Core-6 (Developer, Senior Engineer, Product Owner,
+  Stakeholder, Critical Challenger, AI Agent) — no new personas
+  required. `refine-ticket` becomes the reference skill for
+  default Core-6 invocation. QA specialist is a strong candidate
+  for `--personas=+qa` opt-in since tickets benefit from
+  testability-first questions.
+
   Open decisions before drafting:
-    1. Persona architecture first (Q24) — then `refine-ticket` either
-       hardcodes or references personas.
+    1. ~~Persona architecture first (Q24)~~ — ✅ decided (Core-6).
+       Remaining: confirm the `personas:` frontmatter shape and
+       default-invocation syntax for user-facing commands.
     2. Input contract — Jira URL, ticket key, pasted text, branch-
        name detection? Reuse from `jira-ticket`?
     3. Output contract — 10-section structure as proposed by the
@@ -470,12 +526,17 @@ impression is worse than no README rewrite at all.
     4. Repo-aware mode — MCP-based, local file read, or agent
        context? Gracefully degrade when no repo is available.
     5. Command + skill vs. skill only? External reviewer proposed both.
-    6. Own roadmap (`road-to-ticket-refinement.md`) covering
+    6. Delegation boundary vs. `threat-modeling` (security lens),
+       `validate-feature-fit` (duplicate/scope detection),
+       `feature-plan` (downstream planning) — refine-ticket cites
+       them, doesn't copy their logic.
+    7. Own roadmap (`road-to-ticket-refinement.md`) covering
        `refine-ticket` + `estimate-ticket` as a family, or land under
        `road-to-stronger-skills.md`?
 
   🛑 **Requires `artifact-drafting-protocol`** — substantial new
-  artifact. Blocked by Q24 (persona architecture).
+  artifact. Blocked by Q24 **implementation** (persona files +
+  linter must ship first). Direction unblocks scoping work now.
   → No matching roadmap. Strong product-process fit, high overlap
      with `validate-feature-fit` — scope boundary is the main
      pre-draft decision.
