@@ -77,6 +77,22 @@ class TestCount(unittest.TestCase):
         # Guidelines live in topic subdirectories; recursive walk is required.
         self.assertGreater(update_counts.count("guidelines"), 0)
 
+    def test_personas_non_zero(self):
+        # Personas ship with the Core-6 cast + QA specialist on day one.
+        self.assertGreater(update_counts.count("personas"), 0)
+
+    def test_personas_excludes_readme(self):
+        # The personas/README.md index file must not be counted as a persona.
+        src = Path(update_counts.SRC) / "personas"
+        md_files = [f for f in src.glob("*.md")]
+        readme_present = any(f.name == "README.md" for f in md_files)
+        if readme_present:
+            self.assertLess(
+                update_counts.count("personas"),
+                len(md_files),
+                "personas count must exclude README.md",
+            )
+
 
 class TestRoadmapBaseline(unittest.TestCase):
     """Roadmap baseline pattern must stay wired into TARGETS."""

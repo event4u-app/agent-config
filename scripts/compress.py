@@ -415,7 +415,7 @@ def generate_tools() -> None:
 # itself. Rules are copied (real files); everything else is symlinked.
 
 # Subdirectories of .agent-src/ that map into .augment/ as symlinks.
-AUGMENT_SYMLINK_DIRS = ("skills", "commands", "guidelines", "templates", "contexts", "scripts")
+AUGMENT_SYMLINK_DIRS = ("skills", "commands", "guidelines", "personas", "templates", "contexts", "scripts")
 # Top-level files to symlink into .augment/ (README, etc.)
 AUGMENT_SYMLINK_FILES = ("README.md",)
 

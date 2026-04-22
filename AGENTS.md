@@ -77,6 +77,7 @@ check-refs, check-portability, lint-skills, test, lint-readme.
   rules/        (42 rules)
   commands/     (64 commands)
   guidelines/   (46 guidelines)
+  personas/     (7 personas)
   templates/    (AGENTS.md, copilot-instructions.md, skill.md, …)
   contexts/
 

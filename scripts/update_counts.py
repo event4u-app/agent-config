@@ -30,6 +30,12 @@ def count(kind: str) -> int:
     if kind == "guidelines":
         # guidelines are grouped by topic subdirectory
         return sum(1 for _ in (SRC / "guidelines").rglob("*.md"))
+    if kind == "personas":
+        # personas live as flat .md files, README excluded
+        pdir = SRC / "personas"
+        if not pdir.exists():
+            return 0
+        return sum(1 for f in pdir.glob("*.md") if f.name != "README.md")
     return sum(1 for _ in (SRC / kind).glob("*.md"))
 
 
@@ -51,6 +57,7 @@ TARGETS: list[tuple[str, list[tuple[str, str]]]] = [
             (r"(rules/\s+\()(\d+)( rules\))", "rules"),
             (r"(commands/\s+\()(\d+)( commands\))", "commands"),
             (r"(guidelines/\s+\()(\d+)( guidelines\))", "guidelines"),
+            (r"(personas/\s+\()(\d+)( personas\))", "personas"),
         ],
     ),
     (
@@ -97,9 +104,10 @@ def main() -> int:
     parser.add_argument("--check", action="store_true", help="exit 1 on drift instead of rewriting")
     args = parser.parse_args()
 
-    counts = {k: count(k) for k in ("skills", "rules", "commands", "guidelines")}
+    counts = {k: count(k) for k in ("skills", "rules", "commands", "guidelines", "personas")}
     print(f"📊  Truth: skills={counts['skills']} rules={counts['rules']} "
-          f"commands={counts['commands']} guidelines={counts['guidelines']}")
+          f"commands={counts['commands']} guidelines={counts['guidelines']} "
+          f"personas={counts['personas']}")
 
     any_drift = False
     any_change = False

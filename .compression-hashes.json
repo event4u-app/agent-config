@@ -116,6 +116,13 @@
   "guidelines/php/sql.md": "50be55ec21811010324373f485009d049146d92c281ba43f9dffed7708bac361",
   "guidelines/php/validations.md": "55fa212daab708feb0027bada573e74fcc19e25af43a51e1cc59c9e8b9aa2339",
   "guidelines/php/websocket.md": "b8fbc543d16dc9d68d781e885335f22c8bc5f6eb9dc4bc9ed77219b269d5003e",
+  "personas/ai-agent.md": "65f59d5cbbc635aa21cff3b687c0088e87a54e67e1b82c8b75d02382d37c8438",
+  "personas/critical-challenger.md": "dee0595511c48793bab77f6b3c691a47b176a180872ae75be048a1515a869e26",
+  "personas/developer.md": "f7756e047c51d1f7714bb42133612e7f34488844b8f3a5223d170b9baff0f104",
+  "personas/product-owner.md": "b851752c7a67b71e84c446a11593b61478c0718ec4bdba9c4a8dd9d3a0779ed1",
+  "personas/qa.md": "1b545ea959ad48f5634bb44564673ec9246e6a6aa3019d85333611c559d5adcf",
+  "personas/senior-engineer.md": "4ae0b10a07001138ddceba25180451157fbb3179d9e4ea1b2bf8e564e8c1c46c",
+  "personas/stakeholder.md": "b0bdab54a3e15464934580e82fc13ae15f7a2098b8ad79ae7d44409f387bf475",
   "rules/agent-docs.md": "f729cba77b3209eef9082fb9d13909a4acf073bf994fa2e7ec216c061199b355",
   "rules/analysis-skill-routing.md": "a7a01ed6ed7c783b962ad6acfdf78269a3016de6956e73b1ab579a1200e90ce1",
   "rules/architecture.md": "06d41ea39242ec1b2cf459b04d776433f0cbece31e3e13406c0e8df387c2dfbd",
@@ -299,6 +306,7 @@
   "templates/overrides/rule.md": "40446fc55fa19433a6c168b1db8fd02ceb09a8accdfca27701f3e0302ce4c2d9",
   "templates/overrides/skill.md": "f33bf139261c9691ac67a792ad2dedd437856092c63a77268b29de72ff4945c9",
   "templates/overrides/template.md": "8fdd7c1800f669b599e24e1812b3213f0fd8699ce6fbc3714a3b6c6a3e1f78c5",
+  "templates/persona.md": "cb504df77838d9f42e3eb2c9f0bd1e82c443b70734a2d8feeace5925193954db",
   "templates/roadmaps.md": "9af657790adc32152197b0904f8b80c488340b736983367caae2881c507d63f7",
   "templates/skill.md": "de8d0ae6c4298ed8b88babcc8050e5fb7a5ecc8f5d7de85c6848a83d7d30653b"
 }
