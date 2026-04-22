@@ -45,6 +45,10 @@ PATH_PATTERN = re.compile(
 
 SKILL_REF_PATTERN = re.compile(r'`([\w-]+)`\s+skill')
 RULE_REF_PATTERN = re.compile(r'`([\w-]+)`\s+rule')
+
+# Unchecked TODO items (roadmap checkboxes) legitimately reference files
+# and artifacts that do not exist yet. Skip these lines.
+UNCHECKED_TODO_PATTERN = re.compile(r'^\s*[-*+]\s+\[ \]\s')
 _SKIP_NAMES = {"the", "a", "an", "this", "that", "your", "my", "no", "any", "each", "one",
                "always", "auto", "fail", "vue", "guidelines", "naming",
                "orderBy", "no-commit", "skill-linter", "skill-validator",
@@ -128,6 +132,11 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
             in_code_block = not in_code_block
             continue
         if in_code_block:
+            continue
+
+        # Unchecked TODO checkboxes document future work — their refs are
+        # forward-looking and will not resolve yet.
+        if UNCHECKED_TODO_PATTERN.match(line):
             continue
 
         # File path references

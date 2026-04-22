@@ -168,8 +168,8 @@ get the full feature set.
 | **Library import** | Only for tooling inside `agent-memory` itself | Not a stable contract for consumers |
 | **REST** | Remote multi-machine setups | V2 only |
 
-`agent-config` skills call **CLI first**, upgrade to **MCP** when the
-host advertises it. `absent` mode uses the file fallback (see
+Skills shipped by `agent-config` call **CLI first**, upgrade to **MCP**
+when the host advertises it. `absent` mode uses the file fallback (see
 `road-to-agent-memory-integration.md`). No skill hard-requires MCP.
 
 ## Prerequisites the consumer must meet
