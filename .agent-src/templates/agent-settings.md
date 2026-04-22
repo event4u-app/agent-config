@@ -125,6 +125,17 @@ subagents:
   # Maximum number of parallel subagent invocations (integer, default 3)
   # Set to 1 to serialize. Hard cap enforced by runtime.
   max_parallel: 3
+
+# --- Role modes (see guidelines/agent-infra/role-contracts.md) ---
+roles:
+  # Role the agent defaults to at the start of a session.
+  # Allowed: "" (no default), developer, reviewer, tester, po, incident, planner
+  default_role: ""
+
+  # Role currently active. Set by /mode <name>; cleared by /mode none.
+  # The rule `role-mode-adherence` (auto-triggered when non-empty)
+  # requires every closing output to match the mode's contract.
+  active_role: ""
 ```
 
 ## Settings Reference
@@ -152,6 +163,8 @@ Personal and project-level settings (written by `/config-agent-settings` and
 | `subagents.implementer_model` | model alias or empty | _(empty)_ | Model for implementer subagents. Empty = same tier as session model. See [subagent-configuration](../contexts/subagent-configuration.md). |
 | `subagents.judge_model` | model alias or empty | _(empty)_ | Model for judge subagents. Empty = one tier above implementer (opus if sonnet, sonnet if haiku). |
 | `subagents.max_parallel` | integer | `3` | Maximum parallel subagent invocations. `1` serializes. |
+| `roles.default_role` | `""`, `developer`, `reviewer`, `tester`, `po`, `incident`, `planner` | _(empty)_ | Role the agent defaults to at the start of a session. See [`role-contracts`](../guidelines/agent-infra/role-contracts.md). |
+| `roles.active_role` | same as `default_role` | _(empty)_ | Role currently active; set by `/mode <name>`, cleared by `/mode none`. Enables the `role-mode-adherence` rule. |
 
 ### Rename-Map (migration)
 

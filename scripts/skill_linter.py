@@ -115,6 +115,80 @@ def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+# --- Role-contract anchor cache (see road-to-role-modes Phase 1) ---
+# Populated lazily so the linter stays fast when the guideline is absent.
+_ROLE_CONTRACT_CANDIDATES = (
+    Path(".agent-src.uncompressed/guidelines/agent-infra/role-contracts.md"),
+    Path(".agent-src/guidelines/agent-infra/role-contracts.md"),
+    Path(".augment/guidelines/agent-infra/role-contracts.md"),
+)
+_ROLE_CONTRACT_SLUGS_CACHE: Optional[set[str]] = None
+
+
+def _load_role_contract_slugs() -> set[str]:
+    """Return the set of H3 mode slugs defined in role-contracts.md.
+
+    Empty set if the guideline cannot be found — callers MUST treat an
+    empty cache as "no data" and skip the check rather than flagging
+    every reference as broken.
+    """
+    global _ROLE_CONTRACT_SLUGS_CACHE
+    if _ROLE_CONTRACT_SLUGS_CACHE is not None:
+        return _ROLE_CONTRACT_SLUGS_CACHE
+    slugs: set[str] = set()
+    for candidate in _ROLE_CONTRACT_CANDIDATES:
+        if not candidate.exists():
+            continue
+        try:
+            text = candidate.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        in_skeletons = False
+        for line in text.splitlines():
+            if line.startswith("## "):
+                in_skeletons = line.strip().lower().startswith(
+                    "## contract skeletons"
+                )
+                continue
+            if in_skeletons and line.startswith("### "):
+                name = line[4:].strip().lower()
+                slugs.add(re.sub(r"[^a-z0-9]+", "-", name).strip("-"))
+        if slugs:
+            break
+    _ROLE_CONTRACT_SLUGS_CACHE = slugs
+    return slugs
+
+
+_ROLE_CONTRACT_REF_PATTERN = re.compile(
+    r"role-contracts\.md#([a-z0-9][a-z0-9-]*)", re.IGNORECASE
+)
+
+
+def lint_role_contract_refs(text: str) -> List[Issue]:
+    """Warn if a file references `role-contracts.md#<slug>` for a mode
+    that does not exist as an H3 heading in the guideline. No-op when
+    the guideline is missing or declares no modes (bootstrap safety).
+    """
+    slugs = _load_role_contract_slugs()
+    if not slugs:
+        return []
+    issues: List[Issue] = []
+    seen: set[str] = set()
+    for match in _ROLE_CONTRACT_REF_PATTERN.finditer(text):
+        slug = match.group(1).lower()
+        if slug in seen:
+            continue
+        seen.add(slug)
+        if slug not in slugs:
+            issues.append(Issue(
+                "warning", "unknown_role_contract",
+                f"References role-contracts.md#{slug} but no such "
+                f"mode is defined in the guideline (known: "
+                f"{', '.join(sorted(slugs))})",
+            ))
+    return issues
+
+
 def extract_sections(text: str) -> set[str]:
     return {match.group(1).strip() for match in SECTION_PATTERN.finditer(text)}
 
@@ -727,6 +801,9 @@ def lint_command(path: Path, text: str) -> LintResult:
         issues.append(Issue("error", "no_trailing_newline", "File must end with exactly one newline"))
     elif text.endswith("\n\n"):
         issues.append(Issue("warning", "extra_trailing_newlines", "File ends with multiple newlines; should be exactly one"))
+
+    # Role-contract anchor validity (road-to-role-modes Phase 1).
+    issues.extend(lint_role_contract_refs(text))
 
     return LintResult(
         file=str(path),
