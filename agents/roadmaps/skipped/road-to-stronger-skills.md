@@ -1,5 +1,9 @@
 # Roadmap: Stronger Skills — Backport Judge Patterns to the Full Catalogue
 
+> **Skipped (Q35):** Superseded by a different audit approach — no `[x]` ever
+> landed on this roadmap. All 26 steps were cancelled per the Q35 decision in
+> `road-to-autonomous-agent.md`. Kept for historical reference.
+
 > Adopt the patterns that proved effective in Phase 3.1 (the four specialized
 > judges) across **every** skill in the package — selectively, per role —
 > without blanket rewrites that violate `preservation-guard`.
