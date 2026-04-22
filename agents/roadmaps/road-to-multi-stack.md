@@ -102,8 +102,11 @@ infrastructure. Biggest coverage win per unit of drafting effort.
   `composer-packages`, `security`, `api-design` fire cleanly on
   plain-PHP repos without Laravel context leakage. Fix gaps via
   guidance in existing skills — no new skills if not needed.
-  *(2026-04-22: skipped — needs a real plain-PHP test repo. Tracked
-  as Q31 in `open-questions-2.md`.)*
+  *(2026-04-22: Q31 resolved — scaffold a minimal ~50 LOC fixture
+  (single `index.php`, one class, PSR-4 autoload, no Composer
+  package) as the first step of this wave's drafting session,
+  not preemptively. Escape hatch: if a real plain-PHP repo
+  surfaces before A.4 opens, use that instead.)*
 
 ### Track B — Frontend (Next.js + React, TypeScript-first)
 
@@ -237,7 +240,7 @@ backlog. Per-wave acceptance:
 | Sequencing (Q30 resolved 2026-04-22) | ✅ Track B first · Wave B.1 pilot · one-wave-per-PR · community PRs after B.1 proves the pattern |
 | **Wave B.1 — React core (pilot)** | 🟡 unblocked — awaiting session allocation |
 | Wave B.2-B.4 — Next.js + tooling + UI primitives | ⏸ deferred (ships after B.1 pattern proven) |
-| Wave A.1-A.4 — Symfony + plain PHP authoring (11 skills) | ⏸ deferred (Track A follows Track B; Q31 still open for A.4) |
+| Wave A.1-A.4 — Symfony + plain PHP authoring (11 skills) | ⏸ deferred (Track A follows Track B; A.4 fixture scaffolded inline when the wave opens — Q31 resolved 2026-04-22) |
 | Wave C.1-C.3 — Zend/Laminas (5 skills + migration) | ⏸ deferred (Q32 adoption gate) |
 
 This roadmap is intentionally **never fully done** — it is the

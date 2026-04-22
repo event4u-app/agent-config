@@ -81,10 +81,15 @@
     start date. Opening the first wave is gated on the user
     deciding when to allocate the session.
 
-- **Q31** 🎯 `strategic` — **Wave A.4 plain-PHP leakage
-  verification.** Needs a real plain-PHP test repository (no
-  Laravel). Does the user have one to point at, or should we
-  scaffold a minimal fixture (~50 LOC, no framework)?
+- **Q31** ✅ `resolved` (2026-04-22) — **Wave A.4 plain-PHP
+  leakage verification.** Decision: scaffold a minimal ~50 LOC
+  fixture (single `index.php`, one class, PSR-4 autoload, no
+  Composer package) **when Wave A.4 actually starts** — not now.
+  Rationale: real plain-PHP repos are rare in 2026 and the delta
+  to our skill assumptions isn't predictable until we have the
+  Track A skills in hand. Scaffolding preemptively is wasted
+  context. The fixture task is attached to Wave A.4's drafting
+  session, not to today.
 
 - **Q32** 🎯 `strategic` — **Wave C.2 adoption-gating signal.**
   Laminas authoring skills only ship when adoption justifies.
