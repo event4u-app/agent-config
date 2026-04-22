@@ -259,8 +259,8 @@ tasks:
 
   release:bump:
     desc: |
-      Bump package.json to {{.CLI_ARGS}} and create a release commit.
-      Usage: task release:bump -- 1.9.0
+      Bump package.json + marketplace.json to {{.CLI_ARGS}} and create a
+      release commit. Usage: task release:bump -- 1.9.0
       After the commit lands on main, create the matching git tag and push
       it; the Release Guard workflow asserts package.json and tag agree.
     cmd: |
@@ -270,7 +270,17 @@ tasks:
         exit 2
       fi
       npm version "$version" --no-git-tag-version --allow-same-version
-      git add package.json
+      # Keep .claude-plugin/marketplace.json in sync — lint_marketplace.py
+      # asserts metadata.version == package.json.version.
+      python3 -c "
+      import json, sys
+      from pathlib import Path
+      mp = Path('.claude-plugin/marketplace.json')
+      data = json.loads(mp.read_text())
+      data.setdefault('metadata', {})['version'] = '$version'
+      mp.write_text(json.dumps(data, indent=2) + '\n')
+      "
+      git add package.json .claude-plugin/marketplace.json
       git commit -m "release: $version"
       echo
       echo "Next steps:"

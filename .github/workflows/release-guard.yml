@@ -23,12 +23,22 @@ jobs:
         run: |
           tag="${GITHUB_REF_NAME}"
           pkg="$(jq -r '.version' package.json)"
-          echo "tag:         $tag"
-          echo "package.json: $pkg"
+          mp="$(jq -r '.metadata.version' .claude-plugin/marketplace.json)"
+          echo "tag:                   $tag"
+          echo "package.json:          $pkg"
+          echo "marketplace.json:      $mp"
+          fail=0
           if [ "$tag" != "$pkg" ]; then
             echo "::error::package.json version ($pkg) does not match tag ($tag)."
+            fail=1
+          fi
+          if [ "$tag" != "$mp" ]; then
+            echo "::error::.claude-plugin/marketplace.json metadata.version ($mp) does not match tag ($tag)."
+            fail=1
+          fi
+          if [ "$fail" = "1" ]; then
             echo "Before tagging, run:  task release:bump -- $tag"
             echo "Then commit the version bump, create the tag, and push both."
             exit 1
           fi
-          echo "✅  package.json and tag agree on $tag"
+          echo "✅  package.json, marketplace.json, and tag agree on $tag"
