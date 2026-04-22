@@ -72,13 +72,11 @@ TARGETS: list[tuple[str, list[tuple[str, str]]]] = [
             (r"(Browse all )(\d+)( commands\])", "commands"),
         ],
     ),
-    (
-        "agents/roadmaps/road-to-stronger-skills.md",
-        [
-            # Living baseline — auto-synced so the backport target tracks reality.
-            (r"(baseline )(\d+)( as of)", "skills"),
-        ],
-    ),
+    # Note: ``agents/roadmaps/road-to-stronger-skills.md`` was previously
+    # tracked here with a living ``baseline N as of`` pattern. The roadmap
+    # was moved to ``skipped/`` on 2026-04-23 (Q35 superseded), so its
+    # baseline is frozen as a historical snapshot and is no longer
+    # auto-synced.
 ]
 
 

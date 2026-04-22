@@ -95,21 +95,23 @@ class TestCount(unittest.TestCase):
 
 
 class TestRoadmapBaseline(unittest.TestCase):
-    """Roadmap baseline pattern must stay wired into TARGETS."""
+    """``road-to-stronger-skills.md`` was moved to ``skipped/`` on 2026-04-23
+    (Q35 superseded), so the previously-live baseline pattern is no longer
+    tracked. We keep a regression guard here to prevent a stale target being
+    re-introduced by accident."""
 
-    def test_stronger_skills_baseline_is_tracked(self):
+    def test_stronger_skills_baseline_is_not_tracked(self):
         target_paths = [rel for rel, _ in update_counts.TARGETS]
-        self.assertIn("agents/roadmaps/road-to-stronger-skills.md", target_paths)
-
-    def test_baseline_regex_matches_skill_count(self):
-        patterns = dict(update_counts.TARGETS)[
-            "agents/roadmaps/road-to-stronger-skills.md"
-        ]
-        text = "completion (baseline 121 as of 2026-04-22; roadmap must"
-        counts = {"skills": 122}
-        new_text, drifts = update_counts.apply_to_text(text, patterns, counts)
-        self.assertIn("baseline 122 as of", new_text)
-        self.assertEqual(drifts, [("skills", 121, 122)])
+        self.assertNotIn(
+            "agents/roadmaps/road-to-stronger-skills.md",
+            target_paths,
+            msg="Skipped roadmaps must not carry a living counts baseline.",
+        )
+        self.assertNotIn(
+            "agents/roadmaps/skipped/road-to-stronger-skills.md",
+            target_paths,
+            msg="Skipped roadmaps must not carry a living counts baseline.",
+        )
 
 
 class TestEndToEnd(unittest.TestCase):
