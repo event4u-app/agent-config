@@ -1,0 +1,34 @@
+name: Release Guard
+
+# On every pushed tag, assert that package.json's `version` matches the
+# tag name. Prevents npm publishes on tags whose tarball still carries a
+# stale version (the class of bug that kept npm pinned at 1.4.0 while
+# git tags moved to 1.8.0).
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+-*'
+
+jobs:
+  assert-version-matches-tag:
+    name: package.json.version == tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out tagged commit
+        uses: actions/checkout@v4
+
+      - name: Compare versions
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          pkg="$(jq -r '.version' package.json)"
+          echo "tag:         $tag"
+          echo "package.json: $pkg"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::package.json version ($pkg) does not match tag ($tag)."
+            echo "Before tagging, run:  task release:bump -- $tag"
+            echo "Then commit the version bump, create the tag, and push both."
+            exit 1
+          fi
+          echo "✅  package.json and tag agree on $tag"

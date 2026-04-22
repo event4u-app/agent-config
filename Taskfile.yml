@@ -257,6 +257,27 @@ tasks:
     desc: Show the recommended first-run experience for new users
     cmd: bash scripts/first-run.sh
 
+  release:bump:
+    desc: |
+      Bump package.json to {{.CLI_ARGS}} and create a release commit.
+      Usage: task release:bump -- 1.9.0
+      After the commit lands on main, create the matching git tag and push
+      it; the Release Guard workflow asserts package.json and tag agree.
+    cmd: |
+      version="{{.CLI_ARGS}}"
+      if [ -z "$version" ]; then
+        echo "error: version argument required (e.g. task release:bump -- 1.9.0)" >&2
+        exit 2
+      fi
+      npm version "$version" --no-git-tag-version --allow-same-version
+      git add package.json
+      git commit -m "release: $version"
+      echo
+      echo "Next steps:"
+      echo "  git push"
+      echo "  git tag $version"
+      echo "  git push origin $version"
+
   mcp:render:
     desc: "Render mcp.json → .cursor/mcp.json, .windsurf/mcp.json (add --claude-desktop for user-scope)"
     cmd: python3 scripts/mcp_render.py {{.CLI_ARGS}}
