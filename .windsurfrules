@@ -491,6 +491,38 @@ A learning may be promoted to rule/skill ONLY if ALL gates pass:
 - Update existing over creating duplicates
 - Full workflow: `learning-to-rule-or-skill` skill
 
+## Where learnings are written
+
+Captured learnings live in the **consumer project's** `agents/learnings/`
+directory, one file per learning:
+
+```
+agents/learnings/<YYYY-MM-DD>-<kebab-slug>.md
+```
+
+Minimum fields (markdown with a small YAML frontmatter):
+
+```yaml
+---
+slug: <same as filename>
+captured: <ISO date>
+occurrences: <integer, ≥2 or note "one-off, clearly generalizable">
+type_hint: rule | skill | guideline | update
+scope_hint: project | package
+---
+```
+
+Body: 1-paragraph **pattern** (not anecdote) + 1 concrete example.
+
+A learning file is the input to `learning-to-rule-or-skill`, which
+produces a proposal draft under `agents/proposals/`. The proposal is
+then gated by `scripts/check_proposal.py`; see
+[`self-improvement-pipeline`](../guidelines/agent-infra/self-improvement-pipeline.md).
+
+The `agents/learnings/` and `agents/proposals/` directories are
+consumer-owned — the package ships templates and schemas, never the
+data.
+
 ---
 
 # Development Efficiency
@@ -1779,6 +1811,56 @@ same diff), not from seniority.
   produces the reviewer block.
 - [`requesting-code-review`](../skills/requesting-code-review/SKILL.md) —
   PR preparation and self-review before asking for reviewers.
+
+---
+
+# Role Mode Adherence
+
+Auto-activates when `.agent-settings.yml` sets `roles.active_role` to
+one of the six modes defined in
+[`role-contracts`](../guidelines/agent-infra/role-contracts.md):
+`developer`, `reviewer`, `tester`, `po`, `incident`, `planner`.
+
+Read `roles.active_role` from `.agent-settings.yml` at session start.
+Empty or missing → rule is inert. Do NOT guess a mode.
+
+When active, every closing output MUST:
+
+1. Use the contract fields in the declared order. No invented fields.
+   Missing evidence → single question (per `ask-when-uncertain`), never
+   a fabricated value.
+2. End with the structured mode marker:
+
+   ```
+   <!-- role-mode: <active_role> | contract: <kebab-case-fields> -->
+   ```
+
+3. Refuse work the contract forbids:
+   - `reviewer` — NEVER ships implementation; verdict + blockers only.
+   - `developer` — NEVER writes a review verdict on own change.
+   - `incident` — NEVER expands scope beyond the stated symptom.
+
+   Forbidden work → numbered prompt (per `user-interaction`): switch
+   mode, narrow scope, or clear mode.
+
+## Interactions
+
+- `scope-control` — adherence is stricter (mode may forbid work
+  scope-control would allow).
+- `verify-before-complete` — gate runs BEFORE the mode marker.
+
+## What this rule does NOT do
+
+Infer the mode (Phase-3 router does that). Modify `.agent-settings.yml`
+(only `/mode` writes). Change the contracts (guideline is source of truth).
+
+## See also
+
+- [`role-contracts`](../guidelines/agent-infra/role-contracts.md)
+- [`/mode`](../commands/mode.md)
+- [`ask-when-uncertain`](ask-when-uncertain.md)
+- [`scope-control`](scope-control.md)
+- [`verify-before-complete`](verify-before-complete.md)
 
 ---
 

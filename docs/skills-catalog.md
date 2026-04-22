@@ -1,6 +1,6 @@
 # Skills Catalog
 
-All **121 skills** available in this package, in alphabetical order.
+All **122 skills** available in this package, in alphabetical order.
 Click a skill name to open its SKILL.md and read the full guidance.
 
 > **Regenerate:** `python3 scripts/generate_catalog.py`
@@ -27,6 +27,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`command-routing`](../.agent-src/skills/command-routing/SKILL.md) | Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content — routes to the right command with context inference and GitHub API patterns. |
 | [`command-writing`](../.agent-src/skills/command-writing/SKILL.md) | Use when creating or editing a slash command in .agent-src.uncompressed/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'. |
 | [`composer-packages`](../.agent-src/skills/composer-packages/SKILL.md) | Use when building or maintaining a Composer library — versioning, Laravel integration, autoloading, publishing to private registries — even when the user says 'release a new version'. |
+| [`context-authoring`](../.agent-src/skills/context-authoring/SKILL.md) | Use when filling in knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deployment-order, observability — interactive walkthrough that turns templates into reviewer fuel. |
 | [`context-document`](../.agent-src/skills/context-document/SKILL.md) | Use when the user says "create context", "document this area", or wants a structured snapshot of a codebase area for agent orientation. |
 | [`conventional-commits-writing`](../.agent-src/skills/conventional-commits-writing/SKILL.md) | Use when writing commit messages or squash-merge titles — `feat:`, `fix:`, `chore:`, scopes, breaking changes — even when the user just says 'commit this' without naming Conventional Commits. |
 | [`copilot-agents-optimization`](../.agent-src/skills/copilot-agents-optimization/SKILL.md) | Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience. |
