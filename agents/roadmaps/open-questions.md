@@ -917,48 +917,43 @@ not scoped to one roadmap.
   flow).** ✅ **ABSORBED** into the roadmap's Phase 4. Coordinates
   with Q19 hero rework so there is one README pass, not two.
 
-#### 🔴 Open — Killer-Flow metrics & guardrails
+#### 🟢 Decided — Killer-Flow metrics & guardrails
 
-- **Q38 — Outcome metrics for `/implement-ticket`.** 🎯 strategic.
-  The roadmap commits to five metrics (time-to-verified-change,
-  block rate, memory-decision rate, repeat usage, report
-  rejection). **Open:** where do they live and how are they
-  reviewed? Candidates:
-    1. **Local JSON log per run** under a repo-ignored path, no
-       aggregation — user reads them ad-hoc.
-    2. **Structured append-only log** in `agents/logs/implement-ticket/`
-       (gitignored by default, opt-in to commit for review) —
-       reviewable via a small `task` target.
-    3. **Full telemetry pipeline** (OpenTelemetry, external sink)
-       — rejected by default; only revisit if multi-user demand
-       surfaces.
-  Maintainer pick required before Phase 0 spike concludes so the
-  runtime knows where to emit. Default recommendation: **Option 2**
-  (local, reviewable, no external dependency, matches the
-  package's "governance" posture).
-  → Blocks Phase 0 ADR in
+- **Q38 — Outcome metrics for `/implement-ticket`.** ✅ **DECIDED
+  (2026-04-22) — Option 2: structured append-only log in
+  `agents/logs/implement-ticket/`.**
+  Five metrics emitted as JSON lines per run:
+  `time_to_verified_change_ms`, `block_rate`, `memory_decision_rate`,
+  `repeat_user_runs_per_week`, `report_rejections`.
+  Log directory is gitignored by default; opt-in to commit for team
+  review. A small `task metrics:implement-ticket` target renders the
+  last N runs as a readable table. No external telemetry, no
+  OpenTelemetry, no aggregation service — matches the package's
+  "governance / no hidden external dependencies" posture. Phase 0
+  spike now knows where to emit; ADR can proceed.
+  → Unblocks Phase 0 in
   [`road-to-implement-ticket.md`](road-to-implement-ticket.md#phase-0--technology-spike-1-pr-throwaway-allowed).
 
-- **Q40 — Surface-growth guardrail for delivery flows.** 🎯
-  strategic. `/implement-ticket` is explicitly not the last flow
-  — `/implement-bug`, `/implement-spike`, `/ship-hotfix` are
-  plausible siblings. Each one that lands risks turning the
-  "one opinionated flow" into a kingdom. **Open:** what is the
-  admission gate for a second delivery flow? Proposed gates
-  (non-exclusive):
-    1. ≥10 real `/implement-ticket` runs per week across ≥2
-       users, sustained for 4 weeks.
-    2. A written justification for why the new flow cannot be a
-       persona + a branch inside `/implement-ticket`.
+- **Q40 — Surface-growth guardrail for delivery flows.** ✅
+  **DECIDED (2026-04-22) — all four gates mandatory.**
+  A second delivery flow (`/implement-bug`, `/implement-spike`,
+  `/ship-hotfix`, …) may only be drafted when ALL of the following
+  hold:
+    1. ≥10 real `/implement-ticket` runs per week across ≥2 users,
+       sustained for 4 weeks (demand signal, not speculation).
+    2. Written justification for why the new flow cannot be a
+       persona + a branch inside `/implement-ticket` (avoids
+       duplicating the orchestrator).
     3. Named retirement candidate OR explicit statement that the
-       new flow is additive (with rationale).
-    4. Roadmap amendment + context-doc update BEFORE the new
-       flow drafts its first artifact.
-  Decision needed: which of 1–4 are mandatory vs. recommended?
-  Default recommendation: **all four mandatory**, so the growth
-  rule is as opinionated as the flow itself.
+       new flow is additive, with rationale.
+    4. Roadmap amendment + `implement-ticket-flow.md` context
+       update BEFORE the new flow drafts its first artifact (no
+       PR-rider expansions).
+  The growth rule is as opinionated as the flow itself — this is
+  the explicit firebreak against turning one opinionated flow into
+  a kingdom of flows.
   → Blocks any future `road-to-implement-*` roadmap from being
-  drafted.
+  drafted until all four gates are passed.
 
 ## Cross-repo questions (`agents/roadmaps/agent-memory/*`)
 

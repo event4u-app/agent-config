@@ -102,6 +102,10 @@ works end-to-end on one real ticket.
       time, error-propagation ergonomics, test-writability.
 - [ ] Run both against one synthetic ticket fixture
       (`tests/fixtures/implement-ticket/`).
+- [ ] Emit the five metrics as JSON lines into
+      `agents/logs/implement-ticket/` per
+      [Q38](open-questions.md#q38) — gitignored directory, opt-in
+      commit for team review, no external telemetry.
 - [ ] Decide runtime + location of orchestrator code. Record in a
       short ADR under `agents/contexts/` (not a roadmap).
 - [ ] Throwaway code lives on a spike branch; nothing merged into
@@ -164,10 +168,14 @@ works end-to-end on one real ticket.
 - [ ] `minimal-safe-diff` + `scope-control` hold across all runs —
       no drive-by edits.
 
-## Metrics (Q38 anchor)
+## Metrics (Q38 ✅ decided)
 
-Tracked across the first 20 real runs (see
-[`implement-ticket-flow`](../contexts/implement-ticket-flow.md#metrics)):
+Emitted as JSON lines into `agents/logs/implement-ticket/`
+(gitignored by default, opt-in commit for team review). See
+[Q38](open-questions.md#q38) and
+[`implement-ticket-flow`](../contexts/implement-ticket-flow.md#metrics).
+
+Tracked across the first 20 real runs:
 - **Time-to-verified-change** (start → report).
 - **Block rate** — % of runs that block on ambiguity (target: >0,
   <50%).
@@ -176,13 +184,29 @@ Tracked across the first 20 real runs (see
 - **Repeat usage** — runs per user per week.
 - **Report rejection rate** — user flags a report as wrong / noisy.
 
-## Surface-growth guardrails (Q40 anchor)
+A `task metrics:implement-ticket` target renders the last N runs
+as a readable table. No external telemetry, no OpenTelemetry, no
+aggregation service.
 
-- No new skill may be drafted **inside** `/implement-ticket`'s scope
-  without a retirement candidate named.
+## Surface-growth guardrails (Q40 ✅ decided — all four gates mandatory)
+
+A second delivery flow (`/implement-bug`, `/implement-spike`,
+`/ship-hotfix`, …) may only be drafted when ALL of the following
+hold — see [Q40](open-questions.md#q40):
+
+1. ≥10 real `/implement-ticket` runs per week across ≥2 users,
+   sustained for 4 weeks.
+2. Written justification for why the new flow cannot be a persona
+   + a branch inside `/implement-ticket`.
+3. Named retirement candidate OR explicit statement that the new
+   flow is additive, with rationale.
+4. Roadmap amendment + `implement-ticket-flow.md` context update
+   BEFORE the new flow drafts its first artifact.
+
+Inside this roadmap's own scope:
+- No new skill may be drafted **inside** `/implement-ticket`'s
+  scope without a retirement candidate named.
 - New steps require a roadmap amendment (not a PR rider).
-- Any second flow (`/implement-bug`, `/implement-spike`, …) must
-  first prove ≥10 real `/implement-ticket` runs per week.
 
 ## Risks
 
