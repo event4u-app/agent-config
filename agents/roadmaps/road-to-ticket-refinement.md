@@ -119,13 +119,24 @@ Depends on: personas Phase 2 (Core-6 authored).
 
 ### Phase 3 — repo-aware mode
 
-- [ ] Inside-repo detection — looks for `.git/`, `agents/`,
+- [x] Inside-repo detection — looks for `.git/`, `agents/`,
   `composer.json` / `package.json`, then loads
   `agents/contexts/*.md` for domain vocabulary.
-- [ ] Nearby-ticket scan — recent branch names, recent commits,
+  *(2026-04-22: `_detect_repo_aware()` + `gather_repo_context()` in
+  `scripts/refine_ticket_detect.py`; context docs listed when
+  `agents/contexts/` exists.)*
+- [x] Nearby-ticket scan — recent branch names, recent commits,
   open PRs mined for naming conventions.
-- [ ] Graceful degrade — outside-repo mode produces the same
+  *(2026-04-22: `gather_repo_context()` returns up to 20 recent
+  branches via `git for-each-ref --sort=-committerdate` and 30
+  recent commit subjects via `git log --pretty=format:%s`; PR
+  mining is out of scope for v1 — local git signals cover the
+  naming-convention need without network calls.)*
+- [x] Graceful degrade — outside-repo mode produces the same
   output shape, minus repo-specific citations.
+  *(2026-04-22: asserted by `test_graceful_degrade_output_shape_parity`
+  — sub-skill lines match inside/outside, only the repo-context
+  tail differs.)*
 
 ### Phase 4 — estimate-ticket sibling
 
