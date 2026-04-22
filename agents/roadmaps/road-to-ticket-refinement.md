@@ -144,14 +144,24 @@ Same persona cast as refine-ticket. Separate skill + command so
 each stays focused. May be invoked via `/estimate-ticket` or
 chained after refine (`/refine-ticket --then-estimate`, TBD).
 
-- [ ] `.agent-src.uncompressed/skills/estimate-ticket/SKILL.md`
+- [x] `.agent-src.uncompressed/skills/estimate-ticket/SKILL.md`
   drafted via `artifact-drafting-protocol`. Output: size (S/M/L/XL),
   risk (Low/Med/High), split recommendation (yes/no + split points),
   uncertainty (High-confidence / Needs-spike / Underspecified).
-- [ ] `.agent-src.uncompressed/commands/estimate-ticket.md`
+  *(2026-04-22: four-axis sizing heuristic — surface area / unknowns /
+  coordination / testing cost; Core-6 personas give one sizing-focused
+  sentence each; Underspecified tickets get a single-line redirect to
+  `/refine-ticket`.)*
+- [x] `.agent-src.uncompressed/commands/estimate-ticket.md`
   drafted.
-- [ ] Fixtures: estimate output for three real tickets of varying
+  *(2026-04-22: same input paths as `/refine-ticket` via `jira-ticket`
+  loader; flags `--personas=<list>`, `--personas=+qa`, `--scale=<map>`;
+  estimability-check gate before sizing.)*
+- [x] Fixtures: estimate output for three real tickets of varying
   shapes committed as reference.
+  *(2026-04-22: `tests/fixtures/estimate_ticket/{clean_small,duplicate_intent_medium,security_xl}.expected.md`
+  — reuse the refine-ticket fixtures as inputs, show S / M / XL shape
+  with split points and persona voices.)*
 
 ### Phase 5 — integration with Q19 / Q20 / Q22
 
