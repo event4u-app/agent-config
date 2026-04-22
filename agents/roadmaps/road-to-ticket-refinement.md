@@ -43,7 +43,7 @@ them — but never re-implements their logic.
 - **No** duplicate-detection logic inside refine-ticket — delegate to `validate-feature-fit`.
 - **No** threat-modeling logic inside refine-ticket — delegate to `threat-modeling` when security-sensitive keywords are detected.
 - **No** feature planning — that stays in `/feature-plan` downstream. Refinement stops at "this ticket is ready to plan".
-- **No** Jira-write without explicit flag — default output is a copyable markdown block; writing back to Jira is `--apply` and opt-in.
+- **No** Jira-write in v1 — default output is a copyable markdown block; write-back is handled by an explicit close-prompt at the end of the skill (`1. Comment · 2. Replace description · 3. Nothing`). No `--apply` flag (decision 2026-04-22; superseded the earlier opt-in flag idea).
 - **No** estimation inside refine-ticket — split into `/estimate-ticket` sibling.
 - **No** new personas — Q24's Core-6 maps 1:1 to Q25's six proposed perspectives; qa is a strong `--personas=+qa` opt-in.
 
@@ -77,18 +77,21 @@ at the sub-skill's findings by reference.
 
 Depends on: personas Phase 2 (Core-6 authored).
 
-- [ ] `.agent-src.uncompressed/skills/refine-ticket/SKILL.md`
+- [x] `.agent-src.uncompressed/skills/refine-ticket/SKILL.md`
   drafted via `artifact-drafting-protocol`. Frontmatter declares
   `personas: [developer, senior-engineer, product-owner,
   stakeholder, critical-challenger, ai-agent]` as the default set.
-- [ ] `.agent-src.uncompressed/commands/refine-ticket.md` drafted —
+  *(2026-04-22: skill shipped; orchestrates `validate-feature-fit`
+  and `threat-modeling`; delegates input loading to `jira-ticket`.)*
+- [x] `.agent-src.uncompressed/commands/refine-ticket.md` drafted —
   flags: `--personas=<list>` (override default), `--personas=+qa`
   (add specialist), `--fresh-eyes` (reweight toward first-time-
-  reader confusion — cross-skill with Q23 review modes),
-  `--apply` (write refined version back to Jira via `jira-ticket`).
-- [ ] Output template frozen (three sections — refined ticket /
-  Top-5 risks / persona summaries); example outputs shipped in a
-  test fixture.
+  reader confusion — cross-skill with Q23 review modes).
+  *(2026-04-22: no `--apply` flag; write-back handled by close-prompt
+  at end of skill output — Q4 decision.)*
+- [x] Output template frozen (three sections — refined ticket /
+  Top-5 risks / persona voices) plus close-prompt; `evals/triggers.json`
+  shipped with 5 should + 5 should-not queries.
 - [ ] Linter checks: `personas:` entries resolve; orchestrated
   skill references resolve; output template presence enforced.
 
