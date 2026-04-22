@@ -284,3 +284,5 @@ What's next?
 ## See also
 
 - [`role-contracts`](../guidelines/agent-infra/role-contracts.md#po) — PO mode output contract (Goal / Assumptions / Acceptance criteria / Impacted modules / Risks / Open questions for stakeholder)
+- [`refine-ticket`](refine-ticket.md) — optional upstream step: run first when the input is a Jira/Linear ticket rather than a fresh idea
+- [`estimate-ticket`](estimate-ticket.md) — sibling of `refine-ticket`; size + risk + split recommendation for an already-refined ticket
