@@ -60,9 +60,10 @@ Plain-PHP-suitable (Track A.4 verification target): `php-coder`,
 - No Node.js-native backend skill line; `project-analysis-node-express`
   is the only touchpoint today. Scheduling TBD per Q19 table.
 - No Ruby / Go / Python tracks. Out of scope for this roadmap.
-- `agent-infra` skills (skill-writing, rule-writing, guideline-writing,
-  command-writing, lint-skills, check-refs, compress) are
-  package-internal — never stack-specific.
+- Agent-infra skills (`skill-writing`, `rule-writing`,
+  `guideline-writing`, `command-writing`, `lint-skills`,
+  `check-refs`, `compress`) are package-internal — never
+  stack-specific.
 
 ## Coverage snapshot (2026-04-22)
 

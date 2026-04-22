@@ -160,7 +160,7 @@
   - **Wave 2 (5 skills + rule + command extension):**
     `dependency-risk-review`, `data-exposure-review`,
     `migration-safety`, `queue-safety`, `secrets-and-config-review`,
-    plus `never-help-build-offensive-cyber-capability` rule with
+    plus a "never-help-build-offensive-cyber-capability" rule with
     10-prompt red-team regression, plus `/review-changes`
     Risk-Scorecard extension.
   - **Wave 3 (4 skills + 1 extension):** `input-validation-review`,
