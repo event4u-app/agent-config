@@ -7,7 +7,7 @@
 ## Prerequisites
 
 - [x] Phase 3.1 of [`road-to-autonomous-agent.md`](road-to-autonomous-agent.md) shipped (4 judge sub-skills + dispatcher)
-- [ ] Phase 3.2 live smoke-test of `/review-changes` — recommended before starting, so lessons-learned shape the backport
+- [-] Phase 3.2 live smoke-test of `/review-changes` — recommended before starting, so lessons-learned shape the backport *(Q35)*
 - [x] `preservation-guard` rule active — blocks quality-losing transformations
 - [x] Skill linter active — gates every batch
 - [x] `.agent-src.uncompressed/` is the source of truth; `.agent-src/` is regenerated
@@ -73,67 +73,67 @@ The roadmap is **done** when:
 
 Skills that emit a pass/fail/revise judgment on work produced by another actor.
 
-- [ ] `adversarial-review`
-- [ ] `code-review`
-- [ ] `design-review`
-- [ ] `performance-analysis`
-- [ ] `project-analyzer`
-- [ ] `readme-reviewer`
-- [ ] `receiving-code-review`
-- [ ] `requesting-code-review`
-- [ ] `security-audit`
-- [ ] `skill-reviewer`
-- [ ] `validate-feature-fit`
-- [ ] `verify-before-complete`
+- [-] `adversarial-review` *(Q35)*
+- [-] `code-review` *(Q35)*
+- [-] `design-review` *(Q35)*
+- [-] `performance-analysis` *(Q35)*
+- [-] `project-analyzer` *(Q35)*
+- [-] `readme-reviewer` *(Q35)*
+- [-] `receiving-code-review` *(Q35)*
+- [-] `requesting-code-review` *(Q35)*
+- [-] `security-audit` *(Q35)*
+- [-] `skill-reviewer` *(Q35)*
+- [-] `validate-feature-fit` *(Q35)*
+- [-] `verify-before-complete` *(Q35)*
 
 ### Tier 2 — Analysis / Investigation / Orchestration (24 skills) — patterns 1-4 (+ 6 where applicable)
 
 Skills that **investigate** a problem or **orchestrate** other skills; do not
 emit verdicts but produce structured findings.
 
-- [ ] `agent-docs-writing` · `analysis-autonomous-mode` · `analysis-skill-router`
-- [ ] `bug-analyzer` · `code-refactoring` · `command-routing`
-- [ ] `copilot-agents-optimization` · `description-assist` · `developer-like-execution`
-- [ ] `feature-planning` · `learning-to-rule-or-skill`
-- [ ] `project-analysis-core` · `project-analysis-hypothesis-driven`
-- [ ] `project-analysis-laravel` · `project-analysis-nextjs` · `project-analysis-node-express`
-- [ ] `project-analysis-react` · `project-analysis-symfony` · `project-analysis-zend-laminas`
-- [ ] `sequential-thinking` · `skill-improvement-pipeline` · `subagent-orchestration`
-- [ ] `systematic-debugging` · `universal-project-analysis`
+- [-] `agent-docs-writing` · `analysis-autonomous-mode` · `analysis-skill-router` *(Q35)*
+- [-] `bug-analyzer` · `code-refactoring` · `command-routing` *(Q35)*
+- [-] `copilot-agents-optimization` · `description-assist` · `developer-like-execution` *(Q35)*
+- [-] `feature-planning` · `learning-to-rule-or-skill` *(Q35)*
+- [-] `project-analysis-core` · `project-analysis-hypothesis-driven` *(Q35)*
+- [-] `project-analysis-laravel` · `project-analysis-nextjs` · `project-analysis-node-express` *(Q35)*
+- [-] `project-analysis-react` · `project-analysis-symfony` · `project-analysis-zend-laminas` *(Q35)*
+- [-] `sequential-thinking` · `skill-improvement-pipeline` · `subagent-orchestration` *(Q35)*
+- [-] `systematic-debugging` · `universal-project-analysis` *(Q35)*
 
 ### Tier 3 — Coding / Authoring / Doing (50 skills) — patterns 1 + 2
 
 Skills that produce code, docs, or configuration. Rollen-Frame macht die
 Scope-Grenze sichtbar, Scope-Routing verhindert Overlap mit Sibling-Skills.
 
-- [ ] `api-design` · `api-endpoint` · `api-testing`
-- [ ] `artisan-commands` · `blade-ui` · `command-writing`
-- [ ] `composer-packages` · `context-document` · `conventional-commits-writing`
-- [ ] `dashboard-design` · `dependency-upgrade` · `dto-creator`
-- [ ] `eloquent` · `fe-design` · `finishing-a-development-branch`
-- [ ] `flux` · `git-workflow` · `guideline-writing`
-- [ ] `jobs-events` · `laravel` · `laravel-horizon` · `laravel-mail`
-- [ ] `laravel-middleware` · `laravel-notifications` · `laravel-pennant`
-- [ ] `laravel-pulse` · `laravel-reverb` · `laravel-scheduling` · `laravel-validation`
-- [ ] `livewire` · `logging-monitoring` · `merge-conflicts` · `migration-creator`
-- [ ] `module-management` · `openapi` · `override-management`
-- [ ] `pest-testing` · `php-coder` · `php-debugging` · `php-service`
-- [ ] `playwright-testing` · `readme-writing` · `readme-writing-package`
-- [ ] `roadmap-management` · `rule-writing` · `skill-management` · `skill-writing`
-- [ ] `sql-writing` · `technical-specification` · `test-driven-development`
-- [ ] `test-performance` · `upstream-contribute` · `using-git-worktrees`
+- [-] `api-design` · `api-endpoint` · `api-testing` *(Q35)*
+- [-] `artisan-commands` · `blade-ui` · `command-writing` *(Q35)*
+- [-] `composer-packages` · `context-document` · `conventional-commits-writing` *(Q35)*
+- [-] `dashboard-design` · `dependency-upgrade` · `dto-creator` *(Q35)*
+- [-] `eloquent` · `fe-design` · `finishing-a-development-branch` *(Q35)*
+- [-] `flux` · `git-workflow` · `guideline-writing` *(Q35)*
+- [-] `jobs-events` · `laravel` · `laravel-horizon` · `laravel-mail` *(Q35)*
+- [-] `laravel-middleware` · `laravel-notifications` · `laravel-pennant` *(Q35)*
+- [-] `laravel-pulse` · `laravel-reverb` · `laravel-scheduling` · `laravel-validation` *(Q35)*
+- [-] `livewire` · `logging-monitoring` · `merge-conflicts` · `migration-creator` *(Q35)*
+- [-] `module-management` · `openapi` · `override-management` *(Q35)*
+- [-] `pest-testing` · `php-coder` · `php-debugging` · `php-service` *(Q35)*
+- [-] `playwright-testing` · `readme-writing` · `readme-writing-package` *(Q35)*
+- [-] `roadmap-management` · `rule-writing` · `skill-management` · `skill-writing` *(Q35)*
+- [-] `sql-writing` · `technical-specification` · `test-driven-development` *(Q35)*
+- [-] `test-performance` · `upstream-contribute` · `using-git-worktrees` *(Q35)*
 
 ### Tier 4 — Reference / Tooling / Integration (26 skills) — pattern 2 only
 
 Reference skills and thin tool wrappers. Rollen-Frame wäre Overhead; nur
 Scope-Routing wo Sibling-Skills existieren ist sinnvoll.
 
-- [ ] `aws-infrastructure` · `check-refs` · `copilot-config` · `database`
-- [ ] `devcontainer` · `docker` · `file-editor` · `github-ci` · `grafana`
-- [ ] `jira-integration` · `lint-skills` · `mcp` · `multi-tenancy`
-- [ ] `performance` · `project-docs` · `quality-tools` · `rtk-output-filtering`
-- [ ] `security` · `sentry-integration` · `terraform` · `terragrunt`
-- [ ] `traefik` · `websocket`
+- [-] `aws-infrastructure` · `check-refs` · `copilot-config` · `database` *(Q35)*
+- [-] `devcontainer` · `docker` · `file-editor` · `github-ci` · `grafana` *(Q35)*
+- [-] `jira-integration` · `lint-skills` · `mcp` · `multi-tenancy` *(Q35)*
+- [-] `performance` · `project-docs` · `quality-tools` · `rtk-output-filtering` *(Q35)*
+- [-] `security` · `sentry-integration` · `terraform` · `terragrunt` *(Q35)*
+- [-] `traefik` · `websocket` *(Q35)*
 
 Count check: 12 + 24 + 50 + 23 = 109 + 4 compliant judges + 3 Tier-4-adjacent
 that are handled elsewhere. Reconciled during Phase 0.
@@ -155,13 +155,13 @@ that are handled elsewhere. Reconciled during Phase 0.
 
 ### Phase 0 — Tier calibration & baseline (1 session, ~1h)
 
-- [ ] Run skill-reviewer on one skill per tier to establish a baseline
-- [ ] Verify tier assignment on the 3-ish edge cases (`upstream-contribute`,
+- [-] Run skill-reviewer on one skill per tier to establish a baseline *(Q35)*
+- [-] Verify tier assignment on the 3-ish edge cases (`upstream-contribute`, *(Q35)*
       `finishing-a-development-branch`, `override-management`)
-- [ ] Add a linter rule or lightweight check that **detects** the presence of
+- [-] Add a linter rule or lightweight check that **detects** the presence of *(Q35)*
       each pattern (greps for the blockquote opening, the `route to` phrasing,
       the validation gate heading) — produces a before/after metric
-- [ ] Reconcile the tier counts against the current skill total — no skill left out
+- [-] Reconcile the tier counts against the current skill total — no skill left out *(Q35)*
       *(baseline drift verified 2026-04-22: actual count is **121**, not 116 as
       originally planned — 5 skills added between roadmap authoring and this
       audit; see [`open-questions.md`](open-questions.md) Q12 for decision on
@@ -172,10 +172,10 @@ that are handled elsewhere. Reconciled during Phase 0.
 Highest leverage: these skills directly affect autonomy (judge gates, audits).
 Smallest tier, so start here.
 
-- [ ] Batch 1.a: `skill-reviewer`, `verify-before-complete`, `validate-feature-fit` (3)
-- [ ] Batch 1.b: `code-review`, `adversarial-review`, `design-review` (3)
-- [ ] Batch 1.c: `readme-reviewer`, `receiving-code-review`, `requesting-code-review` (3)
-- [ ] Batch 1.d: `security-audit`, `performance-analysis`, `project-analyzer` (3)
+- [-] Batch 1.a: `skill-reviewer`, `verify-before-complete`, `validate-feature-fit` (3) *(Q35)*
+- [-] Batch 1.b: `code-review`, `adversarial-review`, `design-review` (3) *(Q35)*
+- [-] Batch 1.c: `readme-reviewer`, `receiving-code-review`, `requesting-code-review` (3) *(Q35)*
+- [-] Batch 1.d: `security-audit`, `performance-analysis`, `project-analyzer` (3) *(Q35)*
 
 **Per-batch gate:** linter 0 fail · `preservation-guard` check on every edited file ·
 the new `judge-code-quality` reviews the batch and returns `apply` or addressed
@@ -189,15 +189,15 @@ list before output, and emits an ordered report with a defined severity scale.
 
 Split into 4 sub-batches of 6 to keep diffs reviewable.
 
-- [ ] Batch 2.a: core analysis — `project-analysis-core`, `project-analysis-hypothesis-driven`,
+- [-] Batch 2.a: core analysis — `project-analysis-core`, `project-analysis-hypothesis-driven`, *(Q35)*
       `universal-project-analysis`, `systematic-debugging`, `bug-analyzer`, `sequential-thinking`
-- [ ] Batch 2.b: framework analysis — `project-analysis-laravel`, `project-analysis-symfony`,
+- [-] Batch 2.b: framework analysis — `project-analysis-laravel`, `project-analysis-symfony`, *(Q35)*
       `project-analysis-nextjs`, `project-analysis-react`, `project-analysis-node-express`,
       `project-analysis-zend-laminas`
-- [ ] Batch 2.c: orchestration & routing — `subagent-orchestration`, `command-routing`,
+- [-] Batch 2.c: orchestration & routing — `subagent-orchestration`, `command-routing`, *(Q35)*
       `analysis-skill-router`, `analysis-autonomous-mode`, `skill-improvement-pipeline`,
       `developer-like-execution`
-- [ ] Batch 2.d: meta & authoring — `agent-docs-writing`, `description-assist`,
+- [-] Batch 2.d: meta & authoring — `agent-docs-writing`, `description-assist`, *(Q35)*
       `feature-planning`, `learning-to-rule-or-skill`, `code-refactoring`,
       `copilot-agents-optimization`
 
@@ -214,19 +214,19 @@ the judge paper, `sequential-thinking` → CoT/ToT references).
 
 Largest tier, patterns **1 + 2 only**. Split into 5 sub-batches of 10.
 
-- [ ] Batch 3.a: Laravel core (10) — `laravel`, `eloquent`, `laravel-validation`,
+- [-] Batch 3.a: Laravel core (10) — `laravel`, `eloquent`, `laravel-validation`, *(Q35)*
       `laravel-middleware`, `laravel-scheduling`, `laravel-mail`,
       `laravel-notifications`, `laravel-horizon`, `laravel-pulse`, `laravel-pennant`
-- [ ] Batch 3.b: code-writing PHP (10) — `php-coder`, `php-service`, `php-debugging`,
+- [-] Batch 3.b: code-writing PHP (10) — `php-coder`, `php-service`, `php-debugging`, *(Q35)*
       `artisan-commands`, `migration-creator`, `dto-creator`, `api-endpoint`,
       `api-design`, `api-testing`, `openapi`
-- [ ] Batch 3.c: frontend & tests (10) — `blade-ui`, `livewire`, `flux`, `fe-design`,
+- [-] Batch 3.c: frontend & tests (10) — `blade-ui`, `livewire`, `flux`, `fe-design`, *(Q35)*
       `dashboard-design`, `playwright-testing`, `pest-testing`, `test-driven-development`,
       `test-performance`, `sql-writing`
-- [ ] Batch 3.d: authoring & meta (10) — `skill-writing`, `skill-management`,
+- [-] Batch 3.d: authoring & meta (10) — `skill-writing`, `skill-management`, *(Q35)*
       `rule-writing`, `command-writing`, `guideline-writing`, `roadmap-management`,
       `module-management`, `context-document`, `technical-specification`, `readme-writing`
-- [ ] Batch 3.e: workflow & ops (10) — `git-workflow`, `conventional-commits-writing`,
+- [-] Batch 3.e: workflow & ops (10) — `git-workflow`, `conventional-commits-writing`, *(Q35)*
       `merge-conflicts`, `using-git-worktrees`, `finishing-a-development-branch`,
       `dependency-upgrade`, `composer-packages`, `override-management`, `upstream-contribute`,
       `readme-writing-package`, `jobs-events`, `laravel-reverb`, `logging-monitoring`
@@ -242,12 +242,12 @@ names its siblings in "Do NOT use when" — no other structural change.
 Smallest footprint: only pattern 2 where siblings exist. Some skills may need
 **no** change (e.g. `rtk-output-filtering` has no sibling overlap).
 
-- [ ] Batch 4.a: infra & cloud — `aws-infrastructure`, `terraform`, `terragrunt`,
+- [-] Batch 4.a: infra & cloud — `aws-infrastructure`, `terraform`, `terragrunt`, *(Q35)*
       `docker`, `devcontainer`, `traefik`, `websocket`
-- [ ] Batch 4.b: observability & data — `grafana`, `sentry-integration`,
+- [-] Batch 4.b: observability & data — `grafana`, `sentry-integration`, *(Q35)*
       `logging-monitoring` (if moved here), `database`, `multi-tenancy`,
       `performance`, `security`, `mcp`
-- [ ] Batch 4.c: tooling — `file-editor`, `lint-skills`, `quality-tools`, `check-refs`,
+- [-] Batch 4.c: tooling — `file-editor`, `lint-skills`, `quality-tools`, `check-refs`, *(Q35)*
       `rtk-output-filtering`, `github-ci`, `copilot-config`, `jira-integration`,
       `project-docs`
 
@@ -260,17 +260,17 @@ this roadmap's progress.
 
 ### Phase 5 — Catalogue-wide acceptance & self-review
 
-- [ ] `task ci` green on `main` merge
-- [ ] `scripts/skill_linter.py --all` 0 fail, warn-count no worse than pre-roadmap
-- [ ] `/review-changes` runs the four new judges on 10 random edited skills and
+- [-] `task ci` green on `main` merge *(Q35)*
+- [-] `scripts/skill_linter.py --all` 0 fail, warn-count no worse than pre-roadmap *(Q35)*
+- [-] `/review-changes` runs the four new judges on 10 random edited skills and *(Q35)*
       returns `apply` or a revise-list that has been addressed
-- [ ] A `preservation-guard` audit on 10% random sample (12 skills) — every
+- [-] A `preservation-guard` audit on 10% random sample (12 skills) — every *(Q35)*
       skill must be at least as strong as before (stronger validation, stronger
       anti-pattern, clearer scope)
-- [ ] README + AGENTS.md counts reflect the actual skill total at roadmap
+- [-] README + AGENTS.md counts reflect the actual skill total at roadmap *(Q35)*
       completion (baseline 124 as of 2026-04-22; roadmap must not itself
       add or remove skills — backport only)
-- [ ] A short `agents/analysis/backport-outcomes.md` captures what **did** and
+- [-] A short `agents/analysis/backport-outcomes.md` captures what **did** and *(Q35)*
       **did not** improve — feeds Phase 3.2 acceptance of the parent roadmap
 
 ## Risks & mitigations
@@ -300,8 +300,31 @@ pipeline catch cascading effects before they ship.
 - Rule/command/guideline backport — separate roadmap if needed, but patterns
   are skill-specific
 
+## Final status — 2026-04-22
+
+| Phase | Status |
+|---|---|
+| Phase 0 — tier calibration + baseline linter | ⏸ deferred (Q35) |
+| Phase 1 — Tier 1 (12 skills, 4 batches) | ⏸ deferred (Q35) |
+| Phase 2 — Tier 2 (24 skills, 4 batches) | ⏸ deferred (Q35) |
+| Phase 3 — Tier 3 (50 skills, 5 batches) | ⏸ deferred (Q35) |
+| Phase 4 — Tier 4 (23 skills, 3 batches) | ⏸ deferred (Q35) |
+| Phase 5 — catalogue-wide acceptance + self-review | ⏸ deferred (Q35) |
+
+This roadmap covers ~109 skills across 17 batches. Each batch is a
+separate commit, each skill inside a batch is its own
+`preservation-guard`-gated edit — the work explicitly cannot be
+bulk-automated without violating the rule this roadmap is built
+on. Tracked as Q35 in
+[`open-questions-2.md`](open-questions-2.md). Roadmap stays open.
+
+New skills shipped **after** Phase 3.1 of autonomous-agent are
+authored pattern-compliant on day 1 (e.g., defensive-agent Wave 1
+skills) — this roadmap addresses only the pre-existing catalogue.
+
 ## References
 
+- [`open-questions-2.md`](open-questions-2.md) — Q35 sequencing
 - [`road-to-autonomous-agent.md`](road-to-autonomous-agent.md) — parent roadmap, Phase 3.1
 - [`.agent-src.uncompressed/rules/preservation-guard.md`](../../.agent-src.uncompressed/rules/preservation-guard.md) — quality gate
 - [`.agent-src.uncompressed/rules/skill-quality.md`](../../.agent-src.uncompressed/rules/skill-quality.md) — minimum sharpness

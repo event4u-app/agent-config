@@ -123,6 +123,35 @@
   builder? Or park the whole backlog and drive from
   `open-questions-2.md` when a consumer need arises?
 
+### `road-to-stronger-skills.md`
+
+- **Q35** 🛑 `artifact-drafting` — **Pattern-backport across the
+  pre-existing skill catalogue.** ~109 skills across 4 tiers
+  (Tier 1: 12, Tier 2: 24, Tier 3: 50, Tier 4: 23) grouped into
+  17 batches across 5 phases. Each batch is a single commit;
+  each skill inside a batch is a separate
+  `preservation-guard`-gated edit. The roadmap explicitly
+  prohibits bulk transformations — that is the rule this roadmap
+  is built on.
+
+  New skills shipped after 2026-04 are pattern-compliant on day 1
+  (e.g., `threat-modeling`, `authz-review`, `data-flow-mapper`,
+  `blast-radius-analyzer`, `context-authoring`, the four
+  `judge-*` skills, `test-driven-development`,
+  `systematic-debugging`, `verify-before-complete`,
+  `subagent-orchestration`, `refine-ticket`, `estimate-ticket`).
+  The backport covers only the pre-2026-04 catalogue.
+
+  User questions:
+  - Ship order — Tier 1 first (highest leverage) or Tier 4 first
+    (lowest risk, builds muscle memory)?
+  - Batch size — 3 skills per commit (current plan) or
+    1-skill-per-commit for easier reviews?
+  - Should each batch get a `/review-changes` judge pass before
+    merge, or batch-reviewed weekly?
+  - Is the +10 % word-budget cap still acceptable given the
+    total skill count, or tighten to +5 %?
+
 ### `road-to-defensive-agent.md`
 
 - **Q33** 🛑 `artifact-drafting` — **Wave 2 + Wave 3 + post-wave
