@@ -128,4 +128,3 @@ or the equivalent configured command).
   This command adapts the pattern by dispatching to four specialized
   judges (bug, security, tests, quality) instead of a single generic
   judge, and consolidating their verdicts.
-

@@ -1,6 +1,6 @@
 ---
 name: subagent-orchestration
-description: "Use when orchestrating implementer/judge subagents — five modes (do-and-judge, do-in-steps, do-in-parallel, do-competitively, judge-with-debate) — model pairing and parallelism from .agent-settings.yml."
+description: "Use when orchestrating implementer/judge subagents — five modes (do-and-judge, do-in-steps, do-in-parallel, do-competitively, judge-with-debate) — models from .agent-settings.yml."
 source: package
 ---
 
