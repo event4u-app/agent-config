@@ -174,17 +174,50 @@ are three facets of the same problem and should be treated as one bundle.
   version references) AND strategically weak — it describes structure
   ("122 skills, 42 rules, 64 commands") instead of demonstrating value
   ("paste this prompt, get this result"). Target state:
-    1. One-screen hero: 30-second pitch + one concrete before/after
-       example. Use Laravel for the first example (current strongest
-       coverage) but frame the package as multi-stack by design.
-    2. "Install in 60s, first result in 3 min" section with an exact
-       copy-paste prompt and the expected agent behavior.
+    1. **⚡ 2-Minute Demo section at the very top** — zero theory, pure
+       outcome. Three stack-agnostic copy-paste prompts that trigger
+       existing commands and produce visible, impressive results fast:
+
+       ````
+       ## ⚡ Try this in 2 minutes
+
+       Install, open your AI IDE, paste one of these on any
+       project — PHP, TypeScript, Python, whatever:
+
+       1. "Review my current changes"
+          → dispatches four specialized judges (bugs, security, tests,
+            code quality) in parallel, gives you a consolidated verdict
+            with file:line citations. ~60s.
+
+       2. "Open a PR"
+          → reads the Jira ticket from the branch name, self-reviews
+            the diff, writes a structured description, creates the PR,
+            suggests reviewers. ~90s.
+
+       3. "Analyze this project"
+          → auto-detects the stack (Laravel, Symfony, Next.js, Express,
+            Zend, plain PHP, …), maps the boot flow, inventories
+            modules, flags missing docs. ~2min. This is the prompt
+            that proves "multi-stack by design".
+       ````
+
+       All three must work on a fresh clone with no configuration.
+       No "set up your Jira token first" footnotes in the hero.
+    2. "Install in 60s, first result in 3 min" section right after,
+       with the exact install commands and a link to the longer flows
+       doc (Q20).
     3. Kill the feature catalog above the fold — move counts/inventory
-       below the "I need this" section.
+       below the demo section. Structure is for people who already
+       said "I need this", not for first-timers.
     4. Explicit "Current coverage / Roadmap" table: Laravel ✅,
-       Symfony / Zend / plain PHP / frontend 🚧, so adopters see the
-       direction.
+       Symfony / Zend / plain PHP / frontend 🚧 — so adopters see the
+       direction and multi-stack intent, not just today's state.
+    5. Reframe the narrative: **"We don't teach you our structure.
+       We show you the outcome, then you come back for the structure."**
   → No matching roadmap. Highest externally visible lever right now.
+  → Prerequisite: verify that the three demo prompts actually work
+     end-to-end on a clean install today, and fix gaps before Q19
+     ships. No broken copy-paste in the README hero.
 
 - **Q20 — Real-world usage flows (the missing killer doc).** The repo
   explains structure (skills, rules, commands) but not **flows** — what
@@ -221,28 +254,103 @@ are three facets of the same problem and should be treated as one bundle.
   `road-to-project-memory.md` Q6 but is an independent decision.
   → No matching roadmap.
 
-- **Q22 — First-result-in-3-minutes onboarding.** Concrete acceptance
-  criteria, not vague "first-15-minutes": from `composer require
-  event4u/agent-config` (or `npm install` for the JS/TS bridge, once
-  Q18 frontend coverage lands) to a visible agent result that the user
-  recognizes as useful, in **under 3 minutes**, on a fresh laptop.
-  `task first-run` + `scripts/first-run.sh` exist but don't meet this
-  bar today. Options:
-    1. A `/onboard` command that installs + picks Level 1 preset (Q21)
-       + runs one real flow (Q20) + prints a clear "what just happened"
-       summary.
-    2. A 3-minute screencast embedded in the README hero (Q19) instead
-       of adding more skills.
-    3. Both — command for hands-on users, screencast for evaluators.
-  → No matching roadmap. Completes the Q19–Q22 bundle.
+- **Q22 — Immediate-value onboarding (not a tutorial).** Reframe the
+  earlier "first-15-minutes" idea. The problem is **not** that new
+  users don't understand what a skill/rule/command is. The problem is
+  they drop off before they care. Good devs, AI-experienced users, and
+  stack-matched developers still close the tab because the package
+  doesn't show value fast enough. The goal is not education — it is:
+
+  > ⚡ Holy-shit moment in 2 minutes.
+
+  Concrete acceptance criteria:
+    - From fresh clone to a visible, recognizable agent result in
+      **under 3 minutes**, on a fresh laptop, with zero configuration
+      beyond install.
+    - The user has NOT been asked to read any doc. They pasted one
+      prompt from the README hero (Q19) and watched it work.
+    - After the result, the user is curious about *how* it worked.
+      Structure-docs (skills, rules, commands) become pull not push.
+
+  Options:
+    1. The three README-hero demos from Q19 **are** the onboarding.
+       No separate `/onboard` command. `scripts/first-run.sh` becomes
+       a no-op pointer to the README demos.
+    2. A thin `/onboard` command that only automates the "pick a
+       preset (Q21) + pick one demo (Q19) + run it" wrapper — for
+       CLI-first users who never read READMEs.
+    3. Both — hero demos for evaluators, `/onboard` for hands-on users.
+  → No matching roadmap. Completes the Q19–Q22 bundle. Explicitly
+     **not** a "teach the user our model" doc.
 
 **Sequencing note:** Q19 (README) depends on Q20 (flows) and Q21
-(progressive activation) to have real content. Suggested order:
-Q21 preset scaffolding → Q20 one flow documented → Q22 onboarding
-command wraps both → Q19 rewrites README around the result. Q18
+(progressive activation) to have real content, AND on the three
+demo prompts actually working end-to-end. Suggested order:
+Q21 preset scaffolding → verify the three Q19 demo prompts work →
+Q20 one flow documented → Q22 onboarding wrapper (if needed after
+Q19 hero lands) → Q19 rewrites README around the result. Q18
 (multi-stack expansion) runs in parallel on its own timeline and feeds
-into all four as coverage grows. Doing Q19 first produces marketing
-without substance.
+into all four as coverage grows. Doing Q19 first without verifying the
+demos produces marketing without substance — and a broken first
+impression is worse than no README rewrite at all.
+
+#### 🔴 Open — new capability
+
+- **Q23 — Multi-perspective review skill (brutally honest, 7 lenses).**
+  Proposed by the same external review pass: a review skill that
+  evaluates a repo / feature / PR / architecture decision from seven
+  distinct perspectives and produces one structured verdict. The
+  seven lenses:
+    1. **Maintainer** — code quality, maintainability, scalability,
+       upgrade risk, complexity.
+    2. **Developer (User)** — usability, DX, learning curve, clarity
+       of structure.
+    3. **Senior Engineer** — architecture decisions, trade-offs,
+       long-term risks, over- vs. under-engineering.
+    4. **Product Owner** — business value, ROI, adoption likelihood,
+       market positioning.
+    5. **New User (smart, unfamiliar)** — first impression, time to
+       first value, confusion points, drop-off risks.
+    6. **Critical Challenger** — what is unnecessary, overcomplicated,
+       fake complexity, should be deleted.
+    7. **Optimizer** — highest-leverage single change, wasted effort,
+       what to cut first.
+
+  Overlap with existing skills — must be resolved before drafting:
+    - `judge-bug-hunter`, `judge-security-auditor`, `judge-test-coverage`,
+      `judge-code-quality` already cover the **code-level** Maintainer
+      and Senior Engineer lenses. The new skill must NOT duplicate them.
+    - `adversarial-review` already covers the **Critical Challenger**
+      lens for single proposals. Relationship unclear — merge, extend,
+      or compose?
+    - `review-changes` already dispatches to the four judges above.
+      Does the new skill become a sibling command (`/review-system`?
+      `/review-product`?) or wrap/extend `review-changes`?
+
+  What is genuinely new and not covered today:
+    - Product-Owner, New-User, Optimizer, Developer-DX lenses — none
+      of the existing judges hit these.
+    - **System-level / repo-level / product-level** review scope, not
+      just diff scope. The existing judges are diff-oriented.
+    - Structured output format with a mandatory final verdict
+      (YES / NO / CONDITIONAL) and Top-5-problems + highest-leverage
+      improvements sections.
+
+  Open decisions before drafting:
+    1. One new skill or a skill + a companion `/review-system` command?
+    2. Scope boundaries vs. existing judges — hard split (new lenses
+       only) or full multi-lens skill that delegates to existing
+       judges for the code lenses?
+    3. Input contract — repo URL, local path, feature description,
+       PR? All four with detection?
+    4. Does this deserve its own roadmap (`road-to-review-skill.md`)
+       given the overlap-resolution work, or can it land as a single
+       PR against `road-to-stronger-skills.md` Tier 1?
+
+  🛑 **Requires `artifact-drafting-protocol`** — Understand → Research
+  → Draft with the maintainer. Do NOT silently draft this skill.
+  → No matching roadmap. High value, high overlap risk, needs
+     explicit scoping decision first.
 
 ## Cross-repo questions (`agents/roadmaps/agent-memory/*`)
 
