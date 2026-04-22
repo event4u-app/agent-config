@@ -61,9 +61,22 @@ Show the user:
 
 ### Step 3: Classify
 
-**Category tag:** `skill-weakness` | `rule-weakness` | `routing-issue` | `assumption-issue` | `verification-gap` | `optimization-overreach`
+#### Category tag
 
-**Artifact type:**
+Tag each learning with one category for tracking:
+
+| Category | When |
+|---|---|
+| `skill-weakness` | Skill gave wrong or incomplete guidance |
+| `rule-weakness` | Rule was too vague or missed a case |
+| `routing-issue` | Wrong skill was selected for the task |
+| `assumption-issue` | Agent made bad assumptions instead of asking |
+| `verification-gap` | Verification step was missing or weak |
+| `optimization-overreach` | Optimize command suggested harmful change |
+
+#### Artifact type
+
+Decide what to create:
 
 | Learning type | Create |
 |---|---|

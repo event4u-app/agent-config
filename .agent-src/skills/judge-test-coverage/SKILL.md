@@ -104,9 +104,9 @@ Required fields (ordered):
 4. **Issues** — every finding names the uncovered branch/input and
    the missing or weak assertion; omit only when verdict is `apply`
 
-Runtime confirmation (run pest/phpunit or the project's test runner
-to verify a proposed test fails without the change) is a follow-up
-for the implementer, not the judge.
+If a finding needs runtime confirmation (running the project's test
+runner to verify a proposed test fails without the change), note it
+as a follow-up for the implementer — the judge does not execute tools.
 
 ## Gotcha
 
@@ -129,11 +129,24 @@ for the implementer, not the judge.
 * NEVER silently fall back to a different model than `subagents.judge_model`
 * NEVER accept "tested manually" as a substitute for an automated assertion
 
-## See also
+## References
 
-- [`subagent-orchestration`](../subagent-orchestration/SKILL.md) — model pairing rules
+- **LLM-as-a-Judge foundations** — Zheng et al., "Judging LLM-as-a-Judge
+  with MT-Bench and Chatbot Arena" (2023),
+  [arxiv.org/abs/2306.05685](https://arxiv.org/abs/2306.05685).
+  Establishes the specialized-judge pattern and failure modes (position
+  bias, self-consistency) this skill defends against.
+- **Test-value rubric** — Martin Fowler, "Test Pyramid",
+  [martinfowler.com/bliki/TestPyramid.html](https://martinfowler.com/bliki/TestPyramid.html),
+  and Kent Beck, "Test Desiderata",
+  [kentbeck.github.io/TestDesiderata](https://kentbeck.github.io/TestDesiderata/).
+  The properties (isolated, specific, fast, predictive) the judge asks
+  of every new test — asserts on behavior, not coverage lines.
+- [`subagent-orchestration`](../subagent-orchestration/SKILL.md) —
+  model-pairing rules (`subagents.judge_model` one tier above implementer).
 - [`test-driven-development`](../test-driven-development/SKILL.md) —
-  write-the-test-first workflow that prevents most findings this judge makes
+  the write-the-test-first workflow that prevents most findings this judge makes.
 - Sibling judges: [`judge-bug-hunter`](../judge-bug-hunter/SKILL.md),
   [`judge-security-auditor`](../judge-security-auditor/SKILL.md),
-  [`judge-code-quality`](../judge-code-quality/SKILL.md)
+  [`judge-code-quality`](../judge-code-quality/SKILL.md) — dispatched
+  together by [`/review-changes`](../../commands/review-changes.md).
