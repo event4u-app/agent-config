@@ -88,7 +88,12 @@ Based on gathered context:
 2. **Use `codebase-retrieval`** to find related code.
 3. **Read each file** in the call chain.
 4. **Check for context docs** — `agents/contexts/` or module `agents/contexts/`.
-5. **Identify the data flow** — where does the bad data/state come from?
+5. **Read `agents/memory/incident-learnings.yml`** (if it exists) for
+   entries whose `scope:` overlaps with the touched files or the error
+   signature. A prior incident may already describe the root cause,
+   the fix, and the regression test that should have caught it. Cite
+   the matching `id:` in the root-cause report.
+6. **Identify the data flow** — where does the bad data/state come from?
 
 **Share findings as you go:**
 
@@ -163,3 +168,8 @@ What's next?
 - **Trace to the root cause** — don't just describe the symptom.
 - **Check for similar patterns** elsewhere in the codebase.
 - **Use Sentry tools** (`get_issue_details`, `get_issue_tag_values`) when URLs are available.
+
+## See also
+
+- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#incident) — Incident mode output contract (Symptom / Reproduction / Minimal reversible change / Deferred verification / Follow-up commitment) — use when the bug is a live production issue with `break-glass: true`
+- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#developer) — Developer mode output contract for non-incident bugs

@@ -52,6 +52,24 @@ malformed, **stop and report the parse error** — never silently fall
 back. If neither file exists, emit the generic role-based fallback
 using [`reviewer-awareness`](../../rules/reviewer-awareness.md).
 
+**Also** pull agent-written signals via the shared abstraction (see
+[`memory-access`](../../guidelines/agent-infra/memory-access.md)):
+
+```python
+from scripts.memory_lookup import retrieve
+extra = retrieve(
+    types=["ownership", "historical-patterns", "incident-learnings"],
+    keys=<changed file paths>,
+    limit=5,
+)
+```
+
+Treat `source: "curated"` as equal-trust to the project YAML.
+Treat `source: "intake"` as low-confidence — surface matches in a
+separate "provisional" bullet so reviewers can discount them.
+Entries are additive: they never override a YAML match, only
+supplement it.
+
 ### 3. Match ownership
 
 For every changed file, find the **first** matching entry in

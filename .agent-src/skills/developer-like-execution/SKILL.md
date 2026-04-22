@@ -40,49 +40,60 @@ Develop against expected behavior, ideally test-first.
 
 ## Tool priority
 
-Use smallest, most targeted tool. If available as MCP server — prefer it.
+Use the smallest, most targeted tool that gives the needed evidence.
+If a tool is available as MCP server, prefer it over manual alternatives.
 
 ### Verification tool mapping
 
 | What changed | Primary tool | MCP alternative |
 |---|---|---|
-| **Backend/API** | `curl -s \| jq` | Postman MCP |
-| **Frontend/UI** | Browser check | Playwright MCP (`navigate` + `snapshot`) |
-| **Execution flow** | Logs, print debug | Xdebug MCP (breakpoints, step-through) |
-| **CLI/Jobs** | Run command, check exit code | — |
-| **Database** | Query result, migration status | — |
+| **Backend/API endpoint** | `curl -s \| jq` | Postman MCP (if configured) |
+| **Frontend/UI** | Manual browser check | Playwright MCP (`navigate` + `snapshot`) |
+| **Execution flow/debugging** | Print statements, logs | Xdebug MCP (breakpoints, variable inspection) |
+| **CLI commands/jobs** | Run command, check exit code | — |
+| **Database** | SQL query, migration status | — |
+| **External APIs** | `Http::fake()` in tests | Postman MCP for manual checks |
 
 ### Xdebug workflow (when available)
 
-1. Set breakpoint at suspected method
-2. Trigger request
-3. Inspect variables — don't guess values from reading code
-4. Step through to verify actual vs. assumed flow
-5. Use Xdebug **before** print statements — faster, zero cleanup
+If Xdebug is available (as MCP or IDE integration):
+
+1. Set breakpoints at the suspected code path
+2. Trigger the request (curl, browser, test)
+3. Inspect variables at breakpoint — don't guess values from reading code
+4. Step through to verify actual execution flow vs. assumed flow
+5. Check: is the data what you expected? Is the branch taken what you expected?
+
+Use Xdebug **before** adding print statements or debug logging.
+It's faster and leaves no cleanup work.
 
 ### Playwright for frontend verification
 
-1. Navigate to affected page
-2. Snapshot rendered state
-3. Verify elements present, interactions work, no console errors
-4. Compare before/after for refactoring
+When UI changes are involved:
+
+1. Navigate to the affected page
+2. Take a snapshot of the rendered state
+3. Verify the expected elements are present and interactive
+4. Check console/network for errors
+5. Compare before/after if refactoring
 
 ### Prefer targeted output
 
-- `jq` for JSON: `curl -s /api/users | jq '.[0] | {id, email}'` — never full response
-- `rg`, `grep` — specific patterns, not full files
-- `head`, `tail`, `cut`, `sort`, `uniq` to narrow results
-- `--filter`, `--json`, `--format` flags — always use them
-- Logs: filter by request ID, timestamp, error type — not full files
+- `jq` for JSON: `curl -s /api/users | jq '.[0] | {id, email}'` — never the full response
+- `rg`, `grep` for text: specific patterns, not full files
+- `head`, `tail`, `cut`, `sort`, `uniq` for narrowing results
+- `--filter`, `--json`, `--format` flags on CLI tools — always use them
+- Laravel: `route:list --json | jq '.[] | select(.uri | test("users"))'`
+- Logs: `rg "request_id=abc123" storage/logs` — never `cat storage/logs/laravel.log`
 
-### Avoid large output
+### Avoid large output by default
 
 Do NOT:
 
 - Dump full JSON if one field is enough
 - Load full route lists when filtering one route is enough
-- Inspect full log files when one request ID can isolate the case
-- Re-run broad commands without narrowing
+- Inspect full log files when one request ID or timestamp can isolate the case
+- Re-run broad commands repeatedly without narrowing
 - Load full database tables when a WHERE clause is enough
 
 ## Procedure
@@ -115,6 +126,7 @@ If important information is missing:
 - Trace data flow and execution path
 - Compare with requirements, tickets, current behavior, tests, existing patterns
 - Identify likely cause and smallest correct change
+- **Consult domain-invariants for touched paths** — if `agents/memory/domain-invariants.yml` exists, skim for `scope:` entries that match a file you are about to change. A matching invariant is a hard constraint: violating it = regression. If the planned change conflicts, surface it to the user before proceeding. See [`engineering-memory-data-format`](../../guidelines/agent-infra/engineering-memory-data-format.md) for the schema.
 
 ### 4. Define expected behavior first
 
@@ -167,13 +179,17 @@ When available (MCP or IDE), prefer over print/log debugging:
 
 #### Frontend verification with Playwright
 
-When UI affected, verify with Playwright (MCP or direct):
-navigate → snapshot → check elements/interactions/console errors → compare before/after.
+When UI is affected, verify with Playwright (MCP or direct):
+
+- Navigate to affected page
+- Snapshot the rendered state
+- Check: correct elements visible? Interactions work? Console errors?
+- Compare before/after for refactoring
 
 #### General shell filtering
 
 Use `rg` over broad grep, `jq` for JSON, `cut`/`awk`/`sort`/`uniq` to reduce noise.
-Never load full output into context when a filter gives the answer.
+Never load full output into context when a filter gives you the answer.
 
 ### 6. Form a plan
 
@@ -201,17 +217,18 @@ If a test cannot be added: state exactly why and explain what verification repla
 
 ### 9. Verify with real execution (MANDATORY)
 
-Never trust "should work" — execute and observe.
+Never trust "it should work" — execute and observe.
 
 | What | How | MCP alternative |
 |---|---|---|
 | Backend/API | `curl -s \| jq`, test endpoint | Postman MCP |
-| Frontend/UI | Browser check | Playwright MCP |
-| Execution flow | Logs, print debug | Xdebug MCP |
+| Frontend/UI | Browser check | Playwright MCP (navigate + snapshot) |
+| Execution flow | Logs, print debug | Xdebug MCP (breakpoints, step-through) |
 | CLI/Jobs | Run command, check exit code | — |
+| Database | Query result, migration status | — |
 | Skills/rules | Lint, structure check | — |
 
-If debugging/testing tool available as MCP — **prefer it**.
+If a debugging/testing tool is available as MCP server — **prefer it** over manual alternatives.
 
 ### 10. Validate
 

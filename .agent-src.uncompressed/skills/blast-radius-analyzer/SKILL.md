@@ -79,6 +79,20 @@ For every dependency, mark:
   contract change · flaky test surface · none
 - **Owner hint:** module path, codeowner, or team if discoverable
 
+### 5. Consult engineering memory
+
+Via [`memory-access`](../../guidelines/agent-infra/memory-access.md) call
+`retrieve(types=["architecture-decisions", "ownership"],
+keys=<changed paths + changed symbol>, limit=5)`. Surface:
+
+- **Architecture decisions** that constrain the planned change — cite
+  `id` and the decision verbatim so the report is self-auditing.
+- **Ownership** matches — add these as `owner hint` candidates when
+  the direct grep had no result.
+
+Memory entries are supplementary, never authoritative: a grep miss is
+still a grep miss. Do not infer dependencies from memory alone.
+
 ## Validation
 
 Before finalizing the report, confirm:

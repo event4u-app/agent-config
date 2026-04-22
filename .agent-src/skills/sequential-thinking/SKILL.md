@@ -147,3 +147,12 @@ Explore alternatives when:
 - Do NOT skip the validation step — always check the solution against the original problem.
 - Do NOT ignore contradictions — they are signals, not noise.
 - Do NOT commit to a fixed number of steps upfront — let the problem guide the depth.
+
+## References
+
+- **Chain-of-Thought (CoT)** — [arxiv.org/abs/2201.11903](https://arxiv.org/abs/2201.11903)
+  Step-by-step reasoning improves complex problem solving in large
+  language models. This skill constrains CoT by capping the number
+  of thoughts and enforcing a validation step — avoids the common
+  failure mode of unbounded chain expansion.
+

@@ -119,3 +119,13 @@ or the equivalent configured command).
 - [`/do-and-judge`](do-and-judge.md) — implementer + judge loop for a single change
 - [`/judge`](judge.md) — standalone judge, no review-changes dispatch
 - [`code-review`](../skills/code-review/SKILL.md) — human-oriented review patterns (tone, feedback handling)
+- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#reviewer) — Reviewer mode output contract (Summary / Risks / Findings / Required actions / Verdict)
+
+## References
+
+- **LLM-as-a-Judge** — [arxiv.org/abs/2306.05685](https://arxiv.org/abs/2306.05685)
+  MT-Bench and Chatbot Arena — judging LLM outputs with LLM judges.
+  This command adapts the pattern by dispatching to four specialized
+  judges (bug, security, tests, quality) instead of a single generic
+  judge, and consolidating their verdicts.
+

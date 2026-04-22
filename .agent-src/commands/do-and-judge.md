@@ -52,7 +52,25 @@ context. The judge must return one of:
 **Hard ceiling: two revision cycles.** After the second `revise` fails
 judgment, stop and hand back — further iteration is the user's call.
 
-### 6. Report
+### 6. Emit a memory signal on repeated rejection
+
+When the judge has issued **≥ 2 `revise`/`reject` verdicts** for the
+same failure class on nearby paths during this session, that is a
+pattern worth recording. Drop a signal:
+
+```bash
+python3 scripts/memory_signal.py \
+    --type historical-patterns \
+    --path "<primary path under review>" \
+    --body "<failure class → fix guidance, one sentence>" \
+    --origin "do-and-judge" \
+    --extra '{"severity":"<low|medium|high>"}'
+```
+
+One signal per session — the helper's 7-day dedupe prevents re-emits
+of the same pattern from later sessions. Skip on a single rejection.
+
+### 7. Report
 
 ```
 Mode:       do-and-judge
