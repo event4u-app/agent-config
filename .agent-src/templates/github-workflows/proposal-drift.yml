@@ -1,0 +1,118 @@
+# Proposal Drift — template shipped by agent-config
+#
+# Copy this file to `.github/workflows/proposal-drift.yml` in the PACKAGE
+# repo (event4u/agent-config itself). It runs weekly and posts an
+# imbalance report when the number of accepted upstream proposals in the
+# last quarter diverges from the number of retired rules/skills.
+#
+# Rationale: the curated self-improvement pipeline can only work if
+# **additions and retirements stay roughly in balance**. A repo that
+# only accepts new proposals without ever retiring anything drifts
+# towards noise; a repo that only retires without accepting drifts
+# towards stagnation. See `road-to-curated-self-improvement.md`
+# Phase 4 for the full framing.
+#
+# This workflow is intentionally read-only — it never blocks a PR and
+# never modifies the repo. It only opens / updates a tracking issue.
+#
+# Prerequisites:
+#   - `scripts/memory_report.py` present in the repo (ships with the
+#     package).
+#   - Proposals live under `agents/proposals/` with the schema defined
+#     in `.agent-src/templates/agents/proposal.example.md`.
+
+name: Proposal Drift
+
+on:
+  schedule:
+    # Every Monday at 07:00 UTC — one hour after memory-hygiene so the
+    # two issues do not land in the same notification batch.
+    - cron: "0 7 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  drift-report:
+    name: Accepted vs. retired proposals
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Build quarterly report
+        id: report
+        run: |
+          set +e
+          {
+            echo "## Proposal drift report"
+            echo
+            echo "Accepted vs. retired for the last quarter."
+            echo
+            echo '```'
+            python3 scripts/memory_report.py --quarterly --format text
+            echo '```'
+            echo
+            echo "Open proposals by stage:"
+            echo
+            echo '```'
+            find agents/proposals -name '*.md' 2>/dev/null | \
+              xargs -I{} grep -H '^stage:' {} 2>/dev/null | \
+              awk -F: '{print $3}' | sort | uniq -c || true
+            echo '```'
+          } > drift.md
+          cat drift.md
+
+      - name: Find existing tracking issue
+        id: find_issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              labels: "proposal-drift",
+              per_page: 5,
+            });
+            if (issues.length > 0) {
+              core.setOutput("number", issues[0].number);
+            }
+
+      - name: Open or update tracking issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+            const body = fs.readFileSync("drift.md", "utf8");
+            const title = "Proposal Drift — weekly report";
+            const existing = "${{ steps.find_issue.outputs.number }}";
+            if (existing) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: parseInt(existing, 10),
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ["proposal-drift"],
+              });
+            }

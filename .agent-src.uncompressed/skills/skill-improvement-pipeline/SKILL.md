@@ -144,3 +144,12 @@ Ask the user:
 - Do NOT auto-push without user permission
 - Do NOT create project-specific content in `.agent-src.uncompressed/`
 - Do NOT run this pipeline for trivial learnings
+
+## References
+
+- **Reflexion** — [arxiv.org/abs/2303.11366](https://arxiv.org/abs/2303.11366)
+  Language agents that reinforce from verbal self-reflection on past
+  trials. This pipeline adapts Reflexion by gating promotion with a
+  human review step — learnings only harden into rules/skills after
+  explicit approval, never auto-commit.
+

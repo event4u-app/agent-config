@@ -145,13 +145,49 @@ Prefer:
 * Small focused skill over broad skill
 * Short rule over long rule
 
+### 8. Write the proposal (if scope ≠ nothing)
+
+The output of this skill is a **curated proposal** under
+`agents/proposals/<proposal_id>.md`, using the template at
+`.augment/templates/agents/proposal.example.md` (shipped by the
+package). This is the input to the five-stage pipeline
+(capture → classify → propose → gate → upstream); see
+[`self-improvement-pipeline`](../../guidelines/agent-infra/self-improvement-pipeline.md).
+
+Mandatory fields the draft MUST fill:
+
+* `proposal_id` — stable kebab-case slug, unique in this repo
+* `type` — `rule` | `skill` | `command` | `guideline`
+* `scope` — `project` (stays in `agents/overrides/`) or `package`
+  (contributed upstream via `upstream-contribute`)
+* `source_learning` — path to the `agents/learnings/<date>-<slug>.md`
+  file this proposal was captured from
+* `evidence` — **at least two independent** references (PR, issue,
+  incident, review-comment, test-failure); entries that all resolve
+  to the same PR are rejected by the gate
+* `Proposed artefact` (§4) — the full draft body, no `TODO` / `TBD`
+* `Success signal` (§7) — one metric, one baseline, one target, one
+  evaluation date
+
+Run `python3 scripts/check_proposal.py agents/proposals/<id>.md` (or
+`task check-proposal`) before handing to `upstream-contribute`. The
+script is a hard gate: non-zero exit = the proposal does not move
+to stage `gated`.
+
 ## Output format
+
+For the **decision step** (what this skill prints to the user):
 
 1. Learning summary
 2. Decision: rule, skill, update, or no action
 3. Rationale in one to three lines
-4. Proposed content
-5. Optional: target filename
+4. If decision ≠ "no action": path of the written proposal
+   (`agents/proposals/<proposal_id>.md`) and gate status
+   (`check_proposal.py` exit 0 = ready for review)
+
+The **proposal file itself** follows
+`proposal.example.md` verbatim — all ten sections, YAML frontmatter
+complete, draft body in §4.
 
 ## Core rules
 
