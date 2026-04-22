@@ -11,7 +11,7 @@
 - [x] Maintainer decisions recorded (1.a, 2.c, 3.d, 4.c, 5.a) — in the analysis file above
 - [x] Phase 1 of [`archive/road-to-anthropic-alignment.md`](archive/road-to-anthropic-alignment.md) shipped (commit ec79750 — marketplace manifest canonical; roadmap archived 2026-04-21)
 - [x] [`archive/road-to-rule-quality-research.md`](archive/road-to-rule-quality-research.md) archived 2026-04-20; feasibility verdicts in [`agents/analysis/rule-quality-eval-feasibility.md`](../analysis/rule-quality-eval-feasibility.md)
-- [x] [`road-to-trigger-evals.md`](road-to-trigger-evals.md) Phase 1 PoC available (Phase 1 runner + fixtures shipped; Phase 2 live run gated on Q28 budget)
+- [x] [`road-to-trigger-evals.md`](road-to-trigger-evals.md) Phase 1 PoC available (Phase 1 runner + fixtures shipped; Phase 2 live run unblocked 2026-04-22 — Q28 resolved)
 
 ## Context
 

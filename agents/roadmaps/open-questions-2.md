@@ -201,17 +201,19 @@
 
 ### `road-to-trigger-evals.md`
 
-- **Q28** 💰 `budget` — **Claude API key + budget for live trigger
-  eval runs.** Phase 2 of `road-to-trigger-evals.md` needs a
-  prepaid key (target: $50 ceiling across all PoC + rollout runs
-  combined) and confirmation of which model the user's sessions
-  actually run (undertriggering is model-specific; runner defaults
-  to `claude-sonnet-4-5`, override with `--model`). Ship wiring
-  has been done; execution is the only gate. Decision from user:
-  - Is the $50 ceiling still the agreed budget?
-  - Who provisions the key (user account vs. project account)?
-  - Which model name should the runner lock to, or do we keep
-    `--model` manual per run?
+- **Q28** ✅ `resolved` (2026-04-22) — **Claude API key + budget
+  for live trigger eval runs.** Decisions:
+  - **Budget:** $50 ceiling confirmed (PoC + rollout combined);
+    realistic PoC spend ~$1.50 (3 skills × 10 queries at
+    Sonnet-4-5 rates).
+  - **Provisioning:** user-level key, already installed at
+    `~/.config/agent-config/anthropic.key` (mode 0600).
+  - **Model pin:** `claude-sonnet-4-5` for the pilot + initial
+    rollout. Opus pass follows as a delta report, not in parallel.
+  - **Phase 2 live run is now unblocked.** Actual execution is a
+    manual step (`task test-triggers-live -- <skill>`) — each
+    invocation requires tty `yes` confirmation, so the agent never
+    spends budget silently.
 
 ## See also
 
