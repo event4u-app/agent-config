@@ -45,9 +45,12 @@
   headers: `Refined ticket`, `Top-5 risks`, `Persona voices`)?
   Minimal version: schema-per-skill in `evals/` (e.g.,
   `output-schema.yml`) plus a linter pass that verifies the
-  section exists and matches. Deferred because it expands the
-  linter contract — should ride on `road-to-trigger-evals.md`
-  Phase 3 rather than live alone.
+  section exists and matches.
+  **Decision (2026-04-22): deferred to
+  [`road-to-trigger-evals.md`](road-to-trigger-evals.md) Phase 3.**
+  Will ride on that roadmap's linter-infra upgrade instead of
+  landing as a one-off. Revisit when Phase 3 starts (currently
+  blocked on Q28 budget).
 
 - **Q27** 🎯 `strategic` — **Q19 README demo adoption gate.**
   When is a "paste a messy Jira ticket → watch it get refined"

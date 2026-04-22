@@ -92,16 +92,16 @@ Depends on: personas Phase 2 (Core-6 authored).
 - [x] Output template frozen (three sections — refined ticket /
   Top-5 risks / persona voices) plus close-prompt; `evals/triggers.json`
   shipped with 5 should + 5 should-not queries.
-- [x] Linter checks: `personas:` entries resolve; orchestrated
+- [-] Linter checks: `personas:` entries resolve; orchestrated
   skill references resolve; output template presence enforced.
-  *(2026-04-22: `personas:` frontmatter + markdown skill/command
-  references are validated by
+  *(2026-04-22: partially done — `personas:` frontmatter + markdown
+  skill/command references are validated by
   [`scripts/check_references.py`](../../scripts/check_references.py)
-  — `_extract_personas_frontmatter` + the cross-artifact reference
-  pattern cover both; `python3 scripts/check_references.py` is green
-  with `refine-ticket` and `estimate-ticket` referenced across skills,
-  commands, and roadmaps. Output-template presence enforcement is
-  deferred — tracked as Q26 in
+  (`_extract_personas_frontmatter` + cross-artifact reference pattern).
+  Output-template presence enforcement is **deferred to
+  `road-to-trigger-evals.md` Phase 3** per Q26 decision — will ride
+  on that roadmap's linter-infra upgrade instead of landing as a
+  one-off. Tracked as Q26 in
   [`open-questions-2.md`](open-questions-2.md).)*
 
 ### Phase 2 — orchestration wiring

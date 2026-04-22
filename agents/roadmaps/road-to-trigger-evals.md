@@ -278,6 +278,19 @@ and stop. Do not expand scope.
 - New section in [`skill-writing` guideline](../../.agent-src.uncompressed/guidelines/skill-writing.md):
   one canonical example (one good query, one bad query, one near-miss).
 
+### 3.5 Output-template presence enforcement (inherited from Q26)
+
+- [ ] Extend `scripts/skill_linter.py` to validate that skills declaring
+  an output template carry the expected section shape. Minimal design:
+  per-skill `evals/output-schema.yml` (optional) listing required
+  `##`-headers; linter pass fails if the headers drift.
+- [ ] Seed the schema for the two skills that already freeze their
+  output: `refine-ticket` (`Refined ticket` / `Top-5 risks` /
+  `Persona voices`) and `estimate-ticket` (same three-section shape).
+- Deferred from `archive/road-to-ticket-refinement.md` Phase 1 per
+  Q26 decision — rides on this roadmap's linter-infra upgrade instead
+  of landing as a one-off.
+
 ## Explicitly rejected
 
 | Pattern from skill-creator | Why rejected here |
