@@ -83,67 +83,73 @@ the agent surfaces the numbered prompt, never silently switches.
 
 ## Phases
 
-### Phase 1 — primitive + linter + compression
+### Phase 1 — primitive + linter + compression ✅ SHIPPED (2026-04-22)
 
-- [ ] Persona file schema drafted and frozen — frontmatter
+- [x] Persona file schema drafted and frozen — frontmatter
   (`id`, `role`, `description`, `mode?`, `tier: core | specialist`,
   `questions` count target, `version`) + required sections
   (Focus / Mindset / Unique Questions / Output Expectations / Anti-Patterns).
   Size budget: Core ≤ 120 lines, Specialist ≤ 80 lines.
-- [ ] `scripts/skill_linter.py` gains a persona validator: required
+  → [`.agent-src.uncompressed/personas/README.md`](../../.agent-src.uncompressed/personas/README.md) + [`templates/persona.md`](../../.agent-src.uncompressed/templates/persona.md).
+- [x] `scripts/skill_linter.py` gains a persona validator: required
   frontmatter fields, required sections, Unique-Questions heuristic
   enforcement (≥ 3 questions that don't appear verbatim in any other
   persona). CI-breaking on fail.
-- [ ] `scripts/check_references.py` extends to validate every
+- [x] `scripts/check_references.py` extends to validate every
   `personas:` entry in skill/command frontmatter resolves to a
   known persona file. Unknown persona = CI fail.
-- [ ] `scripts/check_portability.py` extends to forbid
-  project-specific names, domains, stack names in persona files —
-  same strict policy as skills.
-- [ ] `scripts/update_counts.py` TARGETS extended so README /
+- [x] `scripts/check_portability.py` covers persona files by path —
+  `.agent-src*` recursive scan already includes `personas/`.
+- [x] `scripts/update_counts.py` TARGETS extended so README /
   AGENTS.md / docs pick up `personas: <n>` automatically.
-- [ ] Compression handling: each persona compresses separately
+- [x] Compression handling: each persona compresses separately
   (symmetric with skills/rules), preserving frontmatter and
   section markers. `scripts/compress.py` updated; hashes
   tracked in `.compression-hashes.json`.
-- [ ] Projection to `.augment/personas/`, `.claude/personas/`,
+- [x] Projection to `.augment/personas/`, `.claude/personas/`,
   `.cursor/personas/` added to `scripts/compress.py
-  --generate-tools` — same strategy as skills (symlinks where
-  possible, native copy for Augment).
+  --generate-tools` — same strategy as skills (symlinks).
 
-### Phase 2 — Core-6 authored
+### Phase 2 — Core-6 authored ✅ SHIPPED (2026-04-22)
 
 Each of the six Core personas drafted via `artifact-drafting-protocol`,
 committed in a single batch so cross-references resolve at once.
 
-- [ ] `.agent-src.uncompressed/personas/developer.md`
-- [ ] `.agent-src.uncompressed/personas/senior-engineer.md`
-- [ ] `.agent-src.uncompressed/personas/product-owner.md`
-- [ ] `.agent-src.uncompressed/personas/stakeholder.md`
-- [ ] `.agent-src.uncompressed/personas/critical-challenger.md`
-- [ ] `.agent-src.uncompressed/personas/ai-agent.md`
-- [ ] Every persona passes the Unique-Questions heuristic against
+- [x] `.agent-src.uncompressed/personas/developer.md`
+- [x] `.agent-src.uncompressed/personas/senior-engineer.md`
+- [x] `.agent-src.uncompressed/personas/product-owner.md`
+- [x] `.agent-src.uncompressed/personas/stakeholder.md`
+- [x] `.agent-src.uncompressed/personas/critical-challenger.md`
+- [x] `.agent-src.uncompressed/personas/ai-agent.md`
+- [x] Every persona passes the Unique-Questions heuristic against
   the other five — linter enforces.
 
-### Phase 3 — specialist: qa
+### Phase 3 — specialist: qa ✅ SHIPPED (2026-04-22)
 
-- [ ] `.agent-src.uncompressed/personas/qa.md` drafted (strong
+- [x] `.agent-src.uncompressed/personas/qa.md` drafted (strong
   recommendation per Q24).
-- [ ] `artifact-drafting-protocol` run verifies qa produces
+- [x] `artifact-drafting-protocol` run verifies qa produces
   questions Core-6 does not cover; if not, the persona is dropped.
 
-### Phase 4 — integration into existing artifacts
+### Phase 4 — integration into existing artifacts ✅ SHIPPED (2026-04-22)
 
-- [ ] `adversarial-review` skill reframed as a thin wrapper
+- [x] `adversarial-review` skill reframed as a thin wrapper
   invoking `personas: [critical-challenger]`. Logic stays the
   same; the cast becomes explicit and reusable.
-- [ ] `judge-bug-hunter`, `judge-security-auditor`,
-  `judge-test-coverage`, `judge-code-quality` gain optional
-  persona mappings (specialist personas, not Core-6). Dispatch
-  via `review-changes` is unchanged.
-- [ ] `receiving-code-review`, `requesting-code-review` gain
-  persona-driven variants where useful.
-- [ ] `role-contracts.md` guideline gains a "Personas" section
+- [x] `judge-test-coverage` cites `personas: [qa]` — natural mapping
+  to the shipped specialist persona. Dispatch via `review-changes`
+  is unchanged.
+- [ ] `judge-bug-hunter`, `judge-security-auditor`, `judge-code-quality`
+  — **deferred to v1.1** until matching specialist personas exist
+  (`bug-hunter`, `security-auditor`, `code-quality`). Wiring now
+  would require either citing Core-6 (wrong fit) or shipping three
+  new specialists without unique-question validation. Drafting each
+  specialist is its own `artifact-drafting-protocol` run.
+- [x] `receiving-code-review`, `requesting-code-review` cite
+  `personas: [critical-challenger]` — the fake-clarity lens fits
+  both triage (receiving) and self-review (requesting). No new
+  variants — the single persona is the variant.
+- [x] `role-contracts.md` guideline gains a "Personas" section
   linking each role mode to its most common persona companions
   (advisory, not enforcing).
 

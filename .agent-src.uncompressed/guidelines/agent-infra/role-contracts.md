@@ -141,6 +141,57 @@ Any other value is treated as non-conformant. A reply with no marker
 counts as the default "no-mode" conversation and does not feed the
 mode statistics.
 
+## Personas (advisory pairings)
+
+Modes own the **workflow closing contract**. Personas own the
+**voice** a skill brings to the work. They compose: a skill invoked
+inside a mode can cite one or more personas to shape *how* it
+reviews, reasons, or pushes back — without changing the mode's
+output contract.
+
+This table is **advisory**, not enforcing. A skill may cite any
+persona inside any mode; the mapping below is just the most common
+fit. See [`../../personas/README.md`](../../personas/README.md) for
+the persona catalog and schema.
+
+| Mode | Typical persona companions | Why |
+|---|---|---|
+| **Developer** | `developer`, `ai-agent` | Implementation voice + automation-readiness check on the plan |
+| **Reviewer** | `critical-challenger`, `senior-engineer`, `qa` | Fake-clarity hunt, architectural lock-in, coverage gaps |
+| **Tester** | `qa`, `developer` | Testability lens + implementation-reality sanity check |
+| **PO** | `product-owner`, `stakeholder`, `critical-challenger` | Outcome/AC, business fit, challenge hidden assumptions |
+| **Incident** | `senior-engineer`, `developer` | Smallest reversible change + long-term risk on the hotfix |
+| **Planner** | `senior-engineer`, `stakeholder`, `critical-challenger` | Architecture impact, business framing, option-set honesty |
+
+### Invocation
+
+Skills cite personas in frontmatter:
+
+```yaml
+---
+name: requesting-code-review
+personas: [critical-challenger]
+---
+```
+
+Commands accept a CLI-style override that wins over the skill default:
+
+```
+/refine-ticket --personas=product-owner,senior-engineer,+qa
+```
+
+Prefix `+` adds a persona to the default cast; prefix `-` removes one.
+Omitting `--personas` uses the skill's documented default.
+
+### Conflict resolution
+
+If the active mode forbids an action and a persona would push for
+that action (e.g. Reviewer mode + `developer` persona suggesting an
+implementation fix), the agent surfaces a numbered-options prompt per
+[`agent-interaction-and-decision-quality.md`](agent-interaction-and-decision-quality.md) —
+never silently switches mode, never silently drops the persona
+finding. See the Q4 rule in `road-to-personas.md`.
+
 ## Anti-patterns
 
 - **Do NOT** mix two contracts in one reply. If the task shifts

@@ -1,6 +1,8 @@
 ---
 name: receiving-code-review
 description: "Use when processing code review feedback (bot or human) before changing anything — triages, verifies, and pushes back with technical reasoning — even when the user just says 'fix the comments'."
+personas:
+  - critical-challenger
 source: package
 ---
 
