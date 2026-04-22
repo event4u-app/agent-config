@@ -249,6 +249,14 @@ tasks:
     desc: Check compression quality (headings, code blocks, frontmatter, word count)
     cmd: python3 scripts/check_compression.py
 
+  roadmap-progress:
+    desc: Regenerate agents/roadmaps-progress.md from all open roadmaps
+    cmd: python3 .augment/scripts/update_roadmap_progress.py
+
+  roadmap-progress-check:
+    desc: Fail if agents/roadmaps-progress.md is stale (for CI)
+    cmd: python3 .augment/scripts/update_roadmap_progress.py --check
+
   quality-report:
     desc: Generate quality score report (per artifact type)
     cmd: python3 scripts/skill_linter.py --report

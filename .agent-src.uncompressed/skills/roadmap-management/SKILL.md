@@ -121,6 +121,7 @@ Every roadmap implicitly includes these gates (run after each step that changes 
 2. Use the template structure from `.augment/templates/roadmaps.md`.
 3. Review with the user iteratively until approved.
 4. Save with a kebab-case filename (e.g. `optimize-webhook-jobs.md`).
+5. Run `task roadmap-progress` so the dashboard includes the new roadmap.
 
 ### Executing a roadmap
 
@@ -128,7 +129,7 @@ Every roadmap implicitly includes these gates (run after each step that changes 
 2. Find the next unchecked step (`- [ ]`).
 3. Summarize what needs to be done.
 4. Ask the user before implementing (numbered options: implement / adjust / skip).
-5. After implementation: mark `[x]`, run quality gates.
+5. After implementation: mark `[x]`, run quality gates, then `task roadmap-progress`.
 6. Move to the next step.
 
 ### Resuming a roadmap
@@ -193,6 +194,9 @@ After the last step of a roadmap is done, check completion status:
    git mv agents/roadmaps/{file} agents/roadmaps/skipped/{file}
    ```
 
+6. **Regenerate the dashboard:** `task roadmap-progress`. The moved roadmap is
+   excluded from the active set once it sits in `archive/` or `skipped/`.
+
 ### When to use `skipped/` vs `archive/`
 
 | Situation | Destination |
@@ -206,10 +210,33 @@ After the last step of a roadmap is done, check completion status:
 If in doubt: archive beats skipped. `skipped/` is reserved for roadmaps where
 no meaningful work was invested and the scope itself was rejected.
 
+## Progress dashboard — `agents/roadmaps-progress.md`
+
+A generated dashboard aggregates progress across every open roadmap. It sits at
+`agents/roadmaps-progress.md` (outside `roadmaps/` to keep the folder clean) and
+is rewritten by `.augment/scripts/update_roadmap_progress.py`.
+
+**Always regenerate** after one of the following:
+
+- Creating a new roadmap (`roadmap-create`)
+- Marking a step `[x]`, `[~]`, or `[-]` during `roadmap-execute`
+- Archiving or moving a roadmap to `skipped/`
+- Adding, renaming, or removing a phase
+
+Command:
+
+```bash
+task roadmap-progress          # rewrite the dashboard
+task roadmap-progress-check    # CI: fail if stale
+```
+
+The dashboard is a **read-only snapshot**. Do not edit it by hand — regenerate it.
+
 ## Output format
 
 1. Roadmap file in agents/roadmaps/ with ordered phases and tasks
 2. Progress tracking with checkbox status
+3. `agents/roadmaps-progress.md` regenerated on every change
 
 ## Auto-trigger keywords
 

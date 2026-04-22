@@ -1,8 +1,7 @@
 ---
-type: "auto"
-description: "When a CLI tool needed for the task is not installed — ask before working around it; do NOT install silently"
-alwaysApply: false
+type: auto
 source: package
+description: "When a CLI tool needed for the task is not installed — ask before working around it; do NOT install silently"
 ---
 
 # Missing Tool Handling

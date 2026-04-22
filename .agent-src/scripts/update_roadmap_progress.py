@@ -1,0 +1,244 @@
+#!/usr/bin/env python3
+"""Generate `agents/roadmaps-progress.md` — aggregated progress across open roadmaps.
+
+Scans every roadmap under `agents/roadmaps/` (excluding `archive/`, `skipped/`,
+`template.md`, `README.md`, `open-questions*.md`), counts checkbox states per
+phase, and writes a dashboard at `agents/roadmaps-progress.md` (outside the
+`roadmaps/` folder to keep it clean) with:
+
+  - Overall progress (open-roadmap count, steps done, %)
+  - A summary table of every open roadmap
+  - Per-roadmap phase breakdown
+
+Checkbox states:
+  [x]  done      [ ]  open      [~]  deferred      [-]  cancelled
+
+Percentage = done / (done + open). Deferred and cancelled do not count towards
+"open" (they are explicit decisions).
+
+Invocation (from project root):
+  python3 .augment/scripts/update_roadmap_progress.py              # rewrite
+  python3 .augment/scripts/update_roadmap_progress.py --check      # CI: exit 1 if stale
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+import sys
+from dataclasses import dataclass, field
+from pathlib import Path
+
+CHECKBOX_RE = re.compile(r"^\s*[-*]\s+\[([ xX~\-])\]\s", re.MULTILINE)
+# H2 or H3 heading starting with "Phase <number>"; separator (colon, em-dash,
+# hyphen, or whitespace) and name are optional.
+PHASE_RE = re.compile(r"^(#{2,3})\s+Phase\s+(\d+)(?:[\s:\u2014\-]+(.*?))?\s*$", re.MULTILINE)
+TITLE_RE = re.compile(r"^#\s+(?:Roadmap:\s*)?(.+?)\s*$", re.MULTILINE)
+EXCLUDE_NAMES = {"template.md", "README.md", "progress.md", "roadmaps-progress.md"}
+EXCLUDE_PREFIXES = ("open-questions",)
+EXCLUDE_DIRS = {"archive", "skipped"}
+
+
+@dataclass
+class PhaseStats:
+    number: int
+    name: str
+    done: int = 0
+    open_: int = 0
+    deferred: int = 0
+    cancelled: int = 0
+
+    @property
+    def total_active(self) -> int:  # denominator for %
+        return self.done + self.open_
+
+    @property
+    def percent(self) -> int:
+        return round(self.done * 100 / self.total_active) if self.total_active else 0
+
+    @property
+    def state(self) -> str:
+        if self.total_active == 0 and (self.deferred or self.cancelled):
+            return "⏭️ skipped"
+        if self.total_active == 0:
+            return "⬜ empty"
+        if self.done == 0:
+            return "⬜ not started"
+        if self.open_ == 0:
+            return "✅ done"
+        return "🟡 in progress"
+
+
+@dataclass
+class RoadmapStats:
+    path: Path
+    rel: str
+    title: str
+    phases: list[PhaseStats] = field(default_factory=list)
+
+    @property
+    def done(self) -> int:
+        return sum(p.done for p in self.phases)
+
+    @property
+    def open_(self) -> int:
+        return sum(p.open_ for p in self.phases)
+
+    @property
+    def deferred(self) -> int:
+        return sum(p.deferred for p in self.phases)
+
+    @property
+    def cancelled(self) -> int:
+        return sum(p.cancelled for p in self.phases)
+
+    @property
+    def total_active(self) -> int:
+        return self.done + self.open_
+
+    @property
+    def percent(self) -> int:
+        return round(self.done * 100 / self.total_active) if self.total_active else 0
+
+
+def is_roadmap_candidate(path: Path) -> bool:
+    if path.name in EXCLUDE_NAMES:
+        return False
+    if any(path.name.startswith(p) for p in EXCLUDE_PREFIXES):
+        return False
+    if any(part in EXCLUDE_DIRS for part in path.parts):
+        return False
+    return True
+
+
+def count_checkboxes(text: str) -> tuple[int, int, int, int]:
+    done = open_ = deferred = cancelled = 0
+    for m in CHECKBOX_RE.finditer(text):
+        c = m.group(1).lower()
+        if c == "x":
+            done += 1
+        elif c == " ":
+            open_ += 1
+        elif c == "~":
+            deferred += 1
+        elif c == "-":
+            cancelled += 1
+    return done, open_, deferred, cancelled
+
+
+def parse_roadmap(path: Path, roadmap_root: Path) -> RoadmapStats | None:
+    text = path.read_text(encoding="utf-8")
+    phase_matches = list(PHASE_RE.finditer(text))
+    if not phase_matches:
+        return None  # not a roadmap — no ## Phase headings
+    title_match = TITLE_RE.search(text)
+    title = title_match.group(1).strip() if title_match else path.stem
+    rel = str(path.relative_to(roadmap_root))
+    stats = RoadmapStats(path=path, rel=rel, title=title)
+    for i, pm in enumerate(phase_matches):
+        start = pm.end()
+        end = phase_matches[i + 1].start() if i + 1 < len(phase_matches) else len(text)
+        d, o, df, c = count_checkboxes(text[start:end])
+        number = int(pm.group(2))
+        name = (pm.group(3) or "").strip() or f"Phase {number}"
+        stats.phases.append(PhaseStats(number, name, d, o, df, c))
+    return stats
+
+
+def bar(pct: int, width: int = 10) -> str:
+    filled = round(pct * width / 100)
+    return "█" * filled + "░" * (width - filled)
+
+
+def collect(roadmap_root: Path) -> list[RoadmapStats]:
+    results: list[RoadmapStats] = []
+    for path in sorted(roadmap_root.rglob("*.md")):
+        if not path.is_file() or not is_roadmap_candidate(path):
+            continue
+        stats = parse_roadmap(path, roadmap_root)
+        if stats:
+            results.append(stats)
+    return results
+
+
+def render(roadmaps: list[RoadmapStats]) -> str:
+    total_done = sum(r.done for r in roadmaps)
+    total_active = sum(r.total_active for r in roadmaps)
+    overall_pct = round(total_done * 100 / total_active) if total_active else 0
+    lines: list[str] = []
+    lines.append("# Roadmap Progress\n")
+    lines.append(
+        "> Auto-generated by `.augment/scripts/update_roadmap_progress.py`. "
+        "Do not edit — regenerated on every roadmap-create, -execute, or "
+        "completion change (last-modified timestamp lives in git history).\n>\n"
+        f"> {len(roadmaps)} open roadmap"
+        f"{'s' if len(roadmaps) != 1 else ''} · "
+        "[roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · "
+        "[skipped/](roadmaps/skipped/)\n"
+    )
+    lines.append("## Overall\n")
+    lines.append(f"**{total_done} / {total_active} steps done · {overall_pct}%**\n")
+    lines.append("```text\n" + bar(overall_pct, 40) + f"   {overall_pct}%\n```\n")
+    if not roadmaps:
+        lines.append("_No open roadmaps._\n")
+        return "\n".join(lines) + "\n"
+    lines.append("## Open roadmaps\n")
+    lines.append("| # | Roadmap | Phases | Steps | Done | Open | Deferred | Cancelled | Progress |")
+    lines.append("|---|---|---:|---:|---:|---:|---:|---:|---|")
+    for i, r in enumerate(roadmaps, 1):
+        lines.append(
+            f"| {i} | [{r.rel}](roadmaps/{r.rel}) | {len(r.phases)} | {r.total_active} | "
+            f"{r.done} | {r.open_} | {r.deferred} | {r.cancelled} | "
+            f"{r.percent}% {bar(r.percent)} |"
+        )
+    lines.append("")
+    lines.append("---\n")
+    lines.append("## Per-roadmap phase breakdown\n")
+    for r in roadmaps:
+        lines.append(f"### [{r.rel}](roadmaps/{r.rel})\n")
+        lines.append(f"**{r.title}** — {r.done} / {r.total_active} done ({r.percent}%)\n")
+        lines.append("| # | Phase | State | Done | Open | Deferred | Cancelled | % |")
+        lines.append("|---|---|---|---:|---:|---:|---:|---:|")
+        for p in r.phases:
+            lines.append(
+                f"| {p.number} | {p.name} | {p.state} | {p.done} | {p.open_} | "
+                f"{p.deferred} | {p.cancelled} | {p.percent}% |"
+            )
+        lines.append("")
+    return "\n".join(lines) + "\n"
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true", help="exit 1 if progress.md is stale")
+    parser.add_argument("--repo-root", type=Path, default=Path.cwd(),
+                        help="project root (default: cwd)")
+    args = parser.parse_args()
+    roadmap_root = args.repo_root / "agents" / "roadmaps"
+    target = args.repo_root / "agents" / "roadmaps-progress.md"
+    if not roadmap_root.is_dir():
+        # No roadmaps directory yet — skip silently so the CI check is safe in
+        # consumer projects that haven't adopted roadmaps.
+        if args.check:
+            return 0
+        print(f"ℹ️  No roadmaps directory at {roadmap_root} — nothing to do.")
+        return 0
+    roadmaps = collect(roadmap_root)
+    new_text = render(roadmaps)
+    current = target.read_text(encoding="utf-8") if target.exists() else ""
+    if args.check:
+        if current != new_text:
+            print(f"❌  {target.relative_to(args.repo_root)} is stale. "
+                  f"Run `task roadmap-progress` to regenerate.", file=sys.stderr)
+            return 1
+        print(f"✅  {target.relative_to(args.repo_root)} is up to date.")
+        return 0
+    target.write_text(new_text, encoding="utf-8")
+    print(f"✅  Wrote {target.relative_to(args.repo_root)} · "
+          f"{len(roadmaps)} roadmap(s) · "
+          f"{sum(r.done for r in roadmaps)}/{sum(r.total_active for r in roadmaps)} steps done.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
