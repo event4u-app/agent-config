@@ -137,32 +137,56 @@ README today cannot, within 3 minutes, (a) understand what the package
 does in practice, (b) install it, and (c) see one concrete result. Q20–Q22
 are three facets of the same problem and should be treated as one bundle.
 
-#### 🔒 Locked — not open questions
+#### 🎯 Strategic direction (confirmed by maintainer, not an open question)
 
-- **Positioning: Laravel-first.** The Laravel-dense authoring layer plus
-  the broader `project-analysis-*` reading layer is **deliberate**, not
-  an inconsistency. Focus = quality = faster adoption. Multi-stack
-  authoring parity is **not on the roadmap** and README/AGENTS.md should
-  lead with "Laravel-first + multi-stack analysis" framing. (Supersedes
-  the earlier Q18 draft.)
+- **Audience: ALL developers — multi-stack is the goal, not a trade-off.**
+  The package targets Laravel, Symfony, Zend, plain PHP, frontend (JS/TS),
+  and beyond. The current Laravel density is **Phase 1 reality**, not a
+  product choice to stay there. Framing in README/AGENTS.md must reflect
+  this: "Laravel-complete today, multi-stack by design, Symfony/Zend/
+  frontend on the roadmap." **Do not** position the package as
+  Laravel-first / Laravel-only. The second reviewer's "keep Laravel-first"
+  suggestion was rejected on 2026-04-22.
+
+- **Q18 (new) — Multi-stack expansion sequencing.** Audience direction is
+  locked (all devs) but the ordering of stack coverage is open. Open
+  decisions:
+    1. **Which stack next after Laravel?** Candidates: Symfony (largest
+       PHP overlap, reuses quality-tools / eloquent-like patterns),
+       plain PHP (lowest effort, widest reach), frontend TS (largest
+       non-PHP audience, biggest authoring gap today).
+    2. **Per-stack scope.** Parity target = authoring skills + analysis
+       skills + testing + quality tooling, or a narrower "good enough"
+       shape per stack?
+    3. **Shared vs. forked skills.** Does `quality-tools` split into
+       `php-quality-tools` / `js-quality-tools`, or stay unified with
+       stack-aware branches?
+    4. **Community / maintainer bandwidth** — how much of this is
+       internal vs. invited contributions, and how is per-stack quality
+       enforced (lint-skills covers form, not framework correctness)?
+  → No matching roadmap yet. Needs a new `road-to-multi-stack.md` or
+     a Phase addition on `road-to-stronger-skills.md`.
 
 #### 🔴 Open — the Time-to-First-Value bundle
 
-- **Q18 — README refresh (outdated + missing the "I need this" moment).**
+- **Q19 — README refresh (outdated + missing the "I need this" moment).**
   The current README is factually outdated (e.g. skill/rule counts drift,
   version references) AND strategically weak — it describes structure
   ("122 skills, 42 rules, 64 commands") instead of demonstrating value
   ("paste this prompt, get this result"). Target state:
     1. One-screen hero: 30-second pitch + one concrete before/after
-       example a Laravel dev recognizes.
+       example. Use Laravel for the first example (current strongest
+       coverage) but frame the package as multi-stack by design.
     2. "Install in 60s, first result in 3 min" section with an exact
        copy-paste prompt and the expected agent behavior.
     3. Kill the feature catalog above the fold — move counts/inventory
        below the "I need this" section.
-    4. Lead with the Laravel-first positioning (see Locked above).
+    4. Explicit "Current coverage / Roadmap" table: Laravel ✅,
+       Symfony / Zend / plain PHP / frontend 🚧, so adopters see the
+       direction.
   → No matching roadmap. Highest externally visible lever right now.
 
-- **Q19 — Real-world usage flows (the missing killer doc).** The repo
+- **Q20 — Real-world usage flows (the missing killer doc).** The repo
   explains structure (skills, rules, commands) but not **flows** — what
   actually happens when a user types "build a feature", "fix this bug",
   "open a PR"? Which skills trigger in what order, how do rules gate,
@@ -170,47 +194,55 @@ are three facets of the same problem and should be treated as one bundle.
   theoretical. Options:
     1. New `docs/flows/` with 3–5 end-to-end walkthroughs (feature,
        bugfix, PR, code review, test authoring) — real transcripts,
-       not abstract diagrams.
+       not abstract diagrams. Start with Laravel flows (current
+       strongest coverage), add stack variants as coverage grows
+       (see Q18).
     2. A `/demo` command that runs a scripted scenario on a throwaway
        branch and shows exactly which skills/rules fired.
     3. Both — written flows for skimming + executable demo for trying.
-  → No matching roadmap. Second-highest lever after Q18.
+  → No matching roadmap. Second-highest lever after Q19.
 
-- **Q20 — Progressive activation (reframes the earlier "lite preset"
+- **Q21 — Progressive activation (reframes the earlier "lite preset"
   idea).** The problem is **not** that 122 skills is too many — it is
   that all of them activate at once with no onboarding ramp. Better
-  framing: staged adoption levels.
+  framing: staged adoption levels, designed to be stack-agnostic once
+  Q18 multi-stack expansion lands.
     - **Level 1 — Core (≈5 skills):** skill discovery, the one demo
-      flow, commit + PR basics. Enough to feel the value in a day.
-    - **Level 2 — Everyday Laravel:** laravel, eloquent, pest-testing,
-      quality-tools, git-workflow, receiving-code-review — the working
-      set of a Laravel dev.
+      flow, commit + PR basics. Stack-agnostic. Enough to feel the
+      value in a day.
+    - **Level 2 — Everyday working set (per stack):** today = Laravel
+      (laravel, eloquent, pest-testing, quality-tools, git-workflow,
+      receiving-code-review). As Q18 lands, add `level-2-symfony`,
+      `level-2-frontend`, etc. — same shape, different skill set.
     - **Level 3 — Full system:** everything, including memory, defensive
       review sub-skills, orchestration, analysis layer.
-  Surface the level as `preset: level-1 | level-2 | full` in
+  Surface the level as `preset: level-1 | level-2-{stack} | full` in
   `.agent-settings.yml`, documented in the README. Touches
   `road-to-project-memory.md` Q6 but is an independent decision.
   → No matching roadmap.
 
-- **Q21 — First-result-in-3-minutes onboarding.** Concrete acceptance
+- **Q22 — First-result-in-3-minutes onboarding.** Concrete acceptance
   criteria, not vague "first-15-minutes": from `composer require
-  event4u/agent-config` to a visible agent result that the user
+  event4u/agent-config` (or `npm install` for the JS/TS bridge, once
+  Q18 frontend coverage lands) to a visible agent result that the user
   recognizes as useful, in **under 3 minutes**, on a fresh laptop.
   `task first-run` + `scripts/first-run.sh` exist but don't meet this
   bar today. Options:
-    1. A `/onboard` command that installs + picks Level 1 preset (Q20)
-       + runs one real flow (Q19) + prints a clear "what just happened"
+    1. A `/onboard` command that installs + picks Level 1 preset (Q21)
+       + runs one real flow (Q20) + prints a clear "what just happened"
        summary.
-    2. A 3-minute screencast embedded in the README hero (Q18) instead
+    2. A 3-minute screencast embedded in the README hero (Q19) instead
        of adding more skills.
     3. Both — command for hands-on users, screencast for evaluators.
-  → No matching roadmap. Completes the Q18–Q21 bundle.
+  → No matching roadmap. Completes the Q19–Q22 bundle.
 
-**Sequencing note:** Q18 (README) depends on Q19 (flows) and Q20
+**Sequencing note:** Q19 (README) depends on Q20 (flows) and Q21
 (progressive activation) to have real content. Suggested order:
-Q20 preset scaffolding → Q19 one flow documented → Q21 onboarding
-command wraps both → Q18 rewrites README around the result. Doing Q18
-first produces marketing without substance.
+Q21 preset scaffolding → Q20 one flow documented → Q22 onboarding
+command wraps both → Q19 rewrites README around the result. Q18
+(multi-stack expansion) runs in parallel on its own timeline and feeds
+into all four as coverage grows. Doing Q19 first produces marketing
+without substance.
 
 ## Cross-repo questions (`agents/roadmaps/agent-memory/*`)
 
