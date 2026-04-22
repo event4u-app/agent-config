@@ -62,7 +62,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install test deps
-        run: pip install pytest
+        # pytest drives the suite; pyyaml is a runtime dep of the memory
+        # tooling (check_memory / check_proposal / memory_lookup) that
+        # the tests invoke via subprocess.
+        run: pip install pytest pyyaml
 
       - name: Run Python tests
         # pytest discovers every test module in tests/. Prevents new test
