@@ -92,8 +92,17 @@ Depends on: personas Phase 2 (Core-6 authored).
 - [x] Output template frozen (three sections — refined ticket /
   Top-5 risks / persona voices) plus close-prompt; `evals/triggers.json`
   shipped with 5 should + 5 should-not queries.
-- [ ] Linter checks: `personas:` entries resolve; orchestrated
+- [x] Linter checks: `personas:` entries resolve; orchestrated
   skill references resolve; output template presence enforced.
+  *(2026-04-22: `personas:` frontmatter + markdown skill/command
+  references are validated by
+  [`scripts/check_references.py`](../../scripts/check_references.py)
+  — `_extract_personas_frontmatter` + the cross-artifact reference
+  pattern cover both; `python3 scripts/check_references.py` is green
+  with `refine-ticket` and `estimate-ticket` referenced across skills,
+  commands, and roadmaps. Output-template presence enforcement is
+  deferred — tracked as Q26 in
+  [`open-questions-2.md`](open-questions-2.md).)*
 
 ### Phase 2 — orchestration wiring
 
@@ -248,9 +257,26 @@ cleanly on at least three sample tickets (one clean, one
 duplicate-intent, one security-sensitive). Phase 4 ships when
 `estimate-ticket` is drafted and runs on the same three tickets.
 
+## Final status — 2026-04-22
+
+| Phase | Items | Status |
+|---|---|---|
+| Phase 1 — core artifacts | 4 | ✅ all done |
+| Phase 2 — orchestration wiring | 4 | ✅ all done |
+| Phase 3 — repo-aware mode | 3 | ✅ all done |
+| Phase 4 — estimate-ticket sibling | 3 | ✅ all done |
+| Phase 5 — Q19/Q20/Q22 integration | 3 | ✅ 2 done + 1 deferred (Q27 in `open-questions-2.md`) |
+
+**All technical work is shipped.** Open items remaining are the
+README demo (Q27, adoption-gated) and output-template linter
+enforcement (Q26, linter-expansion). Both live in
+[`open-questions-2.md`](open-questions-2.md). Roadmap is **ready
+for archiving**.
+
 ## See also
 
 - [`open-questions.md`](open-questions.md) — Q24, Q25 (source)
+- [`open-questions-2.md`](open-questions-2.md) — Q26, Q27 (deferred)
 - [`archive/road-to-personas.md`](archive/road-to-personas.md) — Core-6 persona primitive (shipped 2026-04-22)
 - [`road-to-stronger-skills.md`](road-to-stronger-skills.md) — pattern compliance for new skills
 - [`.agent-src.uncompressed/skills/validate-feature-fit/SKILL.md`](../../.agent-src.uncompressed/skills/validate-feature-fit/SKILL.md) — orchestrated sub-skill
