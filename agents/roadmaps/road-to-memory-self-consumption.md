@@ -228,16 +228,20 @@ operational backend ships:
 |---|---|
 | Phase 0 — no hard dep, no-circular-dep, absent-path contract | ✅ done |
 | Phase 1 — conflict-resolution contract, hygiene shadow counts | ✅ done |
-| Phase 2 — dogfooding against published agent-memory | ⏸ deferred (Q29 — package not yet published) |
+| Phase 2 — dogfooding against published agent-memory | 🟢 parked-open (Q29 — waiting on our own package release) |
 
 Roadmap stays **open** — Phase 2 will execute the moment
 `@event4u/agent-memory` ships a release; until then the absent-path
-flow is the operational contract. See Q29 in
+flow is the operational contract, and the expected present-path
+interface is pinned in
+[`../contexts/agent-memory-contract.md`](../contexts/agent-memory-contract.md)
+so drift is caught in one place when the package lands. See Q29 in
 [`open-questions-2.md`](open-questions-2.md).
 
 ## See also
 
-- [`open-questions-2.md`](open-questions-2.md) — Q29 (external dep)
+- [`open-questions-2.md`](open-questions-2.md) — Q29 (parked-open)
+- [`../contexts/agent-memory-contract.md`](../contexts/agent-memory-contract.md) — consumer-side interface snapshot
 - [`road-to-project-memory.md`](road-to-project-memory.md) — curated
   files and settings layering; this doc extends its conflict story
 - [`road-to-agent-memory-integration.md`](road-to-agent-memory-integration.md) —

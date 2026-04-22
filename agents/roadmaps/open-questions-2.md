@@ -189,15 +189,24 @@
 
 ### `road-to-memory-self-consumption.md`
 
-- **Q29** 📦 `external-dependency` — **Phase 2 of
-  `road-to-memory-self-consumption.md` needs
-  `@event4u/agent-memory` published.** All three remaining items
-  (local install, operational store, `/memory-promote` walkthrough)
-  share the same blocker. The absent-path flow is production-ready;
-  the present-path flow is wired but cannot execute until the
-  package exists. No agent-config change unblocks this — the
-  agent-memory repo owns the shipping decision. Revisit when a
-  release is tagged there.
+- **Q29** 🟢 `parked-open` (2026-04-22) — **Phase 2 of
+  `road-to-memory-self-consumption.md` waits on
+  `@event4u/agent-memory` shipping.** Since the package is ours, this
+  is a prio decision, not an external blocker. Stays open so it
+  doesn't disappear, but **does not gate other Q-items**.
+  - **Absent path** (no package installed): production-ready, wired,
+    file-fallback via `scripts/memory_lookup.py`.
+  - **Present path** (package installed): wired but unexecutable
+    until the package ships.
+  - **Integrity check shipped 2026-04-22:**
+    [`agents/contexts/agent-memory-contract.md`](../contexts/agent-memory-contract.md)
+    pins the expected interface + flags known drift (`source` /
+    `score` naming vs. spec envelope) so we see the diff in one
+    place when the package lands.
+  - **Revisit triggers:** any tagged `agent-memory` release · a
+    consumer explicitly asks for the present path · an integration
+    PR opens against this repo · the file fallback's public shape
+    changes (then refresh the contract doc *first*).
 
 ### `road-to-trigger-evals.md`
 
