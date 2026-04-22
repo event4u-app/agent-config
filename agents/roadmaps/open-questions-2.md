@@ -84,6 +84,35 @@
   then, analysis-only coverage (`project-analysis-zend-laminas`)
   is the commitment.
 
+### `road-to-defensive-agent.md`
+
+- **Q33** 🛑 `artifact-drafting` — **Wave 2 + Wave 3 + post-wave
+  integration for defensive-agent.** Wave 1 shipped (6 skills + 5
+  context templates). What remains:
+  - **Wave 2 (5 skills + rule + command extension):**
+    `dependency-risk-review`, `data-exposure-review`,
+    `migration-safety`, `queue-safety`, `secrets-and-config-review`,
+    plus `never-help-build-offensive-cyber-capability` rule with
+    10-prompt red-team regression, plus `/review-changes`
+    Risk-Scorecard extension.
+  - **Wave 3 (4 skills + 1 extension):** `input-validation-review`,
+    `multi-tenant-boundary-review`, `secure-laravel-architecture`
+    (stack-scoped), `regression-hunter`, plus `bug-analyzer`
+    incident-mode section.
+  - **Post-waves (3 integrations):** `/review-changes` dispatch
+    globs, `/feature-plan` calls `threat-modeling` +
+    `data-flow-mapper`, `finishing-a-development-branch`
+    cross-links `secrets-and-config-review`.
+
+  Every skill is its own `artifact-drafting-protocol` session;
+  bulk creation is not allowed by `skill-quality`. Also needs a
+  live `/review-changes` smoke test on a real diff. User questions:
+  - Ship Wave 2 before or after Wave 3? (proposal: Wave 2 first —
+    higher leverage, no stack gating)
+  - One PR per skill, or bundled per wave?
+  - Ok to use a past PR from another project as the smoke-test
+    diff, or scaffold a synthetic fixture diff in this repo?
+
 ### `road-to-memory-self-consumption.md`
 
 - **Q29** 📦 `external-dependency` — **Phase 2 of

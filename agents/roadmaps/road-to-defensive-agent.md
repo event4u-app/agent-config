@@ -11,7 +11,10 @@
 - [x] [`road-to-stronger-skills.md`](road-to-stronger-skills.md) exists — defines the 8-pattern tier system this roadmap consumes
 - [x] `preservation-guard`, `skill-quality`, `augment-portability` rules active
 - [x] `scripts/measure_patterns.py` baseline captured — new skills must score ≥ tier target on first commit
-- [ ] `/review-changes` live smoke-test (Phase 3.2 of autonomous-agent) — recommended before wiring new skills as dispatch targets
+- [-] `/review-changes` live smoke-test (Phase 3.2 of autonomous-agent) — recommended before wiring new skills as dispatch targets
+  *(2026-04-22: deferred — depends on a real diff to self-review.
+  Tracked alongside Q33 in
+  [`open-questions-2.md`](open-questions-2.md).)*
 
 ## Vision
 
@@ -124,7 +127,8 @@ and refuse offensive work. Unblocks every later wave.
 
 ### 1.2 — Rules
 
-- [ ] `never-help-build-offensive-cyber-capability` — `always`, ~40 lines, hard refusal rubric *(deferred to Wave 2 with its regression set)*
+- [-] `never-help-build-offensive-cyber-capability` — `always`, ~40 lines, hard refusal rubric *(deferred to Wave 2 with its regression set)*
+  *(2026-04-22: Wave 2 scoped but not shipped — Q33.)*
 - [x] `security-sensitive-stop` — `auto`, triggers on auth/billing/tenant/secrets/upload/external
 - [x] `read-before-write` — extension of `think-before-action` (minimum read set checklist)
 - [x] `minimal-safe-diff` — `always`, smallest-safe-change principle
@@ -132,12 +136,12 @@ and refuse offensive work. Unblocks every later wave.
 ### 1.3 — Commands
 
 - [x] `/threat-model` — dispatches `threat-modeling` + `authz-review`, consolidates into a single report
-- [ ] `/secure-review` — deferred to Wave 2 (depends on `dependency-risk-review` + `data-exposure-review`)
+- [-] `/secure-review` — deferred to Wave 2 (depends on `dependency-risk-review` + `data-exposure-review`) *(Q33)*
 
 ### 1.4 — Acceptance criteria
 
 - [x] Every new skill scores ≥ tier target on `measure_patterns.py` (commit gate)
-- [ ] `never-help-…` rule passes a 10-prompt red-team regression set *(with Wave 2)*
+- [-] `never-help-…` rule passes a 10-prompt red-team regression set *(with Wave 2)* *(Q33)*
 - [x] `systematic-debugging` + `bug-analyzer` have `route to data-flow-mapper` / `blast-radius-analyzer` links
 - [x] `security` + `security-audit` have `route to threat-modeling` / `route to authz-review` links
 
@@ -177,15 +181,16 @@ These ship **between Wave phases** when a real gap shows up before the next wave
 
 ### 2.1 — Skills (all Tier 1)
 
-- [ ] `dependency-risk-review` — new packages, install hooks, transitive risk, supply-chain
-- [ ] `data-exposure-review` — API resources, logs, exceptions, admin leakage
-- [ ] `migration-safety` — lock-prone, backfill, rollback realism, staged rollout
-- [ ] `queue-safety` — idempotency, retries, duplicate dispatch, failure handling
-- [ ] `secrets-and-config-review` — hardcoded secrets, `.env` reach, debug flags, unsafe logging
+- [-] `dependency-risk-review` — new packages, install hooks, transitive risk, supply-chain *(Q33)*
+- [-] `data-exposure-review` — API resources, logs, exceptions, admin leakage *(Q33)*
+- [-] `migration-safety` — lock-prone, backfill, rollback realism, staged rollout *(Q33)*
+- [-] `queue-safety` — idempotency, retries, duplicate dispatch, failure handling *(Q33)*
+- [-] `secrets-and-config-review` — hardcoded secrets, `.env` reach, debug flags, unsafe logging *(Q33)*
 
 ### 2.2 — Command extension
 
-- [ ] `/review-changes` emits a **Risk-Scorecard** block (security · data · regression · operational, each 🔴/🟡/🟢), aggregated from the four judges' verdicts + a new internal routine — **no new skill**, ~30-line extension of the command
+- [-] `/review-changes` emits a **Risk-Scorecard** block (security · data · regression · operational, each 🔴/🟡/🟢), aggregated from the four judges' verdicts + a new internal routine — **no new skill**, ~30-line extension of the command
+  *(2026-04-22: depends on the five Wave-2 review skills existing — Q33.)*
 
 ### 2.3 — Acceptance criteria
 
@@ -200,11 +205,11 @@ into the shared package.
 
 ### 3.1 — Skills
 
-- [ ] `input-validation-review` — Tier 1, framework-neutral
-- [ ] `multi-tenant-boundary-review` — Tier 1, framework-neutral with tenant-detection heuristics
-- [ ] `secure-laravel-architecture` — Tier 1, frontmatter `stacks: [laravel]`
-- [ ] `regression-hunter` — Tier 2, pairs with `bug-analyzer`
-- [ ] `bug-analyzer` **extension** — new "incident mode" section (no new skill; `incident-triage` merged here)
+- [-] `input-validation-review` — Tier 1, framework-neutral *(Q33)*
+- [-] `multi-tenant-boundary-review` — Tier 1, framework-neutral with tenant-detection heuristics *(Q33)*
+- [-] `secure-laravel-architecture` — Tier 1, frontmatter `stacks: [laravel]` *(Q33)*
+- [-] `regression-hunter` — Tier 2, pairs with `bug-analyzer` *(Q33)*
+- [-] `bug-analyzer` **extension** — new "incident mode" section (no new skill; `incident-triage` merged here) *(Q33)*
 
 ### 3.2 — Knowledge-layer templates
 
@@ -228,14 +233,34 @@ Plus a new skill:
 
 ## Post-waves — Integration & dispatch
 
-- [ ] `/review-changes` dispatches to `authz-review`, `data-exposure-review`,
+- [-] `/review-changes` dispatches to `authz-review`, `data-exposure-review`,
       `dependency-risk-review`, `migration-safety`, `queue-safety` when the
       diff matches file globs (auth/policy, resources/logs, composer/package-lock,
-      migrations, jobs)
-- [ ] `/feature-plan` calls `threat-modeling` + `data-flow-mapper` for features
+      migrations, jobs) *(Q33 — needs Wave 2 skills first)*
+- [-] `/feature-plan` calls `threat-modeling` + `data-flow-mapper` for features
       touching Wave-1 trigger areas
-- [ ] `finishing-a-development-branch` cross-links `secrets-and-config-review`
-      as a pre-merge check
+      *(2026-04-22: `threat-modeling` and `data-flow-mapper` shipped; the
+      `/feature-plan` wiring is a ~15-line command edit deferred until
+      Wave 2 integration lands — Q33.)*
+- [-] `finishing-a-development-branch` cross-links `secrets-and-config-review`
+      as a pre-merge check *(Q33 — waits on secrets-and-config-review)*
+
+## Final status — 2026-04-22
+
+| Item set | Status |
+|---|---|
+| Wave 1 — core security skills (`threat-modeling`, `authz-review`, `data-flow-mapper`, `blast-radius-analyzer`) | ✅ done |
+| Wave 1 — knowledge-layer templates (auth/tenant/data/deployment/observability) + `context-authoring` | ✅ done |
+| Wave 1 — `/review-changes` live smoke-test | ⏸ deferred (needs real diff — Q33) |
+| Wave 2 — 5 review skills + Risk-Scorecard extension | ⏸ deferred (Q33) |
+| Wave 2 — `never-help-…` rule + red-team regression | ⏸ deferred (Q33) |
+| Wave 3 — 4 stack-specific review skills + `bug-analyzer` incident-mode | ⏸ deferred (Q33) |
+| Post-waves — dispatch wiring in `/review-changes`, `/feature-plan`, `finishing-a-development-branch` | ⏸ deferred (Q33) |
+
+Wave 1 shipped the foundation (6 skills + 5 templates). Waves 2/3
+and post-wave integration require their own artifact-drafting
+sessions per-skill and are tracked as Q33 in
+[`open-questions-2.md`](open-questions-2.md). Roadmap stays open.
 
 ## Measurement
 
