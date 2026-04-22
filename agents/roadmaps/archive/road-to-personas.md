@@ -1,5 +1,11 @@
 # Roadmap: Personas — reusable review lenses as a first-class primitive
 
+> **Status: v1 SHIPPED (2026-04-22).** Phases 1–5 landed on
+> `feat/improve-agent-setup-10`. Phase 4 wiring of the three
+> `judge-*` skills (bug-hunter, security-auditor, code-quality) is
+> deferred to v1.1 until matching specialist personas exist.
+> Phase 6 (smart activation) is v1.1+ as designed.
+
 > Promote "review lens" from an implicit, per-skill concept to a
 > **shared, versioned, lintable artifact type**. Skills reference
 > personas; users invoke one, several, or all. Absorbs the

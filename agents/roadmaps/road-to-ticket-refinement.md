@@ -8,7 +8,7 @@
 
 ## Prerequisites
 
-- [ ] [`road-to-personas.md`](road-to-personas.md) Phase 1 + Phase 2 shipped — persona schema + linter + Core-6 authored. **Hard blocker** for implementation; scoping is unblocked.
+- [x] [`archive/road-to-personas.md`](archive/road-to-personas.md) Phase 1 + Phase 2 shipped — persona schema + linter + Core-6 authored. Shipped 2026-04-22; scoping unblocked.
 - [x] `validate-feature-fit` skill exists — owns duplicate / scope / architecture-misfit detection
 - [x] `threat-modeling` skill exists — owns pre-implementation security deep-dive
 - [x] `jira-ticket` command exists — owns ticket-loading helper (Jira URL, key, branch-name detection)
@@ -202,7 +202,7 @@ duplicate-intent, one security-sensitive). Phase 4 ships when
 ## See also
 
 - [`open-questions.md`](open-questions.md) — Q24, Q25 (source)
-- [`road-to-personas.md`](road-to-personas.md) — Core-6 persona primitive (hard dependency)
+- [`archive/road-to-personas.md`](archive/road-to-personas.md) — Core-6 persona primitive (shipped 2026-04-22)
 - [`road-to-stronger-skills.md`](road-to-stronger-skills.md) — pattern compliance for new skills
 - [`.agent-src.uncompressed/skills/validate-feature-fit/SKILL.md`](../../.agent-src.uncompressed/skills/validate-feature-fit/SKILL.md) — orchestrated sub-skill
 - [`.agent-src.uncompressed/skills/threat-modeling/SKILL.md`](../../.agent-src.uncompressed/skills/threat-modeling/SKILL.md) — orchestrated sub-skill

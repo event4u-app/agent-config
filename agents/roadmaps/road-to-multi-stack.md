@@ -214,7 +214,7 @@ backlog. Per-wave acceptance:
 
 - [`open-questions.md`](open-questions.md) — Q18, Q19 (source)
 - [`road-to-stronger-skills.md`](road-to-stronger-skills.md) — pattern compliance baseline new skills inherit
-- [`road-to-personas.md`](road-to-personas.md) — personas cited by stack-specific review skills
+- [`archive/road-to-personas.md`](archive/road-to-personas.md) — personas cited by stack-specific review skills (shipped 2026-04-22)
 - [`.agent-src.uncompressed/rules/augment-portability.md`](../../.agent-src.uncompressed/rules/augment-portability.md) — portability gate
 - [`.agent-src.uncompressed/rules/artifact-drafting-protocol.md`](../../.agent-src.uncompressed/rules/artifact-drafting-protocol.md) — mandatory per new stack skill
 - [`scripts/check_portability.py`](../../scripts/check_portability.py) — enforcement
