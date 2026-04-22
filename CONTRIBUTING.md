@@ -20,6 +20,21 @@ so we can align on direction before code is written.
 
 If you are unsure whether a change is in scope: open a discussion first.
 
+## Dependency direction — no circular deps with `agent-memory`
+
+`agent-config` is the upstream, standalone package. It must **never**
+hard-depend on `@event4u/agent-memory`. The optional companion package
+is declared in `suggest` (Composer) / `optionalDependencies` or
+documentation only (npm) — never as a runtime or dev dependency that
+`composer install` / `npm install` would pull automatically.
+
+Reasoning: `agent-memory` depends on `agent-config` for its skills and
+governance. Reversing that would create a circular dependency and break
+installs in consumer projects that only want the rule/skill layer.
+
+See [`agents/roadmaps/road-to-memory-self-consumption.md`](agents/roadmaps/road-to-memory-self-consumption.md)
+for the full conflict-resolution contract between the two packages.
+
 ## Quick start for contributors
 
 ```bash

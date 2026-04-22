@@ -151,3 +151,45 @@ cat /tmp/risk-report.md /tmp/routing-report.md
   content. A whitespace-only edit to `composer.lock` is still `high`.
 - **Not a policy engine.** Use CODEOWNERS + required reviews for
   enforcement; use this workflow for triage and discussion.
+
+---
+
+# Memory Hygiene — installation
+
+Weekly staleness report for the four engineering-memory files under
+`agents/memory/`. Opens (or updates) a single tracking issue with the
+`memory-hygiene` label when entries are past their
+`review_after_days` window. Closes the issue automatically once all
+entries are fresh again. Purely informational — it does **not** block
+PRs.
+
+## What gets installed
+
+| File in package | Copy to | Purpose |
+|---|---|---|
+| `templates/github-workflows/memory-hygiene.yml` | `.github/workflows/memory-hygiene.yml` | Weekly staleness workflow |
+| `templates/scripts/check_memory.py` | `scripts/check_memory.py` | YAML schema + staleness validator |
+
+## Install
+
+```bash
+# from the consumer repo root
+cp .augment/templates/github-workflows/memory-hygiene.yml .github/workflows/
+cp .augment/templates/scripts/check_memory.py            scripts/
+```
+
+Commit both. The first scheduled run (Mondays 06:00 UTC) reports on
+whatever is under `agents/memory/`. Trigger manually with
+`gh workflow run memory-hygiene.yml`.
+
+## Verifying locally
+
+```bash
+python3 scripts/check_memory.py --path agents/memory
+```
+
+Exit `0` = clean, `1` = violations (missing required fields, duplicate
+ids, or obvious secrets — staleness alone is informational).
+
+Schema reference: `.augment/guidelines/agent-infra/engineering-memory-data-format.md`.
+Schema examples: `.augment/templates/agents/memory/*.example.yml`.
