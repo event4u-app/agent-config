@@ -11,7 +11,7 @@
 - [ ] [`road-to-personas.md`](road-to-personas.md) Phase 1 + Phase 2 shipped — persona schema + linter + Core-6 authored. **Hard blocker** for implementation; scoping is unblocked.
 - [x] `validate-feature-fit` skill exists — owns duplicate / scope / architecture-misfit detection
 - [x] `threat-modeling` skill exists — owns pre-implementation security deep-dive
-- [x] `jira-ticket` skill exists — owns ticket-loading helper (Jira URL, key, branch-name detection)
+- [x] `jira-ticket` command exists — owns ticket-loading helper (Jira URL, key, branch-name detection)
 - [x] `feature-plan`, `feature-explore`, `feature-refactor` commands exist — downstream planning; refine-ticket is upstream of them
 - [x] `artifact-drafting-protocol` rule active — mandatory per new skill + command
 
@@ -193,8 +193,8 @@ to full transcript if feedback shows the summary is too thin.
 
 ## Acceptance criteria
 
-Phase 1 ships when: `refine-ticket` skill + command exist,
-linter passes, output template is fixed, and the skill runs
+Phase 1 ships when the `refine-ticket` artifact (skill + command)
+exists, linter passes, the output template is fixed, and it runs
 cleanly on at least three sample tickets (one clean, one
 duplicate-intent, one security-sensitive). Phase 4 ships when
 `estimate-ticket` is drafted and runs on the same three tickets.

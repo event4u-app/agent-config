@@ -78,6 +78,24 @@ class TestCount(unittest.TestCase):
         self.assertGreater(update_counts.count("guidelines"), 0)
 
 
+class TestRoadmapBaseline(unittest.TestCase):
+    """Roadmap baseline pattern must stay wired into TARGETS."""
+
+    def test_stronger_skills_baseline_is_tracked(self):
+        target_paths = [rel for rel, _ in update_counts.TARGETS]
+        self.assertIn("agents/roadmaps/road-to-stronger-skills.md", target_paths)
+
+    def test_baseline_regex_matches_skill_count(self):
+        patterns = dict(update_counts.TARGETS)[
+            "agents/roadmaps/road-to-stronger-skills.md"
+        ]
+        text = "completion (baseline 121 as of 2026-04-22; roadmap must"
+        counts = {"skills": 122}
+        new_text, drifts = update_counts.apply_to_text(text, patterns, counts)
+        self.assertIn("baseline 122 as of", new_text)
+        self.assertEqual(drifts, [("skills", 121, 122)])
+
+
 class TestEndToEnd(unittest.TestCase):
     """The --check mode must pass on a clean working tree."""
 

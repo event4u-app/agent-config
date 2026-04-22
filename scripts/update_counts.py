@@ -60,6 +60,13 @@ TARGETS: list[tuple[str, list[tuple[str, str]]]] = [
             (r"(Browse all )(\d+)( commands\])", "commands"),
         ],
     ),
+    (
+        "agents/roadmaps/road-to-stronger-skills.md",
+        [
+            # Living baseline — auto-synced so the backport target tracks reality.
+            (r"(baseline )(\d+)( as of)", "skills"),
+        ],
+    ),
 ]
 
 
