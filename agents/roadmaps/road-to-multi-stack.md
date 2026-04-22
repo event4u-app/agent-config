@@ -233,15 +233,21 @@ backlog. Per-wave acceptance:
 | Item set | Status |
 |---|---|
 | Phase 0 — inventory + namespace convention | ✅ done (inventory at `agents/contexts/multi-stack-inventory.md`; convention frozen) |
-| Phase 0 — `check_portability.py` blocklist update | ⏸ deferred (no-op until Wave A.1 ships first stack skill) |
-| Wave A.1-A.4 — Symfony + plain PHP authoring (11 skills) | ⏸ deferred (Q30 sequencing / Q31 test repo) |
-| Wave B.1-B.4 — Next.js / React (11 skills) | ⏸ deferred (Q30 sequencing) |
-| Wave C.1-C.3 — Zend/Laminas (5 skills + migration) | ⏸ deferred (Q30 + Q32 adoption gate) |
+| Phase 0 — `check_portability.py` blocklist update | ⏸ deferred (no-op until Wave B.1 ships first stack skill) |
+| Sequencing (Q30 resolved 2026-04-22) | ✅ Track B first · Wave B.1 pilot · one-wave-per-PR · community PRs after B.1 proves the pattern |
+| **Wave B.1 — React core (pilot)** | 🟡 unblocked — awaiting session allocation |
+| Wave B.2-B.4 — Next.js + tooling + UI primitives | ⏸ deferred (ships after B.1 pattern proven) |
+| Wave A.1-A.4 — Symfony + plain PHP authoring (11 skills) | ⏸ deferred (Track A follows Track B; Q31 still open for A.4) |
+| Wave C.1-C.3 — Zend/Laminas (5 skills + migration) | ⏸ deferred (Q32 adoption gate) |
 
 This roadmap is intentionally **never fully done** — it is the
 multi-stack backlog. Phase 0 shipped what can ship without user
 input; every wave below requires its own
-`artifact-drafting-protocol` session. Roadmap stays open.
+`artifact-drafting-protocol` session. **Next action:** open a
+session for Wave B.1 (React core: `react-components`,
+`react-hooks`, `react-state-management`, `react-testing`) — one
+skill per drafting session, one PR for the wave. Roadmap stays
+open.
 
 ## See also
 

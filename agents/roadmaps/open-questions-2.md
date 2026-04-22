@@ -64,19 +64,22 @@
 
 ### `road-to-multi-stack.md`
 
-- **Q30** 🛑 `artifact-drafting` — **Stack-specific authoring
-  skills (Waves A.1-A.3, B.1-B.4, C.1, C.3).** Each named skill
-  (~30 total across Symfony, React/Next.js, Laminas migration) is
-  a separate Understand → Research → Draft session — they cannot
-  be bulk-generated without violating skill-quality and
-  artifact-drafting-protocol. Scope and capability matrix are
-  frozen in [`agents/contexts/multi-stack-inventory.md`](../contexts/multi-stack-inventory.md).
-  Sequencing question for the user:
-  - Do we open Track A (Symfony) first, or prioritise Track B
-    (Next.js/React) based on incoming adoption signals?
-  - One wave per PR, or bundled per track?
-  - Community contributions accepted per wave, or maintainer-only
-    until the pattern is proven on Wave A.1?
+- **Q30** ✅ `resolved` (2026-04-22) — **Stack-specific authoring
+  skills sequencing.** Decisions:
+  - **Priority:** Track B first. **Wave B.1 (React core)** is the
+    pilot wave — larger external adoption market than Symfony,
+    faster feedback loop.
+  - **PR granularity:** **one wave = one PR.** Small, reviewable,
+    gives a triage checkpoint per wave (does the pattern hold or
+    need adjusting?). Track-sized PRs are rejected.
+  - **Community policy:** **maintainer-only until Wave B.1 ships
+    and is pattern-proven.** After that, community PRs are
+    welcomed per wave, following the established pattern. This
+    prevents pattern drift before the reference exists.
+  - Each wave still requires its own Understand → Research →
+    Draft session; Q30 only fixes sequencing + structure, not
+    start date. Opening the first wave is gated on the user
+    deciding when to allocate the session.
 
 - **Q31** 🎯 `strategic` — **Wave A.4 plain-PHP leakage
   verification.** Needs a real plain-PHP test repository (no
