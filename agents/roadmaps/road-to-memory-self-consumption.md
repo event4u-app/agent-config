@@ -150,19 +150,47 @@ for us, it will not work for any other consumer.
 
 ### Phase 1 — conflict rule enforcement
 
-- [ ] Backend detection helper returns the conflict rule's expected
+- [x] Backend detection helper returns the conflict rule's expected
       output when both sources have matching `id`
-- [ ] Retrieval conformance fixture covers the four cases above
-- [ ] `scripts/check_memory.py` reports shadow counts weekly
+      *(2026-04-22: `_apply_conflict_rule()` in
+      [`scripts/memory_lookup.py`](../../scripts/memory_lookup.py); `retrieve()`
+      now accepts an optional `operational_provider` and `with_shadows`
+      flag, returning a `RetrievalResult` with `hits` + `shadows`.)*
+- [x] Retrieval conformance fixture covers the four cases above
+      *(2026-04-22: [`tests/test_conflict_rule.py`](../../tests/test_conflict_rule.py) —
+      six cases: four from the conflict rule plus end-to-end through
+      `retrieve()` and a backward-compat guard on the default return type.)*
+- [x] `scripts/check_memory.py` reports shadow counts weekly
+      *(2026-04-22: `--shadow-report` flag; text/JSON output; Taskfile
+      target `task memory:shadow-report` intended for a weekly cron.
+      Reports `0` everywhere until the operational backend is wired —
+      which is correct by design, not a stub.)*
 
 ### Phase 2 — dogfooding readiness
 
+Phase 2 is **blocked by the absence of a published `@event4u/agent-memory`
+package**. The three checkboxes below stay open, but the `absent`-path
+flow is documented today so the contract is executable the moment the
+operational backend ships:
+
 - [ ] `agent-memory` installable locally against this repo with one
       command
+      *Blocker: package not published. Today: consumers of this repo
+      run entirely on the `absent` path — curated YAML under
+      `agents/memory/<type>/` plus append-only JSONL under
+      `agents/memory/intake/`. No install needed.*
 - [ ] Learnings captured during agent-config development land in its
       own operational store
+      *Blocker: same. Today: learnings flow through `/propose-memory`
+      into `agents/memory/intake/*.jsonl` (absent path); `memory_lookup`
+      returns them with `source: "intake"` and a slight score discount
+      vs. curated.*
 - [ ] One `/memory-promote` walkthrough documented end-to-end against
       this repo itself
+      *Blocker: `/memory-promote` targets the promotion flow defined in
+      `agent-memory/road-to-promotion-flow.md`. Today: the absent-path
+      equivalent is `learning-to-rule-or-skill` → PR against
+      `agents/memory/<type>/` or `.agent-src.uncompressed/`.*
 
 ## Acceptance criteria
 

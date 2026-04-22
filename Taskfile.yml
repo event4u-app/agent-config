@@ -299,6 +299,10 @@ tasks:
         echo "  ℹ️  no agents/memory/*.yml files — skipping"
       fi
 
+  memory:shadow-report:
+    desc: "Per-type shadow counts from the repo-vs-operational conflict rule (weekly cron target)"
+    cmd: python3 scripts/check_memory.py --shadow-report {{.CLI_ARGS}}
+
   ci:
     desc: Run ALL CI checks locally (must pass before push)
     cmds:

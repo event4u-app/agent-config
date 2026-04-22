@@ -235,6 +235,59 @@ def _check_append_only(base: Optional[str], findings: List[Finding]) -> None:
                                         f"line(s) removed or modified (ref={ref})"))
 
 
+def _shadow_report(fmt: str) -> int:
+    """Report per-type shadow counts from the conflict rule.
+
+    Ships today as scaffolding: without a wired operational backend the
+    counts are all zero (there is nothing on the operational side to
+    suppress). Once agent-memory is present locally, re-running this
+    command will surface real shadows under the same shape — so the
+    downstream consumer (dashboards, weekly cron) never changes.
+    """
+    # Inline import so `check_memory.py` stays importable when someone
+    # runs it on a tree without scripts/ on sys.path (e.g., packaging).
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from scripts.memory_lookup import CURATED_TYPES, RetrievalResult, retrieve
+
+    per_type: dict = {}
+    total_shadows = 0
+    for mtype in sorted(CURATED_TYPES):
+        result = retrieve(types=[mtype], keys=[], limit=1000, with_shadows=True)
+        assert isinstance(result, RetrievalResult)
+        per_type[mtype] = {
+            "hits": len(result.hits),
+            "shadows": len(result.shadows),
+        }
+        total_shadows += len(result.shadows)
+
+    # Best-effort backend-status probe — avoid a hard dependency on
+    # memory_status.py in case it is absent.
+    backend = "unknown"
+    try:
+        from scripts.memory_status import status as _memory_status  # type: ignore
+        backend = _memory_status().status
+    except Exception:  # noqa: BLE001
+        pass
+
+    if fmt == "json":
+        print(json.dumps({
+            "backend": backend,
+            "total_shadows": total_shadows,
+            "per_type": per_type,
+        }, indent=2))
+        return 0
+
+    print(f"Shadow report — backend: {backend}")
+    print(f"  Total operational entries shadowed: {total_shadows}")
+    for mtype, stats in per_type.items():
+        print(f"    {mtype:25s}  hits={stats['hits']:>4}  "
+              f"shadows={stats['shadows']}")
+    if backend == "absent":
+        print("\n  ℹ️  operational backend absent — shadow counts will "
+              "stay zero until @event4u/agent-memory is installed.")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--path", default="agents/memory", help="Root path to scan")
@@ -244,7 +297,12 @@ def main() -> int:
                          "via git diff against the base ref")
     ap.add_argument("--base", default=None,
                     help="Base ref for --append-only (default: GITHUB_BASE_REF or origin/main)")
+    ap.add_argument("--shadow-report", action="store_true",
+                    help="Report per-type shadow counts from the repo-vs-operational "
+                         "conflict rule (observability scaffolding for weekly cron)")
     args = ap.parse_args()
+    if args.shadow_report:
+        return _shadow_report(args.format)
     root = Path(args.path)
     findings: List[Finding] = []
     if args.append_only:

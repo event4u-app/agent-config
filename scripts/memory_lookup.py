@@ -26,7 +26,7 @@ import json
 import sys
 from dataclasses import dataclass, asdict, field
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable, Optional, Union
 
 MEMORY_ROOT = Path("agents/memory")
 INTAKE_ROOT = MEMORY_ROOT / "intake"
@@ -45,13 +45,45 @@ CURATED_TYPES = {
 class Hit:
     id: str
     type: str
-    source: str            # "curated" or "intake"
-    path: str              # file that produced the hit
+    source: str            # "curated" | "intake" | "operational"
+    path: str              # file (or logical locator) that produced the hit
     score: float           # naive, content-match based [0..1]
     entry: dict = field(default_factory=dict)
 
     def as_dict(self) -> dict:
         return asdict(self)
+
+
+@dataclass
+class Shadow:
+    """An operational entry suppressed by the conflict rule."""
+    id: str
+    type: str
+    reason: str                    # "same-id" | "repo-deprecated"
+    operational_path: str          # where the suppressed entry came from
+    repo_path: str                 # repo entry that shadowed it
+
+    def as_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass
+class RetrievalResult:
+    """Full retrieval payload with conflict-rule observability."""
+    hits: list
+    shadows: list = field(default_factory=list)
+
+    def as_dict(self) -> dict:
+        return {
+            "hits": [h.as_dict() for h in self.hits],
+            "shadows": [s.as_dict() for s in self.shadows],
+        }
+
+
+# An operational provider returns repo-shaped Hit objects with
+# source="operational". Backend adapters (e.g. @event4u/agent-memory)
+# are expected to translate their native payload into this shape.
+OperationalProvider = Callable[[list[str], list[str]], Iterable[Hit]]
 
 
 def _load_yaml(path: Path):
@@ -152,19 +184,76 @@ def _score(entry: dict, keys: list[str]) -> float:
     return best
 
 
-def retrieve(types: list[str], keys: list[str], limit: int = 5) -> list[Hit]:
+def _apply_conflict_rule(
+    repo_hits: list[Hit],
+    operational_hits: list[Hit],
+) -> tuple[list[Hit], list[Shadow]]:
+    """Enforce REPO WINS / OPERATIONAL AUGMENTS / NEVER CONTRADICTS SILENTLY.
+
+    Reference: `agents/roadmaps/road-to-memory-self-consumption.md` §
+    "Conflict rule: repo vs. operational". The four cases mapped below
+    are covered by `tests/test_conflict_rule.py`.
+    """
+    # Repo entries index — curated AND intake both count as "repo" for
+    # the conflict rule. The operational store is the only non-repo side.
+    repo_by_id: dict[str, Hit] = {h.id: h for h in repo_hits if h.id}
+
+    merged: list[Hit] = list(repo_hits)
+    shadows: list[Shadow] = []
+
+    for op in operational_hits:
+        if op.id and op.id in repo_by_id:
+            # Case 1+2: same id → repo wins (including when repo is
+            # status:deprecated — operational cannot revive a retired
+            # entry). Suppress the operational entry and record shadow.
+            repo = repo_by_id[op.id]
+            reason = (
+                "repo-deprecated"
+                if repo.entry.get("status") == "deprecated"
+                else "same-id"
+            )
+            shadows.append(Shadow(
+                id=op.id,
+                type=op.type,
+                reason=reason,
+                operational_path=op.path,
+                repo_path=repo.path,
+            ))
+            continue
+        # Case 3 (different ids on same logical key) and Case 4 (repo
+        # has no entry) — both simply include the operational hit.
+        # Repo entries naturally rank higher because their score is not
+        # discounted (see _score / operational scoring in retrieve()).
+        merged.append(op)
+
+    return merged, shadows
+
+
+def retrieve(
+    types: list[str],
+    keys: list[str],
+    limit: int = 5,
+    operational_provider: Optional[OperationalProvider] = None,
+    with_shadows: bool = False,
+) -> Union[list[Hit], RetrievalResult]:
     """Return up to `limit` hits across the requested types, highest score first.
 
-    Curated entries are preferred on ties — they are hand-reviewed.
-    The shape (`Hit`) matches the `present` backend adapter so skills
-    can treat both sources identically.
+    Repo entries (curated + intake) are preferred on ties — they are
+    hand-reviewed or session-captured against the repo itself. When an
+    `operational_provider` is supplied (the `present` path of the
+    backend-detection contract), its results are merged under the
+    REPO WINS conflict rule; suppressed operational entries surface as
+    `shadows` when `with_shadows=True`.
+
+    The return type stays `list[Hit]` by default for backward
+    compatibility with existing skill call sites.
     """
-    hits: list[Hit] = []
+    repo_hits: list[Hit] = []
     for mtype in types:
         if mtype not in CURATED_TYPES:
             continue
         for path, entry in _iter_curated_entries(mtype):
-            hits.append(Hit(
+            repo_hits.append(Hit(
                 id=str(entry.get("id", "")),
                 type=mtype,
                 source="curated",
@@ -173,7 +262,7 @@ def retrieve(types: list[str], keys: list[str], limit: int = 5) -> list[Hit]:
                 entry=entry,
             ))
         for path, entry in _iter_intake_entries(mtype):
-            hits.append(Hit(
+            repo_hits.append(Hit(
                 id=str(entry.get("id", "")),
                 type=mtype,
                 source="intake",
@@ -181,10 +270,28 @@ def retrieve(types: list[str], keys: list[str], limit: int = 5) -> list[Hit]:
                 score=_score(entry, keys) * 0.9,  # slight discount vs curated
                 entry=entry,
             ))
-    hits.sort(key=lambda h: (h.score, h.source == "curated"), reverse=True)
-    # Drop zero-score hits unless no better option exists.
-    positives = [h for h in hits if h.score > 0]
-    return (positives or hits)[:limit]
+
+    operational_hits: list[Hit] = []
+    if operational_provider is not None:
+        try:
+            for oh in operational_provider(list(types), list(keys)) or []:
+                # Discount operational vs curated/intake so repo ranks
+                # higher on equal relevance. Providers may already return
+                # trust-adjusted scores; we only apply a floor discount.
+                oh.score = min(oh.score, 0.85)
+                operational_hits.append(oh)
+        except Exception as exc:  # noqa: BLE001 — providers are external
+            print(f"warning: operational_provider raised "
+                  f"{exc.__class__.__name__}: {exc}", file=sys.stderr)
+
+    merged, shadows = _apply_conflict_rule(repo_hits, operational_hits)
+    merged.sort(key=lambda h: (h.score, h.source == "curated"), reverse=True)
+    positives = [h for h in merged if h.score > 0]
+    final_hits = (positives or merged)[:limit]
+
+    if with_shadows:
+        return RetrievalResult(hits=final_hits, shadows=shadows)
+    return final_hits
 
 
 def main() -> int:
@@ -195,20 +302,37 @@ def main() -> int:
                     help="Retrieval key (repeatable)")
     ap.add_argument("--limit", type=int, default=5)
     ap.add_argument("--format", choices=["text", "json"], default="text")
+    ap.add_argument("--with-shadows", action="store_true",
+                    help="Include shadowed-operational entries in the output "
+                         "(no-op until an operational backend is wired)")
     args = ap.parse_args()
     types = [t.strip() for t in args.types.split(",") if t.strip()]
     if not types:
         print("error: --types is required", file=sys.stderr)
         return 2
-    hits = retrieve(types, args.key, args.limit)
+    result = retrieve(types, args.key, args.limit, with_shadows=args.with_shadows)
+    if args.with_shadows:
+        assert isinstance(result, RetrievalResult)
+        hits, shadows = result.hits, result.shadows
+    else:
+        hits, shadows = result, []  # type: ignore[assignment]
     if args.format == "json":
-        print(json.dumps([h.as_dict() for h in hits], indent=2, default=str))
+        payload = {"hits": [h.as_dict() for h in hits],
+                   "shadows": [s.as_dict() for s in shadows]}
+        print(json.dumps(payload, indent=2, default=str))
     else:
         if not hits:
             print("  (no hits)")
         for h in hits:
             print(f"  [{h.source}] {h.type}  score={h.score:.2f}  "
                   f"id={h.id or '-'}  path={h.path}")
+        if shadows:
+            print(f"\n  shadows: {len(shadows)} operational entr"
+                  f"{'y' if len(shadows) == 1 else 'ies'} suppressed by "
+                  f"the conflict rule")
+            for s in shadows:
+                print(f"    [{s.reason}] {s.type}  id={s.id}  "
+                      f"op={s.operational_path}  repo={s.repo_path}")
     return 0
 
 
