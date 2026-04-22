@@ -80,21 +80,49 @@ Check the loaded ticket for clarity signals before orchestrating:
 - Is the scope one feature, or multiple tangled together?
 - Any sentence that references an existing module name, feature flag, or domain concept?
 
-Then scan the body for:
+Then run the deterministic detection helper — do **not** re-derive trigger
+logic in prose:
 
-| Condition | Sub-skill to fire |
-|---|---|
-| ≥ 2 existing feature names mentioned (grep `agents/contexts/`, recent module names) | `validate-feature-fit` |
-| Keywords `auth`, `webhook`, `upload`, `queue`, `secret`, `tenant`, `admin`, `PII`, `public endpoint`, `billing` | `threat-modeling` |
-| Inside a repo (`.git/` present) | Load `agents/contexts/*.md` for domain vocabulary; scan recent branches + commits for naming conventions |
-| Outside a repo | Generic lens; skip repo-aware enrichment |
+```bash
+python3 scripts/refine_ticket_detect.py <ticket-body-file>
+# or, inside the skill run:
+from scripts.refine_ticket_detect import detect, load_map
+decision = detect(ticket_body, load_map(), cwd=Path.cwd())
+```
+
+The helper consumes [`detection-map.yml`](detection-map.yml) (co-located
+in this skill folder) and returns:
+
+- `validate-feature-fit` — fires when ≥ 2 distinct feature-area keywords
+  appear in the body (see `sub_skills.validate-feature-fit.keywords`).
+- `threat-modeling` — fires on any auth / webhook / upload / queue /
+  secret / tenant / admin / PII / payment keyword, or a `CVE-YYYY-N`
+  regex match.
+- `repo_aware` — on when `.git/`, `agents/contexts/`, `composer.json`,
+  or `package.json` is present in the cwd; off otherwise. When on,
+  load `agents/contexts/*.md` for domain vocabulary and scan recent
+  branches + commits for naming conventions.
+
+The match lists and `require_count` thresholds are owned by
+`detection-map.yml` — edit the map, not this skill. Tests:
+[`tests/test_refine_ticket_detect.py`](../../../tests/test_refine_ticket_detect.py)
+(9 cases, DE + EN fixtures).
 
 ### 3. Orchestrate
 
-Invoke each triggered sub-skill with the ticket as input. **Cite,
-don't copy** — the output references findings by sub-skill name and
-file:line where applicable. If a sub-skill reports zero findings,
-note "fired → clean" in the orchestration section.
+For every `SubSkillDecision` with `fired=True`, invoke the named sub-skill
+with the ticket body as input:
+
+- `validate-feature-fit` → returns duplicate / scope-creep findings
+- `threat-modeling` → returns trust boundaries + abuse cases
+
+**Cite, don't copy** — the output references findings by sub-skill name and
+file:line where applicable. If a sub-skill reports zero findings, emit
+`fired → clean` in the orchestration section. Skipped sub-skills appear
+as `skipped (no trigger match)` — never silently omitted.
+
+Each fired finding must map to at least one entry in the Top-5 risks
+section; orchestration that does not influence the risks is waste.
 
 ### 4. Apply personas
 

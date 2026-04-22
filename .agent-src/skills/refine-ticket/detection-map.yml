@@ -1,0 +1,111 @@
+# Detection map for refine-ticket orchestration
+#
+# Declares which sub-skills fire on which ticket-body signals.
+# Consumed by:
+#   - scripts/refine_ticket_detect.py  (deterministic helper, pytest-covered)
+#   - the refine-ticket skill's Step 2  (cites this file, never re-derives)
+#
+# Schema:
+#   sub_skills:
+#     <skill-name>:
+#       description: one-line reason this skill should fire
+#       keywords: [list of case-insensitive substring signals]
+#       require_count: int  (minimum distinct matches to fire; default 1)
+#       regex: [list of python-compatible regex; any match counts as 1]
+#       notes: free text — visible in the orchestration-notes output
+
+version: 1
+
+sub_skills:
+  validate-feature-fit:
+    description: >
+      Ticket body mentions multiple existing feature names — potential
+      duplicate or scope-creep signal.
+    require_count: 2
+    # Feature names are repo-specific; the default list covers common
+    # product areas. Projects can extend via agents/overrides/ or by
+    # editing a project-local copy of this file.
+    keywords:
+      - dashboard
+      - billing
+      - subscription
+      - onboarding
+      - notifications
+      - reporting
+      - export
+      - import
+      - audit log
+      - integration
+      - api
+      - webhook
+      - user management
+      - permissions
+      - roles
+      - invoicing
+      - admin
+    notes: >
+      Matches count distinct keywords — if two or more different feature
+      names appear in the ticket, validate-feature-fit fires. Single-
+      keyword tickets skip this sub-skill.
+
+  threat-modeling:
+    description: >
+      Ticket touches auth / data-sensitivity / trust-boundary surfaces —
+      pre-implementation threat model required.
+    require_count: 1
+    keywords:
+      - auth
+      - authentication
+      - authorization
+      - login
+      - logout
+      - password
+      - token
+      - jwt
+      - oauth
+      - session
+      - webhook
+      - upload
+      - file upload
+      - queue
+      - queued job
+      - worker
+      - secret
+      - secrets
+      - api key
+      - tenant
+      - tenancy
+      - multi-tenant
+      - admin
+      - admin-only
+      - pii
+      - personal data
+      - gdpr
+      - public endpoint
+      - public api
+      - billing
+      - payment
+      - invoice
+      - stripe
+      - paypal
+    regex:
+      - '\bCVE-\d{4}-\d+\b'
+    notes: >
+      Single-keyword match fires; threat-modeling is cheap and
+      security-sensitive tickets are expensive to re-visit post-ship.
+
+repo_aware:
+  description: >
+    When invoked inside a repo clone, /refine-ticket loads
+    agents/contexts/ for domain vocabulary and scans recent branches /
+    commits for naming conventions. Outside a repo, skip silently.
+  signals:
+    - path: .git
+      type: dir
+    - path: agents/contexts
+      type: dir
+    - path: composer.json
+      type: file
+    - path: package.json
+      type: file
+  require_count: 1
