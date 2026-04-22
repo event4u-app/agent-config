@@ -1,0 +1,75 @@
+# ownership.yml — who owns what in the codebase
+#
+# Writer:   tech lead / team maintainer
+# Reader:   `review-routing`, `requesting-code-review`, blast-radius
+#           analysis (consulted to pick reviewers and CODEOWNERS hints)
+# Expiry:   reviewed quarterly or after team reorganizations
+# Location: agents/memory/ownership/<hash>.yml (content-addressed)
+#           OR agents/memory/ownership.yml (single-file mode)
+#
+# See guidelines/agent-infra/review-routing-data-format.md for the
+# sibling review-router schema; this file is the authoritative source
+# for WHO, not HOW.
+
+version: 1
+
+entries:
+  - id: billing-module
+    status: active
+    confidence: high
+    source:
+      - https://github.com/example/repo/blob/main/CODEOWNERS
+      - adr://0003-team-boundaries
+    owner: billing-team
+    last_validated: 2026-04-01
+    review_after_days: 180
+
+    # --- ownership body ---
+    paths:
+      - app/Services/Billing/**
+      - app/Http/Controllers/Billing/**
+      - app/Models/{Invoice,Payment,Subscription}*.php
+    primary_reviewer: "@alice-lead"
+    secondary_reviewers:
+      - "@bob-senior"
+      - "@carol-eng"
+    escalation: "@head-of-platform"
+    slack_channel: "#team-billing"
+    rotation_policy: >
+      Any PR touching `app/Services/Billing/**` must have at least one
+      review from `@alice-lead` or `@bob-senior`. Vacation coverage
+      documented in the team runbook.
+
+  - id: infra-terraform
+    status: active
+    confidence: high
+    source:
+      - https://github.com/example/repo/blob/main/CODEOWNERS
+    owner: platform-team
+    last_validated: 2026-03-10
+    review_after_days: 365
+
+    paths:
+      - terraform/**
+      - .github/workflows/deploy*.yml
+      - docker-compose*.yml
+    primary_reviewer: "@dan-infra"
+    secondary_reviewers:
+      - "@erin-sre"
+    escalation: "@head-of-platform"
+    slack_channel: "#team-platform"
+    rotation_policy: >
+      Infra changes require two platform-team reviews in business
+      hours. After-hours hotfixes follow the break-glass policy in
+      `agents/contexts/deployment-order.md`.
+
+# --- How to add an entry ---
+#
+# 1. `id` is the module/domain name, not a person's handle.
+# 2. `paths` are globs the agent uses to pick reviewers for an
+#    incoming diff. Keep them tight — avoid `app/**` catch-alls.
+# 3. `primary_reviewer` is singular; `secondary_reviewers` is the
+#    fallback pool.
+# 4. `escalation` routes urgent cross-cutting issues; the agent
+#    surfaces it when a PR sits idle past the team's SLA.
+# 5. Run `task check-memory` before committing.

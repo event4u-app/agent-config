@@ -1,0 +1,87 @@
+# product-rules.yml — product-side invariants code must honour
+#
+# Writer:   PO or tech lead after product decision
+# Reader:   `PO` role mode, `validate-feature-fit`, `laravel-validation`
+#           (consulted BEFORE proposing feature changes)
+# Expiry:   version-stamped; old versions archived on rule change
+# Location: agents/memory/product-rules/<hash>.yml
+#           OR agents/memory/product-rules.yml (single-file)
+#
+# Bridges PO intent and developer execution. An entry here exists
+# because the agent MUST enforce this rule in validation, gating,
+# or feature-fit checks — it is not a feature wishlist.
+#
+# REDACTION IS MANDATORY — see road-to-engineering-memory.md.
+# No customer names, no pricing-with-customer-discount, no PII.
+
+version: 1
+
+entries:
+  - id: free-plan-no-export
+    status: active                       # active | deprecated | archived
+    confidence: high
+    source:
+      - https://example.com/product/pricing-tiers   # public doc
+      - https://github.com/example/repo/pull/1503   # enforcement PR
+    owner: product-team
+    last_validated: 2026-04-05
+    review_after_days: 180
+    version: "2.0"
+
+    # --- rule body ---
+    rule: >
+      Users on the `free` plan cannot trigger data exports (CSV,
+      JSON, XLSX) exceeding 100 rows. Exports above the threshold
+      are reserved for `pro` and `enterprise` plans.
+    applies_to:
+      endpoints:
+        - POST /api/exports
+        - GET  /api/exports/{id}/download
+      plan_tiers: [free]
+    enforcement:
+      - policy: app/Policies/ExportPolicy.php
+      - feature_gate: "plan_tiers in FeatureGate service"
+      - test: tests/Feature/FreePlanExportLimitTest.php
+    error_contract:
+      http_status: 403
+      error_code: EXPORT_PLAN_LIMIT
+      user_message: Upgrade to export more than 100 rows.
+
+  - id: weekend-sla-tier-b
+    status: active
+    confidence: medium
+    source:
+      - https://example.com/legal/sla.pdf           # public SLA doc
+      - adr://0019-sla-tier-mapping
+    owner: customer-success-team
+    last_validated: 2026-03-12
+    review_after_days: 90
+    version: "1.3"
+
+    rule: >
+      Support tickets opened between 18:00 Friday and 08:00 Monday
+      in the customer's timezone fall under SLA tier B response
+      time (4h first response) instead of tier A (1h).
+    applies_to:
+      systems: [support-queue, sla-calculator]
+      timezone_scope: customer-local
+    enforcement:
+      - service: app/Services/SLA/ResponseTimeCalculator.php
+      - test: tests/Unit/SlaWeekendTest.php
+      - config: config/sla.yml
+    error_contract: {}                   # no user-facing error; SLA
+                                         # is applied silently
+
+# --- How to add an entry ---
+#
+# 1. A product decision was made AND signed off. Pending proposals
+#    do not belong here.
+# 2. The rule is enforceable — every entry must name at least one
+#    enforcement point (policy, feature gate, test, service).
+# 3. Bump `version` whenever the rule semantics change. Old
+#    versions get `status: archived` and stay for audit.
+# 4. Link both the PRODUCT-side doc (pricing page, SLA PDF, landing
+#    page) AND the code-side enforcement PR.
+# 5. Keep `error_contract` precise — agents generate error messages
+#    from it. An empty contract (`{}`) means "no user error", not
+#    "to be decided later".
