@@ -6,9 +6,14 @@
 > delivery.
 >
 > - **Created:** 2026-04-22
-> - **Status:** draft — contract locked before Phase 1 starts.
-> - **Runtime:** TBD (decided in Phase 0 spike). This doc is
->   runtime-agnostic: it describes shapes, not implementations.
+> - **Status:** Phase 1 shipped 2026-04-23 — `DeliveryState` +
+>   dispatcher live under
+>   [`.agent-src.uncompressed/templates/scripts/implement_ticket/`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/).
+>   Step wiring (Phase 2) still open.
+> - **Runtime:** Python 3.10+ (see
+>   [`adr-implement-ticket-runtime.md`](adr-implement-ticket-runtime.md)).
+>   This doc stays shape-focused; implementation details belong to
+>   the code and the ADR.
 
 ## What this doc is
 

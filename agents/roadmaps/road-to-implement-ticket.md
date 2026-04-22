@@ -90,36 +90,68 @@ first-class outcome, not a failure.
 - [x] `review-changes` + `verify-before-complete` skills available.
 - [x] `/mode` + `role-contracts` in place.
 - [x] Memory retrieval fallback (`memory_lookup.py`) working.
-- [ ] Phase 0 spike (see below) — picks runtime + prototype.
+- [x] Phase 0 spike (see below) — picks runtime + prototype.
 
-## Phase 0 — technology spike (1 PR, throwaway allowed)
+## Phase 0 — technology spike ✅ shipped (2026-04-23)
 
 Pick the smallest prototype that proves the linear orchestrator
 works end-to-end on one real ticket.
 
-- [ ] Prototype step-dispatch in **two** candidate runtimes
+- [x] Prototype step-dispatch in **two** candidate runtimes
       (Bash composition vs. Python skill-runner). Measure boot
       time, error-propagation ergonomics, test-writability.
-- [ ] Run both against one synthetic ticket fixture
-      (`tests/fixtures/implement-ticket/`).
-- [ ] Emit the five metrics as JSON lines into
+      *(See [`spike/implement-ticket/bash/`](../../spike/implement-ticket/bash/)
+      and [`spike/implement-ticket/python/`](../../spike/implement-ticket/python/);
+      benchmark evidence in
+      [`spike/implement-ticket/bench-results.txt`](../../spike/implement-ticket/bench-results.txt).)*
+- [x] Run both against one synthetic ticket fixture.
+      *(Fixture landed at
+      [`spike/implement-ticket/fixtures/`](../../spike/implement-ticket/fixtures/)
+      — deliberately under `spike/` rather than `tests/fixtures/`
+      since Phase 0 code is throwaway and must not leak into the
+      production test tree.)*
+- [x] Emit the five metrics as JSON lines into
       `agents/logs/implement-ticket/` per
       [Q38](open-questions.md#q38) — gitignored directory, opt-in
       commit for team review, no external telemetry.
-- [ ] Decide runtime + location of orchestrator code. Record in a
+      *([`agents/logs/implement-ticket/metrics.jsonl`](../logs/implement-ticket/metrics.jsonl)
+      — 18 KB of structured run data across both prototypes.)*
+- [x] Decide runtime + location of orchestrator code. Record in a
       short ADR under `agents/contexts/` (not a roadmap).
-- [ ] Throwaway code lives on a spike branch; nothing merged into
+      *(Decision: **Python 3.10+**, orchestrator under
+      `.agent-src.uncompressed/templates/scripts/implement_ticket/`
+      per architectural constraint #1. See
+      [`adr-implement-ticket-runtime.md`](../contexts/adr-implement-ticket-runtime.md).)*
+- [x] Throwaway code lives on a spike branch; nothing merged into
       `.agent-src.uncompressed/` from this phase.
+      *(Working branch: `feat/improve-agent-setup-10`; spike code
+      sits at repo root under `spike/` and does **not** touch
+      `.agent-src.uncompressed/`. Will be deleted once the
+      production `/implement-ticket` orchestrator lands.)*
 
-## Phase 1 — DeliveryState + linear dispatcher
+## Phase 1 — DeliveryState + linear dispatcher ✅ shipped (2026-04-23)
 
-- [ ] Implement `DeliveryState` per
+- [x] Implement `DeliveryState` per
       [`implement-ticket-flow`](../contexts/implement-ticket-flow.md).
-- [ ] Implement step dispatcher with three terminal states
+      *(Dataclass under
+      [`.agent-src.uncompressed/templates/scripts/implement_ticket/delivery_state.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/delivery_state.py)
+      — all 10 contract fields, `Outcome` enum, `StepResult`, and the
+      `Step` protocol.)*
+- [x] Implement step dispatcher with three terminal states
       (`success | blocked | partial`).
-- [ ] Every step reads + writes `DeliveryState`; no hidden state.
-- [ ] Fixture-based tests under `tests/implement_ticket/` cover
+      *([`dispatcher.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/dispatcher.py)
+      — linear walk over `STEP_ORDER`, rejects missing handlers and
+      silent blocked/partial outcomes up front.)*
+- [x] Every step reads + writes `DeliveryState`; no hidden state.
+      *(Enforced by the `Step = Callable[[DeliveryState], StepResult]`
+      protocol — dispatcher passes the live state, handler returns
+      only the outcome + surfaced questions.)*
+- [x] Fixture-based tests under `tests/implement_ticket/` cover
       each terminal state at least once.
+      *(Seven tests in
+      [`tests/implement_ticket/test_dispatcher.py`](../../tests/implement_ticket/test_dispatcher.py)
+      — success, blocked, partial, plus guardrails for missing
+      handlers and silent block/partial outcomes.)*
 
 ## Phase 2 — step wiring to existing skills
 
