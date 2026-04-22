@@ -21,6 +21,7 @@
   "commands/do-in-steps.md": "aabb258587dce733a6c3b8a89c16e7ebbf39de789c0a4f68af98ae38a5add4a6",
   "commands/e2e-heal.md": "3d0bb3a51f3e626edb4aff592ad82ce4c5ea6119c21c6daa378e9c9b5b5c32a6",
   "commands/e2e-plan.md": "a4b3ee256d87cfe7da16b516f931eb7c66949e1f21f3675311549d0cb8714783",
+  "commands/estimate-ticket.md": "8c69a69490871611ce99990657b6d7de5ddd678558904bf56104ef99c944572c",
   "commands/feature-dev.md": "ace61c66831939addfd5d1c9c65182318d34ba0f1c5f277c9dbaa66d954aa501",
   "commands/feature-explore.md": "775ae1017c51cd501f9e2d108a7271b8d11acb0338cd382b2a02ed387fdafa39",
   "commands/feature-plan.md": "d6b1f285be71f06026488ffe1d1eb9e029a9d507f945c8367ab30ab96be6fcbd",
