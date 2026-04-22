@@ -1,0 +1,171 @@
+# `/implement-ticket` — Flow Contract
+
+> Technical contracts for the delivery orchestrator shipped under
+> [`road-to-implement-ticket.md`](../roadmaps/road-to-implement-ticket.md).
+> This document is the stable reference; the roadmap tracks phased
+> delivery.
+>
+> - **Created:** 2026-04-22
+> - **Status:** draft — contract locked before Phase 1 starts.
+> - **Runtime:** TBD (decided in Phase 0 spike). This doc is
+>   runtime-agnostic: it describes shapes, not implementations.
+
+## What this doc is
+
+The **shape** of the flow: states, steps, outcomes, report schema,
+metrics. The roadmap tracks what ships when. The runtime is chosen
+in Phase 0 and recorded in a short ADR once decided.
+
+## What this doc is *not*
+
+- A runtime implementation spec.
+- A DSL for user-authored flows (explicitly out of scope).
+- A memory retrieval spec — that lives in
+  [`agent-memory-contract.md`](agent-memory-contract.md).
+
+## The linear flow
+
+```
+refine → memory → analyze → plan → implement → test → verify → report
+```
+
+Eight steps, fixed order, no branching. Each step is a thin
+composition over existing skills. `/implement-ticket` adds no new
+logic — it adds **sequencing + state + block semantics**.
+
+## `DeliveryState` — the only shared object
+
+Every step reads and writes this shape. No hidden state, no side
+channels. Fields (runtime may be dataclass, typed dict, JSON
+document — the shape is normative, the container is not):
+
+| Field | Purpose |
+|---|---|
+| `ticket` | ID, title, body, acceptance criteria, source system |
+| `persona` | Resolved from `.agent-settings.yml` `roles.active_role` |
+| `memory` | Up to 12 hits across four allowed types |
+| `plan` | Structured plan from `feature-plan` |
+| `changes` | List of proposed / applied edits with file:line refs |
+| `tests` | What ran, verdicts, durations |
+| `verify` | `review-changes` verdict + `verify-before-complete` gate |
+| `outcomes` | Per-step `success | blocked | partial` + message |
+| `questions` | Pending numbered questions when blocked |
+| `report` | Final delivery report (populated by `report` step) |
+
+No step may invent fields not declared here. Extensions require a
+roadmap amendment + this doc updated.
+
+## `Step` contract
+
+Each step is a function over `DeliveryState` that returns one of:
+
+- `success` — populates its slice, continues to the next step.
+- `blocked` — populates `questions` with numbered options, stops
+  the flow. Orchestrator emits the questions and exits.
+- `partial` — populates its slice AND `questions`; user chooses to
+  continue or stop. Orchestrator asks explicitly.
+
+Steps **must** declare, in their skill frontmatter, the
+ambiguities they surface — so `blocked` never comes as a surprise.
+
+## Memory retrieval contract
+
+Bounded per the top-level roadmap rule:
+
+- **Max 12 hits total.**
+- **Four allowed types:** `domain-invariants`,
+  `architecture-decisions`, `incident-learnings`,
+  `historical-patterns`. All four exist in the
+  [templates directory](../../.agent-src.uncompressed/templates/agents/memory/).
+- **Keys:** files touched by the plan, symbols referenced by the
+  ticket.
+- **Decision-change rule:** a memory hit that did not change an
+  outcome is dropped from the report. If none changed an outcome,
+  the `memory` section of the report is omitted — not padded.
+- Follows the retrieval shape in
+  [`agent-memory-contract.md`](agent-memory-contract.md).
+
+## Persona policies
+
+Read from `.agent-settings.yml` `roles.active_role`. Policies live
+in [`role-contracts`](../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md);
+this flow only **reads** them. Examples:
+
+- `senior-engineer` — higher risk tolerance, fewer questions,
+  pushes back on weak acceptance criteria before implementing.
+- `qa` — widens test matrix, refuses partial test runs, blocks
+  on missing edge-case coverage.
+- `advisory` modes — never enter the `implement` step; terminate
+  at `plan` with a recommendation report.
+
+**No CLI flag overrides `/mode`.** That is the whole point of the
+session-global persona contract — one source, readable by any
+skill.
+
+## Block-on-ambiguity semantics
+
+When a step returns `blocked`, the orchestrator:
+
+1. Emits the numbered questions per
+   [`user-interaction`](../../.agent-src.uncompressed/rules/user-interaction.md).
+2. Writes a partial report up to the last successful step.
+3. Exits with a `blocked` status — no guess, no fallback.
+
+Resuming is not automatic. The user answers and re-invokes
+`/implement-ticket` (or a follow-up command) with the answer in
+the context. V1 explicitly does **not** attempt resumable sessions.
+
+## Delivery report schema
+
+A copyable markdown block with fixed sections (any section may be
+empty, but all headings are present):
+
+1. **Ticket** — one-line restatement.
+2. **Persona** — active role + policy summary.
+3. **Plan** — ordered steps actually executed.
+4. **Changes** — files, line ranges, one-sentence purpose each.
+5. **Tests** — what ran, verdicts, durations.
+6. **Verify** — review verdict + confidence level.
+7. **Memory that mattered** — only hits that changed an outcome.
+8. **Follow-ups** — deferred work, with file:line anchors.
+9. **Suggested next commands** — `/commit`, `/create-pr`, etc.
+   Never run automatically.
+
+## Metrics
+
+Emitted as structured JSON to a local log (location chosen in
+Phase 0 spike) so the roadmap's metrics anchor (Q38) can be
+measured without instrumentation sprawl:
+
+- `time_to_verified_change_ms`
+- `block_rate` (per 20-run window)
+- `memory_decision_rate`
+- `repeat_user_runs_per_week`
+- `report_rejections`
+
+## Non-goals
+
+- Auto-commit / auto-push / auto-PR (belongs to `/commit`,
+  `/create-pr`).
+- Multi-repo orchestration.
+- User-authored custom flows.
+- Parallel step execution.
+- New memory types or retrieval shapes.
+
+## Revisit triggers
+
+- First 10 real runs show `block_rate < 10%` → loosen
+  block-on-ambiguity (too timid).
+- First 10 real runs show `block_rate > 60%` → tighten step
+  declarations (ambiguity noise).
+- A second flow (`/implement-bug`) is proposed → amend this doc to
+  hoist shared contracts BEFORE drafting the second flow.
+
+## See also
+
+- [`../roadmaps/road-to-implement-ticket.md`](../roadmaps/road-to-implement-ticket.md)
+- [`agent-memory-contract.md`](agent-memory-contract.md)
+- [`../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md`](../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md)
+- [`../../.agent-src.uncompressed/rules/user-interaction.md`](../../.agent-src.uncompressed/rules/user-interaction.md)
+- [`../../.agent-src.uncompressed/rules/scope-control.md`](../../.agent-src.uncompressed/rules/scope-control.md)
+- [`../../.agent-src.uncompressed/rules/minimal-safe-diff.md`](../../.agent-src.uncompressed/rules/minimal-safe-diff.md)
