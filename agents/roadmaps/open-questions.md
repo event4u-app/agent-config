@@ -125,41 +125,92 @@ Everything else surfaces here as a question.
 
 ### External adoption feedback (2026-04-22 review pass)
 
-Surfaced by an external tech-lead-style review of the public repo. Praise
-and non-actionable framing (productivity, "AI-OS", "no real thinking") are
-not captured here — only items that imply a concrete open decision.
+Surfaced by two external review passes of the public repo. First pass was
+tech-lead framing; second pass was user/product framing and sharpened the
+priorities. Praise and non-actionable framing (productivity, "AI-OS",
+"no real thinking") are not captured here — only items that imply a
+concrete open decision.
 
-- **Q18 — Positioning: Laravel-first vs. broad multi-stack?** The core
-  catalog (laravel, eloquent, flux, pest-testing, artisan-commands,
-  jobs-events, laravel-*) is Laravel-dense, while the analysis layer
-  (`project-analysis-{react,nextjs,node-express,symfony,zend-laminas}`)
-  advertises multi-stack breadth. External reviewers read this as an
-  inconsistency. Two roadmap-level options:
-    1. **Laravel-first** — README/AGENTS.md lead with "Laravel + multi-
-       stack analysis"; broaden analysis skills only, not authoring.
-    2. **Multi-stack breadth** — commit to parity (authoring + analysis)
-       for at least one non-PHP stack before calling the package
-       framework-agnostic. Adds a large new roadmap.
-  → No matching roadmap yet. Decide before the next README pass.
+**Headline finding from the second review:** the core failure mode is not
+missing features, it is **Time to First Value**. A user who lands on the
+README today cannot, within 3 minutes, (a) understand what the package
+does in practice, (b) install it, and (c) see one concrete result. Q20–Q22
+are three facets of the same problem and should be treated as one bundle.
 
-- **Q19 — Install preset for solo devs / side projects.** 122 skills +
-  42 rules is a lot of agent surface for a one-dev project. Currently
-  `scripts/install.sh` installs the full set; `.agent-settings.yml`
-  has per-feature toggles but no named preset. Options:
-    1. Add a `preset: lite|full|enterprise` key to `.agent-settings.yml`
-       with curated skill/rule subsets per preset.
-    2. Lean on `.augmentignore` + per-tool ignore files (exists today
-       but undocumented for this purpose).
-    3. No preset — document the trim path instead.
-  → Partially touches `road-to-project-memory.md` Q6. Independent
-     decision.
+#### 🔒 Locked — not open questions
 
-- **Q20 — Onboarding / first-15-minutes experience.** No dedicated doc
-  or command that walks a new adopter from `composer require` to
-  "first skill triggered in my editor". `task first-run` exists
-  (`scripts/first-run.sh`) — is it enough, or does it need a
-  companion `/onboard` command + a 15-minute tutorial in `docs/`?
-  → No matching roadmap. Small but externally visible gap.
+- **Positioning: Laravel-first.** The Laravel-dense authoring layer plus
+  the broader `project-analysis-*` reading layer is **deliberate**, not
+  an inconsistency. Focus = quality = faster adoption. Multi-stack
+  authoring parity is **not on the roadmap** and README/AGENTS.md should
+  lead with "Laravel-first + multi-stack analysis" framing. (Supersedes
+  the earlier Q18 draft.)
+
+#### 🔴 Open — the Time-to-First-Value bundle
+
+- **Q18 — README refresh (outdated + missing the "I need this" moment).**
+  The current README is factually outdated (e.g. skill/rule counts drift,
+  version references) AND strategically weak — it describes structure
+  ("122 skills, 42 rules, 64 commands") instead of demonstrating value
+  ("paste this prompt, get this result"). Target state:
+    1. One-screen hero: 30-second pitch + one concrete before/after
+       example a Laravel dev recognizes.
+    2. "Install in 60s, first result in 3 min" section with an exact
+       copy-paste prompt and the expected agent behavior.
+    3. Kill the feature catalog above the fold — move counts/inventory
+       below the "I need this" section.
+    4. Lead with the Laravel-first positioning (see Locked above).
+  → No matching roadmap. Highest externally visible lever right now.
+
+- **Q19 — Real-world usage flows (the missing killer doc).** The repo
+  explains structure (skills, rules, commands) but not **flows** — what
+  actually happens when a user types "build a feature", "fix this bug",
+  "open a PR"? Which skills trigger in what order, how do rules gate,
+  what does the final output look like? Without this, the package stays
+  theoretical. Options:
+    1. New `docs/flows/` with 3–5 end-to-end walkthroughs (feature,
+       bugfix, PR, code review, test authoring) — real transcripts,
+       not abstract diagrams.
+    2. A `/demo` command that runs a scripted scenario on a throwaway
+       branch and shows exactly which skills/rules fired.
+    3. Both — written flows for skimming + executable demo for trying.
+  → No matching roadmap. Second-highest lever after Q18.
+
+- **Q20 — Progressive activation (reframes the earlier "lite preset"
+  idea).** The problem is **not** that 122 skills is too many — it is
+  that all of them activate at once with no onboarding ramp. Better
+  framing: staged adoption levels.
+    - **Level 1 — Core (≈5 skills):** skill discovery, the one demo
+      flow, commit + PR basics. Enough to feel the value in a day.
+    - **Level 2 — Everyday Laravel:** laravel, eloquent, pest-testing,
+      quality-tools, git-workflow, receiving-code-review — the working
+      set of a Laravel dev.
+    - **Level 3 — Full system:** everything, including memory, defensive
+      review sub-skills, orchestration, analysis layer.
+  Surface the level as `preset: level-1 | level-2 | full` in
+  `.agent-settings.yml`, documented in the README. Touches
+  `road-to-project-memory.md` Q6 but is an independent decision.
+  → No matching roadmap.
+
+- **Q21 — First-result-in-3-minutes onboarding.** Concrete acceptance
+  criteria, not vague "first-15-minutes": from `composer require
+  event4u/agent-config` to a visible agent result that the user
+  recognizes as useful, in **under 3 minutes**, on a fresh laptop.
+  `task first-run` + `scripts/first-run.sh` exist but don't meet this
+  bar today. Options:
+    1. A `/onboard` command that installs + picks Level 1 preset (Q20)
+       + runs one real flow (Q19) + prints a clear "what just happened"
+       summary.
+    2. A 3-minute screencast embedded in the README hero (Q18) instead
+       of adding more skills.
+    3. Both — command for hands-on users, screencast for evaluators.
+  → No matching roadmap. Completes the Q18–Q21 bundle.
+
+**Sequencing note:** Q18 (README) depends on Q19 (flows) and Q20
+(progressive activation) to have real content. Suggested order:
+Q20 preset scaffolding → Q19 one flow documented → Q21 onboarding
+command wraps both → Q18 rewrites README around the result. Doing Q18
+first produces marketing without substance.
 
 ## Cross-repo questions (`agents/roadmaps/agent-memory/*`)
 
