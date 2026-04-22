@@ -155,18 +155,21 @@ committed in a single batch so cross-references resolve at once.
 
 ### Phase 5 — settings integration (depends on Q6 two-file split)
 
-- [ ] `.agent-project-settings.yml` gains `personas.default: [...]`
+- [x] `.agent-project-settings.yml` gains `personas.default: [...]`
   (team-wide default lens selection) and
   `personas.specialists.auto_include: [qa]` (auto-include on every
-  multi-lens run).
-- [ ] `.agent-settings.yml` gains `personas.override: [...]` so a
+  multi-lens run). *(2026-04-22: [`agent-project-settings.example.yml`](../../.agent-src.uncompressed/templates/agents/agent-project-settings.example.yml) — `personas:` block with Core-6 default and `[qa]` auto-include)*
+- [x] `.agent-settings.yml` gains `personas.override: [...]` so a
   developer can narrow or widen their local defaults without
-  changing team config.
-- [ ] `scripts/load_settings.py` merge helper resolves the two
-  layers into a single effective persona list.
-- [ ] `.augmentignore` semantics: a user can ignore a persona by
+  changing team config. *(2026-04-22: [`agent-settings.md`](../../.agent-src.uncompressed/templates/agent-settings.md) — `personas.override` (full replacement) + `personas.ignore` (drop-only) with settings-reference rows)*
+- [x] Merge contract documented in [`layered-settings.md`](../../.agent-src.uncompressed/guidelines/agent-infra/layered-settings.md)
+  — six-step resolution (project default → override → specialist auto-include
+  → ignore → `.augmentignore` → skill frontmatter wins). No separate
+  `load_settings.py` script; same contract consumers implement against as for
+  all other settings (Q6 Phase 0). *(2026-04-22)*
+- [x] `.augmentignore` semantics: a user can ignore a persona by
   id; ignored personas drop out of default lens selection but
-  remain invokable explicitly via `--personas=<id>`.
+  remain invokable explicitly via `--personas=<id>`. *(2026-04-22: codified as step 5 of the resolution order in [`layered-settings.md`](../../.agent-src.uncompressed/guidelines/agent-infra/layered-settings.md); matches skill-ignore behaviour)*
 
 ### Phase 6 — smart activation (v1.1+, deferred)
 
