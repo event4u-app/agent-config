@@ -1,0 +1,15 @@
+=== Phase 0 measurement (20 runs, 3 warmup) ===
+
+## CLEAN ticket (8 steps, success)
+  bash                          mean= 104ms  min=  96ms  median=  99ms  max= 122ms  n=20
+  python                        mean=  36ms  min=  35ms  median=  36ms  max=  38ms  n=20
+
+## AMBIGUOUS ticket (1 step, blocked)
+  bash                          mean=  60ms  min=  59ms  median=  61ms  max=  62ms  n=20
+  python                        mean=  35ms  min=  35ms  median=  35ms  max=  36ms  n=20
+
+## Source size (lines)
+  bash dispatcher:       135 lines
+  bash step handlers (sum):  68 lines
+  python dispatcher:              113 lines
+  python steps + state:      94 lines
