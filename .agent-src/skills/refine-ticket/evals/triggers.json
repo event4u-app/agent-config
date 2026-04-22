@@ -1,0 +1,16 @@
+{
+  "skill": "refine-ticket",
+  "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings and the four input paths (key, branch, paste, URL). Should-not-trigger covers the four near-miss neighbors (plan / estimate / duplicate / threat-model / bug-investigate) whose vocabulary overlaps with ticket refinement.",
+  "queries": [
+    {"q": "refine this ticket before I plan it", "trigger": true},
+    {"q": "tighten the AC on PROJ-123", "trigger": true},
+    {"q": "is this ticket ready for planning?", "trigger": true},
+    {"q": "verbessere das Ticket, ist das klar genug?", "trigger": true},
+    {"q": "poke holes in this Jira ticket and rewrite it", "trigger": true},
+    {"q": "plan the feature described in PROJ-123", "trigger": false, "note": "routes to /feature-plan, not refinement"},
+    {"q": "estimate how big PROJ-123 is", "trigger": false, "note": "routes to /estimate-ticket (Phase 4 sibling)"},
+    {"q": "is this feature already implemented somewhere?", "trigger": false, "note": "routes to validate-feature-fit directly"},
+    {"q": "threat-model the webhook endpoint in PROJ-123", "trigger": false, "note": "routes to threat-modeling directly"},
+    {"q": "investigate this bug — I think there's a Sentry issue linked", "trigger": false, "note": "routes to /bug-investigate"}
+  ]
+}
