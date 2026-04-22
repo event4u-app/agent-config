@@ -155,8 +155,21 @@ works end-to-end on one real ticket.
 
 ## Phase 2 — step wiring to existing skills
 
-- [ ] Step `refine` → delegates to `refine-ticket`.
-- [ ] Step `memory` → bounded retrieval, 12 hits across four types.
+- [x] Step `refine` → deterministic gate in front of `refine-ticket`.
+      *([`steps/refine.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/refine.py)
+      — SUCCESS when ticket carries id + non-trivial title + at
+      least one concrete AC; BLOCKED otherwise with three numbered
+      options that route to `/refine-ticket`, paste-in-chat, or
+      abandon. 8 tests cover id/title/AC deficiencies plus the
+      success path.)*
+- [x] Step `memory` → bounded retrieval, 12 hits across four types.
+      *([`steps/memory.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/memory.py)
+      — forwards the four allowed types
+      (`domain-invariants`, `architecture-decisions`,
+      `incident-learnings`, `historical-patterns`) to
+      `memory_lookup.retrieve` with a hard cap of 12. Keys derived
+      from `files` → title → AC, stop-words dropped, duplicates
+      removed. 6 tests with a spy over `retrieve`.)*
 - [ ] Step `analyze` → delegates to analysis router.
 - [ ] Step `plan` → delegates to `feature-plan`.
 - [ ] Step `implement` → actual edits (guarded by `minimal-safe-diff`).
