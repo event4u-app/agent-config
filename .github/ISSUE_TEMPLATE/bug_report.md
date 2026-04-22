@@ -39,4 +39,4 @@ labels: bug
 
 ### Additional context
 
-<!-- logs, screenshots, .agent-settings contents (redacted), anything else -->
+<!-- logs, screenshots, .agent-settings.yml contents (redacted), anything else -->

@@ -116,11 +116,29 @@ Classify each finding:
 - **Likely incorrect** — no evidence found, needs verification
 - **Unclear** — cannot confirm or deny, needs human input
 
-### 8. Check scope
+### 8. Check scope, size, and splitting
 
 - README not overloaded with deep technical detail
 - Complex content belongs in `/docs`, not README
 - Important onboarding info not missing due to over-compression
+
+Size checks:
+
+- **< 150 lines** — healthy
+- **150–300 lines** — expect a Table of Contents; flag if missing
+- **300–500 lines** — flag as overloaded; deep content should be in `/docs/`
+- **> 500 lines** — flag as broken entry point; hard split required
+
+Structure checks:
+
+- ToC present if > 150 lines or > 6 top-level (`##`) sections
+- Multi-platform install (> 5 variants) uses a table with deep links, not stacked blocks
+- `<details>` used only for secondary, bulky content — never for install, first example, or requirements
+- No duplication between README and `/docs/` (same content in two places drifts)
+- Each `/docs/` file linked from README is self-contained (not just a fragment)
+
+→ See `guidelines/docs/readme-size-and-splitting.md` for full thresholds,
+splitting strategies, and anti-patterns.
 
 ## Output format
 

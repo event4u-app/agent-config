@@ -6,54 +6,66 @@ Machine-readable index of all skills in this package. Each line:
 Source: .agent-src/skills/<name>/SKILL.md
 Catalog: docs/skills-catalog.md
 
-adversarial-review: ONLY when user explicitly requests: adversarial review, devil's advocate analysis, or critical challenge of a plan. NOT for regular code review.
+adversarial-review: ONLY when user explicitly requests adversarial review, devil's advocate analysis, stress-testing a plan, or 'poke holes in this' — NOT for regular code review or design feedback.
 agent-docs-writing: Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure.
-analysis-autonomous-mode: ONLY when user explicitly requests: autonomous analysis, deep investigation, or multi-step research workflow. NOT for regular tasks.
-analysis-skill-router: Use when deciding which analysis skill should handle a request. Routes by scope, framework, and problem shape.
-api-design: Use when designing a new API, planning endpoints, discussing REST conventions, adding API versions, or managing deprecation.
+analysis-autonomous-mode: ONLY when user explicitly requests autonomous analysis, deep investigation, multi-step research, or 'dig into this end-to-end without asking me each step' — NOT for normal feature work.
+analysis-skill-router: Use when picking which analysis or project-analysis-* skill fits a request — routes by scope, framework, and symptom — even if the user just says 'analyze this' or 'dig into the codebase'.
+api-design: Use when designing APIs, planning endpoints, REST conventions, versioning, or deprecation — even when the user just says 'expose this as an endpoint' without naming API design.
 api-endpoint: Use when the user says "create endpoint", "new API route", or "add controller". Creates a complete endpoint with Controller, FormRequest, Resource, route, and OpenAPI docs.
-api-testing: Use when writing tests for API endpoints — integration tests, contract validation, response structure verification, and mocked external services.
+api-testing: Use when writing API endpoint tests — integration tests, contract validation, response assertions, mocked external services — even when the user says 'test this route' without naming API testing.
 artisan-commands: Use when creating or modifying Artisan commands. Covers clear signatures, safe execution flow, helpful output, and project conventions for console tooling.
-aws-infrastructure: Use when working with AWS resources — ECS Fargate, ECR, EFS, Secrets Manager, gomplate templates, or multi-environment deployment setup.
-blade-ui: Use when creating or editing Blade views, components, partials, or view logic. Covers clean separation of concerns and reusable UI structure.
+authz-review: Use when reviewing authorization end-to-end — route → gate → policy → query scope → response filter — before changes to permissions, tenants, ownership, or admin flows.
+aws-infrastructure: Use when working with AWS resources — ECS Fargate, ECR, EFS, Secrets Manager, gomplate templates, multi-env deployments — even when the user says 'deploy to staging' without naming AWS.
+blade-ui: Use when creating or editing Blade views, components, partials, layouts, or view logic — even when the user says 'add a new page' or 'render this data' without naming Blade.
+blast-radius-analyzer: Use BEFORE editing shared code — enumerates every call site, event consumer, queue worker, API client, migration, and test that a planned change will touch, with a file:line citation per dependency.
 bug-analyzer: Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs.
 check-refs: Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions.
 code-refactoring: Use when the user says "refactor this", "rename class", or "move method". Safely refactors PHP code — finds all callers, updates downstream dependencies, and verifies with quality tools.
 code-review: Use when the user says "review this", "check my code", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards.
-command-routing: Use when the user types a slash command like '/create-pr' or '/commit'. Extends the commands rule with context inference and GitHub API patterns.
-composer-packages: Use when developing or maintaining a Composer library package — versioning, Laravel integration, autoloading, and publishing to private registries.
+command-routing: Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content — routes to the right command with context inference and GitHub API patterns.
+command-writing: Use when creating or editing a slash command in .agent-src.uncompressed/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'.
+composer-packages: Use when building or maintaining a Composer library — versioning, Laravel integration, autoloading, publishing to private registries — even when the user says 'release a new version'.
+context-authoring: Use when filling in knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deployment-order, observability — interactive walkthrough that turns templates into reviewer fuel.
 context-document: Use when the user says "create context", "document this area", or wants a structured snapshot of a codebase area for agent orientation.
-conventional-commits-writing: Use when generating, reviewing, or correcting Conventional Commit messages or squash merge titles.
+conventional-commits-writing: Use when writing commit messages or squash-merge titles — `feat:`, `fix:`, `chore:`, scopes, breaking changes — even when the user just says 'commit this' without naming Conventional Commits.
 copilot-agents-optimization: Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience.
-copilot-config: Use when configuring GitHub Copilot behavior, managing copilot-instructions.md, PR review patterns, or optimizing Copilot output for the project.
+copilot-config: Use when configuring GitHub Copilot — copilot-instructions.md, PR review patterns, output optimization — even when the user just says 'tune Copilot' or 'why is Copilot commenting on X'.
 dashboard-design: Use when designing monitoring dashboards — visualization selection, layout principles, observability strategies (RED/USE/Golden Signals), and data storytelling.
-database: Use when working with database architecture, MariaDB optimization, indexing strategies, query performance, or multi-connection patterns.
+data-flow-mapper: Use BEFORE editing code that touches user data — traces the value from entry → validation → transformation → storage → egress, every hop cited with file:line.
+database: Use when working with database architecture, MariaDB/MySQL tuning, indexing strategies, slow queries, or multi-connection patterns — even when the user just says 'this query is slow'.
 dependency-upgrade: Use when upgrading dependencies — "update Laravel", "bump PHP version", or "upgrade packages". Covers changelog review, breaking change detection, and verification.
+description-assist: Use when polishing a skill/rule/command/guideline frontmatter description — pushier phrasing, trigger coverage, undertrigger audit — even if the user just says 'make this pushier'.
 design-review: Use when the user says "review the design", "check the UI", or wants a comprehensive UI/UX review. Uses a 7-phase methodology covering interaction, responsiveness, accessibility, and more.
-devcontainer: Use when setting up or modifying DevContainers, GitHub Codespaces, custom images, secrets management, or workspace configuration.
-developer-like-execution: Use when implementing, debugging, refactoring, or reviewing code, skills, rules, or configs. Enforces think → analyze → verify → execute workflow.
-docker: Use when working with Docker — Dockerfile changes, docker-compose services, container management, or the dual-container architecture (fast + Xdebug).
+devcontainer: Use when configuring DevContainers or GitHub Codespaces — devcontainer.json, custom images, secrets, VS Code features — even when the user just says 'why does my Codespace not start'.
+developer-like-execution: Use when implementing, debugging, refactoring, or reviewing code — enforces the think → analyze → verify → execute workflow — even when the user just says 'implement X' without naming it.
+docker: Use when working with Docker — Dockerfile edits, docker-compose services, containers, or the dual-container (fast + Xdebug) setup — even when the user just says 'my container won't start'.
 dto-creator: Use when the user says "create a DTO", "new data transfer object", or needs to convert request/response data into a typed PHP class. Creates DTOs with SimpleDto base class and attribute mapping.
-eloquent: Use when writing Eloquent models, relationships, scopes, queries, or database interactions. Covers eager loading, type safety, getter/setter conventions, and performance.
+eloquent: Use when writing Eloquent models, relationships, scopes, or queries via Model:: — 'fetch users with their orders'. NOT for PHPStan output, non-Eloquent services, or raw SQL questions.
 fe-design: Use when designing frontend interfaces — component architecture, layout patterns, form design, table patterns, responsive strategies, and UX principles for Blade/Livewire/Flux/Tailwind.
 feature-planning: Use when the user says "plan a feature", "brainstorm", "explore this idea", or wants to go from idea to structured plan and roadmap.
-file-editor: Use when opening edited files in the user's IDE. Reads settings from .agent-settings to determine IDE and whether auto-open is enabled.
+file-editor: Use when opening edited files in the user's IDE. Reads settings from .agent-settings.yml to determine IDE and whether auto-open is enabled.
+finishing-a-development-branch: Use when the feature is implementation-complete and the next step is 'ship it' — verifies, cleans up, and routes to merge/PR/park/discard — even when the user just says 'I'm done, what now?'.
 flux: Use when writing Laravel Flux UI components — the official Livewire component library by the Laravel team. Covers components, slots, and variants.
-git-workflow: Use when working with Git — branch naming, commit messages, PR conventions, rebasing, or the code review process.
-github-ci: Use when working with GitHub Actions CI/CD — quality checks, test workflows, deployment triggers, or reusable workflow modules.
-grafana: Use when creating Grafana dashboards, writing Loki log queries, configuring alerting rules, or building monitoring panels.
+git-workflow: Use when working with Git — branch naming, commit messages, PR creation, rebasing, or the code review process — even when the user says 'push this' or 'merge the branch' without naming Git.
+github-ci: Use when working with GitHub Actions — workflow YAML, quality gates, test matrices, deployment triggers, reusable workflows — even when the user just says 'my CI is failing' or 'add a check'.
+grafana: Use when working with Grafana — dashboards, Loki LogQL queries, alerting rules, monitoring panels — even when the user just says 'build me a dashboard' or 'query the logs' without naming Grafana.
+guideline-writing: Use when creating or editing a guideline in .agent-src.uncompressed/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'.
 jira-integration: Use when the user says "check Jira", "create ticket", "update issue", or needs JQL queries, ticket transitions, or branch-to-ticket linking.
 jobs-events: Use when creating Laravel jobs, queued workflows, events, or listeners. Covers clear responsibilities, safe serialization, and retry/failure handling.
+judge-bug-hunter: Use when a diff needs correctness review — null-safety, edge cases, off-by-one, races, error handling — dispatched by /review-changes, /do-and-judge, /judge, even without 'judge'.
+judge-code-quality: Use when a diff needs a readability review — naming, single-responsibility, DRY, dead code, mismatch with codebase conventions — dispatched by /review-changes, /do-and-judge, /judge.
+judge-security-auditor: Use when a diff may introduce security risk — authZ, injection, secrets, unsafe deserialization, SSRF, XSS, mass assignment — dispatched by /review-changes, /do-and-judge, /judge.
+judge-test-coverage: Use when a diff may lack tests — missing assertions, uncovered branches, over-mocking, no regression test for a bug fix — dispatched by /review-changes, /do-and-judge, /judge, even without 'tests'.
 laravel: Writes Laravel code following framework conventions, project architecture, and modern best practices for controllers, requests, services, jobs, events, policies, and application structure.
-laravel-horizon: Use when configuring Laravel Horizon — queue dashboard, worker supervision, job metrics, balancing strategies, or production tuning.
-laravel-mail: Use when creating Laravel Mailables — templates, Markdown emails, queued sending, attachments, or mail testing.
+laravel-horizon: Use when working with Laravel queues in production — Horizon dashboard, worker supervision, job metrics, balancing strategies — even when the user just says 'my jobs are piling up'.
+laravel-mail: Use when building Laravel emails — Mailables, Markdown templates, queued sending, attachments, previews — even when the user says 'send this as an email' without naming Mailables.
 laravel-middleware: Use when creating or modifying Laravel middleware — request/response filtering, groups, priority, terminable middleware, or route-level assignment.
 laravel-notifications: Use when sending notifications via mail, Slack, database, or custom channels — with queuing, on-demand recipients, and notification preferences.
-laravel-pennant: Use when managing feature flags with Laravel Pennant — gradual rollouts, A/B testing, scope-based flags, or database/array drivers.
-laravel-pulse: Use when setting up Laravel Pulse monitoring — real-time dashboard, built-in cards, custom recorders, or performance insights.
+laravel-pennant: Use when working with feature flags — Laravel Pennant, gradual rollouts, A/B testing, scope-based flags — even when the user just says 'hide this behind a flag' without naming Pennant.
+laravel-pulse: Use when setting up Laravel Pulse — real-time dashboard, built-in cards, custom recorders, performance insights — even when the user just says 'I need app monitoring' without naming Pulse.
 laravel-reverb: Use when configuring Laravel Reverb — the first-party WebSocket server with Pusher protocol compatibility, horizontal scaling, and Pulse monitoring.
 laravel-scheduling: Use when configuring Laravel task scheduling — cron expressions, frequency helpers, overlap prevention, maintenance mode, or output handling.
-laravel-validation: Use when writing validation logic — Form Requests, rules, custom rule objects, and request-boundary design with strong correctness.
+laravel-validation: Use when writing validation — Form Requests, rules, custom rule objects, request-boundary design — even when the user just says 'validate this input' or 'check the request' without naming it.
 learning-to-rule-or-skill: Use when a repeated learning, mistake, or successful pattern should be turned into a new rule or skill. Also use after completing a task to capture learnings from the work.
 lint-skills: Use when running the package's skill linter against all skills and rules to validate frontmatter, required sections, and execution metadata.
 livewire: Use when writing Livewire components — reactive state, events, lifecycle hooks, and clean separation between component logic and Blade templates.
@@ -63,17 +75,17 @@ merge-conflicts: Use when the user has merge conflicts or says "resolve conflict
 migration-creator: Use when the user says "create migration", "add column", or "new table". Creates migrations with correct table prefixes, column naming, and multi-tenant awareness.
 module-management: Use when the user says "create module", "explore module", or works within app/Modules/. Understands module structure, auto-loading, route registration, and namespace conventions.
 multi-tenancy: Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations.
-openapi: Use when writing OpenAPI/Swagger documentation — PHP attributes, project annotation patterns, or spec validation with Redocly.
+openapi: Use when documenting APIs — OpenAPI/Swagger, PHP attributes, Redocly validation, versioned specs — even when the user just says 'document this endpoint' without naming OpenAPI.
 override-management: Creates and manages project-level overrides for shared skills, rules, and commands — extending or replacing originals from .augment/ with project-specific behavior in agents/overrides/.
 performance: Use when optimizing application performance — caching strategies, eager loading, query optimization, Redis patterns, or background job design.
 performance-analysis: ONLY when user explicitly requests: performance audit, bottleneck analysis, or N+1 query detection. NOT for regular feature work.
 pest-testing: Use when writing, generating, or improving Pest tests for Laravel — clear intent, good coverage, maintainable structure, and alignment with project testing conventions.
-php-coder: Writes PHP code following project coding guidelines, SOLID principles, modern PHP best practices, and established patterns — for both legacy and Laravel projects.
-php-debugging: Use when debugging PHP with Xdebug — dual-container architecture, IDE configuration, header-based routing, or debugging workflows.
+php-coder: Writes or edits PHP code — controllers, classes, type hints, SOLID refactors, modern idioms — even without naming PHP. NOT for writing tests (use pest-testing) or explaining PHP concepts.
+php-debugging: Use when debugging PHP with Xdebug — breakpoints, step-through, dual-container setup, IDE configuration, header-based routing — even when the user just says 'why does this blow up on request X'.
 php-service: Use when the user says 'create service', 'new service class', or needs a PHP service following SOLID principles with proper DI and repository usage.
 playwright-testing: Use when writing Playwright E2E tests — browser automation, visual regression testing, Page Objects, fixtures, and reliable test patterns.
 project-analysis-core: Use for the universal deep-analysis workflow: project discovery, version resolution, docs loading, architecture mapping, execution flow, and package research.
-project-analysis-hypothesis-driven: Use for deep root-cause analysis with multiple competing hypotheses, validation loops, and evidence-based conclusions.
+project-analysis-hypothesis-driven: Use when a bug has multiple plausible causes across layers — competing hypotheses, validation loops, evidence-based conclusions — even when the user just says 'why is this happening?'.
 project-analysis-laravel: Use for deep Laravel project analysis: boot flow, request lifecycle, container usage, Eloquent/data flow, async systems, and Laravel-specific failure patterns.
 project-analysis-nextjs: Use for deep Next.js analysis: server vs client boundaries, routing, data fetching, caching, rendering modes, and hydration/runtime issues.
 project-analysis-node-express: Use for deep Node.js / Express project analysis: boot flow, middleware order, async behavior, data layer, auth/security, and Node-specific runtime failure patterns.
@@ -82,12 +94,16 @@ project-analysis-symfony: Use for deep Symfony project analysis: kernel/bootstra
 project-analysis-zend-laminas: Use for deep Zend Framework or Laminas project analysis: bootstrap, config merge order, service manager, MVC flow, data layer, and migration-specific risks.
 project-analyzer: ONLY when user explicitly requests: full project analysis, tech stack detection, or structured analysis documents for agents/analysis/. NOT for regular feature work.
 project-docs: Use when looking for project-specific documentation. Knows which docs exist in agents/docs/ and agents/contexts/ and maps work areas to relevant docs.
-quality-tools: Use when running code quality checks — \"run PHPStan\", \"fix code style\", \"run Rector\". Knows all commands, parameters, execution rules, and language detection for PHP and JS/TS.
+quality-tools: Use when PHPStan, Rector, or ECS output appears — \"phpstan says mixed\", type errors, \"fix code style\", \"run rector\" — even when Eloquent/Laravel/model code is also mentioned.
 readme-reviewer: Use when reviewing a README for accuracy, usability, and alignment with the actual repository. Detects invented content, broken setup steps, and structural issues.
 readme-writing: Use when creating, rewriting, or significantly improving a README based on the actual repository structure, commands, and intended audience.
 readme-writing-package: Use when creating or rewriting a README for a reusable package or library. Focus on installability, minimal usage example, compatibility, and developer onboarding.
+receiving-code-review: Use when processing code review feedback (bot or human) before changing anything — triages, verifies, and pushes back with technical reasoning — even when the user just says 'fix the comments'.
+requesting-code-review: Use when asking for a review or creating a PR — self-review first, frame the right context, test plan included — even when the user just says 'open a PR' or 'ready to merge'.
+review-routing: Use when preparing a PR description, suggesting reviewers, or flagging risk — produces owner-mapped roles plus historical bug-pattern matches from project-local YAML.
 roadmap-management: Use when the user says "create roadmap", "show roadmap", or "execute roadmap". Creates, reads, and manages roadmap files with phase tracking.
 rtk-output-filtering: Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns.
+rule-writing: Use when creating or editing a rule in .agent-src.uncompressed/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'.
 security: Use when applying security best practices — authentication, authorization via Policies, CSRF protection, input sanitization, rate limiting, or secure coding.
 security-audit: ONLY when user explicitly requests: security audit, vulnerability scan, or penetration test review. NOT for regular feature work.
 sentry-integration: Use when the user shares a Sentry URL, says "check Sentry", or wants to investigate production errors. Uses Sentry MCP tools for deep analysis.
@@ -95,14 +111,20 @@ sequential-thinking: ONLY when user explicitly requests: step-by-step reasoning,
 skill-improvement-pipeline: ONLY when user explicitly requests: run the skill improvement pipeline after a learning was detected. Orchestrates capture, classify, create, validate, and apply.
 skill-management: Use when compressing, decompressing, refactoring, or improving existing skills. Covers the full skill lifecycle from verbose → sharp → maintained.
 skill-reviewer: Use when reviewing, auditing, or optimizing skills — validates against the 7 Skill Killers checklist and produces fix recommendations.
-skill-writing: Use when creating or improving agent skills. Covers structure, quality checklist, and best practices.
-sql-writing: Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, or preventing common mistakes like PHP notation in SQL.
+skill-writing: Use when deciding 'should this be a skill or a rule?', creating/improving/reviewing agent skills, SKILL.md frontmatter, or procedure sections — even without saying 'skill-writing'.
+sql-writing: Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement` — even when the user just pastes a query and asks 'why is this slow' without naming SQL.
+subagent-orchestration: Use when orchestrating implementer/judge subagents — five modes (do-and-judge, do-in-steps, do-in-parallel, do-competitively, judge-with-debate) — model pairing and parallelism from .agent-settings.yml.
+systematic-debugging: Use when hitting a bug, test failure, crash, or unexpected behavior — enforces reproduce → isolate → hypothesize → verify before any fix — even when the user just says 'this is broken' or 'quick fix'.
 technical-specification: Use when the user says "write a spec", "create RFC", or "document this decision". Writes technical specifications, RFCs, and ADRs with clear structure.
-terraform: Use when writing Terraform configurations — AWS modules, resources, variables, outputs, state management, and project conventions.
-terragrunt: Use when writing Terragrunt configurations — DRY multi-environment configs, dependency management, and remote state orchestration.
+terraform: Use when writing Terraform — AWS modules, resources, variables, outputs, remote state — even when the user just says 'provision this infra' or 'add an S3 bucket' without naming Terraform.
+terragrunt: Use when working with Terragrunt — DRY multi-env configs, module dependencies, remote state orchestration — even when the user just says 'deploy this to staging and prod' without naming Terragrunt.
+test-driven-development: Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — even if the user just says 'add this function' or 'fix this bug'.
 test-performance: Use when optimizing test suite performance — database setup, seeder optimization, parallel testing, CI pipeline efficiency, or RefreshDatabase alternatives.
+threat-modeling: Use when adding auth, webhooks, uploads, queues, secrets, tenant boundaries, or public endpoints — produces trust boundaries + abuse cases mapped to files, BEFORE implementation.
 traefik: Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing.
 universal-project-analysis: ONLY when user explicitly requests: full project analysis, deep codebase audit, or comprehensive architecture review. Routes to core and framework-specific analysis skills.
 upstream-contribute: Use when a learning, new skill, rule improvement, or bug fix from a consumer project should be contributed back to the shared agent-config package.
+using-git-worktrees: Use when starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety checks and a clean test baseline — even when the user says 'try this on the side'.
 "validate-feature-fit": Validate whether a feature request fits the existing codebase — check for duplicates, contradictions, scope creep, and architectural misfit
-websocket: Use when implementing WebSocket communication, real-time features, broadcasting patterns, or connection management.
+verify-before-complete: Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs.
+websocket: Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'.

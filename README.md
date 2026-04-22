@@ -27,7 +27,7 @@ npm install --save-dev @event4u/agent-config
 ```
 
 After installing the package, run the installer to sync the payload and
-create `.agent-settings`, `.vscode/settings.json`, `.augment/settings.json`,
+create `.agent-settings.yml`, `.vscode/settings.json`, `.augment/settings.json`,
 and the tool-specific glue:
 
 ```bash
@@ -167,7 +167,7 @@ can prioritize the right skills for extraction.
 | [`/jira-ticket`](.agent-src/commands/jira-ticket.md) | Read ticket from branch, implement feature |
 | [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
 
-→ [Browse all 57 commands](.agent-src/commands/)
+→ [Browse all 64 commands](.agent-src/commands/)
 
 ---
 
@@ -192,7 +192,7 @@ Every developer gets the same behavior. No per-user setup needed.
 native slash-commands)
 
 > **What this means in practice:** Augment Code and Claude Code get the full
-> package (rules + 112 skills + 57 native commands). Cursor, Cline, Windsurf,
+> package (rules + 122 skills + 64 native commands). Cursor, Cline, Windsurf,
 > Gemini CLI, and GitHub Copilot only get the **rules** natively; skills and
 > commands are available to them as documentation the agent can read, not as
 > first-class features.

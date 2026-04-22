@@ -24,8 +24,8 @@ If any step is vague, **stop** and ask before running anything.
 
 Same as `/do-and-judge`:
 
-- `subagent_implementer_model` → session model by default
-- `subagent_judge_model` → one tier up by default
+- `subagents.implementer_model` → session model by default
+- `subagents.judge_model` → one tier up by default
 
 Stop if both resolve to the same model in the same context.
 

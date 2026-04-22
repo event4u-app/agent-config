@@ -61,9 +61,22 @@ Show the user:
 
 ### Step 3: Classify
 
-**Category tag:** `skill-weakness` | `rule-weakness` | `routing-issue` | `assumption-issue` | `verification-gap` | `optimization-overreach`
+#### Category tag
 
-**Artifact type:**
+Tag each learning with one category for tracking:
+
+| Category | When |
+|---|---|
+| `skill-weakness` | Skill gave wrong or incomplete guidance |
+| `rule-weakness` | Rule was too vague or missed a case |
+| `routing-issue` | Wrong skill was selected for the task |
+| `assumption-issue` | Agent made bad assumptions instead of asking |
+| `verification-gap` | Verification step was missing or weak |
+| `optimization-overreach` | Optimize command suggested harmful change |
+
+#### Artifact type
+
+Decide what to create:
 
 | Learning type | Create |
 |---|---|
@@ -102,8 +115,8 @@ Ask the user:
 - Done.
 
 **If universal (option 1):**
-1. Read `upstream_repo` and `improvement_pr_branch_prefix` from `.agent-settings`
-2. If `upstream_repo` is empty → ask user for the target repo
+1. Read `project.upstream_repo` and `project.improvement_pr_branch_prefix` from `.agent-settings.yml`
+2. If `project.upstream_repo` is empty → ask user for the target repo
 3. Create branch: `{prefix}{learning-slug}` from `main`
 4. Commit changes to `.agent-src.uncompressed/` AND `.augment/`
 5. Push branch
@@ -131,3 +144,12 @@ Ask the user:
 - Do NOT auto-push without user permission
 - Do NOT create project-specific content in `.agent-src.uncompressed/`
 - Do NOT run this pipeline for trivial learnings
+
+## References
+
+- **Reflexion** — [arxiv.org/abs/2303.11366](https://arxiv.org/abs/2303.11366)
+  Language agents that reinforce from verbal self-reflection on past
+  trials. This pipeline adapts Reflexion by gating promotion with a
+  human review step — learnings only harden into rules/skills after
+  explicit approval, never auto-commit.
+

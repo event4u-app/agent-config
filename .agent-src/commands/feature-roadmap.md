@@ -178,3 +178,7 @@ What's next?
 - **Reference specific files** in roadmap tasks — not vague descriptions.
 - **Include quality gates** (PHPStan, Rector, tests) in every phase.
 - **Research the codebase** to make tasks concrete and realistic.
+
+## See also
+
+- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#planner) — Planner mode output contract (Goal / Constraints / Option set / Recommendation / Dependencies / Rollback)

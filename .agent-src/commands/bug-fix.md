@@ -136,7 +136,27 @@ QUALITY:
 ═══════════════════════════════════════════════
 ```
 
-### 7. Offer next steps
+### 7. Emit a memory signal (post-resolution)
+
+If the root cause is a recognizable pattern (not a one-off typo),
+drop a `historical-patterns` signal so future work benefits:
+
+```bash
+python3 scripts/memory_signal.py \
+    --type historical-patterns \
+    --path "<primary affected file>" \
+    --body "<root cause → fix, one sentence>" \
+    --origin "bug-fix" \
+    --extra '{"symptom":"<observed symptom>","severity":"<low|medium|high>"}'
+```
+
+The helper deduplicates within a 7-day window, so repeated fixes of
+the same symptom only emit once. See
+[`/propose-memory`](propose-memory.md) for the universal write path.
+
+Skip this step for trivial fixes (typos, comment updates).
+
+### 8. Offer next steps
 
 ```
 What next?
@@ -155,3 +175,7 @@ What next?
 - **Present the fix plan** before implementing — let the user confirm.
 - **Update existing tests** that are affected by the change.
 - **Write new tests** for the specific bug scenario (regression test).
+
+## See also
+
+- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#developer) — Developer mode output contract (Goal / Plan / Changes / Tests / Open questions)

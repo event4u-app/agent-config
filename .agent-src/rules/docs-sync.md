@@ -47,13 +47,15 @@ When a skill is **added or its scope changes**, check and update:
 
 ## Settings template sync
 
-When skill/rule/command reads new setting from `.agent-settings` not in `templates/agent-settings.md`:
+When skill/rule/command reads new setting from `.agent-settings.yml` not in `templates/agent-settings.md`:
 
 1. Add key with default to template
 2. Add row to Settings Reference table
-3. Add comment explaining key
-4. **Update local `.agent-settings`** — add new key with default, preserve existing values,
-   apply template order. **Mandatory** — user can't discover new settings otherwise.
+3. Add comment above key explaining it
+4. **Update local `.agent-settings.yml`** — add new key with default, preserve existing values,
+   apply template order and comments. Same behavior as `/config-agent-settings`, inline.
+
+**Mandatory** — without step 4, user can't discover new settings exist.
 
 ## Content consistency
 

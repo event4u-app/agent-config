@@ -248,7 +248,7 @@ Cross-roadmap ties:
   [`compare-anthropics-skills.md`](compare-anthropics-skills.md),
   [`compare-kdcllc-agents-config.md`](compare-kdcllc-agents-config.md)
 - Related roadmaps:
-  [`road-to-anthropic-alignment.md`](../roadmaps/road-to-anthropic-alignment.md),
+  [`archive/road-to-anthropic-alignment.md`](../roadmaps/archive/road-to-anthropic-alignment.md),
   [`archive/road-to-rule-quality-research.md`](../roadmaps/archive/road-to-rule-quality-research.md),
   [`road-to-trigger-evals.md`](../roadmaps/road-to-trigger-evals.md)
 - Command that produced this document:

@@ -126,6 +126,7 @@ If important information is missing:
 - Trace data flow and execution path
 - Compare with requirements, tickets, current behavior, tests, existing patterns
 - Identify likely cause and smallest correct change
+- **Consult domain-invariants for touched paths** — if `agents/memory/domain-invariants.yml` exists, skim for `scope:` entries that match a file you are about to change. A matching invariant is a hard constraint: violating it = regression. If the planned change conflicts, surface it to the user before proceeding. See [`engineering-memory-data-format`](../../guidelines/agent-infra/engineering-memory-data-format.md) for the schema.
 
 ### 4. Define expected behavior first
 

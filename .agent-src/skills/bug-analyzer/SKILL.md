@@ -12,10 +12,15 @@ source: package
 **Proactive mode:** User asks to audit code for hidden bugs, edge cases, or risky patterns.
 
 Do NOT use when:
-- Feature development (use `feature-planning` skill)
-- Code style or refactoring (use `code-refactoring` skill)
-- Performance issues (use `performance-analysis` skill)
-- Security vulnerabilities (use `security-audit` skill)
+
+* Feature development — route to [`feature-planning`](../feature-planning/SKILL.md)
+* Code style or refactoring — route to [`code-refactoring`](../code-refactoring/SKILL.md)
+* Performance issues — route to [`performance-analysis`](../performance-analysis/SKILL.md)
+* Security vulnerabilities — route to [`security-audit`](../security-audit/SKILL.md)
+* You need to trace how one data element flows through the code — route to
+  [`data-flow-mapper`](../data-flow-mapper/SKILL.md)
+* You need to enumerate every call site / consumer affected by a planned fix —
+  route to [`blast-radius-analyzer`](../blast-radius-analyzer/SKILL.md)
 
 ## Input sources
 
@@ -78,6 +83,13 @@ Gather all available evidence before forming any hypothesis:
 - Use `codebase-retrieval` to find the relevant code.
 - Read each file in the call chain to understand the data flow.
 - Check existing context docs (`agents/contexts/`) for the affected area.
+- **Consult engineering memory.** Via
+  [`memory-access`](../../guidelines/agent-infra/memory-access.md) call
+  `retrieve(types=["historical-patterns", "incident-learnings"],
+  keys=[<error class>, <affected file paths>], limit=3)`. A prior
+  matching pattern or incident is the single most reliable accelerator
+  for root-cause analysis. Cite `id` and `path` verbatim so the user
+  can verify the precedent.
 
 #### Multi-component diagnostics
 
@@ -234,3 +246,11 @@ Focus on the "Bug fixes" attack questions: Is this the root cause or a symptom? 
 - Do NOT ignore Sentry data if available — it provides real-world context.
 - Do NOT fix only the symptom — trace to the root cause.
 - Do NOT attempt fix #4 without discussing the architecture with the user.
+
+## References
+
+- **Chain-of-Verification (CoVe)** — [arxiv.org/abs/2309.11495](https://arxiv.org/abs/2309.11495)
+  Generate candidate answers, then verify each with follow-up
+  questions. This skill adapts CoVe by verifying stacktrace-derived
+  hypotheses against Sentry data and surrounding code before fixing.
+

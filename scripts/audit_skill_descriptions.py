@@ -8,8 +8,8 @@ Flags descriptions that are:
   - containing hedge terms ("may help", "can be useful", "covers various", ...)
 
 Context:
-  `road-to-anthropic-alignment.md` Phase 2.2 — "pushy description" pattern from
-  anthropics/skills/skills/skill-creator.
+  `archive/road-to-anthropic-alignment.md` Phase 2.2 — "pushy description" pattern from
+  anthropics/skills/skills/skill-creator (roadmap archived 2026-04-21).
 
 Usage:
   python3 scripts/audit_skill_descriptions.py               # human table

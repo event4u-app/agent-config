@@ -27,8 +27,12 @@ __pycache__/
 # Temp
 /tmp/
 
-# Ignore the agent settings
+# Ignore the agent settings (YAML is the active format; flat legacy is
+# kept for the migration window and gets deleted by scripts/install once
+# the YAML file has been written)
+.agent-settings.yml
 .agent-settings
+.agent-settings.backup.key-value
 
 # Generated Augment Code projection of .agent-src/ (rebuilt by `task sync`)
 /.augment/
@@ -42,3 +46,7 @@ __pycache__/
 .agent-src/skills/*/evals/last-run.json
 # Live trigger-eval outputs — timestamped JSON per run, not committed.
 evals/results/
+
+# Memory access runtime cache (per-repo `memory_status` probe result;
+# regenerated on demand, never committed)
+/.agent-memory/

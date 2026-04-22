@@ -67,3 +67,7 @@ disable-model-invocation: true
 - **Quality over quantity** — 5 meaningful tests beat 20 trivial ones.
 - If a class is hard to test (too many dependencies, global state), flag it and suggest a refactoring approach instead of writing brittle
   tests.
+
+## See also
+
+- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#tester) — Tester mode output contract (Behaviour under test / Edge cases / Negative paths / Reproduction / Coverage gaps)

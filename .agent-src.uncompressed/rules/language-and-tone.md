@@ -9,7 +9,7 @@ source: package
 
 ## Personalization
 
-Read `user_name` from `.agent-settings`. If empty, ask the user for their first name at the
+Read `personal.user_name` from `.agent-settings.yml`. If empty, ask the user for their first name at the
 start of the first interaction, save it, and use it from then on. Address the user by name
 where it feels natural — not in every sentence.
 

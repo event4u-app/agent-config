@@ -1,0 +1,95 @@
+# architecture-decisions.yml — indexed ADRs with path constraints
+#
+# Writer:   decision author at ADR time
+# Reader:   `feature-plan`, `api-design`, `blast-radius-analyzer`
+#           (consulted BEFORE proposing structural changes)
+# Expiry:   marked `deprecated` on reversal; NEVER deleted — history
+#           is the value. Supersession via `superseded_by`.
+# Location: agents/memory/architecture-decisions/<hash>.yml
+#           OR agents/memory/architecture-decisions.yml (single-file)
+#
+# The YAML is an **index**, not the decision doc. Each entry points
+# to a long-form ADR (Markdown, Notion, Confluence — wherever your
+# team writes them) and captures the machine-readable metadata an
+# agent needs: paths constrained, alternatives rejected, trade-offs.
+
+version: 1
+
+entries:
+  - id: 0007-tenant-boundaries
+    status: active                       # active | deprecated | archived
+    confidence: high
+    source:
+      - docs/adr/0007-tenant-boundaries.md
+      - https://github.com/example/repo/pull/842
+    owner: platform-team
+    last_validated: 2026-04-10
+    review_after_days: 365
+
+    # --- decision body ---
+    title: Tenant boundaries enforced by global scopes + dedicated DB
+    date: 2025-11-18
+    context: >
+      Multi-tenant SaaS; legal requirement to isolate tenant data at
+      rest. Prior approach (column-based scoping) leaked in three
+      incidents over six months.
+    decision: >
+      Adopt per-tenant database connections with a `TenantScope`
+      global scope on every tenant-owned Eloquent model. Raw DB
+      access is forbidden outside migrations.
+    alternatives_rejected:
+      - id: column-scoping-only
+        reason: Column scoping proven unsafe under complex joins.
+      - id: schema-per-tenant
+        reason: Operational cost of N schemas exceeded team capacity.
+    trade_offs:
+      - Higher connection pool usage — mitigated by connection reuse.
+      - Slower local dev onboarding — mitigated by seeder changes.
+    paths:                               # globs this ADR constrains
+      - app/Models/Tenant*/**
+      - config/database.php
+      - database/migrations/*_tenant_*.php
+    superseded_by: ""                    # id of replacement ADR
+
+  - id: 0012-money-representation
+    status: active
+    confidence: high
+    source:
+      - docs/adr/0012-money-representation.md
+    owner: finance-team
+    last_validated: 2026-03-20
+    review_after_days: 730
+
+    title: Money represented as integer cents end-to-end
+    date: 2026-01-05
+    context: >
+      Float precision errors in payment reconciliation caused
+      two customer-facing discrepancies.
+    decision: >
+      All monetary values are integer cents (smallest currency unit).
+      Floats appear only inside the formatter boundary, never in
+      storage, transport, or business logic.
+    alternatives_rejected:
+      - id: decimal-type
+        reason: DB decimal support uneven across MariaDB / SQLite
+          test environments; integer is unambiguous.
+    trade_offs:
+      - Every new developer must learn the convention — mitigated by
+        a dedicated `Money` value object with a strict type.
+    paths:
+      - app/Models/Invoice*.php
+      - app/Models/Payment*.php
+      - app/Services/Billing/**
+    superseded_by: ""
+
+# --- How to add an entry ---
+#
+# 1. Write the ADR as a Markdown doc FIRST. This index is a pointer,
+#    not a replacement.
+# 2. Link the ADR doc under `source`. At least one link is mandatory.
+# 3. List `paths` as globs the agent can match. Be generous — it is
+#    better to trigger the ADR on too many paths than too few.
+# 4. Fill `alternatives_rejected` even when it feels obvious. The
+#    agent's main job here is to stop re-litigating decisions.
+# 5. On reversal: keep the old entry, set `status: deprecated`, add
+#    the new entry with `superseded_by` pointing back. History stays.

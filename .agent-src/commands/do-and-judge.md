@@ -18,10 +18,10 @@ target is clear.
 
 ### 2. Resolve model pairing
 
-Read `.agent-settings`:
+Read `.agent-settings.yml`:
 
-- `subagent_implementer_model` → empty = session model
-- `subagent_judge_model` → empty = one tier above implementer
+- `subagents.implementer_model` → empty = session model
+- `subagents.judge_model` → empty = one tier above implementer
 
 If the two resolve to the same model in the same context, **stop** and
 report per the `subagent-orchestration` Iron Law.
@@ -52,7 +52,25 @@ context. The judge must return one of:
 **Hard ceiling: two revision cycles.** After the second `revise` fails
 judgment, stop and hand back — further iteration is the user's call.
 
-### 6. Report
+### 6. Emit a memory signal on repeated rejection
+
+When the judge has issued **≥ 2 `revise`/`reject` verdicts** for the
+same failure class on nearby paths during this session, that is a
+pattern worth recording. Drop a signal:
+
+```bash
+python3 scripts/memory_signal.py \
+    --type historical-patterns \
+    --path "<primary path under review>" \
+    --body "<failure class → fix guidance, one sentence>" \
+    --origin "do-and-judge" \
+    --extra '{"severity":"<low|medium|high>"}'
+```
+
+One signal per session — the helper's 7-day dedupe prevents re-emits
+of the same pattern from later sessions. Skip on a single rejection.
+
+### 7. Report
 
 ```
 Mode:       do-and-judge
@@ -77,6 +95,17 @@ Next step:  <commit / open PR / abandon>
 - Revision loop still failing after ceiling
 - Judge transcript contradicts the original task (off-task drift)
 - User interrupts mid-loop
+
+## Wrappable commands
+
+Commands that document an optional `/do-and-judge` integration block:
+
+- [`/commit`](commit.md) — judge reviews the commit plan + diff before
+  staging. Useful on large, mixed-intent diffs.
+
+Any command without an integration block is still wrappable in
+principle, but the judge lacks a structured artifact to grade — expect
+weaker verdicts.
 
 ## See also
 

@@ -127,16 +127,17 @@ Process all comments without asking. For each comment:
 
 ### Bot icon prefix
 
-Read `pr_comment_bot_icon` from `.agent-settings`. If `true` (default), prefix every
-reply with `🤖 ` so reviewers can see at a glance that the reply was bot-authored.
+Read `project.pr_comment_bot_icon` from `.agent-settings.yml`. If `true` (default),
+prefix every reply with `🤖 ` so reviewers can see at a glance that the reply was
+bot-authored.
 
 Example: `🤖 Good catch, fixed.`
 
-If `false` or `.agent-settings` doesn't exist, do NOT add the prefix.
+If `false` or `.agent-settings.yml` doesn't exist, do NOT add the prefix.
 
 ## Replying via GitHub API
 
-Read `github_pr_reply_method` from `.agent-settings` to determine the correct endpoint.
+Read `github.pr_reply_method` from `.agent-settings.yml` to determine the correct endpoint.
 See the `command-routing` skill → "GitHub API: Replying to PR review comments" for full details.
 
 ## After all comments

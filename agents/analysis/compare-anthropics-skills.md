@@ -173,7 +173,7 @@ not automated arbitration.
 
 **Revised 2026-04-20: the interactive drafting front-end (originally lumped
 into this REJECT section) was reclassified to ADAPT.** See
-[`road-to-drafting-protocol.md`](../roadmaps/road-to-drafting-protocol.md).
+[`archive/road-to-drafting-protocol.md`](../roadmaps/archive/road-to-drafting-protocol.md).
 The valuable part is **Understand / Research / Draft** with numbered-option
 prompts at every step — agent proposes, human decides. The part that stays
 REJECT is the Claude→Claude auto-rewrite loop (`run_loop.py`), the blind
@@ -207,14 +207,15 @@ judge agent, and `.skill` packaging. Distinguishing the two is the whole point.
 
 Three roadmaps, split by scope:
 
-- **[`agents/roadmaps/road-to-anthropic-alignment.md`](../roadmaps/road-to-anthropic-alignment.md)**
+- **[`agents/roadmaps/archive/road-to-anthropic-alignment.md`](../roadmaps/archive/road-to-anthropic-alignment.md)**
   — Phase 1 (Claude Code Plugin Marketplace, v1.7.0) + Phase 2 ("pushy
-  description" pattern in `skill-quality` rule, v1.7.1).
+  description" pattern in `skill-quality` rule, v1.7.1). Archived 2026-04-21.
 - **[`agents/roadmaps/road-to-trigger-evals.md`](../roadmaps/road-to-trigger-evals.md)**
   — empirical trigger measurement (v1.8.0, gated PoC → bounded rollout).
-- **[`agents/roadmaps/road-to-drafting-protocol.md`](../roadmaps/road-to-drafting-protocol.md)**
+- **[`agents/roadmaps/archive/road-to-drafting-protocol.md`](../roadmaps/archive/road-to-drafting-protocol.md)**
   — Understand → Research → Draft protocol for skill/rule/command/guideline
   creation (v1.8.0 rule + v1.8.1 writing skills). Agent proposes, human decides.
+  Archived 2026-04-21.
 
 ## Open questions for the maintainer
 
@@ -249,10 +250,11 @@ No clone, no execute, no credentials used.
 
 - Command that produced this document:
   [`.agent-src.uncompressed/commands/analyze-reference-repo.md`](../../.agent-src.uncompressed/commands/analyze-reference-repo.md)
-- Active roadmaps: [`road-to-anthropic-alignment.md`](../roadmaps/road-to-anthropic-alignment.md),
-  [`road-to-trigger-evals.md`](../roadmaps/road-to-trigger-evals.md),
-  [`road-to-drafting-protocol.md`](../roadmaps/road-to-drafting-protocol.md).
+- Active roadmaps: [`road-to-trigger-evals.md`](../roadmaps/road-to-trigger-evals.md),
+  [`road-to-autonomous-agent.md`](../roadmaps/road-to-autonomous-agent.md).
 - Archived roadmaps:
+  [`archive/road-to-anthropic-alignment.md`](../roadmaps/archive/road-to-anthropic-alignment.md),
+  [`archive/road-to-drafting-protocol.md`](../roadmaps/archive/road-to-drafting-protocol.md),
   [`archive/road-to-9.md`](../roadmaps/archive/road-to-9.md),
   [`archive/road-to-mcp.md`](../roadmaps/archive/road-to-mcp.md).
 - Previous analyses: [`compare-kdcllc-agents-config.md`](compare-kdcllc-agents-config.md).

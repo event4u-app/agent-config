@@ -55,3 +55,35 @@ A learning may be promoted to rule/skill ONLY if ALL gates pass:
 - Smallest effective change
 - Update existing over creating duplicates
 - Full workflow: `learning-to-rule-or-skill` skill
+
+## Where learnings are written
+
+Captured learnings live in the **consumer project's** `agents/learnings/`
+directory, one file per learning:
+
+```
+agents/learnings/<YYYY-MM-DD>-<kebab-slug>.md
+```
+
+Minimum fields (markdown with a small YAML frontmatter):
+
+```yaml
+---
+slug: <same as filename>
+captured: <ISO date>
+occurrences: <integer, ≥2 or note "one-off, clearly generalizable">
+type_hint: rule | skill | guideline | update
+scope_hint: project | package
+---
+```
+
+Body: 1-paragraph **pattern** (not anecdote) + 1 concrete example.
+
+A learning file is the input to `learning-to-rule-or-skill`, which
+produces a proposal draft under `agents/proposals/`. The proposal is
+then gated by `scripts/check_proposal.py`; see
+[`self-improvement-pipeline`](../guidelines/agent-infra/self-improvement-pipeline.md).
+
+The `agents/learnings/` and `agents/proposals/` directories are
+consumer-owned — the package ships templates and schemas, never the
+data.

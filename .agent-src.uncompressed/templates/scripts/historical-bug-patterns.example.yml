@@ -1,0 +1,84 @@
+# Historical bug patterns — consumed by scripts/pr_review_routing.py
+#
+# Copy this file to `.github/historical-bug-patterns.yml` (preferred) or
+# `agents/historical-bug-patterns.yml` and curate the patterns from your
+# project's actual postmortems. Every pattern must reference a real prior
+# failure — this file is not a wishlist.
+#
+# A pattern matches when ANY changed file in the PR matches ANY of its
+# `paths` globs. Routing severity is the max of matched pattern severities.
+
+version: 1
+updated: 2026-04-21
+
+patterns:
+  - id: n-plus-one-tenant-listing
+    label: "N+1 on tenant-scoped listings"
+    severity: medium
+    paths:
+      - "app/Http/Controllers/**Listing*.php"
+      - "app/Http/Controllers/**Index*.php"
+      - "app/Services/**Query*.php"
+    required_test: "assert query count ≤ N for a multi-row tenant fixture"
+    references:
+      - "PR #842 — production slowdown 2024-09"
+
+  - id: missing-policy-on-admin-route
+    label: "Admin-only route without Gate::allows / policy"
+    severity: high
+    paths:
+      - "app/Http/Controllers/Admin/**"
+      - "routes/admin.php"
+    required_test: "negative test: non-admin receives 403"
+    references:
+      - "INC-214 — non-admin reached admin settings endpoint"
+
+  - id: queue-job-not-idempotent
+    label: "Queue job without idempotency key"
+    severity: high
+    paths:
+      - "app/Jobs/**"
+      - "src/MessageHandler/**"
+    required_test: "assert a retried job does not double-write"
+
+  - id: secret-in-config-commit
+    label: "Secret-looking value committed to config"
+    severity: high
+    paths:
+      - "**/config/**.php"
+      - "**/config/**.yaml"
+      - "**/config/**.yml"
+    required_test: "grep-based check in CI that the commit carries no API keys"
+    references:
+      - "INC-088 — API key leaked in config/services.php"
+
+  - id: missing-index-on-foreign-key
+    label: "New foreign key without covering index"
+    severity: medium
+    paths:
+      - "**/migrations/**"
+    required_test: "assert EXPLAIN on a representative query uses the index"
+
+  - id: blade-unsafe-html
+    label: "Blade component renders user input with {!! !!}"
+    severity: high
+    paths:
+      - "resources/views/**.blade.php"
+    required_test: "confirm the rendered field is escaped or sanitized upstream"
+    references:
+      - "CVE-2023-XXX-style XSS from unsanitized profile field"
+
+  - id: webhook-without-signature-check
+    label: "Webhook handler without signature verification"
+    severity: high
+    paths:
+      - "app/Http/Controllers/**Webhook*.php"
+      - "app/api/**webhook**"
+    required_test: "negative test: unsigned payload returns 401"
+
+  - id: migration-no-rollback
+    label: "Migration with destructive up() and empty down()"
+    severity: medium
+    paths:
+      - "**/migrations/**"
+    required_test: "document in the PR why rollback is intentionally not supported"

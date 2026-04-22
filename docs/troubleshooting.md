@@ -149,7 +149,7 @@ npm uninstall @event4u/agent-config
 
 # 2. Remove generated content from the project
 rm -rf .augment .claude .cursor .clinerules .windsurfrules GEMINI.md
-rm -f .agent-settings
+rm -f .agent-settings .agent-settings.yml .agent-settings.backup.key-value
 rm -f .github/copilot-instructions.md
 # Remove the "# event4u/agent-config" block from .gitignore manually
 ```

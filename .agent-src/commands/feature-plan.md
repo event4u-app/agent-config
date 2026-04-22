@@ -102,6 +102,12 @@ Before asking detailed questions, **proactively research**:
   - Similar patterns already implemented
   - Database tables that would be affected
 - Read module-level `agents/` docs if a specific module is involved.
+- **Read `agents/memory/architecture-decisions.yml`** (if it exists) for active
+  ADRs whose `scope:` covers the affected modules. An ADR with
+  `status: active` is a binding constraint — propose structure that
+  respects it. If the feature needs to contradict an ADR, surface that
+  as a decision for the user before drafting the plan. See
+  [`engineering-memory-data-format`](../guidelines/agent-infra/engineering-memory-data-format.md).
 
 **Share key findings with the user** — this informs the discussion:
 
@@ -274,3 +280,7 @@ What's next?
 - **Be collaborative** — ask questions, don't assume.
 - **Challenge scope** — suggest what can be deferred.
 - **Reference existing code** — link to files and patterns found in research.
+
+## See also
+
+- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#po) — PO mode output contract (Goal / Assumptions / Acceptance criteria / Impacted modules / Risks / Open questions for stakeholder)

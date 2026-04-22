@@ -29,6 +29,20 @@ Work like a real developer — not a text generator. Follow this order strictly:
 
 Skipping steps 1-3 is the #1 cause of wrong implementations and wasted retries.
 
+## Minimum read set — read before you write
+
+Before editing code, read the minimum set that defines its behavior:
+
+1. **Symbol under edit** — full method/function body, not just the planned line.
+2. **Direct callers** — one level up (`grep -rn "<symbol>"` + open the matches).
+3. **Tests** — if a test file exists, it encodes the contract.
+4. **One layer of related abstractions** — interface, parent class, or trait (one hop, not the full hierarchy).
+5. **Data changes:** the migration that created the column + any seeder/factory that references it.
+
+Stop expanding once you can explain, in your own words, what the symbol does, who calls
+it, and what breaks if you change its behavior. If you cannot → read more. Never write
+code based on guessed behavior.
+
 ## Verify with real tools
 
 Always verify changes with actual execution — not by reading code and assuming it works.

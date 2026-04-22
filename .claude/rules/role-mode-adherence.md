@@ -1,0 +1,1 @@
+../../.agent-src/rules/role-mode-adherence.md

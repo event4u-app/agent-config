@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SETTINGS_FILE=".agent-settings"
+SETTINGS_FILE=".agent-settings.yml"
+LEGACY_SETTINGS_FILE=".agent-settings"
 
 echo ""
 echo "========================================"
@@ -10,10 +11,23 @@ echo "========================================"
 echo ""
 
 # --- Profile detection ---
+# The YAML format stores `cost_profile` as a top-level scalar:
+#   cost_profile: minimal
+# It may be unquoted or double-quoted after migration. We strip both.
+read_cost_profile() {
+  local file="$1"
+  grep -E '^cost_profile:' "$file" 2>/dev/null \
+    | head -n1 \
+    | sed -E 's/^cost_profile:[[:space:]]*//' \
+    | sed -E 's/^"(.*)"$/\1/' \
+    | sed -E "s/^'(.*)'\$/\\1/" \
+    | tr -d '[:space:]'
+}
+
 if [ -f "$SETTINGS_FILE" ]; then
   echo "✅  Found $SETTINGS_FILE"
   echo ""
-  CURRENT_PROFILE=$(grep -E '^cost_profile=' "$SETTINGS_FILE" 2>/dev/null | head -n1 | cut -d'=' -f2 || true)
+  CURRENT_PROFILE=$(read_cost_profile "$SETTINGS_FILE" || true)
 
   if [ -n "${CURRENT_PROFILE:-}" ]; then
     echo "Active cost_profile: $CURRENT_PROFILE"
@@ -22,14 +36,20 @@ if [ -f "$SETTINGS_FILE" ]; then
     echo ""
     echo "Recommended: add this to $SETTINGS_FILE:"
     echo ""
-    echo "  cost_profile=minimal"
+    echo "  cost_profile: minimal"
   fi
+elif [ -f "$LEGACY_SETTINGS_FILE" ]; then
+  echo "⚠️  Found legacy $LEGACY_SETTINGS_FILE (key=value format)."
+  echo ""
+  echo "   Run 'scripts/install' (or 'php vendor/bin/install.php') to migrate"
+  echo "   it to $SETTINGS_FILE automatically."
+  echo ""
 else
   echo "❌  No $SETTINGS_FILE found."
   echo ""
   echo "Create one with:"
   echo ""
-  echo "  cost_profile=minimal"
+  echo "  cost_profile: minimal"
   echo ""
 fi
 
@@ -83,7 +103,7 @@ echo "  minimal   rules, skills, commands only"
 echo "  balanced  + runtime dispatcher"
 echo "  full      + experimental read-only tool adapters"
 echo ""
-echo "Change profile: edit cost_profile=<name> in $SETTINGS_FILE"
+echo "Change profile: edit cost_profile: <name> in $SETTINGS_FILE"
 echo "Profile details: docs/customization.md"
 echo "Getting started: docs/getting-started.md"
 echo ""

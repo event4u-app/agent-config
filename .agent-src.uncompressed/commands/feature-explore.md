@@ -153,3 +153,7 @@ What's next?
 - **Be honest about feasibility** — if something is hard, say so.
 - **Keep it conversational** — this is brainstorming, not a formal process.
 - **Max 1 file created** (optional idea note). No roadmaps, no implementation.
+
+## See also
+
+- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#po) — PO mode output contract (Goal / Assumptions / Acceptance criteria / Impacted modules / Risks / Open questions for stakeholder)

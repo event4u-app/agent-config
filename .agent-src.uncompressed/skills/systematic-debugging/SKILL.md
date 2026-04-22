@@ -21,6 +21,10 @@ Do NOT use when:
   off-by-one) — fix it and move on
 * Pure style / formatting / lint issues
 * Documentation-only questions
+* You need a static trace of a specific data element — route to
+  [`data-flow-mapper`](../data-flow-mapper/SKILL.md)
+* You need to enumerate what a planned change will touch — route to
+  [`blast-radius-analyzer`](../blast-radius-analyzer/SKILL.md)
 
 ## Goal
 

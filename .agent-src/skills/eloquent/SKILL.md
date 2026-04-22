@@ -25,7 +25,7 @@ Do NOT use when:
 
 ### Step 1: Read attribute access style
 
-Read `eloquent_access_style` from `.agent-settings`. Default: `getters_setters`.
+Read `eloquent.access_style` from `.agent-settings.yml`. Default: `getters_setters`.
 
 | Value | Inside model | Outside model |
 |---|---|---|

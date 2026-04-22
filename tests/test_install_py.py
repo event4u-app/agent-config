@@ -33,7 +33,7 @@ def make_fake_package(root: Path) -> Path:
     """
     package = root / "pkg"
     (package / "config" / "profiles").mkdir(parents=True)
-    shutil.copy(REPO_ROOT / "config" / "agent-settings.template.ini", package / "config" / "agent-settings.template.ini")
+    shutil.copy(REPO_ROOT / "config" / "agent-settings.template.yml", package / "config" / "agent-settings.template.yml")
     for profile in install.SUPPORTED_PROFILES:
         shutil.copy(REPO_ROOT / "config" / "profiles" / f"{profile}.ini", package / "config" / "profiles" / f"{profile}.ini")
     return package
@@ -240,21 +240,29 @@ class TestEnsureAgentSettings(SilentTest):
 
     def test_renders_placeholder(self) -> None:
         install.ensure_agent_settings(self.project, self.package, "balanced", force=False)
-        content = (self.project / ".agent-settings").read_text(encoding="utf-8")
-        self.assertIn("cost_profile=balanced", content)
+        content = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
+        self.assertIn("cost_profile: balanced", content)
         self.assertNotIn(install.COST_PROFILE_PLACEHOLDER, content)
 
+    def test_seeds_subagent_keys(self) -> None:
+        install.ensure_agent_settings(self.project, self.package, "balanced", force=False)
+        content = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
+        self.assertIn("subagents:", content)
+        self.assertIn("implementer_model:", content)
+        self.assertIn("judge_model:", content)
+        self.assertIn("max_parallel: 3", content)
+
     def test_skip_when_exists_without_force(self) -> None:
-        target = self.project / ".agent-settings"
-        target.write_text("cost_profile=custom\n", encoding="utf-8")
+        target = self.project / ".agent-settings.yml"
+        target.write_text("cost_profile: custom\n", encoding="utf-8")
         install.ensure_agent_settings(self.project, self.package, "full", force=False)
-        self.assertEqual(target.read_text(encoding="utf-8"), "cost_profile=custom\n")
+        self.assertEqual(target.read_text(encoding="utf-8"), "cost_profile: custom\n")
 
     def test_force_overwrites(self) -> None:
-        target = self.project / ".agent-settings"
-        target.write_text("cost_profile=custom\n", encoding="utf-8")
+        target = self.project / ".agent-settings.yml"
+        target.write_text("cost_profile: custom\n", encoding="utf-8")
         install.ensure_agent_settings(self.project, self.package, "full", force=True)
-        self.assertIn("cost_profile=full", target.read_text(encoding="utf-8"))
+        self.assertIn("cost_profile: full", target.read_text(encoding="utf-8"))
 
     def test_missing_profile_fails(self) -> None:
         with redirect_stderr(io.StringIO()):
@@ -337,14 +345,14 @@ class TestMainIntegration(unittest.TestCase):
     def test_full_run_creates_all_files(self) -> None:
         exit_code = self._run()
         self.assertEqual(exit_code, 0)
-        self.assertTrue((self.project / ".agent-settings").exists())
+        self.assertTrue((self.project / ".agent-settings.yml").exists())
         self.assertTrue((self.project / ".vscode" / "settings.json").exists())
         self.assertTrue((self.project / ".augment" / "settings.json").exists())
         self.assertTrue((self.project / ".github" / "plugin" / "marketplace.json").exists())
 
     def test_skip_bridges_only_creates_settings(self) -> None:
         self.assertEqual(self._run("--skip-bridges"), 0)
-        self.assertTrue((self.project / ".agent-settings").exists())
+        self.assertTrue((self.project / ".agent-settings.yml").exists())
         self.assertFalse((self.project / ".vscode").exists())
         self.assertFalse((self.project / ".augment").exists())
         self.assertFalse((self.project / ".github").exists())
@@ -356,15 +364,15 @@ class TestMainIntegration(unittest.TestCase):
 
     def test_idempotent(self) -> None:
         self.assertEqual(self._run(), 0)
-        content_first = (self.project / ".agent-settings").read_text(encoding="utf-8")
+        content_first = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
         self.assertEqual(self._run(), 0)
-        content_second = (self.project / ".agent-settings").read_text(encoding="utf-8")
+        content_second = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
         self.assertEqual(content_first, content_second)
 
     def test_profile_is_rendered_into_settings(self) -> None:
         self.assertEqual(self._run("--profile=full"), 0)
-        content = (self.project / ".agent-settings").read_text(encoding="utf-8")
-        self.assertIn("cost_profile=full", content)
+        content = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
+        self.assertIn("cost_profile: full", content)
 
 
 if __name__ == "__main__":

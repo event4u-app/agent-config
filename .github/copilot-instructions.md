@@ -35,7 +35,7 @@ Laravel-specific suggestions in a PR touching this repo, they are wrong.
   internal tools, customers) in `.augment/`, `.agent-src.uncompressed/`, root
   `AGENTS.md`, or `.github/copilot-instructions.md`. Everything here must work
   in **any** consumer project.
-- Project-specific behavior belongs in a consumer's own `.agent-settings`,
+- Project-specific behavior belongs in a consumer's own `.agent-settings.yml`,
   `AGENTS.md`, or `agents/` directory — not in this package.
 - The portability checker (`scripts/check_portability.py`) enforces this in CI.
 

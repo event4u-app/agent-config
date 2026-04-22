@@ -8,7 +8,7 @@ No Task, no Make, no build tools required for installation.
 >
 > 1. `scripts/install.sh` — payload sync (copy rules, symlink skills and
 >    commands, create tool-specific directories).
-> 2. `scripts/install.py` — bridge files (`.agent-settings`, VSCode /
+> 2. `scripts/install.py` — bridge files (`.agent-settings.yml`, VSCode /
 >    Augment / Copilot JSON descriptors).
 >
 > `bin/install.php` and `scripts/postinstall.sh` are thin wrappers that
@@ -47,7 +47,7 @@ php vendor/bin/install.php --profile=balanced
 ```
 
 The `--profile` flag controls the initial `cost_profile` value written
-to `.agent-settings`.
+to `.agent-settings.yml`.
 
 ### npm (JavaScript/TypeScript projects)
 
@@ -92,7 +92,7 @@ Under the hood:
 
 A full run creates:
 
-- `.agent-settings` — profile configuration
+- `.agent-settings.yml` — profile configuration (YAML)
 - `.vscode/settings.json` — VS Code / Copilot plugin discovery
 - `.augment/settings.json` — Augment plugin activation
 - `.github/plugin/marketplace.json` — Copilot CLI marketplace
@@ -124,7 +124,7 @@ regardless of which AI tool they use.** No per-developer plugin installation nee
 After initial setup, commit these files:
 
 ```
-.agent-settings                    ← shared profile (e.g., cost_profile=minimal)
+.agent-settings.yml                ← shared profile (e.g., cost_profile: minimal)
 .augment/                          ← rules, skills, commands (symlinks)
 .cursor/rules/                     ← Cursor rules (symlinks)
 .claude/                           ← Claude rules, skills (symlinks)
@@ -214,11 +214,11 @@ Point it to `https://github.com/event4u-app/agent-config`.
 
 ## After installation: choose a profile
 
-The system works immediately with sensible defaults. Optionally, create `.agent-settings`
+The system works immediately with sensible defaults. Optionally, create `.agent-settings.yml`
 to choose a profile:
 
-```ini
-cost_profile=minimal
+```yaml
+cost_profile: minimal
 ```
 
 | Profile | What's active | For whom |
@@ -256,7 +256,7 @@ If the agent behaves differently than before — it's working.
 | Stage | Script | Output |
 |---|---|---|
 | 1. Payload sync | `scripts/install.sh` | `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`, `GEMINI.md` |
-| 2. Bridges     | `scripts/install.py` | `.agent-settings`, `.vscode/settings.json`, `.augment/settings.json`, `.github/plugin/marketplace.json` |
+| 2. Bridges     | `scripts/install.py` | `.agent-settings.yml`, `.vscode/settings.json`, `.augment/settings.json`, `.github/plugin/marketplace.json` |
 
 Either stage can be skipped (`--skip-sync`, `--skip-bridges`) or invoked
 directly. Stage 2 is gracefully skipped when Python 3 is unavailable.
@@ -362,7 +362,7 @@ npm uninstall @event4u/agent-config
 
 # 2. Remove generated project-local content
 rm -rf .augment .claude .cursor .clinerules .windsurfrules GEMINI.md
-rm -f .agent-settings
+rm -f .agent-settings .agent-settings.yml .agent-settings.backup.key-value
 rm -f .github/copilot-instructions.md
 ```
 

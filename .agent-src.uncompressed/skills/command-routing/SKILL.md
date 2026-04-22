@@ -46,7 +46,7 @@ When commands reply to PR review comments (e.g. `/fix-pr-bot-comments`):
 
 ### 1. Read the setting
 
-Read `github_pr_reply_method` from `.agent-settings`:
+Read `github.pr_reply_method` from `.agent-settings.yml`:
 
 | Value | API call |
 |---|---|
@@ -56,7 +56,7 @@ Read `github_pr_reply_method` from `.agent-settings`:
 
 ### 2. Bot icon prefix
 
-Read `pr_comment_bot_icon` from `.agent-settings`:
+Read `project.pr_comment_bot_icon` from `.agent-settings.yml`:
 - `true` → prefix reply body with `🤖 `.
 - `false` or not set → no prefix.
 
@@ -64,7 +64,7 @@ Read `pr_comment_bot_icon` from `.agent-settings`:
 
 - `data` must be clean JSON with ONLY required API fields — no `summary` or extra params.
 - Each reply is a separate API call — do NOT batch.
-- On first success with `auto` → update `.agent-settings` to the method that worked.
+- On first success with `auto` → update `github.pr_reply_method` in `.agent-settings.yml` to the method that worked.
 
 ### Validate
 

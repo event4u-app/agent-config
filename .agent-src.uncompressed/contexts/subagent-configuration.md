@@ -2,15 +2,15 @@
 
 Loaded by the `subagent-orchestration` skill and the `/do-and-judge`,
 `/do-in-steps`, and `/judge` commands. Describes how the three
-`subagent_*` keys in `.agent-settings` are resolved at runtime.
+`subagents.*` keys in `.agent-settings.yml` are resolved at runtime.
 
 ## Settings
 
 | Key | Default | Purpose |
 |---|---|---|
-| `subagent_implementer_model` | _(empty → session model)_ | Model alias used for implementer subagents |
-| `subagent_judge_model` | _(empty → one tier up)_ | Model alias used for judge subagents |
-| `subagent_max_parallel` | `3` | Hard cap on concurrent subagent invocations |
+| `subagents.implementer_model` | _(empty → session model)_ | Model alias used for implementer subagents |
+| `subagents.judge_model` | _(empty → one tier up)_ | Model alias used for judge subagents |
+| `subagents.max_parallel` | `3` | Hard cap on concurrent subagent invocations |
 
 ## Model tier ladder
 
@@ -29,7 +29,7 @@ If the session runs on **haiku**, judge defaults to sonnet.
 
 For both implementer and judge:
 
-1. If the `.agent-settings` value is **non-empty**, use it verbatim
+1. If the `.agent-settings.yml` value is **non-empty**, use it verbatim
 2. If empty, apply the default (session tier for implementer, one tier
    up for judge)
 3. Refuse to run if the resolved alias is unknown — list the known
@@ -40,7 +40,7 @@ the user configured. An unknown alias is a configuration error.
 
 ## Parallelism
 
-`subagent_max_parallel=1` serializes — pipelines run step-by-step with
+`subagents.max_parallel: 1` serializes — pipelines run step-by-step with
 no concurrency. This is the recommended setting when debugging a new
 command or when cost is a concern.
 
@@ -53,7 +53,7 @@ completes a multi-step task 2-3x faster than serial at ~2x the cost.
 
 The `/config-agent-settings` command detects changes and re-resolves
 on next invocation. There is no long-running process to restart — the
-commands read `.agent-settings` on each run.
+commands read `.agent-settings.yml` on each run.
 
 ## Related
 

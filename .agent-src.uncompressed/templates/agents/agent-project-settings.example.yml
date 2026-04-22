@@ -1,0 +1,117 @@
+# .agent-project-settings.yml — repo-shared agent settings
+#
+# Committed to the repository (the opposite of `.agent-settings.yml`
+# which is git-ignored and per-developer). This file holds decisions
+# that belong to the **project**, not to an individual's workstation.
+#
+# Precedence (lowest → highest):
+#   1. Package defaults (shipped by event4u/agent-config)
+#   2. This file (.agent-project-settings.yml) — team defaults
+#   3. .agent-settings.yml — developer overrides (gitignored)
+#
+# Any key marked `locked: true` in this file CANNOT be overridden by
+# .agent-settings.yml. Use sparingly — locked keys reduce developer
+# autonomy. Reserve for compliance or correctness concerns (e.g.
+# forcing a test framework, pinning a coding style).
+#
+# Copy this file to `.agent-project-settings.yml` (drop the `.example`)
+# and commit it.
+
+schema_version: 1
+
+# --- Project identity ---
+project:
+  # Short slug used in agent output, prompts, and PR metadata. Keep it
+  # identical to the repo name unless there is a reason to differ.
+  slug: ""
+
+  # Human-readable name — used in generated docs and PR bodies.
+  name: ""
+
+  # Primary stack indicator — agent uses this to pick the right skills.
+  # Examples: "laravel", "nextjs", "symfony", "node-express", "react",
+  # "zend-laminas", "multi" (polyglot monorepo).
+  stack: ""
+
+# --- Memory layer (optional) ---
+#
+# Opt-in signal for the @event4u/agent-memory companion package and
+# the repo-shared curated-memory files. If omitted, memory features
+# stay inert — no writes, no reads, no nagging.
+memory:
+  # Enable curated memory files under `agents/memory/` as part of
+  # this repo's dogfooding of its own memory conventions. Only flip
+  # to true after you have agreed on the six content types from
+  # road-to-engineering-memory.md.
+  dogfood: false
+
+  # Path strategy for curated files. `agents` keeps them alongside
+  # roadmaps; `github` puts routing-relevant files under `.github/`.
+  # `auto` picks `github` if that directory exists, else `agents`.
+  path_strategy: auto
+
+  # Hygiene reminders — the agent nudges when entries are stale.
+  # Expiry is evaluated per type (see road-to-engineering-memory.md).
+  hygiene:
+    enabled: true
+    # Warn when `last_validated` is older than this (days). 0 = off.
+    staleness_days: 180
+
+# --- Review routing (optional) ---
+#
+# Points the `review-routing` skill at the two project-local YAML
+# files. See guidelines/agent-infra/review-routing-data-format.md
+# for the schema.
+review_routing:
+  # Location of ownership-map.yml and historical-bug-patterns.yml.
+  # `github` = .github/<file>.yml · `agents` = agents/<file>.yml ·
+  # `auto` = first match wins.
+  location: auto
+
+# --- Role modes (optional) ---
+#
+# Default role loaded for every session in this repo. See
+# guidelines/agent-infra/role-contracts.md for the six modes.
+# Leave empty to fall back to inferred mode switching.
+roles:
+  # One of: developer, reviewer, tester, po, incident, planner.
+  default: ""
+
+  # If set, the agent refuses work outside the default contract
+  # until the user explicitly switches modes with `/mode <name>`.
+  locked: false
+
+# --- Quality pipeline (optional) ---
+#
+# Per-language gate tools the `quality-fix` command invokes. Empty
+# list = skip the language. Agent will still auto-detect; these
+# values are advisory.
+quality:
+  php:
+    # Tools to run in order. Known: phpstan, rector, ecs, pint.
+    tools: [phpstan, rector, ecs]
+  js:
+    # Known: eslint, prettier, tsc, biome.
+    tools: [eslint, prettier, tsc]
+
+# --- Locked keys (override this file only; never locks .agent-settings.yml) ---
+#
+# List keys from this file whose values cannot be overridden by a
+# developer's .agent-settings.yml. Dot-notation. Example:
+#   locked_keys:
+#     - project.stack
+#     - quality.php.tools
+locked_keys: []
+
+# --- Links to curated data (read-only references) ---
+#
+# Paths the agent consults read-only during work. Curated memory
+# files live here when memory.dogfood is true. These paths are for
+# reference only — no enforcement is done from this file.
+references:
+  architecture_decisions: agents/memory/architecture-decisions/
+  domain_invariants: agents/memory/domain-invariants/
+  incident_learnings: agents/memory/incident-learnings/
+  product_rules: agents/memory/product-rules/
+  ownership_map: ""            # auto-resolved by review-routing
+  historical_bug_patterns: ""  # auto-resolved by review-routing

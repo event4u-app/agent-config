@@ -124,7 +124,7 @@ task install-hooks             # Install git hooks (pre-push sync check)
 scripts/
 ├── install                    ← Primary installer (orchestrator)
 ├── install.sh                 ← Payload sync stage (hybrid copy + symlink)
-├── install.py                 ← Bridge files stage (.agent-settings, JSONs)
+├── install.py                 ← Bridge files stage (.agent-settings.yml, JSONs)
 ├── postinstall.sh             ← npm postinstall hook → scripts/install
 ├── setup.sh                   ← One-time Composer hook setup
 ├── compress.py                ← Compression hash management

@@ -187,3 +187,11 @@ Prioritized by: production impact → exploitability → user-facing breakage �
 - Do NOT output fragmented observations without synthesis
 - Do NOT follow a fixed workflow blindly — adapt to what you learn
 - Do NOT stop after the first explanation — verify it
+
+## References
+
+- **Self-Refine** — [arxiv.org/abs/2303.17651](https://arxiv.org/abs/2303.17651)
+  Iterative self-improvement through self-generated feedback. This
+  skill adapts the pattern by routing the critique step to domain
+  specialists instead of a monolithic self-critique.
+

@@ -9,7 +9,7 @@
 
 - [ ] Read [`agents/analysis/compare-composiohq-awesome-claude-skills.md`](../analysis/compare-composiohq-awesome-claude-skills.md)
 - [ ] Maintainer decisions recorded (1.a, 2.c, 3.d, 4.c, 5.a)
-- [ ] Phase 1 of [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) shipped (commit ec79750 — marketplace manifest canonical)
+- [x] Phase 1 of [`archive/road-to-anthropic-alignment.md`](archive/road-to-anthropic-alignment.md) shipped (commit ec79750 — marketplace manifest canonical; roadmap archived 2026-04-21)
 - [ ] [`archive/road-to-rule-quality-research.md`](archive/road-to-rule-quality-research.md) archived 2026-04-20; feasibility verdicts in [`agents/analysis/rule-quality-eval-feasibility.md`](../analysis/rule-quality-eval-feasibility.md)
 - [ ] [`road-to-trigger-evals.md`](road-to-trigger-evals.md) Phase 1 PoC available before Phase 2 of this roadmap
 
@@ -156,9 +156,21 @@ Do not inline the runtime build into this roadmap.
 
 ### 2.4 Phase-2 acceptance
 
-- [ ] One existing command (e.g. `/commit`) optionally wrappable in `/do-and-judge`
-- [ ] `.agent-settings` migration tested on a fresh consumer install (`tests/test_install.sh`)
-- [ ] Cross-roadmap tie confirmed: judge outputs feed into `road-to-trigger-evals.md` Problem 2 PoC
+- [x] `/commit` optionally wrappable in `/do-and-judge` — integration
+      block in [`commands/commit.md`](../../.agent-src.uncompressed/commands/commit.md)
+      under "Optional: wrap in `/do-and-judge`"; cross-linked from
+      [`commands/do-and-judge.md`](../../.agent-src.uncompressed/commands/do-and-judge.md)
+      "Wrappable commands" section
+- [x] `.agent-settings` migration tested on a fresh consumer install —
+      `test_seeds_subagent_keys` (pytest, `tests/test_install_py.py`) +
+      `test_subagent_keys_seeded` (shell, `tests/test_install_orchestrator.sh`)
+      assert all three `subagent_*` keys end up in the rendered file
+- [x] Cross-roadmap tie confirmed: judges are the natural evaluator for
+      Problem 2 (always-rule compliance) in
+      [`archive/road-to-rule-quality-research.md`](archive/road-to-rule-quality-research.md)
+      and [`agents/analysis/rule-quality-eval-feasibility.md`](../analysis/rule-quality-eval-feasibility.md);
+      Phase 3 judge-sub-skills provide the graders that `road-to-compliance-evals.md`
+      (future, conditional on trigger-evals Phase 2 green light) would reuse
 
 ## Phase 3: Specialized judge agents
 
@@ -166,21 +178,53 @@ Do not inline the runtime build into this roadmap.
 
 ### 3.1 Split `review-changes`
 
-- [ ] Audit current `review-changes` command (location: `.agent-src.uncompressed/commands/review-changes.md`)
-- [ ] Extract four judge roles as **sub-skills** (not standalone commands):
-  - [ ] `judge-bug-hunter` — functional correctness, edge cases, null-safety
-  - [ ] `judge-security-auditor` — authz, injection, secrets, unsafe deserialization
-  - [ ] `judge-test-coverage` — missing assertions, coverage gaps, over-mocking
-  - [ ] `judge-code-quality` — naming, SRP, DRY, consistency with codebase conventions
-- [ ] `review-changes` command dispatches to all four sequentially (or in parallel via `/do-in-parallel` from Phase 2)
-- [ ] Each judge skill has a frontmatter system-prompt-style opening ("You are a judge specialized in …")
+- [x] Audit current `review-changes` command (location: `.agent-src.uncompressed/commands/review-changes.md`)
+- [x] Extract four judge roles as **sub-skills** (not standalone commands):
+  - [x] `judge-bug-hunter` — functional correctness, edge cases, null-safety
+  - [x] `judge-security-auditor` — authz, injection, secrets, unsafe deserialization
+  - [x] `judge-test-coverage` — missing assertions, coverage gaps, over-mocking
+  - [x] `judge-code-quality` — naming, SRP, DRY, consistency with codebase conventions
+- [x] `review-changes` command dispatches to all four sequentially (default) or in
+      parallel when `subagent_max_parallel >= 4` (delegates to `subagent-orchestration`'s
+      `do-in-parallel` pattern — safe because judges read the same diff and produce
+      independent reports)
+- [x] Each judge skill has a system-prompt-style opening under its top heading
+      ("You are a judge specialized in …") — see e.g.
+      [`judge-bug-hunter/SKILL.md`](../../.agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md)
 
 ### 3.2 Phase-3 acceptance
 
-- [ ] Running `/review-changes` on a real diff produces four distinct reports
-- [ ] Judge model defaults to `subagent_judge_model` from Phase 2.1
-- [ ] Citation added: `judge-bug-hunter` `## References` links to LLM-as-Judge paper (arxiv.org/abs/2306.05685)
-- [ ] Existing users unaffected: old `review-changes` invocation still works (backward compatible)
+- [x] Running `/review-changes` on a real diff produces four distinct reports
+      (the command's step 4 "Consolidate" keeps each judge's block separate,
+      tags findings by source judge, and highlights multi-judge findings)
+- [x] Judge model defaults to `subagent_judge_model` from Phase 2.1; step 2
+      "Resolve the judge model" in `/review-changes` and step "Resolve models"
+      in each judge's Do NOT block enforce this
+- [x] Citation added: `judge-bug-hunter`'s `## References` section links to
+      Zheng et al., "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena"
+      ([arxiv.org/abs/2306.05685](https://arxiv.org/abs/2306.05685))
+- [x] Existing users unaffected: `/review-changes` invocation is unchanged;
+      diff-gathering step is untouched; language-specific checks (e.g. `php -l`)
+      are now handed off to the optional quality-tools step rather than inlined
+
+### 3.3 Follow-up: catalogue-wide pattern backport
+
+The eight patterns established by the four new judges are being backported to
+every skill in the catalogue via its own roadmap — runs in parallel with
+Phase 4, not as a blocker.
+
+- See [`road-to-stronger-skills.md`](road-to-stronger-skills.md) —
+  Tier-based backport of the judge patterns across all 112 non-judge skills.
+
+### 3.4 Follow-up: defensive-agent skill & rule stack
+
+Parallel work adds 13 review-layer skills + 3 rules + knowledge templates so
+the agent behaves like a skeptical, security-minded staff engineer (defense
+only, no offensive cyber capability). New artifacts are authored
+pattern-compliant from day 1.
+
+- See [`road-to-defensive-agent.md`](road-to-defensive-agent.md) — three
+  waves (foundation · review depth · stack-specific + knowledge templates).
 
 ## Phase 4: Planning chain
 
@@ -284,24 +328,24 @@ Do not inline the runtime build into this roadmap.
 
 ### 8.1 Target list
 
-- [ ] `analysis-autonomous-mode` → Self-Refine (arxiv.org/abs/2303.17651)
-- [ ] `review-changes` → LLM-as-Judge (arxiv.org/abs/2306.05685)
-- [ ] `bug-analyzer` → Chain-of-Verification (arxiv.org/abs/2309.11495)
-- [ ] `skill-improvement-pipeline` → Reflexion (arxiv.org/abs/2303.11366)
-- [ ] `adversarial-review` → Tree-of-Thoughts (arxiv.org/abs/2305.10601)
-- [ ] `sequential-thinking` → Chain-of-Thought (arxiv.org/abs/2201.11903)
-- [ ] New skills from Phases 1-7 that cite sources already in their frontmatter
+- [x] `analysis-autonomous-mode` → Self-Refine (arxiv.org/abs/2303.17651)
+- [x] `review-changes` → LLM-as-Judge (arxiv.org/abs/2306.05685)
+- [x] `bug-analyzer` → Chain-of-Verification (arxiv.org/abs/2309.11495)
+- [x] `skill-improvement-pipeline` → Reflexion (arxiv.org/abs/2303.11366)
+- [x] `adversarial-review` → Tree-of-Thoughts (arxiv.org/abs/2305.10601)
+- [x] `sequential-thinking` → Chain-of-Thought (arxiv.org/abs/2201.11903)
+- [ ] New skills from Phases 1-7 that cite sources already in their frontmatter *(depends on Phases 1-7)*
 
 ### 8.2 Retrofit template
 
-- [ ] Add a `## References` section near the end of each target skill
-- [ ] Format: short label + arxiv link + one-line relevance note
-- [ ] Do not change skill behavior — citation only
+- [x] Add a `## References` section near the end of each target skill
+- [x] Format: short label + arxiv link + one-line relevance note
+- [x] Do not change skill behavior — citation only
 
 ### 8.3 Phase-8 acceptance
 
-- [ ] All target skills retrofitted; linter green
-- [ ] Total line-count increase ≤10 lines per skill
+- [x] All target skills retrofitted; linter green *(2026-04-22)*
+- [x] Total line-count increase ≤10 lines per skill *(6 lines each)*
 
 ## Phase 9: AGENTS.md synthesis
 
@@ -331,7 +375,7 @@ Do not inline the runtime build into this roadmap.
 |---|---|---|
 | Judge-agent gate (Phase 2-3) | [`road-to-trigger-evals.md`](road-to-trigger-evals.md) Phase 2 | Judges are natural evaluators for trigger evals |
 | Judge quality research | [`archive/road-to-rule-quality-research.md`](archive/road-to-rule-quality-research.md) Problem 2 (verdict: conditional go) | Judges on always-rules is the research PoC |
-| Marketplace distribution of new skills | [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md) | Every new skill must land in `.claude-plugin/marketplace.json` |
+| Marketplace distribution of new skills | [`archive/road-to-anthropic-alignment.md`](archive/road-to-anthropic-alignment.md) | Every new skill must land in `.claude-plugin/marketplace.json` |
 | Trim audit (optional) | `road-to-skill-catalog-trim.md` (future, Decision 2.c) | Non-blocking; opens after Phase 1 proves new skills ship clean |
 
 ## Acceptance Criteria (roadmap-level)
@@ -380,5 +424,5 @@ task ci
 ## Related
 
 - Analysis: [`compare-composiohq-awesome-claude-skills.md`](../analysis/compare-composiohq-awesome-claude-skills.md)
-- Sibling roadmaps: [`road-to-anthropic-alignment.md`](road-to-anthropic-alignment.md), [`road-to-trigger-evals.md`](road-to-trigger-evals.md), [`archive/road-to-rule-quality-research.md`](archive/road-to-rule-quality-research.md), [`road-to-drafting-protocol.md`](road-to-drafting-protocol.md)
+- Sibling roadmaps: [`archive/road-to-anthropic-alignment.md`](archive/road-to-anthropic-alignment.md), [`road-to-trigger-evals.md`](road-to-trigger-evals.md), [`archive/road-to-rule-quality-research.md`](archive/road-to-rule-quality-research.md), [`archive/road-to-drafting-protocol.md`](archive/road-to-drafting-protocol.md)
 - Reference repos: `obra/superpowers`, `NeoLabHQ/context-engineering-kit`, `mhattingpete/claude-skills-marketplace`

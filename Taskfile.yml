@@ -265,6 +265,19 @@ tasks:
     desc: "Check MCP targets are in sync with mcp.json (non-zero exit if stale)"
     cmd: python3 scripts/mcp_render.py --check {{.CLI_ARGS}}
 
+  memory:status:
+    desc: "Engineering-memory observability — backend status, intake counts, curated staleness"
+    cmd: python3 scripts/memory_report.py {{.CLI_ARGS}}
+
+  check-memory:
+    desc: "Validate agents/memory/ schema, statuses, and staleness (short-circuits if empty)"
+    cmd: |
+      if [ -d "agents/memory" ] && [ "$(find agents/memory -name '*.yml' 2>/dev/null | wc -l)" -gt 0 ]; then
+        python3 scripts/check_memory.py --path agents/memory
+      else
+        echo "  ℹ️  no agents/memory/*.yml files — skipping"
+      fi
+
   ci:
     desc: Run ALL CI checks locally (must pass before push)
     cmds:
@@ -275,6 +288,7 @@ tasks:
       - task: check-portability
       - task: lint-skills
       - task: lint-marketplace
+      - task: check-memory
       - task: test
       - task: runtime-e2e
       - task: lint-readme

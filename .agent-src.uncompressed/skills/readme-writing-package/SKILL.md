@@ -122,14 +122,28 @@ Include post-install steps (publish, register, env setup) if required.
 Bad: abstract, large, requires unexplained setup.
 Good: 5-15 lines, directly relevant, immediately runnable.
 
-### 7. Keep architecture out of README
+### 7. Keep architecture out of README — use reference-split
 
-Move deep content to dedicated docs:
+Move deep content to dedicated docs. Recommended layout for packages:
 
-- Internal design decisions → `/docs/architecture.md`
-- Full API reference → `/docs/api.md`
-- Migration guides → `/docs/migration.md`
-- Advanced patterns → `/docs/examples/`
+```
+README.md              ← entry: what, why, install, minimal usage
+docs/
+  installation.md      ← full install matrix, post-install steps
+  usage.md             ← extended examples, common patterns
+  architecture.md      ← internal design, decisions
+  api.md               ← full API reference
+  migration.md         ← version upgrade guides
+```
+
+For multi-platform install (> 5 variants), prefer a single table with
+deep links over stacked inline blocks. For occasionally-needed detail
+(long platform quirks, troubleshooting), use `<details>` — never for
+install, first example, or requirements.
+
+→ See `guidelines/docs/readme-size-and-splitting.md` for thresholds,
+deep-link-table pattern, collapsibles, and anti-patterns (premature
+splitting, duplication between README and `/docs/`).
 
 README = enough to adopt. Docs = enough to master.
 
@@ -141,7 +155,9 @@ README = enough to adopt. Docs = enough to master.
 - [ ] All documented commands exist in repo
 - [ ] No invented features or capabilities
 - [ ] Consumer can get started without reading source code
-- [ ] Deep content is in docs, not README
+- [ ] Deep content is in docs, not README (see size guideline)
+- [ ] Multi-platform install uses a table, not stacked blocks
+- [ ] No duplication between README and `/docs/`
 - [ ] First screen shows: what, install, requirements
 
 ## Output format

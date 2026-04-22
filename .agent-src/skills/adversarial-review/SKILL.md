@@ -136,3 +136,12 @@ Only surface trade-offs or concerns that need the user's input.
 - Do NOT apply this to trivial changes — it adds overhead without value.
 - Do NOT let the "grumpy engineer" kill good ideas — the balanced engineer must counter.
 - Do NOT skip Step 3 (Revise) — attacking without improving is just complaining.
+
+## References
+
+- **Tree-of-Thoughts (ToT)** — [arxiv.org/abs/2305.10601](https://arxiv.org/abs/2305.10601)
+  Deliberate problem-solving by exploring multiple reasoning branches.
+  This skill adapts ToT by pitting a grumpy engineer against a
+  balanced engineer — the branching happens between roles, not
+  between thought-tree nodes.
+

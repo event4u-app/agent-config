@@ -2,7 +2,7 @@
 
 > **Date:** 2026-04-21
 > **Tool:** [`scripts/audit_skill_descriptions.py`](../../scripts/audit_skill_descriptions.py)
-> **Source roadmap:** [`agents/roadmaps/road-to-anthropic-alignment.md`](../roadmaps/road-to-anthropic-alignment.md) Phase 2.2
+> **Source roadmap:** [`agents/roadmaps/archive/road-to-anthropic-alignment.md`](../roadmaps/archive/road-to-anthropic-alignment.md) Phase 2.2 (archived 2026-04-21)
 > **Pattern source:** [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md)
 
 ## Snapshot

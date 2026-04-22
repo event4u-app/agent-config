@@ -1,6 +1,6 @@
 ---
 name: subagent-orchestration
-description: "Use when orchestrating implementer/judge subagents — five modes (do-and-judge, do-in-steps, do-in-parallel, do-competitively, judge-with-debate) — model pairing and parallelism from .agent-settings."
+description: "Use when orchestrating implementer/judge subagents — five modes (do-and-judge, do-in-steps, do-in-parallel, do-competitively, judge-with-debate) — models from .agent-settings.yml."
 source: package
 ---
 
@@ -31,7 +31,7 @@ Do NOT use when:
 
 Land a verified change (or set of changes) by combining implementer
 and judge subagents in a mode chosen deliberately, with model pairing
-read from `.agent-settings` — never silently improvised.
+read from `.agent-settings.yml` — never silently improvised.
 
 ## The Iron Law
 
@@ -40,7 +40,7 @@ NO JUDGE ON THE SAME MODEL AS THE IMPLEMENTER ON THE SAME CONTEXT.
 ```
 
 Same model + same context = same blind spots. The whole point of a
-judge is a fresh pair of eyes. If `.agent-settings` resolves to
+judge is a fresh pair of eyes. If `.agent-settings.yml` resolves to
 identical implementer and judge models, surface the mismatch before
 running — do not silently continue.
 
@@ -74,7 +74,7 @@ multi-file changes where a mid-plan mistake would cascade.
 
 Independent slices run concurrently. No judge per slice — judge runs
 once on the aggregated result. Parallelism capped by
-`subagent_max_parallel` in `.agent-settings`.
+`subagents.max_parallel` in `.agent-settings.yml`.
 
 | When to use | When not | Model pairing |
 |---|---|---|
@@ -115,11 +115,11 @@ Do not pick a mode until these four questions have concrete answers.
 
 ### 2. Resolve models
 
-Read `.agent-settings`:
+Read `.agent-settings.yml`:
 
-* `subagent_implementer_model` → empty = session model
-* `subagent_judge_model` → empty = one tier above implementer
-* `subagent_max_parallel` → integer, default 3
+* `subagents.implementer_model` → empty = session model
+* `subagents.judge_model` → empty = one tier above implementer
+* `subagents.max_parallel` → integer, default 3
 
 If resolution produces an unknown alias or implementer == judge in the
 same context, **stop** and report. Do not improvise.

@@ -69,7 +69,7 @@ Before ANY upstream work (branch, files, PR), ask the user:
 
 - **If user picks 2** → STOP. Do not mention upstream again for this item.
 - **If user picks 1** → continue with the procedure below.
-- **If `upstream_repo` is empty in `.agent-settings`** → ask the user to configure it first.
+- **If `project.upstream_repo` is empty in `.agent-settings.yml`** → ask the user to configure it first.
 - **NEVER skip this step**, even if the user previously agreed to other contributions.
 
 ### 1. Determine contribution type
@@ -173,6 +173,26 @@ task consistency                    # Everything in sync
 
 If not in the package repo, note that these checks will run in CI after the PR is created.
 
+### 6b. Proposal gate — MANDATORY when a proposal doc exists
+
+If the contribution originates from a proposal under `agents/proposals/`
+(produced by `learning-to-rule-or-skill` via the pipeline in
+[`self-improvement-pipeline`](../../guidelines/agent-infra/self-improvement-pipeline.md)),
+run the Stage-4 gate before opening the PR:
+
+```bash
+python3 scripts/check_proposal.py agents/proposals/{slug}.md
+```
+
+**Hard refusal rule:** if `check_proposal.py` exits non-zero, STOP —
+do not create the branch, do not push, do not open the PR. Surface the
+findings to the user, ask them to fix the proposal (add evidence,
+remove TODO markers, complete required sections), then rerun.
+
+When no proposal doc exists (small fix, typo, pure bug-fix), skip this
+step and document the rationale in the PR body under the Promotion
+Gate.
+
 ### 7. Commit and create PR
 
 Branch naming: `feat/skills/{name}`, `fix/rules/{name}`, `feat/commands/{name}`
@@ -226,6 +246,7 @@ The shared version now replaces the local override.
 ## Do NOT
 
 - **Do NOT create any upstream artifact without explicit user consent** — this is the #1 rule
+- **Do NOT open a PR if `check_proposal.py` blocks** — fix the proposal first (step 6b)
 - Do NOT edit `.augment/` in the consumer project — it's managed by the package
 - Do NOT submit project-specific content without generalizing it first
 - Do NOT skip the compressed version — both files are mandatory

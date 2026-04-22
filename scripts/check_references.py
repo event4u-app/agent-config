@@ -35,6 +35,16 @@ SCAN_DIRS = [".agent-src", "agents"]
 SKIP_DIRS = ["agents/roadmaps/archive"]  # archived roadmaps have historical refs
 ROOT = Path(".")
 
+# YAML memory files (engineering-memory layer) live under `agents/memory/`.
+# Each entry may reference skills, ADR paths, or local files via
+# `source:` / `enforcement:` / `skill:`. We validate those paths so a
+# memory entry cannot rot silently when a file is moved or deleted.
+MEMORY_YAML_ROOT = "agents/memory"
+MEMORY_FILE_EXTS = (".php", ".py", ".md", ".yml", ".yaml", ".json", ".sh",
+                    ".js", ".ts", ".tsx", ".jsx")
+MEMORY_SKIP_URI_PREFIXES = ("http://", "https://", "adr://", "ticket://",
+                            "incident://", "pr://")
+
 # File path references like `guidelines/agent-infra/size-and-scope.md`
 PATH_PATTERN = re.compile(
     r'[`"\s]'
@@ -45,6 +55,10 @@ PATH_PATTERN = re.compile(
 
 SKILL_REF_PATTERN = re.compile(r'`([\w-]+)`\s+skill')
 RULE_REF_PATTERN = re.compile(r'`([\w-]+)`\s+rule')
+
+# Unchecked TODO items (roadmap checkboxes) legitimately reference files
+# and artifacts that do not exist yet. Skip these lines.
+UNCHECKED_TODO_PATTERN = re.compile(r'^\s*[-*+]\s+\[ \]\s')
 _SKIP_NAMES = {"the", "a", "an", "this", "that", "your", "my", "no", "any", "each", "one",
                "always", "auto", "fail", "vue", "guidelines", "naming",
                "orderBy", "no-commit", "skill-linter", "skill-validator",
@@ -65,6 +79,12 @@ EXAMPLE_PATH_PATTERNS = [
     re.compile(r"agents/authentication"),       # project-specific auth docs
     re.compile(r"agents/roadmaps/agents-"),     # dynamically created roadmaps
     re.compile(r"agents/roadmaps/test-"),       # project-specific roadmaps
+    re.compile(r"agents/ownership-map\.yml"),   # consumer-project routing data
+    re.compile(r"agents/historical-bug-patterns\.yml"),  # consumer-project routing data
+    re.compile(r"agents/memory/"),              # consumer-project memory data
+    re.compile(r"agents/learnings/"),           # consumer-project learning notes
+    re.compile(r"agents/proposals/"),           # consumer-project self-improvement proposals
+    re.compile(r"agents/drafts/"),              # consumer-project artefact drafts
     re.compile(r"guidelines/php-"),             # flattened override naming convention
     re.compile(r"rules/no-commit"),            # example rule in commands
     re.compile(r"skills/[\w-]+\.md"),          # short skill refs in examples (not SKILL.md path)
@@ -128,6 +148,11 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
         if in_code_block:
             continue
 
+        # Unchecked TODO checkboxes document future work — their refs are
+        # forward-looking and will not resolve yet.
+        if UNCHECKED_TODO_PATTERN.match(line):
+            continue
+
         # File path references
         for m in PATH_PATTERN.finditer(line):
             raw_ref = m.group(1)
@@ -188,6 +213,75 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
     return broken
 
 
+def _looks_like_local_path(value: str) -> bool:
+    """Heuristic: treat as a path if it has a known extension and no URI scheme."""
+    if not isinstance(value, str) or not value.strip():
+        return False
+    v = value.strip()
+    if any(v.startswith(p) for p in MEMORY_SKIP_URI_PREFIXES):
+        return False
+    # Globs and wildcard patterns can't be resolved as files
+    if any(ch in v for ch in ("*", "?", "[")):
+        return False
+    # Must contain a directory separator AND end with a known extension
+    if "/" not in v:
+        return False
+    return v.lower().endswith(MEMORY_FILE_EXTS)
+
+
+def _walk_yaml(data, paths: list[str], skills: list[str]) -> None:
+    """Recursively collect path-like strings and `skill:` values."""
+    if isinstance(data, dict):
+        for k, v in data.items():
+            if k in ("skill", "skills") and isinstance(v, str):
+                skills.append(v)
+            elif k in ("skill", "skills") and isinstance(v, list):
+                skills.extend(x for x in v if isinstance(x, str))
+            else:
+                _walk_yaml(v, paths, skills)
+    elif isinstance(data, list):
+        for item in data:
+            _walk_yaml(item, paths, skills)
+    elif isinstance(data, str):
+        if _looks_like_local_path(data):
+            paths.append(data)
+
+
+def check_memory_yaml(filepath: Path, artifacts: dict[str, set[str]],
+                      root: Path) -> List[BrokenRef]:
+    """Validate path/skill refs inside an engineering-memory YAML file."""
+    broken: List[BrokenRef] = []
+    try:
+        import yaml  # type: ignore
+    except ImportError:
+        return broken  # PyYAML optional; text-ref checker still runs
+    try:
+        text = filepath.read_text(encoding="utf-8")
+        data = yaml.safe_load(text)
+    except Exception:
+        return broken
+    if not data:
+        return broken
+    paths: list[str] = []
+    skills: list[str] = []
+    _walk_yaml(data, paths, skills)
+    for p in paths:
+        if not (root / p.lstrip("./")).exists():
+            broken.append(BrokenRef(
+                file=str(filepath), line=0, ref=p,
+                ref_type="memory-path", severity="error",
+                suggestion=_find_suggestion(p, root),
+            ))
+    for s in skills:
+        if s not in artifacts["skills"] and s not in _SKIP_NAMES:
+            broken.append(BrokenRef(
+                file=str(filepath), line=0, ref=s,
+                ref_type="memory-skill", severity="warning",
+                suggestion=_closest_match(s, artifacts["skills"]),
+            ))
+    return broken
+
+
 def scan_all(root: Path) -> List[BrokenRef]:
     artifacts = collect_artifacts(root)
     broken: List[BrokenRef] = []
@@ -200,6 +294,12 @@ def scan_all(root: Path) -> List[BrokenRef]:
             if any(str(f).startswith(str(root / skip)) for skip in SKIP_DIRS):
                 continue
             broken.extend(check_file(f, artifacts, root))
+    memory_dir = root / MEMORY_YAML_ROOT
+    if memory_dir.is_dir():
+        for f in sorted(memory_dir.rglob("*.yml")):
+            broken.extend(check_memory_yaml(f, artifacts, root))
+        for f in sorted(memory_dir.rglob("*.yaml")):
+            broken.extend(check_memory_yaml(f, artifacts, root))
     return broken
 
 

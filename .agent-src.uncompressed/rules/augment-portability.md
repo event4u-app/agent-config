@@ -27,10 +27,10 @@ content into any of them pollutes downstream projects or misleads agents.
   that is meta about the package, not a leak.
 - NEVER hardcode consumer-project paths, class names, or conventions.
 - Write content so it works as a **reusable package** across any project.
-- Project-specific behavior belongs in the **consumer's** `.agent-settings`,
+- Project-specific behavior belongs in the **consumer's** `.agent-settings.yml`,
   `AGENTS.md`, or `agents/` — never in files shipped by this package.
 - If a skill or rule needs project-specific input, read it from
-  `.agent-settings` or accept it as a parameter.
+  `.agent-settings.yml` or accept it as a parameter.
 - When reviewing or editing package files, always ask: "Would this still
   make sense in a completely different project?"
 

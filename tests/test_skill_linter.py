@@ -1142,3 +1142,58 @@ def test_execution_with_allowed_tools_list(tmp_path: Path) -> None:
     result = lint_file(path)
     exec_errors = [i for i in result.issues if i.severity == "error" and ("execution" in i.code or "allowed_tools" in i.code)]
     assert len(exec_errors) == 0
+
+
+def _reset_role_contract_cache() -> None:
+    import skill_linter
+    skill_linter._ROLE_CONTRACT_SLUGS_CACHE = None
+
+
+def test_role_contract_ref_unknown_slug_warns(tmp_path: Path) -> None:
+    """Command that references a non-existent mode anchor should warn."""
+    _reset_role_contract_cache()
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/commands/bogus-ref.md",
+        """---
+name: bogus-ref
+description: test
+disable-model-invocation: true
+---
+
+# Bogus
+
+See [contract](../guidelines/agent-infra/role-contracts.md#notamode).
+
+## Steps
+
+1. Do it.
+""",
+    )
+    result = lint_file(path)
+    assert any(i.code == "unknown_role_contract" for i in result.issues)
+
+
+def test_role_contract_ref_known_slug_passes(tmp_path: Path) -> None:
+    """Command referencing a real mode anchor should NOT trigger the warn."""
+    _reset_role_contract_cache()
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/commands/good-ref.md",
+        """---
+name: good-ref
+description: test
+disable-model-invocation: true
+---
+
+# Good
+
+See [contract](../guidelines/agent-infra/role-contracts.md#developer).
+
+## Steps
+
+1. Do it.
+""",
+    )
+    result = lint_file(path)
+    assert not any(i.code == "unknown_role_contract" for i in result.issues)

@@ -81,7 +81,7 @@ Your agent is now:
 - **Respecting your codebase** — no conflicting patterns
 - **Following standards** — consistent code quality
 
-This is enforced automatically by 37 rules. No configuration needed.
+This is enforced automatically by 42 rules. No configuration needed.
 
 ---
 
@@ -95,10 +95,10 @@ The system supports four configuration profiles:
 | `balanced` | + Runtime dispatcher (shell handler) | Low | Most teams |
 | `full` | + Tool adapters (GitHub / Jira, read-only) | Moderate | Platform teams |
 
-Set your profile in `.agent-settings`:
+Set your profile in `.agent-settings.yml`:
 
-```ini
-cost_profile=minimal
+```yaml
+cost_profile: minimal
 ```
 
 You can override any individual setting. See [Customization](customization.md) for details.
@@ -116,7 +116,7 @@ Your agent now understands slash commands:
 | `/fix-ci` | Fetch and fix GitHub Actions failures |
 | `/quality-fix` | Run and fix all quality checks |
 
-→ [Browse all 57 commands](../.agent-src/commands/)
+→ [Browse all 64 commands](../.agent-src/commands/)
 
 ---
 

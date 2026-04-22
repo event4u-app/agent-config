@@ -43,6 +43,24 @@ Verify the request doesn't conflict with:
 - Established patterns (does it introduce a new pattern where one exists?)
 - Naming conventions (does it use different naming than the codebase?)
 - Data flow (does it bypass existing services or repositories?)
+- **Product rules and domain invariants** — pull active rules via the
+  shared abstraction (see
+  [`memory-access`](../../guidelines/agent-infra/memory-access.md)):
+
+  ```python
+  from scripts.memory_lookup import retrieve
+  matches = retrieve(
+      types=["product-rules", "domain-invariants"],
+      keys=[<affected domain>, <affected paths>],
+      limit=5,
+  )
+  ```
+
+  A product rule is an intentional business constraint
+  (e.g., "free plan caps at 3 users"); the feature must either respect
+  it or explicitly propose to retire it. Cite the matching `id:` in
+  the findings. Schema:
+  [`engineering-memory-data-format`](../../guidelines/agent-infra/engineering-memory-data-format.md).
 
 **If contradiction found** → show the existing pattern, explain why it matters.
 

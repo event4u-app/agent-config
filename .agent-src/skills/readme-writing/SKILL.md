@@ -93,7 +93,18 @@ Reader must answer within 10 seconds: What is this? Why? How to start?
 
 First screen (before scroll): title, summary, install or quickstart.
 
-### 6. Validate
+### 6. Size and structure
+
+Keep README scannable. Past ~150 lines: add Table of Contents. Past ~300
+lines: split deep content to `/docs/` or `references/`. Use `<details>`
+only for secondary, bulky content — never for install, first example, or
+requirements.
+
+→ See `guidelines/docs/readme-size-and-splitting.md` for thresholds,
+splitting strategies (reference-split, deep-link tables, collapsibles),
+multi-audience handling, anti-patterns.
+
+### 7. Validate
 
 - [ ] Every command exists in repo (`Taskfile.yml`, `Makefile`, `package.json`, etc.)
 - [ ] Setup steps are reproducible
@@ -101,6 +112,8 @@ First screen (before scroll): title, summary, install or quickstart.
 - [ ] First screen answers: what, why, how-to-start
 - [ ] No dead sections (heading with 1-2 trivial sentences)
 - [ ] Deep content in dedicated docs, not crammed in README
+- [ ] Size below "overloaded" threshold, or splitting in place (see size guideline)
+- [ ] ToC present if > 150 lines or > 6 top-level sections
 - [ ] All file paths and references are valid
 
 ## Output format

@@ -1,0 +1,123 @@
+# PR Risk Review — template shipped by agent-config
+#
+# Copy this file to `.github/workflows/pr-risk-review.yml` in the consumer
+# project. It posts (or updates) a single sticky comment on every PR with a
+# heuristic risk classification (low / medium / high) based on the list of
+# changed files.
+#
+# Behavior is driven by `.github/pr-risk-config.yml` (see the example file
+# under `.augment/templates/scripts/pr-risk-config.example.yml`). Without a
+# config file the script falls back to sensible cross-stack defaults.
+#
+# This workflow is purely informational — it does NOT block merges. Gate the
+# PR on a separate required check if you want a hard stop.
+
+name: PR Risk Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  risk-review:
+    name: Classify PR risk
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Classify risk
+        id: risk
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 scripts/pr_risk_review.py \
+            --base "$BASE_SHA" \
+            --head "$HEAD_SHA" \
+            --config .github/pr-risk-config.yml \
+            --output risk-report.md \
+            --level-file risk-level.txt
+
+          echo "level=$(cat risk-level.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Post or update sticky PR comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: pr-risk-review
+          path: risk-report.md
+
+      - name: Apply risk label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const level = `${{ steps.risk.outputs.level }}`;
+            if (!['low', 'medium', 'high'].includes(level)) return;
+
+            const prNumber = context.payload.pull_request.number;
+            const desired = `risk:${level}`;
+            const labels = ['risk:low', 'risk:medium', 'risk:high'];
+
+            const { data: existing } = await github.rest.issues.listLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            for (const lbl of existing) {
+              if (labels.includes(lbl.name) && lbl.name !== desired) {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber,
+                  name: lbl.name,
+                });
+              }
+            }
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              labels: [desired],
+            });
+
+      - name: Classify review routing
+        id: routing
+        if: hashFiles('scripts/pr_review_routing.py') != ''
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        # The script auto-discovers ownership-map.yml and
+        # historical-bug-patterns.yml under .github/ first and falls
+        # back to agents/ — matching the review-routing-awareness rule.
+        # Missing data files emit a generic fallback, not an error.
+        run: |
+          python3 scripts/pr_review_routing.py \
+            --base "$BASE_SHA" \
+            --head "$HEAD_SHA" \
+            --output routing-report.md \
+            --level-file routing-level.txt
+
+      - name: Post or update routing sticky comment
+        if: steps.routing.outcome == 'success'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: pr-review-routing
+          path: routing-report.md

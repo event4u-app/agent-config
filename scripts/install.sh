@@ -5,7 +5,7 @@
 # writes the target project's .augment/ tree: copies rules, symlinks everything else.
 # Creates tool-specific directories for Claude Code, Cursor, Cline, Windsurf, Gemini.
 #
-# Does NOT render .agent-settings or bridge JSONs — that is the job of
+# Does NOT render .agent-settings.yml or bridge JSONs — that is the job of
 # scripts/install.py. The primary entry point scripts/install orchestrates both.
 # Running this script on its own installs the payload only.
 #
@@ -631,7 +631,7 @@ main() {
 
     echo ""
     $QUIET || echo "✅  agent-config payload synced."
-    $QUIET || echo "    Run scripts/install (or python3 scripts/install.py) to render .agent-settings and bridges."
+    $QUIET || echo "    Run scripts/install (or python3 scripts/install.py) to render .agent-settings.yml and bridges."
 }
 
 main "$@"

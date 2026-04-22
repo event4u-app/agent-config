@@ -280,16 +280,38 @@ Understand → Research → Draft. Don't improvise questions.
 
 ---
 
-# .augment/ Portability
+# Package Portability
 
-Everything inside `.augment/` (skills, rules, commands, templates, contexts) MUST be **project-agnostic**.
+Everything shipped with `event4u/agent-config` MUST be **project-agnostic**:
 
-- NEVER reference a specific project, repo name, domain, or tech stack directly.
-- NEVER hardcode project-specific paths, class names, or conventions.
-- Write content so it works as a **reusable package** across any project.
-- Project-specific behavior belongs in `.agent-settings`, `AGENTS.md`, or `agents/` — not in `.augment/`.
-- If a skill or rule needs project-specific input, read it from `.agent-settings` or accept it as a parameter.
-- When reviewing or editing `.augment/` files, always ask: "Would this still make sense in a completely different project?"
+- `.augment/` (skills, rules, commands, guidelines, templates, contexts)
+- Package root `AGENTS.md`
+- Package `.github/copilot-instructions.md`
+
+All three are either installed into consumer projects (`.augment/` via
+`install.sh`) or read by AI tools working on the package itself. Leaking
+consumer-specific content pollutes downstream or misleads agents.
+
+## Rules
+
+- NEVER reference a specific consumer project, repo, domain, or tech
+  stack. The package repo itself (`event4u/agent-config`) MAY appear
+  in its own root `AGENTS.md` / `copilot-instructions.md` — meta about
+  the package, not a leak.
+- NEVER hardcode consumer-project paths, class names, or conventions.
+- Write content so it works as a reusable package across any project.
+- Project-specific behavior belongs in the **consumer's**
+  `.agent-settings.yml`, `AGENTS.md`, or `agents/` — never here.
+- If a skill/rule needs project-specific input: read from
+  `.agent-settings.yml` or accept as parameter.
+- Always ask when editing package files: "Would this still make sense
+  in a completely different project?"
+
+## Enforcement
+
+`scripts/check_portability.py` scans `.augment/`, `.agent-src.uncompressed/`,
+and the package root `AGENTS.md` + `.github/copilot-instructions.md` for
+forbidden identifiers. Part of `task ci` — must pass before any PR.
 
 ---
 
@@ -468,6 +490,38 @@ A learning may be promoted to rule/skill ONLY if ALL gates pass:
 - Smallest effective change
 - Update existing over creating duplicates
 - Full workflow: `learning-to-rule-or-skill` skill
+
+## Where learnings are written
+
+Captured learnings live in the **consumer project's** `agents/learnings/`
+directory, one file per learning:
+
+```
+agents/learnings/<YYYY-MM-DD>-<kebab-slug>.md
+```
+
+Minimum fields (markdown with a small YAML frontmatter):
+
+```yaml
+---
+slug: <same as filename>
+captured: <ISO date>
+occurrences: <integer, ≥2 or note "one-off, clearly generalizable">
+type_hint: rule | skill | guideline | update
+scope_hint: project | package
+---
+```
+
+Body: 1-paragraph **pattern** (not anecdote) + 1 concrete example.
+
+A learning file is the input to `learning-to-rule-or-skill`, which
+produces a proposal draft under `agents/proposals/`. The proposal is
+then gated by `scripts/check_proposal.py`; see
+[`self-improvement-pipeline`](../guidelines/agent-infra/self-improvement-pipeline.md).
+
+The `agents/learnings/` and `agents/proposals/` directories are
+consumer-owned — the package ships templates and schemas, never the
+data.
 
 ---
 
@@ -801,13 +855,15 @@ When a skill is **added or its scope changes**, check and update:
 
 ## Settings template sync
 
-When skill/rule/command reads new setting from `.agent-settings` not in `templates/agent-settings.md`:
+When skill/rule/command reads new setting from `.agent-settings.yml` not in `templates/agent-settings.md`:
 
 1. Add key with default to template
 2. Add row to Settings Reference table
-3. Add comment explaining key
-4. **Update local `.agent-settings`** — add new key with default, preserve existing values,
-   apply template order. **Mandatory** — user can't discover new settings otherwise.
+3. Add comment above key explaining it
+4. **Update local `.agent-settings.yml`** — add new key with default, preserve existing values,
+   apply template order and comments. Same behavior as `/config-agent-settings`, inline.
+
+**Mandatory** — without step 4, user can't discover new settings exist.
 
 ## Content consistency
 
@@ -1127,7 +1183,7 @@ creating a new file.
 
 ## Personalization
 
-Read `user_name` from `.agent-settings`. If empty, ask the user for their first name at the
+Read `personal.user_name` from `.agent-settings.yml`. If empty, ask the user for their first name at the
 start of the first interaction, save it, and use it from then on. Address the user by name
 where it feels natural — not in every sentence.
 
@@ -1250,6 +1306,89 @@ When generating markdown with code blocks:
   - Four backticks (``````) as outer fence
 - Prefer stability over pretty formatting.
 - Always validate: no broken rendering, no prematurely closed blocks, entire content is selectable and copyable.
+
+---
+
+# Minimal Safe Diff
+
+A diff is **safe** when every line in it is traceable to the stated task.
+Every other line is scope creep and must be removed or moved to a separate
+change.
+
+## The rule
+
+- The diff contains the **smallest** change that solves the stated problem.
+- Every modified file must be **directly required** by the task — not
+  "while I was in there".
+- Never reformat, rename, or restructure untouched code in the same diff.
+- Never change dependencies, versions, or tooling "because it was outdated".
+- Never consolidate or split unrelated code paths as a side effect.
+- Never delete code that *looks* dead without proof it is unreachable.
+
+## Before writing the diff
+
+Ask yourself, in order:
+
+1. **What is the minimum set of files that must change for the stated task?**
+   If your answer includes files with no causal link to the task, stop and
+   remove them.
+2. **What is the minimum number of lines per file?** If you are editing a
+   method, edit the method — not the surrounding class.
+3. **Is any of this a refactor?** If yes, it belongs in its own commit or
+   PR, clearly labeled as a refactor, with no behavior change.
+
+## When the task seems to require a larger change
+
+- A rename, restructure, or framework upgrade that crosses the minimal-diff
+  line is a **separate, explicit** task — ask the user before expanding.
+- A bug fix that exposes a broader design problem stays a bug fix. Log the
+  design problem as a follow-up (ticket, note, TODO) and ship the fix alone.
+- A new feature that tempts you to "clean up" the module first: resist.
+  Add the feature, commit it, then propose the cleanup as a separate change.
+
+## Auto-formatter or linter rewrites unrelated code
+
+Revert those hunks before staging. The diff you present is the diff you own.
+If project policy forbids partial formatting, split into two commits:
+*format only* · *behavior change*.
+
+## Red flags in your own diff — reject them
+
+Files the task never mentioned · import reordering, whitespace, or comments
+outside the edited region · "small improvements" to neighboring methods ·
+test-only mixed with behavior changes in one commit · renames outside the
+task scope · dependency bumps "because it was close to the cache".
+
+## When in doubt
+
+Ask. A minimal diff plus one follow-up is cheaper than a sprawling diff the
+reviewer has to untangle.
+
+## Break-glass exception
+
+This rule stays in force during production incidents. "Break-glass mode"
+narrows verification (see `verify-before-complete`) — it does **not**
+license drive-by edits.
+
+Allowed during break-glass:
+
+- The **smallest** change that stops the bleeding — one file, one
+  method, one guard — preferred over any refactor.
+- A fast revert to a known-good commit, even if it undoes unrelated
+  improvements shipped in the same PR.
+
+Not allowed, even in break-glass:
+
+- "While I'm in there" cleanups, reformatting, or dependency bumps.
+- Expanding the fix to neighboring modules without evidence they are
+  part of the incident.
+- Merging the hotfix with pending refactors from another branch.
+
+After the incident, open a **follow-up PR** for any scope that was
+intentionally deferred and reference the break-glass commit in its
+description.
+
+See also: `scope-control` · `downstream-changes` · `think-before-action` · `preservation-guard` · `verify-before-complete`.
 
 ---
 
@@ -1411,7 +1550,7 @@ Run `python3 -m pytest tests/test_compress.py -v` **immediately** — don't wait
 
 ## Eloquent Models — Attribute Access
 
-Read `eloquent_access_style` from `.agent-settings` to determine the preferred style.
+Read `eloquent.access_style` from `.agent-settings.yml` to determine the preferred style.
 Default: `getters_setters`. See the `eloquent` skill for the full reference table and examples.
 
 - **`getters_setters`** (strict): Every attribute has a typed getter + fluent setter. Inside the model: `getAttribute('column_name')`/`setAttribute('column_name', $value)`. Outside: always getters/setters. If a getter doesn't exist yet, create it first.
@@ -1476,6 +1615,252 @@ Transformations (merge, refactor, compress, split) must produce output **at leas
 - Strong language downgraded
 
 → Skills: `skill-management`, `skill-reviewer` · Command: `/compress` · Linter: `check_compression_quality()`
+
+---
+
+# Review Routing Awareness
+
+Before suggesting reviewers or declaring a change safe, the agent consults
+two project-local data sources — if they exist — to ground the routing in
+the consumer's actual organizational memory:
+
+1. **Ownership map** — which roles/teams own which paths, with per-path
+   risk notes.
+2. **Historical bug patterns** — recurring failure modes or technical debt
+   the project has paid for before.
+
+Both live in the consumer repository (never in package-shipped files) and
+are optional. Absence is not an error — the agent falls back to
+generic, role-based suggestions from [`reviewer-awareness`](reviewer-awareness.md).
+
+## When this rule applies
+
+- The agent is classifying PR risk, suggesting reviewers, writing a PR
+  description, or producing a review plan.
+- The agent is reviewing its own diff before asking for human review.
+- The change modifies more than a trivial amount of code (≥ 1 file
+  outside docs).
+
+## Required behavior
+
+### 1. Check for project data
+
+Look, in order, for:
+
+- `.github/ownership-map.yml` (or `agents/ownership-map.yml`)
+- `.github/historical-bug-patterns.yml` (or
+  `agents/historical-bug-patterns.yml`)
+
+If neither file exists, skip this rule and rely on
+[`reviewer-awareness`](reviewer-awareness.md) defaults. **Do not invent
+owners or patterns** from context.
+
+### 2. Match the diff
+
+For every changed file, collect:
+
+- **Matching ownership entries** — each yields a role, optional focus
+  note, and optional risk hint.
+- **Matching historical patterns** — each yields a named prior failure
+  mode and the minimum control or test the project expects.
+
+Matching uses glob patterns (see
+[`review-routing-data-format`](../guidelines/review-routing-data-format.md)
+for the schema).
+
+### 3. Surface findings
+
+When producing a review plan, include:
+
+- **Owner-mapped roles** — explicitly preferred over generic roles. If
+  the ownership map says `app/Billing/**` is owned by `finance-engineering
+  + security`, use those, not "backend + security".
+- **Historical-pattern warnings** — list every matched pattern with a
+  short label and the required control, e.g. _"Pattern: N+1 on tenant
+  listings → add an eager-load regression test"_.
+- **Confidence note** — if the ownership map is stale (last updated > 6
+  months ago per the `updated` field), say so. Ownership maps rot.
+
+### 4. Do NOT overreach
+
+- **Never rename paths** or add ownership entries as a side effect of a
+  code change. Ownership map edits are a separate, explicit task.
+- **Never mark a change safe** only because no pattern matched. Pattern
+  absence means "no known hit", not "no risk".
+- **Never copy historical-pattern names into the diff** as code comments
+  or commit messages — they are routing metadata, not commentary.
+
+## Interaction with other rules
+
+- Feeds [`reviewer-awareness`](reviewer-awareness.md) — this rule
+  **resolves** owners; reviewer-awareness **formats** them.
+- Extends [`verify-before-complete`](verify-before-complete.md) — if a
+  historical pattern demands a regression test, the verification gate
+  requires that test before completion is claimed.
+- Does not override [`minimal-safe-diff`](minimal-safe-diff.md) — a
+  matched pattern is a reason to **add a test**, never a reason to
+  expand scope into unrelated refactors.
+
+## Anti-patterns — reject them
+
+- Suggesting owners "because this looks like billing code" without
+  consulting the ownership map when one exists.
+- Inventing historical patterns from general knowledge — patterns must
+  come from the project's own registry.
+- Downgrading a matched high-severity pattern because "the author said
+  it's fine" — the pattern was registered because it bit before.
+- Treating an out-of-date map as absent. Flag staleness; do not silently
+  skip.
+
+## See also
+
+- [`reviewer-awareness`](reviewer-awareness.md) — formatting reviewer
+  suggestions.
+- [`review-routing-data-format`](../guidelines/review-routing-data-format.md)
+  — YAML schemas for ownership-map and historical-bug-patterns.
+- [`review-routing`](../skills/review-routing/SKILL.md) — the skill
+  that produces the merged routing report.
+- [`judge-test-coverage`](../skills/judge-test-coverage/SKILL.md) —
+  consumes the "required test" output from historical patterns.
+
+---
+
+# Reviewer Awareness
+
+When a change is medium- or high-risk, the agent suggests reviewer **roles**
+(not individuals) based on what the diff actually touches — not who is
+loudest, most senior, or who "usually reviews this kind of thing".
+
+## When this rule applies
+
+- The agent is asked to suggest reviewers, draft a PR description, or
+  consolidate a review plan.
+- The change is classified medium or high risk by
+  [`review-routing`](../skills/review-routing/SKILL.md), the
+  `pr_risk_review.py` script, or explicit user judgment.
+- For **low-risk** changes, reviewer suggestions are optional and may be
+  omitted.
+
+## Required behavior
+
+1. **Anchor every suggestion in the diff.** Name the path or change that
+   triggered the role — "backend because `app/Services/PaymentGateway.php`
+   changed", not "backend because it's a code change".
+2. **Two roles minimum for medium/high risk** — one **primary** (the
+   domain most at risk) and one **secondary** (cross-cutting sanity:
+   security, infra, domain owner).
+3. **Explain the focus area** for each reviewer — what they should look
+   at, not just that they should look. "security: confirm the new
+   authorization boundary actually denies cross-tenant reads".
+4. **Prefer ownership-mapped owners** when an ownership map exists
+   (see [`review-routing-awareness`](review-routing-awareness.md)). Fall
+   back to generic roles only when no mapping matches.
+5. **Never name individual reviewers** in package-shipped artifacts.
+   The consumer repo's CODEOWNERS or ownership map does the mapping
+   role → person.
+
+## Reviewer roles
+
+The reference set — extend per project, but keep these as the common
+vocabulary:
+
+| Role | Typical focus |
+|---|---|
+| `backend` | business logic, validation, side effects, data integrity |
+| `frontend` | UX, accessibility, client-side state, rendering |
+| `security` | authz, secrets, trust boundaries, data exposure |
+| `infra` / `ops` | rollout, migration safety, observability, retries |
+| `database` | schema changes, indexes, query plans, rollback realism |
+| `domain owner` | business invariants, policy intent, edge-case correctness |
+| `qa` | test coverage, regression scenarios, flake risk |
+
+## Anti-patterns — reject them
+
+- "Reviewers: @alice, @bob" inside a shared package artifact — individuals
+  live in the consumer's CODEOWNERS, not in package output.
+- "Any senior engineer" — prestige is not a review strategy.
+- "Whoever reviewed this last time" — selection by habit, not by
+  current risk.
+- One role for a 🔴 high-risk change — single-reviewer risk, especially
+  when the change crosses an authorization or tenancy boundary.
+- Suggesting reviewers without naming what they should look at — a
+  rubber-stamp invitation.
+
+## Format
+
+When the agent proposes reviewers, use this block:
+
+```
+Suggested reviewers (role-based):
+  • primary:   <role> — focus: <one line, anchored in diff>
+  • secondary: <role> — focus: <one line, anchored in diff>
+  (optional) additional: <role> — focus: …
+```
+
+## Rationale
+
+The right reviewer reduces blind spots more than the loudest reviewer.
+Blind-spot reduction comes from role diversity (different angles on the
+same diff), not from seniority.
+
+## See also
+
+- [`review-routing-awareness`](review-routing-awareness.md) — how
+  ownership maps and historical patterns feed reviewer selection.
+- [`review-routing`](../skills/review-routing/SKILL.md) — the skill that
+  produces the reviewer block.
+- [`requesting-code-review`](../skills/requesting-code-review/SKILL.md) —
+  PR preparation and self-review before asking for reviewers.
+
+---
+
+# Role Mode Adherence
+
+Auto-activates when `.agent-settings.yml` sets `roles.active_role` to
+one of the six modes defined in
+[`role-contracts`](../guidelines/agent-infra/role-contracts.md):
+`developer`, `reviewer`, `tester`, `po`, `incident`, `planner`.
+
+Read `roles.active_role` from `.agent-settings.yml` at session start.
+Empty or missing → rule is inert. Do NOT guess a mode.
+
+When active, every closing output MUST:
+
+1. Use the contract fields in the declared order. No invented fields.
+   Missing evidence → single question (per `ask-when-uncertain`), never
+   a fabricated value.
+2. End with the structured mode marker:
+
+   ```
+   <!-- role-mode: <active_role> | contract: <kebab-case-fields> -->
+   ```
+
+3. Refuse work the contract forbids:
+   - `reviewer` — NEVER ships implementation; verdict + blockers only.
+   - `developer` — NEVER writes a review verdict on own change.
+   - `incident` — NEVER expands scope beyond the stated symptom.
+
+   Forbidden work → numbered prompt (per `user-interaction`): switch
+   mode, narrow scope, or clear mode.
+
+## Interactions
+
+- `scope-control` — adherence is stricter (mode may forbid work
+  scope-control would allow).
+- `verify-before-complete` — gate runs BEFORE the mode marker.
+
+## What this rule does NOT do
+
+Infer the mode (Phase-3 router does that). Modify `.agent-settings.yml`
+(only `/mode` writes). Change the contracts (guideline is source of truth).
+
+## See also
+
+- [`role-contracts`](../guidelines/agent-infra/role-contracts.md)
+- [`/mode`](../commands/mode.md)
+- [`ask-when-uncertain`](ask-when-uncertain.md)
+- [`scope-control`](scope-control.md)
+- [`verify-before-complete`](verify-before-complete.md)
 
 ---
 
@@ -1574,6 +1959,62 @@ If a skill's execution type or handler is unclear:
 
 ---
 
+# Security-Sensitive Stop Rule
+
+Before editing any file that matches a security-sensitive surface, **stop and
+run a threat analysis first**. Shipping a security-sensitive change without a
+prior threat pass is the #1 driver of authorization and data-exposure bugs.
+
+## What counts as security-sensitive
+
+A file or planned change is security-sensitive when **any** of the following
+is true:
+
+| Surface | Examples |
+|---|---|
+| Authentication | login, session, token issuance, password reset, 2FA, SSO |
+| Authorization | policies, gates, voters, middleware that gates actions, admin checks |
+| Tenancy | tenant scope / `tenant_id` / row-level security / per-tenant keys |
+| Billing / money | charge, refund, subscription, invoice, balance, credit |
+| Secrets | API keys, tokens, signing keys, `.env`, vault, KMS, OAuth client secrets |
+| File uploads | any endpoint that accepts user files or URLs for files |
+| External integrations | outbound HTTP to third parties, webhooks, queue consumers from external sources |
+| Public endpoints | any route with no auth gate (including health/status) |
+| Data exposure | API resources, serializers, exception renderers, log channels, admin panels |
+
+If the change touches any of these, the rule fires.
+
+## What to do when it fires
+
+STOP writing code. Run the matching analysis skill first:
+
+| Change type | Analysis skill |
+|---|---|
+| New or modified permission / tenant check | `authz-review` |
+| New feature touching any surface above | `threat-modeling` |
+| Data flows to logs / API / external | `data-flow-mapper` |
+| Wide refactor of security-sensitive code | `blast-radius-analyzer` |
+
+Capture the output (abuse cases, missing controls, required negative tests) —
+implement against that list, not against your first instinct. Never silently
+fall back to editing without the analysis; if it is blocked, ask the user.
+
+## When NOT to fire
+
+Typo/comment-only edits · test-only edits without behavior change · automated
+tooling output (lockfile, generated code) the user explicitly requested.
+These still deserve review, but do not require a full threat pass.
+
+## Rationale
+
+Authorization and tenancy bugs are often invisible in logs and fire silently
+until an auditor or attacker finds them. The cheapest moment to catch them
+is before the first edit — this rule makes that the default path.
+
+See also: `threat-modeling` · `authz-review` · `data-flow-mapper` · `minimal-safe-diff` · `think-before-action`.
+
+---
+
 # size-enforcement
 
 - Split by responsibility, not by length.
@@ -1599,7 +2040,7 @@ If a skill's execution type or handler is unclear:
 
 ## When to activate
 
-Read `skill_improvement_pipeline` from `.agent-settings`.
+Read `pipelines.skill_improvement` from `.agent-settings.yml`.
 
 - **If `false` or missing** → do nothing. Stop here.
 - **If `true`** → continue.
@@ -1668,23 +2109,29 @@ Every skill MUST have: `When to use`, `Procedure`, `Gotcha`, `Output format`, `D
 
 ## Description Triggering
 
-Claude routes skills by the frontmatter `description`. Polite, generic, or
-hedged descriptions cause **undertriggering** — the skill never loads.
+Claude routes skills by reading the frontmatter `description`. Polite, generic,
+or hedged descriptions cause **undertriggering** — the skill never loads when it
+should, and the user never learns it exists.
 
-Pushy descriptions:
+Make descriptions "pushy" — explicit about when to fire:
 
 - Start with a concrete verb phrase: `Use when ...`, `Creates ...`, `Reviews ...`.
-- Name 2+ concrete triggers (domains, symptoms, file types, user phrasing).
+- Name 2+ concrete triggers — domains, symptoms, file types, user phrasing.
 - End with: `... even if they don't explicitly ask for \`<skill-name>\`.`
-- No hedges: `may help with`, `can be useful for`, `covers various`.
-- **≤ 200 chars** (linter: `description_too_long`). Cut adjectives or
-  collapse lists before dropping triggers or the `even if ...` tail.
+- Avoid hedges: `may help with`, `can be useful for`, `covers various`.
+- **Keep it ≤ 200 characters.** `scripts/skill_linter.py` warns at
+  `description_too_long` above this. If the pushy tail pushes you over, cut
+  adjectives, drop the second example phrasing, or collapse a list — do
+  **not** drop the trigger vocabulary or the `even if ...` tail.
 
-Source: [`skills/skill-creator`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md)
-via [`road-to-anthropic-alignment.md`](../../../agents/roadmaps/road-to-anthropic-alignment.md) Phase 2.
+Source: [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md)
+— description-optimization guidance adopted via
+[`agents/roadmaps/archive/road-to-anthropic-alignment.md`](../../../agents/roadmaps/archive/road-to-anthropic-alignment.md)
+Phase 2.
 
-**Litmus test:** Read the description cold. If you cannot name two phrasings a
-user would type that should route to this skill, rewrite it.
+**Litmus test:** Read the description cold, without the skill's body. If you
+cannot name at least two phrasings a user would realistically type that should
+route to this skill, the description is too polite. Rewrite it.
 
 ## Skill Independence
 
@@ -1897,13 +2344,14 @@ numbered options, or command steps. When a rule or command says "ask the user", 
 
 ### Keep intermediate output minimal
 
-Read `minimal_output` (default: `true`) and `play_by_play` (default: `false`) from project settings.
+Read `personal.minimal_output` (default: `true`) and `personal.play_by_play`
+(default: `false`) from `.agent-settings.yml`.
 
-When `minimal_output=true`:
+When `personal.minimal_output: true`:
 - Multi-step work: short bullet points only, no paragraphs.
 - No thinking out loud — user doesn't need your reasoning.
-- When `play_by_play=false`: silently investigate, report conclusion only.
-- When `play_by_play=true`: briefly share intermediate findings.
+- When `personal.play_by_play: false`: silently investigate, report conclusion only.
+- When `personal.play_by_play: true`: briefly share intermediate findings.
 - At the end: concise summary — what changed, what user needs to know.
 
 ### Don't re-read what you already know
@@ -2188,4 +2636,38 @@ skill.
 
 **Never accept** as proof: "should work", "looks correct", "logic is sound".
 No captured output = not verified.
+
+## Confidence gating
+
+State confidence explicitly before claiming completion on non-trivial work.
+
+- **High** — runtime path read end-to-end, relevant tests inspected or run,
+  no hidden side-effects (queues/events/observers) unaccounted for.
+- **Medium** — main path verified but one gap remains; list the gap in the
+  completion message.
+- **Low** — broad implementation NOT allowed; switch to analysis, narrow
+  the scope, or ask the user before proceeding.
+
+For high-risk areas (auth, tenancy, migrations, queues, dependencies,
+external APIs, data exposure), "high" requires tests AND a cross-layer
+read — not inference from a single file.
+
+## Break-glass reduction
+
+During a live production incident the verification gate is **narrowed**,
+never skipped. Break-glass requires explicit user invocation (e.g.
+`break-glass: true`, "this is a hotfix"). Never enter it unilaterally.
+
+Minimum evidence:
+
+- **Targeted test(s)** covering the exact regression — zero tests is not
+  acceptable.
+- **Smoke check** of the fixed path (curl, manual trigger, log tail) with
+  output captured in the message.
+- **Explicit list of skipped validations** and a **follow-up commitment**
+  (ticket or PR line) to run them within 24h.
+
+Completion wording: _"hotfix applied, full verification deferred per
+break-glass"_ — never _"done"_ or _"verified"_. The normal gate resumes
+on the follow-up PR.
 
