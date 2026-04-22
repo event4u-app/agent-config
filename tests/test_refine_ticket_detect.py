@@ -15,8 +15,10 @@ import pytest
 
 from scripts.refine_ticket_detect import (
     Decision,
+    RepoContext,
     SubSkillDecision,
     detect,
+    gather_repo_context,
     load_map,
 )
 
@@ -125,3 +127,89 @@ def test_repo_aware_off_outside_repo(detection_map, tmp_path):
     body = _load_fixture("clean")
     decision = detect(body, detection_map, cwd=tmp_path)
     assert decision.repo_aware is False
+
+
+# ---- Phase 3 — repo-aware mode ---------------------------------------------
+
+
+def test_gather_repo_context_outside_repo(tmp_path):
+    """Outside a repo the context stays empty — graceful degrade."""
+    ctx = gather_repo_context(tmp_path)
+    assert ctx.is_empty()
+    assert ctx.summary_line() == "Repo context — none gathered"
+
+
+def test_gather_repo_context_inside_this_repo():
+    """Inside this repo we expect branches + commits; context_docs only when agents/contexts/ exists."""
+    ctx = gather_repo_context(REPO_ROOT)
+    assert not ctx.is_empty()
+    assert len(ctx.recent_branches) > 0, "expected at least one branch"
+    assert len(ctx.recent_commits) > 0, "expected at least one commit"
+    # context_docs is optional — only populated when agents/contexts/ exists.
+    # Consumer projects typically have it; this package does not.
+
+
+def test_gather_repo_context_finds_context_docs(tmp_path):
+    """When agents/contexts/ exists and has .md files, they get listed."""
+    subprocess = __import__("subprocess")
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(
+        ["git", "commit", "-q", "--allow-empty", "-m", "init"],
+        cwd=tmp_path,
+        check=True,
+        env={
+            "GIT_AUTHOR_NAME": "t",
+            "GIT_AUTHOR_EMAIL": "t@t",
+            "GIT_COMMITTER_NAME": "t",
+            "GIT_COMMITTER_EMAIL": "t@t",
+            "PATH": __import__("os").environ["PATH"],
+        },
+    )
+    contexts = tmp_path / "agents" / "contexts"
+    contexts.mkdir(parents=True)
+    (contexts / "auth-model.md").write_text("# auth")
+    (contexts / "tenant-boundaries.md").write_text("# tenancy")
+    ctx = gather_repo_context(tmp_path)
+    assert set(ctx.context_docs) == {"auth-model.md", "tenant-boundaries.md"}
+
+
+def test_detect_populates_repo_context_when_repo_aware(detection_map):
+    body = _load_fixture("clean")
+    decision = detect(body, detection_map, cwd=REPO_ROOT)
+    assert decision.repo_aware is True
+    assert not decision.repo_context.is_empty()
+
+
+def test_detect_repo_context_empty_outside_repo(detection_map, tmp_path):
+    body = _load_fixture("clean")
+    decision = detect(body, detection_map, cwd=tmp_path)
+    assert decision.repo_aware is False
+    assert decision.repo_context.is_empty()
+
+
+def test_orchestration_notes_include_repo_context_when_on(detection_map):
+    body = _load_fixture("clean")
+    decision = detect(body, detection_map, cwd=REPO_ROOT)
+    notes = decision.orchestration_notes()
+    assert any(n.startswith("Repo context — ") for n in notes)
+    assert any("branches" in n and "commits" in n for n in notes)
+
+
+def test_orchestration_notes_omit_repo_context_when_off(detection_map, tmp_path):
+    body = _load_fixture("clean")
+    decision = detect(body, detection_map, cwd=tmp_path)
+    notes = decision.orchestration_notes()
+    # Graceful degrade: same line shape, minus the repo-context line
+    assert any("Repo-aware — off" in n for n in notes)
+    assert not any(n.startswith("Repo context — ") for n in notes)
+
+
+def test_graceful_degrade_output_shape_parity(detection_map, tmp_path):
+    """Outside-repo output keeps the same sub-skill lines as inside-repo."""
+    body = _load_fixture("clean")
+    inside = detect(body, detection_map, cwd=REPO_ROOT).orchestration_notes()
+    outside = detect(body, detection_map, cwd=tmp_path).orchestration_notes()
+    # Sub-skill lines must match 1:1; only the repo-context tail differs.
+    inside_subskills = [n for n in inside if n.startswith("`")]
+    outside_subskills = [n for n in outside if n.startswith("`")]
+    assert inside_subskills == outside_subskills

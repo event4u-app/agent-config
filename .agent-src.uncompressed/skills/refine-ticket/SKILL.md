@@ -99,14 +99,27 @@ in this skill folder) and returns:
   secret / tenant / admin / PII / payment keyword, or a `CVE-YYYY-N`
   regex match.
 - `repo_aware` — on when `.git/`, `agents/contexts/`, `composer.json`,
-  or `package.json` is present in the cwd; off otherwise. When on,
-  load `agents/contexts/*.md` for domain vocabulary and scan recent
-  branches + commits for naming conventions.
+  or `package.json` is present in the cwd; off otherwise.
+- When `repo_aware=True`, `decision.repo_context` is populated by
+  `gather_repo_context()`:
+  - `recent_branches` — up to 20 most recent local branches (naming
+    convention signal).
+  - `recent_commits` — up to 30 most recent commit subjects (active
+    modules + verb conventions).
+  - `context_docs` — every `agents/contexts/*.md` filename (domain
+    vocabulary).
+- Outside a repo the context is empty — the skill produces the same
+  output shape, minus repo-specific citations (graceful degrade).
+
+Use `repo_context.recent_branches` to anchor the "Refined ticket" title
+naming (e.g. `feat/` vs `fix/` vs `refactor/` prefix), and
+`repo_context.context_docs` to cite domain vocabulary in the Top-5
+risks instead of inventing terms.
 
 The match lists and `require_count` thresholds are owned by
 `detection-map.yml` — edit the map, not this skill. Tests:
 [`tests/test_refine_ticket_detect.py`](../../../tests/test_refine_ticket_detect.py)
-(9 cases, DE + EN fixtures).
+(17 cases, DE + EN fixtures, repo-aware + graceful-degrade coverage).
 
 ### 3. Orchestrate
 

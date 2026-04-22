@@ -19,6 +19,7 @@ Usage:
 from __future__ import annotations
 
 import re
+import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -60,15 +61,52 @@ class SubSkillDecision:
 
 
 @dataclass
+class RepoContext:
+    """Repo-local signals gathered when cwd is inside a repo clone.
+
+    Feeds the skill's Top-5 risks with project-specific vocabulary —
+    recent branch names (naming-convention signal), recent commit
+    subjects (active modules signal), and on-disk `agents/contexts/`
+    documents (domain-vocabulary signal).
+
+    Empty when `repo_aware=False` — the skill still produces the same
+    output shape (graceful degrade), but without repo-specific
+    citations.
+    """
+
+    recent_branches: list[str] = field(default_factory=list)
+    recent_commits: list[str] = field(default_factory=list)
+    context_docs: list[str] = field(default_factory=list)
+
+    def is_empty(self) -> bool:
+        return not (
+            self.recent_branches or self.recent_commits or self.context_docs
+        )
+
+    def summary_line(self) -> str:
+        if self.is_empty():
+            return "Repo context — none gathered"
+        parts = [
+            f"{len(self.recent_branches)} branches",
+            f"{len(self.recent_commits)} commits",
+            f"{len(self.context_docs)} context docs",
+        ]
+        return "Repo context — " + ", ".join(parts)
+
+
+@dataclass
 class Decision:
     sub_skills: list[SubSkillDecision]
     repo_aware: bool
+    repo_context: RepoContext = field(default_factory=RepoContext)
 
     def orchestration_notes(self) -> list[str]:
         notes = [ss.as_output_line() for ss in self.sub_skills]
         notes.append(
             f"Repo-aware — {'on' if self.repo_aware else 'off'}"
         )
+        if self.repo_aware:
+            notes.append(self.repo_context.summary_line())
         return notes
 
 
@@ -123,6 +161,69 @@ def _detect_repo_aware(
     return hits >= require
 
 
+def _run_git(cwd: Path, args: list[str]) -> str:
+    try:
+        result = subprocess.run(
+            ["git", *args],
+            cwd=str(cwd),
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return ""
+    if result.returncode != 0:
+        return ""
+    return result.stdout
+
+
+def gather_repo_context(
+    cwd: Path,
+    branch_limit: int = 20,
+    commit_limit: int = 30,
+) -> RepoContext:
+    """Collect naming-convention signals from the enclosing repo.
+
+    Safe outside a repo — returns an empty `RepoContext`. Safe when
+    `git` is unavailable (timeout / not installed) — returns partial
+    data without raising.
+    """
+    if not (cwd / ".git").is_dir():
+        return RepoContext()
+
+    branches_raw = _run_git(
+        cwd,
+        [
+            "for-each-ref",
+            "--count",
+            str(branch_limit),
+            "--sort=-committerdate",
+            "--format=%(refname:short)",
+            "refs/heads/",
+        ],
+    )
+    branches = [b.strip() for b in branches_raw.splitlines() if b.strip()]
+
+    commits_raw = _run_git(
+        cwd, ["log", f"-{commit_limit}", "--pretty=format:%s"]
+    )
+    commits = [c.strip() for c in commits_raw.splitlines() if c.strip()]
+
+    context_docs: list[str] = []
+    contexts_dir = cwd / "agents" / "contexts"
+    if contexts_dir.is_dir():
+        context_docs = sorted(
+            p.name for p in contexts_dir.glob("*.md") if p.is_file()
+        )
+
+    return RepoContext(
+        recent_branches=branches,
+        recent_commits=commits,
+        context_docs=context_docs,
+    )
+
+
 def detect(
     ticket_body: str,
     detection_map: dict,
@@ -135,7 +236,14 @@ def detect(
             _match_sub_skill(text_lower, ticket_body, skill_name, spec)
         )
     repo_aware = _detect_repo_aware(cwd, detection_map.get("repo_aware"))
-    return Decision(sub_skills=decisions, repo_aware=repo_aware)
+    repo_context = (
+        gather_repo_context(cwd) if repo_aware and cwd else RepoContext()
+    )
+    return Decision(
+        sub_skills=decisions,
+        repo_aware=repo_aware,
+        repo_context=repo_context,
+    )
 
 
 def main() -> None:
