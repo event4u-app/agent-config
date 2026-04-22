@@ -91,12 +91,21 @@
   context. The fixture task is attached to Wave A.4's drafting
   session, not to today.
 
-- **Q32** 🎯 `strategic` — **Wave C.2 adoption-gating signal.**
-  Laminas authoring skills only ship when adoption justifies.
-  What's the trigger? Proposal: ≥ 2 external consumers install
-  the package against a Laminas project within a quarter. Until
-  then, analysis-only coverage (`project-analysis-zend-laminas`)
-  is the commitment.
+- **Q32** ✅ `resolved` (2026-04-22) — **Wave C.2 adoption-gating
+  signal.** Decision: drop the "≥ 2 installs / quarter" trigger
+  (not measurable without telemetry) and replace it with
+  engagement-based signals that track commitment, not intent:
+  - **≥ 1 concrete pull request** targeting a Laminas authoring
+    skill (strongest possible signal — someone does the work), or
+  - **≥ 2 independent issues / GitHub Discussions** citing a real
+    Laminas use case for authoring (not just analysis),
+  - measured over **2 quarters** (6 months) — Laminas migration
+    timelines are slow; one quarter is too short.
+  Until one threshold is met, Wave C.2 stays parked. No
+  automatic cancel — just "not prioritised". Wave C.1
+  (analysis-only deepening) and Wave C.3 (migration skills)
+  are **not** adoption-gated by Q32 and can progress
+  independently.
 
 ### `road-to-autonomous-agent.md`
 

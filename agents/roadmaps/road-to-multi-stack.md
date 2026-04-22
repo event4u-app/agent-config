@@ -135,8 +135,12 @@ underserved elsewhere, creates a niche competitive edge.
 - [-] **Wave C.2 — authoring**: `laminas-mvc`,
   `laminas-service-manager`, `laminas-hydrators`,
   `laminas-input-filter` — only if adoption signals justify.
-  *(2026-04-22: adoption-gated — see Q32 in
-  [`open-questions-2.md`](open-questions-2.md).)*
+  *(2026-04-22: adoption-gated — Q32 resolved. Trigger is
+  engagement-based: ≥ 1 concrete PR targeting a Laminas
+  authoring skill, OR ≥ 2 independent issues/Discussions
+  citing a real Laminas authoring use case, measured over
+  2 quarters. Install-count metrics dropped as unmeasurable.
+  See Q32 in [`open-questions-2.md`](open-questions-2.md).)*
 - [-] **Wave C.3 — migration skills**: `legacy-to-modern-php` —
   pattern for gradual modernization (shared across all PHP tracks).
   *(Q30)*
@@ -241,7 +245,9 @@ backlog. Per-wave acceptance:
 | **Wave B.1 — React core (pilot)** | 🟡 unblocked — awaiting session allocation |
 | Wave B.2-B.4 — Next.js + tooling + UI primitives | ⏸ deferred (ships after B.1 pattern proven) |
 | Wave A.1-A.4 — Symfony + plain PHP authoring (11 skills) | ⏸ deferred (Track A follows Track B; A.4 fixture scaffolded inline when the wave opens — Q31 resolved 2026-04-22) |
-| Wave C.1-C.3 — Zend/Laminas (5 skills + migration) | ⏸ deferred (Q32 adoption gate) |
+| Wave C.1 — Zend/Laminas analysis deepening | ⏸ deferred (not adoption-gated; prioritise anytime) |
+| Wave C.2 — Laminas authoring (4 skills) | ⏸ parked (engagement-gated: ≥ 1 PR or ≥ 2 issues over 2 quarters — Q32 resolved 2026-04-22) |
+| Wave C.3 — legacy-to-modern-php migration | ⏸ deferred (not adoption-gated; prioritise anytime) |
 
 This roadmap is intentionally **never fully done** — it is the
 multi-stack backlog. Phase 0 shipped what can ship without user
