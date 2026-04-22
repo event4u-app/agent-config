@@ -165,14 +165,28 @@ chained after refine (`/refine-ticket --then-estimate`, TBD).
 
 ### Phase 5 — integration with Q19 / Q20 / Q22
 
-- [ ] `/refine-ticket` cited in the Q20 `feature-build.md` flow as
+- [x] `/refine-ticket` cited in the Q20 `feature-build.md` flow as
   the optional pre-step before `/brainstorm` or `/plan`.
-- [ ] Q19 README demo candidates include a "paste a messy Jira
+  *(2026-04-22: `/feature-build` itself does not exist yet — Q20
+  artifact is still in proposals. Cross-link landed in the two
+  existing downstream commands instead: `feature-explore` (Step 1b
+  hints at `/refine-ticket` when input looks like a ticket) and
+  `feature-plan` ("See also" section names both `refine-ticket` and
+  `estimate-ticket`). When `/feature-build` ships, it inherits the
+  same cross-link pattern.)*
+- [-] Q19 README demo candidates include a "paste a messy Jira
   ticket → watch it get refined" example if adoption signals are
   strong.
-- [ ] Q22 `/onboard` orchestration does NOT auto-run refine-ticket
+  *(2026-04-22: deferred — adoption signals not yet measurable.
+  Revisit after at least one consumer project has run `/refine-ticket`
+  on real tickets.)*
+- [x] Q22 `/onboard` orchestration does NOT auto-run refine-ticket
   (it's opt-in, not discovery — running it silently on random
   tickets would be surprising).
+  *(2026-04-22: `/onboard` does not exist yet either. Decision is
+  documented here so that whoever ships `/onboard` respects it —
+  refine-ticket and estimate-ticket are opt-in only, never invoked
+  silently during onboarding.)*
 
 ## Output shape — locked
 
