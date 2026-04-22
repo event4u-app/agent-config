@@ -349,8 +349,136 @@ impression is worse than no README rewrite at all.
 
   🛑 **Requires `artifact-drafting-protocol`** — Understand → Research
   → Draft with the maintainer. Do NOT silently draft this skill.
+  **Blocked by Q24** (persona architecture) — the seven lenses above
+  should be expressed as personas, not hardcoded prose, once Q24 is
+  resolved.
   → No matching roadmap. High value, high overlap risk, needs
      explicit scoping decision first.
+
+- **Q24 — Personas as first-class reusable building block
+  (architecture, blocks Q23 + Q25).** Q23 hardcodes seven lenses. The
+  proposed refine-ticket skill (Q25) hardcodes another six.
+  Existing skills already carry implicit personas too:
+  `adversarial-review` = Critical Challenger, `judge-*` = specialist
+  reviewers, `receiving-code-review` = reviewee. Without a shared
+  primitive, every new multi-lens skill re-invents the taxonomy and
+  drifts. The architectural question: **introduce `personas/` as a
+  first-class artifact kind, or keep hardcoding per skill?**
+
+  Options:
+    1. **Full persona primitive (`.agent-src.uncompressed/personas/`).**
+       Each persona is a small file — `senior-engineer.md`,
+       `product-owner.md`, `new-user.md`, `critical-challenger.md`,
+       `optimizer.md`, `stakeholder.md`, `ai-agent.md`, `maintainer.md`,
+       `developer-dx.md`, and one or two more. Each file defines the
+       persona's focus, questions-to-ask, style rules, and anti-
+       patterns. Skills reference personas by name in a
+       `personas: [senior-engineer, product-owner]` frontmatter key.
+       User invocation supports "one, several, or all personas" per
+       call: `/refine-ticket --personas=po,senior-engineer`. Compress,
+       linter, and docs-sync need extensions for the new artifact kind.
+    2. **Frontmatter tag only, no persona files.** Add
+       `personas: [...]` to skill frontmatter as pure documentation /
+       discovery tags. No reusable content, each skill still writes
+       its own perspective prose. Lightweight, but doesn't solve the
+       DRY problem — only the taxonomy problem.
+    3. **Status quo — hardcode per skill.** Accept duplication, document
+       a shared persona vocabulary in a new guideline under
+       `guidelines/agent-infra/` (exact filename TBD), skills cite the
+       guideline. Zero infra change.
+
+  Impact on existing artifacts if Option 1 lands:
+    - `adversarial-review` → becomes a thin wrapper that invokes
+      personas `[critical-challenger]` on an input.
+    - `judge-bug-hunter` / `judge-security-auditor` /
+      `judge-test-coverage` / `judge-code-quality` → reframed as
+      specialist personas, with `review-changes` dispatching to them
+      via the same persona contract.
+    - `receiving-code-review`, `requesting-code-review` → persona-
+      driven variants become possible (e.g. review from `new-user`
+      lens for docs changes).
+
+  Open decisions:
+    1. Adopt the primitive (Option 1), lightweight tags (Option 2),
+       or stay as-is (Option 3)?
+    2. If Option 1: which ~10 personas are in the v1 canon? Is there
+       a project-local override mechanism for teams to add their own?
+    3. Compression semantics — does each persona compress separately,
+       or only as part of the skills that cite them?
+    4. Do personas get triggers/descriptions (like skills), or are
+       they passive reference content?
+    5. How does `.agent-settings.yml` interact? A
+       `personas.enabled: [senior-engineer, po, ...]` key for default
+       lens selection?
+
+  🛑 **Requires `artifact-drafting-protocol`** — new artifact kind =
+  new linter rules, new compression handling, new cross-ref semantics.
+  Decide BEFORE drafting Q23 or Q25 so both land on the same
+  primitive.
+  → Likely needs its own `road-to-personas.md` if Option 1 wins.
+
+- **Q25 — New skill proposal: refine-ticket (Jira/Linear ticket
+  refinement from Dev/Arch/PO/Stakeholder/Challenger/AI lenses).**
+  Proposed new skill (name TBD, `refine-ticket` suggested) that
+  simulates a strong refinement session before implementation starts.
+  Core promise: don't just critique tickets, **propose concrete
+  wording, rewritten acceptance criteria, and a refined ticket
+  version**. Six perspectives as proposed:
+    1. Developer — implementation reality, ambiguity, edge cases.
+    2. Senior Engineer — architecture impact, hidden complexity,
+       conventions fit.
+    3. Product Owner — clarity, testable acceptance criteria,
+       scope boundaries.
+    4. Stakeholder — business value, simplification, relevance.
+    5. Critical Challenger — fake simplicity, split-worthy scope,
+       hidden assumptions.
+    6. AI Agent — automation-readiness, reuse references, safe
+       execution by coding agents.
+  Plus **repository-aware refinement** when codebase context is
+  available (compare against existing patterns, naming, modules,
+  conflicts, reuse opportunities).
+
+  Overlap with existing skills — must be resolved before drafting:
+    - `validate-feature-fit` — already covers duplicate-detection,
+      scope creep, architectural misfit, contradictions. The AI-Agent
+      and Senior-Engineer lenses of `refine-ticket` overlap heavily
+      here. Merge, extend, or hand off to `validate-feature-fit`
+      from inside `refine-ticket`?
+    - `feature-plan`, `feature-explore`, `feature-refactor` — adjacent
+      (feature planning). Is `refine-ticket` the upstream step
+      (ticket → plan), or does it swallow parts of planning?
+    - `jira-ticket` — implements tickets, doesn't refine them.
+      Clear boundary, but both share Jira-input contract — reuse
+      the ticket-loading helper.
+    - `threat-modeling` — pre-implementation security lens. Does
+      `refine-ticket` delegate security concerns to threat-modeling,
+      or copy-paste a thin version of that lens?
+
+  Proposed companion (not this Q, but inline note): `estimate-ticket`
+  — size / risk / split recommendation / uncertainty. Keep
+  `refine-ticket` focused on quality + clarity; split estimation into
+  a sibling to avoid bloat.
+
+  Open decisions before drafting:
+    1. Persona architecture first (Q24) — then `refine-ticket` either
+       hardcodes or references personas.
+    2. Input contract — Jira URL, ticket key, pasted text, branch-
+       name detection? Reuse from `jira-ticket`?
+    3. Output contract — 10-section structure as proposed by the
+       external reviewer, or collapsed shape? How does it interact
+       with existing PR-review output conventions?
+    4. Repo-aware mode — MCP-based, local file read, or agent
+       context? Gracefully degrade when no repo is available.
+    5. Command + skill vs. skill only? External reviewer proposed both.
+    6. Own roadmap (`road-to-ticket-refinement.md`) covering
+       `refine-ticket` + `estimate-ticket` as a family, or land under
+       `road-to-stronger-skills.md`?
+
+  🛑 **Requires `artifact-drafting-protocol`** — substantial new
+  artifact. Blocked by Q24 (persona architecture).
+  → No matching roadmap. Strong product-process fit, high overlap
+     with `validate-feature-fit` — scope boundary is the main
+     pre-draft decision.
 
 ## Cross-repo questions (`agents/roadmaps/agent-memory/*`)
 
