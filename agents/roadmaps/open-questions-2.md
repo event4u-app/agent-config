@@ -56,6 +56,46 @@
   and reports back. Until then, Phase 5 item stays `[-]` skipped
   with this rationale.
 
+### `road-to-multi-stack.md`
+
+- **Q30** 🛑 `artifact-drafting` — **Stack-specific authoring
+  skills (Waves A.1-A.3, B.1-B.4, C.1, C.3).** Each named skill
+  (~30 total across Symfony, React/Next.js, Laminas migration) is
+  a separate Understand → Research → Draft session — they cannot
+  be bulk-generated without violating skill-quality and
+  artifact-drafting-protocol. Scope and capability matrix are
+  frozen in [`agents/contexts/multi-stack-inventory.md`](../contexts/multi-stack-inventory.md).
+  Sequencing question for the user:
+  - Do we open Track A (Symfony) first, or prioritise Track B
+    (Next.js/React) based on incoming adoption signals?
+  - One wave per PR, or bundled per track?
+  - Community contributions accepted per wave, or maintainer-only
+    until the pattern is proven on Wave A.1?
+
+- **Q31** 🎯 `strategic` — **Wave A.4 plain-PHP leakage
+  verification.** Needs a real plain-PHP test repository (no
+  Laravel). Does the user have one to point at, or should we
+  scaffold a minimal fixture (~50 LOC, no framework)?
+
+- **Q32** 🎯 `strategic` — **Wave C.2 adoption-gating signal.**
+  Laminas authoring skills only ship when adoption justifies.
+  What's the trigger? Proposal: ≥ 2 external consumers install
+  the package against a Laminas project within a quarter. Until
+  then, analysis-only coverage (`project-analysis-zend-laminas`)
+  is the commitment.
+
+### `road-to-memory-self-consumption.md`
+
+- **Q29** 📦 `external-dependency` — **Phase 2 of
+  `road-to-memory-self-consumption.md` needs
+  `@event4u/agent-memory` published.** All three remaining items
+  (local install, operational store, `/memory-promote` walkthrough)
+  share the same blocker. The absent-path flow is production-ready;
+  the present-path flow is wired but cannot execute until the
+  package exists. No agent-config change unblocks this — the
+  agent-memory repo owns the shipping decision. Revisit when a
+  release is tagged there.
+
 ### `road-to-trigger-evals.md`
 
 - **Q28** 💰 `budget` — **Claude API key + budget for live trigger

@@ -86,49 +86,57 @@ Each track ships in **waves**, smallest useful slice first.
 Rationale: shares `php-coder`, `composer-packages`, `quality-tools`
 infrastructure. Biggest coverage win per unit of drafting effort.
 
-- [ ] **Wave A.1 — core authoring**: `symfony` (framework idioms),
+- [-] **Wave A.1 — core authoring**: `symfony` (framework idioms),
   `symfony-controllers`, `symfony-services` (DI container),
   `symfony-validation` (constraints, validator component),
   `symfony-forms`.
-- [ ] **Wave A.2 — async + jobs**: `symfony-messenger`,
-  `symfony-scheduler`, `symfony-mailer`, `symfony-notifier`.
-- [ ] **Wave A.3 — data + persistence**: `doctrine-orm`,
+  *(2026-04-22: skipped — each skill is a separate
+  `artifact-drafting-protocol` session. Tracked as Q30 in
+  [`open-questions-2.md`](open-questions-2.md).)*
+- [-] **Wave A.2 — async + jobs**: `symfony-messenger`,
+  `symfony-scheduler`, `symfony-mailer`, `symfony-notifier`. *(Q30)*
+- [-] **Wave A.3 — data + persistence**: `doctrine-orm`,
   `doctrine-migrations`, `doctrine-dbal` (parallels `eloquent` +
-  `database` + `sql-writing`).
-- [ ] **Wave A.4 — plain PHP**: verify `php-coder`,
+  `database` + `sql-writing`). *(Q30)*
+- [-] **Wave A.4 — plain PHP**: verify `php-coder`,
   `composer-packages`, `security`, `api-design` fire cleanly on
   plain-PHP repos without Laravel context leakage. Fix gaps via
   guidance in existing skills — no new skills if not needed.
+  *(2026-04-22: skipped — needs a real plain-PHP test repo. Tracked
+  as Q31 in `open-questions-2.md`.)*
 
 ### Track B — Frontend (Next.js + React, TypeScript-first)
 
 Rationale: expands audience beyond PHP world; distinct authoring
 stack; largest new-user demographic.
 
-- [ ] **Wave B.1 — React core**: `react-components`,
-  `react-hooks`, `react-state-management`, `react-testing`.
-- [ ] **Wave B.2 — Next.js**: `nextjs-app-router`,
+- [-] **Wave B.1 — React core**: `react-components`,
+  `react-hooks`, `react-state-management`, `react-testing`. *(Q30)*
+- [-] **Wave B.2 — Next.js**: `nextjs-app-router`,
   `nextjs-server-actions`, `nextjs-data-fetching`,
-  `nextjs-rendering-modes` (SSG/SSR/ISR/streaming).
-- [ ] **Wave B.3 — tooling**: `typescript` (if not shared),
+  `nextjs-rendering-modes` (SSG/SSR/ISR/streaming). *(Q30)*
+- [-] **Wave B.3 — tooling**: `typescript` (if not shared),
   `eslint`, `vitest` / `jest`, `playwright-testing` already
-  covers E2E.
-- [ ] **Wave B.4 — UI primitives**: `tailwind`, `shadcn-ui`,
-  `radix-ui` — opt-in where the consumer stack uses them.
+  covers E2E. *(Q30)*
+- [-] **Wave B.4 — UI primitives**: `tailwind`, `shadcn-ui`,
+  `radix-ui` — opt-in where the consumer stack uses them. *(Q30)*
 
 ### Track C — Zend / Laminas (legacy migration audience)
 
 Rationale: covers the legacy migration audience; lower urgency but
 underserved elsewhere, creates a niche competitive edge.
 
-- [ ] **Wave C.1 — analysis-only deepening**: extend
+- [-] **Wave C.1 — analysis-only deepening**: extend
   `project-analysis-zend-laminas` with migration-path guidance
-  (Zend 1 → 2 → 3, Zend → Laminas, Laminas → Symfony/Laravel).
-- [ ] **Wave C.2 — authoring**: `laminas-mvc`,
+  (Zend 1 → 2 → 3, Zend → Laminas, Laminas → Symfony/Laravel). *(Q30)*
+- [-] **Wave C.2 — authoring**: `laminas-mvc`,
   `laminas-service-manager`, `laminas-hydrators`,
   `laminas-input-filter` — only if adoption signals justify.
-- [ ] **Wave C.3 — migration skills**: `legacy-to-modern-php` —
+  *(2026-04-22: adoption-gated — see Q32 in
+  [`open-questions-2.md`](open-questions-2.md).)*
+- [-] **Wave C.3 — migration skills**: `legacy-to-modern-php` —
   pattern for gradual modernization (shared across all PHP tracks).
+  *(Q30)*
 
 ## README + AGENTS.md framing (feeds Q19)
 
@@ -152,14 +160,24 @@ the README is the acceptance test for each wave.
 
 ### Phase 0 — baseline + policy freeze
 
-- [ ] Inventory: each existing `laravel-*` skill mapped to its
+- [x] Inventory: each existing `laravel-*` skill mapped to its
   Symfony / Next.js / React / Zend equivalent (or "no equivalent,
   shared skill covers it").
-- [ ] `check_portability.py` updated with any new stack-keyword
+  *(2026-04-22: shipped at
+  [`agents/contexts/multi-stack-inventory.md`](../contexts/multi-stack-inventory.md)
+  — full capability matrix, stack-agnostic list, plain-PHP leakage
+  pass scope, coverage snapshot.)*
+- [-] `check_portability.py` updated with any new stack-keyword
   blocklists required.
-- [ ] Skill-namespace convention locked: `<stack>-<capability>`
+  *(2026-04-22: no-op until Track A/B/C actually ships a stack skill;
+  then per-wave addition is trivial. Revisit when Wave A.1 opens.)*
+- [x] Skill-namespace convention locked: `<stack>-<capability>`
   (lowercase, hyphenated). Documented in
   `guidelines/agent-infra/size-and-scope.md` or adjacent.
+  *(2026-04-22: convention stated in this roadmap's "Track" sections
+  and the inventory context doc; the existing `laravel-*` family is
+  the live reference. No separate guideline needed — one source of
+  truth is cleaner.)*
 
 ### Phase 1+ — waves per track
 
@@ -210,8 +228,25 @@ backlog. Per-wave acceptance:
 - README + AGENTS.md + Q19 coverage table reflect the new state.
 - `check_portability.py` passes; `task ci` green.
 
+## Final status — 2026-04-22
+
+| Item set | Status |
+|---|---|
+| Phase 0 — inventory + namespace convention | ✅ done (inventory at `agents/contexts/multi-stack-inventory.md`; convention frozen) |
+| Phase 0 — `check_portability.py` blocklist update | ⏸ deferred (no-op until Wave A.1 ships first stack skill) |
+| Wave A.1-A.4 — Symfony + plain PHP authoring (11 skills) | ⏸ deferred (Q30 sequencing / Q31 test repo) |
+| Wave B.1-B.4 — Next.js / React (11 skills) | ⏸ deferred (Q30 sequencing) |
+| Wave C.1-C.3 — Zend/Laminas (5 skills + migration) | ⏸ deferred (Q30 + Q32 adoption gate) |
+
+This roadmap is intentionally **never fully done** — it is the
+multi-stack backlog. Phase 0 shipped what can ship without user
+input; every wave below requires its own
+`artifact-drafting-protocol` session. Roadmap stays open.
+
 ## See also
 
+- [`open-questions-2.md`](open-questions-2.md) — Q30, Q31, Q32
+- [`agents/contexts/multi-stack-inventory.md`](../contexts/multi-stack-inventory.md) — capability matrix
 - [`open-questions.md`](open-questions.md) — Q18, Q19 (source)
 - [`road-to-stronger-skills.md`](road-to-stronger-skills.md) — pattern compliance baseline new skills inherit
 - [`archive/road-to-personas.md`](archive/road-to-personas.md) — personas cited by stack-specific review skills (shipped 2026-04-22)

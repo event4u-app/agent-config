@@ -173,24 +173,29 @@ package**. The three checkboxes below stay open, but the `absent`-path
 flow is documented today so the contract is executable the moment the
 operational backend ships:
 
-- [ ] `agent-memory` installable locally against this repo with one
+- [-] `agent-memory` installable locally against this repo with one
       command
       *Blocker: package not published. Today: consumers of this repo
       run entirely on the `absent` path — curated YAML under
       `agents/memory/<type>/` plus append-only JSONL under
       `agents/memory/intake/`. No install needed.*
-- [ ] Learnings captured during agent-config development land in its
+      *(2026-04-22: `[-]` skipped until `@event4u/agent-memory` ships;
+      tracked as Q29 in [`open-questions-2.md`](open-questions-2.md).)*
+- [-] Learnings captured during agent-config development land in its
       own operational store
       *Blocker: same. Today: learnings flow through `/propose-memory`
       into `agents/memory/intake/*.jsonl` (absent path); `memory_lookup`
       returns them with `source: "intake"` and a slight score discount
       vs. curated.*
-- [ ] One `/memory-promote` walkthrough documented end-to-end against
+      *(2026-04-22: `[-]` skipped until agent-memory ships — Q29.)*
+- [-] One `/memory-promote` walkthrough documented end-to-end against
       this repo itself
       *Blocker: `/memory-promote` targets the promotion flow defined in
       `agent-memory/road-to-promotion-flow.md`. Today: the absent-path
       equivalent is `learning-to-rule-or-skill` → PR against
       `agents/memory/<type>/` or `.agent-src.uncompressed/`.*
+      *(2026-04-22: `[-]` skipped until promotion flow ships in the
+      agent-memory package — Q29.)*
 
 ## Acceptance criteria
 
@@ -217,8 +222,22 @@ operational backend ships:
   pattern no longer holds), should the hygiene check propose a repo
   retirement PR? Defer; needs real data.
 
+## Final status — 2026-04-22
+
+| Item set | Status |
+|---|---|
+| Phase 0 — no hard dep, no-circular-dep, absent-path contract | ✅ done |
+| Phase 1 — conflict-resolution contract, hygiene shadow counts | ✅ done |
+| Phase 2 — dogfooding against published agent-memory | ⏸ deferred (Q29 — package not yet published) |
+
+Roadmap stays **open** — Phase 2 will execute the moment
+`@event4u/agent-memory` ships a release; until then the absent-path
+flow is the operational contract. See Q29 in
+[`open-questions-2.md`](open-questions-2.md).
+
 ## See also
 
+- [`open-questions-2.md`](open-questions-2.md) — Q29 (external dep)
 - [`road-to-project-memory.md`](road-to-project-memory.md) — curated
   files and settings layering; this doc extends its conflict story
 - [`road-to-agent-memory-integration.md`](road-to-agent-memory-integration.md) —
