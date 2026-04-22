@@ -893,6 +893,73 @@ broken first impression is worse than no README rewrite at all.
   linter must ship first). Scoping now unblocked.
   → Own roadmap: `road-to-ticket-refinement.md` (to be drafted).
 
+#### 🟢 Absorbed — Killer-Flow bundle (external feedback 2026-04-22, round 3)
+
+A third external-review pass surfaced a "proof of power" thesis:
+the package reads as a strong governance / skills system but lacks
+one visible end-to-end delivery outcome. The thesis landed as four
+questions (Q36–Q39) plus one meta-guardrail (Q40). Q36/Q37/Q39 are
+absorbed into a dedicated roadmap so the plan lives in the
+standard roadmap surface, not as a floating Q-list. Q38 and Q40
+remain as open questions below — they span multiple flows and are
+not scoped to one roadmap.
+
+- **Q36 — Showcase / killer flow.** ✅ **ABSORBED** into
+  [`road-to-implement-ticket.md`](road-to-implement-ticket.md).
+  The "one visible end-to-end flow" becomes `/implement-ticket`.
+  No standalone question remains.
+- **Q37 — Delivery orchestrator shape.** ✅ **ABSORBED** into
+  [`road-to-implement-ticket.md`](road-to-implement-ticket.md) +
+  [`../contexts/implement-ticket-flow.md`](../contexts/implement-ticket-flow.md).
+  Linear, eight-step, block-on-ambiguity contract locked; runtime
+  TBD in Phase 0 spike.
+- **Q39 — Narrative framing (README / AGENTS.md lead with the
+  flow).** ✅ **ABSORBED** into the roadmap's Phase 4. Coordinates
+  with Q19 hero rework so there is one README pass, not two.
+
+#### 🔴 Open — Killer-Flow metrics & guardrails
+
+- **Q38 — Outcome metrics for `/implement-ticket`.** 🎯 strategic.
+  The roadmap commits to five metrics (time-to-verified-change,
+  block rate, memory-decision rate, repeat usage, report
+  rejection). **Open:** where do they live and how are they
+  reviewed? Candidates:
+    1. **Local JSON log per run** under a repo-ignored path, no
+       aggregation — user reads them ad-hoc.
+    2. **Structured append-only log** in `agents/logs/implement-ticket/`
+       (gitignored by default, opt-in to commit for review) —
+       reviewable via a small `task` target.
+    3. **Full telemetry pipeline** (OpenTelemetry, external sink)
+       — rejected by default; only revisit if multi-user demand
+       surfaces.
+  Maintainer pick required before Phase 0 spike concludes so the
+  runtime knows where to emit. Default recommendation: **Option 2**
+  (local, reviewable, no external dependency, matches the
+  package's "governance" posture).
+  → Blocks Phase 0 ADR in
+  [`road-to-implement-ticket.md`](road-to-implement-ticket.md#phase-0--technology-spike-1-pr-throwaway-allowed).
+
+- **Q40 — Surface-growth guardrail for delivery flows.** 🎯
+  strategic. `/implement-ticket` is explicitly not the last flow
+  — `/implement-bug`, `/implement-spike`, `/ship-hotfix` are
+  plausible siblings. Each one that lands risks turning the
+  "one opinionated flow" into a kingdom. **Open:** what is the
+  admission gate for a second delivery flow? Proposed gates
+  (non-exclusive):
+    1. ≥10 real `/implement-ticket` runs per week across ≥2
+       users, sustained for 4 weeks.
+    2. A written justification for why the new flow cannot be a
+       persona + a branch inside `/implement-ticket`.
+    3. Named retirement candidate OR explicit statement that the
+       new flow is additive (with rationale).
+    4. Roadmap amendment + context-doc update BEFORE the new
+       flow drafts its first artifact.
+  Decision needed: which of 1–4 are mandatory vs. recommended?
+  Default recommendation: **all four mandatory**, so the growth
+  rule is as opinionated as the flow itself.
+  → Blocks any future `road-to-implement-*` roadmap from being
+  drafted.
+
 ## Cross-repo questions (`agents/roadmaps/agent-memory/*`)
 
 All 6 specs (`road-to-consumer-integration-guide`, `road-to-promotion-flow`,
