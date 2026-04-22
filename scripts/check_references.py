@@ -48,10 +48,16 @@ MEMORY_SKIP_URI_PREFIXES = ("http://", "https://", "adr://", "ticket://",
 # File path references like `guidelines/agent-infra/size-and-scope.md`
 PATH_PATTERN = re.compile(
     r'[`"\s]'
-    r'(\.?(?:augment|agents|guidelines|rules|skills|commands|contexts|templates|patterns)'
+    r'(\.?(?:augment|agents|guidelines|rules|skills|commands|contexts|templates|patterns|personas)'
     r'(?:/[\w._-]+)+\.(?:md|php|py|yml|yaml|json|sh))'
     r'[`"\s,;)\]]'
 )
+
+# Frontmatter `personas:` entries (skills/commands cite personas). Either
+# inline list `[a, b]` or YAML block list on subsequent lines.
+_FM_PERSONAS_INLINE = re.compile(r"^personas:\s*\[([^\]]*)\]\s*$")
+_FM_PERSONAS_KEY = re.compile(r"^personas:\s*$")
+_FM_LIST_ITEM = re.compile(r"^\s*-\s*([\w-]+)\s*$")
 
 SKILL_REF_PATTERN = re.compile(r'`([\w-]+)`\s+skill')
 RULE_REF_PATTERN = re.compile(r'`([\w-]+)`\s+rule')
@@ -95,8 +101,11 @@ EXAMPLE_PATH_PATTERNS = [
 
 
 def collect_artifacts(root: Path) -> dict[str, set[str]]:
-    """Build lookup sets for skills, rules, commands, guidelines."""
-    arts: dict[str, set[str]] = {"skills": set(), "rules": set(), "commands": set(), "guidelines": set()}
+    """Build lookup sets for skills, rules, commands, guidelines, personas."""
+    arts: dict[str, set[str]] = {
+        "skills": set(), "rules": set(), "commands": set(),
+        "guidelines": set(), "personas": set(),
+    }
     augment = root / ".agent-src"
     if not augment.exists():
         return arts
@@ -111,7 +120,49 @@ def collect_artifacts(root: Path) -> dict[str, set[str]]:
     if gdir.exists():
         for f in gdir.rglob("*.md"):
             arts["guidelines"].add(str(f.relative_to(augment)))
+    pdir = augment / "personas"
+    if pdir.exists():
+        for f in pdir.glob("*.md"):
+            if f.stem != "README":
+                arts["personas"].add(f.stem)
     return arts
+
+
+def _extract_personas_frontmatter(text: str) -> list[tuple[int, str]]:
+    """Parse frontmatter for `personas:` list entries. Returns (line_no, id)."""
+    if not text.startswith("---"):
+        return []
+    end = text.find("\n---", 3)
+    if end < 0:
+        return []
+    fm_lines = text[3:end].splitlines()
+    results: list[tuple[int, str]] = []
+    i = 0
+    # Frontmatter starts at file line 2 (after opening `---` on line 1).
+    while i < len(fm_lines):
+        line = fm_lines[i]
+        line_no = i + 2
+        m_inline = _FM_PERSONAS_INLINE.match(line)
+        if m_inline:
+            inner = m_inline.group(1)
+            for raw in inner.split(","):
+                v = raw.strip().strip('"').strip("'")
+                if v:
+                    results.append((line_no, v))
+            i += 1
+            continue
+        if _FM_PERSONAS_KEY.match(line):
+            j = i + 1
+            while j < len(fm_lines):
+                item_m = _FM_LIST_ITEM.match(fm_lines[j])
+                if not item_m:
+                    break
+                results.append((j + 2, item_m.group(1)))
+                j += 1
+            i = j
+            continue
+        i += 1
+    return results
 
 
 def _find_suggestion(path: str, root: Path) -> str:
@@ -138,6 +189,15 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
         text = filepath.read_text(encoding="utf-8")
     except Exception:
         return broken
+
+    # Validate `personas:` frontmatter entries against known persona ids.
+    for line_no, pid in _extract_personas_frontmatter(text):
+        if pid not in artifacts["personas"]:
+            broken.append(BrokenRef(
+                file=str(filepath), line=line_no, ref=pid,
+                ref_type="persona", severity="error",
+                suggestion=_closest_match(pid, artifacts["personas"]),
+            ))
 
     in_code_block = False
     for i, line in enumerate(text.splitlines(), 1):

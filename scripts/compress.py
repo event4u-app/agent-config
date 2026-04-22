@@ -232,7 +232,13 @@ TOOL_DIRS = {
 
 SKILLS_SOURCE = PROJECT_ROOT / ".agent-src" / "skills"
 COMMANDS_SOURCE = PROJECT_ROOT / ".agent-src" / "commands"
+PERSONAS_SOURCE = PROJECT_ROOT / ".agent-src" / "personas"
 CLAUDE_SKILLS_DIR = PROJECT_ROOT / ".claude" / "skills"
+
+PERSONA_TOOL_DIRS = {
+    ".claude/personas": "../../.agent-src/personas",
+    ".cursor/personas": "../../.agent-src/personas",
+}
 
 
 def strip_frontmatter(content: str) -> str:
@@ -397,6 +403,41 @@ def generate_claude_commands() -> None:
     print(msg)
 
 
+def generate_persona_symlinks() -> int:
+    """Create symlink directories for personas (.claude/personas/, .cursor/personas/).
+
+    Symlinks each persona .md file from .agent-src/personas/ into tool-specific
+    directories. Excludes README.md — that's authoring documentation, not a persona.
+    """
+    if not PERSONAS_SOURCE.exists():
+        print("  ⚠️  .agent-src/personas/ not found — skipping personas")
+        return 0
+
+    personas = sorted([
+        f.name for f in PERSONAS_SOURCE.glob("*.md") if f.stem != "README"
+    ])
+    total = 0
+    for tool_dir, rel_prefix in PERSONA_TOOL_DIRS.items():
+        target_dir = PROJECT_ROOT / tool_dir
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        # Clean stale symlinks
+        for item in target_dir.iterdir():
+            if item.is_symlink() and item.name not in personas and item.name != "README.md":
+                item.unlink()
+
+        for persona in personas:
+            link = target_dir / persona
+            target = Path(rel_prefix) / persona
+            if link.exists() or link.is_symlink():
+                link.unlink()
+            link.symlink_to(target)
+            total += 1
+
+    print(f"  ✅  Created {total} persona symlinks across {len(PERSONA_TOOL_DIRS)} tool directories ({len(personas)} personas each)")
+    return total
+
+
 def generate_tools() -> None:
     """Generate all tool-specific directories and files."""
     print("🔧  Generating multi-agent tool directories...\n")
@@ -405,6 +446,7 @@ def generate_tools() -> None:
     generate_gemini_md()
     generate_claude_skills()
     generate_claude_commands()
+    generate_persona_symlinks()
     print("\n✅  All tool directories generated")
 
 
