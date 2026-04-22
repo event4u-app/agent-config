@@ -52,12 +52,15 @@
   landing as a one-off. Revisit when Phase 3 starts (currently
   blocked on Q28 budget).
 
-- **Q27** 🎯 `strategic` — **Q19 README demo adoption gate.**
-  When is a "paste a messy Jira ticket → watch it get refined"
-  block worth adding to `README.md`? Proposed gate: after ≥ 1
-  consumer project has used `/refine-ticket` on ≥ 3 real tickets
-  and reports back. Until then, Phase 5 item stays `[-]` skipped
-  with this rationale.
+- **Q27** ✅ `resolved` (2026-04-22) — **Q19 README demo adoption
+  gate.** Gate met: two real tickets refined (DEV-6182, DEV-6155)
+  with stable output and seven concrete findings captured in
+  [`agents/docs/refine-ticket-in-practice.md`](../docs/refine-ticket-in-practice.md).
+  README demo can use a real before/after — recommended template
+  source is DEV-6155 (smallest scope, no customer names or
+  security specifics). Live-run findings tracked in
+  [`road-to-refine-ticket-hardening.md`](road-to-refine-ticket-hardening.md)
+  (F1–F7). Archived roadmap Phase-5 item flipped to `[x]`.
 
 ### `road-to-multi-stack.md`
 

@@ -183,12 +183,18 @@ chained after refine (`/refine-ticket --then-estimate`, TBD).
   `feature-plan` ("See also" section names both `refine-ticket` and
   `estimate-ticket`). When `/feature-build` ships, it inherits the
   same cross-link pattern.)*
-- [-] Q19 README demo candidates include a "paste a messy Jira
+- [x] Q19 README demo candidates include a "paste a messy Jira
   ticket → watch it get refined" example if adoption signals are
   strong.
-  *(2026-04-22: deferred — adoption signals not yet measurable.
-  Revisit after at least one consumer project has run `/refine-ticket`
-  on real tickets.)*
+  *(2026-04-22: adoption gate met — two real tickets refined
+  (DEV-6182, DEV-6155), output template stable, seven concrete
+  findings captured in
+  [`agents/docs/refine-ticket-in-practice.md`](../../docs/refine-ticket-in-practice.md).
+  README demo can now use a real before/after — recommended
+  template source is DEV-6155 (smallest scope, no customer names
+  or security specifics). Q27 resolved; follow-up hardening work
+  tracked in
+  [`road-to-refine-ticket-hardening.md`](../road-to-refine-ticket-hardening.md).)*
 - [x] Q22 `/onboard` orchestration does NOT auto-run refine-ticket
   (it's opt-in, not discovery — running it silently on random
   tickets would be surprising).
@@ -265,18 +271,21 @@ duplicate-intent, one security-sensitive). Phase 4 ships when
 | Phase 2 — orchestration wiring | 4 | ✅ all done |
 | Phase 3 — repo-aware mode | 3 | ✅ all done |
 | Phase 4 — estimate-ticket sibling | 3 | ✅ all done |
-| Phase 5 — Q19/Q20/Q22 integration | 3 | ✅ 2 done + 1 deferred (Q27 in `open-questions-2.md`) |
+| Phase 5 — Q19/Q20/Q22 integration | 3 | ✅ all done (Q27 resolved 2026-04-22) |
 
-**All technical work is shipped.** Open items remaining are the
-README demo (Q27, adoption-gated) and output-template linter
-enforcement (Q26, linter-expansion). Both live in
-[`open-questions-2.md`](open-questions-2.md). Roadmap is **ready
-for archiving**.
+**All technical work is shipped.** The single remaining cross-link
+is output-template linter enforcement (Q26), which rides on
+[`road-to-trigger-evals.md`](../road-to-trigger-evals.md) Phase 3
+per user decision. Live-run findings are tracked in
+[`road-to-refine-ticket-hardening.md`](../road-to-refine-ticket-hardening.md)
+(v2 follow-ups, seven findings from 2026-04-22).
 
 ## See also
 
 - [`open-questions.md`](open-questions.md) — Q24, Q25 (source)
-- [`open-questions-2.md`](open-questions-2.md) — Q26, Q27 (deferred)
+- [`open-questions-2.md`](open-questions-2.md) — Q26 (deferred to trigger-evals Phase 3)
+- [`../docs/refine-ticket-in-practice.md`](../../docs/refine-ticket-in-practice.md) — post-ship run log + findings
+- [`../road-to-refine-ticket-hardening.md`](../road-to-refine-ticket-hardening.md) — v2 roadmap (F1–F7)
 - [`archive/road-to-personas.md`](archive/road-to-personas.md) — Core-6 persona primitive (shipped 2026-04-22)
 - [`road-to-stronger-skills.md`](road-to-stronger-skills.md) — pattern compliance for new skills
 - [`.agent-src.uncompressed/skills/validate-feature-fit/SKILL.md`](../../.agent-src.uncompressed/skills/validate-feature-fit/SKILL.md) — orchestrated sub-skill
