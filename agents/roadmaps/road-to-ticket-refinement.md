@@ -97,14 +97,25 @@ Depends on: personas Phase 2 (Core-6 authored).
 
 ### Phase 2 — orchestration wiring
 
-- [ ] Skill reads a **detection map** declaring which sub-skills
+- [x] Skill reads a **detection map** declaring which sub-skills
   fire on which triggers (table above, externalized as data).
-- [ ] `validate-feature-fit` invocation path verified end-to-end
+  *(2026-04-22: `.agent-src.uncompressed/skills/refine-ticket/detection-map.yml`
+  + `scripts/refine_ticket_detect.py` helper; skill Step 2 cites the
+  map and helper instead of carrying a prose copy.)*
+- [x] `validate-feature-fit` invocation path verified end-to-end
   on a real ticket with obvious duplicate intent.
-- [ ] `threat-modeling` invocation path verified end-to-end on a
+  *(2026-04-22: `tests/fixtures/refine_ticket/duplicate_intent.md`
+  asserts the trigger via `test_duplicate_intent_fires_validate_feature_fit`.)*
+- [x] `threat-modeling` invocation path verified end-to-end on a
   ticket containing security keywords.
-- [ ] Auto-orchestration visible in the output ("Ran
+  *(2026-04-22: `tests/fixtures/refine_ticket/security_sensitive.md`
+  asserts the trigger via `test_security_sensitive_fires_threat_modeling`
+  + `test_security_sensitive_matches_cve_regex`.)*
+- [x] Auto-orchestration visible in the output ("Ran
   `validate-feature-fit` — findings folded into risks 2 + 4").
+  *(2026-04-22: `Decision.orchestration_notes()` emits one line per
+  sub-skill with `fired on: …` or `skipped (no trigger match)`; covered
+  by `test_orchestration_notes_format` + `test_orchestration_notes_visible_in_output`.)*
 
 ### Phase 3 — repo-aware mode
 
