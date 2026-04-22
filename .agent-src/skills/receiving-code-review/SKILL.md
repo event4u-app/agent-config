@@ -72,6 +72,13 @@ For each blocking/important comment:
   it does
 * Check whether the suggested fix would break another test or caller
 * Check `git blame` / history — current code may be that way for a reason
+* **Consult memory for prior context.** Via
+  [`memory-access`](../../guidelines/agent-infra/memory-access.md),
+  call `retrieve(types=["historical-patterns", "architecture-decisions"],
+  keys=<files in the review>, limit=3)`. A registered historical pattern
+  may confirm the reviewer's concern (accept) or an architecture
+  decision may explain why the current shape is intentional (push back
+  with the cited `id`).
 
 ### 4. Decide: accept, push back, or escalate
 

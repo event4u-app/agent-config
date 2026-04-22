@@ -41,9 +41,26 @@ STOP writing code. Run the matching analysis skill first:
 | Data flows to logs / API / external | `data-flow-mapper` |
 | Wide refactor of security-sensitive code | `blast-radius-analyzer` |
 
-Capture the output (abuse cases, missing controls, required negative tests) —
-implement against that list, not against your first instinct. Never silently
-fall back to editing without the analysis; if it is blocked, ask the user.
+**Before the analysis, consult memory for prior incidents** on this
+surface. Via [`memory-access`](../guidelines/agent-infra/memory-access.md):
+
+```python
+from scripts.memory_lookup import retrieve
+priors = retrieve(
+    types=["incident-learnings", "historical-patterns"],
+    keys=<touched file paths>,
+    limit=3,
+)
+```
+
+A prior security incident on the same path is the cheapest input to a
+threat pass — cite any matching `id` so the required control or
+regression test ships with the fix.
+
+Capture the analysis output (abuse cases, missing controls, required
+negative tests) — implement against that list, not your first instinct.
+Never silently fall back to editing without the analysis; if blocked,
+ask the user.
 
 ## When NOT to fire
 
