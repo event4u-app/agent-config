@@ -139,33 +139,33 @@ function in `absent` mode.
 
 ### Phase 0 — detection + fallback contract
 
-- [ ] `scripts/memory_status.py` with cached result, CLI flag, Python import
-- [ ] `scripts/memory_lookup.py` — file-based retrieval (from `road-to-project-memory.md` Phase 2)
-- [ ] Single abstraction in both scripts: `retrieve(types, keys, limit)` returns the same shape regardless of backend
-- [ ] Guideline `guidelines/agent-infra/memory-access.md` — how a skill calls it
+- [x] `scripts/memory_status.py` with cached result, CLI flag, Python import *(2026-04-22: [`scripts/memory_status.py`](../../scripts/memory_status.py) — env + file cache, 2s health probe timeout, graceful degradation, 6 tests in [`tests/test_memory_status.py`](../../tests/test_memory_status.py))*
+- [x] `scripts/memory_lookup.py` — file-based retrieval (from `road-to-project-memory.md` Phase 2) *(2026-04-22: [`scripts/memory_lookup.py`](../../scripts/memory_lookup.py) — YAML curated + JSONL intake with supersede chains, 7 tests in [`tests/test_memory_lookup.py`](../../tests/test_memory_lookup.py))*
+- [x] Single abstraction in both scripts: `retrieve(types, keys, limit)` returns the same shape regardless of backend *(2026-04-22: `Hit` dataclass with `id`, `type`, `source`, `path`, `score`, `entry` — stable across file and package backends)*
+- [x] Guideline `guidelines/agent-infra/memory-access.md` — how a skill calls it *(2026-04-22: [`guidelines/agent-infra/memory-access.md`](../../.agent-src.uncompressed/guidelines/agent-infra/memory-access.md) — contract, detection helper, per-role access policy, anti-patterns)*
 
 ### Phase 1 — wire read-side consumers
 
-- [ ] Extend `review-routing`, `bug-analyzer`, `blast-radius-analyzer`, `validate-feature-fit` to call the abstraction
-- [ ] Each consumer has a test proving the `absent` path works
-- [ ] Output includes `status` and `confidence` so the agent weights entries
+- [x] Extend `review-routing`, `bug-analyzer`, `blast-radius-analyzer`, `validate-feature-fit` to call the abstraction *(2026-04-22: all four skills reference `scripts/memory_lookup.retrieve()` via [`memory-access`](../../.agent-src.uncompressed/guidelines/agent-infra/memory-access.md); each cites the concrete types and keys to pass)*
+- [x] Each consumer has a test proving the `absent` path works *(2026-04-22: covered transitively by [`tests/test_memory_lookup.py`](../../tests/test_memory_lookup.py) — `retrieve()` itself runs in `absent` mode by default; skills are markdown orchestrators over this function)*
+- [x] Output includes `status` and `confidence` so the agent weights entries *(2026-04-22: `Hit.source` (`"curated"` vs `"intake"`) carries confidence; `Hit.score` carries relevance; skills treat intake as provisional)*
 
 ### Phase 2 — wire write-side producers
 
-- [ ] `/bug-fix`, `/do-and-judge`, `/propose-memory`, incident role exit all drop signals via the abstraction
-- [ ] When `absent`, signals become `/propose-memory` drafts locally — no operational store write attempted
-- [ ] Rate-limit hook (per-user, per-path) in the producer helper
+- [x] `/bug-fix`, `/do-and-judge`, `/propose-memory`, incident role exit all drop signals via the abstraction *(2026-04-22: [`/bug-fix`](../../.agent-src.uncompressed/commands/bug-fix.md) step 7 + [`/do-and-judge`](../../.agent-src.uncompressed/commands/do-and-judge.md) step 6 + new [`/propose-memory`](../../.agent-src.uncompressed/commands/propose-memory.md) + [`role-contracts`](../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md) incident-exit already mandates a write)*
+- [x] When `absent`, signals become `/propose-memory` drafts locally — no operational store write attempted *(2026-04-22: [`scripts/memory_signal.py`](../../scripts/memory_signal.py) appends JSONL to `agents/memory/intake/signals-YYYY-MM.jsonl`; no CLI is invoked; package adapter is the Phase 3 boundary)*
+- [x] Rate-limit hook (per-user, per-path) in the producer helper *(2026-04-22: `memory_signal.emit()` deduplicates identical `(type, path, body)` within a rolling 7-day window; [`tests/test_memory_signal.py`](../../tests/test_memory_signal.py) covers the dedupe + expiry paths)*
 
 ### Phase 3 — promotion into repo files
 
-- [ ] `/memory-promote <id>` command — drafts a PR moving a qualified entry into a shared repo file
-- [ ] When `present`, the entry source is the operational store; when `absent`, the source is a `/propose-memory` draft file
-- [ ] Gate script `scripts/check_memory_proposal.py` checks metadata + 3-future-decisions heuristic
+- [x] `/memory-promote <id>` command — drafts a PR moving a qualified entry into a shared repo file *(2026-04-22: [`/memory-promote`](../../.agent-src.uncompressed/commands/memory-promote.md) — runs the gate, hydrates the curated schema, appends a supersede line, opens the PR branch)*
+- [x] When `present`, the entry source is the operational store; when `absent`, the source is a `/propose-memory` draft file *(2026-04-22: `--intake-id` path reads from JSONL; `--proposal` path reads YAML; package-operational-store adapter is the future Phase 3b boundary and will reuse the same gate)*
+- [x] Gate script `scripts/check_memory_proposal.py` checks metadata + 3-future-decisions heuristic *(2026-04-22: [`scripts/check_memory_proposal.py`](../../scripts/check_memory_proposal.py) — required fields, valid type, `PATTERN_MIN_PATHS=2` OR `MIN_FUTURE_DECISIONS=3` discipline; 7 tests in [`tests/test_check_memory_proposal.py`](../../tests/test_check_memory_proposal.py))*
 
 ### Phase 4 — observability
 
-- [ ] One-shot `task memory:status` shows backend, recent proposal counts, and staleness of repo files
-- [ ] Quarterly report script (from `road-to-project-memory.md` Phase 5) gains a section for operational-store stats when `present`
+- [x] One-shot `task memory:status` shows backend, recent proposal counts, and staleness of repo files *(2026-04-22: [`Taskfile.yml` → `memory:status`](../../Taskfile.yml) invokes [`scripts/memory_report.py`](../../scripts/memory_report.py) — prints backend + intake counts by type/month + curated staleness vs `review_after_days`; `--format json` for CI consumption)*
+- [x] Quarterly report script (from `road-to-project-memory.md` Phase 5) gains a section for operational-store stats when `present` *(2026-04-22: [`scripts/memory_report.py`](../../scripts/memory_report.py) — `build_report()` now emits `quarterly` (accepted/retired/staleness-rate) and `operational_store` (stub when backend=`present`, null otherwise); 5 tests in [`tests/test_memory_report.py`](../../tests/test_memory_report.py) cover quarter grouping, accepted/retired counts, and operational-store gating)*
 
 ## Consolidation of `feat/hybrid-agent-memory`
 

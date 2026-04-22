@@ -328,24 +328,24 @@ pattern-compliant from day 1.
 
 ### 8.1 Target list
 
-- [ ] `analysis-autonomous-mode` → Self-Refine (arxiv.org/abs/2303.17651)
-- [ ] `review-changes` → LLM-as-Judge (arxiv.org/abs/2306.05685)
-- [ ] `bug-analyzer` → Chain-of-Verification (arxiv.org/abs/2309.11495)
-- [ ] `skill-improvement-pipeline` → Reflexion (arxiv.org/abs/2303.11366)
-- [ ] `adversarial-review` → Tree-of-Thoughts (arxiv.org/abs/2305.10601)
-- [ ] `sequential-thinking` → Chain-of-Thought (arxiv.org/abs/2201.11903)
-- [ ] New skills from Phases 1-7 that cite sources already in their frontmatter
+- [x] `analysis-autonomous-mode` → Self-Refine (arxiv.org/abs/2303.17651)
+- [x] `review-changes` → LLM-as-Judge (arxiv.org/abs/2306.05685)
+- [x] `bug-analyzer` → Chain-of-Verification (arxiv.org/abs/2309.11495)
+- [x] `skill-improvement-pipeline` → Reflexion (arxiv.org/abs/2303.11366)
+- [x] `adversarial-review` → Tree-of-Thoughts (arxiv.org/abs/2305.10601)
+- [x] `sequential-thinking` → Chain-of-Thought (arxiv.org/abs/2201.11903)
+- [ ] New skills from Phases 1-7 that cite sources already in their frontmatter *(depends on Phases 1-7)*
 
 ### 8.2 Retrofit template
 
-- [ ] Add a `## References` section near the end of each target skill
-- [ ] Format: short label + arxiv link + one-line relevance note
-- [ ] Do not change skill behavior — citation only
+- [x] Add a `## References` section near the end of each target skill
+- [x] Format: short label + arxiv link + one-line relevance note
+- [x] Do not change skill behavior — citation only
 
 ### 8.3 Phase-8 acceptance
 
-- [ ] All target skills retrofitted; linter green
-- [ ] Total line-count increase ≤10 lines per skill
+- [x] All target skills retrofitted; linter green *(2026-04-22)*
+- [x] Total line-count increase ≤10 lines per skill *(6 lines each)*
 
 ## Phase 9: AGENTS.md synthesis
 

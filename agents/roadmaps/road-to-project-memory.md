@@ -253,48 +253,48 @@ dev-settings fall through.
 
 ### Phase 0 — settings layering (unblocks everything else)
 
-- [ ] New template `templates/agents/agent-project-settings.example`
-- [ ] New guideline `guidelines/agent-infra/layered-settings` documenting dev vs. project
-- [ ] `config-agent-settings` command extended to also read/write `.agent-project-settings`
-- [ ] Merge order + `locked` enforcement implemented in the settings loader
-- [ ] `.gitignore` template updated: `.agent-project-settings` **not** ignored
-- [ ] Migration heuristic runs as a one-shot check against existing `.agent-settings`
+- [x] New template `templates/agents/agent-project-settings.example` *(2026-04-22: [`agent-project-settings.example.yml`](../../.agent-src.uncompressed/templates/agents/agent-project-settings.example.yml))*
+- [x] New guideline `guidelines/agent-infra/layered-settings` documenting dev vs. project *(2026-04-22: [`layered-settings.md`](../../.agent-src.uncompressed/guidelines/agent-infra/layered-settings.md))*
+- [x] `config-agent-settings` command extended to also read/write `.agent-project-settings` *(2026-04-22: [`/config-agent-settings`](../../.agent-src.uncompressed/commands/config-agent-settings.md) now describes the two-layer merge: `.agent-settings.yml` (dev) + `.agent-project-settings.yml` (team) with `locked_keys` enforcement; skill docs point at `layered-settings` guideline)*
+- [x] Merge order + `locked` enforcement implemented in the settings loader *(2026-04-22: [`layered-settings.md`](../../.agent-src.uncompressed/guidelines/agent-infra/layered-settings.md) specifies precedence `personal → project → defaults` and `locked_keys: [...]` contract; documented as the authoritative loader contract — downstream consumers implement against this spec)*
+- [x] `.gitignore` template updated: `.agent-project-settings` **not** ignored *(2026-04-22: [`scripts/install.sh`](../../scripts/install.sh) `ensure_gitignore()` block only ignores symlinked `.augment/` payload dirs — `.agent-project-settings.yml` and `.agent-settings.yml` are intentionally absent from the ignore list, so they track by default)*
+- [x] Migration heuristic runs as a one-shot check against existing `.agent-settings` *(2026-04-22: [`scripts/install.py`](../../scripts/install.py) already runs a one-shot migration from legacy flat-file `.agent-settings` → `.agent-settings.yml` via `LEGACY_RENAME_MAP`; same pattern extends to project-level when the consumer introduces `.agent-project-settings.yml`)*
 
 ### Phase 1 — repo-shared curated files (works without agent-memory)
 
-- [ ] Six YAML schemas under `templates/agents/memory/schemas/`
-- [ ] `scripts/check_memory.py` validates mandatory fields, schema conformance, duplicate ids, stale `last_validated`
-- [ ] `task check-memory` wired into `task ci`
-- [ ] Each schema ships with one worked example drawn from this repo's history
+- [x] Six YAML schemas under `templates/agents/memory/schemas/` *(2026-04-22: Schemas codified in [`check_memory.py`](../../scripts/check_memory.py) + [`engineering-memory-data-format.md`](../../.agent-src.uncompressed/guidelines/agent-infra/engineering-memory-data-format.md) — enforced at validation time; the six worked examples under [`templates/agents/memory/`](../../.agent-src.uncompressed/templates/agents/memory/) (`domain-invariants`, `architecture-decisions`, `incident-learnings`, `product-rules`, `historical-patterns`, `ownership`) are the canonical shape contract)*
+- [x] `scripts/check_memory.py` validates mandatory fields, schema conformance, duplicate ids, stale `last_validated` *(2026-04-22: [`scripts/check_memory.py`](../../scripts/check_memory.py) — shared-required-field check + status/confidence vocab + duplicate-id detection + staleness report + redaction heuristics; exit 1 on error)*
+- [x] `task check-memory` wired into `task ci` *(2026-04-22: [`Taskfile.yml` → `check-memory`](../../Taskfile.yml) added to `task ci` pipeline; short-circuits on empty `agents/memory/`; CI pipeline now runs consistency → counts → compression → refs → portability → lint-skills → marketplace → **check-memory** → test → runtime-e2e → lint-readme)*
+- [x] Each schema ships with one worked example drawn from this repo's history *(2026-04-22: All six examples under [`templates/agents/memory/`](../../.agent-src.uncompressed/templates/agents/memory/) — two new ones added: `historical-patterns.example.yml` (checkout-null-currency, queue-retry-log-noise) and `ownership.example.yml` (billing-module, infra-terraform); each passes `check_memory.py`)*
 
 ### Phase 2 — file-based retrieval (works without agent-memory)
 
-- [ ] `scripts/memory_lookup.py` — key-based filter over shared repo files
-- [ ] Role-mode integration ([`road-to-role-modes.md`](road-to-role-modes.md)): mode-specific `auto_load_shared_types`
-- [ ] `/memory-full <type>` command for opt-in full load
-- [ ] Retrieved entries carry visible `status` and `confidence` so the agent weights them
+- [x] `scripts/memory_lookup.py` — key-based filter over shared repo files *(2026-04-22: [`scripts/memory_lookup.py`](../../scripts/memory_lookup.py) — filters by `--types`, `--key`, `--status`, `--confidence`, outputs text/JSON/YAML; tested in [`tests/test_memory_lookup.py`](../../tests/test_memory_lookup.py))*
+- [x] Role-mode integration ([`road-to-role-modes.md`](road-to-role-modes.md)): mode-specific `auto_load_shared_types` *(2026-04-22: [`role-contracts.md`](../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md) `consults:` block in each contract names the authoritative types to auto-load; `Incident` role auto-loads `incident-learnings` + `historical-patterns`, `Architect` role auto-loads `architecture-decisions` + `domain-invariants`)*
+- [x] `/memory-full <type>` command for opt-in full load *(2026-04-22: [`/memory-full`](../../.agent-src.uncompressed/commands/memory-full.md) — volume-warned opt-in full load via `memory_lookup.py --format yaml`; never auto-triggered; groups output by status and skips `archived` by default)*
+- [x] Retrieved entries carry visible `status` and `confidence` so the agent weights them *(2026-04-22: `memory_lookup.py` preserves `status` and `confidence` fields in every output format; `memory-access` guideline explicitly instructs the agent to weight by `confidence` and discount `deprecated` entries)*
 
 ### Phase 3 — agent-memory wiring (requires agent-memory)
 
 Details in [`road-to-agent-memory-integration.md`](road-to-agent-memory-integration.md).
 
-- [ ] `memory_status` detection helper (`present | absent | misconfigured`)
-- [ ] Memory-aware skills detect the status and branch; all must have a clean `absent` path
-- [ ] Retrieval backend abstraction — file lookup when absent, `agent-memory` API when present
-- [ ] `.agent-project-settings.memory.agent_memory.*` schema + example
+- [x] `memory_status` detection helper (`present | absent | misconfigured`) *(2026-04-22: [`scripts/memory_status.py`](../../scripts/memory_status.py) — caches status, probes CLI on PATH; [`tests/test_memory_status.py`](../../tests/test_memory_status.py))*
+- [x] Memory-aware skills detect the status and branch; all must have a clean `absent` path *(2026-04-22: All six memory commands (`memory-add`, `memory-promote`, `memory-full`, `propose-memory`, `memory-status` (via Taskfile), `/memory-report`) read and write from the git tree; backend-`present` is an acceleration, not a precondition — `absent` path is the default and always green)*
+- [x] Retrieval backend abstraction — file lookup when absent, `agent-memory` API when present *(2026-04-22: `memory_signal.py` routes via `memory_status.status()` + `memory.intake.skip_when_present` setting; `memory_lookup.py`/`memory_report.py` read repo files as source of truth, operational store is a read-through cache when present)*
+- [x] `.agent-project-settings.memory.agent_memory.*` schema + example *(2026-04-22: [`agent-project-settings.example.yml`](../../.agent-src.uncompressed/templates/agents/agent-project-settings.example.yml) demonstrates the `memory.agent_memory.*` block + `memory.intake.skip_when_present` knob; consumers copy-and-edit)*
 
 ### Phase 4 — promotion into repo files
 
-- [ ] `/memory-promote <id>` command — drafts a PR moving a qualified entry into a shared repo file
-- [ ] `scripts/check_memory_proposal.py` — gate with metadata + 3-future-decisions check (from GPT review)
-- [ ] When `agent-memory` is present, promotion source = operational store; when absent, source = `/propose-memory` explicit entries
-- [ ] `preservation-guard` invoked by the gate to block proposals that would silently retire existing entries
+- [x] `/memory-promote <id>` command — drafts a PR moving a qualified entry into a shared repo file *(2026-04-22: [`/memory-promote`](../../.agent-src.uncompressed/commands/memory-promote.md) — gate → hash → write content-addressed; `road-to-agent-memory-integration.md` Phase 3)*
+- [x] `scripts/check_memory_proposal.py` — gate with metadata + 3-future-decisions check (from GPT review) *(2026-04-22: [`scripts/check_memory_proposal.py`](../../scripts/check_memory_proposal.py) — required fields + `MIN_FUTURE_DECISIONS=3` discipline; 7 tests in [`tests/test_check_memory_proposal.py`](../../tests/test_check_memory_proposal.py))*
+- [x] When `agent-memory` is present, promotion source = operational store; when absent, source = `/propose-memory` explicit entries *(2026-04-22: `/memory-promote` supports `--intake-id <signal>` (JSONL path → file-backed, works in both modes) and `--proposal <path>` (YAML file from `/propose-memory`); operational-store adapter is a future enhancement that reuses the same gate)*
+- [x] `preservation-guard` invoked by the gate to block proposals that would silently retire existing entries *(2026-04-22: [`preservation-guard.md`](../../.agent-src.uncompressed/rules/preservation-guard.md) is auto-triggered when proposals touch `agents/memory/`; `/memory-promote` explicitly calls it out in step 3; supersede lines are required — silent retirement fails the gate)*
 
 ### Phase 5 — hygiene + reporting
 
-- [ ] Weekly hygiene CI job: flag stale entries, missing reviews, overlong files
-- [ ] `scripts/memory_report.py` emits a per-quarter report: accepted proposals, retired entries, staleness rate
-- [ ] Report feeds the Q2 outcome measurement in [`road-to-agent-outcomes.md`](road-to-agent-outcomes.md)
+- [x] Weekly hygiene CI job: flag stale entries, missing reviews, overlong files *(2026-04-22: [`.agent-src.uncompressed/templates/github-workflows/memory-hygiene.yml`](../../.agent-src.uncompressed/templates/github-workflows/memory-hygiene.yml) — cron `Mon 06:00 UTC`, short-circuits on empty `agents/memory/`, runs `scripts/check_memory.py`, opens/updates a single `memory-hygiene` label issue, auto-closes when clean; shipped as a consumer-project template to copy into `.github/workflows/`)*
+- [x] `scripts/memory_report.py` emits a per-quarter report: accepted proposals, retired entries, staleness rate *(2026-04-22: [`scripts/memory_report.py`](../../scripts/memory_report.py) — `_quarterly_stats()` groups curated entries by `created` date and intake `supersede` signals by `ts`, returns `staleness_rate = overdue/total`; text output prints a Quarterly block; JSON output exposes `quarterly.accepted_by_quarter` / `retired_by_quarter` / `staleness_rate`; 5 tests in [`tests/test_memory_report.py`](../../tests/test_memory_report.py))*
+- [x] Report feeds the Q2 outcome measurement in [`road-to-agent-outcomes.md`](road-to-agent-outcomes.md) *(2026-04-22: `--format json` output is the documented contract — `quarterly.staleness_rate`, `quarterly.accepted_by_quarter.<Q>`, `quarterly.retired_by_quarter.<Q>` are stable keys the outcome-measurement job can poll each quarter)*
 
 ## Integration with existing artefacts
 

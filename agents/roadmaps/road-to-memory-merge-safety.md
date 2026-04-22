@@ -165,37 +165,37 @@ agents/memory/product-rules/*.yml       text eol=lf
 
 ### Phase 0 — contract + fixtures
 
-- [ ] This doc accepted as the canonical merge-safety reference
-- [ ] `templates/agents/.gitattributes.fragment` shipped
-- [ ] `scripts/check_memory.py` rejects in-place edits of existing JSONL
-      lines (enforces append-only via git diff inspection)
-- [ ] Two-branch merge fixture under `tests/fixtures/memory-merge/` proves
-      parallel intake writes merge clean
+- [x] This doc accepted as the canonical merge-safety reference *(2026-04-22: Phase 0 shipped — `.gitattributes.fragment`, append-only CI check, regression tests — this file is the contract)*
+- [x] `templates/agents/.gitattributes.fragment` shipped *(2026-04-22)*
+- [x] `scripts/check_memory.py` rejects in-place edits of existing JSONL
+      lines (enforces append-only via git diff inspection) *(2026-04-22: [`scripts/check_memory.py --append-only`](../../scripts/check_memory.py) — parses unified-0 diff hunks vs `GITHUB_BASE_REF`/`origin/main`; any hunk removing/modifying existing bytes in `agents/memory/intake/*.jsonl` fails; 4 regression tests in `tests/test_check_memory.py`; template copy shipped in [`templates/scripts/check_memory.py`](../../.agent-src.uncompressed/templates/scripts/check_memory.py))*
+- [x] Two-branch merge fixture under `tests/fixtures/memory-merge/` proves
+      parallel intake writes merge clean *(2026-04-22: [`tests/fixtures/memory-merge/`](../../tests/fixtures/memory-merge/README.md) + [`tests/test_memory_merge_fixture.py`](../../tests/test_memory_merge_fixture.py) — real git repo, real `merge=union` driver, asserts no conflict markers and all append-set survival)*
 
 ### Phase 1 — intake path
 
-- [ ] `scripts/memory_lookup.py` reads intake JSONL with supersede-chain
-      resolution and dedupe by `id`
-- [ ] `/propose-memory` appends; never rewrites
-- [ ] CI check: fails if a PR modifies any line in
-      `agents/memory/intake/*.jsonl` other than appending at EOF
+- [x] `scripts/memory_lookup.py` reads intake JSONL with supersede-chain
+      resolution and dedupe by `id` *(2026-04-22: [`scripts/memory_lookup.py`](../../scripts/memory_lookup.py) walks `agents/memory/intake/*.jsonl`, collects `supersede` records first, then excludes any id in the supersede set and deduplicates by most-recent `created` timestamp; [`tests/test_memory_lookup.py`](../../tests/test_memory_lookup.py) covers the chain + dedupe paths)*
+- [x] `/propose-memory` appends; never rewrites *(2026-04-22: [`/propose-memory`](../../.agent-src.uncompressed/commands/propose-memory.md) shells out to `scripts/memory_signal.py` which opens the monthly file in `"a"` mode; no read-modify-write path exists; the `--append-only` CI gate catches any regression)*
+- [x] CI check: fails if a PR modifies any line in
+      `agents/memory/intake/*.jsonl` other than appending at EOF *(2026-04-22: [`scripts/check_memory.py --append-only`](../../scripts/check_memory.py) is already wired into Phase 0 above — same tool, same test coverage; consumer projects install the gate via [`memory-hygiene.yml`](../../.agent-src.uncompressed/templates/github-workflows/memory-hygiene.yml) workflow template)*
 
 ### Phase 2 — content-addressed promotion
 
-- [ ] `/memory-promote` writes `agents/memory/<type>/<hash>.yml`
-- [ ] Hash = sha256 of canonical-JSON-serialized entry, first 12 hex chars
-- [ ] Duplicate hash = exact duplicate → no-op (git sees unchanged file)
-- [ ] Schema validation before write (`scripts/check_memory.py`)
-- [ ] Two-branch merge fixture: same promotion on both branches results
-      in one file, not two
+- [x] `/memory-promote` writes `agents/memory/<type>/<hash>.yml` *(2026-04-22: [`/memory-promote` step 4](../../.agent-src.uncompressed/commands/memory-promote.md#4-write-the-curated-entry-content-addressed) — computes hash via `scripts/memory_hash.py`, writes one-entry-per-file, refuses if legacy single-file `agents/memory/<type>.yml` still exists)*
+- [x] Hash = sha256 of canonical-JSON-serialized entry, first 12 hex chars *(2026-04-22: [`scripts/memory_hash.py`](../../scripts/memory_hash.py) — `canonical_json()` sorts keys, no whitespace; `hash_entry()` returns `sha256[:12]`; 6 tests in [`tests/test_memory_hash.py`](../../tests/test_memory_hash.py) prove key-order invariance and list-order sensitivity)*
+- [x] Duplicate hash = exact duplicate → no-op (git sees unchanged file) *(2026-04-22: [`test_content_addressed_same_entry_converges`](../../tests/test_memory_merge_fixture.py) merges two branches writing identical content to the same hash-filename — merge succeeds, file is unchanged, filesystem has one file, no conflict markers)*
+- [x] Schema validation before write (`scripts/check_memory.py`) *(2026-04-22: `/memory-promote` step 4 — mandatory `check_memory.py --path <hash>.yml` call; failure path deletes the file and aborts the promotion rather than committing an invalid entry)*
+- [x] Two-branch merge fixture: same promotion on both branches results
+      in one file, not two *(2026-04-22: [`tests/test_memory_merge_fixture.py`](../../tests/test_memory_merge_fixture.py) — two new test cases: identical entry → one file; different entries → two separate files; both verify zero conflict markers)*
 
 ### Phase 3 — package integration
 
-- [ ] `memory_status.py` wires backend selection
-- [ ] When `present`, intake JSONL is still written (debug trail) unless
-      `memory.intake.skip_when_present: true` is set
-- [ ] Promoted files remain repo-side regardless of backend — the curated
-      layer is always git
+- [x] `memory_status.py` wires backend selection *(2026-04-22: [`scripts/memory_status.py`](../../scripts/memory_status.py) already in place from `road-to-agent-memory-integration.md` Phase 0 — probes `agent-memory` CLI on PATH, caches `status() == present | absent`, returns `backend=file` fallback)*
+- [x] When `present`, intake JSONL is still written (debug trail) unless
+      `memory.intake.skip_when_present: true` is set *(2026-04-22: [`scripts/memory_signal.py`](../../scripts/memory_signal.py) now reads `.agent-settings.yml` → `memory.intake.skip_when_present` and only bypasses the JSONL write when both the backend is `present` AND the consumer opted out; default remains debug-trail-on; 4 new tests in [`tests/test_memory_signal.py`](../../tests/test_memory_signal.py) cover skip-true, skip-false, absent-backend, and missing-settings paths)*
+- [x] Promoted files remain repo-side regardless of backend — the curated
+      layer is always git *(2026-04-22: [`/memory-promote`](../../.agent-src.uncompressed/commands/memory-promote.md) always writes `agents/memory/<type>/<hash>.yml` with no backend branch — the operational package (when present) syncs FROM the git tree, not INTO it; `memory_report.py` and `memory_lookup.py` both hit the repo files as source of truth)*
 
 ## Acceptance criteria
 

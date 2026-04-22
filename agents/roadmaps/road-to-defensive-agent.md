@@ -210,15 +210,15 @@ into the shared package.
 
 Ship in `.agent-src.uncompressed/templates/contexts/`:
 
-- [ ] `auth-model.md` — roles, permissions, override/impersonation rules
-- [ ] `tenant-boundaries.md` — tenancy type, scope propagation, known exceptions
-- [ ] `data-sensitivity.md` — field classification, masking rules, log-safe types
-- [ ] `deployment-order.md` — migration/deploy staging, rollback plan, feature flags
-- [ ] `observability.md` — Sentry scopes, log channels, known alerts
+- [x] `auth-model.md` — roles, permissions, override/impersonation rules *(2026-04-22: [`templates/contexts/auth-model.md`](../../.agent-src.uncompressed/templates/contexts/auth-model.md))*
+- [x] `tenant-boundaries.md` — tenancy type, scope propagation, known exceptions *(2026-04-22: [`templates/contexts/tenant-boundaries.md`](../../.agent-src.uncompressed/templates/contexts/tenant-boundaries.md))*
+- [x] `data-sensitivity.md` — field classification, masking rules, log-safe types *(2026-04-22: [`templates/contexts/data-sensitivity.md`](../../.agent-src.uncompressed/templates/contexts/data-sensitivity.md))*
+- [x] `deployment-order.md` — migration/deploy staging, rollback plan, feature flags *(2026-04-22: [`templates/contexts/deployment-order.md`](../../.agent-src.uncompressed/templates/contexts/deployment-order.md))*
+- [x] `observability.md` — Sentry scopes, log channels, known alerts *(2026-04-22: [`templates/contexts/observability.md`](../../.agent-src.uncompressed/templates/contexts/observability.md))*
 
 Plus a new skill:
 
-- [ ] `context-authoring` — Tier 3, walks the user through filling in the above templates
+- [x] `context-authoring` — Tier 3, walks the user through filling in the above templates *(2026-04-22: [`skills/context-authoring/SKILL.md`](../../.agent-src.uncompressed/skills/context-authoring/SKILL.md) — harvest-first walkthrough, preserves template contract, emits `<!-- TBD: ... -->` markers instead of fabricating)*
 
 ### 3.3 — Acceptance criteria
 

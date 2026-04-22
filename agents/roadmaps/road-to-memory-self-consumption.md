@@ -141,10 +141,12 @@ for us, it will not work for any other consumer.
 
 ### Phase 0 — clauses freeze
 
-- [ ] This roadmap accepted; no-circular-dep clause referenced from
-      contribution docs
-- [ ] `agent-config` `composer.json` / `package.json` reviewed — no
+- [x] This roadmap accepted; no-circular-dep clause referenced from
+      contribution docs *(2026-04-22: clause added to
+      [`CONTRIBUTING.md`](../../CONTRIBUTING.md#dependency-direction--no-circular-deps-with-agent-memory))*
+- [x] `agent-config` `composer.json` / `package.json` reviewed — no
       hard dependency on agent-memory; `suggest` only
+      *(verified 2026-04-22: neither manifest mentions agent-memory)*
 
 ### Phase 1 — conflict rule enforcement
 

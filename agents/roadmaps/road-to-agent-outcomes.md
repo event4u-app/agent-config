@@ -127,6 +127,7 @@ The master frame is "holding" when:
 
 ## See also
 
+- [`open-questions.md`](open-questions.md) — **decision queue** across all active roadmaps (triage of blockers, 2026-04-22)
 - [`road-to-defensive-agent.md`](road-to-defensive-agent.md) — Governance base, not replaced
 - [`road-to-stronger-skills.md`](road-to-stronger-skills.md) — Capability-quality base, not replaced
 - [`road-to-trigger-evals.md`](road-to-trigger-evals.md) — Activation base, extended under Q2

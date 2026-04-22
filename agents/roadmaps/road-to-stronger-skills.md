@@ -161,7 +161,11 @@ that are handled elsewhere. Reconciled during Phase 0.
 - [ ] Add a linter rule or lightweight check that **detects** the presence of
       each pattern (greps for the blockquote opening, the `route to` phrasing,
       the validation gate heading) — produces a before/after metric
-- [ ] Reconcile the tier counts against the 116-skill total — no skill left out
+- [ ] Reconcile the tier counts against the current skill total — no skill left out
+      *(baseline drift verified 2026-04-22: actual count is **121**, not 116 as
+      originally planned — 5 skills added between roadmap authoring and this
+      audit; see [`open-questions.md`](open-questions.md) Q12 for decision on
+      whether to absorb into tiers or flag out-of-scope)*
 
 ### Phase 1 — Tier 1 (verdict / review / gate) — 12 skills
 
@@ -263,7 +267,9 @@ this roadmap's progress.
 - [ ] A `preservation-guard` audit on 10% random sample (12 skills) — every
       skill must be at least as strong as before (stronger validation, stronger
       anti-pattern, clearer scope)
-- [ ] README + AGENTS.md counts unchanged (still 116 skills)
+- [ ] README + AGENTS.md counts reflect the actual skill total at roadmap
+      completion (baseline 121 as of 2026-04-22; roadmap must not itself
+      add or remove skills — backport only)
 - [ ] A short `agents/analysis/backport-outcomes.md` captures what **did** and
       **did not** improve — feeds Phase 3.2 acceptance of the parent roadmap
 

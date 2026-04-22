@@ -150,26 +150,26 @@ marks the base patterns `locked: true` so no consumer can disable them.
 
 ### Phase 1 — schemas and templates
 
-- [ ] Four new YAML templates under `.agent-src.uncompressed/templates/agents/`
-- [ ] One guideline per schema: purpose, format, owner, consulting skills, retirement
-- [ ] `check_references.py` validates references from YAML → skill / ADR path exist
+- [x] Four new YAML templates under `.agent-src.uncompressed/templates/agents/memory/` *(2026-04-22: [`domain-invariants`](../../.agent-src.uncompressed/templates/agents/memory/domain-invariants.example.yml), [`architecture-decisions`](../../.agent-src.uncompressed/templates/agents/memory/architecture-decisions.example.yml), [`incident-learnings`](../../.agent-src.uncompressed/templates/agents/memory/incident-learnings.example.yml), [`product-rules`](../../.agent-src.uncompressed/templates/agents/memory/product-rules.example.yml))*
+- [x] ~~One guideline per schema~~ **Single consolidated guideline** matching the existing `review-routing-data-format` pattern: purpose, format, owner, consulting skills, retirement *(2026-04-22: [`engineering-memory-data-format.md`](../../.agent-src.uncompressed/guidelines/agent-infra/engineering-memory-data-format.md))*
+- [x] `check_references.py` validates references from YAML → skill / ADR path exist *(2026-04-22: [`scripts/check_references.py`](../../scripts/check_references.py) now walks `agents/memory/**/*.yml` — extracts local file paths (`enforcement: test:`, `source:` scalars) and `skill:`/`skills:` values, validates them against real files + `artifacts["skills"]`; URLs/ADR-pseudo-URIs/globs are skipped; 8 tests in [`tests/test_check_references_memory.py`](../../tests/test_check_references_memory.py))*
 
 ### Phase 2 — reader integration
 
-- [ ] `developer-like-execution` skill gains a "consult domain-invariants for touched paths" step
-- [ ] `feature-plan` command reads `architecture-decisions.yml` before proposing structure
-- [ ] `bug-investigate` command reads `incident-learnings.yml` for touched paths
-- [ ] `validate-feature-fit` skill reads `product-rules.yml`
+- [x] `developer-like-execution` skill gains a "consult domain-invariants for touched paths" step *(2026-04-22: step 3 extended — read `agents/memory/domain-invariants.yml` for matching `scope:`, surface conflicts)*
+- [x] `feature-plan` command reads `architecture-decisions.yml` before proposing structure *(2026-04-22: step 4 extended — active ADRs with `scope:` covering affected modules are binding; conflicts surface as decisions)*
+- [x] `bug-investigate` command reads `incident-learnings.yml` for touched paths *(2026-04-22: step 4 gained sub-step 5 — cite matching `id:` in root-cause report)*
+- [x] `validate-feature-fit` skill reads `product-rules.yml` *(2026-04-22: step 3 extended — product rules are intentional business constraints; feature must respect or explicitly propose to retire)*
 
 ### Phase 3 — writer ergonomics
 
-- [ ] `/memory-add <type>` command — guided YAML entry with validation against the schema
-- [ ] Incident-learnings entry is the final step of the `Incident` role mode
+- [x] `/memory-add <type>` command — guided YAML entry with validation against the schema *(2026-04-22: [`/memory-add`](../../.agent-src.uncompressed/commands/memory-add.md) — 6-step flow: pick type → duplicate check → collect required fields → show draft → write + gate → cross-link; runs `check_memory.py` as hard gate, reverts on failure)*
+- [x] Incident-learnings entry is the final step of the `Incident` role mode *(2026-04-22: [`role-contracts.md` → Incident](../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md#incident) — contract gains an "Incident learning" field (signal id or `/memory-add` draft); header table updated; mode exits MUST emit the entry via [`memory-access`](../../.agent-src.uncompressed/guidelines/agent-infra/memory-access.md) or `/memory-add incident-learnings`, else the absence is logged rather than silently skipped)*
 
 ### Phase 4 — hygiene and expiry
 
-- [ ] `scripts/check_memory.py` flags entries older than the type-specific expiry window
-- [ ] CI job `memory-hygiene` runs weekly (not per PR) to keep the signal fresh
+- [x] `scripts/check_memory.py` flags entries older than the type-specific expiry window *(2026-04-22: staleness reported as info-level finding when `(today − last_validated) > review_after_days`; active-status entries only)*
+- [x] CI job `memory-hygiene` runs weekly (not per PR) to keep the signal fresh *(2026-04-22: [`templates/github-workflows/memory-hygiene.yml`](../../.agent-src.uncompressed/templates/github-workflows/memory-hygiene.yml) — weekly cron + `workflow_dispatch`; opens/updates/closes a single `memory-hygiene`-labelled issue; short-circuits when no memory files exist; [`templates/scripts/check_memory.py`](../../.agent-src.uncompressed/templates/scripts/check_memory.py) shipped alongside with installation docs)*
 
 ## Adoption story — the part that is usually missing
 
