@@ -1,11 +1,11 @@
 # Agent Config — Governed Agent System
 
-Teach your AI agents Laravel, PHP, testing, Git workflows, and **90+ more skills** — with quality guardrails built in.
+Teach your AI agents Laravel, PHP, testing, Git workflows, and **120+ more skills** — with quality guardrails built in.
 
 > Your agent learns to write Laravel code, run tests, create PRs, fix CI — and follows your team's coding standards while doing it.
 
 <p align="center">
-  <strong>100 Skills</strong> · <strong>36 Rules</strong> · <strong>54 Commands</strong> · <strong>37 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>124 Skills</strong> · <strong>42 Rules</strong> · <strong>66 Commands</strong> · <strong>46 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---

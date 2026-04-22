@@ -48,6 +48,11 @@ TARGETS: list[tuple[str, list[tuple[str, str]]]] = [
             (r"(Browse all )(\d+)( commands\])", "commands"),
             (r"(package \(rules \+ )(\d+)( skills)", "skills"),
             (r"(skills \+ )(\d+)( native commands)", "commands"),
+            # Hero line: **NNN Skills** · **NNN Rules** · **NNN Commands** · **NNN Guidelines**
+            (r"(<strong>)(\d+)( Skills</strong>)", "skills"),
+            (r"(<strong>)(\d+)( Rules</strong>)", "rules"),
+            (r"(<strong>)(\d+)( Commands</strong>)", "commands"),
+            (r"(<strong>)(\d+)( Guidelines</strong>)", "guidelines"),
         ],
     ),
     (
