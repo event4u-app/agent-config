@@ -44,6 +44,7 @@ Everything else surfaces here as a question.
 | Master-frame link to decision hub | `road-to-agent-outcomes.md` | ✅ Linked |
 | Compression sync + hash verification | repo-wide | ✅ `compress.py --check-hashes` clean |
 | CI checks (lint-skills, check-refs, check-portability) | repo-wide | ✅ All green |
+| `package.json` / `marketplace.json` version drift to 1.8.0 + release guard | release-infra | ✅ Both synced, CI workflow asserts tag == package.json == marketplace.json on tag push; `task release:bump` keeps all three aligned going forward. Externally visible bug (Packagist showed 1.4.0 while git was at 1.8.0) flagged by a repo-review pass on 2026-04-22. |
 
 ## Questions by roadmap
 
@@ -121,6 +122,44 @@ Everything else surfaces here as a question.
 - **Q17 — Arxiv reference retrofit.** Phase 9 adds `## References` to
   ~6 skills. Small, but touches existing skills — confirm OK.
   → [Phase 9](road-to-autonomous-agent.md)
+
+### External adoption feedback (2026-04-22 review pass)
+
+Surfaced by an external tech-lead-style review of the public repo. Praise
+and non-actionable framing (productivity, "AI-OS", "no real thinking") are
+not captured here — only items that imply a concrete open decision.
+
+- **Q18 — Positioning: Laravel-first vs. broad multi-stack?** The core
+  catalog (laravel, eloquent, flux, pest-testing, artisan-commands,
+  jobs-events, laravel-*) is Laravel-dense, while the analysis layer
+  (`project-analysis-{react,nextjs,node-express,symfony,zend-laminas}`)
+  advertises multi-stack breadth. External reviewers read this as an
+  inconsistency. Two roadmap-level options:
+    1. **Laravel-first** — README/AGENTS.md lead with "Laravel + multi-
+       stack analysis"; broaden analysis skills only, not authoring.
+    2. **Multi-stack breadth** — commit to parity (authoring + analysis)
+       for at least one non-PHP stack before calling the package
+       framework-agnostic. Adds a large new roadmap.
+  → No matching roadmap yet. Decide before the next README pass.
+
+- **Q19 — Install preset for solo devs / side projects.** 122 skills +
+  42 rules is a lot of agent surface for a one-dev project. Currently
+  `scripts/install.sh` installs the full set; `.agent-settings.yml`
+  has per-feature toggles but no named preset. Options:
+    1. Add a `preset: lite|full|enterprise` key to `.agent-settings.yml`
+       with curated skill/rule subsets per preset.
+    2. Lean on `.augmentignore` + per-tool ignore files (exists today
+       but undocumented for this purpose).
+    3. No preset — document the trim path instead.
+  → Partially touches `road-to-project-memory.md` Q6. Independent
+     decision.
+
+- **Q20 — Onboarding / first-15-minutes experience.** No dedicated doc
+  or command that walks a new adopter from `composer require` to
+  "first skill triggered in my editor". `task first-run` exists
+  (`scripts/first-run.sh`) — is it enough, or does it need a
+  companion `/onboard` command + a 15-minute tutorial in `docs/`?
+  → No matching roadmap. Small but externally visible gap.
 
 ## Cross-repo questions (`agents/roadmaps/agent-memory/*`)
 
