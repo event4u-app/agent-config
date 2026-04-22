@@ -118,11 +118,16 @@ continue to rollout.
       place, **6 descriptions rewritten** (the 3 pilots + `developer-like-execution`,
       `git-workflow`, `conventional-commits-writing`) so the pilot evals measure
       post-rewrite routing.
-- [ ] Claude API key with prepaid budget available (target: $50 ceiling across
+- [-] Claude API key with prepaid budget available (target: $50 ceiling across
       all PoC + rollout runs combined). **Blocker for Phase 2 decision gate.**
-- [ ] Confirm current pricing of whichever model runs our sessions; use that
+      *(2026-04-22: deferred — requires user decision on budget and provisioning.
+      Tracked as Q28 in [`open-questions-2.md`](open-questions-2.md). Runner and
+      wiring are shipped; only the live execution is gated on this.)*
+- [-] Confirm current pricing of whichever model runs our sessions; use that
       exact model for trigger measurements (undertriggering is model-specific).
       *Default in runner: `claude-sonnet-4-5`; override with `--model`.*
+      *(2026-04-22: deferred together with the API-key item — settled once the
+      budget conversation concludes. Tracked as Q28 in `open-questions-2.md`.)*
 - [x] Branch off current feature branch (`feat/pushy-descriptions`, PR #14).
       Originally said "off main after 1.7.1 merges" — working stacked instead to
       keep pattern + runner in one release.
@@ -296,8 +301,24 @@ and stop. Do not expand scope.
    Mitigation: 60% train / 40% held-out test split from day one (stolen from
    skill-creator verbatim — this part is worth copying).
 
+## Final status — 2026-04-22
+
+| Item set | Status |
+|---|---|
+| Phase 0 prerequisites — rewrites, pattern in `skill-quality`, audit tool | ✅ done |
+| Phase 1 PoC — runner, 3-skill wiring, MockRouter, dry-run mode | ✅ shipped (PR #14) |
+| Phase 2 decision gate — live execution against Claude API | ⏸ deferred (Q28 — budget) |
+| Phase 3+ — rollout, schema, quarterly review | ⏸ deferred (unblocks after Q28) |
+
+The runner and wiring are production-ready. **Execution** is the
+only blocker, gated on Q28 in
+[`open-questions-2.md`](open-questions-2.md). Roadmap stays **open**
+(not archived) because Phases 2-3 still have real work to do once
+unblocked — archive when the first real eval report lands.
+
 ## Related
 
+- [`open-questions-2.md`](open-questions-2.md) — Q28 (budget gate)
 - [`archive/road-to-anthropic-alignment.md`](archive/road-to-anthropic-alignment.md) — parent roadmap (Phases 1-2: marketplace + pushy descriptions; archived 2026-04-21)
 - [`archive/road-to-9.md`](archive/road-to-9.md) — archived sibling (runtime depth, closed 2026-04-21)
 - [`archive/road-to-mcp.md`](archive/road-to-mcp.md) — archived sibling (MCP config generation, closed 2026-04-21)

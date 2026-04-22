@@ -56,6 +56,20 @@
   and reports back. Until then, Phase 5 item stays `[-]` skipped
   with this rationale.
 
+### `road-to-trigger-evals.md`
+
+- **Q28** 💰 `budget` — **Claude API key + budget for live trigger
+  eval runs.** Phase 2 of `road-to-trigger-evals.md` needs a
+  prepaid key (target: $50 ceiling across all PoC + rollout runs
+  combined) and confirmation of which model the user's sessions
+  actually run (undertriggering is model-specific; runner defaults
+  to `claude-sonnet-4-5`, override with `--model`). Ship wiring
+  has been done; execution is the only gate. Decision from user:
+  - Is the $50 ceiling still the agreed budget?
+  - Who provisions the key (user account vs. project account)?
+  - Which model name should the runner lock to, or do we keep
+    `--model` manual per run?
+
 ## See also
 
 - [`open-questions.md`](open-questions.md) — Pass 1 (Q1-Q25)
