@@ -304,19 +304,25 @@ pipeline catch cascading effects before they ship.
 
 | Phase | Status |
 |---|---|
-| Phase 0 — tier calibration + baseline linter | ⏸ deferred (Q35) |
-| Phase 1 — Tier 1 (12 skills, 4 batches) | ⏸ deferred (Q35) |
-| Phase 2 — Tier 2 (24 skills, 4 batches) | ⏸ deferred (Q35) |
-| Phase 3 — Tier 3 (50 skills, 5 batches) | ⏸ deferred (Q35) |
-| Phase 4 — Tier 4 (23 skills, 3 batches) | ⏸ deferred (Q35) |
-| Phase 5 — catalogue-wide acceptance + self-review | ⏸ deferred (Q35) |
+| Sequencing (Q35 resolved 2026-04-22) | ✅ Phase 0 first · then Phase 4 (Tier 4, lowest risk) · then 3 → 2 → 1 |
+| **Phase 0 — tier calibration + baseline linter** | 🟡 unblocked — ships before any backport phase begins |
+| **Phase 4 — Tier 4 (23 skills)** | 🟡 unblocked (pilot wave — pattern-application muscle) |
+| Phase 3 — Tier 3 (50 skills) | ⏸ deferred (ships after Phase 4) |
+| Phase 2 — Tier 2 (24 skills) | ⏸ deferred (ships after Phase 3) |
+| Phase 1 — Tier 1 (12 skills) | ⏸ deferred (ships last — highest-leverage, pattern already proven on Tiers 4/3/2) |
+| Phase 5 — catalogue-wide acceptance + self-review | ⏸ deferred (ships after all tier phases) |
 
-This roadmap covers ~109 skills across 17 batches. Each batch is a
-separate commit, each skill inside a batch is its own
-`preservation-guard`-gated edit — the work explicitly cannot be
-bulk-automated without violating the rule this roadmap is built
-on. Tracked as Q35 in
-[`open-questions-2.md`](open-questions-2.md). Roadmap stays open.
+This roadmap covers ~109 skills. **Q35 resolution (2026-04-22):**
+per-commit granularity is **1 skill per commit** (not 3 as the
+original plan) — consistent with Q30/Q33/Q34. `/review-changes`
+runs **per batch**. Word-budget cap stays at **+10 %** (not
+tightened to +5 %). Phase order resequenced so the pattern is
+debugged on the lowest-risk tier (4) first, with Tier 1
+intentionally last so pattern adjustments discovered during
+Tiers 4/3/2 land in the highest-leverage skills last. Each skill
+inside a phase is its own `preservation-guard`-gated edit — the
+work explicitly cannot be bulk-automated without violating the
+rule this roadmap is built on. Roadmap stays open.
 
 New skills shipped **after** Phase 3.1 of autonomous-agent are
 authored pattern-compliant on day 1 (e.g., defensive-agent Wave 1

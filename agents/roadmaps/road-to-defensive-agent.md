@@ -251,16 +251,20 @@ Plus a new skill:
 |---|---|
 | Wave 1 — core security skills (`threat-modeling`, `authz-review`, `data-flow-mapper`, `blast-radius-analyzer`) | ✅ done |
 | Wave 1 — knowledge-layer templates (auth/tenant/data/deployment/observability) + `context-authoring` | ✅ done |
-| Wave 1 — `/review-changes` live smoke-test | ⏸ deferred (needs real diff — Q33) |
-| Wave 2 — 5 review skills + Risk-Scorecard extension | ⏸ deferred (Q33) |
-| Wave 2 — `never-help-…` rule + red-team regression | ⏸ deferred (Q33) |
-| Wave 3 — 4 stack-specific review skills + `bug-analyzer` incident-mode | ⏸ deferred (Q33) |
-| Post-waves — dispatch wiring in `/review-changes`, `/feature-plan`, `finishing-a-development-branch` | ⏸ deferred (Q33) |
+| Sequencing (Q33 resolved 2026-04-22) | ✅ Wave 2 before Wave 3 · one PR per skill · synthetic fixture diff for smoke test |
+| Wave 1 — `/review-changes` live smoke-test | 🟡 unblocked — scaffold synthetic fixture diff in this repo as the first Wave-2 PR |
+| **Wave 2 — 5 review skills + Risk-Scorecard extension** | 🟡 unblocked — awaiting per-skill drafting sessions |
+| Wave 2 — `never-help-…` rule + red-team regression | 🟡 unblocked — rides with `secrets-and-config-review` PR |
+| Wave 3 — 4 stack-specific review skills + `bug-analyzer` incident-mode | ⏸ deferred (ships after Wave 2 completes) |
+| Post-waves — dispatch wiring in `/review-changes`, `/feature-plan`, `finishing-a-development-branch` | ⏸ deferred (ships after Wave 3 completes) |
 
 Wave 1 shipped the foundation (6 skills + 5 templates). Waves 2/3
 and post-wave integration require their own artifact-drafting
-sessions per-skill and are tracked as Q33 in
-[`open-questions-2.md`](open-questions-2.md). Roadmap stays open.
+sessions per-skill; Q33 (resolved 2026-04-22) fixed sequencing
+(Wave 2 first), PR granularity (one skill per PR), and the
+smoke-test approach (synthetic fixture in-repo, not a past PR
+from elsewhere). Roadmap stays open; **next action** is the
+fixture-diff PR.
 
 ## Measurement
 

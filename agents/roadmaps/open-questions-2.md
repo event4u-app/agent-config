@@ -109,7 +109,7 @@
 
 ### `road-to-autonomous-agent.md`
 
-- **Q34** 🛑 `artifact-drafting` + 🎯 `strategic` — **Autonomous-agent
+- **Q34** ✅ `resolved` (2026-04-22) — **Autonomous-agent
   backlog (Phases 0, 4, 5, 7, 9 + leftover items in 1, 6, 8).**
   Shipped: Phases 1-3, 6.1, 8 (target list) — foundation is live
   (TDD, systematic debugging, four judges, subagent orchestration,
@@ -140,46 +140,63 @@
   - **Phase 1.5** — "one real ticket" evidence; requires consumer
     project usage.
 
-  Single question for the user: **sequencing.** Which phase ships
-  next — Phase 0 spike (infrastructure), Phase 4 planning chain
-  (ship or drop after reviewing the overlap), or Phase 7 MCP
-  builder? Or park the whole backlog and drive from
-  `open-questions-2.md` when a consumer need arises?
+  **Resolved 2026-04-22. Decisions:**
+  - **Phase 0 (exec-runtime spike)** ships first — 1 dev-day,
+    measurable go/no-go gate (≥ 70 % token savings across
+    3 bulk-edit benchmarks). Infrastructure unblocks everything.
+  - **Phase 4 collapses** to a thin `/plan` wrapper that calls
+    `/refine-ticket` → `/estimate-ticket` → `/feature-plan` as
+    sub-skills. No new `/brainstorm` or `/implement` commands
+    — the three shipped commands already cover the planning
+    chain. Saves two full drafting sessions and prevents
+    duplication.
+  - **Phase 7 (MCP builder)** next — standalone, user-visible,
+    no dependencies on Phases 4 or 5.
+  - **Phases 5 and 9** last — Phase 5 needs Phase 4's `/plan`
+    wrapper; Phase 9 (AGENTS.md synthesis) lands last by design.
+  - **Phase 6.2, 1.3, 1.5** stay event-triggered (first real
+    parallel session · drift observed · consumer evidence) —
+    no active scheduling.
+  - Ship order within a phase still follows Q30's pattern:
+    one skill / wrapper / command per PR, `/review-changes`
+    per PR.
 
 ### `road-to-stronger-skills.md`
 
-- **Q35** 🛑 `artifact-drafting` — **Pattern-backport across the
-  pre-existing skill catalogue.** ~109 skills across 4 tiers
-  (Tier 1: 12, Tier 2: 24, Tier 3: 50, Tier 4: 23) grouped into
-  17 batches across 5 phases. Each batch is a single commit;
-  each skill inside a batch is a separate
-  `preservation-guard`-gated edit. The roadmap explicitly
-  prohibits bulk transformations — that is the rule this roadmap
-  is built on.
-
-  New skills shipped after 2026-04 are pattern-compliant on day 1
-  (e.g., `threat-modeling`, `authz-review`, `data-flow-mapper`,
+- **Q35** ✅ `resolved` (2026-04-22) — **Pattern-backport across
+  the pre-existing skill catalogue.** ~109 skills across 4 tiers
+  (Tier 1: 12, Tier 2: 24, Tier 3: 50, Tier 4: 23). New skills
+  shipped after 2026-04 are pattern-compliant on day 1
+  (`threat-modeling`, `authz-review`, `data-flow-mapper`,
   `blast-radius-analyzer`, `context-authoring`, the four
   `judge-*` skills, `test-driven-development`,
   `systematic-debugging`, `verify-before-complete`,
   `subagent-orchestration`, `refine-ticket`, `estimate-ticket`).
   The backport covers only the pre-2026-04 catalogue.
 
-  User questions:
-  - Ship order — Tier 1 first (highest leverage) or Tier 4 first
-    (lowest risk, builds muscle memory)?
-  - Batch size — 3 skills per commit (current plan) or
-    1-skill-per-commit for easier reviews?
-  - Should each batch get a `/review-changes` judge pass before
-    merge, or batch-reviewed weekly?
-  - Is the +10 % word-budget cap still acceptable given the
-    total skill count, or tighten to +5 %?
+  **Decisions:**
+  - **Ship order: Tier 4 first** — 23 lowest-risk skills. Builds
+    pattern-application muscle before touching high-leverage
+    Tier 1. If the pattern itself needs adjustment, we discover
+    it on low-stakes skills.
+  - **Batch size: 1 skill per commit** — consistent with Q30,
+    Q33, Q34. Reviewable, revertable, no hidden breakage.
+    Original "3 skills per commit" dropped.
+  - **Review cadence: `/review-changes` per batch**. Weekly
+    batch review loses the four-judge signal that the whole
+    roadmap is built around.
+  - **Word-budget cap: +10 % held** (not tightened to +5 %).
+    Tightening risks losing important context during backport;
+    total skill count doesn't change the per-skill budget math.
+  - Resequences the phases: Phase 4 (Tier 4) first, then
+    Phases 3 → 2 → 1. Phase 0 (baseline linter) still ships
+    before any phase begins.
 
 ### `road-to-defensive-agent.md`
 
-- **Q33** 🛑 `artifact-drafting` — **Wave 2 + Wave 3 + post-wave
-  integration for defensive-agent.** Wave 1 shipped (6 skills + 5
-  context templates). What remains:
+- **Q33** ✅ `resolved` (2026-04-22) — **Wave 2 + Wave 3 +
+  post-wave integration for defensive-agent.** Wave 1 shipped
+  (6 skills + 5 context templates). What remains:
   - **Wave 2 (5 skills + rule + command extension):**
     `dependency-risk-review`, `data-exposure-review`,
     `migration-safety`, `queue-safety`, `secrets-and-config-review`,
@@ -195,14 +212,24 @@
     `data-flow-mapper`, `finishing-a-development-branch`
     cross-links `secrets-and-config-review`.
 
-  Every skill is its own `artifact-drafting-protocol` session;
-  bulk creation is not allowed by `skill-quality`. Also needs a
-  live `/review-changes` smoke test on a real diff. User questions:
-  - Ship Wave 2 before or after Wave 3? (proposal: Wave 2 first —
-    higher leverage, no stack gating)
-  - One PR per skill, or bundled per wave?
-  - Ok to use a past PR from another project as the smoke-test
-    diff, or scaffold a synthetic fixture diff in this repo?
+  **Decisions:**
+  - **Wave 2 before Wave 3** — higher leverage, no stack gating.
+    Wave 3 includes the Laravel-stack-scoped skill and the
+    `bug-analyzer` incident-mode section, both of which benefit
+    from Wave 2's review skills being in place.
+  - **One PR per skill** (wave integration items included) —
+    consistent with Q30, Q34, Q35. Each skill is its own
+    `artifact-drafting-protocol` session.
+  - **Synthetic fixture diff in this repo** for the
+    `/review-changes` smoke test — reproducible, no cross-repo
+    leak, can be kept as a regression anchor. A past PR from
+    another project is a one-shot; a fixture re-runs on every
+    defensive-agent update.
+  - **Rule + command-extension items** ride along with the
+    skill PR that most directly produces them
+    (`never-help-...` rule with `secrets-and-config-review`;
+    Risk-Scorecard extension as its own PR after the 5 Wave-2
+    skills land).
 
 ### `road-to-memory-self-consumption.md`
 

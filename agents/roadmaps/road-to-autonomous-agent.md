@@ -398,28 +398,33 @@ all prior phases ship. Deferred with Q34.)*
 | Phase | Status |
 |---|---|
 | Prerequisites | ✅ done |
-| Phase 0 — exec-runtime spike | ⏸ deferred (Q34) |
+| Sequencing (Q34 resolved 2026-04-22) | ✅ Phase 0 → collapsed Phase 4 → Phase 7 → Phases 5/9 |
+| **Phase 0 — exec-runtime spike** | 🟡 unblocked — 1 dev-day, go/no-go on ≥ 70 % token savings |
 | Phase 1 — developer-discipline core | ✅ done (6 skills + `verify-before-complete` rule/skill split) |
 | Phase 2 — subagent orchestration | ✅ done (skill + 3 commands + `.agent-settings` keys) |
 | Phase 3 — specialized judge agents | ✅ done (4 judges + `/review-changes` dispatch) |
-| Phase 4 — planning chain (`/brainstorm`, `/plan`, `/implement`) | ⏸ deferred (Q34 — may overlap with `/refine-ticket` stack) |
-| Phase 5 — reflection loop | ⏸ deferred (depends on Phase 4 — Q34) |
-| Phase 6 — parallel-work tooling | ✅ 6.1 shipped; 6.2 case study deferred (Q34) |
-| Phase 7 — MCP creation depth | ⏸ deferred (Q34) |
-| Phase 8 — selective citation retrofit | ✅ 6/7 done; last depends on Phases 1-7 (Q34) |
-| Phase 9 — AGENTS.md synthesis | ⏸ deferred (lands last — Q34) |
+| Phase 4 — planning chain | 🟢 **collapsed** — thin `/plan` wrapper calling `/refine-ticket` → `/estimate-ticket` → `/feature-plan`; no new `/brainstorm` or `/implement` commands |
+| Phase 5 — reflection loop | ⏸ deferred (needs Phase 4 `/plan` wrapper first) |
+| Phase 6 — parallel-work tooling | ✅ 6.1 shipped; 6.2 captures on first real parallel session (event-triggered) |
+| **Phase 7 — MCP creation depth** | 🟡 unblocked — standalone, no dependencies on Phases 4/5 |
+| Phase 8 — selective citation retrofit | ✅ 6/7 done; last depends on Phases 1-7 |
+| Phase 9 — AGENTS.md synthesis | ⏸ deferred (lands last by design) |
 
 **Shipped:** Phases 1-3, 6.1, 8 (target list). Foundation is
 production-usable today — TDD, systematic debugging, four judges,
 subagent orchestration, `/review-changes` with dispatch, git
 worktrees, citations on target skills.
 
-**Deferred to Q34 in [`open-questions-2.md`](open-questions-2.md):**
-Phase 0 spike (1-day dedicated session), Phase 4 planning chain
-(3 new commands — may overlap with `/refine-ticket` / `/estimate-ticket`
-that shipped after this roadmap was written), Phase 5 reflection
-loop (depends on Phase 4), Phase 7 MCP builder, Phase 9 AGENTS.md
-synthesis (lands last).
+**Q34 resolution (2026-04-22):** Phase 4 collapses to a thin
+`/plan` wrapper — the three shipped commands (`/refine-ticket`,
+`/estimate-ticket`, `/feature-plan`) already cover the planning
+chain. Saves two full drafting sessions and prevents duplication.
+Sequencing: Phase 0 (spike) first · collapsed Phase 4 next ·
+Phase 7 (MCP builder) third · Phases 5 and 9 last. Phases 6.2,
+1.3, 1.5 stay event-triggered (first real parallel session ·
+drift observed · consumer evidence). Per-PR pattern from Q30
+applies: one skill / wrapper / command per PR,
+`/review-changes` per PR.
 
 Roadmap stays **open** — this is the master autonomy backlog and is
 designed to span multiple sessions by construction.
