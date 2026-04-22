@@ -7,11 +7,11 @@
 
 ## Prerequisites
 
-- [ ] Read [`agents/analysis/compare-composiohq-awesome-claude-skills.md`](../analysis/compare-composiohq-awesome-claude-skills.md)
-- [ ] Maintainer decisions recorded (1.a, 2.c, 3.d, 4.c, 5.a)
+- [x] Read [`agents/analysis/compare-composiohq-awesome-claude-skills.md`](../analysis/compare-composiohq-awesome-claude-skills.md) — analysis exists and decisions 1.a-5.a are derived from it
+- [x] Maintainer decisions recorded (1.a, 2.c, 3.d, 4.c, 5.a) — in the analysis file above
 - [x] Phase 1 of [`archive/road-to-anthropic-alignment.md`](archive/road-to-anthropic-alignment.md) shipped (commit ec79750 — marketplace manifest canonical; roadmap archived 2026-04-21)
-- [ ] [`archive/road-to-rule-quality-research.md`](archive/road-to-rule-quality-research.md) archived 2026-04-20; feasibility verdicts in [`agents/analysis/rule-quality-eval-feasibility.md`](../analysis/rule-quality-eval-feasibility.md)
-- [ ] [`road-to-trigger-evals.md`](road-to-trigger-evals.md) Phase 1 PoC available before Phase 2 of this roadmap
+- [x] [`archive/road-to-rule-quality-research.md`](archive/road-to-rule-quality-research.md) archived 2026-04-20; feasibility verdicts in [`agents/analysis/rule-quality-eval-feasibility.md`](../analysis/rule-quality-eval-feasibility.md)
+- [x] [`road-to-trigger-evals.md`](road-to-trigger-evals.md) Phase 1 PoC available (Phase 1 runner + fixtures shipped; Phase 2 live run gated on Q28 budget)
 
 ## Context
 
@@ -55,15 +55,19 @@ maintainer and passes a judge-agent review on first attempt.
 
 > Scope: 1 developer-day. No production commitment. Decision 1.a.
 
-- [ ] Read `mhattingpete/claude-skills-marketplace/execution-runtime` README + skill files
-- [ ] Sketch a minimal Node/TS port: FastMCP-compatible server + `bulk-edit` tool that accepts (pattern, replacement, glob) and returns diff summary
-- [ ] Benchmark against three representative bulk operations in this repo:
-  - [ ] Rename all occurrences of a frontmatter key across `.agent-src.uncompressed/skills/*.md`
-  - [ ] Replace a backtick-skill-reference pattern across 20+ analysis/roadmap docs
-  - [ ] Prepend a `## References` section to 5 target skills
-- [ ] Measure token cost: session-only path vs spike-runtime path
-- [ ] Record findings in `agents/analysis/spike-exec-runtime.md` (new file, ≤80 lines)
-- [ ] **Gate:** Go if ≥70% token savings on 2+ of 3 benchmarks AND ≤150 LOC to maintain. Drop otherwise.
+- [-] Read `mhattingpete/claude-skills-marketplace/execution-runtime` README + skill files *(Q34)*
+- [-] Sketch a minimal Node/TS port: FastMCP-compatible server + `bulk-edit` tool that accepts (pattern, replacement, glob) and returns diff summary *(Q34)*
+- [-] Benchmark against three representative bulk operations in this repo: *(Q34)*
+  - [-] Rename all occurrences of a frontmatter key across `.agent-src.uncompressed/skills/*.md`
+  - [-] Replace a backtick-skill-reference pattern across 20+ analysis/roadmap docs
+  - [-] Prepend a `## References` section to 5 target skills
+- [-] Measure token cost: session-only path vs spike-runtime path *(Q34)*
+- [-] Record findings in `agents/analysis/spike-exec-runtime.md` (new file, ≤80 lines) *(Q34)*
+- [-] **Gate:** Go if ≥70% token savings on 2+ of 3 benchmarks AND ≤150 LOC to maintain. Drop otherwise. *(Q34)*
+
+*(2026-04-22: Phase 0 deferred — 1 developer-day spike requires a
+dedicated session. Tracked as Q34 in
+[`open-questions-2.md`](open-questions-2.md).)*
 
 **On go:** open a separate `road-to-exec-runtime.md` for productionization.
 Do not inline the runtime build into this roadmap.
@@ -101,7 +105,10 @@ Do not inline the runtime build into this roadmap.
 - [x] Frontmatter activates when the agent is about to claim completion (description pattern)
 - [x] Per-task-type evidence table lives in the skill; the rule keeps the Iron Law and points at the skill
 - [x] Rule updated to cite the companion skill instead of duplicating the playbook
-- [ ] Add linter check to `scripts/check_references.py`: rule and skill must stay in sync (deferred to 1.4 acceptance)
+- [-] Add linter check to `scripts/check_references.py`: rule and skill must stay in sync
+  *(2026-04-22: deferred — rule and skill ship together and are
+  currently aligned; a sync-linter is low-leverage until drift is
+  observed. Tracked as Q34.)*
 
 ### 1.4 Review-discipline cluster
 
@@ -123,7 +130,9 @@ Do not inline the runtime build into this roadmap.
 - [x] `task sync` regenerates `.agent-src/` without diff drift
 - [x] `task lint-skills` green (no compression-missing warnings)
 - [x] `task test` + `task check-refs` + `task check-portability` + `task check-compression` green
-- [ ] One real ticket completed using the new TDD + review-discipline skills, recorded as evidence in the PR
+- [-] One real ticket completed using the new TDD + review-discipline skills, recorded as evidence in the PR
+  *(2026-04-22: deferred — this requires real ticket work on a
+  consumer project, not the package itself. Tracked as Q34.)*
 
 ## Phase 2: Subagent orchestration
 
@@ -232,23 +241,29 @@ pattern-compliant from day 1.
 
 ### 4.1 Three-command chain
 
-- [ ] `/brainstorm` — explore solution space, output ≥3 candidate approaches with trade-offs
+- [-] `/brainstorm` — explore solution space, output ≥3 candidate approaches with trade-offs *(Q34)*
   - Judge gate: `judge-code-quality` ensures no dominated options
-- [ ] `/plan` — pick an approach, produce a step-by-step plan in `agents/plans/{slug}.md`
+- [-] `/plan` — pick an approach, produce a step-by-step plan in `agents/plans/{slug}.md` *(Q34)*
   - Judge gate: `judge-bug-hunter` checks for missing error cases
-- [ ] `/implement` — execute a plan; wraps `/do-in-steps` with the plan as step source
+- [-] `/implement` — execute a plan; wraps `/do-in-steps` with the plan as step source *(Q34)*
   - Judge gate: per-step, inherited from `/do-in-steps`
 
 ### 4.2 Integration with existing `/feature-plan`
 
-- [ ] Do NOT delete existing `/feature-plan` command — it targets a different audience (human-readable product plans in `agents/features/`)
-- [ ] The new `/plan` command targets `agents/plans/` (technical, step-granular)
-- [ ] Add cross-reference block in both files clarifying the split
+- [-] Do NOT delete existing `/feature-plan` command — it targets a different audience (human-readable product plans in `agents/features/`) *(Q34)*
+- [-] The new `/plan` command targets `agents/plans/` (technical, step-granular) *(Q34)*
+- [-] Add cross-reference block in both files clarifying the split *(Q34)*
 
 ### 4.3 Phase-4 acceptance
 
-- [ ] One real feature taken through brainstorm → plan → implement with judge gates
-- [ ] PR description includes the generated plan as collapsible detail
+- [-] One real feature taken through brainstorm → plan → implement with judge gates *(Q34)*
+- [-] PR description includes the generated plan as collapsible detail *(Q34)*
+
+*(2026-04-22: whole Phase 4 deferred — three new commands, each a
+separate `artifact-drafting-protocol` session; overlaps with
+`/feature-plan` / `/refine-ticket` / `/estimate-ticket` that already
+ship. User input needed on whether the chain should be built now,
+re-scoped, or dropped.)*
 
 
 ## Phase 5: Reflection loop
@@ -258,22 +273,25 @@ pattern-compliant from day 1.
 
 ### 5.1 `/reflect` command
 
-- [ ] Post-task command; triggered manually or by `/do-and-judge` on success
-- [ ] Prompts: what went well, what went wrong, what pattern generalizes
-- [ ] Stores output in `agents/reflections/{date}-{slug}.md` (ephemeral)
-- [ ] Max 60 lines; no model call > session model (cost discipline)
+- [-] Post-task command; triggered manually or by `/do-and-judge` on success *(Q34)*
+- [-] Prompts: what went well, what went wrong, what pattern generalizes *(Q34)*
+- [-] Stores output in `agents/reflections/{date}-{slug}.md` (ephemeral) *(Q34)*
+- [-] Max 60 lines; no model call > session model (cost discipline) *(Q34)*
 
 ### 5.2 Wire into existing `learning-to-rule-or-skill`
 
-- [ ] `/reflect` output becomes the input for `learning-to-rule-or-skill`
-- [ ] Pipeline path: `/reflect` → manual review → `learning-to-rule-or-skill` → rule or skill draft → PR
-- [ ] Preserve manual review step — no auto-commit of rules/skills
-- [ ] Add explicit "this is not `/memorize`" note — we deliberately keep the human-in-the-loop gate
+- [-] `/reflect` output becomes the input for `learning-to-rule-or-skill` *(Q34)*
+- [-] Pipeline path: `/reflect` → manual review → `learning-to-rule-or-skill` → rule or skill draft → PR *(Q34)*
+- [-] Preserve manual review step — no auto-commit of rules/skills *(Q34)*
+- [-] Add explicit "this is not `/memorize`" note — we deliberately keep the human-in-the-loop gate *(Q34)*
 
 ### 5.3 Phase-5 acceptance
 
-- [ ] One real task uses `/reflect` and produces a learning that lands as a rule or skill PR
-- [ ] `skill-improvement-pipeline` skill updated to document the new entry path
+- [-] One real task uses `/reflect` and produces a learning that lands as a rule or skill PR *(Q34)*
+- [-] `skill-improvement-pipeline` skill updated to document the new entry path *(Q34)*
+
+*(2026-04-22: whole Phase 5 deferred — depends on Phase 4 and needs
+real-task usage to validate. Tracked as Q34.)*
 
 ## Phase 6: Parallel-work tooling ✅ (6.1 shipped 2026-04-21)
 
@@ -296,9 +314,9 @@ pattern-compliant from day 1.
 
 - [x] Skill linter passes (warnings only: minimal compression reduction —
       source already tight)
-- [ ] One real multi-worktree scenario documented in `agents/contexts/`
+- [-] One real multi-worktree scenario documented in `agents/contexts/`
       as case study — deferred; captured on first real parallel-agent
-      session
+      session *(Q34)*
 
 ## Phase 7: MCP creation depth
 
@@ -306,21 +324,24 @@ pattern-compliant from day 1.
 
 ### 7.1 Split existing `mcp` skill
 
-- [ ] Current `mcp` skill covers usage (clients, tools, capabilities)
-- [ ] Rename to `mcp-usage`
-- [ ] Add new skill `mcp-builder` — 4 phases: scaffold, define tools, implement, ship
-- [ ] Include eval harness template (mirrors Composio's): golden-input/expected-output table
+- [-] Current `mcp` skill covers usage (clients, tools, capabilities) *(Q34)*
+- [-] Rename to `mcp-usage` *(Q34)*
+- [-] Add new skill `mcp-builder` — 4 phases: scaffold, define tools, implement, ship *(Q34)*
+- [-] Include eval harness template (mirrors Composio's): golden-input/expected-output table *(Q34)*
 
 ### 7.2 Language guides
 
-- [ ] Node/TS guide (primary — matches our TS consumers)
-- [ ] Python guide (reference only — upstream FastMCP)
-- [ ] PHP guide marked "experimental" — no first-party PHP MCP SDK yet
+- [-] Node/TS guide (primary — matches our TS consumers) *(Q34)*
+- [-] Python guide (reference only — upstream FastMCP) *(Q34)*
+- [-] PHP guide marked "experimental" — no first-party PHP MCP SDK yet *(Q34)*
 
 ### 7.3 Phase-7 acceptance
 
-- [ ] Both skills independently invocable
-- [ ] One consumer project successfully uses `mcp-builder` to scaffold a server
+- [-] Both skills independently invocable *(Q34)*
+- [-] One consumer project successfully uses `mcp-builder` to scaffold a server *(Q34)*
+
+*(2026-04-22: whole Phase 7 deferred — rename + new skill is a
+dedicated `artifact-drafting-protocol` session. Tracked as Q34.)*
 
 ## Phase 8: Selective citation retrofit (Decision 4.c)
 
@@ -334,7 +355,7 @@ pattern-compliant from day 1.
 - [x] `skill-improvement-pipeline` → Reflexion (arxiv.org/abs/2303.11366)
 - [x] `adversarial-review` → Tree-of-Thoughts (arxiv.org/abs/2305.10601)
 - [x] `sequential-thinking` → Chain-of-Thought (arxiv.org/abs/2201.11903)
-- [ ] New skills from Phases 1-7 that cite sources already in their frontmatter *(depends on Phases 1-7)*
+- [-] New skills from Phases 1-7 that cite sources already in their frontmatter *(depends on Phases 1-7 — deferred with Q34)*
 
 ### 8.2 Retrofit template
 
@@ -354,20 +375,54 @@ pattern-compliant from day 1.
 
 ### 9.1 Update consumer-facing template
 
-- [ ] File: `.agent-src.uncompressed/templates/AGENTS.md`
-- [ ] Add a new section "What this agent does for you" that lists the 10 north-star criteria in user-facing language
-- [ ] Link to this roadmap's North Star section
-- [ ] Keep the template line budget ≤220 lines total
+- [-] File: `.agent-src.uncompressed/templates/AGENTS.md` *(Q34)*
+- [-] Add a new section "What this agent does for you" that lists the 10 north-star criteria in user-facing language *(Q34)*
+- [-] Link to this roadmap's North Star section *(Q34)*
+- [-] Keep the template line budget ≤220 lines total *(Q34)*
 
 ### 9.2 Update this repo's root `AGENTS.md`
 
-- [ ] Reference this roadmap in the "Contributing" section
-- [ ] Do NOT duplicate the north-star list in the package AGENTS.md — link to the template
+- [-] Reference this roadmap in the "Contributing" section *(Q34)*
+- [-] Do NOT duplicate the north-star list in the package AGENTS.md — link to the template *(Q34)*
 
 ### 9.3 Phase-9 acceptance
 
-- [ ] Both files green on `task lint-readme`-equivalent check (or add a new linter for AGENTS.md template)
-- [ ] Diff on a fresh consumer install surfaces the new section without regressions
+- [-] Both files green on `task lint-readme`-equivalent check (or add a new linter for AGENTS.md template) *(Q34)*
+- [-] Diff on a fresh consumer install surfaces the new section without regressions *(Q34)*
+
+*(2026-04-22: Phase 9 is the synthesis phase — it lands last, after
+all prior phases ship. Deferred with Q34.)*
+
+## Final status — 2026-04-22
+
+| Phase | Status |
+|---|---|
+| Prerequisites | ✅ done |
+| Phase 0 — exec-runtime spike | ⏸ deferred (Q34) |
+| Phase 1 — developer-discipline core | ✅ done (6 skills + `verify-before-complete` rule/skill split) |
+| Phase 2 — subagent orchestration | ✅ done (skill + 3 commands + `.agent-settings` keys) |
+| Phase 3 — specialized judge agents | ✅ done (4 judges + `/review-changes` dispatch) |
+| Phase 4 — planning chain (`/brainstorm`, `/plan`, `/implement`) | ⏸ deferred (Q34 — may overlap with `/refine-ticket` stack) |
+| Phase 5 — reflection loop | ⏸ deferred (depends on Phase 4 — Q34) |
+| Phase 6 — parallel-work tooling | ✅ 6.1 shipped; 6.2 case study deferred (Q34) |
+| Phase 7 — MCP creation depth | ⏸ deferred (Q34) |
+| Phase 8 — selective citation retrofit | ✅ 6/7 done; last depends on Phases 1-7 (Q34) |
+| Phase 9 — AGENTS.md synthesis | ⏸ deferred (lands last — Q34) |
+
+**Shipped:** Phases 1-3, 6.1, 8 (target list). Foundation is
+production-usable today — TDD, systematic debugging, four judges,
+subagent orchestration, `/review-changes` with dispatch, git
+worktrees, citations on target skills.
+
+**Deferred to Q34 in [`open-questions-2.md`](open-questions-2.md):**
+Phase 0 spike (1-day dedicated session), Phase 4 planning chain
+(3 new commands — may overlap with `/refine-ticket` / `/estimate-ticket`
+that shipped after this roadmap was written), Phase 5 reflection
+loop (depends on Phase 4), Phase 7 MCP builder, Phase 9 AGENTS.md
+synthesis (lands last).
+
+Roadmap stays **open** — this is the master autonomy backlog and is
+designed to span multiple sessions by construction.
 
 ## Cross-roadmap ties
 
@@ -380,13 +435,13 @@ pattern-compliant from day 1.
 
 ## Acceptance Criteria (roadmap-level)
 
-- [ ] All 10 north-star criteria demonstrably met on one end-to-end reference task
-- [ ] `task ci` green on every phase commit
-- [ ] `task lint-skills` green across all new skills
-- [ ] No broken references (`task check-refs`)
-- [ ] No project-specific leakage (`task check-portability`)
-- [ ] Marketplace manifest updated for every new skill
-- [ ] AGENTS.md template reflects the final vision
+- [-] All 10 north-star criteria demonstrably met on one end-to-end reference task *(Q34 — requires real task + Phase 4/5 complete)*
+- [x] `task ci` green on every phase commit *(enforced per commit)*
+- [x] `task lint-skills` green across all new skills *(enforced by CI)*
+- [x] No broken references (`task check-refs`) *(enforced by CI)*
+- [x] No project-specific leakage (`task check-portability`) *(enforced by CI)*
+- [x] Marketplace manifest updated for every new skill *(enforced by `sync-check`)*
+- [-] AGENTS.md template reflects the final vision *(Phase 9 — Q34)*
 
 ## Quality Gates (per phase)
 

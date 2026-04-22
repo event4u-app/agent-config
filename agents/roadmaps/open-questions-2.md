@@ -84,6 +84,45 @@
   then, analysis-only coverage (`project-analysis-zend-laminas`)
   is the commitment.
 
+### `road-to-autonomous-agent.md`
+
+- **Q34** 🛑 `artifact-drafting` + 🎯 `strategic` — **Autonomous-agent
+  backlog (Phases 0, 4, 5, 7, 9 + leftover items in 1, 6, 8).**
+  Shipped: Phases 1-3, 6.1, 8 (target list) — foundation is live
+  (TDD, systematic debugging, four judges, subagent orchestration,
+  `/review-changes` dispatch, git worktrees, citations on target
+  skills). What remains:
+  - **Phase 0** — exec-runtime spike (1 dev-day, go/no-go gate on
+    ≥ 70 % token savings across 3 bulk-edit benchmarks).
+  - **Phase 4 — planning chain** — `/brainstorm`, `/plan`,
+    `/implement`. **Scope overlap question for the user:**
+    `/refine-ticket` + `/estimate-ticket` + `/feature-plan` shipped
+    after this roadmap was written. Does the three-command chain
+    still carry its weight, or does `/plan` collapse into the
+    existing stack? If it ships, each command is a separate
+    `artifact-drafting-protocol` session.
+  - **Phase 5 — reflection loop** — `/reflect` + wiring into
+    `learning-to-rule-or-skill`. Blocked on Phase 4.
+  - **Phase 6.2** — one real multi-worktree case study. Captures on
+    first real parallel session; no action until then.
+  - **Phase 7 — MCP creation depth** — rename `mcp` → `mcp-usage`
+    and add `mcp-builder` with Node/TS + Python + PHP guides.
+    Separate session; Phase-0 spike findings may change the shape.
+  - **Phase 8 — last retrofit item** — depends on Phases 1-7
+    finishing so there are post-Phase-3 skills to retrofit.
+  - **Phase 9 — AGENTS.md synthesis** — lands last by design; only
+    unblocked after Phases 4, 5, 7 ship.
+  - **Phase 1.3** — rule↔skill sync linter; deferred as
+    low-leverage until drift is observed.
+  - **Phase 1.5** — "one real ticket" evidence; requires consumer
+    project usage.
+
+  Single question for the user: **sequencing.** Which phase ships
+  next — Phase 0 spike (infrastructure), Phase 4 planning chain
+  (ship or drop after reviewing the overlap), or Phase 7 MCP
+  builder? Or park the whole backlog and drive from
+  `open-questions-2.md` when a consumer need arises?
+
 ### `road-to-defensive-agent.md`
 
 - **Q33** 🛑 `artifact-drafting` — **Wave 2 + Wave 3 + post-wave
