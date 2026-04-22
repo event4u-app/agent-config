@@ -147,6 +147,7 @@
   "rules/laravel-translations.md": "9fd2b0e70cf58e961455abea12411873096140da8c0c191cb0665f992f4da4eb",
   "rules/markdown-safe-codeblocks.md": "675b1030620227898254f85a384a70a2c9027644aebc889021f53a41684b80af",
   "rules/minimal-safe-diff.md": "82123ee829e568fa64071f3f0aa0da5b54fc5e084372e6031705a1c42ded63c5",
+  "rules/missing-tool-handling.md": "79fb1edb1c73e4e8e0715f600232d30f055d3ed52ef5ed58d0bfa88bbcabccf7",
   "rules/model-recommendation.md": "bbd04e4ffe9d450f2080cee49c8a6d0cc1e15750ef8109cc4f62e2b8e5dc8f68",
   "rules/package-ci-checks.md": "a2c3b708342d4d09296de14cfccfab31b3f2544b9c0410db75bc1de545308a61",
   "rules/php-coding.md": "3cd1feca5349598de252cd1559c05e16e1f0180e7634022574c874efa09516b8",
