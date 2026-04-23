@@ -7,14 +7,27 @@ this package imports handlers eagerly, so a partial wiring during
 development is caught by the dispatcher's missing-step check rather
 than by an import-time failure.
 
-Phase 2 ships the deterministic gates (``refine``, ``memory``,
-``analyze``, ``plan``) and the Markdown renderer (``report``). The
-remaining agent-driven steps (``implement``, ``test``, ``verify``)
-halt via ``@agent-directive:`` markers and are wired in Phase 3 —
-see ``agents/roadmaps/road-to-implement-ticket.md``.
+Phase 2 ships all eight step handlers. The deterministic gates
+(``refine``, ``memory``, ``analyze``) validate upstream state; the
+delegation gates (``plan``, ``implement``, ``test``, ``verify``)
+halt with ``@agent-directive:`` markers so the orchestrator can
+invoke the matching skill and resume. ``report`` renders the
+delivery Markdown once everything else has succeeded. See
+``agents/roadmaps/road-to-implement-ticket.md`` for the shipping
+order and ``agents/contexts/implement-ticket-flow.md`` for the
+slice contracts each handler writes to.
 """
 from __future__ import annotations
 
-from . import analyze, memory, plan, refine, report
+from . import analyze, implement, memory, plan, refine, report, test, verify
 
-__all__ = ["analyze", "memory", "plan", "refine", "report"]
+__all__ = [
+    "analyze",
+    "implement",
+    "memory",
+    "plan",
+    "refine",
+    "report",
+    "test",
+    "verify",
+]

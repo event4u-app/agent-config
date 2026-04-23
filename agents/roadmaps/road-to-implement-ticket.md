@@ -153,7 +153,7 @@ works end-to-end on one real ticket.
       — success, blocked, partial, plus guardrails for missing
       handlers and silent block/partial outcomes.)*
 
-## Phase 2 — step wiring to existing skills
+## Phase 2 — step wiring to existing skills ✅ shipped (2026-04-23)
 
 - [x] Step `refine` → deterministic gate in front of `refine-ticket`.
       *([`steps/refine.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/refine.py)
@@ -183,9 +183,27 @@ works end-to-end on one real ticket.
       validates shape (string / list of steps / `{steps: [...]}`)
       otherwise. 11 tests cover every gate path + directive
       formatting.)*
-- [ ] Step `implement` → actual edits (guarded by `minimal-safe-diff`).
-- [ ] Step `test` → `tests-execute` + `quality-fix` (targeted first).
-- [ ] Step `verify` → `review-changes` + `verify-before-complete`.
+- [x] Step `implement` → gate + Option-A delegation.
+      *([`steps/implement.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/implement.py)
+      — blocks on missing `plan` precondition; blocks with
+      `@agent-directive: apply-plan` when `state.changes` empty;
+      validates that every change dict carries a non-empty `path`
+      (`file` accepted as alias). Agent applies the plan under
+      `minimal-safe-diff` + `scope-control` on the rebound. 7 tests.)*
+- [x] Step `test` → gate + Option-A delegation to `tests-execute`.
+      *([`steps/test.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/test.py)
+      — blocks on missing `implement` precondition; blocks with
+      `@agent-directive: run-tests scope=targeted` when
+      `state.tests` empty; requires `verdict` ∈ {success, failed,
+      mixed} and halts on non-success verdicts so a bad test
+      result cannot be silently skipped. 8 tests.)*
+- [x] Step `verify` → gate + Option-A delegation to `review-changes`.
+      *([`steps/verify.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/verify.py)
+      — blocks on missing `test` precondition; blocks with
+      `@agent-directive: review-changes` when `state.verify`
+      empty; requires `verdict` ∈ {success, blocked, partial} and
+      halts on non-success verdicts per `verify-before-complete`.
+      7 tests.)*
 - [x] Step `report` → delivery-report renderer.
       *([`steps/report.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/report.py)
       — pure deterministic Markdown renderer per the 9-section
