@@ -68,6 +68,7 @@ Define hard constraints: coding standards, Docker usage, language preferences, s
 | `rtk.md` | Using rtk for token-efficient CLI output filtering |
 | `agent-docs.md` | When to read/create/update documentation |
 | `augment-portability.md` | Everything in `.augment/` must be project-agnostic |
+| `roadmap-progress-sync.md` | Checkbox edits in `agents/roadmaps/*.md` must trigger `task roadmap-progress` in the same response |
 
 ### Skills (`.augment/skills/`)
 

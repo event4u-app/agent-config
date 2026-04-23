@@ -19,11 +19,22 @@ Do NOT use when:
 - Small tasks that don't span multiple steps
 - One-off questions or fixes
 
+## ⚠ Dashboard sync — non-negotiable
+
+`agents/roadmaps-progress.md` is auto-generated and must reflect the
+live state in real time. After **any** checkbox edit (`[x]`, `[~]`,
+`[-]`, `[ ]`) or phase add/rename/remove in a roadmap file, run
+`task roadmap-progress` **in the same response**.
+
+Enforced by [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md).
+Batching edits in one response is fine — one final `task roadmap-progress`
+before replying is enough. But the response must not end without it.
+
 ## Procedure: Manage a roadmap
 
 1. **Identify need** — Is this a multi-step change that spans sessions or agents?
 2. **Create or locate** — Create new roadmap in `agents/roadmaps/` or find existing one.
-3. **Update progress** — Mark completed steps with `[x]`, add notes for blockers.
+3. **Update progress** — Mark completed steps with `[x]`, add notes for blockers, then run `task roadmap-progress` in the same response (enforced by `roadmap-progress-sync`).
 4. **Verify** — Confirm all steps reflect current state, no stale information.
 
 A roadmap is a structured `.md` file in `agents/roadmaps/` that describes a multi-step change
@@ -233,7 +244,8 @@ A generated dashboard aggregates progress across every open roadmap. It sits at
 `agents/roadmaps-progress.md` (outside `roadmaps/` to keep the folder clean) and
 is rewritten by `.augment/scripts/update_roadmap_progress.py`.
 
-**Always regenerate** after one of the following:
+**Always regenerate in the SAME response** after any of the following
+(enforced by [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)):
 
 - Creating a new roadmap (`roadmap-create`)
 - Marking a step `[x]`, `[~]`, or `[-]` during `roadmap-execute`
@@ -281,3 +293,4 @@ The dashboard is a **read-only snapshot**. Do not edit it by hand — regenerate
 - Do NOT archive roadmaps with open `[ ]` items without asking the user.
 - Do NOT delete roadmaps — always move to `archive/` or `skipped/`.
 - Do NOT use `skipped/` as a dumping ground for partially-finished work — that is what `archive/` with deferred items is for.
+- Do NOT assign version numbers, git tags, or release identifiers to phases. Roadmaps plan work; releases and tags are decided by the user separately.
