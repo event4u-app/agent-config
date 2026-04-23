@@ -7,6 +7,19 @@ versioning policy is documented in [CONTRIBUTING.md](CONTRIBUTING.md#versioning-
 > Entries before 1.3.3 were reconstructed from git history after the fact.
 > Early releases did not maintain release notes.
 
+## [1.11.0](https://github.com/event4u-app/agent-config/compare/1.10.0...1.11.0) (2026-04-23)
+
+
+### Features
+
+* **publish:** add workflow_dispatch to publish-npm ([cae25f8](https://github.com/event4u-app/agent-config/commit/cae25f8ed71443237a2e98fe298959a0218720d0))
+
+
+### Bug Fixes
+
+* **npm:** add repository, bugs, and homepage fields to package.json ([d794eab](https://github.com/event4u-app/agent-config/commit/d794eab3918118a513de1fcc78204d15d8b7aae9))
+* **release:** drop component prefix from tags and split npm publish workflow ([281c225](https://github.com/event4u-app/agent-config/commit/281c225ef5d9b266e487f434606111622569cd9f))
+
 ## [1.10.0](https://github.com/event4u-app/agent-config/compare/agent-config-1.9.1...agent-config-1.10.0) (2026-04-23)
 
 
