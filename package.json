@@ -1,6 +1,6 @@
 {
     "name": "@event4u/agent-config",
-    "version": "1.8.0",
+    "version": "1.9.0",
     "description": "Shared agent configuration — skills, rules, commands, guidelines, and templates for AI coding tools",
     "license": "MIT",
     "private": false,
