@@ -134,7 +134,13 @@ Releases are fully automated by the
    `CHANGELOG.md` in one atomic commit.
 2. Review the Release PR when you're ready to ship. Merging it makes
    release-please push the matching git tag and create the GitHub Release.
-3. The [Release Guard workflow](.github/workflows/release-guard.yml) runs on
+3. On the same workflow run, the `publish-npm` job takes over: it checks
+   out the tagged commit, verifies `package.json.version == tag`, and runs
+   `npm publish` against https://registry.npmjs.org with
+   [npm provenance](https://docs.npmjs.com/generating-provenance-statements)
+   so each tarball is cryptographically linked to the GitHub Actions run that
+   built it.
+4. The [Release Guard workflow](.github/workflows/release-guard.yml) runs on
    the pushed tag and fails loudly if `package.json.version` or
    `.claude-plugin/marketplace.json` disagree with the tag — an independent
    cross-check that stays in place even with release-please driving the flow.
@@ -144,12 +150,19 @@ Bump size is derived from commit types:
 Commits like `chore:`, `docs:`, `test:`, `ci:`, `refactor:` do not bump the
 version on their own and ride along in the next Release PR.
 
+#### Required repository secrets
+
+| Secret | Purpose |
+|---|---|
+| `NPM_TOKEN` | Granular Access Token for `@event4u/agent-config` with read-write scope. Used by the `publish-npm` job. Create in [npm → Access Tokens](https://www.npmjs.com/settings/event4u/tokens) and store under `Settings → Secrets and variables → Actions`. |
+
 #### Fallback: manual bump
 
 `task release:bump -- X.Y.Z` is kept as an emergency fallback for the rare
 case where release-please is unavailable (workflow disabled, GitHub outage,
 hotfix on a branch other than `main`). In normal operation, do not use it —
-let the Release PR drive every version change.
+let the Release PR drive every version change. A manual bump does **not**
+publish to npm automatically; run `npm publish` locally after tagging.
 
 ## License of contributions
 

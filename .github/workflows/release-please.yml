@@ -20,11 +20,16 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  id-token: write  # required for npm provenance
 
 jobs:
   release-please:
     name: Maintain release PR
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      prs_created: ${{ steps.release.outputs.prs_created }}
     steps:
       - name: Run release-please
         uses: googleapis/release-please-action@v4
@@ -46,5 +51,55 @@ jobs:
               echo "📝  Release PR created or updated"
             else
               echo "ℹ️   No release-worthy changes since last tag"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  publish-npm:
+    name: Publish to npm
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # required for npm provenance
+    steps:
+      - name: Check out released tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Verify package version matches tag
+        run: |
+          tag="${{ needs.release-please.outputs.tag_name }}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::package.json version ($pkg) does not match tag ($tag); aborting publish."
+            exit 1
+          fi
+          echo "✅  $pkg == $tag"
+
+      - name: Publish
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Job summary
+        if: always()
+        run: |
+          tag="${{ needs.release-please.outputs.tag_name }}"
+          {
+            echo "## npm publish"
+            echo
+            if [ "${{ job.status }}" = "success" ]; then
+              echo "📦  Published \`@event4u/agent-config@${tag}\` to https://registry.npmjs.org"
+              echo "- https://www.npmjs.com/package/@event4u/agent-config/v/${tag}"
+            else
+              echo "❌  Publish failed (see logs)"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
