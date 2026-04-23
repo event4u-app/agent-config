@@ -92,8 +92,14 @@ Show the complete roadmap to the user and ask (in their language) if anything sh
 
 ### 7. Update the progress dashboard
 
-Run `task roadmap-progress` so the new roadmap shows up in
-`agents/roadmaps-progress.md`. Mention the new overall count to the user.
+Regenerate `agents/roadmaps-progress.md` so the new roadmap shows up:
+
+```bash
+python3 .augment/scripts/update_roadmap_progress.py
+```
+
+(Taskfile-based projects can use the shortcut `task roadmap-progress`.)
+Mention the new overall count to the user.
 
 ### 8. Offer execution
 

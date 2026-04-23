@@ -229,7 +229,9 @@ def main() -> int:
     if args.check:
         if current != new_text:
             print(f"❌  {target.relative_to(args.repo_root)} is stale. "
-                  f"Run `task roadmap-progress` to regenerate.", file=sys.stderr)
+                  f"Run `python3 .augment/scripts/update_roadmap_progress.py` "
+                  f"to regenerate (or `task roadmap-progress` in Taskfile "
+                  f"projects).", file=sys.stderr)
             return 1
         print(f"✅  {target.relative_to(args.repo_root)} is up to date.")
         return 0

@@ -23,8 +23,8 @@ Do NOT use when:
 
 `agents/roadmaps-progress.md` is auto-generated and must reflect the
 live state in real time. After **any** checkbox edit (`[x]`, `[~]`,
-`[-]`, `[ ]`) or phase add/rename/remove in a roadmap file, run
-`task roadmap-progress` **in the same response**.
+`[-]`, `[ ]`) or phase add/rename/remove in a roadmap file, regenerate
+the dashboard **in the same response**.
 
 **Completion = archival.** If an edit takes a roadmap to
 `count_open == 0` (pure `[x]`, or `[x]` + `[~]`/`[-]`), `git mv`
@@ -34,14 +34,14 @@ below. A 100%-complete roadmap left in `agents/roadmaps/` makes
 the next reader think work is still open.
 
 Enforced by [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md).
-Batching edits in one response is fine — one final `task roadmap-progress`
-before replying is enough. But the response must not end without it.
+Batching edits in one response is fine — one final regeneration before
+replying is enough. But the response must not end without it.
 
 ## Procedure: Manage a roadmap
 
 1. **Identify need** — Is this a multi-step change that spans sessions or agents?
 2. **Create or locate** — Create new roadmap in `agents/roadmaps/` or find existing one.
-3. **Update progress** — Mark completed steps with `[x]`, add notes for blockers, then run `task roadmap-progress` in the same response (enforced by `roadmap-progress-sync`).
+3. **Update progress** — Mark completed steps with `[x]`, add notes for blockers, then regenerate the dashboard in the same response (enforced by `roadmap-progress-sync`).
 4. **Verify** — Confirm all steps reflect current state, no stale information.
 
 A roadmap is a structured `.md` file in `agents/roadmaps/` that describes a multi-step change
@@ -139,7 +139,7 @@ Every roadmap implicitly includes these gates (run after each step that changes 
 2. Use the template structure from `.augment/templates/roadmaps.md`.
 3. Review with the user iteratively until approved.
 4. Save with a kebab-case filename (e.g. `optimize-webhook-jobs.md`).
-5. Run `task roadmap-progress` so the dashboard includes the new roadmap.
+5. Regenerate the dashboard so the new roadmap is included.
 
 ### Executing a roadmap
 
@@ -147,7 +147,7 @@ Every roadmap implicitly includes these gates (run after each step that changes 
 2. Find the next unchecked step (`- [ ]`).
 3. Summarize what needs to be done.
 4. Ask the user before implementing (numbered options: implement / adjust / skip).
-5. After implementation: mark `[x]`, run quality gates, then `task roadmap-progress`.
+5. After implementation: mark `[x]`, run quality gates, then regenerate the dashboard.
 6. Move to the next step.
 
 ### Resuming a roadmap
@@ -228,7 +228,7 @@ After the last step of a roadmap is done, check completion status:
    git mv agents/roadmaps/{file} agents/roadmaps/skipped/{file}
    ```
 
-6. **Regenerate the dashboard:** `task roadmap-progress`. The moved roadmap is
+6. **Regenerate the dashboard** (see "Command" below). The moved roadmap is
    excluded from the active set once it sits in `archive/` or `skipped/`.
 
 ### When to use `skipped/` vs `archive/`
@@ -262,9 +262,14 @@ is rewritten by `.augment/scripts/update_roadmap_progress.py`.
 Command:
 
 ```bash
-task roadmap-progress          # rewrite the dashboard
-task roadmap-progress-check    # CI: fail if stale
+python3 .augment/scripts/update_roadmap_progress.py           # rewrite the dashboard
+python3 .augment/scripts/update_roadmap_progress.py --check   # CI: fail if stale
 ```
+
+Taskfile projects get two shortcuts: `task roadmap-progress` and
+`task roadmap-progress-check`. Consumer projects without Task use the
+direct python invocation — `.augment/scripts/` is shipped via postinstall
+symlinks and always available.
 
 The dashboard is a **read-only snapshot**. Do not edit it by hand — regenerate it.
 

@@ -44,7 +44,7 @@ For each open step:
 
 - Update the roadmap file: mark the completed step (e.g. `[x]` or add a completion note).
 - Run quality tools if code was changed (PHPStan at minimum).
-- Run `task roadmap-progress` so `agents/roadmaps-progress.md` reflects the new state.
+- Regenerate `agents/roadmaps-progress.md` — `python3 .augment/scripts/update_roadmap_progress.py` (shortcut in Taskfile projects: `task roadmap-progress`).
 - Ask: "Continue with the next step?"
 
 ### 5. After all steps in a phase
@@ -56,7 +56,7 @@ For each open step:
 
 - Summarize total progress: steps completed, steps remaining.
 - Update the roadmap file with the current status.
-- Run `task roadmap-progress` one last time so the dashboard matches the final state.
+- Regenerate the dashboard one last time so it matches the final state.
 - **If ALL steps are done** → trigger the completion & archiving workflow from the `roadmap-management` skill.
 
 ### Rules
