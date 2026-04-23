@@ -9,12 +9,19 @@ outcomes:
 - ``BLOCKED`` — record, copy questions onto the state, halt.
 - ``PARTIAL`` — record, copy questions onto the state, halt.
 
+Resumption semantics (Option A, flow contract §agent-directives):
+steps whose name is already marked ``success`` in
+``state.outcomes`` are **skipped**. This lets a caller re-invoke the
+dispatcher after executing an agent-directive (the ``implement``,
+``test``, ``verify`` steps cannot run from pure Python), update the
+relevant slice of ``DeliveryState``, record ``success`` on the
+resumed step, and continue without replaying earlier work.
+
 Step handlers are injected by the caller rather than discovered at
-import time. Phase 1 uses mock handlers in tests; Phase 2 wires the
-real skill-backed handlers defined under
-``.agent-src.uncompressed/skills/implement-ticket/``. Keeping
-injection explicit means the dispatcher is trivially testable and
-never depends on handler import order.
+import time. Phase 1 shipped the dispatcher with mock handlers;
+Phase 2 wires the real ones under ``steps/``. Keeping injection
+explicit means the dispatcher is trivially testable and never
+depends on handler import order.
 """
 from __future__ import annotations
 
@@ -70,7 +77,17 @@ def dispatch(
     """
     _assert_all_steps_present(steps)
 
+    # Clear stale questions from a previous halt before we resume so
+    # the caller never mistakes old options for fresh ones.
+    state.questions = []
+
     for name in STEP_ORDER:
+        if state.outcomes.get(name) == Outcome.SUCCESS.value:
+            # Already completed on an earlier invocation — skip per the
+            # resume contract. The caller is responsible for keeping
+            # ``state.outcomes`` and the matching slice in sync.
+            continue
+
         handler = steps[name]
         result = handler(state)
         _validate_step_result(name, result)

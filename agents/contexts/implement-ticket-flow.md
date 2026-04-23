@@ -73,6 +73,61 @@ Each step is a function over `DeliveryState` that returns one of:
 Steps **must** declare, in their skill frontmatter, the
 ambiguities they surface — so `blocked` never comes as a surprise.
 
+## Agent directives
+
+Some steps cannot run from pure Python — `implement` performs edits,
+`test` and `verify` drive long-running subprocesses, `report` only
+renders once all prior slices are populated. These steps halt with
+`blocked` and carry an **agent directive** as the first entry of
+`questions`:
+
+```
+questions = [
+    "@agent-directive: implement-plan",         # index 0 — agent-facing
+    "> Ticket TICKET-42 — 3 files touched, plan in state.plan.",
+    "> 1. Continue — changes applied per plan",
+    "> 2. Abort — plan is wrong",
+]
+```
+
+Contract:
+
+- The directive **is always** `questions[0]` when present.
+- The prefix `@agent-directive:` is public contract — changing it is
+  a breaking change.
+- The directive verb (e.g. `implement-plan`, `run-tests`) names the
+  skill or command the agent should invoke next.
+- Optional `key=value` pairs follow the verb on the same line. Rich
+  payloads belong on `DeliveryState`, not in the directive.
+- Numbered user options follow the directive and behave exactly per
+  the `user-interaction` rule — the user still decides after the
+  agent reports back.
+
+Helpers `agent_directive(name, **payload)` and
+`is_agent_directive(line)` live alongside `DeliveryState` in the
+`implement_ticket` package.
+
+## Resume semantics
+
+The dispatcher is idempotent on already-completed steps. When a
+step's name is already marked `success` in `state.outcomes`, the
+dispatcher **skips** it and continues. This is how Option-A
+delegation works end-to-end:
+
+1. Dispatcher runs until an agent-directive step halts with
+   `blocked`.
+2. Orchestrator reads the directive, invokes the matching skill,
+   captures the result onto the matching `DeliveryState` slice
+   (`state.changes`, `state.tests`, etc.).
+3. Orchestrator sets `state.outcomes[step] = "success"` and
+   re-invokes `dispatch(state, steps)`.
+4. Dispatcher skips completed steps and resumes at the first one
+   still pending.
+
+Only the exact string `"success"` triggers the skip. A `"blocked"`
+or `"partial"` marker from a prior run **reruns** the step so the
+current state is re-evaluated rather than trusting stale evidence.
+
 ## Memory retrieval contract
 
 Bounded per the top-level roadmap rule:

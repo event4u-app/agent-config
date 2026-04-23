@@ -143,3 +143,79 @@ def test_delivery_state_defaults_isolate_between_instances() -> None:
 
     assert two.memory == []
     assert two.outcomes == {}
+
+
+def test_dispatch_resumes_by_skipping_steps_already_marked_success() -> None:
+    """Resume semantics: a step already flagged ``success`` must not rerun.
+
+    Models the Option-A flow where the agent executes a directive
+    (e.g. ``implement-plan``), records ``success`` on that step, and
+    re-invokes the dispatcher to continue.
+    """
+    calls: list[str] = []
+
+    def _record(name: str):
+        def _step(_state: DeliveryState) -> StepResult:
+            calls.append(name)
+            return StepResult(outcome=Outcome.SUCCESS)
+
+        return _step
+
+    steps = {name: _record(name) for name in STEP_ORDER}
+
+    state = _state()
+    # Mark the first four steps as already done — dispatcher should
+    # skip them and resume at ``implement``.
+    for done in ("refine", "memory", "analyze", "plan"):
+        state.outcomes[done] = "success"
+
+    final, halting_step = dispatch(state, steps)
+
+    assert final is Outcome.SUCCESS
+    assert halting_step is None
+    # Only the remaining four steps ran, in order.
+    assert calls == ["implement", "test", "verify", "report"]
+    # The skipped steps keep their prior "success" marker.
+    assert state.outcomes["refine"] == "success"
+    assert state.outcomes["report"] == "success"
+
+
+def test_dispatch_clears_stale_questions_before_resuming() -> None:
+    """A fresh invocation must not carry forward questions from a prior halt."""
+    steps = _all_success_steps()
+
+    state = _state()
+    state.questions = [
+        "@agent-directive: implement-plan",
+        "> 1. Continue",
+        "> 2. Abort",
+    ]
+    for done in STEP_ORDER[:4]:
+        state.outcomes[done] = "success"
+
+    final, _ = dispatch(state, steps)
+
+    assert final is Outcome.SUCCESS
+    assert state.questions == []
+
+
+def test_dispatch_does_not_skip_steps_marked_blocked_or_partial() -> None:
+    """Only ``success`` triggers the skip; other markers must rerun the step."""
+    calls: list[str] = []
+
+    def _success(_state: DeliveryState) -> StepResult:
+        calls.append("refine")
+        return StepResult(outcome=Outcome.SUCCESS)
+
+    steps = _all_success_steps()
+    steps["refine"] = _success
+
+    state = _state()
+    # A prior run ended BLOCKED on refine — a resume must rerun it, not
+    # trust the stale marker.
+    state.outcomes["refine"] = "blocked"
+
+    dispatch(state, steps)
+
+    assert calls == ["refine"]
+    assert state.outcomes["refine"] == "success"

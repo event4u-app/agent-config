@@ -20,14 +20,25 @@ Architectural constraints (from
 """
 from __future__ import annotations
 
-from .delivery_state import DeliveryState, Outcome, Step, StepResult
+from .delivery_state import (
+    AGENT_DIRECTIVE_PREFIX,
+    DeliveryState,
+    Outcome,
+    Step,
+    StepResult,
+    agent_directive,
+    is_agent_directive,
+)
 from .dispatcher import STEP_ORDER, dispatch
 
 __all__ = [
+    "AGENT_DIRECTIVE_PREFIX",
     "DeliveryState",
     "Outcome",
     "STEP_ORDER",
     "Step",
     "StepResult",
+    "agent_directive",
     "dispatch",
+    "is_agent_directive",
 ]

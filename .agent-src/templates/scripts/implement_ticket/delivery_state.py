@@ -83,3 +83,48 @@ Step = Callable[[DeliveryState], StepResult]
 A step reads and writes ``DeliveryState`` in place; its return value
 carries only the terminal ``Outcome`` and any surfaced questions.
 """
+
+
+AGENT_DIRECTIVE_PREFIX = "@agent-directive:"
+"""Marker that flags a ``questions[0]`` entry as agent-addressed, not user-addressed.
+
+When a step cannot run deterministically from pure Python (edits,
+subprocess calls, anything that needs tools the dispatcher doesn't
+own), it returns ``BLOCKED`` with this prefix as the first entry of
+``questions``. The orchestrator reads it and drives the matching
+skill; the user-facing numbered options follow on subsequent lines.
+
+The prefix is public contract: changing it breaks every agent that
+has learned to recognise it. See
+``agents/contexts/implement-ticket-flow.md#agent-directives``.
+"""
+
+
+def agent_directive(name: str, **payload: Any) -> str:
+    """Format a canonical ``@agent-directive:`` line.
+
+    ``name`` is the directive verb the agent dispatches on (for
+    example ``"implement-plan"`` or ``"run-tests"``). ``payload``
+    entries are rendered as ``key=value`` pairs on the same line, so
+    the whole directive stays a single greppable string. Values are
+    coerced with ``str`` — richer payloads belong on the
+    ``DeliveryState`` itself, not in the directive line.
+    """
+    suffix = " ".join(f"{key}={value}" for key, value in payload.items())
+    return (
+        f"{AGENT_DIRECTIVE_PREFIX} {name} {suffix}".strip()
+        if suffix
+        else f"{AGENT_DIRECTIVE_PREFIX} {name}"
+    )
+
+
+def is_agent_directive(question: str) -> bool:
+    """True when ``question`` is an agent-addressed directive line.
+
+    Used by the orchestrator to split ``state.questions`` into the
+    agent-facing directive (at most one, always at index 0) and the
+    user-facing numbered options (everything else).
+    """
+    return isinstance(question, str) and question.lstrip().startswith(
+        AGENT_DIRECTIVE_PREFIX,
+    )
