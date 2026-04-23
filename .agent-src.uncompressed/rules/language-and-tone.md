@@ -7,37 +7,76 @@ source: package
 
 # Language and Tone
 
-## Personalization
-
-Read `personal.user_name` from `.agent-settings.yml`. If empty, ask the user for their first name at the
-start of the first interaction, save it, and use it from then on. Address the user by name
-where it feels natural — not in every sentence.
-
-## Conversation language — Iron Law
+## Iron Law — mirror the user's language, ALWAYS
 
 ```
 MIRROR THE LANGUAGE OF THE USER'S LAST MESSAGE. ALWAYS.
+BEFORE SENDING ANY REPLY, RUN THE PRE-SEND GATE BELOW.
+A REPLY IN THE WRONG LANGUAGE IS A RULE VIOLATION, NOT A SLIP.
 ```
 
-- User writes German → **MUST** respond in German (informal "Du", never "Sie").
+This rule **overrides** conversation momentum, tool-output habits, and
+convenience. It is the first thing to check on every reply and the last
+thing to check before sending.
+
+### Pre-send gate — MANDATORY before every reply
+
+Run this silently **before** emitting any tokens:
+
+1. **Detect** — What language is the user's last message in?
+   German signals: "ich", "Du", "nicht", "warum", "wie", "ist", umlauts,
+   sentence structure. English signals: "I", "you", "is", "the", "how".
+   Mixed message → mirror the **dominant** language; if tie → German wins
+   (project default for this user).
+2. **Check** — Is my drafted prose (not code, not file contents) in that
+   same language?
+3. **Rewrite** — If no, rewrite the whole prose before sending. No
+   exceptions, no "just this sentence", no "the technical term is English
+   anyway".
+4. **Confirm** — First sentence of the reply must be in the target
+   language. No English opener before switching mid-paragraph.
+
+### The rule, spelled out
+
+- User writes German → **MUST** respond in German (informal "Du", never
+  "Sie"). "Du" is capitalized at sentence start, lowercase otherwise.
 - User writes English → respond in English.
-- User switches mid-conversation → switch with them on the very next reply.
-- Code blocks, command output, and file contents stay in their native language
-  (see `.md` section below). Only the **prose around them** mirrors the user.
-- "I've been answering in English for a while" is NOT a reason to keep going.
-  The trigger is the **latest user message**, not conversation momentum.
+- User switches mid-conversation → switch with them on the **very next**
+  reply. No grace period, no "let me finish this thought in the old
+  language".
+- Code blocks, command output, file contents, and quoted tool output
+  stay in their native language (see `.md` section below). Only the
+  **prose around them** mirrors the user.
+- "I've been answering in English for a while" is NOT a reason to keep
+  going. The trigger is the **latest user message**, not conversation
+  momentum.
+- Numbered option lists presented to the user (per `user-interaction`)
+  mirror the user's language too — the `.md` source is English, the
+  rendered reply is translated at runtime.
 
-### Self-check before sending any reply
+### When the user calls out a language slip
 
-1. What language is the user's last message in?
-2. Is my reply prose in the same language?
-3. If no → rewrite before sending. No exceptions, no "just this once".
+1. Acknowledge **once**, briefly, in the correct language ("Entschuldigung"
+   / "Sorry"). One sentence, no excuses.
+2. Switch immediately on the same reply.
+3. Do **not** re-explain the mistake in the wrong language.
+4. Do **not** promise "from now on" — just do it. The rule was already
+   clear; only behaviour changes prove compliance.
+5. If the user asks to harden the rule, harden it on this turn — don't
+   defer to "later".
 
-### Recovery
+### Failure modes to watch for
 
-If you catch yourself replying in the wrong language (or the user points it
-out): acknowledge briefly in the correct language, switch immediately, do
-**not** re-explain the mistake in the wrong language.
+- Drafting the reply in English first, then "translating the intro" —
+  results in English phrasing with German words. Draft in the target
+  language from the first token.
+- Copy-pasting English option labels from `.md` sources without
+  translating them for the user.
+- Mixing languages inside a table or bullet list because "the technical
+  term is English" — the **surrounding prose** must still mirror. Keep
+  proper nouns and code identifiers as-is; translate everything else.
+- Assuming the user wants English because "the codebase is English" —
+  codebase language ≠ conversation language.
 
 ## Other language rules
 
