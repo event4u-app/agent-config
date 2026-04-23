@@ -6,19 +6,19 @@
 
 ## Overall
 
-**11 / 40 steps done · 28%**
+**14 / 40 steps done · 35%**
 
 ```text
-███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   28%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   35%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Done | Open | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [agent-memory/road-to-retrieval-contract.md](roadmaps/agent-memory/road-to-retrieval-contract.md) | 3 | 9 | 0 | 9 | 0 | 0 | 0% ░░░░░░░░░░ |
-| 2 | [road-to-implement-ticket.md](roadmaps/road-to-implement-ticket.md) | 5 | 29 | 11 | 18 | 0 | 0 | 38% ████░░░░░░ |
-| 3 | [road-to-trigger-evals.md](roadmaps/road-to-trigger-evals.md) | 3 | 2 | 0 | 2 | 0 | 0 | 0% ░░░░░░░░░░ |
+| 1 | [agent-memory/road-to-retrieval-contract.md](roadmaps/agent-memory/road-to-retrieval-contract.md) | 3 | 9 | 0 | 9 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-implement-ticket.md](roadmaps/road-to-implement-ticket.md) | 5 | 29 | 14 | 15 | 0 | 0 | █████░░░░░ 48% |
+| 3 | [road-to-trigger-evals.md](roadmaps/road-to-trigger-evals.md) | 3 | 2 | 0 | 2 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -36,13 +36,13 @@
 
 ### [road-to-implement-ticket.md](roadmaps/road-to-implement-ticket.md)
 
-**Road to Implement-Ticket — from governed agent to delivery engine** — 11 / 29 done (38%)
+**Road to Implement-Ticket — from governed agent to delivery engine** — 14 / 29 done (48%)
 
 | # | Phase | State | Done | Open | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | technology spike ✅ shipped (2026-04-23) | ✅ done | 5 | 0 | 0 | 0 | 100% |
 | 1 | DeliveryState + linear dispatcher ✅ shipped (2026-04-23) | ✅ done | 4 | 0 | 0 | 0 | 100% |
-| 2 | step wiring to existing skills | 🟡 in progress | 2 | 6 | 0 | 0 | 25% |
+| 2 | step wiring to existing skills | 🟡 in progress | 5 | 3 | 0 | 0 | 62% |
 | 3 | block-on-ambiguity + persona policies | ⬜ not started | 0 | 4 | 0 | 0 | 0% |
 | 4 | delivery report + README hero | ⬜ not started | 0 | 8 | 0 | 0 | 0% |
 

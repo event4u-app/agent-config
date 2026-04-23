@@ -189,7 +189,7 @@ def render(roadmaps: list[RoadmapStats]) -> str:
         lines.append(
             f"| {i} | [{r.rel}](roadmaps/{r.rel}) | {len(r.phases)} | {r.total_active} | "
             f"{r.done} | {r.open_} | {r.deferred} | {r.cancelled} | "
-            f"{r.percent}% {bar(r.percent)} |"
+            f"{bar(r.percent)} {r.percent}% |"
         )
     lines.append("")
     lines.append("---\n")
