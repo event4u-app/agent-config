@@ -248,10 +248,137 @@ def check_file(filepath: Path, patterns: list, allowlist: list) -> List[Violatio
     return violations
 
 
+# ── Task-command detector ───────────────────────────────────────────────
+# Artefact files shipped in the package must not reference `task <name>`
+# invocations (per augment-portability rule). Consumer projects may not
+# have Taskfile installed; agents must use direct script paths instead.
+ARTIFACT_SUBDIRS = ["skills", "rules", "commands", "guidelines", "personas", "contexts"]
+
+# Inline code: `task foo` or `task foo-bar` or `task foo:bar`
+_TASK_INLINE_RE = re.compile(r"`task\s+([a-z][a-z0-9:_-]*)`")
+# Code-fence line: "task foo …" (optional leading whitespace)
+_TASK_FENCE_RE = re.compile(r"^\s*task\s+([a-z][a-z0-9:_-]*)\b")
+
+# Files that legitimately document the forbidden pattern — they define
+# the rule itself. Any path containing one of these suffixes is skipped
+# by the task-invocation detector (but still scanned for layer 1 + 2).
+_TASK_DETECTOR_SKIP = (
+    "rules/augment-portability.md",
+)
+
+
+def check_task_invocations(filepath: Path) -> List[Violation]:
+    """Flag `task <cmd>` invocations in inline code or code fence lines."""
+    violations: List[Violation] = []
+    try:
+        lines = filepath.read_text(encoding="utf-8").splitlines()
+    except Exception:
+        return violations
+
+    in_code_block = False
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            in_code_block = not in_code_block
+            continue
+        if in_code_block:
+            m = _TASK_FENCE_RE.search(line)
+            if m:
+                violations.append(Violation(
+                    file=str(filepath), line=i, match=m.group(0).strip(),
+                    pattern_name="task-invocation", severity="error",
+                    context=stripped,
+                ))
+        else:
+            for m in _TASK_INLINE_RE.finditer(line):
+                violations.append(Violation(
+                    file=str(filepath), line=i, match=m.group(0),
+                    pattern_name="task-invocation", severity="error",
+                    context=stripped,
+                ))
+
+    return violations
+
+
+# ── Direct script-invocation detector ───────────────────────────────────
+# Artefacts shipped to consumers must use the `./agent-config` CLI for
+# commands it already covers. Direct `python3 scripts/…` / `bash scripts/…`
+# invocations only work inside the package repo, not in a consumer project
+# where the scripts live under node_modules/ or vendor/.
+#
+# Each entry: (regex, suggested replacement). Patterns match inside inline
+# backticks OR anywhere on a code-fence line.
+_CLI_INVOCATION_MAP: list[tuple[re.Pattern, str]] = [
+    (
+        re.compile(r"python3\s+scripts/mcp_render\.py\s+--check\b"),
+        "./agent-config mcp:check",
+    ),
+    (
+        re.compile(r"python3\s+scripts/mcp_render\.py\b"),
+        "./agent-config mcp:render",
+    ),
+    (
+        re.compile(r"python3\s+\.(?:agent-src|augment)/scripts/update_roadmap_progress\.py\s+--check\b"),
+        "./agent-config roadmap:progress-check",
+    ),
+    (
+        re.compile(r"python3\s+\.(?:agent-src|augment)/scripts/update_roadmap_progress\.py\b"),
+        "./agent-config roadmap:progress",
+    ),
+    (
+        re.compile(r"bash\s+scripts/first-run\.sh\b"),
+        "./agent-config first-run",
+    ),
+]
+
+# Paths that legitimately document the raw invocations (e.g. the CLI's
+# own help, the portability rule that defines the mapping).
+_CLI_DETECTOR_SKIP = (
+    "rules/augment-portability.md",
+)
+
+
+def check_cli_invocations(filepath: Path) -> List[Violation]:
+    """Flag direct script invocations that should go through `./agent-config`."""
+    violations: List[Violation] = []
+    try:
+        lines = filepath.read_text(encoding="utf-8").splitlines()
+    except Exception:
+        return violations
+
+    in_code_block = False
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            in_code_block = not in_code_block
+            continue
+
+        # In prose lines, only check content inside inline `...` spans to
+        # avoid false positives in running text. In code fences, check the
+        # whole line.
+        if in_code_block:
+            segments = [line]
+        else:
+            segments = re.findall(r"`([^`]+)`", line)
+
+        for seg in segments:
+            for pattern, replacement in _CLI_INVOCATION_MAP:
+                m = pattern.search(seg)
+                if m:
+                    violations.append(Violation(
+                        file=str(filepath), line=i, match=m.group(0),
+                        pattern_name=f"cli-bypass → use `{replacement}`",
+                        severity="error", context=stripped,
+                    ))
+                    break  # one hit per segment is enough
+
+    return violations
+
+
 def scan_all(root: Path) -> tuple[List[Violation], list[str]]:
     """Scan all package files for portability violations. Returns (violations, detected_identifiers).
 
-    Scanning has two layers:
+    Scanning has four layers:
     1. Auto-detected identifiers — applied to `.agent-src/` and
        `.agent-src.uncompressed/` only. The package's own root AGENTS.md and
        copilot-instructions.md are meta docs ABOUT the package, so the
@@ -259,6 +386,13 @@ def scan_all(root: Path) -> tuple[List[Violation], list[str]]:
     2. Optional FORBIDDEN_IDENTIFIERS from AGENT_CONFIG_BLOCKLIST —
        applied to every scanned file, including the root files. Catches
        leakage from renamed or adjacent projects in downstream forks.
+    3. `task <name>` invocations inside artefact subdirs — skills, rules,
+       commands, guidelines, personas, contexts. These shipped artefacts
+       run in consumer projects that may not have Taskfile installed.
+    4. Direct script invocations that bypass the `./agent-config` CLI
+       (e.g. `python3 scripts/mcp_render.py`). Same artefact-subdir scope
+       as layer 3; consumer projects only have the package under
+       `node_modules/` or `vendor/`, so the raw paths never resolve.
     """
     patterns, detected = _compile_patterns(root)
     forbidden = _compile_forbidden_patterns()
@@ -278,6 +412,22 @@ def scan_all(root: Path) -> tuple[List[Violation], list[str]]:
         f = root / rel
         if f.is_file():
             violations.extend(check_file(f, forbidden, allowlist))
+
+    # Layer 3 + 4: artefact-subdir-only scans (task invocations, CLI bypass)
+    for scan_dir in SCAN_DIRS:
+        base = root / scan_dir
+        if not base.exists():
+            continue
+        for sub in ARTIFACT_SUBDIRS:
+            d = base / sub
+            if not d.exists():
+                continue
+            for f in sorted(d.rglob("*.md")):
+                path_str = str(f)
+                if not any(path_str.endswith(skip) for skip in _TASK_DETECTOR_SKIP):
+                    violations.extend(check_task_invocations(f))
+                if not any(path_str.endswith(skip) for skip in _CLI_DETECTOR_SKIP):
+                    violations.extend(check_cli_invocations(f))
 
     return violations, detected
 

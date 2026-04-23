@@ -28,7 +28,7 @@ Every skill's YAML frontmatter MUST validate against `scripts/schemas/skill.sche
 See [`agents/docs/frontmatter-contract.md`](../../../agents/docs/frontmatter-contract.md)
 for the human-readable contract across all artefact types. Violations are
 reported by `scripts/skill_linter.py` as `schema_<rule>` errors and fail
-`task validate-schema` / `task ci`.
+`python3 scripts/validate_frontmatter.py` and the full CI pipeline.
 
 ## Description Triggering
 

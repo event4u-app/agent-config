@@ -593,7 +593,33 @@ ensure_gitignore() {
 
 # Agent config — NOT ignored (real copies, may contain project overrides)
 # .augment/rules/
+
+# Agent config — CLI wrapper (auto-generated on every install)
+/agent-config
 BLOCK
+}
+
+# Install the consumer-facing CLI wrapper `./agent-config` at the project
+# root. Gitignored, overwritten on every install, delegates to the master
+# CLI shipped in the package (node_modules or vendor).
+install_cli_wrapper() {
+    local project_root="$1"
+    local template="$SOURCE_DIR/templates/agent-config-wrapper.sh"
+    local target="$project_root/agent-config"
+
+    if [[ ! -f "$template" ]]; then
+        log_verbose "CLI wrapper template missing: $template — skipping"
+        return 0
+    fi
+
+    if $DRY_RUN; then
+        log_verbose "install CLI wrapper → $target"
+        return
+    fi
+
+    cp "$template" "$target"
+    chmod +x "$target"
+    log_info "Installed ./agent-config wrapper"
 }
 
 # --- Main ---
@@ -626,7 +652,10 @@ main() {
     generate_windsurfrules "$TARGET_DIR"
     create_gemini_md "$TARGET_DIR"
 
-    # 5. Manage .gitignore
+    # 5. Install consumer CLI wrapper (gitignored, overwritten on every install)
+    install_cli_wrapper "$TARGET_DIR"
+
+    # 6. Manage .gitignore
     ensure_gitignore "$TARGET_DIR"
 
     echo ""

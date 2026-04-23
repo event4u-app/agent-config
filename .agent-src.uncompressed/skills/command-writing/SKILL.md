@@ -102,10 +102,11 @@ multi-paragraph explanation, extract it into a skill and call it.
 
 * Run `python3 scripts/skill_linter.py .agent-src.uncompressed/commands/{name}.md`
   → 0 FAIL.
-* Run `task sync` → regenerates `.agent-src/commands/{name}.md`.
-* Run `task generate-tools` → creates the Claude symlink at
+* Run `bash scripts/compress.sh --sync` → regenerates `.agent-src/commands/{name}.md`.
+* Run `python3 scripts/compress.py --generate-tools` → creates the Claude symlink at
   `.claude/skills/{name}/SKILL.md`.
-* Run `task ci` → exits 0 except for tolerated warnings.
+* Run the full CI pipeline locally (see `Taskfile.yml` in this repo for
+  the script list) — must exit 0 except for tolerated warnings.
 
 ## Output format
 

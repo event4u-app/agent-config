@@ -169,8 +169,8 @@ Mandatory fields the draft MUST fill:
 * `Success signal` (§7) — one metric, one baseline, one target, one
   evaluation date
 
-Run `python3 scripts/check_proposal.py agents/proposals/<id>.md` (or
-`task check-proposal`) before handing to `upstream-contribute`. The
+Run `python3 scripts/check_proposal.py agents/proposals/<id>.md`
+before handing to `upstream-contribute`. The
 script is a hard gate: non-zero exit = the proposal does not move
 to stage `gated`.
 

@@ -95,12 +95,8 @@ def test_cli_render_writes_targets(
     monkeypatch.setenv("GH_TOKEN", "ghp_xxx")
     monkeypatch.setenv("JIRA_TOKEN", "jira_yyy")
     source = _write_source(tmp_path)
-    monkeypatch.setattr(mcp_render, "IN_PROJECT_TARGETS", {
-        "cursor": tmp_path / ".cursor" / "mcp.json",
-        "windsurf": tmp_path / ".windsurf" / "mcp.json",
-    })
     monkeypatch.setattr(mcp_render, "CLAUDE_DESKTOP_TARGET", tmp_path / "claude" / "config.json")
-    rc = mcp_render.main(["--source", str(source)])
+    rc = mcp_render.main(["--source", str(source), "--project-root", str(tmp_path)])
     assert rc == 0
     golden = (FIXTURES / "golden.json").read_text(encoding="utf-8")
     expected = json.dumps(json.loads(golden), indent=2, sort_keys=True) + "\n"
@@ -115,11 +111,12 @@ def test_cli_render_includes_claude_desktop_when_opted_in(
     monkeypatch.setenv("GH_TOKEN", "ghp_xxx")
     monkeypatch.setenv("JIRA_TOKEN", "jira_yyy")
     source = _write_source(tmp_path)
-    monkeypatch.setattr(mcp_render, "IN_PROJECT_TARGETS", {
-        "cursor": tmp_path / ".cursor" / "mcp.json",
-    })
     monkeypatch.setattr(mcp_render, "CLAUDE_DESKTOP_TARGET", tmp_path / "claude" / "config.json")
-    rc = mcp_render.main(["--source", str(source), "--claude-desktop"])
+    rc = mcp_render.main([
+        "--source", str(source),
+        "--project-root", str(tmp_path),
+        "--claude-desktop",
+    ])
     assert rc == 0
     assert (tmp_path / "claude" / "config.json").exists()
 
@@ -130,8 +127,7 @@ def test_cli_render_fails_loud_and_writes_nothing(
     monkeypatch.delenv("GH_TOKEN", raising=False)
     monkeypatch.delenv("JIRA_TOKEN", raising=False)
     source = _write_source(tmp_path)
-    monkeypatch.setattr(mcp_render, "IN_PROJECT_TARGETS", {"cursor": tmp_path / ".cursor" / "mcp.json"})
-    rc = mcp_render.main(["--source", str(source)])
+    rc = mcp_render.main(["--source", str(source), "--project-root", str(tmp_path)])
     assert rc == 1
     err = capsys.readouterr().err
     assert "GH_TOKEN" in err and "JIRA_TOKEN" in err
@@ -143,13 +139,13 @@ def test_cli_render_is_idempotent(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
     monkeypatch.setenv("JIRA_TOKEN", "jira_yyy")
     source = _write_source(tmp_path)
     target = tmp_path / ".cursor" / "mcp.json"
-    monkeypatch.setattr(mcp_render, "IN_PROJECT_TARGETS", {"cursor": target})
     monkeypatch.setattr(mcp_render, "CLAUDE_DESKTOP_TARGET", tmp_path / "unused.json")
-    assert mcp_render.main(["--source", str(source)]) == 0
+    args = ["--source", str(source), "--project-root", str(tmp_path)]
+    assert mcp_render.main(args) == 0
     first = target.read_text(encoding="utf-8")
-    assert mcp_render.main(["--source", str(source)]) == 0
+    assert mcp_render.main(args) == 0
     assert target.read_text(encoding="utf-8") == first
-    assert mcp_render.main(["--source", str(source), "--check"]) == 0
+    assert mcp_render.main([*args, "--check"]) == 0
 
 
 def test_cli_check_detects_stale_output(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -157,8 +153,11 @@ def test_cli_check_detects_stale_output(tmp_path: Path, monkeypatch: pytest.Monk
     monkeypatch.setenv("JIRA_TOKEN", "jira_yyy")
     source = _write_source(tmp_path)
     target = tmp_path / ".cursor" / "mcp.json"
-    monkeypatch.setattr(mcp_render, "IN_PROJECT_TARGETS", {"cursor": target})
     monkeypatch.setattr(mcp_render, "CLAUDE_DESKTOP_TARGET", tmp_path / "unused.json")
     target.parent.mkdir()
     target.write_text("{}\n", encoding="utf-8")
-    assert mcp_render.main(["--source", str(source), "--check"]) == 1
+    assert mcp_render.main([
+        "--source", str(source),
+        "--project-root", str(tmp_path),
+        "--check",
+    ]) == 1

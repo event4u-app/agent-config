@@ -7,7 +7,8 @@
         "php": ">=8.0"
     },
     "bin": [
-        "bin/install.php"
+        "bin/install.php",
+        "scripts/agent-config"
     ],
     "archive": {
         "exclude": [

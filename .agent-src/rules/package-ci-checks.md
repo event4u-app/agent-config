@@ -18,8 +18,8 @@ NEVER push without running ALL CI checks locally first.
 ### 1. Sync
 
 ```bash
-task sync-check            # .agent-src/ matches .agent-src.uncompressed/
-task sync-check-hashes     # compression hashes are clean
+bash scripts/compress.sh --check          # .agent-src/ matches .agent-src.uncompressed/
+bash scripts/compress.sh --check-hashes   # compression hashes are clean
 ```
 
 ### 2. Consistency
@@ -51,7 +51,8 @@ python3 scripts/readme_linter.py README.md --root .
 ## Quick one-liner
 
 ```bash
-task sync-check && task sync-check-hashes && \
+bash scripts/compress.sh --check && \
+bash scripts/compress.sh --check-hashes && \
 python3 scripts/check_compression.py && \
 python3 scripts/check_references.py && \
 python3 scripts/check_portability.py && \
@@ -64,8 +65,8 @@ python3 scripts/readme_linter.py README.md --root .
 
 1. Edit uncompressed file
 2. Edit compressed file in `.agent-src/` to match
-3. `task sync-mark-done -- {relative-path}` — update hash
-4. `task sync-check-hashes` — verify
+3. `bash scripts/compress.sh --mark-done {relative-path}` — update hash
+4. `bash scripts/compress.sh --check-hashes` — verify
 
 **Skip step 3 → CI WILL fail.**
 

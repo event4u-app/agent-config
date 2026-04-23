@@ -165,10 +165,11 @@ The files must:
 ### 6. Run quality gates (if working in the package repo)
 
 ```bash
-task lint-skills                    # 0 FAIL required
-task check-compression              # No errors for this file
-task generate-tools                 # Regenerate symlinks
-task consistency                    # Everything in sync
+python3 scripts/skill_linter.py --all          # 0 FAIL required
+python3 scripts/check_compression.py            # No errors for this file
+python3 scripts/compress.py --generate-tools    # Regenerate symlinks
+bash scripts/compress.sh --check                # .agent-src/ in sync with source
+bash scripts/compress.sh --check-hashes         # All hashes match
 ```
 
 If not in the package repo, note that these checks will run in CI after the PR is created.

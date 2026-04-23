@@ -16,7 +16,7 @@ Only changed files need recompression — saving tokens and time.
 ## Step 1: Sync non-.md files
 
 ```bash
-task sync
+bash scripts/compress.sh --sync
 ```
 
 This copies non-`.md` files (`.php`, etc.), deletes stale files, and shows the count of
@@ -25,13 +25,14 @@ changed `.md` files that need compression.
 ## Step 2: Get changed files
 
 ```bash
-task sync-changed
+bash scripts/compress.sh --changed
 ```
 
 This lists only `.md` files whose source has changed since the last compression (based on
 stored SHA-256 hashes). If no files changed → you're done.
 
-If you need to see ALL files regardless of change status: `task sync-list`.
+If you need to see ALL files regardless of change status:
+`bash scripts/compress.sh --list`.
 
 ## Step 3: Compress each changed .md file
 
@@ -97,7 +98,7 @@ Common errors and how to fix them:
 **Do NOT call `mark-done` until this file has zero 🔴 errors.**
 
 8. Show word count: `{original} → {compressed} words ({saved}% saved)`
-9. **Mark as done:** `task sync-mark-done -- {path}`
+9. **Mark as done:** `bash scripts/compress.sh --mark-done {path}`
 
 ### Batch processing
 
@@ -113,7 +114,7 @@ Batch 1/5 complete: 10 files, avg 42% saved
 Run BOTH checks. Both must pass before finishing.
 
 ```bash
-task sync-check
+bash scripts/compress.sh --check
 ```
 
 Must show ✅ (hashes in sync).
@@ -132,9 +133,9 @@ Show a summary table with per-category stats (files compressed, avg savings).
 ## Hash management
 
 - Hashes are stored in `.augment/.compression-hashes.json` (committed to Git).
-- `task sync` automatically cleans up hashes for deleted source files.
-- `task sync-mark-all-done` marks ALL current `.md` files as compressed (useful after an
-  initial full compression or when bootstrapping the hash file).
+- `bash scripts/compress.sh --sync` automatically cleans up hashes for deleted source files.
+- `bash scripts/compress.sh --mark-all-done` marks ALL current `.md` files as compressed
+  (useful after an initial full compression or when bootstrapping the hash file).
 - A file with no stored hash is always treated as "changed".
 
 ## Compression quality checklist
@@ -174,4 +175,4 @@ Unsafe (DO NOT do this):
 - **Only write to `.augment/`** — the compressed output directory.
 - **Preserve ALL technical content** — only compress natural language prose.
 - **YAML frontmatter** in command/skill files must be preserved exactly.
-- **Always run `task sync-mark-done`** after writing each compressed file.
+- **Always run `bash scripts/compress.sh --mark-done {path}`** after writing each compressed file.

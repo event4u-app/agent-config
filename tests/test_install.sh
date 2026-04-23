@@ -231,6 +231,62 @@ test_symlink_replaced_by_copy_for_rules() {
     teardown
 }
 
+test_cli_wrapper_installed() {
+    setup; run_install
+    assert_true "./agent-config exists" test -f "$TMPDIR/agent-config"
+    assert_true "./agent-config is executable" test -x "$TMPDIR/agent-config"
+    teardown
+}
+
+test_cli_wrapper_gitignored() {
+    setup; run_install
+    assert_contains "gitignore covers /agent-config" "$TMPDIR/.gitignore" "/agent-config"
+    teardown
+}
+
+test_cli_wrapper_overwrites_on_reinstall() {
+    setup; run_install
+    echo "# stale content" > "$TMPDIR/agent-config"
+    run_install
+    assert_false "stale marker removed" grep -q "# stale content" "$TMPDIR/agent-config"
+    assert_true "./agent-config still executable" test -x "$TMPDIR/agent-config"
+    teardown
+}
+
+test_cli_wrapper_delegates_to_master() {
+    setup; run_install
+    # Simulate node_modules layout so the wrapper can find the master CLI.
+    mkdir -p "$TMPDIR/node_modules/@event4u"
+    ln -sf "$SCRIPT_DIR" "$TMPDIR/node_modules/@event4u/agent-config"
+    local out
+    out="$(cd "$TMPDIR" && ./agent-config help 2>&1)"
+    if printf '%s' "$out" | grep -q "agent-config — event4u/agent-config CLI"; then
+        echo "  ✅  wrapper delegates to master (help reached master)"
+        ((PASS++)) || true
+    else
+        echo "  ❌  FAIL: wrapper did not reach master; output was:"
+        printf '%s\n' "$out" | sed 's/^/       /'
+        ((FAIL++)) || true
+    fi
+    teardown
+}
+
+test_cli_wrapper_errors_without_install() {
+    setup; run_install
+    # No node_modules / vendor exists → wrapper must fail clearly, exit 127.
+    local out rc
+    out="$(cd "$TMPDIR" && ./agent-config help 2>&1)" && rc=0 || rc=$?
+    assert_true "wrapper exits 127 when master missing" test "$rc" -eq 127
+    if printf '%s' "$out" | grep -q "master CLI not found"; then
+        echo "  ✅  wrapper prints actionable error"
+        ((PASS++)) || true
+    else
+        echo "  ❌  FAIL: wrapper error message missing"
+        ((FAIL++)) || true
+    fi
+    teardown
+}
+
 # --- Runner ---
 echo "🧪  Running install.sh integration tests..."
 echo ""
@@ -255,6 +311,11 @@ test_gemini_md_created
 test_dry_run_no_files
 test_agents_md_copied
 test_symlink_replaced_by_copy_for_rules
+test_cli_wrapper_installed
+test_cli_wrapper_gitignored
+test_cli_wrapper_overwrites_on_reinstall
+test_cli_wrapper_delegates_to_master
+test_cli_wrapper_errors_without_install
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed ($(( PASS + FAIL )) total)"

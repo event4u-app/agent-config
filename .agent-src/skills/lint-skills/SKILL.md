@@ -23,7 +23,7 @@ execution:
 - Investigate reported linter failure
 
 NOT: single file (call `skill_linter.py <path>`), cross-refs (use `check-refs`),
-compression freshness (use `task sync-check`).
+compression freshness (use `bash scripts/compress.sh --check`).
 
 ## Procedure
 

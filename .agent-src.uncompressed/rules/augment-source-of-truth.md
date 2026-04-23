@@ -44,17 +44,20 @@ hashing, sync verification, and quality checks automatically.
 
 1. **Create or edit** the file in `.agent-src.uncompressed/{path}`
 2. **Do NOT auto-compress.** Continue working.
-3. **Before commit/push:** Check if compression is needed (`task sync-changed`).
-   If files need compression, ask the user:
+3. **Before commit/push:** Check if compression is needed
+   (`bash scripts/compress.sh --changed`). If files need compression,
+   ask the user:
    ```
    > 📦 {N} .agent-src files need compression before commit.
    >
    > 1. Compress now — run /compress
    > 2. Later — commit without compression
    ```
-4. If compressing: run `/compress` command, then `task sync-mark-done -- {path}`
+4. If compressing: run `/compress` command, then
+   `bash scripts/compress.sh --mark-done {path}`
 
-For new non-.md files (`.php`, configs): `task sync` copies them automatically.
+For new non-.md files (`.php`, configs):
+`bash scripts/compress.sh --sync` copies them automatically.
 
 **Key change:** Compression happens once before commit/push — not after every edit.
 This avoids interruptions when work is still in progress.
@@ -97,7 +100,7 @@ disable-model-invocation: true
 1. Create `.agent-src.uncompressed/commands/{name}.md` (use template)
 2. Run `python3 scripts/skill_linter.py` — must be 0 FAIL
 3. Compress via `/compress`, which writes to `.agent-src/commands/`
-4. Run `task generate-tools` — creates Claude symlink automatically
+4. Run `python3 scripts/compress.py --generate-tools` — creates Claude symlink automatically
 
 **Never** create `.claude/skills/{name}/SKILL.md` manually for commands — always use the symlink workflow.
 
@@ -105,7 +108,7 @@ disable-model-invocation: true
 
 Before asking for review or creating a PR, verify derived outputs are not stale:
 
-1. Run `task sync-changed` — check if `.agent-src.uncompressed/` has changes not yet compressed
+1. Run `bash scripts/compress.sh --changed` — check if `.agent-src.uncompressed/` has changes not yet compressed
 2. If stale files exist: run `/compress` before pushing
 3. Before merge: verify derived outputs (`.agent-src/`, `.augment/`, `.claude/skills/`) are regenerated
 4. Do NOT leave `.agent-src/` stale across review cycles
@@ -129,9 +132,9 @@ Commands have `disable-model-invocation: true` in their frontmatter.
 |---|---|
 | Edit existing file | Edit in `.agent-src.uncompressed/`, compress to `.agent-src/` |
 | Create new `.md` | Create in `.agent-src.uncompressed/`, compress to `.agent-src/` |
-| Create new non-`.md` | Create in `.agent-src.uncompressed/`, run `task sync` |
-| Create new command | Create in `.agent-src.uncompressed/commands/`, sync, `task generate-tools` |
+| Create new non-`.md` | Create in `.agent-src.uncompressed/`, run `bash scripts/compress.sh --sync` |
+| Create new command | Create in `.agent-src.uncompressed/commands/`, sync, `python3 scripts/compress.py --generate-tools` |
 | Delete a file | Delete from `.agent-src.uncompressed/` and `.agent-src/` |
-| Check what needs compression | `task sync-changed` |
-| Mark file as compressed | `task sync-mark-done -- {path}` |
-| Verify everything is in sync | `task sync-check` |
+| Check what needs compression | `bash scripts/compress.sh --changed` |
+| Mark file as compressed | `bash scripts/compress.sh --mark-done {path}` |
+| Verify everything is in sync | `bash scripts/compress.sh --check` |

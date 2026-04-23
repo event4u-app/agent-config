@@ -71,7 +71,7 @@ Present a summary:
 
 ### 5. Apply fixes
 
-Edit files in `.agent-src.uncompressed/`, then run `task sync` to regenerate `.agent-src/` and `.augment/`.
+Edit files in `.agent-src.uncompressed/`, then run `bash scripts/compress.sh --sync` to regenerate `.agent-src/` and `.augment/`.
 
 After all fixes, re-run:
 
@@ -90,7 +90,7 @@ python3 scripts/compress.py --mark-done "{relative_path}"
 ## Rules
 
 - **Always fix in `.agent-src.uncompressed/`** — never edit `.agent-src/` or `.augment/` directly.
-- **Run `task sync`** after fixing to regenerate `.agent-src/` and `.augment/`.
+- **Run `bash scripts/compress.sh --sync`** after fixing to regenerate `.agent-src/` and `.augment/`.
 - **Do NOT commit or push.**
 - **`agents/` directory is allowed** to have project-specific references — skip it.
 - **Do NOT fix references in code blocks** unless the code block is clearly a template.

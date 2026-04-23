@@ -27,7 +27,7 @@ Do NOT use when:
 
 - Only the body of a single file changed and no names or paths were touched
 - Checking frontmatter shape or required sections — use `lint-skills` instead
-- Verifying compressed vs uncompressed pairs — use `task sync-check` instead
+- Verifying compressed vs uncompressed pairs — use `bash scripts/compress.sh --check` instead
 
 ## Procedure
 

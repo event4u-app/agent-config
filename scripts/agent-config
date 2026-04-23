@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+# agent-config — consumer-facing CLI for the event4u/agent-config package.
+#
+# This is the MASTER entrypoint shipped inside the package
+# (node_modules/@event4u/agent-config/scripts/agent-config or
+# vendor/event4u/agent-config/scripts/agent-config). A thin wrapper at
+# the consumer's repo root (`./agent-config`) delegates here.
+#
+# Commands are strictly consumer-facing. Maintainer workflows stay in
+# Taskfile.yml and are NOT exposed here.
+#
+# Invariants:
+#   * CWD on entry is the consumer's repo root — we keep it that way
+#     so underlying scripts resolve paths correctly.
+#   * PACKAGE_ROOT is derived from this script's location, used only to
+#     locate the package-internal Python scripts (mcp_render.py, …).
+#   * Unknown arguments are forwarded verbatim to the underlying script.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+CONSUMER_ROOT="$(pwd)"
+
+VERSION_FILE="$PACKAGE_ROOT/package.json"
+
+usage() {
+  cat <<'EOF'
+agent-config — event4u/agent-config CLI
+
+Usage:
+  ./agent-config <command> [options]
+
+Commands:
+  mcp:render                 Render mcp.json → .cursor/mcp.json, .windsurf/mcp.json
+                             (pass --claude-desktop to also write user-scope config)
+  mcp:check                  Dry-run mcp:render; exit non-zero if targets are stale
+  roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
+  roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
+  first-run                  Guided first-run setup — cost profile, settings, tooling
+  help                       Show this help
+  --version, -V              Print package version
+
+Examples:
+  ./agent-config mcp:render
+  ./agent-config mcp:render --claude-desktop
+  ./agent-config mcp:check
+  ./agent-config roadmap:progress
+  ./agent-config first-run
+
+All commands operate on the CURRENT DIRECTORY (your project root).
+The CLI is strictly consumer-facing. Maintainer tasks live in Taskfile.yml.
+EOF
+}
+
+print_version() {
+  if [[ -f "$VERSION_FILE" ]] && command -v python3 >/dev/null 2>&1; then
+    python3 -c "import json; print(json.load(open('$VERSION_FILE'))['version'])"
+  else
+    echo "unknown"
+  fi
+}
+
+require_python3() {
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "❌  agent-config: python3 not found on PATH" >&2
+    echo "    Install Python 3.10+ and retry." >&2
+    exit 127
+  fi
+}
+
+# Locate a script. First argument is relative to PACKAGE_ROOT, second is
+# an optional fallback relative to CONSUMER_ROOT (for scripts that ship
+# to the consumer via .augment/, e.g. update_roadmap_progress.py).
+resolve_script() {
+  local pkg_rel="$1"
+  local consumer_rel="${2-}"
+  local pkg_abs="$PACKAGE_ROOT/$pkg_rel"
+  if [[ -f "$pkg_abs" ]]; then
+    printf '%s' "$pkg_abs"
+    return 0
+  fi
+  if [[ -n "$consumer_rel" && -f "$CONSUMER_ROOT/$consumer_rel" ]]; then
+    printf '%s' "$CONSUMER_ROOT/$consumer_rel"
+    return 0
+  fi
+  echo "❌  agent-config: script not found: $pkg_rel" >&2
+  [[ -n "$consumer_rel" ]] && echo "    (also tried: $consumer_rel in $CONSUMER_ROOT)" >&2
+  return 1
+}
+
+cmd_mcp_render() {
+  require_python3
+  local script
+  script="$(resolve_script "scripts/mcp_render.py")"
+  exec python3 "$script" "$@"
+}
+
+cmd_mcp_check() {
+  require_python3
+  local script
+  script="$(resolve_script "scripts/mcp_render.py")"
+  exec python3 "$script" --check "$@"
+}
+
+cmd_roadmap_progress() {
+  require_python3
+  local script
+  script="$(resolve_script ".agent-src/scripts/update_roadmap_progress.py" ".augment/scripts/update_roadmap_progress.py")"
+  exec python3 "$script" "$@"
+}
+
+cmd_roadmap_progress_check() {
+  require_python3
+  local script
+  script="$(resolve_script ".agent-src/scripts/update_roadmap_progress.py" ".augment/scripts/update_roadmap_progress.py")"
+  exec python3 "$script" --check "$@"
+}
+
+cmd_first_run() {
+  local script
+  script="$(resolve_script "scripts/first-run.sh")"
+  exec bash "$script" "$@"
+}
+
+main() {
+  local cmd="${1-}"
+  [[ $# -gt 0 ]] && shift || true
+
+  case "$cmd" in
+    mcp:render)              cmd_mcp_render "$@" ;;
+    mcp:check)               cmd_mcp_check "$@" ;;
+    roadmap:progress)        cmd_roadmap_progress "$@" ;;
+    roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
+    first-run)               cmd_first_run "$@" ;;
+    help|--help|-h|"")        usage ;;
+    --version|-V)            print_version ;;
+    *)
+      echo "❌  agent-config: unknown command: $cmd" >&2
+      echo "    Run \`./agent-config help\` for the command list." >&2
+      exit 2
+      ;;
+  esac
+}
+
+main "$@"

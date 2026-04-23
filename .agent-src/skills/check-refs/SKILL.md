@@ -22,7 +22,7 @@ execution:
 - CI `check-refs` job failed and target ref needs locating
 
 NOT: body-only edits, frontmatter shape (use `lint-skills`), compressed pairs
-(use `task sync-check`).
+(use `bash scripts/compress.sh --check`).
 
 ## Procedure
 

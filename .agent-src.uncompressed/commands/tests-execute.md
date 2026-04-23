@@ -14,12 +14,11 @@ disable-model-invocation: true
 Check in this order — use the **first match**:
 
 1. **Makefile** exists → look for test targets (`make test`, `make test-unit`, etc.)
-2. **Taskfile.yml** exists → look for test tasks (`task test`, `task test-unit`, etc.)
-3. **`artisan` exists** → Laravel project → `php artisan test`
-4. **`vendor/bin/pest` exists** → Pest → `vendor/bin/pest`
-5. **Fallback** → PHPUnit → `vendor/bin/phpunit`
+2. **`artisan` exists** → Laravel project → `php artisan test`
+3. **`vendor/bin/pest` exists** → Pest → `vendor/bin/pest`
+4. **Fallback** → PHPUnit → `vendor/bin/phpunit`
 
-**Prefer Makefile/Taskfile targets** over raw commands — they handle container access,
+**Prefer Makefile targets** over raw commands when they exist — they handle container access,
 environment variables, and parallel settings automatically.
 
 ### 2. Run the tests

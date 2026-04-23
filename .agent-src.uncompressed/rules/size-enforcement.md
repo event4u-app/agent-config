@@ -26,4 +26,5 @@ source: package
 
 → Frontmatter contract (required/optional keys per type):
 [`agents/docs/frontmatter-contract.md`](../../../agents/docs/frontmatter-contract.md).
-Schemas live in `scripts/schemas/` and are enforced by `task validate-schema`.
+Schemas live in `scripts/schemas/` and are enforced by
+`python3 scripts/validate_frontmatter.py`.

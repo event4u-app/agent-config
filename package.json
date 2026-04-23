@@ -21,6 +21,9 @@
         "composer.json",
         "llms.txt"
     ],
+    "bin": {
+        "agent-config": "scripts/agent-config"
+    },
     "scripts": {
         "postinstall": "bash scripts/postinstall.sh"
     },
