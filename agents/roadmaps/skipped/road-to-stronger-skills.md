@@ -27,9 +27,9 @@ backport** so every skill becomes sharper at its own job.
 
 - **Feature:** none (infrastructure roadmap)
 - **Jira:** none
-- **Related:** [`road-to-autonomous-agent.md`](road-to-autonomous-agent.md) Phase 3.1,
-  [`road-to-defensive-agent.md`](road-to-defensive-agent.md) (parallel — new skills ship pattern-compliant, no backport debt),
-  [`.agent-src.uncompressed/rules/preservation-guard.md`](../../.agent-src.uncompressed/rules/preservation-guard.md)
+- **Related:** [`../archive/road-to-autonomous-agent.md`](../archive/road-to-autonomous-agent.md) Phase 3.1,
+  [`../archive/road-to-defensive-agent.md`](../archive/road-to-defensive-agent.md) (parallel — new skills ship pattern-compliant, no backport debt),
+  [`.agent-src.uncompressed/rules/preservation-guard.md`](../../../.agent-src.uncompressed/rules/preservation-guard.md)
 
 ## Definition of done
 
@@ -168,7 +168,7 @@ that are handled elsewhere. Reconciled during Phase 0.
 - [-] Reconcile the tier counts against the current skill total — no skill left out *(Q35)*
       *(baseline drift verified 2026-04-22: actual count is **121**, not 116 as
       originally planned — 5 skills added between roadmap authoring and this
-      audit; see [`open-questions.md`](open-questions.md) Q12 for decision on
+      audit; see [`open-questions.md`](../archive/open-questions.md) Q12 for decision on
       whether to absorb into tiers or flag out-of-scope)*
 
 ### Phase 1 — Tier 1 (verdict / review / gate) — 12 skills
@@ -334,7 +334,7 @@ skills) — this roadmap addresses only the pre-existing catalogue.
 
 ## References
 
-- [`open-questions-2.md`](open-questions-2.md) — Q35 sequencing
+- [`open-questions-2.md`](../archive/open-questions-2.md) — Q35 sequencing
 - [`road-to-autonomous-agent.md`](road-to-autonomous-agent.md) — parent roadmap, Phase 3.1
 - [`.agent-src.uncompressed/rules/preservation-guard.md`](../../.agent-src.uncompressed/rules/preservation-guard.md) — quality gate
 - [`.agent-src.uncompressed/rules/skill-quality.md`](../../.agent-src.uncompressed/rules/skill-quality.md) — minimum sharpness

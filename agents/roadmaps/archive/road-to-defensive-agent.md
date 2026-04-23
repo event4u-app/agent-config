@@ -1,5 +1,12 @@
 # Roadmap: Defensive Agent — Senior-Engineer Security & Analysis
 
+> **Status — archived 2026-04-23.** Wave 1 shipped (6 skills + 5 context
+> templates). Waves 2 + 3 and post-wave dispatch integration remain
+> **deferred, not cancelled** — they were parked with the roadmap rather
+> than kept in the active queue. If Wave 2 is taken up again, re-open
+> this roadmap from the archive (or spawn a focused successor roadmap
+> per Q33 in [`../open-questions-2.md`](../open-questions-2.md)).
+
 > Make the agent behave like a **skeptical, security-minded staff engineer
 > + reviewer** — deeper context, stricter decision rules, reliable
 > defense-side security checks — **without** drifting into offensive

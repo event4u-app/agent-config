@@ -7,15 +7,19 @@
 
 ## Status
 
-**Active frame, not a work plan.** This file sets vision, layers, and
-scope. The actual phased work lives in the three sub-roadmaps listed
-under "Sub-roadmaps" below.
+**Archived 2026-04-23 — frame preserved as context, no open work.** All
+three sub-roadmaps (`road-to-role-modes.md`, `road-to-engineering-memory.md`,
+`road-to-curated-self-improvement.md`) have shipped their committed phases
+and moved to the archive. The prerequisites are all met, the four layers
+are in use, and the open questions Q1-Q4 are either closed or re-homed.
+Future work on the *method-over-model* frame opens a fresh roadmap rather
+than reviving this one.
 
 ## Prerequisites
 
 - [x] [`road-to-defensive-agent.md`](road-to-defensive-agent.md) Waves 1-3 shipped — governance base is in place
 - [x] [`road-to-stronger-skills.md`](road-to-stronger-skills.md) tier system defined — content-quality base is in place
-- [x] [`road-to-trigger-evals.md`](road-to-trigger-evals.md) running — activation base is in place
+- [x] [`archive/road-to-trigger-evals.md`](archive/road-to-trigger-evals.md) running — activation base is in place (archived 2026-04-23)
 - [x] `preservation-guard`, `skill-quality`, `augment-portability` rules active
 - [x] PR #17 merged — path-fallback for ownership/patterns is consistent between docs and CI
 
@@ -130,5 +134,5 @@ The master frame is "holding" when:
 - [`open-questions.md`](open-questions.md) — **decision queue** across all active roadmaps (triage of blockers, 2026-04-22)
 - [`road-to-defensive-agent.md`](road-to-defensive-agent.md) — Governance base, not replaced
 - [`road-to-stronger-skills.md`](road-to-stronger-skills.md) — Capability-quality base, not replaced
-- [`road-to-trigger-evals.md`](road-to-trigger-evals.md) — Activation base, extended under Q2
+- [`archive/road-to-trigger-evals.md`](archive/road-to-trigger-evals.md) — Activation base, extended under Q2 (archived 2026-04-23)
 - [`road-to-autonomous-agent.md`](road-to-autonomous-agent.md) — Execution-layer history (judges, dispatchers)

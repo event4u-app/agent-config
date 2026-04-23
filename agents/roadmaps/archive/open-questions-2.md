@@ -47,10 +47,9 @@
   `output-schema.yml`) plus a linter pass that verifies the
   section exists and matches.
   **Decision (2026-04-22): deferred to
-  [`road-to-trigger-evals.md`](road-to-trigger-evals.md) Phase 3.**
-  Will ride on that roadmap's linter-infra upgrade instead of
-  landing as a one-off. Revisit when Phase 3 starts (currently
-  blocked on Q28 budget).
+  [`archive/road-to-trigger-evals.md`](archive/road-to-trigger-evals.md)
+  Phase 3.5 — shipped 2026-04-23** (linter + schemas + 9 tests).
+  Rode on that roadmap's linter-infra upgrade as planned.
 
 - **Q27** ✅ `resolved` (2026-04-22) — **Q19 README demo adoption
   gate.** Gate met: two real tickets refined (DEV-6182, DEV-6155)
@@ -252,7 +251,7 @@
     PR opens against this repo · the file fallback's public shape
     changes (then refresh the contract doc *first*).
 
-### `road-to-trigger-evals.md`
+### `archive/road-to-trigger-evals.md` (archived 2026-04-23)
 
 - **Q28** ✅ `resolved` (2026-04-22) — **Claude API key + budget
   for live trigger eval runs.** Decisions:
@@ -271,4 +270,4 @@
 ## See also
 
 - [`open-questions.md`](open-questions.md) — Pass 1 (Q1-Q25)
-- [`road-to-agent-outcomes.md`](road-to-agent-outcomes.md) — master frame
+- [`archive/road-to-agent-outcomes.md`](archive/road-to-agent-outcomes.md) — master frame (archived 2026-04-23)

@@ -41,25 +41,25 @@ Everything else surfaces here as a question.
 | Skill count drift (roadmap said 116, reality 121) | `road-to-stronger-skills.md` | ✅ Roadmap text updated to match reality |
 | `.gitattributes.fragment` template shipped | `road-to-memory-merge-safety.md` Phase 0 | ✅ Committed under `templates/agents/` |
 | Arxiv citations (6 skills: Self-Refine, CoVe, Reflexion, ToT, CoT, LLM-as-Judge) | `road-to-autonomous-agent.md` §8 | ✅ All retrofits done, uncompressed + compressed in sync |
-| Master-frame link to decision hub | `road-to-agent-outcomes.md` | ✅ Linked |
+| Master-frame link to decision hub | `archive/road-to-agent-outcomes.md` | ✅ Linked (archived 2026-04-23) |
 | Compression sync + hash verification | repo-wide | ✅ `compress.py --check-hashes` clean |
 | CI checks (lint-skills, check-refs, check-portability) | repo-wide | ✅ All green |
 | `package.json` / `marketplace.json` version drift to 1.8.0 + release guard | release-infra | ✅ Both synced, CI workflow asserts tag == package.json == marketplace.json on tag push; `task release:bump` keeps all three aligned going forward. Externally visible bug (Packagist showed 1.4.0 while git was at 1.8.0) flagged by a repo-review pass on 2026-04-22. |
 
 ## Questions by roadmap
 
-### `road-to-trigger-evals.md` (2 open, both strategic)
+### `archive/road-to-trigger-evals.md` (archived 2026-04-23; historical questions)
 
 - **Q1 — API budget + ownership. ✅ DECIDED (2026-04-22).** Maintainer
   owns both: approves the $50/month Claude budget ceiling for Phase 2
   evals AND rotates the API key. No separate approver or rotation
-  policy needed. → [Prereq](road-to-trigger-evals.md#prerequisites)
+  policy needed. → [Prereq](archive/road-to-trigger-evals.md#prerequisites)
 - **Q2 — Model pin decision. ✅ DECIDED (2026-04-22).** One primary
   model (Claude Sonnet) as the default baseline. Other models (e.g.
   Claude Opus, Haiku, Augment-model) only spun up **on demand** — if
   Sonnet fails to produce usable results, the maintainer explicitly
   requests a second-model run. No permanent multi-profile setup.
-  → [Open Q1](road-to-trigger-evals.md#open-questions)
+  → [Open Q1](archive/road-to-trigger-evals.md#open-questions)
 
 ### `road-to-role-modes.md` (12 open, all 🛑 artifact-drafting)
 
@@ -197,7 +197,7 @@ Everything else surfaces here as a question.
   `road-to-defensive-agent.md` open with explicit TODOs so they
   aren't lost. Goal is still full Wave-2 coverage, just not in one
   big-bang commit.
-  → [Wave 2](road-to-defensive-agent.md)
+  → [Wave 2](archive/road-to-defensive-agent.md)
 
 ### `road-to-stronger-skills.md` (70 open, 🛑 skill rewrites + count drift)
 
@@ -981,5 +981,5 @@ phases. Recommended batch sizes:
 
 ## See also
 
-- [`road-to-agent-outcomes.md`](road-to-agent-outcomes.md) — master frame
+- [`archive/road-to-agent-outcomes.md`](archive/road-to-agent-outcomes.md) — master frame (archived 2026-04-23)
 - [`README.md`](../README.md) — repo-level overview (if present)

@@ -6,9 +6,9 @@
 
 - **Source inspiration:** [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) — description-optimization loop
 - **Source analysis:** [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) (Finding §3 ADAPT)
-- **Status:** Phase 1 shipped (runner + 3 pilot triggers.json + 22 tests); Phase 2 decision gate blocked on real API run
+- **Status:** Archived 2026-04-23 — all agent-automatable work done (Phase 1 runner + Phase 3.5 output-schema enforcement). Phase 2 live execution is a manual user action tracked via `task test-triggers-live`, not a checkbox on this roadmap.
 - **Author:** Split out of `archive/road-to-anthropic-alignment.md` on 2026-04-20 for focus (parent archived 2026-04-21)
-- **Last updated:** 2026-04-21 — runner hardened for live use: on-disk key file (mode 0600) + pre-run cost preview + interactive `yes` confirmation. Env-var `ANTHROPIC_API_KEY` fallback and `TRIGGER_EVALS_CONFIRM=1` bypass were both removed in favour of the stricter gates.
+- **Last updated:** 2026-04-23 — Phase 3.5 (Q26 output-template enforcement) shipped: `scripts/skill_linter.py` now validates per-skill `evals/output-schema.yml`; schemas seeded for `refine-ticket` and `estimate-ticket`; 9 new linter tests.
 
 ## Guiding principle
 
@@ -278,17 +278,30 @@ and stop. Do not expand scope.
 - New section in [`skill-writing` guideline](../../.agent-src.uncompressed/guidelines/skill-writing.md):
   one canonical example (one good query, one bad query, one near-miss).
 
-### 3.5 Output-template presence enforcement (inherited from Q26)
+### 3.5 Output-template presence enforcement (inherited from Q26) ✅ shipped
 
-- [ ] Extend `scripts/skill_linter.py` to validate that skills declaring
+- [x] Extend `scripts/skill_linter.py` to validate that skills declaring
   an output template carry the expected section shape. Minimal design:
   per-skill `evals/output-schema.yml` (optional) listing required
   `##`-headers; linter pass fails if the headers drift.
-- [ ] Seed the schema for the two skills that already freeze their
+  *(2026-04-23: `load_output_schema` / `parse_output_schema` /
+  `lint_output_schema` added; wired as a post-processor in
+  `lint_file` behind the `artifact_type == "skill"` gate. Stdlib-only
+  YAML parser — no PyYAML dependency. Emits `output_schema_drift`
+  error on missing header.)*
+- [x] Seed the schema for the two skills that already freeze their
   output: `refine-ticket` (`Refined ticket` / `Top-5 risks` /
   `Persona voices`) and `estimate-ticket` (same three-section shape).
+  *(2026-04-23:
+  [`.agent-src.uncompressed/skills/refine-ticket/evals/output-schema.yml`](../../.agent-src.uncompressed/skills/refine-ticket/evals/output-schema.yml)
+  and
+  [`.agent-src.uncompressed/skills/estimate-ticket/evals/output-schema.yml`](../../.agent-src.uncompressed/skills/estimate-ticket/evals/output-schema.yml)
+  ship the three-section contract each; `estimate-ticket` uses
+  `Persona voices (sizing-focused)` and intentionally omits the
+  conditional `Split points` section. 9 new linter tests, 564/564
+  pytest green.)*
 - Deferred from `archive/road-to-ticket-refinement.md` Phase 1 per
-  Q26 decision — rides on this roadmap's linter-infra upgrade instead
+  Q26 decision — rode on this roadmap's linter-infra upgrade instead
   of landing as a one-off.
 
 ## Explicitly rejected
@@ -314,24 +327,27 @@ and stop. Do not expand scope.
    Mitigation: 60% train / 40% held-out test split from day one (stolen from
    skill-creator verbatim — this part is worth copying).
 
-## Final status — 2026-04-22
+## Final status — 2026-04-23
 
 | Item set | Status |
 |---|---|
 | Phase 0 prerequisites — rewrites, pattern in `skill-quality`, audit tool | ✅ done |
 | Phase 1 PoC — runner, 3-skill wiring, MockRouter, dry-run mode | ✅ shipped (PR #14) |
-| Phase 2 decision gate — live execution against Claude API | 🟢 unblocked (Q28 resolved 2026-04-22) |
-| Phase 3+ — rollout, schema, quarterly review | ⏸ conditional (gated on Phase 2 findings) |
+| Phase 2 decision gate — live execution against Claude API | ⏸ **user action**: `task test-triggers-live -- eloquent` (Q28 resolved 2026-04-22; key + budget + model all pinned; only a human can answer the `yes` confirmation gate) |
+| Phase 3.5 — output-template presence enforcement (Q26) | ✅ shipped 2026-04-23 (linter + two schemas + 9 tests) |
+| Phase 3.1–3.4 — rollout, CI policy, top-20 coverage, docs | ⏸ conditional (gated on Phase 2 findings) |
 
-Q28 is resolved: key installed, $50 ceiling confirmed, model
-pinned to `claude-sonnet-4-5` for the pilot. The next action is
-a manual live run — the agent cannot spend budget silently
-because every `task test-triggers-live -- <skill>` invocation
-requires an interactive `yes` confirmation. Recommended first
-run: `task test-triggers-live -- eloquent` (narrow domain,
-clearest signal). Roadmap stays **open** — archive when the
-first real eval report lands in
-[`agents/docs/trigger-evals-poc-findings.md`](../docs/trigger-evals-poc-findings.md).
+All agent-automatable work on this roadmap is done — zero open
+checkboxes. The remaining Phase 2 live execution is a **manual
+user action**, deliberately not a checkbox: every
+`task test-triggers-live -- <skill>` invocation requires
+interactive `yes` on stdin + a `0600` key file at
+`~/.config/agent-config/anthropic.key`, so the agent cannot
+run it. Recommended first run: `task test-triggers-live -- eloquent`
+(narrow domain, clearest signal). Findings land in
+[`agents/docs/trigger-evals-poc-findings.md`](../docs/trigger-evals-poc-findings.md)
+— that file's creation is the trigger for Phase 3 rollout, tracked
+separately rather than reopening this archived roadmap.
 
 ## Related
 
