@@ -150,11 +150,22 @@ Bump size is derived from commit types:
 Commits like `chore:`, `docs:`, `test:`, `ci:`, `refactor:` do not bump the
 version on their own and ride along in the next Release PR.
 
-#### Required repository secrets
+#### npm authentication
 
-| Secret | Purpose |
-|---|---|
-| `NPM_TOKEN` | Granular Access Token for `@event4u/agent-config` with read-write scope. Used by the `publish-npm` job. Create in [npm → Access Tokens](https://www.npmjs.com/settings/event4u/tokens) and store under `Settings → Secrets and variables → Actions`. |
+The `publish-npm` job authenticates to npm via
+[OIDC Trusted Publishing](https://docs.npmjs.com/trusted-publishers) — no
+`NPM_TOKEN` secret is required. The trust link is configured on the package
+settings page on npmjs.com and bound to:
+
+- Repository: `event4u-app/agent-config`
+- Workflow filename: `release-please.yml`
+
+The workflow declares `id-token: write` so GitHub Actions can mint a short-
+lived OIDC ID token with claims about the run (repo, workflow, ref). `npm
+publish` sends that token to the registry, which verifies the claims against
+the trust link and — on match — authorizes the publish and records a
+provenance attestation. If the workflow file is renamed or moved, the trust
+link on npm must be updated accordingly or the publish step will fail.
 
 #### Fallback: manual bump
 
