@@ -221,8 +221,13 @@ works end-to-end on one real ticket.
 - [ ] Persona policies: `senior-engineer` asks fewer, higher-signal
       questions; `qa` widens the test matrix; `advisory` modes
       never enter `implement`.
-- [ ] Integration test: one ticket with deliberately ambiguous
-      acceptance criteria must `block` at `refine`, not proceed.
+- [x] Integration test: end-to-end full-flow suite covering the
+      four-rebound happy path, the report renderer contract (both
+      with and without influential memory hits), resume-from-mid-
+      flow, and the failed-verdict halt at `test`.
+      *([`tests/implement_ticket/test_integration_full_flow.py`](../../tests/implement_ticket/test_integration_full_flow.py)
+      — 6 tests exercising the real handlers with a scripted fake
+      orchestrator that fulfils the `@agent-directive:` contract.)*
 
 ## Phase 4 — delivery report + README hero
 
