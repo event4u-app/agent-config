@@ -18,6 +18,7 @@ from __future__ import annotations
 from typing import Any, Iterable
 
 from ..delivery_state import DeliveryState, Outcome, StepResult
+from ..persona_policy import resolve_policy
 
 
 def run(state: DeliveryState) -> StepResult:
@@ -158,6 +159,10 @@ def _extract_followups(state: DeliveryState) -> list[dict[str, Any]]:
 
 
 def _next_commands_section(state: DeliveryState) -> str:
+    if not resolve_policy(state.persona).suggests_next_commands:
+        # Advisory personas produce a plan-only report; suggesting a
+        # commit or PR would mislead the reader — nothing was changed.
+        return ""
     commands = _suggest_commands(state)
     lines = ["## Suggested next commands", ""]
     lines.extend(f"- `{cmd}`" for cmd in commands)

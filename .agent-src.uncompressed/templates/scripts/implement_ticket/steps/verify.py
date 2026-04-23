@@ -28,12 +28,20 @@ from ..delivery_state import (
     StepResult,
     agent_directive,
 )
+from ..persona_policy import resolve_policy
 
 _ALLOWED_VERDICTS = ("success", "blocked", "partial")
 
 
 def run(state: DeliveryState) -> StepResult:
     """Gate on ``test``, then either delegate or validate ``state.verify``."""
+    policy = resolve_policy(state.persona)
+    if not policy.allows_verify:
+        return StepResult(
+            outcome=Outcome.SUCCESS,
+            message=f"verify skipped: persona `{policy.name}` is plan-only.",
+        )
+
     if state.outcomes.get("test") != Outcome.SUCCESS.value:
         return _blocked_on_precondition(state)
 

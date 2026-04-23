@@ -28,18 +28,26 @@ from ..delivery_state import (
     StepResult,
     agent_directive,
 )
+from ..persona_policy import resolve_policy
 
 _ALLOWED_VERDICTS = ("success", "failed", "mixed")
 
 
 def run(state: DeliveryState) -> StepResult:
     """Gate on ``implement``, then either delegate or validate ``state.tests``."""
+    policy = resolve_policy(state.persona)
+    if not policy.allows_test:
+        return StepResult(
+            outcome=Outcome.SUCCESS,
+            message=f"test skipped: persona `{policy.name}` is plan-only.",
+        )
+
     if state.outcomes.get("implement") != Outcome.SUCCESS.value:
         return _blocked_on_precondition(state)
 
     tests = state.tests
     if not tests:
-        return _delegate_to_run_tests(state)
+        return _delegate_to_run_tests(state, policy.widen_tests)
 
     shape_issues = _diagnose_tests(tests)
     if shape_issues:
@@ -65,16 +73,28 @@ def _diagnose_tests(tests: Any) -> list[str]:
     return []
 
 
-def _delegate_to_run_tests(state: DeliveryState) -> StepResult:
+def _delegate_to_run_tests(state: DeliveryState, widen: bool) -> StepResult:
+    """Emit the ``run-tests`` directive.
+
+    ``widen`` comes from the persona policy (``qa`` widens to the full
+    suite). The directive scope becomes the first thing an orchestrator
+    reads, so the widened case is visible without parsing the options.
+    """
     ticket_id = (state.ticket or {}).get("id") or "(no id)"
+    scope = "full" if widen else "targeted"
+    description = (
+        "full suite (qa persona widens to catch regressions outside "
+        "the changed paths)"
+        if widen
+        else "targeted first (`--filter` on the changed paths), full "
+        "suite only if targeted passes"
+    )
     return StepResult(
         outcome=Outcome.BLOCKED,
         questions=[
-            agent_directive("run-tests", ticket=ticket_id, scope="targeted"),
-            f"> Ticket {ticket_id} \u2014 running tests: targeted first "
-            "(`--filter` on the changed paths), full suite only if targeted "
-            "passes.",
-            "> 1. Continue \u2014 run targeted tests now",
+            agent_directive("run-tests", ticket=ticket_id, scope=scope),
+            f"> Ticket {ticket_id} \u2014 running tests: {description}.",
+            f"> 1. Continue \u2014 run {scope} tests now",
             "> 2. Abort \u2014 skip testing (NOT recommended)",
         ],
         message=f"Ticket {ticket_id} needs its tests run before verification.",

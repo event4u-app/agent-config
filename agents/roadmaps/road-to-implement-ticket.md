@@ -218,9 +218,16 @@ works end-to-end on one real ticket.
 - [ ] Every step declares the ambiguities it can surface.
 - [ ] When triggered, emit numbered options via `user-interaction`
       and stop. No fallback guess.
-- [ ] Persona policies: `senior-engineer` asks fewer, higher-signal
-      questions; `qa` widens the test matrix; `advisory` modes
-      never enter `implement`.
+- [x] Persona policies: `senior-engineer`, `qa`, `advisory` shipped.
+      *([`persona_policy.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/persona_policy.py)
+      — frozen `PersonaPolicy` dataclass with five flags
+      (`allows_implement` / `allows_test` / `allows_verify` /
+      `widen_tests` / `suggests_next_commands`). `qa` widens the
+      `run-tests` directive to `scope=full`; `advisory` short-
+      circuits `implement`/`test`/`verify` to SUCCESS and drops
+      the "Suggested next commands" report section because nothing
+      was changed. Unknown names fall back to `senior-engineer`.
+      10 policy tests + 4 integration tests lock behaviour.)*
 - [x] Integration test: end-to-end full-flow suite covering the
       four-rebound happy path, the report renderer contract (both
       with and without influential memory hits), resume-from-mid-

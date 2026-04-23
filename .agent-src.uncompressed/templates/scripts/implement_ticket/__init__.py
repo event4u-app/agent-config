@@ -30,15 +30,25 @@ from .delivery_state import (
     is_agent_directive,
 )
 from .dispatcher import STEP_ORDER, dispatch
+from .persona_policy import (
+    DEFAULT_PERSONA,
+    PersonaPolicy,
+    known_personas,
+    resolve_policy,
+)
 
 __all__ = [
     "AGENT_DIRECTIVE_PREFIX",
+    "DEFAULT_PERSONA",
     "DeliveryState",
     "Outcome",
+    "PersonaPolicy",
     "STEP_ORDER",
     "Step",
     "StepResult",
     "agent_directive",
     "dispatch",
     "is_agent_directive",
+    "known_personas",
+    "resolve_policy",
 ]

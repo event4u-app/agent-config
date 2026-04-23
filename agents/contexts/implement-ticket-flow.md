@@ -147,16 +147,39 @@ Bounded per the top-level roadmap rule:
 
 ## Persona policies
 
-Read from `.agent-settings.yml` `roles.active_role`. Policies live
-in [`role-contracts`](../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md);
-this flow only **reads** them. Examples:
+Read from `.agent-settings.yml` `roles.active_role` and resolved
+via `resolve_policy()` in
+[`persona_policy.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/persona_policy.py).
+Policies live alongside the dispatcher so the flow can consume
+them directly; the shared
+[`role-contracts`](../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md)
+guideline remains the source of truth for persona behaviour in the
+wider agent surface.
 
-- `senior-engineer` — higher risk tolerance, fewer questions,
-  pushes back on weak acceptance criteria before implementing.
-- `qa` — widens test matrix, refuses partial test runs, blocks
-  on missing edge-case coverage.
-- `advisory` modes — never enter the `implement` step; terminate
-  at `plan` with a recommendation report.
+Three personas ship today:
+
+| Persona | `allows_implement` | `allows_test` | `allows_verify` | `widen_tests` | `suggests_next_commands` |
+|---|:-:|:-:|:-:|:-:|:-:|
+| `senior-engineer` (default) | ✅ | ✅ | ✅ | ❌ | ✅ |
+| `qa` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `advisory` | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+Behaviour:
+
+- `senior-engineer` — runs every step, targeted tests, full
+  delivery report with `/commit` + `/create-pr` suggestions when
+  verify succeeds.
+- `qa` — identical to `senior-engineer` except the `run-tests`
+  directive carries `scope=full` so regressions outside the
+  changed paths are caught.
+- `advisory` — plan-only mode. `implement`, `test`, and `verify`
+  short-circuit to SUCCESS without work; the delivery report
+  renders without a "Suggested next commands" section because
+  nothing was changed.
+
+Unknown persona names fall back to `senior-engineer`. The policy
+is frozen and cached per name — step handlers can call
+`resolve_policy(state.persona)` as often as they need.
 
 **No CLI flag overrides `/mode`.** That is the whole point of the
 session-global persona contract — one source, readable by any

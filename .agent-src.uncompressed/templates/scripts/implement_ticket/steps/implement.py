@@ -31,10 +31,21 @@ from ..delivery_state import (
     StepResult,
     agent_directive,
 )
+from ..persona_policy import resolve_policy
 
 
 def run(state: DeliveryState) -> StepResult:
     """Gate on ``plan``, then either delegate or validate ``state.changes``."""
+    policy = resolve_policy(state.persona)
+    if not policy.allows_implement:
+        # Advisory personas produce a plan only; ``state.changes`` stays
+        # empty and the delivery report renders a "no file changes
+        # recorded" placeholder. See ``persona_policy`` for contract.
+        return StepResult(
+            outcome=Outcome.SUCCESS,
+            message=f"implement skipped: persona `{policy.name}` is plan-only.",
+        )
+
     if state.outcomes.get("plan") != Outcome.SUCCESS.value:
         return _blocked_on_precondition(state)
 
