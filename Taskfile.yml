@@ -249,6 +249,10 @@ tasks:
     desc: Check compression quality (headings, code blocks, frontmatter, word count)
     cmd: python3 scripts/check_compression.py
 
+  validate-schema:
+    desc: Validate artefact frontmatter against JSON-Schema (scripts/schemas/)
+    cmd: python3 scripts/validate_frontmatter.py
+
   roadmap-progress:
     desc: Regenerate agents/roadmaps-progress.md from all open roadmaps
     cmd: python3 .augment/scripts/update_roadmap_progress.py
@@ -329,6 +333,7 @@ tasks:
       - task: check-compression
       - task: check-refs
       - task: check-portability
+      - task: validate-schema
       - task: lint-skills
       - task: lint-marketplace
       - task: check-memory

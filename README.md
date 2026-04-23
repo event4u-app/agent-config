@@ -5,7 +5,7 @@ Teach your AI agents Laravel, PHP, testing, Git workflows, and **120+ more skill
 > Your agent learns to write Laravel code, run tests, create PRs, fix CI — and follows your team's coding standards while doing it.
 
 <p align="center">
-  <strong>124 Skills</strong> · <strong>43 Rules</strong> · <strong>67 Commands</strong> · <strong>46 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>124 Skills</strong> · <strong>44 Rules</strong> · <strong>67 Commands</strong> · <strong>46 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -126,6 +126,39 @@ description of intent — not a guarantee of output.
 | Skip quality checks | Run PHPStan, Rector, ECS and fix reported errors |
 | Open PRs without context | Produce structured PR descriptions from Jira tickets |
 | Claim "done" without proof | Verify with real execution before claiming "done" |
+
+---
+
+## What this package is — and what it isn't
+
+`agent-config` is a **content layer** — skills, rules, commands, and
+guidelines — distributed via Composer and npm and projected into every
+supported AI tool's native config format. It follows the
+[Agent Skills open standard](https://agentskills.io).
+
+It is **not** an agent runtime. The agent loop, the LLM dispatcher, and
+tool orchestration stay with the host tool (Claude Code, Augment Code,
+Cursor, Cline, Windsurf, Gemini CLI, GitHub Copilot). Think of this
+package as a playbook and style guide for those tools — not a
+replacement for them.
+
+| In scope | Out of scope |
+|---|---|
+| Skills, rules, commands, guidelines | Agent loop / LLM dispatcher |
+| Multi-tool projection + compression pipeline | Execution engine inside the package |
+| Memory helpers (`memory-add`, `memory-promote`, query scripts) | Cross-tool observability dashboard |
+| Linters, CI, frontmatter validation | Runtime GUI / web dashboard |
+| Skill orchestration via markdown citations + deterministic helpers | Opinionated skill-resolver algorithm |
+
+Frameworks like LangChain or CrewAI are **runtimes**; this package
+sits one layer above them — it tells whichever agent you already use
+how to behave, not how to execute.
+
+Example of what *is* in scope: every artefact's frontmatter validates
+against a JSON-Schema under [`scripts/schemas/`](scripts/schemas/)
+([contract](agents/docs/frontmatter-contract.md)), enforced by
+`task validate-schema` in CI. Runtime validation inside a live agent
+session is explicitly not.
 
 ---
 
