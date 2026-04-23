@@ -1,0 +1,16 @@
+# Output-schema contract for `refine-ticket`.
+#
+# Locks the frozen three-section shape of the `## Output template`
+# block so refactors cannot silently drift the output away from what
+# consumers copy-paste into Jira. Enforced by `scripts/skill_linter.py`
+# (`lint_output_schema`) — a drift is a hard error.
+#
+# Governed by: road-to-trigger-evals.md Phase 3.5 (originally deferred
+# from archive/road-to-ticket-refinement.md Phase 1 per Q26).
+
+version: 1
+
+required_headers:
+  - "Refined ticket"
+  - "Top-5 risks"
+  - "Persona voices"

@@ -1197,3 +1197,195 @@ See [contract](../guidelines/agent-infra/role-contracts.md#developer).
     )
     result = lint_file(path)
     assert not any(i.code == "unknown_role_contract" for i in result.issues)
+
+
+# --- Output-schema drift (road-to-trigger-evals Phase 3.5) ---
+
+from skill_linter import lint_output_schema, parse_output_schema  # noqa: E402
+
+
+_OUTPUT_TEMPLATE_SKILL = """---
+name: frozen-skill
+description: "Use when producing a fixed-shape report."
+source: project
+---
+
+# frozen-skill
+
+## When to use
+
+* When the output must match a frozen contract.
+
+## Procedure
+
+1. Inspect ticket text
+2. Apply template
+3. Validate headers match schema
+
+## Output template
+
+````markdown
+## Refined ticket
+
+<body>
+
+## Top-5 risks
+
+1. …
+
+## Persona voices
+
+- Developer — …
+````
+
+## Output format
+
+1. Refined ticket block wrapped in a copyable markdown box.
+2. Top-5 risks as numbered list.
+3. Persona voices one paragraph each.
+
+## Gotchas
+
+* Headers may drift during refactors — the schema catches it.
+
+## Do NOT
+
+* Do NOT rename frozen headers without updating the schema.
+"""
+
+
+def _write_skill_with_schema(
+    tmp_path: Path, schema_text: str, skill_text: str = _OUTPUT_TEMPLATE_SKILL,
+) -> Path:
+    skill_path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/frozen-skill/SKILL.md",
+        skill_text,
+    )
+    write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/frozen-skill/evals/output-schema.yml",
+        schema_text,
+    )
+    return skill_path
+
+
+def test_output_schema_absent_is_noop(tmp_path: Path) -> None:
+    """Skills without the sibling schema must not trigger the check."""
+    skill_path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/frozen-skill/SKILL.md",
+        _OUTPUT_TEMPLATE_SKILL,
+    )
+    result = lint_file(skill_path)
+    assert not any(i.code == "output_schema_drift" for i in result.issues)
+
+
+def test_output_schema_all_headers_present_passes(tmp_path: Path) -> None:
+    schema = (
+        'version: 1\n'
+        'required_headers:\n'
+        '  - "Refined ticket"\n'
+        '  - "Top-5 risks"\n'
+        '  - "Persona voices"\n'
+    )
+    skill_path = _write_skill_with_schema(tmp_path, schema)
+    result = lint_file(skill_path)
+    assert not any(i.code == "output_schema_drift" for i in result.issues)
+
+
+def test_output_schema_missing_header_fails(tmp_path: Path) -> None:
+    """Removing a frozen header from the template must be a hard error."""
+    schema = (
+        'version: 1\n'
+        'required_headers:\n'
+        '  - "Refined ticket"\n'
+        '  - "Top-5 risks"\n'
+        '  - "Persona voices"\n'
+        '  - "Orchestration notes"\n'  # not present in the sample skill
+    )
+    skill_path = _write_skill_with_schema(tmp_path, schema)
+    result = lint_file(skill_path)
+    drift = [i for i in result.issues if i.code == "output_schema_drift"]
+    assert len(drift) == 1
+    assert drift[0].severity == "error"
+    assert "Orchestration notes" in drift[0].message
+    assert result.status == "fail"
+
+
+def test_output_schema_empty_required_headers_is_noop(tmp_path: Path) -> None:
+    schema = 'version: 1\nrequired_headers:\n'
+    skill_path = _write_skill_with_schema(tmp_path, schema)
+    result = lint_file(skill_path)
+    assert not any(i.code == "output_schema_drift" for i in result.issues)
+
+
+def test_output_schema_unknown_keys_are_ignored(tmp_path: Path) -> None:
+    """Forward-compat: extra top-level keys must not break the parser."""
+    schema = (
+        'version: 2\n'
+        'future_key: "something"\n'
+        'required_headers:\n'
+        '  - "Refined ticket"\n'
+        '  - "Top-5 risks"\n'
+        '  - "Persona voices"\n'
+    )
+    skill_path = _write_skill_with_schema(tmp_path, schema)
+    result = lint_file(skill_path)
+    assert not any(i.code == "output_schema_drift" for i in result.issues)
+
+
+def test_parse_output_schema_comments_and_blank_lines() -> None:
+    parsed = parse_output_schema(
+        '# comment\n'
+        'version: 1\n'
+        '\n'
+        'required_headers:\n'
+        '  # inline list comment\n'
+        '  - "Alpha"\n'
+        '  - Beta\n'
+    )
+    assert parsed["version"] == 1
+    assert parsed["required_headers"] == ["Alpha", "Beta"]
+
+
+def test_lint_output_schema_requires_skill_md(tmp_path: Path) -> None:
+    """Non-SKILL.md files must not trigger the sibling lookup."""
+    other = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/frozen-skill/NOTES.md",
+        "# notes",
+    )
+    # Also create a schema that WOULD match if the lookup misfired
+    write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/frozen-skill/evals/output-schema.yml",
+        'version: 1\nrequired_headers:\n  - "Never appears"\n',
+    )
+    assert lint_output_schema(other, "# notes") == []
+
+
+def test_output_schema_repo_refine_ticket_passes() -> None:
+    """Regression guard: the real refine-ticket schema must stay green."""
+    repo_root = Path(__file__).resolve().parent.parent
+    skill_path = (
+        repo_root / ".agent-src.uncompressed" / "skills"
+        / "refine-ticket" / "SKILL.md"
+    )
+    if not skill_path.exists():
+        return  # Tolerate running against a stripped checkout
+    result = lint_file(skill_path, repo_root=repo_root)
+    assert not any(i.code == "output_schema_drift" for i in result.issues)
+
+
+def test_output_schema_repo_estimate_ticket_passes() -> None:
+    """Regression guard: the real estimate-ticket schema must stay green."""
+    repo_root = Path(__file__).resolve().parent.parent
+    skill_path = (
+        repo_root / ".agent-src.uncompressed" / "skills"
+        / "estimate-ticket" / "SKILL.md"
+    )
+    if not skill_path.exists():
+        return
+    result = lint_file(skill_path, repo_root=repo_root)
+    assert not any(i.code == "output_schema_drift" for i in result.issues)

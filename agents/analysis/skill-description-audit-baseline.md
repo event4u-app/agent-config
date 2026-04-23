@@ -71,7 +71,7 @@ Per the roadmap:
 - **Rewrite the top 10–15 in small PRs (3–5 skills each).**
 - **Re-run the audit after each batch.** The score and length shift are the
   signal that the rewrite actually helped.
-- **Trigger-eval follow-up** (see [`road-to-trigger-evals.md`](../roadmaps/road-to-trigger-evals.md))
+- **Trigger-eval follow-up** (see [`archive/road-to-trigger-evals.md`](../roadmaps/archive/road-to-trigger-evals.md))
   will measure whether rewrites actually change Claude's routing behavior.
 
 The 40 currently-clean skills stay clean by default — no churn.
@@ -119,7 +119,7 @@ shift in the flagged count. History so far:
 - Do **not** rewrite to exactly 150 chars to "pass" the flag — the goal is
   two concrete triggers plus the "even if not explicitly asked" tail, not
   a character count.
-- Trigger-eval follow-up (see [`road-to-trigger-evals.md`](../roadmaps/road-to-trigger-evals.md))
+- Trigger-eval follow-up (see [`archive/road-to-trigger-evals.md`](../roadmaps/archive/road-to-trigger-evals.md))
   will measure whether these rewrites actually change Claude's routing
   behavior.
 
@@ -128,4 +128,4 @@ shift in the flagged count. History so far:
 - Rule: [`rules/skill-quality.md`](../../.agent-src.uncompressed/rules/skill-quality.md)
   § *Description Triggering*.
 - Parent analysis: [`compare-anthropics-skills.md`](compare-anthropics-skills.md).
-- Follow-up roadmap: [`road-to-trigger-evals.md`](../roadmaps/road-to-trigger-evals.md).
+- Follow-up roadmap: [`archive/road-to-trigger-evals.md`](../roadmaps/archive/road-to-trigger-evals.md).

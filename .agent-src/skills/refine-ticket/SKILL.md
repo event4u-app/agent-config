@@ -45,6 +45,22 @@ execution:
 
 `/refine-ticket` **orchestrates** these — it does not replace them.
 
+## Language strategy
+
+Pick output prose language once, up front; apply to every section.
+First hit wins:
+
+1. **User-message language.** Latest user message decides. Honours the
+   global `language-and-tone` iron law.
+2. **Ticket body language.** When the user's message is ambiguous
+   (one-word `/refine-ticket PROJ-123`), mirror the language the ticket
+   is written in (summary + description).
+3. **`.agent-settings.yml` default** (`personal.language` or equivalent).
+   If missing, default to English.
+
+Quoted identifiers (keys, paths, commands, code) stay native. Only
+prose mirrors the picked language.
+
 ## Inputs (four equivalent paths)
 
 Reuses the `jira-ticket` command's loader. Accepts:
@@ -71,6 +87,36 @@ Delegate to `jira-ticket` §1-3:
 
 If pasted text: skip API, parse markdown, extract title + AC
 bullets + body.
+
+**Auto-fetch parent (Phase F4).** Before detection, check the issue
+type and fold parent context in:
+
+```python
+from scripts.refine_ticket_detect import (
+    issuetype_needs_parent, fold_parent_context,
+)
+
+if issuetype_needs_parent(ticket["issuetype"]):
+    parent_key = ticket["parent_key"]          # from `fields.parent.key`
+    parent = fetch_jira_issue(parent_key)      # +1 API call
+    ticket_body = fold_parent_context(
+        ticket_body, parent_body=parent["body"], parent_key=parent_key,
+    )
+```
+
+Rules:
+- Applies to `Story` and `Sub-task` (and Linear / Shortcut equivalents).
+  `Task` / `Bug` / `Epic` skip the auto-fetch unless a `parent` link is
+  populated — then the agent folds explicitly without the issuetype guard.
+- `fold_parent_context()` is idempotent; folding twice with the same
+  parent does not duplicate the block.
+- Parent fetch fails (404, permission, network) → skip the fold, append
+  to orchestration notes:
+  *"Parent `<key>` not reachable — AC may lack upstream context."*
+
+Parent AC lines surfaced this way must be cited verbatim in the refined
+output's *Open questions* section so the user sees which constraints
+come from the parent.
 
 ### 2. Inspect ticket + detect orchestration triggers
 
@@ -201,19 +247,33 @@ so the user can grab it verbatim.
 
 ## Close-prompt (mandatory final step)
 
-After the output, emit exactly this numbered prompt:
+**Probe write access first (Phase F6).** Cheap upfront check before
+rendering:
 
-```
-> Next action for this ticket:
->
-> 1. Comment on Jira — I'll post the refined version as a comment (original untouched)
-> 2. Replace description — I'll overwrite the Jira description; original saved in a comment
-> 3. Nothing — I'll handle it myself / leave the ticket as is
+```python
+from scripts.refine_ticket_detect import render_close_prompt
+
+try:
+    me     = jira_get("/myself")               # existence → auth works
+    meta   = jira_get(f"/issue/{key}/editmeta")# fields → write access
+    write  = bool(meta.get("fields"))
+except Exception:
+    write = None                                # probe itself failed
+
+print(render_close_prompt(write))
 ```
 
-Per user interaction rules, accept number or free text. Options 1
-and 2 require `jira-ticket` write permissions; if missing, degrade
-to copy-paste instructions and note why.
+Behaviour:
+
+| Probe result | Prompt shape |
+|---|---|
+| Write access present (`True`) | Full three-option prompt (comment / replace / nothing) |
+| Read-only (`False`) | Single option: *"Copy-paste — no write access to this project"* |
+| Probe failed (`None`) | Full three-option prompt; skill degrades to copy-paste on selection (v1 fallback) |
+
+Per user interaction rules, accept number or free text. `editmeta`
+is cheap and cacheable; cache per Jira project key for the session,
+re-probe on project change.
 
 ## Output format
 

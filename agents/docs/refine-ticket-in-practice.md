@@ -6,7 +6,7 @@
 > adoption story is evidence-backed rather than intuition-backed.
 >
 > New findings land in this file as they appear. Implementation work
-> tracked in [`road-to-refine-ticket-hardening.md`](../roadmaps/road-to-refine-ticket-hardening.md).
+> tracked in [`road-to-refine-ticket-hardening.md`](../roadmaps/archive/road-to-refine-ticket-hardening.md).
 
 ## Why this doc exists
 
@@ -74,7 +74,7 @@ not as a roadmap checkbox.
 
 Seven concrete defects / improvement opportunities surfaced across
 the two runs. Each is tracked as a phase in
-[`road-to-refine-ticket-hardening.md`](../roadmaps/road-to-refine-ticket-hardening.md).
+[`road-to-refine-ticket-hardening.md`](../roadmaps/archive/road-to-refine-ticket-hardening.md).
 
 ### F1 — Repo-awareness is binary, semantically unreliable
 
@@ -156,9 +156,30 @@ print an explicit line in `Orchestration notes`:
 *"Ticket project X, repo project Y — context may not apply."*
 Natural follow-up to F1.
 
+## Findings resolved
+
+All seven findings from the 2026-04-22 case studies shipped during
+the v2 hardening pass.  Commit hashes are filled in when the user
+commits the pass; test coverage and artefacts are already in place.
+
+| # | Finding | Shipped artefact |
+|---|---|---|
+| F1 | Repo-awareness binary | `ProjectAlignment` + `_extract_ticket_project_key` / `_gather_repo_identifiers` / `_match_project`; `Decision.orchestration_notes()` emits the alignment line. |
+| F2 | `threat-modeling` substring false-positives | `_keyword_pattern()` wraps every keyword in `\b…\b`; `BLOCKED_COMPOSITES` blocklist (`1password`, `lastpass`, `bitwarden`). |
+| F3 | `validate-feature-fit` too conservative | `alternative_signals` block on sub-skills; `_evaluate_alt_signals()`; thresholds `min_distinct_ac_first_words=7`, `min_body_sentences=6`; `scope_creep_prose.md` fixture. |
+| F4 | Parent / linked-issue manual | `issuetype_needs_parent()` + `fold_parent_context()` helpers; new "Auto-fetch parent" block in `refine-ticket/SKILL.md`. |
+| F5 | Language strategy undocumented | New `## Language strategy` section in `refine-ticket/SKILL.md`; mirrored `### 2. Pick the output language` step in `commands/refine-ticket.md`. |
+| F6 | Close-prompt write-permission unprobed | `render_close_prompt(write_access)` helper + `CLOSE_PROMPT_FULL` / `CLOSE_PROMPT_READ_ONLY` constants; new `## Close-prompt` procedure block documenting the probe. |
+| F7 | Cross-repo warning missing | Alignment line now emitted regardless of `repo_aware` flag; covered by `test_f7_alignment_line_present_when_repo_aware_off`. |
+
+Test coverage grew from 17 → 56 cases in
+[`tests/test_refine_ticket_detect.py`](../../tests/test_refine_ticket_detect.py).
+Commit hashes per finding land when the v2 pass is committed — the
+roadmap `Acceptance criteria` bullet tracks that separately.
+
 ## Adoption impact
 
-Q27 in [`open-questions-2.md`](../roadmaps/open-questions-2.md)
+Q27 in [`open-questions-2.md`](../roadmaps/archive/open-questions-2.md)
 (README demo, adoption-gated) is resolved by this file:
 
 - ≥ 2 real tickets refined (DEV-6182, DEV-6155).
@@ -174,8 +195,8 @@ section without redaction.
 ## See also
 
 - [`archive/road-to-ticket-refinement.md`](../roadmaps/archive/road-to-ticket-refinement.md) — v1 shipped (all phases done)
-- [`road-to-refine-ticket-hardening.md`](../roadmaps/road-to-refine-ticket-hardening.md) — v2 follow-ups (F1–F7)
-- [`open-questions-2.md`](../roadmaps/open-questions-2.md) — Q27 resolution
+- [`road-to-refine-ticket-hardening.md`](../roadmaps/archive/road-to-refine-ticket-hardening.md) — v2 follow-ups (F1–F7)
+- [`open-questions-2.md`](../roadmaps/archive/open-questions-2.md) — Q27 resolution
 - [`.agent-src.uncompressed/skills/refine-ticket/SKILL.md`](../../.agent-src.uncompressed/skills/refine-ticket/SKILL.md)
 - [`.agent-src.uncompressed/skills/refine-ticket/detection-map.yml`](../../.agent-src.uncompressed/skills/refine-ticket/detection-map.yml)
 - [`.agent-src.uncompressed/commands/refine-ticket.md`](../../.agent-src.uncompressed/commands/refine-ticket.md)

@@ -13,6 +13,9 @@
 #       require_count: int  (minimum distinct matches to fire; default 1)
 #       regex: [list of python-compatible regex; any match counts as 1]
 #       notes: free text — visible in the orchestration-notes output
+#       alternative_signals:       (Phase F3, optional)
+#         min_distinct_ac_first_words: int   # scope-creep proxy
+#         min_body_sentences: int            # sprawl-in-prose proxy
 
 version: 1
 
@@ -43,10 +46,20 @@ sub_skills:
       - roles
       - invoicing
       - admin
+    alternative_signals:
+      # Phase F3 — scope-creep / prose-sprawl safety net. Thresholds
+      # calibrated on existing fixtures so current behaviour does not
+      # regress: clean.md (2 sentences / 5 AC first-words) and
+      # duplicate_intent.md (3 / 3) stay below the bar; a dedicated
+      # scope_creep_prose.md fixture sits above it.
+      min_distinct_ac_first_words: 7
+      min_body_sentences: 6
     notes: >
       Matches count distinct keywords — if two or more different feature
       names appear in the ticket, validate-feature-fit fires. Single-
-      keyword tickets skip this sub-skill.
+      keyword tickets skip this sub-skill, unless the alt-signal
+      thresholds catch a scope-creep pattern (many distinct AC first-
+      words or a sprawling description body).
 
   threat-modeling:
     description: >

@@ -1566,6 +1566,105 @@ def lint_governance(path: Path, text: str, artifact_type: str, repo_root: Path |
     return issues
 
 
+# --- Output-schema check (see road-to-trigger-evals Phase 3.5) ---
+#
+# Skills that freeze an output shape (`refine-ticket`, `estimate-ticket`)
+# ship an optional `evals/output-schema.yml` listing the `##`-headers
+# their output template MUST carry. The linter fails if a header drifts.
+
+_OUTPUT_SCHEMA_KEY_PATTERN = re.compile(r'^(\w+):\s*(.*?)\s*$')
+
+
+def parse_output_schema(text: str) -> dict:
+    """Tiny YAML-like parser for ``evals/output-schema.yml`` — no PyYAML dep.
+
+    Supported shape::
+
+        version: 1
+        required_headers:
+          - "Refined ticket"
+          - "Top-5 risks"
+
+    Unknown keys are preserved but ignored by :func:`lint_output_schema`.
+    """
+    result: dict = {}
+    current_list: Optional[str] = None
+    for raw in text.splitlines():
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if stripped.startswith("- "):
+            if current_list is None:
+                continue
+            value = stripped[2:].strip().strip('"').strip("'")
+            result[current_list].append(value)
+            continue
+        match = _OUTPUT_SCHEMA_KEY_PATTERN.match(stripped)
+        if not match:
+            continue
+        key, value = match.group(1), match.group(2).strip('"').strip("'")
+        if value == "":
+            result[key] = []
+            current_list = key
+        else:
+            current_list = None
+            try:
+                result[key] = int(value)
+            except ValueError:
+                result[key] = value
+    return result
+
+
+def load_output_schema(skill_path: Path) -> Optional[dict]:
+    """Return the parsed schema sibling to ``skill_path`` or ``None``.
+
+    Lookup: ``<skill-dir>/evals/output-schema.yml``. Callers MUST use the
+    real path (not the repo-relative display path) so the sibling lookup
+    hits the actual directory.
+    """
+    if skill_path.name != "SKILL.md":
+        return None
+    schema_path = skill_path.parent / "evals" / "output-schema.yml"
+    if not schema_path.exists():
+        return None
+    try:
+        return parse_output_schema(schema_path.read_text(encoding="utf-8"))
+    except OSError:
+        return None
+
+
+def lint_output_schema(path: Path, text: str) -> List[Issue]:
+    """Fail if any required header declared in the sibling schema is
+    missing from the skill's output template.
+
+    No-op when the schema file does not exist or declares no
+    ``required_headers`` — keeps the check opt-in per skill.
+    """
+    schema = load_output_schema(path)
+    if schema is None:
+        return []
+    required = schema.get("required_headers") or []
+    if not isinstance(required, list) or not required:
+        return []
+    issues: List[Issue] = []
+    # Scan the whole skill text. Template headers live inside a fenced
+    # code block, but the `^## <header>$` line still matches — a drift
+    # (rename/removal) makes the line disappear from the file entirely.
+    for header in required:
+        if not isinstance(header, str) or not header.strip():
+            continue
+        pattern = re.compile(
+            rf"^##\s+{re.escape(header.strip())}\s*$", re.MULTILINE,
+        )
+        if not pattern.search(text):
+            issues.append(Issue(
+                "error", "output_schema_drift",
+                f"Output template is missing required header "
+                f"`## {header}` (declared in evals/output-schema.yml)",
+            ))
+    return issues
+
+
 # Artefact types that carry a JSON-Schema contract for their frontmatter.
 _SCHEMA_ARTEFACT_TYPES = {"skill", "rule", "command", "persona"}
 
@@ -1631,6 +1730,13 @@ def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
     else:
         return lint_unknown(display_path, text)
 
+    # Post-processing: frontmatter schema validation (errors). Runs first
+    # so schema failures surface before the softer quality checks below.
+    schema_issues = lint_frontmatter_schema(display_path, text, artifact_type)
+    if schema_issues:
+        result.issues.extend(schema_issues)
+        result.status = classify_status(result.issues)
+
     # Post-processing: interaction quality checks (warnings/info only)
     interaction_issues = lint_interaction_quality(display_path, text)
     if interaction_issues:
@@ -1660,6 +1766,14 @@ def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
     if governance_issues:
         result.issues.extend(governance_issues)
         result.status = classify_status(result.issues)
+
+    # Post-processing: output-schema drift (errors). Skills only — schema
+    # lookup walks a sibling `evals/` directory off the real SKILL.md.
+    if artifact_type == "skill":
+        schema_issues = lint_output_schema(path, text)
+        if schema_issues:
+            result.issues.extend(schema_issues)
+            result.status = classify_status(result.issues)
 
     return result
 

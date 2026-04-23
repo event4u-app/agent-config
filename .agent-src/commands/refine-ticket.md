@@ -28,13 +28,26 @@ If no input resolves: ask **one** focused question:
 🎫 Which ticket should I refine? Paste a Jira key, URL, or the ticket text.
 ```
 
-### 2. Run the refine-ticket skill
+### 2. Pick the output language
+
+Apply the skill's language-strategy block. First hit wins:
+
+1. **User-message language** — latest user message decides. Honours
+   the global `language-and-tone` iron law.
+2. **Ticket body language** — minimal invocation (`/refine-ticket PROJ-123`
+   with no prose) mirrors the ticket's own language.
+3. **`.agent-settings.yml` default** — fallback when both silent; English
+   when absent.
+
+Quoted identifiers stay native; only prose mirrors the picked language.
+
+### 3. Run the refine-ticket skill
 
 Invoke the [`refine-ticket`](../skills/refine-ticket/SKILL.md) skill with the
 loaded ticket as input. The skill handles detection, orchestration, persona
 application, synthesis, and close-prompt.
 
-### 3. Honor flags
+### 4. Honor flags
 
 - `--personas=<list>` — comma-separated override of the Core-6 default
   (e.g. `--personas=developer,senior-engineer,critical-challenger`)
@@ -45,7 +58,7 @@ application, synthesis, and close-prompt.
 No `--apply` flag in v1. Write-back is user-controlled via the close-prompt
 at the end of the skill output.
 
-### 4. Emit output + close-prompt
+### 5. Emit output + close-prompt
 
 Render the three-section output template (refined ticket / Top-5 risks /
 persona voices) plus the close-prompt. Stop there. Do **not** chain into

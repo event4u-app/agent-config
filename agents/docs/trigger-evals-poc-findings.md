@@ -157,7 +157,8 @@ primary PoC finding, not a failure of execution.
 ## Remaining work (not executed here)
 
 1. **Phase 3 scope doc** — lift the lessons above into
-   `agents/roadmaps/road-to-trigger-evals.md` before top-20 rollout.
+   `agents/roadmaps/archive/road-to-trigger-evals.md` (archived
+   2026-04-23) or its successor roadmap before top-20 rollout.
 2. **CI integration** — a green CI run should not gate on trigger
    evals until the restated Phase 3 gate is in place, otherwise
    N-class noise will flap the pipeline.

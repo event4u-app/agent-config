@@ -1,7 +1,7 @@
 # Feasibility: Rule & Guideline Quality Evals
 
 > Can we measure whether **rules** and **guidelines** fire and are followed,
-> the same way [`road-to-trigger-evals.md`](../roadmaps/road-to-trigger-evals.md)
+> the same way [`archive/road-to-trigger-evals.md`](../roadmaps/archive/road-to-trigger-evals.md)
 > proposes to do for skills? Three activation shapes, three separate
 > problems, three verdicts.
 
@@ -181,7 +181,7 @@ If a guideline prescribes a **unique, non-reinventable** output shape (e.g., a s
 
 ## Related
 
-- [`road-to-trigger-evals.md`](../roadmaps/road-to-trigger-evals.md) — parent, Problem 1 extends it
+- [`archive/road-to-trigger-evals.md`](../roadmaps/archive/road-to-trigger-evals.md) — parent, Problem 1 extends it (archived 2026-04-23)
 - [`archive/road-to-rule-quality-research.md`](../roadmaps/archive/road-to-rule-quality-research.md) — originating roadmap (archived)
 - [`rule-type-governance.md`](../../.agent-src.uncompressed/rules/rule-type-governance.md) — the auto/always classification this research depends on
 - [`archive/road-to-drafting-protocol.md`](../roadmaps/archive/road-to-drafting-protocol.md) — would benefit from Problem 1 data if both ship (archived 2026-04-21)
