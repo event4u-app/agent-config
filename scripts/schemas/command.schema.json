@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/command.schema.json",
+  "title": "Command frontmatter",
+  "$comment": "Source: agents/docs/frontmatter-contract.md#commands. `description` is required at schema level because 66/67 commands declare it — the one exception is a known gap, not a supported shape.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "description", "disable-model-invocation"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "disable-model-invocation": {
+      "type": "boolean",
+      "enum": [true],
+      "description": "Commands are always user-invoked; model-invocation is disabled."
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      }
+    }
+  }
+}

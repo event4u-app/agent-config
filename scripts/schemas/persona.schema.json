@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/persona.schema.json",
+  "title": "Persona frontmatter",
+  "$comment": "Source: agents/docs/frontmatter-contract.md#personas. `mode` enum mirrors the values declared in personas/*.md plus the additional `incident` value from templates/persona.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "role", "description", "tier", "mode", "version", "source"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Must match the persona filename stem."
+    },
+    "role": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["core", "specialist"]
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["developer", "reviewer", "tester", "product-owner", "incident", "planner"]
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+(\\.[0-9]+){0,2}$"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["package", "project"]
+    }
+  }
+}

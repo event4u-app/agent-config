@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/rule.schema.json",
+  "title": "Rule frontmatter",
+  "$comment": "Source: agents/docs/frontmatter-contract.md#rules. `type` is authoritative; `alwaysApply` is a Cursor/Cline sidecar and accepted but not enforced.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "source", "description"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["always", "auto"]
+    },
+    "source": {
+      "type": "string",
+      "enum": ["package", "project"]
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "alwaysApply": {
+      "type": "boolean",
+      "description": "Optional sidecar for Cursor/Cline; by convention true when type=always, false when type=auto."
+    }
+  }
+}
