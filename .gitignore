@@ -50,3 +50,7 @@ evals/results/
 # Memory access runtime cache (per-repo `memory_status` probe result;
 # regenerated on demand, never committed)
 /.agent-memory/
+
+# /implement-ticket run metrics (JSON lines per run, Q38 ✅ decided).
+# Opt-in to commit for team review — default is local-only.
+/agents/logs/implement-ticket/

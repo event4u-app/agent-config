@@ -1,0 +1,40 @@
+{
+  "contract_version": 1,
+  "status": "partial",
+  "entries": [
+    {
+      "id": "01HZKM9X0000000000000000H1",
+      "type": "historical-patterns",
+      "source": "repo",
+      "confidence": 0.74,
+      "body": {
+        "pattern": "missing_authorization",
+        "path": "app/Http/Controllers/Admin"
+      },
+      "shadowed_by": null
+    },
+    {
+      "id": "01HZKM9X0000000000000000H2",
+      "type": "historical-patterns",
+      "source": "operational",
+      "confidence": 0.61,
+      "trust": 0.55,
+      "body": {
+        "pattern": "logger_called_without_context"
+      },
+      "last_validated": "2026-04-19T11:42:17Z",
+      "shadowed_by": null
+    }
+  ],
+  "slices": {
+    "historical-patterns": { "status": "ok",      "count": 2 },
+    "ownership":           { "status": "timeout", "count": 0 }
+  },
+  "errors": [
+    {
+      "type": "ownership",
+      "code": "timeout",
+      "message": "slice exceeded per-type budget of 800ms"
+    }
+  ]
+}

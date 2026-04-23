@@ -37,9 +37,24 @@ Look, in order, for:
 - `.github/historical-bug-patterns.yml` (or
   `agents/historical-bug-patterns.yml`)
 
-If neither file exists, skip this rule and rely on
-[`reviewer-awareness`](reviewer-awareness.md) defaults. **Do not invent
-owners or patterns** from context.
+If neither file exists, fall back to the engineering-memory layer via
+[`memory-access`](../guidelines/agent-infra/memory-access.md):
+
+```python
+from scripts.memory_lookup import retrieve
+extra = retrieve(
+    types=["ownership", "historical-patterns"],
+    keys=<changed file paths>,
+    limit=5,
+)
+```
+
+Curated memory (`agents/memory/ownership.yml`,
+`agents/memory/historical-patterns.yml`) carries the same schema as the
+project-local YAMLs and is merged into the routing output alongside
+them. If both memory and project YAMLs are absent, skip this rule and
+rely on [`reviewer-awareness`](reviewer-awareness.md) defaults. **Do
+not invent owners or patterns** from context.
 
 ### 2. Match the diff
 

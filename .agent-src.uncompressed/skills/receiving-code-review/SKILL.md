@@ -1,6 +1,8 @@
 ---
 name: receiving-code-review
 description: "Use when processing code review feedback (bot or human) before changing anything — triages, verifies, and pushes back with technical reasoning — even when the user just says 'fix the comments'."
+personas:
+  - critical-challenger
 source: package
 ---
 
@@ -75,6 +77,13 @@ For each comment classified as blocking/important:
 * Check whether the suggested fix would break another test or caller
 * Check `git blame` / history — the current code may be the way it is
   for a reason
+* **Consult memory for prior context.** Via
+  [`memory-access`](../../guidelines/agent-infra/memory-access.md),
+  call `retrieve(types=["historical-patterns", "architecture-decisions"],
+  keys=<files in the review>, limit=3)`. A registered historical pattern
+  may confirm the reviewer's concern (accept) or an architecture
+  decision may explain why the current shape is intentional (push back
+  with the cited `id`).
 
 ### 4. Decide: accept, push back, or escalate
 

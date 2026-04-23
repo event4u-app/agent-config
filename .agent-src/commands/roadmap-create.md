@@ -90,7 +90,12 @@ Show the complete roadmap to the user and ask (in their language) if anything sh
 - Save to the chosen location.
 - Show the final path.
 
-### 7. Offer execution
+### 7. Update the progress dashboard
+
+Run `task roadmap-progress` so the new roadmap shows up in
+`agents/roadmaps-progress.md`. Mention the new overall count to the user.
+
+### 8. Offer execution
 
 After saving, ask the user (in their language) whether to start executing the roadmap immediately.
 

@@ -30,6 +30,12 @@ def count(kind: str) -> int:
     if kind == "guidelines":
         # guidelines are grouped by topic subdirectory
         return sum(1 for _ in (SRC / "guidelines").rglob("*.md"))
+    if kind == "personas":
+        # personas live as flat .md files, README excluded
+        pdir = SRC / "personas"
+        if not pdir.exists():
+            return 0
+        return sum(1 for f in pdir.glob("*.md") if f.name != "README.md")
     return sum(1 for _ in (SRC / kind).glob("*.md"))
 
 
@@ -42,6 +48,11 @@ TARGETS: list[tuple[str, list[tuple[str, str]]]] = [
             (r"(Browse all )(\d+)( commands\])", "commands"),
             (r"(package \(rules \+ )(\d+)( skills)", "skills"),
             (r"(skills \+ )(\d+)( native commands)", "commands"),
+            # Hero line: **NNN Skills** · **NNN Rules** · **NNN Commands** · **NNN Guidelines**
+            (r"(<strong>)(\d+)( Skills</strong>)", "skills"),
+            (r"(<strong>)(\d+)( Rules</strong>)", "rules"),
+            (r"(<strong>)(\d+)( Commands</strong>)", "commands"),
+            (r"(<strong>)(\d+)( Guidelines</strong>)", "guidelines"),
         ],
     ),
     (
@@ -51,6 +62,7 @@ TARGETS: list[tuple[str, list[tuple[str, str]]]] = [
             (r"(rules/\s+\()(\d+)( rules\))", "rules"),
             (r"(commands/\s+\()(\d+)( commands\))", "commands"),
             (r"(guidelines/\s+\()(\d+)( guidelines\))", "guidelines"),
+            (r"(personas/\s+\()(\d+)( personas\))", "personas"),
         ],
     ),
     (
@@ -60,6 +72,11 @@ TARGETS: list[tuple[str, list[tuple[str, str]]]] = [
             (r"(Browse all )(\d+)( commands\])", "commands"),
         ],
     ),
+    # Note: ``agents/roadmaps/road-to-stronger-skills.md`` was previously
+    # tracked here with a living ``baseline N as of`` pattern. The roadmap
+    # was moved to ``skipped/`` on 2026-04-23 (Q35 superseded), so its
+    # baseline is frozen as a historical snapshot and is no longer
+    # auto-synced.
 ]
 
 
@@ -90,9 +107,10 @@ def main() -> int:
     parser.add_argument("--check", action="store_true", help="exit 1 on drift instead of rewriting")
     args = parser.parse_args()
 
-    counts = {k: count(k) for k in ("skills", "rules", "commands", "guidelines")}
+    counts = {k: count(k) for k in ("skills", "rules", "commands", "guidelines", "personas")}
     print(f"📊  Truth: skills={counts['skills']} rules={counts['rules']} "
-          f"commands={counts['commands']} guidelines={counts['guidelines']}")
+          f"commands={counts['commands']} guidelines={counts['guidelines']} "
+          f"personas={counts['personas']}")
 
     any_drift = False
     any_change = False

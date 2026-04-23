@@ -1,5 +1,6 @@
 ---
 name: feature-dev
+description: Full 7-phase feature development workflow for complex features.
 skills: [laravel, php-coder]
 disable-model-invocation: true
 ---

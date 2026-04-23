@@ -29,6 +29,25 @@ Work like a real developer. Follow this order strictly:
 
 Skipping steps 1-3 = #1 cause of wrong implementations and wasted retries.
 
+## Consult memory before editing
+
+Before writing code for the touched paths, call
+[`memory-access`](../guidelines/agent-infra/memory-access.md):
+
+```python
+from scripts.memory_lookup import retrieve
+priors = retrieve(
+    types=["architecture-decisions", "domain-invariants"],
+    keys=<touched paths>,
+    limit=3,
+)
+```
+
+A matching `architecture-decision` explains *why* the current shape
+exists; a matching `domain-invariant` is a hard constraint you cannot
+violate. Cite the `id` if a match influences the plan. No match → no
+overhead; proceed.
+
 ## Verify with real tools
 
 | What changed | How to verify |

@@ -136,6 +136,24 @@ roles:
   # The rule `role-mode-adherence` (auto-triggered when non-empty)
   # requires every closing output to match the mode's contract.
   active_role: ""
+
+# --- Personas (developer-local override of team default lens) ---
+#
+# Personas are reusable review lenses (see .augment/personas/README.md).
+# The team default cast lives in `.agent-project-settings.yml` under
+# `personas.default`. This block lets a developer narrow or widen the
+# local cast without touching the team file. Ignored if the project
+# locks `personas.default` via `locked_keys`.
+personas:
+  # Override the effective default cast for THIS developer. Empty =
+  # inherit team default. Provide a full list (not a diff) to replace
+  # the team cast entirely for local runs.
+  override: []
+
+  # Drop specific persona ids from the default cast without replacing
+  # the whole list. Ignored personas stay invokable explicitly via
+  # `--personas=<id>`. Mirrors `.augmentignore` semantics.
+  ignore: []
 ```
 
 ## Settings Reference
@@ -165,6 +183,8 @@ Personal and project-level settings (written by `/config-agent-settings` and
 | `subagents.max_parallel` | integer | `3` | Maximum parallel subagent invocations. `1` serializes. |
 | `roles.default_role` | `""`, `developer`, `reviewer`, `tester`, `po`, `incident`, `planner` | _(empty)_ | Role the agent defaults to at the start of a session. See [`role-contracts`](../guidelines/agent-infra/role-contracts.md). |
 | `roles.active_role` | same as `default_role` | _(empty)_ | Role currently active; set by `/mode <name>`, cleared by `/mode none`. Enables the `role-mode-adherence` rule. |
+| `personas.override` | list of persona ids | `[]` | Developer-local override of the team default lens cast. Empty = inherit `personas.default` from `.agent-project-settings.yml`. See [`layered-settings`](../guidelines/agent-infra/layered-settings.md). |
+| `personas.ignore` | list of persona ids | `[]` | Persona ids dropped from the default cast locally. Ignored personas stay invokable via `--personas=<id>`. |
 
 ### Rename-Map (migration)
 

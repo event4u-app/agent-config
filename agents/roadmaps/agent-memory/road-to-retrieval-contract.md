@@ -5,11 +5,36 @@
 
 ## Status
 
-Draft. Proposed after GPT review of
+**Accepted (v1, 2026-04-23).** Frozen as the canonical contract. The
+consumer-side implementation shipped schema + fixtures + conformance
+harness in this repo on 2026-04-23
+([`../archive/road-to-retrieval-contract-consumer.md`](../archive/road-to-retrieval-contract-consumer.md));
+the `agent-memory` repo adopts this file verbatim as its
+implementation reference.
+
+### Amendment process
+
+- **Additive changes (minor bump)** — new optional response fields or
+  new error codes land via PR that updates this spec, the JSON schema
+  under [`/schemas/retrieval-v1.schema.json`](../../../schemas/retrieval-v1.schema.json),
+  and adds a fixture under
+  [`/tests/fixtures/retrieval/`](../../../tests/fixtures/retrieval/)
+  covering the new field. Existing fixtures MUST keep passing.
+- **Breaking changes (major bump)** — require a new roadmap (e.g.
+  `road-to-retrieval-contract-v2.md`), a deprecation window of at
+  least one consumer-release cycle, and a new schema file
+  (`retrieval-v2.schema.json`) alongside v1.
+- **Open questions at the bottom of this file** are resolved by PR
+  that updates the relevant section, adds a fixture demonstrating
+  the resolved semantics, and links the PR from this status block.
+
+### Originally proposed after
+
+GPT review of
 [`../road-to-agent-memory-integration.md`](../road-to-agent-memory-integration.md)
-flagged that the `retrieve()` abstraction is named but not specified.
-Blocks Phase 1 of that roadmap — consumers cannot wire against an
-unstable shape.
+flagged that the `retrieve()` abstraction was named but not
+specified — which blocked Phase 1 of that roadmap (consumers
+could not wire against an unstable shape).
 
 ## Problem
 
@@ -146,37 +171,50 @@ health(timeout_ms: int = 2000) -> {
 - **Fixtures are shared.** `agent-config` ships golden-fixture JSON
   files under `tests/fixtures/retrieval/` that both repos test against.
 
-## Phases
+## Implementation tracking
 
-### Phase 0 — freeze v1
+This spec file is the **canonical contract**. Concrete implementation
+work is split across two repos and tracked in separate roadmaps so
+neither side's dashboard is polluted with the other's open items.
 
-- [ ] This file accepted as the canonical contract
-- [ ] JSON schema published under the schemas directory (filename
-      `retrieval-v1.schema.json`)
-- [ ] Golden fixtures committed under a retrieval test-fixtures directory
+### Consumer deliverables (`agent-config` side)
 
-### Phase 1 — consumer implementation
+Shipped 2026-04-23 — archived as
+[`../archive/road-to-retrieval-contract-consumer.md`](../archive/road-to-retrieval-contract-consumer.md):
 
-- [ ] `scripts/memory_status.py` returns `contract_version` from `health()`
-- [ ] `scripts/memory_lookup.py` (file-backed) speaks v1
-- [ ] A conformance test harness validates any backend against the fixtures
+- Spec accepted as canonical contract (this file marked `accepted`).
+- JSON schema published under
+  [`/schemas/retrieval-v1.schema.json`](../../../schemas/retrieval-v1.schema.json).
+- Golden fixtures committed under
+  [`/tests/fixtures/retrieval/`](../../../tests/fixtures/retrieval/).
+- `scripts/memory_status.py` exposes `health()` returning a v1 envelope.
+- `scripts/memory_lookup.py` exposes `retrieve_v1()` and CLI
+  `--envelope v1` speaking v1.
+- Conformance harness (21 tests) under
+  [`/tests/conformance/retrieval/`](../../../tests/conformance/retrieval/)
+  validates any backend against the fixtures with zero
+  `agent-memory` runtime dependency.
 
-### Phase 2 — `agent-memory` implementation
+### Downstream deliverables (`agent-memory` repo)
 
-- [ ] `agent-memory` repo adopts this spec as an issue/roadmap
-- [ ] MCP + CLI + library surfaces all return v1 envelopes
-- [ ] Conformance tests pass against the fixtures shipped here
+Tracked in the `agent-memory` repo's own roadmap once the spec is
+accepted here:
+
+- `agent-memory` repo adopts this spec as an issue/roadmap.
+- MCP + CLI + library surfaces all return v1 envelopes.
+- Conformance tests pass against the fixtures shipped from
+  `agent-config`.
 
 ## Acceptance criteria
 
-- **Phase 0** ships when: schema validates the fixture set, GPT review
-  confirms every ambiguity from the initial review is resolved.
-- **Phase 1** ships when: file-backed retrieval passes the conformance
+- **Consumer side ships** when: schema validates the fixture set,
+  GPT review confirms every ambiguity from the initial review is
+  resolved, and file-backed retrieval passes the conformance
   harness with zero `agent-memory` dependency.
-- **Phase 2** ships when: both backends (file-backed, operational)
-  return byte-identical responses for the same fixture input where
-  the operational side has no extra entries — proves the shape is
-  truly identical across modes.
+- **Downstream side ships** when: both backends (file-backed,
+  operational) return byte-identical responses for the same fixture
+  input where the operational side has no extra entries — proves
+  the shape is truly identical across modes.
 
 ## Open questions
 
@@ -191,6 +229,8 @@ health(timeout_ms: int = 2000) -> {
 
 ## See also
 
+- [`../archive/road-to-retrieval-contract-consumer.md`](../archive/road-to-retrieval-contract-consumer.md) —
+  agent-config consumer implementation (archived 2026-04-23)
 - [`../road-to-agent-memory-integration.md`](../road-to-agent-memory-integration.md) —
   the caller side that depends on this contract
 - [`../road-to-memory-self-consumption.md`](../road-to-memory-self-consumption.md) —

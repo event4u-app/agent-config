@@ -1,0 +1,22 @@
+{
+  "contract_version": 1,
+  "status": "ok",
+  "entries": [
+    {
+      "id": "01HZKM9X0000000000000000A1",
+      "type": "historical-patterns",
+      "source": "repo",
+      "confidence": 0.82,
+      "body": {
+        "pattern": "n_plus_one_query",
+        "path": "app/Http/Controllers/UserController.php",
+        "evidence": "Seen in PR #1204 and PR #1387"
+      },
+      "last_validated": "2026-04-21T00:00:00Z",
+      "shadowed_by": null
+    }
+  ],
+  "slices": {
+    "historical-patterns": { "status": "ok", "count": 1 }
+  }
+}

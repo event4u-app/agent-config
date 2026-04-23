@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/skill.schema.json",
+  "title": "Skill frontmatter",
+  "$comment": "Source: agents/docs/frontmatter-contract.md#skills. Keep in sync with inventory_frontmatter.py and the linter's lint_skill().",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "description", "source"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Lowercase, hyphenated slug; must match the parent directory name."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300,
+      "description": "Trigger phrase; ≤ 200 chars recommended, 300 is the hard ceiling."
+    },
+    "source": {
+      "type": "string",
+      "enum": ["package", "project"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "deprecated", "superseded"]
+    },
+    "replaced_by": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "personas": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["manual", "assisted", "automated"]
+        },
+        "handler": {
+          "type": "string",
+          "enum": ["none", "shell", "php", "node", "internal"]
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "safety_mode": {
+          "type": "string",
+          "enum": ["strict"]
+        },
+        "allowed_tools": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "command": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -174,7 +174,7 @@ Present the stub as a numbered-options prompt (per `user-interaction`):
 
 Nothing is committed without the user's pick. If the user picks *skip*,
 record it in the commit message (`Eval stub: deferred`). See
-[`road-to-trigger-evals.md`](../../../agents/roadmaps/road-to-trigger-evals.md)
+[`road-to-trigger-evals.md`](../../../agents/roadmaps/archive/road-to-trigger-evals.md)
 Phase 1 for the runner and expected format; peer examples:
 `php-coder/evals/triggers.json`, `eloquent/evals/triggers.json`,
 `skill-writing/evals/triggers.json`.

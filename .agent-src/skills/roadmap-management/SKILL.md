@@ -19,11 +19,29 @@ Do NOT use when:
 - Small tasks that don't span multiple steps
 - One-off questions or fixes
 
+## ⚠ Dashboard sync — non-negotiable
+
+`agents/roadmaps-progress.md` is auto-generated and must reflect the
+live state in real time. After **any** checkbox edit (`[x]`, `[~]`,
+`[-]`, `[ ]`) or phase add/rename/remove in a roadmap file, run
+`task roadmap-progress` **in the same response**.
+
+**Completion = archival.** If an edit takes a roadmap to
+`count_open == 0` (pure `[x]`, or `[x]` + `[~]`/`[-]`), `git mv`
+it into `agents/roadmaps/archive/` **before** regenerating — see
+the auto-archive decision table under "Check completion status"
+below. A 100%-complete roadmap left in `agents/roadmaps/` makes
+the next reader think work is still open.
+
+Enforced by [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md).
+Batching edits in one response is fine — one final `task roadmap-progress`
+before replying is enough. But the response must not end without it.
+
 ## Procedure: Manage a roadmap
 
 1. **Identify need** — Is this a multi-step change that spans sessions or agents?
 2. **Create or locate** — Create new roadmap in `agents/roadmaps/` or find existing one.
-3. **Update progress** — Mark completed steps with `[x]`, add notes for blockers.
+3. **Update progress** — Mark completed steps with `[x]`, add notes for blockers, then run `task roadmap-progress` in the same response (enforced by `roadmap-progress-sync`).
 4. **Verify** — Confirm all steps reflect current state, no stale information.
 
 A roadmap is a structured `.md` file in `agents/roadmaps/` that describes a multi-step change
@@ -121,6 +139,7 @@ Every roadmap implicitly includes these gates (run after each step that changes 
 2. Use the template structure from `.augment/templates/roadmaps.md`.
 3. Review with the user iteratively until approved.
 4. Save with a kebab-case filename (e.g. `optimize-webhook-jobs.md`).
+5. Run `task roadmap-progress` so the dashboard includes the new roadmap.
 
 ### Executing a roadmap
 
@@ -128,7 +147,7 @@ Every roadmap implicitly includes these gates (run after each step that changes 
 2. Find the next unchecked step (`- [ ]`).
 3. Summarize what needs to be done.
 4. Ask the user before implementing (numbered options: implement / adjust / skip).
-5. After implementation: mark `[x]`, run quality gates.
+5. After implementation: mark `[x]`, run quality gates, then `task roadmap-progress`.
 6. Move to the next step.
 
 ### Resuming a roadmap
@@ -158,12 +177,28 @@ After the last step of a roadmap is done, check completion status:
    - `[~]` = deferred (intentionally pushed out, may come back)
    - `[-]` = cancelled (individual item dropped)
 
-3. **If ALL items are `[x]`** (nothing open, nothing deferred, nothing cancelled):
-   → **Auto-archive.** Move the file to `agents/roadmaps/archive/` silently.
-   Show: `✅  Roadmap archived → agents/roadmaps/archive/{filename}`
+3. **Decision rule — `count_open == 0` means the roadmap has no active
+   work left. `[x]`, `[~]`, `[-]` are all finalized states; only `[ ]`
+   blocks closure. "Fertig ist fertig" — deferred and cancelled items
+   don't hold a finished roadmap in the active set.**
 
-4. **If any items are `[ ]`, `[~]`, or `[-]`:**
-   → **Ask the user.** Show what's incomplete and why:
+   | count_x | count_open | count_deferred / cancelled | Action |
+   |---|---|---|---|
+   | ≥ 1 | 0 | 0 | **Auto-archive** (silent) — pure completion |
+   | ≥ 1 | 0 | ≥ 1 | **Auto-archive** (silent) — done with intentional skips |
+   | 0 | 0 | ≥ 1 | **Auto-skip** (silent) — no work happened, scope dropped |
+   | ≥ 0 | ≥ 1 | ≥ 0 | **Ask the user** — open work remains |
+
+   Show on auto-move:
+
+   - Archive: `✅  Roadmap archived → agents/roadmaps/archive/{filename}`
+   - Skip:    `⏭️  Roadmap skipped → agents/roadmaps/skipped/{filename}`
+
+   The deferred/cancelled items remain searchable inside the archived file
+   (grep for `- [~]` / `- [-]` across `archive/`); a future revival opens a
+   new roadmap that cites the archived one.
+
+4. **If any items are `[ ]`:** → **Ask the user.** Show what's incomplete:
 
    ```
    📋 Roadmap completion check:
@@ -173,7 +208,7 @@ After the last step of a roadmap is done, check completion status:
      ⏭️  Deferred:  {count_skip}  — {list of deferred items, 1 line each}
      ❌  Cancelled: {count_cancel} — {list of cancelled items, 1 line each}
 
-   > 1. Archive — work happened, remaining items are intentionally unfinished
+   > 1. Archive — mark open items as cancelled [-] and archive now
    > 2. Keep active — I want to finish the open items
    > 3. Mark open items as deferred [~] and archive
    > 4. Skip — move to skipped/ (no meaningful work done, not pursuing)
@@ -193,12 +228,16 @@ After the last step of a roadmap is done, check completion status:
    git mv agents/roadmaps/{file} agents/roadmaps/skipped/{file}
    ```
 
+6. **Regenerate the dashboard:** `task roadmap-progress`. The moved roadmap is
+   excluded from the active set once it sits in `archive/` or `skipped/`.
+
 ### When to use `skipped/` vs `archive/`
 
 | Situation | Destination |
 |---|---|
 | Finished all phases | `archive/` |
 | Finished some phases, rest deferred/cancelled on purpose | `archive/` |
+| Whole roadmap deferred or cancelled (no `[x]` at all) | `skipped/` |
 | Never started, scope decision reversed | `skipped/` |
 | Superseded by another roadmap | `skipped/` — add a pointer line at the top: `> Superseded by agents/roadmaps/{other}.md` |
 | Research proved the direction wrong | `skipped/` — add a 1-line reason at the top |
@@ -206,10 +245,34 @@ After the last step of a roadmap is done, check completion status:
 If in doubt: archive beats skipped. `skipped/` is reserved for roadmaps where
 no meaningful work was invested and the scope itself was rejected.
 
+## Progress dashboard — `agents/roadmaps-progress.md`
+
+A generated dashboard aggregates progress across every open roadmap. It sits at
+`agents/roadmaps-progress.md` (outside `roadmaps/` to keep the folder clean) and
+is rewritten by `.augment/scripts/update_roadmap_progress.py`.
+
+**Always regenerate in the SAME response** after any of the following
+(enforced by [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)):
+
+- Creating a new roadmap (`roadmap-create`)
+- Marking a step `[x]`, `[~]`, or `[-]` during `roadmap-execute`
+- Archiving or moving a roadmap to `skipped/`
+- Adding, renaming, or removing a phase
+
+Command:
+
+```bash
+task roadmap-progress          # rewrite the dashboard
+task roadmap-progress-check    # CI: fail if stale
+```
+
+The dashboard is a **read-only snapshot**. Do not edit it by hand — regenerate it.
+
 ## Output format
 
 1. Roadmap file in agents/roadmaps/ with ordered phases and tasks
 2. Progress tracking with checkbox status
+3. `agents/roadmaps-progress.md` regenerated on every change
 
 ## Auto-trigger keywords
 
@@ -237,3 +300,4 @@ no meaningful work was invested and the scope itself was rejected.
 - Do NOT archive roadmaps with open `[ ]` items without asking the user.
 - Do NOT delete roadmaps — always move to `archive/` or `skipped/`.
 - Do NOT use `skipped/` as a dumping ground for partially-finished work — that is what `archive/` with deferred items is for.
+- Do NOT assign version numbers, git tags, or release identifiers to phases. Roadmaps plan work; releases and tags are decided by the user separately.

@@ -71,7 +71,21 @@ Goal: locate the failure in a single component, layer, or call site.
    Goal: answer "which boundary has expected ≠ actual?".
 3. Check recent changes: `git log`, `git blame` on the failing line,
    recent dependency updates, config edits, infra changes.
-4. Trace backwards from the symptom. `null` arrives at line 42 — where
+4. **Consult memory for prior matches.** Via
+   [`memory-access`](../../guidelines/agent-infra/memory-access.md):
+   ```python
+   from scripts.memory_lookup import retrieve
+   priors = retrieve(
+       types=["incident-learnings", "historical-patterns"],
+       keys=[<error class>, <failing path(s)>],
+       limit=3,
+   )
+   ```
+   A matching `incident-learning` may already name the root cause, fix,
+   and regression test. A matching `historical-pattern` narrows the
+   hypothesis space before Phase 3. Cite matching `id`s in the evidence
+   trail.
+5. Trace backwards from the symptom. `null` arrives at line 42 — where
    does the value originate? Walk up the call stack until the origin is
    found. Fix at origin, not at line 42.
 

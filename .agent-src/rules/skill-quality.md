@@ -22,6 +22,14 @@ Every skill must answer four questions. If ANY answer is weak, the skill is not 
 
 Every skill MUST have: `When to use`, `Procedure`, `Gotcha`, `Output format`, `Do NOT`.
 
+## Frontmatter Contract
+
+Every skill's YAML frontmatter MUST validate against `scripts/schemas/skill.schema.json`.
+See [`agents/docs/frontmatter-contract.md`](../../../agents/docs/frontmatter-contract.md)
+for the human-readable contract across all artefact types. Violations are
+reported by `scripts/skill_linter.py` as `schema_<rule>` errors and fail
+`task validate-schema` / `task ci`.
+
 ## Description Triggering
 
 Claude routes skills by reading the frontmatter `description`. Polite, generic,

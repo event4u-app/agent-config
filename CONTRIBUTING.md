@@ -122,6 +122,26 @@ Every release must update [`CHANGELOG.md`](CHANGELOG.md). Unreleased work
 goes under the `[Unreleased]` section; that section is renamed and dated on
 release.
 
+### Release process
+
+`package.json.version` must match the git tag of the release — npm publishes
+the tarball at whatever version the file declares, so a drift here means the
+npm registry lags behind git. To keep the two in sync:
+
+1. On `main` (or the release branch about to merge), run:
+   ```bash
+   task release:bump -- X.Y.Z
+   ```
+   This bumps `package.json`, stages it, and creates a `release: X.Y.Z` commit.
+2. Push the commit, then create and push the tag:
+   ```bash
+   git push
+   git tag X.Y.Z
+   git push origin X.Y.Z
+   ```
+3. The [Release Guard workflow](.github/workflows/release-guard.yml) runs on
+   tag push and fails loudly if `package.json.version != tag`.
+
 ## License of contributions
 
 By contributing you agree that your contributions are licensed under the

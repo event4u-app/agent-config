@@ -14,10 +14,11 @@ This runs, in order:
 2. **Compression hashes** — Compressed `.md` hashes match source
 3. **Reference check** — No broken cross-references between files
 4. **Portability check** — No project-specific paths in shared files
-5. **Skill linter** — All skills, rules, commands pass structural validation
-6. **README linter** — README passes quality checks
-7. **Tests** — All bash + Python tests pass
-8. **Consistency** — No uncommitted changes from generated outputs
+5. **Schema validation** — Frontmatter of every skill/rule/command/persona matches its JSON-Schema contract
+6. **Skill linter** — All skills, rules, commands pass structural validation
+7. **README linter** — README passes quality checks
+8. **Tests** — All bash + Python tests pass
+9. **Consistency** — No uncommitted changes from generated outputs
 
 ---
 
@@ -26,8 +27,12 @@ This runs, in order:
 The linter (`scripts/skill_linter.py`) validates:
 
 - **Required structure** — YAML frontmatter, description, triggers
+- **Frontmatter schema** — Each artefact type has a JSON-Schema in `scripts/schemas/`; violations surface as `schema_<rule>` errors (see [frontmatter contract](../agents/docs/frontmatter-contract.md))
 - **Anti-patterns** — Procedural rules in behavior rules, overlong skills, scope creep
 - **Compression quality** — Key sections preserved after compression
+
+Schema validation also runs standalone via `task validate-schema` — fast
+fail before the full linter.
 
 ### Quality levels
 

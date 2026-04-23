@@ -1,0 +1,9 @@
+{
+  "contract_version": 1,
+  "status": "ok",
+  "entries": [],
+  "slices": {
+    "historical-patterns": { "status": "ok", "count": 0 },
+    "ownership":           { "status": "ok", "count": 0 }
+  }
+}

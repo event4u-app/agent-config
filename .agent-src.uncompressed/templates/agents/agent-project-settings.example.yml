@@ -81,6 +81,27 @@ roles:
   # until the user explicitly switches modes with `/mode <name>`.
   locked: false
 
+# --- Personas (optional) ---
+#
+# Personas are reusable review lenses (see .augment/personas/README.md).
+# Skills cite them in frontmatter (`personas: [id]`). This block lets
+# the project decide the default cast used by multi-lens skills without
+# editing each skill. A developer's .agent-settings.yml can override
+# or narrow the selection unless the key is listed under `locked_keys`.
+personas:
+  # Core cast always loaded by multi-lens skills when `personas:` is
+  # omitted from the skill's frontmatter. Drop an id to remove it from
+  # the default cast repo-wide. Known Core ids: developer,
+  # senior-engineer, product-owner, stakeholder, critical-challenger,
+  # ai-agent.
+  default: [developer, senior-engineer, product-owner, stakeholder, critical-challenger, ai-agent]
+
+  specialists:
+    # Specialist personas auto-included on every multi-lens run. `qa`
+    # is the v1 specialist; more land in v1.1+ (security, performance).
+    # Leave empty to require explicit --personas=+<id> opt-in.
+    auto_include: [qa]
+
 # --- Quality pipeline (optional) ---
 #
 # Per-language gate tools the `quality-fix` command invokes. Empty

@@ -30,8 +30,26 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Iterable, List, Literal, Optional
 
+# Sibling module — stdlib-only frontmatter schema validator.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from validate_frontmatter import (  # noqa: E402
+    parse_frontmatter as parse_frontmatter_for_schema,
+    load_schema,
+    validate as validate_against_schema,
+)
+
 Severity = Literal["error", "warning", "info"]
-ArtifactType = Literal["skill", "rule", "command", "guideline", "unknown"]
+ArtifactType = Literal["skill", "rule", "command", "guideline", "persona", "unknown"]
+
+REQUIRED_PERSONA_SECTIONS = [
+    "Focus",
+    "Mindset",
+    "Unique Questions",
+    "Output Expectations",
+    "Anti-Patterns",
+]
+VALID_PERSONA_TIERS = {"core", "specialist"}
+PERSONA_LINE_BUDGETS = {"core": 120, "specialist": 80}
 
 
 REQUIRED_SKILL_SECTIONS = [
@@ -219,6 +237,8 @@ def detect_artifact_type(path: Path, text: str) -> ArtifactType:
         return "rule"
     if "/guidelines/" in path_str:
         return "guideline"
+    if "/personas/" in path_str:
+        return "persona"
     if has_skill_heading:
         return "skill"
     return "unknown"
@@ -851,6 +871,112 @@ def lint_guideline(path: Path, text: str) -> LintResult:
     )
 
 
+def lint_persona(path: Path, text: str) -> LintResult:
+    """Lint a persona .md file (frontmatter schema + required sections + size)."""
+    issues: List[Issue] = []
+
+    # Frontmatter required
+    frontmatter = extract_frontmatter(text)
+    if not frontmatter:
+        issues.append(Issue("error", "missing_frontmatter", "Persona requires YAML frontmatter"))
+        return LintResult(
+            file=str(path),
+            artifact_type="persona",
+            status="fail",
+            issues=issues,
+            suggestions=["See .agent-src.uncompressed/templates/persona.md for the schema"],
+        )
+
+    # Required frontmatter fields
+    required = {
+        "id": re.compile(r'^id:\s*"?([\w-]+)"?\s*$', re.MULTILINE),
+        "role": re.compile(r'^role:\s*"?(.+?)"?\s*$', re.MULTILINE),
+        "description": re.compile(r'^description:\s*"?(.+?)"?\s*$', re.MULTILINE),
+        "tier": re.compile(r'^tier:\s*"?(\w+)"?\s*$', re.MULTILINE),
+        "version": re.compile(r'^version:\s*"?(.+?)"?\s*$', re.MULTILINE),
+        "source": re.compile(r'^source:\s*"?(package|project)"?\s*$', re.MULTILINE),
+    }
+    parsed: dict = {}
+    for field, pattern in required.items():
+        value = extract_frontmatter_field(frontmatter, pattern)
+        if not value:
+            issues.append(Issue("error", f"missing_{field}", f"Persona frontmatter must declare `{field}`"))
+        else:
+            parsed[field] = value
+
+    # id matches filename stem
+    if "id" in parsed and parsed["id"] != path.stem:
+        issues.append(Issue(
+            "error",
+            "id_filename_mismatch",
+            f"Persona id `{parsed['id']}` must match filename stem `{path.stem}`",
+        ))
+
+    # tier in valid set
+    if "tier" in parsed and parsed["tier"] not in VALID_PERSONA_TIERS:
+        issues.append(Issue(
+            "error",
+            "invalid_tier",
+            f"Persona tier `{parsed['tier']}` must be one of {sorted(VALID_PERSONA_TIERS)}",
+        ))
+
+    # description length
+    if "description" in parsed and len(parsed["description"]) > 160:
+        issues.append(Issue(
+            "warning",
+            "long_description",
+            f"Persona description is {len(parsed['description'])} chars (target ≤ 160)",
+        ))
+
+    # Required sections
+    sections = extract_sections(text)
+    for required_section in REQUIRED_PERSONA_SECTIONS:
+        if required_section not in sections:
+            issues.append(Issue(
+                "error",
+                "missing_section",
+                f"Persona is missing required section `## {required_section}`",
+            ))
+
+    # Unique Questions must have ≥ 3 bullet items
+    uq_block = extract_section_block(text, "Unique Questions")
+    if uq_block:
+        bullet_count = len(re.findall(r"^\s*[-*]\s+", uq_block, re.MULTILINE))
+        if bullet_count < 3:
+            issues.append(Issue(
+                "warning",
+                "too_few_unique_questions",
+                f"Persona has {bullet_count} unique questions (target ≥ 3)",
+            ))
+
+    # Size budget by tier
+    if "tier" in parsed and parsed["tier"] in PERSONA_LINE_BUDGETS:
+        budget = PERSONA_LINE_BUDGETS[parsed["tier"]]
+        line_count = len(text.splitlines())
+        if line_count > budget:
+            issues.append(Issue(
+                "warning",
+                "size_budget",
+                f"Persona has {line_count} lines ({parsed['tier']} budget ≤ {budget})",
+            ))
+
+    # H1 heading
+    if not H1_PATTERN.search(text):
+        issues.append(Issue("warning", "missing_h1", "Persona is missing an H1 heading"))
+
+    # Trailing newline
+    if not text.endswith("\n"):
+        issues.append(Issue("warning", "no_trailing_newline", "File must end with exactly one newline"))
+
+    return LintResult(
+        file=str(path),
+        artifact_type="persona",
+        status=classify_status(issues),
+        issues=issues,
+        suggestions=[],
+    )
+
+
 def gather_all_candidate_files(root: Path) -> list[Path]:
     """Gather all lintable files. Prefers .agent-src.uncompressed/ (source of truth).
     Falls back to .agent-src/ only if uncompressed doesn't exist.
@@ -894,6 +1020,17 @@ def gather_all_candidate_files(root: Path) -> list[Path]:
     guidelines_base = uncompressed_guidelines if uncompressed_guidelines.exists() else augment_guidelines
     if guidelines_base.exists():
         for f in guidelines_base.rglob("*.md"):
+            if not f.is_symlink():
+                candidates.append(f)
+
+    # Personas
+    uncompressed_personas = root / ".agent-src.uncompressed" / "personas"
+    augment_personas = root / ".agent-src" / "personas"
+    personas_base = uncompressed_personas if uncompressed_personas.exists() else augment_personas
+    if personas_base.exists():
+        for f in personas_base.glob("*.md"):
+            if f.name.lower() == "readme.md":
+                continue
             if not f.is_symlink():
                 candidates.append(f)
 
@@ -1066,8 +1203,8 @@ def _is_execution_artifact(path: Path, text: str) -> bool:
     path_lower = str(path).lower()
     text_lower = text.lower()
 
-    # Exclude commands and guidelines — they are not execution-oriented
-    if "/commands/" in path_lower or "/guidelines/" in path_lower:
+    # Exclude commands, guidelines, and personas — they are not execution-oriented
+    if "/commands/" in path_lower or "/guidelines/" in path_lower or "/personas/" in path_lower:
         return False
 
     # File name match — strong signal
@@ -1429,6 +1566,138 @@ def lint_governance(path: Path, text: str, artifact_type: str, repo_root: Path |
     return issues
 
 
+# --- Output-schema check (see road-to-trigger-evals Phase 3.5) ---
+#
+# Skills that freeze an output shape (`refine-ticket`, `estimate-ticket`)
+# ship an optional `evals/output-schema.yml` listing the `##`-headers
+# their output template MUST carry. The linter fails if a header drifts.
+
+_OUTPUT_SCHEMA_KEY_PATTERN = re.compile(r'^(\w+):\s*(.*?)\s*$')
+
+
+def parse_output_schema(text: str) -> dict:
+    """Tiny YAML-like parser for ``evals/output-schema.yml`` — no PyYAML dep.
+
+    Supported shape::
+
+        version: 1
+        required_headers:
+          - "Refined ticket"
+          - "Top-5 risks"
+
+    Unknown keys are preserved but ignored by :func:`lint_output_schema`.
+    """
+    result: dict = {}
+    current_list: Optional[str] = None
+    for raw in text.splitlines():
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if stripped.startswith("- "):
+            if current_list is None:
+                continue
+            value = stripped[2:].strip().strip('"').strip("'")
+            result[current_list].append(value)
+            continue
+        match = _OUTPUT_SCHEMA_KEY_PATTERN.match(stripped)
+        if not match:
+            continue
+        key, value = match.group(1), match.group(2).strip('"').strip("'")
+        if value == "":
+            result[key] = []
+            current_list = key
+        else:
+            current_list = None
+            try:
+                result[key] = int(value)
+            except ValueError:
+                result[key] = value
+    return result
+
+
+def load_output_schema(skill_path: Path) -> Optional[dict]:
+    """Return the parsed schema sibling to ``skill_path`` or ``None``.
+
+    Lookup: ``<skill-dir>/evals/output-schema.yml``. Callers MUST use the
+    real path (not the repo-relative display path) so the sibling lookup
+    hits the actual directory.
+    """
+    if skill_path.name != "SKILL.md":
+        return None
+    schema_path = skill_path.parent / "evals" / "output-schema.yml"
+    if not schema_path.exists():
+        return None
+    try:
+        return parse_output_schema(schema_path.read_text(encoding="utf-8"))
+    except OSError:
+        return None
+
+
+def lint_output_schema(path: Path, text: str) -> List[Issue]:
+    """Fail if any required header declared in the sibling schema is
+    missing from the skill's output template.
+
+    No-op when the schema file does not exist or declares no
+    ``required_headers`` — keeps the check opt-in per skill.
+    """
+    schema = load_output_schema(path)
+    if schema is None:
+        return []
+    required = schema.get("required_headers") or []
+    if not isinstance(required, list) or not required:
+        return []
+    issues: List[Issue] = []
+    # Scan the whole skill text. Template headers live inside a fenced
+    # code block, but the `^## <header>$` line still matches — a drift
+    # (rename/removal) makes the line disappear from the file entirely.
+    for header in required:
+        if not isinstance(header, str) or not header.strip():
+            continue
+        pattern = re.compile(
+            rf"^##\s+{re.escape(header.strip())}\s*$", re.MULTILINE,
+        )
+        if not pattern.search(text):
+            issues.append(Issue(
+                "error", "output_schema_drift",
+                f"Output template is missing required header "
+                f"`## {header}` (declared in evals/output-schema.yml)",
+            ))
+    return issues
+
+
+# Artefact types that carry a JSON-Schema contract for their frontmatter.
+_SCHEMA_ARTEFACT_TYPES = {"skill", "rule", "command", "persona"}
+
+
+def lint_frontmatter_schema(path: Path, text: str, artifact_type: str) -> List[Issue]:
+    """Validate the frontmatter of an artefact against its JSON-Schema.
+
+    Schemas live in ``scripts/schemas/``. One schema per artefact type;
+    see ``agents/docs/frontmatter-contract.md`` for the human-readable
+    contract the schemas encode. Guidelines have no frontmatter and are
+    skipped.
+    """
+    if artifact_type not in _SCHEMA_ARTEFACT_TYPES:
+        return []
+    try:
+        schema = load_schema(artifact_type)
+    except FileNotFoundError:
+        return []
+
+    data, _ = parse_frontmatter_for_schema(text)
+    if data is None:
+        # Other linter checks already emit a missing-frontmatter error for
+        # rules/commands/personas; avoid double-reporting here.
+        return []
+
+    issues: List[Issue] = []
+    for error in validate_against_schema(data, schema):
+        code = f"schema_{error.rule}"
+        message = f"{error.path} – {error.message}"
+        issues.append(Issue("error", code, message))
+    return issues
+
+
 def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
     # Skip README files — they are not lintable artifacts
     if path.name.lower() == "readme.md":
@@ -1456,8 +1725,17 @@ def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
         result = lint_command(display_path, text)
     elif artifact_type == "guideline":
         result = lint_guideline(display_path, text)
+    elif artifact_type == "persona":
+        result = lint_persona(display_path, text)
     else:
         return lint_unknown(display_path, text)
+
+    # Post-processing: frontmatter schema validation (errors). Runs first
+    # so schema failures surface before the softer quality checks below.
+    schema_issues = lint_frontmatter_schema(display_path, text, artifact_type)
+    if schema_issues:
+        result.issues.extend(schema_issues)
+        result.status = classify_status(result.issues)
 
     # Post-processing: interaction quality checks (warnings/info only)
     interaction_issues = lint_interaction_quality(display_path, text)
@@ -1488,6 +1766,14 @@ def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
     if governance_issues:
         result.issues.extend(governance_issues)
         result.status = classify_status(result.issues)
+
+    # Post-processing: output-schema drift (errors). Skills only — schema
+    # lookup walks a sibling `evals/` directory off the real SKILL.md.
+    if artifact_type == "skill":
+        schema_issues = lint_output_schema(path, text)
+        if schema_issues:
+            result.issues.extend(schema_issues)
+            result.status = classify_status(result.issues)
 
     return result
 

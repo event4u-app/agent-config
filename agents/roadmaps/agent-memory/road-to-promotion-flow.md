@@ -64,7 +64,7 @@ responsible for *accepting a `propose()` call* with the right payload.
 |---|---|---|
 | Bug fix without matching pattern | `/bug-fix` command post-step | `historical-pattern` |
 | Incident closure | Incident role mode exit (see [`../road-to-role-modes.md`](../road-to-role-modes.md)) | `incident-learning` |
-| D-class eval failure + root cause | [`../road-to-trigger-evals.md`](../road-to-trigger-evals.md) runner | `historical-pattern` |
+| D-class eval failure + root cause | [`../archive/road-to-trigger-evals.md`](../archive/road-to-trigger-evals.md) runner | `historical-pattern` |
 | ≥ 3 review findings on same path | `review-routing` statistics | `domain-invariant` or `historical-pattern` |
 | Explicit user request | `/propose-memory <type>` command | any allowed type |
 

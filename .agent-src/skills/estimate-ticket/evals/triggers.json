@@ -1,0 +1,18 @@
+{
+  "skill": "estimate-ticket",
+  "version": 1,
+  "should_trigger": [
+    "estimate PROJ-123",
+    "how big is this ticket?",
+    "should we split this?",
+    "wie groß ist das Ticket?",
+    "sollen wir das splitten?"
+  ],
+  "should_not_trigger": [
+    "refine this ticket",
+    "plan this feature",
+    "is PROJ-123 a duplicate of anything we already have?",
+    "threat-model this change",
+    "investigate this bug"
+  ]
+}

@@ -77,6 +77,42 @@ class TestCount(unittest.TestCase):
         # Guidelines live in topic subdirectories; recursive walk is required.
         self.assertGreater(update_counts.count("guidelines"), 0)
 
+    def test_personas_non_zero(self):
+        # Personas ship with the Core-6 cast + QA specialist on day one.
+        self.assertGreater(update_counts.count("personas"), 0)
+
+    def test_personas_excludes_readme(self):
+        # The personas/README.md index file must not be counted as a persona.
+        src = Path(update_counts.SRC) / "personas"
+        md_files = [f for f in src.glob("*.md")]
+        readme_present = any(f.name == "README.md" for f in md_files)
+        if readme_present:
+            self.assertLess(
+                update_counts.count("personas"),
+                len(md_files),
+                "personas count must exclude README.md",
+            )
+
+
+class TestRoadmapBaseline(unittest.TestCase):
+    """``road-to-stronger-skills.md`` was moved to ``skipped/`` on 2026-04-23
+    (Q35 superseded), so the previously-live baseline pattern is no longer
+    tracked. We keep a regression guard here to prevent a stale target being
+    re-introduced by accident."""
+
+    def test_stronger_skills_baseline_is_not_tracked(self):
+        target_paths = [rel for rel, _ in update_counts.TARGETS]
+        self.assertNotIn(
+            "agents/roadmaps/road-to-stronger-skills.md",
+            target_paths,
+            msg="Skipped roadmaps must not carry a living counts baseline.",
+        )
+        self.assertNotIn(
+            "agents/roadmaps/skipped/road-to-stronger-skills.md",
+            target_paths,
+            msg="Skipped roadmaps must not carry a living counts baseline.",
+        )
+
 
 class TestEndToEnd(unittest.TestCase):
     """The --check mode must pass on a clean working tree."""

@@ -249,6 +249,18 @@ tasks:
     desc: Check compression quality (headings, code blocks, frontmatter, word count)
     cmd: python3 scripts/check_compression.py
 
+  validate-schema:
+    desc: Validate artefact frontmatter against JSON-Schema (scripts/schemas/)
+    cmd: python3 scripts/validate_frontmatter.py
+
+  roadmap-progress:
+    desc: Regenerate agents/roadmaps-progress.md from all open roadmaps
+    cmd: python3 .augment/scripts/update_roadmap_progress.py
+
+  roadmap-progress-check:
+    desc: Fail if agents/roadmaps-progress.md is stale (for CI)
+    cmd: python3 .augment/scripts/update_roadmap_progress.py --check
+
   quality-report:
     desc: Generate quality score report (per artifact type)
     cmd: python3 scripts/skill_linter.py --report
@@ -256,6 +268,37 @@ tasks:
   first-run:
     desc: Show the recommended first-run experience for new users
     cmd: bash scripts/first-run.sh
+
+  release:bump:
+    desc: |
+      Bump package.json + marketplace.json to {{.CLI_ARGS}} and create a
+      release commit. Usage: task release:bump -- 1.9.0
+      After the commit lands on main, create the matching git tag and push
+      it; the Release Guard workflow asserts package.json and tag agree.
+    cmd: |
+      version="{{.CLI_ARGS}}"
+      if [ -z "$version" ]; then
+        echo "error: version argument required (e.g. task release:bump -- 1.9.0)" >&2
+        exit 2
+      fi
+      npm version "$version" --no-git-tag-version --allow-same-version
+      # Keep .claude-plugin/marketplace.json in sync — lint_marketplace.py
+      # asserts metadata.version == package.json.version.
+      python3 -c "
+      import json, sys
+      from pathlib import Path
+      mp = Path('.claude-plugin/marketplace.json')
+      data = json.loads(mp.read_text())
+      data.setdefault('metadata', {})['version'] = '$version'
+      mp.write_text(json.dumps(data, indent=2) + '\n')
+      "
+      git add package.json .claude-plugin/marketplace.json
+      git commit -m "release: $version"
+      echo
+      echo "Next steps:"
+      echo "  git push"
+      echo "  git tag $version"
+      echo "  git push origin $version"
 
   mcp:render:
     desc: "Render mcp.json → .cursor/mcp.json, .windsurf/mcp.json (add --claude-desktop for user-scope)"
@@ -278,6 +321,10 @@ tasks:
         echo "  ℹ️  no agents/memory/*.yml files — skipping"
       fi
 
+  memory:shadow-report:
+    desc: "Per-type shadow counts from the repo-vs-operational conflict rule (weekly cron target)"
+    cmd: python3 scripts/check_memory.py --shadow-report {{.CLI_ARGS}}
+
   ci:
     desc: Run ALL CI checks locally (must pass before push)
     cmds:
@@ -286,6 +333,7 @@ tasks:
       - task: check-compression
       - task: check-refs
       - task: check-portability
+      - task: validate-schema
       - task: lint-skills
       - task: lint-marketplace
       - task: check-memory

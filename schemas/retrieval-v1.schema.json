@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://event4u.app/schemas/retrieval-v1.schema.json",
+  "title": "Cross-repo retrieval contract v1",
+  "description": "Canonical shape for retrieve() and health() responses shared by agent-config and agent-memory. Source: agents/roadmaps/agent-memory/road-to-retrieval-contract.md.",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/RetrieveResponse" },
+    { "$ref": "#/$defs/HealthResponse" }
+  ],
+  "$defs": {
+    "RetrieveResponse": {
+      "type": "object",
+      "required": ["contract_version", "status", "entries", "slices"],
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": { "type": "integer", "const": 1 },
+        "status": { "enum": ["ok", "partial", "error"] },
+        "entries": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Entry" }
+        },
+        "slices": {
+          "type": "object",
+          "description": "Per-slice outcome keyed by requested memory type.",
+          "additionalProperties": { "$ref": "#/$defs/SliceStatus" }
+        },
+        "errors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SliceError" }
+        }
+      }
+    },
+    "Entry": {
+      "type": "object",
+      "required": ["id", "type", "source", "confidence", "body"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "source": { "enum": ["repo", "operational"] },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "trust": {
+          "description": "Only in `present` mode. Operational backends set this; repo entries omit it.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "body": {
+          "type": "object",
+          "description": "Type-specific payload. Shape is the responsibility of the memory type, not this contract."
+        },
+        "last_validated": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "shadowed_by": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "pattern": "^repo:" }
+          ],
+          "description": "Non-null when an operational entry is suppressed by a repo entry. Value encodes the winning repo id as `repo:<id>`."
+        }
+      }
+    },
+    "SliceStatus": {
+      "type": "object",
+      "required": ["status", "count"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "ok",
+            "timeout",
+            "unknown_type",
+            "misconfigured",
+            "internal"
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of entries contributed by this slice to the top-level `entries` array."
+        }
+      }
+    },
+    "SliceError": {
+      "type": "object",
+      "required": ["type", "code", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "minLength": 1 },
+        "code": {
+          "enum": ["timeout", "unknown_type", "misconfigured", "internal"]
+        },
+        "message": { "type": "string" }
+      }
+    },
+    "HealthResponse": {
+      "type": "object",
+      "required": ["contract_version", "status", "backend_version", "features"],
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": { "type": "integer", "const": 1 },
+        "status": { "enum": ["ok", "degraded", "error"] },
+        "backend_version": { "type": "string", "minLength": 1 },
+        "features": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

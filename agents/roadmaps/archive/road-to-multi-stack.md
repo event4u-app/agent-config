@@ -1,0 +1,270 @@
+# Roadmap: Multi-Stack — from Laravel-complete to Laravel-complete-plus
+
+> The package's **authoring** surface is Laravel-dense. The
+> **analysis** surface already covers Symfony, Next.js, React,
+> Node/Express, Zend/Laminas. This roadmap closes the asymmetry
+> by growing authoring coverage for the non-Laravel stacks —
+> parallel tracks, shared-by-default architecture, portability-strict.
+
+## Prerequisites
+
+- [x] [`road-to-agent-outcomes.md`](road-to-agent-outcomes.md) master frame adopted
+- [x] `project-analysis-{laravel,symfony,nextjs,react,node-express,zend-laminas}` skills shipped — analysis covers all target stacks
+- [x] `augment-portability` rule + `scripts/check_portability.py` enforce strict shared-skill hygiene (no project / domain / stack names leaking into shared skills)
+- [x] `artifact-drafting-protocol` rule active — mandatory for every new stack-specific skill
+- [x] [`road-to-stronger-skills.md`](road-to-stronger-skills.md) pattern catalogue exists — new stack skills ship pattern-compliant from day one, no backport debt
+
+## Context — why this is a parallel-tracks roadmap
+
+Decided in Q18 (2026-04-22): the maintainer wants broad coverage,
+not a single-next-stack commitment. This is **the backlog** for
+all non-Laravel stacks. Prioritization inside the roadmap follows:
+
+1. Maintainer bandwidth.
+2. External demand signals (consumer reports, adoption feedback).
+3. Code-sharing wins (Symfony + plain PHP reuse the most existing
+   `php-coder`, `composer-packages`, `quality-tools` infrastructure).
+
+**Laravel is not frozen.** Laravel authoring skills continue to
+evolve; this roadmap is additive.
+
+## Vision
+
+A user who types "build me an X" in a Symfony, Next.js, or Zend
+repo gets the **same quality of agent support** as a Laravel user
+does today — matching skill density, matching pattern compliance,
+matching portability.
+
+Coverage target per stack, in priority order:
+
+1. **Authoring skill parity** — a stack-specific counterpart for
+   every Laravel-* skill that has a stack equivalent (controllers,
+   services, validation, queues, notifications, mail, scheduling,
+   middleware, UI layer).
+2. **Framework idioms** — stack-specific patterns that have no
+   Laravel equivalent (Symfony Messenger, Next.js RSC boundaries,
+   React Server Components, Zend service manager, Laminas hydrators).
+3. **Tooling integrations** — stack-native test runners, linters,
+   type-checkers (PHPStan for PHP stacks, ESLint/TypeScript/Vitest
+   for JS stacks).
+
+## Non-goals (explicit)
+
+- **No** Laravel de-prioritization — this roadmap does not
+  remove or demote any Laravel skill.
+- **No** mega-skills like `symfony-everything` — one skill per
+  responsibility, same as Laravel decomposition.
+- **No** project-specific content in any stack-specific skill —
+  `check_portability` stays strict.
+- **No** dropping shared skills in favour of stack-specific clones.
+  If `php-coder` covers it, `symfony-php-coder` is not created.
+- **No** framework-version chasing — skills target the actively
+  supported major (e.g. Symfony 7.x, Next.js 14+), plus-minus one
+  major at most. Version-specific branches belong in guidelines,
+  not in separate skills.
+
+## Shared-by-default architecture (locked)
+
+| Category | Policy | Example |
+|---|---|---|
+| Language-level | Shared | `php-coder`, `sql-writing`, `security`, `performance` |
+| Tooling | Shared | `composer-packages`, `github-ci`, `git-workflow`, `quality-tools`, `docker` |
+| Framework-specific | Stack-namespaced | `laravel-validation`, `symfony-messenger`, `nextjs-server-actions`, `zend-service-manager` |
+| Cross-stack pattern | Shared with stack notes | `api-design`, `api-testing`, `logging-monitoring`, `websocket` |
+| Project-specific | Never shipped | belongs in consumer `agents/contexts/` |
+
+A skill is stack-namespaced only when its guidance is false or
+misleading on other stacks. Default bias: shared.
+
+## Tracks
+
+Three parallel tracks. Track ownership per maintainer bandwidth.
+Each track ships in **waves**, smallest useful slice first.
+
+### Track A — Symfony + plain PHP (highest code-sharing)
+
+Rationale: shares `php-coder`, `composer-packages`, `quality-tools`
+infrastructure. Biggest coverage win per unit of drafting effort.
+
+- [-] **Wave A.1 — core authoring**: `symfony` (framework idioms),
+  `symfony-controllers`, `symfony-services` (DI container),
+  `symfony-validation` (constraints, validator component),
+  `symfony-forms`.
+  *(2026-04-22: skipped — each skill is a separate
+  `artifact-drafting-protocol` session. Tracked as Q30 in
+  [`open-questions-2.md`](open-questions-2.md).)*
+- [-] **Wave A.2 — async + jobs**: `symfony-messenger`,
+  `symfony-scheduler`, `symfony-mailer`, `symfony-notifier`. *(Q30)*
+- [-] **Wave A.3 — data + persistence**: `doctrine-orm`,
+  `doctrine-migrations`, `doctrine-dbal` (parallels `eloquent` +
+  `database` + `sql-writing`). *(Q30)*
+- [-] **Wave A.4 — plain PHP**: verify `php-coder`,
+  `composer-packages`, `security`, `api-design` fire cleanly on
+  plain-PHP repos without Laravel context leakage. Fix gaps via
+  guidance in existing skills — no new skills if not needed.
+  *(2026-04-22: Q31 resolved — scaffold a minimal ~50 LOC fixture
+  (single `index.php`, one class, PSR-4 autoload, no Composer
+  package) as the first step of this wave's drafting session,
+  not preemptively. Escape hatch: if a real plain-PHP repo
+  surfaces before A.4 opens, use that instead.)*
+
+### Track B — Frontend (Next.js + React, TypeScript-first)
+
+Rationale: expands audience beyond PHP world; distinct authoring
+stack; largest new-user demographic.
+
+- [-] **Wave B.1 — React core**: `react-components`,
+  `react-hooks`, `react-state-management`, `react-testing`. *(Q30)*
+- [-] **Wave B.2 — Next.js**: `nextjs-app-router`,
+  `nextjs-server-actions`, `nextjs-data-fetching`,
+  `nextjs-rendering-modes` (SSG/SSR/ISR/streaming). *(Q30)*
+- [-] **Wave B.3 — tooling**: `typescript` (if not shared),
+  `eslint`, `vitest` / `jest`, `playwright-testing` already
+  covers E2E. *(Q30)*
+- [-] **Wave B.4 — UI primitives**: `tailwind`, `shadcn-ui`,
+  `radix-ui` — opt-in where the consumer stack uses them. *(Q30)*
+
+### Track C — Zend / Laminas (legacy migration audience)
+
+Rationale: covers the legacy migration audience; lower urgency but
+underserved elsewhere, creates a niche competitive edge.
+
+- [-] **Wave C.1 — analysis-only deepening**: extend
+  `project-analysis-zend-laminas` with migration-path guidance
+  (Zend 1 → 2 → 3, Zend → Laminas, Laminas → Symfony/Laravel). *(Q30)*
+- [-] **Wave C.2 — authoring**: `laminas-mvc`,
+  `laminas-service-manager`, `laminas-hydrators`,
+  `laminas-input-filter` — only if adoption signals justify.
+  *(2026-04-22: adoption-gated — Q32 resolved. Trigger is
+  engagement-based: ≥ 1 concrete PR targeting a Laminas
+  authoring skill, OR ≥ 2 independent issues/Discussions
+  citing a real Laminas authoring use case, measured over
+  2 quarters. Install-count metrics dropped as unmeasurable.
+  See Q32 in [`open-questions-2.md`](open-questions-2.md).)*
+- [-] **Wave C.3 — migration skills**: `legacy-to-modern-php` —
+  pattern for gradual modernization (shared across all PHP tracks).
+  *(Q30)*
+
+## README + AGENTS.md framing (feeds Q19)
+
+The Q19 hero table is the externally visible output of this
+roadmap. State per track:
+
+| Stack | Current | Target |
+|---|---|---|
+| Laravel | ✅ complete | maintain |
+| Plain PHP | 🟡 partial (via shared) | ✅ verified end-to-end |
+| Symfony | 🚧 analysis-only | ✅ Wave A.2 shipped |
+| Next.js | 🚧 analysis-only | ✅ Wave B.2 shipped |
+| React | 🚧 analysis-only | ✅ Wave B.1 shipped |
+| Node/Express | 🚧 analysis-only | 🚧 scheduling TBD |
+| Zend/Laminas | 🚧 analysis-only | 🟡 analysis-plus |
+
+Every coverage promotion updates the Q19 table. Honest state in
+the README is the acceptance test for each wave.
+
+## Phases
+
+### Phase 0 — baseline + policy freeze
+
+- [x] Inventory: each existing `laravel-*` skill mapped to its
+  Symfony / Next.js / React / Zend equivalent (or "no equivalent,
+  shared skill covers it").
+  *(2026-04-22: shipped at
+  [`agents/contexts/multi-stack-inventory.md`](../contexts/multi-stack-inventory.md)
+  — full capability matrix, stack-agnostic list, plain-PHP leakage
+  pass scope, coverage snapshot.)*
+- [-] `check_portability.py` updated with any new stack-keyword
+  blocklists required.
+  *(2026-04-22: no-op until Track A/B/C actually ships a stack skill;
+  then per-wave addition is trivial. Revisit when Wave A.1 opens.)*
+- [x] Skill-namespace convention locked: `<stack>-<capability>`
+  (lowercase, hyphenated). Documented in
+  `guidelines/agent-infra/size-and-scope.md` or adjacent.
+  *(2026-04-22: convention stated in this roadmap's "Track" sections
+  and the inventory context doc; the existing `laravel-*` family is
+  the live reference. No separate guideline needed — one source of
+  truth is cleaner.)*
+
+### Phase 1+ — waves per track
+
+Each wave = one or more PRs. Per-wave discipline:
+
+1. Draft via `artifact-drafting-protocol` per skill.
+2. Pattern compliance per `road-to-stronger-skills.md` tier from
+   first commit — no backport debt.
+3. Cross-links: new skill cited from relevant shared skills
+   (`api-design` cites `symfony-controllers` in its "stack-specific
+   routing" section).
+4. README / AGENTS.md counts bumped via `scripts/update_counts.py`.
+5. Q19 coverage table updated.
+
+## Open questions
+
+- **Ownership** — does each track need a dedicated maintainer, or
+  can the package maintainer run all three? Default: single
+  maintainer, community contributions welcomed per track.
+- **Stack-defaults in `.augmentignore`** — should a Symfony project
+  auto-ignore Laravel-specific skills? Default: no — the package
+  targets *senior* engineers who can pick. Revisit if first-run
+  feedback contradicts this.
+- **Test-runner parity** — do we ship `vitest` and `jest` or pick
+  one? Default: `vitest` as primary (modern default), `jest` as
+  guidance-only in the skill.
+- **Framework-version policy** — explicit support matrix in each
+  stack skill's frontmatter, or shared policy doc? Default: shared
+  policy doc, skills reference it.
+
+## Risks & mitigations
+
+| Risk | Mitigation |
+|---|---|
+| Waves start, never finish (half-covered stack worse than zero) | Every wave ships a coherent slice; the README table reflects state honestly |
+| Portability drift as stack count grows | `check_portability.py` strict; pre-commit hook; CI gate |
+| Maintainer burnout on parallel tracks | Explicit wave-by-wave scope; pause any track without guilt |
+| Skill duplication (e.g. shared `api-design` + stack-specific `symfony-routing`) | Inventory in Phase 0 catches overlap; cross-links are mandatory |
+| JS-stack ecosystem moves faster than PHP | Narrower version policy for Track B; shorter skill descriptions, more guideline-delegation |
+
+## Acceptance criteria
+
+The roadmap is **never fully done** — it's the multi-stack
+backlog. Per-wave acceptance:
+
+- Every new skill passes the linter, is pattern-compliant to its
+  tier, has at least one cross-link from a shared skill.
+- README + AGENTS.md + Q19 coverage table reflect the new state.
+- `check_portability.py` passes; `task ci` green.
+
+## Final status — 2026-04-22
+
+| Item set | Status |
+|---|---|
+| Phase 0 — inventory + namespace convention | ✅ done (inventory at `agents/contexts/multi-stack-inventory.md`; convention frozen) |
+| Phase 0 — `check_portability.py` blocklist update | ⏸ deferred (no-op until Wave B.1 ships first stack skill) |
+| Sequencing (Q30 resolved 2026-04-22) | ✅ Track B first · Wave B.1 pilot · one-wave-per-PR · community PRs after B.1 proves the pattern |
+| **Wave B.1 — React core (pilot)** | 🟡 unblocked — awaiting session allocation |
+| Wave B.2-B.4 — Next.js + tooling + UI primitives | ⏸ deferred (ships after B.1 pattern proven) |
+| Wave A.1-A.4 — Symfony + plain PHP authoring (11 skills) | ⏸ deferred (Track A follows Track B; A.4 fixture scaffolded inline when the wave opens — Q31 resolved 2026-04-22) |
+| Wave C.1 — Zend/Laminas analysis deepening | ⏸ deferred (not adoption-gated; prioritise anytime) |
+| Wave C.2 — Laminas authoring (4 skills) | ⏸ parked (engagement-gated: ≥ 1 PR or ≥ 2 issues over 2 quarters — Q32 resolved 2026-04-22) |
+| Wave C.3 — legacy-to-modern-php migration | ⏸ deferred (not adoption-gated; prioritise anytime) |
+
+This roadmap is intentionally **never fully done** — it is the
+multi-stack backlog. Phase 0 shipped what can ship without user
+input; every wave below requires its own
+`artifact-drafting-protocol` session. **Next action:** open a
+session for Wave B.1 (React core: `react-components`,
+`react-hooks`, `react-state-management`, `react-testing`) — one
+skill per drafting session, one PR for the wave. Roadmap stays
+open.
+
+## See also
+
+- [`open-questions-2.md`](open-questions-2.md) — Q30, Q31, Q32
+- [`agents/contexts/multi-stack-inventory.md`](../contexts/multi-stack-inventory.md) — capability matrix
+- [`open-questions.md`](open-questions.md) — Q18, Q19 (source)
+- [`road-to-stronger-skills.md`](road-to-stronger-skills.md) — pattern compliance baseline new skills inherit
+- [`archive/road-to-personas.md`](archive/road-to-personas.md) — personas cited by stack-specific review skills (shipped 2026-04-22)
+- [`.agent-src.uncompressed/rules/augment-portability.md`](../../.agent-src.uncompressed/rules/augment-portability.md) — portability gate
+- [`.agent-src.uncompressed/rules/artifact-drafting-protocol.md`](../../.agent-src.uncompressed/rules/artifact-drafting-protocol.md) — mandatory per new stack skill
+- [`scripts/check_portability.py`](../../scripts/check_portability.py) — enforcement

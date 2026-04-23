@@ -1,11 +1,11 @@
 # Agent Config — Governed Agent System
 
-Teach your AI agents Laravel, PHP, testing, Git workflows, and **90+ more skills** — with quality guardrails built in.
+Teach your AI agents Laravel, PHP, testing, Git workflows, and **120+ more skills** — with quality guardrails built in.
 
 > Your agent learns to write Laravel code, run tests, create PRs, fix CI — and follows your team's coding standards while doing it.
 
 <p align="center">
-  <strong>100 Skills</strong> · <strong>36 Rules</strong> · <strong>54 Commands</strong> · <strong>37 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>124 Skills</strong> · <strong>44 Rules</strong> · <strong>67 Commands</strong> · <strong>46 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -73,6 +73,44 @@ Install directly in your agent for global, cross-project use:
 
 ---
 
+## 2-minute demo: `/implement-ticket`
+
+The flagship command. Drives a ticket end-to-end through a fixed
+linear flow — and **blocks on ambiguity instead of guessing**.
+
+```
+/implement-ticket PROJ-123
+```
+
+The agent runs this sequence:
+
+```
+refine → memory → analyze → plan → implement → test → verify → report
+```
+
+- **Refines** the ticket if acceptance criteria are vague.
+- **Queries memory** for past decisions, invariants, incidents.
+- **Plans** the change; you confirm before any file is touched.
+- **Implements** under `minimal-safe-diff` + `scope-control` — no
+  drive-by edits.
+- **Runs tests** (targeted first, full suite on success).
+- **Reviews** the diff through four judges (bugs, security,
+  tests, code quality).
+- **Reports** a copyable markdown block with changes, verdicts,
+  and follow-ups — then stops. `/commit` and `/create-pr` are
+  suggestions, never run automatically.
+
+If any step hits ambiguity, the flow halts with numbered options
+so you decide — never a silent guess. Persona comes from
+`.agent-settings.yml` (`roles.active_role`): `senior-engineer`
+(default), `qa` (widens to the full test suite), or `advisory`
+(plan-only, skips implementation).
+
+→ [Command reference](.agent-src/commands/implement-ticket.md) ·
+  [Flow contract](agents/contexts/implement-ticket-flow.md)
+
+---
+
 ## What your agent is asked to do
 
 The package ships rules and skills that guide the agent toward these
@@ -88,6 +126,39 @@ description of intent — not a guarantee of output.
 | Skip quality checks | Run PHPStan, Rector, ECS and fix reported errors |
 | Open PRs without context | Produce structured PR descriptions from Jira tickets |
 | Claim "done" without proof | Verify with real execution before claiming "done" |
+
+---
+
+## What this package is — and what it isn't
+
+`agent-config` is a **content layer** — skills, rules, commands, and
+guidelines — distributed via Composer and npm and projected into every
+supported AI tool's native config format. It follows the
+[Agent Skills open standard](https://agentskills.io).
+
+It is **not** an agent runtime. The agent loop, the LLM dispatcher, and
+tool orchestration stay with the host tool (Claude Code, Augment Code,
+Cursor, Cline, Windsurf, Gemini CLI, GitHub Copilot). Think of this
+package as a playbook and style guide for those tools — not a
+replacement for them.
+
+| In scope | Out of scope |
+|---|---|
+| Skills, rules, commands, guidelines | Agent loop / LLM dispatcher |
+| Multi-tool projection + compression pipeline | Execution engine inside the package |
+| Memory helpers (`memory-add`, `memory-promote`, query scripts) | Cross-tool observability dashboard |
+| Linters, CI, frontmatter validation | Runtime GUI / web dashboard |
+| Skill orchestration via markdown citations + deterministic helpers | Opinionated skill-resolver algorithm |
+
+Frameworks like LangChain or CrewAI are **runtimes**; this package
+sits one layer above them — it tells whichever agent you already use
+how to behave, not how to execute.
+
+Example of what *is* in scope: every artefact's frontmatter validates
+against a JSON-Schema under [`scripts/schemas/`](scripts/schemas/)
+([contract](agents/docs/frontmatter-contract.md)), enforced by
+`task validate-schema` in CI. Runtime validation inside a live agent
+session is explicitly not.
 
 ---
 
@@ -167,7 +238,7 @@ can prioritize the right skills for extraction.
 | [`/jira-ticket`](.agent-src/commands/jira-ticket.md) | Read ticket from branch, implement feature |
 | [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
 
-→ [Browse all 64 commands](.agent-src/commands/)
+→ [Browse all 67 commands](.agent-src/commands/)
 
 ---
 
@@ -192,7 +263,7 @@ Every developer gets the same behavior. No per-user setup needed.
 native slash-commands)
 
 > **What this means in practice:** Augment Code and Claude Code get the full
-> package (rules + 122 skills + 64 native commands). Cursor, Cline, Windsurf,
+> package (rules + 124 skills + 67 native commands). Cursor, Cline, Windsurf,
 > Gemini CLI, and GitHub Copilot only get the **rules** natively; skills and
 > commands are available to them as documentation the agent can read, not as
 > first-class features.

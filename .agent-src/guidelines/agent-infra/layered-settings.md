@@ -108,6 +108,38 @@ pattern (e.g. `*.yml` in a nested folder) would otherwise match.
 - **`config-agent-settings`** is the single writer for both files.
   Other commands MUST delegate — no ad-hoc YAML edits.
 
+## Persona-list merge semantics
+
+Persona configuration does **not** follow the simple "higher layer
+wins" rule — lists merge with explicit override and ignore hooks.
+
+| Key | Layer | Role |
+|---|---|---|
+| `personas.default` | project | Team default cast (list of ids) |
+| `personas.specialists.auto_include` | project | Specialists auto-added on every multi-lens run |
+| `personas.override` | developer | Full replacement of `personas.default` for this developer (empty = inherit) |
+| `personas.ignore` | developer | Ids dropped from the effective cast |
+| `.augmentignore` | workstation | Persona files physically hidden from the agent |
+
+**Resolution order** for the effective cast of a multi-lens skill:
+
+1. Start with `personas.default` from the project file.
+2. If `personas.override` is non-empty, **replace** the list (not merge).
+3. Add every id from `personas.specialists.auto_include`.
+4. Remove every id from `personas.ignore`.
+5. Remove every id whose file is matched by `.augmentignore`.
+6. If the skill's own frontmatter pins `personas: [...]`, that wins
+   over all of the above — the skill is the authority for its own
+   cast.
+
+An id removed in step 4 or 5 stays **invokable** via explicit
+`--personas=<id>` on the skill invocation. Ignore hides the id from
+the default cast; it does not blacklist it.
+
+If the project locks `personas.default` via `locked_keys`, steps 2
+and 4 are ignored with a one-line warning — the developer cannot
+narrow a team-locked cast.
+
 ## Anti-patterns
 
 - **Do NOT** commit `.agent-settings.yml`. It contains developer

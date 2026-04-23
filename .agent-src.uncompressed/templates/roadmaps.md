@@ -24,6 +24,10 @@ Templates for roadmap files stored in `agents/roadmaps/` or `app/Modules/{Module
     - `agents/roadmaps/skipped/` — decision against pursuit; typically 0 items `[x]` (superseded, scope rejected)
 
     See the `roadmap-management` skill for the exact trigger matrix and user-confirmation flow.
+13. **No tags, releases, or version numbers.** Roadmaps describe work, not shipping.
+    Never assign version suffixes to phases (`Phase 1 — v1.8.0`), never write
+    "Target release: X.Y.Z", never plan git tags. Release and tag decisions
+    belong to the user and are taken outside the roadmap.
 
 ---
 

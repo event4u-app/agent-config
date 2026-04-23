@@ -21,6 +21,27 @@ If not, ask:
 💡 What's your idea? Describe it briefly — one sentence is enough to start.
 ```
 
+### 1b. Refinement hint — detect ticket-shaped input
+
+Before entering brainstorm mode, check whether the input looks like an
+**existing ticket** rather than a fresh idea. If any of the following
+match, surface the hint below and let the user pick:
+
+- A Jira/Linear URL is present (`https://.../browse/[A-Z]+-[0-9]+`)
+- The current branch name contains a ticket key (`[A-Z]+-[0-9]+`)
+- The pasted text contains structured AC bullets (`- [ ]`, "Acceptance Criteria", "AC:")
+
+Prompt:
+```
+🎫 Looks like you're working with an existing ticket, not a fresh idea.
+
+1. Use `/refine-ticket` — rewrites the ticket + surfaces Top-5 risks + persona voices
+2. Continue brainstorming here — I'll treat it as a new idea to explore
+```
+
+If the user picks 1, hand off to `/refine-ticket` with the same input. If 2,
+continue with Step 2.
+
 ### 2. Gather external context
 
 **Auto-detect ticket from branch:**

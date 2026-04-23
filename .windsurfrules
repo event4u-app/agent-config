@@ -1181,37 +1181,65 @@ creating a new file.
 
 # Language and Tone
 
-## Personalization
-
-Read `personal.user_name` from `.agent-settings.yml`. If empty, ask the user for their first name at the
-start of the first interaction, save it, and use it from then on. Address the user by name
-where it feels natural — not in every sentence.
-
-## Conversation language — Iron Law
+## Iron Law — mirror the user's language, ALWAYS
 
 ```
 MIRROR THE LANGUAGE OF THE USER'S LAST MESSAGE. ALWAYS.
+BEFORE SENDING ANY REPLY, RUN THE PRE-SEND GATE BELOW.
+A REPLY IN THE WRONG LANGUAGE IS A RULE VIOLATION, NOT A SLIP.
 ```
 
+**Overrides** conversation momentum, tool-output habits, convenience.
+First thing to check on every reply, last thing to check before sending.
+
+### Pre-send gate — MANDATORY before every reply
+
+Run silently **before** emitting any tokens:
+
+1. **Detect** — language of user's last message.
+   German signals: "ich", "Du", "nicht", "warum", "wie", "ist", umlauts.
+   English signals: "I", "you", "is", "the", "how".
+   Mixed → mirror the **dominant** language; tie → German wins (project default).
+2. **Check** — is drafted prose (not code, not file contents) in that language?
+3. **Rewrite** — if no, rewrite whole prose before sending. No exceptions, no
+   "just this sentence", no "the technical term is English anyway".
+4. **Confirm** — first sentence must be in target language. No English opener
+   before switching mid-paragraph.
+
+### The rule, spelled out
+
 - User writes German → **MUST** respond in German (informal "Du", never "Sie").
+  "Du" capitalized at sentence start, lowercase otherwise.
 - User writes English → respond in English.
-- User switches mid-conversation → switch with them on the very next reply.
-- Code blocks, command output, and file contents stay in their native language
-  (see `.md` section below). Only the **prose around them** mirrors the user.
+- User switches mid-conversation → switch on the **very next** reply. No
+  grace period, no "let me finish this thought in the old language".
+- Code blocks, command output, file contents, quoted tool output stay in
+  their native language. Only the **prose around them** mirrors the user.
 - "I've been answering in English for a while" is NOT a reason to keep going.
-  The trigger is the **latest user message**, not conversation momentum.
+  Trigger is the **latest user message**, not conversation momentum.
+- Numbered option lists (per `user-interaction`) mirror the user's language —
+  `.md` source is English, rendered reply is translated at runtime.
 
-### Self-check before sending any reply
+### When the user calls out a language slip
 
-1. What language is the user's last message in?
-2. Is my reply prose in the same language?
-3. If no → rewrite before sending. No exceptions, no "just this once".
+1. Acknowledge **once**, briefly, in the correct language ("Entschuldigung" /
+   "Sorry"). One sentence, no excuses.
+2. Switch immediately on the same reply.
+3. Do **not** re-explain the mistake in the wrong language.
+4. Do **not** promise "from now on" — just do it. Only behaviour changes
+   prove compliance.
+5. If user asks to harden the rule, harden it on this turn — don't defer.
 
-### Recovery
+### Failure modes to watch for
 
-If you catch yourself replying in the wrong language (or the user points it
-out): acknowledge briefly in the correct language, switch immediately, do
-**not** re-explain the mistake in the wrong language.
+- Drafting reply in English first, then "translating the intro" → English
+  phrasing with German words. Draft in target language from the first token.
+- Copy-pasting English option labels from `.md` sources without translating.
+- Mixing languages inside a table or bullet list because "the technical term
+  is English" — surrounding prose must still mirror. Keep proper nouns and
+  code identifiers as-is; translate everything else.
+- Assuming English because "the codebase is English" — codebase language ≠
+  conversation language.
 
 ## Other language rules
 
@@ -1389,6 +1417,65 @@ intentionally deferred and reference the break-glass commit in its
 description.
 
 See also: `scope-control` · `downstream-changes` · `think-before-action` · `preservation-guard` · `verify-before-complete`.
+
+---
+
+# Missing Tool Handling
+
+When a CLI tool is needed and **not installed** (`command not found`,
+`which X` empty), **STOP and ask** before working around it or installing it.
+
+## The rule
+
+- **Never install silently.** Installing changes the user's system —
+  requires explicit permission (`scope-control`).
+- **Never silently work around** a missing tool with a brittle substitute
+  (awk for YAML, `grep` for JSON, string splicing) when a proper tool is
+  the standard answer. The workaround hides the dependency.
+- **Ask with numbered options** (`user-interaction`). State the tool, why
+  it fits, the install command, and the workaround cost.
+
+## When it applies
+
+- Shell returns `command not found` for a tool the task genuinely needs
+  (yq, jq, rtk, gh, docker, mkcert, terraform, …).
+- A skill or spike needs the idiomatic tool but it's absent locally.
+- You're about to substitute a verbose script for a single tool call
+  because the tool isn't there.
+
+## When it does NOT apply
+
+- Nice-to-have — clean substitute already present (e.g. `jq` available →
+  no `yq` needed just for JSON).
+- Tool is forbidden by project policy (check `scope-control` and
+  tool-allowlists first).
+- Missing library dependency → use `composer`, `npm`, `pip` per package
+  rules, still with explicit permission.
+
+## How to ask
+
+```
+> `yq` is not installed. It's the cleanest way to parse the ticket YAML
+> in the Bash prototype — the alternative is shelling out to python3,
+> which adds ~50ms to every run.
+>
+> 1. Install via `brew install yq` (recommended — one-time, stays on PATH)
+> 2. Use the python3 fallback — slower but no install needed
+> 3. Drop YAML — convert fixtures to JSON, use `jq` only
+> 4. Skip this path — I propose a different approach
+```
+
+After the user picks: if **install**, wait for confirmation or run the
+documented command only if explicitly authorised this turn. If
+**workaround**, record the decision in the artefact (comment or ADR).
+
+## Capture the learning
+
+If the same tool keeps missing across tasks, flag it in the project's
+setup docs or `.agent-settings.yml` prerequisites.
+
+See also: `scope-control` · `ask-when-uncertain` · `user-interaction` ·
+`tool-safety`.
 
 ---
 
@@ -1651,7 +1738,22 @@ Look, in order, for:
 - `.github/historical-bug-patterns.yml` (or
   `agents/historical-bug-patterns.yml`)
 
-If neither file exists, skip this rule and rely on
+If neither exists, fall back to engineering-memory via
+[`memory-access`](../guidelines/agent-infra/memory-access.md):
+
+```python
+from scripts.memory_lookup import retrieve
+extra = retrieve(
+    types=["ownership", "historical-patterns"],
+    keys=<changed file paths>,
+    limit=5,
+)
+```
+
+Curated memory (`agents/memory/ownership.yml`,
+`agents/memory/historical-patterns.yml`) shares the schema with the
+project-local YAMLs and is merged into the routing output. If both
+memory and project YAMLs are absent, skip this rule and rely on
 [`reviewer-awareness`](reviewer-awareness.md) defaults. **Do not invent
 owners or patterns** from context.
 
@@ -1814,6 +1916,58 @@ same diff), not from seniority.
 
 ---
 
+# Roadmap Progress Sync
+
+## Rule
+
+**CRITICAL — ZERO TOLERANCE:** Whenever you change checkbox state in a
+roadmap file (`agents/roadmaps/*.md`, module or package equivalents)
+you MUST run `task roadmap-progress` **in the same response** — not
+later, not batched across sessions, not "at the end of the roadmap".
+
+`agents/roadmaps-progress.md` is the read-only dashboard. Every
+unsynced edit makes it lie to the next reader.
+
+**Completion = archival, same response.** When the edit takes a
+roadmap to `count_open == 0` (every item is `[x]`, `[~]`, or `[-]`),
+`git mv` it into `agents/roadmaps/archive/` (or `skipped/` if no
+`[x]` at all) **before** regenerating. A 100%-complete roadmap left
+in `agents/roadmaps/` is a rule violation. See `roadmap-management`
+for the archive vs skipped decision table.
+
+## Triggers
+
+| Edit | Must run, same response |
+|---|---|
+| Mark step `[x]`, `[~]`, `[-]`, or unmark back to `[ ]` | `task roadmap-progress` |
+| Add, rename, or remove a phase | `task roadmap-progress` |
+| Create a new roadmap file | `task roadmap-progress` |
+| **Last `[ ]` flips** — roadmap reaches `count_open == 0` | `git mv` → `archive/` (or `skipped/`) **then** `task roadmap-progress` |
+| Move roadmap between `roadmaps/` ↔ `archive/` ↔ `skipped/` | `task roadmap-progress` |
+
+**Batching:** multiple checkbox edits in one response → a **single**
+`task roadmap-progress` call at the end is enough. If one closes a
+roadmap, archive it first, then run the single regen. But the
+response must not end without it.
+
+## Why a rule, not just a skill tip
+
+The `roadmap-management` skill documents the command in several
+places, but skill body text is easy to miss under procedure pressure.
+A rule collapses the constraint into one line the model cannot skip:
+"checkbox edit → `task roadmap-progress` — same response".
+
+## Do NOT
+
+- Do NOT edit `agents/roadmaps-progress.md` by hand — always regenerate.
+- Do NOT defer regen to "next commit" or "before push" — same response.
+- Do NOT rely on `task ci` / `task roadmap-progress-check` as first line of defence — CI is last-line, not real-time.
+- Do NOT skip regen because "only one checkbox changed" — the dashboard aggregates counts and phase percentages that shift on single edits.
+- Do NOT leave a 100%-complete roadmap in `agents/roadmaps/` "for review" — archive same response, ask the user afterwards if needed, not before.
+- Do NOT regenerate the dashboard before the `git mv` when a roadmap closes — otherwise it reappears in "Open roadmaps".
+
+---
+
 # Role Mode Adherence
 
 Auto-activates when `.agent-settings.yml` sets `roles.active_role` to
@@ -1955,7 +2109,29 @@ If a skill's execution type or handler is unclear:
 - New or newly modified code MUST follow all coding rules.
 - Stay within the established project structure and conventions.
 - When unsure about the scope, ask the user.
+
+## Git operations — permission-gated
+
+The user decides the git shape of the work.
+
 - NEVER commit, push, merge, rebase, or force-push without explicit user permission.
+- NEVER create, switch, or delete a branch without explicit user permission.
+  Includes spike, scratch, throwaway, worktree branches.
+- NEVER create, close, reopen, or retarget a pull request without explicit
+  user permission.
+- NEVER push a tag or create a release without explicit user permission.
+- If a task seems to need a separate branch or PR, STOP and **brief
+  first, ask second**. The brief MUST cover, in order:
+  1. **Why** — what the new branch solves that the current one cannot.
+  2. **What** — files touched, experiments run, expected duration.
+  3. **How it continues** — merge back, cherry-pick, throwaway, PR
+     target, how the current branch is protected meanwhile.
+  Then present numbered options with "stay on current branch" as
+  default. User decides. Do NOT branch first and explain later.
+
+"Explicit permission" = the user said so this turn or gave a standing
+instruction they have not revoked. Earlier permission for another op
+does not carry over.
 
 ---
 
@@ -1995,9 +2171,26 @@ STOP writing code. Run the matching analysis skill first:
 | Data flows to logs / API / external | `data-flow-mapper` |
 | Wide refactor of security-sensitive code | `blast-radius-analyzer` |
 
-Capture the output (abuse cases, missing controls, required negative tests) —
-implement against that list, not against your first instinct. Never silently
-fall back to editing without the analysis; if it is blocked, ask the user.
+**Before the analysis, consult memory for prior incidents** on this
+surface. Via [`memory-access`](../guidelines/agent-infra/memory-access.md):
+
+```python
+from scripts.memory_lookup import retrieve
+priors = retrieve(
+    types=["incident-learnings", "historical-patterns"],
+    keys=<touched file paths>,
+    limit=3,
+)
+```
+
+A prior security incident on the same path is the cheapest input to a
+threat pass — cite any matching `id` so the required control or
+regression test ships with the fix.
+
+Capture the analysis output (abuse cases, missing controls, required
+negative tests) — implement against that list, not your first instinct.
+Never silently fall back to editing without the analysis; if blocked,
+ask the user.
 
 ## When NOT to fire
 
@@ -2033,6 +2226,10 @@ See also: `threat-modeling` · `authz-review` · `data-flow-mapper` · `minimal-
   - Smaller (≈60 lines) is strongly preferred
 
 → Size limits and details: `.augment/guidelines/agent-infra/size-and-scope.md`
+
+→ Frontmatter contract (required/optional keys per type):
+[`agents/docs/frontmatter-contract.md`](../../../agents/docs/frontmatter-contract.md).
+Schemas live in `scripts/schemas/` and are enforced by `task validate-schema`.
 
 ---
 
@@ -2106,6 +2303,14 @@ Every skill must answer four questions. If ANY answer is weak, the skill is not 
 ## Required Sections
 
 Every skill MUST have: `When to use`, `Procedure`, `Gotcha`, `Output format`, `Do NOT`.
+
+## Frontmatter Contract
+
+Every skill's YAML frontmatter MUST validate against `scripts/schemas/skill.schema.json`.
+See [`agents/docs/frontmatter-contract.md`](../../../agents/docs/frontmatter-contract.md)
+for the human-readable contract across all artefact types. Violations are
+reported by `scripts/skill_linter.py` as `schema_<rule>` errors and fail
+`task validate-schema` / `task ci`.
 
 ## Description Triggering
 
@@ -2237,6 +2442,25 @@ Work like a real developer. Follow this order strictly:
 5. **Verify** — Run tests, hit endpoint, check UI. Real execution, not "should work".
 
 Skipping steps 1-3 = #1 cause of wrong implementations and wasted retries.
+
+## Consult memory before editing
+
+Before writing code for the touched paths, call
+[`memory-access`](../guidelines/agent-infra/memory-access.md):
+
+```python
+from scripts.memory_lookup import retrieve
+priors = retrieve(
+    types=["architecture-decisions", "domain-invariants"],
+    keys=<touched paths>,
+    limit=3,
+)
+```
+
+A matching `architecture-decision` explains *why* the current shape
+exists; a matching `domain-invariant` is a hard constraint you cannot
+violate. Cite the `id` if a match influences the plan. No match → no
+overhead; proceed.
 
 ## Verify with real tools
 

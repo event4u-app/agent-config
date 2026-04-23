@@ -1,0 +1,8 @@
+{
+  "contract_version": 1,
+  "status": "ok",
+  "backend_version": "0.0.0-file",
+  "features": [
+    "file-fallback"
+  ]
+}
