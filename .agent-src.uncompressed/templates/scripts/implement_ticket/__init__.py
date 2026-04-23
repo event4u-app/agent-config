@@ -29,6 +29,7 @@ from .delivery_state import (
     agent_directive,
     is_agent_directive,
 )
+from .cli import DEFAULT_STATE_FILE, main
 from .dispatcher import STEP_ORDER, dispatch
 from .persona_policy import (
     DEFAULT_PERSONA,
@@ -40,6 +41,7 @@ from .persona_policy import (
 __all__ = [
     "AGENT_DIRECTIVE_PREFIX",
     "DEFAULT_PERSONA",
+    "DEFAULT_STATE_FILE",
     "DeliveryState",
     "Outcome",
     "PersonaPolicy",
@@ -50,5 +52,6 @@ __all__ = [
     "dispatch",
     "is_agent_directive",
     "known_personas",
+    "main",
     "resolve_policy",
 ]
