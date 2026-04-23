@@ -385,18 +385,40 @@ under `.agent-src.uncompressed/{skills,rules,commands,guidelines,personas,contex
 | `task check-compression` | `python3 scripts/check_compression.py` |
 | `task validate-schema` | `python3 scripts/validate_frontmatter.py` |
 | `task counts-check` | `python3 scripts/update_counts.py --check` |
-| `task roadmap-progress` | `python3 .augment/scripts/update_roadmap_progress.py` |
+| `task roadmap-progress` | `./agent-config roadmap:progress` |
 | `task ci` | run each underlying script directly |
 
 Task stays a convenience for package maintainers (`Taskfile.yml`,
 `AGENTS.md`, README). Artefact files must assume Task is absent.
 
+## Consumer CLI — `./agent-config`
+
+A subset of scripts is exposed through a project-local CLI wrapper
+`./agent-config` (written into the project root by the installer,
+gitignored). Artefacts MUST prefer the CLI over raw `python3 scripts/…`
+paths for every command it covers — raw paths only resolve inside the
+package repo, in consumer projects the scripts live under
+`node_modules/` or `vendor/`.
+
+| ❌ Forbidden in artefacts | ✅ Portable |
+|---|---|
+| `python3 scripts/mcp_render.py` | `./agent-config mcp:render` |
+| `python3 scripts/mcp_render.py --check` | `./agent-config mcp:check` |
+| `python3 .augment/scripts/update_roadmap_progress.py` | `./agent-config roadmap:progress` |
+| `python3 .augment/scripts/update_roadmap_progress.py --check` | `./agent-config roadmap:progress-check` |
+| `bash scripts/first-run.sh` | `./agent-config first-run` |
+
+Commands not covered by the CLI stay as direct script invocations
+(e.g. `bash scripts/compress.sh --sync`) — maintainer-only, not
+reachable from a consumer project anyway.
+
 ## Enforcement
 
 `scripts/check_portability.py` scans `.augment/`, `.agent-src.uncompressed/`,
 and the package root `AGENTS.md` + `.github/copilot-instructions.md` for
-forbidden identifiers **and** for any `task <name>` invocation inside
-artefact files. Runs in CI — must pass before any PR.
+forbidden identifiers, for any `task <name>` invocation, and for direct
+script invocations that bypass the `./agent-config` CLI. Runs in CI —
+must pass before any PR.
 
 ---
 
@@ -2022,12 +2044,13 @@ for the archive vs skipped decision table.
 ## How to regenerate
 
 ```bash
-python3 .augment/scripts/update_roadmap_progress.py
+./agent-config roadmap:progress
 ```
 
-npm / Composer / Make / Taskfile wrappers are consumer-project
-optional; the direct python path always works — `.augment/scripts/`
-ships via postinstall symlinks.
+The `./agent-config` wrapper is written into the project root by the
+installer and delegates to the master CLI inside
+`node_modules/@event4u/agent-config/` or `vendor/event4u/agent-config/`.
+No global tooling required.
 
 ## Triggers
 
