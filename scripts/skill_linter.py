@@ -30,6 +30,14 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Iterable, List, Literal, Optional
 
+# Sibling module — stdlib-only frontmatter schema validator.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from validate_frontmatter import (  # noqa: E402
+    parse_frontmatter as parse_frontmatter_for_schema,
+    load_schema,
+    validate as validate_against_schema,
+)
+
 Severity = Literal["error", "warning", "info"]
 ArtifactType = Literal["skill", "rule", "command", "guideline", "persona", "unknown"]
 
@@ -1555,6 +1563,39 @@ def lint_governance(path: Path, text: str, artifact_type: str, repo_root: Path |
                             f"Artifact detected as '{artifact_type}' but not in "
                             f"expected location ({expected_loc})"))
 
+    return issues
+
+
+# Artefact types that carry a JSON-Schema contract for their frontmatter.
+_SCHEMA_ARTEFACT_TYPES = {"skill", "rule", "command", "persona"}
+
+
+def lint_frontmatter_schema(path: Path, text: str, artifact_type: str) -> List[Issue]:
+    """Validate the frontmatter of an artefact against its JSON-Schema.
+
+    Schemas live in ``scripts/schemas/``. One schema per artefact type;
+    see ``agents/docs/frontmatter-contract.md`` for the human-readable
+    contract the schemas encode. Guidelines have no frontmatter and are
+    skipped.
+    """
+    if artifact_type not in _SCHEMA_ARTEFACT_TYPES:
+        return []
+    try:
+        schema = load_schema(artifact_type)
+    except FileNotFoundError:
+        return []
+
+    data, _ = parse_frontmatter_for_schema(text)
+    if data is None:
+        # Other linter checks already emit a missing-frontmatter error for
+        # rules/commands/personas; avoid double-reporting here.
+        return []
+
+    issues: List[Issue] = []
+    for error in validate_against_schema(data, schema):
+        code = f"schema_{error.rule}"
+        message = f"{error.path} – {error.message}"
+        issues.append(Issue("error", code, message))
     return issues
 
 
