@@ -262,14 +262,12 @@ is rewritten by `.augment/scripts/update_roadmap_progress.py`.
 Command:
 
 ```bash
-python3 .augment/scripts/update_roadmap_progress.py           # rewrite the dashboard
-python3 .augment/scripts/update_roadmap_progress.py --check   # CI: fail if stale
+./agent-config roadmap:progress           # rewrite the dashboard
+./agent-config roadmap:progress-check     # CI: fail if stale
 ```
 
-Taskfile projects get two shortcuts: `task roadmap-progress` and
-`task roadmap-progress-check`. Consumer projects without Task use the
-direct python invocation — `.augment/scripts/` is shipped via postinstall
-symlinks and always available.
+The `./agent-config` wrapper is written into the project root by the
+installer and always works — no global tooling or task runner required.
 
 The dashboard is a **read-only snapshot**. Do not edit it by hand — regenerate it.
 

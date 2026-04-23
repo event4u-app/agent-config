@@ -268,9 +268,65 @@ makes the answer unambiguous, proceed — but state the assumption explicitly.
 
 Be specific. Present numbered options (per `user-interaction`). Keep it short.
 
-- Simple (binary, small): multiple at once, numbered
-- Complex (needs thinking): one at a time, wait for answer
-- Handoff (model switch): ask LAST
+### The Iron Law — one question at a time, by default
+
+```
+DEFAULT: ONE QUESTION PER TURN. WAIT FOR THE ANSWER. THEN ASK THE NEXT.
+```
+
+Dumping a list of 3+ design questions on the user is a rule violation,
+not a style choice. The user must not have to scroll through a wall of
+numbered options to reply. Reply length in the user's last message is
+the signal: if they answered with a short number or word, keep future
+questions equally short. One question, ask, wait, read, decide, ask
+the next — even if it feels slower.
+
+### The only exception — truly trivial, truly independent
+
+Asking **multiple questions in one turn** is allowed **only** when ALL
+of the following hold:
+
+- Each question has a **binary or 2–3-option** answer.
+- Answers are **fully independent** — answer to Q1 does not change
+  Q2's options, Q3's options, etc.
+- The whole block fits on **one screen** (max 3 questions, max ~12
+  lines of options total).
+- None of the questions is a **design decision, architecture choice,
+  scope decision, or naming decision**.
+
+If any of these fail, ask ONE question, wait, then ask the next.
+
+### Hard "ask one at a time" triggers
+
+| Situation | Why serial, not batch |
+|---|---|
+| Design / architecture decisions | Answer to Q1 reframes Q2 |
+| Naming / command-syntax / API shape | Later choices depend on it |
+| Scope / PR boundaries | Changes what the other questions even mean |
+| Tool / library selection | Downstream choices branch from it |
+| "Which approach: A vs B vs C" | Each answer opens a different follow-up |
+| Any question the user has to **think** about, not just pick | Thinking load compounds when stacked |
+
+### Self-check before asking
+
+Before sending a turn with questions, ask yourself:
+
+1. Is this ONE question, or more?
+2. If more — does EVERY question pass all four "only exception"
+   conditions above?
+3. Would the user have to scroll to see all options?
+4. Is the answer to Q1 going to change Q2's options?
+
+If any answer is "yes / no / not sure" → collapse to ONE question
+and send. Hold the rest for the next turn.
+
+### Ordering & handoff
+
+- **Model switch / handoff**: ask LAST (per `model-recommendation`).
+- **Blocking clarification** (can't proceed without it): ask FIRST,
+  alone, before any research or planning output.
+- **Optional refinement**: don't ask at all — state the assumption
+  and proceed.
 
 ## Creating new agent artifacts
 
@@ -307,11 +363,40 @@ consumer-specific content pollutes downstream or misleads agents.
 - Always ask when editing package files: "Would this still make sense
   in a completely different project?"
 
+## Runtime invocations — no `task` commands
+
+Skills, rules, commands, guidelines, personas, contexts shipped by this
+package run in **consumer projects** that may not have Task installed.
+NEVER reference a `task <name>` invocation inside any artefact file
+under `.agent-src.uncompressed/{skills,rules,commands,guidelines,personas,contexts}/`
+(or the compressed mirror under `.agent-src/`). Use the direct script:
+
+| ❌ Forbidden | ✅ Portable |
+|---|---|
+| `task sync` | `bash scripts/compress.sh --sync` |
+| `task sync-check` | `bash scripts/compress.sh --check` |
+| `task sync-check-hashes` | `bash scripts/compress.sh --check-hashes` |
+| `task sync-changed` | `bash scripts/compress.sh --changed` |
+| `task sync-mark-done -- X` | `bash scripts/compress.sh --mark-done X` |
+| `task generate-tools` | `python3 scripts/compress.py --generate-tools` |
+| `task lint-skills` | `python3 scripts/skill_linter.py --all` |
+| `task check-refs` | `python3 scripts/check_references.py` |
+| `task check-portability` | `python3 scripts/check_portability.py` |
+| `task check-compression` | `python3 scripts/check_compression.py` |
+| `task validate-schema` | `python3 scripts/validate_frontmatter.py` |
+| `task counts-check` | `python3 scripts/update_counts.py --check` |
+| `task roadmap-progress` | `python3 .augment/scripts/update_roadmap_progress.py` |
+| `task ci` | run each underlying script directly |
+
+Task stays a convenience for package maintainers (`Taskfile.yml`,
+`AGENTS.md`, README). Artefact files must assume Task is absent.
+
 ## Enforcement
 
 `scripts/check_portability.py` scans `.augment/`, `.agent-src.uncompressed/`,
 and the package root `AGENTS.md` + `.github/copilot-instructions.md` for
-forbidden identifiers. Part of `task ci` — must pass before any PR.
+forbidden identifiers **and** for any `task <name>` invocation inside
+artefact files. Runs in CI — must pass before any PR.
 
 ---
 
@@ -346,7 +431,7 @@ Direct edits to `.agent-src/` break compression hashes, cause CI failures, and c
 
 1. **Create or edit** the file in `.agent-src.uncompressed/{path}`
 2. **Do NOT auto-compress.** Continue working.
-3. **Before commit/push:** Check if compression is needed (`task sync-changed`).
+3. **Before commit/push:** Check if compression is needed (`bash scripts/compress.sh --changed`).
    If files need compression, ask the user:
    ```
    > 📦 {N} .agent-src files need compression before commit.
@@ -354,9 +439,9 @@ Direct edits to `.agent-src/` break compression hashes, cause CI failures, and c
    > 1. Compress now — run /compress
    > 2. Later — commit without compression
    ```
-4. If compressing: run `/compress` command, then `task sync-mark-done -- {path}`
+4. If compressing: run `/compress` command, then `bash scripts/compress.sh --mark-done {path}`
 
-For new non-.md files (`.php`, configs): `task sync` copies them automatically.
+For new non-.md files (`.php`, configs): `bash scripts/compress.sh --sync` copies them automatically.
 
 **Key change:** Compression happens once before commit/push — not after every edit.
 This avoids interruptions when work is still in progress.
@@ -399,7 +484,7 @@ disable-model-invocation: true
 1. Create `.agent-src.uncompressed/commands/{name}.md` (use template)
 2. Run `python3 scripts/skill_linter.py` — must be 0 FAIL
 3. Compress via `/compress`, which writes to `.agent-src/commands/`
-4. Run `task generate-tools` — creates Claude symlink automatically
+4. Run `python3 scripts/compress.py --generate-tools` — creates Claude symlink automatically
 
 **Never** create `.claude/skills/{name}/SKILL.md` manually for commands — always use the symlink workflow.
 
@@ -407,7 +492,7 @@ disable-model-invocation: true
 
 Before asking for review or creating a PR, verify derived outputs are not stale:
 
-1. Run `task sync-changed` — check if `.agent-src.uncompressed/` has changes not yet compressed
+1. Run `bash scripts/compress.sh --changed` — check if `.agent-src.uncompressed/` has changes not yet compressed
 2. If stale files exist: run `/compress` before pushing
 3. Before merge: verify derived outputs (`.agent-src/`, `.augment/`, `.claude/skills/`) are regenerated
 4. Do NOT leave `.agent-src/` stale across review cycles
@@ -431,12 +516,12 @@ Commands have `disable-model-invocation: true` in their frontmatter.
 |---|---|
 | Edit existing file | Edit in `.agent-src.uncompressed/`, compress to `.agent-src/` |
 | Create new `.md` | Create in `.agent-src.uncompressed/`, compress to `.agent-src/` |
-| Create new non-`.md` | Create in `.agent-src.uncompressed/`, run `task sync` |
-| Create new command | Create in `.agent-src.uncompressed/commands/`, sync, `task generate-tools` |
+| Create new non-`.md` | Create in `.agent-src.uncompressed/`, run `bash scripts/compress.sh --sync` |
+| Create new command | Create in `.agent-src.uncompressed/commands/`, sync, `python3 scripts/compress.py --generate-tools` |
 | Delete a file | Delete from `.agent-src.uncompressed/` and `.agent-src/` |
-| Check what needs compression | `task sync-changed` |
-| Mark file as compressed | `task sync-mark-done -- {path}` |
-| Verify everything is in sync | `task sync-check` |
+| Check what needs compression | `bash scripts/compress.sh --changed` |
+| Mark file as compressed | `bash scripts/compress.sh --mark-done {path}` |
+| Verify everything is in sync | `bash scripts/compress.sh --check` |
 
 ---
 
@@ -800,13 +885,11 @@ docker compose exec -T <php-service> vendor/bin/phpunit
 
 ## Build / Task Runner
 
-Before using raw `docker compose exec` commands, check if a `Makefile` or `Taskfile.yml` exists.
-These often provide convenient shortcuts for common operations:
-
-- `Makefile` → `make console`, `make test`, `make phpstan`, etc.
-- `Taskfile.yml` → `task console`, `task test`, `task phpstan`, etc.
-
-**Always read the Makefile/Taskfile first** to discover available targets.
+Before using raw `docker compose exec`, check if the consumer project
+ships a `Makefile` — it often wraps common ops (`make console`,
+`make test`, `make phpstan`). Read the Makefile first. If the project
+uses another task runner, inspect its config before falling back to
+raw `docker compose exec`.
 
 Frontend commands (npm, webpack) run on the host or in the node container.
 
@@ -1558,8 +1641,8 @@ NEVER push without running ALL CI checks locally first.
 ### 1. Sync
 
 ```bash
-task sync-check            # .agent-src/ matches .agent-src.uncompressed/
-task sync-check-hashes     # compression hashes are clean
+bash scripts/compress.sh --check          # .agent-src/ matches .agent-src.uncompressed/
+bash scripts/compress.sh --check-hashes   # compression hashes are clean
 ```
 
 ### 2. Consistency
@@ -1591,7 +1674,8 @@ python3 scripts/readme_linter.py README.md --root .
 ## Quick one-liner
 
 ```bash
-task sync-check && task sync-check-hashes && \
+bash scripts/compress.sh --check && \
+bash scripts/compress.sh --check-hashes && \
 python3 scripts/check_compression.py && \
 python3 scripts/check_references.py && \
 python3 scripts/check_portability.py && \
@@ -1604,8 +1688,8 @@ python3 scripts/readme_linter.py README.md --root .
 
 1. Edit uncompressed file
 2. Edit compressed file in `.agent-src/` to match
-3. `task sync-mark-done -- {relative-path}` — update hash
-4. `task sync-check-hashes` — verify
+3. `bash scripts/compress.sh --mark-done {relative-path}` — update hash
+4. `bash scripts/compress.sh --check-hashes` — verify
 
 **Skip step 3 → CI WILL fail.**
 
@@ -1941,10 +2025,9 @@ for the archive vs skipped decision table.
 python3 .augment/scripts/update_roadmap_progress.py
 ```
 
-Taskfile shortcut: `task roadmap-progress` (same script). npm /
-Composer / Make wrappers are consumer-project optional; the direct
-python path always works — `.augment/scripts/` ships via postinstall
-symlinks.
+npm / Composer / Make / Taskfile wrappers are consumer-project
+optional; the direct python path always works — `.augment/scripts/`
+ships via postinstall symlinks.
 
 ## Triggers
 
@@ -2240,7 +2323,7 @@ See also: `threat-modeling` · `authz-review` · `data-flow-mapper` · `minimal-
 
 → Frontmatter contract (required/optional keys per type):
 [`agents/docs/frontmatter-contract.md`](../../../agents/docs/frontmatter-contract.md).
-Schemas live in `scripts/schemas/` and are enforced by `task validate-schema`.
+Schemas live in `scripts/schemas/` and are enforced by `python3 scripts/validate_frontmatter.py`.
 
 ---
 
@@ -2321,7 +2404,7 @@ Every skill's YAML frontmatter MUST validate against `scripts/schemas/skill.sche
 See [`agents/docs/frontmatter-contract.md`](../../../agents/docs/frontmatter-contract.md)
 for the human-readable contract across all artefact types. Violations are
 reported by `scripts/skill_linter.py` as `schema_<rule>` errors and fail
-`task validate-schema` / `task ci`.
+`python3 scripts/validate_frontmatter.py` and the full CI pipeline.
 
 ## Description Triggering
 

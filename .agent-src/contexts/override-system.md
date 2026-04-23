@@ -149,7 +149,7 @@ When a project using this package wants to **optimize** a shared rule or skill:
 
 - The PR must contain **both** uncompressed and compressed versions (complete files)
 - The compressed version must be derived from the uncompressed version
-- Changes must pass the skill linter (`task lint-skills`)
+- Changes must pass the skill linter (`python3 scripts/skill_linter.py --all`)
 - Changes must not be project-specific (no domain assumptions)
 - Changes must pass the promotion gate (see `controlled-self-optimization.md`)
 

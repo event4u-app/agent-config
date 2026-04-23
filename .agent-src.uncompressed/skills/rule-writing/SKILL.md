@@ -98,9 +98,10 @@ the PR or split by responsibility.
 
 * Run `python3 scripts/skill_linter.py .agent-src.uncompressed/rules/{name}.md`
   → must report **0 FAIL**.
-* Run `task sync` to regenerate `.agent-src/rules/{name}.md`.
-* Run `task generate-tools` to project into `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`.
-* Run `task ci` — must exit 0 except for tolerated warnings.
+* Run `bash scripts/compress.sh --sync` to regenerate `.agent-src/rules/{name}.md`.
+* Run `python3 scripts/compress.py --generate-tools` to project into `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`.
+* Run the full CI pipeline locally (see `Taskfile.yml` in this repo for
+  the script list) — must exit 0 except for tolerated warnings.
 
 ## Frontmatter shape
 
@@ -118,7 +119,7 @@ source: package           # or project for consumer-local rules
 1. Complete rule file at `.agent-src.uncompressed/rules/{name}.md`
 2. Frontmatter fully populated, no placeholders left
 3. Linter output showing 0 FAIL
-4. Confirmation that `task sync` + `task generate-tools` ran clean
+4. Confirmation that `bash scripts/compress.sh --sync` + `python3 scripts/compress.py --generate-tools` ran clean
 
 ## Gotchas
 
@@ -126,7 +127,7 @@ source: package           # or project for consumer-local rules
 * Defaulting to `always` "just in case" — token cost is real, `auto` is default.
 * Description like "Rule about X" — it must describe *when*, not *what*.
 * Pasting a workflow into a rule — if it has numbered steps, split into a skill.
-* Forgetting to run `task generate-tools` — downstream tools stay stale.
+* Forgetting to run `python3 scripts/compress.py --generate-tools` — downstream tools stay stale.
 * Editing `.agent-src/rules/` or `.augment/rules/` directly — those are generated.
 
 ## Do NOT

@@ -44,7 +44,7 @@ For each open step:
 
 - Update the roadmap file: mark the completed step (e.g. `[x]` or add a completion note).
 - Run quality tools if code was changed (PHPStan at minimum).
-- Regenerate `agents/roadmaps-progress.md` — `python3 .augment/scripts/update_roadmap_progress.py` (shortcut in Taskfile projects: `task roadmap-progress`).
+- Regenerate `agents/roadmaps-progress.md` — `./agent-config roadmap:progress`.
 - Ask: "Continue with the next step?"
 
 ### 5. After all steps in a phase

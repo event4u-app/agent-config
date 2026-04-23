@@ -95,11 +95,10 @@ Show the complete roadmap to the user and ask (in their language) if anything sh
 Regenerate `agents/roadmaps-progress.md` so the new roadmap shows up:
 
 ```bash
-python3 .augment/scripts/update_roadmap_progress.py
+./agent-config roadmap:progress
 ```
 
-(Taskfile shortcut: `task roadmap-progress`.) Mention the new overall
-count to the user.
+Mention the new overall count to the user.
 
 ### 8. Offer execution
 

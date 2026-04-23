@@ -41,9 +41,65 @@ makes the answer unambiguous, proceed — but state the assumption explicitly.
 
 Be specific. Present numbered options (per `user-interaction`). Keep it short.
 
-- Simple (binary, small): multiple at once, numbered
-- Complex (needs thinking): one at a time, wait for answer
-- Handoff (model switch): ask LAST
+### The Iron Law — one question at a time, by default
+
+```
+DEFAULT: ONE QUESTION PER TURN. WAIT FOR THE ANSWER. THEN ASK THE NEXT.
+```
+
+Dumping a list of 3+ design questions on the user is a rule violation,
+not a style choice. The user must not have to scroll through a wall of
+numbered options to reply. Reply length in the user's last message is
+the signal: if they answered with a short number or word, keep future
+questions equally short. One question, ask, wait, read, decide, ask
+the next — even if it feels slower.
+
+### The only exception — truly trivial, truly independent
+
+Asking **multiple questions in one turn** is allowed **only** when ALL
+of the following hold:
+
+- Each question has a **binary or 2–3-option** answer.
+- Answers are **fully independent** — answer to Q1 does not change
+  Q2's options, Q3's options, etc.
+- The whole block fits on **one screen** (max 3 questions, max ~12
+  lines of options total).
+- None of the questions is a **design decision, architecture choice,
+  scope decision, or naming decision**.
+
+If any of these fail, ask ONE question, wait, then ask the next.
+
+### Hard "ask one at a time" triggers
+
+| Situation | Why serial, not batch |
+|---|---|
+| Design / architecture decisions | Answer to Q1 reframes Q2 |
+| Naming / command-syntax / API shape | Later choices depend on it |
+| Scope / PR boundaries | Changes what the other questions even mean |
+| Tool / library selection | Downstream choices branch from it |
+| "Which approach: A vs B vs C" | Each answer opens a different follow-up |
+| Any question the user has to **think** about, not just pick | Thinking load compounds when stacked |
+
+### Self-check before asking
+
+Before sending a turn with questions, ask yourself:
+
+1. Is this ONE question, or more?
+2. If more — does EVERY question pass all four "only exception"
+   conditions above?
+3. Would the user have to scroll to see all options?
+4. Is the answer to Q1 going to change Q2's options?
+
+If any answer is "yes / no / not sure" → collapse to ONE question
+and send. Hold the rest for the next turn.
+
+### Ordering & handoff
+
+- **Model switch / handoff**: ask LAST (per `model-recommendation`).
+- **Blocking clarification** (can't proceed without it): ask FIRST,
+  alone, before any research or planning output.
+- **Optional refinement**: don't ask at all — state the assumption
+  and proceed.
 
 ## Creating new agent artifacts
 

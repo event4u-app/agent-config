@@ -27,13 +27,13 @@ for the archive vs skipped decision table.
 ## How to regenerate
 
 ```bash
-python3 .augment/scripts/update_roadmap_progress.py
+./agent-config roadmap:progress
 ```
 
-Taskfile shortcut: `task roadmap-progress` (same script). npm /
-Composer / Make wrappers are consumer-project optional; the direct
-python path always works — `.augment/scripts/` ships via postinstall
-symlinks.
+The `./agent-config` wrapper is written into the project root by the
+installer and delegates to the master CLI inside
+`node_modules/@event4u/agent-config/` or `vendor/event4u/agent-config/`.
+No global tooling required.
 
 ## Triggers
 

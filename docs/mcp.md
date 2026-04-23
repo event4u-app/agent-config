@@ -48,13 +48,24 @@ values literal, or resolve them from the environment.
 
 ## Usage
 
+**Consumer projects** — use the `./agent-config` CLI installed into the
+project root:
+
 ```bash
-task mcp:render                        # write in-project targets
-task mcp:render -- --claude-desktop    # also write user-scope Claude Desktop
-task mcp:check                         # dry-run; exit 1 if targets are stale
+./agent-config mcp:render                    # write in-project targets
+./agent-config mcp:render --claude-desktop   # also write user-scope Claude Desktop
+./agent-config mcp:check                     # dry-run; exit 1 if targets are stale
 ```
 
-Or invoke the script directly:
+**Package maintainers** — the same commands are available through Taskfile:
+
+```bash
+task mcp:render
+task mcp:render -- --claude-desktop
+task mcp:check
+```
+
+Or invoke the script directly (maintainer workflow, inside the package repo):
 
 ```bash
 python3 scripts/mcp_render.py [--source PATH] [--claude-desktop] [--check]

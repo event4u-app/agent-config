@@ -171,14 +171,6 @@ The project uses **devbox** for tool management:
 }
 ```
 
-### Taskfile commands
-
-```bash
-task versions          # Show awscli, Terraform, Terragrunt versions
-task check:awscli      # Verify AWS CLI is configured
-task cache:clear       # Clear .terraform and .terragrunt-cache dirs
-```
-
 ### Quick commands (devbox scripts)
 
 ```bash

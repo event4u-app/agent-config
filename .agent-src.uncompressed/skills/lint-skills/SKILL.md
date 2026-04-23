@@ -28,7 +28,7 @@ Do NOT use when:
 
 - Linting only one file — call `python3 scripts/skill_linter.py <path>` directly
 - Checking cross-references between files — use `check-refs` instead
-- Checking compression freshness — use `task sync-check` instead
+- Checking compression freshness — use `bash scripts/compress.sh --check` instead
 
 ## Procedure
 

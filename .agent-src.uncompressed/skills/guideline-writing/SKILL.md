@@ -107,16 +107,17 @@ Above the split signal, break by sub-topic into sibling files in the same folder
 
 * Run `python3 scripts/skill_linter.py .agent-src.uncompressed/guidelines/{topic}/{name}.md`
   → 0 FAIL (guidelines have relaxed linting but must still parse).
-* Run `task sync` → regenerates `.agent-src/guidelines/`.
+* Run `bash scripts/compress.sh --sync` → regenerates `.agent-src/guidelines/`.
 * Run `python3 scripts/check_references.py` → no broken links.
-* Run `task ci` → exits 0 except for tolerated warnings.
+* Run the full CI pipeline locally (see `Taskfile.yml` in this repo for
+  the script list) — must exit 0 except for tolerated warnings.
 
 ## Output format
 
 1. Complete guideline at `.agent-src.uncompressed/guidelines/{topic}/{name}.md`
 2. At least one skill or rule linking to it
 3. Linter + `check_references.py` clean
-4. `task sync` confirmation
+4. `bash scripts/compress.sh --sync` confirmation
 
 ## Gotchas
 

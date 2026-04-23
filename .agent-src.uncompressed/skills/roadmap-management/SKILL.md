@@ -263,15 +263,14 @@ is rewritten by `.augment/scripts/update_roadmap_progress.py`.
 Command:
 
 ```bash
-python3 .augment/scripts/update_roadmap_progress.py           # rewrite the dashboard
-python3 .augment/scripts/update_roadmap_progress.py --check   # CI: fail if stale
+./agent-config roadmap:progress           # rewrite the dashboard
+./agent-config roadmap:progress-check     # CI: fail if stale
 ```
 
-Projects with a Taskfile get two shortcuts for the same script —
-`task roadmap-progress` and `task roadmap-progress-check`. Consumer
-projects without Task use the direct python invocation; the script
-is shipped via postinstall symlinks and always available at
-`.augment/scripts/`.
+The `./agent-config` wrapper lives in the project root (written by the
+package installer, gitignored) and delegates to the master CLI inside
+`node_modules/@event4u/agent-config/` or `vendor/event4u/agent-config/`.
+No global tooling required.
 
 The dashboard is a **read-only snapshot**. Do not edit it by hand — regenerate it.
 

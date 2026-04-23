@@ -27,11 +27,11 @@ Run all of these before pushing — they match the GitHub Actions workflows exac
 ### 1. Sync check
 
 ```bash
-task sync-check            # .agent-src/ matches .agent-src.uncompressed/
-task sync-check-hashes     # compression hashes are clean
+bash scripts/compress.sh --check          # .agent-src/ matches .agent-src.uncompressed/
+bash scripts/compress.sh --check-hashes   # compression hashes are clean
 ```
 
-**Common failure:** Edited uncompressed file but forgot `task sync-mark-done`.
+**Common failure:** Edited uncompressed file but forgot `bash scripts/compress.sh --mark-done {path}`.
 
 ### 2. Consistency checks
 
@@ -70,7 +70,8 @@ python3 scripts/readme_linter.py README.md --root .
 Run all checks in sequence — stops on first failure:
 
 ```bash
-task sync-check && task sync-check-hashes && \
+bash scripts/compress.sh --check && \
+bash scripts/compress.sh --check-hashes && \
 python3 scripts/check_compression.py && \
 python3 scripts/check_references.py && \
 python3 scripts/check_portability.py && \
@@ -85,8 +86,8 @@ When you edit a file in `.agent-src.uncompressed/`:
 
 1. Edit the uncompressed file
 2. Edit the compressed file in `.agent-src/` to match
-3. Run `task sync-mark-done -- {relative-path}` to update the hash
-4. Verify with `task sync-check-hashes`
+3. Run `bash scripts/compress.sh --mark-done {relative-path}` to update the hash
+4. Verify with `bash scripts/compress.sh --check-hashes`
 
 **If you skip step 3, the CI pipeline WILL fail.**
 

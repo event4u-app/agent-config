@@ -44,12 +44,10 @@ docker compose exec -T <php-service> vendor/bin/phpunit
 
 ## Build / Task Runner
 
-Before using raw `docker compose exec` commands, check if a `Makefile` or `Taskfile.yml` exists.
-These often provide convenient shortcuts for common operations:
-
-- `Makefile` → `make console`, `make test`, `make phpstan`, etc.
-- `Taskfile.yml` → `task console`, `task test`, `task phpstan`, etc.
-
-**Always read the Makefile/Taskfile first** to discover available targets.
+Before using raw `docker compose exec`, check if the consumer project
+ships a `Makefile` — it often wraps common ops (`make console`,
+`make test`, `make phpstan`). Read the Makefile first. If the project
+uses another task runner, inspect its config before falling back to
+raw `docker compose exec`.
 
 Frontend commands (npm, webpack) run on the host or in the node container.
