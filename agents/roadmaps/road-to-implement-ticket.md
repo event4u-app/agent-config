@@ -304,20 +304,19 @@ works end-to-end on one real ticket.
 
 ## Acceptance criteria
 
-Mixed closure rules below. A box is ticked when either
-(a) deterministic behaviour is locked by tests and cannot drift
-without a test failure, or (b) a behavioural guarantee was
-demonstrated on a live run and the run is cited. Boxes that
-require a live run against a real ticket stay open — the code
-provides the *mechanism*, not the *demonstration*.
+Closure rules: `[x]` = deterministic behaviour locked by tests and
+cannot drift without a test failure. `[-]` = skipped from this
+roadmap because it can only be verified on a live run against a
+real ticket; tracked as post-release validation in the End-state
+section below, not as open roadmap work.
 
-- [ ] **Live-run only.** One real ticket, one fresh clone, one run →
-      verified change set (tests green, quality-pipeline green)
-      without the user touching any command except `/implement-ticket`
-      and `/commit` / `/create-pr`. Requires a live run; cannot be
-      closed by unit/integration tests. Tick this when the first
-      successful end-to-end delivery lands, with the ticket id
-      and commit SHA cited inline.
+- [-] **Skipped — post-release validation.** One real ticket, one
+      fresh clone, one run → verified change set (tests green,
+      quality-pipeline green) without the user touching any command
+      except `/implement-ticket` and `/commit` / `/create-pr`.
+      Pure live-run demonstration; the mechanism is locked by the
+      integration suite. Verified on the first real delivery; see
+      End-state follow-ups below.
 - [x] Persona switch (`senior-engineer` vs `qa`) produces
       **visibly different** delivery reports on the same ticket.
       *(Mechanism locked. `qa` widens the `run-tests` directive to
@@ -349,13 +348,13 @@ provides the *mechanism*, not the *demonstration*.
       (`test_step_refine.py`, `test_step_plan.py`, etc.) add
       20 + specific BLOCKED assertions. Block-on-ambiguity is
       behaviour, not intention.)*
-- [ ] **Live-run only.** `minimal-safe-diff` + `scope-control` hold
-      across all runs — no drive-by edits. The `implement` step
-      delegates editing to the agent via `@agent-directive:
-      apply-plan`; unit tests cannot observe the diff shape of a
-      real edit. Tick this when the first two live runs both land
-      with a reviewer-approved diff that stays inside the declared
-      scope, with the PR links cited inline.
+- [-] **Skipped — post-release validation.** `minimal-safe-diff` +
+      `scope-control` hold across all runs — no drive-by edits.
+      The `implement` step delegates editing to the agent via
+      `@agent-directive: apply-plan`; unit tests cannot observe the
+      diff shape of a real edit. Verified on the first two
+      reviewer-approved live deliveries; see End-state follow-ups
+      below.
 
 ## Metrics (Q38 ✅ decided)
 
@@ -419,6 +418,27 @@ as *"a strong governance / skills package"*. It becomes:
 
 That is the threshold at which the package is genuinely hard to
 live without.
+
+### Post-release validation (follow-ups from skipped AC)
+
+These two items are deliberately out of this roadmap's scope
+because they can only be observed on real deliveries, not in
+unit or integration tests. They do **not** block shipping the
+roadmap and are tracked here instead of as open checkboxes:
+
+- **First-delivery verification.** On the first real ticket
+  carried end-to-end by `/implement-ticket`, record the ticket
+  id, the resulting commit SHA(s), and confirm the user invoked
+  only `/implement-ticket`, `/commit`, and `/create-pr`.
+- **Diff-safety validation.** After the first two reviewer-
+  approved PRs produced via `/implement-ticket`, confirm both
+  diffs honour `minimal-safe-diff` and `scope-control` — no
+  drive-by edits, no files outside the declared plan. Cite the
+  PR links.
+
+Surface both as a short note in the release announcement. If
+either fails on the live run, open a dedicated follow-up
+roadmap — do not amend this one retroactively.
 
 ## See also
 

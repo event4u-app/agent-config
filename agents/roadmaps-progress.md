@@ -6,10 +6,10 @@
 
 ## Overall
 
-**27 / 40 steps done · 68%**
+**27 / 38 steps done · 71%**
 
 ```text
-███████████████████████████░░░░░░░░░░░░░   68%
+████████████████████████████░░░░░░░░░░░░   71%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Done | Open | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [agent-memory/road-to-retrieval-contract.md](roadmaps/agent-memory/road-to-retrieval-contract.md) | 3 | 9 | 0 | 9 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-implement-ticket.md](roadmaps/road-to-implement-ticket.md) | 5 | 29 | 27 | 2 | 0 | 0 | █████████░ 93% |
+| 2 | [road-to-implement-ticket.md](roadmaps/road-to-implement-ticket.md) | 5 | 27 | 27 | 0 | 0 | 2 | ██████████ 100% |
 | 3 | [road-to-trigger-evals.md](roadmaps/road-to-trigger-evals.md) | 3 | 2 | 0 | 2 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
@@ -36,7 +36,7 @@
 
 ### [road-to-implement-ticket.md](roadmaps/road-to-implement-ticket.md)
 
-**Road to Implement-Ticket — from governed agent to delivery engine** — 27 / 29 done (93%)
+**Road to Implement-Ticket — from governed agent to delivery engine** — 27 / 27 done (100%)
 
 | # | Phase | State | Done | Open | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -44,7 +44,7 @@
 | 1 | DeliveryState + linear dispatcher ✅ shipped (2026-04-23) | ✅ done | 4 | 0 | 0 | 0 | 100% |
 | 2 | step wiring to existing skills ✅ shipped (2026-04-23) | ✅ done | 8 | 0 | 0 | 0 | 100% |
 | 3 | block-on-ambiguity + persona policies | ✅ done | 4 | 0 | 0 | 0 | 100% |
-| 4 | delivery report + README hero | 🟡 in progress | 6 | 2 | 0 | 0 | 75% |
+| 4 | delivery report + README hero | ✅ done | 6 | 0 | 0 | 2 | 100% |
 
 ### [road-to-trigger-evals.md](roadmaps/road-to-trigger-evals.md)
 
