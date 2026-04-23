@@ -271,10 +271,13 @@ tasks:
 
   release:bump:
     desc: |
-      Bump package.json + marketplace.json to {{.CLI_ARGS}} and create a
-      release commit. Usage: task release:bump -- 1.9.0
-      After the commit lands on main, create the matching git tag and push
-      it; the Release Guard workflow asserts package.json and tag agree.
+      Fallback-only. Normal releases are driven by the release-please
+      workflow (.github/workflows/release-please.yml), which maintains a
+      Release PR and tags on merge. Use this task only when release-please
+      is unavailable (workflow disabled, GitHub outage, hotfix on a
+      non-main branch). Bumps package.json + marketplace.json to
+      {{.CLI_ARGS}} and creates a release commit. Usage:
+      task release:bump -- 1.9.0
     cmd: |
       version="{{.CLI_ARGS}}"
       if [ -z "$version" ]; then

@@ -23,5 +23,9 @@
     ],
     "scripts": {
         "postinstall": "bash scripts/postinstall.sh"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
     }
 }

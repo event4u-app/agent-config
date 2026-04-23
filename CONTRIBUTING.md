@@ -118,29 +118,62 @@ the policy is interpreted as follows:
 | **Minor** (x.X.0) | New skills, rules, commands, or guidelines. New tool support. New installer flags. New `.agent-settings.yml` keys with safe defaults. |
 | **Patch** (x.x.X) | Wording fixes and improvements in existing skills, linter fixes, CI changes, documentation updates, internal refactors with no user-visible effect. |
 
-Every release must update [`CHANGELOG.md`](CHANGELOG.md). Unreleased work
-goes under the `[Unreleased]` section; that section is renamed and dated on
-release.
+Release notes live in [`CHANGELOG.md`](CHANGELOG.md) and are generated
+automatically by [release-please](https://github.com/googleapis/release-please)
+from [Conventional Commits](#commit-conventions). Contributors do **not** edit
+the changelog by hand; writing clean commit subjects is how notes are authored.
 
 ### Release process
 
-`package.json.version` must match the git tag of the release — npm publishes
-the tarball at whatever version the file declares, so a drift here means the
-npm registry lags behind git. To keep the two in sync:
+Releases are fully automated by the
+[release-please workflow](.github/workflows/release-please.yml):
 
-1. On `main` (or the release branch about to merge), run:
-   ```bash
-   task release:bump -- X.Y.Z
-   ```
-   This bumps `package.json`, stages it, and creates a `release: X.Y.Z` commit.
-2. Push the commit, then create and push the tag:
-   ```bash
-   git push
-   git tag X.Y.Z
-   git push origin X.Y.Z
-   ```
-3. The [Release Guard workflow](.github/workflows/release-guard.yml) runs on
-   tag push and fails loudly if `package.json.version != tag`.
+1. Every push to `main` triggers release-please. It scans Conventional Commits
+   since the last tag and opens (or updates) a **Release PR** — a single PR
+   that bumps `package.json`, `.claude-plugin/marketplace.json`, and
+   `CHANGELOG.md` in one atomic commit.
+2. Review the Release PR when you're ready to ship. Merging it makes
+   release-please push the matching git tag and create the GitHub Release.
+3. On the same workflow run, the `publish-npm` job takes over: it checks
+   out the tagged commit, verifies `package.json.version == tag`, and runs
+   `npm publish` against https://registry.npmjs.org with
+   [npm provenance](https://docs.npmjs.com/generating-provenance-statements)
+   so each tarball is cryptographically linked to the GitHub Actions run that
+   built it.
+4. The [Release Guard workflow](.github/workflows/release-guard.yml) runs on
+   the pushed tag and fails loudly if `package.json.version` or
+   `.claude-plugin/marketplace.json` disagree with the tag — an independent
+   cross-check that stays in place even with release-please driving the flow.
+
+Bump size is derived from commit types:
+`feat:` → minor, `fix:` → patch, `feat!:` / `fix!:` / `BREAKING CHANGE:` → major.
+Commits like `chore:`, `docs:`, `test:`, `ci:`, `refactor:` do not bump the
+version on their own and ride along in the next Release PR.
+
+#### npm authentication
+
+The `publish-npm` job authenticates to npm via
+[OIDC Trusted Publishing](https://docs.npmjs.com/trusted-publishers) — no
+`NPM_TOKEN` secret is required. The trust link is configured on the package
+settings page on npmjs.com and bound to:
+
+- Repository: `event4u-app/agent-config`
+- Workflow filename: `release-please.yml`
+
+The workflow declares `id-token: write` so GitHub Actions can mint a short-
+lived OIDC ID token with claims about the run (repo, workflow, ref). `npm
+publish` sends that token to the registry, which verifies the claims against
+the trust link and — on match — authorizes the publish and records a
+provenance attestation. If the workflow file is renamed or moved, the trust
+link on npm must be updated accordingly or the publish step will fail.
+
+#### Fallback: manual bump
+
+`task release:bump -- X.Y.Z` is kept as an emergency fallback for the rare
+case where release-please is unavailable (workflow disabled, GitHub outage,
+hotfix on a branch other than `main`). In normal operation, do not use it —
+let the Release PR drive every version change. A manual bump does **not**
+publish to npm automatically; run `npm publish` locally after tagging.
 
 ## License of contributions
 
