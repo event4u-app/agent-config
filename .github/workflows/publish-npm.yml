@@ -14,6 +14,12 @@ on:
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
       - '[0-9]+.[0-9]+.[0-9]+-*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to publish (e.g. 1.10.0). Used only when the workflow file was missing at tag-push time.'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -29,7 +35,7 @@ jobs:
       - name: Check out released tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -40,9 +46,19 @@ jobs:
       - name: Upgrade npm (Trusted Publishing requires >= 11.5.1)
         run: npm install -g npm@latest
 
+      - name: Resolve effective tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            tag="${{ inputs.tag }}"
+          else
+            tag="${GITHUB_REF_NAME}"
+          fi
+          echo "name=$tag" >> "$GITHUB_OUTPUT"
+
       - name: Verify package version matches tag
         run: |
-          tag="${GITHUB_REF_NAME}"
+          tag="${{ steps.tag.outputs.name }}"
           pkg="$(node -p "require('./package.json').version")"
           if [ "$tag" != "$pkg" ]; then
             echo "::error::package.json version ($pkg) does not match tag ($tag); aborting publish."
@@ -56,7 +72,7 @@ jobs:
       - name: Job summary
         if: always()
         run: |
-          tag="${GITHUB_REF_NAME}"
+          tag="${{ steps.tag.outputs.name }}"
           {
             echo "## npm publish"
             echo
