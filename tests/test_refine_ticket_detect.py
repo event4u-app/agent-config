@@ -153,13 +153,14 @@ def test_gather_repo_context_outside_repo(tmp_path):
 
 
 def test_gather_repo_context_inside_this_repo():
-    """Inside this repo we expect branches + commits; context_docs only when agents/contexts/ exists."""
+    """Inside this repo we expect commits; branches may be empty on CI (shallow / detached-HEAD checkout)."""
     ctx = gather_repo_context(REPO_ROOT)
     assert not ctx.is_empty()
-    assert len(ctx.recent_branches) > 0, "expected at least one branch"
     assert len(ctx.recent_commits) > 0, "expected at least one commit"
+    # recent_branches is best-effort — GitHub Actions' default `actions/checkout`
+    # uses a detached HEAD with no local refs under refs/heads/, so this list
+    # is legitimately empty in CI. The commit log is the load-bearing signal.
     # context_docs is optional — only populated when agents/contexts/ exists.
-    # Consumer projects typically have it; this package does not.
 
 
 def test_gather_repo_context_finds_context_docs(tmp_path):
