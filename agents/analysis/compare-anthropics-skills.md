@@ -210,8 +210,9 @@ Three roadmaps, split by scope:
 - **[`agents/roadmaps/archive/road-to-anthropic-alignment.md`](../roadmaps/archive/road-to-anthropic-alignment.md)**
   — Phase 1 (Claude Code Plugin Marketplace, v1.7.0) + Phase 2 ("pushy
   description" pattern in `skill-quality` rule, v1.7.1). Archived 2026-04-21.
-- **[`agents/roadmaps/road-to-trigger-evals.md`](../roadmaps/road-to-trigger-evals.md)**
+- **[`agents/roadmaps/archive/road-to-trigger-evals.md`](../roadmaps/archive/road-to-trigger-evals.md)**
   — empirical trigger measurement (v1.8.0, gated PoC → bounded rollout).
+  Archived 2026-04-23.
 - **[`agents/roadmaps/archive/road-to-drafting-protocol.md`](../roadmaps/archive/road-to-drafting-protocol.md)**
   — Understand → Research → Draft protocol for skill/rule/command/guideline
   creation (v1.8.0 rule + v1.8.1 writing skills). Agent proposes, human decides.
@@ -250,8 +251,9 @@ No clone, no execute, no credentials used.
 
 - Command that produced this document:
   [`.agent-src.uncompressed/commands/analyze-reference-repo.md`](../../.agent-src.uncompressed/commands/analyze-reference-repo.md)
-- Active roadmaps: [`road-to-trigger-evals.md`](../roadmaps/road-to-trigger-evals.md),
-  [`road-to-autonomous-agent.md`](../roadmaps/road-to-autonomous-agent.md).
+- Active roadmaps: [`road-to-autonomous-agent.md`](../roadmaps/road-to-autonomous-agent.md).
+- Related archived roadmap:
+  [`archive/road-to-trigger-evals.md`](../roadmaps/archive/road-to-trigger-evals.md).
 - Archived roadmaps:
   [`archive/road-to-anthropic-alignment.md`](../roadmaps/archive/road-to-anthropic-alignment.md),
   [`archive/road-to-drafting-protocol.md`](../roadmaps/archive/road-to-drafting-protocol.md),
