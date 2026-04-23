@@ -19,11 +19,28 @@ runs a bash payload sync and a Python bridge generator (Python 3 is
 recommended; without it the payload sync still runs). No Task or Make
 required for end users.
 
+## Project CLI — `./agent-config`
+
+The installer writes `./agent-config` into your project root (gitignored)
+so you can run a few package scripts without installing `go-task`,
+`make`, or other build tools:
+
+```bash
+./agent-config mcp:render          # sync MCP server config into .cursor/ and .windsurf/
+./agent-config roadmap:progress    # regenerate agents/roadmaps-progress.md
+./agent-config first-run           # guided setup
+./agent-config help                # full command list
+```
+
+The wrapper is regenerated on every `npm install` / `composer install`
+and delegates to the copy under `node_modules/@event4u/agent-config/`
+or `vendor/event4u/agent-config/`.
+
 ## First Run
 
 Open your agent and try the 3 tests below. That's it — no additional tools needed.
 
-**Optional:** For a guided walkthrough, run `task first-run` (requires [Task](https://taskfile.dev/)).
+**Optional:** For a guided walkthrough, run `./agent-config first-run`.
 
 ---
 
