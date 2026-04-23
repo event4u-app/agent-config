@@ -35,7 +35,7 @@ Both prototypes implement the same shape from
 - Identical fixtures: one clean ticket, one ambiguous ticket that must
   block at `refine` with three numbered questions
 
-Sources: `spike/implement-ticket/{bash,python}/` (throwaway, branch-only).
+Sources: Phase-0 spike (`spike/implement-ticket/{bash,python}/`) — deleted after Phase 1 shipped; the evidence inlined below is the only surviving record.
 
 ## Evidence (measured, not asserted)
 
@@ -46,8 +46,8 @@ Sources: `spike/implement-ticket/{bash,python}/` (throwaway, branch-only).
 | Clean, all 8 steps | 104 ms | 36 ms | **Python 2.9×** |
 | Blocked at step 1  |  60 ms | 35 ms | **Python 1.7×** |
 
-Source: `spike/implement-ticket/bench-results.txt` ·
-harness: `spike/implement-ticket/bench.sh`.
+Harness was `spike/implement-ticket/bench.sh` (20 runs, 3 warmup, macOS ARM);
+raw numbers preserved in this ADR after the spike directory was deleted.
 
 Bash cost is dominated by per-step fork/exec (`yq`, `jq`, `perl`, step
 script). Every step added extends the Bash gap. Python keeps the whole
@@ -110,7 +110,9 @@ Python is 3 files with shared types.
 
 ## Follow-ups (not part of this ADR)
 
-- Promote the spike directory's `bench.sh` into a `task bench-implement-ticket`
-  target once real handlers exist, so later optimisation has a baseline.
+- If later optimisation is needed, port the numbers above into a
+  `task bench-implement-ticket` target against the real handlers — the
+  original `bench.sh` lives only in this repo's git history now (see
+  commit `79f30e7`).
 - Decide CLI framework during Phase 1 (defer — argparse is enough for
   the orchestrator skeleton).

@@ -100,16 +100,16 @@ works end-to-end on one real ticket.
 - [x] Prototype step-dispatch in **two** candidate runtimes
       (Bash composition vs. Python skill-runner). Measure boot
       time, error-propagation ergonomics, test-writability.
-      *(See [`spike/implement-ticket/bash/`](../../spike/implement-ticket/bash/)
-      and [`spike/implement-ticket/python/`](../../spike/implement-ticket/python/);
-      benchmark evidence in
-      [`spike/implement-ticket/bench-results.txt`](../../spike/implement-ticket/bench-results.txt).)*
+      *(Prototypes lived under `spike/implement-ticket/{bash,python}/`
+      during Phase 0; spike directory deleted after Phase 1 shipped.
+      Benchmark numbers preserved in
+      [`adr-implement-ticket-runtime.md`](../../contexts/adr-implement-ticket-runtime.md).
+      Raw sources: git commit `79f30e7`.)*
 - [x] Run both against one synthetic ticket fixture.
-      *(Fixture landed at
-      [`spike/implement-ticket/fixtures/`](../../spike/implement-ticket/fixtures/)
-      — deliberately under `spike/` rather than `tests/fixtures/`
-      since Phase 0 code is throwaway and must not leak into the
-      production test tree.)*
+      *(Fixture lived at `spike/implement-ticket/fixtures/` — deliberately
+      under `spike/` rather than `tests/fixtures/` since Phase 0 code was
+      throwaway and must not leak into the production test tree. Deleted
+      with the rest of the spike after Phase 1 shipped.)*
 - [x] Emit the five metrics as JSON lines into
       `agents/logs/implement-ticket/` per
       [Q38](open-questions.md#q38) — gitignored directory, opt-in
@@ -125,9 +125,9 @@ works end-to-end on one real ticket.
 - [x] Throwaway code lives on a spike branch; nothing merged into
       `.agent-src.uncompressed/` from this phase.
       *(Working branch: `feat/improve-agent-setup-10`; spike code
-      sits at repo root under `spike/` and does **not** touch
-      `.agent-src.uncompressed/`. Will be deleted once the
-      production `/implement-ticket` orchestrator lands.)*
+      sat at repo root under `spike/` and did **not** touch
+      `.agent-src.uncompressed/`. Deleted after Phase 1 shipped —
+      see ADR and commit `79f30e7` for the history.)*
 
 ## Phase 1 — DeliveryState + linear dispatcher ✅ shipped (2026-04-23)
 
