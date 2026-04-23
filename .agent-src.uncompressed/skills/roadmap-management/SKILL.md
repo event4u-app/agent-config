@@ -26,6 +26,13 @@ live state in real time. After **any** checkbox edit (`[x]`, `[~]`,
 `[-]`, `[ ]`) or phase add/rename/remove in a roadmap file, run
 `task roadmap-progress` **in the same response**.
 
+**Completion = archival.** If an edit takes a roadmap to
+`count_open == 0` (pure `[x]`, or `[x]` + `[~]`/`[-]`), `git mv`
+it into `agents/roadmaps/archive/` **before** regenerating — see
+the auto-archive decision table under "Check completion status"
+below. A 100%-complete roadmap left in `agents/roadmaps/` makes the
+next reader think work is still open.
+
 This is enforced by the [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)
 rule. Batching multiple edits in one response is fine — one final
 `task roadmap-progress` before replying is enough. But the response
