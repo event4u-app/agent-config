@@ -1,0 +1,69 @@
+name: Publish to npm
+
+# Publishes @event4u/agent-config to the npm registry via OIDC Trusted
+# Publishing whenever a bare-numeric version tag is pushed (e.g. 1.10.0,
+# 1.11.0, 2.0.0-rc.1). Tags follow the repository convention: no `v`
+# prefix, no component prefix — matching release-please config
+# (`include-v-in-tag: false`, `include-component-in-tag: false`).
+#
+# This workflow is the single publish path; the Release Please workflow
+# only creates tags and GitHub Releases.
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+-*'
+
+permissions:
+  contents: read
+
+jobs:
+  publish-npm:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # required for npm OIDC Trusted Publishing + provenance
+    steps:
+      - name: Check out released tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Upgrade npm (Trusted Publishing requires >= 11.5.1)
+        run: npm install -g npm@latest
+
+      - name: Verify package version matches tag
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::package.json version ($pkg) does not match tag ($tag); aborting publish."
+            exit 1
+          fi
+          echo "✅  $pkg == $tag"
+
+      - name: Publish via OIDC Trusted Publishing
+        run: npm publish
+
+      - name: Job summary
+        if: always()
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          {
+            echo "## npm publish"
+            echo
+            if [ "${{ job.status }}" = "success" ]; then
+              echo "📦  Published \`@event4u/agent-config@${tag}\` to https://registry.npmjs.org"
+              echo "- https://www.npmjs.com/package/@event4u/agent-config/v/${tag}"
+            else
+              echo "❌  Publish failed (see logs)"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

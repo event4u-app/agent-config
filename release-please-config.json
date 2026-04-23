@@ -5,6 +5,7 @@
       "release-type": "node",
       "package-name": "@event4u/agent-config",
       "include-v-in-tag": false,
+      "include-component-in-tag": false,
       "changelog-path": "CHANGELOG.md",
       "draft": false,
       "prerelease": false,
