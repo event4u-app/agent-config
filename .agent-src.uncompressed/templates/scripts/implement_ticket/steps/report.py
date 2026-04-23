@@ -20,6 +20,9 @@ from typing import Any, Iterable
 from ..delivery_state import DeliveryState, Outcome, StepResult
 from ..persona_policy import resolve_policy
 
+AMBIGUITIES: tuple[dict[str, str], ...] = ()
+"""Report rendering is pure and always succeeds — no blocked paths."""
+
 
 def run(state: DeliveryState) -> StepResult:
     """Render the delivery report into ``state.report`` and return SUCCESS."""

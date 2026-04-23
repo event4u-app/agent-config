@@ -32,6 +32,36 @@ from ..persona_policy import resolve_policy
 
 _ALLOWED_VERDICTS = ("success", "failed", "mixed")
 
+AMBIGUITIES: tuple[dict[str, str], ...] = (
+    {
+        "code": "upstream_implement_failed",
+        "trigger": "`implement` outcome is not `success`",
+        "resolution": "re-run `/implement-ticket` from the start",
+    },
+    {
+        "code": "empty_tests_delegate",
+        "trigger": "`state.tests` empty — test runner not invoked yet",
+        "resolution": (
+            "agent directive `run-tests scope=targeted|full` → "
+            "`/tests-execute` (qa persona widens to full suite)"
+        ),
+    },
+    {
+        "code": "malformed_tests",
+        "trigger": (
+            "`state.tests` is not a dict or `verdict` is not one of "
+            "success / failed / mixed"
+        ),
+        "resolution": "re-run tests and record a clean verdict",
+    },
+    {
+        "code": "bad_test_verdict",
+        "trigger": "`state.tests['verdict']` is `failed` or `mixed`",
+        "resolution": "fix failures and re-run, or abort",
+    },
+)
+"""Declared ambiguity surfaces. Advisory personas skip this step entirely."""
+
 
 def run(state: DeliveryState) -> StepResult:
     """Gate on ``implement``, then either delegate or validate ``state.tests``."""
@@ -147,4 +177,4 @@ def _blocked_on_bad_verdict(state: DeliveryState, verdict: Any) -> StepResult:
     )
 
 
-__all__ = ["run"]
+__all__ = ["AMBIGUITIES", "run"]

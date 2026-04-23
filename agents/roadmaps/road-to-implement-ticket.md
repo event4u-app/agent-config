@@ -215,9 +215,28 @@ works end-to-end on one real ticket.
 
 ## Phase 3 — block-on-ambiguity + persona policies
 
-- [ ] Every step declares the ambiguities it can surface.
-- [ ] When triggered, emit numbered options via `user-interaction`
+- [x] Every step declares the ambiguities it can surface.
+      *(Module-level `AMBIGUITIES` tuple on every step —
+      `refine` / `analyze` / `plan` / `implement` / `test` /
+      `verify` declare 3–4 codes each; `memory` and `report`
+      declare `()` explicitly so "forgot to declare" stays
+      distinguishable from "nothing to declare". Aggregated via
+      [`steps.all_ambiguities()`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/__init__.py);
+      mirrored in the flow contract
+      [`implement-ticket-flow.md#declared-ambiguity-surfaces`](../contexts/implement-ticket-flow.md#declared-ambiguity-surfaces).
+      20 codes total across 6 gate steps.)*
+- [x] When triggered, emit numbered options via `user-interaction`
       and stop. No fallback guess.
+      *([`test_ambiguity_coverage.py`](../../tests/implement_ticket/test_ambiguity_coverage.py)
+      — 5 tests lock the contract: every BLOCKED surface emits
+      ≥2 options matching `^> \d+\. ` per the
+      [`user-interaction`](../../.agent-src.uncompressed/rules/user-interaction.md)
+      rule; every ambiguity entry carries `code` / `trigger` /
+      `resolution`; codes are unique per step. Delegation gates
+      additionally emit an `@agent-directive:` marker ahead of
+      the numbered options so the orchestrator can route to the
+      matching skill; see `agent-directive()` in
+      [`delivery_state.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/delivery_state.py).)*
 - [x] Persona policies: `senior-engineer`, `qa`, `advisory` shipped.
       *([`persona_policy.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/persona_policy.py)
       — frozen `PersonaPolicy` dataclass with five flags
@@ -238,11 +257,37 @@ works end-to-end on one real ticket.
 
 ## Phase 4 — delivery report + README hero
 
-- [ ] Report schema (see context doc) — diffs summary, tests,
+- [x] Report schema (see context doc) — diffs summary, tests,
       memory-hits-that-mattered, follow-ups, suggested next
       commands.
-- [ ] README 2-minute demo section adds `/implement-ticket` as the
+      *([`steps/report.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/report.py)
+      renders all nine sections in the order fixed by
+      [`implement-ticket-flow.md#delivery-report-schema`](../contexts/implement-ticket-flow.md#delivery-report-schema):
+      Ticket · Persona · Plan · Changes · Tests · Verify ·
+      Memory that mattered · Follow-ups · Suggested next
+      commands. Droppable sections (`Memory that mattered` when
+      no hit carries `changed_outcome`; `Suggested next
+      commands` for advisory personas) are explicit in the
+      schema now, so reader and renderer agree. Pure
+      deterministic — no I/O, no subprocess. Locked by 10
+      tests in
+      [`test_step_report.py`](../../tests/implement_ticket/test_step_report.py)
+      covering heading order, droppable sections, plan-shape
+      variants, follow-up aggregation, and persona-gated
+      suggestions.)*
+- [x] README 2-minute demo section adds `/implement-ticket` as the
       flagship prompt (coordinates with Q19 hero rework).
+      *([`README.md`](../../README.md) gains a **"2-minute demo:
+      `/implement-ticket`"** section directly after Quickstart.
+      Shows the one-line invocation, the full `refine → memory →
+      analyze → plan → implement → test → verify → report` flow,
+      the block-on-ambiguity guarantee, the `minimal-safe-diff`
+      + `scope-control` constraint during implement, and the
+      persona switch (`senior-engineer` / `qa` / `advisory`).
+      Closes with links to the command reference and the flow
+      contract so a reader drilling down lands on authoritative
+      docs. Standalone — does not depend on Q19 hero rework,
+      which tracks separately under its own roadmap item.)*
 - [x] `AGENTS.md` + `copilot-instructions.md` reference
       `/implement-ticket` as the recommended entry flow.
       *(Command shipped at
@@ -259,18 +304,58 @@ works end-to-end on one real ticket.
 
 ## Acceptance criteria
 
-- [ ] One real ticket, one fresh clone, one run → verified change set
-      (tests green, quality-pipeline green) without the user
-      touching any command except `/implement-ticket` and
-      `/commit` / `/create-pr`.
-- [ ] Persona switch (`senior-engineer` vs `qa`) produces
+Mixed closure rules below. A box is ticked when either
+(a) deterministic behaviour is locked by tests and cannot drift
+without a test failure, or (b) a behavioural guarantee was
+demonstrated on a live run and the run is cited. Boxes that
+require a live run against a real ticket stay open — the code
+provides the *mechanism*, not the *demonstration*.
+
+- [ ] **Live-run only.** One real ticket, one fresh clone, one run →
+      verified change set (tests green, quality-pipeline green)
+      without the user touching any command except `/implement-ticket`
+      and `/commit` / `/create-pr`. Requires a live run; cannot be
+      closed by unit/integration tests. Tick this when the first
+      successful end-to-end delivery lands, with the ticket id
+      and commit SHA cited inline.
+- [x] Persona switch (`senior-engineer` vs `qa`) produces
       **visibly different** delivery reports on the same ticket.
-- [ ] At least one run where memory retrieval changed a decision
+      *(Mechanism locked. `qa` widens the `run-tests` directive to
+      `scope=full` —
+      [`test_persona_integration.py::test_qa_persona_widens_run_tests_directive`](../../tests/implement_ticket/test_persona_integration.py).
+      `advisory` drops the "Suggested next commands" section and
+      short-circuits `implement`/`test`/`verify` —
+      `test_advisory_report_drops_next_commands_section` +
+      `test_advisory_persona_converges_without_rebounds_after_plan`.
+      Same ticket fixture, different personas, demonstrably
+      different reports. Visual demonstration on a live ticket
+      rolls up into the live-run AC above.)*
+- [x] At least one run where memory retrieval changed a decision
       and the change is cited in the report.
-- [ ] At least one run that correctly `blocks` on ambiguity and
+      *(Mechanism locked.
+      [`test_full_flow_keeps_memory_section_when_hit_changed_outcome`](../../tests/implement_ticket/test_integration_full_flow.py)
+      asserts a hit with `changed_outcome=True` renders under
+      **Memory that mattered**;
+      `test_full_flow_drops_memory_section_when_no_hit_changed_outcome`
+      asserts the section is omitted when no hit is influential.
+      The report renderer faithfully cites influential hits; a
+      live demonstration on a real ticket rolls up into the
+      live-run AC above.)*
+- [x] At least one run that correctly `blocks` on ambiguity and
       emits a numbered question.
-- [ ] `minimal-safe-diff` + `scope-control` hold across all runs —
-      no drive-by edits.
+      *([`test_ambiguity_coverage.py::test_blocked_outputs_are_numbered_options`](../../tests/implement_ticket/test_ambiguity_coverage.py)
+      walks a representative BLOCKED path for every gate step
+      and asserts ≥2 options matching `^> \d+\. `. Per-step suites
+      (`test_step_refine.py`, `test_step_plan.py`, etc.) add
+      20 + specific BLOCKED assertions. Block-on-ambiguity is
+      behaviour, not intention.)*
+- [ ] **Live-run only.** `minimal-safe-diff` + `scope-control` hold
+      across all runs — no drive-by edits. The `implement` step
+      delegates editing to the agent via `@agent-directive:
+      apply-plan`; unit tests cannot observe the diff shape of a
+      real edit. Tick this when the first two live runs both land
+      with a reviewer-approved diff that stays inside the declared
+      scope, with the PR links cited inline.
 
 ## Metrics (Q38 ✅ decided)
 

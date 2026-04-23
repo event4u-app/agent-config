@@ -22,6 +22,25 @@ from __future__ import annotations
 
 from ..delivery_state import DeliveryState, Outcome, StepResult
 
+AMBIGUITIES: tuple[dict[str, str], ...] = (
+    {
+        "code": "upstream_refine_failed",
+        "trigger": "`refine` outcome is not `success`",
+        "resolution": "re-run `/implement-ticket` from the start",
+    },
+    {
+        "code": "upstream_memory_failed",
+        "trigger": "`memory` outcome is not `success`",
+        "resolution": "re-run `/implement-ticket` from the start",
+    },
+    {
+        "code": "lost_ac",
+        "trigger": "ticket lost its `acceptance_criteria` between runs",
+        "resolution": "restart with the full ticket payload",
+    },
+)
+"""Declared ambiguity surfaces. Every BLOCKED return maps to one code."""
+
 
 def run(state: DeliveryState) -> StepResult:
     """Return SUCCESS when upstream is coherent, BLOCKED otherwise."""
@@ -76,4 +95,4 @@ def _format_questions(ticket_id: str, missing: list[str]) -> list[str]:
     ]
 
 
-__all__ = ["run"]
+__all__ = ["AMBIGUITIES", "run"]

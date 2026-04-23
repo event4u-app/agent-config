@@ -27,6 +27,28 @@ from ..delivery_state import DeliveryState, Outcome, StepResult
 _MIN_TITLE_LEN = 3
 _MIN_AC_LEN = 10
 
+AMBIGUITIES: tuple[dict[str, str], ...] = (
+    {
+        "code": "missing_id",
+        "trigger": "ticket has no `id` field (or only whitespace)",
+        "resolution": "run `/refine-ticket` or paste the ticket id in chat",
+    },
+    {
+        "code": "trivial_title",
+        "trigger": f"title missing or shorter than {_MIN_TITLE_LEN} chars",
+        "resolution": "run `/refine-ticket` to rewrite the title",
+    },
+    {
+        "code": "missing_or_vague_ac",
+        "trigger": (
+            f"acceptance_criteria empty, non-list, or any item under "
+            f"{_MIN_AC_LEN} chars"
+        ),
+        "resolution": "run `/refine-ticket` to add concrete acceptance criteria",
+    },
+)
+"""Declared ambiguity surfaces. Every BLOCKED return maps to one code."""
+
 
 def run(state: DeliveryState) -> StepResult:
     """Return SUCCESS when the ticket is refined, BLOCKED otherwise."""
@@ -113,3 +135,6 @@ def _format_questions(ticket_id: str, deficiencies: list[str]) -> list[str]:
         "> 2. Provide the missing details in chat — I'll merge them into the ticket",
         "> 3. Abandon this ticket — too vague to implement",
     ]
+
+
+__all__ = ["AMBIGUITIES", "run"]

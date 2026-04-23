@@ -35,6 +35,28 @@ from ..delivery_state import (
     agent_directive,
 )
 
+AMBIGUITIES: tuple[dict[str, str], ...] = (
+    {
+        "code": "upstream_analyze_failed",
+        "trigger": "`analyze` outcome is not `success`",
+        "resolution": "re-run `/implement-ticket` from the start",
+    },
+    {
+        "code": "empty_plan_delegate",
+        "trigger": "`state.plan` empty — no plan recorded yet",
+        "resolution": "agent directive `create-plan` → `/feature-plan`",
+    },
+    {
+        "code": "malformed_plan",
+        "trigger": (
+            "plan is not a non-empty string, list of strings/dicts, "
+            "or dict with a non-empty `steps` list"
+        ),
+        "resolution": "re-run `/feature-plan` or correct the recorded plan",
+    },
+)
+"""Declared ambiguity surfaces. Every BLOCKED return maps to one code."""
+
 
 def run(state: DeliveryState) -> StepResult:
     """Gate on ``analyze``, then either delegate or validate the plan."""
@@ -150,4 +172,4 @@ def _blocked_on_shape(state: DeliveryState, issues: list[str]) -> StepResult:
     )
 
 
-__all__ = ["run"]
+__all__ = ["AMBIGUITIES", "run"]

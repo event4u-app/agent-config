@@ -33,6 +33,28 @@ from ..delivery_state import (
 )
 from ..persona_policy import resolve_policy
 
+AMBIGUITIES: tuple[dict[str, str], ...] = (
+    {
+        "code": "upstream_plan_failed",
+        "trigger": "`plan` outcome is not `success`",
+        "resolution": "re-run `/implement-ticket` from the start",
+    },
+    {
+        "code": "empty_changes_delegate",
+        "trigger": "`state.changes` empty — plan not applied yet",
+        "resolution": (
+            "agent directive `apply-plan` → edit under `minimal-safe-diff` "
+            "+ `scope-control`"
+        ),
+    },
+    {
+        "code": "malformed_changes",
+        "trigger": "any change entry is not a dict or has no non-empty `path`",
+        "resolution": "re-run `apply-plan` and resume",
+    },
+)
+"""Declared ambiguity surfaces. Advisory personas skip this step entirely."""
+
 
 def run(state: DeliveryState) -> StepResult:
     """Gate on ``plan``, then either delegate or validate ``state.changes``."""
@@ -120,4 +142,4 @@ def _blocked_on_shape(state: DeliveryState, issues: list[str]) -> StepResult:
     )
 
 
-__all__ = ["run"]
+__all__ = ["AMBIGUITIES", "run"]

@@ -198,10 +198,38 @@ Resuming is not automatic. The user answers and re-invokes
 `/implement-ticket` (or a follow-up command) with the answer in
 the context. V1 explicitly does **not** attempt resumable sessions.
 
+### Declared ambiguity surfaces
+
+Every step declares — in code — the conditions under which it
+can return `blocked`. The declarations live as module-level
+`AMBIGUITIES` tuples (see
+[`steps/__init__.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/__init__.py)
+`.all_ambiguities()`). The
+[`test_ambiguity_coverage.py`](../../tests/implement_ticket/test_ambiguity_coverage.py)
+suite locks the contract: adding a new `blocked` path without
+declaring it fails the build.
+
+| Step | Codes | Shape |
+|---|---|---|
+| `refine` | `missing_id`, `trivial_title`, `missing_or_vague_ac` | deterministic gate |
+| `memory` | — | always succeeds (zero hits is valid) |
+| `analyze` | `upstream_refine_failed`, `upstream_memory_failed`, `lost_ac` | deterministic gate |
+| `plan` | `upstream_analyze_failed`, `empty_plan_delegate`, `malformed_plan` | delegation gate |
+| `implement` | `upstream_plan_failed`, `empty_changes_delegate`, `malformed_changes` | delegation gate |
+| `test` | `upstream_implement_failed`, `empty_tests_delegate`, `malformed_tests`, `bad_test_verdict` | delegation gate |
+| `verify` | `upstream_test_failed`, `empty_verify_delegate`, `malformed_verify`, `bad_verify_verdict` | delegation gate |
+| `report` | — | pure renderer, always succeeds |
+
+Delegation-gate `empty_*_delegate` codes emit an `@agent-directive:`
+so the orchestrator runs the matching skill (`feature-plan`,
+`apply-plan`, `run-tests`, `review-changes`) and resumes. All
+other codes halt the flow with numbered options for the user.
+
 ## Delivery report schema
 
 A copyable markdown block with fixed sections (any section may be
-empty, but all headings are present):
+empty, but all headings are present unless explicitly marked
+*droppable*):
 
 1. **Ticket** — one-line restatement.
 2. **Persona** — active role + policy summary.
@@ -209,10 +237,21 @@ empty, but all headings are present):
 4. **Changes** — files, line ranges, one-sentence purpose each.
 5. **Tests** — what ran, verdicts, durations.
 6. **Verify** — review verdict + confidence level.
-7. **Memory that mattered** — only hits that changed an outcome.
+7. **Memory that mattered** *(droppable)* — only hits that changed
+   an outcome. When no hit carries a `changed_outcome` marker the
+   entire section (heading included) is omitted so the reader
+   doesn't mistake "nothing influential" for "memory is broken".
 8. **Follow-ups** — deferred work, with file:line anchors.
-9. **Suggested next commands** — `/commit`, `/create-pr`, etc.
-   Never run automatically.
+9. **Suggested next commands** *(droppable)* — `/commit`,
+   `/create-pr`, etc. Never run automatically. Advisory personas
+   produce a plan-only report and omit this section entirely
+   because nothing was changed.
+
+Implementation: see
+[`steps/report.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/report.py).
+Section renderers are pure and deterministic; consumers can rely
+on the heading order and on each section either rendering with
+content or being omitted per the rules above.
 
 ## Metrics
 

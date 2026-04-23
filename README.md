@@ -73,6 +73,44 @@ Install directly in your agent for global, cross-project use:
 
 ---
 
+## 2-minute demo: `/implement-ticket`
+
+The flagship command. Drives a ticket end-to-end through a fixed
+linear flow — and **blocks on ambiguity instead of guessing**.
+
+```
+/implement-ticket PROJ-123
+```
+
+The agent runs this sequence:
+
+```
+refine → memory → analyze → plan → implement → test → verify → report
+```
+
+- **Refines** the ticket if acceptance criteria are vague.
+- **Queries memory** for past decisions, invariants, incidents.
+- **Plans** the change; you confirm before any file is touched.
+- **Implements** under `minimal-safe-diff` + `scope-control` — no
+  drive-by edits.
+- **Runs tests** (targeted first, full suite on success).
+- **Reviews** the diff through four judges (bugs, security,
+  tests, code quality).
+- **Reports** a copyable markdown block with changes, verdicts,
+  and follow-ups — then stops. `/commit` and `/create-pr` are
+  suggestions, never run automatically.
+
+If any step hits ambiguity, the flow halts with numbered options
+so you decide — never a silent guess. Persona comes from
+`.agent-settings.yml` (`roles.active_role`): `senior-engineer`
+(default), `qa` (widens to the full test suite), or `advisory`
+(plan-only, skips implementation).
+
+→ [Command reference](.agent-src/commands/implement-ticket.md) ·
+  [Flow contract](agents/contexts/implement-ticket-flow.md)
+
+---
+
 ## What your agent is asked to do
 
 The package ships rules and skills that guide the agent toward these

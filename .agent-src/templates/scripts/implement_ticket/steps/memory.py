@@ -36,6 +36,13 @@ MEMORY_TYPES: tuple[str, ...] = (
 MAX_HITS: int = 12
 """Hard cap per the roadmap — never raise without amending the contract."""
 
+AMBIGUITIES: tuple[dict[str, str], ...] = ()
+"""Memory retrieval always succeeds — zero hits is a valid outcome.
+
+Declared empty so the aggregate registry in ``steps/__init__.py``
+can round-trip every step's surfaces without a special case.
+"""
+
 _WORD = re.compile(r"[A-Za-z][A-Za-z0-9_\-]{2,}")
 _STOPWORDS = frozenset(
     {

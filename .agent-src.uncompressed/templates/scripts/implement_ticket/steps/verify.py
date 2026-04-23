@@ -32,6 +32,36 @@ from ..persona_policy import resolve_policy
 
 _ALLOWED_VERDICTS = ("success", "blocked", "partial")
 
+AMBIGUITIES: tuple[dict[str, str], ...] = (
+    {
+        "code": "upstream_test_failed",
+        "trigger": "`test` outcome is not `success`",
+        "resolution": "re-run `/implement-ticket` from the start",
+    },
+    {
+        "code": "empty_verify_delegate",
+        "trigger": "`state.verify` empty — four-judge review not run yet",
+        "resolution": "agent directive `review-changes` → `/review-changes`",
+    },
+    {
+        "code": "malformed_verify",
+        "trigger": (
+            "`state.verify` is not a dict or `verdict` is not one of "
+            "success / blocked / partial"
+        ),
+        "resolution": "re-run `/review-changes` and record a clean verdict",
+    },
+    {
+        "code": "bad_verify_verdict",
+        "trigger": "`state.verify['verdict']` is `blocked` or `partial`",
+        "resolution": (
+            "address findings and re-run `/review-changes` — never bypass "
+            "(see `verify-before-complete`)"
+        ),
+    },
+)
+"""Declared ambiguity surfaces. Advisory personas skip this step entirely."""
+
 
 def run(state: DeliveryState) -> StepResult:
     """Gate on ``test``, then either delegate or validate ``state.verify``."""
@@ -137,4 +167,4 @@ def _blocked_on_bad_verdict(state: DeliveryState, verdict: Any) -> StepResult:
     )
 
 
-__all__ = ["run"]
+__all__ = ["AMBIGUITIES", "run"]

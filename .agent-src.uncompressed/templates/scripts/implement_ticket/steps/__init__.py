@@ -21,7 +21,23 @@ from __future__ import annotations
 
 from . import analyze, implement, memory, plan, refine, report, test, verify
 
+_STEPS = (refine, memory, analyze, plan, implement, test, verify, report)
+
+
+def all_ambiguities() -> dict[str, tuple[dict[str, str], ...]]:
+    """Return `{step_name: AMBIGUITIES}` for every step in flow order.
+
+    Used by documentation generators and the ``test_ambiguity_coverage``
+    suite to prove every step explicitly declares what can surface a
+    ``BLOCKED`` outcome. Steps that always succeed (``memory``,
+    ``report``) return an empty tuple — declared intent, not an
+    omission.
+    """
+    return {step.__name__.rsplit(".", 1)[-1]: step.AMBIGUITIES for step in _STEPS}
+
+
 __all__ = [
+    "all_ambiguities",
     "analyze",
     "implement",
     "memory",
