@@ -4,6 +4,14 @@
     "description": "Shared agent configuration — skills, rules, commands, guidelines, and templates for AI coding tools",
     "license": "MIT",
     "private": false,
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/event4u-app/agent-config.git"
+    },
+    "bugs": {
+        "url": "https://github.com/event4u-app/agent-config/issues"
+    },
+    "homepage": "https://github.com/event4u-app/agent-config#readme",
     "files": [
         ".agent-src/",
         ".augment-plugin/",
