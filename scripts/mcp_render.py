@@ -31,16 +31,23 @@ import sys
 from pathlib import Path
 from typing import Any
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-SOURCE_FILE = PROJECT_ROOT / "mcp.json"
-
 ENV_PLACEHOLDER = re.compile(r"\$\{env:([^}]+)\}")
 
-# In-project targets. Claude Desktop is user-scope, opt-in via --claude-desktop.
-IN_PROJECT_TARGETS: dict[str, Path] = {
-    "cursor": PROJECT_ROOT / ".cursor" / "mcp.json",
-    "windsurf": PROJECT_ROOT / ".windsurf" / "mcp.json",
-}
+# Project root defaults to the current working directory so the renderer
+# works both for package maintainers (running from the package root via
+# Taskfile) and for consumer projects (running via `./agent-config
+# mcp:render` from their own repo root). Override with --project-root.
+def default_project_root() -> Path:
+    return Path.cwd().resolve()
+
+
+def in_project_targets(project_root: Path) -> dict[str, Path]:
+    return {
+        "cursor": project_root / ".cursor" / "mcp.json",
+        "windsurf": project_root / ".windsurf" / "mcp.json",
+    }
+
+
 CLAUDE_DESKTOP_TARGET = Path.home() / ".config" / "claude-desktop" / "claude_desktop_config.json"
 
 
@@ -104,20 +111,25 @@ def write_target(path: Path, content: dict[str, Any]) -> None:
     path.write_text(serialized, encoding="utf-8")
 
 
-def collect_targets(include_claude_desktop: bool) -> dict[str, Path]:
-    targets = dict(IN_PROJECT_TARGETS)
+def collect_targets(project_root: Path, include_claude_desktop: bool) -> dict[str, Path]:
+    targets = dict(in_project_targets(project_root))
     if include_claude_desktop:
         targets["claude-desktop"] = CLAUDE_DESKTOP_TARGET
     return targets
 
 
+def resolve_source(args: argparse.Namespace, project_root: Path) -> Path:
+    return Path(args.source) if args.source else project_root / "mcp.json"
+
+
 def cmd_render(args: argparse.Namespace) -> int:
-    data = load_source(Path(args.source))
+    project_root = Path(args.project_root).resolve() if args.project_root else default_project_root()
+    data = load_source(resolve_source(args, project_root))
     rendered, missing = render(data)
     if missing:
         print(format_missing_report(missing), file=sys.stderr)
         return 1
-    targets = collect_targets(args.claude_desktop)
+    targets = collect_targets(project_root, args.claude_desktop)
     for name, path in targets.items():
         write_target(path, rendered)
         print(f"✅  {name:16} → {path}")
@@ -125,20 +137,21 @@ def cmd_render(args: argparse.Namespace) -> int:
 
 
 def cmd_check(args: argparse.Namespace) -> int:
-    data = load_source(Path(args.source))
+    project_root = Path(args.project_root).resolve() if args.project_root else default_project_root()
+    data = load_source(resolve_source(args, project_root))
     rendered, missing = render(data)
     if missing:
         print(format_missing_report(missing), file=sys.stderr)
         return 1
     serialized = json.dumps(rendered, indent=2, sort_keys=True) + "\n"
-    targets = collect_targets(args.claude_desktop)
+    targets = collect_targets(project_root, args.claude_desktop)
     diffs = []
     for name, path in targets.items():
         actual = path.read_text(encoding="utf-8") if path.exists() else ""
         if actual != serialized:
             diffs.append((name, path))
     if diffs:
-        print("❌  Targets out of date (run `task mcp:render`):", file=sys.stderr)
+        print("❌  Targets out of date (run `./agent-config mcp:render`):", file=sys.stderr)
         for name, path in diffs:
             print(f"  - {name}: {path}", file=sys.stderr)
         return 1
@@ -148,7 +161,8 @@ def cmd_check(args: argparse.Namespace) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Render mcp.json → per-tool config files.")
-    parser.add_argument("--source", default=str(SOURCE_FILE), help="Source mcp.json (default: repo root)")
+    parser.add_argument("--source", default=None, help="Source mcp.json (default: <project-root>/mcp.json)")
+    parser.add_argument("--project-root", default=None, help="Project root for resolving source and targets (default: CWD)")
     parser.add_argument("--claude-desktop", action="store_true", help="Also write Claude Desktop user-scope config")
     parser.add_argument("--check", action="store_true", help="Dry-run; exit non-zero if targets are stale")
     args = parser.parse_args(argv)
