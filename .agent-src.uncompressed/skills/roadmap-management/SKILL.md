@@ -159,12 +159,28 @@ After the last step of a roadmap is done, check completion status:
    - `[~]` = deferred (intentionally pushed out, may come back)
    - `[-]` = cancelled (individual item dropped)
 
-3. **If ALL items are `[x]`** (nothing open, nothing deferred, nothing cancelled):
-   → **Auto-archive.** Move the file to `agents/roadmaps/archive/` silently.
-   Show: `✅  Roadmap archived → agents/roadmaps/archive/{filename}`
+3. **Decision rule — `count_open == 0` means the roadmap has no active
+   work left. `[x]`, `[~]`, `[-]` are all finalized states; only `[ ]`
+   blocks closure. "Fertig ist fertig" — deferred and cancelled items
+   don't hold a finished roadmap in the active set.**
 
-4. **If any items are `[ ]`, `[~]`, or `[-]`:**
-   → **Ask the user.** Show what's incomplete and why:
+   | count_x | count_open | count_deferred / cancelled | Action |
+   |---|---|---|---|
+   | ≥ 1 | 0 | 0 | **Auto-archive** (silent) — pure completion |
+   | ≥ 1 | 0 | ≥ 1 | **Auto-archive** (silent) — done with intentional skips |
+   | 0 | 0 | ≥ 1 | **Auto-skip** (silent) — no work happened, scope dropped |
+   | ≥ 0 | ≥ 1 | ≥ 0 | **Ask the user** — open work remains |
+
+   Show on auto-move:
+
+   - Archive: `✅  Roadmap archived → agents/roadmaps/archive/{filename}`
+   - Skip:    `⏭️  Roadmap skipped → agents/roadmaps/skipped/{filename}`
+
+   The deferred/cancelled items remain searchable inside the archived file
+   (grep for `- [~]` / `- [-]` across `archive/`); a future revival opens a
+   new roadmap that cites the archived one.
+
+4. **If any items are `[ ]`:** → **Ask the user.** Show what's incomplete:
 
    ```
    📋 Roadmap completion check:
@@ -174,7 +190,7 @@ After the last step of a roadmap is done, check completion status:
      ⏭️  Deferred:  {count_skip}  — {list of deferred items, 1 line each}
      ❌  Cancelled: {count_cancel} — {list of cancelled items, 1 line each}
 
-   > 1. Archive — work happened, remaining items are intentionally unfinished
+   > 1. Archive — mark open items as cancelled [-] and archive now
    > 2. Keep active — I want to finish the open items
    > 3. Mark open items as deferred [~] and archive
    > 4. Skip — move to skipped/ (no meaningful work done, not pursuing)
@@ -203,6 +219,7 @@ After the last step of a roadmap is done, check completion status:
 |---|---|
 | Finished all phases | `archive/` |
 | Finished some phases, rest deferred/cancelled on purpose | `archive/` |
+| Whole roadmap deferred or cancelled (no `[x]` at all) | `skipped/` |
 | Never started, scope decision reversed | `skipped/` |
 | Superseded by another roadmap | `skipped/` — add a pointer line at the top: `> Superseded by agents/roadmaps/{other}.md` |
 | Research proved the direction wrong | `skipped/` — add a 1-line reason at the top |
