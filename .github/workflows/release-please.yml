@@ -1,0 +1,50 @@
+name: Release Please
+
+# Automated release manager based on Conventional Commits.
+#
+# On every push to main, release-please scans commits since the last tag
+# and maintains a single "Release PR" that bumps package.json,
+# .claude-plugin/marketplace.json, and CHANGELOG.md in one atomic commit.
+# Merging that PR triggers the tag + GitHub Release.
+#
+# Supersedes .github/workflows/release.yml (workflow_dispatch pipeline).
+# Release Guard (release-guard.yml) still runs on every pushed tag as an
+# independent version-consistency check — including tags created by
+# release-please.
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Maintain release PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run release-please
+        uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "## Release Please"
+            echo
+            if [ "${{ steps.release.outputs.release_created }}" = "true" ]; then
+              echo "🚀  Released: \`${{ steps.release.outputs.tag_name }}\`"
+              echo "- Tag: [\`${{ steps.release.outputs.tag_name }}\`](https://github.com/${{ github.repository }}/releases/tag/${{ steps.release.outputs.tag_name }})"
+            elif [ "${{ steps.release.outputs.prs_created }}" = "true" ]; then
+              echo "📝  Release PR created or updated"
+            else
+              echo "ℹ️   No release-worthy changes since last tag"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
