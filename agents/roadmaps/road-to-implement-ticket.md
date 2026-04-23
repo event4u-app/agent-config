@@ -170,12 +170,30 @@ works end-to-end on one real ticket.
       `memory_lookup.retrieve` with a hard cap of 12. Keys derived
       from `files` → title → AC, stop-words dropped, duplicates
       removed. 6 tests with a spy over `retrieve`.)*
-- [ ] Step `analyze` → delegates to analysis router.
-- [ ] Step `plan` → delegates to `feature-plan`.
+- [x] Step `analyze` → deterministic precondition gate.
+      *([`steps/analyze.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/analyze.py)
+      — SUCCESS when `refine` + `memory` both succeeded and the
+      ticket still carries AC; BLOCKED with numbered retry/abort
+      options otherwise. Pure gate, no mutation. 7 tests cover
+      single failures, combined failures, and the clean path.)*
+- [x] Step `plan` → gate + Option-A delegation to `feature-plan`.
+      *([`steps/plan.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/plan.py)
+      — blocks on missing `analyze` precondition, blocks with
+      `@agent-directive: create-plan` when `state.plan` is empty,
+      validates shape (string / list of steps / `{steps: [...]}`)
+      otherwise. 11 tests cover every gate path + directive
+      formatting.)*
 - [ ] Step `implement` → actual edits (guarded by `minimal-safe-diff`).
 - [ ] Step `test` → `tests-execute` + `quality-fix` (targeted first).
 - [ ] Step `verify` → `review-changes` + `verify-before-complete`.
-- [ ] Step `report` → delivery-report renderer.
+- [x] Step `report` → delivery-report renderer.
+      *([`steps/report.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/report.py)
+      — pure deterministic Markdown renderer per the 9-section
+      report schema in `implement-ticket-flow.md`. Drops the
+      "Memory that mattered" section when no hit carries a
+      `changed_outcome` marker; suggests `/create-pr` only when
+      `verify` succeeded. 10 tests lock the schema + placeholder
+      behaviour.)*
 
 ## Phase 3 — block-on-ambiguity + persona policies
 
