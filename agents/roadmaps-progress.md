@@ -6,17 +6,17 @@
 
 ## Overall
 
-**21 / 22 steps done · 95%**
+**22 / 22 steps done · 100%**
 
 ```text
-██████████████████████████████████████░░   95%
+████████████████████████████████████████   100%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Done | Open | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-frontmatter-schema.md](roadmaps/road-to-frontmatter-schema.md) | 4 | 22 | 21 | 1 | 0 | 0 | ██████████ 95% |
+| 1 | [road-to-frontmatter-schema.md](roadmaps/road-to-frontmatter-schema.md) | 4 | 22 | 22 | 0 | 0 | 0 | ██████████ 100% |
 
 ---
 
@@ -24,12 +24,12 @@
 
 ### [road-to-frontmatter-schema.md](roadmaps/road-to-frontmatter-schema.md)
 
-**frontmatter JSON-Schema validation** — 21 / 22 done (95%)
+**frontmatter JSON-Schema validation** — 22 / 22 done (100%)
 
 | # | Phase | State | Done | Open | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | inventory + contract extraction | ✅ done | 5 | 0 | 0 | 0 | 100% |
 | 2 | schemas authored | ✅ done | 4 | 0 | 0 | 0 | 100% |
 | 3 | linter integration | ✅ done | 4 | 0 | 0 | 0 | 100% |
-| 4 | CI gate + docs | 🟡 in progress | 8 | 1 | 0 | 0 | 89% |
+| 4 | CI gate + docs | ✅ done | 9 | 0 | 0 | 0 | 100% |
 

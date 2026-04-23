@@ -128,7 +128,7 @@ To keep the roadmap small and the review feedback from sprawling:
 
 ## Acceptance criteria — roadmap level
 
-- [ ] All four phases shipped as separate commits.
+- [x] All four phases shipped as separate commits.
 - [x] Four schemas under `scripts/schemas/` plus one contract doc.
 - [x] `task ci` green; deliberate-break fixture fails with a clear
       schema error.
