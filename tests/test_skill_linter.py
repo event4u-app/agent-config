@@ -178,6 +178,7 @@ def test_valid_rule_passes(tmp_path: Path) -> None:
         """---
 type: "always"
 source: package
+description: "Always apply these directives when writing or editing content."
 ---
 
 # Good Rule
