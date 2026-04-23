@@ -18,6 +18,12 @@ This repository contains {{project_description_oneline}}.
 > **For Copilot Chat users:** Deeper context lives in `.augment/` (skills,
 > rules, guidelines) and `AGENTS.md`. The instructions below are
 > self-contained for Copilot Code Review.
+>
+> For most tickets — feature, bug fix, or refactor — start with
+> `/implement-ticket` (see `.augment/commands/implement-ticket.md`). It drives
+> the linear flow `refine → memory → analyze → plan → implement → test →
+> verify → report`, blocks on ambiguity instead of guessing, and never
+> commits, pushes, or opens PRs on its own.
 
 ## ✅ Scope Control
 

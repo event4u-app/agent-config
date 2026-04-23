@@ -116,7 +116,7 @@ Your agent now understands slash commands:
 | `/fix-ci` | Fetch and fix GitHub Actions failures |
 | `/quality-fix` | Run and fix all quality checks |
 
-→ [Browse all 66 commands](../.agent-src/commands/)
+→ [Browse all 67 commands](../.agent-src/commands/)
 
 ---
 

@@ -32,6 +32,15 @@
 | Commands (workflows) | `.augment/commands/` |
 | Copilot instructions | `.github/copilot-instructions.md` |
 
+### Recommended entry flow
+
+For most tickets — feature, bug fix, or refactor — start with
+[`/implement-ticket`](.augment/commands/implement-ticket.md). It drives the
+linear flow `refine → memory → analyze → plan → implement → test → verify →
+report` with block-on-ambiguity semantics and no auto-git. Persona comes from
+`.agent-settings.yml` (`roles.active_role`). Use `/commit` and `/create-pr`
+explicitly after the delivery report.
+
 ### Multi-Agent Support
 
 | Tool | Rules | Skills | How |

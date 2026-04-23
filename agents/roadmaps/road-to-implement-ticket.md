@@ -243,8 +243,19 @@ works end-to-end on one real ticket.
       commands.
 - [ ] README 2-minute demo section adds `/implement-ticket` as the
       flagship prompt (coordinates with Q19 hero rework).
-- [ ] `AGENTS.md` + `copilot-instructions.md` reference
+- [x] `AGENTS.md` + `copilot-instructions.md` reference
       `/implement-ticket` as the recommended entry flow.
+      *(Command shipped at
+      [`.agent-src.uncompressed/commands/implement-ticket.md`](../../.agent-src.uncompressed/commands/implement-ticket.md)
+      — agent-facing instructions for the Option-A dispatch loop
+      over `python3 -m implement_ticket`, with a directive-to-
+      skill mapping table (`create-plan` → `/feature-plan`,
+      `apply-plan` → minimal-safe-diff edit, `run-tests` →
+      `/tests-execute`, `review-changes` → `/review-changes`) and
+      a close-prompt offering `/commit` and `/create-pr` after
+      delivery. Both templates now point new projects at
+      `/implement-ticket` as the first thing to try; consumer
+      projects inherit the reference on install.)*
 
 ## Acceptance criteria
 
