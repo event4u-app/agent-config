@@ -1,0 +1,21 @@
+{
+  "contract_version": 1,
+  "status": "error",
+  "entries": [],
+  "slices": {
+    "historical-patterns": { "status": "misconfigured", "count": 0 },
+    "ownership":           { "status": "internal",      "count": 0 }
+  },
+  "errors": [
+    {
+      "type": "historical-patterns",
+      "code": "misconfigured",
+      "message": "table `memory_entries` missing — did you run migrations?"
+    },
+    {
+      "type": "ownership",
+      "code": "internal",
+      "message": "connection reset by peer"
+    }
+  ]
+}

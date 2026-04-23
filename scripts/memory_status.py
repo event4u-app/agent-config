@@ -40,6 +40,12 @@ _HEALTH_TIMEOUT_SECONDS = 2.0
 _CACHE_ENV = "AGENT_MEMORY_STATUS"
 _CACHE_FILE = Path(".agent-memory") / "status.cache"
 
+# Retrieval contract version served by the file-backed fallback.
+# Source of truth: schemas/retrieval-v1.schema.json.
+CONTRACT_VERSION = 1
+_FILE_BACKEND_VERSION = "0.0.0-file"
+_FILE_BACKEND_FEATURES = ("file-fallback",)
+
 
 @dataclass
 class Result:
@@ -135,12 +141,45 @@ def status(refresh: bool = False) -> Result:
     return result
 
 
+def health(refresh: bool = False) -> dict:
+    """Return a v1 retrieval-contract health envelope.
+
+    Schema: ``schemas/retrieval-v1.schema.json`` (HealthResponse).
+    Maps the three-state :func:`status` result onto the contract's
+    ``ok | degraded | error`` so consumers can read
+    ``contract_version`` without caring about the file-vs-package split.
+    """
+    r = status(refresh=refresh)
+    envelope_status = {
+        "present": "ok",
+        "misconfigured": "degraded",
+        "absent": "ok",
+    }[r.status]
+    # When the package is present, report its version from `health()`
+    # output; until we parse that, keep the file-fallback marker so the
+    # envelope never lies about what backed the response.
+    backend_version = _FILE_BACKEND_VERSION
+    features = list(_FILE_BACKEND_FEATURES)
+    return {
+        "contract_version": CONTRACT_VERSION,
+        "status": envelope_status,
+        "backend_version": backend_version,
+        "features": features,
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--format", choices=["text", "json"], default="text")
     ap.add_argument("--refresh", action="store_true",
                     help="Bypass the session cache and probe fresh")
+    ap.add_argument("--health", action="store_true",
+                    help="Emit a v1 retrieval-contract health envelope "
+                         "instead of the legacy status line")
     args = ap.parse_args()
+    if args.health:
+        print(json.dumps(health(refresh=args.refresh)))
+        return 0
     r = status(refresh=args.refresh)
     if args.format == "json":
         print(json.dumps(asdict(r)))

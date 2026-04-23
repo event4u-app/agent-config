@@ -1,0 +1,32 @@
+{
+  "contract_version": 1,
+  "status": "ok",
+  "entries": [
+    {
+      "id": "01HZKM9X0000000000000000R1",
+      "type": "domain-invariants",
+      "source": "repo",
+      "confidence": 0.95,
+      "body": {
+        "statement": "A tenant scope is always derived from the authenticated user, never from the request payload."
+      },
+      "last_validated": "2026-04-20T09:00:00Z",
+      "shadowed_by": null
+    },
+    {
+      "id": "01HZKM9X0000000000000000R1",
+      "type": "domain-invariants",
+      "source": "operational",
+      "confidence": 0.60,
+      "trust": 0.50,
+      "body": {
+        "statement": "Tenant scope may be overridden by a header in debug mode."
+      },
+      "last_validated": "2026-03-02T08:00:00Z",
+      "shadowed_by": "repo:01HZKM9X0000000000000000R1"
+    }
+  ],
+  "slices": {
+    "domain-invariants": { "status": "ok", "count": 2 }
+  }
+}

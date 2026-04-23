@@ -127,4 +127,4 @@ holds:
 - [`memory-access guideline`](../../.agent-src.uncompressed/guidelines/agent-infra/memory-access.md)
 - [`scripts/memory_status.py`](../../.agent-src.uncompressed/templates/scripts/memory_status.py)
 - [`scripts/memory_lookup.py`](../../.agent-src.uncompressed/templates/scripts/memory_lookup.py)
-- [`open-questions-2.md`](../roadmaps/open-questions-2.md) — Q29
+- [`open-questions-2.md`](../roadmaps/archive/open-questions-2.md) — Q29

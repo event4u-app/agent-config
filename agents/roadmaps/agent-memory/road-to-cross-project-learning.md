@@ -137,6 +137,6 @@ Hard rules — agent-memory must enforce these on the signal emit path:
   intra-project loop that this one extends
 - [`../road-to-curated-self-improvement.md`](../road-to-curated-self-improvement.md) —
   downstream consumer of proposals
-- [`../road-to-agent-outcomes.md`](../road-to-agent-outcomes.md) —
+- [`../archive/road-to-agent-outcomes.md`](../archive/road-to-agent-outcomes.md) —
   the outcome this loop serves: the system gets sharper with each
   consumer onboarded

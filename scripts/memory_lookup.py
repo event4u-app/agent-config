@@ -294,6 +294,100 @@ def retrieve(
     return final_hits
 
 
+CONTRACT_VERSION = 1
+
+# Memory types this file-backed backend can answer. Types outside this
+# set map to `unknown_type` per the retrieval contract.
+_KNOWN_TYPES = CURATED_TYPES
+
+
+def retrieve_v1(
+    types: list[str],
+    keys: list[str],
+    limit: int = 20,
+    operational_provider: Optional[OperationalProvider] = None,
+) -> dict:
+    """Return a v1 retrieval-contract envelope.
+
+    Wraps :func:`retrieve` and projects the internal ``Hit`` shape into
+    the shape defined by
+    ``schemas/retrieval-v1.schema.json``. Unknown types are reported as
+    ``status: unknown_type`` for that slice only, rather than failing
+    the whole call.
+    """
+    known = [t for t in types if t in _KNOWN_TYPES]
+    unknown = [t for t in types if t not in _KNOWN_TYPES]
+
+    result = retrieve(known, keys, limit=limit,
+                      operational_provider=operational_provider,
+                      with_shadows=True)
+    assert isinstance(result, RetrievalResult)
+    hits, shadows = result.hits, result.shadows
+    shadow_by_id = {s.id: s for s in shadows if s.id}
+
+    slice_counts: dict[str, int] = {t: 0 for t in known}
+    entries: list[dict] = []
+    for h in hits:
+        source = "operational" if h.source == "operational" else "repo"
+        envelope_entry: dict = {
+            "id": h.id,
+            "type": h.type,
+            "source": source,
+            "confidence": round(float(h.score), 4),
+            "body": dict(h.entry) if isinstance(h.entry, dict) else {},
+            "shadowed_by": None,
+        }
+        if h.type in slice_counts:
+            slice_counts[h.type] += 1
+        entries.append(envelope_entry)
+
+    # Surface shadowed operational entries as additional entries carrying
+    # `shadowed_by`. The conformance harness checks that only
+    # source="operational" entries ever set this field.
+    for sid, s in shadow_by_id.items():
+        entries.append({
+            "id": sid,
+            "type": s.type,
+            "source": "operational",
+            "confidence": 0.0,
+            "body": {},
+            "shadowed_by": f"repo:{sid}",
+        })
+        if s.type in slice_counts:
+            slice_counts[s.type] += 1
+
+    slices: dict[str, dict] = {
+        t: {"status": "ok", "count": slice_counts.get(t, 0)}
+        for t in known
+    }
+    errors: list[dict] = []
+    for t in unknown:
+        slices[t] = {"status": "unknown_type", "count": 0}
+        errors.append({
+            "type": t,
+            "code": "unknown_type",
+            "message": f"file-backed backend does not know type {t!r}",
+        })
+
+    oks = [s for s in slices.values() if s["status"] == "ok"]
+    fails = [s for s in slices.values() if s["status"] != "ok"]
+    envelope_status = (
+        "ok" if not fails
+        else "error" if not oks
+        else "partial"
+    )
+
+    envelope: dict = {
+        "contract_version": CONTRACT_VERSION,
+        "status": envelope_status,
+        "entries": entries,
+        "slices": slices,
+    }
+    if errors:
+        envelope["errors"] = errors
+    return envelope
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--types", default="",
@@ -302,6 +396,9 @@ def main() -> int:
                     help="Retrieval key (repeatable)")
     ap.add_argument("--limit", type=int, default=5)
     ap.add_argument("--format", choices=["text", "json"], default="text")
+    ap.add_argument("--envelope", choices=["legacy", "v1"], default="legacy",
+                    help="Output shape: `legacy` (Hit list) or `v1` "
+                         "(retrieval contract v1 envelope). `v1` implies JSON output.")
     ap.add_argument("--with-shadows", action="store_true",
                     help="Include shadowed-operational entries in the output "
                          "(no-op until an operational backend is wired)")
@@ -310,6 +407,10 @@ def main() -> int:
     if not types:
         print("error: --types is required", file=sys.stderr)
         return 2
+    if args.envelope == "v1":
+        envelope = retrieve_v1(types, args.key, args.limit)
+        print(json.dumps(envelope, indent=2, default=str))
+        return 0
     result = retrieve(types, args.key, args.limit, with_shadows=args.with_shadows)
     if args.with_shadows:
         assert isinstance(result, RetrievalResult)
