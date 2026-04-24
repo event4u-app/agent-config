@@ -73,6 +73,29 @@ eloquent:
   # magic_properties = use $model->column_name (Laravel default)
   access_style: getters_setters
 
+# --- Chat history (crash recovery) ---
+#
+# Persistent JSONL log at .agent-chat-history (project root, git-ignored).
+# Keeps a durable record of the conversation so a crashed or switched
+# agent session can be resumed. See scripts/chat_history.py for the API.
+chat_history:
+  # Log chat events to disk (true, false)
+  enabled: true
+
+  # Logging granularity
+  #   per_turn  = one entry per user↔agent turn (lightest)
+  #   per_phase = one entry per workflow phase
+  #   per_tool  = one entry per tool call (most verbose)
+  frequency: __CHAT_HISTORY_FREQUENCY__
+
+  # Max file size in KB before overflow handling kicks in (integer)
+  max_size_kb: __CHAT_HISTORY_MAX_SIZE_KB__
+
+  # Overflow behavior
+  #   rotate   = drop oldest entries to stay under max_size_kb
+  #   compress = mark for summarization on the next agent turn
+  on_overflow: __CHAT_HISTORY_ON_OVERFLOW__
+
 # --- Optional pipelines ---
 pipelines:
   # Skill improvement pipeline (true, false)

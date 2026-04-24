@@ -111,6 +111,27 @@ eloquent:
   # magic_properties = use $model->column_name (Laravel default)
   access_style: getters_setters
 
+# --- Chat history (crash recovery) ---
+#
+# Persistent JSONL log at .agent-chat-history (project root, git-ignored).
+# Keeps a durable record of the conversation so a crashed or switched
+# agent session can be resumed. See scripts/chat_history.py for the API.
+#
+# Defaults below are placeholders — scripts/install.py substitutes them
+# per cost_profile (see config/profiles/*.ini).
+chat_history:
+  # Log chat events to disk (true, false)
+  enabled: true
+
+  # Logging granularity: per_turn | per_phase | per_tool
+  frequency: per_phase
+
+  # Max file size in KB before overflow handling kicks in
+  max_size_kb: 256
+
+  # Overflow behavior: rotate (drop oldest) | compress (summarize)
+  on_overflow: rotate
+
 # --- Optional pipelines ---
 pipelines:
   # Skill improvement pipeline (true, false)
@@ -197,6 +218,10 @@ lives under `personal:` in YAML.
 | `project.improvement_pr_branch_prefix` | string | `improve/agent-` | Branch prefix for agent improvement PRs. |
 | `github.pr_reply_method` | `replies_endpoint`, `create_review_comment`, `auto` | `create_review_comment` | GitHub API method for replying to PR review comments. `auto` detects on first use. |
 | `eloquent.access_style` | `getters_setters`, `get_attribute`, `magic_properties` | `getters_setters` | How to access Eloquent model attributes. See `eloquent` skill for details. |
+| `chat_history.enabled` | `true`, `false` | `true` | Persist chat events to `.agent-chat-history` (JSONL) for crash recovery. |
+| `chat_history.frequency` | `per_turn`, `per_phase`, `per_tool` | per profile | Logging granularity. Defaults: `minimal`→`per_turn`, `balanced`→`per_phase`, `full`→`per_tool`. |
+| `chat_history.max_size_kb` | integer | per profile | Max file size before overflow handling. Defaults: `minimal`→`128`, `balanced`→`256`, `full`→`512`. |
+| `chat_history.on_overflow` | `rotate`, `compress` | per profile | On overflow: `rotate` drops oldest entries; `compress` marks the file for summarization on the next turn. Defaults: `minimal`/`balanced`→`rotate`, `full`→`compress`. |
 | `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
 | `subagents.implementer_model` | model alias or empty | _(empty)_ | Model for implementer subagents. Empty = same tier as session model. See [subagent-configuration](../contexts/subagent-configuration.md). |
 | `subagents.judge_model` | model alias or empty | _(empty)_ | Model for judge subagents. Empty = one tier above implementer (opus if sonnet, sonnet if haiku). |

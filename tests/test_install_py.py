@@ -269,6 +269,51 @@ class TestEnsureAgentSettings(SilentTest):
             with self.assertRaises(SystemExit):
                 install.ensure_agent_settings(self.project, self.package, "nonexistent", force=False)
 
+    def test_chat_history_rendered_per_profile_minimal(self) -> None:
+        install.ensure_agent_settings(self.project, self.package, "minimal", force=False)
+        content = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
+        self.assertIn("frequency: per_turn", content)
+        self.assertIn("max_size_kb: 128", content)
+        self.assertIn("on_overflow: rotate", content)
+
+    def test_chat_history_rendered_per_profile_balanced(self) -> None:
+        install.ensure_agent_settings(self.project, self.package, "balanced", force=False)
+        content = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
+        self.assertIn("frequency: per_phase", content)
+        self.assertIn("max_size_kb: 256", content)
+        self.assertIn("on_overflow: rotate", content)
+
+    def test_chat_history_rendered_per_profile_full(self) -> None:
+        install.ensure_agent_settings(self.project, self.package, "full", force=False)
+        content = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
+        self.assertIn("frequency: per_tool", content)
+        self.assertIn("max_size_kb: 512", content)
+        self.assertIn("on_overflow: compress", content)
+
+    def test_no_placeholder_left_in_output(self) -> None:
+        for profile in install.SUPPORTED_PROFILES:
+            target = self.project / ".agent-settings.yml"
+            if target.exists():
+                target.unlink()
+            install.ensure_agent_settings(self.project, self.package, profile, force=False)
+            content = target.read_text(encoding="utf-8")
+            leftover = install._PLACEHOLDER_RE.findall(content)
+            self.assertEqual(leftover, [], f"{profile}: leftover placeholders {leftover}")
+
+    def test_profile_mismatch_fails(self) -> None:
+        # Corrupt a profile ini so cost_profile doesn't match --profile
+        bad = self.package / "config" / "profiles" / "minimal.ini"
+        bad.write_text(
+            "cost_profile=balanced\n"
+            "chat_history_frequency=per_turn\n"
+            "chat_history_max_size_kb=128\n"
+            "chat_history_on_overflow=rotate\n",
+            encoding="utf-8",
+        )
+        with redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                install.ensure_agent_settings(self.project, self.package, "minimal", force=False)
+
 
 # --- bridge generators ---
 

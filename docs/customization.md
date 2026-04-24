@@ -53,6 +53,10 @@ those sections.
 | `personal.open_edited_files` | `false` | Open edited files in IDE |
 | `personal.ide` | *(empty)* | IDE for file opening (`cursor`, `code`, `phpstorm`) |
 | `pipelines.skill_improvement` | `true` | Post-task learning capture. Included in every profile except `custom`. |
+| `chat_history.enabled` | `true` | Persistent JSONL log at `.agent-chat-history` for crash recovery. |
+| `chat_history.frequency` | per profile | Logging granularity: `per_turn`, `per_phase`, or `per_tool` (see matrix below). |
+| `chat_history.max_size_kb` | per profile | Max file size before overflow handling (see matrix below). |
+| `chat_history.on_overflow` | per profile | `rotate` drops oldest, `compress` marks for summarization (see matrix below). |
 | `onboarding.onboarded` | `false` | Whether `/onboard` has run. The `onboarding-gate` rule prompts for `/onboard` while this is `false`. |
 
 ### Cost profiles
@@ -71,6 +75,22 @@ changing the profile.
 
 The authoritative matrix of all matrix-controlled settings lives in
 [`.agent-src.uncompressed/templates/agent-settings.md`](../.agent-src.uncompressed/templates/agent-settings.md).
+
+### Chat-history defaults per profile
+
+`scripts/install.py` fills these placeholders from
+[`config/profiles/*.ini`](../config/profiles) when it writes
+`.agent-settings.yml`. Edit the values afterwards if you want different
+behavior — the per-profile table is just the initial default.
+
+| Setting | `minimal` | `balanced` | `full` |
+|---|---|---|---|
+| `chat_history.enabled` | `true` | `true` | `true` |
+| `chat_history.frequency` | `per_turn` | `per_phase` | `per_tool` |
+| `chat_history.max_size_kb` | `128` | `256` | `512` |
+| `chat_history.on_overflow` | `rotate` | `rotate` | `compress` |
+
+`custom` ignores these defaults — set every value explicitly.
 
 ---
 
