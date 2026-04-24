@@ -148,9 +148,21 @@ for every profile), the agent keeps a JSONL log of your conversation in
 rotates at the size configured in the profile (`128 KB` on `minimal`,
 `256 KB` on `balanced`, `512 KB` on `full`).
 
-If a chat crashes or you switch tools mid-flight, open a fresh chat and
-run `/chat-history-resume` — the agent adopts the existing log, summarizes
-prior decisions and open threads, and asks what you want to do next.
+When a chat opens and finds an existing log, the agent runs a
+4-state ownership check and chooses the right flow:
+
+- **match** — this chat already owns the file. Append silently.
+- **foreign** — a different session's file. You get 3 options:
+  Resume (adopt), New start (archive + init), Ignore (skip logging).
+- **returning** — this chat once owned the file, but another session
+  took over in between. You get 3 options: Merge (your history in front
+  of the foreign entries), Replace (wipe foreign entries, keep yours
+  only), Continue (just leave the file and append from now on).
+- **missing** — no file yet. Init and proceed.
+
+Run `/chat-history-resume` to walk through the prompts explicitly, or
+let the agent ask on the first turn of a new chat. All merge/replace/
+resume paths read the on-disk entries into context before any write.
 
 See the [`chat-history` rule](../.agent-src/rules/chat-history.md) and
 [`scripts/chat_history.py`](../scripts/chat_history.py) for the mechanics.
