@@ -223,17 +223,25 @@ def _parse_legacy_settings(text: str) -> "tuple[dict, list]":
     return values, unknown
 
 
+_BARE_ID_RE = re.compile(r"^[a-z][a-z0-9_]*$")
+
+
 def _yaml_scalar(value: str) -> str:
     """Format a string value as a YAML scalar with minimal quoting.
 
-    Booleans and non-negative integers are emitted unquoted; everything
-    else is double-quoted so the migrated file is unambiguous.
+    Booleans and non-negative integers are emitted unquoted. Bare
+    lowercase identifiers (``per_turn``, ``rotate``, ``getters_setters``
+    — the shape of profile values and enum-like strings) are emitted
+    unquoted so `sync_agent_settings.py` stays idempotent against its
+    own output. Everything else is double-quoted.
     """
     if value == "":
         return '""'
     if value in ("true", "false"):
         return value
     if value.isdigit():
+        return value
+    if _BARE_ID_RE.match(value):
         return value
     # Escape backslashes and double-quotes, then wrap
     escaped = value.replace("\\", "\\\\").replace('"', '\\"')
