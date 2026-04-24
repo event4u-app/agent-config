@@ -34,6 +34,13 @@ __pycache__/
 .agent-settings
 .agent-settings.backup.key-value
 
+# Persistent chat-history log (crash recovery; written by
+# scripts/chat_history.py, governed by the chat-history rule). Never
+# commit — contains conversation content and session fingerprints.
+.agent-chat-history
+.agent-chat-history.bak
+.agent-chat-history.*.bak
+
 # Generated Augment Code projection of .agent-src/ (rebuilt by `task sync`)
 /.augment/
 

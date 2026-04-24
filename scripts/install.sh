@@ -596,6 +596,11 @@ ensure_gitignore() {
 
 # Agent config — CLI wrapper (auto-generated on every install)
 /agent-config
+
+# Agent config — persistent chat history (crash recovery, never commit)
+.agent-chat-history
+.agent-chat-history.bak
+.agent-chat-history.*.bak
 BLOCK
 }
 

@@ -132,8 +132,28 @@ Your agent now understands slash commands:
 | `/create-pr` | Create PR with Jira-linked description |
 | `/fix-ci` | Fetch and fix GitHub Actions failures |
 | `/quality-fix` | Run and fix all quality checks |
+| `/chat-history` | Inspect the persistent chat-history log |
+| `/chat-history-resume` | Recover context after a crashed or switched session |
+| `/chat-history-clear` | Wipe the chat-history log (with confirmation) |
 
 → [Browse all 71 commands](../.agent-src/commands/)
+
+---
+
+## Crash recovery — `.agent-chat-history`
+
+When `chat_history.enabled: true` in `.agent-settings.yml` (on by default
+for every profile), the agent keeps a JSONL log of your conversation in
+`.agent-chat-history` at the project root. The file is git-ignored and
+rotates at the size configured in the profile (`128 KB` on `minimal`,
+`256 KB` on `balanced`, `512 KB` on `full`).
+
+If a chat crashes or you switch tools mid-flight, open a fresh chat and
+run `/chat-history-resume` — the agent adopts the existing log, summarizes
+prior decisions and open threads, and asks what you want to do next.
+
+See the [`chat-history` rule](../.agent-src/rules/chat-history.md) and
+[`scripts/chat_history.py`](../scripts/chat_history.py) for the mechanics.
 
 ---
 
