@@ -285,3 +285,202 @@ def test_cli_read_all(tmp_path: Path, monkeypatch, capsys):
     ch.main(["read", "--all"])
     out = json.loads(capsys.readouterr().out)
     assert len(out) == 3
+
+
+# --- Schema v2 --------------------------------------------------------
+
+
+def test_schema_version_is_two():
+    assert ch.SCHEMA_VERSION == 2
+
+
+def test_init_writes_former_fps_empty(hist: Path):
+    h = ch.init("msg", path=hist)
+    assert h["former_fps"] == []
+    assert h["v"] == 2
+
+
+def test_read_header_migrates_v1_in_memory(hist: Path):
+    # Craft a v1 header (no former_fps) directly
+    v1 = {
+        "t": "header", "v": 1, "session": "abc",
+        "started": "2024-01-01T00:00:00+00:00",
+        "fp": ch.fingerprint("old"),
+        "preview": "old", "freq": "per_phase",
+    }
+    hist.write_text(json.dumps(v1) + "\n", encoding="utf-8")
+    h = ch.read_header(hist)
+    assert h is not None
+    assert h["former_fps"] == []
+    # On-disk file not rewritten by read
+    raw = json.loads(hist.read_text(encoding="utf-8").splitlines()[0])
+    assert "former_fps" not in raw
+
+
+def test_ownership_state_match(hist: Path):
+    ch.init("msg", path=hist)
+    assert ch.ownership_state("msg", path=hist) == "match"
+
+
+def test_ownership_state_missing(hist: Path):
+    assert ch.ownership_state("x", path=hist) == "missing"
+
+
+def test_ownership_state_foreign(hist: Path):
+    ch.init("owner", path=hist)
+    # Different fp, not in former_fps → foreign
+    assert ch.ownership_state("stranger", path=hist) == "foreign"
+
+
+def test_ownership_state_returning_after_adopt(hist: Path):
+    ch.init("A", path=hist)
+    ch.adopt("B", path=hist)
+    # A's fp is now in former_fps, B owns → A returning, B matches
+    assert ch.ownership_state("A", path=hist) == "returning"
+    assert ch.ownership_state("B", path=hist) == "match"
+    assert ch.ownership_state("C", path=hist) == "foreign"
+
+
+def test_adopt_pushes_old_fp_with_dedup(hist: Path):
+    ch.init("A", path=hist)
+    ch.adopt("B", path=hist)
+    ch.adopt("A", path=hist)  # Back to A — B goes into former_fps
+    h = ch.read_header(hist)
+    assert h is not None
+    assert h["fp"] == ch.fingerprint("A")
+    # A must NOT appear in former_fps (current owner excluded)
+    assert ch.fingerprint("A") not in h["former_fps"]
+    assert ch.fingerprint("B") in h["former_fps"]
+
+
+def test_adopt_former_fps_caps_at_limit(hist: Path):
+    ch.init("msg-0", path=hist)
+    # Adopt 15 times → former_fps should cap at FORMER_FPS_CAP
+    for i in range(1, 16):
+        ch.adopt(f"msg-{i}", path=hist)
+    h = ch.read_header(hist)
+    assert h is not None
+    assert len(h["former_fps"]) <= ch.FORMER_FPS_CAP
+    # Most recent former owner is the previous one (msg-14)
+    assert h["former_fps"][0] == ch.fingerprint("msg-14")
+
+
+def test_adopt_bumps_schema_version_for_v1_file(hist: Path):
+    v1 = {
+        "t": "header", "v": 1, "session": "abc",
+        "started": "2024-01-01T00:00:00+00:00",
+        "fp": ch.fingerprint("old"), "preview": "old",
+        "freq": "per_phase",
+    }
+    hist.write_text(json.dumps(v1) + "\n", encoding="utf-8")
+    h = ch.adopt("new", path=hist)
+    assert h["v"] == 2
+    assert ch.fingerprint("old") in h["former_fps"]
+
+
+def test_reset_with_entries_replaces_body(hist: Path):
+    ch.init("owner", path=hist)
+    ch.append({"t": "user", "text": "stale"}, path=hist)
+    new_entries = [
+        {"t": "user", "text": "fresh1"},
+        {"t": "agent", "text": "fresh2"},
+    ]
+    h = ch.reset_with_entries("newchat", new_entries, freq="per_turn",
+                              path=hist)
+    assert h["fp"] == ch.fingerprint("newchat")
+    assert h["freq"] == "per_turn"
+    # Old owner's fp preserved in former_fps
+    assert ch.fingerprint("owner") in h["former_fps"]
+    entries = ch.read_entries(path=hist)
+    assert [e["text"] for e in entries] == ["fresh1", "fresh2"]
+
+
+def test_reset_with_entries_rejects_invalid_freq(hist: Path):
+    ch.init("x", path=hist)
+    with pytest.raises(ValueError):
+        ch.reset_with_entries("y", [], freq="hourly", path=hist)
+
+
+def test_reset_with_entries_rejects_header_entry(hist: Path):
+    ch.init("x", path=hist)
+    with pytest.raises(ValueError):
+        ch.reset_with_entries("y", [{"t": "header"}], path=hist)
+
+
+def test_reset_with_entries_on_missing_file_starts_fresh(hist: Path):
+    h = ch.reset_with_entries("new", [{"t": "user", "text": "a"}],
+                              path=hist)
+    assert h["former_fps"] == []
+    entries = ch.read_entries(path=hist)
+    assert [e["text"] for e in entries] == ["a"]
+
+
+def test_prepend_entries_inserts_before_body(hist: Path):
+    ch.init("x", path=hist)
+    ch.append({"t": "agent", "text": "existing1"}, path=hist)
+    ch.append({"t": "agent", "text": "existing2"}, path=hist)
+    n = ch.prepend_entries(
+        [{"t": "user", "text": "older1"},
+         {"t": "user", "text": "older2"}], path=hist,
+    )
+    assert n == 2
+    entries = ch.read_entries(path=hist)
+    assert [e["text"] for e in entries] == [
+        "older1", "older2", "existing1", "existing2",
+    ]
+    # Header still valid
+    h = ch.read_header(hist)
+    assert h is not None and h["fp"] == ch.fingerprint("x")
+
+
+def test_prepend_entries_on_missing_file_raises(hist: Path):
+    with pytest.raises(FileNotFoundError):
+        ch.prepend_entries([{"t": "user", "text": "x"}], path=hist)
+
+
+def test_prepend_entries_rejects_invalid(hist: Path):
+    ch.init("x", path=hist)
+    with pytest.raises(ValueError):
+        ch.prepend_entries([{"text": "no t"}], path=hist)
+
+
+def test_cli_state_returns_one_of_four_states(tmp_path: Path,
+                                              monkeypatch, capsys):
+    target = tmp_path / "s.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["state", "--first-user-msg", "x"])
+    assert capsys.readouterr().out.strip() == "missing"
+    ch.main(["init", "--first-user-msg", "A"])
+    capsys.readouterr()
+    ch.main(["state", "--first-user-msg", "A"])
+    assert capsys.readouterr().out.strip() == "match"
+    ch.main(["state", "--first-user-msg", "B"])
+    assert capsys.readouterr().out.strip() == "foreign"
+    ch.main(["adopt", "--first-user-msg", "B"])
+    capsys.readouterr()
+    ch.main(["state", "--first-user-msg", "A"])
+    assert capsys.readouterr().out.strip() == "returning"
+
+
+def test_cli_reset_and_prepend(tmp_path: Path, monkeypatch, capsys):
+    target = tmp_path / "r.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "orig", "--freq", "per_turn"])
+    ch.main(["append", "--type", "agent", "--json", '{"text":"old"}'])
+    capsys.readouterr()
+    rc = ch.main([
+        "reset", "--first-user-msg", "new", "--freq", "per_turn",
+        "--entries-json",
+        '[{"t":"user","text":"u1"},{"t":"agent","text":"a1"}]',
+    ])
+    assert rc == 0
+    capsys.readouterr()
+    rc = ch.main([
+        "prepend", "--entries-json",
+        '[{"t":"user","text":"earlier"}]',
+    ])
+    assert rc == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["prepended"] == 1
+    entries = ch.read_entries(path=target)
+    assert [e["text"] for e in entries] == ["earlier", "u1", "a1"]
