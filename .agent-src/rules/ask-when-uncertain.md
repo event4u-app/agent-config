@@ -95,7 +95,13 @@ and send. Hold the rest for the next turn.
 
 ### Ordering & handoff
 
-- **Model switch / handoff**: ask LAST (per `model-recommendation`).
+- **Session handoff** (`/agent-handoff`, fresh-chat proposal): ask LAST,
+  after all domain / clarifying questions — so answers fold into the
+  handoff prompt. Rationale:
+  [`agent-interaction-and-decision-quality`](../guidelines/agent-infra/agent-interaction-and-decision-quality.md#handoff--model-switch-questions).
+- **Model switch**: different phase — [`model-recommendation`](model-recommendation.md)
+  triggers at task start with its own STOP-AND-WAIT gate, standalone. Do
+  not conflate.
 - **Blocking clarification** (can't proceed without it): ask FIRST,
   alone, before any research or planning output.
 - **Optional refinement**: don't ask at all — state the assumption
