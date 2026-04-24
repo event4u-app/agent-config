@@ -309,7 +309,11 @@ def preflight(target: str) -> None:
         if not have(b):
             die(f"{b!r} not found on PATH")
 
-    r = run("gh", "auth", "status", check=False, capture=True)
+    # Probe the active token directly via an authenticated API call. `gh auth
+    # status` returns non-zero if *any* account in the keyring is broken, even
+    # when the active one is fine — so we'd rather ask "does the token the
+    # release will actually use work?" than parse multi-account status output.
+    r = run("gh", "api", "user", "--jq", ".login", check=False, capture=True)
     if r.returncode != 0:
         die("gh is not authenticated; run `gh auth login` first")
 
