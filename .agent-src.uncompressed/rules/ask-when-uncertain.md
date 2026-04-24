@@ -33,6 +33,7 @@ request matches one of these without further context, ask **before** touching co
 | "refactor X" | Target pattern? Boundaries? | "Refactor toward what — smaller methods, extract class, or something else?" |
 | "use best practices" | Whose? For what? | "Best practices for what specifically — testing, naming, structure?" |
 | "handle errors properly" | Which errors? How? Log, retry, propagate? | "For which failure modes, and what should happen on error?" |
+| "add a UI / component / tile / page" when the repo mixes frameworks | Which stack? Tailwind? Flux? Livewire? Custom? | "This repo uses {A} and {B} for UI — which one for this?" |
 
 **Escape hatch:** If surrounding context (ticket, open file, prior conversation)
 makes the answer unambiguous, proceed — but state the assumption explicitly.

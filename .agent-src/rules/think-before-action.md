@@ -16,6 +16,7 @@ source: package
 - If requirements are unclear, ask a precise clarification question instead of making hidden assumptions
 - Refactors must preserve behavior, validation, examples, and anti-failure guidance unless there is an explicit reason to change them
 - Do NOT modify code you do not fully understand — read it first, trace the flow, then change it
+- Multiple valid frameworks/patterns already in the codebase (Tailwind + Flux, multiple form libs, competing state stores) → do NOT pick one silently, ask. See [`no blind implementation`](../guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation)
 
 ## The Developer Workflow
 
