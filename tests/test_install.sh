@@ -153,6 +153,37 @@ test_gitignore_not_created_if_missing() {
     teardown
 }
 
+test_gitignore_reinstall_adds_missing_entry() {
+    setup
+    # Seed a legacy block missing a newer entry (.agent-chat-history).
+    cat > "$TMPDIR/.gitignore" <<'EOF'
+/vendor/
+
+# event4u/agent-config
+# Agent config — symlinked from vendor (auto-managed)
+.augment/skills/
+.augment/commands/
+
+# Agent config — CLI wrapper (auto-generated on every install)
+/agent-config
+EOF
+    run_install
+    assert_contains "chat-history entry added on re-install" \
+        "$TMPDIR/.gitignore" ".agent-chat-history"
+    assert_contains "pre-existing user entry preserved" \
+        "$TMPDIR/.gitignore" "/vendor/"
+    teardown
+}
+
+test_gitignore_skip_flag() {
+    setup
+    echo "/vendor/" > "$TMPDIR/.gitignore"
+    run_install --skip-gitignore
+    assert_false "no agent-config block written with --skip-gitignore" \
+        grep -qF "# event4u/agent-config" "$TMPDIR/.gitignore"
+    teardown
+}
+
 test_tool_symlinks_created() {
     setup; run_install
     assert_true ".claude/rules/ exists" test -d "$TMPDIR/.claude/rules"
@@ -302,6 +333,8 @@ test_migration_real_to_symlink
 test_gitignore_marker_added
 test_gitignore_idempotent
 test_gitignore_not_created_if_missing
+test_gitignore_reinstall_adds_missing_entry
+test_gitignore_skip_flag
 test_tool_symlinks_created
 test_stale_tool_symlinks_removed
 test_skill_symlinks_in_claude
