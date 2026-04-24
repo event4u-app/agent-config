@@ -60,10 +60,11 @@ personal:
   open_edited_files: false
 
   # User's first name — used to address the user personally
+  # Captured by /onboard on first run.
   user_name: ""
 
   # rtk (Rust Token Killer) installed for output filtering (true, false)
-  # Agent will auto-detect and ask once, then store the result
+  # Detected and set by /onboard on first run.
   rtk_installed: false
 
   # Minimal output mode (true, false)
@@ -155,6 +156,18 @@ personas:
   # the whole list. Ignored personas stay invokable explicitly via
   # `--personas=<id>`. Mirrors `.augmentignore` semantics.
   ignore: []
+
+# --- Onboarding ---
+#
+# Tracks whether the initial setup flow (/onboard) has been completed
+# for this developer on this project. When false, the onboarding-gate
+# rule prompts the user to run /onboard before starting normal work.
+# Missing entirely = legacy project (treated as onboarded).
+onboarding:
+  # Has the developer completed /onboard? (true, false)
+  # Set to true automatically by /onboard at the end. Flip to false
+  # if you want to re-run the flow.
+  onboarded: false
 ```
 
 ## Settings Reference
@@ -168,8 +181,8 @@ Personal and project-level settings (written by `/config-agent-settings` and
 | `cost_profile` | `minimal`, `balanced`, `full`, `custom` | `minimal` | Selects which agent surfaces are active. See [Cost profiles](#cost-profiles). |
 | `personal.ide` | `code`, `phpstorm`, `cursor` | _(empty)_ | CLI command to open files in the IDE |
 | `personal.open_edited_files` | `true`, `false` | `false` | Auto-open edited files in the IDE after edits |
-| `personal.user_name` | first name | _(empty)_ | User's first name. Agent asks on first interaction if empty, then addresses user by name. |
-| `personal.rtk_installed` | `true`, `false` | `false` | Whether rtk (Rust Token Killer) is installed. Agent auto-detects once and stores the result. |
+| `personal.user_name` | first name | _(empty)_ | User's first name, used to address the user personally. Captured by `/onboard`. |
+| `personal.rtk_installed` | `true`, `false` | `false` | Whether rtk (Rust Token Killer) is installed. Detected and set by `/onboard`. |
 | `personal.minimal_output` | `true`, `false` | `true` | When `true`: short bullet points during work, concise summary at end. When `false`: verbose explanations. |
 | `personal.play_by_play` | `true`, `false` | `false` | When `true`: share intermediate findings during investigation. When `false`: work silently, report only the conclusion. |
 | `project.pr_comment_bot_icon` | `true`, `false` | `false` | Prefix PR comment replies with 🤖 to indicate bot-authored replies |
@@ -186,6 +199,7 @@ Personal and project-level settings (written by `/config-agent-settings` and
 | `roles.active_role` | same as `default_role` | _(empty)_ | Role currently active; set by `/mode <name>`, cleared by `/mode none`. Enables the `role-mode-adherence` rule. |
 | `personas.override` | list of persona ids | `[]` | Developer-local override of the team default lens cast. Empty = inherit `personas.default` from `.agent-project-settings.yml`. See [`layered-settings`](../guidelines/agent-infra/layered-settings.md). |
 | `personas.ignore` | list of persona ids | `[]` | Persona ids dropped from the default cast locally. Ignored personas stay invokable via `--personas=<id>`. |
+| `onboarding.onboarded` | `true`, `false` | `false` | Whether `/onboard` has run on this project. The `onboarding-gate` rule prompts for `/onboard` when this is `false`. Missing entirely = legacy project, treated as onboarded. |
 
 ### Rename-Map (migration)
 

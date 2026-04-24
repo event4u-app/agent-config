@@ -80,4 +80,5 @@ New profile activates a surface (`balanced` → runtime dispatcher; `full` → t
 
 - [`agent-settings`](../templates/agent-settings.md) — profile matrix and settings reference
 - [`config-agent-settings`](config-agent-settings.md) — full settings sync (all keys)
+- [`onboard`](onboard.md) — first-run setup (includes profile confirmation)
 - [`mode`](mode.md) — role-mode setter (different concept)

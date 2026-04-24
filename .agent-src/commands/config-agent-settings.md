@@ -124,3 +124,9 @@ Warn if it fails and suggest how to install the CLI.
 - **Legacy migration is `scripts/install`'s job**, not this command's. If a flat
   `.agent-settings` file is still present, ask the user to run `scripts/install`
   and stop.
+
+## See also
+
+- [`onboard`](onboard.md) — first-run setup for a developer on this project
+- [`set-cost-profile`](set-cost-profile.md) — isolated `cost_profile` change
+- [`agent-settings`](../templates/agent-settings.md) — settings reference and profile matrix

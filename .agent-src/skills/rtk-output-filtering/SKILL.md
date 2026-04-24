@@ -38,43 +38,33 @@ rtk docker compose ps # compact container status
 
 ## Procedure: Wrap commands with rtk
 
-1. Run `which rtk` (silent) — check if installed.
-2. **If installed** → prefix commands with `rtk` when output >30 lines expected.
-3. **If NOT installed** → check `.agent-settings.yml` for `personal.rtk_last_asked`. If not today → prompt user (see Installation below).
+1. Read `personal.rtk_installed` from `.agent-settings.yml`.
+2. **If `true`** → prefix commands with `rtk` when output >30 lines expected.
+3. **If `false` or missing** → use plain commands. Do not prompt the user.
 4. After wrapping: verify output is useful (not truncated on completeness-critical commands).
+
+Installation and one-time setup are owned by
+[`/onboard`](../../commands/onboard.md). If the user asks to install rtk
+outside onboarding, follow the Installation section below and set
+`personal.rtk_installed: true` on success.
 
 ## Output format
 
 1. Wrapped command with `rtk` prefix
 2. Token savings estimate (if first use in conversation)
 
-## Detection & Installation
+## Installation (on-demand)
 
-**Before using CLI commands that produce verbose output**, check if rtk is available:
+Invoked by `/onboard` when rtk is not on `PATH`, or on explicit user
+request. Never fire unsolicited.
 
-1. Run `which rtk` (silent, no output to user).
-2. **If installed** → prefix commands with `rtk` when output may exceed ~30 lines.
-3. **If NOT installed** → check `.agent-settings.yml` for `personal.rtk_last_asked`:
-   - If missing or date is **before today** → prompt the user (see below).
-   - If date is **today** → skip, don't ask again. Use normal commands.
-
-**Prompt template** (translate to user's language):
-
-> 💡 **rtk** (Rust Token Killer) is not installed on your system.
-> It reduces token consumption by 60-90% on common CLI commands.
->
-> 1. Install via Homebrew — `brew install rtk` (recommended on macOS)
-> 2. Install via Cargo — `cargo install rtk`
-> 3. Skip for now — I'll ask again tomorrow
-
-**On user response:**
-- **1 or 2** → Run the chosen install command. After success:
-  1. `rtk --version` to verify installation.
-  2. `rtk init --global` to enable auto-rewrite hooks.
-  3. Apply **Post-Install Setup** (see below) — telemetry, tee, audit logging.
-  4. Generate project-local filters (see Post-Install Setup).
-  5. Save `personal.rtk_installed: true` in `.agent-settings.yml`.
-- **3** → Save `personal.rtk_last_asked: YYYY-MM-DD` (today) in `.agent-settings.yml`. Use normal commands.
+1. Ask which installer to use (macOS → Homebrew; otherwise Cargo).
+2. Run the installer. On success:
+   1. `rtk --version` to verify.
+   2. `rtk init --global` to enable auto-rewrite hooks.
+   3. Apply **Post-Install Setup** below (telemetry, tee, audit logging).
+   4. Generate project-local filters (see Post-Install Setup).
+   5. Write `personal.rtk_installed: true` to `.agent-settings.yml`.
 
 ## Post-Install Setup (mandatory)
 

@@ -53,6 +53,7 @@ those sections.
 | `personal.open_edited_files` | `false` | Open edited files in IDE |
 | `personal.ide` | *(empty)* | IDE for file opening (`cursor`, `code`, `phpstorm`) |
 | `pipelines.skill_improvement` | `true` | Post-task learning capture. Included in every profile except `custom`. |
+| `onboarding.onboarded` | `false` | Whether `/onboard` has run. The `onboarding-gate` rule prompts for `/onboard` while this is `false`. |
 
 ### Cost profiles
 

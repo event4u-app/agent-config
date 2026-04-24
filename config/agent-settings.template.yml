@@ -96,3 +96,15 @@ subagents:
   # Maximum number of parallel subagent invocations
   # Integer, default 3. Set to 1 to serialize. Hard cap enforced by runtime.
   max_parallel: 3
+
+# --- Onboarding ---
+#
+# Tracks whether the initial setup flow (/onboard) has been completed
+# for this developer on this project. When false, the onboarding-gate
+# rule prompts the user to run /onboard before starting normal work.
+# Missing entirely = legacy project (treated as onboarded).
+onboarding:
+  # Has the developer completed /onboard? (true, false)
+  # Set to true automatically by /onboard at the end. Flip to false if
+  # you want to re-run the flow.
+  onboarded: false
