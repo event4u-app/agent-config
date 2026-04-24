@@ -54,7 +54,7 @@ source: package
 
 ## rules — `.agent-src.uncompressed/rules/*.md`
 
-**Inventory:** 45 files.
+**Inventory:** 46 files.
 
 ### Required
 
