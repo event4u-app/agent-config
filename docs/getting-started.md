@@ -136,7 +136,7 @@ Your agent now understands slash commands:
 | `/chat-history-resume` | Recover context after a crashed or switched session |
 | `/chat-history-clear` | Wipe the chat-history log (with confirmation) |
 
-→ [Browse all 72 commands](../.agent-src/commands/)
+→ [Browse all 73 commands](../.agent-src/commands/)
 
 ---
 
