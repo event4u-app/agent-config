@@ -54,7 +54,7 @@ Free-text replies (`"mach weiter"`, `"just do it"`) count as `3`.
 Skip the gate when the user's request already is an onboarding or
 settings operation, so we don't prompt users mid-setup:
 
-- `/onboard`, `/config-agent-settings`, `/set-cost-profile`, `/mode`
+- `/onboard`, `/set-cost-profile`, `/mode`
 - The user explicitly asks about `.agent-settings.yml` or onboarding
 - Incident / break-glass signals (`hotfix`, `break-glass`, `"prod is
   down"`). The gate waits for normal operations to resume.
@@ -71,8 +71,10 @@ gate. This protects projects that were set up before this rule shipped.
   the user's explicit `2` choice do that.
 - Re-prompt across turns in the same conversation. One prompt per
   conversation, max.
-- Replace `/config-agent-settings`. That command handles mid-life
-  settings drift; this rule is a one-time gate.
+- Replace normal settings edits. Mid-life changes are ad-hoc (edit the
+  file directly or ask the agent, which follows
+  [`layered-settings`](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules));
+  this rule is a one-time gate.
 - Run on every agent turn. First turn only.
 
 ## Interactions
@@ -87,6 +89,6 @@ gate. This protects projects that were set up before this rule shipped.
 ## See also
 
 - [`/onboard`](../commands/onboard.md) — the command this gate invokes
-- [`/config-agent-settings`](../commands/config-agent-settings.md) — mid-life sync
+- [`layered-settings`](../guidelines/agent-infra/layered-settings.md) — merge rules for mid-life edits
 - [`agent-settings` template](../templates/agent-settings.md) — `onboarding.onboarded` reference
 - [`rule-type-governance`](rule-type-governance.md) — why this is `always`

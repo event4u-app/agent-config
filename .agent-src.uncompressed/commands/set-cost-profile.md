@@ -17,7 +17,10 @@ the [`agent-settings` template](../templates/agent-settings.md#cost-profiles):
 
 ## When NOT to use
 
-- For all other settings use [`/config-agent-settings`](config-agent-settings.md).
+- For first-run setup use [`/onboard`](onboard.md).
+- For any other single-value change, edit `.agent-settings.yml`
+  directly or ask the agent — the merge rules live in
+  [`layered-settings`](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
 - For role modes use [`/mode`](mode.md) — different concept (sets
   `roles.active_role`, not `cost_profile`).
 
@@ -34,7 +37,7 @@ Profile names are case-insensitive on input; the file value stays lowercase.
 ### 2. Read settings
 
 Read `.agent-settings.yml`. If missing, tell the user to run
-`/config-agent-settings` first and stop — do not create the file here.
+`scripts/install` first and stop — do not create the file here.
 
 Extract the current `cost_profile` value.
 
@@ -64,9 +67,9 @@ value directly — still echo the old → new line in step 6.
 
 ### 5. Write the value
 
-Update `cost_profile` in `.agent-settings.yml` using the same section-aware
-merge rules as `/config-agent-settings` (preserve comments, preserve key
-order, touch only the changed field).
+Update `cost_profile` in `.agent-settings.yml` using the
+[section-aware merge rules](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
+(preserve comments, preserve key order, touch only the changed field).
 
 If the user picked "Keep current", do nothing and stop.
 
@@ -93,6 +96,6 @@ steps here, that's the docs' job.
 ## See also
 
 - [`agent-settings`](../templates/agent-settings.md) — profile matrix and settings reference
-- [`config-agent-settings`](config-agent-settings.md) — full settings sync (all keys)
+- [`layered-settings`](../guidelines/agent-infra/layered-settings.md) — merge rules for settings edits
 - [`onboard`](onboard.md) — first-run setup (includes profile confirmation)
 - [`mode`](mode.md) — role-mode setter (different concept)

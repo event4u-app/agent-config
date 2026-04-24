@@ -113,7 +113,7 @@ Commands organized by workflow:
 | **E2E** | `e2e-plan`, `e2e-heal` |
 | **Agents** | `agents-prepare`, `agents-audit`, `agents-cleanup`, `copilot-agents-optimize`, `agent-handoff`, `agent-status`, `optimize-agents`, `optimize-augmentignore`, `optimize-skills`, `optimize-rtk-filters` |
 | **Overrides** | `override-create`, `override-manage` |
-| **Config** | `config-agent-settings`, `commit` |
+| **Config** | `onboard`, `set-cost-profile`, `commit` |
 | **Packages** | `package-test`, `package-reset` |
 | **Project** | `project-analyze`, `project-health`, `jira-ticket` |
 

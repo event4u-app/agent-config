@@ -50,7 +50,7 @@ At the start of a conversation (or on first file edit), read `.agent-settings.ym
 cat .agent-settings.yml 2>/dev/null
 ```
 
-- If the file doesn't exist → **do not open files**. Suggest running `/config-agent-settings`.
+- If the file doesn't exist → **do not open files**. Suggest running `scripts/install` (then `/onboard`).
 - If `personal.open_edited_files: false` → do nothing.
 - If `personal.open_edited_files: true` and `personal.ide` is set → open files after edits.
 
@@ -124,6 +124,6 @@ code app/Models/User.php
 ## Do NOT
 
 - Do NOT open files without checking `.agent-settings.yml` first.
-- Do NOT prompt the user about IDE settings during normal work — suggest `/config-agent-settings` instead.
+- Do NOT prompt the user about IDE settings during normal work — suggest `/onboard` (for first-run) or editing `.agent-settings.yml` directly.
 - Do NOT open files that were only read, not edited.
 - Do NOT open more than 10 files at once — summarize instead.

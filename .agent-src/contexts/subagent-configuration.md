@@ -51,9 +51,9 @@ completes a multi-step task 2-3x faster than serial at ~2x the cost.
 
 ## When settings change
 
-The `/config-agent-settings` command detects changes and re-resolves
-on next invocation. There is no long-running process to restart — the
-commands read `.agent-settings.yml` on each run.
+Edits to `.agent-settings.yml` (manual or via the agent) take effect
+on the next invocation — there is no long-running process to restart.
+The commands read `.agent-settings.yml` fresh on each run.
 
 ## Related
 

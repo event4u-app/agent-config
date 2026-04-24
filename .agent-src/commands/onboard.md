@@ -1,6 +1,6 @@
 ---
 name: onboard
-description: First-run setup for a developer on this project — captures name, IDE, rtk, cost_profile, and learning opt-out, then sets onboarding.onboarded=true
+description: First-run setup for a developer on this project — captures name, IDE, bot-icon preference, rtk, cost_profile, and learning opt-out, then sets onboarding.onboarded=true
 skills: [file-editor]
 disable-model-invocation: true
 ---
@@ -17,20 +17,22 @@ Triggered by the [`onboarding-gate`](../rules/onboarding-gate.md) rule when
 
 ## When NOT to use
 
-- Mid-life settings edits → [`/config-agent-settings`](config-agent-settings.md).
 - Change cost profile only → [`/set-cost-profile`](set-cost-profile.md).
+- Single-value edit → ask the agent to change it, or edit
+  `.agent-settings.yml` directly. The agent follows the merge rules in
+  [`layered-settings`](../guidelines/agent-infra/layered-settings.md).
 
 ## Preconditions
 
 `.agent-settings.yml` exists. If missing, tell the user to run
-`/config-agent-settings` first and stop — this command assumes the file and
-its template-derived defaults are in place.
+`scripts/install` (or `python3 scripts/install.py`) first and stop — this
+command assumes the file and its template-derived defaults are in place.
 
 ## Steps
 
 ### 1. Greet and set expectations
 
-Keep it short. One line explaining this is the one-time setup, five
+Keep it short. One line explaining this is the one-time setup, six
 questions, one at a time, following the iron law (`user-interaction`).
 
 ### 2. Capture `personal.user_name`
@@ -68,7 +70,23 @@ ps aux | grep -iE '(Visual Studio Code|Code Helper|phpstorm|cursor)' | grep -v g
 
 If IDE is set, also ask about `personal.open_edited_files` (`true`/`false`).
 
-### 4. Detect `personal.rtk_installed`
+### 4. Capture `personal.pr_comment_bot_icon`
+
+Personal preference — each developer decides how their own PR replies
+should look. Skip only if the user has already set a non-default value
+deliberately (agent can't tell, so always ask on first run):
+
+```
+> When I reply to PR review comments on your behalf, should I prefix each
+> reply with 🤖 so reviewers can tell it was a bot-authored reply?
+>
+> 1. Yes — prefix replies with 🤖 (transparent to reviewers)
+> 2. No — plain replies, no prefix (default)
+```
+
+`1` → write `personal.pr_comment_bot_icon: true`. `2` → leave `false`.
+
+### 5. Detect `personal.rtk_installed`
 
 Silent `which rtk`.
 
@@ -90,7 +108,7 @@ rtk post-install steps (telemetry off, init --global) per the
 `3` → leave `rtk_installed: false` and move on. No "ask again tomorrow"
 logic — `/onboard` is one-shot.
 
-### 5. Confirm `cost_profile` and learning loop
+### 6. Confirm `cost_profile` and learning loop
 
 Read current `cost_profile` and `pipelines.skill_improvement` values.
 Present them plainly (they already have sensible defaults from the
@@ -107,13 +125,14 @@ template — `minimal` + `skill_improvement: true`):
 
 `2` → defer to `/set-cost-profile` and return here. `3` → flip the toggle.
 
-### 6. Mark onboarded
+### 7. Mark onboarded
 
 Write `onboarding.onboarded: true` to `.agent-settings.yml` using the
-section-aware merge rules from `/config-agent-settings` (preserve
-comments, key order, touch only the changed fields).
+section-aware merge rules from
+[`layered-settings`](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
+(preserve comments, key order, touch only the changed fields).
 
-### 7. Summary
+### 8. Summary
 
 Echo what was captured, in one block:
 
@@ -123,20 +142,22 @@ Echo what was captured, in one block:
   personal.user_name: {value or —}
   personal.ide: {value or —}
   personal.open_edited_files: {value}
+  personal.pr_comment_bot_icon: {value}
   personal.rtk_installed: {value}
   cost_profile: {value}
   pipelines.skill_improvement: {value}
   onboarding.onboarded: true
 
 You can re-run this with /onboard anytime, or edit .agent-settings.yml
-directly. For a single setting change use /config-agent-settings.
+directly — the agent follows the merge rules in `layered-settings` when
+you ask it to change a value.
 ```
 
 ## Gotchas
 
 - `.agent-settings.yml` is git-ignored. This command never commits.
 - One question per turn. The iron law from `ask-when-uncertain` applies;
-  do not stack questions 2–5 into a single prompt.
+  do not stack questions 2–6 into a single prompt.
 - Re-running `/onboard` when `onboarded: true` is allowed — walk through
   all steps again and rewrite the values the user confirms.
 - Never overwrite a non-empty value without asking (applies to `user_name`
@@ -145,6 +166,6 @@ directly. For a single setting change use /config-agent-settings.
 ## See also
 
 - [`onboarding-gate`](../rules/onboarding-gate.md) — rule that triggers this command
-- [`config-agent-settings`](config-agent-settings.md) — mid-life full sync
 - [`set-cost-profile`](set-cost-profile.md) — isolated profile change
+- [`layered-settings`](../guidelines/agent-infra/layered-settings.md) — merge rules for mid-life edits
 - [`agent-settings` template](../templates/agent-settings.md) — settings reference

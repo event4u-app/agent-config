@@ -47,15 +47,19 @@ When a skill is **added or its scope changes**, check and update:
 
 ## Settings template sync
 
-When skill/rule/command reads new setting from `.agent-settings.yml` not in `templates/agent-settings.md`:
+When a skill, rule, or command **reads a new setting** from `.agent-settings.yml` that does not yet
+exist in `.augment/templates/agent-settings.md`:
 
-1. Add key with default to template
-2. Add row to Settings Reference table
-3. Add comment above key explaining it
-4. **Update local `.agent-settings.yml`** — add new key with default, preserve existing values,
-   apply template order and comments. Same behavior as `/config-agent-settings`, inline.
+1. **Add the key** with its default value to the template block.
+2. **Add a row** to the Settings Reference table.
+3. **Add a comment** above the key explaining what it does.
+4. **Update the local `.agent-settings.yml`** — add the new key with its default value.
+   Preserve all existing values, apply template order and comments. Follow the
+   [section-aware merge rules](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
+   so the user benefits immediately without running a separate command.
 
-**Mandatory** — without step 4, user can't discover new settings exist.
+**This step is mandatory.** If the template gains a new key but the local `.agent-settings.yml`
+is not updated, the user cannot discover the new setting exists.
 
 ## Content consistency
 

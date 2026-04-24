@@ -41,7 +41,7 @@ If `<name>` is not in that set, refuse and print the valid list.
 ### 3. Read settings
 
 Read `.agent-settings.yml`. If missing, tell the user to run
-`/config-agent-settings` first and stop — do not create the file here.
+`scripts/install` first and stop — do not create the file here.
 
 Extract `roles.default_role` and `roles.active_role`.
 
@@ -58,9 +58,9 @@ exactly what the contract demands.
 
 ### 5. Write the active role
 
-Update `roles.active_role` in `.agent-settings.yml` using the same
-section-aware merge rules as `/config-agent-settings` (preserve comments,
-preserve key order, touch only the changed field).
+Update `roles.active_role` in `.agent-settings.yml` using the
+[section-aware merge rules](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
+(preserve comments, preserve key order, touch only the changed field).
 
 For `/mode none`: set `active_role: ""`.
 
@@ -117,5 +117,5 @@ For `/mode` (status only):
 
 - [`role-contracts`](../guidelines/agent-infra/role-contracts.md) — the six modes
 - [`role-mode-adherence`](../rules/role-mode-adherence.md) — closing-output gate
-- [`config-agent-settings`](config-agent-settings.md) — baseline settings writer
+- [`layered-settings`](../guidelines/agent-infra/layered-settings.md) — merge rules for settings edits
 - [`ask-when-uncertain`](../rules/ask-when-uncertain.md) — never invent modes

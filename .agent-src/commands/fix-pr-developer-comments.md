@@ -133,7 +133,7 @@ Process all comments without asking. For each comment:
 
 ### Bot icon prefix
 
-Read `project.pr_comment_bot_icon` from `.agent-settings.yml`. If `true` (default),
+Read `personal.pr_comment_bot_icon` from `.agent-settings.yml`. If `true` (default),
 prefix every reply with `🤖 ` so reviewers can see at a glance that the reply was
 bot-authored.
 

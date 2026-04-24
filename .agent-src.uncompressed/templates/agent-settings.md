@@ -12,8 +12,9 @@ grouped sections (`personal`, `project`, `github`, `eloquent`, `pipelines`,
 
 Keep the format regular — 2-space indent, no tabs, no lists, one nesting
 level only. The installer's YAML handler is a restricted stdlib parser, not
-a full YAML engine. Run `/config-agent-settings` to normalize after manual
-edits.
+a full YAML engine. Ask the agent to normalize after manual edits — it
+follows the merge rules in
+[`layered-settings`](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
 
 ### Migration from the legacy `.agent-settings` (key=value)
 
@@ -32,13 +33,15 @@ exists and is the source of truth.
 ## Template
 
 This block defines the personal and project-level settings that
-`/config-agent-settings` (and `bin/install.php` via
-`config/agent-settings.template.yml`) writes to `.agent-settings.yml`.
+`scripts/install.py` (via `config/agent-settings.template.yml`)
+writes to `.agent-settings.yml` on first install. Subsequent edits are
+made by the user directly or by the agent on request, following the
+[section-aware merge rules](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
 
 ```yaml
 # Agent Settings
 # This file is git-ignored. Each developer has their own settings.
-# Run /config-agent-settings to create or update this file.
+# Run scripts/install to create this file, then /onboard for first-run setup.
 
 # --- Cost profile ---
 #
@@ -77,11 +80,12 @@ personal:
   # false = silently investigate, only report the conclusion
   play_by_play: false
 
-# --- Project / team preferences ---
-project:
   # Prefix PR comment replies with a bot icon 🤖 (true, false)
+  # Personal preference — each developer decides for themselves.
   pr_comment_bot_icon: false
 
+# --- Project / team preferences ---
+project:
   # Path to the PR template file (relative to project root)
   pr_template: .github/pull_request_template.md
 
@@ -172,9 +176,11 @@ onboarding:
 
 ## Settings Reference
 
-Personal and project-level settings (written by `/config-agent-settings` and
-`bin/install.php`). **Key paths use dot-notation** to denote nesting:
-`personal.user_name` lives under `personal:` in YAML.
+Personal and project-level settings (initial file written by
+`scripts/install.py`, edits follow the merge rules in
+[`layered-settings`](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)).
+**Key paths use dot-notation** to denote nesting: `personal.user_name`
+lives under `personal:` in YAML.
 
 | Key path | Values | Default | Description |
 |---|---|---|---|
@@ -185,7 +191,7 @@ Personal and project-level settings (written by `/config-agent-settings` and
 | `personal.rtk_installed` | `true`, `false` | `false` | Whether rtk (Rust Token Killer) is installed. Detected and set by `/onboard`. |
 | `personal.minimal_output` | `true`, `false` | `true` | When `true`: short bullet points during work, concise summary at end. When `false`: verbose explanations. |
 | `personal.play_by_play` | `true`, `false` | `false` | When `true`: share intermediate findings during investigation. When `false`: work silently, report only the conclusion. |
-| `project.pr_comment_bot_icon` | `true`, `false` | `false` | Prefix PR comment replies with 🤖 to indicate bot-authored replies |
+| `personal.pr_comment_bot_icon` | `true`, `false` | `false` | Prefix PR comment replies with 🤖 to indicate bot-authored replies. Personal preference — each developer decides. |
 | `project.pr_template` | file path | `.github/pull_request_template.md` | Path to PR template file. Read this instead of searching for it. |
 | `project.upstream_repo` | `org/repo` | _(empty)_ | Target repository for universal improvement PRs (e.g., `org/agent-config`). |
 | `project.improvement_pr_branch_prefix` | string | `improve/agent-` | Branch prefix for agent improvement PRs. |
@@ -215,7 +221,7 @@ Applied automatically when `scripts/install` finds a legacy `.agent-settings`
 | `rtk_installed` | `personal.rtk_installed` |
 | `minimal_output` | `personal.minimal_output` |
 | `play_by_play` | `personal.play_by_play` |
-| `pr_comment_bot_icon` | `project.pr_comment_bot_icon` |
+| `pr_comment_bot_icon` | `personal.pr_comment_bot_icon` |
 | `pr_template` | `project.pr_template` |
 | `upstream_repo` | `project.upstream_repo` |
 | `improvement_pr_branch_prefix` | `project.improvement_pr_branch_prefix` |
@@ -251,16 +257,19 @@ they ship with a live consumer in code and get documented here, not before.
 
 ## Sync rules
 
-When new settings are added to this template:
+When new settings are added to this template, the
+[section-aware merge rules](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
+govern the update:
 
-1. The `/config-agent-settings` command detects missing keys (dot-paths) in
-   the user's `.agent-settings.yml`.
-2. Missing keys are added with their **default value** from this template,
+1. Missing keys are added with their **default value** from this template,
    inside the correct section.
-3. Existing keys keep their **current value** — never overwritten.
-4. The **order** of keys follows this template — existing values are
+2. Existing keys keep their **current value** — never overwritten.
+3. The **order** of keys follows this template — existing values are
    reordered to match.
-5. Comments from the template are preserved in the output.
+4. Comments from the template are preserved in the output.
+
+Re-run `scripts/install` to pull in template drift, or ask the agent to
+update a specific key — it walks the same rules.
 
 ## Adding new settings
 
@@ -270,5 +279,5 @@ When adding a new setting:
    the right section (or create a new section if it is a new domain).
 2. Add a row to the Settings Reference table using the full dot-path.
 3. Update the relevant skill or command that reads this setting.
-4. The next time `/config-agent-settings` runs, it will add the new key
-   automatically.
+4. Re-run `scripts/install` (or ask the agent to sync) to pull the new
+   key into the user's file.
