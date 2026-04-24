@@ -75,7 +75,7 @@ check-refs, check-portability, lint-skills, test, lint-readme.
 .agent-src.uncompressed/      ← edit here
   skills/       (124 skills)
   rules/        (46 rules)
-  commands/     (71 commands)
+  commands/     (72 commands)
   guidelines/   (46 guidelines)
   personas/     (7 personas)
   templates/    (AGENTS.md, copilot-instructions.md, skill.md, …)

@@ -66,6 +66,7 @@
   "commands/roadmap-execute.md": "5cfd4c2fb232faa8727be299900cdb50c4fc4c6937efb1743a439ad72e581860",
   "commands/rule-compliance-audit.md": "aafb92247d40a7996dcfcc289483add2b22c68dfd49608512de9efdf10b176b9",
   "commands/set-cost-profile.md": "bfe20a2fa3c138c5d3fa7d61c616d6ba6f8a7d625f42159f20b515a209f14eb9",
+  "commands/sync-gitignore.md": "d665583c44ad2874568e93bcab150a0c0a1a85877350df3d448ffaafe2c4cb23",
   "commands/tests-create.md": "8c145e628d24cd765bf17d92174f0a910bd00ae19689db12643116bd762681a0",
   "commands/tests-execute.md": "5ecd4767a335f6096a1af5cb4e4fbd197f4b4e0f255e5538611dae0ccb209c6b",
   "commands/threat-model.md": "b37aeed3d1255599cae6c0b404a936b63af024ffb4b1b8d74289c795fc49b308",
