@@ -139,7 +139,7 @@
   "rules/augment-portability.md": "360cf0ad8d243cb629cee08e79ce5a0311a7d803b8032062d70c4a73210022cb",
   "rules/augment-source-of-truth.md": "c57c0a7167d704a5f3af6f94fd627ff0956b4158fed23706739744b06174af41",
   "rules/capture-learnings.md": "3ece8149eea9347fbfac8b3162aaef97596cdb25aa5febfc7f0dadbd43e47d9d",
-  "rules/chat-history.md": "13d1ae15ba97a29af6c829e72194de3da918598b47f410a3aef647dff9b95072",
+  "rules/chat-history.md": "111f7185944cde4e4092bc81ea38bb56a532c11a2ff012ce8a94331fd0624919",
   "rules/cli-output-handling.md": "89ec1e01cccedbe1b17fa8b06dc37a60fd55268c4120ea21ee222fceef6e1926",
   "rules/commit-conventions.md": "a39f1158c57dbe6fe8f2a4d574d2c8bcb4227e3c1b31a60a86ba5702019d42ea",
   "rules/context-hygiene.md": "b7db992e7d0ebe404162242232b6782590a951bc311d16c0dc7e64e7caca9c96",
