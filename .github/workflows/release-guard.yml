@@ -37,8 +37,8 @@ jobs:
             fail=1
           fi
           if [ "$fail" = "1" ]; then
-            echo "Before tagging, run:  task release:bump -- $tag"
-            echo "Then commit the version bump, create the tag, and push both."
+            echo "Releases are driven by scripts/release.py — do not tag by hand."
+            echo "From main, run:  task release"
             exit 1
           fi
           echo "✅  package.json, marketplace.json, and tag agree on $tag"

@@ -3,11 +3,11 @@ name: Publish to npm
 # Publishes @event4u/agent-config to the npm registry via OIDC Trusted
 # Publishing whenever a bare-numeric version tag is pushed (e.g. 1.10.0,
 # 1.11.0, 2.0.0-rc.1). Tags follow the repository convention: no `v`
-# prefix, no component prefix — matching release-please config
-# (`include-v-in-tag: false`, `include-component-in-tag: false`).
+# prefix, no component prefix.
 #
-# This workflow is the single publish path; the Release Please workflow
-# only creates tags and GitHub Releases.
+# Tags are created by `scripts/release.py` (invoked via
+# `task release`) after the release PR has been merged
+# into main. This workflow is the single publish path.
 
 on:
   push:
