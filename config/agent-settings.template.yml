@@ -74,9 +74,11 @@ eloquent:
 # --- Optional pipelines ---
 pipelines:
   # Skill improvement pipeline (true, false)
-  # true  = after meaningful tasks, propose learning capture and improvements
+  # true  = after meaningful tasks, propose learning capture and improvements (default)
   # false = silent, no post-task analysis
-  skill_improvement: false
+  # Included by every cost_profile except `custom`. Flip to false here if you
+  # want a silent agent; `custom` profile ignores this default entirely.
+  skill_improvement: true
 
 # --- Subagent orchestration ---
 #

@@ -52,16 +52,21 @@ those sections.
 | `personal.play_by_play` | `false` | Share intermediate findings during analysis |
 | `personal.open_edited_files` | `false` | Open edited files in IDE |
 | `personal.ide` | *(empty)* | IDE for file opening (`cursor`, `code`, `phpstorm`) |
-| `pipelines.skill_improvement` | `false` | Enable post-task learning capture |
+| `pipelines.skill_improvement` | `true` | Post-task learning capture. Included in every profile except `custom`. |
 
 ### Cost profiles
 
 | Profile | Description |
 |---|---|
-| `minimal` | Zero extra surface. Rules, skills, and commands only. |
-| `balanced` | + Runtime dispatcher for skills that declare a shell command. |
-| `full` | + Tool adapters (GitHub / Jira, read-only, opt-in). |
+| `minimal` | Rules, skills, and commands only. **Includes the learning loop.** Default. |
+| `balanced` | `minimal` + Runtime dispatcher for skills that declare a shell command. |
+| `full` | `balanced` + Tool adapters (GitHub / Jira, read-only, opt-in). |
 | `custom` | Ignore profile — every matrix value must be set explicitly. |
+
+All profiles except `custom` ship with `pipelines.skill_improvement: true`,
+so the agent captures learnings after meaningful tasks by default. Set it
+to `false` in `.agent-settings.yml` to silence post-task analysis without
+changing the profile.
 
 The authoritative matrix of all matrix-controlled settings lives in
 [`.agent-src.uncompressed/templates/agent-settings.md`](../.agent-src.uncompressed/templates/agent-settings.md).

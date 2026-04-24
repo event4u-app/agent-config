@@ -109,9 +109,10 @@ eloquent:
 # --- Optional pipelines ---
 pipelines:
   # Skill improvement pipeline (true, false)
-  # true  = after meaningful tasks, propose learning capture and improvements
+  # true  = after meaningful tasks, propose learning capture and improvements (default)
   # false = silent, no post-task analysis
-  skill_improvement: false
+  # Included by every cost_profile except `custom`.
+  skill_improvement: true
 
 # --- Subagent orchestration ---
 subagents:
@@ -177,7 +178,7 @@ Personal and project-level settings (written by `/config-agent-settings` and
 | `project.improvement_pr_branch_prefix` | string | `improve/agent-` | Branch prefix for agent improvement PRs. |
 | `github.pr_reply_method` | `replies_endpoint`, `create_review_comment`, `auto` | `create_review_comment` | GitHub API method for replying to PR review comments. `auto` detects on first use. |
 | `eloquent.access_style` | `getters_setters`, `get_attribute`, `magic_properties` | `getters_setters` | How to access Eloquent model attributes. See `eloquent` skill for details. |
-| `pipelines.skill_improvement` | `true`, `false` | `false` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. |
+| `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
 | `subagents.implementer_model` | model alias or empty | _(empty)_ | Model for implementer subagents. Empty = same tier as session model. See [subagent-configuration](../contexts/subagent-configuration.md). |
 | `subagents.judge_model` | model alias or empty | _(empty)_ | Model for judge subagents. Empty = one tier above implementer (opus if sonnet, sonnet if haiku). |
 | `subagents.max_parallel` | integer | `3` | Maximum parallel subagent invocations. `1` serializes. |
@@ -221,15 +222,18 @@ The `cost_profile` setting selects which agent surfaces are active. See
 
 | Profile | Description |
 |---|---|
-| `minimal` | Rules, skills, and commands only. Zero extra surface. Default. |
-| `balanced` | + Runtime dispatcher for skills that declare a shell command. |
-| `full` | + Tool adapters (GitHub / Jira, read-only, opt-in). |
+| `minimal` | Rules, skills, and commands only. **Includes the learning loop.** Default. |
+| `balanced` | `minimal` + Runtime dispatcher for skills that declare a shell command. |
+| `full` | `balanced` + Tool adapters (GitHub / Jira, read-only, opt-in). |
 | `custom` | Ignore profile — every matrix value must be set explicitly. |
 
-The only cross-profile toggle written to `.agent-settings.yml` today is
-`pipelines.skill_improvement`. Other per-feature toggles may be added in
-future releases; when they land, they ship with a live consumer in code
-and get documented here, not before.
+**Learning loop:** `pipelines.skill_improvement` is `true` by default and is
+included in every profile except `custom`. It triggers post-task learning
+capture via the `skill-improvement-trigger` rule. Flip to `false` in the
+settings file if you want a silent agent without touching the profile.
+
+Other per-feature toggles may be added in future releases; when they land,
+they ship with a live consumer in code and get documented here, not before.
 
 ## Sync rules
 
