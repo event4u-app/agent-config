@@ -87,7 +87,7 @@ description: "Architecture rules for creating new files, classes, …"
 
 ## commands — `.agent-src.uncompressed/commands/*.md`
 
-**Inventory:** 67 files.
+**Inventory:** 68 files.
 
 ### Required
 
