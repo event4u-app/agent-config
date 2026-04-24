@@ -19,6 +19,7 @@ Usage:
     python3 scripts/chat_history.py status
     python3 scripts/chat_history.py check --first-user-msg "..."
     python3 scripts/chat_history.py adopt --first-user-msg "..."
+    python3 scripts/chat_history.py read [--last N | --all]
     python3 scripts/chat_history.py clear
     python3 scripts/chat_history.py rotate --max-kb 256 --mode rotate
 """
@@ -147,6 +148,35 @@ def clear(*, path: Path | None = None) -> None:
         p.unlink()
 
 
+def read_entries(last: int | None = None, *,
+                 path: Path | None = None) -> list[dict[str, Any]]:
+    """Return entries (excluding the header) as a list of dicts.
+
+    `last=None` returns all entries; `last=N` returns the trailing N.
+    Malformed lines are skipped silently.
+    """
+    p = path or file_path()
+    if not p.is_file():
+        return []
+    entries: list[dict[str, Any]] = []
+    with p.open(encoding="utf-8") as fh:
+        for i, line in enumerate(fh):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if i == 0 and isinstance(obj, dict) and obj.get("t") == "header":
+                continue
+            if isinstance(obj, dict):
+                entries.append(obj)
+    if last is not None and last >= 0:
+        entries = entries[-last:]
+    return entries
+
+
 def status(*, path: Path | None = None) -> dict[str, Any]:
     p = path or file_path()
     if not p.is_file():
@@ -246,6 +276,13 @@ def _cmd_clear(_args) -> int:
     return 0
 
 
+def _cmd_read(args) -> int:
+    last = None if args.all else args.last
+    entries = read_entries(last=last)
+    print(json.dumps(entries, ensure_ascii=False, indent=2))
+    return 0
+
+
 def _cmd_rotate(args) -> int:
     result = overflow_handle(args.max_kb, mode=args.mode)
     print(json.dumps(result, ensure_ascii=False))
@@ -271,6 +308,13 @@ def main(argv: list[str] | None = None) -> int:
     p_ado.add_argument("--first-user-msg", required=True)
     p_ado.set_defaults(func=_cmd_adopt)
     sub.add_parser("clear").set_defaults(func=_cmd_clear)
+    p_read = sub.add_parser("read")
+    grp = p_read.add_mutually_exclusive_group()
+    grp.add_argument("--last", type=int, default=5,
+                     help="return the trailing N entries (default: 5)")
+    grp.add_argument("--all", action="store_true",
+                     help="return all entries")
+    p_read.set_defaults(func=_cmd_read)
     p_rot = sub.add_parser("rotate")
     p_rot.add_argument("--max-kb", type=int, default=256)
     p_rot.add_argument("--mode", default="rotate", choices=sorted(VALID_OVERFLOW))

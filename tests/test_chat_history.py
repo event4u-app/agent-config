@@ -229,3 +229,59 @@ def test_cli_append_and_check(tmp_path: Path, monkeypatch, capsys):
     assert capsys.readouterr().out.strip() == "match"
     ch.main(["check", "--first-user-msg", "different"])
     assert capsys.readouterr().out.strip() == "mismatch"
+
+
+def test_read_entries_empty_when_file_missing(hist: Path):
+    assert ch.read_entries(path=hist) == []
+
+
+def test_read_entries_skips_header_and_returns_appended(hist: Path):
+    ch.init("msg", freq="per_turn", path=hist)
+    ch.append({"t": "user", "text": "one"}, path=hist)
+    ch.append({"t": "agent", "text": "two"}, path=hist)
+    ch.append({"t": "phase", "text": "three"}, path=hist)
+    entries = ch.read_entries(path=hist)
+    assert [e["t"] for e in entries] == ["user", "agent", "phase"]
+    assert [e["text"] for e in entries] == ["one", "two", "three"]
+
+
+def test_read_entries_last_n(hist: Path):
+    ch.init("msg", freq="per_turn", path=hist)
+    for i in range(5):
+        ch.append({"t": "user", "text": f"msg-{i}"}, path=hist)
+    last2 = ch.read_entries(last=2, path=hist)
+    assert [e["text"] for e in last2] == ["msg-3", "msg-4"]
+
+
+def test_read_entries_skips_malformed_lines(hist: Path):
+    ch.init("msg", freq="per_turn", path=hist)
+    ch.append({"t": "user", "text": "good"}, path=hist)
+    with hist.open("a", encoding="utf-8") as fh:
+        fh.write("{not json\n")
+    ch.append({"t": "agent", "text": "also good"}, path=hist)
+    entries = ch.read_entries(path=hist)
+    assert [e["text"] for e in entries] == ["good", "also good"]
+
+
+def test_cli_read_last(tmp_path: Path, monkeypatch, capsys):
+    target = tmp_path / "read.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "x"])
+    for i in range(4):
+        ch.main(["append", "--type", "user", "--json", f'{{"text":"m{i}"}}'])
+    capsys.readouterr()
+    ch.main(["read", "--last", "2"])
+    out = json.loads(capsys.readouterr().out)
+    assert [e["text"] for e in out] == ["m2", "m3"]
+
+
+def test_cli_read_all(tmp_path: Path, monkeypatch, capsys):
+    target = tmp_path / "read.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "x"])
+    for i in range(3):
+        ch.main(["append", "--type", "user", "--json", f'{{"text":"m{i}"}}'])
+    capsys.readouterr()
+    ch.main(["read", "--all"])
+    out = json.loads(capsys.readouterr().out)
+    assert len(out) == 3
