@@ -223,17 +223,25 @@ def _parse_legacy_settings(text: str) -> "tuple[dict, list]":
     return values, unknown
 
 
+_BARE_ID_RE = re.compile(r"^[a-z][a-z0-9_]*$")
+
+
 def _yaml_scalar(value: str) -> str:
     """Format a string value as a YAML scalar with minimal quoting.
 
-    Booleans and non-negative integers are emitted unquoted; everything
-    else is double-quoted so the migrated file is unambiguous.
+    Booleans and non-negative integers are emitted unquoted. Bare
+    lowercase identifiers (``per_turn``, ``rotate``, ``getters_setters``
+    — the shape of profile values and enum-like strings) are emitted
+    unquoted so `sync_agent_settings.py` stays idempotent against its
+    own output. Everything else is double-quoted.
     """
     if value == "":
         return '""'
     if value in ("true", "false"):
         return value
     if value.isdigit():
+        return value
+    if _BARE_ID_RE.match(value):
         return value
     # Escape backslashes and double-quotes, then wrap
     escaped = value.replace("\\", "\\\\").replace('"', '\\"')
@@ -330,6 +338,44 @@ def _migrate_legacy_if_present(project_root: Path, template_body: str) -> "str |
 
 # --- Bridge generators ---
 
+def _parse_profile_ini(path: Path) -> "dict[str, str]":
+    """Parse a simple key=value profile preset (comments start with ; or #)."""
+    values: "dict[str, str]" = {}
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith(";") or line.startswith("#"):
+            continue
+        if "=" not in line:
+            continue
+        key, _, val = line.partition("=")
+        values[key.strip()] = val.strip()
+    return values
+
+
+_PLACEHOLDER_RE = re.compile(r"__[A-Z][A-Z0-9_]*__")
+
+
+def _render_template(template: str, profile_values: "dict[str, str]") -> str:
+    """Substitute __UPPER_KEY__ placeholders using ini values.
+
+    Each ini key `foo_bar` maps to the `__FOO_BAR__` placeholder. Fails
+    if any placeholder remains unfilled — catches typos and missing
+    profile entries early.
+    """
+    body = template
+    for key, value in profile_values.items():
+        placeholder = f"__{key.upper()}__"
+        if placeholder in body:
+            body = body.replace(placeholder, value)
+    leftover = sorted(set(_PLACEHOLDER_RE.findall(body)))
+    if leftover:
+        fail(
+            "Template has unfilled placeholders after profile render: "
+            + ", ".join(leftover)
+        )
+    return body
+
+
 def ensure_agent_settings(project_root: Path, package_root: Path, profile: str, force: bool) -> None:
     target = project_root / SETTINGS_FILE
     profile_source = package_root / "config" / "profiles" / f"{profile}.ini"
@@ -343,7 +389,13 @@ def ensure_agent_settings(project_root: Path, package_root: Path, profile: str, 
     template = template_source.read_text(encoding="utf-8")
     if COST_PROFILE_PLACEHOLDER not in template:
         fail(f"Template is missing placeholder {COST_PROFILE_PLACEHOLDER}")
-    template_body = template.replace(COST_PROFILE_PLACEHOLDER, profile)
+    profile_values = _parse_profile_ini(profile_source)
+    if profile_values.get("cost_profile") != profile:
+        fail(
+            f"Profile preset {profile_source.name} has cost_profile="
+            f"{profile_values.get('cost_profile')!r} but --profile={profile}"
+        )
+    template_body = _render_template(template, profile_values)
 
     legacy_target = project_root / LEGACY_SETTINGS_FILE
     if legacy_target.is_file() and target.exists():

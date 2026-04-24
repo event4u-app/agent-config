@@ -98,7 +98,7 @@ Your agent is now:
 - **Respecting your codebase** — no conflicting patterns
 - **Following standards** — consistent code quality
 
-This is enforced automatically by 44 rules. No configuration needed.
+This is enforced automatically by 46 rules. No configuration needed.
 
 ---
 
@@ -132,8 +132,40 @@ Your agent now understands slash commands:
 | `/create-pr` | Create PR with Jira-linked description |
 | `/fix-ci` | Fetch and fix GitHub Actions failures |
 | `/quality-fix` | Run and fix all quality checks |
+| `/chat-history` | Inspect the persistent chat-history log |
+| `/chat-history-resume` | Recover context after a crashed or switched session |
+| `/chat-history-clear` | Wipe the chat-history log (with confirmation) |
 
-→ [Browse all 67 commands](../.agent-src/commands/)
+→ [Browse all 73 commands](../.agent-src/commands/)
+
+---
+
+## Crash recovery — `.agent-chat-history`
+
+When `chat_history.enabled: true` in `.agent-settings.yml` (on by default
+for every profile), the agent keeps a JSONL log of your conversation in
+`.agent-chat-history` at the project root. The file is git-ignored and
+rotates at the size configured in the profile (`128 KB` on `minimal`,
+`256 KB` on `balanced`, `512 KB` on `full`).
+
+When a chat opens and finds an existing log, the agent runs a
+4-state ownership check and chooses the right flow:
+
+- **match** — this chat already owns the file. Append silently.
+- **foreign** — a different session's file. You get 3 options:
+  Resume (adopt), New start (archive + init), Ignore (skip logging).
+- **returning** — this chat once owned the file, but another session
+  took over in between. You get 3 options: Merge (your history in front
+  of the foreign entries), Replace (wipe foreign entries, keep yours
+  only), Continue (just leave the file and append from now on).
+- **missing** — no file yet. Init and proceed.
+
+Run `/chat-history-resume` to walk through the prompts explicitly, or
+let the agent ask on the first turn of a new chat. All merge/replace/
+resume paths read the on-disk entries into context before any write.
+
+See the [`chat-history` rule](../.agent-src/rules/chat-history.md) and
+[`scripts/chat_history.py`](../scripts/chat_history.py) for the mechanics.
 
 ---
 

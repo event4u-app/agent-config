@@ -40,8 +40,10 @@ Before coding, quickly verify:
 - Does similar functionality already exist?
 - Does it follow established patterns in the codebase?
 - Does it contradict existing conventions?
+- Do **multiple valid patterns/frameworks** already exist (e.g. Tailwind + Flux, multiple form libraries, competing state stores)? If yes, do NOT pick one arbitrarily — ask which to use.
 
 **If misfit** → show evidence (file references), propose alternative.
+**If multiple valid options** → list them, ask which to use. See [`no blind implementation`](../guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation).
 
 ### 3. Is the approach sound?
 

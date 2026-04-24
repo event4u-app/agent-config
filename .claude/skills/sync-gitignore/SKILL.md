@@ -1,0 +1,1 @@
+../../../.agent-src/commands/sync-gitignore.md

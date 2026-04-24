@@ -5,7 +5,8 @@ Two-file settings model: **team defaults** (committed) and
 without forcing every developer to work the same way.
 
 Referenced by `road-to-project-memory.md` Phase 0. Consumed by the
-`config-agent-settings` command and the settings loader.
+settings loader, the `/onboard` command, and any agent that edits
+`.agent-settings.yml` on user request.
 
 ## The two files
 
@@ -84,8 +85,9 @@ mistakenly committed) migrate by:
    repo history only if it leaked personal tokens. Otherwise leave
    it — future commits supersede.
 
-The `config-agent-settings` command performs steps 1–3 and 5
-automatically when it detects a one-file setup.
+The `/onboard` command and any agent that edits settings on user
+request should walk steps 1–3 and 5 automatically when it detects
+a one-file setup.
 
 ## .gitignore expectations
 
@@ -105,8 +107,9 @@ pattern (e.g. `*.yml` in a nested folder) would otherwise match.
   directly. The loader returns the merged view already.
 - **Commands** that mutate settings must state which layer they
   write to. Writing to the wrong layer is a spec bug.
-- **`config-agent-settings`** is the single writer for both files.
-  Other commands MUST delegate — no ad-hoc YAML edits.
+- Writes to either file MUST follow the [section-aware merge
+  rules](#section-aware-merge-rules) — preserve existing values,
+  template order, and comments. No ad-hoc YAML rewrites.
 
 ## Persona-list merge semantics
 
@@ -139,6 +142,46 @@ the default cast; it does not blacklist it.
 If the project locks `personas.default` via `locked_keys`, steps 2
 and 4 are ignored with a one-line warning — the developer cannot
 narrow a team-locked cast.
+
+## Section-aware merge rules
+
+Any agent that writes `.agent-settings.yml` or
+`.agent-project-settings.yml` on the user's behalf (including
+`/onboard`, `/set-cost-profile`, and ad-hoc "change value X" requests)
+MUST follow these rules. Initial file creation and legacy migration
+are owned by `scripts/install.py`; these rules govern every edit
+after that.
+
+For each section in the template
+([`agent-settings.md`](../../templates/agent-settings.md)), walked in
+template order:
+
+- Keep the section header and its comments verbatim from the template.
+- For each key under the section:
+  - **Key exists in user's file** → use the user's current value.
+  - **Key missing** → use the template default.
+- **Unknown sections/keys** the user has added → preserve at the end
+  of the section (or in a trailing `_user:` block if no matching
+  section exists).
+
+Invariants:
+
+- Template section **order** always wins — reorder existing keys to
+  match.
+- Existing scalar values are **never overwritten** unless the user
+  asked for that specific change.
+- New keys added to the template land with their default value.
+- Comments from the template replace user comments in the same
+  position — comments are documentation, not user data.
+- Write with 2-space indent, no tabs, no trailing whitespace.
+- Never commit — `.agent-settings.yml` is git-ignored.
+- If a legacy flat `.agent-settings` (key=value) is still present,
+  stop and tell the user to run `scripts/install` — migration is the
+  installer's job, never the agent's.
+
+Template drift (new keys shipped by a package update) is resolved by
+re-running `scripts/install` or by the agent walking these rules on
+the next explicit settings edit.
 
 ## Anti-patterns
 

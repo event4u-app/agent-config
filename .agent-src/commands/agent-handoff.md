@@ -62,3 +62,18 @@ Show the handoff prompt in a fenced code block and say:
 - **Open tasks are critical** — the new chat needs to know what's left.
 - **Decisions are important** — prevents the new chat from re-asking settled questions.
 - **File list is optional** — only include if the new chat will need to edit specific files.
+
+## When to use this vs. `/chat-history-resume`
+
+- `/agent-handoff` is **push-based**: you copy a short summary into the
+  new chat. Works across tools (Augment → Claude Code), across machines,
+  and without any persistent file.
+- [`/chat-history-resume`](chat-history-resume.md) is **pull-based**: the
+  new chat reads `.agent-chat-history` from disk (written by the
+  [`chat-history`](../rules/chat-history.md) rule). Works only on the
+  same machine and same repo, but captures more detail (every phase /
+  tool call / decision the prior session logged).
+
+Prefer `/agent-handoff` for planned context switches; prefer
+`/chat-history-resume` after a crash or after switching tools within the
+same workspace.

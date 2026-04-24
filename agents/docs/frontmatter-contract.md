@@ -54,7 +54,7 @@ source: package
 
 ## rules — `.agent-src.uncompressed/rules/*.md`
 
-**Inventory:** 43 files.
+**Inventory:** 46 files.
 
 ### Required
 
@@ -87,7 +87,7 @@ description: "Architecture rules for creating new files, classes, …"
 
 ## commands — `.agent-src.uncompressed/commands/*.md`
 
-**Inventory:** 67 files.
+**Inventory:** 71 files.
 
 ### Required
 

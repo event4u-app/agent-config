@@ -1,0 +1,24 @@
+# Agent config — symlinked from vendor (auto-managed)
+.augment/skills/
+.augment/commands/
+.augment/guidelines/
+.augment/templates/
+.augment/contexts/
+.augment/scripts/
+.augment/README.md
+
+# Agent config — NOT ignored (real copies, may contain project overrides)
+# .augment/rules/
+
+# Agent config — CLI wrapper (auto-generated on every install)
+/agent-config
+
+# Agent config — personal settings (written by the installer)
+.agent-settings.yml
+.agent-settings
+.agent-settings.backup.key-value
+
+# Agent config — persistent chat history (crash recovery, never commit)
+.agent-chat-history
+.agent-chat-history.bak
+.agent-chat-history.*.bak

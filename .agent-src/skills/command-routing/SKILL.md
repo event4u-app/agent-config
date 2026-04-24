@@ -56,7 +56,7 @@ Read `github.pr_reply_method` from `.agent-settings.yml`:
 
 ### 2. Bot icon prefix
 
-Read `project.pr_comment_bot_icon` from `.agent-settings.yml`:
+Read `personal.pr_comment_bot_icon` from `.agent-settings.yml`:
 - `true` → prefix reply body with `🤖 `.
 - `false` or not set → no prefix.
 

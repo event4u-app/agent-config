@@ -19,7 +19,6 @@ set -euo pipefail
 
 # --- Configuration ---
 COPY_DIRS="rules"  # Subdirectories where files must be real copies (space-separated)
-GITIGNORE_MARKER="# event4u/agent-config"
 
 # Rules that are internal to the agent-config package and should NOT be shipped to consumers.
 # These are only relevant when developing the agent-config package itself.
@@ -35,6 +34,7 @@ TARGET_DIR=""
 DRY_RUN=false
 VERBOSE=false
 QUIET=false
+SKIP_GITIGNORE=false
 
 # --- Logging ---
 log_info()    { $QUIET || echo "  ✅  $*"; }
@@ -51,6 +51,7 @@ parse_args() {
             --dry-run) DRY_RUN=true; shift ;;
             --verbose) VERBOSE=true; shift ;;
             --quiet)   QUIET=true; shift ;;
+            --skip-gitignore) SKIP_GITIGNORE=true; shift ;;
             --help|-h) show_help; exit 0 ;;
             *) log_error "Unknown argument: $1"; show_help; exit 1 ;;
         esac
@@ -103,6 +104,7 @@ Options:
   --dry-run        Show what would happen without making changes
   --verbose        Show detailed output
   --quiet          Suppress all output except errors
+  --skip-gitignore Do not touch the target project's .gitignore
   --help, -h       Show this help
 
 Environment:
@@ -561,42 +563,40 @@ copy_if_missing() {
     cp "$source" "$target"
 }
 
-# Ensure .gitignore contains agent-config entries
+# Ensure .gitignore contains the managed agent-config block.
+# Delegates to scripts/sync_gitignore.py so the installer and the
+# standalone /sync-gitignore command share one source of truth
+# (config/gitignore-block.txt). Honors --dry-run and --skip-gitignore.
 ensure_gitignore() {
     local project_root="$1"
     local gitignore="$project_root/.gitignore"
+    local sync_script="$SOURCE_DIR/scripts/sync_gitignore.py"
+    local template="$SOURCE_DIR/config/gitignore-block.txt"
 
+    if $SKIP_GITIGNORE; then
+        log_verbose "skip .gitignore (--skip-gitignore)"
+        return 0
+    fi
+
+    # Match the pre-refactor behavior: don't create .gitignore in a
+    # project that doesn't use git / doesn't already have one.
     if [[ ! -f "$gitignore" ]]; then
         return 0
     fi
 
-    if grep -qF "$GITIGNORE_MARKER" "$gitignore"; then
-        return 0  # Already present
+    if [[ ! -f "$sync_script" || ! -f "$template" ]]; then
+        log_warn ".gitignore sync skipped — script or template missing"
+        return 0
     fi
 
-    if $DRY_RUN; then
-        log_verbose "append .gitignore block"
-        return
+    local args=(--path "$gitignore" --template "$template" --quiet)
+    $DRY_RUN && args+=(--dry-run)
+
+    if python3 "$sync_script" "${args[@]}" >/dev/null 2>&1; then
+        log_verbose ".gitignore synced"
+    else
+        log_warn ".gitignore sync failed (exit $?)"
     fi
-
-    cat >> "$gitignore" << 'BLOCK'
-
-# event4u/agent-config
-# Agent config — symlinked from vendor (auto-managed)
-.augment/skills/
-.augment/commands/
-.augment/guidelines/
-.augment/templates/
-.augment/contexts/
-.augment/scripts/
-.augment/README.md
-
-# Agent config — NOT ignored (real copies, may contain project overrides)
-# .augment/rules/
-
-# Agent config — CLI wrapper (auto-generated on every install)
-/agent-config
-BLOCK
 }
 
 # Install the consumer-facing CLI wrapper `./agent-config` at the project
