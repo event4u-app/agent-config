@@ -339,7 +339,11 @@ def preflight(target: str) -> None:
     if porcelain:
         die("working tree is not clean; commit or stash first")
 
-    run("git", "fetch", REMOTE, "--tags", "--prune", capture=True)
+    # --force lets the remote's tag positions win over stale local tags.
+    # The release consumes the remote view as source of truth, and we're
+    # about to create a new tag anyway — local drift (e.g. from renamed
+    # release-please tags) should not block the fetch.
+    run("git", "fetch", REMOTE, "--tags", "--prune", "--force", capture=True)
     local = git("rev-parse", "HEAD", capture=True)
     remote = git("rev-parse", f"{REMOTE}/{MAIN_BRANCH}", capture=True)
     if local != remote:
