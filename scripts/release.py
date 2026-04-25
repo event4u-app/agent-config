@@ -104,14 +104,28 @@ def run(
     capture: bool = False,
     cwd: Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
-    """Thin subprocess wrapper with sane defaults."""
-    return subprocess.run(
-        list(args),
-        check=check,
-        cwd=cwd or REPO_ROOT,
-        text=True,
-        capture_output=capture,
-    )
+    """Thin subprocess wrapper with sane defaults.
+
+    When ``check`` and ``capture`` are both True and the command fails,
+    Python's default behaviour swallows stderr — callers only see a
+    ``CalledProcessError`` with no hint of what went wrong. We catch that
+    path and die with the actual stderr so release preflight failures are
+    diagnosable without re-running with a debugger.
+    """
+    try:
+        return subprocess.run(
+            list(args),
+            check=check,
+            cwd=cwd or REPO_ROOT,
+            text=True,
+            capture_output=capture,
+        )
+    except subprocess.CalledProcessError as err:
+        if capture:
+            cmd = " ".join(args)
+            out = (err.stderr or err.stdout or "").strip()
+            die(f"command failed ({err.returncode}): {cmd}\n{out}")
+        raise
 
 
 def git(*args: str, capture: bool = False) -> str:
