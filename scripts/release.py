@@ -35,6 +35,7 @@ import json
 import re
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from datetime import date as _date
 from pathlib import Path
@@ -136,6 +137,41 @@ def git(*args: str, capture: bool = False) -> str:
 def gh(*args: str, capture: bool = False, check: bool = True) -> str:
     r = run("gh", *args, capture=capture, check=check)
     return r.stdout.strip() if capture else ""
+
+
+def watch_pr_checks() -> None:
+    """Watch PR checks and tolerate the 'no checks' case.
+
+    ``gh pr checks --watch`` exits 1 both on real failures and when no
+    checks are reported at all (no workflow triggered, no required
+    checks configured in branch protection). The latter must not block
+    the release — we warn and continue. Real failures still die.
+
+    A short grace period gives GitHub time to register workflow runs
+    on a freshly-pushed branch.
+    """
+    time.sleep(5)
+    proc = subprocess.run(
+        ["gh", "pr", "checks", "--watch"],
+        cwd=REPO_ROOT,
+        text=True,
+        capture_output=True,
+    )
+    output = ((proc.stdout or "") + (proc.stderr or "")).strip()
+    if proc.returncode == 0:
+        if output:
+            print(output)
+        return
+    if "no checks reported" in output.lower():
+        print(f"⚠️  {output}")
+        print(
+            "   Continuing without check validation — configure required "
+            "checks in branch protection to enforce this gate."
+        )
+        return
+    if output:
+        print(output, file=sys.stderr)
+    die(f"PR checks failed (exit {proc.returncode})")
 
 
 def have(bin: str) -> bool:
@@ -438,8 +474,8 @@ def execute(plan: Plan, *, wait_for_checks: bool, dry_run: bool) -> None:
     )
 
     if wait_for_checks:
-        _step(6, total, "Wait for required PR checks")
-        run("gh", "pr", "checks", "--watch", "--required")
+        _step(6, total, "Wait for PR checks")
+        watch_pr_checks()
     else:
         _step(6, total, "Skip waiting for checks (--no-wait)")
 
