@@ -7,6 +7,58 @@ versioning policy is documented in [CONTRIBUTING.md](CONTRIBUTING.md#versioning-
 > Entries before 1.3.3 were reconstructed from git history after the fact.
 > Early releases did not maintain release notes.
 
+## [1.12.0](https://github.com/event4u-app/agent-config/compare/1.10.0...1.12.0) (2026-04-25)
+
+### Features
+
+* **release:** add automated release pipeline ([1bf2e0f](https://github.com/event4u-app/agent-config/commit/1bf2e0fa6862aee7a85da84e4f96586e7ab49a4a))
+* **settings:** add sync_agent_settings.py + /sync-agent-settings command ([40443c8](https://github.com/event4u-app/agent-config/commit/40443c87cb397a8ea34c1f51557603937a0d116a))
+* **gitignore:** add /sync-gitignore command + regenerated tool projections ([d04aae6](https://github.com/event4u-app/agent-config/commit/d04aae6c6ac64d56756242c562269629907d5776))
+* **gitignore:** add sync_gitignore.py + single-source-of-truth template ([9d32a32](https://github.com/event4u-app/agent-config/commit/9d32a32f70341d4d8ad78acaa84f8d01b99d182f))
+* **chat-history:** /chat-history-resume routes on 4-state ownership ([fb917d4](https://github.com/event4u-app/agent-config/commit/fb917d4abb6c9a9f8e8b289c82ada43b46943d86))
+* **chat-history:** rewrite rule for 4-state flow (match/returning/foreign/missing) ([cde8017](https://github.com/event4u-app/agent-config/commit/cde8017ab550d95a63e813c8dc1b797e267e568a))
+* **chat-history:** schema v2 with 4-state ownership model ([35825b4](https://github.com/event4u-app/agent-config/commit/35825b41afd8f0c58304f3ce7f08f52ebfe8b5aa))
+* **chat-history:** gitignore, docs, and /agent-handoff cross-ref ([1198be4](https://github.com/event4u-app/agent-config/commit/1198be4492e77e2ace2cb903488e21ae55cf546a))
+* **chat-history:** add /chat-history, /chat-history-resume, /chat-history-clear commands ([a5e9135](https://github.com/event4u-app/agent-config/commit/a5e9135b86d932880ed933b35cd02ebe742dbc88))
+* **chat-history:** add always-active chat-history rule ([0ae95a6](https://github.com/event4u-app/agent-config/commit/0ae95a6edfd2b61badb58ee70679150575bc52ef))
+* **chat-history:** per-profile chat_history settings + installer placeholders ([fca9316](https://github.com/event4u-app/agent-config/commit/fca931667b421e1156994414d2a6d7e4f87b3472))
+* **chat-history:** add chat_history.py helper with JSONL log + overflow handling ([f0cc419](https://github.com/event4u-app/agent-config/commit/f0cc419a02df932af1920b33c4be143ac6636e73))
+* **onboarding:** centralized first-run flow with /onboard and onboarding-gate ([c35c763](https://github.com/event4u-app/agent-config/commit/c35c76352b63e3f3f079d1fb7be5a24af8ca8b6b))
+* **settings:** enable skill_improvement by default in every profile ([2ecc310](https://github.com/event4u-app/agent-config/commit/2ecc3104730b6a929d87e7ed7c6a34c8aabef027))
+* **commands:** add /set-cost-profile to change cost_profile interactively ([b38d8b5](https://github.com/event4u-app/agent-config/commit/b38d8b591df56045fe7a8116f968a568ef4877d8))
+* **publish:** add workflow_dispatch to publish-npm ([cae25f8](https://github.com/event4u-app/agent-config/commit/cae25f8ed71443237a2e98fe298959a0218720d0))
+
+### Bug Fixes
+
+* **release:** force-prune tags during preflight fetch ([e79230f](https://github.com/event4u-app/agent-config/commit/e79230f8aa58a3ac1370e23a996acd61ed528e15))
+* **release:** surface stderr when captured commands fail ([b34de56](https://github.com/event4u-app/agent-config/commit/b34de56aa021dabc710e098bf8ffba0d0a842641))
+* **release:** probe gh auth via api user, not auth status ([daecc3e](https://github.com/event4u-app/agent-config/commit/daecc3e0e1924625e7c383f12e7435c8dbcb6eaf))
+* **install:** preserve bare identifiers in _yaml_scalar ([43accda](https://github.com/event4u-app/agent-config/commit/43accda2c8ef624de6b0cb509aba8201c6c2382b))
+* **roadmap-progress:** support roman and letter phase IDs ([fabd903](https://github.com/event4u-app/agent-config/commit/fabd9039391b979d5f56da8745f792b8e460ee6b))
+* **cli:** resolve symlinks in agent-config so PACKAGE_ROOT works when invoked via PATH/global install ([2d2c592](https://github.com/event4u-app/agent-config/commit/2d2c59292ee4abe630c2541a0056c06596eb1abd))
+* **rules:** wire no-blind-implementation into think/improve/ask ([fa0c908](https://github.com/event4u-app/agent-config/commit/fa0c908ea832a58f00b70991cd2899b512c86952))
+* **rules:** repair handoff-ordering ref in ask-when-uncertain ([aeb4c33](https://github.com/event4u-app/agent-config/commit/aeb4c3377aeba9cb114837ea68dc320f9cd31a16))
+* **npm:** add repository, bugs, and homepage fields to package.json ([d794eab](https://github.com/event4u-app/agent-config/commit/d794eab3918118a513de1fcc78204d15d8b7aae9))
+* **release:** drop component prefix from tags and split npm publish workflow ([281c225](https://github.com/event4u-app/agent-config/commit/281c225ef5d9b266e487f434606111622569cd9f))
+
+### Documentation
+
+* **release:** rewrite release process for the new pipeline ([8f1a60f](https://github.com/event4u-app/agent-config/commit/8f1a60fbb8f2eb6abea5ee960c7715acbffaa38c))
+
+### Refactoring
+
+* **ask-when-uncertain:** remove only-exception, make one-question-per-turn absolute ([ec152e6](https://github.com/event4u-app/agent-config/commit/ec152e62e7206e655a81fe3592e3f11fe0f94dad))
+* **install:** delegate .gitignore handling to sync_gitignore.py ([448ae90](https://github.com/event4u-app/agent-config/commit/448ae90c098b4841543020641d4bd626c376f5c0))
+* **settings:** remove /config-agent-settings, move pr_comment_bot_icon to personal ([5e61522](https://github.com/event4u-app/agent-config/commit/5e615228899cccf1a33e88c51c2230b692dd994b))
+
+### Chores
+
+* **ci:** point release workflows at task release ([cc809ba](https://github.com/event4u-app/agent-config/commit/cc809baf94a4359a968900162d07788ce2d1650a))
+* remove release-please ([5ed3816](https://github.com/event4u-app/agent-config/commit/5ed381672697d94f8b84706dd70fcccae85b9f5d))
+* **chat-history:** regenerate projections + docs for 4-state flow ([688aa2d](https://github.com/event4u-app/agent-config/commit/688aa2df7f8b07f829793a5df9c2b75f9da3cc8e))
+* **chat-history:** regenerate multi-agent tool projections ([c8cf487](https://github.com/event4u-app/agent-config/commit/c8cf4876f6a61fc68040ce2a861141f6810b933e))
+* release main (#23) ([2d69625](https://github.com/event4u-app/agent-config/commit/2d6962536d250a8d6edd08d3e6cd92be0f2fb145))
+
 ## [1.11.0](https://github.com/event4u-app/agent-config/compare/1.10.0...1.11.0) (2026-04-23)
 
 
