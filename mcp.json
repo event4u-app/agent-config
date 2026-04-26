@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "agent-memory": {
+      "command": "memory",
+      "args": ["mcp"]
+    }
+  }
+}

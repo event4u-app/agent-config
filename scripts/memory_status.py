@@ -35,7 +35,7 @@ from typing import Literal
 
 Status = Literal["absent", "misconfigured", "present"]
 
-_CLI_CANDIDATES = ("agent-memory", "agentmem")
+_CLI_CANDIDATES = ("memory", "agent-memory", "agentmem")
 _HEALTH_TIMEOUT_SECONDS = 2.0
 _CACHE_ENV = "AGENT_MEMORY_STATUS"
 _CACHE_FILE = Path(".agent-memory") / "status.cache"
