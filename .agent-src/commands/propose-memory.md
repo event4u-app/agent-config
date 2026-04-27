@@ -8,9 +8,7 @@ disable-model-invocation: true
 # /propose-memory
 
 Drops a **signal** into `agents/memory/intake/signals-YYYY-MM.jsonl` via
-`scripts/memory_signal.py`. Signals are append-only JSONL and
-merge-safe (see
-[`road-to-memory-merge-safety`](../../../agents/roadmaps/road-to-memory-merge-safety.md)).
+`scripts/memory_signal.py`. Signals are append-only JSONL and merge-safe.
 
 Unlike [`/memory-add`](memory-add.md) — which writes a **curated**
 entry the reviewer has validated — `/propose-memory` is cheap and
@@ -30,8 +28,7 @@ Do NOT use when:
 - The entry is a **decision** — go to [`/memory-add`](memory-add.md)
   with `architecture-decisions` or `product-rules`.
 - The finding contradicts an existing curated entry — open a
-  supersede-chain discussion instead; route via
-  [`road-to-memory-self-consumption`](../../../agents/roadmaps/road-to-memory-self-consumption.md).
+  supersede-chain discussion instead.
 
 ## Steps
 
@@ -65,7 +62,7 @@ Ask once, numbered. If the user picks `skip`, proceed without them:
 ### 4. Emit via the shared helper
 
 ```bash
-python3 scripts/memory_signal.py \
+./agent-config memory:signal \
     --type <type> \
     --path "<path>" \
     --body "<body>" \
@@ -104,5 +101,3 @@ is intended (rarely).
 - [`engineering-memory-data-format`](../guidelines/agent-infra/engineering-memory-data-format.md)
 - [`memory-access`](../guidelines/agent-infra/memory-access.md) — the
   read-side contract that consumes what this command writes.
-- [`road-to-agent-memory-integration`](../../../agents/roadmaps/road-to-agent-memory-integration.md)
-  — Phase 2 (write-side producers).

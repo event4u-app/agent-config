@@ -169,9 +169,9 @@ Mandatory fields the draft MUST fill:
 * `Success signal` (§7) — one metric, one baseline, one target, one
   evaluation date
 
-Run `python3 scripts/check_proposal.py agents/proposals/<id>.md`
+Run `./agent-config proposal:check agents/proposals/<id>.md`
 before handing to `upstream-contribute`. The
-script is a hard gate: non-zero exit = the proposal does not move
+gate is hard: non-zero exit = the proposal does not move
 to stage `gated`.
 
 ## Output format
@@ -183,7 +183,7 @@ For the **decision step** (what this skill prints to the user):
 3. Rationale in one to three lines
 4. If decision ≠ "no action": path of the written proposal
    (`agents/proposals/<proposal_id>.md`) and gate status
-   (`check_proposal.py` exit 0 = ready for review)
+   (`./agent-config proposal:check` exit 0 = ready for review)
 
 The **proposal file itself** follows
 `proposal.example.md` verbatim — all ten sections, YAML frontmatter

@@ -59,7 +59,7 @@ same failure class on nearby paths during this session, that is a
 pattern worth recording. Drop a signal:
 
 ```bash
-python3 scripts/memory_signal.py \
+./agent-config memory:signal \
     --type historical-patterns \
     --path "<primary path under review>" \
     --body "<failure class → fix guidance, one sentence>" \

@@ -89,7 +89,7 @@ On confirmation:
 
 - Append the entry to the chosen layout (single-file: append under
   `entries:`; sharded: write `agents/memory/<type>/<hash>.yml`).
-- Run `python3 scripts/check_memory.py --path agents/memory`.
+- Run `./agent-config memory:check --path agents/memory`.
 - On non-zero exit: show the error, **revert** the write, return to
   step 3 or 4 depending on the failure.
 - On zero exit: report the entry `id` and path, remind the user to
@@ -126,5 +126,3 @@ link resolves. Broken link → block and ask the user to fix.
 - [`capture-learnings`](../rules/capture-learnings.md) — when a
   learning is better captured as an `incident-learnings` entry vs a
   rule/skill proposal
-- [`road-to-engineering-memory.md`](../../agents/roadmaps/road-to-engineering-memory.md)
-  — Phase 3 writer ergonomics

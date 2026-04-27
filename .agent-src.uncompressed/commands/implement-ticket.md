@@ -44,7 +44,7 @@ The engine persists everything in a JSON state file (default:
 Run the engine with the state file on every iteration:
 
 ```bash
-PYTHONPATH=scripts python3 -m implement_ticket \
+./agent-config implement-ticket \
     --state-file .implement-ticket-state.json \
     [--ticket-file ticket.json --persona <name>]   # first call only
 ```
@@ -88,8 +88,7 @@ wrote it.
 
 ### 5. Final report + close-prompt
 
-On exit `0`, the engine prints the delivery report (nine fixed sections
-per [`implement-ticket-flow`](../../agents/contexts/implement-ticket-flow.md#delivery-report-schema)).
+On exit `0`, the engine prints the delivery report (nine fixed sections).
 Surface it unchanged. Append the close-prompt:
 
 ```
@@ -126,8 +125,5 @@ permission-gated.
 
 ## See also
 
-- [`implement-ticket-flow`](../../agents/contexts/implement-ticket-flow.md) — flow contract + directive semantics
-- [`adr-implement-ticket-runtime`](../../agents/contexts/adr-implement-ticket-runtime.md) — runtime choice
 - [`refine-ticket`](refine-ticket.md), [`feature-plan`](feature-plan.md), [`tests-execute`](tests-execute.md), [`review-changes`](review-changes.md) — skills the directives delegate to
 - [`commit`](commit.md), [`create-pr`](create-pr.md) — post-delivery commands the user runs explicitly
-- [`road-to-implement-ticket`](../../agents/roadmaps/road-to-implement-ticket.md) — governing roadmap

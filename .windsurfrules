@@ -404,6 +404,14 @@ package repo, in consumer projects the scripts live under
 | `python3 .augment/scripts/update_roadmap_progress.py` | `./agent-config roadmap:progress` |
 | `python3 .augment/scripts/update_roadmap_progress.py --check` | `./agent-config roadmap:progress-check` |
 | `bash scripts/first-run.sh` | `./agent-config first-run` |
+| `PYTHONPATH=… python3 -m implement_ticket` | `./agent-config implement-ticket` |
+| `python3 scripts/memory_lookup.py` | `./agent-config memory:lookup` |
+| `python3 scripts/memory_signal.py` | `./agent-config memory:signal` |
+| `python3 scripts/memory_hash.py` | `./agent-config memory:hash` |
+| `python3 scripts/check_memory.py` | `./agent-config memory:check` |
+| `python3 scripts/check_memory_proposal.py` | `./agent-config memory:check-proposal` |
+| `python3 scripts/check_proposal.py` | `./agent-config proposal:check` |
+| `python3 scripts/refine_ticket_detect.py` | `./agent-config refine-ticket:detect` |
 
 Commands not covered by the CLI stay as direct script invocations
 (e.g. `bash scripts/compress.sh --sync`) — maintainer-only, not
@@ -2633,9 +2641,7 @@ See also: `threat-modeling` · `authz-review` · `data-flow-mapper` · `minimal-
 
 → Size limits and details: `.augment/guidelines/agent-infra/size-and-scope.md`
 
-→ Frontmatter contract (required/optional keys per type):
-[`agents/docs/frontmatter-contract.md`](../../../agents/docs/frontmatter-contract.md).
-Schemas live in `scripts/schemas/` and are enforced by `python3 scripts/validate_frontmatter.py`.
+→ Frontmatter contract: schemas live in `scripts/schemas/` and are enforced by `python3 scripts/validate_frontmatter.py`.
 
 ---
 
@@ -2713,10 +2719,8 @@ Every skill MUST have: `When to use`, `Procedure`, `Gotcha`, `Output format`, `D
 ## Frontmatter Contract
 
 Every skill's YAML frontmatter MUST validate against `scripts/schemas/skill.schema.json`.
-See [`agents/docs/frontmatter-contract.md`](../../../agents/docs/frontmatter-contract.md)
-for the human-readable contract across all artefact types. Violations are
-reported by `scripts/skill_linter.py` as `schema_<rule>` errors and fail
-`python3 scripts/validate_frontmatter.py` and the full CI pipeline.
+Violations are reported by `scripts/skill_linter.py` as `schema_<rule>` errors
+and fail `python3 scripts/validate_frontmatter.py` and the full CI pipeline.
 
 ## Description Triggering
 
@@ -2735,10 +2739,7 @@ Make descriptions "pushy" — explicit about when to fire:
   adjectives, drop the second example phrasing, or collapse a list — do
   **not** drop the trigger vocabulary or the `even if ...` tail.
 
-Source: [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md)
-— description-optimization guidance adopted via
-[`agents/roadmaps/archive/road-to-anthropic-alignment.md`](../../../agents/roadmaps/archive/road-to-anthropic-alignment.md)
-Phase 2.
+Source: [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md).
 
 **Litmus test:** Read the description cold, without the skill's body. If you
 cannot name at least two phrasings a user would realistically type that should
