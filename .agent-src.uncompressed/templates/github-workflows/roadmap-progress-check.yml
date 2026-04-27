@@ -1,0 +1,63 @@
+# Roadmap Progress Check — template shipped by agent-config
+#
+# Copy this file to `.github/workflows/roadmap-progress-check.yml` in the
+# consumer project. It fails CI when `agents/roadmaps-progress.md` is
+# stale relative to the source roadmaps under `agents/roadmaps/`.
+#
+# This is the last-line defence behind the `roadmap-progress-sync` rule
+# and the optional pre-commit hook (see `./agent-config hooks:install`).
+# A green check here proves the dashboard reflects reality on every PR
+# that touches roadmaps.
+#
+# Prerequisites:
+#   - `.augment/scripts/update_roadmap_progress.py` installed by
+#     `task install` (or `./agent-config install`).
+#   - At least one file exists under `agents/roadmaps/` — absence
+#     short-circuits the check with a passing exit (consumer projects
+#     that haven't adopted roadmaps stay green).
+#
+# This workflow is intentionally narrow: it only runs when relevant
+# files change, so it adds zero overhead to unrelated PRs.
+
+name: Roadmap Progress Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "agents/roadmaps/**"
+      - "agents/roadmaps-progress.md"
+      - ".augment/scripts/update_roadmap_progress.py"
+  pull_request:
+    paths:
+      - "agents/roadmaps/**"
+      - "agents/roadmaps-progress.md"
+      - ".augment/scripts/update_roadmap_progress.py"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Verify roadmaps-progress.md is fresh
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run roadmap progress check
+        run: python3 .augment/scripts/update_roadmap_progress.py --check
+
+      - name: Remediation hint on failure
+        if: failure()
+        run: |
+          echo "::error::roadmaps-progress.md is stale."
+          echo "Regenerate locally with one of:"
+          echo "  ./agent-config roadmap:progress"
+          echo "  task roadmap-progress"
+          echo "  python3 .augment/scripts/update_roadmap_progress.py"
+          echo "Then commit and push the updated agents/roadmaps-progress.md."
