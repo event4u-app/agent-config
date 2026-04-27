@@ -28,6 +28,7 @@ so you can run a few package scripts without installing `go-task`,
 ```bash
 ./agent-config mcp:render          # sync MCP server config into .cursor/ and .windsurf/
 ./agent-config roadmap:progress    # regenerate agents/roadmaps-progress.md
+./agent-config hooks:install       # install pre-commit roadmap-progress hook (opt-in)
 ./agent-config first-run           # guided setup
 ./agent-config help                # full command list
 ```

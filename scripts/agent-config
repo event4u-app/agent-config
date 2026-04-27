@@ -46,6 +46,8 @@ Commands:
   mcp:check                  Dry-run mcp:render; exit non-zero if targets are stale
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
+  hooks:install              Install the pre-commit roadmap-progress hook
+                             (use --print to dump it, --force to overwrite an existing hook)
   first-run                  Guided first-run setup — cost profile, settings, tooling
   help                       Show this help
   --version, -V              Print package version
@@ -55,6 +57,7 @@ Examples:
   ./agent-config mcp:render --claude-desktop
   ./agent-config mcp:check
   ./agent-config roadmap:progress
+  ./agent-config hooks:install
   ./agent-config first-run
 
 All commands operate on the CURRENT DIRECTORY (your project root).
@@ -132,6 +135,77 @@ cmd_first_run() {
   exec bash "$script" "$@"
 }
 
+cmd_hooks_install() {
+  local force=false
+  local print_only=false
+  for arg in "$@"; do
+    case "$arg" in
+      --force)   force=true ;;
+      --print)   print_only=true ;;
+      -h|--help)
+        cat <<'HELP'
+agent-config hooks:install — install the pre-commit roadmap-progress hook.
+
+Usage:
+  ./agent-config hooks:install [--force] [--print]
+
+Without flags: copies the hook to .git/hooks/pre-commit. Refuses to
+overwrite an existing pre-commit hook unless --force is given (the
+existing hook may already chain other tooling).
+
+  --print   dump the hook script to stdout (for manual chaining into an
+            existing pre-commit script, husky, lefthook, etc.)
+  --force   overwrite an existing .git/hooks/pre-commit (DESTRUCTIVE)
+HELP
+        return 0 ;;
+      *)
+        echo "❌  hooks:install: unknown argument: $arg" >&2
+        echo "    Run \`./agent-config hooks:install --help\` for usage." >&2
+        return 2 ;;
+    esac
+  done
+
+  local hook_src
+  hook_src="$(resolve_script ".agent-src/templates/hooks/pre-commit-roadmap-progress" ".augment/templates/hooks/pre-commit-roadmap-progress")" || return 1
+
+  if $print_only; then
+    cat "$hook_src"
+    return 0
+  fi
+
+  local git_dir
+  git_dir="$(git -C "$CONSUMER_ROOT" rev-parse --git-dir 2>/dev/null || true)"
+  if [[ -z "$git_dir" ]]; then
+    echo "❌  hooks:install: $CONSUMER_ROOT is not a git repository." >&2
+    return 1
+  fi
+  # Resolve relative git-dir paths (worktrees, submodules) against CONSUMER_ROOT.
+  [[ "$git_dir" != /* ]] && git_dir="$CONSUMER_ROOT/$git_dir"
+
+  local hook_dir="$git_dir/hooks"
+  local target="$hook_dir/pre-commit"
+  mkdir -p "$hook_dir"
+
+  if [[ -f "$target" ]] && ! $force; then
+    if grep -q "pre-commit-roadmap-progress" "$target" 2>/dev/null; then
+      echo "✅  hooks:install: already installed at $target"
+      return 0
+    fi
+    echo "⚠️   hooks:install: $target already exists and looks unrelated." >&2
+    echo "    Options:" >&2
+    echo "      1. Inspect it and append the snippet manually:" >&2
+    echo "         ./agent-config hooks:install --print >> $target" >&2
+    echo "      2. Replace it (destructive):" >&2
+    echo "         ./agent-config hooks:install --force" >&2
+    return 1
+  fi
+
+  cp "$hook_src" "$target"
+  chmod +x "$target"
+  echo "✅  hooks:install: pre-commit hook installed at $target"
+  echo "    To uninstall: rm $target"
+}
+
 main() {
   local cmd="${1-}"
   [[ $# -gt 0 ]] && shift || true
@@ -141,6 +215,7 @@ main() {
     mcp:check)               cmd_mcp_check "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
+    hooks:install)           cmd_hooks_install "$@" ;;
     first-run)               cmd_first_run "$@" ;;
     help|--help|-h|"")        usage ;;
     --version|-V)            print_version ;;
