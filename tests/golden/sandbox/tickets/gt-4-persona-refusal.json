@@ -1,0 +1,10 @@
+{
+  "id": "GT-4-MOD",
+  "title": "Plan-only: outline how modulo(a, b) would be added",
+  "acceptance_criteria": [
+    "Produce an analysis + plan for adding `modulo(a: int, b: int) -> int` to `src/calculator.py`.",
+    "The plan must cover signature, edge cases (b == 0), and the test that would prove it.",
+    "No source files in `src/` or `tests/` may be modified by this ticket \u2014 advisory persona only."
+  ],
+  "persona": "advisory"
+}

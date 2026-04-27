@@ -1,0 +1,53 @@
+{
+  "gt_id": "GT-2",
+  "ticket_file": "tickets/gt-2-ambiguity.json",
+  "persona": null,
+  "final_outcome": "halt_unhandled:_no_directive",
+  "final_exit_code": 1,
+  "cycles": [
+    {
+      "index": 1,
+      "cmd": [
+        "./agent-config",
+        "implement-ticket",
+        "--state-file",
+        ".implement-ticket-state.json",
+        "--ticket-file",
+        "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/tests/golden/sandbox/tickets/gt-2-ambiguity.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=refine\n> Ticket GT-2-DIV is missing: vague acceptance criteria at position(s) 2.\n> 1. Run `/refine-ticket GT-2-DIV` and re-invoke `/implement-ticket`\n> 2. Provide the missing details in chat — I'll merge them into the ticket\n> 3. Abandon this ticket — too vague to implement\n",
+      "stderr": "",
+      "state_after": {
+        "ticket": {
+          "id": "GT-2-DIV",
+          "title": "Add divide(a, b) to the toy calculator",
+          "acceptance_criteria": [
+            "Function signature is `divide(a: int, b: int) -> int` and returns the integer quotient when b is non-zero.",
+            "tbd",
+            "A pytest test `test_divide_returns_quotient` lives in `tests/test_calculator.py` and covers the happy path plus the division-by-zero behaviour from AC #2."
+          ]
+        },
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "blocked"
+        },
+        "questions": [
+          "> Ticket GT-2-DIV is missing: vague acceptance criteria at position(s) 2.",
+          "> 1. Run `/refine-ticket GT-2-DIV` and re-invoke `/implement-ticket`",
+          "> 2. Provide the missing details in chat — I'll merge them into the ticket",
+          "> 3. Abandon this ticket — too vague to implement"
+        ],
+        "report": ""
+      },
+      "directive": null,
+      "recipe_action": null,
+      "recipe_notes": []
+    }
+  ]
+}

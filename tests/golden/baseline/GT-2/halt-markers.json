@@ -1,0 +1,14 @@
+[
+  {
+    "cycle": 1,
+    "exit_code": 1,
+    "directive": null,
+    "recipe_action": null,
+    "questions": [
+      "> Ticket GT-2-DIV is missing: vague acceptance criteria at position(s) 2.",
+      "> 1. Run `/refine-ticket GT-2-DIV` and re-invoke `/implement-ticket`",
+      "> 2. Provide the missing details in chat — I'll merge them into the ticket",
+      "> 3. Abandon this ticket — too vague to implement"
+    ]
+  }
+]

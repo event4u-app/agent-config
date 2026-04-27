@@ -265,6 +265,125 @@ measured without instrumentation sprawl:
 - `repeat_user_runs_per_week`
 - `report_rejections`
 
+## Capture protocol — Golden Transcripts (R1 Phase 1)
+
+The Universal Execution Engine roadmap (`R1`) freezes the engine's
+observable behaviour before any refactor. The artefact that holds
+that freeze is the **Capture Pack** under
+`tests/golden/baseline/GT-{1..5}/`. This section is the operator
+manual for producing and re-producing those packs.
+
+### Scenarios
+
+| GT  | Surface locked                          | Cycles |
+|-----|------------------------------------------|--------|
+| 1   | happy path (plan→apply→tests→review→report) | 5 |
+| 2   | refine-step ambiguity halt (vague AC)    | 1      |
+| 3   | run-tests failed verdict + recovery      | 6      |
+| 4   | advisory persona — plan-only delivery    | 2      |
+| 5   | state-resume from disk between cycles    | 5      |
+
+### Inputs
+
+- Toy domain: `tests/golden/sandbox/repo/` — a 4-function
+  calculator (`add`, `subtract`, `power`-stub, `divide`) plus a
+  pytest config and tests. Deterministic, no I/O.
+- Ticket fixtures: `tests/golden/sandbox/tickets/gt-{1..5}-*.json`.
+  Schema matches `implement_ticket`'s `ticket_loader`.
+- Recipes: `tests/golden/sandbox/recipes/gt{1..5}_*.py`. Each
+  exposes `META` (gt_id, ticket fixture, persona, cycle cap) and
+  `build_recipe(workspace) -> {directive_verb: callable}`. The
+  recipe is the deterministic stand-in for the agent: every halt
+  is resolved by hard-coded edits + state-mutations.
+
+### Invocation
+
+Each cycle is a fresh `./agent-config implement-ticket` subprocess
+seeded from the persisted state file. The runner
+(`tests/golden/sandbox/runner.py`) chains them:
+
+```bash
+./agent-config implement-ticket \
+    --ticket-file tests/golden/sandbox/tickets/gt-1-happy.json \
+    --state-file <workspace>/.agent-state/implement-ticket.json \
+    --workspace <workspace> \
+    --output-format json
+# subsequent cycles drop --ticket-file; the engine loads the
+# ticket from the saved state.
+```
+
+The runner is invoked via the capture driver:
+
+```bash
+python3 -m tests.golden.capture                 # all five GTs
+python3 -m tests.golden.capture --scenarios GT-3
+```
+
+### Kill points & resume
+
+The runner re-executes the engine on every cycle, so resume from
+disk is exercised by **every** GT — not just GT-5. GT-5 simply
+records the contract under a different operation (negate vs.
+multiply) so byte-equal regression detection covers an additional
+state shape. There is no "two-segment" runner mode; the segmentation
+is implicit in the per-cycle subprocess fork.
+
+### Capture Pack layout
+
+```
+tests/golden/baseline/GT-N/
+├── transcript.json       # per-cycle stdout/stderr + exit codes
+├── state-snapshots/      # state file after each cycle (cycle-NN.json)
+├── halt-markers.json     # extracted directives + numbered questions
+├── exit-codes.json       # per-cycle exit codes only
+├── delivery-report.md    # final report (or stub if flow halted)
+├── reproduction-notes.md # per-GT regenerate command + invariants
+└── fixture/              # frozen copy of the input ticket
+```
+
+The driver also writes `tests/golden/baseline/summary.json` (one
+row per GT: outcome, exit code, cycle count) and
+`tests/golden/CHECKSUMS.txt` (sorted SHA256 of every file under
+`tests/golden/baseline/` plus the input fixtures).
+
+### Determinism guarantees
+
+- `PYTHONHASHSEED=0`, `PYTHONIOENCODING=utf-8`,
+  `LC_ALL=C.UTF-8`, `NO_COLOR=1` injected by the runner.
+- Workspace is a fresh `tempfile.TemporaryDirectory` per scenario;
+  the toy repo is materialised into it before cycle 1.
+- `agents/memory/` lookups resolve relative to the workspace, so
+  every run sees zero curated entries — no host-state leakage.
+- Recipes never read the clock, the network, or unbound randomness.
+- pytest verdict normalisation lives in
+  `tests/golden/sandbox/recipes/_helpers.py::run_pytest`
+  (exit 0 → success, exit 1/2 → failed, otherwise → mixed).
+
+### Regenerating the baseline
+
+Only when the engine's observable behaviour intentionally changes:
+
+```bash
+python3 -m tests.golden.capture
+git diff tests/golden/baseline tests/golden/CHECKSUMS.txt
+```
+
+Review the diff; it should match the documented behavioural change
+in this file's revision history. Then commit. Drive-by changes to
+the baseline are blocked by the freeze-guard CI workflow (added in
+Phase 1 Step 7).
+
+### Anti-patterns
+
+- Editing a Capture Pack file by hand. The pack is generated; edit
+  the engine or the recipe instead.
+- Adding a sixth GT without amending the table above and the Phase-6
+  replay harness in lock-step.
+- Reading from `agents/memory/` in a recipe. Recipes seed state
+  directly; memory belongs to the engine under test, not the test.
+- Letting the `_helpers.run_pytest` verdict mapping drift from the
+  engine's `state.tests.verdict` contract — they are coupled.
+
 ## Non-goals
 
 - Auto-commit / auto-push / auto-PR (belongs to `/commit`,
@@ -286,6 +405,8 @@ measured without instrumentation sprawl:
 ## See also
 
 - [`../roadmaps/road-to-implement-ticket.md`](../roadmaps/road-to-implement-ticket.md)
+- [`../roadmaps/road-to-universal-execution-engine.md`](../roadmaps/road-to-universal-execution-engine.md)
+- `tests/golden/` — capture sandbox, recipes, and Capture Packs
 - [`agent-memory-contract.md`](agent-memory-contract.md)
 - [`../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md`](../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md)
 - [`../../.agent-src.uncompressed/rules/user-interaction.md`](../../.agent-src.uncompressed/rules/user-interaction.md)

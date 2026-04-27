@@ -1,0 +1,9 @@
+{
+  "id": "GT-1-MULT",
+  "title": "Add multiply(a, b) to the toy calculator",
+  "acceptance_criteria": [
+    "Function signature is `multiply(a: int, b: int) -> int` and returns the integer product of the two arguments.",
+    "Edge cases covered: multiply(0, n) and multiply(n, 0) return 0; multiply(-2, 3) returns -6.",
+    "A pytest test `test_multiply_returns_product` lives in `tests/test_calculator.py` and exercises both the happy path and the negative-input edge case."
+  ]
+}

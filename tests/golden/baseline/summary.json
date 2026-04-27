@@ -1,0 +1,32 @@
+[
+  {
+    "gt_id": "GT-1",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 5
+  },
+  {
+    "gt_id": "GT-2",
+    "outcome": "halt_unhandled:_no_directive",
+    "exit_code": 1,
+    "cycles": 1
+  },
+  {
+    "gt_id": "GT-3",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 6
+  },
+  {
+    "gt_id": "GT-4",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 2
+  },
+  {
+    "gt_id": "GT-5",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 5
+  }
+]

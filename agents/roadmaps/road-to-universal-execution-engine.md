@@ -7,12 +7,25 @@
 - [ ] Read `.agent-src.uncompressed/commands/implement-ticket.md`
 - [ ] Read `agents/contexts/implement-ticket-flow.md`
 - [ ] Read `agents/contexts/adr-implement-ticket-runtime.md`
-- [ ] Inspect `scripts/implement_ticket/` module structure end-to-end
+- [ ] Inspect `<engine-src>/implement_ticket/` module structure end-to-end (see Paths below)
 - [ ] Re-read `.agent-src.uncompressed/templates/roadmaps.md`
+
+## Paths (canonical, used throughout this roadmap)
+
+The engine is a **template script**, not a repo-root script. Consumers reach it via the `./agent-config implement-ticket` CLI dispatcher. Within this maintainer repo:
+
+| Alias | Resolves to | Role |
+|---|---|---|
+| `<engine-src>` | `.agent-src.uncompressed/templates/scripts/` | Source of truth — edit here |
+| `<engine-mirror>` | `.agent-src/templates/scripts/` | Compressed projection — auto-generated, never edited directly |
+| `<engine-tests>` | `tests/implement_ticket/` | Existing in-process behavior tests (sys.path-injected via `conftest.py`) |
+| `<engine-cli>` | `scripts/agent-config` (root) | Dispatcher that wires `PYTHONPATH` and calls `python3 -m implement_ticket` |
+
+The repo-root `scripts/` directory hosts **maintainer tooling only** (compress, install, lint, dispatcher) — it never contains the engine. Phase 3's "rename" therefore moves `<engine-src>/implement_ticket/` → `<engine-src>/work_engine/` (mirror auto-follows via `task sync`), not anything at repo root.
 
 ## Context (current state)
 
-`/implement-ticket` is the package's strongest workflow: an Option-A dispatch loop over the `scripts/implement_ticket/` Python engine, persistent state in `.implement-ticket-state.json`, persona-aware (via `roles.active_role`), directives `create-plan` / `apply-plan` / `run-tests` / `review-changes`, structured delivery report, permission-gated git.
+`/implement-ticket` is the package's strongest workflow: an Option-A dispatch loop over the `<engine-src>/implement_ticket/` Python engine, persistent state in `.implement-ticket-state.json`, persona-aware (via `roles.active_role`), directives `create-plan` / `apply-plan` / `run-tests` / `review-changes`, structured delivery report, permission-gated git.
 
 The weakness: **the killer mechanics are bolted to a ticket input.** Prompts, refactor briefs, "improve this screen"-style requests cannot reach the same depth. The engine's value lives in the loop, not in the ticket-shape — and right now they are coupled.
 
@@ -78,10 +91,10 @@ State schema (shape, not exhaustive):
 
 ## Phase 1: Golden Transcript Capture (baseline lock)
 
-> **Hard prerequisite for every later phase. No file under `scripts/implement_ticket/` may be touched until this phase exits green.** Behavior can only be protected once it is frozen — this phase captures the freeze against the *current* code, before any refactor. **Live runs only. Synthetic / code-read transcripts are explicitly forbidden** — they freeze interpretation, not behavior.
+> **Hard prerequisite for every later phase. No file under `<engine-src>/implement_ticket/` may be touched until this phase exits green.** Behavior can only be protected once it is frozen — this phase captures the freeze against the *current* code, before any refactor. **Live runs only. Synthetic / code-read transcripts are explicitly forbidden** — they freeze interpretation, not behavior.
 
-- [ ] **Step 1:** Open dedicated freeze branch `golden-capture-baseline` from `main`. Branch protection rule: **no commits touching `scripts/implement_ticket/`, `scripts/work_engine/`, or any consumer (Taskfile, CI, install scripts) are allowed on this branch or anywhere else until the Phase 1 PR is merged.** A `CODEOWNERS` entry or a `.github/workflows/freeze-guard.yml` check enforces it. The freeze guard runs on every push and fails the pipeline if drift is detected.
-- [ ] **Step 2:** Build the **capture sandbox** at `tests/golden/sandbox/`. Deliberately minimal — just enough that the engine can plan, edit, run tests, fail, recover, persist state. **No real Laravel/Composer**; the sandbox is a Python module + pytest (matches package tooling, zero external runtime). Structure:
+- [x] **Step 1:** Phase 1 work happens on the current feature branch (`feat/intent-based-development-thinking`) — maintainer decision; no parallel engine work justifies the cost of a separate `golden-capture-baseline` branch off `main`. Freeze-guard scope reduces to: from this commit until the Phase 1 acceptance checkboxes are all green, no commit on this branch may modify `<engine-src>/implement_ticket/` or `<engine-mirror>/implement_ticket/`. Enforcement: every Phase 1 commit message carries the `R1-P1` tag; a lightweight `.github/workflows/freeze-guard.yml` check (added in this Phase as part of the lock) fails CI when a non-`R1-P1` commit on this branch touches the engine paths. Phase 2-7 commits start only after Step 7's lock-marker commit.
+- [x] **Step 2:** Build the **capture sandbox** at `tests/golden/sandbox/`. Deliberately minimal — just enough that the engine can plan, edit, run tests, fail, recover, persist state. **No real Laravel/Composer**; the sandbox is a Python module + pytest (matches package tooling, zero external runtime). Structure:
   ```
   tests/golden/sandbox/
     repo/                            ← target codebase the engine plans/edits/tests against
@@ -99,13 +112,13 @@ State schema (shape, not exhaustive):
       gt-5-resume.md                 ← exact SIGTERM checkpoint + state-file inspection commands
   ```
   CI bootstraps the sandbox from committed inputs only; no network, no external state. The sandbox is a wegwerf-fixture: it lives in the package, lives forever, never grows beyond what the 5 GTs strictly need.
-- [ ] **Step 3:** **Live-run** capture for each of the 5 GT scenarios against the unmodified `scripts/implement_ticket/` engine, using the sandbox from Step 2. Each GT runs end-to-end with a deterministic, reproducible recipe — no improvisation:
+- [x] **Step 3:** **Live-run** capture for each of the 5 GT scenarios against the unmodified `<engine-src>/implement_ticket/` engine (invoked via `<engine-cli>`, which wires `PYTHONPATH` correctly), using the sandbox from Step 2. Each GT runs end-to-end with a deterministic, reproducible recipe — no improvisation:
   - **GT-1 — happy path:** prepared ticket fixture with complete AC; all tests pre-prepared green; no external deps. Record refine → plan → apply → tests → review → delivery → close-prompt.
   - **GT-2 — ambiguity halt:** prepared ticket fixture with **one deliberately missing AC item**. Record halt at plan step; inject scripted clarification; record resume.
   - **GT-3 — test failure recovery:** prepared fixture with **one deterministically failing assertion** that passes only after a specific known code edit. Record halt → scripted fix → second-run pass. *Never random failure injection.*
   - **GT-4 — persona refusal:** active-role explicitly set to a persona whose contract refuses the requested task type; trigger refusal mid-flow; record structured `role-mode-adherence` halt marker.
   - **GT-5 — state resume:** engine sent `SIGTERM` at a **deterministic checkpoint** (after `apply` writes to state file, before `tests` directive starts). State file persisted; engine re-invoked; resume recorded. *Never "close terminal and hope".*
-- [ ] **Step 4:** Build a **Capture Pack** per GT under `tests/golden/baseline/GT-{1..5}/` with this exact structure:
+- [x] **Step 4:** Build a **Capture Pack** per GT under `tests/golden/baseline/GT-{1..5}/` with this exact structure:
   ```
   GT-x/
     transcript.json          ← all stdout/stderr lines, in order, with timestamps
@@ -118,8 +131,8 @@ State schema (shape, not exhaustive):
   ```
   Per-GT structure is identical so a later red-golden tells the reader **why** it changed, not only **that** it changed.
 - [ ] **Step 5:** Capture SHA256 checksums of **every file in every Capture Pack and the sandbox** into `tests/golden/CHECKSUMS.txt`. Any later edit to any baseline or sandbox file must update checksums in the same commit and reference explicit reviewer sign-off in the message. CI verifies the checksum file matches the tree on every PR — defense against silent baseline edits during refactor.
-- [ ] **Step 6:** Document the capture protocol in `agents/contexts/implement-ticket-flow.md` — exact inputs, exact invocations, exact kill points, exact fix-edits used in GT-3, exact persona setup in GT-4, sandbox bootstrap commands. A future reader must be able to reproduce every capture against pre-refactor `main` byte-for-byte (modulo timestamps).
-- [ ] **Step 7:** **Lock the baseline.** Open PR from `golden-capture-baseline` → `main`. Merge gate (in PR template + CI): sandbox present, all 5 Capture Packs present, checksums valid, freeze-guard green, capture-protocol doc reviewed. Once merged, `scripts/implement_ticket/` is frozen — only Phase 6 reads it for verification; all refactor work moves to `scripts/work_engine/`.
+- [x] **Step 6:** Document the capture protocol in `agents/contexts/implement-ticket-flow.md` — exact inputs, exact invocations, exact kill points, exact fix-edits used in GT-3, exact persona setup in GT-4, sandbox bootstrap commands. A future reader must be able to reproduce every capture against pre-refactor `main` byte-for-byte (modulo timestamps).
+- [ ] **Step 7:** **Lock the baseline.** Land a single Phase-1-lock commit on the current branch (subject prefix `R1-P1-LOCK:`) once the per-step checkboxes above are green. Merge gate (PR template + CI): sandbox present, all 5 Capture Packs present, checksums valid, freeze-guard green for every `R1-P1` commit, capture-protocol doc reviewed. From the lock commit forward, `<engine-src>/implement_ticket/` is frozen — only Phase 6 reads it for verification; all refactor work moves to `<engine-src>/work_engine/`.
 
 ## Phase 2: State schema and migration
 
@@ -174,10 +187,10 @@ State schema (shape, not exhaustive):
 
 - [ ] Capture sandbox present under `tests/golden/sandbox/` with `repo/`, `tickets/`, `recipes/` — minimal Python+pytest, deterministic, CI-bootstrappable from committed inputs only
 - [ ] All 5 Capture Packs present under `tests/golden/baseline/GT-{1..5}/` with full structure (transcript, state-snapshots, delivery-report, halt-markers, exit-codes, fixture, reproduction-notes)
-- [ ] All 5 captures are **live runs** against unmodified `scripts/implement_ticket/` using the sandbox — no synthetic transcripts; reproduction-notes prove byte-for-byte reproducibility (modulo timestamps)
+- [ ] All 5 captures are **live runs** against unmodified `<engine-src>/implement_ticket/` using the sandbox — no synthetic transcripts; reproduction-notes prove byte-for-byte reproducibility (modulo timestamps)
 - [ ] `tests/golden/CHECKSUMS.txt` covers every file in every Capture Pack and the sandbox; CI checksum-verification check is green
-- [ ] Freeze-guard CI check rejects any commit touching `scripts/implement_ticket/`, `scripts/work_engine/`, or consumers before Phase 1 is merged
-- [ ] `scripts/work_engine/` is the canonical module; `scripts/implement_ticket/` is a deprecating shim
+- [ ] Freeze-guard CI check rejects any non-`R1-P1` commit on this branch that touches `<engine-src>/implement_ticket/`, `<engine-mirror>/implement_ticket/`, `<engine-src>/work_engine/`, or `<engine-mirror>/work_engine/` before the Phase 1 lock commit lands
+- [ ] `<engine-src>/work_engine/` is the canonical module; `<engine-src>/implement_ticket/` is a deprecating shim
 - [ ] `.implement-ticket-state.json` files auto-migrate to `.work-state.json` on first run, with `.bak` preserved
 - [ ] State schema v1 is enforced; unknown `input.kind` or `directive_set` raises a clear error
 - [ ] Backend directive set lives under `directives/backend/`; `ui/` and `mixed/` exist as stubs that raise guided `NotImplementedError`
@@ -197,7 +210,7 @@ State schema (shape, not exhaustive):
 ## Risks and mitigations
 
 - **Synthetic baselines freeze interpretation, not behavior** → live-run capture only; freeze-guard CI rejects refactor commits before Phase 1 merge; reproduction-notes per GT enforced
-- **Baseline drift during refactor** (someone "just fixes" `scripts/implement_ticket/` mid-roadmap) → freeze-guard branch protection; checksum-verification CI; PR template gate
+- **Baseline drift during refactor** (someone "just fixes" `<engine-src>/implement_ticket/` mid-roadmap) → freeze-guard CI check (per-commit `R1-P1` tag enforcement); checksum-verification CI; PR template gate
 - **GT-3 / GT-5 captured non-deterministically** → fixed failing-test fixture for GT-3 (specific assertion + specific fix-edit); deterministic SIGTERM checkpoint for GT-5 (after `apply` writes state, before `tests` directive); both documented in reproduction-notes
 - **Module rename breaks consumers** → compatibility shim with `DeprecationWarning`; `check_references.py` enforced in CI
 - **State migration loses data** → `.bak` preserved; migration is idempotent; recovery instructions in ADR
