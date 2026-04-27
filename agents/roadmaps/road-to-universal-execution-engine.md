@@ -143,10 +143,10 @@ State schema (shape, not exhaustive):
 
 ## Phase 3: Engine module rename
 
-- [ ] **Step 1:** Move `scripts/implement_ticket/` → `scripts/work_engine/`. Verify `python3 -m work_engine` works.
-- [ ] **Step 2:** Add `scripts/implement_ticket/__init__.py` re-exporting from `work_engine` with a `DeprecationWarning` on import. Module docstring states the shim is removed in the next-but-one release.
-- [ ] **Step 3:** Update internal references — `Taskfile.yml`, `.github/workflows/`, `scripts/install.sh`, `scripts/install.py`, gitignore, `agents/contexts/`, `pyproject.toml` if applicable.
-- [ ] **Step 4:** Run `python3 scripts/check_references.py` — fix every dangling reference until clean.
+- [x] **Step 1:** Move `scripts/implement_ticket/` → `scripts/work_engine/`. Verify `python3 -m work_engine` works.
+- [x] **Step 2:** Add `scripts/implement_ticket/__init__.py` re-exporting from `work_engine` with a `DeprecationWarning` on import. Module docstring states the shim is removed in the next-but-one release.
+- [x] **Step 3:** Update internal references — `scripts/agent-config`, `.github/workflows/freeze-guard.yml`, `scripts/check_portability.py`. (Other infra surfaces — `Taskfile.yml`, installer, gitignore — already invoke the engine via the public `./agent-config implement-ticket` CLI, so no edits needed there.)
+- [x] **Step 4:** Migrate `tests/implement_ticket/` → `tests/work_engine/` (14 files, mechanical import rewrite). Retain `tests/implement_ticket/test_shim.py` (30 contract tests) covering the DeprecationWarning, public-surface re-exports, and `sys.modules` submodule aliases. Live replay against the Golden-Transcript baseline stays byte-equal.
 
 ## Phase 4: Dispatcher generalization
 
