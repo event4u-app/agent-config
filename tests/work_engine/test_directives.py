@@ -7,7 +7,7 @@ the exact string and the round-trip between ``agent_directive`` and
 """
 from __future__ import annotations
 
-from implement_ticket import (
+from work_engine import (
     AGENT_DIRECTIVE_PREFIX,
     agent_directive,
     is_agent_directive,

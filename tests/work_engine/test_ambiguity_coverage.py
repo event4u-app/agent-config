@@ -23,8 +23,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from implement_ticket.delivery_state import DeliveryState, Outcome
-from implement_ticket.steps import all_ambiguities
+from work_engine.delivery_state import DeliveryState, Outcome
+from work_engine.steps import all_ambiguities
 
 
 NUMBERED_OPTION = re.compile(r"^> \d+\. ")
@@ -102,9 +102,9 @@ def test_blocked_outputs_are_numbered_options() -> None:
 
 
 def _import_step(name: str) -> Any:
-    """Import ``implement_ticket.steps.<name>`` at call time."""
+    """Import ``work_engine.steps.<name>`` at call time."""
     from importlib import import_module
-    return import_module(f"implement_ticket.steps.{name}")
+    return import_module(f"work_engine.steps.{name}")
 
 
 def _state_with(**kwargs: Any) -> DeliveryState:

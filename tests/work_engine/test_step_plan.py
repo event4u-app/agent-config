@@ -9,8 +9,8 @@ Three outcomes the step must navigate correctly:
 """
 from __future__ import annotations
 
-from implement_ticket import AGENT_DIRECTIVE_PREFIX, DeliveryState, Outcome
-from implement_ticket.steps import plan as plan_step
+from work_engine import AGENT_DIRECTIVE_PREFIX, DeliveryState, Outcome
+from work_engine.steps import plan as plan_step
 
 
 def _state(**overrides) -> DeliveryState:

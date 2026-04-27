@@ -18,8 +18,8 @@ from typing import Any
 
 import pytest
 
-from implement_ticket import DeliveryState, Outcome
-from implement_ticket.steps import memory as memory_step
+from work_engine import DeliveryState, Outcome
+from work_engine.steps import memory as memory_step
 
 
 @dataclass

@@ -5,8 +5,8 @@ validation failure, and the clean success path.
 """
 from __future__ import annotations
 
-from implement_ticket import AGENT_DIRECTIVE_PREFIX, DeliveryState, Outcome
-from implement_ticket.steps import implement
+from work_engine import AGENT_DIRECTIVE_PREFIX, DeliveryState, Outcome
+from work_engine.steps import implement
 
 
 def _state(**overrides) -> DeliveryState:

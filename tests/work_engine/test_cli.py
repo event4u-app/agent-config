@@ -1,4 +1,4 @@
-"""Tests for the ``implement_ticket`` CLI entrypoint.
+"""Tests for the ``work_engine`` CLI entrypoint.
 
 The CLI is a thin transport over ``dispatch``: load state, run one
 cycle, persist, print. These tests exercise the happy path and
@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from implement_ticket import main
+from work_engine import main
 
 
 @pytest.fixture()

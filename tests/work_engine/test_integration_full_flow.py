@@ -21,7 +21,7 @@ from typing import Any
 
 import pytest
 
-from implement_ticket import (
+from work_engine import (
     AGENT_DIRECTIVE_PREFIX,
     DeliveryState,
     Outcome,
@@ -29,7 +29,7 @@ from implement_ticket import (
     dispatch,
     is_agent_directive,
 )
-from implement_ticket.steps import (
+from work_engine.steps import (
     analyze,
     implement,
     memory,
