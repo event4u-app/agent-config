@@ -329,6 +329,38 @@ _CLI_INVOCATION_MAP: list[tuple[re.Pattern, str]] = [
         re.compile(r"bash\s+scripts/first-run\.sh\b"),
         "./agent-config first-run",
     ),
+    (
+        re.compile(r"(?:PYTHONPATH=\S+\s+)?python3\s+-m\s+implement_ticket\b"),
+        "./agent-config implement-ticket",
+    ),
+    (
+        re.compile(r"python3\s+scripts/memory_lookup\.py\b"),
+        "./agent-config memory:lookup",
+    ),
+    (
+        re.compile(r"python3\s+scripts/memory_signal\.py\b"),
+        "./agent-config memory:signal",
+    ),
+    (
+        re.compile(r"python3\s+scripts/memory_hash\.py\b"),
+        "./agent-config memory:hash",
+    ),
+    (
+        re.compile(r"python3\s+scripts/check_memory_proposal\.py\b"),
+        "./agent-config memory:check-proposal",
+    ),
+    (
+        re.compile(r"python3\s+scripts/check_memory\.py\b"),
+        "./agent-config memory:check",
+    ),
+    (
+        re.compile(r"python3\s+scripts/check_proposal\.py\b"),
+        "./agent-config proposal:check",
+    ),
+    (
+        re.compile(r"python3\s+scripts/refine_ticket_detect\.py\b"),
+        "./agent-config refine-ticket:detect",
+    ),
 ]
 
 # Paths that legitimately document the raw invocations (e.g. the CLI's
