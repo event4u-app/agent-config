@@ -1,7 +1,7 @@
 {
     "name": "@event4u/agent-config",
     "version": "1.12.0",
-    "description": "Shared agent configuration \u2014 skills, rules, commands, guidelines, and templates for AI coding tools",
+    "description": "Shared agent configuration — skills, rules, commands, guidelines, and templates for AI coding tools",
     "license": "MIT",
     "private": false,
     "repository": {
@@ -38,5 +38,13 @@
     "publishConfig": {
         "access": "public",
         "provenance": true
+    },
+    "peerDependencies": {
+        "@event4u/agent-memory": "^1.1.0"
+    },
+    "peerDependenciesMeta": {
+        "@event4u/agent-memory": {
+            "optional": true
+        }
     }
 }
