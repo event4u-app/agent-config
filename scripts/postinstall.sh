@@ -33,6 +33,22 @@ trap 'rm -f "$LOG"' EXIT
 bash "$INSTALLER" --quiet >"$LOG" 2>&1
 CODE=$?
 if [[ $CODE -eq 0 ]]; then
+    # Optional companion: @event4u/agent-memory. Suggest it once, only if
+    # the consumer hasn't already installed it (locally or on PATH). The
+    # hint is purely informational; agent-config falls back to file-based
+    # memory when the backend is absent.
+    if ! command -v memory >/dev/null 2>&1 \
+       && ! command -v agent-memory >/dev/null 2>&1 \
+       && [[ ! -d "$SCRIPT_DIR/../../@event4u/agent-memory" ]]; then
+        cat >&2 <<'HINT'
+💡 agent-config tip: install @event4u/agent-memory for persistent agent
+   learnings across sessions (optional, dev-only):
+
+       npm install --save-dev @event4u/agent-memory
+
+   Skip if you don't need it — agent-config falls back to file-based memory.
+HINT
+    fi
     exit 0
 fi
 
