@@ -330,6 +330,10 @@ _CLI_INVOCATION_MAP: list[tuple[re.Pattern, str]] = [
         "./agent-config first-run",
     ),
     (
+        re.compile(r"(?:PYTHONPATH=\S+\s+)?python3\s+-m\s+work_engine\b"),
+        "./agent-config implement-ticket",
+    ),
+    (
         re.compile(r"(?:PYTHONPATH=\S+\s+)?python3\s+-m\s+implement_ticket\b"),
         "./agent-config implement-ticket",
     ),

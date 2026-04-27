@@ -49,7 +49,7 @@ Commands:
   hooks:install              Install the pre-commit roadmap-progress hook
                              (use --print to dump it, --force to overwrite an existing hook)
   first-run                  Guided first-run setup — cost profile, settings, tooling
-  implement-ticket           Drive the implement_ticket Python engine
+  implement-ticket           Drive the work_engine Python engine
                              (Option-A loop; called by the /implement-ticket command)
   memory:lookup              Retrieve memory entries (text or JSON envelope)
   memory:signal              Append a provisional intake signal (memory proposal)
@@ -178,12 +178,12 @@ cmd_first_run() {
 cmd_implement_ticket() {
   require_python3
   local engine_root="$PACKAGE_ROOT/.agent-src/templates/scripts"
-  if [[ ! -d "$engine_root/implement_ticket" ]]; then
-    echo "❌  agent-config: implement_ticket module not found at $engine_root/implement_ticket" >&2
+  if [[ ! -d "$engine_root/work_engine" ]]; then
+    echo "❌  agent-config: work_engine module not found at $engine_root/work_engine" >&2
     echo "    Reinstall the package and retry." >&2
     return 1
   fi
-  exec env PYTHONPATH="$engine_root" python3 -m implement_ticket "$@"
+  exec env PYTHONPATH="$engine_root" python3 -m work_engine "$@"
 }
 
 cmd_memory_lookup() {
