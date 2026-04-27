@@ -9,7 +9,10 @@
 > - **Status:** Phase 1 shipped 2026-04-23 — `DeliveryState` +
 >   dispatcher live under
 >   [`.agent-src.uncompressed/templates/scripts/implement_ticket/`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/).
->   Step wiring (Phase 2) still open.
+>   Step wiring (Phase 2) still open. Schema **v1** envelope
+>   (`work_engine.state` / `work_engine.migration.v0_to_v1`) shipped
+>   2026-04-27 as R1 Phase 2 — see [State schema v1](#state-schema-v1)
+>   below.
 > - **Runtime:** Python 3.10+ (see
 >   [`adr-implement-ticket-runtime.md`](adr-implement-ticket-runtime.md)).
 >   This doc stays shape-focused; implementation details belong to
@@ -59,6 +62,60 @@ document — the shape is normative, the container is not):
 
 No step may invent fields not declared here. Extensions require a
 roadmap amendment + this doc updated.
+
+## State schema v1
+
+R1 Phase 2 introduces the **wire-format envelope** that lets the
+engine accept inputs other than tickets in later releases without
+another schema bump. The envelope wraps the legacy slice without
+moving any of its fields:
+
+| Field | Type | Purpose |
+|---|---|---|
+| `version` | int (`1`) | Integer schema version. Loader rejects any other value. |
+| `input.kind` | string | Typed input variant. Only `"ticket"` accepted in R1. |
+| `input.data` | object | Payload. Carries the v0 `ticket` dict verbatim. |
+| `intent` | string | Coarse intent label. Default `"backend-coding"`. |
+| `directive_set` | string | Directive bundle name. One of `backend`, `ui`, `ui-trivial`, `mixed`. Only `backend` is wired in R1. |
+| _legacy slice_ | … | `persona`, `memory`, `plan`, `changes`, `tests`, `verify`, `outcomes`, `questions`, `report` keep their v0 names and meaning. |
+
+Canonical filename is `.work-state.json` (was
+`.implement-ticket-state.json` in v0). Field order on disk is fixed
+— envelope first, legacy slice second — so state-snapshot diffs
+across re-runs and across the freeze-guard replay stay readable.
+
+The schema is **strict** on the envelope (unknown `input.kind` or
+`directive_set` raise `SchemaError`) and **additive** on top-level
+keys (unknown extras are dropped on load, not re-emitted on dump).
+A reader that pre-dates a future field cannot crash on it, but
+also cannot silently relay it forward without an explicit upgrade.
+
+### Migration v0 → v1
+
+A v0 file (no `version` key, ticket under flat `ticket`) is
+upgraded by `work_engine.migration.v0_to_v1`:
+
+```bash
+python3 -m work_engine.migration.v0_to_v1 .implement-ticket-state.json
+```
+
+The migration:
+
+1. Wraps `state.ticket` into `input = {"kind": "ticket", "data": <ticket>}`.
+2. Fills `intent = "backend-coding"` and `directive_set = "backend"`
+   (the only working directive bundle in R1).
+3. Writes the v1 file as `.work-state.json` next to the source.
+4. Renames the v0 file to `.implement-ticket-state.json.bak`
+   (override with `--no-backup`).
+5. Refuses to overwrite an existing destination — accidental
+   double-migration on CI fails loud.
+
+`migrate_payload` is **idempotent** on v1 input and **rejects** any
+declared `version` other than `0` (absent) or `1`. The library
+contract is covered by `tests/work_engine/test_v0_to_v1_migration.py`,
+which exercises three real Phase 1 baseline snapshots (GT-1
+cycle 1, GT-3 cycle 4, GT-5 cycle 5) so the migrator is proven
+against actual engine output rather than synthetic fixtures.
 
 ## `Step` contract
 

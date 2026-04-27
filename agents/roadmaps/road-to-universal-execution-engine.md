@@ -136,10 +136,10 @@ State schema (shape, not exhaustive):
 
 ## Phase 2: State schema and migration
 
-- [ ] **Step 1:** Define schema v1 in `scripts/work_engine/state.py` — `input.kind`, `input.data`, `intent`, `directive_set`, `version: 1`, plus all current fields under their existing names.
-- [ ] **Step 2:** Write `scripts/work_engine/migration/v0_to_v1.py` — reads any state file without `version`, wraps `ticket` payload into `input.kind="ticket"`, sets `intent="backend-coding"`, sets `directive_set="backend"`, writes `.work-state.json`. Leaves a `.implement-ticket-state.json.bak`.
-- [ ] **Step 3:** Schema-validation tests: schema round-trip, migration from 3 representative legacy state files, error on unknown `input.kind`, error on unknown `directive_set`.
-- [ ] **Step 4:** Update `agents/contexts/implement-ticket-flow.md` — document the new schema; mark old field paths as "preserved via migration".
+- [x] **Step 1:** Define schema v1 in `scripts/work_engine/state.py` — `input.kind`, `input.data`, `intent`, `directive_set`, `version: 1`, plus all current fields under their existing names. (Shipped at `.agent-src.uncompressed/templates/scripts/work_engine/state.py`; field order envelope-first, strict envelope validation, additive on unknown top-level keys.)
+- [x] **Step 2:** Write `scripts/work_engine/migration/v0_to_v1.py` — reads any state file without `version`, wraps `ticket` payload into `input.kind="ticket"`, sets `intent="backend-coding"`, sets `directive_set="backend"`, writes `.work-state.json`. Leaves a `.implement-ticket-state.json.bak`. (Shipped; idempotent on v1 input, refuses to overwrite an existing destination, runnable as `python3 -m work_engine.migration.v0_to_v1`.)
+- [x] **Step 3:** Schema-validation tests: schema round-trip, migration from 3 representative legacy state files, error on unknown `input.kind`, error on unknown `directive_set`. (`tests/work_engine/test_state_schema.py` + `tests/work_engine/test_v0_to_v1_migration.py`, 36 cases including round-trip across GT-1 cycle 1, GT-3 cycle 4, GT-5 cycle 5.)
+- [x] **Step 4:** Update `agents/contexts/implement-ticket-flow.md` — document the new schema; mark old field paths as "preserved via migration". (New "State schema v1" section; legacy slice fields marked preserved-by-name.)
 
 ## Phase 3: Engine module rename
 
