@@ -73,7 +73,7 @@ State additions (schema v1, no version bump):
 - [ ] **Step 3:** Wire dispatcher: `input.kind="prompt"` is now a valid path. Default `intent="backend-coding"`, default `directive_set="backend"`.
 - [ ] **Step 4:** Tests: prompt envelope round-trips through state, dispatcher accepts `prompt` kind, schema rejects truncated payloads.
 
-## Phase 3: `refine-prompt` skill and confidence scoring
+## Phase 3: refine-prompt skill and confidence scoring
 
 > The mechanism that prevents prompt-driven execution from becoming noisy.
 

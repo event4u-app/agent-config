@@ -62,7 +62,7 @@
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Naming and command shape decision | ⬜ not started | 0 | 3 | 0 | 0 | 0% |
 | 2 | Prompt resolver and input envelope | ⬜ not started | 0 | 4 | 0 | 0 | 0% |
-| 3 | `refine-prompt` skill and confidence scoring | ⬜ not started | 0 | 4 | 0 | 0 | 0% |
+| 3 | refine-prompt skill and confidence scoring | ⬜ not started | 0 | 4 | 0 | 0 | 0% |
 | 4 | New entrypoint command | ⬜ not started | 0 | 4 | 0 | 0 | 0% |
 | 5 | Golden Compatibility Tests (R1 contract preserved) | ⬜ not started | 0 | 4 | 0 | 0 | 0% |
 | 6 | Verification and docs | ⬜ not started | 0 | 12 | 0 | 0 | 0% |

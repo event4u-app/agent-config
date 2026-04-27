@@ -20,7 +20,7 @@ This roadmap **does not change behavior**. It moves the engine to a shape that c
 
 - **Feature:** none (architectural refactor)
 - **Jira:** none
-- **Supersedes part of:** `agents/roadmaps/intent-based-orchestration.md` — fully superseded after R1 + R2 + R3 land
+- **Supersedes part of:** `agents/roadmaps/archive/intent-based-orchestration.md` — fully superseded after R1 + R2 + R3 land
 
 ## Target architecture
 
@@ -210,7 +210,7 @@ State schema (shape, not exhaustive):
 
 The pieces this roadmap *enables* but does not implement — explicitly out of scope, tracked in their own roadmaps:
 
-- `input.kind="prompt"` resolver and `refine-prompt` skill — **Roadmap 2** (`road-to-prompt-driven-execution.md`)
+- `input.kind="prompt"` resolver and the refine-prompt skill — **Roadmap 2** (`road-to-prompt-driven-execution.md`)
 - Confidence scoring for prompt-reconstructed AC — **Roadmap 2**
 - New entry-point command (working name `/do`, decision deferred to R2) — **Roadmap 2**
 - `directives/ui/` implementation, existing-UI-audit pre-step, design-review polish loop — **Roadmap 3** (`road-to-product-ui-track.md`)

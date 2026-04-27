@@ -9,11 +9,6 @@ package adapter (when present). The status helper
 `scripts/memory_status.py` decides which path to take and caches the
 result for the session.
 
-Referenced by
-[`road-to-agent-memory-integration.md`](../../../agents/roadmaps/road-to-agent-memory-integration.md)
-Phase 0. The retrieval contract itself lives in
-[`agent-memory/road-to-retrieval-contract.md`](../../../agents/roadmaps/agent-memory/road-to-retrieval-contract.md).
-
 ## The contract
 
 ```python
@@ -117,5 +112,3 @@ Other types remain accessible on demand via
   — the on-disk schema
 - [`../../rules/context-hygiene.md`](../../rules/context-hygiene.md)
   — token budget that `max_entries_per_task` protects
-- [`../../../agents/roadmaps/road-to-memory-merge-safety.md`](../../../agents/roadmaps/road-to-memory-merge-safety.md)
-  — why intake is append-only JSONL with `merge=union`
