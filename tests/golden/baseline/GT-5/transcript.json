@@ -188,7 +188,7 @@
           "verdict": "success",
           "scope": "targeted",
           "exit_code": 0,
-          "targeted": "============================== 4 passed in 0.00s ==============================="
+          "targeted": "============================== 4 passed in <DURATION>s ==============================="
         },
         "verify": null,
         "outcomes": {
@@ -264,7 +264,7 @@
           "verdict": "success",
           "scope": "targeted",
           "exit_code": 0,
-          "targeted": "============================== 4 passed in 0.00s ==============================="
+          "targeted": "============================== 4 passed in <DURATION>s ==============================="
         },
         "verify": {
           "verdict": "success",
@@ -309,7 +309,7 @@
         ".implement-ticket-state.json"
       ],
       "exit_code": 0,
-      "stdout": "## Ticket\n\nGT-5-NEG — Add negate(a) to the toy calculator\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n1. **Add negate(a)** — Append negate(a: int) -> int to src/calculator.py\n2. **Add negate(a)** — Append test_negate_returns_negation to tests/test_calculator.py\n3. **Add negate(a)** — Run pytest to confirm both edge cases pass\n\n## Changes\n\n- `src/calculator.py` — applied by GT recipe\n- `tests/test_calculator.py` — applied by GT recipe\n\n## Tests\n\n- **verdict:** success\n- **scope:** targeted\n- **exit_code:** 0\n- **targeted:** ============================== 4 passed in 0.00s ===============================\n\n## Verify\n\n- **verdict:** success\n- **confidence:** high\n- **judges:** ['bug-hunter', 'security', 'test-coverage', 'code-quality']\n- **findings:** []\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`\n",
+      "stdout": "## Ticket\n\nGT-5-NEG — Add negate(a) to the toy calculator\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n1. **Add negate(a)** — Append negate(a: int) -> int to src/calculator.py\n2. **Add negate(a)** — Append test_negate_returns_negation to tests/test_calculator.py\n3. **Add negate(a)** — Run pytest to confirm both edge cases pass\n\n## Changes\n\n- `src/calculator.py` — applied by GT recipe\n- `tests/test_calculator.py` — applied by GT recipe\n\n## Tests\n\n- **verdict:** success\n- **scope:** targeted\n- **exit_code:** 0\n- **targeted:** ============================== 4 passed in <DURATION>s ===============================\n\n## Verify\n\n- **verdict:** success\n- **confidence:** high\n- **judges:** ['bug-hunter', 'security', 'test-coverage', 'code-quality']\n- **findings:** []\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`\n",
       "stderr": "",
       "state_after": {
         "ticket": {
@@ -351,7 +351,7 @@
           "verdict": "success",
           "scope": "targeted",
           "exit_code": 0,
-          "targeted": "============================== 4 passed in 0.00s ==============================="
+          "targeted": "============================== 4 passed in <DURATION>s ==============================="
         },
         "verify": {
           "verdict": "success",
@@ -375,7 +375,7 @@
           "report": "success"
         },
         "questions": [],
-        "report": "## Ticket\n\nGT-5-NEG — Add negate(a) to the toy calculator\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n1. **Add negate(a)** — Append negate(a: int) -> int to src/calculator.py\n2. **Add negate(a)** — Append test_negate_returns_negation to tests/test_calculator.py\n3. **Add negate(a)** — Run pytest to confirm both edge cases pass\n\n## Changes\n\n- `src/calculator.py` — applied by GT recipe\n- `tests/test_calculator.py` — applied by GT recipe\n\n## Tests\n\n- **verdict:** success\n- **scope:** targeted\n- **exit_code:** 0\n- **targeted:** ============================== 4 passed in 0.00s ===============================\n\n## Verify\n\n- **verdict:** success\n- **confidence:** high\n- **judges:** ['bug-hunter', 'security', 'test-coverage', 'code-quality']\n- **findings:** []\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
+        "report": "## Ticket\n\nGT-5-NEG — Add negate(a) to the toy calculator\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n1. **Add negate(a)** — Append negate(a: int) -> int to src/calculator.py\n2. **Add negate(a)** — Append test_negate_returns_negation to tests/test_calculator.py\n3. **Add negate(a)** — Run pytest to confirm both edge cases pass\n\n## Changes\n\n- `src/calculator.py` — applied by GT recipe\n- `tests/test_calculator.py` — applied by GT recipe\n\n## Tests\n\n- **verdict:** success\n- **scope:** targeted\n- **exit_code:** 0\n- **targeted:** ============================== 4 passed in <DURATION>s ===============================\n\n## Verify\n\n- **verdict:** success\n- **confidence:** high\n- **judges:** ['bug-hunter', 'security', 'test-coverage', 'code-quality']\n- **findings:** []\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
       },
       "directive": null,
       "recipe_action": null,

@@ -7,9 +7,17 @@ invocation. Recipes compose them; nothing here invents behaviour.
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 from pathlib import Path
 from typing import Any
+
+_PYTEST_DURATION_RE = re.compile(r"\bin \d+\.\d+s\b")
+"""Pytest emits ``in 0.00s`` / ``in 0.42s`` on the verdict line. The
+exact wallclock is non-deterministic across machines (a fast CI may
+print ``0.00s`` where a contended laptop prints ``0.01s``), so it is
+scrubbed to ``in <DURATION>s`` before being persisted into state. See
+``_summarise``."""
 
 
 def append_to_file(workspace: Path, relpath: str, text: str) -> None:
@@ -92,10 +100,18 @@ def run_pytest(workspace: Path, *extra: str) -> dict[str, Any]:
 
 
 def _summarise(stdout: str) -> str:
-    """Return the last non-empty line of pytest stdout (the verdict line)."""
+    """Return the last non-empty line of pytest stdout, with timing scrubbed.
+
+    The literal pytest duration (``in 0.00s``, ``in 0.42s``) is the
+    only non-deterministic field in the verdict line — every other
+    token (``passed``, ``failed``, the equals-sign banner) is a
+    function of the test outcome, which the recipes hold fixed. The
+    duration is replaced with ``in <DURATION>s`` so Golden Transcripts
+    stay byte-equal across machines.
+    """
     for line in reversed(stdout.splitlines()):
         if line.strip():
-            return line.strip()
+            return _PYTEST_DURATION_RE.sub("in <DURATION>s", line.strip())
     return ""
 
 

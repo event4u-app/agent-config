@@ -22,7 +22,7 @@ senior-engineer
 - **verdict:** success
 - **scope:** targeted
 - **exit_code:** 0
-- **targeted:** ============================== 4 passed in 0.00s ===============================
+- **targeted:** ============================== 4 passed in <DURATION>s ===============================
 
 ## Verify
 

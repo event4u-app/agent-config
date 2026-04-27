@@ -38,7 +38,7 @@
     "verdict": "failed",
     "scope": "targeted",
     "exit_code": 1,
-    "targeted": "========================= 1 failed, 3 passed in 0.01s =========================="
+    "targeted": "========================= 1 failed, 3 passed in <DURATION>s =========================="
   },
   "verify": null,
   "outcomes": {
