@@ -1,12 +1,58 @@
 """``work_engine`` — universal execution engine (R1).
 
-Phase 2 lands the state schema and the v0→v1 migration. The full
-engine code (dispatcher, steps, CLI) moves over from
-``implement_ticket`` in Phase 3 once the schema layer is locked.
+The package owns the linear step dispatcher that drives
+``/implement-ticket`` and any future intent-routed flow. Phase 2 added
+the persistent ``state`` schema and the v0→v1 migration; Phase 3 moves
+the dispatcher, CLI and step modules over from the legacy
+``implement_ticket`` package — which is now a thin compatibility shim
+that re-exports from here with a ``DeprecationWarning``.
 
-The package intentionally has no runtime dependency on
-``implement_ticket``: the Phase 1 freeze-guard treats that module as
-immutable, and ``work_engine`` must be free to evolve without
-disturbing the locked baseline.
+Architectural constraints (from
+``agents/contexts/adr-implement-ticket-runtime.md`` and
+``agents/contexts/implement-ticket-flow.md``):
+
+- Runtime is Python 3.10+.
+- The dispatcher is linear, not a DAG. Eight fixed steps, fixed order.
+- ``DeliveryState`` is the only object shared between steps — no
+  hidden state, no side channels.
+- Every step terminates in ``success | blocked | partial``. ``blocked``
+  and ``partial`` halt the flow and surface numbered questions.
+- The dispatcher never calls git, writes commits, or opens PRs.
 """
 from __future__ import annotations
+
+from .delivery_state import (
+    AGENT_DIRECTIVE_PREFIX,
+    DeliveryState,
+    Outcome,
+    Step,
+    StepResult,
+    agent_directive,
+    is_agent_directive,
+)
+from .cli import DEFAULT_STATE_FILE, main
+from .dispatcher import STEP_ORDER, dispatch
+from .persona_policy import (
+    DEFAULT_PERSONA,
+    PersonaPolicy,
+    known_personas,
+    resolve_policy,
+)
+
+__all__ = [
+    "AGENT_DIRECTIVE_PREFIX",
+    "DEFAULT_PERSONA",
+    "DEFAULT_STATE_FILE",
+    "DeliveryState",
+    "Outcome",
+    "PersonaPolicy",
+    "STEP_ORDER",
+    "Step",
+    "StepResult",
+    "agent_directive",
+    "dispatch",
+    "is_agent_directive",
+    "known_personas",
+    "main",
+    "resolve_policy",
+]
