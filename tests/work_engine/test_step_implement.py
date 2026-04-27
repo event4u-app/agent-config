@@ -6,7 +6,7 @@ validation failure, and the clean success path.
 from __future__ import annotations
 
 from work_engine import AGENT_DIRECTIVE_PREFIX, DeliveryState, Outcome
-from work_engine.steps import implement
+from work_engine.directives.backend import implement
 
 
 def _state(**overrides) -> DeliveryState:

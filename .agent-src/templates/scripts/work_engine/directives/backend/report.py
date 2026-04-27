@@ -17,8 +17,8 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
-from ..delivery_state import DeliveryState, Outcome, StepResult
-from ..persona_policy import resolve_policy
+from ...delivery_state import DeliveryState, Outcome, StepResult
+from ...persona_policy import resolve_policy
 
 AMBIGUITIES: tuple[dict[str, str], ...] = ()
 """Report rendering is pure and always succeeds — no blocked paths."""

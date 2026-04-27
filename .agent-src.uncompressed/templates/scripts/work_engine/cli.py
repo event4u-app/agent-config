@@ -33,8 +33,8 @@ from typing import Sequence
 
 from .delivery_state import DeliveryState, Outcome
 from .dispatcher import dispatch
-from .steps import analyze, implement, memory, plan, refine, report, verify
-from .steps import test as test_step
+from .directives.backend import analyze, implement, memory, plan, refine, report, verify
+from .directives.backend import test as test_step
 
 DEFAULT_STATE_FILE = Path(".implement-ticket-state.json")
 """State file used when ``--state-file`` is not passed."""

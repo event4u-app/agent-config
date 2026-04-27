@@ -31,8 +31,8 @@ import work_engine.cli as _we_cli  # noqa: E402
 import work_engine.delivery_state as _we_delivery_state  # noqa: E402
 import work_engine.dispatcher as _we_dispatcher  # noqa: E402
 import work_engine.persona_policy as _we_persona_policy  # noqa: E402
-import work_engine.steps as _we_steps  # noqa: E402
-from work_engine.steps import (  # noqa: E402
+import work_engine.directives.backend as _we_steps  # noqa: E402
+from work_engine.directives.backend import (  # noqa: E402
     analyze as _we_step_analyze,
     implement as _we_step_implement,
     memory as _we_step_memory,

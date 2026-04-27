@@ -260,7 +260,7 @@ the context. V1 explicitly does **not** attempt resumable sessions.
 Every step declares — in code — the conditions under which it
 can return `blocked`. The declarations live as module-level
 `AMBIGUITIES` tuples (see
-[`steps/__init__.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/__init__.py)
+[`directives/backend/__init__.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/backend/__init__.py)
 `.all_ambiguities()`). The
 [`test_ambiguity_coverage.py`](../../tests/implement_ticket/test_ambiguity_coverage.py)
 suite locks the contract: adding a new `blocked` path without
@@ -305,7 +305,7 @@ empty, but all headings are present unless explicitly marked
    because nothing was changed.
 
 Implementation: see
-[`steps/report.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/report.py).
+[`directives/backend/report.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/backend/report.py).
 Section renderers are pure and deterministic; consumers can rely
 on the heading order and on each section either rendering with
 content or being omitted per the rules above.

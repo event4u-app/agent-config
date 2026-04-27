@@ -8,7 +8,7 @@ the gate with a partially-initialised state.
 from __future__ import annotations
 
 from work_engine import DeliveryState, Outcome
-from work_engine.steps import analyze
+from work_engine.directives.backend import analyze
 
 
 def _state_with_upstream_success(**overrides) -> DeliveryState:

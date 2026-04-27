@@ -22,13 +22,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..delivery_state import (
+from ...delivery_state import (
     DeliveryState,
     Outcome,
     StepResult,
     agent_directive,
 )
-from ..persona_policy import resolve_policy
+from ...persona_policy import resolve_policy
 
 _ALLOWED_VERDICTS = ("success", "failed", "mixed")
 

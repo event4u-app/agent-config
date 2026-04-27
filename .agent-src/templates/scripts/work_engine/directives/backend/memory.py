@@ -23,7 +23,7 @@ from __future__ import annotations
 import re
 from typing import Any, Iterable
 
-from ..delivery_state import DeliveryState, Outcome, StepResult
+from ...delivery_state import DeliveryState, Outcome, StepResult
 
 MEMORY_TYPES: tuple[str, ...] = (
     "domain-invariants",

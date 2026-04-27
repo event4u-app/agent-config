@@ -19,7 +19,7 @@ from typing import Any
 import pytest
 
 from work_engine import DeliveryState, Outcome
-from work_engine.steps import memory as memory_step
+from work_engine.directives.backend import memory as memory_step
 
 
 @dataclass

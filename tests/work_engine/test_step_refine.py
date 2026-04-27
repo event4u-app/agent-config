@@ -8,7 +8,7 @@ the SUCCESS path on a well-formed ticket. No external fakes needed
 from __future__ import annotations
 
 from work_engine import DeliveryState, Outcome
-from work_engine.steps import refine
+from work_engine.directives.backend import refine
 
 
 def _good_ticket(**overrides: object) -> dict[str, object]:

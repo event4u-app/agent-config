@@ -20,7 +20,7 @@ from work_engine import (
     dispatch,
     is_agent_directive,
 )
-from work_engine.steps import (
+from work_engine.directives.backend import (
     analyze,
     implement,
     memory,

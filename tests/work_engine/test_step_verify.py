@@ -6,7 +6,7 @@ Same five outcomes as the ``test`` step, but with the
 from __future__ import annotations
 
 from work_engine import AGENT_DIRECTIVE_PREFIX, DeliveryState, Outcome
-from work_engine.steps import verify
+from work_engine.directives.backend import verify
 
 
 def _state(**overrides) -> DeliveryState:

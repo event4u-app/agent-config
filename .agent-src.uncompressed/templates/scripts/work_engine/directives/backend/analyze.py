@@ -20,7 +20,7 @@ rule. Otherwise it returns ``SUCCESS`` without mutating state.
 """
 from __future__ import annotations
 
-from ..delivery_state import DeliveryState, Outcome, StepResult
+from ...delivery_state import DeliveryState, Outcome, StepResult
 
 AMBIGUITIES: tuple[dict[str, str], ...] = (
     {

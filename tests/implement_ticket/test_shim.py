@@ -39,20 +39,25 @@ _PUBLIC_SURFACE = (
     "resolve_policy",
 )
 
-_ALIASED_SUBMODULES = (
-    "implement_ticket.cli",
-    "implement_ticket.delivery_state",
-    "implement_ticket.dispatcher",
-    "implement_ticket.persona_policy",
-    "implement_ticket.steps",
-    "implement_ticket.steps.analyze",
-    "implement_ticket.steps.implement",
-    "implement_ticket.steps.memory",
-    "implement_ticket.steps.plan",
-    "implement_ticket.steps.refine",
-    "implement_ticket.steps.report",
-    "implement_ticket.steps.test",
-    "implement_ticket.steps.verify",
+# Mapping of legacy dotted paths → their canonical work_engine counterpart.
+# Most entries are a straight package-name swap (`implement_ticket.cli` →
+# ``work_engine.cli``); the ``steps.*`` aliases moved further when R1 Phase 4
+# repackaged them into ``work_engine.directives.backend``. The shim hides
+# both shapes behind the legacy names so existing imports keep resolving.
+_ALIASED_SUBMODULES: tuple[tuple[str, str], ...] = (
+    ("implement_ticket.cli", "work_engine.cli"),
+    ("implement_ticket.delivery_state", "work_engine.delivery_state"),
+    ("implement_ticket.dispatcher", "work_engine.dispatcher"),
+    ("implement_ticket.persona_policy", "work_engine.persona_policy"),
+    ("implement_ticket.steps", "work_engine.directives.backend"),
+    ("implement_ticket.steps.analyze", "work_engine.directives.backend.analyze"),
+    ("implement_ticket.steps.implement", "work_engine.directives.backend.implement"),
+    ("implement_ticket.steps.memory", "work_engine.directives.backend.memory"),
+    ("implement_ticket.steps.plan", "work_engine.directives.backend.plan"),
+    ("implement_ticket.steps.refine", "work_engine.directives.backend.refine"),
+    ("implement_ticket.steps.report", "work_engine.directives.backend.report"),
+    ("implement_ticket.steps.test", "work_engine.directives.backend.test"),
+    ("implement_ticket.steps.verify", "work_engine.directives.backend.verify"),
 )
 
 
@@ -82,18 +87,14 @@ def test_public_surface_is_re_exported(name: str) -> None:
     )
 
 
-@pytest.mark.parametrize("dotted", _ALIASED_SUBMODULES)
-def test_submodule_aliases_resolve_to_work_engine(dotted: str) -> None:
+@pytest.mark.parametrize(("dotted", "target"), _ALIASED_SUBMODULES)
+def test_submodule_aliases_resolve_to_work_engine(dotted: str, target: str) -> None:
     _reset_shim()
     with pytest.warns(DeprecationWarning):
         importlib.import_module("implement_ticket")
     legacy = importlib.import_module(dotted)
-    canonical = importlib.import_module(
-        dotted.replace("implement_ticket", "work_engine", 1)
-    )
-    assert legacy is canonical, (
-        f"{dotted} did not alias to its work_engine counterpart"
-    )
+    canonical = importlib.import_module(target)
+    assert legacy is canonical, f"{dotted} did not alias to {target}"
 
 
 def test_main_entrypoint_delegates_to_work_engine() -> None:
