@@ -26,8 +26,11 @@ depends on handler import order.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from importlib import import_module
+from typing import Any
 
 from .delivery_state import DeliveryState, Outcome, Step, StepResult
+from .state import KNOWN_DIRECTIVE_SETS
 
 STEP_ORDER: tuple[str, ...] = (
     "refine",
@@ -45,6 +48,20 @@ Changing this order is a roadmap-level decision — not a PR rider — per
 the surface-growth guardrails in
 ``agents/roadmaps/road-to-implement-ticket.md``.
 """
+
+DEFAULT_DIRECTIVE_SET: str = "backend"
+"""Directive set chosen when ``state`` does not carry one explicitly.
+
+Backwards compatibility for v0 ``DeliveryState`` callers: the legacy
+shape has no ``directive_set`` field, so ``select_directive_set``
+falls back to ``"backend"`` and the engine behaves exactly as it did
+before R1 Phase 4.
+"""
+
+# Schema enum names use hyphens (``ui-trivial``) but Python packages
+# cannot. The loader is the single place that bridges between the two
+# forms; everywhere else uses the wire form.
+_PACKAGE_NAME_OVERRIDES: Mapping[str, str] = {"ui-trivial": "ui_trivial"}
 
 
 def dispatch(
@@ -132,3 +149,67 @@ def _validate_step_result(name: str, result: StepResult) -> None:
             f"Step {name!r} returned {result.outcome.value} with no questions; "
             "blocked and partial outcomes must surface at least one numbered option.",
         )
+
+
+def select_directive_set(state: Any) -> str:
+    """Return the directive set name to dispatch ``state`` against.
+
+    Looks for ``state.directive_set`` (the v1 :class:`work_engine.state.WorkState`
+    field) and falls back to :data:`DEFAULT_DIRECTIVE_SET` when the
+    attribute is missing — the legacy v0 :class:`DeliveryState` has no
+    such field, and existing callers must keep working unchanged
+    until R1 Phase 4 Step 1 lands the runtime switch.
+
+    The returned name is validated against :data:`KNOWN_DIRECTIVE_SETS`;
+    an unknown value raises ``ValueError`` rather than silently
+    falling back, so a typo in a hand-written state file fails loudly
+    instead of producing surprising behavior.
+    """
+    name = getattr(state, "directive_set", DEFAULT_DIRECTIVE_SET)
+    if not isinstance(name, str) or not name:
+        raise ValueError(
+            f"directive_set must be a non-empty string; got {name!r}",
+        )
+    if name not in KNOWN_DIRECTIVE_SETS:
+        raise ValueError(
+            f"unknown directive_set {name!r}; "
+            f"known sets: {sorted(KNOWN_DIRECTIVE_SETS)}",
+        )
+    return name
+
+
+def load_directive_set(name: str) -> Mapping[str, Step]:
+    """Import the ``directives.<name>`` package and return its step mapping.
+
+    The selected set's ``__init__`` exposes a ``get_steps()`` factory
+    (see :class:`work_engine.directives.backend`) that returns the
+    ``{step_name: handler}`` mapping the dispatcher walks. Unimplemented
+    sets (``ui``, ``ui-trivial``, ``mixed``) raise
+    ``NotImplementedError`` from their ``get_steps()`` so the failure
+    point is the loader, not a half-walked dispatch loop.
+
+    The schema enum carries hyphenated wire names (``ui-trivial``) but
+    Python packages must use underscores; :data:`_PACKAGE_NAME_OVERRIDES`
+    is the single translation point.
+    """
+    if name not in KNOWN_DIRECTIVE_SETS:
+        raise ValueError(
+            f"unknown directive_set {name!r}; "
+            f"known sets: {sorted(KNOWN_DIRECTIVE_SETS)}",
+        )
+
+    package_name = _PACKAGE_NAME_OVERRIDES.get(name, name)
+    module = import_module(f"work_engine.directives.{package_name}")
+    get_steps = getattr(module, "get_steps", None)
+    if not callable(get_steps):
+        raise AttributeError(
+            f"work_engine.directives.{package_name} does not expose a "
+            "callable get_steps()",
+        )
+    steps = get_steps()
+    if not isinstance(steps, Mapping):
+        raise TypeError(
+            f"work_engine.directives.{package_name}.get_steps() must "
+            f"return a Mapping; got {type(steps).__name__}",
+        )
+    return steps
