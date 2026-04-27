@@ -262,8 +262,20 @@ def _relative_cmd(
 
 
 def _rel(base: Path, target: Path) -> str:
+    """Render ``target`` relative to ``base`` for transcript stability.
+
+    Falls back to a ``SANDBOX_ROOT``-relative path when ``target`` lives
+    outside the per-run workspace (e.g. shared ticket fixtures under
+    ``tests/golden/sandbox/tickets/``). The absolute fallback is kept as
+    a last resort but produces machine-specific transcripts and must
+    never be triggered by paths under this repo.
+    """
     try:
         return str(target.relative_to(base))
+    except ValueError:
+        pass
+    try:
+        return str(target.relative_to(SANDBOX_ROOT))
     except ValueError:
         return str(target)
 

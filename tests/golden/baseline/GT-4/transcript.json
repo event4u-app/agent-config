@@ -13,7 +13,7 @@
         "--state-file",
         ".implement-ticket-state.json",
         "--ticket-file",
-        "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/tests/golden/sandbox/tickets/gt-4-persona-refusal.json",
+        "tickets/gt-4-persona-refusal.json",
         "--persona",
         "advisory"
       ],

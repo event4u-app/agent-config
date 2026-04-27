@@ -13,7 +13,7 @@
         "--state-file",
         ".implement-ticket-state.json",
         "--ticket-file",
-        "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/tests/golden/sandbox/tickets/gt-5-state-resume.json"
+        "tickets/gt-5-state-resume.json"
       ],
       "exit_code": 1,
       "stdout": "[halt] outcome=blocked step=plan\n@agent-directive: create-plan ticket=GT-5-NEG\n> Ticket GT-5-NEG — no plan recorded yet; running `feature-plan` and resuming.\n> 1. Continue — use the plan produced by `feature-plan`\n> 2. Abort — stop before any edits are proposed\n",

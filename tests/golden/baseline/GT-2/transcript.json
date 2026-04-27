@@ -13,7 +13,7 @@
         "--state-file",
         ".implement-ticket-state.json",
         "--ticket-file",
-        "/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config/tests/golden/sandbox/tickets/gt-2-ambiguity.json"
+        "tickets/gt-2-ambiguity.json"
       ],
       "exit_code": 1,
       "stdout": "[halt] outcome=blocked step=refine\n> Ticket GT-2-DIV is missing: vague acceptance criteria at position(s) 2.\n> 1. Run `/refine-ticket GT-2-DIV` and re-invoke `/implement-ticket`\n> 2. Provide the missing details in chat — I'll merge them into the ticket\n> 3. Abandon this ticket — too vague to implement\n",
