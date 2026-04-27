@@ -7,6 +7,30 @@ versioning policy is documented in [CONTRIBUTING.md](CONTRIBUTING.md#versioning-
 > Entries before 1.3.3 were reconstructed from git history after the fact.
 > Early releases did not maintain release notes.
 
+## [1.13.0](https://github.com/event4u-app/agent-config/compare/1.12.0...1.13.0) (2026-04-27)
+
+### Features
+
+* **postinstall:** hint about optional @event4u/agent-memory backend ([395cff1](https://github.com/event4u-app/agent-config/commit/395cff164770da4a18d4287effd9ce06b2cee8b9))
+* **npm:** declare @event4u/agent-memory as optional peer dependency ([cef7715](https://github.com/event4u-app/agent-config/commit/cef77159d2d7cd0ba29c78c9c2115f1d08f0e649))
+* **composer:** suggest @event4u/agent-memory as optional memory backend ([6585c32](https://github.com/event4u-app/agent-config/commit/6585c324fcc65ad08f1d50f0e54a7f56b2018d03))
+* **scripts:** fail check mode on unarchived complete roadmaps ([f017979](https://github.com/event4u-app/agent-config/commit/f0179792a9b15588182815a17e4ac7366dad1db0))
+* **scripts:** add hooks:install and pre-commit roadmap-progress hook ([cab9048](https://github.com/event4u-app/agent-config/commit/cab90482ad2bf70fa08f9494236eb19b72e5d58b))
+* **templates:** ship roadmap-progress-check GitHub Actions workflow ([a16c560](https://github.com/event4u-app/agent-config/commit/a16c560d57f3cefd0b99aeaadd0946c3a8865866))
+* **memory:** real backend health envelope ([145bd13](https://github.com/event4u-app/agent-config/commit/145bd13ec6027d48a90cdacc3622ef9cca7d8c05))
+* **memory:** package-backed operational provider (Drift #2) ([284be4c](https://github.com/event4u-app/agent-config/commit/284be4c4addca37490b727a2aec9d45c1fa9b274))
+* **rules:** require recommendations on every numbered-option question ([ed9f5c9](https://github.com/event4u-app/agent-config/commit/ed9f5c9271c486a920fed3fbbea10fc16e75f685))
+* **memory:** wire agent-memory MCP server + recognize 'memory' binary ([e24168b](https://github.com/event4u-app/agent-config/commit/e24168b12bd8f5711ec02f6511c3afa952e595a8))
+
+### Documentation
+
+* **readme:** document @event4u/agent-memory as optional companion ([350930f](https://github.com/event4u-app/agent-config/commit/350930fcee3134275bbed26a6783d54837eba568))
+* **agent-memory:** align contract with reality — CLI surface + drift status ([6cdf19e](https://github.com/event4u-app/agent-config/commit/6cdf19ee256b52aa7602419fde730477d2a904de))
+
+### CI
+
+* wire roadmap-progress-check into task ci ([2022396](https://github.com/event4u-app/agent-config/commit/20223964f2c391598efca5b9e76fd5ca1365f05e))
+
 ## [1.12.0](https://github.com/event4u-app/agent-config/compare/1.10.0...1.12.0) (2026-04-25)
 
 ### Features
