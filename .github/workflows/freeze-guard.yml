@@ -1,0 +1,113 @@
+name: Freeze Guard (Golden Transcripts)
+
+# Locks the behavioural baseline of `./agent-config implement-ticket`.
+# The Capture Packs under `tests/golden/baseline/` are produced by
+# `python3 -m tests.golden.capture` against the unmodified engine.
+# Any change to the engine, recipes, or runner that perturbs the
+# observable behaviour will produce a different checksum manifest;
+# this workflow fails the PR until either:
+#
+# 1. The change is reverted, or
+# 2. The maintainer regenerates the baseline intentionally and
+#    commits the new `tests/golden/CHECKSUMS.txt` together with the
+#    Capture Pack diff.
+#
+# Two checks run:
+#
+# - **manifest-integrity** — verifies that the committed
+#   `CHECKSUMS.txt` matches the committed Capture Packs (catches
+#   manual edits to baseline files without regenerating).
+# - **live-replay** — re-runs the capture driver into a staging
+#   directory and diffs the produced checksums against the committed
+#   manifest (catches engine drift).
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - ".agent-src.uncompressed/templates/scripts/implement_ticket/**"
+      - ".agent-src/templates/scripts/implement_ticket/**"
+      - "scripts/agent-config"
+      - "tests/golden/**"
+      - ".github/workflows/freeze-guard.yml"
+  push:
+    branches: [main, master]
+    paths:
+      - ".agent-src.uncompressed/templates/scripts/implement_ticket/**"
+      - ".agent-src/templates/scripts/implement_ticket/**"
+      - "scripts/agent-config"
+      - "tests/golden/**"
+      - ".github/workflows/freeze-guard.yml"
+
+jobs:
+  manifest-integrity:
+    name: Manifest Integrity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify committed CHECKSUMS.txt matches committed baseline
+        run: |
+          set -euo pipefail
+          if [ ! -f tests/golden/CHECKSUMS.txt ]; then
+            echo "::error::tests/golden/CHECKSUMS.txt is missing."
+            exit 1
+          fi
+          # The manifest is rooted at the repo root; -c expects paths
+          # relative to the cwd, so we run from the repo root.
+          sha256sum -c tests/golden/CHECKSUMS.txt --quiet
+
+  live-replay:
+    name: Live Replay vs Baseline
+    runs-on: ubuntu-latest
+    needs: manifest-integrity
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pytest (recipes drive pytest in the toy repo)
+        run: python3 -m pip install --upgrade pip pytest
+
+      - name: Re-run capture into staging
+        run: |
+          set -euo pipefail
+          python3 -m tests.golden.capture \
+            --target tests/golden/.staging \
+            --checksums tests/golden/.staging-CHECKSUMS.txt
+
+      - name: Normalise staging manifest paths
+        # The capture driver writes paths relative to the repo root
+        # using the staging target. We rewrite them to look as if the
+        # staging tree were the canonical baseline so the diff below
+        # only catches content drift, never the path rename.
+        run: |
+          set -euo pipefail
+          sed 's|tests/golden/\.staging/|tests/golden/baseline/|g' \
+            tests/golden/.staging-CHECKSUMS.txt \
+            > tests/golden/.staging-CHECKSUMS.normalised.txt
+
+      - name: Diff against committed manifest
+        run: |
+          set -euo pipefail
+          if ! diff -u tests/golden/CHECKSUMS.txt \
+                       tests/golden/.staging-CHECKSUMS.normalised.txt; then
+            echo "::error::Live replay produced different checksums than the committed baseline."
+            echo "::error::If this change is intentional, regenerate the baseline:"
+            echo "::error::  python3 -m tests.golden.capture"
+            echo "::error::Then review the diff under tests/golden/baseline/ and commit."
+            exit 1
+          fi
+
+      - name: Upload staging artefacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-staging
+          path: |
+            tests/golden/.staging/
+            tests/golden/.staging-CHECKSUMS.txt
+            tests/golden/.staging-CHECKSUMS.normalised.txt
+          retention-days: 14
