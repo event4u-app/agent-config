@@ -71,6 +71,27 @@ Install directly in your agent for global, cross-project use:
 
 → [Full getting started guide](docs/getting-started.md)
 
+### Optional: persistent agent memory
+
+`agent-config` integrates with [`@event4u/agent-memory`](https://www.npmjs.com/package/@event4u/agent-memory)
+— an MCP-based memory backend that gives agents persistent learnings
+across sessions. It is **strictly optional**:
+
+- Not a required dependency (declared as `suggest` in Composer and as an
+  optional peer in npm). `agent-config` itself never imports it.
+- Without it, agent skills fall back to **file-based memory** under
+  `agents/memory/` and continue to work normally.
+- Recommended for teams that want learnings to survive across machines,
+  branches, and chat sessions.
+
+Install in the same project (dev-only):
+
+```bash
+npm install --save-dev @event4u/agent-memory
+```
+
+→ [Memory contract & retrieval API](agents/contexts/agent-memory-contract.md)
+
 ---
 
 ## 2-minute demo: `/implement-ticket`

@@ -177,7 +177,7 @@
   "rules/token-efficiency.md": "818266e8520c67d393e3fc5412399915d54334bd6b77e940e68cd056e63ecc5b",
   "rules/tool-safety.md": "b13f3564a58a19f3af7c64c2000e0a13eb966c86f4d66f60938f4fad76c8164b",
   "rules/upstream-proposal.md": "eea27d887a97aa6b733e00730266aac1e4d041f5195bc385252d2753866ac0eb",
-  "rules/user-interaction.md": "8c6deb60ced22211051182728050a25a0f37389cf6545c855fd2743571309491",
+  "rules/user-interaction.md": "050ffe67ab1762292749ade26a6e3db26c6fe66717481cb2662d50b44844ccfc",
   "rules/verify-before-complete.md": "12b38af45cc058748009caa98914af5e8e2781b99c2277d416cae456979e3d2a",
   "scripts/update_roadmap_progress.py": "ac5772ece58014da45f88c53a9949750625a365e31fcd3b0b442d59945baf8e1",
   "skills/adversarial-review/SKILL.md": "9e475b2a742be6071aa3fa47ceca4b478463e04d7796d4b164c82da12553624c",

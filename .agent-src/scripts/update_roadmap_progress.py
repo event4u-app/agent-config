@@ -19,6 +19,12 @@ Percentage = done / (done + open). Deferred and cancelled do not count towards
 Invocation (from project root):
   python3 .augment/scripts/update_roadmap_progress.py              # rewrite
   python3 .augment/scripts/update_roadmap_progress.py --check      # CI: exit 1 if stale
+
+`--check` mode also fails when a roadmap reaches `count_open == 0` but is
+still under `agents/roadmaps/` instead of `agents/roadmaps/archive/` —
+backstopping the `roadmap-progress-sync` rule's "completion = archival,
+same response" requirement. The write path emits the same finding as a
+warning on stderr and still regenerates the dashboard.
 """
 
 from __future__ import annotations
@@ -176,6 +182,15 @@ def collect(roadmap_root: Path) -> list[RoadmapStats]:
     return results
 
 
+def unarchived_complete(roadmaps: list[RoadmapStats]) -> list[RoadmapStats]:
+    # A roadmap is complete when every active checkbox is done and at least
+    # one active checkbox exists. The `roadmap-progress-sync` rule mandates
+    # that such a roadmap be moved to `agents/roadmaps/archive/` in the
+    # same response that closes its last open item; `collect()` already
+    # excludes that directory, so anything left here is unarchived.
+    return [r for r in roadmaps if r.total_active > 0 and r.open_ == 0]
+
+
 def render(roadmaps: list[RoadmapStats]) -> str:
     total_done = sum(r.done for r in roadmaps)
     total_active = sum(r.total_active for r in roadmaps)
@@ -241,12 +256,22 @@ def main() -> int:
     roadmaps = collect(roadmap_root)
     new_text = render(roadmaps)
     current = target.read_text(encoding="utf-8") if target.exists() else ""
+    complete = unarchived_complete(roadmaps)
     if args.check:
-        if current != new_text:
+        stale = current != new_text
+        if stale:
             print(f"❌  {target.relative_to(args.repo_root)} is stale. "
                   f"Run `python3 .augment/scripts/update_roadmap_progress.py` "
                   f"to regenerate (or `task roadmap-progress` in Taskfile "
                   f"projects).", file=sys.stderr)
+        if complete:
+            print("❌  Completed roadmaps are still in `agents/roadmaps/` — "
+                  "move them to `agents/roadmaps/archive/` (per the "
+                  "`roadmap-progress-sync` rule):", file=sys.stderr)
+            for r in complete:
+                print(f"      - {r.rel}  ({r.done}/{r.total_active} done)",
+                      file=sys.stderr)
+        if stale or complete:
             return 1
         print(f"✅  {target.relative_to(args.repo_root)} is up to date.")
         return 0
@@ -254,6 +279,11 @@ def main() -> int:
     print(f"✅  Wrote {target.relative_to(args.repo_root)} · "
           f"{len(roadmaps)} roadmap(s) · "
           f"{sum(r.done for r in roadmaps)}/{sum(r.total_active for r in roadmaps)} steps done.")
+    if complete:
+        print("⚠️   Completed roadmaps not yet archived — move to "
+              "`agents/roadmaps/archive/`:", file=sys.stderr)
+        for r in complete:
+            print(f"      - {r.rel}", file=sys.stderr)
     return 0
 
 

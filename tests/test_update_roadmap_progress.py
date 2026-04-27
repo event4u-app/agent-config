@@ -150,3 +150,103 @@ def test_render_emits_string_ids_in_table(roadmaps_dir: Path):
     # Roman-track roadmap too.
     assert "| I | First |" in output
     assert "| II | Second |" in output
+
+
+
+COMPLETE_FIXTURE = """\
+# Roadmap — All Done
+
+## Phase 1 — Wrap-up
+- [x] one
+- [x] two
+"""
+
+EMPTY_FIXTURE = """\
+# Roadmap — Stub
+
+## Phase 1 — TBD
+"""
+
+SKIPPED_ONLY_FIXTURE = """\
+# Roadmap — Skipped Only
+
+## Phase 1 — Decisions
+- [~] deferred
+- [-] cancelled
+"""
+
+
+def test_unarchived_complete_flags_only_done_roadmaps(tmp_path: Path):
+    root = tmp_path / "agents" / "roadmaps"
+    root.mkdir(parents=True)
+    (root / "complete.md").write_text(COMPLETE_FIXTURE, encoding="utf-8")
+    (root / "stub.md").write_text(EMPTY_FIXTURE, encoding="utf-8")
+    (root / "skipped-only.md").write_text(SKIPPED_ONLY_FIXTURE, encoding="utf-8")
+    (root / "numeric.md").write_text(NUMERIC_FIXTURE, encoding="utf-8")
+    roadmaps = urp.collect(root)
+    flagged = urp.unarchived_complete(roadmaps)
+    rels = sorted(r.rel for r in flagged)
+    # Only the truly-complete roadmap is flagged: stubs and skipped-only
+    # have total_active == 0, partial roadmaps still have open items.
+    assert rels == ["complete.md"]
+
+
+def test_unarchived_complete_ignores_archive_dir(tmp_path: Path):
+    root = tmp_path / "agents" / "roadmaps"
+    archive = root / "archive"
+    archive.mkdir(parents=True)
+    (archive / "complete.md").write_text(COMPLETE_FIXTURE, encoding="utf-8")
+    roadmaps = urp.collect(root)
+    # collect() already excludes archive/, so the archived roadmap is not
+    # in the list and unarchived_complete() returns nothing.
+    assert urp.collect(root) == []
+    assert urp.unarchived_complete(roadmaps) == []
+
+
+def _run_main(monkeypatch: pytest.MonkeyPatch, repo_root: Path, *args: str) -> int:
+    monkeypatch.setattr(sys, "argv", ["update_roadmap_progress.py",
+                                       "--repo-root", str(repo_root), *args])
+    return urp.main()
+
+
+def test_check_mode_fails_on_unarchived_complete(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
+):
+    root = tmp_path / "agents" / "roadmaps"
+    root.mkdir(parents=True)
+    (root / "complete.md").write_text(COMPLETE_FIXTURE, encoding="utf-8")
+    # Pre-write a fresh dashboard so staleness alone can't be the reason
+    # for the failure.
+    rc = _run_main(monkeypatch, tmp_path)
+    assert rc == 0
+    rc = _run_main(monkeypatch, tmp_path, "--check")
+    captured = capsys.readouterr()
+    assert rc == 1
+    assert "Completed roadmaps are still in" in captured.err
+    assert "complete.md" in captured.err
+
+
+def test_check_mode_passes_when_complete_is_archived(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    root = tmp_path / "agents" / "roadmaps"
+    archive = root / "archive"
+    archive.mkdir(parents=True)
+    (archive / "complete.md").write_text(COMPLETE_FIXTURE, encoding="utf-8")
+    rc = _run_main(monkeypatch, tmp_path)
+    assert rc == 0
+    rc = _run_main(monkeypatch, tmp_path, "--check")
+    assert rc == 0
+
+
+def test_write_mode_warns_but_does_not_fail(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
+):
+    root = tmp_path / "agents" / "roadmaps"
+    root.mkdir(parents=True)
+    (root / "complete.md").write_text(COMPLETE_FIXTURE, encoding="utf-8")
+    rc = _run_main(monkeypatch, tmp_path)
+    captured = capsys.readouterr()
+    assert rc == 0  # warn-only on write path
+    assert "not yet archived" in captured.err
+    assert "complete.md" in captured.err

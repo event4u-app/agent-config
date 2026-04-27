@@ -6,6 +6,9 @@
     "require": {
         "php": ">=8.0"
     },
+    "suggest": {
+        "@event4u/agent-memory": "Optional MCP-based memory backend (npm: @event4u/agent-memory ^1.1.0). Adds persistent agent learnings across sessions. Install with `npm install --save-dev @event4u/agent-memory` if your team wants the memory layer; otherwise agent-config falls back to file-based memory."
+    },
     "bin": [
         "bin/install.php",
         "scripts/agent-config"

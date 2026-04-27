@@ -1,21 +1,28 @@
 #!/usr/bin/env python3
-"""File-based retrieval for the `absent` path.
+"""Hybrid retrieval — file-first with optional package augmentation.
 
 Implements the shared `retrieve(types, keys, limit)` abstraction used
 by skills. Reads YAML under `agents/memory/<type>/` (curated, hand-
 reviewed) and JSONL under `agents/memory/intake/*.jsonl` (agent-written,
 append-only, supersede-chain aware).
 
-The returned shape is identical to the `present`-path adapter over the
-`@event4u/agent-memory` API, so skills stay backend-agnostic.
+When the `@event4u/agent-memory` package is present (see
+`scripts/memory_status.py`), callers can pass the result of
+:func:`package_operational_provider` to route additional retrieval
+through the package's semantic CLI. Repo entries always win on
+conflict — see `_apply_conflict_rule`.
 
 Usage:
     python3 scripts/memory_lookup.py --types domain-invariants,ownership \\
         --key "app/Http/Controllers/Foo" --limit 5
     python3 scripts/memory_lookup.py --types incident-learnings --format json
+    python3 scripts/memory_lookup.py --types ownership --key billing --auto
 
-    from scripts.memory_lookup import retrieve
-    hits = retrieve(types=["ownership"], keys=["app/Http"], limit=3)
+    from scripts.memory_lookup import retrieve, package_operational_provider
+    hits = retrieve(
+        types=["ownership"], keys=["app/Http"], limit=3,
+        operational_provider=package_operational_provider(),
+    )
 """
 
 from __future__ import annotations
@@ -23,6 +30,8 @@ from __future__ import annotations
 import argparse
 import fnmatch
 import json
+import os
+import subprocess
 import sys
 from dataclasses import dataclass, asdict, field
 from pathlib import Path
@@ -229,6 +238,125 @@ def _apply_conflict_rule(
     return merged, shadows
 
 
+# ---------------------------------------------------------------------------
+# Package-backed operational provider (the `present` path)
+# ---------------------------------------------------------------------------
+#
+# When `memory_status.status() == "present"` the consumer-facing contract
+# says retrieval should route through `@event4u/agent-memory`. The package
+# CLI is purely **semantic** (`memory retrieve <query> --type T …`); the
+# shared `retrieve(types, keys, …)` API is **key-based**. The hybrid
+# resolution agreed in `agents/contexts/agent-memory-contract.md` synthesises
+# `keys` into a single natural-language query for the package call, while
+# the file fallback continues to do glob/substring matching on the same
+# keys. Both legs land in the same `Hit` shape so the conflict rule can
+# merge them transparently.
+
+_CLI_TIMEOUT_SECONDS = 5.0
+_CLI_RETRIEVE_LIMIT_DEFAULT = 20
+
+
+def _synthesize_query(keys: list[str]) -> str:
+    """Turn a list of retrieval keys into one natural-language query.
+
+    Keys are typically file paths (`app/Http/Controllers/Foo`), feature
+    names (`billing`), or short identifiers — joining them with spaces
+    gives the package's semantic search enough surface to score against
+    without inventing structure. Empty or whitespace-only keys are
+    dropped; if nothing remains the caller falls back to the file path.
+    """
+    cleaned = [k.strip() for k in keys if isinstance(k, str) and k.strip()]
+    return " ".join(cleaned)
+
+
+def _cli_operational_provider(
+    types: list[str],
+    keys: list[str],
+    *,
+    cli_path: str = "memory",
+    timeout: float = _CLI_TIMEOUT_SECONDS,
+    limit: int = _CLI_RETRIEVE_LIMIT_DEFAULT,
+) -> Iterable[Hit]:
+    """Run `memory retrieve` and yield operational `Hit` objects.
+
+    Pino structured logs from the package go to stderr; stdout is a
+    clean v1 retrieval envelope. Any non-zero exit, timeout, or parse
+    failure degrades to "no operational hits" — `retrieve()` already
+    treats provider exceptions as a soft warning, so the caller still
+    gets the file-fallback result.
+    """
+    query = _synthesize_query(keys)
+    if not query:
+        return
+    cmd: list[str] = [cli_path, "retrieve", query, "--limit", str(limit)]
+    for t in types:
+        cmd.extend(["--type", t])
+    try:
+        out = subprocess.run(
+            cmd,
+            capture_output=True, text=True, timeout=timeout,
+        )
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        return
+    if out.returncode != 0:
+        return
+    try:
+        envelope = json.loads(out.stdout)
+    except (ValueError, TypeError):
+        return
+    entries = envelope.get("entries") if isinstance(envelope, dict) else None
+    if not isinstance(entries, list):
+        return
+    for e in entries:
+        if not isinstance(e, dict):
+            continue
+        eid = e.get("id")
+        etype = e.get("type")
+        if not isinstance(eid, str) or not isinstance(etype, str):
+            continue
+        # The package returns `confidence` (0..1) per the v1 envelope;
+        # map it onto our internal `score` field so the conflict rule
+        # and ranking work uniformly across providers.
+        try:
+            score = float(e.get("confidence", 0.0))
+        except (TypeError, ValueError):
+            score = 0.0
+        body = e.get("body") if isinstance(e.get("body"), dict) else {}
+        yield Hit(
+            id=eid,
+            type=etype,
+            source="operational",
+            path=f"agent-memory:{eid}",
+            score=score,
+            entry=body,
+        )
+
+
+def package_operational_provider() -> Optional[OperationalProvider]:
+    """Return a CLI-backed provider when the package is `present`, else None.
+
+    Callers who want automatic backend routing pass the result directly
+    to :func:`retrieve` — `None` is a safe value that yields file-only
+    retrieval, so this is the recommended one-liner for skills:
+
+        retrieve(types, keys, operational_provider=package_operational_provider())
+
+    The status probe is bounded (≤ 2s, cached per process) — see
+    `scripts/memory_status.py`. We import lazily so pure file-fallback
+    callers never pay for the probe.
+    """
+    # Late import: keeps `memory_lookup` importable even when
+    # `memory_status` is missing in stripped consumer installs.
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import memory_status  # type: ignore[import-not-found]
+    except ImportError:
+        return None
+    if memory_status.status().status != "present":
+        return None
+    return _cli_operational_provider
+
+
 def retrieve(
     types: list[str],
     keys: list[str],
@@ -402,16 +530,24 @@ def main() -> int:
     ap.add_argument("--with-shadows", action="store_true",
                     help="Include shadowed-operational entries in the output "
                          "(no-op until an operational backend is wired)")
+    ap.add_argument("--auto", action="store_true",
+                    help="Auto-route to the @event4u/agent-memory package "
+                         "when memory_status.status() == 'present'; "
+                         "falls through to file-only retrieval otherwise")
     args = ap.parse_args()
     types = [t.strip() for t in args.types.split(",") if t.strip()]
     if not types:
         print("error: --types is required", file=sys.stderr)
         return 2
+    op_provider = package_operational_provider() if args.auto else None
     if args.envelope == "v1":
-        envelope = retrieve_v1(types, args.key, args.limit)
+        envelope = retrieve_v1(types, args.key, args.limit,
+                               operational_provider=op_provider)
         print(json.dumps(envelope, indent=2, default=str))
         return 0
-    result = retrieve(types, args.key, args.limit, with_shadows=args.with_shadows)
+    result = retrieve(types, args.key, args.limit,
+                      operational_provider=op_provider,
+                      with_shadows=args.with_shadows)
     if args.with_shadows:
         assert isinstance(result, RetrievalResult)
         hits, shadows = result.hits, result.shadows

@@ -35,7 +35,7 @@ from typing import Literal
 
 Status = Literal["absent", "misconfigured", "present"]
 
-_CLI_CANDIDATES = ("agent-memory", "agentmem")
+_CLI_CANDIDATES = ("memory", "agent-memory", "agentmem")
 _HEALTH_TIMEOUT_SECONDS = 2.0
 _CACHE_ENV = "AGENT_MEMORY_STATUS"
 _CACHE_FILE = Path(".agent-memory") / "status.cache"
@@ -54,6 +54,11 @@ class Result:
     reason: str             # short explanation
     elapsed_ms: int         # time spent probing (0 if cached)
     cli_path: str = ""      # resolved CLI path, if any
+    # Populated only when status == "present" — sourced from the
+    # `health` CLI envelope so the v1 health() reports real package
+    # capabilities instead of file-fallback placeholders.
+    backend_version: str = ""
+    features: tuple = ()
 
 
 def _find_cli() -> str:
@@ -64,8 +69,45 @@ def _find_cli() -> str:
     return ""
 
 
-def _probe_health(cli_path: str) -> tuple[bool, str]:
-    """Returns (healthy, reason)."""
+def _parse_health_envelope(stdout: str) -> dict | None:
+    """Extract the v1 health envelope from `memory health` stdout.
+
+    The package emits a single JSON object on stdout (pino structured
+    logs go to stderr). We tolerate older builds that may have leaked
+    log lines into stdout by scanning for the first top-level object
+    that carries ``contract_version``.
+    """
+    text = (stdout or "").strip()
+    if not text:
+        return None
+    try:
+        obj = json.loads(text)
+    except ValueError:
+        obj = None
+    if isinstance(obj, dict) and obj.get("contract_version"):
+        return obj
+    # Fallback: line-by-line scan for an envelope-shaped object — covers
+    # the case where structured logs accidentally share stdout.
+    for line in text.splitlines():
+        line = line.strip()
+        if not line.startswith("{"):
+            continue
+        try:
+            cand = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(cand, dict) and cand.get("contract_version"):
+            return cand
+    return None
+
+
+def _probe_health(cli_path: str) -> tuple[bool, str, dict | None]:
+    """Returns (healthy, reason, envelope).
+
+    On success ``envelope`` is the parsed v1 health envelope (may still
+    be ``None`` for very old CLIs that don't emit one). On failure it
+    is always ``None``.
+    """
     try:
         out = subprocess.run(
             [cli_path, "health"],
@@ -73,15 +115,16 @@ def _probe_health(cli_path: str) -> tuple[bool, str]:
             timeout=_HEALTH_TIMEOUT_SECONDS,
         )
     except subprocess.TimeoutExpired:
-        return False, f"health() timed out after {_HEALTH_TIMEOUT_SECONDS}s"
+        return False, f"health() timed out after {_HEALTH_TIMEOUT_SECONDS}s", None
     except FileNotFoundError:
-        return False, "CLI vanished between which() and invoke"
+        return False, "CLI vanished between which() and invoke", None
     if out.returncode != 0:
         # First line of combined output, capped, for the reason field.
         msg = (out.stderr or out.stdout or "exit != 0").strip().splitlines()
         head = msg[0][:120] if msg else "exit != 0"
-        return False, f"health() returned {out.returncode}: {head}"
-    return True, "ok"
+        return False, f"health() returned {out.returncode}: {head}", None
+    envelope = _parse_health_envelope(out.stdout)
+    return True, "ok", envelope
 
 
 def _read_cache() -> Result | None:
@@ -131,10 +174,23 @@ def status(refresh: bool = False) -> Result:
         result = Result("absent", "file",
                         "agent-memory CLI not on PATH", 0)
     else:
-        healthy, reason = _probe_health(cli)
+        healthy, reason, envelope = _probe_health(cli)
         elapsed = int((time.monotonic() - t0) * 1000)
         if healthy:
-            result = Result("present", "package", reason, elapsed, cli)
+            backend_version = ""
+            features: tuple = ()
+            if isinstance(envelope, dict):
+                bv = envelope.get("backend_version")
+                if isinstance(bv, str):
+                    backend_version = bv
+                feats = envelope.get("features")
+                if isinstance(feats, list) and all(
+                    isinstance(f, str) for f in feats
+                ):
+                    features = tuple(feats)
+            result = Result("present", "package", reason, elapsed, cli,
+                            backend_version=backend_version,
+                            features=features)
         else:
             result = Result("misconfigured", "file", reason, elapsed, cli)
     _write_cache(result)
@@ -148,6 +204,11 @@ def health(refresh: bool = False) -> dict:
     Maps the three-state :func:`status` result onto the contract's
     ``ok | degraded | error`` so consumers can read
     ``contract_version`` without caring about the file-vs-package split.
+
+    When the package backs the call (``status == "present"``), the
+    envelope reports the package's own ``backend_version`` and
+    ``features`` so consumers can feature-detect against real
+    capabilities. Otherwise the file-fallback markers are returned.
     """
     r = status(refresh=refresh)
     envelope_status = {
@@ -155,11 +216,12 @@ def health(refresh: bool = False) -> dict:
         "misconfigured": "degraded",
         "absent": "ok",
     }[r.status]
-    # When the package is present, report its version from `health()`
-    # output; until we parse that, keep the file-fallback marker so the
-    # envelope never lies about what backed the response.
-    backend_version = _FILE_BACKEND_VERSION
-    features = list(_FILE_BACKEND_FEATURES)
+    if r.status == "present" and (r.backend_version or r.features):
+        backend_version = r.backend_version or _FILE_BACKEND_VERSION
+        features = list(r.features) if r.features else list(_FILE_BACKEND_FEATURES)
+    else:
+        backend_version = _FILE_BACKEND_VERSION
+        features = list(_FILE_BACKEND_FEATURES)
     return {
         "contract_version": CONTRACT_VERSION,
         "status": envelope_status,

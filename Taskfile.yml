@@ -357,4 +357,5 @@ tasks:
       - task: check-memory
       - task: test
       - task: runtime-e2e
+      - task: roadmap-progress-check
       - task: lint-readme

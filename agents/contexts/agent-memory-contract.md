@@ -39,12 +39,21 @@ process, **non-raising** on probe failure.
 
 ## Expected CLI surface
 
-Probed in `scripts/memory_status.py`:
+Probed in `scripts/memory_status.py` via `_CLI_CANDIDATES`:
 
-- Executable on `PATH` as `agent-memory` **or** `agentmem`.
-- Supports `health` subcommand returning non-zero on unhealthy.
-- Supports (future) `retrieve --types … --keys … --limit …
-  --format json` returning the retrieval envelope below.
+- Executable on `PATH` as **`memory`** (canonical, ships in
+  `@event4u/agent-memory` v1.1+ as `package.json#bin.memory`),
+  **`agent-memory`** (planned alias), or **`agentmem`** (legacy).
+- Supports `health` subcommand emitting a v1 health envelope on stdout
+  (`{contract_version, status, backend_version, features, latency_ms}`)
+  and exiting non-zero on unhealthy.
+- Supports `retrieve <query> [--type T …] [--limit N] [--layer 1|2|3]
+  [--budget N] [--low-trust] [--repository ID]` emitting a v1
+  retrieval envelope on stdout (always JSON).
+
+The retrieval invocation is **semantic, not key-based** — see the
+"⚠️ Known contract drift" section below for the consumer-side
+implication.
 
 If the released package diverges from these names, we update
 `_CLI_CANDIDATES` in `memory_status.py` — not the other way round.
@@ -70,30 +79,36 @@ Envelope: `contract_version`, `status ∈ {ok, partial, error}`,
 
 ## ⚠️ Known contract drift (consumer vs. spec)
 
-The file fallback in `scripts/memory_lookup.py` currently returns a
-**flat `list[Hit]`** with a different field set:
+**Status: resolved at the consumer boundary.** The CLI / JSON output of
+`scripts/memory_lookup.py` already emits the v1 envelope with
+`source ∈ {repo, operational}`, `confidence`, `slices`, `status`, and
+`contract_version` — see `memory_lookup.py:320-345` (envelope
+assembly).
 
-| File fallback `Hit` | Spec entry | Notes |
+What remains is **internal-only**: the private `Hit` dataclass inside
+`memory_lookup.py` still uses `source ∈ {curated, intake}` and `score`.
+No skill, command, or external consumer imports `Hit` directly — they
+all go through the public JSON surface, which is already spec-aligned.
+
+| Internal `Hit` field | Public envelope field | Visible to consumers? |
 |---|---|---|
-| `id`, `type` | `id`, `type` | match |
-| `source ∈ {curated, intake}` | `source ∈ {repo, operational}` | **naming drift** |
-| `score ∈ [0,1]` | `confidence` | **naming drift** |
-| `path` | — (spec has no `path`) | extra field |
-| — (no envelope) | `contract_version`, `status`, `slices`, `errors` | **missing layer** |
+| `id`, `type` | `id`, `type` | yes — match |
+| `source ∈ {curated, intake}` | `source ∈ {repo, operational}` | no — translated at boundary |
+| `score ∈ [0,1]` | `confidence` | no — translated at boundary |
+| `path` | — | no — internal scoring signal |
 
-This drift is tolerable while the package is absent (skills only
-consume the fallback shape). When the package ships, one of two paths:
+**Trigger to revisit:** if a second module starts importing the `Hit`
+dataclass directly (e.g. `memory_lookup.py` is split into multiple
+files and `Hit` becomes a public type), rename `Hit.source`/`Hit.score`
+to match the envelope so the boundary translation can be deleted.
+Until then, the internal naming is an implementation detail.
 
-1. **Align fallback to spec** — rename `source` values, rename `score`
-   → `confidence`, wrap return value in the envelope. Breaking change
-   in `memory_lookup.py`; skills adjust once.
-2. **Keep fallback flat, adapt package** — the package adapter
-   flattens the envelope on the consumer boundary. Keeps skills
-   unchanged; hides the envelope from agent-config entirely.
-
-Decision postponed until the package is closer to release — the
-tradeoff shifts depending on whether other consumers emerge that want
-the full envelope.
+There is also a **calling-convention drift** between the contract's
+key-based `retrieve(types, keys, limit)` and the package's
+semantic-only `retrieve(query, …)`. This is tracked separately and
+is the subject of an ongoing design decision (hybrid contract — keys
+synthesise into a query for the package path; file-fallback stays
+key-match).
 
 ## Expected `propose()` / signal emission
 

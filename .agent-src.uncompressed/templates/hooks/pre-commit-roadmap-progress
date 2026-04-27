@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Pre-commit hook: roadmap progress dashboard sync (event4u/agent-config)
+#
+# Installed by `./agent-config hooks:install`. Aborts the commit if
+# `agents/roadmaps-progress.md` is out of date relative to staged
+# changes under `agents/roadmaps/`. Exits silently when no roadmap
+# files are staged — zero overhead on unrelated commits.
+#
+# To run manually:
+#   ./agent-config roadmap:progress-check
+#
+# To uninstall:
+#   rm .git/hooks/pre-commit
+set -e
+
+# Only act on commits that touch roadmap content.
+staged="$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null || true)"
+case "$staged" in
+  *agents/roadmaps/*.md*|*agents/roadmaps-progress.md*|*.augment/scripts/update_roadmap_progress.py*)
+    : ;;
+  *)
+    exit 0 ;;
+esac
+
+# Resolve the script — prefer the consumer-shipped path, fall back to
+# the source-of-truth copy when run from inside the package itself.
+script=""
+for cand in \
+  ".augment/scripts/update_roadmap_progress.py" \
+  ".agent-src/scripts/update_roadmap_progress.py" \
+  ".agent-src.uncompressed/scripts/update_roadmap_progress.py"; do
+  if [ -f "$cand" ]; then
+    script="$cand"
+    break
+  fi
+done
+
+if [ -z "$script" ]; then
+  echo "⚠️  pre-commit-roadmap-progress: update_roadmap_progress.py not found." >&2
+  echo "    Run \`task install\` (or \`./agent-config install\`) and retry." >&2
+  echo "    Skipping check — letting commit through." >&2
+  exit 0
+fi
+
+if ! python3 "$script" --check >/dev/null 2>&1; then
+  echo "❌  agents/roadmaps-progress.md is stale relative to your staged changes." >&2
+  echo "" >&2
+  echo "    Regenerate the dashboard with one of:" >&2
+  echo "      ./agent-config roadmap:progress" >&2
+  echo "      task roadmap-progress" >&2
+  echo "      python3 $script" >&2
+  echo "" >&2
+  echo "    Then \`git add agents/roadmaps-progress.md\` and retry the commit." >&2
+  echo "" >&2
+  echo "    To bypass once (NOT recommended):" >&2
+  echo "      git commit --no-verify" >&2
+  exit 1
+fi
+
+exit 0
