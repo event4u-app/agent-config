@@ -74,10 +74,10 @@ moving any of its fields:
 | Field | Type | Purpose |
 |---|---|---|
 | `version` | int (`1`) | Integer schema version. Loader rejects any other value. |
-| `input.kind` | string | Typed input variant. Only `"ticket"` accepted in R1. |
-| `input.data` | object | Payload. Carries the v0 `ticket` dict verbatim. |
+| `input.kind` | string | Typed input variant. `"ticket"` (R1) and `"prompt"` (R2). |
+| `input.data` | object | Payload. Carries the v0 `ticket` dict verbatim, OR for `kind="prompt"` the prompt envelope (`raw`, `reconstructed_ac`, `assumptions`, optional `confidence`). |
 | `intent` | string | Coarse intent label. Default `"backend-coding"`. |
-| `directive_set` | string | Directive bundle name. One of `backend`, `ui`, `ui-trivial`, `mixed`. Only `backend` is wired in R1. |
+| `directive_set` | string | Directive bundle name. One of `backend`, `ui`, `ui-trivial`, `mixed`. Only `backend` is wired in R1/R2. |
 | _legacy slice_ | … | `persona`, `memory`, `plan`, `changes`, `tests`, `verify`, `outcomes`, `questions`, `report` keep their v0 names and meaning. |
 
 Canonical filename is `.work-state.json` (was
@@ -117,6 +117,54 @@ contract is covered by `tests/work_engine/test_v0_to_v1_migration.py`,
 which exercises three real Phase 1 baseline snapshots (GT-1
 cycle 1, GT-3 cycle 4, GT-5 cycle 5) so the migrator is proven
 against actual engine output rather than synthetic fixtures.
+
+## Prompt envelopes and confidence bands (R2)
+
+Prompt envelopes (`input.kind="prompt"`) carry a free-form goal
+instead of a refined ticket. The `refine` step routes on shape
+(presence of `raw` key) and on the first pass emits an
+`@agent-directive: refine-prompt` halt — the agent runs the
+matching skill, which reconstructs `acceptance_criteria` +
+`assumptions`. On the rebound, `scoring/confidence.py` produces a
+frozen `ConfidenceScore(band, score, dimensions, reasons,
+ui_intent)` and the dispatcher branches on `band`:
+
+| Band | Threshold | Trigger | What the user sees | Release |
+|---|---|---|---|---|
+| `high` | `score ≥ 0.8` | All five rubric dimensions clean; no UI keywords | Silent proceed — reconstructed AC + assumptions land in the delivery report under "Confidence" | None — flows straight into `analyze` |
+| `medium` | `0.5 ≤ score < 0.8` | One or two weak dimensions; assumptions inferred | `PARTIAL` halt with the reconstructed AC + numbered assumptions; user picks `1. Confirm` / `2. Edit assumptions` / `3. Abort` | Agent sets `state.ticket['confidence_confirmed'] = True`; refine re-runs and emits `SUCCESS` |
+| `low` | `score < 0.5` | Multiple weak dimensions or destructive scope | `BLOCKED` halt with **one** clarifying question targeted at the weakest dimension (`ask-when-uncertain` Iron Law) | User answers → agent rewrites the prompt → re-score; **`confidence_confirmed` cannot release low band** |
+
+Independently, `ui_intent=True` (UI keyword in `raw`) short-circuits
+into a `BLOCKED` halt with a pointer to `road-to-product-ui-track`
+(R3), regardless of the numeric band.
+
+**AC projection contract.** On every `SUCCESS` exit from
+`_run_prompt`, the dispatcher mirrors `data['reconstructed_ac']`
+into `data['acceptance_criteria']`. Downstream gates (`analyze`,
+`plan`, `implement`) read the legacy slot and stay shape-agnostic
+about the upstream input variant. The mirror is a **list copy**, not
+a reference share — mutating the legacy slot does not corrupt the
+prompt slot, and vice versa. Regression locked by
+`test_refine_prompt_dispatch.py::TestHighBand::test_mirrors_reconstructed_ac_to_acceptance_criteria`
+plus the parallel medium-confirmed assertion.
+
+**Refreshing band thresholds.** `BAND_HIGH_MIN = 0.8` and
+`BAND_MEDIUM_MIN = 0.5` are module constants in
+`scripts/work_engine/scoring/confidence.py`. The skill, the ADR
+(`adr-prompt-driven-execution.md`, R2 Phase 6), and this doc cite
+that module — there is no second source of truth. Tuning thresholds
+therefore requires:
+
+1. Update the constants in `confidence.py`.
+2. Re-run the per-dimension fixtures
+   (`tests/work_engine/test_scoring_confidence.py`).
+3. Re-capture GT-P1..GT-P4 if a fixture's band assignment shifts
+   (`python3 -m tests.golden.capture`); review the diff before
+   locking. If GT-P3 (low) or GT-P4 (UI rejection) flip bands the
+   threshold change is rejected — those fixtures are pinned to
+   their bands by design.
+4. Update the band-threshold table above.
 
 ## `Step` contract
 

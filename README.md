@@ -5,7 +5,7 @@ Teach your AI agents Laravel, PHP, testing, Git workflows, and **120+ more skill
 > Your agent learns to write Laravel code, run tests, create PRs, fix CI — and follows your team's coding standards while doing it.
 
 <p align="center">
-  <strong>124 Skills</strong> · <strong>46 Rules</strong> · <strong>73 Commands</strong> · <strong>46 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>125 Skills</strong> · <strong>46 Rules</strong> · <strong>74 Commands</strong> · <strong>46 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -129,6 +129,38 @@ so you decide — never a silent guess. Persona comes from
 
 → [Command reference](.agent-src/commands/implement-ticket.md) ·
   [Flow contract](agents/contexts/implement-ticket-flow.md)
+
+### Sibling entrypoint: `/work` (free-form prompt)
+
+Same engine, different envelope. Use `/work` when you have a goal
+but no ticket yet:
+
+```
+/work add a CSV export endpoint to the audit-log controller
+```
+
+The first pass scores the prompt on five dimensions
+(`goal_clarity`, `scope_boundary`, `ac_evidence`, `stack_data`,
+`reversibility`) and routes on the resulting band:
+
+| Band | Score | Engine action |
+|---|---|---|
+| **high** | `≥ 0.8` | Silent proceed — reconstructed AC + assumptions land in the delivery report |
+| **medium** | `0.5–0.79` | Halts with assumptions report; you confirm or edit before plan |
+| **low** | `< 0.5` | Halts with **one** clarifying question on the weakest dimension |
+
+After the band gate releases, the rest of the flow is identical
+to `/implement-ticket`. UI-shaped prompts are rejected with an
+explicit pointer to Roadmap 3 — the prompt-driven flow is
+backend-only in this release.
+
+→ [Command reference](.agent-src/commands/work.md) ·
+  [`refine-prompt` skill](.agent-src/skills/refine-prompt/SKILL.md) ·
+  [ADR](agents/contexts/adr-prompt-driven-execution.md)
+
+**Pick which one:** ticket id or pasted ticket payload → `/implement-ticket`.
+Free-form goal, no ticket → `/work`. The two share `.work-state.json`
+and refuse to switch envelopes mid-flight.
 
 ---
 
@@ -259,7 +291,7 @@ can prioritize the right skills for extraction.
 | [`/jira-ticket`](.agent-src/commands/jira-ticket.md) | Read ticket from branch, implement feature |
 | [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
 
-→ [Browse all 73 commands](.agent-src/commands/)
+→ [Browse all 74 commands](.agent-src/commands/)
 
 ---
 
@@ -284,7 +316,7 @@ Every developer gets the same behavior. No per-user setup needed.
 native slash-commands)
 
 > **What this means in practice:** Augment Code and Claude Code get the full
-> package (rules + 124 skills + 73 native commands). Cursor, Cline, Windsurf,
+> package (rules + 125 skills + 74 native commands). Cursor, Cline, Windsurf,
 > Gemini CLI, and GitHub Copilot only get the **rules** natively; skills and
 > commands are available to them as documentation the agent can read, not as
 > first-class features.

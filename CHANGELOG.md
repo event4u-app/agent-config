@@ -9,11 +9,19 @@ versioning policy is documented in [CONTRIBUTING.md](CONTRIBUTING.md#versioning-
 
 ## [Unreleased]
 
-Universal Execution Engine (R1): the `/implement-ticket` runtime is
+Two roadmaps land in this release.
+
+**Universal Execution Engine (R1)** — the `/implement-ticket` runtime is
 renamed and re-shaped into a universal dispatcher. **No user-visible
 behavior change** — the `/implement-ticket` slash command and the
 `./agent-config implement-ticket` CLI are byte-stable, gated by the
 new Golden-Transcript replay harness.
+
+**Prompt-Driven Execution (R2)** — a new `/work` command drives free-form
+prompts through the same `work_engine` dispatcher with a
+confidence-band gate at `refine`. UI-shaped prompts are rejected with an
+explicit Roadmap-3 pointer; backend-only in this release. R1 goldens
+remain byte-equal across the R2 changes.
 
 ### Features
 
@@ -32,6 +40,27 @@ new Golden-Transcript replay harness.
   report headings) with allow-listed free-text drift on `questions`
   and `report` bodies. Both pytest (`tests/golden/test_replay.py`) and
   CLI (`python3 -m tests.golden.harness`) entry points.
+* **command:** `/work` — sibling entrypoint to `/implement-ticket` that
+  drives free-form prompts through the same `work_engine` dispatcher
+  with `input.kind="prompt"`. Backed by the `command-routing` and
+  `refine-prompt` skills.
+* **engine (R2):** prompt resolver (`work_engine.resolvers.prompt`)
+  builds the prompt envelope; `directives/backend/refine.py::_run_prompt`
+  reconstructs acceptance criteria, scores the prompt on five
+  dimensions, and dispatches on the resulting band.
+* **scoring:** deterministic, heuristic-only confidence scorer at
+  `work_engine.scoring.confidence` — single source of truth for the
+  rubric (`goal_clarity`, `scope_boundary`, `ac_evidence`, `stack_data`,
+  `reversibility`) and band thresholds (`high ≥ 0.8`, `medium ≥ 0.5`,
+  `low < 0.5`).
+* **band-action gate:** silent proceed on `high`, assumptions-report
+  halt on `medium`, one-question halt on `low` (per the
+  `ask-when-uncertain` Iron Law). UI-shaped prompts rejected with an
+  explicit Roadmap-3 pointer.
+* **tests (R2):** four new Golden Transcripts (`GT-P1` high-band happy,
+  `GT-P2` medium-band release, `GT-P3` low-band one-question halt,
+  `GT-P4` UI-intent rejection) pinned alongside the R1 goldens —
+  9 transcripts total in `task golden-replay`.
 
 ### Changed
 
@@ -40,6 +69,10 @@ new Golden-Transcript replay harness.
   user-facing prompts, halts, and delivery report are unchanged. State
   filename moves from `.implement-ticket-state.json` to `.work-state.json`
   with auto-migration.
+* **engine (R2):** `refine` SUCCESS paths now mirror
+  `data["reconstructed_ac"]` into `state.ticket["acceptance_criteria"]`
+  as an independent list copy, so downstream gates (`analyze`, `plan`)
+  read the same AC slot regardless of envelope kind.
 
 ### Deprecated
 
@@ -59,12 +92,19 @@ new Golden-Transcript replay harness.
 
 ### Documentation
 
-* **ADR:** [`agents/contexts/adr-work-engine-rename.md`](agents/contexts/adr-work-engine-rename.md)
+* **ADR (R1):** [`agents/contexts/adr-work-engine-rename.md`](agents/contexts/adr-work-engine-rename.md)
   — rationale, scope of the rename, compatibility shim policy, state
   migration, golden-test contract, tradeoffs, non-goals.
+* **ADR (R2):** [`agents/contexts/adr-prompt-driven-execution.md`](agents/contexts/adr-prompt-driven-execution.md)
+  — naming decision (`/work` over `/do`), confidence-band gate,
+  AC-projection fix, R3 deferral boundary, and golden contract.
 * **flow:** `agents/contexts/implement-ticket-flow.md` gains a "Replay
-  protocol — Strict-Verb comparison" section pairing the Phase 1
-  capture protocol with the Phase 6 replay enforcement.
+  protocol — Strict-Verb comparison" section (R1) and a
+  "Prompt envelopes and confidence bands (R2)" section pinning the
+  band-action mapping to the scorer module.
+* **README + AGENTS.md template:** document `/work` as the sibling
+  entrypoint, the confidence-band rubric, and the
+  `/work` vs. `/implement-ticket` selection rule.
 * **rules:** `scope-control` forbids release / version / deprecation-date
   language in roadmaps, plans, and ADRs; introduces a `Decline = silence`
   policy preventing branch-switch and PR proposals from being re-asked
