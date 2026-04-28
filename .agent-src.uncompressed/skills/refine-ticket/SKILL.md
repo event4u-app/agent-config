@@ -136,7 +136,7 @@ Then run the deterministic detection helper — do **not** re-derive trigger
 logic in prose:
 
 ```bash
-python3 scripts/refine_ticket_detect.py <ticket-body-file>
+./agent-config refine-ticket:detect <ticket-body-file>
 # or, inside the skill run:
 from scripts.refine_ticket_detect import detect, load_map
 decision = detect(ticket_body, load_map(), cwd=Path.cwd())
@@ -212,8 +212,7 @@ open a planning doc.
 
 ## Output template
 
-Frozen per Q25 (see
-[`road-to-ticket-refinement.md`](../../../agents/roadmaps/road-to-ticket-refinement.md)).
+Frozen per Q25.
 
 ````markdown
 ## Refined ticket
@@ -312,5 +311,4 @@ the session, re-probe on project change.
 - [`feature-explore`](../../commands/feature-explore.md) — upstream idea capture; hints at `/refine-ticket` when input looks like a ticket
 - [`feature-plan`](../../commands/feature-plan.md) — downstream planning
 - [`adversarial-review`](../adversarial-review/SKILL.md) — same `critical-challenger` persona, different stage (post-plan)
-- [`road-to-ticket-refinement.md`](../../../agents/roadmaps/road-to-ticket-refinement.md) — governing roadmap
 - [`artifact-drafting-protocol`](../../rules/artifact-drafting-protocol.md) — this skill was drafted under it

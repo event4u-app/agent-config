@@ -1,0 +1,70 @@
+{
+  "ticket": {
+    "id": "GT-5-NEG",
+    "title": "Add negate(a) to the toy calculator",
+    "acceptance_criteria": [
+      "Function signature is `negate(a: int) -> int` and returns `-a` for any integer input.",
+      "Edge cases covered: negate(0) returns 0; negate(-7) returns 7.",
+      "A pytest test `test_negate_returns_negation` lives in `tests/test_calculator.py` and pins both edge cases."
+    ]
+  },
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": [
+    {
+      "title": "Add negate(a)",
+      "detail": "Append negate(a: int) -> int to src/calculator.py"
+    },
+    {
+      "title": "Add negate(a)",
+      "detail": "Append test_negate_returns_negation to tests/test_calculator.py"
+    },
+    {
+      "title": "Add negate(a)",
+      "detail": "Run pytest to confirm both edge cases pass"
+    }
+  ],
+  "changes": [
+    {
+      "path": "src/calculator.py",
+      "purpose": "applied by GT recipe"
+    },
+    {
+      "path": "tests/test_calculator.py",
+      "purpose": "applied by GT recipe"
+    }
+  ],
+  "tests": {
+    "verdict": "success",
+    "scope": "targeted",
+    "exit_code": 0,
+    "targeted": "============================== 4 passed in <DURATION>s ==============================="
+  },
+  "verify": {
+    "verdict": "success",
+    "confidence": "high",
+    "judges": [
+      "bug-hunter",
+      "security",
+      "test-coverage",
+      "code-quality"
+    ],
+    "findings": []
+  },
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "success",
+    "implement": "success",
+    "test": "success",
+    "verify": "blocked"
+  },
+  "questions": [
+    "@agent-directive: review-changes ticket=GT-5-NEG",
+    "> Ticket GT-5-NEG — running the four-judge review (bugs, security, tests, code quality) before the delivery report is written.",
+    "> 1. Continue — run `review-changes` now",
+    "> 2. Abort — skip review (NOT recommended)"
+  ],
+  "report": ""
+}

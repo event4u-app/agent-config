@@ -142,7 +142,7 @@ If the root cause is a recognizable pattern (not a one-off typo),
 drop a `historical-patterns` signal so future work benefits:
 
 ```bash
-python3 scripts/memory_signal.py \
+./agent-config memory:signal \
     --type historical-patterns \
     --path "<primary affected file>" \
     --body "<root cause → fix, one sentence>" \

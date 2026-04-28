@@ -16,9 +16,8 @@ matching the existing pattern established by `review-routing-data-format`.
 ## File locations
 
 Each schema lives under `agents/memory/<type>/<hash>.yml` (content-addressed,
-merge-safe — see [`road-to-memory-merge-safety.md`](../../../agents/roadmaps/road-to-memory-merge-safety.md))
-**or** in a single `agents/memory/<type>.yml` file for projects that prefer
-one file per type.
+merge-safe) **or** in a single `agents/memory/<type>.yml` file for projects
+that prefer one file per type.
 
 | Type | Single-file path | Sharded path |
 |---|---|---|
@@ -111,7 +110,4 @@ active — the report is informational, not a gate.
 
 ## See also
 
-- [`road-to-engineering-memory.md`](../../../agents/roadmaps/road-to-engineering-memory.md) — roadmap this guideline implements
-- [`road-to-memory-merge-safety.md`](../../../agents/roadmaps/road-to-memory-merge-safety.md) — why content-addressed files
 - [`review-routing-data-format.md`](review-routing-data-format.md) — sibling format for ownership + bug patterns
-- [`road-to-role-modes.md`](../../../agents/roadmaps/road-to-role-modes.md) — role modes that consume these files

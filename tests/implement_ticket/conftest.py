@@ -1,11 +1,12 @@
-"""Test-time path wiring for the ``implement_ticket`` template package.
+"""Test-time path wiring for the ``implement_ticket`` deprecation shim.
 
-The production code lives under
-``.agent-src.uncompressed/templates/scripts/implement_ticket/`` so the
-installer can ship it into consumer projects. We add that directory to
-``sys.path`` here (rather than creating an editable install) to match
-the convention used by the other script-package tests in this repo
-(see ``tests/test_skill_trigger_eval.py`` and friends).
+The engine itself moved to ``work_engine`` in R1 Phase 3; the main
+test suite lives under ``tests/work_engine/``. This directory keeps
+only the shim contract tests (see ``test_shim.py``) which prove that
+the legacy ``implement_ticket`` module still imports, re-exports the
+public surface, and aliases submodule paths during the deprecation
+window. The sys.path wiring mirrors ``tests/work_engine/conftest.py``
+so the shim resolves against the on-disk template scripts.
 """
 from __future__ import annotations
 

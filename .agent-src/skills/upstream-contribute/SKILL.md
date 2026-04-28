@@ -182,7 +182,7 @@ If the contribution originates from a proposal under `agents/proposals/`
 run the Stage-4 gate before opening the PR:
 
 ```bash
-python3 scripts/check_proposal.py agents/proposals/{slug}.md
+./agent-config proposal:check agents/proposals/{slug}.md
 ```
 
 **Hard refusal rule:** if `check_proposal.py` exits non-zero, STOP —

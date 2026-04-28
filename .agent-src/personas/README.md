@@ -99,6 +99,5 @@ cast (usually Core-6 for review skills, empty for others).
 
 ## Related
 
-- [`../../agents/roadmaps/archive/road-to-personas.md`](../../agents/roadmaps/archive/road-to-personas.md) — roadmap + rationale (shipped 2026-04-22)
 - [`../guidelines/agent-infra/role-contracts.md`](../guidelines/agent-infra/role-contracts.md) — workflow modes personas compose with
 - [`../rules/artifact-drafting-protocol.md`](../rules/artifact-drafting-protocol.md) — mandatory per new persona

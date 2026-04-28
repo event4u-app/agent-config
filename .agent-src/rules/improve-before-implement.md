@@ -40,10 +40,11 @@ Before coding, quickly verify:
 - Does similar functionality already exist?
 - Does it follow established patterns in the codebase?
 - Does it contradict existing conventions?
-- Do **multiple valid patterns/frameworks** already exist (Tailwind + Flux, multiple form libs, competing state stores)? If yes → do NOT pick arbitrarily, ask.
+- Do **multiple valid patterns/frameworks** already exist (e.g. Tailwind + Flux, multiple form libraries, competing state stores)? If yes, do NOT pick one arbitrarily — ask which to use.
+- Is the change a **second branch on the same discriminator** — second `match`/`switch` arm, second `if/elseif`, or second class hardcoded to one enum value (e.g. `Provider::FOO`, `'stripe'`)? If yes, run the Strategy sniff test before adding the branch — see [`guidelines/php/patterns/strategy.md`](../guidelines/php/patterns/strategy.md#sniff-test--when-an-enumstring-discriminator-wants-to-become-a-strategy).
 
 **If misfit** → show evidence (file references), propose alternative.
-**If multiple valid options** → list them, ask which. See [`no blind implementation`](../guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation).
+**If multiple valid options** → list them, ask which to use. See [`no blind implementation`](../guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation).
 
 ### 3. Is the approach sound?
 
@@ -90,7 +91,9 @@ The agent is a thought partner, not a gatekeeper. After presenting concerns:
 
 ## Creating new agent artifacts
 
-For skill/rule/command/guideline creation or major rewrite, the architecture-fit
-check is handled by [`artifact-drafting-protocol`](artifact-drafting-protocol.md)
-Phase B (Research) — scans `.agent-src.uncompressed/` for overlap before
-creating a new file.
+When the request is to create or significantly rewrite a skill, rule, command,
+or guideline, the "fit the existing architecture" check above is handled by
+[`artifact-drafting-protocol`](artifact-drafting-protocol.md)'s Phase B
+(Research). Follow that protocol instead of improvising a one-shot check — it
+scans `.agent-src.uncompressed/` for overlap and reports candidates to extend
+before creating a new file.

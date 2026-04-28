@@ -77,4 +77,3 @@ persona voices) plus the close-prompt. Stop there. Do **not** chain into
 - [`refine-ticket`](refine-ticket.md) — sibling; run first if the ticket is vague
 - [`jira-ticket`](jira-ticket.md) — ticket loader this command delegates to
 - [`feature-plan`](feature-plan.md) — downstream planning
-- [`road-to-ticket-refinement.md`](../../agents/roadmaps/road-to-ticket-refinement.md) — governing roadmap

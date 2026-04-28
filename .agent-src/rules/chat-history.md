@@ -12,6 +12,47 @@ git-ignored) so a crashed or switched agent session can be resumed. File
 I/O is owned by [`scripts/chat_history.py`](../../../scripts/chat_history.py)
 — this rule says **when** to call it, not how the file is structured.
 
+## Iron Law — append at every cadence boundary, ALWAYS
+
+```
+APPEND TO .agent-chat-history AT EVERY CADENCE BOUNDARY. ALWAYS.
+BEFORE SENDING ANY REPLY, RUN THE PRE-SEND GATE BELOW.
+A REPLY WITHOUT A MATCHING APPEND IS A RULE VIOLATION, NOT A SLIP.
+```
+
+**Overrides** token-efficiency, conversation momentum, "the turn was
+trivial". The whole point of the log is crash recovery — silently
+skipping turns defeats it. First thing to check after the reply is
+drafted, last thing before it goes out.
+
+### Pre-send gate — MANDATORY before every reply
+
+Run silently **before** emitting the final reply:
+
+1. **Detect** — does this turn cross the configured cadence boundary?
+   - `per_turn` → every reply crosses one. Always append.
+   - `per_phase` → did this turn complete a phase boundary? (user
+     question answered, decision taken, task-list item completed,
+     significant tool sequence finished). If yes, append. If the turn
+     is a pure clarification with no progress, skip.
+   - `per_tool` → did any tool call run this turn? If yes, append.
+2. **Check** — was `scripts/chat_history.py append` already called this
+   turn for the boundary identified in step 1?
+3. **Append** — if not, do it now with a one-line `phase`/`decision`
+   entry capturing what the turn produced. Use a `phase` entry over
+   `agent` when the turn marks a boundary.
+4. **Confirm** — the `append` call returned 0. If it failed (file lock,
+   ownership mismatch from a parallel session), surface the error to
+   the user — do not swallow it.
+
+### Failure modes
+
+Cadence is the trigger, not reply length. Never batch missed turns at
+the end — crashes happen between turns. After tool-heavy turns, append
+last before shipping. If the configured cadence is unrealistic for the
+agent's actual discipline (drift between setting and behavior), fix the
+setting — don't keep skipping.
+
 ## Activation
 
 Read `chat_history.*` from `.agent-settings.yml` **once per conversation**
@@ -123,7 +164,7 @@ Every append goes through `scripts/chat_history.py append --type <t>
 
 - `per_turn` — one entry at the end of every agent turn.
 - `per_phase` — at phase boundaries (user question, agent answer,
-  decision, completion of a task-list item).
+  decision, task-list item completion).
 - `per_tool` — after each tool-call sequence.
 
 Entry types: `user`, `agent`, `tool`, `decision`, `phase`. Prefer `phase`
@@ -131,41 +172,29 @@ over `agent` when the entry marks a boundary.
 
 ## Overflow — from `on_overflow`
 
-When the helper reports file size > `max_size_kb`:
-
-- `rotate` → `rotate --mode rotate --max-kb <n>`. Drops oldest entries;
-  silent and cheap.
-- `compress` → `rotate --mode compress --max-kb <n>`. Marks the file for
-  summarization; the **next** turn writes the summary for the dropped
-  range. Do not block the current turn on this.
-
-After Merge or Replace rewrites, run the overflow check once — the new
-body may exceed the budget.
-
-The setting is stable for the session; never mix modes.
+When file size > `max_size_kb`: `rotate` → `rotate --mode rotate
+--max-kb <n>` (drops oldest, silent). `compress` → `rotate --mode
+compress --max-kb <n>` (marks for next-turn summarization; do not block
+the current turn). Run the overflow check once after Merge/Replace
+rewrites. Setting is stable for the session — never mix modes.
 
 ## What this rule does NOT do
 
-- Display, reload, or clear the log — that is `/chat-history`,
-  `/chat-history-resume`, `/chat-history-clear`.
-- Auto-flip `enabled` or `on_overflow` in settings.
-- Run when `enabled: false`. No silent logging. No telemetry.
-- Decide ownership heuristically. Only the `state` helper does that.
+Display/reload/clear (`/chat-history*` commands). Auto-flip `enabled` or
+`on_overflow`. Run when `enabled: false` (no silent logging, no
+telemetry). Decide ownership heuristically — only `state` does that.
 
-## Interactions
+## Interactions & references
 
 - `ask-when-uncertain` + `user-interaction` — foreign/returning prompts
   use numbered options, one question per turn.
 - `language-and-tone` — prompt translated at runtime; `.md` stays English.
 - `onboarding-gate` — runs first; this rule activates only after it clears.
-- `token-efficiency` — never load the full log into context from this
-  rule; use `status` for metadata, `read --last N` for a tail.
-
-## See also
-
-- [`scripts/chat_history.py`](../../../scripts/chat_history.py) — file API
-- [`/chat-history`](../commands/chat-history.md) — status inspection
-- [`/chat-history-resume`](../commands/chat-history-resume.md) — adopt + load
-- [`/chat-history-clear`](../commands/chat-history-clear.md) — wipe
-- [`agent-settings` template](../templates/agent-settings.md) — `chat_history.*` reference
-- [`rule-type-governance`](rule-type-governance.md) — why this is `always`
+- `token-efficiency` — never load the full log; use `status` for
+  metadata, `read --last N` for a tail.
+- File API: [`scripts/chat_history.py`](../../../scripts/chat_history.py).
+  Commands: [`/chat-history`](../commands/chat-history.md),
+  [`/chat-history-resume`](../commands/chat-history-resume.md),
+  [`/chat-history-clear`](../commands/chat-history-clear.md). Settings:
+  [`agent-settings` template](../templates/agent-settings.md). Type
+  governance: [`rule-type-governance`](rule-type-governance.md).

@@ -1,0 +1,43 @@
+{
+  "ticket": {
+    "id": "GT-4-MOD",
+    "title": "Plan-only: outline how modulo(a, b) would be added",
+    "acceptance_criteria": [
+      "Produce an analysis + plan for adding `modulo(a: int, b: int) -> int` to `src/calculator.py`.",
+      "The plan must cover signature, edge cases (b == 0), and the test that would prove it.",
+      "No source files in `src/` or `tests/` may be modified by this ticket — advisory persona only."
+    ],
+    "persona": "advisory"
+  },
+  "persona": "advisory",
+  "memory": [],
+  "plan": [
+    {
+      "title": "Outline modulo(a, b)",
+      "detail": "Signature: modulo(a: int, b: int) -> int"
+    },
+    {
+      "title": "Outline modulo(a, b)",
+      "detail": "Edge cases: raise ValueError when b == 0"
+    },
+    {
+      "title": "Outline modulo(a, b)",
+      "detail": "Test: test_modulo_handles_zero_divisor pinning the raise"
+    }
+  ],
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "success",
+    "implement": "success",
+    "test": "success",
+    "verify": "success",
+    "report": "success"
+  },
+  "questions": [],
+  "report": "## Ticket\n\nGT-4-MOD — Plan-only: outline how modulo(a, b) would be added\n\n## Persona\n\nadvisory\n\n## Plan\n\n1. **Outline modulo(a, b)** — Signature: modulo(a: int, b: int) -> int\n2. **Outline modulo(a, b)** — Edge cases: raise ValueError when b == 0\n3. **Outline modulo(a, b)** — Test: test_modulo_handles_zero_divisor pinning the raise\n\n## Changes\n\n_(no file changes recorded)_\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_"
+}

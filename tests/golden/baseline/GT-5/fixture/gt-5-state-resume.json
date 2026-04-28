@@ -1,0 +1,9 @@
+{
+  "id": "GT-5-NEG",
+  "title": "Add negate(a) to the toy calculator",
+  "acceptance_criteria": [
+    "Function signature is `negate(a: int) -> int` and returns `-a` for any integer input.",
+    "Edge cases covered: negate(0) returns 0; negate(-7) returns 7.",
+    "A pytest test `test_negate_returns_negation` lives in `tests/test_calculator.py` and pins both edge cases."
+  ]
+}

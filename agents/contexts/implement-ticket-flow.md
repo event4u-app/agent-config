@@ -9,7 +9,10 @@
 > - **Status:** Phase 1 shipped 2026-04-23 — `DeliveryState` +
 >   dispatcher live under
 >   [`.agent-src.uncompressed/templates/scripts/implement_ticket/`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/).
->   Step wiring (Phase 2) still open.
+>   Step wiring (Phase 2) still open. Schema **v1** envelope
+>   (`work_engine.state` / `work_engine.migration.v0_to_v1`) shipped
+>   2026-04-27 as R1 Phase 2 — see [State schema v1](#state-schema-v1)
+>   below.
 > - **Runtime:** Python 3.10+ (see
 >   [`adr-implement-ticket-runtime.md`](adr-implement-ticket-runtime.md)).
 >   This doc stays shape-focused; implementation details belong to
@@ -59,6 +62,60 @@ document — the shape is normative, the container is not):
 
 No step may invent fields not declared here. Extensions require a
 roadmap amendment + this doc updated.
+
+## State schema v1
+
+R1 Phase 2 introduces the **wire-format envelope** that lets the
+engine accept inputs other than tickets in later releases without
+another schema bump. The envelope wraps the legacy slice without
+moving any of its fields:
+
+| Field | Type | Purpose |
+|---|---|---|
+| `version` | int (`1`) | Integer schema version. Loader rejects any other value. |
+| `input.kind` | string | Typed input variant. Only `"ticket"` accepted in R1. |
+| `input.data` | object | Payload. Carries the v0 `ticket` dict verbatim. |
+| `intent` | string | Coarse intent label. Default `"backend-coding"`. |
+| `directive_set` | string | Directive bundle name. One of `backend`, `ui`, `ui-trivial`, `mixed`. Only `backend` is wired in R1. |
+| _legacy slice_ | … | `persona`, `memory`, `plan`, `changes`, `tests`, `verify`, `outcomes`, `questions`, `report` keep their v0 names and meaning. |
+
+Canonical filename is `.work-state.json` (was
+`.implement-ticket-state.json` in v0). Field order on disk is fixed
+— envelope first, legacy slice second — so state-snapshot diffs
+across re-runs and across the freeze-guard replay stay readable.
+
+The schema is **strict** on the envelope (unknown `input.kind` or
+`directive_set` raise `SchemaError`) and **additive** on top-level
+keys (unknown extras are dropped on load, not re-emitted on dump).
+A reader that pre-dates a future field cannot crash on it, but
+also cannot silently relay it forward without an explicit upgrade.
+
+### Migration v0 → v1
+
+A v0 file (no `version` key, ticket under flat `ticket`) is
+upgraded by `work_engine.migration.v0_to_v1`:
+
+```bash
+python3 -m work_engine.migration.v0_to_v1 .implement-ticket-state.json
+```
+
+The migration:
+
+1. Wraps `state.ticket` into `input = {"kind": "ticket", "data": <ticket>}`.
+2. Fills `intent = "backend-coding"` and `directive_set = "backend"`
+   (the only working directive bundle in R1).
+3. Writes the v1 file as `.work-state.json` next to the source.
+4. Renames the v0 file to `.implement-ticket-state.json.bak`
+   (override with `--no-backup`).
+5. Refuses to overwrite an existing destination — accidental
+   double-migration on CI fails loud.
+
+`migrate_payload` is **idempotent** on v1 input and **rejects** any
+declared `version` other than `0` (absent) or `1`. The library
+contract is covered by `tests/work_engine/test_v0_to_v1_migration.py`,
+which exercises three real Phase 1 baseline snapshots (GT-1
+cycle 1, GT-3 cycle 4, GT-5 cycle 5) so the migrator is proven
+against actual engine output rather than synthetic fixtures.
 
 ## `Step` contract
 
@@ -203,7 +260,7 @@ the context. V1 explicitly does **not** attempt resumable sessions.
 Every step declares — in code — the conditions under which it
 can return `blocked`. The declarations live as module-level
 `AMBIGUITIES` tuples (see
-[`steps/__init__.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/__init__.py)
+[`directives/backend/__init__.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/backend/__init__.py)
 `.all_ambiguities()`). The
 [`test_ambiguity_coverage.py`](../../tests/implement_ticket/test_ambiguity_coverage.py)
 suite locks the contract: adding a new `blocked` path without
@@ -248,7 +305,7 @@ empty, but all headings are present unless explicitly marked
    because nothing was changed.
 
 Implementation: see
-[`steps/report.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/report.py).
+[`directives/backend/report.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/backend/report.py).
 Section renderers are pure and deterministic; consumers can rely
 on the heading order and on each section either rendering with
 content or being omitted per the rules above.
@@ -264,6 +321,125 @@ measured without instrumentation sprawl:
 - `memory_decision_rate`
 - `repeat_user_runs_per_week`
 - `report_rejections`
+
+## Capture protocol — Golden Transcripts (R1 Phase 1)
+
+The Universal Execution Engine roadmap (`R1`) freezes the engine's
+observable behaviour before any refactor. The artefact that holds
+that freeze is the **Capture Pack** under
+`tests/golden/baseline/GT-{1..5}/`. This section is the operator
+manual for producing and re-producing those packs.
+
+### Scenarios
+
+| GT  | Surface locked                          | Cycles |
+|-----|------------------------------------------|--------|
+| 1   | happy path (plan→apply→tests→review→report) | 5 |
+| 2   | refine-step ambiguity halt (vague AC)    | 1      |
+| 3   | run-tests failed verdict + recovery      | 6      |
+| 4   | advisory persona — plan-only delivery    | 2      |
+| 5   | state-resume from disk between cycles    | 5      |
+
+### Inputs
+
+- Toy domain: `tests/golden/sandbox/repo/` — a 4-function
+  calculator (`add`, `subtract`, `power`-stub, `divide`) plus a
+  pytest config and tests. Deterministic, no I/O.
+- Ticket fixtures: `tests/golden/sandbox/tickets/gt-{1..5}-*.json`.
+  Schema matches `implement_ticket`'s `ticket_loader`.
+- Recipes: `tests/golden/sandbox/recipes/gt{1..5}_*.py`. Each
+  exposes `META` (gt_id, ticket fixture, persona, cycle cap) and
+  `build_recipe(workspace) -> {directive_verb: callable}`. The
+  recipe is the deterministic stand-in for the agent: every halt
+  is resolved by hard-coded edits + state-mutations.
+
+### Invocation
+
+Each cycle is a fresh `./agent-config implement-ticket` subprocess
+seeded from the persisted state file. The runner
+(`tests/golden/sandbox/runner.py`) chains them:
+
+```bash
+./agent-config implement-ticket \
+    --ticket-file tests/golden/sandbox/tickets/gt-1-happy.json \
+    --state-file <workspace>/.agent-state/implement-ticket.json \
+    --workspace <workspace> \
+    --output-format json
+# subsequent cycles drop --ticket-file; the engine loads the
+# ticket from the saved state.
+```
+
+The runner is invoked via the capture driver:
+
+```bash
+python3 -m tests.golden.capture                 # all five GTs
+python3 -m tests.golden.capture --scenarios GT-3
+```
+
+### Kill points & resume
+
+The runner re-executes the engine on every cycle, so resume from
+disk is exercised by **every** GT — not just GT-5. GT-5 simply
+records the contract under a different operation (negate vs.
+multiply) so byte-equal regression detection covers an additional
+state shape. There is no "two-segment" runner mode; the segmentation
+is implicit in the per-cycle subprocess fork.
+
+### Capture Pack layout
+
+```
+tests/golden/baseline/GT-N/
+├── transcript.json       # per-cycle stdout/stderr + exit codes
+├── state-snapshots/      # state file after each cycle (cycle-NN.json)
+├── halt-markers.json     # extracted directives + numbered questions
+├── exit-codes.json       # per-cycle exit codes only
+├── delivery-report.md    # final report (or stub if flow halted)
+├── reproduction-notes.md # per-GT regenerate command + invariants
+└── fixture/              # frozen copy of the input ticket
+```
+
+The driver also writes `tests/golden/baseline/summary.json` (one
+row per GT: outcome, exit code, cycle count) and
+`tests/golden/CHECKSUMS.txt` (sorted SHA256 of every file under
+`tests/golden/baseline/` plus the input fixtures).
+
+### Determinism guarantees
+
+- `PYTHONHASHSEED=0`, `PYTHONIOENCODING=utf-8`,
+  `LC_ALL=C.UTF-8`, `NO_COLOR=1` injected by the runner.
+- Workspace is a fresh `tempfile.TemporaryDirectory` per scenario;
+  the toy repo is materialised into it before cycle 1.
+- `agents/memory/` lookups resolve relative to the workspace, so
+  every run sees zero curated entries — no host-state leakage.
+- Recipes never read the clock, the network, or unbound randomness.
+- pytest verdict normalisation lives in
+  `tests/golden/sandbox/recipes/_helpers.py::run_pytest`
+  (exit 0 → success, exit 1/2 → failed, otherwise → mixed).
+
+### Regenerating the baseline
+
+Only when the engine's observable behaviour intentionally changes:
+
+```bash
+python3 -m tests.golden.capture
+git diff tests/golden/baseline tests/golden/CHECKSUMS.txt
+```
+
+Review the diff; it should match the documented behavioural change
+in this file's revision history. Then commit. Drive-by changes to
+the baseline are blocked by the freeze-guard CI workflow (added in
+Phase 1 Step 7).
+
+### Anti-patterns
+
+- Editing a Capture Pack file by hand. The pack is generated; edit
+  the engine or the recipe instead.
+- Adding a sixth GT without amending the table above and the Phase-6
+  replay harness in lock-step.
+- Reading from `agents/memory/` in a recipe. Recipes seed state
+  directly; memory belongs to the engine under test, not the test.
+- Letting the `_helpers.run_pytest` verdict mapping drift from the
+  engine's `state.tests.verdict` contract — they are coupled.
 
 ## Non-goals
 
@@ -286,6 +462,8 @@ measured without instrumentation sprawl:
 ## See also
 
 - [`../roadmaps/road-to-implement-ticket.md`](../roadmaps/road-to-implement-ticket.md)
+- [`../roadmaps/road-to-universal-execution-engine.md`](../roadmaps/road-to-universal-execution-engine.md)
+- `tests/golden/` — capture sandbox, recipes, and Capture Packs
 - [`agent-memory-contract.md`](agent-memory-contract.md)
 - [`../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md`](../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md)
 - [`../../.agent-src.uncompressed/rules/user-interaction.md`](../../.agent-src.uncompressed/rules/user-interaction.md)
