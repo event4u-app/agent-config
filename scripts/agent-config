@@ -49,8 +49,10 @@ Commands:
   hooks:install              Install the pre-commit roadmap-progress hook
                              (use --print to dump it, --force to overwrite an existing hook)
   first-run                  Guided first-run setup — cost profile, settings, tooling
-  implement-ticket           Drive the work_engine Python engine
+  implement-ticket           Drive the work_engine Python engine on a ticket envelope
                              (Option-A loop; called by the /implement-ticket command)
+  work                       Drive the work_engine Python engine on a free-form prompt
+                             (Option-A loop; called by the /work command)
   migrate-state              Migrate a legacy .implement-ticket-state.json file
                              to the v1 .work-state.json schema (preserves .bak)
   memory:lookup              Retrieve memory entries (text or JSON envelope)
@@ -71,6 +73,7 @@ Examples:
   ./agent-config hooks:install
   ./agent-config first-run
   ./agent-config implement-ticket --state-file .work-state.json
+  ./agent-config work --state-file .work-state.json --prompt-file prompt.txt
   ./agent-config migrate-state
   ./agent-config memory:lookup --types domain-invariants --key billing
   ./agent-config memory:signal --type architecture-decision --path src/Foo.php --body "…"
@@ -179,6 +182,21 @@ cmd_first_run() {
 }
 
 cmd_implement_ticket() {
+  require_python3
+  local engine_root="$PACKAGE_ROOT/.agent-src/templates/scripts"
+  if [[ ! -d "$engine_root/work_engine" ]]; then
+    echo "❌  agent-config: work_engine module not found at $engine_root/work_engine" >&2
+    echo "    Reinstall the package and retry." >&2
+    return 1
+  fi
+  exec env PYTHONPATH="$engine_root" python3 -m work_engine "$@"
+}
+
+cmd_work() {
+  # /work shares the engine with /implement-ticket — only the input
+  # envelope differs (kind=prompt vs kind=ticket). Keeping a separate
+  # subcommand makes the user-facing distinction explicit and lets the
+  # two flows diverge later without churn at the wrapper layer.
   require_python3
   local engine_root="$PACKAGE_ROOT/.agent-src/templates/scripts"
   if [[ ! -d "$engine_root/work_engine" ]]; then
@@ -336,6 +354,7 @@ main() {
     hooks:install)           cmd_hooks_install "$@" ;;
     first-run)               cmd_first_run "$@" ;;
     implement-ticket)        cmd_implement_ticket "$@" ;;
+    work)                    cmd_work "$@" ;;
     migrate-state)           cmd_migrate_state "$@" ;;
     memory:lookup)           cmd_memory_lookup "$@" ;;
     memory:signal)           cmd_memory_signal "$@" ;;

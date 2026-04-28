@@ -43,12 +43,29 @@ Only ask the user if inference fails and the command cannot proceed without the 
 ## Commands that dispatch to a Python engine
 
 Most commands are pure markdown procedures — the agent reads the steps
-and executes them. One exception: `/implement-ticket` delegates to the
-`work_engine` Python module via the `./agent-config implement-ticket`
-dispatcher. The wrapper markdown describes the Option-A loop (read
-state → run engine → handle exit code → repeat); the actual step
-logic, halt formats, and delivery report are emitted by the engine.
-Do not paraphrase or reorder engine output — surface it as-is.
+and executes them. Two commands delegate to the `work_engine` Python
+module via the `./agent-config` dispatcher; both share the same
+Option-A loop (read state → run engine → handle exit code → repeat),
+they only differ in the input envelope they build:
+
+| Command | Subcommand | Envelope | Use when |
+|---|---|---|---|
+| `/implement-ticket` | `./agent-config implement-ticket` | `input.kind="ticket"` | User points at a Jira/Linear ticket or supplies a structured ticket payload |
+| `/work` | `./agent-config work` | `input.kind="prompt"` | User supplies a free-form prompt — no ticket id, no acceptance criteria yet |
+
+Route prompt-shaped intents (`"add a CSV export endpoint…"`,
+`"fix the failing login test"`, `"refactor the audit-log controller"`)
+to `/work`. Route ticket-shaped intents
+(`"work on PROJ-123"`, `"start on the ticket on this branch"`) to
+`/implement-ticket`. If the user pastes both a ticket id **and** a
+free-form goal, prefer `/implement-ticket` and let it pull the AC from
+the ticket — `/work` is the fallback when no ticket exists.
+
+The actual step logic, halt formats, scoring breakdowns, and delivery
+report are emitted by the engine. Do not paraphrase or reorder engine
+output — surface it as-is. The two flows are mutually exclusive at the
+state-file level: one `.work-state.json` carries one envelope at a
+time, and the engine refuses to switch mid-flight.
 
 A sibling subcommand `./agent-config migrate-state` upgrades a legacy
 `.implement-ticket-state.json` file to the v1 `.work-state.json`
