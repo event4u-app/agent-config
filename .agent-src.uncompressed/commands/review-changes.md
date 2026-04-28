@@ -1,6 +1,6 @@
 ---
 name: review-changes
-skills: [code-review, subagent-orchestration, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality]
+skills: [code-review, subagent-orchestration, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, git-workflow]
 description: Self-review local changes before creating a PR — dispatches to four specialized judges (bug, security, tests, quality) and consolidates verdicts
 disable-model-invocation: true
 ---
@@ -13,7 +13,29 @@ Review all uncommitted and committed-but-not-pushed changes against
 the default branch (`main`) by dispatching to four specialized judge
 sub-skills and consolidating their verdicts.
 
-### 1. Gather the diff
+### 1. Update the current branch
+
+Before gathering the diff, run [`/prepare-for-review`](prepare-for-review.md)
+to make sure the current branch is up to date with its base chain:
+
+- Detect the current branch with `git rev-parse --abbrev-ref HEAD`.
+- If the branch is `main` → skip this step (nothing to prepare).
+- Otherwise, search for an open GitHub PR whose head is the current
+  branch.
+  - If exactly one open PR is found → invoke `/prepare-for-review`
+    with that PR number. It will update `main`, fetch and merge the
+    full branch chain into the current branch, and leave the current
+    branch checked out.
+  - If no open PR is found → fall back to a minimal local update:
+    `git fetch origin main` and `git merge origin/main --no-edit` on
+    the current branch. Abort on conflict and report.
+  - If multiple PRs are found → ask the user which PR to use before
+    proceeding.
+- If `/prepare-for-review` aborts (merge conflict, network error,
+  etc.) → stop the review here and surface the error. Do **not**
+  continue with stale data.
+
+### 2. Gather the diff
 
 - `git diff origin/main..HEAD --stat` — overview of changed files
 - `git diff origin/main..HEAD` — full committed-but-not-pushed diff
@@ -21,7 +43,7 @@ sub-skills and consolidating their verdicts.
 
 If both diffs are empty, **stop** — nothing to review.
 
-### 2. Resolve the judge model
+### 3. Resolve the judge model
 
 Read `.agent-settings.yml`:
 
@@ -29,7 +51,7 @@ Read `.agent-settings.yml`:
 
 Unknown alias → stop. Never silently fall back.
 
-### 3. Dispatch to the four judges
+### 4. Dispatch to the four judges
 
 Each judge receives **the same diff plus the task context** (ticket,
 PR body, commit messages) and runs independently. The judges are:
@@ -55,7 +77,7 @@ Pick dispatch mode based on diff size and environment:
 Each judge returns its own `Judge / Model / Target / Verdict /
 Issues` block in the format defined by that skill.
 
-### 4. Consolidate
+### 5. Consolidate
 
 Produce one combined report:
 
@@ -65,7 +87,7 @@ Produce one combined report:
 - Highlight any finding that multiple judges flagged — those are the
   highest-confidence items
 
-### 5. Decide next steps
+### 6. Decide next steps
 
 - If **any** judge returned `reject` → stop; the approach must change
   before proceeding
@@ -73,7 +95,7 @@ Produce one combined report:
   ask before fixing 🟡 findings, report 🟢 as suggestions
 - If all four returned `apply` → the diff is ready; report and stop
 
-### 6. Quality tools (optional)
+### 7. Quality tools (optional)
 
 After the consolidated report, ask:
 
@@ -93,8 +115,12 @@ or the equivalent configured command).
   files still gets coverage feedback — `judge-test-coverage` treats
   "production changed, no test changed" as its primary finding
 - Project-specific syntax checks (e.g. `php -l`, linter pre-pass) are
-  out of scope for the judges and belong in the optional step 6
+  out of scope for the judges and belong in the optional step 7
   quality tools hand-off
+- The new step 1 (`/prepare-for-review`) is **best-effort**: if no
+  open PR exists for the current branch, it falls back to a plain
+  `git fetch && git merge origin/main`. Existing invocations that
+  ran on a fully detached or pre-PR branch keep working
 
 ## Use this command when
 
@@ -115,6 +141,7 @@ or the equivalent configured command).
 
 ## See also
 
+- [`/prepare-for-review`](prepare-for-review.md) — updates `main` and merges the full base-branch chain into the target branch (used by step 1)
 - [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md) — dispatch and model-pairing rules
 - [`/do-and-judge`](do-and-judge.md) — implementer + judge loop for a single change
 - [`/judge`](judge.md) — standalone judge, no review-changes dispatch
