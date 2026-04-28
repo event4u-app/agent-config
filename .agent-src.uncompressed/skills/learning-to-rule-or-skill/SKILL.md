@@ -68,7 +68,7 @@ Before proceeding, the learning MUST pass all gates:
 | Repetition | Occurred 2+ times OR clearly generalizable? |
 | Impact | Improves correctness, reliability, or consistency? |
 | Failure pattern | Prevents a real, observed failure? |
-| Non-duplication | No existing rule/skill/guideline covers this? |
+| Non-duplication | No existing rule/skill/guideline/command covers this? **Verify via § 4 search protocol — a negative grep alone is not proof.** |
 | Scope fit | Fits rule, skill, or guideline? |
 | Minimal | Update existing preferred over creation? |
 
@@ -115,11 +115,53 @@ Choose one:
 * Update existing guideline
 * **Nothing** (baseline knowledge, standard tool usage, one-off)
 
-### 4. Check for overlap
+### 4. Check for overlap — search protocol (mandatory)
 
-* Does a similar rule already exist?
-* Does a similar skill already exist?
-* Would a small update be better than a new file?
+A grep that returns zero hits is **not** proof of no overlap. Knowledge in
+this package is distributed across **four surfaces** — `skills/`, `rules/`,
+`guidelines/`, `commands/`. Skip any of them and recall drops to ~25 %.
+Run all four steps before declaring "no overlap":
+
+**Step 1 — list all four surfaces.** Directory taxonomy is free evidence:
+
+```bash
+ls .agent-src.uncompressed/skills/ \
+   .agent-src.uncompressed/rules/ \
+   .agent-src.uncompressed/guidelines/ \
+   .agent-src.uncompressed/commands/
+```
+
+Sub-directories matter — `guidelines/php/patterns/`, `guidelines/agent-infra/`,
+etc. carry topic taxonomies a flat file scan misses. Always descend one level.
+
+**Step 2 — grep with both vocabularies.** Search for **solution-words** *and*
+**problem-words**. Solution-only grep is confirmation bias — the existing
+artifact may name the *symptom*, not the cure.
+
+| Vocabulary | Example for "agents miss Strategy pattern, write switch chains" |
+|---|---|
+| Solution-words | `strategy`, `registry`, `polymorph`, `interface` |
+| Problem-words | `discriminator`, `enum.*match`, `switch.*on`, `if.*else.*chain` |
+
+```bash
+grep -rl -E "<solution-words>|<problem-words>" .agent-src.uncompressed/
+```
+
+**Step 3 — taxonomy scan.** For any topic with a likely sub-folder
+(`patterns/`, `php/`, `laravel/`, `agent-infra/`), `ls` that folder
+*before* reading any file. Filename alone often answers the overlap question.
+
+**Step 4 — sample, do not just list.** On *any* keyword overlap from
+steps 2–3, **open and skim the 3 nearest matches** — read § headings, the
+"When to use" / "Overview" block, and the examples list. Listing filenames
+is not enough; semantic overlap hides behind unrelated keywords.
+
+Only after all four steps return clean → declare "no overlap" and proceed.
+Citation in the proposal: *"Reviewed before drafting: <files skimmed>"* —
+this is the audit trail § 0's Non-duplication gate verifies against.
+
+→ When the parent task is "create a new artifact", `artifact-drafting-protocol`
+Phase B (Research) requires this same protocol — single source of truth.
 
 ### 5. Draft the content
 
