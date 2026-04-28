@@ -150,11 +150,11 @@ State schema (shape, not exhaustive):
 
 ## Phase 4: Dispatcher generalization
 
-- [ ] **Step 1:** Rename internal `ticket` references to `input` where they describe the *generic* input. Keep `ticket` only as a typed input-kind. State field `state.input` replaces `state.ticket` (migration handles the transition).
-- [ ] **Step 2:** Implement directive-set-selection in dispatcher. `select_directive_set(state) -> str` defaults to `"backend"`. The set is loaded from `directives/{set_name}/`.
-- [ ] **Step 3:** Repackage current directives under `directives/backend/`. Verify all halt-points and exit-codes preserved.
-- [ ] **Step 4:** Add `directives/ui/__init__.py`, `directives/ui-trivial/__init__.py`, and `directives/mixed/__init__.py` as stubs that raise `NotImplementedError` with a clear "lands in Roadmap 3" message — anyone manually setting `directive_set` to those gets a guided error, not a crash. Schema enum (`directive_set`) accepts `{"backend", "ui", "ui-trivial", "mixed"}`; backend is the only non-stub. R3 V2's `ui-trivial` path is intentionally pre-listed to avoid a forward-incompatible enum at engine release.
-- [ ] **Step 5:** `refine` directive routes by `input.kind`: `ticket` → existing `refine-ticket` skill invocation; other kinds raise `NotImplementedError`.
+- [x] **Step 1:** Rename internal `ticket` references to `input` where they describe the *generic* input. Keep `ticket` only as a typed input-kind. State field `state.input` replaces `state.ticket` (migration handles the transition).
+- [x] **Step 2:** Implement directive-set-selection in dispatcher. `select_directive_set(state) -> str` defaults to `"backend"`. The set is loaded from `directives/{set_name}/`.
+- [x] **Step 3:** Repackage current directives under `directives/backend/`. Verify all halt-points and exit-codes preserved.
+- [x] **Step 4:** Add `directives/ui/__init__.py`, `directives/ui-trivial/__init__.py`, and `directives/mixed/__init__.py` as stubs that raise `NotImplementedError` with a clear "lands in Roadmap 3" message — anyone manually setting `directive_set` to those gets a guided error, not a crash. Schema enum (`directive_set`) accepts `{"backend", "ui", "ui-trivial", "mixed"}`; backend is the only non-stub. R3 V2's `ui-trivial` path is intentionally pre-listed to avoid a forward-incompatible enum at engine release.
+- [x] **Step 5:** `refine` directive routes by `input.kind`: `ticket` → existing `refine-ticket` skill invocation; other kinds raise `NotImplementedError`.
 
 ## Phase 5: `/implement-ticket` wrapper rewrite
 
