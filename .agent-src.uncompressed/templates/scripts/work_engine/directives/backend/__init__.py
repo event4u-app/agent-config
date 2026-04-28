@@ -28,8 +28,8 @@ slice contracts each handler writes to.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from types import ModuleType
 
+from ...delivery_state import Step
 from . import analyze, implement, memory, plan, refine, report, test, verify
 
 DIRECTIVE_SET_NAME = "backend"
@@ -50,16 +50,20 @@ def all_ambiguities() -> dict[str, tuple[dict[str, str], ...]]:
     return {step.__name__.rsplit(".", 1)[-1]: step.AMBIGUITIES for step in _STEPS}
 
 
-def get_steps() -> Mapping[str, ModuleType]:
+def get_steps() -> Mapping[str, Step]:
     """Return the ``{step_name: handler}`` mapping the dispatcher walks.
 
-    Order of insertion matches the canonical backend flow
-    (refine → memory → analyze → plan → implement → test → verify
-    → report); the dispatcher's own ``STEP_ORDER`` is the single
-    source of truth for *which* steps exist, but the directive set
-    is the single source of truth for *how* each one runs.
+    Each value is the module-level ``run`` callable matching the
+    :data:`work_engine.delivery_state.Step` protocol —
+    ``Callable[[DeliveryState], StepResult]`` — exactly what
+    :func:`work_engine.dispatcher.dispatch` calls. Order of insertion
+    matches the canonical backend flow (refine → memory → analyze →
+    plan → implement → test → verify → report); the dispatcher's own
+    ``STEP_ORDER`` is the single source of truth for *which* steps
+    exist, but the directive set is the single source of truth for
+    *how* each one runs.
     """
-    return {step.__name__.rsplit(".", 1)[-1]: step for step in _STEPS}
+    return {step.__name__.rsplit(".", 1)[-1]: step.run for step in _STEPS}
 
 
 __all__ = [

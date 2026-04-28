@@ -66,8 +66,8 @@ def test_load_backend_returns_full_step_mapping() -> None:
     steps = load_directive_set("backend")
     assert set(steps.keys()) == set(STEP_ORDER)
     for name, handler in steps.items():
-        assert callable(getattr(handler, "run", None)), (
-            f"handler for {name!r} must expose a callable run()"
+        assert callable(handler), (
+            f"handler for {name!r} must be callable per the Step protocol"
         )
 
 
