@@ -192,24 +192,55 @@ def load_directive_set(name: str) -> Mapping[str, Step]:
     Python packages must use underscores; :data:`_PACKAGE_NAME_OVERRIDES`
     is the single translation point.
     """
+    module = _import_directive_set(name)
+    get_steps = getattr(module, "get_steps", None)
+    if not callable(get_steps):
+        raise AttributeError(
+            f"work_engine.directives.{module.__name__.rsplit('.', 1)[-1]} "
+            "does not expose a callable get_steps()",
+        )
+    steps = get_steps()
+    if not isinstance(steps, Mapping):
+        raise TypeError(
+            f"work_engine.directives.{module.__name__.rsplit('.', 1)[-1]}"
+            f".get_steps() must return a Mapping; "
+            f"got {type(steps).__name__}",
+        )
+    return steps
+
+
+def assert_kind_supported(kind: str, set_name: str) -> None:
+    """Raise ``NotImplementedError`` if ``set_name`` cannot handle ``kind``.
+
+    Reads the per-set ``SUPPORTED_KINDS`` tuple (see
+    :data:`work_engine.directives.backend.SUPPORTED_KINDS`) and checks
+    membership. Distinct from :func:`select_directive_set`, which only
+    validates the directive-set *name*: this gate validates the
+    name/kind *pair*, so a future schema widening that adds new
+    ``input.kind`` values (R2 ``prompt``) halts loudly at the boundary
+    instead of crashing inside the first deterministic step.
+
+    Sets that have no ``SUPPORTED_KINDS`` attribute are treated as
+    "supports nothing" — the unimplemented stubs (``ui``,
+    ``ui-trivial``, ``mixed``) already raise from ``get_steps()``, so
+    this branch only matters during the brief window between adding a
+    new directive set and wiring its capability tuple.
+    """
+    module = _import_directive_set(set_name)
+    supported = getattr(module, "SUPPORTED_KINDS", ())
+    if kind not in supported:
+        raise NotImplementedError(
+            f"directive_set {set_name!r} does not handle "
+            f"input.kind={kind!r}; supported kinds: {sorted(set(supported))}",
+        )
+
+
+def _import_directive_set(name: str):
+    """Validate ``name`` and import the matching package module."""
     if name not in KNOWN_DIRECTIVE_SETS:
         raise ValueError(
             f"unknown directive_set {name!r}; "
             f"known sets: {sorted(KNOWN_DIRECTIVE_SETS)}",
         )
-
     package_name = _PACKAGE_NAME_OVERRIDES.get(name, name)
-    module = import_module(f"work_engine.directives.{package_name}")
-    get_steps = getattr(module, "get_steps", None)
-    if not callable(get_steps):
-        raise AttributeError(
-            f"work_engine.directives.{package_name} does not expose a "
-            "callable get_steps()",
-        )
-    steps = get_steps()
-    if not isinstance(steps, Mapping):
-        raise TypeError(
-            f"work_engine.directives.{package_name}.get_steps() must "
-            f"return a Mapping; got {type(steps).__name__}",
-        )
-    return steps
+    return import_module(f"work_engine.directives.{package_name}")

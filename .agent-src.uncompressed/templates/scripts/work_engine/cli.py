@@ -45,7 +45,12 @@ from typing import Any, Sequence
 
 from . import state as _state_module
 from .delivery_state import DeliveryState, Outcome
-from .dispatcher import dispatch, load_directive_set, select_directive_set
+from .dispatcher import (
+    assert_kind_supported,
+    dispatch,
+    load_directive_set,
+    select_directive_set,
+)
 from .migration.v0_to_v1 import migrate_payload
 from .state import Input, SchemaError, WorkState
 
@@ -79,7 +84,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
 
     try:
-        steps = load_directive_set(select_directive_set(work))
+        set_name = select_directive_set(work)
+        assert_kind_supported(work.input.kind, set_name)
+        steps = load_directive_set(set_name)
     except (ValueError, NotImplementedError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2

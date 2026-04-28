@@ -27,6 +27,7 @@ from work_engine.delivery_state import DeliveryState
 from work_engine.dispatcher import (
     DEFAULT_DIRECTIVE_SET,
     STEP_ORDER,
+    assert_kind_supported,
     load_directive_set,
     select_directive_set,
 )
@@ -89,3 +90,35 @@ def test_load_translates_hyphenated_wire_name_to_underscore_package() -> None:
     # ModuleNotFoundError, which would mean the translation broke.
     with pytest.raises(NotImplementedError):
         load_directive_set("ui-trivial")
+
+
+def test_assert_kind_supported_accepts_backend_ticket() -> None:
+    """Backend declares ``ticket`` in ``SUPPORTED_KINDS`` — no raise."""
+    assert_kind_supported("ticket", "backend") is None
+
+
+def test_assert_kind_supported_rejects_backend_unknown_kind() -> None:
+    """Future schema kinds (e.g. R2 ``prompt``) are not yet wired."""
+    with pytest.raises(NotImplementedError, match="does not handle input.kind='prompt'"):
+        assert_kind_supported("prompt", "backend")
+
+
+def test_assert_kind_supported_message_lists_supported_kinds() -> None:
+    with pytest.raises(NotImplementedError, match=r"supported kinds: \['ticket'\]"):
+        assert_kind_supported("design", "backend")
+
+
+def test_assert_kind_supported_rejects_unknown_set_name() -> None:
+    """The kind gate validates the set name before importing."""
+    with pytest.raises(ValueError, match="unknown directive_set"):
+        assert_kind_supported("ticket", "not-a-real-set")
+
+
+@pytest.mark.parametrize("set_name", ["ui", "ui-trivial", "mixed"])
+def test_assert_kind_supported_rejects_stub_sets(set_name: str) -> None:
+    """Stub sets declare no ``SUPPORTED_KINDS`` (or an empty tuple), so
+    every kind is unsupported. The dispatcher halts here rather than
+    advancing to ``load_directive_set`` and the stub's NotImplementedError.
+    """
+    with pytest.raises(NotImplementedError, match="does not handle input.kind"):
+        assert_kind_supported("ticket", set_name)
