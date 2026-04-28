@@ -40,6 +40,21 @@ Only ask the user if inference fails and the command cannot proceed without the 
 | `.augment/commands/` | Shared commands (work across projects) |
 | `agents/overrides/commands/` | Project-specific overrides (used instead of original) |
 
+## Commands that dispatch to a Python engine
+
+Most commands are pure markdown procedures — the agent reads the steps
+and executes them. One exception: `/implement-ticket` delegates to the
+`work_engine` Python module via the `./agent-config implement-ticket`
+dispatcher. The wrapper markdown describes the Option-A loop (read
+state → run engine → handle exit code → repeat); the actual step
+logic, halt formats, and delivery report are emitted by the engine.
+Do not paraphrase or reorder engine output — surface it as-is.
+
+A sibling subcommand `./agent-config migrate-state` upgrades a legacy
+`.implement-ticket-state.json` file to the v1 `.work-state.json`
+schema. The wrapper invokes it automatically when the legacy file is
+detected; agents should not bypass the dispatcher.
+
 ## GitHub API: Replying to PR review comments
 
 When commands reply to PR review comments (e.g. `/fix-pr-bot-comments`):
