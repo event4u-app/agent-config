@@ -179,7 +179,7 @@ State schema (shape, not exhaustive):
 
 ## Phase 7: Verification and docs
 
-- [ ] **Step 1:** Run `task sync && task generate-tools && task ci` — must exit 0 end-to-end, golden harness from Phase 6 included.
+- [x] **Step 1:** Run `task sync && task generate-tools && task ci` — must exit 0 end-to-end, golden harness from Phase 6 included. (Executed end-to-end on `feat/intent-based-development-thinking` HEAD: 4:08 wall-clock, exit 0. Pre-flight caught one stale derived file (`.windsurfrules` drifted from sources `f345809` and `255013a`); regenerated and committed as `a5a0bfe`. All 14 CI subtasks green: consistency, counts-check, check-compression, check-refs, check-portability, validate-schema, lint-skills (183 pass / 113 warn / 0 fail / 296 total), lint-marketplace, check-memory, **golden-replay (5/5 GTs structurally green)**, test (847 passed), runtime-e2e, roadmap-progress-check, lint-readme. The Phase 6 harness is now part of the standard `task ci` failure surface.)
 - [ ] **Step 2:** Update `README.md` and `AGENTS.md` — replace any `implement_ticket` references with `work_engine` where appropriate; note the shim and its deprecation horizon.
 - [ ] **Step 3:** Write ADR `agents/contexts/adr-work-engine-rename.md` — rationale, migration path, compatibility shim, golden-test contract (capture-before-refactor protocol), deprecation timeline.
 - [ ] **Step 4:** Draft a `CHANGELOG` entry under "Unreleased" — pure refactor, no user-visible behavior change, shim deprecation notice.
