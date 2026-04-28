@@ -218,6 +218,10 @@ tasks:
       - python3 scripts/runtime_dispatcher.py run --skill lint-skills
       - python3 scripts/runtime_dispatcher.py run --skill check-refs
 
+  golden-replay:
+    desc: Replay all Golden Transcripts against work_engine — fail on any structural drift (R1 P6)
+    cmd: python3 -m pytest tests/golden/test_replay.py -v
+
   consistency:
     desc: Verify sync + generated tool outputs are clean
     cmds:
@@ -355,6 +359,7 @@ tasks:
       - task: lint-skills
       - task: lint-marketplace
       - task: check-memory
+      - task: golden-replay
       - task: test
       - task: runtime-e2e
       - task: roadmap-progress-check
