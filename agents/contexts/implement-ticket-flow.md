@@ -12,7 +12,8 @@
 >   Step wiring (Phase 2) still open. Schema **v1** envelope
 >   (`work_engine.state` / `work_engine.migration.v0_to_v1`) shipped
 >   2026-04-27 as R1 Phase 2 — see [State schema v1](#state-schema-v1)
->   below.
+>   below. R1 Phase 6 replay harness shipped 2026-04-28 — see
+>   [Replay protocol](#replay-protocol--strict-verb-comparison-r1-phase-6).
 > - **Runtime:** Python 3.10+ (see
 >   [`adr-implement-ticket-runtime.md`](adr-implement-ticket-runtime.md)).
 >   This doc stays shape-focused; implementation details belong to
@@ -441,6 +442,89 @@ Phase 1 Step 7).
 - Letting the `_helpers.run_pytest` verdict mapping drift from the
   engine's `state.tests.verdict` contract — they are coupled.
 
+## Replay protocol — Strict-Verb comparison (R1 Phase 6)
+
+The Capture Pack alone is a frozen artefact; the **replay harness**
+under [`tests/golden/harness.py`](../../tests/golden/harness.py) is what
+turns that artefact into a continuous behavioural contract. It loads
+each baseline, drives the same recipe against the *live* `work_engine`,
+and reports structural drift. Every PR that touches the engine,
+recipes, or runner pays this gate.
+
+### What is locked vs. what may drift
+
+The harness uses **Strict-Verb** comparison: the *shape* and *semantic
+verbs* are normative, free-text wording inside that shape may drift.
+
+| Surface | Comparison rule | Locked | May drift |
+|---|---|---|---|
+| Exit code per cycle | exact equality | the integer | — |
+| `recipe_action` per cycle | exact equality | the action string | — |
+| State snapshot per cycle | recursive *structure* match | key names, types, list lengths | leaf string contents |
+| Halt-marker `questions` list | Strict-Verb classification | line count, per-line class (`directive` / `numbered` / `blockquote` / `text`), `@agent-directive:` verb identity, count of `> N.` options | wording after the verb, prose inside blockquotes, descriptive text after `> N. …` |
+| Delivery report | ordered `^## ` heading list | section presence and order | section *bodies* |
+| Manifest (`CHECKSUMS.txt`) | byte equality after path normalisation | every checksum | — |
+
+The contract is intentionally tighter on *control surfaces* (verbs,
+exit codes, state shape, headings, checksums) than on *free-text
+fields* (numbered-option labels, report bodies, leaf strings). Refactors
+that rename a field, drop an option, change a directive verb, or swap
+an exit code FAIL the gate. Refactors that polish a description string
+PASS — and that is the point.
+
+### Where the gate runs
+
+- `task golden-replay` — local, named entry point, sub-second.
+  Invoked from `task ci` *before* `task test` for failure-first
+  ordering (Phase 6 Step 3).
+- `.github/workflows/tests.yml` step **"Golden Replay (R1 engine
+  refactor freeze-guard)"** — runs before the full pytest sweep so
+  drift surfaces as a named PR check, not a buried test name.
+- `.github/workflows/freeze-guard.yml` — independent integrity gate:
+  `manifest-integrity` re-checks `sha256sum -c CHECKSUMS.txt`,
+  `live-replay` re-runs the capture driver and diffs the manifest.
+  This catches drift the harness can't see (e.g. silent baseline
+  edits without engine changes).
+
+The harness and freeze-guard are intentionally redundant. The harness
+proves *engine behaviour matches baseline*; freeze-guard proves
+*baseline matches what was committed*. Either failing means review.
+
+### Refreshing the baseline
+
+Only when an engine change is **intentionally** behaviour-altering.
+The PR description must justify each new checksum. Procedure:
+
+```bash
+python3 -m tests.golden.capture                  # regenerate Capture Packs + manifest
+git diff tests/golden/baseline tests/golden/CHECKSUMS.txt
+```
+
+Then in the PR:
+
+1. Mention the rationale — which roadmap step / ADR drove the change,
+   what observable surface moved.
+2. Show the per-GT diff summary (which scenarios re-locked, which
+   stayed byte-equal).
+3. Update this section's revision history if a *contract column*
+   above moved (e.g. a new locked surface, a new drift-tolerated
+   field).
+
+Drive-by baseline edits — even one-character whitespace tweaks —
+are blocked by `freeze-guard.yml::manifest-integrity` at PR time.
+
+### Anti-patterns (replay)
+
+- Loosening the harness comparator to "fix" a failing replay. The
+  harness is the contract; the engine is the variable.
+- Re-running `python3 -m tests.golden.capture` to "make the diff go
+  away" without justification. The diff *is* the question.
+- Treating the harness and freeze-guard as duplicate checks. They
+  catch different drift classes — both must stay green.
+- Adding a sixth Capture Pack without adding a corresponding entry
+  to `RECIPE_MODULES` in `harness.py` and a parametrize row in
+  `test_replay.py`.
+
 ## Non-goals
 
 - Auto-commit / auto-push / auto-PR (belongs to `/commit`,
@@ -464,6 +548,8 @@ Phase 1 Step 7).
 - [`../roadmaps/road-to-implement-ticket.md`](../roadmaps/road-to-implement-ticket.md)
 - [`../roadmaps/road-to-universal-execution-engine.md`](../roadmaps/road-to-universal-execution-engine.md)
 - `tests/golden/` — capture sandbox, recipes, and Capture Packs
+- [`../../tests/golden/harness.py`](../../tests/golden/harness.py) — Strict-Verb replay harness
+- [`../../.github/workflows/freeze-guard.yml`](../../.github/workflows/freeze-guard.yml) — manifest-integrity + live-replay gates
 - [`agent-memory-contract.md`](agent-memory-contract.md)
 - [`../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md`](../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md)
 - [`../../.agent-src.uncompressed/rules/user-interaction.md`](../../.agent-src.uncompressed/rules/user-interaction.md)
