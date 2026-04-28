@@ -166,12 +166,13 @@ State schema (shape, not exhaustive):
 
 > The validation half of Phase 1. Phase 1 froze behavior; this phase proves the refactor preserved it. **Failing golden = refactor regressed behavior — fix the engine, never the baseline.**
 
-- [ ] **Step 1:** Build `tests/golden/harness.py` — replays each captured transcript against `scripts/work_engine/`. Asserts:
+- [x] **Step 1:** Build `tests/golden/harness.py` — replays each captured transcript against `scripts/work_engine/`. Asserts:
   - Exit codes match exactly
   - State-file *structure* matches at every halt point (field names, types, ordering — wording in free-text fields may drift, semantic meaning may not)
   - Delivery report sections (headings, presence of fields) match exactly
   - Halt-point markers (`@agent-directive:`, numbered options) match by structure
-- [ ] **Step 2:** Run the harness against the new engine. **All 5 transcripts MUST pass before any further work.** A failure here is a hard stop — debug and fix the engine, do not edit the baselines.
+  - Implementation: library API in `tests/golden/harness.py` (`replay`, `load_baseline`, `compare`, `replay_and_compare`) + four comparators (`compare_exit_codes`, `compare_state_snapshots` with recursive shape walk skipping `questions`/`report`, `compare_halt_markers` with Strict-Verb on `@agent-directive:` line and structural classification of every `questions` entry, `compare_delivery_report` on `^## ` headings). Pytest entry at `tests/golden/test_replay.py` parametrizes over GT-{1..5}; CLI entry via `python3 -m tests.golden.harness [--scenarios GT-N]`.
+- [x] **Step 2:** Run the harness against the new engine. **All 5 transcripts MUST pass before any further work.** A failure here is a hard stop — debug and fix the engine, do not edit the baselines. (All 5 GT scenarios pass cleanly against `work_engine` — `pytest tests/golden/test_replay.py` 5/5 in 1.17s; CLI run reports `all 5 scenario(s) match the locked baseline`.)
 - [ ] **Step 3:** Wire the harness into `task ci` as a required check. Failing golden = failing build.
 - [ ] **Step 4:** Verify `tests/golden/CHECKSUMS.txt` from Phase 1 is unchanged in this branch — confirms no silent baseline edits during the refactor. CI runs the same check.
 - [ ] **Step 5:** Document the contract in `agents/contexts/implement-ticket-flow.md` — what is locked (structure, exit codes, halt-points), what may drift (free-text wording), how to refresh transcripts when an *intentional* change ships (PR-gated, requires explicit reviewer sign-off).
