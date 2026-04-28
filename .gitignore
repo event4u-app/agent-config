@@ -67,3 +67,6 @@ evals/results/
 # diffed against the committed baseline; never committed).
 /tests/golden/.staging/
 /tests/golden/.staging-*.txt
+# Safety net: catch any alternative dot-prefixed staging variants
+# (e.g. `.gt-staging/` debris from earlier capture iterations).
+/tests/golden/.gt-*
