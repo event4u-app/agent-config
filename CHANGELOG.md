@@ -7,6 +7,69 @@ versioning policy is documented in [CONTRIBUTING.md](CONTRIBUTING.md#versioning-
 > Entries before 1.3.3 were reconstructed from git history after the fact.
 > Early releases did not maintain release notes.
 
+## [Unreleased]
+
+Universal Execution Engine (R1): the `/implement-ticket` runtime is
+renamed and re-shaped into a universal dispatcher. **No user-visible
+behavior change** — the `/implement-ticket` slash command and the
+`./agent-config implement-ticket` CLI are byte-stable, gated by the
+new Golden-Transcript replay harness.
+
+### Features
+
+* **engine:** universal `work_engine` Python module with explicit
+  `version: 1` state schema, `directive_set` envelope (backend / ui-stub
+  / mixed-stub), and `input.kind`-based dispatch ready for prompt-driven
+  and UI directives in R2 / R3.
+* **migration:** `work_engine.migration.v0_to_v1` auto-migrates
+  `.implement-ticket-state.json` → `.work-state.json` on first run;
+  v0 file preserved as `.implement-ticket-state.json.bak`. Idempotent
+  and refuses to overwrite an existing v1 destination.
+* **tests:** Golden-Transcript replay harness with 5 live-captured
+  baseline transcripts (`tests/golden/baseline/GT-{1..5}/`),
+  `CHECKSUMS.txt` SHA-256 manifest, four strict comparators
+  (exit codes, state-snapshot structure, halt-marker shape, delivery
+  report headings) with allow-listed free-text drift on `questions`
+  and `report` bodies. Both pytest (`tests/golden/test_replay.py`) and
+  CLI (`python3 -m tests.golden.harness`) entry points.
+
+### Changed
+
+* **engine (refactor):** internal Python module renamed
+  `implement_ticket` → `work_engine`. Public CLI surface, slash command,
+  user-facing prompts, halts, and delivery report are unchanged. State
+  filename moves from `.implement-ticket-state.json` to `.work-state.json`
+  with auto-migration.
+
+### Deprecated
+
+* **`implement_ticket` Python module** — re-export shim retained for
+  backwards compatibility; emits `DeprecationWarning` on import.
+  Internal Python consumers should migrate to `from work_engine import …`.
+  Removal is a separate user-driven decision, not pinned to a release.
+
+### CI
+
+* **freeze-guard:** named `task golden-replay` step in `Taskfile.yml`
+  and a dedicated `Golden Replay` step in `.github/workflows/tests.yml`,
+  both invoked before the main pytest sweep so structural regressions
+  surface first. Freeze-guard workflow rejects baseline edits outside
+  `R1-P1`-tagged commits.
+* **roadmap-progress-check** wired into `task ci` (1.13.0 carry-over).
+
+### Documentation
+
+* **ADR:** [`agents/contexts/adr-work-engine-rename.md`](agents/contexts/adr-work-engine-rename.md)
+  — rationale, scope of the rename, compatibility shim policy, state
+  migration, golden-test contract, tradeoffs, non-goals.
+* **flow:** `agents/contexts/implement-ticket-flow.md` gains a "Replay
+  protocol — Strict-Verb comparison" section pairing the Phase 1
+  capture protocol with the Phase 6 replay enforcement.
+* **rules:** `scope-control` forbids release / version / deprecation-date
+  language in roadmaps, plans, and ADRs; introduces a `Decline = silence`
+  policy preventing branch-switch and PR proposals from being re-asked
+  on the same task.
+
 ## [1.13.0](https://github.com/event4u-app/agent-config/compare/1.12.0...1.13.0) (2026-04-27)
 
 ### Features

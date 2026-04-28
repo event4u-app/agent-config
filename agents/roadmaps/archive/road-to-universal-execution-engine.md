@@ -4,11 +4,11 @@
 
 ## Prerequisites
 
-- [ ] Read `.agent-src.uncompressed/commands/implement-ticket.md`
-- [ ] Read `agents/contexts/implement-ticket-flow.md`
-- [ ] Read `agents/contexts/adr-implement-ticket-runtime.md`
-- [ ] Inspect `<engine-src>/implement_ticket/` module structure end-to-end (see Paths below)
-- [ ] Re-read `.agent-src.uncompressed/templates/roadmaps.md`
+- [-] Read `.agent-src.uncompressed/commands/implement-ticket.md` (pre-flight reading — N/A after roadmap completion)
+- [-] Read `agents/contexts/implement-ticket-flow.md` (pre-flight reading — N/A after roadmap completion)
+- [-] Read `agents/contexts/adr-implement-ticket-runtime.md` (pre-flight reading — N/A after roadmap completion)
+- [-] Inspect `<engine-src>/implement_ticket/` module structure end-to-end (see Paths below) (pre-flight reading — N/A after roadmap completion; module replaced by `work_engine` in Phase 3)
+- [-] Re-read `.agent-src.uncompressed/templates/roadmaps.md` (pre-flight reading — N/A after roadmap completion)
 
 ## Paths (canonical, used throughout this roadmap)
 
@@ -180,25 +180,25 @@ State schema (shape, not exhaustive):
 ## Phase 7: Verification and docs
 
 - [x] **Step 1:** Run `task sync && task generate-tools && task ci` — must exit 0 end-to-end, golden harness from Phase 6 included. (Executed end-to-end on `feat/intent-based-development-thinking` HEAD: 4:08 wall-clock, exit 0. Pre-flight caught one stale derived file (`.windsurfrules` drifted from sources `f345809` and `255013a`); regenerated and committed as `a5a0bfe`. All 14 CI subtasks green: consistency, counts-check, check-compression, check-refs, check-portability, validate-schema, lint-skills (183 pass / 113 warn / 0 fail / 296 total), lint-marketplace, check-memory, **golden-replay (5/5 GTs structurally green)**, test (847 passed), runtime-e2e, roadmap-progress-check, lint-readme. The Phase 6 harness is now part of the standard `task ci` failure surface.)
-- [ ] **Step 2:** Update `README.md` and `AGENTS.md` — replace any `implement_ticket` references with `work_engine` where appropriate; note the shim and its deprecation horizon.
-- [ ] **Step 3:** Write ADR `agents/contexts/adr-work-engine-rename.md` — rationale, migration path, compatibility shim, golden-test contract (capture-before-refactor protocol), deprecation timeline.
-- [ ] **Step 4:** Draft a `CHANGELOG` entry under "Unreleased" — pure refactor, no user-visible behavior change, shim deprecation notice.
+- [x] **Step 2:** Update `README.md` and `AGENTS.md` — replace any `implement_ticket` references with `work_engine` where appropriate; note the shim and its deprecation horizon. (No-op confirmed: `grep -nE "implement_ticket|work_engine"` returns 4 README hits — all on the slash command `/implement-ticket` (lines 97, 103, 130, 131) — and zero AGENTS.md hits. The rename is internal-only; the public surface (slash command + `./agent-config implement-ticket` CLI) is byte-stable, gated by the Phase 6 Golden-Transcript replay. README readers interact via the slash command and never touch the Python module name. The internal rename is documented in S3 (ADR) and S4 (CHANGELOG) — the right addresses for *"why is the module called work_engine now"* — without polluting the user-facing onboarding doc with module-internal concerns. No shim deprecation horizon written: the new `scope-control` rule (committed `ddae361`) forbids release/version/deprecation-date language in roadmaps and ADRs.)
+- [x] **Step 3:** Write ADR `agents/contexts/adr-work-engine-rename.md` — rationale, migration path, compatibility shim, golden-test contract (capture-before-refactor protocol), deprecation timeline. (Shipped at `agents/contexts/adr-work-engine-rename.md`, 154 lines. Structure parallels the existing `adr-implement-ticket-runtime.md`: Status header, Decision, Why, Scope-of-rename table, Compatibility shim, State migration v0→v1, Golden-Transcript contract, Tradeoffs, Non-goals, Consequences, Follow-ups. Cross-refs to flow doc, roadmap, predecessor ADR, and the new `scope-control` section that explains why no removal release is pinned. Explicitly flags "this ADR deliberately does not pin a release, deprecation date, or removal milestone — release planning is decided outside roadmaps and ADRs". Compatibility shim section quotes the actual `DeprecationWarning` text emitted by `<scripts>/implement_ticket/__init__.py`. State-migration section documents idempotency, `.bak` preservation, refuse-to-overwrite, and the structured `SchemaError` rejection paths. Golden-Transcript section cites the four Strict-Verb comparators and the PR-gated refresh policy from `implement-ticket-flow.md`.)
+- [x] **Step 4:** Draft a `CHANGELOG` entry under "Unreleased" — pure refactor, no user-visible behavior change, shim deprecation notice. (Inserted as a new `## [Unreleased]` section at `CHANGELOG.md:9` — between the intro paragraph and `[1.13.0]`, the position release-please consumes on the next release cut. Structure follows the recent-version conventional-commits buckets used in the file (Features / Changed / Deprecated / CI / Documentation), prose-style without commit hashes per draft convention. Lead paragraph states "No user-visible behavior change" explicitly. Buckets cover: universal `work_engine` engine + state schema v1 + migration helper + Golden-Transcript replay harness (Features); internal rename + state filename move (Changed); `implement_ticket` Python module shim with `DeprecationWarning` (Deprecated); `task golden-replay` + tests.yml step + freeze-guard workflow (CI); ADR + flow-doc replay-protocol section + new scope-control policy (Documentation). No release-pinning, deprecation-date, or removal-milestone language — compliant with the new `scope-control` rule.)
 
 ## Acceptance criteria
 
-- [ ] Capture sandbox present under `tests/golden/sandbox/` with `repo/`, `tickets/`, `recipes/` — minimal Python+pytest, deterministic, CI-bootstrappable from committed inputs only
-- [ ] All 5 Capture Packs present under `tests/golden/baseline/GT-{1..5}/` with full structure (transcript, state-snapshots, delivery-report, halt-markers, exit-codes, fixture, reproduction-notes)
-- [ ] All 5 captures are **live runs** against unmodified `<engine-src>/implement_ticket/` using the sandbox — no synthetic transcripts; reproduction-notes prove byte-for-byte reproducibility (modulo timestamps)
-- [ ] `tests/golden/CHECKSUMS.txt` covers every file in every Capture Pack and the sandbox; CI checksum-verification check is green
-- [ ] Freeze-guard CI check rejects any non-`R1-P1` commit on this branch that touches `<engine-src>/implement_ticket/`, `<engine-mirror>/implement_ticket/`, `<engine-src>/work_engine/`, or `<engine-mirror>/work_engine/` before the Phase 1 lock commit lands
-- [ ] `<engine-src>/work_engine/` is the canonical module; `<engine-src>/implement_ticket/` is a deprecating shim
-- [ ] `.implement-ticket-state.json` files auto-migrate to `.work-state.json` on first run, with `.bak` preserved
-- [ ] State schema v1 is enforced; unknown `input.kind` or `directive_set` raises a clear error
-- [ ] Backend directive set lives under `directives/backend/`; `ui/` and `mixed/` exist as stubs that raise guided `NotImplementedError`
-- [ ] `/implement-ticket` wrapper passes ticket through `input.kind="ticket"` envelope; user-facing prompts, options, halts, and delivery report unchanged
-- [ ] All 5 golden transcripts replay green against the new engine in CI; replay harness asserts exit codes, state-file structure, delivery-report sections, halt-marker structure
-- [ ] `task ci` exits 0 end-to-end; `check_references.py` clean; linter clean
-- [ ] ADR + changelog entry in place
+- [x] Capture sandbox present under `tests/golden/sandbox/` with `repo/`, `tickets/`, `recipes/` — minimal Python+pytest, deterministic, CI-bootstrappable from committed inputs only (delivered Phase 1; sandbox layout `tests/golden/sandbox/{repo,tickets,recipes}/` committed and verified by checksum manifest)
+- [x] All 5 Capture Packs present under `tests/golden/baseline/GT-{1..5}/` with full structure (transcript, state-snapshots, delivery-report, halt-markers, exit-codes, fixture, reproduction-notes) (delivered Phase 1; full Capture Pack structure across all five GTs)
+- [x] All 5 captures are **live runs** against unmodified `<engine-src>/implement_ticket/` using the sandbox — no synthetic transcripts; reproduction-notes prove byte-for-byte reproducibility (modulo timestamps) (delivered Phase 1; reproduction-notes per GT, freeze-guard refused any pre-lock refactor commit)
+- [x] `tests/golden/CHECKSUMS.txt` covers every file in every Capture Pack and the sandbox; CI checksum-verification check is green (delivered Phase 1; manifest re-verified Phase 6 Step 4 with three independent integrity checks)
+- [x] Freeze-guard CI check rejects any non-`R1-P1` commit on this branch that touches `<engine-src>/implement_ticket/`, `<engine-mirror>/implement_ticket/`, `<engine-src>/work_engine/`, or `<engine-mirror>/work_engine/` before the Phase 1 lock commit lands (delivered Phase 2; `.github/workflows/freeze-guard.yml` enforced throughout the refactor window)
+- [x] `<engine-src>/work_engine/` is the canonical module; `<engine-src>/implement_ticket/` is a deprecating shim (delivered Phase 3; documented in ADR `agents/contexts/adr-work-engine-rename.md`)
+- [x] `.implement-ticket-state.json` files auto-migrate to `.work-state.json` on first run, with `.bak` preserved (delivered Phase 3; `work_engine.migration.v0_to_v1` with idempotent migration + `.bak` rename, refuses to overwrite existing v1)
+- [x] State schema v1 is enforced; unknown `input.kind` or `directive_set` raises a clear error (delivered Phase 3; `SchemaError` with structured rejection paths in `work_engine/state.py`)
+- [x] Backend directive set lives under `directives/backend/`; `ui/` and `mixed/` exist as stubs that raise guided `NotImplementedError` (delivered Phase 3; backend directives operational, ui/ and mixed/ stubs raise with R3 reference)
+- [x] `/implement-ticket` wrapper passes ticket through `input.kind="ticket"` envelope; user-facing prompts, options, halts, and delivery report unchanged (delivered Phase 5; wrapper at `<scripts>/work_engine/cli.py`, byte-stable surface verified by Phase 6 replay)
+- [x] All 5 golden transcripts replay green against the new engine in CI; replay harness asserts exit codes, state-file structure, delivery-report sections, halt-marker structure (delivered Phase 6; `task golden-replay` 5/5 in 1.17s, four Strict-Verb comparators)
+- [x] `task ci` exits 0 end-to-end; `check_references.py` clean; linter clean (delivered Phase 7 Step 1; 14 CI subtasks green end-to-end on `feat/intent-based-development-thinking` HEAD)
+- [x] ADR + changelog entry in place
 
 ## Open decisions
 
