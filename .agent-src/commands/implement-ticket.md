@@ -1,7 +1,7 @@
 ---
 name: implement-ticket
 skills: [refine-ticket, feature-planning]
-description: Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `implement_ticket` Python engine, block-on-ambiguity, no auto-git.
+description: Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git.
 disable-model-invocation: true
 ---
 
@@ -30,14 +30,30 @@ markdown. If no input resolves:
 ### 2. Prepare the state file
 
 The engine persists everything in a JSON state file (default:
-`.implement-ticket-state.json` in the repo root). Two cases:
+`.work-state.json` in the repo root). The resolved ticket lives inside
+the work-state envelope as `input.kind="ticket"`, `input.data={id,
+title, body, acceptance_criteria}` — the engine builds that wrapping
+internally when given `--ticket-file`, so callers pass the ticket JSON
+unchanged.
 
-- **Fresh run** — state file does not exist. Write the resolved ticket to
+Three cases, in this order:
+
+- **Legacy state file present** — `.implement-ticket-state.json` exists
+  and `.work-state.json` does not. Migrate before doing anything else:
+
+  ```bash
+  ./agent-config migrate-state
+  ```
+
+  Writes `.work-state.json` and renames the source to
+  `.implement-ticket-state.json.bak`. Idempotent and safe to skip if
+  already done. After this, treat the run as **Resume**.
+- **Fresh run** — no state file at all. Write the resolved ticket to
   `ticket.json` (id, title, body, acceptance_criteria) and pass it via
   `--ticket-file ticket.json`. Honour `roles.active_role` from
   `.agent-settings.yml` via `--persona`.
-- **Resume** — state file exists. Do **not** pass `--ticket-file` or
-  `--persona`; mid-flight persona switches are refused by the engine.
+- **Resume** — `.work-state.json` exists. Do **not** pass `--ticket-file`
+  or `--persona`; mid-flight persona switches are refused by the engine.
 
 ### 3. Drive the Option-A dispatch loop
 
@@ -45,9 +61,13 @@ Run the engine with the state file on every iteration:
 
 ```bash
 ./agent-config implement-ticket \
-    --state-file .implement-ticket-state.json \
+    --state-file .work-state.json \
     [--ticket-file ticket.json --persona <name>]   # first call only
 ```
+
+The dispatcher wires `PYTHONPATH` and routes to the engine module
+internally. `./agent-config` is the only supported entry point in
+consumer repos — do not call the engine module directly.
 
 Then branch on the exit code:
 
@@ -95,7 +115,7 @@ Surface it unchanged. Append the close-prompt:
 > 1. /commit — stage + commit per the delivery report
 > 2. /create-pr — open a pull request from this branch
 > 3. Keep working — I'll hold the state file for the next /implement-ticket
-> 4. Discard — delete .implement-ticket-state.json
+> 4. Discard — delete .work-state.json (and any .implement-ticket-state.json.bak)
 ```
 
 **Never run `/commit` or `/create-pr` without the user choosing them.**
