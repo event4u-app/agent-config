@@ -37,6 +37,30 @@ Do NOT use when:
 → See guideline `php/general.md` for detailed PHP conventions.
 → See guideline `php/controllers.md`, `php/eloquent.md`, etc. for domain-specific conventions.
 
+### Step 3: Stop-gate — branching on a discriminator?
+
+Before writing **a second** `match`/`switch` arm, **a second** `if/elseif`
+branch, or **a second** class hardcoded to one enum/string value (e.g.
+`Provider::FOO->value`, `'stripe'`, a `case Type::CSV`), STOP and run the
+Strategy sniff test.
+
+Trigger keywords in the task or surrounding code:
+
+- enum/string used as a type-tag: `Provider`, `Type`, `Channel`, `Format`,
+  `Driver`, `Kind`
+- repeated `match ($x)` / `switch ($x)` blocks on the same value
+- class names that bake a single enum case in: `StripeImportService`,
+  `CsvExporter`, `Ks21Job` next to `GeoCaptureJob` with the same shape
+- allowlist constants: `private const SUPPORTED_FOO = [Type::A, Type::B]`
+
+→ Run the sniff test in
+[`guidelines/php/patterns/strategy.md`](../../guidelines/php/patterns/strategy.md#sniff-test--when-an-enumstring-discriminator-wants-to-become-a-strategy).
+Two "yes" answers → propose Strategy + Registry **before** adding the new
+branch. Three "yes" → it is already overdue and the refactor is the change.
+
+This gate fires **per task**, not per file — once you've passed the sniff
+test for a given discriminator, do not re-ask on the next branch.
+
 ### Core principles
 
 - **KISS** — simplest solution that works. No over-engineering.
