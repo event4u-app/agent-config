@@ -51,6 +51,8 @@ Commands:
   first-run                  Guided first-run setup — cost profile, settings, tooling
   implement-ticket           Drive the work_engine Python engine
                              (Option-A loop; called by the /implement-ticket command)
+  migrate-state              Migrate a legacy .implement-ticket-state.json file
+                             to the v1 .work-state.json schema (preserves .bak)
   memory:lookup              Retrieve memory entries (text or JSON envelope)
   memory:signal              Append a provisional intake signal (memory proposal)
   memory:hash                Hash a memory entry (YAML or JSON stdin)
@@ -68,7 +70,8 @@ Examples:
   ./agent-config roadmap:progress
   ./agent-config hooks:install
   ./agent-config first-run
-  ./agent-config implement-ticket --state-file .implement-ticket-state.json
+  ./agent-config implement-ticket --state-file .work-state.json
+  ./agent-config migrate-state
   ./agent-config memory:lookup --types domain-invariants --key billing
   ./agent-config memory:signal --type architecture-decision --path src/Foo.php --body "…"
   ./agent-config memory:check --path agents/memory
@@ -184,6 +187,21 @@ cmd_implement_ticket() {
     return 1
   fi
   exec env PYTHONPATH="$engine_root" python3 -m work_engine "$@"
+}
+
+cmd_migrate_state() {
+  require_python3
+  local engine_root="$PACKAGE_ROOT/.agent-src/templates/scripts"
+  if [[ ! -d "$engine_root/work_engine/migration" ]]; then
+    echo "❌  agent-config: work_engine.migration module not found at $engine_root/work_engine/migration" >&2
+    echo "    Reinstall the package and retry." >&2
+    return 1
+  fi
+  # -W ignore::RuntimeWarning suppresses the known sys.modules notice from
+  # `python3 -m pkg.subpkg.module` when the parent package eagerly imports
+  # the submodule via its CLI module. The migration is non-invasive and
+  # the warning is cosmetic; suppressing here avoids touching the engine.
+  exec env PYTHONPATH="$engine_root" python3 -W ignore::RuntimeWarning -m work_engine.migration.v0_to_v1 "$@"
 }
 
 cmd_memory_lookup() {
@@ -318,6 +336,7 @@ main() {
     hooks:install)           cmd_hooks_install "$@" ;;
     first-run)               cmd_first_run "$@" ;;
     implement-ticket)        cmd_implement_ticket "$@" ;;
+    migrate-state)           cmd_migrate_state "$@" ;;
     memory:lookup)           cmd_memory_lookup "$@" ;;
     memory:signal)           cmd_memory_signal "$@" ;;
     memory:hash)             cmd_memory_hash "$@" ;;
