@@ -27,8 +27,14 @@ Templates for roadmap files stored in `agents/roadmaps/` or `app/Modules/{Module
 
 13. **No tags, releases, or version numbers.** Roadmaps describe work, not shipping.
     Never assign version suffixes to phases (`Phase 1 — v1.8.0`), never write
-    "Target release: X.Y.Z", never plan git tags. Release and tag decisions
-    belong to the user and are taken outside the roadmap.
+    "Target release: X.Y.Z", never plan git tags or deprecation dates. Release
+    and tag decisions belong to the user, taken outside the roadmap. Enforced by
+    [`scope-control`](../rules/scope-control.md#git-operations--permission-gated).
+14. **No automatic branch switches mid-roadmap.** Roadmap work runs on the
+    current branch. If a separate branch (spike, hotfix, experiment) would
+    be useful, agent may propose it **once** during creation — not during
+    execution. Default: stay on current branch. If user declines, topic is
+    closed for this roadmap. See [`scope-control`](../rules/scope-control.md#decline--silence--no-re-asking-on-the-same-task).
 
 ---
 

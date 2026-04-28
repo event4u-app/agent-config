@@ -167,7 +167,7 @@
   "rules/role-mode-adherence.md": "05823c59ecffcd2e6392e5bd165c845bf563ec1ce4e54590d36e18c724877241",
   "rules/rule-type-governance.md": "c6892b49478bec19cdae1016548b37b5dc9356f7998933de23879b652b225633",
   "rules/runtime-safety.md": "cbd9867ff316288a0bb3c1422cee3579d9b9fdab2e034b05215035b071f64456",
-  "rules/scope-control.md": "0327f208df8ec63c33042119565e2294a0c350acd8fd7a48b9aff9ee42f5fb0f",
+  "rules/scope-control.md": "9bc90e4e3f5535bf118f40aad115eb05461a518af97b94b1f0a83072b803fd45",
   "rules/security-sensitive-stop.md": "7577998630417d6a1689b0e3c896af57f76cb109c58a99fdb26b436e03adcbd2",
   "rules/size-enforcement.md": "fdbfe0bb0ed915700e3144ecb3bc1949f58f0d47535ed3f17071b45452bbbcc0",
   "rules/skill-improvement-trigger.md": "17f717e5f7f9e2e212d251ad0b172f5ed147976959c4b7f03b11505ba7d8f0d6",
@@ -279,7 +279,7 @@
   "skills/refine-ticket/SKILL.md": "9bbccd2c3cc99ff48eb878d2a367639ba037d713b31d292a168d58bb8de43175",
   "skills/requesting-code-review/SKILL.md": "0a8d29108cd2804b8af5044874323da012dd4e09fb1dba648ca0262c83bdb2b3",
   "skills/review-routing/SKILL.md": "9e162335a89b26e2fbf251cfa435e4d60db4623b14fffd4c1b3ddd810d79a44c",
-  "skills/roadmap-management/SKILL.md": "bd207a4c32cc3ee28644c7ba2bdf0cc5d5da189e4b51c5e1c86cdd1090f7aa2d",
+  "skills/roadmap-management/SKILL.md": "c4041b9e5d85488b43e75091344b285695fbb0605a9d50acc3a0639c7565b162",
   "skills/rtk-output-filtering/SKILL.md": "375e8648503937045fe9ea51c1b5f2f73b78e694e767905a176396e53d3a19cb",
   "skills/rule-writing/SKILL.md": "218f23aa37f01fa5ebbc1d9ef03bb0e764df91c0b56914ebe06cb890cedcd09b",
   "skills/security-audit/SKILL.md": "67000f7cc184237c1d42808e7c4e8067930fb928093e0b557461ec5e071de996",
@@ -324,6 +324,6 @@
   "templates/overrides/skill.md": "f33bf139261c9691ac67a792ad2dedd437856092c63a77268b29de72ff4945c9",
   "templates/overrides/template.md": "8fdd7c1800f669b599e24e1812b3213f0fd8699ce6fbc3714a3b6c6a3e1f78c5",
   "templates/persona.md": "cb504df77838d9f42e3eb2c9f0bd1e82c443b70734a2d8feeace5925193954db",
-  "templates/roadmaps.md": "5a6603a67e656f2e37d0616d36b912458be09025c7f779d5684fe24561a1e56f",
+  "templates/roadmaps.md": "b0b7dcb061ef827410cdfcac709758c12920bf3e591f580f0361c75ba947f845",
   "templates/skill.md": "de8d0ae6c4298ed8b88babcc8050e5fb7a5ecc8f5d7de85c6848a83d7d30653b"
 }

@@ -139,8 +139,15 @@ Every roadmap implicitly includes these gates (run after each step that changes 
 1. Ask the user for goal, context-create, and phases.
 2. Use the template structure from `.augment/templates/roadmaps.md`.
 3. Review with the user iteratively until approved.
-4. Save with a kebab-case filename (e.g. `optimize-webhook-jobs.md`).
-5. Regenerate the dashboard so the new roadmap is included.
+4. **Branch & release questions — at most once, only if genuinely useful.**
+   Default: stay on the current branch, no version numbers in the
+   roadmap. Only propose a separate branch when there is concrete,
+   evidence-based reason (e.g. risky migration benefits from a spike).
+   Never include release versions, deprecation dates, or git tags in
+   the roadmap text. If the user declines, do **not** re-propose during
+   `roadmap-execute`. Decline = silence. See [`scope-control`](../../rules/scope-control.md#decline--silence--no-re-asking-on-the-same-task).
+5. Save with a kebab-case filename (e.g. `optimize-webhook-jobs.md`).
+6. Regenerate the dashboard so the new roadmap is included.
 
 ### Executing a roadmap
 
@@ -306,4 +313,5 @@ The dashboard is a **read-only snapshot**. Do not edit it by hand — regenerate
 - Do NOT archive roadmaps with open `[ ]` items without asking the user.
 - Do NOT delete roadmaps — always move to `archive/` or `skipped/`.
 - Do NOT use `skipped/` as a dumping ground for partially-finished work — that is what `archive/` with deferred items is for.
-- Do NOT assign version numbers, git tags, or release identifiers to phases. Roadmaps plan work; releases and tags are decided by the user separately.
+- Do NOT assign version numbers, git tags, deprecation dates, or release identifiers to phases. Roadmaps plan work; releases and tags are decided by the user separately. Hard rule — see [`scope-control`](../../rules/scope-control.md#git-operations--permission-gated).
+- Do NOT propose a branch switch while executing a roadmap. The branch question is settled at creation time; if the user already declined (or you never asked because it wasn't sensible), stay silent. See [`scope-control`](../../rules/scope-control.md#decline--silence--no-re-asking-on-the-same-task).
