@@ -35,17 +35,21 @@ from . import analyze, implement, memory, plan, refine, report, test, verify
 DIRECTIVE_SET_NAME = "backend"
 """External name carried in ``state.directive_set`` for this set."""
 
-SUPPORTED_KINDS: tuple[str, ...] = ("ticket",)
+SUPPORTED_KINDS: tuple[str, ...] = ("ticket", "prompt")
 """Input kinds this directive set knows how to handle.
 
 Read by :func:`work_engine.dispatcher.assert_kind_supported` before the
 loop starts. The schema's :data:`work_engine.state.KNOWN_INPUT_KINDS` is
 the *envelope* whitelist (what is accepted on disk); ``SUPPORTED_KINDS``
 is the *capability* whitelist (what this set can actually drive end to
-end). They happen to match in R1 because ``ticket`` is the only kind
-defined; R2 widens the schema with ``prompt`` while backend keeps the
-narrower capability tuple, so unsupported kinds halt loudly at the
-dispatcher boundary instead of crashing inside ``refine``."""
+end).
+
+R1 only carried ``ticket``. R2 Phase 3 Step 3 added ``prompt`` once the
+``refine`` step learned to detect prompt envelopes (presence of ``raw``
+key in ``state.ticket``), delegate to the ``refine-prompt`` skill on
+the first pass, and route the resulting confidence band into
+``SUCCESS`` / ``PARTIAL`` / ``BLOCKED`` per
+``agents/roadmaps/archive/road-to-prompt-driven-execution.md`` Phase 3."""
 
 _STEPS = (refine, memory, analyze, plan, implement, test, verify, report)
 

@@ -167,3 +167,97 @@ def test_invalid_state_file_exits_two(tmp_path, capsys) -> None:
 
     assert exit_code == 2
     assert "State file shape is invalid" in capsys.readouterr().err
+
+
+# --- Prompt-file path (R2 Phase 4) -------------------------------------
+
+def test_prompt_file_fresh_run_halts_for_refine_prompt(
+    tmp_path: Path, capsys, fake_memory_lookup,
+) -> None:
+    """First /work invocation: builds prompt envelope, halts at refine-prompt."""
+    prompt_file = tmp_path / "prompt.txt"
+    prompt_file.write_text(
+        "Add a CSV export endpoint to the audit-log controller",
+        encoding="utf-8",
+    )
+    state_file = tmp_path / "state.json"
+
+    exit_code = main([
+        "--state-file", str(state_file),
+        "--prompt-file", str(prompt_file),
+    ])
+
+    # First pass: AC empty → engine halts with the refine-prompt directive.
+    assert exit_code == 1
+    stdout = capsys.readouterr().out
+    assert "@agent-directive: refine-prompt" in stdout
+    assert "[halt] outcome=blocked step=refine" in stdout
+    # State persisted as v1 with kind=prompt (no v0 prompt envelope exists).
+    persisted = json.loads(state_file.read_text())
+    assert persisted["version"] == 1
+    assert persisted["input"]["kind"] == "prompt"
+    assert persisted["input"]["data"]["raw"].startswith("Add a CSV export")
+    assert persisted["input"]["data"]["reconstructed_ac"] == []
+    assert persisted["input"]["data"]["assumptions"] == []
+
+
+def test_prompt_file_and_ticket_file_are_mutually_exclusive(
+    tmp_path: Path, capsys,
+) -> None:
+    """Passing both --ticket-file and --prompt-file is a config error."""
+    ticket = _write_ticket(tmp_path)
+    prompt_file = tmp_path / "prompt.txt"
+    prompt_file.write_text("anything", encoding="utf-8")
+    state_file = tmp_path / "state.json"
+
+    exit_code = main([
+        "--state-file", str(state_file),
+        "--ticket-file", str(ticket),
+        "--prompt-file", str(prompt_file),
+    ])
+
+    assert exit_code == 2
+    assert "mutually exclusive" in capsys.readouterr().err
+    assert not state_file.exists()
+
+
+def test_prompt_file_empty_exits_two(tmp_path: Path, capsys) -> None:
+    """Whitespace-only prompt file is rejected by the resolver."""
+    prompt_file = tmp_path / "prompt.txt"
+    prompt_file.write_text("   \n\t\n", encoding="utf-8")
+    state_file = tmp_path / "state.json"
+
+    exit_code = main([
+        "--state-file", str(state_file),
+        "--prompt-file", str(prompt_file),
+    ])
+
+    assert exit_code == 2
+    assert "not a valid prompt" in capsys.readouterr().err
+    assert not state_file.exists()
+
+
+def test_prompt_file_missing_exits_two(tmp_path: Path, capsys) -> None:
+    """Non-existent --prompt-file path surfaces a clean CLI error."""
+    state_file = tmp_path / "state.json"
+
+    exit_code = main([
+        "--state-file", str(state_file),
+        "--prompt-file", str(tmp_path / "does-not-exist.txt"),
+    ])
+
+    assert exit_code == 2
+    assert "Cannot read" in capsys.readouterr().err
+    assert not state_file.exists()
+
+
+def test_no_input_error_mentions_both_flags(tmp_path: Path, capsys) -> None:
+    """Without state file or input flags, the error names both options."""
+    state_file = tmp_path / "nonexistent.json"
+
+    exit_code = main(["--state-file", str(state_file)])
+
+    assert exit_code == 2
+    stderr = capsys.readouterr().err
+    assert "--ticket-file" in stderr
+    assert "--prompt-file" in stderr

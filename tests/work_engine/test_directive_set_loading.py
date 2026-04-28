@@ -97,14 +97,19 @@ def test_assert_kind_supported_accepts_backend_ticket() -> None:
     assert_kind_supported("ticket", "backend") is None
 
 
+def test_assert_kind_supported_accepts_backend_prompt() -> None:
+    """R2 Phase 3 Step 3 wires ``prompt`` into backend's capability tuple."""
+    assert_kind_supported("prompt", "backend") is None
+
+
 def test_assert_kind_supported_rejects_backend_unknown_kind() -> None:
-    """Future schema kinds (e.g. R2 ``prompt``) are not yet wired."""
-    with pytest.raises(NotImplementedError, match="does not handle input.kind='prompt'"):
-        assert_kind_supported("prompt", "backend")
+    """Kinds outside the schema whitelist (e.g. R3 ``diff``) still halt."""
+    with pytest.raises(NotImplementedError, match="does not handle input.kind='design'"):
+        assert_kind_supported("design", "backend")
 
 
 def test_assert_kind_supported_message_lists_supported_kinds() -> None:
-    with pytest.raises(NotImplementedError, match=r"supported kinds: \['ticket'\]"):
+    with pytest.raises(NotImplementedError, match=r"supported kinds: \['prompt', 'ticket'\]"):
         assert_kind_supported("design", "backend")
 
 

@@ -41,10 +41,24 @@ DEFAULT_INTENT = "backend-coding"
 DEFAULT_DIRECTIVE_SET = "backend"
 """Directive set applied when migrating a v0 file or building a fresh state."""
 
-KNOWN_INPUT_KINDS: frozenset[str] = frozenset({"ticket"})
-"""Input kinds accepted by the schema. ``ticket`` is the only one with
-semantics in R1; other kinds are rejected so unknown values surface as
-errors instead of silently falling through to a default branch."""
+KNOWN_INPUT_KINDS: frozenset[str] = frozenset({"ticket", "prompt"})
+"""Input kinds accepted by the schema.
+
+``ticket`` is the R1 kind: pre-structured ``{id, title, acceptance_criteria, …}``
+fed by the ``/implement-ticket`` flow. ``prompt`` is the R2 kind: a free-form
+user prompt wrapped via :mod:`work_engine.resolvers.prompt` into
+``{raw, reconstructed_ac, assumptions}``; the engine refines the raw text
+into actionable AC + a confidence band before plan/apply/test/review run.
+
+Per the schema/capability split documented on
+:data:`work_engine.directives.backend.SUPPORTED_KINDS`, presence here only
+means the *envelope* is accepted on disk — a directive set still has to
+list the kind in its ``SUPPORTED_KINDS`` tuple before the dispatcher will
+route it. R2 widens the envelope; R2 Phase 3 widens backend's capability
+tuple in lockstep with the ``refine-prompt`` skill landing.
+
+Other kinds are rejected so unknown values surface as errors instead of
+silently falling through to a default branch."""
 
 KNOWN_DIRECTIVE_SETS: frozenset[str] = frozenset(
     {"backend", "ui", "ui-trivial", "mixed"},

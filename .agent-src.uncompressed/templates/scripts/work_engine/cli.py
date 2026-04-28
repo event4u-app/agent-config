@@ -52,6 +52,7 @@ from .dispatcher import (
     select_directive_set,
 )
 from .migration.v0_to_v1 import migrate_payload
+from .resolvers.prompt import PromptResolverError, build_envelope as _build_prompt_envelope
 from .state import Input, SchemaError, WorkState
 
 DEFAULT_STATE_FILE = Path(".implement-ticket-state.json")
@@ -118,6 +119,14 @@ def _build_parser() -> argparse.ArgumentParser:
         "state file does not exist yet.",
     )
     parser.add_argument(
+        "--prompt-file",
+        type=Path,
+        default=None,
+        help="Plain-text file carrying the raw user prompt; builds an "
+        "input.kind='prompt' envelope. Mutually exclusive with "
+        "--ticket-file. Used only when the state file does not exist yet.",
+    )
+    parser.add_argument(
         "--persona",
         type=str,
         default=None,
@@ -135,17 +144,26 @@ def _load_or_build(
     """Return the WorkState to dispatch against plus its wire format.
 
     Either loaded from ``state_file`` (format-preserving) or freshly
-    built from ``--ticket-file``. Fresh files default to v0 wire
-    format so that newly captured Goldens stay byte-equal with the
-    pre-Phase-4 baseline; v1 round-trips only happen for state files
-    already on disk in v1 shape.
+    built from ``--ticket-file`` (R1) / ``--prompt-file`` (R2). Fresh
+    ticket files default to v0 wire format so that newly captured
+    Goldens stay byte-equal with the pre-Phase-4 baseline; fresh
+    prompt files emit v1 directly (v0 has no prompt envelope so there
+    is nothing to stay byte-compatible with). v1 round-trips for state
+    files already on disk in v1 shape.
     """
     if state_file.exists():
         return _load(state_file)
+    if args.ticket_file is not None and args.prompt_file is not None:
+        raise _CLIError(
+            "--ticket-file and --prompt-file are mutually exclusive; "
+            "pass exactly one when building an initial state.",
+        )
+    if args.prompt_file is not None:
+        return _build_from_prompt_file(args), _FMT_V1
     if args.ticket_file is None:
         raise _CLIError(
-            f"No state file at {state_file} and no --ticket-file given; "
-            "cannot build an initial state.",
+            f"No state file at {state_file} and no --ticket-file or "
+            "--prompt-file given; cannot build an initial state.",
         )
     ticket = _read_json(args.ticket_file)
     if not isinstance(ticket, dict):
@@ -156,6 +174,28 @@ def _load_or_build(
     if args.persona:
         work.persona = args.persona
     return work, _FMT_V0
+
+
+def _build_from_prompt_file(args: argparse.Namespace) -> WorkState:
+    """Read ``--prompt-file`` as raw text and wrap it in a prompt envelope.
+
+    The file is read verbatim (UTF-8) and handed to the prompt resolver,
+    which validates non-emptiness and returns the canonical
+    ``Input(kind="prompt", data={raw, reconstructed_ac, assumptions})``
+    envelope. Persona is honoured the same way as the ticket path.
+    """
+    try:
+        raw = args.prompt_file.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise _CLIError(f"Cannot read {args.prompt_file}: {exc}") from exc
+    try:
+        envelope = _build_prompt_envelope(raw)
+    except PromptResolverError as exc:
+        raise _CLIError(f"--prompt-file is not a valid prompt: {exc}") from exc
+    work = WorkState(input=envelope)
+    if args.persona:
+        work.persona = args.persona
+    return work
 
 
 def _load(state_file: Path) -> tuple[WorkState, str]:

@@ -146,11 +146,78 @@ class TestEnvelopeValidation:
 
     def test_known_enum_constants(self) -> None:
         # Lock the public enum surface so a future code change that
-        # narrows it cannot happen silently.
-        assert KNOWN_INPUT_KINDS == frozenset({"ticket"})
+        # narrows it cannot happen silently. R2 widened the input-kind
+        # enum with ``prompt``; capability tuples (per-set
+        # ``SUPPORTED_KINDS``) stay narrow until the matching directive
+        # set wires the kind end to end.
+        assert KNOWN_INPUT_KINDS == frozenset({"ticket", "prompt"})
         assert KNOWN_DIRECTIVE_SETS == frozenset(
             {"backend", "ui", "ui-trivial", "mixed"},
         )
+
+    def test_prompt_envelope_round_trips(self) -> None:
+        # R2 envelope: kind=prompt, data carries raw + empty
+        # reconstructed_ac + assumptions slots that the refiner fills
+        # later. Round-trip must preserve byte-for-byte.
+        state = _build_state(
+            input=Input(
+                kind="prompt",
+                data={
+                    "raw": "fix the failing login test",
+                    "reconstructed_ac": [],
+                    "assumptions": [],
+                },
+            ),
+            outcomes={},
+            questions=[],
+        )
+
+        rebuilt = from_dict(to_dict(state))
+
+        assert rebuilt == state
+        assert rebuilt.input.kind == "prompt"
+        assert rebuilt.input.data["raw"] == "fix the failing login test"
+        assert rebuilt.input.data["reconstructed_ac"] == []
+        assert rebuilt.input.data["assumptions"] == []
+
+    def test_prompt_envelope_with_confidence_round_trips(self) -> None:
+        # R2 Phase 3 Step 3 — the refine step writes the confidence
+        # breakdown into ``input.data["confidence"]`` so the report
+        # renderer can include it without re-scoring. The schema treats
+        # ``input.data`` as opaque, so this round-trip is a guard
+        # against accidental future filtering of "unknown" data keys.
+        state = _build_state(
+            input=Input(
+                kind="prompt",
+                data={
+                    "raw": "Add a CSV export endpoint",
+                    "reconstructed_ac": ["Endpoint must stream CSV."],
+                    "assumptions": ["Audit log fits the existing CSV writer."],
+                    "confidence": {
+                        "band": "high",
+                        "score": 0.9,
+                        "dimensions": {
+                            "goal_clarity": 2,
+                            "scope_boundary": 2,
+                            "ac_evidence": 1,
+                            "stack_data": 2,
+                            "reversibility": 2,
+                        },
+                        "reasons": ["goal_clarity=2: ..."],
+                        "ui_intent": False,
+                    },
+                    "confidence_confirmed": False,
+                },
+            ),
+            outcomes={"refine": "success"},
+            questions=[],
+        )
+
+        rebuilt = from_dict(to_dict(state))
+
+        assert rebuilt == state
+        assert rebuilt.input.data["confidence"]["band"] == "high"
+        assert rebuilt.input.data["confidence_confirmed"] is False
 
 
 class TestUnknownTopLevelKeysAreTolerated:
