@@ -39,6 +39,10 @@ RECIPE_MODULES = (
     "tests.golden.sandbox.recipes.gt3_recovery",
     "tests.golden.sandbox.recipes.gt4_persona_refusal",
     "tests.golden.sandbox.recipes.gt5_state_resume",
+    "tests.golden.sandbox.recipes.gt_p1_high",
+    "tests.golden.sandbox.recipes.gt_p2_medium",
+    "tests.golden.sandbox.recipes.gt_p3_low",
+    "tests.golden.sandbox.recipes.gt_p4_ui_rejection",
 )
 
 GOLDEN_ROOT = Path(__file__).resolve().parent
@@ -97,17 +101,40 @@ def _load_module_for(gt_id: str):
     raise KeyError(f"unknown GT id: {gt_id}")
 
 
+def _resolve_inputs(meta: dict[str, Any]) -> tuple[Path | None, Path | None]:
+    """Return ``(ticket_file, prompt_file)`` from a recipe's ``META``.
+
+    Recipes declare exactly one of ``ticket_relpath`` (R1 ticket-mode)
+    and ``prompt_relpath`` (R2 prompt-mode); the unused slot stays
+    ``None``. The raised error matches what ``run_capture`` would say
+    if both or neither were forwarded — failing here surfaces the typo
+    on the META rather than deep inside the runner.
+    """
+    ticket_rel = meta.get("ticket_relpath")
+    prompt_rel = meta.get("prompt_relpath")
+    if (ticket_rel is None) == (prompt_rel is None):
+        raise ValueError(
+            f"META for {meta.get('gt_id')!r} must declare exactly one of "
+            "'ticket_relpath' / 'prompt_relpath'; got "
+            f"ticket_relpath={ticket_rel!r}, prompt_relpath={prompt_rel!r}",
+        )
+    if ticket_rel is not None:
+        return runner.SANDBOX_ROOT / ticket_rel, None
+    return None, runner.SANDBOX_ROOT / prompt_rel
+
+
 def replay(gt_id: str) -> ReplayResult:
     """Run the recipe for ``gt_id`` against the live engine."""
     module = _load_module_for(gt_id)
     meta = module.META
-    ticket_file = runner.SANDBOX_ROOT / meta["ticket_relpath"]
+    ticket_file, prompt_file = _resolve_inputs(meta)
     with tempfile.TemporaryDirectory(prefix=f"replay-{gt_id}-") as tmp:
         workspace = Path(tmp) / "ws"
         recipe = module.build_recipe(workspace)
         cap = runner.run_capture(
             gt_id=gt_id,
             ticket_file=ticket_file,
+            prompt_file=prompt_file,
             workspace=workspace,
             recipe=recipe,
             persona=meta.get("persona"),

@@ -143,6 +143,27 @@ def standard_plan(title: str, *steps: str) -> list[dict[str, Any]]:
     ]
 
 
+def write_prompt_refinement(
+    state: dict[str, Any],
+    *,
+    reconstructed_ac: list[str],
+    assumptions: list[str],
+) -> dict[str, Any]:
+    """Persist the ``refine-prompt`` skill's output back into v1 state.
+
+    The deterministic gate in :mod:`work_engine.directives.backend.refine`
+    reads ``state.input.data["reconstructed_ac"]`` and ``["assumptions"]``
+    on the rebound after the ``refine-prompt`` directive halts. Recipes
+    use this helper to mirror what the agent would write — a single
+    well-named seam keeps the prompt-mode recipes from drifting on the
+    state shape.
+    """
+    data = state.setdefault("input", {}).setdefault("data", {})
+    data["reconstructed_ac"] = list(reconstructed_ac)
+    data["assumptions"] = list(assumptions)
+    return state
+
+
 __all__ = [
     "append_to_file",
     "base_changes",
@@ -150,4 +171,5 @@ __all__ = [
     "run_pytest",
     "simulated_review_verdict",
     "standard_plan",
+    "write_prompt_refinement",
 ]

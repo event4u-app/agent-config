@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Refactor power\n",
+      "reconstructed_ac": [
+        "should preserve the public signature of power(a, b)",
+        "must keep test_power_positive_base green after the edit"
+      ],
+      "assumptions": [
+        "touches src/calculator.py only",
+        "no behaviour change intended; docstring tightening"
+      ],
+      "confidence": {
+        "band": "medium",
+        "score": 0.6,
+        "dimensions": {
+          "goal_clarity": 1,
+          "scope_boundary": 0,
+          "ac_evidence": 1,
+          "stack_data": 2,
+          "reversibility": 2
+        },
+        "reasons": [
+          "goal_clarity=1: verb present but length is borderline",
+          "scope_boundary=0: no file or domain anchor",
+          "ac_evidence=1: 2 criteria, 2 anchored",
+          "stack_data=2: prompt is behavioural, no stack/data signal",
+          "reversibility=2: code-only change, cheap to revert"
+        ],
+        "ui_intent": false
+      },
+      "acceptance_criteria": [
+        "should preserve the public signature of power(a, b)",
+        "must keep test_power_positive_base green after the edit"
+      ],
+      "confidence_confirmed": true
+    }
+  },
+  "intent": "backend-coding",
+  "directive_set": "backend",
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": [
+    {
+      "title": "Tighten power() docstring",
+      "detail": "Replace the placeholder docstring on src/calculator.py::power"
+    },
+    {
+      "title": "Tighten power() docstring",
+      "detail": "Re-run pytest to confirm test_power_positive_base stays green"
+    }
+  ],
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "blocked"
+  },
+  "questions": [
+    "@agent-directive: create-plan ticket=(no id)",
+    "> Ticket (no id) — no plan recorded yet; running `feature-plan` and resuming.",
+    "> 1. Continue — use the plan produced by `feature-plan`",
+    "> 2. Abort — stop before any edits are proposed"
+  ],
+  "report": ""
+}

@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "should we drop the table?\n",
+      "reconstructed_ac": [
+        "needs a clarifying answer about which table is meant"
+      ],
+      "assumptions": [],
+      "confidence": {
+        "band": "low",
+        "score": 0.1,
+        "dimensions": {
+          "goal_clarity": 0,
+          "scope_boundary": 0,
+          "ac_evidence": 1,
+          "stack_data": 0,
+          "reversibility": 0
+        },
+        "reasons": [
+          "goal_clarity=0: prompt is a question, no executable verb",
+          "scope_boundary=0: no file or domain anchor",
+          "ac_evidence=1: 1 criteria, 0 anchored",
+          "stack_data=0: stack/data work implied without target",
+          "reversibility=0: irreversible keyword detected"
+        ],
+        "ui_intent": false
+      },
+      "acceptance_criteria": [
+        "needs a clarifying answer about which table is meant"
+      ]
+    }
+  },
+  "intent": "backend-coding",
+  "directive_set": "backend",
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "blocked"
+  },
+  "questions": [
+    "> Prompt: should we drop the table?",
+    "> Confidence: **low** (score 0.10). Weakest dimension: `goal_clarity` — goal_clarity=0: prompt is a question, no executable verb",
+    "> What is the single observable outcome you want?",
+    "> 1. I'll answer — paste the answer in chat and re-invoke `/work`",
+    "> 2. Abort — drop this prompt"
+  ],
+  "report": ""
+}

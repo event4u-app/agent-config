@@ -36,6 +36,10 @@ RECIPE_MODULES = (
     "tests.golden.sandbox.recipes.gt3_recovery",
     "tests.golden.sandbox.recipes.gt4_persona_refusal",
     "tests.golden.sandbox.recipes.gt5_state_resume",
+    "tests.golden.sandbox.recipes.gt_p1_high",
+    "tests.golden.sandbox.recipes.gt_p2_medium",
+    "tests.golden.sandbox.recipes.gt_p3_low",
+    "tests.golden.sandbox.recipes.gt_p4_ui_rejection",
 )
 
 GOLDEN_ROOT = Path(__file__).resolve().parent
@@ -100,7 +104,7 @@ def main(argv: list[str] | None = None) -> int:
 
 def _run_one(module) -> runner.CaptureResult:
     meta = module.META
-    ticket_file = runner.SANDBOX_ROOT / meta["ticket_relpath"]
+    ticket_file, prompt_file = _resolve_inputs(meta)
 
     with tempfile.TemporaryDirectory(prefix=f"golden-{meta['gt_id']}-") as tmp:
         workspace = Path(tmp) / "ws"
@@ -108,11 +112,34 @@ def _run_one(module) -> runner.CaptureResult:
         return runner.run_capture(
             gt_id=meta["gt_id"],
             ticket_file=ticket_file,
+            prompt_file=prompt_file,
             workspace=workspace,
             recipe=recipe,
             persona=meta.get("persona"),
             cycle_cap=meta.get("cycle_cap", runner.DEFAULT_CYCLE_CAP),
         )
+
+
+def _resolve_inputs(meta: dict[str, Any]) -> tuple[Path | None, Path | None]:
+    """Mirror of :func:`tests.golden.harness._resolve_inputs`.
+
+    Two implementations is the lesser evil here — capture and harness
+    share no module above the sandbox runner, and reaching across into
+    the harness from capture (or vice versa) would couple them by
+    import order. The contract is one line; keeping it duplicated is
+    cheaper than introducing a new shared module just for this helper.
+    """
+    ticket_rel = meta.get("ticket_relpath")
+    prompt_rel = meta.get("prompt_relpath")
+    if (ticket_rel is None) == (prompt_rel is None):
+        raise ValueError(
+            f"META for {meta.get('gt_id')!r} must declare exactly one of "
+            "'ticket_relpath' / 'prompt_relpath'; got "
+            f"ticket_relpath={ticket_rel!r}, prompt_relpath={prompt_rel!r}",
+        )
+    if ticket_rel is not None:
+        return runner.SANDBOX_ROOT / ticket_rel, None
+    return None, runner.SANDBOX_ROOT / prompt_rel
 
 
 def _write_pack(pack_dir: Path, result: runner.CaptureResult, meta: dict) -> None:
@@ -164,18 +191,27 @@ def _write_pack(pack_dir: Path, result: runner.CaptureResult, meta: dict) -> Non
         encoding="utf-8",
     )
 
-    ticket_src = runner.SANDBOX_ROOT / meta["ticket_relpath"]
-    shutil.copy2(ticket_src, fixture_dir / Path(meta["ticket_relpath"]).name)
+    fixture_relpath = meta.get("ticket_relpath") or meta.get("prompt_relpath")
+    fixture_src = runner.SANDBOX_ROOT / fixture_relpath
+    shutil.copy2(fixture_src, fixture_dir / Path(fixture_relpath).name)
 
     notes = _reproduction_notes(meta, result)
     (pack_dir / "reproduction-notes.md").write_text(notes, encoding="utf-8")
 
 
 def _reproduction_notes(meta: dict, result: runner.CaptureResult) -> str:
+    ticket_rel = meta.get("ticket_relpath")
+    prompt_rel = meta.get("prompt_relpath")
+    if ticket_rel is not None:
+        fixture_line = f"- ticket fixture: `tests/golden/sandbox/{ticket_rel}`"
+        invocation = "`./agent-config implement-ticket`"
+    else:
+        fixture_line = f"- prompt fixture: `tests/golden/sandbox/{prompt_rel}`"
+        invocation = "`./agent-config work`"
     lines = [
         f"# {meta['gt_id']} reproduction notes",
         "",
-        f"- ticket fixture: `tests/golden/sandbox/{meta['ticket_relpath']}`",
+        fixture_line,
         f"- persona: `{meta.get('persona') or '(default)'}`",
         f"- cycle cap: {meta.get('cycle_cap', runner.DEFAULT_CYCLE_CAP)}",
         f"- final outcome: `{result.final_outcome}`",
@@ -191,7 +227,7 @@ def _reproduction_notes(meta: dict, result: runner.CaptureResult) -> str:
         "```",
         "",
         "The driver materialises the toy repo under a temporary",
-        "directory and invokes `./agent-config implement-ticket` once",
+        f"directory and invokes {invocation} once",
         "per cycle. Recipe steps mutate the persisted state file in",
         "the same shape the agent would write.",
         "",

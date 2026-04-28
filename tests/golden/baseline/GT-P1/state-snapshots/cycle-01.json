@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Add modulo(a, b) to src/calculator.py — return a % b for ints\n",
+      "reconstructed_ac": [
+        "modulo(a, b) should return the integer remainder a % b",
+        "when called with modulo(7, 3) it must return 1",
+        "when called with modulo(-2, 3) it must return 1 (Python semantics)"
+      ],
+      "assumptions": [
+        "function lives in src/calculator.py next to add/subtract/power",
+        "no behaviour change to existing functions"
+      ]
+    }
+  },
+  "intent": "backend-coding",
+  "directive_set": "backend",
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "blocked"
+  },
+  "questions": [
+    "@agent-directive: refine-prompt",
+    "> Prompt received: Add modulo(a, b) to src/calculator.py — return a % b for ints",
+    "> No reconstructed acceptance criteria yet — running `refine-prompt` and resuming.",
+    "> 1. Continue — let the skill reconstruct AC + assumptions",
+    "> 2. Abort — the prompt is not what I meant"
+  ],
+  "report": ""
+}

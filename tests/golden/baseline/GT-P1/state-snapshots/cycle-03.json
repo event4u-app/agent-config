@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Add modulo(a, b) to src/calculator.py — return a % b for ints\n",
+      "reconstructed_ac": [
+        "modulo(a, b) should return the integer remainder a % b",
+        "when called with modulo(7, 3) it must return 1",
+        "when called with modulo(-2, 3) it must return 1 (Python semantics)"
+      ],
+      "assumptions": [
+        "function lives in src/calculator.py next to add/subtract/power",
+        "no behaviour change to existing functions"
+      ],
+      "confidence": {
+        "band": "high",
+        "score": 1.0,
+        "dimensions": {
+          "goal_clarity": 2,
+          "scope_boundary": 2,
+          "ac_evidence": 2,
+          "stack_data": 2,
+          "reversibility": 2
+        },
+        "reasons": [
+          "goal_clarity=2: action verb + bounded length + single outcome",
+          "scope_boundary=2: explicit file/class/identifier named",
+          "ac_evidence=2: 3 criteria, 3 anchored",
+          "stack_data=2: prompt is behavioural, no stack/data signal",
+          "reversibility=2: code-only change, cheap to revert"
+        ],
+        "ui_intent": false
+      },
+      "acceptance_criteria": [
+        "modulo(a, b) should return the integer remainder a % b",
+        "when called with modulo(7, 3) it must return 1",
+        "when called with modulo(-2, 3) it must return 1 (Python semantics)"
+      ]
+    }
+  },
+  "intent": "backend-coding",
+  "directive_set": "backend",
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": [
+    {
+      "title": "Add modulo(a, b)",
+      "detail": "Append modulo(a: int, b: int) -> int to src/calculator.py"
+    },
+    {
+      "title": "Add modulo(a, b)",
+      "detail": "Append test_modulo_returns_remainder to tests/test_calculator.py"
+    },
+    {
+      "title": "Add modulo(a, b)",
+      "detail": "Run pytest to confirm the new test passes"
+    }
+  ],
+  "changes": [
+    {
+      "path": "src/calculator.py",
+      "purpose": "applied by GT recipe"
+    },
+    {
+      "path": "tests/test_calculator.py",
+      "purpose": "applied by GT recipe"
+    }
+  ],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "success",
+    "implement": "blocked"
+  },
+  "questions": [
+    "@agent-directive: apply-plan ticket=(no id)",
+    "> Ticket (no id) — applying the recorded plan under `minimal-safe-diff` + `scope-control`.",
+    "> 1. Continue — apply the plan as recorded",
+    "> 2. Abort — stop before any edits are made"
+  ],
+  "report": ""
+}

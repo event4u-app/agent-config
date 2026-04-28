@@ -1,0 +1,143 @@
+{
+  "gt_id": "GT-P4",
+  "subcommand": "work",
+  "prompt_file": "prompts/gt-p4-ui-rejection.txt",
+  "persona": null,
+  "final_outcome": "halt_unhandled:_no_directive",
+  "final_exit_code": 1,
+  "cycles": [
+    {
+      "index": 1,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json",
+        "--prompt-file",
+        "prompts/gt-p4-ui-rejection.txt"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=refine\n@agent-directive: refine-prompt\n> Prompt received: Add a dark mode toggle to settings\n> No reconstructed acceptance criteria yet — running `refine-prompt` and resuming.\n> 1. Continue — let the skill reconstruct AC + assumptions\n> 2. Abort — the prompt is not what I meant\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Add a dark mode toggle to settings\n",
+            "reconstructed_ac": [
+              "settings page must offer a dark mode toggle",
+              "choice should persist across sessions",
+              "when toggled the theme must update without reload"
+            ],
+            "assumptions": [
+              "implementation lives in the settings UI module",
+              "no behaviour change to non-theme settings"
+            ]
+          }
+        },
+        "intent": "backend-coding",
+        "directive_set": "backend",
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "blocked"
+        },
+        "questions": [
+          "@agent-directive: refine-prompt",
+          "> Prompt received: Add a dark mode toggle to settings",
+          "> No reconstructed acceptance criteria yet — running `refine-prompt` and resuming.",
+          "> 1. Continue — let the skill reconstruct AC + assumptions",
+          "> 2. Abort — the prompt is not what I meant"
+        ],
+        "report": ""
+      },
+      "directive": "refine-prompt",
+      "recipe_action": "refine-prompt",
+      "recipe_notes": [
+        "refine-prompt rebound: 3 AC + 2 assumptions (high-band UI prompt)"
+      ]
+    },
+    {
+      "index": 2,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=refine\n> Prompt: Add a dark mode toggle to settings\n> This prompt reads as **UI work** — the backend dispatch track can't ship it cleanly.\n> UI dispatch is deferred to Roadmap 3 (`road-to-product-ui-track.md`); until it lands, `/work` only handles backend-shaped prompts.\n> 1. Re-frame as a backend-only prompt — I'll re-score and proceed\n> 2. Park this prompt — wait for R3 and re-invoke `/work` then\n> 3. Abort — drop this prompt\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Add a dark mode toggle to settings\n",
+            "reconstructed_ac": [
+              "settings page must offer a dark mode toggle",
+              "choice should persist across sessions",
+              "when toggled the theme must update without reload"
+            ],
+            "assumptions": [
+              "implementation lives in the settings UI module",
+              "no behaviour change to non-theme settings"
+            ],
+            "confidence": {
+              "band": "high",
+              "score": 0.9,
+              "dimensions": {
+                "goal_clarity": 2,
+                "scope_boundary": 1,
+                "ac_evidence": 2,
+                "stack_data": 2,
+                "reversibility": 2
+              },
+              "reasons": [
+                "goal_clarity=2: action verb + bounded length + single outcome",
+                "scope_boundary=1: domain noun present, no concrete path",
+                "ac_evidence=2: 3 criteria, 3 anchored",
+                "stack_data=2: prompt is behavioural, no stack/data signal",
+                "reversibility=2: code-only change, cheap to revert"
+              ],
+              "ui_intent": true
+            },
+            "acceptance_criteria": [
+              "settings page must offer a dark mode toggle",
+              "choice should persist across sessions",
+              "when toggled the theme must update without reload"
+            ]
+          }
+        },
+        "intent": "backend-coding",
+        "directive_set": "backend",
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "blocked"
+        },
+        "questions": [
+          "> Prompt: Add a dark mode toggle to settings",
+          "> This prompt reads as **UI work** — the backend dispatch track can't ship it cleanly.",
+          "> UI dispatch is deferred to Roadmap 3 (`road-to-product-ui-track.md`); until it lands, `/work` only handles backend-shaped prompts.",
+          "> 1. Re-frame as a backend-only prompt — I'll re-score and proceed",
+          "> 2. Park this prompt — wait for R3 and re-invoke `/work` then",
+          "> 3. Abort — drop this prompt"
+        ],
+        "report": ""
+      },
+      "directive": null,
+      "recipe_action": null,
+      "recipe_notes": []
+    }
+  ]
+}

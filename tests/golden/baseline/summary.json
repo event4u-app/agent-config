@@ -28,5 +28,29 @@
     "outcome": "success",
     "exit_code": 0,
     "cycles": 5
+  },
+  {
+    "gt_id": "GT-P1",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 6
+  },
+  {
+    "gt_id": "GT-P2",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 7
+  },
+  {
+    "gt_id": "GT-P3",
+    "outcome": "halt_unhandled:_no_directive",
+    "exit_code": 1,
+    "cycles": 2
+  },
+  {
+    "gt_id": "GT-P4",
+    "outcome": "halt_unhandled:_no_directive",
+    "exit_code": 1,
+    "cycles": 2
   }
 ]

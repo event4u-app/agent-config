@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Add a dark mode toggle to settings\n",
+      "reconstructed_ac": [
+        "settings page must offer a dark mode toggle",
+        "choice should persist across sessions",
+        "when toggled the theme must update without reload"
+      ],
+      "assumptions": [
+        "implementation lives in the settings UI module",
+        "no behaviour change to non-theme settings"
+      ]
+    }
+  },
+  "intent": "backend-coding",
+  "directive_set": "backend",
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "blocked"
+  },
+  "questions": [
+    "@agent-directive: refine-prompt",
+    "> Prompt received: Add a dark mode toggle to settings",
+    "> No reconstructed acceptance criteria yet — running `refine-prompt` and resuming.",
+    "> 1. Continue — let the skill reconstruct AC + assumptions",
+    "> 2. Abort — the prompt is not what I meant"
+  ],
+  "report": ""
+}
