@@ -6,7 +6,7 @@
 
 ## Overall
 
-**25 / 215 steps done · 12%**
+**26 / 215 steps done · 12%**
 
 ```text
 █████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   12%
@@ -20,7 +20,7 @@
 | 2 | [road-to-context-aware-command-suggestion.md](roadmaps/road-to-context-aware-command-suggestion.md) | 7 | 45 | 0 | 45 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-product-ui-track.md](roadmaps/road-to-product-ui-track.md) | 7 | 53 | 0 | 53 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-prompt-driven-execution.md](roadmaps/road-to-prompt-driven-execution.md) | 6 | 31 | 0 | 31 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-universal-execution-engine.md](roadmaps/road-to-universal-execution-engine.md) | 7 | 45 | 25 | 20 | 0 | 0 | ██████░░░░ 56% |
+| 5 | [road-to-universal-execution-engine.md](roadmaps/road-to-universal-execution-engine.md) | 7 | 45 | 26 | 19 | 0 | 0 | ██████░░░░ 58% |
 | 6 | [road-to-visual-review-loop.md](roadmaps/road-to-visual-review-loop.md) | 1 | 4 | 0 | 4 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
@@ -84,7 +84,7 @@
 
 ### [road-to-universal-execution-engine.md](roadmaps/road-to-universal-execution-engine.md)
 
-**Universal Execution Engine** — 25 / 45 done (56%)
+**Universal Execution Engine** — 26 / 45 done (58%)
 
 | # | Phase | State | Done | Open | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -93,7 +93,7 @@
 | 3 | Engine module rename | ✅ done | 4 | 0 | 0 | 0 | 100% |
 | 4 | Dispatcher generalization | ✅ done | 5 | 0 | 0 | 0 | 100% |
 | 5 | `/implement-ticket` wrapper rewrite | ✅ done | 3 | 0 | 0 | 0 | 100% |
-| 6 | Golden Replay and CI gate | 🟡 in progress | 2 | 3 | 0 | 0 | 40% |
+| 6 | Golden Replay and CI gate | 🟡 in progress | 3 | 2 | 0 | 0 | 60% |
 | 7 | Verification and docs | ⬜ not started | 0 | 17 | 0 | 0 | 0% |
 
 ### [road-to-visual-review-loop.md](roadmaps/road-to-visual-review-loop.md)
