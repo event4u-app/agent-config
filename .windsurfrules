@@ -3317,6 +3317,13 @@ back on the user. Take the position; be wrong out loud if needed.
 - Mark the recommended option inline: `1. Do X — short explanation (recommended)`.
 - After the option block, state **WHY** in 1–3 sentences: the trade-off
   that tips the balance, plus the **caveat** that would flip it.
+- **Consistency Iron Law** — the option marked `(recommended)` inline and
+  the option named in the "I recommend N" / "Empfehlung N" prose MUST
+  be the same number. Other numbers may appear as caveats ("escalate to
+  2 if …"), but the primary recommendation in inline tag and prose
+  match. **Pre-send gate**: before emitting, locate the `(recommended)`
+  tag → locate the first "recommend N" / "Empfehlung N" in the prose
+  → if N differs, rewrite. Mismatch is a rule violation, not a slip.
 - If the agent genuinely cannot pick (rare — true 50/50 with missing
   data), say what data would break the tie and ask for that instead.
 
