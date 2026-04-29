@@ -4,7 +4,7 @@
 
 ## Mission
 
-Make the value of every artefact in `.augment/` empirically defensible. Today we ship 124 skills, 46 rules, 73 commands, 46 guidelines, 7 personas — and have no data on what the agent actually pulls into context, what it cites, what it never touches. The goal is a local, append-only **engagement log** that records — at task boundaries, not per tool-call — which artefacts were `consulted` (loaded into context) and which were `applied` (cited in the agent's output or directly drove a decision), plus a maintainer-side aggregator that turns the log into retirement / promotion signals.
+Make the value of every artefact in `.augment/` empirically defensible. Today we ship 125 skills, 47 rules, 74 commands, 46 guidelines, 7 personas — and have no data on what the agent actually pulls into context, what it cites, what it never touches. The goal is a local, append-only **engagement log** that records — at task boundaries, not per tool-call — which artefacts were `consulted` (loaded into context) and which were `applied` (cited in the agent's output or directly drove a decision), plus a maintainer-side aggregator that turns the log into retirement / promotion signals.
 
 This roadmap **does not** change agent behaviour for consumers who keep the default. Enabled by maintainers (and only by them), it produces a `.agent-engagement.jsonl` that the same maintainer can roll up via `./agent-config telemetry:report`.
 

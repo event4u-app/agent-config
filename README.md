@@ -5,7 +5,7 @@ Teach your AI agents Laravel, PHP, testing, Git workflows, and **120+ more skill
 > Your agent learns to write Laravel code, run tests, create PRs, fix CI — and follows your team's coding standards while doing it.
 
 <p align="center">
-  <strong>125 Skills</strong> · <strong>46 Rules</strong> · <strong>74 Commands</strong> · <strong>46 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>125 Skills</strong> · <strong>47 Rules</strong> · <strong>74 Commands</strong> · <strong>46 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
