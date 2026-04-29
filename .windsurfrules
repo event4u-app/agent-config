@@ -658,12 +658,10 @@ I/O is owned by [`scripts/chat_history.py`](../../../scripts/chat_history.py)
 ```
 
 **Overrides** token-efficiency, conversation momentum, "the turn was
-trivial". Three enforcement layers make violations observable:
-**turn-start gate** (`turn-check` exits non-zero on
-`missing`/`foreign`/`returning`), **append-side refusal**
-(`append --first-user-msg` exits `3` on ownership mismatch), and
-**reply-side heartbeat** (script-generated marker; missing marker or
-stale entry-count = silent skip becomes immediately visible).
+trivial". Three enforcement layers: **turn-check** non-zero on
+`missing`/`foreign`/`returning`, **append refusal** (exit `3` on
+ownership mismatch), **script-generated heartbeat** (silent skip
+becomes immediately visible).
 
 ### Turn-start gate — MANDATORY first tool call
 
@@ -700,7 +698,7 @@ skipped or the file was hijacked — surface it, do not swallow it.
 Cadence is the trigger, not reply length; do not batch missed turns at
 the end (crashes happen between turns).
 
-### Heartbeat marker — MANDATORY in every reply
+### Heartbeat marker — visibility gated by `chat_history.heartbeat`
 
 Run silently before emitting the final reply:
 
@@ -708,24 +706,29 @@ Run silently before emitting the final reply:
 scripts/chat_history.py heartbeat --first-user-msg "<first-user-msg>"
 ```
 
-Stdout is a single line, e.g.
-`📒 chat-history: ok · 9 entries · per_phase · last 30s ago`. Include
-this line **verbatim** as the last line of the reply. Always exits 0
-— this is observability, not a gate.
+Stdout is **at most** one line, e.g.
+`📒 chat-history: ok · 9 entries · per_phase · last 30s ago`. Non-empty
+→ paste **verbatim** as the last line of the reply. Empty → emit
+nothing (the visibility mode chose silence). Always exits 0 —
+observability, not a gate.
 
-**NEVER type the marker from memory.** Re-running the script is
-the observability gate — typing the line from what you *remember*
-makes stale counts, frozen ages, and foreign/missing/returning
-states invisible. Every reply: invoke, copy stdout, paste
-verbatim. Same rule for any tool-generated marker — re-run the
-source, never reproduce from memory.
+**Visibility modes** — `chat_history.heartbeat`:
 
-States: `ok` (entries+age shown), `disabled` (compact, single token),
-`foreign`/`returning`/`missing` (marker tells the user the prompt or
-init step is owed). The user sees stale entry counts or missing
-markers immediately; that is the point — the previous text-only
-pre-send gate was bypassed silently and this layer makes that
-impossible.
+| Mode | When marker prints | Token cost |
+|---|---|---|
+| `on` | every reply (legacy) | ~20 tokens / reply |
+| `off` | never — full silence | 0 |
+| `hybrid` *(default)* | drift states only (`missing`/`foreign`/`returning`) | 0 in normal flow, ~20 on drift |
+
+`hybrid` ships zero tokens when healthy, loud on ownership drift. `on`
+keeps it visible for debugging. `off` opts out — drift only shows up
+when the user opens the file. YAML 1.1 booleanizes bare `on`/`off`;
+the reader coerces both back, so `heartbeat: on` works unquoted.
+
+**NEVER type the marker from memory.** Re-running the script is the
+gate — typed-from-memory lines hide stale counts and frozen ages.
+Every reply: invoke, paste stdout verbatim (or nothing if empty).
+Same rule for any tool-generated marker.
 
 ## Activation & handshake
 
@@ -824,17 +827,11 @@ telemetry). Decide ownership heuristically — only `state` does that.
 
 ## Interactions & references
 
-- `ask-when-uncertain` + `user-interaction` — foreign/returning prompts use
-  numbered options, one question per turn.
+- `ask-when-uncertain` + `user-interaction` — foreign/returning prompts use numbered options, one question per turn.
 - `language-and-tone` — prompt translated at runtime; `.md` stays English.
 - `onboarding-gate` — runs first; this rule activates only after it clears.
-- `token-efficiency` — never load the full log; use `status` /  `read --last N`.
-- File API: [`scripts/chat_history.py`](../../../scripts/chat_history.py).
-  Commands: [`/chat-history`](../commands/chat-history.md),
-  [`/chat-history-resume`](../commands/chat-history-resume.md),
-  [`/chat-history-clear`](../commands/chat-history-clear.md). Settings:
-  [`agent-settings`](../templates/agent-settings.md). Types:
-  [`rule-type-governance`](rule-type-governance.md).
+- `token-efficiency` — never load the full log; use `status` / `read --last N`.
+- API: [`scripts/chat_history.py`](../../../scripts/chat_history.py). Commands: [`/chat-history`](../commands/chat-history.md), [`/chat-history-resume`](../commands/chat-history-resume.md), [`/chat-history-clear`](../commands/chat-history-clear.md). Settings: [`agent-settings`](../templates/agent-settings.md). Types: [`rule-type-governance`](rule-type-governance.md).
 
 ---
 

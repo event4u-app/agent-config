@@ -132,6 +132,13 @@ chat_history:
   # Overflow behavior: rotate (drop oldest) | compress (summarize)
   on_overflow: rotate
 
+  # Heartbeat marker visibility: on | off | hybrid
+  #   on     — print marker every reply (~20 tokens/reply, legacy)
+  #   off    — never print (zero tokens, no drift signal)
+  #   hybrid — print only on drift (missing/foreign/returning); silent otherwise
+  # YAML 1.1 booleanizes bare on/off — both are accepted, no quoting needed.
+  heartbeat: hybrid
+
 # --- Optional pipelines ---
 pipelines:
   # Skill improvement pipeline (true, false)
@@ -222,6 +229,7 @@ lives under `personal:` in YAML.
 | `chat_history.frequency` | `per_turn`, `per_phase`, `per_tool` | per profile | Logging granularity. Defaults: `minimal`→`per_turn`, `balanced`→`per_phase`, `full`→`per_tool`. |
 | `chat_history.max_size_kb` | integer | per profile | Max file size before overflow handling. Defaults: `minimal`→`128`, `balanced`→`256`, `full`→`512`. |
 | `chat_history.on_overflow` | `rotate`, `compress` | per profile | On overflow: `rotate` drops oldest entries; `compress` marks the file for summarization on the next turn. Defaults: `minimal`/`balanced`→`rotate`, `full`→`compress`. |
+| `chat_history.heartbeat` | `on`, `off`, `hybrid` | `hybrid` | Visibility of the `📒 chat-history:` marker. `on` = every reply (~20 tokens), `off` = silent, `hybrid` = print only on drift states (`missing`/`foreign`/`returning`). YAML `on`/`off` accepted bare. |
 | `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
 | `subagents.implementer_model` | model alias or empty | _(empty)_ | Model for implementer subagents. Empty = same tier as session model. See [subagent-configuration](../contexts/subagent-configuration.md). |
 | `subagents.judge_model` | model alias or empty | _(empty)_ | Model for judge subagents. Empty = one tier above implementer (opus if sonnet, sonnet if haiku). |

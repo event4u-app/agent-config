@@ -400,6 +400,47 @@ def _read_chat_history_enabled(settings_path: Path) -> bool:
     return bool(section.get("enabled", False))
 
 
+VALID_HEARTBEAT_MODES = ("on", "off", "hybrid")
+DRIFT_STATES = ("missing", "foreign", "returning")
+
+
+def _read_chat_history_heartbeat_mode(settings_path: Path) -> str:
+    """Read chat_history.heartbeat from .agent-settings.yml.
+
+    Returns one of 'on' | 'off' | 'hybrid'. Default 'hybrid' (marker
+    surfaces only on drift states — missing/foreign/returning — and
+    stays silent on 'ok'/'disabled'). Unknown values fall back to
+    'hybrid'. Mirrors the default-deny policy of `_read_chat_history_enabled`
+    for the `enabled` flag, but here the default is the safer-by-design
+    hybrid mode rather than off.
+    """
+    if not settings_path.is_file():
+        return "hybrid"
+    try:
+        import yaml  # type: ignore[import-untyped]
+    except ImportError:
+        return "hybrid"
+    try:
+        with settings_path.open(encoding="utf-8") as fh:
+            data = yaml.safe_load(fh) or {}
+    except (OSError, yaml.YAMLError):
+        return "hybrid"
+    section = data.get("chat_history") if isinstance(data, dict) else None
+    if not isinstance(section, dict):
+        return "hybrid"
+    raw = section.get("heartbeat", "hybrid")
+    # YAML 1.1 (PyYAML default) booleanizes bare on/off to True/False.
+    # Coerce back so users can write `heartbeat: on` without quoting.
+    if raw is True:
+        return "on"
+    if raw is False:
+        return "off"
+    val = str(raw).lower()
+    if val in VALID_HEARTBEAT_MODES:
+        return val
+    return "hybrid"
+
+
 def turn_check(first_user_msg: str, *, path: Path | None = None,
                settings_path: Path | None = None) -> dict[str, Any]:
     """Compute the turn-start ownership state.
@@ -673,9 +714,20 @@ def _cmd_heartbeat(args) -> int:
     settings_path = Path(args.settings) if args.settings else None
     result = heartbeat(args.first_user_msg, settings_path=settings_path)
     if args.json:
+        # JSON consumers want the full record regardless of mode.
         print(json.dumps(result, ensure_ascii=False))
-    else:
-        print(result["marker"])
+        return EXIT_OK
+    mode = _read_chat_history_heartbeat_mode(
+        settings_path or Path(DEFAULT_SETTINGS_FILE)
+    )
+    state = str(result.get("state", ""))
+    # off → never print. hybrid → only on drift states.
+    # on → always (current behavior).
+    if mode == "off":
+        return EXIT_OK
+    if mode == "hybrid" and state not in DRIFT_STATES:
+        return EXIT_OK
+    print(result["marker"])
     return EXIT_OK
 
 

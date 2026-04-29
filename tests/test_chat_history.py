@@ -573,7 +573,13 @@ def test_cli_append_first_user_msg_foreign_exit_3(
 @pytest.fixture
 def settings_enabled(tmp_path: Path) -> Path:
     p = tmp_path / "agent-settings.yml"
-    p.write_text("chat_history:\n  enabled: true\n", encoding="utf-8")
+    # heartbeat: on keeps legacy CLI tests asserting "marker is printed
+    # whenever the rule is enabled". The shipping default is hybrid;
+    # mode-specific tests below pin their own value.
+    p.write_text(
+        "chat_history:\n  enabled: true\n  heartbeat: on\n",
+        encoding="utf-8",
+    )
     return p
 
 
@@ -581,6 +587,26 @@ def settings_enabled(tmp_path: Path) -> Path:
 def settings_disabled(tmp_path: Path) -> Path:
     p = tmp_path / "agent-settings.yml"
     p.write_text("chat_history:\n  enabled: false\n", encoding="utf-8")
+    return p
+
+
+@pytest.fixture
+def settings_heartbeat_hybrid(tmp_path: Path) -> Path:
+    p = tmp_path / "agent-settings.yml"
+    p.write_text(
+        "chat_history:\n  enabled: true\n  heartbeat: hybrid\n",
+        encoding="utf-8",
+    )
+    return p
+
+
+@pytest.fixture
+def settings_heartbeat_off(tmp_path: Path) -> Path:
+    p = tmp_path / "agent-settings.yml"
+    p.write_text(
+        "chat_history:\n  enabled: true\n  heartbeat: off\n",
+        encoding="utf-8",
+    )
     return p
 
 
@@ -858,8 +884,13 @@ def test_cli_heartbeat_json_flag(
 
 
 def test_cli_heartbeat_disabled(tmp_path: Path, monkeypatch, capsys):
+    # heartbeat: on forces the disabled marker to surface — without it
+    # the default hybrid mode suppresses informational states.
     settings = tmp_path / "agent-settings.yml"
-    settings.write_text("chat_history:\n  enabled: false\n", encoding="utf-8")
+    settings.write_text(
+        "chat_history:\n  enabled: false\n  heartbeat: on\n",
+        encoding="utf-8",
+    )
     monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE",
                        str(tmp_path / "absent.jsonl"))
     rc = ch.main([
@@ -869,4 +900,137 @@ def test_cli_heartbeat_disabled(tmp_path: Path, monkeypatch, capsys):
     assert rc == ch.EXIT_OK
     captured = capsys.readouterr()
     assert "disabled" in captured.out
+
+
+
+# --- D: heartbeat visibility modes (on / off / hybrid) -------------
+
+
+def test_read_heartbeat_mode_default_hybrid(tmp_path: Path):
+    p = tmp_path / "agent-settings.yml"
+    # No heartbeat key at all → default
+    p.write_text("chat_history:\n  enabled: true\n", encoding="utf-8")
+    assert ch._read_chat_history_heartbeat_mode(p) == "hybrid"
+
+
+def test_read_heartbeat_mode_yaml_on_off_coerced(tmp_path: Path):
+    p = tmp_path / "agent-settings.yml"
+    # YAML 1.1 booleanizes bare on/off — reader must coerce back
+    p.write_text(
+        "chat_history:\n  enabled: true\n  heartbeat: on\n",
+        encoding="utf-8",
+    )
+    assert ch._read_chat_history_heartbeat_mode(p) == "on"
+    p.write_text(
+        "chat_history:\n  enabled: true\n  heartbeat: off\n",
+        encoding="utf-8",
+    )
+    assert ch._read_chat_history_heartbeat_mode(p) == "off"
+
+
+def test_read_heartbeat_mode_unknown_falls_back_to_hybrid(tmp_path: Path):
+    p = tmp_path / "agent-settings.yml"
+    p.write_text(
+        "chat_history:\n  enabled: true\n  heartbeat: chatty\n",
+        encoding="utf-8",
+    )
+    assert ch._read_chat_history_heartbeat_mode(p) == "hybrid"
+
+
+def test_cli_heartbeat_off_silent_on_ok(
+    hist: Path, settings_heartbeat_off: Path, monkeypatch, capsys,
+):
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    rc = ch.main([
+        "heartbeat", "--first-user-msg", "orig",
+        "--settings", str(settings_heartbeat_off),
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+
+
+def test_cli_heartbeat_off_silent_on_drift(
+    hist: Path, settings_heartbeat_off: Path, monkeypatch, capsys,
+):
+    # off suppresses even drift states — user opted into full silence
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    rc = ch.main([
+        "heartbeat", "--first-user-msg", "DIFFERENT",
+        "--settings", str(settings_heartbeat_off),
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+
+def test_cli_heartbeat_hybrid_silent_on_ok(
+    hist: Path, settings_heartbeat_hybrid: Path, monkeypatch, capsys,
+):
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    rc = ch.main([
+        "heartbeat", "--first-user-msg", "orig",
+        "--settings", str(settings_heartbeat_hybrid),
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+
+def test_cli_heartbeat_hybrid_visible_on_foreign(
+    hist: Path, settings_heartbeat_hybrid: Path, monkeypatch, capsys,
+):
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    rc = ch.main([
+        "heartbeat", "--first-user-msg", "DIFFERENT",
+        "--settings", str(settings_heartbeat_hybrid),
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    assert "foreign" in captured.out
+
+
+def test_cli_heartbeat_hybrid_silent_on_disabled(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    # disabled + hybrid → silent (chat_history globally off, no signal)
+    settings = tmp_path / "agent-settings.yml"
+    settings.write_text(
+        "chat_history:\n  enabled: false\n  heartbeat: hybrid\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE",
+                       str(tmp_path / "absent.jsonl"))
+    rc = ch.main([
+        "heartbeat", "--first-user-msg", "anything",
+        "--settings", str(settings),
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+
+def test_cli_heartbeat_json_unaffected_by_mode(
+    hist: Path, settings_heartbeat_off: Path, monkeypatch, capsys,
+):
+    # --json bypasses the visibility filter — consumers want full record
+    ch.init("orig", path=hist)
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    rc = ch.main([
+        "heartbeat", "--first-user-msg", "orig",
+        "--settings", str(settings_heartbeat_off), "--json",
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert payload["state"] == "ok"
 
