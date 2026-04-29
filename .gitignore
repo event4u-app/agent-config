@@ -70,3 +70,6 @@ evals/results/
 # Safety net: catch any alternative dot-prefixed staging variants
 # (e.g. `.gt-staging/` debris from earlier capture iterations).
 /tests/golden/.gt-*
+
+# Cloud bundle output
+/dist/

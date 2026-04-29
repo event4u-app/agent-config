@@ -273,6 +273,22 @@ tasks:
     desc: Generate quality score report (per artifact type)
     cmd: python3 scripts/skill_linter.py --report
 
+  build-cloud-bundle:
+    desc: "Build one cloud-skill ZIP (Anthropic Skills format) — usage: task build-cloud-bundle -- SKILL=name"
+    cmd: python3 scripts/build_cloud_bundle.py --skill {{.SKILL}}
+
+  build-cloud-bundles-all:
+    desc: Build every eligible skill into dist/cloud/<name>.zip (T3-H skipped)
+    cmd: python3 scripts/build_cloud_bundle.py --all --clean
+
+  ci-cloud-bundle:
+    desc: Validate cloud-bundle invariants without producing files (CI gate)
+    cmd: python3 scripts/build_cloud_bundle.py --check
+
+  audit-cloud:
+    desc: Tier classification for cloud-distribution readiness
+    cmd: python3 scripts/audit_cloud_compatibility.py {{.CLI_ARGS}}
+
   first-run:
     desc: Show the recommended first-run experience for new users
     cmd: bash scripts/first-run.sh
@@ -363,6 +379,7 @@ tasks:
       - task: validate-schema
       - task: lint-skills
       - task: lint-marketplace
+      - task: ci-cloud-bundle
       - task: check-memory
       - task: golden-replay
       - task: test
