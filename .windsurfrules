@@ -649,21 +649,21 @@ git-ignored) so a crashed or switched agent session can be resumed. File
 I/O is owned by [`scripts/chat_history.py`](../../../scripts/chat_history.py)
 — this rule says **when** to call it, not how the file is structured.
 
-## Iron Law — turn-check first, then append at every cadence boundary
+## Iron Law — three gates, skipping any one is a rule violation
 
 ```
-FIRST TOOL CALL OF EVERY SESSION = `chat_history.py turn-check`.
-APPEND AT EVERY CADENCE BOUNDARY, ALWAYS WITH `--first-user-msg`
-SO THE SCRIPT CAN REFUSE FOREIGN WRITES.
-NO turn-check + NO MATCHING APPEND = RULE VIOLATION, NOT A SLIP.
+1. turn-check    — first tool call of every session
+2. append        — at every cadence boundary, with --first-user-msg
+3. heartbeat     — last line of every reply, script-generated, verbatim
 ```
 
 **Overrides** token-efficiency, conversation momentum, "the turn was
-trivial". Two enforcement layers in `scripts/chat_history.py` make
-violations observable: **turn-start gate** (`turn-check` exits non-zero
-on `missing`/`foreign`/`returning`; skipping it shows up as a missing
-tool call) and **append-side refusal** (`append --first-user-msg`
-exits `3` on ownership mismatch; misrouted writes can't land silently).
+trivial". Three enforcement layers make violations observable:
+**turn-start gate** (`turn-check` exits non-zero on
+`missing`/`foreign`/`returning`), **append-side refusal**
+(`append --first-user-msg` exits `3` on ownership mismatch), and
+**reply-side heartbeat** (script-generated marker; missing marker or
+stale entry-count = silent skip becomes immediately visible).
 
 ### Turn-start gate — MANDATORY first tool call
 
@@ -677,34 +677,48 @@ Exit codes: `0` = `ok`/`disabled` (proceed), `10` = `missing`
 Returning-Prompt + stop). The script also writes a one-line
 `ACTION REQUIRED:` hint to stderr on non-zero exits.
 
-### Pre-send gate — MANDATORY before every reply
+### Append cadence — MANDATORY at boundaries
 
-Run silently **before** emitting the final reply:
+Cadence comes from `chat_history.frequency`:
 
-1. **Detect** — does this turn cross the configured cadence boundary?
-   - `per_turn` → every reply crosses one. Always append.
-   - `per_phase` → did this turn complete a phase boundary? (user
-     question answered, decision taken, task-list item completed,
-     significant tool sequence finished). If yes, append. If the turn
-     is a pure clarification with no progress, skip.
-   - `per_tool` → did any tool call run this turn? If yes, append.
-2. **Check** — was `scripts/chat_history.py append` already called this
-   turn for the boundary identified in step 1?
-3. **Append** — if not, do it now with a one-line `phase`/`decision`
-   entry. Always pass `--first-user-msg "<first-user-msg>"` so the
-   script can refuse foreign writes. Use a `phase` entry over `agent`
-   when the turn marks a boundary.
-4. **Confirm** — the `append` call returned 0. Exit 3 (`OWNERSHIP_REFUSED`)
-   means turn-start was skipped or the file was hijacked between turns:
-   surface the error to the user — do not swallow it, do not retry
-   without `--first-user-msg`.
+- `per_turn` → one entry at the end of every agent turn.
+- `per_phase` → at phase boundaries (user question answered, decision
+  taken, task-list item completed, significant tool sequence finished).
+  Pure clarification turns may skip.
+- `per_tool` → after each tool-call sequence.
 
-### Failure modes
+Every append goes through
 
-Cadence is the trigger, not reply length. Never batch missed turns at
-the end — crashes happen between turns. After tool-heavy turns, append
-last before shipping. If cadence drifts from agent discipline, fix the
-setting, don't keep skipping.
+```bash
+scripts/chat_history.py append --first-user-msg "<msg>" \
+  --type <user|agent|tool|decision|phase> --json '<obj>'
+```
+
+Never write the file directly. Prefer `phase` over `agent` for
+boundaries. Exit `3` (`OWNERSHIP_REFUSED`) means turn-start was
+skipped or the file was hijacked — surface it, do not swallow it.
+Cadence is the trigger, not reply length; do not batch missed turns at
+the end (crashes happen between turns).
+
+### Heartbeat marker — MANDATORY in every reply
+
+Run silently before emitting the final reply:
+
+```bash
+scripts/chat_history.py heartbeat --first-user-msg "<first-user-msg>"
+```
+
+Stdout is a single line, e.g.
+`📒 chat-history: ok · 9 entries · per_phase · last 30s ago`. Include
+this line **verbatim** as the last line of the reply. Always exits 0
+— this is observability, not a gate.
+
+States: `ok` (entries+age shown), `disabled` (compact, single token),
+`foreign`/`returning`/`missing` (marker tells the user the prompt or
+init step is owed). The user sees stale entry counts or missing
+markers immediately; that is the point — the previous text-only
+pre-send gate was bypassed silently and this layer makes that
+impossible.
 
 ## Activation & handshake
 
@@ -786,27 +800,6 @@ flattened preview ≤ ~200 chars (context, not transcript). Use current
 time if exact timestamps are unknown — order matters, not precision.
 Never include tool payloads, file contents, or secrets. For large
 lists (>30 KB) use `reset ... --entries-stdin <<< '<list>'`.
-
-## Append cadence — from `frequency`
-
-Every append goes through
-
-```bash
-scripts/chat_history.py append \
-  --first-user-msg "<first-user-msg>" \
-  --type <t> --json '<obj>'
-```
-
-Never write the file directly. `--first-user-msg` is the
-second-line-of-defense ownership check — exit `3` = foreign/returning/missing, write refused.
-
-- `per_turn` — one entry at the end of every agent turn.
-- `per_phase` — at phase boundaries (user question, agent answer,
-  decision, task-list item completion).
-- `per_tool` — after each tool-call sequence.
-
-Entry types: `user`, `agent`, `tool`, `decision`, `phase`. Prefer `phase`
-over `agent` when the entry marks a boundary.
 
 ## Overflow — from `on_overflow`
 
