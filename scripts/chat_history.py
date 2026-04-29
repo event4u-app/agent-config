@@ -41,11 +41,33 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_FILE = ".agent-chat-history"
+DEFAULT_SETTINGS_FILE = ".agent-settings.yml"
 SCHEMA_VERSION = 2
 FORMER_FPS_CAP = 10
 VALID_FREQS = {"per_turn", "per_phase", "per_tool"}
 VALID_OVERFLOW = {"rotate", "compress"}
 _WS_RE = re.compile(r"\s+")
+
+# Exit codes for the CLI. Distinct codes let shell callers branch on state.
+EXIT_OK = 0
+EXIT_BAD_ARGS = 2
+EXIT_OWNERSHIP_REFUSED = 3
+EXIT_MISSING = 10
+EXIT_FOREIGN = 11
+EXIT_RETURNING = 12
+
+
+class OwnershipError(RuntimeError):
+    """Raised when an operation is rejected because the caller's session
+    does not own the chat-history file. `state` is one of
+    `foreign` | `returning` | `missing`."""
+
+    def __init__(self, state: str, *, header_fp: str = "",
+                 current_fp: str = "") -> None:
+        super().__init__(f"chat-history ownership refused: state={state}")
+        self.state = state
+        self.header_fp = header_fp
+        self.current_fp = current_fp
 
 
 def file_path() -> Path:
@@ -119,14 +141,32 @@ def init(first_user_msg: str, freq: str = "per_phase", *,
     return header
 
 
-def append(entry: dict[str, Any], *, path: Path | None = None) -> None:
-    """Append one entry. Entry must be a dict; `ts` is auto-filled."""
+def append(entry: dict[str, Any], *, path: Path | None = None,
+           first_user_msg: str | None = None) -> None:
+    """Append one entry. Entry must be a dict; `ts` is auto-filled.
+
+    When `first_user_msg` is provided, the call validates ownership
+    before writing: only `state == match` proceeds. Any other state
+    (`foreign`, `returning`, `missing`) raises `OwnershipError`. This
+    is the second line of defense against silent writes to a foreign
+    session's file. Existing callers without `first_user_msg` keep the
+    legacy unguarded behavior for back-compat.
+    """
     if not isinstance(entry, dict) or not entry.get("t"):
         raise ValueError("entry must be a dict with non-empty 't' key")
     if entry["t"] == "header":
         raise ValueError("use init() to write the header, not append()")
-    entry.setdefault("ts", _now())
     p = path or file_path()
+    if first_user_msg is not None:
+        state = ownership_state(first_user_msg, path=p)
+        if state != "match":
+            header = read_header(p) or {}
+            raise OwnershipError(
+                state,
+                header_fp=str(header.get("fp", "")),
+                current_fp=fingerprint(first_user_msg),
+            )
+    entry.setdefault("ts", _now())
     with p.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
@@ -334,6 +374,70 @@ def status(*, path: Path | None = None) -> dict[str, Any]:
     }
 
 
+def _read_chat_history_enabled(settings_path: Path) -> bool:
+    """Read chat_history.enabled from .agent-settings.yml.
+
+    Returns False when the file is missing, malformed, lacks the
+    `chat_history` section, or sets enabled to false. Default-deny so
+    `turn-check` is safe to run from projects that have not opted in.
+    PyYAML is imported lazily — the rest of this module works without it.
+    """
+    if not settings_path.is_file():
+        return False
+    try:
+        import yaml  # type: ignore[import-untyped]
+    except ImportError:
+        return True  # fail open: settings file present but no parser
+    try:
+        with settings_path.open(encoding="utf-8") as fh:
+            data = yaml.safe_load(fh) or {}
+    except (OSError, yaml.YAMLError):
+        return False
+    section = data.get("chat_history") if isinstance(data, dict) else None
+    if not isinstance(section, dict):
+        return False
+    return bool(section.get("enabled", False))
+
+
+def turn_check(first_user_msg: str, *, path: Path | None = None,
+               settings_path: Path | None = None) -> dict[str, Any]:
+    """Compute the turn-start ownership state.
+
+    Returns a structured dict the CLI renders to stdout/stderr. Pure
+    function — no I/O outside the two paths it reads.
+    """
+    sp = settings_path or Path(DEFAULT_SETTINGS_FILE)
+    if not _read_chat_history_enabled(sp):
+        return {"state": "disabled", "exit": EXIT_OK}
+    p = path or file_path()
+    state = ownership_state(first_user_msg, path=p)
+    if state == "match":
+        st = status(path=p)
+        return {
+            "state": "ok",
+            "exit": EXIT_OK,
+            "entries": st.get("entries", 0),
+        }
+    header = read_header(p) or {}
+    out: dict[str, Any] = {
+        "state": state,
+        "current_fp": fingerprint(first_user_msg),
+        "header_fp": str(header.get("fp", "")),
+        "preview": str(header.get("preview", "")),
+    }
+    if state == "missing":
+        out["exit"] = EXIT_MISSING
+    elif state == "foreign":
+        out["exit"] = EXIT_FOREIGN
+        st = status(path=p)
+        out["entries"] = st.get("entries", 0)
+    else:  # returning
+        out["exit"] = EXIT_RETURNING
+        st = status(path=p)
+        out["entries"] = st.get("entries", 0)
+    return out
+
+
 def overflow_handle(max_kb: int, mode: str = "rotate", *,
                     path: Path | None = None) -> dict[str, Any]:
     """Enforce max_kb. Returns {'action', 'kept', 'dropped'}.
@@ -388,10 +492,21 @@ def _cmd_append(args) -> int:
     entry = json.loads(args.json) if args.json else {}
     entry.setdefault("t", args.type)
     if not entry.get("t"):
-        print("error: --type or a 't' key in --json is required", file=sys.stderr)
-        return 2
-    append(entry)
-    return 0
+        print("error: --type or a 't' key in --json is required",
+              file=sys.stderr)
+        return EXIT_BAD_ARGS
+    try:
+        append(entry, first_user_msg=args.first_user_msg)
+    except OwnershipError as exc:
+        print(
+            f"error: append refused — state={exc.state}; "
+            f"header_fp={exc.header_fp[:8]} current_fp={exc.current_fp[:8]}. "
+            f"Run `chat_history.py turn-check --first-user-msg \"...\"` "
+            f"and resolve ownership before retrying.",
+            file=sys.stderr,
+        )
+        return EXIT_OWNERSHIP_REFUSED
+    return EXIT_OK
 
 
 def _cmd_status(_args) -> int:
@@ -407,6 +522,54 @@ def _cmd_check(args) -> int:
 def _cmd_state(args) -> int:
     print(ownership_state(args.first_user_msg))
     return 0
+
+
+def _format_turn_check_stdout(result: dict[str, Any]) -> str:
+    """Render turn_check() result as a single key=value line for shell parsing."""
+    state = result["state"]
+    parts = [f"state={state}"]
+    if "entries" in result:
+        parts.append(f"entries={result['entries']}")
+    if state in {"foreign", "returning"}:
+        parts.append(f"header_fp={str(result.get('header_fp', ''))[:8]}")
+        parts.append(f"current_fp={str(result.get('current_fp', ''))[:8]}")
+        preview = str(result.get("preview", "")).replace('"', "'")
+        if preview:
+            parts.append(f'preview="{preview[:80]}"')
+    return " ".join(parts)
+
+
+def _turn_check_action_hint(state: str) -> str:
+    """Stderr hint telling the agent which prompt to render."""
+    if state == "ok":
+        return ""
+    if state == "disabled":
+        return ""
+    if state == "missing":
+        return ("ACTION REQUIRED: state=missing — run "
+                "`chat_history.py init --first-user-msg \"...\" "
+                "--freq <frequency-from-settings>` before any other reply.")
+    if state == "foreign":
+        return ("ACTION REQUIRED: state=foreign — render the Foreign-Prompt "
+                "from the chat-history rule (3 numbered options: Resume / "
+                "New start / Ignore) before any other reply. Do not append "
+                "to this file until the user picks.")
+    if state == "returning":
+        return ("ACTION REQUIRED: state=returning — render the "
+                "Returning-Prompt from the chat-history rule (3 numbered "
+                "options: Merge / Replace / Continue) before any other "
+                "reply. Do not append to this file until the user picks.")
+    return f"ACTION REQUIRED: unknown state={state}"
+
+
+def _cmd_turn_check(args) -> int:
+    settings_path = Path(args.settings) if args.settings else None
+    result = turn_check(args.first_user_msg, settings_path=settings_path)
+    print(_format_turn_check_stdout(result))
+    hint = _turn_check_action_hint(result["state"])
+    if hint:
+        print(hint, file=sys.stderr)
+    return int(result["exit"])
 
 
 def _cmd_adopt(args) -> int:
@@ -471,6 +634,12 @@ def main(argv: list[str] | None = None) -> int:
     p_app = sub.add_parser("append")
     p_app.add_argument("--type", help="entry type (t field)")
     p_app.add_argument("--json", help="JSON object with entry fields")
+    p_app.add_argument(
+        "--first-user-msg",
+        default=None,
+        help=("validate ownership before writing — refuses with exit "
+              f"{EXIT_OWNERSHIP_REFUSED} on foreign/returning/missing"),
+    )
     p_app.set_defaults(func=_cmd_append)
     sub.add_parser("status").set_defaults(func=_cmd_status)
     p_chk = sub.add_parser("check")
@@ -479,6 +648,19 @@ def main(argv: list[str] | None = None) -> int:
     p_state = sub.add_parser("state")
     p_state.add_argument("--first-user-msg", required=True)
     p_state.set_defaults(func=_cmd_state)
+    p_tc = sub.add_parser(
+        "turn-check",
+        help=("turn-start ownership gate; exit 0=ok/disabled, "
+              f"{EXIT_MISSING}=missing, {EXIT_FOREIGN}=foreign, "
+              f"{EXIT_RETURNING}=returning"),
+    )
+    p_tc.add_argument("--first-user-msg", required=True)
+    p_tc.add_argument(
+        "--settings",
+        default=None,
+        help=f"path to agent settings (default: {DEFAULT_SETTINGS_FILE})",
+    )
+    p_tc.set_defaults(func=_cmd_turn_check)
     p_ado = sub.add_parser("adopt")
     p_ado.add_argument("--first-user-msg", required=True)
     p_ado.set_defaults(func=_cmd_adopt)

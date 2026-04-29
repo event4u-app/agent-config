@@ -484,3 +484,244 @@ def test_cli_reset_and_prepend(tmp_path: Path, monkeypatch, capsys):
     assert out["prepended"] == 1
     entries = ch.read_entries(path=target)
     assert [e["text"] for e in entries] == ["earlier", "u1", "a1"]
+
+
+
+# --- A: append-side ownership enforcement ----------------------------
+
+
+def test_append_with_first_user_msg_match_writes(hist: Path):
+    ch.init("orig msg", path=hist)
+    ch.append({"t": "phase", "name": "ok"}, path=hist,
+              first_user_msg="orig msg")
+    entries = ch.read_entries(path=hist)
+    assert [e.get("name") for e in entries] == ["ok"]
+
+
+def test_append_with_first_user_msg_foreign_raises(hist: Path):
+    ch.init("orig msg", path=hist)
+    with pytest.raises(ch.OwnershipError) as excinfo:
+        ch.append({"t": "phase", "name": "nope"}, path=hist,
+                  first_user_msg="DIFFERENT")
+    assert excinfo.value.state == "foreign"
+    assert excinfo.value.header_fp == ch.fingerprint("orig msg")
+    assert excinfo.value.current_fp == ch.fingerprint("DIFFERENT")
+    # Entry must NOT have been written.
+    assert ch.read_entries(path=hist) == []
+
+
+def test_append_with_first_user_msg_returning_raises(hist: Path):
+    ch.init("orig msg", path=hist)
+    ch.adopt("new msg", path=hist)  # original fp now in former_fps
+    with pytest.raises(ch.OwnershipError) as excinfo:
+        ch.append({"t": "phase", "name": "still nope"}, path=hist,
+                  first_user_msg="orig msg")
+    assert excinfo.value.state == "returning"
+    assert ch.read_entries(path=hist) == []
+
+
+def test_append_with_first_user_msg_missing_raises(hist: Path):
+    with pytest.raises(ch.OwnershipError) as excinfo:
+        ch.append({"t": "phase", "name": "no header"}, path=hist,
+                  first_user_msg="any")
+    assert excinfo.value.state == "missing"
+
+
+def test_append_without_first_user_msg_unchanged(hist: Path):
+    """Back-compat: legacy callers without first_user_msg still pass."""
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "legacy"}, path=hist)
+    assert [e.get("name") for e in ch.read_entries(path=hist)] == ["legacy"]
+
+
+def test_cli_append_first_user_msg_match_exit_0(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    target = tmp_path / "cli.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "orig"])
+    capsys.readouterr()
+    rc = ch.main([
+        "append", "--first-user-msg", "orig",
+        "--type", "phase", "--json", '{"name":"ok"}',
+    ])
+    assert rc == ch.EXIT_OK
+
+
+def test_cli_append_first_user_msg_foreign_exit_3(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    target = tmp_path / "cli.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "orig"])
+    capsys.readouterr()
+    rc = ch.main([
+        "append", "--first-user-msg", "DIFFERENT",
+        "--type", "phase", "--json", '{"name":"nope"}',
+    ])
+    assert rc == ch.EXIT_OWNERSHIP_REFUSED
+    err = capsys.readouterr().err
+    assert "state=foreign" in err
+    assert "turn-check" in err
+    # File still has only the header.
+    assert ch.read_entries(path=target) == []
+
+
+# --- B: turn-check ---------------------------------------------------
+
+
+@pytest.fixture
+def settings_enabled(tmp_path: Path) -> Path:
+    p = tmp_path / "agent-settings.yml"
+    p.write_text("chat_history:\n  enabled: true\n", encoding="utf-8")
+    return p
+
+
+@pytest.fixture
+def settings_disabled(tmp_path: Path) -> Path:
+    p = tmp_path / "agent-settings.yml"
+    p.write_text("chat_history:\n  enabled: false\n", encoding="utf-8")
+    return p
+
+
+def test_turn_check_disabled_short_circuits(
+    hist: Path, settings_disabled: Path,
+):
+    # Even with a foreign file present, disabled wins.
+    ch.init("orig", path=hist)
+    result = ch.turn_check("anything", path=hist,
+                           settings_path=settings_disabled)
+    assert result == {"state": "disabled", "exit": ch.EXIT_OK}
+
+
+def test_turn_check_match(hist: Path, settings_enabled: Path):
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    result = ch.turn_check("orig", path=hist,
+                           settings_path=settings_enabled)
+    assert result["state"] == "ok"
+    assert result["exit"] == ch.EXIT_OK
+    assert result["entries"] == 1
+
+
+def test_turn_check_missing(tmp_path: Path, settings_enabled: Path):
+    hist = tmp_path / "absent.jsonl"
+    result = ch.turn_check("orig", path=hist,
+                           settings_path=settings_enabled)
+    assert result["state"] == "missing"
+    assert result["exit"] == ch.EXIT_MISSING
+
+
+def test_turn_check_foreign(hist: Path, settings_enabled: Path):
+    ch.init("orig", path=hist)
+    result = ch.turn_check("DIFFERENT", path=hist,
+                           settings_path=settings_enabled)
+    assert result["state"] == "foreign"
+    assert result["exit"] == ch.EXIT_FOREIGN
+    assert result["header_fp"] == ch.fingerprint("orig")
+    assert result["current_fp"] == ch.fingerprint("DIFFERENT")
+
+
+def test_turn_check_returning(hist: Path, settings_enabled: Path):
+    ch.init("orig", path=hist)
+    ch.adopt("new", path=hist)
+    result = ch.turn_check("orig", path=hist,
+                           settings_path=settings_enabled)
+    assert result["state"] == "returning"
+    assert result["exit"] == ch.EXIT_RETURNING
+
+
+def test_turn_check_settings_missing_treated_as_disabled(
+    tmp_path: Path, hist: Path,
+):
+    ch.init("orig", path=hist)
+    result = ch.turn_check("orig", path=hist,
+                           settings_path=tmp_path / "absent.yml")
+    assert result["state"] == "disabled"
+
+
+def test_turn_check_settings_no_chat_history_section_disabled(
+    tmp_path: Path, hist: Path,
+):
+    ch.init("orig", path=hist)
+    settings = tmp_path / "agent-settings.yml"
+    settings.write_text("cost_profile: minimal\n", encoding="utf-8")
+    result = ch.turn_check("orig", path=hist, settings_path=settings)
+    assert result["state"] == "disabled"
+
+
+def test_cli_turn_check_match_exit_0(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    target = tmp_path / "cli.jsonl"
+    settings = tmp_path / "agent-settings.yml"
+    settings.write_text("chat_history:\n  enabled: true\n", encoding="utf-8")
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "orig"])
+    capsys.readouterr()
+    rc = ch.main([
+        "turn-check", "--first-user-msg", "orig",
+        "--settings", str(settings),
+    ])
+    assert rc == ch.EXIT_OK
+    out = capsys.readouterr()
+    assert "state=ok" in out.out
+    assert out.err == ""  # no ACTION-REQUIRED hint on match
+
+
+def test_cli_turn_check_foreign_exit_11_with_hint(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    target = tmp_path / "cli.jsonl"
+    settings = tmp_path / "agent-settings.yml"
+    settings.write_text("chat_history:\n  enabled: true\n", encoding="utf-8")
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "orig"])
+    capsys.readouterr()
+    rc = ch.main([
+        "turn-check", "--first-user-msg", "DIFFERENT",
+        "--settings", str(settings),
+    ])
+    assert rc == ch.EXIT_FOREIGN
+    captured = capsys.readouterr()
+    assert "state=foreign" in captured.out
+    assert "header_fp=" in captured.out
+    assert "current_fp=" in captured.out
+    assert "ACTION REQUIRED" in captured.err
+    assert "Foreign-Prompt" in captured.err
+
+
+def test_cli_turn_check_missing_exit_10(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    settings = tmp_path / "agent-settings.yml"
+    settings.write_text("chat_history:\n  enabled: true\n", encoding="utf-8")
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE",
+                       str(tmp_path / "absent.jsonl"))
+    rc = ch.main([
+        "turn-check", "--first-user-msg", "anything",
+        "--settings", str(settings),
+    ])
+    assert rc == ch.EXIT_MISSING
+    captured = capsys.readouterr()
+    assert "state=missing" in captured.out
+    assert "ACTION REQUIRED" in captured.err
+    assert "init" in captured.err
+
+
+def test_cli_turn_check_disabled_exit_0_no_hint(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    settings = tmp_path / "agent-settings.yml"
+    settings.write_text("chat_history:\n  enabled: false\n", encoding="utf-8")
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE",
+                       str(tmp_path / "absent.jsonl"))
+    rc = ch.main([
+        "turn-check", "--first-user-msg", "anything",
+        "--settings", str(settings),
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    assert "state=disabled" in captured.out
+    assert captured.err == ""
+
