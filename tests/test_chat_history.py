@@ -725,3 +725,148 @@ def test_cli_turn_check_disabled_exit_0_no_hint(
     assert "state=disabled" in captured.out
     assert captured.err == ""
 
+
+# --- C: heartbeat ----------------------------------------------------
+
+
+def test_format_age_units():
+    assert ch._format_age(0) == "0s ago"
+    assert ch._format_age(45) == "45s ago"
+    assert ch._format_age(60) == "1m ago"
+    assert ch._format_age(3599) == "59m ago"
+    assert ch._format_age(3600) == "1h ago"
+    assert ch._format_age(86399) == "23h ago"
+    assert ch._format_age(86400) == "1d ago"
+    assert ch._format_age(-5) == "just now"
+
+
+def test_last_entry_age_no_file(tmp_path: Path):
+    assert ch._last_entry_age_seconds(tmp_path / "absent") is None
+
+
+def test_last_entry_age_header_only(hist: Path):
+    ch.init("msg", path=hist)
+    assert ch._last_entry_age_seconds(hist) is None
+
+
+def test_last_entry_age_recent(hist: Path):
+    ch.init("msg", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    age = ch._last_entry_age_seconds(hist)
+    assert age is not None
+    assert 0 <= age <= 5
+
+
+def test_heartbeat_disabled(hist: Path, settings_disabled: Path):
+    ch.init("orig", path=hist)
+    result = ch.heartbeat("anything", path=hist,
+                          settings_path=settings_disabled)
+    assert result["state"] == "disabled"
+    assert result["marker"] == "📒 chat-history: disabled"
+
+
+def test_heartbeat_match_no_entries(hist: Path, settings_enabled: Path):
+    ch.init("orig", path=hist)
+    result = ch.heartbeat("orig", path=hist,
+                          settings_path=settings_enabled)
+    assert result["state"] == "ok"
+    assert result["entries"] == 0
+    assert result["freq"] == "per_phase"
+    assert result["last_age_seconds"] is None
+    assert "ok" in result["marker"]
+    assert "0 entries" in result["marker"]
+    assert "no entries" in result["marker"]
+
+
+def test_heartbeat_match_with_entries(hist: Path, settings_enabled: Path):
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    ch.append({"t": "phase", "name": "y"}, path=hist)
+    result = ch.heartbeat("orig", path=hist,
+                          settings_path=settings_enabled)
+    assert result["state"] == "ok"
+    assert result["entries"] == 2
+    assert result["last_age_seconds"] is not None
+    assert result["last_age_seconds"] >= 0
+    assert "2 entries" in result["marker"]
+    assert "per_phase" in result["marker"]
+    assert "last " in result["marker"]
+
+
+def test_heartbeat_missing(tmp_path: Path, settings_enabled: Path):
+    hist = tmp_path / "absent.jsonl"
+    result = ch.heartbeat("orig", path=hist,
+                          settings_path=settings_enabled)
+    assert result["state"] == "missing"
+    assert "missing" in result["marker"]
+
+
+def test_heartbeat_foreign(hist: Path, settings_enabled: Path):
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    result = ch.heartbeat("DIFFERENT", path=hist,
+                          settings_path=settings_enabled)
+    assert result["state"] == "foreign"
+    assert result["entries"] == 1
+    assert "foreign" in result["marker"]
+    assert "Foreign-Prompt" in result["marker"]
+
+
+def test_heartbeat_returning(hist: Path, settings_enabled: Path):
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    ch.adopt("new", path=hist)
+    result = ch.heartbeat("orig", path=hist,
+                          settings_path=settings_enabled)
+    assert result["state"] == "returning"
+    assert result["entries"] == 1
+    assert "returning" in result["marker"]
+    assert "Returning-Prompt" in result["marker"]
+
+
+def test_cli_heartbeat_match(
+    hist: Path, settings_enabled: Path, monkeypatch, capsys,
+):
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    rc = ch.main([
+        "heartbeat", "--first-user-msg", "orig",
+        "--settings", str(settings_enabled),
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    assert captured.out.startswith("📒 chat-history: ok")
+    assert "1 entries" in captured.out
+    assert captured.err == ""
+
+
+def test_cli_heartbeat_json_flag(
+    hist: Path, settings_enabled: Path, monkeypatch, capsys,
+):
+    ch.init("orig", path=hist)
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    rc = ch.main([
+        "heartbeat", "--first-user-msg", "orig",
+        "--settings", str(settings_enabled), "--json",
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert payload["state"] == "ok"
+    assert "marker" in payload
+
+
+def test_cli_heartbeat_disabled(tmp_path: Path, monkeypatch, capsys):
+    settings = tmp_path / "agent-settings.yml"
+    settings.write_text("chat_history:\n  enabled: false\n", encoding="utf-8")
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE",
+                       str(tmp_path / "absent.jsonl"))
+    rc = ch.main([
+        "heartbeat", "--first-user-msg", "anything",
+        "--settings", str(settings),
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    assert "disabled" in captured.out
+

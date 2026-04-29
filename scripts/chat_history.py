@@ -17,6 +17,7 @@ Usage:
     python3 scripts/chat_history.py init --first-user-msg "..." [--freq per_phase]
     python3 scripts/chat_history.py append --type phase --json '{...}'
     python3 scripts/chat_history.py status
+    python3 scripts/chat_history.py heartbeat --first-user-msg "..."
     python3 scripts/chat_history.py check --first-user-msg "..."
     python3 scripts/chat_history.py state --first-user-msg "..."
     python3 scripts/chat_history.py adopt --first-user-msg "..."
@@ -438,6 +439,102 @@ def turn_check(first_user_msg: str, *, path: Path | None = None,
     return out
 
 
+def _format_age(seconds: int) -> str:
+    """Render a relative duration as a compact human-readable string."""
+    if seconds < 0:
+        return "just now"
+    if seconds < 60:
+        return f"{seconds}s ago"
+    if seconds < 3600:
+        return f"{seconds // 60}m ago"
+    if seconds < 86400:
+        return f"{seconds // 3600}h ago"
+    return f"{seconds // 86400}d ago"
+
+
+def _last_entry_age_seconds(path: Path) -> int | None:
+    """Return age of the latest non-header entry in seconds, or None.
+
+    Reads the file once, takes the last non-empty line, parses its `ts`
+    field. Tolerant of malformed lines and missing timestamps — returns
+    None instead of raising. Used by `heartbeat()` to surface stale
+    appends in the in-band marker.
+    """
+    if not path.is_file():
+        return None
+    last_line: str | None = None
+    try:
+        with path.open(encoding="utf-8") as fh:
+            for raw in fh:
+                stripped = raw.strip()
+                if stripped:
+                    last_line = stripped
+    except OSError:
+        return None
+    if not last_line:
+        return None
+    try:
+        obj = json.loads(last_line)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(obj, dict) or obj.get("t") == "header":
+        return None
+    ts = obj.get("ts")
+    if not ts or not isinstance(ts, str):
+        return None
+    try:
+        parsed = dt.datetime.fromisoformat(ts)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=dt.timezone.utc)
+    now = dt.datetime.now(dt.timezone.utc)
+    return int((now - parsed).total_seconds())
+
+
+def heartbeat(first_user_msg: str, *, path: Path | None = None,
+              settings_path: Path | None = None) -> dict[str, Any]:
+    """Compute the in-band reply marker proving the rule was executed.
+
+    The marker is a single-line string the agent must include verbatim
+    at the end of every reply. Fields surface state, entry count,
+    cadence, and age of the last entry — so a stale gap (no append
+    across two replies at `per_turn`/`per_phase`) is immediately
+    visible to the user without any out-of-band tooling.
+
+    Always returns exit-equivalent 0; this is observability, not a
+    gate. Ownership refusal lives in `append`, the turn-start gate
+    lives in `turn_check`. `heartbeat` only reports.
+    """
+    sp = settings_path or Path(DEFAULT_SETTINGS_FILE)
+    if not _read_chat_history_enabled(sp):
+        return {"state": "disabled",
+                "marker": "📒 chat-history: disabled"}
+    p = path or file_path()
+    state = ownership_state(first_user_msg, path=p)
+    st = status(path=p)
+    entries = int(st.get("entries", 0)) if st.get("exists") else 0
+    header = st.get("header") or {}
+    freq = str(header.get("freq", "?")) if header else "?"
+    if state == "match":
+        age = _last_entry_age_seconds(p)
+        age_str = _format_age(age) if age is not None else "no entries"
+        marker = (f"📒 chat-history: ok · {entries} entries · "
+                  f"{freq} · last {age_str}")
+        return {"state": "ok", "entries": entries, "freq": freq,
+                "last_age_seconds": age, "marker": marker}
+    if state == "missing":
+        return {"state": "missing",
+                "marker": "📒 chat-history: missing — run init"}
+    if state == "foreign":
+        return {"state": "foreign", "entries": entries,
+                "marker": (f"📒 chat-history: foreign · {entries} "
+                           f"entries on file — render Foreign-Prompt")}
+    return {"state": "returning", "entries": entries,
+            "marker": (f"📒 chat-history: returning · {entries} "
+                       f"entries on file — render Returning-Prompt")}
+
+
 def overflow_handle(max_kb: int, mode: str = "rotate", *,
                     path: Path | None = None) -> dict[str, Any]:
     """Enforce max_kb. Returns {'action', 'kept', 'dropped'}.
@@ -572,6 +669,16 @@ def _cmd_turn_check(args) -> int:
     return int(result["exit"])
 
 
+def _cmd_heartbeat(args) -> int:
+    settings_path = Path(args.settings) if args.settings else None
+    result = heartbeat(args.first_user_msg, settings_path=settings_path)
+    if args.json:
+        print(json.dumps(result, ensure_ascii=False))
+    else:
+        print(result["marker"])
+    return EXIT_OK
+
+
 def _cmd_adopt(args) -> int:
     h = adopt(args.first_user_msg)
     print(json.dumps(h, ensure_ascii=False))
@@ -661,6 +768,23 @@ def main(argv: list[str] | None = None) -> int:
         help=f"path to agent settings (default: {DEFAULT_SETTINGS_FILE})",
     )
     p_tc.set_defaults(func=_cmd_turn_check)
+    p_hb = sub.add_parser(
+        "heartbeat",
+        help=("emit the in-band reply marker; always exit 0. "
+              "Agent must include the stdout line verbatim in every reply."),
+    )
+    p_hb.add_argument("--first-user-msg", required=True)
+    p_hb.add_argument(
+        "--settings",
+        default=None,
+        help=f"path to agent settings (default: {DEFAULT_SETTINGS_FILE})",
+    )
+    p_hb.add_argument(
+        "--json",
+        action="store_true",
+        help="emit the full result dict instead of just the marker",
+    )
+    p_hb.set_defaults(func=_cmd_heartbeat)
     p_ado = sub.add_parser("adopt")
     p_ado.add_argument("--first-user-msg", required=True)
     p_ado.set_defaults(func=_cmd_adopt)
