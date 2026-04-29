@@ -4,6 +4,8 @@ description: Show the status of the persistent chat-history log — file size, e
 disable-model-invocation: true
 ---
 
+<!-- cloud_safe: noop -->
+
 # /chat-history
 
 Inspect `.agent-chat-history` — the JSONL log maintained by the

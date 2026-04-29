@@ -4,6 +4,8 @@ description: "Use when creating or editing a rule in .agent-src.uncompressed/rul
 source: package
 ---
 
+<!-- cloud_safe: degrade -->
+
 # rule-writing
 
 ## When to use
@@ -100,7 +102,8 @@ the PR or split by responsibility.
   → must report **0 FAIL**.
 * Run `bash scripts/compress.sh --sync` to regenerate `.agent-src/rules/{name}.md`.
 * Run `python3 scripts/compress.py --generate-tools` to project into `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`.
-* Run the full CI pipeline locally — each script directly — must exit 0 except for tolerated warnings.
+* Run the full CI pipeline locally (see `Taskfile.yml` in this repo for
+  the script list) — must exit 0 except for tolerated warnings.
 
 ## Frontmatter shape
 
@@ -136,6 +139,25 @@ source: package           # or project for consumer-local rules
 * Do NOT edit projections (`.agent-src/`, `.augment/`, `.claude/`, etc.)
 * Do NOT skip the linter
 * Do NOT create a rule when a guideline or skill is the right shape
+
+## Cloud Behavior
+
+On cloud surfaces (Claude.ai Web, Skills API) the package's
+`scripts/skill_linter.py`, `scripts/compress.py`, and `task` runner
+are not reachable. The skill still applies — with prose-only
+validation:
+
+* Emit the full rule file as a copyable Markdown block. Do not
+  attempt to write to disk.
+* Self-check the frontmatter against the rules: `type` is `always`
+  or `auto`, `description` is trigger-shaped, `alwaysApply` matches
+  `type`.
+* Self-check the body: under the size budget (200 lines hard,
+  120 soft), trigger sentence first, no embedded procedures.
+* Tell the user to save under `.agent-src.uncompressed/rules/{name}.md`
+  and run `task sync && task lint-skills` locally before committing.
+* Do not call the linter or compressor — they only run on the
+  user's machine.
 
 ## Examples
 

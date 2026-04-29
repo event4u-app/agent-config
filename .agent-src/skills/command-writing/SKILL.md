@@ -4,6 +4,8 @@ description: "Use when creating or editing a slash command in .agent-src.uncompr
 source: package
 ---
 
+<!-- cloud_safe: degrade -->
+
 # command-writing
 
 ## When to use
@@ -105,8 +107,8 @@ multi-paragraph explanation, extract it into a skill and call it.
 * Run `bash scripts/compress.sh --sync` → regenerates `.agent-src/commands/{name}.md`.
 * Run `python3 scripts/compress.py --generate-tools` → creates the Claude symlink at
   `.claude/skills/{name}/SKILL.md`.
-* Run the full CI pipeline locally — each script directly — must exit 0
-  except for tolerated warnings.
+* Run the full CI pipeline locally (see `Taskfile.yml` in this repo for
+  the script list) — must exit 0 except for tolerated warnings.
 
 ## Output format
 
@@ -132,6 +134,26 @@ multi-paragraph explanation, extract it into a skill and call it.
 * Do NOT inline skill-level detail — delegate
 * Do NOT edit `.agent-src/`, `.augment/`, or `.claude/` projections
 * Do NOT exceed the hard size limit without a waiver
+
+## Cloud Behavior
+
+On cloud surfaces (Claude.ai Web, Skills API) the package's
+`scripts/skill_linter.py`, `scripts/compress.py`, and the `task`
+runner are not available. This skill still applies — but with
+prose-only validation:
+
+* Emit the full command file as a copyable Markdown block. Do not
+  attempt to write it to disk.
+* Self-check the frontmatter against the rules below — `name`,
+  `description`, `disable-model-invocation: true` MUST all be
+  present.
+* Self-check the body shape: numbered steps, explicit safety gates,
+  no inline skill-level detail.
+* Tell the user to save the file under
+  `.agent-src.uncompressed/commands/{name}.md` and run
+  `task sync && task lint-skills` locally before committing.
+* Skip every reference to running the linter, compressor, or
+  generators yourself — they only run on the user's machine.
 
 ## Examples
 

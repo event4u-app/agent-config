@@ -5,6 +5,8 @@ alwaysApply: true
 source: package
 ---
 
+<!-- cloud_safe: noop -->
+
 # Chat History
 
 Persists the conversation to `.agent-chat-history` (JSONL, project root,
@@ -55,11 +57,10 @@ scripts/chat_history.py append --first-user-msg "<msg>" \
   --type <user|agent|tool|decision|phase> --json '<obj>'
 ```
 
-Never write the file directly. Prefer `phase` over `agent` for
-boundaries. Exit `3` (`OWNERSHIP_REFUSED`) means turn-start was
-skipped or the file was hijacked — surface it, do not swallow it.
-Cadence is the trigger, not reply length; do not batch missed turns at
-the end (crashes happen between turns).
+Never write the file directly. Prefer `phase` over `agent` for boundaries.
+Exit `3` (`OWNERSHIP_REFUSED`) means turn-start was skipped or the file
+was hijacked — surface it, do not swallow it. Cadence is the trigger, not
+reply length; do not batch missed turns (crashes happen between turns).
 
 ### Heartbeat marker — visibility gated by `chat_history.heartbeat`
 
@@ -70,10 +71,9 @@ scripts/chat_history.py heartbeat --first-user-msg "<first-user-msg>"
 ```
 
 Stdout is **at most** one line, e.g.
-`📒 chat-history: ok · 9 entries · per_phase · last 30s ago`. Non-empty
-→ paste **verbatim** as the last line of the reply. Empty → emit
-nothing (the visibility mode chose silence). Always exits 0 —
-observability, not a gate.
+`📒 chat-history: ok · 9 entries · per_phase · last 30s ago`. Non-empty →
+paste **verbatim** as the last line of the reply. Empty → emit nothing.
+Always exits 0 — observability, not a gate.
 
 **Visibility modes** — `chat_history.heartbeat`:
 
@@ -83,15 +83,13 @@ observability, not a gate.
 | `off` | never — full silence | 0 |
 | `hybrid` *(default)* | drift states only (`missing`/`foreign`/`returning`) | 0 in normal flow, ~20 on drift |
 
-`hybrid` ships zero tokens when healthy, loud on ownership drift. `on`
-keeps it visible for debugging. `off` opts out — drift only shows up
-when the user opens the file. YAML 1.1 booleanizes bare `on`/`off`;
-the reader coerces both back, so `heartbeat: on` works unquoted.
+`hybrid` ships zero tokens when healthy, loud on ownership drift. YAML 1.1
+booleanizes bare `on`/`off`; the reader coerces both back, so
+`heartbeat: on` works unquoted.
 
-**NEVER type the marker from memory.** Re-running the script is the
-gate — typed-from-memory lines hide stale counts and frozen ages.
-Every reply: invoke, paste stdout verbatim (or nothing if empty).
-Same rule for any tool-generated marker.
+**NEVER type the marker from memory.** Re-running the script is the gate —
+typed-from-memory lines hide stale counts. Every reply: invoke, paste
+stdout verbatim (or nothing if empty).
 
 ## Activation & handshake
 
@@ -104,11 +102,9 @@ state token branches to one of: `missing` → `init`, `ok` → continue,
 
 In `foreign` and `returning`, **always read the file's current contents
 into the agent's working context before any write** — the user chose to
-log history for a reason; losing it silently is never acceptable.
-
-The legacy `state --first-user-msg` subcommand still exists for shell
-scripts that need the bare token; agents prefer `turn-check` (folds in
-`enabled` + distinct exit codes).
+log history for a reason; losing it silently is never acceptable. The
+legacy `state` subcommand still works for shell scripts; agents prefer
+`turn-check` (folds in `enabled` + distinct exit codes).
 
 ## Foreign-Prompt — new chat finds existing history
 
@@ -187,6 +183,13 @@ rewrites. Setting is stable for the session — never mix modes.
 Display/reload/clear (`/chat-history*` commands). Auto-flip `enabled` or
 `on_overflow`. Run when `enabled: false` (no silent logging, no
 telemetry). Decide ownership heuristically — only `state` does that.
+
+## Cloud Behavior
+
+On cloud surfaces (Claude.ai Web, Skills API) the rule is **fully inert** —
+no `.agent-chat-history`, no `scripts/`, no Iron Law gates, no heartbeat,
+no foreign/returning prompts, no overflow warning. Treat
+`chat_history.enabled` as `false`; persistence is a local-agent concern.
 
 ## Interactions & references
 

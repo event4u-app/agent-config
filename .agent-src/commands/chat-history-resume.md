@@ -4,6 +4,8 @@ description: Load the persistent chat-history log into the current conversation 
 disable-model-invocation: true
 ---
 
+<!-- cloud_safe: noop -->
+
 # /chat-history-resume
 
 Reconnects the current conversation with an existing `.agent-chat-history`

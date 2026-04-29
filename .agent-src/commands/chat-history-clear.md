@@ -4,6 +4,8 @@ description: Manually delete the persistent chat-history log — asks for confir
 disable-model-invocation: true
 ---
 
+<!-- cloud_safe: noop -->
+
 # /chat-history-clear
 
 Wipes `.agent-chat-history`. Use when the log is stale (wrong session),
