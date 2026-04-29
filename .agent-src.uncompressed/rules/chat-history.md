@@ -76,6 +76,13 @@ Stdout is a single line, e.g.
 this line **verbatim** as the last line of the reply. Always exits 0
 — this is observability, not a gate.
 
+**NEVER type the marker from memory.** Re-running the script is
+the observability gate — typing the line from what you *remember*
+makes stale counts, frozen ages, and foreign/missing/returning
+states invisible. Every reply: invoke, copy stdout, paste
+verbatim. Same rule for any tool-generated marker — re-run the
+source, never reproduce from memory.
+
 States: `ok` (entries+age shown), `disabled` (compact, single token),
 `foreign`/`returning`/`missing` (marker tells the user the prompt or
 init step is owed). The user sees stale entry counts or missing
