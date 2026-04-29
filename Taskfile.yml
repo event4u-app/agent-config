@@ -249,6 +249,10 @@ tasks:
     desc: Check package portability (no project-specific references)
     cmd: python3 scripts/check_portability.py
 
+  check-reply-consistency:
+    desc: Scan shipped sources for legacy (recommended) inline tags on numbered options
+    cmd: python3 scripts/check_reply_consistency.py --scan-dir .agent-src.uncompressed
+
   check-compression:
     desc: Check compression quality (headings, code blocks, frontmatter, word count)
     cmd: python3 scripts/check_compression.py
@@ -355,6 +359,7 @@ tasks:
       - task: check-compression
       - task: check-refs
       - task: check-portability
+      - task: check-reply-consistency
       - task: validate-schema
       - task: lint-skills
       - task: lint-marketplace
