@@ -9,6 +9,15 @@ guidelines} into a tier:
   T3-S Script-soft    mentions a script as one option (manual fallback exists)
   T3-H Script-hard    artefact's core procedure REQUIRES a script
 
+Cloud-safe markers (HTML comment on its own line, anywhere in body):
+
+  <!-- cloud_safe: noop -->     artefact is inert on cloud → tier = T1
+  <!-- cloud_safe: degrade -->  prose fallback is provided → tier = T3-S
+
+The marker downgrades the audit tier so build_cloud_bundle.py can emit a
+cloud-aware variant. Source still ships its full local content; the
+marker plus a "## Cloud Behavior" section is what the cloud agent reads.
+
 Output: JSON summary on stdout + per-artefact list on --details.
 """
 from __future__ import annotations
@@ -42,6 +51,16 @@ FS_RE = re.compile(
     r"\.augment/|\.claude/|\.cursor/|\.clinerules/|"
     r"agents/|\.agent-settings\.yml|\.agent-chat-history)"
 )
+CLOUD_MARKER_RE = re.compile(
+    r"<!--\s*cloud_safe:\s*(noop|degrade)\s*-->",
+    re.IGNORECASE,
+)
+
+
+def detect_cloud_marker(text: str) -> str | None:
+    """Return 'noop', 'degrade', or None for the cloud-safe marker."""
+    m = CLOUD_MARKER_RE.search(text)
+    return m.group(1).lower() if m else None
 
 
 def classify(text: str) -> tuple[str, dict]:
@@ -49,24 +68,35 @@ def classify(text: str) -> tuple[str, dict]:
     tasks = sorted(set(m.strip("`") for m in TASK_RE.findall(text)))
     fs_refs = sorted(set(FS_RE.findall(text)))
     has_hard = bool(HARD_RE.search(text))
+    cloud_marker = detect_cloud_marker(text)
 
     has_script = bool(scripts) or bool(tasks)
     has_fs = bool(fs_refs)
 
     if has_script and has_hard:
-        tier = "T3-H"
+        raw_tier = "T3-H"
     elif has_script:
-        tier = "T3-S"
+        raw_tier = "T3-S"
     elif has_fs:
-        tier = "T2"
+        raw_tier = "T2"
     else:
+        raw_tier = "T1"
+
+    # Cloud marker downgrades the served tier — local behavior unchanged.
+    if cloud_marker == "noop":
         tier = "T1"
+    elif cloud_marker == "degrade":
+        tier = "T3-S" if raw_tier == "T3-H" else raw_tier
+    else:
+        tier = raw_tier
 
     return tier, {
         "scripts": scripts,
         "tasks": tasks,
         "fs_refs_sample": fs_refs[:3],
         "has_hard_dep_marker": has_hard,
+        "raw_tier": raw_tier,
+        "cloud_marker": cloud_marker,
     }
 
 

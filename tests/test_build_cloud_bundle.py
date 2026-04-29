@@ -164,7 +164,12 @@ def test_build_all_skips_t3h_and_explicit_request_raises(
 
     monkeypatch.setattr(bcb, "SOURCE_SKILLS", src_root)
     monkeypatch.setattr(
-        bcb, "load_tier_map", lambda: {"safe": "T1", "blocked": "T3-H"}
+        bcb,
+        "load_tier_map",
+        lambda: {
+            "safe": {"tier": "T1", "cloud_marker": None, "raw_tier": "T1"},
+            "blocked": {"tier": "T3-H", "cloud_marker": None, "raw_tier": "T3-H"},
+        },
     )
 
     built, skipped = bcb.build_all(

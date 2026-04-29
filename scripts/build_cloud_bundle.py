@@ -34,6 +34,19 @@ Customize → Skills). One ZIP per skill, sandbox-friendly.
 | T3-S  | Bundle with sandbox path-swap; optional script calls degrade.|
 | T3-H  | Skip with explicit log. Manifest records the reason.         |
 
+## Cloud-safe markers (Phase 2)
+
+A source file can declare a cloud variant via an HTML comment in the
+body:
+
+  <!-- cloud_safe: noop -->     local rule, fully inert on cloud
+  <!-- cloud_safe: degrade -->  prose fallback provided
+
+`audit_cloud_compatibility.py` downgrades the tier when a marker is
+present (noop → T1, degrade → T3-S). The builder additionally extracts
+a `## Cloud Behavior` section for `noop` artefacts so the cloud bundle
+ships only the cloud-side instructions, not the full local rule.
+
 ## Frontmatter rewriting
 
 - Keep: `name`, `description`. Drop everything else (e.g. `source`).
@@ -90,6 +103,13 @@ DESC_LIMIT_SPEC = 1024
 FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?\n)---\s*\n(.*)$", re.DOTALL)
 NAME_RE = re.compile(r"^name:\s*(.+?)\s*$", re.MULTILINE)
 DESC_RE = re.compile(r'^description:\s*"?(.+?)"?\s*$', re.MULTILINE)
+CLOUD_BEHAVIOR_RE = re.compile(
+    r"(?ms)^##\s+Cloud Behavior\s*\n(.*?)(?=^##\s+|\Z)"
+)
+TITLE_RE = re.compile(r"(?m)^#\s+(.+?)\s*$")
+MARKER_LINE_RE = re.compile(
+    r"(?m)^\s*<!--\s*cloud_safe:\s*(?:noop|degrade)\s*-->\s*\n?"
+)
 
 # Body preprocessing — sandbox path-swap.
 #
@@ -113,6 +133,12 @@ SANDBOX_NOTE = """\
 > user's machine after they apply the suggested change.
 """
 
+NOOP_BODY_FALLBACK = """\
+On platforms without persistent filesystem (Claude.ai Web, the Anthropic
+Skills API), this artefact is fully inert. None of its local procedures
+apply. The agent does nothing on this rule's behalf.
+"""
+
 
 @dataclass
 class BuildResult:
@@ -122,19 +148,24 @@ class BuildResult:
     reason: str = ""
     zip_path: str = ""
     description_truncated: bool = False
+    cloud_marker: str = ""  # "noop" | "degrade" | ""
     warnings: list[str] = field(default_factory=list)
 
 
-def load_tier_map() -> dict[str, str]:
-    """skill-name → tier, derived from the audit script's scan() output."""
-    tier_map: dict[str, str] = {}
+def load_tier_map() -> dict[str, dict]:
+    """skill-name → {tier, cloud_marker, raw_tier} from audit script."""
+    tier_map: dict[str, dict] = {}
     for row in audit.scan():
         if row["kind"] != "skills":
             continue
         # row["path"] = .agent-src.uncompressed/skills/<name>/SKILL.md
         parts = Path(row["path"]).parts
         if len(parts) >= 3:
-            tier_map[parts[2]] = row["tier"]
+            tier_map[parts[2]] = {
+                "tier": row["tier"],
+                "cloud_marker": row.get("cloud_marker"),
+                "raw_tier": row.get("raw_tier", row["tier"]),
+            }
     return tier_map
 
 
@@ -183,9 +214,44 @@ def swap_paths(body: str) -> str:
     return body
 
 
-def render_skill_md(name: str, description: str, body: str, *, swap: bool) -> str:
-    """Rebuild SKILL.md with cloud-friendly frontmatter and optional path-swap."""
-    if swap:
+def strip_marker(body: str) -> str:
+    """Remove the `<!-- cloud_safe: ... -->` line from the body."""
+    return MARKER_LINE_RE.sub("", body, count=1)
+
+
+def extract_cloud_body_for_noop(body: str, name: str) -> str:
+    """Build a stripped body for a noop artefact: title + Cloud Behavior section.
+
+    If the source has a `## Cloud Behavior` section, use it. Otherwise fall
+    back to a generic noop notice. The returned body always opens with a
+    title heading so the bundle reads as a self-contained skill.
+    """
+    title_match = TITLE_RE.search(body)
+    title = title_match.group(1) if title_match else name
+    section = CLOUD_BEHAVIOR_RE.search(body)
+    section_text = section.group(1).strip() if section else NOOP_BODY_FALLBACK
+    return f"# {title}\n\n## Cloud Behavior\n\n{section_text.strip()}\n"
+
+
+def render_skill_md(
+    name: str,
+    description: str,
+    body: str,
+    *,
+    swap: bool,
+    cloud_marker: str | None = None,
+) -> str:
+    """Rebuild SKILL.md with cloud-friendly frontmatter and tier-aware body.
+
+    - cloud_marker == 'noop'   → body replaced with stripped Cloud Behavior
+    - swap (T2 / T3-S / degrade) → sandbox note + path-swap on full body
+    - otherwise                  → body shipped verbatim (T1)
+    """
+    body = strip_marker(body)
+    if cloud_marker == "noop":
+        body = extract_cloud_body_for_noop(body, name)
+        body = SANDBOX_NOTE + "\n" + body
+    elif swap:
         body = swap_paths(body)
         body = SANDBOX_NOTE + "\n" + body
     fm = f'---\nname: {name}\ndescription: "{description}"\n---\n'
@@ -201,9 +267,12 @@ def build_skill_zip(
     *,
     strict: bool,
     dry_run: bool,
+    cloud_marker: str | None = None,
 ) -> BuildResult:
     name = skill_dir.name
     result = BuildResult(skill=name, status="ok", tier=tier)
+    if cloud_marker:
+        result.cloud_marker = cloud_marker
     skill_md = skill_dir / "SKILL.md"
     if not skill_md.is_file():
         result.status = "error"
@@ -217,14 +286,23 @@ def build_skill_zip(
         result.status = "error"
         result.reason = str(e)
         return result
+    # If caller didn't pass a marker, detect it from the raw body
+    # (covers ad-hoc test fixtures).
+    if cloud_marker is None:
+        cloud_marker = audit.detect_cloud_marker(text)
+        if cloud_marker:
+            result.cloud_marker = cloud_marker
 
     desc, truncated = enforce_description_budget(
         meta["description"], strict=strict, warnings=result.warnings
     )
     result.description_truncated = truncated
 
-    needs_swap = tier in {"T2", "T3-S"}
-    rendered = render_skill_md(meta["name"], desc, body, swap=needs_swap)
+    needs_swap = tier in {"T2", "T3-S"} and cloud_marker != "noop"
+    rendered = render_skill_md(
+        meta["name"], desc, body,
+        swap=needs_swap, cloud_marker=cloud_marker,
+    )
 
     if dry_run:
         return result
@@ -272,7 +350,9 @@ def build_all(
     built: list[BuildResult] = []
     skipped: list[BuildResult] = []
     for sd in skill_dirs:
-        tier = tier_map.get(sd.name, "T1")
+        info = tier_map.get(sd.name) or {"tier": "T1", "cloud_marker": None}
+        tier = info["tier"]
+        cloud_marker = info.get("cloud_marker")
         if tier == "T3-H":
             sk = BuildResult(
                 skill=sd.name,
@@ -289,7 +369,9 @@ def build_all(
             skipped.append(sk)
             continue
         result = build_skill_zip(
-            sd, out_dir, tier, strict=strict, dry_run=dry_run
+            sd, out_dir, tier,
+            strict=strict, dry_run=dry_run,
+            cloud_marker=cloud_marker,
         )
         if result.status == "ok":
             built.append(result)
