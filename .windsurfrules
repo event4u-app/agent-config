@@ -856,7 +856,7 @@ exits 0. Caching the result for the session is fine.
 
 | Verbose command | Use | Fallback (no rtk) |
 |---|---|---|
-| `task ci`, full test runs | `rtk err <cmd>` — only errors/warnings | redirect → tail → grep |
+| CI-style suites, full test runs | `rtk err <cmd>` — only errors/warnings | redirect → tail → grep |
 | Unit tests | `rtk test <cmd>` — only failures | redirect → tail → grep |
 | `git status`/`log`/`diff` | `rtk git <subcmd>` | plain |
 | `gh pr list`, `gh run view` | `rtk gh <subcmd>` | plain |
