@@ -47,11 +47,12 @@ No PHP, no Laravel, no JavaScript runtime dependencies. The `composer.json` /
 ## Working on this repo
 
 ```bash
-task sync          # .agent-src.uncompressed/ → .agent-src/, then project → .augment/
-task generate-tools # Regenerate .claude/, .cursor/, .clinerules/, .windsurfrules
-task test          # pytest tests/ + tests/test_install.sh
-task lint-skills   # python3 scripts/skill_linter.py --all
-task ci            # Full pipeline — must be green before PR
+task sync                  # .agent-src.uncompressed/ → .agent-src/, then project → .augment/
+task generate-tools        # Regenerate .claude/, .cursor/, .clinerules/, .windsurfrules
+task test                  # pytest tests/ + tests/test_install.sh
+task lint-skills           # python3 scripts/skill_linter.py --all
+task build-cloud-bundles-all  # ZIP every eligible skill → dist/cloud/ (Claude.ai Web / Skills API)
+task ci                    # Full pipeline — must be green before PR
 ```
 
 All checks must pass before a PR: sync-check, consistency, check-compression,
@@ -101,9 +102,12 @@ agents/                     ← this package's own roadmaps / sessions / context
 | Cline | `.clinerules/` | Symlinks |
 | Windsurf | `.windsurfrules` | Concatenated file |
 | Gemini CLI | `GEMINI.md` | Symlink → AGENTS.md |
+| Claude.ai Web / Skills API | `dist/cloud/<skill>.zip` | `task build-cloud-bundles-all` (T3-H gated) |
 
 Skills follow the [Agent Skills open standard](https://agentskills.io). Commands
 are converted to Claude Code Skills with `disable-model-invocation: true`.
+Cloud bundles enforce description budgets and prepend a sandbox note for
+T2/T3-S skills — see [`docs/architecture.md`](docs/architecture.md#cloud-bundle-pipeline).
 
 ## Contributing
 

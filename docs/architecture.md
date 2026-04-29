@@ -29,7 +29,31 @@ wired up yet.
     ↓ install.sh (Cursor, Cline, Windsurf, Augment VSCode) / plugin system
 .claude/ .cursor/ .clinerules/  ← Tool-specific symlinks/copies (auto-generated)
 .windsurfrules  GEMINI.md
+    ↓ scripts/build_cloud_bundle.py    (Phase 1 — cloud distribution)
+dist/cloud/<skill>.zip          ← Anthropic Skills bundles (Claude.ai Web / Skills API)
 ```
+
+### Cloud-bundle pipeline
+
+`task build-cloud-bundles-all` produces one ZIP per skill at
+`dist/cloud/<skill>.zip`, ready for upload to Claude.ai Web (Settings →
+Customize → Skills) or the Anthropic Skills API. Per-skill behavior
+follows the cloud-tier classification from `scripts/audit_cloud_compatibility.py`:
+
+| Tier  | Bundle action                                                     |
+|-------|-------------------------------------------------------------------|
+| T1    | Bundle as-is — pure guidance, sandbox-safe                        |
+| T2    | Bundle with prepended sandbox note + package-internal path-swap   |
+| T3-S  | Same as T2; optional script calls degrade gracefully on cloud     |
+| T3-H  | **Skipped** — Phase 2 cloud-aware variant required before bundling |
+
+Cloud-side caps enforced by the builder: `description` ≤ 200 chars
+(Claude.ai Web) with a 1024-char hard cap (Anthropic spec). The sandbox
+note explains to the agent that `.agent-src/`, `agents/`, and `task …`
+references are descriptive — the host has no filesystem access.
+
+CI gate: `task ci-cloud-bundle` runs the builder in `--check` mode and
+fails on any source-side violation, without producing artifacts.
 
 ## What's inside
 
@@ -134,10 +158,13 @@ documented in
 | **Cline** | ✅ | — | — | — | install.sh (symlinks) |
 | **Windsurf** | ✅ | — | — | — | install.sh (concatenated) |
 | **Gemini CLI** | ✅ | — | — | — | install.sh (symlink → AGENTS.md) |
+| **Claude.ai Web / Skills API** | — | ✅ | — | — | `task build-cloud-bundles-all` → `dist/cloud/<skill>.zip` |
 
 Skills use a `SKILL.md` format with YAML frontmatter, compatible with the
 [Agent Skills](https://agentskills.io) community spec and with Claude Code's
-Agent Skills specification.
+Agent Skills specification. Cloud bundles produced by
+`scripts/build_cloud_bundle.py` follow the same format with cloud-side
+adjustments (description budget, sandbox note, package-internal path-swap).
 
 ---
 

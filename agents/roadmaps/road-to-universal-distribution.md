@@ -95,14 +95,14 @@ T3-S is the **manageable** tier — 37 files mention scripts, but the underlying
 
 > Generate a per-skill ZIP set ready for Anthropic Skills API / Claude.ai upload from `.agent-src/`, with per-platform tweaks (description budget, sandbox path swap, T3-H gating). New script: `scripts/build_cloud_bundle.py`. Wired into Taskfile as `task build-cloud-bundle`.
 
-- [ ] **Step 1:** Spec `scripts/build_cloud_bundle.py` — inputs (`.agent-src/skills/`), outputs (`dist/cloud/<skill-name>.zip` per skill), shape (`SKILL.md` + optional `scripts/`, `references/`, `assets/`)
-- [ ] **Step 2:** Implement description-budget enforcer (truncate / refuse if frontmatter `description` > 200 chars on cloud bundle path; raise lint error on the source if > 1024 chars)
-- [ ] **Step 3:** Implement T3-H gating — read tier from `audit_cloud_compatibility.py`, **skip** T3-H skills with an explicit log line; emit them only when Phase 2's cloud-degraded variants exist
-- [ ] **Step 4:** Implement sandbox path-swap — replace literal `.agent-src.uncompressed/`, `.agent-src/`, `agents/` mentions with sandbox equivalents only inside generated bundles, not in source
-- [ ] **Step 5:** Add `task build-cloud-bundle` (single skill) and `task build-cloud-bundles-all` (full set), plus `task ci-cloud-bundle` to fail when source breaks the cloud invariants
-- [ ] **Step 6:** Pytest suite: `tests/test_build_cloud_bundle.py` — fixture skill round-trips, description-budget enforcement, T3-H exclusion, sandbox path-swap correctness
-- [ ] **Step 7:** Manual smoke — upload one bundle (`refactor` rule's host skill if any, otherwise `pest-testing`) to Claude.ai Web, confirm it loads, ask Claude to apply it on a sample prompt, capture screenshot in `agents/reports/`
-- [ ] **Step 8:** Document the path in [`docs/architecture.md`](../../docs/architecture.md) and link from `AGENTS.md`
+- [x] **Step 1:** Spec `scripts/build_cloud_bundle.py` — inputs (`.agent-src/skills/`), outputs (`dist/cloud/<skill-name>.zip` per skill), shape (`SKILL.md` + optional `scripts/`, `references/`, `assets/`)
+- [x] **Step 2:** Implement description-budget enforcer (truncate / refuse if frontmatter `description` > 200 chars on cloud bundle path; raise lint error on the source if > 1024 chars)
+- [x] **Step 3:** Implement T3-H gating — read tier from `audit_cloud_compatibility.py`, **skip** T3-H skills with an explicit log line; emit them only when Phase 2's cloud-degraded variants exist
+- [x] **Step 4:** Implement sandbox path-swap — replace literal `.agent-src.uncompressed/`, `.agent-src/`, `agents/` mentions with sandbox equivalents only inside generated bundles, not in source
+- [x] **Step 5:** Add `task build-cloud-bundle` (single skill) and `task build-cloud-bundles-all` (full set), plus `task ci-cloud-bundle` to fail when source breaks the cloud invariants
+- [x] **Step 6:** Pytest suite: `tests/test_build_cloud_bundle.py` — fixture skill round-trips, description-budget enforcement, T3-H exclusion, sandbox path-swap correctness
+- [~] **Step 7:** Manual smoke — protocol drafted at [`agents/reports/cloud-bundle-smoke.md`](../reports/cloud-bundle-smoke.md); awaiting real upload to Claude.ai Web + screenshots
+- [x] **Step 8:** Document the path in [`docs/architecture.md`](../../docs/architecture.md) and link from `AGENTS.md`
 
 ## Phase 2: T3-H Cloud-Aware Variants
 

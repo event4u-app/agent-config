@@ -6,10 +6,10 @@
 
 ## Overall
 
-**0 / 182 steps done · 0%**
+**7 / 181 steps done · 4%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   4%
 ```
 
 ## Open roadmaps
@@ -19,7 +19,7 @@
 | 1 | [road-to-artifact-engagement-telemetry.md](roadmaps/road-to-artifact-engagement-telemetry.md) | 7 | 37 | 0 | 37 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-context-aware-command-suggestion.md](roadmaps/road-to-context-aware-command-suggestion.md) | 7 | 45 | 0 | 45 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-product-ui-track.md](roadmaps/road-to-product-ui-track.md) | 7 | 53 | 0 | 53 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md) | 7 | 43 | 0 | 43 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md) | 7 | 42 | 7 | 35 | 1 | 0 | ██░░░░░░░░ 17% |
 | 5 | [road-to-visual-review-loop.md](roadmaps/road-to-visual-review-loop.md) | 1 | 4 | 0 | 4 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
@@ -70,12 +70,12 @@
 
 ### [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md)
 
-**Universal Distribution (Cloud + Local Fallbacks)** — 0 / 43 done (0%)
+**Universal Distribution (Cloud + Local Fallbacks)** — 7 / 42 done (17%)
 
 | # | Phase | State | Done | Open | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Tier audit (DONE) | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
-| 1 | Cloud Bundle Builder | ⬜ not started | 0 | 8 | 0 | 0 | 0% |
+| 1 | Cloud Bundle Builder | ✅ done | 7 | 0 | 1 | 0 | 100% |
 | 2 | T3-H Cloud-Aware Variants | ⬜ not started | 0 | 7 | 0 | 0 | 0% |
 | 3 | Linear AI — Rules Digest Distribution | ⬜ not started | 0 | 6 | 0 | 0 | 0% |
 | 4 | Cloud-Aware Documentation Pass | ⬜ not started | 0 | 5 | 0 | 0 | 0% |
