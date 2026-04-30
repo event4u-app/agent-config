@@ -6,17 +6,17 @@
 
 ## Overall
 
-**34 / 139 steps done · 24%**
+**43 / 139 steps done · 31%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   24%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   31%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-context-aware-command-suggestion.md](roadmaps/road-to-context-aware-command-suggestion.md) | 7 | 45 | 45 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-context-aware-command-suggestion.md](roadmaps/road-to-context-aware-command-suggestion.md) | 7 | 45 | 36 | 9 | 0 | 0 | ██░░░░░░░░ 20% |
 | 2 | [road-to-product-ui-track.md](roadmaps/road-to-product-ui-track.md) | 7 | 53 | 53 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md) | 7 | 44 | 3 | 34 | 7 | 0 | █████████░ 92% |
 | 4 | [road-to-visual-review-loop.md](roadmaps/road-to-visual-review-loop.md) | 1 | 4 | 4 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -27,12 +27,12 @@
 
 ### [road-to-context-aware-command-suggestion.md](roadmaps/road-to-context-aware-command-suggestion.md)
 
-**Context-Aware Command Suggestion** — 0 / 45 done (0%)
+**Context-Aware Command Suggestion** — 9 / 45 done (20%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Eligibility audit and trigger drafting | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | Frontmatter schema and migration | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Eligibility audit and trigger drafting | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 2 | Frontmatter schema and migration | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Matcher engine and suggestion rule | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 4 | Tie-break and anti-noise | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 5 | Settings and opt-out paths | ⬜ not started | 4 | 0 | 0 | 0 | 0% |

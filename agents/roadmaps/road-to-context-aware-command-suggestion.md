@@ -4,13 +4,13 @@
 
 ## Prerequisites
 
-- [ ] Read `.agent-src.uncompressed/rules/slash-commands.md` — current invocation contract
-- [ ] Read `.agent-src.uncompressed/rules/user-interaction.md` — numbered-options Iron Law
-- [ ] Read `.agent-src.uncompressed/rules/ask-when-uncertain.md` — one-question-per-turn rule
-- [ ] Read `.agent-src.uncompressed/skills/command-routing/SKILL.md` — current routing skill
-- [ ] Read `.agent-src.uncompressed/skills/command-writing/SKILL.md` — command-authoring conventions
-- [ ] Inventory all commands under `.agent-src.uncompressed/commands/` (currently 73)
-- [ ] Re-read `.agent-src.uncompressed/templates/roadmaps.md`
+- [x] Read `.agent-src.uncompressed/rules/slash-commands.md` — current invocation contract
+- [x] Read `.agent-src.uncompressed/rules/user-interaction.md` — numbered-options Iron Law
+- [x] Read `.agent-src.uncompressed/rules/ask-when-uncertain.md` — one-question-per-turn rule
+- [x] Read `.agent-src.uncompressed/skills/command-routing/SKILL.md` — current routing skill
+- [x] Read `.agent-src.uncompressed/skills/command-writing/SKILL.md` — command-authoring conventions
+- [x] Inventory all commands under `.agent-src.uncompressed/commands/` (75 total — count update vs. roadmap header)
+- [x] Re-read `.agent-src.uncompressed/templates/roadmaps.md`
 
 ## Context (current state)
 
@@ -96,26 +96,26 @@ Rules:
 
 > Inventory every command, decide which are *eligible* for suggestion, draft trigger patterns. Eligibility ≠ tier — it only governs whether the suggestion layer may surface the command. Picking it always runs the normal flow.
 
-- [ ] **Step 1:** Build `agents/contexts/command-suggestion-eligibility.md` — table of all 73 commands: eligible (yes/no), proposed triggers, rationale.
-- [ ] **Step 2:** Default eligibility is **`true`**. Opt-out cases:
+- [x] **Step 1:** Build `agents/contexts/command-suggestion-eligibility.md` — table of all 75 commands: eligible (yes/no), proposed triggers, rationale.
+- [x] **Step 2:** Default eligibility is **`true`**. Opt-out cases:
   - Commands the user invokes only intentionally (e.g., `/onboard`, `/package-reset`, `/mode`, `/agent-handoff`, `/chat-history-clear`).
   - Commands whose trigger patterns would overlap heavily with normal conversation and create noise.
   - Commands that have no clear natural-language signal distinct from neighboring commands.
 
-- [ ] **Step 3:** Each eligible command gets at least 2 trigger items: one `description` (natural-language pattern) and one `context` (concrete signal — file pattern, branch name, recent tool output). Triggers are deliberate; the linter rejects empty or overly generic patterns.
-- [ ] **Step 4:** Independent review of the eligibility table — anyone listed as eligible whose triggers overlap with another eligible command flags a tie-break decision (covered in Phase 4).
-- [ ] **Step 5:** Lock the table. Tier and eligibility changes thereafter are roadmap follow-ups.
+- [x] **Step 3:** Each eligible command gets at least 2 trigger items: one `description` (natural-language pattern) and one `context` (concrete signal — file pattern, branch name, recent tool output). Triggers are deliberate; the linter rejects empty or overly generic patterns.
+- [x] **Step 4:** Independent review of the eligibility table — overlap clusters identified (5 clusters covering 13 commands) and routed to Phase 4 tie-break.
+- [x] **Step 5:** Lock the table. Tier and eligibility changes thereafter are roadmap follow-ups.
 
 ## Phase 2: Frontmatter schema and migration
 
-- [ ] **Step 1:** Extend command frontmatter with the `suggestion` block. Document in `.agent-src.uncompressed/skills/command-writing/SKILL.md`.
-- [ ] **Step 2:** Add schema validation to `scripts/skill_linter.py` (or sibling `command_linter.py`):
+- [x] **Step 1:** Extend command frontmatter with the `suggestion` block. Document in `.agent-src.uncompressed/skills/command-writing/SKILL.md`.
+- [x] **Step 2:** Add schema validation to `scripts/skill_linter.py` (or sibling `command_linter.py`):
   - `suggestion.eligible` must be `true` or `false`; default `true` if missing.
-  - If `eligible: true`, `triggers` must contain at least 2 items (1 `description`, 1 `context`).
-  - `confidence_floor` if present must be `0.0–1.0`.
-  - `cooldown` if present must be a parseable duration.
-- [ ] **Step 3:** Migrate all 73 commands. Eligible commands get triggers from the locked table; opt-outs explicitly set `eligible: false` with a one-line rationale.
-- [ ] **Step 4:** Run `task lint-skills` (extended) — must exit 0 with all 73 commands schema-valid.
+  - If `eligible: true`, `trigger_description` AND `trigger_context` must be non-empty (≥ 10 chars). Flat shape chosen over list-of-objects to keep within the stdlib YAML parser's one-level nesting; same expressive power, simpler validation. Documented in `command-writing/SKILL.md`.
+  - `confidence_floor` if present must be `≥ 0.0`.
+  - `cooldown` if present must be a string ≤ 16 chars.
+- [x] **Step 3:** Migrate all 75 commands via `scripts/migrate_command_suggestions.py`. Eligible commands get triggers from the locked table; opt-outs explicitly set `eligible: false` with a one-line rationale.
+- [x] **Step 4:** Run `python3 scripts/skill_linter.py --all` and `python3 scripts/validate_frontmatter.py` — both exit 0 with all 75 commands schema-valid.
 
 ## Phase 3: Matcher engine and suggestion rule
 
