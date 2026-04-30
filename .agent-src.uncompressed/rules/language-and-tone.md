@@ -146,3 +146,52 @@ The `.md` source files are the English blueprint — they define WHAT to say, no
 > 1. Interactive — ask before each comment
 > 2. Automatic — handle all independently
 ```
+
+### Quoted user-input examples — same rule, with one labeled exception
+
+Common drift pattern: a rule documents trigger phrases the agent
+should recognize and writes them as quoted German examples inside
+English prose. **Not allowed**, even when demonstrative.
+
+**Wrong** (DE quote embedded in EN prose):
+
+```md
+Single-decision delegation ("für diesen Schritt entscheide du") →
+handle that step autonomously.
+
+A standing "arbeite selbstständig" never lifts the floor.
+```
+
+**Correct** — two ways:
+
+1. **Translate to English.** Trigger recognition is semantic; the
+   agent matches intent across languages regardless of the example.
+   `("you decide for this step")` works as well as the German.
+2. **Use a labeled `DE: … · EN: …` anchor list** when the
+   multilingual nature of recognition is the point:
+
+   ```md
+   - DE: "arbeite selbstständig" · "frag nicht jedes Mal" · "tue es einfach"
+   - EN: "work autonomously" · "don't ask" · "just do it"
+   ```
+
+The labeled-anchor block is the **only** allowed location for German
+prose in an English `.md` file. Body text, example sentences, prompt
+templates, agent-rendered strings, and failure modes must be English.
+Reference established phrases abstractly later (e.g. "a standing
+autonomy directive") and link back to the anchor block.
+
+### Detection heuristic
+
+Before saving an `.md` file under `.augment/`, `.agent-src/`,
+`.agent-src.uncompressed/`, or `agents/`, scan for:
+
+- Umlauts (`ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`, `ß`) outside fenced code,
+  file paths, and the labeled anchor block.
+- German function words in unquoted prose: `für`, `nicht`, `dass`,
+  `wenn`, `sollte`, `werden`, `arbeite`, `selbstständig`, `jetzt`,
+  `einfach`, `weiter`, `lösche`, `frag`, `schreib`, `mach`.
+- Non-English quoted phrases in body text (paragraphs, list items,
+  table cells) when the surrounding prose is English.
+
+Hit → translate the fragment or move it into a `DE: … · EN: …` block.

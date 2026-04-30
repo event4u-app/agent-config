@@ -99,7 +99,7 @@ and
 ```
 .agent-src.uncompressed/      ← edit here
   skills/       (126 skills)
-  rules/        (52 rules)
+  rules/        (53 rules)
   commands/     (75 commands)
   guidelines/   (46 guidelines)
   personas/     (7 personas)

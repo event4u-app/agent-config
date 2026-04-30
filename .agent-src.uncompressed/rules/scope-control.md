@@ -57,6 +57,33 @@ The user decides the git shape of the work. Never improvise.
 standing instruction they have not revoked**. Earlier permission for a
 different operation does not carry over.
 
+## Production, infrastructure, bulk-destructive — Hard Floor
+
+A subset of the operations above is **never** autonomous and never
+auto-permitted by a standing autonomy directive. Canonical rule:
+[`non-destructive-by-default`](non-destructive-by-default.md). It is
+restated here so this file remains the single read for git/scope
+concerns:
+
+- **Production-branch merges** — `main`, `master`, `prod`,
+  `production`, `release/*`, or any branch the project marks as
+  deployment trunk. Always ask, even when the roadmap step says
+  "merge".
+- **Deploys / releases** — `terraform apply` / `kubectl apply` on
+  prod, deploy scripts, release commands, tag pushes that trigger
+  CI deployment. Always ask.
+- **Production data / infrastructure** — prod DB writes or
+  migrations, prod config edits, secrets rotation, IAM / role /
+  policy changes, DNS edits, anything in a `prod`-scoped path or
+  pipeline. Always ask.
+- **Bulk-destructive ops** — wildcard or directory deletion
+  (`rm -rf <dir>`, `git rm -r`), `DROP TABLE`, `TRUNCATE`,
+  `git reset --hard` past unpushed work, mass class / module /
+  migration deletion, "delete everything matching X". Always ask.
+
+A roadmap step or earlier turn does **not** count as authorization
+for these. Authorization is "the user said so on this turn".
+
 ## Decline = silence — no re-asking on the same task
 
 After the user **declines** a proposal (branch switch, PR creation,

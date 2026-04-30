@@ -18,7 +18,7 @@ source: package
 
 ## Git operations — permission-gated
 
-The user decides the git shape of the work.
+The user decides the git shape of the work. Never improvise.
 
 > **Commit specifics:** see [`commit-policy`](commit-policy.md) — narrower
 > than the general "no git ops without permission" below (never-ask
@@ -48,6 +48,21 @@ The user decides the git shape of the work.
 "Explicit permission" = the user said so this turn or gave a standing
 instruction they have not revoked. Earlier permission for another op
 does not carry over.
+
+## Production, infrastructure, bulk-destructive — Hard Floor
+
+Subset of the above is **never** autonomous and never auto-permitted
+by a standing autonomy directive. Canonical rule:
+[`non-destructive-by-default`](non-destructive-by-default.md).
+Restated so this file remains the single read for git/scope concerns:
+
+- **Production-branch merges** — `main`, `master`, `prod`, `production`, `release/*`, or any deployment-trunk branch. Always ask, even when the roadmap step says "merge".
+- **Deploys / releases** — `terraform apply` / `kubectl apply` on prod, deploy scripts, release commands, tag pushes that trigger CI deployment. Always ask.
+- **Production data / infrastructure** — prod DB writes / migrations, prod config edits, secrets rotation, IAM / role / policy, DNS, anything in a `prod`-scoped path or pipeline. Always ask.
+- **Bulk-destructive ops** — wildcard or directory deletion (`rm -rf <dir>`, `git rm -r`), `DROP TABLE`, `TRUNCATE`, `git reset --hard` past unpushed work, mass class / module / migration deletion. Always ask.
+
+A roadmap step or earlier turn does **not** count as authorization for
+these. Authorization is "the user said so on this turn".
 
 ## Decline = silence — no re-asking on the same task
 

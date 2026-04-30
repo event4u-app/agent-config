@@ -122,3 +122,39 @@ The `.md` source files are the English blueprint — they define WHAT to say, no
 > 1. Interactive — ask before each comment
 > 2. Automatic — handle all independently
 ```
+
+### Quoted user-input examples — same rule, with one labeled exception
+
+Common drift: a rule documents trigger phrases and writes them as quoted
+German examples inside English prose. **Not allowed**, even demonstrative.
+
+Two correct paths:
+
+1. **Translate to English.** Trigger recognition is semantic; the agent
+   matches intent across languages regardless of example wording.
+2. **Labeled `DE: … · EN: …` anchor block** — only when multilingual
+   recognition is the point:
+
+   ```md
+   - DE: "arbeite selbstständig" · "frag nicht jedes Mal" · "tue es einfach"
+   - EN: "work autonomously" · "don't ask" · "just do it"
+   ```
+
+Labeled-anchor block is the **only** allowed location for German prose in
+an English `.md`. Body text, example sentences, prompt templates,
+agent-rendered strings, failure modes must be English. Reference phrases
+abstractly later (e.g. "a standing autonomy directive") and link back.
+
+### Detection heuristic
+
+Before saving an `.md` file under `.augment/`, `.agent-src/`,
+`.agent-src.uncompressed/`, or `agents/`, scan for:
+
+- Umlauts (`ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`, `ß`) outside fenced code, file
+  paths, and labeled anchor blocks.
+- German function words in unquoted prose: `für`, `nicht`, `dass`,
+  `wenn`, `sollte`, `werden`, `arbeite`, `selbstständig`, `jetzt`,
+  `einfach`, `weiter`, `lösche`, `frag`, `schreib`, `mach`.
+- Non-English quoted phrases in body text when surrounding prose is English.
+
+Hit → translate the fragment or move into a `DE: … · EN: …` block.
