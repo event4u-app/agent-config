@@ -64,6 +64,7 @@ Commands:
   refine-ticket:detect       Run the deterministic refine-ticket detection helper
   telemetry:record           Append one artefact-engagement event (default-off)
   telemetry:status           Print artefact-engagement telemetry status (read-only)
+  telemetry:report           Aggregate the engagement log into a quartile report
   help                       Show this help
   --version, -V              Print package version
 
@@ -83,6 +84,8 @@ Examples:
   ./agent-config refine-ticket:detect ticket-body.txt
   ./agent-config telemetry:status
   ./agent-config telemetry:status --format json
+  ./agent-config telemetry:report --since 30d --top 20
+  ./agent-config telemetry:report --since 7d --format json --top 0
 
 All commands operate on the CURRENT DIRECTORY (your project root).
 The CLI is strictly consumer-facing. Maintainer tasks live in Taskfile.yml.
@@ -261,6 +264,13 @@ cmd_telemetry_status() {
   exec python3 "$script" "$@"
 }
 
+cmd_telemetry_report() {
+  require_python3
+  local script
+  script="$(resolve_template_script "telemetry_report.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
 cmd_memory_check() {
   require_python3
   local script
@@ -383,6 +393,7 @@ main() {
     refine-ticket:detect)    cmd_refine_ticket_detect "$@" ;;
     telemetry:record)        cmd_telemetry_record "$@" ;;
     telemetry:status)        cmd_telemetry_status "$@" ;;
+    telemetry:report)        cmd_telemetry_report "$@" ;;
     help|--help|-h|"")        usage ;;
     --version|-V)            print_version ;;
     *)
