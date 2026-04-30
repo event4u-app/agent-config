@@ -84,6 +84,15 @@ personal:
   # Personal preference — each developer decides for themselves.
   pr_comment_bot_icon: false
 
+  # Autonomous execution — suppress trivial workflow questions (on, off, auto)
+  # on   = act on the obvious next step; never ask "Step 2 or 3?", "should I commit?", etc.
+  # off  = ask trivial workflow questions (legacy behavior)
+  # auto = behaves like 'off' until the user says "arbeite selbstständig" / "work autonomously"
+  #        in the conversation, then switches to 'on' for the rest of the chat.
+  # Blocking decisions (security, scope expansion, push/merge/branch/PR) are NEVER suppressed.
+  # See rules/autonomous-execution.md for the full definition.
+  autonomy: auto
+
 # --- Project / team preferences ---
 project:
   # Path to the PR template file (relative to project root)
@@ -220,6 +229,7 @@ lives under `personal:` in YAML.
 | `personal.minimal_output` | `true`, `false` | `true` | When `true`: short bullet points during work, concise summary at end. When `false`: verbose explanations. |
 | `personal.play_by_play` | `true`, `false` | `false` | When `true`: share intermediate findings during investigation. When `false`: work silently, report only the conclusion. |
 | `personal.pr_comment_bot_icon` | `true`, `false` | `false` | Prefix PR comment replies with 🤖 to indicate bot-authored replies. Personal preference — each developer decides. |
+| `personal.autonomy` | `on`, `off`, `auto` | `auto` | Suppress trivial workflow questions and act on the obvious next step. `auto` defaults to `off` but flips to `on` after a prose opt-in like "arbeite selbstständig". `on` suppresses trivial questions unconditionally. Blocking decisions (security, scope expansion, push/merge/branch/PR/tag) are never suppressed. See `rules/autonomous-execution.md`. |
 | `project.pr_template` | file path | `.github/pull_request_template.md` | Path to PR template file. Read this instead of searching for it. |
 | `project.upstream_repo` | `org/repo` | _(empty)_ | Target repository for universal improvement PRs (e.g., `org/agent-config`). |
 | `project.improvement_pr_branch_prefix` | string | `improve/agent-` | Branch prefix for agent improvement PRs. |
