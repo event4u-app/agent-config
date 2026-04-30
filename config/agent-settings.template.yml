@@ -149,3 +149,32 @@ onboarding:
   # Set to true automatically by /onboard at the end. Flip to false if
   # you want to re-run the flow.
   onboarded: false
+
+# --- Command suggestion (numbered-options shortcut finder) ---
+#
+# When the user's free-form prompt matches an eligible slash command,
+# the agent surfaces a numbered-options block with the recommendation
+# plus an always-present "run as-is" option. The suggestion layer
+# never auto-executes — the user picks. See rules/command-suggestion.md.
+commands:
+  suggestion:
+    # Master switch (true, false). false = the layer is silent; explicit
+    # /commands still work as today.
+    enabled: true
+
+    # Minimum match score (0.0–1.0) before a suggestion surfaces.
+    # 0.6 = default; raise to 0.7 for stricter behaviour, lower to 0.5
+    # if too many useful suggestions are being suppressed.
+    confidence_floor: 0.6
+
+    # Cooldown in seconds between re-suggestions of the same
+    # (command, evidence) pair. Default 600s = 10m.
+    cooldown_seconds: 600
+
+    # Max number of command suggestions before the as-is option.
+    # The as-is option is always extra (so total = max_options + 1).
+    max_options: 4
+
+    # Commands to never suggest. Still work when typed explicitly.
+    # Example: ["/refine-ticket", "/work"]
+    blocklist: []

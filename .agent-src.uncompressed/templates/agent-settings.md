@@ -210,6 +210,28 @@ onboarding:
   # if you want to re-run the flow.
   onboarded: false
 
+# --- Command suggestion (numbered-options shortcut finder) ---
+#
+# When the user's free-form prompt matches an eligible slash command,
+# the agent surfaces a numbered-options block with the recommendation
+# plus an always-present "run as-is" option. The suggestion layer
+# never auto-executes — the user picks. See `rules/command-suggestion.md`.
+commands:
+  suggestion:
+    # Master switch (true, false). `false` = the layer is silent;
+    # explicit `/commands` still work as today.
+    enabled: true
+    # Minimum match score (0.0–1.0) before a suggestion surfaces.
+    confidence_floor: 0.6
+    # Cooldown in seconds between re-suggestions of the same
+    # (command, evidence) pair. Default 600 = 10m.
+    cooldown_seconds: 600
+    # Max number of command suggestions before the as-is option.
+    # The as-is option is always extra (total rendered = max_options + 1).
+    max_options: 4
+    # Commands to never suggest. Still work when typed explicitly.
+    blocklist: []
+
 # --- Telemetry (artefact engagement, default-off) ---
 #
 # Records — at task / phase-step boundaries — which artefacts (skills,
@@ -279,6 +301,11 @@ lives under `personal:` in YAML.
 | `personas.override` | list of persona ids | `[]` | Developer-local override of the team default lens cast. Empty = inherit `personas.default` from `.agent-project-settings.yml`. See [`layered-settings`](../guidelines/agent-infra/layered-settings.md). |
 | `personas.ignore` | list of persona ids | `[]` | Persona ids dropped from the default cast locally. Ignored personas stay invokable via `--personas=<id>`. |
 | `onboarding.onboarded` | `true`, `false` | `false` | Whether `/onboard` has run on this project. The `onboarding-gate` rule prompts for `/onboard` when this is `false`. Missing entirely = legacy project, treated as onboarded. |
+| `commands.suggestion.enabled` | `true`, `false` | `true` | Master switch for the command-suggestion layer. `false` = the layer is silent; explicit `/commands` still work. See `rules/command-suggestion.md`. |
+| `commands.suggestion.confidence_floor` | `0.0`–`1.0` | `0.6` | Minimum match score before a suggestion surfaces. Per-command frontmatter (`suggestion.confidence_floor`) overrides this global floor. |
+| `commands.suggestion.cooldown_seconds` | integer | `600` | Cooldown between re-suggestions of the same `(command, evidence)` pair. `600` = 10m. |
+| `commands.suggestion.max_options` | integer | `4` | Max number of command suggestions before the always-present "run as-is" option (total rendered = `max_options + 1`). |
+| `commands.suggestion.blocklist` | list of command names | `[]` | Commands that never appear as a suggestion. They still work when typed explicitly. |
 | `telemetry.artifact_engagement.enabled` | `true`, `false` | `false` | Master switch for the artefact engagement log. Default-off; zero file IO and zero token cost when `false`. Maintainer-targeted; consumers leave it off. |
 | `telemetry.artifact_engagement.granularity` | `task`, `phase-step`, `tool-call` | `task` | Boundary at which events are recorded. `tool-call` is expensive — opt-in only. |
 | `telemetry.artifact_engagement.record.consulted` | `true`, `false` | `true` | When `true`: record artefacts loaded into context. |
