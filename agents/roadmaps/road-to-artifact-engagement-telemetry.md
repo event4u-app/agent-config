@@ -102,10 +102,10 @@ Each event is a single JSONL line: `{ts, task_id, boundary_kind, consulted: {ski
 
 ## Phase 5: Privacy and anonymisation audit
 
-- [ ] **Step 1:** Audit every event field — confirm zero path, content, prompt, ticket-id, or secret can leak. Repository-internal `task_id`s are allow-listed; consumer-supplied free-text is forbidden.
-- [ ] **Step 2:** Add a redaction validator — `telemetry:record` rejects payloads containing `/`, `\`, file extensions, or strings longer than 200 chars in id fields.
-- [ ] **Step 3:** Maintainer-export check — `./agent-config telemetry:report --json` output passes the same validator before being written; safe to share without further review.
-- [ ] **Step 4:** Document the privacy contract in `agents/contexts/artifact-engagement-flow.md` — what is recorded, what cannot be, how to audit a JSONL by hand.
+- [x] **Step 1:** Audit every event field — confirm zero path, content, prompt, ticket-id, or secret can leak. Repository-internal `task_id`s are allow-listed; consumer-supplied free-text is forbidden. Audited fields: `task_id`, `boundary_kind`, `consulted.<kind>[]`, `applied.<kind>[]`. Strings restricted to bounded id namespaces; control chars, paths, and extensions rejected.
+- [x] **Step 2:** Add a redaction validator — `check_id_redaction` in `telemetry/engagement.py` rejects `/`, `\`, control chars, leading/trailing whitespace, file extensions, empty strings, and strings longer than 200 chars. Wired into `EngagementEvent.validate()` (write gate) and `parse_event` (read gate).
+- [x] **Step 3:** Maintainer-export check — `report_renderer.py` re-runs `check_id_redaction` in `_stat_to_dict` and the markdown row builder. `telemetry_report.main` catches `EngagementSchemaError` and exits `2` with a `redaction validator refused report` message.
+- [x] **Step 4:** Privacy contract documented in `agents/contexts/artifact-engagement-flow.md` — four enforcement layers (schema, aggregator, renderer, CLI), the forbidden-shape table, and two hand-audit recipes (validator-driven and standalone).
 
 ## Phase 6: Dogfooding against R1–R5
 
@@ -127,8 +127,8 @@ Each event is a single JSONL line: `{ts, task_id, boundary_kind, consulted: {ski
 - [ ] Schema validates round-trip; unknown artefact kinds, malformed events, and oversized ids all rejected with non-zero exit
 - [ ] `.agent-engagement.jsonl` is gitignored at root + template; CI fails on attempts to commit one
 - [ ] `./agent-config telemetry:record` is idempotent within a boundary, durable under concurrent writes, silent when disabled
-- [ ] `./agent-config telemetry:report` produces markdown + json output, both pass the redaction validator
-- [ ] Privacy audit: no path, content, secret, or free-text payload reachable in any event field
+- [x] `./agent-config telemetry:report` produces markdown + json output, both pass the redaction validator
+- [x] Privacy audit: no path, content, secret, or free-text payload reachable in any event field
 - [ ] Dogfooding-window report exists; quartiles non-empty; at least one retirement candidate flagged
 - [ ] Settings docs, ADR, README note, changelog entry all in place
 - [ ] `task ci` exits 0 end-to-end including the cost-floor test

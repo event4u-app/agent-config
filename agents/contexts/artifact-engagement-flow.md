@@ -7,7 +7,8 @@
 > agent-side hooks (this document).
 >
 > - **Created:** 2026-04-30
-> - **Status:** Phase 3 in progress — agent recording contract.
+> - **Status:** Phase 5 — schema, engine, recording, aggregator, renderer,
+>   and redaction validator are in place. Phase 6 (dogfooding) next.
 
 This document is the stable reference for **what gets recorded, when, and
 under which constraints**. The roadmap tracks phased delivery; the rule
@@ -89,14 +90,22 @@ signal and defeats the whole point of the system.
 
 ## Forbidden — what NEVER goes into a record
 
-The privacy contract is enforced at three layers (schema, CLI validator,
-rule). Each layer rejects:
+The privacy contract is enforced at **four** layers — schema (write
+gate), aggregator (read gate via `parse_event`), renderer (export gate),
+and CLI (surface gate). Each layer rejects the same set of shapes;
+defense in depth means a leak has to bypass all four to escape:
 
-- File paths, including any string with `/`, `\`, or a file extension.
+- File paths — any string containing `/`, `\`, or a control character.
+- File extensions — trailing `.md`, `.py`, `.json`, `.yaml`, `.yml`,
+  `.php`, `.ts`, `.js`, etc. Detected by
+  `re.compile(r"\.[a-z0-9]{1,10}$", re.IGNORECASE)` in
+  `telemetry.engagement.check_id_redaction`.
 - Source code, prompts, ticket bodies, AC text, comments.
 - Branch names, commit shas, PR numbers, URLs.
 - Secrets, env vars, credentials, customer data.
 - Free-text strings longer than 200 chars.
+- Leading or trailing whitespace, tabs, newlines.
+- Empty strings.
 
 The id namespaces are stable and bounded:
 
@@ -112,6 +121,32 @@ The id namespaces are stable and bounded:
 short opaque slug derived from the prompt for `/work`. Branch names,
 file paths, and free-text titles are forbidden in `task_id` — see the
 schema's `EngagementSchemaError` cases.
+
+### The four enforcement layers
+
+1. **Schema (write gate)** — `EngagementEvent.validate()` in
+   `telemetry/engagement.py` runs `check_id_redaction` over `task_id`
+   and every `consulted` / `applied` artefact id. The CLI exits `1`
+   when this fires; nothing reaches the JSONL.
+2. **Aggregator (read gate)** — `aggregator._iter_events` calls
+   `parse_event`, which re-runs the same validator. A pre-validator
+   line (e.g. an archived snapshot from before the validator landed)
+   is **skipped** and counted in `result.skipped_lines`. The renderer
+   never sees it.
+3. **Renderer (export gate)** — `_stat_to_dict` (JSON) and the
+   markdown row builder both call `check_id_redaction` again before
+   emitting any id. If a caller bypasses `parse_event` and hand-builds
+   an `AggregateResult`, the renderer raises `EngagementSchemaError`
+   instead of producing the row.
+4. **CLI (surface gate)** — `telemetry_report.main` catches
+   `EngagementSchemaError` from the renderer and exits `2` with a
+   `redaction validator refused report` message. A bad row is never
+   written to stdout, never piped to a teammate.
+
+A leak would have to defeat all four layers — write the JSONL outside
+the CLI, parse it outside `parse_event`, render it outside the
+project's renderer, and ship it to a teammate without the CLI in the
+loop. The contract treats that as out of scope.
 
 ## How the agent records
 
@@ -171,33 +206,48 @@ $ grep agent-engagement .gitignore
 
 ## How to audit a JSONL by hand
 
+The fastest path is the project's own validator — it enforces every
+rule listed above:
+
 ```bash
-# Schema sanity — every line must round-trip
+# Validate every line against the schema + redaction floor
 python3 -c '
-import json, sys, pathlib
-for i, line in enumerate(pathlib.Path(".agent-engagement.jsonl").read_text().splitlines(), 1):
+import pathlib, sys
+sys.path.insert(0, ".agent-src.uncompressed/templates/scripts")
+from telemetry.engagement import EngagementSchemaError, parse_event
+log = pathlib.Path(".agent-engagement.jsonl")
+ok = bad = 0
+for i, line in enumerate(log.read_text().splitlines(), 1):
+    if not line.strip():
+        continue
     try:
-        json.loads(line)
-    except Exception as e:
+        parse_event(line + "\n")
+        ok += 1
+    except EngagementSchemaError as e:
+        bad += 1
         print(f"line {i}: {e}", file=sys.stderr)
+print(f"{ok} valid, {bad} rejected")
 '
 
-# Privacy spot-check — no paths, no extensions, no oversized fields
+# A bad-line spot-check that does not depend on the validator
 python3 -c '
 import json, pathlib, re
-forbidden = re.compile(r"[/\\.](md|py|php|ts|js)\b|/|\\\\")
+forbidden = re.compile(r"[/\\\\]|\.[a-z0-9]{1,10}$", re.IGNORECASE)
 for line in pathlib.Path(".agent-engagement.jsonl").read_text().splitlines():
+    if not line.strip():
+        continue
     obj = json.loads(line)
     for kind in ("consulted", "applied"):
         for ids in obj.get(kind, {}).values():
             for v in ids:
                 if forbidden.search(v) or len(v) > 200:
-                    print("LEAK:", v); break
+                    print("LEAK:", v)
 '
 ```
 
-Phase 5 ships these as a maintainer-side audit command; for now the
-recipe above is the canonical hand-audit.
+Either recipe is safe to run on a co-worker's archived JSONL — neither
+writes anything, both surface the same shapes the four enforcement
+layers reject.
 
 ## See also
 
@@ -205,4 +255,4 @@ recipe above is the canonical hand-audit.
 - [`artifact-engagement-recording`](../../.agent-src.uncompressed/rules/artifact-engagement-recording.md) — agent-side trigger
 - [`implement-ticket-flow`](implement-ticket-flow.md) — the eight-step contract this rule observes
 - [`scripts/telemetry/`](../../.agent-src.uncompressed/templates/scripts/telemetry/) — schema, boundary session, settings reader
-- [`tests/telemetry/`](../../tests/telemetry/) — contract enforcement (37 cases as of Phase 2 + 6 cost-floor cases as of Phase 3)
+- [`tests/telemetry/`](../../tests/telemetry/) — contract enforcement (104 cases through Phase 5: schema, settings, aggregator, renderer, CLI, cost-floor, redaction)
