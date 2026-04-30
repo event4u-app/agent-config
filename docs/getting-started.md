@@ -99,7 +99,7 @@ Your agent is now:
 - **Respecting your codebase** — no conflicting patterns
 - **Following standards** — consistent code quality
 
-This is enforced automatically by 47 rules. No configuration needed.
+This is enforced automatically by 49 rules. No configuration needed.
 
 ---
 
@@ -137,7 +137,7 @@ Your agent now understands slash commands:
 | `/chat-history-resume` | Recover context after a crashed or switched session |
 | `/chat-history-clear` | Wipe the chat-history log (with confirmation) |
 
-→ [Browse all 74 commands](../.agent-src/commands/)
+→ [Browse all 75 commands](../.agent-src/commands/)
 
 ---
 
