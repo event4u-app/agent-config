@@ -209,6 +209,58 @@ onboarding:
   # Set to true automatically by /onboard at the end. Flip to false
   # if you want to re-run the flow.
   onboarded: false
+
+# --- Command suggestion (numbered-options shortcut finder) ---
+#
+# When the user's free-form prompt matches an eligible slash command,
+# the agent surfaces a numbered-options block with the recommendation
+# plus an always-present "run as-is" option. The suggestion layer
+# never auto-executes — the user picks. See `rules/command-suggestion.md`.
+commands:
+  suggestion:
+    # Master switch (true, false). `false` = the layer is silent;
+    # explicit `/commands` still work as today.
+    enabled: true
+    # Minimum match score (0.0–1.0) before a suggestion surfaces.
+    confidence_floor: 0.6
+    # Cooldown in seconds between re-suggestions of the same
+    # (command, evidence) pair. Default 600 = 10m.
+    cooldown_seconds: 600
+    # Max number of command suggestions before the as-is option.
+    # The as-is option is always extra (total rendered = max_options + 1).
+    max_options: 4
+    # Commands to never suggest. Still work when typed explicitly.
+    blocklist: []
+
+# --- Telemetry (artefact engagement, default-off) ---
+#
+# Records — at task / phase-step boundaries — which artefacts (skills,
+# rules, commands, guidelines, personas) the agent consulted and
+# applied. Local only, append-only JSONL, never reaches a consumer
+# repo (gitignored). Maintainer-targeted feature; consumers leave it
+# off. See `agents/contexts/artifact-engagement-flow.md` (once Phase 3
+# of road-to-artifact-engagement-telemetry lands).
+telemetry:
+  artifact_engagement:
+    # Master switch. `false` (default) produces zero file IO and zero
+    # token cost. Flip to `true` only as a maintainer; the very first
+    # `record` call prints a one-line stderr warning to make accidental
+    # enables visible.
+    enabled: false
+    # `task` = one event per /implement-ticket or /work run.
+    # `phase-step` = one event per refine|memory|analyze|plan|implement|test|verify|report step.
+    # `tool-call` = one event per tool invocation; expensive, opt-in only.
+    granularity: task
+    # Which categories the agent records. Both default to `true`;
+    # flip individually if a maintainer wants applied-only or
+    # consulted-only data.
+    record:
+      consulted: true
+      applied: true
+    output:
+      # Append-only JSONL log. Path is relative to the project root.
+      # Always gitignored (see config/gitignore-block.txt).
+      path: .agent-engagement.jsonl
 ```
 
 ## Settings Reference
