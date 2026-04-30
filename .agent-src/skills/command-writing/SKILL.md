@@ -60,8 +60,18 @@ name: {command-name}          # must match filename without .md
 description: "Short human-readable summary of what /{name} does"
 disable-model-invocation: true
 skills: [optional-skill-1]    # optional — skills this command delegates to
+suggestion:                   # required (Phase 2 contract)
+  eligible: true              # default; set false to opt out
+  trigger_description: "natural-language pattern, examples"
+  trigger_context: "concrete signal — branch name, file pattern, tool output"
 ---
 ```
+
+Opt-out shape: `eligible: false` + non-empty `rationale`. Linter enforces
+≥10-char triggers when eligible; rationale required when ineligible.
+Optional `confidence_floor` (≥0.0) and `cooldown` (string) override globals.
+Eligibility decisions live in
+[`agents/contexts/command-suggestion-eligibility.md`](../../../agents/contexts/command-suggestion-eligibility.md).
 
 When iterating on the description, delegate to the
 [`description-assist`](../description-assist/SKILL.md) skill — approval-gated,
