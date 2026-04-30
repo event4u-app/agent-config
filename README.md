@@ -69,7 +69,8 @@ Install directly in your agent for global, cross-project use:
 2. `"Add caching to this"` → watch: agent asks instead of guessing
 3. `"Implement this feature"` → watch: agent respects your codebase
 
-→ [Full getting started guide](docs/getting-started.md)
+→ [Full getting started guide](docs/getting-started.md) ·
+[More examples & expected behavior](docs/showcase.md)
 
 ### Optional: persistent agent memory
 
