@@ -1,0 +1,165 @@
+# Roadmap: Stable Chat History via Platform Hooks
+
+> Make `.agent-chat-history` populate **structurally** (platform-driven) instead of
+> **cooperatively** (agent-discipline-driven), so crash-recovery and session-resume
+> stop depending on the agent remembering the Iron Law mid-task.
+
+## Prerequisites
+
+- [ ] Read `AGENTS.md` and `.agent-src.uncompressed/rules/chat-history.md`
+- [ ] Familiarize with `scripts/chat_history.py` (turn-check, append, heartbeat,
+      ownership-state, foreign/returning/missing flow)
+- [ ] Confirm `task test` is green on `tests/test_chat_history*` before any change
+
+## Context
+
+The chat-history system was built three times harder under a cooperative model:
+the agent reads `rules/chat-history.md`, calls `turn-check`, `append`, and
+`heartbeat` at the right moments. In practice this fails under token pressure,
+long sessions, and high-focus coding — the most recent live failure being R3
+Phase 2 of the Product UI Track: significant work and many commits between
+`2026-04-29 20:08` and the start of this session, **zero** chat-history entries.
+
+**Decision (locked, not revisited in this roadmap):**
+
+- Custom `chat_history.py` + JSONL log stays canonical. Augment Memory is **not**
+  an acceptable replacement because it loses chats on Augment Code crashes —
+  exactly the failure mode `.agent-chat-history` is the backup for.
+- The fix is to make population **structural**: platform lifecycle hooks call
+  `scripts/chat_history.py append` automatically. Hooks are the source of
+  invocations; the script and its file format remain the source of truth.
+
+- **Feature:** structural enforcement of chat-history persistence
+- **Jira:** none
+- **Depends on:** nothing — this work is self-contained inside this package
+
+## Non-goals
+
+- **No** replacement of `chat_history.py` with a different storage layer.
+- **No** removal of the existing rule file before automation is verified per
+  platform — manual fallback must keep working until hooks are proven.
+- **No** new CLI subcommands beyond what hooks need (e.g. a compact
+  `hook-append` wrapper if `append` itself is too verbose for hook context).
+- **No** changes to the JSONL file format, fingerprint scheme, or
+  ownership-state machine.
+
+## Phase 1: Platform analysis (analysis-only, no code)
+
+> Output of this phase is one context document that locks in what each
+> platform actually offers. Phase 2 cannot start until this is committed.
+
+- [ ] **Step 1:** Create `agents/contexts/chat-history-platform-hooks.md` with
+      one section per platform: Augment Code, Claude Code, Cursor, Cline,
+      Windsurf, Gemini CLI. Skeleton only — to be filled in by the next steps.
+- [ ] **Step 2:** Augment Code — document the hook surface visible from this
+      package (e.g. the `memory_*_agent-memory` tools imply a session-start /
+      observe / stop / session-end lifecycle). Capture: which hooks fire
+      automatically, which require explicit calls, latency, failure semantics
+      (does the agent see hook errors?), and whether stdout from a hook reaches
+      the chat-history file.
+- [ ] **Step 3:** Claude Code — research `.claude/hooks/` (or current equivalent),
+      including session-start / pre-tool / post-tool / stop hooks. Note hook
+      execution model (subprocess? in-process? sandbox?), how `cwd` is set, and
+      whether hooks have access to the project's Python interpreter.
+- [ ] **Step 4:** Cursor — research extension API or rules-driven hooks. Likely
+      finding: no native hook system. Document the gap explicitly.
+- [ ] **Step 5:** Cline — research VS Code extension lifecycle hooks. Likely
+      finding: limited or none for chat lifecycle. Document the gap.
+- [ ] **Step 6:** Windsurf + Gemini CLI — research and document. Most likely
+      finding: no hooks. Confirm and lock.
+- [ ] **Step 7:** For each platform, decide: **HOOK**, **CHECKPOINT**, or
+      **MANUAL** (see "Strategy taxonomy" below). Record the decision with one
+      sentence of rationale per platform.
+- [ ] **Step 8:** Cross-check with `web-search` / `web-fetch` for each
+      platform's current docs as of 2026-04-30. Cite URLs in the context doc;
+      stale assumptions are the failure mode this phase exists to prevent.
+
+### Strategy taxonomy (authoritative; referenced by Phase 2+)
+
+- **HOOK** — platform fires a lifecycle event, our code runs `scripts/chat_history.py append`. Zero agent involvement.
+- **CHECKPOINT** — no automatic hook, but a thin user-invoked command (e.g. `/chat-history-checkpoint`) takes ~1 second and is socially enforceable. Fallback when HOOK is impossible.
+- **MANUAL** — accept that the platform cannot be automated; document the gap; keep the cooperative rule active **only** for that platform.
+
+## Phase 2: Implement HOOK strategy where available
+
+> Do **not** start any step here before Phase 1 is complete and the strategy
+> per platform is locked.
+
+- [ ] **Step 1:** Build `scripts/chat_history_hook.py` (or extend
+      `chat_history.py` with a `hook-append` subcommand) — a wrapper that:
+      reads the active conversation's first-user-msg from a known location,
+      computes the right entry payload from the hook's input, and appends.
+      Hooks call this; they don't call `append` with raw JSON.
+- [ ] **Step 2:** Augment Code wiring (assuming Phase 1 confirms HOOK is
+      possible) — implement the actual hook integration. Verify it survives
+      an Augment Code crash + restart cycle without corrupting the log.
+- [ ] **Step 3:** Claude Code wiring — implement `.claude/hooks/` script(s)
+      that call the hook wrapper. Verify against `task generate-tools` so the
+      install pipeline ships them.
+- [ ] **Step 4:** Update `scripts/install.sh` / `scripts/install.py` so hook
+      files land in consumer projects automatically. Idempotent install only —
+      never overwrite a customized hook.
+
+## Phase 3: CHECKPOINT fallback for platforms without hooks
+
+- [ ] **Step 1:** Build `/chat-history-checkpoint` command — minimal, single
+      purpose: read context, call append, emit one-line confirmation. Goes
+      under `.agent-src.uncompressed/commands/`.
+- [ ] **Step 2:** Document in `rules/chat-history.md` that on platforms
+      classified MANUAL/CHECKPOINT in Phase 1, the agent SHOULD invoke this
+      command at phase boundaries instead of the current 3-gate Iron Law.
+
+## Phase 4: Rule de-escalation
+
+> Only after Phase 2 hooks are dogfooded for at least one full development
+> session each on Augment Code and Claude Code.
+
+- [ ] **Step 1:** Rewrite `.agent-src.uncompressed/rules/chat-history.md` so
+      the Iron Law is **conditional**: HOOK platforms get a one-liner
+      ("hooks handle it; rule is documentation only"); CHECKPOINT/MANUAL
+      platforms keep a slimmer version of the current gates.
+- [ ] **Step 2:** Update `scripts/skill_linter.py` if it asserts on the rule's
+      structure (it should not block the rewrite).
+- [ ] **Step 3:** Run `task ci` and fix any drift in `.agent-src/`,
+      `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`
+      that comes from the compressed projection of the rewritten rule.
+- [ ] **Step 4:** Update `agents/roadmaps/road-to-stable-chat-history.md`
+      acceptance to reflect what was actually shipped.
+
+## Phase 5: Verification
+
+- [ ] **Step 1:** Dogfood — run a full development session on Augment Code
+      with hooks enabled, perform crash-recovery test (kill agent mid-session,
+      resume on new chat, verify the gap-period entries are intact).
+- [ ] **Step 2:** Same on Claude Code if Phase 2 covered it.
+- [ ] **Step 3:** Long-tail check — every commit landed since session start
+      shows up in the chat-history log without an agent ever calling
+      `append` explicitly.
+
+## Acceptance Criteria
+
+- [ ] `agents/contexts/chat-history-platform-hooks.md` exists, cites current
+      docs, and assigns each of the six platforms to HOOK / CHECKPOINT / MANUAL.
+- [ ] At least one platform (Augment Code OR Claude Code) is HOOK-classified
+      AND end-to-end hook integration is shipped and dogfooded.
+- [ ] Crash-recovery test passes: an agent crash mid-session does not lose
+      entries written by hooks before the crash.
+- [ ] `task ci` exits 0.
+- [ ] `tests/test_chat_history*.py` is still green and now covers the hook
+      wrapper if one was introduced.
+- [ ] `rules/chat-history.md` is rewritten to reflect HOOK / CHECKPOINT /
+      MANUAL strategy per platform.
+
+## Notes
+
+- **No version numbers, no release tags, no deprecation dates** in this
+  roadmap (per `scope-control` § git-operations).
+- **Stay on the current branch** unless the user explicitly opens a separate
+  branch (per `scope-control` § decline = silence).
+- **Phase 1 is analysis-only.** No edits to `scripts/`, no edits to rules,
+  no hook code until the platform classification is locked. Three previous
+  rounds failed because we patched before we understood.
+- **Memory-replace is locked out.** This roadmap will not introduce a
+  dependency on Augment Code's memory tools (`memory_observe`, etc.) for
+  the canonical log — they may *trigger* an append, but the entry lives in
+  `.agent-chat-history`, owned by `chat_history.py`.
