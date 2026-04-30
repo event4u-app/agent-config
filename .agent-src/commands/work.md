@@ -135,6 +135,12 @@ choosing them.
   it verbatim.
 - Persona is session-global. Read it from `.agent-settings.yml` on the
   fresh run; never accept a `--persona` flag from the user mid-flight.
+- When `telemetry.artifact_engagement.enabled: true` in
+  `.agent-settings.yml`, emit one `./agent-config telemetry:record` per
+  boundary (per phase-step or per task — see `granularity`) with the
+  consulted+applied artefact ids. Full contract in
+  [`artifact-engagement-recording`](../rules/artifact-engagement-recording.md).
+  Default-off; absent setting is a silent no-op.
 
 ## Examples
 
