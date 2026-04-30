@@ -145,3 +145,98 @@ def test_bare_identifier_not_requoted(workspace: Path):
     # Profile-driven value must be emitted bare, not quoted
     assert "frequency: per_turn\n" in body
     assert 'frequency: "per_turn"' not in body
+
+
+# --- 3-level nesting + list values (regression for commands.suggestion.*) ---
+
+NESTED_TEMPLATE = """\
+cost_profile: __COST_PROFILE__
+
+commands:
+  suggestion:
+    enabled: true
+    confidence_floor: 0.6
+    cooldown_seconds: 600
+    max_options: 4
+    blocklist: []
+"""
+
+
+@pytest.fixture
+def nested_workspace(tmp_path: Path) -> Path:
+    (tmp_path / "config" / "profiles").mkdir(parents=True)
+    (tmp_path / "config" / "agent-settings.template.yml").write_text(
+        NESTED_TEMPLATE, encoding="utf-8"
+    )
+    (tmp_path / "config" / "profiles" / "minimal.ini").write_text(
+        "cost_profile=minimal\n", encoding="utf-8"
+    )
+    return tmp_path
+
+
+def test_three_level_user_values_preserved(nested_workspace: Path):
+    """Regression: commands.suggestion.* (3-level) must round-trip cleanly."""
+    target = nested_workspace / ".agent-settings.yml"
+    target.write_text(
+        "cost_profile: minimal\n"
+        "commands:\n"
+        "  suggestion:\n"
+        "    enabled: false\n"
+        "    confidence_floor: 0.8\n"
+        "    cooldown_seconds: 300\n"
+        "    max_options: 2\n"
+        "    blocklist: []\n",
+        encoding="utf-8",
+    )
+    assert _run(nested_workspace) == 0
+    body = target.read_text(encoding="utf-8")
+    # Must remain valid YAML (the bug emitted a Python dict repr string)
+    data = yaml.safe_load(body)
+    assert data["commands"]["suggestion"]["enabled"] is False
+    assert data["commands"]["suggestion"]["confidence_floor"] == 0.8
+    assert data["commands"]["suggestion"]["cooldown_seconds"] == 300
+    assert data["commands"]["suggestion"]["max_options"] == 2
+    # No corruption marker — the bug produced a string starting with "{'enabled"
+    assert "suggestion: \"{" not in body
+
+
+def test_three_level_idempotent(nested_workspace: Path):
+    target = nested_workspace / ".agent-settings.yml"
+    target.write_text(
+        "cost_profile: minimal\n"
+        "commands:\n"
+        "  suggestion:\n"
+        "    enabled: false\n"
+        "    confidence_floor: 0.8\n"
+        "    cooldown_seconds: 300\n"
+        "    max_options: 2\n"
+        "    blocklist: []\n",
+        encoding="utf-8",
+    )
+    assert _run(nested_workspace) == 0
+    first = target.read_text(encoding="utf-8")
+    assert _run(nested_workspace) == 0
+    second = target.read_text(encoding="utf-8")
+    assert first == second
+
+
+def test_list_values_round_trip(nested_workspace: Path):
+    """Non-empty list values must serialize back as flow-style YAML."""
+    target = nested_workspace / ".agent-settings.yml"
+    target.write_text(
+        "cost_profile: minimal\n"
+        "commands:\n"
+        "  suggestion:\n"
+        "    enabled: true\n"
+        "    confidence_floor: 0.6\n"
+        "    cooldown_seconds: 600\n"
+        "    max_options: 4\n"
+        "    blocklist: [\"/refine-ticket\", \"/work\"]\n",
+        encoding="utf-8",
+    )
+    assert _run(nested_workspace) == 0
+    body = target.read_text(encoding="utf-8")
+    data = yaml.safe_load(body)
+    assert data["commands"]["suggestion"]["blocklist"] == ["/refine-ticket", "/work"]
+    # The corrupted-emit bug stringified the list with Python repr (single quotes)
+    assert "blocklist: \"['" not in body

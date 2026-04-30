@@ -251,45 +251,67 @@ def _yaml_scalar(value: str) -> str:
 def _replace_template_value(template: str, dotted_path: str, value: str) -> str:
     """Replace the default value for a dotted-path key in the YAML template.
 
-    Strategy: walk the template lines, track the current top-level
-    section, and replace the first matching line. Comments and indentation
-    are preserved.
+    Convenience wrapper: formats *value* as a YAML scalar (via
+    :func:`_yaml_scalar`) and delegates to :func:`_replace_template_value_raw`.
+    """
+    return _replace_template_value_raw(template, dotted_path, _yaml_scalar(value))
+
+
+def _replace_template_value_raw(template: str, dotted_path: str, raw_yaml: str) -> str:
+    """Replace the value at *dotted_path* with the pre-formatted *raw_yaml*.
+
+    Handles arbitrary nesting depth. The template uses 2-space indents;
+    parent sections are tracked by indent level so the leaf scalar is
+    only replaced when every parent matches the dotted path.
+
+    Comments and indentation are preserved. Returns *template* unchanged
+    if the path cannot be located.
     """
     parts = dotted_path.split(".")
-    if len(parts) == 1:
-        section, key = None, parts[0]
-    elif len(parts) == 2:
-        section, key = parts[0], parts[1]
-    else:
-        return template  # deeper nesting not supported in current schema
+    if not parts:
+        return template
+
+    sections = parts[:-1]
+    key = parts[-1]
+    target_indent = "  " * len(sections)
+
+    header_re = re.compile(r"^(\s*)([A-Za-z_][A-Za-z0-9_]*):\s*$")
+    scalar_re = re.compile(r"^(\s*)([A-Za-z_][A-Za-z0-9_]*):\s*\S.*$")
+
+    # Stack of section names by depth; None entries mean "not yet seen
+    # at this depth" or "left this section". For path a.b.c we need
+    # current_path == ['a', 'b'] when scanning for key 'c' at indent 4.
+    current_path: list[str | None] = [None] * len(sections)
 
     lines = template.splitlines()
-    current_section: "str | None" = None
-    section_re = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*):\s*$")
-    scalar_top_re = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*):\s*.*$")
-    scalar_sub_re = re.compile(r"^(\s+)([A-Za-z_][A-Za-z0-9_]*):\s*.*$")
-
-    replacement = _yaml_scalar(value)
     for idx, line in enumerate(lines):
-        # Top-level section header
-        m_section = section_re.match(line)
-        if m_section:
-            current_section = m_section.group(1)
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
             continue
-        if section is None:
-            # Top-level scalar target
-            m_top = scalar_top_re.match(line)
-            if m_top and m_top.group(1) == key and not line.startswith((" ", "\t")):
-                lines[idx] = f"{key}: {replacement}"
-                return "\n".join(lines) + ("\n" if template.endswith("\n") else "")
-        else:
-            if current_section != section:
-                continue
-            m_sub = scalar_sub_re.match(line)
-            if m_sub and m_sub.group(2) == key:
-                indent = m_sub.group(1)
-                lines[idx] = f"{indent}{key}: {replacement}"
-                return "\n".join(lines) + ("\n" if template.endswith("\n") else "")
+
+        m_header = header_re.match(line)
+        if m_header:
+            indent = m_header.group(1)
+            name = m_header.group(2)
+            depth = len(indent) // 2
+            if depth < len(sections):
+                current_path[depth] = name
+                # Reset deeper levels — we just entered a new sub-tree.
+                for d in range(depth + 1, len(sections)):
+                    current_path[d] = None
+            continue
+
+        m_scalar = scalar_re.match(line)
+        if not m_scalar:
+            continue
+        indent = m_scalar.group(1)
+        name = m_scalar.group(2)
+        if name != key or indent != target_indent:
+            continue
+        if current_path != list(sections):
+            continue
+        lines[idx] = f"{indent}{key}: {raw_yaml}"
+        return "\n".join(lines) + ("\n" if template.endswith("\n") else "")
     return template
 
 
