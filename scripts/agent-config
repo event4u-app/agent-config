@@ -62,6 +62,8 @@ Commands:
   memory:check-proposal      Run the admission gate on a memory proposal
   proposal:check             Validate a learning/skill/rule proposal markdown
   refine-ticket:detect       Run the deterministic refine-ticket detection helper
+  telemetry:record           Append one artefact-engagement event (default-off)
+  telemetry:status           Print artefact-engagement telemetry status (read-only)
   help                       Show this help
   --version, -V              Print package version
 
@@ -79,6 +81,8 @@ Examples:
   ./agent-config memory:signal --type architecture-decision --path src/Foo.php --body "…"
   ./agent-config memory:check --path agents/memory
   ./agent-config refine-ticket:detect ticket-body.txt
+  ./agent-config telemetry:status
+  ./agent-config telemetry:status --format json
 
 All commands operate on the CURRENT DIRECTORY (your project root).
 The CLI is strictly consumer-facing. Maintainer tasks live in Taskfile.yml.
@@ -243,6 +247,20 @@ cmd_memory_hash() {
   exec python3 "$script" "$@"
 }
 
+cmd_telemetry_record() {
+  require_python3
+  local script
+  script="$(resolve_template_script "telemetry_record.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
+cmd_telemetry_status() {
+  require_python3
+  local script
+  script="$(resolve_template_script "telemetry_status.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
 cmd_memory_check() {
   require_python3
   local script
@@ -363,6 +381,8 @@ main() {
     memory:check-proposal)   cmd_memory_check_proposal "$@" ;;
     proposal:check)          cmd_proposal_check "$@" ;;
     refine-ticket:detect)    cmd_refine_ticket_detect "$@" ;;
+    telemetry:record)        cmd_telemetry_record "$@" ;;
+    telemetry:status)        cmd_telemetry_status "$@" ;;
     help|--help|-h|"")        usage ;;
     --version|-V)            print_version ;;
     *)
