@@ -48,29 +48,35 @@ Phase 2 of the Product UI Track: significant work and many commits between
 > Output of this phase is one context document that locks in what each
 > platform actually offers. Phase 2 cannot start until this is committed.
 
-- [ ] **Step 1:** Create `agents/contexts/chat-history-platform-hooks.md` with
+- [x] **Step 1:** Create `agents/contexts/chat-history-platform-hooks.md` with
       one section per platform: Augment Code, Claude Code, Cursor, Cline,
       Windsurf, Gemini CLI. Skeleton only — to be filled in by the next steps.
-- [ ] **Step 2:** Augment Code — document the hook surface visible from this
+- [x] **Step 2:** Augment Code — document the hook surface visible from this
       package (e.g. the `memory_*_agent-memory` tools imply a session-start /
       observe / stop / session-end lifecycle). Capture: which hooks fire
       automatically, which require explicit calls, latency, failure semantics
       (does the agent see hook errors?), and whether stdout from a hook reaches
       the chat-history file.
-- [ ] **Step 3:** Claude Code — research `.claude/hooks/` (or current equivalent),
+- [x] **Step 3:** Claude Code — research `.claude/hooks/` (or current equivalent),
       including session-start / pre-tool / post-tool / stop hooks. Note hook
       execution model (subprocess? in-process? sandbox?), how `cwd` is set, and
       whether hooks have access to the project's Python interpreter.
-- [ ] **Step 4:** Cursor — research extension API or rules-driven hooks. Likely
+- [x] **Step 4:** Cursor — research extension API or rules-driven hooks. Likely
       finding: no native hook system. Document the gap explicitly.
-- [ ] **Step 5:** Cline — research VS Code extension lifecycle hooks. Likely
+      → **Updated finding:** Cursor 1.7+ has a full hooks system (beta);
+      CLI surface is partial. See context doc.
+- [x] **Step 5:** Cline — research VS Code extension lifecycle hooks. Likely
       finding: limited or none for chat lifecycle. Document the gap.
-- [ ] **Step 6:** Windsurf + Gemini CLI — research and document. Most likely
+      → **Updated finding:** Cline ships 8 task-lifecycle hooks; Windows
+      unsupported as of `cline/cline#8073`. See context doc.
+- [x] **Step 6:** Windsurf + Gemini CLI — research and document. Most likely
       finding: no hooks. Confirm and lock.
-- [ ] **Step 7:** For each platform, decide: **HOOK**, **CHECKPOINT**, or
+      → **Updated finding:** both have native hook systems (Windsurf 12
+      events since v1.12.41; Gemini CLI shipped in `#14307`/`#15746`).
+- [x] **Step 7:** For each platform, decide: **HOOK**, **CHECKPOINT**, or
       **MANUAL** (see "Strategy taxonomy" below). Record the decision with one
       sentence of rationale per platform.
-- [ ] **Step 8:** Cross-check with `web-search` / `web-fetch` for each
+- [x] **Step 8:** Cross-check with `web-search` / `web-fetch` for each
       platform's current docs as of 2026-04-30. Cite URLs in the context doc;
       stale assumptions are the failure mode this phase exists to prevent.
 
