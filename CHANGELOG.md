@@ -110,6 +110,47 @@ remain byte-equal across the R2 changes.
   policy preventing branch-switch and PR proposals from being re-asked
   on the same task.
 
+**Artefact-Engagement Telemetry** — opt-in, default-off measurement layer
+that records which skills, rules, commands, and guidelines the agent
+consults and applies during a `/implement-ticket` or `/work` run.
+Maintainer-targeted; consumers see no prompts.
+
+### Features
+
+* **telemetry:** `./agent-config telemetry:record` and
+  `./agent-config telemetry:report` CLI scripts + `telemetry/` Python
+  package (boundary, aggregator, renderer, schema). Default-off via
+  `telemetry.artifact_engagement.enabled` in `.agent-settings.yml`.
+* **schema:** `schema_version: 1` JSONL events with `task_id`,
+  `boundary_kind`, `consulted` / `applied` (kind→ids), `ts`,
+  `tokens_estimate`. Aggregator silently skips lines with unknown
+  schema versions.
+* **report:** quartile bucketing on applied/consulted ratio — Essential
+  (top 20 %), Useful (mid 60 %), Retirement Candidates (bottom 20 %) —
+  emitted as Markdown or JSON.
+* **rule:** `artifact-engagement-recording` — fires per phase-step
+  inside `/implement-ticket` and `/work`; no-op under the default-off
+  gate so the recording path costs nothing when disabled.
+* **privacy:** `check_id_redaction` validator enforces a redaction
+  floor (no path separators, no file extensions, no control characters,
+  no whitespace, non-empty) on **both** write and export. Tampered or
+  legacy logs cannot leak through reports — renderer re-validates.
+* **tests:** 36 redaction test cases plus end-to-end CLI coverage
+  in `tests/telemetry/`.
+
+### Documentation
+
+* **ADR:** [`agents/contexts/adr-artifact-engagement.md`](agents/contexts/adr-artifact-engagement.md)
+  — rationale, default-off doctrine, privacy contract, schema
+  versioning, deprecation horizon.
+* **flow:** `agents/contexts/artifact-engagement-flow.md` is the
+  cross-cutting reference for what gets recorded, when, and under
+  which constraints; includes the maintainer hand-audit recipe.
+* **AGENTS.md + README.md:** short *Maintainer telemetry (opt-in)*
+  pointer; consumers see nothing.
+* **`/onboard`:** Step 9 emits a one-screen maintainer-only hint
+  describing the feature; no question, no prompt.
+
 ## [1.13.0](https://github.com/event4u-app/agent-config/compare/1.12.0...1.13.0) (2026-04-27)
 
 ### Features

@@ -381,6 +381,25 @@ Uninstalling: see
 there is no dedicated uninstall command; removal is a documented manual
 step (package manager + `rm -rf` of generated dirs).
 
+### Maintainer telemetry (opt-in, default-off)
+
+A local-only artefact-engagement log can be enabled by maintainers to see
+which skills, rules, commands, and guidelines the agent actually consults
+and applies during a `/implement-ticket` or `/work` run. The log is a
+JSONL file under the project root; nothing is uploaded, nothing is shared
+across projects. Default is off; consumers see no prompts.
+
+```yaml
+# .agent-settings.yml — opt in only when you want measurement
+telemetry:
+  artifact_engagement:
+    enabled: true
+```
+
+Reports: `./agent-config telemetry:report`. Full contract,
+privacy/redaction floor, and quartile semantics:
+[`agents/contexts/artifact-engagement-flow.md`](agents/contexts/artifact-engagement-flow.md).
+
 ---
 
 ## Development

@@ -155,6 +155,27 @@ directly — the agent follows the merge rules in `layered-settings` when
 you ask it to change a value.
 ```
 
+### 9. Maintainer-only feature pointer
+
+Print a one-screen hint after the summary — no question, no prompt, just a
+pointer for maintainers who want to opt into the artefact-engagement
+telemetry layer. Consumers can ignore it; the feature is **default-off**
+and stays off unless explicitly enabled.
+
+```
+ℹ️  Maintainer telemetry (opt-in)
+
+  telemetry.artifact_engagement is off by default. If you maintain skills,
+  rules, or commands and want to see which ones the agent actually applies,
+  set telemetry.artifact_engagement.enabled: true in .agent-settings.yml.
+
+  The log is local-only JSONL — nothing uploaded, nothing shared across
+  projects. Reports: ./agent-config telemetry:report
+  Contract + privacy floor: agents/contexts/artifact-engagement-flow.md
+```
+
+Skip this block in cloud surfaces (no settings file, no log path).
+
 ## Gotchas
 
 - `.agent-settings.yml` is git-ignored. This command never commits.

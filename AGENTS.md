@@ -58,6 +58,18 @@ task ci                    # Full pipeline — must be green before PR
 All checks must pass before a PR: sync-check, consistency, check-compression,
 check-refs, check-portability, lint-skills, test, lint-readme.
 
+## Maintainer telemetry (opt-in)
+
+The artefact-engagement telemetry pipeline (`./agent-config telemetry:record`
+and `./agent-config telemetry:report`) is **default-off**. Maintainers who
+want to measure which skills/rules/commands the agent actually applies set
+`telemetry.artifact_engagement.enabled: true` in `.agent-settings.yml`. The
+log is local-only JSONL (no upload, no cross-project share) and is bound
+by the redaction floor described in
+[`agents/contexts/artifact-engagement-flow.md`](agents/contexts/artifact-engagement-flow.md).
+The recording rule lives at
+[`.agent-src/rules/artifact-engagement-recording.md`](.agent-src/rules/artifact-engagement-recording.md).
+
 ## Key rules for agents editing this repo
 
 | Rule | File |
