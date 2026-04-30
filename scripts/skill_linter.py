@@ -772,6 +772,70 @@ def lint_rule(path: Path, text: str) -> LintResult:
     )
 
 
+def _lint_command_suggestion_block(text: str) -> List[Issue]:
+    """Validate the suggestion frontmatter block (road-to-context-aware-command-suggestion).
+
+    Schema-shape is enforced upstream by validate_frontmatter; this function adds the
+    *conditional* content rules that JSON Schema (Draft-07 subset used here) cannot
+    express: trigger fields must be non-empty when eligible, rationale must be
+    non-empty when ineligible.
+    """
+    issues: List[Issue] = []
+    data, _offset = parse_frontmatter_for_schema(text)
+    if data is None:
+        return issues
+    suggestion = data.get("suggestion")
+    if suggestion is None:
+        issues.append(Issue(
+            "warning", "missing_suggestion_block",
+            "Command frontmatter is missing the 'suggestion' block — required by "
+            "road-to-context-aware-command-suggestion Phase 2.",
+        ))
+        return issues
+    if not isinstance(suggestion, dict):
+        issues.append(Issue("error", "invalid_suggestion_block", "'suggestion' must be a mapping"))
+        return issues
+    eligible = suggestion.get("eligible")
+    if eligible is True:
+        td = (suggestion.get("trigger_description") or "").strip()
+        tc = (suggestion.get("trigger_context") or "").strip()
+        if not td:
+            issues.append(Issue(
+                "error", "missing_trigger_description",
+                "suggestion.eligible=true requires a non-empty 'trigger_description'.",
+            ))
+        elif len(td) < 10:
+            issues.append(Issue(
+                "warning", "trigger_description_too_short",
+                "suggestion.trigger_description is suspiciously short (<10 chars); "
+                "linter rejects empty or overly generic patterns.",
+            ))
+        if not tc:
+            issues.append(Issue(
+                "error", "missing_trigger_context",
+                "suggestion.eligible=true requires a non-empty 'trigger_context'.",
+            ))
+        elif len(tc) < 10:
+            issues.append(Issue(
+                "warning", "trigger_context_too_short",
+                "suggestion.trigger_context is suspiciously short (<10 chars); "
+                "linter rejects empty or overly generic patterns.",
+            ))
+    elif eligible is False:
+        rationale = (suggestion.get("rationale") or "").strip()
+        if not rationale:
+            issues.append(Issue(
+                "error", "missing_suggestion_rationale",
+                "suggestion.eligible=false requires a non-empty 'rationale'.",
+            ))
+    else:
+        issues.append(Issue(
+            "error", "invalid_suggestion_eligible",
+            "suggestion.eligible must be true or false.",
+        ))
+    return issues
+
+
 def lint_command(path: Path, text: str) -> LintResult:
     issues: List[Issue] = []
     suggestions: List[str] = []
@@ -799,6 +863,9 @@ def lint_command(path: Path, text: str) -> LintResult:
         description = extract_description(text)
         if not description:
             issues.append(Issue("warning", "missing_description", "Frontmatter description is missing"))
+
+        # suggestion block (road-to-context-aware-command-suggestion Phase 2)
+        issues.extend(_lint_command_suggestion_block(text))
 
     # --- Structure checks ---
     if not H1_PATTERN.search(text):

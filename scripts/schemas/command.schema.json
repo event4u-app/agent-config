@@ -27,6 +27,47 @@
         "type": "string",
         "pattern": "^[a-z][a-z0-9-]*$"
       }
+    },
+    "suggestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eligible"],
+      "description": "Context-aware command-suggestion metadata. The suggestion layer is read-only and never auto-executes; see road-to-context-aware-command-suggestion.",
+      "properties": {
+        "eligible": {
+          "type": "boolean",
+          "description": "true → suggestion layer may surface this command; false → never suggest (still works when typed explicitly)."
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 240,
+          "description": "Why the command is ineligible. Required when eligible: false (enforced by linter)."
+        },
+        "trigger_description": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 240,
+          "description": "Natural-language pattern trigger. Required when eligible: true (enforced by linter)."
+        },
+        "trigger_context": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 240,
+          "description": "Concrete signal trigger (branch name, file pattern, recent tool output). Required when eligible: true (enforced by linter)."
+        },
+        "confidence_floor": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Optional per-command override of the global confidence floor (0.0–1.0). Defaults to settings."
+        },
+        "cooldown": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 16,
+          "description": "Optional per-command override of the global cooldown duration (e.g. '10m'). Defaults to settings."
+        }
+      }
     }
   }
 }
