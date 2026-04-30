@@ -6,17 +6,17 @@
 
 ## Overall
 
-**46 / 176 steps done · 26%**
+**50 / 176 steps done · 28%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   26%
+███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   28%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-artifact-engagement-telemetry.md](roadmaps/road-to-artifact-engagement-telemetry.md) | 7 | 37 | 25 | 12 | 0 | 0 | ███░░░░░░░ 32% |
+| 1 | [road-to-artifact-engagement-telemetry.md](roadmaps/road-to-artifact-engagement-telemetry.md) | 7 | 37 | 21 | 16 | 0 | 0 | ████░░░░░░ 43% |
 | 2 | [road-to-context-aware-command-suggestion.md](roadmaps/road-to-context-aware-command-suggestion.md) | 7 | 45 | 45 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-product-ui-track.md](roadmaps/road-to-product-ui-track.md) | 7 | 53 | 53 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md) | 7 | 44 | 3 | 34 | 7 | 0 | █████████░ 92% |
@@ -28,14 +28,14 @@
 
 ### [road-to-artifact-engagement-telemetry.md](roadmaps/road-to-artifact-engagement-telemetry.md)
 
-**Artifact Engagement Telemetry** — 12 / 37 done (32%)
+**Artifact Engagement Telemetry** — 16 / 37 done (43%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Schema and settings wireup | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | Recording engine | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Agent-side hooks | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 4 | Aggregator and report | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | Aggregator and report | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | Privacy and anonymisation audit | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 6 | Dogfooding against R1–R5 | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 7 | Docs and onboarding | ⬜ not started | 13 | 0 | 0 | 0 | 0% |

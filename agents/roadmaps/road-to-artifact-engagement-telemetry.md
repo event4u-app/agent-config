@@ -95,10 +95,10 @@ Each event is a single JSONL line: `{ts, task_id, boundary_kind, consulted: {ski
 
 ## Phase 4: Aggregator and report
 
-- [ ] **Step 1:** Implement `<engine-src>/telemetry/aggregator.py` — reads JSONL, groups by artefact id, computes consulted-count, applied-count, applied/consulted ratio, est. cost (tokens × frequency).
-- [ ] **Step 2:** Implement `<engine-src>/telemetry/report_renderer.py` — markdown table with quartiles (top 20 % essential, mid 60 % useful, bottom 20 % retirement candidates), `--json` for machine consumption.
-- [ ] **Step 3:** Wire `./agent-config telemetry:report --since <duration> --top <n> --json` — defaults `--since 30d --top 20` markdown.
-- [ ] **Step 4:** Tests: empty-log → empty-but-valid report; representative log → quartile boundaries match expected; corrupted JSONL line → skip with warning, not crash.
+- [x] **Step 1:** Implemented `<engine-src>/telemetry/aggregator.py` — streams the JSONL log, dataclass `ArtefactStat` (consulted, applied, last_seen_ts, applied_ratio property), `AggregateResult` with parsed/skipped/total counters and ts range, `since` cutoff exclusive on lower bound, missing log → empty result, malformed lines counted in `skipped_lines` (no crash). `rank_artefacts` is sort-stable: applied desc, consulted desc, then `(kind, id)` asc → byte-identical reports across runs.
+- [x] **Step 2:** Implemented `<engine-src>/telemetry/report_renderer.py` — quartile bucketing (`essential` top 20 %, `useful` mid 60 %, `retirement_candidate` bottom 20 %) with small-sample collapse (n ≤ 4 → no retirement bucket; n = 1 → single essential row). Markdown groups under three `##` sections with consulted/applied/ratio/last-seen columns; JSON output is `{schema_version, summary, buckets}` with `applied_ratio` rounded to 4 dp. Empty input renders empty-but-valid in both formats.
+- [x] **Step 3:** Wired `./agent-config telemetry:report` — `--since <int>{d,h,m}|all` (default `30d`), `--top N` (default 20, `0` disables), `--format markdown|json` (default markdown), `--log-path` override for archived snapshots, `--settings` override for tests. Reads log path from `telemetry.artifact_engagement.output.path` via shared `telemetry/settings.py`. Read-only — never mutates settings or log. Exit 2 on unparseable `--since` or settings/log IO errors; warning on stderr when malformed lines were skipped (still exit 0).
+- [x] **Step 4:** Tests in `tests/telemetry/test_aggregator.py` (7 cases), `tests/telemetry/test_report_renderer.py` (11 cases), `tests/telemetry/test_report_cli.py` (7 cases) — empty/missing log → empty result; per-artefact counts and ratios; malformed-lines counted not crashed; `since` cutoff behaviour; deterministic tie-break ordering; bucket sizing at n = 1, 4, 5, 10; `--top` truncation per bucket; `--since` units + invalid input + `all`; warning emission on stderr; settings-driven log path. **1057 passed**.
 
 ## Phase 5: Privacy and anonymisation audit
 
