@@ -183,3 +183,21 @@ def test_build_all_skips_t3h_and_explicit_request_raises(
         bcb.build_all(
             tmp_path / "out", only="blocked", strict=False, dry_run=False
         )
+
+
+# ---------- regression: T3-H must stay 0 in shipped sources --------------
+
+
+def test_no_t3h_in_uncompressed_source() -> None:
+    """The shipped uncompressed sources must never reintroduce a T3-H tier.
+
+    Every previously hard-blocked artefact must declare a `cloud_safe: noop`
+    or `cloud_safe: degrade` marker so the audit downgrades it.
+    """
+    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    import audit_cloud_compatibility as audit  # noqa: E402
+
+    summary = audit.summarize(audit.scan())
+    assert summary["by_tier"].get("T3-H", 0) == 0, (
+        f"T3-H artefacts found in source: {summary['by_tier']}"
+    )
