@@ -51,6 +51,6 @@
     "gt_id": "GT-P4",
     "outcome": "halt_unhandled:_no_directive",
     "exit_code": 1,
-    "cycles": 2
+    "cycles": 1
   }
 ]

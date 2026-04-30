@@ -2,28 +2,14 @@
   {
     "cycle": 1,
     "exit_code": 1,
-    "directive": "refine-prompt",
-    "recipe_action": "refine-prompt",
-    "questions": [
-      "@agent-directive: refine-prompt",
-      "> Prompt received: Add a dark mode toggle to settings",
-      "> No reconstructed acceptance criteria yet — running `refine-prompt` and resuming.",
-      "> 1. Continue — let the skill reconstruct AC + assumptions",
-      "> 2. Abort — the prompt is not what I meant"
-    ]
-  },
-  {
-    "cycle": 2,
-    "exit_code": 1,
     "directive": null,
     "recipe_action": null,
     "questions": [
-      "> Prompt: Add a dark mode toggle to settings",
-      "> This prompt reads as **UI work** — the backend dispatch track can't ship it cleanly.",
-      "> UI dispatch is deferred to Roadmap 3 (`road-to-product-ui-track.md`); until it lands, `/work` only handles backend-shaped prompts.",
+      "> Input routed to UI directive set — track is a Phase 1 stub.",
+      "> Audit / design / apply / review / polish land in later phases of `agents/roadmaps/road-to-product-ui-track.md`; until they ship, the engine cannot drive UI work end to end.",
       "> 1. Re-frame as a backend-only prompt — I'll re-score and proceed",
-      "> 2. Park this prompt — wait for R3 and re-invoke `/work` then",
-      "> 3. Abort — drop this prompt"
+      "> 2. Park this prompt — wait for the UI track and re-invoke `/work` then",
+      "> 3. Abort — drop this input"
     ]
   }
 ]

@@ -12,6 +12,7 @@
   },
   "intent": "backend-coding",
   "directive_set": "backend",
+  "stack": null,
   "persona": "senior-engineer",
   "memory": [],
   "plan": null,

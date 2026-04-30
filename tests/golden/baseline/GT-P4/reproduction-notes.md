@@ -2,10 +2,10 @@
 
 - prompt fixture: `tests/golden/sandbox/prompts/gt-p4-ui-rejection.txt`
 - persona: `(default)`
-- cycle cap: 3
+- cycle cap: 1
 - final outcome: `halt_unhandled:_no_directive`
 - final exit code: `1`
-- cycles recorded: 2
+- cycles recorded: 1
 
 ## How to regenerate
 
