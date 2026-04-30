@@ -14,13 +14,13 @@
 
 ## Open roadmaps
 
-| # | Roadmap | Phases | Steps | Done | Open | Deferred | Cancelled | Progress |
+| # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-artifact-engagement-telemetry.md](roadmaps/road-to-artifact-engagement-telemetry.md) | 7 | 37 | 0 | 37 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-context-aware-command-suggestion.md](roadmaps/road-to-context-aware-command-suggestion.md) | 7 | 45 | 0 | 45 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-product-ui-track.md](roadmaps/road-to-product-ui-track.md) | 7 | 53 | 0 | 53 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md) | 7 | 41 | 27 | 14 | 3 | 0 | ███████░░░ 66% |
-| 5 | [road-to-visual-review-loop.md](roadmaps/road-to-visual-review-loop.md) | 1 | 4 | 0 | 4 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-artifact-engagement-telemetry.md](roadmaps/road-to-artifact-engagement-telemetry.md) | 7 | 37 | 37 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-context-aware-command-suggestion.md](roadmaps/road-to-context-aware-command-suggestion.md) | 7 | 45 | 45 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-product-ui-track.md](roadmaps/road-to-product-ui-track.md) | 7 | 53 | 53 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md) | 7 | 44 | 14 | 27 | 3 | 0 | ███████░░░ 66% |
+| 5 | [road-to-visual-review-loop.md](roadmaps/road-to-visual-review-loop.md) | 1 | 4 | 4 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -30,63 +30,63 @@
 
 **Artifact Engagement Telemetry** — 0 / 37 done (0%)
 
-| # | Phase | State | Done | Open | Deferred | Cancelled | % |
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Schema and settings wireup | ⬜ not started | 0 | 4 | 0 | 0 | 0% |
-| 2 | Recording engine | ⬜ not started | 0 | 4 | 0 | 0 | 0% |
-| 3 | Agent-side hooks | ⬜ not started | 0 | 4 | 0 | 0 | 0% |
-| 4 | Aggregator and report | ⬜ not started | 0 | 4 | 0 | 0 | 0% |
-| 5 | Privacy and anonymisation audit | ⬜ not started | 0 | 4 | 0 | 0 | 0% |
-| 6 | Dogfooding against R1–R5 | ⬜ not started | 0 | 4 | 0 | 0 | 0% |
-| 7 | Docs and onboarding | ⬜ not started | 0 | 13 | 0 | 0 | 0% |
+| 1 | Schema and settings wireup | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Recording engine | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Agent-side hooks | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | Aggregator and report | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 5 | Privacy and anonymisation audit | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 6 | Dogfooding against R1–R5 | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 7 | Docs and onboarding | ⬜ not started | 13 | 0 | 0 | 0 | 0% |
 
 ### [road-to-context-aware-command-suggestion.md](roadmaps/road-to-context-aware-command-suggestion.md)
 
 **Context-Aware Command Suggestion** — 0 / 45 done (0%)
 
-| # | Phase | State | Done | Open | Deferred | Cancelled | % |
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Eligibility audit and trigger drafting | ⬜ not started | 0 | 5 | 0 | 0 | 0% |
-| 2 | Frontmatter schema and migration | ⬜ not started | 0 | 4 | 0 | 0 | 0% |
-| 3 | Matcher engine and suggestion rule | ⬜ not started | 0 | 5 | 0 | 0 | 0% |
-| 4 | Tie-break and anti-noise | ⬜ not started | 0 | 3 | 0 | 0 | 0% |
-| 5 | Settings and opt-out paths | ⬜ not started | 0 | 4 | 0 | 0 | 0% |
-| 6 | Hardening — what suggestion must never do | ⬜ not started | 0 | 6 | 0 | 0 | 0% |
-| 7 | Golden tests, verification, docs | ⬜ not started | 0 | 18 | 0 | 0 | 0% |
+| 1 | Eligibility audit and trigger drafting | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Frontmatter schema and migration | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Matcher engine and suggestion rule | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | Tie-break and anti-noise | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Settings and opt-out paths | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 6 | Hardening — what suggestion must never do | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 7 | Golden tests, verification, docs | ⬜ not started | 18 | 0 | 0 | 0 | 0% |
 
 ### [road-to-product-ui-track.md](roadmaps/road-to-product-ui-track.md)
 
 **Product UI Track** — 0 / 53 done (0%)
 
-| # | Phase | State | Done | Open | Deferred | Cancelled | % |
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Stack detection and UI intent routing | ⬜ not started | 0 | 5 | 0 | 0 | 0% |
-| 2 | Existing-UI-Audit (the hard gate) | ⬜ not started | 0 | 6 | 0 | 0 | 0% |
-| 3 | UI directive set (design → apply → review → polish) | ⬜ not started | 0 | 6 | 0 | 0 | 0% |
-| 4 | Mixed orchestration (backend + UI) | ⬜ not started | 0 | 5 | 0 | 0 | 0% |
-| 5 | `fe-design` migration and skill repositioning | ⬜ not started | 0 | 5 | 0 | 0 | 0% |
-| 6 | Golden Compatibility Tests + UI goldens | ⬜ not started | 0 | 4 | 0 | 0 | 0% |
-| 7 | Verification and docs | ⬜ not started | 0 | 22 | 0 | 0 | 0% |
+| 1 | Stack detection and UI intent routing | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Existing-UI-Audit (the hard gate) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 3 | UI directive set (design → apply → review → polish) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 4 | Mixed orchestration (backend + UI) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 5 | `fe-design` migration and skill repositioning | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 6 | Golden Compatibility Tests + UI goldens | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 7 | Verification and docs | ⬜ not started | 22 | 0 | 0 | 0 | 0% |
 
 ### [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md)
 
 **Universal Distribution (Cloud + Local Fallbacks)** — 27 / 41 done (66%)
 
-| # | Phase | State | Done | Open | Deferred | Cancelled | % |
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Tier audit (DONE) | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
-| 1 | Cloud Bundle Builder | ✅ done | 7 | 0 | 1 | 0 | 100% |
-| 2 | T3-H Cloud-Aware Variants | ✅ done | 7 | 0 | 0 | 0 | 100% |
-| 3 | Linear AI — Rules Digest Distribution | ✅ done | 5 | 0 | 1 | 0 | 100% |
-| 4 | Cloud-Aware Documentation Pass | ✅ done | 4 | 0 | 1 | 0 | 100% |
-| 5 | Distribution Channels & Install Paths | 🟡 in progress | 3 | 2 | 0 | 0 | 60% |
-| 6 | Telemetry & Validation | 🟡 in progress | 1 | 12 | 0 | 0 | 8% |
+| 1 | Cloud Bundle Builder | ✅ done | 0 | 7 | 1 | 0 | 100% |
+| 2 | T3-H Cloud-Aware Variants | ✅ done | 0 | 7 | 0 | 0 | 100% |
+| 3 | Linear AI — Rules Digest Distribution | ✅ done | 0 | 5 | 1 | 0 | 100% |
+| 4 | Cloud-Aware Documentation Pass | ✅ done | 0 | 4 | 1 | 0 | 100% |
+| 5 | Distribution Channels & Install Paths | 🟡 in progress | 2 | 3 | 0 | 0 | 60% |
+| 6 | Telemetry & Validation | 🟡 in progress | 12 | 1 | 0 | 0 | 8% |
 
 ### [road-to-visual-review-loop.md](roadmaps/road-to-visual-review-loop.md)
 
 **Visual Review Loop + A11y** — 0 / 4 done (0%)
 
-| # | Phase | State | Done | Open | Deferred | Cancelled | % |
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Stub — build trigger and contract | ⬜ not started | 0 | 4 | 0 | 0 | 0% |
+| 0 | Stub — build trigger and contract | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 

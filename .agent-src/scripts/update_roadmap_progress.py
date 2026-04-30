@@ -74,6 +74,10 @@ class PhaseStats:
         return self.done + self.open_
 
     @property
+    def total_all(self) -> int:  # all checkboxes incl. deferred + cancelled
+        return self.done + self.open_ + self.deferred + self.cancelled
+
+    @property
     def percent(self) -> int:
         return round(self.done * 100 / self.total_active) if self.total_active else 0
 
@@ -116,6 +120,10 @@ class RoadmapStats:
     @property
     def total_active(self) -> int:
         return self.done + self.open_
+
+    @property
+    def total_all(self) -> int:
+        return self.done + self.open_ + self.deferred + self.cancelled
 
     @property
     def percent(self) -> int:
@@ -213,12 +221,16 @@ def render(roadmaps: list[RoadmapStats]) -> str:
         lines.append("_No open roadmaps._\n")
         return "\n".join(lines) + "\n"
     lines.append("## Open roadmaps\n")
-    lines.append("| # | Roadmap | Phases | Steps | Done | Open | Deferred | Cancelled | Progress |")
+    # Steps = ALL checkboxes (done + open + deferred + cancelled) so the row
+    # arithmetic adds up: Steps − Done − Deferred − Cancelled = Open. Open
+    # comes before Done by design — at-a-glance "what's left to do" first,
+    # historical "what's behind us" second.
+    lines.append("| # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |")
     lines.append("|---|---|---:|---:|---:|---:|---:|---:|---|")
     for i, r in enumerate(roadmaps, 1):
         lines.append(
-            f"| {i} | [{r.rel}](roadmaps/{r.rel}) | {len(r.phases)} | {r.total_active} | "
-            f"{r.done} | {r.open_} | {r.deferred} | {r.cancelled} | "
+            f"| {i} | [{r.rel}](roadmaps/{r.rel}) | {len(r.phases)} | {r.total_all} | "
+            f"{r.open_} | {r.done} | {r.deferred} | {r.cancelled} | "
             f"{bar(r.percent)} {r.percent}% |"
         )
     lines.append("")
@@ -227,11 +239,11 @@ def render(roadmaps: list[RoadmapStats]) -> str:
     for r in roadmaps:
         lines.append(f"### [{r.rel}](roadmaps/{r.rel})\n")
         lines.append(f"**{r.title}** — {r.done} / {r.total_active} done ({r.percent}%)\n")
-        lines.append("| # | Phase | State | Done | Open | Deferred | Cancelled | % |")
+        lines.append("| # | Phase | State | Open | Done | Deferred | Cancelled | % |")
         lines.append("|---|---|---|---:|---:|---:|---:|---:|")
         for p in r.phases:
             lines.append(
-                f"| {p.id} | {p.name} | {p.state} | {p.done} | {p.open_} | "
+                f"| {p.id} | {p.name} | {p.state} | {p.open_} | {p.done} | "
                 f"{p.deferred} | {p.cancelled} | {p.percent}% |"
             )
         lines.append("")
