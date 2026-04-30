@@ -1,18 +1,36 @@
 ---
 name: flux
-description: "Use when writing Laravel Flux UI components — the official Livewire component library by the Laravel team. Covers components, slots, and variants."
+description: "Stack-implementation skill for Laravel Flux — dispatched by `directives/ui/apply.py` (and `review.py` / `polish.py`) when the project uses `livewire/flux`. Covers Flux components, slots, variants, and form primitives."
 source: package
 ---
 
 # flux
 
+## Positioning — dispatched, not standalone
+
+`flux` is the **primitive-library executor** for projects on the Livewire + Flux stack. Invoked by [`directives/ui/apply.py`](../../templates/scripts/work_engine/directives/ui/apply.py) once the design brief is locked, and revisited by `review.py` / `polish.py` during the design-review loop. Does **not** own the flow, drive the audit, or lock the design.
+
+| Concern | Owner |
+|---|---|
+| Audit + token inventory (mandatory pre-step) | [`existing-ui-audit`](../existing-ui-audit/SKILL.md) |
+| Design brief (layout / states / microcopy) | [`directives/ui/design.py`](../../templates/scripts/work_engine/directives/ui/design.py) |
+| Universal design heuristics | [`fe-design`](../fe-design/SKILL.md) |
+| Component logic / state / actions | [`livewire`](../livewire/SKILL.md) |
+| Static Blade partials | [`blade-ui`](../blade-ui/SKILL.md) |
+
 ## When to use
 
-Use when building UI with Flux components in a project that uses `livewire/flux`.
+Cite this skill when:
+
+- Project depends on `livewire/flux` and `directives/ui/apply.py` dispatches Flux primitives
+- Building forms, modals, dropdowns, toasts, or other standard UI elements Flux already provides
 
 Do NOT use when:
+
 - Raw Blade templates without Flux (use `blade-ui` skill)
-- Livewire component logic (use `livewire` skill)
+- Livewire component logic / state (use `livewire` skill)
+- React + shadcn (use `react-shadcn-ui` skill)
+- Driving the full UI flow yourself — that is the `directives/ui/` orchestrator
 
 ## Procedure: Create a Flux view
 
@@ -46,7 +64,7 @@ Do NOT use when:
 
 ## Gotcha
 
-- The model tends to use old Flux API syntax — always check latest docs.
+- Model tends to use old Flux API syntax — always check latest docs.
 - Flux has built-in validation display — don't add manual error rendering alongside it.
 - Don't mix Flux with raw HTML form elements in the same form.
 

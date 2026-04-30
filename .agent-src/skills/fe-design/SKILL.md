@@ -1,73 +1,76 @@
 ---
 name: fe-design
-description: "Use when designing frontend interfaces — component architecture, layout patterns, form design, table patterns, responsive strategies, and UX principles for Blade/Livewire/Flux/Tailwind."
+description: "Reference for frontend-design heuristics — component architecture, layout patterns, form/table design, responsive strategy, a11y, UX principles. Stack-agnostic; cited by directives/ui/design.py."
 source: package
 ---
 
-# Frontend Design Skill
+# Frontend Design Skill (Reference)
+
+## Positioning — reference, not executor
+
+`fe-design` is a **universal reference skill**, not an executor. Stack-agnostic heuristics that the UI directive set cites; does **not** own the flow.
+
+| Concern | Owner |
+|---|---|
+| Layout / states / microcopy lock | [`directives/ui/design.py`](../../templates/scripts/work_engine/directives/ui/design.py) |
+| Stack-dispatched implementation | [`directives/ui/apply.py`](../../templates/scripts/work_engine/directives/ui/apply.py) → `blade-ui` / `livewire` / `flux` / `react-shadcn-ui` |
+| Existing-component inventory + tokens | [`existing-ui-audit`](../existing-ui-audit/SKILL.md) (mandatory pre-step) |
+| Design-review polish loop | [`directives/ui/review.py`](../../templates/scripts/work_engine/directives/ui/review.py) + [`directives/ui/polish.py`](../../templates/scripts/work_engine/directives/ui/polish.py) |
 
 ## When to use
 
-Use this skill when:
+Cite this skill when:
+
 - Planning a new page or feature UI before implementing
 - Choosing between component patterns (modal vs. inline, table vs. cards)
 - Designing forms with complex validation or multi-step flows
 - Making responsive design decisions
 - Reviewing UI for accessibility and usability
-- Deciding how to structure Livewire components
 
-## Procedure: Design a frontend interface
+Do NOT use this skill to:
 
-1. **Understand requirements** — What data is shown? What actions are available? Who is the user?
-2. **Choose technology** — Pick from the project stack (see table below).
-3. **Design layout** — Mobile-first, component-based, consistent spacing.
-4. **Implement** — Build with Blade components, Livewire for interactivity, Flux for UI primitives.
-5. **Verify** — Check accessibility (labels, focus, contrast), responsive behavior, loading states.
+- Implement components — that is the apply-step's stack-dispatched skill
+- Audit an existing UI — that is `existing-ui-audit`
+- Drive the full UI flow — that is the `directives/ui/` orchestrator
 
-This project uses a server-rendered stack:
+## How the directive set cites this skill
 
-| Layer | Technology | Skill |
-|---|---|---|
-| Templates | Laravel Blade | `blade-ui` |
-| Interactivity | Livewire 3 | `livewire` |
-| Component library | Flux (by Laravel) | `flux` |
-| Styling | Tailwind CSS | `tailwind` |
-| Icons | Heroicons / custom | — |
-
-**Key principle:** Server-first. Use Livewire for interactivity. Avoid JavaScript unless Livewire can't handle it (e.g., drag-and-drop, complex animations).
+`directives/ui/design.py` produces the design brief (layout, components, states, microcopy, a11y). Brief picks heuristics from this reference when audit doesn't already pin a project pattern. Stack-specific choices come from the dispatched implementation skill.
 
 ## Component Architecture
 
-### Page structure
+### Page structure (universal shape)
 
 ```
-Page (Blade layout)
-├── Header (Blade partial)
-├── Navigation (Livewire — active state)
+Page layout
+├── Header (static)
+├── Navigation (interactive — active state)
 ├── Content area
-│   ├── Page heading + actions (Blade)
-│   ├── Filters (Livewire — reactive)
-│   ├── Data display (Livewire — table/cards)
-│   └── Pagination (Livewire)
-└── Footer (Blade partial)
+│   ├── Page heading + actions (static)
+│   ├── Filters (interactive — reactive)
+│   ├── Data display (interactive — table / cards)
+│   └── Pagination (interactive)
+└── Footer (static)
 ```
 
-### When to use what
+Stack-specific mapping (Blade partial vs. Livewire component vs. React island vs. Vue SFC) is the apply-step's concern.
 
-| Pattern | When | Example |
+### When to use what (kind, not framework)
+
+| Kind | When | Example |
 |---|---|---|
-| **Blade partial** | Static content, no interactivity | Header, footer, static info |
-| **Blade component** | Reusable UI element, props only | Button, badge, card shell |
-| **Livewire component** | Needs server interaction or state | Forms, tables, filters |
-| **Flux component** | Standard UI element from library | Modal, dropdown, input, toast |
-| **Alpine.js** | Client-only micro-interaction | Toggle, accordion, clipboard |
+| **Static partial** | No interactivity, server-rendered only | Header, footer, static info |
+| **Reusable UI component** | Props-only, no state | Button, badge, card shell |
+| **Stateful component** | Needs server interaction or local state | Forms, tables, filters |
+| **Library primitive** | Standard UI from a design system | Modal, dropdown, input, toast |
+| **Client-only micro-interaction** | No server roundtrip needed | Toggle, accordion, clipboard |
 
 ### Component granularity
 
-- **One Livewire component per concern** — don't build mega-components
-- **Compose with Blade components** inside Livewire for reusable UI pieces
-- **Use Flux for standard elements** — don't rebuild what Flux provides
-- **Extract when used 3+ times** — DRY applies to UI too
+- **One stateful component per concern** — don't build mega-components.
+- **Compose with reusable UI components** for shared shells, headers, fields.
+- **Use the project's library primitives first** — never rebuild what the design system provides (audit findings tell you which).
+- **Extract when used 3+ times** — DRY applies to UI too.
 
 ## Form Design
 
@@ -127,11 +130,11 @@ Step indicator (1 — 2 — 3)
 - Default: 25 rows per page
 - Show total count: "Showing 1–25 of 142"
 - Allow page size change (10, 25, 50, 100)
-- Use Livewire pagination (server-side)
+- Prefer server-side pagination — avoid loading the full set client-side
 
 ## Responsive Strategy
 
-### Breakpoints (Tailwind)
+### Breakpoints (Tailwind reference scale)
 
 | Prefix | Min width | Target |
 |---|---|---|
@@ -189,23 +192,19 @@ Step indicator (1 — 2 — 3)
 
 ## Related
 
-- **Skill:** `blade-ui` — Blade template implementation
-- **Skill:** `livewire` — Livewire component implementation
-- **Skill:** `flux` — Flux component library usage
-- **Skill:** `tailwind` — Tailwind CSS utility patterns
-- **Skill:** `dashboard-design` — Monitoring dashboard design (different domain)
-
-
-## Output format
-
-1. Component structure with layout, data flow, and interaction patterns
-2. Responsive behavior for mobile/tablet/desktop breakpoints
-3. Accessibility annotations (ARIA, keyboard navigation)
+- **Orchestrator:** [`directives/ui/`](../../templates/scripts/work_engine/directives/ui/) — owns the UI flow
+- **Pre-step (mandatory):** [`existing-ui-audit`](../existing-ui-audit/SKILL.md) — inventory before design
+- **Stack apply skills (dispatched, not standalone):**
+  - [`blade-ui`](../blade-ui/SKILL.md) — Blade template implementation
+  - [`livewire`](../livewire/SKILL.md) — Livewire component implementation
+  - [`flux`](../flux/SKILL.md) — Flux component library usage
+  - [`react-shadcn-ui`](../react-shadcn-ui/SKILL.md) — React + shadcn primitives
+- **Adjacent reference:** [`dashboard-design`](../dashboard-design/SKILL.md) — monitoring dashboard design (different domain)
 
 ## Gotcha
 
-- Don't design components without checking existing Flux/Livewire components first — avoid reinventing.
-- The model tends to use raw HTML instead of project component library — always prefer existing components.
+- Don't design components without running `existing-ui-audit` first — audit's component/token inventory is canonical for "what already exists in this project". Reinventing is the #1 failure mode.
+- Heuristics in this reference apply across stacks; do not promote them to project rules without checking the audit.
 - Mobile-first is not optional — every layout must work on 320px width.
 
 ## Do NOT
@@ -213,11 +212,5 @@ Step indicator (1 — 2 — 3)
 - Do NOT skip mobile viewport testing.
 - Do NOT use fixed pixel widths for responsive layouts.
 - Do NOT ignore accessibility requirements.
+- Do NOT use this skill as an executor — it is a reference cited by `directives/ui/design.py`.
 
-## Auto-trigger keywords
-
-- frontend design
-- component architecture
-- layout
-- form design
-- responsive

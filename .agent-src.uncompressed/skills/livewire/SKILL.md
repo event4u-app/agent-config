@@ -1,18 +1,39 @@
 ---
 name: livewire
-description: "Use when writing Livewire components — reactive state, events, lifecycle hooks, and clean separation between component logic and Blade templates."
+description: "Stack-implementation skill for Livewire — dispatched by `directives/ui/apply.py` (and `review.py` / `polish.py`) when the project's frontend stack is Livewire. Covers reactive state, events, lifecycle hooks, and component/view separation."
 source: package
 ---
 
 # livewire
 
+## Positioning — dispatched, not standalone
+
+`livewire` is the **apply-step executor** for the Livewire stack. It is
+invoked by [`directives/ui/apply.py`](../../templates/scripts/work_engine/directives/ui/apply.py)
+once the design brief is locked, and revisited by `review.py` /
+`polish.py` during the design-review loop. It does **not** own the
+flow, does **not** drive the audit, and does **not** lock the design.
+
+| Concern | Owner |
+|---|---|
+| Audit + token inventory (mandatory pre-step) | [`existing-ui-audit`](../existing-ui-audit/SKILL.md) |
+| Design brief (layout / states / microcopy) | [`directives/ui/design.py`](../../templates/scripts/work_engine/directives/ui/design.py) |
+| Universal design heuristics | [`fe-design`](../fe-design/SKILL.md) |
+| Static Blade partials inside the view | [`blade-ui`](../blade-ui/SKILL.md) |
+| Flux primitives inside the view | [`flux`](../flux/SKILL.md) |
+
 ## When to use
 
-Use when creating or editing Livewire components — reactive state, forms, tables, real-time updates.
+Cite this skill when:
+
+- `state.stack.frontend == "livewire"` and `directives/ui/apply.py` dispatches to this skill
+- Editing or creating Livewire components — reactive state, forms, tables, real-time updates
 
 Do NOT use when:
-- Static Blade views (use `blade-ui` skill)
-- Flux UI components (use `flux` skill)
+
+- Static Blade views with no interactivity (use `blade-ui` skill)
+- Flux UI primitives (use `flux` skill — `livewire` composes Flux internally)
+- Driving the full UI flow yourself — that is the `directives/ui/` orchestrator
 
 ## Procedure: Create a Livewire component
 
