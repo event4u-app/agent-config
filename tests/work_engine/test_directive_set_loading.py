@@ -80,16 +80,20 @@ def test_load_backend_returns_full_step_mapping() -> None:
         )
 
 
-def test_load_unimplemented_mixed_raises() -> None:
-    """``mixed`` is still Phase 4 work in R3.
+def test_load_mixed_returns_full_step_mapping() -> None:
+    """R3 Phase 4: ``mixed.get_steps()`` returns the full eight-slot mapping.
 
-    ``ui`` was promoted to a Phase 1 routing-stub by R3 Phase 1 — see
-    :func:`test_load_ui_returns_phase1_stub_steps`. ``ui-trivial`` was
-    promoted to a complete directive set by R3 Phase 2 Step 6 — see
-    :func:`test_load_ui_trivial_returns_full_step_mapping`.
+    The mixed flow chains ``contract`` (plan) → ``ui`` (implement) →
+    ``stitch`` (test); the remaining slots reuse the backend handlers
+    verbatim. All eight handlers must be callable so the dispatcher's
+    completeness check passes.
     """
-    with pytest.raises(NotImplementedError, match="not implemented in R1"):
-        load_directive_set("mixed")
+    steps = load_directive_set("mixed")
+    assert set(steps.keys()) == set(STEP_ORDER)
+    for name, handler in steps.items():
+        assert callable(handler), (
+            f"handler for {name!r} must be callable per the Step protocol"
+        )
 
 
 def test_load_ui_returns_phase1_stub_steps() -> None:
@@ -169,18 +173,21 @@ def test_assert_kind_supported_rejects_unknown_set_name() -> None:
         assert_kind_supported("ticket", "not-a-real-set")
 
 
-def test_assert_kind_supported_rejects_mixed_stub() -> None:
-    """``mixed`` declares no ``SUPPORTED_KINDS``, so every kind is
-    unsupported. The dispatcher halts here rather than advancing to
-    ``load_directive_set`` and the stub's NotImplementedError.
+@pytest.mark.parametrize("kind", ["ticket", "prompt"])
+def test_assert_kind_supported_accepts_mixed_kinds(kind: str) -> None:
+    """R3 Phase 4: ``mixed`` accepts ``ticket`` and ``prompt`` envelopes.
 
-    ``ui`` is no longer a raise-stub — see
-    :func:`test_assert_kind_supported_accepts_ui_phase1_kinds`.
-    ``ui-trivial`` is no longer a raise-stub — see
-    :func:`test_assert_kind_supported_accepts_ui_trivial_kinds`.
+    ``diff`` and ``file`` stay UI-only since they describe an existing
+    screen, not a backend contract surface.
     """
+    assert assert_kind_supported(kind, "mixed") is None
+
+
+@pytest.mark.parametrize("kind", ["diff", "file"])
+def test_assert_kind_supported_rejects_mixed_ui_only_kinds(kind: str) -> None:
+    """``mixed`` rejects ``diff`` / ``file`` — those are UI-only envelopes."""
     with pytest.raises(NotImplementedError, match="does not handle input.kind"):
-        assert_kind_supported("ticket", "mixed")
+        assert_kind_supported(kind, "mixed")
 
 
 @pytest.mark.parametrize("kind", ["ticket", "prompt", "diff", "file"])
