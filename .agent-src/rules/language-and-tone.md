@@ -10,7 +10,7 @@ source: package
 ## Iron Law — mirror the user's language, ALWAYS
 
 ```
-MIRROR THE LANGUAGE OF THE USER'S LAST MESSAGE. ALWAYS.
+MIRROR THE LANGUAGE OF THE USER'S LAST/CURRENT MESSAGE. ALWAYS.
 BEFORE SENDING ANY REPLY, RUN THE PRE-SEND GATE BELOW.
 A REPLY IN THE WRONG LANGUAGE IS A RULE VIOLATION, NOT A SLIP.
 ```
@@ -39,7 +39,7 @@ Run silently **before** emitting any tokens:
 
 1. **Detect** — language of user's last **chat message** (not the open
    file, not the roadmap, not the prior reply).
-   German signals: "ich", "Du", "nicht", "warum", "wie", "ist", umlauts.
+   German signals: "ich", "Du", "nicht", "warum", "wie", "ist", umlauts. <!-- md-language-check: ignore -->
    English signals: "I", "you", "is", "the", "how".
    Mixed → mirror the **dominant** language; tie → German wins (project default).
 2. **Check** — is drafted prose (not code, not file contents) in that language?
