@@ -151,6 +151,63 @@ Maintainer-targeted; consumers see no prompts.
 * **`/onboard`:** Step 9 emits a one-screen maintainer-only hint
   describing the feature; no question, no prompt.
 
+**Context-Aware Command Suggestion** — deterministic, read-only layer
+that surfaces eligible slash commands as numbered options when a
+non-`/`-prefixed user prompt matches their `suggestion.trigger_*`
+frontmatter. **Nothing auto-executes** — the user picks every time;
+the as-is option is always present and always last.
+
+### Features
+
+* **engine:** `scripts/command_suggester/` Python package
+  (`match` / `rank` / `cooldown` / `sanitize` / `render` / `loader`).
+  Heuristic-only scoring (substring + Jaccard token overlap +
+  structural-bonus boosts), per-conversation cooldown keyed on
+  `(command, evidence)`, and a sanitiser that strips fenced + inline
+  code blocks plus the suggester's own previous block shape before
+  scoring.
+* **rule:** `command-suggestion` (always-on) — emits one
+  numbered-options block per turn under the `user-interaction` Iron
+  Law. Subordinate to `scope-control`, `ask-when-uncertain`,
+  `verify-before-complete`, and any active role-mode contract or
+  engine halt; on conflict → silent.
+* **frontmatter:** every command carries
+  `suggestion.eligible` (default `true`) plus a flat
+  `trigger_description` + `trigger_context` pair (linter-validated,
+  ≥ 10 chars each). Locked eligibility table at
+  [`agents/contexts/command-suggestion-eligibility.md`](agents/contexts/command-suggestion-eligibility.md).
+* **settings:** `commands.suggestion` block in
+  `.agent-settings.yml` — `enabled` (global), `blocklist`
+  (per-command), `confidence_floor` (default `0.6`), `cooldown`
+  (default `10m`), `max_options` (default `4`, plus the always-extra
+  as-is option). Per-command overrides via frontmatter.
+* **opt-out paths (3):** global (`enabled: false`), per-command
+  (`blocklist`), per-conversation (`/command-suggestion-off` /
+  `/command-suggestion-on` directives detected by `cooldown.py`).
+* **anti-noise heuristics:** sub-floor suppression, lonely-match
+  guard within `floor + 0.1`, vague-prompt guard (< 6 words +
+  > 2 matches without structural bonus), continuation-phrase guard
+  (`ok`, `weiter`, `continue`, …). Structural bonuses (ticket key,
+  file path) override every suppressor.
+* **tests:** 84 unit cases in `tests/test_command_suggester.py`
+  (matcher, rank, cooldown, sanitiser, render, settings, directive)
+  plus 9 GT-CS goldens in `tests/test_command_suggester_goldens.py`
+  (single-match, tie-break, sub-floor, slash-bypass, as-is pick,
+  cooldown, settings off, clarification-wins, adversarial echo).
+* **no behavioural change to slash invocation:** explicit `/command`
+  bypasses the suggester entirely; per-command halts intact.
+
+### Documentation
+
+* **ADR:** [`agents/contexts/adr-command-suggestion.md`](agents/contexts/adr-command-suggestion.md)
+  — "suggest, never invoke" anchor, eligibility rubric, anti-noise
+  heuristics, hardening list, three opt-out paths.
+* **flow:** [`agents/contexts/command-suggestion-flow.md`](agents/contexts/command-suggestion-flow.md)
+  — scoring breakdown, evidence semantics, subordination order, and
+  hardening tests.
+* **README + AGENTS.md:** short *Context-aware command suggestion*
+  section pointing to the ADR and the flow doc.
+
 ## [1.13.0](https://github.com/event4u-app/agent-config/compare/1.12.0...1.13.0) (2026-04-27)
 
 ### Features

@@ -70,6 +70,18 @@ by the redaction floor described in
 The recording rule lives at
 [`.agent-src/rules/artifact-engagement-recording.md`](.agent-src/rules/artifact-engagement-recording.md).
 
+## Context-aware command suggestion
+
+When a user's free-form prompt matches a command's purpose, the agent
+surfaces matches as a numbered-options block with an always-present
+"run the prompt as-is" escape. **Nothing auto-executes** — the user
+picks every time. Engine: `scripts/command_suggester/`. Rule:
+[`.agent-src/rules/command-suggestion.md`](.agent-src/rules/command-suggestion.md).
+Locked eligibility table, scoring contract, and hardening list:
+[`agents/contexts/adr-command-suggestion.md`](agents/contexts/adr-command-suggestion.md)
+and
+[`agents/contexts/command-suggestion-flow.md`](agents/contexts/command-suggestion-flow.md).
+
 ## Key rules for agents editing this repo
 
 | Rule | File |
@@ -87,7 +99,7 @@ The recording rule lives at
 ```
 .agent-src.uncompressed/      ← edit here
   skills/       (125 skills)
-  rules/        (50 rules)
+  rules/        (51 rules)
   commands/     (75 commands)
   guidelines/   (46 guidelines)
   personas/     (7 personas)

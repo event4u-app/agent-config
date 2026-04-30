@@ -5,7 +5,7 @@ Teach your AI agents Laravel, PHP, testing, Git workflows, and **120+ more skill
 > Your agent learns to write Laravel code, run tests, create PRs, fix CI — and follows your team's coding standards while doing it.
 
 <p align="center">
-  <strong>125 Skills</strong> · <strong>50 Rules</strong> · <strong>75 Commands</strong> · <strong>46 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>125 Skills</strong> · <strong>51 Rules</strong> · <strong>75 Commands</strong> · <strong>46 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -399,6 +399,29 @@ telemetry:
 Reports: `./agent-config telemetry:report`. Full contract,
 privacy/redaction floor, and quartile semantics:
 [`agents/contexts/artifact-engagement-flow.md`](agents/contexts/artifact-engagement-flow.md).
+
+### Context-aware command suggestion
+
+When a user prompt matches a command's purpose ("setze ticket ABC-123 um"
+→ `/implement-ticket`), the agent surfaces matches as a numbered-options
+block with an always-present "run the prompt as-is" escape. **Nothing
+auto-executes** — the user picks every time. Three opt-out paths:
+
+```yaml
+# .agent-settings.yml
+commands:
+  suggestion:
+    enabled: true            # global on/off
+    blocklist: []            # specific commands never suggested
+    confidence_floor: 0.6    # tunable per command in frontmatter
+```
+
+Per-conversation: `/command-suggestion-off` disables the layer until
+the user re-enables or the chat ends. Full scoring contract and
+hardening list:
+[`agents/contexts/adr-command-suggestion.md`](agents/contexts/adr-command-suggestion.md)
+and
+[`agents/contexts/command-suggestion-flow.md`](agents/contexts/command-suggestion-flow.md).
 
 ---
 
