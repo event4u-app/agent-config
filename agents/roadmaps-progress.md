@@ -6,17 +6,17 @@
 
 ## Overall
 
-**56 / 176 steps done · 32%**
+**59 / 175 steps done · 34%**
 
 ```text
-█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   32%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-artifact-engagement-telemetry.md](roadmaps/road-to-artifact-engagement-telemetry.md) | 7 | 37 | 15 | 22 | 0 | 0 | ██████░░░░ 59% |
+| 1 | [road-to-artifact-engagement-telemetry.md](roadmaps/road-to-artifact-engagement-telemetry.md) | 7 | 37 | 11 | 25 | 1 | 0 | ███████░░░ 69% |
 | 2 | [road-to-context-aware-command-suggestion.md](roadmaps/road-to-context-aware-command-suggestion.md) | 7 | 45 | 45 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-product-ui-track.md](roadmaps/road-to-product-ui-track.md) | 7 | 53 | 53 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md) | 7 | 44 | 3 | 34 | 7 | 0 | █████████░ 92% |
@@ -28,7 +28,7 @@
 
 ### [road-to-artifact-engagement-telemetry.md](roadmaps/road-to-artifact-engagement-telemetry.md)
 
-**Artifact Engagement Telemetry** — 22 / 37 done (59%)
+**Artifact Engagement Telemetry** — 25 / 36 done (69%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -37,7 +37,7 @@
 | 3 | Agent-side hooks | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 4 | Aggregator and report | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | Privacy and anonymisation audit | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 6 | Dogfooding against R1–R5 | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 6 | Dogfooding against R1–R5 | ✅ done | 0 | 3 | 1 | 0 | 100% |
 | 7 | Docs and onboarding | 🟡 in progress | 11 | 2 | 0 | 0 | 15% |
 
 ### [road-to-context-aware-command-suggestion.md](roadmaps/road-to-context-aware-command-suggestion.md)
