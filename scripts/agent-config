@@ -62,6 +62,10 @@ Commands:
   memory:check-proposal      Run the admission gate on a memory proposal
   proposal:check             Validate a learning/skill/rule proposal markdown
   refine-ticket:detect       Run the deterministic refine-ticket detection helper
+  chat-history:hook          Platform hook entry point (read JSON from stdin)
+                             Usage: chat-history:hook --platform <claude|augment|cursor|cline|windsurf|gemini>
+  chat-history:checkpoint    Append a phase-boundary entry to .agent-chat-history
+                             (CHECKPOINT fallback for platforms without native hooks)
   telemetry:record           Append one artefact-engagement event (default-off)
   telemetry:status           Print artefact-engagement telemetry status (read-only)
   telemetry:report           Aggregate the engagement log into a quartile report
@@ -299,6 +303,22 @@ cmd_refine_ticket_detect() {
   exec python3 "$script" "$@"
 }
 
+cmd_chat_history_hook() {
+  require_python3
+  local script
+  script="$(resolve_script "scripts/chat_history.py")" || return 1
+  exec python3 "$script" hook-dispatch "$@"
+}
+
+cmd_chat_history_checkpoint() {
+  require_python3
+  local script
+  script="$(resolve_script "scripts/chat_history.py")" || return 1
+  # Default cadence-bearing event when a user/agent invokes /chat-history-checkpoint:
+  # "phase" — explicit phase boundary, lands under per_phase / per_turn cadences.
+  exec python3 "$script" hook-append --event phase "$@"
+}
+
 cmd_hooks_install() {
   local force=false
   local print_only=false
@@ -391,6 +411,8 @@ main() {
     memory:check-proposal)   cmd_memory_check_proposal "$@" ;;
     proposal:check)          cmd_proposal_check "$@" ;;
     refine-ticket:detect)    cmd_refine_ticket_detect "$@" ;;
+    chat-history:hook)       cmd_chat_history_hook "$@" ;;
+    chat-history:checkpoint) cmd_chat_history_checkpoint "$@" ;;
     telemetry:record)        cmd_telemetry_record "$@" ;;
     telemetry:status)        cmd_telemetry_status "$@" ;;
     telemetry:report)        cmd_telemetry_report "$@" ;;

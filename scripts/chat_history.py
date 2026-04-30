@@ -428,6 +428,59 @@ CADENCE_EVENTS = {
     "per_tool": frozenset({"tool_use"}),
 }
 
+# Per-platform mapping from the platform's native hook event name to our
+# internal VALID_HOOK_EVENTS. Used by hook_dispatch() to translate
+# stdin JSON payloads coming from Claude Code, Augment Code, Cursor,
+# Cline, Windsurf, and Gemini CLI into a unified entry-point. Sourced
+# from agents/contexts/chat-history-platform-hooks.md.
+PLATFORM_EVENT_MAP: dict[str, dict[str, str]] = {
+    "claude": {
+        "SessionStart": "session_start",
+        "UserPromptSubmit": "user_prompt",
+        "PostToolUse": "tool_use",
+        "Stop": "stop",
+        "SessionEnd": "session_end",
+        "PreCompact": "phase",
+    },
+    "augment": {
+        "SessionStart": "session_start",
+        "Stop": "stop",
+        "PostToolUse": "tool_use",
+        "SessionEnd": "session_end",
+    },
+    "cursor": {
+        "sessionStart": "session_start",
+        "sessionEnd": "session_end",
+        "afterAgentResponse": "agent_response",
+        "stop": "stop",
+        "postToolUse": "tool_use",
+        "beforeSubmitPrompt": "user_prompt",
+    },
+    "cline": {
+        "TaskStart": "session_start",
+        "TaskComplete": "session_end",
+        "UserPromptSubmit": "user_prompt",
+        "PostToolUse": "tool_use",
+    },
+    "windsurf": {
+        "pre_user_prompt": "user_prompt",
+        "post_cascade_response": "agent_response",
+        "post_cascade_response_with_transcript": "agent_response",
+        "post_setup_worktree": "phase",
+    },
+    "gemini": {
+        "SessionStart": "session_start",
+        "AfterAgent": "agent_response",
+        "AfterTool": "tool_use",
+        "SessionEnd": "session_end",
+    },
+    # Generic / pass-through — the caller already speaks our internal
+    # event vocabulary. Useful for shell snippets that want to invoke
+    # the dispatcher with a known event regardless of platform.
+    "generic": {ev: ev for ev in VALID_HOOK_EVENTS},
+}
+VALID_PLATFORMS = tuple(PLATFORM_EVENT_MAP.keys())
+
 
 def _read_chat_history_frequency(settings_path: Path) -> str:
     """Read chat_history.frequency from .agent-settings.yml. Default per_phase."""
@@ -783,6 +836,119 @@ def hook_append(event: str, *,
     return {"action": "appended", "event": event, "type": entry_type}
 
 
+def _extract_hook_text(payload: dict[str, Any]) -> str:
+    """Pull a textual snippet out of a platform's hook payload.
+
+    Tries common field names across Claude Code, Augment Code, Cursor,
+    Cline, Windsurf, and Gemini CLI. Returns the first non-empty string
+    found, stripped; empty string when nothing usable is present.
+    """
+    for key in ("prompt", "user_prompt", "first_user_msg", "firstUserMsg",
+                "userMessage", "user_message", "text", "response", "message",
+                "content"):
+        v = payload.get(key)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    # Tool response wrappers (Claude PostToolUse, etc.) — best-effort.
+    tr = payload.get("tool_response") or payload.get("toolResponse")
+    if isinstance(tr, dict):
+        for key in ("output", "stdout", "result", "text"):
+            v = tr.get(key)
+            if isinstance(v, str) and v.strip():
+                return v.strip()
+    return ""
+
+
+def _extract_hook_tool(payload: dict[str, Any]) -> str:
+    """Pull the tool name out of a platform's hook payload."""
+    for key in ("tool_name", "toolName", "tool"):
+        v = payload.get(key)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    return ""
+
+
+def _extract_hook_event(payload: dict[str, Any]) -> str:
+    """Pull the platform's native hook event name out of the payload."""
+    for key in ("hook_event_name", "event", "eventName", "event_name"):
+        v = payload.get(key)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    return ""
+
+
+def hook_dispatch(platform: str, raw_json: str, *,
+                  event_override: str | None = None,
+                  path: Path | None = None,
+                  settings_path: Path | None = None) -> dict[str, Any]:
+    """Read a platform's stdin JSON, translate to our hook vocabulary, dispatch.
+
+    Used by `chat_history.py hook-dispatch --platform <name>` so consumer
+    projects can wire their `.claude/settings.json` / `.augment/settings.json`
+    / `.cursor/hooks.json` etc. to a single command. The mapping comes from
+    PLATFORM_EVENT_MAP; unmapped events are silently skipped (returned as
+    `skipped_unmapped_event` so the caller can decide fail-open vs
+    fail-closed).
+
+    Bootstrap: when the platform fires the very first non-`session_start`
+    event (e.g. `UserPromptSubmit`) and no sidecar exists yet, the
+    dispatcher synthesizes a `session_start` first using the prompt as the
+    `first_user_msg`. This handles platforms whose `SessionStart` payload
+    does not carry the prompt itself.
+    """
+    if platform not in PLATFORM_EVENT_MAP:
+        raise ValueError(
+            f"unknown platform: {platform!r}; "
+            f"expected one of {sorted(VALID_PLATFORMS)}"
+        )
+    raw = (raw_json or "").strip()
+    if not raw:
+        payload: dict[str, Any] = {}
+    else:
+        try:
+            payload = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"invalid JSON on stdin: {exc}") from exc
+        if not isinstance(payload, dict):
+            raise ValueError("stdin JSON must decode to an object")
+
+    raw_event = (event_override or _extract_hook_event(payload) or "").strip()
+    event = PLATFORM_EVENT_MAP[platform].get(raw_event)
+    if not event:
+        return {"action": "skipped_unmapped_event", "platform": platform,
+                "raw_event": raw_event}
+
+    text = _extract_hook_text(payload)
+    tool = _extract_hook_tool(payload)
+    # The user's first message is what we hash for ownership. We can only
+    # extract it from prompt-bearing events; for stop / tool_use / *_end
+    # the sidecar must already exist.
+    fum = text if event in {"session_start", "user_prompt"} else None
+
+    hook_payload: dict[str, Any] = {"source": f"hook:{platform}:{raw_event}"}
+    if text and event != "session_start":
+        hook_payload["text"] = text
+    if tool:
+        hook_payload["tool"] = tool
+
+    p = path or file_path()
+
+    if event == "session_start":
+        return hook_append("session_start", first_user_msg=fum,
+                           path=path, settings_path=settings_path)
+
+    # Bootstrap: the first non-session_start event from a platform whose
+    # SessionStart did not carry the prompt (e.g. Claude Code) needs an
+    # implicit init so ownership and the sidecar exist before append.
+    side = read_sidecar(p)
+    if side is None and fum:
+        hook_append("session_start", first_user_msg=fum,
+                    path=path, settings_path=settings_path)
+
+    return hook_append(event, first_user_msg=fum, payload=hook_payload,
+                       path=path, settings_path=settings_path)
+
+
 def _cmd_init(args) -> int:
     h = init(args.first_user_msg, freq=args.freq)
     print(json.dumps(h, ensure_ascii=False))
@@ -808,6 +974,25 @@ def _cmd_hook_append(args) -> int:
             args.event,
             first_user_msg=args.first_user_msg,
             payload=payload,
+            settings_path=settings_path,
+        )
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return EXIT_BAD_ARGS
+    print(json.dumps(result, ensure_ascii=False))
+    if result.get("action") == "ownership_refused":
+        return EXIT_OWNERSHIP_REFUSED
+    return EXIT_OK
+
+
+def _cmd_hook_dispatch(args) -> int:
+    raw = sys.stdin.read() if not sys.stdin.isatty() else ""
+    settings_path = Path(args.settings) if args.settings else None
+    try:
+        result = hook_dispatch(
+            args.platform,
+            raw,
+            event_override=args.event,
             settings_path=settings_path,
         )
     except ValueError as exc:
@@ -1091,6 +1276,30 @@ def main(argv: list[str] | None = None) -> int:
         help=f"path to agent settings (default: {DEFAULT_SETTINGS_FILE})",
     )
     p_hook.set_defaults(func=_cmd_hook_append)
+    p_disp = sub.add_parser(
+        "hook-dispatch",
+        help=("platform-hook entry point — reads platform JSON from stdin, "
+              "translates the native event name to our vocabulary, and "
+              "invokes hook-append"),
+    )
+    p_disp.add_argument(
+        "--platform",
+        required=True,
+        choices=sorted(VALID_PLATFORMS),
+        help="source platform whose hook is firing",
+    )
+    p_disp.add_argument(
+        "--event",
+        default=None,
+        help=("override the platform-native event name (default: read "
+              "from stdin payload key hook_event_name / event)"),
+    )
+    p_disp.add_argument(
+        "--settings",
+        default=None,
+        help=f"path to agent settings (default: {DEFAULT_SETTINGS_FILE})",
+    )
+    p_disp.set_defaults(func=_cmd_hook_dispatch)
     args = ap.parse_args(argv)
     return args.func(args)
 

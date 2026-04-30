@@ -1,0 +1,54 @@
+{
+  "// Instructions": "OPTIONAL: merge this into ~/.augment/settings.json (user-scope, NOT project-scope) to wire chat-history hooks for the Augment CLI.",
+  "// Why user-scope": "The Augment CLI reads hooks from ~/.augment/settings.json (per https://docs.augmentcode.com/cli/hooks.md). Project-scoped .augment/settings.json belongs to the IDE plugin, which has no documented hook surface as of 2026-04-30.",
+  "// IDE plugin": "Use the /chat-history-checkpoint command at phase boundaries instead — see rules/chat-history.md.",
+  "// Wrapper": "The command assumes the project-root ./agent-config wrapper is on PATH or invoked with a project-relative cwd. Adjust to absolute paths if your shell does not chdir into the project.",
+
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./agent-config chat-history:hook --platform augment",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./agent-config chat-history:hook --platform augment",
+            "timeout": 3000
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./agent-config chat-history:hook --platform augment",
+            "timeout": 3000
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./agent-config chat-history:hook --platform augment",
+            "timeout": 3000
+          }
+        ]
+      }
+    ]
+  }
+}

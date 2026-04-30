@@ -458,6 +458,40 @@ def ensure_augment_bridge(project_root: Path, force: bool) -> None:
     merge_json_file(project_root / ".augment" / "settings.json", bridge, force, ".augment/settings.json")
 
 
+def _chat_history_hook_block(platform: str) -> dict:
+    """Single hook entry that calls ./agent-config chat-history:hook --platform <name>."""
+    return {
+        "hooks": [
+            {
+                "type": "command",
+                "command": f"./agent-config chat-history:hook --platform {platform}",
+            },
+        ],
+    }
+
+
+def ensure_claude_bridge(project_root: Path, force: bool) -> None:
+    """Deploy .claude/settings.json with plugin enablement and chat-history hooks.
+
+    Hooks dispatch to scripts/chat_history.py via the project-root ./agent-config
+    wrapper. They are no-ops when chat_history.enabled is false in
+    .agent-settings.yml. Idempotent: reruns merge cleanly without duplicating
+    entries (deep_merge replaces hook arrays rather than appending).
+    """
+    claude_hook = _chat_history_hook_block("claude")
+    bridge = {
+        "enabledPlugins": {"agent-conf@event4u": True},
+        "hooks": {
+            "SessionStart":     [claude_hook],
+            "UserPromptSubmit": [claude_hook],
+            "PostToolUse":      [claude_hook],
+            "Stop":             [claude_hook],
+            "SessionEnd":       [claude_hook],
+        },
+    }
+    merge_json_file(project_root / ".claude" / "settings.json", bridge, force, ".claude/settings.json")
+
+
 def ensure_copilot_bridge(project_root: Path, force: bool) -> None:
     target = project_root / ".github" / "plugin" / "marketplace.json"
 
@@ -538,6 +572,7 @@ def main(argv: list[str]) -> int:
     if not opts.skip_bridges:
         ensure_vscode_bridge(project_root, package_type, opts.force)
         ensure_augment_bridge(project_root, opts.force)
+        ensure_claude_bridge(project_root, opts.force)
         ensure_copilot_bridge(project_root, opts.force)
 
     if not QUIET:
