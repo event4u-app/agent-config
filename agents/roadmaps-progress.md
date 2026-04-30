@@ -6,17 +6,17 @@
 
 ## Overall
 
-**60 / 93 steps done · 65%**
+**61 / 92 steps done · 66%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   65%
+██████████████████████████░░░░░░░░░░░░░░   66%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-product-ui-track.md](roadmaps/road-to-product-ui-track.md) | 7 | 53 | 26 | 26 | 0 | 1 | █████░░░░░ 50% |
+| 1 | [road-to-product-ui-track.md](roadmaps/road-to-product-ui-track.md) | 7 | 53 | 24 | 27 | 1 | 1 | █████░░░░░ 53% |
 | 2 | [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md) | 7 | 44 | 3 | 34 | 7 | 0 | █████████░ 92% |
 | 3 | [road-to-visual-review-loop.md](roadmaps/road-to-visual-review-loop.md) | 1 | 4 | 4 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -26,7 +26,7 @@
 
 ### [road-to-product-ui-track.md](roadmaps/road-to-product-ui-track.md)
 
-**Product UI Track** — 26 / 52 done (50%)
+**Product UI Track** — 27 / 51 done (53%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -35,7 +35,7 @@
 | 3 | UI directive set (design → apply → review → polish) | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 4 | Mixed orchestration (backend + UI) | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 5 | `fe-design` migration and skill repositioning | ✅ done | 0 | 4 | 0 | 1 | 100% |
-| 6 | Golden Compatibility Tests + UI goldens | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 6 | Golden Compatibility Tests + UI goldens | 🟡 in progress | 2 | 1 | 1 | 0 | 33% |
 | 7 | Verification and docs | ⬜ not started | 22 | 0 | 0 | 0 | 0% |
 
 ### [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md)

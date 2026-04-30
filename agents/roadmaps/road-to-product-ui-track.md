@@ -139,9 +139,9 @@ State additions:
 
 ## Phase 6: Golden Compatibility Tests + UI goldens
 
-- [ ] **Step 1:** R1 (GT-1..GT-5) and R2 (GT-P1..GT-P4) goldens MUST stay green. Re-run before any merge in this roadmap.
-- [ ] **Step 2:** Add UI-flow goldens:
-  - **GT-U1 — ui-build happy path:** prompt for new screen → audit → design halt (folded audit-findings) → apply → review → polish → delivery report
+- [x] **Step 1:** R1 (GT-1..GT-5) and R2 (GT-P1..GT-P4) goldens MUST stay green. Re-run before any merge in this roadmap. _Landed: full capture re-run after stub → passthrough rename; 10/10 baselines green (GT-1..5, GT-P1..P4, GT-U1) under `tests/golden/harness.py`. CHECKSUMS regenerated; GT-P1..P4 state-snapshot hashes refreshed (no `phase 3 stub` strings)._
+- [~] **Step 2:** Add UI-flow goldens:
+  - **GT-U1 — ui-build happy path:** prompt for new screen → audit → design halt (folded audit-findings) → apply → review → polish → delivery report _Landed: 6-cycle recipe `tests/golden/sandbox/recipes/gt_u1_build_happy.py` covers existing-ui-audit halt → ui-design-brief halt → confirm → ui-apply-plain → ui-design-review-plain → success exit; baseline locked under `tests/golden/baseline/GT-U1/`._
   - **GT-U2 — ui-improve via diff:** existing-screen diff input → audit → design halt → apply → review → polish
   - **GT-U3 — audit-skipped rejection:** dispatcher rejects design/apply when `state.ui_audit` empty
   - **GT-U4 — polish-loop ceiling:** review finds gaps in 3 consecutive rounds; engine halts after round 2
