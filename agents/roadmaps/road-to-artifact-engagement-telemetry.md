@@ -1,6 +1,6 @@
 # Roadmap: Artifact Engagement Telemetry
 
-> **Status: in progress (Phase 1 ✅).** Default-off, opt-in-only. The whole point of this roadmap is to measure which skills, rules, commands, guidelines and personas the agent actually consults and applies — without quietly costing tokens for consumers who never enable it.
+> **Status: in progress (Phase 1 ✅, Phase 2 ✅).** Default-off, opt-in-only. The whole point of this roadmap is to measure which skills, rules, commands, guidelines and personas the agent actually consults and applies — without quietly costing tokens for consumers who never enable it.
 
 ## Mission
 
@@ -81,10 +81,10 @@ Each event is a single JSONL line: `{ts, task_id, boundary_kind, consulted: {ski
 
 ## Phase 2: Recording engine
 
-- [ ] **Step 1:** Implement `<engine-src>/telemetry/boundary.py` — boundary detection, task vs phase-step granularity, idempotent within a single boundary (duplicate `record` calls coalesce).
-- [ ] **Step 2:** Implement `./agent-config telemetry:record` — reads enabled-flag from settings, validates payload via Phase 1 schema, appends one JSONL line. Returns 0 silently when disabled.
-- [ ] **Step 3:** Implement `./agent-config telemetry:status` — prints `enabled`, `granularity`, log size, last event timestamp. Read-only; safe even when disabled.
-- [ ] **Step 4:** Tests: enabled-disabled symmetry (disabled → no file IO), append durability under concurrent writes (file-lock), schema rejection produces non-zero exit.
+- [x] **Step 1:** Implemented `<engine-src>/telemetry/boundary.py` — `BoundarySession` (set-union coalescing on consulted/applied), `record_event` with `fcntl.flock` for cross-process durability, `open_boundary` context manager that suppresses flush on exception. Idempotent: double-flush is no-op, empty session writes nothing.
+- [x] **Step 2:** Implemented `./agent-config telemetry:record` — wires through `telemetry/settings.py` (shared YAML reader), supports `--payload-file`/`--stdin`/`--task-id`+`--consulted`/`--applied` invocations, returns 0 silently when disabled, exit 1 on schema failure, exit 2 on IO failure. `--force` bypasses for tests.
+- [x] **Step 3:** Implemented `./agent-config telemetry:status` — read-only; renders enabled/granularity/log path/size/line count/last event ts in text or JSON; never creates the log; gracefully handles missing settings, missing section, malformed YAML.
+- [x] **Step 4:** Tests in `tests/telemetry/{test_boundary,test_settings,test_cli_telemetry}.py` (25 cases) — coalescing, exception-suppression, idempotent flush, schema-rejection, **20-process concurrent-write durability**, settings parsing edge-cases, disabled-zero-IO, force-bypass, status JSON shape.
 
 ## Phase 3: Agent-side hooks
 
