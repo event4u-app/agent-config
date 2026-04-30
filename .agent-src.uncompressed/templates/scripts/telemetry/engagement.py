@@ -25,6 +25,7 @@ Design choices:
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -47,9 +48,64 @@ ALLOWED_BOUNDARY_KINDS: tuple[str, ...] = (
     "tool-call",
 )
 
+# Phase 5 redaction validator — keep id fields from leaking paths,
+# free-text, or filenames. Repository-internal artefact ids and
+# task ids never contain these characters.
+_FORBIDDEN_ID_CHARS: tuple[str, ...] = ("/", "\\", "\n", "\r", "\t")
+# Trailing alphabetic extension (`.md`, `.py`, `.json`, …). Restricting
+# to alphabetic chars 1-8 long avoids false positives on version-like
+# patterns (e.g. ``v1.0``, ``ticket-1.2``) while still catching the
+# realistic file-extension leak surface.
+_FILE_EXTENSION_RE = re.compile(r"\.[A-Za-z]{1,8}$")
+
 
 class EngagementSchemaError(ValueError):
     """Raised when an event violates the schema."""
+
+
+def check_id_redaction(label: str, value: str) -> None:
+    """Phase 5 redaction validator — reject path- and free-text-shaped ids.
+
+    Public surface: the schema layer calls this on every ``task_id``
+    and every ``consulted``/``applied`` artefact id before write; the
+    report renderer calls it on every id before emitting JSON, so a
+    pre-validator (or hand-edited) log can never leak into a shared
+    report.
+
+    Caller has already verified ``value`` is a non-empty string of
+    length ``<= MAX_ID_LEN``. This function adds the privacy floor:
+    no slashes, no backslashes, no embedded control chars, no leading
+    or trailing whitespace, no file-extension suffix.
+
+    Failure raises :class:`EngagementSchemaError` with a label that
+    points at the offending field (``task_id``, ``consulted.skills``,
+    ``applied.rules`` …).
+    """
+    if not isinstance(value, str):
+        raise EngagementSchemaError(f"{label} must be a string")
+    if not value:
+        raise EngagementSchemaError(f"{label} must be non-empty")
+    if len(value) > MAX_ID_LEN:
+        raise EngagementSchemaError(
+            f"{label} exceeds {MAX_ID_LEN} chars"
+        )
+    for ch in _FORBIDDEN_ID_CHARS:
+        if ch in value:
+            raise EngagementSchemaError(
+                f"{label} contains forbidden character {ch!r}; "
+                "id fields must be repository-internal artefact ids only "
+                "(no paths, no free-text)"
+            )
+    if value != value.strip():
+        raise EngagementSchemaError(
+            f"{label} must not start or end with whitespace"
+        )
+    if _FILE_EXTENSION_RE.search(value):
+        raise EngagementSchemaError(
+            f"{label} ends in a file extension; "
+            "id fields must be repository-internal artefact ids only "
+            "(strip path + extension before recording)"
+        )
 
 
 @dataclass
@@ -71,6 +127,7 @@ class EngagementEvent:
             raise EngagementSchemaError(
                 f"task_id exceeds {MAX_ID_LEN} chars"
             )
+        check_id_redaction("task_id", self.task_id)
         if self.boundary_kind not in ALLOWED_BOUNDARY_KINDS:
             raise EngagementSchemaError(
                 f"boundary_kind must be one of {ALLOWED_BOUNDARY_KINDS!r}"
@@ -133,6 +190,7 @@ def _validate_artefact_dict(label: str, payload: Any) -> None:
                 raise EngagementSchemaError(
                     f"{label}.{kind} id exceeds {MAX_ID_LEN} chars"
                 )
+            check_id_redaction(f"{label}.{kind}", art_id)
 
 
 def _normalise_artefact_dict(payload: dict[str, list[str]]) -> dict[str, list[str]]:

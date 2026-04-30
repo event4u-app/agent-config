@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from typing import Any, Sequence
 
 from .aggregator import AggregateResult, ArtefactStat, rank_artefacts
+from .engagement import check_id_redaction
 
 QUARTILE_TOP_RATIO = 0.20
 QUARTILE_BOTTOM_RATIO = 0.20
@@ -111,6 +112,8 @@ def render_markdown(
         lines.append("|---|---|---:|---:|---:|---|")
         for entry in rows:
             s = entry.stat
+            # Phase 5 export gate — applies to markdown too, not just JSON.
+            check_id_redaction(f"buckets.{s.kind}.id", s.artefact_id)
             lines.append(
                 f"| {s.kind} | `{s.artefact_id}` | {s.consulted} | {s.applied} "
                 f"| {s.applied_ratio:.2f} | `{s.last_seen_ts}` |"
@@ -149,6 +152,11 @@ def render_json(
 
 
 def _stat_to_dict(stat: ArtefactStat) -> dict[str, Any]:
+    # Phase 5 export gate: every id leaving the renderer is re-validated
+    # against the same redaction floor that the schema enforces on
+    # write. A pre-validator log (or one hand-edited offline) can never
+    # leak path-shaped or free-text content into a shared report.
+    check_id_redaction(f"buckets.{stat.kind}.id", stat.artefact_id)
     return {
         "kind": stat.kind,
         "id": stat.artefact_id,

@@ -17,7 +17,10 @@ Usage:
 
 Exit codes:
     0   success (empty log → empty-but-valid report)
-    2   IO / settings parse error or unparseable --since
+    2   IO / settings parse error, unparseable --since, or
+        redaction-validator failure on a row sourced from the log
+        (a path-shaped or extension-shaped id slipped past the write
+        gate; the report is refused rather than shared)
 """
 from __future__ import annotations
 
@@ -28,6 +31,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from telemetry.aggregator import aggregate
+from telemetry.engagement import EngagementSchemaError
 from telemetry.report_renderer import render_json, render_markdown
 from telemetry.settings import read_settings
 
@@ -132,10 +136,18 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     top = None if args.top <= 0 else args.top
-    if args.format == "json":
-        sys.stdout.write(render_json(result, top=top, since_label=since_label))
-    else:
-        sys.stdout.write(render_markdown(result, top=top, since_label=since_label))
+    try:
+        if args.format == "json":
+            rendered = render_json(result, top=top, since_label=since_label)
+        else:
+            rendered = render_markdown(result, top=top, since_label=since_label)
+    except EngagementSchemaError as exc:
+        print(
+            f"❌  redaction validator refused report: {exc}",
+            file=sys.stderr,
+        )
+        return 2
+    sys.stdout.write(rendered)
 
     if result.skipped_lines:
         print(
