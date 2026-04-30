@@ -108,19 +108,19 @@ T3-S is the **manageable** tier — 37 files mention scripts, but the underlying
 
 > Resolve the 8 hard-blockers. Two strategies depending on the artefact: **noop-on-cloud** (chat-history) or **degrade-to-prose** (authoring skills).
 
-- [ ] **Step 1:** `chat-history` — add a `Cloud Behavior` section to `rules/chat-history.md`: "On platforms without persistent filesystem, this rule is fully inert. Iron Law turn-check / append / heartbeat are skipped. Settings.enabled is treated as false." Mirror it in the three commands.
-- [ ] **Step 2:** Wire a runtime detection hint — add a `cloud_safe: noop` frontmatter field (or equivalent comment in the body, since `agent-skills.io` frontmatter is fixed) so `build_cloud_bundle.py` knows to ship a stripped variant
-- [ ] **Step 3:** `command-writing` — replace the closing "run `bash scripts/compress.sh` + `python3 scripts/skill_linter.py`" block with a cloud-aware fallback: "On cloud, the agent verifies the new command by **re-reading** the relevant rules (frontmatter shape, size budget, numbered-options compliance) and emits a self-review block instead of running the linter."
-- [ ] **Step 4:** Same change for `rule-writing/SKILL.md`, `guideline-writing/SKILL.md`
-- [ ] **Step 5:** `description-assist` — the trigger-eval loop is genuinely script-only (it samples user prompts and measures activation); cloud variant: skill emits its **prompts list and rubric** so the user can run the eval manually or off-platform, and the skill collects the user-pasted results
-- [ ] **Step 6:** Re-run audit — `python3 scripts/audit_cloud_compatibility.py` should now show **0** T3-H artefacts after Phase 2 (variants make them T3-S or T2)
-- [ ] **Step 7:** Add a regression test asserting T3-H count is 0 going forward (similar to `test_agent_src_uncompressed_clean` for legacy tags)
+- [x] **Step 1:** `chat-history` — add a `Cloud Behavior` section to `rules/chat-history.md`: "On platforms without persistent filesystem, this rule is fully inert. Iron Law turn-check / append / heartbeat are skipped. Settings.enabled is treated as false." Mirror it in the three commands.
+- [x] **Step 2:** Wire a runtime detection hint — add a `cloud_safe: noop` frontmatter field (or equivalent comment in the body, since `agent-skills.io` frontmatter is fixed) so `build_cloud_bundle.py` knows to ship a stripped variant
+- [x] **Step 3:** `command-writing` — replace the closing "run `bash scripts/compress.sh` + `python3 scripts/skill_linter.py`" block with a cloud-aware fallback: "On cloud, the agent verifies the new command by **re-reading** the relevant rules (frontmatter shape, size budget, numbered-options compliance) and emits a self-review block instead of running the linter."
+- [x] **Step 4:** Same change for `rule-writing/SKILL.md`, `guideline-writing/SKILL.md`
+- [x] **Step 5:** `description-assist` — the trigger-eval loop is genuinely script-only (it samples user prompts and measures activation); cloud variant: skill emits its **prompts list and rubric** so the user can run the eval manually or off-platform, and the skill collects the user-pasted results
+- [x] **Step 6:** Re-run audit — `python3 scripts/audit_cloud_compatibility.py` should now show **0** T3-H artefacts after Phase 2 (variants make them T3-S or T2)
+- [x] **Step 7:** Add a regression test asserting T3-H count is 0 going forward (similar to `test_agent_src_uncompressed_clean` for legacy tags)
 
 ## Phase 3: Linear AI — Rules Digest Distribution
 
 > Linear's guidance fields take Markdown only. Build a curated concatenation of cloud-safe rules into a single file the user pastes into Workspace / Team / Personal guidance.
 
-- [ ] **Step 1:** Define the inclusion list — every T1 rule + every T2 rule whose substance survives without filesystem (e.g. `scope-control` ✅, `language-and-tone` ✅, `chat-history` ❌, `cli-output-handling` ⚠️ partial). Capture the decision per rule in `agents/contexts/linear-ai-rules-inclusion.md`.
+- [x] **Step 1:** Define the inclusion list — every T1 rule + every T2 rule whose substance survives without filesystem (e.g. `scope-control` ✅, `language-and-tone` ✅, `chat-history` ❌, `cli-output-handling` ⚠️ partial). Capture the decision per rule in [`agents/contexts/linear-ai-rules-inclusion.md`](../contexts/linear-ai-rules-inclusion.md).
 - [ ] **Step 2:** Build `scripts/build_linear_digest.py` — concatenates included rules with section headers; strips file references that won't resolve outside the repo (replace with footnote pointers); emits `dist/linear/{workspace,team,personal}.md`
 - [ ] **Step 3:** Decide the three-layer split — workspace = universal coding posture, team = framework-specific (Laravel, etc.), personal = empty by default. Document in `agents/contexts/linear-ai-three-layers.md`.
 - [ ] **Step 4:** Pytest: round-trip a fixture rule set, verify no broken `[link](path)` survives, verify the digest stays under Linear's per-field char limit (research the actual cap and write it into the test as a constant)
@@ -159,7 +159,7 @@ T3-S is the **manageable** tier — 37 files mention scripts, but the underlying
 
 ## Acceptance Criteria
 
-- [ ] Audit shows **0 T3-H artefacts** after Phase 2 (or every remaining T3-H has an explicit `cloud_safe: noop` declaration)
+- [x] Audit shows **0 T3-H artefacts** after Phase 2 (or every remaining T3-H has an explicit `cloud_safe: noop` declaration)
 - [ ] `task build-cloud-bundles-all` produces a complete `dist/cloud/` set on a clean checkout
 - [ ] `task build-linear-digest` produces a `dist/linear/workspace.md` that fits Linear's per-field char limit
 - [ ] At least one bundle and the Linear digest verified manually on the live platform (screenshots in `agents/reports/`)
