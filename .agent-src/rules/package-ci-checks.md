@@ -9,9 +9,13 @@ source: package
 
 Before **any** push/PR in agent-config: run ALL CI checks locally.
 
+## The Iron Law
+
 ```
 NEVER push without running ALL CI checks locally first.
 ```
+
+Every CI pipeline failure is preventable by running these checks before pushing.
 
 ## Required checks
 

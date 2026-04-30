@@ -11,12 +11,22 @@ source: package
 
 ```
 MIRROR THE LANGUAGE OF THE USER'S LAST/CURRENT MESSAGE. ALWAYS.
-BEFORE SENDING ANY REPLY, RUN THE PRE-SEND GATE BELOW.
+THE FIRST TOKEN OF EVERY REPLY MUST BE IN THAT LANGUAGE.
 A REPLY IN THE WRONG LANGUAGE IS A RULE VIOLATION, NOT A SLIP.
+NO MOMENTUM EXCEPTION. NO TECHNICAL-CONTEXT EXCEPTION.
+NO "SWITCH MID-PARAGRAPH". NO "LAST 20 TURNS WERE ENGLISH".
 ```
 
-**Overrides** conversation momentum, tool-output habits, convenience.
-First thing to check on every reply, last thing to check before sending.
+**Overrides** conversation momentum, tool-output habits, prior-reply
+language, codebase language, open-file language, files-just-edited
+language, convenience. First thing to check on every reply, last thing
+to check before sending.
+
+Canonical failure: agent edited English `.md` for many turns; user
+types short German (`3`, `weiter`, `mach das`, `und jetzt X`); agent
+answers English because momentum wins. **Trigger is the user's last
+message, not the turn count.** Length irrelevant — `3` after a German
+question still means German continues.
 
 ### Source of language truth — chat messages ONLY
 
@@ -127,6 +137,15 @@ The `.md` source files are the English blueprint — they define WHAT to say, no
 
 Common drift: a rule documents trigger phrases and writes them as quoted
 German examples inside English prose. **Not allowed**, even demonstrative.
+
+**Wrong** (DE quote embedded in EN prose):
+
+```md
+Single-decision delegation ("für diesen Schritt entscheide du") →
+handle that step autonomously.
+
+A standing "arbeite selbstständig" never lifts the floor.
+```
 
 Two correct paths:
 
