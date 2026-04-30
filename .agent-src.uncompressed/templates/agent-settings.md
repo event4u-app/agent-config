@@ -148,6 +148,19 @@ chat_history:
   # YAML 1.1 booleanizes bare on/off — both are accepted, no quoting needed.
   heartbeat: hybrid
 
+  # Population path: hook | checkpoint | manual
+  #   hook       — platform fires lifecycle hooks; agent observes only
+  #                (Claude Code, Augment CLI, Cursor 1.7+, Cline non-Windows,
+  #                 Windsurf, Gemini CLI). scripts/install.py wires hooks.
+  #   checkpoint — agent invokes /chat-history-checkpoint at phase boundaries
+  #                (Augment IDE plugin, Cursor < 1.7, Cline on Windows).
+  #                Cooperative three-gate Iron Law applies.
+  #   manual     — rule is inert (cloud surfaces). Persistence is local-only.
+  # Default `checkpoint` is the safest cooperative fallback. HOOK platforms
+  # set this to `hook` automatically when scripts/install.py merges the
+  # platform's settings file.
+  path: checkpoint
+
 # --- Optional pipelines ---
 pipelines:
   # Skill improvement pipeline (true, false)
@@ -292,6 +305,7 @@ lives under `personal:` in YAML.
 | `chat_history.max_size_kb` | integer | per profile | Max file size before overflow handling. Defaults: `minimal`→`128`, `balanced`→`256`, `full`→`512`. |
 | `chat_history.on_overflow` | `rotate`, `compress` | per profile | On overflow: `rotate` drops oldest entries; `compress` marks the file for summarization on the next turn. Defaults: `minimal`/`balanced`→`rotate`, `full`→`compress`. |
 | `chat_history.heartbeat` | `on`, `off`, `hybrid` | `hybrid` | Visibility of the `📒 chat-history:` marker. `on` = every reply (~20 tokens), `off` = silent, `hybrid` = print only on drift states (`missing`/`foreign`/`returning`). YAML `on`/`off` accepted bare. |
+| `chat_history.path` | `hook`, `checkpoint`, `manual` | `checkpoint` | Population path. `hook` = platform fires lifecycle hooks; `checkpoint` = agent invokes `/chat-history-checkpoint` at phase boundaries; `manual` = rule inert (cloud). `scripts/install.py` flips this to `hook` when the platform's hook config is deployed. See [`agents/contexts/chat-history-platform-hooks.md`](../../../agents/contexts/chat-history-platform-hooks.md). |
 | `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
 | `subagents.implementer_model` | model alias or empty | _(empty)_ | Model for implementer subagents. Empty = same tier as session model. See [subagent-configuration](../contexts/subagent-configuration.md). |
 | `subagents.judge_model` | model alias or empty | _(empty)_ | Model for judge subagents. Empty = one tier above implementer (opus if sonnet, sonnet if haiku). |

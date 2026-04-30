@@ -148,6 +148,19 @@ chat_history:
   # YAML 1.1 booleanizes bare on/off — both are accepted, no quoting needed.
   heartbeat: hybrid
 
+  # Population path: hook | checkpoint | manual
+  #   hook       — platform fires lifecycle hooks; agent observes only
+  #                (Claude Code, Augment CLI, Cursor 1.7+, Cline non-Windows,
+  #                 Windsurf, Gemini CLI). scripts/install.py wires hooks.
+  #   checkpoint — agent invokes /chat-history-checkpoint at phase boundaries
+  #                (Augment IDE plugin, Cursor < 1.7, Cline on Windows).
+  #                Cooperative three-gate Iron Law applies.
+  #   manual     — rule is inert (cloud surfaces). Persistence is local-only.
+  # Default `checkpoint` is the safest cooperative fallback. HOOK platforms
+  # set this to `hook` automatically when scripts/install.py merges the
+  # platform's settings file.
+  path: checkpoint
+
 # --- Optional pipelines ---
 pipelines:
   # Skill improvement pipeline (true, false)
@@ -281,7 +294,7 @@ lives under `personal:` in YAML.
 | `personal.minimal_output` | `true`, `false` | `true` | When `true`: short bullet points during work, concise summary at end. When `false`: verbose explanations. |
 | `personal.play_by_play` | `true`, `false` | `false` | When `true`: share intermediate findings during investigation. When `false`: work silently, report only the conclusion. |
 | `personal.pr_comment_bot_icon` | `true`, `false` | `false` | Prefix PR comment replies with 🤖 to indicate bot-authored replies. Personal preference — each developer decides. |
-| `personal.autonomy` | `on`, `off`, `auto` | `auto` | Suppress trivial workflow questions; act on obvious next step. `auto` defaults to `off` but flips to `on` after a prose opt-in like "arbeite selbstständig". `on` suppresses trivial questions unconditionally. Blocking decisions (security, scope, push/merge/branch/PR/tag) never suppressed. See `rules/autonomous-execution.md`. |
+| `personal.autonomy` | `on`, `off`, `auto` | `auto` | Suppress trivial workflow questions and act on the obvious next step. `auto` defaults to `off` but flips to `on` after a prose opt-in like "arbeite selbstständig". `on` suppresses trivial questions unconditionally. Blocking decisions (security, scope expansion, push/merge/branch/PR/tag) are never suppressed. See `rules/autonomous-execution.md`. |
 | `project.pr_template` | file path | `.github/pull_request_template.md` | Path to PR template file. Read this instead of searching for it. |
 | `project.upstream_repo` | `org/repo` | _(empty)_ | Target repository for universal improvement PRs (e.g., `org/agent-config`). |
 | `project.improvement_pr_branch_prefix` | string | `improve/agent-` | Branch prefix for agent improvement PRs. |
@@ -292,6 +305,7 @@ lives under `personal:` in YAML.
 | `chat_history.max_size_kb` | integer | per profile | Max file size before overflow handling. Defaults: `minimal`→`128`, `balanced`→`256`, `full`→`512`. |
 | `chat_history.on_overflow` | `rotate`, `compress` | per profile | On overflow: `rotate` drops oldest entries; `compress` marks the file for summarization on the next turn. Defaults: `minimal`/`balanced`→`rotate`, `full`→`compress`. |
 | `chat_history.heartbeat` | `on`, `off`, `hybrid` | `hybrid` | Visibility of the `📒 chat-history:` marker. `on` = every reply (~20 tokens), `off` = silent, `hybrid` = print only on drift states (`missing`/`foreign`/`returning`). YAML `on`/`off` accepted bare. |
+| `chat_history.path` | `hook`, `checkpoint`, `manual` | `checkpoint` | Population path. `hook` = platform fires lifecycle hooks; `checkpoint` = agent invokes `/chat-history-checkpoint` at phase boundaries; `manual` = rule inert (cloud). `scripts/install.py` flips this to `hook` when the platform's hook config is deployed. See [`agents/contexts/chat-history-platform-hooks.md`](../../../agents/contexts/chat-history-platform-hooks.md). |
 | `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
 | `subagents.implementer_model` | model alias or empty | _(empty)_ | Model for implementer subagents. Empty = same tier as session model. See [subagent-configuration](../contexts/subagent-configuration.md). |
 | `subagents.judge_model` | model alias or empty | _(empty)_ | Model for judge subagents. Empty = one tier above implementer (opus if sonnet, sonnet if haiku). |
@@ -301,6 +315,16 @@ lives under `personal:` in YAML.
 | `personas.override` | list of persona ids | `[]` | Developer-local override of the team default lens cast. Empty = inherit `personas.default` from `.agent-project-settings.yml`. See [`layered-settings`](../guidelines/agent-infra/layered-settings.md). |
 | `personas.ignore` | list of persona ids | `[]` | Persona ids dropped from the default cast locally. Ignored personas stay invokable via `--personas=<id>`. |
 | `onboarding.onboarded` | `true`, `false` | `false` | Whether `/onboard` has run on this project. The `onboarding-gate` rule prompts for `/onboard` when this is `false`. Missing entirely = legacy project, treated as onboarded. |
+| `commands.suggestion.enabled` | `true`, `false` | `true` | Master switch for the command-suggestion layer. `false` = the layer is silent; explicit `/commands` still work. See `rules/command-suggestion.md`. |
+| `commands.suggestion.confidence_floor` | `0.0`–`1.0` | `0.6` | Minimum match score before a suggestion surfaces. Per-command frontmatter (`suggestion.confidence_floor`) overrides this global floor. |
+| `commands.suggestion.cooldown_seconds` | integer | `600` | Cooldown between re-suggestions of the same `(command, evidence)` pair. `600` = 10m. |
+| `commands.suggestion.max_options` | integer | `4` | Max number of command suggestions before the always-present "run as-is" option (total rendered = `max_options + 1`). |
+| `commands.suggestion.blocklist` | list of command names | `[]` | Commands that never appear as a suggestion. They still work when typed explicitly. |
+| `telemetry.artifact_engagement.enabled` | `true`, `false` | `false` | Master switch for the artefact engagement log. Default-off; zero file IO and zero token cost when `false`. Maintainer-targeted; consumers leave it off. |
+| `telemetry.artifact_engagement.granularity` | `task`, `phase-step`, `tool-call` | `task` | Boundary at which events are recorded. `tool-call` is expensive — opt-in only. |
+| `telemetry.artifact_engagement.record.consulted` | `true`, `false` | `true` | When `true`: record artefacts loaded into context. |
+| `telemetry.artifact_engagement.record.applied` | `true`, `false` | `true` | When `true`: record artefacts cited or driving a decision. |
+| `telemetry.artifact_engagement.output.path` | path | `.agent-engagement.jsonl` | Append-only JSONL log path, relative to the project root. Always gitignored. |
 
 ### Rename-Map (migration)
 

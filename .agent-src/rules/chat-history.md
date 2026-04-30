@@ -14,7 +14,28 @@ git-ignored) so a crashed or switched agent session can be resumed. File
 I/O is owned by [`scripts/chat_history.py`](../../../scripts/chat_history.py)
 — this rule says **when** to call it, not how the file is structured.
 
-## Iron Law — three gates, skipping any one is a rule violation
+## Two paths — platform decides which Iron Law applies
+
+Population of `.agent-chat-history` is **structural** (platform-driven)
+on platforms with native lifecycle hooks, and **cooperative**
+(agent-driven) on platforms without. Both paths converge on the same
+JSONL schema; only the trigger differs. Per-platform classification
+lives in
+[`agents/contexts/chat-history-platform-hooks.md`](../../../agents/contexts/chat-history-platform-hooks.md).
+
+| Path | Platforms | Trigger | Agent's role |
+|---|---|---|---|
+| **HOOK** | Claude Code, Augment CLI, Cursor 1.7+, Cline non-Windows, Windsurf, Gemini CLI | Platform fires native lifecycle hooks → `./agent-config chat-history:hook --platform <name>` | Read-only — observe, do not duplicate appends |
+| **CHECKPOINT** | Augment IDE plugin, Cursor < 1.7, Cline on Windows | Agent invokes `/chat-history-checkpoint` at phase boundaries | Cooperative — the three gates below are mandatory |
+| **MANUAL** | Cloud surfaces (Claude.ai Web, Skills API) | Rule is inert — see Cloud Behavior | None |
+
+Detect the path on first turn: read `chat_history.platform` from
+`.agent-settings.yml` if set, else fall back to `chat_history.path`
+(`hook` / `checkpoint` / `manual`). Missing both → assume CHECKPOINT
+(safest cooperative default; HOOK platforms install the platform
+config explicitly via `scripts/install.py`).
+
+## Iron Law (CHECKPOINT path) — three gates, skipping any one is a rule violation
 
 ```
 1. turn-check    — first tool call of every session
@@ -27,6 +48,10 @@ trivial". Three enforcement layers: **turn-check** non-zero on
 `missing`/`foreign`/`returning`, **append refusal** (exit `3` on
 ownership mismatch), **script-generated heartbeat** (silent skip
 becomes immediately visible).
+
+On the HOOK path the platform performs gates 1 + 2 structurally; the
+agent **must not** also call `turn-check` or `append` (double-write
+risk). Heartbeat (gate 3) stays useful for visibility — see below.
 
 ### Turn-start gate — MANDATORY first tool call
 
@@ -96,9 +121,22 @@ stdout verbatim (or nothing if empty).
 Read `chat_history.*` from `.agent-settings.yml` **once per conversation**
 (first turn) and cache. `enabled: false` or section missing → rule is a
 **no-op** (do not read, write, or mention the file). Otherwise cache
-`frequency`, `max_size_kb`, `on_overflow` and run `turn-check` — its
-state token branches to one of: `missing` → `init`, `ok` → continue,
-`foreign` → Foreign-Prompt, `returning` → Returning-Prompt.
+`frequency`, `max_size_kb`, `on_overflow`, and the **path** (HOOK /
+CHECKPOINT / MANUAL — see the table above).
+
+**HOOK path** — skip `turn-check` entirely. The platform's
+`SessionStart` hook already initialized the file; the agent's job is to
+read `status` once for context awareness (header preview, entry count)
+and otherwise leave I/O to the hook dispatcher. Foreign / Returning
+prompts still apply because hooks call into the same ownership state
+machine — when the dispatcher reports `foreign` or `returning` via
+exit code or stderr, render the corresponding prompt.
+
+**CHECKPOINT path** — run `turn-check` as the first tool call. State
+token branches to one of: `missing` → `init`, `ok` → continue,
+`foreign` → Foreign-Prompt, `returning` → Returning-Prompt. Cooperative
+gates 1 + 2 + 3 are mandatory; `/chat-history-checkpoint` is the
+recommended way to satisfy gate 2 at phase boundaries.
 
 In `foreign` and `returning`, **always read the file's current contents
 into the agent's working context before any write** — the user chose to
@@ -183,6 +221,8 @@ rewrites. Setting is stable for the session — never mix modes.
 Display/reload/clear (`/chat-history*` commands). Auto-flip `enabled` or
 `on_overflow`. Run when `enabled: false` (no silent logging, no
 telemetry). Decide ownership heuristically — only `state` does that.
+Double-write on HOOK platforms — when hooks fire structurally, the
+agent does **not** also call `append`.
 
 ## Cloud Behavior
 
@@ -197,4 +237,4 @@ no foreign/returning prompts, no overflow warning. Treat
 - `language-and-tone` — prompt translated at runtime; `.md` stays English.
 - `onboarding-gate` — runs first; this rule activates only after it clears.
 - `token-efficiency` — never load the full log; use `status` / `read --last N`.
-- API: [`scripts/chat_history.py`](../../../scripts/chat_history.py). Commands: [`/chat-history`](../commands/chat-history.md), [`/chat-history-resume`](../commands/chat-history-resume.md), [`/chat-history-clear`](../commands/chat-history-clear.md). Settings: [`agent-settings`](../templates/agent-settings.md). Types: [`rule-type-governance`](rule-type-governance.md).
+- API: [`scripts/chat_history.py`](../../../scripts/chat_history.py). Commands: [`/chat-history`](../commands/chat-history.md), [`/chat-history-resume`](../commands/chat-history-resume.md), [`/chat-history-clear`](../commands/chat-history-clear.md), [`/chat-history-checkpoint`](../commands/chat-history-checkpoint.md). Settings: [`agent-settings`](../templates/agent-settings.md). Platform classification: [`agents/contexts/chat-history-platform-hooks.md`](../../../agents/contexts/chat-history-platform-hooks.md). Types: [`rule-type-governance`](rule-type-governance.md).
