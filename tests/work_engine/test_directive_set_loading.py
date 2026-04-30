@@ -11,9 +11,13 @@ route between multiple directive bundles (``backend``, future ``ui``,
 - ``load_directive_set("backend")`` returns the canonical
   ``{step_name: handler}`` mapping the dispatcher walks (every entry in
   ``STEP_ORDER`` present);
-- the unimplemented sets (``ui``, ``ui-trivial``, ``mixed``) raise
+- the still-unimplemented sets (``ui-trivial``, ``mixed``) raise
   ``NotImplementedError`` from their ``get_steps()`` so the failure point
   is the loader, not a half-walked dispatch loop;
+- ``ui`` is a Phase 1 routing-stub (R3) — ``get_steps()`` returns a step
+  mapping whose ``refine`` handler emits a clean ``BLOCKED`` halt
+  pointing at the deferred audit/design/apply track, and the set
+  declares ``SUPPORTED_KINDS`` for every UI-classifiable input shape;
 - unknown set names and malformed ``directive_set`` values raise
   ``ValueError`` immediately rather than producing surprising behavior.
 """
@@ -72,10 +76,30 @@ def test_load_backend_returns_full_step_mapping() -> None:
         )
 
 
-@pytest.mark.parametrize("set_name", ["ui", "ui-trivial", "mixed"])
+@pytest.mark.parametrize("set_name", ["ui-trivial", "mixed"])
 def test_load_unimplemented_sets_raise(set_name: str) -> None:
+    """``ui-trivial`` and ``mixed`` are still Phase 2/4 work in R3.
+
+    ``ui`` was promoted to a Phase 1 routing-stub by R3 Phase 1 — see
+    :func:`test_load_ui_returns_phase1_stub_steps`.
+    """
     with pytest.raises(NotImplementedError, match="not implemented in R1"):
         load_directive_set(set_name)
+
+
+def test_load_ui_returns_phase1_stub_steps() -> None:
+    """R3 Phase 1: ``ui.get_steps()`` returns a complete step mapping.
+
+    The ``refine`` handler emits the clean ``BLOCKED`` halt; the
+    seven downstream handlers are raise-on-call placeholders that
+    only satisfy the dispatcher's completeness check.
+    """
+    steps = load_directive_set("ui")
+    assert set(steps.keys()) == set(STEP_ORDER)
+    for name, handler in steps.items():
+        assert callable(handler), (
+            f"handler for {name!r} must be callable per the Step protocol"
+        )
 
 
 def test_load_rejects_unknown_set_name() -> None:
@@ -119,11 +143,25 @@ def test_assert_kind_supported_rejects_unknown_set_name() -> None:
         assert_kind_supported("ticket", "not-a-real-set")
 
 
-@pytest.mark.parametrize("set_name", ["ui", "ui-trivial", "mixed"])
+@pytest.mark.parametrize("set_name", ["ui-trivial", "mixed"])
 def test_assert_kind_supported_rejects_stub_sets(set_name: str) -> None:
-    """Stub sets declare no ``SUPPORTED_KINDS`` (or an empty tuple), so
+    """``ui-trivial`` and ``mixed`` declare no ``SUPPORTED_KINDS``, so
     every kind is unsupported. The dispatcher halts here rather than
     advancing to ``load_directive_set`` and the stub's NotImplementedError.
+
+    ``ui`` is no longer a raise-stub — see
+    :func:`test_assert_kind_supported_accepts_ui_phase1_kinds`.
     """
     with pytest.raises(NotImplementedError, match="does not handle input.kind"):
         assert_kind_supported("ticket", set_name)
+
+
+@pytest.mark.parametrize("kind", ["ticket", "prompt", "diff", "file"])
+def test_assert_kind_supported_accepts_ui_phase1_kinds(kind: str) -> None:
+    """R3 Phase 1: ``ui`` accepts every UI-classifiable input shape.
+
+    The Phase 1 stub's ``refine`` handler then emits the clean refusal
+    halt — but the kind gate must pass first so the routing decision
+    surfaces in the halt, not in a config-error exit.
+    """
+    assert assert_kind_supported(kind, "ui") is None

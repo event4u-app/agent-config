@@ -1,68 +1,53 @@
-"""GT-P4 — prompt-driven UI-intent rejection (band-independent).
+"""GT-P4 — prompt classified as UI work, refused at the routing gate.
 
-The raw prompt ``Add a dark mode toggle to settings`` scores
-``high`` on the rubric — the goal is clear, the scope mentions a
-concrete surface, the AC + assumptions are crisp — but the scorer
-sets ``ui_intent=True`` because the prompt reads as UI work and the
-backend dispatch track has no UI capability.
+The raw prompt ``Add a dark mode toggle to settings`` reads as UI
+work. R3 Phase 1's intent classifier sets ``state.directive_set =
+"ui"`` while loading; the dispatcher's kind gate accepts the prompt
+(the ``ui`` set declares ``SUPPORTED_KINDS=("ticket", "prompt",
+"diff", "file")``) and walks into ``ui.refine``.
 
-The engine refuses to plan UI work even at a high score: shipping a
-backend stub for a UI ask is worse than a clean refusal with a
-pointer to the deferred R3 track. Cycles:
+The Phase 1 stub of the ``ui`` directive set is a routing-only
+shell: ``audit`` / ``design`` / ``apply`` / ``review`` / ``polish``
+land in later phases of ``agents/roadmaps/road-to-product-ui-track.md``.
+Until they ship, ``ui.refine`` halts with a clean ``BLOCKED``
+outcome carrying three numbered options (re-frame as backend, park,
+abort). No agent directive is emitted, so the recipe registers no
+callbacks; the runner stops with ``halt_unhandled:_no_directive``
+on cycle 1 and the locked transcript captures the rejection-surface
+bytes.
 
-1. refine-prompt halt        → recipe writes a clean, high-quality AC
-   list + assumptions back into ``state.input.data``.
-2. UI-intent BLOCKED halt    → engine surfaces the band-independent
-   refusal with three numbered options (re-frame / park / abort).
-   Like GT-P3, the recipe registers no ``_no_directive`` step, so the
-   runner stops with ``halt_unhandled:_no_directive`` and the locked
-   transcript captures the rejection surface bytes.
+Iron-law contract this capture pins:
 
-The capture locks the iron-law contract that ``ui_intent=True``
-overrides band routing — a high-band UI prompt still blocks here.
-The accompanying confidence breakdown on ``state.input.data`` shows
-the high score so the surface tells the truth: the gate scored fine,
-the *track* refused.
+- UI-shaped prompts route to ``directive_set="ui"`` even when the
+  prompt would score ``high`` on the rubric (the *track* refused,
+  not the score).
+- The refusal is a clean halt (exit 1), not a config-error exit
+  (exit 2). The kind gate must accept ``prompt`` for ``ui`` so the
+  routing decision surfaces in the halt body.
+- No rebound, no second cycle: the deferred-track refusal is the
+  terminal output until R3 Phase 2/3 wire real handlers.
 """
 from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
 
-from . import _helpers as h
-
 META = {
     "gt_id": "GT-P4",
     "prompt_relpath": "prompts/gt-p4-ui-rejection.txt",
     "persona": None,
-    "cycle_cap": 3,
+    "cycle_cap": 1,
 }
 
 
 def build_recipe(workspace: Path) -> dict[str, Any]:
-    """Resolve the refine-prompt rebound; let the UI-intent halt stop the run."""
+    """Return an empty recipe — no callback fires.
 
-    def on_refine_prompt(state: dict[str, Any], record) -> dict[str, Any]:
-        h.write_prompt_refinement(
-            state,
-            reconstructed_ac=[
-                "settings page must offer a dark mode toggle",
-                "choice should persist across sessions",
-                "when toggled the theme must update without reload",
-            ],
-            assumptions=[
-                "implementation lives in the settings UI module",
-                "no behaviour change to non-theme settings",
-            ],
-        )
-        record.recipe_notes.append(
-            "refine-prompt rebound: 3 AC + 2 assumptions (high-band UI prompt)",
-        )
-        return state
-
-    return {
-        "refine-prompt": on_refine_prompt,
-    }
+    The UI-rejection halt has no agent directive; the runner keys
+    on ``"_no_directive"``, finds no entry, and stops at the end of
+    cycle 1. The empty mapping is the entire recipe.
+    """
+    return {}
 
 
 __all__ = ["META", "build_recipe"]
