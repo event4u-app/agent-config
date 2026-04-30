@@ -71,8 +71,8 @@ RISIKO-CHECK:
 For each change:
 
 1. **Read the file** before modifying.
-2. **Make the change** using `str-replace-editor`.
-3. **Check for downstream effects** — use `codebase-retrieval` to find callers.
+2. **Make the change** with the file-edit tool available to the agent.
+3. **Check for downstream effects** — search the codebase for callers.
 4. **Update related code** if signatures or behavior changed.
 
 ### 4. Quality checks

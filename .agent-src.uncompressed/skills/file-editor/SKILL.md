@@ -8,6 +8,8 @@ execution:
   allowed_tools: []
 ---
 
+<!-- cloud_safe: noop -->
+
 # file-editor
 
 ## When to use
@@ -127,3 +129,10 @@ code app/Models/User.php
 - Do NOT prompt the user about IDE settings during normal work — suggest `/onboard` (for first-run) or editing `.agent-settings.yml` directly.
 - Do NOT open files that were only read, not edited.
 - Do NOT open more than 10 files at once — summarize instead.
+
+## Cloud Behavior
+
+On cloud surfaces (Claude.ai Web, Skills API) this skill is **fully inert** —
+there is no local IDE to open files in, no `.agent-settings.yml` to read, and
+no shell handler available. The cloud agent simply finishes its edits and
+reports back; file-opening is a local-agent concern.

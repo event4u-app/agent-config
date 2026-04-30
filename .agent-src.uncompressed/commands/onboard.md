@@ -5,6 +5,8 @@ skills: [file-editor]
 disable-model-invocation: true
 ---
 
+<!-- cloud_safe: noop -->
+
 # /onboard
 
 Centralized first-run flow. Bundles what used to be scattered "ask once"
@@ -162,6 +164,13 @@ you ask it to change a value.
   all steps again and rewrite the values the user confirms.
 - Never overwrite a non-empty value without asking (applies to `user_name`
   and `ide`).
+
+## Cloud Behavior
+
+On cloud surfaces (Claude.ai Web, Skills API) this command is **fully inert** —
+there is no `.agent-settings.yml` to write, no `onboarding.onboarded` key to
+flip, and no local IDE/rtk environment to capture. First-run setup is a
+local-agent concern; the cloud agent should proceed without invoking it.
 
 ## See also
 

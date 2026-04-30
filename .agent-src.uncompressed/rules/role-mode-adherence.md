@@ -42,7 +42,7 @@ When active, every closing output MUST:
 
 ## What this rule does NOT do
 
-Infer the mode (Phase-3 router does that). Modify `.agent-settings.yml`
+Infer the mode (Phase-3 router does that). Touch `.agent-settings.yml`
 (only `/mode` writes). Change the contracts (guideline is source of truth).
 
 ## See also

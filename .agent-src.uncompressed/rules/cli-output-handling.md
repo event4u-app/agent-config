@@ -36,7 +36,7 @@ the `rtk-output-filtering` skill.
 
 ### Use what you already have
 
-- Edited a file → `str-replace-editor` showed the result. Skip re-reading.
+- Edited a file → the edit tool already returned the result. Skip re-reading.
 - Ran a command → you have the output. Skip re-running to "verify".
 - File in context from recent messages → skip reloading.
 - Found a symbol → use it. Skip searching again differently.
