@@ -219,3 +219,49 @@ def test_dispatch_does_not_skip_steps_marked_blocked_or_partial() -> None:
 
     assert calls == ["refine"]
     assert state.outcomes["refine"] == "success"
+
+
+
+# --- ui directive set rejection (R3 Phase 2 Step 5) -------------------------
+#
+# Defense-in-depth golden: when a caller skips the audit and runs the
+# UI directive set with no ``state.ui_audit``, the dispatcher must
+# halt at ``refine`` (the audit handler), not silently pass through to
+# ``analyze`` and start writing components. Pairs with the rule-layer
+# enforcement in ``.agent-src.uncompressed/rules/ui-audit-before-build.md``.
+
+
+def test_dispatch_ui_set_halts_on_refine_when_audit_skipped() -> None:
+    """Real UI step map: missing ``state.ui_audit`` blocks at refine."""
+    from work_engine.dispatcher import (  # noqa: PLC0415 — local keeps top scope clean
+        load_directive_set,
+    )
+
+    steps = dict(load_directive_set("ui"))
+    state = _state()
+    # No state.ui_audit assignment — the audit gate must catch this.
+
+    final, halting_step = dispatch(state, steps)
+
+    assert final is Outcome.BLOCKED
+    assert halting_step == "refine"
+    assert state.outcomes == {"refine": "blocked"}
+    body = "\n".join(state.questions)
+    assert "existing-ui-audit" in body
+    # No later step may have run.
+    for downstream in ("memory", "analyze", "implement", "test", "verify", "report"):
+        assert downstream not in state.outcomes
+
+
+def test_dispatch_ui_set_halts_on_refine_when_audit_findings_empty() -> None:
+    """An empty dict counts as 'audit has not run' — same halt as None."""
+    from work_engine.dispatcher import load_directive_set  # noqa: PLC0415
+
+    steps = dict(load_directive_set("ui"))
+    state = _state()
+    state.ui_audit = {}  # type: ignore[attr-defined]
+
+    final, halting_step = dispatch(state, steps)
+
+    assert final is Outcome.BLOCKED
+    assert halting_step == "refine"
