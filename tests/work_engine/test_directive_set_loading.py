@@ -11,13 +11,17 @@ route between multiple directive bundles (``backend``, future ``ui``,
 - ``load_directive_set("backend")`` returns the canonical
   ``{step_name: handler}`` mapping the dispatcher walks (every entry in
   ``STEP_ORDER`` present);
-- the still-unimplemented sets (``ui-trivial``, ``mixed``) raise
-  ``NotImplementedError`` from their ``get_steps()`` so the failure point
-  is the loader, not a half-walked dispatch loop;
+- the still-unimplemented set (``mixed``) raises ``NotImplementedError``
+  from its ``get_steps()`` so the failure point is the loader, not a
+  half-walked dispatch loop;
 - ``ui`` is a Phase 1 routing-stub (R3) — ``get_steps()`` returns a step
   mapping whose ``refine`` handler emits a clean ``BLOCKED`` halt
   pointing at the deferred audit/design/apply track, and the set
   declares ``SUPPORTED_KINDS`` for every UI-classifiable input shape;
+- ``ui-trivial`` is the R3 Phase 2 Step 6 short-circuit set —
+  ``get_steps()`` returns a complete eight-step mapping whose
+  ``implement`` slot enforces the trivial-edit hard preconditions and
+  reclassifies to ``ui-improve`` on violation;
 - unknown set names and malformed ``directive_set`` values raise
   ``ValueError`` immediately rather than producing surprising behavior.
 """
@@ -76,15 +80,16 @@ def test_load_backend_returns_full_step_mapping() -> None:
         )
 
 
-@pytest.mark.parametrize("set_name", ["ui-trivial", "mixed"])
-def test_load_unimplemented_sets_raise(set_name: str) -> None:
-    """``ui-trivial`` and ``mixed`` are still Phase 2/4 work in R3.
+def test_load_unimplemented_mixed_raises() -> None:
+    """``mixed`` is still Phase 4 work in R3.
 
     ``ui`` was promoted to a Phase 1 routing-stub by R3 Phase 1 — see
-    :func:`test_load_ui_returns_phase1_stub_steps`.
+    :func:`test_load_ui_returns_phase1_stub_steps`. ``ui-trivial`` was
+    promoted to a complete directive set by R3 Phase 2 Step 6 — see
+    :func:`test_load_ui_trivial_returns_full_step_mapping`.
     """
     with pytest.raises(NotImplementedError, match="not implemented in R1"):
-        load_directive_set(set_name)
+        load_directive_set("mixed")
 
 
 def test_load_ui_returns_phase1_stub_steps() -> None:
@@ -102,18 +107,39 @@ def test_load_ui_returns_phase1_stub_steps() -> None:
         )
 
 
+def test_load_ui_trivial_returns_full_step_mapping() -> None:
+    """R3 Phase 2 Step 6: ``ui-trivial.get_steps()`` returns the full mapping.
+
+    The trivial path fills all eight slots: ``refine`` gates the intent,
+    ``implement`` enforces the hard preconditions and reclassifies on
+    violation, ``test`` delegates to a smoke run, ``report`` renders the
+    one-line summary; the four bypassed slots delegate to a no-op
+    handler that returns ``SUCCESS`` without touching state.
+    """
+    steps = load_directive_set("ui-trivial")
+    assert set(steps.keys()) == set(STEP_ORDER)
+    for name, handler in steps.items():
+        assert callable(handler), (
+            f"handler for {name!r} must be callable per the Step protocol"
+        )
+
+
 def test_load_rejects_unknown_set_name() -> None:
     with pytest.raises(ValueError, match="unknown directive_set"):
         load_directive_set("not-a-real-set")
 
 
 def test_load_translates_hyphenated_wire_name_to_underscore_package() -> None:
-    """``ui-trivial`` (schema) maps to ``ui_trivial`` (Python module)."""
-    # The loader translates correctly even though the underlying module
-    # raises NotImplementedError; we expect that exception type, not
-    # ModuleNotFoundError, which would mean the translation broke.
-    with pytest.raises(NotImplementedError):
-        load_directive_set("ui-trivial")
+    """``ui-trivial`` (schema) maps to ``ui_trivial`` (Python module).
+
+    R3 Phase 2 Step 6 promoted ``ui-trivial`` from raise-stub to a
+    complete directive set, so the loader now returns a real step
+    mapping rather than raising — the assertion is that the wire-form
+    name resolves to the underscore-named Python package without a
+    ``ModuleNotFoundError`` (which would mean the translation broke).
+    """
+    steps = load_directive_set("ui-trivial")
+    assert set(steps.keys()) == set(STEP_ORDER)
 
 
 def test_assert_kind_supported_accepts_backend_ticket() -> None:
@@ -143,17 +169,18 @@ def test_assert_kind_supported_rejects_unknown_set_name() -> None:
         assert_kind_supported("ticket", "not-a-real-set")
 
 
-@pytest.mark.parametrize("set_name", ["ui-trivial", "mixed"])
-def test_assert_kind_supported_rejects_stub_sets(set_name: str) -> None:
-    """``ui-trivial`` and ``mixed`` declare no ``SUPPORTED_KINDS``, so
-    every kind is unsupported. The dispatcher halts here rather than
-    advancing to ``load_directive_set`` and the stub's NotImplementedError.
+def test_assert_kind_supported_rejects_mixed_stub() -> None:
+    """``mixed`` declares no ``SUPPORTED_KINDS``, so every kind is
+    unsupported. The dispatcher halts here rather than advancing to
+    ``load_directive_set`` and the stub's NotImplementedError.
 
     ``ui`` is no longer a raise-stub — see
     :func:`test_assert_kind_supported_accepts_ui_phase1_kinds`.
+    ``ui-trivial`` is no longer a raise-stub — see
+    :func:`test_assert_kind_supported_accepts_ui_trivial_kinds`.
     """
     with pytest.raises(NotImplementedError, match="does not handle input.kind"):
-        assert_kind_supported("ticket", set_name)
+        assert_kind_supported("ticket", "mixed")
 
 
 @pytest.mark.parametrize("kind", ["ticket", "prompt", "diff", "file"])
@@ -165,3 +192,15 @@ def test_assert_kind_supported_accepts_ui_phase1_kinds(kind: str) -> None:
     surfaces in the halt, not in a config-error exit.
     """
     assert assert_kind_supported(kind, "ui") is None
+
+
+@pytest.mark.parametrize("kind", ["ticket", "prompt", "diff", "file"])
+def test_assert_kind_supported_accepts_ui_trivial_kinds(kind: str) -> None:
+    """R3 Phase 2 Step 6: ``ui-trivial`` accepts every UI-classifiable kind.
+
+    The trivial set inherits the same kind tuple as the full ``ui``
+    set; the Phase 1 intent classifier reaches ``ui-trivial`` from any
+    of the four input kinds and the trivial path's safety floor lives
+    at ``implement``, not at the kind gate.
+    """
+    assert assert_kind_supported(kind, "ui-trivial") is None
