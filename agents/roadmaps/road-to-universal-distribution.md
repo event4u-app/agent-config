@@ -121,21 +121,21 @@ T3-S is the **manageable** tier — 37 files mention scripts, but the underlying
 > Linear's guidance fields take Markdown only. Build a curated concatenation of cloud-safe rules into a single file the user pastes into Workspace / Team / Personal guidance.
 
 - [x] **Step 1:** Define the inclusion list — every T1 rule + every T2 rule whose substance survives without filesystem (e.g. `scope-control` ✅, `language-and-tone` ✅, `chat-history` ❌, `cli-output-handling` ⚠️ partial). Capture the decision per rule in [`agents/contexts/linear-ai-rules-inclusion.md`](../contexts/linear-ai-rules-inclusion.md).
-- [ ] **Step 2:** Build `scripts/build_linear_digest.py` — concatenates included rules with section headers; strips file references that won't resolve outside the repo (replace with footnote pointers); emits `dist/linear/{workspace,team,personal}.md`
-- [ ] **Step 3:** Decide the three-layer split — workspace = universal coding posture, team = framework-specific (Laravel, etc.), personal = empty by default. Document in `agents/contexts/linear-ai-three-layers.md`.
-- [ ] **Step 4:** Pytest: round-trip a fixture rule set, verify no broken `[link](path)` survives, verify the digest stays under Linear's per-field char limit (research the actual cap and write it into the test as a constant)
-- [ ] **Step 5:** Manual smoke — paste the workspace digest into a Linear workspace, ask the linked agent (Codegen or Charlie) to do something the rules govern (e.g. "fix this bug — must run quality checks first"), capture whether the rule fired
-- [ ] **Step 6:** Document the install path in `README.md` (Linear AI section): "Copy `dist/linear/workspace.md`, paste into Settings → Agents → Additional guidance (workspace)"
+- [x] **Step 2:** Build `scripts/build_linear_digest.py` — concatenates included rules with section headers; strips file references that won't resolve outside the repo (replace with footnote pointers); emits `dist/linear/{workspace,team,personal}.md`
+- [x] **Step 3:** Decide the three-layer split — workspace = universal coding posture, team = framework-specific (Laravel, etc.), personal = empty by default. Document in [`agents/contexts/linear-ai-three-layers.md`](../contexts/linear-ai-three-layers.md).
+- [x] **Step 4:** Pytest: round-trip a fixture rule set, verify no broken `[link](path)` survives, verify the digest stays under Linear's per-field char limit (research the actual cap and write it into the test as a constant). Implemented as `tests/test_build_linear_digest.py` (12 tests). Linear's hard cap is unpublished; the test pins a 100 KB conservative ceiling — see Open Question #1.
+- [~] **Step 5:** Manual smoke — paste the workspace digest into a Linear workspace, ask the linked agent (Codegen or Charlie) to do something the rules govern (e.g. "fix this bug — must run quality checks first"), capture whether the rule fired
+- [x] **Step 6:** Document the install path in `README.md` (Linear AI section): "Copy `dist/linear/workspace.md`, paste into Settings → Agents → Additional guidance (workspace)"
 
 ## Phase 4: Cloud-Aware Documentation Pass
 
 > Many T2 skills and rules have prose that assumes filesystem access. The substance is fine, but the verbs are wrong on cloud. One pass to rewrite these in cloud-portable language: "the agent reads the file" stays as is; "the agent edits the file" becomes "the agent emits the new file contents; the user copies them into place".
 
-- [ ] **Step 1:** Tag all 108 T2 artefacts with cloud-action category (`reads-only` / `edits` / `runs-task` / `mixed`) using a mini-extension to the audit script
-- [ ] **Step 2:** For `edits` and `runs-task` categories, rewrite the procedure section so the cloud-degraded variant is implicit. Goal: same prose works on local and cloud — no fork.
-- [ ] **Step 3:** Add a one-line `> Cloud note:` callout at the top of each affected SKILL/rule, generated automatically by the bundle builder if needed
-- [ ] **Step 4:** Re-run linter + portability + reply-consistency checks; nothing should break
-- [ ] **Step 5:** Spot-check 10 random T2 skills on Claude.ai Web — does the cloud-degraded reading still produce the right behavior?
+- [x] **Step 1:** Tag all T2 artefacts with cloud-action category (`reads-only` / `edits` / `runs-task` / `mixed`) using a mini-extension to the audit script — implemented in `scripts/audit_cloud_compatibility.py` as `cloud_action` per row + `by_cloud_action` aggregate. Narrowed in a second pass (Phase-4 Step-1 second pass) to match only agent-directed imperatives, dropping false positives from inline backtick CLI and ```bash example blocks
+- [x] **Step 2:** For `edits` and `runs-task` categories, rewrite the procedure section so the cloud-degraded variant is implicit. Goal: same prose works on local and cloud — no fork. Narrow rewrite landed: 5 filesystem-bound artefacts marked `cloud_safe: noop` with a `## Cloud Behavior` section (`skills/file-editor`, `commands/onboard`, `commands/set-cost-profile`, `commands/sync-agent-settings`, `commands/optimize-augmentignore`); 3 wording fixes neutralised tool-specific verbs in `commands/bug-fix`, `rules/cli-output-handling`, `rules/role-mode-adherence`. Audit shows 0 unmarked flagged artefacts
+- [x] **Step 3:** Add a one-line `> Cloud note:` callout at the top of each affected SKILL/rule, generated automatically by the bundle builder if needed — `scripts/build_cloud_bundle.py` injects `SANDBOX_NOTE` block-quote at bundle build time and uses `NOOP_BODY_FALLBACK` for `cloud_safe: noop` artefacts. Source files stay clean
+- [x] **Step 4:** Re-run linter + portability + reply-consistency checks; nothing should break — `task sync` ✅ · `python3 scripts/check_references.py` ✅ · `python3 scripts/check_portability.py` ✅ · `python3 scripts/skill_linter.py --all` 185 pass, 117 warn, 0 fail
+- [~] **Step 5:** Spot-check 10 random T2 skills on Claude.ai Web — does the cloud-degraded reading still produce the right behavior? Deferred to manual smoke (same shape as Phase 2 Step 7); the final acceptance check in this roadmap re-runs the audit after sibling roadmaps archive, then schedules the spot-check together with the other deferred manual smokes
 
 ## Phase 5: Distribution Channels & Install Paths
 
@@ -166,6 +166,7 @@ T3-S is the **manageable** tier — 37 files mention scripts, but the underlying
 - [ ] `README.md` documents all four install paths
 - [ ] `task ci` enforces the cloud invariants (description budget, T3-H gating, broken-link absence in the Linear digest)
 - [ ] All package quality gates still pass: `task sync-check`, `task check-refs`, `task check-portability`, `task lint-skills`, `task check-reply-consistency`, `task test`
+- [ ] **Final re-check after sibling roadmaps archived** — re-run `python3 scripts/audit_cloud_compatibility.py` once `road-to-context-aware-command-suggestion`, `road-to-product-ui-track`, `road-to-artifact-engagement-telemetry`, and `road-to-visual-review-loop` are all archived; if new/changed skills introduced cloud-unfriendly prose, fix before closing this roadmap
 
 ## Open Questions / Decisions Required
 
@@ -180,3 +181,4 @@ T3-S is the **manageable** tier — 37 files mention scripts, but the underlying
 - The audit script (`scripts/audit_cloud_compatibility.py`) is permanent — re-run before every cloud-bundle release to catch regressions.
 - chat-history's "noop on cloud" is the cleanest hard-dep resolution we have. Other potential hard deps in future skills should aim for the same shape: declare cloud-inertness, don't ship a half-broken variant.
 - All work runs on the current branch (`feat/intent-based-development-thinking`) unless the user explicitly requests a separate branch. No mid-roadmap branch switches.
+- **Hold-open until sibling roadmaps drain.** This roadmap stays *not archived* even after all phases here are checked off. Reason: phases 4 and 6 audit/validate the *final* skill+rule set; sibling roadmaps that touch skills/rules (`road-to-context-aware-command-suggestion`, `road-to-product-ui-track`) will reshape the surface that phase 4 sanitises and phase 6 measures. The final acceptance check above re-runs the cloud-action audit after they archive — if new or changed artefacts introduced cloud-unfriendly prose since this roadmap's phase 4 ran, fix-then-close. Only after that re-check passes does this roadmap move to `agents/roadmaps/archive/`.
