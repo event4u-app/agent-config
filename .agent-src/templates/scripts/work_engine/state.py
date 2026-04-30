@@ -123,6 +123,7 @@ class WorkState:
     directive_set: str = DEFAULT_DIRECTIVE_SET
     stack: dict[str, Any] | None = None
     ui_audit: dict[str, Any] | None = None
+    ui_design: dict[str, Any] | None = None
     version: int = SCHEMA_VERSION
     persona: str = "senior-engineer"
     memory: list[dict[str, Any]] = field(default_factory=list)
@@ -152,6 +153,7 @@ def to_dict(state: WorkState) -> dict[str, Any]:
         )
     _validate_stack(state.stack)
     _validate_ui_audit(state.ui_audit)
+    _validate_ui_design(state.ui_design)
     return {
         "version": state.version,
         "input": {"kind": state.input.kind, "data": state.input.data},
@@ -159,6 +161,7 @@ def to_dict(state: WorkState) -> dict[str, Any]:
         "directive_set": state.directive_set,
         "stack": state.stack,
         "ui_audit": state.ui_audit,
+        "ui_design": state.ui_design,
         "persona": state.persona,
         "memory": state.memory,
         "plan": state.plan,
@@ -214,12 +217,16 @@ def from_dict(payload: Any) -> WorkState:
     ui_audit = payload.get("ui_audit")
     _validate_ui_audit(ui_audit)
 
+    ui_design = payload.get("ui_design")
+    _validate_ui_design(ui_design)
+
     return WorkState(
         input=Input(kind=kind, data=data),
         intent=payload.get("intent", DEFAULT_INTENT),
         directive_set=directive_set,
         stack=dict(stack) if isinstance(stack, dict) else None,
         ui_audit=dict(ui_audit) if isinstance(ui_audit, dict) else None,
+        ui_design=dict(ui_design) if isinstance(ui_design, dict) else None,
         version=version,
         persona=payload.get("persona", "senior-engineer"),
         memory=list(payload.get("memory", [])),
@@ -340,6 +347,34 @@ def _validate_ui_audit(ui_audit: Any) -> None:
             f"state.ui_audit.greenfield_decision must be one of "
             f"'scaffold', 'bare', 'external_reference', or null; "
             f"got {decision!r}",
+        )
+
+
+def _validate_ui_design(ui_design: Any) -> None:
+    """Reject malformed ``ui_design`` envelopes; tolerate ``None`` and ``{}``.
+
+    ``None`` means the design step has not produced a brief yet — the
+    dispatcher's design gate (``directives.ui.design``) emits the
+    agent-directive that populates it. An empty dict is the in-progress
+    shape after the skill returns but before the brief lands; the gate
+    treats it the same as ``None``. Once populated, ``design_confirmed``
+    (when present) must be a bool. Other keys (``layout``, ``components``,
+    ``states``, ``microcopy``, ``a11y``, ``reused_from_audit``) are
+    validated by the design handler against the skill contract — the
+    schema only enforces shape, not content.
+    """
+    if ui_design is None:
+        return
+    if not isinstance(ui_design, dict):
+        raise SchemaError(
+            f"state.ui_design must be a JSON object or null; "
+            f"got {type(ui_design).__name__}",
+        )
+    if "design_confirmed" in ui_design and not isinstance(
+        ui_design["design_confirmed"], bool,
+    ):
+        raise SchemaError(
+            "state.ui_design.design_confirmed must be a boolean when present",
         )
 
 

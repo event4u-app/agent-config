@@ -24,6 +24,19 @@ The wire format adds five envelope fields on top of the legacy
   pick. The audit gate (:mod:`work_engine.directives.ui.audit`)
   refuses to advance to design/apply while the slot is empty or
   while ``greenfield`` is set without a recorded decision.
+- ``ui_design`` — optional design brief produced by
+  :mod:`work_engine.directives.ui.design` (R3 Phase 3 Step 1). Locks
+  layout / components / states / microcopy / a11y; ``design_confirmed``
+  carries the user's sign-off.
+- ``ui_review`` — optional review-pass output written by
+  :mod:`work_engine.directives.ui.review` (R3 Phase 3 Step 4). Carries
+  the design-review findings list and a ``review_clean`` flag set when
+  no findings remain.
+- ``ui_polish`` — optional polish-pass log written by
+  :mod:`work_engine.directives.ui.polish` (R3 Phase 3 Step 5). Tracks
+  the round counter (``rounds`` ≤ 2 ceiling) and the per-round
+  applied-fix list so a re-entry knows whether the loop has been
+  exhausted.
 
 All other fields keep their v0 names so the dispatcher can read the
 legacy slice unchanged once Phase 3 wires the steps over.
@@ -123,6 +136,9 @@ class WorkState:
     directive_set: str = DEFAULT_DIRECTIVE_SET
     stack: dict[str, Any] | None = None
     ui_audit: dict[str, Any] | None = None
+    ui_design: dict[str, Any] | None = None
+    ui_review: dict[str, Any] | None = None
+    ui_polish: dict[str, Any] | None = None
     version: int = SCHEMA_VERSION
     persona: str = "senior-engineer"
     memory: list[dict[str, Any]] = field(default_factory=list)
@@ -152,6 +168,9 @@ def to_dict(state: WorkState) -> dict[str, Any]:
         )
     _validate_stack(state.stack)
     _validate_ui_audit(state.ui_audit)
+    _validate_ui_design(state.ui_design)
+    _validate_ui_review(state.ui_review)
+    _validate_ui_polish(state.ui_polish)
     return {
         "version": state.version,
         "input": {"kind": state.input.kind, "data": state.input.data},
@@ -159,6 +178,9 @@ def to_dict(state: WorkState) -> dict[str, Any]:
         "directive_set": state.directive_set,
         "stack": state.stack,
         "ui_audit": state.ui_audit,
+        "ui_design": state.ui_design,
+        "ui_review": state.ui_review,
+        "ui_polish": state.ui_polish,
         "persona": state.persona,
         "memory": state.memory,
         "plan": state.plan,
@@ -214,12 +236,24 @@ def from_dict(payload: Any) -> WorkState:
     ui_audit = payload.get("ui_audit")
     _validate_ui_audit(ui_audit)
 
+    ui_design = payload.get("ui_design")
+    _validate_ui_design(ui_design)
+
+    ui_review = payload.get("ui_review")
+    _validate_ui_review(ui_review)
+
+    ui_polish = payload.get("ui_polish")
+    _validate_ui_polish(ui_polish)
+
     return WorkState(
         input=Input(kind=kind, data=data),
         intent=payload.get("intent", DEFAULT_INTENT),
         directive_set=directive_set,
         stack=dict(stack) if isinstance(stack, dict) else None,
         ui_audit=dict(ui_audit) if isinstance(ui_audit, dict) else None,
+        ui_design=dict(ui_design) if isinstance(ui_design, dict) else None,
+        ui_review=dict(ui_review) if isinstance(ui_review, dict) else None,
+        ui_polish=dict(ui_polish) if isinstance(ui_polish, dict) else None,
         version=version,
         persona=payload.get("persona", "senior-engineer"),
         memory=list(payload.get("memory", [])),
@@ -340,6 +374,98 @@ def _validate_ui_audit(ui_audit: Any) -> None:
             f"state.ui_audit.greenfield_decision must be one of "
             f"'scaffold', 'bare', 'external_reference', or null; "
             f"got {decision!r}",
+        )
+
+
+def _validate_ui_design(ui_design: Any) -> None:
+    """Reject malformed ``ui_design`` envelopes; tolerate ``None`` and ``{}``.
+
+    ``None`` means the design step has not produced a brief yet — the
+    dispatcher's design gate (``directives.ui.design``) emits the
+    agent-directive that populates it. An empty dict is the in-progress
+    shape after the skill returns but before the brief lands; the gate
+    treats it the same as ``None``. Once populated, ``design_confirmed``
+    (when present) must be a bool. Other keys (``layout``, ``components``,
+    ``states``, ``microcopy``, ``a11y``, ``reused_from_audit``) are
+    validated by the design handler against the skill contract — the
+    schema only enforces shape, not content.
+    """
+    if ui_design is None:
+        return
+    if not isinstance(ui_design, dict):
+        raise SchemaError(
+            f"state.ui_design must be a JSON object or null; "
+            f"got {type(ui_design).__name__}",
+        )
+    if "design_confirmed" in ui_design and not isinstance(
+        ui_design["design_confirmed"], bool,
+    ):
+        raise SchemaError(
+            "state.ui_design.design_confirmed must be a boolean when present",
+        )
+
+
+def _validate_ui_review(ui_review: Any) -> None:
+    """Reject malformed ``ui_review`` envelopes; tolerate ``None`` and ``{}``.
+
+    ``None`` means the review pass has not run yet — the dispatcher's
+    review gate (``directives.ui.review``) emits the agent-directive
+    that populates it. An empty dict is the in-progress shape after
+    the skill returns but before findings land. Once populated,
+    ``findings`` (when present) must be a list and ``review_clean``
+    (when present) must be a bool. Field content (severity labels,
+    fix suggestions) is validated by the review handler; the schema
+    enforces only shape.
+    """
+    if ui_review is None:
+        return
+    if not isinstance(ui_review, dict):
+        raise SchemaError(
+            f"state.ui_review must be a JSON object or null; "
+            f"got {type(ui_review).__name__}",
+        )
+    if "findings" in ui_review and not isinstance(ui_review["findings"], list):
+        raise SchemaError(
+            "state.ui_review.findings must be a list when present",
+        )
+    if "review_clean" in ui_review and not isinstance(
+        ui_review["review_clean"], bool,
+    ):
+        raise SchemaError(
+            "state.ui_review.review_clean must be a boolean when present",
+        )
+
+
+def _validate_ui_polish(ui_polish: Any) -> None:
+    """Reject malformed ``ui_polish`` envelopes; tolerate ``None`` and ``{}``.
+
+    ``None`` means the polish loop has not entered yet. Once
+    populated, ``rounds`` (when present) must be an int in ``[0, 2]``
+    — the polish-loop ceiling defined in
+    ``agents/roadmaps/road-to-product-ui-track.md`` Phase 3 Step 5.
+    ``applied`` (when present) must be a list. The polish handler
+    enforces ceiling semantics; the schema enforces only shape.
+    """
+    if ui_polish is None:
+        return
+    if not isinstance(ui_polish, dict):
+        raise SchemaError(
+            f"state.ui_polish must be a JSON object or null; "
+            f"got {type(ui_polish).__name__}",
+        )
+    if "rounds" in ui_polish:
+        rounds = ui_polish["rounds"]
+        if not isinstance(rounds, int) or isinstance(rounds, bool):
+            raise SchemaError(
+                f"state.ui_polish.rounds must be an integer; got {type(rounds).__name__}",
+            )
+        if rounds < 0 or rounds > 2:
+            raise SchemaError(
+                f"state.ui_polish.rounds must be in [0, 2]; got {rounds}",
+            )
+    if "applied" in ui_polish and not isinstance(ui_polish["applied"], list):
+        raise SchemaError(
+            "state.ui_polish.applied must be a list when present",
         )
 
 

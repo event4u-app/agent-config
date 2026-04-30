@@ -76,6 +76,7 @@ class DeliveryState:
     questions: list[str] = field(default_factory=list)
     report: str = ""
     ui_audit: dict[str, Any] | None = None
+    ui_design: dict[str, Any] | None = None
 
 
 Step = Callable[[DeliveryState], StepResult]
