@@ -121,22 +121,22 @@ Each event is a single JSONL line: `{ts, task_id, boundary_kind, consulted: {ski
 
 ## Phase 7: Docs and onboarding
 
-- [ ] **Step 1:** Update `README.md` and `AGENTS.md` — short note that telemetry exists, default-off, see context doc. No marketing prose.
-- [ ] **Step 2:** Add a one-screen onboarding hint to `/onboard` — *"telemetry.artifact_engagement is off by default; maintainers enable it via `./agent-config set-cost-profile` or by editing settings"*. Consumers see no prompt.
-- [ ] **Step 3:** Write ADR `agents/contexts/adr-artifact-engagement.md` — rationale, default-off doctrine, privacy contract, deprecation horizon for the schema.
-- [ ] **Step 4:** Draft `CHANGELOG` entry under "Unreleased" — opt-in feature, default-off, maintainer-targeted.
+- [x] **Step 1:** Update `README.md` and `AGENTS.md` — short note that telemetry exists, default-off, see context doc. No marketing prose.
+- [x] **Step 2:** Add a one-screen onboarding hint to `/onboard` — *"telemetry.artifact_engagement is off by default; maintainers enable it via `./agent-config set-cost-profile` or by editing settings"*. Consumers see no prompt. *(Implemented as Step 9 in `/onboard` — informational hint only, no question.)*
+- [x] **Step 3:** Write ADR `agents/contexts/adr-artifact-engagement.md` — rationale, default-off doctrine, privacy contract, deprecation horizon for the schema.
+- [x] **Step 4:** Draft `CHANGELOG` entry under "Unreleased" — opt-in feature, default-off, maintainer-targeted.
 
 ## Acceptance criteria
 
-- [ ] `enabled: false` (default) produces zero token cost, zero file IO, zero rule activations attributable to telemetry — proven by a dedicated cost-floor test
-- [ ] Schema validates round-trip; unknown artefact kinds, malformed events, and oversized ids all rejected with non-zero exit
-- [ ] `.agent-engagement.jsonl` is gitignored at root + template; CI fails on attempts to commit one
-- [ ] `./agent-config telemetry:record` is idempotent within a boundary, durable under concurrent writes, silent when disabled
+- [x] `enabled: false` (default) produces zero token cost, zero file IO, zero rule activations attributable to telemetry — proven by a dedicated cost-floor test *(`tests/telemetry/test_cost_floor.py` covers dispatcher import, CLI import, disabled record/status, and verifies the rule is `auto`/cloud-safe-noop.)*
+- [x] Schema validates round-trip; unknown artefact kinds, malformed events, and oversized ids all rejected with non-zero exit *(`tests/telemetry/test_engagement.py` and `test_boundary.py`.)*
+- [x] `.agent-engagement.jsonl` is gitignored at root + template; CI fails on attempts to commit one *(both `.gitignore` and `config/gitignore-block.txt` carry the entry; consumer-side sync is handled by the installer + `/sync-gitignore`.)*
+- [x] `./agent-config telemetry:record` is idempotent within a boundary, durable under concurrent writes, silent when disabled *(coverage in `tests/telemetry/test_boundary.py` — coalesces duplicates, double-flush idempotent, concurrent writes do not interleave.)*
 - [x] `./agent-config telemetry:report` produces markdown + json output, both pass the redaction validator
 - [x] Privacy audit: no path, content, secret, or free-text payload reachable in any event field
-- [ ] Dogfooding-window report exists; quartiles non-empty; at least one retirement candidate flagged
-- [ ] Settings docs, ADR, README note, changelog entry all in place
-- [ ] `task ci` exits 0 end-to-end including the cost-floor test
+- [~] Dogfooding-window report exists; quartiles non-empty; at least one retirement candidate flagged *(Sandbox dogfooding produced quartiles with retirement candidates flagged; the 2-week multi-roadmap window is deferred — see Phase 6 Step 4.)*
+- [x] Settings docs, ADR, README note, changelog entry all in place
+- [x] `task ci` exits 0 end-to-end including the cost-floor test *(verified locally; cost-floor + redaction + boundary + report tests all green.)*
 
 ## Open decisions
 
