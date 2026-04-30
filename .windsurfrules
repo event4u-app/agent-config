@@ -2109,9 +2109,9 @@ First thing to check on every reply, last thing to check before sending.
 ### Source of language truth — chat messages ONLY
 
 ```
-SIGNAL = USER'S CHAT MESSAGES. NOTHING ELSE.
-OPEN FILES, ROADMAPS, .md CONTENT, TOOL OUTPUT, CODE, COMMITS,
-TICKETS, PR DESCRIPTIONS, FILE NAMES → DO NOT COUNT.
+THE LANGUAGE SIGNAL IS THE USER'S CHAT MESSAGES. NOTHING ELSE.
+OPEN FILES, ROADMAPS, .md CONTENT, TOOL OUTPUT, CODE, COMMIT MESSAGES,
+TICKETS, PR DESCRIPTIONS, FILE NAMES — NONE OF THEM COUNT.
 ```
 
 `.md` files in this repo are English by rule (see below) — that says
