@@ -2,10 +2,21 @@ version: '3'
 
 tasks:
   sync:
-    desc: Sync .agent-src.uncompressed/ → .agent-src/, then project → .augment/, then refresh doc counts
+    desc: Sync .agent-src.uncompressed/ → .agent-src/, then project → .augment/, then refresh doc counts and local agent-settings
     cmds:
       - bash scripts/compress.sh --sync
       - python3 scripts/update_counts.py
+      - task: sync-agent-settings
+
+  sync-agent-settings:
+    desc: Reconcile local .agent-settings.yml with the canonical template (skipped on fresh clones)
+    cmds:
+      - |
+        if [ -f .agent-settings.yml ]; then
+          python3 scripts/sync_agent_settings.py --quiet
+        else
+          echo "ℹ️  .agent-settings.yml absent — skipping sync (run scripts/install.py for first-run setup)"
+        fi
 
   project-augment:
     desc: Rebuild the .augment/ projection from .agent-src/ (copies rules, symlinks rest)
