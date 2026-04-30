@@ -3,6 +3,10 @@ name: module-create
 skills: [laravel]
 description: Create a new module from .module-template with interactive setup
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "create a new module, scaffold a module for X"
+  trigger_context: "prompt mentions a new domain area without an existing module"
 ---
 
 # module-create

@@ -3,6 +3,9 @@ name: onboard
 description: First-run setup for a developer on this project — captures name, IDE, bot-icon preference, rtk, cost_profile, and learning opt-out, then sets onboarding.onboarded=true
 skills: [file-editor]
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Gated by the onboarding-gate rule already; never inferred from prose."
 ---
 
 # /onboard

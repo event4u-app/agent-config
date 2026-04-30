@@ -3,6 +3,10 @@ name: override-manage
 description: Reviews, updates, and refactors existing project-level overrides.
 skills: [override-management, agent-docs-writing]
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "review my overrides, update the project overrides"
+  trigger_context: "existing entries under agents/overrides/"
 ---
 
 # /override-manage

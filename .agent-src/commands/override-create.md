@@ -3,6 +3,10 @@ name: override-create
 description: Creates a project-level override for a shared skill, rule, or command.
 skills: [override-management, agent-docs-writing]
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "override this skill for the project, customize this rule locally"
+  trigger_context: "prompt names a shared skill/rule needing project-specific behavior"
 ---
 
 # /override-create

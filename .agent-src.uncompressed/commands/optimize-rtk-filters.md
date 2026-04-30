@@ -3,6 +3,9 @@ name: optimize-rtk-filters
 skills: [agent-docs-writing]
 description: Create or optimize project-local rtk filters based on the actual toolchain
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Niche maintenance tool with no recurring NL trigger."
 ---
 
 # optimize-rtk-filters

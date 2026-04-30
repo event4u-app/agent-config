@@ -3,6 +3,10 @@ name: tests-create
 skills: [pest-testing]
 description: Write meaningful tests for the changes in the current branch
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "write tests for these changes, add tests for this branch"
+  trigger_context: "code changes on the branch without matching test changes"
 ---
 
 # tests-create

@@ -3,6 +3,10 @@ name: fix-pr-developer-comments
 skills: [php-coder]
 description: Fix and reply to human reviewer comments on a GitHub PR
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "fix the human reviewer comments, address the developer feedback"
+  trigger_context: "open PR with unresolved human-reviewer comments"
 ---
 
 # fix-pr-developer-comments

@@ -3,6 +3,9 @@ name: judge
 skills: [subagent-orchestration]
 description: Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Sibling of /review-changes — eligibility routed there; keep this explicit."
 ---
 
 # judge

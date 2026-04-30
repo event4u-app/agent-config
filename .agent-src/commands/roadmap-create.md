@@ -3,6 +3,10 @@ name: roadmap-create
 skills: [agent-docs-writing]
 description: Interactively create a new roadmap file in agents/roadmaps/
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "create a roadmap for X, plan this work as a roadmap"
+  trigger_context: "multi-phase work without an existing agents/roadmaps/*.md"
 ---
 
 # roadmap-create

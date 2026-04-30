@@ -2,6 +2,9 @@
 name: chat-history
 description: Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Status display only; no NL trigger distinct from 'show status'."
 ---
 
 <!-- cloud_safe: noop -->

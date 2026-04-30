@@ -3,6 +3,9 @@ skills: [agent-docs-writing]
 name: optimize-augmentignore
 description: Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules.
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Niche maintenance tool with no recurring NL trigger."
 ---
 
 <!-- cloud_safe: noop -->

@@ -3,6 +3,9 @@ name: memory-full
 description: Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered
 skills: []
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Description states 'never auto-triggered' — opt-in deep-load only."
 ---
 
 # /memory-full

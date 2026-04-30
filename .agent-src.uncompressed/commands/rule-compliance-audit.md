@@ -2,6 +2,10 @@
 name: rule-compliance-audit
 description: Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "audit my rules, check rule trigger quality"
+  trigger_context: "maintainer working on .augment/rules/ files"
 ---
 
 # rule-compliance-audit

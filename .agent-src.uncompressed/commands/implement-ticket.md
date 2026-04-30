@@ -3,6 +3,10 @@ name: implement-ticket
 skills: [refine-ticket, feature-planning]
 description: Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git.
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "implement this ticket, setze ticket X um, build PROJ-123"
+  trigger_context: "ticket key matching [A-Z]+-[0-9]+ in branch name or prompt"
 ---
 
 # implement-ticket

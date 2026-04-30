@@ -3,6 +3,10 @@ name: roadmap-execute
 skills: [agent-docs-writing]
 description: Read and interactively execute a roadmap from agents/roadmaps/
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "execute the roadmap, work through the roadmap step by step"
+  trigger_context: "existing agents/roadmaps/*.md referenced in the prompt"
 ---
 
 # roadmap-execute

@@ -3,6 +3,10 @@ name: review-changes
 skills: [code-review, subagent-orchestration, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality]
 description: Self-review local changes before creating a PR — dispatches to four specialized judges (bug, security, tests, quality) and consolidates verdicts
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "self-review my changes, judge this diff before PR"
+  trigger_context: "uncommitted or staged changes pre-PR"
 ---
 
 # review-changes

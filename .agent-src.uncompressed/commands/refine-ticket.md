@@ -3,6 +3,10 @@ name: refine-ticket
 skills: [refine-ticket]
 description: Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates validate-feature-fit and threat-modeling, ends with a close-prompt
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "refine PROJ-123, tighten the acceptance criteria, is this ticket clear"
+  trigger_context: "ticket key in prompt with vague acceptance criteria"
 ---
 
 # refine-ticket

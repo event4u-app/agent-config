@@ -3,6 +3,9 @@ name: propose-memory
 description: Append a provisional memory signal to the intake stream — the universal fallback for any producer (human or agent) to record a finding without committing to a curated entry.
 skills: [file-editor]
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Programmatic intake fallback — overlaps /memory-add; keep explicit."
 ---
 
 # /propose-memory

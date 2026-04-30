@@ -3,6 +3,9 @@ name: compress
 skills: []
 description: Compress .md files from .agent-src.uncompressed/ into caveman format and write to .agent-src/
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Package-internal tooling; only the event4u/agent-config repo runs this."
 ---
 
 # compress

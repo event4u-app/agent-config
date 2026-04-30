@@ -2,6 +2,9 @@
 name: chat-history-clear
 description: Manually delete the persistent chat-history log — asks for confirmation, optionally archives to a timestamped backup before wiping
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Destructive log wipe — must be deliberate."
 ---
 
 <!-- cloud_safe: noop -->

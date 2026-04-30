@@ -3,6 +3,10 @@ name: work
 skills: [refine-prompt, command-routing]
 description: Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git.
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "build this, implement this, drive this end-to-end"
+  trigger_context: "free-form prompt without a ticket key"
 ---
 
 # work

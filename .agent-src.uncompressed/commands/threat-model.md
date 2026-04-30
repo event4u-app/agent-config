@@ -3,6 +3,10 @@ name: threat-model
 skills: [threat-modeling, authz-review, security-sensitive-stop]
 description: Run a pre-implementation threat model on a proposed change — enumerates abuse cases, trust boundaries, and authorization gaps before the first line of code is written
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "threat model this change, what could go wrong security-wise"
+  trigger_context: "changes touching auth, webhooks, uploads, secrets, or public endpoints"
 ---
 
 # threat-model

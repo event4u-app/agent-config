@@ -3,6 +3,10 @@ name: feature-refactor
 skills: [laravel, php-coder]
 description: Refine and update an existing feature plan through interactive discussion
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "update the feature plan, refine the feature spec"
+  trigger_context: "existing agents/features/*.md referenced in the prompt"
 ---
 
 # feature-refactor

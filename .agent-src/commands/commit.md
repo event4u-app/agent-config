@@ -3,6 +3,10 @@ name: commit
 skills: [git-workflow]
 description: Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "commit my changes, save this to git, create commits for these changes"
+  trigger_context: "git status shows uncommitted changes"
 ---
 
 # commit

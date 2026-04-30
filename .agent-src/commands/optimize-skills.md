@@ -3,6 +3,10 @@ name: optimize-skills
 description: Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply.
 skills: [skill-reviewer]
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "audit my skills, find duplicate skills"
+  trigger_context: "maintainer working on .augment/skills/ files"
 ---
 
 # /optimize-skills

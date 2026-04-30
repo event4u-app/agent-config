@@ -2,6 +2,9 @@
 name: sync-agent-settings
 description: Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Settings sync — must be deliberate."
 ---
 
 # /sync-agent-settings

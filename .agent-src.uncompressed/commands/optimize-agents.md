@@ -3,6 +3,10 @@ name: optimize-agents
 description: Audits agent infrastructure — measures token overhead, checks rule triggers, verifies AGENTS.md. Suggest only, never auto-apply.
 skills: [copilot-agents-optimization, agents-audit, agent-docs-writing, quality-tools]
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "audit agent infrastructure, tune the agent setup"
+  trigger_context: "maintainer working on .augment/ files"
 ---
 
 # /optimize-agents

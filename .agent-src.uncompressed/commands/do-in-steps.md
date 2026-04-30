@@ -3,6 +3,9 @@ name: do-in-steps
 skills: [subagent-orchestration, verify-before-complete]
 description: Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Subagent orchestration — overlaps /work and /roadmap-execute; keep explicit."
 ---
 
 # do-in-steps

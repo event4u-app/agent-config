@@ -2,6 +2,9 @@
 name: fix-references
 description: Find and fix broken cross-references in .augment/ and agents/ files
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Package-internal — only the event4u/agent-config repo runs this."
 ---
 
 # fix-references

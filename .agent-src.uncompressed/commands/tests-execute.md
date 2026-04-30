@@ -3,6 +3,10 @@ name: tests-execute
 skills: [pest-testing]
 description: Run PHP tests inside the Docker container
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "run the tests, execute the test suite"
+  trigger_context: "code changes pending verification"
 ---
 
 # tests-execute

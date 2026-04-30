@@ -3,6 +3,9 @@ name: set-cost-profile
 description: Change the cost_profile in .agent-settings.yml — shows each profile's meaning and applies the selection
 skills: [file-editor]
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Settings mutation — must be deliberate."
 ---
 
 # /set-cost-profile

@@ -3,6 +3,9 @@ name: do-and-judge
 skills: [subagent-orchestration, verify-before-complete]
 description: Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Subagent orchestration — overlaps /work and judge skills; keep explicit."
 ---
 
 # do-and-judge
