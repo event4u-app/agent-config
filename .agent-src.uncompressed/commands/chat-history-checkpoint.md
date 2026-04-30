@@ -4,12 +4,8 @@ description: Append a phase-boundary entry to .agent-chat-history — the CHECKP
 disable-model-invocation: true
 suggestion:
   eligible: true
-  triggers:
-    - "checkpoint chat history"
-    - "log a phase boundary"
-    - "manual chat-history append"
-    - "chat history-checkpoint"
-  rationale: "User-invoked CHECKPOINT replaces the cooperative 3-gate Iron Law on platforms classified MANUAL/CHECKPOINT in agents/contexts/chat-history-platform-hooks.md."
+  trigger_description: "User wants to flush a chat-history phase boundary on a CHECKPOINT-class platform (Augment IDE, Cursor < 1.7, Cline on Windows) — phrases like 'checkpoint chat history', 'log a phase boundary', 'manual chat-history append'."
+  trigger_context: "chat_history.path == checkpoint AND a phase-shaped boundary just completed (decision recorded, multi-tool sequence finished, task-list item closed)."
 ---
 
 <!-- cloud_safe: noop -->
