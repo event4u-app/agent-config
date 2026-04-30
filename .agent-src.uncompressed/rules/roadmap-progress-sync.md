@@ -74,7 +74,7 @@ NO "FOUR STEPS DONE, ONE COMMIT, ONE REGEN."
 Step counts as completed when:
 
 - Code / docs change for that step has been **written and saved** AND
-- Verification cited in the step (`task ci`, targeted test, lint) has
+- Verification cited in the step (project CI command, targeted test, lint) has
   **passed in this response or an earlier one** — fresh output, not memory.
 
 Then in the **same reply**: flip the checkbox, regenerate the
