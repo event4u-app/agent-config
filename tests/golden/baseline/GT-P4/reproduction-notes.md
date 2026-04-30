@@ -3,7 +3,7 @@
 - prompt fixture: `tests/golden/sandbox/prompts/gt-p4-ui-rejection.txt`
 - persona: `(default)`
 - cycle cap: 1
-- final outcome: `halt_unhandled:_no_directive`
+- final outcome: `halt_unhandled:existing-ui-audit`
 - final exit code: `1`
 - cycles recorded: 1
 

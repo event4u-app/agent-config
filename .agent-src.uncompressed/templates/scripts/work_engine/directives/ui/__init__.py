@@ -1,143 +1,109 @@
-"""UI directive set — Phase 1 routing stub.
+"""UI directive set — Phase 2 audit gate wired in.
 
-Phase 1 of ``agents/roadmaps/road-to-product-ui-track.md`` lands the
-intent classifier and routes UI-shaped inputs (``ui-build``,
-``ui-improve``) to ``directive_set="ui"``. The actual handlers
-(``audit`` → ``design`` → ``apply`` → ``review`` → ``polish``) are
-Phase 2 / Phase 3 work.
+Phase 1 of ``agents/roadmaps/road-to-product-ui-track.md`` landed the
+intent classifier and routed UI-shaped inputs (``ui-build``,
+``ui-improve``) to ``directive_set="ui"``. Phase 2 promotes the
+``refine`` slot from a deferral stub to the real existing-UI-audit
+gate (:mod:`.audit`). Design / apply / review / polish are still
+Phase 3 work — the dispatcher hits :mod:`._phase3_stub` once audit
+returns ``SUCCESS`` and halts cleanly with the deferred-track refusal.
 
-Until those phases ship, this stub keeps the routing pipeline honest:
-the dispatcher loads the set, walks into ``refine``, and the step
-emits a clean ``BLOCKED`` halt with three numbered options pointing
-at the deferred audit/design/apply track. This preserves the
-"clean refusal halt" contract that GT-P4 locks in CI — much better
-than a config-error exit that hides the routing decision.
+The eight-step shape mirrors :mod:`work_engine.directives.backend`:
 
-When Phase 2 lands the real ``audit.py``/``design.py``/etc., this
-file is replaced with the full step wiring per the
-:mod:`work_engine.directives.backend` shape.
+- ``refine`` → :mod:`.audit` — mandatory pre-step; emits
+  ``@agent-directive: existing-ui-audit`` on first pass, halts on
+  greenfield without a decision, succeeds when populated.
+- ``memory`` … ``report`` → :mod:`._phase3_stub` — clean BLOCKED halt
+  pointing at Phase 3. Once the design / apply / review / polish
+  handlers land, those slots are replaced one-for-one without
+  touching the dispatcher.
+
+Keeping the audit success path live *now* (instead of waiting for
+the full bundle) lets Phase 2 goldens prove the gate enforces the
+contract on its own — see ``tests/golden/baseline/GT-P4*`` and the
+new GT-U* batch landing in Phase 6.
 """
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
 
-from ...delivery_state import DeliveryState, Outcome, Step, StepResult
+from ...delivery_state import Step
+from . import _phase3_stub, audit
 
 DIRECTIVE_SET_NAME = "ui"
 """External name carried in ``state.directive_set`` for this set."""
 
 ROADMAP = "agents/roadmaps/road-to-product-ui-track.md"
-"""Roadmap that promotes this stub to a working directive bundle."""
+"""Roadmap that promotes the Phase 3 stubs to working handlers."""
 
 SUPPORTED_KINDS: tuple[str, ...] = ("ticket", "prompt", "diff", "file")
-"""Input kinds the routed-to stub accepts.
+"""Input kinds this directive set knows how to handle.
 
 Phase 1 wires every UI-classifiable input shape (ticket prose,
 free-form prompt, ``diff`` / ``file`` improve-this-screen envelopes)
-through to this set so the deferral halt fires consistently. Phase 2's
-real ``audit.py`` keeps the same tuple.
+through to this set; Phase 2's audit gate keeps the same tuple so
+input-routing stays unchanged.
 """
 
-AMBIGUITIES: tuple[dict[str, str], ...] = (
-    {
-        "code": "ui_track_stub",
-        "trigger": "input classified as UI work; UI directive set is a Phase 1 stub",
-        "resolution": "wait for road-to-product-ui-track Phase 2/3, re-frame as backend, or abort",
-    },
-)
 
+def _build_step_map() -> dict[str, Step]:
+    """Wire the eight-step dispatcher slots for the UI set.
 
-def _stub_refine(state: DeliveryState) -> StepResult:
-    """Halt with a clean UI-track-deferred refusal.
-
-    Phase 1 only routes; the audit / design / apply handlers land in
-    later phases. The refusal carries three numbered options so the
-    surface matches the GT-P4 contract ("user decides — re-frame, park,
-    or abort") without inventing handlers that don't exist yet.
+    ``refine`` runs the real audit handler. ``memory`` … ``report``
+    share the Phase 3 deferral handler so the dispatcher's
+    completeness check is satisfied and the halt surface stays
+    consistent. The mapping is rebuilt per call (cheap; the
+    dispatcher invokes :func:`get_steps` once per run).
     """
-    return StepResult(
-        outcome=Outcome.BLOCKED,
-        questions=[
-            "> Input routed to UI directive set — track is a Phase 1 stub.",
-            (
-                "> Audit / design / apply / review / polish land in later phases of "
-                f"`{ROADMAP}`; until they ship, the engine cannot drive UI work end to end."
-            ),
-            "> 1. Re-frame as a backend-only prompt — I'll re-score and proceed",
-            "> 2. Park this prompt — wait for the UI track and re-invoke `/work` then",
-            "> 3. Abort — drop this input",
-        ],
-    )
-
-
-def _stub_unreachable(name: str) -> Step:
-    """Build a placeholder step that should never be reached.
-
-    The dispatcher halts at ``refine`` (the first step), so handlers
-    further down the flow never run. We still need *something* in the
-    ``get_steps()`` mapping because :func:`work_engine.dispatcher.dispatch`
-    asserts every entry of ``STEP_ORDER`` is wired before walking.
-    Returning a clearly named handler that raises if invoked surfaces
-    an obvious bug if the dispatcher ever advances past ``refine``
-    against this stub.
-    """
-
-    def _handler(state: DeliveryState) -> StepResult:  # pragma: no cover - guard
-        raise NotImplementedError(
-            f"work_engine.directives.ui.{name} is a Phase 1 stub; "
-            f"{ROADMAP} Phase 2/3 must land before {name} can run.",
-        )
-
-    _handler.__name__ = f"_stub_{name}"
-    return _handler
+    phase3 = _phase3_stub.run
+    return {
+        "refine": audit.run,
+        "memory": phase3,
+        "analyze": phase3,
+        "plan": phase3,
+        "implement": phase3,
+        "test": phase3,
+        "verify": phase3,
+        "report": phase3,
+    }
 
 
 def get_steps() -> Mapping[str, Step]:
-    """Return the eight-step mapping the dispatcher walks.
+    """Return the ``{step_name: handler}`` mapping the dispatcher walks.
 
-    Only ``refine`` carries real behavior in Phase 1: it halts with the
-    deferred-track refusal. The seven downstream steps are
-    raise-on-call placeholders kept solely to satisfy the dispatcher's
-    completeness check.
+    Mirrors :func:`work_engine.directives.backend.get_steps`. ``refine``
+    is the only slot carrying Phase 2 behavior; the rest delegate to
+    the Phase 3 stub until those handlers ship.
     """
-    return {
-        "refine": _stub_refine,
-        "memory": _stub_unreachable("memory"),
-        "analyze": _stub_unreachable("analyze"),
-        "plan": _stub_unreachable("plan"),
-        "implement": _stub_unreachable("implement"),
-        "test": _stub_unreachable("test"),
-        "verify": _stub_unreachable("verify"),
-        "report": _stub_unreachable("report"),
-    }
+    return _build_step_map()
 
 
 def all_ambiguities() -> dict[str, tuple[dict[str, str], ...]]:
     """Per-step ambiguity declarations.
 
     Mirrors :func:`work_engine.directives.backend.all_ambiguities`.
-    Only ``refine`` declares an ambiguity in Phase 1 — the deferred
-    track itself.
+    ``refine`` re-exports :data:`audit.AMBIGUITIES`; the Phase 3 slots
+    re-export :data:`_phase3_stub.AMBIGUITIES` so doc generators see
+    a uniform shape across all eight steps.
     """
-    empty: tuple[dict[str, str], ...] = ()
+    stub = _phase3_stub.AMBIGUITIES
     return {
-        "refine": AMBIGUITIES,
-        "memory": empty,
-        "analyze": empty,
-        "plan": empty,
-        "implement": empty,
-        "test": empty,
-        "verify": empty,
-        "report": empty,
+        "refine": audit.AMBIGUITIES,
+        "memory": stub,
+        "analyze": stub,
+        "plan": stub,
+        "implement": stub,
+        "test": stub,
+        "verify": stub,
+        "report": stub,
     }
 
 
 __all__ = [
-    "AMBIGUITIES",
     "DIRECTIVE_SET_NAME",
     "ROADMAP",
     "SUPPORTED_KINDS",
     "all_ambiguities",
+    "audit",
     "get_steps",
 ]

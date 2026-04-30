@@ -17,6 +17,13 @@ The wire format adds five envelope fields on top of the legacy
   detector has not yet run; the dispatcher fills it on the first UI
   dispatch and re-runs detection when ``mtime`` no longer matches the
   filesystem (manifest edited).
+- ``ui_audit`` — optional inventory written by the
+  ``existing-ui-audit`` skill (R3 Phase 2). ``None`` while the audit
+  has not run; populated dict once the skill returns. ``greenfield``
+  flag plus ``greenfield_decision`` carry the user's scaffolding
+  pick. The audit gate (:mod:`work_engine.directives.ui.audit`)
+  refuses to advance to design/apply while the slot is empty or
+  while ``greenfield`` is set without a recorded decision.
 
 All other fields keep their v0 names so the dispatcher can read the
 legacy slice unchanged once Phase 3 wires the steps over.
@@ -115,6 +122,7 @@ class WorkState:
     intent: str = DEFAULT_INTENT
     directive_set: str = DEFAULT_DIRECTIVE_SET
     stack: dict[str, Any] | None = None
+    ui_audit: dict[str, Any] | None = None
     version: int = SCHEMA_VERSION
     persona: str = "senior-engineer"
     memory: list[dict[str, Any]] = field(default_factory=list)
@@ -143,12 +151,14 @@ def to_dict(state: WorkState) -> dict[str, Any]:
             f"version must be {SCHEMA_VERSION}; got {state.version!r}",
         )
     _validate_stack(state.stack)
+    _validate_ui_audit(state.ui_audit)
     return {
         "version": state.version,
         "input": {"kind": state.input.kind, "data": state.input.data},
         "intent": state.intent,
         "directive_set": state.directive_set,
         "stack": state.stack,
+        "ui_audit": state.ui_audit,
         "persona": state.persona,
         "memory": state.memory,
         "plan": state.plan,
@@ -201,11 +211,15 @@ def from_dict(payload: Any) -> WorkState:
     stack = payload.get("stack")
     _validate_stack(stack)
 
+    ui_audit = payload.get("ui_audit")
+    _validate_ui_audit(ui_audit)
+
     return WorkState(
         input=Input(kind=kind, data=data),
         intent=payload.get("intent", DEFAULT_INTENT),
         directive_set=directive_set,
         stack=dict(stack) if isinstance(stack, dict) else None,
+        ui_audit=dict(ui_audit) if isinstance(ui_audit, dict) else None,
         version=version,
         persona=payload.get("persona", "senior-engineer"),
         memory=list(payload.get("memory", [])),
@@ -287,6 +301,45 @@ def _validate_stack(stack: Any) -> None:
     if not isinstance(mtime, (int, float)):
         raise SchemaError(
             f"state.stack.mtime must be a number; got {type(mtime).__name__}",
+        )
+
+
+def _validate_ui_audit(ui_audit: Any) -> None:
+    """Reject malformed ``ui_audit`` envelopes; tolerate ``None`` and ``{}``.
+
+    ``None`` means the audit has not run yet — the dispatcher's audit
+    gate (``directives.ui.audit``) will emit the agent-directive that
+    populates it. An empty dict is the in-progress shape after the
+    skill returns but before findings land; the gate treats it the
+    same as ``None``. Once populated, ``greenfield`` (when present)
+    must be a bool, and ``greenfield_decision`` (when present) must
+    be one of the three documented choices. Other keys (``components``,
+    ``patterns``, …) are validated by the audit handler against the
+    skill contract — the schema only enforces shape, not content.
+    """
+    if ui_audit is None:
+        return
+    if not isinstance(ui_audit, dict):
+        raise SchemaError(
+            f"state.ui_audit must be a JSON object or null; "
+            f"got {type(ui_audit).__name__}",
+        )
+    if "greenfield" in ui_audit and not isinstance(
+        ui_audit["greenfield"], bool,
+    ):
+        raise SchemaError(
+            "state.ui_audit.greenfield must be a boolean when present",
+        )
+    decision = ui_audit.get("greenfield_decision")
+    if decision is not None and decision not in {
+        "scaffold",
+        "bare",
+        "external_reference",
+    }:
+        raise SchemaError(
+            f"state.ui_audit.greenfield_decision must be one of "
+            f"'scaffold', 'bare', 'external_reference', or null; "
+            f"got {decision!r}",
         )
 
 

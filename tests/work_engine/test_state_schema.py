@@ -283,6 +283,87 @@ class TestStackEnvelope:
             from_dict(payload)
 
 
+class TestUiAuditEnvelope:
+    """``state.ui_audit`` is the R3-Phase-2 inventory written by the audit skill.
+
+    Schema rules: ``None`` is the default (audit has not run). When
+    present, ``greenfield`` (if set) must be a bool and
+    ``greenfield_decision`` (if set) must be one of the three
+    documented choices. Other keys are content the schema does not
+    police.
+    """
+
+    def test_default_ui_audit_is_none(self) -> None:
+        state = _build_state()
+        assert state.ui_audit is None
+        assert to_dict(state)["ui_audit"] is None
+
+    def test_ui_audit_round_trips(self) -> None:
+        audit = {
+            "components": [{"path": "components/Button.tsx", "name": "Button"}],
+            "design_system": "shadcn",
+            "design_tokens": {"colors": {"primary": "#000"}},
+            "shadcn_inventory": {
+                "version": None,
+                "style": "default",
+                "primitives": ["Button"],
+            },
+            "patterns": {"forms": [], "tables": []},
+            "candidates": [],
+            "greenfield": False,
+            "greenfield_decision": None,
+        }
+        state = _build_state(ui_audit=audit)
+
+        rebuilt = from_dict(to_dict(state))
+
+        assert rebuilt.ui_audit == audit
+
+    def test_greenfield_decision_round_trips(self) -> None:
+        for decision in ("scaffold", "bare", "external_reference"):
+            state = _build_state(
+                ui_audit={"greenfield": True, "greenfield_decision": decision},
+            )
+            rebuilt = from_dict(to_dict(state))
+            assert rebuilt.ui_audit["greenfield_decision"] == decision
+
+    def test_rejects_non_bool_greenfield(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "ui_audit": {"greenfield": "yes"},
+        }
+
+        with pytest.raises(SchemaError, match="ui_audit.greenfield"):
+            from_dict(payload)
+
+    def test_rejects_unknown_greenfield_decision(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "ui_audit": {"greenfield": True, "greenfield_decision": "freestyle"},
+        }
+
+        with pytest.raises(SchemaError, match="greenfield_decision"):
+            from_dict(payload)
+
+    def test_rejects_ui_audit_that_is_not_an_object(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "ui_audit": ["not", "an", "object"],
+        }
+
+        with pytest.raises(SchemaError, match="state.ui_audit must be a JSON object"):
+            from_dict(payload)
+
+
 class TestUnknownTopLevelKeysAreTolerated:
     def test_extra_keys_are_dropped(self) -> None:
         # Forward-compat: an older reader against a newer file should

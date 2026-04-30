@@ -49,7 +49,7 @@
   },
   {
     "gt_id": "GT-P4",
-    "outcome": "halt_unhandled:_no_directive",
+    "outcome": "halt_unhandled:existing-ui-audit",
     "exit_code": 1,
     "cycles": 1
   }

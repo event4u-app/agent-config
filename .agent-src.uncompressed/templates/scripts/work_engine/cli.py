@@ -256,6 +256,7 @@ def _to_delivery(work: WorkState) -> DeliveryState:
         outcomes=work.outcomes,
         questions=work.questions,
         report=work.report,
+        ui_audit=work.ui_audit,
     )
 
 
@@ -278,6 +279,7 @@ def _sync_back(work: WorkState, delivery: DeliveryState) -> None:
     work.outcomes = delivery.outcomes
     work.questions = delivery.questions
     work.report = delivery.report
+    work.ui_audit = delivery.ui_audit
 
 
 def _save(state_file: Path, work: WorkState, fmt: str) -> None:

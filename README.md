@@ -5,7 +5,7 @@ Teach your AI agents Laravel, PHP, testing, Git workflows, and **120+ more skill
 > Your agent learns to write Laravel code, run tests, create PRs, fix CI — and follows your team's coding standards while doing it.
 
 <p align="center">
-  <strong>125 Skills</strong> · <strong>51 Rules</strong> · <strong>75 Commands</strong> · <strong>46 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>126 Skills</strong> · <strong>52 Rules</strong> · <strong>75 Commands</strong> · <strong>46 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -317,7 +317,7 @@ Every developer gets the same behavior. No per-user setup needed.
 native slash-commands)
 
 > **What this means in practice:** Augment Code and Claude Code get the full
-> package (rules + 125 skills + 75 native commands). Cursor, Cline, Windsurf,
+> package (rules + 126 skills + 75 native commands). Cursor, Cline, Windsurf,
 > Gemini CLI, and GitHub Copilot only get the **rules** natively; skills and
 > commands are available to them as documentation the agent can read, not as
 > first-class features.

@@ -18,6 +18,7 @@
   "intent": "backend-coding",
   "directive_set": "backend",
   "stack": null,
+  "ui_audit": null,
   "persona": "senior-engineer",
   "memory": [],
   "plan": null,
