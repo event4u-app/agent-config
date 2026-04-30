@@ -110,6 +110,9 @@ If yes → switch to the `roadmap-execute` command workflow with the newly creat
 
 - **Do NOT auto-generate content** — always ask the user for input.
 - **Do NOT commit or push.**
+- **Do NOT include commit steps in the roadmap** unless the user explicitly
+  requested them. See [`commit-policy`](../rules/commit-policy.md#never-write-commit-steps-into-roadmaps-unsolicited).
+  Roadmaps plan **work**; commits are a separate delivery decision.
 - **Write the roadmap in English** (per project convention for `.md` files).
 - Follow the roadmap template from `.augment/templates/roadmaps.md`.
 - Keep the file focused: 500–1000 lines max. If larger, suggest splitting.

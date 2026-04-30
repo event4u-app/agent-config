@@ -20,6 +20,10 @@ source: package
 
 The user decides the git shape of the work.
 
+> **Commit specifics:** see [`commit-policy`](commit-policy.md) — narrower
+> than the general "no git ops without permission" below (never-ask
+> default + roadmap-authorized exception).
+
 - NEVER commit, push, merge, rebase, or force-push without explicit user permission.
 - NEVER create, switch, or delete a branch without explicit user permission.
   Includes spike, scratch, throwaway, worktree branches.

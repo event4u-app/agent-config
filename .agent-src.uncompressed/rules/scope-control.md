@@ -20,6 +20,11 @@ source: package
 
 The user decides the git shape of the work. Never improvise.
 
+> **Commit specifics:** see the canonical [`commit-policy`](commit-policy.md)
+> rule — narrower than the general "no git ops without permission"
+> below (covers the never-ask-about-committing default and the
+> roadmap-authorized exception).
+
 - NEVER commit, push, merge, rebase, or force-push without explicit user permission.
 - NEVER create a new branch, switch to a different branch, or delete a
   branch without explicit user permission. This includes spike, scratch,

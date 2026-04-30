@@ -61,7 +61,14 @@ For each open step:
 
 ### Rules
 
-- **Do NOT commit or push** — only apply local changes and update the roadmap file.
+- **Commits per [`commit-policy`](../rules/commit-policy.md).** Default: only
+  apply local changes and update the roadmap file — no commits.
+  - Roadmap **without** commit steps → never commit, never ask.
+  - Roadmap **with** commit steps:
+    - **Non-autonomous** (`autonomy: off`, or `auto` before opt-in) → ask before each.
+    - **Autonomous** (`autonomy: on`, or `auto` after opt-in) → pre-scan **before
+      starting**, ask **once** upfront, then proceed silently per the answer.
+- **Push, merge, branch, PR, tag** stay permission-gated by [`scope-control`](../rules/scope-control.md#git-operations--permission-gated).
 - **Always ask before implementing** a step — never auto-execute.
 - **Run quality checks** after each code change.
 - If a step is unclear or too large, suggest breaking it down further.
