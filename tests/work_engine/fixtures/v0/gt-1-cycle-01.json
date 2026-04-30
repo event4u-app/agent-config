@@ -1,0 +1,43 @@
+{
+  "ticket": {
+    "id": "GT-1-MULT",
+    "title": "Add multiply(a, b) to the toy calculator",
+    "acceptance_criteria": [
+      "Function signature is `multiply(a: int, b: int) -> int` and returns the integer product of the two arguments.",
+      "Edge cases covered: multiply(0, n) and multiply(n, 0) return 0; multiply(-2, 3) returns -6.",
+      "A pytest test `test_multiply_returns_product` lives in `tests/test_calculator.py` and exercises both the happy path and the negative-input edge case."
+    ]
+  },
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": [
+    {
+      "title": "Add multiply(a, b)",
+      "detail": "Append multiply(a: int, b: int) -> int to src/calculator.py"
+    },
+    {
+      "title": "Add multiply(a, b)",
+      "detail": "Append test_multiply_returns_product to tests/test_calculator.py"
+    },
+    {
+      "title": "Add multiply(a, b)",
+      "detail": "Run pytest to confirm the new test passes"
+    }
+  ],
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "blocked"
+  },
+  "questions": [
+    "@agent-directive: create-plan ticket=GT-1-MULT",
+    "> Ticket GT-1-MULT — no plan recorded yet; running `feature-plan` and resuming.",
+    "> 1. Continue — use the plan produced by `feature-plan`",
+    "> 2. Abort — stop before any edits are proposed"
+  ],
+  "report": ""
+}

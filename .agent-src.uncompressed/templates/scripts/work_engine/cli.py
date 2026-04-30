@@ -51,6 +51,7 @@ from .dispatcher import (
     load_directive_set,
     select_directive_set,
 )
+from .intent import populate_routing
 from .migration.v0_to_v1 import migrate_payload
 from .resolvers.prompt import PromptResolverError, build_envelope as _build_prompt_envelope
 from .state import Input, SchemaError, WorkState
@@ -173,6 +174,7 @@ def _load_or_build(
     work = WorkState(input=Input(kind="ticket", data=ticket))
     if args.persona:
         work.persona = args.persona
+    populate_routing(work)
     return work, _FMT_V0
 
 
@@ -195,6 +197,7 @@ def _build_from_prompt_file(args: argparse.Namespace) -> WorkState:
     work = WorkState(input=envelope)
     if args.persona:
         work.persona = args.persona
+    populate_routing(work)
     return work
 
 

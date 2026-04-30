@@ -4,9 +4,9 @@ A resolver wraps a typed source (a free-form prompt, a diff, a file
 reference) into the canonical :class:`work_engine.state.Input` shape so
 the dispatcher only ever speaks one schema. The R1 ticket flow does not
 need a resolver — ticket payloads arrive pre-structured from
-``/implement-ticket``; R2 introduces the first resolver
-(:mod:`work_engine.resolvers.prompt`) and reserves slots for ``diff``
-and ``file`` resolvers landing in R3.
+``/implement-ticket``; R2 introduces :mod:`.prompt`; R3 Phase 1 adds
+:mod:`.diff` and :mod:`.file` for the UI-improve track ("improve this
+screen via diff/PR" and "improve this existing component/page").
 
 Resolvers are deliberately thin: they normalize, they do not interpret.
 Reconstruction of acceptance criteria + assumptions + confidence is the
@@ -17,6 +17,6 @@ lifting stays with the agent-directive halt where it belongs.
 """
 from __future__ import annotations
 
-from . import prompt
+from . import diff, file, prompt
 
-__all__ = ["prompt"]
+__all__ = ["diff", "file", "prompt"]

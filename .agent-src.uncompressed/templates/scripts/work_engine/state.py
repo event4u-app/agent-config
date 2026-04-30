@@ -1,6 +1,6 @@
 """Schema v1 of the universal-engine work state.
 
-The wire format adds four envelope fields on top of the legacy
+The wire format adds five envelope fields on top of the legacy
 ``DeliveryState`` shape from ``implement_ticket.delivery_state``:
 
 - ``version`` — integer schema version, currently ``1``.
@@ -12,6 +12,11 @@ The wire format adds four envelope fields on top of the legacy
   ``mixed`` are accepted by the schema even though only ``backend``
   has working directives in R1 (Phase 4 Step 4 — pre-listed to avoid
   a schema bump when R3 V2 lands).
+- ``stack`` — optional ``{frontend, mtime}`` cache populated by
+  :mod:`work_engine.stack.detect` (R3 Phase 1). ``None`` while the
+  detector has not yet run; the dispatcher fills it on the first UI
+  dispatch and re-runs detection when ``mtime`` no longer matches the
+  filesystem (manifest edited).
 
 All other fields keep their v0 names so the dispatcher can read the
 legacy slice unchanged once Phase 3 wires the steps over.
@@ -41,7 +46,7 @@ DEFAULT_INTENT = "backend-coding"
 DEFAULT_DIRECTIVE_SET = "backend"
 """Directive set applied when migrating a v0 file or building a fresh state."""
 
-KNOWN_INPUT_KINDS: frozenset[str] = frozenset({"ticket", "prompt"})
+KNOWN_INPUT_KINDS: frozenset[str] = frozenset({"ticket", "prompt", "diff", "file"})
 """Input kinds accepted by the schema.
 
 ``ticket`` is the R1 kind: pre-structured ``{id, title, acceptance_criteria, …}``
@@ -50,12 +55,20 @@ user prompt wrapped via :mod:`work_engine.resolvers.prompt` into
 ``{raw, reconstructed_ac, assumptions}``; the engine refines the raw text
 into actionable AC + a confidence band before plan/apply/test/review run.
 
+``diff`` and ``file`` are the R3 Phase 1 UI-improve kinds. ``diff`` carries a
+unified-diff / patch payload (``{raw, reconstructed_ac, assumptions}``) so the
+``directives/ui`` set can take an "improve this screen" PR-style input; ``file``
+carries a path reference to an existing component/page (``{path,
+reconstructed_ac, assumptions}``) for the same surface. Both default-route to
+``ui-improve`` via :func:`work_engine.intent.populate_routing`.
+
 Per the schema/capability split documented on
 :data:`work_engine.directives.backend.SUPPORTED_KINDS`, presence here only
 means the *envelope* is accepted on disk — a directive set still has to
 list the kind in its ``SUPPORTED_KINDS`` tuple before the dispatcher will
 route it. R2 widens the envelope; R2 Phase 3 widens backend's capability
-tuple in lockstep with the ``refine-prompt`` skill landing.
+tuple in lockstep with the ``refine-prompt`` skill landing. R3 Phase 1 widens
+the envelope further; ``ui`` capability is wired in Phase 3 of the UI track.
 
 Other kinds are rejected so unknown values surface as errors instead of
 silently falling through to a default branch."""
@@ -93,14 +106,15 @@ class WorkState:
     """Schema v1 of the persisted work state.
 
     Field order mirrors the on-disk JSON: envelope (``version``,
-    ``input``, ``intent``, ``directive_set``) first, then the legacy
-    ``DeliveryState`` slice (``persona`` … ``report``) so a diff
-    between a v1 file and its v0 ancestor stays readable.
+    ``input``, ``intent``, ``directive_set``, ``stack``) first, then
+    the legacy ``DeliveryState`` slice (``persona`` … ``report``) so a
+    diff between a v1 file and its v0 ancestor stays readable.
     """
 
     input: Input
     intent: str = DEFAULT_INTENT
     directive_set: str = DEFAULT_DIRECTIVE_SET
+    stack: dict[str, Any] | None = None
     version: int = SCHEMA_VERSION
     persona: str = "senior-engineer"
     memory: list[dict[str, Any]] = field(default_factory=list)
@@ -128,11 +142,13 @@ def to_dict(state: WorkState) -> dict[str, Any]:
         raise SchemaError(
             f"version must be {SCHEMA_VERSION}; got {state.version!r}",
         )
+    _validate_stack(state.stack)
     return {
         "version": state.version,
         "input": {"kind": state.input.kind, "data": state.input.data},
         "intent": state.intent,
         "directive_set": state.directive_set,
+        "stack": state.stack,
         "persona": state.persona,
         "memory": state.memory,
         "plan": state.plan,
@@ -182,10 +198,14 @@ def from_dict(payload: Any) -> WorkState:
     directive_set = payload.get("directive_set", DEFAULT_DIRECTIVE_SET)
     _validate_directive_set(directive_set)
 
+    stack = payload.get("stack")
+    _validate_stack(stack)
+
     return WorkState(
         input=Input(kind=kind, data=data),
         intent=payload.get("intent", DEFAULT_INTENT),
         directive_set=directive_set,
+        stack=dict(stack) if isinstance(stack, dict) else None,
         version=version,
         persona=payload.get("persona", "senior-engineer"),
         memory=list(payload.get("memory", [])),
@@ -239,6 +259,34 @@ def _validate_directive_set(name: Any) -> None:
         raise SchemaError(
             f"unknown directive_set {name!r}; "
             f"expected one of {sorted(KNOWN_DIRECTIVE_SETS)}",
+        )
+
+
+def _validate_stack(stack: Any) -> None:
+    """Reject malformed stack envelopes; tolerate ``None`` (not yet detected).
+
+    The detector populates ``state.stack`` lazily — the first dispatch
+    of a new state file may run without it set, then the dispatcher
+    fills it in before any UI handler reads it. We only validate the
+    shape when present so the absence-of-detection case stays a normal
+    code path, not an error.
+    """
+    if stack is None:
+        return
+    if not isinstance(stack, dict):
+        raise SchemaError(
+            f"state.stack must be a JSON object or null; "
+            f"got {type(stack).__name__}",
+        )
+    frontend = stack.get("frontend")
+    if not isinstance(frontend, str) or not frontend:
+        raise SchemaError(
+            "state.stack.frontend must be a non-empty string",
+        )
+    mtime = stack.get("mtime", 0.0)
+    if not isinstance(mtime, (int, float)):
+        raise SchemaError(
+            f"state.stack.mtime must be a number; got {type(mtime).__name__}",
         )
 
 

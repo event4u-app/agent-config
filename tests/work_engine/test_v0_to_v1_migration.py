@@ -1,8 +1,11 @@
 """Migration of legacy ``DeliveryState`` JSON files to schema v1.
 
-The fixtures pull three captured state snapshots from the Phase 1
-baseline (``tests/golden/baseline/``) so the migration is exercised
-against real engine output, not synthetic toys.
+Fixtures live under ``tests/work_engine/fixtures/v0/`` — frozen copies
+of three captured state snapshots from the Phase 1 baseline. They are
+intentionally decoupled from the live golden baselines under
+``tests/golden/baseline/``: those snapshots evolve with the schema (R3
+Phase 1 added ``stack``, future phases will add more), but the
+migration must keep working against the *original* v0 shape forever.
 
 Coverage:
 
@@ -34,13 +37,12 @@ from work_engine.state import (
     from_dict,
 )
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-BASELINE = REPO_ROOT / "tests" / "golden" / "baseline"
+FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures" / "v0"
 
 LEGACY_FIXTURES: list[tuple[str, Path]] = [
-    ("GT-1/cycle-01", BASELINE / "GT-1" / "state-snapshots" / "cycle-01.json"),
-    ("GT-3/cycle-04", BASELINE / "GT-3" / "state-snapshots" / "cycle-04.json"),
-    ("GT-5/cycle-05", BASELINE / "GT-5" / "state-snapshots" / "cycle-05.json"),
+    ("GT-1/cycle-01", FIXTURES_DIR / "gt-1-cycle-01.json"),
+    ("GT-3/cycle-04", FIXTURES_DIR / "gt-3-cycle-04.json"),
+    ("GT-5/cycle-05", FIXTURES_DIR / "gt-5-cycle-05.json"),
 ]
 
 

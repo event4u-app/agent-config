@@ -147,10 +147,11 @@ class TestEnvelopeValidation:
     def test_known_enum_constants(self) -> None:
         # Lock the public enum surface so a future code change that
         # narrows it cannot happen silently. R2 widened the input-kind
-        # enum with ``prompt``; capability tuples (per-set
+        # enum with ``prompt``; R3 Phase 1 added ``diff`` and ``file``
+        # for the UI-improve track. Capability tuples (per-set
         # ``SUPPORTED_KINDS``) stay narrow until the matching directive
         # set wires the kind end to end.
-        assert KNOWN_INPUT_KINDS == frozenset({"ticket", "prompt"})
+        assert KNOWN_INPUT_KINDS == frozenset({"ticket", "prompt", "diff", "file"})
         assert KNOWN_DIRECTIVE_SETS == frozenset(
             {"backend", "ui", "ui-trivial", "mixed"},
         )
@@ -218,6 +219,68 @@ class TestEnvelopeValidation:
         assert rebuilt == state
         assert rebuilt.input.data["confidence"]["band"] == "high"
         assert rebuilt.input.data["confidence_confirmed"] is False
+
+
+class TestStackEnvelope:
+    """``state.stack`` is the R3-Phase-1 cache slot for the detected frontend.
+
+    Schema rules: ``None`` is the default (detector has not run yet);
+    when present, ``frontend`` must be a non-empty string and ``mtime``
+    a number.
+    """
+
+    def test_default_stack_is_none(self) -> None:
+        state = _build_state()
+        assert state.stack is None
+        assert to_dict(state)["stack"] is None
+
+    def test_stack_round_trips(self) -> None:
+        state = _build_state(
+            stack={"frontend": "react-shadcn", "mtime": 1700000000.0},
+        )
+
+        rebuilt = from_dict(to_dict(state))
+
+        assert rebuilt.stack == {
+            "frontend": "react-shadcn",
+            "mtime": 1700000000.0,
+        }
+
+    def test_rejects_stack_with_empty_frontend(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "stack": {"frontend": "", "mtime": 0},
+        }
+
+        with pytest.raises(SchemaError, match="state.stack.frontend"):
+            from_dict(payload)
+
+    def test_rejects_stack_with_non_numeric_mtime(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "stack": {"frontend": "vue", "mtime": "yesterday"},
+        }
+
+        with pytest.raises(SchemaError, match="state.stack.mtime"):
+            from_dict(payload)
+
+    def test_rejects_stack_that_is_not_an_object(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "stack": ["not", "an", "object"],
+        }
+
+        with pytest.raises(SchemaError, match="state.stack must be a JSON object"):
+            from_dict(payload)
 
 
 class TestUnknownTopLevelKeysAreTolerated:
