@@ -98,7 +98,7 @@ and
 
 ```
 .agent-src.uncompressed/      ← edit here
-  skills/       (127 skills)
+  skills/       (128 skills)
   rules/        (53 rules)
   commands/     (77 commands)
   guidelines/   (46 guidelines)
