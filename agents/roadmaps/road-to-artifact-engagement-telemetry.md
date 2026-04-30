@@ -1,6 +1,6 @@
 # Roadmap: Artifact Engagement Telemetry
 
-> **Status: not started.** Default-off, opt-in-only. The whole point of this roadmap is to measure which skills, rules, commands, guidelines and personas the agent actually consults and applies — without quietly costing tokens for consumers who never enable it.
+> **Status: in progress (Phase 1 ✅).** Default-off, opt-in-only. The whole point of this roadmap is to measure which skills, rules, commands, guidelines and personas the agent actually consults and applies — without quietly costing tokens for consumers who never enable it.
 
 ## Mission
 
@@ -14,9 +14,9 @@ This roadmap **does not** change agent behaviour for consumers who keep the defa
 
 ## Prerequisites
 
-- [ ] Read `.agent-src.uncompressed/templates/agent-settings.md` (telemetry namespace must not collide with existing keys)
-- [ ] Read `agents/contexts/implement-ticket-flow.md` (task-boundary semantics — engagement records align to those boundaries)
-- [ ] Confirm `.gitignore` entries for `.agent-engagement.jsonl` (must never reach a consumer's repo)
+- [x] Read `.agent-src.uncompressed/templates/agent-settings.md` (telemetry namespace confirmed clear — sits between `onboarding:` and Settings Reference)
+- [x] Read `agents/contexts/implement-ticket-flow.md` (task-boundary semantics — engagement records align to the eight-step linear flow)
+- [x] Confirm `.gitignore` entries for `.agent-engagement.jsonl` (added to root + `config/gitignore-block.txt` so the consumer installer ships the entry)
 
 ## Paths (canonical)
 
@@ -74,10 +74,10 @@ Each event is a single JSONL line: `{ts, task_id, boundary_kind, consulted: {ski
 
 ## Phase 1: Schema and settings wireup
 
-- [ ] **Step 1:** Define event schema in `<engine-src>/telemetry/engagement.py` — typed dict, strict validation, JSONL serialisation. Reject events with unknown artefact kinds.
-- [ ] **Step 2:** Extend `<settings-template>` with the `telemetry.artifact_engagement` namespace; default `enabled: false` everywhere; `sync-agent-settings` skill picks the new section up additively.
-- [ ] **Step 3:** Update `.gitignore` (root + template) to exclude `.agent-engagement.jsonl` — must never reach a consumer commit.
-- [ ] **Step 4:** Schema-validation tests: round-trip, rejection of unknown kinds, idempotent JSONL appends, default-off behaviour proves zero file IO.
+- [x] **Step 1:** Define event schema in `<engine-src>/telemetry/engagement.py` — `EngagementEvent` dataclass, strict structural validation, JSONL serialisation, unknown artefact kinds rejected.
+- [x] **Step 2:** Extend `<settings-template>` with the `telemetry.artifact_engagement` namespace; default `enabled: false` everywhere; section sits at the YAML tail with full Settings Reference rows so `sync-agent-settings` picks it up additively.
+- [x] **Step 3:** `.gitignore` (root) and `config/gitignore-block.txt` (consumer installer template) both exclude `.agent-engagement.jsonl` and `.bak` — never reaches a consumer commit.
+- [x] **Step 4:** Schema-validation tests in `tests/telemetry/test_engagement.py` (12 cases): round-trip, unknown-kind rejection, unknown-boundary rejection, oversized-id rejection, parse-event invalid-JSON rejection, idempotent JSONL appends, default-off zero-IO under chdir.
 
 ## Phase 2: Recording engine
 
