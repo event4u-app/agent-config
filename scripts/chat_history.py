@@ -403,6 +403,92 @@ def _read_chat_history_enabled(settings_path: Path) -> bool:
 VALID_HEARTBEAT_MODES = ("on", "off", "hybrid")
 DRIFT_STATES = ("missing", "foreign", "returning")
 
+# Hook events that the platform-hook wrapper accepts. Mapped to entry
+# types in HOOK_EVENT_ENTRY_TYPE; cadence filtering in
+# CADENCE_EVENTS decides whether the event actually lands in the log
+# given chat_history.frequency.
+VALID_HOOK_EVENTS = (
+    "session_start", "session_end", "user_prompt", "agent_response",
+    "tool_use", "phase", "stop",
+)
+HOOK_EVENT_ENTRY_TYPE = {
+    "user_prompt": "user",
+    "agent_response": "agent",
+    "tool_use": "tool",
+    "phase": "phase",
+    "stop": "agent",
+    "session_end": "phase",
+}
+# Which events actually trigger an append for each frequency. session_*
+# events are control plane (sidecar / init), not log entries, so they
+# are absent from these sets.
+CADENCE_EVENTS = {
+    "per_turn": frozenset({"stop", "agent_response"}),
+    "per_phase": frozenset({"phase", "stop", "user_prompt"}),
+    "per_tool": frozenset({"tool_use"}),
+}
+
+
+def _read_chat_history_frequency(settings_path: Path) -> str:
+    """Read chat_history.frequency from .agent-settings.yml. Default per_phase."""
+    if not settings_path.is_file():
+        return "per_phase"
+    try:
+        import yaml  # type: ignore[import-untyped]
+    except ImportError:
+        return "per_phase"
+    try:
+        with settings_path.open(encoding="utf-8") as fh:
+            data = yaml.safe_load(fh) or {}
+    except (OSError, yaml.YAMLError):
+        return "per_phase"
+    section = data.get("chat_history") if isinstance(data, dict) else None
+    if not isinstance(section, dict):
+        return "per_phase"
+    val = str(section.get("frequency", "per_phase")).lower()
+    return val if val in VALID_FREQS else "per_phase"
+
+
+def sidecar_path(path: Path | None = None) -> Path:
+    """Return the path to the session sidecar (.agent-chat-history.session).
+
+    Sidecar carries the first-user-msg for the active session so hook
+    invocations after `session_start` don't need the agent to pass it
+    on every call. Lives next to the JSONL file.
+    """
+    base = path or file_path()
+    return base.with_name(base.name + ".session")
+
+
+def read_sidecar(path: Path | None = None) -> dict[str, Any] | None:
+    """Read and parse the sidecar; returns None on missing or malformed."""
+    sp = sidecar_path(path)
+    if not sp.is_file():
+        return None
+    try:
+        with sp.open(encoding="utf-8") as fh:
+            data = json.load(fh)
+        return data if isinstance(data, dict) else None
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def write_sidecar(first_user_msg: str, *,
+                  path: Path | None = None) -> dict[str, Any]:
+    """Write the session sidecar atomically. Overwrites on session_start."""
+    sp = sidecar_path(path)
+    sp.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "first_user_msg": first_user_msg,
+        "fp": fingerprint(first_user_msg),
+        "started_at": _now(),
+    }
+    tmp = sp.with_suffix(sp.suffix + ".tmp")
+    with tmp.open("w", encoding="utf-8") as fh:
+        json.dump(payload, fh, ensure_ascii=False)
+    tmp.replace(sp)
+    return payload
+
 
 def _read_chat_history_heartbeat_mode(settings_path: Path) -> str:
     """Read chat_history.heartbeat from .agent-settings.yml.
@@ -620,10 +706,117 @@ def overflow_handle(max_kb: int, mode: str = "rotate", *,
     return {"action": "compress_marked", "kept": len(entries), "dropped": 0}
 
 
+def hook_append(event: str, *,
+                first_user_msg: str | None = None,
+                payload: dict[str, Any] | None = None,
+                path: Path | None = None,
+                settings_path: Path | None = None) -> dict[str, Any]:
+    """Platform-hook entry point — wraps init/append/sidecar.
+
+    Designed for `SessionStart`, `UserPromptSubmit`, `PostToolUse`,
+    `Stop`, `SessionEnd` style hooks across platforms. Stateless: every
+    invocation reads the sidecar for the active session's first-user-msg.
+    The very first call (`event == "session_start"`) writes the sidecar
+    and initializes the JSONL header if missing.
+
+    Cadence-aware: events that don't match `chat_history.frequency`
+    are silently skipped. `enabled: false` short-circuits to a noop.
+
+    Returns a structured dict the CLI emits as JSON. Never raises for
+    non-fatal control-plane states (missing sidecar, cadence skip,
+    disabled) — these surface as `action` values so hooks can choose
+    fail_open vs fail_closed by inspecting the result.
+    """
+    if event not in VALID_HOOK_EVENTS:
+        raise ValueError(f"event must be one of {sorted(VALID_HOOK_EVENTS)}")
+    sp = settings_path or Path(DEFAULT_SETTINGS_FILE)
+    if not _read_chat_history_enabled(sp):
+        return {"action": "disabled", "event": event}
+    p = path or file_path()
+    payload = payload or {}
+
+    if event == "session_start":
+        if not first_user_msg:
+            return {"action": "skipped_no_first_user_msg", "event": event}
+        write_sidecar(first_user_msg, path=p)
+        if not p.is_file() or read_header(p) is None:
+            freq = _read_chat_history_frequency(sp)
+            init(first_user_msg, freq=freq, path=p)
+            return {"action": "initialized", "event": event,
+                    "fp": fingerprint(first_user_msg)}
+        return {"action": "sidecar_written", "event": event,
+                "fp": fingerprint(first_user_msg)}
+
+    side = read_sidecar(p)
+    fum = first_user_msg or (side or {}).get("first_user_msg")
+    if not fum:
+        return {"action": "skipped_no_sidecar", "event": event,
+                "hint": "session_start hook never ran or sidecar was deleted"}
+
+    if event == "session_end":
+        # Control plane only — touch sidecar's last-seen but do not append.
+        return {"action": "session_end_noop", "event": event}
+
+    freq = _read_chat_history_frequency(sp)
+    if event not in CADENCE_EVENTS.get(freq, frozenset()):
+        return {"action": "skipped_cadence", "event": event, "frequency": freq}
+
+    entry_type = HOOK_EVENT_ENTRY_TYPE.get(event, "agent")
+    entry: dict[str, Any] = {"t": entry_type}
+    text = str(payload.get("text", "")).strip()
+    if text:
+        entry["text"] = _preview(text, 200)
+    if event == "tool_use":
+        tool = payload.get("tool")
+        if tool:
+            entry["tool"] = str(tool)
+    for k in ("source", "phase", "decision"):
+        if payload.get(k):
+            entry[k] = str(payload[k])
+    try:
+        append(entry, path=p, first_user_msg=fum)
+    except OwnershipError as exc:
+        return {"action": "ownership_refused", "event": event,
+                "state": exc.state,
+                "header_fp": exc.header_fp[:8],
+                "current_fp": exc.current_fp[:8]}
+    return {"action": "appended", "event": event, "type": entry_type}
+
+
 def _cmd_init(args) -> int:
     h = init(args.first_user_msg, freq=args.freq)
     print(json.dumps(h, ensure_ascii=False))
     return 0
+
+
+def _cmd_hook_append(args) -> int:
+    payload: dict[str, Any] = {}
+    if args.payload:
+        try:
+            payload = json.loads(args.payload)
+        except json.JSONDecodeError as exc:
+            print(f"error: --payload must be valid JSON: {exc}",
+                  file=sys.stderr)
+            return EXIT_BAD_ARGS
+        if not isinstance(payload, dict):
+            print("error: --payload must decode to a JSON object",
+                  file=sys.stderr)
+            return EXIT_BAD_ARGS
+    settings_path = Path(args.settings) if args.settings else None
+    try:
+        result = hook_append(
+            args.event,
+            first_user_msg=args.first_user_msg,
+            payload=payload,
+            settings_path=settings_path,
+        )
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return EXIT_BAD_ARGS
+    print(json.dumps(result, ensure_ascii=False))
+    if result.get("action") == "ownership_refused":
+        return EXIT_OWNERSHIP_REFUSED
+    return EXIT_OK
 
 
 def _cmd_append(args) -> int:
@@ -869,6 +1062,35 @@ def main(argv: list[str] | None = None) -> int:
     p_rot.add_argument("--max-kb", type=int, default=256)
     p_rot.add_argument("--mode", default="rotate", choices=sorted(VALID_OVERFLOW))
     p_rot.set_defaults(func=_cmd_rotate)
+    p_hook = sub.add_parser(
+        "hook-append",
+        help=("platform-hook entry point — wraps init/append/sidecar; "
+              "stateless after the first session_start call"),
+    )
+    p_hook.add_argument(
+        "--event",
+        required=True,
+        choices=sorted(VALID_HOOK_EVENTS),
+        help="hook event name (session_start required first)",
+    )
+    p_hook.add_argument(
+        "--first-user-msg",
+        default=None,
+        help=("required on session_start; subsequent events read it from "
+              "the sidecar"),
+    )
+    p_hook.add_argument(
+        "--payload",
+        default=None,
+        help=("JSON object with event-specific fields "
+              "(text/tool/source/phase/decision)"),
+    )
+    p_hook.add_argument(
+        "--settings",
+        default=None,
+        help=f"path to agent settings (default: {DEFAULT_SETTINGS_FILE})",
+    )
+    p_hook.set_defaults(func=_cmd_hook_append)
     args = ap.parse_args(argv)
     return args.func(args)
 

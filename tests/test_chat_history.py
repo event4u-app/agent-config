@@ -1034,3 +1034,222 @@ def test_cli_heartbeat_json_unaffected_by_mode(
     payload = json.loads(captured.out)
     assert payload["state"] == "ok"
 
+
+
+# --- Phase 2: hook-append wrapper -----------------------------------
+
+
+@pytest.fixture
+def settings_per_tool(tmp_path: Path) -> Path:
+    p = tmp_path / "settings-per-tool.yml"
+    p.write_text(
+        "chat_history:\n  enabled: true\n  frequency: per_tool\n",
+        encoding="utf-8",
+    )
+    return p
+
+
+@pytest.fixture
+def settings_per_turn(tmp_path: Path) -> Path:
+    p = tmp_path / "settings-per-turn.yml"
+    p.write_text(
+        "chat_history:\n  enabled: true\n  frequency: per_turn\n",
+        encoding="utf-8",
+    )
+    return p
+
+
+def test_sidecar_path_lives_next_to_history(hist: Path):
+    sp = ch.sidecar_path(hist)
+    assert sp.parent == hist.parent
+    assert sp.name == hist.name + ".session"
+
+
+def test_write_and_read_sidecar_roundtrip(hist: Path):
+    payload = ch.write_sidecar("hello", path=hist)
+    loaded = ch.read_sidecar(hist)
+    assert loaded == payload
+    assert loaded["first_user_msg"] == "hello"
+    assert loaded["fp"] == ch.fingerprint("hello")
+
+
+def test_read_sidecar_missing_returns_none(hist: Path):
+    assert ch.read_sidecar(hist) is None
+
+
+def test_read_sidecar_malformed_returns_none(hist: Path):
+    sp = ch.sidecar_path(hist)
+    sp.write_text("{not json", encoding="utf-8")
+    assert ch.read_sidecar(hist) is None
+
+
+def test_hook_append_session_start_initializes(hist: Path,
+                                               settings_enabled: Path):
+    result = ch.hook_append("session_start",
+                            first_user_msg="first",
+                            path=hist,
+                            settings_path=settings_enabled)
+    assert result["action"] == "initialized"
+    header = ch.read_header(hist)
+    assert header is not None
+    assert header["fp"] == ch.fingerprint("first")
+    assert ch.read_sidecar(hist)["first_user_msg"] == "first"
+
+
+def test_hook_append_session_start_existing_history(hist: Path,
+                                                    settings_enabled: Path):
+    ch.init("first", path=hist)
+    result = ch.hook_append("session_start",
+                            first_user_msg="first",
+                            path=hist,
+                            settings_path=settings_enabled)
+    assert result["action"] == "sidecar_written"
+
+
+def test_hook_append_disabled_short_circuits(hist: Path,
+                                             settings_disabled: Path):
+    result = ch.hook_append("user_prompt",
+                            payload={"text": "x"},
+                            path=hist,
+                            settings_path=settings_disabled)
+    assert result["action"] == "disabled"
+    assert not hist.exists()
+
+
+def test_hook_append_no_sidecar_returns_skipped(hist: Path,
+                                                settings_enabled: Path):
+    result = ch.hook_append("user_prompt",
+                            payload={"text": "x"},
+                            path=hist,
+                            settings_path=settings_enabled)
+    assert result["action"] == "skipped_no_sidecar"
+
+
+def test_hook_append_per_phase_filters_tool_use(hist: Path,
+                                                settings_enabled: Path):
+    ch.hook_append("session_start", first_user_msg="m",
+                   path=hist, settings_path=settings_enabled)
+    result = ch.hook_append("tool_use",
+                            payload={"tool": "bash"},
+                            path=hist,
+                            settings_path=settings_enabled)
+    assert result["action"] == "skipped_cadence"
+    assert result["frequency"] == "per_phase"
+
+
+def test_hook_append_per_phase_appends_user_prompt(hist: Path,
+                                                   settings_enabled: Path):
+    ch.hook_append("session_start", first_user_msg="m",
+                   path=hist, settings_path=settings_enabled)
+    result = ch.hook_append("user_prompt",
+                            payload={"text": "hi"},
+                            path=hist,
+                            settings_path=settings_enabled)
+    assert result["action"] == "appended"
+    entries = ch.read_entries(path=hist)
+    assert len(entries) == 1
+    assert entries[0]["t"] == "user"
+    assert entries[0]["text"] == "hi"
+
+
+def test_hook_append_per_tool_filters_user_prompt(
+    hist: Path, settings_per_tool: Path,
+):
+    ch.hook_append("session_start", first_user_msg="m",
+                   path=hist, settings_path=settings_per_tool)
+    skip = ch.hook_append("user_prompt", payload={"text": "x"},
+                          path=hist, settings_path=settings_per_tool)
+    appended = ch.hook_append("tool_use", payload={"tool": "bash",
+                                                   "text": "ls"},
+                              path=hist, settings_path=settings_per_tool)
+    assert skip["action"] == "skipped_cadence"
+    assert appended["action"] == "appended"
+    entries = ch.read_entries(path=hist)
+    assert len(entries) == 1
+    assert entries[0]["t"] == "tool"
+    assert entries[0]["tool"] == "bash"
+
+
+def test_hook_append_per_turn_appends_stop_only(
+    hist: Path, settings_per_turn: Path,
+):
+    ch.hook_append("session_start", first_user_msg="m",
+                   path=hist, settings_path=settings_per_turn)
+    skip = ch.hook_append("user_prompt", payload={"text": "x"},
+                          path=hist, settings_path=settings_per_turn)
+    appended = ch.hook_append("stop", payload={"text": "done"},
+                              path=hist, settings_path=settings_per_turn)
+    assert skip["action"] == "skipped_cadence"
+    assert appended["action"] == "appended"
+    entries = ch.read_entries(path=hist)
+    assert len(entries) == 1
+    assert entries[0]["t"] == "agent"
+
+
+def test_hook_append_session_end_is_noop(
+    hist: Path, settings_enabled: Path,
+):
+    ch.hook_append("session_start", first_user_msg="m",
+                   path=hist, settings_path=settings_enabled)
+    before = len(ch.read_entries(path=hist))
+    result = ch.hook_append("session_end", path=hist,
+                            settings_path=settings_enabled)
+    assert result["action"] == "session_end_noop"
+    assert len(ch.read_entries(path=hist)) == before
+
+
+def test_hook_append_invalid_event_raises():
+    with pytest.raises(ValueError):
+        ch.hook_append("bogus_event")
+
+
+def test_hook_append_ownership_refused_after_fingerprint_change(
+    hist: Path, settings_enabled: Path,
+):
+    ch.hook_append("session_start", first_user_msg="orig",
+                   path=hist, settings_path=settings_enabled)
+    # Simulate an outside actor overwriting the sidecar with a different fp.
+    ch.write_sidecar("imposter", path=hist)
+    result = ch.hook_append("user_prompt",
+                            payload={"text": "x"},
+                            path=hist,
+                            settings_path=settings_enabled)
+    assert result["action"] == "ownership_refused"
+    assert result["state"] == "foreign"
+
+
+def test_cli_hook_append_session_start_then_event(
+    tmp_path: Path, monkeypatch, capsys, settings_enabled: Path,
+):
+    target = tmp_path / "cli-hook.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    rc = ch.main([
+        "hook-append", "--event", "session_start",
+        "--first-user-msg", "first",
+        "--settings", str(settings_enabled),
+    ])
+    assert rc == ch.EXIT_OK
+    out1 = json.loads(capsys.readouterr().out)
+    assert out1["action"] == "initialized"
+    rc = ch.main([
+        "hook-append", "--event", "user_prompt",
+        "--payload", '{"text":"hello"}',
+        "--settings", str(settings_enabled),
+    ])
+    assert rc == ch.EXIT_OK
+    out2 = json.loads(capsys.readouterr().out)
+    assert out2["action"] == "appended"
+
+
+def test_cli_hook_append_invalid_payload_returns_bad_args(
+    tmp_path: Path, monkeypatch, capsys, settings_enabled: Path,
+):
+    target = tmp_path / "cli-hook.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    rc = ch.main([
+        "hook-append", "--event", "user_prompt",
+        "--payload", "{not-json}",
+        "--settings", str(settings_enabled),
+    ])
+    assert rc == ch.EXIT_BAD_ARGS
+

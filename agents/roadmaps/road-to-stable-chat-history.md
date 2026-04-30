@@ -91,11 +91,17 @@ Phase 2 of the Product UI Track: significant work and many commits between
 > Do **not** start any step here before Phase 1 is complete and the strategy
 > per platform is locked.
 
-- [ ] **Step 1:** Build `scripts/chat_history_hook.py` (or extend
+- [x] **Step 1:** Build `scripts/chat_history_hook.py` (or extend
       `chat_history.py` with a `hook-append` subcommand) — a wrapper that:
       reads the active conversation's first-user-msg from a known location,
       computes the right entry payload from the hook's input, and appends.
       Hooks call this; they don't call `append` with raw JSON.
+      → **Implementation:** `chat_history.py hook-append` subcommand +
+      `hook_append()` API. Sidecar at `.agent-chat-history.session` carries
+      `first_user_msg` so subsequent hook calls are stateless. Cadence-aware
+      (`per_turn` / `per_phase` / `per_tool`); events not matching cadence
+      return `skipped_cadence`. 16 unit tests added in
+      `tests/test_chat_history.py` (109 total, all green).
 - [ ] **Step 2:** Augment Code wiring (assuming Phase 1 confirms HOOK is
       possible) — implement the actual hook integration. Verify it survives
       an Augment Code crash + restart cycle without corrupting the log.
