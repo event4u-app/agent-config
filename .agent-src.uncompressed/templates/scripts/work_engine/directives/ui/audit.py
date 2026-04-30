@@ -47,6 +47,12 @@ STRONG_SIMILARITY: float = 0.7
 TIE_GAP: float = 0.05
 """Top-2 within this gap counts as ambiguous regardless of confidence."""
 
+TESTED_AGAINST_SHADCN_MAJOR: int = 2
+"""Major version the ``react-shadcn-ui`` skill body declares as ``Tested
+against`` (``shadcn@2.1`` → major ``2``). When ``state.ui_audit
+.shadcn_inventory.version`` resolves to a different major, audit emits
+the soft version-mismatch halt (Phase 2 Step 5)."""
+
 AMBIGUITIES: tuple[dict[str, str], ...] = (
     {
         "code": "audit_missing",
@@ -62,6 +68,17 @@ AMBIGUITIES: tuple[dict[str, str], ...] = (
         ),
         "resolution": "user picks scaffold / bare / external_reference; "
         "agent records the choice in state.ui_audit.greenfield_decision",
+    },
+    {
+        "code": "shadcn_version_mismatch",
+        "trigger": (
+            "state.ui_audit.shadcn_inventory.version major differs from "
+            "TESTED_AGAINST_SHADCN_MAJOR — react-shadcn-ui skill was "
+            "tested against a different major"
+        ),
+        "resolution": "user accepts cautious composition or aborts; "
+        "agent records the choice in "
+        "state.ui_audit.version_mismatch_decision",
     },
     {
         "code": "audit_ambiguous",
@@ -93,6 +110,14 @@ def run(state: DeliveryState) -> StepResult:
         if not audit.get("audit_path"):
             audit["audit_path"] = "greenfield"
         return StepResult(outcome=Outcome.SUCCESS)
+
+    # Soft halt: react-shadcn-ui skill was tested against a specific
+    # major; a project on a different major needs an explicit "proceed
+    # with cautious composition" pick before apply runs. Idempotent via
+    # ``version_mismatch_decision``.
+    mismatch = _detect_shadcn_version_mismatch(audit)
+    if mismatch is not None and not audit.get("version_mismatch_decision"):
+        return _halt_shadcn_version_mismatch(state, mismatch)
 
     # Idempotent re-entry: an already-decided path round-trips through
     # SUCCESS without re-emitting the halt the user already answered.
@@ -258,6 +283,72 @@ def _similarity_of(match: dict[str, Any]) -> float:
         return 0.0
 
 
+def _detect_shadcn_version_mismatch(audit: dict[str, Any]) -> dict[str, Any] | None:
+    """Return mismatch info when the inventory diverges by a major.
+
+    Reads ``audit["shadcn_inventory"]["version"]`` and compares its
+    leading integer with :data:`TESTED_AGAINST_SHADCN_MAJOR`. Returns
+    ``None`` (no halt) when:
+
+    - the inventory is missing, not a dict, or has no ``version``;
+    - the version string cannot be parsed (treat as "unknown — skill
+      will fall back to manual composition rather than a stale skill");
+    - the major matches the tested major.
+    """
+    inventory = audit.get("shadcn_inventory")
+    if not isinstance(inventory, dict):
+        return None
+    raw_version = inventory.get("version")
+    if not isinstance(raw_version, str) or not raw_version.strip():
+        return None
+    head = raw_version.lstrip("v").split(".", 1)[0].strip()
+    try:
+        installed_major = int(head)
+    except ValueError:
+        return None
+    if installed_major == TESTED_AGAINST_SHADCN_MAJOR:
+        return None
+    return {
+        "installed_version": raw_version,
+        "installed_major": installed_major,
+        "tested_major": TESTED_AGAINST_SHADCN_MAJOR,
+    }
+
+
+def _halt_shadcn_version_mismatch(
+    state: DeliveryState, mismatch: dict[str, Any]
+) -> StepResult:
+    """BLOCKED soft-halt \u2014 user accepts cautious composition or aborts."""
+    preview = _preview_input(state)
+    installed = mismatch["installed_version"]
+    tested = mismatch["tested_major"]
+    installed_major = mismatch["installed_major"]
+    return StepResult(
+        outcome=Outcome.BLOCKED,
+        questions=[
+            f"> Input: {preview}",
+            f"> shadcn skill tested against v{tested}.x; project uses "
+            f"`{installed}` (major v{installed_major}).",
+            "> 1. Proceed with cautious composition \u2014 skill applies "
+            "general patterns, agent verifies primitive APIs against "
+            "the installed version",
+            "> 2. Abort \u2014 update the `react-shadcn-ui` skill to the "
+            "installed major before continuing",
+            "",
+            "**Recommendation: 1 \u2014 Proceed with caution** "
+            "\u2014 most shadcn primitive APIs are stable across "
+            "majors; the skill's structural guidance still applies. "
+            "Caveat: flip to 2 if the design brief leans on a "
+            "primitive whose API changed (Form, Sheet, Dialog have "
+            "had breaking renames in past majors).",
+        ],
+        message=(
+            f"shadcn version mismatch (skill v{tested}.x vs project "
+            f"{installed}); halting for cautious-composition decision."
+        ),
+    )
+
+
 def _halt_ambiguous(state: DeliveryState, audit: dict[str, Any]) -> StepResult:
     """BLOCKED halt \u2014 user picks an existing candidate or 'build new'."""
     preview = _preview_input(state)
@@ -314,4 +405,10 @@ def _halt_ambiguous(state: DeliveryState, audit: dict[str, Any]) -> StepResult:
     )
 
 
-__all__ = ["AMBIGUITIES", "STRONG_SIMILARITY", "TIE_GAP", "run"]
+__all__ = [
+    "AMBIGUITIES",
+    "STRONG_SIMILARITY",
+    "TESTED_AGAINST_SHADCN_MAJOR",
+    "TIE_GAP",
+    "run",
+]

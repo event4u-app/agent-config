@@ -258,6 +258,267 @@ def test_audit_passes_on_legacy_components_alias_with_high_confidence() -> None:
 # --- ambiguity declaration --------------------------------------------------
 
 
-def test_audit_declares_three_ambiguity_codes() -> None:
+def test_audit_declares_four_ambiguity_codes() -> None:
+    """R3 Phase 2 Step 5 added ``shadcn_version_mismatch`` to the surface."""
     codes = {entry["code"] for entry in audit.AMBIGUITIES}
-    assert codes == {"audit_missing", "greenfield_undecided", "audit_ambiguous"}
+    assert codes == {
+        "audit_missing",
+        "greenfield_undecided",
+        "shadcn_version_mismatch",
+        "audit_ambiguous",
+    }
+
+
+# --- per-stack fixtures (Phase 2 Step 5) -------------------------------------
+#
+# These fixtures pin realistic ``state.ui_audit`` payloads for each
+# detected stack so apply / review / polish downstream consumers can
+# trust the shape of what audit writes. They double as the contract
+# tests that the schema in ``state.py`` does not regress.
+
+
+def test_audit_passes_with_blade_flux_stack_fixture() -> None:
+    """Blade + Livewire + Flux: components_found uses ``.blade.php`` paths."""
+    state = _ui_state(
+        confidence_band="high",
+        ui_audit={
+            "design_system": "flux",
+            "components_found": [
+                {
+                    "name": "OrderTable",
+                    "path": "resources/views/orders/table.blade.php",
+                    "kind": "blade",
+                    "similarity": 0.82,
+                },
+                {
+                    "name": "EmptyState",
+                    "path": "resources/views/components/empty-state.blade.php",
+                    "kind": "blade",
+                    "similarity": 0.41,
+                },
+            ],
+            "patterns": {"forms": ["flux:input"], "tables": ["flux:table"]},
+            "design_tokens": {
+                "colors": {"primary": "#0f172a"},
+                "source": "tailwind.config.js",
+            },
+        },
+    )
+
+    result = audit.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+    assert state.ui_audit["audit_path"] == "high_confidence"
+
+
+def test_audit_passes_with_react_shadcn_stack_fixture() -> None:
+    """React + shadcn: shadcn_inventory at the tested major succeeds."""
+    state = _ui_state(
+        confidence_band="high",
+        ui_audit={
+            "design_system": "shadcn",
+            "components_found": [
+                {
+                    "name": "DataTable",
+                    "path": "components/data-table.tsx",
+                    "kind": "react",
+                    "similarity": 0.88,
+                },
+            ],
+            "shadcn_inventory": {
+                "version": "2.1.0",
+                "style": "default",
+                "primitives": ["Button", "Dialog", "Form", "Table"],
+            },
+            "design_tokens": {
+                "colors": {"background": "hsl(var(--background))"},
+                "source": "tailwind.config.ts",
+            },
+        },
+    )
+
+    result = audit.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+    assert state.ui_audit["audit_path"] == "high_confidence"
+
+
+def test_audit_passes_with_vue_stack_fixture() -> None:
+    """Vue: components_found uses ``.vue`` paths; no shadcn inventory."""
+    state = _ui_state(
+        confidence_band="high",
+        ui_audit={
+            "design_system": "custom",
+            "components_found": [
+                {
+                    "name": "UserCard",
+                    "path": "src/components/UserCard.vue",
+                    "kind": "vue",
+                    "similarity": 0.78,
+                },
+            ],
+            "design_tokens": {
+                "colors": {"brand": "#7c3aed"},
+                "source": "tailwind.config.js",
+            },
+        },
+    )
+
+    result = audit.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+    assert state.ui_audit["audit_path"] == "high_confidence"
+
+
+def test_audit_preserves_design_tokens_on_pass_through() -> None:
+    """Tokens fixture: design_tokens round-trips even when audit succeeds."""
+    tokens = {
+        "colors": {"primary": "#000", "secondary": "#fff"},
+        "spacing": {"sm": "0.5rem", "md": "1rem"},
+        "source": "app.css",
+    }
+    state = _ui_state(
+        confidence_band="high",
+        ui_audit={
+            "components_found": [{"name": "Card", "similarity": 0.9}],
+            "design_tokens": tokens,
+        },
+    )
+
+    result = audit.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+    # Tokens are not touched by the audit step.
+    assert state.ui_audit["design_tokens"] == tokens
+
+
+# --- shadcn version-mismatch halt (Phase 2 Step 5) --------------------------
+
+
+def test_audit_halts_on_shadcn_major_version_mismatch() -> None:
+    """Project on shadcn v3 with skill tested against v2 → soft halt."""
+    state = _ui_state(
+        confidence_band="high",
+        ui_audit={
+            "components_found": [{"name": "Button", "similarity": 0.9}],
+            "shadcn_inventory": {
+                "version": "3.0.1",
+                "primitives": ["Button"],
+            },
+        },
+    )
+
+    result = audit.run(state)
+
+    assert result.outcome is Outcome.BLOCKED
+    body = "\n".join(result.questions)
+    assert "shadcn skill tested against v2.x" in body
+    assert "3.0.1" in body
+    assert "> 1." in body and "Proceed" in body
+    assert "> 2." in body and "Abort" in body
+    assert "**Recommendation:" in body
+
+
+def test_audit_passes_when_version_mismatch_decision_recorded() -> None:
+    """Idempotent: a recorded decision lets the run continue."""
+    state = _ui_state(
+        confidence_band="high",
+        ui_audit={
+            "components_found": [{"name": "Button", "similarity": 0.9}],
+            "shadcn_inventory": {"version": "3.0.1"},
+            "version_mismatch_decision": "proceed",
+        },
+    )
+
+    result = audit.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+    assert state.ui_audit["audit_path"] == "high_confidence"
+
+
+def test_audit_does_not_halt_when_shadcn_version_matches_tested_major() -> None:
+    """v2.1.0 against tested major 2 → no version halt."""
+    state = _ui_state(
+        confidence_band="high",
+        ui_audit={
+            "components_found": [{"name": "Button", "similarity": 0.9}],
+            "shadcn_inventory": {"version": "2.4.5"},
+        },
+    )
+
+    result = audit.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+
+
+def test_audit_does_not_halt_on_unparseable_shadcn_version() -> None:
+    """``latest`` / ``canary`` strings fall back to no-halt (skill warns)."""
+    state = _ui_state(
+        confidence_band="high",
+        ui_audit={
+            "components_found": [{"name": "Button", "similarity": 0.9}],
+            "shadcn_inventory": {"version": "canary"},
+        },
+    )
+
+    result = audit.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+
+
+def test_audit_does_not_halt_when_no_shadcn_inventory() -> None:
+    """Non-React stacks have no shadcn_inventory → version check is a no-op."""
+    state = _ui_state(
+        confidence_band="high",
+        ui_audit={
+            "components_found": [{"name": "OrderTable", "similarity": 0.9}],
+            "design_system": "flux",
+        },
+    )
+
+    result = audit.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+
+
+# --- greenfield branch fixtures (Phase 2 Step 5) ----------------------------
+
+
+def test_audit_passes_when_greenfield_decision_is_bare() -> None:
+    state = _ui_state(
+        ui_audit={"greenfield": True, "greenfield_decision": "bare"},
+    )
+
+    result = audit.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+    assert state.ui_audit["audit_path"] == "greenfield"
+
+
+def test_audit_passes_when_greenfield_decision_is_external_reference() -> None:
+    state = _ui_state(
+        ui_audit={
+            "greenfield": True,
+            "greenfield_decision": "external_reference",
+            "external_reference_url": "https://ui.shadcn.com",
+        },
+    )
+
+    result = audit.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+    assert state.ui_audit["audit_path"] == "greenfield"
+
+
+def test_audit_greenfield_halt_offers_three_decision_paths() -> None:
+    """The greenfield halt body must list scaffold / bare / external."""
+    state = _ui_state(ui_audit={"greenfield": True})
+
+    result = audit.run(state)
+
+    assert result.outcome is Outcome.BLOCKED
+    body = "\n".join(result.questions)
+    assert "scaffold" in body.lower()
+    assert "bare" in body.lower()
+    assert "external" in body.lower() or "reference" in body.lower()
+
