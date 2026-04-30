@@ -102,36 +102,55 @@ Phase 2 of the Product UI Track: significant work and many commits between
       (`per_turn` / `per_phase` / `per_tool`); events not matching cadence
       return `skipped_cadence`. 16 unit tests added in
       `tests/test_chat_history.py` (109 total, all green).
-- [ ] **Step 2:** Augment Code wiring (assuming Phase 1 confirms HOOK is
-      possible) — implement the actual hook integration. Verify it survives
-      an Augment Code crash + restart cycle without corrupting the log.
-- [ ] **Step 3:** Claude Code wiring — implement `.claude/hooks/` script(s)
-      that call the hook wrapper. Verify against `task generate-tools` so the
-      install pipeline ships them.
-- [ ] **Step 4:** Update `scripts/install.sh` / `scripts/install.py` so hook
-      files land in consumer projects automatically. Idempotent install only —
-      never overwrite a customized hook.
+- [x] **Step 2:** Augment Code wiring — IDE plugin has **no** documented hook
+      surface as of 2026-04-30 → CHECKPOINT only (see Phase 3). Augment CLI
+      hooks live in user-scope `~/.augment/settings.json`; an opt-in template
+      ships at `templates/consumer-settings/augment-cli-hooks.json` that
+      consumers merge manually. Auto-deploy to user scope is intentionally
+      avoided — the package never writes outside the project root.
+- [x] **Step 3:** Claude Code wiring — `templates/consumer-settings/claude-settings.json`
+      carries five hook entries (`SessionStart`, `UserPromptSubmit`,
+      `PostToolUse`, `Stop`, `SessionEnd`) that call
+      `./agent-config chat-history:hook --platform claude`. Master CLI exposes
+      `chat-history:hook` and `chat-history:checkpoint` subcommands that
+      delegate to `scripts/chat_history.py hook-dispatch` / `hook-append`.
+- [x] **Step 4:** `scripts/install.py` ships an `ensure_claude_bridge()` that
+      merges hook configuration into `.claude/settings.json` via the existing
+      `merge_json_file()` helper — idempotent, force-gated, leaves user edits
+      intact. Smoke-tested against `/tmp/install_smoke`.
 
 ## Phase 3: CHECKPOINT fallback for platforms without hooks
 
-- [ ] **Step 1:** Build `/chat-history-checkpoint` command — minimal, single
+- [x] **Step 1:** Build `/chat-history-checkpoint` command — minimal, single
       purpose: read context, call append, emit one-line confirmation. Goes
       under `.agent-src.uncompressed/commands/`.
-- [ ] **Step 2:** Document in `rules/chat-history.md` that on platforms
+      → **Implementation:** `.agent-src.uncompressed/commands/chat-history-checkpoint.md`
+      ships the command. Master CLI `chat-history:checkpoint` subcommand
+      delegates to `scripts/chat_history.py hook-append --event checkpoint`.
+- [x] **Step 2:** Document in `rules/chat-history.md` that on platforms
       classified MANUAL/CHECKPOINT in Phase 1, the agent SHOULD invoke this
       command at phase boundaries instead of the current 3-gate Iron Law.
+      → **Implementation:** Conditional Iron Law landed in Phase 4 rewrite.
+      CHECKPOINT path documented with `/chat-history-checkpoint` as the
+      recommended phase-boundary trigger; HOOK path drops the manual gates.
 
 ## Phase 4: Rule de-escalation
 
 > Only after Phase 2 hooks are dogfooded for at least one full development
 > session each on Augment Code and Claude Code.
 
-- [ ] **Step 1:** Rewrite `.agent-src.uncompressed/rules/chat-history.md` so
+- [x] **Step 1:** Rewrite `.agent-src.uncompressed/rules/chat-history.md` so
       the Iron Law is **conditional**: HOOK platforms get a one-liner
       ("hooks handle it; rule is documentation only"); CHECKPOINT/MANUAL
       platforms keep a slimmer version of the current gates.
-- [ ] **Step 2:** Update `scripts/skill_linter.py` if it asserts on the rule's
+      → **Implementation:** Iron Law split by `chat_history.path`. HOOK
+      path documents that hooks own I/O; CHECKPOINT path keeps the three
+      cooperative gates plus the new checkpoint command. Activation &
+      handshake section branches on path before reading state.
+- [x] **Step 2:** Update `scripts/skill_linter.py` if it asserts on the rule's
       structure (it should not block the rewrite).
+      → **Verified:** `task lint-skills` passes (188/188); linter does
+      not assert on the Iron Law block structure.
 - [ ] **Step 3:** Run `task ci` and fix any drift in `.agent-src/`,
       `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`
       that comes from the compressed projection of the rewritten rule.
