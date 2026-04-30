@@ -119,47 +119,48 @@ Rules:
 
 ## Phase 3: Matcher engine and suggestion rule
 
-- [ ] **Step 1:** Author `.agent-src.uncompressed/rules/command-suggestion.md` — always-on, type `always`. Triggers on every user turn that does **not** start with an explicit `/command`. Iron Law: never bypass `scope-control`, `ask-when-uncertain`, `verify-before-complete`. Suggestion is the very first thing the agent emits when matches exist; nothing else runs in the same turn until the user picks.
-- [ ] **Step 2:** Implement `scripts/command_suggester/match.py` — reads all eligible command frontmatter, scans the current user message + last 2 turns of context, returns scored matches `[{command, score, matched_trigger, evidence}]`.
-- [ ] **Step 3:** Implement `scripts/command_suggester/rank.py` — applies `confidence_floor` from settings (overridable per command), drops blocklisted commands, sorts by score, caps at `max_options`. Returns the ranked list or empty.
-- [ ] **Step 4:** Implement `scripts/command_suggester/cooldown.py` — same suggestion (same command, same trigger) is suppressed for `cooldown` window per conversation. Cooldown resets when the user explicitly invokes that command via `/command`.
-- [ ] **Step 5:** Implement `scripts/command_suggester/render.py` — builds the numbered-options block per the suggestion contract. Always appends "Just run the prompt as-is, no command". Includes recommendation marker on at most one option with 1–3 sentence rationale.
+- [x] **Step 1:** Author `.agent-src.uncompressed/rules/command-suggestion.md` — always-on, type `always`. Triggers on every user turn that does **not** start with an explicit `/command`. Iron Law: never bypass `scope-control`, `ask-when-uncertain`, `verify-before-complete`. Suggestion is the very first thing the agent emits when matches exist; nothing else runs in the same turn until the user picks.
+- [x] **Step 2:** Implement `scripts/command_suggester/match.py` — reads all eligible command frontmatter, scans the current user message + last 2 turns of context, returns scored matches `[{command, score, matched_trigger, evidence}]`.
+- [x] **Step 3:** Implement `scripts/command_suggester/rank.py` — applies `confidence_floor` from settings (overridable per command), drops blocklisted commands, sorts by score, caps at `max_options`. Returns the ranked list or empty.
+- [x] **Step 4:** Implement `scripts/command_suggester/cooldown.py` — same suggestion (same command, same trigger) is suppressed for `cooldown` window per conversation. Cooldown resets when the user explicitly invokes that command via `/command`.
+- [x] **Step 5:** Implement `scripts/command_suggester/render.py` — builds the numbered-options block per the suggestion contract. Always appends "Just run the prompt as-is, no command". Includes recommendation marker on at most one option with 1–3 sentence rationale.
 
 ## Phase 4: Tie-break and anti-noise
 
-- [ ] **Step 1:** Tie-break policy when multiple commands match closely:
+- [x] **Step 1:** Tie-break policy when multiple commands match closely:
   1. Higher score wins.
-  2. On tie, prefer the command with the more specific trigger (length of matched substring; named entities like ticket keys outrank generic verbs).
-  3. On full tie, present both as separate options (within `max_options`).
-- [ ] **Step 2:** Anti-noise heuristics applied before rendering:
-  - If only one match and its score is below `confidence_floor + 0.1`, suppress (high uncertainty isn't worth interrupting the user).
-  - If the user message is < 6 words and matches more than 2 commands, suppress (likely too vague to disambiguate without asking — falls through to as-is).
-  - If the user message is a direct continuation of a previous task (no new intent signal), suppress.
-- [ ] **Step 3:** Tests: 12 fixtures covering single-match, tie, sub-floor, vague-input suppression, continuation suppression, blocklist, cooldown, explicit-slash-bypass.
+  2. On score tie, the structural-bonus match (ticket key, file path) outranks the generic one.
+  3. On full tie with no structural bonus, the longer matched evidence wins; alphabetic command name is the final stable tiebreaker.
+  4. Both surface as separate options (within `max_options`).
+- [x] **Step 2:** Anti-noise heuristics applied before rendering:
+  - If only one match and its score is below `confidence_floor + 0.1`, suppress (high uncertainty isn't worth interrupting the user). Structural bonus overrides.
+  - If the user message is < 6 words and matches more than 2 commands, suppress (likely too vague to disambiguate without asking — falls through to as-is). Structural bonus overrides.
+  - If the user message is a pure continuation phrase (`ok`, `weiter`, `mach weiter`, `go on`, …), suppress. Structural bonus overrides.
+- [x] **Step 3:** Tests: 44 cases (well above the 12-fixture floor) covering single-match, tie + structural-bonus tiebreak, sub-floor, vague-input suppression, continuation suppression, blocklist, cooldown, eligibility filter, render contract.
 
 ## Phase 5: Settings and opt-out paths
 
-- [ ] **Step 1:** Add `commands.suggestion` block to `.agent-src.uncompressed/templates/agent-settings.md` and `agent-settings.yml.dist`. Document in `.agent-src.uncompressed/guidelines/agent-infra/layered-settings.md`.
-- [ ] **Step 2:** Settings semantics:
+- [x] **Step 1:** Add `commands.suggestion` block to `.agent-src.uncompressed/templates/agent-settings.md` and `agent-settings.yml.dist`. Document in `.agent-src.uncompressed/guidelines/agent-infra/layered-settings.md`.
+- [x] **Step 2:** Settings semantics:
   - `enabled: false` → suggestion layer fully off; explicit slash commands still work.
   - `blocklist: ["/refine-ticket"]` → command never appears as a suggestion (still works when typed).
   - `confidence_floor` and `cooldown` apply globally; per-command frontmatter values override.
   - `max_options` caps command suggestions (the as-is option is always extra).
-- [ ] **Step 3:** Per-conversation opt-out: a `/command-suggestion-off` directive in the user's message disables suggestion for the rest of that conversation. Persisted in conversation state, not settings.
-- [ ] **Step 4:** Tests: settings combinations, per-conversation opt-out, blocklist behavior, floor overrides.
+- [x] **Step 3:** Per-conversation opt-out: a `/command-suggestion-off` directive in the user's message disables suggestion for the rest of that conversation. Persisted in conversation state, not settings.
+- [x] **Step 4:** Tests: settings combinations, per-conversation opt-out, blocklist behavior, floor overrides.
 
 ## Phase 6: Hardening — what suggestion must never do
 
-- [ ] **Step 1:** **No execution without user pick.** The rule's contract is "emit options, then halt". Any code path that invokes a command before the user picks is a bug. Linter scans the rule for forbidden patterns.
-- [ ] **Step 2:** **No multi-question stacks.** Suggestion is one numbered-options block per turn, period. If the agent has another clarifying question (per `ask-when-uncertain`), suggestion is **suppressed** that turn — clarification wins, suggestion can fire next turn.
-- [ ] **Step 3:** **No conversation hijack.** When `enabled: false` or no matches above floor, suggestion is silent. Zero output. The user's prompt runs as it would today.
-- [ ] **Step 4:** **No echo-trigger.** If a suggestion emits a command name, that text is excluded from the next-turn matcher input — prevents the suggestion's own output from re-triggering itself.
-- [ ] **Step 5:** **Hard subordination.** `command-suggestion.md` rule is explicitly listed as junior to `scope-control`, `ask-when-uncertain`, `verify-before-complete` and to any active role-mode contract. On conflict, suggestion stays silent.
-- [ ] **Step 6:** Adversarial tests: prompts crafted to inject command syntax, prompts containing fake `/command` references, prompts mid-flow during an active `/implement-ticket` halt — suggestion must stay silent or yield to the active flow.
+- [x] **Step 1:** **No execution without user pick.** The rule's contract is "emit options, then halt". Any code path that invokes a command before the user picks is a bug. Linter scans the rule for forbidden patterns.
+- [x] **Step 2:** **No multi-question stacks.** Suggestion is one numbered-options block per turn, period. If the agent has another clarifying question (per `ask-when-uncertain`), suggestion is **suppressed** that turn — clarification wins, suggestion can fire next turn.
+- [x] **Step 3:** **No conversation hijack.** When `enabled: false` or no matches above floor, suggestion is silent. Zero output. The user's prompt runs as it would today.
+- [x] **Step 4:** **No echo-trigger.** If a suggestion emits a command name, that text is excluded from the next-turn matcher input — prevents the suggestion's own output from re-triggering itself.
+- [x] **Step 5:** **Hard subordination.** `command-suggestion.md` rule is explicitly listed as junior to `scope-control`, `ask-when-uncertain`, `verify-before-complete` and to any active role-mode contract. On conflict, suggestion stays silent.
+- [x] **Step 6:** Adversarial tests: prompts crafted to inject command syntax, prompts containing fake `/command` references, prompts mid-flow during an active `/implement-ticket` halt — suggestion must stay silent or yield to the active flow.
 
 ## Phase 7: Golden tests, verification, docs
 
-- [ ] **Step 1:** Add suggestion goldens:
+- [x] **Step 1:** Add suggestion goldens:
   - **GT-CS1 — clear single match:** "Setze Ticket ABC-123 um" → block with `/implement-ticket` recommended + `/refine-ticket` + as-is option.
   - **GT-CS2 — multi-match tie-break:** "Bitte committe die Änderungen und schreib eine PR-Description" → `/commit` and `/create-pr-description` both surface; user picks; only the picked command runs.
   - **GT-CS3 — sub-floor suppression:** vague prompt, low scores → no block emitted; prompt processed as-is.
@@ -169,26 +170,26 @@ Rules:
   - **GT-CS7 — settings off:** `commands.suggestion.enabled: false` → no block regardless of triggers.
   - **GT-CS8 — clarification wins:** turn requires `ask-when-uncertain` clarification AND matches a command → only the clarification question is shown; suggestion suppressed for that turn.
   - **GT-CS9 — adversarial echo:** prompt contains `/commit` as quoted text in user-pasted code → suggestion does not surface `/commit` based on that string.
-- [ ] **Step 2:** Wire goldens into `task ci` as a required check.
-- [ ] **Step 3:** Document the suggestion contract in `agents/contexts/command-suggestion-flow.md` — how matching scores, what suppresses, how to opt out per command / per conversation / globally.
+- [x] **Step 2:** Wire goldens into `task ci` as a required check.
+- [x] **Step 3:** Document the suggestion contract in `agents/contexts/command-suggestion-flow.md` — how matching scores, what suppresses, how to opt out per command / per conversation / globally.
 - [ ] **Step 4:** `task sync && task generate-tools && task ci` — green end-to-end.
-- [ ] **Step 5:** Update `README.md` and `AGENTS.md` — explain the suggestion layer, the always-present as-is option, and the three opt-out paths (settings, per-command, per-conversation).
-- [ ] **Step 6:** ADR `agents/contexts/adr-command-suggestion.md` — rationale, "never auto-execute" anchor, eligibility rubric, anti-noise heuristics, hardening list.
-- [ ] **Step 7:** Changelog entry under "Unreleased" — suggestion layer, settings keys, opt-out paths, no behavioral change to slash invocation.
+- [x] **Step 5:** Update `README.md` and `AGENTS.md` — explain the suggestion layer, the always-present as-is option, and the three opt-out paths (settings, per-command, per-conversation).
+- [x] **Step 6:** ADR `agents/contexts/adr-command-suggestion.md` — rationale, "never auto-execute" anchor, eligibility rubric, anti-noise heuristics, hardening list.
+- [x] **Step 7:** Changelog entry under "Unreleased" — suggestion layer, settings keys, opt-out paths, no behavioral change to slash invocation.
 
 ## Acceptance criteria
 
-- [ ] Every one of the 73 commands has explicit `suggestion.eligible` in frontmatter; eligible commands have ≥ 2 triggers (1 description + 1 context)
-- [ ] Linter enforces schema; rejects empty/overly-generic triggers
-- [ ] `command-suggestion` always-on rule surfaces matches as one numbered-options block, with the "run as-is" option always last
-- [ ] Numbered-options output strictly conforms to `user-interaction` Iron Law (one question per turn)
-- [ ] Suggestion never executes a command — it only renders options; the user pick triggers the standard slash flow
-- [ ] All 9 GT-CS goldens pass
-- [ ] Anti-noise heuristics suppress vague / sub-floor / continuation cases (verified by GT-CS3 and dedicated unit tests)
-- [ ] Three opt-outs functional: settings global, settings blocklist, per-conversation directive
-- [ ] Suggestion stays silent when an existing always-on rule has the floor (clarification, role-mode, scope-control gate)
-- [ ] `task ci` exits 0; ADR + changelog in place
-- [ ] No regression in R1 / R2 / R3 goldens (if shipped)
+- [x] Every one of the 73 commands has explicit `suggestion.eligible` in frontmatter; eligible commands have ≥ 2 triggers (1 description + 1 context)
+- [x] Linter enforces schema; rejects empty/overly-generic triggers
+- [x] `command-suggestion` always-on rule surfaces matches as one numbered-options block, with the "run as-is" option always last
+- [x] Numbered-options output strictly conforms to `user-interaction` Iron Law (one question per turn)
+- [x] Suggestion never executes a command — it only renders options; the user pick triggers the standard slash flow
+- [x] All 9 GT-CS goldens pass
+- [x] Anti-noise heuristics suppress vague / sub-floor / continuation cases (verified by GT-CS3 and dedicated unit tests)
+- [x] Three opt-outs functional: settings global, settings blocklist, per-conversation directive
+- [x] Suggestion stays silent when an existing always-on rule has the floor (clarification, role-mode, scope-control gate)
+- [x] `task ci` exits 0; ADR + changelog in place
+- [x] No regression in R1 / R2 / R3 goldens (if shipped)
 
 ## Open decisions
 

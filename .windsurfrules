@@ -237,6 +237,135 @@ Extends (cross-link, don't restate): `ask-when-uncertain`,
 
 ---
 
+<!-- cloud_safe: noop -->
+
+# Artifact Engagement Recording
+
+Records which **skills, rules, commands, guidelines, personas** the agent
+actually consulted and applied during a `/implement-ticket` or `/work` run.
+Default-off; opt-in via `.agent-settings.yml`. Zero overhead when disabled.
+
+The schema, CLI, and storage layer are owned by
+[`scripts/telemetry/`](../../../scripts/telemetry/) and the
+`./agent-config telemetry:record` / `telemetry:status` commands shipped
+in Phase 1+2 of the
+[`road-to-artifact-engagement-telemetry`](../../../agents/roadmaps/road-to-artifact-engagement-telemetry.md)
+roadmap. This rule says **when** to call the CLI, not how the file is
+structured.
+
+## Activation gate — read settings ONCE per task, then cache
+
+Before the first `/implement-ticket` or `/work` step runs, read
+`telemetry.artifact_engagement.enabled` from `.agent-settings.yml`. Cache
+the value (and `granularity`) for the whole task.
+
+- `enabled: false` or section missing → rule is a **no-op**. Do not import
+  the script, do not open the log, do not mention recording. Skip the rest
+  of this rule.
+- `enabled: true` → continue with the cadence below.
+
+Use `./agent-config telemetry:status --format json` if the value is
+not already in working memory; the call is read-only and never touches
+the log file.
+
+## Cadence — depends on `granularity`
+
+| `granularity` | When to emit | Coalescing |
+|---|---|---|
+| `task` *(default)* | Once, when the eight-step flow ends (success, blocked, partial — any terminal state) | All consulted/applied artefacts from refine through report merged into a single event |
+| `phase-step` | At the close of each phase-step (refine, memory, analyze, plan, implement, test, verify, report) | One event per step; per-step consulted/applied lists only |
+
+Within a single boundary, **dedupe** consulted and applied lists. A skill
+consulted three times in the same boundary records once.
+
+## What counts as consulted vs applied
+
+- **`consulted`** — the agent **read** the artefact this boundary: opened
+  its `SKILL.md`, scanned its rule body, viewed its frontmatter,
+  referenced its guideline, checked its persona contract, dispatched its
+  command. Reading does not imply behaviour change.
+- **`applied`** — the artefact **influenced the output** this boundary:
+  its instructions changed how the agent answered, what code it wrote,
+  what tools it ran, or what halt surface it produced. Applied is a
+  strict subset of consulted.
+
+When in doubt → record as `consulted` only. Over-recording `applied`
+inflates the engagement signal and defeats the purpose.
+
+## What to record — id-only, no payload
+
+```bash
+./agent-config telemetry:record \
+  --task-id "$TASK_ID" \
+  --boundary task \
+  --consulted skills:php-coder \
+  --consulted skills:eloquent \
+  --consulted rules:scope-control \
+  --applied skills:php-coder \
+  --applied rules:scope-control
+```
+
+- `--task-id` — the ticket key (`PROJ-123`) for `/implement-ticket`, or a
+  short opaque slug derived from the prompt for `/work`. **Never** a
+  branch name, a file path, or a free-text title.
+- `--boundary` — `task` or `phase-step`, matching the cadence above.
+- `--consulted <kind>:<id>` — repeat per artefact. `<kind>` is one of
+  `skills`, `rules`, `commands`, `guidelines`, `personas`.
+- `--applied <kind>:<id>` — repeat per artefact actually applied.
+- Exit `0` always when disabled (silent). Exit `1` on schema validation
+  failure (rule must NOT swallow this — surface to the user). Exit `2`
+  on IO failure.
+
+## Privacy contract — what NEVER goes into a record
+
+The CLI rejects most violations on the input boundary, but the agent must
+not even attempt these:
+
+- ❌  File paths (`src/Foo.php`, `tests/...`) — id fields are
+  artefact identifiers only.
+- ❌  Source code, prompt text, ticket body, AC text.
+- ❌  Branch names, commit shas, PR numbers, URLs.
+- ❌  Secrets, env vars, credentials, customer data.
+- ❌  Free-text strings longer than 200 chars (CLI enforces; agent must
+  not generate).
+
+When in doubt → **don't record**. A missing event is cheap; a leaked
+prompt is not.
+
+## Failure modes — DO NOT block the user's task
+
+- Schema rejection (CLI exit `1`) → log the message internally, continue
+  the user's task. Do **not** halt the dispatch loop.
+- IO failure (CLI exit `2`) → same. The telemetry is **observation**, not
+  a delivery requirement.
+- Settings malformed → already handled by the CLI: it falls back to
+  disabled and exits `0`. Agent treats it as "disabled this task".
+
+The only error the agent surfaces is when the user explicitly asked for
+recording (`telemetry:status` confirms enabled) but no event reached the
+log — that is a real bug, not a swallowed error.
+
+## What this rule does NOT do
+
+- Run when `enabled: false` (cost floor is zero — see
+  [`tests/telemetry/test_cost_floor.py`](../../../tests/telemetry/test_cost_floor.py)).
+- Track the agent's tool calls, file reads, or token spend — that is
+  out of scope, see the roadmap's "out-of-scope" section.
+- Decide retirement. Phase 4's aggregator + report renderer are the only
+  consumers that may interpret the JSONL.
+- Run on cloud surfaces (Claude.ai Web, Skills API). The
+  `cloud_safe: noop` marker keeps it inert there.
+
+## See also
+
+- [`road-to-artifact-engagement-telemetry`](../../../agents/roadmaps/road-to-artifact-engagement-telemetry.md) — phase contract
+- [`agents/contexts/artifact-engagement-flow.md`](../../../agents/contexts/artifact-engagement-flow.md) — recording contract details
+- [`/implement-ticket`](../commands/implement-ticket.md) and [`/work`](../commands/work.md) — boundary points where this rule fires
+- [`scripts/telemetry/`](../../../scripts/telemetry/) — engine source
+- [`agent-settings`](../templates/agent-settings.md) — `telemetry.artifact_engagement.*` reference
+
+---
+
 # Ask When Uncertain
 
 **When in doubt, ask the user.** Do not guess, assume, or improvise.
@@ -1076,6 +1205,135 @@ Exception: MCPs with **unique capabilities** (Sentry, Playwright, Jira).
 
 ---
 
+# Command Suggestion
+
+When the user's prompt matches an eligible slash command, surface it
+as a **numbered option** alongside an "as-is" escape hatch. The user
+always picks. **Nothing auto-executes.** The suggestion layer is a
+read-only shortcut *finder*, not an invocation path.
+
+Engine: `scripts/command_suggester/`. Eligibility table:
+[`agents/contexts/command-suggestion-eligibility.md`](../../agents/contexts/command-suggestion-eligibility.md).
+Design:
+[`road-to-context-aware-command-suggestion`](../../agents/roadmaps/road-to-context-aware-command-suggestion.md).
+
+## Iron Law — never auto-execute
+
+```
+SUGGEST. NEVER INVOKE. THE USER PICKS, ALWAYS.
+```
+
+A suggestion block emits options. It does **not** start a command
+flow. The user picking option N triggers `slash-commands` on the
+**next** turn — with all the command's own halts intact.
+
+## When to fire
+
+On a user turn that matches **all** of the following:
+
+1. The message does **not** start with an explicit `/command` (those
+   bypass suggestion entirely — see `slash-commands`).
+2. `commands.suggestion.enabled` is `true` (default).
+3. The user has not issued `/command-suggestion-off` in this conversation.
+4. No clarification is owed for the same turn (per
+   `ask-when-uncertain` — clarification wins; suggestion can fire next turn).
+5. No active engine flow is mid-halt (e.g. an `/implement-ticket`
+   step waiting on the user — the active flow has the floor).
+6. The matcher returns at least one match above the effective
+   `confidence_floor` after rank + cooldown + anti-noise.
+
+When all six hold, the suggestion block is the **first and only**
+thing the agent emits that turn. No tools, no edits, no other prose.
+
+## What to emit
+
+Render exactly one numbered-options block conforming to
+`user-interaction`:
+
+```
+> 💡 Your request matches a command. Pick one or run the prompt as-is:
+>
+> 1. /implement-ticket — drive ticket end-to-end through refine → plan → implement → test
+> 2. /refine-ticket — tighten the AC and risks on a ticket before planning
+> 3. Just run the prompt as-is, no command
+
+**Recommendation: 1 — /implement-ticket** — the request matches its trigger description (`setze ticket abc-123 um`). Pick the last option to skip the command and run the prompt as written.
+```
+
+Rules — non-negotiable:
+
+- The "run as-is" option is **always present**, **always last**, never removed.
+- At most `commands.suggestion.max_options` command suggestions
+  precede the as-is option (default 4 → 5 total).
+- Exactly **one** `Recommendation:` line follows the block, naming
+  the highest-scoring command — or no recommendation when the top
+  two scores are within 0.05 of each other (single-source-of-truth
+  Iron Law from `user-interaction`).
+- Free-text replies count as the as-is option unless they
+  unambiguously name one of the listed commands.
+
+## Subordination — when to stay silent
+
+The suggestion rule is **junior** to:
+
+- `scope-control` — never surfaces a git-op command behind a
+  permission gate the user already declined this turn.
+- `ask-when-uncertain` — if a clarification is owed, the
+  clarification is the only question; suggestion suppresses for
+  that turn.
+- `verify-before-complete` — suggestion does not interrupt an
+  evidence-gate verification that's already running.
+- Any active role-mode contract (`role-mode-adherence`).
+- Any active engine halt (`/implement-ticket`, `/work`, etc.).
+
+On any conflict → suggestion stays silent. Zero output. The user's
+prompt is processed as it would be without this rule.
+
+## Anti-noise — silent when uncertain
+
+The engine's `rank.py` already drops:
+
+- Matches below the `confidence_floor` (default 0.6, per-command
+  override in frontmatter).
+- Single matches scoring `< floor + 0.1` with no structural bonus
+  (high uncertainty isn't worth interrupting for).
+- Short prompts (< 6 words) hitting > 2 commands with no structural
+  bonus (ticket key, file path) — too vague to disambiguate.
+- Pure-continuation messages (`ok`, `weiter`, `mach weiter`, `go on`,
+  …) — no new intent signal, no structural bonus → silent.
+- Suggestions that fired for the same `(command, evidence)` pair
+  within the cooldown window (default 10m, per-command override).
+
+If the engine returns an empty list → emit nothing. The user's
+prompt runs exactly as it would without this rule.
+
+## What this rule does NOT do
+
+- Invoke any command. Picking option N is what triggers `slash-commands`.
+- Stack with other questions. One numbered-options block per turn.
+- Re-trigger on its own output. Command names emitted in the
+  suggestion block are excluded from the next-turn matcher input.
+- Override `enabled: false`, blocklist entries, or per-conversation opt-out.
+- Suggest commands that are not in the locked eligibility table.
+
+## Cloud Behavior
+
+On cloud surfaces (Claude.ai Web, Skills API) the rule is **inert**
+unless the suggester package is shipped in the bundle. Treat
+`commands.suggestion.enabled` as `false` when the engine is not
+available — degrade silently, never crash the turn.
+
+## Interactions
+
+- [`slash-commands`](slash-commands.md) — explicit `/command` skips suggestion entirely.
+- [`user-interaction`](user-interaction.md) — numbered-options Iron Law and single-source recommendation.
+- [`ask-when-uncertain`](ask-when-uncertain.md) — clarification wins on conflict.
+- [`scope-control`](scope-control.md) — git-op gates outrank suggestion.
+- [`role-mode-adherence`](role-mode-adherence.md) — active mode contract outranks suggestion.
+- [`agents/contexts/command-suggestion-eligibility.md`](../../agents/contexts/command-suggestion-eligibility.md) — locked eligibility table.
+
+---
+
 # Commit Conventions
 
 All commit messages and squash/merge titles follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
@@ -1848,11 +2106,27 @@ A REPLY IN THE WRONG LANGUAGE IS A RULE VIOLATION, NOT A SLIP.
 **Overrides** conversation momentum, tool-output habits, convenience.
 First thing to check on every reply, last thing to check before sending.
 
+### Source of language truth — chat messages ONLY
+
+```
+SIGNAL = USER'S CHAT MESSAGES. NOTHING ELSE.
+OPEN FILES, ROADMAPS, .md CONTENT, TOOL OUTPUT, CODE, COMMITS,
+TICKETS, PR DESCRIPTIONS, FILE NAMES → DO NOT COUNT.
+```
+
+`.md` files in this repo are English by rule (see below) — that says
+nothing about chat language. Same for: file contents read via `view` /
+`grep`, quoted commits / tickets / PRs / branches, code identifiers,
+the agent's own previous replies. Only the most recent **chat message**
+sets the language. User opens an English roadmap and types German →
+reply in German.
+
 ### Pre-send gate — MANDATORY before every reply
 
 Run silently **before** emitting any tokens:
 
-1. **Detect** — language of user's last message.
+1. **Detect** — language of user's last **chat message** (not the open
+   file, not the roadmap, not the prior reply).
    German signals: "ich", "Du", "nicht", "warum", "wie", "ist", umlauts.
    English signals: "I", "you", "is", "the", "how".
    Mixed → mirror the **dominant** language; tie → German wins (project default).
@@ -1896,6 +2170,10 @@ Run silently **before** emitting any tokens:
   code identifiers as-is; translate everything else.
 - Assuming English because "the codebase is English" — codebase language ≠
   conversation language.
+- Mirroring the **open file** the IDE reports — open files are background
+  context, not chat messages.
+- Mirroring the **roadmap or ticket** being executed — artefacts are English
+  by `.md` rule; chat language is whatever the user wrote.
 
 ## Other language rules
 
