@@ -79,6 +79,8 @@ class DeliveryState:
     ui_design: dict[str, Any] | None = None
     ui_review: dict[str, Any] | None = None
     ui_polish: dict[str, Any] | None = None
+    contract: dict[str, Any] | None = None
+    stitch: dict[str, Any] | None = None
 
 
 Step = Callable[[DeliveryState], StepResult]

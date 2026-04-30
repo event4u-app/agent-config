@@ -37,6 +37,18 @@ The wire format adds five envelope fields on top of the legacy
   the round counter (``rounds`` ≤ 2 ceiling) and the per-round
   applied-fix list so a re-entry knows whether the loop has been
   exhausted.
+- ``contract`` — optional backend-contract envelope written by
+  :mod:`work_engine.directives.mixed.contract` (R3 Phase 4 Step 1).
+  Locks ``data_model`` and ``api_surface`` before any UI work starts;
+  ``contract_confirmed`` carries the user's sign-off. The mixed UI
+  step refuses to advance without a confirmed contract — this is the
+  sentinel that prevents UI work from racing ahead of the backend.
+- ``stitch`` — optional integration-verification envelope written by
+  :mod:`work_engine.directives.mixed.stitch` (R3 Phase 4 Step 3).
+  Carries the end-to-end smoke ``scenarios`` list, an aggregate
+  ``verdict`` (success / blocked / partial), and the
+  ``integration_confirmed`` flag the user sets after reviewing the
+  integration evidence.
 
 All other fields keep their v0 names so the dispatcher can read the
 legacy slice unchanged once Phase 3 wires the steps over.
@@ -139,6 +151,8 @@ class WorkState:
     ui_design: dict[str, Any] | None = None
     ui_review: dict[str, Any] | None = None
     ui_polish: dict[str, Any] | None = None
+    contract: dict[str, Any] | None = None
+    stitch: dict[str, Any] | None = None
     version: int = SCHEMA_VERSION
     persona: str = "senior-engineer"
     memory: list[dict[str, Any]] = field(default_factory=list)
@@ -171,6 +185,8 @@ def to_dict(state: WorkState) -> dict[str, Any]:
     _validate_ui_design(state.ui_design)
     _validate_ui_review(state.ui_review)
     _validate_ui_polish(state.ui_polish)
+    _validate_contract(state.contract)
+    _validate_stitch(state.stitch)
     return {
         "version": state.version,
         "input": {"kind": state.input.kind, "data": state.input.data},
@@ -181,6 +197,8 @@ def to_dict(state: WorkState) -> dict[str, Any]:
         "ui_design": state.ui_design,
         "ui_review": state.ui_review,
         "ui_polish": state.ui_polish,
+        "contract": state.contract,
+        "stitch": state.stitch,
         "persona": state.persona,
         "memory": state.memory,
         "plan": state.plan,
@@ -245,6 +263,12 @@ def from_dict(payload: Any) -> WorkState:
     ui_polish = payload.get("ui_polish")
     _validate_ui_polish(ui_polish)
 
+    contract = payload.get("contract")
+    _validate_contract(contract)
+
+    stitch = payload.get("stitch")
+    _validate_stitch(stitch)
+
     return WorkState(
         input=Input(kind=kind, data=data),
         intent=payload.get("intent", DEFAULT_INTENT),
@@ -254,6 +278,8 @@ def from_dict(payload: Any) -> WorkState:
         ui_design=dict(ui_design) if isinstance(ui_design, dict) else None,
         ui_review=dict(ui_review) if isinstance(ui_review, dict) else None,
         ui_polish=dict(ui_polish) if isinstance(ui_polish, dict) else None,
+        contract=dict(contract) if isinstance(contract, dict) else None,
+        stitch=dict(stitch) if isinstance(stitch, dict) else None,
         version=version,
         persona=payload.get("persona", "senior-engineer"),
         memory=list(payload.get("memory", [])),
@@ -466,6 +492,81 @@ def _validate_ui_polish(ui_polish: Any) -> None:
     if "applied" in ui_polish and not isinstance(ui_polish["applied"], list):
         raise SchemaError(
             "state.ui_polish.applied must be a list when present",
+        )
+
+
+def _validate_contract(contract: Any) -> None:
+    """Reject malformed ``contract`` envelopes; tolerate ``None`` and ``{}``.
+
+    ``None`` means the contract step has not run yet — the mixed
+    ``contract`` directive (R3 Phase 4 Step 1) emits the
+    agent-directive that populates it. Once populated,
+    ``data_model`` and ``api_surface`` (when present) must be lists,
+    and ``contract_confirmed`` (when present) must be a bool. Field
+    content (entity names, endpoint shapes) is validated by the
+    contract handler; the schema enforces only shape so the mixed UI
+    step's sentinel check (``contract_confirmed is True``) stays a
+    simple equality test.
+    """
+    if contract is None:
+        return
+    if not isinstance(contract, dict):
+        raise SchemaError(
+            f"state.contract must be a JSON object or null; "
+            f"got {type(contract).__name__}",
+        )
+    if "data_model" in contract and not isinstance(contract["data_model"], list):
+        raise SchemaError(
+            "state.contract.data_model must be a list when present",
+        )
+    if "api_surface" in contract and not isinstance(contract["api_surface"], list):
+        raise SchemaError(
+            "state.contract.api_surface must be a list when present",
+        )
+    if "contract_confirmed" in contract and not isinstance(
+        contract["contract_confirmed"], bool
+    ):
+        raise SchemaError(
+            "state.contract.contract_confirmed must be a bool when present",
+        )
+
+
+def _validate_stitch(stitch: Any) -> None:
+    """Reject malformed ``stitch`` envelopes; tolerate ``None`` and ``{}``.
+
+    ``None`` means the integration-verification step has not run yet
+    — the mixed ``stitch`` directive (R3 Phase 4 Step 3) emits the
+    agent-directive that populates it. Once populated, ``scenarios``
+    (when present) must be a list of integration smoke cases,
+    ``verdict`` (when present) must be one of
+    ``{"success", "blocked", "partial"}``, and
+    ``integration_confirmed`` (when present) must be a bool. The
+    stitch handler enforces verdict semantics; the schema enforces
+    only shape.
+    """
+    if stitch is None:
+        return
+    if not isinstance(stitch, dict):
+        raise SchemaError(
+            f"state.stitch must be a JSON object or null; "
+            f"got {type(stitch).__name__}",
+        )
+    if "scenarios" in stitch and not isinstance(stitch["scenarios"], list):
+        raise SchemaError(
+            "state.stitch.scenarios must be a list when present",
+        )
+    if "verdict" in stitch:
+        verdict = stitch["verdict"]
+        if verdict not in {"success", "blocked", "partial"}:
+            raise SchemaError(
+                f"state.stitch.verdict must be one of success/blocked/partial; "
+                f"got {verdict!r}",
+            )
+    if "integration_confirmed" in stitch and not isinstance(
+        stitch["integration_confirmed"], bool
+    ):
+        raise SchemaError(
+            "state.stitch.integration_confirmed must be a bool when present",
         )
 
 

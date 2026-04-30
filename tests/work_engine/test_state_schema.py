@@ -364,6 +364,127 @@ class TestUiAuditEnvelope:
             from_dict(payload)
 
 
+class TestContractEnvelope:
+    """``state.contract`` is the R3-Phase-4 sentinel written by ``mixed.contract``.
+
+    Schema rules: ``None`` is the default (contract has not run).
+    When present, ``data_model`` and ``api_surface`` (if set) must be
+    lists, and ``contract_confirmed`` (if set) must be a bool. The
+    mixed UI step's gate reads ``contract_confirmed is True`` so
+    schema-level shape integrity is load-bearing.
+    """
+
+    def test_default_contract_is_none(self) -> None:
+        state = _build_state()
+        assert state.contract is None
+        assert to_dict(state)["contract"] is None
+
+    def test_contract_round_trips(self) -> None:
+        contract = {
+            "data_model": [{"entity": "Booking", "fields": ["id", "status"]}],
+            "api_surface": [{"method": "POST", "path": "/bookings"}],
+            "contract_confirmed": True,
+        }
+        state = _build_state(contract=contract)
+
+        rebuilt = from_dict(to_dict(state))
+
+        assert rebuilt.contract == contract
+
+    def test_rejects_non_list_data_model(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "contract": {"data_model": "Booking"},
+        }
+        with pytest.raises(SchemaError, match="contract.data_model"):
+            from_dict(payload)
+
+    def test_rejects_non_bool_contract_confirmed(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "contract": {"contract_confirmed": "yes"},
+        }
+        with pytest.raises(SchemaError, match="contract_confirmed"):
+            from_dict(payload)
+
+    def test_rejects_contract_that_is_not_an_object(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "contract": ["not", "an", "object"],
+        }
+        with pytest.raises(SchemaError, match="state.contract must be a JSON object"):
+            from_dict(payload)
+
+
+class TestStitchEnvelope:
+    """``state.stitch`` is the R3-Phase-4 integration verdict from ``mixed.stitch``.
+
+    Schema rules: ``None`` is the default (stitch has not run). When
+    present, ``scenarios`` (if set) must be a list, ``verdict`` (if
+    set) must be one of ``success``/``blocked``/``partial``, and
+    ``integration_confirmed`` (if set) must be a bool.
+    """
+
+    def test_default_stitch_is_none(self) -> None:
+        state = _build_state()
+        assert state.stitch is None
+        assert to_dict(state)["stitch"] is None
+
+    def test_stitch_round_trips(self) -> None:
+        stitch = {
+            "scenarios": [{"name": "fill-form-and-submit", "result": "pass"}],
+            "verdict": "success",
+            "integration_confirmed": True,
+        }
+        state = _build_state(stitch=stitch)
+
+        rebuilt = from_dict(to_dict(state))
+
+        assert rebuilt.stitch == stitch
+
+    def test_rejects_unknown_verdict(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "stitch": {"verdict": "kinda-ok"},
+        }
+        with pytest.raises(SchemaError, match="stitch.verdict"):
+            from_dict(payload)
+
+    def test_rejects_non_list_scenarios(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "stitch": {"scenarios": {"name": "x"}},
+        }
+        with pytest.raises(SchemaError, match="stitch.scenarios"):
+            from_dict(payload)
+
+    def test_rejects_stitch_that_is_not_an_object(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "stitch": "not-an-object",
+        }
+        with pytest.raises(SchemaError, match="state.stitch must be a JSON object"):
+            from_dict(payload)
+
+
 class TestUnknownTopLevelKeysAreTolerated:
     def test_extra_keys_are_dropped(self) -> None:
         # Forward-compat: an older reader against a newer file should
