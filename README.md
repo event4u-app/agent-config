@@ -335,6 +335,23 @@ Skills use a `SKILL.md` format with YAML frontmatter that is compatible with
 the [Agent Skills](https://agentskills.io) community spec and with Claude
 Code's Agent Skills specification.
 
+### Cloud-only surfaces (paste-in distribution)
+
+For platforms where the package's scripts cannot run, the rules ship as
+plain text the user pastes into the platform's own guidance field.
+
+| Surface | Output | How to install |
+|---|---|---|
+| **Linear AI** (Codegen, Charlie, …) | `dist/linear/{workspace,team,personal}.md` | `task build-linear-digest`, then paste each layer into Linear's `Settings → Agents → Additional guidance` |
+| **Claude.ai Web Skills** | `dist/cloud/<skill>.zip` | `task build-cloud-bundles-all`, then upload the ZIP via Skills UI |
+
+The Linear digest is split into three layers — workspace (universal
+coding posture), team (framework-specific), personal (empty stub). See
+[`agents/contexts/linear-ai-three-layers.md`](agents/contexts/linear-ai-three-layers.md)
+for the rationale and
+[`agents/contexts/linear-ai-rules-inclusion.md`](agents/contexts/linear-ai-rules-inclusion.md)
+for the per-rule routing.
+
 ---
 
 ## Core Principles

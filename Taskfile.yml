@@ -300,6 +300,14 @@ tasks:
     desc: Tier classification for cloud-distribution readiness
     cmd: python3 scripts/audit_cloud_compatibility.py {{.CLI_ARGS}}
 
+  build-linear-digest:
+    desc: Build the Linear AI rules digest (workspace + team + personal) into dist/linear/
+    cmd: python3 scripts/build_linear_digest.py {{.CLI_ARGS}}
+
+  ci-linear-digest:
+    desc: Validate the Linear AI digest builds clean (CI gate, no per-rule drift, under budget)
+    cmd: python3 scripts/build_linear_digest.py --strict-missing
+
   first-run:
     desc: Show the recommended first-run experience for new users
     cmd: bash scripts/first-run.sh
@@ -391,6 +399,7 @@ tasks:
       - task: lint-skills
       - task: lint-marketplace
       - task: ci-cloud-bundle
+      - task: ci-linear-digest
       - task: check-memory
       - task: golden-replay
       - task: test
