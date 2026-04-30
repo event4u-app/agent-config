@@ -131,11 +131,11 @@ State additions:
 
 ## Phase 5: `fe-design` migration and skill repositioning
 
-- [ ] **Step 1:** Audit `fe-design/SKILL.md` against the new directive set. Move planning content into `directives/ui/design.py` (or a referenced sub-skill); keep `fe-design` as a universal frontend-design *reference* skill (architecture patterns, component-structure heuristics) — not an executor.
-- [ ] **Step 2:** Reposition `blade-ui`, `livewire`, `flux` as stack-implementation skills invoked by `directives/ui/apply.py`. Their descriptions clarify they are dispatched, not standalone.
-- [ ] **Step 3:** Cross-reference cleanup — every UI skill points to the directive set as the orchestrator; no UI skill claims to own the full flow.
-- [ ] **Step 4:** Run `python3 scripts/check_references.py` and fix every dangling reference.
-- [ ] **Step 5 (optional):** Author template `agents/contexts/copywriting.md` — voice, tone, microcopy patterns, banned phrases. When present, design-brief loads it and threads tone through every microcopy field. When absent, audit's tone-detection (reading existing button labels and empty-states) fills the gap.
+- [x] **Step 1:** Audit `fe-design/SKILL.md` against the new directive set. Move planning content into `directives/ui/design.py` (or a referenced sub-skill); keep `fe-design` as a universal frontend-design *reference* skill (architecture patterns, component-structure heuristics) — not an executor. _Landed: `fe-design` description rewritten as stack-agnostic reference cited by `directives/ui/design.py`; planning heuristics retained, executor verbs removed; compressed `.agent-src/skills/fe-design/SKILL.md` in sync._
+- [x] **Step 2:** Reposition `blade-ui`, `livewire`, `flux` as stack-implementation skills invoked by `directives/ui/apply.py`. Their descriptions clarify they are dispatched, not standalone. _Landed: each skill's description and "When to use" section explicitly names `directives/ui/apply.py` (and `review.py` / `polish.py`) as the dispatcher; standalone-invocation language removed; compressed siblings regenerated._
+- [x] **Step 3:** Cross-reference cleanup — every UI skill points to the directive set as the orchestrator; no UI skill claims to own the full flow. _Landed: `fe-design`, `blade-ui`, `livewire`, `flux`, `react-shadcn-ui` all reference the dispatching directive(s); audit→design→apply→review→polish chain is canonical; previously missing `react-shadcn-ui` compressed sibling now present in `.agent-src/`._
+- [x] **Step 4:** Run `python3 scripts/check_references.py` and fix every dangling reference. _Landed: `bash scripts/compress.sh --check` ✅ in sync; `python3 scripts/check_compression.py` ✅ zero 🔴 errors (only ℹ️ minimal-reduction info on templates); `python3 scripts/check_references.py` ✅ no broken references._
+- [-] **Step 5 (optional):** Author template `agents/contexts/copywriting.md` — voice, tone, microcopy patterns, banned phrases. When present, design-brief loads it and threads tone through every microcopy field. When absent, audit's tone-detection (reading existing button labels and empty-states) fills the gap. _Deferred: optional, not a blocker for Phase 6/7. Audit's tone-detection fallback is sufficient for the current track; can be added in a follow-up roadmap when copywriting standardization is requested._
 
 ## Phase 6: Golden Compatibility Tests + UI goldens
 
