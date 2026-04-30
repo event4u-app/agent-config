@@ -162,11 +162,11 @@ T3-S is the **manageable** tier — 37 files mention scripts, but the underlying
 ## Acceptance Criteria
 
 - [x] Audit shows **0 T3-H artefacts** after Phase 2 (or every remaining T3-H has an explicit `cloud_safe: noop` declaration)
-- [ ] `task build-cloud-bundles-all` produces a complete `dist/cloud/` set on a clean checkout
-- [ ] `task build-linear-digest` produces a `dist/linear/workspace.md` that fits Linear's per-field char limit
+- [x] `task build-cloud-bundles-all` produces a complete `dist/cloud/` set on a clean checkout — verified `2026-04-30` via fresh `git clone` into `/tmp`: `task build-cloud-bundles-all` → 125 ZIPs built · 0 skipped, `dist/cloud/*.zip` count = 125.
+- [x] `task build-linear-digest` produces a `dist/linear/workspace.md` that fits Linear's per-field char limit — verified `2026-04-30`: `workspace.md` = 59,855 bytes, `team.md` = 8,453 bytes, `personal.md` = 464 bytes; `build_linear_digest.py` enforces a `--max-bytes` budget (default 100,000 bytes — conservative cap per Open Question #1) and exits 2 if exceeded. workspace fits well under budget.
 - [ ] At least one bundle and the Linear digest verified manually on the live platform (screenshots in `agents/reports/`)
-- [ ] `README.md` documents all four install paths
-- [ ] `task ci` enforces the cloud invariants (description budget, T3-H gating, broken-link absence in the Linear digest)
+- [x] `README.md` documents all four install paths — landed in Phase 5 Step 2 with `Project-installed` / `Plugin-installed` / `Cloud / Hosted-agent surfaces` tables linking into [`docs/installation.md`](../../docs/installation.md).
+- [x] `task ci` enforces the cloud invariants (description budget, T3-H gating, broken-link absence in the Linear digest) — verified `2026-04-30`: `task ci` chain calls `lint-marketplace` → `ci-cloud-bundle` (`build_cloud_bundle.py --check` runs `enforce_description_budget` 200-char cap + T3-H skip-with-reason gate) → `ci-linear-digest` (`build_linear_digest.py --strict-missing` exits non-zero on unmatched `strip_sections` = broken-link drift signal). Wired into PR pipeline via `.github/workflows/consistency.yml` (Phase 5 Step 5).
 - [ ] All package quality gates still pass: `task sync-check`, `task check-refs`, `task check-portability`, `task lint-skills`, `task check-reply-consistency`, `task test`
 - [ ] **Final re-check after sibling roadmaps archived** — re-run `python3 scripts/audit_cloud_compatibility.py` once `road-to-context-aware-command-suggestion`, `road-to-product-ui-track`, `road-to-artifact-engagement-telemetry`, and `road-to-visual-review-loop` are all archived; if new/changed skills introduced cloud-unfriendly prose, fix before closing this roadmap
 
