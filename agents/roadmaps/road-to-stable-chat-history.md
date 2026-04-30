@@ -172,13 +172,38 @@ Phase 2 of the Product UI Track: significant work and many commits between
       verify a fresh session resumes via `turn-check` without losing the
       pre-crash entries, cover the foreign-user-no-clobber path, and round-trip
       through the CLI. Lives in `tests/test_chat_history.py`.
-- [ ] **Step 1:** Dogfood — run a full development session on Augment Code
+- [~] **Step 1:** Dogfood — run a full development session on Augment Code
       with hooks enabled, perform crash-recovery test (kill agent mid-session,
       resume on new chat, verify the gap-period entries are intact).
-- [ ] **Step 2:** Same on Claude Code if Phase 2 covered it.
-- [ ] **Step 3:** Long-tail check — every commit landed since session start
+      → **Synthetic CLI round-trip done** (`/tmp/test_hook_crash2.py`):
+      `session_start` after a crash with the same `first-user-msg` returns
+      `action: sidecar_written`, the 5 pre-crash entries (header + 2 user
+      + 2 phase) are preserved, and 2 post-resume entries land cleanly
+      after the tail. `frequency: per_phase` skips of `agent_response`
+      and `tool_use` events behave as designed.
+      → **Open**: a real Augment CLI session with hooks installed
+      (`templates/consumer-settings/augment-cli-hooks.json`) — agent
+      currently runs on the IDE plugin (CHECKPOINT path), so this step
+      needs an explicit Augment CLI dogfood run to count as "real" hook
+      verification.
+- [~] **Step 2:** Same on Claude Code if Phase 2 covered it.
+      → Phase 2 shipped `templates/consumer-settings/claude-settings.json`
+      with `SessionStart`, `UserPromptSubmit`, `PostToolUse`, `Stop` hooks
+      wired to `chat_history.py hook-append`. Substance is covered by the
+      same synthetic round-trip + automated pytest cases.
+      → **Open**: a real Claude Code session against this repo with the
+      claude-settings.json installed.
+- [~] **Step 3:** Long-tail check — every commit landed since session start
       shows up in the chat-history log without an agent ever calling
       `append` explicitly.
+      → **Live evidence** from the active log on this repo:
+      header started 2026-04-28T23:49:31; 105 commits have landed since;
+      the log itself is on the CHECKPOINT path (this is the IDE plugin),
+      so commit-level entries depend on cooperative `append` calls — that
+      is by design, not a hook bug. The HOOK-path equivalent is covered
+      by the synthetic round-trip and `tests/test_crash_recovery_via_cli_round_trip`.
+      → **Open**: same as Steps 1+2 — a real CLI/Claude session would
+      provide the platform-driven evidence.
 
 ## Acceptance Criteria
 

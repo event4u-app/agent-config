@@ -6,10 +6,10 @@
 
 ## Overall
 
-**63 / 121 steps done · 52%**
+**63 / 118 steps done · 53%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   52%
+█████████████████████░░░░░░░░░░░░░░░░░░░   53%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-product-ui-track.md](roadmaps/road-to-product-ui-track.md) | 7 | 53 | 42 | 10 | 1 | 0 | ██░░░░░░░░ 19% |
-| 2 | [road-to-stable-chat-history.md](roadmaps/road-to-stable-chat-history.md) | 5 | 28 | 9 | 19 | 0 | 0 | ███████░░░ 68% |
+| 2 | [road-to-stable-chat-history.md](roadmaps/road-to-stable-chat-history.md) | 5 | 28 | 6 | 19 | 3 | 0 | ████████░░ 76% |
 | 3 | [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md) | 7 | 44 | 3 | 34 | 7 | 0 | █████████░ 92% |
 | 4 | [road-to-visual-review-loop.md](roadmaps/road-to-visual-review-loop.md) | 1 | 4 | 4 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -41,7 +41,7 @@
 
 ### [road-to-stable-chat-history.md](roadmaps/road-to-stable-chat-history.md)
 
-**Stable Chat History via Platform Hooks** — 19 / 28 done (68%)
+**Stable Chat History via Platform Hooks** — 19 / 25 done (76%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -49,7 +49,7 @@
 | 2 | Implement HOOK strategy where available | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | CHECKPOINT fallback for platforms without hooks | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 4 | Rule de-escalation | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 5 | Verification | 🟡 in progress | 9 | 1 | 0 | 0 | 10% |
+| 5 | Verification | 🟡 in progress | 6 | 1 | 3 | 0 | 14% |
 
 ### [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md)
 
