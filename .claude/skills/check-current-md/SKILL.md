@@ -1,0 +1,1 @@
+../../../.agent-src/commands/check-current-md.md

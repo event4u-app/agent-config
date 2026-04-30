@@ -1,0 +1,1 @@
+../.agent-src/rules/non-destructive-by-default.md
