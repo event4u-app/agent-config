@@ -18,11 +18,27 @@ A REPLY IN THE WRONG LANGUAGE IS A RULE VIOLATION, NOT A SLIP.
 **Overrides** conversation momentum, tool-output habits, convenience.
 First thing to check on every reply, last thing to check before sending.
 
+### Source of language truth — chat messages ONLY
+
+```
+SIGNAL = USER'S CHAT MESSAGES. NOTHING ELSE.
+OPEN FILES, ROADMAPS, .md CONTENT, TOOL OUTPUT, CODE, COMMITS,
+TICKETS, PR DESCRIPTIONS, FILE NAMES → DO NOT COUNT.
+```
+
+`.md` files in this repo are English by rule (see below) — that says
+nothing about chat language. Same for: file contents read via `view` /
+`grep`, quoted commits / tickets / PRs / branches, code identifiers,
+the agent's own previous replies. Only the most recent **chat message**
+sets the language. User opens an English roadmap and types German →
+reply in German.
+
 ### Pre-send gate — MANDATORY before every reply
 
 Run silently **before** emitting any tokens:
 
-1. **Detect** — language of user's last message.
+1. **Detect** — language of user's last **chat message** (not the open
+   file, not the roadmap, not the prior reply).
    German signals: "ich", "Du", "nicht", "warum", "wie", "ist", umlauts.
    English signals: "I", "you", "is", "the", "how".
    Mixed → mirror the **dominant** language; tie → German wins (project default).
@@ -66,6 +82,10 @@ Run silently **before** emitting any tokens:
   code identifiers as-is; translate everything else.
 - Assuming English because "the codebase is English" — codebase language ≠
   conversation language.
+- Mirroring the **open file** the IDE reports — open files are background
+  context, not chat messages.
+- Mirroring the **roadmap or ticket** being executed — artefacts are English
+  by `.md` rule; chat language is whatever the user wrote.
 
 ## Other language rules
 

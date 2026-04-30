@@ -19,15 +19,42 @@ This rule **overrides** conversation momentum, tool-output habits, and
 convenience. It is the first thing to check on every reply and the last
 thing to check before sending.
 
+### Source of language truth — chat messages ONLY
+
+```
+THE LANGUAGE SIGNAL IS THE USER'S CHAT MESSAGES. NOTHING ELSE.
+OPEN FILES, ROADMAPS, .md CONTENT, TOOL OUTPUT, CODE, COMMIT MESSAGES,
+TICKETS, PR DESCRIPTIONS, FILE NAMES — NONE OF THEM COUNT.
+```
+
+The IDE may report an open file (`README.md`, a roadmap, a SKILL.md).
+That is **background context**, not a language signal. The roadmap is
+in English because all `.md` files in this repo are in English by rule
+(see "`.md` files are ALWAYS English" below) — that says nothing about
+what language the user wants in chat.
+
+Same applies to:
+
+- File contents the agent reads via `view` / `grep` / tool output
+- Quoted commit messages, tickets, PR descriptions, branch names
+- Code identifiers, function names, variable names
+- The agent's own previous replies (conversation momentum is not a signal)
+
+The **only** signal is what the user typed in their most recent chat
+message. If that is German → reply in German, even when every file in
+context is English. If that is English → reply in English, even when
+the user opened a German document.
+
 ### Pre-send gate — MANDATORY before every reply
 
 Run this silently **before** emitting any tokens:
 
-1. **Detect** — What language is the user's last message in?
-   German signals: "ich", "Du", "nicht", "warum", "wie", "ist", umlauts,
-   sentence structure. English signals: "I", "you", "is", "the", "how".
-   Mixed message → mirror the **dominant** language; if tie → German wins
-   (project default for this user).
+1. **Detect** — What language is the user's **last chat message** in?
+   (Not the open file, not the roadmap, not the prior reply — only the
+   chat message.) German signals: "ich", "Du", "nicht", "warum", "wie",
+   "ist", umlauts, sentence structure. English signals: "I", "you",
+   "is", "the", "how". Mixed message → mirror the **dominant** language;
+   if tie → German wins (project default for this user).
 2. **Check** — Is my drafted prose (not code, not file contents) in that
    same language?
 3. **Rewrite** — If no, rewrite the whole prose before sending. No
@@ -77,6 +104,12 @@ Run this silently **before** emitting any tokens:
   proper nouns and code identifiers as-is; translate everything else.
 - Assuming the user wants English because "the codebase is English" —
   codebase language ≠ conversation language.
+- Mirroring the language of the **open file** the IDE reports — open
+  files are background context, not chat messages. User opens an
+  English roadmap and types a German message → reply in German.
+- Mirroring the language of the **roadmap or ticket** being executed —
+  the artefact is in English by `.md` rule; the chat is whatever the
+  user wrote.
 
 ## Other language rules
 
