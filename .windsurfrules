@@ -3210,6 +3210,45 @@ delegates to master CLI in `node_modules/@event4u/agent-config/` or
 regen at end is enough. One edit closes a roadmap → archive first,
 then single regen. Response must not end without it.
 
+## Autonomous execution — checkbox cadence
+
+Autonomous roadmap run (multi-turn, no per-step user prompt) → user
+loses progress unless checkboxes flip **as work lands**, not at end.
+Iron Law:
+
+```
+EVERY DONE STEP FLIPS [ ] → [x] IN NEXT REPLY THAT ACKNOWLEDGES IT.
+NO "I UPDATE ROADMAP AT END OF PHASE."
+NO "FOUR STEPS DONE, ONE COMMIT, ONE REGEN."
+```
+
+Step counts as done when:
+
+- Code / docs change for step **written and saved** AND
+- Verification cited in step (`task ci`, targeted test, lint) **passed
+  in this response or earlier** — fresh output, not memory.
+
+Then in **same reply**: flip checkbox, regen dashboard, commit if
+commit policy allows.
+
+**Forbidden pattern** (canonical failure):
+
+> Turn 1: Step 1. Turn 2: Step 2. Turn 3: Step 3. Turn 4: Step 4.
+> Turn 5: "all done, update roadmap and commit." → user spent four
+> turns without dashboard movement.
+
+**Required pattern:**
+
+> Turn 1: Step 1, flip `[x]`, regen, commit.
+> Turn 2: Step 2, flip `[x]`, regen, commit. …
+
+Reply that lands verified step without flipping checkbox = rule violation.
+
+**In-progress marker:** step takes more than one reply → mark `[~]`
+moment work starts, regen. User sees row move `[ ]` → `[~]` → `[x]`
+instead of silent rows. `[~]` open for `count_open` but moves phase
+percentage forward.
+
 ## Pre-send self-check — MANDATORY
 
 Before sending any reply that touched `agents/roadmaps/`, silent gate:
@@ -3217,6 +3256,7 @@ Before sending any reply that touched `agents/roadmaps/`, silent gate:
 1. Did this turn create, rename, delete, or move a roadmap file? → regen MUST be in reply.
 2. Did this turn flip any checkbox in a roadmap file? → regen MUST be in reply.
 3. Did the regen output (`✅ Wrote agents/roadmaps-progress.md · …`) actually appear this turn? → no → run it now before sending.
+4. **Autonomous roadmap execution gate** — did this turn complete a roadmap step (code saved + verification passed) without flipping its checkbox? → flip `[x]` (or `[~]` if multi-turn) and regen before sending.
 
 Any "yes" + no regen run = rule violation. Rerun before sending.
 
@@ -3248,6 +3288,10 @@ regenerate dashboard — same response".
   `git mv`** — closed roadmap reappears in "Open roadmaps".
 - **Edited dashboard by hand to "fix it quickly"** — next regen
   overwrites manual edit; no audit trail.
+- **Autonomous run, four steps shipped across four turns, dashboard
+  flat whole time, single regen at end** — user lost progress
+  visibility for entire run. Each done step must flip checkbox in
+  reply that ships it.
 
 ---
 
