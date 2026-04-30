@@ -6,17 +6,17 @@
 
 ## Overall
 
-**34 / 94 steps done · 36%**
+**39 / 94 steps done · 41%**
 
 ```text
-██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   36%
+████████████████░░░░░░░░░░░░░░░░░░░░░░░░   41%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-product-ui-track.md](roadmaps/road-to-product-ui-track.md) | 7 | 53 | 53 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-product-ui-track.md](roadmaps/road-to-product-ui-track.md) | 7 | 53 | 48 | 5 | 0 | 0 | █░░░░░░░░░ 9% |
 | 2 | [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md) | 7 | 44 | 3 | 34 | 7 | 0 | █████████░ 92% |
 | 3 | [road-to-visual-review-loop.md](roadmaps/road-to-visual-review-loop.md) | 1 | 4 | 4 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -26,11 +26,11 @@
 
 ### [road-to-product-ui-track.md](roadmaps/road-to-product-ui-track.md)
 
-**Product UI Track** — 0 / 53 done (0%)
+**Product UI Track** — 5 / 53 done (9%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Stack detection and UI intent routing | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | Stack detection and UI intent routing | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 2 | Existing-UI-Audit (the hard gate) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 3 | UI directive set (design → apply → review → polish) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 4 | Mixed orchestration (backend + UI) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |

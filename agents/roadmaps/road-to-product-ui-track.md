@@ -4,12 +4,12 @@
 
 ## Prerequisites
 
-- [ ] **Roadmap 1 (`road-to-universal-execution-engine.md`) merged**
-- [ ] **Roadmap 2 (`road-to-prompt-driven-execution.md`) merged** — confidence scoring, prompt resolver, R2 goldens
-- [ ] Read `.agent-src.uncompressed/skills/fe-design/SKILL.md` — current frontend-design skill (will migrate)
-- [ ] Read `.agent-src.uncompressed/skills/blade-ui/SKILL.md`, `livewire/SKILL.md`, `flux/SKILL.md` — current Laravel-stack UI skills
-- [ ] Read `agents/contexts/implement-ticket-flow.md` — updated with R1 + R2 changes
-- [ ] Re-read `.agent-src.uncompressed/templates/roadmaps.md`
+- [x] **Roadmap 1 (`road-to-universal-execution-engine.md`) merged** — archived in `agents/roadmaps/archive/`
+- [x] **Roadmap 2 (`road-to-prompt-driven-execution.md`) merged** — confidence scoring, prompt resolver, R2 goldens; archived in `agents/roadmaps/archive/`
+- [x] Read `.agent-src.uncompressed/skills/fe-design/SKILL.md` — current frontend-design skill (will migrate)
+- [x] Read `.agent-src.uncompressed/skills/blade-ui/SKILL.md`, `livewire/SKILL.md`, `flux/SKILL.md` — current Laravel-stack UI skills
+- [x] Read `agents/contexts/implement-ticket-flow.md` — updated with R1 + R2 changes
+- [x] Re-read `.agent-src.uncompressed/templates/roadmaps.md`
 
 ## Context (current state)
 
@@ -85,15 +85,15 @@ State additions:
 
 ## Phase 1: Stack detection and UI intent routing
 
-- [ ] **Step 1:** Implement `scripts/work_engine/stack/detect.py`. Heuristics: `composer.json` + `livewire/livewire` + `livewire/flux` → `blade-livewire-flux`; `package.json` + `react` + `@radix-ui` or shadcn marker → `react-shadcn`; `vue` in package.json → `vue`; otherwise `plain`. Cached per state-file (survives session boundaries) with re-detect trigger if `package.json` or `composer.json` mtime changes.
-- [ ] **Step 2:** Extend `refine-prompt` (R2) and ticket refine (R1) to classify intent: `ui-build` (new screen/component), `ui-improve` (existing screen/component), `ui-trivial` (single-file, single-concern micro-edit — color, copy-string, single class, one prop), `mixed` (backend + UI), `backend-coding` (default).
-- [ ] **Step 3:** Dispatcher:
+- [x] **Step 1:** Implement `scripts/work_engine/stack/detect.py`. Heuristics: `composer.json` + `livewire/livewire` + `livewire/flux` → `blade-livewire-flux`; `package.json` + `react` + `@radix-ui` or shadcn marker → `react-shadcn`; `vue` in package.json → `vue`; otherwise `plain`. Cached per state-file (survives session boundaries) with re-detect trigger if `package.json` or `composer.json` mtime changes.
+- [x] **Step 2:** Extend `refine-prompt` (R2) and ticket refine (R1) to classify intent: `ui-build` (new screen/component), `ui-improve` (existing screen/component), `ui-trivial` (single-file, single-concern micro-edit — color, copy-string, single class, one prop), `mixed` (backend + UI), `backend-coding` (default).
+- [x] **Step 3:** Dispatcher:
   - `intent == "ui-trivial"` → `directive_set="ui-trivial"` (skips audit + design + review; runs apply + smoke-test only; emits short delivery report). See Phase 2 Step 6 for the trivial-path schema and reclassification logic.
   - `intent in {ui-build, ui-improve}` → `directive_set="ui"` (full audit → design → apply → review → polish).
   - `intent == "mixed"` → `directive_set="mixed"`.
   - Backend intents unchanged.
-- [ ] **Step 4:** Add `input.kind="diff"` resolver (improve-this-screen via diff/PR) and `input.kind="file"` resolver (path to existing component/page).
-- [ ] **Step 5:** Tests: stack detection on 4 fixture projects, intent classification on 16 prompts (3 per non-trivial intent class + 4 trivial-vs-improve edge cases), resolver tests for diff and file.
+- [x] **Step 4:** Add `input.kind="diff"` resolver (improve-this-screen via diff/PR) and `input.kind="file"` resolver (path to existing component/page).
+- [x] **Step 5:** Tests: stack detection on 4 fixture projects, intent classification on 16 prompts (3 per non-trivial intent class + 4 trivial-vs-improve edge cases), resolver tests for diff and file.
 
 ## Phase 2: Existing-UI-Audit (the hard gate)
 
