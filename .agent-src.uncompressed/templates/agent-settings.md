@@ -209,6 +209,36 @@ onboarding:
   # Set to true automatically by /onboard at the end. Flip to false
   # if you want to re-run the flow.
   onboarded: false
+
+# --- Telemetry (artefact engagement, default-off) ---
+#
+# Records — at task / phase-step boundaries — which artefacts (skills,
+# rules, commands, guidelines, personas) the agent consulted and
+# applied. Local only, append-only JSONL, never reaches a consumer
+# repo (gitignored). Maintainer-targeted feature; consumers leave it
+# off. See `agents/contexts/artifact-engagement-flow.md` (once Phase 3
+# of road-to-artifact-engagement-telemetry lands).
+telemetry:
+  artifact_engagement:
+    # Master switch. `false` (default) produces zero file IO and zero
+    # token cost. Flip to `true` only as a maintainer; the very first
+    # `record` call prints a one-line stderr warning to make accidental
+    # enables visible.
+    enabled: false
+    # `task` = one event per /implement-ticket or /work run.
+    # `phase-step` = one event per refine|memory|analyze|plan|implement|test|verify|report step.
+    # `tool-call` = one event per tool invocation; expensive, opt-in only.
+    granularity: task
+    # Which categories the agent records. Both default to `true`;
+    # flip individually if a maintainer wants applied-only or
+    # consulted-only data.
+    record:
+      consulted: true
+      applied: true
+    output:
+      # Append-only JSONL log. Path is relative to the project root.
+      # Always gitignored (see config/gitignore-block.txt).
+      path: .agent-engagement.jsonl
 ```
 
 ## Settings Reference
@@ -249,6 +279,11 @@ lives under `personal:` in YAML.
 | `personas.override` | list of persona ids | `[]` | Developer-local override of the team default lens cast. Empty = inherit `personas.default` from `.agent-project-settings.yml`. See [`layered-settings`](../guidelines/agent-infra/layered-settings.md). |
 | `personas.ignore` | list of persona ids | `[]` | Persona ids dropped from the default cast locally. Ignored personas stay invokable via `--personas=<id>`. |
 | `onboarding.onboarded` | `true`, `false` | `false` | Whether `/onboard` has run on this project. The `onboarding-gate` rule prompts for `/onboard` when this is `false`. Missing entirely = legacy project, treated as onboarded. |
+| `telemetry.artifact_engagement.enabled` | `true`, `false` | `false` | Master switch for the artefact engagement log. Default-off; zero file IO and zero token cost when `false`. Maintainer-targeted; consumers leave it off. |
+| `telemetry.artifact_engagement.granularity` | `task`, `phase-step`, `tool-call` | `task` | Boundary at which events are recorded. `tool-call` is expensive — opt-in only. |
+| `telemetry.artifact_engagement.record.consulted` | `true`, `false` | `true` | When `true`: record artefacts loaded into context. |
+| `telemetry.artifact_engagement.record.applied` | `true`, `false` | `true` | When `true`: record artefacts cited or driving a decision. |
+| `telemetry.artifact_engagement.output.path` | path | `.agent-engagement.jsonl` | Append-only JSONL log path, relative to the project root. Always gitignored. |
 
 ### Rename-Map (migration)
 

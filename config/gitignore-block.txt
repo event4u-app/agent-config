@@ -22,3 +22,7 @@
 .agent-chat-history
 .agent-chat-history.bak
 .agent-chat-history.*.bak
+
+# Agent config — artefact engagement telemetry (default-off, maintainer-only, never commit)
+.agent-engagement.jsonl
+.agent-engagement.jsonl.bak

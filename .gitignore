@@ -41,6 +41,13 @@ __pycache__/
 .agent-chat-history.bak
 .agent-chat-history.*.bak
 
+# Artefact engagement telemetry log (default-off, maintainer-only;
+# written by `./agent-config telemetry:record` when
+# `telemetry.artifact_engagement.enabled: true`). Local-only —
+# never commit.
+.agent-engagement.jsonl
+.agent-engagement.jsonl.bak
+
 # Generated Augment Code projection of .agent-src/ (rebuilt by `task sync`)
 /.augment/
 
