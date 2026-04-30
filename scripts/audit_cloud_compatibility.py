@@ -56,11 +56,90 @@ CLOUD_MARKER_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Cloud-action heuristics — Phase 4 Step 1, narrow second pass.
+#
+# Goal: flag only artefacts whose PROSE imperatives the cloud agent
+# cannot execute. False positives from a broad first pass (inline
+# backtick CLI, ```bash example blocks, "write a test" coding
+# instructions) are explicitly excluded — the bundle builder's
+# SANDBOX_NOTE preamble already neutralises CLI-as-guidance.
+#
+# Two signals that DO matter on cloud:
+#
+# 1. AGENT_EDIT_RE — procedure imperatively tells the AGENT to write
+#    or edit a specific local path the user owns (`.agent-settings.yml`,
+#    `.gitignore`, `.augmentignore`, `composer.json`, etc.). Plain
+#    "create a file" / "write a class" is coding work, fine on cloud.
+# 2. AGENT_RUN_RE — procedure imperatively tells the AGENT to invoke
+#    a local command as ITS OWN action ("first tool call is …",
+#    "MUST run `task ci`", "automatically invokes scripts/x.py").
+#    Backtick CLI in mid-sentence ("with `composer install`") is
+#    guidance for the user and does NOT match.
+AGENT_EDIT_RE = re.compile(
+    r"(?:"
+    r"\b(?:edit|write|update|modify|patch|append\s+to|set)\s+"
+    r"(?:the\s+|a\s+|this\s+|that\s+|your\s+)?"
+    r"`?\.(?:agent-settings\.yml|gitignore|augmentignore|"
+    r"agent-chat-history|env|claude/|cursor/|clinerules|windsurfrules)"
+    r"|"
+    r"\b(?:str-replace-editor|save-file|remove-files)\b"
+    r")",
+    re.IGNORECASE,
+)
+AGENT_RUN_RE = re.compile(
+    r"(?:"
+    r"MUST\s+(?:run|invoke|call|execute)\s+`?(?:task|python3|bash|"
+    r"scripts/|\.augment/scripts/|\.augment/scripts)"
+    r"|"
+    r"first\s+tool\s+call\s+(?:is|must\s+be)\b"
+    r"|"
+    r"automatically\s+(?:invokes?|runs?)\s+`?(?:task|scripts/|"
+    r"\.augment/scripts/)"
+    r"|"
+    r"runs?\s+silently\s+before"
+    r"|"
+    r"^\s*[*-]\s*(?:Run|Invoke|Call|Execute)\s+`(?:task|python3|"
+    r"bash\s+scripts|scripts/|\.augment/scripts/)"
+    r")",
+    re.IGNORECASE | re.MULTILINE,
+)
+# READ_RE retained for completeness — but it's mostly informational
+# (read-only ops are universally cloud-safe; we don't rewrite them).
+AGENT_READ_RE = re.compile(
+    r"\b(?:MUST\s+read|first\s+(?:reads?|inspects?))\s+"
+    r"(?:the\s+|a\s+)?(?:file|frontmatter|`\.)",
+    re.IGNORECASE,
+)
+
 
 def detect_cloud_marker(text: str) -> str | None:
     """Return 'noop', 'degrade', or None for the cloud-safe marker."""
     m = CLOUD_MARKER_RE.search(text)
     return m.group(1).lower() if m else None
+
+
+def classify_cloud_action(text: str) -> str:
+    """Tag T2/T3-S artefact with cloud-action category.
+
+    Returns one of: 'reads-only', 'edits', 'runs-task', 'mixed', 'none'.
+    Narrow heuristic — only matches imperatives directed at the agent
+    itself. CLI examples shown to the user (backtick or ```bash) do
+    not match — the bundle builder's SANDBOX_NOTE handles those.
+    """
+    has_edit = bool(AGENT_EDIT_RE.search(text))
+    has_run = bool(AGENT_RUN_RE.search(text))
+    has_read = bool(AGENT_READ_RE.search(text))
+
+    active = sum([has_edit, has_run, has_read])
+    if active == 0:
+        return "none"
+    if active >= 2:
+        return "mixed"
+    if has_edit:
+        return "edits"
+    if has_run:
+        return "runs-task"
+    return "reads-only"
 
 
 def classify(text: str) -> tuple[str, dict]:
@@ -90,6 +169,13 @@ def classify(text: str) -> tuple[str, dict]:
     else:
         tier = raw_tier
 
+    # Cloud-action category is meaningful for tiers that *might* run on
+    # cloud (T1 / T2 / T3-S). For T3-H the answer is always "blocked".
+    if tier in ("T1", "T2", "T3-S"):
+        cloud_action = classify_cloud_action(text)
+    else:
+        cloud_action = "blocked"
+
     return tier, {
         "scripts": scripts,
         "tasks": tasks,
@@ -97,6 +183,7 @@ def classify(text: str) -> tuple[str, dict]:
         "has_hard_dep_marker": has_hard,
         "raw_tier": raw_tier,
         "cloud_marker": cloud_marker,
+        "cloud_action": cloud_action,
     }
 
 
@@ -127,15 +214,25 @@ def summarize(rows: list[dict]) -> dict:
         by_kind_tier.setdefault(r["kind"], Counter())[r["tier"]] += 1
     script_freq = Counter()
     task_freq = Counter()
+    cloud_action_freq = Counter()
+    cloud_action_by_tier: dict[str, Counter] = {}
     for r in rows:
         for s in r["scripts"]:
             script_freq[s] += 1
         for t in r["tasks"]:
             task_freq[t] += 1
+        ca = r.get("cloud_action")
+        if ca:
+            cloud_action_freq[ca] += 1
+            cloud_action_by_tier.setdefault(r["tier"], Counter())[ca] += 1
     return {
         "total": len(rows),
         "by_tier": dict(by_tier.most_common()),
         "by_kind_tier": {k: dict(v) for k, v in by_kind_tier.items()},
+        "by_cloud_action": dict(cloud_action_freq.most_common()),
+        "cloud_action_by_tier": {
+            k: dict(v) for k, v in cloud_action_by_tier.items()
+        },
         "top_scripts": script_freq.most_common(15),
         "top_tasks": task_freq.most_common(10),
     }
@@ -147,6 +244,12 @@ def main(argv: list[str] | None = None) -> int:
                    help="emit per-artefact rows, not just summary")
     p.add_argument("--tier", choices=["T1", "T2", "T3-S", "T3-H"],
                    help="filter --details to one tier")
+    p.add_argument(
+        "--cloud-action",
+        choices=["reads-only", "edits", "runs-task", "mixed", "none",
+                 "blocked"],
+        help="filter --details to one cloud-action category",
+    )
     p.add_argument("--format", choices=["json", "md"], default="json")
     args = p.parse_args(argv)
 
@@ -154,15 +257,23 @@ def main(argv: list[str] | None = None) -> int:
     summary = summarize(rows)
 
     if args.details:
-        filtered = [r for r in rows if not args.tier or r["tier"] == args.tier]
+        filtered = [
+            r for r in rows
+            if (not args.tier or r["tier"] == args.tier)
+            and (not args.cloud_action
+                 or r.get("cloud_action") == args.cloud_action)
+        ]
         if args.format == "json":
             print(json.dumps({"summary": summary, "rows": filtered}, indent=2))
         else:
-            print(f"# Cloud-compat audit — tier filter: {args.tier or 'all'}\n")
+            print(f"# Cloud-compat audit — tier filter: {args.tier or 'all'}"
+                  f" · cloud-action: {args.cloud_action or 'all'}\n")
             print(f"Total in scope: {len(filtered)}\n")
             for r in filtered:
                 marker = " 🔴" if r["has_hard_dep_marker"] else ""
-                print(f"- `{r['path']}` — **{r['tier']}**{marker}")
+                action = r.get("cloud_action", "—")
+                print(f"- `{r['path']}` — **{r['tier']}** · "
+                      f"action: `{action}`{marker}")
                 if r["scripts"]:
                     print(f"  - scripts: `{'`, `'.join(r['scripts'])}`")
                 if r["tasks"]:
