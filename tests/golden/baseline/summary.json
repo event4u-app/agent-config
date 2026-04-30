@@ -52,5 +52,11 @@
     "outcome": "halt_unhandled:existing-ui-audit",
     "exit_code": 1,
     "cycles": 1
+  },
+  {
+    "gt_id": "GT-U1",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 6
   }
 ]

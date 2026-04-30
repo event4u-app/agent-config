@@ -43,6 +43,7 @@ RECIPE_MODULES = (
     "tests.golden.sandbox.recipes.gt_p2_medium",
     "tests.golden.sandbox.recipes.gt_p3_low",
     "tests.golden.sandbox.recipes.gt_p4_ui_rejection",
+    "tests.golden.sandbox.recipes.gt_u1_build_happy",
 )
 
 GOLDEN_ROOT = Path(__file__).resolve().parent

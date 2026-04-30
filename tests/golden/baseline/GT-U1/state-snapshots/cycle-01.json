@@ -3,7 +3,7 @@
   "input": {
     "kind": "prompt",
     "data": {
-      "raw": "Add a dark mode toggle to settings\n",
+      "raw": "Add a Contact Us form with name, email, and message fields\n",
       "reconstructed_ac": [],
       "assumptions": []
     }
@@ -11,7 +11,30 @@
   "intent": "ui-build",
   "directive_set": "ui",
   "stack": null,
-  "ui_audit": null,
+  "ui_audit": {
+    "components_found": [
+      {
+        "path": "resources/views/components/forms/text-input.blade.php",
+        "name": "forms.text-input",
+        "kind": "form-primitive",
+        "similarity": 0.82
+      }
+    ],
+    "design_tokens": {
+      "spacing": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "color": [
+        "primary",
+        "muted",
+        "danger"
+      ]
+    },
+    "audit_path": "high_confidence",
+    "candidate_pick": "forms.text-input"
+  },
   "ui_design": null,
   "ui_review": null,
   "ui_polish": null,
@@ -28,7 +51,7 @@
   },
   "questions": [
     "@agent-directive: existing-ui-audit",
-    "> Input: Add a dark mode toggle to settings",
+    "> Input: Add a Contact Us form with name, email, and message fields",
     "> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.",
     "> 1. Continue — let the skill produce the audit",
     "> 2. Abort — drop this UI request"
