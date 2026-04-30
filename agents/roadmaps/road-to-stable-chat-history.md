@@ -151,14 +151,27 @@ Phase 2 of the Product UI Track: significant work and many commits between
       structure (it should not block the rewrite).
       → **Verified:** `task lint-skills` passes (188/188); linter does
       not assert on the Iron Law block structure.
-- [ ] **Step 3:** Run `task ci` and fix any drift in `.agent-src/`,
+- [x] **Step 3:** Run `task ci` and fix any drift in `.agent-src/`,
       `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`
       that comes from the compressed projection of the rewritten rule.
-- [ ] **Step 4:** Update `agents/roadmaps/road-to-stable-chat-history.md`
+      → **Resolved:** rule slimmed under the 200-line limit by
+      extracting handshake mechanics to `agents/contexts/chat-history-handshake.md`.
+      Schema fix on `/chat-history-checkpoint` frontmatter
+      (`triggers` → `trigger_description` + `trigger_context`).
+      Marketplace.json updated to register the new skill (and three
+      pre-existing drifts). `task ci` exits 0.
+- [x] **Step 4:** Update `agents/roadmaps/road-to-stable-chat-history.md`
       acceptance to reflect what was actually shipped.
+      → **This update.** Acceptance criteria below cross-checked with
+      shipped artefacts; dogfooding criteria flagged as Phase 5.
 
 ## Phase 5: Verification
 
+- [x] **Step 0:** Automated crash-recovery tests — add pytest cases that
+      simulate an agent crash between `session_start` and `session_end`,
+      verify a fresh session resumes via `turn-check` without losing the
+      pre-crash entries, cover the foreign-user-no-clobber path, and round-trip
+      through the CLI. Lives in `tests/test_chat_history.py`.
 - [ ] **Step 1:** Dogfood — run a full development session on Augment Code
       with hooks enabled, perform crash-recovery test (kill agent mid-session,
       resume on new chat, verify the gap-period entries are intact).

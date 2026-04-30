@@ -1253,3 +1253,146 @@ def test_cli_hook_append_invalid_payload_returns_bad_args(
     ])
     assert rc == ch.EXIT_BAD_ARGS
 
+
+
+# --- Phase 5: crash-recovery smoke tests -----------------------------
+#
+# These simulate the HOOK lifecycle when the agent process dies between
+# the `session_start` hook and the matching `session_end` hook. The file
+# must survive intact, all pre-crash entries must remain readable, and a
+# fresh session must be able to resume via `turn_check` and continue
+# appending without corrupting the prior log.
+
+
+def test_crash_recovery_preserves_pre_crash_entries(
+    hist: Path, settings_enabled: Path,
+):
+    """Hooks fire session_start + N appends, the process dies (no
+    session_end), and a fresh process can still read every pre-crash
+    entry verbatim."""
+    ch.hook_append("session_start", first_user_msg="resume me",
+                   path=hist, settings_path=settings_enabled)
+    ch.hook_append("user_prompt", payload={"text": "step 1"},
+                   path=hist, settings_path=settings_enabled)
+    ch.hook_append("user_prompt", payload={"text": "step 2"},
+                   path=hist, settings_path=settings_enabled)
+    ch.hook_append("user_prompt", payload={"text": "step 3"},
+                   path=hist, settings_path=settings_enabled)
+
+    # --- crash: no session_end ever runs ---
+
+    # Fresh process boots, reads the file as-is.
+    header = ch.read_header(hist)
+    entries = ch.read_entries(path=hist)
+
+    assert header is not None
+    assert header["fp"] == ch.fingerprint("resume me")
+    assert [e["text"] for e in entries] == ["step 1", "step 2", "step 3"]
+
+
+def test_crash_recovery_same_user_resumes_via_turn_check(
+    hist: Path, settings_enabled: Path,
+):
+    """Same first-user-msg after a crash → turn_check returns `ok`
+    and the next hook append lands after the pre-crash tail."""
+    ch.hook_append("session_start", first_user_msg="same prompt",
+                   path=hist, settings_path=settings_enabled)
+    ch.hook_append("user_prompt", payload={"text": "before crash"},
+                   path=hist, settings_path=settings_enabled)
+
+    # --- crash ---
+
+    # Resume turn — agent's first tool call is turn_check.
+    state = ch.turn_check("same prompt", path=hist,
+                          settings_path=settings_enabled)
+    assert state["state"] == "ok"
+    assert state["entries"] == 1
+
+    # Hook appends keep flowing; pre-crash entry is preserved.
+    ch.hook_append("user_prompt", payload={"text": "after crash"},
+                   path=hist, settings_path=settings_enabled)
+
+    entries = ch.read_entries(path=hist)
+    assert [e["text"] for e in entries] == ["before crash", "after crash"]
+
+
+def test_crash_recovery_foreign_user_does_not_clobber_log(
+    hist: Path, settings_enabled: Path,
+):
+    """Different user starts a session against the same project after
+    a crash — turn_check returns `foreign`, the prior log is intact,
+    and no append fires until the agent renders the Foreign-Prompt and
+    the user picks a branch."""
+    ch.hook_append("session_start", first_user_msg="user A",
+                   path=hist, settings_path=settings_enabled)
+    ch.hook_append("user_prompt", payload={"text": "A's work"},
+                   path=hist, settings_path=settings_enabled)
+
+    # --- crash ---
+
+    state = ch.turn_check("user B with different prompt", path=hist,
+                          settings_path=settings_enabled)
+    assert state["state"] == "foreign"
+    assert state["exit"] == ch.EXIT_FOREIGN
+
+    # File untouched until the user resolves the handshake.
+    entries = ch.read_entries(path=hist)
+    assert [e["text"] for e in entries] == ["A's work"]
+
+
+def test_crash_recovery_via_cli_round_trip(
+    tmp_path: Path, monkeypatch, capsys, settings_enabled: Path,
+):
+    """End-to-end at the CLI surface: hook commands write entries,
+    process 'dies' (we drop the in-process state), a new invocation
+    sees the same file and can read every pre-crash entry."""
+    target = tmp_path / "crash-recovery.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+
+    # Process A: session_start + two appends.
+    rc = ch.main([
+        "hook-append", "--event", "session_start",
+        "--first-user-msg", "crash-test",
+        "--settings", str(settings_enabled),
+    ])
+    assert rc == ch.EXIT_OK
+    capsys.readouterr()
+
+    rc = ch.main([
+        "hook-append", "--event", "user_prompt",
+        "--payload", '{"text":"alpha"}',
+        "--settings", str(settings_enabled),
+    ])
+    assert rc == ch.EXIT_OK
+    capsys.readouterr()
+
+    rc = ch.main([
+        "hook-append", "--event", "user_prompt",
+        "--payload", '{"text":"beta"}',
+        "--settings", str(settings_enabled),
+    ])
+    assert rc == ch.EXIT_OK
+    capsys.readouterr()
+
+    # --- Process A dies. session_end never runs. ---
+
+    # Process B: turn_check on the same prompt + a fresh append.
+    rc = ch.main([
+        "turn-check", "--first-user-msg", "crash-test",
+        "--settings", str(settings_enabled),
+    ])
+    assert rc == ch.EXIT_OK
+    out = capsys.readouterr().out
+    assert "state=ok" in out
+    assert "entries=2" in out
+
+    rc = ch.main([
+        "hook-append", "--event", "user_prompt",
+        "--payload", '{"text":"gamma"}',
+        "--settings", str(settings_enabled),
+    ])
+    assert rc == ch.EXIT_OK
+    capsys.readouterr()
+
+    entries = ch.read_entries(path=target)
+    assert [e["text"] for e in entries] == ["alpha", "beta", "gamma"]
