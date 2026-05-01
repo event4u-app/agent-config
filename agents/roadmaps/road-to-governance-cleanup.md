@@ -184,7 +184,7 @@ skill names + descriptions in the system prompt. Estimated size ~25-35k chars
 covers rules; the actual per-turn budget is well above 120k once skills are
 counted.
 
-`optimize-augmentignore` skill exists. Open question: is it being run as part
+`optimize-augmentignore` command exists. Open question: is it being run as part
 of regular project hygiene, or is it dormant?
 
 | Option | Idea | Trade-off |
@@ -412,7 +412,7 @@ README catalog link replaces ad-hoc deep-links.
 
 ### F6 — Hidden char consumption (`available_skills`) → **A + C combined**
 
-- **A — Schedule augmentignore reviews:** `optimize-augmentignore` skill
+- **A — Schedule augmentignore reviews:** `optimize-augmentignore` command
   surfaces in `task ci` as an advisory check (warn, not fail). New consumer
   projects run it in their onboarding.
 - **C — Description-length budget:** Hard cap of **200 chars** per skill
