@@ -81,6 +81,7 @@ class DeliveryState:
     ui_polish: dict[str, Any] | None = None
     contract: dict[str, Any] | None = None
     stitch: dict[str, Any] | None = None
+    stack: dict[str, Any] | None = None
 
 
 Step = Callable[[DeliveryState], StepResult]

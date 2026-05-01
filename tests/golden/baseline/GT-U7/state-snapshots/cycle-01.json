@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Change the primary button color from blue to brand-red in `resources/views/components/button.blade.php`.\n",
+      "reconstructed_ac": [
+        "Primary button uses brand-red token instead of blue",
+        "Edit limited to the existing button component"
+      ],
+      "assumptions": [
+        "brand-red token already exists in the design system"
+      ],
+      "confidence": {
+        "band": "high",
+        "score": 0.95
+      },
+      "intent": "ui-trivial",
+      "trivial_edit": {
+        "files": [
+          "resources/views/components/button.blade.php"
+        ],
+        "lines_changed": 3,
+        "summary": "primary button color blue → brand-red",
+        "new_component": false,
+        "new_state": false,
+        "new_dependency": false
+      }
+    }
+  },
+  "intent": "ui-trivial",
+  "directive_set": "ui-trivial",
+  "stack": null,
+  "ui_audit": null,
+  "ui_design": null,
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": null,
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "success",
+    "implement": "blocked"
+  },
+  "questions": [
+    "@agent-directive: trivial-apply",
+    "> Trivial UI edit path — audit / design / review skipped.",
+    "> 1. Continue — perform the single-file edit, then write a `trivial_edit` envelope back into state.ticket (files, lines_changed, new_component, new_state, new_dependency)",
+    "> 2. Abort — drop this trivial edit"
+  ],
+  "report": ""
+}

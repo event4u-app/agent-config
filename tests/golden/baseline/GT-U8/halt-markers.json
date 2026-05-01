@@ -1,0 +1,86 @@
+[
+  {
+    "cycle": 1,
+    "exit_code": 1,
+    "directive": "trivial-apply",
+    "recipe_action": "trivial-apply",
+    "questions": [
+      "@agent-directive: trivial-apply",
+      "> Trivial UI edit path — audit / design / review skipped.",
+      "> 1. Continue — perform the single-file edit, then write a `trivial_edit` envelope back into state.ticket (files, lines_changed, new_component, new_state, new_dependency)",
+      "> 2. Abort — drop this trivial edit"
+    ]
+  },
+  {
+    "cycle": 2,
+    "exit_code": 1,
+    "directive": "reclassify-to-ui-improve",
+    "recipe_action": "reclassify-to-ui-improve",
+    "questions": [
+      "@agent-directive: reclassify-to-ui-improve",
+      "> Trivial-edit preconditions violated; this work needs the full audit gate.",
+      "> Violations: files_exceeded:2>1, lines_exceeded:7>5.",
+      "> 1. Reclassify — orchestrator sets `state.directive_set = \"ui-improve\"` and re-runs the engine",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 3,
+    "exit_code": 1,
+    "directive": "existing-ui-audit",
+    "recipe_action": "existing-ui-audit",
+    "questions": [
+      "@agent-directive: existing-ui-audit",
+      "> Input: Tweak the marketing hero copy and align the CTA button color to the new brand-r…",
+      "> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.",
+      "> 1. Continue — let the skill produce the audit",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 4,
+    "exit_code": 1,
+    "directive": "ui-design-brief",
+    "recipe_action": "ui-design-brief",
+    "questions": [
+      "@agent-directive: ui-design-brief",
+      "> Input: Tweak the marketing hero copy and align the CTA button color to the new brand-r…",
+      "> No design brief yet — producing one now. The brief locks layout, components, states, microcopy, and a11y before any code is written.",
+      "> 1. Continue — produce the brief from audit findings",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 5,
+    "exit_code": 1,
+    "directive": "ui-apply-plain",
+    "recipe_action": "ui-apply-plain",
+    "questions": [
+      "@agent-directive: ui-apply-plain",
+      "> Stack: `plain`. Implementing the locked design brief.",
+      "> Microcopy is locked — every button label, empty-state message, and validation message must come verbatim from `state.ui_design.microcopy`.",
+      "> 1. Continue — implement the brief and write a `ui_apply` envelope back into state.ticket (rendered: {path: text}, files: [...])",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 6,
+    "exit_code": 1,
+    "directive": "ui-design-review-plain",
+    "recipe_action": "ui-design-review-plain",
+    "questions": [
+      "@agent-directive: ui-design-review-plain",
+      "> Stack: `plain`. Reviewing rendered components against the locked design brief.",
+      "> The review pass compares `state.ticket.ui_apply.rendered` against `state.ui_design` (microcopy, states, a11y, layout) and produces a structured `findings` list.",
+      "> 1. Continue — run the review and write `{findings: [...], review_clean: bool}` into `state.ui_review`",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 7,
+    "exit_code": 0,
+    "directive": null,
+    "recipe_action": null,
+    "questions": []
+  }
+]

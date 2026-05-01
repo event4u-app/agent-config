@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Tweak the marketing hero copy and align the CTA button color to the new brand-red token.\n",
+      "reconstructed_ac": [
+        "Hero headline reads 'Welcome to the next chapter'",
+        "CTA button uses brand-red token"
+      ],
+      "assumptions": [
+        "brand-red token already exists",
+        "edit fits the trivial path"
+      ],
+      "confidence": {
+        "band": "high",
+        "score": 0.9
+      },
+      "intent": "ui-improve"
+    }
+  },
+  "intent": "ui-improve",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": null,
+  "ui_design": null,
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": null,
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {},
+  "questions": [
+    "@agent-directive: reclassify-to-ui-improve",
+    "> Trivial-edit preconditions violated; this work needs the full audit gate.",
+    "> Violations: files_exceeded:2>1, lines_exceeded:7>5.",
+    "> 1. Reclassify — orchestrator sets `state.directive_set = \"ui-improve\"` and re-runs the engine",
+    "> 2. Abort — drop this UI request"
+  ],
+  "report": ""
+}

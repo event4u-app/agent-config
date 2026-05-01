@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Tweak the marketing hero copy and align the CTA button color to the new brand-red token.\n",
+      "reconstructed_ac": [
+        "Hero headline reads 'Welcome to the next chapter'",
+        "CTA button uses brand-red token"
+      ],
+      "assumptions": [
+        "brand-red token already exists",
+        "edit fits the trivial path"
+      ],
+      "confidence": {
+        "band": "high",
+        "score": 0.9
+      },
+      "intent": "ui-improve"
+    }
+  },
+  "intent": "ui-improve",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": {
+    "components_found": [
+      {
+        "path": "resources/views/components/button.blade.php",
+        "name": "button",
+        "kind": "ui-primitive",
+        "similarity": 0.82
+      }
+    ],
+    "design_tokens": {
+      "spacing": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "color": [
+        "primary",
+        "muted",
+        "danger",
+        "brand-red"
+      ]
+    },
+    "audit_path": "high_confidence",
+    "candidate_pick": "button"
+  },
+  "ui_design": null,
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": null,
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "blocked"
+  },
+  "questions": [
+    "@agent-directive: existing-ui-audit",
+    "> Input: Tweak the marketing hero copy and align the CTA button color to the new brand-r…",
+    "> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.",
+    "> 1. Continue — let the skill produce the audit",
+    "> 2. Abort — drop this UI request"
+  ],
+  "report": ""
+}

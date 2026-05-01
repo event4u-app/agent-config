@@ -1,0 +1,800 @@
+{
+  "gt_id": "GT-U8",
+  "subcommand": "work",
+  "prompt_file": "prompts/gt-u8-trivial-reclassification.txt",
+  "persona": null,
+  "final_outcome": "success",
+  "final_exit_code": 0,
+  "cycles": [
+    {
+      "index": 1,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=implement\n@agent-directive: trivial-apply\n> Trivial UI edit path — audit / design / review skipped.\n> 1. Continue — perform the single-file edit, then write a `trivial_edit` envelope back into state.ticket (files, lines_changed, new_component, new_state, new_dependency)\n> 2. Abort — drop this trivial edit\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Tweak the marketing hero copy and align the CTA button color to the new brand-red token.\n",
+            "reconstructed_ac": [
+              "Hero headline reads 'Welcome to the next chapter'",
+              "CTA button uses brand-red token"
+            ],
+            "assumptions": [
+              "brand-red token already exists",
+              "edit fits the trivial path"
+            ],
+            "confidence": {
+              "band": "high",
+              "score": 0.9
+            },
+            "intent": "ui-trivial",
+            "trivial_edit": {
+              "files": [
+                "resources/views/marketing/hero.blade.php",
+                "resources/views/components/button.blade.php"
+              ],
+              "lines_changed": 7,
+              "summary": "hero copy + CTA button color (touches 2 files / 7 lines)",
+              "new_component": false,
+              "new_state": false,
+              "new_dependency": false
+            }
+          }
+        },
+        "intent": "ui-trivial",
+        "directive_set": "ui-trivial",
+        "stack": null,
+        "ui_audit": null,
+        "ui_design": null,
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": null,
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "success",
+          "implement": "blocked"
+        },
+        "questions": [
+          "@agent-directive: trivial-apply",
+          "> Trivial UI edit path — audit / design / review skipped.",
+          "> 1. Continue — perform the single-file edit, then write a `trivial_edit` envelope back into state.ticket (files, lines_changed, new_component, new_state, new_dependency)",
+          "> 2. Abort — drop this trivial edit"
+        ],
+        "report": ""
+      },
+      "directive": "trivial-apply",
+      "recipe_action": "trivial-apply",
+      "recipe_notes": [
+        "violating trivial_edit written: 2 files (>1), 7 lines (>5)"
+      ]
+    },
+    {
+      "index": 2,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=implement\n@agent-directive: reclassify-to-ui-improve\n> Trivial-edit preconditions violated; this work needs the full audit gate.\n> Violations: files_exceeded:2>1, lines_exceeded:7>5.\n> 1. Reclassify — orchestrator sets `state.directive_set = \"ui-improve\"` and re-runs the engine\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Tweak the marketing hero copy and align the CTA button color to the new brand-red token.\n",
+            "reconstructed_ac": [
+              "Hero headline reads 'Welcome to the next chapter'",
+              "CTA button uses brand-red token"
+            ],
+            "assumptions": [
+              "brand-red token already exists",
+              "edit fits the trivial path"
+            ],
+            "confidence": {
+              "band": "high",
+              "score": 0.9
+            },
+            "intent": "ui-improve"
+          }
+        },
+        "intent": "ui-improve",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": null,
+        "ui_design": null,
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": null,
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {},
+        "questions": [
+          "@agent-directive: reclassify-to-ui-improve",
+          "> Trivial-edit preconditions violated; this work needs the full audit gate.",
+          "> Violations: files_exceeded:2>1, lines_exceeded:7>5.",
+          "> 1. Reclassify — orchestrator sets `state.directive_set = \"ui-improve\"` and re-runs the engine",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "reclassify-to-ui-improve",
+      "recipe_action": "reclassify-to-ui-improve",
+      "recipe_notes": [
+        "promoted directive_set=ui, intent=ui-improve, outcomes cleared so audit gate runs from scratch"
+      ]
+    },
+    {
+      "index": 3,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=refine\n@agent-directive: existing-ui-audit\n> Input: Tweak the marketing hero copy and align the CTA button color to the new brand-r…\n> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.\n> 1. Continue — let the skill produce the audit\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Tweak the marketing hero copy and align the CTA button color to the new brand-red token.\n",
+            "reconstructed_ac": [
+              "Hero headline reads 'Welcome to the next chapter'",
+              "CTA button uses brand-red token"
+            ],
+            "assumptions": [
+              "brand-red token already exists",
+              "edit fits the trivial path"
+            ],
+            "confidence": {
+              "band": "high",
+              "score": 0.9
+            },
+            "intent": "ui-improve"
+          }
+        },
+        "intent": "ui-improve",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/button.blade.php",
+              "name": "button",
+              "kind": "ui-primitive",
+              "similarity": 0.82
+            }
+          ],
+          "design_tokens": {
+            "spacing": [
+              "sm",
+              "md",
+              "lg"
+            ],
+            "color": [
+              "primary",
+              "muted",
+              "danger",
+              "brand-red"
+            ]
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "button"
+        },
+        "ui_design": null,
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": null,
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "blocked"
+        },
+        "questions": [
+          "@agent-directive: existing-ui-audit",
+          "> Input: Tweak the marketing hero copy and align the CTA button color to the new brand-r…",
+          "> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.",
+          "> 1. Continue — let the skill produce the audit",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "existing-ui-audit",
+      "recipe_action": "existing-ui-audit",
+      "recipe_notes": [
+        "ui_audit populated: 1 component, audit_path=high_confidence"
+      ]
+    },
+    {
+      "index": 4,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=analyze\n@agent-directive: ui-design-brief\n> Input: Tweak the marketing hero copy and align the CTA button color to the new brand-r…\n> No design brief yet — producing one now. The brief locks layout, components, states, microcopy, and a11y before any code is written.\n> 1. Continue — produce the brief from audit findings\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Tweak the marketing hero copy and align the CTA button color to the new brand-red token.\n",
+            "reconstructed_ac": [
+              "Hero headline reads 'Welcome to the next chapter'",
+              "CTA button uses brand-red token"
+            ],
+            "assumptions": [
+              "brand-red token already exists",
+              "edit fits the trivial path"
+            ],
+            "confidence": {
+              "band": "high",
+              "score": 0.9
+            },
+            "intent": "ui-improve"
+          }
+        },
+        "intent": "ui-improve",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/button.blade.php",
+              "name": "button",
+              "kind": "ui-primitive",
+              "similarity": 0.82
+            }
+          ],
+          "design_tokens": {
+            "spacing": [
+              "sm",
+              "md",
+              "lg"
+            ],
+            "color": [
+              "primary",
+              "muted",
+              "danger",
+              "brand-red"
+            ]
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "button"
+        },
+        "ui_design": {
+          "layout": "marketing hero band, full-width, single CTA",
+          "components": [
+            {
+              "name": "Hero",
+              "primitives": [
+                "button"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Headline + subhead + CTA rendered",
+            "loading": "n/a — static surface",
+            "error": "n/a — static surface",
+            "success": "n/a — static surface",
+            "disabled": "n/a — static surface"
+          },
+          "microcopy": {
+            "title": "Welcome to the next chapter",
+            "buttons": {
+              "submit": "Get started"
+            }
+          },
+          "a11y": {
+            "labels": "CTA carries accessible name 'Get started'",
+            "focus": "CTA receives focus on tab order entry",
+            "aria_live": "n/a — static surface"
+          },
+          "reused_from_audit": [
+            "button"
+          ],
+          "design_confirmed": true
+        },
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": null,
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "blocked"
+        },
+        "questions": [
+          "@agent-directive: ui-design-brief",
+          "> Input: Tweak the marketing hero copy and align the CTA button color to the new brand-r…",
+          "> No design brief yet — producing one now. The brief locks layout, components, states, microcopy, and a11y before any code is written.",
+          "> 1. Continue — produce the brief from audit findings",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "ui-design-brief",
+      "recipe_action": "ui-design-brief",
+      "recipe_notes": [
+        "ui_design brief written with design_confirmed=True (sign-off halt skipped)"
+      ]
+    },
+    {
+      "index": 5,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=implement\n@agent-directive: ui-apply-plain\n> Stack: `plain`. Implementing the locked design brief.\n> Microcopy is locked — every button label, empty-state message, and validation message must come verbatim from `state.ui_design.microcopy`.\n> 1. Continue — implement the brief and write a `ui_apply` envelope back into state.ticket (rendered: {path: text}, files: [...])\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Tweak the marketing hero copy and align the CTA button color to the new brand-red token.\n",
+            "reconstructed_ac": [
+              "Hero headline reads 'Welcome to the next chapter'",
+              "CTA button uses brand-red token"
+            ],
+            "assumptions": [
+              "brand-red token already exists",
+              "edit fits the trivial path"
+            ],
+            "confidence": {
+              "band": "high",
+              "score": 0.9
+            },
+            "intent": "ui-improve",
+            "ui_apply": {
+              "summary": "Hero headline updated and CTA button retokenised to brand-red",
+              "rendered": {
+                "resources/views/marketing/hero.blade.php": "Welcome to the next chapter — Get started.",
+                "resources/views/components/button.blade.php": "<button class=\"bg-brand-red\">Get started</button>"
+              },
+              "files": [
+                "resources/views/marketing/hero.blade.php",
+                "resources/views/components/button.blade.php"
+              ]
+            }
+          }
+        },
+        "intent": "ui-improve",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/button.blade.php",
+              "name": "button",
+              "kind": "ui-primitive",
+              "similarity": 0.82
+            }
+          ],
+          "design_tokens": {
+            "spacing": [
+              "sm",
+              "md",
+              "lg"
+            ],
+            "color": [
+              "primary",
+              "muted",
+              "danger",
+              "brand-red"
+            ]
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "button"
+        },
+        "ui_design": {
+          "layout": "marketing hero band, full-width, single CTA",
+          "components": [
+            {
+              "name": "Hero",
+              "primitives": [
+                "button"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Headline + subhead + CTA rendered",
+            "loading": "n/a — static surface",
+            "error": "n/a — static surface",
+            "success": "n/a — static surface",
+            "disabled": "n/a — static surface"
+          },
+          "microcopy": {
+            "title": "Welcome to the next chapter",
+            "buttons": {
+              "submit": "Get started"
+            }
+          },
+          "a11y": {
+            "labels": "CTA carries accessible name 'Get started'",
+            "focus": "CTA receives focus on tab order entry",
+            "aria_live": "n/a — static surface"
+          },
+          "reused_from_audit": [
+            "button"
+          ],
+          "design_confirmed": true
+        },
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": null,
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "success",
+          "implement": "blocked"
+        },
+        "questions": [
+          "@agent-directive: ui-apply-plain",
+          "> Stack: `plain`. Implementing the locked design brief.",
+          "> Microcopy is locked — every button label, empty-state message, and validation message must come verbatim from `state.ui_design.microcopy`.",
+          "> 1. Continue — implement the brief and write a `ui_apply` envelope back into state.ticket (rendered: {path: text}, files: [...])",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "ui-apply-plain",
+      "recipe_action": "ui-apply-plain",
+      "recipe_notes": [
+        "ui_apply envelope written: 2 files via the audit-gated path"
+      ]
+    },
+    {
+      "index": 6,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=test\n@agent-directive: ui-design-review-plain\n> Stack: `plain`. Reviewing rendered components against the locked design brief.\n> The review pass compares `state.ticket.ui_apply.rendered` against `state.ui_design` (microcopy, states, a11y, layout) and produces a structured `findings` list.\n> 1. Continue — run the review and write `{findings: [...], review_clean: bool}` into `state.ui_review`\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Tweak the marketing hero copy and align the CTA button color to the new brand-red token.\n",
+            "reconstructed_ac": [
+              "Hero headline reads 'Welcome to the next chapter'",
+              "CTA button uses brand-red token"
+            ],
+            "assumptions": [
+              "brand-red token already exists",
+              "edit fits the trivial path"
+            ],
+            "confidence": {
+              "band": "high",
+              "score": 0.9
+            },
+            "intent": "ui-improve",
+            "ui_apply": {
+              "summary": "Hero headline updated and CTA button retokenised to brand-red",
+              "rendered": {
+                "resources/views/marketing/hero.blade.php": "Welcome to the next chapter — Get started.",
+                "resources/views/components/button.blade.php": "<button class=\"bg-brand-red\">Get started</button>"
+              },
+              "files": [
+                "resources/views/marketing/hero.blade.php",
+                "resources/views/components/button.blade.php"
+              ]
+            }
+          }
+        },
+        "intent": "ui-improve",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/button.blade.php",
+              "name": "button",
+              "kind": "ui-primitive",
+              "similarity": 0.82
+            }
+          ],
+          "design_tokens": {
+            "spacing": [
+              "sm",
+              "md",
+              "lg"
+            ],
+            "color": [
+              "primary",
+              "muted",
+              "danger",
+              "brand-red"
+            ]
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "button"
+        },
+        "ui_design": {
+          "layout": "marketing hero band, full-width, single CTA",
+          "components": [
+            {
+              "name": "Hero",
+              "primitives": [
+                "button"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Headline + subhead + CTA rendered",
+            "loading": "n/a — static surface",
+            "error": "n/a — static surface",
+            "success": "n/a — static surface",
+            "disabled": "n/a — static surface"
+          },
+          "microcopy": {
+            "title": "Welcome to the next chapter",
+            "buttons": {
+              "submit": "Get started"
+            }
+          },
+          "a11y": {
+            "labels": "CTA carries accessible name 'Get started'",
+            "focus": "CTA receives focus on tab order entry",
+            "aria_live": "n/a — static surface"
+          },
+          "reused_from_audit": [
+            "button"
+          ],
+          "design_confirmed": true
+        },
+        "ui_review": {
+          "findings": [],
+          "review_clean": true
+        },
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": null,
+        "memory": [],
+        "plan": null,
+        "changes": [
+          {
+            "kind": "ui",
+            "stack": "plain",
+            "file": "resources/views/marketing/hero.blade.php",
+            "summary": "Hero headline updated and CTA button retokenised to brand-red"
+          },
+          {
+            "kind": "ui",
+            "stack": "plain",
+            "file": "resources/views/components/button.blade.php",
+            "summary": "Hero headline updated and CTA button retokenised to brand-red"
+          }
+        ],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "success",
+          "implement": "success",
+          "test": "blocked"
+        },
+        "questions": [
+          "@agent-directive: ui-design-review-plain",
+          "> Stack: `plain`. Reviewing rendered components against the locked design brief.",
+          "> The review pass compares `state.ticket.ui_apply.rendered` against `state.ui_design` (microcopy, states, a11y, layout) and produces a structured `findings` list.",
+          "> 1. Continue — run the review and write `{findings: [...], review_clean: bool}` into `state.ui_review`",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "ui-design-review-plain",
+      "recipe_action": "ui-design-review-plain",
+      "recipe_notes": [
+        "ui_review clean: 0 findings, review_clean=True"
+      ]
+    },
+    {
+      "index": 7,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 0,
+      "stdout": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\n(unset)\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/marketing/hero.blade.php`\n- `resources/views/components/button.blade.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Tweak the marketing hero copy and align the CTA button color to the new brand-red token.\n",
+            "reconstructed_ac": [
+              "Hero headline reads 'Welcome to the next chapter'",
+              "CTA button uses brand-red token"
+            ],
+            "assumptions": [
+              "brand-red token already exists",
+              "edit fits the trivial path"
+            ],
+            "confidence": {
+              "band": "high",
+              "score": 0.9
+            },
+            "intent": "ui-improve",
+            "ui_apply": {
+              "summary": "Hero headline updated and CTA button retokenised to brand-red",
+              "rendered": {
+                "resources/views/marketing/hero.blade.php": "Welcome to the next chapter — Get started.",
+                "resources/views/components/button.blade.php": "<button class=\"bg-brand-red\">Get started</button>"
+              },
+              "files": [
+                "resources/views/marketing/hero.blade.php",
+                "resources/views/components/button.blade.php"
+              ]
+            }
+          }
+        },
+        "intent": "ui-improve",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/button.blade.php",
+              "name": "button",
+              "kind": "ui-primitive",
+              "similarity": 0.82
+            }
+          ],
+          "design_tokens": {
+            "spacing": [
+              "sm",
+              "md",
+              "lg"
+            ],
+            "color": [
+              "primary",
+              "muted",
+              "danger",
+              "brand-red"
+            ]
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "button"
+        },
+        "ui_design": {
+          "layout": "marketing hero band, full-width, single CTA",
+          "components": [
+            {
+              "name": "Hero",
+              "primitives": [
+                "button"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Headline + subhead + CTA rendered",
+            "loading": "n/a — static surface",
+            "error": "n/a — static surface",
+            "success": "n/a — static surface",
+            "disabled": "n/a — static surface"
+          },
+          "microcopy": {
+            "title": "Welcome to the next chapter",
+            "buttons": {
+              "submit": "Get started"
+            }
+          },
+          "a11y": {
+            "labels": "CTA carries accessible name 'Get started'",
+            "focus": "CTA receives focus on tab order entry",
+            "aria_live": "n/a — static surface"
+          },
+          "reused_from_audit": [
+            "button"
+          ],
+          "design_confirmed": true
+        },
+        "ui_review": {
+          "findings": [],
+          "review_clean": true
+        },
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": null,
+        "memory": [],
+        "plan": null,
+        "changes": [
+          {
+            "kind": "ui",
+            "stack": "plain",
+            "file": "resources/views/marketing/hero.blade.php",
+            "summary": "Hero headline updated and CTA button retokenised to brand-red"
+          },
+          {
+            "kind": "ui",
+            "stack": "plain",
+            "file": "resources/views/components/button.blade.php",
+            "summary": "Hero headline updated and CTA button retokenised to brand-red"
+          }
+        ],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "success",
+          "implement": "success",
+          "test": "success",
+          "verify": "success",
+          "report": "success"
+        },
+        "questions": [],
+        "report": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\n(unset)\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/marketing/hero.blade.php`\n- `resources/views/components/button.blade.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
+      },
+      "directive": null,
+      "recipe_action": null,
+      "recipe_notes": []
+    }
+  ]
+}

@@ -495,6 +495,9 @@ def _to_delivery(work: WorkState) -> DeliveryState:
         ui_design=work.ui_design,
         ui_review=work.ui_review,
         ui_polish=work.ui_polish,
+        contract=work.contract,
+        stitch=work.stitch,
+        stack=work.stack,
     )
 
 
@@ -521,6 +524,9 @@ def _sync_back(work: WorkState, delivery: DeliveryState) -> None:
     work.ui_design = delivery.ui_design
     work.ui_review = delivery.ui_review
     work.ui_polish = delivery.ui_polish
+    work.contract = delivery.contract
+    work.stitch = delivery.stitch
+    work.stack = delivery.stack
 
 
 def _save(state_file: Path, work: WorkState, fmt: str) -> None:
