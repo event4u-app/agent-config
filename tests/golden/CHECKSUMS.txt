@@ -99,4 +99,16 @@ ba955596a79c1564cb88fd886447e12aeafbbedc739dda2f436389fd06caf504  tests/golden/b
 353acf208e137eb2dbecef3788d3d49ed16131c2a9ddc72c8d9e9d6fc82c4edf  tests/golden/baseline/GT-U1/state-snapshots/cycle-05.json
 2fb8d13a664e3797a88936a0fcc177d862cbc6c7bfed89b607c000bed96f141c  tests/golden/baseline/GT-U1/state-snapshots/cycle-06.json
 f2c31acc0351c9b7f00fbed2e11a63365cd2646b6f1311607ccd88e63851c8a2  tests/golden/baseline/GT-U1/transcript.json
-5137242503e236ea1cf07f38a0b61364cfa1af68be9ebdc75989650eea4b95a2  tests/golden/baseline/summary.json
+6f7335de637d16167f0ab1443877bc6b8261a0e4d754a0b756fec72c4c45e2c4  tests/golden/baseline/GT-U2/delivery-report.md
+170c1cc5dee8e7cc440bc2fb4c8ff4854301a375782cb7d7397c56b0efd1d8f4  tests/golden/baseline/GT-U2/exit-codes.json
+1de197dbe3b1a08400809e77d90a670b80fd668a1cd535422676cd9d03587269  tests/golden/baseline/GT-U2/fixture/gt-u2-improve-diff.diff
+12b7e50700c3d9800e596bc79f314809dd3ca933cbe6229d74d49d5fb8885020  tests/golden/baseline/GT-U2/halt-markers.json
+83b43ada6a7863809087ee3e06d4356619d00cb3eacff5002633aebadaa6797d  tests/golden/baseline/GT-U2/reproduction-notes.md
+a9f7427820a8fd8defa8053e495840e04dc3663a3d10aa32c460de0231651ad3  tests/golden/baseline/GT-U2/state-snapshots/cycle-01.json
+aef5679c8d424044e5d71e512db5d76da5f50ef92be45dab6f1b821929f12901  tests/golden/baseline/GT-U2/state-snapshots/cycle-02.json
+e5d6207e18097e213e4656eb59492f8e8564995277bb961fb9fe4b16a739797d  tests/golden/baseline/GT-U2/state-snapshots/cycle-03.json
+70c5d94f482e1dde270ce82c077352696efaccf86d35d69111577c6743871a74  tests/golden/baseline/GT-U2/state-snapshots/cycle-04.json
+e69a815865e66bf7cdf32354cbf255c2d29786818c0ad47099cafdbc4e7a7e1e  tests/golden/baseline/GT-U2/state-snapshots/cycle-05.json
+9726c2ebfa27616ad0a54bbb83893b7396fff7a482e3167a276f5ac46a5f2baf  tests/golden/baseline/GT-U2/state-snapshots/cycle-06.json
+4ba8b3b609ebe51029e6276df9a3dcf77cd5517379fa3d91706480e0cad995fa  tests/golden/baseline/GT-U2/transcript.json
+455a2b85bf292a140a6166bc94f4ae001547fc8b7f8400b34501c599ff46854c  tests/golden/baseline/summary.json

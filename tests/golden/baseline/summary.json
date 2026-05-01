@@ -58,5 +58,11 @@
     "outcome": "success",
     "exit_code": 0,
     "cycles": 6
+  },
+  {
+    "gt_id": "GT-U2",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 6
   }
 ]

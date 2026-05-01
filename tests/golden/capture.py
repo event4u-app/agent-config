@@ -41,6 +41,7 @@ RECIPE_MODULES = (
     "tests.golden.sandbox.recipes.gt_p3_low",
     "tests.golden.sandbox.recipes.gt_p4_ui_rejection",
     "tests.golden.sandbox.recipes.gt_u1_build_happy",
+    "tests.golden.sandbox.recipes.gt_u2_improve_diff",
 )
 
 GOLDEN_ROOT = Path(__file__).resolve().parent
@@ -66,33 +67,53 @@ def main(argv: list[str] | None = None) -> int:
         "--scenarios",
         nargs="*",
         default=None,
-        help="Optional GT ids to run (default: all five).",
+        help="Optional GT ids to run (default: every registered recipe).",
     )
     args = parser.parse_args(argv)
 
-    if args.target.exists():
+    selected = set(args.scenarios) if args.scenarios else None
+
+    # Selective re-capture (`--scenarios GT-X GT-Y`) must preserve the
+    # other baselines on disk and merge them into the summary, so a
+    # one-scenario refresh can't silently delete the rest of the suite.
+    # Full re-capture (no --scenarios) wipes the whole target so stale
+    # GT directories from removed recipes are cleaned up.
+    if selected is None and args.target.exists():
         shutil.rmtree(args.target)
     args.target.mkdir(parents=True, exist_ok=True)
 
-    selected = set(args.scenarios) if args.scenarios else None
+    existing_summary: dict[str, dict[str, Any]] = {}
+    summary_path = args.target / "summary.json"
+    if selected is not None and summary_path.exists():
+        try:
+            for entry in json.loads(summary_path.read_text(encoding="utf-8")):
+                existing_summary[entry["gt_id"]] = entry
+        except (json.JSONDecodeError, KeyError, TypeError):
+            existing_summary = {}
+
     summary: list[dict[str, Any]] = []
     for module_name in RECIPE_MODULES:
         module = importlib.import_module(module_name)
         meta = module.META
-        if selected and meta["gt_id"] not in selected:
+        gt_id = meta["gt_id"]
+        if selected is not None and gt_id not in selected:
+            if gt_id in existing_summary:
+                summary.append(existing_summary[gt_id])
             continue
-        print(f"=== {meta['gt_id']} ({module_name}) ===", file=sys.stderr)
+        print(f"=== {gt_id} ({module_name}) ===", file=sys.stderr)
+        pack_dir = args.target / gt_id
+        if pack_dir.exists():
+            shutil.rmtree(pack_dir)
         result = _run_one(module)
-        pack_dir = args.target / meta["gt_id"]
         _write_pack(pack_dir, result, meta)
         summary.append({
-            "gt_id": meta["gt_id"],
+            "gt_id": gt_id,
             "outcome": result.final_outcome,
             "exit_code": result.final_exit_code,
             "cycles": len(result.cycles),
         })
 
-    (args.target / "summary.json").write_text(
+    summary_path.write_text(
         json.dumps(summary, indent=2) + "\n",
         encoding="utf-8",
     )
@@ -105,7 +126,7 @@ def main(argv: list[str] | None = None) -> int:
 
 def _run_one(module) -> runner.CaptureResult:
     meta = module.META
-    ticket_file, prompt_file = _resolve_inputs(meta)
+    ticket_file, prompt_file, diff_file, file_file = _resolve_inputs(meta)
 
     with tempfile.TemporaryDirectory(prefix=f"golden-{meta['gt_id']}-") as tmp:
         workspace = Path(tmp) / "ws"
@@ -114,6 +135,8 @@ def _run_one(module) -> runner.CaptureResult:
             gt_id=meta["gt_id"],
             ticket_file=ticket_file,
             prompt_file=prompt_file,
+            diff_file=diff_file,
+            file_file=file_file,
             workspace=workspace,
             recipe=recipe,
             persona=meta.get("persona"),
@@ -121,7 +144,9 @@ def _run_one(module) -> runner.CaptureResult:
         )
 
 
-def _resolve_inputs(meta: dict[str, Any]) -> tuple[Path | None, Path | None]:
+def _resolve_inputs(
+    meta: dict[str, Any],
+) -> tuple[Path | None, Path | None, Path | None, Path | None]:
     """Mirror of :func:`tests.golden.harness._resolve_inputs`.
 
     Two implementations is the lesser evil here — capture and harness
@@ -132,15 +157,23 @@ def _resolve_inputs(meta: dict[str, Any]) -> tuple[Path | None, Path | None]:
     """
     ticket_rel = meta.get("ticket_relpath")
     prompt_rel = meta.get("prompt_relpath")
-    if (ticket_rel is None) == (prompt_rel is None):
+    diff_rel = meta.get("diff_relpath")
+    file_rel = meta.get("file_relpath")
+    supplied = [r for r in (ticket_rel, prompt_rel, diff_rel, file_rel) if r is not None]
+    if len(supplied) != 1:
         raise ValueError(
             f"META for {meta.get('gt_id')!r} must declare exactly one of "
-            "'ticket_relpath' / 'prompt_relpath'; got "
-            f"ticket_relpath={ticket_rel!r}, prompt_relpath={prompt_rel!r}",
+            "'ticket_relpath' / 'prompt_relpath' / 'diff_relpath' / "
+            f"'file_relpath'; got ticket_relpath={ticket_rel!r}, "
+            f"prompt_relpath={prompt_rel!r}, diff_relpath={diff_rel!r}, "
+            f"file_relpath={file_rel!r}",
         )
-    if ticket_rel is not None:
-        return runner.SANDBOX_ROOT / ticket_rel, None
-    return None, runner.SANDBOX_ROOT / prompt_rel
+    return (
+        runner.SANDBOX_ROOT / ticket_rel if ticket_rel is not None else None,
+        runner.SANDBOX_ROOT / prompt_rel if prompt_rel is not None else None,
+        runner.SANDBOX_ROOT / diff_rel if diff_rel is not None else None,
+        runner.SANDBOX_ROOT / file_rel if file_rel is not None else None,
+    )
 
 
 def _write_pack(pack_dir: Path, result: runner.CaptureResult, meta: dict) -> None:
@@ -192,7 +225,12 @@ def _write_pack(pack_dir: Path, result: runner.CaptureResult, meta: dict) -> Non
         encoding="utf-8",
     )
 
-    fixture_relpath = meta.get("ticket_relpath") or meta.get("prompt_relpath")
+    fixture_relpath = (
+        meta.get("ticket_relpath")
+        or meta.get("prompt_relpath")
+        or meta.get("diff_relpath")
+        or meta.get("file_relpath")
+    )
     fixture_src = runner.SANDBOX_ROOT / fixture_relpath
     shutil.copy2(fixture_src, fixture_dir / Path(fixture_relpath).name)
 
@@ -203,11 +241,19 @@ def _write_pack(pack_dir: Path, result: runner.CaptureResult, meta: dict) -> Non
 def _reproduction_notes(meta: dict, result: runner.CaptureResult) -> str:
     ticket_rel = meta.get("ticket_relpath")
     prompt_rel = meta.get("prompt_relpath")
+    diff_rel = meta.get("diff_relpath")
+    file_rel = meta.get("file_relpath")
     if ticket_rel is not None:
         fixture_line = f"- ticket fixture: `tests/golden/sandbox/{ticket_rel}`"
         invocation = "`./agent-config implement-ticket`"
-    else:
+    elif prompt_rel is not None:
         fixture_line = f"- prompt fixture: `tests/golden/sandbox/{prompt_rel}`"
+        invocation = "`./agent-config work`"
+    elif diff_rel is not None:
+        fixture_line = f"- diff fixture: `tests/golden/sandbox/{diff_rel}`"
+        invocation = "`./agent-config work`"
+    else:
+        fixture_line = f"- file fixture: `tests/golden/sandbox/{file_rel}`"
         invocation = "`./agent-config work`"
     lines = [
         f"# {meta['gt_id']} reproduction notes",

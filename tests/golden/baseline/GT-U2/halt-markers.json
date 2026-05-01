@@ -1,0 +1,79 @@
+[
+  {
+    "cycle": 1,
+    "exit_code": 1,
+    "directive": "existing-ui-audit",
+    "recipe_action": "existing-ui-audit",
+    "questions": [
+      "@agent-directive: existing-ui-audit",
+      "> Input: diff --git a/resources/views/contact.blade.php b/resources/views/contact.blade.…",
+      "> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.",
+      "> 1. Continue — let the skill produce the audit",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 2,
+    "exit_code": 1,
+    "directive": "ui-design-brief",
+    "recipe_action": "ui-design-brief",
+    "questions": [
+      "@agent-directive: ui-design-brief",
+      "> Input: diff --git a/resources/views/contact.blade.php b/resources/views/contact.blade.…",
+      "> No design brief yet — producing one now. The brief locks layout, components, states, microcopy, and a11y before any code is written.",
+      "> 1. Continue — produce the brief from audit findings",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 3,
+    "exit_code": 1,
+    "directive": null,
+    "recipe_action": "_no_directive",
+    "questions": [
+      "> Input: diff --git a/resources/views/contact.blade.php b/resources/views/contact.blade.…",
+      "> Design brief is ready. Summary:",
+      "> - Components: 1",
+      "> - States covered: 5",
+      "> - Microcopy entries (locked): 5",
+      "> 1. Confirm — lock this brief and advance to apply",
+      "> 2. Revise — send feedback; loops back to ui-design-brief",
+      "> 3. Abort — drop this UI request",
+      "",
+      "**Recommendation: 1 — Confirm** — the brief covers all required slots and microcopy is final. Caveat: flip to 2 only if a string, state, or component is wrong; do not confirm strings you have not read."
+    ]
+  },
+  {
+    "cycle": 4,
+    "exit_code": 1,
+    "directive": "ui-apply-plain",
+    "recipe_action": "ui-apply-plain",
+    "questions": [
+      "@agent-directive: ui-apply-plain",
+      "> Stack: `plain`. Implementing the locked design brief.",
+      "> Microcopy is locked — every button label, empty-state message, and validation message must come verbatim from `state.ui_design.microcopy`.",
+      "> 1. Continue — implement the brief and write a `ui_apply` envelope back into state.ticket (rendered: {path: text}, files: [...])",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 5,
+    "exit_code": 1,
+    "directive": "ui-design-review-plain",
+    "recipe_action": "ui-design-review-plain",
+    "questions": [
+      "@agent-directive: ui-design-review-plain",
+      "> Stack: `plain`. Reviewing rendered components against the locked design brief.",
+      "> The review pass compares `state.ticket.ui_apply.rendered` against `state.ui_design` (microcopy, states, a11y, layout) and produces a structured `findings` list.",
+      "> 1. Continue — run the review and write `{findings: [...], review_clean: bool}` into `state.ui_review`",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 6,
+    "exit_code": 0,
+    "directive": null,
+    "recipe_action": null,
+    "questions": []
+  }
+]

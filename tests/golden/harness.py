@@ -44,6 +44,7 @@ RECIPE_MODULES = (
     "tests.golden.sandbox.recipes.gt_p3_low",
     "tests.golden.sandbox.recipes.gt_p4_ui_rejection",
     "tests.golden.sandbox.recipes.gt_u1_build_happy",
+    "tests.golden.sandbox.recipes.gt_u2_improve_diff",
 )
 
 GOLDEN_ROOT = Path(__file__).resolve().parent
@@ -102,33 +103,44 @@ def _load_module_for(gt_id: str):
     raise KeyError(f"unknown GT id: {gt_id}")
 
 
-def _resolve_inputs(meta: dict[str, Any]) -> tuple[Path | None, Path | None]:
-    """Return ``(ticket_file, prompt_file)`` from a recipe's ``META``.
+def _resolve_inputs(
+    meta: dict[str, Any],
+) -> tuple[Path | None, Path | None, Path | None, Path | None]:
+    """Return ``(ticket_file, prompt_file, diff_file, file_file)`` from META.
 
-    Recipes declare exactly one of ``ticket_relpath`` (R1 ticket-mode)
-    and ``prompt_relpath`` (R2 prompt-mode); the unused slot stays
-    ``None``. The raised error matches what ``run_capture`` would say
-    if both or neither were forwarded — failing here surfaces the typo
-    on the META rather than deep inside the runner.
+    Recipes declare exactly one of ``ticket_relpath`` (R1 ticket-mode),
+    ``prompt_relpath`` (R2 prompt-mode), ``diff_relpath`` (R3 diff-mode)
+    or ``file_relpath`` (R3 file-mode); the unused slots stay ``None``.
+    The raised error matches what ``run_capture`` would say if any
+    other count was forwarded — failing here surfaces the typo on the
+    META rather than deep inside the runner.
     """
     ticket_rel = meta.get("ticket_relpath")
     prompt_rel = meta.get("prompt_relpath")
-    if (ticket_rel is None) == (prompt_rel is None):
+    diff_rel = meta.get("diff_relpath")
+    file_rel = meta.get("file_relpath")
+    supplied = [r for r in (ticket_rel, prompt_rel, diff_rel, file_rel) if r is not None]
+    if len(supplied) != 1:
         raise ValueError(
             f"META for {meta.get('gt_id')!r} must declare exactly one of "
-            "'ticket_relpath' / 'prompt_relpath'; got "
-            f"ticket_relpath={ticket_rel!r}, prompt_relpath={prompt_rel!r}",
+            "'ticket_relpath' / 'prompt_relpath' / 'diff_relpath' / "
+            f"'file_relpath'; got ticket_relpath={ticket_rel!r}, "
+            f"prompt_relpath={prompt_rel!r}, diff_relpath={diff_rel!r}, "
+            f"file_relpath={file_rel!r}",
         )
-    if ticket_rel is not None:
-        return runner.SANDBOX_ROOT / ticket_rel, None
-    return None, runner.SANDBOX_ROOT / prompt_rel
+    return (
+        runner.SANDBOX_ROOT / ticket_rel if ticket_rel is not None else None,
+        runner.SANDBOX_ROOT / prompt_rel if prompt_rel is not None else None,
+        runner.SANDBOX_ROOT / diff_rel if diff_rel is not None else None,
+        runner.SANDBOX_ROOT / file_rel if file_rel is not None else None,
+    )
 
 
 def replay(gt_id: str) -> ReplayResult:
     """Run the recipe for ``gt_id`` against the live engine."""
     module = _load_module_for(gt_id)
     meta = module.META
-    ticket_file, prompt_file = _resolve_inputs(meta)
+    ticket_file, prompt_file, diff_file, file_file = _resolve_inputs(meta)
     with tempfile.TemporaryDirectory(prefix=f"replay-{gt_id}-") as tmp:
         workspace = Path(tmp) / "ws"
         recipe = module.build_recipe(workspace)
@@ -136,6 +148,8 @@ def replay(gt_id: str) -> ReplayResult:
             gt_id=gt_id,
             ticket_file=ticket_file,
             prompt_file=prompt_file,
+            diff_file=diff_file,
+            file_file=file_file,
             workspace=workspace,
             recipe=recipe,
             persona=meta.get("persona"),
