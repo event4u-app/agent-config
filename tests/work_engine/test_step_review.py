@@ -208,3 +208,270 @@ def test_review_does_not_enforce_clean_matches_findings_count() -> None:
     result = review.run(state)
 
     assert result.outcome is Outcome.SUCCESS
+
+
+# --- R4 Phase 1: a11y gate --------------------------------------------------
+
+
+def _ui_state_with_audit(
+    *,
+    audit: dict[str, object] | None,
+    ui_review: dict[str, object],
+) -> DeliveryState:
+    """Build a state with both ``ui_audit`` and ``ui_review`` populated."""
+    state = _ui_state(ui_review=ui_review)
+    if audit is not None:
+        state.ui_audit = audit
+    return state
+
+
+def test_a11y_gate_no_baseline_no_envelope_passes() -> None:
+    """Pre-R4 envelopes (no baseline, no a11y) bypass the gate."""
+    state = _ui_state(ui_review={"findings": [], "review_clean": True})
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+
+
+def test_a11y_gate_baseline_without_envelope_halts_pending() -> None:
+    """Audit declared a baseline but review skipped a11y → pending halt."""
+    state = _ui_state_with_audit(
+        audit={"a11y_baseline": []},
+        ui_review={"findings": [], "review_clean": True},
+    )
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.BLOCKED
+    body = "\n".join(result.questions)
+    assert "a11y" in body.lower()
+    assert "baseline" in body.lower()
+
+
+def test_a11y_gate_no_baseline_envelope_present_still_filters() -> None:
+    """Envelope without a baseline still applies severity / accepted filters.
+
+    Useful when a stack opts in to a11y without recording a baseline
+    (greenfield component).
+    """
+    state = _ui_state_with_audit(
+        audit=None,
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            "a11y": {
+                "violations": [
+                    {"rule": "label", "selector": "input", "severity": "serious"},
+                ],
+            },
+        },
+    )
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+    assert state.ui_review["review_clean"] is False
+    findings = state.ui_review["findings"]
+    assert len(findings) == 1
+    assert findings[0]["kind"] == "a11y_violation"
+    assert findings[0]["rule"] == "label"
+
+
+def test_a11y_gate_filters_baseline_violations() -> None:
+    """Pre-existing violations (baseline match) are ignored."""
+    state = _ui_state_with_audit(
+        audit={
+            "a11y_baseline": [
+                {"rule": "color-contrast", "selector": "h1", "severity": "moderate"},
+            ],
+        },
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            "a11y": {
+                "violations": [
+                    {"rule": "color-contrast", "selector": "h1", "severity": "moderate"},
+                ],
+            },
+        },
+    )
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+    assert state.ui_review["review_clean"] is True
+    assert state.ui_review["findings"] == []
+
+
+def test_a11y_gate_filters_below_severity_floor() -> None:
+    """Violations strictly below the floor are informational, not blocking."""
+    state = _ui_state_with_audit(
+        audit={"a11y_baseline": []},
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            "a11y": {
+                "violations": [
+                    {"rule": "region", "selector": "main", "severity": "minor"},
+                ],
+                "severity_floor": "moderate",
+            },
+        },
+    )
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+    assert state.ui_review["review_clean"] is True
+    assert state.ui_review["findings"] == []
+
+
+def test_a11y_gate_filters_accepted_violations() -> None:
+    """User-acknowledged violations from a previous halt are not re-blocked."""
+    state = _ui_state_with_audit(
+        audit={"a11y_baseline": []},
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            "a11y": {
+                "violations": [
+                    {"rule": "aria-roles", "selector": "[role=tab]", "severity": "serious"},
+                ],
+                "accepted_violations": [
+                    {"rule": "aria-roles", "selector": "[role=tab]"},
+                ],
+            },
+        },
+    )
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+    assert state.ui_review["review_clean"] is True
+    assert state.ui_review["findings"] == []
+
+
+def test_a11y_gate_synthesizes_actionable_findings() -> None:
+    """Actionable violations land as ``a11y_violation`` findings."""
+    state = _ui_state_with_audit(
+        audit={"a11y_baseline": []},
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            "a11y": {
+                "violations": [
+                    {"rule": "label", "selector": "input#email", "severity": "serious"},
+                    {"rule": "color-contrast", "selector": "h1", "severity": "critical"},
+                    {"rule": "region", "selector": "main", "severity": "minor"},
+                ],
+                "severity_floor": "moderate",
+            },
+        },
+    )
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+    assert state.ui_review["review_clean"] is False
+    findings = state.ui_review["findings"]
+    assert len(findings) == 2
+    rules = {f["rule"] for f in findings}
+    assert rules == {"label", "color-contrast"}
+    for f in findings:
+        assert f["kind"] == "a11y_violation"
+
+
+def test_a11y_gate_is_idempotent_on_re_entry() -> None:
+    """Re-running the gate must not duplicate synthesised findings."""
+    state = _ui_state_with_audit(
+        audit={"a11y_baseline": []},
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            "a11y": {
+                "violations": [
+                    {"rule": "label", "selector": "input", "severity": "serious"},
+                ],
+            },
+        },
+    )
+
+    review.run(state)
+    review.run(state)
+    review.run(state)
+
+    findings = state.ui_review["findings"]
+    assert len(findings) == 1
+    assert findings[0]["rule"] == "label"
+
+
+def test_a11y_gate_preserves_existing_non_a11y_findings() -> None:
+    """Non-a11y findings (design issues) stay intact alongside synthesised a11y."""
+    state = _ui_state_with_audit(
+        audit={"a11y_baseline": []},
+        ui_review={
+            "findings": [
+                {"path": "header", "issue": "wrong padding"},
+            ],
+            "review_clean": False,
+            "a11y": {
+                "violations": [
+                    {"rule": "label", "selector": "input", "severity": "serious"},
+                ],
+            },
+        },
+    )
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+    findings = state.ui_review["findings"]
+    assert len(findings) == 2
+    a11y_findings = [f for f in findings if f.get("kind") == "a11y_violation"]
+    assert len(a11y_findings) == 1
+
+
+def test_a11y_gate_unknown_severity_defaults_to_floor() -> None:
+    """Malformed severity must not silently weaken the gate."""
+    state = _ui_state_with_audit(
+        audit={"a11y_baseline": []},
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            "a11y": {
+                "violations": [
+                    {"rule": "label", "selector": "input", "severity": "bogus"},
+                ],
+                "severity_floor": "moderate",
+            },
+        },
+    )
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+    # Unknown severity defaulted to moderate → at floor → actionable
+    assert state.ui_review["review_clean"] is False
+    assert len(state.ui_review["findings"]) == 1
+
+
+def test_a11y_pending_halt_runs_after_basic_gates() -> None:
+    """Basic shape errors (missing findings) still surface first."""
+    state = _ui_state_with_audit(
+        audit={"a11y_baseline": []},
+        ui_review={"review_clean": True},  # findings missing
+    )
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.BLOCKED
+    body = "\n".join(result.questions).lower()
+    assert "findings" in body
+    assert "a11y" not in body  # a11y halt did not fire
+
+
+def test_a11y_gate_in_ambiguities_table() -> None:
+    """``review_a11y_pending`` is declared in the AMBIGUITIES table."""
+    codes = {entry["code"] for entry in review.AMBIGUITIES}
+    assert "review_a11y_pending" in codes

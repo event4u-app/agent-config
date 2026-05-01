@@ -62,6 +62,18 @@ An unknown stack falls through to ``ui-design-review-plain``.
 DEFAULT_DIRECTIVE = "ui-design-review-plain"
 """Fallback directive when ``state.stack`` is missing or malformed."""
 
+SEVERITY_ORDER: dict[str, int] = {
+    "minor": 0,
+    "moderate": 1,
+    "serious": 2,
+    "critical": 3,
+}
+"""R4 a11y severity ranking — mirrors axe-core's impact levels."""
+
+DEFAULT_SEVERITY_FLOOR = "moderate"
+"""R4 a11y default severity floor — violations strictly below this are
+informational; violations at or above are actionable."""
+
 AMBIGUITIES: tuple[dict[str, str], ...] = (
     {
         "code": "review_envelope_missing",
@@ -84,6 +96,16 @@ AMBIGUITIES: tuple[dict[str, str], ...] = (
         "True or False before returning the envelope; review does "
         "not infer it from findings count",
     },
+    {
+        "code": "review_a11y_pending",
+        "trigger": "state.ui_audit declared an `a11y_baseline` but "
+        "state.ui_review.a11y is missing — the review skill ran but "
+        "did not produce an a11y envelope",
+        "resolution": "agent re-runs the review skill so it captures "
+        "axe-core (or equivalent) findings into "
+        "`state.ui_review.a11y.violations`; the gate then filters "
+        "against the baseline and the severity floor",
+    },
 )
 """Declared ambiguity surfaces for this step."""
 
@@ -100,6 +122,10 @@ def run(state: DeliveryState) -> StepResult:
     findings = review["findings"]
     if not isinstance(review.get("review_clean"), bool):
         return _halt_clean_missing(state, findings_count=len(findings))
+
+    a11y_halt = _apply_a11y_gate(state, review)
+    if a11y_halt is not None:
+        return a11y_halt
 
     return StepResult(outcome=Outcome.SUCCESS)
 
@@ -196,9 +222,163 @@ def _halt_clean_missing(
     )
 
 
+def _apply_a11y_gate(
+    state: DeliveryState,
+    review: dict[str, Any],
+) -> StepResult | None:
+    """R4 Phase 1: enforce a11y gate after the basic shape gates pass.
+
+    The gate is **opt-in via the audit baseline**: if
+    ``state.ui_audit.a11y_baseline`` is present (a list, possibly empty)
+    the audit declared this UI surface to be a11y-tracked. The review
+    skill must then populate ``state.ui_review.a11y.violations``;
+    missing → ``review_a11y_pending`` halt. Pre-R4 envelopes (no
+    baseline) bypass the gate so existing fixtures keep working.
+
+    When the envelope is present the gate filters violations against
+    the baseline (pre-existing issues are ignored), against the
+    accepted list (user-acknowledged issues from a previous polish
+    halt), and against the severity floor (default ``moderate``). Any
+    *actionable* leftover violations are synthesised as
+    ``a11y_violation`` findings on ``review.findings`` and
+    ``review_clean`` is forced to ``False`` so polish picks them up.
+
+    Returns ``None`` to advance the dispatcher, or a ``BLOCKED``
+    ``StepResult`` for the pending halt.
+
+    Side effects on ``review`` are deduplicated by ``(kind, rule)`` so
+    a re-entry round-trips without growing the findings list.
+    """
+    audit = getattr(state, "ui_audit", None)
+    has_baseline = isinstance(audit, dict) and "a11y_baseline" in audit
+    a11y = review.get("a11y")
+
+    if a11y is None:
+        if has_baseline:
+            return _halt_a11y_pending(state)
+        return None
+
+    violations = a11y.get("violations") or []
+    baseline = audit["a11y_baseline"] if has_baseline else []
+    accepted = a11y.get("accepted_violations") or []
+    floor = a11y.get("severity_floor") or DEFAULT_SEVERITY_FLOOR
+
+    new_violations = _filter_known(violations, baseline)
+    new_violations = _filter_known(new_violations, accepted)
+    actionable = [v for v in new_violations if _at_or_above_floor(v, floor)]
+
+    if not actionable:
+        return None
+
+    _synthesize_a11y_findings(review["findings"], actionable)
+    review["review_clean"] = False
+    return None
+
+
+def _filter_known(
+    violations: list[Any],
+    known: list[Any],
+) -> list[Any]:
+    """Drop violations whose ``(rule, selector)`` matches ``known``.
+
+    Used for both the baseline filter (pre-existing violations stay
+    ignored) and the accepted filter (user-acknowledged violations
+    after a ``polish_a11y_blocking`` halt). Non-dict entries in either
+    list are skipped — schema only enforces list shape.
+    """
+    if not known:
+        return list(violations)
+    keys: set[tuple[Any, Any]] = set()
+    for entry in known:
+        if isinstance(entry, dict):
+            keys.add((entry.get("rule"), entry.get("selector")))
+    if not keys:
+        return list(violations)
+    return [
+        v for v in violations
+        if not (
+            isinstance(v, dict)
+            and (v.get("rule"), v.get("selector")) in keys
+        )
+    ]
+
+
+def _at_or_above_floor(violation: Any, floor: str) -> bool:
+    """``True`` when ``violation.severity`` is at or above ``floor``.
+
+    Unknown severities default to ``moderate`` rather than dropping
+    the violation — a malformed envelope must not silently weaken the
+    gate. The floor itself is schema-validated, so a bogus floor never
+    reaches this helper.
+    """
+    if not isinstance(violation, dict):
+        return False
+    severity = violation.get("severity")
+    sev_rank = SEVERITY_ORDER.get(
+        severity if isinstance(severity, str) else "",
+        SEVERITY_ORDER[DEFAULT_SEVERITY_FLOOR],
+    )
+    floor_rank = SEVERITY_ORDER.get(floor, SEVERITY_ORDER[DEFAULT_SEVERITY_FLOOR])
+    return sev_rank >= floor_rank
+
+
+def _synthesize_a11y_findings(
+    findings: list[Any],
+    actionable: list[Any],
+) -> None:
+    """Append ``a11y_violation`` findings, deduped by ``(rule, selector)``.
+
+    Polish reads these as ordinary findings; the ``kind`` discriminator
+    lets Phase 2's ``polish_a11y_blocking`` gate isolate the a11y
+    subset at the polish ceiling.
+    """
+    existing: set[tuple[Any, Any]] = {
+        (f.get("rule"), f.get("selector"))
+        for f in findings
+        if isinstance(f, dict) and f.get("kind") == "a11y_violation"
+    }
+    for v in actionable:
+        if not isinstance(v, dict):
+            continue
+        key = (v.get("rule"), v.get("selector"))
+        if key in existing:
+            continue
+        findings.append({
+            "kind": "a11y_violation",
+            "rule": v.get("rule"),
+            "selector": v.get("selector"),
+            "severity": v.get("severity"),
+        })
+        existing.add(key)
+
+
+def _halt_a11y_pending(state: DeliveryState) -> StepResult:
+    """BLOCKED halt — audit declared a baseline but review has no a11y."""
+    directive = _resolve_directive(state)
+    return StepResult(
+        outcome=Outcome.BLOCKED,
+        questions=[
+            agent_directive(directive),
+            "> Review envelope is incomplete: the audit declared an "
+            "`a11y_baseline` but `state.ui_review.a11y` is missing.",
+            "> Re-run the review skill so it captures axe-core (or "
+            "equivalent) findings into "
+            "`state.ui_review.a11y.violations`. The gate filters "
+            "against the baseline and the severity floor "
+            f"(default `{DEFAULT_SEVERITY_FLOOR}`).",
+        ],
+        message=(
+            "UI review envelope incomplete; `a11y` envelope missing "
+            "(audit declared a baseline)."
+        ),
+    )
+
+
 __all__ = [
     "AMBIGUITIES",
     "DEFAULT_DIRECTIVE",
+    "DEFAULT_SEVERITY_FLOOR",
+    "SEVERITY_ORDER",
     "STACK_DIRECTIVES",
     "run",
 ]
