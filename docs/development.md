@@ -109,7 +109,7 @@ task tool-validate             # Validate tool declarations
 
 ```bash
 task install -- --target <dir> # Run the installer orchestrator on a target
-task install-hooks             # Install git hooks (pre-push sync check)
+task install-hooks             # Install git hooks (pre-commit marketplace lint, pre-push sync check, chat-history bridges)
 ```
 
 ---

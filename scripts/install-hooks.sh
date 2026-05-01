@@ -28,6 +28,35 @@ EOF
 chmod +x "$HOOKS_DIR/pre-push"
 echo "✅  Pre-push hook installed."
 
+# Pre-commit: marketplace consistency -----------------------------------------
+#
+# Distribution manifests (.claude-plugin/marketplace.json) drift silently —
+# adding a skill on disk without updating the manifest renders it invisible to
+# Claude Code Plugin Marketplace consumers. CI catches it, but a structural
+# pre-commit gate stops the bad commit from landing in the first place.
+# Runtime is ~40 ms; always-on is cheaper than scoped detection.
+
+cat > "$HOOKS_DIR/pre-commit" << 'EOF'
+#!/usr/bin/env bash
+# Pre-commit hook: verify .claude-plugin/marketplace.json lists every skill
+# that exists on disk under .claude/skills/.
+
+python3 scripts/lint_marketplace.py
+status=$?
+
+if [ $status -ne 0 ]; then
+    echo ""
+    echo "❌  Commit blocked — .claude-plugin/marketplace.json is out of sync."
+    echo "   Add the missing skill to the manifest (or remove the stale entry),"
+    echo "   then re-stage and commit. To bypass for an unrelated WIP commit:"
+    echo "       git commit --no-verify"
+    exit 1
+fi
+EOF
+
+chmod +x "$HOOKS_DIR/pre-commit"
+echo "✅  Pre-commit hook installed."
+
 # Chat-history bridge hooks ----------------------------------------------------
 #
 # Augment IDE plugin (and any other agent surface without native chat

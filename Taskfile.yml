@@ -63,7 +63,7 @@ tasks:
     cmd: bash scripts/install {{.CLI_ARGS}}
 
   install-hooks:
-    desc: Install git hooks (pre-push sync check)
+    desc: Install git hooks (pre-commit marketplace lint, pre-push sync check, chat-history bridges)
     cmd: bash scripts/install-hooks.sh
 
 

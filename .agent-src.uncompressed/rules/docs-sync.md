@@ -92,8 +92,10 @@ Failure mode that motivated this section: a skill on disk without its
 `marketplace.json` entry passes local edits, builds, and tests — only
 CI catches it via `lint_marketplace`. The cooperative path is
 "agent updates the manifest in the same response as the skill"; the
-structural backstop (pre-commit hook for `lint_marketplace`) is a
-separate roadmap item.
+structural backstop is a pre-commit hook installed by
+`scripts/install-hooks.sh` that runs `lint_marketplace` on every
+commit. Run the installer once per clone; bypass for an unrelated WIP
+commit is `git commit --no-verify`.
 
 ## Content consistency
 
