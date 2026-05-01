@@ -11,9 +11,10 @@
 >   polish handlers live under
 >   [`.agent-src.uncompressed/templates/scripts/work_engine/directives/ui/`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/ui/).
 >   Mixed (Phase 4) under `directives/mixed/`. `ui-trivial` (Phase 2 Step 6)
->   under `directives/ui_trivial/`. Golden Transcripts GT-U1..U4, U9..U12
->   pin happy-path and ambiguity branches; GT-U5..U8 deferred to
->   [`road-to-product-ui-track-followup.md`](../roadmaps/road-to-product-ui-track-followup.md).
+>   under `directives/ui_trivial/`. Golden Transcripts GT-U1..U4, U7,
+>   U8, U9..U12 plus GT-U5 (mixed flow) and GT-U6A/B (stack dispatch)
+>   pin happy-path, ambiguity, mixed orchestration, stack dispatch,
+>   trivial happy path, and reclassification branches.
 > - **Runtime:** Python 3.10+. Same `DeliveryState` envelope, same
 >   eight-slot dispatcher as the backend track — only the slot handlers
 >   differ.
@@ -267,8 +268,8 @@ suite asserts every `BLOCKED` path has a matching declaration.
 - [`road-to-product-ui-track.md`](../roadmaps/road-to-product-ui-track.md)
   — phased delivery and Golden-Transcript matrix.
 - [`road-to-product-ui-track-followup.md`](../roadmaps/road-to-product-ui-track-followup.md)
-  — deferred GT-U5..U8 (mixed flow, stack dispatch, trivial happy
-  path, reclassification).
+  — pinned GT-U5 (mixed flow), GT-U6A/B (stack dispatch), GT-U7
+  (trivial happy path), GT-U8 (trivial reclassification).
 - [`existing-ui-audit` SKILL](../../.agent-src.uncompressed/skills/existing-ui-audit/SKILL.md)
   — producer of `state.ui_audit`.
 - [`ui-audit-before-build` rule](../../.agent-src.uncompressed/rules/ui-audit-before-build.md)
