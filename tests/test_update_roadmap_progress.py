@@ -308,3 +308,78 @@ def test_per_phase_breakdown_column_order(tmp_path: Path):
     assert "| # | Phase | State | Open | Done | Deferred | Cancelled | % |" in output
     # Row: id=1, name=Spread, state=in progress, Open=1, Done=2, Def=1, Can=1.
     assert "| 1 | Spread | 🟡 in progress | 1 | 2 | 1 | 1 |" in output
+
+
+
+# ---------------------------------------------------------------------------
+# Capture-only frontmatter — synthesis / feedback docs (status: capture-only,
+# capture_only, or mode: feedback) are excluded from collect() and surfaced
+# in a separate footer via collect_capture_only(). Regression guard for the
+# dashboard fix that introduced the "capture vs execution" split.
+# ---------------------------------------------------------------------------
+
+CAPTURE_ONLY_FIXTURE = """\
+---
+status: capture-only
+---
+
+# Roadmap — Synthesis
+
+## Finding 1 — Some observation
+- [ ] not really a step
+"""
+
+FEEDBACK_FIXTURE = """\
+---
+mode: feedback
+---
+
+# Roadmap — Feedback
+
+## Phase 1 — Looks executable but flagged
+- [ ] open
+"""
+
+
+def test_collect_excludes_capture_only(tmp_path: Path):
+    root = tmp_path / "agents" / "roadmaps"
+    root.mkdir(parents=True)
+    (root / "synth.md").write_text(CAPTURE_ONLY_FIXTURE, encoding="utf-8")
+    (root / "feedback.md").write_text(FEEDBACK_FIXTURE, encoding="utf-8")
+    (root / "real.md").write_text(NUMERIC_FIXTURE, encoding="utf-8")
+    roadmaps = urp.collect(root)
+    rels = sorted(r.rel for r in roadmaps)
+    assert rels == ["real.md"]
+
+
+def test_collect_capture_only_returns_flagged_docs(tmp_path: Path):
+    root = tmp_path / "agents" / "roadmaps"
+    root.mkdir(parents=True)
+    (root / "synth.md").write_text(CAPTURE_ONLY_FIXTURE, encoding="utf-8")
+    (root / "feedback.md").write_text(FEEDBACK_FIXTURE, encoding="utf-8")
+    (root / "real.md").write_text(NUMERIC_FIXTURE, encoding="utf-8")
+    docs = urp.collect_capture_only(root)
+    rels = sorted(d.rel for d in docs)
+    assert rels == ["feedback.md", "synth.md"]
+    by_rel = {d.rel: d.marker for d in docs}
+    assert by_rel["synth.md"] == "capture-only"
+    assert by_rel["feedback.md"] == "feedback"
+
+
+def test_render_includes_capture_only_footer(tmp_path: Path):
+    root = tmp_path / "agents" / "roadmaps"
+    root.mkdir(parents=True)
+    (root / "synth.md").write_text(CAPTURE_ONLY_FIXTURE, encoding="utf-8")
+    (root / "real.md").write_text(NUMERIC_FIXTURE, encoding="utf-8")
+    roadmaps = urp.collect(root)
+    capture = urp.collect_capture_only(root)
+    output = urp.render(roadmaps, capture)
+    assert "## Capture-only roadmaps" in output
+    assert "synth.md" in output
+    assert "1 capture-only doc" in output
+
+
+def test_parse_frontmatter_handles_quoted_and_blank_lines():
+    text = '---\nstatus: "capture-only"\n\n# comment line\nmode: feedback\n---\n# Title'
+    fm = urp.parse_frontmatter(text)
+    assert fm == {"status": "capture-only", "mode": "feedback"}
