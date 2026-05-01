@@ -401,6 +401,12 @@ def _validate_ui_audit(ui_audit: Any) -> None:
             f"'scaffold', 'bare', 'external_reference', or null; "
             f"got {decision!r}",
         )
+    if "a11y_baseline" in ui_audit and not isinstance(
+        ui_audit["a11y_baseline"], list,
+    ):
+        raise SchemaError(
+            "state.ui_audit.a11y_baseline must be a list when present",
+        )
 
 
 def _validate_ui_design(ui_design: Any) -> None:
@@ -460,6 +466,44 @@ def _validate_ui_review(ui_review: Any) -> None:
         raise SchemaError(
             "state.ui_review.review_clean must be a boolean when present",
         )
+    a11y = ui_review.get("a11y")
+    if a11y is not None:
+        if not isinstance(a11y, dict):
+            raise SchemaError(
+                "state.ui_review.a11y must be a JSON object or null when present",
+            )
+        if "violations" in a11y and not isinstance(a11y["violations"], list):
+            raise SchemaError(
+                "state.ui_review.a11y.violations must be a list when present",
+            )
+        floor = a11y.get("severity_floor")
+        if floor is not None and floor not in {
+            "minor",
+            "moderate",
+            "serious",
+            "critical",
+        }:
+            raise SchemaError(
+                f"state.ui_review.a11y.severity_floor must be one of "
+                f"'minor', 'moderate', 'serious', 'critical', or null; "
+                f"got {floor!r}",
+            )
+        if "accepted_violations" in a11y and not isinstance(
+            a11y["accepted_violations"], list,
+        ):
+            raise SchemaError(
+                "state.ui_review.a11y.accepted_violations must be a list when present",
+            )
+    preview = ui_review.get("preview")
+    if preview is not None:
+        if not isinstance(preview, dict):
+            raise SchemaError(
+                "state.ui_review.preview must be a JSON object or null when present",
+            )
+        if "render_ok" in preview and not isinstance(preview["render_ok"], bool):
+            raise SchemaError(
+                "state.ui_review.preview.render_ok must be a boolean when present",
+            )
 
 
 def _validate_ui_polish(ui_polish: Any) -> None:
@@ -492,6 +536,12 @@ def _validate_ui_polish(ui_polish: Any) -> None:
     if "applied" in ui_polish and not isinstance(ui_polish["applied"], list):
         raise SchemaError(
             "state.ui_polish.applied must be a list when present",
+        )
+    if "extension_used" in ui_polish and not isinstance(
+        ui_polish["extension_used"], bool,
+    ):
+        raise SchemaError(
+            "state.ui_polish.extension_used must be a boolean when present",
         )
 
 

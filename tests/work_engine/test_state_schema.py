@@ -485,6 +485,165 @@ class TestStitchEnvelope:
             from_dict(payload)
 
 
+class TestUiAuditA11yBaseline:
+    """``state.ui_audit.a11y_baseline`` is the R4 pre-existing-violations cache.
+
+    Schema rule: when present, must be a list. Content shape is
+    enforced by the review handler, not the schema.
+    """
+
+    def test_a11y_baseline_round_trips(self) -> None:
+        baseline = [
+            {"rule": "color-contrast", "selector": "header h1", "severity": "moderate"},
+        ]
+        state = _build_state(ui_audit={"a11y_baseline": baseline})
+        rebuilt = from_dict(to_dict(state))
+        assert rebuilt.ui_audit["a11y_baseline"] == baseline
+
+    def test_rejects_non_list_a11y_baseline(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "ui_audit": {"a11y_baseline": "not-a-list"},
+        }
+
+        with pytest.raises(SchemaError, match="ui_audit.a11y_baseline"):
+            from_dict(payload)
+
+
+class TestUiReviewA11yEnvelope:
+    """``state.ui_review.a11y`` is the R4 a11y findings envelope.
+
+    Schema rules: when present, must be a JSON object. ``violations``
+    (if set) must be a list, ``severity_floor`` (if set) must be one
+    of the four documented levels, ``accepted_violations`` (if set)
+    must be a list. Content shape is enforced by the review handler.
+    """
+
+    def test_a11y_envelope_round_trips(self) -> None:
+        a11y = {
+            "violations": [
+                {"rule": "label", "selector": "input#email", "severity": "serious"},
+            ],
+            "severity_floor": "moderate",
+            "baseline_compared": True,
+            "accepted_violations": [],
+        }
+        state = _build_state(ui_review={"a11y": a11y})
+        rebuilt = from_dict(to_dict(state))
+        assert rebuilt.ui_review["a11y"] == a11y
+
+    def test_rejects_a11y_that_is_not_an_object(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "ui_review": {"a11y": ["bad"]},
+        }
+
+        with pytest.raises(SchemaError, match="state.ui_review.a11y must be a JSON object"):
+            from_dict(payload)
+
+    def test_rejects_non_list_violations(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "ui_review": {"a11y": {"violations": "not-a-list"}},
+        }
+
+        with pytest.raises(SchemaError, match="a11y.violations must be a list"):
+            from_dict(payload)
+
+    def test_rejects_unknown_severity_floor(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "ui_review": {"a11y": {"severity_floor": "nuclear"}},
+        }
+
+        with pytest.raises(SchemaError, match="severity_floor must be one of"):
+            from_dict(payload)
+
+    def test_rejects_non_list_accepted_violations(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "ui_review": {"a11y": {"accepted_violations": "none"}},
+        }
+
+        with pytest.raises(SchemaError, match="accepted_violations must be a list"):
+            from_dict(payload)
+
+
+class TestUiReviewPreviewEnvelope:
+    """``state.ui_review.preview`` is the R4 visual-preview envelope."""
+
+    def test_preview_envelope_round_trips(self) -> None:
+        preview = {
+            "screenshot_path": "tmp/preview.png",
+            "dom_dump_path": "tmp/preview.html",
+            "render_ok": True,
+            "error": None,
+        }
+        state = _build_state(ui_review={"preview": preview})
+        rebuilt = from_dict(to_dict(state))
+        assert rebuilt.ui_review["preview"] == preview
+
+    def test_rejects_preview_that_is_not_an_object(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "ui_review": {"preview": "screenshot.png"},
+        }
+
+        with pytest.raises(SchemaError, match="preview must be a JSON object"):
+            from_dict(payload)
+
+    def test_rejects_non_bool_render_ok(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "ui_review": {"preview": {"render_ok": "yes"}},
+        }
+
+        with pytest.raises(SchemaError, match="preview.render_ok must be a boolean"):
+            from_dict(payload)
+
+
+class TestUiPolishExtensionUsed:
+    """``state.ui_polish.extension_used`` is the R4 one-shot extension flag."""
+
+    def test_extension_used_round_trips(self) -> None:
+        state = _build_state(ui_polish={"rounds": 2, "extension_used": True})
+        rebuilt = from_dict(to_dict(state))
+        assert rebuilt.ui_polish["extension_used"] is True
+
+    def test_rejects_non_bool_extension_used(self) -> None:
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "ui_polish": {"extension_used": "yes"},
+        }
+
+        with pytest.raises(SchemaError, match="extension_used must be a boolean"):
+            from_dict(payload)
+
+
 class TestUnknownTopLevelKeysAreTolerated:
     def test_extra_keys_are_dropped(self) -> None:
         # Forward-compat: an older reader against a newer file should
