@@ -246,7 +246,7 @@ def _apply_conflict_rule(
 # says retrieval should route through `@event4u/agent-memory`. The package
 # CLI is purely **semantic** (`memory retrieve <query> --type T …`); the
 # shared `retrieve(types, keys, …)` API is **key-based**. The hybrid
-# resolution agreed in `agents/contexts/agent-memory-contract.md` synthesises
+# resolution agreed in `docs/contracts/agent-memory-contract.md` synthesises
 # `keys` into a single natural-language query for the package call, while
 # the file fallback continues to do glob/substring matching on the same
 # keys. Both legs land in the same `Hit` shape so the conflict rule can

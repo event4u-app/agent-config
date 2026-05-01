@@ -1,7 +1,7 @@
 """``report`` step — delivery report renderer.
 
 Produces the markdown block described in
-``agents/contexts/implement-ticket-flow.md#delivery-report-schema``.
+``docs/contracts/implement-ticket-flow.md#delivery-report-schema``.
 All nine headings are present on every run — the schema is stable
 for consumers — but section bodies are omitted when the matching
 slice of ``DeliveryState`` is empty. The single exception is the

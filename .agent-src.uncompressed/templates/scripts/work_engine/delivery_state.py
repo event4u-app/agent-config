@@ -1,6 +1,6 @@
 """``DeliveryState`` — the only object shared between orchestrator steps.
 
-The shape mirrors ``agents/contexts/implement-ticket-flow.md``. No step
+The shape mirrors ``docs/contracts/implement-ticket-flow.md``. No step
 may invent fields not declared here; extensions require a roadmap
 amendment plus a flow-contract update.
 
@@ -59,7 +59,7 @@ class DeliveryState:
     """Canonical state passed between orchestrator steps.
 
     Field order matches the table in
-    ``agents/contexts/implement-ticket-flow.md``. Mutable defaults use
+    ``docs/contracts/implement-ticket-flow.md``. Mutable defaults use
     ``field(default_factory=...)`` so every instance owns its own
     containers — a single shared list across runs would be a
     cross-run contamination hazard for the metrics pipeline.
@@ -103,7 +103,7 @@ skill; the user-facing numbered options follow on subsequent lines.
 
 The prefix is public contract: changing it breaks every agent that
 has learned to recognise it. See
-``agents/contexts/implement-ticket-flow.md#agent-directives``.
+``docs/contracts/implement-ticket-flow.md#agent-directives``.
 """
 
 

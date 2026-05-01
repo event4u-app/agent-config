@@ -41,7 +41,39 @@ DEFAULT_V1_FILENAME = ".work-state.json"
 """Canonical filename for the v1 wire format."""
 
 BACKUP_SUFFIX = ".bak"
-"""Appended to the v0 source path when the migration archives it."""
+"""Appended to the v0 source path when the migration archives it.
+
+If the ``.bak`` slot is already taken (re-running the migration after
+an aborted run, manual rollback, etc.) the rotator falls back to
+``.bak.1``, ``.bak.2``, ... — see :func:`_rotate_backup_path`. The
+migration never silently overwrites an existing backup."""
+
+_MAX_BACKUP_ROTATIONS = 999
+"""Hard ceiling on rotated backup filenames; surfaces an explicit
+:class:`SchemaError` instead of looping forever if a checkout has
+hundreds of stale backups."""
+
+
+def _rotate_backup_path(source: Path) -> Path:
+    """Return the next free ``.bak`` slot for ``source``.
+
+    Tries ``source.bak`` first, then ``source.bak.1``,
+    ``source.bak.2``, ... up to :data:`_MAX_BACKUP_ROTATIONS`. The
+    rotator only inspects existence — collision-safe by construction —
+    and never deletes or overwrites prior backups.
+    """
+    primary = source.with_suffix(source.suffix + BACKUP_SUFFIX)
+    if not primary.exists():
+        return primary
+    for index in range(1, _MAX_BACKUP_ROTATIONS + 1):
+        candidate = primary.with_suffix(primary.suffix + f".{index}")
+        if not candidate.exists():
+            return candidate
+    raise SchemaError(
+        f"refusing to rotate backup for {source}: more than "
+        f"{_MAX_BACKUP_ROTATIONS} stale .bak files already exist; "
+        "clean them up before re-running the migration",
+    )
 
 
 def migrate_payload(payload: Any) -> dict[str, Any]:
@@ -143,7 +175,7 @@ def migrate_file(
     )
 
     if backup:
-        backup_path = source.with_suffix(source.suffix + BACKUP_SUFFIX)
+        backup_path = _rotate_backup_path(source)
         shutil.move(str(source), str(backup_path))
 
     return target

@@ -156,3 +156,40 @@ class TestMigrateFile:
 
         with pytest.raises(SchemaError, match="invalid JSON"):
             migrate_file(source)
+
+    def test_existing_bak_rotates_to_numbered_slot(
+        self, tmp_path, legacy_state,
+    ) -> None:
+        """A pre-existing ``.bak`` must not be overwritten — the rotator
+        falls back to ``.bak.1`` so prior rollback surfaces are
+        preserved."""
+        _label, v0 = legacy_state
+        source = self._write_v0(tmp_path, v0)
+        existing_bak = source.with_suffix(source.suffix + BACKUP_SUFFIX)
+        existing_bak.write_text("prior backup\n", encoding="utf-8")
+
+        target = migrate_file(source)
+
+        assert target.is_file()
+        assert existing_bak.read_text(encoding="utf-8") == "prior backup\n", (
+            "pre-existing .bak must be preserved verbatim"
+        )
+        rotated = existing_bak.with_suffix(existing_bak.suffix + ".1")
+        assert rotated.is_file(), "rotator must fall back to .bak.1"
+        assert json.loads(rotated.read_text(encoding="utf-8")) == v0
+
+    def test_multiple_bak_rotations_pick_next_free_slot(
+        self, tmp_path, legacy_state,
+    ) -> None:
+        """``.bak`` and ``.bak.1`` taken → migration writes ``.bak.2``."""
+        _label, v0 = legacy_state
+        source = self._write_v0(tmp_path, v0)
+        primary = source.with_suffix(source.suffix + BACKUP_SUFFIX)
+        primary.write_text("first\n", encoding="utf-8")
+        primary.with_suffix(primary.suffix + ".1").write_text("second\n", encoding="utf-8")
+
+        migrate_file(source)
+
+        next_slot = primary.with_suffix(primary.suffix + ".2")
+        assert next_slot.is_file()
+        assert json.loads(next_slot.read_text(encoding="utf-8")) == v0

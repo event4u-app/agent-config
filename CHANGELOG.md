@@ -103,10 +103,10 @@ baselines pin the R3 contract.
 * **ADR (R1):** [`agents/contexts/adr-work-engine-rename.md`](agents/contexts/adr-work-engine-rename.md)
   — rationale, scope of the rename, compatibility shim policy, state
   migration, golden-test contract, tradeoffs, non-goals.
-* **ADR (R2):** [`agents/contexts/adr-prompt-driven-execution.md`](agents/contexts/adr-prompt-driven-execution.md)
+* **ADR (R2):** [`docs/contracts/adr-prompt-driven-execution.md`](docs/contracts/adr-prompt-driven-execution.md)
   — naming decision (`/work` over `/do`), confidence-band gate,
   AC-projection fix, R3 deferral boundary, and golden contract.
-* **flow:** `agents/contexts/implement-ticket-flow.md` gains a "Replay
+* **flow:** `docs/contracts/implement-ticket-flow.md` gains a "Replay
   protocol — Strict-Verb comparison" section (R1) and a
   "Prompt envelopes and confidence bands (R2)" section pinning the
   band-action mapping to the scorer module.
@@ -170,17 +170,17 @@ baselines pin the R3 contract.
 
 ### Documentation (R3)
 
-* **ADR (R3):** [`agents/contexts/adr-product-ui-track.md`](agents/contexts/adr-product-ui-track.md)
+* **ADR (R3):** [`docs/contracts/adr-product-ui-track.md`](docs/contracts/adr-product-ui-track.md)
   — audit-as-hard-gate rationale, design-review loop, halt-budget
   reasoning, trivial-path-and-reclassification, stack-detection
   strategy, fe-design migration, tradeoffs, non-goals.
-* **flow contract:** [`agents/contexts/ui-track-flow.md`](agents/contexts/ui-track-flow.md)
+* **flow contract:** [`docs/contracts/ui-track-flow.md`](docs/contracts/ui-track-flow.md)
   — slot-by-slot wiring for `ui` / `ui-trivial` / `mixed`, the
   audit-path table (`STRONG_SIMILARITY = 0.7`, `TIE_GAP = 0.05`),
   design-brief lock + placeholder patterns, stack-dispatch tables,
   polish ceiling, trivial preconditions, mixed sentinels,
   idempotency table, declared ambiguities across all eight directives.
-* **extension recipe:** [`agents/contexts/ui-stack-extension.md`](agents/contexts/ui-stack-extension.md)
+* **extension recipe:** [`docs/contracts/ui-stack-extension.md`](docs/contracts/ui-stack-extension.md)
   — how to add a new stack (Svelte, SolidJS, Astro, …): label
   conventions, detector heuristic, three required skills, dispatch
   wiring, version anchor, Golden fixture, end-to-end verification.
@@ -232,7 +232,7 @@ Maintainer-targeted; consumers see no prompts.
 * **ADR:** [`agents/contexts/adr-artifact-engagement.md`](agents/contexts/adr-artifact-engagement.md)
   — rationale, default-off doctrine, privacy contract, schema
   versioning, deprecation horizon.
-* **flow:** `agents/contexts/artifact-engagement-flow.md` is the
+* **flow:** `docs/contracts/artifact-engagement-flow.md` is the
   cross-cutting reference for what gets recorded, when, and under
   which constraints; includes the maintainer hand-audit recipe.
 * **AGENTS.md + README.md:** short *Maintainer telemetry (opt-in)*
@@ -288,10 +288,10 @@ the as-is option is always present and always last.
 
 ### Documentation
 
-* **ADR:** [`agents/contexts/adr-command-suggestion.md`](agents/contexts/adr-command-suggestion.md)
+* **ADR:** [`docs/contracts/adr-command-suggestion.md`](docs/contracts/adr-command-suggestion.md)
   — "suggest, never invoke" anchor, eligibility rubric, anti-noise
   heuristics, hardening list, three opt-out paths.
-* **flow:** [`agents/contexts/command-suggestion-flow.md`](agents/contexts/command-suggestion-flow.md)
+* **flow:** [`docs/contracts/command-suggestion-flow.md`](docs/contracts/command-suggestion-flow.md)
   — scoring breakdown, evidence semantics, subordination order, and
   hardening tests.
 * **README + AGENTS.md:** short *Context-aware command suggestion*

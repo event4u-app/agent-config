@@ -17,7 +17,7 @@ Flow:
 - Otherwise → SUCCESS.
 
 ``changes`` entries use the loose shape described in
-``agents/contexts/implement-ticket-flow.md#deliverystate-the-only-shared-object``
+``docs/contracts/implement-ticket-flow.md#deliverystate-the-only-shared-object``
 \u2014 each entry is a dict with at least a ``path``; optional
 ``lines`` / ``purpose`` feed the delivery report.
 """

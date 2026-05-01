@@ -8,7 +8,7 @@ directive plus numbered questions — on BLOCKED/PARTIAL.
 The script never edits code, runs tests, or opens pull requests.
 All of that is delegated to the agent via ``@agent-directive:``
 markers per
-``agents/contexts/implement-ticket-flow.md#agent-directives``. The
+``docs/contracts/implement-ticket-flow.md#agent-directives``. The
 agent executes the directive, writes the resulting slice back to
 the state file, and re-invokes this script to resume.
 
@@ -70,8 +70,18 @@ from .resolvers.file import FileResolverError, build_envelope as _build_file_env
 from .resolvers.prompt import PromptResolverError, build_envelope as _build_prompt_envelope
 from .state import Input, SchemaError, WorkState
 
-DEFAULT_STATE_FILE = Path(".implement-ticket-state.json")
-"""State file used when ``--state-file`` is not passed."""
+DEFAULT_STATE_FILE = Path(".work-state.json")
+"""State file used when ``--state-file`` is not passed.
+
+Renamed from ``.implement-ticket-state.json`` in 1.15.0 alongside the
+``implement_ticket → work_engine`` package move. The legacy filename is
+still recognised on load (see :data:`LEGACY_STATE_FILE` below) so that
+existing checkouts surface a clear migration message instead of a
+silent "no state file" error."""
+
+LEGACY_STATE_FILE = Path(".implement-ticket-state.json")
+"""Pre-1.15.0 default state file. Detected only as a migration hint;
+never written to. See ``docs/MIGRATION.md``."""
 
 _FMT_V0 = "v0"
 _FMT_V1 = "v1"
@@ -233,6 +243,36 @@ def _emit_halt(halt: HookHalt) -> int:
     return 2
 
 
+def _maybe_raise_legacy_hint(state_file: Path) -> None:
+    """Surface a migration hint when only the pre-1.15.0 file is present.
+
+    The dispatcher renamed the default state file from
+    ``.implement-ticket-state.json`` to ``.work-state.json`` in 1.15.0
+    (alongside the ``implement_ticket → work_engine`` package move).
+    Existing checkouts that still carry the legacy file would otherwise
+    fail with a generic "no state file" message. This helper detects
+    the legacy file in the same directory and points the user at the
+    one-shot migration command instead.
+
+    Only fires when ``state_file`` has the canonical default name and
+    sits next to a legacy file — explicit ``--state-file`` overrides
+    bypass the hint so power users can carry their own naming scheme.
+    """
+    if state_file.name != DEFAULT_STATE_FILE.name:
+        return
+    legacy_candidate = state_file.with_name(LEGACY_STATE_FILE.name)
+    if not legacy_candidate.is_file():
+        return
+    raise _CLIError(
+        f"Found legacy state file {legacy_candidate} but no "
+        f"{state_file}. The default state file was renamed in 1.15.0. "
+        f"Run `python3 -m work_engine.migration.v0_to_v1 "
+        f"{legacy_candidate}` to migrate, or pass `--state-file "
+        f"{legacy_candidate}` to keep using the old name. See "
+        "docs/MIGRATION.md.",
+    )
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="implement-ticket",
@@ -321,6 +361,7 @@ def _load_or_build(
     """
     if state_file.exists():
         return _load(state_file)
+    _maybe_raise_legacy_hint(state_file)
     inputs = [
         ("--ticket-file", args.ticket_file),
         ("--prompt-file", args.prompt_file),

@@ -261,3 +261,40 @@ def test_no_input_error_mentions_both_flags(tmp_path: Path, capsys) -> None:
     stderr = capsys.readouterr().err
     assert "--ticket-file" in stderr
     assert "--prompt-file" in stderr
+
+
+def test_legacy_state_file_surfaces_migration_hint(
+    tmp_path: Path, capsys, monkeypatch,
+) -> None:
+    """If only ``.implement-ticket-state.json`` exists next to the
+    requested ``.work-state.json``, the CLI must point at the migration
+    command instead of the generic 'no state file' error."""
+    monkeypatch.chdir(tmp_path)
+    legacy = tmp_path / ".implement-ticket-state.json"
+    legacy.write_text(json.dumps({"ticket": {"id": "X-1"}}), encoding="utf-8")
+    state_file = tmp_path / ".work-state.json"
+
+    exit_code = main(["--state-file", str(state_file)])
+
+    assert exit_code == 2
+    stderr = capsys.readouterr().err
+    assert "legacy state file" in stderr.lower()
+    assert "work_engine.migration.v0_to_v1" in stderr
+    assert "MIGRATION.md" in stderr
+
+
+def test_legacy_hint_skipped_for_custom_state_file(
+    tmp_path: Path, capsys,
+) -> None:
+    """An explicit ``--state-file`` with a non-default name bypasses the
+    legacy hint — power users with custom names get the generic error."""
+    legacy = tmp_path / ".implement-ticket-state.json"
+    legacy.write_text(json.dumps({"ticket": {"id": "X-1"}}), encoding="utf-8")
+    state_file = tmp_path / "custom.json"
+
+    exit_code = main(["--state-file", str(state_file)])
+
+    assert exit_code == 2
+    stderr = capsys.readouterr().err
+    assert "legacy state file" not in stderr.lower()
+    assert "--ticket-file" in stderr

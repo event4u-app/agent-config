@@ -1,7 +1,11 @@
+---
+stability: beta
+---
+
 # `/implement-ticket` — Flow Contract
 
 > Technical contracts for the delivery orchestrator shipped under
-> [`road-to-implement-ticket.md`](../roadmaps/road-to-implement-ticket.md).
+> [`road-to-implement-ticket.md`](../../agents/roadmaps/road-to-implement-ticket.md).
 > This document is the stable reference; the roadmap tracks phased
 > delivery.
 >
@@ -107,9 +111,15 @@ The migration:
    (the only working directive bundle in R1).
 3. Writes the v1 file as `.work-state.json` next to the source.
 4. Renames the v0 file to `.implement-ticket-state.json.bak`
-   (override with `--no-backup`).
+   (override with `--no-backup`). If a `.bak` already exists it
+   rotates to `.bak.1`, `.bak.2`, … so prior rollback surfaces are
+   never overwritten silently. Hard-fails after 999 rotated slots.
 5. Refuses to overwrite an existing destination — accidental
    double-migration on CI fails loud.
+
+End-to-end migration UX (default state-file rename, legacy-file
+detection on load, rollback recipe) lives in the user-facing
+[`docs/MIGRATION.md`](../MIGRATION.md).
 
 `migrate_payload` is **idempotent** on v1 input and **rejects** any
 declared `version` other than `0` (absent) or `1`. The library
@@ -606,8 +616,8 @@ are blocked by `freeze-guard.yml::manifest-integrity` at PR time.
 
 ## See also
 
-- [`../roadmaps/road-to-implement-ticket.md`](../roadmaps/road-to-implement-ticket.md)
-- [`../roadmaps/road-to-universal-execution-engine.md`](../roadmaps/road-to-universal-execution-engine.md)
+- [`agents/roadmaps/road-to-implement-ticket.md`](../../agents/roadmaps/road-to-implement-ticket.md)
+- [`agents/roadmaps/road-to-universal-execution-engine.md`](../../agents/roadmaps/road-to-universal-execution-engine.md)
 - `tests/golden/` — capture sandbox, recipes, and Capture Packs
 - [`../../tests/golden/harness.py`](../../tests/golden/harness.py) — Strict-Verb replay harness
 - [`../../.github/workflows/freeze-guard.yml`](../../.github/workflows/freeze-guard.yml) — manifest-integrity + live-replay gates

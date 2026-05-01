@@ -8,8 +8,8 @@ the dispatcher, CLI and step modules over from the legacy
 that re-exports from here with a ``DeprecationWarning``.
 
 Architectural constraints (from
-``agents/contexts/adr-implement-ticket-runtime.md`` and
-``agents/contexts/implement-ticket-flow.md``):
+``docs/contracts/adr-implement-ticket-runtime.md`` and
+``docs/contracts/implement-ticket-flow.md``):
 
 - Runtime is Python 3.10+.
 - The dispatcher is linear, not a DAG. Eight fixed steps, fixed order.
