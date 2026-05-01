@@ -157,6 +157,8 @@ ALLOWLIST = [
     r"agent-config",               # refers to the package concept, not a specific project
     r"shared.*package",            # "shared package" concept
     r"package repository",         # "package repository" concept
+    r"scripts/mcp_server/",        # MCP server module path (road-to-mcp-server.md Phase 1)
+    r"scripts\.mcp_server",        # MCP server Python module entrypoint
 ]
 
 # Directories to scan (only package files, not project-specific agents/)
