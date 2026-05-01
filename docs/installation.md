@@ -264,9 +264,9 @@ the matching Linear field.
    - Leave `personal.md` empty unless you have personal overrides
 
 3. **Per-layer rationale** — see
-   [`agents/contexts/linear-ai-three-layers.md`](../agents/contexts/linear-ai-three-layers.md)
+   [`docs/contracts/linear-ai-three-layers.md`](contracts/linear-ai-three-layers.md)
    for the split rationale and
-   [`agents/contexts/linear-ai-rules-inclusion.md`](../agents/contexts/linear-ai-rules-inclusion.md)
+   [`docs/contracts/linear-ai-rules-inclusion.md`](contracts/linear-ai-rules-inclusion.md)
    for which rules go where.
 
 ---

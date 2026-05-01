@@ -1,5 +1,7 @@
 # Agent Config — Governed Agent System
 
+> **agent-config is not a runtime, but it ships a deterministic orchestration contract / state machine for host agents.**
+
 Teach your AI agents Laravel, PHP, testing, Git workflows, and **120+ more skills** — with quality guardrails built in.
 
 > Your agent learns to write Laravel code, run tests, create PRs, fix CI — and follows your team's coding standards while doing it.
@@ -91,7 +93,7 @@ Install in the same project (dev-only):
 npm install --save-dev @event4u/agent-memory
 ```
 
-→ [Memory contract & retrieval API](agents/contexts/agent-memory-contract.md)
+→ [Memory contract & retrieval API](docs/contracts/agent-memory-contract.md)
 
 ---
 
@@ -129,7 +131,7 @@ so you decide — never a silent guess. Persona comes from
 (plan-only, skips implementation).
 
 → [Command reference](.agent-src/commands/implement-ticket.md) ·
-  [Flow contract](agents/contexts/implement-ticket-flow.md)
+  [Flow contract](docs/contracts/implement-ticket-flow.md)
 
 ### Sibling entrypoint: `/work` (free-form prompt)
 
@@ -156,7 +158,7 @@ to `/implement-ticket`. UI-shaped prompts are routed through the
 
 → [Command reference](.agent-src/commands/work.md) ·
   [`refine-prompt` skill](.agent-src/skills/refine-prompt/SKILL.md) ·
-  [ADR](agents/contexts/adr-prompt-driven-execution.md)
+  [ADR](docs/contracts/adr-prompt-driven-execution.md)
 
 **Pick which one:** ticket id or pasted ticket payload → `/implement-ticket`.
 Free-form goal, no ticket → `/work`. The two share `.work-state.json`
@@ -188,9 +190,9 @@ screenshots / findings) via a defined contract. Stack detection routes
 `react-shadcn` / `vue` / `plain`; trivial path reclassifies loudly when
 preconditions fail. Halt budget on the happy path is 2.
 
-→ [Flow contract](agents/contexts/ui-track-flow.md) ·
-  [ADR](agents/contexts/adr-product-ui-track.md) ·
-  [Stack-extension recipe](agents/contexts/ui-stack-extension.md)
+→ [Flow contract](docs/contracts/ui-track-flow.md) ·
+  [ADR](docs/contracts/adr-product-ui-track.md) ·
+  [Stack-extension recipe](docs/contracts/ui-stack-extension.md)
 
 ---
 
@@ -252,16 +254,25 @@ Start with **Rules + Skills**. Everything else is optional.
 | Mode | What's active | Token overhead |
 |---|---|---|
 | **Minimal** (default) | Rules, Skills, Commands | Zero |
-| **Balanced** | + Runtime dispatcher for skills that declare a shell command | Low |
-| **Full** | + Tool adapters (GitHub / Jira read-only, opt-in) | Moderate |
+| **Balanced** | + Runtime Dispatcher for skills that declare a shell command | Low |
+| **Full** | + Tool Adapters (GitHub / Jira read-only, opt-in) | Moderate |
 
 Nothing runs automatically without your control. [Configure modes →](docs/customization.md)
 
-> **Experimental modules:** the runtime (dispatcher + shell handler) runs
-> two pilot skills in CI (`lint-skills`, `check-refs`). The tool registry
-> ships two read-only adapters (GitHub, Jira) behind the `full` profile.
-> Other handlers (`php`, `node`) are still scaffold. The `minimal`
-> profile — which most users should pick — is unaffected.
+> **Stability tiers** ([`STABILITY.md`](docs/contracts/STABILITY.md)):
+> - **Runtime Dispatcher** (`scripts/runtime_dispatcher.py`) is **stable** as
+>   a mechanism — single-skill shell execution, two pilots in CI
+>   (`lint-skills`, `check-refs`). `php` / `node` handlers are still scaffold.
+> - **Work Engine** (`templates/scripts/work_engine/`) is **beta (beta)** —
+>   the multi-step orchestrator behind `/work` and `/implement-ticket`. The
+>   contract has shipped one minor cycle but the surface is still expected
+>   to evolve; minor-version breaks allowed under a `### Breaking` note.
+> - **Tool Adapters** (GitHub, Jira) are **experimental** — read-only with
+>   `GITHUB_TOKEN`, scaffold for writes; behind the `full` profile.
+>
+> The `minimal` profile — which most users should pick — is unaffected by
+> the Runtime Dispatcher and Tool Adapters. The Work Engine activates only
+> when `/work` or `/implement-ticket` is invoked, regardless of profile.
 
 ---
 
@@ -377,9 +388,9 @@ builds artefacts you upload or paste into the platform's own surface.
 
 The Linear digest is split into three layers — workspace (universal
 coding posture), team (framework-specific), personal (empty stub). See
-[`agents/contexts/linear-ai-three-layers.md`](agents/contexts/linear-ai-three-layers.md)
+[`docs/contracts/linear-ai-three-layers.md`](docs/contracts/linear-ai-three-layers.md)
 for the rationale and
-[`agents/contexts/linear-ai-rules-inclusion.md`](agents/contexts/linear-ai-rules-inclusion.md)
+[`docs/contracts/linear-ai-rules-inclusion.md`](docs/contracts/linear-ai-rules-inclusion.md)
 for the per-rule routing.
 
 ---
@@ -404,6 +415,7 @@ for the per-rule routing.
 | [**Development**](docs/development.md) | Prerequisites, editing workflow, all `task` commands, project structure |
 | [**Customization**](docs/customization.md) | Overrides, AGENTS.md, agent settings, cost profiles |
 | [**Quality & CI**](docs/quality.md) | Linting, CI pipeline, compression system |
+| [**Migration**](docs/MIGRATION.md) | Per-version upgrade steps (e.g. `implement_ticket → work_engine` in 1.15.0) |
 
 Uninstalling: see
 [docs/installation.md#uninstalling](docs/installation.md#uninstalling) —
@@ -427,7 +439,7 @@ telemetry:
 
 Reports: `./agent-config telemetry:report`. Full contract,
 privacy/redaction floor, and quartile semantics:
-[`agents/contexts/artifact-engagement-flow.md`](agents/contexts/artifact-engagement-flow.md).
+[`docs/contracts/artifact-engagement-flow.md`](docs/contracts/artifact-engagement-flow.md).
 
 ### Context-aware command suggestion
 
@@ -448,9 +460,9 @@ commands:
 Per-conversation: `/command-suggestion-off` disables the layer until
 the user re-enables or the chat ends. Full scoring contract and
 hardening list:
-[`agents/contexts/adr-command-suggestion.md`](agents/contexts/adr-command-suggestion.md)
+[`docs/contracts/adr-command-suggestion.md`](docs/contracts/adr-command-suggestion.md)
 and
-[`agents/contexts/command-suggestion-flow.md`](agents/contexts/command-suggestion-flow.md).
+[`docs/contracts/command-suggestion-flow.md`](docs/contracts/command-suggestion-flow.md).
 
 ---
 
