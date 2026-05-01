@@ -1,0 +1,66 @@
+{
+  "ticket": {
+    "id": "GT-3-POW",
+    "title": "Make power(a, b) handle negative bases correctly",
+    "acceptance_criteria": [
+      "`power(-2, 3)` returns -8 (current stub returns 8 because of the abs() bug).",
+      "`power(-2, 4)` returns 16 (even exponent on negative base stays positive).",
+      "A pytest test `test_power_negative_base` lives in `tests/test_calculator.py` and pins both behaviours."
+    ]
+  },
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": [
+    {
+      "title": "Fix power() for negative bases",
+      "detail": "Replace the abs(a)**b stub with sign-aware logic"
+    },
+    {
+      "title": "Fix power() for negative bases",
+      "detail": "Add test_power_negative_base covering odd + even exponents"
+    },
+    {
+      "title": "Fix power() for negative bases",
+      "detail": "Re-run pytest to confirm both assertions pass"
+    }
+  ],
+  "changes": [
+    {
+      "path": "src/calculator.py",
+      "purpose": "applied by GT recipe"
+    },
+    {
+      "path": "tests/test_calculator.py",
+      "purpose": "applied by GT recipe"
+    }
+  ],
+  "tests": {
+    "verdict": "success",
+    "scope": "targeted",
+    "exit_code": 0,
+    "targeted": "============================== 4 passed in <DURATION>s ==============================="
+  },
+  "verify": {
+    "verdict": "success",
+    "confidence": "high",
+    "judges": [
+      "bug-hunter",
+      "security",
+      "test-coverage",
+      "code-quality"
+    ],
+    "findings": []
+  },
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "success",
+    "implement": "success",
+    "test": "success",
+    "verify": "success",
+    "report": "success"
+  },
+  "questions": [],
+  "report": "## Ticket\n\nGT-3-POW — Make power(a, b) handle negative bases correctly\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n1. **Fix power() for negative bases** — Replace the abs(a)**b stub with sign-aware logic\n2. **Fix power() for negative bases** — Add test_power_negative_base covering odd + even exponents\n3. **Fix power() for negative bases** — Re-run pytest to confirm both assertions pass\n\n## Changes\n\n- `src/calculator.py` — applied by GT recipe\n- `tests/test_calculator.py` — applied by GT recipe\n\n## Tests\n\n- **verdict:** success\n- **scope:** targeted\n- **exit_code:** 0\n- **targeted:** ============================== 4 passed in <DURATION>s ===============================\n\n## Verify\n\n- **verdict:** success\n- **confidence:** high\n- **judges:** ['bug-hunter', 'security', 'test-coverage', 'code-quality']\n- **findings:** []\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
+}

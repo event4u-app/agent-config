@@ -1,0 +1,1139 @@
+{
+  "gt_id": "GT-U4",
+  "subcommand": "work",
+  "prompt_file": "prompts/gt-u4-polish-ceiling.txt",
+  "persona": null,
+  "final_outcome": "cycle_cap_reached",
+  "final_exit_code": 1,
+  "cycles": [
+    {
+      "index": 1,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json",
+        "--prompt-file",
+        "prompts/gt-u4-polish-ceiling.txt"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=refine\n@agent-directive: existing-ui-audit\n> Input: Tighten the spacing on the customer onboarding wizard.\n> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.\n> 1. Continue — let the skill produce the audit\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Tighten the spacing on the customer onboarding wizard.\n",
+            "reconstructed_ac": [],
+            "assumptions": []
+          }
+        },
+        "intent": "ui-improve",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/wizards/step.blade.php",
+              "name": "wizards.step",
+              "kind": "wizard-step",
+              "similarity": 0.74
+            }
+          ],
+          "design_tokens": {
+            "spacing": {
+              "sm": "8px",
+              "md": "12px",
+              "lg": "16px"
+            }
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "wizards.step"
+        },
+        "ui_design": null,
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "blocked"
+        },
+        "questions": [
+          "@agent-directive: existing-ui-audit",
+          "> Input: Tighten the spacing on the customer onboarding wizard.",
+          "> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.",
+          "> 1. Continue — let the skill produce the audit",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "existing-ui-audit",
+      "recipe_action": "existing-ui-audit",
+      "recipe_notes": [
+        "ui_audit populated for polish-ceiling run"
+      ]
+    },
+    {
+      "index": 2,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=analyze\n@agent-directive: ui-design-brief\n> Input: Tighten the spacing on the customer onboarding wizard.\n> No design brief yet — producing one now. The brief locks layout, components, states, microcopy, and a11y before any code is written.\n> 1. Continue — produce the brief from audit findings\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Tighten the spacing on the customer onboarding wizard.\n",
+            "reconstructed_ac": [],
+            "assumptions": []
+          }
+        },
+        "intent": "ui-improve",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/wizards/step.blade.php",
+              "name": "wizards.step",
+              "kind": "wizard-step",
+              "similarity": 0.74
+            }
+          ],
+          "design_tokens": {
+            "spacing": {
+              "sm": "8px",
+              "md": "12px",
+              "lg": "16px"
+            }
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "wizards.step"
+        },
+        "ui_design": {
+          "layout": "vertical wizard, max-w-2xl, 12px step gap",
+          "components": [
+            {
+              "name": "OnboardingWizard",
+              "primitives": [
+                "wizards.step"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Wizard rendered with first step active",
+            "loading": "Step transition shows inline spinner",
+            "error": "Step-level validation errors inline",
+            "success": "Final step replaced by completion card",
+            "disabled": "Disabled steps show muted indicators"
+          },
+          "microcopy": {
+            "title": "Welcome — let's set up your account",
+            "buttons": {
+              "next": "Continue",
+              "back": "Back"
+            },
+            "completion": "All set — onboarding complete."
+          },
+          "a11y": {
+            "labels": "every step has aria-current=step when active",
+            "focus": "first invalid field focused on validation error",
+            "aria_live": "completion card announced via aria-live=polite"
+          },
+          "reused_from_audit": [
+            "wizards.step"
+          ]
+        },
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "blocked"
+        },
+        "questions": [
+          "@agent-directive: ui-design-brief",
+          "> Input: Tighten the spacing on the customer onboarding wizard.",
+          "> No design brief yet — producing one now. The brief locks layout, components, states, microcopy, and a11y before any code is written.",
+          "> 1. Continue — produce the brief from audit findings",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "ui-design-brief",
+      "recipe_action": "ui-design-brief",
+      "recipe_notes": [
+        "ui_design brief written for wizard polish"
+      ]
+    },
+    {
+      "index": 3,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=analyze\n> Input: Tighten the spacing on the customer onboarding wizard.\n> Design brief is ready. Summary:\n> - Components: 1\n> - States covered: 5\n> - Microcopy entries (locked): 4\n> 1. Confirm — lock this brief and advance to apply\n> 2. Revise — send feedback; loops back to ui-design-brief\n> 3. Abort — drop this UI request\n\n**Recommendation: 1 — Confirm** — the brief covers all required slots and microcopy is final. Caveat: flip to 2 only if a string, state, or component is wrong; do not confirm strings you have not read.\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Tighten the spacing on the customer onboarding wizard.\n",
+            "reconstructed_ac": [],
+            "assumptions": []
+          }
+        },
+        "intent": "ui-improve",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/wizards/step.blade.php",
+              "name": "wizards.step",
+              "kind": "wizard-step",
+              "similarity": 0.74
+            }
+          ],
+          "design_tokens": {
+            "spacing": {
+              "sm": "8px",
+              "md": "12px",
+              "lg": "16px"
+            }
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "wizards.step"
+        },
+        "ui_design": {
+          "layout": "vertical wizard, max-w-2xl, 12px step gap",
+          "components": [
+            {
+              "name": "OnboardingWizard",
+              "primitives": [
+                "wizards.step"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Wizard rendered with first step active",
+            "loading": "Step transition shows inline spinner",
+            "error": "Step-level validation errors inline",
+            "success": "Final step replaced by completion card",
+            "disabled": "Disabled steps show muted indicators"
+          },
+          "microcopy": {
+            "title": "Welcome — let's set up your account",
+            "buttons": {
+              "next": "Continue",
+              "back": "Back"
+            },
+            "completion": "All set — onboarding complete."
+          },
+          "a11y": {
+            "labels": "every step has aria-current=step when active",
+            "focus": "first invalid field focused on validation error",
+            "aria_live": "completion card announced via aria-live=polite"
+          },
+          "reused_from_audit": [
+            "wizards.step"
+          ],
+          "design_confirmed": true
+        },
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "blocked"
+        },
+        "questions": [
+          "> Input: Tighten the spacing on the customer onboarding wizard.",
+          "> Design brief is ready. Summary:",
+          "> - Components: 1",
+          "> - States covered: 5",
+          "> - Microcopy entries (locked): 4",
+          "> 1. Confirm — lock this brief and advance to apply",
+          "> 2. Revise — send feedback; loops back to ui-design-brief",
+          "> 3. Abort — drop this UI request",
+          "",
+          "**Recommendation: 1 — Confirm** — the brief covers all required slots and microcopy is final. Caveat: flip to 2 only if a string, state, or component is wrong; do not confirm strings you have not read."
+        ],
+        "report": ""
+      },
+      "directive": null,
+      "recipe_action": "_no_directive",
+      "recipe_notes": [
+        "design_confirmed=True (user picked option 1)"
+      ]
+    },
+    {
+      "index": 4,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=implement\n@agent-directive: ui-apply-plain\n> Stack: `plain`. Implementing the locked design brief.\n> Microcopy is locked — every button label, empty-state message, and validation message must come verbatim from `state.ui_design.microcopy`.\n> 1. Continue — implement the brief and write a `ui_apply` envelope back into state.ticket (rendered: {path: text}, files: [...])\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Tighten the spacing on the customer onboarding wizard.\n",
+            "reconstructed_ac": [],
+            "assumptions": [],
+            "ui_apply": {
+              "summary": "Onboarding wizard rendered; spacing applied per brief",
+              "rendered": {
+                "resources/views/onboarding/wizard.blade.php": "Welcome — let's set up your account. Continue / Back. All set — onboarding complete."
+              },
+              "files": [
+                "resources/views/onboarding/wizard.blade.php"
+              ]
+            }
+          }
+        },
+        "intent": "ui-improve",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/wizards/step.blade.php",
+              "name": "wizards.step",
+              "kind": "wizard-step",
+              "similarity": 0.74
+            }
+          ],
+          "design_tokens": {
+            "spacing": {
+              "sm": "8px",
+              "md": "12px",
+              "lg": "16px"
+            }
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "wizards.step"
+        },
+        "ui_design": {
+          "layout": "vertical wizard, max-w-2xl, 12px step gap",
+          "components": [
+            {
+              "name": "OnboardingWizard",
+              "primitives": [
+                "wizards.step"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Wizard rendered with first step active",
+            "loading": "Step transition shows inline spinner",
+            "error": "Step-level validation errors inline",
+            "success": "Final step replaced by completion card",
+            "disabled": "Disabled steps show muted indicators"
+          },
+          "microcopy": {
+            "title": "Welcome — let's set up your account",
+            "buttons": {
+              "next": "Continue",
+              "back": "Back"
+            },
+            "completion": "All set — onboarding complete."
+          },
+          "a11y": {
+            "labels": "every step has aria-current=step when active",
+            "focus": "first invalid field focused on validation error",
+            "aria_live": "completion card announced via aria-live=polite"
+          },
+          "reused_from_audit": [
+            "wizards.step"
+          ],
+          "design_confirmed": true
+        },
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "success",
+          "implement": "blocked"
+        },
+        "questions": [
+          "@agent-directive: ui-apply-plain",
+          "> Stack: `plain`. Implementing the locked design brief.",
+          "> Microcopy is locked — every button label, empty-state message, and validation message must come verbatim from `state.ui_design.microcopy`.",
+          "> 1. Continue — implement the brief and write a `ui_apply` envelope back into state.ticket (rendered: {path: text}, files: [...])",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "ui-apply-plain",
+      "recipe_action": "ui-apply-plain",
+      "recipe_notes": [
+        "ui_apply envelope written: 1 file"
+      ]
+    },
+    {
+      "index": 5,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=test\n@agent-directive: ui-design-review-plain\n> Stack: `plain`. Reviewing rendered components against the locked design brief.\n> The review pass compares `state.ticket.ui_apply.rendered` against `state.ui_design` (microcopy, states, a11y, layout) and produces a structured `findings` list.\n> 1. Continue — run the review and write `{findings: [...], review_clean: bool}` into `state.ui_review`\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Tighten the spacing on the customer onboarding wizard.\n",
+            "reconstructed_ac": [],
+            "assumptions": [],
+            "ui_apply": {
+              "summary": "Onboarding wizard rendered; spacing applied per brief",
+              "rendered": {
+                "resources/views/onboarding/wizard.blade.php": "Welcome — let's set up your account. Continue / Back. All set — onboarding complete."
+              },
+              "files": [
+                "resources/views/onboarding/wizard.blade.php"
+              ]
+            }
+          }
+        },
+        "intent": "ui-improve",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/wizards/step.blade.php",
+              "name": "wizards.step",
+              "kind": "wizard-step",
+              "similarity": 0.74
+            }
+          ],
+          "design_tokens": {
+            "spacing": {
+              "sm": "8px",
+              "md": "12px",
+              "lg": "16px"
+            }
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "wizards.step"
+        },
+        "ui_design": {
+          "layout": "vertical wizard, max-w-2xl, 12px step gap",
+          "components": [
+            {
+              "name": "OnboardingWizard",
+              "primitives": [
+                "wizards.step"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Wizard rendered with first step active",
+            "loading": "Step transition shows inline spinner",
+            "error": "Step-level validation errors inline",
+            "success": "Final step replaced by completion card",
+            "disabled": "Disabled steps show muted indicators"
+          },
+          "microcopy": {
+            "title": "Welcome — let's set up your account",
+            "buttons": {
+              "next": "Continue",
+              "back": "Back"
+            },
+            "completion": "All set — onboarding complete."
+          },
+          "a11y": {
+            "labels": "every step has aria-current=step when active",
+            "focus": "first invalid field focused on validation error",
+            "aria_live": "completion card announced via aria-live=polite"
+          },
+          "reused_from_audit": [
+            "wizards.step"
+          ],
+          "design_confirmed": true
+        },
+        "ui_review": {
+          "findings": [
+            {
+              "kind": "spacing-mismatch",
+              "component": "OnboardingWizard",
+              "severity": "minor",
+              "note": "step indicators use 8px gap; brief asks 12px"
+            }
+          ],
+          "review_clean": false
+        },
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [
+          {
+            "kind": "ui",
+            "stack": "plain",
+            "file": "resources/views/onboarding/wizard.blade.php",
+            "summary": "Onboarding wizard rendered; spacing applied per brief"
+          }
+        ],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "success",
+          "implement": "success",
+          "test": "blocked"
+        },
+        "questions": [
+          "@agent-directive: ui-design-review-plain",
+          "> Stack: `plain`. Reviewing rendered components against the locked design brief.",
+          "> The review pass compares `state.ticket.ui_apply.rendered` against `state.ui_design` (microcopy, states, a11y, layout) and produces a structured `findings` list.",
+          "> 1. Continue — run the review and write `{findings: [...], review_clean: bool}` into `state.ui_review`",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "ui-design-review-plain",
+      "recipe_action": "ui-design-review-plain",
+      "recipe_notes": [
+        "ui_review dirty: 1 finding, review_clean=False (round 0 baseline)"
+      ]
+    },
+    {
+      "index": 6,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=verify\n@agent-directive: ui-polish-plain\n> Stack: `plain`. Polish round 1 of 2.\n> 1 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.\n> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Tighten the spacing on the customer onboarding wizard.\n",
+            "reconstructed_ac": [],
+            "assumptions": [],
+            "ui_apply": {
+              "summary": "Onboarding wizard rendered; spacing applied per brief",
+              "rendered": {
+                "resources/views/onboarding/wizard.blade.php": "Welcome — let's set up your account. Continue / Back. All set — onboarding complete."
+              },
+              "files": [
+                "resources/views/onboarding/wizard.blade.php"
+              ]
+            }
+          }
+        },
+        "intent": "ui-improve",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/wizards/step.blade.php",
+              "name": "wizards.step",
+              "kind": "wizard-step",
+              "similarity": 0.74
+            }
+          ],
+          "design_tokens": {
+            "spacing": {
+              "sm": "8px",
+              "md": "12px",
+              "lg": "16px"
+            }
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "wizards.step"
+        },
+        "ui_design": {
+          "layout": "vertical wizard, max-w-2xl, 12px step gap",
+          "components": [
+            {
+              "name": "OnboardingWizard",
+              "primitives": [
+                "wizards.step"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Wizard rendered with first step active",
+            "loading": "Step transition shows inline spinner",
+            "error": "Step-level validation errors inline",
+            "success": "Final step replaced by completion card",
+            "disabled": "Disabled steps show muted indicators"
+          },
+          "microcopy": {
+            "title": "Welcome — let's set up your account",
+            "buttons": {
+              "next": "Continue",
+              "back": "Back"
+            },
+            "completion": "All set — onboarding complete."
+          },
+          "a11y": {
+            "labels": "every step has aria-current=step when active",
+            "focus": "first invalid field focused on validation error",
+            "aria_live": "completion card announced via aria-live=polite"
+          },
+          "reused_from_audit": [
+            "wizards.step"
+          ],
+          "design_confirmed": true
+        },
+        "ui_review": {
+          "findings": [
+            {
+              "kind": "spacing-mismatch",
+              "component": "OnboardingWizard",
+              "severity": "minor",
+              "note": "step indicators use 8px gap; brief asks 12px"
+            }
+          ],
+          "review_clean": false
+        },
+        "ui_polish": {
+          "rounds": 1,
+          "applied": [
+            "round 1: tried tightening step gap; review still dirty"
+          ]
+        },
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [
+          {
+            "kind": "ui",
+            "stack": "plain",
+            "file": "resources/views/onboarding/wizard.blade.php",
+            "summary": "Onboarding wizard rendered; spacing applied per brief"
+          }
+        ],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "success",
+          "implement": "success",
+          "test": "success",
+          "verify": "blocked"
+        },
+        "questions": [
+          "@agent-directive: ui-polish-plain",
+          "> Stack: `plain`. Polish round 1 of 2.",
+          "> 1 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.",
+          "> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "ui-polish-plain",
+      "recipe_action": "ui-polish-plain",
+      "recipe_notes": [
+        "polish round 1: review still dirty, no convergence"
+      ]
+    },
+    {
+      "index": 7,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=verify\n@agent-directive: ui-polish-plain\n> Stack: `plain`. Polish round 2 of 2.\n> 1 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.\n> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Tighten the spacing on the customer onboarding wizard.\n",
+            "reconstructed_ac": [],
+            "assumptions": [],
+            "ui_apply": {
+              "summary": "Onboarding wizard rendered; spacing applied per brief",
+              "rendered": {
+                "resources/views/onboarding/wizard.blade.php": "Welcome — let's set up your account. Continue / Back. All set — onboarding complete."
+              },
+              "files": [
+                "resources/views/onboarding/wizard.blade.php"
+              ]
+            }
+          }
+        },
+        "intent": "ui-improve",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/wizards/step.blade.php",
+              "name": "wizards.step",
+              "kind": "wizard-step",
+              "similarity": 0.74
+            }
+          ],
+          "design_tokens": {
+            "spacing": {
+              "sm": "8px",
+              "md": "12px",
+              "lg": "16px"
+            }
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "wizards.step"
+        },
+        "ui_design": {
+          "layout": "vertical wizard, max-w-2xl, 12px step gap",
+          "components": [
+            {
+              "name": "OnboardingWizard",
+              "primitives": [
+                "wizards.step"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Wizard rendered with first step active",
+            "loading": "Step transition shows inline spinner",
+            "error": "Step-level validation errors inline",
+            "success": "Final step replaced by completion card",
+            "disabled": "Disabled steps show muted indicators"
+          },
+          "microcopy": {
+            "title": "Welcome — let's set up your account",
+            "buttons": {
+              "next": "Continue",
+              "back": "Back"
+            },
+            "completion": "All set — onboarding complete."
+          },
+          "a11y": {
+            "labels": "every step has aria-current=step when active",
+            "focus": "first invalid field focused on validation error",
+            "aria_live": "completion card announced via aria-live=polite"
+          },
+          "reused_from_audit": [
+            "wizards.step"
+          ],
+          "design_confirmed": true
+        },
+        "ui_review": {
+          "findings": [
+            {
+              "kind": "spacing-mismatch",
+              "component": "OnboardingWizard",
+              "severity": "minor",
+              "note": "step indicators use 8px gap; brief asks 12px"
+            }
+          ],
+          "review_clean": false
+        },
+        "ui_polish": {
+          "rounds": 2,
+          "applied": [
+            "round 1: tried tightening step gap; review still dirty",
+            "round 2: tried tightening step gap; review still dirty"
+          ]
+        },
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [
+          {
+            "kind": "ui",
+            "stack": "plain",
+            "file": "resources/views/onboarding/wizard.blade.php",
+            "summary": "Onboarding wizard rendered; spacing applied per brief"
+          }
+        ],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "success",
+          "implement": "success",
+          "test": "success",
+          "verify": "blocked"
+        },
+        "questions": [
+          "@agent-directive: ui-polish-plain",
+          "> Stack: `plain`. Polish round 2 of 2.",
+          "> 1 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.",
+          "> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "ui-polish-plain",
+      "recipe_action": "ui-polish-plain",
+      "recipe_notes": [
+        "polish round 2: review still dirty, no convergence"
+      ]
+    },
+    {
+      "index": 8,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=verify\n> Stack: `plain`. Polish ceiling reached (2/2 rounds).\n> 1 finding(s) still open in `state.ui_review`. The engine refuses a third round.\n> 1. Ship as-is — mark `state.ui_review.review_clean = True` and continue to `report` (the open findings stay in the delivery report)\n> 2. Abort — drop this UI request\n> 3. Hand off — a human picks up the remaining findings outside the engine; re-invoke `/work` only after they are resolved\n\n**Recommendation: 3 — Hand off** — two automated rounds failed to converge. Caveat: pick 1 only when the remaining findings are explicitly acceptable (low-priority polish, deferred to a follow-up).\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Tighten the spacing on the customer onboarding wizard.\n",
+            "reconstructed_ac": [],
+            "assumptions": [],
+            "ui_apply": {
+              "summary": "Onboarding wizard rendered; spacing applied per brief",
+              "rendered": {
+                "resources/views/onboarding/wizard.blade.php": "Welcome — let's set up your account. Continue / Back. All set — onboarding complete."
+              },
+              "files": [
+                "resources/views/onboarding/wizard.blade.php"
+              ]
+            }
+          }
+        },
+        "intent": "ui-improve",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/wizards/step.blade.php",
+              "name": "wizards.step",
+              "kind": "wizard-step",
+              "similarity": 0.74
+            }
+          ],
+          "design_tokens": {
+            "spacing": {
+              "sm": "8px",
+              "md": "12px",
+              "lg": "16px"
+            }
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "wizards.step"
+        },
+        "ui_design": {
+          "layout": "vertical wizard, max-w-2xl, 12px step gap",
+          "components": [
+            {
+              "name": "OnboardingWizard",
+              "primitives": [
+                "wizards.step"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Wizard rendered with first step active",
+            "loading": "Step transition shows inline spinner",
+            "error": "Step-level validation errors inline",
+            "success": "Final step replaced by completion card",
+            "disabled": "Disabled steps show muted indicators"
+          },
+          "microcopy": {
+            "title": "Welcome — let's set up your account",
+            "buttons": {
+              "next": "Continue",
+              "back": "Back"
+            },
+            "completion": "All set — onboarding complete."
+          },
+          "a11y": {
+            "labels": "every step has aria-current=step when active",
+            "focus": "first invalid field focused on validation error",
+            "aria_live": "completion card announced via aria-live=polite"
+          },
+          "reused_from_audit": [
+            "wizards.step"
+          ],
+          "design_confirmed": true
+        },
+        "ui_review": {
+          "findings": [
+            {
+              "kind": "spacing-mismatch",
+              "component": "OnboardingWizard",
+              "severity": "minor",
+              "note": "step indicators use 8px gap; brief asks 12px"
+            }
+          ],
+          "review_clean": false
+        },
+        "ui_polish": {
+          "rounds": 2,
+          "applied": [
+            "round 1: tried tightening step gap; review still dirty",
+            "round 2: tried tightening step gap; review still dirty"
+          ]
+        },
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [
+          {
+            "kind": "ui",
+            "stack": "plain",
+            "file": "resources/views/onboarding/wizard.blade.php",
+            "summary": "Onboarding wizard rendered; spacing applied per brief"
+          }
+        ],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "success",
+          "implement": "success",
+          "test": "success",
+          "verify": "blocked"
+        },
+        "questions": [
+          "> Stack: `plain`. Polish ceiling reached (2/2 rounds).",
+          "> 1 finding(s) still open in `state.ui_review`. The engine refuses a third round.",
+          "> 1. Ship as-is — mark `state.ui_review.review_clean = True` and continue to `report` (the open findings stay in the delivery report)",
+          "> 2. Abort — drop this UI request",
+          "> 3. Hand off — a human picks up the remaining findings outside the engine; re-invoke `/work` only after they are resolved",
+          "",
+          "**Recommendation: 3 — Hand off** — two automated rounds failed to converge. Caveat: pick 1 only when the remaining findings are explicitly acceptable (low-priority polish, deferred to a follow-up)."
+        ],
+        "report": ""
+      },
+      "directive": null,
+      "recipe_action": "_no_directive",
+      "recipe_notes": [
+        "ceiling halt observed; state left untouched for idempotent re-halt"
+      ]
+    },
+    {
+      "index": 9,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=verify\n> Stack: `plain`. Polish ceiling reached (2/2 rounds).\n> 1 finding(s) still open in `state.ui_review`. The engine refuses a third round.\n> 1. Ship as-is — mark `state.ui_review.review_clean = True` and continue to `report` (the open findings stay in the delivery report)\n> 2. Abort — drop this UI request\n> 3. Hand off — a human picks up the remaining findings outside the engine; re-invoke `/work` only after they are resolved\n\n**Recommendation: 3 — Hand off** — two automated rounds failed to converge. Caveat: pick 1 only when the remaining findings are explicitly acceptable (low-priority polish, deferred to a follow-up).\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Tighten the spacing on the customer onboarding wizard.\n",
+            "reconstructed_ac": [],
+            "assumptions": [],
+            "ui_apply": {
+              "summary": "Onboarding wizard rendered; spacing applied per brief",
+              "rendered": {
+                "resources/views/onboarding/wizard.blade.php": "Welcome — let's set up your account. Continue / Back. All set — onboarding complete."
+              },
+              "files": [
+                "resources/views/onboarding/wizard.blade.php"
+              ]
+            }
+          }
+        },
+        "intent": "ui-improve",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/wizards/step.blade.php",
+              "name": "wizards.step",
+              "kind": "wizard-step",
+              "similarity": 0.74
+            }
+          ],
+          "design_tokens": {
+            "spacing": {
+              "sm": "8px",
+              "md": "12px",
+              "lg": "16px"
+            }
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "wizards.step"
+        },
+        "ui_design": {
+          "layout": "vertical wizard, max-w-2xl, 12px step gap",
+          "components": [
+            {
+              "name": "OnboardingWizard",
+              "primitives": [
+                "wizards.step"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Wizard rendered with first step active",
+            "loading": "Step transition shows inline spinner",
+            "error": "Step-level validation errors inline",
+            "success": "Final step replaced by completion card",
+            "disabled": "Disabled steps show muted indicators"
+          },
+          "microcopy": {
+            "title": "Welcome — let's set up your account",
+            "buttons": {
+              "next": "Continue",
+              "back": "Back"
+            },
+            "completion": "All set — onboarding complete."
+          },
+          "a11y": {
+            "labels": "every step has aria-current=step when active",
+            "focus": "first invalid field focused on validation error",
+            "aria_live": "completion card announced via aria-live=polite"
+          },
+          "reused_from_audit": [
+            "wizards.step"
+          ],
+          "design_confirmed": true
+        },
+        "ui_review": {
+          "findings": [
+            {
+              "kind": "spacing-mismatch",
+              "component": "OnboardingWizard",
+              "severity": "minor",
+              "note": "step indicators use 8px gap; brief asks 12px"
+            }
+          ],
+          "review_clean": false
+        },
+        "ui_polish": {
+          "rounds": 2,
+          "applied": [
+            "round 1: tried tightening step gap; review still dirty",
+            "round 2: tried tightening step gap; review still dirty"
+          ]
+        },
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [
+          {
+            "kind": "ui",
+            "stack": "plain",
+            "file": "resources/views/onboarding/wizard.blade.php",
+            "summary": "Onboarding wizard rendered; spacing applied per brief"
+          }
+        ],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "success",
+          "implement": "success",
+          "test": "success",
+          "verify": "blocked"
+        },
+        "questions": [
+          "> Stack: `plain`. Polish ceiling reached (2/2 rounds).",
+          "> 1 finding(s) still open in `state.ui_review`. The engine refuses a third round.",
+          "> 1. Ship as-is — mark `state.ui_review.review_clean = True` and continue to `report` (the open findings stay in the delivery report)",
+          "> 2. Abort — drop this UI request",
+          "> 3. Hand off — a human picks up the remaining findings outside the engine; re-invoke `/work` only after they are resolved",
+          "",
+          "**Recommendation: 3 — Hand off** — two automated rounds failed to converge. Caveat: pick 1 only when the remaining findings are explicitly acceptable (low-priority polish, deferred to a follow-up)."
+        ],
+        "report": ""
+      },
+      "directive": null,
+      "recipe_action": "_no_directive",
+      "recipe_notes": [
+        "ceiling halt observed; state left untouched for idempotent re-halt"
+      ]
+    }
+  ]
+}

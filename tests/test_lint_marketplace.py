@@ -137,3 +137,31 @@ def test_owner_missing_email_fails(valid_repo: Path) -> None:
     result = run_linter(valid_repo)
     assert result.returncode == 1
     assert "email" in result.stdout
+
+
+def test_skill_on_disk_not_listed_in_marketplace_fails(valid_repo: Path) -> None:
+    """Reverse drift detection: skill exists on disk but is missing from manifest."""
+    drifted = valid_repo / ".claude" / "skills" / "drifted-skill"
+    drifted.mkdir()
+    (drifted / "SKILL.md").write_text("---\nname: drifted-skill\ndescription: Drift.\n---\n")
+    # marketplace.json is unchanged (still lists only demo-skill)
+    result = run_linter(valid_repo)
+    assert result.returncode == 1
+    assert "drifted-skill" in result.stdout
+    assert "not listed" in result.stdout
+
+
+def test_completeness_check_ignores_dirs_without_skill_md(valid_repo: Path) -> None:
+    """A directory without SKILL.md is not a skill — must not trigger drift."""
+    (valid_repo / ".claude" / "skills" / "_template").mkdir()
+    # No SKILL.md inside; should be ignored by the reverse-check
+    result = run_linter(valid_repo)
+    assert result.returncode == 0, result.stdout
+    assert "No issues" in result.stdout
+
+
+def test_completeness_check_ignores_loose_files(valid_repo: Path) -> None:
+    """Files (not dirs) under .claude/skills/ must not trigger drift."""
+    (valid_repo / ".claude" / "skills" / "README.md").write_text("# index")
+    result = run_linter(valid_repo)
+    assert result.returncode == 0, result.stdout

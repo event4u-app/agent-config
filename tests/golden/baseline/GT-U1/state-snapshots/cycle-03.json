@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Add a Contact Us form with name, email, and message fields\n",
+      "reconstructed_ac": [],
+      "assumptions": []
+    }
+  },
+  "intent": "ui-build",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": {
+    "components_found": [
+      {
+        "path": "resources/views/components/forms/text-input.blade.php",
+        "name": "forms.text-input",
+        "kind": "form-primitive",
+        "similarity": 0.82
+      }
+    ],
+    "design_tokens": {
+      "spacing": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "color": [
+        "primary",
+        "muted",
+        "danger"
+      ]
+    },
+    "audit_path": "high_confidence",
+    "candidate_pick": "forms.text-input"
+  },
+  "ui_design": {
+    "layout": "single-column form, max-w-md, centered",
+    "components": [
+      {
+        "name": "ContactForm",
+        "primitives": [
+          "forms.text-input",
+          "button"
+        ]
+      }
+    ],
+    "states": {
+      "empty": "Initial render: all fields empty, submit disabled",
+      "loading": "Submit pressed: button shows spinner, fields disabled",
+      "error": "Validation or server error: field-level messages",
+      "success": "Form replaced by confirmation card",
+      "disabled": "Fields disabled while loading state is active"
+    },
+    "microcopy": {
+      "title": "Contact us",
+      "fields": {
+        "name": "Your name",
+        "email": "Your email address",
+        "message": "How can we help?"
+      },
+      "buttons": {
+        "submit": "Send message"
+      },
+      "errors": {
+        "name_required": "Please enter your name.",
+        "email_invalid": "Enter a valid email address.",
+        "message_required": "Please enter a message."
+      },
+      "success": "Thanks — we will be in touch within one business day."
+    },
+    "a11y": {
+      "labels": "every field has a visible label tied via for/id",
+      "focus": "first invalid field receives focus on submit error",
+      "aria_live": "success card is announced via aria-live=polite"
+    },
+    "reused_from_audit": [
+      "forms.text-input"
+    ],
+    "design_confirmed": true
+  },
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "blocked"
+  },
+  "questions": [
+    "> Input: Add a Contact Us form with name, email, and message fields",
+    "> Design brief is ready. Summary:",
+    "> - Components: 1",
+    "> - States covered: 5",
+    "> - Microcopy entries (locked): 9",
+    "> 1. Confirm — lock this brief and advance to apply",
+    "> 2. Revise — send feedback; loops back to ui-design-brief",
+    "> 3. Abort — drop this UI request",
+    "",
+    "**Recommendation: 1 — Confirm** — the brief covers all required slots and microcopy is final. Caveat: flip to 2 only if a string, state, or component is wrong; do not confirm strings you have not read."
+  ],
+  "report": ""
+}

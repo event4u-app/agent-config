@@ -117,9 +117,8 @@ do not pretend verification happened.
 ## Structured mode markers
 
 Every contract output MUST begin with a one-line HTML comment so
-session captures, log scrapers, and the measurement hook in
-[`road-to-role-modes.md`](../../../agents/roadmaps/road-to-role-modes.md#phase-4--measurement-hook-closes-q2-of-master-frame)
-can count contract-conformant outputs per mode:
+session captures, log scrapers, and the measurement hook can count
+contract-conformant outputs per mode:
 
 ```
 <!-- role-mode: developer | contract: goal,plan,changes,tests,open-questions -->
@@ -206,6 +205,5 @@ finding. See the Q4 rule in `road-to-personas.md`.
 
 ## See also
 
-- [`road-to-role-modes.md`](../../../agents/roadmaps/road-to-role-modes.md) — roadmap this guideline implements
 - [`output-patterns.md`](output-patterns.md) — generic output conventions modes inherit
 - [`agent-interaction-and-decision-quality.md`](agent-interaction-and-decision-quality.md) — how modes interact with the numbered-options protocol

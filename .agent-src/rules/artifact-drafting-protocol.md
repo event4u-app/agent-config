@@ -39,8 +39,13 @@ If the user skips Q1 or Q5, stop and surface the ambiguity — don't guess.
 
 ## Phase B — Research
 
-Scan `.agent-src.uncompressed/` for overlap. Report the top 3-5
-most-similar artifacts and ask (numbered options):
+Run the **search protocol** from
+[`learning-to-rule-or-skill` § 4](../skills/learning-to-rule-or-skill/SKILL.md#4-check-for-overlap--search-protocol-mandatory)
+— `ls` all four surfaces (`skills/`, `rules/`, `guidelines/`, `commands/`),
+grep with **solution-words AND problem-words**, scan sub-directory
+taxonomies, then **open and skim** the 3 nearest matches. A negative grep
+alone is not proof of no overlap. Report the top 3-5 most-similar
+artifacts and ask (numbered options):
 
 - Extend an existing one?
 - Create a new one — gap is real?

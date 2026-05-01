@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Build a settings panel with toggle controls and tooltips.\n",
+      "reconstructed_ac": [],
+      "assumptions": []
+    }
+  },
+  "intent": "ui-build",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": {
+    "components_found": [
+      {
+        "path": "resources/views/components/forms/toggle.blade.php",
+        "name": "forms.toggle",
+        "kind": "form-primitive",
+        "similarity": 0.81
+      }
+    ],
+    "design_tokens": {
+      "spacing": {
+        "sm": "8px",
+        "md": "12px"
+      }
+    },
+    "audit_path": "high_confidence",
+    "candidate_pick": "forms.toggle",
+    "a11y_baseline": []
+  },
+  "ui_design": {
+    "layout": "two-column settings panel, max-w-3xl",
+    "components": [
+      {
+        "name": "SettingsPanel",
+        "primitives": [
+          "forms.toggle",
+          "tooltip"
+        ]
+      }
+    ],
+    "states": {
+      "empty": "Panel renders with default toggle states",
+      "loading": "Save button shows spinner while persisting",
+      "error": "Inline error replaces toast on save failure",
+      "success": "Save button confirms with checkmark for 1s",
+      "disabled": "Toggles disabled while save is in flight"
+    },
+    "microcopy": {
+      "title": "Notification settings",
+      "fields": {
+        "notifications": "Email me when a job finishes"
+      },
+      "tooltips": {
+        "notifications": "Sent at most once per hour."
+      },
+      "buttons": {
+        "save": "Save changes"
+      }
+    },
+    "a11y": {
+      "labels": "every toggle has a visible label and matching for/id",
+      "focus": "save button reachable after the last toggle",
+      "aria_live": "save confirmation announced via aria-live=polite"
+    },
+    "reused_from_audit": [
+      "forms.toggle"
+    ]
+  },
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "blocked"
+  },
+  "questions": [
+    "@agent-directive: ui-design-brief",
+    "> Input: Build a settings panel with toggle controls and tooltips.",
+    "> No design brief yet — producing one now. The brief locks layout, components, states, microcopy, and a11y before any code is written.",
+    "> 1. Continue — produce the brief from audit findings",
+    "> 2. Abort — drop this UI request"
+  ],
+  "report": ""
+}

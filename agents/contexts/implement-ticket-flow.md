@@ -9,7 +9,11 @@
 > - **Status:** Phase 1 shipped 2026-04-23 — `DeliveryState` +
 >   dispatcher live under
 >   [`.agent-src.uncompressed/templates/scripts/implement_ticket/`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/).
->   Step wiring (Phase 2) still open.
+>   Step wiring (Phase 2) still open. Schema **v1** envelope
+>   (`work_engine.state` / `work_engine.migration.v0_to_v1`) shipped
+>   2026-04-27 as R1 Phase 2 — see [State schema v1](#state-schema-v1)
+>   below. R1 Phase 6 replay harness shipped 2026-04-28 — see
+>   [Replay protocol](#replay-protocol--strict-verb-comparison-r1-phase-6).
 > - **Runtime:** Python 3.10+ (see
 >   [`adr-implement-ticket-runtime.md`](adr-implement-ticket-runtime.md)).
 >   This doc stays shape-focused; implementation details belong to
@@ -59,6 +63,108 @@ document — the shape is normative, the container is not):
 
 No step may invent fields not declared here. Extensions require a
 roadmap amendment + this doc updated.
+
+## State schema v1
+
+R1 Phase 2 introduces the **wire-format envelope** that lets the
+engine accept inputs other than tickets in later releases without
+another schema bump. The envelope wraps the legacy slice without
+moving any of its fields:
+
+| Field | Type | Purpose |
+|---|---|---|
+| `version` | int (`1`) | Integer schema version. Loader rejects any other value. |
+| `input.kind` | string | Typed input variant. `"ticket"` (R1) and `"prompt"` (R2). |
+| `input.data` | object | Payload. Carries the v0 `ticket` dict verbatim, OR for `kind="prompt"` the prompt envelope (`raw`, `reconstructed_ac`, `assumptions`, optional `confidence`). |
+| `intent` | string | Coarse intent label. Default `"backend-coding"`. |
+| `directive_set` | string | Directive bundle name. One of `backend`, `ui`, `ui-trivial`, `mixed`. Only `backend` is wired in R1/R2. |
+| _legacy slice_ | … | `persona`, `memory`, `plan`, `changes`, `tests`, `verify`, `outcomes`, `questions`, `report` keep their v0 names and meaning. |
+
+Canonical filename is `.work-state.json` (was
+`.implement-ticket-state.json` in v0). Field order on disk is fixed
+— envelope first, legacy slice second — so state-snapshot diffs
+across re-runs and across the freeze-guard replay stay readable.
+
+The schema is **strict** on the envelope (unknown `input.kind` or
+`directive_set` raise `SchemaError`) and **additive** on top-level
+keys (unknown extras are dropped on load, not re-emitted on dump).
+A reader that pre-dates a future field cannot crash on it, but
+also cannot silently relay it forward without an explicit upgrade.
+
+### Migration v0 → v1
+
+A v0 file (no `version` key, ticket under flat `ticket`) is
+upgraded by `work_engine.migration.v0_to_v1`:
+
+```bash
+python3 -m work_engine.migration.v0_to_v1 .implement-ticket-state.json
+```
+
+The migration:
+
+1. Wraps `state.ticket` into `input = {"kind": "ticket", "data": <ticket>}`.
+2. Fills `intent = "backend-coding"` and `directive_set = "backend"`
+   (the only working directive bundle in R1).
+3. Writes the v1 file as `.work-state.json` next to the source.
+4. Renames the v0 file to `.implement-ticket-state.json.bak`
+   (override with `--no-backup`).
+5. Refuses to overwrite an existing destination — accidental
+   double-migration on CI fails loud.
+
+`migrate_payload` is **idempotent** on v1 input and **rejects** any
+declared `version` other than `0` (absent) or `1`. The library
+contract is covered by `tests/work_engine/test_v0_to_v1_migration.py`,
+which exercises three real Phase 1 baseline snapshots (GT-1
+cycle 1, GT-3 cycle 4, GT-5 cycle 5) so the migrator is proven
+against actual engine output rather than synthetic fixtures.
+
+## Prompt envelopes and confidence bands (R2)
+
+Prompt envelopes (`input.kind="prompt"`) carry a free-form goal
+instead of a refined ticket. The `refine` step routes on shape
+(presence of `raw` key) and on the first pass emits an
+`@agent-directive: refine-prompt` halt — the agent runs the
+matching skill, which reconstructs `acceptance_criteria` +
+`assumptions`. On the rebound, `scoring/confidence.py` produces a
+frozen `ConfidenceScore(band, score, dimensions, reasons,
+ui_intent)` and the dispatcher branches on `band`:
+
+| Band | Threshold | Trigger | What the user sees | Release |
+|---|---|---|---|---|
+| `high` | `score ≥ 0.8` | All five rubric dimensions clean; no UI keywords | Silent proceed — reconstructed AC + assumptions land in the delivery report under "Confidence" | None — flows straight into `analyze` |
+| `medium` | `0.5 ≤ score < 0.8` | One or two weak dimensions; assumptions inferred | `PARTIAL` halt with the reconstructed AC + numbered assumptions; user picks `1. Confirm` / `2. Edit assumptions` / `3. Abort` | Agent sets `state.ticket['confidence_confirmed'] = True`; refine re-runs and emits `SUCCESS` |
+| `low` | `score < 0.5` | Multiple weak dimensions or destructive scope | `BLOCKED` halt with **one** clarifying question targeted at the weakest dimension (`ask-when-uncertain` Iron Law) | User answers → agent rewrites the prompt → re-score; **`confidence_confirmed` cannot release low band** |
+
+Independently, `ui_intent=True` (UI keyword in `raw`) short-circuits
+into a `BLOCKED` halt with a pointer to `road-to-product-ui-track`
+(R3), regardless of the numeric band.
+
+**AC projection contract.** On every `SUCCESS` exit from
+`_run_prompt`, the dispatcher mirrors `data['reconstructed_ac']`
+into `data['acceptance_criteria']`. Downstream gates (`analyze`,
+`plan`, `implement`) read the legacy slot and stay shape-agnostic
+about the upstream input variant. The mirror is a **list copy**, not
+a reference share — mutating the legacy slot does not corrupt the
+prompt slot, and vice versa. Regression locked by
+`test_refine_prompt_dispatch.py::TestHighBand::test_mirrors_reconstructed_ac_to_acceptance_criteria`
+plus the parallel medium-confirmed assertion.
+
+**Refreshing band thresholds.** `BAND_HIGH_MIN = 0.8` and
+`BAND_MEDIUM_MIN = 0.5` are module constants in
+`scripts/work_engine/scoring/confidence.py`. The skill, the ADR
+(`adr-prompt-driven-execution.md`, R2 Phase 6), and this doc cite
+that module — there is no second source of truth. Tuning thresholds
+therefore requires:
+
+1. Update the constants in `confidence.py`.
+2. Re-run the per-dimension fixtures
+   (`tests/work_engine/test_scoring_confidence.py`).
+3. Re-capture GT-P1..GT-P4 if a fixture's band assignment shifts
+   (`python3 -m tests.golden.capture`); review the diff before
+   locking. If GT-P3 (low) or GT-P4 (UI rejection) flip bands the
+   threshold change is rejected — those fixtures are pinned to
+   their bands by design.
+4. Update the band-threshold table above.
 
 ## `Step` contract
 
@@ -127,6 +233,19 @@ delegation works end-to-end:
 Only the exact string `"success"` triggers the skip. A `"blocked"`
 or `"partial"` marker from a prior run **reruns** the step so the
 current state is re-evaluated rather than trusting stale evidence.
+
+## Hook lifecycle (side-channel)
+
+The dispatcher and CLI emit lifecycle hooks at fixed points
+(`before_step`, `after_step`, `on_halt`, `on_error` on the
+dispatcher side; `before_load`, `after_load`, `before_dispatch`,
+`after_dispatch`, `before_save`, `after_save` on the CLI side).
+Hooks are **observers** — they may halt the engine via `HookHalt`
+but never replace step logic. Default-off (`hooks.enabled: false`);
+golden-replay flows stay byte-stable when hooks do not register.
+Built-in hooks cover trace, halt-surface audit, state-shape
+validation, directive-set guard, and the four chat-history
+boundary writes. Full reference: [`work-engine-hooks.md`](work-engine-hooks.md).
 
 ## Memory retrieval contract
 
@@ -203,7 +322,7 @@ the context. V1 explicitly does **not** attempt resumable sessions.
 Every step declares — in code — the conditions under which it
 can return `blocked`. The declarations live as module-level
 `AMBIGUITIES` tuples (see
-[`steps/__init__.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/__init__.py)
+[`directives/backend/__init__.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/backend/__init__.py)
 `.all_ambiguities()`). The
 [`test_ambiguity_coverage.py`](../../tests/implement_ticket/test_ambiguity_coverage.py)
 suite locks the contract: adding a new `blocked` path without
@@ -248,7 +367,7 @@ empty, but all headings are present unless explicitly marked
    because nothing was changed.
 
 Implementation: see
-[`steps/report.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/report.py).
+[`directives/backend/report.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/backend/report.py).
 Section renderers are pure and deterministic; consumers can rely
 on the heading order and on each section either rendering with
 content or being omitted per the rules above.
@@ -264,6 +383,208 @@ measured without instrumentation sprawl:
 - `memory_decision_rate`
 - `repeat_user_runs_per_week`
 - `report_rejections`
+
+## Capture protocol — Golden Transcripts (R1 Phase 1)
+
+The Universal Execution Engine roadmap (`R1`) freezes the engine's
+observable behaviour before any refactor. The artefact that holds
+that freeze is the **Capture Pack** under
+`tests/golden/baseline/GT-{1..5}/`. This section is the operator
+manual for producing and re-producing those packs.
+
+### Scenarios
+
+| GT  | Surface locked                          | Cycles |
+|-----|------------------------------------------|--------|
+| 1   | happy path (plan→apply→tests→review→report) | 5 |
+| 2   | refine-step ambiguity halt (vague AC)    | 1      |
+| 3   | run-tests failed verdict + recovery      | 6      |
+| 4   | advisory persona — plan-only delivery    | 2      |
+| 5   | state-resume from disk between cycles    | 5      |
+
+### Inputs
+
+- Toy domain: `tests/golden/sandbox/repo/` — a 4-function
+  calculator (`add`, `subtract`, `power`-stub, `divide`) plus a
+  pytest config and tests. Deterministic, no I/O.
+- Ticket fixtures: `tests/golden/sandbox/tickets/gt-{1..5}-*.json`.
+  Schema matches `implement_ticket`'s `ticket_loader`.
+- Recipes: `tests/golden/sandbox/recipes/gt{1..5}_*.py`. Each
+  exposes `META` (gt_id, ticket fixture, persona, cycle cap) and
+  `build_recipe(workspace) -> {directive_verb: callable}`. The
+  recipe is the deterministic stand-in for the agent: every halt
+  is resolved by hard-coded edits + state-mutations.
+
+### Invocation
+
+Each cycle is a fresh `./agent-config implement-ticket` subprocess
+seeded from the persisted state file. The runner
+(`tests/golden/sandbox/runner.py`) chains them:
+
+```bash
+./agent-config implement-ticket \
+    --ticket-file tests/golden/sandbox/tickets/gt-1-happy.json \
+    --state-file <workspace>/.agent-state/implement-ticket.json \
+    --workspace <workspace> \
+    --output-format json
+# subsequent cycles drop --ticket-file; the engine loads the
+# ticket from the saved state.
+```
+
+The runner is invoked via the capture driver:
+
+```bash
+python3 -m tests.golden.capture                 # all five GTs
+python3 -m tests.golden.capture --scenarios GT-3
+```
+
+### Kill points & resume
+
+The runner re-executes the engine on every cycle, so resume from
+disk is exercised by **every** GT — not just GT-5. GT-5 simply
+records the contract under a different operation (negate vs.
+multiply) so byte-equal regression detection covers an additional
+state shape. There is no "two-segment" runner mode; the segmentation
+is implicit in the per-cycle subprocess fork.
+
+### Capture Pack layout
+
+```
+tests/golden/baseline/GT-N/
+├── transcript.json    # per-cycle stdout/stderr + exit codes
+├── state-snapshots/   # state file after each cycle (cycle-NN.json)
+├── halt-markers.json  # extracted directives + numbered questions
+├── exit-codes.json    # per-cycle exit codes only
+├── delivery-report.md # final report (or stub if flow halted)
+└── fixture/           # frozen copy of the input ticket
+```
+
+The driver also writes `tests/golden/baseline/summary.json` (one
+row per GT: outcome, exit code, cycle count) and
+`tests/golden/CHECKSUMS.txt` (sorted SHA256 of every file under
+`tests/golden/baseline/` plus the input fixtures). Regeneration
+recipe and relock policy: [`tests/golden/CAPTURING.md`](../../tests/golden/CAPTURING.md).
+
+### Determinism guarantees
+
+- `PYTHONHASHSEED=0`, `PYTHONIOENCODING=utf-8`,
+  `LC_ALL=C.UTF-8`, `NO_COLOR=1` injected by the runner.
+- Workspace is a fresh `tempfile.TemporaryDirectory` per scenario;
+  the toy repo is materialised into it before cycle 1.
+- `agents/memory/` lookups resolve relative to the workspace, so
+  every run sees zero curated entries — no host-state leakage.
+- Recipes never read the clock, the network, or unbound randomness.
+- pytest verdict normalisation lives in
+  `tests/golden/sandbox/recipes/_helpers.py::run_pytest`
+  (exit 0 → success, exit 1/2 → failed, otherwise → mixed).
+
+### Regenerating the baseline
+
+Only when the engine's observable behaviour intentionally changes:
+
+```bash
+python3 -m tests.golden.capture
+git diff tests/golden/baseline tests/golden/CHECKSUMS.txt
+```
+
+Review the diff; it should match the documented behavioural change
+in this file's revision history. Then commit. Drive-by changes to
+the baseline are blocked by the freeze-guard CI workflow (added in
+Phase 1 Step 7).
+
+### Anti-patterns
+
+- Editing a Capture Pack file by hand. The pack is generated; edit
+  the engine or the recipe instead.
+- Adding a sixth GT without amending the table above and the Phase-6
+  replay harness in lock-step.
+- Reading from `agents/memory/` in a recipe. Recipes seed state
+  directly; memory belongs to the engine under test, not the test.
+- Letting the `_helpers.run_pytest` verdict mapping drift from the
+  engine's `state.tests.verdict` contract — they are coupled.
+
+## Replay protocol — Strict-Verb comparison (R1 Phase 6)
+
+The Capture Pack alone is a frozen artefact; the **replay harness**
+under [`tests/golden/harness.py`](../../tests/golden/harness.py) is what
+turns that artefact into a continuous behavioural contract. It loads
+each baseline, drives the same recipe against the *live* `work_engine`,
+and reports structural drift. Every PR that touches the engine,
+recipes, or runner pays this gate.
+
+### What is locked vs. what may drift
+
+The harness uses **Strict-Verb** comparison: the *shape* and *semantic
+verbs* are normative, free-text wording inside that shape may drift.
+
+| Surface | Comparison rule | Locked | May drift |
+|---|---|---|---|
+| Exit code per cycle | exact equality | the integer | — |
+| `recipe_action` per cycle | exact equality | the action string | — |
+| State snapshot per cycle | recursive *structure* match | key names, types, list lengths | leaf string contents |
+| Halt-marker `questions` list | Strict-Verb classification | line count, per-line class (`directive` / `numbered` / `blockquote` / `text`), `@agent-directive:` verb identity, count of `> N.` options | wording after the verb, prose inside blockquotes, descriptive text after `> N. …` |
+| Delivery report | ordered `^## ` heading list | section presence and order | section *bodies* |
+| Manifest (`CHECKSUMS.txt`) | byte equality after path normalisation | every checksum | — |
+
+The contract is intentionally tighter on *control surfaces* (verbs,
+exit codes, state shape, headings, checksums) than on *free-text
+fields* (numbered-option labels, report bodies, leaf strings). Refactors
+that rename a field, drop an option, change a directive verb, or swap
+an exit code FAIL the gate. Refactors that polish a description string
+PASS — and that is the point.
+
+### Where the gate runs
+
+- `task golden-replay` — local, named entry point, sub-second.
+  Invoked from `task ci` *before* `task test` for failure-first
+  ordering (Phase 6 Step 3).
+- `.github/workflows/tests.yml` step **"Golden Replay (R1 engine
+  refactor freeze-guard)"** — runs before the full pytest sweep so
+  drift surfaces as a named PR check, not a buried test name.
+- `.github/workflows/freeze-guard.yml` — independent integrity gate:
+  `manifest-integrity` re-checks `sha256sum -c CHECKSUMS.txt`,
+  `live-replay` re-runs the capture driver and diffs the manifest.
+  This catches drift the harness can't see (e.g. silent baseline
+  edits without engine changes).
+
+The harness and freeze-guard are intentionally redundant. The harness
+proves *engine behaviour matches baseline*; freeze-guard proves
+*baseline matches what was committed*. Either failing means review.
+
+### Refreshing the baseline
+
+Only when an engine change is **intentionally** behaviour-altering.
+The PR description must justify each new checksum. Procedure:
+
+```bash
+python3 -m tests.golden.capture                  # regenerate Capture Packs + manifest
+git diff tests/golden/baseline tests/golden/CHECKSUMS.txt
+```
+
+Then in the PR:
+
+1. Mention the rationale — which roadmap step / ADR drove the change,
+   what observable surface moved.
+2. Show the per-GT diff summary (which scenarios re-locked, which
+   stayed byte-equal).
+3. Update this section's revision history if a *contract column*
+   above moved (e.g. a new locked surface, a new drift-tolerated
+   field).
+
+Drive-by baseline edits — even one-character whitespace tweaks —
+are blocked by `freeze-guard.yml::manifest-integrity` at PR time.
+
+### Anti-patterns (replay)
+
+- Loosening the harness comparator to "fix" a failing replay. The
+  harness is the contract; the engine is the variable.
+- Re-running `python3 -m tests.golden.capture` to "make the diff go
+  away" without justification. The diff *is* the question.
+- Treating the harness and freeze-guard as duplicate checks. They
+  catch different drift classes — both must stay green.
+- Adding a sixth Capture Pack without adding a corresponding entry
+  to `RECIPE_MODULES` in `harness.py` and a parametrize row in
+  `test_replay.py`.
 
 ## Non-goals
 
@@ -286,6 +607,10 @@ measured without instrumentation sprawl:
 ## See also
 
 - [`../roadmaps/road-to-implement-ticket.md`](../roadmaps/road-to-implement-ticket.md)
+- [`../roadmaps/road-to-universal-execution-engine.md`](../roadmaps/road-to-universal-execution-engine.md)
+- `tests/golden/` — capture sandbox, recipes, and Capture Packs
+- [`../../tests/golden/harness.py`](../../tests/golden/harness.py) — Strict-Verb replay harness
+- [`../../.github/workflows/freeze-guard.yml`](../../.github/workflows/freeze-guard.yml) — manifest-integrity + live-replay gates
 - [`agent-memory-contract.md`](agent-memory-contract.md)
 - [`../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md`](../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md)
 - [`../../.agent-src.uncompressed/rules/user-interaction.md`](../../.agent-src.uncompressed/rules/user-interaction.md)

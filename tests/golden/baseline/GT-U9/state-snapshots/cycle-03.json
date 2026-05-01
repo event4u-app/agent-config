@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Build the first marketing landing page for our brand-new SaaS product.\n",
+      "reconstructed_ac": [],
+      "assumptions": []
+    }
+  },
+  "intent": "ui-build",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": {
+    "greenfield": true,
+    "components_found": [],
+    "design_tokens": {},
+    "greenfield_decision": "scaffold",
+    "audit_path": "greenfield"
+  },
+  "ui_design": {
+    "layout": "single-column landing page, max-w-5xl, hero + 3 feature blocks",
+    "components": [
+      {
+        "name": "MarketingLanding",
+        "primitives": [
+          "hero",
+          "feature-grid",
+          "cta"
+        ]
+      }
+    ],
+    "states": {
+      "empty": "First load with hero, features, CTA",
+      "loading": "CTA button shows spinner while signup form submits",
+      "error": "Inline validation on signup field",
+      "success": "CTA replaced by 'Thanks — check your inbox'",
+      "disabled": "CTA disabled while submission is in flight"
+    },
+    "microcopy": {
+      "hero_title": "Ship faster with our SaaS platform",
+      "hero_subtitle": "Deploy in minutes, not days.",
+      "cta_button": "Start free trial",
+      "success": "Thanks — check your inbox to confirm your email."
+    },
+    "a11y": {
+      "labels": "hero h1 is the page title; CTA button labelled explicitly",
+      "focus": "skip link to main content; CTA receives focus on success",
+      "aria_live": "success message announced via aria-live=polite"
+    },
+    "reused_from_audit": []
+  },
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "blocked"
+  },
+  "questions": [
+    "@agent-directive: ui-design-brief",
+    "> Input: Build the first marketing landing page for our brand-new SaaS product.",
+    "> No design brief yet — producing one now. The brief locks layout, components, states, microcopy, and a11y before any code is written.",
+    "> 1. Continue — produce the brief from audit findings",
+    "> 2. Abort — drop this UI request"
+  ],
+  "report": ""
+}

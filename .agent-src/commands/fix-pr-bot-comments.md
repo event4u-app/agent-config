@@ -3,6 +3,10 @@ name: fix-pr-bot-comments
 skills: [php-coder, quality-tools]
 description: Fix and reply to bot review comments (Copilot, Augment, Greptile, etc.) on a GitHub PR
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "address the Copilot/Greptile comments, fix the bot review feedback"
+  trigger_context: "open PR with bot review comments unresolved"
 ---
 
 # fix-pr-bot-comments

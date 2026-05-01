@@ -3,6 +3,9 @@ name: agents-cleanup
 skills: [agent-docs-writing]
 description: Execute cleanup actions from an agents-audit — move, merge, delete, and update agent docs
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Consumes prior audit output; only meaningful right after /agents-audit."
 ---
 
 # agents-cleanup
@@ -18,9 +21,11 @@ disable-model-invocation: true
 ```
 ⚠️  No audit roadmap found.
 
-1. 🔍 Run /agents-audit first (recommended)
+1. 🔍 Run /agents-audit first
 2. 💬 I know what to do — start directly
 ```
+
+**Recommendation: 1 — Run /agents-audit first** — without an audit roadmap, the cleanup is shooting in the dark. Caveat: pick 2 only if you already know exactly which docs to touch.
 
 If option 2, ask what to clean up.
 

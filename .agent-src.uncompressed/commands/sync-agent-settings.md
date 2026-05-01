@@ -2,7 +2,12 @@
 name: sync-agent-settings
 description: Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Settings sync — must be deliberate."
 ---
+
+<!-- cloud_safe: noop -->
 
 # /sync-agent-settings
 
@@ -111,6 +116,13 @@ check-only workflows; report the drift and let the pipeline decide.
 - Changes to `config/agent-settings.template.yml` or the profile
   presets require a package update in the consumer project before
   this command can apply them.
+
+## Cloud Behavior
+
+On cloud surfaces (Claude.ai Web, Skills API) this command is **fully inert** —
+there is no `.agent-settings.yml` on disk, no `scripts/sync_agent_settings.py`
+to call, and no template/profile preset reachable. Settings reconciliation
+is a local-agent concern.
 
 ## See also
 

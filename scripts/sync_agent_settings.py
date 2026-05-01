@@ -47,29 +47,48 @@ DEFAULT_PROFILE_DIR = Path(__file__).resolve().parent.parent / "config" / "profi
 
 
 def _flatten(data: dict, prefix: str = "") -> dict[str, object]:
-    """Flatten nested dicts to dotted keys — one level of nesting supported."""
+    """Flatten nested dicts to dotted keys — recurses to all leaves.
+
+    Lists, scalars, and ``None`` are leaves. Dicts are walked and their
+    keys folded into the dotted path.
+    """
     out: dict[str, object] = {}
     for key, value in data.items():
         path = f"{prefix}{key}"
         if isinstance(value, dict):
-            for sub_key, sub_val in value.items():
-                out[f"{path}.{sub_key}"] = sub_val
+            out.update(_flatten(value, prefix=f"{path}."))
         else:
             out[path] = value
     return out
 
 
-def _as_scalar_text(value: object) -> str:
-    """Normalize a parsed YAML value to the raw string form expected by
-    `install._replace_template_value` — which re-quotes via `_yaml_scalar`
-    internally, so we must pass the *unquoted* payload here."""
+def _as_yaml_value(value: object) -> str | None:
+    """Format *value* as an inline-YAML literal.
+
+    Returns ``None`` when the value cannot be safely represented as a
+    scalar / flow-style sequence (e.g. unsupported types). Callers
+    must skip those keys so the template default sticks instead of
+    producing malformed YAML.
+    """
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, int):
         return str(value)
+    if isinstance(value, float):
+        return repr(value)
     if value is None:
-        return ""
-    return str(value)
+        return "~"
+    if isinstance(value, list):
+        items: list[str] = []
+        for item in value:
+            rendered = _as_yaml_value(item)
+            if rendered is None:
+                return None
+            items.append(rendered)
+        return "[" + ", ".join(items) + "]"
+    if isinstance(value, str):
+        return _install._yaml_scalar(value)
+    return None
 
 
 def _template_keys(template_body: str) -> set[str]:
@@ -81,10 +100,18 @@ def _template_keys(template_body: str) -> set[str]:
 
 
 def _apply_user_values(template_body: str, user_flat: dict[str, object]) -> str:
-    """Overlay every known user value on the rendered template body."""
+    """Overlay every known user value on the rendered template body.
+
+    Keys whose value cannot be rendered inline (see :func:`_as_yaml_value`)
+    are skipped so the template default survives instead of corrupting
+    the file.
+    """
     body = template_body
     for dotted, value in user_flat.items():
-        body = _install._replace_template_value(body, dotted, _as_scalar_text(value))
+        rendered = _as_yaml_value(value)
+        if rendered is None:
+            continue
+        body = _install._replace_template_value_raw(body, dotted, rendered)
     return body
 
 
@@ -100,7 +127,10 @@ def _append_unknown(body: str, user_flat: dict[str, object], known: set[str]) ->
         "_user:",
     ]
     for key in unknown:
-        lines.append(f"  {key}: {_install._yaml_scalar(_as_scalar_text(user_flat[key]))}")
+        rendered = _as_yaml_value(user_flat[key])
+        if rendered is None:
+            continue
+        lines.append(f"  {key}: {rendered}")
     suffix = "\n".join(lines) + "\n"
     return body + (suffix if body.endswith("\n") else "\n" + suffix)
 

@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Throw together a quick demo page for a one-off internal showcase next week.\n",
+      "reconstructed_ac": [],
+      "assumptions": []
+    }
+  },
+  "intent": "ui-improve",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": {
+    "greenfield": true,
+    "components_found": [],
+    "design_tokens": {},
+    "greenfield_decision": "bare",
+    "audit_path": "greenfield"
+  },
+  "ui_design": {
+    "layout": "single-column demo page, max-w-3xl, header + body",
+    "components": [
+      {
+        "name": "DemoPage",
+        "primitives": [
+          "heading",
+          "paragraph"
+        ]
+      }
+    ],
+    "states": {
+      "empty": "Initial render with heading and body copy",
+      "loading": "n/a — static page",
+      "error": "n/a — static page",
+      "success": "n/a — static page",
+      "disabled": "n/a — static page"
+    },
+    "microcopy": {
+      "title": "Internal showcase demo",
+      "body": "Throwaway page for next week's review."
+    },
+    "a11y": {
+      "labels": "h1 carries the page title",
+      "focus": "default browser focus order",
+      "aria_live": "n/a"
+    },
+    "reused_from_audit": [],
+    "design_confirmed": true
+  },
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "blocked"
+  },
+  "questions": [
+    "> Input: Throw together a quick demo page for a one-off internal showcase next week.",
+    "> Design brief is ready. Summary:",
+    "> - Components: 1",
+    "> - States covered: 5",
+    "> - Microcopy entries (locked): 2",
+    "> 1. Confirm — lock this brief and advance to apply",
+    "> 2. Revise — send feedback; loops back to ui-design-brief",
+    "> 3. Abort — drop this UI request",
+    "",
+    "**Recommendation: 1 — Confirm** — the brief covers all required slots and microcopy is final. Caveat: flip to 2 only if a string, state, or component is wrong; do not confirm strings you have not read."
+  ],
+  "report": ""
+}

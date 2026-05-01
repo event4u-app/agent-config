@@ -1,0 +1,183 @@
+{
+  "gt_id": "GT-U3",
+  "subcommand": "work",
+  "prompt_file": "prompts/gt-u3-audit-skipped.txt",
+  "persona": null,
+  "final_outcome": "cycle_cap_reached",
+  "final_exit_code": 1,
+  "cycles": [
+    {
+      "index": 1,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json",
+        "--prompt-file",
+        "prompts/gt-u3-audit-skipped.txt"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=refine\n@agent-directive: existing-ui-audit\n> Input: Add a billing-overview tile to the customer dashboard.\n> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.\n> 1. Continue — let the skill produce the audit\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Add a billing-overview tile to the customer dashboard.\n",
+            "reconstructed_ac": [],
+            "assumptions": []
+          }
+        },
+        "intent": "ui-build",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "audit_path": "high_confidence",
+          "skipped_by_user": true
+        },
+        "ui_design": null,
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "blocked"
+        },
+        "questions": [
+          "@agent-directive: existing-ui-audit",
+          "> Input: Add a billing-overview tile to the customer dashboard.",
+          "> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.",
+          "> 1. Continue — let the skill produce the audit",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "existing-ui-audit",
+      "recipe_action": "existing-ui-audit",
+      "recipe_notes": [
+        "ui_audit set with audit_path but no components_found / components / greenfield — gate must re-halt"
+      ]
+    },
+    {
+      "index": 2,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=refine\n@agent-directive: existing-ui-audit\n> Input: Add a billing-overview tile to the customer dashboard.\n> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.\n> 1. Continue — let the skill produce the audit\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Add a billing-overview tile to the customer dashboard.\n",
+            "reconstructed_ac": [],
+            "assumptions": []
+          }
+        },
+        "intent": "ui-build",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "audit_path": "high_confidence",
+          "skipped_by_user": true
+        },
+        "ui_design": null,
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "blocked"
+        },
+        "questions": [
+          "@agent-directive: existing-ui-audit",
+          "> Input: Add a billing-overview tile to the customer dashboard.",
+          "> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.",
+          "> 1. Continue — let the skill produce the audit",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "existing-ui-audit",
+      "recipe_action": "existing-ui-audit",
+      "recipe_notes": [
+        "ui_audit set with audit_path but no components_found / components / greenfield — gate must re-halt"
+      ]
+    },
+    {
+      "index": 3,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=refine\n@agent-directive: existing-ui-audit\n> Input: Add a billing-overview tile to the customer dashboard.\n> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.\n> 1. Continue — let the skill produce the audit\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Add a billing-overview tile to the customer dashboard.\n",
+            "reconstructed_ac": [],
+            "assumptions": []
+          }
+        },
+        "intent": "ui-build",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "audit_path": "high_confidence",
+          "skipped_by_user": true
+        },
+        "ui_design": null,
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "blocked"
+        },
+        "questions": [
+          "@agent-directive: existing-ui-audit",
+          "> Input: Add a billing-overview tile to the customer dashboard.",
+          "> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.",
+          "> 1. Continue — let the skill produce the audit",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "existing-ui-audit",
+      "recipe_action": "existing-ui-audit",
+      "recipe_notes": [
+        "ui_audit set with audit_path but no components_found / components / greenfield — gate must re-halt"
+      ]
+    }
+  ]
+}

@@ -41,6 +41,13 @@ __pycache__/
 .agent-chat-history.bak
 .agent-chat-history.*.bak
 
+# Artefact engagement telemetry log (default-off, maintainer-only;
+# written by `./agent-config telemetry:record` when
+# `telemetry.artifact_engagement.enabled: true`). Local-only —
+# never commit.
+.agent-engagement.jsonl
+.agent-engagement.jsonl.bak
+
 # Generated Augment Code projection of .agent-src/ (rebuilt by `task sync`)
 /.augment/
 
@@ -61,3 +68,15 @@ evals/results/
 # /implement-ticket run metrics (JSON lines per run, Q38 ✅ decided).
 # Opt-in to commit for team review — default is local-only.
 /agents/logs/implement-ticket/
+
+# Golden Transcript freeze-guard staging output (produced by
+# `python3 -m tests.golden.capture --target tests/golden/.staging`,
+# diffed against the committed baseline; never committed).
+/tests/golden/.staging/
+/tests/golden/.staging-*.txt
+# Safety net: catch any alternative dot-prefixed staging variants
+# (e.g. `.gt-staging/` debris from earlier capture iterations).
+/tests/golden/.gt-*
+
+# Cloud bundle output
+/dist/

@@ -1,0 +1,21 @@
+[
+  {
+    "cycle": 1,
+    "exit_code": 1,
+    "directive": "create-plan",
+    "recipe_action": "create-plan",
+    "questions": [
+      "@agent-directive: create-plan ticket=GT-4-MOD",
+      "> Ticket GT-4-MOD — no plan recorded yet; running `feature-plan` and resuming.",
+      "> 1. Continue — use the plan produced by `feature-plan`",
+      "> 2. Abort — stop before any edits are proposed"
+    ]
+  },
+  {
+    "cycle": 2,
+    "exit_code": 0,
+    "directive": null,
+    "recipe_action": null,
+    "questions": []
+  }
+]

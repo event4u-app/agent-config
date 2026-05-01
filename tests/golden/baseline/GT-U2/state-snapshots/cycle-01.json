@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "diff",
+    "data": {
+      "raw": "diff --git a/resources/views/contact.blade.php b/resources/views/contact.blade.php\n--- a/resources/views/contact.blade.php\n+++ b/resources/views/contact.blade.php\n@@ -1,6 +1,7 @@\n-<h1>Contact</h1>\n+<h1>Contact us</h1>\n <form method=\"POST\" action=\"/contact\">\n     @csrf\n+    <label for=\"name\">Your name</label>\n     <input type=\"text\" name=\"name\" required>\n     <button type=\"submit\">Send</button>\n </form>\n",
+      "reconstructed_ac": [],
+      "assumptions": []
+    }
+  },
+  "intent": "ui-improve",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": {
+    "components_found": [
+      {
+        "path": "resources/views/components/forms/text-input.blade.php",
+        "name": "forms.text-input",
+        "kind": "form-primitive",
+        "similarity": 0.78
+      }
+    ],
+    "design_tokens": {
+      "spacing": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "color": [
+        "primary",
+        "muted",
+        "danger"
+      ]
+    },
+    "audit_path": "high_confidence",
+    "candidate_pick": "forms.text-input"
+  },
+  "ui_design": null,
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "blocked"
+  },
+  "questions": [
+    "@agent-directive: existing-ui-audit",
+    "> Input: diff --git a/resources/views/contact.blade.php b/resources/views/contact.blade.…",
+    "> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.",
+    "> 1. Continue — let the skill produce the audit",
+    "> 2. Abort — drop this UI request"
+  ],
+  "report": ""
+}

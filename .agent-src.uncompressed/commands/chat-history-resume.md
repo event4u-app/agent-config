@@ -2,7 +2,12 @@
 name: chat-history-resume
 description: Load the persistent chat-history log into the current conversation — picks match/returning/foreign flow and supports resume, merge, replace, or continue
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Explicit resume mechanic with foreign/returning state machine."
 ---
+
+<!-- cloud_safe: noop -->
 
 # /chat-history-resume
 

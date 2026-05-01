@@ -10,6 +10,8 @@ shape used by anthropics/skills:
   - metadata must have description + version
   - metadata.version must match package.json (single source of truth)
   - every plugins[].skills[] entry must exist on disk and carry a SKILL.md
+  - every SKILL.md on disk under .claude/skills/ must be listed in some
+    plugin's skills[] (drift detection)
 
 Exit codes: 0 = clean, 1 = problems found, 3 = internal error.
 """
@@ -23,6 +25,7 @@ from pathlib import Path
 ROOT = Path(".")
 MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 PACKAGE_JSON = ROOT / "package.json"
+CLAUDE_SKILLS_DIR = ROOT / ".claude" / "skills"
 
 
 def fail(errors: list[str]) -> int:
@@ -120,6 +123,30 @@ def main() -> int:
             skill_md = skill_dir / "SKILL.md"
             if not skill_md.exists():
                 errors.append(f"{entry} has no SKILL.md: `{path}`")
+
+    # Reverse-completeness: every SKILL.md on disk under .claude/skills/
+    # must appear in some plugin's skills[]. Catches the drift where new
+    # skills are generated but never added to the marketplace manifest.
+    listed: set[str] = set()
+    for plugin in plugins:
+        if not isinstance(plugin, dict):
+            continue
+        for path in plugin.get("skills", []):
+            if isinstance(path, str):
+                listed.add(path.removeprefix("./"))
+
+    if CLAUDE_SKILLS_DIR.exists():
+        for skill_dir in sorted(CLAUDE_SKILLS_DIR.iterdir()):
+            if not skill_dir.is_dir():
+                continue
+            if not (skill_dir / "SKILL.md").exists():
+                continue
+            rel = f".claude/skills/{skill_dir.name}"
+            if rel not in listed:
+                errors.append(
+                    f"skill exists on disk but is not listed in marketplace.json: "
+                    f"`./{rel}`"
+                )
 
     if errors:
         return fail(errors)

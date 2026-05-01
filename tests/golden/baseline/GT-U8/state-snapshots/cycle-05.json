@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Tweak the marketing hero copy and align the CTA button color to the new brand-red token.\n",
+      "reconstructed_ac": [
+        "Hero headline reads 'Welcome to the next chapter'",
+        "CTA button uses brand-red token"
+      ],
+      "assumptions": [
+        "brand-red token already exists",
+        "edit fits the trivial path"
+      ],
+      "confidence": {
+        "band": "high",
+        "score": 0.9
+      },
+      "intent": "ui-improve",
+      "ui_apply": {
+        "summary": "Hero headline updated and CTA button retokenised to brand-red",
+        "rendered": {
+          "resources/views/marketing/hero.blade.php": "Welcome to the next chapter — Get started.",
+          "resources/views/components/button.blade.php": "<button class=\"bg-brand-red\">Get started</button>"
+        },
+        "files": [
+          "resources/views/marketing/hero.blade.php",
+          "resources/views/components/button.blade.php"
+        ]
+      }
+    }
+  },
+  "intent": "ui-improve",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": {
+    "components_found": [
+      {
+        "path": "resources/views/components/button.blade.php",
+        "name": "button",
+        "kind": "ui-primitive",
+        "similarity": 0.82
+      }
+    ],
+    "design_tokens": {
+      "spacing": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "color": [
+        "primary",
+        "muted",
+        "danger",
+        "brand-red"
+      ]
+    },
+    "audit_path": "high_confidence",
+    "candidate_pick": "button"
+  },
+  "ui_design": {
+    "layout": "marketing hero band, full-width, single CTA",
+    "components": [
+      {
+        "name": "Hero",
+        "primitives": [
+          "button"
+        ]
+      }
+    ],
+    "states": {
+      "empty": "Headline + subhead + CTA rendered",
+      "loading": "n/a — static surface",
+      "error": "n/a — static surface",
+      "success": "n/a — static surface",
+      "disabled": "n/a — static surface"
+    },
+    "microcopy": {
+      "title": "Welcome to the next chapter",
+      "buttons": {
+        "submit": "Get started"
+      }
+    },
+    "a11y": {
+      "labels": "CTA carries accessible name 'Get started'",
+      "focus": "CTA receives focus on tab order entry",
+      "aria_live": "n/a — static surface"
+    },
+    "reused_from_audit": [
+      "button"
+    ],
+    "design_confirmed": true
+  },
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": null,
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "success",
+    "implement": "blocked"
+  },
+  "questions": [
+    "@agent-directive: ui-apply-plain",
+    "> Stack: `plain`. Implementing the locked design brief.",
+    "> Microcopy is locked — every button label, empty-state message, and validation message must come verbatim from `state.ui_design.microcopy`.",
+    "> 1. Continue — implement the brief and write a `ui_apply` envelope back into state.ticket (rendered: {path: text}, files: [...])",
+    "> 2. Abort — drop this UI request"
+  ],
+  "report": ""
+}

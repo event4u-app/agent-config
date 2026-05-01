@@ -31,6 +31,10 @@ become a PR. Never destroy work without explicit confirmation.
 NO MERGE, NO PR, NO DISCARD WITHOUT VERIFIED TESTS + EXPLICIT CHOICE.
 ```
 
+Skipping verification because "it worked a minute ago" is how broken
+`main` happens. Discarding because "I assumed the user meant it" is
+how work gets lost.
+
 ## Procedure
 
 ### 1. Inspect branch state

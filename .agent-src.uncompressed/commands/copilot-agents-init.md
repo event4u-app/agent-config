@@ -3,6 +3,9 @@ name: copilot-agents-init
 description: Create AGENTS.md and .github/copilot-instructions.md from scratch in the consumer project — interactive, auto-detects stack, never leaks other projects' identifiers.
 skills: [copilot-config, copilot-agents-optimization, agent-docs-writing]
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Project init — only deliberately during onboarding."
 ---
 
 # /copilot-agents-init

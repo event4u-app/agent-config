@@ -250,3 +250,61 @@ def test_write_mode_warns_but_does_not_fail(
     assert rc == 0  # warn-only on write path
     assert "not yet archived" in captured.err
     assert "complete.md" in captured.err
+
+
+# ---------------------------------------------------------------------------
+# Column semantics — `Steps` must include deferred + cancelled, and the
+# overall-table column order must be `Steps | Open | Done | Deferred |
+# Cancelled` so each row's arithmetic adds up:
+#     Steps − Done − Deferred − Cancelled = Open
+# Regression guard for the dashboard rewrite that flipped Steps from
+# `done + open_` (active subset) to `total_all`.
+# ---------------------------------------------------------------------------
+
+MIXED_FIXTURE = """\
+# Roadmap — Mixed states
+
+## Phase 1 — Spread
+- [x] one done
+- [x] two done
+- [ ] three open
+- [~] four deferred
+- [-] five cancelled
+"""
+
+
+def test_total_all_includes_deferred_and_cancelled():
+    stats = urp.parse_roadmap.__wrapped__ if hasattr(urp.parse_roadmap, "__wrapped__") else urp.parse_roadmap
+    p = urp.PhaseStats(id="1", name="Spread",
+                       done=2, open_=1, deferred=1, cancelled=1)
+    assert p.total_active == 3
+    assert p.total_all == 5  # 2 + 1 + 1 + 1
+    r = urp.RoadmapStats(path=Path("x.md"), rel="x.md", title="x",
+                         phases=[p])
+    assert r.total_all == 5
+    assert r.total_active == 3
+
+
+def test_overall_table_column_order_and_arithmetic(tmp_path: Path):
+    root = tmp_path / "agents" / "roadmaps"
+    root.mkdir(parents=True)
+    (root / "mixed.md").write_text(MIXED_FIXTURE, encoding="utf-8")
+    roadmaps = urp.collect(root)
+    assert len(roadmaps) == 1
+    output = urp.render(roadmaps)
+    # Header order must be Steps | Open | Done | Deferred | Cancelled.
+    assert "| # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |" in output
+    # Row arithmetic: Steps=5, Open=1, Done=2, Deferred=1, Cancelled=1.
+    assert "| 1 | [mixed.md](roadmaps/mixed.md) | 1 | 5 | 1 | 2 | 1 | 1 |" in output
+
+
+def test_per_phase_breakdown_column_order(tmp_path: Path):
+    root = tmp_path / "agents" / "roadmaps"
+    root.mkdir(parents=True)
+    (root / "mixed.md").write_text(MIXED_FIXTURE, encoding="utf-8")
+    roadmaps = urp.collect(root)
+    output = urp.render(roadmaps)
+    # Phase breakdown header — Open before Done, same as overall.
+    assert "| # | Phase | State | Open | Done | Deferred | Cancelled | % |" in output
+    # Row: id=1, name=Spread, state=in progress, Open=1, Done=2, Def=1, Can=1.
+    assert "| 1 | Spread | 🟡 in progress | 1 | 2 | 1 | 1 |" in output

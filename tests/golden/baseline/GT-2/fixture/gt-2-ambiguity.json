@@ -1,0 +1,9 @@
+{
+  "id": "GT-2-DIV",
+  "title": "Add divide(a, b) to the toy calculator",
+  "acceptance_criteria": [
+    "Function signature is `divide(a: int, b: int) -> int` and returns the integer quotient when b is non-zero.",
+    "tbd",
+    "A pytest test `test_divide_returns_quotient` lives in `tests/test_calculator.py` and covers the happy path plus the division-by-zero behaviour from AC #2."
+  ]
+}

@@ -3,6 +3,10 @@ name: review-routing
 skills: [review-routing, reviewer-awareness, review-routing-awareness]
 description: Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "who should review this, suggest reviewers for this PR"
+  trigger_context: "PR open without assigned reviewers"
 ---
 
 # review-routing

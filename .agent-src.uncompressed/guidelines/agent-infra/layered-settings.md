@@ -198,4 +198,3 @@ the next explicit settings edit.
 
 - [`agent-settings.md`](../../templates/agent-settings.md) — dev-layer schema
 - [`agent-project-settings.example.yml`](../../templates/agents/agent-project-settings.example.yml) — team-layer template
-- [`road-to-project-memory.md`](../../../agents/roadmaps/road-to-project-memory.md) — roadmap this guideline implements

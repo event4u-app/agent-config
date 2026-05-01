@@ -484,3 +484,915 @@ def test_cli_reset_and_prepend(tmp_path: Path, monkeypatch, capsys):
     assert out["prepended"] == 1
     entries = ch.read_entries(path=target)
     assert [e["text"] for e in entries] == ["earlier", "u1", "a1"]
+
+
+
+# --- A: append-side ownership enforcement ----------------------------
+
+
+def test_append_with_first_user_msg_match_writes(hist: Path):
+    ch.init("orig msg", path=hist)
+    ch.append({"t": "phase", "name": "ok"}, path=hist,
+              first_user_msg="orig msg")
+    entries = ch.read_entries(path=hist)
+    assert [e.get("name") for e in entries] == ["ok"]
+
+
+def test_append_with_first_user_msg_foreign_raises(hist: Path):
+    ch.init("orig msg", path=hist)
+    with pytest.raises(ch.OwnershipError) as excinfo:
+        ch.append({"t": "phase", "name": "nope"}, path=hist,
+                  first_user_msg="DIFFERENT")
+    assert excinfo.value.state == "foreign"
+    assert excinfo.value.header_fp == ch.fingerprint("orig msg")
+    assert excinfo.value.current_fp == ch.fingerprint("DIFFERENT")
+    # Entry must NOT have been written.
+    assert ch.read_entries(path=hist) == []
+
+
+def test_append_with_first_user_msg_returning_raises(hist: Path):
+    ch.init("orig msg", path=hist)
+    ch.adopt("new msg", path=hist)  # original fp now in former_fps
+    with pytest.raises(ch.OwnershipError) as excinfo:
+        ch.append({"t": "phase", "name": "still nope"}, path=hist,
+                  first_user_msg="orig msg")
+    assert excinfo.value.state == "returning"
+    assert ch.read_entries(path=hist) == []
+
+
+def test_append_with_first_user_msg_missing_raises(hist: Path):
+    with pytest.raises(ch.OwnershipError) as excinfo:
+        ch.append({"t": "phase", "name": "no header"}, path=hist,
+                  first_user_msg="any")
+    assert excinfo.value.state == "missing"
+
+
+def test_append_without_first_user_msg_unchanged(hist: Path):
+    """Back-compat: legacy callers without first_user_msg still pass."""
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "legacy"}, path=hist)
+    assert [e.get("name") for e in ch.read_entries(path=hist)] == ["legacy"]
+
+
+def test_cli_append_first_user_msg_match_exit_0(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    target = tmp_path / "cli.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "orig"])
+    capsys.readouterr()
+    rc = ch.main([
+        "append", "--first-user-msg", "orig",
+        "--type", "phase", "--json", '{"name":"ok"}',
+    ])
+    assert rc == ch.EXIT_OK
+
+
+def test_cli_append_first_user_msg_foreign_exit_3(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    target = tmp_path / "cli.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "orig"])
+    capsys.readouterr()
+    rc = ch.main([
+        "append", "--first-user-msg", "DIFFERENT",
+        "--type", "phase", "--json", '{"name":"nope"}',
+    ])
+    assert rc == ch.EXIT_OWNERSHIP_REFUSED
+    err = capsys.readouterr().err
+    assert "state=foreign" in err
+    assert "turn-check" in err
+    # File still has only the header.
+    assert ch.read_entries(path=target) == []
+
+
+# --- B: turn-check ---------------------------------------------------
+
+
+@pytest.fixture
+def settings_enabled(tmp_path: Path) -> Path:
+    p = tmp_path / "agent-settings.yml"
+    # heartbeat: on keeps legacy CLI tests asserting "marker is printed
+    # whenever the rule is enabled". The shipping default is hybrid;
+    # mode-specific tests below pin their own value.
+    p.write_text(
+        "chat_history:\n  enabled: true\n  heartbeat: on\n",
+        encoding="utf-8",
+    )
+    return p
+
+
+@pytest.fixture
+def settings_disabled(tmp_path: Path) -> Path:
+    p = tmp_path / "agent-settings.yml"
+    p.write_text("chat_history:\n  enabled: false\n", encoding="utf-8")
+    return p
+
+
+@pytest.fixture
+def settings_heartbeat_hybrid(tmp_path: Path) -> Path:
+    p = tmp_path / "agent-settings.yml"
+    p.write_text(
+        "chat_history:\n  enabled: true\n  heartbeat: hybrid\n",
+        encoding="utf-8",
+    )
+    return p
+
+
+@pytest.fixture
+def settings_heartbeat_off(tmp_path: Path) -> Path:
+    p = tmp_path / "agent-settings.yml"
+    p.write_text(
+        "chat_history:\n  enabled: true\n  heartbeat: off\n",
+        encoding="utf-8",
+    )
+    return p
+
+
+def test_turn_check_disabled_short_circuits(
+    hist: Path, settings_disabled: Path,
+):
+    # Even with a foreign file present, disabled wins.
+    ch.init("orig", path=hist)
+    result = ch.turn_check("anything", path=hist,
+                           settings_path=settings_disabled)
+    assert result == {"state": "disabled", "exit": ch.EXIT_OK}
+
+
+def test_turn_check_match(hist: Path, settings_enabled: Path):
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    result = ch.turn_check("orig", path=hist,
+                           settings_path=settings_enabled)
+    assert result["state"] == "ok"
+    assert result["exit"] == ch.EXIT_OK
+    assert result["entries"] == 1
+
+
+def test_turn_check_missing(tmp_path: Path, settings_enabled: Path):
+    hist = tmp_path / "absent.jsonl"
+    result = ch.turn_check("orig", path=hist,
+                           settings_path=settings_enabled)
+    assert result["state"] == "missing"
+    assert result["exit"] == ch.EXIT_MISSING
+
+
+def test_turn_check_foreign(hist: Path, settings_enabled: Path):
+    ch.init("orig", path=hist)
+    result = ch.turn_check("DIFFERENT", path=hist,
+                           settings_path=settings_enabled)
+    assert result["state"] == "foreign"
+    assert result["exit"] == ch.EXIT_FOREIGN
+    assert result["header_fp"] == ch.fingerprint("orig")
+    assert result["current_fp"] == ch.fingerprint("DIFFERENT")
+
+
+def test_turn_check_returning(hist: Path, settings_enabled: Path):
+    ch.init("orig", path=hist)
+    ch.adopt("new", path=hist)
+    result = ch.turn_check("orig", path=hist,
+                           settings_path=settings_enabled)
+    assert result["state"] == "returning"
+    assert result["exit"] == ch.EXIT_RETURNING
+
+
+def test_turn_check_settings_missing_treated_as_disabled(
+    tmp_path: Path, hist: Path,
+):
+    ch.init("orig", path=hist)
+    result = ch.turn_check("orig", path=hist,
+                           settings_path=tmp_path / "absent.yml")
+    assert result["state"] == "disabled"
+
+
+def test_turn_check_settings_no_chat_history_section_disabled(
+    tmp_path: Path, hist: Path,
+):
+    ch.init("orig", path=hist)
+    settings = tmp_path / "agent-settings.yml"
+    settings.write_text("cost_profile: minimal\n", encoding="utf-8")
+    result = ch.turn_check("orig", path=hist, settings_path=settings)
+    assert result["state"] == "disabled"
+
+
+def test_cli_turn_check_match_exit_0(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    target = tmp_path / "cli.jsonl"
+    settings = tmp_path / "agent-settings.yml"
+    settings.write_text("chat_history:\n  enabled: true\n", encoding="utf-8")
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "orig"])
+    capsys.readouterr()
+    rc = ch.main([
+        "turn-check", "--first-user-msg", "orig",
+        "--settings", str(settings),
+    ])
+    assert rc == ch.EXIT_OK
+    out = capsys.readouterr()
+    assert "state=ok" in out.out
+    assert out.err == ""  # no ACTION-REQUIRED hint on match
+
+
+def test_cli_turn_check_foreign_exit_11_with_hint(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    target = tmp_path / "cli.jsonl"
+    settings = tmp_path / "agent-settings.yml"
+    settings.write_text("chat_history:\n  enabled: true\n", encoding="utf-8")
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "orig"])
+    capsys.readouterr()
+    rc = ch.main([
+        "turn-check", "--first-user-msg", "DIFFERENT",
+        "--settings", str(settings),
+    ])
+    assert rc == ch.EXIT_FOREIGN
+    captured = capsys.readouterr()
+    assert "state=foreign" in captured.out
+    assert "header_fp=" in captured.out
+    assert "current_fp=" in captured.out
+    assert "ACTION REQUIRED" in captured.err
+    assert "Foreign-Prompt" in captured.err
+
+
+def test_cli_turn_check_missing_exit_10(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    settings = tmp_path / "agent-settings.yml"
+    settings.write_text("chat_history:\n  enabled: true\n", encoding="utf-8")
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE",
+                       str(tmp_path / "absent.jsonl"))
+    rc = ch.main([
+        "turn-check", "--first-user-msg", "anything",
+        "--settings", str(settings),
+    ])
+    assert rc == ch.EXIT_MISSING
+    captured = capsys.readouterr()
+    assert "state=missing" in captured.out
+    assert "ACTION REQUIRED" in captured.err
+    assert "init" in captured.err
+
+
+def test_cli_turn_check_disabled_exit_0_no_hint(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    settings = tmp_path / "agent-settings.yml"
+    settings.write_text("chat_history:\n  enabled: false\n", encoding="utf-8")
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE",
+                       str(tmp_path / "absent.jsonl"))
+    rc = ch.main([
+        "turn-check", "--first-user-msg", "anything",
+        "--settings", str(settings),
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    assert "state=disabled" in captured.out
+    assert captured.err == ""
+
+
+# --- C: heartbeat ----------------------------------------------------
+
+
+def test_format_age_units():
+    assert ch._format_age(0) == "0s ago"
+    assert ch._format_age(45) == "45s ago"
+    assert ch._format_age(60) == "1m ago"
+    assert ch._format_age(3599) == "59m ago"
+    assert ch._format_age(3600) == "1h ago"
+    assert ch._format_age(86399) == "23h ago"
+    assert ch._format_age(86400) == "1d ago"
+    assert ch._format_age(-5) == "just now"
+
+
+def test_last_entry_age_no_file(tmp_path: Path):
+    assert ch._last_entry_age_seconds(tmp_path / "absent") is None
+
+
+def test_last_entry_age_header_only(hist: Path):
+    ch.init("msg", path=hist)
+    assert ch._last_entry_age_seconds(hist) is None
+
+
+def test_last_entry_age_recent(hist: Path):
+    ch.init("msg", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    age = ch._last_entry_age_seconds(hist)
+    assert age is not None
+    assert 0 <= age <= 5
+
+
+def test_heartbeat_disabled(hist: Path, settings_disabled: Path):
+    ch.init("orig", path=hist)
+    result = ch.heartbeat("anything", path=hist,
+                          settings_path=settings_disabled)
+    assert result["state"] == "disabled"
+    assert result["marker"] == "📒 chat-history: disabled"
+
+
+def test_heartbeat_match_no_entries(hist: Path, settings_enabled: Path):
+    ch.init("orig", path=hist)
+    result = ch.heartbeat("orig", path=hist,
+                          settings_path=settings_enabled)
+    assert result["state"] == "ok"
+    assert result["entries"] == 0
+    assert result["freq"] == "per_phase"
+    assert result["last_age_seconds"] is None
+    assert "ok" in result["marker"]
+    assert "0 entries" in result["marker"]
+    assert "no entries" in result["marker"]
+
+
+def test_heartbeat_match_with_entries(hist: Path, settings_enabled: Path):
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    ch.append({"t": "phase", "name": "y"}, path=hist)
+    result = ch.heartbeat("orig", path=hist,
+                          settings_path=settings_enabled)
+    assert result["state"] == "ok"
+    assert result["entries"] == 2
+    assert result["last_age_seconds"] is not None
+    assert result["last_age_seconds"] >= 0
+    assert "2 entries" in result["marker"]
+    assert "per_phase" in result["marker"]
+    assert "last " in result["marker"]
+
+
+def test_heartbeat_missing(tmp_path: Path, settings_enabled: Path):
+    hist = tmp_path / "absent.jsonl"
+    result = ch.heartbeat("orig", path=hist,
+                          settings_path=settings_enabled)
+    assert result["state"] == "missing"
+    assert "missing" in result["marker"]
+
+
+def test_heartbeat_foreign(hist: Path, settings_enabled: Path):
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    result = ch.heartbeat("DIFFERENT", path=hist,
+                          settings_path=settings_enabled)
+    assert result["state"] == "foreign"
+    assert result["entries"] == 1
+    assert "foreign" in result["marker"]
+    assert "Foreign-Prompt" in result["marker"]
+
+
+def test_heartbeat_returning(hist: Path, settings_enabled: Path):
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    ch.adopt("new", path=hist)
+    result = ch.heartbeat("orig", path=hist,
+                          settings_path=settings_enabled)
+    assert result["state"] == "returning"
+    assert result["entries"] == 1
+    assert "returning" in result["marker"]
+    assert "Returning-Prompt" in result["marker"]
+
+
+def test_cli_heartbeat_match(
+    hist: Path, settings_enabled: Path, monkeypatch, capsys,
+):
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    rc = ch.main([
+        "heartbeat", "--first-user-msg", "orig",
+        "--settings", str(settings_enabled),
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    assert captured.out.startswith("📒 chat-history: ok")
+    assert "1 entries" in captured.out
+    assert captured.err == ""
+
+
+def test_cli_heartbeat_json_flag(
+    hist: Path, settings_enabled: Path, monkeypatch, capsys,
+):
+    ch.init("orig", path=hist)
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    rc = ch.main([
+        "heartbeat", "--first-user-msg", "orig",
+        "--settings", str(settings_enabled), "--json",
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert payload["state"] == "ok"
+    assert "marker" in payload
+
+
+def test_cli_heartbeat_disabled(tmp_path: Path, monkeypatch, capsys):
+    # heartbeat: on forces the disabled marker to surface — without it
+    # the default hybrid mode suppresses informational states.
+    settings = tmp_path / "agent-settings.yml"
+    settings.write_text(
+        "chat_history:\n  enabled: false\n  heartbeat: on\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE",
+                       str(tmp_path / "absent.jsonl"))
+    rc = ch.main([
+        "heartbeat", "--first-user-msg", "anything",
+        "--settings", str(settings),
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    assert "disabled" in captured.out
+
+
+
+# --- D: heartbeat visibility modes (on / off / hybrid) -------------
+
+
+def test_read_heartbeat_mode_default_hybrid(tmp_path: Path):
+    p = tmp_path / "agent-settings.yml"
+    # No heartbeat key at all → default
+    p.write_text("chat_history:\n  enabled: true\n", encoding="utf-8")
+    assert ch._read_chat_history_heartbeat_mode(p) == "hybrid"
+
+
+def test_read_heartbeat_mode_yaml_on_off_coerced(tmp_path: Path):
+    p = tmp_path / "agent-settings.yml"
+    # YAML 1.1 booleanizes bare on/off — reader must coerce back
+    p.write_text(
+        "chat_history:\n  enabled: true\n  heartbeat: on\n",
+        encoding="utf-8",
+    )
+    assert ch._read_chat_history_heartbeat_mode(p) == "on"
+    p.write_text(
+        "chat_history:\n  enabled: true\n  heartbeat: off\n",
+        encoding="utf-8",
+    )
+    assert ch._read_chat_history_heartbeat_mode(p) == "off"
+
+
+def test_read_heartbeat_mode_unknown_falls_back_to_hybrid(tmp_path: Path):
+    p = tmp_path / "agent-settings.yml"
+    p.write_text(
+        "chat_history:\n  enabled: true\n  heartbeat: chatty\n",
+        encoding="utf-8",
+    )
+    assert ch._read_chat_history_heartbeat_mode(p) == "hybrid"
+
+
+def test_cli_heartbeat_off_silent_on_ok(
+    hist: Path, settings_heartbeat_off: Path, monkeypatch, capsys,
+):
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    rc = ch.main([
+        "heartbeat", "--first-user-msg", "orig",
+        "--settings", str(settings_heartbeat_off),
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+
+
+def test_cli_heartbeat_off_silent_on_drift(
+    hist: Path, settings_heartbeat_off: Path, monkeypatch, capsys,
+):
+    # off suppresses even drift states — user opted into full silence
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    rc = ch.main([
+        "heartbeat", "--first-user-msg", "DIFFERENT",
+        "--settings", str(settings_heartbeat_off),
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+
+def test_cli_heartbeat_hybrid_silent_on_ok(
+    hist: Path, settings_heartbeat_hybrid: Path, monkeypatch, capsys,
+):
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    rc = ch.main([
+        "heartbeat", "--first-user-msg", "orig",
+        "--settings", str(settings_heartbeat_hybrid),
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+
+def test_cli_heartbeat_hybrid_visible_on_foreign(
+    hist: Path, settings_heartbeat_hybrid: Path, monkeypatch, capsys,
+):
+    ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "x"}, path=hist)
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    rc = ch.main([
+        "heartbeat", "--first-user-msg", "DIFFERENT",
+        "--settings", str(settings_heartbeat_hybrid),
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    assert "foreign" in captured.out
+
+
+def test_cli_heartbeat_hybrid_silent_on_disabled(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    # disabled + hybrid → silent (chat_history globally off, no signal)
+    settings = tmp_path / "agent-settings.yml"
+    settings.write_text(
+        "chat_history:\n  enabled: false\n  heartbeat: hybrid\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE",
+                       str(tmp_path / "absent.jsonl"))
+    rc = ch.main([
+        "heartbeat", "--first-user-msg", "anything",
+        "--settings", str(settings),
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+
+def test_cli_heartbeat_json_unaffected_by_mode(
+    hist: Path, settings_heartbeat_off: Path, monkeypatch, capsys,
+):
+    # --json bypasses the visibility filter — consumers want full record
+    ch.init("orig", path=hist)
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    rc = ch.main([
+        "heartbeat", "--first-user-msg", "orig",
+        "--settings", str(settings_heartbeat_off), "--json",
+    ])
+    assert rc == ch.EXIT_OK
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert payload["state"] == "ok"
+
+
+
+# --- Phase 2: hook-append wrapper -----------------------------------
+
+
+@pytest.fixture
+def settings_per_tool(tmp_path: Path) -> Path:
+    p = tmp_path / "settings-per-tool.yml"
+    p.write_text(
+        "chat_history:\n  enabled: true\n  frequency: per_tool\n",
+        encoding="utf-8",
+    )
+    return p
+
+
+@pytest.fixture
+def settings_per_turn(tmp_path: Path) -> Path:
+    p = tmp_path / "settings-per-turn.yml"
+    p.write_text(
+        "chat_history:\n  enabled: true\n  frequency: per_turn\n",
+        encoding="utf-8",
+    )
+    return p
+
+
+def test_sidecar_path_lives_next_to_history(hist: Path):
+    sp = ch.sidecar_path(hist)
+    assert sp.parent == hist.parent
+    assert sp.name == hist.name + ".session"
+
+
+def test_write_and_read_sidecar_roundtrip(hist: Path):
+    payload = ch.write_sidecar("hello", path=hist)
+    loaded = ch.read_sidecar(hist)
+    assert loaded == payload
+    assert loaded["first_user_msg"] == "hello"
+    assert loaded["fp"] == ch.fingerprint("hello")
+
+
+def test_read_sidecar_missing_returns_none(hist: Path):
+    assert ch.read_sidecar(hist) is None
+
+
+def test_read_sidecar_malformed_returns_none(hist: Path):
+    sp = ch.sidecar_path(hist)
+    sp.write_text("{not json", encoding="utf-8")
+    assert ch.read_sidecar(hist) is None
+
+
+def test_hook_append_session_start_initializes(hist: Path,
+                                               settings_enabled: Path):
+    result = ch.hook_append("session_start",
+                            first_user_msg="first",
+                            path=hist,
+                            settings_path=settings_enabled)
+    assert result["action"] == "initialized"
+    header = ch.read_header(hist)
+    assert header is not None
+    assert header["fp"] == ch.fingerprint("first")
+    assert ch.read_sidecar(hist)["first_user_msg"] == "first"
+
+
+def test_hook_append_session_start_existing_history(hist: Path,
+                                                    settings_enabled: Path):
+    ch.init("first", path=hist)
+    result = ch.hook_append("session_start",
+                            first_user_msg="first",
+                            path=hist,
+                            settings_path=settings_enabled)
+    assert result["action"] == "sidecar_written"
+
+
+def test_hook_append_disabled_short_circuits(hist: Path,
+                                             settings_disabled: Path):
+    result = ch.hook_append("user_prompt",
+                            payload={"text": "x"},
+                            path=hist,
+                            settings_path=settings_disabled)
+    assert result["action"] == "disabled"
+    assert not hist.exists()
+
+
+def test_hook_append_no_sidecar_returns_skipped(hist: Path,
+                                                settings_enabled: Path):
+    result = ch.hook_append("user_prompt",
+                            payload={"text": "x"},
+                            path=hist,
+                            settings_path=settings_enabled)
+    assert result["action"] == "skipped_no_sidecar"
+
+
+def test_hook_append_per_phase_filters_tool_use(hist: Path,
+                                                settings_enabled: Path):
+    ch.hook_append("session_start", first_user_msg="m",
+                   path=hist, settings_path=settings_enabled)
+    result = ch.hook_append("tool_use",
+                            payload={"tool": "bash"},
+                            path=hist,
+                            settings_path=settings_enabled)
+    assert result["action"] == "skipped_cadence"
+    assert result["frequency"] == "per_phase"
+
+
+def test_hook_append_per_phase_appends_user_prompt(hist: Path,
+                                                   settings_enabled: Path):
+    ch.hook_append("session_start", first_user_msg="m",
+                   path=hist, settings_path=settings_enabled)
+    result = ch.hook_append("user_prompt",
+                            payload={"text": "hi"},
+                            path=hist,
+                            settings_path=settings_enabled)
+    assert result["action"] == "appended"
+    entries = ch.read_entries(path=hist)
+    assert len(entries) == 1
+    assert entries[0]["t"] == "user"
+    assert entries[0]["text"] == "hi"
+
+
+def test_hook_append_per_tool_filters_user_prompt(
+    hist: Path, settings_per_tool: Path,
+):
+    ch.hook_append("session_start", first_user_msg="m",
+                   path=hist, settings_path=settings_per_tool)
+    skip = ch.hook_append("user_prompt", payload={"text": "x"},
+                          path=hist, settings_path=settings_per_tool)
+    appended = ch.hook_append("tool_use", payload={"tool": "bash",
+                                                   "text": "ls"},
+                              path=hist, settings_path=settings_per_tool)
+    assert skip["action"] == "skipped_cadence"
+    assert appended["action"] == "appended"
+    entries = ch.read_entries(path=hist)
+    assert len(entries) == 1
+    assert entries[0]["t"] == "tool"
+    assert entries[0]["tool"] == "bash"
+
+
+def test_hook_append_per_turn_appends_stop_only(
+    hist: Path, settings_per_turn: Path,
+):
+    ch.hook_append("session_start", first_user_msg="m",
+                   path=hist, settings_path=settings_per_turn)
+    skip = ch.hook_append("user_prompt", payload={"text": "x"},
+                          path=hist, settings_path=settings_per_turn)
+    appended = ch.hook_append("stop", payload={"text": "done"},
+                              path=hist, settings_path=settings_per_turn)
+    assert skip["action"] == "skipped_cadence"
+    assert appended["action"] == "appended"
+    entries = ch.read_entries(path=hist)
+    assert len(entries) == 1
+    assert entries[0]["t"] == "agent"
+
+
+def test_hook_append_session_end_is_noop(
+    hist: Path, settings_enabled: Path,
+):
+    ch.hook_append("session_start", first_user_msg="m",
+                   path=hist, settings_path=settings_enabled)
+    before = len(ch.read_entries(path=hist))
+    result = ch.hook_append("session_end", path=hist,
+                            settings_path=settings_enabled)
+    assert result["action"] == "session_end_noop"
+    assert len(ch.read_entries(path=hist)) == before
+
+
+def test_hook_append_invalid_event_raises():
+    with pytest.raises(ValueError):
+        ch.hook_append("bogus_event")
+
+
+def test_hook_append_ownership_refused_after_fingerprint_change(
+    hist: Path, settings_enabled: Path,
+):
+    ch.hook_append("session_start", first_user_msg="orig",
+                   path=hist, settings_path=settings_enabled)
+    # Simulate an outside actor overwriting the sidecar with a different fp.
+    ch.write_sidecar("imposter", path=hist)
+    result = ch.hook_append("user_prompt",
+                            payload={"text": "x"},
+                            path=hist,
+                            settings_path=settings_enabled)
+    assert result["action"] == "ownership_refused"
+    assert result["state"] == "foreign"
+
+
+def test_cli_hook_append_session_start_then_event(
+    tmp_path: Path, monkeypatch, capsys, settings_enabled: Path,
+):
+    target = tmp_path / "cli-hook.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    rc = ch.main([
+        "hook-append", "--event", "session_start",
+        "--first-user-msg", "first",
+        "--settings", str(settings_enabled),
+    ])
+    assert rc == ch.EXIT_OK
+    out1 = json.loads(capsys.readouterr().out)
+    assert out1["action"] == "initialized"
+    rc = ch.main([
+        "hook-append", "--event", "user_prompt",
+        "--payload", '{"text":"hello"}',
+        "--settings", str(settings_enabled),
+    ])
+    assert rc == ch.EXIT_OK
+    out2 = json.loads(capsys.readouterr().out)
+    assert out2["action"] == "appended"
+
+
+def test_cli_hook_append_invalid_payload_returns_bad_args(
+    tmp_path: Path, monkeypatch, capsys, settings_enabled: Path,
+):
+    target = tmp_path / "cli-hook.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    rc = ch.main([
+        "hook-append", "--event", "user_prompt",
+        "--payload", "{not-json}",
+        "--settings", str(settings_enabled),
+    ])
+    assert rc == ch.EXIT_BAD_ARGS
+
+
+
+# --- Phase 5: crash-recovery smoke tests -----------------------------
+#
+# These simulate the HOOK lifecycle when the agent process dies between
+# the `session_start` hook and the matching `session_end` hook. The file
+# must survive intact, all pre-crash entries must remain readable, and a
+# fresh session must be able to resume via `turn_check` and continue
+# appending without corrupting the prior log.
+
+
+def test_crash_recovery_preserves_pre_crash_entries(
+    hist: Path, settings_enabled: Path,
+):
+    """Hooks fire session_start + N appends, the process dies (no
+    session_end), and a fresh process can still read every pre-crash
+    entry verbatim."""
+    ch.hook_append("session_start", first_user_msg="resume me",
+                   path=hist, settings_path=settings_enabled)
+    ch.hook_append("user_prompt", payload={"text": "step 1"},
+                   path=hist, settings_path=settings_enabled)
+    ch.hook_append("user_prompt", payload={"text": "step 2"},
+                   path=hist, settings_path=settings_enabled)
+    ch.hook_append("user_prompt", payload={"text": "step 3"},
+                   path=hist, settings_path=settings_enabled)
+
+    # --- crash: no session_end ever runs ---
+
+    # Fresh process boots, reads the file as-is.
+    header = ch.read_header(hist)
+    entries = ch.read_entries(path=hist)
+
+    assert header is not None
+    assert header["fp"] == ch.fingerprint("resume me")
+    assert [e["text"] for e in entries] == ["step 1", "step 2", "step 3"]
+
+
+def test_crash_recovery_same_user_resumes_via_turn_check(
+    hist: Path, settings_enabled: Path,
+):
+    """Same first-user-msg after a crash → turn_check returns `ok`
+    and the next hook append lands after the pre-crash tail."""
+    ch.hook_append("session_start", first_user_msg="same prompt",
+                   path=hist, settings_path=settings_enabled)
+    ch.hook_append("user_prompt", payload={"text": "before crash"},
+                   path=hist, settings_path=settings_enabled)
+
+    # --- crash ---
+
+    # Resume turn — agent's first tool call is turn_check.
+    state = ch.turn_check("same prompt", path=hist,
+                          settings_path=settings_enabled)
+    assert state["state"] == "ok"
+    assert state["entries"] == 1
+
+    # Hook appends keep flowing; pre-crash entry is preserved.
+    ch.hook_append("user_prompt", payload={"text": "after crash"},
+                   path=hist, settings_path=settings_enabled)
+
+    entries = ch.read_entries(path=hist)
+    assert [e["text"] for e in entries] == ["before crash", "after crash"]
+
+
+def test_crash_recovery_foreign_user_does_not_clobber_log(
+    hist: Path, settings_enabled: Path,
+):
+    """Different user starts a session against the same project after
+    a crash — turn_check returns `foreign`, the prior log is intact,
+    and no append fires until the agent renders the Foreign-Prompt and
+    the user picks a branch."""
+    ch.hook_append("session_start", first_user_msg="user A",
+                   path=hist, settings_path=settings_enabled)
+    ch.hook_append("user_prompt", payload={"text": "A's work"},
+                   path=hist, settings_path=settings_enabled)
+
+    # --- crash ---
+
+    state = ch.turn_check("user B with different prompt", path=hist,
+                          settings_path=settings_enabled)
+    assert state["state"] == "foreign"
+    assert state["exit"] == ch.EXIT_FOREIGN
+
+    # File untouched until the user resolves the handshake.
+    entries = ch.read_entries(path=hist)
+    assert [e["text"] for e in entries] == ["A's work"]
+
+
+def test_crash_recovery_via_cli_round_trip(
+    tmp_path: Path, monkeypatch, capsys, settings_enabled: Path,
+):
+    """End-to-end at the CLI surface: hook commands write entries,
+    process 'dies' (we drop the in-process state), a new invocation
+    sees the same file and can read every pre-crash entry."""
+    target = tmp_path / "crash-recovery.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+
+    # Process A: session_start + two appends.
+    rc = ch.main([
+        "hook-append", "--event", "session_start",
+        "--first-user-msg", "crash-test",
+        "--settings", str(settings_enabled),
+    ])
+    assert rc == ch.EXIT_OK
+    capsys.readouterr()
+
+    rc = ch.main([
+        "hook-append", "--event", "user_prompt",
+        "--payload", '{"text":"alpha"}',
+        "--settings", str(settings_enabled),
+    ])
+    assert rc == ch.EXIT_OK
+    capsys.readouterr()
+
+    rc = ch.main([
+        "hook-append", "--event", "user_prompt",
+        "--payload", '{"text":"beta"}',
+        "--settings", str(settings_enabled),
+    ])
+    assert rc == ch.EXIT_OK
+    capsys.readouterr()
+
+    # --- Process A dies. session_end never runs. ---
+
+    # Process B: turn_check on the same prompt + a fresh append.
+    rc = ch.main([
+        "turn-check", "--first-user-msg", "crash-test",
+        "--settings", str(settings_enabled),
+    ])
+    assert rc == ch.EXIT_OK
+    out = capsys.readouterr().out
+    assert "state=ok" in out
+    assert "entries=2" in out
+
+    rc = ch.main([
+        "hook-append", "--event", "user_prompt",
+        "--payload", '{"text":"gamma"}',
+        "--settings", str(settings_enabled),
+    ])
+    assert rc == ch.EXIT_OK
+    capsys.readouterr()
+
+    entries = ch.read_entries(path=target)
+    assert [e["text"] for e in entries] == ["alpha", "beta", "gamma"]

@@ -149,9 +149,23 @@ auggie plugin install agent-config@event4u-agent-config
 
 ### Claude Code
 
+Two equivalent paths — pick whichever surface you're already in:
+
 ```bash
+# From your shell (CLI)
 claude plugin install agent-config@event4u-agent-config
 ```
+
+```text
+# From inside Claude Code (slash command)
+/plugin marketplace add event4u-app/agent-config
+/plugin install agent-config@event4u-agent-config
+```
+
+The slash-command path is the canonical Claude Code Plugin Marketplace
+flow ([reference](https://docs.claude.com/en/docs/claude-code/plugin-marketplaces)).
+It pulls the repo via git-clone and reads the skills directly from
+`.claude/skills/` — no separate ZIP download.
 
 ### Copilot CLI
 
@@ -182,6 +196,78 @@ claude marketplace add event4u-app/agent-config
 # Copilot CLI
 copilot marketplace add event4u-app/agent-config
 ```
+
+---
+
+## Cloud / Hosted agent installation
+
+For agents running outside your local machine — Claude.ai Web Skills
+and Linear AI — the package's local installer cannot run. Instead,
+the package ships pre-built artefacts you upload or paste into the
+hosted platform's own configuration surface.
+
+These channels are **additional** to project- and plugin-installed
+modes; use them when the agent loop runs on the platform's servers,
+not on your machine.
+
+### Claude.ai Web (Skills UI)
+
+Claude.ai Web supports Skills via manual ZIP upload through the Skills
+UI. The package builds one ZIP per cloud-eligible skill.
+
+1. **Build the bundles**
+
+   ```bash
+   task build-cloud-bundles-all
+   ```
+
+   Output: `dist/cloud/<skill>.zip` per eligible skill. Skills marked
+   `cloud_safe: noop` (filesystem-bound, e.g. `chat-history`,
+   `file-editor`) are bundled with a stripped no-op variant; T3-H
+   skills (hard filesystem dependencies) are excluded by default.
+   See [`scripts/audit_cloud_compatibility.py`](../scripts/audit_cloud_compatibility.py)
+   for per-skill tier and [`scripts/build_cloud_bundle.py`](../scripts/build_cloud_bundle.py)
+   for the gating logic.
+
+2. **Upload to Claude.ai**
+
+   - Open Claude.ai → Skills → Upload Skill
+   - Select one bundle from `dist/cloud/`
+   - Repeat per skill you want available
+
+3. **Verify** — open a fresh Claude.ai conversation and confirm the
+   skill appears in the Skills picker.
+
+### Linear AI (Codegen, Charlie, …)
+
+Linear AI agents read free-form guidance from Linear's workspace
+settings; there is no plugin or upload mechanism. The package ships
+a pre-built digest split into three layers, paste each layer into
+the matching Linear field.
+
+1. **Build the digest**
+
+   ```bash
+   task build-linear-digest
+   ```
+
+   Output:
+   - `dist/linear/workspace.md` — universal coding posture (T1 rules)
+   - `dist/linear/team.md` — framework-specific guidance (Laravel, …)
+   - `dist/linear/personal.md` — stub for individual overrides
+
+2. **Paste into Linear**
+
+   - Open Linear → Settings → Agents → Additional guidance
+   - Paste `workspace.md` into the workspace-level field
+   - Paste `team.md` into your team's field (if framework-specific)
+   - Leave `personal.md` empty unless you have personal overrides
+
+3. **Per-layer rationale** — see
+   [`agents/contexts/linear-ai-three-layers.md`](../agents/contexts/linear-ai-three-layers.md)
+   for the split rationale and
+   [`agents/contexts/linear-ai-rules-inclusion.md`](../agents/contexts/linear-ai-rules-inclusion.md)
+   for which rules go where.
 
 ---
 

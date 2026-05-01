@@ -4,6 +4,8 @@ description: "Use when polishing a skill/rule/command/guideline frontmatter desc
 source: package
 ---
 
+<!-- cloud_safe: degrade -->
+
 # description-assist
 
 ## When to use
@@ -154,6 +156,25 @@ and stop. Do not loop further.
 * Do NOT silently strip or reword quotes inside the description value
 * Do NOT run `scripts/skill_trigger_eval.py` from inside this skill — eval
   execution spends API tokens and is a separate user action
+
+## Cloud Behavior
+
+On cloud surfaces (Claude.ai Web, Skills API) the package's
+`scripts/audit_skill_descriptions.py`, `scripts/skill_linter.py`,
+and `scripts/skill_trigger_eval.py` are not reachable. The skill
+still applies — with prose-only inspection:
+
+* Reason from the description text in the conversation. The agent
+  acts as the inspector; no separate audit pass runs.
+* Apply the same checklist used by the local audit: length budget,
+  trigger prefix ("Use when …"), domain class, symptom class,
+  undertrigger tail.
+* Emit verdict + up to 3 numbered variants. The user picks; the
+  agent emits the new frontmatter as a copyable block.
+* Skip every reference to running the audit or trigger-eval scripts.
+  Recommend the user run the package's local linter after applying.
+* Never claim a description has been "graded" or "scored" by an
+  external pass — there isn't one.
 
 ## Examples
 

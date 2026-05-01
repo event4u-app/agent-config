@@ -1,0 +1,34 @@
+[
+  {
+    "cycle": 1,
+    "exit_code": 1,
+    "directive": "trivial-apply",
+    "recipe_action": "trivial-apply",
+    "questions": [
+      "@agent-directive: trivial-apply",
+      "> Trivial UI edit path — audit / design / review skipped.",
+      "> 1. Continue — perform the single-file edit, then write a `trivial_edit` envelope back into state.ticket (files, lines_changed, new_component, new_state, new_dependency)",
+      "> 2. Abort — drop this trivial edit"
+    ]
+  },
+  {
+    "cycle": 2,
+    "exit_code": 1,
+    "directive": "run-tests",
+    "recipe_action": "run-tests",
+    "questions": [
+      "@agent-directive: run-tests scope=smoke",
+      "> Trivial edit applied; run the smoke test layer covering the touched file.",
+      "> 1. Continue — invoke `/tests-execute` with smoke scope, then write the verdict back to `state.tests`",
+      "> 2. Skip — record `state.tests = {\"verdict\": \"success\", \"scope\": \"none\"}` (logged as a deferred verification)",
+      "> 3. Abort — drop this run"
+    ]
+  },
+  {
+    "cycle": 3,
+    "exit_code": 0,
+    "directive": null,
+    "recipe_action": null,
+    "questions": []
+  }
+]

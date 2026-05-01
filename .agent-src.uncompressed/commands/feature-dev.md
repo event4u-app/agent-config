@@ -3,6 +3,10 @@ name: feature-dev
 description: Full 7-phase feature development workflow for complex features.
 skills: [laravel, php-coder]
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "build this feature end-to-end, run the full feature workflow"
+  trigger_context: "long-form feature description spanning multiple components"
 ---
 # /feature-dev
 

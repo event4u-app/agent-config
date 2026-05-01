@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "diff",
+    "data": {
+      "raw": "diff --git a/resources/views/contact.blade.php b/resources/views/contact.blade.php\n--- a/resources/views/contact.blade.php\n+++ b/resources/views/contact.blade.php\n@@ -1,6 +1,7 @@\n-<h1>Contact</h1>\n+<h1>Contact us</h1>\n <form method=\"POST\" action=\"/contact\">\n     @csrf\n+    <label for=\"name\">Your name</label>\n     <input type=\"text\" name=\"name\" required>\n     <button type=\"submit\">Send</button>\n </form>\n",
+      "reconstructed_ac": [],
+      "assumptions": [],
+      "ui_apply": {
+        "summary": "Contact form refined with locked microcopy and a11y label",
+        "rendered": {
+          "resources/views/contact.blade.php": "Contact us — Your name (labeled), Send."
+        },
+        "files": [
+          "resources/views/contact.blade.php"
+        ]
+      }
+    }
+  },
+  "intent": "ui-improve",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": {
+    "components_found": [
+      {
+        "path": "resources/views/components/forms/text-input.blade.php",
+        "name": "forms.text-input",
+        "kind": "form-primitive",
+        "similarity": 0.78
+      }
+    ],
+    "design_tokens": {
+      "spacing": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "color": [
+        "primary",
+        "muted",
+        "danger"
+      ]
+    },
+    "audit_path": "high_confidence",
+    "candidate_pick": "forms.text-input"
+  },
+  "ui_design": {
+    "layout": "single-column form, max-w-md, centered",
+    "components": [
+      {
+        "name": "ContactForm",
+        "primitives": [
+          "forms.text-input",
+          "button"
+        ]
+      }
+    ],
+    "states": {
+      "empty": "Initial render: name field empty, submit enabled",
+      "loading": "Submit pressed: button shows spinner, field disabled",
+      "error": "Validation error: field-level message under input",
+      "success": "Form replaced by confirmation card",
+      "disabled": "Field disabled while loading state is active"
+    },
+    "microcopy": {
+      "title": "Contact us",
+      "fields": {
+        "name": "Your name"
+      },
+      "buttons": {
+        "submit": "Send"
+      },
+      "errors": {
+        "name_required": "Please enter your name."
+      },
+      "success": "Thanks — we will be in touch within one business day."
+    },
+    "a11y": {
+      "labels": "name field has visible label tied via for/id",
+      "focus": "first invalid field receives focus on submit error",
+      "aria_live": "success card is announced via aria-live=polite"
+    },
+    "reused_from_audit": [
+      "forms.text-input"
+    ],
+    "design_confirmed": true
+  },
+  "ui_review": {
+    "findings": [],
+    "review_clean": true
+  },
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [
+    {
+      "kind": "ui",
+      "stack": "plain",
+      "file": "resources/views/contact.blade.php",
+      "summary": "Contact form refined with locked microcopy and a11y label"
+    }
+  ],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "success",
+    "implement": "success",
+    "test": "blocked"
+  },
+  "questions": [
+    "@agent-directive: ui-design-review-plain",
+    "> Stack: `plain`. Reviewing rendered components against the locked design brief.",
+    "> The review pass compares `state.ticket.ui_apply.rendered` against `state.ui_design` (microcopy, states, a11y, layout) and produces a structured `findings` list.",
+    "> 1. Continue — run the review and write `{findings: [...], review_clean: bool}` into `state.ui_review`",
+    "> 2. Abort — drop this UI request"
+  ],
+  "report": ""
+}

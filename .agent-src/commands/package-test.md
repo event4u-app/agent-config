@@ -3,6 +3,9 @@ name: package-test
 skills: [composer, npm]
 description: /package-test
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Package-internal — only the event4u/agent-config repo runs this."
 ---
 
 # package-test

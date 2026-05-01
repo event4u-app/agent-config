@@ -3,6 +3,10 @@ name: context-create
 skills: [agent-docs-writing]
 description: Analyze a codebase area and create a structured context document
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "document this part of the codebase, create a context doc for X"
+  trigger_context: "working in a module without an agents/contexts/ doc"
 ---
 
 # context-create

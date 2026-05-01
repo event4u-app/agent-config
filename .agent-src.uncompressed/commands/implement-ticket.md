@@ -1,8 +1,12 @@
 ---
 name: implement-ticket
 skills: [refine-ticket, feature-planning]
-description: Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `implement_ticket` Python engine, block-on-ambiguity, no auto-git.
+description: Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git.
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "implement this ticket, setze ticket X um, build PROJ-123"
+  trigger_context: "ticket key matching [A-Z]+-[0-9]+ in branch name or prompt"
 ---
 
 # implement-ticket
@@ -30,24 +34,44 @@ markdown. If no input resolves:
 ### 2. Prepare the state file
 
 The engine persists everything in a JSON state file (default:
-`.implement-ticket-state.json` in the repo root). Two cases:
+`.work-state.json` in the repo root). The resolved ticket lives inside
+the work-state envelope as `input.kind="ticket"`, `input.data={id,
+title, body, acceptance_criteria}` — the engine builds that wrapping
+internally when given `--ticket-file`, so callers pass the ticket JSON
+unchanged.
 
-- **Fresh run** — state file does not exist. Write the resolved ticket to
+Three cases, in this order:
+
+- **Legacy state file present** — `.implement-ticket-state.json` exists
+  and `.work-state.json` does not. Migrate before doing anything else:
+
+  ```bash
+  ./agent-config migrate-state
+  ```
+
+  Writes `.work-state.json` and renames the source to
+  `.implement-ticket-state.json.bak`. Idempotent and safe to skip if
+  already done. After this, treat the run as **Resume**.
+- **Fresh run** — no state file at all. Write the resolved ticket to
   `ticket.json` (id, title, body, acceptance_criteria) and pass it via
   `--ticket-file ticket.json`. Honour `roles.active_role` from
   `.agent-settings.yml` via `--persona`.
-- **Resume** — state file exists. Do **not** pass `--ticket-file` or
-  `--persona`; mid-flight persona switches are refused by the engine.
+- **Resume** — `.work-state.json` exists. Do **not** pass `--ticket-file`
+  or `--persona`; mid-flight persona switches are refused by the engine.
 
 ### 3. Drive the Option-A dispatch loop
 
 Run the engine with the state file on every iteration:
 
 ```bash
-PYTHONPATH=scripts python3 -m implement_ticket \
-    --state-file .implement-ticket-state.json \
+./agent-config implement-ticket \
+    --state-file .work-state.json \
     [--ticket-file ticket.json --persona <name>]   # first call only
 ```
+
+The dispatcher wires `PYTHONPATH` and routes to the engine module
+internally. `./agent-config` is the only supported entry point in
+consumer repos — do not call the engine module directly.
 
 Then branch on the exit code:
 
@@ -88,15 +112,14 @@ wrote it.
 
 ### 5. Final report + close-prompt
 
-On exit `0`, the engine prints the delivery report (nine fixed sections
-per [`implement-ticket-flow`](../../agents/contexts/implement-ticket-flow.md#delivery-report-schema)).
+On exit `0`, the engine prints the delivery report (nine fixed sections).
 Surface it unchanged. Append the close-prompt:
 
 ```
 > 1. /commit — stage + commit per the delivery report
 > 2. /create-pr — open a pull request from this branch
 > 3. Keep working — I'll hold the state file for the next /implement-ticket
-> 4. Discard — delete .implement-ticket-state.json
+> 4. Discard — delete .work-state.json (and any .implement-ticket-state.json.bak)
 ```
 
 **Never run `/commit` or `/create-pr` without the user choosing them.**
@@ -115,6 +138,12 @@ permission-gated.
   fresh run; never accept a `--persona` flag from the user mid-flight.
 - Memory section in the report is absent when no hit changed an outcome.
   That is by design — don't pad it.
+- When `telemetry.artifact_engagement.enabled: true` in
+  `.agent-settings.yml`, emit one `./agent-config telemetry:record` per
+  boundary (per phase-step or per task — see `granularity`) with the
+  consulted+applied artefact ids. Full contract in
+  [`artifact-engagement-recording`](../rules/artifact-engagement-recording.md).
+  Default-off; absent setting is a silent no-op.
 
 ## Examples
 
@@ -126,8 +155,5 @@ permission-gated.
 
 ## See also
 
-- [`implement-ticket-flow`](../../agents/contexts/implement-ticket-flow.md) — flow contract + directive semantics
-- [`adr-implement-ticket-runtime`](../../agents/contexts/adr-implement-ticket-runtime.md) — runtime choice
 - [`refine-ticket`](refine-ticket.md), [`feature-plan`](feature-plan.md), [`tests-execute`](tests-execute.md), [`review-changes`](review-changes.md) — skills the directives delegate to
 - [`commit`](commit.md), [`create-pr`](create-pr.md) — post-delivery commands the user runs explicitly
-- [`road-to-implement-ticket`](../../agents/roadmaps/road-to-implement-ticket.md) — governing roadmap

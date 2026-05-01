@@ -1,0 +1,9 @@
+{
+  "id": "GT-3-POW",
+  "title": "Make power(a, b) handle negative bases correctly",
+  "acceptance_criteria": [
+    "`power(-2, 3)` returns -8 (current stub returns 8 because of the abs() bug).",
+    "`power(-2, 4)` returns 16 (even exponent on negative base stays positive).",
+    "A pytest test `test_power_negative_base` lives in `tests/test_calculator.py` and pins both behaviours."
+  ]
+}

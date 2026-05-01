@@ -1,0 +1,128 @@
+[
+  {
+    "cycle": 1,
+    "exit_code": 1,
+    "directive": "existing-ui-audit",
+    "recipe_action": "existing-ui-audit",
+    "questions": [
+      "@agent-directive: existing-ui-audit",
+      "> Input: Tighten the spacing on the customer onboarding wizard.",
+      "> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.",
+      "> 1. Continue — let the skill produce the audit",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 2,
+    "exit_code": 1,
+    "directive": "ui-design-brief",
+    "recipe_action": "ui-design-brief",
+    "questions": [
+      "@agent-directive: ui-design-brief",
+      "> Input: Tighten the spacing on the customer onboarding wizard.",
+      "> No design brief yet — producing one now. The brief locks layout, components, states, microcopy, and a11y before any code is written.",
+      "> 1. Continue — produce the brief from audit findings",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 3,
+    "exit_code": 1,
+    "directive": null,
+    "recipe_action": "_no_directive",
+    "questions": [
+      "> Input: Tighten the spacing on the customer onboarding wizard.",
+      "> Design brief is ready. Summary:",
+      "> - Components: 1",
+      "> - States covered: 5",
+      "> - Microcopy entries (locked): 4",
+      "> 1. Confirm — lock this brief and advance to apply",
+      "> 2. Revise — send feedback; loops back to ui-design-brief",
+      "> 3. Abort — drop this UI request",
+      "",
+      "**Recommendation: 1 — Confirm** — the brief covers all required slots and microcopy is final. Caveat: flip to 2 only if a string, state, or component is wrong; do not confirm strings you have not read."
+    ]
+  },
+  {
+    "cycle": 4,
+    "exit_code": 1,
+    "directive": "ui-apply-plain",
+    "recipe_action": "ui-apply-plain",
+    "questions": [
+      "@agent-directive: ui-apply-plain",
+      "> Stack: `plain`. Implementing the locked design brief.",
+      "> Microcopy is locked — every button label, empty-state message, and validation message must come verbatim from `state.ui_design.microcopy`.",
+      "> 1. Continue — implement the brief and write a `ui_apply` envelope back into state.ticket (rendered: {path: text}, files: [...])",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 5,
+    "exit_code": 1,
+    "directive": "ui-design-review-plain",
+    "recipe_action": "ui-design-review-plain",
+    "questions": [
+      "@agent-directive: ui-design-review-plain",
+      "> Stack: `plain`. Reviewing rendered components against the locked design brief.",
+      "> The review pass compares `state.ticket.ui_apply.rendered` against `state.ui_design` (microcopy, states, a11y, layout) and produces a structured `findings` list.",
+      "> 1. Continue — run the review and write `{findings: [...], review_clean: bool}` into `state.ui_review`",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 6,
+    "exit_code": 1,
+    "directive": "ui-polish-plain",
+    "recipe_action": "ui-polish-plain",
+    "questions": [
+      "@agent-directive: ui-polish-plain",
+      "> Stack: `plain`. Polish round 1 of 2.",
+      "> 1 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.",
+      "> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 7,
+    "exit_code": 1,
+    "directive": "ui-polish-plain",
+    "recipe_action": "ui-polish-plain",
+    "questions": [
+      "@agent-directive: ui-polish-plain",
+      "> Stack: `plain`. Polish round 2 of 2.",
+      "> 1 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.",
+      "> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 8,
+    "exit_code": 1,
+    "directive": null,
+    "recipe_action": "_no_directive",
+    "questions": [
+      "> Stack: `plain`. Polish ceiling reached (2/2 rounds).",
+      "> 1 finding(s) still open in `state.ui_review`. The engine refuses a third round.",
+      "> 1. Ship as-is — mark `state.ui_review.review_clean = True` and continue to `report` (the open findings stay in the delivery report)",
+      "> 2. Abort — drop this UI request",
+      "> 3. Hand off — a human picks up the remaining findings outside the engine; re-invoke `/work` only after they are resolved",
+      "",
+      "**Recommendation: 3 — Hand off** — two automated rounds failed to converge. Caveat: pick 1 only when the remaining findings are explicitly acceptable (low-priority polish, deferred to a follow-up)."
+    ]
+  },
+  {
+    "cycle": 9,
+    "exit_code": 1,
+    "directive": null,
+    "recipe_action": "_no_directive",
+    "questions": [
+      "> Stack: `plain`. Polish ceiling reached (2/2 rounds).",
+      "> 1 finding(s) still open in `state.ui_review`. The engine refuses a third round.",
+      "> 1. Ship as-is — mark `state.ui_review.review_clean = True` and continue to `report` (the open findings stay in the delivery report)",
+      "> 2. Abort — drop this UI request",
+      "> 3. Hand off — a human picks up the remaining findings outside the engine; re-invoke `/work` only after they are resolved",
+      "",
+      "**Recommendation: 3 — Hand off** — two automated rounds failed to converge. Caveat: pick 1 only when the remaining findings are explicitly acceptable (low-priority polish, deferred to a follow-up)."
+    ]
+  }
+]

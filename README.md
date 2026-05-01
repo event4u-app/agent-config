@@ -5,7 +5,7 @@ Teach your AI agents Laravel, PHP, testing, Git workflows, and **120+ more skill
 > Your agent learns to write Laravel code, run tests, create PRs, fix CI — and follows your team's coding standards while doing it.
 
 <p align="center">
-  <strong>124 Skills</strong> · <strong>46 Rules</strong> · <strong>73 Commands</strong> · <strong>46 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>128 Skills</strong> · <strong>53 Rules</strong> · <strong>77 Commands</strong> · <strong>46 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -69,7 +69,8 @@ Install directly in your agent for global, cross-project use:
 2. `"Add caching to this"` → watch: agent asks instead of guessing
 3. `"Implement this feature"` → watch: agent respects your codebase
 
-→ [Full getting started guide](docs/getting-started.md)
+→ [Full getting started guide](docs/getting-started.md) ·
+[More examples & expected behavior](docs/showcase.md)
 
 ### Optional: persistent agent memory
 
@@ -129,6 +130,67 @@ so you decide — never a silent guess. Persona comes from
 
 → [Command reference](.agent-src/commands/implement-ticket.md) ·
   [Flow contract](agents/contexts/implement-ticket-flow.md)
+
+### Sibling entrypoint: `/work` (free-form prompt)
+
+Same engine, different envelope. Use `/work` when you have a goal
+but no ticket yet:
+
+```
+/work add a CSV export endpoint to the audit-log controller
+```
+
+The first pass scores the prompt on five dimensions
+(`goal_clarity`, `scope_boundary`, `ac_evidence`, `stack_data`,
+`reversibility`) and routes on the resulting band:
+
+| Band | Score | Engine action |
+|---|---|---|
+| **high** | `≥ 0.8` | Silent proceed — reconstructed AC + assumptions land in the delivery report |
+| **medium** | `0.5–0.79` | Halts with assumptions report; you confirm or edit before plan |
+| **low** | `< 0.5` | Halts with **one** clarifying question on the weakest dimension |
+
+After the band gate releases, the rest of the flow is identical
+to `/implement-ticket`. UI-shaped prompts are routed through the
+**product UI track** — see below.
+
+→ [Command reference](.agent-src/commands/work.md) ·
+  [`refine-prompt` skill](.agent-src/skills/refine-prompt/SKILL.md) ·
+  [ADR](agents/contexts/adr-prompt-driven-execution.md)
+
+**Pick which one:** ticket id or pasted ticket payload → `/implement-ticket`.
+Free-form goal, no ticket → `/work`. The two share `.work-state.json`
+and refuse to switch envelopes mid-flight.
+
+### Product UI track
+
+UI-shaped work (build a screen, improve a component, fix microcopy)
+switches the engine to one of three directive sets:
+
+| `directive_set` | When | Flow |
+|---|---|---|
+| `ui` | Non-trivial UI surface | `audit → design → apply → review → polish → report` |
+| `ui-trivial` | Bounded edit (≤ 1 file, ≤ 5 changed lines) | `apply → test → report` |
+| `mixed` | Backend + UI | `contract → ui → stitch` |
+
+Four load-bearing properties: (1) **existing-UI audit is a hard gate** —
+no `apply` without audit, enforced at dispatcher AND
+[`ui-audit-before-build`](.agent-src/rules/ui-audit-before-build.md) rule;
+(2) **design brief is locked microcopy** — placeholders (`<placeholder>`,
+`Lorem`, `TODO:`) rejected at both ends; (3) **polish has a 2-round
+ceiling**, then halts ship-as-is / abort / hand-off; (4) **a11y precedence**
+— unresolved axe-core / pa11y violations must be fixed or explicitly
+accepted before ship, regardless of round counter (one-shot extension
+allowed). The engine never renders UI itself: rendering happens
+out-of-process, the engine consumes a `preview_envelope` (status /
+screenshots / findings) via a defined contract. Stack detection routes
+(`composer.json` + `package.json`) to `blade-livewire-flux` /
+`react-shadcn` / `vue` / `plain`; trivial path reclassifies loudly when
+preconditions fail. Halt budget on the happy path is 2.
+
+→ [Flow contract](agents/contexts/ui-track-flow.md) ·
+  [ADR](agents/contexts/adr-product-ui-track.md) ·
+  [Stack-extension recipe](agents/contexts/ui-stack-extension.md)
 
 ---
 
@@ -259,7 +321,7 @@ can prioritize the right skills for extraction.
 | [`/jira-ticket`](.agent-src/commands/jira-ticket.md) | Read ticket from branch, implement feature |
 | [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
 
-→ [Browse all 73 commands](.agent-src/commands/)
+→ [Browse all 77 commands](.agent-src/commands/)
 
 ---
 
@@ -284,7 +346,7 @@ Every developer gets the same behavior. No per-user setup needed.
 native slash-commands)
 
 > **What this means in practice:** Augment Code and Claude Code get the full
-> package (rules + 124 skills + 73 native commands). Cursor, Cline, Windsurf,
+> package (rules + 128 skills + 77 native commands). Cursor, Cline, Windsurf,
 > Gemini CLI, and GitHub Copilot only get the **rules** natively; skills and
 > commands are available to them as documentation the agent can read, not as
 > first-class features.
@@ -302,6 +364,23 @@ Works across all your projects. Auto-updates via marketplace.
 Skills use a `SKILL.md` format with YAML frontmatter that is compatible with
 the [Agent Skills](https://agentskills.io) community spec and with Claude
 Code's Agent Skills specification.
+
+### Cloud / Hosted-agent surfaces (paste-in or upload)
+
+For platforms where the package's scripts cannot run, the package
+builds artefacts you upload or paste into the platform's own surface.
+
+| Surface | Output | How to install |
+|---|---|---|
+| **Linear AI** (Codegen, Charlie, …) | `dist/linear/{workspace,team,personal}.md` | [Install →](docs/installation.md#linear-ai-codegen-charlie-) |
+| **Claude.ai Web Skills** | `dist/cloud/<skill>.zip` | [Install →](docs/installation.md#claudeai-web-skills-ui) |
+
+The Linear digest is split into three layers — workspace (universal
+coding posture), team (framework-specific), personal (empty stub). See
+[`agents/contexts/linear-ai-three-layers.md`](agents/contexts/linear-ai-three-layers.md)
+for the rationale and
+[`agents/contexts/linear-ai-rules-inclusion.md`](agents/contexts/linear-ai-rules-inclusion.md)
+for the per-rule routing.
 
 ---
 
@@ -330,6 +409,48 @@ Uninstalling: see
 [docs/installation.md#uninstalling](docs/installation.md#uninstalling) —
 there is no dedicated uninstall command; removal is a documented manual
 step (package manager + `rm -rf` of generated dirs).
+
+### Maintainer telemetry (opt-in, default-off)
+
+A local-only artefact-engagement log can be enabled by maintainers to see
+which skills, rules, commands, and guidelines the agent actually consults
+and applies during a `/implement-ticket` or `/work` run. The log is a
+JSONL file under the project root; nothing is uploaded, nothing is shared
+across projects. Default is off; consumers see no prompts.
+
+```yaml
+# .agent-settings.yml — opt in only when you want measurement
+telemetry:
+  artifact_engagement:
+    enabled: true
+```
+
+Reports: `./agent-config telemetry:report`. Full contract,
+privacy/redaction floor, and quartile semantics:
+[`agents/contexts/artifact-engagement-flow.md`](agents/contexts/artifact-engagement-flow.md).
+
+### Context-aware command suggestion
+
+When a user prompt matches a command's purpose ("setze ticket ABC-123 um"
+→ `/implement-ticket`), the agent surfaces matches as a numbered-options
+block with an always-present "run the prompt as-is" escape. **Nothing
+auto-executes** — the user picks every time. Three opt-out paths:
+
+```yaml
+# .agent-settings.yml
+commands:
+  suggestion:
+    enabled: true            # global on/off
+    blocklist: []            # specific commands never suggested
+    confidence_floor: 0.6    # tunable per command in frontmatter
+```
+
+Per-conversation: `/command-suggestion-off` disables the layer until
+the user re-enables or the chat ends. Full scoring contract and
+hardening list:
+[`agents/contexts/adr-command-suggestion.md`](agents/contexts/adr-command-suggestion.md)
+and
+[`agents/contexts/command-suggestion-flow.md`](agents/contexts/command-suggestion-flow.md).
 
 ---
 

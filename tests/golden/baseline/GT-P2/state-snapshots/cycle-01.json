@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Refactor power\n",
+      "reconstructed_ac": [
+        "should preserve the public signature of power(a, b)",
+        "must keep test_power_positive_base green after the edit"
+      ],
+      "assumptions": [
+        "touches src/calculator.py only",
+        "no behaviour change intended; docstring tightening"
+      ]
+    }
+  },
+  "intent": "backend-coding",
+  "directive_set": "backend",
+  "stack": null,
+  "ui_audit": null,
+  "ui_design": null,
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "blocked"
+  },
+  "questions": [
+    "@agent-directive: refine-prompt",
+    "> Prompt received: Refactor power",
+    "> No reconstructed acceptance criteria yet — running `refine-prompt` and resuming.",
+    "> 1. Continue — let the skill reconstruct AC + assumptions",
+    "> 2. Abort — the prompt is not what I meant"
+  ],
+  "report": ""
+}

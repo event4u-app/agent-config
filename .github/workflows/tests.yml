@@ -67,6 +67,16 @@ jobs:
         # the tests invoke via subprocess.
         run: pip install pytest pyyaml
 
+      - name: Golden Replay (R1 engine refactor freeze-guard)
+        # Replays each captured Golden Transcript against the live
+        # work_engine and asserts no structural drift. Surfaced as a
+        # named step so PR reviewers see the result at a glance instead
+        # of scanning 800+ test names. A failure here means the
+        # refactor regressed engine behavior — fix the engine, never
+        # the baseline. The full pytest sweep below re-runs this same
+        # file; the cost is sub-second, the visibility is the point.
+        run: python3 -m pytest tests/golden/test_replay.py -v
+
       - name: Run Python tests
         # pytest discovers every test module in tests/. Prevents new test
         # files from silently missing CI coverage.

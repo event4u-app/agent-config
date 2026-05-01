@@ -25,10 +25,8 @@ Every skill MUST have: `When to use`, `Procedure`, `Gotcha`, `Output format`, `D
 ## Frontmatter Contract
 
 Every skill's YAML frontmatter MUST validate against `scripts/schemas/skill.schema.json`.
-See [`agents/docs/frontmatter-contract.md`](../../../agents/docs/frontmatter-contract.md)
-for the human-readable contract across all artefact types. Violations are
-reported by `scripts/skill_linter.py` as `schema_<rule>` errors and fail
-`python3 scripts/validate_frontmatter.py` and the full CI pipeline.
+Violations are reported by `scripts/skill_linter.py` as `schema_<rule>` errors
+and fail `python3 scripts/validate_frontmatter.py` and the full CI pipeline.
 
 ## Description Triggering
 
@@ -47,10 +45,7 @@ Make descriptions "pushy" — explicit about when to fire:
   adjectives, drop the second example phrasing, or collapse a list — do
   **not** drop the trigger vocabulary or the `even if ...` tail.
 
-Source: [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md)
-— description-optimization guidance adopted via
-[`agents/roadmaps/archive/road-to-anthropic-alignment.md`](../../../agents/roadmaps/archive/road-to-anthropic-alignment.md)
-Phase 2.
+Source: [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md).
 
 **Litmus test:** Read the description cold, without the skill's body. If you
 cannot name at least two phrasings a user would realistically type that should

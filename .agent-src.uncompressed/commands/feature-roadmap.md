@@ -3,6 +3,10 @@ name: feature-roadmap
 skills: [agent-docs-writing]
 description: Generate implementation roadmap(s) from a feature plan and link them
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "turn this feature into a roadmap, generate the implementation roadmap"
+  trigger_context: "existing feature plan without linked roadmap"
 ---
 
 # feature-roadmap
@@ -172,6 +176,8 @@ What's next?
 ### Rules
 
 - **Do NOT commit or push.**
+- **Do NOT include commit steps in the roadmap** unless the user explicitly
+  requested them. See [`commit-policy`](../rules/commit-policy.md#never-write-commit-steps-into-roadmaps-unsolicited).
 - **Do NOT modify the feature plan** beyond updating the Roadmaps section and status.
 - **Always link roadmaps back to the feature** and vice versa.
 - **Use the roadmap template** from `agents/roadmaps/template.md`.

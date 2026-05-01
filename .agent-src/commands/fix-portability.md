@@ -2,6 +2,9 @@
 name: fix-portability
 description: Find and fix project-specific references in shared .augment/ package files
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Package-internal — only the event4u/agent-config repo runs this."
 ---
 
 # fix-portability

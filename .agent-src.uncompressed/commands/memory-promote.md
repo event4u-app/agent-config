@@ -3,6 +3,9 @@ name: memory-promote
 description: Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate.
 skills: [file-editor]
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Curation pipeline — overlaps /memory-add; keep explicit."
 ---
 
 # /memory-promote
@@ -23,7 +26,7 @@ entry.
   (`/bug-fix`, `/do-and-judge`, incident-role exit).
 - The user can name the intake `id` (e.g., `sig-abc123`). If not,
   route to the read side:
-  `python3 scripts/memory_lookup.py --types <type> --key <hint>` to
+  `./agent-config memory:lookup --types <type> --key <hint>` to
   surface candidates.
 
 ## Steps
@@ -40,7 +43,7 @@ entry.
 ### 2. Run the admission gate
 
 ```bash
-python3 scripts/check_memory_proposal.py --intake-id <sig-id>
+./agent-config memory:check-proposal --intake-id <sig-id>
 ```
 
 If the gate reports failures, show them to the user numbered and ask:
@@ -76,7 +79,7 @@ Compute the content hash and write a **one-entry file** at
 `agents/memory/<type>/<hash>.yml`:
 
 ```bash
-HASH=$(python3 scripts/memory_hash.py --yaml /tmp/draft.yml)
+HASH=$(./agent-config memory:hash --yaml /tmp/draft.yml)
 mkdir -p agents/memory/<type>
 mv /tmp/draft.yml agents/memory/<type>/${HASH}.yml
 ```
@@ -91,7 +94,7 @@ mv /tmp/draft.yml agents/memory/<type>/${HASH}.yml
   existence and refuse with a migration hint:
   `⚠️  agents/memory/<type>.yml exists — migrate to content-
   addressed first (`/memory-migrate <type>`)`.
-- **Schema validation** — run `python3 scripts/check_memory.py
+- **Schema validation** — run `./agent-config memory:check
   --path agents/memory/<type>/${HASH}.yml` before commit. On failure,
   delete the file and stop.
 
@@ -140,5 +143,3 @@ git push -u origin memory/promote-<curated-id>
 - [`/propose-memory`](propose-memory.md) — write-side entry point.
 - [`/memory-add`](memory-add.md) — direct curated write (skips intake).
 - [`engineering-memory-data-format`](../guidelines/agent-infra/engineering-memory-data-format.md)
-- [`road-to-agent-memory-integration`](../../../agents/roadmaps/road-to-agent-memory-integration.md)
-  — Phase 3.

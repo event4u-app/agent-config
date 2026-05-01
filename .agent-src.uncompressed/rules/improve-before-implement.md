@@ -41,6 +41,7 @@ Before coding, quickly verify:
 - Does it follow established patterns in the codebase?
 - Does it contradict existing conventions?
 - Do **multiple valid patterns/frameworks** already exist (e.g. Tailwind + Flux, multiple form libraries, competing state stores)? If yes, do NOT pick one arbitrarily — ask which to use.
+- Is the change a **second branch on the same discriminator** — second `match`/`switch` arm, second `if/elseif`, or second class hardcoded to one enum value (e.g. `Provider::FOO`, `'stripe'`)? If yes, run the Strategy sniff test before adding the branch — see [`guidelines/php/patterns/strategy.md`](../guidelines/php/patterns/strategy.md#sniff-test--when-an-enumstring-discriminator-wants-to-become-a-strategy).
 
 **If misfit** → show evidence (file references), propose alternative.
 **If multiple valid options** → list them, ask which to use. See [`no blind implementation`](../guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation).

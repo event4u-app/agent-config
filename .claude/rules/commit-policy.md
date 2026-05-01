@@ -1,0 +1,1 @@
+../../.agent-src/rules/commit-policy.md

@@ -251,45 +251,67 @@ def _yaml_scalar(value: str) -> str:
 def _replace_template_value(template: str, dotted_path: str, value: str) -> str:
     """Replace the default value for a dotted-path key in the YAML template.
 
-    Strategy: walk the template lines, track the current top-level
-    section, and replace the first matching line. Comments and indentation
-    are preserved.
+    Convenience wrapper: formats *value* as a YAML scalar (via
+    :func:`_yaml_scalar`) and delegates to :func:`_replace_template_value_raw`.
+    """
+    return _replace_template_value_raw(template, dotted_path, _yaml_scalar(value))
+
+
+def _replace_template_value_raw(template: str, dotted_path: str, raw_yaml: str) -> str:
+    """Replace the value at *dotted_path* with the pre-formatted *raw_yaml*.
+
+    Handles arbitrary nesting depth. The template uses 2-space indents;
+    parent sections are tracked by indent level so the leaf scalar is
+    only replaced when every parent matches the dotted path.
+
+    Comments and indentation are preserved. Returns *template* unchanged
+    if the path cannot be located.
     """
     parts = dotted_path.split(".")
-    if len(parts) == 1:
-        section, key = None, parts[0]
-    elif len(parts) == 2:
-        section, key = parts[0], parts[1]
-    else:
-        return template  # deeper nesting not supported in current schema
+    if not parts:
+        return template
+
+    sections = parts[:-1]
+    key = parts[-1]
+    target_indent = "  " * len(sections)
+
+    header_re = re.compile(r"^(\s*)([A-Za-z_][A-Za-z0-9_]*):\s*$")
+    scalar_re = re.compile(r"^(\s*)([A-Za-z_][A-Za-z0-9_]*):\s*\S.*$")
+
+    # Stack of section names by depth; None entries mean "not yet seen
+    # at this depth" or "left this section". For path a.b.c we need
+    # current_path == ['a', 'b'] when scanning for key 'c' at indent 4.
+    current_path: list[str | None] = [None] * len(sections)
 
     lines = template.splitlines()
-    current_section: "str | None" = None
-    section_re = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*):\s*$")
-    scalar_top_re = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*):\s*.*$")
-    scalar_sub_re = re.compile(r"^(\s+)([A-Za-z_][A-Za-z0-9_]*):\s*.*$")
-
-    replacement = _yaml_scalar(value)
     for idx, line in enumerate(lines):
-        # Top-level section header
-        m_section = section_re.match(line)
-        if m_section:
-            current_section = m_section.group(1)
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
             continue
-        if section is None:
-            # Top-level scalar target
-            m_top = scalar_top_re.match(line)
-            if m_top and m_top.group(1) == key and not line.startswith((" ", "\t")):
-                lines[idx] = f"{key}: {replacement}"
-                return "\n".join(lines) + ("\n" if template.endswith("\n") else "")
-        else:
-            if current_section != section:
-                continue
-            m_sub = scalar_sub_re.match(line)
-            if m_sub and m_sub.group(2) == key:
-                indent = m_sub.group(1)
-                lines[idx] = f"{indent}{key}: {replacement}"
-                return "\n".join(lines) + ("\n" if template.endswith("\n") else "")
+
+        m_header = header_re.match(line)
+        if m_header:
+            indent = m_header.group(1)
+            name = m_header.group(2)
+            depth = len(indent) // 2
+            if depth < len(sections):
+                current_path[depth] = name
+                # Reset deeper levels — we just entered a new sub-tree.
+                for d in range(depth + 1, len(sections)):
+                    current_path[d] = None
+            continue
+
+        m_scalar = scalar_re.match(line)
+        if not m_scalar:
+            continue
+        indent = m_scalar.group(1)
+        name = m_scalar.group(2)
+        if name != key or indent != target_indent:
+            continue
+        if current_path != list(sections):
+            continue
+        lines[idx] = f"{indent}{key}: {raw_yaml}"
+        return "\n".join(lines) + ("\n" if template.endswith("\n") else "")
     return template
 
 
@@ -436,6 +458,92 @@ def ensure_augment_bridge(project_root: Path, force: bool) -> None:
     merge_json_file(project_root / ".augment" / "settings.json", bridge, force, ".augment/settings.json")
 
 
+# Augment lifecycle hooks live at user scope (~/.augment/settings.json) per
+# https://docs.augmentcode.com/cli/hooks — that is the only path read by both
+# the CLI and the IDE plugins (VSCode, IntelliJ). Project-local
+# .augment/settings.json is plugin enablement, not hooks.
+AUGMENT_USER_DIR = Path.home() / ".augment"
+AUGMENT_USER_HOOKS_DIR = AUGMENT_USER_DIR / "hooks"
+AUGMENT_TRAMPOLINE_NAME = "augment-chat-history.sh"
+AUGMENT_HOOK_EVENTS = ("SessionStart", "SessionEnd", "Stop", "PostToolUse")
+
+
+def ensure_augment_user_hooks(package_root: Path, force: bool) -> None:
+    """Deploy the Augment lifecycle-hook trampoline at user scope.
+
+    Augment hook scripts must use the .sh extension and be referenced by
+    absolute path; user scope is the only surface that fires for both the
+    CLI and the IDE plugins. This installs once per developer (not per
+    project) — the trampoline reads workspace_roots from the event payload
+    and dispatches into whichever project is active at hook-fire time.
+    """
+    src = package_root / "scripts" / "hooks" / AUGMENT_TRAMPOLINE_NAME
+    if not src.exists():
+        skip(f"augment trampoline missing in package: {src}")
+        return
+
+    AUGMENT_USER_HOOKS_DIR.mkdir(parents=True, exist_ok=True)
+    dst = AUGMENT_USER_HOOKS_DIR / AUGMENT_TRAMPOLINE_NAME
+
+    src_text = src.read_text(encoding="utf-8")
+    if dst.exists() and dst.read_text(encoding="utf-8") == src_text and not force:
+        skip(f"~/.augment/hooks/{AUGMENT_TRAMPOLINE_NAME} already up to date")
+    else:
+        dst.write_text(src_text, encoding="utf-8")
+        dst.chmod(0o755)
+        success(f"~/.augment/hooks/{AUGMENT_TRAMPOLINE_NAME} installed")
+
+    hook_entry = {
+        "hooks": [
+            {
+                "type": "command",
+                "command": str(dst),
+            },
+        ],
+    }
+    settings_patch: dict = {"hooks": {event: [hook_entry] for event in AUGMENT_HOOK_EVENTS}}
+    merge_json_file(
+        AUGMENT_USER_DIR / "settings.json",
+        settings_patch,
+        force,
+        "~/.augment/settings.json",
+    )
+
+
+def _chat_history_hook_block(platform: str) -> dict:
+    """Single hook entry that calls ./agent-config chat-history:hook --platform <name>."""
+    return {
+        "hooks": [
+            {
+                "type": "command",
+                "command": f"./agent-config chat-history:hook --platform {platform}",
+            },
+        ],
+    }
+
+
+def ensure_claude_bridge(project_root: Path, force: bool) -> None:
+    """Deploy .claude/settings.json with plugin enablement and chat-history hooks.
+
+    Hooks dispatch to scripts/chat_history.py via the project-root ./agent-config
+    wrapper. They are no-ops when chat_history.enabled is false in
+    .agent-settings.yml. Idempotent: reruns merge cleanly without duplicating
+    entries (deep_merge replaces hook arrays rather than appending).
+    """
+    claude_hook = _chat_history_hook_block("claude")
+    bridge = {
+        "enabledPlugins": {"agent-conf@event4u": True},
+        "hooks": {
+            "SessionStart":     [claude_hook],
+            "UserPromptSubmit": [claude_hook],
+            "PostToolUse":      [claude_hook],
+            "Stop":             [claude_hook],
+            "SessionEnd":       [claude_hook],
+        },
+    }
+    merge_json_file(project_root / ".claude" / "settings.json", bridge, force, ".claude/settings.json")
+
+
 def ensure_copilot_bridge(project_root: Path, force: bool) -> None:
     target = project_root / ".github" / "plugin" / "marketplace.json"
 
@@ -474,6 +582,11 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument("--force", action="store_true", help="overwrite existing files")
     parser.add_argument("--skip-bridges", action="store_true", help="only create .agent-settings.yml")
+    parser.add_argument(
+        "--augment-user-hooks",
+        action="store_true",
+        help="also deploy ~/.augment/settings.json + ~/.augment/hooks/ (user-scope, all projects)",
+    )
     parser.add_argument("--project", default=None, help="project root (default: cwd or PROJECT_ROOT env)")
     parser.add_argument("--package", default=None, help="package root (default: auto-detect under project)")
     parser.add_argument("--quiet", action="store_true", help="suppress info/success output (warnings/errors still shown)")
@@ -516,7 +629,11 @@ def main(argv: list[str]) -> int:
     if not opts.skip_bridges:
         ensure_vscode_bridge(project_root, package_type, opts.force)
         ensure_augment_bridge(project_root, opts.force)
+        ensure_claude_bridge(project_root, opts.force)
         ensure_copilot_bridge(project_root, opts.force)
+
+    if opts.augment_user_hooks:
+        ensure_augment_user_hooks(package_root, opts.force)
 
     if not QUIET:
         print()

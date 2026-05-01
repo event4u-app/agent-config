@@ -1,0 +1,70 @@
+{
+  "ticket": {
+    "id": "GT-1-MULT",
+    "title": "Add multiply(a, b) to the toy calculator",
+    "acceptance_criteria": [
+      "Function signature is `multiply(a: int, b: int) -> int` and returns the integer product of the two arguments.",
+      "Edge cases covered: multiply(0, n) and multiply(n, 0) return 0; multiply(-2, 3) returns -6.",
+      "A pytest test `test_multiply_returns_product` lives in `tests/test_calculator.py` and exercises both the happy path and the negative-input edge case."
+    ]
+  },
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": [
+    {
+      "title": "Add multiply(a, b)",
+      "detail": "Append multiply(a: int, b: int) -> int to src/calculator.py"
+    },
+    {
+      "title": "Add multiply(a, b)",
+      "detail": "Append test_multiply_returns_product to tests/test_calculator.py"
+    },
+    {
+      "title": "Add multiply(a, b)",
+      "detail": "Run pytest to confirm the new test passes"
+    }
+  ],
+  "changes": [
+    {
+      "path": "src/calculator.py",
+      "purpose": "applied by GT recipe"
+    },
+    {
+      "path": "tests/test_calculator.py",
+      "purpose": "applied by GT recipe"
+    }
+  ],
+  "tests": {
+    "verdict": "success",
+    "scope": "targeted",
+    "exit_code": 0,
+    "targeted": "============================== 4 passed in <DURATION>s ==============================="
+  },
+  "verify": {
+    "verdict": "success",
+    "confidence": "high",
+    "judges": [
+      "bug-hunter",
+      "security",
+      "test-coverage",
+      "code-quality"
+    ],
+    "findings": []
+  },
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "success",
+    "implement": "success",
+    "test": "success",
+    "verify": "blocked"
+  },
+  "questions": [
+    "@agent-directive: review-changes ticket=GT-1-MULT",
+    "> Ticket GT-1-MULT — running the four-judge review (bugs, security, tests, code quality) before the delivery report is written.",
+    "> 1. Continue — run `review-changes` now",
+    "> 2. Abort — skip review (NOT recommended)"
+  ],
+  "report": ""
+}

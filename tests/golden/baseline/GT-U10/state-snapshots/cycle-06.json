@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Throw together a quick demo page for a one-off internal showcase next week.\n",
+      "reconstructed_ac": [],
+      "assumptions": [],
+      "ui_apply": {
+        "summary": "Bare demo page scaffolded with Tailwind defaults",
+        "rendered": {
+          "resources/views/demo/showcase.blade.php": "Internal showcase demo. Throwaway page for next week's review."
+        },
+        "files": [
+          "resources/views/demo/showcase.blade.php"
+        ]
+      }
+    }
+  },
+  "intent": "ui-improve",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": {
+    "greenfield": true,
+    "components_found": [],
+    "design_tokens": {},
+    "greenfield_decision": "bare",
+    "audit_path": "greenfield"
+  },
+  "ui_design": {
+    "layout": "single-column demo page, max-w-3xl, header + body",
+    "components": [
+      {
+        "name": "DemoPage",
+        "primitives": [
+          "heading",
+          "paragraph"
+        ]
+      }
+    ],
+    "states": {
+      "empty": "Initial render with heading and body copy",
+      "loading": "n/a — static page",
+      "error": "n/a — static page",
+      "success": "n/a — static page",
+      "disabled": "n/a — static page"
+    },
+    "microcopy": {
+      "title": "Internal showcase demo",
+      "body": "Throwaway page for next week's review."
+    },
+    "a11y": {
+      "labels": "h1 carries the page title",
+      "focus": "default browser focus order",
+      "aria_live": "n/a"
+    },
+    "reused_from_audit": [],
+    "design_confirmed": true
+  },
+  "ui_review": {
+    "findings": [],
+    "review_clean": true
+  },
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [
+    {
+      "kind": "ui",
+      "stack": "plain",
+      "file": "resources/views/demo/showcase.blade.php",
+      "summary": "Bare demo page scaffolded with Tailwind defaults"
+    }
+  ],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "success",
+    "implement": "success",
+    "test": "blocked"
+  },
+  "questions": [
+    "@agent-directive: ui-design-review-plain",
+    "> Stack: `plain`. Reviewing rendered components against the locked design brief.",
+    "> The review pass compares `state.ticket.ui_apply.rendered` against `state.ui_design` (microcopy, states, a11y, layout) and produces a structured `findings` list.",
+    "> 1. Continue — run the review and write `{findings: [...], review_clean: bool}` into `state.ui_review`",
+    "> 2. Abort — drop this UI request"
+  ],
+  "report": ""
+}

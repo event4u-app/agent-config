@@ -3,6 +3,10 @@ name: bug-fix
 skills: [bug-analyzer, pest-testing]
 description: Plan and implement a bug fix — based on investigation, with quality checks and test verification
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "fix this bug, patch the issue, resolve this error"
+  trigger_context: "branch name matches fix/* or bug/*"
 ---
 
 # bug-fix
@@ -71,8 +75,8 @@ RISIKO-CHECK:
 For each change:
 
 1. **Read the file** before modifying.
-2. **Make the change** using `str-replace-editor`.
-3. **Check for downstream effects** — use `codebase-retrieval` to find callers.
+2. **Make the change** with the file-edit tool available to the agent.
+3. **Check for downstream effects** — search the codebase for callers.
 4. **Update related code** if signatures or behavior changed.
 
 ### 4. Quality checks
@@ -142,7 +146,7 @@ If the root cause is a recognizable pattern (not a one-off typo),
 drop a `historical-patterns` signal so future work benefits:
 
 ```bash
-python3 scripts/memory_signal.py \
+./agent-config memory:signal \
     --type historical-patterns \
     --path "<primary affected file>" \
     --body "<root cause → fix, one sentence>" \

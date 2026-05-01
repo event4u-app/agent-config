@@ -3,6 +3,10 @@ name: roadmap-create
 skills: [agent-docs-writing]
 description: Interactively create a new roadmap file in agents/roadmaps/
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "create a roadmap for X, plan this work as a roadmap"
+  trigger_context: "multi-phase work without an existing agents/roadmaps/*.md"
 ---
 
 # roadmap-create
@@ -110,6 +114,9 @@ If yes → switch to the `roadmap-execute` command workflow with the newly creat
 
 - **Do NOT auto-generate content** — always ask the user for input.
 - **Do NOT commit or push.**
+- **Do NOT include commit steps in the roadmap** unless the user explicitly
+  requested them. See [`commit-policy`](../rules/commit-policy.md#never-write-commit-steps-into-roadmaps-unsolicited).
+  Roadmaps plan **work**; commits are a separate delivery decision.
 - **Write the roadmap in English** (per project convention for `.md` files).
 - Follow the roadmap template from `.augment/templates/roadmaps.md`.
 - Keep the file focused: 500–1000 lines max. If larger, suggest splitting.

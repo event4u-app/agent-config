@@ -3,6 +3,9 @@ name: package-reset
 skills: [composer, npm]
 description: /package-reset
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Package-internal destructive reset."
 ---
 
 # package-reset

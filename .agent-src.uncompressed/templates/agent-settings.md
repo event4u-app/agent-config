@@ -84,6 +84,15 @@ personal:
   # Personal preference — each developer decides for themselves.
   pr_comment_bot_icon: false
 
+  # Autonomous execution — suppress trivial workflow questions (on, off, auto)
+  # on   = act on the obvious next step; never ask "Step 2 or 3?", "should I commit?", etc.
+  # off  = ask trivial workflow questions (legacy behavior)
+  # auto = behaves like 'off' until the user says "arbeite selbstständig" / "work autonomously"
+  #        in the conversation, then switches to 'on' for the rest of the chat.
+  # Blocking decisions (security, scope expansion, push/merge/branch/PR) are NEVER suppressed.
+  # See rules/autonomous-execution.md for the full definition.
+  autonomy: auto
+
 # --- Project / team preferences ---
 project:
   # Path to the PR template file (relative to project root)
@@ -131,6 +140,74 @@ chat_history:
 
   # Overflow behavior: rotate (drop oldest) | compress (summarize)
   on_overflow: rotate
+
+  # Heartbeat marker visibility: on | off | hybrid
+  #   on     — print marker every reply (~20 tokens/reply, legacy)
+  #   off    — never print (zero tokens, no drift signal)
+  #   hybrid — print only on drift (missing/foreign/returning); silent otherwise
+  # YAML 1.1 booleanizes bare on/off — both are accepted, no quoting needed.
+  heartbeat: hybrid
+
+  # Population path: hook | checkpoint | manual
+  #   hook       — platform fires lifecycle hooks; agent observes only
+  #                (Claude Code, Augment CLI, Cursor 1.7+, Cline non-Windows,
+  #                 Windsurf, Gemini CLI). scripts/install.py wires hooks.
+  #   checkpoint — agent invokes /chat-history-checkpoint at phase boundaries
+  #                (Augment IDE plugin, Cursor < 1.7, Cline on Windows).
+  #                Cooperative three-gate Iron Law applies.
+  #   manual     — rule is inert (cloud surfaces). Persistence is local-only.
+  # Default `checkpoint` is the safest cooperative fallback. HOOK platforms
+  # set this to `hook` automatically when scripts/install.py merges the
+  # platform's settings file.
+  path: checkpoint
+
+# --- Work-engine hooks ---
+#
+# Lifecycle hook surface of the `work_engine` Python engine
+# (scripts/work_engine/). Hooks observe, validate, or persist around the
+# six CLI events (before_load, after_load, before_dispatch,
+# after_dispatch, before_save, after_save) and the dispatcher events
+# (before_step, after_step, on_halt). See agents/contexts/
+# work-engine-hooks.md for the full lifecycle and registration contract.
+#
+# Default-off by construction: when the `hooks:` block is absent the
+# registry stays empty and golden-replay flows are byte-stable. Enable
+# the master switch to opt in; per-hook flags then control individual
+# registration.
+hooks:
+  # Master switch — when false (default) the registry stays empty
+  # regardless of the per-hook fields below.
+  enabled: false
+
+  # TraceHook — emits per-event trace lines on stderr. Useful for
+  # debugging engine flow; off by default because it is noisy.
+  trace: false
+
+  # HaltSurfaceAuditHook — defense-in-depth check that every halt
+  # surfaced by the dispatcher carries the expected shape. Cheap.
+  halt_surface_audit: true
+
+  # StateShapeValidationHook — re-runs the state schema validator on
+  # AFTER_LOAD and BEFORE_SAVE. Cheap, catches drift between the
+  # in-memory state and the persisted JSON.
+  state_shape_validation: true
+
+  # DirectiveSetGuardHook — verifies the directive-set resolved by the
+  # dispatcher matches the input envelope's intent. Cheap, catches
+  # routing drift.
+  directive_set_guard: true
+
+  # Chat-history hooks — populate .agent-chat-history structurally from
+  # the engine. Gated by BOTH this block AND the global
+  # chat_history.enabled above; either off → no chat-history hook
+  # registers. Keep both on for the HOOK path; flip either off to fall
+  # back to the cooperative CHECKPOINT path.
+  chat_history:
+    enabled: true
+    # Override path to the chat-history CLI (defaults to
+    # scripts/chat_history.py). Only set this when the script lives
+    # outside the standard location.
+    # script: scripts/chat_history.py
 
 # --- Optional pipelines ---
 pipelines:
@@ -193,6 +270,58 @@ onboarding:
   # Set to true automatically by /onboard at the end. Flip to false
   # if you want to re-run the flow.
   onboarded: false
+
+# --- Command suggestion (numbered-options shortcut finder) ---
+#
+# When the user's free-form prompt matches an eligible slash command,
+# the agent surfaces a numbered-options block with the recommendation
+# plus an always-present "run as-is" option. The suggestion layer
+# never auto-executes — the user picks. See `rules/command-suggestion.md`.
+commands:
+  suggestion:
+    # Master switch (true, false). `false` = the layer is silent;
+    # explicit `/commands` still work as today.
+    enabled: true
+    # Minimum match score (0.0–1.0) before a suggestion surfaces.
+    confidence_floor: 0.6
+    # Cooldown in seconds between re-suggestions of the same
+    # (command, evidence) pair. Default 600 = 10m.
+    cooldown_seconds: 600
+    # Max number of command suggestions before the as-is option.
+    # The as-is option is always extra (total rendered = max_options + 1).
+    max_options: 4
+    # Commands to never suggest. Still work when typed explicitly.
+    blocklist: []
+
+# --- Telemetry (artefact engagement, default-off) ---
+#
+# Records — at task / phase-step boundaries — which artefacts (skills,
+# rules, commands, guidelines, personas) the agent consulted and
+# applied. Local only, append-only JSONL, never reaches a consumer
+# repo (gitignored). Maintainer-targeted feature; consumers leave it
+# off. See `agents/contexts/artifact-engagement-flow.md` (once Phase 3
+# of road-to-artifact-engagement-telemetry lands).
+telemetry:
+  artifact_engagement:
+    # Master switch. `false` (default) produces zero file IO and zero
+    # token cost. Flip to `true` only as a maintainer; the very first
+    # `record` call prints a one-line stderr warning to make accidental
+    # enables visible.
+    enabled: false
+    # `task` = one event per /implement-ticket or /work run.
+    # `phase-step` = one event per refine|memory|analyze|plan|implement|test|verify|report step.
+    # `tool-call` = one event per tool invocation; expensive, opt-in only.
+    granularity: task
+    # Which categories the agent records. Both default to `true`;
+    # flip individually if a maintainer wants applied-only or
+    # consulted-only data.
+    record:
+      consulted: true
+      applied: true
+    output:
+      # Append-only JSONL log. Path is relative to the project root.
+      # Always gitignored (see config/gitignore-block.txt).
+      path: .agent-engagement.jsonl
 ```
 
 ## Settings Reference
@@ -213,6 +342,7 @@ lives under `personal:` in YAML.
 | `personal.minimal_output` | `true`, `false` | `true` | When `true`: short bullet points during work, concise summary at end. When `false`: verbose explanations. |
 | `personal.play_by_play` | `true`, `false` | `false` | When `true`: share intermediate findings during investigation. When `false`: work silently, report only the conclusion. |
 | `personal.pr_comment_bot_icon` | `true`, `false` | `false` | Prefix PR comment replies with 🤖 to indicate bot-authored replies. Personal preference — each developer decides. |
+| `personal.autonomy` | `on`, `off`, `auto` | `auto` | Suppress trivial workflow questions and act on the obvious next step. `auto` defaults to `off` but flips to `on` after a prose opt-in like "arbeite selbstständig". `on` suppresses trivial questions unconditionally. Blocking decisions (security, scope expansion, push/merge/branch/PR/tag) are never suppressed. See `rules/autonomous-execution.md`. |
 | `project.pr_template` | file path | `.github/pull_request_template.md` | Path to PR template file. Read this instead of searching for it. |
 | `project.upstream_repo` | `org/repo` | _(empty)_ | Target repository for universal improvement PRs (e.g., `org/agent-config`). |
 | `project.improvement_pr_branch_prefix` | string | `improve/agent-` | Branch prefix for agent improvement PRs. |
@@ -222,6 +352,15 @@ lives under `personal:` in YAML.
 | `chat_history.frequency` | `per_turn`, `per_phase`, `per_tool` | per profile | Logging granularity. Defaults: `minimal`→`per_turn`, `balanced`→`per_phase`, `full`→`per_tool`. |
 | `chat_history.max_size_kb` | integer | per profile | Max file size before overflow handling. Defaults: `minimal`→`128`, `balanced`→`256`, `full`→`512`. |
 | `chat_history.on_overflow` | `rotate`, `compress` | per profile | On overflow: `rotate` drops oldest entries; `compress` marks the file for summarization on the next turn. Defaults: `minimal`/`balanced`→`rotate`, `full`→`compress`. |
+| `chat_history.heartbeat` | `on`, `off`, `hybrid` | `hybrid` | Visibility of the `📒 chat-history:` marker. `on` = every reply (~20 tokens), `off` = silent, `hybrid` = print only on drift states (`missing`/`foreign`/`returning`). YAML `on`/`off` accepted bare. |
+| `chat_history.path` | `hook`, `checkpoint`, `manual` | `checkpoint` | Population path. `hook` = platform fires lifecycle hooks; `checkpoint` = agent invokes `/chat-history-checkpoint` at phase boundaries; `manual` = rule inert (cloud). `scripts/install.py` flips this to `hook` when the platform's hook config is deployed. See [`agents/contexts/chat-history-platform-hooks.md`](../../../agents/contexts/chat-history-platform-hooks.md). |
+| `hooks.enabled` | `true`, `false` | `false` | Master switch for the work-engine hook layer. When `false` (default) the registry stays empty and golden replay is byte-stable. See [`agents/contexts/work-engine-hooks.md`](../../../agents/contexts/work-engine-hooks.md). |
+| `hooks.trace` | `true`, `false` | `false` | Emit per-event trace lines on stderr. Useful for debugging; off by default because it is noisy. |
+| `hooks.halt_surface_audit` | `true`, `false` | `true` | Defense-in-depth check that every halt surfaced by the dispatcher carries the expected shape. Cheap. |
+| `hooks.state_shape_validation` | `true`, `false` | `true` | Re-run the state schema validator on `AFTER_LOAD` and `BEFORE_SAVE`. Cheap, catches drift. |
+| `hooks.directive_set_guard` | `true`, `false` | `true` | Verify the dispatcher-resolved directive set matches the input envelope intent. Cheap, catches routing drift. |
+| `hooks.chat_history.enabled` | `true`, `false` | `true` | Register the four chat-history hooks (turn-check, append, halt-append, heartbeat). Gated by **both** this flag AND `chat_history.enabled`; either off → no chat-history hook registers. |
+| `hooks.chat_history.script` | path | `scripts/chat_history.py` | Override path to the chat-history CLI. Set only when the script lives outside the standard location. |
 | `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
 | `subagents.implementer_model` | model alias or empty | _(empty)_ | Model for implementer subagents. Empty = same tier as session model. See [subagent-configuration](../contexts/subagent-configuration.md). |
 | `subagents.judge_model` | model alias or empty | _(empty)_ | Model for judge subagents. Empty = one tier above implementer (opus if sonnet, sonnet if haiku). |
@@ -231,6 +370,16 @@ lives under `personal:` in YAML.
 | `personas.override` | list of persona ids | `[]` | Developer-local override of the team default lens cast. Empty = inherit `personas.default` from `.agent-project-settings.yml`. See [`layered-settings`](../guidelines/agent-infra/layered-settings.md). |
 | `personas.ignore` | list of persona ids | `[]` | Persona ids dropped from the default cast locally. Ignored personas stay invokable via `--personas=<id>`. |
 | `onboarding.onboarded` | `true`, `false` | `false` | Whether `/onboard` has run on this project. The `onboarding-gate` rule prompts for `/onboard` when this is `false`. Missing entirely = legacy project, treated as onboarded. |
+| `commands.suggestion.enabled` | `true`, `false` | `true` | Master switch for the command-suggestion layer. `false` = the layer is silent; explicit `/commands` still work. See `rules/command-suggestion.md`. |
+| `commands.suggestion.confidence_floor` | `0.0`–`1.0` | `0.6` | Minimum match score before a suggestion surfaces. Per-command frontmatter (`suggestion.confidence_floor`) overrides this global floor. |
+| `commands.suggestion.cooldown_seconds` | integer | `600` | Cooldown between re-suggestions of the same `(command, evidence)` pair. `600` = 10m. |
+| `commands.suggestion.max_options` | integer | `4` | Max number of command suggestions before the always-present "run as-is" option (total rendered = `max_options + 1`). |
+| `commands.suggestion.blocklist` | list of command names | `[]` | Commands that never appear as a suggestion. They still work when typed explicitly. |
+| `telemetry.artifact_engagement.enabled` | `true`, `false` | `false` | Master switch for the artefact engagement log. Default-off; zero file IO and zero token cost when `false`. Maintainer-targeted; consumers leave it off. |
+| `telemetry.artifact_engagement.granularity` | `task`, `phase-step`, `tool-call` | `task` | Boundary at which events are recorded. `tool-call` is expensive — opt-in only. |
+| `telemetry.artifact_engagement.record.consulted` | `true`, `false` | `true` | When `true`: record artefacts loaded into context. |
+| `telemetry.artifact_engagement.record.applied` | `true`, `false` | `true` | When `true`: record artefacts cited or driving a decision. |
+| `telemetry.artifact_engagement.output.path` | path | `.agent-engagement.jsonl` | Append-only JSONL log path, relative to the project root. Always gitignored. |
 
 ### Rename-Map (migration)
 

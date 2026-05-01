@@ -1,0 +1,28 @@
+[
+  {
+    "cycle": 1,
+    "exit_code": 1,
+    "directive": "refine-prompt",
+    "recipe_action": "refine-prompt",
+    "questions": [
+      "@agent-directive: refine-prompt",
+      "> Prompt received: should we drop the table?",
+      "> No reconstructed acceptance criteria yet — running `refine-prompt` and resuming.",
+      "> 1. Continue — let the skill reconstruct AC + assumptions",
+      "> 2. Abort — the prompt is not what I meant"
+    ]
+  },
+  {
+    "cycle": 2,
+    "exit_code": 1,
+    "directive": null,
+    "recipe_action": null,
+    "questions": [
+      "> Prompt: should we drop the table?",
+      "> Confidence: **low** (score 0.10). Weakest dimension: `goal_clarity` — goal_clarity=0: prompt is a question, no executable verb",
+      "> What is the single observable outcome you want?",
+      "> 1. I'll answer — paste the answer in chat and re-invoke `/work`",
+      "> 2. Abort — drop this prompt"
+    ]
+  }
+]

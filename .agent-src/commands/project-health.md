@@ -3,6 +3,10 @@ name: project-health
 skills: [quality-tools]
 description: Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "check project health, what's the state of my docs and modules"
+  trigger_context: "routine health check, no destructive intent"
 ---
 
 # project-health

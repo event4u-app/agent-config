@@ -1,0 +1,152 @@
+[
+  {
+    "gt_id": "GT-1",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 5
+  },
+  {
+    "gt_id": "GT-2",
+    "outcome": "halt_unhandled:_no_directive",
+    "exit_code": 1,
+    "cycles": 1
+  },
+  {
+    "gt_id": "GT-3",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 6
+  },
+  {
+    "gt_id": "GT-4",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 2
+  },
+  {
+    "gt_id": "GT-5",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 5
+  },
+  {
+    "gt_id": "GT-P1",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 6
+  },
+  {
+    "gt_id": "GT-P2",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 7
+  },
+  {
+    "gt_id": "GT-P3",
+    "outcome": "halt_unhandled:_no_directive",
+    "exit_code": 1,
+    "cycles": 2
+  },
+  {
+    "gt_id": "GT-P4",
+    "outcome": "halt_unhandled:existing-ui-audit",
+    "exit_code": 1,
+    "cycles": 1
+  },
+  {
+    "gt_id": "GT-U1",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 6
+  },
+  {
+    "gt_id": "GT-U2",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 6
+  },
+  {
+    "gt_id": "GT-U3",
+    "outcome": "cycle_cap_reached",
+    "exit_code": 1,
+    "cycles": 3
+  },
+  {
+    "gt_id": "GT-U4",
+    "outcome": "cycle_cap_reached",
+    "exit_code": 1,
+    "cycles": 9
+  },
+  {
+    "gt_id": "GT-U5",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 6
+  },
+  {
+    "gt_id": "GT-U6A",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 2
+  },
+  {
+    "gt_id": "GT-U6B",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 2
+  },
+  {
+    "gt_id": "GT-U7",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 3
+  },
+  {
+    "gt_id": "GT-U8",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 7
+  },
+  {
+    "gt_id": "GT-U9",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 7
+  },
+  {
+    "gt_id": "GT-U10",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 7
+  },
+  {
+    "gt_id": "GT-U11",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 2
+  },
+  {
+    "gt_id": "GT-U12",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 3
+  },
+  {
+    "gt_id": "GT-U13",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 7
+  },
+  {
+    "gt_id": "GT-U14",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 9
+  },
+  {
+    "gt_id": "GT-U15",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 7
+  }
+]

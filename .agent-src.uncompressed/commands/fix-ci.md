@@ -3,6 +3,10 @@ name: fix-ci
 skills: [github-ci, quality-tools]
 description: Fetch CI errors from GitHub Actions and fix them
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "CI is failing, fix the GitHub Actions errors, the pipeline is red"
+  trigger_context: "open PR with failing checks"
 ---
 
 # fix-ci

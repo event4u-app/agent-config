@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "should we drop the table?\n",
+      "reconstructed_ac": [
+        "needs a clarifying answer about which table is meant"
+      ],
+      "assumptions": []
+    }
+  },
+  "intent": "backend-coding",
+  "directive_set": "backend",
+  "stack": null,
+  "ui_audit": null,
+  "ui_design": null,
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "blocked"
+  },
+  "questions": [
+    "@agent-directive: refine-prompt",
+    "> Prompt received: should we drop the table?",
+    "> No reconstructed acceptance criteria yet — running `refine-prompt` and resuming.",
+    "> 1. Continue — let the skill reconstruct AC + assumptions",
+    "> 2. Abort — the prompt is not what I meant"
+  ],
+  "report": ""
+}

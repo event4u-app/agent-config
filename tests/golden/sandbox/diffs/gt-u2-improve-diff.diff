@@ -1,0 +1,12 @@
+diff --git a/resources/views/contact.blade.php b/resources/views/contact.blade.php
+--- a/resources/views/contact.blade.php
++++ b/resources/views/contact.blade.php
+@@ -1,6 +1,7 @@
+-<h1>Contact</h1>
++<h1>Contact us</h1>
+ <form method="POST" action="/contact">
+     @csrf
++    <label for="name">Your name</label>
+     <input type="text" name="name" required>
+     <button type="submit">Send</button>
+ </form>

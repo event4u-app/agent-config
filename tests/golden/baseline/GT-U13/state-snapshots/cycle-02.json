@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Add an accessible status banner to the dashboard header.\n",
+      "reconstructed_ac": [],
+      "assumptions": []
+    }
+  },
+  "intent": "ui-build",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": {
+    "components_found": [
+      {
+        "path": "resources/views/components/banners/status.blade.php",
+        "name": "banners.status",
+        "kind": "banner",
+        "similarity": 0.78
+      }
+    ],
+    "design_tokens": {
+      "spacing": {
+        "sm": "8px",
+        "md": "12px"
+      }
+    },
+    "audit_path": "high_confidence",
+    "candidate_pick": "banners.status",
+    "a11y_baseline": []
+  },
+  "ui_design": {
+    "layout": "horizontal banner under top nav, full-width",
+    "components": [
+      {
+        "name": "StatusBanner",
+        "primitives": [
+          "banners.status"
+        ]
+      }
+    ],
+    "states": {
+      "empty": "Banner hidden when no status to surface",
+      "loading": "Banner shows neutral spinner while message resolves",
+      "error": "Banner switches to danger variant on failures",
+      "success": "Banner switches to success variant on positive ack",
+      "disabled": "Banner muted while another modal owns focus"
+    },
+    "microcopy": {
+      "title": "System status",
+      "message": "All services operating normally.",
+      "buttons": {
+        "dismiss": "Dismiss"
+      }
+    },
+    "a11y": {
+      "labels": "banner has role=status with aria-live=polite",
+      "focus": "dismiss button reachable as last item in tab order",
+      "aria_live": "status changes announced via aria-live=polite"
+    },
+    "reused_from_audit": [
+      "banners.status"
+    ]
+  },
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "blocked"
+  },
+  "questions": [
+    "@agent-directive: ui-design-brief",
+    "> Input: Add an accessible status banner to the dashboard header.",
+    "> No design brief yet — producing one now. The brief locks layout, components, states, microcopy, and a11y before any code is written.",
+    "> 1. Continue — produce the brief from audit findings",
+    "> 2. Abort — drop this UI request"
+  ],
+  "report": ""
+}

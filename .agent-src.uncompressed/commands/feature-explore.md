@@ -3,6 +3,10 @@ name: feature-explore
 skills: [laravel]
 description: Brainstorm and explore a feature idea before committing to a full plan
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "brainstorm this idea, explore this feature concept"
+  trigger_context: "open-ended feature idea without acceptance criteria"
 ---
 
 # feature-explore

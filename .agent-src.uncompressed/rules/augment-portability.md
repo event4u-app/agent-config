@@ -94,6 +94,14 @@ consumer project the scripts live under `node_modules/` or `vendor/`.
 | `python3 .augment/scripts/update_roadmap_progress.py` | `./agent-config roadmap:progress` |
 | `python3 .augment/scripts/update_roadmap_progress.py --check` | `./agent-config roadmap:progress-check` |
 | `bash scripts/first-run.sh` | `./agent-config first-run` |
+| `PYTHONPATH=… python3 -m implement_ticket` | `./agent-config implement-ticket` |
+| `python3 scripts/memory_lookup.py` | `./agent-config memory:lookup` |
+| `python3 scripts/memory_signal.py` | `./agent-config memory:signal` |
+| `python3 scripts/memory_hash.py` | `./agent-config memory:hash` |
+| `python3 scripts/check_memory.py` | `./agent-config memory:check` |
+| `python3 scripts/check_memory_proposal.py` | `./agent-config memory:check-proposal` |
+| `python3 scripts/check_proposal.py` | `./agent-config proposal:check` |
+| `python3 scripts/refine_ticket_detect.py` | `./agent-config refine-ticket:detect` |
 
 Commands not covered by the CLI stay as direct script invocations
 (e.g. `bash scripts/compress.sh --sync`) — those are maintainer-only

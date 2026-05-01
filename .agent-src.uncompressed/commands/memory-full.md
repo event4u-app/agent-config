@@ -3,6 +3,9 @@ name: memory-full
 description: Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered
 skills: []
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Description states 'never auto-triggered' — opt-in deep-load only."
 ---
 
 # /memory-full
@@ -42,7 +45,7 @@ in the entry count and the signal-to-noise degrades fast on large types.
 Before loading, count the entries:
 
 ```bash
-python3 scripts/memory_lookup.py --types <type> --format json | \
+./agent-config memory:lookup --types <type> --format json | \
   python3 -c "import sys, json; print(len(json.load(sys.stdin)))"
 ```
 
@@ -59,7 +62,7 @@ If the count exceeds 25, warn:
 ### 3. Load
 
 ```bash
-python3 scripts/memory_lookup.py --types <type> --format yaml
+./agent-config memory:lookup --types <type> --format yaml
 ```
 
 Render the output verbatim, grouped by status (`active` first, then

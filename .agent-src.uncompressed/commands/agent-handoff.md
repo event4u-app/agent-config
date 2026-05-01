@@ -3,6 +3,9 @@ name: agent-handoff
 skills: [agent-docs-writing]
 description: Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Explicit fresh-chat handoff — must be deliberate, never inferred from prose."
 ---
 
 # /agent-handoff

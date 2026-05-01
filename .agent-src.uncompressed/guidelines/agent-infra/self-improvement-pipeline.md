@@ -129,7 +129,6 @@ unreviewed upstream changes is not.
 
 ## See also
 
-- [`road-to-curated-self-improvement.md`](../../../agents/roadmaps/road-to-curated-self-improvement.md) — roadmap this guideline implements
 - [`proposal.example.md`](../../templates/agents/proposal.example.md) — the template every proposal derives from
 - [`artifact-drafting-protocol`](../../rules/artifact-drafting-protocol.md) — Understand → Research → Draft sequence used inside Stage 3
 - [`preservation-guard`](../../rules/preservation-guard.md) — invoked by the gate to check replacement proposals

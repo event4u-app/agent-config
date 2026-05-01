@@ -3,6 +3,10 @@ name: estimate-ticket
 skills: [estimate-ticket]
 description: Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "how big is this ticket, estimate PROJ-123, should we split this"
+  trigger_context: "ticket key matching [A-Z]+-[0-9]+ in the prompt and no plan yet"
 ---
 
 # estimate-ticket
@@ -77,4 +81,3 @@ persona voices) plus the close-prompt. Stop there. Do **not** chain into
 - [`refine-ticket`](refine-ticket.md) — sibling; run first if the ticket is vague
 - [`jira-ticket`](jira-ticket.md) — ticket loader this command delegates to
 - [`feature-plan`](feature-plan.md) — downstream planning
-- [`road-to-ticket-refinement.md`](../../agents/roadmaps/road-to-ticket-refinement.md) — governing roadmap

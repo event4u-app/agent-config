@@ -1,7 +1,7 @@
 ---
 type: "auto"
 alwaysApply: false
-description: "Running CLI commands that produce verbose output — git, tests, linters, docker, build tools, artisan, npm, composer"
+description: "Running CLI commands that produce verbose output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk when installed; tail/grep is fallback."
 source: package
 ---
 
@@ -9,6 +9,28 @@ source: package
 
 Loaded when actively working with code, tests, quality tools, CLI, or analysis.
 For communication and response style rules → see the always-loaded `token-efficiency` rule.
+
+## Iron Law — rtk first, tail/grep fallback
+
+```
+IF `rtk` IS INSTALLED, WRAP VERBOSE COMMANDS WITH rtk.
+USE tail / grep / cat ONLY AS FALLBACK WHEN rtk HAS NO MATCHING SUBCOMMAND.
+NEVER PIPE A STILL-RUNNING LONG COMMAND THROUGH tail — IT BUFFERS TO EOF.
+```
+
+Detection: `rtk_installed: true` in `.agent-settings.yml`, or `which rtk`
+exits 0. Caching the result for the session is fine.
+
+| Verbose command | Use | Fallback (no rtk) |
+|---|---|---|
+| CI-style suites, full test runs | `rtk err <cmd>` — only errors/warnings | redirect → tail → grep |
+| Unit tests | `rtk test <cmd>` — only failures | redirect → tail → grep |
+| `git status`/`log`/`diff` | `rtk git <subcmd>` | plain |
+| `gh pr list`, `gh run view` | `rtk gh <subcmd>` | plain |
+| Generic noisy command | `rtk summary <cmd>` or `rtk err <cmd>` | redirect → tail |
+
+For the full rtk subcommand catalog and project-local filter setup → see
+the `rtk-output-filtering` skill.
 
 ## Codebase Navigation
 
@@ -38,9 +60,10 @@ For communication and response style rules → see the always-loaded `token-effi
 - **`view_range`** when you know the exact lines.
 - **One `codebase-retrieval` call** with all symbols — batch, not 5 separate calls.
 
-## Pattern: Redirect, Summarize, Target
+## Fallback Pattern: Redirect, Summarize, Target
 
-Every command that MAY produce more than ~30 lines of output:
+When `rtk` has no matching subcommand for the tool at hand, fall back to
+this pattern. Every command that MAY produce more than ~30 lines of output:
 
 ### Step 1: Redirect to file
 ```bash

@@ -3,6 +3,10 @@ name: fix-seeder
 skills: [eloquent]
 description: Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "the seeder is broken, foreign key errors in seeders"
+  trigger_context: "seeder error output or recent edits in database/seeders/"
 ---
 
 # fix-seeder

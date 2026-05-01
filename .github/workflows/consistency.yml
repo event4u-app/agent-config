@@ -6,9 +6,13 @@ on:
       - ".agent-src.uncompressed/**"
       - ".augment/**"
       - "agents/**"
+      - ".claude-plugin/marketplace.json"
       - "scripts/compress.py"
       - "scripts/compress.sh"
       - "scripts/check_references.py"
+      - "scripts/build_cloud_bundle.py"
+      - "scripts/build_linear_digest.py"
+      - "scripts/lint_marketplace.py"
       - "tests/**"
       - "Taskfile.yml"
       - ".github/workflows/consistency.yml"
@@ -20,9 +24,13 @@ on:
       - ".agent-src.uncompressed/**"
       - ".augment/**"
       - "agents/**"
+      - ".claude-plugin/marketplace.json"
       - "scripts/compress.py"
       - "scripts/compress.sh"
       - "scripts/check_references.py"
+      - "scripts/build_cloud_bundle.py"
+      - "scripts/build_linear_digest.py"
+      - "scripts/lint_marketplace.py"
       - "tests/**"
       - "Taskfile.yml"
       - ".github/workflows/consistency.yml"
@@ -72,6 +80,18 @@ jobs:
 
       - name: Check compression quality
         run: python3 scripts/check_compression.py
+
+      - name: Check Iron Law prominence
+        run: python3 scripts/check_iron_law_prominence.py
+
+      - name: Lint marketplace.json
+        run: task lint-marketplace
+
+      - name: Cloud bundle dry-run (source invariants)
+        run: task ci-cloud-bundle
+
+      - name: Linear digest dry-run (no per-rule drift, under budget)
+        run: task ci-linear-digest
 
       - name: Lint README
         run: python3 scripts/readme_linter.py README.md --root .

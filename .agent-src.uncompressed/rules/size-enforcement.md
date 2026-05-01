@@ -24,7 +24,5 @@ source: package
 
 → Size limits and details: `.augment/guidelines/agent-infra/size-and-scope.md`
 
-→ Frontmatter contract (required/optional keys per type):
-[`agents/docs/frontmatter-contract.md`](../../../agents/docs/frontmatter-contract.md).
-Schemas live in `scripts/schemas/` and are enforced by
+→ Frontmatter contract: schemas live in `scripts/schemas/` and are enforced by
 `python3 scripts/validate_frontmatter.py`.

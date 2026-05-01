@@ -8,6 +8,8 @@ Checks that compression preserved structural integrity:
 - All code blocks preserved exactly
 - YAML frontmatter identical
 - Word count reduction within healthy range (10-60%)
+- Iron Law sections (## Iron Law / ### Iron Law / ## The Iron Law / Iron Laws / numbered)
+  preserved per `preservation-guard`: heading verbatim at original level, ≤ 15% reduction
 
 Exit codes: 0 = clean, 1 = issues found, 3 = internal error
 """
@@ -60,6 +62,103 @@ def extract_frontmatter(text: str) -> str:
     return m.group(1).strip() if m else ""
 
 
+# Matches `## Iron Law`, `## The Iron Law`, `## Iron Laws`, `### Iron Law — …`,
+# `## Iron Law 1 — …`, etc. Any heading level 2-6.
+IRON_LAW_HEADING = re.compile(r"^(#{2,6})\s+(The\s+)?Iron Laws?\b")
+
+LIST_ITEM_RE = re.compile(r"^(?:[-*+]|\d+\.)\s")
+INNER_HEADING_RE = re.compile(r"^#{1,6}\s")
+
+
+def count_iron_law_structure(body: str) -> dict:
+    """Count structural units in an Iron Law body.
+
+    Returns counts of paragraphs (blank-line-separated prose blocks),
+    list items (bullet + numbered), and fenced code blocks. Caveman
+    compression may shorten word count freely; what must NOT change is
+    the count of these structural units. Each represents a passage of
+    the law that the source decided to keep.
+
+    Multi-line list items (bullet text wrapped to indented continuation
+    lines, no blank line between) count as ONE list item, not as a
+    list item plus a paragraph.
+    """
+    paragraphs = 0
+    list_items = 0
+    code_blocks = 0
+    in_code = False
+    state = "blank"  # "blank" | "paragraph" | "list"
+    for line in body.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            if not in_code:
+                code_blocks += 1
+            in_code = not in_code
+            state = "blank"
+            continue
+        if in_code:
+            continue
+        if not stripped:
+            state = "blank"
+            continue
+        if LIST_ITEM_RE.match(stripped):
+            list_items += 1
+            state = "list"
+            continue
+        if INNER_HEADING_RE.match(stripped):
+            state = "blank"
+            continue
+        # Indented non-empty line right after a list item is a wrap
+        # continuation of that item, not a new paragraph.
+        if state == "list" and line.startswith((" ", "\t")):
+            continue
+        if state != "paragraph":
+            paragraphs += 1
+            state = "paragraph"
+    return {"paragraphs": paragraphs, "list_items": list_items, "code_blocks": code_blocks}
+
+
+def extract_iron_law_sections(text: str) -> list[tuple[str, int, str]]:
+    """Return [(heading, level, body)] for each Iron Law section.
+
+    Body is everything after the heading until the next heading at the same
+    or higher (numerically lower) level — fenced code blocks included verbatim.
+    """
+    lines = text.splitlines()
+    sections: list[tuple[str, int, str]] = []
+    i = 0
+    in_code = False
+    while i < len(lines):
+        line = lines[i]
+        if line.strip().startswith("```"):
+            in_code = not in_code
+            i += 1
+            continue
+        if not in_code:
+            m = IRON_LAW_HEADING.match(line)
+            if m:
+                heading = line.rstrip()
+                level = len(m.group(1))
+                body_lines: list[str] = []
+                j = i + 1
+                inner_code = False
+                while j < len(lines):
+                    jline = lines[j]
+                    if jline.strip().startswith("```"):
+                        inner_code = not inner_code
+                    if not inner_code:
+                        hm = re.match(r"^(#{1,6})\s", jline)
+                        if hm and len(hm.group(1)) <= level:
+                            break
+                    body_lines.append(jline)
+                    j += 1
+                sections.append((heading, level, "\n".join(body_lines)))
+                i = j
+                continue
+        i += 1
+    return sections
+
+
 def check_pair(rel_path: str, source: str, compressed: str) -> List[Issue]:
     """Compare source and compressed versions of a file."""
     issues: List[Issue] = []
@@ -95,6 +194,46 @@ def check_pair(rel_path: str, source: str, compressed: str) -> List[Issue]:
             if block.replace(" ", "").replace("\n", "") != cmp_blocks[i].replace(" ", "").replace("\n", ""):
                 issues.append(Issue(rel_path, "modified_code_block", "error",
                                     f"Code block {i+1} content changed during compression"))
+
+    # Iron Law preservation — non-negotiable behavioral rules, see preservation-guard
+    src_laws = extract_iron_law_sections(source)
+    cmp_laws = extract_iron_law_sections(compressed)
+    cmp_law_map = {h: (lvl, body) for h, lvl, body in cmp_laws}
+    # Build a level-agnostic lookup so we can detect heading-level downgrades
+    # (`## Iron Law` → `### Iron Law`).
+    cmp_law_by_text = {h.lstrip("# ").strip(): (lvl, h, body)
+                       for h, lvl, body in cmp_laws}
+    for src_heading, src_level, src_body in src_laws:
+        src_text = src_heading.lstrip("# ").strip()
+        if src_heading not in cmp_law_map:
+            # Heading text may exist at a different level → downgrade
+            if src_text in cmp_law_by_text:
+                cmp_level, cmp_heading, _ = cmp_law_by_text[src_text]
+                if cmp_level != src_level:
+                    issues.append(Issue(rel_path, "iron_law_heading_downgrade", "error",
+                                        f"Iron Law heading level changed: "
+                                        f"{'#' * src_level} → {'#' * cmp_level} "
+                                        f"({src_heading.strip()})"))
+                    continue
+            issues.append(Issue(rel_path, "iron_law_missing", "error",
+                                f"Iron Law section removed during compression: "
+                                f"{src_heading.strip()}"))
+            continue
+        # Section exists at correct level — check structural-unit survival.
+        # Caveman compression is fine (drop articles, terse phrasing); what
+        # must NOT change is the count of paragraphs, list items, and code
+        # blocks. Each is a passage the source kept on purpose.
+        _, cmp_body = cmp_law_map[src_heading]
+        src_struct = count_iron_law_structure(src_body)
+        cmp_struct = count_iron_law_structure(cmp_body)
+        for kind, src_n in src_struct.items():
+            cmp_n = cmp_struct[kind]
+            if cmp_n < src_n:
+                issues.append(Issue(rel_path, "iron_law_passage_dropped", "error",
+                                    f"Iron Law section dropped "
+                                    f"{src_n - cmp_n} {kind} "
+                                    f"({src_n} → {cmp_n}): "
+                                    f"{src_heading.strip()}"))
 
     # Word count ratio
     src_words = len(source.split())

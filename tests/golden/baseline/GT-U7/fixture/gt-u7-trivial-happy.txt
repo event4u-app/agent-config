@@ -1,0 +1,1 @@
+Change the primary button color from blue to brand-red in `resources/views/components/button.blade.php`.

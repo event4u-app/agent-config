@@ -1,0 +1,59 @@
+{
+  "ticket": {
+    "id": "GT-5-NEG",
+    "title": "Add negate(a) to the toy calculator",
+    "acceptance_criteria": [
+      "Function signature is `negate(a: int) -> int` and returns `-a` for any integer input.",
+      "Edge cases covered: negate(0) returns 0; negate(-7) returns 7.",
+      "A pytest test `test_negate_returns_negation` lives in `tests/test_calculator.py` and pins both edge cases."
+    ]
+  },
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": [
+    {
+      "title": "Add negate(a)",
+      "detail": "Append negate(a: int) -> int to src/calculator.py"
+    },
+    {
+      "title": "Add negate(a)",
+      "detail": "Append test_negate_returns_negation to tests/test_calculator.py"
+    },
+    {
+      "title": "Add negate(a)",
+      "detail": "Run pytest to confirm both edge cases pass"
+    }
+  ],
+  "changes": [
+    {
+      "path": "src/calculator.py",
+      "purpose": "applied by GT recipe"
+    },
+    {
+      "path": "tests/test_calculator.py",
+      "purpose": "applied by GT recipe"
+    }
+  ],
+  "tests": {
+    "verdict": "success",
+    "scope": "targeted",
+    "exit_code": 0,
+    "targeted": "============================== 4 passed in <DURATION>s ==============================="
+  },
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "success",
+    "implement": "success",
+    "test": "blocked"
+  },
+  "questions": [
+    "@agent-directive: run-tests ticket=GT-5-NEG scope=targeted",
+    "> Ticket GT-5-NEG — running tests: targeted first (`--filter` on the changed paths), full suite only if targeted passes.",
+    "> 1. Continue — run targeted tests now",
+    "> 2. Abort — skip testing (NOT recommended)"
+  ],
+  "report": ""
+}

@@ -3,7 +3,12 @@ name: set-cost-profile
 description: Change the cost_profile in .agent-settings.yml — shows each profile's meaning and applies the selection
 skills: [file-editor]
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Settings mutation — must be deliberate."
 ---
+
+<!-- cloud_safe: noop -->
 
 # /set-cost-profile
 
@@ -92,6 +97,12 @@ steps here, that's the docs' job.
   this command reflects the new text on next run.
 - `custom` ignores the profile matrix — every per-feature toggle must be
   set explicitly afterwards. Warn the user when switching to `custom`.
+
+## Cloud Behavior
+
+On cloud surfaces (Claude.ai Web, Skills API) this command is **fully inert** —
+there is no `.agent-settings.yml` to write and no `cost_profile` toggle to
+flip. Cost behaviour on those surfaces is governed by the platform itself.
 
 ## See also
 

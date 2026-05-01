@@ -4,6 +4,8 @@ description: "Use when creating or editing a guideline in .agent-src.uncompresse
 source: package
 ---
 
+<!-- cloud_safe: degrade -->
+
 # guideline-writing
 
 ## When to use
@@ -134,6 +136,26 @@ Above the split signal, break by sub-topic into sibling files in the same folder
 * Do NOT embed numbered procedures — those belong in skills
 * Do NOT create an orphan guideline with no inbound links
 * Do NOT edit `.agent-src/guidelines/` or `.augment/guidelines/` — generated
+
+## Cloud Behavior
+
+On cloud surfaces (Claude.ai Web, Skills API) the package's
+`scripts/check_references.py`, `scripts/skill_linter.py`, and `task`
+runner are not reachable. The skill still applies — with prose-only
+validation:
+
+* Emit the full guideline file as a copyable Markdown block. Do not
+  attempt to write to disk.
+* Self-check the frontmatter: `description` only, no `type`, no
+  `alwaysApply`.
+* Self-check the body: reference material, no numbered procedures,
+  named in a topic folder.
+* Tell the user to save under
+  `.agent-src.uncompressed/guidelines/{topic}/{name}.md` and run
+  `task sync && task lint-skills && task check-refs` locally before
+  committing.
+* Do not call the linter, ref-checker, or compressor — they only
+  run on the user's machine.
 
 ## Examples
 

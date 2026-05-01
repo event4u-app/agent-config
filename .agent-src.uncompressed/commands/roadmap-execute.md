@@ -3,6 +3,10 @@ name: roadmap-execute
 skills: [agent-docs-writing]
 description: Read and interactively execute a roadmap from agents/roadmaps/
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "execute the roadmap, work through the roadmap step by step"
+  trigger_context: "existing agents/roadmaps/*.md referenced in the prompt"
 ---
 
 # roadmap-execute
@@ -61,7 +65,16 @@ For each open step:
 
 ### Rules
 
-- **Do NOT commit or push** — only apply local changes and update the roadmap file.
+- **Commits are governed by [`commit-policy`](../rules/commit-policy.md).**
+  By default: only apply local changes and update the roadmap file — no commits.
+  - If the roadmap **does not** contain explicit commit steps → never commit, never ask.
+  - If the roadmap **does** contain explicit commit steps:
+    - **Non-autonomous** (`personal.autonomy: off`, or `auto` before opt-in) →
+      ask before each commit step.
+    - **Autonomous** (`personal.autonomy: on`, or `auto` after opt-in) →
+      pre-scan the roadmap **before starting**, ask **once** upfront whether
+      to execute the listed commit steps, then proceed silently per the answer.
+- **Push, merge, branch, PR, tag** stay permission-gated by [`scope-control`](../rules/scope-control.md#git-operations--permission-gated).
 - **Always ask before implementing** a step — never auto-execute.
 - **Run quality checks** after each code change.
 - If a step is unclear or too large, suggest breaking it down further.

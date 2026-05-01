@@ -46,6 +46,15 @@ personal:
   # Personal preference — each developer decides for themselves.
   pr_comment_bot_icon: false
 
+  # Autonomous execution — suppress trivial workflow questions (on, off, auto)
+  # on   = act on the obvious next step; never ask "Step 2 or 3?", "should I commit?", etc.
+  # off  = ask trivial workflow questions (legacy behavior)
+  # auto = behaves like 'off' until the user says "arbeite selbstständig" / "work autonomously"
+  #        in the conversation, then switches to 'on' for the rest of the chat.
+  # Blocking decisions (security, scope expansion, push/merge/branch/PR) are NEVER suppressed.
+  # See rules/autonomous-execution.md for the full definition.
+  autonomy: auto
+
 # --- Project / team preferences ---
 project:
   # Path to the PR template file (relative to project root)
@@ -96,6 +105,13 @@ chat_history:
   #   compress = mark for summarization on the next agent turn
   on_overflow: __CHAT_HISTORY_ON_OVERFLOW__
 
+  # Heartbeat marker visibility (token-cost knob)
+  #   on     = print the 📒 marker every reply (~20 tokens/reply, legacy)
+  #   off    = never print (zero tokens, drift only visible by reading the file)
+  #   hybrid = print only on drift states (missing/foreign/returning); silent otherwise
+  # YAML 1.1 booleanizes bare on/off — both are accepted, no quoting needed.
+  heartbeat: hybrid
+
 # --- Optional pipelines ---
 pipelines:
   # Skill improvement pipeline (true, false)
@@ -133,3 +149,32 @@ onboarding:
   # Set to true automatically by /onboard at the end. Flip to false if
   # you want to re-run the flow.
   onboarded: false
+
+# --- Command suggestion (numbered-options shortcut finder) ---
+#
+# When the user's free-form prompt matches an eligible slash command,
+# the agent surfaces a numbered-options block with the recommendation
+# plus an always-present "run as-is" option. The suggestion layer
+# never auto-executes — the user picks. See rules/command-suggestion.md.
+commands:
+  suggestion:
+    # Master switch (true, false). false = the layer is silent; explicit
+    # /commands still work as today.
+    enabled: true
+
+    # Minimum match score (0.0–1.0) before a suggestion surfaces.
+    # 0.6 = default; raise to 0.7 for stricter behaviour, lower to 0.5
+    # if too many useful suggestions are being suppressed.
+    confidence_floor: 0.6
+
+    # Cooldown in seconds between re-suggestions of the same
+    # (command, evidence) pair. Default 600s = 10m.
+    cooldown_seconds: 600
+
+    # Max number of command suggestions before the as-is option.
+    # The as-is option is always extra (so total = max_options + 1).
+    max_options: 4
+
+    # Commands to never suggest. Still work when typed explicitly.
+    # Example: ["/refine-ticket", "/work"]
+    blocklist: []

@@ -3,6 +3,10 @@ name: context-refactor
 skills: [agent-docs-writing]
 description: Analyze, update, and extend an existing context document
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "update the context doc, refresh this context document"
+  trigger_context: "existing agents/contexts/*.md referenced in the prompt"
 ---
 
 # context-refactor

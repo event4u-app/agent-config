@@ -1,0 +1,105 @@
+name: Cloud Release
+
+# On every pushed version tag, build the cloud-distribution artefacts
+# (Claude.ai Web Skill ZIPs + Linear AI digest) and attach them to the
+# GitHub Release. Tags are created by `scripts/release.py` (invoked via
+# `task release`) — this workflow is purely additive: it does not tag,
+# does not bump, does not publish to package registries.
+#
+# Companion to publish-npm.yml. Both run on the same tag triggers; this
+# one targets cloud / hosted-agent surfaces (Claude.ai Web, Linear AI),
+# publish-npm.yml targets the npm registry path.
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+-*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to build cloud bundles for (e.g. 1.10.0). Used only when the workflow file was missing at tag-push time.'
+        required: true
+        type: string
+
+permissions:
+  contents: write  # required to attach artefacts to the GitHub Release
+
+jobs:
+  build-cloud-artefacts:
+    name: Build & publish cloud artefacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out released tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Resolve tag name
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "name=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build Claude.ai Web cloud bundles (dist/cloud/*.zip)
+        run: |
+          python3 scripts/build_cloud_bundle.py --all --clean
+          echo "=== bundle inventory ==="
+          ls -la dist/cloud/
+          count=$(find dist/cloud -name '*.zip' | wc -l | tr -d ' ')
+          echo "cloud_bundle_count=$count" >> "$GITHUB_ENV"
+          if [ "$count" = "0" ]; then
+            echo "::error::no cloud bundles produced — build_cloud_bundle.py emitted zero ZIPs"
+            exit 1
+          fi
+
+      - name: Build Linear AI digest (dist/linear/*.md)
+        run: |
+          python3 scripts/build_linear_digest.py --strict-missing
+          echo "=== digest inventory ==="
+          ls -la dist/linear/
+          for layer in workspace team personal; do
+            f="dist/linear/${layer}.md"
+            if [ ! -f "$f" ]; then
+              echo "::error::missing Linear digest layer: $f"
+              exit 1
+            fi
+          done
+
+      - name: Stage release artefacts
+        run: |
+          mkdir -p artefacts
+          # Cloud bundles: keep one ZIP per skill, plus a combined tarball
+          # for users who want everything in one shot.
+          cp dist/cloud/*.zip artefacts/
+          tar -czf "artefacts/cloud-bundles-${{ steps.tag.outputs.name }}.tar.gz" -C dist/cloud .
+          # Linear digest: ship the three layers as-is plus a combined
+          # tarball mirror of the cloud layout.
+          cp dist/linear/*.md artefacts/
+          tar -czf "artefacts/linear-digest-${{ steps.tag.outputs.name }}.tar.gz" -C dist/linear .
+          echo "=== final artefact set ==="
+          ls -la artefacts/
+
+      - name: Upload as workflow artefact (debugging fallback)
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloud-release-${{ steps.tag.outputs.name }}
+          path: artefacts/
+          retention-days: 30
+
+      - name: Attach artefacts to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          files: artefacts/*
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

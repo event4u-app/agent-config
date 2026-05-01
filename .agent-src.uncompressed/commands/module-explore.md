@@ -3,6 +3,10 @@ name: module-explore
 skills: [laravel]
 description: Explore a module — load its structure, docs, and context into the current conversation
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "show me the X module, load the module context"
+  trigger_context: "existing Modules/<Name>/ referenced in the prompt"
 ---
 
 # module-explore

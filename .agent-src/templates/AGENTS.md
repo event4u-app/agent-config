@@ -34,12 +34,30 @@
 
 ### Recommended entry flow
 
-For most tickets — feature, bug fix, or refactor — start with
-[`/implement-ticket`](.augment/commands/implement-ticket.md). It drives the
-linear flow `refine → memory → analyze → plan → implement → test → verify →
-report` with block-on-ambiguity semantics and no auto-git. Persona comes from
-`.agent-settings.yml` (`roles.active_role`). Use `/commit` and `/create-pr`
-explicitly after the delivery report.
+Two entrypoints share the same engine and Option-A loop; pick by input shape:
+
+| You have | Command | Envelope |
+|---|---|---|
+| Ticket id, URL, or pasted ticket payload | [`/implement-ticket`](.augment/commands/implement-ticket.md) | `input.kind="ticket"` |
+| Free-form goal, no ticket | [`/work`](.augment/commands/work.md) | `input.kind="prompt"` |
+
+Both drive the linear flow `refine → memory → analyze → plan → implement →
+test → verify → report` with block-on-ambiguity semantics and no auto-git.
+
+`/work` adds a confidence-band gate at `refine`: the
+[`refine-prompt`](.augment/skills/refine-prompt/SKILL.md) skill scores the
+prompt on five dimensions and the engine proceeds **silently** on `high`,
+halts with an **assumptions report** on `medium`, or halts with **one
+clarifying question** on `low` (per the `ask-when-uncertain` Iron Law).
+UI-shaped prompts route through the product UI track (`directive_set`
+`ui` / `ui-trivial` / `mixed`) — `audit → design → apply → review →
+polish` with a hard audit gate before any `apply`.
+
+Persona comes from `.agent-settings.yml` (`roles.active_role`). Use
+`/commit` and `/create-pr` explicitly after the delivery report. The two
+flows are mutually exclusive at the state-file level: one
+`.work-state.json` carries one envelope at a time; the engine refuses to
+switch mid-flight.
 
 ### Multi-Agent Support
 

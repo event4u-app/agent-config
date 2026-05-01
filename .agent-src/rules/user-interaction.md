@@ -7,10 +7,72 @@ source: package
 
 # User Interaction
 
+Two Iron Laws govern every reply that contains numbered options. They
+override conversation momentum, brevity, and the urge to defer to the
+user. **Missing a recommendation is a rule violation, not a slip.**
+
+## Iron Law 1 — Single-Source Recommendation
+
+```
+EXACTLY ONE LINE NAMES THE RECOMMENDED NUMBER. NO INLINE TAG. NO SECOND PROSE NUMBER.
+THE OPTION BLOCK STAYS NEUTRAL. THE RECOMMENDATION LINE IS THE ONLY SOURCE OF TRUTH.
+DRIFT BETWEEN OPTION-BLOCK AND PROSE IS STRUCTURALLY IMPOSSIBLE WHEN THE TAG DOES NOT EXIST.
+MISSING RECOMMENDATION = RULE VIOLATION, NOT A SLIP.
+```
+
+The agent has read the code, the contracts, the trade-offs. Refusing
+to take a position dumps that work back on the user. Take the
+position; be wrong out loud if needed. "Egal, was bevorzugst Du?" /
+"no preference" is NEVER acceptable.
+
+**Format — non-negotiable:**
+
+- Options block stays NEUTRAL — no `(recommended)`, no `(rec)`, no `←`, no bold, no checkmark.
+- Directly after the options block, ONE line, bolded, in the user's language:
+  - English: `**Recommendation: N — <option-name>** — <why>. Caveat: <flip-condition>.`
+  - German:  `**Empfehlung: N — <option-name>** — <warum>. Caveat: <flip-bedingung>.`
+- Other numbers MAY appear later in the prose, but ONLY as caveats
+  (`escalate to 3 if …`, `flip to 1 when …`). NEVER as a primary recommendation.
+- If the agent genuinely cannot pick (rare — true 50/50 with missing data),
+  say what data would break the tie and ask for that instead.
+
+**What does NOT count as a recommendation:**
+
+- "Both work" / "either is fine" / "depends on what you prefer"
+- Listing pros and cons without picking a number
+- "I'd lean towards X" without a reason
+- Hiding behind "you know the project better"
+- Inline `(recommended)` tag with no follow-up `Recommendation: N` line
+
+**Slip handling — same protocol as [`language-and-tone`](language-and-tone.md#when-the-user-calls-out-a-language-slip).**
+User calls out a missing or wrong recommendation → acknowledge once
+in the user's language, rewrite the reply with a recommendation,
+ship. No "from now on" promises — only the next reply proves
+compliance.
+
+## Iron Law 2 — Pre-Send Self-Check
+
+```
+EVERY REPLY WITH NUMBERED OPTIONS RUNS THE SELF-CHECK. NO EXCEPTIONS.
+SKIPPING IT IS A RULE VIOLATION, NOT A SLIP.
+```
+
+Before emitting any reply that contains numbered options, scan the
+drafted text:
+
+1. Count occurrences of `(recommended)` / `(rec)` / `(empfohlen)` inline next to a numbered option → MUST be **zero**. Found one → rewrite, drop the tag.
+2. Count distinct `Recommendation:\s*N` / `Empfehlung:\s*N` lines (case-insensitive) → MUST be **exactly one**. Zero → add one. Two or more distinct numbers → rewrite, pick one.
+3. The number on the recommendation line MUST exist in the option block.
+
+Mechanical backstop: `python3 scripts/check_reply_consistency.py --stdin < draft.md`
+(non-zero exit on any rule above). Self-scan is the primary gate; the
+script is the deterministic safety net for ambiguous cases.
+
 ## Numbered Options — Always
 
-When asking the user a question with predefined choices, **always present numbered options**.
-The user should be able to reply with just a number (e.g., `1`) instead of typing a sentence.
+When asking the user a question with predefined choices, **always
+present numbered options**. The user should be able to reply with
+just a number (e.g., `1`) instead of typing a sentence.
 
 ### Format
 
@@ -18,6 +80,8 @@ The user should be able to reply with just a number (e.g., `1`) instead of typin
 > 1. First option — brief explanation
 > 2. Second option — brief explanation
 > 3. Third option — brief explanation
+
+**Recommendation: 2 — Second option** — <one-sentence reason>. Caveat: <flip-condition>.
 ```
 
 ### Rules
@@ -25,77 +89,45 @@ The user should be able to reply with just a number (e.g., `1`) instead of typin
 - **Every question with choices** must use numbered options — no exceptions.
 - **Keep options short** — one line each, with a brief explanation after the dash.
 - **Always include a "skip" or "no change" option** when applicable.
-- **Always state a recommendation** — see iron law below.
+- **Always state a recommendation** — Iron Law 1 above.
 - **Use the user's language** for the question and options.
 - **Accept both** the number and a natural language answer (e.g., "1" or "the first one").
 
-### Iron Law — ALWAYS recommend
-
-```
-EVERY numbered-option question MUST state which option the agent recommends and WHY.
-"Egal, was bevorzugst Du?" / "no preference" is NEVER an acceptable agent stance.
-```
-
-The user is asking the agent because the agent has read the code, the
-contracts, the trade-offs. Refusing to take a position dumps that work
-back on the user. Take the position; be wrong out loud if needed.
-
-**Format:**
-
-- Mark the recommended option inline: `1. Do X — short explanation (recommended)`.
-- After the option block, state **WHY** in 1–3 sentences: the trade-off
-  that tips the balance, plus the **caveat** that would flip it.
-- If the agent genuinely cannot pick (rare — true 50/50 with missing
-  data), say what data would break the tie and ask for that instead.
-
-**Example:**
-
-```
-> 1. Hybrid contract — keys + query (recommended)
-> 2. Key-based — extend the package
-> 3. Semantic — change all call sites
-
-I recommend 1: solves the acute consult-flow without a cross-repo PR,
-and the file-fallback stays trivial. Caveat — if hit-rate on the
-concat-shim turns out poor in practice, escalate to 2.
-```
-
-**What does NOT count as a recommendation:**
-
-- "Both work" / "either is fine" / "depends on what you prefer"
-- Listing pros and cons without picking
-- "I'd lean towards X" without a reason
-- Hiding behind "you know the project better" (the agent just researched it)
-
 ### Examples
 
-**Binary choice (with recommendation):**
+**Binary choice:**
+
 ```
-> 1. Interactive — ask before each comment (recommended)
+> 1. Interactive — ask before each comment
 > 2. Automatic — handle all independently
 
-I recommend 1: the comments touch security-sensitive code, so a wrong
-auto-fix is more expensive than the friction of approving each one.
-Switch to 2 if the comments turn out to be pure formatting.
+**Recommendation: 1 — Interactive** — the comments touch security-sensitive code,
+so a wrong auto-fix is more expensive than approving each one. Caveat: flip to 2
+if the comments turn out to be pure formatting.
 ```
 
-**Multiple choice with skip (with recommendation):**
+**Multiple choice with skip:**
+
 ```
-> 1. Fix the code (recommended)
+> 1. Fix the code
 > 2. Fix the test
 > 3. Skip
 
-I recommend 1: the test is asserting the documented behavior; the
-production code drifted from the contract. Pick 2 only if the contract
+**Recommendation: 1 — Fix the code** — the test asserts the documented behaviour;
+the production code drifted from the contract. Caveat: pick 2 only if the contract
 itself is wrong.
 ```
 
-**Confirmation with context (recommendation implicit in framing):**
+**Confirmation with context:**
+
 ```
 > Found PR #1399 on branch `chore/refactor-agent-setup-2`.
 >
-> 1. Yes, that's the right PR (recommended — branch matches)
+> 1. Yes, that's the right PR
 > 2. No, different PR — I'll provide the URL
+
+**Recommendation: 1 — Yes** — the branch name matches the PR title exactly.
+Caveat: flip to 2 if the PR was reopened from a different branch.
 ```
 
 ### When NOT to use numbered options

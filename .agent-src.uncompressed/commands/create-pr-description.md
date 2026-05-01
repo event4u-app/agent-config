@@ -3,6 +3,10 @@ name: create-pr-description
 skills: [git-workflow]
 description: Generate a PR description as a copyable markdown block — used standalone or by create-pr
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "write a PR description, draft the PR text"
+  trigger_context: "PR exists or branch ready for review without description"
 ---
 
 # create-pr-description

@@ -5,6 +5,8 @@ alwaysApply: true
 source: package
 ---
 
+<!-- cloud_safe: noop -->
+
 # Chat History
 
 Persists the conversation to `.agent-chat-history` (JSONL, project root,
@@ -12,160 +14,187 @@ git-ignored) so a crashed or switched agent session can be resumed. File
 I/O is owned by [`scripts/chat_history.py`](../../../scripts/chat_history.py)
 — this rule says **when** to call it, not how the file is structured.
 
-## Activation
+## Two paths — platform decides which Iron Law applies
 
-Read `chat_history.*` from `.agent-settings.yml` **once per conversation**
-(first turn). Cache the values.
+Population of `.agent-chat-history` is **structural** (platform-driven)
+on platforms with native lifecycle hooks, and **cooperative**
+(agent-driven) on platforms without. Both paths converge on the same
+JSONL schema; only the trigger differs. Per-platform classification
+lives in
+[`agents/contexts/chat-history-platform-hooks.md`](../../../agents/contexts/chat-history-platform-hooks.md).
 
-- `chat_history.enabled: false` **or** section missing → rule is a **no-op**
-  for the whole conversation. Do not read, write, or mention the file.
-- `chat_history.enabled: true` → cache `frequency`, `max_size_kb`,
-  `on_overflow` and proceed to the first-turn handshake.
+| Path | Platforms / Surfaces | Trigger | Agent's role |
+|---|---|---|---|
+| **HOOK** | Claude Code, Augment CLI, Cursor 1.7+, Cline non-Windows, Windsurf, Gemini CLI | Platform fires native lifecycle hooks → `./agent-config chat-history:hook --platform <name>` | Read-only — observe, do not duplicate appends |
+| **ENGINE** | `/implement-ticket`, `/work`, any flow driven by `scripts/work_engine/cli.py` | `work_engine` fires `turn-check` (before-dispatch), `append --type phase` (per successful step), `--type decision` (on-halt), `heartbeat` (after-dispatch) via the hook layer | Read-only during engine-driven turns — do not duplicate appends. See [`agents/contexts/work-engine-hooks.md`](../../../agents/contexts/work-engine-hooks.md) |
+| **CHECKPOINT** | Augment IDE plugin, Cursor < 1.7, Cline on Windows | Agent invokes `/chat-history-checkpoint` at phase boundaries | Cooperative — the three gates below are mandatory |
+| **MANUAL** | Cloud surfaces (Claude.ai Web, Skills API) | Rule is inert — see Cloud Behavior | None |
 
-## First-turn handshake — four states
+Detect the path on first turn: read `chat_history.platform` from
+`.agent-settings.yml` if set, else fall back to `chat_history.path`
+(`hook` / `checkpoint` / `manual`). Missing both → assume CHECKPOINT
+(safest cooperative default; HOOK platforms install the platform
+config explicitly via `scripts/install.py`).
 
-Before executing the user's request, run:
+## Iron Law (CHECKPOINT path) — three gates, skipping any one is a rule violation
 
-```bash
-scripts/chat_history.py state --first-user-msg "<msg>"
+```
+1. turn-check    — first tool call of every session
+2. append        — at every cadence boundary, with --first-user-msg
+3. heartbeat     — last line of every reply, from current subprocess
+                   stdout (NEVER from memory)
 ```
 
-It prints exactly one of `match` | `returning` | `foreign` | `missing`.
-Branch:
+**Overrides** token-efficiency, conversation momentum, "the turn was
+trivial". Three enforcement layers: **turn-check** non-zero on
+`missing`/`foreign`/`returning`, **append refusal** (exit `3` on
+ownership mismatch), **script-generated heartbeat** (silent skip
+becomes immediately visible).
 
-- `missing` → `init --first-user-msg "<msg>" --freq <frequency>`. Proceed
-  silently.
-- `match` → this chat already owns the file. Continue appending as cached.
-- `foreign` → a different session's file. Show **Foreign-Prompt** below.
-- `returning` → this chat once owned the file but another session took
-  over. Show **Returning-Prompt** below.
+On the HOOK and ENGINE paths the platform / engine performs gates 1 + 2
+structurally; the agent **must not** also call `turn-check` or `append`
+(double-write risk). Engine-driven turns inherit the structural guarantee
+for the duration of the dispatch cycle — once the engine returns control,
+free-form prose around the engine output falls back to whatever path the
+platform supplies. Heartbeat (gate 3) stays useful for visibility on
+every path — see below.
+
+### Turn-start gate — MANDATORY first tool call
+
+```bash
+scripts/chat_history.py turn-check --first-user-msg "<first-user-msg>"
+```
+
+Exit codes: `0` = `ok`/`disabled` (proceed), `10` = `missing`
+(run `init --first-user-msg "..." --freq <freq>`), `11` = `foreign`
+(render Foreign-Prompt + stop), `12` = `returning` (render
+Returning-Prompt + stop). The script also writes a one-line
+`ACTION REQUIRED:` hint to stderr on non-zero exits.
+
+### Append cadence — MANDATORY at boundaries
+
+Cadence comes from `chat_history.frequency`:
+
+- `per_turn` → one entry at the end of every agent turn.
+- `per_phase` → at phase boundaries (user question answered, decision
+  taken, task-list item completed, significant tool sequence finished).
+  Pure clarification turns may skip.
+- `per_tool` → after each tool-call sequence.
+
+Every append goes through
+
+```bash
+scripts/chat_history.py append --first-user-msg "<msg>" \
+  --type <user|agent|tool|decision|phase> --json '<obj>'
+```
+
+Never write the file directly. Prefer `phase` over `agent` for boundaries.
+Exit `3` (`OWNERSHIP_REFUSED`) means turn-start was skipped or the file
+was hijacked — surface it, do not swallow it. Cadence is the trigger, not
+reply length; do not batch missed turns (crashes happen between turns).
+
+### Heartbeat marker — visibility gated by `chat_history.heartbeat`
+
+Run silently before emitting the final reply:
+
+```bash
+scripts/chat_history.py heartbeat --first-user-msg "<first-user-msg>"
+```
+
+Stdout is **at most** one line, e.g.
+`📒 chat-history: ok · 9 entries · per_phase · last 30s ago`. Non-empty →
+paste **verbatim** as the last line of the reply. Empty → emit nothing.
+Always exits 0 — observability, not a gate.
+
+**Visibility modes** — `chat_history.heartbeat`:
+
+| Mode | When marker prints | Token cost |
+|---|---|---|
+| `on` | every reply (legacy) | ~20 tokens / reply |
+| `off` | never — full silence | 0 |
+| `hybrid` *(default)* | drift states only (`missing`/`foreign`/`returning`) | 0 in normal flow, ~20 on drift |
+
+`hybrid` ships zero tokens when healthy, loud on ownership drift. YAML 1.1
+booleanizes bare `on`/`off`; the reader coerces both back, so
+`heartbeat: on` works unquoted.
+
+### Memory-typing the marker — rule violation, not a slip
+
+Format is memorizable; counts and timestamps are not. A typed-from-
+memory line shows stale entries and a healthy-looking `ok` while the
+file is silently behind — observability collapses, invisible until
+`status` is checked. Heartbeat is the script output of the **current
+turn**, verbatim, or nothing.
+
+**Self-check before send — MANDATORY.** (1) Did `heartbeat` run on
+this turn? (2) Is the line byte-identical to that subprocess stdout?
+(3) Empty stdout → no marker line. Any "no" → drop it.
+
+**Slip handling.** Stale marker called out → acknowledge once in the
+user's language; run `status`; on CHECKPOINT `append` missed phase-
+boundaries; run a real `heartbeat`; paste stdout verbatim or nothing.
+Don't promise "from now on" — only behaviour proves compliance
+(mirrors `language-and-tone` § slip handling).
+
+## Activation & handshake
+
+Read `chat_history.*` from `.agent-settings.yml` **once per conversation**
+(first turn) and cache. `enabled: false` or section missing → rule is a
+**no-op** (do not read, write, or mention the file). Otherwise cache
+`frequency`, `max_size_kb`, `on_overflow`, and the **path** (HOOK /
+CHECKPOINT / MANUAL — see the table above).
+
+**HOOK path** — skip `turn-check` entirely. The platform's
+`SessionStart` hook already initialized the file; the agent's job is to
+read `status` once for context awareness (header preview, entry count)
+and otherwise leave I/O to the hook dispatcher. Foreign / Returning
+prompts still apply because hooks call into the same ownership state
+machine — when the dispatcher reports `foreign` or `returning` via
+exit code or stderr, render the corresponding prompt.
+
+**CHECKPOINT path** — run `turn-check` as the first tool call. State
+token branches to one of: `missing` → `init`, `ok` → continue,
+`foreign` → Foreign-Prompt, `returning` → Returning-Prompt. Cooperative
+gates 1 + 2 + 3 are mandatory; `/chat-history-checkpoint` is the
+recommended way to satisfy gate 2 at phase boundaries.
 
 In `foreign` and `returning`, **always read the file's current contents
 into the agent's working context before any write** — the user chose to
-log history for a reason; losing it silently is never acceptable.
+log history for a reason; losing it silently is never acceptable. The
+legacy `state` subcommand still works for shell scripts; agents prefer
+`turn-check` (folds in `enabled` + distinct exit codes).
 
-## Foreign-Prompt — new chat finds existing history
+## Foreign / Returning prompts — full mechanics
 
-Trigger: `state == foreign` **and** `status.entries >= 1`.
-
-```
-> 📒 Found chat history from an unknown session.
->
-> Header fingerprint: <short-hash-A>
-> Current session:    <short-hash-B>
-> Entries on file:    <N>   Age: <age>
->
-> 1. Resume — adopt this file, load entries as context, keep appending here
-> 2. New start — archive to .agent-chat-history.bak, init fresh
-> 3. Ignore — leave the file untouched, disable logging for this session
-```
-
-- `1` → `adopt --first-user-msg "<msg>"` (the old fp lands in
-  `former_fps` automatically). Read entries into context, then append
-  normally.
-- `2` → rename to `.agent-chat-history.bak`, then
-  `init --first-user-msg "<msg>" --freq <frequency>`.
-- `3` → logging disabled for this conversation; do not touch the file,
-  do not edit settings.
-
-Free-text replies ("weiter", "skip it") count as `3`.
-
-## Returning-Prompt — old chat comes back
-
-Trigger: `state == returning`. The file exists, its current owner is a
-different session, but this chat's fingerprint is in `former_fps`. The
-agent still has its own in-memory history of the turns it logged before
-the hand-off.
-
-```
-> 📒 Welcome back. This chat once owned the history file; another
-> session has written to it since.
->
-> On-file entries:    <N>   Size: <X> KB   (now includes <M> foreign entries)
->
-> (All three options read the on-disk entries into context first.)
->
-> 1. Merge — my in-memory history first, the foreign entries after,
->    overwrite the file with the combined body
-> 2. Replace — wipe the foreign entries, rewrite the file with my
->    in-memory history only
-> 3. Continue — leave the file as-is; only new entries from now on
-```
-
-- `1` (Merge) → build the in-memory entries list (see below), call
-  `prepend --entries-json '<list>'`, then `adopt --first-user-msg "<msg>"`.
-- `2` (Replace) → build the in-memory list,
-  `reset --first-user-msg "<msg>" --freq <frequency> --entries-json '<list>'`.
-- `3` (Continue) → `adopt --first-user-msg "<msg>"`, then append normally.
-
-Free-text replies count as `3`.
-
-## Building the in-memory entries list (Merge / Replace)
-
-The agent reconstructs its own conversation as a JSON array, one entry
-per turn boundary. Keep it compact:
-
-- One `{"t":"user","text":"<preview>","ts":"<iso>"}` per user message.
-- One `{"t":"agent","text":"<preview>","ts":"<iso>"}` per agent reply.
-- `text` is a preview — flatten whitespace, cap at ~200 characters. This
-  is context, not a transcript.
-- Timestamps in ISO-8601 UTC. If the agent does not have exact times,
-  use the current time for all entries; order is what matters.
-- Do **not** include tool-call payloads, file contents, or secrets.
-
-If the list is large (>30 KB), pass it via stdin:
-`reset ... --entries-stdin <<< '<list>'`.
-
-## Append cadence — from `frequency`
-
-Every append goes through `scripts/chat_history.py append --type <t>
---json '<obj>'`. Never write the file directly.
-
-- `per_turn` — one entry at the end of every agent turn.
-- `per_phase` — at phase boundaries (user question, agent answer,
-  decision, completion of a task-list item).
-- `per_tool` — after each tool-call sequence.
-
-Entry types: `user`, `agent`, `tool`, `decision`, `phase`. Prefer `phase`
-over `agent` when the entry marks a boundary.
-
-## Overflow — from `on_overflow`
-
-When the helper reports file size > `max_size_kb`:
-
-- `rotate` → `rotate --mode rotate --max-kb <n>`. Drops oldest entries;
-  silent and cheap.
-- `compress` → `rotate --mode compress --max-kb <n>`. Marks the file for
-  summarization; the **next** turn writes the summary for the dropped
-  range. Do not block the current turn on this.
-
-After Merge or Replace rewrites, run the overflow check once — the new
-body may exceed the budget.
-
-The setting is stable for the session; never mix modes.
+When `turn-check` exits `11` (foreign) or `12` (returning), render the
+matching numbered-options block from
+[`agents/contexts/chat-history-handshake.md`](../../../agents/contexts/chat-history-handshake.md).
+That doc holds the prompt bodies, the option → script-call mapping
+(`adopt` / `init` / `prepend` / `reset`), the in-memory entries-list
+shape, free-text fallbacks, and the overflow handling per
+`on_overflow` (`rotate` / `compress`). Read it once on first foreign
+or returning event; cache the chosen option for the rest of the
+conversation.
 
 ## What this rule does NOT do
 
-- Display, reload, or clear the log — that is `/chat-history`,
-  `/chat-history-resume`, `/chat-history-clear`.
-- Auto-flip `enabled` or `on_overflow` in settings.
-- Run when `enabled: false`. No silent logging. No telemetry.
-- Decide ownership heuristically. Only the `state` helper does that.
+Display/reload/clear (`/chat-history*` commands). Auto-flip `enabled` or
+`on_overflow`. Run when `enabled: false` (no silent logging, no
+telemetry). Decide ownership heuristically — only `state` does that.
+Double-write on HOOK platforms — when hooks fire structurally, the
+agent does **not** also call `append`.
 
-## Interactions
+## Cloud Behavior
 
-- `ask-when-uncertain` + `user-interaction` — foreign/returning prompts
-  use numbered options, one question per turn.
+On cloud surfaces (Claude.ai Web, Skills API) the rule is **fully inert** —
+no `.agent-chat-history`, no `scripts/`, no Iron Law gates, no heartbeat,
+no foreign/returning prompts, no overflow warning. Treat
+`chat_history.enabled` as `false`; persistence is a local-agent concern.
+
+## Interactions & references
+
+- `ask-when-uncertain` + `user-interaction` — foreign/returning prompts use numbered options, one question per turn.
 - `language-and-tone` — prompt translated at runtime; `.md` stays English.
 - `onboarding-gate` — runs first; this rule activates only after it clears.
-- `token-efficiency` — never load the full log into context from this
-  rule; use `status` for metadata, `read --last N` for a tail.
-
-## See also
-
-- [`scripts/chat_history.py`](../../../scripts/chat_history.py) — file API
-- [`/chat-history`](../commands/chat-history.md) — status inspection
-- [`/chat-history-resume`](../commands/chat-history-resume.md) — adopt + load
-- [`/chat-history-clear`](../commands/chat-history-clear.md) — wipe
-- [`agent-settings` template](../templates/agent-settings.md) — `chat_history.*` reference
-- [`rule-type-governance`](rule-type-governance.md) — why this is `always`
+- `token-efficiency` — never load the full log; use `status` / `read --last N`.
+- API: [`scripts/chat_history.py`](../../../scripts/chat_history.py). Commands: [`/chat-history`](../commands/chat-history.md), [`/chat-history-resume`](../commands/chat-history-resume.md), [`/chat-history-clear`](../commands/chat-history-clear.md), [`/chat-history-checkpoint`](../commands/chat-history-checkpoint.md). Settings: [`agent-settings`](../templates/agent-settings.md). Platform classification: [`agents/contexts/chat-history-platform-hooks.md`](../../../agents/contexts/chat-history-platform-hooks.md). Types: [`rule-type-governance`](rule-type-governance.md).

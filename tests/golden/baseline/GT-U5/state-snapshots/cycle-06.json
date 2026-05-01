@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Add a customer feedback form: POST /api/feedback persists to a `feedbacks` table, render the form on `/feedback` with a success state.\n",
+      "reconstructed_ac": [
+        "POST /api/feedback validates payload and persists to feedbacks",
+        "GET /feedback renders a form bound to forms.text-input",
+        "Successful submission swaps the form for a confirmation card"
+      ],
+      "assumptions": [
+        "feedbacks table is new; migration ships with this change",
+        "no admin moderation flow in this iteration"
+      ],
+      "confidence": {
+        "band": "high",
+        "score": 0.91
+      },
+      "acceptance_criteria": [
+        "POST /api/feedback validates payload and persists to feedbacks",
+        "GET /feedback renders a form bound to forms.text-input",
+        "Successful submission swaps the form for a confirmation card"
+      ]
+    }
+  },
+  "intent": "mixed",
+  "directive_set": "mixed",
+  "stack": null,
+  "ui_audit": {
+    "components_found": [
+      {
+        "path": "resources/views/components/forms/text-input.blade.php",
+        "name": "forms.text-input",
+        "kind": "form-primitive",
+        "similarity": 0.82
+      }
+    ],
+    "design_tokens": {
+      "spacing": [
+        "sm",
+        "md",
+        "lg"
+      ]
+    }
+  },
+  "ui_design": {
+    "layout": "single-column form on /feedback, max-w-md",
+    "components": [
+      {
+        "name": "FeedbackForm",
+        "primitives": [
+          "forms.text-input",
+          "button"
+        ]
+      }
+    ],
+    "states": {
+      "empty": "fields empty, submit disabled until valid",
+      "loading": "submit pressed: spinner, fields disabled",
+      "error": "field-level validation messages",
+      "success": "form replaced by confirmation card",
+      "disabled": "fields disabled while loading"
+    },
+    "reused_from_audit": [
+      "forms.text-input"
+    ],
+    "design_confirmed": true
+  },
+  "ui_review": {
+    "findings": [],
+    "review_clean": true
+  },
+  "ui_polish": null,
+  "contract": {
+    "data_model": [
+      {
+        "entity": "Feedback",
+        "table": "feedbacks",
+        "fields": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "primary": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "email",
+            "type": "email",
+            "required": true
+          },
+          {
+            "name": "message",
+            "type": "text",
+            "required": true
+          },
+          {
+            "name": "created_at",
+            "type": "datetime"
+          }
+        ]
+      }
+    ],
+    "api_surface": [
+      {
+        "method": "POST",
+        "path": "/api/feedback",
+        "request": [
+          "name",
+          "email",
+          "message"
+        ],
+        "response": {
+          "201": "FeedbackResource",
+          "422": "ValidationError"
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/feedback",
+        "response": {
+          "200": "feedback.show view"
+        }
+      }
+    ],
+    "contract_confirmed": true
+  },
+  "stitch": {
+    "verdict": "success",
+    "scenarios": [
+      {
+        "name": "happy: submit feedback round-trips to confirmation",
+        "outcome": "passed"
+      },
+      {
+        "name": "validation: empty payload returns 422 with field errors",
+        "outcome": "passed"
+      }
+    ]
+  },
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [
+    {
+      "path": "app/Http/Controllers/FeedbackController.php",
+      "purpose": "applied by GT recipe"
+    },
+    {
+      "path": "app/Models/Feedback.php",
+      "purpose": "applied by GT recipe"
+    },
+    {
+      "path": "database/migrations/2026_05_01_create_feedbacks_table.php",
+      "purpose": "applied by GT recipe"
+    },
+    {
+      "path": "resources/views/feedback/show.blade.php",
+      "purpose": "applied by GT recipe"
+    },
+    {
+      "path": "routes/web.php",
+      "purpose": "applied by GT recipe"
+    }
+  ],
+  "tests": null,
+  "verify": {
+    "verdict": "success",
+    "confidence": "high",
+    "judges": [
+      "bug-hunter",
+      "security",
+      "test-coverage",
+      "code-quality"
+    ],
+    "findings": []
+  },
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "success",
+    "implement": "success",
+    "test": "success",
+    "verify": "success",
+    "report": "success"
+  },
+  "questions": [],
+  "report": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `app/Http/Controllers/FeedbackController.php` — applied by GT recipe\n- `app/Models/Feedback.php` — applied by GT recipe\n- `database/migrations/2026_05_01_create_feedbacks_table.php` — applied by GT recipe\n- `resources/views/feedback/show.blade.php` — applied by GT recipe\n- `routes/web.php` — applied by GT recipe\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n- **verdict:** success\n- **confidence:** high\n- **judges:** ['bug-hunter', 'security', 'test-coverage', 'code-quality']\n- **findings:** []\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
+}

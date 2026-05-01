@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Add an accessible status banner to the dashboard header.\n",
+      "reconstructed_ac": [],
+      "assumptions": [],
+      "ui_apply": {
+        "summary": "Status banner rendered under the dashboard header",
+        "rendered": {
+          "resources/views/dashboard/header.blade.php": "System status — All services operating normally. Dismiss."
+        },
+        "files": [
+          "resources/views/dashboard/header.blade.php"
+        ]
+      }
+    }
+  },
+  "intent": "ui-build",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": {
+    "components_found": [
+      {
+        "path": "resources/views/components/banners/status.blade.php",
+        "name": "banners.status",
+        "kind": "banner",
+        "similarity": 0.78
+      }
+    ],
+    "design_tokens": {
+      "spacing": {
+        "sm": "8px",
+        "md": "12px"
+      }
+    },
+    "audit_path": "high_confidence",
+    "candidate_pick": "banners.status",
+    "a11y_baseline": []
+  },
+  "ui_design": {
+    "layout": "horizontal banner under top nav, full-width",
+    "components": [
+      {
+        "name": "StatusBanner",
+        "primitives": [
+          "banners.status"
+        ]
+      }
+    ],
+    "states": {
+      "empty": "Banner hidden when no status to surface",
+      "loading": "Banner shows neutral spinner while message resolves",
+      "error": "Banner switches to danger variant on failures",
+      "success": "Banner switches to success variant on positive ack",
+      "disabled": "Banner muted while another modal owns focus"
+    },
+    "microcopy": {
+      "title": "System status",
+      "message": "All services operating normally.",
+      "buttons": {
+        "dismiss": "Dismiss"
+      }
+    },
+    "a11y": {
+      "labels": "banner has role=status with aria-live=polite",
+      "focus": "dismiss button reachable as last item in tab order",
+      "aria_live": "status changes announced via aria-live=polite"
+    },
+    "reused_from_audit": [
+      "banners.status"
+    ],
+    "design_confirmed": true
+  },
+  "ui_review": {
+    "findings": [],
+    "review_clean": true,
+    "a11y": {
+      "violations": [
+        {
+          "rule": "image-alt",
+          "selector": "img.banner-icon",
+          "severity": "serious"
+        }
+      ]
+    }
+  },
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [
+    {
+      "kind": "ui",
+      "stack": "plain",
+      "file": "resources/views/dashboard/header.blade.php",
+      "summary": "Status banner rendered under the dashboard header"
+    }
+  ],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "success",
+    "implement": "success",
+    "test": "blocked"
+  },
+  "questions": [
+    "@agent-directive: ui-design-review-plain",
+    "> Stack: `plain`. Reviewing rendered components against the locked design brief.",
+    "> The review pass compares `state.ticket.ui_apply.rendered` against `state.ui_design` (microcopy, states, a11y, layout) and produces a structured `findings` list.",
+    "> 1. Continue — run the review and write `{findings: [...], review_clean: bool}` into `state.ui_review`",
+    "> 2. Abort — drop this UI request"
+  ],
+  "report": ""
+}

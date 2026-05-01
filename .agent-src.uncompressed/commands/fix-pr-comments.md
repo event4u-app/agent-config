@@ -3,6 +3,10 @@ name: fix-pr-comments
 skills: [php-coder]
 description: Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "fix all PR review comments, resolve the review feedback"
+  trigger_context: "open PR with unresolved comments (bot + human)"
 ---
 
 # fix-pr-comments

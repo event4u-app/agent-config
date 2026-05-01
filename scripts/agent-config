@@ -49,6 +49,26 @@ Commands:
   hooks:install              Install the pre-commit roadmap-progress hook
                              (use --print to dump it, --force to overwrite an existing hook)
   first-run                  Guided first-run setup — cost profile, settings, tooling
+  implement-ticket           Drive the work_engine Python engine on a ticket envelope
+                             (Option-A loop; called by the /implement-ticket command)
+  work                       Drive the work_engine Python engine on a free-form prompt
+                             (Option-A loop; called by the /work command)
+  migrate-state              Migrate a legacy .implement-ticket-state.json file
+                             to the v1 .work-state.json schema (preserves .bak)
+  memory:lookup              Retrieve memory entries (text or JSON envelope)
+  memory:signal              Append a provisional intake signal (memory proposal)
+  memory:hash                Hash a memory entry (YAML or JSON stdin)
+  memory:check               Validate memory YAML schema + staleness
+  memory:check-proposal      Run the admission gate on a memory proposal
+  proposal:check             Validate a learning/skill/rule proposal markdown
+  refine-ticket:detect       Run the deterministic refine-ticket detection helper
+  chat-history:hook          Platform hook entry point (read JSON from stdin)
+                             Usage: chat-history:hook --platform <claude|augment|cursor|cline|windsurf|gemini>
+  chat-history:checkpoint    Append a phase-boundary entry to .agent-chat-history
+                             (CHECKPOINT fallback for platforms without native hooks)
+  telemetry:record           Append one artefact-engagement event (default-off)
+  telemetry:status           Print artefact-engagement telemetry status (read-only)
+  telemetry:report           Aggregate the engagement log into a quartile report
   help                       Show this help
   --version, -V              Print package version
 
@@ -59,6 +79,17 @@ Examples:
   ./agent-config roadmap:progress
   ./agent-config hooks:install
   ./agent-config first-run
+  ./agent-config implement-ticket --state-file .work-state.json
+  ./agent-config work --state-file .work-state.json --prompt-file prompt.txt
+  ./agent-config migrate-state
+  ./agent-config memory:lookup --types domain-invariants --key billing
+  ./agent-config memory:signal --type architecture-decision --path src/Foo.php --body "…"
+  ./agent-config memory:check --path agents/memory
+  ./agent-config refine-ticket:detect ticket-body.txt
+  ./agent-config telemetry:status
+  ./agent-config telemetry:status --format json
+  ./agent-config telemetry:report --since 30d --top 20
+  ./agent-config telemetry:report --since 7d --format json --top 0
 
 All commands operate on the CURRENT DIRECTORY (your project root).
 The CLI is strictly consumer-facing. Maintainer tasks live in Taskfile.yml.
@@ -101,6 +132,32 @@ resolve_script() {
   return 1
 }
 
+# Resolve a script that ships under templates/scripts/. Tries (in order):
+#   1. CONSUMER_ROOT/scripts/<name>                       — local copy / customization
+#   2. CONSUMER_ROOT/.augment/templates/scripts/<name>    — installer-shipped
+#   3. PACKAGE_ROOT/.agent-src/templates/scripts/<name>   — package-internal fallback
+# Consumer customization wins so projects can patch behavior locally
+# without losing the upstream default.
+resolve_template_script() {
+  local name="$1"
+  local p
+  for p in \
+    "$CONSUMER_ROOT/scripts/$name" \
+    "$CONSUMER_ROOT/.augment/templates/scripts/$name" \
+    "$PACKAGE_ROOT/.agent-src/templates/scripts/$name"; do
+    if [[ -f "$p" ]]; then
+      printf '%s' "$p"
+      return 0
+    fi
+  done
+  echo "❌  agent-config: template script not found: $name" >&2
+  echo "    Searched:" >&2
+  echo "      - $CONSUMER_ROOT/scripts/$name" >&2
+  echo "      - $CONSUMER_ROOT/.augment/templates/scripts/$name" >&2
+  echo "      - $PACKAGE_ROOT/.agent-src/templates/scripts/$name" >&2
+  return 1
+}
+
 cmd_mcp_render() {
   require_python3
   local script
@@ -133,6 +190,133 @@ cmd_first_run() {
   local script
   script="$(resolve_script "scripts/first-run.sh")"
   exec bash "$script" "$@"
+}
+
+cmd_implement_ticket() {
+  require_python3
+  local engine_root="$PACKAGE_ROOT/.agent-src/templates/scripts"
+  if [[ ! -d "$engine_root/work_engine" ]]; then
+    echo "❌  agent-config: work_engine module not found at $engine_root/work_engine" >&2
+    echo "    Reinstall the package and retry." >&2
+    return 1
+  fi
+  exec env PYTHONPATH="$engine_root" python3 -m work_engine "$@"
+}
+
+cmd_work() {
+  # /work shares the engine with /implement-ticket — only the input
+  # envelope differs (kind=prompt vs kind=ticket). Keeping a separate
+  # subcommand makes the user-facing distinction explicit and lets the
+  # two flows diverge later without churn at the wrapper layer.
+  require_python3
+  local engine_root="$PACKAGE_ROOT/.agent-src/templates/scripts"
+  if [[ ! -d "$engine_root/work_engine" ]]; then
+    echo "❌  agent-config: work_engine module not found at $engine_root/work_engine" >&2
+    echo "    Reinstall the package and retry." >&2
+    return 1
+  fi
+  exec env PYTHONPATH="$engine_root" python3 -m work_engine "$@"
+}
+
+cmd_migrate_state() {
+  require_python3
+  local engine_root="$PACKAGE_ROOT/.agent-src/templates/scripts"
+  if [[ ! -d "$engine_root/work_engine/migration" ]]; then
+    echo "❌  agent-config: work_engine.migration module not found at $engine_root/work_engine/migration" >&2
+    echo "    Reinstall the package and retry." >&2
+    return 1
+  fi
+  # -W ignore::RuntimeWarning suppresses the known sys.modules notice from
+  # `python3 -m pkg.subpkg.module` when the parent package eagerly imports
+  # the submodule via its CLI module. The migration is non-invasive and
+  # the warning is cosmetic; suppressing here avoids touching the engine.
+  exec env PYTHONPATH="$engine_root" python3 -W ignore::RuntimeWarning -m work_engine.migration.v0_to_v1 "$@"
+}
+
+cmd_memory_lookup() {
+  require_python3
+  local script
+  script="$(resolve_template_script "memory_lookup.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
+cmd_memory_signal() {
+  require_python3
+  local script
+  script="$(resolve_template_script "memory_signal.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
+cmd_memory_hash() {
+  require_python3
+  local script
+  script="$(resolve_template_script "memory_hash.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
+cmd_telemetry_record() {
+  require_python3
+  local script
+  script="$(resolve_template_script "telemetry_record.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
+cmd_telemetry_status() {
+  require_python3
+  local script
+  script="$(resolve_template_script "telemetry_status.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
+cmd_telemetry_report() {
+  require_python3
+  local script
+  script="$(resolve_template_script "telemetry_report.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
+cmd_memory_check() {
+  require_python3
+  local script
+  script="$(resolve_template_script "check_memory.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
+cmd_memory_check_proposal() {
+  require_python3
+  local script
+  script="$(resolve_template_script "check_memory_proposal.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
+cmd_proposal_check() {
+  require_python3
+  local script
+  script="$(resolve_script "scripts/check_proposal.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
+cmd_refine_ticket_detect() {
+  require_python3
+  local script
+  script="$(resolve_script "scripts/refine_ticket_detect.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
+cmd_chat_history_hook() {
+  require_python3
+  local script
+  script="$(resolve_script "scripts/chat_history.py")" || return 1
+  exec python3 "$script" hook-dispatch "$@"
+}
+
+cmd_chat_history_checkpoint() {
+  require_python3
+  local script
+  script="$(resolve_script "scripts/chat_history.py")" || return 1
+  # Default cadence-bearing event when a user/agent invokes /chat-history-checkpoint:
+  # "phase" — explicit phase boundary, lands under per_phase / per_turn cadences.
+  exec python3 "$script" hook-append --event phase "$@"
 }
 
 cmd_hooks_install() {
@@ -217,6 +401,21 @@ main() {
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
     hooks:install)           cmd_hooks_install "$@" ;;
     first-run)               cmd_first_run "$@" ;;
+    implement-ticket)        cmd_implement_ticket "$@" ;;
+    work)                    cmd_work "$@" ;;
+    migrate-state)           cmd_migrate_state "$@" ;;
+    memory:lookup)           cmd_memory_lookup "$@" ;;
+    memory:signal)           cmd_memory_signal "$@" ;;
+    memory:hash)             cmd_memory_hash "$@" ;;
+    memory:check)            cmd_memory_check "$@" ;;
+    memory:check-proposal)   cmd_memory_check_proposal "$@" ;;
+    proposal:check)          cmd_proposal_check "$@" ;;
+    refine-ticket:detect)    cmd_refine_ticket_detect "$@" ;;
+    chat-history:hook)       cmd_chat_history_hook "$@" ;;
+    chat-history:checkpoint) cmd_chat_history_checkpoint "$@" ;;
+    telemetry:record)        cmd_telemetry_record "$@" ;;
+    telemetry:status)        cmd_telemetry_status "$@" ;;
+    telemetry:report)        cmd_telemetry_report "$@" ;;
     help|--help|-h|"")        usage ;;
     --version|-V)            print_version ;;
     *)

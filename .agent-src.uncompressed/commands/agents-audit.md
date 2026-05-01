@@ -3,6 +3,10 @@ name: agents-audit
 description: Audits agents/ and module agents/ directories — finds outdated docs, structural issues, duplicates, orphaned overrides, and creates an improvement roadmap.
 skills: [agents-audit, agent-docs-writing, override-management, module-management]
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "audit my agent docs, check the state of the agents/ directory"
+  trigger_context: "stale files under agents/ or recent edits to .augment/ without doc updates"
 ---
 
 # /agents-audit

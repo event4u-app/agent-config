@@ -3,7 +3,12 @@ name: onboard
 description: First-run setup for a developer on this project — captures name, IDE, bot-icon preference, rtk, cost_profile, and learning opt-out, then sets onboarding.onboarded=true
 skills: [file-editor]
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Gated by the onboarding-gate rule already; never inferred from prose."
 ---
+
+<!-- cloud_safe: noop -->
 
 # /onboard
 
@@ -153,6 +158,27 @@ directly — the agent follows the merge rules in `layered-settings` when
 you ask it to change a value.
 ```
 
+### 9. Maintainer-only feature pointer
+
+Print a one-screen hint after the summary — no question, no prompt, just a
+pointer for maintainers who want to opt into the artefact-engagement
+telemetry layer. Consumers can ignore it; the feature is **default-off**
+and stays off unless explicitly enabled.
+
+```
+ℹ️  Maintainer telemetry (opt-in)
+
+  telemetry.artifact_engagement is off by default. If you maintain skills,
+  rules, or commands and want to see which ones the agent actually applies,
+  set telemetry.artifact_engagement.enabled: true in .agent-settings.yml.
+
+  The log is local-only JSONL — nothing uploaded, nothing shared across
+  projects. Reports: ./agent-config telemetry:report
+  Contract + privacy floor: agents/contexts/artifact-engagement-flow.md
+```
+
+Skip this block in cloud surfaces (no settings file, no log path).
+
 ## Gotchas
 
 - `.agent-settings.yml` is git-ignored. This command never commits.
@@ -162,6 +188,13 @@ you ask it to change a value.
   all steps again and rewrite the values the user confirms.
 - Never overwrite a non-empty value without asking (applies to `user_name`
   and `ide`).
+
+## Cloud Behavior
+
+On cloud surfaces (Claude.ai Web, Skills API) this command is **fully inert** —
+there is no `.agent-settings.yml` to write, no `onboarding.onboarded` key to
+flip, and no local IDE/rtk environment to capture. First-run setup is a
+local-agent concern; the cloud agent should proceed without invoking it.
 
 ## See also
 

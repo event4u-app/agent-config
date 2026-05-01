@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Build the first marketing landing page for our brand-new SaaS product.\n",
+      "reconstructed_ac": [],
+      "assumptions": [],
+      "ui_apply": {
+        "summary": "Marketing landing page scaffolded with locked microcopy",
+        "rendered": {
+          "resources/views/marketing/landing.blade.php": "Ship faster with our SaaS platform. Deploy in minutes, not days. Start free trial."
+        },
+        "files": [
+          "resources/views/marketing/landing.blade.php"
+        ]
+      }
+    }
+  },
+  "intent": "ui-build",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": {
+    "greenfield": true,
+    "components_found": [],
+    "design_tokens": {},
+    "greenfield_decision": "scaffold",
+    "audit_path": "greenfield"
+  },
+  "ui_design": {
+    "layout": "single-column landing page, max-w-5xl, hero + 3 feature blocks",
+    "components": [
+      {
+        "name": "MarketingLanding",
+        "primitives": [
+          "hero",
+          "feature-grid",
+          "cta"
+        ]
+      }
+    ],
+    "states": {
+      "empty": "First load with hero, features, CTA",
+      "loading": "CTA button shows spinner while signup form submits",
+      "error": "Inline validation on signup field",
+      "success": "CTA replaced by 'Thanks — check your inbox'",
+      "disabled": "CTA disabled while submission is in flight"
+    },
+    "microcopy": {
+      "hero_title": "Ship faster with our SaaS platform",
+      "hero_subtitle": "Deploy in minutes, not days.",
+      "cta_button": "Start free trial",
+      "success": "Thanks — check your inbox to confirm your email."
+    },
+    "a11y": {
+      "labels": "hero h1 is the page title; CTA button labelled explicitly",
+      "focus": "skip link to main content; CTA receives focus on success",
+      "aria_live": "success message announced via aria-live=polite"
+    },
+    "reused_from_audit": [],
+    "design_confirmed": true
+  },
+  "ui_review": {
+    "findings": [],
+    "review_clean": true
+  },
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [
+    {
+      "kind": "ui",
+      "stack": "plain",
+      "file": "resources/views/marketing/landing.blade.php",
+      "summary": "Marketing landing page scaffolded with locked microcopy"
+    }
+  ],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "success",
+    "implement": "success",
+    "test": "blocked"
+  },
+  "questions": [
+    "@agent-directive: ui-design-review-plain",
+    "> Stack: `plain`. Reviewing rendered components against the locked design brief.",
+    "> The review pass compares `state.ticket.ui_apply.rendered` against `state.ui_design` (microcopy, states, a11y, layout) and produces a structured `findings` list.",
+    "> 1. Continue — run the review and write `{findings: [...], review_clean: bool}` into `state.ui_review`",
+    "> 2. Abort — drop this UI request"
+  ],
+  "report": ""
+}

@@ -3,6 +3,10 @@ name: refine-ticket
 skills: [refine-ticket]
 description: Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates validate-feature-fit and threat-modeling, ends with a close-prompt
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "refine PROJ-123, tighten the acceptance criteria, is this ticket clear"
+  trigger_context: "ticket key in prompt with vague acceptance criteria"
 ---
 
 # refine-ticket
@@ -80,4 +84,3 @@ persona voices) plus the close-prompt. Stop there. Do **not** chain into
 - [`jira-ticket`](jira-ticket.md) — ticket loader this command delegates to
 - [`estimate-ticket`](estimate-ticket.md) — sibling command — run after refining if you also need sizing
 - [`feature-plan`](feature-plan.md), [`feature-explore`](feature-explore.md) — downstream commands
-- [`road-to-ticket-refinement.md`](../../agents/roadmaps/road-to-ticket-refinement.md) — governing roadmap

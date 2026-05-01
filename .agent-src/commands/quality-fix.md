@@ -3,6 +3,10 @@ name: quality-fix
 skills: [quality-tools]
 description: Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "fix the quality errors, run PHPStan and fix issues, fix code style"
+  trigger_context: "PHPStan/Rector/ECS output in recent tool results"
 ---
 
 # quality-fix

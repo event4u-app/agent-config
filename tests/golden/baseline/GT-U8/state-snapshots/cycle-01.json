@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Tweak the marketing hero copy and align the CTA button color to the new brand-red token.\n",
+      "reconstructed_ac": [
+        "Hero headline reads 'Welcome to the next chapter'",
+        "CTA button uses brand-red token"
+      ],
+      "assumptions": [
+        "brand-red token already exists",
+        "edit fits the trivial path"
+      ],
+      "confidence": {
+        "band": "high",
+        "score": 0.9
+      },
+      "intent": "ui-trivial",
+      "trivial_edit": {
+        "files": [
+          "resources/views/marketing/hero.blade.php",
+          "resources/views/components/button.blade.php"
+        ],
+        "lines_changed": 7,
+        "summary": "hero copy + CTA button color (touches 2 files / 7 lines)",
+        "new_component": false,
+        "new_state": false,
+        "new_dependency": false
+      }
+    }
+  },
+  "intent": "ui-trivial",
+  "directive_set": "ui-trivial",
+  "stack": null,
+  "ui_audit": null,
+  "ui_design": null,
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": null,
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "success",
+    "implement": "blocked"
+  },
+  "questions": [
+    "@agent-directive: trivial-apply",
+    "> Trivial UI edit path — audit / design / review skipped.",
+    "> 1. Continue — perform the single-file edit, then write a `trivial_edit` envelope back into state.ticket (files, lines_changed, new_component, new_state, new_dependency)",
+    "> 2. Abort — drop this trivial edit"
+  ],
+  "report": ""
+}

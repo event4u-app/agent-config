@@ -1,0 +1,22 @@
+[
+  {
+    "cycle": 1,
+    "exit_code": 1,
+    "directive": "ui-design-brief",
+    "recipe_action": "ui-design-brief",
+    "questions": [
+      "@agent-directive: ui-design-brief",
+      "> Input: Add a contact form to the marketing site that matches the existing form primiti…",
+      "> No design brief yet — producing one now. The brief locks layout, components, states, microcopy, and a11y before any code is written.",
+      "> 1. Continue — produce the brief from audit findings",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 2,
+    "exit_code": 0,
+    "directive": null,
+    "recipe_action": null,
+    "questions": []
+  }
+]

@@ -3,6 +3,10 @@ name: e2e-heal
 skills: [playwright-testing]
 description: Find, debug, and fix failing Playwright E2E tests
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "fix the failing E2E tests, playwright tests are red"
+  trigger_context: "failing test output from tests/e2e/"
 ---
 
 # e2e-heal

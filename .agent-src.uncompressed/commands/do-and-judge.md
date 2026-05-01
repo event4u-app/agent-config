@@ -3,6 +3,9 @@ name: do-and-judge
 skills: [subagent-orchestration, verify-before-complete]
 description: Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Subagent orchestration — overlaps /work and judge skills; keep explicit."
 ---
 
 # do-and-judge
@@ -59,7 +62,7 @@ same failure class on nearby paths during this session, that is a
 pattern worth recording. Drop a signal:
 
 ```bash
-python3 scripts/memory_signal.py \
+./agent-config memory:signal \
     --type historical-patterns \
     --path "<primary path under review>" \
     --body "<failure class → fix guidance, one sentence>" \

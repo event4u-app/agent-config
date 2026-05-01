@@ -1,9 +1,63 @@
 {
-  "// Instructions": "Copy this into your project's .claude/settings.json to auto-enable the agent-config plugin.",
+  "// Instructions": "Copy this into your project's .claude/settings.json to auto-enable the agent-config plugin and chat-history hooks.",
   "// After setup": "Claude Code will load the plugin when the marketplace is installed.",
   "// Install marketplace": "Run: claude plugin marketplace add event4u-app/agent-config",
+  "// Hooks": "Hooks call ./agent-config (the wrapper installed at the project root) which dispatches to scripts/chat_history.py hook-dispatch. They are no-ops when chat_history.enabled is false in .agent-settings.yml.",
 
   "enabledPlugins": {
     "agent-conf@event4u": true
+  },
+
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./agent-config chat-history:hook --platform claude"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./agent-config chat-history:hook --platform claude"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./agent-config chat-history:hook --platform claude"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./agent-config chat-history:hook --platform claude"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./agent-config chat-history:hook --platform claude"
+          }
+        ]
+      }
+    ]
   }
 }

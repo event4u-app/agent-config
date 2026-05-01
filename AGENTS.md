@@ -47,15 +47,40 @@ No PHP, no Laravel, no JavaScript runtime dependencies. The `composer.json` /
 ## Working on this repo
 
 ```bash
-task sync          # .agent-src.uncompressed/ → .agent-src/, then project → .augment/
-task generate-tools # Regenerate .claude/, .cursor/, .clinerules/, .windsurfrules
-task test          # pytest tests/ + tests/test_install.sh
-task lint-skills   # python3 scripts/skill_linter.py --all
-task ci            # Full pipeline — must be green before PR
+task sync                  # .agent-src.uncompressed/ → .agent-src/, then project → .augment/
+task generate-tools        # Regenerate .claude/, .cursor/, .clinerules/, .windsurfrules
+task test                  # pytest tests/ + tests/test_install.sh
+task lint-skills           # python3 scripts/skill_linter.py --all
+task build-cloud-bundles-all  # ZIP every eligible skill → dist/cloud/ (Claude.ai Web / Skills API)
+task ci                    # Full pipeline — must be green before PR
 ```
 
 All checks must pass before a PR: sync-check, consistency, check-compression,
 check-refs, check-portability, lint-skills, test, lint-readme.
+
+## Maintainer telemetry (opt-in)
+
+The artefact-engagement telemetry pipeline (`./agent-config telemetry:record`
+and `./agent-config telemetry:report`) is **default-off**. Maintainers who
+want to measure which skills/rules/commands the agent actually applies set
+`telemetry.artifact_engagement.enabled: true` in `.agent-settings.yml`. The
+log is local-only JSONL (no upload, no cross-project share) and is bound
+by the redaction floor described in
+[`agents/contexts/artifact-engagement-flow.md`](agents/contexts/artifact-engagement-flow.md).
+The recording rule lives at
+[`.agent-src/rules/artifact-engagement-recording.md`](.agent-src/rules/artifact-engagement-recording.md).
+
+## Context-aware command suggestion
+
+When a user's free-form prompt matches a command's purpose, the agent
+surfaces matches as a numbered-options block with an always-present
+"run the prompt as-is" escape. **Nothing auto-executes** — the user
+picks every time. Engine: `scripts/command_suggester/`. Rule:
+[`.agent-src/rules/command-suggestion.md`](.agent-src/rules/command-suggestion.md).
+Locked eligibility table, scoring contract, and hardening list:
+[`agents/contexts/adr-command-suggestion.md`](agents/contexts/adr-command-suggestion.md)
+and
+[`agents/contexts/command-suggestion-flow.md`](agents/contexts/command-suggestion-flow.md).
 
 ## Key rules for agents editing this repo
 
@@ -73,9 +98,9 @@ check-refs, check-portability, lint-skills, test, lint-readme.
 
 ```
 .agent-src.uncompressed/      ← edit here
-  skills/       (124 skills)
-  rules/        (46 rules)
-  commands/     (73 commands)
+  skills/       (128 skills)
+  rules/        (53 rules)
+  commands/     (77 commands)
   guidelines/   (46 guidelines)
   personas/     (7 personas)
   templates/    (AGENTS.md, copilot-instructions.md, skill.md, …)
@@ -101,9 +126,12 @@ agents/                     ← this package's own roadmaps / sessions / context
 | Cline | `.clinerules/` | Symlinks |
 | Windsurf | `.windsurfrules` | Concatenated file |
 | Gemini CLI | `GEMINI.md` | Symlink → AGENTS.md |
+| Claude.ai Web / Skills API | `dist/cloud/<skill>.zip` | `task build-cloud-bundles-all` (T3-H gated) |
 
 Skills follow the [Agent Skills open standard](https://agentskills.io). Commands
 are converted to Claude Code Skills with `disable-model-invocation: true`.
+Cloud bundles enforce description budgets and prepend a sandbox note for
+T2/T3-S skills — see [`docs/architecture.md`](docs/architecture.md#cloud-bundle-pipeline).
 
 ## Contributing
 

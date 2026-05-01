@@ -3,6 +3,10 @@ name: jira-ticket
 skills: [laravel]
 description: Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug
 disable-model-invocation: true
+suggestion:
+  eligible: true
+  trigger_description: "implement the ticket on this branch, work on the Jira ticket from the branch"
+  trigger_context: "branch name matching feat/PROJ-123-* or similar"
 ---
 
 # jira-ticket

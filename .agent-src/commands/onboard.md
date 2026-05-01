@@ -3,6 +3,9 @@ name: onboard
 description: First-run setup for a developer on this project — captures name, IDE, bot-icon preference, rtk, cost_profile, and learning opt-out, then sets onboarding.onboarded=true
 skills: [file-editor]
 disable-model-invocation: true
+suggestion:
+  eligible: false
+  rationale: "Gated by the onboarding-gate rule already; never inferred from prose."
 ---
 
 # /onboard
@@ -152,6 +155,27 @@ You can re-run this with /onboard anytime, or edit .agent-settings.yml
 directly — the agent follows the merge rules in `layered-settings` when
 you ask it to change a value.
 ```
+
+### 9. Maintainer-only feature pointer
+
+One-screen hint after the summary — no question, no prompt. Pointer for
+maintainers who want to opt into artefact-engagement telemetry. Consumers
+can ignore it; the feature is **default-off** and stays off unless
+explicitly enabled.
+
+```
+ℹ️  Maintainer telemetry (opt-in)
+
+  telemetry.artifact_engagement is off by default. If you maintain skills,
+  rules, or commands and want to see which ones the agent actually applies,
+  set telemetry.artifact_engagement.enabled: true in .agent-settings.yml.
+
+  The log is local-only JSONL — nothing uploaded, nothing shared across
+  projects. Reports: ./agent-config telemetry:report
+  Contract + privacy floor: agents/contexts/artifact-engagement-flow.md
+```
+
+Skip this block in cloud surfaces (no settings file, no log path).
 
 ## Gotchas
 

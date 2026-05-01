@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Refactor power\n",
+      "reconstructed_ac": [
+        "should preserve the public signature of power(a, b)",
+        "must keep test_power_positive_base green after the edit"
+      ],
+      "assumptions": [
+        "touches src/calculator.py only",
+        "no behaviour change intended; docstring tightening"
+      ],
+      "confidence": {
+        "band": "medium",
+        "score": 0.6,
+        "dimensions": {
+          "goal_clarity": 1,
+          "scope_boundary": 0,
+          "ac_evidence": 1,
+          "stack_data": 2,
+          "reversibility": 2
+        },
+        "reasons": [
+          "goal_clarity=1: verb present but length is borderline",
+          "scope_boundary=0: no file or domain anchor",
+          "ac_evidence=1: 2 criteria, 2 anchored",
+          "stack_data=2: prompt is behavioural, no stack/data signal",
+          "reversibility=2: code-only change, cheap to revert"
+        ],
+        "ui_intent": false
+      },
+      "acceptance_criteria": [
+        "should preserve the public signature of power(a, b)",
+        "must keep test_power_positive_base green after the edit"
+      ],
+      "confidence_confirmed": true
+    }
+  },
+  "intent": "backend-coding",
+  "directive_set": "backend",
+  "stack": null,
+  "ui_audit": null,
+  "ui_design": null,
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "partial"
+  },
+  "questions": [
+    "> Prompt: Refactor power",
+    "> Confidence: **medium** (score 0.60). Assumptions worth confirming before I plan.",
+    "> Reconstructed AC:",
+    ">    1. should preserve the public signature of power(a, b)",
+    ">    2. must keep test_power_positive_base green after the edit",
+    "> Assumptions:",
+    ">    - touches src/calculator.py only",
+    ">    - no behaviour change intended; docstring tightening",
+    "> 1. Continue as-is — the AC + assumptions are good enough",
+    "> 2. Refine — I'll send a corrected prompt and re-run `refine-prompt`",
+    "> 3. Abort — pause this `/work` cycle"
+  ],
+  "report": ""
+}
