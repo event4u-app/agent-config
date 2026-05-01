@@ -564,7 +564,11 @@ Aggregate verdicts:
 | Stability statement on Work Engine missing | AI #4 | low (single source) | Is the Work Engine stable, beta, or experimental? Must be made explicit. Affects how consumers read upgrade guarantees and breaking-change risk. Pairs with the term-separation theme above. |
 | Public Contract API needs a stable home (`docs/contracts/`) | AI #4 | low (single source, but flows from packaging bug) | If `agents/contexts/` stays internal-only (AI #4's preferred packaging fix), the public-facing contracts (memory, implement-ticket flow, UI-track flow, artifact-engagement, command-suggestion) need a stable shipped location. Implies: redirect README links + freeze public contract files. |
 
-## Open questions for the user (defer until window closes)
+## Open questions for the user
+
+> **Resolved 2026-05-01.** All items below were answered in the
+> "Decisions (synthesized)" section near the top of this file. Kept here
+> as historical context for the synthesis trail.
 
 - **Demo-track scope:** is "3 holy-shit demos" a roadmap deliverable, or a
   marketing artefact (and therefore out of this roadmap)?
@@ -644,14 +648,19 @@ Aggregate verdicts:
 
 ## Proposed actions
 
-*To be filled after the feedback window closes.*
+> See "Decisions (synthesized)" near the top of this file. Phase 1
+> (housekeeping 1.15.0) is the active execution slice; Phase 2 unlocks
+> after Phase 1 ships green CI.
 
 ## Risk register
 
-*To be filled after the feedback window closes.*
+> Per-source risk captures remain in the AI feedback blocks above.
+> Consolidated forward-looking risk lives inside each Phase 2 row of
+> the Decisions section (CI budget, modularisation behaviour-equiv,
+> chat-history split scope).
 
 ## Next step
 
-User will paste additional AI feedback. Each round → append a new "Raw feedback —
-AI #N" block + update the synthesized-themes table (raise confidence on
-cross-source agreement, lower / drop on contradiction).
+> Phase 1 P0 items are queued. Start with the packaging fix
+> (`docs/contracts/`), positioning sentence, counter-drift guard,
+> and term-separation in README + `docs/architecture.md`.

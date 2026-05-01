@@ -525,23 +525,15 @@ agent-config today (`task generate-tools` + `scripts/install.sh|.py`):
 | Reference-separation cap (SKILL.md ≤10KB, deep content in `references/`) | Benchmark | low (single source) | Hard size cap with structured overflow. Existing `size-enforcement` rule covers the cap; `references/` directory pattern is the new piece. |
 | Architecturally cleaner projection (vs claude-skills hand-rolled installers) | Benchmark | low (single source — strategic asset) | Worth surfacing in README/H block as a *differentiator*. agent-config's `task generate-tools` is single-source-of-truth; claude-skills duplicates per platform. |
 
-## Open questions for the user (defer until window closes)
+## Open questions for the user
 
-- Persona introduction: aligned with current identity, or scope drift?
-- PO/discovery skills: in scope for `agent-config`, or belongs to a sibling package?
-- Per-skill Python tools: net-new surface or convergence with existing engine?
-- Star/adoption signal: is mindshare a goal at all?
-- **Identity:** Galawork-internal · OSS product · OSS-light? (Blocks marketing, plugin marketplace, multi-tool work.)
-- **Audience:** primary = teams with own stack, secondary = agencies — OK or different?
-- **UI/frontend skills:** in scope for this package, or sibling package `agent-config-frontend`?
-- **Roadmap horizon:** keep current multi-roadmap planning style, or hard 6-week cap?
-- **Skill versioning:** introduce per-skill semver, or keep "the package version is the skill version"?
-- **Benchmark — Persona spine:** adopt the 9-section claude-skills shape as-is, prune to a leaner 5-6 section variant, or design from scratch?
-- **Benchmark — Orchestration pattern names:** borrow the four names verbatim (Solo Sprint · Domain Deep-Dive · Multi-Agent Handoff · Skill Chain), or rename to fit existing `/work` and `/implement-ticket` vocabulary?
-- **Benchmark — Eval thresholds:** adopt ≥85% pass / ≥+30% delta / <20% flake / quality-tier gating, or set our own numbers and route through `lint-skills` instead?
-- **Benchmark — Context-first pattern:** introduce `<domain>-context.md` files, or treat existing `agents/contexts/` as the equivalent surface?
-- **Benchmark — `/plugin-audit`-style pipeline:** worth orchestrating `task ci` + linters into a single 8-phase audit command, or keep them as flat parallel checks?
-- **Benchmark — Reference-separation:** introduce `references/` subdir per skill, or keep current single-file SKILL.md model?
+> **Resolved 2026-05-01.** All items (persona scope, PO/discovery scope,
+> Python tools surface, audience, UI scope, roadmap horizon, skill
+> versioning, persona-spine adoption, orchestration-pattern names, eval
+> thresholds, context-first reuse, plugin-audit pipeline,
+> reference-separation cap) are answered in the "Decisions
+> (synthesized)" section near the top of this file. Kept here as
+> historical context for the synthesis trail.
 
 ### AI #2 (continued) — ICE prioritization (Impact × Confidence × Ease, 1-10 each)
 
@@ -675,15 +667,20 @@ Reviewed claude-skills' installer + CLI surface against agent-config's:
 
 ## Proposed actions
 
-*To be filled after the feedback window closes.*
+> See "Decisions (synthesized)" near the top of this file. Block
+> sequence is locked B → A → C → D → H/I → Q/G → F. Block B starts
+> after Phase 1 of `road-to-post-pr29-optimize.md` ships.
 
 ## Risk register
 
-*Captured per-source above (AI #2 first cut). Consolidated register to be filled
-after the feedback window closes.*
+> AI #2's eight-row register (persona-schema bikeshed, Block D
+> explosion, marketing eats engineering, engine R1 drag, 178-step
+> demotivation, override bloat, 0 stars, copy-by-claude-skills) is
+> the consolidated register. Mitigations stay as captured.
 
 ## Next step
 
-User will paste additional AI feedback. Each round → append a new "Raw feedback —
-AI #N" block + update the synthesized-themes table (raise confidence on
-cross-source agreement, lower / drop on contradiction).
+> Refactor the 178-step backlog to "current 6-week plate +
+> directional backlog" (Decisions, Roadmap horizon). Then start
+> Block B (skill reorg) once Phase 1 of `road-to-post-pr29-optimize.md`
+> lands.
