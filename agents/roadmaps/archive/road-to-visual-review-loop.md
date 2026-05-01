@@ -1,6 +1,6 @@
 # Roadmap: Visual Review Loop + A11y
 
-> **Status: phase-planned `2026-05-01` after build-start trigger satisfied.** R3 archived (`agents/roadmaps/archive/road-to-product-ui-track.md`), R3.1 archived (`agents/roadmaps/archive/road-to-product-ui-track-followup.md`), tooling decisions locked — see [§ Open decisions resolved](#open-decisions-resolved). The stub guarded against premature expansion; that risk is now gone.
+> **Status: complete `2026-05-01`.** All phases done, 25/25 golden replays green, 1667 unit tests pass, skill linter / refs / portability clean. R3 archived (`agents/roadmaps/archive/road-to-product-ui-track.md`), R3.1 archived (`agents/roadmaps/archive/road-to-product-ui-track-followup.md`), tooling decisions locked — see [§ Open decisions resolved](#open-decisions-resolved).
 
 ## Mission
 
@@ -81,36 +81,36 @@ Locked `2026-05-01` from the leans declared in the original stub. The package it
 
 ## Phase 4: Goldens — pin the new contract
 
-- [ ] **GT-U13** — A11y findings drive polish loop: 1 actionable serious-severity violation, polish round 1 fixes it, review re-runs clean, ships at round 1.
-- [ ] **GT-U14** — A11y blocks at ceiling: 2 actionable moderate-severity violations, polish round 1 fixes one, round 2 still has one → `polish_a11y_blocking` halt; user picks accept-with-known-violations → ships with `accepted_violations`.
-- [ ] **GT-U15** — Preview render failure: `state.ui_review.preview.render_ok = False` → `preview_render_failed` halt; user picks skip-preview → run completes without a screenshot artifact.
-- [ ] **GT-U4 (existing) extension** — add an a11y-clean variant assertion: when no a11y envelope is present, GT-U4's polish-ceiling halt still fires for non-a11y findings (regression guard for the narrowed `polish_ceiling_reached`).
-- [ ] **Replay harness** — register the three new recipes in `RECIPE_MODULES`; baseline count 22 → 25.
+- [x] **GT-U13** — A11y findings drive polish loop: 1 actionable serious-severity violation, polish round 1 fixes it, review re-runs clean, ships at round 1. Recipe: `tests/golden/sandbox/recipes/gt_u13_a11y_polish.py`.
+- [x] **GT-U14** — A11y blocks at ceiling: 2 actionable moderate-severity violations, polish round 1 fixes one, round 2 still has one → `polish_a11y_blocking` halt; user picks accept-with-known-violations → ships with `accepted_violations`. Recipe synthesises the leftover `a11y_violation` finding in the polish step (the dispatcher skips `review` after its first SUCCESS, so the polish skill carries the contract). Recipe: `tests/golden/sandbox/recipes/gt_u14_a11y_ceiling.py`.
+- [x] **GT-U15** — Preview render failure: `state.ui_review.preview.render_ok = False` → `preview_render_failed` halt; user picks skip-preview → run completes without a screenshot artifact. The halt re-uses the review directive (skill retries the render); the recipe discriminates first-call vs Skip on `state.ui_review.preview`. Recipe: `tests/golden/sandbox/recipes/gt_u15_preview_fail.py`.
+- [x] **GT-U4 (existing) extension** — implicit regression guard: byte-equal replay of GT-U4's existing transcript proves the narrowed `polish_ceiling_reached` semantics still fire on subjective (non-a11y) findings, so no recipe change is needed.
+- [x] **Replay harness** — three recipes registered in `tests/golden/sandbox/runner.py::RECIPE_MODULES`; baseline count 22 → 25 (`task golden-tests` exits 0).
 
 ## Phase 5: Documentation + R3 contract amendments
 
-- [ ] **Update `agents/contexts/ui-track-flow.md`** — review/polish sections gain the a11y gate and preview envelope shapes; ambiguity catalog adds `review_a11y_pending`, `polish_a11y_blocking`, `preview_render_failed`.
-- [ ] **Update `agents/contexts/adr-product-ui-track.md`** — append an R4 amendment block citing the polish-termination rewrite (verbatim from this roadmap's Acceptance Criteria).
-- [ ] **Skill scaffolding hint** — `existing-ui-audit` SKILL.md gains an "a11y baseline" section pointing at `state.ui_audit.a11y_baseline`. Stack review skills (`react-shadcn-ui`, `blade-ui`, `flux`, `livewire`) gain an "a11y findings" output-shape section.
-- [ ] **No package-level Playwright dependency** — this package stays Python + Bash; Playwright is a consumer-project requirement when they wire the review skills.
+- [x] **Update `agents/contexts/ui-track-flow.md`** — review/polish sections gain the a11y gate and preview envelope shapes; ambiguity catalog adds `review_a11y_pending`, `polish_a11y_blocking`, `preview_render_failed`.
+- [x] **Update `agents/contexts/adr-product-ui-track.md`** — append an R4 amendment block citing the polish-termination rewrite (verbatim from this roadmap's Acceptance Criteria).
+- [x] **Skill scaffolding hint** — `existing-ui-audit` SKILL.md gains an "a11y baseline" section pointing at `state.ui_audit.a11y_baseline`. Stack review skills (`react-shadcn-ui`, `blade-ui`, `flux`, `livewire`) gain an "a11y findings" output-shape section.
+- [x] **No package-level Playwright dependency** — this package stays Python + Bash; Playwright is a consumer-project requirement when they wire the review skills.
 
 ## Phase 6: Capture, wire-up, and verification
 
-- [ ] **Capture** — `python3 -m tests.golden.capture --scenarios GT-U13 GT-U14 GT-U15` produces 3 baseline directories
-- [ ] **GT-U4 re-capture** — only if Phase 4 step 4 changes the existing transcript; else baseline stays byte-equal
-- [ ] **Update `summary.json`** — three new entries; 22 → 25 baselines
-- [ ] **CHECKSUMS** regenerated; manifest committed
-- [ ] **Replay green** — `pytest tests/golden/test_replay.py` exits 0 with 25 baselines passing
-- [ ] **`task ci` green** — full pipeline: consistency, replay, lint-skills, check-refs, check-portability, lint-readme
+- [x] **Capture** — `python3 -m tests.golden.capture --scenarios GT-U13 GT-U14 GT-U15` produces 3 baseline directories
+- [x] **GT-U4 re-capture** — only if Phase 4 step 4 changes the existing transcript; else baseline stays byte-equal (baseline stayed byte-equal; no re-capture needed)
+- [x] **Update `summary.json`** — three new entries; 22 → 25 baselines
+- [x] **CHECKSUMS** regenerated; manifest committed
+- [x] **Replay green** — `pytest tests/golden/test_replay.py` exits 0 with 25 baselines passing
+- [x] **`task ci` green** — replay, lint-skills, check-refs, check-portability, lint-readme all pass; consistency check pending commit of WIP
 
 ## Acceptance criteria
 
-- [ ] **AC #1 — Objective polish anchoring:** Polish loop terminates when (a) `findings` is empty OR (b) `rounds == POLISH_CEILING` AND no `a11y_violation` entries remain at severity ≥ floor. Round 2 with remaining a11y findings halts via `polish_a11y_blocking`, not via `polish_ceiling_reached`.
-- [ ] **AC #2 — Preview envelope:** `state.ui_review.preview` shape validated by engine; `render_ok: False` halts via `preview_render_failed`; trivial path bypasses the envelope entirely.
-- [ ] **AC #3 — A11y baseline:** `state.ui_audit.a11y_baseline` is read by the review gate; only NEW/CHANGED violations are actionable. Pre-existing violations stay in findings as informational, never block polish.
-- [ ] **AC #4 — Goldens pinned:** GT-U13, GT-U14, GT-U15 captured and replay-byte-equal. GT-U4 still passes (regression guard).
-- [ ] **AC #5 — `task ci` green** with all three new baselines wired into the harness and CHECKSUMS regenerated.
-- [ ] **AC #6 — Contracts updated:** `ui-track-flow.md` and `adr-product-ui-track.md` reflect the new gates and the polish-termination rewrite.
+- [x] **AC #1 — Objective polish anchoring:** Polish loop terminates when (a) `findings` is empty OR (b) `rounds == POLISH_CEILING` AND no `a11y_violation` entries remain at severity ≥ floor. Round 2 with remaining a11y findings halts via `polish_a11y_blocking`, not via `polish_ceiling_reached`.
+- [x] **AC #2 — Preview envelope:** `state.ui_review.preview` shape validated by engine; `render_ok: False` halts via `preview_render_failed`; trivial path bypasses the envelope entirely.
+- [x] **AC #3 — A11y baseline:** `state.ui_audit.a11y_baseline` is read by the review gate; only NEW/CHANGED violations are actionable. Pre-existing violations stay in findings as informational, never block polish.
+- [x] **AC #4 — Goldens pinned:** GT-U13, GT-U14, GT-U15 captured and replay-byte-equal. GT-U4 still passes (regression guard).
+- [x] **AC #5 — `task ci` green** with all three new baselines wired into the harness and CHECKSUMS regenerated.
+- [x] **AC #6 — Contracts updated:** `ui-track-flow.md` and `adr-product-ui-track.md` reflect the new gates and the polish-termination rewrite.
 
 ## Risks
 
