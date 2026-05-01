@@ -511,8 +511,10 @@ def _validate_ui_polish(ui_polish: Any) -> None:
 
     ``None`` means the polish loop has not entered yet. Once
     populated, ``rounds`` (when present) must be an int in ``[0, 2]``
-    — the polish-loop ceiling defined in
+    by default — the polish-loop ceiling defined in
     ``agents/roadmaps/road-to-product-ui-track.md`` Phase 3 Step 5.
+    R4 Phase 2 widens the upper bound to ``3`` when
+    ``extension_used`` is ``True`` (one-shot a11y extension halt).
     ``applied`` (when present) must be a list. The polish handler
     enforces ceiling semantics; the schema enforces only shape.
     """
@@ -523,25 +525,28 @@ def _validate_ui_polish(ui_polish: Any) -> None:
             f"state.ui_polish must be a JSON object or null; "
             f"got {type(ui_polish).__name__}",
         )
+    if "extension_used" in ui_polish and not isinstance(
+        ui_polish["extension_used"], bool,
+    ):
+        raise SchemaError(
+            "state.ui_polish.extension_used must be a boolean when present",
+        )
+    extension_used = bool(ui_polish.get("extension_used", False))
     if "rounds" in ui_polish:
         rounds = ui_polish["rounds"]
         if not isinstance(rounds, int) or isinstance(rounds, bool):
             raise SchemaError(
                 f"state.ui_polish.rounds must be an integer; got {type(rounds).__name__}",
             )
-        if rounds < 0 or rounds > 2:
+        max_rounds = 3 if extension_used else 2
+        if rounds < 0 or rounds > max_rounds:
             raise SchemaError(
-                f"state.ui_polish.rounds must be in [0, 2]; got {rounds}",
+                f"state.ui_polish.rounds must be in [0, {max_rounds}]; "
+                f"got {rounds} (extension_used={extension_used})",
             )
     if "applied" in ui_polish and not isinstance(ui_polish["applied"], list):
         raise SchemaError(
             "state.ui_polish.applied must be a list when present",
-        )
-    if "extension_used" in ui_polish and not isinstance(
-        ui_polish["extension_used"], bool,
-    ):
-        raise SchemaError(
-            "state.ui_polish.extension_used must be a boolean when present",
         )
 
 

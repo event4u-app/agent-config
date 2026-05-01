@@ -422,3 +422,132 @@ def test_polish_ceiling_overrides_token_extraction_halt() -> None:
 def test_polish_token_threshold_is_two() -> None:
     """Roadmap mirror — Phase 3 Step 5 says ">2 times"."""
     assert polish.TOKEN_REPEAT_THRESHOLD == 2
+
+
+
+# --- R4 Phase 2: a11y-blocking + one-shot extension ------------------------
+
+
+def _a11y_finding(rule: str = "color-contrast", selector: str = ".x") -> dict:
+    return {
+        "kind": "a11y_violation",
+        "rule": rule,
+        "selector": selector,
+        "severity": "serious",
+    }
+
+
+def test_polish_ceiling_with_a11y_findings_emits_a11y_blocking_halt() -> None:
+    """A11y findings at the ceiling route to the dedicated halt."""
+    state = _ui_state(
+        ui_review={
+            "findings": [_a11y_finding()],
+            "review_clean": False,
+        },
+        ui_polish={"rounds": 2, "applied": [], "extension_used": False},
+    )
+
+    result = polish.run(state)
+
+    assert result.outcome is Outcome.BLOCKED
+    body = "\n".join(result.questions)
+    assert "a11y violation" in body
+    assert "Extend" in body
+    assert "Accept" in body
+    assert "Ship as-is" not in body
+    assert "Hand off" not in body
+
+
+def test_polish_ceiling_a11y_takes_precedence_over_subjective() -> None:
+    """Mixed findings at ceiling — a11y halt fires, not subjective ceiling."""
+    state = _ui_state(
+        ui_review={
+            "findings": [
+                _a11y_finding(),
+                {"path": "x", "issue": "subjective"},
+            ],
+            "review_clean": False,
+        },
+        ui_polish={"rounds": 2, "applied": []},
+    )
+
+    result = polish.run(state)
+
+    body = "\n".join(result.questions)
+    assert "Extend" in body
+    assert "Ship as-is" not in body
+
+
+def test_polish_ceiling_subjective_only_keeps_classic_halt() -> None:
+    """Non-a11y findings at ceiling still fire the original halt."""
+    state = _ui_state(
+        ui_review={
+            "findings": [{"path": "x", "issue": "subjective"}],
+            "review_clean": False,
+        },
+        ui_polish={"rounds": 2, "applied": []},
+    )
+
+    result = polish.run(state)
+
+    body = "\n".join(result.questions)
+    assert "Ship as-is" in body
+    assert "Hand off" in body
+    assert "Extend" not in body
+
+
+def test_polish_extension_grants_round_three() -> None:
+    """rounds==2 + extension_used=True → next-round delegation, not halt."""
+    state = _ui_state(
+        ui_review={
+            "findings": [_a11y_finding()],
+            "review_clean": False,
+        },
+        ui_polish={"rounds": 2, "applied": [], "extension_used": True},
+    )
+
+    result = polish.run(state)
+
+    assert result.outcome is Outcome.BLOCKED
+    assert result.questions[0].startswith(AGENT_DIRECTIVE_PREFIX)
+    body = "\n".join(result.questions)
+    assert "round 3 of 3" in body
+
+
+def test_polish_extension_exhausted_drops_extend_option() -> None:
+    """rounds==3 + extension_used=True → a11y halt without Extend option."""
+    state = _ui_state(
+        ui_review={
+            "findings": [_a11y_finding()],
+            "review_clean": False,
+        },
+        ui_polish={"rounds": 3, "applied": [], "extension_used": True},
+    )
+
+    result = polish.run(state)
+
+    assert result.outcome is Outcome.BLOCKED
+    body = "\n".join(result.questions)
+    assert "Accept" in body
+    assert "Abort" in body
+    assert "Extend" not in body
+
+
+def test_polish_a11y_halt_lists_findings() -> None:
+    state = _ui_state(
+        ui_review={
+            "findings": [
+                _a11y_finding(rule="color-contrast", selector=".btn"),
+                _a11y_finding(rule="label", selector="input#name"),
+            ],
+            "review_clean": False,
+        },
+        ui_polish={"rounds": 2, "applied": []},
+    )
+
+    result = polish.run(state)
+
+    body = "\n".join(result.questions)
+    assert "color-contrast" in body
+    assert ".btn" in body
+    assert "label" in body

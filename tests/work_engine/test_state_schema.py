@@ -643,6 +643,41 @@ class TestUiPolishExtensionUsed:
         with pytest.raises(SchemaError, match="extension_used must be a boolean"):
             from_dict(payload)
 
+    def test_rejects_rounds_three_without_extension(self) -> None:
+        """Schema mirror — round 3 only legal when extension_used=True."""
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "ui_polish": {"rounds": 3, "extension_used": False},
+        }
+
+        with pytest.raises(SchemaError, match=r"rounds must be in \[0, 2\]"):
+            from_dict(payload)
+
+    def test_accepts_rounds_three_with_extension(self) -> None:
+        """R4 Phase 2 — round 3 is legal once the one-shot extension fired."""
+        state = _build_state(
+            ui_polish={"rounds": 3, "extension_used": True},
+        )
+        rebuilt = from_dict(to_dict(state))
+        assert rebuilt.ui_polish["rounds"] == 3
+        assert rebuilt.ui_polish["extension_used"] is True
+
+    def test_rejects_rounds_four_even_with_extension(self) -> None:
+        """Hard cap — extension grants exactly one extra round, not two."""
+        payload = {
+            "version": SCHEMA_VERSION,
+            "input": {"kind": "ticket", "data": {}},
+            "intent": DEFAULT_INTENT,
+            "directive_set": DEFAULT_DIRECTIVE_SET,
+            "ui_polish": {"rounds": 4, "extension_used": True},
+        }
+
+        with pytest.raises(SchemaError, match=r"rounds must be in \[0, 3\]"):
+            from_dict(payload)
+
 
 class TestUnknownTopLevelKeysAreTolerated:
     def test_extra_keys_are_dropped(self) -> None:

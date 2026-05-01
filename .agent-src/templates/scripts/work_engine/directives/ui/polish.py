@@ -41,8 +41,22 @@ POLISH_CEILING = 2
 """Maximum number of polish rounds per ``/work`` run.
 
 Mirrored by :func:`work_engine.state._validate_ui_polish` (rejects
-``rounds > 2`` at schema load) so the contract holds across
-in-memory state, on-disk state, and the dispatcher.
+``rounds > 2`` at schema load when ``extension_used`` is ``False``)
+so the contract holds across in-memory state, on-disk state, and the
+dispatcher. R4 Phase 2 adds a one-shot extension that lifts the
+runtime cap to ``POLISH_CEILING + 1`` when
+``state.ui_polish.extension_used`` is ``True``.
+"""
+
+A11Y_VIOLATION_KIND = "a11y_violation"
+"""Marker on a review finding that flags an axe-core (or equivalent)
+accessibility issue. Synthesised by
+:func:`work_engine.directives.ui.review._synthesize_a11y_findings`
+when actionable violations remain after baseline / accepted /
+severity-floor filtering. Polish treats them as ordinary findings
+during rounds 1..N but isolates them at the ceiling so the user
+gets the dedicated ``polish_a11y_blocking`` halt instead of the
+subjective ``polish_ceiling_reached`` halt.
 """
 
 TOKEN_VIOLATION_KIND = "token_violation"
@@ -88,10 +102,25 @@ AMBIGUITIES: tuple[dict[str, str], ...] = (
     },
     {
         "code": "polish_ceiling_reached",
-        "trigger": "state.ui_polish.rounds == 2 and review still dirty "
-        "— two rounds did not converge",
+        "trigger": "state.ui_polish.rounds == ceiling and remaining "
+        "findings are non-a11y (subjective polish that did not "
+        "converge) — a11y blocks take precedence via "
+        "polish_a11y_blocking",
         "resolution": "user picks: ship as-is, abort, or hand off to "
-        "manual fix; engine refuses to start a third round",
+        "manual fix; engine refuses to start another round",
+    },
+    {
+        "code": "polish_a11y_blocking",
+        "trigger": "state.ui_polish.rounds == ceiling and "
+        "state.ui_review.findings still contains a11y_violation "
+        "entries — objective gate that takes precedence over the "
+        "subjective polish_ceiling_reached halt",
+        "resolution": "user picks: extend by one round (engine sets "
+        "state.ui_polish.extension_used=True so the next round can "
+        "fire), accept-with-known-violations (engine appends the "
+        "leftover violations to state.ui_review.a11y.accepted_violations "
+        "so the review gate stops blocking on them), or abort the "
+        "UI request",
     },
     {
         "code": "polish_token_extraction_pending",
@@ -122,9 +151,24 @@ def run(state: DeliveryState) -> StepResult:
     rounds = polish.get("rounds", 0)
     if not isinstance(rounds, int) or isinstance(rounds, bool):
         rounds = 0
+    extension_used = bool(polish.get("extension_used", False))
+    effective_ceiling = POLISH_CEILING + (1 if extension_used else 0)
 
-    if rounds >= POLISH_CEILING:
-        return _halt_ceiling(state, findings_count=len(findings), rounds=rounds)
+    if rounds >= effective_ceiling:
+        a11y_findings = _a11y_findings(findings)
+        if a11y_findings:
+            return _halt_a11y_blocking(
+                state,
+                a11y_findings=a11y_findings,
+                rounds=rounds,
+                extension_available=not extension_used,
+            )
+        return _halt_ceiling(
+            state,
+            findings_count=len(findings),
+            rounds=rounds,
+            ceiling=effective_ceiling,
+        )
 
     tokens = _design_tokens(state)
     matched, unmatched_repeats = _classify_token_violations(findings, tokens)
@@ -136,6 +180,7 @@ def run(state: DeliveryState) -> StepResult:
         findings_count=len(findings),
         matched_token_count=len(matched),
         rounds=rounds,
+        ceiling=effective_ceiling,
     )
 
 
@@ -165,6 +210,7 @@ def _delegate_to_polish_skill(
     findings_count: int,
     matched_token_count: int,
     rounds: int,
+    ceiling: int,
 ) -> StepResult:
     """BLOCKED halt — emit the stack-specific polish directive.
 
@@ -178,7 +224,9 @@ def _delegate_to_polish_skill(
     ``matched_token_count`` reports how many findings are
     ``token_violation`` entries whose value already lives in
     ``state.ui_audit.design_tokens`` — those auto-convert in this
-    round without further user input.
+    round without further user input. ``ceiling`` is the
+    extension-aware upper bound (``POLISH_CEILING`` or
+    ``POLISH_CEILING + 1`` after an a11y extension).
     """
     directive = _resolve_directive(state)
     stack_label = _stack_label(state)
@@ -201,14 +249,14 @@ def _delegate_to_polish_skill(
         questions=[
             agent_directive(directive),
             f"> Stack: `{stack_label}`. Polish round "
-            f"{next_round} of {POLISH_CEILING}.",
+            f"{next_round} of {ceiling}.",
             findings_line,
             "> 1. Continue \u2014 apply fixes, re-review, and increment "
             "`state.ui_polish.rounds`",
             "> 2. Abort \u2014 drop this UI request",
         ],
         message=(
-            f"UI polish round {next_round}/{POLISH_CEILING}; delegating "
+            f"UI polish round {next_round}/{ceiling}; delegating "
             f"to `{directive}` for stack `{stack_label}`."
         ),
     )
@@ -219,14 +267,21 @@ def _halt_ceiling(
     *,
     findings_count: int,
     rounds: int,
+    ceiling: int,
 ) -> StepResult:
-    """BLOCKED halt — two rounds spent and review still dirty."""
+    """BLOCKED halt — ceiling reached on subjective (non-a11y) findings.
+
+    R4 Phase 2 narrows this halt: a11y findings are routed to
+    :func:`_halt_a11y_blocking` first, so this halt only fires when
+    every remaining finding is subjective polish that did not
+    converge.
+    """
     stack_label = _stack_label(state)
     return StepResult(
         outcome=Outcome.BLOCKED,
         questions=[
             f"> Stack: `{stack_label}`. Polish ceiling reached "
-            f"({rounds}/{POLISH_CEILING} rounds).",
+            f"({rounds}/{ceiling} rounds).",
             f"> {findings_count} finding(s) still open in "
             "`state.ui_review`. The engine refuses a third round.",
             "> 1. Ship as-is \u2014 mark `state.ui_review.review_clean "
@@ -243,8 +298,83 @@ def _halt_ceiling(
             "polish, deferred to a follow-up).",
         ],
         message=(
-            f"UI polish ceiling reached ({rounds}/{POLISH_CEILING}); "
+            f"UI polish ceiling reached ({rounds}/{ceiling}); "
             f"{findings_count} finding(s) still open."
+        ),
+    )
+
+
+def _a11y_findings(findings: list[Any]) -> list[dict[str, Any]]:
+    """Return the subset of ``findings`` synthesised by the a11y gate."""
+    return [
+        f for f in findings
+        if isinstance(f, dict) and f.get("kind") == A11Y_VIOLATION_KIND
+    ]
+
+
+def _halt_a11y_blocking(
+    state: DeliveryState,
+    *,
+    a11y_findings: list[dict[str, Any]],
+    rounds: int,
+    extension_available: bool,
+) -> StepResult:
+    """BLOCKED halt — ceiling reached with actionable a11y findings.
+
+    Takes precedence over :func:`_halt_ceiling`: the user gets three
+    options tailored to a11y (extend / accept / abort) instead of
+    the subjective ship-or-handoff trio. ``extension_available`` is
+    ``False`` once the one-shot extension was already used; in that
+    case option 1 disappears and only accept / abort remain.
+    """
+    stack_label = _stack_label(state)
+    count = len(a11y_findings)
+    questions: list[str] = [
+        f"> Stack: `{stack_label}`. Polish ceiling reached "
+        f"({rounds}/{POLISH_CEILING} rounds) with {count} a11y "
+        "violation(s) still open.",
+    ]
+    for finding in a11y_findings[:5]:
+        rule = finding.get("rule") or "?"
+        selector = finding.get("selector") or "?"
+        severity = finding.get("severity") or "?"
+        questions.append(
+            f"> - `{rule}` on `{selector}` (severity: {severity})"
+        )
+    if count > 5:
+        questions.append(f"> ... and {count - 5} more")
+    if extension_available:
+        questions.extend([
+            "> 1. Extend \u2014 grant one extra polish round; the "
+            "engine sets `state.ui_polish.extension_used = True` so "
+            "the next delegation can fire",
+            "> 2. Accept \u2014 append the open violations to "
+            "`state.ui_review.a11y.accepted_violations` so the review "
+            "gate stops blocking on them, then continue to `report`",
+            "> 3. Abort \u2014 drop this UI request",
+            "",
+            "**Recommendation: 1 \u2014 Extend** \u2014 a11y "
+            "violations are objective; one more round usually closes "
+            "the gap. Pick 2 only when the violations are explicitly "
+            "out of scope for this run.",
+        ])
+    else:
+        questions.extend([
+            "> 1. Accept \u2014 append the open violations to "
+            "`state.ui_review.a11y.accepted_violations` so the review "
+            "gate stops blocking on them, then continue to `report`",
+            "> 2. Abort \u2014 drop this UI request",
+            "",
+            "**Recommendation: 1 \u2014 Accept** \u2014 the one-shot "
+            "extension is already spent; either accept the residual "
+            "violations or abort.",
+        ])
+    return StepResult(
+        outcome=Outcome.BLOCKED,
+        questions=questions,
+        message=(
+            f"UI polish ceiling reached ({rounds}/{POLISH_CEILING}); "
+            f"{count} a11y violation(s) still open."
         ),
     )
 
@@ -369,6 +499,7 @@ def _halt_token_extraction(
 
 
 __all__ = [
+    "A11Y_VIOLATION_KIND",
     "AMBIGUITIES",
     "DEFAULT_DIRECTIVE",
     "POLISH_CEILING",
