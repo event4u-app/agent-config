@@ -307,3 +307,74 @@ the contract first costs one halt and saves an entire polish round.
   `react-shadcn-v2` / `react-shadcn-v3` once shadcn ships its next
   major; the audit version-mismatch warning surfaces this signal
   without forcing a split today.
+
+## R4 amendment — Visual Review Loop (2026-05-01)
+
+> **Status:** Decided · R4 Phases 0–4 shipped · Phase 5 in progress
+> **Roadmap:** [`road-to-visual-review-loop.md`](../roadmaps/road-to-visual-review-loop.md)
+
+R4 narrows the polish-termination contract from "subjective ceiling
+only" to "subjective ceiling **plus** objective a11y block", adds a
+preview envelope on `state.ui_review.preview` (engine reads, skill
+writes — the engine never spawns a browser), and threads an a11y
+baseline through the existing audit step so pre-existing violations
+stay informational while new ones block.
+
+### Acceptance criteria — locked verbatim from the roadmap
+
+- **AC #1 — Objective polish anchoring:** Polish loop terminates when
+  (a) `findings` is empty OR (b) `rounds == POLISH_CEILING` AND no
+  `a11y_violation` entries remain at severity ≥ floor. Round 2 with
+  remaining a11y findings halts via `polish_a11y_blocking`, not via
+  `polish_ceiling_reached`.
+- **AC #2 — Preview envelope:** `state.ui_review.preview` shape
+  validated by engine; `render_ok: False` halts via
+  `preview_render_failed`; trivial path bypasses the envelope
+  entirely.
+- **AC #3 — A11y baseline:** `state.ui_audit.a11y_baseline` is read
+  by the review gate; only NEW/CHANGED violations are actionable.
+  Pre-existing violations stay in findings as informational, never
+  block polish.
+- **AC #4 — Goldens pinned:** GT-U13, GT-U14, GT-U15 captured and
+  replay-byte-equal. GT-U4 still passes (regression guard for the
+  narrowed `polish_ceiling_reached`).
+- **AC #5 — `task ci` green** with all three new baselines wired
+  into the harness and CHECKSUMS regenerated.
+- **AC #6 — Contracts updated:** `ui-track-flow.md` and
+  `adr-product-ui-track.md` reflect the new gates and the
+  polish-termination rewrite.
+
+### Termination rewrite — load-bearing change
+
+The pre-R4 polish step had one ceiling halt
+(`polish_ceiling_reached`) with three options: ship as-is / abort /
+hand off. R4 keeps that branch for **subjective** findings (visual
+polish, design tweaks) and adds an explicit **objective** branch
+when remaining findings include `a11y_violation` entries:
+
+- `polish_a11y_blocking` halt with options:
+  1. **Extend** — sets `state.ui_polish.extension_used = True`; the
+     schema validator widens `rounds` from `[0, 2]` to `[0, 3]` only
+     while the flag is set. Once spent, the Extend option disappears
+     on re-entry.
+  2. **Accept** — appends rule ids to
+     `state.ui_review.a11y.accepted_violations`; on replay the review
+     gate's `_apply_a11y_gate` filters those rule ids before
+     synthesising findings, so the run round-trips through `SUCCESS`
+     idempotently.
+  3. **Abort** — drops the UI request.
+
+The two halts share the polish step but never fire together: the
+explicit branch in `polish.run()` checks for `a11y_violation` entries
+before falling through to the subjective ceiling.
+
+### Iron law
+
+The engine **never** renders. Playwright integration lives in the
+stack-specific review skills. The engine reads
+`state.ui_review.preview`; the skill writes it. `render_ok: False`
+halts the user; `skipped: True` bypasses the gate idempotently;
+`render_ok: True` with `screenshot_path` set threads the path into
+the delivery report's `artifacts` list. This boundary keeps the
+package Python + Bash and pushes the browser dependency into
+consumer-project setup.
