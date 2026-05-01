@@ -1,6 +1,6 @@
 # Roadmap: Visual Review Loop + A11y
 
-> **Status: stub — not started.** Anchored on the dashboard so the product arc is visible. Do not pull steps from here until R3 is merged. Content is deliberately thin until the build of R3 surfaces what shape this needs.
+> **Status: phase-planned `2026-05-01` after build-start trigger satisfied.** R3 archived (`agents/roadmaps/archive/road-to-product-ui-track.md`), R3.1 archived (`agents/roadmaps/archive/road-to-product-ui-track-followup.md`), tooling decisions locked — see [§ Open decisions resolved](#open-decisions-resolved). The stub guarded against premature expansion; that risk is now gone.
 
 ## Mission
 
@@ -10,9 +10,10 @@ A11y is the lever, not the screenshot. Code-review and visual-review are subject
 
 ## Prerequisites
 
-- [ ] **Roadmap 3 (`road-to-product-ui-track.md`) merged** — this roadmap modifies R3's polish contract; doing it before R3 is wrong-order
-- [ ] R1, R2 goldens green
-- [ ] UI-track goldens (GT-U1..GT-U12) green
+- [x] **Roadmap 3 archived** — `agents/roadmaps/archive/road-to-product-ui-track.md` (`2026-05-01`); R4 modifies R3's polish contract, so R3 must be locked first
+- [x] **Roadmap 3.1 archived** — `agents/roadmaps/archive/road-to-product-ui-track-followup.md` (`2026-05-01`); GT-U5..U8 pinned, mixed and stack contracts locked
+- [x] R1, R2, R3, R3.1 goldens green — `tests/golden/test_replay.py` covers 22 baselines (`2026-05-01`)
+- [x] **A11y tooling decision locked** — see [§ Open decisions resolved](#open-decisions-resolved)
 
 ## Context
 
@@ -34,38 +35,86 @@ R4's two pillars:
 - **No** UI-quality scoring / dashboard
 - **No** removal of R3's 2-round ceiling — the ceiling stays as a *time* limit; a11y findings add a separate *correctness* limit that overrides termination
 
-## Phase 0: Stub — build trigger and contract
+## Open decisions resolved
 
-> Single placeholder phase so this roadmap appears on the dashboard arc. Expand into full phase breakdown only when R3 merges.
+Locked `2026-05-01` from the leans declared in the original stub. The package itself ships no UI and no Playwright dependency — these decisions describe what the **engine contract** assumes consumer-project skills produce, not what this package installs.
 
-- [ ] **Build trigger:** R3 (`road-to-product-ui-track.md`) is merged AND a11y tooling decision (axe-core via Playwright vs. pa11y) is locked in `Open decisions` below. Do not start before both hold.
+| Decision | Resolution | Rationale |
+|---|---|---|
+| **Tooling choice** | **axe-core via Playwright** is the canonical producer; pa11y CLI is documented as the fallback for stacks where Playwright is not viable (e.g. server-only Blade with no JS bundle). The engine consumes a normalized findings shape; it does not shell out to either. | Both leans confirmed in the stub. axe-core has the richer rule set and integrates with Playwright (already a documented E2E skill). pa11y stays in the docs so consumers without a JS runtime are not stranded. |
+| **Severity threshold** | **`moderate+` blocks polish termination**; `minor` violations land in findings as informational. Threshold lives in `state.ui_review.a11y.severity_floor` (default `"moderate"`, override per-project via `.agent-settings.yml`). | Original lean. Objective discipline only works if the bar is meaningful; minor a11y issues (e.g. landmark naming) are noise without context. |
+| **Render target** | **Playwright** is the documented render target for the preview envelope. Puppeteer / native browser are out of scope. | Original lean. Playwright is already a documented E2E skill, the team has tooling, and axe-core integrates natively. |
+| **Findings producer** | The stack-specific review skills (`ui-design-review-blade-livewire-flux`, `ui-design-review-react-shadcn`, …) extend their output schema with an `a11y` block. The engine reads `state.ui_review.a11y.violations` and `state.ui_review.preview` — no new directive type is added. | Reuses the existing dispatcher slot. New directives mean new validation paths, new goldens, more drift surface. |
+| **Pre-existing violation handling** | Audit-time baseline: `state.ui_audit.a11y_baseline` records pre-existing violations on touched components. Polish gate compares findings against the baseline; only NEW or CHANGED violations block. | Without this, retrofitting axe-core onto a project with debt halts every UI run. The baseline is an opt-in field — absence means the gate sees all findings. |
 
-## Acceptance preview (authoritative shape, not full list)
+## Phase 0: State-shape extension (engine layer)
 
-- [ ] Polish loop terminates ONLY when both conditions hold: (a) ≤ 2 rounds run AND (b) a11y findings list is empty (zero unresolved axe/pa11y violations of severity ≥ moderate). If a11y findings remain after round 2, engine halts to user with the findings — does not silently ship.
-- [ ] Headless-browser render is captured as a delivery-report artifact for every UI run (screenshot + DOM dump); failure to render is a hard error, not a warning.
-- [ ] A11y findings are surfaced in the design-brief review halt (Phase 2/3 of R3) — user sees and accepts known violations explicitly when they cannot be auto-fixed.
+- [ ] **Extend `state.ui_review`** schema: add optional `a11y` envelope `{violations: [...], severity_floor: str, baseline_compared: bool}`; add optional `preview` envelope `{screenshot_path: str, dom_dump_path: str, render_ok: bool, error: str | None}`. Both are optional so non-UI flows and pre-R4 fixtures keep working.
+- [ ] **Extend `state.ui_audit`** schema: add optional `a11y_baseline: [...]` field carrying pre-existing violations for touched components.
+- [ ] **Validators** in `work_engine/state.py`: shape check only (list of dicts, severity ∈ `{minor, moderate, serious, critical}`); no business rules at the schema layer.
+- [ ] **`DeliveryState` round-trip** — confirm a11y/preview fields survive `WorkState ↔ DeliveryState` boundary (mirrors the `c8086ca` fix for contract/stitch/stack).
 
-## R3 contract amendments (referenced from R4 build, not edited until then)
+## Phase 1: Review step — a11y gate integration
 
-This roadmap will, on build, rewrite the following R3 acceptance items:
+- [ ] **Read** `state.ui_review.a11y.violations` after the existing `findings`/`review_clean` gates pass. Filter against `state.ui_audit.a11y_baseline` if present.
+- [ ] **Severity floor**: violations strictly below `severity_floor` (default `moderate`) drop into informational findings; violations at or above the floor stay actionable.
+- [ ] **Outcome**: when actionable a11y violations remain, set `review_clean = False` automatically (engine-controlled, not skill-controlled) and synthesize one `a11y_violation` finding per blocked rule into `state.ui_review.findings`. Polish then sees them as ordinary findings.
+- [ ] **New ambiguity**: `review_a11y_pending` — `state.ui_review` populated, `findings` and `review_clean` set, but `a11y` envelope missing on a stack where it is expected.
 
-- "Polish loop has 2-round ceiling; engine halts to user if findings remain after round 2" → "Polish loop terminates after 2 rounds OR when zero unresolved a11y findings remain, whichever is *later*; round 2 with remaining findings is a halt, not a ship"
-- "Microcopy in shipped components matches the design-brief verbatim" → unchanged, but adds a11y-audit pass on microcopy (alt-text, aria-label content)
+## Phase 2: Polish termination contract amendment
 
-The R3 polish-loop tests (GT-U4) will gain an a11y-finding fixture variant.
+- [ ] **`POLISH_CEILING` stays at 2** — round count is the *time* limit.
+- [ ] **New gate**: at `rounds == POLISH_CEILING` AND `findings` still contains `a11y_violation` entries → halt with `polish_a11y_blocking` ambiguity (NOT the existing `polish_ceiling_reached` ship-or-abort halt). User picks: extend ceiling by one round, accept-with-known-violations (write decision into `state.ui_review.a11y.accepted_violations`), or abort.
+- [ ] **`polish_ceiling_reached` semantics narrow** — only fires when remaining findings are non-a11y (subjective polish); a11y blocks take precedence.
+- [ ] **Idempotent re-entry**: a `state.ui_review.a11y.accepted_violations` list with rule ids matching the remaining a11y findings round-trips through `SUCCESS` (user already chose accept).
 
-## Open decisions (deferred to build-start)
+## Phase 3: Preview envelope — render contract (no engine render)
 
-- **Tooling choice** — axe-core (browser-based) vs. pa11y (CLI) vs. both. Lean: axe-core via Playwright; pa11y as fallback for non-React stacks if axe-core proves heavy
-- **Severity threshold** — block on `moderate+` (default) vs. `serious+` only. Lean: `moderate+`; the entire point is objective discipline
-- **Render target** — Playwright (default, already required by E2E skill) vs. Puppeteer vs. native browser. Lean: Playwright
+- [ ] **Engine never renders** — Playwright integration lives in the stack-specific review skills. The engine reads `state.ui_review.preview` and validates shape only.
+- [ ] **`render_ok: False`** with `error` populated → halt with `preview_render_failed` ambiguity. User picks: retry, skip-preview-this-run (writes `state.ui_review.preview.skipped: true`), or abort.
+- [ ] **`render_ok: True`** with `screenshot_path` set → preview is captured as a delivery-report artifact (writes the path into the delivery report's `artifacts` list).
+- [ ] **Trivial path skips preview** — `directive_set == "ui-trivial"` does not consult `state.ui_review.preview` at all (matches the existing trivial fast-path: no audit, no design, no review, no polish).
 
-## Risks (sketch only, sharpened on build)
+## Phase 4: Goldens — pin the new contract
 
-- **A11y tooling produces noise on existing components** — audit-time baselining: only NEW or CHANGED components in the diff are subject to the gate; pre-existing violations are tracked separately as tech-debt
-- **Headless render is slow** — only run on `directive_set="ui"` AND when changed files include component templates; trivial-path runs skip it
-- **R3 contract drift while R4 is dormant** — R3 acceptance criteria reference this roadmap by path; CI cross-ref check enforces the pointer stays valid
+- [ ] **GT-U13** — A11y findings drive polish loop: 1 actionable serious-severity violation, polish round 1 fixes it, review re-runs clean, ships at round 1.
+- [ ] **GT-U14** — A11y blocks at ceiling: 2 actionable moderate-severity violations, polish round 1 fixes one, round 2 still has one → `polish_a11y_blocking` halt; user picks accept-with-known-violations → ships with `accepted_violations`.
+- [ ] **GT-U15** — Preview render failure: `state.ui_review.preview.render_ok = False` → `preview_render_failed` halt; user picks skip-preview → run completes without a screenshot artifact.
+- [ ] **GT-U4 (existing) extension** — add an a11y-clean variant assertion: when no a11y envelope is present, GT-U4's polish-ceiling halt still fires for non-a11y findings (regression guard for the narrowed `polish_ceiling_reached`).
+- [ ] **Replay harness** — register the three new recipes in `RECIPE_MODULES`; baseline count 22 → 25.
+
+## Phase 5: Documentation + R3 contract amendments
+
+- [ ] **Update `agents/contexts/ui-track-flow.md`** — review/polish sections gain the a11y gate and preview envelope shapes; ambiguity catalog adds `review_a11y_pending`, `polish_a11y_blocking`, `preview_render_failed`.
+- [ ] **Update `agents/contexts/adr-product-ui-track.md`** — append an R4 amendment block citing the polish-termination rewrite (verbatim from this roadmap's Acceptance Criteria).
+- [ ] **Skill scaffolding hint** — `existing-ui-audit` SKILL.md gains an "a11y baseline" section pointing at `state.ui_audit.a11y_baseline`. Stack review skills (`react-shadcn-ui`, `blade-ui`, `flux`, `livewire`) gain an "a11y findings" output-shape section.
+- [ ] **No package-level Playwright dependency** — this package stays Python + Bash; Playwright is a consumer-project requirement when they wire the review skills.
+
+## Phase 6: Capture, wire-up, and verification
+
+- [ ] **Capture** — `python3 -m tests.golden.capture --scenarios GT-U13 GT-U14 GT-U15` produces 3 baseline directories
+- [ ] **GT-U4 re-capture** — only if Phase 4 step 4 changes the existing transcript; else baseline stays byte-equal
+- [ ] **Update `summary.json`** — three new entries; 22 → 25 baselines
+- [ ] **CHECKSUMS** regenerated; manifest committed
+- [ ] **Replay green** — `pytest tests/golden/test_replay.py` exits 0 with 25 baselines passing
+- [ ] **`task ci` green** — full pipeline: consistency, replay, lint-skills, check-refs, check-portability, lint-readme
+
+## Acceptance criteria
+
+- [ ] **AC #1 — Objective polish anchoring:** Polish loop terminates when (a) `findings` is empty OR (b) `rounds == POLISH_CEILING` AND no `a11y_violation` entries remain at severity ≥ floor. Round 2 with remaining a11y findings halts via `polish_a11y_blocking`, not via `polish_ceiling_reached`.
+- [ ] **AC #2 — Preview envelope:** `state.ui_review.preview` shape validated by engine; `render_ok: False` halts via `preview_render_failed`; trivial path bypasses the envelope entirely.
+- [ ] **AC #3 — A11y baseline:** `state.ui_audit.a11y_baseline` is read by the review gate; only NEW/CHANGED violations are actionable. Pre-existing violations stay in findings as informational, never block polish.
+- [ ] **AC #4 — Goldens pinned:** GT-U13, GT-U14, GT-U15 captured and replay-byte-equal. GT-U4 still passes (regression guard).
+- [ ] **AC #5 — `task ci` green** with all three new baselines wired into the harness and CHECKSUMS regenerated.
+- [ ] **AC #6 — Contracts updated:** `ui-track-flow.md` and `adr-product-ui-track.md` reflect the new gates and the polish-termination rewrite.
+
+## Risks
+
+- **A11y tooling produces noise on existing components** — mitigated by `a11y_baseline`. If `existing-ui-audit` skills do not populate it, the gate sees all findings; Phase 5 step 3 documents this as a hard expectation for stack review skills.
+- **Severity-floor disagreement** — projects on `serious+`-only mode lose the discipline R4 promises. Mitigation: the floor is a per-project setting, not a per-run flag; switching is a deliberate `.agent-settings.yml` edit, not a one-off override.
+- **Polish loop infinite-extension drift** — the new "extend by one round" pick at `polish_a11y_blocking` is a one-shot per run, not a slider. State carries `state.ui_polish.extension_used: bool`; second extension halt offers only accept-or-abort.
+- **Engine-rendered preview vs. skill-rendered preview** — the contract is engine reads, skill writes. Phase 3 step 1 is non-negotiable; engine never spawns a browser. Documented in `ui-track-flow.md`.
+- **Trivial-path scope creep** — `directive_set == "ui-trivial"` MUST keep skipping the a11y gate. Phase 3 step 4 + GT-U13/14/15 explicitly do not run on trivial; existing GT-U7 covers the trivial happy path.
 
 ## Future-track recipe (deferred indefinitely)
 
@@ -73,7 +122,4 @@ The R3 polish-loop tests (GT-U4) will gain an a11y-finding fixture variant.
 - Screenshot-to-code generation
 - Figma import / design-system sync
 - UI-quality numeric scoring
-
-## Notes for the builder
-
-This stub exists to anchor the dashboard arc and lock the *identity* of R4 (objective polish anchoring via a11y, not subjective screenshot review). The actual phase breakdown lands at build-start. Do not expand this file until R3 ships — premature expansion is the failure mode this stub explicitly guards against.
+- A11y rule customization beyond axe-core defaults (custom rule packs)
