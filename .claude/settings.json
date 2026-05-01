@@ -1,0 +1,57 @@
+{
+    "enabledPlugins": {
+        "agent-conf@event4u": true
+    },
+    "hooks": {
+        "SessionStart": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "./agent-config chat-history:hook --platform claude"
+                    }
+                ]
+            }
+        ],
+        "UserPromptSubmit": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "./agent-config chat-history:hook --platform claude"
+                    }
+                ]
+            }
+        ],
+        "PostToolUse": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "./agent-config chat-history:hook --platform claude"
+                    }
+                ]
+            }
+        ],
+        "Stop": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "./agent-config chat-history:hook --platform claude"
+                    }
+                ]
+            }
+        ],
+        "SessionEnd": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "./agent-config chat-history:hook --platform claude"
+                    }
+                ]
+            }
+        ]
+    }
+}

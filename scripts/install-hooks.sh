@@ -27,3 +27,41 @@ EOF
 
 chmod +x "$HOOKS_DIR/pre-push"
 echo "✅  Pre-push hook installed."
+
+# Chat-history bridge hooks ----------------------------------------------------
+#
+# Augment IDE plugin (and any other agent surface without native chat
+# lifecycle hooks) cannot fire SessionStart/Stop/PostToolUse. Git hooks
+# are the platform-agnostic lifecycle surface that fires regardless of
+# IDE — every commit, merge, checkout, and rewrite turns into a phase
+# boundary in .agent-chat-history when an agent session is active.
+#
+# The hooks are silent no-ops when no agent session is active (the
+# chat_history.py hook-append script returns "skipped_no_sidecar" with
+# exit 0) and `|| true` belt-and-suspenders ensures git operations are
+# never blocked.
+
+write_chat_history_hook() {
+    local name="$1"
+    local phase_tag="$2"
+    cat > "$HOOKS_DIR/$name" << EOF
+#!/usr/bin/env bash
+# $name: append a phase boundary to .agent-chat-history when an agent
+# session is active. Silent no-op otherwise. Never blocks git.
+
+if [ -x ./agent-config ]; then
+    ref="\$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+    payload="{\"phase\":\"$phase_tag\",\"source\":\"git-hook:\$ref\"}"
+    ./agent-config chat-history:checkpoint --payload "\$payload" \
+        >/dev/null 2>&1 || true
+fi
+exit 0
+EOF
+    chmod +x "$HOOKS_DIR/$name"
+    echo "✅  $name hook installed."
+}
+
+write_chat_history_hook "post-commit"   "git:post-commit"
+write_chat_history_hook "post-merge"    "git:post-merge"
+write_chat_history_hook "post-checkout" "git:post-checkout"
+write_chat_history_hook "post-rewrite"  "git:post-rewrite"
