@@ -243,53 +243,6 @@ def _write_pack(pack_dir: Path, result: runner.CaptureResult, meta: dict) -> Non
     fixture_src = runner.SANDBOX_ROOT / fixture_relpath
     shutil.copy2(fixture_src, fixture_dir / Path(fixture_relpath).name)
 
-    notes = _reproduction_notes(meta, result)
-    (pack_dir / "reproduction-notes.md").write_text(notes, encoding="utf-8")
-
-
-def _reproduction_notes(meta: dict, result: runner.CaptureResult) -> str:
-    ticket_rel = meta.get("ticket_relpath")
-    prompt_rel = meta.get("prompt_relpath")
-    diff_rel = meta.get("diff_relpath")
-    file_rel = meta.get("file_relpath")
-    if ticket_rel is not None:
-        fixture_line = f"- ticket fixture: `tests/golden/sandbox/{ticket_rel}`"
-        invocation = "`./agent-config implement-ticket`"
-    elif prompt_rel is not None:
-        fixture_line = f"- prompt fixture: `tests/golden/sandbox/{prompt_rel}`"
-        invocation = "`./agent-config work`"
-    elif diff_rel is not None:
-        fixture_line = f"- diff fixture: `tests/golden/sandbox/{diff_rel}`"
-        invocation = "`./agent-config work`"
-    else:
-        fixture_line = f"- file fixture: `tests/golden/sandbox/{file_rel}`"
-        invocation = "`./agent-config work`"
-    lines = [
-        f"# {meta['gt_id']} reproduction notes",
-        "",
-        fixture_line,
-        f"- persona: `{meta.get('persona') or '(default)'}`",
-        f"- cycle cap: {meta.get('cycle_cap', runner.DEFAULT_CYCLE_CAP)}",
-        f"- final outcome: `{result.final_outcome}`",
-        f"- final exit code: `{result.final_exit_code}`",
-        f"- cycles recorded: {len(result.cycles)}",
-        "",
-        "## How to regenerate",
-        "",
-        "From the repo root:",
-        "",
-        "```bash",
-        f"python3 -m tests.golden.capture --scenarios {meta['gt_id']}",
-        "```",
-        "",
-        "The driver materialises the toy repo under a temporary",
-        f"directory and invokes {invocation} once",
-        "per cycle. Recipe steps mutate the persisted state file in",
-        "the same shape the agent would write.",
-        "",
-    ]
-    return "\n".join(lines)
-
 
 def _write_checksums(target: Path, manifest_path: Path) -> None:
     """Write a sorted SHA256 manifest covering every file in ``target``.

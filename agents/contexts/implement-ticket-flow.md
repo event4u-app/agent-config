@@ -451,19 +451,19 @@ is implicit in the per-cycle subprocess fork.
 
 ```
 tests/golden/baseline/GT-N/
-├── transcript.json       # per-cycle stdout/stderr + exit codes
-├── state-snapshots/      # state file after each cycle (cycle-NN.json)
-├── halt-markers.json     # extracted directives + numbered questions
-├── exit-codes.json       # per-cycle exit codes only
-├── delivery-report.md    # final report (or stub if flow halted)
-├── reproduction-notes.md # per-GT regenerate command + invariants
-└── fixture/              # frozen copy of the input ticket
+├── transcript.json    # per-cycle stdout/stderr + exit codes
+├── state-snapshots/   # state file after each cycle (cycle-NN.json)
+├── halt-markers.json  # extracted directives + numbered questions
+├── exit-codes.json    # per-cycle exit codes only
+├── delivery-report.md # final report (or stub if flow halted)
+└── fixture/           # frozen copy of the input ticket
 ```
 
 The driver also writes `tests/golden/baseline/summary.json` (one
 row per GT: outcome, exit code, cycle count) and
 `tests/golden/CHECKSUMS.txt` (sorted SHA256 of every file under
-`tests/golden/baseline/` plus the input fixtures).
+`tests/golden/baseline/` plus the input fixtures). Regeneration
+recipe and relock policy: [`tests/golden/CAPTURING.md`](../../tests/golden/CAPTURING.md).
 
 ### Determinism guarantees
 
