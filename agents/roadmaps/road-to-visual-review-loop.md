@@ -49,10 +49,12 @@ Locked `2026-05-01` from the leans declared in the original stub. The package it
 
 ## Phase 0: State-shape extension (engine layer)
 
-- [ ] **Extend `state.ui_review`** schema: add optional `a11y` envelope `{violations: [...], severity_floor: str, baseline_compared: bool}`; add optional `preview` envelope `{screenshot_path: str, dom_dump_path: str, render_ok: bool, error: str | None}`. Both are optional so non-UI flows and pre-R4 fixtures keep working.
-- [ ] **Extend `state.ui_audit`** schema: add optional `a11y_baseline: [...]` field carrying pre-existing violations for touched components.
-- [ ] **Validators** in `work_engine/state.py`: shape check only (list of dicts, severity ∈ `{minor, moderate, serious, critical}`); no business rules at the schema layer.
-- [ ] **`DeliveryState` round-trip** — confirm a11y/preview fields survive `WorkState ↔ DeliveryState` boundary (mirrors the `c8086ca` fix for contract/stitch/stack).
+- [x] **Extend `state.ui_review`** schema: optional `a11y` envelope (`violations`, `severity_floor`, `accepted_violations`) and `preview` envelope (`render_ok`, `screenshot_path`, `dom_dump_path`, `error`) — `_validate_ui_review` in `state.py:463-509`
+- [x] **Extend `state.ui_audit`** schema: optional `a11y_baseline` list — `_validate_ui_audit` in `state.py:404-409`
+- [x] **Extend `state.ui_polish`** schema: optional `extension_used` bool for the one-shot extension flag — `_validate_ui_polish` in `state.py:540-545`
+- [x] **Validators are shape-only** — severity floor restricted to `{minor, moderate, serious, critical}`; content validation deferred to handlers
+- [x] **`DeliveryState` round-trip** — `_to_delivery` / `_sync_back` already pass the three envelopes by reference; new sub-keys flow through transparently (no code change needed)
+- [x] **Tests** — 12 new tests in `TestUiAuditA11yBaseline`, `TestUiReviewA11yEnvelope`, `TestUiReviewPreviewEnvelope`, `TestUiPolishExtensionUsed` — `tests/work_engine/test_state_schema.py`
 
 ## Phase 1: Review step — a11y gate integration
 

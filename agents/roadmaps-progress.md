@@ -6,10 +6,10 @@
 
 ## Overall
 
-**35 / 74 steps done · 47%**
+**41 / 76 steps done · 54%**
 
 ```text
-███████████████████░░░░░░░░░░░░░░░░░░░░░   47%
+██████████████████████░░░░░░░░░░░░░░░░░░   54%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md) | 7 | 44 | 2 | 35 | 7 | 0 | ██████████ 95% |
-| 2 | [road-to-visual-review-loop.md](roadmaps/road-to-visual-review-loop.md) | 7 | 37 | 37 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-visual-review-loop.md](roadmaps/road-to-visual-review-loop.md) | 7 | 39 | 33 | 6 | 0 | 0 | ██░░░░░░░░ 15% |
 
 ---
 
@@ -39,11 +39,11 @@
 
 ### [road-to-visual-review-loop.md](roadmaps/road-to-visual-review-loop.md)
 
-**Visual Review Loop + A11y** — 0 / 37 done (0%)
+**Visual Review Loop + A11y** — 6 / 39 done (15%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | State-shape extension (engine layer) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 0 | State-shape extension (engine layer) | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 1 | Review step — a11y gate integration | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 2 | Polish termination contract amendment | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 3 | Preview envelope — render contract (no engine render) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
