@@ -151,9 +151,8 @@ The first pass scores the prompt on five dimensions
 | **low** | `< 0.5` | Halts with **one** clarifying question on the weakest dimension |
 
 After the band gate releases, the rest of the flow is identical
-to `/implement-ticket`. UI-shaped prompts are rejected with an
-explicit pointer to Roadmap 3 — the prompt-driven flow is
-backend-only in this release.
+to `/implement-ticket`. UI-shaped prompts are routed through the
+**product UI track** — see below.
 
 → [Command reference](.agent-src/commands/work.md) ·
   [`refine-prompt` skill](.agent-src/skills/refine-prompt/SKILL.md) ·
@@ -162,6 +161,32 @@ backend-only in this release.
 **Pick which one:** ticket id or pasted ticket payload → `/implement-ticket`.
 Free-form goal, no ticket → `/work`. The two share `.work-state.json`
 and refuse to switch envelopes mid-flight.
+
+### Product UI track
+
+UI-shaped work (build a screen, improve a component, fix microcopy)
+switches the engine to one of three directive sets:
+
+| `directive_set` | When | Flow |
+|---|---|---|
+| `ui` | Non-trivial UI surface | `audit → design → apply → review → polish → report` |
+| `ui-trivial` | Bounded edit (≤ 1 file, ≤ 5 changed lines) | `apply → test → report` |
+| `mixed` | Backend + UI | `contract → ui → stitch` |
+
+Three load-bearing properties: (1) **existing-UI audit is a hard
+gate** — no `apply` without audit, enforced at dispatcher AND
+[`ui-audit-before-build`](.agent-src/rules/ui-audit-before-build.md)
+rule; (2) **design brief is locked microcopy** — placeholders
+(`<placeholder>`, `Lorem`, `TODO:`) rejected at both ends; (3)
+**polish has a 2-round ceiling**, then halts ship-as-is / abort /
+hand-off. Stack detection (`composer.json` + `package.json`) routes
+to `blade-livewire-flux` / `react-shadcn` / `vue` / `plain` bundles;
+trivial path reclassifies loudly when preconditions fail. Halt
+budget on the happy path is 2 (audit pick + design sign-off).
+
+→ [Flow contract](agents/contexts/ui-track-flow.md) ·
+  [ADR](agents/contexts/adr-product-ui-track.md) ·
+  [Stack-extension recipe](agents/contexts/ui-stack-extension.md)
 
 ---
 

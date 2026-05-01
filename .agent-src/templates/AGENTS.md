@@ -49,8 +49,9 @@ test → verify → report` with block-on-ambiguity semantics and no auto-git.
 prompt on five dimensions and the engine proceeds **silently** on `high`,
 halts with an **assumptions report** on `medium`, or halts with **one
 clarifying question** on `low` (per the `ask-when-uncertain` Iron Law).
-UI-shaped prompts are rejected with an explicit pointer — backend-only in
-this release.
+UI-shaped prompts route through the product UI track (`directive_set`
+`ui` / `ui-trivial` / `mixed`) — `audit → design → apply → review →
+polish` with a hard audit gate before any `apply`.
 
 Persona comes from `.agent-settings.yml` (`roles.active_role`). Use
 `/commit` and `/create-pr` explicitly after the delivery report. The two
