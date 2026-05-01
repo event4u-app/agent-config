@@ -68,7 +68,7 @@ want to measure which skills/rules/commands the agent actually applies set
 `telemetry.artifact_engagement.enabled: true` in `.agent-settings.yml`. The
 log is local-only JSONL (no upload, no cross-project share) and is bound
 by the redaction floor described in
-[`docs/contracts/artifact-engagement-flow.md`](docs/contracts/artifact-engagement-flow.md).
+[`docs/contracts/artifact-engagement-flow.md`](docs/contracts/artifact-engagement-flow.md) (beta).
 The recording rule lives at
 [`.agent-src/rules/artifact-engagement-recording.md`](.agent-src/rules/artifact-engagement-recording.md).
 
@@ -82,7 +82,7 @@ picks every time. Engine: `scripts/command_suggester/`. Rule:
 Locked eligibility table, scoring contract, and hardening list:
 [`docs/contracts/adr-command-suggestion.md`](docs/contracts/adr-command-suggestion.md)
 and
-[`docs/contracts/command-suggestion-flow.md`](docs/contracts/command-suggestion-flow.md).
+[`docs/contracts/command-suggestion-flow.md`](docs/contracts/command-suggestion-flow.md) (beta).
 
 ## Key rules for agents editing this repo
 

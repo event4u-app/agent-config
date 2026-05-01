@@ -93,7 +93,7 @@ Install in the same project (dev-only):
 npm install --save-dev @event4u/agent-memory
 ```
 
-→ [Memory contract & retrieval API](docs/contracts/agent-memory-contract.md)
+→ [Memory contract & retrieval API](docs/contracts/agent-memory-contract.md) (beta)
 
 ---
 
@@ -131,7 +131,7 @@ so you decide — never a silent guess. Persona comes from
 (plan-only, skips implementation).
 
 → [Command reference](.agent-src/commands/implement-ticket.md) ·
-  [Flow contract](docs/contracts/implement-ticket-flow.md)
+  [Flow contract](docs/contracts/implement-ticket-flow.md) (beta)
 
 ### Sibling entrypoint: `/work` (free-form prompt)
 
@@ -190,9 +190,9 @@ screenshots / findings) via a defined contract. Stack detection routes
 `react-shadcn` / `vue` / `plain`; trivial path reclassifies loudly when
 preconditions fail. Halt budget on the happy path is 2.
 
-→ [Flow contract](docs/contracts/ui-track-flow.md) ·
+→ [Flow contract](docs/contracts/ui-track-flow.md) (beta) ·
   [ADR](docs/contracts/adr-product-ui-track.md) ·
-  [Stack-extension recipe](docs/contracts/ui-stack-extension.md)
+  [Stack-extension recipe](docs/contracts/ui-stack-extension.md) (beta)
 
 ---
 
@@ -388,9 +388,9 @@ builds artefacts you upload or paste into the platform's own surface.
 
 The Linear digest is split into three layers — workspace (universal
 coding posture), team (framework-specific), personal (empty stub). See
-[`docs/contracts/linear-ai-three-layers.md`](docs/contracts/linear-ai-three-layers.md)
+[`docs/contracts/linear-ai-three-layers.md`](docs/contracts/linear-ai-three-layers.md) (beta)
 for the rationale and
-[`docs/contracts/linear-ai-rules-inclusion.md`](docs/contracts/linear-ai-rules-inclusion.md)
+[`docs/contracts/linear-ai-rules-inclusion.md`](docs/contracts/linear-ai-rules-inclusion.md) (beta)
 for the per-rule routing.
 
 ---
@@ -439,7 +439,7 @@ telemetry:
 
 Reports: `./agent-config telemetry:report`. Full contract,
 privacy/redaction floor, and quartile semantics:
-[`docs/contracts/artifact-engagement-flow.md`](docs/contracts/artifact-engagement-flow.md).
+[`docs/contracts/artifact-engagement-flow.md`](docs/contracts/artifact-engagement-flow.md) (beta).
 
 ### Context-aware command suggestion
 
@@ -462,7 +462,7 @@ the user re-enables or the chat ends. Full scoring contract and
 hardening list:
 [`docs/contracts/adr-command-suggestion.md`](docs/contracts/adr-command-suggestion.md)
 and
-[`docs/contracts/command-suggestion-flow.md`](docs/contracts/command-suggestion-flow.md).
+[`docs/contracts/command-suggestion-flow.md`](docs/contracts/command-suggestion-flow.md) (beta).
 
 ---
 
