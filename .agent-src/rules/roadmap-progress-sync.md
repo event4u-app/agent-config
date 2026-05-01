@@ -7,7 +7,7 @@ source: package
 
 # Roadmap Progress Sync
 
-## Iron Law
+## Iron Law — dashboard sync
 
 ```
 ANY ROADMAP TOUCH → REGENERATE THE DASHBOARD, SAME RESPONSE.
@@ -34,9 +34,9 @@ skipped table.
 ## Iron Law — every active roadmap is trackable
 
 ```
-EVERY ACTIVE ROADMAP MUST CONTAIN ≥1 TRACKABLE CHECKBOX (`- [ ]`)
-PER NON-INTRO PHASE. ROADMAPS WITHOUT EXECUTABLE STEPS EITHER GET
-A CHECKLIST OR THE `status: draft` FLAG.
+EVERY ACTIVE ROADMAP MUST CONTAIN AT LEAST ONE TRACKABLE CHECKBOX
+(`- [ ]`) PER NON-INTRO PHASE. ROADMAPS WITHOUT EXECUTABLE STEPS
+EITHER GET A CHECKLIST OR THE `status: draft` FLAG.
 ```
 
 **Active roadmap =** any file in `agents/roadmaps/` (root, not
@@ -54,7 +54,7 @@ execute the decision. `## Phase steps`, `### Sequencing — Phase 1`,
 
 ```yaml
 ---
-status: draft          # hidden from dashboard until flipped
+status: draft          # hidden from the dashboard until flipped
 ---
 ```
 
