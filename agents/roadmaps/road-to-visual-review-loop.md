@@ -66,10 +66,11 @@ Locked `2026-05-01` from the leans declared in the original stub. The package it
 
 ## Phase 2: Polish termination contract amendment
 
-- [ ] **`POLISH_CEILING` stays at 2** — round count is the *time* limit.
-- [ ] **New gate**: at `rounds == POLISH_CEILING` AND `findings` still contains `a11y_violation` entries → halt with `polish_a11y_blocking` ambiguity (NOT the existing `polish_ceiling_reached` ship-or-abort halt). User picks: extend ceiling by one round, accept-with-known-violations (write decision into `state.ui_review.a11y.accepted_violations`), or abort.
-- [ ] **`polish_ceiling_reached` semantics narrow** — only fires when remaining findings are non-a11y (subjective polish); a11y blocks take precedence.
-- [ ] **Idempotent re-entry**: a `state.ui_review.a11y.accepted_violations` list with rule ids matching the remaining a11y findings round-trips through `SUCCESS` (user already chose accept).
+- [x] **`POLISH_CEILING` stays at 2** — round count is the *time* limit. Effective ceiling becomes `POLISH_CEILING + 1` once `state.ui_polish.extension_used` is set; schema validator widens the upper bound from `[0, 2]` to `[0, 3]` only when the flag is `True` (`state.py:539-545`).
+- [x] **New gate**: at `rounds == effective_ceiling` AND `findings` still contains `a11y_violation` entries → halt with `polish_a11y_blocking` ambiguity (`directives/ui/polish.py:_halt_a11y_blocking`). User picks: extend ceiling by one round (engine sets `extension_used=True`), accept-with-known-violations (engine appends to `state.ui_review.a11y.accepted_violations`), or abort. Once the extension is spent, the Extend option disappears.
+- [x] **`polish_ceiling_reached` semantics narrow** — only fires when remaining findings are non-a11y (subjective polish); a11y blocks take precedence via the explicit branch in `polish.run()`.
+- [x] **Idempotent re-entry**: a `state.ui_review.a11y.accepted_violations` list with rule ids matching the remaining a11y findings round-trips through `SUCCESS` because the review gate's `_apply_a11y_gate` filters accepted entries before synthesising `a11y_violation` findings (`directives/ui/review.py:263-271`).
+- [x] **Tests** — 6 new tests in `tests/work_engine/test_step_polish.py` (a11y-blocking, precedence, subjective-only, extension grants round 3, exhausted extension drops Extend option, halt body lists findings) plus 3 schema tests in `tests/work_engine/test_state_schema.py` (rejects rounds=3 without extension, accepts rounds=3 with extension, rejects rounds=4 even with extension).
 
 ## Phase 3: Preview envelope — render contract (no engine render)
 
