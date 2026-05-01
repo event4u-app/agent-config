@@ -70,6 +70,15 @@ Do NOT use when:
 1. Blade view or component file(s) following project conventions
 2. Component class (if applicable) with typed props
 
+### Review pass — a11y findings + preview envelope
+
+When dispatched by `directives/ui/review.py` (test slot) or `directives/ui/polish.py` (verify slot) — review/polish run, not initial apply — also emits:
+
+- `state.ui_review.a11y` — `{violations: [{rule, selector, severity}, ...], severity_floor?, accepted_violations?}`. Use same `(rule, selector)` shape as `state.ui_audit.a11y_baseline` so engine's de-dup matches pre-existing entries on replay. Omit envelope on apply passes; engine's `_apply_a11y_gate` only fires when baseline present.
+- `state.ui_review.preview` — `{render_ok: bool, screenshot_path?, dom_dump_path?, error?, skipped?}`. `render_ok: false` with `error` populated triggers `preview_render_failed` halt; `render_ok: true` with `screenshot_path` threads screenshot into delivery report's `artifacts` list. Browser tooling (Playwright/Cypress/…) is consumer-project dependency — package does not ship one.
+
+Polish dispatch: when dispatcher skips `review` because previous review pass returned `SUCCESS`, this skill MUST itself synthesise updated `state.ui_review.findings` (including remaining `a11y_violation` entries) so engine's gate sees current state on next polish round.
+
 ## Gotcha
 
 - `@include` shares parent scope — components don't. Know the difference.

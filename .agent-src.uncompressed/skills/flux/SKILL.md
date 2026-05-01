@@ -67,6 +67,30 @@ Do NOT use when:
 1. Blade view using Flux components with correct props and slots
 2. Livewire component class if interactive behavior is needed
 
+### Review pass — a11y findings + preview envelope
+
+When this skill is dispatched by `directives/ui/review.py` (test slot)
+or `directives/ui/polish.py` (verify slot) — i.e. a review/polish run,
+not the initial apply — it also emits:
+
+- `state.ui_review.a11y` — `{violations: [{rule, selector, severity}, ...],
+  severity_floor?, accepted_violations?}`. Use the same `(rule, selector)`
+  shape as `state.ui_audit.a11y_baseline` so the engine's de-dup matches
+  pre-existing entries on replay. Omit the envelope on apply passes; the
+  engine's `_apply_a11y_gate` only fires when a baseline is present.
+- `state.ui_review.preview` — `{render_ok: bool, screenshot_path?,
+  dom_dump_path?, error?, skipped?}`. `render_ok: false` with `error`
+  populated triggers the `preview_render_failed` halt; `render_ok: true`
+  with `screenshot_path` threads the screenshot into the delivery
+  report's `artifacts` list. Browser tooling (Playwright/Cypress/…) is
+  a consumer-project dependency — this package does not ship one.
+
+Polish dispatch: when the dispatcher skips `review` because a previous
+review pass already returned `SUCCESS`, this skill MUST itself
+synthesise the updated `state.ui_review.findings` (including any
+remaining `a11y_violation` entries) so the engine's gate sees the
+current state on the next polish round.
+
 ## Gotcha
 
 - The model tends to use old Flux API syntax — always check latest docs.

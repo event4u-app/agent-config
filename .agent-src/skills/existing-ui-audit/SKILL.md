@@ -126,7 +126,33 @@ demo or single-page prototype that will not grow.
 
 Record the user's pick in `state.ui_audit.greenfield_decision` (`scaffold` | `bare` | `external_reference`). Re-running the skill on the same state-file with `greenfield_decision` set is a no-op for the halt (audit findings stay).
 
-### 8. Validate and write findings
+### 8. (Optional) Capture an a11y baseline
+
+R4 visual-review-loop contract reads `state.ui_audit.a11y_baseline` when present; review gate filters incoming `state.ui_review.a11y.violations` against it so pre-existing violations stay informational and only NEW or CHANGED entries block polish loop. Without baseline gate sees every violation as actionable — fine for greenfield, noisy for legacy surfaces.
+
+Capture baseline when:
+
+- Audit covers components with known a11y debt project does not intend to fix this run (legacy templates, third-party embeds, vendor widgets).
+- User says "don't block on existing a11y issues" or similar.
+
+Skip baseline (omit key, leave `state.ui_audit.a11y_baseline` unset) when:
+
+- Surface is greenfield — review gate should treat every violation as new.
+- Project's a11y posture is "zero known violations" and any finding is by definition actionable.
+
+Shape (each entry MUST carry at least `rule` + `selector`; severity optional but recommended so review gate's severity-floor filter behaves same on replay):
+
+```
+state.ui_audit.a11y_baseline = [
+  {rule: "color-contrast", selector: ".legacy-tab", severity: "moderate"},
+  {rule: "label",          selector: "form#search input[type=search]"},
+  ...
+]
+```
+
+Producer parity: review skill that writes `state.ui_review.a11y.violations` MUST use same `(rule, selector)` shape, otherwise engine's de-dup will miss matches and pre-existing violations will surface as new findings on every run.
+
+### 9. Validate and write findings
 
 1. Verify every key in the **Output format** below is present in `state.ui_audit` (empty arrays/objects allowed; `null` only for `shadcn_inventory` outside the react-shadcn stack).
 2. Verify `state.ui_audit.greenfield == true` implies `state.ui_audit.greenfield_decision` is set.
@@ -141,6 +167,7 @@ Record the user's pick in `state.ui_audit.greenfield_decision` (`scaffold` | `ba
 5. **`state.ui_audit.patterns`** — object with forms, tables, modals, empty_states, navigation, data_display arrays
 6. **`state.ui_audit.candidates`** — top-5 similarity matches for the current input (may be empty)
 7. **`state.ui_audit.greenfield`** — boolean; when true, `greenfield_decision` MUST also be set before the dispatcher advances
+8. **`state.ui_audit.a11y_baseline`** *(optional)* — array of `{rule, selector, severity?}` entries documenting pre-existing a11y violations the review gate should treat as informational. Omit the key entirely when no baseline applies; do not write `[]` for "I checked and there are none" — that disables the gate's filter for every future run.
 
 ## Gotcha
 

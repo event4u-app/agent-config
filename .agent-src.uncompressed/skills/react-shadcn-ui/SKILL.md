@@ -147,6 +147,33 @@ declared version:
 2. Per file, one entry recorded in `state.changes` with `kind="ui"`,
    `stack="react-shadcn"`, and the design-brief summary.
 
+### Review pass — a11y findings + preview envelope
+
+When this skill is dispatched by `directives/ui/review.py` (test slot)
+or `directives/ui/polish.py` (verify slot) — i.e. a review/polish run,
+not the initial apply — it also emits:
+
+- `state.ui_review.a11y` — `{violations: [{rule, selector, severity}, ...],
+  severity_floor?, accepted_violations?}`. Run an a11y tool against the
+  rendered output (e.g. `axe-core` via Playwright, `@axe-core/react`,
+  `jest-axe`) and translate hits into this shape. Use the same
+  `(rule, selector)` shape as `state.ui_audit.a11y_baseline` so the
+  engine's de-dup matches pre-existing entries on replay. Omit the
+  envelope on apply passes; the engine's `_apply_a11y_gate` only fires
+  when a baseline is present.
+- `state.ui_review.preview` — `{render_ok: bool, screenshot_path?,
+  dom_dump_path?, error?, skipped?}`. `render_ok: false` with `error`
+  populated triggers the `preview_render_failed` halt; `render_ok: true`
+  with `screenshot_path` threads the screenshot into the delivery
+  report's `artifacts` list. Browser tooling (Playwright/Cypress/…) is
+  a consumer-project dependency — this package does not ship one.
+
+Polish dispatch: when the dispatcher skips `review` because a previous
+review pass already returned `SUCCESS`, this skill MUST itself
+synthesise the updated `state.ui_review.findings` (including any
+remaining `a11y_violation` entries) so the engine's gate sees the
+current state on the next polish round.
+
 ## Do NOT
 
 - Do NOT install `shadcn-ui` from npm — primitives are scaffolded.
