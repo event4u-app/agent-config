@@ -6,10 +6,10 @@
 
 ## Overall
 
-**0 / 124 steps done · 0%**
+**8 / 124 steps done · 6%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   6%
 ```
 
 ## Open roadmaps
@@ -20,7 +20,7 @@
 | 2 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-governance-cleanup.md](roadmaps/road-to-governance-cleanup.md) | 1 | 24 | 24 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-post-pr29-optimize.md](roadmaps/road-to-post-pr29-optimize.md) | 3 | 24 | 24 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 5 | [road-to-post-pr29-optimize.md](roadmaps/road-to-post-pr29-optimize.md) | 3 | 24 | 16 | 8 | 0 | 0 | ███░░░░░░░ 33% |
 
 ---
 
@@ -69,11 +69,11 @@
 
 ### [road-to-post-pr29-optimize.md](roadmaps/road-to-post-pr29-optimize.md)
 
-**Road to Post-PR-29 Optimize** — 0 / 24 done (0%)
+**Road to Post-PR-29 Optimize** — 8 / 24 done (33%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Housekeeping 1.15.0 | ⬜ not started | 13 | 0 | 0 | 0 | 0% |
+| 1 | Housekeeping 1.15.0 | 🟡 in progress | 5 | 8 | 0 | 0 | 62% |
 | 2 | Post-1.15.0 work | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
 | 2 | ICE table | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 

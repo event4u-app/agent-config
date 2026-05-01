@@ -131,14 +131,14 @@ This section is the trackable execution surface — each P0 maps 1:1
 to a numbered decision; sub-bullets capture the named gates inside a
 single P0 so progress reflects the actual deliverables.
 
-- [ ] P0.1 — Adopt `docs/contracts/` packaging fix (option **(b)**); move public contracts out of `agents/contexts/`; redirect README links
-- [ ] P0.1a — `docs/contracts/STABILITY.md` defining `stable | beta | experimental` frontmatter
-- [ ] P0.1b — `scripts/check_public_links.py` link-checker wired into `task ci`
-- [ ] P0.2 — Apply positioning sentence verbatim to README headline + AGENTS.md + `docs/architecture.md`
-- [ ] P0.3 — Counter-drift fix: make `update_counts.py` mandatory in `task sync` with build-breaking guard (README + AGENTS.md + `docs/architecture.md`)
-- [ ] P0.4 — Term separation: split `runtime_dispatcher.py` from `work_engine` from tool adapters in README + architecture doc; lock Work Engine = beta
-- [ ] P0.5 — State-default + migration safety: change `DEFAULT_STATE_FILE` to `.work-state.json`; collision-safe backup rotation; ship `MIGRATION.md` for `implement_ticket → work_engine`
-- [ ] P0.6 — Clear lint regressions in `scope-control`, `autonomous-execution`, `commit-policy`, `direct-answers`; CI green
+- [x] P0.1 — Adopt `docs/contracts/` packaging fix (option **(b)**); move public contracts out of `agents/contexts/`; redirect README links
+- [x] P0.1a — `docs/contracts/STABILITY.md` defining `stable | beta | experimental` frontmatter
+- [x] P0.1b — `scripts/check_public_links.py` link-checker wired into `task ci`
+- [x] P0.2 — Apply positioning sentence verbatim to README headline + AGENTS.md + `docs/architecture.md`
+- [x] P0.3 — Counter-drift fix: make `update_counts.py` mandatory in `task sync` with build-breaking guard (README + AGENTS.md + `docs/architecture.md`)
+- [x] P0.4 — Term separation: split `runtime_dispatcher.py` from `work_engine` from tool adapters in README + architecture doc; lock Work Engine = beta
+- [x] P0.5 — State-default + migration safety: change `DEFAULT_STATE_FILE` to `.work-state.json`; collision-safe backup rotation; ship `MIGRATION.md` for `implement_ticket → work_engine`
+- [x] P0.6 — Clear lint regressions in `scope-control`, `autonomous-execution`, `commit-policy`, `direct-answers`; CI green
 - [ ] P0.7 — Test coverage gaps: `implement-ticket` without `--state-file`; `/work` UI-prompt + medium-prompt + resume + pre-existing `.work-state.json`
 - [ ] P0.8 — Command-collapse migration docs + atomic-command linter
 - [ ] P0.8a — `docs/migrations/commands-1.15.0.md` (old → new --subcommand table, deprecation window, shim-removal version)
@@ -497,7 +497,7 @@ Aggregate verdicts:
 3. **Packaging bug — likely the most concrete defect.** `package.json`
    does **not** include `agents/` in `files`. `composer.json` *explicitly
    excludes* `/agents` from the archive. README repeatedly links to
-   `agents/contexts/agent-memory-contract.md`, `…/implement-ticket-flow.md`,
+   `docs/contracts/agent-memory-contract.md`, `…/implement-ticket-flow.md`,
    `…/ui-track-flow.md`, `…/artifact-engagement-flow.md`,
    `…/command-suggestion-flow.md`. **Installed npm / Composer packages
    have broken README links.** *Real release-quality bug.* Three
@@ -628,7 +628,7 @@ Aggregate verdicts:
 | External feedback system missing — package cannot learn without external signal | AI #3 | low (single source) | Need: issue template "which skill did not trigger?", discussions category "skill suggestions", "did this help?" minimal UX. Telemetry-as-internal-mirror is the symptom, missing-feedback-loop is the cause. |
 | Golden Transcripts CI cost not measured / parallelised | AI #3 | low (single source) | 24 capture packs (GT-1..5 + GT-P1..4 + GT-U1..15) replayed by freeze-guard. Zero commits in 1.14.0 address CI duration or parallelisation. AI #3: "the technical debt that grows quietest". Becomes blocking when R5+ lands. |
 | Four install paths for 0 external users | AI #3 | low (single source) | `docs/installation.md`: local (Composer/npm) · plugin · cloud · Linear. AI #3: pruning / staging recommended; cloud + Linear not battle-tested. Tension with the "stop adding architecture" iron rule from AI #1. |
-| **Packaging bug — README links to `agents/contexts/` but `agents/` is excluded from npm + Composer artefacts** | AI #4 | low (single source, verifiable, **release-quality bug**) | `package.json` does not include `agents/` in `files`; `composer.json` explicitly excludes `/agents` from the archive. README links into `agents/contexts/agent-memory-contract.md`, `…/implement-ticket-flow.md`, `…/ui-track-flow.md`, `…/artifact-engagement-flow.md`, `…/command-suggestion-flow.md`. Installed packages have **broken README links**. Three options: (a) ship `agents/contexts` in package; (b) move public contracts to `docs/contracts/`; (c) only link to files that actually ship. AI #4 recommendation: **(b)** — `docs/contracts/` for public, `agents/` internal-only. |
+| **Packaging bug — README links to `agents/contexts/` but `agents/` is excluded from npm + Composer artefacts** | AI #4 | low (single source, verifiable, **release-quality bug**) | `package.json` does not include `agents/` in `files`; `composer.json` explicitly excludes `/agents` from the archive. README links into `docs/contracts/agent-memory-contract.md`, `…/implement-ticket-flow.md`, `…/ui-track-flow.md`, `…/artifact-engagement-flow.md`, `…/command-suggestion-flow.md`. Installed packages have **broken README links**. Three options: (a) ship `agents/contexts` in package; (b) move public contracts to `docs/contracts/`; (c) only link to files that actually ship. AI #4 recommendation: **(b)** — `docs/contracts/` for public, `agents/` internal-only. |
 | `work_engine/cli.py` is at the complexity limit — modularise | AI #4 | low (single source, concrete refactor named) | One file currently owns: ticket · prompt · diff · file · personas · hooks · v0/v1 state · migration · directive-set routing · UI routing · chat-history hooks · resolvers · state sync · format-preserving save. Split into `cli_args.py` · `state_io.py` · `input_builders.py` · `hook_bootstrap.py` · `runner.py` · `emitters.py`; keep `cli.py` as orchestration glue. P1, not P0. |
 | UI-track onboarding density — missing 1-page mental model | AI #4 | low (single source) | UI contract is "fachlich gut, aber schwer für neue Contributor und Agenten". Audit · design · apply · review · a11y · preview · polish · token extraction · mixed contract · stitching · trivial reclassification all in one contract. Needed: 1-page "UI Track Quick Mental Model" — when UI? when ui-trivial? when mixed? what must the agent never do? where does it stop? P1. |
 | "Experimental modules" framing is stale; term separation needed | AI #4 | low (single source) | README still describes runtime as experimental (two pilot skills in CI), while same README presents Work Engine + `/implement-ticket` + `/work` + UI track as product core. AI #4: separate `runtime_dispatcher.py` (experimental shell-skill runner) from `work_engine` (shipped orchestration protocol) from tool adapters (experimental) from host execution (external). P0 (part of "clarify terms" alongside packaging fix and architecture.md sync). |
