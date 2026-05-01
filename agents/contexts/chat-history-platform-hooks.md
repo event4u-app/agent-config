@@ -7,7 +7,7 @@
 > agent discipline. Every classification is cited; stale assumptions
 > are the failure mode this phase exists to prevent.
 >
-> Last refreshed: 2026-04-30.
+> Last refreshed: 2026-05-01.
 
 ## Strategy taxonomy
 
@@ -26,8 +26,7 @@ Mirrors the roadmap's authoritative definitions:
 | Cline | VS Code + JetBrains | **HOOK** (non-Windows) | `TaskStart`, `TaskComplete`, `UserPromptSubmit`, `PreCompact` | Hooks unsupported on Windows as of `cline/cline#8073`. |
 | Windsurf | Cascade | **HOOK** | `pre_user_prompt`, `post_cascade_response`, `post_setup_worktree` | 12 events; shipped v1.12.41. |
 | Gemini CLI | CLI | **HOOK** | `SessionStart`, `SessionEnd`, `BeforeAgent`, `AfterAgent` | `SessionStart` is advisory (cannot block). |
-| Augment Code | CLI | **HOOK** | `SessionStart`, `SessionEnd`, `Stop`, `PreToolUse`, `PostToolUse` | CLI only — IDE plugin surface unverified (see Open Questions). |
-| Augment Code | IDE plugin | **CHECKPOINT** | — | No documented IDE-side hook surface as of 2026-04-30. |
+| Augment Code | CLI + IDE plugin (VSCode + IntelliJ) | **HOOK** | `SessionStart`, `SessionEnd`, `Stop`, `PreToolUse`, `PostToolUse` | Hooks read from `~/.augment/settings.json` (user scope) or `/etc/augment/settings.json` (system); same surface for CLI and IDE. Project-local `.augment/settings.json` is plugin enablement only. |
 
 ## Claude Code
 
@@ -97,21 +96,21 @@ Mirrors the roadmap's authoritative definitions:
 
 ## Augment Code
 
-- **Hook surface (CLI):** `~/.augment/settings.json` `hooks` block; command type with timeout. Mirrors Claude's shape closely.
-- **Lifecycle events (CLI):** `SessionStart`, `SessionEnd`, `PreToolUse`, `PostToolUse`, `Stop`. Matchers via regex on tool name.
-- **Execution model (CLI):** subprocess; synchronous for `PreToolUse`/`PostToolUse`/`Stop`. `Stop` can return `decision: "block"` to prevent termination.
-- **Failure semantics (CLI):** `PreToolUse` can deny tool calls; `PostToolUse` cannot block; `Stop` can block agent finish.
-- **IDE plugin surface:** **no documented hook system** as of 2026-04-30. The "Using Agent" docs describe the user-visible interrupt model (Stop button, three-dots Skip) but no programmable lifecycle. The package's `.augment/` directory is the IDE-plugin target; the CLI surface is separate.
-- **Decision (CLI): HOOK.** Map `SessionStart` → init/turn-check, `Stop` → append at end-of-turn.
-- **Decision (IDE plugin): CHECKPOINT.** Until a hook surface ships, the IDE plugin relies on the cooperative rule plus a `/checkpoint` command for cadence enforcement.
+- **Hook surface:** `~/.augment/settings.json` (user scope) or `/etc/augment/settings.json` (system); same surface for CLI **and** the IDE plugins (VSCode + IntelliJ). Project-local `.augment/settings.json` is plugin enablement only — not read for hooks.
+- **Script extension constraint:** hook commands must point at scripts with a `.sh` extension and live under one of the documented hook directories (e.g. `~/.augment/hooks/`). The package ships `scripts/hooks/augment-chat-history.sh` as a workspace-routing trampoline that satisfies this constraint.
+- **Lifecycle events:** `SessionStart`, `SessionEnd`, `PreToolUse`, `PostToolUse`, `Stop`. Matchers via regex on tool name.
+- **Execution model:** subprocess; synchronous for `PreToolUse`/`PostToolUse`/`Stop`. `Stop` can return `decision: "block"` to prevent termination.
+- **Failure semantics:** `PreToolUse` can deny tool calls; `PostToolUse` cannot block; `Stop` can block agent finish.
+- **Workspace routing:** hooks fire at user scope (one install per developer, shared across all projects). The trampoline reads `workspace_roots[0]` from the event payload and dispatches into the active project's `./agent-config chat-history:hook --platform augment`. Silent no-op when the workspace has no `agent-config` wrapper.
+- **Deployment:** opt-in via `python3 scripts/install.py --augment-user-hooks`. Writes `~/.augment/hooks/augment-chat-history.sh` and merges hook entries into `~/.augment/settings.json`.
+- **Decision: HOOK.** Map `SessionStart` → init/turn-check, `Stop` → append at end-of-turn, `PostToolUse` → per-tool cadence, `SessionEnd` → consolidation.
 - **Sources:**
-  - <https://docs.augmentcode.com/cli/hooks.md>
+  - <https://docs.augmentcode.com/cli/hooks>
   - <https://docs.augmentcode.com/cli/hooks-examples>
   - <https://docs.augmentcode.com/using-augment/agent>
 
 ## Open questions (unblocked, but tracked)
 
-1. **Augment IDE plugin parity** — the IDE plugin is the package's primary surface; the CLI hook docs may eventually apply to the IDE too. Re-check the docs before Phase 2 Step 2 of the roadmap; if IDE hooks ship, flip the row from CHECKPOINT to HOOK without other changes.
-2. **Cursor CLI parity** — `beforeSubmitPrompt`/`stop` are IDE-only as of 2026-01. Track the changelog; same flip-pattern as Augment IDE.
-3. **Cline Windows parity** — patch landed in `cline/cline#8201`; verify before Phase 4 dogfooding on a Windows host.
-4. **Async vs sync semantics** — Windsurf's `post_cascade_response` is async; Gemini's `SessionEnd` is best-effort. Phase 2 wrapper must tolerate both (write-then-fsync, single-line append, no read-modify-write).
+1. **Cursor CLI parity** — `beforeSubmitPrompt`/`stop` are IDE-only as of 2026-01. Track the changelog and flip the CLI row when they ship.
+2. **Cline Windows parity** — patch landed in `cline/cline#8201`; verify before Phase 4 dogfooding on a Windows host.
+3. **Async vs sync semantics** — Windsurf's `post_cascade_response` is async; Gemini's `SessionEnd` is best-effort. Phase 2 wrapper must tolerate both (write-then-fsync, single-line append, no read-modify-write).

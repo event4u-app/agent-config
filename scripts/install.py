@@ -458,6 +458,58 @@ def ensure_augment_bridge(project_root: Path, force: bool) -> None:
     merge_json_file(project_root / ".augment" / "settings.json", bridge, force, ".augment/settings.json")
 
 
+# Augment lifecycle hooks live at user scope (~/.augment/settings.json) per
+# https://docs.augmentcode.com/cli/hooks — that is the only path read by both
+# the CLI and the IDE plugins (VSCode, IntelliJ). Project-local
+# .augment/settings.json is plugin enablement, not hooks.
+AUGMENT_USER_DIR = Path.home() / ".augment"
+AUGMENT_USER_HOOKS_DIR = AUGMENT_USER_DIR / "hooks"
+AUGMENT_TRAMPOLINE_NAME = "augment-chat-history.sh"
+AUGMENT_HOOK_EVENTS = ("SessionStart", "SessionEnd", "Stop", "PostToolUse")
+
+
+def ensure_augment_user_hooks(package_root: Path, force: bool) -> None:
+    """Deploy the Augment lifecycle-hook trampoline at user scope.
+
+    Augment hook scripts must use the .sh extension and be referenced by
+    absolute path; user scope is the only surface that fires for both the
+    CLI and the IDE plugins. This installs once per developer (not per
+    project) — the trampoline reads workspace_roots from the event payload
+    and dispatches into whichever project is active at hook-fire time.
+    """
+    src = package_root / "scripts" / "hooks" / AUGMENT_TRAMPOLINE_NAME
+    if not src.exists():
+        skip(f"augment trampoline missing in package: {src}")
+        return
+
+    AUGMENT_USER_HOOKS_DIR.mkdir(parents=True, exist_ok=True)
+    dst = AUGMENT_USER_HOOKS_DIR / AUGMENT_TRAMPOLINE_NAME
+
+    src_text = src.read_text(encoding="utf-8")
+    if dst.exists() and dst.read_text(encoding="utf-8") == src_text and not force:
+        skip(f"~/.augment/hooks/{AUGMENT_TRAMPOLINE_NAME} already up to date")
+    else:
+        dst.write_text(src_text, encoding="utf-8")
+        dst.chmod(0o755)
+        success(f"~/.augment/hooks/{AUGMENT_TRAMPOLINE_NAME} installed")
+
+    hook_entry = {
+        "hooks": [
+            {
+                "type": "command",
+                "command": str(dst),
+            },
+        ],
+    }
+    settings_patch: dict = {"hooks": {event: [hook_entry] for event in AUGMENT_HOOK_EVENTS}}
+    merge_json_file(
+        AUGMENT_USER_DIR / "settings.json",
+        settings_patch,
+        force,
+        "~/.augment/settings.json",
+    )
+
+
 def _chat_history_hook_block(platform: str) -> dict:
     """Single hook entry that calls ./agent-config chat-history:hook --platform <name>."""
     return {
@@ -530,6 +582,11 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument("--force", action="store_true", help="overwrite existing files")
     parser.add_argument("--skip-bridges", action="store_true", help="only create .agent-settings.yml")
+    parser.add_argument(
+        "--augment-user-hooks",
+        action="store_true",
+        help="also deploy ~/.augment/settings.json + ~/.augment/hooks/ (user-scope, all projects)",
+    )
     parser.add_argument("--project", default=None, help="project root (default: cwd or PROJECT_ROOT env)")
     parser.add_argument("--package", default=None, help="package root (default: auto-detect under project)")
     parser.add_argument("--quiet", action="store_true", help="suppress info/success output (warnings/errors still shown)")
@@ -574,6 +631,9 @@ def main(argv: list[str]) -> int:
         ensure_augment_bridge(project_root, opts.force)
         ensure_claude_bridge(project_root, opts.force)
         ensure_copilot_bridge(project_root, opts.force)
+
+    if opts.augment_user_hooks:
+        ensure_augment_user_hooks(package_root, opts.force)
 
     if not QUIET:
         print()
