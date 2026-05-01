@@ -135,10 +135,10 @@ engine state; failures surface as `HookError` (non-fatal).
 | `HaltSurfaceAuditHook` | Dispatcher | `on_halt` | Defense-in-depth: every halt must carry a non-empty surface |
 | `StateShapeValidationHook` | CLI | `after_load`, `before_save` | Re-runs the schema validator; catches drift between memory and disk |
 | `DirectiveSetGuardHook` | CLI | `before_dispatch` | Verifies `set_name` matches the input envelope's intent |
-| `ChatHistoryTurnCheckHook` | CLI | `before_load` | Runs `chat_history.py turn-check`; halts on `foreign` / `returning` |
+| `ChatHistoryTurnCheckHook` | CLI | `before_dispatch` | Runs `chat_history.py turn-check`; halts on `foreign` / `returning` |
 | `ChatHistoryAppendHook` | Dispatcher | `after_step` | Appends one phase entry per successful step at the configured cadence |
-| `ChatHistoryHaltAppendHook` | Both | `on_halt`, `after_dispatch` | Appends a halt entry so the log reflects user-visible boundaries |
-| `ChatHistoryHeartbeatHook` | CLI | `after_save` | Emits the chat-history heartbeat so the marker reflects fresh counts |
+| `ChatHistoryHaltAppendHook` | Dispatcher | `on_halt` | Appends a `decision` entry whenever a step halts so the log captures user-visible boundaries |
+| `ChatHistoryHeartbeatHook` | CLI | `before_save` | Emits the chat-history heartbeat onto `state.report`; runs after `_sync_back` so the marker survives onto the persisted report |
 
 ## Configuration
 

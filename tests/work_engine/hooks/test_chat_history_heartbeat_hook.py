@@ -34,13 +34,13 @@ def _ctx(report: str = "") -> HookContext:
     return HookContext(work=work)
 
 
-def test_heartbeat_registers_only_after_dispatch() -> None:
+def test_heartbeat_registers_only_before_save() -> None:
     registry = HookRegistry()
     runner, _ = _make_runner()
     ChatHistoryHeartbeatHook(Path("s.py"), runner=runner).register(registry)
-    assert registry.for_event(HookEvent.AFTER_DISPATCH)
+    assert registry.for_event(HookEvent.BEFORE_SAVE)
     for event in HookEvent:
-        if event is HookEvent.AFTER_DISPATCH:
+        if event is HookEvent.BEFORE_SAVE:
             continue
         assert not registry.for_event(event)
 
@@ -50,7 +50,7 @@ def test_heartbeat_threads_marker_into_empty_report() -> None:
     registry = HookRegistry()
     ChatHistoryHeartbeatHook(Path("s.py"), runner=runner).register(registry)
     ctx = _ctx()
-    HookRunner(registry).emit(HookEvent.AFTER_DISPATCH, ctx)
+    HookRunner(registry).emit(HookEvent.BEFORE_SAVE, ctx)
     assert ctx.work.report == "📒 chat-history: ok · per_phase"
 
 
@@ -59,7 +59,7 @@ def test_heartbeat_appends_marker_to_existing_report() -> None:
     registry = HookRegistry()
     ChatHistoryHeartbeatHook(Path("s.py"), runner=runner).register(registry)
     ctx = _ctx(report="Done.")
-    HookRunner(registry).emit(HookEvent.AFTER_DISPATCH, ctx)
+    HookRunner(registry).emit(HookEvent.BEFORE_SAVE, ctx)
     assert ctx.work.report == "Done.\n\n📒 chat-history: ok"
 
 
@@ -68,7 +68,7 @@ def test_heartbeat_idempotent_when_marker_already_present() -> None:
     registry = HookRegistry()
     ChatHistoryHeartbeatHook(Path("s.py"), runner=runner).register(registry)
     ctx = _ctx(report="📒 chat-history: ok")
-    HookRunner(registry).emit(HookEvent.AFTER_DISPATCH, ctx)
+    HookRunner(registry).emit(HookEvent.BEFORE_SAVE, ctx)
     assert ctx.work.report == "📒 chat-history: ok"
 
 
@@ -77,7 +77,7 @@ def test_heartbeat_silent_marker_does_nothing() -> None:
     registry = HookRegistry()
     ChatHistoryHeartbeatHook(Path("s.py"), runner=runner).register(registry)
     ctx = _ctx(report="Done.")
-    HookRunner(registry).emit(HookEvent.AFTER_DISPATCH, ctx)
+    HookRunner(registry).emit(HookEvent.BEFORE_SAVE, ctx)
     assert ctx.work.report == "Done."
 
 
@@ -87,7 +87,7 @@ def test_heartbeat_failure_warns_without_touching_report() -> None:
     ChatHistoryHeartbeatHook(Path("s.py"), runner=runner).register(registry)
     ctx = _ctx(report="Done.")
     with pytest.warns(UserWarning, match="heartbeat failed"):
-        HookRunner(registry).emit(HookEvent.AFTER_DISPATCH, ctx)
+        HookRunner(registry).emit(HookEvent.BEFORE_SAVE, ctx)
     assert ctx.work.report == "Done."
 
 
@@ -97,4 +97,4 @@ def test_heartbeat_no_work_state_skips_silently() -> None:
     ChatHistoryHeartbeatHook(
         Path("s.py"), runner=runner, first_user_msg="pinned",
     ).register(registry)
-    HookRunner(registry).emit(HookEvent.AFTER_DISPATCH, HookContext())
+    HookRunner(registry).emit(HookEvent.BEFORE_SAVE, HookContext())

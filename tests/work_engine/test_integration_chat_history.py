@@ -7,7 +7,8 @@ structural contract:
 
 - ``turn-check`` fires once per dispatch cycle on ``before_dispatch``.
 - ``append --type phase`` fires once per successful step boundary.
-- ``heartbeat`` fires once per dispatch cycle on ``after_dispatch``.
+- ``heartbeat`` fires once per dispatch cycle on ``before_save`` (after
+  ``cli._sync_back`` so the marker survives onto the persisted report).
 - A ``foreign`` / ``returning`` ``turn-check`` exit halts the cycle
   with CLI exit code 2 and never reaches ``_save``.
 """

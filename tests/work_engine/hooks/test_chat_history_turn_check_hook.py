@@ -68,7 +68,8 @@ def test_turn_check_foreign_returns_halt() -> None:
     ChatHistoryTurnCheckHook(Path("script.py"), runner=runner).register(registry)
     halt = HookRunner(registry).emit(HookEvent.BEFORE_DISPATCH, _ctx_with_prompt())
     assert isinstance(halt, HookHalt)
-    assert "foreign" in str(halt)
+    assert halt.reason == "chat_history_turn_check_foreign"
+    assert halt.surface == ["ACTION REQUIRED: foreign"]
 
 
 def test_turn_check_returning_returns_halt() -> None:
@@ -77,7 +78,34 @@ def test_turn_check_returning_returns_halt() -> None:
     ChatHistoryTurnCheckHook(Path("script.py"), runner=runner).register(registry)
     halt = HookRunner(registry).emit(HookEvent.BEFORE_DISPATCH, _ctx_with_prompt())
     assert isinstance(halt, HookHalt)
-    assert "returning" in str(halt)
+    assert halt.reason == "chat_history_turn_check_returning"
+    assert halt.surface == ["ACTION REQUIRED: returning"]
+
+
+def test_turn_check_foreign_multiline_surface_preserved() -> None:
+    runner, _ = _make_runner(
+        11,
+        stderr="ACTION REQUIRED: foreign\n> 1. Adopt this session\n> 2. Reset",
+    )
+    registry = HookRegistry()
+    ChatHistoryTurnCheckHook(Path("script.py"), runner=runner).register(registry)
+    halt = HookRunner(registry).emit(HookEvent.BEFORE_DISPATCH, _ctx_with_prompt())
+    assert isinstance(halt, HookHalt)
+    assert halt.surface == [
+        "ACTION REQUIRED: foreign",
+        "> 1. Adopt this session",
+        "> 2. Reset",
+    ]
+
+
+def test_turn_check_foreign_empty_text_falls_back_to_default_surface() -> None:
+    runner, _ = _make_runner(11, stderr="", stdout="")
+    registry = HookRegistry()
+    ChatHistoryTurnCheckHook(Path("script.py"), runner=runner).register(registry)
+    halt = HookRunner(registry).emit(HookEvent.BEFORE_DISPATCH, _ctx_with_prompt())
+    assert isinstance(halt, HookHalt)
+    assert halt.reason == "chat_history_turn_check_foreign"
+    assert halt.surface == ["chat-history turn-check: foreign"]
 
 
 def test_turn_check_unknown_exit_warns() -> None:

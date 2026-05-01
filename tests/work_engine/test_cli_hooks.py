@@ -267,9 +267,9 @@ def test_build_hook_registry_includes_chat_history_when_both_switches_on(
 
     events = set(registry.events())
     # Four chat-history hooks register on BEFORE_DISPATCH (turn-check),
-    # AFTER_STEP (append), ON_HALT (halt-append), AFTER_DISPATCH
-    # (heartbeat).
+    # AFTER_STEP (append), ON_HALT (halt-append), BEFORE_SAVE
+    # (heartbeat — runs after _sync_back so the marker survives).
     assert HookEvent.BEFORE_DISPATCH in events
     assert HookEvent.AFTER_STEP in events
     assert HookEvent.ON_HALT in events
-    assert HookEvent.AFTER_DISPATCH in events
+    assert HookEvent.BEFORE_SAVE in events

@@ -37,8 +37,12 @@ class ChatHistoryTurnCheckHook(_ChatHistoryHookBase):
         if code in (EXIT_OK, EXIT_MISSING):
             return
         if code in (EXIT_FOREIGN, EXIT_RETURNING):
-            surface = (result.stderr or result.stdout or "").strip()
-            raise HookHalt(f"chat-history turn-check: {surface}")
+            text = (result.stderr or result.stdout or "").strip()
+            reason = "foreign" if code == EXIT_FOREIGN else "returning"
+            surface = [line for line in text.splitlines() if line] or [
+                f"chat-history turn-check: {reason}",
+            ]
+            raise HookHalt(f"chat_history_turn_check_{reason}", surface=surface)
         raise HookError(f"chat-history turn-check failed (exit {code})")
 
 
