@@ -234,6 +234,19 @@ Only the exact string `"success"` triggers the skip. A `"blocked"`
 or `"partial"` marker from a prior run **reruns** the step so the
 current state is re-evaluated rather than trusting stale evidence.
 
+## Hook lifecycle (side-channel)
+
+The dispatcher and CLI emit lifecycle hooks at fixed points
+(`before_step`, `after_step`, `on_halt`, `on_error` on the
+dispatcher side; `before_load`, `after_load`, `before_dispatch`,
+`after_dispatch`, `before_save`, `after_save` on the CLI side).
+Hooks are **observers** — they may halt the engine via `HookHalt`
+but never replace step logic. Default-off (`hooks.enabled: false`);
+golden-replay flows stay byte-stable when hooks do not register.
+Built-in hooks cover trace, halt-surface audit, state-shape
+validation, directive-set guard, and the four chat-history
+boundary writes. Full reference: [`work-engine-hooks.md`](work-engine-hooks.md).
+
 ## Memory retrieval contract
 
 Bounded per the top-level roadmap rule:

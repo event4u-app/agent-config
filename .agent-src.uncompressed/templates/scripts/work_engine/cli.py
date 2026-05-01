@@ -51,8 +51,22 @@ from .dispatcher import (
     load_directive_set,
     select_directive_set,
 )
+from .hooks import HookContext, HookEvent, HookHalt, HookRegistry, HookRunner
+from .hooks.builtin import (
+    ChatHistoryAppendHook,
+    ChatHistoryHaltAppendHook,
+    ChatHistoryHeartbeatHook,
+    ChatHistoryTurnCheckHook,
+    DirectiveSetGuardHook,
+    HaltSurfaceAuditHook,
+    StateShapeValidationHook,
+    TraceHook,
+)
+from .hooks.settings import HookSettings, load_hook_settings
 from .intent import populate_routing
 from .migration.v0_to_v1 import migrate_payload
+from .resolvers.diff import DiffResolverError, build_envelope as _build_diff_envelope
+from .resolvers.file import FileResolverError, build_envelope as _build_file_envelope
 from .resolvers.prompt import PromptResolverError, build_envelope as _build_prompt_envelope
 from .state import Input, SchemaError, WorkState
 
@@ -79,11 +93,27 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     state_file: Path = args.state_file
 
+    runner = HookRunner(_build_hook_registry(args))
+
+    halt = runner.emit(
+        HookEvent.BEFORE_LOAD,
+        HookContext(state_file=state_file, args=args),
+    )
+    if halt is not None:
+        return _emit_halt(halt)
+
     try:
         work, fmt = _load_or_build(state_file, args)
     except _CLIError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+
+    halt = runner.emit(
+        HookEvent.AFTER_LOAD,
+        HookContext(state_file=state_file, work=work, fmt=fmt, args=args),
+    )
+    if halt is not None:
+        return _emit_halt(halt)
 
     try:
         set_name = select_directive_set(work)
@@ -94,11 +124,113 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
 
     delivery = _to_delivery(work)
-    final, halting = dispatch(delivery, steps)
+
+    halt = runner.emit(
+        HookEvent.BEFORE_DISPATCH,
+        HookContext(work=work, delivery=delivery, set_name=set_name, args=args),
+    )
+    if halt is not None:
+        return _emit_halt(halt)
+
+    final, halting = dispatch(delivery, steps, hooks=runner)
+
+    halt = runner.emit(
+        HookEvent.AFTER_DISPATCH,
+        HookContext(
+            work=work,
+            delivery=delivery,
+            final=final,
+            halting=halting,
+            args=args,
+        ),
+    )
+    if halt is not None:
+        return _emit_halt(halt)
+
     _sync_back(work, delivery)
+
+    halt = runner.emit(
+        HookEvent.BEFORE_SAVE,
+        HookContext(work=work, delivery=delivery, fmt=fmt, args=args),
+    )
+    if halt is not None:
+        return _emit_halt(halt)
+
     _save(state_file, work, fmt)
+
+    halt = runner.emit(
+        HookEvent.AFTER_SAVE,
+        HookContext(work=work, state_file=state_file, fmt=fmt, args=args),
+    )
+    if halt is not None:
+        # State is already on disk; exit 2 still per the P3 branch table.
+        return _emit_halt(halt)
+
     _emit(work, final, halting)
     return 0 if final is Outcome.SUCCESS else 1
+
+
+def _build_hook_registry(args: argparse.Namespace) -> HookRegistry:
+    """Build the CLI-side :class:`HookRegistry` for one ``main()`` run.
+
+    Reads ``hooks.*`` from ``.agent-settings.yml`` and registers the
+    enabled hooks. The master switch ``hooks.enabled`` defaults to
+    ``False`` when the block (or the file) is missing — the registry
+    stays empty and golden replay flows are byte-stable.
+
+    ``--no-hooks`` on the CLI forces an empty registry regardless of
+    settings, which is the explicit escape hatch golden-replay test
+    harnesses can use.
+    """
+    registry = HookRegistry()
+    if getattr(args, "no_hooks", False):
+        return registry
+
+    settings_path = getattr(args, "hooks_config", None)
+    settings = load_hook_settings(settings_path)
+    if not settings.enabled:
+        return registry
+
+    if settings.trace:
+        TraceHook().register(registry)
+    if settings.halt_surface_audit:
+        HaltSurfaceAuditHook().register(registry)
+    if settings.state_shape_validation:
+        StateShapeValidationHook().register(registry)
+    if settings.directive_set_guard:
+        DirectiveSetGuardHook().register(registry)
+    if settings.chat_history_enabled:
+        _register_chat_history_hooks(registry, settings)
+
+    return registry
+
+
+def _register_chat_history_hooks(
+    registry: HookRegistry, settings: HookSettings,
+) -> None:
+    """Register the four chat-history hooks bound to the configured script."""
+    script = Path(settings.chat_history_script)
+    ChatHistoryTurnCheckHook(script).register(registry)
+    ChatHistoryAppendHook(script).register(registry)
+    ChatHistoryHaltAppendHook(script).register(registry)
+    ChatHistoryHeartbeatHook(script).register(registry)
+
+
+def _emit_halt(halt: HookHalt) -> int:
+    """Render a :class:`HookHalt` surface to stderr and return exit 2.
+
+    Per the P3 halt branch table, every CLI-layer halt yields exit code
+    ``2`` regardless of which event fired it. State persistence is
+    governed by *where* in ``main`` the halt is detected: the call site
+    decides whether ``_save`` already ran. This helper is the single
+    place that formats the surface so the wire output stays consistent.
+    """
+    if halt.surface:
+        for line in halt.surface:
+            print(line, file=sys.stderr)
+    else:
+        print(f"halt: {halt.reason}", file=sys.stderr)
+    return 2
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -128,12 +260,47 @@ def _build_parser() -> argparse.ArgumentParser:
         "--ticket-file. Used only when the state file does not exist yet.",
     )
     parser.add_argument(
+        "--diff-file",
+        type=Path,
+        default=None,
+        help="Plain-text file carrying a unified diff payload; builds an "
+        "input.kind='diff' envelope routed through the UI-improve "
+        "directive set. Mutually exclusive with --ticket-file / "
+        "--prompt-file / --file-file. Used only when the state file does "
+        "not exist yet.",
+    )
+    parser.add_argument(
+        "--file-file",
+        type=Path,
+        default=None,
+        help="Plain-text file carrying a single path reference (one line); "
+        "builds an input.kind='file' envelope routed through the UI-improve "
+        "directive set. Mutually exclusive with --ticket-file / "
+        "--prompt-file / --diff-file. Used only when the state file does "
+        "not exist yet.",
+    )
+    parser.add_argument(
         "--persona",
         type=str,
         default=None,
         help="Persona name (senior-engineer | qa | advisory). Only honoured "
         "when the state file does not exist yet; ignored on resume so a "
         "mid-flight persona switch cannot silently change behaviour.",
+    )
+    parser.add_argument(
+        "--no-hooks",
+        action="store_true",
+        default=False,
+        help="Disable every lifecycle hook for this run. Use in golden-"
+        "replay test harnesses so a future settings change cannot "
+        "silently invalidate captured outputs.",
+    )
+    parser.add_argument(
+        "--hooks-config",
+        type=Path,
+        default=None,
+        help="Override the path to the agent-settings file used to resolve "
+        "the hooks.* block. Defaults to ./.agent-settings.yml.",
     )
     return parser
 
@@ -145,27 +312,39 @@ def _load_or_build(
     """Return the WorkState to dispatch against plus its wire format.
 
     Either loaded from ``state_file`` (format-preserving) or freshly
-    built from ``--ticket-file`` (R1) / ``--prompt-file`` (R2). Fresh
-    ticket files default to v0 wire format so that newly captured
-    Goldens stay byte-equal with the pre-Phase-4 baseline; fresh
-    prompt files emit v1 directly (v0 has no prompt envelope so there
-    is nothing to stay byte-compatible with). v1 round-trips for state
-    files already on disk in v1 shape.
+    built from ``--ticket-file`` (R1), ``--prompt-file`` (R2),
+    ``--diff-file`` (R3) or ``--file-file`` (R3). Fresh ticket files
+    default to v0 wire format so that newly captured Goldens stay
+    byte-equal with the pre-Phase-4 baseline; the prompt / diff / file
+    paths emit v1 directly (v0 has no envelope concept for these
+    kinds). v1 round-trips for state files already on disk in v1 shape.
     """
     if state_file.exists():
         return _load(state_file)
-    if args.ticket_file is not None and args.prompt_file is not None:
+    inputs = [
+        ("--ticket-file", args.ticket_file),
+        ("--prompt-file", args.prompt_file),
+        ("--diff-file", args.diff_file),
+        ("--file-file", args.file_file),
+    ]
+    supplied = [name for name, value in inputs if value is not None]
+    if len(supplied) > 1:
         raise _CLIError(
-            "--ticket-file and --prompt-file are mutually exclusive; "
-            "pass exactly one when building an initial state.",
+            f"{', '.join(supplied)} are mutually exclusive; pass exactly "
+            "one when building an initial state.",
+        )
+    if not supplied:
+        raise _CLIError(
+            f"No state file at {state_file} and no --ticket-file, "
+            "--prompt-file, --diff-file, or --file-file given; cannot "
+            "build an initial state.",
         )
     if args.prompt_file is not None:
         return _build_from_prompt_file(args), _FMT_V1
-    if args.ticket_file is None:
-        raise _CLIError(
-            f"No state file at {state_file} and no --ticket-file or "
-            "--prompt-file given; cannot build an initial state.",
-        )
+    if args.diff_file is not None:
+        return _build_from_diff_file(args), _FMT_V1
+    if args.file_file is not None:
+        return _build_from_file_file(args), _FMT_V1
     ticket = _read_json(args.ticket_file)
     if not isinstance(ticket, dict):
         raise _CLIError(
@@ -194,6 +373,62 @@ def _build_from_prompt_file(args: argparse.Namespace) -> WorkState:
         envelope = _build_prompt_envelope(raw)
     except PromptResolverError as exc:
         raise _CLIError(f"--prompt-file is not a valid prompt: {exc}") from exc
+    work = WorkState(input=envelope)
+    if args.persona:
+        work.persona = args.persona
+    populate_routing(work)
+    return work
+
+
+def _build_from_diff_file(args: argparse.Namespace) -> WorkState:
+    """Read ``--diff-file`` as raw text and wrap it in a diff envelope.
+
+    The file is read verbatim (UTF-8) and handed to the diff resolver,
+    which validates the unified-diff header heuristic and returns the
+    canonical
+    ``Input(kind="diff", data={raw, reconstructed_ac, assumptions})``
+    envelope. ``populate_routing`` then routes the envelope to the
+    UI-improve directive set without running the prose classifier — see
+    :mod:`work_engine.intent.classify` for the routing contract.
+    """
+    try:
+        raw = args.diff_file.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise _CLIError(f"Cannot read {args.diff_file}: {exc}") from exc
+    try:
+        envelope = _build_diff_envelope(raw)
+    except DiffResolverError as exc:
+        raise _CLIError(f"--diff-file is not a valid diff: {exc}") from exc
+    work = WorkState(input=envelope)
+    if args.persona:
+        work.persona = args.persona
+    populate_routing(work)
+    return work
+
+
+def _build_from_file_file(args: argparse.Namespace) -> WorkState:
+    """Read ``--file-file`` as a single-line path and wrap it in a file envelope.
+
+    The file is read verbatim (UTF-8); the first non-empty line is taken
+    as the path reference and handed to the file resolver, which
+    validates path shape (non-empty, NUL-free, not a URL) and returns
+    the canonical
+    ``Input(kind="file", data={path, reconstructed_ac, assumptions})``
+    envelope. Trailing whitespace and additional lines are ignored —
+    the resolver treats the file's content as the path itself, not as
+    structured payload.
+    """
+    try:
+        raw = args.file_file.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise _CLIError(f"Cannot read {args.file_file}: {exc}") from exc
+    path = raw.strip().splitlines()[0] if raw.strip() else ""
+    try:
+        envelope = _build_file_envelope(path)
+    except FileResolverError as exc:
+        raise _CLIError(
+            f"--file-file does not carry a valid path: {exc}",
+        ) from exc
     work = WorkState(input=envelope)
     if args.persona:
         work.persona = args.persona

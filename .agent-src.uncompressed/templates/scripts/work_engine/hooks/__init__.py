@@ -19,6 +19,16 @@ from the agent into the work engine. The engine owns boundaries.
 """
 from __future__ import annotations
 
+from .builtin import (
+    ChatHistoryAppendHook,
+    ChatHistoryHaltAppendHook,
+    ChatHistoryHeartbeatHook,
+    ChatHistoryTurnCheckHook,
+    DirectiveSetGuardHook,
+    HaltSurfaceAuditHook,
+    StateShapeValidationHook,
+    TraceHook,
+)
 from .context import HookContext
 from .events import HookEvent
 from .exceptions import HookError, HookHalt
@@ -26,6 +36,12 @@ from .registry import HookCallback, HookRegistry
 from .runner import HookRunner
 
 __all__ = [
+    "ChatHistoryAppendHook",
+    "ChatHistoryHaltAppendHook",
+    "ChatHistoryHeartbeatHook",
+    "ChatHistoryTurnCheckHook",
+    "DirectiveSetGuardHook",
+    "HaltSurfaceAuditHook",
     "HookCallback",
     "HookContext",
     "HookError",
@@ -33,4 +49,6 @@ __all__ = [
     "HookHalt",
     "HookRegistry",
     "HookRunner",
+    "StateShapeValidationHook",
+    "TraceHook",
 ]

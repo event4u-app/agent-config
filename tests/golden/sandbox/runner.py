@@ -15,7 +15,7 @@ The runner never edits the engine state via private imports — all
 mutation happens through the same JSON file the agent would write,
 keeping the captured transcripts representative of production use.
 
-Two input modes are supported:
+Four input modes are supported:
 
 - **ticket mode** (R1) — ``ticket_file`` is a JSON envelope passed via
   ``--ticket-file`` to ``implement-ticket``. State files round-trip in
@@ -23,10 +23,18 @@ Two input modes are supported:
 - **prompt mode** (R2 Phase 5) — ``prompt_file`` is a plain-text file
   passed via ``--prompt-file`` to ``work``. State files round-trip in
   v1 wire format.
+- **diff mode** (R3 Phase 6) — ``diff_file`` is a unified-diff text
+  file passed via ``--diff-file`` to ``work``. Builds an
+  ``input.kind="diff"`` envelope routed to ``ui-improve``.
+- **file mode** (R3 Phase 6) — ``file_file`` is a single-line text
+  file carrying a path reference, passed via ``--file-file`` to
+  ``work``. Builds an ``input.kind="file"`` envelope routed to
+  ``ui-improve``.
 
-The two are mutually exclusive per :func:`run_capture`. Recipes
+The four are mutually exclusive per :func:`run_capture`. Recipes
 declare which mode they want via their ``META`` dict
-(``ticket_relpath`` vs ``prompt_relpath``).
+(``ticket_relpath`` / ``prompt_relpath`` / ``diff_relpath`` /
+``file_relpath``).
 """
 from __future__ import annotations
 
@@ -79,9 +87,10 @@ class CycleRecord:
 class CaptureResult:
     """Aggregated transcript for a single Golden Transcript run.
 
-    Exactly one of ``ticket_file`` and ``prompt_file`` is set per run;
-    the other stays ``None``. ``subcommand`` records which CLI verb the
-    runner invoked so transcripts and reproduction notes stay accurate.
+    Exactly one of ``ticket_file`` / ``prompt_file`` / ``diff_file`` /
+    ``file_file`` is set per run; the others stay ``None``.
+    ``subcommand`` records which CLI verb the runner invoked so
+    transcripts and reproduction notes stay accurate.
     """
 
     gt_id: str
@@ -89,6 +98,8 @@ class CaptureResult:
     persona: Optional[str]
     workspace: Path
     prompt_file: Optional[Path] = None
+    diff_file: Optional[Path] = None
+    file_file: Optional[Path] = None
     subcommand: str = CMD_TICKET
     cycles: list[CycleRecord] = field(default_factory=list)
     final_outcome: str = "unknown"
@@ -118,6 +129,8 @@ def invoke_engine(
     state_file: Path,
     ticket_file: Optional[Path] = None,
     prompt_file: Optional[Path] = None,
+    diff_file: Optional[Path] = None,
+    file_file: Optional[Path] = None,
     subcommand: str = CMD_TICKET,
     persona: Optional[str] = None,
 ) -> tuple[int, str, str, dict[str, Any]]:
@@ -128,19 +141,28 @@ def invoke_engine(
     exit code 2 (config/IO error) it is *not* written; we surface an
     empty dict so the recipe can decide whether to abort.
 
-    Exactly one of ``ticket_file`` / ``prompt_file`` must be non-``None``
-    on the first cycle; on resume both stay ``None`` because the engine
-    rebuilds its envelope from the persisted state file. ``subcommand``
-    selects ``implement-ticket`` (ticket mode) or ``work`` (prompt mode);
-    both subcommands route through the same engine but the user-facing
-    verb stays accurate in the transcript.
+    Exactly one of ``ticket_file`` / ``prompt_file`` / ``diff_file`` /
+    ``file_file`` must be non-``None`` on the first cycle; on resume all
+    stay ``None`` because the engine rebuilds its envelope from the
+    persisted state file. ``subcommand`` selects ``implement-ticket``
+    (ticket mode) or ``work`` (prompt / diff / file mode); both
+    subcommands route through the same engine but the user-facing verb
+    stays accurate in the transcript.
     """
+    # Force --no-hooks at runtime so a future settings change cannot
+    # silently invalidate captured goldens. Not added to _relative_cmd
+    # (transcripts stay byte-stable across the harness change).
     cmd: list[str] = [str(AGENT_CONFIG), subcommand,
-                      "--state-file", str(state_file)]
+                      "--state-file", str(state_file),
+                      "--no-hooks"]
     if ticket_file is not None:
         cmd += ["--ticket-file", str(ticket_file)]
     if prompt_file is not None:
         cmd += ["--prompt-file", str(prompt_file)]
+    if diff_file is not None:
+        cmd += ["--diff-file", str(diff_file)]
+    if file_file is not None:
+        cmd += ["--file-file", str(file_file)]
     if persona is not None:
         cmd += ["--persona", persona]
 
@@ -215,26 +237,34 @@ def run_capture(
     recipe: dict[str, RecipeStep],
     ticket_file: Optional[Path] = None,
     prompt_file: Optional[Path] = None,
+    diff_file: Optional[Path] = None,
+    file_file: Optional[Path] = None,
     persona: Optional[str] = None,
     cycle_cap: int = DEFAULT_CYCLE_CAP,
     state_filename: str = ".implement-ticket-state.json",
 ) -> CaptureResult:
     """Drive a Golden Transcript end-to-end and return the transcript.
 
-    Exactly one of ``ticket_file`` / ``prompt_file`` must be supplied —
-    they pick the subcommand (``implement-ticket`` vs ``work``) and the
-    initial input flag. ``recipe`` keys are directive verbs
-    (``create-plan``, ``apply-plan``, ``run-tests``, ``review-changes``,
-    plus ``refine-prompt`` in prompt mode) and the sentinel
-    ``"_no_directive"`` for halts without an agent-addressed line
-    (refine ambiguity, UI-intent rejection, bad-verdict halts). Each
-    step receives the post-cycle state and the ``CycleRecord`` and must
-    return the state to persist before the next invocation.
+    Exactly one of ``ticket_file`` / ``prompt_file`` / ``diff_file`` /
+    ``file_file`` must be supplied — they pick the subcommand
+    (``implement-ticket`` for ticket mode; ``work`` for prompt / diff /
+    file mode) and the initial input flag. ``recipe`` keys are directive
+    verbs (``create-plan``, ``apply-plan``, ``run-tests``,
+    ``review-changes``, ``existing-ui-audit``, ``ui-design``,
+    ``ui-apply``, ``ui-review``, ``ui-polish``, plus ``refine-prompt``)
+    and the sentinel ``"_no_directive"`` for halts without an
+    agent-addressed line. Each step receives the post-cycle state and
+    the ``CycleRecord`` and must return the state to persist before the
+    next invocation.
     """
-    if (ticket_file is None) == (prompt_file is None):
+    inputs = [ticket_file, prompt_file, diff_file, file_file]
+    supplied = [p for p in inputs if p is not None]
+    if len(supplied) != 1:
         raise ValueError(
-            "run_capture requires exactly one of ticket_file / prompt_file; "
-            f"got ticket_file={ticket_file!r}, prompt_file={prompt_file!r}",
+            "run_capture requires exactly one of ticket_file / "
+            "prompt_file / diff_file / file_file; got "
+            f"ticket_file={ticket_file!r}, prompt_file={prompt_file!r}, "
+            f"diff_file={diff_file!r}, file_file={file_file!r}",
         )
     subcommand = CMD_TICKET if ticket_file is not None else CMD_WORK
     prepare_workspace(workspace)
@@ -243,6 +273,8 @@ def run_capture(
         gt_id=gt_id,
         ticket_file=ticket_file,
         prompt_file=prompt_file,
+        diff_file=diff_file,
+        file_file=file_file,
         subcommand=subcommand,
         persona=persona,
         workspace=workspace,
@@ -251,12 +283,16 @@ def run_capture(
     for cycle_index in range(1, cycle_cap + 1):
         ticket_arg = ticket_file if cycle_index == 1 else None
         prompt_arg = prompt_file if cycle_index == 1 else None
+        diff_arg = diff_file if cycle_index == 1 else None
+        file_arg = file_file if cycle_index == 1 else None
         persona_arg = persona if cycle_index == 1 else None
         exit_code, stdout, stderr, state = invoke_engine(
             workspace,
             state_file=state_file,
             ticket_file=ticket_arg,
             prompt_file=prompt_arg,
+            diff_file=diff_arg,
+            file_file=file_arg,
             subcommand=subcommand,
             persona=persona_arg,
         )
@@ -268,6 +304,8 @@ def run_capture(
                 subcommand=subcommand,
                 ticket=ticket_arg,
                 prompt=prompt_arg,
+                diff=diff_arg,
+                file=file_arg,
                 persona=persona_arg,
                 state_file=state_file,
             ),
@@ -310,6 +348,8 @@ def _relative_cmd(
     subcommand: str = CMD_TICKET,
     ticket: Optional[Path] = None,
     prompt: Optional[Path] = None,
+    diff: Optional[Path] = None,
+    file: Optional[Path] = None,
     persona: Optional[str] = None,
     state_file: Path,
 ) -> list[str]:
@@ -320,6 +360,10 @@ def _relative_cmd(
         cmd += ["--ticket-file", _rel(workspace, ticket)]
     if prompt is not None:
         cmd += ["--prompt-file", _rel(workspace, prompt)]
+    if diff is not None:
+        cmd += ["--diff-file", _rel(workspace, diff)]
+    if file is not None:
+        cmd += ["--file-file", _rel(workspace, file)]
     if persona is not None:
         cmd += ["--persona", persona]
     return cmd
@@ -356,11 +400,20 @@ def serialise_capture(result: CaptureResult) -> dict[str, Any]:
     - **Prompt mode** (R2 P5) replaces ``ticket_file`` with
       ``prompt_file`` and adds ``subcommand: "work"`` so the captured
       transcript is unambiguous about how the run was invoked.
+    - **Diff / file mode** (R3 P6) replace ``ticket_file`` with
+      ``diff_file`` / ``file_file`` respectively and also emit
+      ``subcommand: "work"``.
     """
     payload: dict[str, Any] = {"gt_id": result.gt_id}
     if result.prompt_file is not None:
         payload["subcommand"] = result.subcommand
         payload["prompt_file"] = _rel_fixture(result.prompt_file)
+    elif result.diff_file is not None:
+        payload["subcommand"] = result.subcommand
+        payload["diff_file"] = _rel_fixture(result.diff_file)
+    elif result.file_file is not None:
+        payload["subcommand"] = result.subcommand
+        payload["file_file"] = _rel_fixture(result.file_file)
     else:
         payload["ticket_file"] = _rel_fixture(result.ticket_file)
     payload["persona"] = result.persona
