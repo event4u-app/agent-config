@@ -6,17 +6,17 @@
 
 ## Overall
 
-**35 / 76 steps done · 46%**
+**67 / 77 steps done · 87%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   46%
+███████████████████████████████████░░░░░   87%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-product-ui-track-followup.md](roadmaps/road-to-product-ui-track-followup.md) | 6 | 35 | 35 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-product-ui-track-followup.md](roadmaps/road-to-product-ui-track-followup.md) | 6 | 36 | 4 | 32 | 0 | 0 | █████████░ 89% |
 | 2 | [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md) | 7 | 44 | 2 | 35 | 7 | 0 | ██████████ 95% |
 | 3 | [road-to-visual-review-loop.md](roadmaps/road-to-visual-review-loop.md) | 1 | 4 | 4 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -26,16 +26,16 @@
 
 ### [road-to-product-ui-track-followup.md](roadmaps/road-to-product-ui-track-followup.md)
 
-**Product UI Track — Follow-up Goldens (R3.1)** — 0 / 35 done (0%)
+**Product UI Track — Follow-up Goldens (R3.1)** — 32 / 36 done (89%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Recipe scaffolding and shared helpers | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | GT-U5 — mixed orchestration golden | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 3 | GT-U6 — stack dispatch golden | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 4 | GT-U7 — trivial happy path golden | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 5 | GT-U8 — trivial reclassification golden | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 6 | Capture, wire-up, and verification | ⬜ not started | 12 | 0 | 0 | 0 | 0% |
+| 1 | Recipe scaffolding and shared helpers | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | GT-U5 — mixed orchestration golden | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 3 | GT-U6 — stack dispatch golden | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 4 | GT-U7 — trivial happy path golden | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 5 | GT-U8 — trivial reclassification golden | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 6 | Capture, wire-up, and verification | 🟡 in progress | 4 | 8 | 0 | 0 | 67% |
 
 ### [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md)
 
