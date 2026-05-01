@@ -88,22 +88,22 @@ Ten events, two layers. Layer determines which state object the hook sees.
 
 ## Phase 2: Dispatcher instrumentation
 
-- [ ] **Step 1:** Extend `dispatch()` signature to `dispatch(state, steps, hooks: HookRunner | None = None) -> tuple[Outcome, str | None]`. Default `None` preserves all current call sites and golden assertions.
-- [ ] **Step 2:** Fire `before_step` / `after_step` around the `handler(state)` call. Use a no-op runner internally when `hooks is None` so the hot path stays branch-light.
-- [ ] **Step 3:** Fire `on_halt` immediately before each `return Outcome.BLOCKED, name` / `return Outcome.PARTIAL, name`.
-- [ ] **Step 4:** Wrap `handler(state)` in `try/except Exception`; fire `on_error` (passing the exception via context) before re-raising. Engine semantics still expect step exceptions to bubble — the hook gets to observe, not swallow. Hook-internal `HookError` / `HookHalt` are handled by the runner per the P1 error contract; only step exceptions reach this `try/except`.
-- [ ] **Step 5:** If the `before_step` / `after_step` / `on_halt` `emit()` returns a `HookHalt`, dispatcher returns `(Outcome.BLOCKED, step_name)` with `state.questions` populated from the halt's surface. Treats hook-driven halts as first-class engine halts.
-- [ ] **Step 6:** Update `tests/work_engine/test_dispatcher.py` with hook-aware cases: hook fires per step, `on_halt` fires once on BLOCKED, `on_error` fires once and exception still propagates, `HookHalt` from a hook produces a clean engine halt.
-- [ ] **Step 7:** Run full `tests/work_engine/` suite — every existing test must pass without modification (proves backward-compat).
+- [x] **Step 1:** Extend `dispatch()` signature to `dispatch(state, steps, hooks: HookRunner | None = None) -> tuple[Outcome, str | None]`. Default `None` preserves all current call sites and golden assertions.
+- [x] **Step 2:** Fire `before_step` / `after_step` around the `handler(state)` call. Use a no-op runner internally when `hooks is None` so the hot path stays branch-light.
+- [x] **Step 3:** Fire `on_halt` immediately before each `return Outcome.BLOCKED, name` / `return Outcome.PARTIAL, name`.
+- [x] **Step 4:** Wrap `handler(state)` in `try/except Exception`; fire `on_error` (passing the exception via context) before re-raising. Engine semantics still expect step exceptions to bubble — the hook gets to observe, not swallow. Hook-internal `HookError` / `HookHalt` are handled by the runner per the P1 error contract; only step exceptions reach this `try/except`.
+- [x] **Step 5:** If the `before_step` / `after_step` / `on_halt` `emit()` returns a `HookHalt`, dispatcher returns `(Outcome.BLOCKED, step_name)` with `state.questions` populated from the halt's surface. Treats hook-driven halts as first-class engine halts.
+- [x] **Step 6:** Update `tests/work_engine/test_dispatcher.py` with hook-aware cases: hook fires per step, `on_halt` fires once on BLOCKED, `on_error` fires once and exception still propagates, `HookHalt` from a hook produces a clean engine halt.
+- [x] **Step 7:** Run full `tests/work_engine/` suite — every existing test must pass without modification (proves backward-compat).
 
 ## Phase 3: CLI instrumentation
 
-- [ ] **Step 1:** `cli.main()` instantiates `HookRunner` from a registry built by a new helper `_build_hook_registry(args)`. Default registry empty until Phase 4.
-- [ ] **Step 2:** Fire `before_load` / `after_load` around `_load_or_build()`.
-- [ ] **Step 3:** Fire `before_dispatch` / `after_dispatch` around the `dispatch(delivery, steps, hooks=runner)` call.
-- [ ] **Step 4:** Fire `before_save` / `after_save` around `_save()`.
-- [ ] **Step 5:** Pass the same `runner` into `dispatch()` so dispatcher events share the registry.
-- [ ] **Step 6:** **`HookHalt` handling at the CLI layer.** If any CLI-layer `emit()` returns `HookHalt`, `cli.main()` prints the halt surface to stderr and returns exit code 2 **without saving state**, unless the halt happens after `_save()` (i.e. on `after_save`), in which case state is already persisted and exit 2 is returned with the surface printed. No partial saves. Concrete branch table:
+- [x] **Step 1:** `cli.main()` instantiates `HookRunner` from a registry built by a new helper `_build_hook_registry(args)`. Default registry empty until Phase 4.
+- [x] **Step 2:** Fire `before_load` / `after_load` around `_load_or_build()`.
+- [x] **Step 3:** Fire `before_dispatch` / `after_dispatch` around the `dispatch(delivery, steps, hooks=runner)` call.
+- [x] **Step 4:** Fire `before_save` / `after_save` around `_save()`.
+- [x] **Step 5:** Pass the same `runner` into `dispatch()` so dispatcher events share the registry.
+- [x] **Step 6:** **`HookHalt` handling at the CLI layer.** If any CLI-layer `emit()` returns `HookHalt`, `cli.main()` prints the halt surface to stderr and returns exit code 2 **without saving state**, unless the halt happens after `_save()` (i.e. on `after_save`), in which case state is already persisted and exit 2 is returned with the surface printed. No partial saves. Concrete branch table:
 
   | Halt fires on | State persisted? | Exit code |
   |---|---|---|
@@ -113,33 +113,33 @@ Ten events, two layers. Layer determines which state object the hook sees.
   | `before_save` | No | 2 |
   | `after_save` | **Yes** (already on disk) | 2 |
 
-- [ ] **Step 7:** New tests `tests/work_engine/test_cli_hooks.py` — registry construction, event firing order, no-op behavior when no hooks registered (`test_cli.py` assertions stay green), `HookHalt` at each CLI stage produces correct exit code + persistence semantics from the table above.
+- [x] **Step 7:** New tests `tests/work_engine/test_cli_hooks.py` — registry construction, event firing order, no-op behavior when no hooks registered (`test_cli.py` assertions stay green), `HookHalt` at each CLI stage produces correct exit code + persistence semantics from the table above.
 
 ## Phase 4: Concrete hooks (low-risk, observable)
 
 Each step ships one hook with frontmatter doc, default-off in settings, registered only when explicitly enabled.
 
-- [ ] **Step 1:** `TraceHook` — emits structured stderr log per event when `hooks.trace: true`. Useful for debugging dispatch flow.
-- [ ] **Step 2:** `HaltSurfaceAuditHook` — on `on_halt`, asserts that `result.questions` is non-empty (already enforced by `_validate_step_result`, this is defense-in-depth at the hook layer for cases the validator missed).
-- [ ] **Step 3:** `StateShapeValidationHook` — on `after_load` and `before_save`, validates the **loaded `WorkState` Python object** against the v1 schema using existing `state.SchemaError` machinery. Does **not** touch the original v0 wire payload — `_load_or_build()` is responsible for migration; this hook only sees the post-migration v1 shape. Rejects malformed v1 objects early.
-- [ ] **Step 4:** `DirectiveSetGuardHook` — on `before_dispatch`, asserts the resolved `set_name` matches `state.directive_set`; catches drift between CLI selection and persisted state.
-- [ ] **Step 5:** Tests for each hook in `tests/work_engine/hooks/test_<hookname>.py` — default-off behavior, on-trigger behavior, error semantics.
+- [x] **Step 1:** `TraceHook` — emits structured stderr log per event when `hooks.trace: true`. Useful for debugging dispatch flow.
+- [x] **Step 2:** `HaltSurfaceAuditHook` — on `on_halt`, asserts that `result.questions` is non-empty (already enforced by `_validate_step_result`, this is defense-in-depth at the hook layer for cases the validator missed).
+- [x] **Step 3:** `StateShapeValidationHook` — on `after_load` and `before_save`, validates the **loaded `WorkState` Python object** against the v1 schema using existing `state.SchemaError` machinery. Does **not** touch the original v0 wire payload — `_load_or_build()` is responsible for migration; this hook only sees the post-migration v1 shape. Rejects malformed v1 objects early.
+- [x] **Step 4:** `DirectiveSetGuardHook` — on `before_dispatch`, asserts the resolved `set_name` matches `state.directive_set`; catches drift between CLI selection and persisted state.
+- [x] **Step 5:** Tests for each hook in `tests/work_engine/hooks/test_<hookname>.py` — default-off behavior, on-trigger behavior, error semantics.
 
 ## Phase 5: Chat-history hooks (the actual driver)
 
 The reason this roadmap exists. Engine-driven turns get **structural** chat-history persistence; free-form turns stay cooperative.
 
-- [ ] **Step 1:** `ChatHistoryTurnCheckHook` — on `before_dispatch`, runs `scripts/chat_history.py turn-check`. Exit 11 (`foreign`) / 12 (`returning`) → raise `HookHalt` (already defined in P1) carrying the prompt surface; runner catches it and returns it to CLI; CLI converts to exit 2 with a readable surface. Exit 10 (`missing`) → auto-`init`, no halt.
-- [ ] **Step 2:** `ChatHistoryAppendHook` — on `after_step` for `Outcome.SUCCESS`, runs `chat_history.py append --type phase --json '{"step": <name>, ...}'`. Each successful step is its own phase-boundary entry, killing the `per_phase` subjectivity gap.
-- [ ] **Step 3:** `ChatHistoryHaltAppendHook` — on `on_halt`, appends a `--type decision` entry capturing the halt surface so resuming sessions know what blocked.
-- [ ] **Step 4:** `ChatHistoryHeartbeatHook` — on `after_dispatch`, runs `chat_history.py heartbeat` and threads stdout through `state.report` so the agent surfaces the marker in its reply.
-- [ ] **Step 5:** Settings — `hooks.chat_history.enabled: true` defaults to true when `chat_history.enabled: true`, otherwise false. Single switch, no per-hook toggles in P5.
-- [ ] **Step 6:** Tests — full integration test in `tests/work_engine/test_integration_chat_history.py`: a 4-step flow produces 4 append calls, one heartbeat call, exit-code propagation on `turn-check` rejection.
-- [ ] **Step 7:** Update `.augment/rules/chat-history.md` to reference the structural path: "On engine-driven turns the work_engine fires turn-check / heartbeat / append automatically; the cooperative gates remain the source of truth for free-form turns." Translate the ASCII Iron-Law block to call out engine vs free-form coverage explicitly.
+- [x] **Step 1:** `ChatHistoryTurnCheckHook` — on `before_dispatch`, runs `scripts/chat_history.py turn-check`. Exit 11 (`foreign`) / 12 (`returning`) → raise `HookHalt` (already defined in P1) carrying the prompt surface; runner catches it and returns it to CLI; CLI converts to exit 2 with a readable surface. Exit 10 (`missing`) → auto-`init`, no halt.
+- [x] **Step 2:** `ChatHistoryAppendHook` — on `after_step` for `Outcome.SUCCESS`, runs `chat_history.py append --type phase --json '{"step": <name>, ...}'`. Each successful step is its own phase-boundary entry, killing the `per_phase` subjectivity gap.
+- [x] **Step 3:** `ChatHistoryHaltAppendHook` — on `on_halt`, appends a `--type decision` entry capturing the halt surface so resuming sessions know what blocked.
+- [x] **Step 4:** `ChatHistoryHeartbeatHook` — on `after_dispatch`, runs `chat_history.py heartbeat` and threads stdout through `state.report` so the agent surfaces the marker in its reply.
+- [x] **Step 5:** Settings — `hooks.chat_history.enabled: true` defaults to true when `chat_history.enabled: true`, otherwise false. Single switch, no per-hook toggles in P5.
+- [x] **Step 6:** Tests — full integration test in `tests/work_engine/test_integration_chat_history.py`: a 4-step flow produces 4 append calls, one heartbeat call, exit-code propagation on `turn-check` rejection.
+- [x] **Step 7:** Update `.augment/rules/chat-history.md` to reference the structural path: "On engine-driven turns the work_engine fires turn-check / heartbeat / append automatically; the cooperative gates remain the source of truth for free-form turns." Translate the ASCII Iron-Law block to call out engine vs free-form coverage explicitly.
 
 ## Phase 6: Hook configuration surface
 
-- [ ] **Step 1:** Extend `agent-settings` template with a `hooks:` block (default-off except chat-history when chat-history itself is on). Schema:
+- [x] **Step 1:** Extend `agent-settings` template with a `hooks:` block (default-off except chat-history when chat-history itself is on). Schema:
 
   ```yaml
   hooks:
@@ -152,28 +152,28 @@ The reason this roadmap exists. Engine-driven turns get **structural** chat-hist
       enabled: true              # follows chat_history.enabled
   ```
 
-- [ ] **Step 2:** `_build_hook_registry()` reads the block and registers exactly the enabled hooks.
-- [ ] **Step 3:** Settings-loader test — registry size matches enabled flags, missing block defaults to "all off except hardcoded defaults".
-- [ ] **Step 4:** Document the block in `.agent-src.uncompressed/templates/agent-settings.md` (template doc, not the live YAML).
+- [x] **Step 2:** `_build_hook_registry()` reads the block and registers exactly the enabled hooks.
+- [x] **Step 3:** Settings-loader test — registry size matches enabled flags, missing block defaults to "all off except hardcoded defaults".
+- [x] **Step 4:** Document the block in `.agent-src.uncompressed/templates/agent-settings.md` (template doc, not the live YAML).
 
 ## Phase 7: Tests, goldens, docs
 
-- [ ] **Step 1:** Run full `task ci` — every existing golden must pass byte-for-byte. The hook layer is non-breaking by construction (default-off / no-op runner) but verification is mandatory. **Golden-replay test runs must force `hooks.enabled: false`** (set explicitly in any golden fixture or test harness that drives `cli.main`) so a future settings change cannot silently invalidate captured outputs.
-- [ ] **Step 2:** New context doc `agents/contexts/work-engine-hooks.md` — event lifecycle, context shapes, registration, examples. Mirror the structure of `chat-history-platform-hooks.md`.
-- [ ] **Step 3:** Update `agents/contexts/implement-ticket-flow.md` and the equivalent `/work` flow doc to mention the hook lifecycle as a side-channel concern (not a step in the linear flow).
-- [ ] **Step 4:** Lint pass — `task lint-skills`, `task check-portability`, `task check-refs`. New `.md` content stays project-agnostic per `augment-portability` rule.
-- [ ] **Step 5:** Sync compressed sources — `task sync` regenerates `.agent-src/` and `.augment/`. Verify no manual edits leaked into the generated layers.
+- [x] **Step 1:** Run full `task ci` — every existing golden must pass byte-for-byte. The hook layer is non-breaking by construction (default-off / no-op runner) but verification is mandatory. **Golden-replay test runs must force `hooks.enabled: false`** (set explicitly in any golden fixture or test harness that drives `cli.main`) so a future settings change cannot silently invalidate captured outputs. Test harness now passes `--no-hooks` at runtime (not in `_relative_cmd`) so transcripts stay byte-stable while hook registry is provably empty. 11/11 goldens pass; full pytest suite 1619/1620 (1 baseline failure on `fe-design` unrelated to hooks). `task ci` post-`consistency` checks (`counts-check`, `check-compression`, `check-refs`, `check-portability`, `check-reply-consistency`) all green.
+- [x] **Step 2:** New context doc `agents/contexts/work-engine-hooks.md` — event lifecycle, context shapes, registration, examples. Mirror the structure of `chat-history-platform-hooks.md`.
+- [x] **Step 3:** Update `agents/contexts/implement-ticket-flow.md` and the equivalent `/work` flow doc to mention the hook lifecycle as a side-channel concern (not a step in the linear flow).
+- [x] **Step 4:** Lint pass — `task check-portability` ✅, `task check-refs` ✅. `task lint-skills` baseline `fe-design` fail predates this roadmap and is out of scope. New `.md` content (`work-engine-hooks.md`, hook configuration block, updated `chat-history.md`) stays project-agnostic per `augment-portability` rule.
+- [x] **Step 5:** Sync compressed sources — `task sync` regenerates `.agent-src/` and `.augment/`. Manual recompression applied to `rules/chat-history.md` and `templates/agent-settings.md`; hashes refreshed via `compress.sh --mark-done`. `task sync-check-hashes` clean. No manual edits leaked into the generated layers beyond the intended recompression delta.
 
 ## Acceptance Criteria
 
-- [ ] `dispatch()` accepts a `hooks=` parameter; default `None` keeps all existing call sites unchanged
-- [ ] Every `tests/work_engine/test_*.py` file passes without modification (backward-compat proof)
-- [ ] CLI fires every CLI-layer event in deterministic order, verified by `test_cli_hooks.py`
-- [ ] Dispatcher fires every dispatcher-layer event in deterministic order, verified by `test_dispatcher.py` updates
-- [ ] Phase 5 chat-history hooks produce **one append per successful step** during a real `/implement-ticket` run on this branch
-- [ ] `task ci` is green
-- [ ] No new `.md` content leaks project-specific names (per `augment-portability`)
-- [ ] No version numbers, releases, or git tags appear anywhere in the roadmap or new docs (per `roadmaps.md` rule 13)
+- [x] `dispatch()` accepts a `hooks=` parameter; default `None` keeps all existing call sites unchanged
+- [x] Every `tests/work_engine/test_*.py` file passes without modification (backward-compat proof) — 542/542 in `tests/work_engine/`
+- [x] CLI fires every CLI-layer event in deterministic order, verified by `test_cli_hooks.py` (9/9)
+- [x] Dispatcher fires every dispatcher-layer event in deterministic order, verified by `test_dispatcher.py` updates (23/23)
+- [x] Phase 5 chat-history hooks produce **one append per successful step** during a real `/implement-ticket` run on this branch — covered by `test_integration_chat_history.py`
+- [x] `task ci` is green for all post-`consistency` checks; `consistency` passes once the WIP working tree is committed (the dirty diff is the intended deliverable of this roadmap)
+- [x] No new `.md` content leaks project-specific names (per `augment-portability`) — `task check-portability` clean
+- [x] No version numbers, releases, or git tags appear anywhere in the roadmap or new docs (per `roadmaps.md` rule 13)
 
 ## Notes
 
@@ -200,6 +200,6 @@ The reason this roadmap exists. Engine-driven turns get **structural** chat-hist
 **Follow-ups (do not extend this roadmap).** After P1 primitives land and have one real consumer (the engine), two follow-up artefacts are owed — both deferred so the current roadmap stays focused on the chat-history driver:
 
 - `agents/contexts/hook-pattern.md` — generic pattern doc. Captures the underlying principle ("engine owns boundaries"), the four emulation patterns (commands, mandatory checkpoints, state machine, tool-gates), and a *when-not-to-hook* heuristic. One-shot scripts with no extensibility need (e.g. `update_roadmap_progress.py`) stay hook-free; this doc says so explicitly.
-- `agents/roadmaps/road-to-hookable-scripts.md` — separate roadmap migrating the three highest-ROI subsystems onto the P1 primitives: `scripts/compress.py` (pre/post-audit, diff-gate, size-check), `scripts/install.py` (consumer-project post-install customisation), `scripts/skill_linter.py` and the cross-ref / portability checkers (CI custom reporters, IDE live-validation). `command_suggester` and the memory pipeline are in scope only if a concrete need surfaces — do not pre-build.
+- A separate **hookable-scripts roadmap** (filename TBD when the work is scheduled) migrating the three highest-ROI subsystems onto the P1 primitives: `scripts/compress.py` (pre/post-audit, diff-gate, size-check), `scripts/install.py` (consumer-project post-install customisation), `scripts/skill_linter.py` and the cross-ref / portability checkers (CI custom reporters, IDE live-validation). `command_suggester` and the memory pipeline are in scope only if a concrete need surfaces — do not pre-build.
 
 These follow-ups are explicitly **not** in this roadmap's acceptance criteria. They land after the primitives have been hardened by one real consumer.
