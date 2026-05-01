@@ -172,7 +172,7 @@ explicitly enabled.
 
   The log is local-only JSONL — nothing uploaded, nothing shared across
   projects. Reports: ./agent-config telemetry:report
-  Contract + privacy floor: agents/contexts/artifact-engagement-flow.md
+  Contract + privacy floor: docs/contracts/artifact-engagement-flow.md
 ```
 
 Skip this block in cloud surfaces (no settings file, no log path).

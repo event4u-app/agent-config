@@ -1,6 +1,10 @@
+---
+stability: beta
+---
+
 # Linear AI — rules inclusion list
 
-> Phase 3 Step 1 deliverable for [`road-to-universal-distribution.md`](../roadmaps/road-to-universal-distribution.md).
+> Phase 3 Step 1 deliverable for [`road-to-universal-distribution.md`](../../agents/roadmaps/road-to-universal-distribution.md).
 > Per-rule decision for the Linear AI rules digest. The digest is a
 > Markdown blob the user pastes into Linear's `Settings → Agents →
 > Additional guidance` (workspace / team / personal). The third-party

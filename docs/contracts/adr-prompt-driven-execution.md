@@ -1,8 +1,12 @@
+---
+stability: stable
+---
+
 # ADR — Prompt-Driven Execution: `/work` and the confidence-band gate
 
 > **Status:** Decided · R2 Phases 1–6 shipped · 2026-04-28
 > **Context:** [`implement-ticket-flow.md`](implement-ticket-flow.md) ·
-> [`road-to-prompt-driven-execution.md`](../roadmaps/archive/road-to-prompt-driven-execution.md)
+> [`road-to-prompt-driven-execution.md`](../../agents/roadmaps/archive/road-to-prompt-driven-execution.md)
 > **Builds on:** [`adr-work-engine-rename.md`](adr-work-engine-rename.md) —
 > the universal-dispatcher refactor that this entrypoint slots into.
 > **Defers to:** Roadmap 3 (`road-to-product-ui-track.md`) for UI- and

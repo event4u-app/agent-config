@@ -1,6 +1,10 @@
+---
+stability: beta
+---
+
 # Linear AI — three-layer split rationale
 
-> Phase 3 Step 3 deliverable for [`road-to-universal-distribution.md`](../roadmaps/road-to-universal-distribution.md).
+> Phase 3 Step 3 deliverable for [`road-to-universal-distribution.md`](../../agents/roadmaps/road-to-universal-distribution.md).
 > Per-rule routing is in [`linear-ai-rules-inclusion.md`](linear-ai-rules-inclusion.md);
 > this file documents *why* the split is workspace / team / personal and
 > what belongs in each.
@@ -124,4 +128,4 @@ does not maintain `event4u/agent-config`.
 - Per-rule decision: [`linear-ai-rules-inclusion.md`](linear-ai-rules-inclusion.md)
 - Builder script: [`scripts/build_linear_digest.py`](../../scripts/build_linear_digest.py)
 - Generated digests: `dist/linear/{workspace,team,personal}.md` (gitignored)
-- Roadmap: [`road-to-universal-distribution.md`](../roadmaps/road-to-universal-distribution.md) Phase 3
+- Roadmap: [`road-to-universal-distribution.md`](../../agents/roadmaps/road-to-universal-distribution.md) Phase 3

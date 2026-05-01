@@ -1,8 +1,12 @@
+---
+stability: beta
+---
+
 # Artifact Engagement — Flow & Recording Contract
 
 > Cross-cutting reference for the artifact-engagement telemetry system
 > shipped under
-> [`road-to-artifact-engagement-telemetry.md`](../roadmaps/road-to-artifact-engagement-telemetry.md).
+> [`road-to-artifact-engagement-telemetry.md`](../../agents/roadmaps/road-to-artifact-engagement-telemetry.md).
 > Phase 1 + 2 ship the schema, CLI, and engine. Phase 3 ships the
 > agent-side hooks (this document).
 >
@@ -251,7 +255,7 @@ layers reject.
 
 ## See also
 
-- [`road-to-artifact-engagement-telemetry`](../roadmaps/road-to-artifact-engagement-telemetry.md) — phased delivery
+- [`road-to-artifact-engagement-telemetry`](../../agents/roadmaps/road-to-artifact-engagement-telemetry.md) — phased delivery
 - [`artifact-engagement-recording`](../../.agent-src.uncompressed/rules/artifact-engagement-recording.md) — agent-side trigger
 - [`implement-ticket-flow`](implement-ticket-flow.md) — the eight-step contract this rule observes
 - [`scripts/telemetry/`](../../.agent-src.uncompressed/templates/scripts/telemetry/) — schema, boundary session, settings reader

@@ -1,8 +1,12 @@
+---
+stability: stable
+---
+
 # ADR — `/implement-ticket` runtime: Python
 
 > **Status:** Decided · Phase 0 spike closed · 2026-04-22
 > **Context:** [`implement-ticket-flow.md`](implement-ticket-flow.md) ·
-> [`road-to-implement-ticket.md`](../roadmaps/road-to-implement-ticket.md)
+> [`road-to-implement-ticket.md`](../../agents/roadmaps/road-to-implement-ticket.md)
 > **Supersedes:** the `Runtime: TBD` placeholder in `implement-ticket-flow.md`.
 
 ## Decision

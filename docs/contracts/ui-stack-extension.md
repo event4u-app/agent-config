@@ -1,3 +1,7 @@
+---
+stability: beta
+---
+
 # UI Stack Extension — adding a new frontend stack to the UI track
 
 > **Audience:** maintainers adding a new stack (Svelte, SolidJS, Astro,

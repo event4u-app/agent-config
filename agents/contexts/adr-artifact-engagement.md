@@ -1,7 +1,7 @@
 # ADR — Artefact-Engagement Telemetry
 
 > **Status:** Decided · Phases 1–6 shipped, Phase 7 docs in progress · 2026-04-30
-> **Context:** [`artifact-engagement-flow.md`](artifact-engagement-flow.md) ·
+> **Context:** [`docs/contracts/artifact-engagement-flow.md`](../../docs/contracts/artifact-engagement-flow.md) ·
 > [`road-to-artifact-engagement-telemetry.md`](../roadmaps/road-to-artifact-engagement-telemetry.md)
 > **Recording rule:** [`artifact-engagement-recording`](../../.agent-src.uncompressed/rules/artifact-engagement-recording.md)
 > **Orthogonal to:** R1 (`adr-work-engine-rename.md`) and R2
@@ -88,7 +88,7 @@ cannot leak through reports. Violations raise `EngagementSchemaError`
 and exit `1`.
 
 Hand-audit recipe for maintainers:
-[`agents/contexts/artifact-engagement-flow.md`](artifact-engagement-flow.md#privacy-and-redaction-contract).
+[`docs/contracts/artifact-engagement-flow.md`](../../docs/contracts/artifact-engagement-flow.md#privacy-and-redaction-contract).
 
 ## Schema versioning and deprecation horizon
 
@@ -123,7 +123,7 @@ not a verdict.
 
 ## See also
 
-- [`artifact-engagement-flow.md`](artifact-engagement-flow.md) — flow + privacy contract
+- [`docs/contracts/artifact-engagement-flow.md`](../../docs/contracts/artifact-engagement-flow.md) — flow + privacy contract
 - [`artifact-engagement-recording`](../../.agent-src.uncompressed/rules/artifact-engagement-recording.md) — when the agent records
 - [`road-to-artifact-engagement-telemetry.md`](../roadmaps/road-to-artifact-engagement-telemetry.md) — phased delivery
 - [`adr-work-engine-rename.md`](adr-work-engine-rename.md) — engine boundary this telemetry sits outside of
