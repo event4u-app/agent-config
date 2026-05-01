@@ -100,11 +100,13 @@ Every roadmap follows this structure:
 
 ## Key rules for roadmaps
 
-### Checkboxes
+### Checkboxes — mandatory, not decorative
 
 - Every actionable step uses `- [ ]` (unchecked) or `- [x]` (completed).
+- **Every active roadmap MUST contain ≥1 `- [ ]` per non-intro phase.** Decision tables, ICE matrices, block-sequencing = valid rationale but do NOT satisfy alone — pair with `## Phase N` / `## Implementation Checklist` section whose checkboxes execute the decision. No checkboxes → invisible to `agents/roadmaps-progress.md`; violates [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md) Iron Law #2.
 - Mark steps as `[x]` immediately after completing them.
 - Never remove completed steps — they serve as history.
+- **Status binary: `ready` (default, implicit) or `draft`.** New roadmaps created **ready** unless user explicitly says otherwise — `ready` implicit, never written. Roadmaps still being authored, awaiting upstream decisions, or capturing options without a worked plan declare `status: draft` in YAML frontmatter at top of file. Drafts hidden from `agents/roadmaps-progress.md` until flag removed or flipped to `ready`. No other status values; legacy banners (`**Status: directional**`, `Status: capture-only`, `mode: feedback`) removed.
 
 ### Phases
 

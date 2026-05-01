@@ -9,7 +9,6 @@ phase, and writes a dashboard at `agents/roadmaps-progress.md` (outside the
   - Overall progress (open-roadmap count, steps done, %)
   - A summary table of every open roadmap
   - Per-roadmap phase breakdown
-  - A footer listing capture-only synthesis documents (excluded from totals)
 
 Checkbox states:
   [x]  done      [ ]  open      [~]  deferred      [-]  cancelled
@@ -17,10 +16,12 @@ Checkbox states:
 Percentage = done / (done + open). Deferred and cancelled do not count towards
 "open" (they are explicit decisions).
 
-Capture-only roadmaps — frontmatter `status: capture-only` (or `capture_only`)
-or `mode: feedback` — are synthesis/feedback documents, not executable plans.
-They are excluded from the executable totals and listed in a separate footer
-section so the dashboard reflects only actionable work.
+Roadmap visibility is binary:
+
+  - No `status:` frontmatter (or `status: ready`) → executable, listed.
+  - `status: draft` → hidden from the dashboard entirely (not counted,
+    not listed). Drafts become visible the moment the frontmatter flag
+    is removed or flipped to `ready`.
 
 Invocation (from project root):
   python3 .augment/scripts/update_roadmap_progress.py              # rewrite
@@ -62,11 +63,12 @@ EXCLUDE_NAMES = {"template.md", "README.md", "progress.md", "roadmaps-progress.m
 EXCLUDE_PREFIXES = ("open-questions",)
 EXCLUDE_DIRS = {"archive", "skipped"}
 
-# Frontmatter — minimal YAML block at the top of a roadmap. Used to flag
-# synthesis/feedback docs (`status: capture-only` or `mode: feedback`) so the
-# dashboard separates "capture vs execution" cleanly.
+# Frontmatter — minimal YAML block at the top of a roadmap. Used to hide
+# drafts (`status: draft`) from the dashboard. Anything else (no
+# frontmatter, `status: ready`, unknown values) counts as a normal
+# executable roadmap.
 FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\s*\n", re.DOTALL)
-CAPTURE_ONLY_VALUES = frozenset({"capture-only", "capture_only", "feedback"})
+DRAFT_VALUES = frozenset({"draft"})
 
 
 @dataclass
@@ -142,19 +144,6 @@ class RoadmapStats:
         return round(self.done * 100 / self.total_active) if self.total_active else 0
 
 
-@dataclass
-class CaptureOnlyDoc:
-    """A roadmap flagged as capture-only / feedback in its frontmatter.
-
-    Tracked separately from RoadmapStats so it never contributes to
-    open-step totals. Surfaced in a footer section of the dashboard.
-    """
-    path: Path
-    rel: str
-    title: str
-    marker: str  # the frontmatter value that flagged it (e.g. "capture-only")
-
-
 def parse_frontmatter(text: str) -> dict[str, str]:
     """Parse a leading YAML frontmatter block. String scalars only.
 
@@ -176,17 +165,14 @@ def parse_frontmatter(text: str) -> dict[str, str]:
     return fm
 
 
-def capture_only_marker(fm: dict[str, str]) -> str | None:
-    """Return the frontmatter value that flagged the doc as capture-only.
+def is_draft(fm: dict[str, str]) -> bool:
+    """Return True when frontmatter declares the roadmap as draft.
 
-    Checks `status:` and `mode:` (in that order). Returns None when the doc
-    is a normal executable roadmap.
+    `status: draft` is the single supported way to hide a roadmap from
+    the dashboard. Everything else (no frontmatter, `status: ready`,
+    unknown values) counts as an executable roadmap.
     """
-    for key in ("status", "mode"):
-        v = fm.get(key, "").lower()
-        if v in CAPTURE_ONLY_VALUES:
-            return v
-    return None
+    return fm.get("status", "").lower() in DRAFT_VALUES
 
 
 def is_roadmap_candidate(path: Path) -> bool:
@@ -239,40 +225,18 @@ def bar(pct: int, width: int = 10) -> str:
 
 
 def collect(roadmap_root: Path) -> list[RoadmapStats]:
-    """Collect executable roadmaps. Capture-only docs are excluded."""
+    """Collect executable roadmaps. Drafts are excluded."""
     results: list[RoadmapStats] = []
     for path in sorted(roadmap_root.rglob("*.md")):
         if not path.is_file() or not is_roadmap_candidate(path):
             continue
         text = path.read_text(encoding="utf-8")
-        if capture_only_marker(parse_frontmatter(text)) is not None:
+        if is_draft(parse_frontmatter(text)):
             continue
         stats = parse_roadmap(path, roadmap_root)
         if stats:
             results.append(stats)
     return results
-
-
-def collect_capture_only(roadmap_root: Path) -> list[CaptureOnlyDoc]:
-    """Sibling of collect() — gather capture-only / feedback synthesis docs.
-
-    These are intentionally excluded from open-step totals; they are
-    surfaced in a separate dashboard footer so they remain discoverable
-    without polluting executable progress arithmetic.
-    """
-    docs: list[CaptureOnlyDoc] = []
-    for path in sorted(roadmap_root.rglob("*.md")):
-        if not path.is_file() or not is_roadmap_candidate(path):
-            continue
-        text = path.read_text(encoding="utf-8")
-        marker = capture_only_marker(parse_frontmatter(text))
-        if marker is None:
-            continue
-        title_match = TITLE_RE.search(text)
-        title = title_match.group(1).strip() if title_match else path.stem
-        rel = str(path.relative_to(roadmap_root))
-        docs.append(CaptureOnlyDoc(path=path, rel=rel, title=title, marker=marker))
-    return docs
 
 
 def unarchived_complete(roadmaps: list[RoadmapStats]) -> list[RoadmapStats]:
@@ -284,11 +248,7 @@ def unarchived_complete(roadmaps: list[RoadmapStats]) -> list[RoadmapStats]:
     return [r for r in roadmaps if r.total_active > 0 and r.open_ == 0]
 
 
-def render(
-    roadmaps: list[RoadmapStats],
-    capture_only: list[CaptureOnlyDoc] | None = None,
-) -> str:
-    capture_only = capture_only or []
+def render(roadmaps: list[RoadmapStats]) -> str:
     total_done = sum(r.done for r in roadmaps)
     total_active = sum(r.total_active for r in roadmaps)
     overall_pct = round(total_done * 100 / total_active) if total_active else 0
@@ -297,13 +257,6 @@ def render(
     header_meta = (
         f"> {len(roadmaps)} open roadmap"
         f"{'s' if len(roadmaps) != 1 else ''}"
-    )
-    if capture_only:
-        header_meta += (
-            f" · {len(capture_only)} capture-only doc"
-            f"{'s' if len(capture_only) != 1 else ''}"
-        )
-    header_meta += (
         " · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · "
         "[skipped/](roadmaps/skipped/)\n"
     )
@@ -318,8 +271,6 @@ def render(
     lines.append("```text\n" + bar(overall_pct, 40) + f"   {overall_pct}%\n```\n")
     if not roadmaps:
         lines.append("_No open roadmaps._\n")
-        if capture_only:
-            lines.extend(_render_capture_only(capture_only))
         return "\n".join(lines) + "\n"
     lines.append("## Open roadmaps\n")
     # Steps = ALL checkboxes (done + open + deferred + cancelled) so the row
@@ -348,34 +299,7 @@ def render(
                 f"{p.deferred} | {p.cancelled} | {p.percent}% |"
             )
         lines.append("")
-    if capture_only:
-        lines.extend(_render_capture_only(capture_only))
     return "\n".join(lines) + "\n"
-
-
-def _render_capture_only(docs: list[CaptureOnlyDoc]) -> list[str]:
-    """Footer block listing capture-only / feedback synthesis docs.
-
-    Kept visible in the dashboard so synthesis work does not vanish, but
-    excluded from open-step totals — these docs have no executable steps
-    by design (see `road-to-governance-cleanup` Bug #2).
-    """
-    out: list[str] = []
-    out.append("---\n")
-    out.append("## Capture-only roadmaps\n")
-    out.append(
-        "_Synthesis / feedback docs flagged with `status: capture-only` "
-        "or `mode: feedback` in their frontmatter. Excluded from "
-        "executable totals; awaiting promotion to executable phases._\n"
-    )
-    out.append("| # | Roadmap | Marker | Title |")
-    out.append("|---|---|---|---|")
-    for i, d in enumerate(docs, 1):
-        out.append(
-            f"| {i} | [{d.rel}](roadmaps/{d.rel}) | `{d.marker}` | {d.title} |"
-        )
-    out.append("")
-    return out
 
 
 def main() -> int:
@@ -394,8 +318,7 @@ def main() -> int:
         print(f"ℹ️  No roadmaps directory at {roadmap_root} — nothing to do.")
         return 0
     roadmaps = collect(roadmap_root)
-    capture_only = collect_capture_only(roadmap_root)
-    new_text = render(roadmaps, capture_only)
+    new_text = render(roadmaps)
     current = target.read_text(encoding="utf-8") if target.exists() else ""
     complete = unarchived_complete(roadmaps)
     if args.check:
@@ -417,11 +340,8 @@ def main() -> int:
         print(f"✅  {target.relative_to(args.repo_root)} is up to date.")
         return 0
     target.write_text(new_text, encoding="utf-8")
-    capture_suffix = (
-        f" · {len(capture_only)} capture-only" if capture_only else ""
-    )
     print(f"✅  Wrote {target.relative_to(args.repo_root)} · "
-          f"{len(roadmaps)} roadmap(s){capture_suffix} · "
+          f"{len(roadmaps)} roadmap(s) · "
           f"{sum(r.done for r in roadmaps)}/{sum(r.total_active for r in roadmaps)} steps done.")
     if complete:
         print("⚠️   Completed roadmaps not yet archived — move to "

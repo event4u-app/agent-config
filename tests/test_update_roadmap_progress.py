@@ -312,74 +312,68 @@ def test_per_phase_breakdown_column_order(tmp_path: Path):
 
 
 # ---------------------------------------------------------------------------
-# Capture-only frontmatter — synthesis / feedback docs (status: capture-only,
-# capture_only, or mode: feedback) are excluded from collect() and surfaced
-# in a separate footer via collect_capture_only(). Regression guard for the
-# dashboard fix that introduced the "capture vs execution" split.
+# Status frontmatter — binary `ready` (default) vs `draft` (hidden).
+# Drafts are excluded from collect() entirely; they do not appear in the
+# dashboard, do not count towards open/done totals, and cannot trigger the
+# "completed but unarchived" warning. No frontmatter at all = ready.
 # ---------------------------------------------------------------------------
 
-CAPTURE_ONLY_FIXTURE = """\
+DRAFT_FIXTURE = """\
 ---
-status: capture-only
----
-
-# Roadmap — Synthesis
-
-## Finding 1 — Some observation
-- [ ] not really a step
-"""
-
-FEEDBACK_FIXTURE = """\
----
-mode: feedback
+status: draft
 ---
 
-# Roadmap — Feedback
+# Roadmap — Draft
 
-## Phase 1 — Looks executable but flagged
+## Phase 1 — Not yet listed
 - [ ] open
 """
 
+READY_FIXTURE = """\
+---
+status: ready
+---
 
-def test_collect_excludes_capture_only(tmp_path: Path):
+# Roadmap — Explicit Ready
+
+## Phase 1 — Listed
+- [x] one
+- [ ] two
+"""
+
+
+def test_collect_excludes_drafts(tmp_path: Path):
     root = tmp_path / "agents" / "roadmaps"
     root.mkdir(parents=True)
-    (root / "synth.md").write_text(CAPTURE_ONLY_FIXTURE, encoding="utf-8")
-    (root / "feedback.md").write_text(FEEDBACK_FIXTURE, encoding="utf-8")
+    (root / "draft.md").write_text(DRAFT_FIXTURE, encoding="utf-8")
     (root / "real.md").write_text(NUMERIC_FIXTURE, encoding="utf-8")
     roadmaps = urp.collect(root)
     rels = sorted(r.rel for r in roadmaps)
     assert rels == ["real.md"]
 
 
-def test_collect_capture_only_returns_flagged_docs(tmp_path: Path):
+def test_collect_includes_explicit_ready(tmp_path: Path):
     root = tmp_path / "agents" / "roadmaps"
     root.mkdir(parents=True)
-    (root / "synth.md").write_text(CAPTURE_ONLY_FIXTURE, encoding="utf-8")
-    (root / "feedback.md").write_text(FEEDBACK_FIXTURE, encoding="utf-8")
-    (root / "real.md").write_text(NUMERIC_FIXTURE, encoding="utf-8")
-    docs = urp.collect_capture_only(root)
-    rels = sorted(d.rel for d in docs)
-    assert rels == ["feedback.md", "synth.md"]
-    by_rel = {d.rel: d.marker for d in docs}
-    assert by_rel["synth.md"] == "capture-only"
-    assert by_rel["feedback.md"] == "feedback"
-
-
-def test_render_includes_capture_only_footer(tmp_path: Path):
-    root = tmp_path / "agents" / "roadmaps"
-    root.mkdir(parents=True)
-    (root / "synth.md").write_text(CAPTURE_ONLY_FIXTURE, encoding="utf-8")
-    (root / "real.md").write_text(NUMERIC_FIXTURE, encoding="utf-8")
+    (root / "explicit.md").write_text(READY_FIXTURE, encoding="utf-8")
+    (root / "implicit.md").write_text(NUMERIC_FIXTURE, encoding="utf-8")
     roadmaps = urp.collect(root)
-    capture = urp.collect_capture_only(root)
-    output = urp.render(roadmaps, capture)
-    assert "## Capture-only roadmaps" in output
-    assert "synth.md" in output
-    assert "1 capture-only doc" in output
+    rels = sorted(r.rel for r in roadmaps)
+    # Explicit `status: ready` and absent frontmatter are both included.
+    assert rels == ["explicit.md", "implicit.md"]
+
+
+def test_is_draft_only_matches_draft_value():
+    assert urp.is_draft({"status": "draft"}) is True
+    assert urp.is_draft({"status": "DRAFT"}) is True
+    # Anything else — empty, ready, unknown — is treated as executable.
+    assert urp.is_draft({}) is False
+    assert urp.is_draft({"status": "ready"}) is False
+    assert urp.is_draft({"status": "capture-only"}) is False
+    assert urp.is_draft({"status": "directional"}) is False
 
 
 def test_parse_frontmatter_handles_quoted_and_blank_lines():
-    text = '---\nstatus: "capture-only"\n\n# comment line\nmode: feedback\n---\n# Title'
+    text = '---\nstatus: "draft"\n\n# comment line\nowner: matze\n---\n# Title'
     fm = urp.parse_frontmatter(text)
-    assert fm == {"status": "capture-only", "mode": "feedback"}
+    assert fm == {"status": "draft", "owner": "matze"}

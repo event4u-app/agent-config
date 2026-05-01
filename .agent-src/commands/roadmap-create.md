@@ -120,3 +120,12 @@ If yes → switch to the `roadmap-execute` command workflow with the newly creat
 - **Write the roadmap in English** (per project convention for `.md` files).
 - Follow the roadmap template from `.augment/templates/roadmaps.md`.
 - Keep the file focused: 500–1000 lines max. If larger, suggest splitting.
+- **Every phase MUST contain ≥1 `- [ ]` checkbox.** Roadmaps without
+  checkboxes are invisible to `agents/roadmaps-progress.md`; violates
+  [`roadmap-progress-sync`](../rules/roadmap-progress-sync.md) Iron Law #2.
+- **Status is binary: `ready` (default) or `draft`.** Create new roadmaps
+  as **ready** — no `status:` field needed, ready is implicit. Only mark
+  `status: draft` (YAML frontmatter) when user explicitly says it should
+  be hidden from the dashboard (authoring, awaiting upstream decisions,
+  capture-only synthesis without executable phases). If user wants draft,
+  ask once at step 3 — do not infer.

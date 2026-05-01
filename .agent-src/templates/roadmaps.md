@@ -7,7 +7,8 @@ Templates for roadmap files stored in `agents/roadmaps/` or `app/Modules/{Module
 ## Rules for Roadmaps
 
 1. **Be precise and concise.** Aim for 500–1000 lines max. If larger, split into multiple files.
-2. **Use checkboxes** (`- [ ]`) for every actionable step. Mark `[x]` when completed.
+2. **Checkboxes mandatory.** Every active roadmap MUST contain ≥1 `- [ ]` per non-intro phase. Decision tables, ICE matrices, block-sequencing capture *why*; checkboxes capture *what next*. No checkboxes → invisible to `agents/roadmaps-progress.md`. Enforced by [`roadmap-progress-sync`](../rules/roadmap-progress-sync.md) Iron Law #2.
+   - **Status binary: `ready` (default) or `draft`.** New roadmaps created **ready** unless user explicitly says draft — `ready` implicit, never written. Drafts declare via frontmatter (`---\nstatus: draft\n---`); hidden from dashboard until removed/flipped to `ready`. Use `draft` while authoring, awaiting upstream decisions, or capture-only synthesis without executable phases. No other status values; legacy banners (`**Status: directional**`) removed.
 3. **State the goal first.** One sentence at the top — what is the outcome?
 4. **List prerequisites** — what must exist or be running before starting.
 5. **Reference existing code** — point to files, classes, or modules.
