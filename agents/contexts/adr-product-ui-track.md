@@ -3,7 +3,7 @@
 > **Status:** Decided · R3 Phases 1–6 shipped · 2026-05-01
 > **Context:** [`ui-track-flow.md`](ui-track-flow.md) ·
 > [`road-to-product-ui-track.md`](../roadmaps/road-to-product-ui-track.md) ·
-> [`road-to-product-ui-track-followup.md`](../roadmaps/road-to-product-ui-track-followup.md)
+> [`road-to-product-ui-track-followup.md`](../roadmaps/archive/road-to-product-ui-track-followup.md)
 > **Builds on:** [`adr-prompt-driven-execution.md`](adr-prompt-driven-execution.md)
 > — R2 envelope routing and the band-action gate that R3 widens to UI.
 > **Defers to:** Roadmap 4 (`road-to-visual-review-loop.md`, stub) for

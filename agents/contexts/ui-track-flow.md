@@ -267,7 +267,7 @@ suite asserts every `BLOCKED` path has a matching declaration.
   hooks, persona policies, replay protocol.
 - [`road-to-product-ui-track.md`](../roadmaps/road-to-product-ui-track.md)
   — phased delivery and Golden-Transcript matrix.
-- [`road-to-product-ui-track-followup.md`](../roadmaps/road-to-product-ui-track-followup.md)
+- [`road-to-product-ui-track-followup.md`](../roadmaps/archive/road-to-product-ui-track-followup.md)
   — pinned GT-U5 (mixed flow), GT-U6A/B (stack dispatch), GT-U7
   (trivial happy path), GT-U8 (trivial reclassification).
 - [`existing-ui-audit` SKILL](../../.agent-src.uncompressed/skills/existing-ui-audit/SKILL.md)

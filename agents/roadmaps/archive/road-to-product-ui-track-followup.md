@@ -98,8 +98,8 @@ Engine archaeology pass `2026-05-01` confirmed every primitive these goldens dep
 - [x] **Update `summary.json`** — five new entries; total 17 → 22 baselines (verified by replay run count)
 - [x] **CHECKSUMS** — `tests/golden/capture.py:_write_checksums` regenerated; manifest committed
 - [x] **Replay green** — `pytest tests/golden/test_replay.py` exits 0 with 22 baselines passing
-- [ ] **`task ci` green** — full pipeline rerun pending after roadmap update
-- [ ] **Drop the "deferred" note from `agents/contexts/ui-track-flow.md`** — the four contracts are now pinned; remove the parenthetical pointing at this roadmap and replace with the GT-U5..U8 list
+- [x] **`task ci` green** — full pipeline passes including consistency, replay, lint-skills, check-refs, check-portability
+- [x] **Drop the "deferred" note from `agents/contexts/ui-track-flow.md`** — replaced with the GT-U5..U8 pinned list
 
 ## Acceptance criteria
 
@@ -107,8 +107,8 @@ Engine archaeology pass `2026-05-01` confirmed every primitive these goldens dep
 - [x] **AC #2 — Stack dispatch pinned:** GT-U6A (blade) and GT-U6B (react) share prompt, differ only on the apply-halt `ui-apply-<stack>` directive, replay byte-equal for both
 - [x] **AC #3 — Trivial happy pinned:** GT-U7 captures the 3-cycle short-circuit (trivial-apply → smoke-tests → SUCCESS), no audit/design/review/polish in transcript
 - [x] **AC #4 — Trivial reclassification pinned:** GT-U8 captures the trivial-apply → reclassify halt sequence with `state.directive_set` flipping from `ui-trivial` to `ui-improve`, then completes via the ui-improve sub-track
-- [ ] **AC #5 — `task ci` green** with all five new baselines wired into the harness and CHECKSUMS regenerated
-- [ ] **AC #6 — Context updated:** `ui-track-flow.md` no longer points at this roadmap as "deferred"; the four contracts are listed as pinned with their GT-id
+- [x] **AC #5 — `task ci` green** with all five new baselines wired into the harness and CHECKSUMS regenerated
+- [x] **AC #6 — Context updated:** `ui-track-flow.md` no longer points at this roadmap as "deferred"; the four contracts are listed as pinned with their GT-id
 
 ## Risks
 
