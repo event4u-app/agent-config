@@ -259,20 +259,11 @@ Start with **Rules + Skills**. Everything else is optional.
 
 Nothing runs automatically without your control. [Configure modes →](docs/customization.md)
 
-> **Stability tiers** ([`STABILITY.md`](docs/contracts/STABILITY.md)):
-> - **Runtime Dispatcher** (`scripts/runtime_dispatcher.py`) is **stable** as
->   a mechanism — single-skill shell execution, two pilots in CI
->   (`lint-skills`, `check-refs`). `php` / `node` handlers are still scaffold.
-> - **Work Engine** (`templates/scripts/work_engine/`) is **beta (beta)** —
->   the multi-step orchestrator behind `/work` and `/implement-ticket`. The
->   contract has shipped one minor cycle but the surface is still expected
->   to evolve; minor-version breaks allowed under a `### Breaking` note.
-> - **Tool Adapters** (GitHub, Jira) are **experimental** — read-only with
->   `GITHUB_TOKEN`, scaffold for writes; behind the `full` profile.
->
-> The `minimal` profile — which most users should pick — is unaffected by
-> the Runtime Dispatcher and Tool Adapters. The Work Engine activates only
-> when `/work` or `/implement-ticket` is invoked, regardless of profile.
+> **Stability tiers** — [`STABILITY.md`](docs/contracts/STABILITY.md) for
+> the full matrix. Runtime Dispatcher: **stable** (`php` / `node` handlers
+> scaffold). Work Engine: **beta (beta)** — orchestrator behind `/work`
+> + `/implement-ticket`. Tool Adapters: **experimental**, read-only,
+> behind `full`. `minimal` profile unaffected.
 
 ---
 
@@ -458,11 +449,9 @@ commands:
 ```
 
 Per-conversation: `/command-suggestion-off` disables the layer until
-the user re-enables or the chat ends. Full scoring contract and
-hardening list:
-[`docs/contracts/adr-command-suggestion.md`](docs/contracts/adr-command-suggestion.md)
-and
-[`docs/contracts/command-suggestion-flow.md`](docs/contracts/command-suggestion-flow.md) (beta).
+re-enabled or the chat ends. Full scoring contract and hardening:
+[`adr-command-suggestion`](docs/contracts/adr-command-suggestion.md),
+[`command-suggestion-flow`](docs/contracts/command-suggestion-flow.md) (beta).
 
 ---
 
