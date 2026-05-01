@@ -1,0 +1,22 @@
+[
+  {
+    "cycle": 1,
+    "exit_code": 1,
+    "directive": "ui-apply-blade-livewire-flux",
+    "recipe_action": "ui-apply-blade-livewire-flux",
+    "questions": [
+      "@agent-directive: ui-apply-blade-livewire-flux",
+      "> Stack: `blade-livewire-flux`. Implementing the locked design brief.",
+      "> Microcopy is locked — every button label, empty-state message, and validation message must come verbatim from `state.ui_design.microcopy`.",
+      "> 1. Continue — implement the brief and write a `ui_apply` envelope back into state.ticket (rendered: {path: text}, files: [...])",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 2,
+    "exit_code": 0,
+    "directive": null,
+    "recipe_action": null,
+    "questions": []
+  }
+]

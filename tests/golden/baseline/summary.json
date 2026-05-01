@@ -78,6 +78,36 @@
     "cycles": 9
   },
   {
+    "gt_id": "GT-U5",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 6
+  },
+  {
+    "gt_id": "GT-U6A",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 2
+  },
+  {
+    "gt_id": "GT-U6B",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 2
+  },
+  {
+    "gt_id": "GT-U7",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 3
+  },
+  {
+    "gt_id": "GT-U8",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 7
+  },
+  {
     "gt_id": "GT-U9",
     "outcome": "success",
     "exit_code": 0,

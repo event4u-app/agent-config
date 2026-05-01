@@ -164,12 +164,101 @@ def write_prompt_refinement(
     return state
 
 
+def trivial_envelope(
+    *,
+    files: list[str],
+    lines_changed: int,
+    summary: str,
+    new_component: bool = False,
+    new_state: bool = False,
+    new_dependency: bool = False,
+) -> dict[str, Any]:
+    """Build the ``trivial_edit`` envelope read by ``ui_trivial.apply``.
+
+    Singular keys (``new_component`` / ``new_state`` / ``new_dependency``)
+    match the precondition checks in
+    ``templates/scripts/work_engine/directives/ui_trivial/apply.py:103-108``.
+    Recipes assign the return value to ``state.input.data['trivial_edit']``
+    so the rebound apply step finds it and validates the preconditions.
+    """
+    return {
+        "files": list(files),
+        "lines_changed": lines_changed,
+        "summary": summary,
+        "new_component": new_component,
+        "new_state": new_state,
+        "new_dependency": new_dependency,
+    }
+
+
+def stack_state(
+    *,
+    frontend: str,
+    php_framework: str | None = None,
+) -> dict[str, Any]:
+    """Build the ``state.stack`` shape read by ``ui.apply``'s dispatch.
+
+    The dispatch in ``directives/ui/apply.py:41-56`` selects the
+    stack-specific apply skill from ``state.stack['frontend']``. The toy
+    repo (``tests/golden/sandbox/repo/``) ships no ``composer.json`` /
+    ``package.json``, so the detector returns ``plain`` by default —
+    GT-U6 recipes inject this dict via ``seed_state`` (same pattern as
+    GT-U11) instead of fabricating manifests.
+    """
+    return {
+        "frontend": frontend,
+        "php_framework": php_framework,
+    }
+
+
+def mixed_contract(
+    *,
+    data_model: list[dict[str, Any]] | None = None,
+    api_surface: list[dict[str, Any]] | None = None,
+    confirmed: bool = False,
+) -> dict[str, Any]:
+    """Build the ``state.contract`` shape pinned by GT-U5.
+
+    Mirrors the keys ``directives/mixed/contract.py`` reads on rebound:
+    ``data_model`` (entities and fields), ``api_surface`` (endpoints),
+    and the ``contract_confirmed`` sentinel that lets the sign-off halt
+    short-circuit. Empty lists default-in so a recipe can pin the
+    pre-confirmation halt without fabricating contract content.
+    """
+    return {
+        "data_model": list(data_model or []),
+        "api_surface": list(api_surface or []),
+        "contract_confirmed": confirmed,
+    }
+
+
+def simulated_smoke_verdict() -> dict[str, Any]:
+    """Stable ``state.tests`` payload for the ``ui-trivial`` smoke gate.
+
+    ``ui_trivial.test`` halts with ``@agent-directive: run-tests
+    scope=smoke`` until ``state.tests`` carries a recognised verdict
+    (``success`` / ``failed`` / ``mixed``). The trivial happy path
+    seeds the ``success`` verdict at the narrowest scope so the report
+    step records ``smoke: success`` in the one-line summary.
+    """
+    return {
+        "verdict": "success",
+        "scope": "smoke",
+        "exit_code": 0,
+        "targeted": "1 passed in <DURATION>s",
+    }
+
+
 __all__ = [
     "append_to_file",
     "base_changes",
+    "mixed_contract",
     "replace_in_file",
     "run_pytest",
     "simulated_review_verdict",
+    "simulated_smoke_verdict",
+    "stack_state",
     "standard_plan",
+    "trivial_envelope",
     "write_prompt_refinement",
 ]

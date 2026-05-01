@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Add a customer feedback form: POST /api/feedback persists to a `feedbacks` table, render the form on `/feedback` with a success state.\n",
+      "reconstructed_ac": [
+        "POST /api/feedback validates payload and persists to feedbacks",
+        "GET /feedback renders a form bound to forms.text-input",
+        "Successful submission swaps the form for a confirmation card"
+      ],
+      "assumptions": [
+        "feedbacks table is new; migration ships with this change",
+        "no admin moderation flow in this iteration"
+      ],
+      "confidence": {
+        "band": "high",
+        "score": 0.91
+      },
+      "acceptance_criteria": [
+        "POST /api/feedback validates payload and persists to feedbacks",
+        "GET /feedback renders a form bound to forms.text-input",
+        "Successful submission swaps the form for a confirmation card"
+      ]
+    }
+  },
+  "intent": "mixed",
+  "directive_set": "mixed",
+  "stack": null,
+  "ui_audit": null,
+  "ui_design": null,
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": {
+    "data_model": [
+      {
+        "entity": "Feedback",
+        "table": "feedbacks",
+        "fields": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "primary": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "email",
+            "type": "email",
+            "required": true
+          },
+          {
+            "name": "message",
+            "type": "text",
+            "required": true
+          },
+          {
+            "name": "created_at",
+            "type": "datetime"
+          }
+        ]
+      }
+    ],
+    "api_surface": [
+      {
+        "method": "POST",
+        "path": "/api/feedback",
+        "request": [
+          "name",
+          "email",
+          "message"
+        ],
+        "response": {
+          "201": "FeedbackResource",
+          "422": "ValidationError"
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/feedback",
+        "response": {
+          "200": "feedback.show view"
+        }
+      }
+    ],
+    "contract_confirmed": false
+  },
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "blocked"
+  },
+  "questions": [
+    "@agent-directive: contract-plan",
+    "> Input: Add a customer feedback form: POST /api/feedback persists to a `feedbacks` tabl…",
+    "> No backend contract yet — producing one now. The contract locks the data model and API surface the UI will consume; the mixed `ui` step refuses to start without it.",
+    "> Scope: contract-only (no UI plan, no implementation).",
+    "> 1. Continue — produce the contract via `feature-plan`",
+    "> 2. Abort — drop this mixed request"
+  ],
+  "report": ""
+}

@@ -1,0 +1,83 @@
+[
+  {
+    "cycle": 1,
+    "exit_code": 1,
+    "directive": "contract-plan",
+    "recipe_action": "contract-plan",
+    "questions": [
+      "@agent-directive: contract-plan",
+      "> Input: Add a customer feedback form: POST /api/feedback persists to a `feedbacks` tabl…",
+      "> No backend contract yet — producing one now. The contract locks the data model and API surface the UI will consume; the mixed `ui` step refuses to start without it.",
+      "> Scope: contract-only (no UI plan, no implementation).",
+      "> 1. Continue — produce the contract via `feature-plan`",
+      "> 2. Abort — drop this mixed request"
+    ]
+  },
+  {
+    "cycle": 2,
+    "exit_code": 1,
+    "directive": null,
+    "recipe_action": "_no_directive",
+    "questions": [
+      "> Input: Add a customer feedback form: POST /api/feedback persists to a `feedbacks` tabl…",
+      "> Backend contract is ready. Summary:",
+      "> - Entities (data model): 1",
+      "> - Endpoints / actions (api surface): 2",
+      "> 1. Confirm — lock this contract and advance to the UI track",
+      "> 2. Revise — send feedback; loops back to `contract-plan`",
+      "> 3. Abort — drop this mixed request",
+      "",
+      "**Recommendation: 1 — Confirm** — the contract covers both required slots. Caveat: flip to 2 only if an entity field or endpoint signature is wrong; the UI track will treat this contract as immutable input."
+    ]
+  },
+  {
+    "cycle": 3,
+    "exit_code": 1,
+    "directive": "ui-track",
+    "recipe_action": "ui-track",
+    "questions": [
+      "@agent-directive: ui-track",
+      "> Input: Add a customer feedback form: POST /api/feedback persists to a `feedbacks` tabl…",
+      "> Contract is locked. Handing off to the UI track:",
+      "> - Entities: 1",
+      "> - Endpoints / actions: 2",
+      "> The UI track runs audit → design → apply → review → polish with the contract as immutable input. No new entities or endpoints — the contract drives the UI shape.",
+      "> 1. Continue — run the UI track",
+      "> 2. Abort — drop this mixed request"
+    ]
+  },
+  {
+    "cycle": 4,
+    "exit_code": 1,
+    "directive": "integration-test",
+    "recipe_action": "integration-test",
+    "questions": [
+      "@agent-directive: integration-test",
+      "> Input: Add a customer feedback form: POST /api/feedback persists to a `feedbacks` tabl…",
+      "> UI track finished; the contract / UI seam needs end-to-end verification before the delivery report:",
+      "> - Endpoints / actions to smoke: 2",
+      "> Scenarios cover the full round-trip — fill form → server validation → response → UI update. Unit-level passes from the UI review do **not** substitute for this gate.",
+      "> 1. Continue — run `integration-test` now",
+      "> 2. Abort — skip integration verification (NOT recommended)"
+    ]
+  },
+  {
+    "cycle": 5,
+    "exit_code": 1,
+    "directive": "review-changes",
+    "recipe_action": "review-changes",
+    "questions": [
+      "@agent-directive: review-changes ticket=(no id)",
+      "> Ticket (no id) — running the four-judge review (bugs, security, tests, code quality) before the delivery report is written.",
+      "> 1. Continue — run `review-changes` now",
+      "> 2. Abort — skip review (NOT recommended)"
+    ]
+  },
+  {
+    "cycle": 6,
+    "exit_code": 0,
+    "directive": null,
+    "recipe_action": null,
+    "questions": []
+  }
+]
