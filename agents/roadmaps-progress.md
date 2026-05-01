@@ -6,10 +6,10 @@
 
 ## Overall
 
-**34 / 46 steps done · 74%**
+**35 / 46 steps done · 76%**
 
 ```text
-██████████████████████████████░░░░░░░░░░   74%
+██████████████████████████████░░░░░░░░░░   76%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-product-ui-track-followup.md](roadmaps/road-to-product-ui-track-followup.md) | 1 | 5 | 5 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md) | 7 | 44 | 3 | 34 | 7 | 0 | █████████░ 92% |
+| 2 | [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md) | 7 | 44 | 2 | 35 | 7 | 0 | ██████████ 95% |
 | 3 | [road-to-visual-review-loop.md](roadmaps/road-to-visual-review-loop.md) | 1 | 4 | 4 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
@@ -34,7 +34,7 @@
 
 ### [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md)
 
-**Universal Distribution (Cloud + Local Fallbacks)** — 34 / 37 done (92%)
+**Universal Distribution (Cloud + Local Fallbacks)** — 35 / 37 done (95%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -44,7 +44,7 @@
 | 3 | Linear AI — Rules Digest Distribution | ✅ done | 0 | 5 | 1 | 0 | 100% |
 | 4 | Cloud-Aware Documentation Pass | ✅ done | 0 | 4 | 1 | 0 | 100% |
 | 5 | Distribution Channels & Install Paths | ✅ done | 0 | 4 | 1 | 0 | 100% |
-| 6 | Telemetry & Validation | 🟡 in progress | 3 | 7 | 3 | 0 | 70% |
+| 6 | Telemetry & Validation | 🟡 in progress | 2 | 8 | 3 | 0 | 80% |
 
 ### [road-to-visual-review-loop.md](roadmaps/road-to-visual-review-loop.md)
 
