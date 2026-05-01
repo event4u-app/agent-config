@@ -189,13 +189,6 @@ Any "yes" + no regen run = rule violation. Rerun before sending.
   mark the file `status: draft` so it is hidden until the executable
   phases land.
 
-## Why this is a rule, not a skill tip
-
-The `roadmap-management` skill documents the command in several
-places, but skill body text is easy to miss under procedure pressure.
-A rule collapses the constraint into one line the model cannot skip:
-"checkbox edit → regenerate dashboard — same response".
-
 ## Do NOT
 
 - Do NOT edit `agents/roadmaps-progress.md` by hand — always regenerate.

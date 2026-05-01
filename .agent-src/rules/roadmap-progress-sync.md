@@ -148,13 +148,6 @@ Before sending any reply that touched `agents/roadmaps/`, silent gate:
 
 Any "yes" + no regen run = rule violation. Rerun before sending.
 
-## Why this is a rule, not a skill tip
-
-`roadmap-management` skill documents command in several places, but
-skill body text easy to miss under procedure pressure. Rule collapses
-constraint into one line model cannot skip: "checkbox edit →
-regenerate dashboard — same response".
-
 ## Do NOT
 
 - Do NOT edit `agents/roadmaps-progress.md` by hand — always regenerate.
