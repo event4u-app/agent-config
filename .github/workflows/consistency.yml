@@ -81,6 +81,9 @@ jobs:
       - name: Check compression quality
         run: python3 scripts/check_compression.py
 
+      - name: Check Iron Law prominence
+        run: python3 scripts/check_iron_law_prominence.py
+
       - name: Lint marketplace.json
         run: task lint-marketplace
 

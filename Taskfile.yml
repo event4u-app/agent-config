@@ -264,6 +264,10 @@ tasks:
     desc: Scan shipped sources for legacy (recommended) inline tags on numbered options
     cmd: python3 scripts/check_reply_consistency.py --scan-dir .agent-src.uncompressed
 
+  check-iron-law-prominence:
+    desc: Verify Iron Laws sit at the top of every rule file (H2, first 2 positions)
+    cmd: python3 scripts/check_iron_law_prominence.py
+
   check-compression:
     desc: Check compression quality (headings, code blocks, frontmatter, word count)
     cmd: python3 scripts/check_compression.py
@@ -395,6 +399,7 @@ tasks:
       - task: check-refs
       - task: check-portability
       - task: check-reply-consistency
+      - task: check-iron-law-prominence
       - task: validate-schema
       - task: lint-skills
       - task: lint-marketplace
