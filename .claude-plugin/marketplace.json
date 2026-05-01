@@ -168,6 +168,7 @@
         "./.claude/skills/propose-memory",
         "./.claude/skills/quality-fix",
         "./.claude/skills/quality-tools",
+        "./.claude/skills/react-shadcn-ui",
         "./.claude/skills/readme-reviewer",
         "./.claude/skills/readme-writing",
         "./.claude/skills/readme-writing-package",
