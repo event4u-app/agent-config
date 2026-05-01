@@ -58,10 +58,11 @@ Locked `2026-05-01` from the leans declared in the original stub. The package it
 
 ## Phase 1: Review step — a11y gate integration
 
-- [ ] **Read** `state.ui_review.a11y.violations` after the existing `findings`/`review_clean` gates pass. Filter against `state.ui_audit.a11y_baseline` if present.
-- [ ] **Severity floor**: violations strictly below `severity_floor` (default `moderate`) drop into informational findings; violations at or above the floor stay actionable.
-- [ ] **Outcome**: when actionable a11y violations remain, set `review_clean = False` automatically (engine-controlled, not skill-controlled) and synthesize one `a11y_violation` finding per blocked rule into `state.ui_review.findings`. Polish then sees them as ordinary findings.
-- [ ] **New ambiguity**: `review_a11y_pending` — `state.ui_review` populated, `findings` and `review_clean` set, but `a11y` envelope missing on a stack where it is expected.
+- [x] **Read** `state.ui_review.a11y.violations` after the existing `findings`/`review_clean` gates pass — `_apply_a11y_gate` in `directives/ui/review.py:251` filters against `state.ui_audit.a11y_baseline` when present
+- [x] **Severity floor** — violations below `severity_floor` (default `moderate`) drop out via `_at_or_above_floor`; unknown severities default to `moderate` so a malformed envelope cannot weaken the gate
+- [x] **Outcome** — actionable violations are synthesised as `{kind: "a11y_violation", rule, selector, severity}` findings via `_synthesize_a11y_findings` (deduped by `(rule, selector)`) and `review_clean` is forced to `False` engine-side
+- [x] **New ambiguity** `review_a11y_pending` — declared in `AMBIGUITIES`; fires when `state.ui_audit.a11y_baseline` exists but `state.ui_review.a11y` is missing (opt-in via baseline; pre-R4 envelopes bypass)
+- [x] **Tests** — 12 new tests in `tests/work_engine/test_step_review.py` covering pending-halt, baseline filter, severity floor, accepted-violations filter, synthesis, idempotency, and ordering with basic gates
 
 ## Phase 2: Polish termination contract amendment
 
