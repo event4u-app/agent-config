@@ -161,6 +161,54 @@ chat_history:
   # platform's settings file.
   path: checkpoint
 
+# --- Work-engine hooks ---
+#
+# Lifecycle hook surface of the `work_engine` Python engine
+# (scripts/work_engine/). Hooks observe, validate, or persist around the
+# six CLI events (before_load, after_load, before_dispatch,
+# after_dispatch, before_save, after_save) and the dispatcher events
+# (before_step, after_step, on_halt). See agents/contexts/
+# work-engine-hooks.md for the full lifecycle and registration contract.
+#
+# Default-off by construction: when the `hooks:` block is absent the
+# registry stays empty and golden-replay flows are byte-stable. Enable
+# the master switch to opt in; per-hook flags then control individual
+# registration.
+hooks:
+  # Master switch — when false (default) the registry stays empty
+  # regardless of the per-hook fields below.
+  enabled: false
+
+  # TraceHook — emits per-event trace lines on stderr. Useful for
+  # debugging engine flow; off by default because it is noisy.
+  trace: false
+
+  # HaltSurfaceAuditHook — defense-in-depth check that every halt
+  # surfaced by the dispatcher carries the expected shape. Cheap.
+  halt_surface_audit: true
+
+  # StateShapeValidationHook — re-runs the state schema validator on
+  # AFTER_LOAD and BEFORE_SAVE. Cheap, catches drift between the
+  # in-memory state and the persisted JSON.
+  state_shape_validation: true
+
+  # DirectiveSetGuardHook — verifies the directive-set resolved by the
+  # dispatcher matches the input envelope's intent. Cheap, catches
+  # routing drift.
+  directive_set_guard: true
+
+  # Chat-history hooks — populate .agent-chat-history structurally from
+  # the engine. Gated by BOTH this block AND the global
+  # chat_history.enabled above; either off → no chat-history hook
+  # registers. Keep both on for the HOOK path; flip either off to fall
+  # back to the cooperative CHECKPOINT path.
+  chat_history:
+    enabled: true
+    # Override path to the chat-history CLI (defaults to
+    # scripts/chat_history.py). Only set this when the script lives
+    # outside the standard location.
+    # script: scripts/chat_history.py
+
 # --- Optional pipelines ---
 pipelines:
   # Skill improvement pipeline (true, false)
@@ -306,6 +354,13 @@ lives under `personal:` in YAML.
 | `chat_history.on_overflow` | `rotate`, `compress` | per profile | On overflow: `rotate` drops oldest entries; `compress` marks the file for summarization on the next turn. Defaults: `minimal`/`balanced`→`rotate`, `full`→`compress`. |
 | `chat_history.heartbeat` | `on`, `off`, `hybrid` | `hybrid` | Visibility of the `📒 chat-history:` marker. `on` = every reply (~20 tokens), `off` = silent, `hybrid` = print only on drift states (`missing`/`foreign`/`returning`). YAML `on`/`off` accepted bare. |
 | `chat_history.path` | `hook`, `checkpoint`, `manual` | `checkpoint` | Population path. `hook` = platform fires lifecycle hooks; `checkpoint` = agent invokes `/chat-history-checkpoint` at phase boundaries; `manual` = rule inert (cloud). `scripts/install.py` flips this to `hook` when the platform's hook config is deployed. See [`agents/contexts/chat-history-platform-hooks.md`](../../../agents/contexts/chat-history-platform-hooks.md). |
+| `hooks.enabled` | `true`, `false` | `false` | Master switch for the work-engine hook layer. When `false` (default) the registry stays empty and golden replay is byte-stable. See [`agents/contexts/work-engine-hooks.md`](../../../agents/contexts/work-engine-hooks.md). |
+| `hooks.trace` | `true`, `false` | `false` | Emit per-event trace lines on stderr. Useful for debugging; off by default because it is noisy. |
+| `hooks.halt_surface_audit` | `true`, `false` | `true` | Defense-in-depth check that every halt surfaced by the dispatcher carries the expected shape. Cheap. |
+| `hooks.state_shape_validation` | `true`, `false` | `true` | Re-run the state schema validator on `AFTER_LOAD` and `BEFORE_SAVE`. Cheap, catches drift. |
+| `hooks.directive_set_guard` | `true`, `false` | `true` | Verify the dispatcher-resolved directive set matches the input envelope intent. Cheap, catches routing drift. |
+| `hooks.chat_history.enabled` | `true`, `false` | `true` | Register the four chat-history hooks (turn-check, append, halt-append, heartbeat). Gated by **both** this flag AND `chat_history.enabled`; either off → no chat-history hook registers. |
+| `hooks.chat_history.script` | path | `scripts/chat_history.py` | Override path to the chat-history CLI. Set only when the script lives outside the standard location. |
 | `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
 | `subagents.implementer_model` | model alias or empty | _(empty)_ | Model for implementer subagents. Empty = same tier as session model. See [subagent-configuration](../contexts/subagent-configuration.md). |
 | `subagents.judge_model` | model alias or empty | _(empty)_ | Model for judge subagents. Empty = one tier above implementer (opus if sonnet, sonnet if haiku). |

@@ -943,9 +943,10 @@ JSONL schema; only the trigger differs. Per-platform classification
 lives in
 [`agents/contexts/chat-history-platform-hooks.md`](../../../agents/contexts/chat-history-platform-hooks.md).
 
-| Path | Platforms | Trigger | Agent's role |
+| Path | Platforms / Surfaces | Trigger | Agent's role |
 |---|---|---|---|
 | **HOOK** | Claude Code, Augment CLI, Cursor 1.7+, Cline non-Windows, Windsurf, Gemini CLI | Platform fires native lifecycle hooks → `./agent-config chat-history:hook --platform <name>` | Read-only — observe, do not duplicate appends |
+| **ENGINE** | `/implement-ticket`, `/work`, any flow driven by `scripts/work_engine/cli.py` | `work_engine` fires `turn-check` (before-dispatch), `append --type phase` (per successful step), `--type decision` (on-halt), `heartbeat` (after-dispatch) via the hook layer | Read-only during engine-driven turns — do not duplicate appends. See [`agents/contexts/work-engine-hooks.md`](../../../agents/contexts/work-engine-hooks.md) |
 | **CHECKPOINT** | Augment IDE plugin, Cursor < 1.7, Cline on Windows | Agent invokes `/chat-history-checkpoint` at phase boundaries | Cooperative — the three gates below are mandatory |
 | **MANUAL** | Cloud surfaces (Claude.ai Web, Skills API) | Rule is inert — see Cloud Behavior | None |
 
@@ -969,9 +970,13 @@ trivial". Three enforcement layers: **turn-check** non-zero on
 ownership mismatch), **script-generated heartbeat** (silent skip
 becomes immediately visible).
 
-On the HOOK path the platform performs gates 1 + 2 structurally; the
-agent **must not** also call `turn-check` or `append` (double-write
-risk). Heartbeat (gate 3) stays useful for visibility — see below.
+On the HOOK and ENGINE paths the platform / engine performs gates 1 + 2
+structurally; the agent **must not** also call `turn-check` or `append`
+(double-write risk). Engine-driven turns inherit the structural guarantee
+for the duration of the dispatch cycle — once the engine returns control,
+free-form prose around the engine output falls back to whatever path the
+platform supplies. Heartbeat (gate 3) stays useful for visibility on
+every path — see below.
 
 ### Turn-start gate — MANDATORY first tool call
 
