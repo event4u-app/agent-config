@@ -371,6 +371,20 @@ log — that is a real bug, not a swallowed error.
 **When in doubt, ask the user.** Do not guess, assume, or improvise.
 Asking one question too many is always better than a wrong assumption.
 
+## Iron Law — one question per turn, ALWAYS
+
+```
+ONE QUESTION PER TURN. NO EXCEPTIONS.
+ASK. WAIT FOR THE ANSWER. THEN ASK THE NEXT.
+```
+
+This is absolute. Not a default, not a guideline, not "usually".
+Every turn that contains a question contains **exactly one** question.
+Even if the questions look trivial. Even if they look independent.
+Even if they would fit on one screen. Even if batching "feels more
+efficient". Full self-check, ordering, and handoff rules under
+[How to ask](#how-to-ask).
+
 ## When to ask
 
 - Requirement is ambiguous or could be interpreted multiple ways
@@ -403,22 +417,13 @@ makes the answer unambiguous, proceed — but state the assumption explicitly.
 
 Be specific. Present numbered options (per `user-interaction`). Keep it short.
 
-### The Iron Law — one question per turn, ALWAYS
-
-```
-ONE QUESTION PER TURN. NO EXCEPTIONS.
-ASK. WAIT FOR THE ANSWER. THEN ASK THE NEXT.
-```
-
-This is absolute. Not a default, not a guideline, not "usually". Every
-turn that contains a question contains **exactly one** question. Even
-if the questions look trivial. Even if they look independent. Even if
-they would fit on one screen. Even if batching "feels more efficient".
+The Iron Law (one question per turn) is at the top of this file.
+This section adds the rationale, self-check, and ordering.
 
 The user must never have to track sub-numbers, scroll through stacked
 option blocks, or split their reply across multiple questions. One
-question, numbered options (per `user-interaction`), one short answer,
-next turn.
+question, numbered options (per `user-interaction`), one short
+answer, next turn.
 
 Rationale — why even "trivial" batches fail:
 
@@ -961,7 +966,8 @@ config explicitly via `scripts/install.py`).
 ```
 1. turn-check    — first tool call of every session
 2. append        — at every cadence boundary, with --first-user-msg
-3. heartbeat     — last line of every reply, script-generated, verbatim
+3. heartbeat     — last line of every reply, from current subprocess
+                   stdout (NEVER from memory)
 ```
 
 **Overrides** token-efficiency, conversation momentum, "the turn was
@@ -1037,9 +1043,23 @@ Always exits 0 — observability, not a gate.
 booleanizes bare `on`/`off`; the reader coerces both back, so
 `heartbeat: on` works unquoted.
 
-**NEVER type the marker from memory.** Re-running the script is the gate —
-typed-from-memory lines hide stale counts. Every reply: invoke, paste
-stdout verbatim (or nothing if empty).
+### Memory-typing the marker — rule violation, not a slip
+
+Format is memorizable; counts and timestamps are not. A typed-from-
+memory line shows stale entries and a healthy-looking `ok` while the
+file is silently behind — observability collapses, invisible until
+`status` is checked. Heartbeat is the script output of the **current
+turn**, verbatim, or nothing.
+
+**Self-check before send — MANDATORY.** (1) Did `heartbeat` run on
+this turn? (2) Is the line byte-identical to that subprocess stdout?
+(3) Empty stdout → no marker line. Any "no" → drop it.
+
+**Slip handling.** Stale marker called out → acknowledge once in the
+user's language; run `status`; on CHECKPOINT `append` missed phase-
+boundaries; run a real `heartbeat`; paste stdout verbatim or nothing.
+Don't promise "from now on" — only behaviour proves compliance
+(mirrors `language-and-tone` § slip handling).
 
 ## Activation & handshake
 
@@ -1830,6 +1850,16 @@ Inconsistent documentation is worse than no documentation.
 
 # Downstream Changes
 
+## The Iron Law
+
+```
+EVERY EDIT IS INCOMPLETE UNTIL ALL DOWNSTREAM CHANGES ARE MADE.
+MISSING A CALLER, A TEST, OR AN IMPORT IS A CRITICAL FAILURE.
+```
+
+Do NOT move on to the next task, claim completion, or suggest
+committing until every caller, test, import, and reference is updated.
+
 ## Rule
 
 After EVERY code edit, find **ALL downstream changes** needed. Missing a caller, a test,
@@ -1882,15 +1912,6 @@ After completing all downstream changes:
 2. **No broken tests** — run the test suite
 3. **No broken types** — PHPStan Level 9 catches signature mismatches
 4. **No stale references** — grep for the old name/namespace to confirm zero results
-
-## The iron law
-
-```
-Every edit is incomplete until all downstream changes are made.
-```
-
-Do NOT move on to the next task, claim completion, or suggest committing
-until every caller, test, import, and reference is updated.
 
 ---
 
@@ -4177,10 +4198,72 @@ If ANY of these is YES → propose to the user:
 
 # User Interaction
 
+Two Iron Laws govern every reply that contains numbered options. They
+override conversation momentum, brevity, and the urge to defer to the
+user. **Missing a recommendation is a rule violation, not a slip.**
+
+## Iron Law 1 — Single-Source Recommendation
+
+```
+EXACTLY ONE LINE NAMES THE RECOMMENDED NUMBER. NO INLINE TAG. NO SECOND PROSE NUMBER.
+THE OPTION BLOCK STAYS NEUTRAL. THE RECOMMENDATION LINE IS THE ONLY SOURCE OF TRUTH.
+DRIFT BETWEEN OPTION-BLOCK AND PROSE IS STRUCTURALLY IMPOSSIBLE WHEN THE TAG DOES NOT EXIST.
+MISSING RECOMMENDATION = RULE VIOLATION, NOT A SLIP.
+```
+
+The agent has read the code, the contracts, the trade-offs. Refusing
+to take a position dumps that work back on the user. Take the
+position; be wrong out loud if needed. "Egal, was bevorzugst Du?" /
+"no preference" is NEVER acceptable.
+
+**Format — non-negotiable:**
+
+- Options block stays NEUTRAL — no `(recommended)`, no `(rec)`, no `←`, no bold, no checkmark.
+- Directly after the options block, ONE line, bolded, in the user's language:
+  - English: `**Recommendation: N — <option-name>** — <why>. Caveat: <flip-condition>.`
+  - German:  `**Empfehlung: N — <option-name>** — <warum>. Caveat: <flip-bedingung>.`
+- Other numbers MAY appear later in the prose, but ONLY as caveats
+  (`escalate to 3 if …`, `flip to 1 when …`). NEVER as a primary recommendation.
+- If the agent genuinely cannot pick (rare — true 50/50 with missing data),
+  say what data would break the tie and ask for that instead.
+
+**What does NOT count as a recommendation:**
+
+- "Both work" / "either is fine" / "depends on what you prefer"
+- Listing pros and cons without picking a number
+- "I'd lean towards X" without a reason
+- Hiding behind "you know the project better"
+- Inline `(recommended)` tag with no follow-up `Recommendation: N` line
+
+**Slip handling — same protocol as [`language-and-tone`](language-and-tone.md#when-the-user-calls-out-a-language-slip).**
+User calls out a missing or wrong recommendation → acknowledge once
+in the user's language, rewrite the reply with a recommendation,
+ship. No "from now on" promises — only the next reply proves
+compliance.
+
+## Iron Law 2 — Pre-Send Self-Check
+
+```
+EVERY REPLY WITH NUMBERED OPTIONS RUNS THE SELF-CHECK. NO EXCEPTIONS.
+SKIPPING IT IS A RULE VIOLATION, NOT A SLIP.
+```
+
+Before emitting any reply that contains numbered options, scan the
+drafted text:
+
+1. Count occurrences of `(recommended)` / `(rec)` / `(empfohlen)` inline next to a numbered option → MUST be **zero**. Found one → rewrite, drop the tag.
+2. Count distinct `Recommendation:\s*N` / `Empfehlung:\s*N` lines (case-insensitive) → MUST be **exactly one**. Zero → add one. Two or more distinct numbers → rewrite, pick one.
+3. The number on the recommendation line MUST exist in the option block.
+
+Mechanical backstop: `python3 scripts/check_reply_consistency.py --stdin < draft.md`
+(non-zero exit on any rule above). Self-scan is the primary gate; the
+script is the deterministic safety net for ambiguous cases.
+
 ## Numbered Options — Always
 
-When asking the user a question with predefined choices, **always present numbered options**.
-The user should be able to reply with just a number (e.g., `1`) instead of typing a sentence.
+When asking the user a question with predefined choices, **always
+present numbered options**. The user should be able to reply with
+just a number (e.g., `1`) instead of typing a sentence.
 
 ### Format
 
@@ -4197,55 +4280,9 @@ The user should be able to reply with just a number (e.g., `1`) instead of typin
 - **Every question with choices** must use numbered options — no exceptions.
 - **Keep options short** — one line each, with a brief explanation after the dash.
 - **Always include a "skip" or "no change" option** when applicable.
-- **Always state a recommendation** — see iron law below.
+- **Always state a recommendation** — Iron Law 1 above.
 - **Use the user's language** for the question and options.
 - **Accept both** the number and a natural language answer (e.g., "1" or "the first one").
-
-### Iron Law — Single-Source Recommendation
-
-```
-EXACTLY ONE LINE NAMES THE RECOMMENDED NUMBER. NO INLINE TAG. NO SECOND PROSE NUMBER.
-THE OPTION BLOCK STAYS NEUTRAL. THE RECOMMENDATION LINE IS THE ONLY SOURCE OF TRUTH.
-DRIFT BETWEEN OPTION-BLOCK AND PROSA IS STRUCTURALLY IMPOSSIBLE WHEN THE TAG DOES NOT EXIST.
-```
-
-The agent has read the code, the contracts, the trade-offs. Refusing to take a position
-dumps that work back on the user. Take the position; be wrong out loud if needed.
-"Egal, was bevorzugst Du?" / "no preference" is NEVER acceptable.
-
-**Format — non-negotiable:**
-
-- Options block stays NEUTRAL — no `(recommended)`, no `(rec)`, no `←`, no bold, no checkmark.
-- Directly after the options block, ONE line, bolded, in the user's language:
-  - English: `**Recommendation: N — <option-name>** — <why>. Caveat: <flip-condition>.`
-  - German:  `**Empfehlung: N — <option-name>** — <warum>. Caveat: <flip-bedingung>.`
-- Other numbers MAY appear later in the prose, but ONLY as caveats
-  (`escalate to 3 if …`, `flip to 1 when …`). NEVER as a primary recommendation.
-- If the agent genuinely cannot pick (rare — true 50/50 with missing data),
-  say what data would break the tie and ask for that instead.
-
-### Iron Law — Pre-Send Self-Check
-
-Before emitting any reply that contains numbered options, run this scan
-on the drafted text:
-
-1. Count occurrences of `(recommended)` / `(rec)` / `(empfohlen)` inline next to a numbered option → MUST be **zero**. Found one → rewrite, drop the tag.
-2. Count distinct `Recommendation:\s*N` / `Empfehlung:\s*N` lines (case-insensitive) → MUST be **exactly one**. Two or more distinct numbers → rewrite, pick one.
-3. The number on the recommendation line MUST exist in the option block.
-
-Mechanical backstop available: `python3 scripts/check_reply_consistency.py --stdin < draft.md`
-(non-zero exit on any rule above). Self-scan is the primary gate; the script is the
-deterministic safety net for ambiguous cases.
-
-**Mismatch is a rule violation, not a slip.** When a slip happens, the user calls it out → acknowledge once, rewrite, ship — same handling as `language-and-tone` slip protocol.
-
-### What does NOT count as a recommendation
-
-- "Both work" / "either is fine" / "depends on what you prefer"
-- Listing pros and cons without picking a number
-- "I'd lean towards X" without a reason
-- Hiding behind "you know the project better"
-- Inline `(recommended)` tag with no follow-up `Recommendation: N` line
 
 ### Examples
 

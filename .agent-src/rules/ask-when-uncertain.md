@@ -10,6 +10,20 @@ source: package
 **When in doubt, ask the user.** Do not guess, assume, or improvise.
 Asking one question too many is always better than a wrong assumption.
 
+## Iron Law — one question per turn, ALWAYS
+
+```
+ONE QUESTION PER TURN. NO EXCEPTIONS.
+ASK. WAIT FOR THE ANSWER. THEN ASK THE NEXT.
+```
+
+This is absolute. Not a default, not a guideline, not "usually".
+Every turn that contains a question contains **exactly one** question.
+Even if the questions look trivial. Even if they look independent.
+Even if they would fit on one screen. Even if batching "feels more
+efficient". Full self-check, ordering, and handoff rules under
+[How to ask](#how-to-ask).
+
 ## When to ask
 
 - Requirement is ambiguous or could be interpreted multiple ways
@@ -42,22 +56,13 @@ makes the answer unambiguous, proceed — but state the assumption explicitly.
 
 Be specific. Present numbered options (per `user-interaction`). Keep it short.
 
-### The Iron Law — one question per turn, ALWAYS
-
-```
-ONE QUESTION PER TURN. NO EXCEPTIONS.
-ASK. WAIT FOR THE ANSWER. THEN ASK THE NEXT.
-```
-
-This is absolute. Not a default, not a guideline, not "usually". Every
-turn that contains a question contains **exactly one** question. Even
-if the questions look trivial. Even if they look independent. Even if
-they would fit on one screen. Even if batching "feels more efficient".
+The Iron Law (one question per turn) is at the top of this file.
+This section adds the rationale, self-check, and ordering.
 
 The user must never have to track sub-numbers, scroll through stacked
 option blocks, or split their reply across multiple questions. One
-question, numbered options (per `user-interaction`), one short answer,
-next turn.
+question, numbered options (per `user-interaction`), one short
+answer, next turn.
 
 Rationale — why even "trivial" batches fail:
 

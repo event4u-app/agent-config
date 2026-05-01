@@ -26,7 +26,7 @@ Mirrors the roadmap's authoritative definitions:
 | Cline | VS Code + JetBrains | **HOOK** (non-Windows) | `TaskStart`, `TaskComplete`, `UserPromptSubmit`, `PreCompact` | Hooks unsupported on Windows as of `cline/cline#8073`. |
 | Windsurf | Cascade | **HOOK** | `pre_user_prompt`, `post_cascade_response`, `post_setup_worktree` | 12 events; shipped v1.12.41. |
 | Gemini CLI | CLI | **HOOK** | `SessionStart`, `SessionEnd`, `BeforeAgent`, `AfterAgent` | `SessionStart` is advisory (cannot block). |
-| Augment Code | CLI + IDE plugin (VSCode + IntelliJ) | **HOOK** | `SessionStart`, `SessionEnd`, `Stop`, `PreToolUse`, `PostToolUse` | Hooks read from `~/.augment/settings.json` (user scope) or `/etc/augment/settings.json` (system); same surface for CLI and IDE. Project-local `.augment/settings.json` is plugin enablement only. |
+| Augment Code | CLI + IDE plugin (VSCode + IntelliJ) | **HOOK** | `SessionStart`, `SessionEnd`, `Stop`, `PreToolUse`, `PostToolUse` | Hooks read from `~/.augment/settings.json` (user scope) or `/etc/augment/settings.json` (system); same surface for CLI and IDE. A project-local `settings.json` inside the `.augment/` projection is plugin enablement only. |
 
 ## Claude Code
 
@@ -96,7 +96,7 @@ Mirrors the roadmap's authoritative definitions:
 
 ## Augment Code
 
-- **Hook surface:** `~/.augment/settings.json` (user scope) or `/etc/augment/settings.json` (system); same surface for CLI **and** the IDE plugins (VSCode + IntelliJ). Project-local `.augment/settings.json` is plugin enablement only — not read for hooks.
+- **Hook surface:** `~/.augment/settings.json` (user scope) or `/etc/augment/settings.json` (system); same surface for CLI **and** the IDE plugins (VSCode + IntelliJ). A project-local `settings.json` inside the `.augment/` projection is plugin enablement only — not read for hooks.
 - **Script extension constraint:** hook commands must point at scripts with a `.sh` extension and live under one of the documented hook directories (e.g. `~/.augment/hooks/`). The package ships `scripts/hooks/augment-chat-history.sh` as a workspace-routing trampoline that satisfies this constraint.
 - **Lifecycle events:** `SessionStart`, `SessionEnd`, `PreToolUse`, `PostToolUse`, `Stop`. Matchers via regex on tool name.
 - **Execution model:** subprocess; synchronous for `PreToolUse`/`PostToolUse`/`Stop`. `Stop` can return `decision: "block"` to prevent termination.

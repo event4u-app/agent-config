@@ -190,6 +190,25 @@ Step indicator (1 — 2 — 3)
 5. **Loading states** — Skeleton screens or spinners, never blank screens
 6. **Error recovery** — Clear error messages with suggested actions
 
+## Procedure
+
+When `directives/ui/design.py` (or any caller) cites this skill:
+
+1. **Confirm audit ran first** — `state.ui_audit` from [`existing-ui-audit`](../existing-ui-audit/SKILL.md) is mandatory. Stop and request audit if missing.
+2. **Pick smallest matching section** — Component Architecture, Form Design, Table Design, Responsive Strategy, Accessibility, or UX Principles. Cite by H2/H3 heading, never paste whole skill.
+3. **Defer to audit findings** — when audit pins a project pattern (token, primitive, layout convention), use it. Heuristics here are fallbacks for gaps, not overrides.
+4. **Defer to stack apply skill** — Blade vs. Livewire vs. Flux vs. React-shadcn choices come from dispatched implementation skill, never from this reference.
+5. **Surface conflicts** — if heuristic here contradicts an audit finding or stack convention, name both and let caller decide; do not silently pick.
+
+## Output format
+
+When this skill's content is folded into a design brief or review:
+
+1. Quote cited heuristic verbatim, with H2/H3 heading and one-line "why this applies" tie-back to request.
+2. Map each heuristic to a concrete artifact in brief (component, form section, table column, breakpoint rule, a11y check, UX state).
+3. Keep stack-agnostic — never name Blade/Livewire/Flux/React primitives in cited prose; apply step adds those.
+4. Mark anything overridden by audit findings as `[audit override]` and link to audit entry.
+
 ## Related
 
 - **Orchestrator:** [`directives/ui/`](../../templates/scripts/work_engine/directives/ui/) — owns the UI flow

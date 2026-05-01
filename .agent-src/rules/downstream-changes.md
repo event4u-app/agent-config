@@ -7,6 +7,16 @@ source: package
 
 # Downstream Changes
 
+## The Iron Law
+
+```
+EVERY EDIT IS INCOMPLETE UNTIL ALL DOWNSTREAM CHANGES ARE MADE.
+MISSING A CALLER, A TEST, OR AN IMPORT IS A CRITICAL FAILURE.
+```
+
+Do NOT move on to the next task, claim completion, or suggest
+committing until every caller, test, import, and reference is updated.
+
 ## Rule
 
 After EVERY code edit, find **ALL downstream changes** needed. Missing a caller, a test,
@@ -59,12 +69,3 @@ After completing all downstream changes:
 2. **No broken tests** — run the test suite
 3. **No broken types** — PHPStan Level 9 catches signature mismatches
 4. **No stale references** — grep for the old name/namespace to confirm zero results
-
-## The iron law
-
-```
-Every edit is incomplete until all downstream changes are made.
-```
-
-Do NOT move on to the next task, claim completion, or suggest committing
-until every caller, test, import, and reference is updated.

@@ -7,10 +7,72 @@ source: package
 
 # User Interaction
 
+Two Iron Laws govern every reply that contains numbered options. They
+override conversation momentum, brevity, and the urge to defer to the
+user. **Missing a recommendation is a rule violation, not a slip.**
+
+## Iron Law 1 — Single-Source Recommendation
+
+```
+EXACTLY ONE LINE NAMES THE RECOMMENDED NUMBER. NO INLINE TAG. NO SECOND PROSE NUMBER.
+THE OPTION BLOCK STAYS NEUTRAL. THE RECOMMENDATION LINE IS THE ONLY SOURCE OF TRUTH.
+DRIFT BETWEEN OPTION-BLOCK AND PROSE IS STRUCTURALLY IMPOSSIBLE WHEN THE TAG DOES NOT EXIST.
+MISSING RECOMMENDATION = RULE VIOLATION, NOT A SLIP.
+```
+
+The agent has read the code, the contracts, the trade-offs. Refusing
+to take a position dumps that work back on the user. Take the
+position; be wrong out loud if needed. "Egal, was bevorzugst Du?" /
+"no preference" is NEVER acceptable.
+
+**Format — non-negotiable:**
+
+- Options block stays NEUTRAL — no `(recommended)`, no `(rec)`, no `←`, no bold, no checkmark.
+- Directly after the options block, ONE line, bolded, in the user's language:
+  - English: `**Recommendation: N — <option-name>** — <why>. Caveat: <flip-condition>.`
+  - German:  `**Empfehlung: N — <option-name>** — <warum>. Caveat: <flip-bedingung>.`
+- Other numbers MAY appear later in the prose, but ONLY as caveats
+  (`escalate to 3 if …`, `flip to 1 when …`). NEVER as a primary recommendation.
+- If the agent genuinely cannot pick (rare — true 50/50 with missing data),
+  say what data would break the tie and ask for that instead.
+
+**What does NOT count as a recommendation:**
+
+- "Both work" / "either is fine" / "depends on what you prefer"
+- Listing pros and cons without picking a number
+- "I'd lean towards X" without a reason
+- Hiding behind "you know the project better"
+- Inline `(recommended)` tag with no follow-up `Recommendation: N` line
+
+**Slip handling — same protocol as [`language-and-tone`](language-and-tone.md#when-the-user-calls-out-a-language-slip).**
+User calls out a missing or wrong recommendation → acknowledge once
+in the user's language, rewrite the reply with a recommendation,
+ship. No "from now on" promises — only the next reply proves
+compliance.
+
+## Iron Law 2 — Pre-Send Self-Check
+
+```
+EVERY REPLY WITH NUMBERED OPTIONS RUNS THE SELF-CHECK. NO EXCEPTIONS.
+SKIPPING IT IS A RULE VIOLATION, NOT A SLIP.
+```
+
+Before emitting any reply that contains numbered options, scan the
+drafted text:
+
+1. Count occurrences of `(recommended)` / `(rec)` / `(empfohlen)` inline next to a numbered option → MUST be **zero**. Found one → rewrite, drop the tag.
+2. Count distinct `Recommendation:\s*N` / `Empfehlung:\s*N` lines (case-insensitive) → MUST be **exactly one**. Zero → add one. Two or more distinct numbers → rewrite, pick one.
+3. The number on the recommendation line MUST exist in the option block.
+
+Mechanical backstop: `python3 scripts/check_reply_consistency.py --stdin < draft.md`
+(non-zero exit on any rule above). Self-scan is the primary gate; the
+script is the deterministic safety net for ambiguous cases.
+
 ## Numbered Options — Always
 
-When asking the user a question with predefined choices, **always present numbered options**.
-The user should be able to reply with just a number (e.g., `1`) instead of typing a sentence.
+When asking the user a question with predefined choices, **always
+present numbered options**. The user should be able to reply with
+just a number (e.g., `1`) instead of typing a sentence.
 
 ### Format
 
@@ -27,55 +89,9 @@ The user should be able to reply with just a number (e.g., `1`) instead of typin
 - **Every question with choices** must use numbered options — no exceptions.
 - **Keep options short** — one line each, with a brief explanation after the dash.
 - **Always include a "skip" or "no change" option** when applicable.
-- **Always state a recommendation** — see iron law below.
+- **Always state a recommendation** — Iron Law 1 above.
 - **Use the user's language** for the question and options.
 - **Accept both** the number and a natural language answer (e.g., "1" or "the first one").
-
-### Iron Law — Single-Source Recommendation
-
-```
-EXACTLY ONE LINE NAMES THE RECOMMENDED NUMBER. NO INLINE TAG. NO SECOND PROSE NUMBER.
-THE OPTION BLOCK STAYS NEUTRAL. THE RECOMMENDATION LINE IS THE ONLY SOURCE OF TRUTH.
-DRIFT BETWEEN OPTION-BLOCK AND PROSA IS STRUCTURALLY IMPOSSIBLE WHEN THE TAG DOES NOT EXIST.
-```
-
-The agent has read the code, the contracts, the trade-offs. Refusing to take a position
-dumps that work back on the user. Take the position; be wrong out loud if needed.
-"Egal, was bevorzugst Du?" / "no preference" is NEVER acceptable.
-
-**Format — non-negotiable:**
-
-- Options block stays NEUTRAL — no `(recommended)`, no `(rec)`, no `←`, no bold, no checkmark.
-- Directly after the options block, ONE line, bolded, in the user's language:
-  - English: `**Recommendation: N — <option-name>** — <why>. Caveat: <flip-condition>.`
-  - German:  `**Empfehlung: N — <option-name>** — <warum>. Caveat: <flip-bedingung>.`
-- Other numbers MAY appear later in the prose, but ONLY as caveats
-  (`escalate to 3 if …`, `flip to 1 when …`). NEVER as a primary recommendation.
-- If the agent genuinely cannot pick (rare — true 50/50 with missing data),
-  say what data would break the tie and ask for that instead.
-
-### Iron Law — Pre-Send Self-Check
-
-Before emitting any reply that contains numbered options, run this scan
-on the drafted text:
-
-1. Count occurrences of `(recommended)` / `(rec)` / `(empfohlen)` inline next to a numbered option → MUST be **zero**. Found one → rewrite, drop the tag.
-2. Count distinct `Recommendation:\s*N` / `Empfehlung:\s*N` lines (case-insensitive) → MUST be **exactly one**. Two or more distinct numbers → rewrite, pick one.
-3. The number on the recommendation line MUST exist in the option block.
-
-Mechanical backstop available: `python3 scripts/check_reply_consistency.py --stdin < draft.md`
-(non-zero exit on any rule above). Self-scan is the primary gate; the script is the
-deterministic safety net for ambiguous cases.
-
-**Mismatch is a rule violation, not a slip.** When a slip happens, the user calls it out → acknowledge once, rewrite, ship — same handling as `language-and-tone` slip protocol.
-
-### What does NOT count as a recommendation
-
-- "Both work" / "either is fine" / "depends on what you prefer"
-- Listing pros and cons without picking a number
-- "I'd lean towards X" without a reason
-- Hiding behind "you know the project better"
-- Inline `(recommended)` tag with no follow-up `Recommendation: N` line
 
 ### Examples
 

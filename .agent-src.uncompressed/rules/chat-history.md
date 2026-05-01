@@ -41,7 +41,8 @@ config explicitly via `scripts/install.py`).
 ```
 1. turn-check    — first tool call of every session
 2. append        — at every cadence boundary, with --first-user-msg
-3. heartbeat     — last line of every reply, script-generated, verbatim
+3. heartbeat     — last line of every reply, from current subprocess
+                   stdout (NEVER from memory)
 ```
 
 **Overrides** token-efficiency, conversation momentum, "the turn was
@@ -117,9 +118,23 @@ Always exits 0 — observability, not a gate.
 booleanizes bare `on`/`off`; the reader coerces both back, so
 `heartbeat: on` works unquoted.
 
-**NEVER type the marker from memory.** Re-running the script is the gate —
-typed-from-memory lines hide stale counts. Every reply: invoke, paste
-stdout verbatim (or nothing if empty).
+### Memory-typing the marker — rule violation, not a slip
+
+Format is memorizable; counts and timestamps are not. A typed-from-
+memory line shows stale entries and a healthy-looking `ok` while the
+file is silently behind — observability collapses, invisible until
+`status` is checked. Heartbeat is the script output of the **current
+turn**, verbatim, or nothing.
+
+**Self-check before send — MANDATORY.** (1) Did `heartbeat` run on
+this turn? (2) Is the line byte-identical to that subprocess stdout?
+(3) Empty stdout → no marker line. Any "no" → drop it.
+
+**Slip handling.** Stale marker called out → acknowledge once in the
+user's language; run `status`; on CHECKPOINT `append` missed phase-
+boundaries; run a real `heartbeat`; paste stdout verbatim or nothing.
+Don't promise "from now on" — only behaviour proves compliance
+(mirrors `language-and-tone` § slip handling).
 
 ## Activation & handshake
 
