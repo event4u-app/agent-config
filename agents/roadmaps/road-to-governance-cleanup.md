@@ -1,6 +1,8 @@
 # Road to Governance Cleanup
 
-**Status:** DRAFT — capture-only. User will signal when final.
+**Status:** READY-FOR-EXECUTION — decisions synthesized 2026-05-01 from
+two external AI reviews (Claude, ChatGPT) plus self-synthesis. Sequencing
+locked. ICE table populated. Open questions closed.
 **Started:** 2026-05-01
 **Trigger:** User-driven optimize pass: command count fragmentation, rule/skill
 naming overlap, Augmentcode 49k always-rule budget breach. Plus benchmark optimize-lens
@@ -29,7 +31,8 @@ This roadmap is **structural cleanup**, not feature work. Sister tracks:
 - OSS distribution strategy, Medium articles, sponsorship (better-skills track).
   Note: README/docs *positioning surface* moved IN scope via Finding 7.
 
-**Nothing here is approved for execution** until user closes the feedback window.
+**Phase 1 (F1, F3, F2-top-3, F4, F5, F6, F7) is approved for execution.**
+Phase 2 (F2 remaining 12 clusters) waits one release cycle.
 
 ## Sources
 
@@ -256,49 +259,218 @@ weaker than ours.
 | `available_skills` block is hidden tax | **Low (single source, estimated)** | Char count not measured per project. Verify before acting. |
 | Identity drift: Laravel/PHP-first positioning vs universal substance | **High (audit, 9 verified hits)** | Measured against 6 project-analysis skills + framework-agnostic engine. Surface contradicts substance. |
 
-## Open questions for the user (defer until window closes)
+## Decisions (synthesized 2026-05-01)
 
-- **Finding 1 — A/B/C/D mix:** which combination closes the budget? (My read: A+C.)
-- **Finding 2 — A/B/C:** full collapse, top-3 only, or `/help`-only?
-- **Finding 3 — A/B/C:** rename to convention, suffix, or glossary-only?
-- **Finding 4 — A/B/C:** guidelines = doc, skill sub-layer, or dissolve?
-- **Finding 5 — A/B/C:** auto-generated index, per-type indexes, or README inline?
-- **Finding 6 — A/B/C combinable:** schedule reviews, ship per-stack defaults, cap descriptions?
-- **Finding 7 — A/B/C/D mix:** full universal reframe (A), two-track positioning (B), dynamic stack-aware framing (C), or audit-only defer (D)? (My read: A+B.)
-- **Migration cycle policy:** how many releases of deprecation shims for renamed/collapsed commands? One? Two? Permanent alias?
-- **Order of operations:** Finding 1 first (budget is critical), Finding 2 first (visible to users), or Finding 7 first (positioning blocks audience growth)? All three touch large numbers of files.
-- **Scope-creep guard:** Finding 7 was surfaced during synthesis on user request — hard-stop at 7, or continue capturing?
+Synthesized from two independent AI reviews (Claude, ChatGPT) + self-read.
+Cross-source agreement was high on F1, F2, F7; medium on F3, F5; low on F4,
+F6 (single-source / mechanical). The seven findings form one cleanup release;
+order of operations is locked below.
 
-## ICE prioritization (deferred)
+### F1 — Always-rule budget breach → **A + C combined**
 
-ICE table not populated yet. Will be filled once the user picks options per
-finding and the cleanup work is sized.
+- **Tier (A):** Demote to auto-trigger: `chat-history`, `command-suggestion`,
+  `model-recommendation`, `onboarding-gate`, `ui-audit-before-build`,
+  `chat-history` (trimmed). Keep always: `non-destructive-by-default`,
+  `scope-control`, `commit-policy`, `ask-when-uncertain`, `direct-answers`,
+  `language-and-tone` (trimmed), `verify-before-complete`.
+- **Merge (C):** Collapse `autonomous-execution` + `commit-policy` +
+  `non-destructive-by-default` + `scope-control` into one `agent-authority.md`
+  always-rule with sectioned authority bands (Hard Floor · Permission-Gated ·
+  Trivial). Keep the existing rule files as redirect stubs for one cycle.
+- **Compression pass (D):** Run an always-only stricter compression profile
+  *after* A+C; treat the saving as gravy, not the plan.
+- **Skip (B):** Body-relocation is rejected — relocates pages, not authority;
+  agents would still pay the cost on every read.
+
+**Target:** ≤ 49k always chars. **Confidence:** High. Cross-source agreement
+that the budget is the binding constraint and merging overlapping authority
+rules is the leverage point.
+
+### F2 — 77 commands → **B then A (phased collapse)**
+
+- **Phase 1 (this release):** Top-3 verb clusters — `/fix` · `/optimize` ·
+  `/feature`. Net: -13 commands. Sub-commands surface via `<Tab>` /
+  `--<subcmd>`.
+- **Phase 2 (next release):** Remaining 12 clusters listed in Finding 2.
+  Net: -22 more commands. Final: 77 → ~38–42 top-level.
+- **Old commands stay as deprecation shims for ONE release cycle**, then
+  removed. No permanent aliases.
+- **Reject C (`/help` only):** does not solve the underlying fragmentation;
+  worst of both worlds (surface stays, indirection added).
+
+**Confidence:** High. Cross-source agreement on phased over Big-Bang.
+
+### F3 — Naming overlap → **A (naming convention)**
+
+Rules use **policy verbs** (`*-policy`, `*-floor`, `*-gate`, `*-authority`).
+Skills use **tool nouns** (`existing-ui-audit`, `verify-completion-evidence`).
+
+| Rename | From | To |
+|---|---|---|
+| 1 | `verify-before-complete` (skill) | `verify-completion-evidence` |
+| 2 | `ui-audit-before-build` (rule) | `ui-audit-gate` |
+| 3 | merged authority rule | `agent-authority` |
+| 4 | `chat-history` (rule, after tiering to auto) | `chat-history-policy` |
+| 5 | `command-suggestion` (rule) | `command-suggestion-policy` |
+| 6 | `slash-commands` (rule) | `slash-command-routing-policy` |
+
+Cross-refs updated by `check-refs` linter; one deprecation cycle for old
+names. **Reject B (suffix):** noise everywhere. **Reject C (glossary):**
+does not solve confusion at the agent-loading layer.
+
+**Confidence:** Medium. Single-source data but mechanical fix.
+
+### F4 — Guidelines → **A (referenced only, move to `docs/guidelines/`)**
+
+Guidelines are **never auto-loaded**; only skill/rule body links to them.
+Move all 46 guideline files from `.agent-src.uncompressed/guidelines/` to
+`docs/guidelines/`. Linter rule: skill/rule referencing a guideline must
+use a `docs/guidelines/<name>.md` path; broken paths fail CI.
+
+**Reject B (skill sub-layer):** keeps ambiguity, adds linter mass without
+solving the load-semantics question. **Reject C (dissolve):** loses
+content reuse across multiple skills; many guidelines are cited 3-5 times.
+
+**Confidence:** Medium. Resolves the load-semantics ambiguity, kills
+hidden-char risk, and moves authority cleanly to `docs/`.
+
+### F5 — Discovery surface → **A (auto-generated `agents/index.md`)**
+
+Generator (`scripts/generate_index.py`) scans `.agent-src.uncompressed/`,
+emits one row per artifact: `name · type · trigger · 1-line purpose · link`.
+Runs in `task ci` as a sync-check (drift = build break).
+
+Bonus pass: generator flags naming-convention violations (F3) and unused
+guideline files (F4) — one tool, three guards.
+
+**Reject B (per-type indexes):** smaller files but 4× the navigation hops.
+**Reject C (README inline):** breaks the 500-line README cap immediately.
+
+**Confidence:** Medium. Single tool, three guard responsibilities.
+
+### F6 — Hidden char consumption (`available_skills`) → **A + C combined**
+
+- **A — Schedule augmentignore reviews:** `optimize-augmentignore` skill
+  surfaces in `task ci` as an advisory check (warn, not fail). New consumer
+  projects run it in their onboarding.
+- **C — Description-length budget:** Hard cap of **200 chars** per skill
+  `description:`. Enforced by `lint-skills`. Existing 128 skills audited in
+  the same pass; over-budget descriptions rewritten before this release ships.
+- **Defer B (per-stack `.augmentignore` defaults):** good idea, requires
+  reliable stack detection. Move to `road-to-better-skills-and-profiles.md`
+  follow-up; not blocking this cleanup.
+
+**Confidence:** Medium. Char saving is mechanical (~5-10k); review cadence
+is operational.
+
+### F7 — Identity drift → **A + B combined**
+
+- **A — Universal reframe:** README tagline becomes stack-neutral. Audience
+  matrix lists Laravel · Symfony · Next.js · React · Node · Zend/Laminas as
+  co-equal. GitHub topics drop "primary domain — Laravel" framing.
+  `getting-started.md` opens with stack detection, not `composer require`.
+- **B — Laravel as flagship reference:** Explicit, honest framing —
+  "Reference implementation: Laravel (deepest skill set: Pest, PHPStan,
+  Rector, Eloquent, Livewire/Flux). Other stacks have parallel sections
+  at matching depth as they grow." Pairs A's reach with B's honesty about
+  current stack-skill density.
+- **Reject C (dynamic stack-aware framing):** good infra, separate roadmap
+  item. Does not block the surface fix.
+- **Reject D (audit-only defer):** identity question is decided
+  (OSS-light governed alternative — see post-pr29-optimize and
+  better-skills-and-profiles); positioning surface must follow.
+
+Stack-specific skills (`laravel`, `eloquent`, `pest-testing`, `php-coding`)
+**stay as-is** — they are correctly scoped tools, not identity surface.
+
+**Confidence:** High. Cross-source agreement (Claude + ChatGPT both A+B).
+
+### Cross-cutting decisions
+
+- **Migration cycle policy:** **One release** of deprecation shims for
+  renamed/collapsed commands and renamed rules. Removed in the next.
+  Permanent aliases rejected — they are a maintenance tax forever.
+- **Scope-creep guard:** **Hard-stop at 7 findings.** New findings during
+  execution become follow-up roadmap items, not in-flight scope expansion.
+- **Order of operations (locked):**
+  1. **F1 (budget)** — critical safety; everything else assumes the agent
+     can load its own rules.
+  2. **F3 (naming)** — must precede F2 because the merged `agent-authority`
+     rule (F1-C) is the largest naming change.
+  3. **F2 phase 1 (top-3 clusters)** — visible to users; deprecation shims
+     give one cycle of grace.
+  4. **F4 (guidelines move)** — pure file relocation; safe after F3
+     cross-refs are updated.
+  5. **F5 (index generator)** — runs in `task ci`; depends on F1+F3+F4
+     for stable artifact names.
+  6. **F6 (description budget)** — mechanical sweep; runs as a
+     `lint-skills` extension.
+  7. **F7 (identity reframe)** — README + getting-started + topics; safe
+     last because it touches no agent-loaded content.
+  8. **F2 phase 2 (remaining 12 clusters)** — next release, after one
+     deprecation cycle.
+
+## ICE prioritization
 
 | # | Finding | Option | Impact | Conf | Ease | Score | When |
 |---|---|---|---:|---:|---:|---:|---|
-| 1 | F1 — Always-rule budget | TBD | — | — | — | — | — |
-| 2 | F2 — Command collapse | TBD | — | — | — | — | — |
-| 3 | F3 — Naming convention | TBD | — | — | — | — | — |
-| 4 | F4 — Guideline status | TBD | — | — | — | — | — |
-| 5 | F5 — Discovery index | TBD | — | — | — | — | — |
-| 6 | F6 — Skill description budget | TBD | — | — | — | — | — |
-| 7 | F7 — Universal identity reframe | TBD | — | — | — | — | — |
+| 1 | F1 — Always-rule budget | A + C | 10 | 9 | 5 | 450 | Phase 1 (this release) |
+| 2 | F3 — Naming convention | A | 7 | 8 | 7 | 392 | Phase 1 (precedes F2) |
+| 3 | F2 — Command collapse (top-3) | B | 8 | 9 | 7 | 504 | Phase 1 |
+| 4 | F4 — Guideline status | A | 6 | 7 | 8 | 336 | Phase 1 |
+| 5 | F5 — Discovery index | A | 7 | 7 | 6 | 294 | Phase 1 |
+| 6 | F6 — Description budget | A + C | 6 | 8 | 8 | 384 | Phase 1 |
+| 7 | F7 — Universal identity reframe | A + B | 9 | 9 | 6 | 486 | Phase 1 (last) |
+| 8 | F2 — Command collapse (rest) | A (12 clusters) | 7 | 8 | 6 | 336 | Phase 2 (next release) |
 
-## Next steps (capture-only)
+## Phase steps
 
-1. **Wait for user signal** to close the feedback window on this roadmap.
-2. **User picks options** per finding (A/B/C/...).
-3. **ICE rerun** with chosen options.
-4. **Sequence + sizing** added per finding.
-5. **Cross-roadmap dependency check** — confirm no overlap with `road-to-post-pr29-optimize.md`
-   or `road-to-better-skills-and-profiles.md` before any execution PR.
+- [ ] F1.1 — Draft `agent-authority.md` merging the four authority rules; preserve every Iron Law verbatim
+- [ ] F1.2 — Demote `chat-history`, `command-suggestion`, `model-recommendation`, `onboarding-gate`, `ui-audit-before-build` to `type: auto`
+- [ ] F1.3 — Trim `language-and-tone` to <6k always-char (relocate examples to `docs/guidelines/language-and-tone-examples.md`)
+- [ ] F1.4 — Run always-only compression profile; verify ≤ 49k total
+- [ ] F1.5 — Add CI guard `tests/test_always_budget.py` failing if total > 49k
+- [ ] F3.1 — Rename per F3 table; create deprecation stubs for old names
+- [ ] F3.2 — Update `check-refs` to enforce policy-verb (rules) vs tool-noun (skills) split
+- [ ] F2.1 — Implement `/fix`, `/optimize`, `/feature` orchestrators with sub-command dispatch
+- [ ] F2.2 — Convert old commands to deprecation shims (one-line stub → routes to new)
+- [ ] F2.3 — Update README + AGENTS.md command examples
+- [ ] F4.1 — Move `.agent-src.uncompressed/guidelines/` → `docs/guidelines/`
+- [ ] F4.2 — Update all skill/rule cross-refs to `docs/guidelines/<name>.md`
+- [ ] F4.3 — Add `check-refs` rule rejecting old guideline paths
+- [ ] F5.1 — Implement `scripts/generate_index.py` → `agents/index.md`
+- [ ] F5.2 — Wire into `task ci` as drift check
+- [ ] F6.1 — Audit all 128 skill descriptions; rewrite over-budget ones
+- [ ] F6.2 — Add 200-char cap to `lint-skills`
+- [ ] F6.3 — Surface `optimize-augmentignore` as advisory in `task ci`
+- [ ] F7.1 — Rewrite README tagline + sub-tagline to stack-neutral
+- [ ] F7.2 — Replace audience matrix with co-equal stack list + "Reference impl: Laravel" section
+- [ ] F7.3 — Rewrite `docs/getting-started.md` opening: stack detection first
+- [ ] F7.4 — Update `docs/architecture.md` sample descriptions to mixed stacks
+- [ ] F7.5 — Update `docs/github-topics.md` to drop "primary domain" framing
+- [ ] F7.6 — Audit AGENTS.md (root) for residual Laravel-first language
 
-**Nothing in this roadmap is approved for execution.** Capture-only.
+## Risk register
+
+| Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|
+| F1-C merged authority rule loses Iron-Law prominence | Medium | High | `iron-law-prominence-linter` runs against the new file; one Iron Law per section, banner format preserved |
+| F3 renames break user muscle memory | High | Medium | Deprecation shims one cycle; CHANGELOG with sed-friendly find/replace block |
+| F2 sub-command dispatch confuses tab-completion | Medium | Medium | Test `/fix <Tab>` UX in two clients (Claude Code, Cursor) before release |
+| F4 guideline relocation breaks cited cross-refs | Low | Medium | `check-refs` runs as part of the move PR; CI breaks on drift |
+| F7 reframe alienates existing PHP audience | Low | Medium | "Reference impl: Laravel" section makes the depth honest, not demoted |
+| Cleanup release becomes too large | High | Medium | Phase 2 of F2 deferred to next release; everything else fits one PR per finding |
+| Augmentcode budget changes upstream | Low | Low | Budget cap is configurable in the CI guard; recheck on every Augmentcode release |
+
+## Next steps
+
+1. **Open execution PR for Phase 1**, finding-by-finding (one PR per finding to keep review tight).
+2. **Run cross-roadmap dependency check** before each PR (confirm no overlap with `road-to-post-pr29-optimize.md` for `agent-authority` or `chat-history` work).
+3. **Update `roadmaps-progress.md`** dashboard after each finding lands.
+4. **Plan Phase 2 (F2 remaining 12 clusters)** for the next release window.
 
 ## Out of scope (explicit)
 
-- Implementation work — no rule edits, no command renames, no skill merges
-  until user closes the window.
 - New rules, new skills, new commands — this track is structural cleanup, not
   expansion.
 - Engine changes (`work_engine`, dispatcher, directives) — handled in

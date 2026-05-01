@@ -1,10 +1,12 @@
 # Road to Post-PR-29 Optimize
 
-**Status:** DRAFT — collecting multi-AI feedback. User will signal when final.
+**Status:** READY FOR EXECUTION — decisions synthesized 2026-05-01.
 **Started:** 2026-05-01
 **Trigger:** Senior-staff-level review of `agent-config` post-1.14.0 — focus on
 runtime maturity, rule-system robustness, and outcome validation (not skill catalogue).
-**Mode:** Capture-only. No implementation actions until user marks roadmap final.
+**Mode:** Phase 1 (housekeeping 1.15.0 + P0 packaging/positioning) approved.
+Phase 2 (rule-interaction matrix, demo cases, outcome telemetry) approved
+sequentially after Phase 1 lands.
 
 ## Purpose
 
@@ -21,7 +23,74 @@ roadmap covers everything else: engine, rules, runtime, demos, outcome proof.
 - Persona layer, stakeholder skills, per-skill Python tools, orchestration DSL,
   marketing / reach, multi-tool expansion, audit-as-memory.
 
-**Nothing here is approved for execution** until user closes the feedback window.
+## Decisions (synthesized 2026-05-01)
+
+Synthesized from Claude + ChatGPT review rounds on the open-questions handoff.
+Each decision cites the reviewer alignment and is anchored on the constraints
+declared in `road-to-governance-cleanup.md` (engine = beta orchestration
+contract, no new rules/skills, ~49k always-rule budget).
+
+### Sequencing — Phase 1 (housekeeping 1.15.0) before any feature work
+
+Both reviewers agreed: ship a **1.15.0 housekeeping release first**, then resume
+feature tracks. Phase 1 contents (in order):
+
+1. **Packaging fix (P0)** — adopt option **(b) `docs/contracts/`**. Move public
+   contracts out of `agents/contexts/` (which is excluded from npm + Composer
+   archives) into `docs/contracts/`. Redirect README links. `agents/` stays
+   internal-only. Smallest persistent fix; option (a) "ship `agents/contexts`"
+   bleeds internal notes into the public surface.
+2. **Positioning sentence (P0)** — adopt verbatim:
+   > *"`agent-config` is not a runtime, but it ships a deterministic
+   > orchestration contract / state machine for host agents."*
+   Apply to README headline, AGENTS.md, `docs/architecture.md`. Resolves the
+   "not a runtime" vs "Engine" contradiction without backtracking on either.
+3. **Counter-drift fix (P0)** — make `update_counts.py` mandatory in
+   `task sync` with a build-breaking guard covering README + AGENTS.md +
+   `docs/architecture.md`. One commit, blocking CI.
+4. **Term separation (P0)** — split `runtime_dispatcher.py` (experimental
+   shell-skill runner) from `work_engine` (shipped beta orchestration) from
+   tool adapters (experimental) in README + architecture doc. Stability
+   label: **Work Engine = beta** (locked here).
+5. **State-default + migration safety** — change `DEFAULT_STATE_FILE` in
+   `work_engine/cli.py` to `.work-state.json`; make migration backup
+   collision-safe (`.bak` → `.bak.1` rotation or hard-fail). Ship
+   `MIGRATION.md` for `implement_ticket → work_engine`.
+6. **Lint regressions cleared** — fix the warnings shipped in
+   `scope-control`, `autonomous-execution`, `commit-policy`,
+   `direct-answers`. CI must surface a visible green status.
+7. **Test coverage gaps** — `implement-ticket` without `--state-file`;
+   `/work` UI-prompt + medium-prompt + resume + pre-existing
+   `.work-state.json`.
+
+### Phase 2 — sequenced after 1.15.0 lands
+
+| Item | Decision | Rationale |
+|---|---|---|
+| **Chat-history redesign (C9)** | **Split into three artefacts** per Claude: `chat-history-ownership.md` (turn-check state machine, always-floor), `chat-history-cadence.md` (per_turn/per_phase/per_tool, auto-trigger), `chat-history-visibility.md` (heartbeat modes, auto-trigger). The 12-iteration signal means the 13th patch is wrong. ADR captures the split before any code edit. |
+| **Rule-interaction matrix (C5/C14)** | **Both forms.** Machine-readable YAML (`agents/contracts/rule-interactions.yml`) consumed by a new linter; rendered diagram in `docs/contracts/`. Anchor pair: `non-destructive-by-default` (top priority per AI #4) × {`autonomous-execution`, `scope-control`, `commit-policy`, `ask-when-uncertain`, `verify-before-complete`}. |
+| **`work_engine/cli.py` modularisation (C13)** | **Follow the named split** — `cli_args.py · state_io.py · input_builders.py · hook_bootstrap.py · runner.py · emitters.py`, `cli.py` keeps orchestration glue. Schedule **after** Phase 1 housekeeping; before R5+ feature work. Bounded refactor, zero behavior change verified by golden replay. |
+| **CI performance budget (C12)** | **Introduce now.** PR CI target ≤ 8–10 min wall-clock. Smoke subset of GTs on PRs; nightly full replay (24 capture packs) as separate workflow. Engine-path changes trigger full replay on PR. Measurement gate: `task ci` must emit a duration line. |
+| **Install-path pruning (C11)** | **Prune now.** Composer + npm = primary. curl, manual clone, cloud, Linear → labelled `advanced` / `experimental` / `staged` in `docs/installation.md`. No removals — relabelling only. Cloud + Linear stay shipped, just demoted from the front page. |
+| **Telemetry redesign (C10)** | **Pause artefact-engagement counts; build feedback loop first.** With 0 external users, telemetry mirrors own dev work. Sequence: (a) issue templates ("which skill did not trigger?"), discussions category, "did this help?" minimal UX; (b) re-aim telemetry at behavioural outcomes (blocks · memory-relevance · directive-set failures · partial verifications · stop-rules); (c) keep opt-in privacy contract. Existing R6 telemetry stays installed but inert until users exist. |
+| **Demo-track scope** | **Roadmap deliverable, not marketing.** Four named scenarios per AI #4: backend ticket · `/work` free-form · UI track · mixed flow. Concrete before/after reports in `agents/demos/`. Marketing reuse is out-of-scope here (lives in `road-to-better-skills-and-profiles.md` Block H). |
+| **Decision engine "explicit"** | **ADR + spike, not implementation.** Capture the future contract (scoring + confidence + risk surfaces) as an architectural-decision record. No code until the rule-interaction matrix lands and proves the decision shape. |
+| **Memory-visibility surface** | **Heartbeat-style line + opt-in `/memory-impact` command.** Heartbeat reuses chat-history visibility plumbing. Dedicated command for inspection. Rejected: implicit-via-summaries (too invisible to count as "behavior gets better"). |
+| **Stop-growing iron rule** | **Roadmap-level guidance, not project-level meta-policy.** Tied to budget recovery in `road-to-governance-cleanup.md`. Promote to meta-policy only after Phase 1 ships and budget returns under 49k. |
+| **AI #2 merge-blockers** | Folded into Phase 1 housekeeping above (state-default, migration safety, lint regressions, test coverage, intent-router doc). PR #29 already shipped as 1.14.0; these are 1.15.0 fixes, not retro-blockers. |
+| **AI #3 ship-before-next-feature trio** | All three in Phase 1: README rewrite (1), chat-history split (2 — Phase 2 ADR + Phase 3 implementation), `update_counts.py` enforced (3 — Phase 1). |
+| **AI #4 P1 — UI-track 1-page mental model** | **In Phase 1.** Single `docs/ui-track-mental-model.md` answering: when UI? when ui-trivial? when mixed? what must the agent never do? where does it stop? Linked from README. |
+
+### Out of scope (confirmed)
+
+- New rules / skills / commands until budget + matrix land.
+- Persona layer, stakeholder skills (sibling roadmap).
+- MCP server (sibling roadmap).
+- OSS marketing push (sibling roadmap; identity = OSS-light governed alternative,
+  locked in `road-to-governance-cleanup.md`).
+
+**Phase 1 (housekeeping 1.15.0) is approved for execution.**
+Phase 2 unlocks once Phase 1 ships green CI and an updated counter table.
 
 ## Sources (append per AI)
 

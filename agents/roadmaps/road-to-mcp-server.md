@@ -1,9 +1,10 @@
 # Road to MCP Server
 
-**Status:** capture-only — design proposal + staged execution plan.
+**Status:** READY FOR EXECUTION (Phase 1 only) — decisions synthesized 2026-05-01.
 **Started:** 2026-05-01
 **Trigger:** User asked whether agent-config is available as an MCP server. Answer: no — only consumer-side MCP usage docs exist. No server, no JSON-RPC surface.
-**Mode:** Capture-only until Phase 1 is approved for execution.
+**Mode:** Phase 1 (A1–A7, MVP skeleton) approved as a spike, gated on A1 + A2.
+Phases 2+ stay capture-only until Phase 1 lands a working stdio prompt fetch.
 
 ## Purpose
 
@@ -126,12 +127,44 @@ Only runs **after** A1-A7 are green and a real client renders prompts.
 | Client UX inconsistency (each client renders prompts differently) | Medium | Test in 2+ clients during Phase 1. Document client-specific quirks in `docs/mcp-server.md`. |
 | Bloat: shipping MCP runtime to non-MCP users | Low | `mcp` SDK as optional dependency; server only imported when entrypoint runs. |
 
-## Open questions
+## Decisions (synthesized 2026-05-01)
 
-- Should commands be exposed as prompts, or as something else (MCP doesn't have a "command" primitive)? Defer to Phase 2 design.
-- Project-local overrides vs package skills — merge order in `prompts/list`?
-- Telemetry / artifact-engagement: does an MCP-prompt fetch count as "applied"?
-- Multi-tenancy: one server per project (today's assumption) or one shared server with project switching?
+Synthesized from Claude + ChatGPT review rounds. Both reviewers stated that
+without A1 (SDK) + A2 (client tier) answers, all further MCP planning is
+speculation. Phase 1 is therefore a **spike** with two hard gates; Phases
+2+ remain capture-only until Phase 1 ships.
+
+### Phase 1 gating — confirmed
+
+| Gate | Decision |
+|---|---|
+| **A1 — SDK verification** | Hard gate. Verify Anthropic `mcp` Python SDK on PyPI: install, list capabilities, confirm stdio handler API and prompt/resource schemas. SDK unstable or missing required capabilities → roadmap returns to capture-only with documented gap. No code written without A1 green. |
+| **A2 — Free-tier client** | Hard gate. Confirm at least one MCP-aware client accepts stdio Python servers without paid features. Verification list: Claude Desktop free tier · Zed · Continue. One confirmed client = A3+ unblocked. Zero confirmed → pause roadmap, document the constraint. |
+
+### Open-question resolutions
+
+| Question | Decision | Rationale |
+|---|---|---|
+| **Commands as prompts, or other primitive?** | **As prompts.** MCP has no "command" primitive in the current spec; `prompts` is the closest semantic match (parametrised text the user invokes). Disambiguate via prompt name prefix (`skill.<name>` vs `command.<name>`) and the MCP `description` field. Re-evaluate if a future MCP spec adds a command primitive. |
+| **Project-local overrides vs package skills — merge order** | **Project overrides win.** `prompts/list` returns the merged view: same shape as the existing `task generate-tools` projection. Override entries get `source: project` in metadata; package entries get `source: package`. Clients see one prompt per name, with overrides taking precedence. No "show both" mode in MVP. |
+| **Telemetry — does an MCP prompt fetch count as "applied"?** | **No — fetch ≠ apply.** A `prompts/get` retrieval counts as `consulted`, not `applied`. Apply telemetry stays anchored on the existing `./agent-config telemetry:record` rule (concrete code/doc edits citing the artefact). The MCP server emits a `consulted` event when telemetry is enabled (opt-in, same privacy contract as local). Aligns with the redesign in `road-to-post-pr29-optimize.md` (artefact-engagement deprioritised in favour of behavioural outcomes). |
+| **Multi-tenancy — one server per project, or shared server with switching?** | **One server per project (current assumption locked).** stdio transport is process-per-client; project context binds at launch time via `cwd` + `.agent-src/`. Shared server with project-switching needs SSE + auth model — deferred to Phase 6 (F2/F3) alongside cloud distribution. |
+
+### Confidence
+
+- A1 + A2: **high** — concrete verification steps, binary gates, no ambiguity.
+- Phases 2–5: **medium** — depend on Phase 1 evidence; replan after spike.
+- Phase 6: **low** — distribution polish, scoped after real adoption signal.
+
+**Phase 1 (A1–A7) is approved for execution as a spike.** A1 + A2 fail →
+roadmap returns to capture-only with the gap documented. Phases 2+ stay
+capture-only until Phase 1 ships a working stdio prompt fetch in at least
+one confirmed client.
+
+## Open questions (deferred to post-spike)
+
+- None blocking Phase 1. Open items above all rolled into Decisions or
+  deferred to Phases 2/4/6 as documented.
 
 ## Reference
 
