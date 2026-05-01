@@ -167,22 +167,22 @@ State additions:
 
 ## Acceptance criteria
 
-- [ ] Stack detection identifies blade-livewire-flux, react-shadcn, vue, plain on representative fixtures
-- [ ] `directives/ui/` is fully implemented (audit, design, apply, review, polish) and wired through dispatcher
-- [ ] **Existing-UI-audit is enforced as hard gate** — both at directive level AND at always-on rule level; skipping on `ui-build` or `ui-improve` runs is impossible
-- [ ] `directives/ui-trivial/apply.py` implements the bypass with hard preconditions; reclassification at apply-time is mandatory and logged
-- [ ] Greenfield audit branch: `greenfield=true` plus user-chosen `greenfield_decision` passes the gate; absence of either is hard-error
-- [ ] `directives/mixed/` runs contract → ui → stitch with halts at the right boundaries
-- [ ] Polish loop has 2-round ceiling; engine halts to user if findings remain after round 2
-- [ ] **UI happy-path halt-budget is enforced: max 2 user halts before delivery report on `directive_set="ui"` runs.** Test asserts halt-count for high-confidence and ambiguous paths separately
-- [ ] Microcopy in shipped components matches the design-brief verbatim (no Lorem-Ipsum or placeholder strings reach apply output)
-- [ ] Audit extracts design tokens from `tailwind.config.{js,ts}`, CSS custom properties, or detected theme files into `state.ui_audit.design_tokens`
-- [ ] When `design_tokens` is non-empty, polish flags hardcoded color/spacing values that have token equivalents and refactors them; tests verify auto-conversion
-- [ ] `react-shadcn-ui` skill exists; declares its tested shadcn + tailwind versions in frontmatter; audit detects installed version mismatch and warns; blade-livewire-flux skills repositioned as dispatched
-- [ ] `fe-design` migrated to reference-skill positioning
-- [ ] All R1, R2, R3 goldens pass in CI
-- [ ] `intent-based-orchestration.md` archived as superseded
-- [ ] ADR + extension recipe + changelog in place
+- [x] Stack detection identifies blade-livewire-flux, react-shadcn, vue, plain on representative fixtures _Landed: `scripts/work_engine/stack/detect.py` (Phase 1 Step 1) + 4 fixture projects in CI (Phase 1 Step 5)._
+- [x] `directives/ui/` is fully implemented (audit, design, apply, review, polish) and wired through dispatcher _Landed: 5 directive modules in `templates/scripts/work_engine/directives/ui/` (Phase 3); dispatcher routing in Phase 1 Step 3._
+- [x] **Existing-UI-audit is enforced as hard gate** — both at directive level AND at always-on rule level; skipping on `ui-build` or `ui-improve` runs is impossible _Landed: `directives/ui/audit.py` refuses advance without `state.ui_audit` (Phase 2); always-on rule [`ui-audit-before-build`](../../.agent-src.uncompressed/rules/ui-audit-before-build.md) covers cloud / free-form cases._
+- [x] `directives/ui-trivial/apply.py` implements the bypass with hard preconditions; reclassification at apply-time is mandatory and logged _Landed: `directives/ui_trivial/apply.py` (Python module name) with reclassification → `ui-improve` on precondition failure (Phase 2 Step 6)._
+- [x] Greenfield audit branch: `greenfield=true` plus user-chosen `greenfield_decision` passes the gate; absence of either is hard-error _Landed: `existing-ui-audit` skill records `greenfield_decision`; verified by GT-U9 (scaffold) and GT-U10 (bare-proceed) goldens._
+- [x] `directives/mixed/` runs contract → ui → stitch with halts at the right boundaries _Landed: 3 directive modules in `directives/mixed/` (Phase 4); sentinel-based handoff verified by GT-U2/U3 goldens._
+- [x] Polish loop has 2-round ceiling; engine halts to user if findings remain after round 2 _Landed: `POLISH_CEILING=2` in `directives/ui/polish.py` (Phase 3 Step 5); halts ship-as-is / abort / hand-off._
+- [x] **UI happy-path halt-budget is enforced: max 2 user halts before delivery report on `directive_set="ui"` runs.** Test asserts halt-count for high-confidence and ambiguous paths separately _Landed: GT-U11 pins exactly 1 halt (high-confidence, audit folded into design); GT-U12 pins exactly 2 halts (ambiguous, audit candidate-pick + design sign-off)._
+- [x] Microcopy in shipped components matches the design-brief verbatim (no Lorem-Ipsum or placeholder strings reach apply output) _Landed: design-brief schema enforces `microcopy` field; `directives/ui/apply.py` rejects `<placeholder>`, `Lorem`, `TODO:` patterns at producer + consumer (Phase 3 Step 3)._
+- [x] Audit extracts design tokens from `tailwind.config.{js,ts}`, CSS custom properties, or detected theme files into `state.ui_audit.design_tokens` _Landed: `existing-ui-audit` skill writes `design_tokens.{colors,spacing,typography,source}` per Phase 2 Step 4._
+- [x] When `design_tokens` is non-empty, polish flags hardcoded color/spacing values that have token equivalents and refactors them; tests verify auto-conversion _Landed: `directives/ui/polish.py` token-violation sweep (Phase 3 Step 5); `TOKEN_REPEAT_THRESHOLD=2`._
+- [x] `react-shadcn-ui` skill exists; declares its tested shadcn + tailwind versions in frontmatter; audit detects installed version mismatch and warns; blade-livewire-flux skills repositioned as dispatched _Landed: `skills/react-shadcn-ui/SKILL.md` with `TESTED_AGAINST_SHADCN_MAJOR=2` anchor; `existing-ui-audit` emits mismatch warning; blade/livewire/flux dispatched via stack detect (Phase 5)._
+- [x] `fe-design` migrated to reference-skill positioning _Landed: `skills/fe-design/SKILL.md` repositioned as stack-agnostic reference, cited by `directives/ui/design.py` (Phase 5)._
+- [x] All R1, R2, R3 goldens pass in CI _Landed: 17 goldens (GT-1..5, GT-P1..P4, GT-U1..U4, GT-U9..U12) replay byte-equal in `task ci → golden-replay` (Phase 7 Step 1)._
+- [x] `intent-based-orchestration.md` archived as superseded _Landed: moved to `agents/roadmaps/archive/intent-based-orchestration.md` (Phase 7 Step 5)._
+- [x] ADR + extension recipe + changelog in place _Landed: [`adr-product-ui-track.md`](../contexts/adr-product-ui-track.md), [`ui-stack-extension.md`](../contexts/ui-stack-extension.md), CHANGELOG R3 section (Phase 7 Steps 3, 4, 6)._
 
 ## Open decisions
 
