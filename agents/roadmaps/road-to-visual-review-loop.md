@@ -74,10 +74,10 @@ Locked `2026-05-01` from the leans declared in the original stub. The package it
 
 ## Phase 3: Preview envelope — render contract (no engine render)
 
-- [ ] **Engine never renders** — Playwright integration lives in the stack-specific review skills. The engine reads `state.ui_review.preview` and validates shape only.
-- [ ] **`render_ok: False`** with `error` populated → halt with `preview_render_failed` ambiguity. User picks: retry, skip-preview-this-run (writes `state.ui_review.preview.skipped: true`), or abort.
-- [ ] **`render_ok: True`** with `screenshot_path` set → preview is captured as a delivery-report artifact (writes the path into the delivery report's `artifacts` list).
-- [ ] **Trivial path skips preview** — `directive_set == "ui-trivial"` does not consult `state.ui_review.preview` at all (matches the existing trivial fast-path: no audit, no design, no review, no polish).
+- [x] **Engine never renders** — Playwright integration lives in the stack-specific review skills. The engine reads `state.ui_review.preview` and validates shape only.
+- [x] **`render_ok: False`** with `error` populated → halt with `preview_render_failed` ambiguity. User picks: retry, skip-preview-this-run (writes `state.ui_review.preview.skipped: true`), or abort.
+- [x] **`render_ok: True`** with `screenshot_path` set → preview is captured as a delivery-report artifact (writes the path into the delivery report's `artifacts` list).
+- [x] **Trivial path skips preview** — `directive_set == "ui-trivial"` does not consult `state.ui_review.preview` at all (matches the existing trivial fast-path: no audit, no design, no review, no polish).
 
 ## Phase 4: Goldens — pin the new contract
 

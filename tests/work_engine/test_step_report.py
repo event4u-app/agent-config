@@ -146,3 +146,103 @@ def test_report_placeholders_when_slices_are_empty() -> None:
     assert "_(no tests ran)_" in state.report
     assert "_(no verify verdict)_" in state.report
     assert "_(none)_" in state.report  # follow-ups placeholder
+
+
+
+# --- R4 Phase 3: visual preview section -------------------------------------
+
+
+def test_report_omits_visual_preview_when_ui_review_absent() -> None:
+    """Pre-R4 / non-UI runs render no `## Visual preview` heading."""
+    state = _state()
+
+    report.run(state)
+
+    assert "## Visual preview" not in state.report
+
+
+def test_report_omits_visual_preview_when_render_ok_false() -> None:
+    """Failed renders never surface as a delivery artifact."""
+    state = _state(
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            "preview": {"render_ok": False, "error": "boom"},
+        },
+    )
+
+    report.run(state)
+
+    assert "## Visual preview" not in state.report
+
+
+def test_report_omits_visual_preview_when_skipped() -> None:
+    """User-skipped previews drop the section."""
+    state = _state(
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            "preview": {"render_ok": True, "skipped": True, "screenshot_path": "x"},
+        },
+    )
+
+    report.run(state)
+
+    assert "## Visual preview" not in state.report
+
+
+def test_report_omits_visual_preview_when_no_artifact_paths() -> None:
+    """`render_ok: True` without paths drops the section (nothing to show)."""
+    state = _state(
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            "preview": {"render_ok": True},
+        },
+    )
+
+    report.run(state)
+
+    assert "## Visual preview" not in state.report
+
+
+def test_report_renders_visual_preview_with_screenshot_only() -> None:
+    """Screenshot-only envelopes render the screenshot bullet."""
+    state = _state(
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            "preview": {
+                "render_ok": True,
+                "screenshot_path": "tmp/preview/foo.png",
+            },
+        },
+    )
+
+    report.run(state)
+
+    assert "## Visual preview" in state.report
+    assert "Screenshot: `tmp/preview/foo.png`" in state.report
+    assert "DOM dump" not in state.report
+
+
+def test_report_renders_visual_preview_with_both_paths() -> None:
+    """Both artifact paths render as bullets in stable order."""
+    state = _state(
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            "preview": {
+                "render_ok": True,
+                "screenshot_path": "tmp/preview/foo.png",
+                "dom_dump_path": "tmp/preview/foo.html",
+            },
+        },
+    )
+
+    report.run(state)
+
+    assert "## Visual preview" in state.report
+    screenshot_idx = state.report.index("Screenshot:")
+    dom_idx = state.report.index("DOM dump:")
+    assert screenshot_idx < dom_idx

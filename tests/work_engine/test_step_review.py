@@ -475,3 +475,142 @@ def test_a11y_gate_in_ambiguities_table() -> None:
     """``review_a11y_pending`` is declared in the AMBIGUITIES table."""
     codes = {entry["code"] for entry in review.AMBIGUITIES}
     assert "review_a11y_pending" in codes
+
+
+
+# --- R4 Phase 3: preview envelope gate --------------------------------------
+
+
+def test_preview_gate_no_envelope_passes() -> None:
+    """Pre-R4 envelopes (no `preview` key) flow through silently."""
+    state = _ui_state(ui_review={"findings": [], "review_clean": True})
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+
+
+def test_preview_gate_render_ok_true_passes() -> None:
+    """Successful render → no halt; report picks up the artifact."""
+    state = _ui_state(
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            "preview": {
+                "render_ok": True,
+                "screenshot_path": "tmp/preview/foo.png",
+            },
+        },
+    )
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+
+
+def test_preview_gate_render_ok_missing_passes() -> None:
+    """Incomplete envelope (skill still working) is not yet actionable."""
+    state = _ui_state(
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            "preview": {},
+        },
+    )
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+
+
+def test_preview_gate_render_ok_false_halts() -> None:
+    """`render_ok: False` triggers `preview_render_failed`."""
+    state = _ui_state(
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            "preview": {
+                "render_ok": False,
+                "error": "ECONNREFUSED at http://localhost:5173",
+            },
+        },
+    )
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.BLOCKED
+    body = "\n".join(result.questions).lower()
+    assert "preview" in body
+    assert "render" in body
+    # Error string surfaces in the halt body for the user.
+    assert "econnrefused" in body
+    # All three options are present.
+    assert "retry" in body
+    assert "skip" in body
+    assert "abort" in body
+
+
+def test_preview_gate_render_ok_false_without_error_still_halts() -> None:
+    """Missing `error` does not weaken the halt; placeholder is rendered."""
+    state = _ui_state(
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            "preview": {"render_ok": False},
+        },
+    )
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.BLOCKED
+    body = "\n".join(result.questions).lower()
+    assert "none reported" in body
+
+
+def test_preview_gate_skipped_idempotent() -> None:
+    """`skipped: True` round-trips through SUCCESS without re-halting."""
+    state = _ui_state(
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            "preview": {
+                "render_ok": False,
+                "error": "boom",
+                "skipped": True,
+            },
+        },
+    )
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.SUCCESS
+
+
+def test_preview_gate_runs_after_a11y_gate() -> None:
+    """A11y pending halts surface BEFORE preview gate fires.
+
+    Ensures the gate ordering (basic shape → a11y → preview) is stable;
+    a missing a11y envelope plus a failed preview must surface a11y first.
+    """
+    state = _ui_state_with_audit(
+        audit={"a11y_baseline": []},
+        ui_review={
+            "findings": [],
+            "review_clean": True,
+            # No `a11y` key → a11y_pending halt fires first.
+            "preview": {"render_ok": False, "error": "boom"},
+        },
+    )
+
+    result = review.run(state)
+
+    assert result.outcome is Outcome.BLOCKED
+    body = "\n".join(result.questions).lower()
+    assert "a11y" in body
+    assert "render" not in body  # preview halt did not fire
+
+
+def test_preview_gate_in_ambiguities_table() -> None:
+    """`preview_render_failed` is declared in the AMBIGUITIES table."""
+    codes = {entry["code"] for entry in review.AMBIGUITIES}
+    assert "preview_render_failed" in codes

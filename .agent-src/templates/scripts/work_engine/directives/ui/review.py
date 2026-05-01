@@ -106,6 +106,15 @@ AMBIGUITIES: tuple[dict[str, str], ...] = (
         "`state.ui_review.a11y.violations`; the gate then filters "
         "against the baseline and the severity floor",
     },
+    {
+        "code": "preview_render_failed",
+        "trigger": "state.ui_review.preview.render_ok is False — the "
+        "stack-specific review skill tried to render the changed "
+        "components and the headless browser reported an error",
+        "resolution": "user picks Retry (re-run the review skill so it "
+        "renders again), Skip (write `state.ui_review.preview.skipped = "
+        "true` so the gate stops asking this run), or Abort",
+    },
 )
 """Declared ambiguity surfaces for this step."""
 
@@ -126,6 +135,10 @@ def run(state: DeliveryState) -> StepResult:
     a11y_halt = _apply_a11y_gate(state, review)
     if a11y_halt is not None:
         return a11y_halt
+
+    preview_halt = _apply_preview_gate(state, review)
+    if preview_halt is not None:
+        return preview_halt
 
     return StepResult(outcome=Outcome.SUCCESS)
 
@@ -371,6 +384,77 @@ def _halt_a11y_pending(state: DeliveryState) -> StepResult:
             "UI review envelope incomplete; `a11y` envelope missing "
             "(audit declared a baseline)."
         ),
+    )
+
+
+def _apply_preview_gate(
+    state: DeliveryState,
+    review: dict[str, Any],
+) -> StepResult | None:
+    """R4 Phase 3: validate the visual-preview envelope written by the skill.
+
+    Contract: the **engine never renders**. Stack-specific review skills
+    (Playwright + axe-core for ``react-shadcn``, equivalent for
+    ``blade-livewire-flux``) produce ``state.ui_review.preview`` with
+    ``render_ok`` plus optional ``screenshot_path``, ``dom_dump_path``,
+    and ``error``. The gate inspects shape only.
+
+    Branches:
+
+    - ``preview`` missing or not a dict → no-op (opt-in; pre-R4 envelopes
+      and stacks that do not produce previews flow through silently).
+    - ``preview.skipped`` truthy → no-op (idempotent re-entry after the
+      user picked the Skip option on a previous halt).
+    - ``preview.render_ok`` missing → no-op (envelope still in progress;
+      schema validates type when present, content gates wait for an
+      explicit signal).
+    - ``preview.render_ok is False`` → ``preview_render_failed`` halt
+      with Retry / Skip / Abort options.
+    - ``preview.render_ok is True`` → no-op; ``report.run`` will surface
+      ``screenshot_path`` / ``dom_dump_path`` as a delivery artifact.
+
+    Trivial path (``directive_set == "ui-trivial"``) never reaches this
+    handler — the dispatcher routes ``review`` to ``_skipped.run`` for
+    that set, so the preview envelope is bypassed by construction.
+    """
+    preview = review.get("preview")
+    if not isinstance(preview, dict):
+        return None
+    if preview.get("skipped"):
+        return None
+    if "render_ok" not in preview:
+        return None
+    if preview["render_ok"] is False:
+        return _halt_preview_failed(state, preview)
+    return None
+
+
+def _halt_preview_failed(
+    state: DeliveryState,
+    preview: dict[str, Any],
+) -> StepResult:
+    """BLOCKED halt — render reported failure; user picks the next step."""
+    directive = _resolve_directive(state)
+    error = preview.get("error")
+    error_line = (
+        f"> Render error: `{error}`."
+        if isinstance(error, str) and error
+        else "> Render error: `(none reported)`."
+    )
+    return StepResult(
+        outcome=Outcome.BLOCKED,
+        questions=[
+            agent_directive(directive),
+            "> Visual preview failed: "
+            "`state.ui_review.preview.render_ok` is `False`.",
+            error_line,
+            "> 1. Retry — re-run the review skill so it renders again "
+            "and writes a fresh `preview` envelope",
+            "> 2. Skip — set `state.ui_review.preview.skipped = true` "
+            "so this run ships without a screenshot artifact",
+            "> 3. Abort — drop this UI request",
+        ],
+        message="UI preview render failed; awaiting user decision.",
     )
 
 

@@ -38,12 +38,13 @@ def _render(state: DeliveryState) -> str:
         _changes_section(state),
         _tests_section(state),
         _verify_section(state),
+        _visual_preview_section(state),
         _memory_section(state),
         _followups_section(state),
         _next_commands_section(state),
     ]
-    # Drop sections that opted out (memory-that-mattered returns "" when no
-    # hit influenced an outcome — per the report schema drop-rule).
+    # Drop sections that opted out (memory-that-mattered and visual-preview
+    # return "" when their slice is absent — per the report schema drop-rule).
     return "\n\n".join(section for section in sections if section)
 
 
@@ -115,6 +116,37 @@ def _tests_section(state: DeliveryState) -> str:
 
 def _verify_section(state: DeliveryState) -> str:
     return "## Verify\n\n" + _format_kv_block(state.verify, "_(no verify verdict)_")
+
+
+def _visual_preview_section(state: DeliveryState) -> str:
+    """R4 Phase 3: render captured preview artifacts when the skill rendered.
+
+    Reads ``state.ui_review.preview`` (engine never renders — the
+    stack-specific review skill writes the envelope). Emits a section
+    only when ``render_ok`` is ``True`` AND at least one artifact path
+    is present. Failed renders, skipped previews, and pre-R4 envelopes
+    drop the whole section (heading included).
+    """
+    ui_review = getattr(state, "ui_review", None)
+    if not isinstance(ui_review, dict):
+        return ""
+    preview = ui_review.get("preview")
+    if not isinstance(preview, dict):
+        return ""
+    if preview.get("render_ok") is not True:
+        return ""
+    if preview.get("skipped"):
+        return ""
+    screenshot = preview.get("screenshot_path")
+    dom_dump = preview.get("dom_dump_path")
+    lines: list[str] = []
+    if isinstance(screenshot, str) and screenshot:
+        lines.append(f"- Screenshot: `{screenshot}`")
+    if isinstance(dom_dump, str) and dom_dump:
+        lines.append(f"- DOM dump: `{dom_dump}`")
+    if not lines:
+        return ""
+    return "\n".join(["## Visual preview", "", *lines])
 
 
 def _memory_section(state: DeliveryState) -> str:
