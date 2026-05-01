@@ -217,9 +217,10 @@ Used when a single input touches both layers. Slot mapping:
   `blocked` / `partial` halts with three numbered options unless
   `state.stitch.integration_confirmed = True` (explicit user override).
 
-`stitch` delegates to the `integration-test` skill via
-`@agent-directive: integration-test`. `mixed.ui` delegates to the full
-UI track via `@agent-directive: ui-track`.
+`stitch` emits `@agent-directive: integration-test` so an
+agent-side handler runs the end-to-end smokes; `mixed.ui` emits
+`@agent-directive: ui-track` to delegate the visible-surface work
+back into the full UI directive set.
 
 ## Idempotency and replay
 
