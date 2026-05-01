@@ -40,6 +40,19 @@ feature tracks. Phase 1 contents (in order):
    archives) into `docs/contracts/`. Redirect README links. `agents/` stays
    internal-only. Smallest persistent fix; option (a) "ship `agents/contexts`"
    bleeds internal notes into the public surface.
+   - **Stability policy (added 2026-05-01 after AI #5 review).** Each file
+     under `docs/contracts/` declares in frontmatter:
+     `stability: stable | beta | experimental`. Defined in
+     `docs/contracts/STABILITY.md`:
+     - **stable** → SemVer-major required for breaking change. README + AGENTS.md may link.
+     - **beta** → minor-version breaking changes allowed with CHANGELOG note. Public README links permitted with `(beta)` marker.
+     - **experimental** → may break in any release. README must NOT link; only `docs/contracts/` index lists them.
+   - **Link checker** (`scripts/check_public_links.py`) runs in `task ci`:
+     scans README + AGENTS.md + `docs/architecture.md` for links into
+     `docs/contracts/`; fails when any link points to an `experimental`
+     contract or to a path outside `docs/contracts/` for public-surface
+     concepts. Closes the AI #5 risk that the README re-deep-links into
+     `agents/` after Phase 1 redirects.
 2. **Positioning sentence (P0)** — adopt verbatim:
    > *"`agent-config` is not a runtime, but it ships a deterministic
    > orchestration contract / state machine for host agents."*
@@ -62,8 +75,27 @@ feature tracks. Phase 1 contents (in order):
 7. **Test coverage gaps** — `implement-ticket` without `--state-file`;
    `/work` UI-prompt + medium-prompt + resume + pre-existing
    `.work-state.json`.
+8. **Command-collapse migration docs + atomic-command linter (P0, added
+   2026-05-01 after AI #5 review).** Anchors the F2 phased collapse from
+   `road-to-governance-cleanup.md` so 1.15.0 ships the discipline, not
+   just the intent.
+   - `docs/migrations/commands-1.15.0.md` — table of every collapsed
+     command with `old → new --subcommand`, deprecation-cycle window
+     (one minor release), and shim-removal version. Linked from
+     CHANGELOG and README upgrade notes.
+   - Deprecation shims emit a one-line warning on invocation
+     (`"⚠️  /old-name is deprecated; use /new --sub"`) and otherwise
+     forward verbatim. Warning text is required for the shim to pass
+     `lint-skills` (new check).
+   - **Atomic-command linter** (`scripts/lint_no_new_atomic_commands.py`):
+     fails CI when a new command file is added without a `cluster:` field
+     in frontmatter pointing to one of the locked verb clusters
+     (`fix · optimize · feature` in Phase 1; full list maintained in
+     `docs/contracts/command-clusters.md`). Closes the AI #5 risk that
+     1.15.0 ships F2 phase 1 collapsed but new atomic commands keep
+     accreting.
 
-### Phase 2 — sequenced after 1.15.0 lands
+### Decisions for Phase 2 (sequenced after 1.15.0 lands)
 
 | Item | Decision | Rationale |
 |---|---|---|
@@ -91,6 +123,45 @@ feature tracks. Phase 1 contents (in order):
 
 **Phase 1 (housekeeping 1.15.0) is approved for execution.**
 Phase 2 unlocks once Phase 1 ships green CI and an updated counter table.
+
+## Phase 1: Housekeeping 1.15.0
+
+Decisions and rationale live above under `### Sequencing — Phase 1`.
+This section is the trackable execution surface — each P0 maps 1:1
+to a numbered decision; sub-bullets capture the named gates inside a
+single P0 so progress reflects the actual deliverables.
+
+- [ ] P0.1 — Adopt `docs/contracts/` packaging fix (option **(b)**); move public contracts out of `agents/contexts/`; redirect README links
+- [ ] P0.1a — `docs/contracts/STABILITY.md` defining `stable | beta | experimental` frontmatter
+- [ ] P0.1b — `scripts/check_public_links.py` link-checker wired into `task ci`
+- [ ] P0.2 — Apply positioning sentence verbatim to README headline + AGENTS.md + `docs/architecture.md`
+- [ ] P0.3 — Counter-drift fix: make `update_counts.py` mandatory in `task sync` with build-breaking guard (README + AGENTS.md + `docs/architecture.md`)
+- [ ] P0.4 — Term separation: split `runtime_dispatcher.py` from `work_engine` from tool adapters in README + architecture doc; lock Work Engine = beta
+- [ ] P0.5 — State-default + migration safety: change `DEFAULT_STATE_FILE` to `.work-state.json`; collision-safe backup rotation; ship `MIGRATION.md` for `implement_ticket → work_engine`
+- [ ] P0.6 — Clear lint regressions in `scope-control`, `autonomous-execution`, `commit-policy`, `direct-answers`; CI green
+- [ ] P0.7 — Test coverage gaps: `implement-ticket` without `--state-file`; `/work` UI-prompt + medium-prompt + resume + pre-existing `.work-state.json`
+- [ ] P0.8 — Command-collapse migration docs + atomic-command linter
+- [ ] P0.8a — `docs/migrations/commands-1.15.0.md` (old → new --subcommand table, deprecation window, shim-removal version)
+- [ ] P0.8b — Deprecation shims emit one-line warning; warning text required by `lint-skills`
+- [ ] P0.8c — `scripts/lint_no_new_atomic_commands.py` failing CI on new atomic commands without `cluster:` frontmatter
+
+## Phase 2: Post-1.15.0 work
+
+Sequenced after Phase 1 ships green CI. Decisions captured in the
+table under `### Phase 2 — sequenced after 1.15.0 lands`; each item
+maps 1:1.
+
+- [ ] Chat-history redesign — split into `chat-history-ownership.md` · `chat-history-cadence.md` · `chat-history-visibility.md`; ADR captures the split before any code edit
+- [ ] Rule-interaction matrix — machine-readable YAML (`agents/contracts/rule-interactions.yml`) + linter + rendered diagram; anchor pair `non-destructive-by-default` × {`autonomous-execution`, `scope-control`, `commit-policy`, `ask-when-uncertain`, `verify-before-complete`}
+- [ ] `work_engine/cli.py` modularisation — `cli_args.py · state_io.py · input_builders.py · hook_bootstrap.py · runner.py · emitters.py`; behavior-preserving, golden-replay verified
+- [ ] CI performance budget — PR CI ≤ 8–10 min; smoke GT subset on PRs; nightly full replay; engine-path PRs trigger full replay; `task ci` emits duration line
+- [ ] Install-path pruning — relabel curl/manual/cloud/Linear as `advanced` / `experimental` / `staged` in `docs/installation.md`; no removals
+- [ ] Telemetry redesign — pause artefact-engagement counts; ship feedback-loop UX (issue templates · discussions · "did this help?"); re-aim at behavioural outcomes
+- [ ] Demo-track scope — four named scenarios in `agents/demos/`: backend ticket · `/work` free-form · UI track · mixed flow
+- [ ] Decision-engine ADR + spike — capture future contract (scoring + confidence + risk surfaces); no code until rule-interaction matrix lands
+- [ ] Memory-visibility surface — heartbeat-style line + opt-in `/memory-impact` command; reuses chat-history visibility plumbing
+- [ ] Stop-growing iron rule — promote roadmap-level guidance to meta-policy only after Phase 1 ships and budget returns under 49k
+- [ ] AI #4 P1 — `docs/ui-track-mental-model.md` (when UI? when ui-trivial? when mixed? what must the agent never do? where does it stop?)
 
 ## Sources (append per AI)
 
@@ -648,16 +719,60 @@ Aggregate verdicts:
 
 ## Proposed actions
 
-> See "Decisions (synthesized)" near the top of this file. Phase 1
-> (housekeeping 1.15.0) is the active execution slice; Phase 2 unlocks
-> after Phase 1 ships green CI.
+Phase 1 (housekeeping 1.15.0) is the active execution slice; Phase 2
+unlocks after Phase 1 ships green CI. ICE prioritisation below
+sequences Phase 2 inside the 6-week horizon (see
+`road-to-governance-cleanup.md`); items below the median ICE score
+are deferred to a follow-up plate.
+
+### Phase 2 ICE table
+
+Impact (1–5: reach × leverage), Confidence (1–5: clarity of
+deliverable + dependencies known), Ease (1–5: estimated effort
+inverted — 5 = ≤ 1 day, 1 = ≥ 2 weeks). Score = I × C × E. **Median
+score 60.** Items at or above the median ship inside the 6-week
+horizon; items below are deferred and called out under "Out of
+scope (forward-looking)" in the next plate.
+
+| Item | I | C | E | Score | Position |
+|---|---:|---:|---:|---:|---|
+| Chat-history redesign (split into 3) | 5 | 5 | 3 | **75** | inside horizon · highest leverage (12-iteration signal) |
+| Rule-interaction matrix (YAML + diagram) | 5 | 4 | 3 | **60** | inside horizon · unblocks decision-engine ADR |
+| `work_engine/cli.py` modularisation | 4 | 5 | 3 | **60** | inside horizon · pre-req for R5+ feature work |
+| CI performance budget (≤ 8–10 min) | 4 | 5 | 4 | **80** | inside horizon · cheap, prevents CI rot |
+| Install-path pruning (relabel only) | 3 | 5 | 5 | **75** | inside horizon · trivial edit, removes confusion |
+| Telemetry redesign + feedback loop | 4 | 3 | 3 | **36** | deferred · no users yet, redesign without signal is speculative |
+| Demo-track scope (4 named scenarios) | 4 | 4 | 2 | **32** | deferred · belongs to demos sprint after matrix lands |
+| Decision-engine ADR + spike | 3 | 3 | 4 | **36** | deferred · gated on rule-interaction matrix landing |
+| Memory-visibility surface | 3 | 3 | 3 | **27** | deferred · needs chat-history split first |
+| Stop-growing iron rule (promote to meta) | 4 | 4 | 5 | **80** | inside horizon · trivial promotion once budget < 49k |
+| `docs/ui-track-mental-model.md` | 4 | 5 | 4 | **80** | already in Phase 1 (P0.4 sibling); listed for completeness |
+
+**Inside-horizon set (≥ 60):** chat-history redesign · rule-interaction matrix · cli.py modularisation · CI budget · install-path pruning · stop-growing promotion · ui-track mental model. Total: 7 items, all in Phase 2 plate.
+
+**Deferred set (< 60):** telemetry redesign · demo-track · decision-engine ADR · memory-visibility. These move to the next plate after Phase 2 ships; flagged here to prevent silent reabsorption.
 
 ## Risk register
 
-> Per-source risk captures remain in the AI feedback blocks above.
-> Consolidated forward-looking risk lives inside each Phase 2 row of
-> the Decisions section (CI budget, modularisation behaviour-equiv,
-> chat-history split scope).
+Forward-looking risks for Phase 1 → Phase 2 transition and Phase 2
+execution. Per-source historical risk captures remain in the AI
+feedback blocks below; this register is the **consolidated
+operational view** the executor reads before starting a phase.
+
+| # | Risk | Phase | Likelihood | Impact | Mitigation | Owner-marker |
+|---|---|---|---:|---:|---|---|
+| R1 | **Counter-drift returns** after `update_counts.py` guard ships — manual edits to README/AGENTS.md skip the guard | 1 | M | M | P0.3 mandatory in `task sync` + CI gate; `task sync-check` fails the build on drift | P0.3 |
+| R2 | **`docs/contracts/` link-checker false positives** block Phase 1 ship — README link to a `beta`-marked contract reads as breaking | 1 | M | L | STABILITY.md frontmatter authoritative; checker scans frontmatter, not heuristics; pre-merge dry-run on PR #30 | P0.1b |
+| R3 | **Migration backup collision** in `.work-state.json` rotation eats user state | 1 | L | H | Hard-fail when `.bak.N` chain reaches a configurable cap (default 10); no silent overwrite ever | P0.5 |
+| R4 | **Atomic-command linter false negatives** — new commands ship without `cluster:` because the linter only fires on `commands/*.md` additions, not edits | 1 | M | L | Linter scans frontmatter on every CI run, not just diff-additions; `cluster:` required even on existing commands when next touched | P0.8c |
+| R5 | **Chat-history split breaks live `.agent-chat-history` files** during Phase 2 — schema or ownership semantics drift between artefacts | 2 | M | H | ADR captured **before** any code edit; existing files run through `chat_history.py status` migration check; rollback plan = single-artefact mode flag | C9 |
+| R6 | **Rule-interaction matrix becomes write-only** — YAML diverges from actual rule behavior because no replay tests it | 2 | H | M | Linter consumes the YAML at CI time; matrix entries reference rule files by path; CI fails on stale entries (rule deleted) or missing entries (rule added without matrix update) | C5/C14 |
+| R7 | **`cli.py` modularisation breaks golden replay** — split shifts log emission order, byte-equal replay fails | 2 | M | H | Bounded refactor: only file-level moves, no behavior edits in same PR; full replay (24 capture packs) on PR; revert single PR if any GT diverges | C13 |
+| R8 | **CI budget regression** — adding the duration line is easy; keeping the budget under 8–10 min as features land needs ongoing discipline | 2 | H | M | `task ci` emits duration; PR template line for CI delta; nightly full replay isolates engine-path overhead from skill-set growth | C12 |
+| R9 | **Install-path relabelling read as deprecation** by external readers — `experimental` label triggers panic that cloud / Linear are leaving | 2 | M | M | `docs/installation.md` adds explicit "still supported, just not the default path" preamble; CHANGELOG note for 1.15.0 | C11 |
+| R10 | **Phase 2 deferred items reabsorbed silently** — telemetry redesign / demo-track / decision-engine ADR drift back into Phase 2 because they sit in the same table | 2 | M | M | ICE table above is the gate; items < 60 stay listed under "Deferred set"; new items into Phase 2 require an ICE entry | (ICE table) |
+| R11 | **Stop-growing rule promotion** happens before budget returns under 49k — meta-policy without measurement is decoration | 2 | L | L | Promotion gate is explicit (`always_rule_kb < 49`); promotion PR includes the latest measurement; promotion blocked otherwise | C-meta |
+| R12 | **Phase 1 → Phase 2 unlock criteria slip** — "green CI" gets reinterpreted as "green most checks" under release pressure | 1→2 | M | M | Unlock requires: CI fully green on `main` for ≥ 2 days; `task sync-check` clean; counter table re-verified; explicit unlock note in this file | (transition gate) |
 
 ## Next step
 

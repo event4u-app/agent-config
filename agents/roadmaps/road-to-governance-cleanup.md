@@ -34,6 +34,26 @@ This roadmap is **structural cleanup**, not feature work. Sister tracks:
 **Phase 1 (F1, F3, F2-top-3, F4, F5, F6, F7) is approved for execution.**
 Phase 2 (F2 remaining 12 clusters) waits one release cycle.
 
+## Horizon (6-week visible plate)
+
+Per `road-to-better-skills-and-profiles.md` "Roadmap horizon" decision —
+6 weeks is the visible commitment plate; anything outside is **out-of-horizon** (beyond 6 weeks).
+
+**Inside the plate (this 6-week window):**
+
+- F1 (always-rule budget) — CRITICAL, blocks every other rule edit.
+- F3 (naming convention rename pass) — gated on F1.1 + F1.2.
+- F2 phase 1 (top-3 verb clusters: `/fix`, `/optimize`, `/feature`).
+- F4 (guideline relocation + ship-metadata).
+- F5 (discovery index generator).
+- F6 (description-budget linter pass).
+- F7 (identity reframe — README, getting-started, topics, AGENTS.md).
+
+**Outside the plate (out-of-horizon, next release window):**
+
+- F2 phase 2 (remaining 12 verb clusters) — waits one deprecation cycle.
+- Augmentcode budget recheck on next upstream release.
+
 ## Sources
 
 | # | Source | Date | Scope | Status |
@@ -266,25 +286,42 @@ Cross-source agreement was high on F1, F2, F7; medium on F3, F5; low on F4,
 F6 (single-source / mechanical). The seven findings form one cleanup release;
 order of operations is locked below.
 
-### F1 — Always-rule budget breach → **A + C combined**
+### F1 — Always-rule budget breach → **A + C-router combined**
 
 - **Tier (A):** Demote to auto-trigger: `chat-history`, `command-suggestion`,
   `model-recommendation`, `onboarding-gate`, `ui-audit-before-build`,
   `chat-history` (trimmed). Keep always: `non-destructive-by-default`,
   `scope-control`, `commit-policy`, `ask-when-uncertain`, `direct-answers`,
   `language-and-tone` (trimmed), `verify-before-complete`.
-- **Merge (C):** Collapse `autonomous-execution` + `commit-policy` +
-  `non-destructive-by-default` + `scope-control` into one `agent-authority.md`
-  always-rule with sectioned authority bands (Hard Floor · Permission-Gated ·
-  Trivial). Keep the existing rule files as redirect stubs for one cycle.
+- **C-router (revised 2026-05-01 after AI #5 review):** Do **not** fully
+  merge the four safety rules into one `agent-authority.md`. The rules
+  have distinct safety roles and merging destroys auditability:
+    - `non-destructive-by-default` — absolute Hard Floor (own file)
+    - `scope-control` — work boundaries (own file, trimmed)
+    - `commit-policy` — commit-exception logic (own file, trimmed)
+    - `autonomous-execution` — trivial-vs-blocking surface (auto-trigger,
+      moved out of always-tier)
+  - `agent-authority.md` becomes a **short always-active Priority Index**
+    (~1.5k chars max): one-line per rule, authority band, link. Acts as
+    the router agents read first; full bodies live in their own files.
 - **Compression pass (D):** Run an always-only stricter compression profile
-  *after* A+C; treat the saving as gravy, not the plan.
+  *after* A + C-router; treat the saving as gravy, not the plan.
 - **Skip (B):** Body-relocation is rejected — relocates pages, not authority;
   agents would still pay the cost on every read.
 
-**Target:** ≤ 49k always chars. **Confidence:** High. Cross-source agreement
-that the budget is the binding constraint and merging overlapping authority
-rules is the leverage point.
+**Budget caps (added 2026-05-01 after AI #5 review) — all enforced by
+`lint-skills` extension and CI:**
+
+| Cap | Value | Rationale |
+|---|---|---|
+| Always-rules total | ≤ **49,000** chars | Existing constraint |
+| Single always-rule | ≤ **8,000** chars | Prevents Monsterregel rebound |
+| Top-5 always-rules combined | ≤ **28,000** chars | Distribution guard |
+| `agent-authority.md` (router) | ≤ **1,500** chars | Index discipline |
+
+**Confidence:** High. Per-rule caps and the router decision close the
+two AI #5 risks (auditability loss · Monsterregel rebound). Cross-source
+agreement that the total budget is the binding constraint.
 
 ### F2 — 77 commands → **B then A (phased collapse)**
 
@@ -320,33 +357,58 @@ does not solve confusion at the agent-loading layer.
 
 **Confidence:** Medium. Single-source data but mechanical fix.
 
-### F4 — Guidelines → **A (referenced only, move to `docs/guidelines/`)**
+### F4 — Guidelines → **A (referenced only) + ship-metadata**
 
 Guidelines are **never auto-loaded**; only skill/rule body links to them.
 Move all 46 guideline files from `.agent-src.uncompressed/guidelines/` to
 `docs/guidelines/`. Linter rule: skill/rule referencing a guideline must
 use a `docs/guidelines/<name>.md` path; broken paths fail CI.
 
+**Ship-metadata (added 2026-05-01 after AI #5 review).** Each guideline
+declares in frontmatter:
+
+```yaml
+ship: true   # included in distributed package, linkable from public README
+ship: false  # internal authoring/process only, excluded from package archives
+```
+
+- `ship: true` → projected to `docs/guidelines/` and shipped in npm +
+  Composer archives. Public README can link.
+- `ship: false` → stays under `agents/internal-guidelines/` (gitignored
+  by package archive globs); README linker fails CI on links to these.
+- Default during migration: **`ship: false`** unless explicitly opted in.
+  Forces a per-file ship review rather than blanket exposure.
+
 **Reject B (skill sub-layer):** keeps ambiguity, adds linter mass without
 solving the load-semantics question. **Reject C (dissolve):** loses
 content reuse across multiple skills; many guidelines are cited 3-5 times.
 
-**Confidence:** Medium. Resolves the load-semantics ambiguity, kills
-hidden-char risk, and moves authority cleanly to `docs/`.
+**Confidence:** Medium. Ship-metadata closes the AI #5 risk that
+internal process docs leak into the distributed package.
 
-### F5 — Discovery surface → **A (auto-generated `agents/index.md`)**
+### F5 — Discovery surface → **A (internal index) + public `docs/catalog.md`**
 
-Generator (`scripts/generate_index.py`) scans `.agent-src.uncompressed/`,
-emits one row per artifact: `name · type · trigger · 1-line purpose · link`.
-Runs in `task ci` as a sync-check (drift = build break).
+Two artefacts, one generator (`scripts/generate_index.py`):
 
-Bonus pass: generator flags naming-convention violations (F3) and unused
-guideline files (F4) — one tool, three guards.
+| Artefact | Audience | Source scope | Rendered fields |
+|---|---|---|---|
+| `agents/index.md` | Internal authors | All artefacts in `.agent-src.uncompressed/` | name · type · trigger · 1-line purpose · ship-flag · link |
+| `docs/catalog.md` | Package consumers | Only `ship: true` guidelines + all rules/skills/commands marked public | name · type · trigger · 1-line purpose · contract-stability · link |
+
+Both run in `task ci` as a sync-check (drift = build break). The public
+catalog is the single entry point linked from the public README; internal
+index is for maintainers and never linked from the public surface.
+
+Bonus pass: generator flags naming-convention violations (F3), unused
+guideline files (F4), and broken public links (F4 ship-metadata) — one
+tool, four guards.
 
 **Reject B (per-type indexes):** smaller files but 4× the navigation hops.
 **Reject C (README inline):** breaks the 500-line README cap immediately.
 
-**Confidence:** Medium. Single tool, three guard responsibilities.
+**Confidence:** Medium-high. Public/internal split closes the AI #5
+risk that consumers cannot find the shipped contract surface, and the
+README catalog link replaces ad-hoc deep-links.
 
 ### F6 — Hidden char consumption (`available_skills`) → **A + C combined**
 
@@ -423,14 +485,14 @@ Stack-specific skills (`laravel`, `eloquent`, `pest-testing`, `php-coding`)
 | 7 | F7 — Universal identity reframe | A + B | 9 | 9 | 6 | 486 | Phase 1 (last) |
 | 8 | F2 — Command collapse (rest) | A (12 clusters) | 7 | 8 | 6 | 336 | Phase 2 (next release) |
 
-## Phase steps
+## Phase 1: Cleanup execution
 
 - [ ] F1.1 — Draft `agent-authority.md` merging the four authority rules; preserve every Iron Law verbatim
 - [ ] F1.2 — Demote `chat-history`, `command-suggestion`, `model-recommendation`, `onboarding-gate`, `ui-audit-before-build` to `type: auto`
 - [ ] F1.3 — Trim `language-and-tone` to <6k always-char (relocate examples to `docs/guidelines/language-and-tone-examples.md`)
 - [ ] F1.4 — Run always-only compression profile; verify ≤ 49k total
 - [ ] F1.5 — Add CI guard `tests/test_always_budget.py` failing if total > 49k
-- [ ] F3.1 — Rename per F3 table; create deprecation stubs for old names
+- [ ] F3.1 — Rename per F3 table; create deprecation stubs for old names *(requires: F1.1 + F1.2 done — `agent-authority.md` must exist and `chat-history` must be demoted to `type: auto` before the rename pass; otherwise the F3 table targets unstable artefact names)*
 - [ ] F3.2 — Update `check-refs` to enforce policy-verb (rules) vs tool-noun (skills) split
 - [ ] F2.1 — Implement `/fix`, `/optimize`, `/feature` orchestrators with sub-command dispatch
 - [ ] F2.2 — Convert old commands to deprecation shims (one-line stub → routes to new)
@@ -455,6 +517,7 @@ Stack-specific skills (`laravel`, `eloquent`, `pest-testing`, `php-coding`)
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
 | F1-C merged authority rule loses Iron-Law prominence | Medium | High | `iron-law-prominence-linter` runs against the new file; one Iron Law per section, banner format preserved |
+| **R-Ordering — F3 rename pass runs before F1 tier/merge completes** (e.g. `chat-history` renamed to `chat-history-policy` while still in always-tier; `agent-authority.md` referenced by F3 table before F1.1 created it) | Medium | High | F3.1 carries a hard pre-condition on F1.1 + F1.2 (see Phase 1 checklist); locked Order-of-Operations (Cross-cutting decisions) sequences F1 → F3 → F2; PR-template requires reviewer to confirm all `F1.*` boxes ticked before opening any `F3.*` PR; `check-refs` fails CI if a rename targets a non-existent post-F1 artefact |
 | F3 renames break user muscle memory | High | Medium | Deprecation shims one cycle; CHANGELOG with sed-friendly find/replace block |
 | F2 sub-command dispatch confuses tab-completion | Medium | Medium | Test `/fix <Tab>` UX in two clients (Claude Code, Cursor) before release |
 | F4 guideline relocation breaks cited cross-refs | Low | Medium | `check-refs` runs as part of the move PR; CI breaks on drift |

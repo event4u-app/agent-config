@@ -1,10 +1,13 @@
-# Road to Better Skills
+# Road to Better Skills (Thinking Layer)
 
-**Status:** READY FOR EXECUTION — decisions synthesized 2026-05-01.
+**Status:** READY FOR EXECUTION — decisions synthesized 2026-05-01,
+re-scoped 2026-05-01 to Thinking Layer only after AI #5 review.
 **Started:** 2026-05-01
 **Trigger:** Multi-AI review of the skill ecosystem (personas, stakeholder lens,
 per-skill tools, orchestration), benchmarked against `alirezarezvani/claude-skills`.
-**Mode:** Block sequencing locked (B → A → C → D → H/I → Q/G → F).
+**Mode:** Block sequencing locked for Thinking Layer (B → A → C → D-pilot → F).
+Distribution/adoption/orchestration blocks (H · I · G · Q) moved to sibling
+roadmap `road-to-distribution-and-adoption.md` and stay **out-of-horizon**.
 Blocks unlock only after Phase 1 of `road-to-post-pr29-optimize.md` ships.
 
 ## Purpose
@@ -34,11 +37,11 @@ first — no skill/persona work begins while the always-rule budget is over
 |---|---|---|
 | **Persona introduction (A1 in this roadmap)** | **In scope.** Block A is #1 leverage point per all three reviewers. Persona = "who is thinking", missing layer. Use the 9-section claude-skills spine, prune to a leaner 6-section variant: identity · mission · critical rules · capabilities · workflows · success metrics. Drop "communication style" / "advanced capabilities" / "learning" — covered by existing `direct-answers`, `language-and-tone`, `verify-before-complete` rules. |
 | **PO/discovery/stakeholder skills scope** | **In scope** for this package. Block C ships: `po-discovery`, `risk-officer`, `decision-record`, `tech-debt-tracker`, `migration-architect`, `incident-commander`, `stakeholder-tradeoff`, `code-review-multi-lens`. Stops short of C-level / marketing / compliance — those stay claude-skills' lane (AI #1 + AI #2 non-goals). |
-| **Per-skill Python tools (D1)** | **Net-new surface, but bounded.** Stdlib-only, CLI-first, `--help` + `--json`, `snake_case_verb_noun.py`, embedded sample data, scoring 0–100. Engine CLI stays separate (orchestration). Pilot 3 tools first (Block D week 1) before committing to all 100+. Mandatory test coverage; linter blocks complex tools. |
+| **Per-skill Python tools (D1)** | **Net-new surface, hard-bounded pilot (revised 2026-05-01 after AI #5 review).** Stdlib-only, CLI-first, `--help` + `--json`, `snake_case_verb_noun.py`, embedded sample data, scoring 0–100. Engine CLI stays separate (orchestration). **Pilot exactly 3 tools (Block D weeks 1–3)** with a hard kill-switch: if the pilot misses the eval thresholds (≥85% pass-rate, ≥+30% delta) or exceeds the maintenance budget (1 day/week per tool average), Block D pauses and remaining tools move **out-of-horizon**. No "pilot 3 then scale" auto-promotion. Each pilot tool ships with mandatory test coverage; linter (`scripts/lint_skill_tools.py`) blocks tools that import non-stdlib modules, exceed 200 LOC, or lack a `--json` mode. |
 | **Star/adoption signal goal** | **Yes — but secondary to depth.** Identity is OSS-light. Block H targets 200 stars / 5 external consumers / 1 talk in 6 months. Hard cap: 1 day/week per person on marketing. A+C+D ship regardless of H success. |
 | **Audience (A5)** | **Primary = teams with own stack** (Galawork pattern, leverages override system). **Secondary = agencies** (multi-tenant override consumers). Solo devs and enterprise/compliance: explicit non-targets. |
 | **UI/frontend skills (Block F)** | **In scope** for this package, not a sibling. UI-track engine work in `road-to-post-pr29-optimize.md` already shipped `react-shadcn-ui`. Block F adds `livewire-developer`, `tailwind-engineer`, `accessibility-auditor`, `playwright-engineer`, `ui-component-architect`, `form-handler`. Pre-condition: Block E phase 4 from sibling roadmap. |
-| **Roadmap horizon** | **6-week visible cap** per AI #2. Anything past 6 weeks labelled `directional`. Existing 178-step plans collapsed to: current 6-week plate + directional backlog. Reflected in `agents/roadmaps-progress.md` columns. |
+| **Roadmap horizon** | **6-week visible cap** per AI #2. Anything past 6 weeks labelled **out-of-horizon**. Existing 178-step plans collapsed to: current 6-week plate + out-of-horizon backlog. Reflected in `agents/roadmaps-progress.md` columns. |
 | **Skill versioning** | **No per-skill semver.** Package version = skill version (current model). Defer until external consumer asks. State-schema versioning (work_engine) stays as-is. |
 
 ### Benchmark adoption — what to borrow as-is
@@ -54,17 +57,40 @@ first — no skill/persona work begins while the always-rule budget is over
 
 ### Block sequencing — locked
 
-| Order | Block | Dependency | Effort |
-|---|---|---|---|
-| 1 | **B — Skill reorg** (domain folders + `domain:` frontmatter) | None — preparation for A | 1 week |
-| 2 | **A — Personas** (schema + 8 backend personas) | After B | 2–3 weeks |
-| 3 | **C — Stakeholder/PO skills** (8 skills, parallel start with A's last week) | After A weeks 1–2 | 4–6 weeks |
-| 4 | **D — Python tools** (stdlib-only, pilot 3, then scale) | After A | 6–8 weeks |
-| 5 | **H — Marketing** (README + bundles + Medium + comparison page) | After A+C+D ~30% | 1 day/week, 6 months |
-| 6 | **I — Multi-tool expansion** (cheap wins: Aider, Kilo Code, OpenCode, Codex) | After projection layer review | 2 weeks |
-| 7 | **G — Orchestration DSL** (YAML pipelines + `/orchestrate`) | After A + C complete | 3–4 weeks |
-| 8 | **Q — Audit-as-Memory** (persistent log + promotion gate) | After G | 4–6 weeks |
-| 9 | **F — UI skills** (livewire/tailwind/a11y/playwright/ui-arch/form-handler) | Pre-condition for engine R1 phase 4 | 4–5 weeks |
+This roadmap covers the **Thinking Layer (Ready for execution)** only.
+Distribution / adoption / orchestration tracks moved to a sibling roadmap
+`road-to-distribution-and-adoption.md` (created 2026-05-01) and stay
+**out-of-horizon** until the Thinking Layer ships Block A + C.
+
+**Thinking Layer — Ready (6-week visible plate):**
+
+| Order | Block | Dependency | Effort | Status |
+|---|---|---|---|---|
+| 1 | **B — Skill reorg** (domain folders + `domain:` frontmatter) | None — preparation for A | 1 week | Ready |
+| 2 | **A — Personas** (schema + 8 backend personas) | After B | 2–3 weeks | Ready |
+| 3 | **C — Stakeholder/PO skills** (8 skills, parallel start with A's last week) | After A weeks 1–2 | 4–6 weeks | Ready |
+| 4 | **D — Python tools** (stdlib-only, hard-pilot 3, kill-switch on miss) | After A | 3 weeks pilot, then re-decide | Ready (pilot only) |
+| 5 | **F — UI skills** (livewire/tailwind/a11y/playwright/ui-arch/form-handler) | Pre-condition for engine R1 phase 4 | 4–5 weeks | Ready (gated by sibling roadmap) |
+
+**Distribution / adoption — Out-of-horizon (sibling roadmap):**
+
+| Block | Horizon | Sibling roadmap section |
+|---|---|---|
+| **H — Marketing** (README + bundles + Medium + comparison page) | Out-of-horizon | `road-to-distribution-and-adoption.md` § H |
+| **I — Multi-tool expansion** (Aider, Kilo Code, OpenCode, Codex) | Out-of-horizon | `road-to-distribution-and-adoption.md` § I |
+| **G — Orchestration DSL** (YAML pipelines + `/orchestrate`) | Out-of-horizon | `road-to-distribution-and-adoption.md` § G |
+| **Q — Audit-as-Memory** (persistent log + promotion gate) | Out-of-horizon | `road-to-distribution-and-adoption.md` § Q |
+
+**178-step backlog refactor (added 2026-05-01 after AI #5 review).**
+The legacy 178-step plans embedded later in this file (and any
+sibling-roadmap counterparts) are obsolete after this split. A
+follow-up commit replaces them with: (a) a 6-week plate matching the
+table above, expanded into checklist items per block; (b) an
+**out-of-horizon** backlog under each block with no checklist items (so
+`agents/roadmaps-progress.md` does not score them as work-in-progress).
+Until that refactor lands, the legacy step lists are retained as
+historical context but explicitly tagged `legacy — superseded by Block
+sequencing table above`.
 
 ### Out of scope (confirmed)
 
@@ -85,6 +111,67 @@ override bloat, 0 stars, copy-by-claude-skills) stay with AI #2's mitigations.
 
 **Sequencing locked. Block B starts once Phase 1 of
 `road-to-post-pr29-optimize.md` ships.**
+
+## Phase 1: Thinking Layer execution
+
+Block-level + sub-step checklist. The order matches the locked
+sequencing table above (B → A → C → D-pilot → F). Sub-steps live
+inline so the dashboard reflects real progress, not just five
+oversized buckets. Block-level rows act as completion markers — they
+flip to `[x]` only after every sub-step under them ships.
+
+### Block B — Skill reorg (1 week, prep for A)
+
+- [ ] **B** — Skill reorg complete (block marker; flips when B1–B4 are all done). Gated on `road-to-post-pr29-optimize.md` Phase 1 shipping.
+- [ ] **B1** — Domain taxonomy locked in `docs/contracts/skill-domains.md` (which domains, naming, no overlap).
+- [ ] **B2** — `domain:` frontmatter field added to `lint-skills`; CI fails on missing or unknown value.
+- [ ] **B3** — Existing 128 skills back-filled with `domain:` (mass edit + lint-green). No file moves yet.
+- [ ] **B4** — Skill folders reorganised into domain folders under `.agent-src.uncompressed/skills/<domain>/`; symlinks + tool projections regenerated; `task ci` green.
+
+### Block A — Personas (2–3 weeks)
+
+- [ ] **A** — Personas shipped (block marker; flips when A1–A6 are all done). Starts after B lands.
+- [ ] **A1** — Persona schema locked: 6-section spine (identity · mission · critical rules · capabilities · workflows · success metrics); frontmatter `name · description · color · emoji · vibe · tools`; template under `.agent-src.uncompressed/personas/_template/`.
+- [ ] **A2** — `lint-skills` extended with persona-specific checks (required sections, frontmatter, `vibe` enum).
+- [ ] **A3** — 4 backend personas drafted (first batch — pick from: backend-architect, api-designer, db-migrator, queue-tuner, php-modernizer, eloquent-tamer, security-engineer, perf-investigator).
+- [ ] **A4** — 4 remaining personas drafted (second batch from the same list).
+- [ ] **A5** — Persona discovery surface: `available_personas` block in `AGENTS.md` template; persona-aware skill suggestions in `command-suggestion`.
+- [ ] **A6** — Persona usage docs in `docs/personas.md` (when to invoke, how `/mode` interacts, override pattern).
+
+### Block C — Stakeholder / PO skills (4–6 weeks, parallel start with A's last week)
+
+- [ ] **C** — Stakeholder skills shipped (block marker; flips when C1–C8 are all done).
+- [ ] **C1** — `po-discovery` (problem framing, user-story shaping, AC tightening).
+- [ ] **C2** — `risk-officer` (risk surfacing, blast-radius framing, mitigations).
+- [ ] **C3** — `decision-record` (ADR drafting, locking trade-offs, supersession chains).
+- [ ] **C4** — `tech-debt-tracker` (debt surfacing, prioritisation, repayment-plan framing).
+- [ ] **C5** — `migration-architect` (rollout shape, deprecation cycle, dual-write windows).
+- [ ] **C6** — `incident-commander` (incident framing, comms cadence, post-mortem skeleton).
+- [ ] **C7** — `stakeholder-tradeoff` (multi-stakeholder framing, trade-off matrix).
+- [ ] **C8** — `code-review-multi-lens` (security · perf · readability · tests · architecture composite verdict).
+
+### Block D — Python tools pilot (3 weeks, hard-bounded, kill-switch on miss)
+
+- [ ] **D** — Pilot evaluated (block marker; flips after D5 verdict, regardless of pass/fail). Starts after A.
+- [ ] **D1** — `scripts/lint_skill_tools.py` linter: stdlib-only check, `--help` + `--json` required, ≤ 200 LOC cap, `snake_case_verb_noun.py` naming, embedded sample data.
+- [ ] **D2** — Pilot tool 1 (named in working-notes; e.g. `score_skill_relevance.py`) shipped with mandatory test coverage and eval baseline.
+- [ ] **D3** — Pilot tool 2 shipped with same bar.
+- [ ] **D4** — Pilot tool 3 shipped with same bar.
+- [ ] **D5** — Eval gate: ≥ 85% pass-rate, ≥ +30% delta vs baseline, ≤ 1 day/week/tool maintenance. Pass → continue Block D scope discussion. Miss → kill-switch fires; remaining tools demoted **out-of-horizon**; capture lessons in `agents/roadmaps/sessions/`.
+
+### Block F — UI skills (4–5 weeks, gated by sibling roadmap)
+
+- [ ] **F** — UI skills shipped (block marker; flips when F1–F6 are all done). Pre-condition: engine R1 phase 4 from `road-to-post-pr29-optimize.md`.
+- [ ] **F1** — `livewire-developer` (component shape, lifecycle, event flow).
+- [ ] **F2** — `tailwind-engineer` (utility-first patterns, design-token discipline, no inline-style drift).
+- [ ] **F3** — `accessibility-auditor` (WCAG checklist, keyboard nav, ARIA boundaries).
+- [ ] **F4** — `playwright-engineer` (locator strategy, fixtures, flake-prevention patterns).
+- [ ] **F5** — `ui-component-architect` (component-tree shape, composition vs inheritance, slot patterns).
+- [ ] **F6** — `form-handler` (validation, error display, submission lifecycle, optimistic UI).
+
+Distribution / adoption / orchestration blocks (H · I · G · Q) live
+in `road-to-distribution-and-adoption.md` and are out of scope for
+this phase.
 
 ## Sources (append per AI)
 
@@ -208,7 +295,7 @@ Acknowledged weaknesses:
   fully justify it; future PRs should split.
 - **Roadmap inflation.** 178 steps across 5 roadmaps = ~18-month plan in a field that
   moves quarterly. By step 50, steps 80-100 will have drifted. Recommendation:
-  6-week horizon hard, everything beyond marked *directional*.
+  6-week horizon hard, everything beyond marked *out-of-horizon*.
 - **Phases 3-7 produce zero consumer-visible value.** All internal engine refactor.
   Legitimate infrastructure investment, but if not balanced with user-facing skills,
   the project "dies of engineering without users".
@@ -233,7 +320,7 @@ Acknowledged weaknesses:
 2. Build **stakeholder / PO / discovery / risk-officer** skills.
 3. Group skills by **domain hierarchy**, not flat folder.
 4. Define an **orchestration grammar** (Solo Sprint / Deep Dive / Handoff / Chain).
-5. Constrain **roadmap horizon to 6 weeks** + label deeper plans as directional.
+5. Constrain **roadmap horizon to 6 weeks** + label deeper plans as out-of-horizon.
 6. **Marketing model is a separate question** — pick one (Galawork-internal vs. OSS growth).
 7. Backlog **GT-6 real-SIGTERM** test as a follow-up to PR #29.
 8. Borrow `skill-security-auditor` *concept* (not the file).
@@ -493,7 +580,7 @@ agent-config today (`task generate-tools` + `scripts/install.sh|.py`):
 | Phases 3-7 produce no consumer-visible value | AI #1, AI #2 | **high** (cross-source agreement) | Pure infra work; needs counter-balance with user-facing skill / persona delivery in same window. |
 | Skills are flat, not domain-grouped | AI #2, Benchmark | medium (cross-source) | AI #2: discovery / mental-model issue. Benchmark: 9 explicit domain folders (engineering, product-team, content, etc.) — concrete grouping precedent. Cheap to fold into `domain:` frontmatter → folders. |
 | No explicit orchestration grammar | AI #2, Benchmark | medium (cross-source — names settle) | AI #2: Solo Sprint / Deep Dive / Handoff / Chain naming. Benchmark: same 4 patterns documented + verbatim handoff format. Names borrowable as-is; spec, not refactor. |
-| Roadmap horizon should be ≤ 6 weeks | AI #2 | low (single source) | Recommends "directional" label past 6 weeks. Conflicts with current multi-roadmap planning style. |
+| Roadmap horizon should be ≤ 6 weeks | AI #2 | low (single source) | Recommends "out-of-horizon" label past 6 weeks. Conflicts with current multi-roadmap planning style. |
 | Marketing / reach gap (0 stars) | AI #2 | low (single source) | Treat as strategic question, not a backlog item. Open: is OSS growth a goal? |
 | README starts with "Galawork API" | AI #2 | low (single source) | Possible PR-template artifact; cheap verification. |
 | `skill-security-auditor` concept worth borrowing | AI #2, Benchmark | medium (cross-source — benchmark = pipeline) | AI #2: scan skills for malicious code pre-install. Benchmark: `/plugin-audit` 8-phase pipeline (discovery · structure ≥75 · quality ≥60 · script test · security 0-crit/0-high · marketplace · ecosystem · domain review). Borrowable as orchestrated audit, not flat lint. |
@@ -584,7 +671,7 @@ agent-config today (`task generate-tools` + `scripts/install.sh|.py`):
 | Block D explodes (tools harder to maintain than expected) | High | Medium | stdlib-only, small, mandatory test coverage; linter blocks complex tools |
 | Marketing eats engineering time | High | High | Hard cap: 1 day/week per person, no more |
 | Engine R1 (Block E) drags, blocks UI skills | Medium | High | Prepare UI skills (F) without engine hooks; only engine-integration waits on E |
-| 178-step roadmap demotivates | High | Medium | Cap visible roadmap to 6 weeks, label rest as "directional" |
+| 178-step roadmap demotivates | High | Medium | Cap visible roadmap to 6 weeks, label rest as "out-of-horizon" |
 | Override system bloats because everyone wants own personas | Medium | Medium | Whitelist fields only; strict schema validation |
 | 0 stars stays 0 despite Block H | Low | Medium | Accept — Block H is not make-or-break, A+C+D are |
 | claude-skills copies compression | Low | High | Speed: agent-config is 1+ year ahead |
@@ -595,7 +682,7 @@ agent-config today (`task generate-tools` + `scripts/install.sh|.py`):
 with two small follow-ups:
 
 1. GT-6 with real SIGTERM kill in a follow-up PR.
-2. Cap visible roadmap to 6 weeks, label deeper plans "directional".
+2. Cap visible roadmap to 6 weeks, label deeper plans "out-of-horizon".
 
 claude-skills shows three gaps to close independently of PR #29: **(1) Personas
 (Block A — top priority) · (2) Stakeholder/PO lens (Block C — parallel) · (3)
@@ -616,7 +703,7 @@ governed alternative to claude-skills that engineering teams actually want.*
 
 ## Multi-client expansion — verified gap & action plan
 
-**Status:** capture-only. Promote to executable phase when user signals.
+**Note:** Captured only. No phase scaffolding yet — promote to a separate roadmap (or new phase here) when the user signals.
 **Verified:** 2026-05-01 against `alirezarezvani/claude-skills` live README.
 
 ### Gap (verified)
@@ -667,20 +754,66 @@ Reviewed claude-skills' installer + CLI surface against agent-config's:
 
 ## Proposed actions
 
-> See "Decisions (synthesized)" near the top of this file. Block
-> sequence is locked B → A → C → D → H/I → Q/G → F. Block B starts
-> after Phase 1 of `road-to-post-pr29-optimize.md` ships.
+Block sequence is locked B → A → C → D-pilot → F per the table in
+"Decisions (synthesized)". ICE prioritisation below confirms each
+block fits inside the 6-week visible plate (`road-to-governance-cleanup.md`
+horizon rule); blocks below the median ICE are **inside the plate
+anyway** — sequencing is fixed by dependency, ICE is a sanity check
+that the dependency chain itself is worth running, not a re-ordering
+gate.
+
+### Phase 1 ICE table
+
+Impact (1–5: leverage on the Thinking Layer goal — depth + identity),
+Confidence (1–5: clarity of deliverable + dependencies known), Ease
+(1–5: estimated effort inverted — 5 = ≤ 1 week, 1 = ≥ 5 weeks).
+Score = I × C × E. **Median score 48.** Sequencing is locked by
+dependency (B → A → C → D → F), not by ICE; the table is a sanity
+check on the chain.
+
+| Block | I | C | E | Score | Notes |
+|---|---:|---:|---:|---:|---|
+| **B — Skill reorg** | 3 | 5 | 5 | **75** | Highest ease; unblocks A; cheap once `domain:` taxonomy is locked |
+| **A — Personas** | 5 | 4 | 3 | **60** | #1 leverage per all three reviewers; spine + 8 personas; medium effort |
+| **C — Stakeholder skills** | 4 | 4 | 2 | **32** | High value but 8 skills × 4–6 weeks; longest single block |
+| **D — Python tools (pilot)** | 3 | 3 | 3 | **27** | Net-new surface; hard-bounded pilot; eval gate decides scale-out |
+| **F — UI skills** | 4 | 4 | 2 | **32** | Gated by sibling roadmap; 6 skills × 4–5 weeks |
+
+**Inside-plate set:** all five blocks. The 6-week plate is satisfied
+by B + A (4 weeks combined) plus the parallel start of C in A's
+last week. C's tail (4–6 weeks) overflows the plate by design and
+becomes the first work item of the **next** plate; same for D and F.
+
+**Sequencing read:** B and A together are the **must-ship slice**
+of this plate. C, D, F are listed inside Phase 1 because they are
+ready to start, not because they all complete inside 6 weeks.
 
 ## Risk register
 
-> AI #2's eight-row register (persona-schema bikeshed, Block D
-> explosion, marketing eats engineering, engine R1 drag, 178-step
-> demotivation, override bloat, 0 stars, copy-by-claude-skills) is
-> the consolidated register. Mitigations stay as captured.
+Forward-looking risks for Phase 1 execution. AI #2's eight-row
+historical register stays in the AI feedback section below; this is
+the **consolidated operational view** the executor reads before
+starting a block. Risk numbers are stable identifiers — referenced
+by sub-step working notes and post-mortems.
+
+| # | Risk | Block | Likelihood | Impact | Mitigation | Owner-marker |
+|---|---|---|---:|---:|---|---|
+| R1 | **Persona-schema bikeshed** — 6-section spine vs claude-skills' 9-section drains 2+ weeks before any persona ships | A | M | M | A1 locks the schema in week 1; PR template requires schema citation; deviations require new ADR, not section-level edits | A1 |
+| R2 | **Block D explosion** — pilot 3 tools succeeds, momentum pushes scope to 20+ tools without re-evaluating the kill-switch | D | H | H | D5 eval gate is **hard**: pass continues pilot scope discussion only, never auto-promotes. New tools after pilot require an explicit ADR + ICE entry | D5 |
+| R3 | **`domain:` taxonomy churn** — domain folders renamed mid-flight after some skills moved, breaking symlinks and tool projections | B | M | H | B1 locks taxonomy in `docs/contracts/skill-domains.md` **before** any file move; renames after B4 require a contract bump (`stable` policy) | B1 |
+| R4 | **Override bloat** — consumer projects override every persona to fit local naming, defeating the shared layer | A · C | M | M | A1 schema documents override surface (frontmatter override only, body override = full replace); `override-management` skill called out in persona docs | A1 + C |
+| R5 | **Block C scope drift** — `code-review-multi-lens` swells into a meta-skill that subsumes the four existing judges (`judge-bug-hunter`, `judge-security-auditor`, `judge-test-coverage`, `judge-code-quality`) | C | M | M | C8 explicitly framed as **composite verdict** orchestrating the four existing judges, not a replacement; `subagent-orchestration` is the dispatch surface | C8 |
+| R6 | **Personas misread as agents** — readers expect persona invocation to spawn a sub-agent, not a mode the host agent adopts | A | H | M | A6 docs lead with "personas are modes, not agents"; `mode` skill is the canonical invocation; persona description warns against agent-style framing | A6 |
+| R7 | **Linter false positives in `lint_skill_tools.py`** — stdlib-only check trips on legitimate `dataclasses` / `typing` usage | D | L | L | D1 allowlist explicit (stdlib + typing + dataclasses + json + argparse); test fixture covers all allowed imports; new rejections require linter ADR | D1 |
+| R8 | **F gate slips** — engine R1 phase 4 from sibling roadmap delays, F sits idle while C is still running, momentum collapses | F | M | M | F-block scheduling is **dependent**, not parallel; if R1 phase 4 slips > 2 weeks, F is explicitly deferred to the next plate, not held in limbo | F |
+| R9 | **Sub-step inflation** — Phase 1 grew from 5 block-steps to ~30 sub-steps; future blocks tempted to follow the same density and the dashboard becomes noise again | Phase 1 | M | M | Sub-steps in this roadmap reflect actual deliverables (one persona, one skill, one tool); future blocks expand similarly **only** when each sub-step maps to a shippable artefact, not a planning checkpoint | (template) |
+| R10 | **Phase 1 unlock criteria slip** — Block B starts before `road-to-post-pr29-optimize.md` Phase 1 ships green CI | B | L | H | Block B row carries an explicit gating note; PR opening Block B work requires a cite-line to a green-CI sha on `main` for the post-pr29 plate | B |
+| R11 | **Marketing pull on Block A** — distribution roadmap (sibling) starts pulling persona work into Block H demos before A6 ships | A · sibling H | M | M | Sibling roadmap H phases gated on "Thinking Layer Blocks A + C ≥80% shipped"; A6 is the explicit unlock for marketing reuse | A6 |
+| R12 | **Copy-by-claude-skills** — claude-skills picks up the OSS-light governed alternative framing and ships a thinner copy under their brand | identity | L | M | Identity locked in `road-to-governance-cleanup.md` F1 (OSS-light governed alternative); differentiator is governance + override + compression, not skill count; `agent-config` ships discipline, not breadth | (identity) |
 
 ## Next step
 
 > Refactor the 178-step backlog to "current 6-week plate +
-> directional backlog" (Decisions, Roadmap horizon). Then start
+> out-of-horizon backlog" (Decisions, Roadmap horizon). Then start
 > Block B (skill reorg) once Phase 1 of `road-to-post-pr29-optimize.md`
 > lands.

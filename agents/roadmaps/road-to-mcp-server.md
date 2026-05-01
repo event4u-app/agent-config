@@ -19,6 +19,29 @@ This is positioned as a **distinguishing feature** — `claude-skills` does not
 ship an MCP server today. agent-config has the architectural advantage
 (single source of truth) needed to do this cleanly.
 
+## Horizon (6-week visible plate)
+
+Per `road-to-better-skills-and-profiles.md` "Roadmap horizon" decision —
+6 weeks is the visible commitment plate; anything outside is **out-of-horizon** (beyond 6 weeks).
+
+**Inside the plate (this 6-week window):**
+
+- Phase 1 (A1–A7) — MVP skeleton: SDK verify (A1), free-tier client confirm
+  (A2), `scripts/mcp_server/` entrypoint, `prompts/list` + `prompts/get` for
+  5 hand-picked stack-agnostic skills, smoke test in one client, base test
+  suite. Estimated effort 1–2 dev days; gated on A1 + A2 succeeding.
+
+**Outside the plate (out-of-horizon, gated on Phase 1 evidence):**
+
+- Phase 2 (B1–B5) — full skill + command coverage, pagination, hot-reload.
+- Phase 3 (C1–C4) — resources (rules · guidelines · contexts).
+- Phase 4 (D1–D4) — tools (engine helpers, allowlist) — design call required first.
+- Phase 5 (E1–E5) — real setup docs + README/AGENTS surfaces.
+- Phase 6 (F1–F4) — distribution polish (versioning, SSE, cloud bundle, marketplace).
+
+Phases 2+ stay capture-only until Phase 1 ships a working stdio prompt fetch
+in at least one confirmed client.
+
 ## Why this is a separate roadmap
 
 Multi-client expansion (A1–A8 in `road-to-better-skills-and-profiles.md`)
@@ -69,7 +92,7 @@ Estimated effort: 1-2 dev days, gated on SDK verification.
 - [ ] **A1** — Verify `mcp` Python SDK: install, check capability surface, confirm stdio handler API. If SDK is unstable or missing required capabilities, **stop** and re-plan in capture-only.
 - [ ] **A2** — Confirm at least one MCP-aware client supports stdio Python servers without paid features (Claude Desktop free tier, Zed, Continue, …). One confirmed client = Phase 1 unblocked.
 - [ ] **A3** — `scripts/mcp_server/__init__.py` + `__main__.py` entrypoint, stdio transport boilerplate.
-- [ ] **A4** — `prompts/list` returns 5 hand-picked skills (frontmatter → MCP prompt metadata). Picks: `pest-testing`, `eloquent`, `conventional-commits-writing`, `refine-ticket`, `react-shadcn-ui` — verify these exist in `.agent-src/skills/` before locking.
+- [ ] **A4** — `prompts/list` returns 5 hand-picked skills (frontmatter → MCP prompt metadata). Picks: `verify-before-complete`, `systematic-debugging`, `test-driven-development`, `refine-ticket`, `conventional-commits-writing` — stack-agnostic on purpose, so the demo lands on any consumer regardless of language/framework. All five verified in `.agent-src/skills/` 2026-05-01.
 - [ ] **A5** — `prompts/get` returns the SKILL.md body (compressed `.agent-src/` form, not uncompressed).
 - [ ] **A6** — Manual smoke test in confirmed client from A2; record session transcript in `agents/roadmaps/sessions/`.
 - [ ] **A7** — `tests/test_mcp_server.py` — at minimum: prompts/list returns ≥5 entries, prompts/get returns non-empty body, JSON-RPC envelope is valid.
@@ -134,18 +157,19 @@ without A1 (SDK) + A2 (client tier) answers, all further MCP planning is
 speculation. Phase 1 is therefore a **spike** with two hard gates; Phases
 2+ remain capture-only until Phase 1 ships.
 
-### Phase 1 gating — confirmed
+### Gating decisions for Phase 1
 
 | Gate | Decision |
 |---|---|
 | **A1 — SDK verification** | Hard gate. Verify Anthropic `mcp` Python SDK on PyPI: install, list capabilities, confirm stdio handler API and prompt/resource schemas. SDK unstable or missing required capabilities → roadmap returns to capture-only with documented gap. No code written without A1 green. |
 | **A2 — Free-tier client** | Hard gate. Confirm at least one MCP-aware client accepts stdio Python servers without paid features. Verification list: Claude Desktop free tier · Zed · Continue. One confirmed client = A3+ unblocked. Zero confirmed → pause roadmap, document the constraint. |
+| **A0 — Execution-safety boundary** (added 2026-05-01 after AI #5 review) | Hard contract before any code. Phase 1 server is **read-only and instructional**: `prompts/list`, `prompts/get`, `resources/list`, `resources/read`. No `tools` primitive, no engine spawn, no state-file writes, no shell execution. Documented in `docs/contracts/mcp-phase-1-scope.md` with `stability: experimental`. Any deviation → not Phase 1. |
 
 ### Open-question resolutions
 
 | Question | Decision | Rationale |
 |---|---|---|
-| **Commands as prompts, or other primitive?** | **As prompts.** MCP has no "command" primitive in the current spec; `prompts` is the closest semantic match (parametrised text the user invokes). Disambiguate via prompt name prefix (`skill.<name>` vs `command.<name>`) and the MCP `description` field. Re-evaluate if a future MCP spec adds a command primitive. |
+| **Commands as prompts, or other primitive?** | **As prompts — instructional content only.** MCP has no "command" primitive in the current spec; `prompts` is the closest semantic match (parametrised text the user invokes). Disambiguate via prompt name prefix (`skill.<name>` vs `command.<name>`) and the MCP `description` field. **Phase 1 ships instructional prompts only** — the host agent receives the command body as text and runs it; the MCP server never executes engine code, never spawns `work_engine`, never touches `.work-state.json`. Engine-driven commands (`/work`, `/implement-ticket`) are explicitly **out of scope for Phase 1**: their `prompts/get` returns a stub message pointing at the local `./agent-config` CLI. Closes the AI #5 execution-safety risk that an MCP client confuses prompt-fetch with engine-run. Re-evaluate if a future MCP spec adds a command primitive or a sandboxed-execution primitive. |
 | **Project-local overrides vs package skills — merge order** | **Project overrides win.** `prompts/list` returns the merged view: same shape as the existing `task generate-tools` projection. Override entries get `source: project` in metadata; package entries get `source: package`. Clients see one prompt per name, with overrides taking precedence. No "show both" mode in MVP. |
 | **Telemetry — does an MCP prompt fetch count as "applied"?** | **No — fetch ≠ apply.** A `prompts/get` retrieval counts as `consulted`, not `applied`. Apply telemetry stays anchored on the existing `./agent-config telemetry:record` rule (concrete code/doc edits citing the artefact). The MCP server emits a `consulted` event when telemetry is enabled (opt-in, same privacy contract as local). Aligns with the redesign in `road-to-post-pr29-optimize.md` (artefact-engagement deprioritised in favour of behavioural outcomes). |
 | **Multi-tenancy — one server per project, or shared server with switching?** | **One server per project (current assumption locked).** stdio transport is process-per-client; project context binds at launch time via `cwd` + `.agent-src/`. Shared server with project-switching needs SSE + auth model — deferred to Phase 6 (F2/F3) alongside cloud distribution. |
