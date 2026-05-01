@@ -1,0 +1,1 @@
+Render a pricing tier card grid for the marketing page.

@@ -1,0 +1,1 @@
+Build a settings panel with toggle controls and tooltips.

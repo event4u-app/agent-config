@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Render a pricing tier card grid for the marketing page.\n",
+      "reconstructed_ac": [],
+      "assumptions": [],
+      "ui_apply": {
+        "summary": "Pricing tier grid rendered with three tiers",
+        "rendered": {
+          "resources/views/marketing/pricing.blade.php": "Pricing — Starter, Team, Enterprise. Choose plan."
+        },
+        "files": [
+          "resources/views/marketing/pricing.blade.php"
+        ]
+      }
+    }
+  },
+  "intent": "ui-improve",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": {
+    "components_found": [
+      {
+        "path": "resources/views/components/cards/tier.blade.php",
+        "name": "cards.tier",
+        "kind": "card",
+        "similarity": 0.83
+      }
+    ],
+    "design_tokens": {
+      "spacing": {
+        "sm": "8px",
+        "md": "12px",
+        "lg": "16px"
+      },
+      "color": {
+        "primary": "#1a73e8",
+        "muted": "#6b7280"
+      }
+    },
+    "audit_path": "high_confidence",
+    "candidate_pick": "cards.tier"
+  },
+  "ui_design": {
+    "layout": "three-column tier grid, max-w-6xl, centered",
+    "components": [
+      {
+        "name": "PricingTierCard",
+        "primitives": [
+          "cards.tier",
+          "button"
+        ]
+      }
+    ],
+    "states": {
+      "empty": "Grid renders all three tiers with default emphasis",
+      "loading": "Skeleton placeholders while pricing data resolves",
+      "error": "Inline error replaces grid on price-feed failure",
+      "success": "Selected tier highlighted; CTA enabled",
+      "disabled": "Tiers muted while a checkout flow is active"
+    },
+    "microcopy": {
+      "title": "Pricing",
+      "tiers": {
+        "starter": "Starter — for solo builders",
+        "team": "Team — for growing squads",
+        "enterprise": "Enterprise — talk to sales"
+      },
+      "buttons": {
+        "cta": "Choose plan"
+      }
+    },
+    "a11y": {
+      "labels": "each tier card is a labelled region with heading",
+      "focus": "CTA button reachable after the tier description",
+      "aria_live": "selection feedback announced via aria-live=polite"
+    },
+    "reused_from_audit": [
+      "cards.tier"
+    ],
+    "design_confirmed": true
+  },
+  "ui_review": {
+    "findings": [],
+    "review_clean": true,
+    "preview": {
+      "render_ok": false,
+      "error": "playwright: net::ERR_CONNECTION_REFUSED at http://localhost:8080/marketing/pricing",
+      "skipped": true
+    }
+  },
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [
+    {
+      "kind": "ui",
+      "stack": "plain",
+      "file": "resources/views/marketing/pricing.blade.php",
+      "summary": "Pricing tier grid rendered with three tiers"
+    }
+  ],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "success",
+    "implement": "success",
+    "test": "success",
+    "verify": "success",
+    "report": "success"
+  },
+  "questions": [],
+  "report": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/marketing/pricing.blade.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
+}

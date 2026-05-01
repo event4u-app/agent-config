@@ -1,0 +1,1227 @@
+{
+  "gt_id": "GT-U14",
+  "subcommand": "work",
+  "prompt_file": "prompts/gt-u14-a11y-ceiling.txt",
+  "persona": null,
+  "final_outcome": "success",
+  "final_exit_code": 0,
+  "cycles": [
+    {
+      "index": 1,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json",
+        "--prompt-file",
+        "prompts/gt-u14-a11y-ceiling.txt"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=refine\n@agent-directive: existing-ui-audit\n> Input: Build a settings panel with toggle controls and tooltips.\n> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.\n> 1. Continue — let the skill produce the audit\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Build a settings panel with toggle controls and tooltips.\n",
+            "reconstructed_ac": [],
+            "assumptions": []
+          }
+        },
+        "intent": "ui-build",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/forms/toggle.blade.php",
+              "name": "forms.toggle",
+              "kind": "form-primitive",
+              "similarity": 0.81
+            }
+          ],
+          "design_tokens": {
+            "spacing": {
+              "sm": "8px",
+              "md": "12px"
+            }
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "forms.toggle",
+          "a11y_baseline": []
+        },
+        "ui_design": null,
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "blocked"
+        },
+        "questions": [
+          "@agent-directive: existing-ui-audit",
+          "> Input: Build a settings panel with toggle controls and tooltips.",
+          "> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.",
+          "> 1. Continue — let the skill produce the audit",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "existing-ui-audit",
+      "recipe_action": "existing-ui-audit",
+      "recipe_notes": [
+        "ui_audit populated with empty a11y_baseline (a11y gate opted in)"
+      ]
+    },
+    {
+      "index": 2,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=analyze\n@agent-directive: ui-design-brief\n> Input: Build a settings panel with toggle controls and tooltips.\n> No design brief yet — producing one now. The brief locks layout, components, states, microcopy, and a11y before any code is written.\n> 1. Continue — produce the brief from audit findings\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Build a settings panel with toggle controls and tooltips.\n",
+            "reconstructed_ac": [],
+            "assumptions": []
+          }
+        },
+        "intent": "ui-build",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/forms/toggle.blade.php",
+              "name": "forms.toggle",
+              "kind": "form-primitive",
+              "similarity": 0.81
+            }
+          ],
+          "design_tokens": {
+            "spacing": {
+              "sm": "8px",
+              "md": "12px"
+            }
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "forms.toggle",
+          "a11y_baseline": []
+        },
+        "ui_design": {
+          "layout": "two-column settings panel, max-w-3xl",
+          "components": [
+            {
+              "name": "SettingsPanel",
+              "primitives": [
+                "forms.toggle",
+                "tooltip"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Panel renders with default toggle states",
+            "loading": "Save button shows spinner while persisting",
+            "error": "Inline error replaces toast on save failure",
+            "success": "Save button confirms with checkmark for 1s",
+            "disabled": "Toggles disabled while save is in flight"
+          },
+          "microcopy": {
+            "title": "Notification settings",
+            "fields": {
+              "notifications": "Email me when a job finishes"
+            },
+            "tooltips": {
+              "notifications": "Sent at most once per hour."
+            },
+            "buttons": {
+              "save": "Save changes"
+            }
+          },
+          "a11y": {
+            "labels": "every toggle has a visible label and matching for/id",
+            "focus": "save button reachable after the last toggle",
+            "aria_live": "save confirmation announced via aria-live=polite"
+          },
+          "reused_from_audit": [
+            "forms.toggle"
+          ]
+        },
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "blocked"
+        },
+        "questions": [
+          "@agent-directive: ui-design-brief",
+          "> Input: Build a settings panel with toggle controls and tooltips.",
+          "> No design brief yet — producing one now. The brief locks layout, components, states, microcopy, and a11y before any code is written.",
+          "> 1. Continue — produce the brief from audit findings",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "ui-design-brief",
+      "recipe_action": "ui-design-brief",
+      "recipe_notes": [
+        "ui_design brief written for settings panel"
+      ]
+    },
+    {
+      "index": 3,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=analyze\n> Input: Build a settings panel with toggle controls and tooltips.\n> Design brief is ready. Summary:\n> - Components: 1\n> - States covered: 5\n> - Microcopy entries (locked): 4\n> 1. Confirm — lock this brief and advance to apply\n> 2. Revise — send feedback; loops back to ui-design-brief\n> 3. Abort — drop this UI request\n\n**Recommendation: 1 — Confirm** — the brief covers all required slots and microcopy is final. Caveat: flip to 2 only if a string, state, or component is wrong; do not confirm strings you have not read.\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Build a settings panel with toggle controls and tooltips.\n",
+            "reconstructed_ac": [],
+            "assumptions": []
+          }
+        },
+        "intent": "ui-build",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/forms/toggle.blade.php",
+              "name": "forms.toggle",
+              "kind": "form-primitive",
+              "similarity": 0.81
+            }
+          ],
+          "design_tokens": {
+            "spacing": {
+              "sm": "8px",
+              "md": "12px"
+            }
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "forms.toggle",
+          "a11y_baseline": []
+        },
+        "ui_design": {
+          "layout": "two-column settings panel, max-w-3xl",
+          "components": [
+            {
+              "name": "SettingsPanel",
+              "primitives": [
+                "forms.toggle",
+                "tooltip"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Panel renders with default toggle states",
+            "loading": "Save button shows spinner while persisting",
+            "error": "Inline error replaces toast on save failure",
+            "success": "Save button confirms with checkmark for 1s",
+            "disabled": "Toggles disabled while save is in flight"
+          },
+          "microcopy": {
+            "title": "Notification settings",
+            "fields": {
+              "notifications": "Email me when a job finishes"
+            },
+            "tooltips": {
+              "notifications": "Sent at most once per hour."
+            },
+            "buttons": {
+              "save": "Save changes"
+            }
+          },
+          "a11y": {
+            "labels": "every toggle has a visible label and matching for/id",
+            "focus": "save button reachable after the last toggle",
+            "aria_live": "save confirmation announced via aria-live=polite"
+          },
+          "reused_from_audit": [
+            "forms.toggle"
+          ],
+          "design_confirmed": true
+        },
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "blocked"
+        },
+        "questions": [
+          "> Input: Build a settings panel with toggle controls and tooltips.",
+          "> Design brief is ready. Summary:",
+          "> - Components: 1",
+          "> - States covered: 5",
+          "> - Microcopy entries (locked): 4",
+          "> 1. Confirm — lock this brief and advance to apply",
+          "> 2. Revise — send feedback; loops back to ui-design-brief",
+          "> 3. Abort — drop this UI request",
+          "",
+          "**Recommendation: 1 — Confirm** — the brief covers all required slots and microcopy is final. Caveat: flip to 2 only if a string, state, or component is wrong; do not confirm strings you have not read."
+        ],
+        "report": ""
+      },
+      "directive": null,
+      "recipe_action": "_no_directive",
+      "recipe_notes": [
+        "design_confirmed=True (user picked option 1)"
+      ]
+    },
+    {
+      "index": 4,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=implement\n@agent-directive: ui-apply-plain\n> Stack: `plain`. Implementing the locked design brief.\n> Microcopy is locked — every button label, empty-state message, and validation message must come verbatim from `state.ui_design.microcopy`.\n> 1. Continue — implement the brief and write a `ui_apply` envelope back into state.ticket (rendered: {path: text}, files: [...])\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Build a settings panel with toggle controls and tooltips.\n",
+            "reconstructed_ac": [],
+            "assumptions": [],
+            "ui_apply": {
+              "summary": "Settings panel rendered with toggles and tooltips",
+              "rendered": {
+                "resources/views/settings/notifications.blade.php": "Notification settings — Email me when a job finishes. Save changes."
+              },
+              "files": [
+                "resources/views/settings/notifications.blade.php"
+              ]
+            }
+          }
+        },
+        "intent": "ui-build",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/forms/toggle.blade.php",
+              "name": "forms.toggle",
+              "kind": "form-primitive",
+              "similarity": 0.81
+            }
+          ],
+          "design_tokens": {
+            "spacing": {
+              "sm": "8px",
+              "md": "12px"
+            }
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "forms.toggle",
+          "a11y_baseline": []
+        },
+        "ui_design": {
+          "layout": "two-column settings panel, max-w-3xl",
+          "components": [
+            {
+              "name": "SettingsPanel",
+              "primitives": [
+                "forms.toggle",
+                "tooltip"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Panel renders with default toggle states",
+            "loading": "Save button shows spinner while persisting",
+            "error": "Inline error replaces toast on save failure",
+            "success": "Save button confirms with checkmark for 1s",
+            "disabled": "Toggles disabled while save is in flight"
+          },
+          "microcopy": {
+            "title": "Notification settings",
+            "fields": {
+              "notifications": "Email me when a job finishes"
+            },
+            "tooltips": {
+              "notifications": "Sent at most once per hour."
+            },
+            "buttons": {
+              "save": "Save changes"
+            }
+          },
+          "a11y": {
+            "labels": "every toggle has a visible label and matching for/id",
+            "focus": "save button reachable after the last toggle",
+            "aria_live": "save confirmation announced via aria-live=polite"
+          },
+          "reused_from_audit": [
+            "forms.toggle"
+          ],
+          "design_confirmed": true
+        },
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "success",
+          "implement": "blocked"
+        },
+        "questions": [
+          "@agent-directive: ui-apply-plain",
+          "> Stack: `plain`. Implementing the locked design brief.",
+          "> Microcopy is locked — every button label, empty-state message, and validation message must come verbatim from `state.ui_design.microcopy`.",
+          "> 1. Continue — implement the brief and write a `ui_apply` envelope back into state.ticket (rendered: {path: text}, files: [...])",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "ui-apply-plain",
+      "recipe_action": "ui-apply-plain",
+      "recipe_notes": [
+        "ui_apply envelope written: 1 file"
+      ]
+    },
+    {
+      "index": 5,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=test\n@agent-directive: ui-design-review-plain\n> Stack: `plain`. Reviewing rendered components against the locked design brief.\n> The review pass compares `state.ticket.ui_apply.rendered` against `state.ui_design` (microcopy, states, a11y, layout) and produces a structured `findings` list.\n> 1. Continue — run the review and write `{findings: [...], review_clean: bool}` into `state.ui_review`\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Build a settings panel with toggle controls and tooltips.\n",
+            "reconstructed_ac": [],
+            "assumptions": [],
+            "ui_apply": {
+              "summary": "Settings panel rendered with toggles and tooltips",
+              "rendered": {
+                "resources/views/settings/notifications.blade.php": "Notification settings — Email me when a job finishes. Save changes."
+              },
+              "files": [
+                "resources/views/settings/notifications.blade.php"
+              ]
+            }
+          }
+        },
+        "intent": "ui-build",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/forms/toggle.blade.php",
+              "name": "forms.toggle",
+              "kind": "form-primitive",
+              "similarity": 0.81
+            }
+          ],
+          "design_tokens": {
+            "spacing": {
+              "sm": "8px",
+              "md": "12px"
+            }
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "forms.toggle",
+          "a11y_baseline": []
+        },
+        "ui_design": {
+          "layout": "two-column settings panel, max-w-3xl",
+          "components": [
+            {
+              "name": "SettingsPanel",
+              "primitives": [
+                "forms.toggle",
+                "tooltip"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Panel renders with default toggle states",
+            "loading": "Save button shows spinner while persisting",
+            "error": "Inline error replaces toast on save failure",
+            "success": "Save button confirms with checkmark for 1s",
+            "disabled": "Toggles disabled while save is in flight"
+          },
+          "microcopy": {
+            "title": "Notification settings",
+            "fields": {
+              "notifications": "Email me when a job finishes"
+            },
+            "tooltips": {
+              "notifications": "Sent at most once per hour."
+            },
+            "buttons": {
+              "save": "Save changes"
+            }
+          },
+          "a11y": {
+            "labels": "every toggle has a visible label and matching for/id",
+            "focus": "save button reachable after the last toggle",
+            "aria_live": "save confirmation announced via aria-live=polite"
+          },
+          "reused_from_audit": [
+            "forms.toggle"
+          ],
+          "design_confirmed": true
+        },
+        "ui_review": {
+          "findings": [],
+          "review_clean": true,
+          "a11y": {
+            "violations": [
+              {
+                "rule": "label",
+                "selector": "input#settings-toggle-notifications",
+                "severity": "moderate"
+              },
+              {
+                "rule": "aria-tooltip-name",
+                "selector": "[role=tooltip]#settings-help",
+                "severity": "moderate"
+              }
+            ]
+          }
+        },
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [
+          {
+            "kind": "ui",
+            "stack": "plain",
+            "file": "resources/views/settings/notifications.blade.php",
+            "summary": "Settings panel rendered with toggles and tooltips"
+          }
+        ],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "success",
+          "implement": "success",
+          "test": "blocked"
+        },
+        "questions": [
+          "@agent-directive: ui-design-review-plain",
+          "> Stack: `plain`. Reviewing rendered components against the locked design brief.",
+          "> The review pass compares `state.ticket.ui_apply.rendered` against `state.ui_design` (microcopy, states, a11y, layout) and produces a structured `findings` list.",
+          "> 1. Continue — run the review and write `{findings: [...], review_clean: bool}` into `state.ui_review`",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "ui-design-review-plain",
+      "recipe_action": "ui-design-review-plain",
+      "recipe_notes": [
+        "ui_review with 2 moderate a11y violations; gate will synthesise findings"
+      ]
+    },
+    {
+      "index": 6,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=verify\n@agent-directive: ui-polish-plain\n> Stack: `plain`. Polish round 1 of 2.\n> 2 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.\n> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Build a settings panel with toggle controls and tooltips.\n",
+            "reconstructed_ac": [],
+            "assumptions": [],
+            "ui_apply": {
+              "summary": "Settings panel rendered with toggles and tooltips",
+              "rendered": {
+                "resources/views/settings/notifications.blade.php": "Notification settings — Email me when a job finishes. Save changes."
+              },
+              "files": [
+                "resources/views/settings/notifications.blade.php"
+              ]
+            }
+          }
+        },
+        "intent": "ui-build",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/forms/toggle.blade.php",
+              "name": "forms.toggle",
+              "kind": "form-primitive",
+              "similarity": 0.81
+            }
+          ],
+          "design_tokens": {
+            "spacing": {
+              "sm": "8px",
+              "md": "12px"
+            }
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "forms.toggle",
+          "a11y_baseline": []
+        },
+        "ui_design": {
+          "layout": "two-column settings panel, max-w-3xl",
+          "components": [
+            {
+              "name": "SettingsPanel",
+              "primitives": [
+                "forms.toggle",
+                "tooltip"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Panel renders with default toggle states",
+            "loading": "Save button shows spinner while persisting",
+            "error": "Inline error replaces toast on save failure",
+            "success": "Save button confirms with checkmark for 1s",
+            "disabled": "Toggles disabled while save is in flight"
+          },
+          "microcopy": {
+            "title": "Notification settings",
+            "fields": {
+              "notifications": "Email me when a job finishes"
+            },
+            "tooltips": {
+              "notifications": "Sent at most once per hour."
+            },
+            "buttons": {
+              "save": "Save changes"
+            }
+          },
+          "a11y": {
+            "labels": "every toggle has a visible label and matching for/id",
+            "focus": "save button reachable after the last toggle",
+            "aria_live": "save confirmation announced via aria-live=polite"
+          },
+          "reused_from_audit": [
+            "forms.toggle"
+          ],
+          "design_confirmed": true
+        },
+        "ui_review": {
+          "findings": [
+            {
+              "kind": "a11y_violation",
+              "rule": "aria-tooltip-name",
+              "selector": "[role=tooltip]#settings-help",
+              "severity": "moderate"
+            }
+          ],
+          "review_clean": false,
+          "a11y": {
+            "violations": [
+              {
+                "rule": "aria-tooltip-name",
+                "selector": "[role=tooltip]#settings-help",
+                "severity": "moderate"
+              }
+            ]
+          }
+        },
+        "ui_polish": {
+          "rounds": 1,
+          "applied": [
+            "round 1: added <label for> on settings-toggle-notifications; tooltip name still missing"
+          ]
+        },
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [
+          {
+            "kind": "ui",
+            "stack": "plain",
+            "file": "resources/views/settings/notifications.blade.php",
+            "summary": "Settings panel rendered with toggles and tooltips"
+          }
+        ],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "success",
+          "implement": "success",
+          "test": "success",
+          "verify": "blocked"
+        },
+        "questions": [
+          "@agent-directive: ui-polish-plain",
+          "> Stack: `plain`. Polish round 1 of 2.",
+          "> 2 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.",
+          "> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "ui-polish-plain",
+      "recipe_action": "ui-polish-plain",
+      "recipe_notes": [
+        "polish round 1: VIOLATION_B still open; synthesised a11y_violation finding into ui_review.findings"
+      ]
+    },
+    {
+      "index": 7,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=verify\n@agent-directive: ui-polish-plain\n> Stack: `plain`. Polish round 2 of 2.\n> 1 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.\n> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`\n> 2. Abort — drop this UI request\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Build a settings panel with toggle controls and tooltips.\n",
+            "reconstructed_ac": [],
+            "assumptions": [],
+            "ui_apply": {
+              "summary": "Settings panel rendered with toggles and tooltips",
+              "rendered": {
+                "resources/views/settings/notifications.blade.php": "Notification settings — Email me when a job finishes. Save changes."
+              },
+              "files": [
+                "resources/views/settings/notifications.blade.php"
+              ]
+            }
+          }
+        },
+        "intent": "ui-build",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/forms/toggle.blade.php",
+              "name": "forms.toggle",
+              "kind": "form-primitive",
+              "similarity": 0.81
+            }
+          ],
+          "design_tokens": {
+            "spacing": {
+              "sm": "8px",
+              "md": "12px"
+            }
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "forms.toggle",
+          "a11y_baseline": []
+        },
+        "ui_design": {
+          "layout": "two-column settings panel, max-w-3xl",
+          "components": [
+            {
+              "name": "SettingsPanel",
+              "primitives": [
+                "forms.toggle",
+                "tooltip"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Panel renders with default toggle states",
+            "loading": "Save button shows spinner while persisting",
+            "error": "Inline error replaces toast on save failure",
+            "success": "Save button confirms with checkmark for 1s",
+            "disabled": "Toggles disabled while save is in flight"
+          },
+          "microcopy": {
+            "title": "Notification settings",
+            "fields": {
+              "notifications": "Email me when a job finishes"
+            },
+            "tooltips": {
+              "notifications": "Sent at most once per hour."
+            },
+            "buttons": {
+              "save": "Save changes"
+            }
+          },
+          "a11y": {
+            "labels": "every toggle has a visible label and matching for/id",
+            "focus": "save button reachable after the last toggle",
+            "aria_live": "save confirmation announced via aria-live=polite"
+          },
+          "reused_from_audit": [
+            "forms.toggle"
+          ],
+          "design_confirmed": true
+        },
+        "ui_review": {
+          "findings": [
+            {
+              "kind": "a11y_violation",
+              "rule": "aria-tooltip-name",
+              "selector": "[role=tooltip]#settings-help",
+              "severity": "moderate"
+            }
+          ],
+          "review_clean": false,
+          "a11y": {
+            "violations": [
+              {
+                "rule": "aria-tooltip-name",
+                "selector": "[role=tooltip]#settings-help",
+                "severity": "moderate"
+              }
+            ]
+          }
+        },
+        "ui_polish": {
+          "rounds": 2,
+          "applied": [
+            "round 1: added <label for> on settings-toggle-notifications; tooltip name still missing",
+            "round 2: tried wrapping tooltip in role=group; a11y still flags missing accessible name"
+          ]
+        },
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [
+          {
+            "kind": "ui",
+            "stack": "plain",
+            "file": "resources/views/settings/notifications.blade.php",
+            "summary": "Settings panel rendered with toggles and tooltips"
+          }
+        ],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "success",
+          "implement": "success",
+          "test": "success",
+          "verify": "blocked"
+        },
+        "questions": [
+          "@agent-directive: ui-polish-plain",
+          "> Stack: `plain`. Polish round 2 of 2.",
+          "> 1 finding(s) from `state.ui_review`. Apply each fix, re-run the review, and write the refreshed envelope back.",
+          "> 1. Continue — apply fixes, re-review, and increment `state.ui_polish.rounds`",
+          "> 2. Abort — drop this UI request"
+        ],
+        "report": ""
+      },
+      "directive": "ui-polish-plain",
+      "recipe_action": "ui-polish-plain",
+      "recipe_notes": [
+        "polish round 2: VIOLATION_B still open; synthesised a11y_violation finding into ui_review.findings"
+      ]
+    },
+    {
+      "index": 8,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=verify\n> Stack: `plain`. Polish ceiling reached (2/2 rounds) with 1 a11y violation(s) still open.\n> - `aria-tooltip-name` on `[role=tooltip]#settings-help` (severity: moderate)\n> 1. Extend — grant one extra polish round; the engine sets `state.ui_polish.extension_used = True` so the next delegation can fire\n> 2. Accept — append the open violations to `state.ui_review.a11y.accepted_violations` so the review gate stops blocking on them, then continue to `report`\n> 3. Abort — drop this UI request\n\n**Recommendation: 1 — Extend** — a11y violations are objective; one more round usually closes the gap. Pick 2 only when the violations are explicitly out of scope for this run.\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Build a settings panel with toggle controls and tooltips.\n",
+            "reconstructed_ac": [],
+            "assumptions": [],
+            "ui_apply": {
+              "summary": "Settings panel rendered with toggles and tooltips",
+              "rendered": {
+                "resources/views/settings/notifications.blade.php": "Notification settings — Email me when a job finishes. Save changes."
+              },
+              "files": [
+                "resources/views/settings/notifications.blade.php"
+              ]
+            }
+          }
+        },
+        "intent": "ui-build",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/forms/toggle.blade.php",
+              "name": "forms.toggle",
+              "kind": "form-primitive",
+              "similarity": 0.81
+            }
+          ],
+          "design_tokens": {
+            "spacing": {
+              "sm": "8px",
+              "md": "12px"
+            }
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "forms.toggle",
+          "a11y_baseline": []
+        },
+        "ui_design": {
+          "layout": "two-column settings panel, max-w-3xl",
+          "components": [
+            {
+              "name": "SettingsPanel",
+              "primitives": [
+                "forms.toggle",
+                "tooltip"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Panel renders with default toggle states",
+            "loading": "Save button shows spinner while persisting",
+            "error": "Inline error replaces toast on save failure",
+            "success": "Save button confirms with checkmark for 1s",
+            "disabled": "Toggles disabled while save is in flight"
+          },
+          "microcopy": {
+            "title": "Notification settings",
+            "fields": {
+              "notifications": "Email me when a job finishes"
+            },
+            "tooltips": {
+              "notifications": "Sent at most once per hour."
+            },
+            "buttons": {
+              "save": "Save changes"
+            }
+          },
+          "a11y": {
+            "labels": "every toggle has a visible label and matching for/id",
+            "focus": "save button reachable after the last toggle",
+            "aria_live": "save confirmation announced via aria-live=polite"
+          },
+          "reused_from_audit": [
+            "forms.toggle"
+          ],
+          "design_confirmed": true
+        },
+        "ui_review": {
+          "findings": [
+            {
+              "kind": "a11y_violation",
+              "rule": "aria-tooltip-name",
+              "selector": "[role=tooltip]#settings-help",
+              "severity": "moderate"
+            }
+          ],
+          "review_clean": true,
+          "a11y": {
+            "violations": [
+              {
+                "rule": "aria-tooltip-name",
+                "selector": "[role=tooltip]#settings-help",
+                "severity": "moderate"
+              }
+            ],
+            "accepted_violations": [
+              {
+                "rule": "aria-tooltip-name",
+                "selector": "[role=tooltip]#settings-help",
+                "severity": "moderate"
+              }
+            ]
+          }
+        },
+        "ui_polish": {
+          "rounds": 2,
+          "applied": [
+            "round 1: added <label for> on settings-toggle-notifications; tooltip name still missing",
+            "round 2: tried wrapping tooltip in role=group; a11y still flags missing accessible name"
+          ]
+        },
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [
+          {
+            "kind": "ui",
+            "stack": "plain",
+            "file": "resources/views/settings/notifications.blade.php",
+            "summary": "Settings panel rendered with toggles and tooltips"
+          }
+        ],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "success",
+          "implement": "success",
+          "test": "success",
+          "verify": "blocked"
+        },
+        "questions": [
+          "> Stack: `plain`. Polish ceiling reached (2/2 rounds) with 1 a11y violation(s) still open.",
+          "> - `aria-tooltip-name` on `[role=tooltip]#settings-help` (severity: moderate)",
+          "> 1. Extend — grant one extra polish round; the engine sets `state.ui_polish.extension_used = True` so the next delegation can fire",
+          "> 2. Accept — append the open violations to `state.ui_review.a11y.accepted_violations` so the review gate stops blocking on them, then continue to `report`",
+          "> 3. Abort — drop this UI request",
+          "",
+          "**Recommendation: 1 — Extend** — a11y violations are objective; one more round usually closes the gap. Pick 2 only when the violations are explicitly out of scope for this run."
+        ],
+        "report": ""
+      },
+      "directive": null,
+      "recipe_action": "_no_directive",
+      "recipe_notes": [
+        "a11y_blocking halt: user picked Accept; VIOLATION_B appended to accepted_violations"
+      ]
+    },
+    {
+      "index": 9,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json"
+      ],
+      "exit_code": 0,
+      "stdout": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/settings/notifications.blade.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Build a settings panel with toggle controls and tooltips.\n",
+            "reconstructed_ac": [],
+            "assumptions": [],
+            "ui_apply": {
+              "summary": "Settings panel rendered with toggles and tooltips",
+              "rendered": {
+                "resources/views/settings/notifications.blade.php": "Notification settings — Email me when a job finishes. Save changes."
+              },
+              "files": [
+                "resources/views/settings/notifications.blade.php"
+              ]
+            }
+          }
+        },
+        "intent": "ui-build",
+        "directive_set": "ui",
+        "stack": null,
+        "ui_audit": {
+          "components_found": [
+            {
+              "path": "resources/views/components/forms/toggle.blade.php",
+              "name": "forms.toggle",
+              "kind": "form-primitive",
+              "similarity": 0.81
+            }
+          ],
+          "design_tokens": {
+            "spacing": {
+              "sm": "8px",
+              "md": "12px"
+            }
+          },
+          "audit_path": "high_confidence",
+          "candidate_pick": "forms.toggle",
+          "a11y_baseline": []
+        },
+        "ui_design": {
+          "layout": "two-column settings panel, max-w-3xl",
+          "components": [
+            {
+              "name": "SettingsPanel",
+              "primitives": [
+                "forms.toggle",
+                "tooltip"
+              ]
+            }
+          ],
+          "states": {
+            "empty": "Panel renders with default toggle states",
+            "loading": "Save button shows spinner while persisting",
+            "error": "Inline error replaces toast on save failure",
+            "success": "Save button confirms with checkmark for 1s",
+            "disabled": "Toggles disabled while save is in flight"
+          },
+          "microcopy": {
+            "title": "Notification settings",
+            "fields": {
+              "notifications": "Email me when a job finishes"
+            },
+            "tooltips": {
+              "notifications": "Sent at most once per hour."
+            },
+            "buttons": {
+              "save": "Save changes"
+            }
+          },
+          "a11y": {
+            "labels": "every toggle has a visible label and matching for/id",
+            "focus": "save button reachable after the last toggle",
+            "aria_live": "save confirmation announced via aria-live=polite"
+          },
+          "reused_from_audit": [
+            "forms.toggle"
+          ],
+          "design_confirmed": true
+        },
+        "ui_review": {
+          "findings": [
+            {
+              "kind": "a11y_violation",
+              "rule": "aria-tooltip-name",
+              "selector": "[role=tooltip]#settings-help",
+              "severity": "moderate"
+            }
+          ],
+          "review_clean": true,
+          "a11y": {
+            "violations": [
+              {
+                "rule": "aria-tooltip-name",
+                "selector": "[role=tooltip]#settings-help",
+                "severity": "moderate"
+              }
+            ],
+            "accepted_violations": [
+              {
+                "rule": "aria-tooltip-name",
+                "selector": "[role=tooltip]#settings-help",
+                "severity": "moderate"
+              }
+            ]
+          }
+        },
+        "ui_polish": {
+          "rounds": 2,
+          "applied": [
+            "round 1: added <label for> on settings-toggle-notifications; tooltip name still missing",
+            "round 2: tried wrapping tooltip in role=group; a11y still flags missing accessible name"
+          ]
+        },
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [
+          {
+            "kind": "ui",
+            "stack": "plain",
+            "file": "resources/views/settings/notifications.blade.php",
+            "summary": "Settings panel rendered with toggles and tooltips"
+          }
+        ],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "success",
+          "memory": "success",
+          "analyze": "success",
+          "plan": "success",
+          "implement": "success",
+          "test": "success",
+          "verify": "success",
+          "report": "success"
+        },
+        "questions": [],
+        "report": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/settings/notifications.blade.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
+      },
+      "directive": null,
+      "recipe_action": null,
+      "recipe_notes": []
+    }
+  ]
+}
