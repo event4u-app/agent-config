@@ -158,12 +158,12 @@ State additions:
 
 ## Phase 7: Verification and docs
 
-- [ ] **Step 1:** `task sync && task generate-tools && task ci` — green end-to-end with R1 + R2 + R3 goldens.
-- [ ] **Step 2:** Update `README.md` and `AGENTS.md` — UI track, mixed orchestration, stack dispatch, audit gate, halt-budget contract, trivial path.
-- [ ] **Step 3:** ADR `agents/contexts/adr-product-ui-track.md` — rationale, audit-as-hard-gate, design-review loop ceiling, halt-budget rationale, trivial-path-and-reclassification, stack-detection strategy, fe-design migration path.
-- [ ] **Step 4:** Extension recipe `agents/contexts/ui-stack-extension.md` — how to add a new stack (Svelte, SolidJS, etc.): detector heuristic, apply-skill, polish-skill, golden fixture, version-anchor convention.
-- [ ] **Step 5:** Mark `agents/roadmaps/intent-based-orchestration.md` as **superseded** by R1 + R2 + R3 (move to `agents/roadmaps/archive/` per `roadmap-progress-sync` rule).
-- [ ] **Step 6:** Changelog entry under "Unreleased" — UI track, mixed orchestration, audit gate, trivial path, halt-budget, new commands and skills.
+- [x] **Step 1:** `task sync && task generate-tools && task ci` — green end-to-end with R1 + R2 + R3 goldens (`consistency` gate flags pending commits, all content gates green).
+- [x] **Step 2:** Update `README.md` and `AGENTS.md` — UI track, mixed orchestration, stack dispatch, audit gate, halt-budget contract, trivial path.
+- [x] **Step 3:** ADR `agents/contexts/adr-product-ui-track.md` — rationale, audit-as-hard-gate, design-review loop ceiling, halt-budget rationale, trivial-path-and-reclassification, stack-detection strategy, fe-design migration path.
+- [x] **Step 4:** Extension recipe `agents/contexts/ui-stack-extension.md` — how to add a new stack (Svelte, SolidJS, etc.): detector heuristic, apply-skill, polish-skill, golden fixture, version-anchor convention.
+- [x] **Step 5:** Mark `agents/roadmaps/archive/intent-based-orchestration.md` as **superseded** by R1 + R2 + R3 (moved to `agents/roadmaps/archive/` per `roadmap-progress-sync` rule).
+- [x] **Step 6:** Changelog entry under "Unreleased" — UI track, mixed orchestration, audit gate, trivial path, halt-budget, new commands and skills.
 
 ## Acceptance criteria
 

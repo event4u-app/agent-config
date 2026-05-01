@@ -6,10 +6,10 @@
 
 ## Overall
 
-**64 / 98 steps done · 65%**
+**70 / 98 steps done · 71%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   65%
+████████████████████████████░░░░░░░░░░░░   71%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-product-ui-track-followup.md](roadmaps/road-to-product-ui-track-followup.md) | 1 | 5 | 5 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-product-ui-track.md](roadmaps/road-to-product-ui-track.md) | 7 | 57 | 22 | 30 | 0 | 5 | ██████░░░░ 58% |
+| 2 | [road-to-product-ui-track.md](roadmaps/road-to-product-ui-track.md) | 7 | 57 | 16 | 36 | 0 | 5 | ███████░░░ 69% |
 | 3 | [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md) | 7 | 44 | 3 | 34 | 7 | 0 | █████████░ 92% |
 | 4 | [road-to-visual-review-loop.md](roadmaps/road-to-visual-review-loop.md) | 1 | 4 | 4 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -35,7 +35,7 @@
 
 ### [road-to-product-ui-track.md](roadmaps/road-to-product-ui-track.md)
 
-**Product UI Track** — 30 / 52 done (58%)
+**Product UI Track** — 36 / 52 done (69%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -45,7 +45,7 @@
 | 4 | Mixed orchestration (backend + UI) | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 5 | `fe-design` migration and skill repositioning | ✅ done | 0 | 4 | 0 | 1 | 100% |
 | 6 | Golden Compatibility Tests + UI goldens | ✅ done | 0 | 4 | 0 | 4 | 100% |
-| 7 | Verification and docs | ⬜ not started | 22 | 0 | 0 | 0 | 0% |
+| 7 | Verification and docs | 🟡 in progress | 16 | 6 | 0 | 0 | 27% |
 
 ### [road-to-universal-distribution.md](roadmaps/road-to-universal-distribution.md)
 
