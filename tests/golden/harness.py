@@ -56,6 +56,9 @@ RECIPE_MODULES = (
     "tests.golden.sandbox.recipes.gt_u10_greenfield_bare",
     "tests.golden.sandbox.recipes.gt_u11_high_confidence",
     "tests.golden.sandbox.recipes.gt_u12_ambiguous",
+    "tests.golden.sandbox.recipes.gt_u13_a11y_polish",
+    "tests.golden.sandbox.recipes.gt_u14_a11y_ceiling",
+    "tests.golden.sandbox.recipes.gt_u15_preview_fail",
 )
 
 GOLDEN_ROOT = Path(__file__).resolve().parent
