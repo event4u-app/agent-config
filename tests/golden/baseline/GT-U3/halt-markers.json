@@ -1,0 +1,41 @@
+[
+  {
+    "cycle": 1,
+    "exit_code": 1,
+    "directive": "existing-ui-audit",
+    "recipe_action": "existing-ui-audit",
+    "questions": [
+      "@agent-directive: existing-ui-audit",
+      "> Input: Add a billing-overview tile to the customer dashboard.",
+      "> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.",
+      "> 1. Continue — let the skill produce the audit",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 2,
+    "exit_code": 1,
+    "directive": "existing-ui-audit",
+    "recipe_action": "existing-ui-audit",
+    "questions": [
+      "@agent-directive: existing-ui-audit",
+      "> Input: Add a billing-overview tile to the customer dashboard.",
+      "> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.",
+      "> 1. Continue — let the skill produce the audit",
+      "> 2. Abort — drop this UI request"
+    ]
+  },
+  {
+    "cycle": 3,
+    "exit_code": 1,
+    "directive": "existing-ui-audit",
+    "recipe_action": "existing-ui-audit",
+    "questions": [
+      "@agent-directive: existing-ui-audit",
+      "> Input: Add a billing-overview tile to the customer dashboard.",
+      "> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.",
+      "> 1. Continue — let the skill produce the audit",
+      "> 2. Abort — drop this UI request"
+    ]
+  }
+]

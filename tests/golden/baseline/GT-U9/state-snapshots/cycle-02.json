@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Build the first marketing landing page for our brand-new SaaS product.\n",
+      "reconstructed_ac": [],
+      "assumptions": []
+    }
+  },
+  "intent": "ui-build",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": {
+    "greenfield": true,
+    "components_found": [],
+    "design_tokens": {},
+    "greenfield_decision": "scaffold"
+  },
+  "ui_design": null,
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "blocked"
+  },
+  "questions": [
+    "> Input: Build the first marketing landing page for our brand-new SaaS product.",
+    "> No existing UI surface detected — this looks like greenfield.",
+    "> 1. Scaffold — minimal token set + base component primitive folder",
+    "> 2. Bare — proceed with Tailwind defaults, no scaffolding",
+    "> 3. External reference — point me at a design-system URL or file",
+    "",
+    "**Recommendation: 1 — Scaffold tokens + primitives** — even one extra screen benefits from a shared base; the scaffold cost is ~10 min and saves re-doing every primitive on screen 2. Caveat: flip to 2 if this is a demo or single-page prototype that will not grow."
+  ],
+  "report": ""
+}

@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Build the first marketing landing page for our brand-new SaaS product.\n",
+      "reconstructed_ac": [],
+      "assumptions": []
+    }
+  },
+  "intent": "ui-build",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": {
+    "greenfield": true,
+    "components_found": [],
+    "design_tokens": {}
+  },
+  "ui_design": null,
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "blocked"
+  },
+  "questions": [
+    "@agent-directive: existing-ui-audit",
+    "> Input: Build the first marketing landing page for our brand-new SaaS product.",
+    "> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.",
+    "> 1. Continue — let the skill produce the audit",
+    "> 2. Abort — drop this UI request"
+  ],
+  "report": ""
+}

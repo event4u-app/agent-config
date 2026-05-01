@@ -1,0 +1,43 @@
+[
+  {
+    "cycle": 1,
+    "exit_code": 1,
+    "directive": null,
+    "recipe_action": "_no_directive",
+    "questions": [
+      "> Input: Improve the form layout — make it look better and feel more consistent with wha…",
+      "> Audit findings are ambiguous — pick the candidate to extend, or build new:",
+      "> 1. Extend `forms.labeled-input` (similarity 0.62) — `resources/views/components/forms/labeled-input.blade.php`",
+      "> 2. Extend `forms.stacked-input` (similarity 0.60) — `resources/views/components/forms/stacked-input.blade.php`",
+      "> 3. Extend `forms.compact-input` (similarity 0.58) — `resources/views/components/forms/compact-input.blade.php`",
+      "> 4. Build new — none of the above is close enough",
+      "",
+      "**Recommendation: 1 — Extend `forms.labeled-input`** — similarity 0.62 is the strongest match in the inventory; reuse beats new code unless the contract diverges. Caveat: flip to 4 if the existing component cannot host the new behavior cleanly."
+    ]
+  },
+  {
+    "cycle": 2,
+    "exit_code": 1,
+    "directive": null,
+    "recipe_action": "_no_directive",
+    "questions": [
+      "> Input: Improve the form layout — make it look better and feel more consistent with wha…",
+      "> Design brief is ready. Summary:",
+      "> - Components: 1",
+      "> - States covered: 5",
+      "> - Microcopy entries (locked): 7",
+      "> 1. Confirm — lock this brief and advance to apply",
+      "> 2. Revise — send feedback; loops back to ui-design-brief",
+      "> 3. Abort — drop this UI request",
+      "",
+      "**Recommendation: 1 — Confirm** — the brief covers all required slots and microcopy is final. Caveat: flip to 2 only if a string, state, or component is wrong; do not confirm strings you have not read."
+    ]
+  },
+  {
+    "cycle": 3,
+    "exit_code": 0,
+    "directive": null,
+    "recipe_action": null,
+    "questions": []
+  }
+]

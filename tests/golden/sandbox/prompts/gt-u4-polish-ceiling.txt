@@ -1,0 +1,1 @@
+Tighten the spacing on the customer onboarding wizard.

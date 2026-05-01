@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Tighten the spacing on the customer onboarding wizard.\n",
+      "reconstructed_ac": [],
+      "assumptions": []
+    }
+  },
+  "intent": "ui-improve",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": {
+    "components_found": [
+      {
+        "path": "resources/views/components/wizards/step.blade.php",
+        "name": "wizards.step",
+        "kind": "wizard-step",
+        "similarity": 0.74
+      }
+    ],
+    "design_tokens": {
+      "spacing": {
+        "sm": "8px",
+        "md": "12px",
+        "lg": "16px"
+      }
+    },
+    "audit_path": "high_confidence",
+    "candidate_pick": "wizards.step"
+  },
+  "ui_design": null,
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "blocked"
+  },
+  "questions": [
+    "@agent-directive: existing-ui-audit",
+    "> Input: Tighten the spacing on the customer onboarding wizard.",
+    "> No UI audit findings yet — running `existing-ui-audit` to inventory components, design system, tokens, and candidate matches before design.",
+    "> 1. Continue — let the skill produce the audit",
+    "> 2. Abort — drop this UI request"
+  ],
+  "report": ""
+}

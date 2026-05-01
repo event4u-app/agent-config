@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Throw together a quick demo page for a one-off internal showcase next week.\n",
+      "reconstructed_ac": [],
+      "assumptions": [],
+      "ui_apply": {
+        "summary": "Bare demo page scaffolded with Tailwind defaults",
+        "rendered": {
+          "resources/views/demo/showcase.blade.php": "Internal showcase demo. Throwaway page for next week's review."
+        },
+        "files": [
+          "resources/views/demo/showcase.blade.php"
+        ]
+      }
+    }
+  },
+  "intent": "ui-improve",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": {
+    "greenfield": true,
+    "components_found": [],
+    "design_tokens": {},
+    "greenfield_decision": "bare",
+    "audit_path": "greenfield"
+  },
+  "ui_design": {
+    "layout": "single-column demo page, max-w-3xl, header + body",
+    "components": [
+      {
+        "name": "DemoPage",
+        "primitives": [
+          "heading",
+          "paragraph"
+        ]
+      }
+    ],
+    "states": {
+      "empty": "Initial render with heading and body copy",
+      "loading": "n/a — static page",
+      "error": "n/a — static page",
+      "success": "n/a — static page",
+      "disabled": "n/a — static page"
+    },
+    "microcopy": {
+      "title": "Internal showcase demo",
+      "body": "Throwaway page for next week's review."
+    },
+    "a11y": {
+      "labels": "h1 carries the page title",
+      "focus": "default browser focus order",
+      "aria_live": "n/a"
+    },
+    "reused_from_audit": [],
+    "design_confirmed": true
+  },
+  "ui_review": {
+    "findings": [],
+    "review_clean": true
+  },
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [
+    {
+      "kind": "ui",
+      "stack": "plain",
+      "file": "resources/views/demo/showcase.blade.php",
+      "summary": "Bare demo page scaffolded with Tailwind defaults"
+    }
+  ],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "success",
+    "plan": "success",
+    "implement": "success",
+    "test": "success",
+    "verify": "success",
+    "report": "success"
+  },
+  "questions": [],
+  "report": "## Ticket\n\n(no id) — (no title)\n\n## Persona\n\nsenior-engineer\n\n## Plan\n\n_(no plan recorded)_\n\n## Changes\n\n- `resources/views/demo/showcase.blade.php`\n\n## Tests\n\n_(no tests ran)_\n\n## Verify\n\n_(no verify verdict)_\n\n## Follow-ups\n\n_(none)_\n\n## Suggested next commands\n\n- `/commit`\n- `/create-pr`"
+}

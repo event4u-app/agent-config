@@ -242,6 +242,7 @@ def run_capture(
     persona: Optional[str] = None,
     cycle_cap: int = DEFAULT_CYCLE_CAP,
     state_filename: str = ".implement-ticket-state.json",
+    seed_state: Optional[dict[str, Any]] = None,
 ) -> CaptureResult:
     """Drive a Golden Transcript end-to-end and return the transcript.
 
@@ -256,6 +257,15 @@ def run_capture(
     agent-addressed line. Each step receives the post-cycle state and
     the ``CycleRecord`` and must return the state to persist before the
     next invocation.
+
+    ``seed_state`` is an optional fully-formed v1 state dict written to
+    the state file *before* cycle 1. The engine's ``_load_or_build``
+    treats an existing state file as authoritative, so the input flags
+    are suppressed in cycle 1 when a seed is supplied (state already
+    carries the envelope). Used by scenarios that need to start past a
+    gate the engine would otherwise emit a halt for — e.g. GT-U11
+    starting with a populated ``state.ui_audit`` so the audit step
+    short-circuits to SUCCESS and the design halt is the *only* halt.
     """
     inputs = [ticket_file, prompt_file, diff_file, file_file]
     supplied = [p for p in inputs if p is not None]
@@ -269,6 +279,8 @@ def run_capture(
     subcommand = CMD_TICKET if ticket_file is not None else CMD_WORK
     prepare_workspace(workspace)
     state_file = workspace / state_filename
+    if seed_state is not None:
+        write_state(state_file, seed_state)
     result = CaptureResult(
         gt_id=gt_id,
         ticket_file=ticket_file,
@@ -281,11 +293,12 @@ def run_capture(
     )
 
     for cycle_index in range(1, cycle_cap + 1):
-        ticket_arg = ticket_file if cycle_index == 1 else None
-        prompt_arg = prompt_file if cycle_index == 1 else None
-        diff_arg = diff_file if cycle_index == 1 else None
-        file_arg = file_file if cycle_index == 1 else None
-        persona_arg = persona if cycle_index == 1 else None
+        first_cycle = cycle_index == 1 and seed_state is None
+        ticket_arg = ticket_file if first_cycle else None
+        prompt_arg = prompt_file if first_cycle else None
+        diff_arg = diff_file if first_cycle else None
+        file_arg = file_file if first_cycle else None
+        persona_arg = persona if first_cycle else None
         exit_code, stdout, stderr, state = invoke_engine(
             workspace,
             state_file=state_file,

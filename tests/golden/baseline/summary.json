@@ -64,5 +64,41 @@
     "outcome": "success",
     "exit_code": 0,
     "cycles": 6
+  },
+  {
+    "gt_id": "GT-U3",
+    "outcome": "cycle_cap_reached",
+    "exit_code": 1,
+    "cycles": 3
+  },
+  {
+    "gt_id": "GT-U4",
+    "outcome": "cycle_cap_reached",
+    "exit_code": 1,
+    "cycles": 9
+  },
+  {
+    "gt_id": "GT-U9",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 7
+  },
+  {
+    "gt_id": "GT-U10",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 7
+  },
+  {
+    "gt_id": "GT-U11",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 2
+  },
+  {
+    "gt_id": "GT-U12",
+    "outcome": "success",
+    "exit_code": 0,
+    "cycles": 3
   }
 ]

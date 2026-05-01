@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "raw": "Tighten the spacing on the customer onboarding wizard.\n",
+      "reconstructed_ac": [],
+      "assumptions": []
+    }
+  },
+  "intent": "ui-improve",
+  "directive_set": "ui",
+  "stack": null,
+  "ui_audit": {
+    "components_found": [
+      {
+        "path": "resources/views/components/wizards/step.blade.php",
+        "name": "wizards.step",
+        "kind": "wizard-step",
+        "similarity": 0.74
+      }
+    ],
+    "design_tokens": {
+      "spacing": {
+        "sm": "8px",
+        "md": "12px",
+        "lg": "16px"
+      }
+    },
+    "audit_path": "high_confidence",
+    "candidate_pick": "wizards.step"
+  },
+  "ui_design": {
+    "layout": "vertical wizard, max-w-2xl, 12px step gap",
+    "components": [
+      {
+        "name": "OnboardingWizard",
+        "primitives": [
+          "wizards.step"
+        ]
+      }
+    ],
+    "states": {
+      "empty": "Wizard rendered with first step active",
+      "loading": "Step transition shows inline spinner",
+      "error": "Step-level validation errors inline",
+      "success": "Final step replaced by completion card",
+      "disabled": "Disabled steps show muted indicators"
+    },
+    "microcopy": {
+      "title": "Welcome — let's set up your account",
+      "buttons": {
+        "next": "Continue",
+        "back": "Back"
+      },
+      "completion": "All set — onboarding complete."
+    },
+    "a11y": {
+      "labels": "every step has aria-current=step when active",
+      "focus": "first invalid field focused on validation error",
+      "aria_live": "completion card announced via aria-live=polite"
+    },
+    "reused_from_audit": [
+      "wizards.step"
+    ],
+    "design_confirmed": true
+  },
+  "ui_review": null,
+  "ui_polish": null,
+  "contract": null,
+  "stitch": null,
+  "persona": "senior-engineer",
+  "memory": [],
+  "plan": null,
+  "changes": [],
+  "tests": null,
+  "verify": null,
+  "outcomes": {
+    "refine": "success",
+    "memory": "success",
+    "analyze": "blocked"
+  },
+  "questions": [
+    "> Input: Tighten the spacing on the customer onboarding wizard.",
+    "> Design brief is ready. Summary:",
+    "> - Components: 1",
+    "> - States covered: 5",
+    "> - Microcopy entries (locked): 4",
+    "> 1. Confirm — lock this brief and advance to apply",
+    "> 2. Revise — send feedback; loops back to ui-design-brief",
+    "> 3. Abort — drop this UI request",
+    "",
+    "**Recommendation: 1 — Confirm** — the brief covers all required slots and microcopy is final. Caveat: flip to 2 only if a string, state, or component is wrong; do not confirm strings you have not read."
+  ],
+  "report": ""
+}

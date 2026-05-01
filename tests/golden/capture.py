@@ -42,6 +42,12 @@ RECIPE_MODULES = (
     "tests.golden.sandbox.recipes.gt_p4_ui_rejection",
     "tests.golden.sandbox.recipes.gt_u1_build_happy",
     "tests.golden.sandbox.recipes.gt_u2_improve_diff",
+    "tests.golden.sandbox.recipes.gt_u3_audit_skipped",
+    "tests.golden.sandbox.recipes.gt_u4_polish_ceiling",
+    "tests.golden.sandbox.recipes.gt_u9_greenfield_scaffold",
+    "tests.golden.sandbox.recipes.gt_u10_greenfield_bare",
+    "tests.golden.sandbox.recipes.gt_u11_high_confidence",
+    "tests.golden.sandbox.recipes.gt_u12_ambiguous",
 )
 
 GOLDEN_ROOT = Path(__file__).resolve().parent
@@ -131,6 +137,8 @@ def _run_one(module) -> runner.CaptureResult:
     with tempfile.TemporaryDirectory(prefix=f"golden-{meta['gt_id']}-") as tmp:
         workspace = Path(tmp) / "ws"
         recipe = module.build_recipe(workspace)
+        seed_state_fn = getattr(module, "seed_state", None)
+        seed = seed_state_fn(workspace) if seed_state_fn is not None else None
         return runner.run_capture(
             gt_id=meta["gt_id"],
             ticket_file=ticket_file,
@@ -141,6 +149,7 @@ def _run_one(module) -> runner.CaptureResult:
             recipe=recipe,
             persona=meta.get("persona"),
             cycle_cap=meta.get("cycle_cap", runner.DEFAULT_CYCLE_CAP),
+            seed_state=seed,
         )
 
 
