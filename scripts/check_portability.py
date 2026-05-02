@@ -250,6 +250,55 @@ def check_file(filepath: Path, patterns: list, allowlist: list) -> List[Violatio
     return violations
 
 
+# ── Identity-framing detector ───────────────────────────────────────────
+# The package's public identity surface (README, AGENTS, copilot-instructions)
+# must read stack-neutral. Laravel is the deepest reference stack today, never
+# the headline. This detector flags banned phrases that elevate any single
+# stack to identity status. Source-of-truth list lives in the
+# road-to-1-15-followups.md roadmap (P0 #1, F1.5).
+_IDENTITY_FRAMING_PATTERNS: list[tuple[re.Pattern, str]] = [
+    (re.compile(r"\bLaravel-first\b", re.IGNORECASE), "identity-laravel-first"),
+    (re.compile(r"\bfor\s+PHP\s*/\s*Laravel\s+teams?\b", re.IGNORECASE), "identity-for-php-laravel-teams"),
+    (re.compile(r"\bfor\s+Laravel\s+teams?\b", re.IGNORECASE), "identity-for-laravel-teams"),
+    (re.compile(r"\bprimary\s+audience\s*[:=]\s*Laravel\b", re.IGNORECASE), "identity-primary-audience-laravel"),
+    (re.compile(r"\bbuilt\s+for\s+Laravel\b", re.IGNORECASE), "identity-built-for-laravel"),
+    (re.compile(r"\bLaravel\s*=\s*primary\b", re.IGNORECASE), "identity-laravel-equals-primary"),
+    (re.compile(r"\*\*Reference\s+implementation:\s*Laravel\.?\*\*", re.IGNORECASE), "identity-reference-implementation-laravel"),
+]
+
+# Files whose identity framing must stay stack-neutral. Relative to repo root.
+IDENTITY_SCAN_FILES = [
+    "README.md",
+    "AGENTS.md",
+    ".github/copilot-instructions.md",
+]
+
+
+def check_identity_framing(filepath: Path) -> List[Violation]:
+    """Flag banned identity-framing phrases in README / AGENTS / copilot-instructions.
+
+    The package presents itself as a universal governance system; any phrase
+    that pins identity to a single stack (Laravel-first, built for Laravel,
+    Reference implementation: Laravel as a bolded headline) is a regression.
+    """
+    violations: List[Violation] = []
+    try:
+        lines = filepath.read_text(encoding="utf-8").splitlines()
+    except Exception:
+        return violations
+
+    for i, line in enumerate(lines, 1):
+        for pattern, name in _IDENTITY_FRAMING_PATTERNS:
+            m = pattern.search(line)
+            if m:
+                violations.append(Violation(
+                    file=str(filepath), line=i, match=m.group(0),
+                    pattern_name=name, severity="error",
+                    context=line.strip(),
+                ))
+    return violations
+
+
 # ── Task-command detector ───────────────────────────────────────────────
 # Artefact files shipped in the package must not reference `task <name>`
 # invocations (per augment-portability rule). Consumer projects may not
@@ -466,6 +515,12 @@ def scan_all(root: Path) -> tuple[List[Violation], list[str]]:
                     violations.extend(check_task_invocations(f))
                 if not any(path_str.endswith(skip) for skip in _CLI_DETECTOR_SKIP):
                     violations.extend(check_cli_invocations(f))
+
+    # Layer 5: identity-framing scan on the public identity surface
+    for rel in IDENTITY_SCAN_FILES:
+        f = root / rel
+        if f.is_file():
+            violations.extend(check_identity_framing(f))
 
     return violations, detected
 

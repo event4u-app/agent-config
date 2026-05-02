@@ -68,7 +68,9 @@ Consolidate the 1.15.0 review into actionable, scoped phases — without resurfa
 - [x] **F1.2** Rewrite `README.md` opener (lines 1–11) — universal framing first; Laravel referenced only as "deepest reference stack".
 - [x] **F1.3** Rewrite `README.md` § "Who this is for" / quickstart prose so the opener doesn't get contradicted three sections later.
 - [x] **F1.4** Apply the same neutral framing to `AGENTS.md` opener and the `.github/copilot-instructions.md` opener if they currently read Laravel-first.
-- [ ] **F1.5** Add a CI lint (`scripts/check_identity_framing.py` or extend an existing linter) that fails when README/AGENTS opener prose contains the banned phrases. Same source-of-truth as `check-public-links`.
+- [x] **F1.5** Add a CI lint (`scripts/check_identity_framing.py` or extend an existing linter) that fails when README/AGENTS opener prose contains the banned phrases. Same source-of-truth as `check-public-links`.
+
+  **Implemented as Layer 5 of `scripts/check_portability.py`** — `check_identity_framing()` scans `README.md`, `AGENTS.md`, `.github/copilot-instructions.md` for 7 banned phrases (`Laravel-first`, `for PHP/Laravel teams`, `for Laravel teams`, `primary audience: Laravel`, `built for Laravel`, `Laravel = primary`, bolded `**Reference implementation: Laravel.**`). All hit synthetic violations cleanly; current files pass. No separate `check_identity_framing.py` script — consolidating into `check_portability.py` keeps the portability contract in one place and re-uses the existing `Violation` machinery + CI wiring.
 - [ ] **F1.6** Update `docs/contracts/STABILITY.md` if it inherits any Laravel-coloured language; the contract layer must be stack-neutral by definition.
 
 **Exit criteria:** Stranger reads README top + AGENTS top + copilot-instructions top — comes away thinking "universal governance package, Laravel happens to have the deepest skill density today" — never "Laravel package".
