@@ -95,21 +95,55 @@ the rule's tree, not by the target's tree.
 A `load_context:` graph that cycles fails the linter. Cycles are
 defined across both `load_context:` and `load_context_eager:` edges.
 
+## Examples
+
+### Real consumer — `autonomous-execution`
+
+`.agent-src.uncompressed/rules/autonomous-execution.md` is the first
+production rule to declare `load_context:`. Its frontmatter:
+
+```yaml
+---
+type: "auto"
+description: "Deciding whether to ask the user or just act on a workflow step — trivial-vs-blocking classification, autonomy opt-in detection, commit default; defers to non-destructive-by-default for the Hard Floor"
+alwaysApply: false
+source: package
+load_context:
+  - .agent-src.uncompressed/contexts/execution/autonomy-detection.md
+  - .agent-src.uncompressed/contexts/execution/autonomy-mechanics.md
+  - .agent-src.uncompressed/contexts/execution/autonomy-examples.md
+---
+```
+
+Three lazy-loaded contexts, no `load_context_eager:`. The agent reads
+each context only when the corresponding section of the slim rule
+points at it (the rule body cites the same paths in prose so the
+load is intent-driven, not blanket).
+
+Pattern proven by this consumer:
+
+- **Slim the rule to obligations only** — the 192-line pre-split
+  source dropped to 119 lines (≤ 120 target met) by extracting LOGIC
+  (detection algorithm), MECHANICS (setting table, cloud behavior),
+  and EXAMPLES (anchor phrases, worked cases, failure modes) into
+  three separate context files.
+- **Cite, don't duplicate** — the slim rule contains zero
+  algorithm/mechanics/example prose; everything moved was physically
+  removed (verified by Phase 2.5 obligation diff:
+  [`agents/reports/pr-34-phase-2-5-autonomous-execution-obligation-check.md`](../../agents/reports/pr-34-phase-2-5-autonomous-execution-obligation-check.md)).
+- **Lazy by default** — no eager-load is declared; the budget guard
+  is therefore a no-op for this rule.
+
+`task lint-load-context` reports **1 declarer**, all paths resolve,
+no cycles.
+
 ## Stability
 
-`beta` — the schema is settled but no rule currently uses it (Phase 1
-of the rebalancing roadmap closed-as-moot, no over-deletion to
-restore). Adding the first consumer will surface ergonomic edges; a
-breaking schema change is a SemVer-minor pre-1.0 bump. Adding a new
-optional key is non-breaking.
-
-## Linter behavior with zero consumers
-
-The linter is wired into `task ci` even though no rule currently
-declares `load_context:`. With zero consumers it is a fast no-op
-(scans frontmatter, finds nothing, exits 0). The wiring exists so
-that the *first* consumer ships under a green CI without retroactive
-infrastructure work.
+`beta` — schema is settled and serves one production rule
+(`autonomous-execution`). A breaking schema change is a SemVer-minor
+pre-1.0 bump. Adding a new optional key is non-breaking. The first
+consumer surfaced no schema gaps; the next migration batch (roadmap
+`road-to-pr-34-followups` Phase 5) is the next stress test.
 
 ## Cross-references
 

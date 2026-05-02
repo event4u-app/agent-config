@@ -93,12 +93,12 @@ Round 6 finding:
 
 > "Schema and linter shipped (Phase 2 of `road-to-rebalancing`); the first real consumer is still missing."
 
-- [ ] **3.1 Pick the pilot rule.** Natural candidate is `autonomous-execution` once Phase 2 above starts (its split produces the first non-trivial `load_context:` consumer). If Phase 2 stalls, fall back to a single read-only context reference on `verify-completion-evidence` or `non-destructive-by-default`.
-- [ ] **3.2 Wire `load_context:` frontmatter** on the pilot rule. Lazy by default; only switch to `load_context_eager:` if the budget audit confirms headroom.
-- [ ] **3.3 Confirm CI green.** `task lint-load-context` already runs in `task ci`; verify it now finds ≥ 1 declarer and that path resolution + budget caps still pass.
-- [ ] **3.4 Document the pattern.** `docs/contracts/load-context-schema.md` § Examples must contain at least one real, working example sourced from the pilot rule (no synthetic or hand-waved samples).
-- [ ] **3.5 Confirm duplication removal.** The logic / mechanics moved into the loaded context must be physically removed from the slim rule — diff the pre-/post-rule and assert no overlap.
-- [ ] **3.6 Context is exercised in Golden transcripts.** At least one Phase-4 Golden Transcript must trigger a code path that depends on the loaded context (so the convention has a behavioural test, not just a structural one).
+- [x] **3.1 Pick the pilot rule.** Natural candidate is `autonomous-execution` once Phase 2 above starts (its split produces the first non-trivial `load_context:` consumer). If Phase 2 stalls, fall back to a single read-only context reference on `verify-completion-evidence` or `non-destructive-by-default`. → satisfied as side effect of Phase 2.4 (commit `94edd24`).
+- [x] **3.2 Wire `load_context:` frontmatter** on the pilot rule. Lazy by default; only switch to `load_context_eager:` if the budget audit confirms headroom. → done in Phase 2.4 (3 lazy entries, no eager-load).
+- [x] **3.3 Confirm CI green.** `task lint-load-context` already runs in `task ci`; verify it now finds ≥ 1 declarer and that path resolution + budget caps still pass. → linter reports "load_context schema clean (1 declarer(s))".
+- [x] **3.4 Document the pattern.** `docs/contracts/load-context-schema.md` § Examples must contain at least one real, working example sourced from the pilot rule (no synthetic or hand-waved samples). → § Examples added with `autonomous-execution` frontmatter and pattern notes.
+- [x] **3.5 Confirm duplication removal.** The logic / mechanics moved into the loaded context must be physically removed from the slim rule — diff the pre-/post-rule and assert no overlap. → [`agents/reports/pr-34-phase-3-5-duplication-removal.md`](../reports/pr-34-phase-3-5-duplication-removal.md) (zero shared non-trivial lines).
+- [ ] **3.6 Context is exercised in Golden transcripts.** At least one Phase-4 Golden Transcript must trigger a code path that depends on the loaded context (so the convention has a behavioural test, not just a structural one). → blocked on Phase 4 (no Golden transcripts shipped yet).
 
 ### Phase-3 success criteria
 
