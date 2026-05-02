@@ -86,3 +86,9 @@ evals/results/
 # call from scripts/ai_council/_default_prices.py). User-editable —
 # never commit, prices drift constantly.
 .agent-prices.md
+
+# AI Council session persistence (D2). Each /council run writes
+# request + raw responses + manifest to a per-UTC-timestamp folder
+# for local audit + replay. Contains real provider output and
+# user-pasted manual replies — never commit.
+agents/council-sessions/
