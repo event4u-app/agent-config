@@ -299,6 +299,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | guideline | [`break-glass-usage`](../docs/guidelines/agent-infra/break-glass-usage.md) | agent-infra |  |
 | guideline | [`developer-judgment`](../docs/guidelines/agent-infra/developer-judgment.md) | agent-infra |  |
 | guideline | [`engineering-memory-data-format`](../docs/guidelines/agent-infra/engineering-memory-data-format.md) | agent-infra |  |
+| guideline | [`language-and-tone-examples`](../docs/guidelines/agent-infra/language-and-tone-examples.md) | agent-infra |  |
 | guideline | [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md) | agent-infra |  |
 | guideline | [`memory-access`](../docs/guidelines/agent-infra/memory-access.md) | agent-infra |  |
 | guideline | [`naming`](../docs/guidelines/agent-infra/naming.md) | agent-infra |  |
@@ -312,7 +313,6 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | guideline | [`tool-integration`](../docs/guidelines/agent-infra/tool-integration.md) | agent-infra |  |
 | guideline | [`readme-size-and-splitting`](../docs/guidelines/docs/readme-size-and-splitting.md) | docs |  |
 | guideline | [`playwright`](../docs/guidelines/e2e/playwright.md) | e2e |  |
-| guideline | [`language-and-tone-examples`](../docs/guidelines/language-and-tone-examples.md) | (root) |  |
 | guideline | [`api-design`](../docs/guidelines/php/api-design.md) | php |  |
 | guideline | [`artisan-commands`](../docs/guidelines/php/artisan-commands.md) | php |  |
 | guideline | [`blade-ui`](../docs/guidelines/php/blade-ui.md) | php |  |
