@@ -292,6 +292,10 @@ tasks:
     desc: Verify docs/catalog.md links resolve to shipped surfaces (no .agent-src.uncompressed/, all paths under package.json#files)
     cmd: python3 scripts/check_public_catalog_links.py
 
+  check-command-count:
+    desc: Verify README/AGENTS.md/docs/getting-started.md command counts match the cluster registry (active vs. shim split)
+    cmd: python3 scripts/check_command_count_messaging.py
+
   lint-no-new-atomic-commands:
     desc: Fail when a new atomic command lands without a `cluster:` field (P0.8c)
     cmd: python3 scripts/lint_no_new_atomic_commands.py
@@ -471,6 +475,7 @@ tasks:
       - task: check-portability
       - task: check-public-links
       - task: check-public-catalog-links
+      - task: check-command-count
       - task: lint-no-new-atomic-commands
       - task: lint-rule-interactions
       - task: lint-load-context
