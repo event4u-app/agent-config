@@ -135,5 +135,5 @@ can be validated without requiring `agent-memory` at runtime.
   — the authoritative spec
 - [`../contexts/agent-memory-contract.md`](../contexts/agent-memory-contract.md)
   — how the contract is consumed from agent-config
-- [`../../.agent-src.uncompressed/guidelines/agent-infra/memory-access.md`](../../.agent-src.uncompressed/guidelines/agent-infra/memory-access.md)
+- [`../../docs/guidelines/agent-infra/memory-access.md`](../../docs/guidelines/agent-infra/memory-access.md)
   — guideline that agents read before calling `retrieve()`

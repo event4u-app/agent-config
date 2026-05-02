@@ -115,7 +115,7 @@ These remain unresolved and belong to whichever sub-roadmap picks them up:
 
 - Source: GPT review #1 (PR #17)
 - Status: *opinion* — depends on consumer setup
-- Home: [`runtime-layer.md`](../../.agent-src.uncompressed/guidelines/agent-infra/runtime-layer.md)
+- Home: [`runtime-layer.md`](../../docs/guidelines/agent-infra/runtime-layer.md)
   guideline already covers part of this; extension belongs in the
   Execution layer, not in a new roadmap
 

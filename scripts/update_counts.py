@@ -28,8 +28,9 @@ def count(kind: str) -> int:
     if kind == "skills":
         return sum(1 for _ in (SRC / "skills").rglob("SKILL.md"))
     if kind == "guidelines":
-        # guidelines are grouped by topic subdirectory
-        return sum(1 for _ in (SRC / "guidelines").rglob("*.md"))
+        # Guidelines live under docs/guidelines/{topic}/ — they are reference
+        # material, not packaged artefacts. Recursive walk to count every .md.
+        return sum(1 for _ in (REPO_ROOT / "docs" / "guidelines").rglob("*.md"))
     if kind == "personas":
         # personas live as flat .md files, README excluded
         pdir = SRC / "personas"

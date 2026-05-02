@@ -338,5 +338,5 @@ skills) — this roadmap addresses only the pre-existing catalogue.
 - [`road-to-autonomous-agent.md`](road-to-autonomous-agent.md) — parent roadmap, Phase 3.1
 - [`.agent-src.uncompressed/rules/preservation-guard.md`](../../.agent-src.uncompressed/rules/preservation-guard.md) — quality gate
 - [`.agent-src.uncompressed/rules/skill-quality.md`](../../.agent-src.uncompressed/rules/skill-quality.md) — minimum sharpness
-- [`.agent-src.uncompressed/guidelines/agent-infra/size-and-scope.md`](../../.agent-src.uncompressed/guidelines/agent-infra/size-and-scope.md) — word budgets
+- [`docs/guidelines/agent-infra/size-and-scope.md`](../../docs/guidelines/agent-infra/size-and-scope.md) — word budgets
 - [`.agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md`](../../.agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md) — reference implementation of patterns 1-8

@@ -136,9 +136,7 @@ def read_text(path: Path) -> str:
 # --- Role-contract anchor cache (see road-to-role-modes Phase 1) ---
 # Populated lazily so the linter stays fast when the guideline is absent.
 _ROLE_CONTRACT_CANDIDATES = (
-    Path(".agent-src.uncompressed/guidelines/agent-infra/role-contracts.md"),
-    Path(".agent-src/guidelines/agent-infra/role-contracts.md"),
-    Path(".augment/guidelines/agent-infra/role-contracts.md"),
+    Path("docs/guidelines/agent-infra/role-contracts.md"),
 )
 _ROLE_CONTRACT_SLUGS_CACHE: Optional[set[str]] = None
 

@@ -168,14 +168,14 @@ committed in a single batch so cross-references resolve at once.
 - [x] `.agent-settings.yml` gains `personas.override: [...]` so a
   developer can narrow or widen their local defaults without
   changing team config. *(2026-04-22: [`agent-settings.md`](../../.agent-src.uncompressed/templates/agent-settings.md) — `personas.override` (full replacement) + `personas.ignore` (drop-only) with settings-reference rows)*
-- [x] Merge contract documented in [`layered-settings.md`](../../.agent-src.uncompressed/guidelines/agent-infra/layered-settings.md)
+- [x] Merge contract documented in [`layered-settings.md`](../../docs/guidelines/agent-infra/layered-settings.md)
   — six-step resolution (project default → override → specialist auto-include
   → ignore → `.augmentignore` → skill frontmatter wins). No separate
   `load_settings.py` script; same contract consumers implement against as for
   all other settings (Q6 Phase 0). *(2026-04-22)*
 - [x] `.augmentignore` semantics: a user can ignore a persona by
   id; ignored personas drop out of default lens selection but
-  remain invokable explicitly via `--personas=<id>`. *(2026-04-22: codified as step 5 of the resolution order in [`layered-settings.md`](../../.agent-src.uncompressed/guidelines/agent-infra/layered-settings.md); matches skill-ignore behaviour)*
+  remain invokable explicitly via `--personas=<id>`. *(2026-04-22: codified as step 5 of the resolution order in [`layered-settings.md`](../../docs/guidelines/agent-infra/layered-settings.md); matches skill-ignore behaviour)*
 
 ### Phase 6 — smart activation (v1.1+, deferred)
 
@@ -236,4 +236,4 @@ at least one skill each.
 - [`road-to-stronger-skills.md`](road-to-stronger-skills.md) — Tier-1 rewrites absorb persona references
 - [`.agent-src.uncompressed/rules/artifact-drafting-protocol.md`](../../.agent-src.uncompressed/rules/artifact-drafting-protocol.md) — mandatory per new persona
 - [`.agent-src.uncompressed/rules/skill-quality.md`](../../.agent-src.uncompressed/rules/skill-quality.md) — quality baseline personas inherit
-- [`.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md`](../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md) — workflow closing contracts
+- [`docs/guidelines/agent-infra/role-contracts.md`](../../docs/guidelines/agent-infra/role-contracts.md) — workflow closing contracts

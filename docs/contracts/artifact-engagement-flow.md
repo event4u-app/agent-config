@@ -118,7 +118,7 @@ The id namespaces are stable and bounded:
 | `skills` | `.agent-src/skills/<id>/SKILL.md` | `php-coder`, `eloquent` |
 | `rules` | `.agent-src/rules/<id>.md` | `scope-control`, `language-and-tone` |
 | `commands` | `.agent-src/commands/<id>.md` | `commit`, `create-pr` |
-| `guidelines` | `.agent-src/guidelines/<path>/<id>.md` | `agent-interaction-and-decision-quality` |
+| `guidelines` | `docs/guidelines/<path>/<id>.md` | `agent-interaction-and-decision-quality` |
 | `personas` | `.agent-src/personas/<id>.md` | `qa`, `senior-engineer` |
 
 `task_id` is the ticket key (`PROJ-123`) for `/implement-ticket` or a

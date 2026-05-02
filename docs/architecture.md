@@ -67,7 +67,7 @@ fails on any source-side violation, without producing artifacts.
 | **Skills** | 128 | On-demand expertise — Laravel, testing, Docker, API design, security, ... |
 | **Rules** | 56 | Always-active constraints — coding standards, scope control, verification |
 | **Commands** | 80 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/compress`, ... |
-| **Guidelines** | 46 | Coding guidelines by language — PHP patterns, Eloquent, Playwright, ... |
+| **Guidelines** | 47 | Coding guidelines by language — PHP patterns, Eloquent, Playwright, ... |
 | **Templates** | 7 | Scaffolds for features, roadmaps, contexts, skills, overrides |
 | **Contexts** | 5 | Shared knowledge about the system itself |
 

@@ -739,7 +739,7 @@ def test_guidelines_excluded_from_execution_checks(tmp_path: Path) -> None:
     """Guidelines should be excluded from execution quality checks."""
     path = write_file(
         tmp_path,
-        ".agent-src/guidelines/php/testing.md",
+        "docs/guidelines/php/testing.md",
         """\
 ---
 description: "Testing patterns"
@@ -766,7 +766,7 @@ def test_guideline_with_executable_procedure_warns(tmp_path: Path) -> None:
     """Guideline with 5+ executable numbered steps → warning."""
     path = write_file(
         tmp_path,
-        ".agent-src/guidelines/php/testing.md",
+        "docs/guidelines/php/testing.md",
         """\
 ---
 description: "Testing workflow"
@@ -791,7 +791,7 @@ def test_guideline_without_procedure_passes(tmp_path: Path) -> None:
     """Guideline without executable steps → no warning."""
     path = write_file(
         tmp_path,
-        ".agent-src/guidelines/php/naming.md",
+        "docs/guidelines/php/naming.md",
         """\
 ---
 description: "Naming conventions"
@@ -1164,7 +1164,7 @@ disable-model-invocation: true
 
 # Bogus
 
-See [contract](../guidelines/agent-infra/role-contracts.md#notamode).
+See [contract](docs/guidelines/agent-infra/role-contracts.md#notamode).
 
 ## Steps
 
@@ -1189,7 +1189,7 @@ disable-model-invocation: true
 
 # Good
 
-See [contract](../guidelines/agent-infra/role-contracts.md#developer).
+See [contract](docs/guidelines/agent-infra/role-contracts.md#developer).
 
 ## Steps
 

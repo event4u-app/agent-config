@@ -103,11 +103,11 @@ and
   skills/       (128 skills)
   rules/        (56 rules)
   commands/     (80 commands)
-  guidelines/   (46 guidelines)
   personas/     (7 personas)
   templates/    (AGENTS.md, copilot-instructions.md, skill.md, …)
   contexts/
 
+docs/guidelines/            (47 guidelines — reference material, not packaged)
 .agent-src/                 ← compressed output shipped in the package
 .augment/                   ← local projection for Augment Code (gitignored)
 scripts/                    ← install.sh, install.py, compress.py, linters
