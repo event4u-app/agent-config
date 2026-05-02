@@ -508,12 +508,12 @@ Stack-specific skills (`laravel`, `eloquent`, `pest-testing`, `php-coding`)
 - [x] F6.1 — Audit all 128 skill descriptions; rewrite over-budget ones *(Landed 2026-05-02: 14 over-budget artefacts identified (3 skills, 9 rules, 2 commands) and rewritten to ≤ 200 chars; uncompressed and compressed copies kept in lockstep, hashes re-marked.)*
 - [x] F6.2 — Add 200-char cap to `lint-skills` *(Landed 2026-05-02: cap promoted from warning → error in `scripts/skill_linter.py` for skills, rules, and commands; lint-skills green at 0 fail.)*
 - [x] F6.3 — Surface `optimize-augmentignore` as advisory in `task ci` *(Landed 2026-05-02: `scripts/check_augmentignore.py` reminds when `.augmentignore` is missing, >90 days stale, or has <5 active entries; wired as `task check-augmentignore`, always exits 0, runs at the tail of `task ci`.)*
-- [ ] F7.1 — Rewrite README tagline + sub-tagline to stack-neutral
-- [ ] F7.2 — Replace audience matrix with co-equal stack list + "Reference impl: Laravel" section
-- [ ] F7.3 — Rewrite `docs/getting-started.md` opening: stack detection first
-- [ ] F7.4 — Update `docs/architecture.md` sample descriptions to mixed stacks
-- [ ] F7.5 — Update `docs/github-topics.md` to drop "primary domain" framing
-- [ ] F7.6 — Audit AGENTS.md (root) for residual Laravel-first language
+- [x] F7.1 — Rewrite README tagline + sub-tagline to stack-neutral *(Landed 2026-05-02: tagline now leads with "audit-disciplined orchestration contract" + "120+ stack-aware skills"; sub-tagline names Laravel as reference implementation alongside parallel Symfony / Zend / Laminas / Next.js / React / Node skill sets.)*
+- [x] F7.2 — Replace audience matrix with co-equal stack list + "Reference impl: Laravel" section *(Landed 2026-05-02: matrix now lists Laravel · Symfony · Zend / Laminas · Next.js · React · Node · Vue · plain at parallel coverage; honest "Reference implementation: Laravel" paragraph explains depth ordering without demoting other stacks. "What your agent is asked to do" table generalised to detected-stack wording (Pest/PHPUnit/Vitest/Jest, PHPStan/Rector/ECS · ESLint/Prettier/tsc).)*
+- [x] F7.3 — Rewrite `docs/getting-started.md` opening: stack detection first *(Landed 2026-05-02: opens with stack-agnostic framing; installer block lists four entrypoints — Composer, npm, mixed, stack-less — instead of leading with `composer require`.)*
+- [x] F7.4 — Update `docs/architecture.md` sample descriptions to mixed stacks *(Landed 2026-05-02: Skills-row example now spans Laravel · Symfony · Zend / Laminas · Next.js · React · Node; Guidelines-row example reframed as "reference material cited by skills" instead of PHP-only.)*
+- [x] F7.5 — Update `docs/github-topics.md` to drop "primary domain" framing *(Landed 2026-05-02: added `orchestration`, `nextjs`, `nodejs`, `typescript` topics; rationale row for `laravel`/`php` reframed as "reference-implementation stack — currently the deepest skill density" instead of "primary domain".)*
+- [x] F7.6 — Audit AGENTS.md (root) for residual Laravel-first language *(Landed 2026-05-02: audited; the only Laravel/PHP mentions are factual statements about the package's own internals — "type: library in composer.json; no Laravel runtime", "no PHP, no Laravel, no JavaScript runtime dependencies". These describe what agent-config IS, not who it targets, so no reframing required.)*
 
 ## Risk register
 

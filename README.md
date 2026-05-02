@@ -2,9 +2,9 @@
 
 > **agent-config is not a runtime, but it ships a deterministic orchestration contract / state machine for host agents.**
 
-Teach your AI agents Laravel, PHP, testing, Git workflows, and **120+ more skills** — with quality guardrails built in.
+Give your AI agents an audit-disciplined orchestration contract — testing, Git, CI, code review, and **120+ stack-aware skills** — with quality guardrails built in.
 
-> Your agent learns to write Laravel code, run tests, create PRs, fix CI — and follows your team's coding standards while doing it.
+> Your agent picks up the project's stack, runs tests, creates PRs, fixes CI — and follows your team's coding standards while doing it. Reference implementation: Laravel; parallel skill sets for Symfony, Zend/Laminas, Next.js, React, and Node grow alongside.
 
 <p align="center">
   <strong>128 Skills</strong> · <strong>56 Rules</strong> · <strong>80 Commands</strong> · <strong>47 Guidelines</strong> · <strong>8 AI Tools</strong>
@@ -206,11 +206,11 @@ description of intent — not a guarantee of output.
 | Default behavior | With agent-config (the agent is instructed to) |
 |---|---|
 | Guess and edit blindly | Analyze code before changing it — no blind edits |
-| Drift from project conventions | Follow the project's PHP/Laravel coding standards |
-| Skip or invent tests | Write Pest tests following the project's conventions |
-| Write generic commit messages | Use Conventional Commits with scope and Jira links |
-| Skip quality checks | Run PHPStan, Rector, ECS and fix reported errors |
-| Open PRs without context | Produce structured PR descriptions from Jira tickets |
+| Drift from project conventions | Follow the project's coding standards (detected from the stack) |
+| Skip or invent tests | Write tests in the project's framework (Pest, PHPUnit, Vitest, Jest, …) |
+| Write generic commit messages | Use Conventional Commits with scope and ticket links |
+| Skip quality checks | Run the project's quality pipeline (PHPStan/Rector/ECS, ESLint/Prettier/tsc, …) and fix reported errors |
+| Open PRs without context | Produce structured PR descriptions from Jira / Linear / GitHub tickets |
 | Claim "done" without proof | Verify with real execution before claiming "done" |
 
 ---
@@ -270,21 +270,28 @@ Nothing runs automatically without your control. [Configure modes →](docs/cust
 
 ## Who this is for
 
-The content is **built for PHP / Laravel teams** and is where the package
-is most useful out of the box. Skills, rules, and quality-tool integration
-assume a Laravel-style repository (Pest, PHPStan, Rector, ECS, Artisan,
-Composer workflows). You can install it on any project, but:
+`agent-config` ships a **stack-agnostic governance core** — orchestration
+contract, role modes, command clusters, quality gates, audit-discipline —
+that applies to any project a coding agent works on. Around that core sit
+**parallel stack-specific skill sets** at varying depth:
 
-| Stack | Fit |
+| Stack | Coverage |
 |---|---|
-| **Laravel / modern PHP** | ✅ Primary audience — most skills apply directly |
-| **Other PHP frameworks** (Symfony, Zend/Laminas) | ☑️ Deep-analysis skills apply; framework-specific ones do not |
-| **JavaScript / TypeScript / Next.js / Node** | ☑️ General skills + governance apply; PHP-specific skills are noise |
-| **Other stacks** | ⚠️ Cherry-pick rules/commands; expect to disable a lot |
+| Laravel · modern PHP | Skills, rules, project-analysis, quality-tool wiring (Pest · PHPStan · Rector · ECS) |
+| Symfony · Zend / Laminas | Project-analysis skills + shared PHP coder/quality skills |
+| Next.js · React · Node / Express | Project-analysis skills + UI directive set (`react-shadcn`) |
+| Vue · plain HTML | UI directive set (`vue` / `plain`) — analysis skills as they ship |
+| Cross-stack | API design · testing strategy · security · database · Docker · Git · CI · review · threat modeling · observability |
 
-A language-agnostic core is on the roadmap but not yet extracted. If you
-adopt the package outside the primary audience, please open an issue so we
-can prioritize the right skills for extraction.
+**Reference implementation: Laravel.** Today the deepest skill density
+sits around Laravel (Pest, PHPStan, Rector, Eloquent, Livewire/Flux,
+Horizon, Pulse, Reverb, Pennant). That is where the package was first
+proven and where regressions show up earliest. Parallel sections for the
+other stacks land at matching depth as they mature — none are second-class
+citizens; they simply ship in the order they are battle-tested.
+
+If you adopt the package on a stack that's currently thin, open an issue
+so we can prioritize the right skills for extraction.
 
 ---
 

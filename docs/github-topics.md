@@ -13,8 +13,12 @@ ai-coding
 agent-skills
 agent-rules
 governance
+orchestration
 laravel
 php
+nextjs
+nodejs
+typescript
 devcontainer
 augment-agent
 claude-code
@@ -30,8 +34,9 @@ agentskills-standard
 | `agent-skills` | Aligns with the [Agent Skills](https://agentskills.io) community spec |
 | `agent-rules` | Complementary — rules govern behavior, skills provide expertise |
 | `governance` | Differentiates from prompt collections |
-| `laravel` | Primary domain — Laravel projects are the main audience |
-| `php` | Broader PHP audience |
+| `orchestration` | Captures the core identity — a deterministic orchestration contract / state machine |
+| `laravel`, `php` | Reference-implementation stack — currently the deepest skill density |
+| `nextjs`, `nodejs`, `typescript` | Parallel skill sets for JS/TS surfaces (project-analysis, UI directives) |
 | `devcontainer` | One of our 4 core concerns |
 | `augment-agent`, `claude-code`, `copilot` | Tool-specific discovery |
 | `agentskills-standard` | SKILL.md format is compatible with the agentskills.io spec |
@@ -53,8 +58,12 @@ gh repo edit event4u-app/agent-config \
   --add-topic agent-skills \
   --add-topic agent-rules \
   --add-topic governance \
+  --add-topic orchestration \
   --add-topic laravel \
   --add-topic php \
+  --add-topic nextjs \
+  --add-topic nodejs \
+  --add-topic typescript \
   --add-topic devcontainer \
   --add-topic augment-agent \
   --add-topic claude-code \
@@ -69,7 +78,7 @@ curl -X PUT \
   -H "Authorization: Bearer $GITHUB_TOKEN" \
   -H "Accept: application/vnd.github+json" \
   https://api.github.com/repos/event4u-app/agent-config/topics \
-  -d '{"names":["ai-coding","agent-skills","agent-rules","governance","laravel","php","devcontainer","augment-agent","claude-code","copilot","agentskills-standard"]}'
+  -d '{"names":["ai-coding","agent-skills","agent-rules","governance","orchestration","laravel","php","nextjs","nodejs","typescript","devcontainer","augment-agent","claude-code","copilot","agentskills-standard"]}'
 ```
 
 ## Verify

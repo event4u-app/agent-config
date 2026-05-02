@@ -82,7 +82,7 @@ A second wave of collapses (`chat-history`, `agents`, `memory`,
 `roadmap`, `module`, `tests`, `context`, `override`, `copilot-agents`,
 `commit`, `judge`, `create-pr`) is scheduled after 1.15.0 ships and
 the deprecation cycle for Phase 1 closes. Tracked in
-[`agents/roadmaps/road-to-governance-cleanup.md`](../../agents/roadmaps/road-to-governance-cleanup.md)
+[`agents/roadmaps/archive/road-to-governance-cleanup.md`](../../agents/roadmaps/archive/road-to-governance-cleanup.md)
 § F2.
 
 ## Related rule split — `chat-history` (post-1.15.0)

@@ -6,7 +6,7 @@ stability: beta
 
 > **Status:** beta — locked for `1.15.0` Phase 1 (top-3 clusters).
 > Phase 2 (remaining 12 clusters) waits one deprecation cycle.
-> Source roadmap: [`agents/roadmaps/road-to-governance-cleanup.md`](../../agents/roadmaps/road-to-governance-cleanup.md)
+> Source roadmap: [`agents/roadmaps/archive/road-to-governance-cleanup.md`](../../agents/roadmaps/archive/road-to-governance-cleanup.md)
 > § F2.
 
 The agent-config command surface collapses related atomic commands
@@ -120,7 +120,7 @@ Phase 2 cluster expansion.
 
 ## See also
 
-- [`agents/roadmaps/road-to-governance-cleanup.md`](../../agents/roadmaps/road-to-governance-cleanup.md) — F2 phased-collapse decision.
+- [`agents/roadmaps/archive/road-to-governance-cleanup.md`](../../agents/roadmaps/archive/road-to-governance-cleanup.md) — F2 phased-collapse decision.
 - [`agents/roadmaps/road-to-post-pr29-optimize.md`](../../agents/roadmaps/road-to-post-pr29-optimize.md) — P0.8 anchors this contract in 1.15.0.
 - [`docs/migrations/commands-1.15.0.md`](../migrations/commands-1.15.0.md) — user-facing migration notes.
 - [`docs/contracts/STABILITY.md`](STABILITY.md) — `beta` level rules apply.
