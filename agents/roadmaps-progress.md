@@ -21,7 +21,7 @@
 | 3 | [road-to-council-modes.md](roadmaps/road-to-council-modes.md) | 3 | 20 | 6 | 14 | 0 | 0 | ███████░░░ 70% |
 | 4 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 6 | [road-to-rebalancing.md](roadmaps/road-to-rebalancing.md) | 5 | 0 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 6 | [road-to-rebalancing.md](roadmaps/road-to-rebalancing.md) | 7 | 0 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -87,9 +87,11 @@
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| A | Removed-Knowledge Audit | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
-| B | Rule Rebalancing (5 candidates) | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
-| C | Structural Split: Rules vs Knowledge | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
-| D | Senior-Agent Behavior Tests | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
-| E | `minimal-safe-diff` specific concern | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
+| 0 | Removed-Knowledge Audit | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
+| 1 | Pilot Context Split (2–3 rules) | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
+| 2 | Context Loading Convention + Linter | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
+| 3 | Guidelines Domain Folders | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
+| 4 | Golden-Transcript-Backed Demos (`examples/flows/`) | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
+| 5 | Rule Priority Hierarchy + Interaction Matrix | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
+| 6 | Senior-Agent Behavior Tests | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 
