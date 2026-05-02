@@ -10,8 +10,23 @@ adds the redaction validator on top. The contract here is:
       "boundary_kind": "task" | "phase-step" | "tool-call",
       "consulted": {"skills": [...], "rules": [...], ...},
       "applied":   {"skills": [...], "rules": [...], ...},
+      "outcomes":  ["blocked", "verification_failed", ...]  # optional
       "tokens_estimate": {"consulted_load": <int>}   # optional
     }
+
+Outcomes (optional, additive in schema v1) capture *what happened*
+during the boundary, not which artefacts were consulted. The five
+allowed categories are scoped tightly so reports stay actionable:
+
+- ``blocked``                    — Hard-Floor / scope-control gate fired, work paused.
+- ``partial``                    — boundary closed without finishing the planned scope.
+- ``memory_influenced_decision`` — a memory entry shaped a non-trivial decision.
+- ``verification_failed``        — verify-before-complete gate rejected the result.
+- ``stop_rule_triggered``        — context-hygiene 3-failure / tool-loop stop fired.
+
+Outcomes compose: a single boundary may carry multiple. Order is
+preserved as recorded; duplicates are rejected to keep reports
+honest.
 
 Design choices:
 
@@ -47,6 +62,18 @@ ALLOWED_BOUNDARY_KINDS: tuple[str, ...] = (
     "phase-step",
     "tool-call",
 )
+
+# Outcome categories — see module docstring for semantics. The set is
+# intentionally small; widening requires an explicit follow-up roadmap
+# step. Reports group by these labels, so renaming is breaking.
+ALLOWED_OUTCOMES: tuple[str, ...] = (
+    "blocked",
+    "partial",
+    "memory_influenced_decision",
+    "verification_failed",
+    "stop_rule_triggered",
+)
+MAX_OUTCOMES_PER_EVENT = len(ALLOWED_OUTCOMES)
 
 # Phase 5 redaction validator — keep id fields from leaking paths,
 # free-text, or filenames. Repository-internal artefact ids and
@@ -115,6 +142,7 @@ class EngagementEvent:
     boundary_kind: str
     consulted: dict[str, list[str]] = field(default_factory=dict)
     applied: dict[str, list[str]] = field(default_factory=dict)
+    outcomes: list[str] | None = None
     tokens_estimate: dict[str, int] | None = None
     schema_version: int = SCHEMA_VERSION
 
@@ -134,6 +162,8 @@ class EngagementEvent:
             )
         _validate_artefact_dict("consulted", self.consulted)
         _validate_artefact_dict("applied", self.applied)
+        if self.outcomes is not None:
+            _validate_outcomes(self.outcomes)
         if self.tokens_estimate is not None:
             if not isinstance(self.tokens_estimate, dict):
                 raise EngagementSchemaError(
@@ -160,6 +190,8 @@ class EngagementEvent:
             "consulted": _normalise_artefact_dict(self.consulted),
             "applied": _normalise_artefact_dict(self.applied),
         }
+        if self.outcomes:
+            out["outcomes"] = list(self.outcomes)
         if self.tokens_estimate:
             out["tokens_estimate"] = dict(self.tokens_estimate)
         return out
@@ -198,6 +230,32 @@ def _normalise_artefact_dict(payload: dict[str, list[str]]) -> dict[str, list[st
     return {kind: list(payload[kind]) for kind in ALLOWED_KINDS if payload.get(kind)}
 
 
+def _validate_outcomes(payload: Any) -> None:
+    if not isinstance(payload, list):
+        raise EngagementSchemaError(
+            "outcomes must be a list of str or None"
+        )
+    if len(payload) > MAX_OUTCOMES_PER_EVENT:
+        raise EngagementSchemaError(
+            f"outcomes exceeds {MAX_OUTCOMES_PER_EVENT} entries"
+        )
+    seen: set[str] = set()
+    for label in payload:
+        if not isinstance(label, str) or not label:
+            raise EngagementSchemaError(
+                "outcomes must contain non-empty str labels"
+            )
+        if label not in ALLOWED_OUTCOMES:
+            raise EngagementSchemaError(
+                f"outcomes contains {label!r}; allowed: {ALLOWED_OUTCOMES!r}"
+            )
+        if label in seen:
+            raise EngagementSchemaError(
+                f"outcomes contains duplicate {label!r}"
+            )
+        seen.add(label)
+
+
 def parse_event(line: str) -> EngagementEvent:
     if not isinstance(line, str) or not line.strip():
         raise EngagementSchemaError("line must be a non-empty JSONL record")
@@ -213,6 +271,7 @@ def parse_event(line: str) -> EngagementEvent:
         boundary_kind=raw.get("boundary_kind", ""),
         consulted=raw.get("consulted", {}) or {},
         applied=raw.get("applied", {}) or {},
+        outcomes=raw.get("outcomes"),
         tokens_estimate=raw.get("tokens_estimate"),
         schema_version=raw.get("schema_version", SCHEMA_VERSION),
     )

@@ -26,7 +26,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, Iterator
 
-from .engagement import EngagementEvent, EngagementSchemaError, parse_event
+from .engagement import (
+    ALLOWED_OUTCOMES,
+    EngagementEvent,
+    EngagementSchemaError,
+    parse_event,
+)
 
 
 @dataclass(frozen=True)
@@ -53,6 +58,10 @@ class AggregateResult:
     earliest_ts: str | None = None
     latest_ts: str | None = None
     artefacts: dict[tuple[str, str], dict[str, object]] = field(default_factory=dict)
+    # Event-level outcome counts (boundary outcomes, not per-artefact).
+    # Initialised lazily in :func:`aggregate` so empty logs yield an
+    # empty dict rather than zeros across all five categories.
+    outcomes: dict[str, int] = field(default_factory=dict)
 
     def stats(self) -> list[ArtefactStat]:
         """Materialise the accumulated buckets as immutable stats."""
@@ -121,6 +130,12 @@ def aggregate(
         if result.latest_ts is None or event.ts > result.latest_ts:
             result.latest_ts = event.ts
         _accumulate(result.artefacts, event.consulted, event.applied, event.ts)
+        if event.outcomes:
+            for label in event.outcomes:
+                # Validator already restricted to ALLOWED_OUTCOMES, but
+                # the explicit guard documents intent and is cheap.
+                if label in ALLOWED_OUTCOMES:
+                    result.outcomes[label] = result.outcomes.get(label, 0) + 1
     return result
 
 

@@ -23,6 +23,7 @@ import pytest
 from telemetry.engagement import (
     ALLOWED_BOUNDARY_KINDS,
     ALLOWED_KINDS,
+    ALLOWED_OUTCOMES,
     SCHEMA_VERSION,
     EngagementEvent,
     EngagementSchemaError,
@@ -161,4 +162,79 @@ def test_allowed_constants_are_stable() -> None:
         "skills", "rules", "commands", "guidelines", "personas",
     )
     assert ALLOWED_BOUNDARY_KINDS == ("task", "phase-step", "tool-call")
+    assert ALLOWED_OUTCOMES == (
+        "blocked",
+        "partial",
+        "memory_influenced_decision",
+        "verification_failed",
+        "stop_rule_triggered",
+    )
     assert SCHEMA_VERSION == 1
+
+
+def test_outcomes_round_trip_preserves_order() -> None:
+    original = EngagementEvent(
+        ts="2026-04-30T12:00:00Z",
+        task_id="t-outcome",
+        boundary_kind="task",
+        outcomes=["verification_failed", "stop_rule_triggered"],
+    )
+    restored = parse_event(original.to_jsonl())
+    assert restored.outcomes == ["verification_failed", "stop_rule_triggered"]
+
+
+def test_outcomes_omitted_when_empty_or_none() -> None:
+    """Optional field stays out of the JSONL when unused (backward compat)."""
+    none_event = EngagementEvent(ts=now_utc_iso(), task_id="t1", boundary_kind="task")
+    empty_event = EngagementEvent(
+        ts=now_utc_iso(), task_id="t1", boundary_kind="task", outcomes=[]
+    )
+    assert "outcomes" not in json.loads(none_event.to_jsonl())
+    assert "outcomes" not in json.loads(empty_event.to_jsonl())
+
+
+def test_unknown_outcome_rejected() -> None:
+    bad = EngagementEvent(
+        ts=now_utc_iso(),
+        task_id="t1",
+        boundary_kind="task",
+        outcomes=["nope"],
+    )
+    with pytest.raises(EngagementSchemaError, match="allowed:"):
+        bad.validate()
+
+
+def test_duplicate_outcome_rejected() -> None:
+    bad = EngagementEvent(
+        ts=now_utc_iso(),
+        task_id="t1",
+        boundary_kind="task",
+        outcomes=["blocked", "blocked"],
+    )
+    with pytest.raises(EngagementSchemaError, match="duplicate"):
+        bad.validate()
+
+
+def test_outcomes_must_be_list() -> None:
+    bad = EngagementEvent(
+        ts=now_utc_iso(),
+        task_id="t1",
+        boundary_kind="task",
+        outcomes="blocked",  # type: ignore[arg-type]
+    )
+    with pytest.raises(EngagementSchemaError, match="must be a list"):
+        bad.validate()
+
+
+def test_legacy_event_without_outcomes_parses() -> None:
+    """Logs written before the outcome field still round-trip."""
+    raw = json.dumps({
+        "schema_version": SCHEMA_VERSION,
+        "ts": "2026-04-30T12:00:00Z",
+        "task_id": "t-legacy",
+        "boundary_kind": "task",
+        "consulted": {"skills": ["x"]},
+        "applied": {},
+    })
+    event = parse_event(raw)
+    assert event.outcomes is None

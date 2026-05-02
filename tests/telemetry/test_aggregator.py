@@ -30,6 +30,7 @@ def _event_line(
     task_id: str = "ticket-1",
     consulted: dict[str, list[str]] | None = None,
     applied: dict[str, list[str]] | None = None,
+    outcomes: list[str] | None = None,
 ) -> str:
     return EngagementEvent(
         ts=ts,
@@ -37,6 +38,7 @@ def _event_line(
         boundary_kind="task",
         consulted=consulted or {},
         applied=applied or {},
+        outcomes=outcomes,
     ).to_jsonl().rstrip("\n")
 
 
@@ -134,3 +136,37 @@ def test_aggregate_records_ts_range(tmp_path: Path) -> None:
     result = aggregate(log)
     assert result.earliest_ts == "2026-04-30T12:00:00Z"
     assert result.latest_ts == "2026-04-30T12:05:00Z"
+
+
+def test_aggregate_counts_outcomes(tmp_path: Path) -> None:
+    log = tmp_path / "log.jsonl"
+    _write(log, [
+        _event_line(
+            "2026-04-30T12:00:00Z",
+            consulted={"skills": ["a"]},
+            outcomes=["blocked"],
+        ),
+        _event_line(
+            "2026-04-30T12:01:00Z",
+            consulted={"skills": ["a"]},
+            outcomes=["blocked", "verification_failed"],
+        ),
+        _event_line(
+            "2026-04-30T12:02:00Z",
+            consulted={"skills": ["a"]},
+            outcomes=["memory_influenced_decision"],
+        ),
+        _event_line("2026-04-30T12:03:00Z", consulted={"skills": ["a"]}),
+    ])
+    result = aggregate(log)
+    assert result.outcomes == {
+        "blocked": 2,
+        "verification_failed": 1,
+        "memory_influenced_decision": 1,
+    }
+
+
+def test_aggregate_outcomes_empty_when_unused(tmp_path: Path) -> None:
+    log = tmp_path / "log.jsonl"
+    _write(log, [_event_line("2026-04-30T12:00:00Z", consulted={"skills": ["a"]})])
+    assert aggregate(log).outcomes == {}

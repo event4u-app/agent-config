@@ -19,7 +19,8 @@ Usage:
     ./agent-config telemetry:record \\
         --task-id ticket-PROJ-42 --boundary task \\
         --consulted skills:php-coder --consulted rules:scope-control \\
-        --applied skills:php-coder
+        --applied skills:php-coder \\
+        --outcome verification_failed --outcome stop_rule_triggered
 
 Exit codes:
     0   success or disabled (silent)
@@ -38,6 +39,7 @@ from pathlib import Path
 # the script is dispatched from the package or from a consumer copy.
 from telemetry.boundary import record_event
 from telemetry.engagement import (
+    ALLOWED_OUTCOMES,
     EngagementEvent,
     EngagementSchemaError,
     now_utc_iso,
@@ -71,6 +73,7 @@ def _build_event_from_args(args: argparse.Namespace) -> EngagementEvent:
         boundary_kind=args.boundary,
         consulted=_parse_kv_list(args.consulted or []),
         applied=_parse_kv_list(args.applied or []),
+        outcomes=list(args.outcome) if args.outcome else None,
     )
 
 
@@ -87,6 +90,7 @@ def _build_event_from_payload(raw: str) -> EngagementEvent:
         boundary_kind=data.get("boundary_kind", ""),
         consulted=data.get("consulted", {}) or {},
         applied=data.get("applied", {}) or {},
+        outcomes=data.get("outcomes"),
         tokens_estimate=data.get("tokens_estimate"),
     )
 
@@ -107,6 +111,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--consulted", action="append")
     parser.add_argument("--applied", action="append")
+    parser.add_argument(
+        "--outcome",
+        action="append",
+        choices=ALLOWED_OUTCOMES,
+        help=(
+            "Boundary outcome label; repeat for multiple. "
+            "Allowed: " + ", ".join(ALLOWED_OUTCOMES) + "."
+        ),
+    )
     parser.add_argument("--ts", default="")
     parser.add_argument("--payload-file", type=Path)
     parser.add_argument("--stdin", action="store_true")
