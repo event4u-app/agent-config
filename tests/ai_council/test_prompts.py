@@ -9,9 +9,12 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from scripts.ai_council.project_context import ProjectContext  # noqa: E402
 from scripts.ai_council.prompts import (  # noqa: E402
+    HOST_AGENT_IDENTITY_PATTERNS,
     NEUTRALITY_PREAMBLE,
     all_modes,
+    handoff_preamble,
     system_prompt_for,
 )
 
@@ -61,3 +64,97 @@ def test_no_yes_man_bias(mode: str) -> None:
 def test_neutrality_preamble_has_independence_clause() -> None:
     assert "independent" in NEUTRALITY_PREAMBLE.lower()
     assert "not seen" in NEUTRALITY_PREAMBLE.lower()
+
+
+# ── handoff_preamble ──────────────────────────────────────────────────────────
+
+
+def test_handoff_preamble_collapses_to_neutrality_when_empty() -> None:
+    """Backward-compat: no project, no ask → identical to v1 preamble."""
+    assert handoff_preamble(None, "") == NEUTRALITY_PREAMBLE
+    assert handoff_preamble(ProjectContext(), "") == NEUTRALITY_PREAMBLE
+
+
+def test_handoff_preamble_includes_project_fields() -> None:
+    p = ProjectContext(name="vendor/pkg", stack="PHP ^8.2 · Laravel", repo_purpose="A neutral orchestrator.")
+    out = handoff_preamble(p, "")
+    assert "Project: vendor/pkg" in out
+    assert "Stack: PHP ^8.2 · Laravel" in out
+    assert "Purpose: A neutral orchestrator." in out
+    assert out.endswith(NEUTRALITY_PREAMBLE)
+
+
+def test_handoff_preamble_omits_missing_fields_silently() -> None:
+    p = ProjectContext(name="vendor/pkg")  # stack + purpose missing
+    out = handoff_preamble(p, "")
+    assert "Project: vendor/pkg" in out
+    assert "Stack:" not in out
+    assert "Purpose:" not in out
+    assert "None" not in out
+
+
+def test_handoff_preamble_passes_original_ask_verbatim() -> None:
+    out = handoff_preamble(None, "review this roadmap before I execute it")
+    assert "The user originally asked:" in out
+    assert "> review this roadmap before I execute it" in out
+    assert out.endswith(NEUTRALITY_PREAMBLE)
+
+
+def test_handoff_preamble_quotes_multiline_ask() -> None:
+    out = handoff_preamble(None, "line one\nline two")
+    assert "> line one" in out
+    assert "> line two" in out
+
+
+@pytest.mark.parametrize("needle", list(HOST_AGENT_IDENTITY_PATTERNS))
+def test_handoff_preamble_strips_host_identity_from_ask(needle: str) -> None:
+    """Iron Law: a line mentioning the host agent must not leak."""
+    ask = f"the {needle} agent thinks this is fine\nbut the user disagrees"
+    out = handoff_preamble(None, ask)
+    assert needle not in out.lower()
+    assert "but the user disagrees" in out
+
+
+@pytest.mark.parametrize("needle", list(HOST_AGENT_IDENTITY_PATTERNS))
+def test_handoff_preamble_strips_host_identity_from_project(needle: str) -> None:
+    p = ProjectContext(name="vendor/pkg", repo_purpose=f"Built with {needle} support.")
+    out = handoff_preamble(p, "")
+    assert needle not in out.lower()
+
+
+def test_handoff_preamble_strips_only_offending_lines() -> None:
+    ask = "first line is fine\nclaude code says no\nthird line is also fine"
+    out = handoff_preamble(None, ask)
+    assert "first line is fine" in out
+    assert "third line is also fine" in out
+    assert "claude code" not in out.lower()
+
+
+def test_handoff_preamble_empty_after_strip_falls_back_to_neutrality() -> None:
+    """If every line is host-identity noise, output collapses to NEUTRALITY only."""
+    out = handoff_preamble(None, "claude code\naugment\ncursor agent")
+    assert out == NEUTRALITY_PREAMBLE
+
+
+# ── system_prompt_for with handoff arguments ──────────────────────────────────
+
+
+def test_system_prompt_for_without_project_matches_v1_shape() -> None:
+    """Back-compat: no kwargs → identical to pre-2a output."""
+    out = system_prompt_for("prompt")
+    assert out.startswith(NEUTRALITY_PREAMBLE)
+
+
+def test_system_prompt_for_with_project_uses_handoff_preamble() -> None:
+    p = ProjectContext(name="vendor/pkg", stack="PHP")
+    out = system_prompt_for("prompt", project=p, original_ask="critique this")
+    assert "Project: vendor/pkg" in out
+    assert "> critique this" in out
+    # Per-mode addendum still appended after.
+    assert "honest assessment" in out.lower()
+
+
+def test_system_prompt_for_with_only_original_ask_still_includes_ask() -> None:
+    out = system_prompt_for("roadmap", original_ask="ship it?")
+    assert "> ship it?" in out
+    assert NEUTRALITY_PREAMBLE in out
