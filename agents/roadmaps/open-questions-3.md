@@ -28,8 +28,8 @@
 | Category | Count |
 |---|---|
 | 🔬 Architecture | 5 (Q37-Q41) |
-| 🎯 Strategic | 1 (Q43) |
-| ✅ Resolved | 2 (Q36, Q42) |
+| 🎯 Strategic | 0 |
+| ✅ Resolved | 3 (Q36, Q42, Q43) |
 | 🛑 Artifact drafting | 0 |
 | 🌐 Cross-repo | 0 |
 | 💰 Budget | 0 |
@@ -198,7 +198,7 @@ the decision and re-runs the affected work.
   from the dashboard, but for an unrelated reason (zero `## Phase`
   headings — no phase structure at all).
 
-- **Q43** 🎯 `strategic` — **`.agent-src/commands/council.md`
+- **Q43** ✅ `resolved` — **`.agent-src/commands/council.md`
   compressed mirror is stale on Pre-Phase-1.** The compressed
   command file does not yet reflect Phase-1 (pricing / estimate gate
   / overrun callback), Phase-2a (handoff preamble), or Phase-2b
@@ -229,6 +229,16 @@ the decision and re-runs the affected work.
   (Understand → Research → Draft). Phase 2c has no committed
   timeline; deferring further would land a fourth drift layer on
   the next phase-pass. Compression contract must hold.
+
+  **Landed 2026-05-02.** `.agent-src/commands/council.md` rewritten
+  Pre-Phase-1 → Phase-2b in a single `artifact-drafting-protocol`
+  pass: original-ask capture, `mode:api|manual` invocation flag,
+  per-member mode resolution (Step 2.5), price-table load + staleness
+  gate, billable-only cost estimate with all-manual short-circuit,
+  `consult(..., project, original_ask, on_overrun)`, four new
+  failure modes (manual aborted, invalid mode, stale-table refresher
+  fail, corrupt prices). `compress.py --check` green;
+  `compress.py --changed` clean for `commands/council.md`.
 
 ## See also
 

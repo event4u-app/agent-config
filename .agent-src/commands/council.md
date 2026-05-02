@@ -14,7 +14,7 @@ suggestion:
 
 ## Instructions
 
-### 1. Resolve the target
+### 1. Resolve the target + capture the original ask
 
 The user invoked `/council` on exactly one input mode:
 
@@ -23,36 +23,73 @@ The user invoked `/council` on exactly one input mode:
 - `diff:<base>..<head>` — a git diff range
 - `files:<path>,<path>` — a comma-separated file list
 
+Optional invocation flag: `mode:api|manual` overrides the per-member
+and global mode for this call only (see Step 2.5). `mode:playwright`
+is reserved for Phase 2c — refuse politely if invoked.
+
 If none was supplied, ask the user which mode + target. **One question
 per turn** (per `ask-when-uncertain`). Do not assume the working-tree
 diff.
 
-### 2. Check the council is configured
+Also capture the user's **original ask** verbatim — the free-form
+sentence that triggered the council, distinct from the bundled
+artefact. For `prompt:"…"` mode the ask and the artefact are the
+same string. For `roadmap` / `diff` / `files` modes, the ask is the
+user's framing sentence ("review this roadmap before I execute it",
+"is this diff safe to merge?"). It flows into
+`consult(..., original_ask=…)` in Step 5 so members get the neutral
+handoff preamble alongside the artefact (per `ai-council` skill §
+Neutrality — context-handoff).
+
+### 2. Check the council is configured + price table fresh
 
 Read `.agent-settings.yml` → `ai_council`:
 
 - If `ai_council.enabled` is false → state that and offer to flip it
   on. Do not flip it autonomously.
 - If no member has `enabled: true` → list the install commands
-  (`bash scripts/install_anthropic_key.sh`, `bash scripts/install_openai_key.sh`)
+  (`./agent-config keys:install-anthropic`, `./agent-config keys:install-openai`)
   and stop.
 - If a member is enabled but its `*.key` file is missing or has the
   wrong mode → tell the user which key to install. Do not fall back to
   env vars. Ever.
 
-### 3. Cost confirmation — ALWAYS ASK
+Load the price table via `scripts.ai_council.pricing.load_prices()`
+(auto-bootstraps `.agent-prices.md` from defaults if missing). Run
+`pricing.is_stale(table)` and, if stale, surface the staleness gate
+from the `ai-council` skill (§ Stale price-table gate) before
+continuing.
 
-Council calls are billable. Even under `personal.autonomy: on`, the
-agent **must** ask before invoking. Surface a numbered-options block:
+### 2.5. Resolve per-member execution mode
 
-> External council call — billable
->
-> Members: anthropic (claude-sonnet-4-5), openai (gpt-4o)
-> Mode: roadmap · Target: `agents/roadmaps/<name>.md` (~3 KB after redaction)
-> Cost ceiling: 50k input / 20k output tokens
->
-> 1. Run the consultation
-> 2. Cancel
+For each enabled member, resolve its mode via
+`scripts.ai_council.modes.resolve_mode(name, invocation_mode,
+member_settings, global_mode)`. Precedence: invocation flag >
+per-member setting > global setting > default (`api`).
+
+Construct each member from the resolved mode:
+
+- `api` → `AnthropicClient` / `OpenAIClient` (billable, cost-gated).
+- `manual` → `ManualClient` from `scripts.ai_council.clients`
+  (`billable=False`, no API key, no SDK call).
+- `playwright` → reserved for Phase 2c. If a settings/invocation
+  resolves to it, refuse with a one-line note.
+
+### 3. Cost confirmation — ALWAYS ASK for billable members
+
+Council calls to billable members spend money. Even under
+`personal.autonomy: on`, the agent **must** ask before invoking any
+billable member.
+
+Compute `orchestrator.estimate(question, members, table)` over the
+**billable** subset only (`getattr(m, "billable", True)`). Manual
+members contribute `$0` and skip the estimate.
+
+Render the cost-confirmation numbered-options block per the
+`ai-council` skill (§ Pre-call estimate format) — per-member tokens
++ USD, projected total, budget caps, then `1. Run / 2. Cancel`. If
+the resolved member set is **all-manual**, skip the gate entirely
+(spend = $0) and proceed directly to Step 4.
 
 Wait for the user's pick. `1` proceeds; anything else aborts.
 
@@ -74,13 +111,34 @@ sending — gives the user a chance to abort if scope is wrong.
 
 ### 5. Run the orchestrator
 
-Call `scripts.ai_council.orchestrator.consult(members, question, budget)`.
-Members are constructed from the settings file plus the keys from
-`load_anthropic_key()` / `load_openai_key()`.
+Members are constructed from the settings file plus
+`load_anthropic_key()` / `load_openai_key()`. Cost budget comes from
+`ai_council.cost_budget`.
 
-Cost budget comes from `ai_council.cost_budget`. The orchestrator
-runs in parallel and normalises per-member errors — one failure does
-not abort the others.
+Detect project context once via
+`scripts.ai_council.project_context.detect_project_context()` (reads
+`composer.json`, `package.json`, root `README.md` — never raises;
+empty fields fall back to the bare neutrality preamble).
+
+Call:
+
+```python
+consult(
+    members, question, budget,
+    table=table,
+    on_overrun=_handle_overrun,
+    project=project,
+    original_ask=original_ask,
+)
+```
+
+`project` + `original_ask` flow into `handoff_preamble()` so each
+member receives a neutral context-handoff alongside the artefact
+(see `ai-council` skill § Neutrality — context-handoff). Members run
+**sequentially**; per-member errors are normalised — one failure
+does not abort the others. Define `_handle_overrun(event)` per the
+`ai-council` skill (§ Mid-flow overrun callback) to surface the user
+prompt before each breaching member.
 
 ### 6. Render the report
 
@@ -118,9 +176,23 @@ loses meaning if the council can act on the project directly.
   Do not fall back to mocks.
 - **Key file mode drift** → refuse and point at the install script.
   The 0600 contract is non-negotiable.
+- **Manual mode + non-interactive stdin** → `ManualClient` reads
+  pasted replies from stdin terminated by a line containing only
+  `END`. If stdin is closed before any reply lands, the member
+  returns empty text with `error="manual_aborted"`; render the
+  partial result and ask the user.
+- **Invalid mode value** → `resolve_mode()` raises
+  `InvalidModeError` with the exact settings path. Surface verbatim
+  and stop.
 - **Cost budget exceeded mid-fan-out** → render the partial
   responses and clearly mark the unfinished members with their
   `cost_budget_exceeded` error. Do not silently retry.
+- **Stale price table, refresher fails (offline)** → state the
+  failure, re-offer "continue with stale table / cancel", do not
+  proceed silently.
+- **`.agent-prices.md` corrupt (missing frontmatter or columns)** →
+  surface the parse error, suggest deleting the file to bootstrap
+  fresh from defaults; never silently fall back.
 - **All members error** → render the errors and ask the user
   whether to fix and retry, or abort.
 
