@@ -139,7 +139,7 @@ single P0 so progress reflects the actual deliverables.
 - [x] P0.4 — Term separation: split `runtime_dispatcher.py` from `work_engine` from tool adapters in README + architecture doc; lock Work Engine = beta
 - [x] P0.5 — State-default + migration safety: change `DEFAULT_STATE_FILE` to `.work-state.json`; collision-safe backup rotation; ship `MIGRATION.md` for `implement_ticket → work_engine`
 - [x] P0.6 — Clear lint regressions in `scope-control`, `autonomous-execution`, `commit-policy`, `direct-answers`; CI green
-- [ ] P0.7 — Test coverage gaps: `implement-ticket` without `--state-file`; `/work` UI-prompt + medium-prompt + resume + pre-existing `.work-state.json`
+- [x] P0.7 — Test coverage gaps: `implement-ticket` without `--state-file`; `/work` UI-prompt + medium-prompt + resume + pre-existing `.work-state.json`
 - [ ] P0.8 — Command-collapse migration docs + atomic-command linter
 - [ ] P0.8a — `docs/migrations/commands-1.15.0.md` (old → new --subcommand table, deprecation window, shim-removal version)
 - [ ] P0.8b — Deprecation shims emit one-line warning; warning text required by `lint-skills`

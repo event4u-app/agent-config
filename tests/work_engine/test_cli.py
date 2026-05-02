@@ -298,3 +298,133 @@ def test_legacy_hint_skipped_for_custom_state_file(
     stderr = capsys.readouterr().err
     assert "legacy state file" not in stderr.lower()
     assert "--ticket-file" in stderr
+
+
+# --- Default state file (P0.7) -----------------------------------------
+
+def test_default_state_file_creates_work_state_in_cwd(
+    tmp_path: Path, capsys, fake_memory_lookup, monkeypatch,
+) -> None:
+    """Omitting ``--state-file`` writes to ``.work-state.json`` in cwd.
+
+    The 1.15.0 default file rename is observable on the wire: a fresh
+    run with only ``--ticket-file`` must materialise the state at the
+    canonical default path, not at the legacy
+    ``.implement-ticket-state.json``.
+    """
+    monkeypatch.chdir(tmp_path)
+    ticket = _write_ticket(tmp_path)
+
+    exit_code = main(["--ticket-file", str(ticket)])
+
+    assert exit_code == 1  # halts at create-plan
+    default_state = tmp_path / ".work-state.json"
+    legacy_state = tmp_path / ".implement-ticket-state.json"
+    assert default_state.is_file(), "default --state-file must be .work-state.json"
+    assert not legacy_state.exists(), "legacy state file must NOT be written"
+
+
+def test_default_state_file_resumes_without_explicit_flag(
+    tmp_path: Path, capsys, fake_memory_lookup, monkeypatch,
+) -> None:
+    """A second invocation with no flags resumes from ``.work-state.json``.
+
+    Verifies the resume path through the default-file contract: once
+    state is on disk at the canonical default, a bare ``main([])`` must
+    pick it up and continue dispatch without needing ``--state-file``.
+    """
+    monkeypatch.chdir(tmp_path)
+    ticket = _write_ticket(tmp_path)
+
+    main(["--ticket-file", str(ticket)])
+    capsys.readouterr()
+
+    default_state = tmp_path / ".work-state.json"
+    persisted = json.loads(default_state.read_text())
+    persisted["plan"] = [{"title": "Add /exports route"}]
+    persisted["outcomes"]["plan"] = "success"
+    default_state.write_text(json.dumps(persisted), encoding="utf-8")
+
+    exit_code = main([])
+
+    assert exit_code == 1  # halts at next agent step (apply-plan)
+    stdout = capsys.readouterr().out
+    assert "@agent-directive: apply-plan" in stdout
+
+
+# --- /work UI prompt routing (P0.7) ------------------------------------
+
+def test_prompt_file_ui_routes_to_ui_directive_set(
+    tmp_path: Path, capsys, fake_memory_lookup,
+) -> None:
+    """A UI-shaped prompt routes through the ``ui`` directive set.
+
+    First-pass behaviour: ``populate_routing`` classifies the prompt as
+    ``ui-build`` and pins ``directive_set='ui'``; the dispatcher then
+    runs the UI ``refine`` slot (the ``audit`` handler), which halts
+    with the ``existing-ui-audit`` directive because ``state.ui_audit``
+    is empty.
+    """
+    prompt_file = tmp_path / "prompt.txt"
+    prompt_file.write_text(
+        "Build a new checkout screen with shipping address and order summary",
+        encoding="utf-8",
+    )
+    state_file = tmp_path / "state.json"
+
+    exit_code = main([
+        "--state-file", str(state_file),
+        "--prompt-file", str(prompt_file),
+    ])
+
+    assert exit_code == 1  # BLOCKED at audit gate
+    stdout = capsys.readouterr().out
+    assert "@agent-directive: existing-ui-audit" in stdout
+    persisted = json.loads(state_file.read_text())
+    assert persisted["intent"] == "ui-build"
+    assert persisted["directive_set"] == "ui"
+    assert persisted["input"]["kind"] == "prompt"
+
+
+# --- /work medium-band confidence halt (P0.7) --------------------------
+
+def test_prompt_file_medium_band_emits_assumptions_report(
+    tmp_path: Path, capsys, fake_memory_lookup,
+) -> None:
+    """A backend prompt scoring ``medium`` halts with an assumptions report.
+
+    Driven by writing a v1 state file that mirrors what a refine-prompt
+    rebound produces: ``reconstructed_ac`` populated with weak AC, no
+    ``confidence_confirmed`` flag yet. The dispatcher then runs
+    ``backend.refine``, scores the prompt at the medium band, and halts
+    with the partial-outcome assumptions report.
+    """
+    state_file = tmp_path / "state.json"
+    state_file.write_text(
+        json.dumps({
+            "version": 1,
+            "input": {
+                "kind": "prompt",
+                "data": {
+                    "raw": "Improve performance and also clean up logs",
+                    "reconstructed_ac": ["queries should be faster"],
+                    "assumptions": [],
+                },
+            },
+            "intent": "backend",
+            "directive_set": "backend",
+            "outcomes": {},
+            "questions": [],
+        }),
+        encoding="utf-8",
+    )
+
+    exit_code = main(["--state-file", str(state_file)])
+
+    assert exit_code == 1  # PARTIAL → BLOCKED on the wire
+    stdout = capsys.readouterr().out
+    assert "**medium**" in stdout
+    assert "Reconstructed AC" in stdout
+    assert "Assumptions" in stdout
+    persisted = json.loads(state_file.read_text())
+    assert persisted["outcomes"]["refine"] == "partial"
