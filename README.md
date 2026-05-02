@@ -177,7 +177,7 @@ switches the engine to one of three directive sets:
 
 Four load-bearing properties: (1) **existing-UI audit is a hard gate** —
 no `apply` without audit, enforced at dispatcher AND
-[`ui-audit-before-build`](.agent-src/rules/ui-audit-before-build.md) rule;
+[`ui-audit-gate`](.agent-src/rules/ui-audit-gate.md) rule;
 (2) **design brief is locked microcopy** — placeholders (`<placeholder>`,
 `Lorem`, `TODO:`) rejected at both ends; (3) **polish has a 2-round
 ceiling**, then halts ship-as-is / abort / hand-off; (4) **a11y precedence**

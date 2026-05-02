@@ -189,7 +189,7 @@
   "rules/think-before-action.md": "ea3c4ee91d0991aace1c2c74c88abcc0a11e4f79c4e878479a698168d996cab7",
   "rules/token-efficiency.md": "e3366a04cdbcc558f425574268c7454299a8884b7815f036c4cfb078ebfe7e35",
   "rules/tool-safety.md": "b13f3564a58a19f3af7c64c2000e0a13eb966c86f4d66f60938f4fad76c8164b",
-  "rules/ui-audit-before-build.md": "b4aa9119e5d5112512193bb92a2d591ca15efb3ab0910a50888089a40519a10a",
+  "rules/ui-audit-gate.md": "b4aa9119e5d5112512193bb92a2d591ca15efb3ab0910a50888089a40519a10a",
   "rules/upstream-proposal.md": "eea27d887a97aa6b733e00730266aac1e4d041f5195bc385252d2753866ac0eb",
   "rules/user-interaction.md": "254e51e8c30092a59e5e948e9b38e6fb9d09ecaf0eff0f75c7f4c644102c2cbc",
   "rules/verify-before-complete.md": "12b38af45cc058748009caa98914af5e8e2781b99c2277d416cae456979e3d2a",

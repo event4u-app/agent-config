@@ -28,7 +28,7 @@ with three load-bearing properties:
 
 1. **Existing-UI-audit is a hard gate.** No `apply` runs without
    `state.ui_audit` populated. The gate lives at directive level **and**
-   at always-on rule level ([`ui-audit-before-build`](../../.agent-src.uncompressed/rules/ui-audit-before-build.md))
+   at always-on rule level ([`ui-audit-gate`](../../.agent-src.uncompressed/rules/ui-audit-gate.md))
    so an agent acting outside the engine cannot bypass it.
 2. **Design brief is locked microcopy.** `apply` consumes the brief
    verbatim — `PLACEHOLDER_PATTERNS` (`<placeholder>`, `lorem`, `todo:`,
@@ -89,7 +89,7 @@ Two enforcement layers, deliberately redundant:
   [`directives/ui/audit.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/ui/audit.py)
   refuses to write `outcomes["refine"] = "success"` without a populated
   audit. Purely structural; no LLM, no heuristic.
-- **Agent layer** — [`ui-audit-before-build`](../../.agent-src.uncompressed/rules/ui-audit-before-build.md)
+- **Agent layer** — [`ui-audit-gate`](../../.agent-src.uncompressed/rules/ui-audit-gate.md)
   is an always-on rule that fires when the agent is about to write a
   component file outside the engine (free-form edit, side conversation,
   cloud surface). The rule encodes the same Iron Law in prose so cloud

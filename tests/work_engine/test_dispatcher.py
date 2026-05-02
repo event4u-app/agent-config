@@ -236,7 +236,7 @@ def test_dispatch_does_not_skip_steps_marked_blocked_or_partial() -> None:
 # UI directive set with no ``state.ui_audit``, the dispatcher must
 # halt at ``refine`` (the audit handler), not silently pass through to
 # ``analyze`` and start writing components. Pairs with the rule-layer
-# enforcement in ``.agent-src.uncompressed/rules/ui-audit-before-build.md``.
+# enforcement in ``.agent-src.uncompressed/rules/ui-audit-gate.md``.
 
 
 def test_dispatch_ui_set_halts_on_refine_when_audit_skipped() -> None:

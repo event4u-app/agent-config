@@ -1,4 +1,4 @@
-"""Content invariants for ``ui-audit-before-build`` (R3 Phase 2 Step 5).
+"""Content invariants for ``ui-audit-gate`` (R3 Phase 2 Step 5).
 
 The rule file is the defense-in-depth twin of the dispatcher gate in
 ``directives/ui/audit.py``: when an agent is acting outside the engine
@@ -21,7 +21,7 @@ RULE_PATH = (
     REPO_ROOT
     / ".agent-src.uncompressed"
     / "rules"
-    / "ui-audit-before-build.md"
+    / "ui-audit-gate.md"
 )
 
 
