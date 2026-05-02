@@ -104,7 +104,7 @@ If the helper returned `skipped_cadence`, surface it:
 
 - The command writes through the same ownership-state machine as
   hooks — a `foreign` log triggers the
-  [`chat-history`](../rules/chat-history.md) Foreign-Prompt before any
+  [`chat-history`](../rules/chat-history-ownership.md) Foreign-Prompt before any
   append. This is intentional; the checkpoint must not silently
   hijack another session's log.
 - The `phase` payload key is required. Other keys are accepted but
@@ -117,7 +117,7 @@ If the helper returned `skipped_cadence`, surface it:
 
 ## See also
 
-- [`chat-history`](../rules/chat-history.md) — the rule defining the
+- [`chat-history`](../rules/chat-history-ownership.md) — the rule defining the
   conditional Iron Law (HOOK platforms vs CHECKPOINT/MANUAL platforms)
 - [`/chat-history`](chat-history.md) — read-only status display
 - [`/chat-history-resume`](chat-history-resume.md) — adopt + load

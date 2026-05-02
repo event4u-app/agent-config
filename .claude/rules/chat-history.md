@@ -1,1 +1,0 @@
-../../.agent-src/rules/chat-history.md
