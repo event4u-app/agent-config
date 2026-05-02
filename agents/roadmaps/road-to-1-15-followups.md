@@ -51,7 +51,20 @@ Consolidate the 1.15.0 review into actionable, scoped phases — without resurfa
 
 > Granularity: F-step, each row is a single PR-able commit.
 
-- [ ] **F1.1** Audit every file under `README.md`, `AGENTS.md`, `.github/copilot-instructions.md`, `docs/architecture.md`, `docs/contracts/*.md` for Laravel-coloured identity language (greppable list: "Laravel-first", "for PHP / Laravel teams", "primary audience: Laravel", "built for Laravel", "Laravel = primary"). Produce a deliverable list of locations + current wording + proposed neutral wording.
+- [x] **F1.1** Audit every file under `README.md`, `AGENTS.md`, `.github/copilot-instructions.md`, `docs/architecture.md`, `docs/contracts/*.md` for Laravel-coloured identity language (greppable list: "Laravel-first", "for PHP / Laravel teams", "primary audience: Laravel", "built for Laravel", "Laravel = primary"). Produce a deliverable list of locations + current wording + proposed neutral wording.
+
+  **Audit results (2026-05-02).** None of the explicit banned phrases hit (`Laravel-first`, `for PHP / Laravel teams`, `primary audience: Laravel`, `built for Laravel`). Identity-frame-leaning lines that still need neutralization:
+
+  | File | Line | Current wording (excerpt) | Action |
+  |---|---|---|---|
+  | `README.md` | 7 | "Reference implementation: Laravel; parallel skill sets for Symfony · Zend/Laminas · Next.js · React · Node grow alongside." | F1.2 — universal framing first; Laravel referenced only as one of several reference stacks. |
+  | `README.md` | 283 | "**Reference implementation: Laravel.** Deepest skill density today …" (under § Who this is for) | F1.3 — reframe as "deepest skill density today" without Laravel as the bolded headline. |
+  | `AGENTS.md` | 18, 46 | "no `app/` directory, no Laravel runtime"; "No PHP, no Laravel, no JavaScript runtime dependencies." | F1.4 — keep technical accuracy, drop the Laravel-first reading. |
+  | `.github/copilot-instructions.md` | 5, 22, 23 | "not a Laravel/PHP application"; "No PHP source files, no Laravel code, no JavaScript runtime deps. If you see Laravel-specific suggestions in a PR …" | F1.4 — generalize "Laravel" → "framework" / "application stack". |
+  | `docs/architecture.md` | 67 | "stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node)" | No change — Laravel is one item in a list, no identity bias. |
+  | `docs/contracts/STABILITY.md` | — | No Laravel mentions. | F1.6 — no edit needed; record as audited. |
+
+  Banned-phrase grep is empty, so the F1.5 lint can ship with an authoritative starter list. P0 #4 (Token-overhead wording) cell verified: the literal "Zero" sits under header "Token overhead" in the Cost-profiles table at `README.md` line 255–257.
 - [ ] **F1.2** Rewrite `README.md` opener (lines 1–11) — universal framing first; Laravel referenced only as "deepest reference stack".
 - [ ] **F1.3** Rewrite `README.md` § "Who this is for" / quickstart prose so the opener doesn't get contradicted three sections later.
 - [ ] **F1.4** Apply the same neutral framing to `AGENTS.md` opener and the `.github/copilot-instructions.md` opener if they currently read Laravel-first.
