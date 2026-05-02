@@ -130,10 +130,23 @@ def _collect_guidelines() -> list[Entry]:
     return out
 
 
-def _render_table(entries: list[Entry], cols: list[str], link_prefix: str) -> str:
+# Path rewriter for the public catalog: link to the shipped surface
+# (`.agent-src/`) instead of the source-of-truth (`.agent-src.uncompressed/`),
+# which is excluded from `package.json#files` and `composer.json` archives.
+def _to_shipped_path(path: str) -> str:
+    return path.replace(".agent-src.uncompressed/", ".agent-src/", 1)
+
+
+def _render_table(
+    entries: list[Entry],
+    cols: list[str],
+    link_prefix: str,
+    path_rewrite=None,
+) -> str:
     rows = ["| " + " | ".join(cols) + " |", "|" + "|".join(["---"] * len(cols)) + "|"]
     for e in entries:
-        link = f"[`{e.name}`]({link_prefix}{e.path})"
+        path = path_rewrite(e.path) if path_rewrite else e.path
+        link = f"[`{e.name}`]({link_prefix}{path})"
         row = [e.kind, link, e.extra, e.description]
         rows.append("| " + " | ".join(row) + " |")
     return "\n".join(rows)
@@ -188,19 +201,19 @@ def _render_catalog(skills, rules, commands, guidelines) -> str:
         "",
         f"## Skills ({len(skills)})",
         "",
-        _render_table(skills, ["kind", "name", "extra", "description"], "../"),
+        _render_table(skills, ["kind", "name", "extra", "description"], "../", _to_shipped_path),
         "",
         f"## Rules ({len(public_rules)})",
         "",
-        _render_table(public_rules, ["kind", "name", "type", "description"], "../"),
+        _render_table(public_rules, ["kind", "name", "type", "description"], "../", _to_shipped_path),
         "",
         f"## Commands ({len(public_commands)})",
         "",
-        _render_table(public_commands, ["kind", "name", "cluster", "description"], "../"),
+        _render_table(public_commands, ["kind", "name", "cluster", "description"], "../", _to_shipped_path),
         "",
         f"## Guidelines ({len(guidelines)})",
         "",
-        _render_table(guidelines, ["kind", "name", "category", "description"], "../"),
+        _render_table(guidelines, ["kind", "name", "category", "description"], "../", _to_shipped_path),
         "",
         "---",
         "",
