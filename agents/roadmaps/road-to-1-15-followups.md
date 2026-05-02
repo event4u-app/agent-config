@@ -66,7 +66,7 @@ Consolidate the 1.15.0 review into actionable, scoped phases — without resurfa
 
   Banned-phrase grep is empty, so the F1.5 lint can ship with an authoritative starter list. P0 #4 (Token-overhead wording) cell verified: the literal "Zero" sits under header "Token overhead" in the Cost-profiles table at `README.md` line 255–257.
 - [x] **F1.2** Rewrite `README.md` opener (lines 1–11) — universal framing first; Laravel referenced only as "deepest reference stack".
-- [ ] **F1.3** Rewrite `README.md` § "Who this is for" / quickstart prose so the opener doesn't get contradicted three sections later.
+- [x] **F1.3** Rewrite `README.md` § "Who this is for" / quickstart prose so the opener doesn't get contradicted three sections later.
 - [ ] **F1.4** Apply the same neutral framing to `AGENTS.md` opener and the `.github/copilot-instructions.md` opener if they currently read Laravel-first.
 - [ ] **F1.5** Add a CI lint (`scripts/check_identity_framing.py` or extend an existing linter) that fails when README/AGENTS opener prose contains the banned phrases. Same source-of-truth as `check-public-links`.
 - [ ] **F1.6** Update `docs/contracts/STABILITY.md` if it inherits any Laravel-coloured language; the contract layer must be stack-neutral by definition.

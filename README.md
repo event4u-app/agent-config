@@ -280,7 +280,7 @@ Nothing runs automatically without your control. [Configure modes →](docs/cust
 | Vue · plain HTML | UI directive set (`vue` / `plain`) — analysis skills as they ship |
 | Cross-stack | API design · testing · security · database · Docker · Git · CI · review · threat modeling · observability |
 
-**Reference implementation: Laravel.** Deepest skill density today (Pest, PHPStan, Rector, Eloquent, Livewire/Flux, Horizon, Pulse, Reverb, Pennant) — the stack the package was first proven on. Other stacks ship in the order they are battle-tested, not second-class. Adopting on a thin stack? Open an issue so we can prioritize the right skills for extraction.
+**Deepest reference stack today: Laravel.** Skill density covers Pest, PHPStan, Rector, Eloquent, Livewire/Flux, Horizon, Pulse, Reverb, Pennant — the stack the package was first proven on. Other stacks ship in the order they are battle-tested, not second-class. Adopting on a thin stack? Open an issue so we can prioritize the right skills for extraction.
 
 ---
 
