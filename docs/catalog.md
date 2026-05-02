@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **295 public artefacts** shipped by
+Consumer-facing catalog of all **298 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -199,7 +199,7 @@ are excluded.
 | rule | [`user-interaction`](../.agent-src.uncompressed/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src.uncompressed/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (66)
+## Commands (69)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -223,6 +223,9 @@ are excluded.
 | command | [`context-refactor`](../.agent-src.uncompressed/commands/context-refactor.md) |  | Analyze, update, and extend an existing context document |
 | command | [`copilot-agents-init`](../.agent-src.uncompressed/commands/copilot-agents-init.md) |  | Create AGENTS.md and .github/copilot-instructions.md from scratch in the consumer project — interactive, auto-detects stack, never leaks other projects' identifiers. |
 | command | [`copilot-agents-optimize`](../.agent-src.uncompressed/commands/copilot-agents-optimize.md) |  | Analyzes and refactors AGENTS.md and copilot-instructions.md — removes duplications, enforces line budgets, and ensures both files are optimized for their audience. |
+| command | [`council-design`](../.agent-src.uncompressed/commands/council-design.md) | cluster: optimize | Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment. |
+| command | [`council-optimize`](../.agent-src.uncompressed/commands/council-optimize.md) | cluster: optimize | Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice. |
+| command | [`council-pr`](../.agent-src.uncompressed/commands/council-pr.md) | cluster: optimize | Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in. |
 | command | [`council`](../.agent-src.uncompressed/commands/council.md) | cluster: optimize | Consult external AIs (OpenAI, Anthropic) for an independent second opinion on a prompt, roadmap, diff, or file set — neutral framing, redacted context, advisory output only. |
 | command | [`create-pr-description`](../.agent-src.uncompressed/commands/create-pr-description.md) |  | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
 | command | [`create-pr`](../.agent-src.uncompressed/commands/create-pr.md) |  | Create a GitHub PR with structured description from Jira ticket and code changes |
