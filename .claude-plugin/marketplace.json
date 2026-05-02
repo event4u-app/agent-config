@@ -213,7 +213,7 @@
         "./.claude/skills/upstream-contribute",
         "./.claude/skills/using-git-worktrees",
         "./.claude/skills/validate-feature-fit",
-        "./.claude/skills/verify-before-complete",
+        "./.claude/skills/verify-completion-evidence",
         "./.claude/skills/websocket",
         "./.claude/skills/work"
       ]

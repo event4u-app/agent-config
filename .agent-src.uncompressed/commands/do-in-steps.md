@@ -1,6 +1,6 @@
 ---
 name: do-in-steps
-skills: [subagent-orchestration, verify-before-complete]
+skills: [subagent-orchestration, verify-completion-evidence]
 description: Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict
 disable-model-invocation: true
 suggestion:
@@ -57,7 +57,7 @@ On stop, report the last verified state so the user can resume.
 
 ### 5. Final verification
 
-After step N passes judgment, run `verify-before-complete` across the
+After step N passes judgment, run `verify-completion-evidence` across the
 whole changeset — targeted tests + full suite + quality pipeline.
 Never declare the plan "done" without this gate.
 
@@ -77,11 +77,11 @@ Next step:  <commit / open PR / resume from step K>
 
 - Never skip a step because the next one looks easier
 - Never apply a revised step without the judge re-verdicting
-- Never declare complete without final `verify-before-complete`
+- Never declare complete without final `verify-completion-evidence`
 - A failing step never cascades silently — stop, report, hand back
 
 ## See also
 
 - [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md)
-- [`verify-before-complete`](../skills/verify-before-complete/SKILL.md)
+- [`verify-completion-evidence`](../skills/verify-completion-evidence/SKILL.md)
 - [`/do-and-judge`](do-and-judge.md) — single-change variant

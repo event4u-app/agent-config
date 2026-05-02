@@ -128,7 +128,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`upstream-contribute`](../.agent-src/skills/upstream-contribute/SKILL.md) | Use when a learning, new skill, rule improvement, or bug fix from a consumer project should be contributed back to the shared agent-config package. |
 | [`using-git-worktrees`](../.agent-src/skills/using-git-worktrees/SKILL.md) | Use when starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety checks and a clean test baseline — even when the user says 'try this on the side'. |
 | [`"validate-feature-fit"`](../.agent-src/skills/"validate-feature-fit"/SKILL.md) | Validate whether a feature request fits the existing codebase — check for duplicates, contradictions, scope creep, and architectural misfit |
-| [`verify-before-complete`](../.agent-src/skills/verify-before-complete/SKILL.md) | Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs. |
+| [`verify-completion-evidence`](../.agent-src/skills/verify-completion-evidence/SKILL.md) | Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs. |
 | [`websocket`](../.agent-src/skills/websocket/SKILL.md) | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
 ---
