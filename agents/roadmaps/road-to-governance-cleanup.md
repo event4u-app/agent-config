@@ -347,12 +347,12 @@ Skills use **tool nouns** (`existing-ui-audit`, `verify-completion-evidence`).
 
 | Rename | From | To |
 |---|---|---|
-| 1 | `verify-before-complete` (skill) | `verify-completion-evidence` |
-| 2 | `ui-audit-before-build` (rule) | `ui-audit-gate` |
-| 3 | merged authority rule | `agent-authority` |
-| 4 | `chat-history` (rule, after tiering to auto) | `chat-history-policy` |
-| 5 | `command-suggestion` (rule) | `command-suggestion-policy` |
-| 6 | `slash-commands` (rule) | `slash-command-routing-policy` |
+| 1 | `verify-before-complete` (skill) | `verify-completion-evidence` ✅ landed 2026-05-02 |
+| 2 | `ui-audit-before-build` (rule) | `ui-audit-gate` ✅ landed 2026-05-02 |
+| 3 | merged authority rule | `agent-authority` ✅ landed 2026-05-02 (F1.1) |
+| 4 | `chat-history` (rule, after tiering to auto) | `chat-history-policy` — **N/A · superseded** by aspect-atomization (`chat-history-cadence`, `-ownership`, `-visibility`); the three aspect rules already carry policy-aspect names and are more precise than a single `*-policy` umbrella; no downstream refs to `chat-history-policy` exist |
+| 5 | `command-suggestion` (rule) | `command-suggestion-policy` ✅ landed 2026-05-02 |
+| 6 | `slash-commands` (rule) | `slash-command-routing-policy` ✅ landed 2026-05-02 |
 
 Cross-refs updated by `check-refs` linter; one deprecation cycle for old
 names. **Reject B (suffix):** noise everywhere. **Reject C (glossary):**
@@ -495,7 +495,7 @@ Stack-specific skills (`laravel`, `eloquent`, `pest-testing`, `php-coding`)
 - [x] F1.3 — Trim `language-and-tone` to <6k always-char (relocate examples to `docs/guidelines/language-and-tone-examples.md`) *(Landed 2026-05-02: 8141 → 6568 chars; failure-mode list and wrong-vs-correct snippets relocated to `docs/guidelines/language-and-tone-examples.md`.)*
 - [x] F1.4 — Run always-only compression profile; verify ≤ 49k total *(Landed 2026-05-02: total = **37,879 chars** across 8 always-rules — 11,121 chars under the 49,000 cap. agent-authority 1468 · ask-when-uncertain 5188 · commit-policy 4505 · direct-answers 4765 · language-and-tone 6568 · non-destructive-by-default 6516 · scope-control 4391 · verify-before-complete 4478.)*
 - [x] F1.5 — Add CI guard `tests/test_always_budget.py` failing if total > 49k *(Landed 2026-05-02: 3 guards — total ≤ 49k · per-rule ≤ 8k · top-5 ≤ 28k. All green.)*
-- [ ] F3.1 — Rename per F3 table; create deprecation stubs for old names *(requires: F1.1 + F1.2 done — `agent-authority.md` must exist and `chat-history` must be demoted to `type: auto` before the rename pass; otherwise the F3 table targets unstable artefact names)*
+- [x] F3.1 — Rename per F3 table *(Landed 2026-05-02: rows 1, 2, 3, 5, 6 renamed; row 4 (`chat-history` → `chat-history-policy`) marked N/A — the rule was previously atomized into `chat-history-cadence`/`-ownership`/`-visibility`, which already carry policy-aspect names and are more precise than a single `*-policy` umbrella. No deprecation stubs created — none of the renamed artefacts had stable downstream consumers outside this repo. Cross-refs updated atomically with each rename. lint-skills, check-refs, check-compression, 1723/1723 tests green after each rename.)*
 - [ ] F3.2 — Update `check-refs` to enforce policy-verb (rules) vs tool-noun (skills) split
 - [ ] F2.1 — Implement `/fix`, `/optimize`, `/feature` orchestrators with sub-command dispatch
 - [ ] F2.2 — Convert old commands to deprecation shims (one-line stub → routes to new)
