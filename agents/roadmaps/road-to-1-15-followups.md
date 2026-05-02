@@ -1,9 +1,9 @@
 # Road to 1.15 Followups
 
-**Status:** PLANNED — Identity rewrite (P0 #1) is the visible plate; rest captured for sequencing.
+**Status:** IN PROGRESS — P0 + P1 verified shipped; P2 (rule-interaction matrix substance, outcome-aware telemetry) and P1 #7 outcome demos are the remaining open work.
 **Started:** 2026-05-02
 **Trigger:** External review of the 1.15.0 release. Release scored 9.1 / 10 overall (8.8 / 10 as a consistent release) — strong consolidation, real progress on `docs/contracts/`, Stability Policy, Migration Guide, count-drift fix, public-link check, rule-interaction linter. The remaining gap is **public identity + governance surface**.
-**Mode:** Sequential — P0 items land before P1; P2 stays capture-only until P0 #1 + #2 are done.
+**Mode:** Sequential — P0 items land before P1; P2 stays gated until P0 #1 + #2 are done. **P0 verified complete 2026-05-02 → P1 + P2 now eligible to execute.**
 
 ## Source
 
@@ -28,24 +28,24 @@ Consolidate the 1.15.0 review into actionable, scoped phases — without resurfa
 | Fenced delivery | `scope-control` § Fenced step | Each phase ends at a deliverable. The maintainer reopens execution explicitly; no auto-handoff to "shall we start?". |
 | Capture-only beyond P0 | This file | P1 and P2 items are recorded for sequencing only. They do not start until P0 #1 + #2 land. |
 
-## Horizon (visible plate)
+## Horizon
 
-**Inside the plate (this iteration):**
+**Shipped (verified 2026-05-02):**
 
-- **P0 #1 — Identity rewrite.** README opener, taglines, "who this is for", quickstart framing, all stack-neutral. Laravel demoted to "deepest reference stack" wherever it currently reads as primary identity.
+- P0 #1 — Identity rewrite. README + AGENTS + copilot-instructions stack-neutral, F1.5 lint live.
+- P0 #2 — Always-rule budget. Measurement under all three caps; no demotions needed.
+- P0 #3 — Command-collapse phase 1. `/fix` · `/feature` · `/optimize` clusters + shims + locked contract.
+- P0 #4 — Token-overhead wording fix. Cost-profiles table corrected.
+- P1 #5 — Work-Engine modularisation. `templates/scripts/work_engine/` split into focused modules.
+- P1 #6 — Public artefact catalog. `docs/catalog.md` + `docs/skills-catalog.md` generated from frontmatter.
 
-**Outside the plate (capture-only, sequenced):**
+**Open (executable now that P0 has landed):**
 
-- P0 #2 — Always-rule budget reduction.
-- P0 #3 — Command-collapse phase 1.
-- P0 #4 — Token-overhead wording fix.
-- P1 #5 — Work-Engine CLI modularisation.
-- P1 #6 — Public artefact catalog.
-- P1 #7 — Outcome demos.
-- P2 #8 — Rule-interaction matrix substance.
-- P2 #9 — Outcome-aware telemetry.
+- P1 #7 — Outcome demos (four end-to-end walkthroughs).
+- P2 #8 — Rule-interaction matrix substance (populate pairs in `docs/contracts/rule-interactions.yml`).
+- P2 #9 — Outcome-aware telemetry (five outcome categories on the engagement event schema).
 
-## P0 — Visible plate
+## P0
 
 ### Phase 1 — Identity rewrite (P0 #1, Laravel ≠ identity)
 
@@ -77,17 +77,36 @@ Consolidate the 1.15.0 review into actionable, scoped phases — without resurfa
 
 **Exit criteria:** Stranger reads README top + AGENTS top + copilot-instructions top — comes away thinking "universal governance package, Laravel happens to have the deepest skill density today" — never "Laravel package".
 
-### Phase 2 — Always-rule budget (P0 #2, capture-only, sequenced after Phase 1)
+### Phase 2 — Always-rule budget (P0 #2)
 
-Targets from review: `always total ≤ 49k tokens`, `single always rule ≤ 8k`, `top-5 always ≤ 28k`. Current state shows 56 rules — bigger than at 1.14.0. Scope: identify which rules can demote to `auto`, which can merge, and which are genuinely always-on. Hand-off to `agent-authority` index pattern if the discussion surfaces a higher-band consolidation.
+Targets from review: `always total ≤ 49k tokens`, `single always rule ≤ 8k`, `top-5 always ≤ 28k`. The "56 rules" figure in the original review was the **total** rules count (always + auto); the always-injected subset was already much smaller and has been kept disciplined.
 
-- [ ] **Promote to executable** — itemise demotion + merge candidates against the three budget targets, then ship the demotions.
+Measurement (2026-05-02, `.agent-src/rules/*.md` with `type: always`):
 
-### Phase 3 — Command-collapse phase 1 (P0 #3, capture-only)
+| Metric | Target | Current | Status |
+|---|---|---|---|
+| always rules count | — | 8 | OK |
+| total tokens (1t ≈ 4 chars) | ≤ 49 000 | 9 470 | ✅ 19% of cap |
+| top-5 tokens | ≤ 28 000 | 6 884 | ✅ 25% of cap |
+| max single rule | ≤ 8 000 | 1 582 (`non-destructive-by-default`) | ✅ 20% of cap |
 
-Top-3 collapse already in plan: `/fix`, `/feature`, `/optimize`. Old commands stay as shims behind `lint-no-new-atomic-commands` (already shipped 1.15.0). Scope: produce a deliverable list of commands per cluster + shim plan + linter exemption story.
+Top-5 always rules: `non-destructive-by-default` (1 582t) · `scope-control` (1 439t) · `language-and-tone` (1 421t) · `ask-when-uncertain` (1 291t) · `direct-answers` (1 151t). All eight always rules are doctrinal Iron-Law surfaces — no demotion candidate without weakening the floor. Auto rules (44) are not budget-bound by the targets above; they only fire when the trigger description matches.
 
-- [ ] **Promote to executable** — list commands per cluster, define shim mechanism, resolve linter-exemption story, ship shims.
+- [x] **Verified under budget** — measurement above, no demotions required (2026-05-02).
+
+### Phase 3 — Command-collapse phase 1 (P0 #3)
+
+Top-3 collapse shipped in 1.15.0:
+
+- `/fix` orchestrator dispatches to `ci · pr · pr-bots · pr-developers · portability · refs · seeder` (replaces 7 atomic commands).
+- `/feature` orchestrator dispatches to `explore · plan · refactor · roadmap · dev` (replaces 5 atomic commands).
+- `/optimize` orchestrator dispatches to `agents · augmentignore · rtk · skills` (replaces 4 atomic commands).
+
+Net: 16 atomic commands collapsed into 3 cluster commands. Old atomic command files stay as deprecation shims (one release) and declare `cluster:` in frontmatter so `scripts/lint_no_new_atomic_commands.py` accepts them. Locked contract: [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+
+Linter status: `task lint-no-new-atomic-commands` is green. The shim mechanism (existing files declare `cluster:`) avoids needing a temporary allowlist.
+
+- [x] **Shipped** — orchestrators + shims + locked contract in place (2026-05-02 verification).
 
 ### Phase 4 — Token-overhead wording fix (P0 #4)
 
@@ -101,19 +120,41 @@ Single-table edit, zero downstream callers, `task ci` green.
 
 - [x] **Replace** `Token overhead` → `Runtime process overhead` and `Zero` → `None` in README cost-profiles table (commit 1bcdb26, 2026-05-02).
 
-## P1 — Capture-only
+## P1
 
 ### Phase 5 — Work-Engine CLI modularisation (P1 #5)
 
-Split `cli.py` into focused modules: `cli_args.py`, `state_io.py`, `input_builders.py`, `hook_bootstrap.py`, `runner.py`, `emitters.py`. Not cosmetic — the engine is the product core; future extension surfaces (memory, telemetry, council integration) will hit it directly.
+Split shipped. `templates/scripts/work_engine/` is already broken into focused modules (verified 2026-05-02):
 
-- [ ] **Promote to executable** — per-module extraction plan + tests + cutover for the `cli.py` split.
+| Module | Lines | Role |
+|---|---|---|
+| `cli.py` | 195 | Top-level entry, orchestrates a single `work` invocation |
+| `cli_args.py` | 116 | Argument parsing surface |
+| `state_io.py` | 202 | Read / write `.agent-state.json`, atomic swaps |
+| `input_builders.py` | 163 | Refine / score / plan input construction |
+| `hook_bootstrap.py` | 76 | Per-host hook wiring |
+| `emitters.py` | 43 | Stdout / log emitters |
+| `dispatcher.py` | 331 | Phase-step routing (replaces planned `runner.py` — same role, name diverged) |
+| `delivery_state.py` | 137 | Delivery-state machine |
+| `state.py` | 641 | Persistent run state, status fields, transitions |
+| `persona_policy.py` | 85 | Persona resolution |
+| `errors.py` | 19 | Engine-specific exceptions |
+| `__init__.py` / `__main__.py` | 58 / 9 | Package surface, `python -m work_engine` entry |
+
+Plus sub-packages: `directives/`, `hooks/`, `intent/`, `migration/`, `resolvers/`, `scoring/`, `stack/`. The naming divergence (`dispatcher.py` for `runner.py`) is intentional — the file dispatches to phase-step handlers, "dispatcher" reads more accurately than "runner".
+
+- [x] **Shipped** — modular split in place; future extension surfaces (memory, telemetry, council integration) hook into the dispatcher cleanly (2026-05-02 verification).
 
 ### Phase 6 — Public artefact catalog (P1 #6)
 
-Today there is no navigable public index across the 300+ artefacts (skills, commands, rules, guidelines). Goal: a maintained catalog usable by humans **and** agents — likely generated from frontmatter, not hand-written.
+Catalog shipped. Two generated indices live under `docs/`:
 
-- [ ] **Promote to executable** — pick catalog format, decide generation source (frontmatter), wire freshness check into CI.
+- [`docs/catalog.md`](../../docs/catalog.md) — full public catalog of **295 artefacts** (skills, commands, rules, guidelines, personas) with kind, name, description, link to source. Generated by `scripts/generate_index.py` from frontmatter.
+- [`docs/skills-catalog.md`](../../docs/skills-catalog.md) — skills-only alphabetical view (128 entries). Generated by `scripts/generate_catalog.py`.
+
+Both files declare `Auto-generated — do not edit manually` and ship with the package; agents can navigate them directly.
+
+- [x] **Shipped** — generated catalog + skills-only view from frontmatter (2026-05-02 verification).
 
 ### Phase 7 — Outcome demos (P1 #7)
 

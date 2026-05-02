@@ -6,17 +6,17 @@
 
 ## Overall
 
-**47 / 148 steps done · 32%**
+**51 / 148 steps done · 34%**
 
 ```text
-█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   32%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-1-15-followups.md](roadmaps/road-to-1-15-followups.md) | 9 | 14 | 7 | 7 | 0 | 0 | █████░░░░░ 50% |
+| 1 | [road-to-1-15-followups.md](roadmaps/road-to-1-15-followups.md) | 9 | 14 | 3 | 11 | 0 | 0 | ████████░░ 79% |
 | 2 | [road-to-ai-council.md](roadmaps/road-to-ai-council.md) | 4 | 38 | 12 | 26 | 0 | 0 | ███████░░░ 68% |
 | 3 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 1 | 34 | 34 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-council-modes.md](roadmaps/road-to-council-modes.md) | 3 | 20 | 6 | 14 | 0 | 0 | ███████░░░ 70% |
@@ -29,16 +29,16 @@
 
 ### [road-to-1-15-followups.md](roadmaps/road-to-1-15-followups.md)
 
-**Road to 1.15 Followups** — 7 / 14 done (50%)
+**Road to 1.15 Followups** — 11 / 14 done (79%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Identity rewrite (P0 #1, Laravel ≠ identity) | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 2 | Always-rule budget (P0 #2, capture-only, sequenced after Phase 1) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 3 | Command-collapse phase 1 (P0 #3, capture-only) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 2 | Always-rule budget (P0 #2) | ✅ done | 0 | 1 | 0 | 0 | 100% |
+| 3 | Command-collapse phase 1 (P0 #3) | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 4 | Token-overhead wording fix (P0 #4) | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 5 | Work-Engine CLI modularisation (P1 #5) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 6 | Public artefact catalog (P1 #6) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 5 | Work-Engine CLI modularisation (P1 #5) | ✅ done | 0 | 1 | 0 | 0 | 100% |
+| 6 | Public artefact catalog (P1 #6) | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 7 | Outcome demos (P1 #7) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 8 | Rule-interaction matrix substance (P2 #8) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 9 | Outcome-aware telemetry (P2 #9) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
