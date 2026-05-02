@@ -296,6 +296,10 @@ tasks:
     desc: Validate docs/contracts/rule-interactions.yml schema, slugs, evidence paths, and anchor-pair coverage (P2.2)
     cmd: python3 scripts/lint_rule_interactions.py
 
+  lint-load-context:
+    desc: Validate the `load_context:` / `load_context_eager:` frontmatter schema (docs/contracts/load-context-schema.md)
+    cmd: python3 scripts/lint_load_context.py
+
   check-reply-consistency:
     desc: Scan shipped sources for legacy (recommended) inline tags on numbered options
     cmd: python3 scripts/check_reply_consistency.py --scan-dir .agent-src.uncompressed
@@ -464,6 +468,7 @@ tasks:
       - task: check-public-links
       - task: lint-no-new-atomic-commands
       - task: lint-rule-interactions
+      - task: lint-load-context
       - task: check-reply-consistency
       - task: check-iron-law-prominence
       - task: validate-schema
