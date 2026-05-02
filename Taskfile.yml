@@ -268,6 +268,10 @@ tasks:
     desc: Fail when a new atomic command lands without a `cluster:` field (P0.8c)
     cmd: python3 scripts/lint_no_new_atomic_commands.py
 
+  lint-rule-interactions:
+    desc: Validate docs/contracts/rule-interactions.yml schema, slugs, evidence paths, and anchor-pair coverage (P2.2)
+    cmd: python3 scripts/lint_rule_interactions.py
+
   check-reply-consistency:
     desc: Scan shipped sources for legacy (recommended) inline tags on numbered options
     cmd: python3 scripts/check_reply_consistency.py --scan-dir .agent-src.uncompressed
@@ -408,6 +412,7 @@ tasks:
       - task: check-portability
       - task: check-public-links
       - task: lint-no-new-atomic-commands
+      - task: lint-rule-interactions
       - task: check-reply-consistency
       - task: check-iron-law-prominence
       - task: validate-schema

@@ -1,0 +1,142 @@
+# Rule-Interaction Matrix
+# -----------------------
+# Machine-readable contract for how the package's `always` rules relate
+# when more than one fires on the same turn. Linted by
+# `scripts/lint_rule_interactions.py`. Rendered diagram in
+# `docs/contracts/rule-interactions.md`.
+#
+# Schema:
+#   version: integer
+#   rules: list of rule slugs that participate in any interaction (each
+#     must exist as `.agent-src.uncompressed/rules/<slug>.md`)
+#   pairs: list of pairwise interactions
+#     - id:        kebab-case stable identifier
+#       rules:     [senior, junior] — `senior` wins on conflict
+#       relation:  overrides | narrows | defers_to | restates | gates | complements
+#       conflict:  one-line trigger that causes both to fire
+#       resolution: one paragraph — what the agent does
+#       evidence:  list of `file#anchor` citations
+#       tests:     optional list of test paths
+#
+# Anchor pair: `non-destructive-by-default` × five rules per
+# `road-to-post-pr29-optimize.md` Phase 2.
+
+version: 1
+
+rules:
+  - non-destructive-by-default
+  - autonomous-execution
+  - scope-control
+  - commit-policy
+  - ask-when-uncertain
+  - verify-before-complete
+
+pairs:
+
+  - id: ndd-x-autonomous-execution
+    rules: [non-destructive-by-default, autonomous-execution]
+    relation: overrides
+    conflict: >-
+      Standing autonomy directive ("arbeite selbstständig") is active and
+      the next step crosses a Hard-Floor trigger (production-branch merge,
+      deploy, push, prod data/infra, whimsical bulk deletion, commit with
+      bulk deletion / infra change).
+    resolution: >-
+      Autonomy never lifts the floor. Stop, surface the action via one
+      numbered-options block, wait for explicit user confirmation on
+      this turn before proceeding.
+    evidence:
+      - .agent-src.uncompressed/rules/non-destructive-by-default.md#the-iron-law
+      - .agent-src.uncompressed/rules/autonomous-execution.md#hard-floor--see-non-destructive-by-default
+
+  - id: ndd-x-scope-control
+    rules: [non-destructive-by-default, scope-control]
+    relation: restates
+    conflict: >-
+      Push, merge, branch creation, PR ops, tag pushes — both rules speak
+      to the same git operations.
+    resolution: >-
+      `scope-control` is the canonical permission gate; the floor restates
+      the prod-trunk and deploy-tied subset so the never-overridable layer
+      cannot be weakened by future scope-control edits. On any conflict,
+      the floor wins.
+    evidence:
+      - .agent-src.uncompressed/rules/non-destructive-by-default.md#the-iron-law
+      - .agent-src.uncompressed/rules/scope-control.md#git-operations--permission-gated
+      - .agent-src.uncompressed/rules/scope-control.md#production-infrastructure-bulk-destructive--hard-floor
+
+  - id: ndd-x-commit-policy
+    rules: [non-destructive-by-default, commit-policy]
+    relation: gates
+    conflict: >-
+      A commit is otherwise authorized by one of `commit-policy`'s four
+      paths (user-this-turn, standing instruction, `/commit*` invocation,
+      roadmap pre-scan), but the diff contains bulk deletions or infra
+      changes (row 6 of the Hard Floor).
+    resolution: >-
+      The commit pre-scan triggers regardless of which authorization path
+      applies. Surface the diff (paths + counts), confirm this turn,
+      then commit. The four exceptions cover *whether* commits happen;
+      the floor covers *which diffs* still need a separate confirmation.
+    evidence:
+      - .agent-src.uncompressed/rules/non-destructive-by-default.md#the-iron-law
+      - .agent-src.uncompressed/rules/commit-policy.md#hard-floor-still-applies--bulk-deletions-and-infra-changes
+
+  - id: ndd-x-ask-when-uncertain
+    rules: [non-destructive-by-default, ask-when-uncertain]
+    relation: complements
+    conflict: >-
+      A floor trigger fires AND the request is ambiguous (e.g. "delete
+      the legacy folder" without a file list).
+    resolution: >-
+      Both rules require the same response — stop and ask. The floor
+      provides the categorical reason (destructive); ask-when-uncertain
+      provides the question shape (one numbered-options block, blocking).
+      No conflict; both fire harmoniously.
+    evidence:
+      - .agent-src.uncompressed/rules/non-destructive-by-default.md#failure-modes
+      - .agent-src.uncompressed/rules/ask-when-uncertain.md#vague-request-triggers--must-ask
+
+  - id: ndd-x-verify-before-complete
+    rules: [non-destructive-by-default, verify-before-complete]
+    relation: complements
+    conflict: >-
+      A floor-crossing action (deploy, prod-data write) was authorized
+      and executed; agent is about to claim "done".
+    resolution: >-
+      Both rules apply independently. Floor is satisfied by user
+      confirmation; verify-before-complete is satisfied by fresh
+      verification evidence in the same message. Skipping either is a
+      rule violation.
+    evidence:
+      - .agent-src.uncompressed/rules/non-destructive-by-default.md#the-iron-law
+      - .agent-src.uncompressed/rules/verify-before-complete.md#the-iron-law
+
+  - id: autonomy-x-scope-control
+    rules: [scope-control, autonomous-execution]
+    relation: gates
+    conflict: >-
+      Autonomy is `on` and the next step is a permission-gated git
+      operation (push, branch create/delete, PR open, tag push) below
+      the floor threshold.
+    resolution: >-
+      `scope-control`'s permission gate stays in force. Autonomy
+      suppresses *trivial* questions only; git-shape decisions are
+      blocking. Stop and ask.
+    evidence:
+      - .agent-src.uncompressed/rules/scope-control.md#git-operations--permission-gated
+      - .agent-src.uncompressed/rules/autonomous-execution.md#blocking--still-ask-regardless-of-personalautonomy
+
+  - id: autonomy-x-commit-policy
+    rules: [commit-policy, autonomous-execution]
+    relation: overrides
+    conflict: >-
+      Autonomy is `on` and the agent could plausibly "just commit" after
+      a green verification step.
+    resolution: >-
+      `commit-policy` Iron Law forbids both committing AND asking about
+      committing unless one of the four exceptions applies. Autonomy
+      does not add a fifth exception.
+    evidence:
+      - .agent-src.uncompressed/rules/commit-policy.md#the-iron-law
+      - .agent-src.uncompressed/rules/autonomous-execution.md#commit-policy--see-commit-policy
