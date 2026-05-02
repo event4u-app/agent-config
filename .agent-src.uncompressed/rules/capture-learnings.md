@@ -82,7 +82,7 @@ Body: 1-paragraph **pattern** (not anecdote) + 1 concrete example.
 A learning file is the input to `learning-to-rule-or-skill`, which
 produces a proposal draft under `agents/proposals/`. The proposal is
 then gated by `scripts/check_proposal.py`; see
-[`self-improvement-pipeline`](../guidelines/agent-infra/self-improvement-pipeline.md).
+[`self-improvement-pipeline`](../../docs/guidelines/agent-infra/self-improvement-pipeline.md).
 
 The `agents/learnings/` and `agents/proposals/` directories are
 consumer-owned — the package ships templates and schemas, never the

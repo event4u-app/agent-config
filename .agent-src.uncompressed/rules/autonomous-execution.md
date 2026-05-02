@@ -33,7 +33,7 @@ assumes the floor has already been cleared.
 | `off` | Ask trivial questions too. Use this if you want the agent to check in on each workflow step. |
 | `auto` (default) | Same as `off` by default. Flips to `on` for the rest of the conversation as soon as the user expresses the intent "stop asking, just work". See **Opt-in detection** below — match by **intent**, not exact string. The flip never lifts the Hard Floor. |
 
-Read the value once on the first turn (per [`layered-settings`](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules))
+Read the value once on the first turn (per [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules))
 and cache. Missing key → treat as `on`.
 
 ## Opt-in detection — match by intent, not exact string

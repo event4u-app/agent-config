@@ -130,7 +130,7 @@ If the narrow skill is too weak or hollowed out, route through the broader skill
 ## General Principles
 
 - **Controllers are thin** — no business logic, delegate to services.
-- **Only Single Action Controllers** — every new controller MUST use `__invoke()`. No multi-action / resource controllers. See `.augment/guidelines/php/controllers.md` for naming conventions.
+- **Only Single Action Controllers** — every new controller MUST use `__invoke()`. No multi-action / resource controllers. See `../../docs/guidelines/php/controllers.md` for naming conventions.
 - **Every controller needs a FormRequest** — never validate inline with `$request->validate()`. Use a dedicated `FormRequest` subclass.
 - **Services contain business logic** — calculations, orchestration, validation.
 - **Models have no business logic** — only relationships, scopes, accessors/mutators.
@@ -475,7 +475,7 @@ are related".
 - **Session handoff** (`/agent-handoff`, fresh-chat proposal): ask LAST,
   after all domain / clarifying questions — so the user's answers can be
   folded into the handoff prompt. Full rationale in
-  [`agent-interaction-and-decision-quality`](../guidelines/agent-infra/agent-interaction-and-decision-quality.md#handoff--model-switch-questions).
+  [`agent-interaction-and-decision-quality`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#handoff--model-switch-questions).
 - **Model switch**: different phase — [`model-recommendation`](model-recommendation.md)
   triggers at task start with its own STOP-AND-WAIT gate, standalone, not
   appended to a Q&A block. Do not conflate the two.
@@ -758,7 +758,7 @@ assumes the floor has cleared.
 | `off` | Ask trivial questions too. Use to check in on each workflow step. |
 | `auto` (default) | Like `off` until user expresses "stop asking, just work" — then `on` for the rest of the chat. See **Opt-in detection** below; match by **intent**, not exact string. The flip never lifts the Hard Floor. |
 
-Read once on first turn (per [`layered-settings`](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules))
+Read once on first turn (per [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules))
 and cache. Missing key → treat as `on`.
 
 ## Opt-in detection — match by intent, not exact string
@@ -961,7 +961,7 @@ Body: 1-paragraph **pattern** (not anecdote) + 1 concrete example.
 A learning file is the input to `learning-to-rule-or-skill`, which
 produces a proposal draft under `agents/proposals/`. The proposal is
 then gated by `scripts/check_proposal.py`; see
-[`self-improvement-pipeline`](../guidelines/agent-infra/self-improvement-pipeline.md).
+[`self-improvement-pipeline`](../../docs/guidelines/agent-infra/self-improvement-pipeline.md).
 
 The `agents/learnings/` and `agents/proposals/` directories are
 consumer-owned — the package ships templates and schemas, never the
@@ -1584,7 +1584,7 @@ ci(lint): add skill-lint workflow
 docs(roadmap): add phase 3 implementation plan
 ```
 
-→ Type selection rules, anti-patterns, decision checklist: `guidelines/php/git.md`
+→ Type selection rules, anti-patterns, decision checklist: `docs/guidelines/php/git.md`
 
 ---
 
@@ -1989,7 +1989,7 @@ exist in `.augment/templates/agent-settings.md`:
 3. **Add a comment** above the key explaining what it does.
 4. **Update the local `.agent-settings.yml`** — add the new key with its default value.
    Preserve all existing values, apply template order and comments. Follow the
-   [section-aware merge rules](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
+   [section-aware merge rules](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
    so the user benefits immediately without running a separate command.
 
 **This step is mandatory.** If the template gains a new key but the local `.agent-settings.yml`
@@ -2125,7 +2125,7 @@ After completing all downstream changes:
 
 ## Before writing E2E tests
 
-1. **Read the guideline** — `.augment/guidelines/e2e/playwright.md` for all conventions and patterns.
+1. **Read the guideline** — `../../docs/guidelines/e2e/playwright.md` for all conventions and patterns.
 2. **Check existing tests** — match the project's structure, fixtures, and Page Object patterns.
 3. **Check `playwright.config.ts`** — base URL, browsers, timeouts, projects.
 
@@ -2177,7 +2177,7 @@ Coding guidelines live in `.augment/guidelines/` organized by language.
 
 ## Available Guidelines
 
-### PHP (`.augment/guidelines/php/`)
+### PHP (`../../docs/guidelines/php/`)
 
 | File | Topic |
 |---|---|
@@ -2202,7 +2202,7 @@ Coding guidelines live in `.augment/guidelines/` organized by language.
 | `websocket.md` | WebSocket conventions — Broadcasting, channel types, connection management |
 | `patterns.md` | Design patterns index (links to `patterns/` subdirectory) |
 
-### PHP Patterns (`.augment/guidelines/php/patterns/`)
+### PHP Patterns (`../../docs/guidelines/php/patterns/`)
 
 | File | Pattern |
 |---|---|
@@ -2216,11 +2216,11 @@ Coding guidelines live in `.augment/guidelines/` organized by language.
 | `pipelines.md` | Laravel Pipeline pattern |
 | `strategy.md` | Strategy pattern implementation |
 
-### E2E (`.augment/guidelines/e2e/`)
+### E2E (`../../docs/guidelines/e2e/`)
 
 Playwright best practices, Page Objects, fixtures, CI.
 
-### Agent Infrastructure (`.augment/guidelines/agent-infra/`)
+### Agent Infrastructure (`../../docs/guidelines/agent-infra/`)
 
 | File | Topic |
 |---|---|
@@ -2292,10 +2292,10 @@ Before coding, quickly verify:
 - Does it follow established patterns in the codebase?
 - Does it contradict existing conventions?
 - Do **multiple valid patterns/frameworks** already exist (e.g. Tailwind + Flux, multiple form libraries, competing state stores)? If yes, do NOT pick one arbitrarily — ask which to use.
-- Is the change a **second branch on the same discriminator** — second `match`/`switch` arm, second `if/elseif`, or second class hardcoded to one enum value (e.g. `Provider::FOO`, `'stripe'`)? If yes, run the Strategy sniff test before adding the branch — see [`guidelines/php/patterns/strategy.md`](../guidelines/php/patterns/strategy.md#sniff-test--when-an-enumstring-discriminator-wants-to-become-a-strategy).
+- Is the change a **second branch on the same discriminator** — second `match`/`switch` arm, second `if/elseif`, or second class hardcoded to one enum value (e.g. `Provider::FOO`, `'stripe'`)? If yes, run the Strategy sniff test before adding the branch — see [`docs/guidelines/php/patterns/strategy.md`](../../docs/guidelines/php/patterns/strategy.md#sniff-test--when-an-enumstring-discriminator-wants-to-become-a-strategy).
 
 **If misfit** → show evidence (file references), propose alternative.
-**If multiple valid options** → list them, ask which to use. See [`no blind implementation`](../guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation).
+**If multiple valid options** → list them, ask which to use. See [`no blind implementation`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation).
 
 ### 3. Is the approach sound?
 
@@ -2430,7 +2430,7 @@ Run silently **before** emitting any tokens:
 
 ### Failure modes
 
-See [`docs/guidelines/language-and-tone-examples.md`](../../docs/guidelines/language-and-tone-examples.md)
+See [`../../docs/guidelines/language-and-tone-examples.md`](../../docs/guidelines/language-and-tone-examples.md)
 for the full failure-mode list (drafting in EN then translating, copy-pasting
 EN labels, codebase ≠ conversation, mirroring the open file or roadmap).
 
@@ -2453,7 +2453,7 @@ formatted output blocks, table headers and content.
 The agent translates to the user's language **at runtime** when
 presenting options. The `.md` source files are the English blueprint —
 they define WHAT to say, not in which language. Concrete wrong-vs-correct
-examples live in [`docs/guidelines/language-and-tone-examples.md`](../../docs/guidelines/language-and-tone-examples.md).
+examples live in [`../../docs/guidelines/language-and-tone-examples.md`](../../docs/guidelines/language-and-tone-examples.md).
 
 ### Quoted user-input examples — labeled-anchor exception
 
@@ -2468,7 +2468,7 @@ Drift pattern: a rule writes quoted German examples inside English prose.
    abstractly later and link back to the anchor block.
 
 Wrong-vs-correct snippets in
-[`docs/guidelines/language-and-tone-examples.md`](../../docs/guidelines/language-and-tone-examples.md).
+[`../../docs/guidelines/language-and-tone-examples.md`](../../docs/guidelines/language-and-tone-examples.md).
 
 ### Detection heuristic
 
@@ -2934,7 +2934,7 @@ gate. This protects projects that were set up before this rule shipped.
   conversation, max.
 - Replace normal settings edits. Mid-life changes are ad-hoc (edit the
   file directly or ask the agent, which follows
-  [`layered-settings`](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules));
+  [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules));
   this rule is a one-time gate.
 - Run on every agent turn. First turn only.
 
@@ -2950,7 +2950,7 @@ gate. This protects projects that were set up before this rule shipped.
 ## See also
 
 - [`/onboard`](../commands/onboard.md) — the command this gate invokes
-- [`layered-settings`](../guidelines/agent-infra/layered-settings.md) — merge rules for mid-life edits
+- [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md) — merge rules for mid-life edits
 - [`agent-settings` template](../templates/agent-settings.md) — `onboarding.onboarded` reference
 - [`rule-type-governance`](rule-type-governance.md) — why this is `always`
 
@@ -3174,8 +3174,8 @@ Look, in order, for:
 - `.github/historical-bug-patterns.yml` (or
   `agents/historical-bug-patterns.yml`)
 
-If neither exists, fall back to engineering-memory via
-[`memory-access`](../guidelines/agent-infra/memory-access.md):
+If neither file exists, fall back to the engineering-memory layer via
+[`memory-access`](../../docs/guidelines/agent-infra/memory-access.md):
 
 ```python
 from scripts.memory_lookup import retrieve
@@ -3187,11 +3187,11 @@ extra = retrieve(
 ```
 
 Curated memory (`agents/memory/ownership.yml`,
-`agents/memory/historical-patterns.yml`) shares the schema with the
-project-local YAMLs and is merged into the routing output. If both
-memory and project YAMLs are absent, skip this rule and rely on
-[`reviewer-awareness`](reviewer-awareness.md) defaults. **Do not invent
-owners or patterns** from context.
+`agents/memory/historical-patterns.yml`) carries the same schema as the
+project-local YAMLs and is merged into the routing output alongside
+them. If both memory and project YAMLs are absent, skip this rule and
+rely on [`reviewer-awareness`](reviewer-awareness.md) defaults. **Do
+not invent owners or patterns** from context.
 
 ### 2. Match the diff
 
@@ -3203,7 +3203,7 @@ For every changed file, collect:
   mode and the minimum control or test the project expects.
 
 Matching uses glob patterns (see
-[`review-routing-data-format`](../guidelines/review-routing-data-format.md)
+[`review-routing-data-format`](../../docs/guidelines/agent-infra/review-routing-data-format.md)
 for the schema).
 
 ### 3. Surface findings
@@ -3254,7 +3254,7 @@ When producing a review plan, include:
 
 - [`reviewer-awareness`](reviewer-awareness.md) — formatting reviewer
   suggestions.
-- [`review-routing-data-format`](../guidelines/review-routing-data-format.md)
+- [`review-routing-data-format`](../../docs/guidelines/agent-infra/review-routing-data-format.md)
   — YAML schemas for ownership-map and historical-bug-patterns.
 - [`review-routing`](../skills/review-routing/SKILL.md) — the skill
   that produces the merged routing report.
@@ -3551,7 +3551,7 @@ Any "yes" + no regen run = rule violation. Rerun before sending.
 
 Auto-activates when `.agent-settings.yml` sets `roles.active_role` to
 one of the six modes defined in
-[`role-contracts`](../guidelines/agent-infra/role-contracts.md):
+[`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md):
 `developer`, `reviewer`, `tester`, `po`, `incident`, `planner`.
 
 Read `roles.active_role` from `.agent-settings.yml` at session start.
@@ -3589,7 +3589,7 @@ Infer the mode (Phase-3 router does that). Touch `.agent-settings.yml`
 
 ## See also
 
-- [`role-contracts`](../guidelines/agent-infra/role-contracts.md)
+- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md)
 - [`/mode`](../commands/mode.md)
 - [`ask-when-uncertain`](ask-when-uncertain.md)
 - [`scope-control`](scope-control.md)
@@ -3792,7 +3792,7 @@ STOP writing code. Run the matching analysis skill first:
 | Wide refactor of security-sensitive code | `blast-radius-analyzer` |
 
 **Before the analysis, consult memory for prior incidents** on this
-surface. Via [`memory-access`](../guidelines/agent-infra/memory-access.md):
+surface. Via [`memory-access`](../../docs/guidelines/agent-infra/memory-access.md):
 
 ```python
 from scripts.memory_lookup import retrieve
@@ -3845,7 +3845,7 @@ See also: `threat-modeling` · `authz-review` · `data-flow-mapper` · `minimal-
   - Rules and system instructions should stay well below 200 lines
   - Smaller (≈60 lines) is strongly preferred
 
-→ Size limits and details: `.augment/guidelines/agent-infra/size-and-scope.md`
+→ Size limits and details: `../../docs/guidelines/agent-infra/size-and-scope.md`
 
 → Frontmatter contract: schemas live in `scripts/schemas/` and are enforced by
 `python3 scripts/validate_frontmatter.py`.
@@ -4044,7 +4044,7 @@ Editor may report an open file (e.g., "user has `compress.md` open"). **Irreleva
 - If requirements are unclear, ask a precise clarification question instead of making hidden assumptions
 - Refactors must preserve behavior, validation, examples, and anti-failure guidance unless there is an explicit reason to change them
 - Do NOT modify code you do not fully understand — read it first, trace the flow, then change it
-- Multiple valid frameworks/patterns already in the codebase (Tailwind + Flux, multiple form libs, competing state stores) → do NOT pick one silently, ask. See [`no blind implementation`](../guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation)
+- Multiple valid frameworks/patterns already in the codebase (Tailwind + Flux, multiple form libs, competing state stores) → do NOT pick one silently, ask. See [`no blind implementation`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation)
 
 ## The Developer Workflow
 
@@ -4061,7 +4061,7 @@ Skipping steps 1-3 = #1 cause of wrong implementations and wasted retries.
 ## Consult memory before editing
 
 Before writing code for the touched paths, call
-[`memory-access`](../guidelines/agent-infra/memory-access.md):
+[`memory-access`](../../docs/guidelines/agent-infra/memory-access.md):
 
 ```python
 from scripts.memory_lookup import retrieve
@@ -4212,7 +4212,7 @@ When `personal.minimal_output: true`:
 - Debugging: OK to read more context around one error.
 - User explicitly asks for full output: show it.
 
-→ Detailed patterns: `guidelines/agent-infra/output-patterns.md`
+→ Detailed patterns: `docs/guidelines/agent-infra/output-patterns.md`
 
 ---
 

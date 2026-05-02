@@ -20,7 +20,7 @@ Do NOT use when:
 
 ## Conventions
 
-→ See guideline `guidelines/php/git.md` for branch naming, commit messages, PR conventions.
+→ See guideline `docs/guidelines/php/git.md` for branch naming, commit messages, PR conventions.
 → See `commit-conventions` rule for commit format, types, and scope rules.
 → Use `conventional-commits-writing` skill for generating/reviewing commit messages.
 

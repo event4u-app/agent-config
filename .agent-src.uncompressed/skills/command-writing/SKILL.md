@@ -117,7 +117,7 @@ Required sections in this order:
 ### 4. Enforce the size budget
 
 Normative source: [`size-enforcement`](../../rules/size-enforcement.md) +
-`guidelines/agent-infra/size-and-scope.md`.
+`docs/guidelines/agent-infra/size-and-scope.md`.
 
 | Category | Target |
 |---|---|

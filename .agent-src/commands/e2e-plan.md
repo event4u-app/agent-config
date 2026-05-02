@@ -21,7 +21,7 @@ suggestion:
 > 2. Which feature area? (e.g., "checkout flow", "user settings", or "all visible flows")
 > 3. Is there an existing seed/setup file? (e.g., `tests/e2e/fixtures/auth.ts`)
 
-- Read the Playwright guideline: `.augment/guidelines/e2e/playwright.md`
+- Read the Playwright guideline: `../../docs/guidelines/e2e/playwright.md`
 - Check for existing test plans in `specs/` or `tests/e2e/specs/`.
 
 ### 2. Explore the application

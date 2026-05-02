@@ -194,4 +194,4 @@ What's next?
 
 ## See also
 
-- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#planner) — Planner mode output contract (Goal / Constraints / Option set / Recommendation / Dependencies / Rollback)
+- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md#planner) — Planner mode output contract (Goal / Constraints / Option set / Recommendation / Dependencies / Rollback)

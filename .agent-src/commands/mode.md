@@ -11,7 +11,7 @@ suggestion:
 
 Sets `roles.active_role` in `.agent-settings.yml` and surfaces the active
 contract before any work. Six modes are defined in
-[`role-contracts`](../guidelines/agent-infra/role-contracts.md):
+[`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md):
 
 - `developer` · `reviewer` · `tester` · `po` · `incident` · `planner`
 
@@ -37,7 +37,7 @@ Anything else: refuse. List the valid values and stop.
 
 ### 2. Validate the mode name
 
-Read [`role-contracts.md`](../guidelines/agent-infra/role-contracts.md).
+Read [`role-contracts.md`](../../docs/guidelines/agent-infra/role-contracts.md).
 Extract H3 headings under `## Contract skeletons` and lowercase them.
 If `<name>` is not in that set, refuse and print the valid list.
 
@@ -62,7 +62,7 @@ exactly what the contract demands.
 ### 5. Write the active role
 
 Update `roles.active_role` in `.agent-settings.yml` using the
-[section-aware merge rules](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
+[section-aware merge rules](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
 (preserve comments, preserve key order, touch only the changed field).
 
 For `/mode none`: set `active_role: ""`.
@@ -118,7 +118,7 @@ For `/mode` (status only):
 
 ## See also
 
-- [`role-contracts`](../guidelines/agent-infra/role-contracts.md) — the six modes
+- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md) — the six modes
 - [`role-mode-adherence`](../rules/role-mode-adherence.md) — closing-output gate
-- [`layered-settings`](../guidelines/agent-infra/layered-settings.md) — merge rules for settings edits
+- [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md) — merge rules for settings edits
 - [`ask-when-uncertain`](../rules/ask-when-uncertain.md) — never invent modes

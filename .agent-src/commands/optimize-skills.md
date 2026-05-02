@@ -85,7 +85,7 @@ done
 ```
 
 Oversized → suggest splitting by responsibility or extracting reference material.
-Size limits: see `guidelines/agent-infra/size-and-scope.md`.
+Size limits: see `docs/guidelines/agent-infra/size-and-scope.md`.
 
 ### 6. Present findings
 

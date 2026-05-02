@@ -61,7 +61,7 @@ gate script to lower the bar.
 ### 3. Draft the curated entry
 
 Using the schema in
-[`engineering-memory-data-format`](../guidelines/agent-infra/engineering-memory-data-format.md),
+[`engineering-memory-data-format`](../../docs/guidelines/agent-infra/engineering-memory-data-format.md),
 hydrate the full frontmatter:
 
 - `id` — kebab-case slug (not the `sig-*` id — that is an intake marker).
@@ -142,4 +142,4 @@ git push -u origin memory/promote-<curated-id>
 
 - [`/propose-memory`](propose-memory.md) — write-side entry point.
 - [`/memory-add`](memory-add.md) — direct curated write (skips intake).
-- [`engineering-memory-data-format`](../guidelines/agent-infra/engineering-memory-data-format.md)
+- [`engineering-memory-data-format`](../../docs/guidelines/agent-infra/engineering-memory-data-format.md)

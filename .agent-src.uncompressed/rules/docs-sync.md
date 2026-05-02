@@ -55,7 +55,7 @@ exist in `.augment/templates/agent-settings.md`:
 3. **Add a comment** above the key explaining what it does.
 4. **Update the local `.agent-settings.yml`** — add the new key with its default value.
    Preserve all existing values, apply template order and comments. Follow the
-   [section-aware merge rules](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
+   [section-aware merge rules](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
    so the user benefits immediately without running a separate command.
 
 **This step is mandatory.** If the template gains a new key but the local `.agent-settings.yml`

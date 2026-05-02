@@ -118,7 +118,7 @@ Before asking detailed questions, **proactively research**:
   `status: active` is a binding constraint — propose structure that
   respects it. If the feature needs to contradict an ADR, surface that
   as a decision for the user before drafting the plan. See
-  [`engineering-memory-data-format`](../guidelines/agent-infra/engineering-memory-data-format.md).
+  [`engineering-memory-data-format`](../../docs/guidelines/agent-infra/engineering-memory-data-format.md).
 
 **Share key findings with the user** — this informs the discussion:
 
@@ -294,6 +294,6 @@ What's next?
 
 ## See also
 
-- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#po) — PO mode output contract (Goal / Assumptions / Acceptance criteria / Impacted modules / Risks / Open questions for stakeholder)
+- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md#po) — PO mode output contract (Goal / Assumptions / Acceptance criteria / Impacted modules / Risks / Open questions for stakeholder)
 - [`refine-ticket`](refine-ticket.md) — optional upstream step: run first when the input is a Jira/Linear ticket rather than a fresh idea
 - [`estimate-ticket`](estimate-ticket.md) — sibling of `refine-ticket`; size + risk + split recommendation for an already-refined ticket

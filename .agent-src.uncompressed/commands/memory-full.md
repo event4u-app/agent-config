@@ -80,7 +80,7 @@ opts in.
 
 The agent should now treat every loaded entry as an authority signal
 with its declared `confidence` — see
-[`memory-access`](../guidelines/agent-infra/memory-access.md) for
+[`memory-access`](../../docs/guidelines/agent-infra/memory-access.md) for
 how entries modulate edits.
 
 ## When to reject
@@ -96,5 +96,5 @@ how entries modulate edits.
 - [`memory-add`](memory-add.md) — add a single entry
 - [`memory-promote`](memory-promote.md) — promote an intake signal to
   a curated entry
-- [`memory-access`](../guidelines/agent-infra/memory-access.md) —
+- [`memory-access`](../../docs/guidelines/agent-infra/memory-access.md) —
   how entries flow into agent decisions

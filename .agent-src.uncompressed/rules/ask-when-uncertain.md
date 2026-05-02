@@ -94,7 +94,7 @@ are related".
 - **Session handoff** (`/agent-handoff`, fresh-chat proposal): ask LAST,
   after all domain / clarifying questions — so the user's answers can be
   folded into the handoff prompt. Full rationale in
-  [`agent-interaction-and-decision-quality`](../guidelines/agent-infra/agent-interaction-and-decision-quality.md#handoff--model-switch-questions).
+  [`agent-interaction-and-decision-quality`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#handoff--model-switch-questions).
 - **Model switch**: different phase — [`model-recommendation`](model-recommendation.md)
   triggers at task start with its own STOP-AND-WAIT gate, standalone, not
   appended to a Q&A block. Do not conflate the two.

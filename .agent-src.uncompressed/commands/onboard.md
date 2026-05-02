@@ -25,7 +25,7 @@ Triggered by the [`onboarding-gate`](../rules/onboarding-gate.md) rule when
 - Change cost profile only → [`/set-cost-profile`](set-cost-profile.md).
 - Single-value edit → ask the agent to change it, or edit
   `.agent-settings.yml` directly. The agent follows the merge rules in
-  [`layered-settings`](../guidelines/agent-infra/layered-settings.md).
+  [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md).
 
 ## Preconditions
 
@@ -134,7 +134,7 @@ template — `minimal` + `skill_improvement: true`):
 
 Write `onboarding.onboarded: true` to `.agent-settings.yml` using the
 section-aware merge rules from
-[`layered-settings`](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
+[`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
 (preserve comments, key order, touch only the changed fields).
 
 ### 8. Summary
@@ -200,5 +200,5 @@ local-agent concern; the cloud agent should proceed without invoking it.
 
 - [`onboarding-gate`](../rules/onboarding-gate.md) — rule that triggers this command
 - [`set-cost-profile`](set-cost-profile.md) — isolated profile change
-- [`layered-settings`](../guidelines/agent-infra/layered-settings.md) — merge rules for mid-life edits
+- [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md) — merge rules for mid-life edits
 - [`agent-settings` template](../templates/agent-settings.md) — settings reference

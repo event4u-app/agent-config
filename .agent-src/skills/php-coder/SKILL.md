@@ -54,7 +54,7 @@ Trigger keywords in the task or surrounding code:
 - allowlist constants: `private const SUPPORTED_FOO = [Type::A, Type::B]`
 
 → Run the sniff test in
-[`guidelines/php/patterns/strategy.md`](../../guidelines/php/patterns/strategy.md#sniff-test--when-an-enumstring-discriminator-wants-to-become-a-strategy).
+[`docs/guidelines/php/patterns/strategy.md`](../../../docs/guidelines/php/patterns/strategy.md#sniff-test--when-an-enumstring-discriminator-wants-to-become-a-strategy).
 Two "yes" answers → propose Strategy + Registry **before** adding the new
 branch. Three "yes" → it is already overdue and the refactor is the change.
 

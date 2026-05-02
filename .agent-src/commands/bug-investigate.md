@@ -175,5 +175,5 @@ What's next?
 
 ## See also
 
-- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#incident) — Incident mode output contract (Symptom / Reproduction / Minimal reversible change / Deferred verification / Follow-up commitment) — use when the bug is a live production issue with `break-glass: true`
-- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#developer) — Developer mode output contract for non-incident bugs
+- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md#incident) — Incident mode output contract (Symptom / Reproduction / Minimal reversible change / Deferred verification / Follow-up commitment) — use when the bug is a live production issue with `break-glass: true`
+- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md#developer) — Developer mode output contract for non-incident bugs

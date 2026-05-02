@@ -1,6 +1,6 @@
 ---
 name: guideline-writing
-description: "Use when creating or editing a guideline in .agent-src.uncompressed/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'."
+description: "Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'."
 source: package
 ---
 
@@ -10,7 +10,7 @@ source: package
 
 ## When to use
 
-* Creating a new guideline in `.agent-src.uncompressed/guidelines/{topic}/{name}.md`
+* Creating a new guideline in `docs/guidelines/{topic}/{name}.md`
 * Rewriting an existing guideline (not a typo fix)
 * Extracting reference material out of a bloated skill or rule
 * Consolidating repeated explanations from multiple skills
@@ -42,7 +42,7 @@ Creating or materially rewriting a guideline **must** go through Understand
 
 * **Understand** — which skills or rules will cite this guideline? If the
   answer is "none", the guideline has no home — stop.
-* **Research** — **inspect** `guidelines/` for overlap and grep
+* **Research** — **inspect** `docs/guidelines/` for overlap and grep
   `.agent-src.uncompressed/` for pages that already cover the topic.
   **Analyze** 1–2 peer guidelines in the same topic folder for tone.
 * **Draft** — propose location (topic folder + filename) and outline. Only
@@ -50,7 +50,7 @@ Creating or materially rewriting a guideline **must** go through Understand
 
 ### 1. Pick the right topic folder
 
-Folders under `.agent-src.uncompressed/guidelines/`:
+Folders under `docs/guidelines/`:
 
 | Folder | Contents |
 |---|---|
@@ -89,7 +89,7 @@ approval-gated flow as for skills and rules.
 A guideline is useless if nothing cites it. Before closing the task:
 
 * Add a link from at least one skill or rule using the pattern
-  `→ See 'guidelines/{topic}/{name}.md' for full X`.
+  `→ See 'docs/guidelines/{topic}/{name}.md' for full X`.
 * Keep the citing skill/rule **executable** — do not hollow it out into a
   pointer. (Normative source: [`preservation-guard`](../../rules/preservation-guard.md).)
 
@@ -107,16 +107,16 @@ Above the split signal, break by sub-topic into sibling files in the same folder
 
 ### 6. Validate
 
-* Run `python3 scripts/skill_linter.py .agent-src.uncompressed/guidelines/{topic}/{name}.md`
+* Run `python3 scripts/skill_linter.py docs/guidelines/{topic}/{name}.md`
   → 0 FAIL (guidelines have relaxed linting but must still parse).
-* Run `bash scripts/compress.sh --sync` → regenerates `.agent-src/guidelines/`.
+* Run `bash scripts/compress.sh --sync` → projects updates.
 * Run `python3 scripts/check_references.py` → no broken links.
 * Run the full CI pipeline locally (see `Taskfile.yml` in this repo for
   the script list) — must exit 0 except for tolerated warnings.
 
 ## Output format
 
-1. Complete guideline at `.agent-src.uncompressed/guidelines/{topic}/{name}.md`
+1. Complete guideline at `docs/guidelines/{topic}/{name}.md`
 2. At least one skill or rule linking to it
 3. Linter + `check_references.py` clean
 4. `bash scripts/compress.sh --sync` confirmation
@@ -135,7 +135,7 @@ Above the split signal, break by sub-topic into sibling files in the same folder
 * Do NOT add `type:` or `alwaysApply:` to the frontmatter
 * Do NOT embed numbered procedures — those belong in skills
 * Do NOT create an orphan guideline with no inbound links
-* Do NOT edit `.agent-src/guidelines/` or `.augment/guidelines/` — generated
+* Do NOT reintroduce `.agent-src.uncompressed/guidelines/` — relocated to `docs/guidelines/`
 
 ## Cloud Behavior
 
@@ -151,7 +151,7 @@ validation:
 * Self-check the body: reference material, no numbered procedures,
   named in a topic folder.
 * Tell the user to save under
-  `.agent-src.uncompressed/guidelines/{topic}/{name}.md` and run
+  `docs/guidelines/{topic}/{name}.md` and run
   `task sync && task lint-skills && task check-refs` locally before
   committing.
 * Do not call the linter, ref-checker, or compressor — they only
@@ -161,7 +161,7 @@ validation:
 
 Good guideline name + description:
 
-> Path: `guidelines/agent-infra/size-and-scope.md`
+> Path: `docs/guidelines/agent-infra/size-and-scope.md`
 > Description: "Golden size rules for rules, skills, commands, and guidelines"
 
 Bad:

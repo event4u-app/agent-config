@@ -124,5 +124,5 @@ Or add `BREAKING CHANGE:` in the commit body/footer.
 ## References
 
 - Rule: `commit-conventions` — base format, types, scope, examples
-- Guideline: `guidelines/php/git.md` — type selection rules, anti-patterns, decision checklist
+- Guideline: `docs/guidelines/php/git.md` — type selection rules, anti-patterns, decision checklist
 - Command: `/commit` — uses this skill for message generation

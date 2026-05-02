@@ -101,6 +101,6 @@ is intended (rarely).
 ## See also
 
 - [`/memory-add`](memory-add.md) — curated (reviewer-validated) entries.
-- [`engineering-memory-data-format`](../guidelines/agent-infra/engineering-memory-data-format.md)
-- [`memory-access`](../guidelines/agent-infra/memory-access.md) — the
+- [`engineering-memory-data-format`](../../docs/guidelines/agent-infra/engineering-memory-data-format.md)
+- [`memory-access`](../../docs/guidelines/agent-infra/memory-access.md) — the
   read-side contract that consumes what this command writes.

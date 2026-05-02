@@ -37,8 +37,8 @@ Look, in order, for:
 - `.github/historical-bug-patterns.yml` (or
   `agents/historical-bug-patterns.yml`)
 
-If neither exists, fall back to engineering-memory via
-[`memory-access`](../guidelines/agent-infra/memory-access.md):
+If neither file exists, fall back to the engineering-memory layer via
+[`memory-access`](../../docs/guidelines/agent-infra/memory-access.md):
 
 ```python
 from scripts.memory_lookup import retrieve
@@ -50,11 +50,11 @@ extra = retrieve(
 ```
 
 Curated memory (`agents/memory/ownership.yml`,
-`agents/memory/historical-patterns.yml`) shares the schema with the
-project-local YAMLs and is merged into the routing output. If both
-memory and project YAMLs are absent, skip this rule and rely on
-[`reviewer-awareness`](reviewer-awareness.md) defaults. **Do not invent
-owners or patterns** from context.
+`agents/memory/historical-patterns.yml`) carries the same schema as the
+project-local YAMLs and is merged into the routing output alongside
+them. If both memory and project YAMLs are absent, skip this rule and
+rely on [`reviewer-awareness`](reviewer-awareness.md) defaults. **Do
+not invent owners or patterns** from context.
 
 ### 2. Match the diff
 
@@ -66,7 +66,7 @@ For every changed file, collect:
   mode and the minimum control or test the project expects.
 
 Matching uses glob patterns (see
-[`review-routing-data-format`](../guidelines/review-routing-data-format.md)
+[`review-routing-data-format`](../../docs/guidelines/agent-infra/review-routing-data-format.md)
 for the schema).
 
 ### 3. Surface findings
@@ -117,7 +117,7 @@ When producing a review plan, include:
 
 - [`reviewer-awareness`](reviewer-awareness.md) — formatting reviewer
   suggestions.
-- [`review-routing-data-format`](../guidelines/review-routing-data-format.md)
+- [`review-routing-data-format`](../../docs/guidelines/agent-infra/review-routing-data-format.md)
   — YAML schemas for ownership-map and historical-bug-patterns.
 - [`review-routing`](../skills/review-routing/SKILL.md) — the skill
   that produces the merged routing report.

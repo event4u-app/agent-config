@@ -79,7 +79,7 @@ Goal: locate the failure in a single component, layer, or call site.
 3. Check recent changes: `git log`, `git blame` on the failing line,
    recent dependency updates, config edits, infra changes.
 4. **Consult memory for prior matches.** Via
-   [`memory-access`](../../guidelines/agent-infra/memory-access.md):
+   [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md):
    ```python
    from scripts.memory_lookup import retrieve
    priors = retrieve(

@@ -15,7 +15,7 @@ Reconciles `.agent-settings.yml` with the shipped template
 (`config/agent-settings.template.yml`) and the selected cost-profile
 preset (`config/profiles/{profile}.ini`). Applies the section-aware
 merge rules documented in
-[`layered-settings`](../guidelines/agent-infra/layered-settings.md):
+[`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md):
 
 - Template section order wins — keys reorder to match.
 - Existing user scalar values are preserved.
@@ -129,6 +129,6 @@ is a local-agent concern.
 - [`scripts/sync_agent_settings.py`](../../../scripts/sync_agent_settings.py) — the helper
 - [`config/agent-settings.template.yml`](../../../config/agent-settings.template.yml) — canonical template
 - [`config/profiles/`](../../../config/profiles/) — profile presets
-- [`layered-settings`](../guidelines/agent-infra/layered-settings.md) — the merge rules this command enforces
+- [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md) — the merge rules this command enforces
 - [`scripts/install.py`](../../../scripts/install.py) — first-install path; this command handles the update path
 - [`/sync-gitignore`](sync-gitignore.md) — sibling command for the `.gitignore` block

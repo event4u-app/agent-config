@@ -10,7 +10,7 @@ source: package
 ## General Principles
 
 - **Controllers are thin** — no business logic, delegate to services.
-- **Only Single Action Controllers** — every new controller MUST use `__invoke()`. No multi-action / resource controllers. See `.augment/guidelines/php/controllers.md` for naming conventions.
+- **Only Single Action Controllers** — every new controller MUST use `__invoke()`. No multi-action / resource controllers. See `../../docs/guidelines/php/controllers.md` for naming conventions.
 - **Every controller needs a FormRequest** — never validate inline with `$request->validate()`. Use a dedicated `FormRequest` subclass.
 - **Services contain business logic** — calculations, orchestration, validation.
 - **Models have no business logic** — only relationships, scopes, accessors/mutators.

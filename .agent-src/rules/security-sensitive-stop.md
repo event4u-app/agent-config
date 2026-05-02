@@ -42,7 +42,7 @@ STOP writing code. Run the matching analysis skill first:
 | Wide refactor of security-sensitive code | `blast-radius-analyzer` |
 
 **Before the analysis, consult memory for prior incidents** on this
-surface. Via [`memory-access`](../guidelines/agent-infra/memory-access.md):
+surface. Via [`memory-access`](../../docs/guidelines/agent-infra/memory-access.md):
 
 ```python
 from scripts.memory_lookup import retrieve

@@ -38,7 +38,7 @@ Look, in order, for:
   `agents/historical-bug-patterns.yml`)
 
 If neither file exists, fall back to the engineering-memory layer via
-[`memory-access`](../guidelines/agent-infra/memory-access.md):
+[`memory-access`](../../docs/guidelines/agent-infra/memory-access.md):
 
 ```python
 from scripts.memory_lookup import retrieve
@@ -66,7 +66,7 @@ For every changed file, collect:
   mode and the minimum control or test the project expects.
 
 Matching uses glob patterns (see
-[`review-routing-data-format`](../guidelines/review-routing-data-format.md)
+[`review-routing-data-format`](../../docs/guidelines/agent-infra/review-routing-data-format.md)
 for the schema).
 
 ### 3. Surface findings
@@ -117,7 +117,7 @@ When producing a review plan, include:
 
 - [`reviewer-awareness`](reviewer-awareness.md) — formatting reviewer
   suggestions.
-- [`review-routing-data-format`](../guidelines/review-routing-data-format.md)
+- [`review-routing-data-format`](../../docs/guidelines/agent-infra/review-routing-data-format.md)
   — YAML schemas for ownership-map and historical-bug-patterns.
 - [`review-routing`](../skills/review-routing/SKILL.md) — the skill
   that produces the merged routing report.

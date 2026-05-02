@@ -84,7 +84,7 @@ Run silently **before** emitting any tokens:
 
 ### Failure modes
 
-See [`docs/guidelines/language-and-tone-examples.md`](../../docs/guidelines/language-and-tone-examples.md)
+See [`../../docs/guidelines/language-and-tone-examples.md`](../../docs/guidelines/language-and-tone-examples.md)
 for the full failure-mode list (drafting in EN then translating, copy-pasting
 EN labels, codebase ≠ conversation, mirroring the open file or roadmap).
 
@@ -107,7 +107,7 @@ formatted output blocks, table headers and content.
 The agent translates to the user's language **at runtime** when
 presenting options. The `.md` source files are the English blueprint —
 they define WHAT to say, not in which language. Concrete wrong-vs-correct
-examples live in [`docs/guidelines/language-and-tone-examples.md`](../../docs/guidelines/language-and-tone-examples.md).
+examples live in [`../../docs/guidelines/language-and-tone-examples.md`](../../docs/guidelines/language-and-tone-examples.md).
 
 ### Quoted user-input examples — labeled-anchor exception
 
@@ -122,7 +122,7 @@ Drift pattern: a rule writes quoted German examples inside English prose.
    abstractly later and link back to the anchor block.
 
 Wrong-vs-correct snippets in
-[`docs/guidelines/language-and-tone-examples.md`](../../docs/guidelines/language-and-tone-examples.md).
+[`../../docs/guidelines/language-and-tone-examples.md`](../../docs/guidelines/language-and-tone-examples.md).
 
 ### Detection heuristic
 

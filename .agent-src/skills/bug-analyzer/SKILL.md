@@ -84,7 +84,7 @@ Gather all available evidence before forming any hypothesis:
 - Read each file in the call chain to understand the data flow.
 - Check existing context docs (`agents/contexts/`) for the affected area.
 - **Consult engineering memory.** Via
-  [`memory-access`](../../guidelines/agent-infra/memory-access.md) call
+  [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md) call
   `retrieve(types=["historical-patterns", "incident-learnings"],
   keys=[<error class>, <affected file paths>], limit=3)`. A prior
   matching pattern or incident is the single most reliable accelerator

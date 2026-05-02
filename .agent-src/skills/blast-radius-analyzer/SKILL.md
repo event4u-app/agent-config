@@ -81,7 +81,7 @@ For every dependency, mark:
 
 ### 5. Consult engineering memory
 
-Via [`memory-access`](../../guidelines/agent-infra/memory-access.md) call
+Via [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md) call
 `retrieve(types=["architecture-decisions", "ownership"],
 keys=<changed paths + changed symbol>, limit=5)`. Surface:
 

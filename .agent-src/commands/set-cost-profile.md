@@ -25,7 +25,7 @@ the [`agent-settings` template](../templates/agent-settings.md#cost-profiles):
 - For first-run setup use [`/onboard`](onboard.md).
 - For any other single-value change, edit `.agent-settings.yml`
   directly or ask the agent — the merge rules live in
-  [`layered-settings`](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
+  [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
 - For role modes use [`/mode`](mode.md) — different concept (sets
   `roles.active_role`, not `cost_profile`).
 
@@ -73,7 +73,7 @@ value directly — still echo the old → new line in step 6.
 ### 5. Write the value
 
 Update `cost_profile` in `.agent-settings.yml` using the
-[section-aware merge rules](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
+[section-aware merge rules](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
 (preserve comments, preserve key order, touch only the changed field).
 
 If the user picked "Keep current", do nothing and stop.
@@ -107,6 +107,6 @@ flip. Cost behaviour on those surfaces is governed by the platform itself.
 ## See also
 
 - [`agent-settings`](../templates/agent-settings.md) — profile matrix and settings reference
-- [`layered-settings`](../guidelines/agent-infra/layered-settings.md) — merge rules for settings edits
+- [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md) — merge rules for settings edits
 - [`onboard`](onboard.md) — first-run setup (includes profile confirmation)
 - [`mode`](mode.md) — role-mode setter (different concept)

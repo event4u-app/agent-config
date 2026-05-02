@@ -53,7 +53,7 @@ back. If neither file exists, emit the generic role-based fallback
 using [`reviewer-awareness`](../../rules/reviewer-awareness.md).
 
 **Also** pull agent-written signals via the shared abstraction (see
-[`memory-access`](../../guidelines/agent-infra/memory-access.md)):
+[`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md)):
 
 ```python
 from scripts.memory_lookup import retrieve
@@ -189,7 +189,7 @@ Data source: <"ownership-map.yml + historical-bug-patterns.yml"
 
 - [`reviewer-awareness`](../../rules/reviewer-awareness.md)
 - [`review-routing-awareness`](../../rules/review-routing-awareness.md)
-- [`review-routing-data-format`](../../guidelines/agent-infra/review-routing-data-format.md)
+- [`review-routing-data-format`](../../../docs/guidelines/agent-infra/review-routing-data-format.md)
 - [`create-pr-description`](../create-pr-description/SKILL.md)
 - [`judge-test-coverage`](../judge-test-coverage/SKILL.md) — consumes
   the `required_test` entries from matched patterns.

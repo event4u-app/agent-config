@@ -150,7 +150,7 @@ or the equivalent configured command).
 - [`/do-and-judge`](do-and-judge.md) — implementer + judge loop for a single change
 - [`/judge`](judge.md) — standalone judge, no review-changes dispatch
 - [`code-review`](../skills/code-review/SKILL.md) — human-oriented review patterns (tone, feedback handling)
-- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#reviewer) — Reviewer mode output contract (Summary / Risks / Findings / Required actions / Verdict)
+- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md#reviewer) — Reviewer mode output contract (Summary / Risks / Findings / Required actions / Verdict)
 
 ## References
 

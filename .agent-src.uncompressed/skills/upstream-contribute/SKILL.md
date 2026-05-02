@@ -178,7 +178,7 @@ If not in the package repo, note that these checks will run in CI after the PR i
 
 If the contribution originates from a proposal under `agents/proposals/`
 (produced by `learning-to-rule-or-skill` via the pipeline in
-[`self-improvement-pipeline`](../../guidelines/agent-infra/self-improvement-pipeline.md)),
+[`self-improvement-pipeline`](../../../docs/guidelines/agent-infra/self-improvement-pipeline.md)),
 run the Stage-4 gate before opening the PR:
 
 ```bash

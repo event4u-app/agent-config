@@ -61,4 +61,4 @@ ci(lint): add skill-lint workflow
 docs(roadmap): add phase 3 implementation plan
 ```
 
-→ Type selection rules, anti-patterns, decision checklist: `guidelines/php/git.md`
+→ Type selection rules, anti-patterns, decision checklist: `docs/guidelines/php/git.md`
