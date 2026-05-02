@@ -264,6 +264,10 @@ tasks:
     desc: Validate README/AGENTS.md/docs/architecture.md links into docs/contracts/ against stability frontmatter
     cmd: python3 scripts/check_public_links.py
 
+  lint-no-new-atomic-commands:
+    desc: Fail when a new atomic command lands without a `cluster:` field (P0.8c)
+    cmd: python3 scripts/lint_no_new_atomic_commands.py
+
   check-reply-consistency:
     desc: Scan shipped sources for legacy (recommended) inline tags on numbered options
     cmd: python3 scripts/check_reply_consistency.py --scan-dir .agent-src.uncompressed
@@ -403,6 +407,7 @@ tasks:
       - task: check-refs
       - task: check-portability
       - task: check-public-links
+      - task: lint-no-new-atomic-commands
       - task: check-reply-consistency
       - task: check-iron-law-prominence
       - task: validate-schema

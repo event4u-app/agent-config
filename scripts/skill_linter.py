@@ -867,6 +867,20 @@ def lint_command(path: Path, text: str) -> LintResult:
         # suggestion block (road-to-context-aware-command-suggestion Phase 2)
         issues.extend(_lint_command_suggestion_block(text))
 
+        # deprecation-shim warning line (P0.8b — command-clusters contract)
+        if "superseded_by:" in frontmatter:
+            shim_warning = re.search(
+                r"⚠️\s+/[a-z][a-z0-9-]*\s+is deprecated;\s+use\s+/[a-z][a-z0-9 -]+\s+instead",
+                text,
+            )
+            if not shim_warning:
+                issues.append(Issue(
+                    "error", "shim_missing_warning",
+                    "Deprecation shim must contain a one-line warning matching "
+                    "'⚠️  /<old-name> is deprecated; use /<cluster> <sub> instead.'"
+                    " (see docs/contracts/command-clusters.md § Deprecation shim contract)"
+                ))
+
     # --- Structure checks ---
     if not H1_PATTERN.search(text):
         issues.append(Issue("error", "missing_h1", "Command is missing an H1 heading (# Title)"))

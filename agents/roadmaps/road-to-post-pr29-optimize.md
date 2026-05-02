@@ -140,10 +140,10 @@ single P0 so progress reflects the actual deliverables.
 - [x] P0.5 — State-default + migration safety: change `DEFAULT_STATE_FILE` to `.work-state.json`; collision-safe backup rotation; ship `MIGRATION.md` for `implement_ticket → work_engine`
 - [x] P0.6 — Clear lint regressions in `scope-control`, `autonomous-execution`, `commit-policy`, `direct-answers`; CI green
 - [x] P0.7 — Test coverage gaps: `implement-ticket` without `--state-file`; `/work` UI-prompt + medium-prompt + resume + pre-existing `.work-state.json`
-- [ ] P0.8 — Command-collapse migration docs + atomic-command linter
-- [ ] P0.8a — `docs/migrations/commands-1.15.0.md` (old → new --subcommand table, deprecation window, shim-removal version)
-- [ ] P0.8b — Deprecation shims emit one-line warning; warning text required by `lint-skills`
-- [ ] P0.8c — `scripts/lint_no_new_atomic_commands.py` failing CI on new atomic commands without `cluster:` frontmatter
+- [x] P0.8 — Command-collapse migration docs + atomic-command linter
+- [x] P0.8a — `docs/migrations/commands-1.15.0.md` (old → new --subcommand table, deprecation window, shim-removal version)
+- [x] P0.8b — Deprecation shims emit one-line warning; warning text required by `lint-skills`
+- [x] P0.8c — `scripts/lint_no_new_atomic_commands.py` failing CI on new atomic commands without `cluster:` frontmatter
 
 ## Phase 2: Post-1.15.0 work
 
