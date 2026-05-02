@@ -114,18 +114,20 @@ If yes → switch to the `roadmap-execute` command workflow with the newly creat
 
 - **Do NOT auto-generate content** — always ask the user for input.
 - **Do NOT commit or push.**
-- **Do NOT include commit steps** unless user explicitly requested them.
-  See [`commit-policy`](../rules/commit-policy.md#never-write-commit-steps-into-roadmaps-unsolicited).
+- **Do NOT include commit steps in the roadmap** unless the user explicitly
+  requested them. See [`commit-policy`](../rules/commit-policy.md#never-write-commit-steps-into-roadmaps-unsolicited).
   Roadmaps plan **work**; commits are a separate delivery decision.
+- **Every phase MUST contain at least one `- [ ]` checkbox.** A roadmap
+  without checkboxes is invisible to `agents/roadmaps-progress.md` and
+  violates [`roadmap-progress-sync`](../rules/roadmap-progress-sync.md)
+  Iron Law #2.
+- **Status is binary: `ready` (default) or `draft`.** Create new
+  roadmaps as **ready** — no `status:` field needed, ready is
+  implicit. Only mark `status: draft` (in YAML frontmatter) when the
+  user explicitly says it should be hidden from the dashboard (still
+  being authored, awaiting upstream decisions, capture-only synthesis
+  without executable phases). If the user wants draft, ask once at
+  step 3 — do not infer it.
 - **Write the roadmap in English** (per project convention for `.md` files).
 - Follow the roadmap template from `.augment/templates/roadmaps.md`.
 - Keep the file focused: 500–1000 lines max. If larger, suggest splitting.
-- **Every phase MUST contain ≥1 `- [ ]` checkbox.** Roadmaps without
-  checkboxes are invisible to `agents/roadmaps-progress.md`; violates
-  [`roadmap-progress-sync`](../rules/roadmap-progress-sync.md) Iron Law #2.
-- **Status is binary: `ready` (default) or `draft`.** Create new roadmaps
-  as **ready** — no `status:` field needed, ready is implicit. Only mark
-  `status: draft` (YAML frontmatter) when user explicitly says it should
-  be hidden from the dashboard (authoring, awaiting upstream decisions,
-  capture-only synthesis without executable phases). If user wants draft,
-  ask once at step 3 — do not infer.

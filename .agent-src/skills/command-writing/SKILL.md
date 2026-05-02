@@ -67,7 +67,7 @@ suggestion:                   # required (road-to-context-aware-command-suggesti
 ---
 ```
 
-Opt-out shape:
+Or, when opting out:
 
 ```yaml
 suggestion:
@@ -75,10 +75,21 @@ suggestion:
   rationale: "one-line reason this command must be invoked deliberately"
 ```
 
-Linter enforces ≥10-char triggers when eligible; rationale required when
-ineligible. Optional `confidence_floor` (0.0–1.0) and `cooldown` (e.g. `10m`)
-override the global settings per command. Eligibility decisions live in
+Suggestion-block rules (linter-enforced):
+
+* `eligible` is **required** and must be `true` or `false`.
+* `eligible: true` → both `trigger_description` and `trigger_context` must be
+  non-empty (≥ 10 chars each); the linter rejects empty or overly generic
+  patterns. The suggestion layer never auto-executes; the user always picks.
+* `eligible: false` → `rationale` must be non-empty. Use the opt-out for
+  intentional-only invocations (settings mutations, destructive actions,
+  package-internal tools, niche maintenance).
+* Optional `confidence_floor` (0.0–1.0) and `cooldown` (e.g. `10m`)
+  override the global settings per command.
+
+Eligibility decisions are tracked in
 [`agents/contexts/command-suggestion-eligibility.md`](../../../agents/contexts/command-suggestion-eligibility.md).
+Add or revise entries there before changing a command's `suggestion` block.
 
 When iterating on the description, delegate to the
 [`description-assist`](../description-assist/SKILL.md) skill — approval-gated,

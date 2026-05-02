@@ -8,7 +8,11 @@ source: package
 
 ## Positioning — dispatched, not standalone
 
-`livewire` is the **apply-step executor** for the Livewire stack. Invoked by [`directives/ui/apply.py`](../../templates/scripts/work_engine/directives/ui/apply.py) once the design brief is locked, and revisited by `review.py` / `polish.py` during the design-review loop. Does **not** own the flow, drive the audit, or lock the design.
+`livewire` is the **apply-step executor** for the Livewire stack. It is
+invoked by [`directives/ui/apply.py`](../../templates/scripts/work_engine/directives/ui/apply.py)
+once the design brief is locked, and revisited by `review.py` /
+`polish.py` during the design-review loop. It does **not** own the
+flow, does **not** drive the audit, and does **not** lock the design.
 
 | Concern | Owner |
 |---|---|
@@ -77,12 +81,27 @@ Do NOT use when:
 
 ### Review pass — a11y findings + preview envelope
 
-When dispatched by `directives/ui/review.py` (test slot) or `directives/ui/polish.py` (verify slot) — review/polish run, not initial apply — also emits:
+When this skill is dispatched by `directives/ui/review.py` (test slot)
+or `directives/ui/polish.py` (verify slot) — i.e. a review/polish run,
+not the initial apply — it also emits:
 
-- `state.ui_review.a11y` — `{violations: [{rule, selector, severity}, ...], severity_floor?, accepted_violations?}`. Use same `(rule, selector)` shape as `state.ui_audit.a11y_baseline` so engine's de-dup matches pre-existing entries on replay. Omit envelope on apply passes; engine's `_apply_a11y_gate` only fires when baseline present.
-- `state.ui_review.preview` — `{render_ok: bool, screenshot_path?, dom_dump_path?, error?, skipped?}`. `render_ok: false` with `error` populated triggers `preview_render_failed` halt; `render_ok: true` with `screenshot_path` threads screenshot into delivery report's `artifacts` list. Browser tooling (Playwright/Cypress/…) is consumer-project dependency — package does not ship one.
+- `state.ui_review.a11y` — `{violations: [{rule, selector, severity}, ...],
+  severity_floor?, accepted_violations?}`. Use the same `(rule, selector)`
+  shape as `state.ui_audit.a11y_baseline` so the engine's de-dup matches
+  pre-existing entries on replay. Omit the envelope on apply passes; the
+  engine's `_apply_a11y_gate` only fires when a baseline is present.
+- `state.ui_review.preview` — `{render_ok: bool, screenshot_path?,
+  dom_dump_path?, error?, skipped?}`. `render_ok: false` with `error`
+  populated triggers the `preview_render_failed` halt; `render_ok: true`
+  with `screenshot_path` threads the screenshot into the delivery
+  report's `artifacts` list. Browser tooling (Playwright/Cypress/…) is
+  a consumer-project dependency — this package does not ship one.
 
-Polish dispatch: when dispatcher skips `review` because previous review pass returned `SUCCESS`, this skill MUST itself synthesise updated `state.ui_review.findings` (including remaining `a11y_violation` entries) so engine's gate sees current state on next polish round.
+Polish dispatch: when the dispatcher skips `review` because a previous
+review pass already returned `SUCCESS`, this skill MUST itself
+synthesise the updated `state.ui_review.findings` (including any
+remaining `a11y_violation` entries) so the engine's gate sees the
+current state on the next polish round.
 
 ## Gotcha
 

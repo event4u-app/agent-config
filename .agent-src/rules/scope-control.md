@@ -20,62 +20,83 @@ source: package
 
 The user decides the git shape of the work. Never improvise.
 
-> **Commit specifics:** see [`commit-policy`](commit-policy.md) — narrower
-> than the general "no git ops without permission" below (never-ask
-> default + roadmap-authorized exception).
+> **Commit specifics:** see the canonical [`commit-policy`](commit-policy.md)
+> rule — narrower than the general "no git ops without permission"
+> below (covers the never-ask-about-committing default and the
+> roadmap-authorized exception).
 
 - NEVER commit, push, merge, rebase, or force-push without explicit user permission.
-- NEVER create, switch, or delete a branch without explicit user permission.
-  Includes spike, scratch, throwaway, worktree branches.
-- NEVER create, close, reopen, or retarget a pull request without explicit
-  user permission.
+- NEVER create a new branch, switch to a different branch, or delete a
+  branch without explicit user permission. This includes spike, scratch,
+  throwaway, and worktree branches.
+- NEVER create, close, reopen, or change the target of a pull request
+  without explicit user permission.
 - NEVER push a tag or create a release without explicit user permission.
-- NEVER include version numbers, releases, deprecation dates,
-  release-tied milestones, or git tags in roadmaps, plans, tickets, or
-  any planning artifact. Roadmaps plan **work**; releases are a
-  separate user decision. Never surface "which release" as a numbered
-  option, ADR field, or roadmap entry. If user wants a release pinned
-  to a milestone, they say so explicitly.
-- If a task seems to need a separate branch or PR, STOP and **brief
-  first, ask second**. The brief MUST cover, in order:
-  1. **Why** — what the new branch solves that the current one cannot.
-  2. **What** — files touched, experiments run, expected duration.
-  3. **How it continues** — merge back, cherry-pick, throwaway, PR
-     target, how the current branch is protected meanwhile.
-  Then present numbered options with "stay on current branch" as
-  default. User decides. Do NOT branch first and explain later.
+- NEVER include version numbers, target releases, deprecation dates,
+  release-tied milestones, or git tags inside roadmaps, plans, tickets,
+  or any other planning artifact. Roadmaps plan **work**; releases and
+  tags are a separate decision the user makes outside the roadmap.
+  Never surface "which release should this ship in?" as an option in
+  numbered choices, ADRs, or roadmap text. If the user wants a release
+  pinned to a milestone, they will say so explicitly.
+- If a task seems to *need* a separate branch or PR (spike, hotfix,
+  experiment, worktree), STOP and **brief the user before asking**. The
+  brief MUST cover, in this order:
+  1. **Why** — what problem a separate branch solves that the current
+     branch cannot; why staying on the current branch would be worse.
+  2. **What** — exactly what you plan to do on the new branch: files
+     touched, prototypes built, experiments run, expected duration.
+  3. **How it continues** — the return path: merge back, cherry-pick,
+     throwaway delete, PR target, how the current branch's state is
+     protected while you work on the other one.
+  Then present numbered options (`user-interaction`) with "stay on the
+  current branch" as the default. The user decides. Do not branch
+  first and explain later.
 
-"Explicit permission" = the user said so this turn or gave a standing
-instruction they have not revoked. Earlier permission for another op
-does not carry over.
+"Explicit permission" means the user said so **in this turn or in a
+standing instruction they have not revoked**. Earlier permission for a
+different operation does not carry over.
 
 ## Production, infrastructure, bulk-destructive — Hard Floor
 
-Subset of the above is **never** autonomous and never auto-permitted
-by a standing autonomy directive. Canonical rule:
-[`non-destructive-by-default`](non-destructive-by-default.md).
-Restated so this file remains the single read for git/scope concerns:
+A subset of the operations above is **never** autonomous and never
+auto-permitted by a standing autonomy directive. Canonical rule:
+[`non-destructive-by-default`](non-destructive-by-default.md). It is
+restated here so this file remains the single read for git/scope
+concerns:
 
-- **Production-branch merges** — `main`, `master`, `prod`, `production`, `release/*`, or any deployment-trunk branch. Always ask, even when the roadmap step says "merge".
-- **Deploys / releases** — `terraform apply` / `kubectl apply` on prod, deploy scripts, release commands, tag pushes that trigger CI deployment. Always ask.
-- **Production data / infrastructure** — prod DB writes / migrations, prod config edits, secrets rotation, IAM / role / policy, DNS, anything in a `prod`-scoped path or pipeline. Always ask.
-- **Bulk-destructive ops** — wildcard or directory deletion (`rm -rf <dir>`, `git rm -r`), `DROP TABLE`, `TRUNCATE`, `git reset --hard` past unpushed work, mass class / module / migration deletion. Always ask.
+- **Production-branch merges** — `main`, `master`, `prod`,
+  `production`, `release/*`, or any branch the project marks as
+  deployment trunk. Always ask, even when the roadmap step says
+  "merge".
+- **Deploys / releases** — `terraform apply` / `kubectl apply` on
+  prod, deploy scripts, release commands, tag pushes that trigger
+  CI deployment. Always ask.
+- **Production data / infrastructure** — prod DB writes or
+  migrations, prod config edits, secrets rotation, IAM / role /
+  policy changes, DNS edits, anything in a `prod`-scoped path or
+  pipeline. Always ask.
+- **Bulk-destructive ops** — wildcard or directory deletion
+  (`rm -rf <dir>`, `git rm -r`), `DROP TABLE`, `TRUNCATE`,
+  `git reset --hard` past unpushed work, mass class / module /
+  migration deletion, "delete everything matching X". Always ask.
 
-A roadmap step or earlier turn does **not** count as authorization for
-these. Authorization is "the user said so on this turn".
+A roadmap step or earlier turn does **not** count as authorization
+for these. Authorization is "the user said so on this turn".
 
 ## Decline = silence — no re-asking on the same task
 
-After a declined proposal (branch switch, PR, tag/release entry,
-worktree, version pinning in a roadmap), do **not** raise it again on
-the same task. Decline stands until user reopens it.
+After the user **declines** a proposal (branch switch, PR creation,
+tag/release entry, separate worktree, version pinning in a roadmap),
+do **not** raise the same proposal again on the same task. The decline
+stands until the user reopens the topic themselves.
 
-Right moment to ask — at most **once**, only when genuinely useful —
-is **before** work starts (writing roadmap, opening ticket), not
-mid-execution. During roadmap execution the branch question is
-settled; do not resurface it step by step.
+The right moment to ask — at most **once**, only when genuinely useful
+— is **before** the work starts (e.g. when writing the roadmap or
+opening a ticket), not mid-execution. During roadmap execution the
+branch question is settled; do not resurface it step by step.
 
 A proposal that "might be sensible" is not enough reason to ask.
-Default: stay on current branch, no release language. Only ask with
-concrete evidence-based reason (e.g. risky migration → spike branch).
-If in doubt, do not ask.
+Default: stay on the current branch, no release language. Only ask
+when there's a concrete, evidence-based reason (e.g. risky migration
+benefits from a spike branch). If in doubt, do not ask.

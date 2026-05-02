@@ -20,22 +20,24 @@ sub-skills and consolidating their verdicts.
 ### 1. Update the current branch
 
 Before gathering the diff, run [`/prepare-for-review`](prepare-for-review.md)
-to ensure the current branch is up to date with its base chain:
+to make sure the current branch is up to date with its base chain:
 
-- Detect current branch with `git rev-parse --abbrev-ref HEAD`.
-- Branch is `main` → skip this step (nothing to prepare).
-- Otherwise, search for an open GitHub PR whose head is the current branch.
-  - Exactly one open PR found → invoke `/prepare-for-review` with that
-    PR number. It updates `main`, fetches and merges the full branch
-    chain into the current branch, and leaves the current branch
-    checked out.
-  - No open PR found → fall back to a minimal local update:
+- Detect the current branch with `git rev-parse --abbrev-ref HEAD`.
+- If the branch is `main` → skip this step (nothing to prepare).
+- Otherwise, search for an open GitHub PR whose head is the current
+  branch.
+  - If exactly one open PR is found → invoke `/prepare-for-review`
+    with that PR number. It will update `main`, fetch and merge the
+    full branch chain into the current branch, and leave the current
+    branch checked out.
+  - If no open PR is found → fall back to a minimal local update:
     `git fetch origin main` and `git merge origin/main --no-edit` on
     the current branch. Abort on conflict and report.
-  - Multiple PRs found → ask which PR to use before proceeding.
-- `/prepare-for-review` aborts (merge conflict, network error, etc.)
-  → stop the review here and surface the error. Do **not** continue
-  with stale data.
+  - If multiple PRs are found → ask the user which PR to use before
+    proceeding.
+- If `/prepare-for-review` aborts (merge conflict, network error,
+  etc.) → stop the review here and surface the error. Do **not**
+  continue with stale data.
 
 ### 2. Gather the diff
 
@@ -119,10 +121,10 @@ or the equivalent configured command).
 - Project-specific syntax checks (e.g. `php -l`, linter pre-pass) are
   out of scope for the judges and belong in the optional step 7
   quality tools hand-off
-- Step 1 (`/prepare-for-review`) is **best-effort**: if no open PR
-  exists for the current branch, it falls back to a plain
-  `git fetch && git merge origin/main`. Existing invocations that ran
-  on a fully detached or pre-PR branch keep working
+- The new step 1 (`/prepare-for-review`) is **best-effort**: if no
+  open PR exists for the current branch, it falls back to a plain
+  `git fetch && git merge origin/main`. Existing invocations that
+  ran on a fully detached or pre-PR branch keep working
 
 ## Use this command when
 

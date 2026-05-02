@@ -22,9 +22,8 @@ Check in this order — use the **first match**:
 3. **`vendor/bin/pest` exists** → Pest → `vendor/bin/pest`
 4. **Fallback** → PHPUnit → `vendor/bin/phpunit`
 
-**Prefer Makefile targets** over raw commands — they handle container access,
-environment variables, and parallel settings automatically. If the project
-uses a different task runner, inspect its config before falling back to raw.
+**Prefer Makefile targets** over raw commands when they exist — they handle container access,
+environment variables, and parallel settings automatically.
 
 ### 2. Run the tests
 

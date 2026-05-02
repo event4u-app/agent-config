@@ -8,6 +8,8 @@ suggestion:
   rationale: "Niche maintenance tool with no recurring NL trigger."
 ---
 
+<!-- cloud_safe: noop -->
+
 # /optimize-augmentignore
 
 Scans the project to find files that waste tokens in Augment's retrieval index
@@ -263,3 +265,10 @@ echo "Rules ignored: $rules_count"
 - **Never ignore always-active rules** — only auto-loaded rules (those with `description` frontmatter) may be ignored.
 - **Never ignore meta/agent-system skills** — `agent-docs-writing-writing`, `commands`, `context-create`, `override-management`, `guidelines`, `project-docs`, `roadmap-management`, `naming`, `skill-reviewer`, `file-editor`, `copilot-config`, `copilot-agents-optimization`.
 - **Restore previously ignored skills** when the stack changes (e.g., Vue added to project → restore `vue` skill).
+
+## Cloud Behavior
+
+On cloud surfaces (Claude.ai Web, Skills API) this command is **fully inert** —
+`.augmentignore` is an Augment-Code-specific retrieval-index config; it has
+no equivalent on the cloud surfaces and no file to write. Index pruning is
+a local-agent concern.

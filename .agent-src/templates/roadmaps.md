@@ -7,8 +7,8 @@ Templates for roadmap files stored in `agents/roadmaps/` or `app/Modules/{Module
 ## Rules for Roadmaps
 
 1. **Be precise and concise.** Aim for 500–1000 lines max. If larger, split into multiple files.
-2. **Checkboxes mandatory.** Every active roadmap MUST contain ≥1 `- [ ]` per non-intro phase. Decision tables, ICE matrices, block-sequencing capture *why*; checkboxes capture *what next*. No checkboxes → invisible to `agents/roadmaps-progress.md`. Enforced by [`roadmap-progress-sync`](../rules/roadmap-progress-sync.md) Iron Law #2.
-   - **Status binary: `ready` (default) or `draft`.** New roadmaps created **ready** unless user explicitly says draft — `ready` implicit, never written. Drafts declare via frontmatter (`---\nstatus: draft\n---`); hidden from dashboard until removed/flipped to `ready`. Use `draft` while authoring, awaiting upstream decisions, or capture-only synthesis without executable phases. No other status values; legacy banners (`**Status: directional**`) removed.
+2. **Checkboxes are mandatory, not decorative.** Every active roadmap MUST contain at least one `- [ ]` per non-intro phase. Decision tables, ICE matrices, and block-sequencing tables capture the *why*; checkboxes capture the *what to do next*. A roadmap without checkboxes is invisible to `agents/roadmaps-progress.md` — the dashboard cannot count it, the next reader thinks no work is planned. Enforced by [`roadmap-progress-sync`](../rules/roadmap-progress-sync.md) Iron Law #2.
+   - **Status is binary: `ready` (default) or `draft`.** New roadmaps are created **ready** unless the user explicitly says draft — `ready` is implicit and need not be written. Drafts declare it via frontmatter at the top of the file (`---\nstatus: draft\n---`) and are hidden from the dashboard until the flag is removed or flipped to `ready`. Use `draft` while the roadmap is still being authored, while waiting for upstream decisions, or as a capture-only synthesis that has not been promoted to executable phases. There are no other status values; legacy banners like `**Status: directional**` are removed.
 3. **State the goal first.** One sentence at the top — what is the outcome?
 4. **List prerequisites** — what must exist or be running before starting.
 5. **Reference existing code** — point to files, classes, or modules.
@@ -25,17 +25,17 @@ Templates for roadmap files stored in `agents/roadmaps/` or `app/Modules/{Module
     - `agents/roadmaps/skipped/` — decision against pursuit; typically 0 items `[x]` (superseded, scope rejected)
 
     See the `roadmap-management` skill for the exact trigger matrix and user-confirmation flow.
-
 13. **No tags, releases, or version numbers.** Roadmaps describe work, not shipping.
     Never assign version suffixes to phases (`Phase 1 — v1.8.0`), never write
     "Target release: X.Y.Z", never plan git tags or deprecation dates. Release
-    and tag decisions belong to the user, taken outside the roadmap. Enforced by
-    [`scope-control`](../rules/scope-control.md#git-operations--permission-gated).
+    and tag decisions belong to the user and are taken outside the roadmap.
+    This is enforced by [`scope-control`](../rules/scope-control.md#git-operations--permission-gated).
 14. **No automatic branch switches mid-roadmap.** Roadmap work runs on the
-    current branch. If a separate branch (spike, hotfix, experiment) would
-    be useful, agent may propose it **once** during creation — not during
-    execution. Default: stay on current branch. If user declines, topic is
-    closed for this roadmap. See [`scope-control`](../rules/scope-control.md#decline--silence--no-re-asking-on-the-same-task).
+    branch the user is on. If a separate branch (spike, hotfix, experiment)
+    would be genuinely useful, the agent may propose it **once** while
+    creating the roadmap — not during execution. Default: stay on the
+    current branch. If the user declines, the topic is closed for this
+    roadmap. See [`scope-control`](../rules/scope-control.md#decline--silence--no-re-asking-on-the-same-task).
 
 ---
 

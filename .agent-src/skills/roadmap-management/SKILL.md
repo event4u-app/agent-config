@@ -30,12 +30,13 @@ the dashboard **in the same response**.
 `count_open == 0` (pure `[x]`, or `[x]` + `[~]`/`[-]`), `git mv`
 it into `agents/roadmaps/archive/` **before** regenerating — see
 the auto-archive decision table under "Check completion status"
-below. A 100%-complete roadmap left in `agents/roadmaps/` makes
-the next reader think work is still open.
+below. A 100%-complete roadmap left in `agents/roadmaps/` makes the
+next reader think work is still open.
 
-Enforced by [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md).
-Batching edits in one response is fine — one final regeneration before
-replying is enough. But the response must not end without it.
+This is enforced by the [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)
+rule. Batching multiple edits in one response is fine — one final
+regeneration before replying is enough. But the response must not end
+without it.
 
 ## Procedure: Manage a roadmap
 
@@ -102,11 +103,11 @@ Every roadmap follows this structure:
 
 ### Checkboxes — mandatory, not decorative
 
+- **Every active roadmap MUST contain at least one `- [ ]` per non-intro phase.** Decision tables, ICE matrices, and block-sequencing tables are valid rationale, but they do not satisfy this rule on their own — pair them with a `## Phase N` or `## Implementation Checklist` section whose checkboxes execute the decision. A roadmap without checkboxes is invisible to `agents/roadmaps-progress.md` and violates [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md) Iron Law #2.
 - Every actionable step uses `- [ ]` (unchecked) or `- [x]` (completed).
-- **Every active roadmap MUST contain ≥1 `- [ ]` per non-intro phase.** Decision tables, ICE matrices, block-sequencing = valid rationale but do NOT satisfy alone — pair with `## Phase N` / `## Implementation Checklist` section whose checkboxes execute the decision. No checkboxes → invisible to `agents/roadmaps-progress.md`; violates [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md) Iron Law #2.
 - Mark steps as `[x]` immediately after completing them.
 - Never remove completed steps — they serve as history.
-- **Status binary: `ready` (default, implicit) or `draft`.** New roadmaps created **ready** unless user explicitly says otherwise — `ready` implicit, never written. Roadmaps still being authored, awaiting upstream decisions, or capturing options without a worked plan declare `status: draft` in YAML frontmatter at top of file. Drafts hidden from `agents/roadmaps-progress.md` until flag removed or flipped to `ready`. No other status values; legacy banners (`**Status: directional**`, `Status: capture-only`, `mode: feedback`) removed.
+- **Status is binary: `ready` (default, implicit) or `draft`.** New roadmaps are created **ready** unless the user explicitly says otherwise — `ready` is implicit and need not be written. A roadmap that is still being authored, awaiting upstream decisions, or capturing options without a worked plan declares `status: draft` in YAML frontmatter at the top of the file. Drafts are hidden from `agents/roadmaps-progress.md` until the flag is removed or flipped to `ready`. There are no other status values; legacy banners (`**Status: directional**`, `Status: capture-only`, `mode: feedback`) are removed.
 
 ### Phases
 
@@ -140,12 +141,13 @@ Every roadmap implicitly includes these gates (run after each step that changes 
 1. Ask the user for goal, context-create, and phases.
 2. Use the template structure from `.augment/templates/roadmaps.md`.
 3. Review with the user iteratively until approved.
-4. **Branch & release questions — ask at most once, only if genuinely useful.**
-   Default: stay on current branch, no version numbers in roadmap.
-   Only propose a separate branch with concrete evidence (e.g. risky
-   migration → spike branch). Never include releases, deprecation dates,
-   or git tags in roadmap text. If user declines, do **not** re-propose
-   during `roadmap-execute`. Decline = silence. See [`scope-control`](../../rules/scope-control.md#decline--silence--no-re-asking-on-the-same-task).
+4. **Branch & release questions — at most once, only if genuinely useful.**
+   Default: stay on the current branch, no version numbers in the
+   roadmap. Only propose a separate branch when there is concrete,
+   evidence-based reason (e.g. risky migration benefits from a spike).
+   Never include release versions, deprecation dates, or git tags in
+   the roadmap text. If the user declines, do **not** re-propose during
+   `roadmap-execute`. Decline = silence. See [`scope-control`](../../rules/scope-control.md#decline--silence--no-re-asking-on-the-same-task).
 5. Save with a kebab-case filename (e.g. `optimize-webhook-jobs.md`).
 6. Regenerate the dashboard so the new roadmap is included.
 
@@ -274,8 +276,10 @@ Command:
 ./agent-config roadmap:progress-check     # CI: fail if stale
 ```
 
-The `./agent-config` wrapper is written into the project root by the
-installer and always works — no global tooling or task runner required.
+The `./agent-config` wrapper lives in the project root (written by the
+package installer, gitignored) and delegates to the master CLI inside
+`node_modules/@event4u/agent-config/` or `vendor/event4u/agent-config/`.
+No global tooling required.
 
 The dashboard is a **read-only snapshot**. Do not edit it by hand — regenerate it.
 
@@ -311,5 +315,5 @@ The dashboard is a **read-only snapshot**. Do not edit it by hand — regenerate
 - Do NOT archive roadmaps with open `[ ]` items without asking the user.
 - Do NOT delete roadmaps — always move to `archive/` or `skipped/`.
 - Do NOT use `skipped/` as a dumping ground for partially-finished work — that is what `archive/` with deferred items is for.
-- Do NOT assign version numbers, git tags, deprecation dates, or release identifiers to phases. Hard rule — see [`scope-control`](../../rules/scope-control.md#git-operations--permission-gated).
-- Do NOT propose a branch switch while executing a roadmap. Branch question is settled at creation; declined or never-asked = silent. See [`scope-control`](../../rules/scope-control.md#decline--silence--no-re-asking-on-the-same-task).
+- Do NOT assign version numbers, git tags, deprecation dates, or release identifiers to phases. Roadmaps plan work; releases and tags are decided by the user separately. Hard rule — see [`scope-control`](../../rules/scope-control.md#git-operations--permission-gated).
+- Do NOT propose a branch switch while executing a roadmap. The branch question is settled at creation time; if the user already declined (or you never asked because it wasn't sensible), stay silent. See [`scope-control`](../../rules/scope-control.md#decline--silence--no-re-asking-on-the-same-task).

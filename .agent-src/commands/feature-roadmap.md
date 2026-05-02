@@ -176,8 +176,8 @@ What's next?
 ### Rules
 
 - **Do NOT commit or push.**
-- **Do NOT include commit steps** unless user explicitly requested them.
-  See [`commit-policy`](../rules/commit-policy.md#never-write-commit-steps-into-roadmaps-unsolicited).
+- **Do NOT include commit steps in the roadmap** unless the user explicitly
+  requested them. See [`commit-policy`](../rules/commit-policy.md#never-write-commit-steps-into-roadmaps-unsolicited).
 - **Do NOT modify the feature plan** beyond updating the Roadmaps section and status.
 - **Always link roadmaps back to the feature** and vice versa.
 - **Use the roadmap template** from `agents/roadmaps/template.md`.
