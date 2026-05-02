@@ -32,7 +32,10 @@ class BrokenRef:
 
 
 SCAN_DIRS = [".agent-src", "agents"]
-SKIP_DIRS = ["agents/roadmaps/archive"]  # archived roadmaps have historical refs
+SKIP_DIRS = [
+    "agents/roadmaps/archive",  # archived roadmaps have historical refs
+    "agents/council-sessions",  # per-user audit trail (gitignored), captured provider output
+]
 ROOT = Path(".")
 
 # YAML memory files (engineering-memory layer) live under `agents/memory/`.
