@@ -44,17 +44,21 @@ from pathlib import Path
 
 CHECKBOX_RE = re.compile(r"^\s*[-*]\s+\[([ xX~\-])\]\s", re.MULTILINE)
 # H2 or H3 heading starting with "Phase <id>"; separator (colon, em-dash,
-# hyphen, or whitespace) and name are optional. The id supports three
+# hyphen, or whitespace) and name are optional. The id supports four
 # project-level conventions:
 #   - numeric        `Phase 0`, `Phase 10`
+#   - numeric+sub    `Phase 2a`, `Phase 10c` (digit run + single
+#                    lowercase letter for sub-phases)
 #   - roman I..XXXIX `Phase I`, `Phase III`
 #   - letter track   `Phase A`, `Phase B1` (single uppercase letter,
 #                    optional trailing digits for sub-track IDs)
 # Roman is capped at [IVX]+ (up to XXXIX) on purpose: the broader
 # [IVXLCDM]+ would also match all-caps words like `Phase LIVE`. Letter
 # is [A-Z] not [A-Za-z] so `## Phase overview` stays a non-phase anchor.
+# The numeric+sub branch keeps the lowercase-letter restriction so
+# `Phase abc` (no digits) still falls through to the rejection branch.
 PHASE_RE = re.compile(
-    r"^(#{2,3})\s+Phase\s+(\d+|[IVX]+|[A-Z](?:\d+)?)"
+    r"^(#{2,3})\s+Phase\s+(\d+[a-z]?|[IVX]+|[A-Z](?:\d+)?)"
     r"(?:[\s:\u2014\-]+(.*?))?\s*$",
     re.MULTILINE,
 )
@@ -74,8 +78,9 @@ DRAFT_VALUES = frozenset({"draft"})
 @dataclass
 class PhaseStats:
     # Phase identifier as it appears in the heading: numeric ("0"),
-    # roman ("III"), or letter-track ("A", "B1"). Kept as a string so
-    # non-numeric conventions survive round-tripping through render().
+    # numeric+sub ("2a"), roman ("III"), or letter-track ("A", "B1").
+    # Kept as a string so non-numeric conventions survive round-tripping
+    # through render().
     id: str
     name: str
     done: int = 0
