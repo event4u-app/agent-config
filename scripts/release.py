@@ -20,10 +20,13 @@ Pipeline:
                            push the tag (this triggers publish-npm.yml).
     9. GitHub Release    — `gh release create X.Y.Z --notes <changelog>`.
 
-Idempotency is intentionally limited: this script mutates git state, so
-re-running after a partial failure needs a clean tree. Each step prints
-what it's about to do before doing it, so a crash leaves a recoverable
-trail.
+Idempotency: pass `--resume` to recover from a partial failure. Each
+step then probes existing state (branch, commit, PR, tag, GitHub
+Release) and skips work that is already done, instead of erroring out.
+Without `--resume` the pipeline still mutates git/network state, so
+re-running on a dirty tree needs `--resume` (or a manual cleanup).
+Each step prints what it's about to do before doing it, so a crash
+leaves a recoverable trail.
 
 Stdlib-only (Python 3.10+). No third-party runtime dependencies.
 """
@@ -181,6 +184,61 @@ def have(bin: str) -> bool:
         ).returncode
         == 0
     )
+
+
+# ─── resume-mode state probes ────────────────────────────────────────────────
+
+
+def _branch_exists_local(branch: str) -> bool:
+    r = run(
+        "git", "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}",
+        check=False, capture=True,
+    )
+    return r.returncode == 0
+
+
+def _branch_exists_remote(branch: str) -> bool:
+    r = run(
+        "git", "ls-remote", "--exit-code", "--heads", REMOTE, branch,
+        check=False, capture=True,
+    )
+    return r.returncode == 0
+
+
+def _tag_exists_local(tag: str) -> bool:
+    return tag in git("tag", "-l", tag, capture=True).splitlines()
+
+
+def _tag_exists_remote(tag: str) -> bool:
+    r = run(
+        "git", "ls-remote", "--exit-code", "--tags", REMOTE, tag,
+        check=False, capture=True,
+    )
+    return r.returncode == 0
+
+
+def _pr_for_branch(branch: str) -> dict | None:
+    """Most recent PR (any state) with `release/X.Y.Z` as head, or None."""
+    r = run(
+        "gh", "pr", "list",
+        "--head", branch,
+        "--state", "all",
+        "--json", "number,state,url",
+        "--limit", "1",
+        check=False, capture=True,
+    )
+    if r.returncode != 0:
+        return None
+    try:
+        items = json.loads(r.stdout or "[]")
+    except json.JSONDecodeError:
+        return None
+    return items[0] if items else None
+
+
+def _release_exists(tag: str) -> bool:
+    r = run("gh", "release", "view", tag, check=False, capture=True)
+    return r.returncode == 0
 
 
 # ─── version math ─────────────────────────────────────────────────────────────
@@ -353,8 +411,21 @@ def set_marketplace_version(path: Path, version: str) -> None:
 # ─── preflight ────────────────────────────────────────────────────────────────
 
 
-def preflight(target: str) -> None:
-    """Fail fast on conditions that would break the release mid-flight."""
+def preflight(target: str, *, resume: bool = False) -> None:
+    """Fail fast on conditions that would break the release mid-flight.
+
+    In ``--resume`` mode two invariants are relaxed:
+
+    * The starting branch may be ``release/{target}`` in addition to
+      ``main`` — both are valid resume positions (mid-pipeline crash
+      after step 1 leaves you on the release branch).
+    * The target-tag-exists check is dropped — execute() probes for
+      existing tags/releases and skips them.
+
+    Tree cleanliness, gh auth, and ``main`` in-sync with origin are
+    still enforced, so resuming has the same starting posture as a
+    fresh run; only step-level outcomes differ.
+    """
     for b in ("git", "gh"):
         if not have(b):
             die(f"{b!r} not found on PATH")
@@ -368,7 +439,14 @@ def preflight(target: str) -> None:
         die("gh is not authenticated; run `gh auth login` first")
 
     branch = git("rev-parse", "--abbrev-ref", "HEAD", capture=True)
-    if branch != MAIN_BRANCH:
+    release_branch = f"release/{target}"
+    allowed = {MAIN_BRANCH, release_branch} if resume else {MAIN_BRANCH}
+    if branch not in allowed:
+        if resume:
+            die(
+                f"resume must run from {MAIN_BRANCH!r} or {release_branch!r}, "
+                f"currently on {branch!r}"
+            )
         die(f"release must run from {MAIN_BRANCH!r}, currently on {branch!r}")
 
     porcelain = git("status", "--porcelain", capture=True)
@@ -380,17 +458,24 @@ def preflight(target: str) -> None:
     # about to create a new tag anyway — local drift (e.g. from renamed
     # release-please tags) should not block the fetch.
     run("git", "fetch", REMOTE, "--tags", "--prune", "--force", capture=True)
-    local = git("rev-parse", "HEAD", capture=True)
-    remote = git("rev-parse", f"{REMOTE}/{MAIN_BRANCH}", capture=True)
-    if local != remote:
-        die(
-            f"local {MAIN_BRANCH} is not in sync with {REMOTE}/{MAIN_BRANCH}; "
-            "pull or push first"
-        )
 
-    tags = git("tag", "-l", target, capture=True).splitlines()
-    if target in tags:
-        die(f"tag {target!r} already exists; nothing to release")
+    # The local-in-sync-with-origin check only applies to main; if we're
+    # already on the release branch in resume mode, the relevant invariant
+    # is "main hasn't moved beyond what release/X.Y.Z branched off", which
+    # `git pull --ff-only` enforces in step 8 anyway.
+    if branch == MAIN_BRANCH:
+        local = git("rev-parse", "HEAD", capture=True)
+        remote = git("rev-parse", f"{REMOTE}/{MAIN_BRANCH}", capture=True)
+        if local != remote:
+            die(
+                f"local {MAIN_BRANCH} is not in sync with "
+                f"{REMOTE}/{MAIN_BRANCH}; pull or push first"
+            )
+
+    if not resume:
+        tags = git("tag", "-l", target, capture=True).splitlines()
+        if target in tags:
+            die(f"tag {target!r} already exists; nothing to release")
 
 
 # ─── plan ─────────────────────────────────────────────────────────────────────
@@ -436,7 +521,13 @@ def _step(n: int, total: int, msg: str) -> None:
     print(f"[{n}/{total}] {msg}")
 
 
-def execute(plan: Plan, *, wait_for_checks: bool, dry_run: bool) -> None:
+def execute(
+    plan: Plan,
+    *,
+    wait_for_checks: bool,
+    dry_run: bool,
+    resume: bool = False,
+) -> None:
     branch = f"release/{plan.target}"
     total = 9
 
@@ -444,57 +535,129 @@ def execute(plan: Plan, *, wait_for_checks: bool, dry_run: bool) -> None:
         print("(dry-run) no git/gh mutations will be performed.")
         return
 
-    _step(1, total, f"Create branch {branch}")
-    run("git", "checkout", "-b", branch)
+    # Probe the world once at the top so each step skip-decision is cheap.
+    pr_info = _pr_for_branch(branch) if resume else None
+    pr_state = (pr_info or {}).get("state")
+    pr_merged = pr_state == "MERGED"
 
-    _step(2, total, "Bump package.json + marketplace.json, prepend CHANGELOG")
-    set_package_version(PACKAGE_JSON, plan.target)
-    set_marketplace_version(MARKETPLACE_JSON, plan.target)
-    prepend_changelog(CHANGELOG, plan.changelog_entry)
+    # ─── 1. branch ──────────────────────────────────────────────────────────
+    if pr_merged:
+        _step(1, total, f"PR for {branch} already merged — staying on {MAIN_BRANCH}")
+        if git("rev-parse", "--abbrev-ref", "HEAD", capture=True) != MAIN_BRANCH:
+            run("git", "checkout", MAIN_BRANCH)
+        run("git", "pull", "--ff-only", REMOTE, MAIN_BRANCH)
+    elif resume and _branch_exists_local(branch):
+        _step(1, total, f"Branch {branch} exists locally — checkout")
+        run("git", "checkout", branch)
+    elif resume and _branch_exists_remote(branch):
+        _step(1, total, f"Branch {branch} exists on {REMOTE} — fetch + checkout")
+        run("git", "fetch", REMOTE, branch)
+        run("git", "checkout", "-b", branch, f"{REMOTE}/{branch}")
+    else:
+        _step(1, total, f"Create branch {branch}")
+        run("git", "checkout", "-b", branch)
 
-    _step(3, total, f"Commit `release: {plan.target}`")
-    run("git", "add", str(PACKAGE_JSON), str(MARKETPLACE_JSON), str(CHANGELOG))
-    run("git", "commit", "-m", f"release: {plan.target}")
+    # ─── 2. file mutations ──────────────────────────────────────────────────
+    if pr_merged:
+        _step(2, total, "PR already merged — skip file bumps")
+    else:
+        current_pkg = json.loads(PACKAGE_JSON.read_text(encoding="utf-8")).get("version")
+        if resume and current_pkg == plan.target:
+            _step(2, total, f"Files already at {plan.target} — skip bump")
+        else:
+            _step(2, total, "Bump package.json + marketplace.json, prepend CHANGELOG")
+            set_package_version(PACKAGE_JSON, plan.target)
+            set_marketplace_version(MARKETPLACE_JSON, plan.target)
+            prepend_changelog(CHANGELOG, plan.changelog_entry)
 
-    _step(4, total, f"Push {branch} to {REMOTE}")
-    run("git", "push", "-u", REMOTE, branch)
+    # ─── 3. commit ──────────────────────────────────────────────────────────
+    if pr_merged:
+        _step(3, total, "PR already merged — skip commit")
+    else:
+        last_msg = git("log", "-1", "--format=%s", capture=True)
+        porcelain = git("status", "--porcelain", capture=True)
+        if resume and last_msg == f"release: {plan.target}" and not porcelain:
+            _step(3, total, f"Last commit already `release: {plan.target}` and tree clean — skip")
+        else:
+            _step(3, total, f"Commit `release: {plan.target}`")
+            run("git", "add", str(PACKAGE_JSON), str(MARKETPLACE_JSON), str(CHANGELOG))
+            run("git", "commit", "-m", f"release: {plan.target}")
 
-    _step(5, total, "Open pull request")
-    pr_body = (
-        f"Release {plan.target}.\n\n"
-        f"{plan.changelog_body}\n\n"
-        "Created by `scripts/release.py`."
-    )
-    run(
-        "gh", "pr", "create",
-        "--base", MAIN_BRANCH,
-        "--head", branch,
-        "--title", f"release: {plan.target}",
-        "--body", pr_body,
-    )
+    # ─── 4. push ────────────────────────────────────────────────────────────
+    if pr_merged:
+        _step(4, total, "PR already merged — skip push")
+    else:
+        # `git push -u` is naturally idempotent — it prints "Everything
+        # up-to-date" when remote already matches. No probe needed.
+        _step(4, total, f"Push {branch} to {REMOTE}")
+        run("git", "push", "-u", REMOTE, branch)
 
-    if wait_for_checks:
+    # ─── 5. PR ──────────────────────────────────────────────────────────────
+    if pr_merged:
+        _step(5, total, f"PR #{pr_info.get('number')} already merged — skip")
+    elif resume and pr_state == "OPEN":
+        _step(5, total, f"PR already open: {pr_info.get('url')}")
+    else:
+        _step(5, total, "Open pull request")
+        pr_body = (
+            f"Release {plan.target}.\n\n"
+            f"{plan.changelog_body}\n\n"
+            "Created by `scripts/release.py`."
+        )
+        run(
+            "gh", "pr", "create",
+            "--base", MAIN_BRANCH,
+            "--head", branch,
+            "--title", f"release: {plan.target}",
+            "--body", pr_body,
+        )
+
+    # ─── 6. wait for checks ─────────────────────────────────────────────────
+    if pr_merged:
+        _step(6, total, "PR already merged — skip checks wait")
+    elif wait_for_checks:
         _step(6, total, "Wait for PR checks")
         watch_pr_checks()
     else:
         _step(6, total, "Skip waiting for checks (--no-wait)")
 
-    _step(7, total, "Merge pull request (merge commit) and delete branch")
-    run("gh", "pr", "merge", "--merge", "--delete-branch")
+    # ─── 7. merge ───────────────────────────────────────────────────────────
+    if pr_merged:
+        _step(7, total, f"PR #{pr_info.get('number')} already merged — skip")
+    else:
+        _step(7, total, "Merge pull request (merge commit) and delete branch")
+        run("gh", "pr", "merge", "--merge", "--delete-branch")
 
-    _step(8, total, f"Fast-forward {MAIN_BRANCH}, tag merge commit, push tag")
-    run("git", "checkout", MAIN_BRANCH)
+    # ─── 8. tag main + push tag ─────────────────────────────────────────────
+    # Always idempotent — even outside resume mode this prevents a mid-flight
+    # crash on step 9 from leaving a half-tagged release that subsequent
+    # `task release` invocations can't recover from without `--resume`.
+    if git("rev-parse", "--abbrev-ref", "HEAD", capture=True) != MAIN_BRANCH:
+        run("git", "checkout", MAIN_BRANCH)
     run("git", "pull", "--ff-only", REMOTE, MAIN_BRANCH)
-    run("git", "tag", plan.target)
-    run("git", "push", REMOTE, plan.target)
 
-    _step(9, total, "Create GitHub Release (triggers publish-npm on the tag)")
-    notes = plan.changelog_body or f"Release {plan.target}"
-    run(
-        "gh", "release", "create", plan.target,
-        "--title", plan.target,
-        "--notes", notes,
-    )
+    if _tag_exists_local(plan.target):
+        if _tag_exists_remote(plan.target):
+            _step(8, total, f"Tag {plan.target} already on {REMOTE} — skip")
+        else:
+            _step(8, total, f"Tag {plan.target} exists locally — push only")
+            run("git", "push", REMOTE, plan.target)
+    else:
+        _step(8, total, f"Tag merge commit and push {plan.target}")
+        run("git", "tag", plan.target)
+        run("git", "push", REMOTE, plan.target)
+
+    # ─── 9. GitHub Release ──────────────────────────────────────────────────
+    if _release_exists(plan.target):
+        _step(9, total, f"GitHub Release {plan.target} already exists — skip")
+    else:
+        _step(9, total, "Create GitHub Release (triggers publish-npm on the tag)")
+        notes = plan.changelog_body or f"Release {plan.target}"
+        run(
+            "gh", "release", "create", plan.target,
+            "--title", plan.target,
+            "--notes", notes,
+        )
 
     print()
     print(f"✅  Released {plan.target}")
@@ -535,6 +698,15 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--no-wait", action="store_true",
         help="Merge immediately without waiting for PR checks to pass.",
     )
+    p.add_argument(
+        "--resume", action="store_true",
+        help=(
+            "Recover from a partial run. Each step probes existing state "
+            "(branch, commit, PR, tag, GitHub Release) and skips work that "
+            "is already done. Use this when an earlier `task release` "
+            "crashed mid-pipeline."
+        ),
+    )
     return p.parse_args(argv)
 
 
@@ -543,6 +715,49 @@ def resolve_bump(override: str | None, commits: list[Commit]) -> str:
     if override:
         return override
     return infer_bump(commits)
+
+
+_RELEASE_BRANCH_RE = re.compile(r"^release/(\d+\.\d+\.\d+)$")
+
+
+def _detect_in_flight_target() -> str | None:
+    """Find the in-flight release target from existing release branches.
+
+    Resume mode needs to know which `release/X.Y.Z` is being recovered,
+    not what the next bump would be. The release branch name is the
+    canonical anchor: it was committed by step 1 of an earlier run and
+    is the only state guaranteed to survive a partial pipeline.
+
+    Local branches win over remote, current-branch wins over both — if
+    you ran `git checkout release/1.15.0`, that's the target. Returns
+    None if no release branch exists; caller falls back to the regular
+    bump-inference path.
+    """
+    head = git("rev-parse", "--abbrev-ref", "HEAD", capture=True)
+    m = _RELEASE_BRANCH_RE.match(head)
+    if m:
+        return m.group(1)
+
+    local_raw = git("for-each-ref", "--format=%(refname:short)", "refs/heads/release/", capture=True)
+    candidates = [
+        m.group(1)
+        for line in local_raw.splitlines()
+        if (m := _RELEASE_BRANCH_RE.match(line.strip()))
+    ]
+    remote_raw = git(
+        "for-each-ref", "--format=%(refname:short)",
+        f"refs/remotes/{REMOTE}/release/", capture=True,
+    )
+    for line in remote_raw.splitlines():
+        bare = line.strip().removeprefix(f"{REMOTE}/")
+        if (m := _RELEASE_BRANCH_RE.match(bare)):
+            candidates.append(m.group(1))
+
+    if not candidates:
+        return None
+    # Sort semver-aware so 1.10.0 > 1.9.0 (lexicographic would lose).
+    candidates.sort(key=parse_version)
+    return candidates[-1]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -554,11 +769,22 @@ def main(argv: list[str] | None = None) -> int:
     prev = latest_tag()
     commits = commits_since(prev)
     bump = resolve_bump(args.bump_override, commits)
-    target = args.explicit or bump_version(current, bump)
+
+    # Resume mode: prefer an existing `release/X.Y.Z` over computed bump,
+    # so we don't accidentally start a 1.16.0 release while 1.15.0 is
+    # still in flight. Explicit --version still wins.
+    in_flight = _detect_in_flight_target() if args.resume else None
+    if args.explicit:
+        target = args.explicit
+    elif in_flight:
+        target = in_flight
+        print(f"(resume) detected in-flight release branch release/{in_flight}")
+    else:
+        target = bump_version(current, bump)
     parse_version(target)
 
     if not args.dry_run:
-        preflight(target)
+        preflight(target, resume=args.resume)
 
     today = _date.today().isoformat()
     full, body = render_changelog_entry(target, prev, commits, today)
@@ -572,6 +798,8 @@ def main(argv: list[str] | None = None) -> int:
         changelog_entry=full,
     )
     print_preview(plan)
+    if args.resume:
+        print("(resume) probing existing state — completed steps will be skipped.")
 
     if args.dry_run:
         return 0
@@ -580,7 +808,12 @@ def main(argv: list[str] | None = None) -> int:
         print("aborted.")
         return 1
 
-    execute(plan, wait_for_checks=not args.no_wait, dry_run=False)
+    execute(
+        plan,
+        wait_for_checks=not args.no_wait,
+        dry_run=False,
+        resume=args.resume,
+    )
     return 0
 
 

@@ -212,3 +212,51 @@ class TestParseVersion:
     def test_rejects(self, bad: str) -> None:
         with pytest.raises(SystemExit):
             rel.parse_version(bad)
+
+
+# ─── resume-mode in-flight detection ─────────────────────────────────────────
+
+
+class TestReleaseBranchPattern:
+    @pytest.mark.parametrize(
+        ("name", "expected"),
+        [
+            ("release/1.0.0", "1.0.0"),
+            ("release/10.20.30", "10.20.30"),
+            ("release/1.15.0", "1.15.0"),
+        ],
+    )
+    def test_matches_valid(self, name: str, expected: str) -> None:
+        m = rel._RELEASE_BRANCH_RE.match(name)
+        assert m is not None
+        assert m.group(1) == expected
+
+    @pytest.mark.parametrize(
+        "name",
+        [
+            "release/1.0",        # incomplete semver
+            "release/v1.0.0",     # leading v
+            "release/1.0.0-rc",   # pre-release suffix
+            "feat/release/1.0.0", # nested prefix
+            "release/",           # empty
+            "main",               # unrelated
+        ],
+    )
+    def test_rejects_invalid(self, name: str) -> None:
+        assert rel._RELEASE_BRANCH_RE.match(name) is None
+
+
+class TestArgsResume:
+    def test_resume_flag_parses(self) -> None:
+        args = rel._parse_args(["--resume"])
+        assert args.resume is True
+
+    def test_resume_flag_default_false(self) -> None:
+        args = rel._parse_args([])
+        assert args.resume is False
+
+    def test_resume_combines_with_yes_no_wait(self) -> None:
+        args = rel._parse_args(["--resume", "--yes", "--no-wait"])
+        assert args.resume is True
+        assert args.yes is True
+        assert args.no_wait is True
