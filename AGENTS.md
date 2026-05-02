@@ -14,8 +14,9 @@ when they install the package.
 
 ## What this repo is
 
-- A distribution package, not an application.
-- `type: library` in `composer.json`; no `app/` directory, no Laravel runtime.
+- A distribution package, not an application of any framework.
+- `type: library` in `composer.json`; no `app/` directory, no application
+  runtime (no Laravel, Symfony, Next.js, or other framework app code).
 - Published to Composer and npm as `event4u/agent-config` / `@event4u/agent-config`.
 - Installed into consumer projects via `scripts/install.sh` (Bash) and
   `scripts/install.py` (Python bridge).
@@ -43,8 +44,9 @@ and run `task sync` (or `task ci`) to compress + regenerate the tool directories
 - **Taskfile** — developer entrypoints (`task ci`, `task sync`, `task test`)
 - **GitHub Actions** — CI workflow under `.github/workflows/`
 
-No PHP, no Laravel, no JavaScript runtime dependencies. The `composer.json` /
-`package.json` are thin distribution manifests.
+No application code or framework runtime (no Laravel / Symfony / Next.js /
+Express). The `composer.json` / `package.json` are thin distribution
+manifests.
 
 ## Working on this repo
 
