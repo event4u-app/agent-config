@@ -28,8 +28,8 @@
 | Category | Count |
 |---|---|
 | 🔬 Architecture | 5 (Q37-Q41) |
-| 🎯 Strategic | 2 (Q36, Q43) |
-| ✅ Resolved | 1 (Q42) |
+| 🎯 Strategic | 1 (Q43) |
+| ✅ Resolved | 2 (Q36, Q42) |
 | 🛑 Artifact drafting | 0 |
 | 🌐 Cross-repo | 0 |
 | 💰 Budget | 0 |
@@ -40,10 +40,10 @@
 
 ### `road-to-governance-cleanup.md` (carry-over: P0.6 territory)
 
-- **Q36** 🎯 `strategic` — **Always-rule budget breach is
-  pre-existing on `feat/optimize-agent-config`.** `tests/test_always_budget.py`
-  fails because the top-5 always-rules sum to **28,685 chars**
-  (cap: 28,000). Sizes today:
+- **Q36** ✅ `resolved` — **Always-rule budget breach fixed on
+  `feat/road-to-governance`.** `tests/test_always_budget.py`
+  was failing because the top-5 always-rules summed to **28,685 chars**
+  (cap: 28,000). Sizes before:
 
   | Rule | Bytes |
   |---|---|
@@ -79,15 +79,16 @@
   3. **Raise the top-5 cap** to 30,000 with a written rationale in
      the test. Risk: budget creep — every future addition compounds.
 
-  **Recommendation:** Option 1 on `language-and-tone.md` — the file
-  duplicates "source of language truth" twice, and the failure-mode
-  list can move into the existing examples guideline. Frees ≥ 685
-  chars without losing any Iron Law.
+  **Resolved via Option 1 on `language-and-tone.md`** — trimmed the
+  duplicated "source of language truth" fenced block, the canonical-
+  failure paragraph, the German/English signal lists in the pre-send
+  gate, the numbered slip-recovery list (now prose), and the failure-
+  modes parenthetical (already in the linked guideline). No Iron Law
+  changed. New size: **5,760 chars** (was 6,586). Top-5 now **27,859 /
+  28,000** (141 chars headroom). Full pytest 1,877 green;
+  `check_references`, `check_portability`, `skill_linter` clean.
 
-  **Status:** parked-open. Phase 2b ships with the breach unaddressed
-  because (a) it's pre-existing, (b) compression of an always-rule
-  needs an `artifact-drafting-protocol` session per `preservation-guard`,
-  and (c) the Phase 2b code paths never load these rules.
+  **Status:** ✅ resolved 2026-05-02 on `feat/road-to-governance`.
 
 ### `road-to-council-modes.md` — Phase 2b decisions taken autonomously
 
