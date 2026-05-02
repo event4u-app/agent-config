@@ -1,15 +1,18 @@
 # Road to Governance Cleanup
 
-**Status:** READY-FOR-EXECUTION — decisions synthesized 2026-05-01 from
+**Status:** PHASE 1 EXECUTING — decisions synthesized 2026-05-01 from
 two external AI reviews (Claude, ChatGPT) plus self-synthesis. Sequencing
-locked. ICE table populated. Open questions closed.
+locked. ICE table populated. Open questions closed. User promoted Phase 1
+out of capture-only 2026-05-02.
 **Started:** 2026-05-01
 **Trigger:** User-driven optimize pass: command count fragmentation, rule/skill
 naming overlap, Augmentcode 49k always-rule budget breach. Plus benchmark optimize-lens
 on `alirezarezvani/claude-skills` (governance shape, not skill depth). Identity
 drift surfaced 2026-05-01: package positioned as Laravel/PHP-first while substance
 is framework-agnostic.
-**Mode:** Capture-only. No implementation actions until user marks roadmap final.
+**Mode:** Phase 1 execution (F1, F3, F2-top-3, F4, F5, F6, F7) — sequencing
+locked per Order-of-Operations (F1 → F3 → F2/F4/F5/F6/F7). Phase 2 (F2
+remaining 12 clusters) stays capture-only until Phase 1 ships.
 
 ## Purpose
 
@@ -487,7 +490,7 @@ Stack-specific skills (`laravel`, `eloquent`, `pest-testing`, `php-coding`)
 
 ## Phase 1: Cleanup execution
 
-- [ ] F1.1 — Draft `agent-authority.md` merging the four authority rules; preserve every Iron Law verbatim
+- [x] F1.1 — Draft `agent-authority.md` as the C-router Priority Index (≤ 1,500 chars, always-active): one row per authority rule with its band (Hard Floor · Permission Gate · Commit Default · Trivial-vs-Blocking) and link. Iron Laws preserved verbatim **in their own files** — the router never restates them. *(Landed 2026-05-02: 1468 chars source/compressed, lint + check-refs + check-compression green, projected to `.augment/rules/`.)*
 - [ ] F1.2 — Demote `chat-history`, `command-suggestion`, `model-recommendation`, `onboarding-gate`, `ui-audit-before-build` to `type: auto`
 - [ ] F1.3 — Trim `language-and-tone` to <6k always-char (relocate examples to `docs/guidelines/language-and-tone-examples.md`)
 - [ ] F1.4 — Run always-only compression profile; verify ≤ 49k total

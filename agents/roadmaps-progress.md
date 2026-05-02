@@ -6,10 +6,10 @@
 
 ## Overall
 
-**0 / 100 steps done · 0%**
+**1 / 100 steps done · 1%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   1%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 2 | 34 | 34 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-governance-cleanup.md](roadmaps/road-to-governance-cleanup.md) | 1 | 24 | 24 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-governance-cleanup.md](roadmaps/road-to-governance-cleanup.md) | 1 | 24 | 23 | 1 | 0 | 0 | ░░░░░░░░░░ 4% |
 | 4 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
@@ -47,11 +47,11 @@
 
 ### [road-to-governance-cleanup.md](roadmaps/road-to-governance-cleanup.md)
 
-**Road to Governance Cleanup** — 0 / 24 done (0%)
+**Road to Governance Cleanup** — 1 / 24 done (4%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Cleanup execution | ⬜ not started | 24 | 0 | 0 | 0 | 0% |
+| 1 | Cleanup execution | 🟡 in progress | 23 | 1 | 0 | 0 | 4% |
 
 ### [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md)
 
