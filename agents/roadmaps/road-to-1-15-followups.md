@@ -39,11 +39,11 @@ Consolidate the 1.15.0 review into actionable, scoped phases — without resurfa
 - P1 #5 — Work-Engine modularisation. `templates/scripts/work_engine/` split into focused modules.
 - P1 #6 — Public artefact catalog. `docs/catalog.md` + `docs/skills-catalog.md` generated from frontmatter.
 - P2 #8 — Rule-interaction matrix substance. 9 rules, 13 pairs in `docs/contracts/rule-interactions.yml`.
+- P2 #9 — Outcome-aware telemetry. Five outcome categories (`blocked`, `partial`, `memory_influenced_decision`, `verification_failed`, `stop_rule_triggered`) live on engagement event schema, recorder CLI, aggregator, and Markdown / JSON reports.
 
 **Open (executable now that P0 has landed):**
 
 - P1 #7 — Outcome demos (four end-to-end walkthroughs).
-- P2 #9 — Outcome-aware telemetry (five outcome categories on the engagement event schema).
 
 ## P0
 
@@ -178,7 +178,7 @@ Each pair carries `id`, `rules`, `relation` (one of: overrides, narrows, defers_
 
 Current artefact-engagement telemetry records "consulted / applied". Extend to: `blocked`, `partial`, `memory_influenced_decision`, `verification_failed`, `stop_rule_triggered`. Outcomes, not just artefact hits.
 
-- [ ] **Promote to executable** — add the five outcome categories to the telemetry recorder + report.
+- [x] **Shipped** — five outcome categories on `EngagementEvent` schema (`ALLOWED_OUTCOMES`), aggregator counts (`AggregateResult.outcomes`), Markdown + JSON report sections, `telemetry:record --outcome` CLI flag, full test coverage in `tests/telemetry/` (2026-05-02).
 
 ## Out of scope for this roadmap
 
