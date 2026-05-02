@@ -78,7 +78,7 @@ Emojis are **functional markers**, never decoration.
 **Whitelist — allowed and expected:**
 
 - Mandated markers from rules/scripts: `📒` (chat-history heartbeat,
-  verbatim per `chat-history`), mode markers from
+  verbatim per `chat-history-visibility`), mode markers from
   `role-mode-adherence`.
 - CLI status icons: `❌`, `✅`, `⚠️` — two-space rule from
   `language-and-tone` § other-language-rules still applies.

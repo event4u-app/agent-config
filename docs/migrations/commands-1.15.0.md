@@ -85,6 +85,19 @@ the deprecation cycle for Phase 1 closes. Tracked in
 [`agents/roadmaps/road-to-governance-cleanup.md`](../../agents/roadmaps/road-to-governance-cleanup.md)
 § F2.
 
+## Related rule split — `chat-history` (post-1.15.0)
+
+The monolithic `rules/chat-history.md` was split into three sibling
+`always` rules in the post-1.15.0 optimization phase:
+
+- [`chat-history-ownership`](../../.agent-src/rules/chat-history-ownership.md) — sole owner of file I/O + first-turn handshake.
+- [`chat-history-cadence`](../../.agent-src/rules/chat-history-cadence.md) — when to persist (SessionStart / StepEnd / append boundaries).
+- [`chat-history-visibility`](../../.agent-src/rules/chat-history-visibility.md) — heartbeat marker contract for user-facing reporting.
+
+Decision record: [`docs/contracts/adr-chat-history-split.md`](../contracts/adr-chat-history-split.md).
+Cross-references in commands and contexts now point to
+`chat-history-ownership` as the entry point.
+
 ## Rollback
 
 If a deprecation warning blocks tooling that screen-scrapes agent

@@ -96,7 +96,7 @@ effect — this command is scoped to the file on disk only.
 
 ## See also
 
-- [`chat-history`](../rules/chat-history.md) — the rule that writes the file
+- [`chat-history`](../rules/chat-history-ownership.md) — the rule that writes the file
 - [`/chat-history`](chat-history.md) — status inspection
 - [`/chat-history-resume`](chat-history-resume.md) — load + adopt instead of wipe
 - [`agent-settings` template](../templates/agent-settings.md) — `chat_history.*` reference
