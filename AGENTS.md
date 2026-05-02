@@ -78,7 +78,7 @@ When a user's free-form prompt matches a command's purpose, the agent
 surfaces matches as a numbered-options block with an always-present
 "run the prompt as-is" escape. **Nothing auto-executes** — the user
 picks every time. Engine: `scripts/command_suggester/`. Rule:
-[`.agent-src/rules/command-suggestion.md`](.agent-src/rules/command-suggestion.md).
+[`.agent-src/rules/command-suggestion-policy.md`](.agent-src/rules/command-suggestion-policy.md).
 Locked eligibility table, scoring contract, and hardening list:
 [`docs/contracts/adr-command-suggestion.md`](docs/contracts/adr-command-suggestion.md)
 and

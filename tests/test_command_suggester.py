@@ -788,7 +788,7 @@ def test_match_sanitize_off_exposes_raw_path(specs: list[CommandSpec]) -> None:
 # Rule-contract self-check (Phase 6 Steps 1, 5)
 # ---------------------------------------------------------------------------
 
-RULE_PATH = REPO_ROOT / ".agent-src.uncompressed" / "rules" / "command-suggestion.md"
+RULE_PATH = REPO_ROOT / ".agent-src.uncompressed" / "rules" / "command-suggestion-policy.md"
 
 
 def test_rule_contains_iron_law_no_auto_execute() -> None:

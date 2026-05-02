@@ -6,7 +6,7 @@ stability: beta
 
 > Cross-cutting reference for the suggestion layer shipped under
 > [`road-to-context-aware-command-suggestion.md`](../../agents/roadmaps/road-to-context-aware-command-suggestion.md).
-> The runtime rule is [`command-suggestion`](../../.agent-src.uncompressed/rules/command-suggestion.md);
+> The runtime rule is [`command-suggestion`](../../.agent-src.uncompressed/rules/command-suggestion-policy.md);
 > the architectural decision lives in [`adr-command-suggestion.md`](adr-command-suggestion.md).
 >
 > - **Created:** 2026-04-30
@@ -141,7 +141,7 @@ Cursor, Cline, Windsurf) get the engine via `scripts/`.
 
 ## See also
 
-- [`command-suggestion`](../../.agent-src.uncompressed/rules/command-suggestion.md) — runtime rule
+- [`command-suggestion`](../../.agent-src.uncompressed/rules/command-suggestion-policy.md) — runtime rule
 - [`adr-command-suggestion.md`](adr-command-suggestion.md) — architectural decision
 - [`command-suggestion-eligibility.md`](command-suggestion-eligibility.md) — locked eligibility table
 - [`road-to-context-aware-command-suggestion.md`](../../agents/roadmaps/road-to-context-aware-command-suggestion.md) — phased delivery

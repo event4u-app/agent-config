@@ -155,7 +155,7 @@ onboarding:
 # When the user's free-form prompt matches an eligible slash command,
 # the agent surfaces a numbered-options block with the recommendation
 # plus an always-present "run as-is" option. The suggestion layer
-# never auto-executes — the user picks. See rules/command-suggestion.md.
+# never auto-executes — the user picks. See rules/command-suggestion-policy.md.
 commands:
   suggestion:
     # Master switch (true, false). false = the layer is silent; explicit

@@ -152,7 +152,7 @@
   "rules/chat-history-ownership.md": "7ff3552f9ff318624fefc7af01e6fe4d79cec3dd1fe5a512793152093b0b6127",
   "rules/chat-history-visibility.md": "58a46a314ad7d821fd1ebe3f94a81225f67054699874881582f8e8649517f608",
   "rules/cli-output-handling.md": "7a1ba7d65319d87c09fb76a0040fadfbab68cc659d1b53938e4cfcf1a3085324",
-  "rules/command-suggestion.md": "ef3cfb634979b9b95ea7ead1e88a2b926ba88a04f95de72d9c09a864f10a2c1f",
+  "rules/command-suggestion-policy.md": "ef3cfb634979b9b95ea7ead1e88a2b926ba88a04f95de72d9c09a864f10a2c1f",
   "rules/commit-conventions.md": "a39f1158c57dbe6fe8f2a4d574d2c8bcb4227e3c1b31a60a86ba5702019d42ea",
   "rules/commit-policy.md": "18cd03e39ef96a8366c0cbc516ca7af0ff8b4f84137952a3b42eb2ed8954f7eb",
   "rules/context-hygiene.md": "b169b7b5e2ec5afe2175d796372c926fa18d8388ff5c22171d892ee85cfb6646",

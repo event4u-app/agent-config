@@ -6,7 +6,7 @@ stability: stable
 
 > **Status:** Decided · Phases 1–7 shipped · 2026-04-30
 > **Roadmap:** [`road-to-context-aware-command-suggestion.md`](../../agents/roadmaps/road-to-context-aware-command-suggestion.md)
-> **Rule:** [`command-suggestion`](../../.agent-src.uncompressed/rules/command-suggestion.md)
+> **Rule:** [`command-suggestion`](../../.agent-src.uncompressed/rules/command-suggestion-policy.md)
 > **Eligibility table:** [`command-suggestion-eligibility.md`](command-suggestion-eligibility.md)
 > **Engine:** `scripts/command_suggester/`
 > **Orthogonal to:** R1 (`adr-work-engine-rename.md`) — the suggester is a
@@ -90,7 +90,7 @@ suppression when they signal real intent.
 
 ## Hardening — what suggestion must never do
 
-The rule (`.agent-src.uncompressed/rules/command-suggestion.md`)
+The rule (`.agent-src.uncompressed/rules/command-suggestion-policy.md`)
 binds the engine to five non-negotiables, mirrored as goldens:
 
 1. **No execution without user pick.** `SUGGEST. NEVER INVOKE.` is the
@@ -139,7 +139,7 @@ retirement candidates without a hard SLA.
 
 ## See also
 
-- [`command-suggestion`](../../.agent-src.uncompressed/rules/command-suggestion.md) — runtime rule
+- [`command-suggestion`](../../.agent-src.uncompressed/rules/command-suggestion-policy.md) — runtime rule
 - [`command-suggestion-eligibility.md`](command-suggestion-eligibility.md) — locked eligibility table
 - [`road-to-context-aware-command-suggestion.md`](../../agents/roadmaps/road-to-context-aware-command-suggestion.md) — phased delivery
 - [`adr-prompt-driven-execution.md`](adr-prompt-driven-execution.md) — `/work` entrypoint that explicit slash invocations route to
