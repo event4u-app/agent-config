@@ -158,15 +158,28 @@ ai_council:
   # not the same as wanting the agent to spend money on it.
   enabled: false
 
+  # Default transport mode for every member (overridable per-member
+  # below, and per-invocation via `/council mode:<x>`).
+  #
+  #   api        = direct SDK call against the provider's API (billable).
+  #   manual     = copy-paste loop, user is the transport (free).
+  #   playwright = browser automation (Phase 2c, not yet wired).
+  #
+  # Precedence: invocation flag > per-member mode > global mode > "api".
+  mode: "api"
+
   # Per-member configuration. Set enabled=true on the providers you want
   # to consult. The model field selects which model receives the query.
+  # Optional `mode:` overrides the global setting for that member only.
   members:
     anthropic:
       enabled: false
       model: "claude-sonnet-4-5"
+      # mode: "api"      # uncomment to override ai_council.mode
     openai:
       enabled: false
       model: "gpt-4o"
+      # mode: "manual"   # uncomment to override ai_council.mode
 
   # Hard cost ceiling per /council invocation. The orchestrator pauses
   # before any member whose projected spend would breach a cap and asks

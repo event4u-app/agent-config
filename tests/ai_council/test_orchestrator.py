@@ -20,6 +20,7 @@ from scripts.ai_council.orchestrator import (  # noqa: E402
     render,
 )
 from scripts.ai_council.pricing import bootstrap_from_defaults, load_prices  # noqa: E402
+from scripts.ai_council.project_context import ProjectContext  # noqa: E402
 
 
 # ── stub members ──────────────────────────────────────────────────────────────
@@ -193,6 +194,33 @@ def test_consult_calls_on_overrun_per_member(tmp_path) -> None:  # type: ignore[
     assert out[1].text == "b"
 
 
+# ── handoff preamble integration (Phase 2a) ──────────────────────────────────
+
+
+def test_consult_passes_handoff_preamble_with_project_and_ask() -> None:
+    m = _StubMember("a", "m", CouncilResponse("a", "m", "ok"))
+    project = ProjectContext(name="vendor/pkg", stack="PHP")
+    consult(
+        [m], CouncilQuestion(mode="prompt", user_prompt="payload"),
+        project=project, original_ask="should we ship this?",
+    )
+    assert m.received is not None
+    sys_prompt, _, _ = m.received
+    assert "Project: vendor/pkg" in sys_prompt
+    assert "Stack: PHP" in sys_prompt
+    assert "> should we ship this?" in sys_prompt
+
+
+def test_consult_without_handoff_args_keeps_v1_shape() -> None:
+    """E3.3 back-compat: omitted kwargs → no Project/Stack/ask blocks."""
+    m = _StubMember("a", "m", CouncilResponse("a", "m", "ok"))
+    consult([m], CouncilQuestion(mode="prompt", user_prompt="payload"))
+    assert m.received is not None
+    sys_prompt, _, _ = m.received
+    assert "Project:" not in sys_prompt
+    assert "originally asked" not in sys_prompt
+
+
 # ── render ────────────────────────────────────────────────────────────────────
 
 
@@ -210,3 +238,65 @@ def test_render_emits_one_section_per_member_plus_summary_slot() -> None:
     assert "Convergence / Divergence" in out
     # stable separator between blocks
     assert out.count("\n\n---\n\n") >= 2
+
+
+
+# ── non-billable bypass (Phase 2b · F4) ───────────────────────────────────────
+
+
+class _NonBillable(ExternalAIClient):
+    name = "manual"
+    model = "manual"
+    billable = False
+
+    def __init__(self, response: CouncilResponse):
+        self._response = response
+        self.called = False
+
+    def ask(self, system_prompt: str, user_prompt: str, max_tokens: int = 1024) -> CouncilResponse:
+        self.called = True
+        return self._response
+
+
+def test_non_billable_bypasses_cost_gate_even_when_budget_zero() -> None:
+    """A manual member must run even with a $0 USD cap and tight token caps."""
+    table = load_prices()
+    rs = CouncilResponse("manual", "manual", "free reply", input_tokens=999_999, output_tokens=999_999)
+    member = _NonBillable(rs)
+    budget = CostBudget(max_input_tokens=10, max_output_tokens=10, max_total_usd=0.0001, max_calls=2)
+    out = consult(
+        [member], CouncilQuestion(mode="prompt", user_prompt="x" * 5000),
+        budget, table=table,
+    )
+    assert member.called is True
+    assert out[0].error is None
+    assert out[0].text == "free reply"
+
+
+def test_non_billable_skips_overrun_callback() -> None:
+    table = load_prices()
+    member = _NonBillable(CouncilResponse("manual", "manual", "ok"))
+    calls: list[OverrunEvent] = []
+    consult(
+        [member], CouncilQuestion(mode="prompt", user_prompt="y"),
+        CostBudget(max_input_tokens=1, max_output_tokens=1, max_total_usd=0.001),
+        table=table, on_overrun=lambda ev: calls.append(ev) or True,
+    )
+    assert calls == []  # callback must NOT fire for non-billable members
+
+
+def test_non_billable_does_not_consume_usd_budget_for_subsequent_member() -> None:
+    """A manual member must not eat into the USD budget that the next billable member needs."""
+    table = load_prices()
+    free = _NonBillable(CouncilResponse("manual", "manual", "free", input_tokens=10, output_tokens=10))
+    paid = _StubMember("anthropic", "claude-sonnet-4-5",
+                       CouncilResponse("anthropic", "claude-sonnet-4-5", "paid reply", 5, 5))
+    out = consult(
+        [free, paid],
+        CouncilQuestion(mode="prompt", user_prompt="z"),
+        CostBudget(max_input_tokens=50_000, max_output_tokens=50_000, max_total_usd=0.50, max_calls=2),
+        table=table,
+    )
+    assert out[0].text == "free"
+    assert out[1].text == "paid reply"
+    assert out[1].error is None

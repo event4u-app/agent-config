@@ -29,6 +29,7 @@ from scripts.ai_council.pricing import (
     estimate_cost,
     estimate_input_tokens,
 )
+from scripts.ai_council.project_context import ProjectContext
 from scripts.ai_council.prompts import system_prompt_for
 
 
@@ -68,11 +69,20 @@ def estimate(
     question: CouncilQuestion,
     members: list[ExternalAIClient],
     table: PriceTable,
+    *,
+    project: ProjectContext | None = None,
+    original_ask: str = "",
 ) -> list[CostEstimate]:
-    """Return a pre-call cost estimate per member, in input order."""
-    input_tokens = estimate_input_tokens(question.user_prompt) + estimate_input_tokens(
-        system_prompt_for(question.mode)
+    """Return a pre-call cost estimate per member, in input order.
+
+    `project` and `original_ask` are passed through to
+    `system_prompt_for()` so the estimate covers the handoff preamble
+    bytes too. Both default to v1-shape (no preamble extension).
+    """
+    sys_prompt = system_prompt_for(
+        question.mode, project=project, original_ask=original_ask,
     )
+    input_tokens = estimate_input_tokens(question.user_prompt) + estimate_input_tokens(sys_prompt)
     return [
         estimate_cost(m.name, m.model, input_tokens, question.max_tokens, table)
         for m in members
@@ -86,6 +96,8 @@ def consult(
     *,
     table: PriceTable | None = None,
     on_overrun: OnOverrunCallback | None = None,
+    project: ProjectContext | None = None,
+    original_ask: str = "",
 ) -> list[CouncilResponse]:
     """Sequentially fan out `question` to every enabled member.
 
@@ -97,6 +109,9 @@ def consult(
       `cost_budget_exceeded`; True proceeds with the call.
     - Without `on_overrun`, breaching caps short-circuits remaining
       members with `cost_budget_exceeded` (v1 behaviour preserved).
+    - `project` + `original_ask` flow into `handoff_preamble()` so the
+      council member receives a neutral context-handoff alongside the
+      artefact. Both default to v1 shape (no preamble extension).
     """
     if not members:
         return []
@@ -107,15 +122,38 @@ def consult(
             f"{budget.max_calls} calls."
         )
 
-    system_prompt = system_prompt_for(question.mode)
+    system_prompt = system_prompt_for(
+        question.mode, project=project, original_ask=original_ask,
+    )
     results: list[CouncilResponse] = []
     spent_input = 0
     spent_output = 0
     spent_usd = 0.0
 
-    estimates = estimate(question, members, table) if table is not None else None
+    estimates = (
+        estimate(question, members, table, project=project, original_ask=original_ask)
+        if table is not None
+        else None
+    )
 
     for idx, member in enumerate(members):
+        # ── non-billable members skip the cost gate entirely ─────────
+        # ManualClient (and future PlaywrightClient) cost us $0; their
+        # token counts are still tracked from the response below for
+        # observability, but no projection / budget breach can apply.
+        if not getattr(member, "billable", True):
+            try:
+                response = member.ask(system_prompt, question.user_prompt, question.max_tokens)
+            except Exception as exc:  # noqa: BLE001 - last-resort safety net
+                response = CouncilResponse(
+                    provider=member.name, model=member.model, text="",
+                    error=f"{type(exc).__name__}: {exc}",
+                )
+            results.append(response)
+            spent_input += response.input_tokens
+            spent_output += response.output_tokens
+            continue
+
         # ── projected spend check ────────────────────────────────────
         proj_input = spent_input + (estimates[idx].input_tokens if estimates else 0)
         proj_output = spent_output + (estimates[idx].output_tokens if estimates else 0)
