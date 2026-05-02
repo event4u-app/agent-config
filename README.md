@@ -494,7 +494,6 @@ task lint-skills   # Lint skills, rules, commands
 **For contributors only** (rebuilding `.augment/` locally):
 
 - [Task](https://taskfile.dev/) — runs the CI pipeline (`task ci`).
-- No runtime dependencies — the package ships static markdown files.
 
 ## License
 
