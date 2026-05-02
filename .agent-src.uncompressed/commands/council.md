@@ -27,6 +27,21 @@ Optional invocation flag: `mode:api|manual` overrides the per-member
 and global mode for this call only (see Step 2.5). `mode:playwright`
 is reserved for Phase 2c — refuse politely if invoked.
 
+Optional **rounds**: `rounds:N` (1-3) enables multi-round debate. Round
+1 sees the artefact alone. Round 2+ sees the artefact plus anonymised
+critiques from the previous round (provider/model identity stripped).
+Total spend = N × single-round cost; surface this in the cost gate.
+Default `rounds:1` (single round, v1 behaviour).
+
+Optional **mode_override**: `mode_override=pr|design|optimize` swaps
+the system-prompt addendum for one of the specialised lenses
+(see `prompts.py` `_MODE_TABLE`). The bundle mode (`prompt:` /
+`roadmap:` / `diff:` / `files:`) is unchanged; only the per-mode
+neutrality addendum is replaced. Routed by `/council-pr`,
+`/council-design`, `/council-optimize` — surface to the user as
+"council on <target> — <lens> lens" so the report header is
+unambiguous.
+
 If none was supplied, ask the user which mode + target. **One question
 per turn** (per `ask-when-uncertain`). Do not assume the working-tree
 diff.
@@ -129,6 +144,7 @@ consult(
     on_overrun=_handle_overrun,
     project=project,
     original_ask=original_ask,
+    rounds=rounds,  # 1 by default; 2-3 enables multi-round debate
 )
 ```
 

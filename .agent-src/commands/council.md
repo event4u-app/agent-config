@@ -27,6 +27,21 @@ Optional invocation flag: `mode:api|manual` overrides the per-member
 and global mode for this call only (see Step 2.5). `mode:playwright`
 is reserved for Phase 2c — refuse politely if invoked.
 
+Optional **rounds**: `rounds:N` (1-3) enables multi-round debate. Round
+1 sees the artefact alone. Round 2+ sees the artefact plus anonymised
+critiques from the previous round (provider/model identity stripped).
+Total spend = N × single-round cost; surface this in the cost gate.
+Default `rounds:1` (single round, v1 behaviour).
+
+Optional **mode_override**: `mode_override=pr|design|optimize` swaps
+the system-prompt addendum for one of the specialised lenses
+(see `prompts.py` `_MODE_TABLE`). The bundle mode (`prompt:` /
+`roadmap:` / `diff:` / `files:`) is unchanged; only the per-mode
+neutrality addendum is replaced. Routed by `/council-pr`,
+`/council-design`, `/council-optimize` — surface to the user as
+"council on <target> — <lens> lens" so the report header is
+unambiguous.
+
 If none was supplied, ask the user which mode + target. **One question
 per turn** (per `ask-when-uncertain`). Do not assume the working-tree
 diff.
@@ -36,10 +51,10 @@ sentence that triggered the council, distinct from the bundled
 artefact. For `prompt:"…"` mode the ask and the artefact are the
 same string. For `roadmap` / `diff` / `files` modes, the ask is the
 user's framing sentence ("review this roadmap before I execute it",
-"is this diff safe to merge?"). It flows into
-`consult(..., original_ask=…)` in Step 5 so members get the neutral
-handoff preamble alongside the artefact (per `ai-council` skill §
-Neutrality — context-handoff).
+"is this diff safe to merge?"). This string flows into
+`consult(..., original_ask=…)` in Step 5 so council members receive
+the neutral handoff preamble alongside the artefact (per
+`ai-council` skill § Neutrality — context-handoff).
 
 ### 2. Check the council is configured + price table fresh
 
@@ -118,7 +133,7 @@ Members are constructed from the settings file plus
 Detect project context once via
 `scripts.ai_council.project_context.detect_project_context()` (reads
 `composer.json`, `package.json`, root `README.md` — never raises;
-empty fields fall back to the bare neutrality preamble).
+empty-fields fall back to bare neutrality preamble).
 
 Call:
 
@@ -129,6 +144,7 @@ consult(
     on_overrun=_handle_overrun,
     project=project,
     original_ask=original_ask,
+    rounds=rounds,  # 1 by default; 2-3 enables multi-round debate
 )
 ```
 

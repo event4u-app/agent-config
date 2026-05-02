@@ -60,28 +60,29 @@ in front of every member's system prompt, assembled by
 |---|---|
 | Project name (from `composer.json` / `package.json` / repo dir) | Host-agent identity (Augment, Claude Code, Cursor, Cline, Windsurf, Copilot agent) — stripped line-by-line before send |
 | Stack one-liner inferred from manifest files | Host-agent reasoning, prior turns, internal analysis |
-| One paragraph of repo purpose from `README.md` (max 400 chars) | Host-agent framing language |
+| One paragraph of repo purpose from `README.md` (max 400 chars) | Host-agent framing language ("I think this looks weak", "the user probably wants…") |
 | The user's **original ask** verbatim (the free-form sentence that triggered `/council`) | Anything the host agent generated about the artefact |
 
 `detect_project_context()` in `scripts/ai_council/project_context.py`
 reads only the manifest files + root README; missing fields collapse
 to `None` and the preamble silently omits the line. With both
 `project=None` and `original_ask=""`, the preamble degrades to the
-bare `NEUTRALITY_PREAMBLE` (v1 shape — back-compat).
+bare `NEUTRALITY_PREAMBLE` (v1 shape — back-compat for callers that
+have not migrated yet).
 
 ## Execution modes
 
-A council member runs in one of three transports. Neutrality preamble
-is identical across all of them — only the path the bytes travel
-changes.
+A council member can run in one of three transports. The neutrality
+preamble is identical across all of them — only the path the bytes
+travel changes.
 
 | Mode | Client | Billable | Transport | Status |
 |---|---|---|---|---|
-| `api` | `AnthropicClient` / `OpenAIClient` | yes | provider SDK + `~/.config/agent-config/<provider>.key` | shipped |
-| `manual` | `ManualClient` | no | `stdout` (prompt) + `stdin` (user pastes web-UI reply, terminator: line `END`) | shipped (Phase 2b) |
-| `playwright` | `PlaywrightClient` | no | persistent-profile browser at provider chat URL via DOM adapter | reserved (Phase 2c — capture-only) |
+| `api` | `AnthropicClient` / `OpenAIClient` | yes | provider SDK + key from `~/.config/agent-config/<provider>.key` | shipped |
+| `manual` | `ManualClient` | no | `stdout` (prompt block) + `stdin` (user pastes the web-UI reply, terminated by a line containing only `END`) | shipped (Phase 2b) |
+| `playwright` | `PlaywrightClient` | no | persistent-profile browser at the provider's chat URL via DOM adapter | reserved (Phase 2c — capture-only) |
 
-`scripts/ai_council/modes.py` resolves the mode:
+Resolution lives in `scripts/ai_council/modes.py`:
 `resolve_mode(name, invocation_mode, member_settings, global_mode)`
 with precedence **invocation flag > per-member setting > global
 setting > default (`api`)**. Whitespace-and-case insensitive; empty
@@ -91,30 +92,32 @@ the offending settings path (`ai_council.mode`,
 
 ### Manual-mode UX
 
-`ManualClient` is the user-as-transport variant: agent prints one
-Markdown block per member (system prompt + handoff preamble +
-artefact between two `═` rules), user pastes it into a web chat
-(Claude.ai, ChatGPT, Gemini), pastes the reply back ending with a
-line containing only `END`. After each reply, a 1/2/3 menu fires:
+`ManualClient` is the user-as-transport variant: the agent prints
+one Markdown block per member (system prompt + handoff preamble +
+artefact between two `═` rules), the user pastes it into a web
+chat (Claude.ai, ChatGPT, Gemini), then pastes the reply back
+ending with a line containing only `END`. After each reply, a 1/2/3
+menu surfaces:
 
 1. More feedback for this member (continue this thread)
 2. Done with this member, move to the next
 3. Abort the council run
 
-`1` re-emits a follow-up block addressed to the **same chat thread**
-(no system-prompt repetition). `2` records the round and moves to
-the next member. `3` returns `error="manual_aborted"` for that
-member and the orchestrator stops the fan-out.
+`1` re-emits a follow-up block addressed to the **same chat
+thread** (no system prompt repetition). `2` records the round and
+moves to the next member. `3` returns `error="manual_aborted"` for
+that member and the orchestrator stops the fan-out.
 
 ### Cost-gate bypass for non-billable members
 
 `ExternalAIClient.billable` is the contract. Clients with
 `billable=False` (today: `ManualClient`; future: `PlaywrightClient`)
-bypass the cost gate entirely — orchestrator skips the projection
-check, the `on_overrun` callback, and the USD-budget short-circuit
-for that member, but still records the response's token counts for
-observability. Mixed runs (one manual + one api) gate only the api
-members.
+bypass the cost gate entirely — the orchestrator skips the
+projection check, the `on_overrun` callback, and the USD-budget
+short-circuit for that member, but still records the response's
+token counts (from the manual-paste length heuristic or the
+provider's reply, when available) for observability. Mixed runs
+(one manual + one api) gate only the api members.
 
 ## Procedure
 
@@ -210,13 +213,113 @@ a ceiling.
 Every consultation hits a paid API. The orchestrator enforces
 per-invocation caps from `ai_council.cost_budget`:
 
-- `max_input_tokens` — sum of input tokens across all members.
-- `max_output_tokens` — sum of output tokens across all members.
+- `max_input_tokens` / `max_output_tokens` — token caps across all members.
+- `max_total_usd` — per-invocation USD ceiling. `0` disables the USD ceiling (token caps still apply).
 - `max_calls` — maximum number of council members per invocation.
+- `daily_limit_usd` — rolling 24h spend cap across all `/council`
+  invocations. `0` disables. Persists in
+  `~/.config/agent-config/council-spend.jsonl` (mode 0600). Breach
+  fires `on_overrun(event)` with `event.breach_kind == "daily"` and,
+  if the callback returns False or is absent, tags the member
+  `daily_budget_exceeded` instead of `cost_budget_exceeded`.
 
-If a cap fires mid-fan-out, the unfinished members get a
-`CouncilResponse` with `error="cost_budget_exceeded"`. Do not retry
-silently. Surface the partial result and ask the user.
+Prices come from `.agent-prices.md` (gitignored, refreshed weekly).
+The pricing module bootstraps it from `_default_prices.py` on first
+use and flags it stale when older than the most recent Monday 00:00
+UTC.
+
+### Pre-call estimate format
+
+Before the cost gate, compute `orchestrator.estimate(question, members,
+table)` and render a per-member table. Heuristic: `len(text) / 4` for
+input, member's `max_tokens` ceiling for output (actual spend is
+usually lower).
+
+> External council call — billable
+>
+> Mode: roadmap · Target: `agents/roadmaps/<name>.md` (~3 KB after redaction)
+>
+> | member                          | est. in / out tokens | est. USD |
+> |---------------------------------|---------------------:|---------:|
+> | anthropic / claude-sonnet-4-5   |      ~750 / 1024     |  $0.0176 |
+> | openai / gpt-4o                 |      ~750 / 1024     |  $0.0121 |
+> | **total**                       |                      | **$0.0297** |
+>
+> Budget: 50k in / 20k out tokens · USD ceiling: $0.50
+>
+> 1. Run the consultation
+> 2. Cancel
+
+### Stale price-table gate
+
+If `pricing.is_stale(table)` returns true, ask before proceeding:
+
+> Price table is stale (last_updated: YYYY-MM-DD)
+> 1. Refresh now (`python3 scripts/update_prices.py`)
+> 2. Continue with the stale table
+> 3. Cancel
+
+Do not silently auto-refresh — the user keeps control.
+
+### Mid-flow overrun callback (`on_overrun`)
+
+The orchestrator runs members **sequentially**. Before each member
+whose projected spend would breach a cap, it invokes the
+`on_overrun(event)` callback. The callback returns `True` to proceed
+with that member (raises the effective ceiling for THIS call only)
+or `False` to skip and record `cost_budget_exceeded`. The callback
+fires again for every subsequent breaching member — the user keeps
+control on each step.
+
+> Cost budget overrun — pausing before next member
+>
+> Member: openai / gpt-4o (member 2 of 2)
+> Already spent: ~620 in / ~480 out tokens · $0.0094
+> Next call estimate: ~750 in / 1024 out tokens · $0.0121
+> **Projected total after this call: $0.0215** (ceiling: $0.0150)
+>
+> 1. Continue with this member
+> 2. Skip this member (records `cost_budget_exceeded`, continues with the rest)
+
+Without `on_overrun`, breaching short-circuits all remaining members
+(v1 fallback). Do not retry silently. Surface the partial result and
+ask the user.
+
+## Multi-round debate (`rounds:N`)
+
+`consult(..., rounds=N)` enables 2-3 round critique loops. Round 1
+runs the standard single-round flow. Round 2+ rebuilds the user
+prompt as `<original artefact> + <prior round, anonymised>` so each
+member can refine, agree, or push back on the previous critique
+without seeing which provider produced which point.
+
+| Property | Behaviour |
+|---|---|
+| Anonymisation | Provider/model identity is stripped. Reviewers are labelled `Reviewer A / B / C…` in input order. |
+| Errored prior responses | Skipped — they reveal nothing useful and can leak provider error formats. |
+| Cost budget | Accumulates across rounds. A round-2 call that breaches the cap fires `on_overrun` exactly like a round-1 breach. |
+| Daily limit | Same — every billable round-2 call records spend in the rolling 24h ledger. |
+| Return value | Final round only. Use `on_round_complete(round_idx, responses)` to capture intermediate rounds for rendering. |
+
+> Iron Law: anonymisation is non-negotiable. If you ever need to
+> surface "which model said what" between rounds, that is a different
+> feature — debug-only, off by default, never enabled in user-facing
+> output. The neutrality contract dies the moment a member learns it
+> is talking to Claude vs GPT in round 2.
+
+Pre-call estimate must surface the round count: total = `N × single-round cost`. Render inline:
+
+```
+External council call — billable · 2 rounds
+Round 1: artefact only
+Round 2: artefact + anonymised round 1 critiques
+
+| member             | per-round | × 2     |
+|--------------------|----------:|--------:|
+| anthropic/sonnet   |   $0.0176 | $0.0352 |
+| openai/gpt-4o      |   $0.0121 | $0.0242 |
+| **total**          |           | $0.0594 |
+```
 
 ## See also
 

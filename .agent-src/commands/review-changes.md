@@ -81,6 +81,31 @@ Pick dispatch mode based on diff size and environment:
 Each judge returns its own `Judge / Model / Target / Verdict /
 Issues` block in the format defined by that skill.
 
+### 4b. Optional external council (B3 hook)
+
+If `.agent-settings.yml` has `ai_council.enabled: true` **and** at least
+one member is enabled, ask (in the user's language):
+
+> 1. Add an external council review alongside the four internal judges? (billable)
+> 2. Skip — internal judges only
+
+Suppress when `personal.autonomy: on` (council is billable).
+
+If picked **1**:
+
+- Run `/council diff:<base>..<head>` in parallel with the four
+  internal judges (or sequentially after them — whichever the
+  dispatch mode picked in step 4 supports).
+- Treat each council member as one extra "judge" in the consolidated
+  report (step 5), but **mark them clearly as external** so the user
+  can weight them differently. Council verdicts are **advisory** —
+  they never block on their own; they augment the internal verdicts.
+- The council's neutrality preamble already strips host-agent
+  identity; do **not** add the internal judges' verdicts to the
+  council prompt (would defeat the Iron Law of Neutrality).
+
+If picked **2** → continue with internal judges only.
+
 ### 5. Consolidate
 
 Produce one combined report:

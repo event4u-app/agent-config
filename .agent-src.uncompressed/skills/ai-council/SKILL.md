@@ -214,8 +214,14 @@ Every consultation hits a paid API. The orchestrator enforces
 per-invocation caps from `ai_council.cost_budget`:
 
 - `max_input_tokens` / `max_output_tokens` — token caps across all members.
-- `max_total_usd` — USD ceiling. `0` disables the USD ceiling (token caps still apply).
+- `max_total_usd` — per-invocation USD ceiling. `0` disables the USD ceiling (token caps still apply).
 - `max_calls` — maximum number of council members per invocation.
+- `daily_limit_usd` — rolling 24h spend cap across all `/council`
+  invocations. `0` disables. Persists in
+  `~/.config/agent-config/council-spend.jsonl` (mode 0600). Breach
+  fires `on_overrun(event)` with `event.breach_kind == "daily"` and,
+  if the callback returns False or is absent, tags the member
+  `daily_budget_exceeded` instead of `cost_budget_exceeded`.
 
 Prices come from `.agent-prices.md` (gitignored, refreshed weekly).
 The pricing module bootstraps it from `_default_prices.py` on first
@@ -278,6 +284,42 @@ control on each step.
 Without `on_overrun`, breaching short-circuits all remaining members
 (v1 fallback). Do not retry silently. Surface the partial result and
 ask the user.
+
+## Multi-round debate (`rounds:N`)
+
+`consult(..., rounds=N)` enables 2-3 round critique loops. Round 1
+runs the standard single-round flow. Round 2+ rebuilds the user
+prompt as `<original artefact> + <prior round, anonymised>` so each
+member can refine, agree, or push back on the previous critique
+without seeing which provider produced which point.
+
+| Property | Behaviour |
+|---|---|
+| Anonymisation | Provider/model identity is stripped. Reviewers are labelled `Reviewer A / B / C…` in input order. |
+| Errored prior responses | Skipped — they reveal nothing useful and can leak provider error formats. |
+| Cost budget | Accumulates across rounds. A round-2 call that breaches the cap fires `on_overrun` exactly like a round-1 breach. |
+| Daily limit | Same — every billable round-2 call records spend in the rolling 24h ledger. |
+| Return value | Final round only. Use `on_round_complete(round_idx, responses)` to capture intermediate rounds for rendering. |
+
+> Iron Law: anonymisation is non-negotiable. If you ever need to
+> surface "which model said what" between rounds, that is a different
+> feature — debug-only, off by default, never enabled in user-facing
+> output. The neutrality contract dies the moment a member learns it
+> is talking to Claude vs GPT in round 2.
+
+Pre-call estimate must surface the round count: total = `N × single-round cost`. Render inline:
+
+```
+External council call — billable · 2 rounds
+Round 1: artefact only
+Round 2: artefact + anonymised round 1 critiques
+
+| member             | per-round | × 2     |
+|--------------------|----------:|--------:|
+| anthropic/sonnet   |   $0.0176 | $0.0352 |
+| openai/gpt-4o      |   $0.0121 | $0.0242 |
+| **total**          |           | $0.0594 |
+```
 
 ## See also
 
