@@ -1,7 +1,8 @@
 # Open Questions 3 — Council-Modes + Pre-Existing Budget Breach
 
 > Created during the autonomous Phase-2b pass on **2026-05-02**.
-> Continuation of [`archive/open-questions-2.md`](archive/open-questions-2.md) (Q1-Q35).
+> Continuation of [`open-questions-2.md`](open-questions-2.md) (Q1-Q35).
+> **Archived 2026-05-02** — all 13 questions resolved (Q36, Q37–Q41, Q42, Q43, Q44–Q49).
 > Pass 3 starts at **Q36**.
 >
 > Each entry maps 1:1 to either a `[-]` skipped roadmap item or an
@@ -242,7 +243,7 @@ the decision and re-runs the affected work.
 
 ## See also
 
-- [`archive/open-questions.md`](archive/open-questions.md) — Pass 1 (Q1-Q25)
-- [`archive/open-questions-2.md`](archive/open-questions-2.md) — Pass 2 (Q26-Q35)
-- [`road-to-council-modes.md`](road-to-council-modes.md) — source roadmap for Q37-Q41
+- [`open-questions.md`](open-questions.md) — Pass 1 (Q1-Q25)
+- [`open-questions-2.md`](open-questions-2.md) — Pass 2 (Q26-Q35)
+- [`../road-to-council-modes.md`](../road-to-council-modes.md) — source roadmap for Q37-Q41
 - [`road-to-governance-cleanup.md`](road-to-governance-cleanup.md) — P0.6 lint regressions, related to Q36

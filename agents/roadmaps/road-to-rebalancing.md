@@ -128,6 +128,6 @@ This roadmap is **CAPTURE**, not **PLAN**. No phase runs autonomously. The next 
 
 ## Cross-references
 
-- [`open-questions-3.md`](open-questions-3.md) — Q36 (always-rule budget) is the precondition this rebalancing builds on.
+- [`archive/open-questions-3.md`](archive/open-questions-3.md) — Q36 (always-rule budget) is the precondition this rebalancing builds on.
 - [`archive/road-to-governance-cleanup.md`](archive/road-to-governance-cleanup.md) — F1–F7 source of truth (post-archive).
 - [`road-to-ai-council.md`](road-to-ai-council.md) — second strand of PR #34, separate from this rebalancing work.

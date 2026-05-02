@@ -125,7 +125,7 @@ Phase 2+ stay capture-only until Phase 1 lands a working round-trip — no scope
 
 ## Decisions (resolved 2026-05-02)
 
-All five Phase-1 design questions are closed. Trace: `agents/roadmaps/open-questions-3.md` Q45–Q49.
+All five Phase-1 design questions are closed. Trace: `agents/roadmaps/archive/open-questions-3.md` Q45–Q49.
 
 1. **Council member roster for v1.** ✅ Anthropic + OpenAI only. `ExternalAIClient` ABC stays open for a third provider; no extra client lands until evidence demands it. *(Q45)*
 2. **Default `enabled` state in settings.** ✅ Explicit opt-in. Key install is infrastructure, not permission to spend. Each `install_<provider>_key.sh` prints a hint pointing the user at `ai_council.members.<provider>.enabled` in `.agent-settings.yml`. *(Q46)*
