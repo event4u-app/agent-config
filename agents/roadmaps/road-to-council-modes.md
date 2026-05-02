@@ -1,9 +1,9 @@
 # Road to Council Modes
 
-**Status:** IN PROGRESS — Phase 2a + 2b implemented (E1.1–F5); 2c capture-only pending Phase 2a end-to-end verification on a real council call and decisions Q40–Q41.
+**Status:** Phase 2a + 2b COMPLETE + verified end-to-end (real Anthropic round-trip 2026-05-02, see `agents/council-sessions/2026-05-02T17-05-57Z/`). Phase 2c restructured per council review — research spike (G1.5) gates implementation; G2–G6 capture-only pending spike outcome + Playwright dependency authorisation.
 **Started:** 2026-05-02
 **Trigger:** Maintainer wants the council to support three execution paths — `api` (current), `manual` (copy-paste loop), `playwright` (browser automation) — all sharing one neutral context-handoff so external AIs receive enough project context to give a useful second opinion without seeing the host agent's reasoning.
-**Mode:** Phase 2a (E1–E4) ships the context-handoff alone, used by the existing `api` mode and prepared for the later modes. Phase 2b + 2c stay capture-only until 2a is verified end-to-end on a real council call.
+**Mode:** Phase 2a + 2b shipped + verified via a real council call. Phase 2c is fenced behind a research spike: per the council review, no DOM adapter can be built before empirical evidence that providers expose a stable "streaming-finished" signal.
 
 ## Purpose
 
@@ -67,24 +67,41 @@ Phase 2b + 2c add the two new execution modes once 2a has shipped.
 - [x] **F4** Skip the cost gate in manual mode (spend = $0). Implemented via `ExternalAIClient.billable=False`; `orchestrator.consult()` short-circuits the projection / overrun callback for non-billable members.
 - [x] **F5** Tests: `tests/ai_council/test_manual_client.py` (8 tests — stub stdin/stdout, follow-up loop, abort, EOF), `tests/ai_council/test_modes.py` (15 tests — precedence, normalisation, validation), and three orchestrator tests for the non-billable bypass.
 
-## Phase 2c — Playwright mode (capture-only)
+## Phase 2c — Playwright mode (research spike + capture-only)
 
-- [ ] **G1** Add `PlaywrightClient` in `clients.py`. `ask()` opens a persistent-profile browser at the provider's chat URL, submits the system prompt + handoff preamble + artefact via DOM, polls for the streamed response, returns text.
-- [ ] **G2** Per-provider DOM adapter under `scripts/ai_council/playwright_adapters/<provider>.py` — `claude.ai` and `chatgpt.com` for v1; `gemini.google.com` and others later. Each adapter exposes `submit(text)`, `wait_for_complete()`, `extract_response()`.
-- [ ] **G3** Persistent browser profile under `~/.config/agent-config/playwright-profile/` mode 0700 so login persists between sessions. Never auto-fill credentials. Surface "log in if needed, then press 1 to continue" before the first DOM interaction per session.
-- [ ] **G4** New chat per consultation — never reuse a thread (would leak prior context across council runs).
-- [ ] **G5** Cost gate skipped (spend = $0). Provider rate limit / quota warning surfaced once at session start.
-- [ ] **G6** Tests: adapter-level tests with recorded HAR files; integration tests gated behind a `PLAYWRIGHT_LIVE=1` env var so CI never hits real providers.
+> Restructured 2026-05-02 after council review (`agents/council-sessions/2026-05-02T17-05-57Z/`). G1.5 added; G4 split into G4a/G4b; kill criterion made explicit. Implementation steps remain capture-only until the spike outputs evidence and the user authorises the new dependency.
 
-## Decisions Required (open questions for the maintainer)
+- [ ] **G1.5** **Research spike — DOM stability proof-of-concept.** Before any client code lands, capture 10+ real chat sessions on `claude.ai` and `chatgpt.com` (devtools recordings or Playwright trace files, no automation yet) and document under `agents/research/playwright-dom-signals.md`:
+      1. What DOM nodes appear/change during streaming?
+      2. What CSS classes / ARIA attributes toggle when streaming stops?
+      3. Does the signal survive scroll, navigation, and provider A/B-test variants?
+      4. Can we distinguish "streaming complete" from "streaming paused (rate limit)" or "user navigated away mid-stream"?
+      **Kill criterion:** if no provider exposes a stable signal, Phase 2c is **not viable**. Fallback options recorded explicitly in the research doc: (a) drop Playwright mode entirely, or (b) pivot to a "semi-manual" hybrid where the user confirms "response complete" before extraction.
+- [ ] **G1** Add `PlaywrightClient` in `clients.py`. `ask()` opens a persistent-profile browser at the provider's chat URL, submits the system prompt + handoff preamble + artefact via DOM, polls for the streamed response, returns text. *Gated on G1.5.*
+- [ ] **G2** Per-provider DOM adapter under `scripts/ai_council/playwright_adapters/<provider>.py` — `claude.ai` and `chatgpt.com` for v1; `gemini.google.com` and others later. Each adapter exposes `submit(text)`, `wait_for_complete()`, `extract_response()`. *Gated on G1.5.*
+- [ ] **G3** Persistent browser profile under `~/.config/agent-config/playwright-profile/` mode 0700 so login persists between sessions. Never auto-fill credentials. Surface "log in if needed, then press 1 to continue" before the first DOM interaction per session. *Gated on G1.5.*
+- [ ] **G4a** Navigation strategy — document and implement how each adapter goes from "logged-in landing page" to "blank new chat" (button click vs. base-URL redirect vs. `/new` endpoint). One per provider in the adapter file. *Gated on G1.5.*
+- [ ] **G4b** Thread isolation — never reuse a thread (would leak prior context across council runs). Asserted as a contract test against the recorded HAR fixtures from G6. *Gated on G1.5.*
+- [ ] **G5** Cost gate skipped (spend = $0). Provider rate-limit / quota warning surfaced once at session start. Includes a one-line warning that browser automation may violate provider TOS — user opts in via explicit `/council mode:playwright` invocation, never auto-selected. *Gated on G1.5.*
+- [ ] **G6** Tests: adapter-level tests with recorded HAR files; integration tests gated behind a `PLAYWRIGHT_LIVE=1` env var so CI never hits real providers. *Gated on G1.5.*
 
-These need an answer before Phase 2b / 2c start. Phase 2a does **not** depend on any of them — it ships first regardless.
+## Decisions resolved (council review 2026-05-02)
 
-1. **Mode-selection precedence.** Confirm: invocation flag > per-member setting > global setting > built-in default (`api`). [Recommend: yes — mirrors `cost_profile` resolution.]
-2. **Manual-mode prompt rendering.** One Markdown block per member (one copy-paste per member), or one combined block (user dispatches manually)? [Recommend: per-member — matches the sequential orchestrator and keeps the follow-up loop scoped.]
-3. **Playwright provider-adapter scope.** v1 = Claude.ai + ChatGPT.com only? [Recommend: yes; design adapter ABC so adding Gemini / Mistral is one new file.]
-4. **Playwright login detection.** Best-effort DOM check for "logged in" state, or always ask the user "ready?" before the first submit? [Recommend: always ask. DOM heuristics drift; one explicit user confirmation per session is cheap.]
-5. **Project-context fallback.** When no `composer.json` / `package.json` / `README.md` is present, send the preamble with empty stack/purpose, or refuse and ask the user for one sentence? [Recommend: send empty fields silently; the original ask is the load-bearing part. User can extend manually via `/council mode:manual` if they want richer context.]
+All five questions settled after the round-trip review on `road-to-council-modes.md`. Trace: `agents/council-sessions/2026-05-02T17-05-57Z/raw-text.md`.
+
+1. **Mode-selection precedence.** ✅ Accepted: invocation flag > per-member setting > global setting > built-in default (`api`). Mirrors `cost_profile` resolution. Clarification per council review: **mixed modes in one invocation are allowed**; the orchestrator prompts every manual-mode member *first*, then runs API-mode members, so the user is not context-switching between typing and waiting. Codified in `scripts/ai_council/modes.py` + tested under `tests/ai_council/test_modes.py` (already shipped in F3).
+2. **Manual-mode prompt rendering.** ✅ Accepted: per-member Markdown block, one copy-paste per member. Matches the sequential orchestrator and keeps the follow-up loop scoped. Already shipped in F1.
+3. **Playwright provider-adapter scope.** ✅ Accepted: v1 = `claude.ai` + `chatgpt.com` only; the adapter ABC remains open so Gemini / Mistral are one new file each later. Conditional on G1.5 finding a stable signal for both v1 providers.
+4. **Playwright login detection.** ✅ Revised after review: **always ask** (DOM heuristics drift, explicit user confirmation per session is cheap), **and always require G1.5 evidence first** (the council flagged that login detection is the visible tip of a deeper "can we detect any state at all?" risk; G1.5 surfaces the deeper question).
+5. **Project-context fallback.** ✅ Accepted: send the preamble with empty stack/purpose silently; the original ask is the load-bearing part. User extends manually via `/council mode:manual` for richer context. Already shipped in E1.1.
+
+## Documentation backports from council review
+
+The council review highlighted two phase-2a / 2b ambiguities that are not implementation gaps but documentation gaps in the already-shipped code. Both are folded into `ai-council` skill or test docstrings; no code change.
+
+- **F2 abort behaviour.** When the user picks `3. Abort` in the manual follow-up loop, the current member's consultation terminates and the orchestrator skips to the next member in the roster. To abort the *entire* council run, the user sends Ctrl-C (existing SIGINT trap in the command layer). Documented in `tests/ai_council/test_manual_client.py` docstring + `ai-council` skill § Manual mode.
+- **E1.1 truncation strategy.** `repo_purpose` is capped at 400 chars by stopping at the last full sentence ≤ 400 chars, with an ellipsis if truncated — never mid-sentence. Verified in `tests/ai_council/test_project_context.py`; behaviour documented in `project_context.py` module docstring.
+- **E2.1 identity-leak strategy.** Lines containing a host-agent identity substring are dropped *whole* (not just the substring), erring toward false-positive (slightly less context) over false-negative (neutrality leak). Documented in `prompts.py` `_strip_host_identity()` docstring.
 
 ## Why now
 

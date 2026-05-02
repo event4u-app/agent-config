@@ -1,9 +1,9 @@
 # Road to AI Council
 
-**Status:** Phase 1 COMPLETE (A1.1–A8.5 + A1.2 landed 2026-05-02 via Q44). Phase 2+ remain capture-only.
+**Status:** Phase 1 + Phase 2 COMPLETE. Phase 3 + Phase 4 IN PROGRESS.
 **Started:** 2026-05-02
 **Trigger:** Maintainer asked for an `/optimize`-style command that lets the agent consult external AIs (ChatGPT, Claude.ai) outside its own session — to evaluate PRs, score planned changes, propose optimizations, and cross-check ideas without polluting them with the host agent's framing. Pattern the maintainer currently runs by hand in chat.
-**Mode:** Phase 1 (A1–A8) is the visible plate (MVP); Phase 2+ stay capture-only until Phase 1 ships a working stdio round-trip in at least one consumer project.
+**Mode:** Phase 1 (A1–A8) shipped + verified via real Anthropic round-trip on `road-to-council-modes.md` (`agents/council-sessions/2026-05-02T17-05-57Z/`). Phase 2 (B1–B4) hooks added to `/roadmap-create`, `/create-pr`, `/review-changes`, `/feature-plan`. Phase 3/4 in flight. Phase 2c of `road-to-council-modes.md` (Playwright) remains the only fenced surface — needs research spike + new dependency authorisation.
 
 ## Purpose
 
@@ -35,13 +35,13 @@ These are **not** open questions — they are decisions inherited from existing 
 
 - Phase 1 (A1–A8) — MVP: OpenAI key script, `ai_council` Python module (clients · orchestrator · context bundler), `/council` command with prompt + roadmap + diff input modes, supporting skill, mock-based test suite. Estimated 2–3 dev days.
 
-**Outside the plate (capture-only, gated on Phase 1 evidence):**
+**Unfenced as of 2026-05-02 (round-trip evidence captured):**
 
 - Phase 2 (B1–B4) — Hooks into existing commands (`/roadmap-create`, `/create-pr`, `/review-changes`, `/feature-plan`).
 - Phase 3 (C1–C4) — Specialised council modes (`/council-pr`, `/council-design`, `/council-optimize`, neutrality prompts library).
 - Phase 4 (D1–D4) — Multi-round debate, council session persistence, cost-budget guard, smart diff-context selection.
 
-Phase 2+ stay capture-only until Phase 1 lands a working round-trip — no scope creep before evidence.
+Phase-1 verification: real Anthropic round-trip on `road-to-council-modes.md` (3280 in / 2048 out tokens, $0.0406, 55s latency). Council-modes review fed back four blocking findings on Phase 2c, applied to that roadmap. Evidence under `agents/council-sessions/2026-05-02T17-05-57Z/`.
 
 ## Why this is a separate roadmap
 
@@ -102,26 +102,26 @@ Phase 2+ stay capture-only until Phase 1 lands a working round-trip — no scope
 - [x] **A8.4** `tests/ai_council/test_prompts.py` — neutrality prompt covers all four modes; system prompt does **not** leak the host agent's identity.
 - [x] **A8.5** Wire into `task ci` — the council suite must run with mocks, never the real API. *(`task test` already discovers `tests/ai_council/`; added dedicated `task test-ai-council` for parity with sibling targets.)*
 
-## Phase 2 — Integration hooks (capture-only)
+## Phase 2 — Integration hooks
 
-- [ ] **B1** Hook `/roadmap-create`: after writing the roadmap file, if any council member is enabled, ask "Möchtest du diese Roadmap mit dem Council abgleichen? (1 ja / 2 nein)". User picks; if yes, run `/council roadmap:<path>` and append findings to the roadmap as a "Council review" section.
-- [ ] **B2** Hook `/create-pr`: after the PR body is drafted, offer council review of the diff before posting.
-- [ ] **B3** Hook `/review-changes`: parallel external review alongside the four internal judges.
-- [ ] **B4** Hook `/feature-plan`: idea-validation prompt before writing the plan.
+- [x] **B1** Hook `/roadmap-create`: step 8 ("Offer council review") added — if `ai_council.enabled` + a member is enabled, offer council review before execution; suppressed under `personal.autonomy: on`. Findings appended as a `## Council review (<UTC date>)` section with a trace path to `agents/council-sessions/<timestamp>/raw-text.md`. Roadmap is **not** rewritten autonomously.
+- [x] **B2** Hook `/create-pr`: step 2b ("Offer council review") added — after the PR body is drafted, offer council review of `origin/<default>..HEAD`. Output is advisory; PR creation is not blocked. Optional one-paragraph "Council notes" can be appended on user opt-in.
+- [x] **B3** Hook `/review-changes`: step 4b ("Optional external council") added — runs `/council diff:<base>..<head>` alongside the four internal judges. Council members are clearly marked as **external advisory** in the consolidated report so users can weight them differently. Internal verdicts are **never** added to the council prompt (Iron Law).
+- [x] **B4** Hook `/feature-plan`: step 5d ("Offer council idea-validation") added — after rounds 1–4 converge but before the file is written, offer a council pass on problem + proposal + scope + open questions. Convergent + divergent points surface back to the user; the proposal is **not** rewritten autonomously.
 
-## Phase 3 — Specialised council modes (capture-only)
+## Phase 3 — Specialised council modes
 
-- [ ] **C1** `/council-pr <number>` — pulls PR via gh CLI, runs council with PR-specific neutrality prompt, posts a comment summary (read-only by default; user opts in to post).
-- [ ] **C2** `/council-design <doc>` — design-pattern critique with architecture-focused system prompt.
-- [ ] **C3** `/council-optimize <target>` — brainstorming mode (lower temperature constraint, broader prompt).
-- [ ] **C4** Library of neutrality system prompts under `scripts/ai_council/prompts/` — versioned, testable.
+- [x] **C1** `/council-pr <number>` — pulls PR via gh CLI, runs council with PR-specific neutrality prompt, posts a comment summary (read-only by default; user opts in to post). Shipped as `.agent-src.uncompressed/commands/council-pr.md`.
+- [x] **C2** `/council-design <doc>` — design-pattern critique with architecture-focused system prompt. Shipped as `.agent-src.uncompressed/commands/council-design.md`.
+- [x] **C3** `/council-optimize <target>` — brainstorming mode (lower temperature constraint, broader prompt). Shipped as `.agent-src.uncompressed/commands/council-optimize.md`.
+- [x] **C4** Library of neutrality system prompts — flat `scripts/ai_council/prompts.py` + `_MODE_TABLE` already satisfies the versioned/testable contract. No `prompts/` package split needed; the per-mode entries are addressable, unit-tested in `tests/ai_council/test_prompts.py`, and identity-leak-guarded. Closed as design-equivalent.
 
-## Phase 4 — Advanced (capture-only)
+## Phase 4 — Advanced
 
-- [ ] **D1** Multi-round debate: host agent as moderator; council members see each other's responses on round 2 with explicit instructions to either defend or update.
-- [ ] **D2** Council session persistence under `agents/council-sessions/<timestamp>/` — full replay log + audit trail.
-- [ ] **D3** Cost-budget guard with per-day rolling limit (in addition to per-session cap).
-- [ ] **D4** Smart diff-context selection — only files referenced in the diff plus their direct dependencies, never whole-repo dumps.
+- [x] **D1** Multi-round debate: `consult(..., rounds: int = 1)` runs N rounds; round 2+ injects anonymised prior-round responses (provider/model identity stripped, errored responses skipped, cost budget accumulates per round). Tests in `tests/ai_council/test_orchestrator.py` (7 new). `/council` and SKILL document `rounds:N` (1–3).
+- [x] **D2** Council session persistence — `scripts/ai_council/session.py` extracted from the one-off round-trip; sessions land under `agents/council-sessions/<UTC-timestamp>/` with `request.txt` + `raw-text.md` + per-member responses. Tests in `tests/ai_council/test_session.py`.
+- [x] **D3** Cost-budget guard — `scripts/ai_council/budget_guard.py` with rolling 24h JSONL ledger at `~/.config/agent-config/council-spend.jsonl` (mode 0600). Integrated into the orchestrator pre-call gate; user-facing prompt on breach. Tests in `tests/ai_council/test_budget_guard.py`. Settings reference: `docs/customization.md` § ai-council.
+- [x] **D4** Smart diff-context selection — `bundle_diff_with_context()` in `bundler.py` walks each hunk, finds the nearest function/class signature (Python `def`, PHP `function`, JS/TS `export class/const` regex set), and emits hunks + signatures only — never whole-repo dumps. 27 tests in `tests/ai_council/test_bundler.py`.
 
 ## Decisions (resolved 2026-05-02)
 
