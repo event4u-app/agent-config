@@ -5,7 +5,7 @@ stability: beta
 # ADR — Chat-history rule split
 
 > **Status:** Decided · 2026-05-02 · scoped under
-> [`road-to-post-pr29-optimize.md`](../../agents/roadmaps/road-to-post-pr29-optimize.md)
+> [`road-to-post-pr29-optimize.md`](../../agents/roadmaps/archive/road-to-post-pr29-optimize.md)
 > Phase 2 item P2.1.
 > **Context:** AI #1, AI #3, AI #5 review of PR #29 flagged the
 > 200-line monolithic `rules/chat-history.md` as the rule the agent

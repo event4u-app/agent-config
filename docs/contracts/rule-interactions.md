@@ -104,4 +104,4 @@ junior (yields). For `complements`, ordering is documentary only.
 
 - [`docs/contracts/STABILITY.md`](STABILITY.md) — public-surface stability tiers.
 - [`docs/contracts/adr-chat-history-split.md`](adr-chat-history-split.md) — ADR pattern for major rule structural changes.
-- [`agents/roadmaps/road-to-post-pr29-optimize.md`](../../agents/roadmaps/road-to-post-pr29-optimize.md) § P2.2 — anchor for this matrix.
+- [`agents/roadmaps/archive/road-to-post-pr29-optimize.md`](../../agents/roadmaps/archive/road-to-post-pr29-optimize.md) § P2.2 — anchor for this matrix.

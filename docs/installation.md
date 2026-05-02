@@ -30,7 +30,7 @@ No Task, no Make, no build tools required for installation.
 > tested. Nothing on this page is being removed in 1.15.0 — the
 > reorder simply marks which paths get the most maintenance attention
 > and which we keep as fallbacks. See R9 in
-> [`agents/roadmaps/road-to-post-pr29-optimize.md`](../agents/roadmaps/road-to-post-pr29-optimize.md)
+> [`agents/roadmaps/archive/road-to-post-pr29-optimize.md`](../agents/roadmaps/archive/road-to-post-pr29-optimize.md)
 > for the rationale.
 
 | Label | Meaning | Examples |

@@ -156,12 +156,12 @@ maps 1:1.
 - [x] `work_engine/cli.py` modularisation — `cli_args.py · state_io.py · input_builders.py · hook_bootstrap.py · emitters.py · errors.py`; behavior-preserving, 706 work_engine + 1708 full-suite tests green; cli.py reduced from 634 → 195 lines (thin orchestrator re-exports the full monkeypatch surface)
 - [x] CI performance budget — PR CI gets the smoke GT subset (`-m smoke`, 6/25, ~2s) via `task golden-replay-smoke` and the named step in `tests.yml`; full 25-scenario replay still runs in `pytest tests/` (~7s) and on every engine-path PR via `freeze-guard.yml`, plus a nightly `cron: "17 3 * * *"` and `workflow_dispatch`; `task ci` emits a `⏱  task ci duration: Xm Ys` line via `_ci-start` / `_ci-end` deferred internal tasks (works on success and failure)
 - [x] Install-path pruning — `docs/installation.md` gets a label table (`(no label)` / `advanced` / `experimental` / `staged`) + an explicit "still supported, just not the default path" preamble per R9; section headers tagged inline (Manual / submodule / VS Code Git URL → `advanced`; Claude.ai Web Skills UI → `experimental`; Linear AI → `staged`); CHANGELOG `[Unreleased]` carries a *Install-path pruning (relabel only)* note that pins the no-removal contract and links back to R9
-- [ ] Telemetry redesign — pause artefact-engagement counts; ship feedback-loop UX (issue templates · discussions · "did this help?"); re-aim at behavioural outcomes
-- [ ] Demo-track scope — four named scenarios in `agents/demos/`: backend ticket · `/work` free-form · UI track · mixed flow
-- [ ] Decision-engine ADR + spike — capture future contract (scoring + confidence + risk surfaces); no code until rule-interaction matrix lands
-- [ ] Memory-visibility surface — heartbeat-style line + opt-in `/memory-impact` command; reuses chat-history visibility plumbing
-- [ ] Stop-growing iron rule — promote roadmap-level guidance to meta-policy only after Phase 1 ships and budget returns under 49k
-- [ ] AI #4 P1 — `docs/ui-track-mental-model.md` (when UI? when ui-trivial? when mixed? what must the agent never do? where does it stop?)
+- [-] Telemetry redesign — **deferred** per ICE table (score 36 < 60); no external users yet, redesign without behavioural signal is speculative; moves to next plate after Phase 2 ships (R10)
+- [-] Demo-track scope — **deferred** per ICE table (score 32 < 60); belongs to demos sprint after rule-interaction matrix lands (R10)
+- [-] Decision-engine ADR + spike — **deferred** per ICE table (score 36 < 60); gated on rule-interaction matrix landing (now done) but the spike itself is post-Phase-2 work (R10)
+- [-] Memory-visibility surface — **deferred** per ICE table (score 27 < 60); needs chat-history split first (now done); reabsorbed into next plate (R10)
+- [~] Stop-growing iron rule — **blocked** by R11 budget gate. Measured 2026-05-02: 20 always-rules total **101,818 chars compressed (~25.5k tokens)**; `road-to-governance-cleanup.md` tracks the budget in **chars** with a 49k ceiling, current breach is **2.08×**. Promotion to meta-policy is refused until tiering work in `road-to-governance-cleanup.md` (F1.1–F1.5) lands and `tests/test_always_budget.py` reports `total_chars < 49000`. Roadmap-level guidance stays in force; only the elevation to project-level meta-policy is gated.
+- [x] AI #4 P1 — `docs/ui-track-mental-model.md` shipped (1-page mental model: three +1 directive sets · pick-which-when · five never-do clauses · per-set stop conditions · audit / design-locked semantics · polish termination · stack dispatch · linked from README under *Product UI track*; complements `ui-track-flow.md` (slot-by-slot) and `adr-product-ui-track.md` (rationale))
 
 ## Sources (append per AI)
 

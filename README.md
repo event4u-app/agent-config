@@ -190,7 +190,8 @@ screenshots / findings) via a defined contract. Stack detection routes
 `react-shadcn` / `vue` / `plain`; trivial path reclassifies loudly when
 preconditions fail. Halt budget on the happy path is 2.
 
-→ [Flow contract](docs/contracts/ui-track-flow.md) (beta) ·
+→ [Mental model](docs/ui-track-mental-model.md) (1 page — when each set, where it stops, what the agent must never do) ·
+  [Flow contract](docs/contracts/ui-track-flow.md) (beta) ·
   [ADR](docs/contracts/adr-product-ui-track.md) ·
   [Stack-extension recipe](docs/contracts/ui-stack-extension.md) (beta)
 

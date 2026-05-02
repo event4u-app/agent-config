@@ -109,4 +109,4 @@ The setting disappears in 1.16.0 along with the shims.
 
 - [`docs/contracts/command-clusters.md`](../contracts/command-clusters.md) — locked cluster spec.
 - [`docs/contracts/STABILITY.md`](../contracts/STABILITY.md) — public-surface stability tiers.
-- [`agents/roadmaps/road-to-post-pr29-optimize.md`](../../agents/roadmaps/road-to-post-pr29-optimize.md) — P0.8 anchor for this migration.
+- [`agents/roadmaps/archive/road-to-post-pr29-optimize.md`](../../agents/roadmaps/archive/road-to-post-pr29-optimize.md) — P0.8 anchor for this migration.

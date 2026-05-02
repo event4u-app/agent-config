@@ -313,7 +313,7 @@ our recommendation order, not its support status.
   preamble that calls out the no-removal contract explicitly. Section
   headers carry their label inline for skim-readers.
 * **rationale:** see R9 in
-  [`agents/roadmaps/road-to-post-pr29-optimize.md`](agents/roadmaps/road-to-post-pr29-optimize.md)
+  [`agents/roadmaps/archive/road-to-post-pr29-optimize.md`](agents/roadmaps/archive/road-to-post-pr29-optimize.md)
   — relabelling addresses the "four install paths at zero external
   users" tension without removing any path that an existing user
   might rely on.
