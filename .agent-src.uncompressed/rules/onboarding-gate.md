@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "First-run gate — when onboarding.onboarded is false in .agent-settings.yml, prompt the user to run /onboard before anything else"
-alwaysApply: true
+type: "auto"
+description: "First turn of a conversation on a project — check onboarding.onboarded in .agent-settings.yml; when false, prompt the user to run /onboard before executing any other request"
+alwaysApply: false
 source: package
 ---
 

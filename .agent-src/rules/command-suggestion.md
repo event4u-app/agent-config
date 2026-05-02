@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "Surface matching slash commands as numbered options when user intent matches a command's purpose — never auto-executes; user always picks (read-only suggestion layer)."
-alwaysApply: true
+type: "auto"
+description: "User prompt that doesn't start with /command but might match an eligible slash command — surface matches as numbered options with always-present as-is escape hatch; never auto-executes, user always picks"
+alwaysApply: false
 source: package
 ---
 

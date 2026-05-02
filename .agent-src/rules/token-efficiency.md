@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "Token efficiency — redirect output, minimize tool calls, keep responses concise"
-alwaysApply: true
+type: "auto"
+description: "When running CLI tools, fetching logs, or producing replies — redirect verbose output, minimize tool calls, keep replies concise"
+alwaysApply: false
 source: package
 ---
 

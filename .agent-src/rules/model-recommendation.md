@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "Model recommendation — detect task complexity, suggest optimal model (Opus/Sonnet/GPT), check on task changes and command invocations"
-alwaysApply: true
+type: "auto"
+description: "Starting a new task, switching task type, or invoking a command — detect task complexity and recommend the optimal model (Opus/Sonnet/GPT) before any work"
+alwaysApply: false
 source: package
 ---
 

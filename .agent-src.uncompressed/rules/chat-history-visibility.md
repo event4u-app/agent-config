@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "Heartbeat marker visibility for .agent-chat-history — paste subprocess stdout verbatim or nothing, never type from memory, hybrid mode prints only on drift, slip handling per language-and-tone"
-alwaysApply: true
+type: "auto"
+description: "Emitting the chat-history heartbeat marker — paste subprocess stdout verbatim or nothing, never type from memory, hybrid mode prints on drift only, slip handling per language-and-tone"
+alwaysApply: false
 source: package
 ---
 

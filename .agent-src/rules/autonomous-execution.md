@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "Suppress trivial workflow questions and act on the obvious next step; defers to non-destructive-by-default for the safety floor; never commit and never ask about committing except via /commit-in-chunks or explicit user instruction"
-alwaysApply: true
+type: "auto"
+description: "Deciding whether to ask the user or just act on a workflow step — trivial-vs-blocking classification, autonomy opt-in detection, commit default; defers to non-destructive-by-default for the Hard Floor"
+alwaysApply: false
 source: package
 ---
 

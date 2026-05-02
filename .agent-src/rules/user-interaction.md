@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "User interaction — numbered options, progress indicators, summaries"
-alwaysApply: true
+type: "auto"
+description: "Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators"
+alwaysApply: false
 source: package
 ---
 

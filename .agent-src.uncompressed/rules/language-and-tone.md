@@ -82,20 +82,11 @@ Run silently **before** emitting any tokens:
    prove compliance.
 5. If user asks to harden the rule, harden it on this turn — don't defer.
 
-### Failure modes to watch for
+### Failure modes
 
-- Drafting reply in English first, then "translating the intro" → English
-  phrasing with German words. Draft in target language from the first token.
-- Copy-pasting English option labels from `.md` sources without translating.
-- Mixing languages inside a table or bullet list because "the technical term
-  is English" — surrounding prose must still mirror. Keep proper nouns and
-  code identifiers as-is; translate everything else.
-- Assuming English because "the codebase is English" — codebase language ≠
-  conversation language.
-- Mirroring the **open file** the IDE reports — open files are background
-  context, not chat messages.
-- Mirroring the **roadmap or ticket** being executed — artefacts are English
-  by `.md` rule; chat language is whatever the user wrote.
+See [`docs/guidelines/language-and-tone-examples.md`](../../docs/guidelines/language-and-tone-examples.md)
+for the full failure-mode list (drafting in EN then translating, copy-pasting
+EN labels, codebase ≠ conversation, mirroring the open file or roadmap).
 
 ## Other language rules
 
@@ -108,64 +99,30 @@ Run silently **before** emitting any tokens:
 
 ## `.md` files are ALWAYS English — no exceptions
 
-**Every** piece of text inside `.md` files in `.augment/` and `agents/` must be in English.
-This includes:
+**Every** piece of text inside `.md` files in `.augment/` and `agents/`
+must be in English: headings, paragraphs, bullets, example option labels,
+example prompts/questions, template placeholders, ASCII-art labels in
+formatted output blocks, table headers and content.
 
-- Headings, paragraphs, and bullet points
-- **Example option labels** (e.g., `> 1. Yes — start implementing`, NOT `> 1. Ja — mit der Umsetzung starten`)
-- **Example prompts and questions** (e.g., `"Found X unresolved comments."`, NOT `"X offene Kommentare gefunden."`)
-- **Template placeholders and sample output** (e.g., `Progress:`, NOT `Fortschritt:`)
-- **ASCII art labels** in formatted output blocks (e.g., `CHANGES:`, NOT `ÄNDERUNGEN:`)
-- **Table headers and content**
+The agent translates to the user's language **at runtime** when
+presenting options. The `.md` source files are the English blueprint —
+they define WHAT to say, not in which language. Concrete wrong-vs-correct
+examples live in [`docs/guidelines/language-and-tone-examples.md`](../../docs/guidelines/language-and-tone-examples.md).
 
-The agent translates to the user's language **at runtime** when presenting options.
-The `.md` source files are the English blueprint — they define WHAT to say, not in which language.
+### Quoted user-input examples — labeled-anchor exception
 
-**Wrong** (German in `.md`):
-```
-> 1. Interaktiv — bei jedem Kommentar nachfragen
-> 2. Automatisch — alle selbstständig abarbeiten
-```
+Drift pattern: a rule writes quoted German examples inside English prose.
+**Not allowed**. Two correct ways:
 
-**Correct** (English in `.md`):
-```
-> 1. Interactive — ask before each comment
-> 2. Automatic — handle all independently
-```
+1. **Translate to English.** Trigger recognition is semantic; the agent
+   matches intent across languages regardless of the example.
+2. **Use a labeled `DE: … · EN: …` anchor list** when the multilingual
+   nature of recognition is the point — the **only** allowed location
+   for German prose in an English `.md`. Reference established phrases
+   abstractly later and link back to the anchor block.
 
-### Quoted user-input examples — same rule, with one labeled exception
-
-Common drift pattern: a rule documents trigger phrases the agent
-should recognize and writes them as quoted German examples inside
-English prose. **Not allowed**, even when demonstrative.
-
-**Wrong** (DE quote embedded in EN prose):
-
-```md
-Single-decision delegation ("für diesen Schritt entscheide du") →
-handle that step autonomously.
-
-A standing "arbeite selbstständig" never lifts the floor.
-```
-
-**Correct** — two ways:
-
-1. **Translate to English.** Trigger recognition is semantic; the
-   agent matches intent across languages regardless of the example.
-   `("you decide for this step")` works as well as the German.
-2. **Use a labeled `DE: … · EN: …` anchor list** when the
-   multilingual nature of recognition is the point:
-
-   ```md
-   - DE: "arbeite selbstständig" · "frag nicht jedes Mal" · "tue es einfach"
-   - EN: "work autonomously" · "don't ask" · "just do it"
-   ```
-
-The labeled-anchor block is the **only** allowed location for German
-prose in an English `.md` file. Body text, example sentences, prompt
-templates, agent-rendered strings, and failure modes must be English.
-Reference established phrases abstractly later (e.g. "a standing
-autonomy directive") and link back to the anchor block.
+Wrong-vs-correct snippets in
+[`docs/guidelines/language-and-tone-examples.md`](../../docs/guidelines/language-and-tone-examples.md).
 
 ### Detection heuristic
 

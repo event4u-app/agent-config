@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "UI work — never write a component, screen, or partial without existing-ui-audit findings populated in state.ui_audit; the audit is the gate, not a suggestion"
-alwaysApply: true
+type: "auto"
+description: "Writing or editing UI — components, screens, partials, layouts, design tokens — require existing-ui-audit findings populated in state.ui_audit before any non-trivial UI change; the audit is the gate, not a suggestion"
+alwaysApply: false
 source: package
 ---
 

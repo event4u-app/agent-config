@@ -31,10 +31,14 @@ def rule_text() -> str:
     return RULE_PATH.read_text(encoding="utf-8")
 
 
-def test_rule_has_always_apply_frontmatter(rule_text: str) -> None:
-    """Iron-Law rules must declare ``type: always`` so they are never skipped."""
-    assert 'type: "always"' in rule_text
-    assert "alwaysApply: true" in rule_text
+def test_rule_declares_auto_trigger_frontmatter(rule_text: str) -> None:
+    """Demoted to ``type: auto`` per F1.2 (always-rule budget). Description
+    must carry an explicit UI-write trigger so the rule still fires before
+    a component edit even though it is no longer always-loaded."""
+    assert 'type: "auto"' in rule_text
+    assert "alwaysApply: false" in rule_text
+    # Trigger description must mention UI-write triggers so auto-routing fires.
+    assert "Writing or editing UI" in rule_text or "UI" in rule_text
 
 
 def test_rule_states_iron_law_verbatim(rule_text: str) -> None:

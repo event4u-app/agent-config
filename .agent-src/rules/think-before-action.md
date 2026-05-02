@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "Always analyze before acting. Prefer targeted inspection, tests, and real verification over guessing or trial-and-error."
-alwaysApply: true
+type: "auto"
+description: "Before coding, modifying, or debugging — analyze first, verify with real tools, never guess or trial-and-error"
+alwaysApply: false
 source: package
 ---
 

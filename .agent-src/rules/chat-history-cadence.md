@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "Append cadence for .agent-chat-history — when to call append (per_turn/per_phase/per_tool), turn-check ownership refusal handling, never write the file directly, cadence is the trigger not reply length"
-alwaysApply: true
+type: "auto"
+description: "Appending to .agent-chat-history — cadence boundaries (per_turn/per_phase/per_tool), turn-check ownership refusal handling, never writing the file directly; cadence is the trigger, not reply length"
+alwaysApply: false
 source: package
 ---
 

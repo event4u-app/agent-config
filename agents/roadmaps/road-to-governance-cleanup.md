@@ -491,10 +491,10 @@ Stack-specific skills (`laravel`, `eloquent`, `pest-testing`, `php-coding`)
 ## Phase 1: Cleanup execution
 
 - [x] F1.1 — Draft `agent-authority.md` as the C-router Priority Index (≤ 1,500 chars, always-active): one row per authority rule with its band (Hard Floor · Permission Gate · Commit Default · Trivial-vs-Blocking) and link. Iron Laws preserved verbatim **in their own files** — the router never restates them. *(Landed 2026-05-02: 1468 chars source/compressed, lint + check-refs + check-compression green, projected to `.augment/rules/`.)*
-- [ ] F1.2 — Demote `chat-history`, `command-suggestion`, `model-recommendation`, `onboarding-gate`, `ui-audit-before-build` to `type: auto`
-- [ ] F1.3 — Trim `language-and-tone` to <6k always-char (relocate examples to `docs/guidelines/language-and-tone-examples.md`)
-- [ ] F1.4 — Run always-only compression profile; verify ≤ 49k total
-- [ ] F1.5 — Add CI guard `tests/test_always_budget.py` failing if total > 49k
+- [x] F1.2 — Demote to `type: auto`: `autonomous-execution`, `chat-history-cadence`, `chat-history-ownership`, `chat-history-visibility`, `command-suggestion`, `model-recommendation`, `onboarding-gate`, `ui-audit-before-build`, `user-interaction`, `think-before-action`, `token-efficiency`, `minimal-safe-diff`, `context-hygiene`. *(Landed 2026-05-02: Keep-list of 7 + router enforced; expanded set vs roadmap-original list is mathematically required to hit 49k cap given the locked keep list.)*
+- [x] F1.3 — Trim `language-and-tone` to <6k always-char (relocate examples to `docs/guidelines/language-and-tone-examples.md`) *(Landed 2026-05-02: 8141 → 6568 chars; failure-mode list and wrong-vs-correct snippets relocated to `docs/guidelines/language-and-tone-examples.md`.)*
+- [x] F1.4 — Run always-only compression profile; verify ≤ 49k total *(Landed 2026-05-02: total = **37,879 chars** across 8 always-rules — 11,121 chars under the 49,000 cap. agent-authority 1468 · ask-when-uncertain 5188 · commit-policy 4505 · direct-answers 4765 · language-and-tone 6568 · non-destructive-by-default 6516 · scope-control 4391 · verify-before-complete 4478.)*
+- [x] F1.5 — Add CI guard `tests/test_always_budget.py` failing if total > 49k *(Landed 2026-05-02: 3 guards — total ≤ 49k · per-rule ≤ 8k · top-5 ≤ 28k. All green.)*
 - [ ] F3.1 — Rename per F3 table; create deprecation stubs for old names *(requires: F1.1 + F1.2 done — `agent-authority.md` must exist and `chat-history` must be demoted to `type: auto` before the rename pass; otherwise the F3 table targets unstable artefact names)*
 - [ ] F3.2 — Update `check-refs` to enforce policy-verb (rules) vs tool-noun (skills) split
 - [ ] F2.1 — Implement `/fix`, `/optimize`, `/feature` orchestrators with sub-command dispatch
