@@ -2,7 +2,7 @@
 
 Three personas ship today, each keyed by the string already carried
 on ``DeliveryState.persona`` (see
-``agents/contexts/implement-ticket-flow.md#personas``):
+``docs/contracts/implement-ticket-flow.md#personas``):
 
 ``senior-engineer``
     Default. Runs every step. No test widening.

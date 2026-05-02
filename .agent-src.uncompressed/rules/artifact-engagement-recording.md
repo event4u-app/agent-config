@@ -127,7 +127,7 @@ log — that is a real bug, not a swallowed error.
 ## See also
 
 - [`road-to-artifact-engagement-telemetry`](../../../agents/roadmaps/road-to-artifact-engagement-telemetry.md) — phase contract
-- [`agents/contexts/artifact-engagement-flow.md`](../../../agents/contexts/artifact-engagement-flow.md) — recording contract details
+- [`docs/contracts/artifact-engagement-flow.md`](../../docs/contracts/artifact-engagement-flow.md) — recording contract details
 - [`/implement-ticket`](../commands/implement-ticket.md) and [`/work`](../commands/work.md) — boundary points where this rule fires
 - [`scripts/telemetry/`](../../../scripts/telemetry/) — engine source
 - [`agent-settings`](../templates/agent-settings.md) — `telemetry.artifact_engagement.*` reference

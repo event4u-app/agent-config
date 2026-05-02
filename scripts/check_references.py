@@ -78,6 +78,7 @@ EXAMPLE_PATH_PATTERNS = [
     re.compile(r"agents/overrides/"),           # override examples
     re.compile(r"commands/old-cmd"),            # example placeholder
     re.compile(r"agents/README"),               # README reference (may not exist in package)
+    re.compile(r"agents/index[\w.-]*\.md"),     # planned auto-generated artefact index (F5)
     re.compile(r"agents/docs/"),               # project-specific docs (not in package)
     re.compile(r"agents/contexts/"),           # project-specific contexts (not in package)
     re.compile(r"agents/gates"),               # project-specific policy docs

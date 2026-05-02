@@ -299,7 +299,7 @@ commands:
 # rules, commands, guidelines, personas) the agent consulted and
 # applied. Local only, append-only JSONL, never reaches a consumer
 # repo (gitignored). Maintainer-targeted feature; consumers leave it
-# off. See `agents/contexts/artifact-engagement-flow.md` (once Phase 3
+# off. See `docs/contracts/artifact-engagement-flow.md` (once Phase 3
 # of road-to-artifact-engagement-telemetry lands).
 telemetry:
   artifact_engagement:

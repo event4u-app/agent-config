@@ -1,7 +1,7 @@
 """``memory`` step — bounded retrieval over the four allowed types.
 
 Contract (see
-``agents/contexts/implement-ticket-flow.md#memory-retrieval-contract``):
+``docs/contracts/implement-ticket-flow.md#memory-retrieval-contract``):
 
 - Four allowed types: ``domain-invariants``, ``architecture-decisions``,
   ``incident-learnings``, ``historical-patterns``.

@@ -1,7 +1,7 @@
 """Linear step dispatcher for ``/implement-ticket``.
 
 The dispatcher holds no business logic. It walks the fixed eight-step
-order declared in ``agents/contexts/implement-ticket-flow.md``, hands
+order declared in ``docs/contracts/implement-ticket-flow.md``, hands
 each step a live ``DeliveryState``, and honours the three terminal
 outcomes:
 

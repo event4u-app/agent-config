@@ -1,17 +1,22 @@
 # Architecture
 
+> **agent-config is not a runtime, but it ships a deterministic orchestration contract / state machine for host agents.**
+
 ## System overview
 
 ```
-Rules         → Behavior enforcement (always active)         ← stable
-Skills        → Execution logic (on-demand expertise)        ← stable
-Runtime       → Dispatcher + shell handler (pilot skills)    ← partial
-Tools         → External integrations (GitHub, Jira)         ← experimental
+Rules               → Behavior enforcement (always active)              ← stable
+Skills              → Execution logic (on-demand expertise)             ← stable
+Runtime Dispatcher  → Single-skill shell execution (pilot skills)       ← stable (mechanism)
+Work Engine         → Multi-step orchestration for /work + /implement   ← beta
+Tool Adapters       → External integrations (GitHub, Jira)              ← experimental
 ```
 
-**Stable** = shipped, documented, exercised by the default (`minimal`) profile.
-**Experimental** = scaffold with tests and data model, but no real execution
-wired up yet.
+Stability tiers follow [`docs/contracts/STABILITY.md`](contracts/STABILITY.md):
+
+- **stable** = shipped, documented, exercised by the default (`minimal`) profile or by CI on every PR; SemVer-major for breaks.
+- **beta** = shipped and load-bearing for one or more flows, but the surface is expected to evolve; minor-version breaks allowed under a `### Breaking` CHANGELOG note.
+- **experimental** = scaffold or pilot status; breaks allowed in any release.
 
 > The previous "observability, feedback, lifecycle" layers were removed in
 > 1.5 — they were scaffolds without production consumers. See the
@@ -59,10 +64,10 @@ fails on any source-side violation, without producing artifacts.
 
 | Layer | Count | Purpose |
 |---|---|---|
-| **Skills** | 93 | On-demand expertise — Laravel, testing, Docker, API design, security, ... |
-| **Rules** | 31 | Always-active constraints — coding standards, scope control, verification |
-| **Commands** | 51 | Slash-command workflows — `/commit`, `/create-pr`, `/fix-ci`, `/compress`, ... |
-| **Guidelines** | 34 | Coding guidelines by language — PHP patterns, Eloquent, Playwright, ... |
+| **Skills** | 128 | On-demand expertise — Laravel, testing, Docker, API design, security, ... |
+| **Rules** | 55 | Always-active constraints — coding standards, scope control, verification |
+| **Commands** | 77 | Slash-command workflows — `/commit`, `/create-pr`, `/fix-ci`, `/compress`, ... |
+| **Guidelines** | 46 | Coding guidelines by language — PHP patterns, Eloquent, Playwright, ... |
 | **Templates** | 7 | Scaffolds for features, roadmaps, contexts, skills, overrides |
 | **Contexts** | 5 | Shared knowledge about the system itself |
 
@@ -79,18 +84,25 @@ fails on any source-side violation, without producing artifacts.
 
 Ensures: no guessing, analysis before action, real verification, consistent outputs.
 
-### 2. Execution Layer (Runtime) — partially real, partially scaffold
+### 2. Runtime Dispatcher — stable mechanism, pilot coverage
+
+> **Scope:** single-skill execution. Resolves a `SKILL.md` with
+> `execution.command` argv, enforces safety constraints, hands off to
+> the matching handler. **Not** a multi-step orchestrator — that is
+> the Work Engine (next section).
 
 > **Status:**
-> - **Real:** shell-handler path — skills that declare an `execution.command`
->   argv are dispatched and executed by `scripts/runtime_handler.py`. A typed
->   `ExecutionResult` (exit code, stdout, stderr, duration, artifacts) is
->   returned and can be persisted as JSON via `--output FILE`. Pilots:
->   `lint-skills`, `check-refs`. Both run on every PR and appear in the
->   GitHub Step Summary via `scripts/ci_summary.py`.
-> - **Scaffold:** `php` and `node` handlers — the frontmatter accepts them
->   and the registry validates them, but no handler implementation exists
->   yet.
+> - **Stable mechanism:** the dispatcher itself
+>   (`scripts/runtime_dispatcher.py`), the shell handler
+>   (`scripts/runtime_handler.py`), and the `ExecutionResult` shape.
+>   `subprocess.run` is invoked with `shell=False` (argv only); the
+>   environment is scrubbed to an explicit allowlist.
+> - **Pilot coverage:** two skills ship as live pilots —
+>   `lint-skills` and `check-refs` — both run on every PR and appear
+>   in the GitHub Step Summary via `scripts/ci_summary.py`.
+> - **Scaffold:** `php` and `node` handlers — the frontmatter accepts
+>   them and the registry validates them, but no handler
+>   implementation exists yet.
 
 Skills opt into runtime by declaring execution metadata:
 
@@ -113,14 +125,49 @@ Invoke a runtime-capable skill end-to-end:
 python3 scripts/runtime_dispatcher.py run --skill lint-skills
 ```
 
-The dispatcher resolves the skill, enforces safety constraints, then hands
-off to the matching handler. Environment is scrubbed to an explicit
-allowlist; `subprocess.run` is invoked with `shell=False` (argv only).
+A typed `ExecutionResult` (exit code, stdout, stderr, duration,
+artifacts) is returned and can be persisted as JSON via
+`--output FILE`.
 
-Planned scope (still to come): `php` / `node` handlers, tool-registry
-wiring for `allowed_tools`, streaming output.
+Planned scope: `php` / `node` handlers, tool-registry wiring for
+`allowed_tools`, streaming output.
 
-### 3. Tool Integration — experimental
+### 3. Work Engine — beta, multi-step orchestration
+
+> **Scope:** multi-step phase dispatch for `/work` and
+> `/implement-ticket`. Drives the
+> `refine → score → plan → implement → test → verify → report` loop,
+> persists state in `.work-state.json`, and routes UI-shaped work
+> through the product UI track. Lives at
+> [`templates/scripts/work_engine/`](../.agent-src.uncompressed/templates/scripts/work_engine/);
+> shipped to consumer projects via `scripts/install.py`.
+
+> **Status: beta.** The contract (directive sets, halt budgets,
+> envelope shape) has shipped one full SemVer-minor cycle, but the
+> surface is still expected to evolve. Breaks are allowed in
+> minor-version releases under a `### Breaking` CHANGELOG note. See
+> [`docs/contracts/STABILITY.md`](contracts/STABILITY.md).
+
+Key responsibilities:
+
+- **Directive routing** — `ui` / `ui-trivial` / `mixed` directive
+  sets, locked into the contract at
+  [`adr-product-ui-track.md`](contracts/adr-product-ui-track.md) (beta).
+- **Halt protocol** — every phase emits a structured halt; the
+  agent re-enters with the user's answer, never improvises.
+- **State machine** — `.work-state.json` is the single source of
+  truth across resumes; the engine refuses to switch envelope
+  mid-flight. Legacy `.implement-ticket-state.json` files are
+  detected on load and routed through
+  [`docs/MIGRATION.md`](MIGRATION.md).
+- **Hooks** — chat-history, telemetry, and platform hooks fire
+  through the engine's hook layer.
+
+The Work Engine **uses** the Runtime Dispatcher when a phase needs
+to execute a single skill (e.g. lint, refs check), but the two are
+independent components with separate stability tiers.
+
+### 4. Tool Adapters — experimental
 
 > **Status: scaffold + read-only GitHub calls.** With a `GITHUB_TOKEN` the
 > GitHub adapter performs real read calls; without one it returns scaffold
@@ -134,14 +181,16 @@ Controlled integration via adapters:
 - Tool registry with safety rules for execution
 - Structured responses with error classification
 
-### 4. Cost Control
+### 5. Cost Control
 
 > **Key principle:** Opt-in by default.
 
-The dispatcher and tool adapters activate only under the `balanced` or
-`full` profile. The default `minimal` profile ships rules, skills, and
-commands and nothing else. All settings and their profile defaults are
-documented in
+The Runtime Dispatcher and Tool Adapters activate only under the
+`balanced` or `full` profile. The Work Engine activates whenever
+`/work` or `/implement-ticket` is invoked and is independent of the
+cost profile. The default `minimal` profile ships rules, skills, and
+commands and nothing else. All settings and their profile defaults
+are documented in
 [`.agent-src.uncompressed/templates/agent-settings.md`](../.agent-src.uncompressed/templates/agent-settings.md).
 
 ---

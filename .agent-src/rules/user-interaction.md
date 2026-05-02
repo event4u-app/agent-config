@@ -18,12 +18,23 @@ EXACTLY ONE LINE NAMES THE RECOMMENDED NUMBER. NO INLINE TAG. NO SECOND PROSE NU
 THE OPTION BLOCK STAYS NEUTRAL. THE RECOMMENDATION LINE IS THE ONLY SOURCE OF TRUTH.
 DRIFT BETWEEN OPTION-BLOCK AND PROSE IS STRUCTURALLY IMPOSSIBLE WHEN THE TAG DOES NOT EXIST.
 MISSING RECOMMENDATION = RULE VIOLATION, NOT A SLIP.
+POSITION-AGNOSTIC. END-OF-TURN MENUS COUNT. NEXT-STEP LISTS COUNT. NO EXCEPTIONS.
 ```
 
 The agent has read the code, the contracts, the trade-offs. Refusing
 to take a position dumps that work back on the user. Take the
 position; be wrong out loud if needed. "Egal, was bevorzugst Du?" /
 "no preference" is NEVER acceptable.
+
+**Position-agnostic — closes the most common slip:** End-of-turn
+"Wie weiter?" / "What next?" / "How to proceed?" / "How should we
+continue?" blocks with numbered options are **numbered-options
+blocks**. Same Iron Law applies — exactly one `Empfehlung: N` /
+`Recommendation: N` line, every time. There is no "these are just
+follow-up suggestions" exception, no "the user knows better here"
+exception, no "I genuinely don't have a preference" exception. If
+the agent prints `1. … 2. … 3. …` anywhere in the reply, the
+recommendation line is mandatory.
 
 **Format — non-negotiable:**
 
@@ -58,15 +69,27 @@ SKIPPING IT IS A RULE VIOLATION, NOT A SLIP.
 ```
 
 Before emitting any reply that contains numbered options, scan the
-drafted text:
+**entire drafted reply** — top to bottom, including end-of-turn
+"Wie weiter?" / "What next?" continuation menus, follow-up
+suggestion blocks, and any list of `1. … 2. … 3. …` regardless of
+its position or framing:
 
 1. Count occurrences of `(recommended)` / `(rec)` / `(empfohlen)` inline next to a numbered option → MUST be **zero**. Found one → rewrite, drop the tag.
-2. Count distinct `Recommendation:\s*N` / `Empfehlung:\s*N` lines (case-insensitive) → MUST be **exactly one**. Zero → add one. Two or more distinct numbers → rewrite, pick one.
-3. The number on the recommendation line MUST exist in the option block.
+2. Count `1\.\s` / `2\.\s` / `3\.\s` patterns inside blockquotes or top-level prose → if **any** numbered-option block exists anywhere in the reply, the recommendation line is mandatory.
+3. Count distinct `Recommendation:\s*N` / `Empfehlung:\s*N` lines (case-insensitive) → MUST be **exactly one per options block**. Zero → add one. Two or more distinct numbers → rewrite, pick one.
+4. The number on the recommendation line MUST exist in the option block it follows.
+5. If the reply has multiple options blocks (e.g. a clarification block AND an end-of-turn menu), each block gets its own `Recommendation: N` line directly underneath.
 
 Mechanical backstop: `python3 scripts/check_reply_consistency.py --stdin < draft.md`
 (non-zero exit on any rule above). Self-scan is the primary gate; the
 script is the deterministic safety net for ambiguous cases.
+
+### Common failure modes — known, named, no excuses
+
+- **End-of-turn menu skipped.** Reply answers the question fine, then ends with `> 1. Foo > 2. Bar > 3. Stop` and no `Empfehlung:`. Iron Law 1 was violated — these are numbered options, position is irrelevant.
+- **"Genuinely no preference" hedge.** Pick anyway. The agent has more context than the user on the trade-off; refusing to pick dumps the work back. Pick the safest option, name the flip-condition.
+- **"User knows the project better" hedge.** Same failure mode, different costume. The user asked for an opinion by virtue of accepting the options block; deliver it.
+- **Multi-block reply with one recommendation.** Two options blocks but only one `Empfehlung:` line — the second block is unguarded. Rule 5 above closes this.
 
 ## Numbered Options — Always
 

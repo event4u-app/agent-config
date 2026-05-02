@@ -23,6 +23,23 @@ No Task, no Make, no build tools required for installation.
 | **Project-installed** (recommended) | Teams, shared standards | Repository-wide |
 | **Plugin-installed** | Individual users, global use | User-wide |
 
+> **All paths on this page are still supported.** The labels
+> (`advanced` / `experimental` / `staged`) describe how prominent the
+> path is in our recommendation order, not its support status.
+> Composer + npm are the default; everything else stays shipped and
+> tested. Nothing on this page is being removed in 1.15.0 — the
+> reorder simply marks which paths get the most maintenance attention
+> and which we keep as fallbacks. See R9 in
+> [`agents/roadmaps/archive/road-to-post-pr29-optimize.md`](../agents/roadmaps/archive/road-to-post-pr29-optimize.md)
+> for the rationale.
+
+| Label | Meaning | Examples |
+|---|---|---|
+| (no label) | Primary path — first-class, fully supported | Composer, npm, Augment / Claude Code / Copilot CLI plugins |
+| `advanced` | Supported fallback — works, expects familiarity with the toolchain | Git submodule, manual clone, VS Code Git URL |
+| `experimental` | Shipped but evolving — interface may shift between minor releases | Claude.ai Web Skills UI |
+| `staged` | Shipped, narrow surface area — kept for users who already use the platform | Linear AI workspace guidance |
+
 ---
 
 ## Project-installed mode (recommended for teams)
@@ -210,7 +227,16 @@ These channels are **additional** to project- and plugin-installed
 modes; use them when the agent loop runs on the platform's servers,
 not on your machine.
 
-### Claude.ai Web (Skills UI)
+> Both cloud channels remain shipped and tested. The labels reflect
+> recommendation prominence, not support status — see the label table
+> at the top of this page.
+
+### Claude.ai Web (Skills UI) — `experimental`
+
+> `experimental` — shipped, still tested, but the upload surface and
+> bundle format may shift between minor releases as Claude.ai's Skills
+> UI evolves. Pin to a release tag if you depend on a specific bundle
+> shape.
 
 Claude.ai Web supports Skills via manual ZIP upload through the Skills
 UI. The package builds one ZIP per cloud-eligible skill.
@@ -238,7 +264,12 @@ UI. The package builds one ZIP per cloud-eligible skill.
 3. **Verify** — open a fresh Claude.ai conversation and confirm the
    skill appears in the Skills picker.
 
-### Linear AI (Codegen, Charlie, …)
+### Linear AI (Codegen, Charlie, …) — `staged`
+
+> `staged` — shipped, narrow surface area, kept primarily for users
+> already operating inside Linear. Iteration cadence is slower than
+> the project- and plugin-installed paths; major changes land first
+> on Composer + npm and propagate to the Linear digest in a follow-up.
 
 Linear AI agents read free-form guidance from Linear's workspace
 settings; there is no plugin or upload mechanism. The package ships
@@ -264,16 +295,21 @@ the matching Linear field.
    - Leave `personal.md` empty unless you have personal overrides
 
 3. **Per-layer rationale** — see
-   [`agents/contexts/linear-ai-three-layers.md`](../agents/contexts/linear-ai-three-layers.md)
+   [`docs/contracts/linear-ai-three-layers.md`](contracts/linear-ai-three-layers.md)
    for the split rationale and
-   [`agents/contexts/linear-ai-rules-inclusion.md`](../agents/contexts/linear-ai-rules-inclusion.md)
+   [`docs/contracts/linear-ai-rules-inclusion.md`](contracts/linear-ai-rules-inclusion.md)
    for which rules go where.
 
 ---
 
-## Alternative install methods
+## Alternative install methods — `advanced`
 
-These are fallbacks when the recommended paths above don't work.
+> `advanced` — supported fallbacks for users comfortable driving the
+> orchestrator directly. They share the same `scripts/install` entry
+> point as Composer and npm; the only difference is how the package
+> source ends up on disk. Pick these when you cannot use Composer or
+> npm (e.g. a polyglot repo without either, or a CI runner that
+> already vendors the package via submodule).
 
 ### Git Submodule
 

@@ -73,7 +73,7 @@ Show the handoff prompt in a fenced code block and say:
   and without any persistent file.
 - [`/chat-history-resume`](chat-history-resume.md) is **pull-based**: the
   new chat reads `.agent-chat-history` from disk (written by the
-  [`chat-history`](../rules/chat-history.md) rule). Works only on the
+  [`chat-history`](../rules/chat-history-ownership.md) rule). Works only on the
   same machine and same repo, but captures more detail (every phase /
   tool call / decision the prior session logged).
 

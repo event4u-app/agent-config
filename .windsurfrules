@@ -359,7 +359,7 @@ log — that is a real bug, not a swallowed error.
 ## See also
 
 - [`road-to-artifact-engagement-telemetry`](../../../agents/roadmaps/road-to-artifact-engagement-telemetry.md) — phase contract
-- [`agents/contexts/artifact-engagement-flow.md`](../../../agents/contexts/artifact-engagement-flow.md) — recording contract details
+- [`docs/contracts/artifact-engagement-flow.md`](../../docs/contracts/artifact-engagement-flow.md) — recording contract details
 - [`/implement-ticket`](../commands/implement-ticket.md) and [`/work`](../commands/work.md) — boundary points where this rule fires
 - [`scripts/telemetry/`](../../../scripts/telemetry/) — engine source
 - [`agent-settings`](../templates/agent-settings.md) — `telemetry.artifact_engagement.*` reference
@@ -932,73 +932,31 @@ data.
 
 <!-- cloud_safe: noop -->
 
-# Chat History
+# Chat History — Cadence
 
-Persists the conversation to `.agent-chat-history` (JSONL, project root,
-git-ignored) so a crashed or switched agent session can be resumed. File
-I/O is owned by [`scripts/chat_history.py`](../../../scripts/chat_history.py)
-— this rule says **when** to call it, not how the file is structured.
+Owns gate 2 of the chat-history Iron Law: WHEN to call `append`.
+Ownership (gate 1) lives in [`chat-history-ownership`](chat-history-ownership.md);
+visibility (gate 3) lives in [`chat-history-visibility`](chat-history-visibility.md).
+File I/O is owned by [`scripts/chat_history.py`](../../../scripts/chat_history.py)
+— this rule decides the trigger boundaries, not the file format.
 
-## Two paths — platform decides which Iron Law applies
-
-Population of `.agent-chat-history` is **structural** (platform-driven)
-on platforms with native lifecycle hooks, and **cooperative**
-(agent-driven) on platforms without. Both paths converge on the same
-JSONL schema; only the trigger differs. Per-platform classification
-lives in
-[`agents/contexts/chat-history-platform-hooks.md`](../../../agents/contexts/chat-history-platform-hooks.md).
-
-| Path | Platforms / Surfaces | Trigger | Agent's role |
-|---|---|---|---|
-| **HOOK** | Claude Code, Augment CLI, Cursor 1.7+, Cline non-Windows, Windsurf, Gemini CLI | Platform fires native lifecycle hooks → `./agent-config chat-history:hook --platform <name>` | Read-only — observe, do not duplicate appends |
-| **ENGINE** | `/implement-ticket`, `/work`, any flow driven by `scripts/work_engine/cli.py` | `work_engine` fires `turn-check` (before-dispatch), `append --type phase` (per successful step), `--type decision` (on-halt), `heartbeat` (after-dispatch) via the hook layer | Read-only during engine-driven turns — do not duplicate appends. See [`agents/contexts/work-engine-hooks.md`](../../../agents/contexts/work-engine-hooks.md) |
-| **CHECKPOINT** | Augment IDE plugin, Cursor < 1.7, Cline on Windows | Agent invokes `/chat-history-checkpoint` at phase boundaries | Cooperative — the three gates below are mandatory |
-| **MANUAL** | Cloud surfaces (Claude.ai Web, Skills API) | Rule is inert — see Cloud Behavior | None |
-
-Detect the path on first turn: read `chat_history.platform` from
-`.agent-settings.yml` if set, else fall back to `chat_history.path`
-(`hook` / `checkpoint` / `manual`). Missing both → assume CHECKPOINT
-(safest cooperative default; HOOK platforms install the platform
-config explicitly via `scripts/install.py`).
-
-## Iron Law (CHECKPOINT path) — three gates, skipping any one is a rule violation
+## Iron Law — gate 2 (append at every cadence boundary)
 
 ```
-1. turn-check    — first tool call of every session
-2. append        — at every cadence boundary, with --first-user-msg
-3. heartbeat     — last line of every reply, from current subprocess
-                   stdout (NEVER from memory)
+EVERY CADENCE BOUNDARY GETS ONE append CALL — WITH --first-user-msg.
+SKIPPING IS A RULE VIOLATION. NEVER WRITE .agent-chat-history DIRECTLY.
+ON HOOK / ENGINE PATHS, THE PLATFORM / ENGINE PERFORMS append STRUCTURALLY
+— THE AGENT MUST NOT DUPLICATE.
 ```
 
-**Overrides** token-efficiency, conversation momentum, "the turn was
-trivial". Three enforcement layers: **turn-check** non-zero on
-`missing`/`foreign`/`returning`, **append refusal** (exit `3` on
-ownership mismatch), **script-generated heartbeat** (silent skip
-becomes immediately visible).
+Cadence is **gated by ownership**: gate 1 (turn-check from
+[`chat-history-ownership`](chat-history-ownership.md)) must have cleared
+this turn before any append fires. Skip turn-check → append refuses with
+exit `3` (`OWNERSHIP_REFUSED`).
 
-On the HOOK and ENGINE paths the platform / engine performs gates 1 + 2
-structurally; the agent **must not** also call `turn-check` or `append`
-(double-write risk). Engine-driven turns inherit the structural guarantee
-for the duration of the dispatch cycle — once the engine returns control,
-free-form prose around the engine output falls back to whatever path the
-platform supplies. Heartbeat (gate 3) stays useful for visibility on
-every path — see below.
+## Append cadence — boundaries
 
-### Turn-start gate — MANDATORY first tool call
-
-```bash
-scripts/chat_history.py turn-check --first-user-msg "<first-user-msg>"
-```
-
-Exit codes: `0` = `ok`/`disabled` (proceed), `10` = `missing`
-(run `init --first-user-msg "..." --freq <freq>`), `11` = `foreign`
-(render Foreign-Prompt + stop), `12` = `returning` (render
-Returning-Prompt + stop). The script also writes a one-line
-`ACTION REQUIRED:` hint to stderr on non-zero exits.
-
-### Append cadence — MANDATORY at boundaries
-
-Cadence comes from `chat_history.frequency`:
+Cadence comes from `chat_history.frequency` in `.agent-settings.yml`:
 
 - `per_turn` → one entry at the end of every agent turn.
 - `per_phase` → at phase boundaries (user question answered, decision
@@ -1014,60 +972,129 @@ scripts/chat_history.py append --first-user-msg "<msg>" \
 ```
 
 Never write the file directly. Prefer `phase` over `agent` for boundaries.
-Exit `3` (`OWNERSHIP_REFUSED`) means turn-start was skipped or the file
-was hijacked — surface it, do not swallow it. Cadence is the trigger, not
-reply length; do not batch missed turns (crashes happen between turns).
+**Cadence is the trigger, not reply length** — a one-line reply that
+crosses a boundary still appends; a 200-line reply that doesn't cross
+one still doesn't. **Do not batch missed turns** — crashes happen
+between turns, and a batched append loses the timeline that crash
+recovery depends on.
 
-### Heartbeat marker — visibility gated by `chat_history.heartbeat`
+## Ownership refusal — exit `3`
 
-Run silently before emitting the final reply:
+`append` exits `3` when the file's ownership header doesn't match the
+current session (`turn-check` was skipped or the file was hijacked
+between turns). Surface the failure to the user, **do not swallow it**:
 
-```bash
-scripts/chat_history.py heartbeat --first-user-msg "<first-user-msg>"
+1. Stop the current append.
+2. Render the Foreign-Prompt from [`chat-history-ownership`](chat-history-ownership.md)
+   so the user re-handshakes.
+3. Resume cadence only after gate 1 clears again.
+
+This is the structural enforcement layer that catches the case where
+an agent technically called `turn-check` but on the wrong platform path
+(e.g. HOOK platform also tried CHECKPOINT cooperative gates and the
+file got into a mixed state).
+
+## Path-specific behavior
+
+**CHECKPOINT path** — gates 1 + 2 are cooperative. The agent runs
+`turn-check` first, then runs `append` at every cadence boundary.
+`/chat-history-checkpoint` is the recommended boundary-trigger; it
+captures phase entries with the right metadata.
+
+**HOOK path** — `work_engine` and platform `SessionStart` /
+`PreToolUse` hooks fire `turn-check` and `append` structurally. The
+agent must **not** call either — double-write produces interleaved
+entries and breaks the JSONL schema. Hooks emit the same exit codes,
+so refusal handling stays identical.
+
+**ENGINE path** — `work_engine` fires `append --type phase` per
+successful step and `append --type decision` on halt. Free-form prose
+around the engine output falls back to whatever path the platform
+supplies (HOOK or CHECKPOINT). Engine-driven turns inherit the
+structural guarantee for the duration of the dispatch cycle only.
+
+## What this rule does NOT do
+
+Manage ownership decisions (handshake, foreign/returning) — those
+live in [`chat-history-ownership`](chat-history-ownership.md).
+Manage the heartbeat marker — that lives in [`chat-history-visibility`](chat-history-visibility.md).
+Decide cadence dynamically based on reply content — cadence is
+the configured frequency, period.
+
+## Cloud Behavior
+
+On cloud surfaces (Claude.ai Web, Skills API) cadence is **inert** —
+no append calls, no `scripts/`, no JSONL file. Treat
+`chat_history.enabled` as `false`.
+
+## Interactions & references
+
+- Sibling rules: [`chat-history-ownership`](chat-history-ownership.md) (gate 1 — turn-check) · [`chat-history-visibility`](chat-history-visibility.md) (gate 3 — heartbeat marker).
+- `token-efficiency` — never load the full log; cadence keeps appends small and bounded.
+- API: [`scripts/chat_history.py`](../../../scripts/chat_history.py) `append` subcommand. Settings: [`agent-settings`](../templates/agent-settings.md) `chat_history.frequency`. Engine hooks: [`agents/contexts/work-engine-hooks.md`](../../../agents/contexts/work-engine-hooks.md).
+
+---
+
+<!-- cloud_safe: noop -->
+
+# Chat History — Ownership
+
+Owns gate 1 of the chat-history Iron Law: the first-turn handshake
+that decides whose `.agent-chat-history` file the current session is
+talking to. Cadence (gate 2) lives in [`chat-history-cadence`](chat-history-cadence.md);
+visibility (gate 3) lives in [`chat-history-visibility`](chat-history-visibility.md).
+File I/O is owned by [`scripts/chat_history.py`](../../../scripts/chat_history.py)
+— this rule says **when** to handshake, not how the file is structured.
+
+## Two paths — platform decides which Iron Law applies
+
+Population of `.agent-chat-history` is **structural** (platform-driven)
+on platforms with native lifecycle hooks, and **cooperative**
+(agent-driven) on platforms without. Both paths converge on the same
+JSONL schema; only the trigger differs. Per-platform classification
+lives in
+[`agents/contexts/chat-history-platform-hooks.md`](../../../agents/contexts/chat-history-platform-hooks.md).
+
+| Path | Platforms / Surfaces | Trigger | Agent's role |
+|---|---|---|---|
+| **HOOK** | Claude Code, Augment CLI, Cursor 1.7+, Cline non-Windows, Windsurf, Gemini CLI | Platform fires native lifecycle hooks → `./agent-config chat-history:hook --platform <name>` | Read-only — observe, do not duplicate appends |
+| **ENGINE** | `/implement-ticket`, `/work`, any flow driven by `scripts/work_engine/cli.py` | `work_engine` fires `turn-check` (before-dispatch), `append --type phase` (per successful step), `--type decision` (on-halt), `heartbeat` (after-dispatch) via the hook layer | Read-only during engine-driven turns — do not duplicate appends. See [`agents/contexts/work-engine-hooks.md`](../../../agents/contexts/work-engine-hooks.md) |
+| **CHECKPOINT** | Augment IDE plugin, Cursor < 1.7, Cline on Windows | Agent invokes `/chat-history-checkpoint` at phase boundaries | Cooperative — gates 1 + 2 + 3 are mandatory |
+| **MANUAL** | Cloud surfaces (Claude.ai Web, Skills API) | Rule is inert — see Cloud Behavior | None |
+
+Detect the path on first turn: read `chat_history.platform` from
+`.agent-settings.yml` if set, else fall back to `chat_history.path`
+(`hook` / `checkpoint` / `manual`). Missing both → assume CHECKPOINT
+(safest cooperative default; HOOK platforms install the platform
+config explicitly via `scripts/install.py`).
+
+## Iron Law — gate 1 (turn-check is the first tool call)
+
+```
+ON CHECKPOINT, turn-check IS THE FIRST TOOL CALL OF EVERY SESSION.
+ON HOOK, THE PLATFORM FIRES turn-check STRUCTURALLY — DO NOT DUPLICATE.
+ON ENGINE, work_engine FIRES turn-check BEFORE DISPATCH — DO NOT DUPLICATE.
 ```
 
-Stdout is **at most** one line, e.g.
-`📒 chat-history: ok · 9 entries · per_phase · last 30s ago`. Non-empty →
-paste **verbatim** as the last line of the reply. Empty → emit nothing.
-Always exits 0 — observability, not a gate.
+CHECKPOINT path — run silently before any other tool call:
 
-**Visibility modes** — `chat_history.heartbeat`:
+```bash
+scripts/chat_history.py turn-check --first-user-msg "<first-user-msg>"
+```
 
-| Mode | When marker prints | Token cost |
-|---|---|---|
-| `on` | every reply (legacy) | ~20 tokens / reply |
-| `off` | never — full silence | 0 |
-| `hybrid` *(default)* | drift states only (`missing`/`foreign`/`returning`) | 0 in normal flow, ~20 on drift |
-
-`hybrid` ships zero tokens when healthy, loud on ownership drift. YAML 1.1
-booleanizes bare `on`/`off`; the reader coerces both back, so
-`heartbeat: on` works unquoted.
-
-### Memory-typing the marker — rule violation, not a slip
-
-Format is memorizable; counts and timestamps are not. A typed-from-
-memory line shows stale entries and a healthy-looking `ok` while the
-file is silently behind — observability collapses, invisible until
-`status` is checked. Heartbeat is the script output of the **current
-turn**, verbatim, or nothing.
-
-**Self-check before send — MANDATORY.** (1) Did `heartbeat` run on
-this turn? (2) Is the line byte-identical to that subprocess stdout?
-(3) Empty stdout → no marker line. Any "no" → drop it.
-
-**Slip handling.** Stale marker called out → acknowledge once in the
-user's language; run `status`; on CHECKPOINT `append` missed phase-
-boundaries; run a real `heartbeat`; paste stdout verbatim or nothing.
-Don't promise "from now on" — only behaviour proves compliance
-(mirrors `language-and-tone` § slip handling).
+Exit codes: `0` = `ok`/`disabled` (proceed), `10` = `missing`
+(run `init --first-user-msg "..." --freq <freq>`), `11` = `foreign`
+(render Foreign-Prompt + stop), `12` = `returning` (render
+Returning-Prompt + stop). The script writes a one-line
+`ACTION REQUIRED:` hint to stderr on non-zero exits.
 
 ## Activation & handshake
 
 Read `chat_history.*` from `.agent-settings.yml` **once per conversation**
-(first turn) and cache. `enabled: false` or section missing → rule is a
-**no-op** (do not read, write, or mention the file). Otherwise cache
-`frequency`, `max_size_kb`, `on_overflow`, and the **path** (HOOK /
-CHECKPOINT / MANUAL — see the table above).
+(first turn) and cache. `enabled: false` or section missing → all three
+chat-history rules are a **no-op** (do not read, write, or mention the
+file). Otherwise cache `frequency`, `max_size_kb`, `on_overflow`, and
+the **path** (HOOK / CHECKPOINT / MANUAL — see the table above).
 
 **HOOK path** — skip `turn-check` entirely. The platform's
 `SessionStart` hook already initialized the file; the agent's job is to
@@ -1079,9 +1106,9 @@ exit code or stderr, render the corresponding prompt.
 
 **CHECKPOINT path** — run `turn-check` as the first tool call. State
 token branches to one of: `missing` → `init`, `ok` → continue,
-`foreign` → Foreign-Prompt, `returning` → Returning-Prompt. Cooperative
-gates 1 + 2 + 3 are mandatory; `/chat-history-checkpoint` is the
-recommended way to satisfy gate 2 at phase boundaries.
+`foreign` → Foreign-Prompt, `returning` → Returning-Prompt.
+`/chat-history-checkpoint` is the recommended way to satisfy gate 2
+at phase boundaries (see [`chat-history-cadence`](chat-history-cadence.md)).
 
 In `foreign` and `returning`, **always read the file's current contents
 into the agent's working context before any write** — the user chose to
@@ -1104,25 +1131,118 @@ conversation.
 ## What this rule does NOT do
 
 Display/reload/clear (`/chat-history*` commands). Auto-flip `enabled` or
-`on_overflow`. Run when `enabled: false` (no silent logging, no
-telemetry). Decide ownership heuristically — only `state` does that.
-Double-write on HOOK platforms — when hooks fire structurally, the
-agent does **not** also call `append`.
+`on_overflow`. Run when `enabled: false`. Decide ownership
+heuristically — only `turn-check` / `state` does that. Double-write on
+HOOK platforms — when hooks fire structurally, the agent does **not**
+also call `turn-check`. Cadence (gate 2) and heartbeat (gate 3) are
+covered in their sibling rules.
 
 ## Cloud Behavior
 
 On cloud surfaces (Claude.ai Web, Skills API) the rule is **fully inert** —
-no `.agent-chat-history`, no `scripts/`, no Iron Law gates, no heartbeat,
-no foreign/returning prompts, no overflow warning. Treat
-`chat_history.enabled` as `false`; persistence is a local-agent concern.
+no `.agent-chat-history`, no `scripts/`, no Iron Law gates, no foreign/returning
+prompts. Treat `chat_history.enabled` as `false`; persistence is a
+local-agent concern.
 
 ## Interactions & references
 
+- Sibling rules: [`chat-history-cadence`](chat-history-cadence.md) (gate 2 — append timing) · [`chat-history-visibility`](chat-history-visibility.md) (gate 3 — heartbeat marker).
 - `ask-when-uncertain` + `user-interaction` — foreign/returning prompts use numbered options, one question per turn.
 - `language-and-tone` — prompt translated at runtime; `.md` stays English.
 - `onboarding-gate` — runs first; this rule activates only after it clears.
-- `token-efficiency` — never load the full log; use `status` / `read --last N`.
 - API: [`scripts/chat_history.py`](../../../scripts/chat_history.py). Commands: [`/chat-history`](../commands/chat-history.md), [`/chat-history-resume`](../commands/chat-history-resume.md), [`/chat-history-clear`](../commands/chat-history-clear.md), [`/chat-history-checkpoint`](../commands/chat-history-checkpoint.md). Settings: [`agent-settings`](../templates/agent-settings.md). Platform classification: [`agents/contexts/chat-history-platform-hooks.md`](../../../agents/contexts/chat-history-platform-hooks.md). Types: [`rule-type-governance`](rule-type-governance.md).
+
+---
+
+<!-- cloud_safe: noop -->
+
+# Chat History — Visibility
+
+Owns gate 3 of the chat-history Iron Law: the heartbeat marker that
+makes append-cadence drift visible. Ownership (gate 1) lives in
+[`chat-history-ownership`](chat-history-ownership.md); cadence (gate 2)
+lives in [`chat-history-cadence`](chat-history-cadence.md). File I/O is
+owned by [`scripts/chat_history.py`](../../../scripts/chat_history.py).
+
+## Iron Law — gate 3 (heartbeat is subprocess stdout, not memory)
+
+```
+HEARTBEAT IS THE SCRIPT OUTPUT OF THE CURRENT TURN, VERBATIM, OR NOTHING.
+NEVER TYPE THE LINE FROM MEMORY. NEVER REUSE THE PRIOR TURN'S MARKER.
+EMPTY STDOUT → NO MARKER LINE.
+```
+
+Run silently before emitting the final reply:
+
+```bash
+scripts/chat_history.py heartbeat --first-user-msg "<first-user-msg>"
+```
+
+Stdout is **at most** one line, e.g.
+`📒 chat-history: ok · 9 entries · per_phase · last 30s ago`. Non-empty →
+paste **verbatim** as the last line of the reply. Empty → emit nothing.
+Always exits 0 — observability, not a gate.
+
+## Visibility modes — `chat_history.heartbeat`
+
+| Mode | When marker prints | Token cost |
+|---|---|---|
+| `on` | every reply (legacy) | ~20 tokens / reply |
+| `off` | never — full silence | 0 |
+| `hybrid` *(default)* | drift states only (`missing`/`foreign`/`returning`) | 0 in normal flow, ~20 on drift |
+
+`hybrid` ships zero tokens when healthy, loud on ownership drift. YAML 1.1
+booleanizes bare `on`/`off`; the reader coerces both back, so
+`heartbeat: on` works unquoted.
+
+## Memory-typing the marker — rule violation, not a slip
+
+Format is memorizable; counts and timestamps are not. A typed-from-
+memory line shows stale entries and a healthy-looking `ok` while the
+file is silently behind — observability collapses, invisible until
+`status` is checked. Heartbeat is the script output of the **current
+turn**, verbatim, or nothing.
+
+**Self-check before send — MANDATORY.** (1) Did `heartbeat` run on
+this turn? (2) Is the line byte-identical to that subprocess stdout?
+(3) Empty stdout → no marker line. Any "no" → drop it.
+
+**Slip handling.** Stale marker called out → acknowledge once in the
+user's language; run `status`; on CHECKPOINT call `append` for
+missed phase-boundaries (see [`chat-history-cadence`](chat-history-cadence.md));
+run a real `heartbeat`; paste stdout verbatim or nothing. Don't promise
+"from now on" — only behaviour proves compliance (mirrors
+`language-and-tone` § slip handling).
+
+## Path-specific behavior
+
+Heartbeat (gate 3) stays useful for visibility on **every** path —
+HOOK, ENGINE, CHECKPOINT — because the marker reports the file's
+state, not the agent's intent. On HOOK and ENGINE paths the agent
+still emits the marker even though it didn't fire `turn-check` or
+`append` itself: the marker is read-only observability over whatever
+the platform / engine wrote.
+
+## What this rule does NOT do
+
+Manage ownership decisions — those live in [`chat-history-ownership`](chat-history-ownership.md).
+Manage append timing — that lives in [`chat-history-cadence`](chat-history-cadence.md).
+Auto-decide visibility mode — `chat_history.heartbeat` is the only
+trigger. Insert decoration: the marker is functional output per
+[`direct-answers`](direct-answers.md) emoji whitelist, not a status
+badge.
+
+## Cloud Behavior
+
+On cloud surfaces (Claude.ai Web, Skills API) heartbeat is **inert** —
+no marker line, no `scripts/`. Treat `chat_history.enabled` as `false`.
+
+## Interactions & references
+
+- Sibling rules: [`chat-history-ownership`](chat-history-ownership.md) (gate 1 — turn-check) · [`chat-history-cadence`](chat-history-cadence.md) (gate 2 — append).
+- `direct-answers` — emoji whitelist permits the `📒` marker as functional output, not decoration.
+- `language-and-tone` § slip handling — stale-marker acknowledgement.
+- API: [`scripts/chat_history.py`](../../../scripts/chat_history.py) `heartbeat` and `status` subcommands. Settings: [`agent-settings`](../templates/agent-settings.md) `chat_history.heartbeat`.
 
 ---
 
@@ -1682,7 +1802,7 @@ Emojis are **functional markers**, never decoration.
 **Whitelist — allowed and expected:**
 
 - Mandated markers from rules/scripts: `📒` (chat-history heartbeat,
-  verbatim per `chat-history`), mode markers from
+  verbatim per `chat-history-visibility`), mode markers from
   `role-mode-adherence`.
 - CLI status icons: `❌`, `✅`, `⚠️` — two-space rule from
   `language-and-tone` § other-language-rules still applies.
@@ -3223,7 +3343,7 @@ same diff), not from seniority.
 
 # Roadmap Progress Sync
 
-## Iron Law
+## Iron Law — dashboard sync
 
 ```
 ANY ROADMAP TOUCH → REGENERATE THE DASHBOARD, SAME RESPONSE.
@@ -3246,6 +3366,48 @@ dashboard says 0 done.
 **before** regen. 100%-complete roadmap left in `agents/roadmaps/`
 is rule violation. See `roadmap-management` skill for archive vs
 skipped table.
+
+## Iron Law — every active roadmap is trackable
+
+```
+EVERY ACTIVE ROADMAP MUST CONTAIN AT LEAST ONE TRACKABLE CHECKBOX
+(`- [ ]`) PER NON-INTRO PHASE. ROADMAPS WITHOUT EXECUTABLE STEPS
+EITHER GET A CHECKLIST OR THE `status: draft` FLAG.
+```
+
+**Active roadmap =** any file in `agents/roadmaps/` (root, not
+`archive/` or `skipped/`) without `status: draft` frontmatter.
+
+**Trackable checkbox =** actionable `- [ ]` under `## Phase N` /
+`### Phase N` heading (numeric `Phase 1`, roman `Phase II`, letter
+`Phase A1` — matched by dashboard's `PHASE_RE`). Decision tables, ICE
+matrices, block-sequencing tables = valid **rationale** but do NOT
+satisfy alone — must pair with `## Phase N` section whose checkboxes
+execute the decision. `## Phase steps`, `### Sequencing — Phase 1`,
+`## Block A` do **NOT** count — only canonical `Phase <id>` form.
+
+## Status — binary `ready` (default) vs `draft`
+
+```yaml
+---
+status: draft          # hidden from the dashboard until flipped
+---
+```
+
+Two values, no synonyms. Anything else — no frontmatter, `status: ready`,
+unknown value — counts as **ready** and lands in dashboard.
+
+- **Ready** = implicit default. New roadmaps created ready unless user
+  explicitly says draft. Listed in dashboard, count towards open/done
+  totals, trip "completed but not archived" warning on close.
+- **Draft** = hides file from dashboard (not counted, not listed). Use
+  while authoring, awaiting upstream decisions, or capture-only
+  synthesis without executable phases. Flip to ready (or remove field)
+  the moment roadmap is ready to track.
+
+`## Decisions` / `## Block sequencing` table alone is **not** a roadmap.
+Pair with `## Phase N: <name>` section whose checkboxes execute the
+decision, or mark `status: draft` until executable phases land.
 
 ## How to regenerate
 
@@ -3321,13 +3483,6 @@ Before sending any reply that touched `agents/roadmaps/`, silent gate:
 4. **Autonomous roadmap execution gate** — did this turn complete a roadmap step (code saved + verification passed) without flipping its checkbox? → flip `[x]` (or `[~]` if multi-turn) and regen before sending.
 
 Any "yes" + no regen run = rule violation. Rerun before sending.
-
-## Why this is a rule, not a skill tip
-
-`roadmap-management` skill documents command in several places, but
-skill body text easy to miss under procedure pressure. Rule collapses
-constraint into one line model cannot skip: "checkbox edit →
-regenerate dashboard — same response".
 
 ## Do NOT
 
@@ -4245,12 +4400,23 @@ EXACTLY ONE LINE NAMES THE RECOMMENDED NUMBER. NO INLINE TAG. NO SECOND PROSE NU
 THE OPTION BLOCK STAYS NEUTRAL. THE RECOMMENDATION LINE IS THE ONLY SOURCE OF TRUTH.
 DRIFT BETWEEN OPTION-BLOCK AND PROSE IS STRUCTURALLY IMPOSSIBLE WHEN THE TAG DOES NOT EXIST.
 MISSING RECOMMENDATION = RULE VIOLATION, NOT A SLIP.
+POSITION-AGNOSTIC. END-OF-TURN MENUS COUNT. NEXT-STEP LISTS COUNT. NO EXCEPTIONS.
 ```
 
 The agent has read the code, the contracts, the trade-offs. Refusing
 to take a position dumps that work back on the user. Take the
 position; be wrong out loud if needed. "Egal, was bevorzugst Du?" /
 "no preference" is NEVER acceptable.
+
+**Position-agnostic — closes the most common slip:** End-of-turn
+"Wie weiter?" / "What next?" / "How to proceed?" / "How should we
+continue?" blocks with numbered options are **numbered-options
+blocks**. Same Iron Law applies — exactly one `Empfehlung: N` /
+`Recommendation: N` line, every time. There is no "these are just
+follow-up suggestions" exception, no "the user knows better here"
+exception, no "I genuinely don't have a preference" exception. If
+the agent prints `1. … 2. … 3. …` anywhere in the reply, the
+recommendation line is mandatory.
 
 **Format — non-negotiable:**
 
@@ -4285,15 +4451,27 @@ SKIPPING IT IS A RULE VIOLATION, NOT A SLIP.
 ```
 
 Before emitting any reply that contains numbered options, scan the
-drafted text:
+**entire drafted reply** — top to bottom, including end-of-turn
+"Wie weiter?" / "What next?" continuation menus, follow-up
+suggestion blocks, and any list of `1. … 2. … 3. …` regardless of
+its position or framing:
 
 1. Count occurrences of `(recommended)` / `(rec)` / `(empfohlen)` inline next to a numbered option → MUST be **zero**. Found one → rewrite, drop the tag.
-2. Count distinct `Recommendation:\s*N` / `Empfehlung:\s*N` lines (case-insensitive) → MUST be **exactly one**. Zero → add one. Two or more distinct numbers → rewrite, pick one.
-3. The number on the recommendation line MUST exist in the option block.
+2. Count `1\.\s` / `2\.\s` / `3\.\s` patterns inside blockquotes or top-level prose → if **any** numbered-option block exists anywhere in the reply, the recommendation line is mandatory.
+3. Count distinct `Recommendation:\s*N` / `Empfehlung:\s*N` lines (case-insensitive) → MUST be **exactly one per options block**. Zero → add one. Two or more distinct numbers → rewrite, pick one.
+4. The number on the recommendation line MUST exist in the option block it follows.
+5. If the reply has multiple options blocks (e.g. a clarification block AND an end-of-turn menu), each block gets its own `Recommendation: N` line directly underneath.
 
 Mechanical backstop: `python3 scripts/check_reply_consistency.py --stdin < draft.md`
 (non-zero exit on any rule above). Self-scan is the primary gate; the
 script is the deterministic safety net for ambiguous cases.
+
+### Common failure modes — known, named, no excuses
+
+- **End-of-turn menu skipped.** Reply answers the question fine, then ends with `> 1. Foo > 2. Bar > 3. Stop` and no `Empfehlung:`. Iron Law 1 was violated — these are numbered options, position is irrelevant.
+- **"Genuinely no preference" hedge.** Pick anyway. The agent has more context than the user on the trade-off; refusing to pick dumps the work back. Pick the safest option, name the flip-condition.
+- **"User knows the project better" hedge.** Same failure mode, different costume. The user asked for an opinion by virtue of accepting the options block; deliver it.
+- **Multi-block reply with one recommendation.** Two options blocks but only one `Empfehlung:` line — the second block is unguarded. Rule 5 above closes this.
 
 ## Numbered Options — Always
 

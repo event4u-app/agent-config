@@ -99,7 +99,7 @@ Your agent is now:
 - **Respecting your codebase** — no conflicting patterns
 - **Following standards** — consistent code quality
 
-This is enforced automatically by 53 rules. No configuration needed.
+This is enforced automatically by 55 rules. No configuration needed.
 
 ---
 
@@ -165,7 +165,7 @@ Run `/chat-history-resume` to walk through the prompts explicitly, or
 let the agent ask on the first turn of a new chat. All merge/replace/
 resume paths read the on-disk entries into context before any write.
 
-See the [`chat-history` rule](../.agent-src/rules/chat-history.md) and
+See the [`chat-history` rule](../.agent-src/rules/chat-history-ownership.md) and
 [`scripts/chat_history.py`](../scripts/chat_history.py) for the mechanics.
 
 ---

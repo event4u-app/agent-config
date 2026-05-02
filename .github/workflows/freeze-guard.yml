@@ -42,6 +42,12 @@ on:
       - "scripts/agent-config"
       - "tests/golden/**"
       - ".github/workflows/freeze-guard.yml"
+  # P2.4 \u2014 nightly full replay so the behavioural baseline stays
+  # locked even when no engine-path PR has run for a while. Pairs with
+  # the smoke subset in tests.yml (sub-second PR feedback).
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch: {}
 
 jobs:
   manifest-integrity:

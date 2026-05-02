@@ -15,7 +15,7 @@ Why split the resolver from the refiner:
   it without touching the LLM-facing skill harness.
 - The refiner runs inside the dispatcher loop and is allowed to halt
   (medium-confidence assumptions report, low-confidence one-question
-  block) per :doc:`agents/contexts/implement-ticket-flow.md`. That
+  block) per :doc:`docs/contracts/implement-ticket-flow.md`. That
   control-flow surface does not belong in a resolver.
 
 Future R3 resolvers (``diff``, ``file``) follow the same pattern: thin

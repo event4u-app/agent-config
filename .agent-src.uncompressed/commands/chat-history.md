@@ -12,7 +12,7 @@ suggestion:
 # /chat-history
 
 Inspect `.agent-chat-history` — the JSONL log maintained by the
-[`chat-history`](../rules/chat-history.md) rule for crash recovery.
+[`chat-history`](../rules/chat-history-ownership.md) rule for crash recovery.
 
 Shows:
 
@@ -100,7 +100,7 @@ append may trigger overflow handling.
 
 ## See also
 
-- [`chat-history`](../rules/chat-history.md) — the rule that writes the file
+- [`chat-history`](../rules/chat-history-ownership.md) — the rule that writes the file
 - [`/chat-history-resume`](chat-history-resume.md) — adopt + load
 - [`/chat-history-clear`](chat-history-clear.md) — wipe
 - [`agent-settings` template](../templates/agent-settings.md) — `chat_history.*` reference

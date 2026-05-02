@@ -22,7 +22,7 @@ validate upstream state; the delegation gates (``plan``,
 matching skill and resume. ``report`` renders the delivery Markdown
 once everything else has succeeded. See
 ``agents/roadmaps/road-to-implement-ticket.md`` for the shipping
-order and ``agents/contexts/implement-ticket-flow.md`` for the
+order and ``docs/contracts/implement-ticket-flow.md`` for the
 slice contracts each handler writes to.
 """
 from __future__ import annotations

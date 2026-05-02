@@ -1,6 +1,6 @@
 # Chat-History Handshake — Foreign / Returning prompts
 
-Operational reference cited by [`rules/chat-history.md`](../../.agent-src.uncompressed/rules/chat-history.md).
+Operational reference cited by [`rules/chat-history-ownership.md`](../../.agent-src.uncompressed/rules/chat-history-ownership.md).
 Holds the verbose prompt blocks, free-text fallbacks, and the in-memory
 entries-list shape so the rule itself stays under the size budget.
 
@@ -91,6 +91,6 @@ stable for the session — never mix modes.
 
 ## See also
 
-- [`rules/chat-history.md`](../../.agent-src.uncompressed/rules/chat-history.md) — Iron Law and activation gates.
+- [`rules/chat-history-ownership.md`](../../.agent-src.uncompressed/rules/chat-history-ownership.md) — Iron Law and activation gates.
 - [`agents/contexts/chat-history-platform-hooks.md`](chat-history-platform-hooks.md) — per-platform classification.
 - [`scripts/chat_history.py`](../../scripts/chat_history.py) — canonical implementation.

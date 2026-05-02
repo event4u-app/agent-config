@@ -72,6 +72,16 @@ TARGETS: list[tuple[str, list[tuple[str, str]]]] = [
             (r"(Browse all )(\d+)( commands\])", "commands"),
         ],
     ),
+    (
+        "docs/architecture.md",
+        [
+            # "What's inside" table: | **Skills** | NNN | … |
+            (r"(\| \*\*Skills\*\* \| )(\d+)( \|)", "skills"),
+            (r"(\| \*\*Rules\*\* \| )(\d+)( \|)", "rules"),
+            (r"(\| \*\*Commands\*\* \| )(\d+)( \|)", "commands"),
+            (r"(\| \*\*Guidelines\*\* \| )(\d+)( \|)", "guidelines"),
+        ],
+    ),
     # Note: ``agents/roadmaps/road-to-stronger-skills.md`` was previously
     # tracked here with a living ``baseline N as of`` pattern. The roadmap
     # was moved to ``skipped/`` on 2026-04-23 (Q35 superseded), so its

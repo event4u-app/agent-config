@@ -90,7 +90,7 @@ tasks:
     cmd: python3 scripts/generate_catalog.py
 
   counts-update:
-    desc: Sync skill/rule/command/guideline counts in README.md, AGENTS.md, docs/getting-started.md
+    desc: Sync skill/rule/command/guideline counts in README.md, AGENTS.md, docs/getting-started.md, docs/architecture.md
     cmd: python3 scripts/update_counts.py
 
   counts-check:
@@ -233,6 +233,10 @@ tasks:
     desc: Replay all Golden Transcripts against work_engine — fail on any structural drift (R1 P6)
     cmd: python3 -m pytest tests/golden/test_replay.py -v
 
+  golden-replay-smoke:
+    desc: Replay only the smoke-tagged Golden Transcripts — sub-second PR feedback (P2.4)
+    cmd: python3 -m pytest tests/golden/test_replay.py -m smoke -v
+
   consistency:
     desc: Verify sync + generated tool outputs are clean
     cmds:
@@ -259,6 +263,18 @@ tasks:
   check-portability:
     desc: Check package portability (no project-specific references)
     cmd: python3 scripts/check_portability.py
+
+  check-public-links:
+    desc: Validate README/AGENTS.md/docs/architecture.md links into docs/contracts/ against stability frontmatter
+    cmd: python3 scripts/check_public_links.py
+
+  lint-no-new-atomic-commands:
+    desc: Fail when a new atomic command lands without a `cluster:` field (P0.8c)
+    cmd: python3 scripts/lint_no_new_atomic_commands.py
+
+  lint-rule-interactions:
+    desc: Validate docs/contracts/rule-interactions.yml schema, slugs, evidence paths, and anchor-pair coverage (P2.2)
+    cmd: python3 scripts/lint_rule_interactions.py
 
   check-reply-consistency:
     desc: Scan shipped sources for legacy (recommended) inline tags on numbered options
@@ -390,14 +406,39 @@ tasks:
     desc: "Per-type shadow counts from the repo-vs-operational conflict rule (weekly cron target)"
     cmd: python3 scripts/check_memory.py --shadow-report {{.CLI_ARGS}}
 
-  ci:
-    desc: Run ALL CI checks locally (must pass before push)
+  _ci-start:
+    desc: "Internal — record CI start time for duration reporting (P2.4)"
+    internal: true
+    cmd: date +%s > /tmp/agent-config-ci-start.txt
+
+  _ci-end:
+    desc: "Internal — print CI duration line (P2.4)"
+    internal: true
     cmds:
+      - |
+        if [ -f /tmp/agent-config-ci-start.txt ]; then
+          start=$(cat /tmp/agent-config-ci-start.txt)
+          end=$(date +%s)
+          dur=$((end - start))
+          mins=$((dur / 60))
+          secs=$((dur % 60))
+          printf "\n⏱  task ci duration: %dm %ds (%ds total)\n" "$mins" "$secs" "$dur"
+          rm -f /tmp/agent-config-ci-start.txt
+        fi
+
+  ci:
+    desc: Run ALL CI checks locally (must pass before push) — emits duration line (P2.4)
+    cmds:
+      - task: _ci-start
+      - defer: { task: _ci-end }
       - task: consistency
       - task: counts-check
       - task: check-compression
       - task: check-refs
       - task: check-portability
+      - task: check-public-links
+      - task: lint-no-new-atomic-commands
+      - task: lint-rule-interactions
       - task: check-reply-consistency
       - task: check-iron-law-prominence
       - task: validate-schema

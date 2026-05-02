@@ -17,7 +17,7 @@ flow: silent summarize, adopt, merge, or replace.
 
 Use after a crashed chat, after switching tools (Augment → Claude Code),
 or when the agent showed the foreign- or returning-session prompt from
-the [`chat-history`](../rules/chat-history.md) rule and the user picked
+the [`chat-history`](../rules/chat-history-ownership.md) rule and the user picked
 "resume".
 
 ## When NOT to use
@@ -174,7 +174,7 @@ the user decides what to do next.
 
 ## See also
 
-- [`chat-history`](../rules/chat-history.md) — the rule that triggers
+- [`chat-history`](../rules/chat-history-ownership.md) — the rule that triggers
   this command via the foreign- and returning-session prompts
 - [`/chat-history`](chat-history.md) — status inspection without adopting
 - [`/chat-history-clear`](chat-history-clear.md) — wipe instead of adopt

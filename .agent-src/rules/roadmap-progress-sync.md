@@ -1,13 +1,13 @@
 ---
 type: "auto"
-description: "Editing checkboxes in agents/roadmaps/*.md — [x], [~], [-], or add/rename/remove phases — must regenerate the roadmap dashboard in the SAME response; a roadmap that hits 0 open items must also be archived in the SAME response"
+description: "Any touch to agents/roadmaps/ — creating, renaming, deleting, or moving a roadmap file (including into archive/ or skipped/), editing checkboxes ([x], [~], [-]), or adding/renaming/removing phases — must regenerate the roadmap dashboard in the SAME response; a roadmap that hits 0 open items must also be archived in the SAME response"
 alwaysApply: false
 source: package
 ---
 
 # Roadmap Progress Sync
 
-## Iron Law
+## Iron Law — dashboard sync
 
 ```
 ANY ROADMAP TOUCH → REGENERATE THE DASHBOARD, SAME RESPONSE.
@@ -30,6 +30,48 @@ dashboard says 0 done.
 **before** regen. 100%-complete roadmap left in `agents/roadmaps/`
 is rule violation. See `roadmap-management` skill for archive vs
 skipped table.
+
+## Iron Law — every active roadmap is trackable
+
+```
+EVERY ACTIVE ROADMAP MUST CONTAIN AT LEAST ONE TRACKABLE CHECKBOX
+(`- [ ]`) PER NON-INTRO PHASE. ROADMAPS WITHOUT EXECUTABLE STEPS
+EITHER GET A CHECKLIST OR THE `status: draft` FLAG.
+```
+
+**Active roadmap =** any file in `agents/roadmaps/` (root, not
+`archive/` or `skipped/`) without `status: draft` frontmatter.
+
+**Trackable checkbox =** actionable `- [ ]` under `## Phase N` /
+`### Phase N` heading (numeric `Phase 1`, roman `Phase II`, letter
+`Phase A1` — matched by dashboard's `PHASE_RE`). Decision tables, ICE
+matrices, block-sequencing tables = valid **rationale** but do NOT
+satisfy alone — must pair with `## Phase N` section whose checkboxes
+execute the decision. `## Phase steps`, `### Sequencing — Phase 1`,
+`## Block A` do **NOT** count — only canonical `Phase <id>` form.
+
+## Status — binary `ready` (default) vs `draft`
+
+```yaml
+---
+status: draft          # hidden from the dashboard until flipped
+---
+```
+
+Two values, no synonyms. Anything else — no frontmatter, `status: ready`,
+unknown value — counts as **ready** and lands in dashboard.
+
+- **Ready** = implicit default. New roadmaps created ready unless user
+  explicitly says draft. Listed in dashboard, count towards open/done
+  totals, trip "completed but not archived" warning on close.
+- **Draft** = hides file from dashboard (not counted, not listed). Use
+  while authoring, awaiting upstream decisions, or capture-only
+  synthesis without executable phases. Flip to ready (or remove field)
+  the moment roadmap is ready to track.
+
+`## Decisions` / `## Block sequencing` table alone is **not** a roadmap.
+Pair with `## Phase N: <name>` section whose checkboxes execute the
+decision, or mark `status: draft` until executable phases land.
 
 ## How to regenerate
 
@@ -105,13 +147,6 @@ Before sending any reply that touched `agents/roadmaps/`, silent gate:
 4. **Autonomous roadmap execution gate** — did this turn complete a roadmap step (code saved + verification passed) without flipping its checkbox? → flip `[x]` (or `[~]` if multi-turn) and regen before sending.
 
 Any "yes" + no regen run = rule violation. Rerun before sending.
-
-## Why this is a rule, not a skill tip
-
-`roadmap-management` skill documents command in several places, but
-skill body text easy to miss under procedure pressure. Rule collapses
-constraint into one line model cannot skip: "checkbox edit →
-regenerate dashboard — same response".
 
 ## Do NOT
 

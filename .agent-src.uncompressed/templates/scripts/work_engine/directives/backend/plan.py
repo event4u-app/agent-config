@@ -3,7 +3,7 @@
 The dispatcher cannot synthesise a plan from pure Python: the real
 work needs code reading and judgement that only the agent has. The
 step therefore follows the Option-A delegation pattern described in
-``agents/contexts/implement-ticket-flow.md#agent-directives``:
+``docs/contracts/implement-ticket-flow.md#agent-directives``:
 
 - ``state.plan`` empty → halt with ``BLOCKED`` and emit
   ``@agent-directive: create-plan``. The orchestrator runs the

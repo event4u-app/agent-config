@@ -1,5 +1,7 @@
 # event4u/agent-config
 
+> **agent-config is not a runtime, but it ships a deterministic orchestration contract / state machine for host agents.**
+
 **Shared agent configuration** — skills, rules, commands, guidelines, and templates
 for AI coding tools (Augment Code, Claude Code, Cursor, Cline, Windsurf, Gemini CLI,
 GitHub Copilot).
@@ -66,7 +68,7 @@ want to measure which skills/rules/commands the agent actually applies set
 `telemetry.artifact_engagement.enabled: true` in `.agent-settings.yml`. The
 log is local-only JSONL (no upload, no cross-project share) and is bound
 by the redaction floor described in
-[`agents/contexts/artifact-engagement-flow.md`](agents/contexts/artifact-engagement-flow.md).
+[`docs/contracts/artifact-engagement-flow.md`](docs/contracts/artifact-engagement-flow.md) (beta).
 The recording rule lives at
 [`.agent-src/rules/artifact-engagement-recording.md`](.agent-src/rules/artifact-engagement-recording.md).
 
@@ -78,9 +80,9 @@ surfaces matches as a numbered-options block with an always-present
 picks every time. Engine: `scripts/command_suggester/`. Rule:
 [`.agent-src/rules/command-suggestion.md`](.agent-src/rules/command-suggestion.md).
 Locked eligibility table, scoring contract, and hardening list:
-[`agents/contexts/adr-command-suggestion.md`](agents/contexts/adr-command-suggestion.md)
+[`docs/contracts/adr-command-suggestion.md`](docs/contracts/adr-command-suggestion.md)
 and
-[`agents/contexts/command-suggestion-flow.md`](agents/contexts/command-suggestion-flow.md).
+[`docs/contracts/command-suggestion-flow.md`](docs/contracts/command-suggestion-flow.md) (beta).
 
 ## Key rules for agents editing this repo
 
@@ -99,7 +101,7 @@ and
 ```
 .agent-src.uncompressed/      ← edit here
   skills/       (128 skills)
-  rules/        (53 rules)
+  rules/        (55 rules)
   commands/     (77 commands)
   guidelines/   (46 guidelines)
   personas/     (7 personas)
