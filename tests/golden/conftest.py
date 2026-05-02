@@ -17,3 +17,16 @@ collect_ignore_glob = [
     "sandbox/repo/*",
     "sandbox/repo/**/*",
 ]
+
+
+def pytest_configure(config) -> None:
+    """Register the ``smoke`` marker used by ``test_replay``.
+
+    Smoke-tagged Golden Transcripts run on every PR via
+    ``pytest -m smoke`` (see ``Taskfile.yml::golden-replay-smoke``);
+    the full matrix is locked in by the nightly freeze-guard run.
+    """
+    config.addinivalue_line(
+        "markers",
+        "smoke: representative GT subset for fast PR feedback",
+    )
