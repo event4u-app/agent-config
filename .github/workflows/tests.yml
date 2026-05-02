@@ -21,6 +21,10 @@ on:
       - ".agent-src.uncompressed/skills/lint-skills/**"
       - ".agent-src.uncompressed/skills/check-refs/**"
       - ".github/workflows/tests.yml"
+  # Manual re-trigger from the Actions UI / `gh workflow run tests.yml`.
+  # Needed because the path filter sometimes skips a synchronize event
+  # even when scripts/** or tests/** changed (observed on PR #34).
+  workflow_dispatch:
 
 jobs:
   install-tests:
