@@ -4,7 +4,7 @@
 
 Give your AI agents an audit-disciplined orchestration contract — testing, Git, CI, code review, and **120+ stack-aware skills** — with quality guardrails built in.
 
-> Your agent picks up the project's stack, runs tests, creates PRs, fixes CI — and follows your team's coding standards while doing it. Reference implementation: Laravel; parallel skill sets for Symfony, Zend/Laminas, Next.js, React, and Node grow alongside.
+> Your agent picks up the project's stack, runs tests, creates PRs, fixes CI — and follows your team's coding standards while doing it. Reference implementation: Laravel; parallel skill sets for Symfony · Zend/Laminas · Next.js · React · Node grow alongside.
 
 <p align="center">
   <strong>128 Skills</strong> · <strong>56 Rules</strong> · <strong>80 Commands</strong> · <strong>47 Guidelines</strong> · <strong>8 AI Tools</strong>
@@ -270,10 +270,7 @@ Nothing runs automatically without your control. [Configure modes →](docs/cust
 
 ## Who this is for
 
-`agent-config` ships a **stack-agnostic governance core** — orchestration
-contract, role modes, command clusters, quality gates, audit-discipline —
-that applies to any project a coding agent works on. Around that core sit
-**parallel stack-specific skill sets** at varying depth:
+`agent-config` ships a **stack-agnostic governance core** (orchestration contract, role modes, command clusters, quality gates, audit-discipline) plus **parallel stack-specific skill sets** at varying depth:
 
 | Stack | Coverage |
 |---|---|
@@ -281,17 +278,9 @@ that applies to any project a coding agent works on. Around that core sit
 | Symfony · Zend / Laminas | Project-analysis skills + shared PHP coder/quality skills |
 | Next.js · React · Node / Express | Project-analysis skills + UI directive set (`react-shadcn`) |
 | Vue · plain HTML | UI directive set (`vue` / `plain`) — analysis skills as they ship |
-| Cross-stack | API design · testing strategy · security · database · Docker · Git · CI · review · threat modeling · observability |
+| Cross-stack | API design · testing · security · database · Docker · Git · CI · review · threat modeling · observability |
 
-**Reference implementation: Laravel.** Today the deepest skill density
-sits around Laravel (Pest, PHPStan, Rector, Eloquent, Livewire/Flux,
-Horizon, Pulse, Reverb, Pennant). That is where the package was first
-proven and where regressions show up earliest. Parallel sections for the
-other stacks land at matching depth as they mature — none are second-class
-citizens; they simply ship in the order they are battle-tested.
-
-If you adopt the package on a stack that's currently thin, open an issue
-so we can prioritize the right skills for extraction.
+**Reference implementation: Laravel.** Deepest skill density today (Pest, PHPStan, Rector, Eloquent, Livewire/Flux, Horizon, Pulse, Reverb, Pennant) — the stack the package was first proven on. Other stacks ship in the order they are battle-tested, not second-class. Adopting on a thin stack? Open an issue so we can prioritize the right skills for extraction.
 
 ---
 
