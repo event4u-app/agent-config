@@ -22,6 +22,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
+from scripts.ai_council.budget_guard import (
+    record_spend as _record_daily_spend,
+    today_spend_usd as _today_spend_usd,
+    would_exceed as _would_exceed_daily,
+)
 from scripts.ai_council.clients import CouncilResponse, ExternalAIClient
 from scripts.ai_council.pricing import (
     CostEstimate,
@@ -39,6 +44,7 @@ class CostBudget:
     max_output_tokens: int = 20_000
     max_calls: int = 10
     max_total_usd: float = 0.0  # 0 = USD ceiling disabled (token caps still apply)
+    daily_limit_usd: float = 0.0  # 0 = rolling 24h cap disabled (D3)
 
 
 @dataclass
@@ -59,6 +65,9 @@ class OverrunEvent:
     spent_output_tokens: int
     spent_usd: float
     projected_total_usd: float  # spent_usd + next_estimate.total_usd
+    daily_spent_usd: float = 0.0  # rolling 24h spend BEFORE this member (D3)
+    daily_limit_usd: float = 0.0  # the configured daily cap (0 = disabled)
+    breach_kind: str = "session"  # "session" | "daily" | "tokens"
 
 
 # Callback signature: receive event → return True (proceed) or False (skip + tag error).
@@ -98,6 +107,8 @@ def consult(
     on_overrun: OnOverrunCallback | None = None,
     project: ProjectContext | None = None,
     original_ask: str = "",
+    rounds: int = 1,
+    on_round_complete: Callable[[int, list[CouncilResponse]], None] | None = None,
 ) -> list[CouncilResponse]:
     """Sequentially fan out `question` to every enabled member.
 
@@ -112,7 +123,15 @@ def consult(
     - `project` + `original_ask` flow into `handoff_preamble()` so the
       council member receives a neutral context-handoff alongside the
       artefact. Both default to v1 shape (no preamble extension).
+    - `rounds >= 2` enables multi-round debate (D1). Each subsequent
+      round augments the user prompt with anonymised prior-round
+      responses (provider/model identity stripped). Token + USD caps
+      accumulate across rounds. Returns the FINAL round's responses;
+      use `on_round_complete(round_idx, responses)` to capture
+      intermediate rounds.
     """
+    if rounds < 1:
+        raise ValueError(f"rounds must be >= 1 (got {rounds})")
     if not members:
         return []
     budget = budget or CostBudget()
@@ -122,14 +141,50 @@ def consult(
             f"{budget.max_calls} calls."
         )
 
+    spent: dict[str, float] = {"input": 0, "output": 0, "usd": 0.0}
+    last_results: list[CouncilResponse] = []
+    current_user_prompt = question.user_prompt
+
+    for round_idx in range(rounds):
+        round_question = (
+            question if round_idx == 0
+            else CouncilQuestion(
+                mode=question.mode,
+                user_prompt=current_user_prompt,
+                max_tokens=question.max_tokens,
+            )
+        )
+        last_results = _run_round(
+            members, round_question, budget, spent,
+            table=table, on_overrun=on_overrun,
+            project=project, original_ask=original_ask,
+        )
+        if on_round_complete is not None:
+            on_round_complete(round_idx, last_results)
+        if round_idx + 1 < rounds:
+            current_user_prompt = _augment_for_next_round(
+                question.user_prompt, last_results, round_idx + 2,
+            )
+
+    return last_results
+
+
+def _run_round(
+    members: list[ExternalAIClient],
+    question: CouncilQuestion,
+    budget: CostBudget,
+    spent: dict[str, float],
+    *,
+    table: PriceTable | None,
+    on_overrun: OnOverrunCallback | None,
+    project: ProjectContext | None,
+    original_ask: str,
+) -> list[CouncilResponse]:
+    """Run a single round; mutate `spent` with cumulative totals."""
     system_prompt = system_prompt_for(
         question.mode, project=project, original_ask=original_ask,
     )
     results: list[CouncilResponse] = []
-    spent_input = 0
-    spent_output = 0
-    spent_usd = 0.0
-
     estimates = (
         estimate(question, members, table, project=project, original_ask=original_ask)
         if table is not None
@@ -150,39 +205,58 @@ def consult(
                     error=f"{type(exc).__name__}: {exc}",
                 )
             results.append(response)
-            spent_input += response.input_tokens
-            spent_output += response.output_tokens
+            spent["input"] += response.input_tokens
+            spent["output"] += response.output_tokens
             continue
 
         # ── projected spend check ────────────────────────────────────
-        proj_input = spent_input + (estimates[idx].input_tokens if estimates else 0)
-        proj_output = spent_output + (estimates[idx].output_tokens if estimates else 0)
-        proj_usd = spent_usd + (estimates[idx].total_usd if estimates else 0.0)
+        proj_input = spent["input"] + (estimates[idx].input_tokens if estimates else 0)
+        proj_output = spent["output"] + (estimates[idx].output_tokens if estimates else 0)
+        proj_usd = spent["usd"] + (estimates[idx].total_usd if estimates else 0.0)
+        next_call_usd = estimates[idx].total_usd if estimates else 0.0
 
         breaches_tokens = (
             proj_input > budget.max_input_tokens
             or proj_output > budget.max_output_tokens
         )
         breaches_usd = budget.max_total_usd > 0 and proj_usd > budget.max_total_usd
+        breaches_daily = (
+            budget.daily_limit_usd > 0
+            and _would_exceed_daily(budget.daily_limit_usd, next_call_usd)
+        )
 
-        if breaches_tokens or breaches_usd:
+        if breaches_tokens or breaches_usd or breaches_daily:
+            breach_kind = (
+                "tokens" if breaches_tokens
+                else "daily" if breaches_daily
+                else "session"
+            )
+            error_tag = (
+                "daily_budget_exceeded" if breach_kind == "daily"
+                else "cost_budget_exceeded"
+            )
             if on_overrun is not None and estimates is not None:
                 event = OverrunEvent(
                     member_index=idx,
                     member=member,
                     next_estimate=estimates[idx],
-                    spent_input_tokens=spent_input,
-                    spent_output_tokens=spent_output,
-                    spent_usd=spent_usd,
+                    spent_input_tokens=int(spent["input"]),
+                    spent_output_tokens=int(spent["output"]),
+                    spent_usd=spent["usd"],
                     projected_total_usd=proj_usd,
+                    daily_spent_usd=(
+                        _today_spend_usd() if budget.daily_limit_usd > 0 else 0.0
+                    ),
+                    daily_limit_usd=budget.daily_limit_usd,
+                    breach_kind=breach_kind,
                 )
                 if not on_overrun(event):
-                    results.append(_aborted(member, "cost_budget_exceeded"))
+                    results.append(_aborted(member, error_tag))
                     continue
             else:
                 # v1 behaviour: short-circuit all remaining members.
                 for left in members[idx:]:
-                    results.append(_aborted(left, "cost_budget_exceeded"))
+                    results.append(_aborted(left, error_tag))
                 return results
 
         # ── actual call ──────────────────────────────────────────────
@@ -194,9 +268,9 @@ def consult(
                 error=f"{type(exc).__name__}: {exc}",
             )
         results.append(response)
-        spent_input += response.input_tokens
-        spent_output += response.output_tokens
-        if estimates is not None:
+        spent["input"] += response.input_tokens
+        spent["output"] += response.output_tokens
+        if estimates is not None and table is not None:
             # Bill the actual output against the budget using the
             # member's per-1M output rate. Re-use estimate_cost with
             # the *real* token count.
@@ -204,7 +278,13 @@ def consult(
                 member.name, member.model,
                 response.input_tokens, response.output_tokens, table,
             )
-            spent_usd += actual.total_usd
+            spent["usd"] += actual.total_usd
+            # Persist to the rolling 24h ledger when the daily cap is
+            # active. Errors are swallowed inside record_spend.
+            if budget.daily_limit_usd > 0 and not response.error:
+                _record_daily_spend(
+                    actual.total_usd, member.name, member.model,
+                )
 
     return results
 
@@ -212,6 +292,44 @@ def consult(
 def _aborted(member: ExternalAIClient, reason: str) -> CouncilResponse:
     return CouncilResponse(
         provider=member.name, model=member.model, text="", error=reason,
+    )
+
+
+def _augment_for_next_round(
+    original_prompt: str,
+    prior_responses: list[CouncilResponse],
+    next_round_number: int,
+) -> str:
+    """Build the round-N user prompt: original artefact + anonymised prior round.
+
+    Provider/model identifiers are stripped (Iron Law of Neutrality §
+    multi-round). Reviewers are labelled "Reviewer A / B / C…" in the
+    order they appeared. Errors are skipped — they reveal nothing
+    useful and can leak provider error formats.
+    """
+    blocks: list[str] = []
+    label_idx = 0
+    for r in prior_responses:
+        if r.error or not r.text.strip():
+            continue
+        label = chr(ord("A") + label_idx)
+        label_idx += 1
+        blocks.append(f"### Reviewer {label}\n\n{r.text.strip()}")
+    if not blocks:
+        return original_prompt
+    prior_block = "\n\n".join(blocks)
+    return (
+        f"{original_prompt}\n\n"
+        f"---\n\n"
+        f"## Prior round critiques (round {next_round_number - 1})\n\n"
+        f"You are now in round {next_round_number}. Below are anonymised\n"
+        f"critiques from independent reviewers in the previous round.\n"
+        f"You do NOT know which model produced which critique. Read them,\n"
+        f"then respond with:\n\n"
+        f"1. Which prior points you agree with (cite reviewer label).\n"
+        f"2. Which you disagree with and why.\n"
+        f"3. New points or refinements not raised in round 1.\n\n"
+        f"{prior_block}"
     )
 
 

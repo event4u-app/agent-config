@@ -10,6 +10,12 @@ line.
 Iron law of neutrality (`ai-council` skill): nothing here may carry
 host-agent identity, prior reasoning, or framing. Manifest fields and
 README prose only.
+
+Truncation strategy (locked by council review, 2026-05-02): the
+``repo_purpose`` field is capped at ``REPO_PURPOSE_MAX_CHARS`` by
+stopping at the **last full sentence ≤ 400 chars**, with an ellipsis
+when truncation occurred. We never cut mid-sentence — a half-sentence
+reads as broken and adds noise to the council preamble.
 """
 
 from __future__ import annotations
@@ -120,8 +126,21 @@ def _purpose_from_readme(path: Path) -> str | None:
     if not joined:
         return None
     if len(joined) > REPO_PURPOSE_MAX_CHARS:
-        joined = joined[: REPO_PURPOSE_MAX_CHARS - 1].rstrip() + "…"
+        joined = _truncate_at_sentence(joined, REPO_PURPOSE_MAX_CHARS)
     return joined
+
+
+def _truncate_at_sentence(text: str, limit: int) -> str:
+    """Truncate at the last full sentence ≤ limit chars; append an ellipsis.
+
+    Total return length is always ≤ ``limit`` (ellipsis included).
+    """
+    budget = max(1, limit - 2)
+    head = text[:budget]
+    cut = max(head.rfind(". "), head.rfind("! "), head.rfind("? "))
+    if cut >= 0:
+        return head[: cut + 1].rstrip() + " …"
+    return head.rstrip() + " …"
 
 
 def detect_project_context(root: Path | None = None) -> ProjectContext:

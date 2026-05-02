@@ -13,7 +13,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from scripts.ai_council.bundler import (  # noqa: E402
     MAX_BUNDLE_BYTES,
     BundleTooLarge,
+    _enclosing_signature,
+    _parse_diff_hunks,
     bundle_diff,
+    bundle_diff_with_context,
     bundle_files,
     bundle_prompt,
     bundle_roadmap,
@@ -144,3 +147,185 @@ def test_bundle_diff_propagates_git_errors(monkeypatch: pytest.MonkeyPatch) -> N
     monkeypatch.setattr("scripts.ai_council.bundler.subprocess.run", boom)
     with pytest.raises(RuntimeError, match="git diff"):
         bundle_diff("nope", "HEAD")
+
+
+
+# ── smart diff context (D4) ────────────────────────────────────────────────
+
+
+def test_parse_diff_hunks_extracts_file_and_start_line() -> None:
+    diff = (
+        "diff --git a/foo.py b/foo.py\n"
+        "--- a/foo.py\n"
+        "+++ b/foo.py\n"
+        "@@ -10,3 +12,4 @@\n"
+        " context\n"
+        "+added\n"
+        "diff --git a/bar.py b/bar.py\n"
+        "--- a/bar.py\n"
+        "+++ b/bar.py\n"
+        "@@ -1 +1,2 @@\n"
+        "+x\n"
+    )
+    assert _parse_diff_hunks(diff) == [("foo.py", 12), ("bar.py", 1)]
+
+
+def test_parse_diff_hunks_skips_dev_null_for_deletions() -> None:
+    diff = (
+        "diff --git a/gone.py b/gone.py\n"
+        "--- a/gone.py\n"
+        "+++ /dev/null\n"
+        "@@ -1,2 +0,0 @@\n"
+        "-old\n"
+    )
+    assert _parse_diff_hunks(diff) == []
+
+
+def test_enclosing_signature_finds_python_def() -> None:
+    src = "import os\n\ndef foo(x):\n    a = 1\n    b = 2\n    return a + b\n"
+    sig = _enclosing_signature(src, target_line=5)
+    assert sig is not None
+    line_no, text = sig
+    assert line_no == 3
+    assert text.strip().startswith("def foo")
+
+
+def test_enclosing_signature_finds_class() -> None:
+    src = "class Foo:\n    def bar(self):\n        return 1\n"
+    sig = _enclosing_signature(src, target_line=2)
+    assert sig is not None
+    assert sig[1].strip().startswith("def bar")
+
+
+def test_enclosing_signature_returns_none_for_top_level() -> None:
+    src = "x = 1\ny = 2\nz = 3\n"
+    assert _enclosing_signature(src, target_line=2) is None
+
+
+def test_enclosing_signature_php_method() -> None:
+    src = (
+        "<?php\n"
+        "class Service {\n"
+        "    public function handle(): void {\n"
+        "        $x = 1;\n"
+        "    }\n"
+        "}\n"
+    )
+    sig = _enclosing_signature(src, target_line=4)
+    assert sig is not None
+    assert "function handle" in sig[1]
+
+
+def test_bundle_diff_with_context_appends_signatures(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    target = tmp_path / "foo.py"
+    target.write_text(
+        "import os\n"
+        "\n"
+        "def helper(x):\n"
+        "    return x + 1\n"
+        "\n"
+        "class Service:\n"
+        "    def run(self):\n"
+        "        return helper(2)\n",
+        encoding="utf-8",
+    )
+
+    diff = (
+        "diff --git a/foo.py b/foo.py\n"
+        "--- a/foo.py\n"
+        "+++ b/foo.py\n"
+        "@@ -3,1 +3,2 @@\n"
+        " def helper(x):\n"
+        "+    # new comment\n"
+    )
+
+    def fake_run(cmd, **kw):  # type: ignore[no-untyped-def]
+        class _R:
+            stdout = diff
+            stderr = ""
+            returncode = 0
+
+        return _R()
+
+    monkeypatch.setattr("scripts.ai_council.bundler.subprocess.run", fake_run)
+    ctx = bundle_diff_with_context("main", "HEAD", cwd=tmp_path)
+    assert ctx.mode == "diff"
+    assert "## Surrounding signatures" in ctx.text
+    assert "foo.py" in ctx.text
+    assert "def helper" in ctx.text
+    assert any("surrounding signatures" in m for m in ctx.manifest)
+
+
+def test_bundle_diff_with_context_no_hunks_returns_base(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_run(cmd, **kw):  # type: ignore[no-untyped-def]
+        class _R:
+            stdout = ""
+            stderr = ""
+            returncode = 0
+
+        return _R()
+
+    monkeypatch.setattr("scripts.ai_council.bundler.subprocess.run", fake_run)
+    ctx = bundle_diff_with_context("main", "HEAD", cwd=tmp_path)
+    assert "## Surrounding signatures" not in ctx.text
+
+
+def test_bundle_diff_with_context_skips_missing_files(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    diff = (
+        "diff --git a/missing.py b/missing.py\n"
+        "--- a/missing.py\n"
+        "+++ b/missing.py\n"
+        "@@ -1,1 +1,2 @@\n"
+        "+x = 1\n"
+    )
+
+    def fake_run(cmd, **kw):  # type: ignore[no-untyped-def]
+        class _R:
+            stdout = diff
+            stderr = ""
+            returncode = 0
+
+        return _R()
+
+    monkeypatch.setattr("scripts.ai_council.bundler.subprocess.run", fake_run)
+    ctx = bundle_diff_with_context("main", "HEAD", cwd=tmp_path)
+    assert "## Surrounding signatures" not in ctx.text
+
+
+def test_bundle_diff_with_context_redacts_secrets(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    target = tmp_path / "foo.py"
+    target.write_text(
+        "def loader():\n"
+        "    api_key = 'sk-ant-AAAAAAAAAAAAAAAAA'\n"
+        "    return api_key\n",
+        encoding="utf-8",
+    )
+    diff = (
+        "diff --git a/foo.py b/foo.py\n"
+        "--- a/foo.py\n"
+        "+++ b/foo.py\n"
+        "@@ -2,1 +2,1 @@\n"
+        "-    api_key = 'old'\n"
+        "+    api_key = 'sk-ant-AAAAAAAAAAAAAAAAA'\n"
+    )
+
+    def fake_run(cmd, **kw):  # type: ignore[no-untyped-def]
+        class _R:
+            stdout = diff
+            stderr = ""
+            returncode = 0
+
+        return _R()
+
+    monkeypatch.setattr("scripts.ai_council.bundler.subprocess.run", fake_run)
+    ctx = bundle_diff_with_context("main", "HEAD", cwd=tmp_path)
+    assert "sk-ant-AAAAAAAAAAAAAAAAA" not in ctx.text
+    assert "[redacted:" in ctx.text

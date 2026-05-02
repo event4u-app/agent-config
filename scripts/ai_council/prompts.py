@@ -73,17 +73,77 @@ Map out:
 4. The single change that would most reduce future maintenance cost.
 """.strip()
 
+# Specialised modes — used by /council-pr, /council-design,
+# /council-optimize. Selected via `mode_override=` in `/council` so the
+# base modes (`prompt`, `roadmap`, `diff`, `files`) keep their v2 byte
+# shape for back-compat with existing callers.
+
+PR_MODE = """\
+The artefact is a code diff from a pull request. Review with both a
+correctness lens AND a shipping-risk lens:
+1. Correctness — bugs, off-by-one, null-safety, type drift.
+2. Security — injection, secrets, unsafe deserialization, authZ gaps.
+3. Test coverage — uncovered branches, missing regression tests.
+4. Shipping risk — does this PR mix concerns that should be split?
+   Is the blast radius bigger than the title implies?
+5. Reviewer fatigue — is anything in the diff that a tired reviewer
+   would rubber-stamp but should not?
+End with: APPROVE / REQUEST_CHANGES / REJECT, one sentence why, and
+the single highest-leverage change the PR author should make before
+merge.
+""".strip()
+
+DESIGN_MODE = """\
+The artefact is a design document, ADR, or architecture proposal.
+Critique it as if you were greenlighting it as a senior engineer.
+Focus on:
+1. Trust boundaries and module coupling the design glosses over.
+2. Rollback / kill-switch criteria the design omits.
+3. Sequencing risk — does step N really not block step N+1?
+4. Open questions disguised as decisions, or decisions disguised as
+   open questions.
+5. The single architectural call you would push back on the hardest,
+   and what evidence would change your mind.
+""".strip()
+
+OPTIMIZE_MODE = """\
+The artefact is an optimization target — code, a query, a profile,
+or an existing optimization report. Produce ranked, evidence-based
+suggestions for the metric stated in the user's original ask. You
+MUST:
+1. Rank suggestions by expected impact on the stated metric, not by
+   effort or cleverness.
+2. Cite the evidence (line, query plan, profile entry) for every
+   suggestion. No hand-wave "this is probably slow".
+3. State at least one suggestion you explicitly REJECT as
+   low-leverage, so the user does not over-engineer.
+4. Mark at least one suggestion as hypothesis (requires measurement
+   before committing) versus confirmed (already supported by the
+   evidence in the artefact).
+""".strip()
+
 
 _MODE_TABLE = {
     "prompt": PROMPT_MODE,
     "roadmap": ROADMAP_MODE,
     "diff": DIFF_MODE,
     "files": FILES_MODE,
+    "pr": PR_MODE,
+    "design": DESIGN_MODE,
+    "optimize": OPTIMIZE_MODE,
 }
 
 
 def _strip_host_identity(text: str) -> str:
-    """Drop any line containing a host-agent identity string."""
+    """Drop any *whole line* containing a host-agent identity substring.
+
+    Strategy (locked by council review, 2026-05-02): a line is dropped
+    in full as soon as any host-identity needle (Augment / Claude Code
+    / Cursor / Cline / Windsurf, etc.) appears anywhere on it. We err
+    toward false-positive — slightly less context — over false-negative
+    — a neutrality leak. Substring-only stripping was rejected because
+    it can leave dangling clauses that still hint at the host.
+    """
     if not text:
         return text
     kept: list[str] = []

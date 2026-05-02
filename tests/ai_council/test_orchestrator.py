@@ -194,6 +194,92 @@ def test_consult_calls_on_overrun_per_member(tmp_path) -> None:  # type: ignore[
     assert out[1].text == "b"
 
 
+# ── daily rolling-budget integration (D3) ───────────────────────────────────
+
+
+def test_consult_blocks_when_daily_limit_would_be_exceeded(tmp_path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    """D3: rolling 24h cap > 0 + ledger entry near limit → next call blocked."""
+    from scripts.ai_council import budget_guard
+
+    ledger = tmp_path / "council-spend.jsonl"
+    monkeypatch.setattr(budget_guard, "LEDGER_PATH", ledger)
+    # Pre-populate near the cap.
+    budget_guard.record_spend(0.49, "anthropic", "claude-sonnet-4-5", path=ledger)
+
+    table = _table(tmp_path)
+    m = _StubMember("anthropic", "claude-sonnet-4-5", CouncilResponse("anthropic", "claude-sonnet-4-5", "x"))
+    q = CouncilQuestion(mode="prompt", user_prompt="x" * 4000, max_tokens=8192)
+    budget = CostBudget(
+        max_input_tokens=10**9, max_output_tokens=10**9,
+        max_total_usd=0.0,  # session cap disabled
+        daily_limit_usd=0.50,
+    )
+    out = consult([m], q, budget, table=table)
+    assert out[0].error == "daily_budget_exceeded"
+    assert m.received is None
+
+
+def test_consult_records_spend_to_ledger_after_billable_call(tmp_path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    """D3: successful billable call appends an entry when daily_limit_usd > 0."""
+    from scripts.ai_council import budget_guard
+
+    ledger = tmp_path / "council-spend.jsonl"
+    monkeypatch.setattr(budget_guard, "LEDGER_PATH", ledger)
+
+    table = _table(tmp_path)
+    m = _StubMember(
+        "anthropic", "claude-sonnet-4-5",
+        CouncilResponse("anthropic", "claude-sonnet-4-5", "ok", 50, 50),
+    )
+    q = CouncilQuestion(mode="prompt", user_prompt="x" * 200, max_tokens=128)
+    budget = CostBudget(daily_limit_usd=10.0)
+    consult([m], q, budget, table=table)
+
+    entries = budget_guard.read_entries(ledger)
+    assert len(entries) == 1
+    assert entries[0].provider == "anthropic"
+    assert entries[0].usd > 0
+
+
+def test_consult_skips_ledger_when_daily_limit_disabled(tmp_path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    """D3 back-compat: daily_limit_usd == 0 keeps v2 shape (no ledger writes)."""
+    from scripts.ai_council import budget_guard
+
+    ledger = tmp_path / "council-spend.jsonl"
+    monkeypatch.setattr(budget_guard, "LEDGER_PATH", ledger)
+
+    table = _table(tmp_path)
+    m = _StubMember(
+        "anthropic", "claude-sonnet-4-5",
+        CouncilResponse("anthropic", "claude-sonnet-4-5", "ok", 50, 50),
+    )
+    q = CouncilQuestion(mode="prompt", user_prompt="x" * 200, max_tokens=128)
+    consult([m], q, CostBudget(), table=table)
+    assert not ledger.exists()
+
+
+def test_overrun_event_carries_daily_metadata(tmp_path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    """OverrunEvent.breach_kind == 'daily' lets the host agent prompt accordingly."""
+    from scripts.ai_council import budget_guard
+
+    ledger = tmp_path / "council-spend.jsonl"
+    monkeypatch.setattr(budget_guard, "LEDGER_PATH", ledger)
+    budget_guard.record_spend(0.49, "anthropic", "claude-sonnet-4-5", path=ledger)
+
+    table = _table(tmp_path)
+    m = _StubMember("anthropic", "claude-sonnet-4-5", CouncilResponse("anthropic", "claude-sonnet-4-5", "fine", 1, 1))
+    q = CouncilQuestion(mode="prompt", user_prompt="x" * 4000, max_tokens=8192)
+    budget = CostBudget(max_total_usd=0.0, daily_limit_usd=0.50)
+
+    seen: list[OverrunEvent] = []
+    out = consult([m], q, budget, table=table, on_overrun=lambda e: (seen.append(e) or True))
+    assert len(seen) == 1
+    assert seen[0].breach_kind == "daily"
+    assert seen[0].daily_limit_usd == 0.50
+    assert seen[0].daily_spent_usd == pytest.approx(0.49)
+    assert out[0].text == "fine"
+
+
 # ── handoff preamble integration (Phase 2a) ──────────────────────────────────
 
 
@@ -300,3 +386,132 @@ def test_non_billable_does_not_consume_usd_budget_for_subsequent_member() -> Non
     assert out[0].text == "free"
     assert out[1].text == "paid reply"
     assert out[1].error is None
+
+
+
+# ── multi-round debate (D1) ─────────────────────────────────────────────────
+
+
+class _RecordingMember(ExternalAIClient):
+    """Captures every prompt it receives across rounds."""
+
+    def __init__(self, name: str, model: str, replies: list[str]):
+        self.name = name
+        self.model = model
+        self._replies = list(replies)
+        self.calls: list[tuple[str, str, int]] = []
+
+    def ask(self, system_prompt: str, user_prompt: str, max_tokens: int = 1024) -> CouncilResponse:
+        self.calls.append((system_prompt, user_prompt, max_tokens))
+        text = self._replies.pop(0) if self._replies else ""
+        return CouncilResponse(
+            provider=self.name, model=self.model, text=text,
+            input_tokens=10, output_tokens=20, latency_ms=1,
+        )
+
+
+def test_consult_rejects_zero_or_negative_rounds() -> None:
+    with pytest.raises(ValueError, match="rounds must be"):
+        consult(
+            [],
+            CouncilQuestion(mode="prompt", user_prompt="x"),
+            rounds=0,
+        )
+
+
+def test_consult_default_rounds_is_one_round() -> None:
+    member = _RecordingMember("anthropic", "m", ["round 1 reply"])
+    out = consult([member], CouncilQuestion(mode="prompt", user_prompt="ask"))
+    assert len(member.calls) == 1
+    assert out[0].text == "round 1 reply"
+
+
+def test_consult_two_rounds_calls_each_member_twice() -> None:
+    a = _RecordingMember("anthropic", "m1", ["A1", "A2"])
+    b = _RecordingMember("openai", "m2", ["B1", "B2"])
+    out = consult(
+        [a, b],
+        CouncilQuestion(mode="prompt", user_prompt="original ask"),
+        rounds=2,
+    )
+    assert len(a.calls) == 2
+    assert len(b.calls) == 2
+    # Returns FINAL round only.
+    assert out[0].text == "A2"
+    assert out[1].text == "B2"
+
+
+def test_consult_round_two_prompt_includes_anonymised_prior_responses() -> None:
+    a = _RecordingMember("anthropic", "m1", ["alpha critique", "alpha refined"])
+    b = _RecordingMember("openai", "m2", ["beta critique", "beta refined"])
+    consult(
+        [a, b],
+        CouncilQuestion(mode="prompt", user_prompt="ORIGINAL"),
+        rounds=2,
+    )
+    # Round 1 prompts == original.
+    assert a.calls[0][1] == "ORIGINAL"
+    assert b.calls[0][1] == "ORIGINAL"
+    # Round 2 prompts include anonymised prior round.
+    round2 = a.calls[1][1]
+    assert "ORIGINAL" in round2
+    assert "Reviewer A" in round2
+    assert "Reviewer B" in round2
+    assert "alpha critique" in round2
+    assert "beta critique" in round2
+    # Provider/model identity must NOT leak.
+    assert "anthropic" not in round2.lower()
+    assert "openai" not in round2.lower()
+    assert "m1" not in round2
+    assert "m2" not in round2
+
+
+def test_consult_round_two_skips_errored_prior_responses() -> None:
+    good = _RecordingMember("anthropic", "m1", ["ok r1", "ok r2"])
+    bad = _RaisingMember("openai", "m2", RuntimeError("boom"))
+    a = good
+    b = bad
+    consult(
+        [a, b],
+        CouncilQuestion(mode="prompt", user_prompt="X"),
+        rounds=2,
+    )
+    # Round 2 prompt for `good` must not include the raising member.
+    round2 = a.calls[1][1]
+    assert "Reviewer A" in round2
+    assert "Reviewer B" not in round2
+    assert "boom" not in round2
+
+
+def test_consult_on_round_complete_called_per_round() -> None:
+    a = _RecordingMember("anthropic", "m1", ["r1", "r2", "r3"])
+    captured: list[tuple[int, list[str]]] = []
+
+    def cb(round_idx: int, responses: list[CouncilResponse]) -> None:
+        captured.append((round_idx, [r.text for r in responses]))
+
+    consult(
+        [a],
+        CouncilQuestion(mode="prompt", user_prompt="x"),
+        rounds=3,
+        on_round_complete=cb,
+    )
+    assert [c[0] for c in captured] == [0, 1, 2]
+    assert captured[0][1] == ["r1"]
+    assert captured[2][1] == ["r3"]
+
+
+def test_consult_multiround_cost_budget_accumulates_across_rounds() -> None:
+    bootstrap_from_defaults()
+    table = load_prices()
+    a = _RecordingMember("anthropic", "claude-sonnet-4-5", ["r1"])
+    out = consult(
+        [a],
+        CouncilQuestion(mode="prompt", user_prompt="x", max_tokens=10_000),
+        # Tiny output budget: round 1 already consumes it, round 2 must abort.
+        CostBudget(max_input_tokens=999_999, max_output_tokens=15, max_calls=1),
+        table=table,
+        rounds=2,
+    )
+    # Round 2 must hit the cost gate (output spent in round 1 carries over).
+    assert out[0].error == "cost_budget_exceeded"

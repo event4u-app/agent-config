@@ -19,17 +19,22 @@ from scripts.ai_council.prompts import (  # noqa: E402
 )
 
 
+BASE_MODES = ["diff", "files", "prompt", "roadmap"]
+SPECIALISED_MODES = ["design", "optimize", "pr"]
+ALL_MODES = sorted(BASE_MODES + SPECIALISED_MODES)
+
+
 def test_all_modes_returns_sorted_canonical_set() -> None:
-    assert all_modes() == ["diff", "files", "prompt", "roadmap"]
+    assert all_modes() == ALL_MODES
 
 
-@pytest.mark.parametrize("mode", ["diff", "files", "prompt", "roadmap"])
+@pytest.mark.parametrize("mode", ALL_MODES)
 def test_system_prompt_starts_with_neutrality_preamble(mode: str) -> None:
     sp = system_prompt_for(mode)
     assert sp.startswith(NEUTRALITY_PREAMBLE)
 
 
-@pytest.mark.parametrize("mode", ["diff", "files", "prompt", "roadmap"])
+@pytest.mark.parametrize("mode", ALL_MODES)
 def test_system_prompt_includes_mode_specific_addendum(mode: str) -> None:
     sp = system_prompt_for(mode)
     # Each addendum must exist after the preamble.
@@ -42,7 +47,7 @@ def test_unknown_mode_raises() -> None:
         system_prompt_for("nope")
 
 
-@pytest.mark.parametrize("mode", ["diff", "files", "prompt", "roadmap"])
+@pytest.mark.parametrize("mode", ALL_MODES)
 def test_no_host_agent_identity_leak(mode: str) -> None:
     """Iron Law: the council never sees the host agent's name."""
     sp = system_prompt_for(mode).lower()
@@ -53,12 +58,43 @@ def test_no_host_agent_identity_leak(mode: str) -> None:
         )
 
 
-@pytest.mark.parametrize("mode", ["diff", "files", "prompt", "roadmap"])
+@pytest.mark.parametrize("mode", ALL_MODES)
 def test_no_yes_man_bias(mode: str) -> None:
     """The reviewer must not be primed to agree."""
     sp = system_prompt_for(mode).lower()
     # Crude but useful guard: explicit anti-bias language is required.
-    assert "disagree" in sp or "challenge" in sp or "critique" in sp
+    assert (
+        "disagree" in sp
+        or "challenge" in sp
+        or "critique" in sp
+        or "reject" in sp
+        or "push back" in sp
+    )
+
+
+# ── Specialised modes — extra contract checks ────────────────────────────────
+
+
+def test_pr_mode_requires_verdict_keyword() -> None:
+    """PR mode must end with an APPROVE / REQUEST_CHANGES / REJECT verdict."""
+    sp = system_prompt_for("pr")
+    assert "APPROVE" in sp
+    assert "REQUEST_CHANGES" in sp
+    assert "REJECT" in sp
+
+
+def test_design_mode_focuses_on_architecture_risk() -> None:
+    sp = system_prompt_for("design").lower()
+    assert "trust boundar" in sp or "coupling" in sp
+    assert "rollback" in sp or "kill-switch" in sp
+
+
+def test_optimize_mode_demands_evidence_and_ranking() -> None:
+    sp = system_prompt_for("optimize").lower()
+    assert "rank" in sp
+    assert "evidence" in sp
+    # Must require a hypothesis-vs-confirmed split to avoid hand-wave output.
+    assert "hypothesis" in sp or "measure" in sp
 
 
 def test_neutrality_preamble_has_independence_clause() -> None:
