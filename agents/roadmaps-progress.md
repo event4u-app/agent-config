@@ -6,17 +6,17 @@
 
 ## Overall
 
-**39 / 133 steps done · 29%**
+**40 / 134 steps done · 30%**
 
 ```text
-████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   29%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-ai-council.md](roadmaps/road-to-ai-council.md) | 4 | 38 | 12 | 25 | 0 | 1 | ███████░░░ 68% |
+| 1 | [road-to-ai-council.md](roadmaps/road-to-ai-council.md) | 4 | 38 | 12 | 26 | 0 | 0 | ███████░░░ 68% |
 | 2 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 2 | 34 | 34 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-council-modes.md](roadmaps/road-to-council-modes.md) | 3 | 20 | 6 | 14 | 0 | 0 | ███████░░░ 70% |
 | 4 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -29,11 +29,11 @@
 
 ### [road-to-ai-council.md](roadmaps/road-to-ai-council.md)
 
-**Road to AI Council** — 25 / 37 done (68%)
+**Road to AI Council** — 26 / 38 done (68%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | MVP (visible plate) | ✅ done | 0 | 25 | 0 | 1 | 100% |
+| 1 | MVP (visible plate) | ✅ done | 0 | 26 | 0 | 0 | 100% |
 | 2 | Integration hooks (capture-only) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 3 | Specialised council modes (capture-only) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 4 | Advanced (capture-only) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
