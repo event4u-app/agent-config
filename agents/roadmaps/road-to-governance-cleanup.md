@@ -497,14 +497,14 @@ Stack-specific skills (`laravel`, `eloquent`, `pest-testing`, `php-coding`)
 - [x] F1.5 — Add CI guard `tests/test_always_budget.py` failing if total > 49k *(Landed 2026-05-02: 3 guards — total ≤ 49k · per-rule ≤ 8k · top-5 ≤ 28k. All green.)*
 - [x] F3.1 — Rename per F3 table *(Landed 2026-05-02: rows 1, 2, 3, 5, 6 renamed; row 4 (`chat-history` → `chat-history-policy`) marked N/A — the rule was previously atomized into `chat-history-cadence`/`-ownership`/`-visibility`, which already carry policy-aspect names and are more precise than a single `*-policy` umbrella. No deprecation stubs created — none of the renamed artefacts had stable downstream consumers outside this repo. Cross-refs updated atomically with each rename. lint-skills, check-refs, check-compression, 1723/1723 tests green after each rename.)*
 - [x] F3.2 — Enforce policy-verb (rules) vs tool-noun (skills) split via CI guard *(Landed 2026-05-02: `tests/test_naming_convention.py` adds 3 guards — no rule may use a tool-noun suffix (`-evidence`, `-audit`, `-mapper`, `-router`, `-tool`, `-checker`, `-finder`, `-analyzer`, `-tracker`); no skill may use a policy-verb suffix (`-policy`, `-gate`, `-floor`, `-authority`); no rule↔skill name collision. Implemented as a pytest guard rather than extending `check_references.py` because naming convention is a static-namespace concern, not a cross-reference concern. 1726/1726 tests green.)*
-- [x] F2.1 — Implement `/fix`, `/optimize`, `/feature` orchestrators with sub-command dispatch
-- [x] F2.2 — Convert old commands to deprecation shims (one-line stub → routes to new)
-- [x] F2.3 — Update README + AGENTS.md command examples
-- [ ] F4.1 — Move `.agent-src.uncompressed/guidelines/` → `docs/guidelines/`
-- [ ] F4.2 — Update all skill/rule cross-refs to `docs/guidelines/<name>.md`
-- [ ] F4.3 — Add `check-refs` rule rejecting old guideline paths
-- [ ] F5.1 — Implement `scripts/generate_index.py` → `agents/index.md`
-- [ ] F5.2 — Wire into `task ci` as drift check
+- [x] F2.1 — Implement `/fix`, `/optimize`, `/feature` orchestrators with sub-command dispatch *(Landed 2026-05-02: 3 cluster orchestrators with `cluster:` frontmatter + `/<cluster> <sub>` dispatch tables aligned with `docs/contracts/command-clusters.md`.)*
+- [x] F2.2 — Convert old commands to deprecation shims (one-line stub → routes to new) *(Landed 2026-05-02: 15 atomic commands carry `superseded_by` + `deprecated_in: 1.15.0` in frontmatter and a one-line warning banner; schema extended with `cluster`/`sub`/`superseded_by`/`deprecated_in`; lint-skills + sync-check-hashes green.)*
+- [x] F2.3 — Update README + AGENTS.md command examples *(Landed 2026-05-02 alongside F2.1.)*
+- [x] F4.1 — Move `.agent-src.uncompressed/guidelines/` → `docs/guidelines/` *(Landed 2026-05-02: 47 guideline files relocated with full git history; 4 sub-categories preserved.)*
+- [x] F4.2 — Update all skill/rule cross-refs to `docs/guidelines/<name>.md` *(Landed 2026-05-02: ~330 cross-references rewritten across `.agent-src.uncompressed/`, AGENTS.md, README.md, contracts.)*
+- [x] F4.3 — Add check-refs guard rejecting old guideline paths *(Landed 2026-05-02: `scripts/check_references.py` blocks any `guidelines/` path outside `docs/guidelines/`; check-refs green.)*
+- [x] F5.1 — Implement `scripts/generate_index.py` → `agents/index.md` + `docs/catalog.md` *(Landed 2026-05-02: stdlib-only generator parses frontmatter from `.agent-src.uncompressed/{skills,rules,commands}/` and `docs/guidelines/`; renders 311-row internal index and 293-row public catalog (rules excludes the 3 internal `augment-*`/`docs-sync` rules, commands exclude shims). README links the public catalog as primary entry point.)*
+- [x] F5.2 — Wire into `task ci` as drift check *(Landed 2026-05-02: `task generate-index` regenerates; `task check-index` runs in `task ci` between `counts-check` and `check-compression`; `--check` mode exits 1 on drift.)*
 - [ ] F6.1 — Audit all 128 skill descriptions; rewrite over-budget ones
 - [ ] F6.2 — Add 200-char cap to `lint-skills`
 - [ ] F6.3 — Surface `optimize-augmentignore` as advisory in `task ci`

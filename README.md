@@ -307,7 +307,7 @@ can prioritize the right skills for extraction.
 | [`api-design`](.agent-src/skills/api-design/SKILL.md) | REST conventions, versioning, deprecation |
 | [`database`](.agent-src/skills/database/SKILL.md) | MariaDB optimization, indexing, query performance |
 
-→ [Browse all skills](docs/skills-catalog.md) · [llms.txt](llms.txt)
+→ [Public catalog](docs/catalog.md) (all rules, skills, commands, guidelines) · [Skills only](docs/skills-catalog.md) · [llms.txt](llms.txt)
 
 ---
 

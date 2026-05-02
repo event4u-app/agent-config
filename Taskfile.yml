@@ -89,6 +89,14 @@ tasks:
     desc: Regenerate llms.txt and docs/skills-catalog.md from SKILL.md frontmatter
     cmd: python3 scripts/generate_catalog.py
 
+  generate-index:
+    desc: Regenerate agents/index.md (internal) and docs/catalog.md (public)
+    cmd: python3 scripts/generate_index.py
+
+  check-index:
+    desc: Verify agents/index.md and docs/catalog.md are in sync (fails on drift)
+    cmd: python3 scripts/generate_index.py --check
+
   counts-update:
     desc: Sync skill/rule/command/guideline counts in README.md, AGENTS.md, docs/getting-started.md, docs/architecture.md
     cmd: python3 scripts/update_counts.py
@@ -433,6 +441,7 @@ tasks:
       - defer: { task: _ci-end }
       - task: consistency
       - task: counts-check
+      - task: check-index
       - task: check-compression
       - task: check-refs
       - task: check-portability
