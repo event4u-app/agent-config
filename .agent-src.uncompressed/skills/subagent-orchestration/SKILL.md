@@ -187,4 +187,5 @@ the judge verdict.
 | Do-and-judge loop                    | [`/do-and-judge`](../../commands/do-and-judge.md) |
 | Stepwise plan with judge gates       | [`/do-in-steps`](../../commands/do-in-steps.md) |
 | Standalone judge on an existing diff | [`/judge`](../../commands/judge.md)  |
+| External / networked second opinion  | [`ai-council`](../ai-council/SKILL.md) |
 | Verifying completeness               | [`verify-before-complete`](../verify-before-complete/SKILL.md) |

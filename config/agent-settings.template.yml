@@ -138,6 +138,44 @@ subagents:
   # Integer, default 3. Set to 1 to serialize. Hard cap enforced by runtime.
   max_parallel: 3
 
+# --- AI Council (external second-opinion network) ---
+#
+# When enabled, the /council command lets the agent poll independent
+# external models (OpenAI, Anthropic) for a neutral critique of a
+# roadmap, diff, prompt, or file set. Council members never see the
+# host agent's reasoning — only the artefact + a neutral system prompt.
+#
+# Tokens are NEVER stored here. They live in ~/.config/agent-config/
+# <provider>.key (mode 0600), installed via:
+#   bash scripts/install_anthropic_key.sh
+#   bash scripts/install_openai_key.sh
+#
+# Cost note: every consultation makes real, paid API calls. The
+# autonomy directive does NOT silently spend tokens — the /council
+# command always asks before invoking, even under autonomy: on.
+ai_council:
+  # Master switch (true, false). Default false — installing a key is
+  # not the same as wanting the agent to spend money on it.
+  enabled: false
+
+  # Per-member configuration. Set enabled=true on the providers you want
+  # to consult. The model field selects which model receives the query.
+  members:
+    anthropic:
+      enabled: false
+      model: "claude-sonnet-4-5"
+    openai:
+      enabled: false
+      model: "gpt-4o"
+
+  # Hard cost ceiling per /council invocation. The orchestrator aborts
+  # remaining members once either token cap is hit. Each member counts
+  # individually toward the cap.
+  cost_budget:
+    max_input_tokens: 50000
+    max_output_tokens: 20000
+    max_calls: 10
+
 # --- Onboarding ---
 #
 # Tracks whether the initial setup flow (/onboard) has been completed

@@ -207,6 +207,10 @@ tasks:
     desc: Run runtime registry and dispatcher tests
     cmd: python3 -m pytest tests/test_runtime_registry.py tests/test_runtime_dispatcher.py -v
 
+  test-ai-council:
+    desc: Run AI Council tests (clients, bundler, orchestrator, prompts)
+    cmd: python3 -m pytest tests/ai_council/ -v
+
   runtime-list:
     desc: List all runtime-capable skills
     cmd: python3 scripts/runtime_registry.py
