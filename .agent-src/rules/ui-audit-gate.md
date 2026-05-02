@@ -1,6 +1,6 @@
 ---
 type: "auto"
-description: "Writing or editing UI — components, screens, partials, layouts, design tokens — require existing-ui-audit findings populated in state.ui_audit before any non-trivial UI change; the audit is the gate, not a suggestion"
+description: "Writing or editing UI — components, screens, partials, layouts, design tokens — require existing-ui-audit findings in state.ui_audit before non-trivial UI change; gate, not suggestion"
 alwaysApply: false
 source: package
 ---

@@ -1,6 +1,6 @@
 ---
 name: chat-history-checkpoint
-description: Append a phase-boundary entry to .agent-chat-history — the CHECKPOINT fallback for platforms without a native hook surface (Augment Code IDE plugin, Cursor non-1.7+, Cline non-Mac/Linux). Cooperative gate, ~1 second to run.
+description: Append a phase-boundary entry to .agent-chat-history — CHECKPOINT fallback for platforms without a native hook (Augment IDE, Cursor pre-1.7, Cline non-Mac/Linux). ~1s.
 disable-model-invocation: true
 suggestion:
   eligible: true

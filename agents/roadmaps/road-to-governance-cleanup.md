@@ -505,9 +505,9 @@ Stack-specific skills (`laravel`, `eloquent`, `pest-testing`, `php-coding`)
 - [x] F4.3 — Add check-refs guard rejecting old guideline paths *(Landed 2026-05-02: `scripts/check_references.py` blocks any `guidelines/` path outside `docs/guidelines/`; check-refs green.)*
 - [x] F5.1 — Implement `scripts/generate_index.py` → `agents/index.md` + `docs/catalog.md` *(Landed 2026-05-02: stdlib-only generator parses frontmatter from `.agent-src.uncompressed/{skills,rules,commands}/` and `docs/guidelines/`; renders 311-row internal index and 293-row public catalog (rules excludes the 3 internal `augment-*`/`docs-sync` rules, commands exclude shims). README links the public catalog as primary entry point.)*
 - [x] F5.2 — Wire into `task ci` as drift check *(Landed 2026-05-02: `task generate-index` regenerates; `task check-index` runs in `task ci` between `counts-check` and `check-compression`; `--check` mode exits 1 on drift.)*
-- [ ] F6.1 — Audit all 128 skill descriptions; rewrite over-budget ones
-- [ ] F6.2 — Add 200-char cap to `lint-skills`
-- [ ] F6.3 — Surface `optimize-augmentignore` as advisory in `task ci`
+- [x] F6.1 — Audit all 128 skill descriptions; rewrite over-budget ones *(Landed 2026-05-02: 14 over-budget artefacts identified (3 skills, 9 rules, 2 commands) and rewritten to ≤ 200 chars; uncompressed and compressed copies kept in lockstep, hashes re-marked.)*
+- [x] F6.2 — Add 200-char cap to `lint-skills` *(Landed 2026-05-02: cap promoted from warning → error in `scripts/skill_linter.py` for skills, rules, and commands; lint-skills green at 0 fail.)*
+- [x] F6.3 — Surface `optimize-augmentignore` as advisory in `task ci` *(Landed 2026-05-02: `scripts/check_augmentignore.py` reminds when `.augmentignore` is missing, >90 days stale, or has <5 active entries; wired as `task check-augmentignore`, always exits 0, runs at the tail of `task ci`.)*
 - [ ] F7.1 — Rewrite README tagline + sub-tagline to stack-neutral
 - [ ] F7.2 — Replace audience matrix with co-equal stack list + "Reference impl: Laravel" section
 - [ ] F7.3 — Rewrite `docs/getting-started.md` opening: stack detection first

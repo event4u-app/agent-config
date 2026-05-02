@@ -97,6 +97,10 @@ tasks:
     desc: Verify agents/index.md and docs/catalog.md are in sync (fails on drift)
     cmd: python3 scripts/generate_index.py --check
 
+  check-augmentignore:
+    desc: Advisory check — reminds to refresh .augmentignore (non-blocking, always exits 0)
+    cmd: python3 scripts/check_augmentignore.py
+
   counts-update:
     desc: Sync skill/rule/command/guideline counts in README.md, AGENTS.md, docs/getting-started.md, docs/architecture.md
     cmd: python3 scripts/update_counts.py
@@ -461,3 +465,4 @@ tasks:
       - task: runtime-e2e
       - task: roadmap-progress-check
       - task: lint-readme
+      - task: check-augmentignore

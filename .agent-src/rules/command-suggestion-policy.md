@@ -1,6 +1,6 @@
 ---
 type: "auto"
-description: "User prompt that doesn't start with /command but might match an eligible slash command — surface matches as numbered options with always-present as-is escape hatch; never auto-executes, user always picks"
+description: "User prompt without /command but matching an eligible slash command — surface matches as numbered options with as-is escape hatch; never auto-executes, user always picks"
 alwaysApply: false
 source: package
 ---

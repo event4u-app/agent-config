@@ -1,6 +1,6 @@
 ---
 name: check-current-md
-description: Check the currently open .md file (or a path you pass) for German content outside DE:/EN: anchor blocks — umlauts, German function words, untranslated quoted phrases. Reports findings and offers fixes.
+description: Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes.
 disable-model-invocation: true
 suggestion:
   eligible: false

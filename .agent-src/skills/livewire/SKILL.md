@@ -1,6 +1,6 @@
 ---
 name: livewire
-description: "Stack-implementation skill for Livewire — dispatched by `directives/ui/apply.py` (and `review.py` / `polish.py`) when the project's frontend stack is Livewire. Covers reactive state, events, lifecycle hooks, and component/view separation."
+description: "Use when the project's frontend stack is Livewire — dispatched by `directives/ui/{apply,review,polish}.py`. Covers reactive state, events, lifecycle hooks, and component/view separation."
 source: package
 ---
 

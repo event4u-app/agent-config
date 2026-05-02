@@ -371,7 +371,8 @@ def lint_skill(path: Path, text: str) -> LintResult:
 
     if description:
         if len(description) > 200:
-            issues.append(Issue("warning", "description_too_long", "Description is longer than 200 characters"))
+            issues.append(Issue("error", "description_too_long",
+                                f"Description is {len(description)} chars (hard cap: 200) — see road-to-governance-cleanup F6"))
         for pattern in TRIGGER_WARNING_PATTERNS:
             if re.search(pattern, description, re.IGNORECASE):
                 issues.append(Issue("warning", "weak_trigger", f"Description looks too generic: {description}"))
@@ -714,6 +715,12 @@ def lint_rule(path: Path, text: str) -> LintResult:
             if not description:
                 issues.append(Issue("error", "auto_missing_description", "Auto rules require a 'description' field for matching"))
 
+        # description length cap (F6 — 200-char hard cap, see road-to-governance-cleanup)
+        rule_description = extract_description(text)
+        if rule_description and len(rule_description) > 200:
+            issues.append(Issue("error", "description_too_long",
+                                f"Description is {len(rule_description)} chars (hard cap: 200) — see road-to-governance-cleanup F6"))
+
         # always-rules that look like auto candidates (rule-type-governance check)
         if rule_type == "always":
             description = extract_description(text) or ""
@@ -861,6 +868,9 @@ def lint_command(path: Path, text: str) -> LintResult:
         description = extract_description(text)
         if not description:
             issues.append(Issue("warning", "missing_description", "Frontmatter description is missing"))
+        elif len(description) > 200:
+            issues.append(Issue("error", "description_too_long",
+                                f"Description is {len(description)} chars (hard cap: 200) — see road-to-governance-cleanup F6"))
 
         # suggestion block (road-to-context-aware-command-suggestion Phase 2)
         issues.extend(_lint_command_suggestion_block(text))

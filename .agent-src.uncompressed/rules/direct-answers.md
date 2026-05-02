@@ -1,6 +1,6 @@
 ---
 type: "always"
-description: "Always — direct, unembellished answers. No flattery, no invented facts (verify the load-bearing ones with tools, otherwise ask). Emojis only as functional markers — status, warning, mandated. Brevity is the default."
+description: "Always — direct, unembellished answers. No flattery, no invented facts (verify load-bearing claims, otherwise ask). Emojis only as functional markers. Brevity is the default."
 alwaysApply: true
 source: package
 ---

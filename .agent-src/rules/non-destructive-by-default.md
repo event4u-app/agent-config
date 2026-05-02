@@ -1,6 +1,6 @@
 ---
 type: "always"
-description: "Agent is never destructive and never endangers production systems — Hard Floor that always asks for production-trunk merges, deploys, pushes, prod data/infra changes, whimsical bulk deletions, and commits containing bulk deletions or infra changes; no autonomy setting, roadmap step, or standing instruction can bypass it"
+description: "Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass"
 alwaysApply: true
 source: package
 ---

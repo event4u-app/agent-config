@@ -1,7 +1,7 @@
 ---
 type: "auto"
 alwaysApply: false
-description: "After completing a /implement-ticket or /work phase-step (refine, memory, analyze, plan, implement, test, verify, report) or full task — emit one telemetry:record call with consulted+applied artefact ids when telemetry.artifact_engagement.enabled is true"
+description: "After a /implement-ticket or /work phase-step (refine/memory/analyze/plan/implement/test/verify/report) or full task — emit one telemetry:record call with consulted+applied ids when enabled"
 source: package
 ---
 

@@ -1,6 +1,6 @@
 ---
 type: "auto"
-description: "Any touch to agents/roadmaps/ — creating, renaming, deleting, or moving a roadmap file (including into archive/ or skipped/), editing checkboxes ([x], [~], [-]), or adding/renaming/removing phases — must regenerate the roadmap dashboard in the SAME response; a roadmap that hits 0 open items must also be archived in the SAME response"
+description: "Any touch to agents/roadmaps/ — create/rename/delete/move, edit checkboxes ([x]/[~]/[-]), add/rename/remove phases — must regenerate dashboard and archive if 0 open items, same response"
 alwaysApply: false
 source: package
 ---
