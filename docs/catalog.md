@@ -1,18 +1,19 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **293 public artefacts** shipped by
+Consumer-facing catalog of all **295 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > Auto-generated — do not edit manually.
 
-## Skills (128)
+## Skills (129)
 
 | kind | name | extra | description |
 |---|---|---|---|
 | skill | [`adversarial-review`](../.agent-src.uncompressed/skills/adversarial-review/SKILL.md) |  | ONLY when user explicitly requests adversarial review, devil's advocate analysis, stress-testing a plan, or 'poke holes in this' — NOT for regular code review or design feedback. |
 | skill | [`agent-docs-writing`](../.agent-src.uncompressed/skills/agent-docs-writing/SKILL.md) |  | Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure. |
+| skill | [`ai-council`](../.agent-src.uncompressed/skills/ai-council/SKILL.md) |  | Use when polling external AIs (OpenAI, Anthropic) outside the host session for a neutral second opinion on a roadmap, diff, prompt, or file set — or 'cross-check with another model'. |
 | skill | [`analysis-autonomous-mode`](../.agent-src.uncompressed/skills/analysis-autonomous-mode/SKILL.md) |  | ONLY when user explicitly requests autonomous analysis, deep investigation, multi-step research, or 'dig into this end-to-end without asking me each step' — NOT for normal feature work. |
 | skill | [`analysis-skill-router`](../.agent-src.uncompressed/skills/analysis-skill-router/SKILL.md) |  | Use when picking which analysis or project-analysis-* skill fits a request — routes by scope, framework, and symptom — even if the user just says 'analyze this' or 'dig into the codebase'. |
 | skill | [`api-design`](../.agent-src.uncompressed/skills/api-design/SKILL.md) |  | Use when designing APIs, planning endpoints, REST conventions, versioning, or deprecation — even when the user just says 'expose this as an endpoint' without naming API design. |
@@ -198,7 +199,7 @@ are excluded.
 | rule | [`user-interaction`](../.agent-src.uncompressed/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src.uncompressed/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (65)
+## Commands (66)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -222,6 +223,7 @@ are excluded.
 | command | [`context-refactor`](../.agent-src.uncompressed/commands/context-refactor.md) |  | Analyze, update, and extend an existing context document |
 | command | [`copilot-agents-init`](../.agent-src.uncompressed/commands/copilot-agents-init.md) |  | Create AGENTS.md and .github/copilot-instructions.md from scratch in the consumer project — interactive, auto-detects stack, never leaks other projects' identifiers. |
 | command | [`copilot-agents-optimize`](../.agent-src.uncompressed/commands/copilot-agents-optimize.md) |  | Analyzes and refactors AGENTS.md and copilot-instructions.md — removes duplications, enforces line budgets, and ensures both files are optimized for their audience. |
+| command | [`council`](../.agent-src.uncompressed/commands/council.md) | cluster: optimize | Consult external AIs (OpenAI, Anthropic) for an independent second opinion on a prompt, roadmap, diff, or file set — neutral framing, redacted context, advisory output only. |
 | command | [`create-pr-description`](../.agent-src.uncompressed/commands/create-pr-description.md) |  | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
 | command | [`create-pr`](../.agent-src.uncompressed/commands/create-pr.md) |  | Create a GitHub PR with structured description from Jira ticket and code changes |
 | command | [`do-and-judge`](../.agent-src.uncompressed/commands/do-and-judge.md) |  | Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user |
