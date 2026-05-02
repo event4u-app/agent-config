@@ -30,6 +30,9 @@ rules:
   - commit-policy
   - ask-when-uncertain
   - verify-before-complete
+  - agent-authority
+  - language-and-tone
+  - direct-answers
 
 pairs:
 
@@ -140,3 +143,96 @@ pairs:
     evidence:
       - .agent-src.uncompressed/rules/commit-policy.md#the-iron-law
       - .agent-src.uncompressed/rules/autonomous-execution.md#commit-policy--see-commit-policy
+
+  - id: authority-x-ndd
+    rules: [agent-authority, non-destructive-by-default]
+    relation: defers_to
+    conflict: >-
+      Both rules speak to "may the agent do this autonomously?" — the
+      Priority Index points to the Hard Floor as Band 1.
+    resolution: >-
+      `agent-authority` is a router, never a source of truth. The Hard
+      Floor's Iron Law lives verbatim in `non-destructive-by-default`
+      and wins every conflict. The index points; it never restates.
+    evidence:
+      - .agent-src.uncompressed/rules/agent-authority.md#index-rules
+      - .agent-src.uncompressed/rules/non-destructive-by-default.md#the-iron-law
+
+  - id: authority-x-scope-control
+    rules: [agent-authority, scope-control]
+    relation: defers_to
+    conflict: >-
+      Permission Gate questions (push, branch, PR, architectural change)
+      surface during routine work — the index labels Band 2.
+    resolution: >-
+      The Priority Index routes to `scope-control` for git-shape and
+      scope-expansion decisions. Index never narrows or weakens the
+      gate; canonical rule wins on any wording divergence.
+    evidence:
+      - .agent-src.uncompressed/rules/agent-authority.md#index-rules
+      - .agent-src.uncompressed/rules/scope-control.md#git-operations--permission-gated
+
+  - id: authority-x-commit-policy
+    rules: [agent-authority, commit-policy]
+    relation: defers_to
+    conflict: >-
+      The "about to commit" decision arises — the index labels it Band 3
+      (Commit Default = never, with four exceptions).
+    resolution: >-
+      `commit-policy` Iron Law is canonical. The Priority Index points
+      to it; it does not enumerate the four exceptions itself. Future
+      edits to commit-policy do not require Index updates unless the
+      band ordering changes.
+    evidence:
+      - .agent-src.uncompressed/rules/agent-authority.md#index-rules
+      - .agent-src.uncompressed/rules/commit-policy.md#exceptions--when-committing-is-allowed
+
+  - id: scope-x-commit-policy
+    rules: [scope-control, commit-policy]
+    relation: narrows
+    conflict: >-
+      `scope-control` § "Git operations" forbids committing without
+      explicit permission as one of several git-op gates; `commit-policy`
+      narrows the commit case to a never-ask default with four named
+      exceptions.
+    resolution: >-
+      `commit-policy` is the narrower, canonical rule for the commit
+      sub-case. `scope-control` continues to govern push, branch, PR,
+      tag operations. On commit specifics, defer to `commit-policy`;
+      on other git ops, defer to `scope-control`.
+    evidence:
+      - .agent-src.uncompressed/rules/scope-control.md#git-operations--permission-gated
+      - .agent-src.uncompressed/rules/commit-policy.md#the-iron-law
+
+  - id: ask-x-direct-answers
+    rules: [ask-when-uncertain, direct-answers]
+    relation: complements
+    conflict: >-
+      A vague request triggers `ask-when-uncertain` (must ask), but
+      `direct-answers` Iron Law 3 (brevity by default) discourages
+      overlong replies; could read as tension when the question needs
+      framing.
+    resolution: >-
+      Both rules apply. `ask-when-uncertain` decides *whether* to ask
+      and demands one question per turn with numbered options.
+      `direct-answers` shapes *how* the question reads — no flattery,
+      no padding, shortest form that fully states the choice.
+    evidence:
+      - .agent-src.uncompressed/rules/ask-when-uncertain.md#iron-law--one-question-per-turn-always
+      - .agent-src.uncompressed/rules/direct-answers.md#iron-law-3--brevity-by-default
+
+  - id: language-x-direct-answers
+    rules: [language-and-tone, direct-answers]
+    relation: complements
+    conflict: >-
+      User writes German; agent must mirror language AND avoid flattery,
+      invented facts, padding. Both rules speak to reply shape.
+    resolution: >-
+      `language-and-tone` decides the language token (mirror user's last
+      chat message); `direct-answers` decides content discipline (no
+      flattery, verified facts, brevity). They compose: a brief, direct,
+      flattery-free reply in the user's language. Neither weakens the
+      other.
+    evidence:
+      - .agent-src.uncompressed/rules/language-and-tone.md#iron-law--mirror-the-users-language-always
+      - .agent-src.uncompressed/rules/direct-answers.md#iron-law-1--no-flattery

@@ -38,11 +38,11 @@ Consolidate the 1.15.0 review into actionable, scoped phases — without resurfa
 - P0 #4 — Token-overhead wording fix. Cost-profiles table corrected.
 - P1 #5 — Work-Engine modularisation. `templates/scripts/work_engine/` split into focused modules.
 - P1 #6 — Public artefact catalog. `docs/catalog.md` + `docs/skills-catalog.md` generated from frontmatter.
+- P2 #8 — Rule-interaction matrix substance. 9 rules, 13 pairs in `docs/contracts/rule-interactions.yml`.
 
 **Open (executable now that P0 has landed):**
 
 - P1 #7 — Outcome demos (four end-to-end walkthroughs).
-- P2 #8 — Rule-interaction matrix substance (populate pairs in `docs/contracts/rule-interactions.yml`).
 - P2 #9 — Outcome-aware telemetry (five outcome categories on the engagement event schema).
 
 ## P0
@@ -166,9 +166,13 @@ Backend `/implement-ticket` walkthrough, `/work` free-form walkthrough, UI track
 
 ### Phase 8 — Rule-interaction matrix substance (P2 #8)
 
-`lint-rule-interactions` shipped 1.15.0; the matrix it lints against is still thin. Phase-2 work: populate the interaction matrix with the real cross-rule semantics (Hard Floor wins, Permission Gate above Commit Default, etc.).
+`lint-rule-interactions` shipped 1.15.0; matrix populated with substantive cross-rule semantics in [`docs/contracts/rule-interactions.yml`](../../docs/contracts/rule-interactions.yml).
 
-- [ ] **Promote to executable** — populate the rule-interaction matrix with cross-rule semantics, validate via `lint-rule-interactions`.
+State (2026-05-02): **9 rules declared, 13 pairs**. Anchor coverage complete (`non-destructive-by-default` × all five required partners). Additional pairs document the Priority Index relationships (`agent-authority` × Hard Floor / Permission Gate / Commit Default), `scope-control` × `commit-policy` narrowing, and the user-interaction triad (`ask-when-uncertain` × `direct-answers`, `language-and-tone` × `direct-answers`).
+
+Each pair carries `id`, `rules`, `relation` (one of: overrides, narrows, defers_to, restates, gates, complements), `conflict`, `resolution`, and `evidence` with file-anchor citations. `task lint-rule-interactions` green.
+
+- [x] **Shipped** — matrix populated with 13 pairs covering Hard-Floor anchors, autonomy-vs-gate semantics, Priority Index routing, and user-interaction composition (2026-05-02).
 
 ### Phase 9 — Outcome-aware telemetry (P2 #9)
 
