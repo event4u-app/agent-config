@@ -320,6 +320,10 @@ tasks:
     desc: Fail if agents/roadmaps-progress.md is stale (for CI)
     cmd: python3 .augment/scripts/update_roadmap_progress.py --check
 
+  check-roadmap-trackable:
+    desc: Fail if any active roadmap has unparseable headings or zero-checkbox phases (roadmap-progress-sync rule)
+    cmd: python3 scripts/check_roadmap_trackable.py
+
   quality-report:
     desc: Generate quality score report (per artifact type)
     cmd: python3 scripts/skill_linter.py --report
@@ -471,6 +475,7 @@ tasks:
       - task: golden-replay
       - task: test
       - task: runtime-e2e
+      - task: check-roadmap-trackable
       - task: roadmap-progress-check
       - task: lint-readme
       - task: check-augmentignore
