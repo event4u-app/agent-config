@@ -5,6 +5,9 @@ alwaysApply: false
 source: package
 ---
 
+<!-- cloud_safe: degrade -->
+<!-- Authoring discipline applies in cloud; local script + regen are no-ops there. -->
+
 # Roadmap Progress Sync
 
 ## Iron Law — dashboard sync
@@ -133,20 +136,9 @@ Step counts as completed when:
 Then in the **same reply**: flip the checkbox, regenerate the
 dashboard, commit if commit policy allows.
 
-**Forbidden pattern** (canonical failure):
-
-> Turn 1: implement Step 1. Turn 2: implement Step 2. Turn 3:
-> implement Step 3. Turn 4: implement Step 4. Turn 5: "all done,
-> let me update the roadmap and commit." → the user spent four turns
-> without dashboard movement.
-
-**Required pattern:**
-
-> Turn 1: implement Step 1, flip `[x]`, regen, commit.
-> Turn 2: implement Step 2, flip `[x]`, regen, commit. …
-
-A reply that lands a verified step without flipping its checkbox
-is a rule violation.
+**Forbidden:** four turns of step work, dashboard flat, single regen at the end.
+**Required:** each turn — implement step, flip `[x]`, regen, commit (if policy allows).
+A reply that lands a verified step without flipping its checkbox is a rule violation.
 
 **In-progress marker:** when a step takes more than one reply,
 mark it `[~]` the moment work starts on it and regenerate. The
