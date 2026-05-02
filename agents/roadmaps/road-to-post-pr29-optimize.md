@@ -153,7 +153,7 @@ maps 1:1.
 
 - [x] Chat-history redesign — split into `chat-history-ownership.md` · `chat-history-cadence.md` · `chat-history-visibility.md`; ADR captures the split before any code edit (`docs/contracts/adr-chat-history-split.md`)
 - [x] Rule-interaction matrix — machine-readable YAML (`docs/contracts/rule-interactions.yml`) + linter (`scripts/lint_rule_interactions.py`, wired into `task ci`) + rendered diagram (`docs/contracts/rule-interactions.md`); anchor pair `non-destructive-by-default` × {`autonomous-execution`, `scope-control`, `commit-policy`, `ask-when-uncertain`, `verify-before-complete`} all present
-- [ ] `work_engine/cli.py` modularisation — `cli_args.py · state_io.py · input_builders.py · hook_bootstrap.py · runner.py · emitters.py`; behavior-preserving, golden-replay verified
+- [x] `work_engine/cli.py` modularisation — `cli_args.py · state_io.py · input_builders.py · hook_bootstrap.py · emitters.py · errors.py`; behavior-preserving, 706 work_engine + 1708 full-suite tests green; cli.py reduced from 634 → 195 lines (thin orchestrator re-exports the full monkeypatch surface)
 - [ ] CI performance budget — PR CI ≤ 8–10 min; smoke GT subset on PRs; nightly full replay; engine-path PRs trigger full replay; `task ci` emits duration line
 - [ ] Install-path pruning — relabel curl/manual/cloud/Linear as `advanced` / `experimental` / `staged` in `docs/installation.md`; no removals
 - [ ] Telemetry redesign — pause artefact-engagement counts; ship feedback-loop UX (issue templates · discussions · "did this help?"); re-aim at behavioural outcomes
