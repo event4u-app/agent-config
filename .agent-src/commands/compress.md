@@ -34,7 +34,8 @@ bash scripts/compress.sh --changed
 This lists only `.md` files whose source has changed since the last compression (based on
 stored SHA-256 hashes). If no files changed → you're done.
 
-If you need to see ALL files regardless of change status: `bash scripts/compress.sh --list`.
+If you need to see ALL files regardless of change status:
+`bash scripts/compress.sh --list`.
 
 ## Step 3: Compress each changed .md file
 
@@ -71,6 +72,7 @@ For each changed `.md` file:
    - Concrete validation checks
    - Gotchas based on real failure patterns
    - Anti-patterns that prevent recurring failures
+   - **Iron Law sections** — see "Iron Laws — do not touch" below
 5. **Enrich (SKILL.md files only):** During compression, also improve agent-effectiveness:
    - **Validation steps:** If a Procedure ends with a vague validation ("check if it works"),
      replace with concrete checks (expected output, commands to verify, specific conditions)
@@ -140,9 +142,39 @@ Show a summary table with per-category stats (files compressed, avg savings).
   (useful after an initial full compression or when bootstrapping the hash file).
 - A file with no stored hash is always treated as "changed".
 
+## Iron Laws — do not touch
+
+Sections under headings matching `Iron Law`, `Iron Laws`, or `The Iron Law` (any
+heading level, numbered variants like `Iron Law 1` included) are **load-bearing
+behavioral rules**. Compression rules above do **not** apply to them.
+
+For every Iron Law section in a source file:
+
+- **Copy the heading verbatim**, exact text, exact `#` level. NEVER downgrade
+  `## Iron Law` to `### Iron Law` or to inline `**Iron Law:**`.
+- **Copy the fenced code block byte-for-byte**, including capitalization, line
+  breaks, and trailing punctuation.
+- **Copy the negation clauses verbatim** — `NO X`, `NEVER Y`, `NOT Z`. These
+  are the law's exception denials; stripping them weakens the rule.
+- **Caveman the prose, keep every passage** — every paragraph, every list
+  item, and every fenced code block from the source must appear in the
+  compressed output, in order. Drop articles, shorten phrasing, primitive
+  grammar, terse cave-speak — all encouraged. What's forbidden is dropping
+  whole sentences, merging two paragraphs into one, or skipping a bullet.
+  One paragraph → one paragraph; one bullet → one bullet.
+- **No word-count budget** — compress the prose as hard as caveman style
+  allows. The check is structural (passage count), not quantitative.
+
+`scripts/check_compression.py` enforces these mechanically — `iron_law_missing`,
+`iron_law_passage_dropped`, and `iron_law_heading_downgrade` are `error`-level
+and block CI.
+
+If an Iron Law section genuinely contains filler (rare): edit the SOURCE in
+`.agent-src.uncompressed/`, not the compressed copy. Source is the truth.
+
 ## Compression quality checklist
 
-**Also apply the `preservation-guard` rule** — strongest validation, example, anti-pattern, and decision hints must survive compression.
+**Also apply the `preservation-guard` rule** — strongest validation, example, anti-pattern, and decision hints must survive compression. Iron Laws are non-negotiable.
 
 After compressing each file, verify:
 

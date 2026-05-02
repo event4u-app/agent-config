@@ -34,16 +34,18 @@ If no input resolves: ask **one** focused question:
 
 ### 2. Pick the output language
 
-Apply the skill's language-strategy block. First hit wins:
+Apply the skill's language-strategy block. Fallback order, first hit wins:
 
 1. **User-message language** — latest user message decides. Honours
    the global `language-and-tone` iron law.
-2. **Ticket body language** — minimal invocation (`/refine-ticket PROJ-123`
-   with no prose) mirrors the ticket's own language.
-3. **`.agent-settings.yml` default** — fallback when both silent; English
-   when absent.
+2. **Ticket body language** — when the invocation is minimal
+   (`/refine-ticket PROJ-123` with no prose), mirror the ticket's
+   own language (summary + description).
+3. **`.agent-settings.yml` default** — fallback when both are silent;
+   English when the setting is absent.
 
-Quoted identifiers stay native; only prose mirrors the picked language.
+Quoted identifiers (keys, paths, commands) stay native; only the
+prose mirrors the picked language.
 
 ### 3. Run the refine-ticket skill
 

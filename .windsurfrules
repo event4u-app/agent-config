@@ -474,38 +474,47 @@ Understand → Research → Draft. Don't improvise questions.
 
 # Package Portability
 
-Everything shipped with `event4u/agent-config` MUST be **project-agnostic**:
+Everything that ships with the `event4u/agent-config` package MUST be
+**project-agnostic**. That includes:
 
-- `.augment/` (skills, rules, commands, guidelines, templates, contexts)
-- Package root `AGENTS.md`
-- Package `.github/copilot-instructions.md`
+- Everything inside `.augment/` (skills, rules, commands, guidelines,
+  templates, contexts)
+- The package repo's own root `AGENTS.md`
+- The package repo's own `.github/copilot-instructions.md`
 
 All three are either installed into consumer projects (`.augment/` via
-`install.sh`) or read by AI tools working on the package itself. Leaking
-consumer-specific content pollutes downstream or misleads agents.
+`install.sh`) or read by AI tools when working on the package itself
+(`AGENTS.md`, `copilot-instructions.md`). Leaking consumer-specific
+content into any of them pollutes downstream projects or misleads agents.
 
 ## Rules
 
-- NEVER reference a specific consumer project, repo, domain, or tech
-  stack. The package repo itself (`event4u/agent-config`) MAY appear
-  in its own root `AGENTS.md` / `copilot-instructions.md` — meta about
-  the package, not a leak.
+- NEVER reference a specific consumer project, repo name, domain, or tech
+  stack directly. The package repo itself (`event4u/agent-config`) MAY be
+  named inside its own root `AGENTS.md` and `copilot-instructions.md` —
+  that is meta about the package, not a leak.
 - NEVER hardcode consumer-project paths, class names, or conventions.
-- Write content so it works as a reusable package across any project.
-- Project-specific behavior belongs in the **consumer's**
-  `.agent-settings.yml`, `AGENTS.md`, or `agents/` — never here.
-- If a skill/rule needs project-specific input: read from
-  `.agent-settings.yml` or accept as parameter.
-- Always ask when editing package files: "Would this still make sense
-  in a completely different project?"
+- Write content so it works as a **reusable package** across any project.
+- Project-specific behavior belongs in the **consumer's** `.agent-settings.yml`,
+  `AGENTS.md`, or `agents/` — never in files shipped by this package.
+- If a skill or rule needs project-specific input, read it from
+  `.agent-settings.yml` or accept it as a parameter.
+- When reviewing or editing package files, always ask: "Would this still
+  make sense in a completely different project?"
 
 ## Runtime invocations — no `task` commands
 
-Skills, rules, commands, guidelines, personas, contexts shipped by this
-package run in **consumer projects** that may not have Task installed.
-NEVER reference a `task <name>` invocation inside any artefact file
-under `.agent-src.uncompressed/{skills,rules,commands,guidelines,personas,contexts}/`
-(or the compressed mirror under `.agent-src/`). Use the direct script:
+Skills, rules, commands, guidelines, personas, and context docs
+shipped by this package run in **consumer projects**. Consumer
+projects may not have [Task](https://taskfile.dev) installed —
+they might use npm scripts, Composer scripts, Make, or nothing at
+all. A skill that instructs an agent to run `task <something>`
+silently breaks in every project without a `Taskfile.yml`.
+
+**Rule:** Never reference a `task <something>` invocation inside any
+artefact file under `.agent-src.uncompressed/{skills,rules,commands,guidelines,personas,contexts}/`
+(and therefore also not in the compressed mirror under `.agent-src/`).
+Use the direct script invocation instead:
 
 | ❌ Forbidden | ✅ Portable |
 |---|---|
@@ -522,19 +531,29 @@ under `.agent-src.uncompressed/{skills,rules,commands,guidelines,personas,contex
 | `task validate-schema` | `python3 scripts/validate_frontmatter.py` |
 | `task counts-check` | `python3 scripts/update_counts.py --check` |
 | `task roadmap-progress` | `./agent-config roadmap:progress` |
-| `task ci` | run each underlying script directly |
+| `task ci` | run each underlying script directly (no single portable equivalent) |
 
-Task stays a convenience for package maintainers (`Taskfile.yml`,
-`AGENTS.md`, README). Artefact files must assume Task is absent.
+Task remains a convenience shortcut for maintainers working on the
+package repo itself — `task ci` is the recommended local gate before
+a PR and lives in `Taskfile.yml`, `AGENTS.md`, and the package README.
+Those maintainer-facing surfaces are outside the scope of this rule.
+Artefact files must assume Task is absent.
+
+The detection pattern *"if the consumer has a `Makefile` / build
+script, prefer its targets over raw commands"* is still allowed when
+the skill adapts to the **consumer's own** tooling (e.g.
+`tests-execute` detecting `php artisan test` vs `vendor/bin/pest`).
+It is not allowed to reference `task <name>` as the detected target —
+every direct invocation must resolve to a real script path.
 
 ## Consumer CLI — `./agent-config`
 
-A subset of scripts is exposed through a project-local CLI wrapper
-`./agent-config` (written into the project root by the installer,
-gitignored). Artefacts MUST prefer the CLI over raw `python3 scripts/…`
-paths for every command it covers — raw paths only resolve inside the
-package repo, in consumer projects the scripts live under
-`node_modules/` or `vendor/`.
+A subset of package scripts is exposed through a project-local CLI
+wrapper `./agent-config` (written into the project root by the
+installer, gitignored). Artefacts MUST prefer the CLI over raw
+`python3 scripts/…` paths for every command the CLI already covers,
+because the raw paths only resolve inside the package repo — in a
+consumer project the scripts live under `node_modules/` or `vendor/`.
 
 | ❌ Forbidden in artefacts | ✅ Portable |
 |---|---|
@@ -553,16 +572,16 @@ package repo, in consumer projects the scripts live under
 | `python3 scripts/refine_ticket_detect.py` | `./agent-config refine-ticket:detect` |
 
 Commands not covered by the CLI stay as direct script invocations
-(e.g. `bash scripts/compress.sh --sync`) — maintainer-only, not
-reachable from a consumer project anyway.
+(e.g. `bash scripts/compress.sh --sync`) — those are maintainer-only
+and not reachable from a consumer project anyway.
 
 ## Enforcement
 
 `scripts/check_portability.py` scans `.augment/`, `.agent-src.uncompressed/`,
-and the package root `AGENTS.md` + `.github/copilot-instructions.md` for
-forbidden identifiers, for any `task <name>` invocation, and for direct
-script invocations that bypass the `./agent-config` CLI. Runs in CI —
-must pass before any PR.
+and the package repo's root `AGENTS.md` + `.github/copilot-instructions.md`
+for forbidden identifiers, for any `task <name>` invocation inside
+artefact files, and for direct script invocations that bypass the
+`./agent-config` CLI. It runs in CI and must pass before any PR.
 
 ---
 
@@ -1277,7 +1296,7 @@ the `rtk-output-filtering` skill.
 
 ### Use what you already have
 
-- Edited a file → `str-replace-editor` showed the result. Skip re-reading.
+- Edited a file → the edit tool already returned the result. Skip re-reading.
 - Ran a command → you have the output. Skip re-running to "verify".
 - File in context from recent messages → skip reloading.
 - Found a symbol → use it. Skip searching again differently.
@@ -1366,9 +1385,10 @@ as a **numbered option** alongside an "as-is" escape hatch. The user
 always picks. **Nothing auto-executes.** The suggestion layer is a
 read-only shortcut *finder*, not an invocation path.
 
-Engine: `scripts/command_suggester/`. Eligibility table:
+The deterministic engine lives in `scripts/command_suggester/`. The
+locked eligibility table lives in
 [`agents/contexts/command-suggestion-eligibility.md`](../../agents/contexts/command-suggestion-eligibility.md).
-Design:
+The full design lives in
 [`road-to-context-aware-command-suggestion`](../../agents/roadmaps/road-to-context-aware-command-suggestion.md).
 
 ## Iron Law — never auto-execute
@@ -1550,10 +1570,10 @@ docs(roadmap): add phase 3 implementation plan
 
 # Commit Policy
 
-Local commits don't change remote state, but committing prematurely
-makes review harder. **Canonical** rule, referenced by
-[`autonomous-execution`](autonomous-execution.md),
-[`scope-control`](scope-control.md), and roadmap commands.
+Local commits do not change remote state, but committing prematurely
+makes review harder. This is the **canonical** rule for committing,
+referenced by [`autonomous-execution`](autonomous-execution.md),
+[`scope-control`](scope-control.md), and the roadmap commands.
 
 ## The Iron Law
 
@@ -1563,20 +1583,24 @@ EXCEPTIONS ARE EXPLICIT, NOT INFERRED.
 ```
 
 Applies regardless of `personal.autonomy`, conversation momentum, or
-"clean stopping point". Default is **no commit, no question**.
+"but it's a clean stopping point". Default is **no commit, no
+question**.
 
 ## Exceptions — when committing IS allowed
 
-Four ways only:
+Exactly four ways the agent may commit:
 
 1. **User says so this turn** — explicit phrase like "commit this now",
-   "go ahead and commit". This commit only, not standing.
-2. **Standing instruction not yet revoked** — earlier "commit after
-   every phase" or similar, not yet revoked. Cache and honor.
+   "go ahead and commit". Permission is for **this commit only**, not
+   standing.
+2. **Standing instruction not yet revoked** — user said earlier in
+   the conversation "commit after every phase" or similar, and has not
+   revoked it. Cache and honor.
 3. **Commit command invoked** — `/commit` (with confirmation) or
    `/commit-in-chunks` (auto-split, no confirmation).
-4. **Roadmap authorization** — roadmap lists explicit commit steps
-   and user invoked execution. See [Roadmap-authorized commits](#roadmap-authorized-commits).
+4. **Roadmap authorization** — the roadmap file lists explicit commit
+   steps and the user invoked roadmap execution. See
+   [Roadmap-authorized commits](#roadmap-authorized-commits) below.
 
 Anything else → no commit.
 
@@ -1599,47 +1623,53 @@ four exceptions cover *whether* commits happen; the Hard Floor covers
 ## NEVER ask about committing
 
 Asking "should I commit this?", "do we want to commit?", or any
-variant is **forbidden**. User invokes a command or says so
-explicitly. Don't surface a commit option in numbered-options unless
-the rest of the message would be incomplete without it.
+variant is **forbidden**. The user invokes a command or says so
+explicitly. Don't surface a commit option in numbered-options blocks
+unless the rest of the message would be incomplete without it.
 
-Speech-act check from [`autonomous-execution`](autonomous-execution.md#speech-act-check--the-phrase-must-be-a-meta-instruction-to-the-agent)
+The same speech-act check from [`autonomous-execution`](autonomous-execution.md#speech-act-check--the-phrase-must-be-a-meta-instruction-to-the-agent)
 applies in reverse: an explicit commit phrase inside a quote, code
 block, or content (e.g. a copy-paste of a chat log) is **not** a
 permission grant.
 
 ## NEVER write commit steps into roadmaps unsolicited
 
-When **creating** a roadmap (`/roadmap-create`, `/feature-roadmap`,
-or any roadmap-producing flow), do **not** include commit steps
-unless the user explicitly requested them. Commits are a delivery
-decision; roadmaps plan **work**.
+When **creating** a roadmap (via `/roadmap-create`,
+`/feature-roadmap`, or any roadmap-producing flow), do **not** include
+commit steps unless the user explicitly requested them. Commits are a
+delivery decision; roadmaps plan **work**.
 
-If the user explicitly wants commit steps, write them clearly
-(e.g. "Commit phase X: chore: …").
+If the user explicitly wants commit steps in the roadmap, write them
+clearly and unambiguously (e.g. "Commit phase X: chore: …").
 
 ## Roadmap-authorized commits
 
 When **executing** a roadmap that contains commit steps:
 
-- **Non-autonomous** (`autonomy: off`, or `auto` before opt-in) —
-  agent may ask before each commit step. User retains step-level
-  control.
-- **Autonomous** (`autonomy: on`, or `auto` after opt-in) — agent
-  pre-scans the roadmap **before starting execution**. Commit steps
-  found → ask **once** upfront: "Roadmap contains N commit steps —
-  should they be executed?". Cache the answer; honor or skip for
-  the rest of the run. No re-asking per step.
+- **Non-autonomous mode** (`personal.autonomy: off`, or `auto`
+  before opt-in) — agent may ask before each commit step. The user
+  authorized commits by writing them into the roadmap, but retains
+  step-level control.
+- **Autonomous mode** (`personal.autonomy: on`, or `auto` after
+  opt-in) — agent does a quick pre-scan of the roadmap **before
+  starting execution**. If commit steps are found, ask **once** at
+  the very start: "Roadmap contains N commit steps — should they be
+  executed?". After that, honor or skip per the answer.
+  No re-asking per step.
 
 The pre-scan ask is the **only** permitted commit-related question
-in autonomous mode.
+in autonomous mode. Once answered, the decision is cached for the
+rest of the roadmap execution.
 
 ## See also
 
-- [`autonomous-execution`](autonomous-execution.md) — trivial-question suppression survives this rule.
-- [`scope-control`](scope-control.md) — push/merge/branch/PR/tag stay permission-gated.
-- [`/commit`](../commands/commit.md) — split + commit with confirmation.
-- [`/commit-in-chunks`](../commands/commit-in-chunks.md) — auto-split + commit without confirmation.
+- [`autonomous-execution`](autonomous-execution.md) — when to suppress
+  trivial questions; this rule survives the suppression.
+- [`scope-control`](scope-control.md) — git-ops permission gate
+  (push, merge, branch, PR, tag stay separately permission-gated).
+- [`/commit`](../commands/commit.md) — split and commit with confirmation.
+- [`/commit-in-chunks`](../commands/commit-in-chunks.md) — auto-split
+  and commit without confirmation.
 
 ---
 
@@ -2431,8 +2461,9 @@ The `.md` source files are the English blueprint — they define WHAT to say, no
 
 ### Quoted user-input examples — same rule, with one labeled exception
 
-Common drift: a rule documents trigger phrases and writes them as quoted
-German examples inside English prose. **Not allowed**, even demonstrative.
+Common drift pattern: a rule documents trigger phrases the agent
+should recognize and writes them as quoted German examples inside
+English prose. **Not allowed**, even when demonstrative.
 
 **Wrong** (DE quote embedded in EN prose):
 
@@ -2443,36 +2474,39 @@ handle that step autonomously.
 A standing "arbeite selbstständig" never lifts the floor.
 ```
 
-Two correct paths:
+**Correct** — two ways:
 
-1. **Translate to English.** Trigger recognition is semantic; the agent
-   matches intent across languages regardless of example wording.
-2. **Labeled `DE: … · EN: …` anchor block** — only when multilingual
-   recognition is the point:
+1. **Translate to English.** Trigger recognition is semantic; the
+   agent matches intent across languages regardless of the example.
+   `("you decide for this step")` works as well as the German.
+2. **Use a labeled `DE: … · EN: …` anchor list** when the
+   multilingual nature of recognition is the point:
 
    ```md
    - DE: "arbeite selbstständig" · "frag nicht jedes Mal" · "tue es einfach"
    - EN: "work autonomously" · "don't ask" · "just do it"
    ```
 
-Labeled-anchor block is the **only** allowed location for German prose in
-an English `.md`. Body text, example sentences, prompt templates,
-agent-rendered strings, failure modes must be English. Reference phrases
-abstractly later (e.g. "a standing autonomy directive") and link back.
+The labeled-anchor block is the **only** allowed location for German
+prose in an English `.md` file. Body text, example sentences, prompt
+templates, agent-rendered strings, and failure modes must be English.
+Reference established phrases abstractly later (e.g. "a standing
+autonomy directive") and link back to the anchor block.
 
 ### Detection heuristic
 
 Before saving an `.md` file under `.augment/`, `.agent-src/`,
 `.agent-src.uncompressed/`, or `agents/`, scan for:
 
-- Umlauts (`ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`, `ß`) outside fenced code, file
-  paths, and labeled anchor blocks.
+- Umlauts (`ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`, `ß`) outside fenced code,
+  file paths, and the labeled anchor block.
 - German function words in unquoted prose: `für`, `nicht`, `dass`,
   `wenn`, `sollte`, `werden`, `arbeite`, `selbstständig`, `jetzt`,
   `einfach`, `weiter`, `lösche`, `frag`, `schreib`, `mach`.
-- Non-English quoted phrases in body text when surrounding prose is English.
+- Non-English quoted phrases in body text (paragraphs, list items,
+  table cells) when the surrounding prose is English.
 
-Hit → translate the fragment or move into a `DE: … · EN: …` block.
+Hit → translate the fragment or move it into a `DE: … · EN: …` block.
 
 ---
 
@@ -2744,11 +2778,11 @@ Show the same numbered options as above. Repeat once if dismissed — then accep
 
 # Non-Destructive by Default
 
-Agent is **never** destructive and **never** endangers user work or
-production systems. Universal safety floor — applies in every mode,
-every conversation, every turn. Autonomy settings, "just keep going"
-directives, roadmap authorizations, and standing permissions narrow
-other rules; **none lift this one**.
+The agent is **never** destructive and **never** endangers user work
+or production systems. This is the universal safety floor — it applies
+in every mode, every conversation, every turn. Autonomy settings, "just
+keep going" directives, roadmap authorizations, and standing
+permissions narrow other rules; **none of them lift this one**.
 
 ## The Iron Law
 
@@ -2760,8 +2794,8 @@ NO "JUST KEEP GOING" CAN BYPASS IT.
 
 Triggers below require explicit user confirmation **on this turn** —
 not from a previous turn, not from a roadmap, not from a standing
-autonomy directive (anchor list of recognized phrases:
-[`autonomous-execution`](autonomous-execution.md#opt-in-detection--match-by-intent-not-exact-string)):
+autonomy directive (see [`autonomous-execution`](autonomous-execution.md#opt-in-detection--match-by-intent-not-exact-string)
+for the anchor list of recognized phrases):
 
 | Trigger | Examples |
 |---|---|
@@ -2769,7 +2803,7 @@ autonomy directive (anchor list of recognized phrases:
 | **Deploy / release** | `terraform apply` on prod, `kubectl apply` on prod, deploy scripts, release commands, tag pushes that trigger CI deployment |
 | **Push to remote** | any `git push` (also covered by [`scope-control`](scope-control.md), restated so the floor never weakens) |
 | **Production data / infra** | prod DB writes or migrations, prod config, secrets rotation, IAM / role / policy, DNS, anything in a `prod`-scoped path or pipeline |
-| **Whimsical or unscoped bulk deletion** | `rm -rf <dir>`, `git rm -r`, glob deletions, `DROP TABLE`, `TRUNCATE`, `git reset --hard` past unpushed work — when **not required by the current task**. Task-aligned bulk deletions are allowed during WIP — see below. |
+| **Whimsical or unscoped bulk deletion** | `rm -rf <dir>`, `git rm -r`, glob deletions, `DROP TABLE`, `TRUNCATE`, `git reset --hard` past unpushed work — when the deletions are **not required by the current task**. Task-aligned bulk deletions are allowed during WIP — see below. |
 | **Commit containing bulk deletions or infra changes** | a commit whose diff removes a directory, deletes ≥5 unrelated files, or touches Terraform / Pulumi / k8s manifests / Ansible / cloud-config — surface the diff and confirm even when [`commit-policy`](commit-policy.md) otherwise authorizes the commit |
 
 Standing "just keep going" + next step crosses the floor → STOP,
@@ -2788,12 +2822,12 @@ of truth makes it reversible. Lives in
 ## Bulk deletions during WIP — allowed if task-connected
 
 Deletions inside an **active, user-stated task** are allowed in the
-working tree, **even multiple files or multiple folders**. Floor
+working tree, **even multiple files or multiple folders**. The floor
 moves to the **commit** (row 6 above), not the in-progress edit.
 
 **Allowed during WIP (no floor on the edit):**
 
-- A roadmap step or current task explicitly names files / folders to remove
+- A roadmap step or current task explicitly names the files / folders to remove
 - Refactor naturally drops deprecated code the user already agreed is dead
 - Cleanup of generated artifacts — `node_modules/`, `dist/`, `.next/`,
   build caches, `vendor/` reinstall — never source code
@@ -2806,7 +2840,7 @@ moves to the **commit** (row 6 above), not the in-progress edit.
 - Whimsical — "while I was in there", drive-by cleanup not part of the task
 - Unnamed scope — "delete all the old tests" without a list, glob
   across unrelated files, "clean up the legacy folder" with no inventory
-- ≥5 unrelated files in one operation, outside current task scope
+- ≥5 unrelated files in one operation, outside the current task scope
 - Content destruction — `DROP TABLE`, `TRUNCATE`, `git reset --hard`
   past unpushed work, database wipes (destroys *content*, not just tree)
 
@@ -2824,11 +2858,11 @@ confirmation, then commit.
   deploying, pushing, prod-data edits, or whimsical `rm -rf <dir>`
   always ask.
 - Reading a roadmap step that says "deploy to staging" or
-  "merge into main" as authorization. Roadmap can sequence work;
-  only the user-this-turn authorizes the floor crossing.
+  "merge into main" as authorization. The roadmap can sequence the
+  work; only the user-this-turn can authorize the floor crossing.
 - Refusing to delete files the user already named because "the floor
   fires on `rm`". It does not — task-aligned WIP deletions are
-  allowed, even multi-folder. Floor fires when the deletion is
+  allowed, even multi-folder. The floor fires when the deletion is
   whimsical, unscoped, or about to be committed.
 - Committing a diff that removes a directory, deletes ≥5 unrelated
   files, or touches Terraform / k8s manifests / Ansible without
@@ -2837,14 +2871,14 @@ confirmation, then commit.
   pre-scan, an explicit "commit this now"). Bulk-deletion / infra
   commits need their own ask, every time.
 - Reading a roadmap step listing files to delete as authorization to
-  *commit* the deletion. Step authorizes the *edit*; the commit is
-  row 6 of the Hard Floor and needs its own confirmation.
+  *commit* the deletion. The step authorizes the *edit*; the commit
+  is row 6 of the Hard Floor and needs its own confirmation.
 
 ## Cloud Behavior
 
 The Hard Floor applies on every surface, including Claude.ai Web,
-Skills API, and any cloud agent. No "cloud override" — the floor
-predates and outranks any platform-specific autonomy default.
+Skills API, and any cloud agent. There is no "cloud override" — the
+floor predates and outranks any platform-specific autonomy default.
 
 ## See also
 
@@ -3351,21 +3385,14 @@ NO EXCEPTIONS. NO "I'LL DO IT AT THE END". NO BATCHING ACROSS TURNS.
 A ROADMAP NOT IN THE DASHBOARD IS A RULE VIOLATION, NOT AN OVERSIGHT.
 ```
 
-**Roadmap touch =** create file, rename, delete, move between
-`roadmaps/` ↔ `archive/` ↔ `skipped/`, add/rename/remove phase,
-**OR** flip any checkbox (`[ ]` ↔ `[x]` ↔ `[~]` ↔ `[-]`).
+**Roadmap touch =** create the file, rename it, delete it, move it
+between `roadmaps/` ↔ `archive/` ↔ `skipped/`, add/rename/remove a
+phase, **OR** flip any checkbox (`[ ]` ↔ `[x]` ↔ `[~]` ↔ `[-]`).
 
-`agents/roadmaps-progress.md` is read-only dashboard. Every unsynced
-edit lies to next reader. Created roadmap, no regen → dashboard
-claims it does not exist. Marked 8 steps `[x]`, forgot regen →
-dashboard says 0 done.
-
-**Completion = archival, same response.** Edit takes roadmap to
-`count_open == 0` (every item `[x]`, `[~]`, or `[-]`) → `git mv` to
-`agents/roadmaps/archive/` (or `skipped/` if no `[x]` at all)
-**before** regen. 100%-complete roadmap left in `agents/roadmaps/`
-is rule violation. See `roadmap-management` skill for archive vs
-skipped table.
+`agents/roadmaps-progress.md` is the read-only dashboard. Every
+unsynced edit makes it lie to the next reader. Created a roadmap
+without regenerating? The dashboard claims it does not exist. Marked
+8 steps `[x]` and forgot the regen? The dashboard says 0 done.
 
 ## Iron Law — every active roadmap is trackable
 
@@ -3378,13 +3405,16 @@ EITHER GET A CHECKLIST OR THE `status: draft` FLAG.
 **Active roadmap =** any file in `agents/roadmaps/` (root, not
 `archive/` or `skipped/`) without `status: draft` frontmatter.
 
-**Trackable checkbox =** actionable `- [ ]` under `## Phase N` /
-`### Phase N` heading (numeric `Phase 1`, roman `Phase II`, letter
-`Phase A1` — matched by dashboard's `PHASE_RE`). Decision tables, ICE
-matrices, block-sequencing tables = valid **rationale** but do NOT
-satisfy alone — must pair with `## Phase N` section whose checkboxes
-execute the decision. `## Phase steps`, `### Sequencing — Phase 1`,
-`## Block A` do **NOT** count — only canonical `Phase <id>` form.
+**Trackable checkbox =** an actionable `- [ ]` line under a `## Phase N`
+or `### Phase N` heading (numeric `Phase 1`, roman `Phase II`, or
+letter-track `Phase A1` — matched by the dashboard's `PHASE_RE`).
+Tables of decisions, ICE matrices, ADR captures, and "block
+sequencing" tables are valid **rationale**, but they do not satisfy
+this rule on their own — they must be paired with at least one
+`## Phase N` section whose checkboxes execute the decision.
+Headings such as `## Phase steps`, `### Sequencing — Phase 1 …`, or
+`## Block A` do **not** count — only the canonical `Phase <id>`
+form parsed by the dashboard.
 
 ## Status — binary `ready` (default) vs `draft`
 
@@ -3394,20 +3424,33 @@ status: draft          # hidden from the dashboard until flipped
 ---
 ```
 
-Two values, no synonyms. Anything else — no frontmatter, `status: ready`,
-unknown value — counts as **ready** and lands in dashboard.
+Two values, no synonyms. Anything else — no frontmatter at all,
+`status: ready`, an unknown value — counts as **ready** and lands
+in the dashboard.
 
-- **Ready** = implicit default. New roadmaps created ready unless user
-  explicitly says draft. Listed in dashboard, count towards open/done
-  totals, trip "completed but not archived" warning on close.
-- **Draft** = hides file from dashboard (not counted, not listed). Use
-  while authoring, awaiting upstream decisions, or capture-only
-  synthesis without executable phases. Flip to ready (or remove field)
-  the moment roadmap is ready to track.
+- **Ready** is the implicit default. New roadmaps are created
+  ready unless the user explicitly says draft. Ready roadmaps are
+  listed in the dashboard, count towards open/done totals, and
+  trip the "completed but not archived" warning when they close.
+- **Draft** hides the file from the dashboard entirely (not
+  counted, not listed). Use it while the roadmap is still being
+  authored, while waiting for upstream decisions, or as a
+  capture-only synthesis that has not yet been promoted to
+  executable phases. Flip to ready (or remove the field) the
+  moment the roadmap is ready to track.
 
-`## Decisions` / `## Block sequencing` table alone is **not** a roadmap.
-Pair with `## Phase N: <name>` section whose checkboxes execute the
-decision, or mark `status: draft` until executable phases land.
+A `## Decisions` or `## Block sequencing` table is **not** a roadmap
+on its own. Either pair it with a `## Phase N: <name>` section whose
+checkboxes execute the decision, or mark the file `status: draft`
+until the executable phases land.
+
+**Completion = archival, same response.** When the edit takes a
+roadmap to `count_open == 0` (every item is `[x]`, `[~]`, or `[-]`),
+`git mv` it into `agents/roadmaps/archive/` (or `skipped/` if no `[x]`
+at all) **before** regenerating the dashboard. A 100%-complete
+roadmap left under `agents/roadmaps/` is a rule violation, not an
+optional cleanup. See `roadmap-management` skill for the archive vs
+skipped decision table.
 
 ## How to regenerate
 
@@ -3415,30 +3458,32 @@ decision, or mark `status: draft` until executable phases land.
 ./agent-config roadmap:progress
 ```
 
-`./agent-config` wrapper sits in project root, written by installer,
-delegates to master CLI in `node_modules/@event4u/agent-config/` or
-`vendor/event4u/agent-config/`. No global tooling.
+The `./agent-config` wrapper is written into the project root by the
+package installer and delegates to the master CLI inside
+`node_modules/@event4u/agent-config/` or `vendor/event4u/agent-config/`.
+No global tooling required.
 
 ## Triggers
 
 | Edit | Must run, same response |
 |---|---|
-| **Create new roadmap file** | regenerate dashboard |
-| **Rename or delete roadmap file** | regenerate dashboard |
+| **Create a new roadmap file** | regenerate dashboard |
+| **Rename or delete a roadmap file** | regenerate dashboard |
 | Mark step `[x]`, `[~]`, `[-]`, or unmark back to `[ ]` | regenerate dashboard |
-| Add, rename, or remove phase | regenerate dashboard |
+| Add, rename, or remove a phase | regenerate dashboard |
 | **Last `[ ]` flips** — roadmap reaches `count_open == 0` | `git mv` → `archive/` (or `skipped/`) **then** regenerate dashboard |
 | Move roadmap between `roadmaps/` ↔ `archive/` ↔ `skipped/` | regenerate dashboard |
 
-**Batching:** multiple checkbox edits in one response → **single**
-regen at end is enough. One edit closes a roadmap → archive first,
-then single regen. Response must not end without it.
+**Batching rule:** if you edit multiple checkboxes in one response, a
+**single** regeneration at the end of that response is enough — but
+the response must not end without it. If one of those edits closes a
+roadmap, archive it first, then run the single regen.
 
 ## Autonomous execution — checkbox cadence
 
-Autonomous roadmap run (multi-turn, no per-step user prompt) → user
-loses progress unless checkboxes flip **as work lands**, not at end.
-Iron Law:
+When executing a roadmap autonomously (multi-turn, no per-step user
+prompt), the user loses progress visibility unless checkboxes flip
+**as work lands**, not in a batch at the end. Iron Law:
 
 ```
 EVERY DONE STEP FLIPS [ ] → [x] IN NEXT REPLY THAT ACKNOWLEDGES IT.
@@ -3446,69 +3491,82 @@ NO "I UPDATE ROADMAP AT END OF PHASE."
 NO "FOUR STEPS DONE, ONE COMMIT, ONE REGEN."
 ```
 
-Step counts as done when:
+Step counts as completed when:
 
-- Code / docs change for step **written and saved** AND
-- Verification cited in step (project CI command, targeted test, lint) **passed
-  in this response or earlier** — fresh output, not memory.
+- Code / docs change for that step has been **written and saved** AND
+- Verification cited in the step (project CI command, targeted test, lint) has
+  **passed in this response or an earlier one** — fresh output, not memory.
 
-Then in **same reply**: flip checkbox, regen dashboard, commit if
-commit policy allows.
+Then in the **same reply**: flip the checkbox, regenerate the
+dashboard, commit if commit policy allows.
 
 **Forbidden pattern** (canonical failure):
 
-> Turn 1: Step 1. Turn 2: Step 2. Turn 3: Step 3. Turn 4: Step 4.
-> Turn 5: "all done, update roadmap and commit." → user spent four
-> turns without dashboard movement.
+> Turn 1: implement Step 1. Turn 2: implement Step 2. Turn 3:
+> implement Step 3. Turn 4: implement Step 4. Turn 5: "all done,
+> let me update the roadmap and commit." → the user spent four turns
+> without dashboard movement.
 
 **Required pattern:**
 
-> Turn 1: Step 1, flip `[x]`, regen, commit.
-> Turn 2: Step 2, flip `[x]`, regen, commit. …
+> Turn 1: implement Step 1, flip `[x]`, regen, commit.
+> Turn 2: implement Step 2, flip `[x]`, regen, commit. …
 
-Reply that lands verified step without flipping checkbox = rule violation.
+A reply that lands a verified step without flipping its checkbox
+is a rule violation.
 
-**In-progress marker:** step takes more than one reply → mark `[~]`
-moment work starts, regen. User sees row move `[ ]` → `[~]` → `[x]`
-instead of silent rows. `[~]` open for `count_open` but moves phase
-percentage forward.
+**In-progress marker:** when a step takes more than one reply,
+mark it `[~]` the moment work starts on it and regenerate. The
+user sees one row move from `[ ]` to `[~]` to `[x]` instead of
+silent rows. `[~]` is treated as open for `count_open` but moves
+the phase percentage forward in the dashboard.
 
 ## Pre-send self-check — MANDATORY
 
-Before sending any reply that touched `agents/roadmaps/`, silent gate:
+Before sending any reply that touched `agents/roadmaps/`, run this
+silent gate:
 
-1. Did this turn create, rename, delete, or move a roadmap file? → regen MUST be in reply.
-2. Did this turn flip any checkbox in a roadmap file? → regen MUST be in reply.
-3. Did the regen output (`✅ Wrote agents/roadmaps-progress.md · …`) actually appear this turn? → no → run it now before sending.
+1. Did this turn create, rename, delete, or move a roadmap file? → regen MUST be in the reply.
+2. Did this turn flip any checkbox in a roadmap file? → regen MUST be in the reply.
+3. Did the regen output (`✅ Wrote agents/roadmaps-progress.md · …`) actually appear this turn? → if no, run it now before sending.
 4. **Autonomous roadmap execution gate** — did this turn complete a roadmap step (code saved + verification passed) without flipping its checkbox? → flip `[x]` (or `[~]` if multi-turn) and regen before sending.
+5. **Trackable-roadmap gate** — did this turn create or substantially edit a roadmap file? → does it now contain at least one `- [ ]` per non-intro phase, **or** carry `status: draft` in frontmatter? → if neither, add the checklist or the draft flag before sending.
 
 Any "yes" + no regen run = rule violation. Rerun before sending.
+
+## Failure modes
+
+- **Created the roadmap, marked Phase 1 done across multiple turns,
+  never regenerated** — dashboard silently lies "this roadmap does
+  not exist" to the next reader. Canonical failure of this rule;
+  the rule was hardened in response to it.
+- **Regenerated yesterday, edited today, "I'll regen at session
+  end"** — session ends from a crash, regen never lands.
+- **Closed a roadmap (last `[ ]` → `[x]`) and regenerated before
+  `git mv`** — the closed roadmap reappears in "Open roadmaps".
+- **Edited the dashboard by hand to "fix it quickly"** — next regen
+  overwrites the manual edit; no audit trail of why.
+- **Autonomous run, four steps shipped across four turns, dashboard
+  flat the whole time, single regen at the end** — user lost
+  progress visibility for the entire run. Each completed step must
+  flip its checkbox in the reply that ships it.
+- **Decision-only roadmap shipped without checkboxes** — the file
+  documents synthesized decisions, ICE matrices, or block sequencing
+  but contains zero `- [ ]` items. The dashboard regenerates with
+  `0/0 steps` for that file or omits it from the open set entirely.
+  The reader thinks no work is planned. Either pair the decisions
+  with a `## Phase N` / `## Implementation Checklist` section, or
+  mark the file `status: draft` so it is hidden until the executable
+  phases land.
 
 ## Do NOT
 
 - Do NOT edit `agents/roadmaps-progress.md` by hand — always regenerate.
-- Do NOT defer regen to "next commit" or "before push" — same response.
-- Do NOT rely on CI (`--check` mode) as first line of defence — CI is last-line, not real-time.
-- Do NOT skip regen because "only one checkbox changed" — dashboard aggregates counts and phase percentages that shift on single edits.
-- Do NOT leave 100%-complete roadmap in `agents/roadmaps/` "for review" — archive same response, ask user afterwards if needed.
-- Do NOT regenerate dashboard before `git mv` when roadmap closes — otherwise it reappears in "Open roadmaps".
-
-## Failure modes
-
-- **Created roadmap, marked Phase 1 done across multiple turns,
-  never regenerated** — dashboard silently lies "this roadmap does
-  not exist" to next reader. Canonical failure of this rule; rule
-  hardened in response to it.
-- **Regenerated yesterday, edited today, "regen at session end"** —
-  session ends from crash, regen never lands.
-- **Closed roadmap (last `[ ]` → `[x]`) and regenerated before
-  `git mv`** — closed roadmap reappears in "Open roadmaps".
-- **Edited dashboard by hand to "fix it quickly"** — next regen
-  overwrites manual edit; no audit trail.
-- **Autonomous run, four steps shipped across four turns, dashboard
-  flat whole time, single regen at end** — user lost progress
-  visibility for entire run. Each done step must flip checkbox in
-  reply that ships it.
+- Do NOT defer the regen to "next commit" or "before push" — same response.
+- Do NOT rely on CI (`--check` mode) as the first line of defence — CI is last-line, not real-time.
+- Do NOT skip the regen because "only one checkbox changed" — the dashboard aggregates counts and phase percentages that shift on single edits.
+- Do NOT leave a 100%-complete roadmap in `agents/roadmaps/` "for review" — archive it in the same response, ask the user afterwards if needed, not before.
+- Do NOT regenerate the dashboard before the `git mv` when a roadmap closes — otherwise the completed roadmap reappears in "Open roadmaps".
 
 ---
 
@@ -3549,7 +3607,7 @@ When active, every closing output MUST:
 
 ## What this rule does NOT do
 
-Infer the mode (Phase-3 router does that). Modify `.agent-settings.yml`
+Infer the mode (Phase-3 router does that). Touch `.agent-settings.yml`
 (only `/mode` writes). Change the contracts (guideline is source of truth).
 
 ## See also
@@ -3812,7 +3870,8 @@ See also: `threat-modeling` · `authz-review` · `data-flow-mapper` · `minimal-
 
 → Size limits and details: `.augment/guidelines/agent-infra/size-and-scope.md`
 
-→ Frontmatter contract: schemas live in `scripts/schemas/` and are enforced by `python3 scripts/validate_frontmatter.py`.
+→ Frontmatter contract: schemas live in `scripts/schemas/` and are enforced by
+`python3 scripts/validate_frontmatter.py`.
 
 ---
 
@@ -4492,9 +4551,10 @@ just a number (e.g., `1`) instead of typing a sentence.
 ### Rules
 
 - **Every question with choices** must use numbered options — no exceptions.
+- **Every numbered list with `1. … 2. … 3. …`** is a numbered-options block, regardless of position. End-of-turn "Wie weiter?" / "What next?" / "How to proceed?" menus, mid-reply continuation prompts, and clarification blocks all count.
 - **Keep options short** — one line each, with a brief explanation after the dash.
 - **Always include a "skip" or "no change" option** when applicable.
-- **Always state a recommendation** — Iron Law 1 above.
+- **Always state a recommendation** — Iron Law 1 above. Per options block, every time, position-agnostic.
 - **Use the user's language** for the question and options.
 - **Accept both** the number and a natural language answer (e.g., "1" or "the first one").
 

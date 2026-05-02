@@ -173,9 +173,9 @@ Present the stub as a numbered-options prompt (per `user-interaction`):
 ```
 
 Nothing is committed without the user's pick. If the user picks *skip*,
-record it in the commit message (`Eval stub: deferred`). Peer examples:
-`php-coder/evals/triggers.json`, `eloquent/evals/triggers.json`,
-`skill-writing/evals/triggers.json`.
+record it in the commit message (`Eval stub: deferred`). Peer examples
+for the expected format: `php-coder/evals/triggers.json`,
+`eloquent/evals/triggers.json`, `skill-writing/evals/triggers.json`.
 
 Rules / commands / guidelines do **not** get eval stubs — only skills
 route through the top-level catalogue.

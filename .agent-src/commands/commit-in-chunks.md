@@ -11,10 +11,10 @@ suggestion:
 
 # commit-in-chunks
 
-Auto-split and commit all local changes in one go. Use when you want
-commits made without being asked to confirm each batch. Sibling of
-[`/commit`](commit.md), which waits for approval; this command skips
-that step.
+Auto-split and commit all local changes in one go. Use this when you
+want commits made without being asked to confirm each batch. Sibling
+of [`/commit`](commit.md), which presents the plan and waits for
+approval. This command skips the approval step.
 
 Per [`autonomous-execution`](../rules/autonomous-execution.md), the
 agent does **not** commit on its own initiative — invoking this
@@ -30,29 +30,36 @@ git diff --stat
 git diff --cached --stat
 ```
 
-No uncommitted changes → report "Nothing to commit." and stop.
+If there are no uncommitted changes (staged or unstaged), report
+"Nothing to commit." and stop.
 
 ### 2. Determine the ticket number
 
-- Extract ticket ID from current branch (e.g. `feat/DEV-1234/...` → `DEV-1234`).
-- No ticket ID → omit scope: write `chore: ...` not `chore(): ...`. Do **not** ask the user.
+- Extract the ticket ID from the current branch name (e.g. `feat/DEV-1234/...`
+  → `DEV-1234`).
+- If no ticket ID is found, omit the scope from the messages — write
+  `chore: ...` not `chore(): ...`. Do **not** ask the user for one.
 
 ### 3. Analyze and split
 
-Group changed files into logical units per [`/commit`](commit.md) step 3:
+Group changed files into logical units following [`/commit`](commit.md)
+step 3 grouping rules:
 
 - Same feature / fix → one commit.
 - Migration + corresponding model/seeder → one commit.
-- Test + class under test → one commit.
-- Style-only (ECS/Rector/formatter) → separate `style:` / `chore:` commit when mixed with logic.
+- Test + the class under test → one commit.
+- Style-only changes (ECS/Rector/formatter) → separate `style:` /
+  `chore:` commit when mixed with logic changes.
 - Truly unrelated change → its own commit.
 
 Splitting rules:
-- **Do NOT split arbitrarily** — only when logically independent.
+- **Do NOT split arbitrarily** — only when the changes are logically
+  independent.
 - **Prefer fewer, coherent commits** over many tiny ones.
-- **Tests go with the code they test** unless test-only changes are large and noisy.
+- **Tests go with the code they test** unless test-only changes are
+  large and noisy.
 
-Generate messages per [`commit-conventions`](../rules/commit-conventions.md).
+Generate commit messages per [`commit-conventions`](../rules/commit-conventions.md).
 
 ### 4. Commit immediately
 
@@ -63,9 +70,12 @@ git add {files...}
 git commit -m "{message}"
 ```
 
-No "looks good?" prompt. No confirmation. User invoked the command knowing the plan would execute.
+No "looks good?" prompt. No confirmation step. The user invoked this
+command knowing the plan would be executed.
 
 ### 5. Report
+
+Show a summary:
 
 ```
 Created N commits:
@@ -80,19 +90,29 @@ Include `git log --oneline -N` output for verification.
 
 - **Never push** — pushing remains explicit per [`scope-control`](../rules/scope-control.md#git-operations--permission-gated).
 - **Never modify files** — only stage and commit existing changes.
-- **Do NOT add untracked files** unless clearly part of the change (check `git status` first).
-- **Follow commit conventions** per [`commit-conventions`](../rules/commit-conventions.md).
-- **Stop on first failure** — if `git commit` fails (hook rejection, pre-commit lint error), stop, report, leave staged files for the user. Do not continue with remaining commits.
-- **No interactive prompts** — fail fast over hanging on input.
+- **Do NOT add untracked files** unless they are clearly part of the
+  change (check with `git status` first).
+- **Follow commit conventions** as defined in [`commit-conventions`](../rules/commit-conventions.md).
+- **Stop on first failure** — if `git commit` fails (hook rejection,
+  pre-commit lint error), stop, report the error, and do not continue
+  with the remaining planned commits. Leave staged files for the user
+  to inspect.
+- **No interactive prompts** — fail fast over hanging waiting for
+  input.
 
 ## When NOT to use
 
-- User hasn't seen the diff and would benefit from review → use [`/commit`](commit.md).
-- Diff includes large unrelated changes the user might want to reorganise → use [`/commit`](commit.md).
-- Repo has a pre-commit hook requiring manual response → fix the hook or use `/commit`.
+- The user has not seen the diff yet and would benefit from review →
+  use [`/commit`](commit.md) instead.
+- The diff includes large unrelated changes the user might want to
+  reorganise → use [`/commit`](commit.md).
+- The repo has a pre-commit hook that requires manual response → fix
+  the hook or use `/commit`.
 
 ## See also
 
 - [`/commit`](commit.md) — split + present plan + wait for approval
-- [`autonomous-execution`](../rules/autonomous-execution.md) — the rule that defines the no-ask commit default this command opts out of
-- [`commit-conventions`](../rules/commit-conventions.md) — message format
+- [`autonomous-execution`](../rules/autonomous-execution.md) — the
+  rule that defines the no-ask commit default this command opts out of
+- [`commit-conventions`](../rules/commit-conventions.md) — message
+  format

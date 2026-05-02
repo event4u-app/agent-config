@@ -128,19 +128,31 @@ Record the user's pick in `state.ui_audit.greenfield_decision` (`scaffold` | `ba
 
 ### 8. (Optional) Capture an a11y baseline
 
-R4 visual-review-loop contract reads `state.ui_audit.a11y_baseline` when present; review gate filters incoming `state.ui_review.a11y.violations` against it so pre-existing violations stay informational and only NEW or CHANGED entries block polish loop. Without baseline gate sees every violation as actionable — fine for greenfield, noisy for legacy surfaces.
+The R4 visual-review-loop contract reads `state.ui_audit.a11y_baseline`
+when present; the review gate then filters incoming
+`state.ui_review.a11y.violations` against it so pre-existing
+violations stay informational and only NEW or CHANGED entries block
+the polish loop. Without a baseline the gate sees every violation as
+actionable — fine for greenfield, noisy for legacy surfaces.
 
-Capture baseline when:
+Capture the baseline when:
 
-- Audit covers components with known a11y debt project does not intend to fix this run (legacy templates, third-party embeds, vendor widgets).
-- User says "don't block on existing a11y issues" or similar.
+- The audit covers components with known a11y debt the project does
+  not intend to fix in this run (legacy templates, third-party
+  embeds, vendor widgets).
+- The user says "don't block on existing a11y issues" or similar.
 
-Skip baseline (omit key, leave `state.ui_audit.a11y_baseline` unset) when:
+Skip the baseline (omit the key, leave `state.ui_audit.a11y_baseline`
+unset) when:
 
-- Surface is greenfield — review gate should treat every violation as new.
-- Project's a11y posture is "zero known violations" and any finding is by definition actionable.
+- The surface is greenfield — the review gate should treat every
+  violation as new.
+- The project's a11y posture is "zero known violations" and any
+  finding is by definition actionable.
 
-Shape (each entry MUST carry at least `rule` + `selector`; severity optional but recommended so review gate's severity-floor filter behaves same on replay):
+Shape (each entry must carry at least `rule` + `selector`; severity
+is optional but recommended so the review gate's severity-floor
+filter behaves the same on replay):
 
 ```
 state.ui_audit.a11y_baseline = [
@@ -150,7 +162,10 @@ state.ui_audit.a11y_baseline = [
 ]
 ```
 
-Producer parity: review skill that writes `state.ui_review.a11y.violations` MUST use same `(rule, selector)` shape, otherwise engine's de-dup will miss matches and pre-existing violations will surface as new findings on every run.
+Producer parity: the review skill that writes
+`state.ui_review.a11y.violations` MUST use the same `(rule, selector)`
+shape, otherwise the engine's de-dup will miss matches and pre-existing
+violations will surface as new findings on every run.
 
 ### 9. Validate and write findings
 

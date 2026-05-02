@@ -7,11 +7,11 @@ source: package
 
 # Non-Destructive by Default
 
-Agent is **never** destructive and **never** endangers user work or
-production systems. Universal safety floor — applies in every mode,
-every conversation, every turn. Autonomy settings, "just keep going"
-directives, roadmap authorizations, and standing permissions narrow
-other rules; **none lift this one**.
+The agent is **never** destructive and **never** endangers user work
+or production systems. This is the universal safety floor — it applies
+in every mode, every conversation, every turn. Autonomy settings, "just
+keep going" directives, roadmap authorizations, and standing
+permissions narrow other rules; **none of them lift this one**.
 
 ## The Iron Law
 
@@ -23,8 +23,8 @@ NO "JUST KEEP GOING" CAN BYPASS IT.
 
 Triggers below require explicit user confirmation **on this turn** —
 not from a previous turn, not from a roadmap, not from a standing
-autonomy directive (anchor list of recognized phrases:
-[`autonomous-execution`](autonomous-execution.md#opt-in-detection--match-by-intent-not-exact-string)):
+autonomy directive (see [`autonomous-execution`](autonomous-execution.md#opt-in-detection--match-by-intent-not-exact-string)
+for the anchor list of recognized phrases):
 
 | Trigger | Examples |
 |---|---|
@@ -32,7 +32,7 @@ autonomy directive (anchor list of recognized phrases:
 | **Deploy / release** | `terraform apply` on prod, `kubectl apply` on prod, deploy scripts, release commands, tag pushes that trigger CI deployment |
 | **Push to remote** | any `git push` (also covered by [`scope-control`](scope-control.md), restated so the floor never weakens) |
 | **Production data / infra** | prod DB writes or migrations, prod config, secrets rotation, IAM / role / policy, DNS, anything in a `prod`-scoped path or pipeline |
-| **Whimsical or unscoped bulk deletion** | `rm -rf <dir>`, `git rm -r`, glob deletions, `DROP TABLE`, `TRUNCATE`, `git reset --hard` past unpushed work — when **not required by the current task**. Task-aligned bulk deletions are allowed during WIP — see below. |
+| **Whimsical or unscoped bulk deletion** | `rm -rf <dir>`, `git rm -r`, glob deletions, `DROP TABLE`, `TRUNCATE`, `git reset --hard` past unpushed work — when the deletions are **not required by the current task**. Task-aligned bulk deletions are allowed during WIP — see below. |
 | **Commit containing bulk deletions or infra changes** | a commit whose diff removes a directory, deletes ≥5 unrelated files, or touches Terraform / Pulumi / k8s manifests / Ansible / cloud-config — surface the diff and confirm even when [`commit-policy`](commit-policy.md) otherwise authorizes the commit |
 
 Standing "just keep going" + next step crosses the floor → STOP,
@@ -51,12 +51,12 @@ of truth makes it reversible. Lives in
 ## Bulk deletions during WIP — allowed if task-connected
 
 Deletions inside an **active, user-stated task** are allowed in the
-working tree, **even multiple files or multiple folders**. Floor
+working tree, **even multiple files or multiple folders**. The floor
 moves to the **commit** (row 6 above), not the in-progress edit.
 
 **Allowed during WIP (no floor on the edit):**
 
-- A roadmap step or current task explicitly names files / folders to remove
+- A roadmap step or current task explicitly names the files / folders to remove
 - Refactor naturally drops deprecated code the user already agreed is dead
 - Cleanup of generated artifacts — `node_modules/`, `dist/`, `.next/`,
   build caches, `vendor/` reinstall — never source code
@@ -69,7 +69,7 @@ moves to the **commit** (row 6 above), not the in-progress edit.
 - Whimsical — "while I was in there", drive-by cleanup not part of the task
 - Unnamed scope — "delete all the old tests" without a list, glob
   across unrelated files, "clean up the legacy folder" with no inventory
-- ≥5 unrelated files in one operation, outside current task scope
+- ≥5 unrelated files in one operation, outside the current task scope
 - Content destruction — `DROP TABLE`, `TRUNCATE`, `git reset --hard`
   past unpushed work, database wipes (destroys *content*, not just tree)
 
@@ -87,11 +87,11 @@ confirmation, then commit.
   deploying, pushing, prod-data edits, or whimsical `rm -rf <dir>`
   always ask.
 - Reading a roadmap step that says "deploy to staging" or
-  "merge into main" as authorization. Roadmap can sequence work;
-  only the user-this-turn authorizes the floor crossing.
+  "merge into main" as authorization. The roadmap can sequence the
+  work; only the user-this-turn can authorize the floor crossing.
 - Refusing to delete files the user already named because "the floor
   fires on `rm`". It does not — task-aligned WIP deletions are
-  allowed, even multi-folder. Floor fires when the deletion is
+  allowed, even multi-folder. The floor fires when the deletion is
   whimsical, unscoped, or about to be committed.
 - Committing a diff that removes a directory, deletes ≥5 unrelated
   files, or touches Terraform / k8s manifests / Ansible without
@@ -100,14 +100,14 @@ confirmation, then commit.
   pre-scan, an explicit "commit this now"). Bulk-deletion / infra
   commits need their own ask, every time.
 - Reading a roadmap step listing files to delete as authorization to
-  *commit* the deletion. Step authorizes the *edit*; the commit is
-  row 6 of the Hard Floor and needs its own confirmation.
+  *commit* the deletion. The step authorizes the *edit*; the commit
+  is row 6 of the Hard Floor and needs its own confirmation.
 
 ## Cloud Behavior
 
 The Hard Floor applies on every surface, including Claude.ai Web,
-Skills API, and any cloud agent. No "cloud override" — the floor
-predates and outranks any platform-specific autonomy default.
+Skills API, and any cloud agent. There is no "cloud override" — the
+floor predates and outranks any platform-specific autonomy default.
 
 ## See also
 

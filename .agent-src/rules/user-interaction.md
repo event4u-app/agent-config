@@ -110,9 +110,10 @@ just a number (e.g., `1`) instead of typing a sentence.
 ### Rules
 
 - **Every question with choices** must use numbered options — no exceptions.
+- **Every numbered list with `1. … 2. … 3. …`** is a numbered-options block, regardless of position. End-of-turn "Wie weiter?" / "What next?" / "How to proceed?" menus, mid-reply continuation prompts, and clarification blocks all count.
 - **Keep options short** — one line each, with a brief explanation after the dash.
 - **Always include a "skip" or "no change" option** when applicable.
-- **Always state a recommendation** — Iron Law 1 above.
+- **Always state a recommendation** — Iron Law 1 above. Per options block, every time, position-agnostic.
 - **Use the user's language** for the question and options.
 - **Accept both** the number and a natural language answer (e.g., "1" or "the first one").
 

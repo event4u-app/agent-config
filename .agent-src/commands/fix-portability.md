@@ -92,8 +92,8 @@ python3 scripts/compress.py --mark-done "{relative_path}"
 
 ## Rules
 
-- **Always fix in `.agent-src.uncompressed/`** — never edit `.agent-src/` or `.augment/` directly.
-- **Run `bash scripts/compress.sh --sync`** after fixing to regenerate `.agent-src/` and `.augment/`.
+- **Always fix in `.agent-src.uncompressed/`** — never edit `.augment/` directly.
+- **Copy to `.augment/`** after fixing.
 - **Do NOT commit or push.**
 - **`agents/` directory is allowed** to have project-specific references — skip it.
 - **Do NOT fix references in code blocks** unless the code block is clearly a template.

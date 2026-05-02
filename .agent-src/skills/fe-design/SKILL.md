@@ -8,7 +8,9 @@ source: package
 
 ## Positioning — reference, not executor
 
-`fe-design` is a **universal reference skill**, not an executor. Stack-agnostic heuristics that the UI directive set cites; does **not** own the flow.
+`fe-design` is a **universal reference skill**, not an executor. It carries
+stack-agnostic heuristics that the UI directive set cites; it does **not**
+own the flow.
 
 | Concern | Owner |
 |---|---|
@@ -35,7 +37,10 @@ Do NOT use this skill to:
 
 ## How the directive set cites this skill
 
-`directives/ui/design.py` produces the design brief (layout, components, states, microcopy, a11y). Brief picks heuristics from this reference when audit doesn't already pin a project pattern. Stack-specific choices come from the dispatched implementation skill.
+`directives/ui/design.py` produces the design brief (layout, components,
+states, microcopy, a11y). The brief picks heuristics from this reference
+when the audit doesn't already pin a project pattern. Stack-specific
+choices come from the dispatched implementation skill, not from here.
 
 ## Component Architecture
 
@@ -53,7 +58,8 @@ Page layout
 └── Footer (static)
 ```
 
-Stack-specific mapping (Blade partial vs. Livewire component vs. React island vs. Vue SFC) is the apply-step's concern.
+The stack-specific mapping (Blade partial vs. Livewire component vs.
+React island vs. Vue SFC) is the apply-step's concern, not this skill's.
 
 ### When to use what (kind, not framework)
 
@@ -69,7 +75,7 @@ Stack-specific mapping (Blade partial vs. Livewire component vs. React island vs
 
 - **One stateful component per concern** — don't build mega-components.
 - **Compose with reusable UI components** for shared shells, headers, fields.
-- **Use the project's library primitives first** — never rebuild what the design system provides (audit findings tell you which).
+- **Use the project's library primitives first** — never rebuild what the design system already provides (audit findings tell you which).
 - **Extract when used 3+ times** — DRY applies to UI too.
 
 ## Form Design
@@ -194,20 +200,20 @@ Step indicator (1 — 2 — 3)
 
 When `directives/ui/design.py` (or any caller) cites this skill:
 
-1. **Confirm audit ran first** — `state.ui_audit` from [`existing-ui-audit`](../existing-ui-audit/SKILL.md) is mandatory. Stop and request audit if missing.
-2. **Pick smallest matching section** — Component Architecture, Form Design, Table Design, Responsive Strategy, Accessibility, or UX Principles. Cite by H2/H3 heading, never paste whole skill.
-3. **Defer to audit findings** — when audit pins a project pattern (token, primitive, layout convention), use it. Heuristics here are fallbacks for gaps, not overrides.
-4. **Defer to stack apply skill** — Blade vs. Livewire vs. Flux vs. React-shadcn choices come from dispatched implementation skill, never from this reference.
-5. **Surface conflicts** — if heuristic here contradicts an audit finding or stack convention, name both and let caller decide; do not silently pick.
+1. **Confirm the audit ran first** — `state.ui_audit` from [`existing-ui-audit`](../existing-ui-audit/SKILL.md) is mandatory. Stop and request the audit if missing.
+2. **Pick the smallest matching section** — Component Architecture, Form Design, Table Design, Responsive Strategy, Accessibility, or UX Principles. Cite by H2/H3 heading, never paste the whole skill.
+3. **Defer to audit findings** — when the audit pins a project pattern (token, primitive, layout convention), use it. The heuristics here are fallbacks for gaps, not overrides.
+4. **Defer to the stack apply skill** — Blade vs. Livewire vs. Flux vs. React-shadcn choices come from the dispatched implementation skill, never from this reference.
+5. **Surface conflicts** — if a heuristic here contradicts an audit finding or stack convention, name both and let the caller decide; do not silently pick.
 
 ## Output format
 
 When this skill's content is folded into a design brief or review:
 
-1. Quote cited heuristic verbatim, with H2/H3 heading and one-line "why this applies" tie-back to request.
-2. Map each heuristic to a concrete artifact in brief (component, form section, table column, breakpoint rule, a11y check, UX state).
-3. Keep stack-agnostic — never name Blade/Livewire/Flux/React primitives in cited prose; apply step adds those.
-4. Mark anything overridden by audit findings as `[audit override]` and link to audit entry.
+1. Quote the cited heuristic verbatim, with the H2/H3 heading and a one-line "why this applies" tie-back to the request.
+2. Map each heuristic to a concrete artifact in the brief (component, form section, table column, breakpoint rule, a11y check, UX state).
+3. Keep stack-agnostic — never name Blade/Livewire/Flux/React primitives in the cited prose; the apply step adds those.
+4. Mark anything overridden by audit findings as `[audit override]` and link to the audit entry.
 
 ## Related
 
@@ -222,7 +228,7 @@ When this skill's content is folded into a design brief or review:
 
 ## Gotcha
 
-- Don't design components without running `existing-ui-audit` first — audit's component/token inventory is canonical for "what already exists in this project". Reinventing is the #1 failure mode.
+- Don't design components without running `existing-ui-audit` first — the audit's component/token inventory is the canonical source for "what already exists in this project". Reinventing is the #1 failure mode.
 - Heuristics in this reference apply across stacks; do not promote them to project rules without checking the audit.
 - Mobile-first is not optional — every layout must work on 320px width.
 
@@ -232,4 +238,3 @@ When this skill's content is folded into a design brief or review:
 - Do NOT use fixed pixel widths for responsive layouts.
 - Do NOT ignore accessibility requirements.
 - Do NOT use this skill as an executor — it is a reference cited by `directives/ui/design.py`.
-

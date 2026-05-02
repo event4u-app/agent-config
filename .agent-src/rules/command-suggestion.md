@@ -12,9 +12,10 @@ as a **numbered option** alongside an "as-is" escape hatch. The user
 always picks. **Nothing auto-executes.** The suggestion layer is a
 read-only shortcut *finder*, not an invocation path.
 
-Engine: `scripts/command_suggester/`. Eligibility table:
+The deterministic engine lives in `scripts/command_suggester/`. The
+locked eligibility table lives in
 [`agents/contexts/command-suggestion-eligibility.md`](../../agents/contexts/command-suggestion-eligibility.md).
-Design:
+The full design lives in
 [`road-to-context-aware-command-suggestion`](../../agents/roadmaps/road-to-context-aware-command-suggestion.md).
 
 ## Iron Law — never auto-execute
