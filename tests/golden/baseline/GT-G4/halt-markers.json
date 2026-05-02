@@ -1,0 +1,15 @@
+[
+  {
+    "cycle": 1,
+    "exit_code": 1,
+    "directive": "refine-prompt",
+    "recipe_action": null,
+    "questions": [
+      "@agent-directive: refine-prompt",
+      "> Prompt received: Fix the bug and then commit and push the changes.",
+      "> No reconstructed acceptance criteria yet — running `refine-prompt` and resuming.",
+      "> 1. Continue — let the skill reconstruct AC + assumptions",
+      "> 2. Abort — the prompt is not what I meant"
+    ]
+  }
+]

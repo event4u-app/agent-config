@@ -6,10 +6,10 @@
 
 ## Overall
 
-**27 / 124 steps done · 22%**
+**32 / 124 steps done · 26%**
 
 ```text
-█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   22%
+██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   26%
 ```
 
 ## Open roadmaps
@@ -20,7 +20,7 @@
 | 2 | [road-to-council-modes.md](roadmaps/road-to-council-modes.md) | 3 | 22 | 8 | 14 | 0 | 0 | ██████░░░░ 64% |
 | 3 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-pr-34-followups.md](roadmaps/road-to-pr-34-followups.md) | 6 | 26 | 13 | 13 | 0 | 0 | █████░░░░░ 50% |
+| 5 | [road-to-pr-34-followups.md](roadmaps/road-to-pr-34-followups.md) | 6 | 26 | 8 | 18 | 0 | 0 | ███████░░░ 69% |
 
 ---
 
@@ -70,14 +70,14 @@
 
 ### [road-to-pr-34-followups.md](roadmaps/road-to-pr-34-followups.md)
 
-**Road to PR #34 Follow-ups** — 13 / 26 done (50%)
+**Road to PR #34 Follow-ups** — 18 / 26 done (69%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | P0 merge-blockers | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | Split `autonomous-execution` | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 3 | `load_context:` first consumer | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
-| 4 | Engine halt tests for governance anti-patterns | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | Engine halt tests for governance anti-patterns | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 5 | Context-layer realization (strategic) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 6 | Always-rule budget hardening (strategic) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 
