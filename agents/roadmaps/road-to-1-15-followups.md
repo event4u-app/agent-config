@@ -71,7 +71,9 @@ Consolidate the 1.15.0 review into actionable, scoped phases — without resurfa
 - [x] **F1.5** Add a CI lint (`scripts/check_identity_framing.py` or extend an existing linter) that fails when README/AGENTS opener prose contains the banned phrases. Same source-of-truth as `check-public-links`.
 
   **Implemented as Layer 5 of `scripts/check_portability.py`** — `check_identity_framing()` scans `README.md`, `AGENTS.md`, `.github/copilot-instructions.md` for 7 banned phrases (`Laravel-first`, `for PHP/Laravel teams`, `for Laravel teams`, `primary audience: Laravel`, `built for Laravel`, `Laravel = primary`, bolded `**Reference implementation: Laravel.**`). All hit synthetic violations cleanly; current files pass. No separate `check_identity_framing.py` script — consolidating into `check_portability.py` keeps the portability contract in one place and re-uses the existing `Violation` machinery + CI wiring.
-- [ ] **F1.6** Update `docs/contracts/STABILITY.md` if it inherits any Laravel-coloured language; the contract layer must be stack-neutral by definition.
+- [x] **F1.6** Update `docs/contracts/STABILITY.md` if it inherits any Laravel-coloured language; the contract layer must be stack-neutral by definition.
+
+  **Verified clean (2026-05-02).** `grep -niE "laravel|php|symfony|next\.js|react|node"` against `docs/contracts/STABILITY.md` returns zero hits across all 95 lines. The contract describes stability levels (`stable | beta | experimental`), promotion rules, and the contract surface — entirely stack-agnostic. No edit needed.
 
 **Exit criteria:** Stranger reads README top + AGENTS top + copilot-instructions top — comes away thinking "universal governance package, Laravel happens to have the deepest skill density today" — never "Laravel package".
 
@@ -83,9 +85,15 @@ Targets from review: `always total ≤ 49k tokens`, `single always rule ≤ 8k`,
 
 Top-3 collapse already in plan: `/fix`, `/feature`, `/optimize`. Old commands stay as shims behind `lint-no-new-atomic-commands` (already shipped 1.15.0). Scope: produce a deliverable list of commands per cluster + shim plan + linter exemption story.
 
-### P0 #4 — Token-overhead wording fix (capture-only)
+### P0 #4 — Token-overhead wording fix ✅ DONE 2026-05-02
 
-Replace "Token overhead: Zero" in `README.md` § Cost profiles with "No background-process overhead" or "Zero runtime process overhead" — wherever the literal "Token overhead: Zero" string appears. Small and safe, but technically misleading today.
+Replaced. `README.md` § "You don't need everything" Cost-profiles table at L255–259:
+
+- Column header: `Token overhead` → `Runtime process overhead` (the column intent is background-process spawning, not document token consumption — rules/skills always consume tokens when loaded into context).
+- Minimal row value: `Zero` → `None` (parallels the header rephrase).
+- Balanced/Full rows untouched (`Low` / `Moderate` already accurate against the new header).
+
+Single-table edit, zero downstream callers, `task ci` green.
 
 ## P1 — Capture-only
 

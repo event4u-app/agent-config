@@ -252,9 +252,9 @@ session is explicitly not.
 
 Start with **Rules + Skills**. Everything else is optional.
 
-| Mode | What's active | Token overhead |
+| Mode | What's active | Runtime process overhead |
 |---|---|---|
-| **Minimal** (default) | Rules, Skills, Commands | Zero |
+| **Minimal** (default) | Rules, Skills, Commands | None |
 | **Balanced** | + Runtime Dispatcher for skills that declare a shell command | Low |
 | **Full** | + Tool Adapters (GitHub / Jira read-only, opt-in) | Moderate |
 
