@@ -7,7 +7,7 @@ Teach your AI agents Laravel, PHP, testing, Git workflows, and **120+ more skill
 > Your agent learns to write Laravel code, run tests, create PRs, fix CI — and follows your team's coding standards while doing it.
 
 <p align="center">
-  <strong>128 Skills</strong> · <strong>56 Rules</strong> · <strong>77 Commands</strong> · <strong>46 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>128 Skills</strong> · <strong>56 Rules</strong> · <strong>80 Commands</strong> · <strong>46 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -297,8 +297,8 @@ can prioritize the right skills for extraction.
 | [`eloquent`](.agent-src/skills/eloquent/SKILL.md) | Eloquent models, relationships, scopes, eager loading, type safety |
 | [`create-pr`](.agent-src/commands/create-pr.md) | Create GitHub PRs with structured descriptions from Jira tickets |
 | [`commit`](.agent-src/commands/commit.md) | Stage and commit changes following Conventional Commits |
-| [`fix-ci`](.agent-src/commands/fix-ci.md) | Fetch CI errors from GitHub Actions and fix them |
-| [`fix-pr-comments`](.agent-src/commands/fix-pr-comments.md) | Fix and reply to all open review comments on a PR |
+| [`/fix ci`](.agent-src/commands/fix.md) | Fetch CI errors from GitHub Actions and fix them |
+| [`/fix pr-comments`](.agent-src/commands/fix.md) | Fix and reply to all open review comments on a PR |
 | [`quality-fix`](.agent-src/commands/quality-fix.md) | Run PHPStan/Rector/ECS and fix all errors |
 | [`bug-analyzer`](.agent-src/skills/bug-analyzer/SKILL.md) | Root cause analysis from Sentry errors or Jira tickets |
 | [`improve-before-implement`](.agent-src/rules/improve-before-implement.md) | Challenge weak requirements before coding |
@@ -317,14 +317,16 @@ can prioritize the right skills for extraction.
 |---|---|
 | [`/commit`](.agent-src/commands/commit.md) | Stage and commit with Conventional Commits |
 | [`/create-pr`](.agent-src/commands/create-pr.md) | Create PR with Jira-linked description |
-| [`/fix-ci`](.agent-src/commands/fix-ci.md) | Fetch and fix GitHub Actions failures |
-| [`/fix-pr-comments`](.agent-src/commands/fix-pr-comments.md) | Fix and reply to review comments |
+| [`/fix ci`](.agent-src/commands/fix.md) | Fetch and fix GitHub Actions failures |
+| [`/fix pr-comments`](.agent-src/commands/fix.md) | Fix and reply to review comments |
+| [`/optimize skills`](.agent-src/commands/optimize.md) | Audit skills, find duplicates, run linter |
+| [`/feature plan`](.agent-src/commands/feature.md) | Interactively plan a feature |
 | [`/quality-fix`](.agent-src/commands/quality-fix.md) | Run and fix all quality checks |
 | [`/review-changes`](.agent-src/commands/review-changes.md) | Self-review before creating a PR |
 | [`/jira-ticket`](.agent-src/commands/jira-ticket.md) | Read ticket from branch, implement feature |
 | [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
 
-→ [Browse all 77 commands](.agent-src/commands/)
+→ [Browse all 80 commands](.agent-src/commands/)
 
 ---
 
@@ -349,7 +351,7 @@ Every developer gets the same behavior. No per-user setup needed.
 native slash-commands)
 
 > **What this means in practice:** Augment Code and Claude Code get the full
-> package (rules + 128 skills + 77 native commands). Cursor, Cline, Windsurf,
+> package (rules + 128 skills + 80 native commands). Cursor, Cline, Windsurf,
 > Gemini CLI, and GitHub Copilot only get the **rules** natively; skills and
 > commands are available to them as documentation the agent can read, not as
 > first-class features.

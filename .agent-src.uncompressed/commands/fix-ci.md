@@ -9,6 +9,13 @@ suggestion:
   trigger_context: "open PR with failing checks"
 ---
 
+<!-- F2-deprecation-banner -->
+> **Deprecated — use `/fix ci`.** This standalone command
+> is kept as a deprecation shim for one release cycle and routes to
+> the same instructions below. New invocations should go through the
+> `/fix` orchestrator (`commands/fix.md`).
+<!-- /F2-deprecation-banner -->
+
 # fix-ci
 
 ## Instructions

@@ -131,13 +131,15 @@ Your agent now understands slash commands:
 |---|---|
 | `/commit` | Stage and commit with Conventional Commits |
 | `/create-pr` | Create PR with Jira-linked description |
-| `/fix-ci` | Fetch and fix GitHub Actions failures |
+| `/fix ci` | Fetch and fix GitHub Actions failures |
+| `/optimize skills` | Audit skills, find duplicates, run linter |
+| `/feature plan` | Interactively plan a feature |
 | `/quality-fix` | Run and fix all quality checks |
 | `/chat-history` | Inspect the persistent chat-history log |
 | `/chat-history-resume` | Recover context after a crashed or switched session |
 | `/chat-history-clear` | Wipe the chat-history log (with confirmation) |
 
-→ [Browse all 77 commands](../.agent-src/commands/)
+→ [Browse all 80 commands](../.agent-src/commands/)
 
 ---
 
@@ -173,7 +175,7 @@ See the [`chat-history` rule](../.agent-src/rules/chat-history-ownership.md) and
 ## Next steps
 
 1. **Stay on `minimal`** — use it for a few days, see if the difference is noticeable
-2. **Try commands** — `/commit`, `/create-pr`, `/fix-ci` are great starting points
+2. **Try commands** — `/commit`, `/create-pr`, `/fix ci` are great starting points
 3. **Upgrade when ready** — switch to `balanced` to let the runtime dispatcher execute skills that declare a shell command
 4. **Customize** — add [project overrides](customization.md) for your team's specific patterns
 

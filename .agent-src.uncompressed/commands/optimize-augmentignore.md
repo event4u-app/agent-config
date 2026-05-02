@@ -8,6 +8,13 @@ suggestion:
   rationale: "Niche maintenance tool with no recurring NL trigger."
 ---
 
+<!-- F2-deprecation-banner -->
+> **Deprecated — use `/optimize augmentignore`.** This standalone command
+> is kept as a deprecation shim for one release cycle and routes to
+> the same instructions below. New invocations should go through the
+> `/optimize` orchestrator (`commands/optimize.md`).
+<!-- /F2-deprecation-banner -->
+
 <!-- cloud_safe: noop -->
 
 # /optimize-augmentignore

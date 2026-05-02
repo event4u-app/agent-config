@@ -8,6 +8,14 @@ suggestion:
   trigger_description: "build this feature end-to-end, run the full feature workflow"
   trigger_context: "long-form feature description spanning multiple components"
 ---
+
+<!-- F2-deprecation-banner -->
+> **Deprecated — use `/feature dev`.** This standalone command
+> is kept as a deprecation shim for one release cycle and routes to
+> the same instructions below. New invocations should go through the
+> `/feature` orchestrator (`commands/feature.md`).
+<!-- /F2-deprecation-banner -->
+
 # /feature-dev
 
 > Full 7-phase feature development workflow for complex features.

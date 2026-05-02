@@ -9,6 +9,13 @@ suggestion:
   trigger_context: "maintainer working on .augment/ files"
 ---
 
+<!-- F2-deprecation-banner -->
+> **Deprecated — use `/optimize agents`.** This standalone command
+> is kept as a deprecation shim for one release cycle and routes to
+> the same instructions below. New invocations should go through the
+> `/optimize` orchestrator (`commands/optimize.md`).
+<!-- /F2-deprecation-banner -->
+
 # /optimize-agents
 
 Agent infrastructure audit: measure token overhead, check rule triggers, verify AGENTS.md, find stale references. **Suggest only — never auto-apply.**

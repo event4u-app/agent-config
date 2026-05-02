@@ -7,6 +7,13 @@ suggestion:
   rationale: "Package-internal — only the event4u/agent-config repo runs this."
 ---
 
+<!-- F2-deprecation-banner -->
+> **Deprecated — use `/fix references`.** This standalone command
+> is kept as a deprecation shim for one release cycle and routes to
+> the same instructions below. New invocations should go through the
+> `/fix` orchestrator (`commands/fix.md`).
+<!-- /F2-deprecation-banner -->
+
 # fix-references
 
 ## Instructions

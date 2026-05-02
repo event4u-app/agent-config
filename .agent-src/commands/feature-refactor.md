@@ -9,6 +9,13 @@ suggestion:
   trigger_context: "existing agents/features/*.md referenced in the prompt"
 ---
 
+<!-- F2-deprecation-banner -->
+> **Deprecated — use `/feature refactor`.** This standalone command
+> is kept as a deprecation shim for one release cycle and routes to
+> the same instructions below. New invocations should go through the
+> `/feature` orchestrator (`commands/feature.md`).
+<!-- /F2-deprecation-banner -->
+
 # feature-refactor
 
 ## Instructions

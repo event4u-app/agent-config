@@ -9,6 +9,13 @@ suggestion:
   trigger_context: "open PR with unresolved human-reviewer comments"
 ---
 
+<!-- F2-deprecation-banner -->
+> **Deprecated — use `/fix pr-developer-comments`.** This standalone command
+> is kept as a deprecation shim for one release cycle and routes to
+> the same instructions below. New invocations should go through the
+> `/fix` orchestrator (`commands/fix.md`).
+<!-- /F2-deprecation-banner -->
+
 # fix-pr-developer-comments
 
 ## Input

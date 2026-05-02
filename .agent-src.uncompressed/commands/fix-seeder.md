@@ -9,6 +9,13 @@ suggestion:
   trigger_context: "seeder error output or recent edits in database/seeders/"
 ---
 
+<!-- F2-deprecation-banner -->
+> **Deprecated — use `/fix seeder`.** This standalone command
+> is kept as a deprecation shim for one release cycle and routes to
+> the same instructions below. New invocations should go through the
+> `/fix` orchestrator (`commands/fix.md`).
+<!-- /F2-deprecation-banner -->
+
 # fix-seeder
 
 Scans all `PhpDataSeeder` data files for foreign key references that use raw seeder constants

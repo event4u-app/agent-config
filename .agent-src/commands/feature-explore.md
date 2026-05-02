@@ -9,6 +9,13 @@ suggestion:
   trigger_context: "open-ended feature idea without acceptance criteria"
 ---
 
+<!-- F2-deprecation-banner -->
+> **Deprecated — use `/feature explore`.** This standalone command
+> is kept as a deprecation shim for one release cycle and routes to
+> the same instructions below. New invocations should go through the
+> `/feature` orchestrator (`commands/feature.md`).
+<!-- /F2-deprecation-banner -->
+
 # feature-explore
 
 ## Instructions

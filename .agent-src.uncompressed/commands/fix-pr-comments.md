@@ -9,6 +9,13 @@ suggestion:
   trigger_context: "open PR with unresolved comments (bot + human)"
 ---
 
+<!-- F2-deprecation-banner -->
+> **Deprecated — use `/fix pr-comments`.** This standalone command
+> is kept as a deprecation shim for one release cycle and routes to
+> the same instructions below. New invocations should go through the
+> `/fix` orchestrator (`commands/fix.md`).
+<!-- /F2-deprecation-banner -->
+
 # fix-pr-comments
 
 This command runs `fix-pr-bot-comments` and `fix-pr-developer-comments` in sequence on the same PR.

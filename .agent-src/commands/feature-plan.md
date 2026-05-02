@@ -9,6 +9,13 @@ suggestion:
   trigger_context: "feature idea referenced and no plan doc exists"
 ---
 
+<!-- F2-deprecation-banner -->
+> **Deprecated — use `/feature plan`.** This standalone command
+> is kept as a deprecation shim for one release cycle and routes to
+> the same instructions below. New invocations should go through the
+> `/feature` orchestrator (`commands/feature.md`).
+<!-- /F2-deprecation-banner -->
+
 # feature-plan
 
 ## Instructions

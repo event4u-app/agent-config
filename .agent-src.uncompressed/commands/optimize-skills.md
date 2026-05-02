@@ -9,6 +9,13 @@ suggestion:
   trigger_context: "maintainer working on .augment/skills/ files"
 ---
 
+<!-- F2-deprecation-banner -->
+> **Deprecated — use `/optimize skills`.** This standalone command
+> is kept as a deprecation shim for one release cycle and routes to
+> the same instructions below. New invocations should go through the
+> `/optimize` orchestrator (`commands/optimize.md`).
+<!-- /F2-deprecation-banner -->
+
 # /optimize-skills
 
 Skill audit: measure, find duplicates/merge candidates, run linter, present findings. **Suggest only — never auto-apply.**

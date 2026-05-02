@@ -9,6 +9,13 @@ suggestion:
   trigger_context: "existing feature plan without linked roadmap"
 ---
 
+<!-- F2-deprecation-banner -->
+> **Deprecated — use `/feature roadmap`.** This standalone command
+> is kept as a deprecation shim for one release cycle and routes to
+> the same instructions below. New invocations should go through the
+> `/feature` orchestrator (`commands/feature.md`).
+<!-- /F2-deprecation-banner -->
+
 # feature-roadmap
 
 ## Instructions

@@ -497,9 +497,9 @@ Stack-specific skills (`laravel`, `eloquent`, `pest-testing`, `php-coding`)
 - [x] F1.5 — Add CI guard `tests/test_always_budget.py` failing if total > 49k *(Landed 2026-05-02: 3 guards — total ≤ 49k · per-rule ≤ 8k · top-5 ≤ 28k. All green.)*
 - [x] F3.1 — Rename per F3 table *(Landed 2026-05-02: rows 1, 2, 3, 5, 6 renamed; row 4 (`chat-history` → `chat-history-policy`) marked N/A — the rule was previously atomized into `chat-history-cadence`/`-ownership`/`-visibility`, which already carry policy-aspect names and are more precise than a single `*-policy` umbrella. No deprecation stubs created — none of the renamed artefacts had stable downstream consumers outside this repo. Cross-refs updated atomically with each rename. lint-skills, check-refs, check-compression, 1723/1723 tests green after each rename.)*
 - [x] F3.2 — Enforce policy-verb (rules) vs tool-noun (skills) split via CI guard *(Landed 2026-05-02: `tests/test_naming_convention.py` adds 3 guards — no rule may use a tool-noun suffix (`-evidence`, `-audit`, `-mapper`, `-router`, `-tool`, `-checker`, `-finder`, `-analyzer`, `-tracker`); no skill may use a policy-verb suffix (`-policy`, `-gate`, `-floor`, `-authority`); no rule↔skill name collision. Implemented as a pytest guard rather than extending `check_references.py` because naming convention is a static-namespace concern, not a cross-reference concern. 1726/1726 tests green.)*
-- [ ] F2.1 — Implement `/fix`, `/optimize`, `/feature` orchestrators with sub-command dispatch
-- [ ] F2.2 — Convert old commands to deprecation shims (one-line stub → routes to new)
-- [ ] F2.3 — Update README + AGENTS.md command examples
+- [x] F2.1 — Implement `/fix`, `/optimize`, `/feature` orchestrators with sub-command dispatch
+- [x] F2.2 — Convert old commands to deprecation shims (one-line stub → routes to new)
+- [x] F2.3 — Update README + AGENTS.md command examples
 - [ ] F4.1 — Move `.agent-src.uncompressed/guidelines/` → `docs/guidelines/`
 - [ ] F4.2 — Update all skill/rule cross-refs to `docs/guidelines/<name>.md`
 - [ ] F4.3 — Add `check-refs` rule rejecting old guideline paths
