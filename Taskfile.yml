@@ -72,13 +72,17 @@ tasks:
     cmds:
       - bash tests/test_install.sh
       - bash tests/test_install_orchestrator.sh
+      - bash tests/test_install_openai_key.sh
+      - bash tests/test_install_anthropic_key.sh
       - python3 -m pytest tests/ -v
 
   test-install:
-    desc: Run install.sh + orchestrator + install.py tests
+    desc: Run install.sh + orchestrator + install.py + key-script tests
     cmds:
       - bash tests/test_install.sh
       - bash tests/test_install_orchestrator.sh
+      - bash tests/test_install_openai_key.sh
+      - bash tests/test_install_anthropic_key.sh
       - python3 -m pytest tests/test_install_py.py -v
 
   test-python:

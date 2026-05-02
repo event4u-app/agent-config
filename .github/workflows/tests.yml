@@ -44,6 +44,12 @@ jobs:
       - name: Run install orchestrator integration tests
         run: bash tests/test_install_orchestrator.sh
 
+      - name: Run install_openai_key.sh contract tests
+        run: bash tests/test_install_openai_key.sh
+
+      - name: Run install_anthropic_key.sh contract tests
+        run: bash tests/test_install_anthropic_key.sh
+
   python-tests:
     name: Python Tests (${{ matrix.os }}, ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
