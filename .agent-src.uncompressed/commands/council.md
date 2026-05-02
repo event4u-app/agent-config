@@ -27,32 +27,34 @@ If none was supplied, ask the user which mode + target. **One question
 per turn** (per `ask-when-uncertain`). Do not assume the working-tree
 diff.
 
-### 2. Check the council is configured
+### 2. Check the council is configured + price table fresh
 
 Read `.agent-settings.yml` → `ai_council`:
 
 - If `ai_council.enabled` is false → state that and offer to flip it
   on. Do not flip it autonomously.
 - If no member has `enabled: true` → list the install commands
-  (`bash scripts/install_anthropic_key.sh`, `bash scripts/install_openai_key.sh`)
+  (`./agent-config keys:install-anthropic`, `./agent-config keys:install-openai`)
   and stop.
 - If a member is enabled but its `*.key` file is missing or has the
   wrong mode → tell the user which key to install. Do not fall back to
   env vars. Ever.
 
-### 3. Cost confirmation — ALWAYS ASK
+Load the price table via `scripts.ai_council.pricing.load_prices()`
+(auto-bootstraps `.agent-prices.md` from defaults if missing). Run
+`pricing.is_stale(table)` and, if stale, surface the staleness gate
+from the `ai-council` skill (§ Stale price-table gate) before
+continuing.
+
+### 3. Cost confirmation — ALWAYS ASK, with per-member estimate
 
 Council calls are billable. Even under `personal.autonomy: on`, the
-agent **must** ask before invoking. Surface a numbered-options block:
+agent **must** ask before invoking.
 
-> External council call — billable
->
-> Members: anthropic (claude-sonnet-4-5), openai (gpt-4o)
-> Mode: roadmap · Target: `agents/roadmaps/<name>.md` (~3 KB after redaction)
-> Cost ceiling: 50k input / 20k output tokens
->
-> 1. Run the consultation
-> 2. Cancel
+Compute `orchestrator.estimate(question, members, table)` and render
+the cost-confirmation numbered-options block per the `ai-council`
+skill (§ Pre-call estimate format) — per-member tokens + USD,
+projected total, budget caps, then `1. Run / 2. Cancel`.
 
 Wait for the user's pick. `1` proceeds; anything else aborts.
 
@@ -74,13 +76,16 @@ sending — gives the user a chance to abort if scope is wrong.
 
 ### 5. Run the orchestrator
 
-Call `scripts.ai_council.orchestrator.consult(members, question, budget)`.
-Members are constructed from the settings file plus the keys from
-`load_anthropic_key()` / `load_openai_key()`.
+Members are constructed from the settings file plus
+`load_anthropic_key()` / `load_openai_key()`. Cost budget comes from
+`ai_council.cost_budget`.
 
-Cost budget comes from `ai_council.cost_budget`. The orchestrator
-runs in parallel and normalises per-member errors — one failure does
-not abort the others.
+Call `consult(members, question, budget, table=table,
+on_overrun=_handle_overrun)`. Members run **sequentially**;
+per-member errors are normalised — one failure does not abort the
+others. Define `_handle_overrun(event)` per the `ai-council` skill
+(§ Mid-flow overrun callback) to surface the user prompt before
+each breaching member.
 
 ### 6. Render the report
 
@@ -121,6 +126,12 @@ loses meaning if the council can act on the project directly.
 - **Cost budget exceeded mid-fan-out** → render the partial
   responses and clearly mark the unfinished members with their
   `cost_budget_exceeded` error. Do not silently retry.
+- **Stale price table, refresher fails (offline)** → state the
+  failure, re-offer "continue with stale table / cancel", do not
+  proceed silently.
+- **`.agent-prices.md` corrupt (missing frontmatter or columns)** →
+  surface the parse error, suggest deleting the file to bootstrap
+  fresh from defaults; never silently fall back.
 - **All members error** → render the errors and ask the user
   whether to fix and retry, or abort.
 

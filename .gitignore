@@ -80,3 +80,9 @@ evals/results/
 
 # Cloud bundle output
 /dist/
+
+# AI Council runtime price cache (refreshed weekly by
+# `python3 scripts/update_prices.py`; bootstrapped on first /council
+# call from scripts/ai_council/_default_prices.py). User-editable —
+# never commit, prices drift constantly.
+.agent-prices.md

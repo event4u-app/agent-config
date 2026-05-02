@@ -142,13 +142,71 @@ a ceiling.
 Every consultation hits a paid API. The orchestrator enforces
 per-invocation caps from `ai_council.cost_budget`:
 
-- `max_input_tokens` — sum of input tokens across all members.
-- `max_output_tokens` — sum of output tokens across all members.
+- `max_input_tokens` / `max_output_tokens` — token caps across all members.
+- `max_total_usd` — USD ceiling. `0` disables the USD ceiling (token caps still apply).
 - `max_calls` — maximum number of council members per invocation.
 
-If a cap fires mid-fan-out, the unfinished members get a
-`CouncilResponse` with `error="cost_budget_exceeded"`. Do not retry
-silently. Surface the partial result and ask the user.
+Prices come from `.agent-prices.md` (gitignored, refreshed weekly).
+The pricing module bootstraps it from `_default_prices.py` on first
+use and flags it stale when older than the most recent Monday 00:00
+UTC.
+
+### Pre-call estimate format
+
+Before the cost gate, compute `orchestrator.estimate(question, members,
+table)` and render a per-member table. Heuristic: `len(text) / 4` for
+input, member's `max_tokens` ceiling for output (actual spend is
+usually lower).
+
+> External council call — billable
+>
+> Mode: roadmap · Target: `agents/roadmaps/<name>.md` (~3 KB after redaction)
+>
+> | member                          | est. in / out tokens | est. USD |
+> |---------------------------------|---------------------:|---------:|
+> | anthropic / claude-sonnet-4-5   |      ~750 / 1024     |  $0.0176 |
+> | openai / gpt-4o                 |      ~750 / 1024     |  $0.0121 |
+> | **total**                       |                      | **$0.0297** |
+>
+> Budget: 50k in / 20k out tokens · USD ceiling: $0.50
+>
+> 1. Run the consultation
+> 2. Cancel
+
+### Stale price-table gate
+
+If `pricing.is_stale(table)` returns true, ask before proceeding:
+
+> Price table is stale (last_updated: YYYY-MM-DD)
+> 1. Refresh now (`python3 scripts/update_prices.py`)
+> 2. Continue with the stale table
+> 3. Cancel
+
+Do not silently auto-refresh — the user keeps control.
+
+### Mid-flow overrun callback (`on_overrun`)
+
+The orchestrator runs members **sequentially**. Before each member
+whose projected spend would breach a cap, it invokes the
+`on_overrun(event)` callback. The callback returns `True` to proceed
+with that member (raises the effective ceiling for THIS call only)
+or `False` to skip and record `cost_budget_exceeded`. The callback
+fires again for every subsequent breaching member — the user keeps
+control on each step.
+
+> Cost budget overrun — pausing before next member
+>
+> Member: openai / gpt-4o (member 2 of 2)
+> Already spent: ~620 in / ~480 out tokens · $0.0094
+> Next call estimate: ~750 in / 1024 out tokens · $0.0121
+> **Projected total after this call: $0.0215** (ceiling: $0.0150)
+>
+> 1. Continue with this member
+> 2. Skip this member (records `cost_budget_exceeded`, continues with the rest)
+
+Without `on_overrun`, breaching short-circuits all remaining members
+(v1 fallback). Do not retry silently. Surface the partial result and
+ask the user.
 
 ## See also
 

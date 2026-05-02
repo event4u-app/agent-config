@@ -168,13 +168,19 @@ ai_council:
       enabled: false
       model: "gpt-4o"
 
-  # Hard cost ceiling per /council invocation. The orchestrator aborts
-  # remaining members once either token cap is hit. Each member counts
-  # individually toward the cap.
+  # Hard cost ceiling per /council invocation. The orchestrator pauses
+  # before any member whose projected spend would breach a cap and asks
+  # the user to continue. `max_total_usd: 0` disables the USD ceiling
+  # (token caps still apply).
+  #
+  # Prices come from `.agent-prices.md` (gitignored, refreshed weekly
+  # by `python3 scripts/update_prices.py`; bootstrapped from
+  # scripts/ai_council/_default_prices.py on first run).
   cost_budget:
     max_input_tokens: 50000
     max_output_tokens: 20000
     max_calls: 10
+    max_total_usd: 0.50
 
 # --- Onboarding ---
 #

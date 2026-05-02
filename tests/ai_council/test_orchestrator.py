@@ -1,9 +1,8 @@
-"""Parallel fan-out, cost-budget abort, render shape."""
+"""Sequential fan-out, cost-budget abort, overrun callback, render shape."""
 
 from __future__ import annotations
 
 import sys
-import threading
 import time
 from pathlib import Path
 
@@ -15,9 +14,12 @@ from scripts.ai_council.clients import CouncilResponse, ExternalAIClient  # noqa
 from scripts.ai_council.orchestrator import (  # noqa: E402
     CostBudget,
     CouncilQuestion,
+    OverrunEvent,
     consult,
+    estimate,
     render,
 )
+from scripts.ai_council.pricing import bootstrap_from_defaults, load_prices  # noqa: E402
 
 
 # ── stub members ──────────────────────────────────────────────────────────────
@@ -76,14 +78,14 @@ def test_consult_passes_resolved_system_prompt_for_mode() -> None:
     assert max_tokens == 42
 
 
-def test_consult_runs_members_in_parallel() -> None:
-    """Two 50ms members must finish in well under 100ms total."""
+def test_consult_runs_members_sequentially() -> None:
+    """v2 contract: two 50ms members serialise to ≥100ms total."""
     a = _StubMember("a", "m", CouncilResponse("a", "m", "ok", 1, 1), delay=0.05)
     b = _StubMember("b", "m", CouncilResponse("b", "m", "ok", 1, 1), delay=0.05)
     t0 = time.monotonic()
     consult([a, b], CouncilQuestion(mode="prompt", user_prompt="x"))
     elapsed = time.monotonic() - t0
-    assert elapsed < 0.09, f"expected parallel (<90ms), got {elapsed*1000:.0f}ms"
+    assert elapsed >= 0.09, f"expected sequential (>=90ms), got {elapsed*1000:.0f}ms"
 
 
 # ── error normalisation ───────────────────────────────────────────────────────
@@ -103,34 +105,92 @@ def test_consult_normalises_member_exception_into_response() -> None:
 
 
 def test_consult_aborts_on_cost_budget_input_exceeded() -> None:
-    started = threading.Event()
-    blocker = threading.Event()
+    """v1 fallback (no table): post-call accounting short-circuits remaining members."""
 
     class _Greedy(ExternalAIClient):
         name, model = "greedy", "m"
         def ask(self, *a: object, **kw: object) -> CouncilResponse:
             return CouncilResponse("greedy", "m", "big", input_tokens=100, output_tokens=1)
 
-    class _Slow(ExternalAIClient):
-        name, model = "slow", "m"
-        def ask(self, *a: object, **kw: object) -> CouncilResponse:
-            started.set()
-            blocker.wait(timeout=2.0)
-            return CouncilResponse("slow", "m", "late", 1, 1)
+    class _Loud(ExternalAIClient):
+        name, model = "loud", "m"
+        def ask(self, *a: object, **kw: object) -> CouncilResponse:  # pragma: no cover
+            raise AssertionError("must not run after greedy busted the budget")
 
-    members = [_Greedy(), _Slow()]
+    members = [_Greedy(), _Loud()]
     budget = CostBudget(max_input_tokens=50, max_output_tokens=50, max_calls=10)
     out = consult(members, CouncilQuestion(mode="prompt", user_prompt="x"), budget)
-    blocker.set()  # release in case it's still pending
     assert out[0].text == "big"
     assert out[1].error == "cost_budget_exceeded"
-    assert out[1].provider == "slow"
+    assert out[1].provider == "loud"
 
 
 def test_consult_rejects_more_members_than_max_calls() -> None:
     members = [_StubMember(f"m{i}", "x", CouncilResponse(f"m{i}", "x", "ok")) for i in range(3)]
     with pytest.raises(ValueError, match="caps at"):
         consult(members, CouncilQuestion(mode="prompt", user_prompt="x"), CostBudget(max_calls=2))
+
+
+# ── pre-call estimate ─────────────────────────────────────────────────────────
+
+
+def _table(tmp_path):  # type: ignore[no-untyped-def]
+    p = tmp_path / "prices.md"
+    bootstrap_from_defaults(p)
+    return load_prices(p)
+
+
+def test_estimate_returns_one_entry_per_member_in_input_order(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    table = _table(tmp_path)
+    a = _StubMember("anthropic", "claude-sonnet-4-5", CouncilResponse("a", "m", ""))
+    b = _StubMember("openai", "gpt-4o", CouncilResponse("b", "m", ""))
+    q = CouncilQuestion(mode="prompt", user_prompt="x" * 400, max_tokens=512)
+    out = estimate(q, [a, b], table)
+    assert [e.provider for e in out] == ["anthropic", "openai"]
+    assert all(e.input_tokens > 0 for e in out)
+    assert all(e.output_tokens == 512 for e in out)
+    assert all(e.total_usd > 0 for e in out)
+
+
+# ── overrun callback ──────────────────────────────────────────────────────────
+
+
+def test_consult_invokes_on_overrun_and_proceeds_when_callback_returns_true(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    table = _table(tmp_path)
+    m = _StubMember("anthropic", "claude-sonnet-4-5", CouncilResponse("anthropic", "claude-sonnet-4-5", "fine", 5, 5))
+    q = CouncilQuestion(mode="prompt", user_prompt="x" * 4000, max_tokens=8192)
+    # Force overrun: USD ceiling tiny → projected total breaches.
+    budget = CostBudget(max_input_tokens=10**9, max_output_tokens=10**9, max_total_usd=0.000001)
+
+    seen: list[OverrunEvent] = []
+    out = consult([m], q, budget, table=table, on_overrun=lambda e: (seen.append(e) or True))
+    assert len(seen) == 1
+    assert seen[0].member_index == 0
+    assert seen[0].next_estimate.total_usd > 0
+    assert out[0].text == "fine"
+
+
+def test_consult_skips_member_when_on_overrun_returns_false(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    table = _table(tmp_path)
+    m = _StubMember("anthropic", "claude-sonnet-4-5", CouncilResponse("anthropic", "claude-sonnet-4-5", "never"))
+    q = CouncilQuestion(mode="prompt", user_prompt="x" * 4000, max_tokens=8192)
+    budget = CostBudget(max_input_tokens=10**9, max_output_tokens=10**9, max_total_usd=0.000001)
+    out = consult([m], q, budget, table=table, on_overrun=lambda e: False)
+    assert out[0].error == "cost_budget_exceeded"
+    assert m.received is None  # ask() never called
+
+
+def test_consult_calls_on_overrun_per_member(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    table = _table(tmp_path)
+    a = _StubMember("anthropic", "claude-sonnet-4-5", CouncilResponse("anthropic", "claude-sonnet-4-5", "a", 1, 1))
+    b = _StubMember("openai", "gpt-4o", CouncilResponse("openai", "gpt-4o", "b", 1, 1))
+    q = CouncilQuestion(mode="prompt", user_prompt="x" * 4000, max_tokens=8192)
+    budget = CostBudget(max_input_tokens=10**9, max_output_tokens=10**9, max_total_usd=0.000001)
+    calls: list[int] = []
+    out = consult([a, b], q, budget, table=table, on_overrun=lambda e: (calls.append(e.member_index) or True))
+    assert calls == [0, 1]
+    assert out[0].text == "a"
+    assert out[1].text == "b"
 
 
 # ── render ────────────────────────────────────────────────────────────────────
