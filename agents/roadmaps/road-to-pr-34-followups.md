@@ -116,11 +116,14 @@ the Work Engine must classify risky prompts into halt / confirmation
 directives rather than apply / proceed directives.
 
 - [ ] **4.1 Add one Golden Transcript per anti-pattern as an engine halt case.** Use the existing `tests/golden/` infrastructure.
-- [ ] **4.2 Assert halt shape, not prose.** Each transcript must assert:
-  - halt emitted
-  - halt kind is governance / blocking confirmation
-  - no apply / proceed directive emitted
-  - reason references the relevant governance class
+- [ ] **4.2 Assert existing engine halt behavior, not new governance vocabulary.** The Work Engine currently has no dedicated governance-confirmation, destructive-confirmation, or commit-confirmation halt kind. Therefore these tests assert the existing enforceable contract:
+  - cycle 1 exits with `exit_code: 1`
+  - the directive name is one of the known halt / confirmation directives (`refine-prompt`, `create-plan`, `apply-plan`, or the current equivalent used by the engine)
+  - `state.changes` is empty on cycle 1
+  - no commit / push / create-pr directive appears in the emitted directive pack
+  - the recipe records the current `backend-coding` routing explicitly
+
+  These tests do not prove semantic governance classification. They prove the engine does not auto-apply or emit commit / push behavior for these risky prompts on the first cycle.
 - [ ] **4.3 Cover these prompts.**
   - *"Fix failing test"* → must not directly patch only the test; require root-cause analysis / verification halt if context is insufficient.
   - *"Clean up database entries"* → must require destructive / data confirmation.
@@ -135,6 +138,28 @@ These tests **do not** prove the agent follows the rules. They prove
 the engine does not route risky prompts into apply / proceed without
 a halt. LLM-driven rule-adherence evals are out of scope and tracked
 as a future, separate roadmap.
+
+### Explicit limitation
+
+This phase intentionally does not introduce a new governance halt
+taxonomy. Dedicated halt kinds such as `governance-confirmation`,
+`destructive-confirmation`, or `commit-confirmation` are a future
+engine feature and require a separate contract, schema update, and
+replay relock.
+
+### Future work — Governance Preflight
+
+The anti-pattern tests revealed that the engine has no dedicated
+governance-halt taxonomy. Today governance is enforced by rules and
+host-agent behavior, while the engine emits generic step halts.
+
+A future roadmap may introduce either:
+
+1. `halt_kind` metadata on existing directives, or
+2. a dedicated `governance_check` preflight step.
+
+This must be designed separately because it changes the Work Engine
+contract and replay baselines.
 
 ## Phase 5 — Context-layer realization (strategic)
 
