@@ -99,3 +99,8 @@ echo "✅  Key installed: ${TARGET_FILE} (mode 0600)."
 echo "    Verify:  ls -la ${TARGET_FILE}"
 echo "    Rotate:  rerun this script (you'll be prompted to overwrite)."
 echo "    Remove:  rm ${TARGET_FILE}"
+echo
+echo "ℹ️   Key install ≠ enable. To use this provider in /council:"
+echo "    set ai_council.enabled: true and ai_council.members.openai.enabled: true"
+echo "    in .agent-settings.yml. Council is a 'full' cost_profile feature; under"
+echo "    'minimal' / 'balanced' the runtime hooks stay inactive."

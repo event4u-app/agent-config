@@ -1,6 +1,6 @@
 # Road to AI Council
 
-**Status:** IN PROGRESS — Phase 1 implemented (A1.1–A8.5); A1.2 deferred pending maintainer decision.
+**Status:** Phase 1 COMPLETE (A1.1–A8.5 + A1.2 landed 2026-05-02 via Q44). Phase 2+ remain capture-only.
 **Started:** 2026-05-02
 **Trigger:** Maintainer asked for an `/optimize`-style command that lets the agent consult external AIs (ChatGPT, Claude.ai) outside its own session — to evaluate PRs, score planned changes, propose optimizations, and cross-check ideas without polluting them with the host agent's framing. Pattern the maintainer currently runs by hand in chat.
 **Mode:** Phase 1 (A1–A8) is the visible plate (MVP); Phase 2+ stay capture-only until Phase 1 ships a working stdio round-trip in at least one consumer project.
@@ -54,7 +54,7 @@ Phase 2+ stay capture-only until Phase 1 lands a working round-trip — no scope
 ### A1 — OpenAI key install script
 
 - [x] **A1.1** Add `scripts/install_openai_key.sh` mirroring `install_anthropic_key.sh` exactly: `/dev/tty` enforcement, 0600 mode, atomic write, format check (`sk-` prefix), overwrite confirmation. **No** `--force`, **no** `--yes`, **no** env-var bypass.
-- [-] **A1.2** Add `tests/test_install_openai_key.sh` — same matrix as the Anthropic version. *(Deferred: no `tests/test_install_anthropic_key.sh` exists either; mirroring nothing makes no sense. Open question for maintainer: write both, or skip both.)*
+- [x] **A1.2** Add `tests/test_install_openai_key.sh` **and** `tests/test_install_anthropic_key.sh` — contract-grep matrix (mode 0600, `/dev/tty` enforcement, atomic write, format check, no env-var bypass, post-install opt-in hint) + a `setsid`-gated no-tty behaviour test. Wired into `task test`, `task test-install`, and `.github/workflows/tests.yml`. *(Q44 resolved 2026-05-02 → both written together; mirroring made sense once the tests covered an Iron-Law security surface.)*
 - [x] **A1.3** Update `docs/customization.md` and the new council docs section with the install path.
 
 ### A2 — `ai_council` Python module skeleton
@@ -123,15 +123,15 @@ Phase 2+ stay capture-only until Phase 1 lands a working round-trip — no scope
 - [ ] **D3** Cost-budget guard with per-day rolling limit (in addition to per-session cap).
 - [ ] **D4** Smart diff-context selection — only files referenced in the diff plus their direct dependencies, never whole-repo dumps.
 
-## Decisions Required (open questions for the maintainer)
+## Decisions (resolved 2026-05-02)
 
-These need an answer before Phase 1 starts. Each row is one decision; my recommendation in brackets.
+All five Phase-1 design questions are closed. Trace: `agents/roadmaps/open-questions-3.md` Q45–Q49.
 
-1. **Council member roster for v1.** Anthropic + OpenAI only, or also Gemini / Mistral / local Ollama? [Recommend: Anthropic + OpenAI only for v1; design `ExternalAIClient` so adding a third provider is one new file.]
-2. **Default `enabled` state in settings.** If the user installs a key, should the council auto-enable, or stay opt-in via explicit `enabled: true`? [Recommend: explicit opt-in. Installing a key is not the same as wanting the agent to spend money on it.]
-3. **Phase-2 hook UX.** Always ask post-roadmap-create, or only when an env hint says the user wants the prompt? [Recommend: always ask, but the question is suppressed by `personal.autonomy: on` (council is a billable side-effect — autonomy should not silently spend the user's tokens).]
-4. **Output rendering format.** Per-member columns side-by-side, or per-member sections stacked vertically? [Recommend: stacked sections + a final "Convergence / Divergence" summary written by the host agent at the end. Side-by-side breaks on narrow terminals.]
-5. **Roadmap-mode behaviour.** Does the council see only the roadmap text, or also the linked context (referenced contracts, related skills)? [Recommend: roadmap only, plus a manifest listing what was *not* included so the user can opt to expand. Larger context = more cost + more bias surface.]
+1. **Council member roster for v1.** ✅ Anthropic + OpenAI only. `ExternalAIClient` ABC stays open for a third provider; no extra client lands until evidence demands it. *(Q45)*
+2. **Default `enabled` state in settings.** ✅ Explicit opt-in. Key install is infrastructure, not permission to spend. Each `install_<provider>_key.sh` prints a hint pointing the user at `ai_council.members.<provider>.enabled` in `.agent-settings.yml`. *(Q46)*
+3. **Phase-2 hook UX.** ✅ Always-Ask after every hookable event, suppressed under `personal.autonomy: on` (council is billable; autonomy must not silently spend tokens). Implemented when Phase 2 unblocks. *(Q47)*
+4. **Output rendering format.** ✅ Stacked sections per member + final "Convergence / Divergence" summary written by the host agent. Robust across terminal widths, preserves per-member wording for audit. *(Q48)*
+5. **Roadmap-mode behaviour.** ✅ Roadmap-only with a manifest listing what was *not* included. Users opt in to expansion via `/council files:<paths>`. More context = more cost + more bias surface. *(Q49)*
 
 ## Why now
 

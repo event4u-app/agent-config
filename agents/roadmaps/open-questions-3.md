@@ -97,41 +97,82 @@ five carry an explicit *Recommend:* line. The autonomous Phase-2b
 pass took each recommendation as the default; user override flips
 the decision and re-runs the affected work.
 
-- **Q37** 🔬🟡 `architecture` `autonomous-default` — **Mode
-  precedence.** Invocation flag > per-member setting > global setting
+- **Q37** ✅ `architecture` — **Mode precedence confirmed
+  2026-05-02.** Invocation flag > per-member setting > global setting
   > built-in default (`api`). Mirrors `cost_profile` resolution.
-  Roadmap recommendation taken verbatim.
-  **Override path:** if user wants per-member to win over invocation,
-  flip the order in `resolve_mode()` and update `test_mode_resolver.py`.
+  Already wired in `scripts/ai_council/modes.py::resolve_mode()`,
+  15 tests in `test_modes.py` green. No further work.
 
-- **Q38** 🔬🟡 `architecture` `autonomous-default` — **Manual-mode
-  rendering granularity.** One Markdown block per member (one
-  copy-paste per member), not one combined block.
-  Matches the sequential orchestrator and keeps the follow-up loop
-  scoped to one provider at a time.
-  **Override path:** if user wants a single combined block, refactor
-  `ManualClient.ask()` to render once and dispatch the same prompt
-  to every member; lose the per-member follow-up loop.
+- **Q38** ✅ `architecture` — **Manual-mode rendering confirmed
+  2026-05-02.** One Markdown block per member; sequential
+  copy-paste; per-member follow-up loop. Matches the orchestrator
+  flow. Already wired in `ManualClient.ask()`, 8 tests in
+  `test_manual_client.py` green. No further work.
 
-- **Q39** 🔬🟡 `architecture` `autonomous-default` — **Project-context
-  fallback when no manifest is present.** Send the preamble with
-  empty stack/purpose silently. The original ask is the load-bearing
-  part. User can extend manually via `/council mode:manual`.
-  Already implemented in Phase 2a (E1.1 ProjectContext fields are all
-  Optional). No new work needed.
+- **Q39** ✅ `architecture` — **Project-context fallback confirmed
+  2026-05-02.** Silent-empty preamble when no manifest is present;
+  `original_ask` carries the load. Already implemented in Phase 2a
+  (E1.1 — `ProjectContext` fields all `Optional`); tests in
+  `test_project_context.py` and `test_prompts.py` cover the empty
+  case. No further work.
 
-- **Q40** 🔬🟡 `architecture` `autonomous-default` — **Playwright
-  provider-adapter scope (Phase 2c).** v1 = Claude.ai + ChatGPT.com
-  only. Adapter ABC designed so adding Gemini / Mistral is one new
-  file. Decision is captured for Phase 2c; **no code lands in this
-  pass** (Phase 2c stays capture-only per Hard Floor — browser
-  automation introduces a new dependency + login flow).
+- **Q40** ✅ `architecture` — **Playwright adapter scope confirmed
+  2026-05-02.** v1 = Claude.ai + ChatGPT.com only. Adapter ABC
+  designed so adding a third provider is one new file under
+  `scripts/ai_council/playwright_adapters/`. Phase 2c stays
+  capture-only — decision applies when the phase is unblocked.
 
-- **Q41** 🔬🟡 `architecture` `autonomous-default` — **Playwright
-  login detection.** Always ask the user "ready?" before the first
-  submit per session. DOM heuristics drift; one explicit user
-  confirmation per session is cheap.
-  **Captured for Phase 2c. No code lands in this pass.**
+- **Q41** ✅ `architecture` — **Playwright login detection
+  confirmed 2026-05-02.** Always-ask before the first submit per
+  session; no DOM heuristic. DOM selectors at Claude.ai / ChatGPT.com
+  drift too often to rely on; one user confirmation per session is
+  cheap. Phase 2c stays capture-only — decision applies when the
+  phase is unblocked.
+
+### Block B — `road-to-ai-council.md` retroactive validation (Phase 1 already shipped)
+
+- **Q44** ✅ `security` — **install-key tests confirmed 2026-05-02.**
+  Both `tests/test_install_openai_key.sh` and
+  `tests/test_install_anthropic_key.sh` to be written. Coverage:
+  `/dev/tty` enforcement, mode 0600, atomic write, format check
+  (`sk-` for OpenAI, `sk-ant-` for Anthropic), overwrite confirmation,
+  no `--force` bypass, no env-var bypass. Pattern reusable for future
+  providers. Unblocks A1.2 from `[-]` deferred → `[x]` done.
+
+- **Q45** ✅ `architecture` — **v1 council roster confirmed
+  2026-05-02.** Anthropic + OpenAI only. `ExternalAIClient` ABC stays
+  open; adding a third provider (Gemini, Mistral, Ollama) is a future
+  PR with its own client file, key-install script, and settings
+  entry. No Phase-1 code change.
+
+- **Q46** ✅ `security` — **explicit opt-in confirmed 2026-05-02.**
+  Key install ≠ permission to spend. Both `install_openai_key.sh` and
+  `install_anthropic_key.sh` to print a hint line on success:
+  `"To enable: set ai_council.members.<provider>.enabled: true in
+  .agent-settings.yml"`. Default `enabled: false` stays. Hard-Floor
+  rationale: council is billable, billable ops require explicit
+  user sign-off.
+
+- **Q47** ✅ `architecture` — **Phase-2 hook UX confirmed
+  2026-05-02.** Always-ask after `/roadmap-create`, `/create-pr`,
+  `/review-changes`, `/feature-plan` — `1 yes council / 2 no`.
+  Suppressed under `personal.autonomy: on` (council = billable
+  side effect). Decision applies when Phase 2 is unblocked. Hybrid
+  setting+flag rejected as over-engineered before real-user data.
+
+- **Q48** ✅ `architecture` — **stacked output rendering confirmed
+  2026-05-02.** Per-member section block with provider/model header,
+  full text, then a convergence/divergence summary written by the
+  host agent. Already implemented in `commands/council.md` Step 5.
+  Side-by-side rejected (breaks at <120 cols); compact-diff rejected
+  (loses provenance).
+
+- **Q49** ✅ `architecture` — **roadmap-mode bundle scope confirmed
+  2026-05-02.** `bundle_roadmap()` reads only the roadmap file; the
+  bundle manifest signals what was *not* included. User can expand
+  manually via `/council files:<paths>`. Auto-crawl rejected — more
+  context = more cost + bias surface (council sees what the host
+  agent chose to link, breaking neutrality).
 
 ### Cross-cutting follow-ups (surfaced during Phase 2b pass)
 
@@ -183,11 +224,11 @@ the decision and re-runs the affected work.
      point readers at the uncompressed source. Lowest effort, but
      the compression contract is broken.
 
-  **Recommendation:** Option 1 — Phase 2c is gated on Phase 2a
-  end-to-end verification which has no committed timeline.
-
-  **Status:** parked. `compress.py --check` will continue to flag
-  `commands/council.md` as drifted until this is resolved.
+  **Resolved 2026-05-02** — Option 1 selected. Compression sweep to
+  run **now** as a dedicated `artifact-drafting-protocol` session
+  (Understand → Research → Draft). Phase 2c has no committed
+  timeline; deferring further would land a fourth drift layer on
+  the next phase-pass. Compression contract must hold.
 
 ## See also
 
