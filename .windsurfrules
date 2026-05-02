@@ -3361,6 +3361,7 @@ without regenerating? The dashboard claims it does not exist. Marked
 EVERY ACTIVE ROADMAP MUST CONTAIN AT LEAST ONE TRACKABLE CHECKBOX
 (`- [ ]`) PER NON-INTRO PHASE. ROADMAPS WITHOUT EXECUTABLE STEPS
 EITHER GET A CHECKLIST OR THE `status: draft` FLAG.
+CI-ENFORCED: `task check-roadmap-trackable` (CANNOT BE DEFERRED).
 ```
 
 **Active roadmap =** any file in `agents/roadmaps/` (root, not
@@ -3373,9 +3374,21 @@ Tables of decisions, ICE matrices, ADR captures, and "block
 sequencing" tables are valid **rationale**, but they do not satisfy
 this rule on their own — they must be paired with at least one
 `## Phase N` section whose checkboxes execute the decision.
-Headings such as `## Phase steps`, `### Sequencing — Phase 1 …`, or
-`## Block A` do **not** count — only the canonical `Phase <id>`
-form parsed by the dashboard.
+Headings such as `## Phase steps`, `### Sequencing — Phase 1 …`,
+`### P0 #1 — …`, or `## Block A` do **not** count — only the
+canonical `Phase <id>` form parsed by the dashboard.
+
+**CI backstop.** `scripts/check_roadmap_trackable.py` (wired into
+`task ci` as `check-roadmap-trackable`) fails the build when:
+
+1. An active roadmap has zero `## Phase <id>` / `### Phase <id>`
+   headings (invisible to the dashboard), **or**
+2. Any parsed phase has zero `- [ ]` / `[x]` / `[~]` / `[-]` items
+   (shows as `⬜ empty`, contributes nothing to progress).
+
+The linter is the **last line of defence**, not the first. Real-time
+authoring still flips checkboxes and regenerates the dashboard
+in-response. CI catches drift the in-response gate missed.
 
 ## Status — binary `ready` (default) vs `draft`
 
