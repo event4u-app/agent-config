@@ -48,6 +48,77 @@ stop. Framing is exactly what kills the second-opinion value. Use the
 unbiased system prompts in `scripts/ai_council/prompts.py`; do not
 roll your own.
 
+### Neutrality — context-handoff
+
+External reviewers do better critique when they know **what the
+project is**, not just what the artefact looks like. The council
+ships a neutral **handoff preamble** (modelled on `/agent-handoff`)
+in front of every member's system prompt, assembled by
+`prompts.handoff_preamble(project, original_ask)`:
+
+| Carried | Forbidden |
+|---|---|
+| Project name (from `composer.json` / `package.json` / repo dir) | Host-agent identity (Augment, Claude Code, Cursor, Cline, Windsurf, Copilot agent) — stripped line-by-line before send |
+| Stack one-liner inferred from manifest files | Host-agent reasoning, prior turns, internal analysis |
+| One paragraph of repo purpose from `README.md` (max 400 chars) | Host-agent framing language ("I think this looks weak", "the user probably wants…") |
+| The user's **original ask** verbatim (the free-form sentence that triggered `/council`) | Anything the host agent generated about the artefact |
+
+`detect_project_context()` in `scripts/ai_council/project_context.py`
+reads only the manifest files + root README; missing fields collapse
+to `None` and the preamble silently omits the line. With both
+`project=None` and `original_ask=""`, the preamble degrades to the
+bare `NEUTRALITY_PREAMBLE` (v1 shape — back-compat for callers that
+have not migrated yet).
+
+## Execution modes
+
+A council member can run in one of three transports. The neutrality
+preamble is identical across all of them — only the path the bytes
+travel changes.
+
+| Mode | Client | Billable | Transport | Status |
+|---|---|---|---|---|
+| `api` | `AnthropicClient` / `OpenAIClient` | yes | provider SDK + key from `~/.config/agent-config/<provider>.key` | shipped |
+| `manual` | `ManualClient` | no | `stdout` (prompt block) + `stdin` (user pastes the web-UI reply, terminated by a line containing only `END`) | shipped (Phase 2b) |
+| `playwright` | `PlaywrightClient` | no | persistent-profile browser at the provider's chat URL via DOM adapter | reserved (Phase 2c — capture-only) |
+
+Resolution lives in `scripts/ai_council/modes.py`:
+`resolve_mode(name, invocation_mode, member_settings, global_mode)`
+with precedence **invocation flag > per-member setting > global
+setting > default (`api`)**. Whitespace-and-case insensitive; empty
+strings fall through; unknown values raise `InvalidModeError` with
+the offending settings path (`ai_council.mode`,
+`ai_council.members.<name>.mode`, or `/council mode=`).
+
+### Manual-mode UX
+
+`ManualClient` is the user-as-transport variant: the agent prints
+one Markdown block per member (system prompt + handoff preamble +
+artefact between two `═` rules), the user pastes it into a web
+chat (Claude.ai, ChatGPT, Gemini), then pastes the reply back
+ending with a line containing only `END`. After each reply, a 1/2/3
+menu surfaces:
+
+1. More feedback for this member (continue this thread)
+2. Done with this member, move to the next
+3. Abort the council run
+
+`1` re-emits a follow-up block addressed to the **same chat
+thread** (no system prompt repetition). `2` records the round and
+moves to the next member. `3` returns `error="manual_aborted"` for
+that member and the orchestrator stops the fan-out.
+
+### Cost-gate bypass for non-billable members
+
+`ExternalAIClient.billable` is the contract. Clients with
+`billable=False` (today: `ManualClient`; future: `PlaywrightClient`)
+bypass the cost gate entirely — the orchestrator skips the
+projection check, the `on_overrun` callback, and the USD-budget
+short-circuit for that member, but still records the response's
+token counts (from the manual-paste length heuristic or the
+provider's reply, when available) for observability. Mixed runs
+(one manual + one api) gate only the api members.
+
 ## Procedure
 
 1. **Resolve target.** Identify the artefact mode (`prompt`, `roadmap`,

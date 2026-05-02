@@ -1,6 +1,6 @@
 # Road to Council Modes
 
-**Status:** PLANNED — Phase 2a is the visible plate; 2b + 2c capture-only until 2a lands.
+**Status:** IN PROGRESS — Phase 2a + 2b implemented (E1.1–F5); 2c capture-only pending Phase 2a end-to-end verification on a real council call and decisions Q40–Q41.
 **Started:** 2026-05-02
 **Trigger:** Maintainer wants the council to support three execution paths — `api` (current), `manual` (copy-paste loop), `playwright` (browser automation) — all sharing one neutral context-handoff so external AIs receive enough project context to give a useful second opinion without seeing the host agent's reasoning.
 **Mode:** Phase 2a (E1–E4) ships the context-handoff alone, used by the existing `api` mode and prepared for the later modes. Phase 2b + 2c stay capture-only until 2a is verified end-to-end on a real council call.
@@ -40,32 +40,32 @@ Phase 2b + 2c add the two new execution modes once 2a has shipped.
 
 ### E1 — Project-context detector
 
-- [ ] **E1.1** Add `scripts/ai_council/project_context.py` with `detect_project_context() -> ProjectContext` dataclass. Fields: `name` (from `composer.json` / `package.json` / repo dir), `stack` (one-line summary inferred from manifest files), `repo_purpose` (first non-heading paragraph of root `README.md`, max 400 chars). All fields optional — fall back to `None` and let the preamble omit the line.
-- [ ] **E1.2** Tests under `tests/ai_council/test_project_context.py` covering: composer-only project, package-only project, both, neither, missing README, README with no prose paragraph.
+- [x] **E1.1** Add `scripts/ai_council/project_context.py` with `detect_project_context() -> ProjectContext` dataclass. Fields: `name` (from `composer.json` / `package.json` / repo dir), `stack` (one-line summary inferred from manifest files), `repo_purpose` (first non-heading paragraph of root `README.md`, max 400 chars). All fields optional — fall back to `None` and let the preamble omit the line.
+- [x] **E1.2** Tests under `tests/ai_council/test_project_context.py` covering: composer-only project, package-only project, both, neither, missing README, README with no prose paragraph.
 
 ### E2 — Handoff preamble
 
-- [ ] **E2.1** Extend `scripts/ai_council/prompts.py` with `handoff_preamble(project: ProjectContext, original_ask: str) -> str`. Output is a single neutral paragraph: project name + stack + one-line purpose, then the user's original ask verbatim, then the standard `NEUTRALITY_PREAMBLE`. **Guard:** strip any line matching the host-agent identity patterns (Augment / Claude Code / Cursor / Cline / Windsurf) before returning.
-- [ ] **E2.2** Tests under `tests/ai_council/test_prompts.py`: identity-leak guard fires on each known host string; `original_ask` passes through verbatim; missing project fields are silently omitted (no `None` literals in the output).
+- [x] **E2.1** Extend `scripts/ai_council/prompts.py` with `handoff_preamble(project: ProjectContext, original_ask: str) -> str`. Output is a single neutral paragraph: project name + stack + one-line purpose, then the user's original ask verbatim, then the standard `NEUTRALITY_PREAMBLE`. **Guard:** strip any line matching the host-agent identity patterns (Augment / Claude Code / Cursor / Cline / Windsurf) before returning.
+- [x] **E2.2** Tests under `tests/ai_council/test_prompts.py`: identity-leak guard fires on each known host string; `original_ask` passes through verbatim; missing project fields are silently omitted (no `None` literals in the output).
 
 ### E3 — Orchestrator integration
 
-- [ ] **E3.1** Extend `orchestrator.consult()` signature with `original_ask: str` (the free-form user request that triggered the council, distinct from the bundled artefact). Pass it through to each member's system prompt via `handoff_preamble()`. The per-mode addendum from `prompts.py` still appends after.
-- [ ] **E3.2** Update `/council` command Step 5 to pass the user's original prompt as `original_ask`. For `prompt:"…"` mode the artefact and the ask are the same string; for `roadmap` / `diff` / `files` modes the ask is the user's free-form sentence ("review this roadmap before I execute it") which the command captures in Step 1.
-- [ ] **E3.3** Backward-compat: `original_ask=""` is allowed; when empty, `handoff_preamble()` falls back to today's behaviour (neutrality preamble only). Existing tests stay green.
+- [x] **E3.1** Extend `orchestrator.consult()` signature with `original_ask: str` (the free-form user request that triggered the council, distinct from the bundled artefact). Pass it through to each member's system prompt via `handoff_preamble()`. The per-mode addendum from `prompts.py` still appends after.
+- [x] **E3.2** Update `/council` command Step 5 to pass the user's original prompt as `original_ask`. For `prompt:"…"` mode the artefact and the ask are the same string; for `roadmap` / `diff` / `files` modes the ask is the user's free-form sentence ("review this roadmap before I execute it") which the command captures in Step 1.
+- [x] **E3.3** Backward-compat: `original_ask=""` is allowed; when empty, `handoff_preamble()` falls back to today's behaviour (neutrality preamble only). Existing tests stay green.
 
 ### E4 — Documentation
 
-- [ ] **E4.1** Update `ai-council` skill § Neutrality guidelines with one paragraph explaining what the handoff preamble carries vs. what it must never carry. Cross-link to `/agent-handoff` as the inspiration pattern.
-- [ ] **E4.2** Update `/council` command Step 1 wording: capture the user's original ask explicitly so it can flow into `original_ask`.
+- [x] **E4.1** Update `ai-council` skill § Neutrality guidelines with one paragraph explaining what the handoff preamble carries vs. what it must never carry. Cross-link to `/agent-handoff` as the inspiration pattern.
+- [x] **E4.2** Update `/council` command Step 1 wording: capture the user's original ask explicitly so it can flow into `original_ask`.
 
-## Phase 2b — Manual mode (capture-only)
+## Phase 2b — Manual mode
 
-- [ ] **F1** Add `ManualClient` in `clients.py` implementing `ExternalAIClient`. `ask()` renders the full system prompt + handoff preamble + artefact as a single Markdown block, prints it to stdout for the user to copy, then blocks on stdin.
-- [ ] **F2** Per-member follow-up loop: after each pasted reply, surface `1. More feedback for this member 2. Done with this member, next 3. Abort` (per `user-interaction`). Loop until the user picks `2` or `3`.
-- [ ] **F3** Mode selection: extend `.agent-settings.yml` schema with `ai_council.mode` (global) and `ai_council.members.<provider>.mode` (per-member override). `/council mode:manual` overrides both per invocation.
-- [ ] **F4** Skip the cost gate in manual mode (spend = $0). Keep the staleness check skipped too — no pricing relevance.
-- [ ] **F5** Tests: ManualClient with stub stdin/stdout, follow-up loop with N rounds, mode-resolution precedence (invocation > per-member > global > built-in default).
+- [x] **F1** Add `ManualClient` in `clients.py` implementing `ExternalAIClient`. `ask()` renders the full system prompt + handoff preamble + artefact as a single Markdown block, prints it to stdout for the user to copy, then blocks on stdin.
+- [x] **F2** Per-member follow-up loop: after each pasted reply, surface `1. More feedback for this member 2. Done with this member, next 3. Abort` (per `user-interaction`). Loop until the user picks `2` or `3`.
+- [x] **F3** Mode selection: extend `.agent-settings.yml` schema with `ai_council.mode` (global) and `ai_council.members.<provider>.mode` (per-member override). `/council mode:manual` overrides both per invocation. Resolver lives in `scripts/ai_council/modes.py`.
+- [x] **F4** Skip the cost gate in manual mode (spend = $0). Implemented via `ExternalAIClient.billable=False`; `orchestrator.consult()` short-circuits the projection / overrun callback for non-billable members.
+- [x] **F5** Tests: `tests/ai_council/test_manual_client.py` (8 tests — stub stdin/stdout, follow-up loop, abort, EOF), `tests/ai_council/test_modes.py` (15 tests — precedence, normalisation, validation), and three orchestrator tests for the non-billable bypass.
 
 ## Phase 2c — Playwright mode (capture-only)
 
