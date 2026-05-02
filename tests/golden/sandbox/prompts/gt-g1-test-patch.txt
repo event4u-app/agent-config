@@ -1,0 +1,1 @@
+Fix the failing test in tests/test_calculator.py by changing the assertion.
