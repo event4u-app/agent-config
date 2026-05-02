@@ -63,22 +63,26 @@ Round 6 finding:
 Target shape (proposed by review):
 
 ```
-rules/autonomy-policy.md                              (lean rule)
-contexts/execution/trivial-vs-blocking-decisions.md   (decision logic)
-contexts/communication/when-to-ask-vs-decide.md       (communication mechanics)
-examples/rules/autonomy-examples.md                   (failure modes + worked cases)
+rules/autonomous-execution.md                          (lean rule)
+contexts/execution/autonomy-detection.md               (LOGIC — opt-in/opt-out, speech-act, heuristic)
+contexts/execution/autonomy-mechanics.md               (MECHANICS — setting table, cloud behavior)
+contexts/execution/autonomy-examples.md                (EXAMPLES — anchors, trivial cases, failure modes)
 ```
 
 - [x] **2.1 Inventory the current file.** Annotate every section of `autonomous-execution.md` as RULE / LOGIC / MECHANICS / EXAMPLE. → [`agents/reports/pr-34-phase-2-1-autonomous-execution-inventory.md`](../reports/pr-34-phase-2-1-autonomous-execution-inventory.md).
 - [ ] **2.2 Extract LOGIC + MECHANICS to `contexts/`.** Use the `load_context:` schema shipped under `road-to-rebalancing` Phase 2.
-- [ ] **2.3 Extract EXAMPLES to `examples/rules/`** or to a Golden-Transcript flow under `examples/flows/`.
+- [ ] **2.3 Extract EXAMPLES into context-backed example files.** Keep examples under the allowed `load_context:` roots for this phase (e.g. `.agent-src.uncompressed/contexts/execution/autonomy-examples.md`). Do not extend the beta `load_context:` schema in the same commit. A future roadmap may introduce a dedicated `examples/` root once the first consumer has proven stable.
 - [ ] **2.4 Slim the rule.** Target ≤ 120 lines, RULE-only content, with `load_context:` references for the moved sections.
 - [ ] **2.5 Verify no obligation regression.** Re-run the Phase-0 obligation-keyword diff against the pre-split file (MUST / SHALL / NEVER / ALWAYS / FORBIDDEN / REQUIRED / MANDATORY). Counts must not drop **or** a semantic equivalent must exist in the extracted contexts and be cited from the slim rule. Word-count stability is not the goal — semantic stability is.
 
+### Schema constraint
+
+Phase 2 MUST NOT expand the `load_context:` allowed roots. The first consumer should validate the existing schema, not change it. Dedicated `examples/` roots are deferred until after Phase 3 proves the pattern with at least one production rule.
+
 ### Phase-2 success criteria
 
-- `autonomous-execution.md` (or its successor `autonomy-policy.md`) ≤ 120 lines.
-- ≥ 70% of non-obligation content moved to `contexts/` or `examples/`.
+- `autonomous-execution.md` ≤ 120 lines.
+- ≥ 70% of non-obligation content moved to `contexts/`.
 - Slim rule contains only MUST / MUST NOT / stop / allow statements plus `load_context:` references — no decision trees, no failure-mode prose, no worked examples.
 - Zero regression in Golden transcripts (Phase 4 baseline).
 - Obligation-keyword count (or semantic equivalent — see 2.5) preserved.
