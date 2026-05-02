@@ -25,7 +25,7 @@ SUGGEST. NEVER INVOKE. THE USER PICKS, ALWAYS.
 ```
 
 A suggestion block emits options. It does **not** start a command
-flow. The user picking option N triggers `slash-commands` on the
+flow. The user picking option N triggers `slash-command-routing-policy` on the
 **next** turn — with all the command's own halts intact.
 
 ## When to fire
@@ -33,7 +33,7 @@ flow. The user picking option N triggers `slash-commands` on the
 On a user turn that matches **all** of the following:
 
 1. The message does **not** start with an explicit `/command` (those
-   bypass suggestion entirely — see `slash-commands`).
+   bypass suggestion entirely — see `slash-command-routing-policy`).
 2. `commands.suggestion.enabled` is `true` (default).
 3. The user has not issued `/command-suggestion-off` in this conversation.
 4. No clarification is owed for the same turn (per
@@ -110,7 +110,7 @@ prompt runs exactly as it would without this rule.
 
 ## What this rule does NOT do
 
-- Invoke any command. Picking option N is what triggers `slash-commands`.
+- Invoke any command. Picking option N is what triggers `slash-command-routing-policy`.
 - Stack with other questions. One numbered-options block per turn.
 - Re-trigger on its own output. Command names emitted in the
   suggestion block are excluded from the next-turn matcher input.
@@ -126,7 +126,7 @@ available — degrade silently, never crash the turn.
 
 ## Interactions
 
-- [`slash-commands`](slash-commands.md) — explicit `/command` skips suggestion entirely.
+- [`slash-command-routing-policy`](slash-command-routing-policy.md) — explicit `/command` skips suggestion entirely.
 - [`user-interaction`](user-interaction.md) — numbered-options Iron Law and single-source recommendation.
 - [`ask-when-uncertain`](ask-when-uncertain.md) — clarification wins on conflict.
 - [`scope-control`](scope-control.md) — git-op gates outrank suggestion.

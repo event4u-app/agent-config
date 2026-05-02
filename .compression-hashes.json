@@ -185,7 +185,7 @@
   "rules/size-enforcement.md": "fdbfe0bb0ed915700e3144ecb3bc1949f58f0d47535ed3f17071b45452bbbcc0",
   "rules/skill-improvement-trigger.md": "17f717e5f7f9e2e212d251ad0b172f5ed147976959c4b7f03b11505ba7d8f0d6",
   "rules/skill-quality.md": "192652adab1a9a62cac130b3c426d3b634c9f7fa0d31780b357b396a90d7f930",
-  "rules/slash-commands.md": "27edaf6a96d611e87aeff6006de517edaac0b21ea9aaee5e5f6f080b4abf91f9",
+  "rules/slash-command-routing-policy.md": "27edaf6a96d611e87aeff6006de517edaac0b21ea9aaee5e5f6f080b4abf91f9",
   "rules/think-before-action.md": "ea3c4ee91d0991aace1c2c74c88abcc0a11e4f79c4e878479a698168d996cab7",
   "rules/token-efficiency.md": "e3366a04cdbcc558f425574268c7454299a8884b7815f036c4cfb078ebfe7e35",
   "rules/tool-safety.md": "b13f3564a58a19f3af7c64c2000e0a13eb966c86f4d66f60938f4fad76c8164b",

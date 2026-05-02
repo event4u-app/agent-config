@@ -22,7 +22,7 @@ delivery; this doc explains the contract every suggestion must honour.
 ```
 user turn
    │
-   ├── starts with "/cmd" ──────────────► slash-commands handles it. STOP.
+   ├── starts with "/cmd" ──────────────► slash-command-routing-policy handles it. STOP.
    │
    ├── senior-rule active                ►  STOP.  (clarification owed,
    │   (ask-when-uncertain, scope gate,      role-mode contract, engine
