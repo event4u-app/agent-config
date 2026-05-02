@@ -86,6 +86,8 @@
   "commands/work.md": "e148c228af53fe0ba1aecdc0ee095c1ca28cffd793288fae102b6f5cff0367c5",
   "contexts/augment-infrastructure.md": "cb3193090724fa66487d87e1ea566c4b189549c3dcf19ee8831e824ba0cc6c5b",
   "contexts/documentation-hierarchy.md": "89088ae20880282c75064d0b4ee3421b4c200e2080d6fa8de630ed404eab769a",
+  "contexts/execution/autonomy-detection.md": "45191db621d75a588fbc13b9d477e083607fa6162a9a9cc28d32eb7917748fac",
+  "contexts/execution/autonomy-mechanics.md": "9cab379ba6ef5389885bc6b9253e428c667afc58f18fe1f6572176c44f1ccc75",
   "contexts/model-recommendations.md": "f55a85144280730ac837a263306cf92463162047319890111fd225b7ed2c0f8f",
   "contexts/override-system.md": "3ddd95d8362bf2c7d8b3f4e29d4bc77e74ccc85e76ba45721068f54643fa862e",
   "contexts/skills-and-commands.md": "5343df8781a72a3f6172808c4f1d36ed81f313b4960b49dd7e6fa8d23af5b12e",
