@@ -318,6 +318,60 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.15.0](https://github.com/event4u-app/agent-config/compare/1.14.0...1.15.0) (2026-05-02)
+
+### Features
+
+* **governance:** rule-interaction matrix + linter (P2.2) ([cd68591](https://github.com/event4u-app/agent-config/commit/cd6859174d289737b829fe49a4c7f92bd318a290))
+* **rules:** split chat-history into ownership/cadence/visibility (P2.1) ([7b5348d](https://github.com/event4u-app/agent-config/commit/7b5348d2656c12000fca667c2e577c026839aa11))
+* **governance:** command-collapse contract + atomic-command linter (P0.8) ([5f1ebb7](https://github.com/event4u-app/agent-config/commit/5f1ebb72484da28679f7a49fffc5cbb4bd7a07f6))
+* **work_engine:** default state file → .work-state.json + collision-safe backup ([b0f487a](https://github.com/event4u-app/agent-config/commit/b0f487a3f261797320b3726211206f813f2c2c1a))
+* **docs:** public contracts to docs/contracts/ + STABILITY policy + link checker ([7c6ac17](https://github.com/event4u-app/agent-config/commit/7c6ac17609d19505625cb4fa9a76798a403997ad))
+* support capture-only roadmaps in dashboard generator ([c0df2dc](https://github.com/event4u-app/agent-config/commit/c0df2dc3c680a6cfa6c87f2e64868360695fa3ec))
+
+### Bug Fixes
+
+* **rules:** restore Iron Law heading + code blocks in compressed roadmap-progress-sync ([96c633b](https://github.com/event4u-app/agent-config/commit/96c633b583fc17ea560fe1ddf7b915ab5a3be3f3))
+* **ci:** clear check-refs regressions in roadmap files ([56b40f3](https://github.com/event4u-app/agent-config/commit/56b40f397e632337f5f69a507b13aa2b475453c3))
+
+### Performance
+
+* **ci:** smoke GT subset + duration line + nightly full replay (P2.4) ([7b0608d](https://github.com/event4u-app/agent-config/commit/7b0608d3f51bac534f835424860049483ae6004a))
+
+### Documentation
+
+* **ui-track:** 1-page mental model + archive Phase 2 roadmap — P2.10/P2.11 ([d87673d](https://github.com/event4u-app/agent-config/commit/d87673d75ec8cd0136336a1954b356a953b79e4e))
+* **install:** relabel install paths (advanced/experimental/staged) — P2.5 ([66e5389](https://github.com/event4u-app/agent-config/commit/66e53894f3dd12ff0762a56f677e302d1ca726c1))
+* add visible (beta) markers to public-surface contract links ([282b74f](https://github.com/event4u-app/agent-config/commit/282b74fccab2c0ba585271013c5fe61b396aaa09))
+* positioning headline + work_engine vs runtime_dispatcher separation ([ccf833f](https://github.com/event4u-app/agent-config/commit/ccf833f07b34ff2c6c5cf64e8328fb67b7629c4d))
+* **roadmaps:** reviewer feedback + directional → out-of-horizon ([6af0320](https://github.com/event4u-app/agent-config/commit/6af03205537d761a0cbe6c205662c34854deea6a))
+* **rules:** position-agnostic recommendation in user-interaction ([ee57ae0](https://github.com/event4u-app/agent-config/commit/ee57ae0d233b3332f30dfd3d3f67b3954ce153ef))
+* **roadmaps:** retire stale open-questions and placeholder sections ([c1ec177](https://github.com/event4u-app/agent-config/commit/c1ec17782521bb5688260d1873423fbf4d4adc99))
+* **roadmaps:** synthesize decisions from multi-AI review ([4d9dcc1](https://github.com/event4u-app/agent-config/commit/4d9dcc19929fe7d3fa2657509a4b8a2e9a1ee7e2))
+* add capture-only synthesis roadmaps ([d2bdb76](https://github.com/event4u-app/agent-config/commit/d2bdb76ec562d8a00313f49b388083fdad8f1b42))
+
+### Refactoring
+
+* **work_engine:** modularise cli.py into 7 focused modules (P2.3) ([ad92366](https://github.com/event4u-app/agent-config/commit/ad9236681c1537beec3d407bead9b7386c57c73d))
+* **roadmaps:** binary status model — ready (implicit) / draft (hidden) ([2d3d713](https://github.com/event4u-app/agent-config/commit/2d3d713a52ac039c08317817331ba6aaa81fcb12))
+
+### Tests
+
+* **work_engine:** cover default state file + UI-prompt routing + medium-band halt (P0.7) ([e97c499](https://github.com/event4u-app/agent-config/commit/e97c499fa7daaf0478423efbdb34d648b6e400c8))
+
+### Chores
+
+* **generated:** sync compressed projections for chat-history split (P2.1) ([f53a44f](https://github.com/event4u-app/agent-config/commit/f53a44f31fd7d93c28122b945f8059bd112dc854))
+* **generated:** regenerate .windsurfrules after rule edits ([0090392](https://github.com/event4u-app/agent-config/commit/00903924eaf1955ad2049dc03c3c57d9f4ff016e))
+* **roadmaps:** mark Phase 1 progress in road-to-post-pr29-optimize + dashboard ([a2160af](https://github.com/event4u-app/agent-config/commit/a2160afd6e7280bd3d4a71641fb4dba8234edf21))
+* **scripts:** whitelist scripts/mcp_server/ in portability check ([259745e](https://github.com/event4u-app/agent-config/commit/259745e9f52ea0a60e3e92a553a5938b15adc0ca))
+
+### Other
+
+* **readme:** drop redundant 'no runtime deps' bullet — clear 500-line limit ([53b5df4](https://github.com/event4u-app/agent-config/commit/53b5df481122ccbd70ce358a3192643c7fff73b0))
+* **readme:** trim Stability tiers + command-suggestion blocks to clear 500-line limit ([5bb50ba](https://github.com/event4u-app/agent-config/commit/5bb50ba43d8734f5deb02c0b34c9c6e26475c52b))
+* **rules:** trim roadmap-progress-sync to 199 lines (clear CI hard limit) ([12c3a2e](https://github.com/event4u-app/agent-config/commit/12c3a2e1357dfca7ec0bd2f6b507e606ec2de596))
+
 ## [1.14.0](https://github.com/event4u-app/agent-config/compare/1.13.0...1.14.0) (2026-05-01)
 
 ### Features
