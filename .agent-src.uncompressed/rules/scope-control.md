@@ -100,3 +100,43 @@ A proposal that "might be sensible" is not enough reason to ask.
 Default: stay on the current branch, no release language. Only ask
 when there's a concrete, evidence-based reason (e.g. risky migration
 benefits from a spike branch). If in doubt, do not ask.
+
+## Fenced step — user-set review gates
+
+When the user explicitly fences off the next step — *"don't implement
+yet"*, *"plan only"*, *"just write the roadmap, I'll review"*,
+*"review first"*, *"erst Roadmap, ich schau drüber"*, *"nichts
+implementieren"*, *"nur planen"*, *"erstmal nur X, dann ich"* — the
+agent's reply is **the deliverable plus a handoff**, never the
+deliverable plus *"shall we start?"*.
+
+```
+USER FENCED OFF EXECUTION → DELIVER + HAND BACK.
+NO NUMBERED OPTION OFFERING TO BEGIN WORK.
+NO "READY TO IMPLEMENT?" RE-ASK.
+NO "STARTEN WIR MIT PHASE 1?" PIVOT.
+```
+
+The fence stands until the user reopens the topic themselves, exactly
+like `Decline = silence` above. Permitted follow-up questions on the
+same turn cover **the deliverable** (adjust scope, fix wording, add a
+section), never **its execution**.
+
+Failure modes:
+
+- Numbered-options block whose Option 1 is *"start with Phase 1 / E1.1
+  / step X"*. The fence makes execution off-limits; offering it as the
+  default choice violates the fence.
+- Re-asking *"may I begin now?"* after delivering the plan. The user
+  said no execution; that decision is binding for the rest of the
+  task.
+- Treating delivery as a hand-off **to execution** (*"roadmap is
+  ready, kicking off E1.1"*) instead of a hand-off **to review**
+  (*"roadmap is ready, over to you"*).
+- Inferring *"plan accepted"* from a thumbs-up or short
+  acknowledgement. Acceptance of the plan is not authorization to
+  start; the user gives the green light explicitly when ready.
+
+Bypass: a clear *"go ahead"*, *"start now"*, *"mach weiter"*, or an
+explicit *"approved, implement E1.1"* on a later turn lifts the fence.
+Until then: silence on execution.
