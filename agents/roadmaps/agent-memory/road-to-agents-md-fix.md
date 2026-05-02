@@ -1,3 +1,7 @@
+---
+status: draft
+---
+
 # Spec: Fix the stale AGENTS.md in `agent-memory`
 
 > **Spec for `agent-memory`, authored from `agent-config`.**

@@ -6,26 +6,42 @@
 
 ## Overall
 
-**40 / 134 steps done · 30%**
+**47 / 148 steps done · 32%**
 
 ```text
-████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
+█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   32%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-ai-council.md](roadmaps/road-to-ai-council.md) | 4 | 38 | 12 | 26 | 0 | 0 | ███████░░░ 68% |
-| 2 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 2 | 34 | 34 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-council-modes.md](roadmaps/road-to-council-modes.md) | 3 | 20 | 6 | 14 | 0 | 0 | ███████░░░ 70% |
-| 4 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 6 | [road-to-rebalancing.md](roadmaps/road-to-rebalancing.md) | 7 | 0 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-1-15-followups.md](roadmaps/road-to-1-15-followups.md) | 9 | 14 | 7 | 7 | 0 | 0 | █████░░░░░ 50% |
+| 2 | [road-to-ai-council.md](roadmaps/road-to-ai-council.md) | 4 | 38 | 12 | 26 | 0 | 0 | ███████░░░ 68% |
+| 3 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 1 | 34 | 34 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-council-modes.md](roadmaps/road-to-council-modes.md) | 3 | 20 | 6 | 14 | 0 | 0 | ███████░░░ 70% |
+| 5 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 6 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
 ## Per-roadmap phase breakdown
+
+### [road-to-1-15-followups.md](roadmaps/road-to-1-15-followups.md)
+
+**Road to 1.15 Followups** — 7 / 14 done (50%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Identity rewrite (P0 #1, Laravel ≠ identity) | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 2 | Always-rule budget (P0 #2, capture-only, sequenced after Phase 1) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 3 | Command-collapse phase 1 (P0 #3, capture-only) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 4 | Token-overhead wording fix (P0 #4) | ✅ done | 0 | 1 | 0 | 0 | 100% |
+| 5 | Work-Engine CLI modularisation (P1 #5) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 6 | Public artefact catalog (P1 #6) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 7 | Outcome demos (P1 #7) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 8 | Rule-interaction matrix substance (P2 #8) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 9 | Outcome-aware telemetry (P2 #9) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 
 ### [road-to-ai-council.md](roadmaps/road-to-ai-council.md)
 
@@ -45,7 +61,6 @@
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Thinking Layer execution | ⬜ not started | 34 | 0 | 0 | 0 | 0% |
-| 1 | ICE table | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 
 ### [road-to-council-modes.md](roadmaps/road-to-council-modes.md)
 
@@ -80,18 +95,4 @@
 | 4 | Tools (engine helpers) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 5 | Real setup docs (the deliverable from option 3) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 6 | Distribution polish (deferred) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-
-### [road-to-rebalancing.md](roadmaps/road-to-rebalancing.md)
-
-**Road to Rebalancing** — 0 / 0 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Removed-Knowledge Audit | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
-| 1 | Pilot Context Split (2–3 rules) | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
-| 2 | Context Loading Convention + Linter | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
-| 3 | Guidelines Domain Folders | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
-| 4 | Golden-Transcript-Backed Demos (`examples/flows/`) | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
-| 5 | Rule Priority Hierarchy + Interaction Matrix | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
-| 6 | Senior-Agent Behavior Tests | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 

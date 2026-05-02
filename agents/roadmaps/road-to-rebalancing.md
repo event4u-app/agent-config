@@ -1,3 +1,7 @@
+---
+status: draft
+---
+
 # Road to Rebalancing
 
 **Status:** CAPTURE — five rounds of external feedback collected. **Not yet validated, not yet scoped for execution.**

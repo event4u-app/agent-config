@@ -1,3 +1,7 @@
+---
+status: draft
+---
+
 # Spec: Consumer integration guide
 
 > **Spec for `agent-memory`, authored from `agent-config`.**

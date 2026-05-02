@@ -47,7 +47,7 @@ Consolidate the 1.15.0 review into actionable, scoped phases — without resurfa
 
 ## P0 — Visible plate
 
-### P0 #1 — Identity rewrite (Laravel ≠ identity)
+### Phase 1 — Identity rewrite (P0 #1, Laravel ≠ identity)
 
 > Granularity: F-step, each row is a single PR-able commit.
 
@@ -77,15 +77,19 @@ Consolidate the 1.15.0 review into actionable, scoped phases — without resurfa
 
 **Exit criteria:** Stranger reads README top + AGENTS top + copilot-instructions top — comes away thinking "universal governance package, Laravel happens to have the deepest skill density today" — never "Laravel package".
 
-### P0 #2 — Always-rule budget (capture-only, sequenced after #1)
+### Phase 2 — Always-rule budget (P0 #2, capture-only, sequenced after Phase 1)
 
 Targets from review: `always total ≤ 49k tokens`, `single always rule ≤ 8k`, `top-5 always ≤ 28k`. Current state shows 56 rules — bigger than at 1.14.0. Scope: identify which rules can demote to `auto`, which can merge, and which are genuinely always-on. Hand-off to `agent-authority` index pattern if the discussion surfaces a higher-band consolidation.
 
-### P0 #3 — Command-collapse phase 1 (capture-only)
+- [ ] **Promote to executable** — itemise demotion + merge candidates against the three budget targets, then ship the demotions.
+
+### Phase 3 — Command-collapse phase 1 (P0 #3, capture-only)
 
 Top-3 collapse already in plan: `/fix`, `/feature`, `/optimize`. Old commands stay as shims behind `lint-no-new-atomic-commands` (already shipped 1.15.0). Scope: produce a deliverable list of commands per cluster + shim plan + linter exemption story.
 
-### P0 #4 — Token-overhead wording fix ✅ DONE 2026-05-02
+- [ ] **Promote to executable** — list commands per cluster, define shim mechanism, resolve linter-exemption story, ship shims.
+
+### Phase 4 — Token-overhead wording fix (P0 #4)
 
 Replaced. `README.md` § "You don't need everything" Cost-profiles table at L255–259:
 
@@ -95,29 +99,41 @@ Replaced. `README.md` § "You don't need everything" Cost-profiles table at L255
 
 Single-table edit, zero downstream callers, `task ci` green.
 
+- [x] **Replace** `Token overhead` → `Runtime process overhead` and `Zero` → `None` in README cost-profiles table (commit 1bcdb26, 2026-05-02).
+
 ## P1 — Capture-only
 
-### P1 #5 — Work-Engine CLI modularisation
+### Phase 5 — Work-Engine CLI modularisation (P1 #5)
 
 Split `cli.py` into focused modules: `cli_args.py`, `state_io.py`, `input_builders.py`, `hook_bootstrap.py`, `runner.py`, `emitters.py`. Not cosmetic — the engine is the product core; future extension surfaces (memory, telemetry, council integration) will hit it directly.
 
-### P1 #6 — Public artefact catalog
+- [ ] **Promote to executable** — per-module extraction plan + tests + cutover for the `cli.py` split.
 
-Today there is no navigable public index across the 300+ artefacts (skills, commands, rules, guidelines). Goal: a maintained catalog usable by humans **and** agents \u2014 likely generated from frontmatter, not hand-written.
+### Phase 6 — Public artefact catalog (P1 #6)
 
-### P1 #7 — Outcome demos
+Today there is no navigable public index across the 300+ artefacts (skills, commands, rules, guidelines). Goal: a maintained catalog usable by humans **and** agents — likely generated from frontmatter, not hand-written.
+
+- [ ] **Promote to executable** — pick catalog format, decide generation source (frontmatter), wire freshness check into CI.
+
+### Phase 7 — Outcome demos (P1 #7)
 
 Backend `/implement-ticket` walkthrough, `/work` free-form walkthrough, UI track walkthrough, blocked / partial-completion path walkthrough. The package today demonstrates inputs and outputs separately; the demo gap is end-to-end traces.
 
+- [ ] **Promote to executable** — script the four end-to-end walkthroughs (backend / free-form / UI / blocked).
+
 ## P2 — Capture-only
 
-### P2 #8 — Rule-interaction matrix substance
+### Phase 8 — Rule-interaction matrix substance (P2 #8)
 
 `lint-rule-interactions` shipped 1.15.0; the matrix it lints against is still thin. Phase-2 work: populate the interaction matrix with the real cross-rule semantics (Hard Floor wins, Permission Gate above Commit Default, etc.).
 
-### P2 #9 — Outcome-aware telemetry
+- [ ] **Promote to executable** — populate the rule-interaction matrix with cross-rule semantics, validate via `lint-rule-interactions`.
+
+### Phase 9 — Outcome-aware telemetry (P2 #9)
 
 Current artefact-engagement telemetry records "consulted / applied". Extend to: `blocked`, `partial`, `memory_influenced_decision`, `verification_failed`, `stop_rule_triggered`. Outcomes, not just artefact hits.
+
+- [ ] **Promote to executable** — add the five outcome categories to the telemetry recorder + report.
 
 ## Out of scope for this roadmap
 
