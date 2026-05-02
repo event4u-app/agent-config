@@ -7,14 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "CI is failing, fix the GitHub Actions errors, the pipeline is red"
   trigger_context: "open PR with failing checks"
+superseded_by: fix ci
+deprecated_in: "1.15.0"
 ---
 
-<!-- F2-deprecation-banner -->
-> **Deprecated — use `/fix ci`.** This standalone command
-> is kept as a deprecation shim for one release cycle and routes to
-> the same instructions below. New invocations should go through the
-> `/fix` orchestrator (`commands/fix.md`).
-<!-- /F2-deprecation-banner -->
+> ⚠️  /fix-ci is deprecated; use /fix ci instead.
+> This shim is retained for one release cycle (1.15.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # fix-ci
 

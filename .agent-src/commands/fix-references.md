@@ -5,14 +5,12 @@ disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Package-internal — only the event4u/agent-config repo runs this."
+superseded_by: fix refs
+deprecated_in: "1.15.0"
 ---
 
-<!-- F2-deprecation-banner -->
-> **Deprecated — use `/fix references`.** This standalone command
-> is kept as a deprecation shim for one release cycle and routes to
-> the same instructions below. New invocations should go through the
-> `/fix` orchestrator (`commands/fix.md`).
-<!-- /F2-deprecation-banner -->
+> ⚠️  /fix-references is deprecated; use /fix refs instead.
+> This shim is retained for one release cycle (1.15.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # fix-references
 

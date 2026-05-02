@@ -28,6 +28,26 @@
         "pattern": "^[a-z][a-z0-9-]*$"
       }
     },
+    "cluster": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Locked verb cluster this command belongs to. See docs/contracts/command-clusters.md."
+    },
+    "sub": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Sub-command identifier within the cluster (e.g. `ci` for `/fix ci`)."
+    },
+    "superseded_by": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*( [a-z][a-z0-9-]*)?$",
+      "description": "Set on deprecation shims. Format: '<cluster> <sub>' (e.g. 'fix ci'). See docs/contracts/command-clusters.md § Deprecation shim contract."
+    },
+    "deprecated_in": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Semver release in which this command became a shim (e.g. '1.15.0')."
+    },
     "suggestion": {
       "type": "object",
       "additionalProperties": false,

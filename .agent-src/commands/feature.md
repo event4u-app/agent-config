@@ -1,6 +1,7 @@
 ---
 name: feature
 description: Feature orchestrator — routes to explore, plan, refactor, roadmap, dev
+cluster: feature
 disable-model-invocation: true
 suggestion:
   eligible: true

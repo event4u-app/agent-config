@@ -7,14 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "update the feature plan, refine the feature spec"
   trigger_context: "existing agents/features/*.md referenced in the prompt"
+superseded_by: feature refactor
+deprecated_in: "1.15.0"
 ---
 
-<!-- F2-deprecation-banner -->
-> **Deprecated — use `/feature refactor`.** This standalone command
-> is kept as a deprecation shim for one release cycle and routes to
-> the same instructions below. New invocations should go through the
-> `/feature` orchestrator (`commands/feature.md`).
-<!-- /F2-deprecation-banner -->
+> ⚠️  /feature-refactor is deprecated; use /feature refactor instead.
+> This shim is retained for one release cycle (1.15.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # feature-refactor
 

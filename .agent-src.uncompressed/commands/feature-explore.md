@@ -7,14 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "brainstorm this idea, explore this feature concept"
   trigger_context: "open-ended feature idea without acceptance criteria"
+superseded_by: feature explore
+deprecated_in: "1.15.0"
 ---
 
-<!-- F2-deprecation-banner -->
-> **Deprecated — use `/feature explore`.** This standalone command
-> is kept as a deprecation shim for one release cycle and routes to
-> the same instructions below. New invocations should go through the
-> `/feature` orchestrator (`commands/feature.md`).
-<!-- /F2-deprecation-banner -->
+> ⚠️  /feature-explore is deprecated; use /feature explore instead.
+> This shim is retained for one release cycle (1.15.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # feature-explore
 

@@ -6,14 +6,12 @@ disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Niche maintenance tool with no recurring NL trigger."
+superseded_by: optimize augmentignore
+deprecated_in: "1.15.0"
 ---
 
-<!-- F2-deprecation-banner -->
-> **Deprecated — use `/optimize augmentignore`.** This standalone command
-> is kept as a deprecation shim for one release cycle and routes to
-> the same instructions below. New invocations should go through the
-> `/optimize` orchestrator (`commands/optimize.md`).
-<!-- /F2-deprecation-banner -->
+> ⚠️  /optimize-augmentignore is deprecated; use /optimize augmentignore instead.
+> This shim is retained for one release cycle (1.15.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 <!-- cloud_safe: noop -->
 

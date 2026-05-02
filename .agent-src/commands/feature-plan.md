@@ -7,14 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "plan this feature, create a feature spec for X"
   trigger_context: "feature idea referenced and no plan doc exists"
+superseded_by: feature plan
+deprecated_in: "1.15.0"
 ---
 
-<!-- F2-deprecation-banner -->
-> **Deprecated — use `/feature plan`.** This standalone command
-> is kept as a deprecation shim for one release cycle and routes to
-> the same instructions below. New invocations should go through the
-> `/feature` orchestrator (`commands/feature.md`).
-<!-- /F2-deprecation-banner -->
+> ⚠️  /feature-plan is deprecated; use /feature plan instead.
+> This shim is retained for one release cycle (1.15.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # feature-plan
 

@@ -1,6 +1,7 @@
 ---
 name: optimize
 description: Optimize orchestrator — routes to skills, agents, augmentignore, rtk-filters
+cluster: optimize
 disable-model-invocation: true
 suggestion:
   eligible: true
@@ -20,7 +21,10 @@ commands with a single entry point + sub-command dispatch.
 | `/optimize skills` | `optimize-skills.md` | Audit skills — measure baseline, find duplicates, run linter |
 | `/optimize agents` | `optimize-agents.md` | Audit agent infrastructure — token overhead, rule triggers, AGENTS.md |
 | `/optimize augmentignore` | `optimize-augmentignore.md` | Create or refine `.augmentignore` based on actual stack |
-| `/optimize rtk-filters` | `optimize-rtk-filters.md` | Create or refine project-local rtk filters |
+| `/optimize rtk` | `optimize-rtk-filters.md` | Create or refine project-local rtk filters |
+
+Sub-command names match the locked contract in
+[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 ## Dispatch
 
@@ -33,7 +37,7 @@ commands with a single entry point + sub-command dispatch.
    > 1. skills — audit skills (find duplicates, run linter)
    > 2. agents — audit agent infrastructure (token overhead, rule triggers)
    > 3. augmentignore — create or refine `.augmentignore`
-   > 4. rtk-filters — create or refine project-local rtk filters
+   > 4. rtk — create or refine project-local rtk filters
 
 ## Migration
 

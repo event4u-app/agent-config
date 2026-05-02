@@ -7,14 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "audit my skills, find duplicate skills"
   trigger_context: "maintainer working on .augment/skills/ files"
+superseded_by: optimize skills
+deprecated_in: "1.15.0"
 ---
 
-<!-- F2-deprecation-banner -->
-> **Deprecated — use `/optimize skills`.** This standalone command
-> is kept as a deprecation shim for one release cycle and routes to
-> the same instructions below. New invocations should go through the
-> `/optimize` orchestrator (`commands/optimize.md`).
-<!-- /F2-deprecation-banner -->
+> ⚠️  /optimize-skills is deprecated; use /optimize skills instead.
+> This shim is retained for one release cycle (1.15.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # /optimize-skills
 

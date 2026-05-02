@@ -7,14 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "audit agent infrastructure, tune the agent setup"
   trigger_context: "maintainer working on .augment/ files"
+superseded_by: optimize agents
+deprecated_in: "1.15.0"
 ---
 
-<!-- F2-deprecation-banner -->
-> **Deprecated — use `/optimize agents`.** This standalone command
-> is kept as a deprecation shim for one release cycle and routes to
-> the same instructions below. New invocations should go through the
-> `/optimize` orchestrator (`commands/optimize.md`).
-<!-- /F2-deprecation-banner -->
+> ⚠️  /optimize-agents is deprecated; use /optimize agents instead.
+> This shim is retained for one release cycle (1.15.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # /optimize-agents
 
