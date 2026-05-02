@@ -297,6 +297,27 @@ the as-is option is always present and always last.
 * **README + AGENTS.md:** short *Context-aware command suggestion*
   section pointing to the ADR and the flow doc.
 
+**Install-path pruning (relabel only)** — `docs/installation.md`
+reorders install paths by recommendation prominence. Composer + npm
+remain the default; manual / submodule / VS Code Git URL are tagged
+`advanced`; Claude.ai Web Skills UI is tagged `experimental`; Linear
+AI workspace guidance is tagged `staged`. **No installer or shipped
+artefact is removed in 1.15.0** — every path on the page still works
+and is still tested. The labels describe how prominent the path is in
+our recommendation order, not its support status.
+
+### Documentation
+
+* **`docs/installation.md`:** new label table at the top
+  (`(no label)` / `advanced` / `experimental` / `staged`) plus a
+  preamble that calls out the no-removal contract explicitly. Section
+  headers carry their label inline for skim-readers.
+* **rationale:** see R9 in
+  [`agents/roadmaps/road-to-post-pr29-optimize.md`](agents/roadmaps/road-to-post-pr29-optimize.md)
+  — relabelling addresses the "four install paths at zero external
+  users" tension without removing any path that an existing user
+  might rely on.
+
 ## [1.14.0](https://github.com/event4u-app/agent-config/compare/1.13.0...1.14.0) (2026-05-01)
 
 ### Features
