@@ -70,8 +70,8 @@ contexts/execution/autonomy-examples.md                (EXAMPLES — anchors, tr
 ```
 
 - [x] **2.1 Inventory the current file.** Annotate every section of `autonomous-execution.md` as RULE / LOGIC / MECHANICS / EXAMPLE. → [`agents/reports/pr-34-phase-2-1-autonomous-execution-inventory.md`](../reports/pr-34-phase-2-1-autonomous-execution-inventory.md).
-- [ ] **2.2 Extract LOGIC + MECHANICS to `contexts/`.** Use the `load_context:` schema shipped under `road-to-rebalancing` Phase 2.
-- [ ] **2.3 Extract EXAMPLES into context-backed example files.** Keep examples under the allowed `load_context:` roots for this phase (e.g. `.agent-src.uncompressed/contexts/execution/autonomy-examples.md`). Do not extend the beta `load_context:` schema in the same commit. A future roadmap may introduce a dedicated `examples/` root once the first consumer has proven stable.
+- [x] **2.2 Extract LOGIC + MECHANICS to `contexts/`.** Use the `load_context:` schema shipped under `road-to-rebalancing` Phase 2.
+- [x] **2.3 Extract EXAMPLES into context-backed example files.** Keep examples under the allowed `load_context:` roots for this phase (e.g. `.agent-src.uncompressed/contexts/execution/autonomy-examples.md`). Do not extend the beta `load_context:` schema in the same commit. A future roadmap may introduce a dedicated `examples/` root once the first consumer has proven stable.
 - [ ] **2.4 Slim the rule.** Target ≤ 120 lines, RULE-only content, with `load_context:` references for the moved sections.
 - [ ] **2.5 Verify no obligation regression.** Re-run the Phase-0 obligation-keyword diff against the pre-split file (MUST / SHALL / NEVER / ALWAYS / FORBIDDEN / REQUIRED / MANDATORY). Counts must not drop **or** a semantic equivalent must exist in the extracted contexts and be cited from the slim rule. Word-count stability is not the goal — semantic stability is.
 

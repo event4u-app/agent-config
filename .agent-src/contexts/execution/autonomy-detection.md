@@ -2,9 +2,8 @@
 
 Loaded by the [`autonomous-execution`](../../rules/autonomous-execution.md)
 rule when deciding whether a user message in `auto` mode flips standing
-autonomy on (or off). Anchor phrases and worked cases will be added
-under `autonomy-examples.md` in Phase 2.3 of
-[`road-to-pr-34-followups.md`](../../../agents/roadmaps/road-to-pr-34-followups.md).
+autonomy on (or off). Anchor phrases and worked cases live in
+[`autonomy-examples.md`](autonomy-examples.md).
 
 ## Recognize intent, not literal substring
 
