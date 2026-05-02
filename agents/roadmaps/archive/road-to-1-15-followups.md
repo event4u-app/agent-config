@@ -1,6 +1,6 @@
 # Road to 1.15 Followups
 
-**Status:** IN PROGRESS — P0 + P1 verified shipped; P2 (rule-interaction matrix substance, outcome-aware telemetry) and P1 #7 outcome demos are the remaining open work.
+**Status:** COMPLETE — P0, P1, and P2 all verified shipped. Pending maintainer sign-off only.
 **Started:** 2026-05-02
 **Trigger:** External review of the 1.15.0 release. Release scored 9.1 / 10 overall (8.8 / 10 as a consistent release) — strong consolidation, real progress on `docs/contracts/`, Stability Policy, Migration Guide, count-drift fix, public-link check, rule-interaction linter. The remaining gap is **public identity + governance surface**.
 **Mode:** Sequential — P0 items land before P1; P2 stays gated until P0 #1 + #2 are done. **P0 verified complete 2026-05-02 → P1 + P2 now eligible to execute.**
@@ -40,10 +40,9 @@ Consolidate the 1.15.0 review into actionable, scoped phases — without resurfa
 - P1 #6 — Public artefact catalog. `docs/catalog.md` + `docs/skills-catalog.md` generated from frontmatter.
 - P2 #8 — Rule-interaction matrix substance. 9 rules, 13 pairs in `docs/contracts/rule-interactions.yml`.
 - P2 #9 — Outcome-aware telemetry. Five outcome categories (`blocked`, `partial`, `memory_influenced_decision`, `verification_failed`, `stop_rule_triggered`) live on engagement event schema, recorder CLI, aggregator, and Markdown / JSON reports.
+- P1 #7 — Outcome demos. Four end-to-end walkthroughs (backend, free-form, UI, blocked) in [`docs/end-to-end-walkthroughs.md`](../../docs/end-to-end-walkthroughs.md), each anchored to a golden transcript under `tests/golden/baseline/`.
 
-**Open (executable now that P0 has landed):**
-
-- P1 #7 — Outcome demos (four end-to-end walkthroughs).
+**Open:** _(none — roadmap complete pending maintainer review)_
 
 ## P0
 
@@ -160,7 +159,7 @@ Both files declare `Auto-generated — do not edit manually` and ship with the p
 
 Backend `/implement-ticket` walkthrough, `/work` free-form walkthrough, UI track walkthrough, blocked / partial-completion path walkthrough. The package today demonstrates inputs and outputs separately; the demo gap is end-to-end traces.
 
-- [ ] **Promote to executable** — script the four end-to-end walkthroughs (backend / free-form / UI / blocked).
+- [x] **Shipped** — four cycle-by-cycle walkthroughs in [`docs/end-to-end-walkthroughs.md`](../../docs/end-to-end-walkthroughs.md), each anchored to a checked-in golden transcript (GT-1 backend, GT-P1 free-form, GT-U2 UI track, GT-2 blocked); cross-linked from `docs/showcase.md` (2026-05-02).
 
 ## P2 — Capture-only
 

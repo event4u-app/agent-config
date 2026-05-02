@@ -192,10 +192,15 @@ criteria, assumptions, confidence band) before the engine plans.
 
 ## More
 
-The five examples above cover the load-bearing iron laws. The full
-rule set lives in [`.agent-src/rules/`](../.agent-src/rules/) (browse
-the `description:` line in each file's frontmatter to see when it
-auto-triggers); the full skill catalog is in
+The five examples above cover the load-bearing iron laws. For the
+**cycle-by-cycle traces** of the engine commands (`/implement-ticket`,
+`/work`, the UI track, and the blocked path), see
+[`end-to-end-walkthroughs.md`](end-to-end-walkthroughs.md) — each
+walkthrough is anchored to a checked-in golden transcript.
+
+The full rule set lives in [`.agent-src/rules/`](../.agent-src/rules/)
+(browse the `description:` line in each file's frontmatter to see
+when it auto-triggers); the full skill catalog is in
 [`docs/skills-catalog.md`](skills-catalog.md).
 
 **Suggesting an example?** Open a PR adding a new section here. Same
