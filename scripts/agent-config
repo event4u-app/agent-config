@@ -48,6 +48,10 @@ Commands:
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
   hooks:install              Install the pre-commit roadmap-progress hook
                              (use --print to dump it, --force to overwrite an existing hook)
+  keys:install-anthropic     Install the Anthropic API key for the AI Council
+                             (interactive, /dev/tty only, writes ~/.config/agent-config/anthropic.key 0600)
+  keys:install-openai        Install the OpenAI API key for the AI Council
+                             (interactive, /dev/tty only, writes ~/.config/agent-config/openai.key 0600)
   first-run                  Guided first-run setup — cost profile, settings, tooling
   implement-ticket           Drive the work_engine Python engine on a ticket envelope
                              (Option-A loop; called by the /implement-ticket command)
@@ -78,6 +82,8 @@ Examples:
   ./agent-config mcp:check
   ./agent-config roadmap:progress
   ./agent-config hooks:install
+  ./agent-config keys:install-anthropic
+  ./agent-config keys:install-openai
   ./agent-config first-run
   ./agent-config implement-ticket --state-file .work-state.json
   ./agent-config work --state-file .work-state.json --prompt-file prompt.txt
@@ -390,6 +396,21 @@ HELP
   echo "    To uninstall: rm $target"
 }
 
+# Wrap the interactive key installers under a stable CLI entry. The shell
+# scripts themselves enforce /dev/tty, 0600, and atomic write — this is
+# pure routing so consumers never have to know the package layout.
+cmd_keys_install_anthropic() {
+  local script
+  script="$(resolve_script "scripts/install_anthropic_key.sh")" || return 1
+  exec bash "$script" "$@"
+}
+
+cmd_keys_install_openai() {
+  local script
+  script="$(resolve_script "scripts/install_openai_key.sh")" || return 1
+  exec bash "$script" "$@"
+}
+
 main() {
   local cmd="${1-}"
   [[ $# -gt 0 ]] && shift || true
@@ -400,6 +421,8 @@ main() {
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
     hooks:install)           cmd_hooks_install "$@" ;;
+    keys:install-anthropic)  cmd_keys_install_anthropic "$@" ;;
+    keys:install-openai)     cmd_keys_install_openai "$@" ;;
     first-run)               cmd_first_run "$@" ;;
     implement-ticket)        cmd_implement_ticket "$@" ;;
     work)                    cmd_work "$@" ;;

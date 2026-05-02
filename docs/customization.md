@@ -65,8 +65,8 @@ those sections.
 | `ai_council.cost_budget.max_output_tokens` | `20000` | Hard cap on summed output tokens per `/council` invocation. |
 | `ai_council.cost_budget.max_calls` | `10` | Maximum council members per invocation. |
 
-Council API tokens are installed via `bash scripts/install_anthropic_key.sh`
-and `bash scripts/install_openai_key.sh` — they prompt on `/dev/tty`, write to
+Council API tokens are installed via `./agent-config keys:install-anthropic`
+and `./agent-config keys:install-openai` — they prompt on `/dev/tty`, write to
 `~/.config/agent-config/<provider>.key` with mode `0600`, and never accept env
 vars. The `/council` command refuses to run if the key file's permissions
 drift.
