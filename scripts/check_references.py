@@ -233,6 +233,13 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
             if any(p.search(raw_ref) for p in EXAMPLE_PATH_PATTERNS):
                 continue
 
+            # Skip references into directories already excluded from scanning
+            # (gitignored audit trails, archived roadmaps). Files there are
+            # not committed, so existence checks would always fail in CI.
+            if any(raw_ref.startswith(skip + "/") or raw_ref == skip
+                   for skip in SKIP_DIRS):
+                continue
+
             resolved = False
             # Try raw ref as-is from root (covers .agent-src/..., agents/..., etc.)
             if (root / raw_ref).exists():
