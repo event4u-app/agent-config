@@ -6,17 +6,17 @@
 
 ## Overall
 
-**37 / 167 steps done · 22%**
+**49 / 167 steps done · 29%**
 
 ```text
-█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   22%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   29%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-1-16-followups.md](roadmaps/road-to-1-16-followups.md) | 8 | 34 | 13 | 16 | 0 | 5 | ██████░░░░ 55% |
+| 1 | [road-to-1-16-followups.md](roadmaps/road-to-1-16-followups.md) | 8 | 34 | 1 | 28 | 0 | 5 | ██████████ 97% |
 | 2 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 1 | 34 | 34 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -28,7 +28,7 @@
 
 ### [road-to-1-16-followups.md](roadmaps/road-to-1-16-followups.md)
 
-**Road to 1.16.0 Follow-ups** — 16 / 29 done (55%)
+**Road to 1.16.0 Follow-ups** — 28 / 29 done (97%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -38,8 +38,8 @@
 | 0b | Budget-headroom + golden-test replay (gated) | ✅ done | 0 | 10 | 0 | 0 | 100% |
 | 0b | success criteria | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 | 0b | abort / rollback | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
-| 1 | `load_context:` rollout + archive audit | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
-| 2 | Polish & onboarding | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | `load_context:` rollout + archive audit | ✅ done | 0 | 8 | 0 | 0 | 100% |
+| 2 | Polish & onboarding | ✅ done | 0 | 4 | 0 | 0 | 100% |
 
 ### [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md)
 
