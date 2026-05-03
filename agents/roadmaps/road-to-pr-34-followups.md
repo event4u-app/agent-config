@@ -161,36 +161,58 @@ A future roadmap may introduce either:
 This must be designed separately because it changes the Work Engine
 contract and replay baselines.
 
-## Phase 5 — Context-layer realization (strategic)
+## Phase 5 — Pre-Phase-6 CI drift hygiene (P0, blocks Phase 6)
 
-- [ ] **5.1 Decide canonical roots.** Round 6 proposes `contexts/execution/`, `contexts/communication/`, `contexts/authority/`. Confirm or revise; current schema allows `.agent-src*/contexts/` and `agents/contexts/` only — extend allowlist if needed.
-- [ ] **5.2 Migrate the next 3 rules** beyond the Phase-2 pilot. Candidates: `commit-policy`, `scope-control`, `verify-before-complete`.
-- [ ] **5.3 Always-rule budget audit after migration.** Target ≤ 80% of cap permanently (Phase 6 ties in here).
+`task ci` does not exit 0 on the post-Phase-4 commit. Two pre-existing drift sources surface every `task sync` / `task generate-tools` and break `consistency` (`git diff --quiet`). Both pre-date Phase 4 — they were verified to reproduce on commit `1905918` (the parent of the Phase-4 commits) — but they block the regression-risk-guard contract that every later phase relies on. This phase resolves them with the smallest possible diff. No new linters, no new gates, no new contract surface.
 
-### Phase-5 scope limits (anti-overengineering guard)
+- [ ] **5.1 Resolve `update_counts.py` ↔ `check_command_count_messaging.py` conflict on `README.md`.** `scripts/update_counts.py` writes `commands=84` (file count) into the README hero and the tools-blurb; Phase-1.2 commit `1053d56` set both surfaces to "69 active commands" and added `scripts/check_command_count_messaging.py` as the canonical regression gate. The two scripts contradict each other and `task sync` re-introduces the drift on every run. Fix by either (a) excluding the README hero / tools-blurb patterns from `update_counts.py`'s commands-pattern list, or (b) teaching `update_counts.py` to read `active_count = total - len(superseded_by)` from `.agent-src.uncompressed/commands/` frontmatter and writing the active count for those specific patterns. Verification: `task sync` followed by `git diff --quiet README.md` exits 0; `task check-command-count` stays green.
+- [ ] **5.2 Regenerate `.windsurfrules`.** After the Phase-2 `autonomous-execution.md` refactor (commits around `94edd24`), the committed `.windsurfrules` carries pre-refactor content; `task generate-tools` produces a file that diffs ≈179 lines against the committed copy. Mechanical re-emission only — no rule content changes. Verification: `task generate-tools` followed by `git diff --quiet .windsurfrules` exits 0.
+- [ ] **5.3 Confirm `task ci` exits 0 end-to-end** on the post-5.2 commit. This is the gate Phase 6 + Phase 7 inherit; without it neither strategic phase can prove closure under the regression-risk-guard contract.
 
-The risk in Phase 5 is "let's move everything to contexts" — context inflation is the same failure mode as rule inflation, just one layer down.
+### Phase-5 scope discipline (anti-scope-creep guard)
+
+- Do **not** add new linters or gates. Existing gates (`check_command_count_messaging.py`, `consistency`) already enforce the contract; they're just not converging.
+- Do **not** rewrite `update_counts.py` end-to-end. Smallest patch that resolves the conflict wins.
+- Do **not** touch any rule, skill, or command content while regenerating `.windsurfrules`. The regeneration must be a pure mechanical re-emission of the current `.agent-src/` state.
+- Do **not** bundle this with Phase 6 (`load_context:` migration). The two phases must commit separately so the CI-drift fix can be reverted independently if needed.
+
+### Phase-5 success criteria
+
+- `task sync` is idempotent (no working-tree changes) on the post-5.1 commit.
+- `task generate-tools` is idempotent (no working-tree changes) on the post-5.2 commit.
+- `task ci` exits 0 on a clean checkout of the post-5.3 commit.
+- All 29 Golden Transcripts continue to replay clean (Phase-4 baseline preserved byte-stable).
+
+## Phase 6 — Context-layer realization (strategic)
+
+- [ ] **6.1 Decide canonical roots.** Round 6 proposes `contexts/execution/`, `contexts/communication/`, `contexts/authority/`. Confirm or revise; current schema allows `.agent-src*/contexts/` and `agents/contexts/` only — extend allowlist if needed.
+- [ ] **6.2 Migrate the next 3 rules** beyond the Phase-2 pilot. Candidates: `commit-policy`, `scope-control`, `verify-before-complete`.
+- [ ] **6.3 Always-rule budget audit after migration.** Target ≤ 80% of cap permanently (Phase 7 ties in here).
+
+### Phase-6 scope limits (anti-overengineering guard)
+
+The risk in Phase 6 is "let's move everything to contexts" — context inflation is the same failure mode as rule inflation, just one layer down.
 
 - Max **3 new contexts per phase iteration**. A larger batch must be split into a separate roadmap.
 - Each new context **must be referenced by ≥ 1 rule** (`load_context:`). Orphan contexts are a lint failure, not a soft warning — extend `scripts/lint_load_context.py` to enforce.
 - No context may be created speculatively ("we might need this later"). The triggering rule and the moved content must exist before the context is committed.
 - Each new context must have a measurable size budget (line count or char count) declared at creation; budget enforcement is not deferred.
 
-## Phase 6 — Always-rule budget hardening (strategic)
+## Phase 7 — Always-rule budget hardening (strategic)
 
 Current: 37,879 / 49,000 chars (≈ 77% utilization). Round 6 recommendation: keep ≥ 20% headroom permanently.
 
-- [ ] **6.1 Add a CI gate** at 80% utilization (warn at 80%, fail at 90%). Extend `scripts/check_iron_law_prominence.py` or add a sibling `check_always_budget.py`.
-- [ ] **6.2 Publish the budget number** in `docs/contracts/STABILITY.md` or `docs/contracts/rule-priority-hierarchy.md` so consumers can see the contract.
-- [ ] **6.3 Re-run budget audit** after Phases 2 and 5 land; record the post-migration number.
-- [ ] **6.4 Per-rule caps.** Add to `check_always_budget.py`: no single always-rule may exceed 6,000 chars; the top-3 always-rules combined may not exceed 50% of the global budget. Prevents a single monster from re-emerging under the global cap.
+- [ ] **7.1 Add a CI gate** at 80% utilization (warn at 80%, fail at 90%). Extend `scripts/check_iron_law_prominence.py` or add a sibling `check_always_budget.py`.
+- [ ] **7.2 Publish the budget number** in `docs/contracts/STABILITY.md` or `docs/contracts/rule-priority-hierarchy.md` so consumers can see the contract.
+- [ ] **7.3 Re-run budget audit** after Phases 2 and 6 land; record the post-migration number.
+- [ ] **7.4 Per-rule caps.** Add to `check_always_budget.py`: no single always-rule may exceed 6,000 chars; the top-3 always-rules combined may not exceed 50% of the global budget. Prevents a single monster from re-emerging under the global cap.
 
-### Phase-6 success criteria
+### Phase-7 success criteria
 
 - Global gate live (warn 80%, fail 90%).
 - Per-rule caps live (≤ 6k per rule; top-3 ≤ 50% of budget).
 - Budget number published in a versioned contract doc.
-- Post-Phase-2 + Phase-5 audit recorded with delta vs. baseline.
+- Post-Phase-2 + Phase-6 audit recorded with delta vs. baseline.
 
 ## Regression risk guard
 
@@ -212,4 +234,4 @@ This applies in addition to phase-specific success criteria. The guard exists be
 
 ## Exit criteria for this roadmap
 
-Phases 1–4 closed → roadmap stays in-progress with strategic phases only. Phases 5–6 closed → archive per `roadmap-progress-sync` (0 open items → archive).
+Phases 1–5 closed → roadmap stays in-progress with strategic phases only. Phases 6–7 closed → archive per `roadmap-progress-sync` (0 open items → archive).
