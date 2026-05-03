@@ -137,15 +137,16 @@ The "Per-item independent" rollback note below is **scoped to council acceptance
 
 ### 0.6 Context-file path conventions (HIGH)
 
-- [ ] **0.6.1** Lock the path tree:
+- [x] **0.6.1** Lock the path tree:
   - Phase 2A contexts → `contexts/communication/rules-always/<rule-name>-mechanics.md`
   - Phase 2B contexts → `contexts/communication/rules-auto/<rule-name>-mechanics.md`
   - Phase 3a shared → `contexts/judges/judge-shared-procedure.md` + `contexts/judges/persona-voice-rubric.md` + `contexts/judges/no-consolidate-rationale.md` (if 3a aborts)
   - Phase 3b shared → `contexts/analysis/project-analysis-core-procedure.md`
   - Phase 3c shared → `contexts/skills/skill-quality-rules.md`
   - Phase 6 contexts → `contexts/chat-history/{cadence,ownership,visibility}.md`
-- [ ] **0.6.2** Implement `scripts/check_context_paths.py`: collisions and out-of-tree placements fail CI.
-- [ ] **0.6.3** Add to `scripts/docs-sync.py`: ensure each new context file is referenced from at least one rule (no orphan contexts).
+  - Locked at `docs/contracts/context-paths.md` (internal-locked, `stability: beta`); also covers six grandfathered root files plus existing `execution/` and `authority/` sub-trees.
+- [x] **0.6.2** Implement `scripts/check_context_paths.py`: collisions and out-of-tree placements fail CI. Wired via `task check-context-paths` and added to `task ci`.
+- [x] **0.6.3** Orphan check: ensure each new context file is referenced from at least one rule, skill, command, or other context. **Deviation:** the roadmap named `scripts/docs-sync.py`, but no such script exists in the repo (cross-reference checking lives in `scripts/check_references.py`, which is scoped to *broken* refs). The orphan check is folded into `scripts/check_context_paths.py` instead, which keeps every context-file invariant in one linter. Functionally equivalent to the roadmap intent; recorded in `docs/contracts/context-paths.md` § "Why `check_context_paths.py` carries the orphan check".
 
 ### Success criteria
 
