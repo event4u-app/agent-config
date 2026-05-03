@@ -13,7 +13,7 @@ purpose: >
 # Why `judge-*` skills are NOT consolidated
 
 The Phase 3a spike on the road-to-structural-optimization roadmap
-(see `agents/roadmaps/road-to-structural-optimization.md` § 3a)
+(see `agents/roadmaps/archive/road-to-structural-optimization.md` § 3a)
 evaluated extracting a shared procedure file
 (`contexts/judges/judge-shared-procedure.md`) loaded by all four
 `judge-*` skills. The locked Q1=A shape (separate skills + shared

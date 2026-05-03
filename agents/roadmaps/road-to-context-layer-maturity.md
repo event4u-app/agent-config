@@ -273,8 +273,9 @@ alternative strategies remain:
       behaviour is not yet outcome-tested.** Outcome-untested rules
       stay in scope only for 4d (hard compress).
 - [ ] **4.1** Decision matrix: per always-rule, evaluate 4a/4b/4c/4d
-      feasibility *given the locked Phase 2 + 3 baselines*. Output:
-      `agents/roadmaps/budget-v2-matrix.md`.
+      feasibility *given the locked Phase 2 + 3 baselines*. Output
+      (created by this step): `budget-v2-matrix.md` next to this
+      roadmap.
 - [ ] **4.2** Pick the highest-leverage two paths from the matrix.
       No "do all four" — Feedback #2 explicit warning.
 - [ ] **4.3** Execute the picked paths in atomic commits. Each

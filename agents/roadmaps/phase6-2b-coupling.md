@@ -27,7 +27,7 @@ both surfaces to catch drift.
 ## Scope
 
 **Targets:** 13 Phase-2B `type: auto` rules per the priority list at
-`agents/roadmaps/road-to-structural-optimization.md` § Phase 2 → 2B.
+`agents/roadmaps/archive/road-to-structural-optimization.md` § Phase 2 → 2B.
 
 **Probes:**
 
