@@ -33,6 +33,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/commands/agents.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/commands/analyze-reference-repo.md": {
       "kind": "command",
       "rule_type": null,
@@ -64,6 +70,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/commands/chat-history-resume.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/chat-history-show.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
@@ -111,6 +123,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/commands/context.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/commands/copilot-agents-init.md": {
       "kind": "command",
       "rule_type": null,
@@ -118,6 +136,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/commands/copilot-agents-optimize.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/copilot-agents.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
@@ -285,6 +309,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/commands/judge-solo.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/commands/judge.md": {
       "kind": "command",
       "rule_type": null,
@@ -309,6 +339,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/commands/memory.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/commands/mode.md": {
       "kind": "command",
       "rule_type": null,
@@ -322,6 +358,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/commands/module-explore.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/module.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
@@ -370,6 +412,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/commands/override-manage.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/override.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
@@ -447,6 +495,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/commands/roadmap.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/commands/rule-compliance-audit.md": {
       "kind": "command",
       "rule_type": null,
@@ -478,6 +532,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/commands/tests-execute.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/tests.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
@@ -531,6 +591,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/contexts/documentation-hierarchy.md": {
       "kind": "context",
       "rule_type": null,
@@ -556,6 +622,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/contexts/execution/verification-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/contexts/judges/persona-voice-rubric.md": {
       "kind": "context",
       "rule_type": null,
       "load_context": [],
@@ -940,7 +1012,9 @@
     ".agent-src.uncompressed/rules/slash-command-routing-policy.md": {
       "kind": "rule",
       "rule_type": "auto",
-      "load_context": [],
+      "load_context": [
+        ".agent-src.uncompressed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md"
+      ],
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/think-before-action.md": {
@@ -1813,6 +1887,13 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/commands/agents.md",
+      "target": ".agent-src.uncompressed/commands/agents.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/commands/analyze-reference-repo.md",
       "target": ".agent-src.uncompressed/commands/analyze-reference-repo.md",
       "type": "WRITE",
@@ -1960,15 +2041,36 @@
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/commands/chat-history.md",
+      "source": ".agent-src.uncompressed/commands/chat-history-show.md",
       "target": ".agent-src.uncompressed/commands/chat-history-clear.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/commands/chat-history.md",
+      "source": ".agent-src.uncompressed/commands/chat-history-show.md",
       "target": ".agent-src.uncompressed/commands/chat-history-resume.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/chat-history-show.md",
+      "target": ".agent-src.uncompressed/commands/chat-history-show.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/chat-history-show.md",
+      "target": ".agent-src.uncompressed/rules/chat-history-ownership.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/chat-history-show.md",
+      "target": ".agent-src.uncompressed/rules/token-efficiency.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -1979,20 +2081,6 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/commands/chat-history.md",
-      "target": ".agent-src.uncompressed/rules/chat-history-ownership.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/commands/chat-history.md",
-      "target": ".agent-src.uncompressed/rules/token-efficiency.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/commands/check-current-md.md",
@@ -2093,6 +2181,13 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/commands/context.md",
+      "target": ".agent-src.uncompressed/commands/context.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/commands/copilot-agents-init.md",
       "target": ".agent-src.uncompressed/commands/copilot-agents-init.md",
       "type": "WRITE",
@@ -2102,6 +2197,13 @@
     {
       "source": ".agent-src.uncompressed/commands/copilot-agents-optimize.md",
       "target": ".agent-src.uncompressed/commands/copilot-agents-optimize.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/copilot-agents.md",
+      "target": ".agent-src.uncompressed/commands/copilot-agents.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -2478,8 +2580,29 @@
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/commands/judge.md",
+      "source": ".agent-src.uncompressed/commands/judge-solo.md",
       "target": ".agent-src.uncompressed/commands/do-and-judge.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/judge-solo.md",
+      "target": ".agent-src.uncompressed/commands/judge-solo.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/judge-solo.md",
+      "target": ".agent-src.uncompressed/commands/review-changes.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/judge-solo.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -2562,6 +2685,13 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/commands/memory.md",
+      "target": ".agent-src.uncompressed/commands/memory.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/commands/mode.md",
       "target": ".agent-src.uncompressed/commands/mode.md",
       "type": "WRITE",
@@ -2592,6 +2722,13 @@
     {
       "source": ".agent-src.uncompressed/commands/module-explore.md",
       "target": ".agent-src.uncompressed/commands/module-explore.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/module.md",
+      "target": ".agent-src.uncompressed/commands/module.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -2669,6 +2806,13 @@
     {
       "source": ".agent-src.uncompressed/commands/override-manage.md",
       "target": ".agent-src.uncompressed/commands/override-manage.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/override.md",
+      "target": ".agent-src.uncompressed/commands/override.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -2919,6 +3063,13 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/commands/roadmap.md",
+      "target": ".agent-src.uncompressed/commands/roadmap.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/commands/rule-compliance-audit.md",
       "target": ".agent-src.uncompressed/commands/rule-compliance-audit.md",
       "type": "WRITE",
@@ -2977,6 +3128,13 @@
     {
       "source": ".agent-src.uncompressed/commands/tests-execute.md",
       "target": ".agent-src.uncompressed/commands/tests-execute.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/tests.md",
+      "target": ".agent-src.uncompressed/commands/tests.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -3206,6 +3364,13 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/contexts/documentation-hierarchy.md",
       "target": ".agent-src.uncompressed/contexts/documentation-hierarchy.md",
       "type": "WRITE",
@@ -3323,6 +3488,13 @@
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/judges/persona-voice-rubric.md",
+      "target": ".agent-src.uncompressed/contexts/judges/persona-voice-rubric.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncompressed/contexts/model-recommendations.md",
@@ -4373,6 +4545,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/slash-command-routing-policy.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "load_context",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/rules/slash-command-routing-policy.md",
