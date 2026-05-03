@@ -489,20 +489,11 @@ task lint-skills   # Lint skills, rules, commands
   orchestrator skips bridges and completes the payload sync.
 - **Composer or npm** — to pull the package itself.
 
-**Platform support:**
-
-| Platform | Status |
-|---|---|
-| macOS 12.3+ | ✅ Supported |
-| Linux (modern distros) | ✅ Supported |
-| Windows (WSL2) | ✅ Supported |
-| Windows (Git Bash) | ⚠️ Works; symlinks need Developer Mode |
-| Windows (native PowerShell/cmd) | ❌ Not supported |
-
-**For contributors only** (rebuilding `.augment/` locally):
-
-- [Task](https://taskfile.dev/) — runs the CI pipeline (`task ci`).
+**Platform support:** macOS 12.3+, Linux (modern distros), and Windows
+(WSL2) are fully supported. Git Bash works but symlinks require
+Developer Mode; native PowerShell / cmd is not supported. Contributors
+rebuilding `.augment/` locally also need [Task](https://taskfile.dev/).
 
 ## License
 
-[MIT](LICENSE) — you can use, fork, and redistribute this freely.
+[MIT](LICENSE).
