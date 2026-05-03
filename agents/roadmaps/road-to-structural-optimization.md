@@ -4,10 +4,10 @@ status: locked
 
 # Road to Structural Optimization
 
-**Status:** LOCKED v3.1 (2026-05-03) — Round-4/5 council close-out folded in; three v3-introduced gaps fixed (G2 fan-out transitive, G3 tolerance band, A4 6.1 logic inverted); Phase 0 sequencing made explicit. Frozen for execution; further changes require a v4 revision and a new council session.
+**Status:** LOCKED v3.2 (2026-05-03) — Slow-rollout protocol (Anthropic A7 / F5 "1 PR per rule + 24 h wait") **dropped** under explicit user mandate; full execution on a single branch (`feat/better-basement`) feeding one PR (#36). All other v3.1 contracts remain frozen.
 **Started:** 2026-05-03
 **Trigger:** User request after `road-to-council-modes` cancellation: "Erstelle eine neue roadmap, die unsere bestehenden strukturen weiter optimiert, ohne dass wir qualität einbüßen." Building on the closure of five governance roadmaps (cleanup, council, council-modes 2a/2b, 1.15 follow-ups, PR #34 hardening) and the locked Phase-2 cluster contract.
-**Mode:** Sequential per phase. Parallel within phase only where the file-ownership matrix (Phase 0.1) proves zero overlap. Quality-first: no obligation drops, no rule semantic regressions, no skill dispatch loss.
+**Mode:** Sequential per phase, **single-branch single-PR execution** (per v3.2). Parallel within phase only where the file-ownership matrix (Phase 0.1) proves zero overlap. Per-rule and per-cluster rollback inside the branch is still allowed (revert one commit without aborting the phase) — only the inter-PR cooldown is dropped. Quality-first: no obligation drops, no rule semantic regressions, no skill dispatch loss.
 **Council reviews:**
 - Round 1 — `agents/council-sessions/2026-05-03T06-52-20Z/` — initial design review (5 convergence findings, 3 Anthropic-only follow-ups).
 - Round 2 — `agents/council-sessions/2026-05-03T07-15-02Z/` — independent re-review of v2; CONDITIONAL GREENLIGHT pending three CRITICAL fixes (file-ownership matrix, `load_context:` budget model, Phase 6→2B decoupling proof) plus three HIGH and three MODERATE fixes.
@@ -437,4 +437,4 @@ Rationales, rollback gates, and the cross-question coupling analysis live in `ag
 
 ---
 
-**Total scope:** 7 phases. Phase 0 = 6 work-streams / ~22 sub-tasks (CRITICAL + HIGH gates; +1 from v3 for 0.1.5 ownership-matrix re-gen hook per A1 fix). Phases 1-6 = ~44 sub-tasks. Estimated PR cluster: one PR per phase (7 PRs), or one combined branch with phase-tagged commits (1 PR, larger review). Decide at execution start, after Phase 0 closes. Estimated effort: Phase 0 ≈ 3.5–4.0 engineer-days (+0.5d for 0.1.5 hook + transitive resolution + tolerance band); Phases 1-6 unchanged from v2 estimates.
+**Total scope:** 7 phases. Phase 0 = 6 work-streams / ~22 sub-tasks (CRITICAL + HIGH gates; +1 from v3 for 0.1.5 ownership-matrix re-gen hook per A1 fix). Phases 1-6 = ~44 sub-tasks. **PR shape (locked v3.2):** single combined branch (`feat/better-basement`) with phase-tagged commits, landing as one PR (#36). The "one PR per phase" / "one PR per rule" alternatives are explicitly off the table per user mandate; the slow-rollout protocol (Anthropic A7 / F5) is dropped. Per-commit revert inside the branch remains the rollback unit. Estimated effort: Phase 0 ≈ 3.5–4.0 engineer-days (+0.5d for 0.1.5 hook + transitive resolution + tolerance band); Phases 1-6 unchanged from v2 estimates.
