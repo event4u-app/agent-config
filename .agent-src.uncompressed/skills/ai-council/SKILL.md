@@ -4,6 +4,8 @@ description: "Use when polling external AIs (OpenAI, Anthropic) outside the host
 source: package
 ---
 
+> **Experimental.** AI Council is not yet validated by external users. API costs apply per consultation.
+
 # ai-council
 
 ## When to use
