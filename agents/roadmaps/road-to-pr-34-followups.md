@@ -185,9 +185,9 @@ contract and replay baselines.
 
 ## Phase 6 — Context-layer realization (strategic)
 
-- [ ] **6.1 Decide canonical roots.** Round 6 proposes `contexts/execution/`, `contexts/communication/`, `contexts/authority/`. Confirm or revise; current schema allows `.agent-src*/contexts/` and `agents/contexts/` only — extend allowlist if needed.
-- [ ] **6.2 Migrate the next 3 rules** beyond the Phase-2 pilot. Candidates: `commit-policy`, `scope-control`, `verify-before-complete`.
-- [ ] **6.3 Always-rule budget audit after migration.** Target ≤ 80% of cap permanently (Phase 7 ties in here).
+- [x] **6.1 Decide canonical roots.** Confirmed `contexts/execution/` (runtime decision logic / mechanics) + `contexts/authority/` (mechanics behind authority gates); `contexts/communication/` proposed but not created (anti-speculation: create only when first migrating rule lands). Documented in `docs/contracts/load-context-schema.md` § Subdirectory conventions. No allowlist change needed — existing `.agent-src*/contexts/` root covers subdirs. Commit `befdd92`.
+- [x] **6.2 Migrate the next 3 rules** beyond the Phase-2 pilot: `commit-policy` (4,668 → 3,309 chars, -29%, → `contexts/authority/commit-mechanics.md`), `scope-control` (5,758 → 4,636 chars, -19%, → `contexts/authority/scope-mechanics.md`), `verify-before-complete` (4,436 → 2,196 chars, -50%, → `contexts/execution/verification-mechanics.md`). Iron Laws preserved verbatim; mechanics, lookup tables, and failure-mode catalogs lazy-loaded. `task lint-load-context` reports 4 declarers. All 29 Golden transcripts pass post-migration (no obligation regression). Commit `0b93832`.
+- [x] **6.3 Always-rule budget audit after migration.** Pre-Phase-6 baseline: 42,521 / 49,000 (86.8%). Post-Phase-6: **37,720 / 49,000 (77.0%)**, headroom 23.0% — exceeds the ≥20% target and feeds Phase 7's per-rule caps. Top-5 sum: 26,464 / 28,000 (94.5%, well under cap). Budget snapshot recorded inline in `0b93832` commit body. → audit complete.
 
 ### Phase-6 scope limits (anti-overengineering guard)
 
@@ -200,11 +200,11 @@ The risk in Phase 6 is "let's move everything to contexts" — context inflation
 
 ## Phase 7 — Always-rule budget hardening (strategic)
 
-Current: 37,879 / 49,000 chars (≈ 77% utilization). Round 6 recommendation: keep ≥ 20% headroom permanently.
+Current post-Phase-6: **37,720 / 49,000 chars (77.0% utilization)**, 23.0% headroom. Round 6 recommendation: keep ≥ 20% headroom permanently.
 
 - [ ] **7.1 Add a CI gate** at 80% utilization (warn at 80%, fail at 90%). Extend `scripts/check_iron_law_prominence.py` or add a sibling `check_always_budget.py`.
 - [ ] **7.2 Publish the budget number** in `docs/contracts/STABILITY.md` or `docs/contracts/rule-priority-hierarchy.md` so consumers can see the contract.
-- [ ] **7.3 Re-run budget audit** after Phases 2 and 6 land; record the post-migration number.
+- [x] **7.3 Re-run budget audit** after Phases 2 and 6 land; record the post-migration number. Pre-Phase-2: ≈45k / 49k. Post-Phase-2: 42,521 / 49,000 (86.8%). Post-Phase-6: 37,720 / 49,000 (77.0%). Δ vs. pre-Phase-6: −4,801 chars / −9.8 pp. Captured in Phase 6.3 close-out and in the `0b93832` commit body.
 - [ ] **7.4 Per-rule caps.** Add to `check_always_budget.py`: no single always-rule may exceed 6,000 chars; the top-3 always-rules combined may not exceed 50% of the global budget. Prevents a single monster from re-emerging under the global cap.
 
 ### Phase-7 success criteria
