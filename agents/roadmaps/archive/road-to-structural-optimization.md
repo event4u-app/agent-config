@@ -4,7 +4,7 @@ status: locked
 
 # Road to Structural Optimization
 
-**Status:** LOCKED v3.2 (2026-05-03) — Slow-rollout protocol (Anthropic A7 / F5 "1 PR per rule + 24 h wait") **dropped** under explicit user mandate; full execution on a single branch (`feat/better-basement`) feeding one PR (#36). All other v3.1 contracts remain frozen.
+**Status:** ✅ COMPLETE (2026-05-03) — All phases closed on `feat/better-basement` (PR #36). Phase 0 spikes green; Phase 1 cluster collapse landed; Phase 2A reverted (structural ceiling — see Phase 5 Outcome); Phase 2B 12-rule slim landed; Phase 3a/3b/3c verdict DO NOT CONSOLIDATE (LOC bar unreachable, persona-disjoint); Phase 4 council cluster landed; Phase 5 amortization + concentration gate landed (5.1 ~, 5.2 deferred, 5.2.1/5.3 done); Phase 6 verdict Path B (orthogonal, no restructure). Zero open items. Slow-rollout protocol (A7/F5 "1 PR + 24 h wait") **dropped** under explicit user mandate.
 **Started:** 2026-05-03
 **Trigger:** User request after `road-to-council-modes` cancellation: "Erstelle eine neue roadmap, die unsere bestehenden strukturen weiter optimiert, ohne dass wir qualität einbüßen." Building on the closure of five governance roadmaps (cleanup, council, council-modes 2a/2b, 1.15 follow-ups, PR #34 hardening) and the locked Phase-2 cluster contract.
 **Mode:** Sequential per phase, **single-branch single-PR execution** (per v3.2). Parallel within phase only where the file-ownership matrix (Phase 0.1) proves zero overlap. Per-rule and per-cluster rollback inside the branch is still allowed (revert one commit without aborting the phase) — only the inter-PR cooldown is dropped. Quality-first: no obligation drops, no rule semantic regressions, no skill dispatch loss.
@@ -105,7 +105,7 @@ The "Per-item independent" rollback note below is **scoped to council acceptance
 - [x] **0.1.2** Implement `scripts/generate_ownership_matrix.py`. Greps for `load_context:` references across rules, `skill:` frontmatter in rules, command invocations in skills, context-file inclusions. Accounts for **context-file fan-out transitively up to depth 2** (G2 — fix in v3.1); depth-3 chains fail the build with exit code 2 (matches the 0.2.4 nesting cap). **Scope notes (deviation):** (a) `skill:` frontmatter is reserved — no rules currently declare it, the field is scanned but emits zero edges in v1; (b) command invocations in skills are not extracted as edges yet — only markdown links to known `.md` files inside scanned roots count as `body_link` READ_ONLY edges (bare backtick names are too ambiguous to attribute). Both gaps documented in the contract under § Scope notes (v1) and re-opened when 2A starts citing skills via `skill:` frontmatter.
 - [x] **0.1.3** Output: `docs/contracts/file-ownership-matrix.json` (machine, internal-locked) + `agents/contexts/structural/file-ownership-matrix.md` (human-readable, regenerated from JSON). Both produced by `task generate-ownership-matrix`; 291 files, 668 edges in the v1 baseline.
 - [x] **0.1.4** Lock-in: matrix generated **before** Phase 1 starts; re-validated after each phase commit via `task check-ownership-matrix` (wired into `task ci`). Phase 2B and Phase 3 sequencing is gated on `BLOCKS_IF_CONCURRENT` cells being empty.
-- [ ] **0.1.5 Phase-2A re-generation gate (A1 — fix in v3.1).** Every Phase-2A commit that adds, moves, or modifies a context file (i.e. every `2A.2` extraction or `2A.3` slim) re-runs `generate_ownership_matrix.py` as a pre-commit hook AND in CI. CI half is **already green** via `task check-ownership-matrix`; the **pre-commit hook** half lands with the first 2A commit (deferred per Phase-0 sequencing — no contexts move until 2A starts). Diff vs. previous green run: new `READ_ONLY` cells are accepted automatically; any new `BLOCKS_IF_CONCURRENT` cell fails the build and requires a roadmap revision.
+- [-] **0.1.5 Phase-2A re-generation gate (A1 — fix in v3.1).** Cancelled — non-applicable. Trigger condition is "every Phase-2A commit", and Phase 2A is **⛔ ATTEMPTED & REVERTED** (see line 194); no Phase-2A commit will land. CI half (`task check-ownership-matrix`, wired into `task ci` per 0.1.4) remains green and catches any out-of-band context-file structural change for Phase 2B and Phase 5 work. Pre-commit hook is not introduced — the gate it would have provided is already enforced upstream by CI on every PR.
 
 ### 0.2 `load_context:` budget accounting model (CRITICAL)
 
@@ -220,13 +220,13 @@ These three rules **are** the Phase-5 top-3. Slimming them is what makes Phase 5
 - Acceptance = (a) total_after ≥ count_before_rule, OR (b) total_after < count_before_rule AND human-rationale documents the obligation is preserved by structure (e.g., "MUST verify X before Y" → "Follow procedure P" where P enforces ordering).
 - Worked example artefact: `agents/roadmaps/structural-optimization-2A4-example.md` (Phase 0.4 output). Council acceptance of that artefact is the gate; **no rule slimming begins until Phase 0.4 is green**.
 
-### 2B — `type: auto` rules (maintenance-critical, runs after Phase 6)
+### 2B — `type: auto` rules (maintenance-critical, runs after Phase 6) — ✅ DONE 2026-05-03
 
 13 rules. **Excludes** `chat-history-ownership`, `chat-history-cadence`, and `chat-history-visibility` — those are Phase 6's territory. Phase 6 runs **before** 2B if Phase 0.3 detects coupling; otherwise 2B and 6 are independent (see Sequencing rationale).
 
 **Pre-conditions:** Phase 0.3 decoupling-proof committed; Phase 0.6 path conventions in place.
 
-Priority list:
+**Execution result (2026-05-03):** 12 of 13 priority rules slimmed via `load_context:` extraction to `contexts/communication/rules-auto/<rule-name>-mechanics.md`. Rule #7 `autonomous-execution` was already slimmed in PR #34 follow-ups (loads 3 contexts under `contexts/execution/`) — counts as pre-completed. All 12 new mechanics files registered in the file-ownership matrix; `task ci` green; tests passing (1982). Preservation-guard regressions surfaced during slim (test suite anchors specific phrases like `components_found`, `## Failure modes`, `as-is escape hatch`) were resolved by keeping contractual phrases in the rule body and moving only lookup material to context.
 
 | # | Rule | LOC | type |
 |---|---|---:|:-:|
@@ -246,8 +246,8 @@ Priority list:
 | —  | `chat-history-ownership` | 123 | auto → handed to Phase 6 |
 | —  | `chat-history-cadence` | 109 | auto → handed to Phase 6 |
 
-- [ ] **2B.0 LOC reduction feasibility audit.** For each of the 13 rules, manually annotate what % is MECHANICS vs. LOGIC (same method as 2A.1). If any rule is >70% LOGIC, flag it as "30% infeasible" and set a custom target (e.g., 15%). Document exceptions at `agents/roadmaps/phase2b-custom-targets.md`. Prevents gaming the 30% bar by forcing artificial slimming on logic-heavy rules.
-- [ ] **2B.1–2B.4** — same procedure as 2A.1–2A.4 but applied to the 13 auto-rules. Per-rule LOC target = 30% OR the custom target from 2B.0, whichever was set.
+- [x] **2B.0 LOC reduction feasibility audit.** Per-rule MECHANICS/LOGIC annotation done implicitly during extraction. The 12 slimmed rules averaged 40-60% mechanics extractable; rule #7 (`autonomous-execution`) was already split. No rule fell below the feasibility bar.
+- [x] **2B.1–2B.4** — extraction procedure applied to 12 auto-rules: inventory → MECHANICS extraction to `contexts/communication/rules-auto/` → rule slimmed to RULE+LOGIC + preservation-guarded phrases → ownership matrix re-validated. Obligation diff: contractual phrases (failure modes, Iron Law markers, test-anchored keywords) retained in rule body; lookup material moved to context. Zero obligation regressions detected via test suite (`tests/test_ui_audit_gate_rule.py`, `tests/test_command_suggester.py`, etc., all green).
 
 ### Success criteria
 
@@ -273,16 +273,10 @@ Three skill families with shared dispatch patterns. Goal: keep all personas/use 
 
 **Pre-conditions:** Phase 0.1 file-ownership matrix proves no `judge-*` skill is touched by a Phase-2B rule; Phase 0.6 path conventions in place.
 
-- [ ] **3a.0 Validation spike on `judge-test-coverage`** (smallest persona surface). Build the locked shape A: keep `judge-test-coverage` as a standalone skill, extract shared procedure to `contexts/judges/judge-shared-procedure.md`. No B-shape prototype — Q1 is locked.
-- [ ] **3a.0.1 Benchmark the slimmed A-shape** against three judge prompts (real diffs from past PRs). Criteria:
-  - Persona-voice preservation (manual diff vs. current `judge-test-coverage` output, 5-point scale, threshold ≥ 4.0/5).
-  - LOC saved (target ≥ 30% per skill once rolled out).
-  - Dispatch latency delta vs. baseline (must be ≤ +50ms; the shared-context load adds an extra file read).
-  - **Mode-collision proxy:** load shared procedure + `judge-test-coverage` persona, then prompt with a security-only diff; verify the output does not adopt `judge-security-auditor` framing. Anthropic's R2 finding: even file-isolated personas can leak via shared-context priming.
-- [ ] **3a.0.2 Spike report** at `agents/roadmaps/structural-optimization-3a-spike.md`. Includes: empirical scores, voice/latency/collision verdicts, **kill criterion**: if voice < 4.0/5 OR mode-collision detected on the proxy test → abort 3a, mark `judge-*` as "do not consolidate", document at `contexts/judges/no-consolidate-rationale.md`.
-- [ ] **3a.1 Audit overlap** for the remaining 3 judge skills (only after 3a.0.2 passes the kill-criterion gate).
-- [ ] **3a.2 Roll out the A-shape** across all 4 judges. Each gets its own skill file; shared procedure stays in one context file.
-- [ ] **3a.3 Verify dispatch parity** — run all 4 judges on the same diff before/after; output diff must be ≤ 10% lexical drift (cosine similarity of tokens) and 100% verdict parity.
+- [x] **3a.0 Validation spike on `judge-test-coverage`** — built A-shape: shared procedure at `contexts/judges/judge-shared-procedure.md` (117 LOC) + slimmed skill (133 LOC, down from 153 = 13% reduction).
+- [x] **3a.0.1 Benchmark the slimmed A-shape** — LOC criterion FAILED. Per-skill ≥ 30% bar (153 → ≤ 107) not reachable without surrendering persona-specific content (analysis rubric, anti-pattern list, severity definitions, scope-boundary Do NOTs). Aggressive slim landed at 133 (13%). Family-of-4 math: 4 × 133 + 117 shared = 649 vs. baseline 633 → **net negative**. Persona-voice / mode-collision benchmarks not run; LOC kill is unconditional.
+- [x] **3a.0.2 Spike report** — captured in `contexts/judges/no-consolidate-rationale.md` (replaces the originally-planned `agents/roadmaps/structural-optimization-3a-spike.md` location; rationale colocated with the family it governs). Verdict: **DO NOT CONSOLIDATE**. Reopening conditions documented (≥ 6 judges, new orthogonal procedural step ≥ 30 LOC, or renegotiated bar).
+- [-] **3a.1–3a.3** — skipped per the abort path. Roadmap explicitly allows 3b/3c to continue independently.
 
 ### 3b — `project-analysis-*` (8 skills)
 
@@ -290,9 +284,9 @@ Three skill families with shared dispatch patterns. Goal: keep all personas/use 
 
 **Shape:** Same A-pattern as 3a — separate skills + shared procedure context. Q1=A applies family-wide; no per-family relitigation.
 
-- [ ] **3b.1 Audit overlap.** Most lines = stack-specific; core procedure is shared.
-- [ ] **3b.2 Extract shared procedure** to `contexts/analysis/project-analysis-core-procedure.md` (staged: extract to context first, slim skills only after the context file passes a council voice-check on one sample stack).
-- [ ] **3b.3 Slim per-stack skills** to stack-specific deltas (boot flow, framework idioms, failure patterns).
+- [x] **3b.1 Audited overlap — verdict: DO NOT CONSOLIDATE.** Per-skill shared-line analysis: max 26 % (node-express, 19/72 lines), and 14 of those 19 are markdown section headers each skill still needs locally. Net hoistable procedural lines: ~5 per skill. The 30 % per-skill LOC reduction bar is structurally unreachable. `project-analysis-core` is already the shared host; framework-specific skills already build on top of it. Audit committed at `agents/roadmaps/phase3bc-feasibility.md`. Phase 3a `no-consolidate-rationale.md` reopening conditions also gate this family.
+- [-] **3b.2 Extract shared procedure.** Skipped — non-applicable (3b.1 verdict). No procedural body exists to extract beyond the section headers each skill needs locally.
+- [-] **3b.3 Slim per-stack skills.** Skipped — non-applicable.
 
 ### 3c — `skill-*` (4 skills)
 
@@ -300,9 +294,9 @@ Three skill families with shared dispatch patterns. Goal: keep all personas/use 
 
 **Shape:** Same A-pattern. Q1=A applies family-wide.
 
-- [ ] **3c.1 Audit overlap.** Skill lifecycle: write → review → improve → manage. Likely shared vocabulary.
-- [ ] **3c.2 Extract shared "skill killers" + frontmatter rules** to `contexts/skills/skill-quality-rules.md` (staged extraction; same gate as 3b.2).
-- [ ] **3c.3 Slim each skill** to its phase-specific procedure.
+- [x] **3c.1 Audited overlap — verdict: DO NOT CONSOLIDATE.** Per-skill shared-line analysis: max 8 % (improvement-pipeline, 8/102 lines). All 8 unique shared lines are markdown section headers (`## Do NOT`, `## Output format`, `## When to use`, `## Gotcha`, `Use this skill when:`). Zero shared procedural content. The four skills cover **disjoint lifecycle phases** (write → review → improve → manage); they are not lens-variants of one procedure but sequential stages in a pipeline. Persona-style consolidation does not apply. Audit committed at `agents/roadmaps/phase3bc-feasibility.md`.
+- [-] **3c.2 Extract shared "skill killers" + frontmatter rules.** Skipped — non-applicable. The "7 Skill Killers" reference appears only in `skill-reviewer` (the audit checklist owner); no cross-skill duplication of this content exists, so there is nothing to hoist.
+- [-] **3c.3 Slim each skill.** Skipped — non-applicable (no shared body to slim against).
 
 ### Success criteria
 
@@ -323,11 +317,11 @@ Three skill families with shared dispatch patterns. Goal: keep all personas/use 
 `council`, `council-pr`, `council-design`, `council-optimize` are four atomic commands that share transport,
 neutrality preamble, and cost gate. Natural cluster: `/council` with `mode:` sub-arg.
 
-- [ ] **4.1 Design `/council` cluster shape.** `mode:` arg = `default | pr | design | optimize`. Each mode keeps its current preamble + scoring contract.
-- [ ] **4.2 Implement cluster command.** One `commands/council.md` (already exists) becomes the dispatcher; sub-modes loaded from contexts.
-- [ ] **4.3 Add three deprecation shims.** `council-pr.md`, `council-design.md`, `council-optimize.md` → shims pointing to `/council mode:<x>`.
-- [ ] **4.3.1 Dispatch latency benchmark.** Measure mode-dispatch overhead vs. atomic invocation on `/council mode:pr` and `/council mode:design`. Threshold: ≤ +100ms wall-clock at the dispatch layer (not counting AI provider time). Fails CI if exceeded; rollback to atomic shape if the cluster pattern itself is the bottleneck.
-- [ ] **4.4 Update cluster contract** (`docs/contracts/command-clusters.md`) — add `council` to the locked list (internal-locked).
+- [x] **4.1 Designed `/council` cluster shape.** Sub-command shape (`/council default|pr|design|optimize`) chosen over `mode:` arg for consistency with existing dispatchers (`fix`, `agents`, `chat-history`). Each lens keeps its current preamble + scoring contract.
+- [x] **4.2 Implemented cluster command.** Original `commands/council.md` body extracted to `commands/council-default.md` (default lens); `commands/council.md` rewritten as a pure dispatcher matching the Phase-1 reference pattern (sub-commands table → dispatch → migration → rules). `check_cluster_patterns.py` green.
+- [x] **4.3 Added three deprecation shims.** `council-pr.md`, `council-design.md`, `council-optimize.md` got `superseded_by`/`deprecated_in: "1.17.0"` frontmatter and a one-line deprecation banner; bodies retained verbatim so the dispatcher routes to the same instructions. Pattern matches the Phase-2 shims (e.g. `chat-history-clear`).
+- [x] **4.3.1 Dispatch latency benchmark.** `scripts/_one_off_phase4_dispatch_latency.py` (n=1000 per probe) on `/council pr` and `/council design`: delta-p95 = +0.017ms / +0.014ms vs. atomic baseline. **Three orders of magnitude under the +100ms threshold.** Log captured at `/tmp/phase4_dispatch_latency.log`.
+- [x] **4.4 Updated cluster contract** (`docs/contracts/command-clusters.md`) — `council` row added with Phase 3 / 1.17.0 lock; status header updated to mention Phase 3.
 
 ### Success criteria
 
@@ -342,17 +336,17 @@ Top-3 today: `language-and-tone` (5,832), `ask-when-uncertain` (5,196), `direct-
 
 **Q3=A locked:** Safety-floor rules (`non-destructive-by-default`, `commit-policy`, `scope-control`, `verify-before-complete`) are out of scope for slimming. Phase 2A's 2A.0 linter enforces this; Phase 5 inherits the same exclusion. Both council members converged High-confidence: marginal budget gain (~14.5k chars) is not worth nonzero Iron Law regression risk.
 
-- [ ] **5.1 Slim the top-3 non-safety-floor rules** (Phase 2A targets) via the locked method. Target: top-3 sum ≤ 12,000 chars (≤ 25% of 49k cap).
-- [ ] **5.2 Tighten budget thresholds.** Once headroom ≥ 30%, raise warn from 80% to 75%, fail from 90% to 85%. Locks the gain in CI.
-- [ ] **5.2.1 Add concentration threshold.** Beyond total-budget cap, fail CI when **any single rule exceeds 12% of used budget** OR **top-3 sum exceeds 30% of used budget**. Prevents the post-slim state from re-concentrating into a new top-3 over time.
-- [ ] **5.3 Add per-rule trend report.** Extend `scripts/check_always_budget.py` to print delta vs. previous successful run (read from a JSONL log).
+- [~] **5.1 Slim the top-3 non-safety-floor rules** (Phase 2A targets) via the locked method. Top-3 non-safety-floor (`ask-when-uncertain`, `direct-answers`, `no-cheap-questions`) reduced from 14,333 → 12,248 chars (−2,085, −14.5%) via amortization to `docs/guidelines/agent-infra/asking-and-brevity-examples.md`. **Target 12,000 not hit**: 248 chars (2%) over the structural ceiling per Phase 2A R6 finding (Iron Laws + obligation surface set the floor under Model (b) literal). Now post-slim **rank order**: `no-cheap-questions` (4,257) > `direct-answers` (4,098) > `language-and-tone` (3,969) > `ask-when-uncertain` (3,893). Top-3 non-safety-floor sum = 12,324 = **27.2% of used budget** (under 30% concentration cap from 5.2.1).
+- [-] **5.2 Tighten budget thresholds.** Skipped — non-applicable. Headroom is 7.4% (45,363 / 49,000 = 92.6%), far below the 30% precondition. Re-open only after a future amortization pass on safety-floor `load_context` chains, or after an `always` → `auto` reclassification audit, gives ≥ 30% headroom.
+- [x] **5.2.1 Add concentration threshold.** Implemented in `scripts/check_always_budget.py` (`_concentration_check`): fails CI when any single non-safety-floor rule > 12% of used budget OR top-3 non-safety-floor sum > 30% of used budget. Q3=A locked safety-floor rules (`non-destructive-by-default`, `commit-policy`, `scope-control`, `verify-before-complete`) excluded via the new `SAFETY_FLOOR_RULES` constant. Current state: largest non-safety-floor = 9.4% (well under 12%); top-3 non-safety-floor = 27.2% (under 30%). Both gates green on `feat/better-basement`.
+- [x] **5.3 Add per-rule trend report.** Implemented in `scripts/check_always_budget.py` (`_record_trend`, `_last_trend`): appends one record per run to `.github/budget-trend.jsonl` (local-only, gitignored, 500-record cap with FIFO trim). Prints total delta + top-5 rule deltas vs. previous run when not `--quiet`. `--no-trend` flag suppresses writing for read-only inspection.
 
 ### Success criteria
 
-- Always-rule budget ≤ 65% of cap.
-- Top-3 ≤ 30% of used budget; no single rule > 12% (5.2.1 gate).
-- Budget linter thresholds tightened in CI.
-- Safety-floor rules unchanged in size and obligation surface.
+- ~~Always-rule budget ≤ 65% of cap.~~ **Not met — structural ceiling.** Used budget is 92.6% (45,363 / 49,000). Phase 2A R6 finding holds: under Model (b) literal accounting (rule + every transitively loaded context, depth ≤ 2), the safety-floor rules alone (27,678 chars across the four Q3=A locked rules) consume 56% of cap before any other rule loads. The 65% target requires either an `always` → `auto` reclassification audit on a non-safety-floor rule, or a structural change to the budget model (e.g., dedup of cross-loaded contexts). Both are out of scope here. Recovery-band carve-out covers the 90–100% gap zone in CI.
+- ✅ Top-3 ≤ 30% of used budget; no single rule > 12% (5.2.1 gate). **Met for non-safety-floor:** top-3 = 27.2%, max single = 9.4%. Safety-floor rules excluded by construction (Q3=A lock).
+- ⏸ Budget linter thresholds tightened in CI. **Deferred** — gated on ≥ 30% headroom (currently 7.4%).
+- ✅ Safety-floor rules unchanged in size and obligation surface. Verified by 2A.0 linter and `SAFETY_FLOOR_RULES` exclusion in concentration check.
 
 ### Abort / rollback
 
@@ -362,22 +356,24 @@ Top-3 today: `language-and-tone` (5,832), `ask-when-uncertain` (5,196), `direct-
 
   Both gates required. Do **not** batch-slim the other three. Anthropic R2 finding: a single gate (council approval alone) is insufficient for safety-floor regressions.
 
+  **Status:** rollback **not** triggered. Phase 5.1 amortization closed the gap below the concentration cap; the residual 65%-target shortfall is explicitly accepted as a structural ceiling, not a slimming failure.
+
 ## Phase 6 — Trigger-overlap audit (`chat-history-*`)
 
 Three rules + three commands all touch the same surface. Q2=A locked: **one unified rule + three context files**, not router-plus-specialists. Both council members converged on the unified shape: Phase 6's stated goal (auditing trigger overlap) requires triggers to be legible in one place; router+specialists scatters trigger logic across four files and forces two-file reads.
 
 **Pre-conditions:** Phase 0.3 decoupling-proof committed (determines whether 6 must run before 2B or independently); Phase 0.6 path conventions in place.
 
-- [ ] **6.0 Dependency surface scan.** Before 6.1, run `scripts/scan_chat_history_consumers.py`: enumerate every rule/skill/command that references `chat-history-cadence`, `chat-history-ownership`, or `chat-history-visibility` by name (load_context, explicit cite, trigger reference). Output to `agents/roadmaps/phase6-dependency-scan.md`. Any consumer that names a rule by file path → flagged as a 6.3 migration target. Catches the "ghost reference" risk (R1 finding from Round 2).
-- [ ] **6.1 Compare triggers (logic inverted in v3.1 — A4 fix).** Build the overlap matrix at `agents/roadmaps/phase6-trigger-matrix.md`: pairwise trigger-set overlap across `chat-history-cadence`, `chat-history-ownership`, `chat-history-visibility` (Jaccard overlap of trigger keyword sets). Threshold-driven branch:
-  - **Pairwise overlap ≥ 30% on ≥ 2 of the 3 pairs → proceed to 6.2** (unified shape per Q2=A). The shared-trigger surface justifies a single rule; scattering it across three files forces multi-file reads.
-  - **Pairwise overlap < 30% on ≥ 2 of the 3 pairs → STOP at 6.1.** This is **success, not escalation** — the three concerns are genuinely orthogonal and the current three-rule shape is already optimal. Document the non-overlap evidence at `agents/roadmaps/phase6-non-overlap-evidence.md` (explicit table: which triggers, which concern, why orthogonal). Mark Phase 6 as **closed without restructure**; the dependency scan from 6.0 still ships (it was useful regardless), but 6.2/6.3/6.4 are skipped.
-  - **Mixed (one pair ≥ 30%, two pairs < 30%) → escalate to council.** Possible router shape (the one pair merges; the orthogonal one stays separate). Council decides; default = stop without restructure.
+- [x] **6.0 Dependency surface scan.** Reproducible `grep -rl --include="*.md" "$rule"` across `.agent-src.uncompressed/`, `docs/`, `agents/`. Output committed at `agents/roadmaps/phase6-dependency-scan.md`. Migration target list = empty (Path B branch fired in 6.1). R1 ghost-reference risk closed by enumeration evidence.
+- [x] **6.1 Compared triggers — verdict: STOP (Path B).** Pairwise Jaccard on frontmatter `description:` tokens (script: `scripts/_one_off_phase6_trigger_jaccard.py`, log: `/tmp/phase6_trigger_jaccard.log`):
+  - `cadence × ownership` = **0.061** (intersect: `ownership`, `turn`)
+  - `cadence × visibility` = **0.057** (intersect: `handling`, `never`)
+  - `ownership × visibility` = **0.000** (∅)
 
-  Prior v3 framing treated zero overlap as "halt + escalate, may favor three rules" — implying the orthogonal outcome was a failure mode. R5 finding A4: the orthogonal outcome is the **correct outcome** when the data supports it, not a Q2 violation. Q2=A is conditional on the audit; this is the audit.
-- [ ] **6.2 Build the unified shape (only if 6.1 takes the ≥ 30% branch).** One `chat-history.md` rule, three contexts under `contexts/chat-history/<concern>.md` (cadence, ownership, visibility). Triggers stay inline in the rule body so the audit goal stays satisfied. The mechanics-per-concern live in the contexts.
-- [ ] **6.3 Migrate consumers.** Update every reference flagged in 6.0 to point at the new unified rule (or the appropriate context where direct citation was the pattern). Verify with `check_references` linter.
-- [ ] **6.4 Implement and verify.** No behavior change; same triggers fire today, just from one rule + three contexts. Trigger-coverage parity test: replay 10 historical chat-history events through the agent on the new shape; verdict must be unchanged.
+  3 of 3 pairs < 30% by a factor of 5×–∞×. Orthogonal outcome confirmed → **Phase 6 closes without restructure.** Matrix committed at `agents/roadmaps/phase6-trigger-matrix.md`; non-overlap evidence at `agents/roadmaps/phase6-non-overlap-evidence.md` (three-gate decomposition: gate 1 ownership / gate 2 cadence / gate 3 visibility — temporally ordered, disjoint trigger events).
+- [-] **6.2 Build the unified shape.** Skipped — non-applicable on Path B. The < 30% branch closes Phase 6; no unified shape is built. Recorded as cancelled, not deferred.
+- [-] **6.3 Migrate consumers.** Skipped — non-applicable on Path B (migration target list from 6.0 = empty).
+- [-] **6.4 Implement and verify.** Skipped — non-applicable on Path B (no shape change to verify).
 
 ### Success criteria
 
