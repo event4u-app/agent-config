@@ -318,6 +318,128 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.16.0](https://github.com/event4u-app/agent-config/compare/1.15.0...1.16.0) (2026-05-03)
+
+### Features
+
+* add no-cheap-questions always-rule with pre-send self-check ([2916210](https://github.com/event4u-app/agent-config/commit/2916210887f5ba9fc103d80585f0a8a0e2809686))
+* **lint:** load_context frontmatter convention + linter (Phase 2) ([f7c9c51](https://github.com/event4u-app/agent-config/commit/f7c9c5186e4264baee2a4cc299990ed9f87ded54))
+* **council:** B1–B4 host integration hooks ([f5ec711](https://github.com/event4u-app/agent-config/commit/f5ec71174f21f1f096fb4d8cff94feac2410835f))
+* **council:** specialised modes — /council-pr, /council-design, /council-optimize ([00ec7df](https://github.com/event4u-app/agent-config/commit/00ec7df94397addd4a09365b8e48f54441a3a496))
+* **council:** session persistence (D2) + daily budget guard (D3) ([b2395e9](https://github.com/event4u-app/agent-config/commit/b2395e9d325fb339fb45ada7f4e4297ee8e0811b))
+* **council:** multi-round debate (D1) + smart diff context (D4) ([3a06d8f](https://github.com/event4u-app/agent-config/commit/3a06d8f7b95ddb2db7b4d6d965f6b66abcda78a5))
+* **telemetry:** outcome-aware engagement events (P2 #9) ([bb8a7c3](https://github.com/event4u-app/agent-config/commit/bb8a7c39b9ecb36219eeb4d639706026f0e7db7b))
+* **rules:** expand rule-interaction matrix to 13 pairs across 9 rules ([0ce5891](https://github.com/event4u-app/agent-config/commit/0ce589148ea1a4b56a7fd782bc3492682850024e))
+* **ci:** add check-roadmap-trackable linter ([980e242](https://github.com/event4u-app/agent-config/commit/980e242189129271fb603222589eeb59864d3de6))
+* **check-portability:** F1.5 add identity-framing detector (Layer 5) ([9245f3b](https://github.com/event4u-app/agent-config/commit/9245f3b29cb3719df40c321b0e5c3f7ed50f19dc))
+* **ai-council:** Phase 2b — Manual mode + non-billable orchestrator path ([4cbe5ef](https://github.com/event4u-app/agent-config/commit/4cbe5ef6ff6959c42ebcb40df96f9e6a853d1d03))
+* **ai-council:** Phase 2a — neutral project-context handoff ([25b64dc](https://github.com/event4u-app/agent-config/commit/25b64dc55e0eeba66141d128a8963042735b05dd))
+* **ai-council:** pricing layer + per-member estimate gate + sequential overrun callback ([c6e0203](https://github.com/event4u-app/agent-config/commit/c6e0203acc8e50315e83ee56b156b95b00578fdc))
+* **installer:** add keys:install-* CLI commands and gitignore .agent-prices.md ([c4c29a6](https://github.com/event4u-app/agent-config/commit/c4c29a64bf9335cfb2ae764b7c49a4a3f1ff5ba6))
+* **ai-council:** add /council command + ai-council skill ([68e28e6](https://github.com/event4u-app/agent-config/commit/68e28e6992cd18b8808245b42e348d57f827359c))
+* **ai-council:** implement core orchestrator, bundler, clients, prompts ([d16ef04](https://github.com/event4u-app/agent-config/commit/d16ef04d2d734f527127e3ef884d6a975347d0bd))
+* **roadmap:** plan AI Council — external second-opinion workflow ([f973c38](https://github.com/event4u-app/agent-config/commit/f973c386fafa603bfc3d5935d8c1379d576e6236))
+* **governance:** F7 — universal identity reframe + archive completed roadmap ([8a259f0](https://github.com/event4u-app/agent-config/commit/8a259f0b41cbba8c70961f6e83f1c8dd08e02094))
+* **governance:** F6 — description-budget cap + augmentignore advisory ([5ac837d](https://github.com/event4u-app/agent-config/commit/5ac837d28971e4c8d679f5f3a1f25a0a4b6e50f7))
+* **governance:** F5 — index generator for internal + public catalogs ([bae4e19](https://github.com/event4u-app/agent-config/commit/bae4e198356a7994644f3c19c8da552d5d61560b))
+* **commands:** F2 — collapse fix/optimize/feature clusters into orchestrators ([5db2d1a](https://github.com/event4u-app/agent-config/commit/5db2d1a55533805c77195e35c800a89acdfe0bf3))
+* **rules:** F1.2-F1.5 — close always-rule budget breach (37,879/49,000) ([b9eb922](https://github.com/event4u-app/agent-config/commit/b9eb92232b6ec72209e60ee7d43f167489124690))
+* **rules:** add agent-authority Priority-Index router (F1.1) ([410653f](https://github.com/event4u-app/agent-config/commit/410653f1887bce755f314a97c542100e9dc4696e))
+
+### Bug Fixes
+
+* **rules:** trim no-cheap-questions to satisfy top-5 always-rule cap ([41e575b](https://github.com/event4u-app/agent-config/commit/41e575b8439f7f654f0c65284626dbe2c06b9e39))
+* **schema:** allow load_context in rule frontmatter ([342496e](https://github.com/event4u-app/agent-config/commit/342496e12adb7299bf6a20b5d7949aa657b0e6d4))
+* **scripts:** exempt README hero/blurb from update_counts ([6c6822a](https://github.com/event4u-app/agent-config/commit/6c6822aa055698c5d008d6487ab1a65ab5d65fd3))
+* **catalog:** point public catalog at shipped surface, add regression gate ([58ec2e9](https://github.com/event4u-app/agent-config/commit/58ec2e98b19aebe28ab2b718f2199adc2b6c6e82))
+* **rules:** trim language-and-tone.md to satisfy always-rule budget cap ([d20c99a](https://github.com/event4u-app/agent-config/commit/d20c99a36fba5e6c76f21f0be8f3435d699e8d2c))
+* **roadmap-progress:** support digit+letter phase ids (Phase 2a) ([968f7c6](https://github.com/event4u-app/agent-config/commit/968f7c64d39dfea043980cd5bc81af3970202966))
+* **rules:** add 'fenced step' clause to scope-control ([be337d8](https://github.com/event4u-app/agent-config/commit/be337d856b503fc4e15d9d4dfcad5b34f05b2597))
+
+### Documentation
+
+* **roadmap:** close + archive road-to-pr-34-followups ([4bb8d36](https://github.com/event4u-app/agent-config/commit/4bb8d3635eb4a8a386f8111ad2dd0a31ca4578fd))
+* **contracts:** Phase 7.2 — publish always-rule budget contract ([ff65861](https://github.com/event4u-app/agent-config/commit/ff65861db977688d9c0fb266c256aab710ba1d6e))
+* **roadmap:** close Phase 6 of road-to-pr-34-followups; mark 7.3 done ([0380083](https://github.com/event4u-app/agent-config/commit/0380083304a6ff22f0989acb3ff06259c58fe8b5))
+* **contracts:** Phase 6.1 — subdirectory conventions for contexts/ ([befdd92](https://github.com/event4u-app/agent-config/commit/befdd92d6cec1b6104316c0270d9dc124f9a2dce))
+* **roadmap:** close Phase 5 of road-to-pr-34-followups ([298b61f](https://github.com/event4u-app/agent-config/commit/298b61fac68efea9020d2a3e56327179116a29d1))
+* **roadmap:** insert Phase 5 CI drift hygiene; renumber 5/6 → 6/7 ([0e708a5](https://github.com/event4u-app/agent-config/commit/0e708a57b40688fe3aeb29ece85873abc6cbc270))
+* **roadmap:** narrow Phase 4.2 to existing engine vocabulary ([1905918](https://github.com/event4u-app/agent-config/commit/1905918cdfd1743680edc4ed1e22e9422424ed3c))
+* **roadmap:** reframe Phase 4 — engine halt tests, not LLM eval ([3eb2017](https://github.com/event4u-app/agent-config/commit/3eb2017a062c7c082d651a03ffe8521e804ae940))
+* **load-context:** close Phase 3 — first consumer documented + verified ([9b09833](https://github.com/event4u-app/agent-config/commit/9b098335e691ecf9c2808ceeabc318314379b367))
+* **reports:** verify autonomous-execution obligation surface (Phase 2.5) ([2e66d8c](https://github.com/event4u-app/agent-config/commit/2e66d8c416c6589203ce61969ebaa3ef347dd299))
+* **contexts:** extract autonomy EXAMPLES (Phase 2.3) ([4d56143](https://github.com/event4u-app/agent-config/commit/4d561437617c1cd74b1664bfab2154381f2352ae))
+* **contexts:** extract autonomy LOGIC + MECHANICS (Phase 2.2) ([1875f9a](https://github.com/event4u-app/agent-config/commit/1875f9a0ea5ac9fa2ef1f3074d98622d0ad2787e))
+* **roadmap:** pin Phase 2 to existing load_context: roots ([e2773f0](https://github.com/event4u-app/agent-config/commit/e2773f0635816d55f696d25be0aeb6107412949e))
+* **roadmap:** inventory autonomous-execution.md (Phase 2.1) ([2bead66](https://github.com/event4u-app/agent-config/commit/2bead66ae89c6f3f54e324e4c4ba7354a939032d))
+* **readme:** honest command count + governance-aligned hero wording ([1053d56](https://github.com/event4u-app/agent-config/commit/1053d56b3e52fd945a9c09555634abb74bfb2e81))
+* **roadmaps:** add road-to-pr-34-followups (round-6 review + round-7 hardening) ([7375759](https://github.com/event4u-app/agent-config/commit/737575907570dc22f83e6e0325ec3a6a85aaf2d7))
+* **roadmaps:** mark road-to-rebalancing complete + archive ([4c83f8e](https://github.com/event4u-app/agent-config/commit/4c83f8e752f83616209b79ae4fade551e932ef96))
+* **contracts:** add rule-priority-hierarchy.md (Phase 5) ([949c7a9](https://github.com/event4u-app/agent-config/commit/949c7a95689b273302dee3f3d1b9f8694425a213))
+* **rules:** point language-and-tone at the relocated examples doc ([45cc06c](https://github.com/event4u-app/agent-config/commit/45cc06c828d4535a013274952c3a3b627552d528))
+* **guidelines:** relocate language-and-tone-examples into agent-infra/ (Phase 3) ([579e162](https://github.com/event4u-app/agent-config/commit/579e162e960e4dd024888efcbab9ac98c5eb3601))
+* **roadmaps:** archive road-to-ai-council, mark council-modes Phase 2a/2b done ([9caba6d](https://github.com/event4u-app/agent-config/commit/9caba6d26a574591bafdc0e7c0a7f5434adbd717))
+* add end-to-end walkthroughs + complete road-to-1-15-followups (P1 #7) ([fa29fc4](https://github.com/event4u-app/agent-config/commit/fa29fc4279c020579e9cfdb6b79ded37268bc012))
+* **roadmaps:** mark P2 #9 shipped + regen dashboard ([821bcb1](https://github.com/event4u-app/agent-config/commit/821bcb16bd29cf2e06b260e341d6931d2a99677f))
+* **roadmap:** mark P0 #2/#3 + P1 #5/#6 verified shipped ([caccf12](https://github.com/event4u-app/agent-config/commit/caccf129e27ac81994bf549741704989b22e53fc))
+* **roadmaps:** canonicalize headings + tag drafts to satisfy linter ([a5e64b8](https://github.com/event4u-app/agent-config/commit/a5e64b8c8c051f79d3a3a1384f91136999a99150))
+* **rules:** harden roadmap-progress-sync with trackability Iron Law ([ef426cd](https://github.com/event4u-app/agent-config/commit/ef426cdfc7463f4ac44e0e323c7904b82f71a745))
+* **readme:** P0 #4 fix Token overhead wording in cost-profiles table ([1bcdb26](https://github.com/event4u-app/agent-config/commit/1bcdb26644875c5aee297957b0845bbab7240bc3))
+* **agents,copilot:** F1.4 generalize Laravel framing in AGENTS + copilot ([c282ae3](https://github.com/event4u-app/agent-config/commit/c282ae3a2ae93658de69dc92082399df552cb317))
+* **readme:** F1.3 reframe § Who this is for — Laravel as value, not headline ([2fa8022](https://github.com/event4u-app/agent-config/commit/2fa802269b2b936d621344dda0a995bd81bf9737))
+* **readme:** F1.2 neutralize opener stack-naming (Laravel ≠ headline) ([d26bf68](https://github.com/event4u-app/agent-config/commit/d26bf68a94ab0471a7270dea95b5cb35190ca581))
+* **roadmap:** F1.1 audit — Laravel-coloured identity language inventory ([2a42fad](https://github.com/event4u-app/agent-config/commit/2a42fad8b3f659d0c9c704942a3581cb7401057a))
+* **roadmap:** rewrite rebalancing roadmap around layered architecture ([5786d9c](https://github.com/event4u-app/agent-config/commit/5786d9c3f7ba8a668f4cf72478d72dfa463aef29))
+* **roadmap:** capture rebalancing roadmap from PR #34 review feedback ([55977d4](https://github.com/event4u-app/agent-config/commit/55977d4f60f4d665d26ea0f362fa2c581e7ebde5))
+* **ai-council:** Phase 2a/2b skill + command + roadmap updates ([c6b284f](https://github.com/event4u-app/agent-config/commit/c6b284fe8fd361636b2c52c75e03d679981bd231))
+* **roadmap:** capture 1.15.0 review followups -- identity rewrite as P0 #1 ([2abd676](https://github.com/event4u-app/agent-config/commit/2abd676aba025f5bc8efcd2ac2b5e27124f25a13))
+* **roadmap:** plan AI Council Phase 2 -- context-handoff, manual + playwright modes ([b578d6d](https://github.com/event4u-app/agent-config/commit/b578d6da916f98eed2baa57a00089b8815033f9f))
+* **ai-council:** document settings, install flow, and skill xref ([3b8a528](https://github.com/event4u-app/agent-config/commit/3b8a52875842fe4c939b2ae1049d347c0b7d443d))
+* **roadmap:** F3.1 close-out — 5 of 6 renames done, row 4 N/A ([713ff59](https://github.com/event4u-app/agent-config/commit/713ff5900fa1ba6e494286f8fa7403c6e26e3966))
+
+### Refactoring
+
+* **rules:** Phase 7.4 — slim non-destructive-by-default under 6k cap ([62d39ea](https://github.com/event4u-app/agent-config/commit/62d39ea296c0afe5822514d7c0c707ee91be7ce1))
+* **rules:** Phase 6.2 — migrate 3 rules to load_context ([0b93832](https://github.com/event4u-app/agent-config/commit/0b9383244ff90a0e0fbaa2b387c55f3d65672096))
+* **rules:** slim autonomous-execution + wire load_context: (Phase 2.4) ([94edd24](https://github.com/event4u-app/agent-config/commit/94edd24dd52e9d7ada2ecea4c90f23607686eda2))
+* **commands:** F2 — convert 15 atomic commands to deprecation shims ([84283cb](https://github.com/event4u-app/agent-config/commit/84283cbb98192f6f25e567c902aec246eb55e49a))
+* **governance:** F4 — update scripts, docs, and counts for relocated guidelines ([8234649](https://github.com/event4u-app/agent-config/commit/82346494df9efbca1392e55a858a993bec8b05c5))
+* **governance:** F4 — relocate guidelines to docs/guidelines/ ([6a82c0c](https://github.com/event4u-app/agent-config/commit/6a82c0c8e51fffb9ad0278a8f69fa03dcc2ab808))
+* **skills:** F3 — rename verify-before-complete (skill) → verify-completion-evidence ([1bada56](https://github.com/event4u-app/agent-config/commit/1bada563724a6a74c6e26dac988bde5c73d4246d))
+* **rules:** F3 — rename command-suggestion → command-suggestion-policy ([2338aef](https://github.com/event4u-app/agent-config/commit/2338aeff2f81fc28beae1ae79e1e5584237bf7d2))
+* **rules:** F3 — rename slash-commands → slash-command-routing-policy ([347caf8](https://github.com/event4u-app/agent-config/commit/347caf87cd2dbaeb90761f42865276789a0d89b7))
+* **rules:** F3.2 — rename ui-audit-before-build → ui-audit-gate ([dcab51a](https://github.com/event4u-app/agent-config/commit/dcab51ae1535d10b56ff0afaa3164cd595a1b0d3))
+
+### Tests
+
+* **golden:** lock governance anti-pattern baselines ([360f259](https://github.com/event4u-app/agent-config/commit/360f259b72e6d3ab69b4afc344aacf17beabf980))
+* **golden:** add governance anti-pattern recipes ([960c0ec](https://github.com/event4u-app/agent-config/commit/960c0ecf1c106c09a81930a53da10a88e4420f4e))
+* **ai-council:** contract tests for install_{openai,anthropic}_key.sh ([0e193bc](https://github.com/event4u-app/agent-config/commit/0e193bc588394dc41ae4f51cd65021c3c7c13521))
+* **naming:** F3.2 — guard policy-verb vs tool-noun naming split ([efbe2db](https://github.com/event4u-app/agent-config/commit/efbe2dbf04a25fc873e78f5522996ed57bfcc176))
+
+### CI
+
+* **budget:** Phase 7.4 — enforce per-rule 6k cap and top-3 ≤ 50% in CI + tests ([9e8b079](https://github.com/event4u-app/agent-config/commit/9e8b079fc8f11b274ff542d91469dd50381e5ae4))
+* **budget:** Phase 7.1 — always-rule budget gate (warn 80% / fail 90%) ([b3af9ad](https://github.com/event4u-app/agent-config/commit/b3af9ad04334d678bf0d49a60c13808ba17a4450))
+* **tests:** allow manual workflow_dispatch trigger on tests.yml ([e230e2b](https://github.com/event4u-app/agent-config/commit/e230e2bcb9e973a4450170cd4f09aba96116cb05))
+
+### Chores
+
+* finish council modes ([c1496e4](https://github.com/event4u-app/agent-config/commit/c1496e4a240be4210c7624b41cb389065bdf3aee))
+* update gitignore ([184c27f](https://github.com/event4u-app/agent-config/commit/184c27f6a8d9e7549432b9190f6c929ec1be63af))
+* **index:** regenerate index/catalog for no-cheap-questions ([7c45498](https://github.com/event4u-app/agent-config/commit/7c454983735680ebe1b9efb72ad0e4533997e9b6))
+* **tools:** regenerate .windsurfrules and rule symlinks ([8621e23](https://github.com/event4u-app/agent-config/commit/8621e23578c5200ce58888d1be3dc14a5705eb0e))
+* **check-refs:** skip agents/council-sessions/ ([53ff5a6](https://github.com/event4u-app/agent-config/commit/53ff5a6ba28508bcee257d90302073d17c822e49))
+* **index:** regen agents/index.md + docs/catalog.md for council-* commands ([c9d01e5](https://github.com/event4u-app/agent-config/commit/c9d01e5cb819042a4eecf47aec02ac9a8c96325b))
+* **rules:** mark roadmap-progress-sync cloud_safe degrade and trim under 200-line cap ([c740054](https://github.com/event4u-app/agent-config/commit/c74005487a3898ae416b704ad2fbeea4c4c8daf4))
+* **roadmap:** archive open-questions-3.md (all 13 closed) ([18ba9ba](https://github.com/event4u-app/agent-config/commit/18ba9ba789a9974e51258c2242c1bbb2dfbc5a52))
+* **roadmap:** regenerate progress dashboard after Q43 closure ([f027c55](https://github.com/event4u-app/agent-config/commit/f027c550c6a7fe66eb189440ce22a46990977c45))
+* **tools:** regenerate .windsurfrules after language-and-tone trim ([d9a6cf4](https://github.com/event4u-app/agent-config/commit/d9a6cf4921ca29787b4aaa46341eacd86493a8e8))
+* **ai-council:** recompress council.md (Q43) + refresh stale hash ([005ba1b](https://github.com/event4u-app/agent-config/commit/005ba1bcebcdf945df4023d720fe924471448d3d))
+* **ai-council:** post-install enable hint + close Phase-1 decisions ([595d475](https://github.com/event4u-app/agent-config/commit/595d475911f1621c84d846a2e10452611b7558f1))
+* **readme:** trim 'Who this is for' below 500-line linter budget ([e06237d](https://github.com/event4u-app/agent-config/commit/e06237dec5ae61f26cf9456c7584e500f4a36f0f))
+* **roadmap:** regenerate roadmaps-progress dashboard after F6 ([024916b](https://github.com/event4u-app/agent-config/commit/024916b2fe47deb4d77bc561ca9c8f82833c2da6))
+
 ## [1.15.0](https://github.com/event4u-app/agent-config/compare/1.14.0...1.15.0) (2026-05-02)
 
 ### Features
