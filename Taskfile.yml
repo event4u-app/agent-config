@@ -341,6 +341,10 @@ tasks:
     desc: Always-rule budget gate (warn at 80%, fail at 90% of 49,000 chars)
     cmd: python3 scripts/check_always_budget.py --quiet
 
+  check-phase-coupling:
+    desc: Phase 6 → 2B decoupling guard (no chat-history-* rule refs from 13 Phase-2B targets)
+    cmd: python3 scripts/check_phase_coupling.py --quiet
+
   check-compression:
     desc: Check compression quality (headings, code blocks, frontmatter, word count)
     cmd: python3 scripts/check_compression.py
@@ -509,6 +513,7 @@ tasks:
       - task: check-reply-consistency
       - task: check-iron-law-prominence
       - task: check-always-budget
+      - task: check-phase-coupling
       - task: validate-schema
       - task: lint-skills
       - task: lint-marketplace

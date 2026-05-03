@@ -114,13 +114,11 @@ The "Per-item independent" rollback note below is **scoped to council acceptance
 - [x] **0.2.3** Retroactive test: re-calculate PR #34's `autonomous-execution` split under the new model. Must still pass the 49,000-char cap. **Tolerance band (G3 — fix in v3.1):** overshoot ≤ 2% of cap (≤ 980 chars) → council refines the model parameters (e.g., shared-context divisor); overshoot > 2% → model (b) is rejected, escalate to council for an alternative. The 2% band reflects empirical noise in `load_context:` accounting (whitespace, frontmatter, footer references) and prevents a 0.4% delta from triggering a roadmap-wide pause. **Result:** total extended budget 49,311 / 49,000 chars (100.6 %) — within the 2 % band; model (b) ACCEPTED. `autonomous-execution` itself is `type: auto` and does not enter the always-budget; the four always-rules touched by PR #34 (`commit-policy`, `non-destructive-by-default`, `scope-control`, `verify-before-complete`) are the budget-paying surface. Per-rule breaches (`non-destructive-by-default` 7,887; `scope-control` 8,529) are allowlisted as transitional; Phase 2A retires.
 - [x] **0.2.4** Constrain nesting to **max 2 levels**. Rule loads context A; context A may load context B; context B loading context C aborts the build. Added to `scripts/check_always_budget.py` and `tests/test_always_budget.py::test_load_context_depth_within_cap`. Currently zero violations across the always-rule set.
 
-### 0.3 Phase 6 → 2B decoupling proof (CRITICAL)
+### 0.3 Phase 6 → 2B decoupling proof (CRITICAL) ✅ COMPLETE
 
-- [ ] **0.3.1** Grep all 13 Phase-2B target rules for references to `chat-history-{cadence,ownership,visibility}` (rule names in `load_context:`, command names in body, frontmatter keywords).
-- [ ] **0.3.2** Document findings at `agents/roadmaps/phase6-2b-coupling.md`. Cases:
-  - **0 hits** → decouple confirmed; Phase 6 ↔ Phase 2B can run in either order.
-  - **>0 hits** → Phase 6 must ship a backward-compatible call-signature contract (`docs/contracts/chat-history-router.md`) **before** Phase 2B touches the coupled rule. Alternative: Phase 2B excludes the coupled rule and waits until Phase 6 commits.
-- [ ] **0.3.3** Linter check: `scripts/check_phase_coupling.py` re-runs the grep on every Phase-2B PR; new coupling fails the build.
+- [x] **0.3.1** Grep all 13 Phase-2B target rules for references to `chat-history-{cadence,ownership,visibility}` (rule names in `load_context:`, command names in body, frontmatter keywords). **Result: 0 rule-name hits, 0 `load_context:` hits, 0 body link/cite hits across all 13 targets** (uncompressed + compressed surfaces). Single hit (`docs-sync` line 88) references the CLI dispatcher subcommand `chat-history:hook` — excluded from the coupling probe by design.
+- [x] **0.3.2** Document findings at `agents/roadmaps/phase6-2b-coupling.md`. **Outcome: 0 hits → decouple confirmed; Phase 6 ↔ Phase 2B can run in either order.** The "must ship call-signature contract" alternative is dropped — no coupled rule exists.
+- [x] **0.3.3** Linter check: `scripts/check_phase_coupling.py` re-runs the grep on every Phase-2B PR; new coupling fails the build. Wired into `task ci` via `task check-phase-coupling`. Test suite at `tests/test_check_phase_coupling.py` (6 tests, all green).
 
 ### 0.4 2A.4 worked example (HIGH)
 
