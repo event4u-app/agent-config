@@ -100,8 +100,8 @@ the budget is part of the public contract, not an implementation detail.
 | Total always-rule budget | **49,000 chars** | `stable` | `tests/test_always_budget.py::test_always_rules_total_chars_under_cap` |
 | Warn threshold (CI) | **80% (39,200 chars)** | `beta` | `scripts/check_always_budget.py` |
 | Fail threshold (CI) | **90% (44,100 chars)** | `beta` | `scripts/check_always_budget.py` |
-| Per-rule cap | **8,000 chars** (target: 6,000) | `beta` | `tests/test_always_budget.py::test_no_single_always_rule_over_per_rule_cap` |
-| Top-5 combined cap | **28,000 chars** | `beta` | `tests/test_always_budget.py::test_top5_always_rules_under_cap` |
+| Per-rule cap | **6,000 chars** | `beta` | `tests/test_always_budget.py::test_no_single_always_rule_over_per_rule_cap` · `scripts/check_always_budget.py` |
+| Top-3 combined cap | **24,500 chars** (50% of total) | `beta` | `tests/test_always_budget.py::test_top3_always_rules_under_cap` · `scripts/check_always_budget.py` |
 
 **Promises a consumer can rely on:**
 
@@ -111,11 +111,11 @@ the budget is part of the public contract, not an implementation detail.
 - The CI gate (`task check-always-budget`, run on every PR) prevents
   drift toward the cap without a maintainer noticing — the warn/fail
   thresholds give two PR-cycles of advance notice before the wall.
-- Per-rule and top-N caps prevent a single monster rule re-emerging
-  under the global cap. The current per-rule cap is `beta` because
-  Phase 7.4 of `road-to-pr-34-followups.md` is in flight to tighten it
-  to 6,000 chars; the next promotion to `stable` happens after that
-  phase closes.
+- Per-rule and top-3 caps prevent a single monster rule re-emerging
+  under the global cap. The current per-rule cap is `beta` because the
+  numbers are still being tuned against real-world rule churn; promotion
+  to `stable` follows one SemVer-minor cycle without a tightening or
+  loosening change.
 
 **What's intentionally not promised:**
 

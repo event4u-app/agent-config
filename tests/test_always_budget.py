@@ -3,7 +3,12 @@
 Hard cap from `road-to-governance-cleanup.md` Finding 1: Augmentcode considers
 ~49,000 chars across all always-active rules a safety budget. Breach risks
 context-window pressure on every reply. The cap, the per-rule cap, and the
-top-5 cap are enforced here so a future PR cannot reintroduce the breach.
+top-3 cap are enforced here so a future PR cannot reintroduce the breach.
+
+Phase 7.4 of `road-to-pr-34-followups` tightened the per-rule cap from
+8,000 → 6,000 chars and replaced the top-5 (≤ 28,000) cap with a
+top-3 (≤ 50% of total budget) cap. Numbers must match the
+`Budget contracts` table in `docs/contracts/STABILITY.md`.
 """
 
 from __future__ import annotations
@@ -14,8 +19,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 RULES_DIR = REPO_ROOT / ".agent-src" / "rules"
 
 TOTAL_CAP = 49_000
-PER_RULE_CAP = 8_000
-TOP5_CAP = 28_000
+PER_RULE_CAP = 6_000
+TOP3_CAP = TOTAL_CAP // 2  # 24,500 chars — top-3 combined ≤ 50% of total
 
 
 def _always_rules() -> list[Path]:
@@ -48,9 +53,10 @@ def test_no_single_always_rule_over_per_rule_cap() -> None:
     )
 
 
-def test_top5_always_rules_under_cap() -> None:
+def test_top3_always_rules_under_cap() -> None:
     sizes = sorted((f.stat().st_size for f in _always_rules()), reverse=True)
-    top5 = sum(sizes[:5])
-    assert top5 <= TOP5_CAP, (
-        f"top-5 always-rule cap breach: {top5} > {TOP5_CAP} chars."
+    top3 = sum(sizes[:3])
+    assert top3 <= TOP3_CAP, (
+        f"top-3 always-rule cap breach: {top3} > {TOP3_CAP} chars "
+        f"(top-3 must stay ≤ 50% of {TOTAL_CAP} total budget)."
     )

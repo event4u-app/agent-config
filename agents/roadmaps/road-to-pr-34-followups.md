@@ -200,12 +200,12 @@ The risk in Phase 6 is "let's move everything to contexts" — context inflation
 
 ## Phase 7 — Always-rule budget hardening (strategic)
 
-Current post-Phase-6: **37,720 / 49,000 chars (77.0% utilization)**, 23.0% headroom. Round 6 recommendation: keep ≥ 20% headroom permanently.
+Pre-Phase-7 baseline: **37,720 / 49,000 chars (77.0%)**, 23.0% headroom. Post-Phase-7 (after 7.4 migration): **36,381 / 49,000 chars (74.2%)**, 25.8% headroom. Round 6 recommendation (≥ 20% headroom permanently) met with a comfortable margin; per-rule and top-3 caps now live in CI and pytest.
 
-- [ ] **7.1 Add a CI gate** at 80% utilization (warn at 80%, fail at 90%). Extend `scripts/check_iron_law_prominence.py` or add a sibling `check_always_budget.py`.
-- [ ] **7.2 Publish the budget number** in `docs/contracts/STABILITY.md` or `docs/contracts/rule-priority-hierarchy.md` so consumers can see the contract.
+- [x] **7.1 Add a CI gate** at 80% utilization (warn at 80%, fail at 90%). Sibling script `scripts/check_always_budget.py` (commit `b3af9ad`); wired into `Taskfile.yml` (`task check-always-budget`) and the `consistency` GitHub workflow.
+- [x] **7.2 Publish the budget number.** `docs/contracts/STABILITY.md` § Budget contracts (commit `ff65861`) lists TOTAL_CAP / warn / fail / per-rule / top-3 with stability levels and owners. Cross-linked from the roadmap and `rule-priority-hierarchy.md`.
 - [x] **7.3 Re-run budget audit** after Phases 2 and 6 land; record the post-migration number. Pre-Phase-2: ≈45k / 49k. Post-Phase-2: 42,521 / 49,000 (86.8%). Post-Phase-6: 37,720 / 49,000 (77.0%). Δ vs. pre-Phase-6: −4,801 chars / −9.8 pp. Captured in Phase 6.3 close-out and in the `0b93832` commit body.
-- [ ] **7.4 Per-rule caps.** Add to `check_always_budget.py`: no single always-rule may exceed 6,000 chars; the top-3 always-rules combined may not exceed 50% of the global budget. Prevents a single monster from re-emerging under the global cap.
+- [x] **7.4 Per-rule caps.** `scripts/check_always_budget.py` and `tests/test_always_budget.py` both enforce: per-rule ≤ 6,000 chars, top-3 combined ≤ 24,500 chars (50% of TOTAL_CAP). Required one rule migration first — `non-destructive-by-default.md` (6,382 → 4,607 chars) by extracting the WIP-deletion scope rule and the failure-mode catalog into `contexts/authority/destructive-mechanics.md` (commit `62d39ea`). Test renamed `test_top5_always_rules_under_cap` → `test_top3_always_rules_under_cap`. Final budget snapshot: 36,381 / 49,000 (74.2%); top-3 sum 15,750 / 24,500 (64%); largest rule 5,832 (`language-and-tone.md`); all 9 always-rules under the per-rule cap. STABILITY.md `Budget contracts` table updated to drop the 8k target / top-5 row and reflect the now-enforced 6k / top-3 caps.
 
 ### Phase-7 success criteria
 
