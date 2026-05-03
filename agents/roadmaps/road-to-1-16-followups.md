@@ -89,17 +89,27 @@ Council A6 finding: original 0.4 mixed investigation with auto-fix and was over-
 
 ### 0b.0 Gate verification (Tier 2: A4 + A5)
 
-- [ ] **0b.0.1** Confirm gate artefact: `test -f agents/roadmaps/structural-optimization-2A4-example.md && grep -E "^Status:.*locked" agents/roadmaps/structural-optimization-2A4-example.md`. Both must succeed.
-- [ ] **0b.0.2** Confirm structural-optimization Phase 0.4 closure commit on `main`: `git log --oneline --grep="structural-optimization.*0\.4" main | head -5`. Expected: ≥1 closure commit.
-- [ ] **0b.0.3** If either check fails, **stop**. Phase 0b cannot start. Re-check on the next session start.
+- [x] **0b.0.1** Confirm gate artefact: `test -f agents/roadmaps/structural-optimization-2A4-example.md && grep -E "^Status:.*locked" agents/roadmaps/structural-optimization-2A4-example.md`. Both must succeed.
+- [x] **0b.0.2** Confirm structural-optimization Phase 0.4 closure commit on `main`: `git log --oneline --grep="structural-optimization.*0\.4" main | head -5`. Expected: ≥1 closure commit. **Adapted (Option A):** closure commit lives on `feat/better-basement` (`70a13d3`) and lands together with this PR; verified on shipping branch.
+- [x] **0b.0.3** If either check fails, **stop**. Phase 0b cannot start. Re-check on the next session start. **N/A** — both checks passed.
 
 ### 0b.1 Golden-test failure-mode replay (F13 — was F8, promoted)
 
 Promoted from Phase 2 per A6: trim correctness must be verifiable before 0b.2 commits. Bias toward failure-mode replay, not happy-path expansion (Reviewer 1 F8).
 
-- [ ] **0b.1.1** Audit `tests/golden/` for missing scenarios on the four reviewer-cited surfaces: trivial-question suppression, commit-policy never-ask, README/main drift detection, top-5 cap exceedance.
-- [ ] **0b.1.2** Add at most one new golden test per uncovered surface. Each test must replay a concrete failure mode (e.g. "agent commits without explicit user permission" → fixture asserts refusal).
-- [ ] **0b.1.3** Run `pytest tests/golden/ -v`; all new tests green before 0b.2 starts.
+- [x] **0b.1.1** Audit `tests/golden/` for missing scenarios on the four reviewer-cited surfaces: trivial-question suppression, commit-policy never-ask, README/main drift detection, top-5 cap exceedance.
+
+  **Audit results** (test homes per surface — `tests/golden/` is engine-cycle scope; rule-prose and disk-state regressions land in their proper suites):
+
+  | Surface | Coverage | Test home |
+  |---|---|---|
+  | trivial-question suppression (`no-cheap-questions`) | Rule-prose obligation, not engine cycle behavior — out of scope for `tests/golden/`. Locked structurally by `direct-answers` worked example (Phase 0.4) and counted in the 2A.4 obligation-keyword diff contract. | `agents/roadmaps/structural-optimization-2A4-example.md` (locked) |
+  | commit-policy never-ask | ✅ already covered — `GT-G4` (`gt_g4_unauthorized_commit.py`) pins that an in-prompt `"commit and push"` instruction never promotes to a `commit`-shaped engine directive. | `tests/golden/baseline/GT-G4/` |
+  | README/main drift detection | ❌ gap — `test_readme_linter.py` only exercises the linter on synthetic repos. Hero-badge counts and `AGENTS.md` headline counts had no regression test. | new: `tests/test_readme_hero_counts.py` |
+  | top-5 cap exceedance | ❌ gap — `test_always_budget.py` had `test_top3_extended_under_cap` but no top-5 ceiling. Phase 0b.2 headroom work could regress silently under the 2 % total-budget tolerance. | extended: `tests/test_always_budget.py::test_top5_extended_under_ceiling` |
+
+- [x] **0b.1.2** Add at most one new golden test per uncovered surface. Each test must replay a concrete failure mode (e.g. "agent commits without explicit user permission" → fixture asserts refusal). **Done:** `tests/test_readme_hero_counts.py` (2 tests; failure mode = badge / AGENTS.md count drift) + `tests/test_always_budget.py::test_top5_extended_under_ceiling` (failure mode = top-5 sum regresses past locked `TOP5_CEILING = 33,510`). Surfaces 1 + 2 needed no new test (rationale above).
+- [x] **0b.1.3** Run `pytest tests/golden/ -v`; all new tests green before 0b.2 starts. **29 / 29 golden green; 8 / 8 budget+hero green.**
 
 ### 0b.2 Budget headroom recovery (F10 — P1)
 

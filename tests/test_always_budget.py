@@ -30,6 +30,13 @@ TOTAL_CAP = 49_000
 TOLERANCE_BAND = 0.02  # G3 — overshoot ≤ 2 % accepted while Phase 2A pending
 PER_RULE_CAP = 6_000
 TOP3_CAP = TOTAL_CAP // 2
+# Phase 0b.1 (F13) — top-5 baseline ceiling. Locked at 33,510 chars on the
+# `feat/better-basement` shipping branch (post-`no-cheap-questions` trim).
+# Failure mode pinned: the top-5 always-rule extended sum grows beyond this
+# ceiling without an accompanying trim, signalling that Phase 0b.2 budget
+# headroom is regressing. Trims that push the ceiling DOWN must update this
+# constant in the same commit.
+TOP5_CEILING = 33_510
 MAX_DEPTH = 2
 
 # Mirrors `scripts/check_always_budget.py::KNOWN_PER_RULE_BREACHES`.
@@ -155,6 +162,26 @@ def test_top3_extended_under_cap() -> None:
     assert top3 <= TOP3_CAP, (
         f"top-3 always-rule extended cap breach: {top3} > {TOP3_CAP} "
         f"chars (top-3 must stay ≤ 50% of {TOTAL_CAP} total budget)."
+    )
+
+
+def test_top5_extended_under_ceiling() -> None:
+    """Phase 0b.1 (F13) — top-5 sum must not regress past the locked ceiling.
+
+    Failure-mode replay for Phase 0b.2 budget headroom: an unrelated rule
+    edit silently grows one of the top-5 rules. The total-budget test still
+    passes because the growth fits under the 2 % tolerance, but headroom
+    recovery work is being undone. This test fires before that drift ships.
+    """
+    sizes = sorted(
+        (_extended_size(r) for r in _always_rules()), reverse=True
+    )
+    top5 = sum(sizes[:5])
+    assert top5 <= TOP5_CEILING, (
+        f"top-5 always-rule extended ceiling breach: {top5} > {TOP5_CEILING} "
+        f"chars. Either trim a top-5 rule back under the ceiling, or update "
+        f"TOP5_CEILING in tests/test_always_budget.py with a justification "
+        f"in the commit message."
     )
 
 
