@@ -134,8 +134,35 @@ diagnostics but does not gate the always-budget cap.
 4. Depth ≤ 2 on every `load_context:` chain reachable from an
    always-rule.
 
-Exit codes: 0 = pass (or warn), 1 = any cap breach or depth
-violation, 3 = internal error.
+### Recovery band (Phase 2A → Phase 5 transitional)
+
+Locked by AI Council session `2026-05-03T12-02-42Z` (verdict A1)
+after Phase 2A was attempted and reverted: the 1:1 rule-to-context
+split was uneconomical under Model (b) literal because the
+frontmatter and citation-line tax on the new context file outweighed
+the chars removed from the rule. Reverting Phase 2A left the budget
+at 96.8 % — strictly better than the `main` baseline at 100.6 % but
+inside the 90–100 % gap zone the linter rejects.
+
+While `RECOVERY_BAND_ENABLED = True`, the linter accepts a branch in
+the gap zone iff:
+
+- `total_ext < baseline` (read from `.github/budget-baseline.txt`,
+  the chars at last-green `main`), AND
+- every per-rule cap holds (allowlisted entries unchanged), AND
+- top-3 cap holds, AND
+- depth-2 cap holds.
+
+A branch passing only the recovery band reports
+`⚠️  WARN (recovery band, baseline N)`. The band is a one-way ratchet:
+once a smaller branch lands on `main`, the baseline file must be
+updated to the new total in the same commit. Phase 5 of
+`road-to-structural-optimization` flips `RECOVERY_BAND_ENABLED` to
+`False` and removes both the band and the G3 tolerance — the gate
+collapses to `total < TOTAL_CAP` strict.
+
+Exit codes: 0 = pass (or warn, including recovery band), 1 = any cap
+breach or depth violation, 3 = internal error.
 
 ## What this contract intentionally does **not** promise
 

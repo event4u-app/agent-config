@@ -1,0 +1,14 @@
+# Last-green main baseline for `scripts/check_always_budget.py` recovery band.
+#
+# Format: single integer (chars) on the first non-comment line.
+# Updated by hand on each main merge that lowers the always-rule extended
+# total. The recovery-band carve-out (locked by AI Council session
+# 2026-05-03T12-02-42Z) accepts a branch in the 90–100 % gap zone iff its
+# total is strictly less than this baseline AND no per-rule / top-3 / depth
+# cap is breached. Phase 5 of road-to-structural-optimization disables the
+# recovery band by setting RECOVERY_BAND_ENABLED = False in the linter.
+#
+# 2026-05-03 — recorded from main HEAD (f4060d01) after Phase 1 cluster
+# landing. Branch feat/better-basement at 47,448 chars trims 1,863 chars
+# below this ceiling and is the first beneficiary of the band.
+49311

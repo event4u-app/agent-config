@@ -28,8 +28,30 @@ COMP_PREFIX = ".agent-src/"
 
 TOTAL_CAP = 49_000
 TOLERANCE_BAND = 0.02  # G3 — overshoot ≤ 2 % accepted while Phase 2A pending
+FAIL_THRESHOLD = 0.90
 PER_RULE_CAP = 6_000
 TOP3_CAP = TOTAL_CAP // 2
+
+# Recovery band — mirrors `scripts/check_always_budget.py`. AI Council
+# session 2026-05-03T12-02-42Z, verdict A1: a branch in the 90–100 %
+# gap zone passes iff its extended total is strictly below the
+# last-green main baseline AND every per-rule / top-3 / depth cap holds.
+RECOVERY_BAND_ENABLED = True
+BASELINE_FILE = REPO_ROOT / ".github" / "budget-baseline.txt"
+
+
+def _load_baseline() -> int | None:
+    if not BASELINE_FILE.exists():
+        return None
+    for line in BASELINE_FILE.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        try:
+            return int(line)
+        except ValueError:
+            return None
+    return None
 # Phase 0b.1 (F13) — top-5 baseline ceiling. Originally locked at 33,510
 # chars on the `feat/better-basement` shipping branch (post-`no-cheap-
 # questions` trim). Phase 0b.2 (F10) trim of `language-and-tone` dropped
@@ -122,6 +144,33 @@ def test_always_rules_total_extended_within_tolerance() -> None:
         + "\n".join(
             f"  {n}: {s}" for n, s in sorted(sizes, key=lambda x: -x[1])
         )
+    )
+
+
+def test_recovery_band_invariant() -> None:
+    """Mirrors the linter's recovery-band gate.
+
+    When the recovery band is enabled and the current total sits in the
+    90–100 % gap zone, it must be strictly below the baseline recorded
+    in `.github/budget-baseline.txt`. Failure here means the linter
+    would also fail — keeps test and script in lock-step.
+    """
+    if not RECOVERY_BAND_ENABLED:
+        pytest.skip("recovery band disabled; gap-zone is a hard fail")
+    total = sum(_extended_size(r) for r in _always_rules())
+    pct = total / TOTAL_CAP
+    if pct < FAIL_THRESHOLD or pct >= 1.0:
+        return
+    baseline = _load_baseline()
+    assert baseline is not None, (
+        "recovery band engaged (90–100 %% gap zone) but no baseline file "
+        f"at {BASELINE_FILE} — cannot verify branch is strictly better "
+        "than main. Either trim below 90 %% or record a baseline."
+    )
+    assert total < baseline, (
+        f"recovery-band breach: branch total {total:,} ≥ baseline "
+        f"{baseline:,}. Branch must be strictly better than the last-"
+        "green main to claim the recovery band carve-out."
     )
 
 

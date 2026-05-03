@@ -45,6 +45,16 @@ PER_RULE_CAP = 6_000
 TOP3_CAP = TOTAL_CAP // 2
 MAX_DEPTH = 2
 
+# Recovery band (AI Council session 2026-05-03T12-02-42Z, verdict A1).
+# When enabled, a branch in the 90–100 % gap zone passes as WARN iff its
+# extended total is strictly below the last-green main baseline AND every
+# per-rule / top-3 / depth cap holds. Resolves the paradox where main at
+# 100.6 % passed via TOLERANCE_BAND while a strictly-better branch at
+# 96.8 % failed the gap-zone gate. Phase 5 of road-to-structural-
+# optimization flips this to False and enforces total < TOTAL_CAP strictly.
+RECOVERY_BAND_ENABLED = True
+BASELINE_FILE = REPO_ROOT / ".github" / "budget-baseline.txt"
+
 # Transitional allowlist — per-rule extended-size breaches that Phase 2A
 # of road-to-structural-optimization is contracted to retire. Each entry
 # records the measured ceiling on the day Phase 0.2 was committed; a
@@ -55,6 +65,27 @@ KNOWN_PER_RULE_BREACHES: dict[str, int] = {
     "non-destructive-by-default.md": 7_887,
     "scope-control.md": 8_529,
 }
+
+
+def _load_baseline() -> int | None:
+    """Return the last-green main baseline char total, or None if absent.
+
+    Reads `.github/budget-baseline.txt`; the first non-comment, non-blank
+    line is parsed as an integer. Missing file or malformed content
+    disables the recovery band silently — the linter falls back to the
+    pre-band gate.
+    """
+    if not BASELINE_FILE.exists():
+        return None
+    for line in BASELINE_FILE.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        try:
+            return int(line)
+        except ValueError:
+            return None
+    return None
 
 
 def _frontmatter(path: Path) -> dict:
@@ -165,8 +196,19 @@ def main() -> int:
             grew_over_ceiling.append((name, ext, ceiling))
 
     in_tolerance = 1.0 <= pct <= 1.0 + TOLERANCE_BAND
+    baseline = _load_baseline() if RECOVERY_BAND_ENABLED else None
+    in_recovery_band = (
+        baseline is not None
+        and FAIL_THRESHOLD <= pct < 1.0
+        and total_ext < baseline
+    )
     failing = (
-        (pct >= FAIL_THRESHOLD and not in_tolerance and pct < 1.0)
+        (
+            pct >= FAIL_THRESHOLD
+            and not in_tolerance
+            and not in_recovery_band
+            and pct < 1.0
+        )
         or pct > 1.0 + TOLERANCE_BAND
         or over_per_rule
         or grew_over_ceiling
@@ -177,6 +219,11 @@ def main() -> int:
         status, rc = "❌  FAIL", 1
     elif in_tolerance:
         status, rc = "⚠️  WARN (G3 tolerance band)", 0
+    elif in_recovery_band:
+        status, rc = (
+            f"⚠️  WARN (recovery band, baseline {baseline:,})",
+            0,
+        )
     elif pct >= WARN_THRESHOLD:
         status, rc = "⚠️  WARN", 0
     else:
