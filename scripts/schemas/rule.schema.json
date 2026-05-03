@@ -23,6 +23,16 @@
     "alwaysApply": {
       "type": "boolean",
       "description": "Optional sidecar for Cursor/Cline; by convention true when type=always, false when type=auto."
+    },
+    "load_context": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "\\.md$"},
+      "description": "Lazy on-demand context references. Path rules and budget caps enforced by scripts/lint_load_context.py. Contract: docs/contracts/load-context-schema.md."
+    },
+    "load_context_eager": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "\\.md$"},
+      "description": "Eager auto-loaded context references. Counts against the per-rule char budget; enforced by scripts/lint_load_context.py."
     }
   }
 }
