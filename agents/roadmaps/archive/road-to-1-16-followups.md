@@ -1,7 +1,7 @@
 
 # Road to 1.16.0 Follow-ups
 
-**Status:** DRAFT v1.1 (2026-05-03) — Round-1 council close-out folded in (Anthropic A1–A7 + F13-gap, OpenAI verification-tightening). Phase 0 split into 0a (immediate) + 0b (gated on structural-opt 0.4) per Option A. F8 (golden tests) promoted to Phase 0b. F13 reassigned (was a numbering gap; now covers golden-test failure-mode replay).
+**Status:** archived 2026-05-03 — all 29 active boxes closed (5 cancelled per `[-]`); Phase 0a + 0b + 1 + 2 shipped on `feat/better-basement` (PR #36). Round-1 council close-out folded in (Anthropic A1–A7 + F13-gap, OpenAI verification-tightening). Phase 0 split into 0a (immediate) + 0b (gated on structural-opt 0.4) per Option A. F8 (golden tests) promoted to Phase 0b. F13 reassigned (was a numbering gap; now covers golden-test failure-mode replay).
 **Started:** 2026-05-03
 **Trigger:** External review feedback after release 1.16.0. Reviewer 1 (consolidation-quality lens): score 9.5/10 — surface still large, README dense, context-layer young. Reviewer 2 (commit-level audit): score A−, with a P0/P1/P2 fix stack: README on `main` shows pre-1.15.0 state; budget headroom ~141 chars after `no-cheap-questions`; AI Council Phase 3–4 grew without external-user signal.
 **Mode:** Sequential by phase. Phase 0a is the reviewer's P0/P2 stack — independent, ≤30 min total. Phase 0b is the budget-headroom + golden-test work, **strictly gated** on `road-to-structural-optimization` v3.1 Phase 0.4 (Option A). Phase 1 depends on the same gate. Phase 2 is opportunistic polish.
