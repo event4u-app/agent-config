@@ -332,7 +332,7 @@ Nothing runs automatically without your control. [Configure modes →](docs/cust
 | [`/jira-ticket`](.agent-src/commands/jira-ticket.md) | Read ticket from branch, implement feature |
 | [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
 
-→ [Browse all 69 active commands](.agent-src/commands/) &nbsp;<sub>(84 files total — 15 are deprecation shims that redirect to clustered commands)</sub>
+→ [Browse all 51 active commands](.agent-src/commands/) &nbsp;<sub>(94 files total — 43 are deprecation shims that redirect to clustered commands)</sub>
 
 ---
 
@@ -357,7 +357,7 @@ Every developer gets the same behavior. No per-user setup needed.
 native slash-commands)
 
 > **What this means in practice:** Augment Code and Claude Code get the full
-> package (rules + 129 skills + 69 native commands). Cursor, Cline, Windsurf,
+> package (rules + 129 skills + 51 native commands). Cursor, Cline, Windsurf,
 > Gemini CLI, and GitHub Copilot only get the **rules** natively; skills and
 > commands are available to them as documentation the agent can read, not as
 > first-class features.
