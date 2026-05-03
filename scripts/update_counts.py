@@ -48,12 +48,16 @@ TARGETS: list[tuple[str, list[tuple[str, str]]]] = [
         [
             (r"(Browse all )(\d+)( commands\])", "commands"),
             (r"(package \(rules \+ )(\d+)( skills)", "skills"),
-            (r"(skills \+ )(\d+)( native commands)", "commands"),
             # Hero line: **NNN Skills** · **NNN Rules** · **NNN Commands** · **NNN Guidelines**
             (r"(<strong>)(\d+)( Skills</strong>)", "skills"),
             (r"(<strong>)(\d+)( Rules</strong>)", "rules"),
-            (r"(<strong>)(\d+)( Commands</strong>)", "commands"),
             (r"(<strong>)(\d+)( Guidelines</strong>)", "guidelines"),
+            # NOTE: hero `<strong>N Commands</strong>` and tools-blurb
+            # `skills + N native commands` are owned by
+            # `check_command_count_messaging.py` (Phase-1.2 of
+            # road-to-pr-34-followups). Those surfaces advertise the
+            # **active** command count (total − deprecation shims), not
+            # the raw file count this script computes.
         ],
     ),
     (
