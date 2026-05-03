@@ -1,5 +1,6 @@
 ---
 stability: beta
+status: draft
 ---
 
 # Phase 3a Spike — Scoring Protocol

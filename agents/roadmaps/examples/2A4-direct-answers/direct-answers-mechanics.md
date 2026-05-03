@@ -5,6 +5,7 @@ type: context
 loaded_by:
   - .agent-src.uncompressed/rules/direct-answers.md
 stability: beta
+status: draft
 ---
 
 # Direct Answers — mechanics & failure modes

@@ -5,6 +5,7 @@ alwaysApply: true
 source: package
 load_context:
   - .agent-src.uncompressed/contexts/communication/rules-always/direct-answers-mechanics.md
+status: draft
 ---
 
 # Direct Answers

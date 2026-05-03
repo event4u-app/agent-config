@@ -4,6 +4,7 @@ roadmap: agents/roadmaps/road-to-structural-optimization.md
 phase: 0.3
 stability: beta
 locked_at: 2026-05-03
+status: draft
 ---
 
 # Phase 6 → 2B coupling proof
