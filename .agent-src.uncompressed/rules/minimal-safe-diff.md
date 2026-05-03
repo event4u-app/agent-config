@@ -1,7 +1,7 @@
 ---
-type: "always"
-alwaysApply: true
-description: "Minimal safe diff — the smallest change that solves the stated problem; no drive-by edits, no opportunistic refactors, no reformatting of untouched code"
+type: "auto"
+alwaysApply: false
+description: "When writing or reviewing a diff — the smallest change that solves the stated problem; no drive-by edits, no opportunistic refactors, no reformatting of untouched code"
 source: package
 ---
 

@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "fix all PR review comments, resolve the review feedback"
   trigger_context: "open PR with unresolved comments (bot + human)"
+superseded_by: fix pr
+deprecated_in: "1.15.0"
 ---
+
+> ⚠️  /fix-pr-comments is deprecated; use /fix pr instead.
+> This shim is retained for one release cycle (1.15.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # fix-pr-comments
 

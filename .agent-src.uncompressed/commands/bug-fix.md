@@ -182,4 +182,4 @@ What next?
 
 ## See also
 
-- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#developer) — Developer mode output contract (Goal / Plan / Changes / Tests / Open questions)
+- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md#developer) — Developer mode output contract (Goal / Plan / Changes / Tests / Open questions)

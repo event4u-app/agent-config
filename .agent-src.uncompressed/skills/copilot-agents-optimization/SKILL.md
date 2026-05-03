@@ -57,7 +57,7 @@ Only after this analysis, proceed with optimization.
 **What does NOT belong here:**
 - Coding standards (→ `.augment/rules/` and `.augment/guidelines/`)
 - Architecture principles like SOLID, KISS, DRY (→ `.augment/rules/architecture.md`)
-- PHP conventions (→ `.augment/guidelines/php/`)
+- PHP conventions (→ `../../../docs/guidelines/php/`)
 - Scope control rules (→ `.augment/rules/scope-control.md`)
 - Language/tone rules (→ `.augment/rules/language-and-tone.md`)
 - Detailed module documentation (→ `app/Modules/README.md`)
@@ -115,7 +115,7 @@ both. Instead, reference with a table:
 | What | Where |
 |---|---|
 | PHP coding rules | `.augment/rules/php-coding.md` |
-| Controller guidelines | `.augment/guidelines/php/controllers.md` |
+| Controller guidelines | `../../../docs/guidelines/php/controllers.md` |
 ```
 
 ## Line Budget Enforcement

@@ -64,4 +64,4 @@ ci(lint): add skill-lint workflow
 docs(roadmap): add phase 3 implementation plan
 ```
 
-→ Full type selection rules and anti-patterns: see guideline `guidelines/php/git.md`.
+→ Full type selection rules and anti-patterns: see guideline `docs/guidelines/php/git.md`.

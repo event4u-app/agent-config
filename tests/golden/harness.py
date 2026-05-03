@@ -59,6 +59,10 @@ RECIPE_MODULES = (
     "tests.golden.sandbox.recipes.gt_u13_a11y_polish",
     "tests.golden.sandbox.recipes.gt_u14_a11y_ceiling",
     "tests.golden.sandbox.recipes.gt_u15_preview_fail",
+    "tests.golden.sandbox.recipes.gt_g1_test_patch",
+    "tests.golden.sandbox.recipes.gt_g2_db_cleanup",
+    "tests.golden.sandbox.recipes.gt_g3_scope_creep",
+    "tests.golden.sandbox.recipes.gt_g4_unauthorized_commit",
 )
 
 GOLDEN_ROOT = Path(__file__).resolve().parent

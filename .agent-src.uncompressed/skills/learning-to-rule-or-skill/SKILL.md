@@ -119,7 +119,7 @@ Choose one:
 
 A grep that returns zero hits is **not** proof of no overlap. Knowledge in
 this package is distributed across **four surfaces** — `skills/`, `rules/`,
-`guidelines/`, `commands/`. Skip any of them and recall drops to ~25 %.
+`docs/guidelines/`, `commands/`. Skip any of them and recall drops to ~25 %.
 Run all four steps before declaring "no overlap":
 
 **Step 1 — list all four surfaces.** Directory taxonomy is free evidence:
@@ -127,11 +127,11 @@ Run all four steps before declaring "no overlap":
 ```bash
 ls .agent-src.uncompressed/skills/ \
    .agent-src.uncompressed/rules/ \
-   .agent-src.uncompressed/guidelines/ \
+   docs/guidelines/ \
    .agent-src.uncompressed/commands/
 ```
 
-Sub-directories matter — `guidelines/php/patterns/`, `guidelines/agent-infra/`,
+Sub-directories matter — `docs/guidelines/php/patterns/`, `docs/guidelines/agent-infra/`,
 etc. carry topic taxonomies a flat file scan misses. Always descend one level.
 
 **Step 2 — grep with both vocabularies.** Search for **solution-words** *and*
@@ -194,7 +194,7 @@ The output of this skill is a **curated proposal** under
 `.augment/templates/agents/proposal.example.md` (shipped by the
 package). This is the input to the five-stage pipeline
 (capture → classify → propose → gate → upstream); see
-[`self-improvement-pipeline`](../../guidelines/agent-infra/self-improvement-pipeline.md).
+[`self-improvement-pipeline`](../../../docs/guidelines/agent-infra/self-improvement-pipeline.md).
 
 Mandatory fields the draft MUST fill:
 

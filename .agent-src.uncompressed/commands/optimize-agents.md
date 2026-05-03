@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "audit agent infrastructure, tune the agent setup"
   trigger_context: "maintainer working on .augment/ files"
+superseded_by: optimize agents
+deprecated_in: "1.15.0"
 ---
+
+> ⚠️  /optimize-agents is deprecated; use /optimize agents instead.
+> This shim is retained for one release cycle (1.15.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # /optimize-agents
 
@@ -89,7 +94,7 @@ Present candidates with explicit justification. **Never auto-apply.**
 ### 4. Check AGENTS.md + copilot-instructions.md
 
 - **Budget**: AGENTS.md target ≤800 words (max ~1200). copilot-instructions.md < 60 lines (max ~150).
-  See `guidelines/agent-infra/size-and-scope.md` for all limits.
+  See `docs/guidelines/agent-infra/size-and-scope.md` for all limits.
 - **Quality**: Dev Setup, Testing, Quality Tools need full detail — don't compress to one-liners
 - **Duplication**: only word-for-word identical. Summary + detail = layered context, NOT duplication
 - **Freshness**: paths, commands, references match reality?

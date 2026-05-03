@@ -1,3 +1,7 @@
+---
+status: draft
+---
+
 # Spec: Cross-repo retrieval contract
 
 > **Spec for `agent-memory`, authored from `agent-config`.**

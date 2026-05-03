@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "audit my skills, find duplicate skills"
   trigger_context: "maintainer working on .augment/skills/ files"
+superseded_by: optimize skills
+deprecated_in: "1.15.0"
 ---
+
+> ⚠️  /optimize-skills is deprecated; use /optimize skills instead.
+> This shim is retained for one release cycle (1.15.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # /optimize-skills
 
@@ -78,7 +83,7 @@ done
 ```
 
 Oversized → suggest splitting by responsibility or extracting reference material.
-Size limits: see `guidelines/agent-infra/size-and-scope.md`.
+Size limits: see `docs/guidelines/agent-infra/size-and-scope.md`.
 
 ### 6. Present findings
 

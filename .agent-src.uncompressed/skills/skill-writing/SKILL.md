@@ -70,7 +70,7 @@ Do NOT create a skill or rule for:
 
 ### Size and structure hints
 
-→ See `guidelines/agent-infra/size-and-scope.md` for full limits.
+→ See `docs/guidelines/agent-infra/size-and-scope.md` for full limits.
 
 * Target: 300–900 words. Review for split above 1200 words. Strongly consider split above 1500 words.
 * If multiple workflows exist → split into multiple skills
@@ -262,7 +262,7 @@ Example:
 
 Skills may declare an `execution` frontmatter block (`type`, `handler`,
 `timeout_seconds`, `safety_mode`, `allowed_tools`). Default is `manual`
-(instructional only). See `guidelines/agent-infra/runtime-layer.md` for
+(instructional only). See `docs/guidelines/agent-infra/runtime-layer.md` for
 the full specification and `assisted` / `automated` semantics.
 
 ### When to create a `project-analysis-*` skill
@@ -285,5 +285,5 @@ utility libs, or simple state managers.
 
 * Write documentation-style, pointer-only, or too-broad skills ("Laravel skill")
 * Skip Procedure or use vague validation
-* Exceed size limits (see `guidelines/agent-infra/size-and-scope.md`)
+* Exceed size limits (see `docs/guidelines/agent-infra/size-and-scope.md`)
 * Duplicate rules

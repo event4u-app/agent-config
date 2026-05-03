@@ -31,7 +31,7 @@ def is_explicit_slash_invocation(message: str) -> bool:
 
     Per the `command-suggestion` rule, explicit slash invocations
     bypass the suggestion layer entirely \u2014 they're handled by
-    `slash-commands` directly. The engine should not score in that
+    `slash-command-routing-policy` directly. The engine should not score in that
     case. Helper exposed for the runtime caller and the GT-CS4
     golden.
     """

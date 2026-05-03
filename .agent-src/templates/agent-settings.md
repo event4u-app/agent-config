@@ -14,7 +14,7 @@ Keep the format regular — 2-space indent, no tabs, no lists, one nesting
 level only. The installer's YAML handler is a restricted stdlib parser, not
 a full YAML engine. Ask the agent to normalize after manual edits — it
 follows the merge rules in
-[`layered-settings`](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
+[`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
 
 ### Migration from the legacy `.agent-settings` (key=value)
 
@@ -36,7 +36,7 @@ This block defines the personal and project-level settings that
 `scripts/install.py` (via `config/agent-settings.template.yml`)
 writes to `.agent-settings.yml` on first install. Subsequent edits are
 made by the user directly or by the agent on request, following the
-[section-aware merge rules](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
+[section-aware merge rules](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
 
 ```yaml
 # Agent Settings
@@ -276,7 +276,7 @@ onboarding:
 # When the user's free-form prompt matches an eligible slash command,
 # the agent surfaces a numbered-options block with the recommendation
 # plus an always-present "run as-is" option. The suggestion layer
-# never auto-executes — the user picks. See `rules/command-suggestion.md`.
+# never auto-executes — the user picks. See `rules/command-suggestion-policy.md`.
 commands:
   suggestion:
     # Master switch (true, false). `false` = the layer is silent;
@@ -328,7 +328,7 @@ telemetry:
 
 Personal and project-level settings (initial file written by
 `scripts/install.py`, edits follow the merge rules in
-[`layered-settings`](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)).
+[`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)).
 **Key paths use dot-notation** to denote nesting: `personal.user_name`
 lives under `personal:` in YAML.
 
@@ -365,12 +365,12 @@ lives under `personal:` in YAML.
 | `subagents.implementer_model` | model alias or empty | _(empty)_ | Model for implementer subagents. Empty = same tier as session model. See [subagent-configuration](../contexts/subagent-configuration.md). |
 | `subagents.judge_model` | model alias or empty | _(empty)_ | Model for judge subagents. Empty = one tier above implementer (opus if sonnet, sonnet if haiku). |
 | `subagents.max_parallel` | integer | `3` | Maximum parallel subagent invocations. `1` serializes. |
-| `roles.default_role` | `""`, `developer`, `reviewer`, `tester`, `po`, `incident`, `planner` | _(empty)_ | Role the agent defaults to at the start of a session. See [`role-contracts`](../guidelines/agent-infra/role-contracts.md). |
+| `roles.default_role` | `""`, `developer`, `reviewer`, `tester`, `po`, `incident`, `planner` | _(empty)_ | Role the agent defaults to at the start of a session. See [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md). |
 | `roles.active_role` | same as `default_role` | _(empty)_ | Role currently active; set by `/mode <name>`, cleared by `/mode none`. Enables the `role-mode-adherence` rule. |
-| `personas.override` | list of persona ids | `[]` | Developer-local override of the team default lens cast. Empty = inherit `personas.default` from `.agent-project-settings.yml`. See [`layered-settings`](../guidelines/agent-infra/layered-settings.md). |
+| `personas.override` | list of persona ids | `[]` | Developer-local override of the team default lens cast. Empty = inherit `personas.default` from `.agent-project-settings.yml`. See [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md). |
 | `personas.ignore` | list of persona ids | `[]` | Persona ids dropped from the default cast locally. Ignored personas stay invokable via `--personas=<id>`. |
 | `onboarding.onboarded` | `true`, `false` | `false` | Whether `/onboard` has run on this project. The `onboarding-gate` rule prompts for `/onboard` when this is `false`. Missing entirely = legacy project, treated as onboarded. |
-| `commands.suggestion.enabled` | `true`, `false` | `true` | Master switch for the command-suggestion layer. `false` = the layer is silent; explicit `/commands` still work. See `rules/command-suggestion.md`. |
+| `commands.suggestion.enabled` | `true`, `false` | `true` | Master switch for the command-suggestion layer. `false` = the layer is silent; explicit `/commands` still work. See `rules/command-suggestion-policy.md`. |
 | `commands.suggestion.confidence_floor` | `0.0`–`1.0` | `0.6` | Minimum match score before a suggestion surfaces. Per-command frontmatter (`suggestion.confidence_floor`) overrides this global floor. |
 | `commands.suggestion.cooldown_seconds` | integer | `600` | Cooldown between re-suggestions of the same `(command, evidence)` pair. `600` = 10m. |
 | `commands.suggestion.max_options` | integer | `4` | Max number of command suggestions before the always-present "run as-is" option (total rendered = `max_options + 1`). |
@@ -432,7 +432,7 @@ they ship with a live consumer in code and get documented here, not before.
 ## Sync rules
 
 When new settings are added to this template, the
-[section-aware merge rules](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
+[section-aware merge rules](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
 govern the update:
 
 1. Missing keys are added with their **default value** from this template,

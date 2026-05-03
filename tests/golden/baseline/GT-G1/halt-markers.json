@@ -1,0 +1,15 @@
+[
+  {
+    "cycle": 1,
+    "exit_code": 1,
+    "directive": "refine-prompt",
+    "recipe_action": null,
+    "questions": [
+      "@agent-directive: refine-prompt",
+      "> Prompt received: Fix the failing test in tests/test_calculator.py by changing the assertion.",
+      "> No reconstructed acceptance criteria yet — running `refine-prompt` and resuming.",
+      "> 1. Continue — let the skill reconstruct AC + assumptions",
+      "> 2. Abort — the prompt is not what I meant"
+    ]
+  }
+]

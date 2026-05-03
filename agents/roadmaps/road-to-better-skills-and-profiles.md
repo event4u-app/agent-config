@@ -762,7 +762,7 @@ anyway** — sequencing is fixed by dependency, ICE is a sanity check
 that the dependency chain itself is worth running, not a re-ordering
 gate.
 
-### Phase 1 ICE table
+### ICE table for Phase 1
 
 Impact (1–5: leverage on the Thinking Layer goal — depth + identity),
 Confidence (1–5: clarity of deliverable + dependencies known), Ease

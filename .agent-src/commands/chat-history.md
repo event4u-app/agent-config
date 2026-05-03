@@ -31,7 +31,7 @@ Read-only — this command never writes to the file.
 - Wipe the file → [`/chat-history-clear`](chat-history-clear.md).
 - Configure logging behavior → edit `.agent-settings.yml` directly
   (`chat_history.*`); see
-  [`layered-settings`](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
+  [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
 
 ## Steps
 

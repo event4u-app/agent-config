@@ -44,7 +44,7 @@ A misclassified `ui-trivial` that grows during edit must reclassify
 
 1. **Skip the audit.** No new component, screen, or partial without
    `state.ui_audit` populated (or `greenfield_decision` recorded).
-   Defense-in-depth: dispatcher refuses *and* `ui-audit-before-build`
+   Defense-in-depth: dispatcher refuses *and* `ui-audit-gate`
    refuses, even when the engine is not in the loop.
 2. **Render the UI.** The engine never opens a browser, never takes a
    screenshot, never runs axe. Rendering and a11y scanning happen
@@ -118,4 +118,4 @@ stack ships as a new skill bundle and a recipe — see
 - [`adr-product-ui-track.md`](contracts/adr-product-ui-track.md) — *why* this shape.
 - [`ui-track-flow.md`](contracts/ui-track-flow.md) — slot-by-slot contract.
 - [`ui-stack-extension.md`](contracts/ui-stack-extension.md) — adding a stack.
-- [`ui-audit-before-build`](../.agent-src/rules/ui-audit-before-build.md) — the always-on rule that mirrors the dispatcher gate.
+- [`ui-audit-gate`](../.agent-src/rules/ui-audit-gate.md) — the always-on rule that mirrors the dispatcher gate.

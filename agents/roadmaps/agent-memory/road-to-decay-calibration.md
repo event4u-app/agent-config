@@ -1,3 +1,7 @@
+---
+status: draft
+---
+
 # Spec: Decay calibration per memory type
 
 > **Spec for `agent-memory`, authored from `agent-config`.**

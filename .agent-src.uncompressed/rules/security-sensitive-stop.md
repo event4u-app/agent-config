@@ -1,7 +1,7 @@
 ---
 type: "auto"
 alwaysApply: false
-description: "Security-sensitive code paths — authentication, authorization, billing, tenant boundaries, secrets, file uploads, external integrations, webhooks, public endpoints — stop and run threat analysis BEFORE editing"
+description: "Security-sensitive paths — auth, billing, tenant boundaries, secrets, file uploads, external integrations, webhooks, public endpoints — stop and run threat analysis BEFORE editing"
 source: package
 ---
 
@@ -42,7 +42,7 @@ STOP writing code. Run the matching analysis skill first:
 | Wide refactor of security-sensitive code | `blast-radius-analyzer` |
 
 **Before running the analysis, consult memory for prior incidents** on
-this surface. Via [`memory-access`](../guidelines/agent-infra/memory-access.md):
+this surface. Via [`memory-access`](../../docs/guidelines/agent-infra/memory-access.md):
 
 ```python
 from scripts.memory_lookup import retrieve

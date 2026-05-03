@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "Detect file ownership of .agent-chat-history on first turn — match/returning/foreign/missing handshake, two-paths classification (HOOK/ENGINE/CHECKPOINT/MANUAL), Foreign/Returning numbered-options prompt"
-alwaysApply: true
+type: "auto"
+description: "First turn or reference to .agent-chat-history — detects ownership (match/returning/foreign/missing) and HOOK/ENGINE/CHECKPOINT/MANUAL path classification with numbered-options prompt"
+alwaysApply: false
 source: package
 ---
 

@@ -14,7 +14,7 @@ suggestion:
 Creates or updates a single entry in one of the four engineering-memory
 YAML files under `agents/memory/` in the consumer project. The entry
 is validated against the schema in
-[`engineering-memory-data-format`](../guidelines/agent-infra/engineering-memory-data-format.md)
+[`engineering-memory-data-format`](../../docs/guidelines/agent-infra/engineering-memory-data-format.md)
 before the file is written.
 
 Absence of these files is legal — this command is the entry point for
@@ -58,7 +58,7 @@ sharded layout: `agents/memory/<type>/*.yml`). For each existing
 ### 3. Collect the required fields
 
 All four types share the frontmatter in
-[`engineering-memory-data-format`](../guidelines/agent-infra/engineering-memory-data-format.md#shared-frontmatter-fields).
+[`engineering-memory-data-format`](../../docs/guidelines/agent-infra/engineering-memory-data-format.md#shared-frontmatter-fields).
 Collect in this order, one numbered question at a time:
 
 1. `id` — kebab-case slug, unique within the type.
@@ -125,7 +125,7 @@ link resolves. Broken link → block and ask the user to fix.
 
 ## See also
 
-- [`engineering-memory-data-format`](../guidelines/agent-infra/engineering-memory-data-format.md)
+- [`engineering-memory-data-format`](../../docs/guidelines/agent-infra/engineering-memory-data-format.md)
   — full schema
 - [`capture-learnings`](../rules/capture-learnings.md) — when a
   learning is better captured as an `incident-learnings` entry vs a

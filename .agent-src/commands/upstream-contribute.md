@@ -68,7 +68,7 @@ If project-specific content is found, ask:
 | **Skill** | `.agent-src.uncompressed/skills/{name}/SKILL.md` | `.agent-src/skills/{name}/SKILL.md` |
 | **Rule** | `.agent-src.uncompressed/rules/{name}.md` | `.agent-src/rules/{name}.md` |
 | **Command** | `.agent-src.uncompressed/commands/{name}.md` | `.agent-src/commands/{name}.md` |
-| **Guideline** | `.agent-src.uncompressed/guidelines/{cat}/{name}.md` | `.agent-src/guidelines/{cat}/{name}.md` |
+| **Guideline** | `docs/guidelines/{cat}/{name}.md` | _(not compressed; reference-only)_ |
 
 ### 4. Get access to the package repo
 

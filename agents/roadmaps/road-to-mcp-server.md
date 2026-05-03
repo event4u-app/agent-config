@@ -199,4 +199,6 @@ one confirmed client.
 
 ## Next step
 
-Pending user confirmation: promote Phase 1 (A1–A7) out of capture-only and start with A1 (SDK verification).
+Phase 1 promoted out of capture-only 2026-05-02. Active: A1 (SDK verification)
+and A2 (free-tier client confirmation) running as parallel hard gates. A3+
+unblock once both gates land green.

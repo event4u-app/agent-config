@@ -9,7 +9,7 @@ source: package
 
 ## Before writing E2E tests
 
-1. **Read the guideline** — `.augment/guidelines/e2e/playwright.md` for all conventions and patterns.
+1. **Read the guideline** — `../../docs/guidelines/e2e/playwright.md` for all conventions and patterns.
 2. **Check existing tests** — match the project's structure, fixtures, and Page Object patterns.
 3. **Check `playwright.config.ts`** — base URL, browsers, timeouts, projects.
 

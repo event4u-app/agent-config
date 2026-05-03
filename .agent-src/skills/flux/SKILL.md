@@ -1,6 +1,6 @@
 ---
 name: flux
-description: "Stack-implementation skill for Laravel Flux — dispatched by `directives/ui/apply.py` (and `review.py` / `polish.py`) when the project uses `livewire/flux`. Covers Flux components, slots, variants, and form primitives."
+description: "Use when the project uses `livewire/flux` — dispatched by `directives/ui/{apply,review,polish}.py`. Covers Flux components, slots, variants, and form primitives."
 source: package
 ---
 

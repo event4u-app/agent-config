@@ -28,8 +28,9 @@ def count(kind: str) -> int:
     if kind == "skills":
         return sum(1 for _ in (SRC / "skills").rglob("SKILL.md"))
     if kind == "guidelines":
-        # guidelines are grouped by topic subdirectory
-        return sum(1 for _ in (SRC / "guidelines").rglob("*.md"))
+        # Guidelines live under docs/guidelines/{topic}/ — they are reference
+        # material, not packaged artefacts. Recursive walk to count every .md.
+        return sum(1 for _ in (REPO_ROOT / "docs" / "guidelines").rglob("*.md"))
     if kind == "personas":
         # personas live as flat .md files, README excluded
         pdir = SRC / "personas"
@@ -47,12 +48,16 @@ TARGETS: list[tuple[str, list[tuple[str, str]]]] = [
         [
             (r"(Browse all )(\d+)( commands\])", "commands"),
             (r"(package \(rules \+ )(\d+)( skills)", "skills"),
-            (r"(skills \+ )(\d+)( native commands)", "commands"),
             # Hero line: **NNN Skills** · **NNN Rules** · **NNN Commands** · **NNN Guidelines**
             (r"(<strong>)(\d+)( Skills</strong>)", "skills"),
             (r"(<strong>)(\d+)( Rules</strong>)", "rules"),
-            (r"(<strong>)(\d+)( Commands</strong>)", "commands"),
             (r"(<strong>)(\d+)( Guidelines</strong>)", "guidelines"),
+            # NOTE: hero `<strong>N Commands</strong>` and tools-blurb
+            # `skills + N native commands` are owned by
+            # `check_command_count_messaging.py` (Phase-1.2 of
+            # road-to-pr-34-followups). Those surfaces advertise the
+            # **active** command count (total − deprecation shims), not
+            # the raw file count this script computes.
         ],
     ),
     (

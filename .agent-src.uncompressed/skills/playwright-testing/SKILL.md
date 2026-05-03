@@ -16,12 +16,12 @@ Use this skill when:
 - Debugging flaky E2E tests
 - Configuring Playwright for CI/CD
 
-**Guideline:** `.augment/guidelines/e2e/playwright.md` — full conventions, config templates, CI setup.
+**Guideline:** `../../../docs/guidelines/e2e/playwright.md` — full conventions, config templates, CI setup.
 **Rule:** `.augment/rules/e2e-testing.md` — constraints enforced during E2E test work.
 
 ## Procedure: Write Playwright tests
 
-1. **Read the guideline** — `.augment/guidelines/e2e/playwright.md` for detailed conventions.
+1. **Read the guideline** — `../../../docs/guidelines/e2e/playwright.md` for detailed conventions.
 2. **Check Playwright config** — `playwright.config.ts` for browsers, base URL, timeouts.
 3. **Check existing tests** — match patterns in `tests/e2e/` or `e2e/`.
 4. **Check test utilities** — look for page objects, fixtures, helpers.

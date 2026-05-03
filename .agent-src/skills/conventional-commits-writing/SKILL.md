@@ -66,5 +66,5 @@ Read all PR commits → identify net effect → write single Conventional Commit
 ## References
 
 - Rule: `commit-conventions` — format, types, scope
-- Guideline: `guidelines/php/git.md` — selection rules, anti-patterns, checklist
+- Guideline: `docs/guidelines/php/git.md` — selection rules, anti-patterns, checklist
 - Command: `/commit` — uses this skill

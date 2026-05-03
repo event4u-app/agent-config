@@ -50,6 +50,25 @@ LETTER_FIXTURE = """\
 - [ ] open
 """
 
+# Numeric+sub: the `road-to-council-modes.md` shape — `Phase 2a`/`2b`/`2c`
+# for sub-phases of a parent numeric phase. Without the `\\d+[a-z]?`
+# branch the whole roadmap parses as zero phases and silently disappears
+# from `agents/roadmaps-progress.md`.
+NUMERIC_SUB_FIXTURE = """\
+# Roadmap — Numeric+Sub
+
+## Phase 2a — Context-Handoff
+- [x] one
+- [x] two
+
+## Phase 2b — Manual mode
+- [x] three
+- [ ] four
+
+## Phase 2c — Playwright
+- [ ] five
+"""
+
 
 @pytest.fixture
 def roadmaps_dir(tmp_path: Path) -> Path:
@@ -58,6 +77,7 @@ def roadmaps_dir(tmp_path: Path) -> Path:
     (root / "numeric.md").write_text(NUMERIC_FIXTURE, encoding="utf-8")
     (root / "roman.md").write_text(ROMAN_FIXTURE, encoding="utf-8")
     (root / "letter.md").write_text(LETTER_FIXTURE, encoding="utf-8")
+    (root / "numeric-sub.md").write_text(NUMERIC_SUB_FIXTURE, encoding="utf-8")
     return root
 
 
@@ -88,13 +108,28 @@ def test_letter_ids_parsed(roadmaps_dir: Path):
     assert stats.open_ == 1
 
 
-def test_collect_picks_up_all_three_styles(roadmaps_dir: Path):
+def test_numeric_sub_ids_parsed(roadmaps_dir: Path):
+    stats = urp.parse_roadmap(
+        roadmaps_dir / "numeric-sub.md", roadmaps_dir
+    )
+    assert stats is not None, "numeric+sub phase headings must parse"
+    assert [p.id for p in stats.phases] == ["2a", "2b", "2c"]
+    assert [p.name for p in stats.phases] == [
+        "Context-Handoff",
+        "Manual mode",
+        "Playwright",
+    ]
+    assert stats.done == 3
+    assert stats.open_ == 2
+
+
+def test_collect_picks_up_all_four_styles(roadmaps_dir: Path):
     roadmaps = urp.collect(roadmaps_dir)
-    assert len(roadmaps) == 3
+    assert len(roadmaps) == 4
     total_done = sum(r.done for r in roadmaps)
     total_open = sum(r.open_ for r in roadmaps)
-    assert total_done == 4
-    assert total_open == 3
+    assert total_done == 7
+    assert total_open == 5
 
 
 @pytest.mark.parametrize(
@@ -109,6 +144,12 @@ def test_collect_picks_up_all_three_styles(roadmaps_dir: Path):
         ("## Phase A1 — Sub-track", "A1"),
         ("### Phase B: concurrent", "B"),
         ("## Phase 0: colon separator", "0"),
+        # Numeric+sub: digit run + single lowercase letter for sub-phases.
+        # Used by `road-to-council-modes.md` (`Phase 2a`/`2b`/`2c`).
+        ("## Phase 2a — Context-Handoff", "2a"),
+        ("## Phase 2b — Manual mode", "2b"),
+        ("## Phase 10c — boundary", "10c"),
+        ("### Phase 1z: last letter", "1z"),
     ],
 )
 def test_regex_matches_supported_styles(heading: str, want_id: str):
@@ -131,6 +172,10 @@ def test_regex_matches_supported_styles(heading: str, want_id: str):
         "#### Phase 0 — too deep",
         # Lowercase letter — reserved for non-phase content.
         "## Phase abc — lowercase",
+        # Numeric+sub branch is lowercase only — uppercase suffix and
+        # multi-letter suffix must still fall through.
+        "## Phase 2A — uppercase suffix",
+        "## Phase 2ab — multi-letter suffix",
     ],
 )
 def test_regex_rejects_non_phase_headings(heading: str):
@@ -150,6 +195,10 @@ def test_render_emits_string_ids_in_table(roadmaps_dir: Path):
     # Roman-track roadmap too.
     assert "| I | First |" in output
     assert "| II | Second |" in output
+    # Numeric+sub roadmap surfaces its lowercase suffix verbatim.
+    assert "| 2a | Context-Handoff |" in output
+    assert "| 2b | Manual mode |" in output
+    assert "| 2c | Playwright |" in output
 
 
 

@@ -1,0 +1,1 @@
+Refactor the entire src/ directory to use type hints.

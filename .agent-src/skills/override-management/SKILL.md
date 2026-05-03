@@ -70,13 +70,13 @@ Override files **must match the original filename** exactly:
 | `.augment/rules/php-coding.md` | `agents/overrides/rules/php-coding.md` |
 | `.augment/skills/eloquent/SKILL.md` | `agents/overrides/skills/eloquent.md` |
 | `.augment/commands/feature-plan.md` | `agents/overrides/commands/feature-plan.md` |
-| `.augment/guidelines/php/controllers.md` | `agents/overrides/guidelines/php-controllers.md` |
+| `../../../docs/guidelines/php/controllers.md` | `agents/overrides/guidelines/php-controllers.md` |
 | `.augment/templates/roadmaps.md` | `agents/overrides/templates/roadmaps.md` |
 
 **Skills** are flattened: the original lives in a directory (`skills/{name}/SKILL.md`),
 but the override is a single file (`skills/{name}.md`).
 
-**Guidelines** are flattened with a prefix: `guidelines/php/controllers.md` → `guidelines/php-controllers.md`.
+**Guidelines** are flattened with a prefix: `docs/guidelines/php/controllers.md` → `guidelines/php-controllers.md`.
 
 **Templates** keep their original filename: `templates/roadmaps.md` → `templates/roadmaps.md`.
 

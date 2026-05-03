@@ -24,7 +24,7 @@ touching the file, unless the file does not exist in the first place.
 - Keep the entries but re-point the header → [`/chat-history-resume`](chat-history-resume.md).
 - Disable logging entirely → set `chat_history.enabled: false` in
   `.agent-settings.yml`; see
-  [`layered-settings`](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
+  [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
   Disabling does not delete the existing file; run this command
   afterwards if you also want it gone.
 

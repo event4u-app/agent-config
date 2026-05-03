@@ -99,5 +99,5 @@ cast (usually Core-6 for review skills, empty for others).
 
 ## Related
 
-- [`../guidelines/agent-infra/role-contracts.md`](../guidelines/agent-infra/role-contracts.md) — workflow modes personas compose with
+- [`../../docs/guidelines/agent-infra/role-contracts.md`](../../docs/guidelines/agent-infra/role-contracts.md) — workflow modes personas compose with
 - [`../rules/artifact-drafting-protocol.md`](../rules/artifact-drafting-protocol.md) — mandatory per new persona

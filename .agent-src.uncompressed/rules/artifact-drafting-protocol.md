@@ -1,7 +1,7 @@
 ---
 type: "auto"
 alwaysApply: false
-description: "Use when the user asks to create a new skill, rule, command, or guideline, or to significantly rewrite an existing one — even if they don't explicitly say 'new artifact' or 'drafting protocol'. Runs a mandatory Understand → Research → Draft sequence before anything is written."
+description: "Creating a new skill, rule, command, or guideline, or significantly rewriting one — runs a mandatory Understand → Research → Draft sequence before any artifact content is written."
 source: package
 ---
 

@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "turn this feature into a roadmap, generate the implementation roadmap"
   trigger_context: "existing feature plan without linked roadmap"
+superseded_by: feature roadmap
+deprecated_in: "1.15.0"
 ---
+
+> ⚠️  /feature-roadmap is deprecated; use /feature roadmap instead.
+> This shim is retained for one release cycle (1.15.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # feature-roadmap
 
@@ -187,4 +192,4 @@ What's next?
 
 ## See also
 
-- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#planner) — Planner mode output contract (Goal / Constraints / Option set / Recommendation / Dependencies / Rollback)
+- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md#planner) — Planner mode output contract (Goal / Constraints / Option set / Recommendation / Dependencies / Rollback)

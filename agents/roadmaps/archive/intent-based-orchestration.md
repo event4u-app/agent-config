@@ -121,7 +121,7 @@ The skeleton — router rule, three track entry points, settings, extension patt
 - [ ] **Step 4:** Create skill `.agent-src.uncompressed/skills/fullstack-feature-orchestrator/SKILL.md`. Splits a mixed task into backend-contract (data shape, API, errors) + UI-experience (screens, flows, states), runs them in order, validates integration at the seam.
 - [ ] **Step 5:** Reposition `.agent-src.uncompressed/skills/developer-like-execution/SKILL.md` as the **canonical backend track entry point**. Update its description and "When to use" to mention orchestration. No procedural rewrite.
 - [ ] **Step 6:** Create rule `backend-contract-before-impl.md` — when intent is `backend-coding`, design the request/response/error contract before implementation. Mirrors `layout-before-code` (Phase 2) for the backend track.
-- [ ] **Step 7:** Create guideline `.agent-src.uncompressed/guidelines/agent-infra/orchestration-tracks.md`. Documents the track-extension recipe so future tracks plug in cleanly.
+- [ ] **Step 7:** Create guideline `docs/guidelines/agent-infra/orchestration-tracks.md`. Documents the track-extension recipe so future tracks plug in cleanly.
 - [ ] **Step 8:** Update `.agent-src.uncompressed/templates/AGENTS.md` to mention orchestration in the entry-flow section.
 - [ ] **Step 9:** Run `python3 scripts/skill_linter.py --all`, `python3 scripts/check_references.py`, `python3 scripts/check_portability.py`. Fix until clean.
 
@@ -163,7 +163,7 @@ Fleshes out the UI track end-to-end: full pipeline body, behavioural rules, comm
 
   All scaffolded empty with section structure. **Default behaviour when absent:** orchestrator proceeds with detected conventions and mentions in the response that context files would improve future output. **Scaffolding only happens on explicit user request** (e.g. `/context-create` or "yes, set up context"). Orchestrator auto-loads when present.
 
-- [ ] **Step 6:** Document the context layer in `.agent-src.uncompressed/guidelines/agent-infra/project-context-layer.md`.
+- [ ] **Step 6:** Document the context layer in `docs/guidelines/agent-infra/project-context-layer.md`.
 - [ ] **Step 7:** Run `skill_linter`, `check_references`, `check_portability`.
 
 ## Phase 3: Frontend skill migration

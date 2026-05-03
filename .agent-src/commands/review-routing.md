@@ -107,7 +107,7 @@ After the block, ask:
 - [`reviewer-awareness`](../rules/reviewer-awareness.md) — role vocabulary
 - [`review-routing-awareness`](../rules/review-routing-awareness.md) —
   data-source rules
-- [`review-routing-data-format`](../guidelines/agent-infra/review-routing-data-format.md)
+- [`review-routing-data-format`](../../docs/guidelines/agent-infra/review-routing-data-format.md)
   — YAML schemas
 - [`create-pr-description`](../skills/create-pr-description/SKILL.md) —
   consumes the routing block

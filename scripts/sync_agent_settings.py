@@ -2,7 +2,7 @@
 """Sync `.agent-settings.yml` against the template + profile.
 
 Applies the section-aware merge rules documented in
-`.agent-src.uncompressed/guidelines/agent-infra/layered-settings.md`:
+`docs/guidelines/agent-infra/layered-settings.md`:
 
 - Template section order always wins — reorder keys to match.
 - Existing user scalar values are preserved verbatim (as parsed).

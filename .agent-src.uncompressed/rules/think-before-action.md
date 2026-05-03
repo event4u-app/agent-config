@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "Always analyze before acting. Prefer targeted inspection, tests, and real verification over guessing or trial-and-error."
-alwaysApply: true
+type: "auto"
+description: "Before coding, modifying, or debugging — analyze first, verify with real tools, never guess or trial-and-error"
+alwaysApply: false
 source: package
 ---
 
@@ -16,7 +16,7 @@ source: package
 - If requirements are unclear, ask a precise clarification question instead of making hidden assumptions
 - Refactors must preserve behavior, validation, examples, and anti-failure guidance unless there is an explicit reason to change them
 - Do NOT modify code you do not fully understand — read it first, trace the flow, then change it
-- When multiple valid frameworks/patterns already exist in the codebase (e.g. Tailwind + Flux, multiple form libraries, competing state stores), do NOT pick one silently — ask which to use. See [`no blind implementation`](../guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation)
+- When multiple valid frameworks/patterns already exist in the codebase (e.g. Tailwind + Flux, multiple form libraries, competing state stores), do NOT pick one silently — ask which to use. See [`no blind implementation`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation)
 
 ## The Developer Workflow
 
@@ -40,7 +40,7 @@ Before editing code, read the minimum set that defines its behavior:
 4. **One layer of related abstractions** — interface, parent class, or trait (one hop, not the full hierarchy).
 5. **Data changes:** the migration that created the column + any seeder/factory that references it.
 6. **Memory layer — prior decisions and invariants.** Via
-   [`memory-access`](../guidelines/agent-infra/memory-access.md), call
+   [`memory-access`](../../docs/guidelines/agent-infra/memory-access.md), call
    `retrieve(types=["architecture-decisions", "domain-invariants"], keys=<touched paths>, limit=3)`.
    A matching `architecture-decision` explains *why* the current shape
    exists; a matching `domain-invariant` is a hard constraint you cannot

@@ -3,6 +3,8 @@ type: "always"
 description: "Scope control — no unsolicited architectural changes, refactors, or library replacements"
 alwaysApply: true
 source: package
+load_context:
+  - .agent-src.uncompressed/contexts/authority/scope-mechanics.md
 ---
 
 # Scope Control
@@ -39,19 +41,10 @@ The user decides the git shape of the work. Never improvise.
   Never surface "which release should this ship in?" as an option in
   numbered choices, ADRs, or roadmap text. If the user wants a release
   pinned to a milestone, they will say so explicitly.
-- If a task seems to *need* a separate branch or PR (spike, hotfix,
-  experiment, worktree), STOP and **brief the user before asking**. The
-  brief MUST cover, in this order:
-  1. **Why** — what problem a separate branch solves that the current
-     branch cannot; why staying on the current branch would be worse.
-  2. **What** — exactly what you plan to do on the new branch: files
-     touched, prototypes built, experiments run, expected duration.
-  3. **How it continues** — the return path: merge back, cherry-pick,
-     throwaway delete, PR target, how the current branch's state is
-     protected while you work on the other one.
-  Then present numbered options (`user-interaction`) with "stay on the
-  current branch" as the default. The user decides. Do not branch
-  first and explain later.
+- If a task seems to need a separate branch or PR, STOP and **brief
+  the user before asking** — see
+  [`scope-mechanics`](../contexts/authority/scope-mechanics.md)
+  § Brief-before-asking for the required Why / What / How sequence.
 
 "Explicit permission" means the user said so **in this turn or in a
 standing instruction they have not revoked**. Earlier permission for a
@@ -61,28 +54,12 @@ different operation does not carry over.
 
 A subset of the operations above is **never** autonomous and never
 auto-permitted by a standing autonomy directive. Canonical rule:
-[`non-destructive-by-default`](non-destructive-by-default.md). It is
-restated here so this file remains the single read for git/scope
-concerns:
-
-- **Production-branch merges** — `main`, `master`, `prod`,
-  `production`, `release/*`, or any branch the project marks as
-  deployment trunk. Always ask, even when the roadmap step says
-  "merge".
-- **Deploys / releases** — `terraform apply` / `kubectl apply` on
-  prod, deploy scripts, release commands, tag pushes that trigger
-  CI deployment. Always ask.
-- **Production data / infrastructure** — prod DB writes or
-  migrations, prod config edits, secrets rotation, IAM / role /
-  policy changes, DNS edits, anything in a `prod`-scoped path or
-  pipeline. Always ask.
-- **Bulk-destructive ops** — wildcard or directory deletion
-  (`rm -rf <dir>`, `git rm -r`), `DROP TABLE`, `TRUNCATE`,
-  `git reset --hard` past unpushed work, mass class / module /
-  migration deletion, "delete everything matching X". Always ask.
-
-A roadmap step or earlier turn does **not** count as authorization
-for these. Authorization is "the user said so on this turn".
+[`non-destructive-by-default`](non-destructive-by-default.md). The
+trigger list (production-branch merges, deploys / releases, prod
+data / infra, bulk-destructive ops) and the
+"authorization is this turn, not earlier" clarification live in
+[`scope-mechanics`](../contexts/authority/scope-mechanics.md)
+§ Production, infrastructure, bulk-destructive.
 
 ## Decline = silence — no re-asking on the same task
 
@@ -91,12 +68,33 @@ tag/release entry, separate worktree, version pinning in a roadmap),
 do **not** raise the same proposal again on the same task. The decline
 stands until the user reopens the topic themselves.
 
-The right moment to ask — at most **once**, only when genuinely useful
-— is **before** the work starts (e.g. when writing the roadmap or
-opening a ticket), not mid-execution. During roadmap execution the
-branch question is settled; do not resurface it step by step.
+Timing and "is this worth asking?" guidance lives in
+[`scope-mechanics`](../contexts/authority/scope-mechanics.md)
+§ Decline = silence — context.
 
-A proposal that "might be sensible" is not enough reason to ask.
-Default: stay on the current branch, no release language. Only ask
-when there's a concrete, evidence-based reason (e.g. risky migration
-benefits from a spike branch). If in doubt, do not ask.
+## Fenced step — user-set review gates
+
+When the user explicitly fences off the next step — *"don't implement
+yet"*, *"plan only"*, *"just write the roadmap, I'll review"*,
+*"review first"*, *"erst Roadmap, ich schau drüber"*, *"nichts
+implementieren"*, *"nur planen"*, *"erstmal nur X, dann ich"* — the
+agent's reply is **the deliverable plus a handoff**, never the
+deliverable plus *"shall we start?"*.
+
+```
+USER FENCED OFF EXECUTION → DELIVER + HAND BACK.
+NO NUMBERED OPTION OFFERING TO BEGIN WORK.
+NO "READY TO IMPLEMENT?" RE-ASK.
+NO "STARTEN WIR MIT PHASE 1?" PIVOT.
+```
+
+The fence stands until the user reopens the topic themselves, exactly
+like `Decline = silence` above. Permitted follow-up questions on the
+same turn cover **the deliverable** (adjust scope, fix wording, add a
+section), never **its execution**.
+
+For the failure-mode catalog (Option 1 = "start now", re-asking after
+delivery, hand-off-to-execution drift, inferring acceptance from a
+thumbs-up) and the explicit bypass phrases that lift the fence, see
+[`scope-mechanics`](../contexts/authority/scope-mechanics.md)
+§ Fenced step.

@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "plan this feature, create a feature spec for X"
   trigger_context: "feature idea referenced and no plan doc exists"
+superseded_by: feature plan
+deprecated_in: "1.15.0"
 ---
+
+> ⚠️  /feature-plan is deprecated; use /feature plan instead.
+> This shim is retained for one release cycle (1.15.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # feature-plan
 
@@ -111,7 +116,7 @@ Before asking detailed questions, **proactively research**:
   `status: active` is a binding constraint — propose structure that
   respects it. If the feature needs to contradict an ADR, surface that
   as a decision for the user before drafting the plan. See
-  [`engineering-memory-data-format`](../guidelines/agent-infra/engineering-memory-data-format.md).
+  [`engineering-memory-data-format`](../../docs/guidelines/agent-infra/engineering-memory-data-format.md).
 
 **Share key findings with the user** — this informs the discussion:
 
@@ -208,6 +213,32 @@ Mir sind noch ein paar offene Fragen aufgefallen:
 Hast du dazu schon eine Meinung?
 ```
 
+### 5d. Offer council idea-validation (B4 hook)
+
+Once the conversation has converged on a problem statement, proposal,
+and rough scope (rounds 1–4), but **before** step 6 writes the file,
+ask (in the user's language):
+
+> 1. Run the council on this idea before writing the plan? (billable)
+> 2. Skip — write the plan now
+
+Suppress when `personal.autonomy: on` (council is billable).
+
+If picked **1**:
+
+- Build a short prompt: the problem, the proposal, the scope, the
+  open questions from round 4. **Do not** include the agent's
+  framing or recommendations — neutrality preamble is mandatory.
+- Run `/council prompt:"<assembled prompt>"` with `original_ask` set
+  to the feature title from step 1.
+- Surface convergent + divergent points back to the user. **Do not**
+  rewrite the proposal autonomously; let the user decide which
+  council points to fold in.
+- After the user has reviewed, return to step 6 with the (possibly
+  updated) proposal.
+
+If picked **2** → continue.
+
 ### 6. Create the feature document
 
 - Read `.augment/templates/features.md` for the structure.
@@ -287,6 +318,6 @@ What's next?
 
 ## See also
 
-- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#po) — PO mode output contract (Goal / Assumptions / Acceptance criteria / Impacted modules / Risks / Open questions for stakeholder)
+- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md#po) — PO mode output contract (Goal / Assumptions / Acceptance criteria / Impacted modules / Risks / Open questions for stakeholder)
 - [`refine-ticket`](refine-ticket.md) — optional upstream step: run first when the input is a Jira/Linear ticket rather than a fresh idea
 - [`estimate-ticket`](estimate-ticket.md) — sibling of `refine-ticket`; size + risk + split recommendation for an already-refined ticket

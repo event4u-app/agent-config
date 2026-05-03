@@ -6,7 +6,12 @@ disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Niche maintenance tool with no recurring NL trigger."
+superseded_by: optimize rtk
+deprecated_in: "1.15.0"
 ---
+
+> ⚠️  /optimize-rtk-filters is deprecated; use /optimize rtk instead.
+> This shim is retained for one release cycle (1.15.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # optimize-rtk-filters
 

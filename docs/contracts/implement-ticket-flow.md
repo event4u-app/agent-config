@@ -281,7 +281,7 @@ via `resolve_policy()` in
 [`persona_policy.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/persona_policy.py).
 Policies live alongside the dispatcher so the flow can consume
 them directly; the shared
-[`role-contracts`](../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md)
+[`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md)
 guideline remains the source of truth for persona behaviour in the
 wider agent surface.
 
@@ -622,7 +622,7 @@ are blocked by `freeze-guard.yml::manifest-integrity` at PR time.
 - [`../../tests/golden/harness.py`](../../tests/golden/harness.py) — Strict-Verb replay harness
 - [`../../.github/workflows/freeze-guard.yml`](../../.github/workflows/freeze-guard.yml) — manifest-integrity + live-replay gates
 - [`agent-memory-contract.md`](agent-memory-contract.md)
-- [`../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md`](../../.agent-src.uncompressed/guidelines/agent-infra/role-contracts.md)
+- [`../../docs/guidelines/agent-infra/role-contracts.md`](../../docs/guidelines/agent-infra/role-contracts.md)
 - [`../../.agent-src.uncompressed/rules/user-interaction.md`](../../.agent-src.uncompressed/rules/user-interaction.md)
 - [`../../.agent-src.uncompressed/rules/scope-control.md`](../../.agent-src.uncompressed/rules/scope-control.md)
 - [`../../.agent-src.uncompressed/rules/minimal-safe-diff.md`](../../.agent-src.uncompressed/rules/minimal-safe-diff.md)

@@ -14,8 +14,9 @@ when they install the package.
 
 ## What this repo is
 
-- A distribution package, not an application.
-- `type: library` in `composer.json`; no `app/` directory, no Laravel runtime.
+- A distribution package, not an application of any framework.
+- `type: library` in `composer.json`; no `app/` directory, no application
+  runtime (no Laravel, Symfony, Next.js, or other framework app code).
 - Published to Composer and npm as `event4u/agent-config` / `@event4u/agent-config`.
 - Installed into consumer projects via `scripts/install.sh` (Bash) and
   `scripts/install.py` (Python bridge).
@@ -43,8 +44,9 @@ and run `task sync` (or `task ci`) to compress + regenerate the tool directories
 - **Taskfile** — developer entrypoints (`task ci`, `task sync`, `task test`)
 - **GitHub Actions** — CI workflow under `.github/workflows/`
 
-No PHP, no Laravel, no JavaScript runtime dependencies. The `composer.json` /
-`package.json` are thin distribution manifests.
+No application code or framework runtime (no Laravel / Symfony / Next.js /
+Express). The `composer.json` / `package.json` are thin distribution
+manifests.
 
 ## Working on this repo
 
@@ -78,7 +80,7 @@ When a user's free-form prompt matches a command's purpose, the agent
 surfaces matches as a numbered-options block with an always-present
 "run the prompt as-is" escape. **Nothing auto-executes** — the user
 picks every time. Engine: `scripts/command_suggester/`. Rule:
-[`.agent-src/rules/command-suggestion.md`](.agent-src/rules/command-suggestion.md).
+[`.agent-src/rules/command-suggestion-policy.md`](.agent-src/rules/command-suggestion-policy.md).
 Locked eligibility table, scoring contract, and hardening list:
 [`docs/contracts/adr-command-suggestion.md`](docs/contracts/adr-command-suggestion.md)
 and
@@ -100,14 +102,14 @@ and
 
 ```
 .agent-src.uncompressed/      ← edit here
-  skills/       (128 skills)
-  rules/        (55 rules)
-  commands/     (77 commands)
-  guidelines/   (46 guidelines)
+  skills/       (129 skills)
+  rules/        (57 rules)
+  commands/     (84 files — 69 active + 15 deprecation shims)
   personas/     (7 personas)
   templates/    (AGENTS.md, copilot-instructions.md, skill.md, …)
   contexts/
 
+docs/guidelines/            (47 guidelines — reference material, not packaged)
 .agent-src/                 ← compressed output shipped in the package
 .augment/                   ← local projection for Augment Code (gitignored)
 scripts/                    ← install.sh, install.py, compress.py, linters

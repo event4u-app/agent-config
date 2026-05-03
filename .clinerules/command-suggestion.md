@@ -1,1 +1,0 @@
-../.agent-src/rules/command-suggestion.md

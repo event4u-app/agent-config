@@ -101,7 +101,7 @@ These reference Augment-only mechanics — model identity in Augment's
 system prompt, Augment's `/slash` command surface, and the Augment
 onboarding flow gated by `.agent-settings.yml`.
 
-`model-recommendation`, `onboarding-gate`, `slash-commands`.
+`model-recommendation`, `onboarding-gate`, `slash-command-routing-policy`.
 
 ### Skill-routing only (1)
 

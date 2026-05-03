@@ -1,7 +1,7 @@
 ---
-type: "always"
-alwaysApply: true
-description: "3-failure rule for debugging and fixing errors — stop after 3 consecutive failed attempts, dump state, and recommend a fresh session"
+type: "auto"
+alwaysApply: false
+description: "When debugging, fixing errors, or running long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers"
 source: package
 ---
 

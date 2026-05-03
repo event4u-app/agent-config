@@ -84,6 +84,9 @@ jobs:
       - name: Check Iron Law prominence
         run: python3 scripts/check_iron_law_prominence.py
 
+      - name: Check always-rule budget (warn 80% / fail 90%)
+        run: task check-always-budget
+
       - name: Lint marketplace.json
         run: task lint-marketplace
 

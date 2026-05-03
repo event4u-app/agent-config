@@ -135,6 +135,39 @@ def test_record_payload_stdin(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
     assert event.boundary_kind == "phase-step"
 
 
+def test_record_outcome_flag_persists_to_log(tmp_path: Path) -> None:
+    settings = tmp_path / "settings.yml"
+    log = tmp_path / ".agent-engagement.jsonl"
+    settings.write_text(SETTINGS_ENABLED.format(log=log))
+
+    rc = telemetry_record.main([
+        "--settings", str(settings),
+        "--task-id", "ticket-outcome",
+        "--consulted", "rules:scope-control",
+        "--outcome", "blocked",
+        "--outcome", "verification_failed",
+    ])
+    assert rc == 0
+    lines = [l for l in log.read_text().splitlines() if l.strip()]
+    event = parse_event(lines[0] + "\n")
+    assert event.outcomes == ["blocked", "verification_failed"]
+
+
+def test_record_outcome_unknown_label_rejected(tmp_path: Path) -> None:
+    settings = tmp_path / "settings.yml"
+    log = tmp_path / ".agent-engagement.jsonl"
+    settings.write_text(SETTINGS_ENABLED.format(log=log))
+
+    with pytest.raises(SystemExit) as exc_info:
+        telemetry_record.main([
+            "--settings", str(settings),
+            "--task-id", "t",
+            "--consulted", "skills:x",
+            "--outcome", "nope",
+        ])
+    assert exc_info.value.code != 0
+
+
 def test_record_payload_schema_failure_returns_1(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     settings = tmp_path / "settings.yml"
     log = tmp_path / ".agent-engagement.jsonl"

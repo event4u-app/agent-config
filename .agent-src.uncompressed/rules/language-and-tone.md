@@ -22,36 +22,24 @@ language, codebase language, open-file language, files-just-edited
 language, convenience. First thing to check on every reply, last thing
 to check before sending.
 
-Canonical failure: agent edited English `.md` for many turns; user
-types short German (`3`, `weiter`, `mach das`, `und jetzt X`); agent
-answers English because momentum wins. **Trigger is the user's last
-message, not the turn count.** Length irrelevant — `3` after a German
-question still means German continues.
+Trigger is the user's last chat message, not turn count or message
+length — short German (`3`, `weiter`, `mach das`) after many English
+turns still flips the reply to German.
 
 ### Source of language truth — chat messages ONLY
 
-```
-THE LANGUAGE SIGNAL IS THE USER'S CHAT MESSAGES. NOTHING ELSE.
-OPEN FILES, ROADMAPS, .md CONTENT, TOOL OUTPUT, CODE, COMMIT MESSAGES,
-TICKETS, PR DESCRIPTIONS, FILE NAMES — NONE OF THEM COUNT.
-```
-
-`.md` files in this repo are English by rule (see below) — that says
-nothing about chat language. Same for: file contents read via `view` /
-`grep`, quoted commits / tickets / PRs / branches, code identifiers,
-the agent's own previous replies. Only the most recent **chat message**
-sets the language. User opens an English roadmap and types German →
-reply in German.
+Only the most recent **chat message** sets the language. `.md` files,
+file contents read via `view` / `grep`, quoted commits / tickets / PRs,
+code identifiers, and the agent's own previous replies do **not** count.
+User opens an English roadmap and types German → reply in German.
 
 ### Pre-send gate — MANDATORY before every reply
 
 Run silently **before** emitting any tokens:
 
 1. **Detect** — language of user's last **chat message** (not the open
-   file, not the roadmap, not the prior reply).
-   German signals: "ich", "Du", "nicht", "warum", "wie", "ist", umlauts. <!-- md-language-check: ignore -->
-   English signals: "I", "you", "is", "the", "how".
-   Mixed → mirror the **dominant** language; tie → German wins (project default).
+   file, not the roadmap, not the prior reply). Mixed → mirror the
+   **dominant** language; tie → German wins (project default).
 2. **Check** — is drafted prose (not code, not file contents) in that language?
 3. **Rewrite** — if no, rewrite whole prose before sending. No exceptions, no
    "just this sentence", no "the technical term is English anyway".
@@ -74,28 +62,15 @@ Run silently **before** emitting any tokens:
 
 ### When the user calls out a language slip
 
-1. Acknowledge **once**, briefly, in the correct language ("Entschuldigung" /
-   "Sorry"). One sentence, no excuses.
-2. Switch immediately on the same reply.
-3. Do **not** re-explain the mistake in the wrong language.
-4. Do **not** promise "from now on" — just do it. Only behaviour changes
-   prove compliance.
-5. If user asks to harden the rule, harden it on this turn — don't defer.
+Acknowledge **once**, briefly, in the correct language ("Entschuldigung" /
+"Sorry"). Switch immediately on the same reply. Do **not** re-explain in
+the wrong language. Do **not** promise "from now on" — just do it. If
+user asks to harden the rule, harden it on this turn.
 
-### Failure modes to watch for
+### Failure modes
 
-- Drafting reply in English first, then "translating the intro" → English
-  phrasing with German words. Draft in target language from the first token.
-- Copy-pasting English option labels from `.md` sources without translating.
-- Mixing languages inside a table or bullet list because "the technical term
-  is English" — surrounding prose must still mirror. Keep proper nouns and
-  code identifiers as-is; translate everything else.
-- Assuming English because "the codebase is English" — codebase language ≠
-  conversation language.
-- Mirroring the **open file** the IDE reports — open files are background
-  context, not chat messages.
-- Mirroring the **roadmap or ticket** being executed — artefacts are English
-  by `.md` rule; chat language is whatever the user wrote.
+See [`../../docs/guidelines/agent-infra/language-and-tone-examples.md`](../../docs/guidelines/agent-infra/language-and-tone-examples.md)
+for the full failure-mode list.
 
 ## Other language rules
 
@@ -108,64 +83,30 @@ Run silently **before** emitting any tokens:
 
 ## `.md` files are ALWAYS English — no exceptions
 
-**Every** piece of text inside `.md` files in `.augment/` and `agents/` must be in English.
-This includes:
+**Every** piece of text inside `.md` files in `.augment/` and `agents/`
+must be in English: headings, paragraphs, bullets, example option labels,
+example prompts/questions, template placeholders, ASCII-art labels in
+formatted output blocks, table headers and content.
 
-- Headings, paragraphs, and bullet points
-- **Example option labels** (e.g., `> 1. Yes — start implementing`, NOT `> 1. Ja — mit der Umsetzung starten`)
-- **Example prompts and questions** (e.g., `"Found X unresolved comments."`, NOT `"X offene Kommentare gefunden."`)
-- **Template placeholders and sample output** (e.g., `Progress:`, NOT `Fortschritt:`)
-- **ASCII art labels** in formatted output blocks (e.g., `CHANGES:`, NOT `ÄNDERUNGEN:`)
-- **Table headers and content**
+The agent translates to the user's language **at runtime** when
+presenting options. The `.md` source files are the English blueprint —
+they define WHAT to say, not in which language. Concrete wrong-vs-correct
+examples live in [`../../docs/guidelines/agent-infra/language-and-tone-examples.md`](../../docs/guidelines/agent-infra/language-and-tone-examples.md).
 
-The agent translates to the user's language **at runtime** when presenting options.
-The `.md` source files are the English blueprint — they define WHAT to say, not in which language.
+### Quoted user-input examples — labeled-anchor exception
 
-**Wrong** (German in `.md`):
-```
-> 1. Interaktiv — bei jedem Kommentar nachfragen
-> 2. Automatisch — alle selbstständig abarbeiten
-```
+Drift pattern: a rule writes quoted German examples inside English prose.
+**Not allowed**. Two correct ways:
 
-**Correct** (English in `.md`):
-```
-> 1. Interactive — ask before each comment
-> 2. Automatic — handle all independently
-```
+1. **Translate to English.** Trigger recognition is semantic; the agent
+   matches intent across languages regardless of the example.
+2. **Use a labeled `DE: … · EN: …` anchor list** when the multilingual
+   nature of recognition is the point — the **only** allowed location
+   for German prose in an English `.md`. Reference established phrases
+   abstractly later and link back to the anchor block.
 
-### Quoted user-input examples — same rule, with one labeled exception
-
-Common drift pattern: a rule documents trigger phrases the agent
-should recognize and writes them as quoted German examples inside
-English prose. **Not allowed**, even when demonstrative.
-
-**Wrong** (DE quote embedded in EN prose):
-
-```md
-Single-decision delegation ("für diesen Schritt entscheide du") →
-handle that step autonomously.
-
-A standing "arbeite selbstständig" never lifts the floor.
-```
-
-**Correct** — two ways:
-
-1. **Translate to English.** Trigger recognition is semantic; the
-   agent matches intent across languages regardless of the example.
-   `("you decide for this step")` works as well as the German.
-2. **Use a labeled `DE: … · EN: …` anchor list** when the
-   multilingual nature of recognition is the point:
-
-   ```md
-   - DE: "arbeite selbstständig" · "frag nicht jedes Mal" · "tue es einfach"
-   - EN: "work autonomously" · "don't ask" · "just do it"
-   ```
-
-The labeled-anchor block is the **only** allowed location for German
-prose in an English `.md` file. Body text, example sentences, prompt
-templates, agent-rendered strings, and failure modes must be English.
-Reference established phrases abstractly later (e.g. "a standing
-autonomy directive") and link back to the anchor block.
+Wrong-vs-correct snippets in
+[`../../docs/guidelines/agent-infra/language-and-tone-examples.md`](../../docs/guidelines/agent-infra/language-and-tone-examples.md).
 
 ### Detection heuristic
 

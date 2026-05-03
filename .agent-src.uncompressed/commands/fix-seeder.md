@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "the seeder is broken, foreign key errors in seeders"
   trigger_context: "seeder error output or recent edits in database/seeders/"
+superseded_by: fix seeder
+deprecated_in: "1.15.0"
 ---
+
+> ⚠️  /fix-seeder is deprecated; use /fix seeder instead.
+> This shim is retained for one release cycle (1.15.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # fix-seeder
 

@@ -110,7 +110,7 @@ carrying the proposal doc as the PR body. Standard package CI
 
 - [x] New proposal template under `templates/agents/` (name: `proposal`) *(2026-04-22: [`proposal.example.md`](../../.agent-src.uncompressed/templates/agents/proposal.example.md))*
 - [x] `scripts/check_proposal.py` implementing the Stage 4 checks *(2026-04-22: [`scripts/check_proposal.py`](../../scripts/check_proposal.py) — frontmatter + sections + evidence-count + no-TODO markers + success-signal checks; verdict PASS/BLOCK; exit 1 on block)*
-- [x] New agent-infra guideline `self-improvement-pipeline` documenting the five stages *(2026-04-22: [`self-improvement-pipeline.md`](../../.agent-src.uncompressed/guidelines/agent-infra/self-improvement-pipeline.md))*
+- [x] New agent-infra guideline `self-improvement-pipeline` documenting the five stages *(2026-04-22: [`self-improvement-pipeline.md`](../../docs/guidelines/agent-infra/self-improvement-pipeline.md))*
 
 ### Phase 2 — wire existing skills into stages
 

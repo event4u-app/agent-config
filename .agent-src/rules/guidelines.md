@@ -12,7 +12,7 @@ Coding guidelines live in `.augment/guidelines/` organized by language.
 
 ## Available Guidelines
 
-### PHP (`.augment/guidelines/php/`)
+### PHP (`../../docs/guidelines/php/`)
 
 | File | Topic |
 |---|---|
@@ -37,7 +37,7 @@ Coding guidelines live in `.augment/guidelines/` organized by language.
 | `websocket.md` | WebSocket conventions — Broadcasting, channel types, connection management |
 | `patterns.md` | Design patterns index (links to `patterns/` subdirectory) |
 
-### PHP Patterns (`.augment/guidelines/php/patterns/`)
+### PHP Patterns (`../../docs/guidelines/php/patterns/`)
 
 | File | Pattern |
 |---|---|
@@ -51,11 +51,11 @@ Coding guidelines live in `.augment/guidelines/` organized by language.
 | `pipelines.md` | Laravel Pipeline pattern |
 | `strategy.md` | Strategy pattern implementation |
 
-### E2E (`.augment/guidelines/e2e/`)
+### E2E (`../../docs/guidelines/e2e/`)
 
 Playwright best practices, Page Objects, fixtures, CI.
 
-### Agent Infrastructure (`.augment/guidelines/agent-infra/`)
+### Agent Infrastructure (`../../docs/guidelines/agent-infra/`)
 
 | File | Topic |
 |---|---|

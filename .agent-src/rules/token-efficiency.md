@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "Token efficiency — redirect output, minimize tool calls, keep responses concise"
-alwaysApply: true
+type: "auto"
+description: "When running CLI tools, fetching logs, or producing replies — redirect verbose output, minimize tool calls, keep replies concise"
+alwaysApply: false
 source: package
 ---
 
@@ -96,4 +96,4 @@ When `personal.minimal_output: true`:
 - Debugging: OK to read more context around one error.
 - User explicitly asks for full output: show it.
 
-→ Detailed patterns: `guidelines/agent-infra/output-patterns.md`
+→ Detailed patterns: `docs/guidelines/agent-infra/output-patterns.md`

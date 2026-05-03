@@ -104,9 +104,36 @@ Regenerate `agents/roadmaps-progress.md` so the new roadmap shows up:
 
 Mention the new overall count to the user.
 
-### 8. Offer execution
+### 8. Offer council review (B1 hook)
 
-After saving, ask the user (in their language) whether to start executing the roadmap immediately.
+If `.agent-settings.yml` has `ai_council.enabled: true` **and** at least
+one member is enabled (`anthropic` or `openai`), ask the user (in their
+language):
+
+> 1. Run the council on this roadmap before execution? (billable)
+> 2. Skip council review
+
+Suppress this question entirely when `personal.autonomy: on` is set —
+council is billable, autonomous mode must not silently spend tokens
+(see `road-to-ai-council.md` Decision 3 / Q47).
+
+If the user picks **1**:
+
+- Run `/council roadmap:<path>` with the user's original ask captured
+  in step 1 as `original_ask` (the handoff preamble carries it
+  verbatim, see `scripts/ai_council/prompts.py`).
+- Append the council findings as a `## Council review (<UTC date>)`
+  section at the bottom of the roadmap. Include the trace path to
+  `agents/council-sessions/<timestamp>/raw-text.md` so future readers
+  can audit.
+- Do **not** rewrite the roadmap based on the findings — surface them,
+  let the user decide what to act on.
+
+If the user picks **2** → continue.
+
+### 9. Offer execution
+
+After saving (and any council review), ask the user (in their language) whether to start executing the roadmap immediately.
 
 If yes → switch to the `roadmap-execute` command workflow with the newly created file.
 

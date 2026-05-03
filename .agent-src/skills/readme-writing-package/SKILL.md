@@ -138,7 +138,7 @@ links over stacked inline blocks. Occasionally-needed detail (long
 platform quirks, troubleshooting): use `<details>` — never for install,
 first example, or requirements.
 
-→ See `guidelines/docs/readme-size-and-splitting.md` for thresholds,
+→ See `docs/guidelines/docs/readme-size-and-splitting.md` for thresholds,
 deep-link-table pattern, collapsibles, anti-patterns (premature
 splitting, duplication between README and `/docs/`).
 

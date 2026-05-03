@@ -126,7 +126,7 @@ baselines pin the R3 contract.
   `directives/mixed/` (`contract → ui → stitch`). Dispatched at the
   engine boundary on `state.directive_set`; the audit gate is enforced
   at the dispatcher AND at always-on rule level
-  ([`ui-audit-before-build`](.agent-src/rules/ui-audit-before-build.md))
+  ([`ui-audit-gate`](.agent-src/rules/ui-audit-gate.md))
   so cloud surfaces and free-form edits cannot bypass it.
 * **stack detection:** `scripts/work_engine/stack/detect.py` reads
   `composer.json` + `package.json` and labels the frontend as

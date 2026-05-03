@@ -1,3 +1,7 @@
+---
+status: draft
+---
+
 # Spec: Promotion flow — from observation to team truth
 
 > **Spec for `agent-memory`, authored from `agent-config`.**

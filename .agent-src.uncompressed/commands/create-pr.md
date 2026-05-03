@@ -33,6 +33,29 @@ fallback structure defined in `/create-pr-description`. NEVER invent a custom bo
 
 The user reviews and adjusts the content in that step.
 
+### 2b. Offer council review (B2 hook)
+
+If `.agent-settings.yml` has `ai_council.enabled: true` **and** at least
+one member is enabled, ask (in the user's language):
+
+> 1. Run the council on this diff before opening the PR? (billable)
+> 2. Skip council review
+
+Suppress when `personal.autonomy: on` (council is billable; autonomy
+must not silently spend — see `road-to-ai-council.md` Decision 3).
+
+If picked **1**:
+
+- Compute the diff range — `origin/<default>..HEAD` from step 1.
+- Run `/council diff:<base>..<head>` with `original_ask` set to the
+  PR title from step 2 (the user's framing of the change).
+- Surface findings to the user before step 3. **Do not** auto-edit
+  the PR body or block PR creation — output is advisory.
+- Optional: offer to append a one-paragraph "Council notes" section
+  to the PR description for reviewer transparency. Default: skip.
+
+If picked **2** → continue.
+
 ### 3. Create the PR
 
 Once the user approves the content from step 2:

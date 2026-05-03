@@ -2,7 +2,8 @@
 
 This repository is the **event4u/agent-config** package: shared agent configuration
 (skills, rules, commands, guidelines, templates) for AI coding tools. It is a
-distribution package, not a Laravel/PHP application.
+distribution package, not an application of any framework (Laravel, Symfony,
+Next.js, etc.).
 
 > **For Copilot Chat users:** Rich context lives in `.augment/` (rules, skills,
 > guidelines) and `AGENTS.md` at the repo root. Ask Copilot Chat to read those
@@ -19,8 +20,9 @@ distribution package, not a Laravel/PHP application.
   `.augment/` (generated output). Edit the former, never the latter.
 - **pytest** test suite under `tests/`.
 
-No PHP source files, no Laravel code, no JavaScript runtime deps. If you see
-Laravel-specific suggestions in a PR touching this repo, they are wrong.
+No application source code — no framework app code (Laravel, Symfony, Next.js,
+Express, etc.), no JavaScript runtime deps. If you see framework-specific
+suggestions in a PR touching this repo, they are wrong.
 
 ## ✅ Scope Control
 

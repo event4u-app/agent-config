@@ -1,3 +1,7 @@
+---
+status: draft
+---
+
 # Spec: Cross-project learning feed (Stage 3)
 
 > **Spec for `agent-memory`, authored from `agent-config`.**

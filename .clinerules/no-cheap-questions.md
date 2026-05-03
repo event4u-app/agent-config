@@ -1,0 +1,1 @@
+../.agent-src/rules/no-cheap-questions.md

@@ -27,6 +27,9 @@ __pycache__/
 # Temp
 /tmp/
 
+# Playwright
+/.playwright-mcp/*
+
 # Ignore the agent settings (YAML is the active format; flat legacy is
 # kept for the migration window and gets deleted by scripts/install once
 # the YAML file has been written)
@@ -80,3 +83,15 @@ evals/results/
 
 # Cloud bundle output
 /dist/
+
+# AI Council runtime price cache (refreshed weekly by
+# `python3 scripts/update_prices.py`; bootstrapped on first /council
+# call from scripts/ai_council/_default_prices.py). User-editable —
+# never commit, prices drift constantly.
+.agent-prices.md
+
+# AI Council session persistence (D2). Each /council run writes
+# request + raw responses + manifest to a per-UTC-timestamp folder
+# for local audit + replay. Contains real provider output and
+# user-pasted manual replies — never commit.
+agents/council-sessions/

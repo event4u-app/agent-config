@@ -111,7 +111,7 @@ _Data source: ownership-map.yml + historical-bug-patterns.yml. …_
 ```
 
 Curate `ownership-map.yml` and `historical-bug-patterns.yml` over time —
-see `.augment/guidelines/agent-infra/review-routing-data-format.md` for
+see `../../../docs/guidelines/agent-infra/review-routing-data-format.md` for
 the full schema.
 
 ## Uninstall
@@ -191,5 +191,5 @@ python3 scripts/check_memory.py --path agents/memory
 Exit `0` = clean, `1` = violations (missing required fields, duplicate
 ids, or obvious secrets — staleness alone is informational).
 
-Schema reference: `.augment/guidelines/agent-infra/engineering-memory-data-format.md`.
+Schema reference: `../../../docs/guidelines/agent-infra/engineering-memory-data-format.md`.
 Schema examples: `.augment/templates/agents/memory/*.example.yml`.

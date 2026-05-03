@@ -140,7 +140,7 @@ Rules:
 
 ## Phase 5: Settings and opt-out paths
 
-- [x] **Step 1:** Add `commands.suggestion` block to `.agent-src.uncompressed/templates/agent-settings.md` and `agent-settings.yml.dist`. Document in `.agent-src.uncompressed/guidelines/agent-infra/layered-settings.md`.
+- [x] **Step 1:** Add `commands.suggestion` block to `.agent-src.uncompressed/templates/agent-settings.md` and `agent-settings.yml.dist`. Document in `docs/guidelines/agent-infra/layered-settings.md`.
 - [x] **Step 2:** Settings semantics:
   - `enabled: false` → suggestion layer fully off; explicit slash commands still work.
   - `blocklist: ["/refine-ticket"]` → command never appears as a suggestion (still works when typed).

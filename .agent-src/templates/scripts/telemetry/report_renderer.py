@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from typing import Any, Sequence
 
 from .aggregator import AggregateResult, ArtefactStat, rank_artefacts
-from .engagement import check_id_redaction
+from .engagement import ALLOWED_OUTCOMES, check_id_redaction
 
 QUARTILE_TOP_RATIO = 0.20
 QUARTILE_BOTTOM_RATIO = 0.20
@@ -93,6 +93,23 @@ def render_markdown(
         lines.append(f"- ts range: `{aggregate.earliest_ts}` → `{aggregate.latest_ts}`")
     lines.append("")
 
+    # Outcomes summary — one row per category, in declared order, only
+    # when the log carries any outcome data. Stable column order so two
+    # reports over the same log render byte-identical.
+    outcomes_total = sum(aggregate.outcomes.values())
+    if outcomes_total:
+        lines.append("## Outcomes")
+        lines.append("")
+        lines.append("| outcome | count | share |")
+        lines.append("|---|---:|---:|")
+        for label in ALLOWED_OUTCOMES:
+            count = aggregate.outcomes.get(label, 0)
+            if not count:
+                continue
+            share = count / outcomes_total
+            lines.append(f"| {label} | {count} | {share:.2f} |")
+        lines.append("")
+
     titles = {
         BUCKET_TOP: "Essential (top 20 %)",
         BUCKET_MID: "Useful (mid 60 %)",
@@ -136,6 +153,15 @@ def render_json(
     if top is not None:
         for bucket in grouped:
             grouped[bucket] = grouped[bucket][:top]
+    # Outcomes — declared order, zeros omitted, total at top so callers
+    # can short-circuit without iterating the dict. Empty when no event
+    # in the window carried outcomes.
+    outcomes_total = sum(aggregate.outcomes.values())
+    outcomes_payload: dict[str, Any] = {"total": outcomes_total, "by_category": {}}
+    for label in ALLOWED_OUTCOMES:
+        count = aggregate.outcomes.get(label, 0)
+        if count:
+            outcomes_payload["by_category"][label] = count
     payload = {
         "schema_version": 1,
         "summary": {
@@ -146,6 +172,7 @@ def render_json(
             "latest_ts": aggregate.latest_ts,
             "since_label": since_label,
         },
+        "outcomes": outcomes_payload,
         "buckets": grouped,
     }
     return json.dumps(payload, sort_keys=True, indent=2) + "\n"

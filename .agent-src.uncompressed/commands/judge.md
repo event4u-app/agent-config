@@ -86,4 +86,4 @@ Next step: <what the user should do based on the verdict>
 - [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md)
 - [`/do-and-judge`](do-and-judge.md) — if a revision loop is wanted
 - [`/review-changes`](review-changes.md) — human-oriented self-review
-- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#reviewer) — Reviewer mode output contract (Summary / Risks / Findings / Required actions / Verdict)
+- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md#reviewer) — Reviewer mode output contract (Summary / Risks / Findings / Required actions / Verdict)

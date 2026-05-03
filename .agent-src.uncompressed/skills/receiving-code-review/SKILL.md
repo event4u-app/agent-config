@@ -78,7 +78,7 @@ For each comment classified as blocking/important:
 * Check `git blame` / history — the current code may be the way it is
   for a reason
 * **Consult memory for prior context.** Via
-  [`memory-access`](../../guidelines/agent-infra/memory-access.md),
+  [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md),
   call `retrieve(types=["historical-patterns", "architecture-decisions"],
   keys=<files in the review>, limit=3)`. A registered historical pattern
   may confirm the reviewer's concern (accept) or an architecture

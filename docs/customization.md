@@ -58,6 +58,20 @@ those sections.
 | `chat_history.max_size_kb` | per profile | Max file size before overflow handling (see matrix below). |
 | `chat_history.on_overflow` | per profile | `rotate` drops oldest, `compress` marks for summarization (see matrix below). |
 | `onboarding.onboarded` | `false` | Whether `/onboard` has run. The `onboarding-gate` rule prompts for `/onboard` while this is `false`. |
+| `ai_council.enabled` | `false` | Master switch for the `/council` command. Even when enabled, every consultation asks before spending tokens. |
+| `ai_council.members.<provider>.enabled` | `false` | Per-provider opt-in (`anthropic`, `openai`). Tokens live in `~/.config/agent-config/<provider>.key` (mode 0600), never in this file. |
+| `ai_council.members.<provider>.model` | per provider | Which model the provider sends the query to (e.g. `claude-sonnet-4-5`, `gpt-4o`). |
+| `ai_council.cost_budget.max_input_tokens` | `50000` | Hard cap on summed input tokens per `/council` invocation. |
+| `ai_council.cost_budget.max_output_tokens` | `20000` | Hard cap on summed output tokens per `/council` invocation. |
+| `ai_council.cost_budget.max_calls` | `10` | Maximum council members per invocation. |
+| `ai_council.cost_budget.max_total_usd` | `0.0` | Per-invocation USD ceiling. `0` disables (token caps still apply). |
+| `ai_council.cost_budget.daily_limit_usd` | `0.0` | Rolling 24h USD ceiling across all `/council` calls. `0` disables. Ledger lives at `~/.config/agent-config/council-spend.jsonl` (mode 0600). |
+
+Council API tokens are installed via `./agent-config keys:install-anthropic`
+and `./agent-config keys:install-openai` — they prompt on `/dev/tty`, write to
+`~/.config/agent-config/<provider>.key` with mode `0600`, and never accept env
+vars. The `/council` command refuses to run if the key file's permissions
+drift.
 
 ### Cost profiles
 

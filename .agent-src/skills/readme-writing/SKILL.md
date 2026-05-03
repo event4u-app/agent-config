@@ -100,7 +100,7 @@ lines: split deep content to `/docs/` or `references/`. Use `<details>`
 only for secondary, bulky content — never for install, first example, or
 requirements.
 
-→ See `guidelines/docs/readme-size-and-splitting.md` for thresholds,
+→ See `docs/guidelines/docs/readme-size-and-splitting.md` for thresholds,
 splitting strategies (reference-split, deep-link tables, collapsibles),
 multi-audience handling, anti-patterns.
 

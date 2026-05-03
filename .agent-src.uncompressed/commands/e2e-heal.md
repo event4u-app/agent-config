@@ -21,7 +21,7 @@ suggestion:
 > 2. Fix a specific test file — which one?
 > 3. Fix tests that failed in CI — provide the CI run URL or error output
 
-- Read the Playwright guideline: `.augment/guidelines/e2e/playwright.md`
+- Read the Playwright guideline: `../../docs/guidelines/e2e/playwright.md`
 
 ### 2. Run failing tests
 

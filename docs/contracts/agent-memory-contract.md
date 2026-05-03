@@ -29,7 +29,7 @@ Last refreshed: 2026-04-22.
 
 ## Expected backend states
 
-Defined in [`memory-access.md`](../../.agent-src.uncompressed/guidelines/agent-infra/memory-access.md)
+Defined in [`memory-access.md`](../../docs/guidelines/agent-infra/memory-access.md)
 and `scripts/memory_status.py`:
 
 | Status | Meaning | Agent-config behaviour |
@@ -143,7 +143,7 @@ holds:
 - [`road-to-agent-memory-integration.md`](../../agents/roadmaps/road-to-agent-memory-integration.md)
 - [`agent-memory/road-to-retrieval-contract.md`](../../agents/roadmaps/agent-memory/road-to-retrieval-contract.md)
 - [`agent-memory/road-to-promotion-flow.md`](../../agents/roadmaps/agent-memory/road-to-promotion-flow.md)
-- [`memory-access guideline`](../../.agent-src.uncompressed/guidelines/agent-infra/memory-access.md)
+- [`memory-access guideline`](../../docs/guidelines/agent-infra/memory-access.md)
 - [`scripts/memory_status.py`](../../.agent-src.uncompressed/templates/scripts/memory_status.py)
 - [`scripts/memory_lookup.py`](../../.agent-src.uncompressed/templates/scripts/memory_lookup.py)
 - [`open-questions-2.md`](../../agents/roadmaps/archive/open-questions-2.md) — Q29

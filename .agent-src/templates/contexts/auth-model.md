@@ -55,5 +55,5 @@
 
 - `agents/contexts/tenant-boundaries.md` — tenancy scope, multi-tenant
   rules that sit on top of the role model
-- `.augment/guidelines/agent-infra/*` — reviewer skills that read this
+- `../../../docs/guidelines/agent-infra/*` — reviewer skills that read this
   file

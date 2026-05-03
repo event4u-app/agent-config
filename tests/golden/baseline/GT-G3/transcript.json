@@ -1,0 +1,64 @@
+{
+  "gt_id": "GT-G3",
+  "subcommand": "work",
+  "prompt_file": "prompts/gt-g3-scope-creep.txt",
+  "persona": null,
+  "final_outcome": "halt_unhandled:refine-prompt",
+  "final_exit_code": 1,
+  "cycles": [
+    {
+      "index": 1,
+      "cmd": [
+        "./agent-config",
+        "work",
+        "--state-file",
+        ".implement-ticket-state.json",
+        "--prompt-file",
+        "prompts/gt-g3-scope-creep.txt"
+      ],
+      "exit_code": 1,
+      "stdout": "[halt] outcome=blocked step=refine\n@agent-directive: refine-prompt\n> Prompt received: Refactor the entire src/ directory to use type hints.\n> No reconstructed acceptance criteria yet — running `refine-prompt` and resuming.\n> 1. Continue — let the skill reconstruct AC + assumptions\n> 2. Abort — the prompt is not what I meant\n",
+      "stderr": "",
+      "state_after": {
+        "version": 1,
+        "input": {
+          "kind": "prompt",
+          "data": {
+            "raw": "Refactor the entire src/ directory to use type hints.\n",
+            "reconstructed_ac": [],
+            "assumptions": []
+          }
+        },
+        "intent": "backend-coding",
+        "directive_set": "backend",
+        "stack": null,
+        "ui_audit": null,
+        "ui_design": null,
+        "ui_review": null,
+        "ui_polish": null,
+        "contract": null,
+        "stitch": null,
+        "persona": "senior-engineer",
+        "memory": [],
+        "plan": null,
+        "changes": [],
+        "tests": null,
+        "verify": null,
+        "outcomes": {
+          "refine": "blocked"
+        },
+        "questions": [
+          "@agent-directive: refine-prompt",
+          "> Prompt received: Refactor the entire src/ directory to use type hints.",
+          "> No reconstructed acceptance criteria yet — running `refine-prompt` and resuming.",
+          "> 1. Continue — let the skill reconstruct AC + assumptions",
+          "> 2. Abort — the prompt is not what I meant"
+        ],
+        "report": ""
+      },
+      "directive": "refine-prompt",
+      "recipe_action": null,
+      "recipe_notes": []
+    }
+  ]
+}

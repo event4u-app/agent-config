@@ -151,7 +151,7 @@ Define where feedback suggestions go and how they become governance actions.
 
 **Files:**
 - New: `scripts/feedback_governance.py`
-- New: `.agent-src.uncompressed/guidelines/agent-infra/feedback-governance.md`
+- New: `docs/guidelines/agent-infra/feedback-governance.md`
 - New: `tests/test_feedback_governance.py`
 
 **Governance targets:**

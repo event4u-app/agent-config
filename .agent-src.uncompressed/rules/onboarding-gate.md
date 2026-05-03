@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "First-run gate — when onboarding.onboarded is false in .agent-settings.yml, prompt the user to run /onboard before anything else"
-alwaysApply: true
+type: "auto"
+description: "First turn of a conversation on a project — check onboarding.onboarded in .agent-settings.yml; when false, prompt the user to run /onboard before executing any other request"
+alwaysApply: false
 source: package
 ---
 
@@ -73,7 +73,7 @@ gate. This protects projects that were set up before this rule shipped.
   conversation, max.
 - Replace normal settings edits. Mid-life changes are ad-hoc (edit the
   file directly or ask the agent, which follows
-  [`layered-settings`](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules));
+  [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules));
   this rule is a one-time gate.
 - Run on every agent turn. First turn only.
 
@@ -89,6 +89,6 @@ gate. This protects projects that were set up before this rule shipped.
 ## See also
 
 - [`/onboard`](../commands/onboard.md) — the command this gate invokes
-- [`layered-settings`](../guidelines/agent-infra/layered-settings.md) — merge rules for mid-life edits
+- [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md) — merge rules for mid-life edits
 - [`agent-settings` template](../templates/agent-settings.md) — `onboarding.onboarded` reference
 - [`rule-type-governance`](rule-type-governance.md) — why this is `always`

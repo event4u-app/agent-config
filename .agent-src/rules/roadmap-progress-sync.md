@@ -1,9 +1,12 @@
 ---
 type: "auto"
-description: "Any touch to agents/roadmaps/ — creating, renaming, deleting, or moving a roadmap file (including into archive/ or skipped/), editing checkboxes ([x], [~], [-]), or adding/renaming/removing phases — must regenerate the roadmap dashboard in the SAME response; a roadmap that hits 0 open items must also be archived in the SAME response"
+description: "Any touch to agents/roadmaps/ — create/rename/delete/move, edit checkboxes ([x]/[~]/[-]), add/rename/remove phases — must regenerate dashboard and archive if 0 open items, same response"
 alwaysApply: false
 source: package
 ---
+
+<!-- cloud_safe: degrade -->
+<!-- Authoring discipline applies in cloud; local script + regen are no-ops there. -->
 
 # Roadmap Progress Sync
 
@@ -30,6 +33,7 @@ without regenerating? The dashboard claims it does not exist. Marked
 EVERY ACTIVE ROADMAP MUST CONTAIN AT LEAST ONE TRACKABLE CHECKBOX
 (`- [ ]`) PER NON-INTRO PHASE. ROADMAPS WITHOUT EXECUTABLE STEPS
 EITHER GET A CHECKLIST OR THE `status: draft` FLAG.
+CI-ENFORCED: `scripts/check_roadmap_trackable.py` (CANNOT BE DEFERRED).
 ```
 
 **Active roadmap =** any file in `agents/roadmaps/` (root, not
@@ -42,9 +46,16 @@ Tables of decisions, ICE matrices, ADR captures, and "block
 sequencing" tables are valid **rationale**, but they do not satisfy
 this rule on their own — they must be paired with at least one
 `## Phase N` section whose checkboxes execute the decision.
-Headings such as `## Phase steps`, `### Sequencing — Phase 1 …`, or
-`## Block A` do **not** count — only the canonical `Phase <id>`
-form parsed by the dashboard.
+Headings such as `## Phase steps`, `### Sequencing — Phase 1 …`,
+`### P0 #1 — …`, or `## Block A` do **not** count — only the
+canonical `Phase <id>` form parsed by the dashboard.
+
+**CI backstop.** `scripts/check_roadmap_trackable.py` (package-shipped,
+wire into the consumer's pre-commit / pre-push / Actions gate) fails
+when an active roadmap has zero canonical `Phase` headings or when
+any parsed phase has zero checkboxes. Last line of defence — real-time
+authoring still flips checkboxes and regenerates the dashboard the
+same response.
 
 ## Status — binary `ready` (default) vs `draft`
 
@@ -68,11 +79,6 @@ in the dashboard.
   capture-only synthesis that has not yet been promoted to
   executable phases. Flip to ready (or remove the field) the
   moment the roadmap is ready to track.
-
-A `## Decisions` or `## Block sequencing` table is **not** a roadmap
-on its own. Either pair it with a `## Phase N: <name>` section whose
-checkboxes execute the decision, or mark the file `status: draft`
-until the executable phases land.
 
 **Completion = archival, same response.** When the edit takes a
 roadmap to `count_open == 0` (every item is `[x]`, `[~]`, or `[-]`),
@@ -130,20 +136,9 @@ Step counts as completed when:
 Then in the **same reply**: flip the checkbox, regenerate the
 dashboard, commit if commit policy allows.
 
-**Forbidden pattern** (canonical failure):
-
-> Turn 1: implement Step 1. Turn 2: implement Step 2. Turn 3:
-> implement Step 3. Turn 4: implement Step 4. Turn 5: "all done,
-> let me update the roadmap and commit." → the user spent four turns
-> without dashboard movement.
-
-**Required pattern:**
-
-> Turn 1: implement Step 1, flip `[x]`, regen, commit.
-> Turn 2: implement Step 2, flip `[x]`, regen, commit. …
-
-A reply that lands a verified step without flipping its checkbox
-is a rule violation.
+**Forbidden:** four turns of step work, dashboard flat, single regen at the end.
+**Required:** each turn — implement step, flip `[x]`, regen, commit (if policy allows).
+A reply that lands a verified step without flipping its checkbox is a rule violation.
 
 **In-progress marker:** when a step takes more than one reply,
 mark it `[~]` the moment work starts on it and regenerate. The
@@ -180,14 +175,13 @@ Any "yes" + no regen run = rule violation. Rerun before sending.
   flat the whole time, single regen at the end** — user lost
   progress visibility for the entire run. Each completed step must
   flip its checkbox in the reply that ships it.
-- **Decision-only roadmap shipped without checkboxes** — the file
-  documents synthesized decisions, ICE matrices, or block sequencing
-  but contains zero `- [ ]` items. The dashboard regenerates with
-  `0/0 steps` for that file or omits it from the open set entirely.
-  The reader thinks no work is planned. Either pair the decisions
-  with a `## Phase N` / `## Implementation Checklist` section, or
-  mark the file `status: draft` so it is hidden until the executable
-  phases land.
+- **Decision-only roadmap shipped without checkboxes** — file
+  contains decisions / ICE / block-sequencing but zero `- [ ]`,
+  dashboard shows `0/0` or omits it. Pair with a `## Phase N`
+  section or mark `status: draft` (CI catches this now).
+- **Headings off-canon (`### P0 #N`, `## Block A`, `### Sequencing
+  — Phase 1`)** — `PHASE_RE` skips them, roadmap invisible to the
+  dashboard. Rename to `## Phase <id>` or mark `status: draft`.
 
 ## Do NOT
 
@@ -195,5 +189,4 @@ Any "yes" + no regen run = rule violation. Rerun before sending.
 - Do NOT defer the regen to "next commit" or "before push" — same response.
 - Do NOT rely on CI (`--check` mode) as the first line of defence — CI is last-line, not real-time.
 - Do NOT skip the regen because "only one checkbox changed" — the dashboard aggregates counts and phase percentages that shift on single edits.
-- Do NOT leave a 100%-complete roadmap in `agents/roadmaps/` "for review" — archive it in the same response, ask the user afterwards if needed, not before.
-- Do NOT regenerate the dashboard before the `git mv` when a roadmap closes — otherwise the completed roadmap reappears in "Open roadmaps".
+- Do NOT leave a 100%-complete roadmap in `agents/roadmaps/` "for review" — `git mv` to archive **before** regenerating, otherwise it reappears in "Open roadmaps".

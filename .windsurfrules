@@ -2,6 +2,26 @@
 
 ---
 
+# Agent Authority — Priority Index
+
+Four rules answer **"may the agent do this autonomously?"** Check bands in order; higher band wins.
+
+| Band | Trigger | Canonical rule |
+|---|---|---|
+| **1. Hard Floor** | Prod-trunk merge · deploy · push · prod data/infra · whimsical bulk deletion · bulk-deletion or infra commit | [`non-destructive-by-default`](non-destructive-by-default.md) |
+| **2. Permission Gate** | Git op · branch / PR / tag · architectural or library change · scope expansion | [`scope-control`](scope-control.md) |
+| **3. Commit Default** | About to commit — never, unless one of four exceptions fires | [`commit-policy`](commit-policy.md) |
+| **4. Trivial-vs-Blocking** | Routine workflow question — act or ask | [`autonomous-execution`](autonomous-execution.md) |
+
+## Index rules
+
+- **Hard Floor wins, always.** No autonomy setting, roadmap step, or standing instruction lifts it.
+- **Higher band wins on conflict.** Commit exception ≠ Hard Floor override; scope permission ≠ commit override.
+- **Index never restates an Iron Law.** Iron Laws live verbatim in canonical files; this router only points.
+- **Unsure → ask.** [`ask-when-uncertain`](ask-when-uncertain.md) is the universal escape hatch.
+
+---
+
 # Agent Documentation
 
 ## When to read agent docs
@@ -110,7 +130,7 @@ If the narrow skill is too weak or hollowed out, route through the broader skill
 ## General Principles
 
 - **Controllers are thin** — no business logic, delegate to services.
-- **Only Single Action Controllers** — every new controller MUST use `__invoke()`. No multi-action / resource controllers. See `.augment/guidelines/php/controllers.md` for naming conventions.
+- **Only Single Action Controllers** — every new controller MUST use `__invoke()`. No multi-action / resource controllers. See `../../docs/guidelines/php/controllers.md` for naming conventions.
 - **Every controller needs a FormRequest** — never validate inline with `$request->validate()`. Use a dedicated `FormRequest` subclass.
 - **Services contain business logic** — calculations, orchestration, validation.
 - **Models have no business logic** — only relationships, scopes, accessors/mutators.
@@ -455,7 +475,7 @@ are related".
 - **Session handoff** (`/agent-handoff`, fresh-chat proposal): ask LAST,
   after all domain / clarifying questions — so the user's answers can be
   folded into the handoff prompt. Full rationale in
-  [`agent-interaction-and-decision-quality`](../guidelines/agent-infra/agent-interaction-and-decision-quality.md#handoff--model-switch-questions).
+  [`agent-interaction-and-decision-quality`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#handoff--model-switch-questions).
 - **Model switch**: different phase — [`model-recommendation`](model-recommendation.md)
   triggers at task start with its own STOP-AND-WAIT gate, standalone, not
   appended to a Q&A block. Do not conflate the two.
@@ -713,152 +733,112 @@ Commands have `disable-model-invocation: true` in their frontmatter.
 # Autonomous Execution
 
 User's time is the scarce resource. Trivial workflow questions are
-noise. Defines **trivial** (just act), **blocking** (still ask), the
-**hard floor** (always ask, no override), and the **commit default**
-(never commit, never ask — review-first by design).
+noise. This rule defines **trivial** (just act), **blocking** (still
+ask), the **hard floor** (always ask, no override), and the **commit
+default** (never commit, never ask — review-first by design).
 
 ## Hard Floor — see [`non-destructive-by-default`](non-destructive-by-default.md)
 
-Universal safety floor (production-branch merges, deploys, pushes,
+The universal safety floor (production-branch merges, deploys, pushes,
 prod data/infra, whimsical bulk deletions, and commits containing
 bulk deletions or infra changes) is governed by the canonical
 [`non-destructive-by-default`](non-destructive-by-default.md) rule.
-
-Applies regardless of `personal.autonomy`, a standing autonomy
-directive (anchor list in [Opt-in detection](#opt-in-detection--match-by-intent-not-exact-string)),
-or any roadmap authorization. Nothing in **this** rule lifts it. If a
-trigger from that rule fires, stop and ask — every section below
-assumes the floor has cleared.
+It applies regardless of `personal.autonomy`, a standing autonomy
+directive, or any roadmap authorization. Nothing in **this** rule
+lifts it. If a trigger fires, stop and ask — every other section
+below assumes the floor has already been cleared.
 
 ## Setting — `personal.autonomy`
 
-| Value | Behavior |
-|---|---|
-| `on` | Suppress trivial questions. Act on obvious next step. Still ask on blocking decisions; ALWAYS ask on Hard-Floor triggers. |
-| `off` | Ask trivial questions too. Use to check in on each workflow step. |
-| `auto` (default) | Like `off` until user expresses "stop asking, just work" — then `on` for the rest of the chat. See **Opt-in detection** below; match by **intent**, not exact string. The flip never lifts the Hard Floor. |
-
-Read once on first turn (per [`layered-settings`](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules))
-and cache. Missing key → treat as `on`.
+Three values: `on` (suppress trivial questions), `off` (ask trivial
+questions too), `auto` (default — same as `off` until the user opts
+in via a standing autonomy directive). Read once on the first turn
+(per [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules))
+and cache. Missing key → treat as `on`. Full table, semantics, and
+cloud behavior:
+[`contexts/execution/autonomy-mechanics.md`](../contexts/execution/autonomy-mechanics.md).
 
 ## Opt-in detection — match by intent, not exact string
 
-In `auto`, flip to `on` for the rest of the chat when the user expresses
-**"stop asking on trivial steps, just work"**. Recognize the **intent**,
-not the literal substring — semantic equivalent in either language.
+In `auto` mode, flip to `on` for the rest of the conversation when
+the user expresses **"stop asking on trivial steps, just work"**.
+Recognize **intent**, not the literal substring. Opt-out (same intent,
+reversed) flips back to `off`. Both directions are
+**speech-act-checked**: the phrase must be a meta-instruction to the
+agent, not content / quote / subject / code / third-party reference /
+hypothetical. In doubt → keep current mode, no speculative flips.
 
-Anchor examples (illustrative, not exhaustive):
-
-- DE: "arbeite selbstständig" · "frag nicht jedes Mal" · "tue es einfach"
-- EN: "work autonomously" · "don't ask" · "just do it"
-
-Litmus test: standing permission to skip trivial questions? → flip.
-Single-decision delegation ("you decide for this step") → handle that
-step, do **not** flip standing mode.
-
-### Speech-act check — meta-instruction, not content
-
-Before flipping, verify the phrase is **addressed to the agent as
-guidance about how to work**, not a literal substring inside another
-instruction. Do **not** flip when the phrase is:
-
-- **Content / copy** — "Put the slogan 'just do it' on the landing page."
-- **Quote / reference** — "Nike's tagline is 'just do it' — write a blog post."
-- **Subject of a request** — "Write docs about the 'work autonomously' modes."
-- **Code / data** — string literals, fixtures, translations, JSON.
-- **About a third party** — "My colleague works autonomously."
-- **Question / hypothetical** — "Should I set `don't ask` as the default?"
-
-Heuristic: strip quotes, code blocks, embedded content. Read what's
-**left**. Still a directive to the agent about its working style →
-flip. Otherwise → don't.
-
-Opt-out (reversed intent) flips back to `off`:
-
-- DE: "frag mich wieder" · "frag mich erst" · "stop autonomous mode"
-- EN: "ask me first" · "ask me again" · "stop being autonomous"
-
-Same speech-act check applies.
-
-Counter-examples — do **not** flip on meta-questions, self-descriptions,
-or one-shot delegations: "why don't you ask that yourself?", "I'm
-working autonomously right now", "can you decide that yourself?".
-
-In doubt → keep current mode, no speculative flips.
+Algorithm and speech-act heuristic:
+[`contexts/execution/autonomy-detection.md`](../contexts/execution/autonomy-detection.md).
+Anchor phrases (DE+EN), no-flip patterns, counter-examples:
+[`contexts/execution/autonomy-examples.md`](../contexts/execution/autonomy-examples.md).
 
 ## Trivial — JUST ACT, do not ask
 
-Examples (matches `personal.autonomy: on` or `auto`-after-opt-in):
-
-- "Step 2 or Step 3?" — pick the obvious next roadmap step; if blocked, name the blocker, otherwise go.
-- "Commit now or after the next change?" — answered by the commit-default below.
-- "How should I split the commits?" — never asked; either `/commit-in-chunks` was invoked (split + commit) or it wasn't (don't commit).
-- "Run linter / tests now or later?" — `verify-before-complete` decides; act.
-- "Found 3 follow-ups — fix all or stop?" — if within scope and minimal-safe-diff allows, fix; if scope expands, stop and surface as list.
-- "Filename `X.md` or `Y.md`?" when one matches convention — pick convention-matching one.
-- "Verification table or paragraph?" — pick whichever fits; format isn't a decision worth a turn.
-- "Show me a diff before regenerating output from a tracked source?"
-  — compression, code-gen, formatter passes, lock-file rebuilds — run
-  it and report the result. Reversibility comes from the source, not
-  from per-file confirmation. See [`non-destructive-by-default`](non-destructive-by-default.md#not-in-scope--deterministic-regeneration)
-  § Not in scope.
-
-`personal.autonomy: off`: ask these. `on` or `auto`-after-opt-in: act.
+In `personal.autonomy: on` or `auto`-after-opt-in, do not ask
+trivial workflow questions — pick the obvious next step and proceed.
+In `personal.autonomy: off`, ask them. Worked cases:
+[`contexts/execution/autonomy-examples.md`](../contexts/execution/autonomy-examples.md).
 
 ## Blocking — STILL ASK regardless of `personal.autonomy`
 
-Beyond the Hard Floor, the autonomy setting also never overrides:
+Beyond the Hard Floor above, the autonomy setting also never
+overrides:
 
-- **Vague-request triggers** in [`ask-when-uncertain`](ask-when-uncertain.md) — ambiguous stays ambiguous; pick-one-and-pray is wrong.
-- **Architectural / structural choices** the codebase hasn't settled (multi-stack picks, library introductions).
+- **Vague-request triggers** in [`ask-when-uncertain`](ask-when-uncertain.md)
+  — ambiguous requirements stay ambiguous; pick-one-and-pray is wrong.
+- **Architectural / structural choices** that the codebase doesn't
+  already settle (multi-stack picks, library introductions).
 - **Security-sensitive paths** — see [`security-sensitive-stop`](security-sensitive-stop.md).
-- **Scope expansion** beyond stated task — see [`scope-control`](scope-control.md).
-- **Remote-state ops** — push, merge, rebase, force-push, branch create/delete/switch, PR create/close/retarget, tag/release. Permission-gated by [`scope-control`](scope-control.md); the prod-trunk and deploy-tied subset is governed by [`non-destructive-by-default`](non-destructive-by-default.md).
-- **Destructive ops** — see [`non-destructive-by-default`](non-destructive-by-default.md) for the full taxonomy (whimsical bulk deletions, content destruction, commits containing bulk deletions or infra changes).
+- **Scope expansion** beyond the stated task — see [`scope-control`](scope-control.md).
+- **Remote-state operations** — push, merge, rebase, force-push,
+  branch create/delete/switch, PR create/close/retarget, tag/release.
+  Permission-gated by [`scope-control`](scope-control.md); the
+  prod-trunk and deploy-tied subset is governed by
+  [`non-destructive-by-default`](non-destructive-by-default.md).
+- **Destructive ops** — see [`non-destructive-by-default`](non-destructive-by-default.md)
+  for the full taxonomy (whimsical bulk deletions, content
+  destruction, commits containing bulk deletions or infra changes).
 
-In doubt → blocking. Ask.
+When in doubt whether something is trivial or blocking → it is
+blocking. Ask.
 
 ## Commit policy — see [`commit-policy`](commit-policy.md)
 
-Committing is governed by [`commit-policy`](commit-policy.md), which
-applies regardless of `personal.autonomy`. Summary:
+Committing is governed by the canonical [`commit-policy`](commit-policy.md)
+rule, which applies regardless of `personal.autonomy`. Summary:
 
 - NEVER commit unless user said so this turn, a commit command was
   invoked, a standing instruction is active, or the roadmap authorizes it.
-- NEVER ask about committing.
-- In autonomous mode, the **only** permitted commit-related question
-  is the one-shot pre-scan ask at the start of roadmap execution.
+- NEVER ask about committing. The user invokes a command or says so.
+- In autonomous mode, the **only** permitted commit-related question is
+  the one-shot pre-scan ask at the start of roadmap execution.
 
-Push, merge, rebase, branch creation, PR ops, tags remain
-permission-gated per [`scope-control`](scope-control.md#git-operations--permission-gated).
+Push, merge, rebase, branch creation, PR operations, and tags remain
+permission-gated by [`scope-control`](scope-control.md#git-operations--permission-gated).
 
 ## Failure modes
 
-- Asking "Step 2 or Step 3?" when the roadmap orders them.
-- "Should I run the CI checks?" — `verify-before-complete` decides; act.
-- "Do we want to commit this?" — no, by default. Don't ask.
-- Numbered-options block whose only difference is sequencing ("A then B" vs "B then A") with no real trade-off.
-- Asking after user already issued a standing autonomy directive earlier (cache the opt-in for `auto`).
-
-For Hard-Floor failure modes (treating autonomy as cover for a
-floor-crossing action, reading a roadmap step as deploy authorization,
-refusing task-aligned WIP deletions, committing bulk-deletion / infra
-diffs without surfacing them) see
+Autonomy-side wrong-behavior patterns (sequencing-only asks, CI-run
+asks, commit asks, no-trade-off option blocks, re-asking after a
+standing opt-in):
+[`contexts/execution/autonomy-examples.md`](../contexts/execution/autonomy-examples.md).
+For Hard-Floor failure modes see
 [`non-destructive-by-default`](non-destructive-by-default.md#failure-modes).
-
-## Cloud Behavior
-
-Settings reads degrade gracefully on cloud platforms (no
-`.agent-settings.yml`). Treat as `personal.autonomy: on` — user had to
-deliberately ship a custom skill bundle and is unlikely to want
-trivial-question friction.
 
 ## See also
 
-- [`non-destructive-by-default`](non-destructive-by-default.md) — universal safety floor; never overridden by autonomy
-- [`scope-control`](scope-control.md) — git-ops permission gate (push/merge/branch/PR/tag stays explicit)
-- [`ask-when-uncertain`](ask-when-uncertain.md) — vague-request triggers that always require asking
-- [`direct-answers`](direct-answers.md) — Iron Laws on brevity and no-flattery (this rule extends to no-trivial-questions)
+- [`non-destructive-by-default`](non-destructive-by-default.md) —
+  universal safety floor; never overridden by autonomy
+- [`scope-control`](scope-control.md) — git-ops permission gate
+  (push/merge/branch/PR/tag stays explicit)
+- [`ask-when-uncertain`](ask-when-uncertain.md) — vague-request
+  triggers that always require asking
+- [`no-cheap-questions`](no-cheap-questions.md) — mode-independent
+  floor against context-derived, sequencing-only, and
+  Iron-Law-violating asks (applies in `off` and pre-opt-in `auto` too)
+- [`direct-answers`](direct-answers.md) — Iron Laws on brevity and
+  no-flattery (this rule extends to no-trivial-questions)
 - [`/commit-in-chunks`](../commands/commit-in-chunks.md) — auto-split and commit without confirmation
 - [`/commit`](../commands/commit.md) — split and commit with confirmation
 
@@ -941,7 +921,7 @@ Body: 1-paragraph **pattern** (not anecdote) + 1 concrete example.
 A learning file is the input to `learning-to-rule-or-skill`, which
 produces a proposal draft under `agents/proposals/`. The proposal is
 then gated by `scripts/check_proposal.py`; see
-[`self-improvement-pipeline`](../guidelines/agent-infra/self-improvement-pipeline.md).
+[`self-improvement-pipeline`](../../docs/guidelines/agent-infra/self-improvement-pipeline.md).
 
 The `agents/learnings/` and `agents/proposals/` directories are
 consumer-owned — the package ships templates and schemas, never the
@@ -1398,7 +1378,7 @@ SUGGEST. NEVER INVOKE. THE USER PICKS, ALWAYS.
 ```
 
 A suggestion block emits options. It does **not** start a command
-flow. The user picking option N triggers `slash-commands` on the
+flow. The user picking option N triggers `slash-command-routing-policy` on the
 **next** turn — with all the command's own halts intact.
 
 ## When to fire
@@ -1406,7 +1386,7 @@ flow. The user picking option N triggers `slash-commands` on the
 On a user turn that matches **all** of the following:
 
 1. The message does **not** start with an explicit `/command` (those
-   bypass suggestion entirely — see `slash-commands`).
+   bypass suggestion entirely — see `slash-command-routing-policy`).
 2. `commands.suggestion.enabled` is `true` (default).
 3. The user has not issued `/command-suggestion-off` in this conversation.
 4. No clarification is owed for the same turn (per
@@ -1483,7 +1463,7 @@ prompt runs exactly as it would without this rule.
 
 ## What this rule does NOT do
 
-- Invoke any command. Picking option N is what triggers `slash-commands`.
+- Invoke any command. Picking option N is what triggers `slash-command-routing-policy`.
 - Stack with other questions. One numbered-options block per turn.
 - Re-trigger on its own output. Command names emitted in the
   suggestion block are excluded from the next-turn matcher input.
@@ -1499,7 +1479,7 @@ available — degrade silently, never crash the turn.
 
 ## Interactions
 
-- [`slash-commands`](slash-commands.md) — explicit `/command` skips suggestion entirely.
+- [`slash-command-routing-policy`](slash-command-routing-policy.md) — explicit `/command` skips suggestion entirely.
 - [`user-interaction`](user-interaction.md) — numbered-options Iron Law and single-source recommendation.
 - [`ask-when-uncertain`](ask-when-uncertain.md) — clarification wins on conflict.
 - [`scope-control`](scope-control.md) — git-op gates outrank suggestion.
@@ -1564,7 +1544,7 @@ ci(lint): add skill-lint workflow
 docs(roadmap): add phase 3 implementation plan
 ```
 
-→ Type selection rules, anti-patterns, decision checklist: `guidelines/php/git.md`
+→ Type selection rules, anti-patterns, decision checklist: `docs/guidelines/php/git.md`
 
 ---
 
@@ -1599,26 +1579,12 @@ Exactly four ways the agent may commit:
 3. **Commit command invoked** — `/commit` (with confirmation) or
    `/commit-in-chunks` (auto-split, no confirmation).
 4. **Roadmap authorization** — the roadmap file lists explicit commit
-   steps and the user invoked roadmap execution. See
-   [Roadmap-authorized commits](#roadmap-authorized-commits) below.
+   steps and the user invoked roadmap execution.
 
-Anything else → no commit.
-
-## Hard Floor still applies — bulk deletions and infra changes
-
-Even when one of the four exceptions above authorizes a commit, the
-[`non-destructive-by-default`](non-destructive-by-default.md) Hard
-Floor still fires when the diff:
-
-- Removes a directory
-- Deletes ≥5 unrelated files
-- Touches Terraform / Pulumi / k8s manifests / Ansible / cloud-config
-
-In those cases, **surface the diff** (paths + counts) and confirm
-this turn before committing — even under `/commit-in-chunks`,
-roadmap pre-scan authorization, or an explicit "commit this now". The
-four exceptions cover *whether* commits happen; the Hard Floor covers
-*which diffs* still need a separate confirmation.
+Anything else → no commit. Hard Floor (bulk deletions, infra changes)
+still fires on top of any exception — see
+[`commit-mechanics`](../contexts/authority/commit-mechanics.md) for
+the diff triggers and the roadmap-authorized commit flow.
 
 ## NEVER ask about committing
 
@@ -1627,10 +1593,10 @@ variant is **forbidden**. The user invokes a command or says so
 explicitly. Don't surface a commit option in numbered-options blocks
 unless the rest of the message would be incomplete without it.
 
-The same speech-act check from [`autonomous-execution`](autonomous-execution.md#speech-act-check--the-phrase-must-be-a-meta-instruction-to-the-agent)
-applies in reverse: an explicit commit phrase inside a quote, code
-block, or content (e.g. a copy-paste of a chat log) is **not** a
-permission grant.
+Quoted commit phrases (chat-log paste, log excerpt, roadmap snippet)
+are **not** permission — see
+[`commit-mechanics`](../contexts/authority/commit-mechanics.md)
+§ Speech-act check.
 
 ## NEVER write commit steps into roadmaps unsolicited
 
@@ -1642,29 +1608,13 @@ delivery decision; roadmaps plan **work**.
 If the user explicitly wants commit steps in the roadmap, write them
 clearly and unambiguously (e.g. "Commit phase X: chore: …").
 
-## Roadmap-authorized commits
-
-When **executing** a roadmap that contains commit steps:
-
-- **Non-autonomous mode** (`personal.autonomy: off`, or `auto`
-  before opt-in) — agent may ask before each commit step. The user
-  authorized commits by writing them into the roadmap, but retains
-  step-level control.
-- **Autonomous mode** (`personal.autonomy: on`, or `auto` after
-  opt-in) — agent does a quick pre-scan of the roadmap **before
-  starting execution**. If commit steps are found, ask **once** at
-  the very start: "Roadmap contains N commit steps — should they be
-  executed?". After that, honor or skip per the answer.
-  No re-asking per step.
-
-The pre-scan ask is the **only** permitted commit-related question
-in autonomous mode. Once answered, the decision is cached for the
-rest of the roadmap execution.
-
 ## See also
 
 - [`autonomous-execution`](autonomous-execution.md) — when to suppress
   trivial questions; this rule survives the suppression.
+- [`no-cheap-questions`](no-cheap-questions.md) — commit asks are
+  cheap by construction; this rule is the canonical Iron Law, the
+  cheap-questions rule cites it and refuses to surface the option.
 - [`scope-control`](scope-control.md) — git-ops permission gate
   (push, merge, branch, PR, tag stay separately permission-gated).
 - [`/commit`](../commands/commit.md) — split and commit with confirmation.
@@ -1969,7 +1919,7 @@ exist in `.augment/templates/agent-settings.md`:
 3. **Add a comment** above the key explaining what it does.
 4. **Update the local `.agent-settings.yml`** — add the new key with its default value.
    Preserve all existing values, apply template order and comments. Follow the
-   [section-aware merge rules](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
+   [section-aware merge rules](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
    so the user benefits immediately without running a separate command.
 
 **This step is mandatory.** If the template gains a new key but the local `.agent-settings.yml`
@@ -2105,7 +2055,7 @@ After completing all downstream changes:
 
 ## Before writing E2E tests
 
-1. **Read the guideline** — `.augment/guidelines/e2e/playwright.md` for all conventions and patterns.
+1. **Read the guideline** — `../../docs/guidelines/e2e/playwright.md` for all conventions and patterns.
 2. **Check existing tests** — match the project's structure, fixtures, and Page Object patterns.
 3. **Check `playwright.config.ts`** — base URL, browsers, timeouts, projects.
 
@@ -2157,7 +2107,7 @@ Coding guidelines live in `.augment/guidelines/` organized by language.
 
 ## Available Guidelines
 
-### PHP (`.augment/guidelines/php/`)
+### PHP (`../../docs/guidelines/php/`)
 
 | File | Topic |
 |---|---|
@@ -2182,7 +2132,7 @@ Coding guidelines live in `.augment/guidelines/` organized by language.
 | `websocket.md` | WebSocket conventions — Broadcasting, channel types, connection management |
 | `patterns.md` | Design patterns index (links to `patterns/` subdirectory) |
 
-### PHP Patterns (`.augment/guidelines/php/patterns/`)
+### PHP Patterns (`../../docs/guidelines/php/patterns/`)
 
 | File | Pattern |
 |---|---|
@@ -2196,11 +2146,11 @@ Coding guidelines live in `.augment/guidelines/` organized by language.
 | `pipelines.md` | Laravel Pipeline pattern |
 | `strategy.md` | Strategy pattern implementation |
 
-### E2E (`.augment/guidelines/e2e/`)
+### E2E (`../../docs/guidelines/e2e/`)
 
 Playwright best practices, Page Objects, fixtures, CI.
 
-### Agent Infrastructure (`.augment/guidelines/agent-infra/`)
+### Agent Infrastructure (`../../docs/guidelines/agent-infra/`)
 
 | File | Topic |
 |---|---|
@@ -2272,10 +2222,10 @@ Before coding, quickly verify:
 - Does it follow established patterns in the codebase?
 - Does it contradict existing conventions?
 - Do **multiple valid patterns/frameworks** already exist (e.g. Tailwind + Flux, multiple form libraries, competing state stores)? If yes, do NOT pick one arbitrarily — ask which to use.
-- Is the change a **second branch on the same discriminator** — second `match`/`switch` arm, second `if/elseif`, or second class hardcoded to one enum value (e.g. `Provider::FOO`, `'stripe'`)? If yes, run the Strategy sniff test before adding the branch — see [`guidelines/php/patterns/strategy.md`](../guidelines/php/patterns/strategy.md#sniff-test--when-an-enumstring-discriminator-wants-to-become-a-strategy).
+- Is the change a **second branch on the same discriminator** — second `match`/`switch` arm, second `if/elseif`, or second class hardcoded to one enum value (e.g. `Provider::FOO`, `'stripe'`)? If yes, run the Strategy sniff test before adding the branch — see [`docs/guidelines/php/patterns/strategy.md`](../../docs/guidelines/php/patterns/strategy.md#sniff-test--when-an-enumstring-discriminator-wants-to-become-a-strategy).
 
 **If misfit** → show evidence (file references), propose alternative.
-**If multiple valid options** → list them, ask which to use. See [`no blind implementation`](../guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation).
+**If multiple valid options** → list them, ask which to use. See [`no blind implementation`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation).
 
 ### 3. Is the approach sound?
 
@@ -2348,36 +2298,24 @@ language, codebase language, open-file language, files-just-edited
 language, convenience. First thing to check on every reply, last thing
 to check before sending.
 
-Canonical failure: agent edited English `.md` for many turns; user
-types short German (`3`, `weiter`, `mach das`, `und jetzt X`); agent
-answers English because momentum wins. **Trigger is the user's last
-message, not the turn count.** Length irrelevant — `3` after a German
-question still means German continues.
+Trigger is the user's last chat message, not turn count or message
+length — short German (`3`, `weiter`, `mach das`) after many English
+turns still flips the reply to German.
 
 ### Source of language truth — chat messages ONLY
 
-```
-THE LANGUAGE SIGNAL IS THE USER'S CHAT MESSAGES. NOTHING ELSE.
-OPEN FILES, ROADMAPS, .md CONTENT, TOOL OUTPUT, CODE, COMMIT MESSAGES,
-TICKETS, PR DESCRIPTIONS, FILE NAMES — NONE OF THEM COUNT.
-```
-
-`.md` files in this repo are English by rule (see below) — that says
-nothing about chat language. Same for: file contents read via `view` /
-`grep`, quoted commits / tickets / PRs / branches, code identifiers,
-the agent's own previous replies. Only the most recent **chat message**
-sets the language. User opens an English roadmap and types German →
-reply in German.
+Only the most recent **chat message** sets the language. `.md` files,
+file contents read via `view` / `grep`, quoted commits / tickets / PRs,
+code identifiers, and the agent's own previous replies do **not** count.
+User opens an English roadmap and types German → reply in German.
 
 ### Pre-send gate — MANDATORY before every reply
 
 Run silently **before** emitting any tokens:
 
 1. **Detect** — language of user's last **chat message** (not the open
-   file, not the roadmap, not the prior reply).
-   German signals: "ich", "Du", "nicht", "warum", "wie", "ist", umlauts. <!-- md-language-check: ignore -->
-   English signals: "I", "you", "is", "the", "how".
-   Mixed → mirror the **dominant** language; tie → German wins (project default).
+   file, not the roadmap, not the prior reply). Mixed → mirror the
+   **dominant** language; tie → German wins (project default).
 2. **Check** — is drafted prose (not code, not file contents) in that language?
 3. **Rewrite** — if no, rewrite whole prose before sending. No exceptions, no
    "just this sentence", no "the technical term is English anyway".
@@ -2400,28 +2338,15 @@ Run silently **before** emitting any tokens:
 
 ### When the user calls out a language slip
 
-1. Acknowledge **once**, briefly, in the correct language ("Entschuldigung" /
-   "Sorry"). One sentence, no excuses.
-2. Switch immediately on the same reply.
-3. Do **not** re-explain the mistake in the wrong language.
-4. Do **not** promise "from now on" — just do it. Only behaviour changes
-   prove compliance.
-5. If user asks to harden the rule, harden it on this turn — don't defer.
+Acknowledge **once**, briefly, in the correct language ("Entschuldigung" /
+"Sorry"). Switch immediately on the same reply. Do **not** re-explain in
+the wrong language. Do **not** promise "from now on" — just do it. If
+user asks to harden the rule, harden it on this turn.
 
-### Failure modes to watch for
+### Failure modes
 
-- Drafting reply in English first, then "translating the intro" → English
-  phrasing with German words. Draft in target language from the first token.
-- Copy-pasting English option labels from `.md` sources without translating.
-- Mixing languages inside a table or bullet list because "the technical term
-  is English" — surrounding prose must still mirror. Keep proper nouns and
-  code identifiers as-is; translate everything else.
-- Assuming English because "the codebase is English" — codebase language ≠
-  conversation language.
-- Mirroring the **open file** the IDE reports — open files are background
-  context, not chat messages.
-- Mirroring the **roadmap or ticket** being executed — artefacts are English
-  by `.md` rule; chat language is whatever the user wrote.
+See [`../../docs/guidelines/agent-infra/language-and-tone-examples.md`](../../docs/guidelines/agent-infra/language-and-tone-examples.md)
+for the full failure-mode list.
 
 ## Other language rules
 
@@ -2434,64 +2359,30 @@ Run silently **before** emitting any tokens:
 
 ## `.md` files are ALWAYS English — no exceptions
 
-**Every** piece of text inside `.md` files in `.augment/` and `agents/` must be in English.
-This includes:
+**Every** piece of text inside `.md` files in `.augment/` and `agents/`
+must be in English: headings, paragraphs, bullets, example option labels,
+example prompts/questions, template placeholders, ASCII-art labels in
+formatted output blocks, table headers and content.
 
-- Headings, paragraphs, and bullet points
-- **Example option labels** (e.g., `> 1. Yes — start implementing`, NOT `> 1. Ja — mit der Umsetzung starten`)
-- **Example prompts and questions** (e.g., `"Found X unresolved comments."`, NOT `"X offene Kommentare gefunden."`)
-- **Template placeholders and sample output** (e.g., `Progress:`, NOT `Fortschritt:`)
-- **ASCII art labels** in formatted output blocks (e.g., `CHANGES:`, NOT `ÄNDERUNGEN:`)
-- **Table headers and content**
+The agent translates to the user's language **at runtime** when
+presenting options. The `.md` source files are the English blueprint —
+they define WHAT to say, not in which language. Concrete wrong-vs-correct
+examples live in [`../../docs/guidelines/agent-infra/language-and-tone-examples.md`](../../docs/guidelines/agent-infra/language-and-tone-examples.md).
 
-The agent translates to the user's language **at runtime** when presenting options.
-The `.md` source files are the English blueprint — they define WHAT to say, not in which language.
+### Quoted user-input examples — labeled-anchor exception
 
-**Wrong** (German in `.md`):
-```
-> 1. Interaktiv — bei jedem Kommentar nachfragen
-> 2. Automatisch — alle selbstständig abarbeiten
-```
+Drift pattern: a rule writes quoted German examples inside English prose.
+**Not allowed**. Two correct ways:
 
-**Correct** (English in `.md`):
-```
-> 1. Interactive — ask before each comment
-> 2. Automatic — handle all independently
-```
+1. **Translate to English.** Trigger recognition is semantic; the agent
+   matches intent across languages regardless of the example.
+2. **Use a labeled `DE: … · EN: …` anchor list** when the multilingual
+   nature of recognition is the point — the **only** allowed location
+   for German prose in an English `.md`. Reference established phrases
+   abstractly later and link back to the anchor block.
 
-### Quoted user-input examples — same rule, with one labeled exception
-
-Common drift pattern: a rule documents trigger phrases the agent
-should recognize and writes them as quoted German examples inside
-English prose. **Not allowed**, even when demonstrative.
-
-**Wrong** (DE quote embedded in EN prose):
-
-```md
-Single-decision delegation ("für diesen Schritt entscheide du") →
-handle that step autonomously.
-
-A standing "arbeite selbstständig" never lifts the floor.
-```
-
-**Correct** — two ways:
-
-1. **Translate to English.** Trigger recognition is semantic; the
-   agent matches intent across languages regardless of the example.
-   `("you decide for this step")` works as well as the German.
-2. **Use a labeled `DE: … · EN: …` anchor list** when the
-   multilingual nature of recognition is the point:
-
-   ```md
-   - DE: "arbeite selbstständig" · "frag nicht jedes Mal" · "tue es einfach"
-   - EN: "work autonomously" · "don't ask" · "just do it"
-   ```
-
-The labeled-anchor block is the **only** allowed location for German
-prose in an English `.md` file. Body text, example sentences, prompt
-templates, agent-rendered strings, and failure modes must be English.
-Reference established phrases abstractly later (e.g. "a standing
-autonomy directive") and link back to the anchor block.
+Wrong-vs-correct snippets in
+[`../../docs/guidelines/agent-infra/language-and-tone-examples.md`](../../docs/guidelines/agent-infra/language-and-tone-examples.md).
 
 ### Detection heuristic
 
@@ -2735,7 +2626,7 @@ If the detected model is `gemini`, immediately trigger the Gemini warning (see b
 `/commit`, `/fix-pr-comments` are sonnet tasks — even if the previous task was opus-level.
 This is the most commonly missed check. Do NOT skip it.
 
-**Priority over commands rule**: This check runs BEFORE the `slash-commands` rule. If a model switch
+**Priority over commands rule**: This check runs BEFORE the `slash-command-routing-policy` rule. If a model switch
 is recommended, show the suggestion first. Only after the user responds, execute the command.
 
 **If ambiguous** (could be opus or sonnet): default to **sonnet** — cheaper, and the user can escalate.
@@ -2773,6 +2664,91 @@ suggest switching back to sonnet for implementation. Same numbered options.
 If detected model is `gemini`: warn that Gemini is **not recommended** for this project.
 Suggest switching to the best model for the current task (opus/sonnet/gpt).
 Show the same numbered options as above. Repeat once if dismissed — then accept.
+
+---
+
+# No Cheap Questions
+
+A question is **cheap** when the answer follows from stated context,
+when an option would breach an Iron Law, when choices differ only in
+sequencing or format, or when one option is obviously dominant. Cheap
+questions are noise, regardless of `personal.autonomy`.
+
+Mode-independent. The "trivial" failure modes in
+[`autonomous-execution`](autonomous-execution.md) are scoped to
+`personal.autonomy: on` (or `auto`-after-opt-in); this rule lifts the
+**no-trade-off** subset to apply in `off` and pre-opt-in `auto` too.
+
+## The Iron Laws
+
+```
+NEVER ASK WHAT THE STATED CONTEXT ALREADY ANSWERS.
+NEVER PRESENT AN OPTION THAT VIOLATES AN IRON LAW.
+NEVER OFFER NUMBERED CHOICES WITHOUT A REAL TRADE-OFF.
+```
+
+Hold in `off`, `auto`, and `on`. Autonomy never lifts them.
+
+## What counts as cheap
+
+| Class | Pattern · why cheap |
+|---|---|
+| **Sequencing** | "Step 2 or 3 next?" when roadmap orders them — answer is in the roadmap |
+| **Format-only** | "Table or paragraph?" — no semantic trade-off |
+| **Commit asks** | "Commit now?" — [`commit-policy`](commit-policy.md): never ask |
+| **CI / test asks** | "Run tests now?" — [`verify-before-complete`](verify-before-complete.md) decides |
+| **Fenced-step re-asks** | "Start Phase 1?" after "plan only" — [`scope-control § fenced step`](scope-control.md#fenced-step--user-set-review-gates) |
+| **Iron-Law option** | Option breaches `commit-policy`, `scope-control § git-ops`, or `non-destructive-by-default` — does not exist |
+| **Context-derived** | Answer follows from prior turn / standing instruction / roadmap — act, state assumption inline |
+| **Dominant option** | One choice obviously correct; alternatives carry no upside — pick it |
+| **Re-ask after decline** | Same path after user said no — [`scope-control § decline = silence`](scope-control.md#decline--silence--no-re-asking-on-the-same-task) |
+
+## Pre-Send Self-Check — MANDATORY before every question
+
+Before drafting any numbered-options block, run silently:
+
+1. Does the answer follow from already-stated context?
+2. Does any option violate [`commit-policy`](commit-policy.md),
+   [`scope-control § git-ops`](scope-control.md), or
+   [`non-destructive-by-default`](non-destructive-by-default.md)?
+3. Are options pure sequencing / format with no trade-off?
+4. Is one option obviously dominant?
+5. Did the user fence the next step (*"plan only"*, *"review first"*)?
+   → deliver + handback per [`scope-control § fenced step`](scope-control.md#fenced-step--user-set-review-gates).
+6. Did the user already decline? Re-asking is forbidden per
+   [`scope-control § decline = silence`](scope-control.md#decline--silence--no-re-asking-on-the-same-task).
+
+Any "yes" → **do not ask**. Pick the dominant path, state the
+assumption inline (*"assuming X — adjust if wrong"*), hand back. The
+one-question-per-turn Iron Law from
+[`ask-when-uncertain`](ask-when-uncertain.md) still applies when the
+question is genuine.
+
+## When asking IS allowed
+
+- Real architectural / scope decision with non-obvious trade-offs.
+- Vague-request trigger per
+  [`ask-when-uncertain`](ask-when-uncertain.md#vague-request-triggers--must-ask).
+- Security-sensitive path per
+  [`security-sensitive-stop`](security-sensitive-stop.md).
+- Hard Floor in [`non-destructive-by-default`](non-destructive-by-default.md)
+  fires — confirmation is mandatory, never cheap.
+- Two genuinely-equivalent paths; user preference is the tiebreaker.
+
+In doubt → genuine. Ask. This rule narrows asking, never widens silence.
+
+## Interactions
+
+- [`ask-when-uncertain`](ask-when-uncertain.md) — vague triggers +
+  one-question-per-turn; this rule narrows the cheap subset.
+- [`autonomous-execution`](autonomous-execution.md) — mode-scoped
+  triviality there; mode-independent floor here.
+- [`commit-policy`](commit-policy.md) · [`scope-control`](scope-control.md) ·
+  [`non-destructive-by-default`](non-destructive-by-default.md) —
+  the Iron Laws this rule defends.
+- [`user-interaction`](user-interaction.md) — numbered-options shape;
+  this rule decides whether the block is sent at all.
+- [`direct-answers`](direct-answers.md) — brevity, no flattery.
 
 ---
 
@@ -2822,57 +2798,21 @@ of truth makes it reversible. Lives in
 ## Bulk deletions during WIP — allowed if task-connected
 
 Deletions inside an **active, user-stated task** are allowed in the
-working tree, **even multiple files or multiple folders**. The floor
-moves to the **commit** (row 6 above), not the in-progress edit.
-
-**Allowed during WIP (no floor on the edit):**
-
-- A roadmap step or current task explicitly names the files / folders to remove
-- Refactor naturally drops deprecated code the user already agreed is dead
-- Cleanup of generated artifacts — `node_modules/`, `dist/`, `.next/`,
-  build caches, `vendor/` reinstall — never source code
-- Single-file edits, single-class refactors, deleting **one** file the
-  user just named
-- Renames and moves (technically delete + add)
-
-**Floor fires on the edit when the deletion is:**
-
-- Whimsical — "while I was in there", drive-by cleanup not part of the task
-- Unnamed scope — "delete all the old tests" without a list, glob
-  across unrelated files, "clean up the legacy folder" with no inventory
-- ≥5 unrelated files in one operation, outside the current task scope
-- Content destruction — `DROP TABLE`, `TRUNCATE`, `git reset --hard`
-  past unpushed work, database wipes (destroys *content*, not just tree)
-
-Ambiguous → floor wins. Ask.
-
-**The commit of task-aligned bulk deletions still needs its own ask.**
-A roadmap or task authorizes the *edit*; only the user-this-turn
-authorizes the *commit* (row 6). Surface the diff (paths + counts), get
-confirmation, then commit.
+working tree, **even multiple files or multiple folders** — the Hard
+Floor moves to the **commit** (row 6 above), not the in-progress edit.
+Whimsical / drive-by / unnamed-scope deletions still trip the floor on
+the edit. Full allowed/forbidden lists in
+[`destructive-mechanics`](../contexts/authority/destructive-mechanics.md)
+§ Bulk deletions during WIP.
 
 ## Failure modes
 
-- Treating a standing autonomy directive as cover for a Hard-Floor
-  action. Standing autonomy never lifts the floor; merging to `main`,
-  deploying, pushing, prod-data edits, or whimsical `rm -rf <dir>`
-  always ask.
-- Reading a roadmap step that says "deploy to staging" or
-  "merge into main" as authorization. The roadmap can sequence the
-  work; only the user-this-turn can authorize the floor crossing.
-- Refusing to delete files the user already named because "the floor
-  fires on `rm`". It does not — task-aligned WIP deletions are
-  allowed, even multi-folder. The floor fires when the deletion is
-  whimsical, unscoped, or about to be committed.
-- Committing a diff that removes a directory, deletes ≥5 unrelated
-  files, or touches Terraform / k8s manifests / Ansible without
-  surfacing the diff first — even when [`commit-policy`](commit-policy.md)
-  otherwise authorizes commits (e.g. `/commit-in-chunks`, roadmap
-  pre-scan, an explicit "commit this now"). Bulk-deletion / infra
-  commits need their own ask, every time.
-- Reading a roadmap step listing files to delete as authorization to
-  *commit* the deletion. The step authorizes the *edit*; the commit
-  is row 6 of the Hard Floor and needs its own confirmation.
+The full failure-mode catalog (autonomy-as-cover, roadmap-as-authorization,
+refusing-named-deletions, commit-without-diff-surface,
+roadmap-step-≠-commit-authorization) lives in
+[`destructive-mechanics`](../contexts/authority/destructive-mechanics.md)
+§ Failure modes. Reach for it when a Hard-Floor situation feels
+ambiguous; the rule itself stays focused on the trigger table.
 
 ## Cloud Behavior
 
@@ -2957,7 +2897,7 @@ gate. This protects projects that were set up before this rule shipped.
   conversation, max.
 - Replace normal settings edits. Mid-life changes are ad-hoc (edit the
   file directly or ask the agent, which follows
-  [`layered-settings`](../guidelines/agent-infra/layered-settings.md#section-aware-merge-rules));
+  [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules));
   this rule is a one-time gate.
 - Run on every agent turn. First turn only.
 
@@ -2973,7 +2913,7 @@ gate. This protects projects that were set up before this rule shipped.
 ## See also
 
 - [`/onboard`](../commands/onboard.md) — the command this gate invokes
-- [`layered-settings`](../guidelines/agent-infra/layered-settings.md) — merge rules for mid-life edits
+- [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md) — merge rules for mid-life edits
 - [`agent-settings` template](../templates/agent-settings.md) — `onboarding.onboarded` reference
 - [`rule-type-governance`](rule-type-governance.md) — why this is `always`
 
@@ -3197,8 +3137,8 @@ Look, in order, for:
 - `.github/historical-bug-patterns.yml` (or
   `agents/historical-bug-patterns.yml`)
 
-If neither exists, fall back to engineering-memory via
-[`memory-access`](../guidelines/agent-infra/memory-access.md):
+If neither file exists, fall back to the engineering-memory layer via
+[`memory-access`](../../docs/guidelines/agent-infra/memory-access.md):
 
 ```python
 from scripts.memory_lookup import retrieve
@@ -3210,11 +3150,11 @@ extra = retrieve(
 ```
 
 Curated memory (`agents/memory/ownership.yml`,
-`agents/memory/historical-patterns.yml`) shares the schema with the
-project-local YAMLs and is merged into the routing output. If both
-memory and project YAMLs are absent, skip this rule and rely on
-[`reviewer-awareness`](reviewer-awareness.md) defaults. **Do not invent
-owners or patterns** from context.
+`agents/memory/historical-patterns.yml`) carries the same schema as the
+project-local YAMLs and is merged into the routing output alongside
+them. If both memory and project YAMLs are absent, skip this rule and
+rely on [`reviewer-awareness`](reviewer-awareness.md) defaults. **Do
+not invent owners or patterns** from context.
 
 ### 2. Match the diff
 
@@ -3226,7 +3166,7 @@ For every changed file, collect:
   mode and the minimum control or test the project expects.
 
 Matching uses glob patterns (see
-[`review-routing-data-format`](../guidelines/review-routing-data-format.md)
+[`review-routing-data-format`](../../docs/guidelines/agent-infra/review-routing-data-format.md)
 for the schema).
 
 ### 3. Surface findings
@@ -3277,7 +3217,7 @@ When producing a review plan, include:
 
 - [`reviewer-awareness`](reviewer-awareness.md) — formatting reviewer
   suggestions.
-- [`review-routing-data-format`](../guidelines/review-routing-data-format.md)
+- [`review-routing-data-format`](../../docs/guidelines/agent-infra/review-routing-data-format.md)
   — YAML schemas for ownership-map and historical-bug-patterns.
 - [`review-routing`](../skills/review-routing/SKILL.md) — the skill
   that produces the merged routing report.
@@ -3375,6 +3315,9 @@ same diff), not from seniority.
 
 ---
 
+<!-- cloud_safe: degrade -->
+<!-- Authoring discipline applies in cloud; local script + regen are no-ops there. -->
+
 # Roadmap Progress Sync
 
 ## Iron Law — dashboard sync
@@ -3400,6 +3343,7 @@ without regenerating? The dashboard claims it does not exist. Marked
 EVERY ACTIVE ROADMAP MUST CONTAIN AT LEAST ONE TRACKABLE CHECKBOX
 (`- [ ]`) PER NON-INTRO PHASE. ROADMAPS WITHOUT EXECUTABLE STEPS
 EITHER GET A CHECKLIST OR THE `status: draft` FLAG.
+CI-ENFORCED: `scripts/check_roadmap_trackable.py` (CANNOT BE DEFERRED).
 ```
 
 **Active roadmap =** any file in `agents/roadmaps/` (root, not
@@ -3412,9 +3356,16 @@ Tables of decisions, ICE matrices, ADR captures, and "block
 sequencing" tables are valid **rationale**, but they do not satisfy
 this rule on their own — they must be paired with at least one
 `## Phase N` section whose checkboxes execute the decision.
-Headings such as `## Phase steps`, `### Sequencing — Phase 1 …`, or
-`## Block A` do **not** count — only the canonical `Phase <id>`
-form parsed by the dashboard.
+Headings such as `## Phase steps`, `### Sequencing — Phase 1 …`,
+`### P0 #1 — …`, or `## Block A` do **not** count — only the
+canonical `Phase <id>` form parsed by the dashboard.
+
+**CI backstop.** `scripts/check_roadmap_trackable.py` (package-shipped,
+wire into the consumer's pre-commit / pre-push / Actions gate) fails
+when an active roadmap has zero canonical `Phase` headings or when
+any parsed phase has zero checkboxes. Last line of defence — real-time
+authoring still flips checkboxes and regenerates the dashboard the
+same response.
 
 ## Status — binary `ready` (default) vs `draft`
 
@@ -3438,11 +3389,6 @@ in the dashboard.
   capture-only synthesis that has not yet been promoted to
   executable phases. Flip to ready (or remove the field) the
   moment the roadmap is ready to track.
-
-A `## Decisions` or `## Block sequencing` table is **not** a roadmap
-on its own. Either pair it with a `## Phase N: <name>` section whose
-checkboxes execute the decision, or mark the file `status: draft`
-until the executable phases land.
 
 **Completion = archival, same response.** When the edit takes a
 roadmap to `count_open == 0` (every item is `[x]`, `[~]`, or `[-]`),
@@ -3500,20 +3446,9 @@ Step counts as completed when:
 Then in the **same reply**: flip the checkbox, regenerate the
 dashboard, commit if commit policy allows.
 
-**Forbidden pattern** (canonical failure):
-
-> Turn 1: implement Step 1. Turn 2: implement Step 2. Turn 3:
-> implement Step 3. Turn 4: implement Step 4. Turn 5: "all done,
-> let me update the roadmap and commit." → the user spent four turns
-> without dashboard movement.
-
-**Required pattern:**
-
-> Turn 1: implement Step 1, flip `[x]`, regen, commit.
-> Turn 2: implement Step 2, flip `[x]`, regen, commit. …
-
-A reply that lands a verified step without flipping its checkbox
-is a rule violation.
+**Forbidden:** four turns of step work, dashboard flat, single regen at the end.
+**Required:** each turn — implement step, flip `[x]`, regen, commit (if policy allows).
+A reply that lands a verified step without flipping its checkbox is a rule violation.
 
 **In-progress marker:** when a step takes more than one reply,
 mark it `[~]` the moment work starts on it and regenerate. The
@@ -3550,14 +3485,13 @@ Any "yes" + no regen run = rule violation. Rerun before sending.
   flat the whole time, single regen at the end** — user lost
   progress visibility for the entire run. Each completed step must
   flip its checkbox in the reply that ships it.
-- **Decision-only roadmap shipped without checkboxes** — the file
-  documents synthesized decisions, ICE matrices, or block sequencing
-  but contains zero `- [ ]` items. The dashboard regenerates with
-  `0/0 steps` for that file or omits it from the open set entirely.
-  The reader thinks no work is planned. Either pair the decisions
-  with a `## Phase N` / `## Implementation Checklist` section, or
-  mark the file `status: draft` so it is hidden until the executable
-  phases land.
+- **Decision-only roadmap shipped without checkboxes** — file
+  contains decisions / ICE / block-sequencing but zero `- [ ]`,
+  dashboard shows `0/0` or omits it. Pair with a `## Phase N`
+  section or mark `status: draft` (CI catches this now).
+- **Headings off-canon (`### P0 #N`, `## Block A`, `### Sequencing
+  — Phase 1`)** — `PHASE_RE` skips them, roadmap invisible to the
+  dashboard. Rename to `## Phase <id>` or mark `status: draft`.
 
 ## Do NOT
 
@@ -3565,8 +3499,7 @@ Any "yes" + no regen run = rule violation. Rerun before sending.
 - Do NOT defer the regen to "next commit" or "before push" — same response.
 - Do NOT rely on CI (`--check` mode) as the first line of defence — CI is last-line, not real-time.
 - Do NOT skip the regen because "only one checkbox changed" — the dashboard aggregates counts and phase percentages that shift on single edits.
-- Do NOT leave a 100%-complete roadmap in `agents/roadmaps/` "for review" — archive it in the same response, ask the user afterwards if needed, not before.
-- Do NOT regenerate the dashboard before the `git mv` when a roadmap closes — otherwise the completed roadmap reappears in "Open roadmaps".
+- Do NOT leave a 100%-complete roadmap in `agents/roadmaps/` "for review" — `git mv` to archive **before** regenerating, otherwise it reappears in "Open roadmaps".
 
 ---
 
@@ -3574,7 +3507,7 @@ Any "yes" + no regen run = rule violation. Rerun before sending.
 
 Auto-activates when `.agent-settings.yml` sets `roles.active_role` to
 one of the six modes defined in
-[`role-contracts`](../guidelines/agent-infra/role-contracts.md):
+[`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md):
 `developer`, `reviewer`, `tester`, `po`, `incident`, `planner`.
 
 Read `roles.active_role` from `.agent-settings.yml` at session start.
@@ -3612,7 +3545,7 @@ Infer the mode (Phase-3 router does that). Touch `.agent-settings.yml`
 
 ## See also
 
-- [`role-contracts`](../guidelines/agent-infra/role-contracts.md)
+- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md)
 - [`/mode`](../commands/mode.md)
 - [`ask-when-uncertain`](ask-when-uncertain.md)
 - [`scope-control`](scope-control.md)
@@ -3716,65 +3649,82 @@ If a skill's execution type or handler is unclear:
 
 The user decides the git shape of the work. Never improvise.
 
-> **Commit specifics:** see [`commit-policy`](commit-policy.md) — narrower
-> than the general "no git ops without permission" below (never-ask
-> default + roadmap-authorized exception).
+> **Commit specifics:** see the canonical [`commit-policy`](commit-policy.md)
+> rule — narrower than the general "no git ops without permission"
+> below (covers the never-ask-about-committing default and the
+> roadmap-authorized exception).
 
 - NEVER commit, push, merge, rebase, or force-push without explicit user permission.
-- NEVER create, switch, or delete a branch without explicit user permission.
-  Includes spike, scratch, throwaway, worktree branches.
-- NEVER create, close, reopen, or retarget a pull request without explicit
-  user permission.
+- NEVER create a new branch, switch to a different branch, or delete a
+  branch without explicit user permission. This includes spike, scratch,
+  throwaway, and worktree branches.
+- NEVER create, close, reopen, or change the target of a pull request
+  without explicit user permission.
 - NEVER push a tag or create a release without explicit user permission.
-- NEVER include version numbers, releases, deprecation dates,
-  release-tied milestones, or git tags in roadmaps, plans, tickets, or
-  any planning artifact. Roadmaps plan **work**; releases are a
-  separate user decision. Never surface "which release" as a numbered
-  option, ADR field, or roadmap entry. If user wants a release pinned
-  to a milestone, they say so explicitly.
+- NEVER include version numbers, target releases, deprecation dates,
+  release-tied milestones, or git tags inside roadmaps, plans, tickets,
+  or any other planning artifact. Roadmaps plan **work**; releases and
+  tags are a separate decision the user makes outside the roadmap.
+  Never surface "which release should this ship in?" as an option in
+  numbered choices, ADRs, or roadmap text. If the user wants a release
+  pinned to a milestone, they will say so explicitly.
 - If a task seems to need a separate branch or PR, STOP and **brief
-  first, ask second**. The brief MUST cover, in order:
-  1. **Why** — what the new branch solves that the current one cannot.
-  2. **What** — files touched, experiments run, expected duration.
-  3. **How it continues** — merge back, cherry-pick, throwaway, PR
-     target, how the current branch is protected meanwhile.
-  Then present numbered options with "stay on current branch" as
-  default. User decides. Do NOT branch first and explain later.
+  the user before asking** — see
+  [`scope-mechanics`](../contexts/authority/scope-mechanics.md)
+  § Brief-before-asking for the required Why / What / How sequence.
 
-"Explicit permission" = the user said so this turn or gave a standing
-instruction they have not revoked. Earlier permission for another op
-does not carry over.
+"Explicit permission" means the user said so **in this turn or in a
+standing instruction they have not revoked**. Earlier permission for a
+different operation does not carry over.
 
 ## Production, infrastructure, bulk-destructive — Hard Floor
 
-Subset of the above is **never** autonomous and never auto-permitted
-by a standing autonomy directive. Canonical rule:
-[`non-destructive-by-default`](non-destructive-by-default.md).
-Restated so this file remains the single read for git/scope concerns:
-
-- **Production-branch merges** — `main`, `master`, `prod`, `production`, `release/*`, or any deployment-trunk branch. Always ask, even when the roadmap step says "merge".
-- **Deploys / releases** — `terraform apply` / `kubectl apply` on prod, deploy scripts, release commands, tag pushes that trigger CI deployment. Always ask.
-- **Production data / infrastructure** — prod DB writes / migrations, prod config edits, secrets rotation, IAM / role / policy, DNS, anything in a `prod`-scoped path or pipeline. Always ask.
-- **Bulk-destructive ops** — wildcard or directory deletion (`rm -rf <dir>`, `git rm -r`), `DROP TABLE`, `TRUNCATE`, `git reset --hard` past unpushed work, mass class / module / migration deletion. Always ask.
-
-A roadmap step or earlier turn does **not** count as authorization for
-these. Authorization is "the user said so on this turn".
+A subset of the operations above is **never** autonomous and never
+auto-permitted by a standing autonomy directive. Canonical rule:
+[`non-destructive-by-default`](non-destructive-by-default.md). The
+trigger list (production-branch merges, deploys / releases, prod
+data / infra, bulk-destructive ops) and the
+"authorization is this turn, not earlier" clarification live in
+[`scope-mechanics`](../contexts/authority/scope-mechanics.md)
+§ Production, infrastructure, bulk-destructive.
 
 ## Decline = silence — no re-asking on the same task
 
-After a declined proposal (branch switch, PR, tag/release entry,
-worktree, version pinning in a roadmap), do **not** raise it again on
-the same task. Decline stands until user reopens it.
+After the user **declines** a proposal (branch switch, PR creation,
+tag/release entry, separate worktree, version pinning in a roadmap),
+do **not** raise the same proposal again on the same task. The decline
+stands until the user reopens the topic themselves.
 
-Right moment to ask — at most **once**, only when genuinely useful —
-is **before** work starts (writing roadmap, opening ticket), not
-mid-execution. During roadmap execution the branch question is
-settled; do not resurface it step by step.
+Timing and "is this worth asking?" guidance lives in
+[`scope-mechanics`](../contexts/authority/scope-mechanics.md)
+§ Decline = silence — context.
 
-A proposal that "might be sensible" is not enough reason to ask.
-Default: stay on current branch, no release language. Only ask with
-concrete evidence-based reason (e.g. risky migration → spike branch).
-If in doubt, do not ask.
+## Fenced step — user-set review gates
+
+When the user explicitly fences off the next step — *"don't implement
+yet"*, *"plan only"*, *"just write the roadmap, I'll review"*,
+*"review first"*, *"erst Roadmap, ich schau drüber"*, *"nichts
+implementieren"*, *"nur planen"*, *"erstmal nur X, dann ich"* — the
+agent's reply is **the deliverable plus a handoff**, never the
+deliverable plus *"shall we start?"*.
+
+```
+USER FENCED OFF EXECUTION → DELIVER + HAND BACK.
+NO NUMBERED OPTION OFFERING TO BEGIN WORK.
+NO "READY TO IMPLEMENT?" RE-ASK.
+NO "STARTEN WIR MIT PHASE 1?" PIVOT.
+```
+
+The fence stands until the user reopens the topic themselves, exactly
+like `Decline = silence` above. Permitted follow-up questions on the
+same turn cover **the deliverable** (adjust scope, fix wording, add a
+section), never **its execution**.
+
+For the failure-mode catalog (Option 1 = "start now", re-asking after
+delivery, hand-off-to-execution drift, inferring acceptance from a
+thumbs-up) and the explicit bypass phrases that lift the fence, see
+[`scope-mechanics`](../contexts/authority/scope-mechanics.md)
+§ Fenced step.
 
 ---
 
@@ -3815,7 +3765,7 @@ STOP writing code. Run the matching analysis skill first:
 | Wide refactor of security-sensitive code | `blast-radius-analyzer` |
 
 **Before the analysis, consult memory for prior incidents** on this
-surface. Via [`memory-access`](../guidelines/agent-infra/memory-access.md):
+surface. Via [`memory-access`](../../docs/guidelines/agent-infra/memory-access.md):
 
 ```python
 from scripts.memory_lookup import retrieve
@@ -3868,7 +3818,7 @@ See also: `threat-modeling` · `authz-review` · `data-flow-mapper` · `minimal-
   - Rules and system instructions should stay well below 200 lines
   - Smaller (≈60 lines) is strongly preferred
 
-→ Size limits and details: `.augment/guidelines/agent-infra/size-and-scope.md`
+→ Size limits and details: `../../docs/guidelines/agent-infra/size-and-scope.md`
 
 → Frontmatter contract: schemas live in `scripts/schemas/` and are enforced by
 `python3 scripts/validate_frontmatter.py`.
@@ -4067,7 +4017,7 @@ Editor may report an open file (e.g., "user has `compress.md` open"). **Irreleva
 - If requirements are unclear, ask a precise clarification question instead of making hidden assumptions
 - Refactors must preserve behavior, validation, examples, and anti-failure guidance unless there is an explicit reason to change them
 - Do NOT modify code you do not fully understand — read it first, trace the flow, then change it
-- Multiple valid frameworks/patterns already in the codebase (Tailwind + Flux, multiple form libs, competing state stores) → do NOT pick one silently, ask. See [`no blind implementation`](../guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation)
+- Multiple valid frameworks/patterns already in the codebase (Tailwind + Flux, multiple form libs, competing state stores) → do NOT pick one silently, ask. See [`no blind implementation`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation)
 
 ## The Developer Workflow
 
@@ -4084,7 +4034,7 @@ Skipping steps 1-3 = #1 cause of wrong implementations and wasted retries.
 ## Consult memory before editing
 
 Before writing code for the touched paths, call
-[`memory-access`](../guidelines/agent-infra/memory-access.md):
+[`memory-access`](../../docs/guidelines/agent-infra/memory-access.md):
 
 ```python
 from scripts.memory_lookup import retrieve
@@ -4235,7 +4185,7 @@ When `personal.minimal_output: true`:
 - Debugging: OK to read more context around one error.
 - User explicitly asks for full output: show it.
 
-→ Detailed patterns: `guidelines/agent-infra/output-patterns.md`
+→ Detailed patterns: `docs/guidelines/agent-infra/output-patterns.md`
 
 ---
 
@@ -4633,25 +4583,6 @@ NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
 
 If you haven't run the verification command **in this message**, you cannot claim it passes.
 
-## When to run what — timing matters
-
-**Quality tools (PHPStan, Rector, ECS) run ONCE at the very end** — not after every edit.
-Do NOT run quality checks between tasks if you have more work to do.
-Only run the full quality pipeline when you are about to finish all work in the current conversation.
-
-**Tests: as targeted as possible, as little as necessary.**
-- During work: run ONLY the specific test class or test case affected by the change.
-  Use `--filter=ClassName` or `--filter=test_name` — NEVER the full suite mid-work.
-- Only run tests when you genuinely need to verify behavior (not "just to be safe").
-- Full test suite: ONCE at the very end, before quality tools.
-
-**The sequence at the end:**
-1. All code changes are done
-2. Run tests — targeted first (`--filter`), full suite only if targeted passes
-3. Run quality pipeline (PHPStan → Rector → ECS → PHPStan)
-4. Fix any issues from step 2-3
-5. ONLY THEN claim completion or suggest commit/push/PR
-
 ## The Gate
 
 Before claiming ANY work is complete:
@@ -4685,55 +4616,17 @@ Skip any step = the claim is unverified.
 For specific commands → see the `quality-tools` skill.
 
 For the detailed evidence-gate playbook (claim→command mapping, output
-inspection, end-of-work sequence) → see the `verify-before-complete`
+inspection, end-of-work sequence) → see the `verify-completion-evidence`
 skill.
 
-## Minimum verification per task type
+## Mechanics — when to run what, per-task evidence, confidence, break-glass
 
-| Task | Required evidence |
-|---|---|
-| Code change | Tests + PHPStan |
-| New feature | Tests + PHPStan + smoke test |
-| Bug fix | Regression test + full suite |
-| Refactoring | Full suite + PHPStan + Rector |
-| Config/migration | Relevant tests or command output |
-| API endpoint | curl/HTTP response output |
-| Documentation only | No verification needed |
-
-**Never accept** as proof: "should work", "looks correct", "logic is sound".
-No captured output = not verified.
-
-## Confidence gating
-
-State confidence explicitly before claiming completion on non-trivial work.
-
-- **High** — runtime path read end-to-end, relevant tests inspected or run,
-  no hidden side-effects (queues/events/observers) unaccounted for.
-- **Medium** — main path verified but one gap remains; list the gap in the
-  completion message.
-- **Low** — broad implementation NOT allowed; switch to analysis, narrow
-  the scope, or ask the user before proceeding.
-
-For high-risk areas (auth, tenancy, migrations, queues, dependencies,
-external APIs, data exposure), "high" requires tests AND a cross-layer
-read — not inference from a single file.
-
-## Break-glass reduction
-
-During a live production incident the verification gate is **narrowed**,
-never skipped. Break-glass requires explicit user invocation (e.g.
-`break-glass: true`, "this is a hotfix"). Never enter it unilaterally.
-
-Minimum evidence:
-
-- **Targeted test(s)** covering the exact regression — zero tests is not
-  acceptable.
-- **Smoke check** of the fixed path (curl, manual trigger, log tail) with
-  output captured in the message.
-- **Explicit list of skipped validations** and a **follow-up commitment**
-  (ticket or PR line) to run them within 24h.
-
-Completion wording: _"hotfix applied, full verification deferred per
-break-glass"_ — never _"done"_ or _"verified"_. The normal gate resumes
-on the follow-up PR.
+The decision logic for **when** to run quality tools vs. tests, the
+per-task-type minimum-evidence table, confidence gating (High /
+Medium / Low), and the break-glass reduction during live incidents
+all live in
+[`verification-mechanics`](../contexts/execution/verification-mechanics.md).
+The Iron Law and the Gate above are the obligation surface; the
+mechanics context is the lookup material the agent pulls when the
+gate fires.
 

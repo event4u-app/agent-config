@@ -2,12 +2,12 @@
 
 > **agent-config is not a runtime, but it ships a deterministic orchestration contract / state machine for host agents.**
 
-Teach your AI agents Laravel, PHP, testing, Git workflows, and **120+ more skills** — with quality guardrails built in.
+Give your AI agents an audit-disciplined orchestration contract — testing, Git, CI, code review, and **120+ stack-aware skills** — with quality guardrails built in.
 
-> Your agent learns to write Laravel code, run tests, create PRs, fix CI — and follows your team's coding standards while doing it.
+> Your agent picks up the project's stack, runs tests, prepares PRs, fixes CI — and follows your team's coding standards while doing it. Stack-aware skill sets ship for PHP (Laravel · Symfony · Zend/Laminas), JavaScript (Next.js · React · Node), and cross-stack concerns (API · testing · security · observability).
 
 <p align="center">
-  <strong>128 Skills</strong> · <strong>55 Rules</strong> · <strong>77 Commands</strong> · <strong>46 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>129 Skills</strong> · <strong>57 Rules</strong> · <strong>69 Commands</strong> · <strong>47 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -177,7 +177,7 @@ switches the engine to one of three directive sets:
 
 Four load-bearing properties: (1) **existing-UI audit is a hard gate** —
 no `apply` without audit, enforced at dispatcher AND
-[`ui-audit-before-build`](.agent-src/rules/ui-audit-before-build.md) rule;
+[`ui-audit-gate`](.agent-src/rules/ui-audit-gate.md) rule;
 (2) **design brief is locked microcopy** — placeholders (`<placeholder>`,
 `Lorem`, `TODO:`) rejected at both ends; (3) **polish has a 2-round
 ceiling**, then halts ship-as-is / abort / hand-off; (4) **a11y precedence**
@@ -206,11 +206,11 @@ description of intent — not a guarantee of output.
 | Default behavior | With agent-config (the agent is instructed to) |
 |---|---|
 | Guess and edit blindly | Analyze code before changing it — no blind edits |
-| Drift from project conventions | Follow the project's PHP/Laravel coding standards |
-| Skip or invent tests | Write Pest tests following the project's conventions |
-| Write generic commit messages | Use Conventional Commits with scope and Jira links |
-| Skip quality checks | Run PHPStan, Rector, ECS and fix reported errors |
-| Open PRs without context | Produce structured PR descriptions from Jira tickets |
+| Drift from project conventions | Follow the project's coding standards (detected from the stack) |
+| Skip or invent tests | Write tests in the project's framework (Pest, PHPUnit, Vitest, Jest, …) |
+| Write generic commit messages | Use Conventional Commits with scope and ticket links |
+| Skip quality checks | Run the project's quality pipeline (PHPStan/Rector/ECS, ESLint/Prettier/tsc, …) and fix reported errors |
+| Open PRs without context | Produce structured PR descriptions from Jira / Linear / GitHub tickets |
 | Claim "done" without proof | Verify with real execution before claiming "done" |
 
 ---
@@ -252,9 +252,9 @@ session is explicitly not.
 
 Start with **Rules + Skills**. Everything else is optional.
 
-| Mode | What's active | Token overhead |
+| Mode | What's active | Runtime process overhead |
 |---|---|---|
-| **Minimal** (default) | Rules, Skills, Commands | Zero |
+| **Minimal** (default) | Rules, Skills, Commands | None |
 | **Balanced** | + Runtime Dispatcher for skills that declare a shell command | Low |
 | **Full** | + Tool Adapters (GitHub / Jira read-only, opt-in) | Moderate |
 
@@ -270,21 +270,17 @@ Nothing runs automatically without your control. [Configure modes →](docs/cust
 
 ## Who this is for
 
-The content is **built for PHP / Laravel teams** and is where the package
-is most useful out of the box. Skills, rules, and quality-tool integration
-assume a Laravel-style repository (Pest, PHPStan, Rector, ECS, Artisan,
-Composer workflows). You can install it on any project, but:
+`agent-config` ships a **stack-agnostic governance core** (orchestration contract, role modes, command clusters, quality gates, audit-discipline) plus **parallel stack-specific skill sets** at varying depth:
 
-| Stack | Fit |
+| Stack | Coverage |
 |---|---|
-| **Laravel / modern PHP** | ✅ Primary audience — most skills apply directly |
-| **Other PHP frameworks** (Symfony, Zend/Laminas) | ☑️ Deep-analysis skills apply; framework-specific ones do not |
-| **JavaScript / TypeScript / Next.js / Node** | ☑️ General skills + governance apply; PHP-specific skills are noise |
-| **Other stacks** | ⚠️ Cherry-pick rules/commands; expect to disable a lot |
+| Laravel · modern PHP | Skills, rules, project-analysis, quality-tool wiring (Pest · PHPStan · Rector · ECS) |
+| Symfony · Zend / Laminas | Project-analysis skills + shared PHP coder/quality skills |
+| Next.js · React · Node / Express | Project-analysis skills + UI directive set (`react-shadcn`) |
+| Vue · plain HTML | UI directive set (`vue` / `plain`) — analysis skills as they ship |
+| Cross-stack | API design · testing · security · database · Docker · Git · CI · review · threat modeling · observability |
 
-A language-agnostic core is on the roadmap but not yet extracted. If you
-adopt the package outside the primary audience, please open an issue so we
-can prioritize the right skills for extraction.
+**Deepest reference stack today: Laravel.** Skill density covers Pest, PHPStan, Rector, Eloquent, Livewire/Flux, Horizon, Pulse, Reverb, Pennant — the stack the package was first proven on. Other stacks ship in the order they are battle-tested, not second-class. Adopting on a thin stack? Open an issue so we can prioritize the right skills for extraction.
 
 ---
 
@@ -297,8 +293,8 @@ can prioritize the right skills for extraction.
 | [`eloquent`](.agent-src/skills/eloquent/SKILL.md) | Eloquent models, relationships, scopes, eager loading, type safety |
 | [`create-pr`](.agent-src/commands/create-pr.md) | Create GitHub PRs with structured descriptions from Jira tickets |
 | [`commit`](.agent-src/commands/commit.md) | Stage and commit changes following Conventional Commits |
-| [`fix-ci`](.agent-src/commands/fix-ci.md) | Fetch CI errors from GitHub Actions and fix them |
-| [`fix-pr-comments`](.agent-src/commands/fix-pr-comments.md) | Fix and reply to all open review comments on a PR |
+| [`/fix ci`](.agent-src/commands/fix.md) | Fetch CI errors from GitHub Actions and fix them |
+| [`/fix pr-comments`](.agent-src/commands/fix.md) | Fix and reply to all open review comments on a PR |
 | [`quality-fix`](.agent-src/commands/quality-fix.md) | Run PHPStan/Rector/ECS and fix all errors |
 | [`bug-analyzer`](.agent-src/skills/bug-analyzer/SKILL.md) | Root cause analysis from Sentry errors or Jira tickets |
 | [`improve-before-implement`](.agent-src/rules/improve-before-implement.md) | Challenge weak requirements before coding |
@@ -307,7 +303,7 @@ can prioritize the right skills for extraction.
 | [`api-design`](.agent-src/skills/api-design/SKILL.md) | REST conventions, versioning, deprecation |
 | [`database`](.agent-src/skills/database/SKILL.md) | MariaDB optimization, indexing, query performance |
 
-→ [Browse all skills](docs/skills-catalog.md) · [llms.txt](llms.txt)
+→ [Public catalog](docs/catalog.md) (all rules, skills, commands, guidelines) · [Skills only](docs/skills-catalog.md) · [llms.txt](llms.txt)
 
 ---
 
@@ -317,14 +313,16 @@ can prioritize the right skills for extraction.
 |---|---|
 | [`/commit`](.agent-src/commands/commit.md) | Stage and commit with Conventional Commits |
 | [`/create-pr`](.agent-src/commands/create-pr.md) | Create PR with Jira-linked description |
-| [`/fix-ci`](.agent-src/commands/fix-ci.md) | Fetch and fix GitHub Actions failures |
-| [`/fix-pr-comments`](.agent-src/commands/fix-pr-comments.md) | Fix and reply to review comments |
+| [`/fix ci`](.agent-src/commands/fix.md) | Fetch and fix GitHub Actions failures |
+| [`/fix pr-comments`](.agent-src/commands/fix.md) | Fix and reply to review comments |
+| [`/optimize skills`](.agent-src/commands/optimize.md) | Audit skills, find duplicates, run linter |
+| [`/feature plan`](.agent-src/commands/feature.md) | Interactively plan a feature |
 | [`/quality-fix`](.agent-src/commands/quality-fix.md) | Run and fix all quality checks |
 | [`/review-changes`](.agent-src/commands/review-changes.md) | Self-review before creating a PR |
 | [`/jira-ticket`](.agent-src/commands/jira-ticket.md) | Read ticket from branch, implement feature |
 | [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
 
-→ [Browse all 77 commands](.agent-src/commands/)
+→ [Browse all 69 active commands](.agent-src/commands/) &nbsp;<sub>(84 files total — 15 are deprecation shims that redirect to clustered commands)</sub>
 
 ---
 
@@ -349,7 +347,7 @@ Every developer gets the same behavior. No per-user setup needed.
 native slash-commands)
 
 > **What this means in practice:** Augment Code and Claude Code get the full
-> package (rules + 128 skills + 77 native commands). Cursor, Cline, Windsurf,
+> package (rules + 129 skills + 69 native commands). Cursor, Cline, Windsurf,
 > Gemini CLI, and GitHub Copilot only get the **rules** natively; skills and
 > commands are available to them as documentation the agent can read, not as
 > first-class features.

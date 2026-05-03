@@ -148,5 +148,29 @@
     "outcome": "success",
     "exit_code": 0,
     "cycles": 7
+  },
+  {
+    "gt_id": "GT-G1",
+    "outcome": "halt_unhandled:refine-prompt",
+    "exit_code": 1,
+    "cycles": 1
+  },
+  {
+    "gt_id": "GT-G2",
+    "outcome": "halt_unhandled:refine-prompt",
+    "exit_code": 1,
+    "cycles": 1
+  },
+  {
+    "gt_id": "GT-G3",
+    "outcome": "halt_unhandled:refine-prompt",
+    "exit_code": 1,
+    "cycles": 1
+  },
+  {
+    "gt_id": "GT-G4",
+    "outcome": "halt_unhandled:refine-prompt",
+    "exit_code": 1,
+    "cycles": 1
   }
 ]

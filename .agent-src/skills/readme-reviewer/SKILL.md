@@ -136,7 +136,7 @@ Structure checks:
 - No duplication between README and `/docs/` (drifts over time)
 - Each `/docs/` file linked from README is self-contained (not just a fragment)
 
-→ See `guidelines/docs/readme-size-and-splitting.md` for full thresholds,
+→ See `docs/guidelines/docs/readme-size-and-splitting.md` for full thresholds,
 splitting strategies, anti-patterns.
 
 ## Output format

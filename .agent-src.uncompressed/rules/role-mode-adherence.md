@@ -9,7 +9,7 @@ source: package
 
 Auto-activates when `.agent-settings.yml` sets `roles.active_role` to
 one of the six modes defined in
-[`role-contracts`](../guidelines/agent-infra/role-contracts.md):
+[`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md):
 `developer`, `reviewer`, `tester`, `po`, `incident`, `planner`.
 
 Read `roles.active_role` from `.agent-settings.yml` at session start.
@@ -47,7 +47,7 @@ Infer the mode (Phase-3 router does that). Touch `.agent-settings.yml`
 
 ## See also
 
-- [`role-contracts`](../guidelines/agent-infra/role-contracts.md)
+- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md)
 - [`/mode`](../commands/mode.md)
 - [`ask-when-uncertain`](ask-when-uncertain.md)
 - [`scope-control`](scope-control.md)

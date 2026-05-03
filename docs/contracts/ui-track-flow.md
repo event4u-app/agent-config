@@ -334,5 +334,5 @@ suite asserts every `BLOCKED` path has a matching declaration.
   GT-U15 (preview render failure).
 - [`existing-ui-audit` SKILL](../../.agent-src.uncompressed/skills/existing-ui-audit/SKILL.md)
   — producer of `state.ui_audit`.
-- [`ui-audit-before-build` rule](../../.agent-src.uncompressed/rules/ui-audit-before-build.md)
+- [`ui-audit-gate` rule](../../.agent-src.uncompressed/rules/ui-audit-gate.md)
   — the always-on rule that mirrors the audit gate at the agent layer.

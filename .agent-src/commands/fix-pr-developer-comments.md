@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "fix the human reviewer comments, address the developer feedback"
   trigger_context: "open PR with unresolved human-reviewer comments"
+superseded_by: fix pr-developers
+deprecated_in: "1.15.0"
 ---
+
+> ⚠️  /fix-pr-developer-comments is deprecated; use /fix pr-developers instead.
+> This shim is retained for one release cycle (1.15.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # fix-pr-developer-comments
 

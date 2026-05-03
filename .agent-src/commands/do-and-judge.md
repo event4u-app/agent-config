@@ -1,6 +1,6 @@
 ---
 name: do-and-judge
-skills: [subagent-orchestration, verify-before-complete]
+skills: [subagent-orchestration, verify-completion-evidence]
 description: Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user
 disable-model-invocation: true
 suggestion:
@@ -90,7 +90,7 @@ Next step:  <commit / open PR / abandon>
 - No apply without the judge's `apply` verdict
 - No silent model fallback — unknown alias = stop and ask
 - No more than two revisions without user consent
-- No skipping of `verify-before-complete` on the final apply
+- No skipping of `verify-completion-evidence` on the final apply
 
 ## When to stop and ask
 
@@ -113,5 +113,5 @@ weaker verdicts.
 ## See also
 
 - [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md)
-- [`verify-before-complete`](../skills/verify-before-complete/SKILL.md)
+- [`verify-completion-evidence`](../skills/verify-completion-evidence/SKILL.md)
 - [`subagent-configuration`](../contexts/subagent-configuration.md)

@@ -129,3 +129,34 @@ def test_render_json_includes_ratio_rounded() -> None:
 def test_render_json_propagates_since_label() -> None:
     payload = json.loads(render_json(AggregateResult(), since_label="last 30d"))
     assert payload["summary"]["since_label"] == "last 30d"
+
+
+def test_render_markdown_includes_outcomes_section_when_present() -> None:
+    res = AggregateResult()
+    res.outcomes = {"blocked": 2, "verification_failed": 1}
+    output = render_markdown(res)
+    assert "## Outcomes" in output
+    assert "| blocked | 2 |" in output
+    assert "| verification_failed | 1 |" in output
+
+
+def test_render_markdown_omits_outcomes_section_when_empty() -> None:
+    output = render_markdown(AggregateResult())
+    assert "## Outcomes" not in output
+
+
+def test_render_json_outcomes_payload_structure() -> None:
+    res = AggregateResult()
+    res.outcomes = {"blocked": 2, "memory_influenced_decision": 1}
+    payload = json.loads(render_json(res))
+    assert payload["outcomes"]["total"] == 3
+    assert payload["outcomes"]["by_category"] == {
+        "blocked": 2,
+        "memory_influenced_decision": 1,
+    }
+
+
+def test_render_json_outcomes_total_zero_when_unused() -> None:
+    payload = json.loads(render_json(AggregateResult()))
+    assert payload["outcomes"]["total"] == 0
+    assert payload["outcomes"]["by_category"] == {}

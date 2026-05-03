@@ -72,13 +72,17 @@ tasks:
     cmds:
       - bash tests/test_install.sh
       - bash tests/test_install_orchestrator.sh
+      - bash tests/test_install_openai_key.sh
+      - bash tests/test_install_anthropic_key.sh
       - python3 -m pytest tests/ -v
 
   test-install:
-    desc: Run install.sh + orchestrator + install.py tests
+    desc: Run install.sh + orchestrator + install.py + key-script tests
     cmds:
       - bash tests/test_install.sh
       - bash tests/test_install_orchestrator.sh
+      - bash tests/test_install_openai_key.sh
+      - bash tests/test_install_anthropic_key.sh
       - python3 -m pytest tests/test_install_py.py -v
 
   test-python:
@@ -88,6 +92,18 @@ tasks:
   generate-catalog:
     desc: Regenerate llms.txt and docs/skills-catalog.md from SKILL.md frontmatter
     cmd: python3 scripts/generate_catalog.py
+
+  generate-index:
+    desc: Regenerate agents/index.md (internal) and docs/catalog.md (public)
+    cmd: python3 scripts/generate_index.py
+
+  check-index:
+    desc: Verify agents/index.md and docs/catalog.md are in sync (fails on drift)
+    cmd: python3 scripts/generate_index.py --check
+
+  check-augmentignore:
+    desc: Advisory check — reminds to refresh .augmentignore (non-blocking, always exits 0)
+    cmd: python3 scripts/check_augmentignore.py
 
   counts-update:
     desc: Sync skill/rule/command/guideline counts in README.md, AGENTS.md, docs/getting-started.md, docs/architecture.md
@@ -195,6 +211,10 @@ tasks:
     desc: Run runtime registry and dispatcher tests
     cmd: python3 -m pytest tests/test_runtime_registry.py tests/test_runtime_dispatcher.py -v
 
+  test-ai-council:
+    desc: Run AI Council tests (clients, bundler, orchestrator, prompts)
+    cmd: python3 -m pytest tests/ai_council/ -v
+
   runtime-list:
     desc: List all runtime-capable skills
     cmd: python3 scripts/runtime_registry.py
@@ -268,6 +288,14 @@ tasks:
     desc: Validate README/AGENTS.md/docs/architecture.md links into docs/contracts/ against stability frontmatter
     cmd: python3 scripts/check_public_links.py
 
+  check-public-catalog-links:
+    desc: Verify docs/catalog.md links resolve to shipped surfaces (no .agent-src.uncompressed/, all paths under package.json#files)
+    cmd: python3 scripts/check_public_catalog_links.py
+
+  check-command-count:
+    desc: Verify README/AGENTS.md/docs/getting-started.md command counts match the cluster registry (active vs. shim split)
+    cmd: python3 scripts/check_command_count_messaging.py
+
   lint-no-new-atomic-commands:
     desc: Fail when a new atomic command lands without a `cluster:` field (P0.8c)
     cmd: python3 scripts/lint_no_new_atomic_commands.py
@@ -276,6 +304,10 @@ tasks:
     desc: Validate docs/contracts/rule-interactions.yml schema, slugs, evidence paths, and anchor-pair coverage (P2.2)
     cmd: python3 scripts/lint_rule_interactions.py
 
+  lint-load-context:
+    desc: Validate the `load_context:` / `load_context_eager:` frontmatter schema (docs/contracts/load-context-schema.md)
+    cmd: python3 scripts/lint_load_context.py
+
   check-reply-consistency:
     desc: Scan shipped sources for legacy (recommended) inline tags on numbered options
     cmd: python3 scripts/check_reply_consistency.py --scan-dir .agent-src.uncompressed
@@ -283,6 +315,10 @@ tasks:
   check-iron-law-prominence:
     desc: Verify Iron Laws sit at the top of every rule file (H2, first 2 positions)
     cmd: python3 scripts/check_iron_law_prominence.py
+
+  check-always-budget:
+    desc: Always-rule budget gate (warn at 80%, fail at 90% of 49,000 chars)
+    cmd: python3 scripts/check_always_budget.py --quiet
 
   check-compression:
     desc: Check compression quality (headings, code blocks, frontmatter, word count)
@@ -299,6 +335,10 @@ tasks:
   roadmap-progress-check:
     desc: Fail if agents/roadmaps-progress.md is stale (for CI)
     cmd: python3 .augment/scripts/update_roadmap_progress.py --check
+
+  check-roadmap-trackable:
+    desc: Fail if any active roadmap has unparseable headings or zero-checkbox phases (roadmap-progress-sync rule)
+    cmd: python3 scripts/check_roadmap_trackable.py
 
   quality-report:
     desc: Generate quality score report (per artifact type)
@@ -433,14 +473,19 @@ tasks:
       - defer: { task: _ci-end }
       - task: consistency
       - task: counts-check
+      - task: check-index
       - task: check-compression
       - task: check-refs
       - task: check-portability
       - task: check-public-links
+      - task: check-public-catalog-links
+      - task: check-command-count
       - task: lint-no-new-atomic-commands
       - task: lint-rule-interactions
+      - task: lint-load-context
       - task: check-reply-consistency
       - task: check-iron-law-prominence
+      - task: check-always-budget
       - task: validate-schema
       - task: lint-skills
       - task: lint-marketplace
@@ -450,5 +495,7 @@ tasks:
       - task: golden-replay
       - task: test
       - task: runtime-e2e
+      - task: check-roadmap-trackable
       - task: roadmap-progress-check
       - task: lint-readme
+      - task: check-augmentignore

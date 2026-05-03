@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "CI is failing, fix the GitHub Actions errors, the pipeline is red"
   trigger_context: "open PR with failing checks"
+superseded_by: fix ci
+deprecated_in: "1.15.0"
 ---
+
+> ⚠️  /fix-ci is deprecated; use /fix ci instead.
+> This shim is retained for one release cycle (1.15.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # fix-ci
 

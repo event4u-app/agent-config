@@ -1,23 +1,39 @@
 # Getting Started
 
+`agent-config` is a stack-agnostic orchestration contract for coding
+agents. The installer detects the project shape (Composer / npm / both /
+neither) and wires the matching glue. **Pick the entrypoint that
+matches the project**, not the language you happen to prefer.
+
 ## Installation
 
+The installer is the same orchestrator across stacks — it reads
+`composer.json` and/or `package.json`, syncs the payload, and generates
+the tool-specific glue. Pick one entrypoint:
+
 ```bash
-# Composer (PHP) — two steps: install, then run the orchestrator
+# Composer-based projects (PHP / Laravel / Symfony / Zend / Laminas)
 composer require --dev event4u/agent-config
 php vendor/bin/install.php
 # Equivalent: bash vendor/event4u/agent-config/scripts/install
 
-# npm (JavaScript/TypeScript) — the orchestrator runs via postinstall
+# npm-based projects (Next.js / React / Node / Vue / plain JS/TS)
 npm install --save-dev @event4u/agent-config
-# Re-run or pick a profile:
+# Postinstall runs the orchestrator. Re-run or pick a profile:
 # bash node_modules/@event4u/agent-config/scripts/install --profile=balanced
+
+# Mixed Composer + npm projects (Laravel + Inertia, Symfony + Vue, …)
+# Run both — the orchestrator merges results, no double-write.
+
+# Stack-less or polyglot repos (no Composer, no npm)
+git clone https://github.com/event4u-app/agent-config /tmp/agent-config
+bash /tmp/agent-config/scripts/install --target "$PWD"
 ```
 
 That's it. Your agent now follows your team's standards. The orchestrator
 runs a bash payload sync and a Python bridge generator (Python 3 is
 recommended; without it the payload sync still runs). No Task or Make
-required for end users.
+required for end users — those are contributor-only.
 
 ## Project CLI — `./agent-config`
 
@@ -99,7 +115,7 @@ Your agent is now:
 - **Respecting your codebase** — no conflicting patterns
 - **Following standards** — consistent code quality
 
-This is enforced automatically by 55 rules. No configuration needed.
+This is enforced automatically by 57 rules. No configuration needed.
 
 ---
 
@@ -131,13 +147,15 @@ Your agent now understands slash commands:
 |---|---|
 | `/commit` | Stage and commit with Conventional Commits |
 | `/create-pr` | Create PR with Jira-linked description |
-| `/fix-ci` | Fetch and fix GitHub Actions failures |
+| `/fix ci` | Fetch and fix GitHub Actions failures |
+| `/optimize skills` | Audit skills, find duplicates, run linter |
+| `/feature plan` | Interactively plan a feature |
 | `/quality-fix` | Run and fix all quality checks |
 | `/chat-history` | Inspect the persistent chat-history log |
 | `/chat-history-resume` | Recover context after a crashed or switched session |
 | `/chat-history-clear` | Wipe the chat-history log (with confirmation) |
 
-→ [Browse all 77 commands](../.agent-src/commands/)
+→ [Browse all 69 active commands](../.agent-src/commands/)
 
 ---
 
@@ -173,7 +191,7 @@ See the [`chat-history` rule](../.agent-src/rules/chat-history-ownership.md) and
 ## Next steps
 
 1. **Stay on `minimal`** — use it for a few days, see if the difference is noticeable
-2. **Try commands** — `/commit`, `/create-pr`, `/fix-ci` are great starting points
+2. **Try commands** — `/commit`, `/create-pr`, `/fix ci` are great starting points
 3. **Upgrade when ready** — switch to `balanced` to let the runtime dispatcher execute skills that declare a shell command
 4. **Customize** — add [project overrides](customization.md) for your team's specific patterns
 

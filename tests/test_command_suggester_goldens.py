@@ -33,7 +33,7 @@ from command_suggester import (  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 COMMANDS_DIR = REPO_ROOT / ".agent-src.uncompressed" / "commands"
-RULE_PATH = REPO_ROOT / ".agent-src.uncompressed" / "rules" / "command-suggestion.md"
+RULE_PATH = REPO_ROOT / ".agent-src.uncompressed" / "rules" / "command-suggestion-policy.md"
 
 
 @pytest.fixture(scope="module")

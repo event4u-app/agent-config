@@ -1,7 +1,7 @@
 ---
-type: "always"
-description: "Always analyze before acting. Prefer targeted inspection, tests, and real verification over guessing or trial-and-error."
-alwaysApply: true
+type: "auto"
+description: "Before coding, modifying, or debugging — analyze first, verify with real tools, never guess or trial-and-error"
+alwaysApply: false
 source: package
 ---
 
@@ -16,7 +16,7 @@ source: package
 - If requirements are unclear, ask a precise clarification question instead of making hidden assumptions
 - Refactors must preserve behavior, validation, examples, and anti-failure guidance unless there is an explicit reason to change them
 - Do NOT modify code you do not fully understand — read it first, trace the flow, then change it
-- Multiple valid frameworks/patterns already in the codebase (Tailwind + Flux, multiple form libs, competing state stores) → do NOT pick one silently, ask. See [`no blind implementation`](../guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation)
+- Multiple valid frameworks/patterns already in the codebase (Tailwind + Flux, multiple form libs, competing state stores) → do NOT pick one silently, ask. See [`no blind implementation`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation)
 
 ## The Developer Workflow
 
@@ -33,7 +33,7 @@ Skipping steps 1-3 = #1 cause of wrong implementations and wasted retries.
 ## Consult memory before editing
 
 Before writing code for the touched paths, call
-[`memory-access`](../guidelines/agent-infra/memory-access.md):
+[`memory-access`](../../docs/guidelines/agent-infra/memory-access.md):
 
 ```python
 from scripts.memory_lookup import retrieve

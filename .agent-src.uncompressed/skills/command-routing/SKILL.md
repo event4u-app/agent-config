@@ -12,7 +12,7 @@ execution:
 
 ## When to use
 
-Triggered when user invokes a slash command. The `slash-commands` rule (always loaded) handles core behavior — this skill adds context inference and GitHub API patterns.
+Triggered when user invokes a slash command. The `slash-command-routing-policy` rule (always loaded) handles core behavior — this skill adds context inference and GitHub API patterns.
 
 ## Procedure: Execute a command
 

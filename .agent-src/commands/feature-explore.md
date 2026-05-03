@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "brainstorm this idea, explore this feature concept"
   trigger_context: "open-ended feature idea without acceptance criteria"
+superseded_by: feature explore
+deprecated_in: "1.15.0"
 ---
+
+> ⚠️  /feature-explore is deprecated; use /feature explore instead.
+> This shim is retained for one release cycle (1.15.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # feature-explore
 
@@ -181,4 +186,4 @@ What's next?
 
 ## See also
 
-- [`role-contracts`](../guidelines/agent-infra/role-contracts.md#po) — PO mode output contract (Goal / Assumptions / Acceptance criteria / Impacted modules / Risks / Open questions for stakeholder)
+- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md#po) — PO mode output contract (Goal / Assumptions / Acceptance criteria / Impacted modules / Risks / Open questions for stakeholder)
