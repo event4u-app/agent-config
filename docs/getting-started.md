@@ -115,7 +115,7 @@ Your agent is now:
 - **Respecting your codebase** — no conflicting patterns
 - **Following standards** — consistent code quality
 
-This is enforced automatically by 56 rules. No configuration needed.
+This is enforced automatically by 57 rules. No configuration needed.
 
 ---
 

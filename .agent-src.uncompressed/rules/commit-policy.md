@@ -102,6 +102,9 @@ rest of the roadmap execution.
 
 - [`autonomous-execution`](autonomous-execution.md) — when to suppress
   trivial questions; this rule survives the suppression.
+- [`no-cheap-questions`](no-cheap-questions.md) — commit asks are
+  cheap by construction; this rule is the canonical Iron Law, the
+  cheap-questions rule cites it and refuses to surface the option.
 - [`scope-control`](scope-control.md) — git-ops permission gate
   (push, merge, branch, PR, tag stay separately permission-gated).
 - [`/commit`](../commands/commit.md) — split and commit with confirmation.

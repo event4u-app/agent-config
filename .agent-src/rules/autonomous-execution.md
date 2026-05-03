@@ -113,6 +113,9 @@ For Hard-Floor failure modes see
   (push/merge/branch/PR/tag stays explicit)
 - [`ask-when-uncertain`](ask-when-uncertain.md) — vague-request
   triggers that always require asking
+- [`no-cheap-questions`](no-cheap-questions.md) — mode-independent
+  floor against context-derived, sequencing-only, and
+  Iron-Law-violating asks (applies in `off` and pre-opt-in `auto` too)
 - [`direct-answers`](direct-answers.md) — Iron Laws on brevity and
   no-flattery (this rule extends to no-trivial-questions)
 - [`/commit-in-chunks`](../commands/commit-in-chunks.md) — auto-split and commit without confirmation

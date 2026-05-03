@@ -103,7 +103,7 @@ and
 ```
 .agent-src.uncompressed/      ← edit here
   skills/       (129 skills)
-  rules/        (56 rules)
+  rules/        (57 rules)
   commands/     (84 files — 69 active + 15 deprecation shims)
   personas/     (7 personas)
   templates/    (AGENTS.md, copilot-instructions.md, skill.md, …)
