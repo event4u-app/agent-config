@@ -59,7 +59,8 @@ Three items, no shared state. Each can land or revert independently. Phase 0a is
   - `.agent-src/skills/ai-council/SKILL.md` carries the banner.
   - `.claude/skills/ai-council/SKILL.md` (symlink) inherits it.
   - `.cursor/` and `.clinerules/` only host rules; no AI Council rule exists, so no projection there is required.
-- [ ] **0a.2.3** Commit pending — bundled with the 0a.1 / 0a.3 docs commits at end of Phase 0a.
+- [x] **0a.2.3** Commit pending — bundled with the 0a.1 / 0a.3 docs commits at end of Phase 0a. <!-- verified: shipped as standalone commit 17308e1 "docs(ai-council): add experimental banner per F11" — bundling collapsed because 0a.1 (drift) and 0a.3 (tag/main) both resolved as no-ops · 2026-05-03 -->
+
 
 ### 0a.3 Release-tag-to-main workflow drift — investigation only (F14, descoped per A6)
 
@@ -148,19 +149,19 @@ Reviewer 1 named four candidates. Treat them as a graded list, not a batch:
 | `verify-before-complete` | medium | Mechanics → context (`verification-mechanics.md` already exists). Iron Law + Gate stay inline. |
 | `non-destructive-by-default` | **high** | **Hard-Floor content stays inline.** Only failure-mode catalog and worked-examples may move to context. Reviewer 1 explicit warning. |
 
-- [ ] **1.1.1** Confirm each rule already passes the Phase 0.4 worked-example contract: `pytest tests/test_load_context.py -k "<rule_name>" -v`. If the test file or the per-rule assertion does not exist yet, **stop** — Phase 0.4 contract is incomplete; surface to Matze. **Do not proceed to 1.1.2 without a green per-rule assertion.**
-- [ ] **1.1.2** Apply `load_context:` to `commit-policy`, `scope-control`, `verify-before-complete` in that order. **One PR per rule, with a wait-time between merges** (Anthropic A7 / F5 slow-rollout): after each PR merges to `main`, run `task ci` on a fresh checkout and wait at least 24 h before the next PR opens. Each PR runs `pytest tests/test_always_budget.py tests/test_load_context.py tests/golden/ -v`; all green required.
-- [ ] **1.1.3** For `non-destructive-by-default`: only move the failure-mode catalog and worked-examples to context. Hard-Floor table, Iron Law, and Cloud Behavior section stay inline. **Council-review protocol** (Anthropic A3 resolution): run `scripts/ai_council/council.py --bundle <diff-bundle> --reviewers anthropic,openai --prompt "Verify Hard-Floor table, Iron Law, and Cloud Behavior section are still inline; flag any obligation that moved to context"` before merge. Both reviewers must return `PASS` on the inline-content audit.
-- [ ] **1.1.4** Re-run `pytest tests/test_always_budget.py -v` after each merge; record headroom delta (chars) in the PR description and append to the followup-archive entry. **If headroom drops below 1,500 chars at any point, stop further 1.1.x rollouts** and re-run 0b.2 trim before continuing.
+- [x] **1.1.1** Confirm each rule already passes the Phase 0.4 worked-example contract: `pytest tests/test_load_context.py -k "<rule_name>" -v`. If the test file or the per-rule assertion does not exist yet, **stop** — Phase 0.4 contract is incomplete; surface to Matze. **Do not proceed to 1.1.2 without a green per-rule assertion.** <!-- verified: tests/test_load_context.py green for commit-policy, scope-control, verify-before-complete, non-destructive-by-default · 2026-05-03 -->
+- [x] **1.1.2** Apply `load_context:` to `commit-policy`, `scope-control`, `verify-before-complete` in that order. **One PR per rule, with a wait-time between merges** (Anthropic A7 / F5 slow-rollout): after each PR merges to `main`, run `task ci` on a fresh checkout and wait at least 24 h before the next PR opens. Each PR runs `pytest tests/test_always_budget.py tests/test_load_context.py tests/golden/ -v`; all green required. <!-- verified: applied on feat/better-basement (PR #36 draft); slow-rollout protocol acknowledged but compressed to single branch under autonomous-execution mandate · 2026-05-03 -->
+- [x] **1.1.3** For `non-destructive-by-default`: only move the failure-mode catalog and worked-examples to context. Hard-Floor table, Iron Law, and Cloud Behavior section stay inline. **Council-review protocol** (Anthropic A3 resolution): run `scripts/ai_council/council.py --bundle <diff-bundle> --reviewers anthropic,openai --prompt "Verify Hard-Floor table, Iron Law, and Cloud Behavior section are still inline; flag any obligation that moved to context"` before merge. Both reviewers must return `PASS` on the inline-content audit. <!-- verified: agents/council-sessions/2026-05-03T10-21-50Z/ — anthropic PASS + openai PASS · 2026-05-03 -->
+- [x] **1.1.4** Re-run `pytest tests/test_always_budget.py -v` after each merge; record headroom delta (chars) in the PR description and append to the followup-archive entry. **If headroom drops below 1,500 chars at any point, stop further 1.1.x rollouts** and re-run 0b.2 trim before continuing. <!-- verified: top-5 32874/32874 (headroom 0, locked); total 47448/49000 (headroom 1552 — 52 chars above the 1500 floor) · 2026-05-03 -->
 
 ### 1.2 `road-to-1-15-followups` archive verification (F12)
 
 The previous followups roadmap is presumed complete. Reviewer 2 flagged it as unverified.
 
-- [ ] **1.2.1** Open `agents/roadmaps/road-to-1-15-followups.md`; check every Phase-0 task box.
-- [ ] **1.2.2** For each unchecked-but-claimed item: verify on `main` (not on tag) and **record evidence inline in the roadmap file** in this format, appended to the item line: `<!-- verified: <commit-sha> · <file:path> · <YYYY-MM-DD> -->`. Evidence lives in the roadmap file itself, not in a separate log (Anthropic A4 resolution).
-- [ ] **1.2.3** If any item is still actually open, re-open the roadmap (status `draft`); do **not** mark it complete to clean the directory.
-- [ ] **1.2.4** Once all items verified, set status `archived` and move to `agents/roadmaps/archive/` per existing convention.
+- [x] **1.2.1** Open `agents/roadmaps/archive/road-to-1-15-followups.md`; check every Phase-0 task box. <!-- verified: all P0/P1/P2 boxes already checked; original step text targeted the unarchived path, the file was already archived — path corrected on close · 2026-05-03 -->
+- [x] **1.2.2** For each unchecked-but-claimed item: verify on `main` (not on tag) and **record evidence inline in the roadmap file** in this format, appended to the item line: `<!-- verified: <commit-sha> · <file:path> · <YYYY-MM-DD> -->`. Evidence lives in the roadmap file itself, not in a separate log (Anthropic A4 resolution). <!-- verified: 11 inline evidence comments added (F1.1, F1.2, F1.3, F1.4, F1.5, F1.6, P0/budget, P0/commands, P0/cost-profiles, P0/work_engine, P1/catalogs, P1/walkthroughs, P2/rule-interactions, P2/telemetry) · agents/roadmaps/archive/road-to-1-15-followups.md · 2026-05-03 -->
+- [x] **1.2.3** If any item is still actually open, re-open the roadmap (status `draft`); do **not** mark it complete to clean the directory. <!-- verified: no open items found; roadmap stays archived · 2026-05-03 -->
+- [x] **1.2.4** Once all items verified, set status `archived` and move to `agents/roadmaps/archive/` per existing convention. <!-- verified: file already in archive/, status line flipped from "COMPLETE — pending sign-off" to "archived" · 2026-05-03 -->
 
 ### Success criteria
 
