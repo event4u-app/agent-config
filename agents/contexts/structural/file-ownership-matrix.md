@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **303**
-- Edges (incl. self-WRITE): **683**
+- Files indexed: **315**
+- Edges (incl. self-WRITE): **733**
 
 ## READ_ONLY edges
 
@@ -132,6 +132,22 @@
 | `.agent-src.uncompressed/contexts/authority/destructive-mechanics.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/authority/scope-mechanics.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/authority/scope-mechanics.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/communication/rules-auto/artifact-engagement-recording-mechanics.md` | `.agent-src.uncompressed/rules/artifact-engagement-recording.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/communication/rules-auto/augment-portability-mechanics.md` | `.agent-src.uncompressed/rules/augment-portability.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md` | `.agent-src.uncompressed/rules/augment-source-of-truth.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/communication/rules-auto/cli-output-handling-mechanics.md` | `.agent-src.uncompressed/rules/cli-output-handling.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/communication/rules-auto/command-suggestion-policy-mechanics.md` | `.agent-src.uncompressed/rules/command-suggestion-policy.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/communication/rules-auto/docs-sync-mechanics.md` | `.agent-src.uncompressed/rules/docs-sync.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/communication/rules-auto/package-ci-checks-mechanics.md` | `.agent-src.uncompressed/rules/package-ci-checks.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/communication/rules-auto/review-routing-awareness-mechanics.md` | `.agent-src.uncompressed/rules/review-routing-awareness.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/communication/rules-auto/review-routing-awareness-mechanics.md` | `.agent-src.uncompressed/rules/reviewer-awareness.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md` | `.agent-src.uncompressed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/communication/rules-auto/skill-quality-mechanics.md` | `.agent-src.uncompressed/rules/skill-quality.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md` | `.agent-src.uncompressed/rules/improve-before-implement.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md` | `.agent-src.uncompressed/rules/ui-audit-gate.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md` | `.agent-src.uncompressed/skills/existing-ui-audit/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md` | `.agent-src.uncompressed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/autonomy-detection.md` | `.agent-src.uncompressed/contexts/execution/autonomy-examples.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/autonomy-detection.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/autonomy-examples.md` | `.agent-src.uncompressed/contexts/execution/autonomy-detection.md` | `body_link` | 1 |
@@ -158,8 +174,14 @@
 | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `.agent-src.uncompressed/skills/learning-to-rule-or-skill/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/artifact-engagement-recording.md` | `.agent-src.uncompressed/commands/implement-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/artifact-engagement-recording.md` | `.agent-src.uncompressed/commands/work.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/artifact-engagement-recording.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/artifact-engagement-recording-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/artifact-engagement-recording.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/artifact-engagement-recording-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `.agent-src.uncompressed/rules/model-recommendation.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/augment-portability.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/augment-portability-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/augment-portability.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/augment-portability-mechanics.md` | `load_context` | 1 |
+| `.agent-src.uncompressed/rules/augment-source-of-truth.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/augment-source-of-truth.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/autonomous-execution.md` | `.agent-src.uncompressed/commands/commit-in-chunks.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/autonomous-execution.md` | `.agent-src.uncompressed/commands/commit.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/autonomous-execution.md` | `.agent-src.uncompressed/contexts/execution/autonomy-detection.md` | `body_link` | 1 |
@@ -187,6 +209,10 @@
 | `.agent-src.uncompressed/rules/chat-history-visibility.md` | `.agent-src.uncompressed/rules/chat-history-cadence.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/chat-history-visibility.md` | `.agent-src.uncompressed/rules/chat-history-ownership.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/chat-history-visibility.md` | `.agent-src.uncompressed/rules/direct-answers.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/cli-output-handling.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/cli-output-handling-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/cli-output-handling.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/cli-output-handling-mechanics.md` | `load_context` | 1 |
+| `.agent-src.uncompressed/rules/command-suggestion-policy.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/command-suggestion-policy-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/command-suggestion-policy.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/command-suggestion-policy-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/command-suggestion-policy.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/command-suggestion-policy.md` | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/command-suggestion-policy.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
@@ -199,6 +225,8 @@
 | `.agent-src.uncompressed/rules/commit-policy.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/commit-policy.md` | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/commit-policy.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/docs-sync.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/docs-sync-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/docs-sync.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/docs-sync-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/improve-before-implement.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
@@ -217,6 +245,10 @@
 | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `.agent-src.uncompressed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/onboarding-gate.md` | `.agent-src.uncompressed/commands/onboard.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/onboarding-gate.md` | `.agent-src.uncompressed/rules/rule-type-governance.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/package-ci-checks.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/package-ci-checks-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/package-ci-checks.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/package-ci-checks-mechanics.md` | `load_context` | 1 |
+| `.agent-src.uncompressed/rules/review-routing-awareness.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/review-routing-awareness-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/review-routing-awareness.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/review-routing-awareness-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/review-routing-awareness.md` | `.agent-src.uncompressed/rules/minimal-safe-diff.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/review-routing-awareness.md` | `.agent-src.uncompressed/rules/reviewer-awareness.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/review-routing-awareness.md` | `.agent-src.uncompressed/rules/verify-before-complete.md` | `body_link` | 1 |
@@ -225,6 +257,8 @@
 | `.agent-src.uncompressed/rules/reviewer-awareness.md` | `.agent-src.uncompressed/rules/review-routing-awareness.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/reviewer-awareness.md` | `.agent-src.uncompressed/skills/requesting-code-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/reviewer-awareness.md` | `.agent-src.uncompressed/skills/review-routing/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/roadmap-progress-sync.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/roadmap-progress-sync.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `.agent-src.uncompressed/commands/mode.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
@@ -233,12 +267,16 @@
 | `.agent-src.uncompressed/rules/scope-control.md` | `.agent-src.uncompressed/contexts/authority/scope-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/scope-control.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/scope-control.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/skill-quality.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/skill-quality-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/skill-quality.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/skill-quality-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/slash-command-routing-policy.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/ui-audit-gate.md` | `.agent-src.uncompressed/commands/implement-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/ui-audit-gate.md` | `.agent-src.uncompressed/commands/work.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/ui-audit-gate.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/ui-audit-gate.md` | `.agent-src.uncompressed/rules/improve-before-implement.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/ui-audit-gate.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/ui-audit-gate.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/ui-audit-gate.md` | `.agent-src.uncompressed/skills/existing-ui-audit/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/user-interaction.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/user-interaction.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/user-interaction.md` | `.agent-src.uncompressed/rules/language-and-tone.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/verify-before-complete.md` | `.agent-src.uncompressed/contexts/execution/verification-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/verify-before-complete.md` | `.agent-src.uncompressed/contexts/execution/verification-mechanics.md` | `load_context` | 1 |
@@ -398,7 +436,7 @@
 | Kind | Count |
 |---|---:|
 | `command` | 94 |
-| `context` | 15 |
+| `context` | 27 |
 | `persona` | 8 |
 | `rule` | 57 |
 | `skill` | 129 |

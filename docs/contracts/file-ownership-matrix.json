@@ -591,7 +591,79 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/contexts/communication/rules-auto/artifact-engagement-recording-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/contexts/communication/rules-auto/augment-portability-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/contexts/communication/rules-auto/cli-output-handling-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/contexts/communication/rules-auto/command-suggestion-policy-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/contexts/communication/rules-auto/docs-sync-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/contexts/communication/rules-auto/package-ci-checks-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/contexts/communication/rules-auto/review-routing-awareness-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/contexts/communication/rules-auto/skill-quality-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md": {
       "kind": "context",
       "rule_type": null,
       "load_context": [],
@@ -738,7 +810,9 @@
     ".agent-src.uncompressed/rules/artifact-engagement-recording.md": {
       "kind": "rule",
       "rule_type": "auto",
-      "load_context": [],
+      "load_context": [
+        ".agent-src.uncompressed/contexts/communication/rules-auto/artifact-engagement-recording-mechanics.md"
+      ],
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/ask-when-uncertain.md": {
@@ -750,13 +824,17 @@
     ".agent-src.uncompressed/rules/augment-portability.md": {
       "kind": "rule",
       "rule_type": "auto",
-      "load_context": [],
+      "load_context": [
+        ".agent-src.uncompressed/contexts/communication/rules-auto/augment-portability-mechanics.md"
+      ],
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/augment-source-of-truth.md": {
       "kind": "rule",
       "rule_type": "auto",
-      "load_context": [],
+      "load_context": [
+        ".agent-src.uncompressed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md"
+      ],
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/autonomous-execution.md": {
@@ -796,13 +874,17 @@
     ".agent-src.uncompressed/rules/cli-output-handling.md": {
       "kind": "rule",
       "rule_type": "auto",
-      "load_context": [],
+      "load_context": [
+        ".agent-src.uncompressed/contexts/communication/rules-auto/cli-output-handling-mechanics.md"
+      ],
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/command-suggestion-policy.md": {
       "kind": "rule",
       "rule_type": "auto",
-      "load_context": [],
+      "load_context": [
+        ".agent-src.uncompressed/contexts/communication/rules-auto/command-suggestion-policy-mechanics.md"
+      ],
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/commit-conventions.md": {
@@ -840,7 +922,9 @@
     ".agent-src.uncompressed/rules/docs-sync.md": {
       "kind": "rule",
       "rule_type": "auto",
-      "load_context": [],
+      "load_context": [
+        ".agent-src.uncompressed/contexts/communication/rules-auto/docs-sync-mechanics.md"
+      ],
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/downstream-changes.md": {
@@ -926,7 +1010,9 @@
     ".agent-src.uncompressed/rules/package-ci-checks.md": {
       "kind": "rule",
       "rule_type": "auto",
-      "load_context": [],
+      "load_context": [
+        ".agent-src.uncompressed/contexts/communication/rules-auto/package-ci-checks-mechanics.md"
+      ],
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/php-coding.md": {
@@ -944,7 +1030,9 @@
     ".agent-src.uncompressed/rules/review-routing-awareness.md": {
       "kind": "rule",
       "rule_type": "auto",
-      "load_context": [],
+      "load_context": [
+        ".agent-src.uncompressed/contexts/communication/rules-auto/review-routing-awareness-mechanics.md"
+      ],
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/reviewer-awareness.md": {
@@ -956,7 +1044,9 @@
     ".agent-src.uncompressed/rules/roadmap-progress-sync.md": {
       "kind": "rule",
       "rule_type": "auto",
-      "load_context": [],
+      "load_context": [
+        ".agent-src.uncompressed/contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md"
+      ],
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/role-mode-adherence.md": {
@@ -1006,7 +1096,9 @@
     ".agent-src.uncompressed/rules/skill-quality.md": {
       "kind": "rule",
       "rule_type": "auto",
-      "load_context": [],
+      "load_context": [
+        ".agent-src.uncompressed/contexts/communication/rules-auto/skill-quality-mechanics.md"
+      ],
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/slash-command-routing-policy.md": {
@@ -1038,7 +1130,9 @@
     ".agent-src.uncompressed/rules/ui-audit-gate.md": {
       "kind": "rule",
       "rule_type": "auto",
-      "load_context": [],
+      "load_context": [
+        ".agent-src.uncompressed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md"
+      ],
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/upstream-proposal.md": {
@@ -1050,7 +1144,9 @@
     ".agent-src.uncompressed/rules/user-interaction.md": {
       "kind": "rule",
       "rule_type": "auto",
-      "load_context": [],
+      "load_context": [
+        ".agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md"
+      ],
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/verify-before-complete.md": {
@@ -3364,11 +3460,207 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/artifact-engagement-recording-mechanics.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/artifact-engagement-recording-mechanics.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/artifact-engagement-recording-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/artifact-engagement-recording.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/augment-portability-mechanics.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/augment-portability-mechanics.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/augment-portability-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/augment-portability.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/augment-source-of-truth.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/cli-output-handling-mechanics.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/cli-output-handling-mechanics.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/cli-output-handling-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/cli-output-handling.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/command-suggestion-policy-mechanics.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/command-suggestion-policy-mechanics.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/command-suggestion-policy-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/command-suggestion-policy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/docs-sync-mechanics.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/docs-sync-mechanics.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/docs-sync-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/docs-sync.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/package-ci-checks-mechanics.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/package-ci-checks-mechanics.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/package-ci-checks-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/package-ci-checks.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/review-routing-awareness-mechanics.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/review-routing-awareness-mechanics.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/review-routing-awareness-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/review-routing-awareness.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/review-routing-awareness-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/reviewer-awareness.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/roadmap-progress-sync.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/skill-quality-mechanics.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/skill-quality-mechanics.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/skill-quality-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/skill-quality.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md",
       "target": ".agent-src.uncompressed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/ask-when-uncertain.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/improve-before-implement.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/ui-audit-gate.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md",
+      "target": ".agent-src.uncompressed/skills/existing-ui-audit/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/user-interaction.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/contexts/documentation-hierarchy.md",
@@ -3715,6 +4007,20 @@
     },
     {
       "source": ".agent-src.uncompressed/rules/artifact-engagement-recording.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/artifact-engagement-recording-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/artifact-engagement-recording.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/artifact-engagement-recording-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "load_context",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/artifact-engagement-recording.md",
       "target": ".agent-src.uncompressed/rules/artifact-engagement-recording.md",
       "type": "WRITE",
       "via": "self",
@@ -3743,10 +4049,38 @@
     },
     {
       "source": ".agent-src.uncompressed/rules/augment-portability.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/augment-portability-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/augment-portability.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/augment-portability-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "load_context",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/augment-portability.md",
       "target": ".agent-src.uncompressed/rules/augment-portability.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/augment-source-of-truth.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/augment-source-of-truth.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "load_context",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/rules/augment-source-of-truth.md",
@@ -3981,10 +4315,38 @@
     },
     {
       "source": ".agent-src.uncompressed/rules/cli-output-handling.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/cli-output-handling-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/cli-output-handling.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/cli-output-handling-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "load_context",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/cli-output-handling.md",
       "target": ".agent-src.uncompressed/rules/cli-output-handling.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/command-suggestion-policy.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/command-suggestion-policy-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/command-suggestion-policy.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/command-suggestion-policy-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "load_context",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/rules/command-suggestion-policy.md",
@@ -4111,6 +4473,20 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/docs-sync.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/docs-sync-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/docs-sync.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/docs-sync-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "load_context",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/rules/docs-sync.md",
@@ -4338,6 +4714,20 @@
     },
     {
       "source": ".agent-src.uncompressed/rules/package-ci-checks.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/package-ci-checks-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/package-ci-checks.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/package-ci-checks-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "load_context",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/package-ci-checks.md",
       "target": ".agent-src.uncompressed/rules/package-ci-checks.md",
       "type": "WRITE",
       "via": "self",
@@ -4356,6 +4746,20 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/review-routing-awareness.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/review-routing-awareness-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/review-routing-awareness.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/review-routing-awareness-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "load_context",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/rules/review-routing-awareness.md",
@@ -4425,6 +4829,20 @@
       "target": ".agent-src.uncompressed/skills/review-routing/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/roadmap-progress-sync.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/roadmap-progress-sync.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "load_context",
       "depth": 1
     },
     {
@@ -4541,6 +4959,20 @@
     },
     {
       "source": ".agent-src.uncompressed/rules/skill-quality.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/skill-quality-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/skill-quality.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/skill-quality-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "load_context",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/skill-quality.md",
       "target": ".agent-src.uncompressed/rules/skill-quality.md",
       "type": "WRITE",
       "via": "self",
@@ -4597,16 +5029,16 @@
     },
     {
       "source": ".agent-src.uncompressed/rules/ui-audit-gate.md",
-      "target": ".agent-src.uncompressed/rules/ask-when-uncertain.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/rules/ui-audit-gate.md",
-      "target": ".agent-src.uncompressed/rules/improve-before-implement.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md",
       "type": "READ_ONLY",
-      "via": "body_link",
+      "via": "load_context",
       "depth": 1
     },
     {
@@ -4629,6 +5061,20 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/user-interaction.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/user-interaction.md",
+      "target": ".agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "load_context",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/rules/user-interaction.md",
