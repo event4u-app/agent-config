@@ -133,7 +133,7 @@
   "rules/minimal-safe-diff.md": "6dbf3df5e9e50f6cb4b535cb55a3c38f129106d30ed3220013e5b393d21b0964",
   "rules/missing-tool-handling.md": "85d602e9f0150fdb7066d9f73ec9fd0661bd646a31bcab39e88726dab75bc258",
   "rules/model-recommendation.md": "e1d8af31b8d0ab806cc044311c34f1cee65664005680b26ccd1c4c614eea4b2a",
-  "rules/no-cheap-questions.md": "11a16c3110e55df742b77bd2e053f37aaf4fa24ae83eb9e5b4befa7cbee889da",
+  "rules/no-cheap-questions.md": "4b7d0bcdaf87b0c3f3127bef99871307b2b4ef78aaf125faa69f914b66fbda67",
   "rules/non-destructive-by-default.md": "f070f20add6232f7bdae0bf48413f432f42114f5606e3f38a723bd1447bea4e3",
   "rules/onboarding-gate.md": "5f655cd696226bb0561f06daa6a2dc90030c3ac2d3fcb22b7478bd0a7a43fbe2",
   "rules/package-ci-checks.md": "b5c8be4dabed9157c06c2e5414c1e6677009d62e9da429f281116d4fdcf8cad8",
