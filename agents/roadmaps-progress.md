@@ -6,7 +6,7 @@
 
 ## Overall
 
-**0 / 130 steps done · 0%**
+**0 / 136 steps done · 0%**
 
 ```text
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
@@ -20,7 +20,7 @@
 | 2 | [road-to-context-layer-maturity.md](roadmaps/road-to-context-layer-maturity.md) | 6 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-rule-hardening.md](roadmaps/road-to-rule-hardening.md) | 6 | 23 | 23 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 5 | [road-to-rule-hardening.md](roadmaps/road-to-rule-hardening.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -73,14 +73,14 @@
 
 ### [road-to-rule-hardening.md](roadmaps/road-to-rule-hardening.md)
 
-**Road to Rule Hardening** — 0 / 23 done (0%)
+**Road to Rule Hardening** — 0 / 29 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Self-Check Rule Audit (≤ 1 day) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Tier Classification (≤ 1 day) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Self-Check Rule Audit (≤ 1 day) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Tier Classification (≤ 1 day) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | Pilot Hardening (1–2 days) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 4 | Tier 1 Rollout (2–3 days, gated by Phase 3) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 5 | Tier 2 Nudge Strategy (1–2 days) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 6 | Tier 3 Disposition (≤ 1 day) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Tier 1 Rollout (2–3 days, gated by Phase 3) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 5 | Tier 2 Nudge Strategy (1–2 days) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 6 | Tier 3 Disposition (≤ 1 day) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 

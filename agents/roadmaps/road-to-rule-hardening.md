@@ -1,8 +1,13 @@
 
 # Road to Rule Hardening
 
-**Status:** ready for execution.
+**Status:** ready for execution (v2 — council-reviewed).
 **Started:** 2026-05-03
+**Council review:** `agents/council-sessions/2026-05-03T19-16-25Z/`
+(Sonnet 4.5 + GPT-4o, conditional greenlight, six binding revisions
+applied: hook-cost column, Tier 2a/2b split, pilot selection criteria,
+Production = Augment + Claude Code, ≥ 70% compliance threshold,
+6-month re-audit + Tier classification on new rules).
 **Trigger:** Three observed failures of the same class within one
 session — `model-recommendation`, `context-hygiene`, and
 `roadmap-progress-sync` all silently skipped despite being valid,
@@ -59,41 +64,67 @@ row per rule.
 - [ ] For each rule, record: trigger event (turn-count / task-start /
       tool-call / output-shape / settings-state), observability
       (agent-only / hook-observable / settings-observable),
-      enforcement surface (output / tool-call / state / none).
+      enforcement surface (output / tool-call / state / none),
+      **hook-cost estimate** (low / medium / high — engineering effort
+      to mechanise across Augment + Claude Code).
 - [ ] Write `agents/contexts/rule-trigger-matrix.md` with the full
       table plus a short executive summary.
 - [ ] Mark rules that are already mechanical (e.g.
       `chat-history-cadence` via heartbeat). They are the precedent.
+- [ ] Audit must explicitly include rules that have **never** observably
+      fired (suspected dormant: `command-suggestion-policy`, `slash-command-routing-policy`,
+      `analysis-skill-routing`). Absence of failures ≠ healthy trigger.
 
 ### Phase 2 — Tier Classification (≤ 1 day)
 
-For each rule the audit flags as soft, assign a Tier (1 / 2 / 3) plus
-a one-line justification.
+For each rule the audit flags as soft, assign a Tier plus a one-line
+justification. Tier 2 is split into two sub-tiers because nudge
+strategies have different verifiability profiles.
 
-- [ ] Tier 1 candidate list — fully mechanizable today (turn counters,
-      settings checks, file-system events). Expected members:
-      `context-hygiene`, `onboarding-gate`, `roadmap-progress-sync`.
-- [ ] Tier 2 candidate list — needs hook to detect, agent formulates
-      the response. Expected members: `model-recommendation`,
-      `verify-before-complete`.
-- [ ] Tier 3 candidate list — no platform mechanism. Expected members:
-      `language-and-tone` pre-send gate, `direct-answers` Iron Laws,
-      pre-send rules in general.
-- [ ] Per Tier 3 rule, decide disposition: accept-as-soft, convert to
-      `/`-command, or deprecate. No new soft rules are introduced.
+- [ ] **Tier 1 — Mechanical.** Hook + deterministic check, agent-
+      independent. Fully mechanizable today (turn counters, settings
+      checks, file-system events). Expected members: `context-hygiene`,
+      `onboarding-gate`, `roadmap-progress-sync`.
+- [ ] **Tier 2a — Marker nudge.** Hook detects, marker injected into
+      the agent's context, agent formulates the response. Verification
+      is best-effort (the agent may still ignore the marker). Expected
+      members: `model-recommendation`, `capture-learnings`.
+- [ ] **Tier 2b — Structured injection.** Hook detects, structured
+      payload injected (settings flag, tool-call gate). Verifiable
+      because the structured field is observable post-hoc. Expected
+      members: `verify-before-complete` (gate before commit/PR claim).
+- [ ] **Tier 3 — Inherent soft.** No platform mechanism exists.
+      Expected members: `language-and-tone` pre-send gate,
+      `direct-answers` Iron Laws, pre-send rules in general.
+- [ ] Per Tier 3 rule, decide disposition: accept-as-soft (with
+      mandatory failure-tracking annotation in the rule body), convert
+      to `/`-command, or deprecate. No new soft rules are introduced.
 
 ### Phase 3 — Pilot Hardening (1–2 days)
 
 Pick the highest-value Tier 1 candidate. Build the hook end-to-end on
 **one** platform. Prove the pattern carries.
 
-- [ ] Choose pilot rule (open question — see closing prompt).
+**Pilot selection criteria (all must hold):**
+- Rule covers ≥ 30% of agent sessions (frequency check).
+- ≥ 2 observed failures within recent sessions (real, not theoretical).
+- Trigger is binary-verifiable (file written / not written, turn
+  count crossed / not crossed) — no fuzzy boolean.
+- Hook-cost rated `low` in Phase 1 audit.
+
+**Pilot order (decided):** `roadmap-progress-sync` (1) →
+`onboarding-gate` (3) → `context-hygiene` (2). Rationale: smallest hook
+first to validate infrastructure, session-start second for a different
+slot type, per-turn counter last because cross-platform persistence is
+the most expensive piece. Council noted (3, 1, 2) as a complexity-
+gradient alternative; tracked as risk, not adopted.
+
+- [ ] Pilot 1: `roadmap-progress-sync` (PostToolUse + path filter).
 - [ ] Implement the hook script in `scripts/hooks/` (Python, no
       platform-specific wiring yet).
-- [ ] Wire it for one platform (Augment PostToolUse or Claude Code
-      Stop, depending on rule type).
+- [ ] Wire it for one platform (Augment PostToolUse).
 - [ ] Verify: trigger fires deterministically, agent cannot suppress
-      it, output is human-readable.
+      it, output is human-readable, < 100 ms overhead per file write.
 - [ ] Document the pattern in `agents/contexts/hardening-pattern.md`
       so Phase 4 has a template.
 
@@ -102,11 +133,21 @@ Pick the highest-value Tier 1 candidate. Build the hook end-to-end on
 Apply the pilot pattern to the remaining Tier 1 candidates. One PR
 per rule, to keep blast radius small.
 
-- [ ] Implement hook for second Tier 1 rule.
-- [ ] Implement hook for third Tier 1 rule.
+**Production = Augment + Claude Code.** A rule is "hardened" only when
+both platforms have a working hook. Cursor / Cline / Windsurf parity
+is **explicitly deferred** — but each deferral lands as a tracked
+GitHub issue under the `hardening-platform-parity` label, with a
+documented capability-gap reason. Silent deferral is forbidden.
+
+- [ ] Implement hook for second Tier 1 rule (`onboarding-gate`,
+      session-start slot).
+- [ ] Implement hook for third Tier 1 rule (`context-hygiene`,
+      per-turn counter).
 - [ ] Cross-platform extension: each new hook ships with a Claude
-      Code variant alongside the Augment one (no Cursor / Cline /
-      Windsurf parity yet — that is a downstream concern).
+      Code variant alongside the Augment one.
+- [ ] File `hardening-platform-parity` issue per deferred platform
+      with the specific capability gap (e.g. "Cursor lacks
+      PostToolUse").
 - [ ] Update each rule's body to reference the hook as the primary
       enforcement, with self-check kept only as a fallback note.
 
@@ -116,37 +157,61 @@ Tier 2 needs a hook to detect, but the response is the agent's. The
 nudge mechanism is what makes the trigger observable to the agent
 mid-flow, without requiring the agent to self-check.
 
-- [ ] Decide nudge surface: PostToolUse marker, session-start preamble,
-      or settings-state injection.
-- [ ] Prototype on one Tier 2 rule (likely `verify-before-complete`).
-- [ ] Measure: does the marker actually change agent behavior on the
-      next turn? Outcome verification is the same standard Phase 2 of
-      the context-layer-maturity roadmap requires.
+**Compliance threshold:** ≥ 70% of nudges must produce the expected
+agent behavior on the next turn. Below that, the nudge is failing —
+escalate to Tier 2b structured injection or accept as Tier 3.
+
+- [ ] Decide nudge surface per sub-tier: Tier 2a uses PostToolUse
+      marker; Tier 2b uses settings-state injection or tool-call gate.
+- [ ] **Prototype on `model-recommendation`** first (Tier 2a, low-stakes
+      — wrong recommendation costs nothing). Use as the validation
+      vehicle for the nudge mechanism itself before applying to
+      higher-stakes rules.
+- [ ] Measure compliance over ≥ 20 sessions. If ≥ 70%, promote nudge
+      to standard. If < 70%, document the failure and either escalate
+      or accept-as-Tier-3.
+- [ ] Apply validated pattern to `verify-before-complete` (Tier 2b
+      structured injection — gate the "done" claim before commit/PR).
 
 ### Phase 6 — Tier 3 Disposition (≤ 1 day)
 
 Final pass on the soft-by-construction rules. No new mechanism — only
-explicit disposition.
+explicit disposition plus a re-audit clock.
 
 - [ ] For each Tier 3 rule, write the disposition into the rule body
       itself (one line under the Iron Law, if any): "this is a soft
-      rule; mechanical enforcement is not feasible because <reason>".
+      rule; mechanical enforcement is not feasible because <reason>;
+      re-audit due <date+6 months>".
 - [ ] Convert any Tier 3 rule with a clear `/`-command equivalent
       into a command (the rule becomes a pointer).
+- [ ] **Update `.agent-src.uncompressed/templates/rule.md`** to require
+      a `tier:` frontmatter field. New rules cannot merge without
+      Tier classification.
+- [ ] **Update `.agent-src.uncompressed/rules/rule-type-governance.md`**
+      to enforce Tier classification on every new or edited rule.
 - [ ] Roadmap closure note: hardening is now a class with a known
-      ceiling. Future rule-creation reviews must classify the new
-      rule into a Tier before merge.
+      ceiling. Re-audit cadence: every 6 months, Tier 3 rules are
+      re-evaluated against new platform capabilities — a rule that
+      was Tier 3 today may become Tier 2 next year.
 
 ## Acceptance
 
 - `agents/contexts/rule-trigger-matrix.md` exists and covers every
-  rule in `.augment/rules/`.
-- Every soft rule has a Tier assignment.
+  rule in `.augment/rules/`, with hook-cost column populated.
+- Every soft rule has a Tier assignment (1 / 2a / 2b / 3).
 - At least three Tier 1 rules have working hooks in production
   (Augment + Claude Code, both).
+- At least one Tier 2 nudge has cleared the ≥ 70% compliance
+  threshold over ≥ 20 measured sessions.
 - The hardening pattern is documented well enough that a new
   Tier 1 rule can be hardened by following the template, no
   architectural decisions required.
+- Rule template requires `tier:` frontmatter; `rule-type-governance`
+  enforces classification on merge.
+- Tier 3 rules carry a re-audit-due date (+ 6 months from
+  disposition).
+- Deferred-platform parity (Cursor / Cline / Windsurf) is tracked
+  as labeled GitHub issues, not as silent debt.
 - No rule in the safety floor is modified.
 
 ## Reference
