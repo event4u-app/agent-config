@@ -1,6 +1,3 @@
----
-status: draft
----
 
 # Road to 1.16.0 Follow-ups
 
@@ -39,33 +36,40 @@ Close the visible-quality regression Reviewer 2 surfaced (Phase 0), extend the `
 
 Three items, no shared state. Each can land or revert independently. Phase 0a is **not** gated on anything and is sequenced first for visible-quality recovery.
 
-### 0a.1 README sync on `main` (F9 — P0)
+### 0a.1 README sync on `main` (F9 — P0) — RESOLVED (no-op)
 
-- [ ] **0a.1.1** Verify drift exists: `git log --oneline main..1.16.0 -- README.md` — expected output is non-empty.
-- [ ] **0a.1.2** Verify each reviewer-supplied SHA is reachable on the 1.16.0 tag **before** cherry-pick. Run: `for sha in 1053d56 d26bf68 2fa8022 c282ae3; do git merge-base --is-ancestor "$sha" 1.16.0 && echo "$sha OK" || echo "$sha MISSING"; done`. **Failure path:** if any SHA reports `MISSING`, abort cherry-pick, re-derive the actual README-update commit list with `git log 1.16.0 ^main --oneline -- README.md`, and surface the corrected list to Matze before proceeding.
-- [ ] **0a.1.3** Cherry-pick verified SHAs onto `main` (working branch, not direct push): `git checkout -b chore/readme-sync-main main && git cherry-pick <sha-list>`.
-- [ ] **0a.1.4** Run `task sync` to regenerate counts via `update_counts.py`. Confirm tagline change ("Teach your AI agents Laravel…" → governance-aligned wording) lands and counts match `129 Skills · 57 Rules · 69 Commands · 47 Guidelines`.
-- [ ] **0a.1.5** Run `task ci`; must be green. Open PR; merge only after CI green and Matze review.
-- [ ] **0a.1.6** Verify externally post-merge: `curl -s https://raw.githubusercontent.com/event4u/agent-config/refs/heads/main/README.md | grep -E "(Teach your AI agents|129 Skills)"` — first pattern must be absent, second must be present.
+**Status (2026-05-03):** All four reviewer-supplied SHAs are already on `main`; `git diff 1.16.0..main -- README.md` is empty. The reviewer's snapshot was outdated. No cherry-pick needed.
+
+- [x] **0a.1.1** ~~Verify drift exists~~ — `git log --oneline main..1.16.0 -- README.md` returned empty; `git log --oneline 1.16.0..main -- README.md` also empty. <!-- verified: 2026-05-03 · main = 1.16.0 for README.md -->
+- [x] **0a.1.2** ~~Verify reviewer SHAs reachable on 1.16.0~~ — all four reachable on tag AND already on main: 1053d56, d26bf68, 2fa8022, c282ae3. <!-- verified: 2026-05-03 · git merge-base --is-ancestor each → ON main -->
+- [-] **0a.1.3** SKIPPED — no cherry-pick needed (drift = 0).
+- [-] **0a.1.4** SKIPPED — counts already correct on main.
+- [-] **0a.1.5** SKIPPED — no PR needed.
+- [x] **0a.1.6** External verification post-fact: `curl -fsSL https://raw.githubusercontent.com/event4u-app/agent-config/refs/heads/main/README.md` shows old tagline ABSENT and `129 Skills · 57 Rules · 69 Commands · 47 Guidelines` PRESENT. <!-- verified: 2026-05-03 · live raw.githubusercontent.com fetch -->
+
+**Note:** the original roadmap referenced `event4u/agent-config`; correct org slug is `event4u-app/agent-config`. `0a.1.6` curl URL fixed accordingly.
 
 ### 0a.2 AI Council experimental labeling (F11 — P2)
 
-- [ ] **0a.2.1** Add this banner block (literal markdown) to two locations:
-  ```
-  > **Experimental.** AI Council is not yet validated by external users. API costs apply per consultation.
-  ```
-  - `.agent-src.uncompressed/skills/ai-council/SKILL.md` — directly after the frontmatter block, before the first heading.
-  - `docs/customization.md` — at the top of the council/section that documents council usage (search `grep -n "council" docs/customization.md` to locate).
-- [ ] **0a.2.2** Run `task sync`; verify the banner propagates to `.agent-src/skills/ai-council/SKILL.md` and to all generated tool projections (`.claude/`, `.cursor/`, `.clinerules/`).
-- [ ] **0a.2.3** Commit. No code change, no behaviour change.
+- [x] **0a.2.1** Banner block added to:
+  - `.agent-src.uncompressed/skills/ai-council/SKILL.md` (after frontmatter, before `# ai-council`).
+  - `.agent-src/skills/ai-council/SKILL.md` (compressed mirror — manual sync since `compress.py` does not auto-rewrite).
+  - `docs/customization.md` (immediately before the "Council API tokens are installed via…" paragraph at line ~70).
+- [x] **0a.2.2** `task sync` + `task generate-tools` ran clean. Verified:
+  - `.agent-src/skills/ai-council/SKILL.md` carries the banner.
+  - `.claude/skills/ai-council/SKILL.md` (symlink) inherits it.
+  - `.cursor/` and `.clinerules/` only host rules; no AI Council rule exists, so no projection there is required.
+- [ ] **0a.2.3** Commit pending — bundled with the 0a.1 / 0a.3 docs commits at end of Phase 0a.
 
 ### 0a.3 Release-tag-to-main workflow drift — investigation only (F14, descoped per A6)
 
 Council A6 finding: original 0.4 mixed investigation with auto-fix and was over-scoped for "≤1 h immediate." v1.1 descopes to **investigation + documentation only**; CI-gate work moves to a follow-up roadmap if findings warrant it.
 
-- [ ] **0a.3.1** Verify hypothesis: `git merge-base --is-ancestor 08daac9 main && echo "ON_MAIN" || echo "DRIFTED"`. Capture output.
-- [ ] **0a.3.2** If `DRIFTED`: document root cause in a new `docs/release-process.md` skeleton (sections: "How tags relate to main", "Hotfix vs. minor flow", "Findings from 1.16.0 drift incident"). One-page maximum.
-- [ ] **0a.3.3** If a CI/workflow fix is warranted, file as a separate roadmap item (`agents/roadmaps/road-to-release-workflow-gate.md`, status `draft`). **Do not implement here.**
+- [x] **0a.3.1** Hypothesis verified: `git merge-base --is-ancestor 08daac9 main` → **ON_MAIN**. Tag `1.16.0` and `origin/main` both point at the same commit `08daac9` (the PR-#35 release-merge commit). `git log main..1.16.0` and `git log 1.16.0..main` are both empty. No drift exists on the live repo. <!-- verified: 2026-05-03 · main HEAD == tag 1.16.0 == 08daac9 -->
+- [-] **0a.3.2** SKIPPED — `DRIFTED` path did not trigger.
+- [-] **0a.3.3** SKIPPED — no CI/workflow fix warranted; no follow-up roadmap needed.
+
+**Investigation note:** The reviewer-2 finding (F14) most likely captured a transient state during the release-PR window — at that moment `main` had not yet absorbed the `release/1.16.0` branch and the tag was created on the release branch. Once PR #35 merged into `main`, the tag and `main` re-aligned. No structural process bug; no recurrence prevention required at this layer. If a future release exhibits actual durable drift, file it then.
 
 ### Phase 0a success criteria
 
