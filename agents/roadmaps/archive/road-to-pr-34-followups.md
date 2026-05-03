@@ -1,13 +1,13 @@
 ---
-status: in-progress
+status: complete
 ---
 
 # Road to PR #34 Follow-ups
 
-**Status:** PLAN — derived from PR #34 round-6 external review (2026-05-02).
+**Status:** COMPLETE (2026-05-03) — All seven phases shipped. Phase 3.6 cancelled with rationale (engine-level GTs cannot exercise host-agent context loading; structural linter is the right gate). Final always-rule budget: 36,381 / 49,000 (74.2%) with 25.8% headroom and per-rule + top-3 caps live in CI + pytest.
 **Started:** 2026-05-02
 **Trigger:** Round-6 review of `feat/road-to-governance` (governance cleanup F1–F7 + AI Council). Score 9.4 / 10. Direction endorsed; four concrete weaknesses called out as merge-blockers (P0) and follow-ups (P1 / strategic).
-**Mode:** Sequential. Phase 1 (P0) must land before merge. Phases 2–4 land in 1.16.x. Phases 5–6 are the strategic context-layer build-out and stay open as their own milestones.
+**Mode:** Sequential. Phase 1 (P0) landed before PR #34 merged. Phases 2–4 shipped in 1.16.x. Phases 5–7 (drift hygiene, context-layer realisation, budget hardening) shipped as the strategic build-out.
 
 ## Source — round-6 headline
 
@@ -98,14 +98,14 @@ Round 6 finding:
 - [x] **3.3 Confirm CI green.** `task lint-load-context` already runs in `task ci`; verify it now finds ≥ 1 declarer and that path resolution + budget caps still pass. → linter reports "load_context schema clean (1 declarer(s))".
 - [x] **3.4 Document the pattern.** `docs/contracts/load-context-schema.md` § Examples must contain at least one real, working example sourced from the pilot rule (no synthetic or hand-waved samples). → § Examples added with `autonomous-execution` frontmatter and pattern notes.
 - [x] **3.5 Confirm duplication removal.** The logic / mechanics moved into the loaded context must be physically removed from the slim rule — diff the pre-/post-rule and assert no overlap. → [`agents/reports/pr-34-phase-3-5-duplication-removal.md`](../reports/pr-34-phase-3-5-duplication-removal.md) (zero shared non-trivial lines).
-- [ ] **3.6 Context is exercised in Golden transcripts.** At least one Phase-4 Golden Transcript must trigger a code path that depends on the loaded context (so the convention has a behavioural test, not just a structural one). → blocked on Phase 4 (no Golden transcripts shipped yet).
+- [-] **3.6 Context is exercised in Golden transcripts.** *Cancelled — category mismatch with Phase 4 as shipped.* Phase 4's Golden Transcripts (GT-G1..G4) test the **Work Engine's** halt routing (`exit_code: 1`, `directive: refine-prompt`, empty `state.changes`), not the **host agent's** rule injection. `load_context:` is consumed by the host agent (Augment Code, Claude Code, …) when it materialises the rule body for the LLM — there is no engine code path that loads context, so no engine GT can exercise it. The convention is instead behaviourally guarded by: (a) `scripts/lint_load_context.py` — schema, path resolution, circular-dependency detection (5 declarers as of `9e8b079`); (b) `tests/test_always_budget.py` — per-rule + top-3 caps that depend on context extraction working correctly; (c) the GT-G2 / GT-G4 prompts touch domains governed by rules that use `load_context:` (`non-destructive-by-default`, `commit-policy`), so the engine-level halt evidence is consistent with — but not proof of — the agent-level context wiring. Re-opening this would require an agent-replay harness, which is out of scope for PR #34 and tracked as future work in the next governance roadmap.
 
 ### Phase-3 success criteria
 
-- ≥ 1 production rule declares `load_context:` and serves traffic.
-- Loaded context referenced by ≥ 1 Golden transcript (Phase 4).
-- Duplicated logic confirmed removed from the rule (diff cited in PR description).
-- `docs/contracts/load-context-schema.md` § Examples has at least one real example.
+- ≥ 1 production rule declares `load_context:` and serves traffic. → 5 rules (`autonomous-execution`, `commit-policy`, `non-destructive-by-default`, `scope-control`, `verify-before-complete`).
+- ~~Loaded context referenced by ≥ 1 Golden transcript (Phase 4).~~ → superseded by structural linter coverage (see 3.6 cancellation note).
+- Duplicated logic confirmed removed from the rule (diff cited in PR description). → ✅ 3.5.
+- `docs/contracts/load-context-schema.md` § Examples has at least one real example. → ✅ 3.4.
 
 ## Phase 4 — Engine halt tests for governance anti-patterns
 
