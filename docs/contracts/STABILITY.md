@@ -95,13 +95,21 @@ Numeric caps on the always-active rule surface. These are **load-bearing
 constants** — every reply the agent emits pays the always-rule cost, so
 the budget is part of the public contract, not an implementation detail.
 
+The accounting model since Phase 0.2 of `road-to-structural-optimization`
+is **Model (b) literal** — a rule's effective size is its own char count
+plus every context it loads (transitively, depth ≤ 2). See
+[`load-context-budget-model.md`](load-context-budget-model.md) (beta)
+for the contract and the transitional allowlist.
+
 | Constant | Value | Stability | Owner |
 |---|---|---|---|
-| Total always-rule budget | **49,000 chars** | `stable` | `tests/test_always_budget.py::test_always_rules_total_chars_under_cap` |
-| Warn threshold (CI) | **80% (39,200 chars)** | `beta` | `scripts/check_always_budget.py` |
-| Fail threshold (CI) | **90% (44,100 chars)** | `beta` | `scripts/check_always_budget.py` |
-| Per-rule cap | **6,000 chars** | `beta` | `tests/test_always_budget.py::test_no_single_always_rule_over_per_rule_cap` · `scripts/check_always_budget.py` |
-| Top-3 combined cap | **24,500 chars** (50% of total) | `beta` | `tests/test_always_budget.py::test_top3_always_rules_under_cap` · `scripts/check_always_budget.py` |
+| Total always-rule budget | **49,000 chars** (extended) | `stable` | `tests/test_always_budget.py::test_always_rules_total_extended_within_tolerance` |
+| G3 tolerance band | **2 % overshoot** (≤ 49,980 chars) | `beta` | `scripts/check_always_budget.py` · `tests/test_always_budget.py` |
+| Warn threshold (CI) | **80 % (39,200 chars)** | `beta` | `scripts/check_always_budget.py` |
+| Fail threshold (CI) | **90 % (44,100 chars)** below 100 %; **> 102 %** above | `beta` | `scripts/check_always_budget.py` |
+| Per-rule cap | **6,000 chars** (extended) with transitional allowlist | `beta` | `tests/test_always_budget.py::test_no_unallowlisted_per_rule_breach` · `scripts/check_always_budget.py` |
+| Top-3 combined cap | **24,500 chars** (extended, 50 % of total) | `beta` | `tests/test_always_budget.py::test_top3_extended_under_cap` · `scripts/check_always_budget.py` |
+| `load_context:` nesting cap | **depth ≤ 2** | `beta` | `tests/test_always_budget.py::test_load_context_depth_within_cap` · `scripts/check_always_budget.py` |
 
 **Promises a consumer can rely on:**
 
