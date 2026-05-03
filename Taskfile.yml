@@ -316,6 +316,10 @@ tasks:
     desc: Verify Iron Laws sit at the top of every rule file (H2, first 2 positions)
     cmd: python3 scripts/check_iron_law_prominence.py
 
+  check-always-budget:
+    desc: Always-rule budget gate (warn at 80%, fail at 90% of 49,000 chars)
+    cmd: python3 scripts/check_always_budget.py --quiet
+
   check-compression:
     desc: Check compression quality (headings, code blocks, frontmatter, word count)
     cmd: python3 scripts/check_compression.py
@@ -481,6 +485,7 @@ tasks:
       - task: lint-load-context
       - task: check-reply-consistency
       - task: check-iron-law-prominence
+      - task: check-always-budget
       - task: validate-schema
       - task: lint-skills
       - task: lint-marketplace
