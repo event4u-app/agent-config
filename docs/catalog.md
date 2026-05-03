@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **299 public artefacts** shipped by
+Consumer-facing catalog of all **281 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -200,38 +200,27 @@ are excluded.
 | rule | [`user-interaction`](../.agent-src/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (69)
+## Commands (51)
 
 | kind | name | cluster | description |
 |---|---|---|---|
 | command | [`agent-handoff`](../.agent-src/commands/agent-handoff.md) |  | Generate a context summary for continuing work in a fresh chat. Replaces the session system. |
 | command | [`agent-status`](../.agent-src/commands/agent-status.md) |  | Show current conversation stats — message count, token costs, task progress, next freshness check. |
-| command | [`agents-audit`](../.agent-src/commands/agents-audit.md) |  | Audits agents/ and module agents/ directories — finds outdated docs, structural issues, duplicates, orphaned overrides, and creates an improvement roadmap. |
-| command | [`agents-cleanup`](../.agent-src/commands/agents-cleanup.md) |  | Execute cleanup actions from an agents-audit — move, merge, delete, and update agent docs |
-| command | [`agents-prepare`](../.agent-src/commands/agents-prepare.md) |  | Scaffold the agents/ directory structure with all required subdirectories and .gitkeep files |
+| command | [`agents`](../.agent-src/commands/agents.md) | cluster: agents | Agents-folder orchestrator — routes to audit, cleanup, prepare |
 | command | [`analyze-reference-repo`](../.agent-src/commands/analyze-reference-repo.md) |  | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`bug-fix`](../.agent-src/commands/bug-fix.md) |  | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
 | command | [`bug-investigate`](../.agent-src/commands/bug-investigate.md) |  | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
-| command | [`chat-history-checkpoint`](../.agent-src/commands/chat-history-checkpoint.md) |  | Append a phase-boundary entry to .agent-chat-history — CHECKPOINT fallback for platforms without a native hook (Augment IDE, Cursor pre-1.7, Cline non-Mac/Linux). ~1s. |
-| command | [`chat-history-clear`](../.agent-src/commands/chat-history-clear.md) |  | Manually delete the persistent chat-history log — asks for confirmation, optionally archives to a timestamped backup before wiping |
-| command | [`chat-history-resume`](../.agent-src/commands/chat-history-resume.md) |  | Load the persistent chat-history log into the current conversation — picks match/returning/foreign flow and supports resume, merge, replace, or continue |
-| command | [`chat-history`](../.agent-src/commands/chat-history.md) |  | Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries |
+| command | [`chat-history`](../.agent-src/commands/chat-history.md) | cluster: chat-history | Chat-history orchestrator — routes to show, resume, clear, checkpoint |
 | command | [`check-current-md`](../.agent-src/commands/check-current-md.md) |  | Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes. |
-| command | [`commit-in-chunks`](../.agent-src/commands/commit-in-chunks.md) |  | Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows |
 | command | [`commit`](../.agent-src/commands/commit.md) |  | Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits |
 | command | [`compress`](../.agent-src/commands/compress.md) |  | Compress .md files from .agent-src.uncompressed/ into caveman format and write to .agent-src/ |
-| command | [`context-create`](../.agent-src/commands/context-create.md) |  | Analyze a codebase area and create a structured context document |
-| command | [`context-refactor`](../.agent-src/commands/context-refactor.md) |  | Analyze, update, and extend an existing context document |
-| command | [`copilot-agents-init`](../.agent-src/commands/copilot-agents-init.md) |  | Create AGENTS.md and .github/copilot-instructions.md from scratch in the consumer project — interactive, auto-detects stack, never leaks other projects' identifiers. |
-| command | [`copilot-agents-optimize`](../.agent-src/commands/copilot-agents-optimize.md) |  | Analyzes and refactors AGENTS.md and copilot-instructions.md — removes duplications, enforces line budgets, and ensures both files are optimized for their audience. |
+| command | [`context`](../.agent-src/commands/context.md) | cluster: context | Context orchestrator — routes to create, refactor |
+| command | [`copilot-agents`](../.agent-src/commands/copilot-agents.md) | cluster: copilot-agents | Copilot agents-doc orchestrator — routes to init, optimize |
 | command | [`council-design`](../.agent-src/commands/council-design.md) | cluster: optimize | Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment. |
 | command | [`council-optimize`](../.agent-src/commands/council-optimize.md) | cluster: optimize | Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice. |
 | command | [`council-pr`](../.agent-src/commands/council-pr.md) | cluster: optimize | Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in. |
 | command | [`council`](../.agent-src/commands/council.md) | cluster: optimize | Consult external AIs (OpenAI, Anthropic) for an independent second opinion on a prompt, roadmap, diff, or file set — neutral framing, redacted context, advisory output only. |
-| command | [`create-pr-description`](../.agent-src/commands/create-pr-description.md) |  | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
 | command | [`create-pr`](../.agent-src/commands/create-pr.md) |  | Create a GitHub PR with structured description from Jira ticket and code changes |
-| command | [`do-and-judge`](../.agent-src/commands/do-and-judge.md) |  | Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user |
-| command | [`do-in-steps`](../.agent-src/commands/do-in-steps.md) |  | Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict |
 | command | [`e2e-heal`](../.agent-src/commands/e2e-heal.md) |  | Find, debug, and fix failing Playwright E2E tests |
 | command | [`e2e-plan`](../.agent-src/commands/e2e-plan.md) |  | Explore the application and create a structured E2E test plan in Markdown |
 | command | [`estimate-ticket`](../.agent-src/commands/estimate-ticket.md) |  | Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt |
@@ -240,35 +229,28 @@ are excluded.
 | command | [`fix`](../.agent-src/commands/fix.md) | cluster: fix | Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, pr-bot-comments, pr-developer-comments |
 | command | [`implement-ticket`](../.agent-src/commands/implement-ticket.md) |  | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git. |
 | command | [`jira-ticket`](../.agent-src/commands/jira-ticket.md) |  | Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug |
-| command | [`judge`](../.agent-src/commands/judge.md) |  | Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only |
-| command | [`memory-add`](../.agent-src/commands/memory-add.md) |  | Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules) |
-| command | [`memory-full`](../.agent-src/commands/memory-full.md) |  | Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered |
-| command | [`memory-promote`](../.agent-src/commands/memory-promote.md) |  | Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate. |
+| command | [`judge`](../.agent-src/commands/judge.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff |
+| command | [`memory`](../.agent-src/commands/memory.md) | cluster: memory | Memory orchestrator — routes to add, load, promote, propose |
 | command | [`mode`](../.agent-src/commands/mode.md) |  | Set the active role mode — prints the contract, lists default skills, and refuses work outside the contract (see role-contracts) |
-| command | [`module-create`](../.agent-src/commands/module-create.md) |  | Create a new module from .module-template with interactive setup |
-| command | [`module-explore`](../.agent-src/commands/module-explore.md) |  | Explore a module — load its structure, docs, and context into the current conversation |
+| command | [`module`](../.agent-src/commands/module.md) | cluster: module | Module orchestrator — routes to create, explore |
 | command | [`onboard`](../.agent-src/commands/onboard.md) |  | First-run setup for a developer on this project — captures name, IDE, bot-icon preference, rtk, cost_profile, and learning opt-out, then sets onboarding.onboarded=true |
 | command | [`optimize`](../.agent-src/commands/optimize.md) | cluster: optimize | Optimize orchestrator — routes to skills, agents, augmentignore, rtk-filters |
-| command | [`override-create`](../.agent-src/commands/override-create.md) |  | Creates a project-level override for a shared skill, rule, or command. |
-| command | [`override-manage`](../.agent-src/commands/override-manage.md) |  | Reviews, updates, and refactors existing project-level overrides. |
+| command | [`override`](../.agent-src/commands/override.md) | cluster: override | Override orchestrator — routes to create, manage |
 | command | [`package-reset`](../.agent-src/commands/package-reset.md) |  | /package-reset |
 | command | [`package-test`](../.agent-src/commands/package-test.md) |  | /package-test |
 | command | [`prepare-for-review`](../.agent-src/commands/prepare-for-review.md) |  | Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date |
 | command | [`project-analyze`](../.agent-src/commands/project-analyze.md) |  | Full project analysis — detect stack, inventory modules, audit docs, create missing contexts |
 | command | [`project-health`](../.agent-src/commands/project-health.md) |  | Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything |
-| command | [`propose-memory`](../.agent-src/commands/propose-memory.md) |  | Append a provisional memory signal to the intake stream — the universal fallback for any producer (human or agent) to record a finding without committing to a curated entry. |
 | command | [`quality-fix`](../.agent-src/commands/quality-fix.md) |  | Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files |
 | command | [`refine-ticket`](../.agent-src/commands/refine-ticket.md) |  | Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates validate-feature-fit and threat-modeling, ends with a close-prompt |
 | command | [`review-changes`](../.agent-src/commands/review-changes.md) |  | Self-review local changes before creating a PR — dispatches to four specialized judges (bug, security, tests, quality) and consolidates verdicts |
 | command | [`review-routing`](../.agent-src/commands/review-routing.md) |  | Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml |
-| command | [`roadmap-create`](../.agent-src/commands/roadmap-create.md) |  | Interactively create a new roadmap file in agents/roadmaps/ |
-| command | [`roadmap-execute`](../.agent-src/commands/roadmap-execute.md) |  | Read and interactively execute a roadmap from agents/roadmaps/ |
+| command | [`roadmap`](../.agent-src/commands/roadmap.md) | cluster: roadmap | Roadmap orchestrator — routes to create, execute |
 | command | [`rule-compliance-audit`](../.agent-src/commands/rule-compliance-audit.md) |  | Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules |
 | command | [`set-cost-profile`](../.agent-src/commands/set-cost-profile.md) |  | Change the cost_profile in .agent-settings.yml — shows each profile's meaning and applies the selection |
 | command | [`sync-agent-settings`](../.agent-src/commands/sync-agent-settings.md) |  | Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing |
 | command | [`sync-gitignore`](../.agent-src/commands/sync-gitignore.md) |  | Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing |
-| command | [`tests-create`](../.agent-src/commands/tests-create.md) |  | Write meaningful tests for the changes in the current branch |
-| command | [`tests-execute`](../.agent-src/commands/tests-execute.md) |  | Run PHP tests inside the Docker container |
+| command | [`tests`](../.agent-src/commands/tests.md) | cluster: tests | Tests orchestrator — routes to create, execute |
 | command | [`threat-model`](../.agent-src/commands/threat-model.md) |  | Run a pre-implementation threat model on a proposed change — enumerates abuse cases, trust boundaries, and authorization gaps before the first line of code is written |
 | command | [`update-form-request-messages`](../.agent-src/commands/update-form-request-messages.md) |  | Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones |
 | command | [`upstream-contribute`](../.agent-src/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
