@@ -6,7 +6,12 @@ disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Project init — only deliberately during onboarding."
+superseded_by: copilot-agents init
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /copilot-agents-init is deprecated; use /copilot-agents init instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # /copilot-agents-init
 

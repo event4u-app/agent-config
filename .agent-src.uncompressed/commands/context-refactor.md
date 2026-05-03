@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "update the context doc, refresh this context document"
   trigger_context: "existing agents/contexts/*.md referenced in the prompt"
+superseded_by: context refactor
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /context-refactor is deprecated; use /context refactor instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # context-refactor
 

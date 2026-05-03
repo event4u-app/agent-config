@@ -43,24 +43,24 @@ class Violation:
 
 
 def load_locked_clusters() -> set[str]:
-    """Parse the Phase 1 cluster table from the locked contract."""
+    """Parse the locked cluster table from the contract."""
     text = (ROOT / CLUSTER_CONTRACT).read_text(encoding="utf-8")
-    # Locate the Phase 1 table; cluster names sit in backticks in column 1.
-    in_phase_1 = False
+    # Locate the locked-clusters table; cluster names sit in backticks in column 1.
+    in_table = False
     clusters: set[str] = set()
     for line in text.splitlines():
-        if line.startswith("## Phase 1 clusters"):
-            in_phase_1 = True
+        if line.startswith("## Locked clusters"):
+            in_table = True
             continue
-        if in_phase_1 and line.startswith("## "):
+        if in_table and line.startswith("## "):
             break
-        if in_phase_1:
+        if in_table:
             m = re.match(r"\|\s*`([a-z][a-z0-9-]*)`\s*\|", line)
             if m:
                 clusters.add(m.group(1))
     if not clusters:
         print(
-            f"❌  Could not parse Phase 1 cluster table from {CLUSTER_CONTRACT}",
+            f"❌  Could not parse locked-clusters table from {CLUSTER_CONTRACT}",
             file=sys.stderr,
         )
         sys.exit(3)

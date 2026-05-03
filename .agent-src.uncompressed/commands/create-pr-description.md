@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "write a PR description, draft the PR text"
   trigger_context: "PR exists or branch ready for review without description"
+superseded_by: create-pr --description-only
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /create-pr-description is deprecated; use /create-pr --description-only instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # create-pr-description
 

@@ -6,7 +6,12 @@ disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "One-shot project scaffolding; only run during initial setup."
+superseded_by: agents prepare
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /agents-prepare is deprecated; use /agents prepare instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # agents-prepare
 

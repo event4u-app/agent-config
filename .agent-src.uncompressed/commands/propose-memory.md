@@ -6,7 +6,12 @@ disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Programmatic intake fallback — overlaps /memory-add; keep explicit."
+superseded_by: memory propose
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /propose-memory is deprecated; use /memory propose instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # /propose-memory
 

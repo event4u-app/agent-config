@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "show me the X module, load the module context"
   trigger_context: "existing Modules/<Name>/ referenced in the prompt"
+superseded_by: module explore
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /module-explore is deprecated; use /module explore instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # module-explore
 

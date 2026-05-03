@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "document this part of the codebase, create a context doc for X"
   trigger_context: "working in a module without an agents/contexts/ doc"
+superseded_by: context create
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /context-create is deprecated; use /context create instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # context-create
 

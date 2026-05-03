@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "commit everything autonomously, split and commit without confirmation"
   trigger_context: "autonomous mode active and uncommitted changes present"
+superseded_by: commit --in-chunks
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /commit-in-chunks is deprecated; use /commit --in-chunks instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # commit-in-chunks
 

@@ -6,7 +6,12 @@ disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Subagent orchestration — overlaps /work and /roadmap-execute; keep explicit."
+superseded_by: judge steps
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /do-in-steps is deprecated; use /judge steps instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # do-in-steps
 

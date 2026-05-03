@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "execute the roadmap, work through the roadmap step by step"
   trigger_context: "existing agents/roadmaps/*.md referenced in the prompt"
+superseded_by: roadmap execute
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /roadmap-execute is deprecated; use /roadmap execute instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # roadmap-execute
 

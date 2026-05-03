@@ -6,7 +6,12 @@ suggestion:
   eligible: true
   trigger_description: "User wants to flush a chat-history phase boundary on a CHECKPOINT-class platform (Augment IDE, Cursor < 1.7, Cline on Windows) — phrases like 'checkpoint chat history', 'log a phase boundary', 'manual chat-history append'."
   trigger_context: "chat_history.path == checkpoint AND a phase-shaped boundary just completed (decision recorded, multi-tool sequence finished, task-list item closed)."
+superseded_by: chat-history checkpoint
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /chat-history-checkpoint is deprecated; use /chat-history checkpoint instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 <!-- cloud_safe: noop -->
 

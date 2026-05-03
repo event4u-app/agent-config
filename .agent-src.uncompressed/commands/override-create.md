@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "override this skill for the project, customize this rule locally"
   trigger_context: "prompt names a shared skill/rule needing project-specific behavior"
+superseded_by: override create
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /override-create is deprecated; use /override create instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # /override-create
 

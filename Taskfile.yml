@@ -309,6 +309,10 @@ tasks:
     desc: Fail when a new atomic command lands without a `cluster:` field (P0.8c)
     cmd: python3 scripts/lint_no_new_atomic_commands.py
 
+  check-cluster-patterns:
+    desc: Verify Phase-2 cluster dispatchers match Phase-1 reference structure (Phase 1 § 1.4.1)
+    cmd: python3 scripts/check_cluster_patterns.py
+
   lint-rule-interactions:
     desc: Validate docs/contracts/rule-interactions.yml schema, slugs, evidence paths, and anchor-pair coverage (P2.2)
     cmd: python3 scripts/lint_rule_interactions.py
@@ -506,6 +510,7 @@ tasks:
       - task: check-public-catalog-links
       - task: check-command-count
       - task: lint-no-new-atomic-commands
+      - task: check-cluster-patterns
       - task: lint-rule-interactions
       - task: lint-load-context
       - task: check-context-paths

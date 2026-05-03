@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "write tests for these changes, add tests for this branch"
   trigger_context: "code changes on the branch without matching test changes"
+superseded_by: tests create
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /tests-create is deprecated; use /tests create instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # tests-create
 

@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "audit my agent docs, check the state of the agents/ directory"
   trigger_context: "stale files under agents/ or recent edits to .augment/ without doc updates"
+superseded_by: agents audit
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /agents-audit is deprecated; use /agents audit instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # /agents-audit
 

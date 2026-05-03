@@ -40,8 +40,8 @@
     },
     "superseded_by": {
       "type": "string",
-      "pattern": "^[a-z][a-z0-9-]*( [a-z][a-z0-9-]*)?$",
-      "description": "Set on deprecation shims. Format: '<cluster> <sub>' (e.g. 'fix ci'). See docs/contracts/command-clusters.md § Deprecation shim contract."
+      "pattern": "^[a-z][a-z0-9-]*( (--[a-z][a-z0-9-]*|[a-z][a-z0-9-]*))?$",
+      "description": "Set on deprecation shims. Format: '<cluster> <sub>' (e.g. 'fix ci') or '<cluster> --<flag>' for flag-clusters (e.g. 'commit --in-chunks'). See docs/contracts/command-clusters.md § Deprecation shim contract."
     },
     "deprecated_in": {
       "type": "string",

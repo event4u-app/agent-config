@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "create a roadmap for X, plan this work as a roadmap"
   trigger_context: "multi-phase work without an existing agents/roadmaps/*.md"
+superseded_by: roadmap create
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /roadmap-create is deprecated; use /roadmap create instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # roadmap-create
 

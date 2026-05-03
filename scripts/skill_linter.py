@@ -886,6 +886,7 @@ def lint_command(path: Path, text: str) -> LintResult:
                     "error", "shim_missing_warning",
                     "Deprecation shim must contain a one-line warning matching "
                     "'⚠️  /<old-name> is deprecated; use /<cluster> <sub> instead.'"
+                    " (or '/<cluster> --<flag>' for flag-clusters)"
                     " (see docs/contracts/command-clusters.md § Deprecation shim contract)"
                 ))
 
