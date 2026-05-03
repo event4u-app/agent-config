@@ -128,10 +128,10 @@ The "Per-item independent" rollback note below is **scoped to council acceptance
 
 ### 0.5 Phase 3a spike scoring protocol + persona-voice rubric (HIGH)
 
-- [ ] **0.5.1** Define 3-scorer protocol: author + 2 reviewers; average score must be ≥ 3.5/5; any individual score < 3.0 escalates to council.
-- [ ] **0.5.2** Write rubric at `agents/contexts/judges/persona-voice-rubric.md`. Cover: tone, vocabulary, prompt-shape preservation, refusal patterns, evidence-citation style.
-- [ ] **0.5.3** Lock 5-day decision deadline from spike start. If deadline passes without consensus, council decides; **default = A** (separate skills + shared context, per locked Q1=A).
-- [ ] **0.5.4** Spike scope confirmed against Q1-locked decision: Option A is the leading hypothesis; the spike still tests Option B for empirical falsification (and for **mode-collision risk** — see 3a.0.1).
+- [x] **0.5.1** Define 3-scorer protocol: author + 2 reviewers; average score must be ≥ 3.5/5; any individual score < 3.0 escalates to council. *(Locked at `agents/roadmaps/structural-optimization-3a-scoring-protocol.md`.)*
+- [x] **0.5.2** Write rubric at `.agent-src.uncompressed/contexts/judges/persona-voice-rubric.md` (locked path per § 0.6). Covers: tone, vocabulary, prompt-shape preservation, refusal patterns, evidence-citation style.
+- [x] **0.5.3** Lock 5-day decision deadline from spike start. If deadline passes without consensus, council decides; **default = A** (separate skills + shared context, per locked Q1=A). *(Schedule in scoring-protocol § 5-day decision deadline.)*
+- [x] **0.5.4** Spike scope confirmed against Q1-locked decision: Option A is the leading hypothesis; the spike still tests Option B-collision risk via the security-only diff probe (B-shape itself is **not** prototyped — Q1 rejected it). *(Scope locked in scoring-protocol § Spike scope confirmation.)*
 
 ### 0.6 Context-file path conventions (HIGH)
 

@@ -101,6 +101,14 @@ EXAMPLE_PATH_PATTERNS = [
     re.compile(r"skills/[\w-]+/SKILL\.md"),    # example skill paths in commands
     re.compile(r"\{"),                         # template placeholders like {module}
     re.compile(r"\.compression-hashes\.json"), # JSON file, not .md
+    # Forward references inside in-flight planning docs (road-to-
+    # structural-optimization.md and its companion spike protocols).
+    # Each pattern below is removed once the matching phase lands.
+    re.compile(r"structural-optimization-3a-spike\.md"),       # 3a.0.2
+    re.compile(r"contexts/judges/no-consolidate-rationale"),   # 3a.0.2 abort
+    re.compile(r"contexts/judges/judge-shared-procedure"),     # 3a.1
+    re.compile(r"contexts/analysis/project-analysis-core-procedure"),  # 3b.1
+    re.compile(r"agents/roadmaps/phase6-non-overlap-evidence"),        # 6.1 conditional
 ]
 
 

@@ -6,10 +6,10 @@
 
 ## Overall
 
-**22 / 166 steps done · 13%**
+**26 / 166 steps done · 16%**
 
 ```text
-█████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   13%
+██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   16%
 ```
 
 ## Open roadmaps
@@ -20,7 +20,7 @@
 | 2 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 1 | 34 | 34 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-structural-optimization.md](roadmaps/road-to-structural-optimization.md) | 7 | 62 | 45 | 16 | 1 | 0 | ███░░░░░░░ 26% |
+| 5 | [road-to-structural-optimization.md](roadmaps/road-to-structural-optimization.md) | 7 | 62 | 41 | 20 | 1 | 0 | ███░░░░░░░ 33% |
 
 ---
 
@@ -75,11 +75,11 @@
 
 ### [road-to-structural-optimization.md](roadmaps/road-to-structural-optimization.md)
 
-**Road to Structural Optimization** — 16 / 61 done (26%)
+**Road to Structural Optimization** — 20 / 61 done (33%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Pre-execution spikes & audits | 🟡 in progress | 5 | 16 | 1 | 0 | 76% |
+| 0 | Pre-execution spikes & audits | 🟡 in progress | 1 | 20 | 1 | 0 | 95% |
 | 1 | Command Cluster Phase 2 (the deferred 12) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 2 | Rule slimming via `load_context:` | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
 | 3 | Skill family dispatcher consolidation | ⬜ not started | 12 | 0 | 0 | 0 | 0% |

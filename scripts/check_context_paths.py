@@ -49,11 +49,17 @@ GRANDFATHERED_ROOT_FILES = frozenset({
 })
 
 # Directories whose content we scan for references to a context file.
+# `agents/roadmaps` is included because in-flight roadmap docs are
+# legitimate referrers during multi-phase rollouts — a context can land
+# in phase N while its first rule/skill referrer lands in phase N+k.
+# Without this scan dir, every newly-introduced context would orphan
+# until the consuming artefact lands, blocking phase-by-phase commits.
 REFERENCE_SCAN_DIRS = (
     ".agent-src.uncompressed/rules",
     ".agent-src.uncompressed/skills",
     ".agent-src.uncompressed/commands",
     ".agent-src.uncompressed/contexts",
+    "agents/roadmaps",
 )
 
 
