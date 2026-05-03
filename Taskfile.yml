@@ -161,11 +161,20 @@ tasks:
 
   install-anthropic-key:
     desc: |
-      Install the Anthropic API key used by live trigger evals.
-      Interactive: key is read with no echo and stored in
-      ~/.config/agent-config/anthropic.key (mode 0600). Piped stdin is
-      refused. Rerun to rotate.
+      Install the Anthropic API key used by live trigger evals and the
+      AI Council `anthropic` member. Interactive: key is read with no
+      echo and stored in ~/.config/agent-config/anthropic.key (mode
+      0600). Piped stdin is refused. Rerun to rotate.
     cmd: bash scripts/install_anthropic_key.sh
+    interactive: true
+
+  install-openai-key:
+    desc: |
+      Install the OpenAI API key used by the AI Council `openai`
+      member. Interactive: key is read with no echo and stored in
+      ~/.config/agent-config/openai.key (mode 0600). Piped stdin is
+      refused. Rerun to rotate.
+    cmd: bash scripts/install_openai_key.sh
     interactive: true
 
   test-triggers-live:
