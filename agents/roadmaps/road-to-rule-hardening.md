@@ -52,6 +52,38 @@ ends, the new pattern lives on as a class.
 
 ## Phases
 
+### Phase 0a — PR #36 Closeout Hygiene (≤ 0.5 day, blocks merge)
+
+Pre-merge cleanup surfaced by an external review of PR #36 (rating 8.8 / 10,
+verdict: "content strong, strategy right, but too large and too meta-heavy"),
+before this roadmap's Phase 1 begins. Four tightly scoped items.
+
+- [ ] **0a.1 PR body honesty.** Update PR #36 description. Replace the
+      original "33 commits / Phase 0+1+2 narrative" with the actual diff
+      scope (structural optimization foundation + regression gates +
+      command surface reduction). Quote the real GitHub stats (file count,
+      line delta) instead of the planning narrative.
+- [ ] **0a.2 One-off script lifecycle.** Move the 14 existing
+      `scripts/ai_council/_one_off_*.py` scripts to
+      `scripts/ai_council/one_off_archive/2026-05/`. Add a CI guard
+      (`scripts/check_one_off_location.py` or extend `check_portability.py`)
+      that fails when a new `_one_off_*.py` lands outside
+      `one_off_archive/`. Wire it into `task ci`.
+- [ ] **0a.3 Promote 2A revert finding to a Locked Decision.** Create
+      `agents/contexts/adr-always-rule-context-split-not-viable.md`
+      summarising: under Model (b) accounting, splitting an Always-rule
+      into rule + `load_context:` produces a net character increase due
+      to context-frontmatter + citation overhead (empirical: `language-and-tone`
+      split = +186 chars net). Cross-link from
+      `.agent-src.uncompressed/contexts/budget/load-context-budget-model.md`.
+      Closes the institutional-knowledge gap: prevents the next attempt.
+- [ ] **0a.4 Budget wording — drop "improved".** Replace any "budget
+      improved" / "budget headroom improved" wording on the active surface
+      with the explicit number: Always-rule extended budget at
+      47,448 / 49,000 chars (1,552 chars headroom, 96.8 % utilisation —
+      **tight**, not "improved"). One pass over PR-body, README hero
+      section, and the two anchor lines in `road-to-context-layer-maturity.md`.
+
 ### Phase 1 — Self-Check Rule Audit (≤ 1 day)
 
 Inventory every rule in `.agent-src.uncompressed/rules/` and classify
