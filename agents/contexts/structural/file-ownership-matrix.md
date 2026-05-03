@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **315**
-- Edges (incl. self-WRITE): **733**
+- Files indexed: **317**
+- Edges (incl. self-WRITE): **740**
 
 ## READ_ONLY edges
 
@@ -160,6 +160,11 @@
 | `.agent-src.uncompressed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/verification-mechanics.md` | `.agent-src.uncompressed/rules/verify-before-complete.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md` | `.agent-src.uncompressed/contexts/judges/persona-voice-rubric.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md` | `.agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md` | `.agent-src.uncompressed/skills/judge-code-quality/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md` | `.agent-src.uncompressed/skills/judge-security-auditor/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md` | `.agent-src.uncompressed/skills/judge-test-coverage/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/subagent-configuration.md` | `.agent-src.uncompressed/commands/do-and-judge.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/subagent-configuration.md` | `.agent-src.uncompressed/commands/do-in-steps.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/subagent-configuration.md` | `.agent-src.uncompressed/commands/judge.md` | `body_link` | 1 |
@@ -435,8 +440,8 @@
 
 | Kind | Count |
 |---|---:|
-| `command` | 94 |
-| `context` | 27 |
+| `command` | 95 |
+| `context` | 28 |
 | `persona` | 8 |
 | `rule` | 57 |
 | `skill` | 129 |

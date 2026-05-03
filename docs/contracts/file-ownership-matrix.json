@@ -147,6 +147,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/commands/council-default.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/commands/council-design.md": {
       "kind": "command",
       "rule_type": null,
@@ -694,6 +700,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/contexts/execution/verification-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md": {
       "kind": "context",
       "rule_type": null,
       "load_context": [],
@@ -2305,6 +2317,13 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/commands/council-default.md",
+      "target": ".agent-src.uncompressed/commands/council-default.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/commands/council-design.md",
       "target": ".agent-src.uncompressed/commands/council-design.md",
       "type": "WRITE",
@@ -3777,6 +3796,48 @@
     {
       "source": ".agent-src.uncompressed/contexts/execution/verification-mechanics.md",
       "target": ".agent-src.uncompressed/rules/verify-before-complete.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md",
+      "target": ".agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md",
+      "target": ".agent-src.uncompressed/contexts/judges/persona-voice-rubric.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md",
+      "target": ".agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md",
+      "target": ".agent-src.uncompressed/skills/judge-code-quality/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md",
+      "target": ".agent-src.uncompressed/skills/judge-security-auditor/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md",
+      "target": ".agent-src.uncompressed/skills/judge-test-coverage/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
