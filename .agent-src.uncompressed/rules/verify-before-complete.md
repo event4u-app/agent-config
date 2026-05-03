@@ -3,6 +3,8 @@ type: "always"
 description: "Verify before completion — run tests and quality tools before claiming done"
 alwaysApply: true
 source: package
+load_context:
+  - .agent-src.uncompressed/contexts/execution/verification-mechanics.md
 ---
 
 # Verify Before Completion
@@ -14,25 +16,6 @@ NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
 ```
 
 If you haven't run the verification command **in this message**, you cannot claim it passes.
-
-## When to run what — timing matters
-
-**Quality tools (PHPStan, Rector, ECS) run ONCE at the very end** — not after every edit.
-Do NOT run quality checks between tasks if you have more work to do.
-Only run the full quality pipeline when you are about to finish all work in the current conversation.
-
-**Tests: as targeted as possible, as little as necessary.**
-- During work: run ONLY the specific test class or test case affected by the change.
-  Use `--filter=ClassName` or `--filter=test_name` — NEVER the full suite mid-work.
-- Only run tests when you genuinely need to verify behavior (not "just to be safe").
-- Full test suite: ONCE at the very end, before quality tools.
-
-**The sequence at the end:**
-1. All code changes are done
-2. Run tests — targeted first (`--filter`), full suite only if targeted passes
-3. Run quality pipeline (PHPStan → Rector → ECS → PHPStan)
-4. Fix any issues from step 2-3
-5. ONLY THEN claim completion or suggest commit/push/PR
 
 ## The Gate
 
@@ -70,51 +53,13 @@ For the detailed evidence-gate playbook (claim→command mapping, output
 inspection, end-of-work sequence) → see the `verify-completion-evidence`
 skill.
 
-## Minimum verification per task type
+## Mechanics — when to run what, per-task evidence, confidence, break-glass
 
-| Task | Required evidence |
-|---|---|
-| Code change | Tests + PHPStan |
-| New feature | Tests + PHPStan + smoke test |
-| Bug fix | Regression test + full suite |
-| Refactoring | Full suite + PHPStan + Rector |
-| Config/migration | Relevant tests or command output |
-| API endpoint | curl/HTTP response output |
-| Documentation only | No verification needed |
-
-**Never accept** as proof: "should work", "looks correct", "logic is sound".
-No captured output = not verified.
-
-## Confidence gating
-
-State confidence explicitly before claiming completion on non-trivial work.
-
-- **High** — runtime path read end-to-end, relevant tests inspected or run,
-  no hidden side-effects (queues/events/observers) unaccounted for.
-- **Medium** — main path verified but one gap remains; list the gap in the
-  completion message.
-- **Low** — broad implementation NOT allowed; switch to analysis, narrow
-  the scope, or ask the user before proceeding.
-
-For high-risk areas (auth, tenancy, migrations, queues, dependencies,
-external APIs, data exposure), "high" requires tests AND a cross-layer
-read — not inference from a single file.
-
-## Break-glass reduction
-
-During a live production incident the verification gate is **narrowed**,
-never skipped. Break-glass requires explicit user invocation (e.g.
-`break-glass: true`, "this is a hotfix"). Never enter it unilaterally.
-
-Minimum evidence:
-
-- **Targeted test(s)** covering the exact regression — zero tests is not
-  acceptable.
-- **Smoke check** of the fixed path (curl, manual trigger, log tail) with
-  output captured in the message.
-- **Explicit list of skipped validations** and a **follow-up commitment**
-  (ticket or PR line) to run them within 24h.
-
-Completion wording: _"hotfix applied, full verification deferred per
-break-glass"_ — never _"done"_ or _"verified"_. The normal gate resumes
-on the follow-up PR.
+The decision logic for **when** to run quality tools vs. tests, the
+per-task-type minimum-evidence table, confidence gating (High /
+Medium / Low), and the break-glass reduction during live incidents
+all live in
+[`verification-mechanics`](../contexts/execution/verification-mechanics.md).
+The Iron Law and the Gate above are the obligation surface; the
+mechanics context is the lookup material the agent pulls when the
+gate fires.
