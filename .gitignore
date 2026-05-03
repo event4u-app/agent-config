@@ -27,6 +27,9 @@ __pycache__/
 # Temp
 /tmp/
 
+# Playwright
+/.playwright-mcp/*
+
 # Ignore the agent settings (YAML is the active format; flat legacy is
 # kept for the migration window and gets deleted by scripts/install once
 # the YAML file has been written)
