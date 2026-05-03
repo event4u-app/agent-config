@@ -23,7 +23,9 @@ error.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -36,6 +38,29 @@ COMP_PREFIX = ".agent-src/"
 TOTAL_CAP = 49_000
 WARN_THRESHOLD = 0.80
 FAIL_THRESHOLD = 0.90
+
+# Phase 5.2.1 concentration thresholds (non-safety-floor rules only).
+# Beyond the total-budget cap, fail CI when any single non-safety-floor
+# rule exceeds SINGLE_PCT of used budget OR the top-3 non-safety-floor
+# sum exceeds TOP3_PCT of used budget. Prevents post-slim concentration
+# regrowth (risk #12 in road-to-structural-optimization).
+CONCENTRATION_SINGLE_PCT = 0.12
+CONCENTRATION_TOP3_PCT = 0.30
+
+# Q3=A locked safety-floor rules — out of scope for slimming and for the
+# concentration check. Their size is intentional (Iron Laws + obligation
+# surface), not drift. See road-to-structural-optimization Phase 5.
+SAFETY_FLOOR_RULES: frozenset[str] = frozenset({
+    "non-destructive-by-default.md",
+    "commit-policy.md",
+    "scope-control.md",
+    "verify-before-complete.md",
+})
+
+# Phase 5.3 — per-rule trend log. JSONL, one record per linter run.
+# Each line: {"ts": iso8601, "total": int, "rules": {name: ext}}.
+TREND_LOG = REPO_ROOT / ".github" / "budget-trend.jsonl"
+TREND_LOG_MAX_RECORDS = 500
 # Phase 0.2 G3 tolerance band — overshoot ≤ 2 % of cap is accepted by
 # the model (b) contract; > 2 % rejects model (b) and escalates. The
 # linter treats the [100 %, 100 % + tolerance] window as a hardened
@@ -153,12 +178,80 @@ def _extended_size(rule: Path) -> tuple[int, list[tuple[str, str]]]:
     return ext, violations
 
 
+def _concentration_check(
+    sizes: list[tuple[str, int, int]],
+    total_ext: int,
+) -> tuple[list[tuple[str, int, float]], tuple[int, float] | None]:
+    """Phase 5.2.1 concentration check (non-safety-floor rules only).
+
+    Returns (single-rule breaches, top-3 breach or None). Q3=A locked
+    safety-floor rules are excluded from both numerator and the top-3
+    selection — their size is intentional, not drift.
+    """
+    non_floor = [
+        (name, raw, ext) for name, raw, ext in sizes
+        if name not in SAFETY_FLOOR_RULES
+    ]
+    single_cap = total_ext * CONCENTRATION_SINGLE_PCT
+    top3_cap = total_ext * CONCENTRATION_TOP3_PCT
+
+    single_breaches = [
+        (name, ext, ext / total_ext)
+        for name, _, ext in non_floor
+        if ext > single_cap
+    ]
+    top3_sum = sum(ext for _, _, ext in non_floor[:3])
+    top3_breach = (
+        (top3_sum, top3_sum / total_ext)
+        if top3_sum > top3_cap else None
+    )
+    return single_breaches, top3_breach
+
+
+def _record_trend(total_ext: int, sizes: list[tuple[str, int, int]]) -> None:
+    """Append the current run to the trend log (Phase 5.3)."""
+    TREND_LOG.parent.mkdir(parents=True, exist_ok=True)
+    record = {
+        "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "total": total_ext,
+        "rules": {name: ext for name, _, ext in sizes},
+    }
+    lines: list[str] = []
+    if TREND_LOG.exists():
+        lines = TREND_LOG.read_text(encoding="utf-8").splitlines()
+    lines.append(json.dumps(record, separators=(",", ":")))
+    if len(lines) > TREND_LOG_MAX_RECORDS:
+        lines = lines[-TREND_LOG_MAX_RECORDS:]
+    TREND_LOG.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _last_trend() -> dict | None:
+    """Return the most recent trend record, or None if log is empty."""
+    if not TREND_LOG.exists():
+        return None
+    lines = [
+        line for line in TREND_LOG.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    if not lines:
+        return None
+    try:
+        return json.loads(lines[-1])
+    except json.JSONDecodeError:
+        return None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--quiet",
         action="store_true",
         help="suppress the per-rule breakdown unless threshold is crossed",
+    )
+    parser.add_argument(
+        "--no-trend",
+        action="store_true",
+        help="skip writing to .github/budget-trend.jsonl (Phase 5.3)",
     )
     args = parser.parse_args()
 
@@ -202,6 +295,9 @@ def main() -> int:
         and FAIL_THRESHOLD <= pct < 1.0
         and total_ext < baseline
     )
+    single_breaches, top3_concentration_breach = _concentration_check(
+        sizes, total_ext
+    )
     failing = (
         (
             pct >= FAIL_THRESHOLD
@@ -214,6 +310,8 @@ def main() -> int:
         or grew_over_ceiling
         or top3_breach
         or all_violations
+        or single_breaches
+        or top3_concentration_breach is not None
     )
     if failing:
         status, rc = "❌  FAIL", 1
@@ -284,6 +382,51 @@ def main() -> int:
         )
         for rule_name, chain in all_violations:
             print(f"        {rule_name}: {chain}")
+
+    if single_breaches:
+        details = ", ".join(
+            f"{n}={ext:,} ({frac * 100:.1f}%)"
+            for n, ext, frac in single_breaches
+        )
+        print(
+            f"\n      Concentration breach (single rule > "
+            f"{CONCENTRATION_SINGLE_PCT * 100:.0f}% of used budget, "
+            f"non-allowlisted): {details}"
+        )
+
+    if top3_concentration_breach is not None:
+        sum_, frac = top3_concentration_breach
+        print(
+            f"\n      Concentration breach (top-3 non-allowlisted > "
+            f"{CONCENTRATION_TOP3_PCT * 100:.0f}% of used budget): "
+            f"{sum_:,} ({frac * 100:.1f}%)"
+        )
+
+    # Phase 5.3 — per-rule trend delta vs. previous run.
+    prev = _last_trend()
+    if prev is not None and not args.quiet:
+        prev_total = prev.get("total")
+        prev_rules = prev.get("rules") or {}
+        if isinstance(prev_total, int):
+            delta_total = total_ext - prev_total
+            sign = "+" if delta_total >= 0 else ""
+            print(
+                f"\n      Trend vs. previous run "
+                f"({prev.get('ts', '?')}): total {sign}{delta_total:,} chars"
+            )
+            deltas: list[tuple[str, int, int]] = []
+            for name, _, ext in sizes:
+                old = prev_rules.get(name)
+                if isinstance(old, int) and old != ext:
+                    deltas.append((name, ext - old, ext))
+            if deltas:
+                deltas.sort(key=lambda x: -abs(x[1]))
+                for name, d, ext in deltas[:5]:
+                    s = "+" if d >= 0 else ""
+                    print(f"        {name}: {s}{d:,} (now {ext:,})")
+
+    if not args.no_trend:
+        _record_trend(total_ext, sizes)
 
     if rc == 1:
         print(
