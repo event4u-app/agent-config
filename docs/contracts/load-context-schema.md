@@ -55,6 +55,36 @@ opt-in and budget-gated.
 - A context file may itself declare `load_context:` (chain reasoning).
   The linter rejects cycles.
 
+## Subdirectory conventions
+
+Subdirectories under `contexts/` are **conventional, not enforced**.
+The linter only validates the root prefix; subdirectory layout is a
+documentation contract for human reviewers.
+
+Two canonical subdirectories are in production:
+
+| Subdir | Holds | First consumer |
+|---|---|---|
+| `contexts/execution/` | runtime decision logic, mechanics, and examples for execution-time rules (autonomy detection, verification mechanics, etc.) | `autonomous-execution` (Phase 2 of `road-to-pr-34-followups`) |
+| `contexts/authority/` | mechanics behind authority gates — what makes commits, scope changes, and git ops legal vs. illegal | `commit-policy` and `scope-control` (Phase 6 of `road-to-pr-34-followups`) |
+
+A third subdirectory, `contexts/communication/`, was proposed by the
+PR #34 round-6 review for user-interaction and language-and-tone
+mechanics. It is **not yet created** — the anti-speculation guard in
+Phase 6 forbids creating a context root before its triggering rule
+exists. Add it the same turn as the first migrating rule, not before.
+
+A new subdirectory is justified when:
+
+- A second rule needs to share contexts with the first one, AND
+- The contexts have a coherent topic (execution, authority, communication, …), AND
+- The triggering rule and its content move at the same time
+  (no empty subdir reservations).
+
+Single-rule contexts that don't fit one of the canonical topics live
+directly under `contexts/` (see `contexts/model-recommendations.md`,
+`contexts/skills-and-commands.md`).
+
 ## Combined char-budget guard
 
 `load_context_eager:` triggers a budget check:
@@ -143,7 +173,8 @@ no cycles.
 (`autonomous-execution`). A breaking schema change is a SemVer-minor
 pre-1.0 bump. Adding a new optional key is non-breaking. The first
 consumer surfaced no schema gaps; the next migration batch (roadmap
-`road-to-pr-34-followups` Phase 5) is the next stress test.
+`road-to-pr-34-followups` Phase 6 — `commit-policy`, `scope-control`,
+`verify-before-complete`) is the next stress test.
 
 ## Cross-references
 
