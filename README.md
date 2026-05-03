@@ -12,6 +12,16 @@ Give your AI agents an audit-disciplined orchestration contract — testing, Git
 
 ---
 
+## Start here
+
+New to agent-config? 60 seconds, three links:
+
+1. **[Install](#quickstart)** — `composer require` or `npm install`, then run the installer.
+2. **[First command](#2-minute-demo-implement-ticket)** — `/implement-ticket` or `/work` walkthrough.
+3. **[Where the rules live](#documentation)** — `.augment/`, `.claude/`, `.cursor/`, and friends.
+
+---
+
 ## Quickstart
 
 Two minutes from `composer require` to a better-behaved agent.

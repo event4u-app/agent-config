@@ -167,8 +167,9 @@ for every profile), the agent keeps a JSONL log of your conversation in
 rotates at the size configured in the profile (`128 KB` on `minimal`,
 `256 KB` on `balanced`, `512 KB` on `full`).
 
-When a chat opens and finds an existing log, the agent runs a
-4-state ownership check and chooses the right flow:
+When a chat opens and finds an existing log, the host agent is
+instructed to run a 4-state ownership check and choose the right
+flow:
 
 - **match** — this chat already owns the file. Append silently.
 - **foreign** — a different session's file. You get 3 options:
