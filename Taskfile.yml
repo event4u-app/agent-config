@@ -321,6 +321,14 @@ tasks:
     desc: Validate context-file path tree, basename collisions, and orphans (docs/contracts/context-paths.md)
     cmd: python3 scripts/check_context_paths.py
 
+  generate-ownership-matrix:
+    desc: Regenerate the file-ownership matrix JSON + MD (docs/contracts/file-ownership-matrix.md)
+    cmd: python3 scripts/generate_ownership_matrix.py
+
+  check-ownership-matrix:
+    desc: Verify the committed ownership matrix matches a fresh regeneration (CI gate)
+    cmd: python3 scripts/generate_ownership_matrix.py --check
+
   check-reply-consistency:
     desc: Scan shipped sources for legacy (recommended) inline tags on numbered options
     cmd: python3 scripts/check_reply_consistency.py --scan-dir .agent-src.uncompressed
@@ -497,6 +505,7 @@ tasks:
       - task: lint-rule-interactions
       - task: lint-load-context
       - task: check-context-paths
+      - task: check-ownership-matrix
       - task: check-reply-consistency
       - task: check-iron-law-prominence
       - task: check-always-budget
