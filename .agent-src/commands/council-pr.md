@@ -1,6 +1,7 @@
 ---
 name: council-pr
-cluster: optimize
+cluster: council
+sub: pr
 skills: [ai-council]
 description: Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in.
 disable-model-invocation: true
@@ -8,7 +9,12 @@ suggestion:
   eligible: true
   trigger_description: "council on PR #N, external review of pull request, second opinion on a PR"
   trigger_context: "user has a PR number / URL and wants an external review before approve/merge"
+superseded_by: council pr
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /council-pr is deprecated; use /council pr instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # council-pr
 

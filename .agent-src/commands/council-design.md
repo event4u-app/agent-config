@@ -1,6 +1,7 @@
 ---
 name: council-design
-cluster: optimize
+cluster: council
+sub: design
 skills: [ai-council]
 description: Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment.
 disable-model-invocation: true
@@ -8,7 +9,12 @@ suggestion:
   eligible: true
   trigger_description: "council on this design, second opinion on the ADR, external review of architecture proposal"
   trigger_context: "user has a design doc / ADR / architecture proposal and wants an external review before commitment"
+superseded_by: council design
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /council-design is deprecated; use /council design instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # council-design
 

@@ -5,9 +5,10 @@ stability: beta
 # Command-cluster contract
 
 > **Status:** beta — Phase 1 locked for `1.15.0` (top-3 clusters);
-> Phase 2 locked for `1.17.0` (the remaining 12 clusters).
+> Phase 2 locked for `1.17.0` (the remaining 12 clusters);
+> Phase 3 locked for `1.17.0` (`council` cluster).
 > Source roadmap: [`agents/roadmaps/road-to-structural-optimization.md`](../../agents/roadmaps/road-to-structural-optimization.md)
-> § Phase 1 (which builds on `archive/road-to-governance-cleanup.md` § F2).
+> § Phase 1 / § Phase 4 (which builds on `archive/road-to-governance-cleanup.md` § F2).
 
 The agent-config command surface collapses related atomic commands
 into **verb clusters**. A cluster is a single top-level command
@@ -43,6 +44,7 @@ column 1 of this table.
 | `judge` | 2 | `solo` · `on-diff` · `steps` | `judge` (legacy standalone) · `do-and-judge` · `do-in-steps` |
 | `commit` | 2 | flag: `--in-chunks` | `commit-in-chunks` |
 | `create-pr` | 2 | flag: `--description-only` | `create-pr-description` |
+| `council` | 3 | `default` · `pr` · `design` · `optimize` | `council` (legacy default lens) · `council-pr` · `council-design` · `council-optimize` |
 
 **Net change:** Phase 1 collapsed 15 atomics → 3 clusters; Phase 2
 collapses 26 atomics → 9 sub-command clusters + 2 flag-clusters
