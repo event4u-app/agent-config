@@ -30,13 +30,16 @@ TOTAL_CAP = 49_000
 TOLERANCE_BAND = 0.02  # G3 — overshoot ≤ 2 % accepted while Phase 2A pending
 PER_RULE_CAP = 6_000
 TOP3_CAP = TOTAL_CAP // 2
-# Phase 0b.1 (F13) — top-5 baseline ceiling. Locked at 33,510 chars on the
-# `feat/better-basement` shipping branch (post-`no-cheap-questions` trim).
+# Phase 0b.1 (F13) — top-5 baseline ceiling. Originally locked at 33,510
+# chars on the `feat/better-basement` shipping branch (post-`no-cheap-
+# questions` trim). Phase 0b.2 (F10) trim of `language-and-tone` dropped
+# the rule from rank 3 to rank 8 (5,832 → 3,969 chars), pulling the top-5
+# sum down to 32,874 with `ask-when-uncertain` (5,196) entering rank 5.
 # Failure mode pinned: the top-5 always-rule extended sum grows beyond this
 # ceiling without an accompanying trim, signalling that Phase 0b.2 budget
 # headroom is regressing. Trims that push the ceiling DOWN must update this
 # constant in the same commit.
-TOP5_CEILING = 33_510
+TOP5_CEILING = 32_874
 MAX_DEPTH = 2
 
 # Mirrors `scripts/check_always_budget.py::KNOWN_PER_RULE_BREACHES`.

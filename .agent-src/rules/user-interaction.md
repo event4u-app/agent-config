@@ -55,7 +55,7 @@ recommendation line is mandatory.
 - Hiding behind "you know the project better"
 - Inline `(recommended)` tag with no follow-up `Recommendation: N` line
 
-**Slip handling — same protocol as [`language-and-tone`](language-and-tone.md#when-the-user-calls-out-a-language-slip).**
+**Slip handling — same protocol as [`language-and-tone`](language-and-tone.md#slip-handling).**
 User calls out a missing or wrong recommendation → acknowledge once
 in the user's language, rewrite the reply with a recommendation,
 ship. No "from now on" promises — only the next reply proves

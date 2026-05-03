@@ -6,21 +6,21 @@
 
 ## Overall
 
-**26 / 166 steps done · 16%**
+**37 / 167 steps done · 22%**
 
 ```text
-██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   16%
+█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   22%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-1-16-followups.md](roadmaps/road-to-1-16-followups.md) | 8 | 34 | 23 | 6 | 0 | 5 | ██░░░░░░░░ 21% |
+| 1 | [road-to-1-16-followups.md](roadmaps/road-to-1-16-followups.md) | 8 | 34 | 13 | 16 | 0 | 5 | ██████░░░░ 55% |
 | 2 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 1 | 34 | 34 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-structural-optimization.md](roadmaps/road-to-structural-optimization.md) | 7 | 62 | 41 | 20 | 1 | 0 | ███░░░░░░░ 33% |
+| 5 | [road-to-structural-optimization.md](roadmaps/road-to-structural-optimization.md) | 7 | 62 | 41 | 21 | 0 | 0 | ███░░░░░░░ 34% |
 
 ---
 
@@ -28,14 +28,14 @@
 
 ### [road-to-1-16-followups.md](roadmaps/road-to-1-16-followups.md)
 
-**Road to 1.16.0 Follow-ups** — 6 / 29 done (21%)
+**Road to 1.16.0 Follow-ups** — 16 / 29 done (55%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0a | Immediate fixes (independent, ≤30 min) | 🟡 in progress | 1 | 6 | 0 | 5 | 86% |
 | 0a | success criteria | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 | 0a | abort / rollback | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
-| 0b | Budget-headroom + golden-test replay (gated) | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
+| 0b | Budget-headroom + golden-test replay (gated) | ✅ done | 0 | 10 | 0 | 0 | 100% |
 | 0b | success criteria | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 | 0b | abort / rollback | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 | 1 | `load_context:` rollout + archive audit | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
@@ -75,11 +75,11 @@
 
 ### [road-to-structural-optimization.md](roadmaps/road-to-structural-optimization.md)
 
-**Road to Structural Optimization** — 20 / 61 done (33%)
+**Road to Structural Optimization** — 21 / 62 done (34%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Pre-execution spikes & audits | 🟡 in progress | 1 | 20 | 1 | 0 | 95% |
+| 0 | Pre-execution spikes & audits | 🟡 in progress | 1 | 21 | 0 | 0 | 95% |
 | 1 | Command Cluster Phase 2 (the deferred 12) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 2 | Rule slimming via `load_context:` | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
 | 3 | Skill family dispatcher consolidation | ⬜ not started | 12 | 0 | 0 | 0 | 0% |
