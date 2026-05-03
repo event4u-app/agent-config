@@ -3,6 +3,8 @@ type: "auto"
 description: "Creating, editing, or reviewing skills — minimum quality standard, every skill must be executable, validated, and self-contained"
 alwaysApply: false
 source: package
+load_context:
+  - .agent-src.uncompressed/contexts/communication/rules-auto/skill-quality-mechanics.md
 ---
 
 # Skill Quality
@@ -30,26 +32,13 @@ and fail `python3 scripts/validate_frontmatter.py` and the full CI pipeline.
 
 ## Description Triggering
 
-Claude routes skills by reading the frontmatter `description`. Polite, generic,
-or hedged descriptions cause **undertriggering** — the skill never loads when it
-should, and the user never learns it exists.
-
-Make descriptions "pushy" — explicit about when to fire:
-
-- Start with a concrete verb phrase: `Use when ...`, `Creates ...`, `Reviews ...`.
-- Name 2+ concrete triggers — domains, symptoms, file types, user phrasing.
-- End with: `... even if they don't explicitly ask for \`<skill-name>\`.`
-- Avoid hedges: `may help with`, `can be useful for`, `covers various`.
-- **Keep it ≤ 200 characters.** `scripts/skill_linter.py` warns at
-  `description_too_long` above this. If the pushy tail pushes you over, cut
-  adjectives, drop the second example phrasing, or collapse a list — do
-  **not** drop the trigger vocabulary or the `even if ...` tail.
-
-Source: [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md).
-
-**Litmus test:** Read the description cold, without the skill's body. If you
-cannot name at least two phrasings a user would realistically type that should
-route to this skill, the description is too polite. Rewrite it.
+Claude routes skills by their frontmatter `description`. Pushy,
+trigger-rich descriptions are required — polite or hedged ones cause
+undertriggering. The full recipe (concrete verb phrase, ≥2 triggers,
+`even if they don't explicitly ask for …` tail, ≤200 chars,
+litmus test) lives in
+[`contexts/communication/rules-auto/skill-quality-mechanics.md`](../contexts/communication/rules-auto/skill-quality-mechanics.md)
+§ Description Triggering.
 
 ## Skill Independence
 
@@ -64,35 +53,14 @@ If a skill is not executable without opening a guideline, it is broken.
 **Litmus test:** Cover all guideline references in the Procedure. Is it still executable?
 If not → the skill needs more own steps, decisions, and validation — not more guideline links.
 
-## Merge Preservation
+## Merge & Compression Preservation
 
-When merging or refactoring skills, the merged result MUST preserve:
-
-1. **Strongest validation** from each source skill
-2. **Strongest example** (good/bad contrast) from each source
-3. **Strongest anti-pattern** from each source
-4. **All concrete decision criteria** that differ between sources
-
-A merge is invalid if:
-- Validation got weaker than the strongest source
-- Examples were lost without replacement
-- Anti-pattern coverage decreased
-- The merged skill became a generic umbrella doc
-
-## Compression Preservation
-
-When compressing a skill, the compressed version MUST preserve:
-
-- Trigger quality (description + When to use)
-- All procedure steps that contain decisions
-- All concrete validation checks
-- All gotchas and anti-patterns
-- Strongest example (at minimum one good/bad contrast)
-
-Compression may remove:
-- Verbose explanations
-- Redundant examples (keep the strongest)
-- Commentary that doesn't affect execution
+When merging or compressing skills, the result MUST preserve the
+strongest validation, strongest examples, all anti-patterns, all
+decision criteria, and trigger quality. Full preservation invariants
+and "merge is invalid if …" / "compression may remove …" lists in
+[`contexts/communication/rules-auto/skill-quality-mechanics.md`](../contexts/communication/rules-auto/skill-quality-mechanics.md)
+§ Merge Preservation and § Compression Preservation.
 
 ## Refactor Safety
 

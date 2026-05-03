@@ -3,14 +3,18 @@ type: "auto"
 description: "User prompt without /command but matching an eligible slash command — surface matches as numbered options with as-is escape hatch; never auto-executes, user always picks"
 alwaysApply: false
 source: package
+load_context:
+  - .agent-src.uncompressed/contexts/communication/rules-auto/command-suggestion-policy-mechanics.md
 ---
 
 # Command Suggestion
 
 When the user's prompt matches an eligible slash command, surface it
-as a **numbered option** alongside an "as-is" escape hatch. The user
-always picks. **Nothing auto-executes.** The suggestion layer is a
-read-only shortcut *finder*, not an invocation path.
+as a **numbered option** alongside an "as-is" escape hatch — the
+"run prompt as-is" option is **always last** and **always present**,
+never omitted. The user always picks. **Nothing auto-executes.** The
+suggestion layer is a read-only shortcut *finder*, not an invocation
+path.
 
 The deterministic engine lives in `scripts/command_suggester/`. The
 locked eligibility table lives in
@@ -46,33 +50,6 @@ On a user turn that matches **all** of the following:
 When all six hold, the suggestion block is the **first and only**
 thing the agent emits that turn. No tools, no edits, no other prose.
 
-## What to emit
-
-Render exactly one numbered-options block conforming to
-`user-interaction`:
-
-```
-> 💡 Your request matches a command. Pick one or run the prompt as-is:
->
-> 1. /implement-ticket — drive ticket end-to-end through refine → plan → implement → test
-> 2. /refine-ticket — tighten the AC and risks on a ticket before planning
-> 3. Just run the prompt as-is, no command
-
-**Recommendation: 1 — /implement-ticket** — the request matches its trigger description (`setze ticket abc-123 um`). Pick the last option to skip the command and run the prompt as written.
-```
-
-Rules — non-negotiable:
-
-- The "run as-is" option is **always present**, **always last**, never removed.
-- At most `commands.suggestion.max_options` command suggestions
-  precede the as-is option (default 4 → 5 total).
-- Exactly **one** `Recommendation:` line follows the block, naming
-  the highest-scoring command — or no recommendation when the top
-  two scores are within 0.05 of each other (single-source-of-truth
-  Iron Law from `user-interaction`).
-- Free-text replies count as the as-is option unless they
-  unambiguously name one of the listed commands.
-
 ## Subordination — when to stay silent
 
 The suggestion rule is **junior** to:
@@ -90,39 +67,19 @@ The suggestion rule is **junior** to:
 On any conflict → suggestion stays silent. Zero output. The user's
 prompt is processed as it would be without this rule.
 
-## Anti-noise — silent when uncertain
-
-The engine's `rank.py` already drops:
-
-- Matches below the `confidence_floor` (default 0.6, per-command
-  override in frontmatter).
-- Single matches scoring `< floor + 0.1` with no structural bonus
-  (high uncertainty isn't worth interrupting for).
-- Short prompts (< 6 words) hitting > 2 commands with no structural
-  bonus (ticket key, file path) — too vague to disambiguate.
-- Pure-continuation messages (`ok`, `weiter`, `mach weiter`, `go on`,
-  …) — no new intent signal, no structural bonus → silent.
-- Suggestions that fired for the same `(command, evidence)` pair
-  within the cooldown window (default 10m, per-command override).
-
-If the engine returns an empty list → emit nothing. The user's
-prompt runs exactly as it would without this rule.
-
-## What this rule does NOT do
-
-- Invoke any command. Picking option N is what triggers `slash-command-routing-policy`.
-- Stack with other questions. One numbered-options block per turn.
-- Re-trigger on its own output. Command names emitted in the
-  suggestion block are excluded from the next-turn matcher input.
-- Override `enabled: false`, blocklist entries, or per-conversation opt-out.
-- Suggest commands that are not in the locked eligibility table.
-
 ## Cloud Behavior
 
 On cloud surfaces (Claude.ai Web, Skills API) the rule is **inert**
 unless the suggester package is shipped in the bundle. Treat
 `commands.suggestion.enabled` as `false` when the engine is not
 available — degrade silently, never crash the turn.
+
+## Mechanics — output format, anti-noise, what this rule does NOT do
+
+The exact rendered options block, the `Recommendation:` rules, the
+`max_options` cap, the `rank.py` anti-noise filters, and the
+"what this rule does NOT do" catalog live in
+[`contexts/communication/rules-auto/command-suggestion-policy-mechanics.md`](../contexts/communication/rules-auto/command-suggestion-policy-mechanics.md).
 
 ## Interactions
 

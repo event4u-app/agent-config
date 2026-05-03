@@ -3,6 +3,8 @@ type: "auto"
 description: "Writing or editing UI — components, screens, partials, layouts, design tokens — require existing-ui-audit findings in state.ui_audit before non-trivial UI change; gate, not suggestion"
 alwaysApply: false
 source: package
+load_context:
+  - .agent-src.uncompressed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md
 ---
 
 # UI-Audit Before Build
@@ -50,19 +52,6 @@ Any precondition fails at edit time → stop, reclassify as
 `ui-improve`, re-enter the gate. Backend-only edits and
 documentation work were never in scope for this rule.
 
-## What "audit findings" means
-
-`state.ui_audit` is a non-empty dict carrying at least one of:
-
-- `components_found` — `{path, name, kind, similarity?}` inventory
-  entries from [`existing-ui-audit`](../skills/existing-ui-audit/SKILL.md).
-- `greenfield: true` plus `greenfield_decision` ∈
-  `{scaffold, bare, external_reference}`.
-- Legacy `components` alias — back-compat for the same shape.
-
-`null`, `{}`, or a dict without those keys is **not** findings;
-emit `@agent-directive: existing-ui-audit` instead of writing code.
-
 ## What to do when the gate fires
 
 1. Stop. Do not open an editor on a component file.
@@ -74,33 +63,30 @@ emit `@agent-directive: existing-ui-audit` instead of writing code.
    external-reference halt **before** code; record the pick in
    `state.ui_audit.greenfield_decision`.
 
+## What "audit findings" means
+
+`state.ui_audit` is a non-empty dict carrying at least one of:
+
+- `components_found` — inventory entries from `existing-ui-audit`.
+- `greenfield: true` plus `greenfield_decision` ∈
+  `{scaffold, bare, external_reference}`.
+- Legacy `components` alias — back-compat for the same shape.
+
+`null`, `{}`, or a dict without those keys is **not** findings —
+the empty dict is rejected on purpose. An audit that finds nothing
+must record either ≥1 `components_found` or the greenfield branch.
+
 ## Failure modes
 
 - Writing the component first and "thinking about reuse later".
-- Citing a similar-looking component from memory without verifying
-  it via the audit.
-- Treating `state.ui_audit = {}` as "audit ran, found nothing" —
-  empty dict is rejected on purpose; an audit that finds nothing
-  must record either ≥1 `components_found` or the greenfield branch.
+- Citing a similar-looking component from memory without verifying.
+- Treating `state.ui_audit = {}` as "audit ran, found nothing".
 - Bypassing the gate for "just one tile".
 
-## Interactions
+## Lookup material — see mechanics
 
-- [`improve-before-implement`](improve-before-implement.md) — runs
-  first when the request is ambiguous; this rule is the next gate.
-- [`ask-when-uncertain`](ask-when-uncertain.md) — "just build it"
-  does **not** drop the audit; acknowledge, run audit, continue.
-- [`directives/ui/audit.py`](../templates/scripts/work_engine/directives/ui/audit.py)
-  — code-layer twin; this rule covers the cases where the engine
-  is not in the loop.
-- [`existing-ui-audit`](../skills/existing-ui-audit/SKILL.md) — the
-  skill that produces the findings.
-
-## Cloud Behavior
-
-On cloud surfaces the engine is not shipped, so `state.ui_audit`
-does not exist. The Iron Law still applies: take the visible
-inventory of files in conversation context as the audit, and
-surface a one-line audit summary in the reply before writing the
-component. The gate is satisfied by an explicit summary, not by
-silently skipping.
+The full failure-mode catalog, cross-rule interactions, and the
+cloud-surface adaptation live in
+[`contexts/communication/rules-auto/ui-audit-gate-mechanics.md`](../contexts/communication/rules-auto/ui-audit-gate-mechanics.md).
+Pull it whenever the gate fires or the agent is unsure whether a
+recorded `state.ui_audit` qualifies.

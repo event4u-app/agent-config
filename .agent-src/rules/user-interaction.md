@@ -3,6 +3,8 @@ type: "auto"
 description: "Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators"
 alwaysApply: false
 source: package
+load_context:
+  - .agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md
 ---
 
 # User Interaction
@@ -84,12 +86,11 @@ Mechanical backstop: `python3 scripts/check_reply_consistency.py --stdin < draft
 (non-zero exit on any rule above). Self-scan is the primary gate; the
 script is the deterministic safety net for ambiguous cases.
 
-### Common failure modes — known, named, no excuses
-
-- **End-of-turn menu skipped.** Reply answers the question fine, then ends with `> 1. Foo > 2. Bar > 3. Stop` and no `Empfehlung:`. Iron Law 1 was violated — these are numbered options, position is irrelevant.
-- **"Genuinely no preference" hedge.** Pick anyway. The agent has more context than the user on the trade-off; refusing to pick dumps the work back. Pick the safest option, name the flip-condition.
-- **"User knows the project better" hedge.** Same failure mode, different costume. The user asked for an opinion by virtue of accepting the options block; deliver it.
-- **Multi-block reply with one recommendation.** Two options blocks but only one `Empfehlung:` line — the second block is unguarded. Rule 5 above closes this.
+Common failure modes (end-of-turn menu skipped, "no preference"
+hedges, multi-block reply with one recommendation) and the named
+slip catalog live in
+[`contexts/communication/rules-auto/user-interaction-mechanics.md`](../contexts/communication/rules-auto/user-interaction-mechanics.md)
+§ Common failure modes.
 
 ## Numbered Options — Always
 
@@ -117,65 +118,9 @@ just a number (e.g., `1`) instead of typing a sentence.
 - **Use the user's language** for the question and options.
 - **Accept both** the number and a natural language answer (e.g., "1" or "the first one").
 
-### Examples
+### Examples and "when NOT to use" — see mechanics
 
-**Binary choice:**
-
-```
-> 1. Interactive — ask before each comment
-> 2. Automatic — handle all independently
-
-**Recommendation: 1 — Interactive** — the comments touch security-sensitive code,
-so a wrong auto-fix is more expensive than approving each one. Caveat: flip to 2
-if the comments turn out to be pure formatting.
-```
-
-**Multiple choice with skip:**
-
-```
-> 1. Fix the code
-> 2. Fix the test
-> 3. Skip
-
-**Recommendation: 1 — Fix the code** — the test asserts the documented behaviour;
-the production code drifted from the contract. Caveat: pick 2 only if the contract
-itself is wrong.
-```
-
-**Confirmation with context:**
-
-```
-> Found PR #1399 on branch `chore/refactor-agent-setup-2`.
->
-> 1. Yes, that's the right PR
-> 2. No, different PR — I'll provide the URL
-
-**Recommendation: 1 — Yes** — the branch name matches the PR title exactly.
-Caveat: flip to 2 if the PR was reopened from a different branch.
-```
-
-### When NOT to use numbered options
-
-- **Open-ended questions** where the answer is free text (e.g., "What should the class be named?").
-- **Simple yes/no** can use numbered options OR accept "ja"/"nein" directly.
-  Even for yes/no, prefer numbered options if there's additional context to show.
-
-## Progress Indicators
-
-When processing multiple items (e.g., review comments, test failures), show progress:
-
-```
-**Comment 3/7** — `filename.php:42`
-```
-
-## Summaries
-
-After completing a batch of actions, provide a summary table:
-
-```
-| # | File | Action |
-|---|---|---|
-| 1 | `file.php` | Fixed null check |
-| 2 | `test.php` | Updated assertion |
-| 3 | `config.php` | Skipped (intentional) |
-```
+Worked examples (binary choice, multiple choice with skip,
+confirmation with context), the "when NOT to use numbered options"
+catalog, progress indicators, and summary-table patterns live in
+[`contexts/communication/rules-auto/user-interaction-mechanics.md`](../contexts/communication/rules-auto/user-interaction-mechanics.md).
