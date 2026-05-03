@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **281 public artefacts** shipped by
+Consumer-facing catalog of all **280 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -200,7 +200,7 @@ are excluded.
 | rule | [`user-interaction`](../.agent-src/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (51)
+## Commands (49)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -216,10 +216,8 @@ are excluded.
 | command | [`compress`](../.agent-src/commands/compress.md) |  | Compress .md files from .agent-src.uncompressed/ into caveman format and write to .agent-src/ |
 | command | [`context`](../.agent-src/commands/context.md) | cluster: context | Context orchestrator — routes to create, refactor |
 | command | [`copilot-agents`](../.agent-src/commands/copilot-agents.md) | cluster: copilot-agents | Copilot agents-doc orchestrator — routes to init, optimize |
-| command | [`council-design`](../.agent-src/commands/council-design.md) | cluster: optimize | Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment. |
-| command | [`council-optimize`](../.agent-src/commands/council-optimize.md) | cluster: optimize | Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice. |
-| command | [`council-pr`](../.agent-src/commands/council-pr.md) | cluster: optimize | Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in. |
-| command | [`council`](../.agent-src/commands/council.md) | cluster: optimize | Consult external AIs (OpenAI, Anthropic) for an independent second opinion on a prompt, roadmap, diff, or file set — neutral framing, redacted context, advisory output only. |
+| command | [`council-default`](../.agent-src/commands/council-default.md) | cluster: council | Default council lens — neutral framing, redacted context, advisory output only. Run `/council default <input>` for prompt/roadmap/diff/files; the cluster shows a menu when invoked bare. |
+| command | [`council`](../.agent-src/commands/council.md) | cluster: council | Council orchestrator — routes to default, pr, design, optimize |
 | command | [`create-pr`](../.agent-src/commands/create-pr.md) |  | Create a GitHub PR with structured description from Jira ticket and code changes |
 | command | [`e2e-heal`](../.agent-src/commands/e2e-heal.md) |  | Find, debug, and fix failing Playwright E2E tests |
 | command | [`e2e-plan`](../.agent-src/commands/e2e-plan.md) |  | Explore the application and create a structured E2E test plan in Markdown |
@@ -256,11 +254,12 @@ are excluded.
 | command | [`upstream-contribute`](../.agent-src/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
 | command | [`work`](../.agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (47)
+## Guidelines (48)
 
 | kind | name | category | description |
 |---|---|---|---|
 | guideline | [`agent-interaction-and-decision-quality`](../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md) | agent-infra |  |
+| guideline | [`asking-and-brevity-examples`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md) | agent-infra |  |
 | guideline | [`break-glass-usage`](../docs/guidelines/agent-infra/break-glass-usage.md) | agent-infra |  |
 | guideline | [`developer-judgment`](../docs/guidelines/agent-infra/developer-judgment.md) | agent-infra |  |
 | guideline | [`engineering-memory-data-format`](../docs/guidelines/agent-infra/engineering-memory-data-format.md) | agent-infra |  |

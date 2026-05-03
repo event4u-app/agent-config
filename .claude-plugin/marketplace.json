@@ -65,6 +65,7 @@
         "./.claude/skills/copilot-agents-optimize",
         "./.claude/skills/copilot-config",
         "./.claude/skills/council",
+        "./.claude/skills/council-default",
         "./.claude/skills/council-design",
         "./.claude/skills/council-optimize",
         "./.claude/skills/council-pr",

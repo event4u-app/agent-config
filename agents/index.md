@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **327 artefacts** in this package.
+Maintainer-facing index of all **329 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -203,7 +203,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`user-interaction`](../.agent-src.uncompressed/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src.uncompressed/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (94)
+## Commands (95)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -231,10 +231,11 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | shim | [`copilot-agents-init`](../.agent-src.uncompressed/commands/copilot-agents-init.md) | shim → /copilot-agents init | Create AGENTS.md and .github/copilot-instructions.md from scratch in the consumer project — interactive, auto-detects stack, never leaks other projects' identifiers. |
 | shim | [`copilot-agents-optimize`](../.agent-src.uncompressed/commands/copilot-agents-optimize.md) | shim → /copilot-agents optimize | Analyzes and refactors AGENTS.md and copilot-instructions.md — removes duplications, enforces line budgets, and ensures both files are optimized for their audience. |
 | command | [`copilot-agents`](../.agent-src.uncompressed/commands/copilot-agents.md) | cluster: copilot-agents | Copilot agents-doc orchestrator — routes to init, optimize |
-| command | [`council-design`](../.agent-src.uncompressed/commands/council-design.md) | cluster: optimize | Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment. |
-| command | [`council-optimize`](../.agent-src.uncompressed/commands/council-optimize.md) | cluster: optimize | Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice. |
-| command | [`council-pr`](../.agent-src.uncompressed/commands/council-pr.md) | cluster: optimize | Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in. |
-| command | [`council`](../.agent-src.uncompressed/commands/council.md) | cluster: optimize | Consult external AIs (OpenAI, Anthropic) for an independent second opinion on a prompt, roadmap, diff, or file set — neutral framing, redacted context, advisory output only. |
+| command | [`council-default`](../.agent-src.uncompressed/commands/council-default.md) | cluster: council | Default council lens — neutral framing, redacted context, advisory output only. Run `/council default <input>` for prompt/roadmap/diff/files; the cluster shows a menu when invoked bare. |
+| shim | [`council-design`](../.agent-src.uncompressed/commands/council-design.md) | shim → /council design | Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment. |
+| shim | [`council-optimize`](../.agent-src.uncompressed/commands/council-optimize.md) | shim → /council optimize | Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice. |
+| shim | [`council-pr`](../.agent-src.uncompressed/commands/council-pr.md) | shim → /council pr | Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in. |
+| command | [`council`](../.agent-src.uncompressed/commands/council.md) | cluster: council | Council orchestrator — routes to default, pr, design, optimize |
 | shim | [`create-pr-description`](../.agent-src.uncompressed/commands/create-pr-description.md) | shim → /create-pr --description-only | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
 | command | [`create-pr`](../.agent-src.uncompressed/commands/create-pr.md) |  | Create a GitHub PR with structured description from Jira ticket and code changes |
 | shim | [`do-and-judge`](../.agent-src.uncompressed/commands/do-and-judge.md) | shim → /judge on-diff | Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user |
@@ -302,11 +303,12 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`upstream-contribute`](../.agent-src.uncompressed/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
 | command | [`work`](../.agent-src.uncompressed/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (47)
+## Guidelines (48)
 
 | kind | name | category | description |
 |---|---|---|---|
 | guideline | [`agent-interaction-and-decision-quality`](../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md) | agent-infra |  |
+| guideline | [`asking-and-brevity-examples`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md) | agent-infra |  |
 | guideline | [`break-glass-usage`](../docs/guidelines/agent-infra/break-glass-usage.md) | agent-infra |  |
 | guideline | [`developer-judgment`](../docs/guidelines/agent-infra/developer-judgment.md) | agent-infra |  |
 | guideline | [`engineering-memory-data-format`](../docs/guidelines/agent-infra/engineering-memory-data-format.md) | agent-infra |  |
