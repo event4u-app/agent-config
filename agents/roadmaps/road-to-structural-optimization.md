@@ -124,7 +124,7 @@ The "Per-item independent" rollback note below is **scoped to council acceptance
 
 - [x] **0.4.1** Pick one Phase-2A rule for the dry-run. Recommend `direct-answers` (smallest of the top-3, cleanest mechanics/logic split).
 - [x] **0.4.2** Apply 2A.4 obligation-keyword diff. Produce the per-rule table (keyword × count_before × count_after_rule × count_in_context × total_after × accept(Y/N) × rationale) plus any human-rationale entries.
-- [~] **0.4.3** Land at `agents/roadmaps/structural-optimization-2A4-example.md`. Council reviews. **Pass:** 2A.4 contract is locked, Phase 2A unblocked. **Fail:** revise contract; re-run example before any rule slimming. *(artefact landed; council acceptance pending — see §7 of the artefact)*
+- [x] **0.4.3** Land at `agents/roadmaps/structural-optimization-2A4-example.md`. Council reviews. **Pass:** 2A.4 contract is locked, Phase 2A unblocked. *(Council session `agents/council-sessions/2026-05-03T09-45-33Z/` — both members `ACCEPT_WITH_REVISIONS`; revisions applied: §4.1 counting conventions including multi-cell-table `trigger-class` collapse, §6.1 pre-flight candidate generation, §6 PAT array completed for all 17 keywords. Artefact status: `locked`.)*
 
 ### 0.5 Phase 3a spike scoring protocol + persona-voice rubric (HIGH)
 
