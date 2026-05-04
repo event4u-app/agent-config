@@ -315,6 +315,7 @@ _TASK_FENCE_RE = re.compile(r"^\s*task\s+([a-z][a-z0-9:_-]*)\b")
 # by the task-invocation detector (but still scanned for layer 1 + 2).
 _TASK_DETECTOR_SKIP = (
     "rules/augment-portability.md",
+    "contexts/communication/rules-auto/augment-portability-mechanics.md",
 )
 
 
@@ -422,6 +423,7 @@ _CLI_INVOCATION_MAP: list[tuple[re.Pattern, str]] = [
 # own help, the portability rule that defines the mapping).
 _CLI_DETECTOR_SKIP = (
     "rules/augment-portability.md",
+    "contexts/communication/rules-auto/augment-portability-mechanics.md",
 )
 
 

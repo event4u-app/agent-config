@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "create a new module, scaffold a module for X"
   trigger_context: "prompt mentions a new domain area without an existing module"
+superseded_by: module create
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /module-create is deprecated; use /module create instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # module-create
 

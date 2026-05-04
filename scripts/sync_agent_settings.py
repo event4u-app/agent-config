@@ -136,8 +136,31 @@ def _append_unknown(body: str, user_flat: dict[str, object], known: set[str]) ->
 
 
 def render_target(template_body: str, user_data: dict) -> str:
-    """Return the desired `.agent-settings.yml` body for the given user data."""
-    user_flat = _flatten(user_data) if user_data else {}
+    """Return the desired `.agent-settings.yml` body for the given user data.
+
+    The trailing ``_user:`` block (emitted by :func:`_append_unknown`) is
+    already in dotted-key form on every read after the first sync. Re-
+    flattening it would prepend another ``_user.`` segment on every run
+    and accumulate forever, so we strip the wrapper and merge its
+    contents straight into the flat dict.
+    """
+    if user_data:
+        user_only = user_data.pop("_user", None) if isinstance(user_data, dict) else None
+        user_flat = _flatten(user_data)
+        if isinstance(user_only, dict):
+            for key, value in user_only.items():
+                # Dotted keys round-trip verbatim — never re-flatten them.
+                if isinstance(key, str):
+                    # Heal legacy corruption: pre-fix syncs prepended a
+                    # `_user.` segment per run, so a key may carry an
+                    # arbitrary number of them. Strip them all back to
+                    # the original leaf path.
+                    healed = key
+                    while healed.startswith("_user."):
+                        healed = healed[len("_user."):]
+                    user_flat[healed] = value
+    else:
+        user_flat = {}
     known = _template_keys(template_body)
     body = _apply_user_values(template_body, user_flat)
     return _append_unknown(body, user_flat, known)

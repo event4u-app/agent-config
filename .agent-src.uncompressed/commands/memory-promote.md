@@ -6,7 +6,12 @@ disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Curation pipeline — overlaps /memory-add; keep explicit."
+superseded_by: memory promote
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /memory-promote is deprecated; use /memory promote instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # /memory-promote
 

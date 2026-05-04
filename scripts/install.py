@@ -464,44 +464,65 @@ def ensure_augment_bridge(project_root: Path, force: bool) -> None:
 # .augment/settings.json is plugin enablement, not hooks.
 AUGMENT_USER_DIR = Path.home() / ".augment"
 AUGMENT_USER_HOOKS_DIR = AUGMENT_USER_DIR / "hooks"
-AUGMENT_TRAMPOLINE_NAME = "augment-chat-history.sh"
-AUGMENT_HOOK_EVENTS = ("SessionStart", "SessionEnd", "Stop", "PostToolUse")
+AUGMENT_CHAT_HISTORY_TRAMPOLINE = "augment-chat-history.sh"
+AUGMENT_ROADMAP_PROGRESS_TRAMPOLINE = "augment-roadmap-progress.sh"
+# (trampoline name, list of events it should fire on). Each trampoline
+# is a self-contained workspace router; mapping them per-event keeps the
+# wiring explicit and lets a future hook bind to a different surface
+# without touching the chat-history one.
+AUGMENT_HOOK_BINDINGS = (
+    (AUGMENT_CHAT_HISTORY_TRAMPOLINE,
+     ("SessionStart", "SessionEnd", "Stop", "PostToolUse")),
+    (AUGMENT_ROADMAP_PROGRESS_TRAMPOLINE,
+     ("PostToolUse",)),
+)
+
+
+def _deploy_augment_trampoline(package_root: Path, name: str, force: bool) -> Path | None:
+    src = package_root / "scripts" / "hooks" / name
+    if not src.exists():
+        skip(f"augment trampoline missing in package: {src}")
+        return None
+    AUGMENT_USER_HOOKS_DIR.mkdir(parents=True, exist_ok=True)
+    dst = AUGMENT_USER_HOOKS_DIR / name
+    src_text = src.read_text(encoding="utf-8")
+    if dst.exists() and dst.read_text(encoding="utf-8") == src_text and not force:
+        skip(f"~/.augment/hooks/{name} already up to date")
+    else:
+        dst.write_text(src_text, encoding="utf-8")
+        dst.chmod(0o755)
+        success(f"~/.augment/hooks/{name} installed")
+    return dst
 
 
 def ensure_augment_user_hooks(package_root: Path, force: bool) -> None:
-    """Deploy the Augment lifecycle-hook trampoline at user scope.
+    """Deploy the Augment lifecycle-hook trampolines at user scope.
 
     Augment hook scripts must use the .sh extension and be referenced by
     absolute path; user scope is the only surface that fires for both the
     CLI and the IDE plugins. This installs once per developer (not per
-    project) — the trampoline reads workspace_roots from the event payload
-    and dispatches into whichever project is active at hook-fire time.
+    project) — each trampoline reads workspace_roots from the event
+    payload and dispatches into whichever project is active at hook-fire
+    time.
+
+    Two trampolines are deployed:
+      - augment-chat-history.sh   → SessionStart/SessionEnd/Stop/PostToolUse
+      - augment-roadmap-progress.sh → PostToolUse (path-filtered to
+        agents/roadmaps/ — see scripts/roadmap_progress_hook.py)
     """
-    src = package_root / "scripts" / "hooks" / AUGMENT_TRAMPOLINE_NAME
-    if not src.exists():
-        skip(f"augment trampoline missing in package: {src}")
+    per_event: dict[str, list] = {}
+    for name, events in AUGMENT_HOOK_BINDINGS:
+        dst = _deploy_augment_trampoline(package_root, name, force)
+        if dst is None:
+            continue
+        entry = {"hooks": [{"type": "command", "command": str(dst)}]}
+        for event in events:
+            per_event.setdefault(event, []).append(entry)
+
+    if not per_event:
         return
 
-    AUGMENT_USER_HOOKS_DIR.mkdir(parents=True, exist_ok=True)
-    dst = AUGMENT_USER_HOOKS_DIR / AUGMENT_TRAMPOLINE_NAME
-
-    src_text = src.read_text(encoding="utf-8")
-    if dst.exists() and dst.read_text(encoding="utf-8") == src_text and not force:
-        skip(f"~/.augment/hooks/{AUGMENT_TRAMPOLINE_NAME} already up to date")
-    else:
-        dst.write_text(src_text, encoding="utf-8")
-        dst.chmod(0o755)
-        success(f"~/.augment/hooks/{AUGMENT_TRAMPOLINE_NAME} installed")
-
-    hook_entry = {
-        "hooks": [
-            {
-                "type": "command",
-                "command": str(dst),
-            },
-        ],
-    }
-    settings_patch: dict = {"hooks": {event: [hook_entry] for event in AUGMENT_HOOK_EVENTS}}
+    settings_patch: dict = {"hooks": per_event}
     merge_json_file(
         AUGMENT_USER_DIR / "settings.json",
         settings_patch,

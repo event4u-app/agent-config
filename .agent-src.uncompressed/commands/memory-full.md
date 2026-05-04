@@ -6,7 +6,12 @@ disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Description states 'never auto-triggered' — opt-in deep-load only."
+superseded_by: memory load
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /memory-full is deprecated; use /memory load instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # /memory-full
 

@@ -70,6 +70,8 @@ Commands:
                              Usage: chat-history:hook --platform <claude|augment|cursor|cline|windsurf|gemini>
   chat-history:checkpoint    Append a phase-boundary entry to .agent-chat-history
                              (CHECKPOINT fallback for platforms without native hooks)
+  roadmap-progress:hook      PostToolUse hook entry point (read JSON from stdin)
+                             Regenerates roadmaps-progress.md when a tool wrote under agents/roadmaps/
   telemetry:record           Append one artefact-engagement event (default-off)
   telemetry:status           Print artefact-engagement telemetry status (read-only)
   telemetry:report           Aggregate the engagement log into a quartile report
@@ -316,6 +318,13 @@ cmd_chat_history_hook() {
   exec python3 "$script" hook-dispatch "$@"
 }
 
+cmd_roadmap_progress_hook() {
+  require_python3
+  local script
+  script="$(resolve_script "scripts/roadmap_progress_hook.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
 cmd_chat_history_checkpoint() {
   require_python3
   local script
@@ -436,6 +445,7 @@ main() {
     refine-ticket:detect)    cmd_refine_ticket_detect "$@" ;;
     chat-history:hook)       cmd_chat_history_hook "$@" ;;
     chat-history:checkpoint) cmd_chat_history_checkpoint "$@" ;;
+    roadmap-progress:hook)   cmd_roadmap_progress_hook "$@" ;;
     telemetry:record)        cmd_telemetry_record "$@" ;;
     telemetry:status)        cmd_telemetry_status "$@" ;;
     telemetry:report)        cmd_telemetry_report "$@" ;;

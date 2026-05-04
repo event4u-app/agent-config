@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "run the tests, execute the test suite"
   trigger_context: "code changes pending verification"
+superseded_by: tests execute
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /tests-execute is deprecated; use /tests execute instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # tests-execute
 

@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "review my overrides, update the project overrides"
   trigger_context: "existing entries under agents/overrides/"
+superseded_by: override manage
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /override-manage is deprecated; use /override manage instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # /override-manage
 

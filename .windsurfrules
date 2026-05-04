@@ -312,69 +312,13 @@ consulted three times in the same boundary records once.
 When in doubt → record as `consulted` only. Over-recording `applied`
 inflates the engagement signal and defeats the purpose.
 
-## What to record — id-only, no payload
+## Mechanics — CLI invocation, privacy contract, failure handling
 
-```bash
-./agent-config telemetry:record \
-  --task-id "$TASK_ID" \
-  --boundary task \
-  --consulted skills:php-coder \
-  --consulted skills:eloquent \
-  --consulted rules:scope-control \
-  --applied skills:php-coder \
-  --applied rules:scope-control
-```
-
-- `--task-id` — the ticket key (`PROJ-123`) for `/implement-ticket`, or a
-  short opaque slug derived from the prompt for `/work`. **Never** a
-  branch name, a file path, or a free-text title.
-- `--boundary` — `task` or `phase-step`, matching the cadence above.
-- `--consulted <kind>:<id>` — repeat per artefact. `<kind>` is one of
-  `skills`, `rules`, `commands`, `guidelines`, `personas`.
-- `--applied <kind>:<id>` — repeat per artefact actually applied.
-- Exit `0` always when disabled (silent). Exit `1` on schema validation
-  failure (rule must NOT swallow this — surface to the user). Exit `2`
-  on IO failure.
-
-## Privacy contract — what NEVER goes into a record
-
-The CLI rejects most violations on the input boundary, but the agent must
-not even attempt these:
-
-- ❌  File paths (`src/Foo.php`, `tests/...`) — id fields are
-  artefact identifiers only.
-- ❌  Source code, prompt text, ticket body, AC text.
-- ❌  Branch names, commit shas, PR numbers, URLs.
-- ❌  Secrets, env vars, credentials, customer data.
-- ❌  Free-text strings longer than 200 chars (CLI enforces; agent must
-  not generate).
-
-When in doubt → **don't record**. A missing event is cheap; a leaked
-prompt is not.
-
-## Failure modes — DO NOT block the user's task
-
-- Schema rejection (CLI exit `1`) → log the message internally, continue
-  the user's task. Do **not** halt the dispatch loop.
-- IO failure (CLI exit `2`) → same. The telemetry is **observation**, not
-  a delivery requirement.
-- Settings malformed → already handled by the CLI: it falls back to
-  disabled and exits `0`. Agent treats it as "disabled this task".
-
-The only error the agent surfaces is when the user explicitly asked for
-recording (`telemetry:status` confirms enabled) but no event reached the
-log — that is a real bug, not a swallowed error.
-
-## What this rule does NOT do
-
-- Run when `enabled: false` (cost floor is zero — see
-  [`tests/telemetry/test_cost_floor.py`](../../../tests/telemetry/test_cost_floor.py)).
-- Track the agent's tool calls, file reads, or token spend — that is
-  out of scope, see the roadmap's "out-of-scope" section.
-- Decide retirement. Phase 4's aggregator + report renderer are the only
-  consumers that may interpret the JSONL.
-- Run on cloud surfaces (Claude.ai Web, Skills API). The
-  `cloud_safe: noop` marker keeps it inert there.
+The exact `telemetry:record` call shape with all flags, the privacy
+contract (what NEVER goes into a record), the failure-mode handling
+(do NOT block the user's task), and the "what this rule does NOT do"
+catalog live in
+[`contexts/communication/rules-auto/artifact-engagement-recording-mechanics.md`](../contexts/communication/rules-auto/artifact-engagement-recording-mechanics.md).
 
 ## See also
 
@@ -398,16 +342,13 @@ ONE QUESTION PER TURN. NO EXCEPTIONS.
 ASK. WAIT FOR THE ANSWER. THEN ASK THE NEXT.
 ```
 
-This is absolute. Not a default, not a guideline, not "usually".
-Every turn that contains a question contains **exactly one** question.
-Even if the questions look trivial. Even if they look independent.
-Even if they would fit on one screen. Even if batching "feels more
-efficient". Full self-check, ordering, and handoff rules under
-[How to ask](#how-to-ask).
+Absolute. Not a default, not "usually". Every turn with a question
+has **exactly one**. Even if trivial, independent, or batchable.
+Self-check, ordering, handoff under [How to ask](#how-to-ask).
 
 ## When to ask
 
-- Requirement is ambiguous or could be interpreted multiple ways
+- Requirement ambiguous or multi-interpretable
 - Not 100% sure which approach is correct
 - About to touch code you haven't fully understood
 - Choosing between multiple valid approaches
@@ -415,47 +356,35 @@ efficient". Full self-check, ordering, and handoff rules under
 
 ## Vague-request triggers — MUST ask
 
-The following patterns are almost always too vague to execute safely. When the user's
-request matches one of these without further context, ask **before** touching code:
+These patterns are too vague to execute safely. Match without further
+context → ask **before** touching code:
 
-| Pattern | Missing info | Example question |
-|---|---|---|
-| "improve / optimize this" | What metric? Speed, readability, memory? | "Optimize for what — execution speed or readability?" |
-| "add caching" | Cache store? Scope? Invalidation rules? | "Which cache driver, and what invalidates it?" |
-| "make it better / cleaner" | By what standard? | "What specifically feels wrong in the current code?" |
-| "clean up this file" | Dead code? Formatting? Refactor? | "Remove unused code, reformat, or restructure?" |
-| "fix this" (without specifying) | What's the symptom? | "What output/behavior is wrong right now?" |
-| "refactor X" | Target pattern? Boundaries? | "Refactor toward what — smaller methods, extract class, or something else?" |
-| "use best practices" | Whose? For what? | "Best practices for what specifically — testing, naming, structure?" |
-| "handle errors properly" | Which errors? How? Log, retry, propagate? | "For which failure modes, and what should happen on error?" |
-| "add a UI / component / tile / page" when the repo mixes frameworks | Which stack? Tailwind? Flux? Livewire? Custom? | "This repo uses {A} and {B} for UI — which one for this?" |
+- "improve / optimize this" — metric? speed, readability, memory?
+- "add caching" — store? scope? invalidation?
+- "make it better / cleaner" — by what standard?
+- "clean up this file" — dead code? format? refactor?
+- "fix this" (no symptom) — what output is wrong?
+- "refactor X" — target pattern? boundaries?
+- "use best practices" — whose? for what?
+- "handle errors properly" — which errors? log/retry/propagate?
+- "add a UI/component/tile/page" in mixed-framework repo — which stack?
 
-**Escape hatch:** If surrounding context (ticket, open file, prior conversation)
-makes the answer unambiguous, proceed — but state the assumption explicitly.
+Example questions per pattern:
+[`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#vague-request-triggers--example-questions).
+
+**Escape hatch:** if context (ticket, open file, prior turn) makes
+the answer unambiguous, proceed — but state the assumption.
 
 ## How to ask
 
-Be specific. Present numbered options (per `user-interaction`). Keep it short.
+Numbered options (per `user-interaction`). Short. The Iron Law is at
+the top; this section adds self-check and ordering.
 
-The Iron Law (one question per turn) is at the top of this file.
-This section adds the rationale, self-check, and ordering.
-
-The user must never have to track sub-numbers, scroll through stacked
-option blocks, or split their reply across multiple questions. One
-question, numbered options (per `user-interaction`), one short
-answer, next turn.
-
-Rationale — why even "trivial" batches fail:
-
-| Situation | Why serial always wins |
-|---|---|
-| Design / architecture decisions | Answer to Q1 reframes Q2 |
-| Naming / command-syntax / API shape | Later choices depend on it |
-| Scope / PR boundaries | Changes what the other questions even mean |
-| Tool / library selection | Downstream choices branch from it |
-| "Which approach: A vs B vs C" | Each answer opens a different follow-up |
-| Even "independent" yes/no pairs | User still has to parse two contexts |
-| Any question the user has to **think** about, not just pick | Thinking load compounds when stacked |
+The user must never track sub-numbers, scroll stacked option blocks,
+or split a reply across multiple questions. Rationale shorthand: if
+the user has to *think* about an answer, that answer almost always
+reframes the next question. Full rationale:
+[`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#one-question-per-turn--why-serial-always-wins).
 
 ### Self-check before asking
 
@@ -524,76 +453,28 @@ content into any of them pollutes downstream projects or misleads agents.
 
 ## Runtime invocations — no `task` commands
 
-Skills, rules, commands, guidelines, personas, and context docs
-shipped by this package run in **consumer projects**. Consumer
-projects may not have [Task](https://taskfile.dev) installed —
-they might use npm scripts, Composer scripts, Make, or nothing at
-all. A skill that instructs an agent to run `task <something>`
-silently breaks in every project without a `Taskfile.yml`.
-
-**Rule:** Never reference a `task <something>` invocation inside any
-artefact file under `.agent-src.uncompressed/{skills,rules,commands,guidelines,personas,contexts}/`
+Skills, rules, commands, guidelines, personas, and context docs run in
+**consumer projects**, which may not have Task installed. **Never**
+reference a `task <something>` invocation inside any artefact file
+under `.agent-src.uncompressed/{skills,rules,commands,guidelines,personas,contexts}/`
 (and therefore also not in the compressed mirror under `.agent-src/`).
-Use the direct script invocation instead:
-
-| ❌ Forbidden | ✅ Portable |
-|---|---|
-| `task sync` | `bash scripts/compress.sh --sync` |
-| `task sync-check` | `bash scripts/compress.sh --check` |
-| `task sync-check-hashes` | `bash scripts/compress.sh --check-hashes` |
-| `task sync-changed` | `bash scripts/compress.sh --changed` |
-| `task sync-mark-done -- X` | `bash scripts/compress.sh --mark-done X` |
-| `task generate-tools` | `python3 scripts/compress.py --generate-tools` |
-| `task lint-skills` | `python3 scripts/skill_linter.py --all` |
-| `task check-refs` | `python3 scripts/check_references.py` |
-| `task check-portability` | `python3 scripts/check_portability.py` |
-| `task check-compression` | `python3 scripts/check_compression.py` |
-| `task validate-schema` | `python3 scripts/validate_frontmatter.py` |
-| `task counts-check` | `python3 scripts/update_counts.py --check` |
-| `task roadmap-progress` | `./agent-config roadmap:progress` |
-| `task ci` | run each underlying script directly (no single portable equivalent) |
-
-Task remains a convenience shortcut for maintainers working on the
-package repo itself — `task ci` is the recommended local gate before
-a PR and lives in `Taskfile.yml`, `AGENTS.md`, and the package README.
-Those maintainer-facing surfaces are outside the scope of this rule.
-Artefact files must assume Task is absent.
-
-The detection pattern *"if the consumer has a `Makefile` / build
-script, prefer its targets over raw commands"* is still allowed when
-the skill adapts to the **consumer's own** tooling (e.g.
-`tests-execute` detecting `php artisan test` vs `vendor/bin/pest`).
-It is not allowed to reference `task <name>` as the detected target —
-every direct invocation must resolve to a real script path.
+Use direct script invocations instead.
 
 ## Consumer CLI — `./agent-config`
 
 A subset of package scripts is exposed through a project-local CLI
 wrapper `./agent-config` (written into the project root by the
 installer, gitignored). Artefacts MUST prefer the CLI over raw
-`python3 scripts/…` paths for every command the CLI already covers,
-because the raw paths only resolve inside the package repo — in a
-consumer project the scripts live under `node_modules/` or `vendor/`.
+`python3 scripts/…` paths for every command the CLI already covers.
 
-| ❌ Forbidden in artefacts | ✅ Portable |
-|---|---|
-| `python3 scripts/mcp_render.py` | `./agent-config mcp:render` |
-| `python3 scripts/mcp_render.py --check` | `./agent-config mcp:check` |
-| `python3 .augment/scripts/update_roadmap_progress.py` | `./agent-config roadmap:progress` |
-| `python3 .augment/scripts/update_roadmap_progress.py --check` | `./agent-config roadmap:progress-check` |
-| `bash scripts/first-run.sh` | `./agent-config first-run` |
-| `PYTHONPATH=… python3 -m implement_ticket` | `./agent-config implement-ticket` |
-| `python3 scripts/memory_lookup.py` | `./agent-config memory:lookup` |
-| `python3 scripts/memory_signal.py` | `./agent-config memory:signal` |
-| `python3 scripts/memory_hash.py` | `./agent-config memory:hash` |
-| `python3 scripts/check_memory.py` | `./agent-config memory:check` |
-| `python3 scripts/check_memory_proposal.py` | `./agent-config memory:check-proposal` |
-| `python3 scripts/check_proposal.py` | `./agent-config proposal:check` |
-| `python3 scripts/refine_ticket_detect.py` | `./agent-config refine-ticket:detect` |
+## Translation tables — see mechanics
 
-Commands not covered by the CLI stay as direct script invocations
-(e.g. `bash scripts/compress.sh --sync`) — those are maintainer-only
-and not reachable from a consumer project anyway.
+The full `task`-to-script translation table, the `./agent-config`
+CLI mapping, and the rationale (Task absence on consumers,
+maintainer-vs-artefact split) all live in
+[`contexts/communication/rules-auto/augment-portability-mechanics.md`](../contexts/communication/rules-auto/augment-portability-mechanics.md).
+Pull it whenever an artefact is about to mention a runtime
+invocation.
 
 ## Enforcement
 
@@ -607,15 +488,16 @@ artefact files, and for direct script invocations that bypass the
 
 # Source of Truth
 
-`.agent-src.uncompressed/` is the **single source of truth**. Compressed output
-ships as `.agent-src/`. In the package repo, `.augment/` is a local projection
-of `.agent-src/` for Augment Code (rules copied, rest symlinked). Consumer
-projects still see `.augment/` as the installed runtime tree.
+`.agent-src.uncompressed/` is the **single source of truth**. The compressed
+output ships as `.agent-src/`. In the package repo, `.augment/` is a local
+projection of `.agent-src/` for Augment Code (rules copied, rest symlinked).
+Consumer projects still see `.augment/` as the installed runtime tree.
 
-Never edit any generated layer directly:
+Never edit any of these generated layers directly:
 
 - `.agent-src/` — compressed output shipped in the package
-- `.augment/` — local projection (gitignored in package; installer output in consumers)
+- `.augment/` — local projection (gitignored in the package repo; installer
+  output in consumer projects)
 - `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules` — tool projections
 
 ## The Iron Rule
@@ -625,73 +507,20 @@ NEVER create or edit files in .agent-src/ or .augment/ directly — not even "ju
 ALWAYS work in .agent-src.uncompressed/ — then compress via /compress command.
 ```
 
-**ZERO exceptions.** Even if the fix is obvious, small, or "faster" — STOP.
-Edit `.agent-src.uncompressed/` first. Always.
+**There are ZERO exceptions to this rule.** Even if:
 
-Direct edits to `.agent-src/` break compression hashes, cause CI failures, and create drift.
+- You "know" the compressed content is correct
+- It's "just adding a missing section"
+- It's "faster to edit the compressed file directly"
+- The fix is "trivially obvious"
 
-**Compression ONLY via `/compress` command.** Handles hashing, sync, and quality checks.
+**STOP. Edit `.agent-src.uncompressed/` first. Always.**
 
-## Workflow
+Direct edits to `.agent-src/` break compression hashes, cause CI failures
+("Verify compression hashes" step), and create drift between source and output.
 
-1. **Create or edit** the file in `.agent-src.uncompressed/{path}`
-2. **Do NOT auto-compress.** Continue working.
-3. **Before commit/push:** Check if compression is needed (`bash scripts/compress.sh --changed`).
-   If files need compression, ask the user:
-   ```
-   > 📦 {N} .agent-src files need compression before commit.
-   >
-   > 1. Compress now — run /compress
-   > 2. Later — commit without compression
-   ```
-4. If compressing: run `/compress` command, then `bash scripts/compress.sh --mark-done {path}`
-
-For new non-.md files (`.php`, configs): `bash scripts/compress.sh --sync` copies them automatically.
-
-**Key change:** Compression happens once before commit/push — not after every edit.
-This avoids interruptions when work is still in progress.
-
-## What "compress" means
-
-- Remove articles (a, an, the), filler, hedging, connective fluff
-- Shorten phrases: "in order to" → "to", "make sure to" → "ensure"
-- Fragments OK: "Run tests before commit" not "You should always run tests before committing"
-- Merge redundant bullets
-
-## What NEVER changes during compression
-
-- Code blocks, inline code, URLs, file paths, commands
-- Headings (exact text preserved)
-- Tables (structure preserved, compress cell text only)
-- YAML frontmatter
-- Technical terms, library names, API names
-- Strong language: "NEVER", "MUST", "Do NOT" — these are load-bearing
-
-## Commands workflow
-
-Commands live in `.agent-src.uncompressed/commands/{name}.md` (single source of truth).
-Claude Code reads them via symlinks in `.claude/skills/{name}/SKILL.md`.
-
-**Required frontmatter for commands:**
-
-```yaml
-name: {command-name}
-description: {what it does}
-disable-model-invocation: true
-```
-
-- `name` and `disable-model-invocation: true` are required for Claude Code compatibility
-- Augment ignores unknown frontmatter fields — no conflict
-- Template: `.agent-src.uncompressed/templates/command.md`
-
-**Creating a new command:**
-
-1. Create `.agent-src.uncompressed/commands/{name}.md` (use template)
-2. Run `python3 scripts/skill_linter.py` — must be 0 FAIL
-3. Compress via `/compress`, which writes to `.agent-src/commands/`
-4. Run `python3 scripts/compress.py --generate-tools` — creates Claude symlink automatically
-
-**Never** create `.claude/skills/{name}/SKILL.md` manually for commands — always use the symlink workflow.
+**Compression is ONLY done via the `/compress` command.** The command handles
+hashing, sync verification, and quality checks automatically.
 
 ## Pre-review consistency checkpoints
 
@@ -702,31 +531,15 @@ Before asking for review or creating a PR, verify derived outputs are not stale:
 3. Before merge: verify derived outputs (`.agent-src/`, `.augment/`, `.claude/skills/`) are regenerated
 4. Do NOT leave `.agent-src/` stale across review cycles
 
-## Multi-agent symlink mapping
+## Mechanics — workflow, compression rules, commands, symlinks, quick reference
 
-`.claude/skills/` contains symlinks to **both** `.agent-src/skills/` and `.agent-src/commands/`.
-Claude Code treats both as "skills" — but they are different artifact types in our taxonomy.
-
-| `.claude/skills/{name}/SKILL.md` points to... | Actual type |
-|---|---|
-| `.agent-src/skills/{name}/SKILL.md` | **Skill** (workflow) |
-| `.agent-src/commands/{name}.md` | **Command** (slash-invoked procedure) |
-
-Always check the symlink target to determine the actual artifact type.
-Commands have `disable-model-invocation: true` in their frontmatter.
-
-## Quick reference
-
-| Task | What to do |
-|---|---|
-| Edit existing file | Edit in `.agent-src.uncompressed/`, compress to `.agent-src/` |
-| Create new `.md` | Create in `.agent-src.uncompressed/`, compress to `.agent-src/` |
-| Create new non-`.md` | Create in `.agent-src.uncompressed/`, run `bash scripts/compress.sh --sync` |
-| Create new command | Create in `.agent-src.uncompressed/commands/`, sync, `python3 scripts/compress.py --generate-tools` |
-| Delete a file | Delete from `.agent-src.uncompressed/` and `.agent-src/` |
-| Check what needs compression | `bash scripts/compress.sh --changed` |
-| Mark file as compressed | `bash scripts/compress.sh --mark-done {path}` |
-| Verify everything is in sync | `bash scripts/compress.sh --check` |
+The authoring workflow, what compression does (and never touches), the
+commands workflow with required frontmatter, the multi-agent symlink
+mapping, and the per-task quick-reference table live in
+[`contexts/communication/rules-auto/augment-source-of-truth-mechanics.md`](../contexts/communication/rules-auto/augment-source-of-truth-mechanics.md).
+Pull it whenever an edit, new file, new command, or sync question
+fires — the rule above is the obligation surface; the mechanics file
+is the lookup material.
 
 ---
 
@@ -1272,83 +1085,15 @@ exits 0. Caching the result for the session is fine.
 For the full rtk subcommand catalog and project-local filter setup → see
 the `rtk-output-filtering` skill.
 
-## Codebase Navigation
+## Lookup material — see mechanics
 
-### Use what you already have
-
-- Edited a file → the edit tool already returned the result. Skip re-reading.
-- Ran a command → you have the output. Skip re-running to "verify".
-- File in context from recent messages → skip reloading.
-- Found a symbol → use it. Skip searching again differently.
-
-### Search before reading
-
-- **Search first** — `codebase-retrieval`, `search_query_regex`, or `grep`.
-- **Load only what you need** — use `view_range` or `search_query_regex`, not full files.
-- **Small files** (< 50 lines) — OK to read fully.
-
-### Ignored files (`.augmentignore`)
-
-- `vendor/`, `node_modules/`, lock files, and generated files are excluded from `codebase-retrieval`.
-- When you need to understand a vendor package (base class, interface, API), **read the specific file** with `view`. This bypasses the ignore.
-- Load only the file you need — never browse entire vendor directories.
-
-### Minimize tool calls
-
-- **Parallel reads** — read multiple files in one batch, not sequentially.
-- **`search_query_regex`** over full file reads.
-- **`view_range`** when you know the exact lines.
-- **One `codebase-retrieval` call** with all symbols — batch, not 5 separate calls.
-
-## Fallback Pattern: Redirect, Summarize, Target
-
-When `rtk` has no matching subcommand for the tool at hand, fall back to
-this pattern. Every command that MAY produce more than ~30 lines of output:
-
-### Step 1: Redirect to file
-```bash
-docker compose exec -T <service> <command> 2>&1 > /tmp/<tool>-output.txt
-echo "EXIT=$?"
-```
-
-### Step 2: Read ONLY the summary
-```bash
-tail -5 /tmp/<tool>-output.txt
-```
-
-### Step 3: If errors exist, read ONLY what you need to fix
-```bash
-grep "ERROR\|error\|✏️" /tmp/<tool>-output.txt | head -20
-grep "app/Services/MyService.php" /tmp/<tool>-output.txt
-```
-
-**NEVER** do:
-- `cat /tmp/<tool>-output.txt` (loads everything)
-- Read the full output of a passing command (waste)
-- Read diffs you don't plan to act on
-
-## General Rules
-
-For tool-specific commands → see the `quality-tools` skill.
-
-1. **Exit code first**: Check `$?` before reading ANY output. If 0, you're done — skip reading.
-2. **Summary line**: Most tools print a summary as the last few lines. That's all you need.
-3. **Targeted grep**: When you need details, `grep` for the specific file or error type.
-4. **Read once, act, move on**: Once you've read output and acted on it, skip re-reading.
-5. **Iterative fixing**: Fix one error at a time, re-run, check exit code.
-   Output becomes stale after each fix — always re-run before reading again.
-
-## CLI Over MCP
-
-MCP servers are **significantly more token-expensive** than CLI equivalents.
-When both options exist, prefer the CLI tool.
-
-- **Git**: `git` CLI, not Git MCP
-- **Files**: shell commands, not filesystem MCP
-- **APIs**: `curl`/`httpie`, not HTTP MCP
-- **Database**: `mysql`/`psql` CLI, not DB MCP
-
-Exception: MCPs with **unique capabilities** (Sentry, Playwright, Jira).
+Codebase-navigation tips, the redirect-summarize-target fallback
+pattern (with the three-step `tail`/`grep` recipe), the general rules
+(exit code first, summary line, targeted `grep`, read-once-act-move-on,
+iterative fixing), and the CLI-over-MCP catalog all live in
+[`contexts/communication/rules-auto/cli-output-handling-mechanics.md`](../contexts/communication/rules-auto/cli-output-handling-mechanics.md).
+Pull it whenever a verbose command is about to run without an `rtk`
+match.
 
 ## Exceptions
 
@@ -1361,9 +1106,11 @@ Exception: MCPs with **unique capabilities** (Sentry, Playwright, Jira).
 # Command Suggestion
 
 When the user's prompt matches an eligible slash command, surface it
-as a **numbered option** alongside an "as-is" escape hatch. The user
-always picks. **Nothing auto-executes.** The suggestion layer is a
-read-only shortcut *finder*, not an invocation path.
+as a **numbered option** alongside an "as-is" escape hatch — the
+"run prompt as-is" option is **always last** and **always present**,
+never omitted. The user always picks. **Nothing auto-executes.** The
+suggestion layer is a read-only shortcut *finder*, not an invocation
+path.
 
 The deterministic engine lives in `scripts/command_suggester/`. The
 locked eligibility table lives in
@@ -1399,33 +1146,6 @@ On a user turn that matches **all** of the following:
 When all six hold, the suggestion block is the **first and only**
 thing the agent emits that turn. No tools, no edits, no other prose.
 
-## What to emit
-
-Render exactly one numbered-options block conforming to
-`user-interaction`:
-
-```
-> 💡 Your request matches a command. Pick one or run the prompt as-is:
->
-> 1. /implement-ticket — drive ticket end-to-end through refine → plan → implement → test
-> 2. /refine-ticket — tighten the AC and risks on a ticket before planning
-> 3. Just run the prompt as-is, no command
-
-**Recommendation: 1 — /implement-ticket** — the request matches its trigger description (`setze ticket abc-123 um`). Pick the last option to skip the command and run the prompt as written.
-```
-
-Rules — non-negotiable:
-
-- The "run as-is" option is **always present**, **always last**, never removed.
-- At most `commands.suggestion.max_options` command suggestions
-  precede the as-is option (default 4 → 5 total).
-- Exactly **one** `Recommendation:` line follows the block, naming
-  the highest-scoring command — or no recommendation when the top
-  two scores are within 0.05 of each other (single-source-of-truth
-  Iron Law from `user-interaction`).
-- Free-text replies count as the as-is option unless they
-  unambiguously name one of the listed commands.
-
 ## Subordination — when to stay silent
 
 The suggestion rule is **junior** to:
@@ -1443,39 +1163,19 @@ The suggestion rule is **junior** to:
 On any conflict → suggestion stays silent. Zero output. The user's
 prompt is processed as it would be without this rule.
 
-## Anti-noise — silent when uncertain
-
-The engine's `rank.py` already drops:
-
-- Matches below the `confidence_floor` (default 0.6, per-command
-  override in frontmatter).
-- Single matches scoring `< floor + 0.1` with no structural bonus
-  (high uncertainty isn't worth interrupting for).
-- Short prompts (< 6 words) hitting > 2 commands with no structural
-  bonus (ticket key, file path) — too vague to disambiguate.
-- Pure-continuation messages (`ok`, `weiter`, `mach weiter`, `go on`,
-  …) — no new intent signal, no structural bonus → silent.
-- Suggestions that fired for the same `(command, evidence)` pair
-  within the cooldown window (default 10m, per-command override).
-
-If the engine returns an empty list → emit nothing. The user's
-prompt runs exactly as it would without this rule.
-
-## What this rule does NOT do
-
-- Invoke any command. Picking option N is what triggers `slash-command-routing-policy`.
-- Stack with other questions. One numbered-options block per turn.
-- Re-trigger on its own output. Command names emitted in the
-  suggestion block are excluded from the next-turn matcher input.
-- Override `enabled: false`, blocklist entries, or per-conversation opt-out.
-- Suggest commands that are not in the locked eligibility table.
-
 ## Cloud Behavior
 
 On cloud surfaces (Claude.ai Web, Skills API) the rule is **inert**
 unless the suggester package is shipped in the bundle. Treat
 `commands.suggestion.enabled` as `false` when the engine is not
 available — degrade silently, never crash the turn.
+
+## Mechanics — output format, anti-noise, what this rule does NOT do
+
+The exact rendered options block, the `Recommendation:` rules, the
+`max_options` cap, the `rank.py` anti-noise filters, and the
+"what this rule does NOT do" catalog live in
+[`contexts/communication/rules-auto/command-suggestion-policy-mechanics.md`](../contexts/communication/rules-auto/command-suggestion-policy-mechanics.md).
 
 ## Interactions
 
@@ -1722,18 +1422,12 @@ NEVER PRAISE THE USER'S IDEA TO MAKE THEM HAPPY.
 ANSWER THE SUBSTANCE. SHIP THE TRUTH.
 ```
 
-- No positive adjectives about the user, their question, idea, or
-  work product as an opener.
-- No subjective judgments on the user's code, decisions, or work
-  products ("nice approach", "clean design", "boring") unless the
-  user asked for an evaluation.
-- "Good catch" / "you're right" only when literally true and
-  load-bearing for the answer.
-- Acknowledge mistakes without performative apologies. One sentence,
-  switch behavior.
+- No positive adjectives about user, question, idea, or work product as opener.
+- No subjective judgments on user's code/decisions ("nice approach", "boring") unless evaluation was asked.
+- "Good catch" / "you're right" only when literally true and load-bearing.
+- Acknowledge mistakes without performative apologies — one sentence, switch behavior.
 
-Failure mode: praise as a hedge before delivering bad news. Drop the
-cushion, deliver the news.
+Failure mode: praise as a hedge before bad news. Drop the cushion, deliver the news.
 
 ## Iron Law 2 — No Invented Facts (severity-tiered)
 
@@ -1743,18 +1437,17 @@ THE MORE LOAD-BEARING THE CLAIM, THE HARDER YOU VERIFY.
 WHEN VERIFICATION IS NOT WORTH THE COST → ASK.
 ```
 
-| Severity | Examples | Required action |
-|---|---|---|
-| **High — load-bearing** | File paths, function/method signatures, version numbers, security claims, API contracts, "this test passes/fails", "this method exists" | MUST verify with tools (`view`, `grep`, `codebase-retrieval`, command output) before claiming. If too expensive → ask the user. |
-| **Medium — project-shape** | "This project uses X for Y", general conventions, file location guesses | Verify if one tool call reaches it; otherwise hedge explicitly ("I'd guess X — not checked"). |
-| **Low — well-known idioms** | Generic language/framework idioms, illustrative examples, well-documented public APIs | Inference acceptable. Mark as inference if not 100% sure. |
+| Severity | Required action |
+|---|---|
+| **High — load-bearing** (file paths, signatures, version numbers, security claims, "this test passes") | MUST verify with `view`, `grep`, `codebase-retrieval`, or fresh command output. Too expensive → ask. |
+| **Medium — project-shape** ("uses X for Y", conventions, file location) | Verify if one tool call reaches it; otherwise hedge: *"I'd guess X — not checked"*. |
+| **Low — well-known idioms** (generic language/framework idioms, public APIs) | Inference acceptable. Mark as inference if not 100% sure. |
+
+Concrete examples and hedge-language patterns:
+[`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#direct-answers--severity-tiered-claim-examples).
 
 User override: "just guess", "rough estimate is fine", "skip the
 verify" → drop to Low for that turn.
-
-Hedging language is explicit and short: "haven't verified X",
-"guess, not checked". Never bare "probably" / "vermutlich" without
-naming what's unverified.
 
 ## Iron Law 3 — Brevity by Default
 
@@ -1764,45 +1457,37 @@ LONG ANSWERS ARE A FAILURE MODE, NOT A SIGN OF EFFORT.
 ```
 
 - Skip restating the user's question.
-- Skip announcing intent ("Let me…", "I will now…"). Just do.
-- Skip explaining why a tool was used — the call result speaks.
-- Skip post-hoc summary unless the user must recheck a decision.
-- Multi-step work → bullet points, not paragraphs.
-- Question with one true answer → one sentence + the answer.
+- Skip announcing intent ("Let me…", "I will now…") — just do.
+- Skip explaining tool use — the call result speaks.
+- Skip post-hoc summary unless rechecking a decision.
+- Multi-step → bullets, not paragraphs.
+- One-true-answer question → one sentence + the answer.
 
-`token-efficiency` covers the loop side (no repeated tool calls);
-this rule covers the per-reply-length side. **Never overrides**
-`user-interaction` (numbered options stay) or command-mandated
-steps — brevity ≠ skipping required questions.
+`token-efficiency` covers the loop side; this rule covers per-reply
+length. **Never overrides** `user-interaction` (numbered options
+stay) or command-mandated steps.
 
-## Emoji Scope — Whitelist + Blacklist
+## Emoji Scope — functional markers only
 
-Emojis are **functional markers**, never decoration.
+**Whitelist (allowed):**
 
-**Whitelist — allowed and expected:**
+- Mandated markers: `📒` (chat-history heartbeat, verbatim per
+  `chat-history-visibility`), mode markers from `role-mode-adherence`.
+- CLI status: `❌`, `✅`, `⚠️` (two-space rule from `language-and-tone`).
+- Roadmap checkboxes: `[x]`, `[~]`, `[-]`.
 
-- Mandated markers from rules/scripts: `📒` (chat-history heartbeat,
-  verbatim per `chat-history-visibility`), mode markers from
-  `role-mode-adherence`.
-- CLI status icons: `❌`, `✅`, `⚠️` — two-space rule from
-  `language-and-tone` § other-language-rules still applies.
-- Roadmap status checkboxes: `[x]`, `[~]`, `[-]`.
-
-**Blacklist — never in the agent's own prose:**
+**Blacklist (never in prose):**
 
 - Opening flair: ✨, 🚀, 🎉, 💡, 🔥, 👍.
-- Empathy signaling: ❤️, 🤗, 😊.
-- Section dividers / headline ornaments.
-- Reaction reactions to the user's message.
+- Empathy: ❤️, 🤗, 😊.
+- Section dividers, headline ornaments, reaction emojis.
 
-If unsure whether a given emoji is functional → assume blacklist.
+Unsure → assume blacklist.
 
 ## Failure modes the user will call out
 
-- "Great question, …" / "Das ist eine gute Frage" — Iron Law 1.
-- Stating a function name without `grep`/`view` — Iron Law 2.
-- Three paragraphs for a one-line answer — Iron Law 3.
-- ✨/🎉/💡 to mark "this is interesting" — emoji blacklist.
+Trigger phrases per Iron Law and the in-language correction pattern:
+[`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#direct-answers--failure-modes-the-user-will-call-out).
 
 When called out: acknowledge once in the user's language, switch,
 no excuses (mirrors `language-and-tone` § slip handling).
@@ -1882,32 +1567,15 @@ A new rule/skill/command without its index entry, count update, and context upda
 1. Create/delete the file
 2. **Immediately** update `contexts/augment-infrastructure.md` (counts + category tables)
 3. Check cross-references in contexts and routing hints (inline "see X skill" references)
+4. If a **skill** was added/renamed/deleted: update distribution manifests
+5. If a **hook** was added/renamed/deleted: update hook registries
+6. If **content** changed: run the consistency grep across other artefacts
 
-Steps 2–3 are NOT optional. Do NOT present the result to the user until all steps are done.
+Steps 2–6 are NOT optional. Do NOT present the result to the user until all steps are done.
 
 **Two modes:**
-- **Reactive** (automatic): Triggered by add/remove/rename or scope/description/count changes → sync counts, contexts, cross-references.
+- **Reactive** (automatic): Triggered by add/remove/rename or scope/description/count changes → sync counts, contexts, cross-references, manifests, registries.
 - **Proactive** (on demand): Full audit → find duplicates, thin skills, redundancy, stale content → fix or merge. Ask before destructive actions.
-
-## What to update
-
-When a file is **added, removed, or renamed**:
-
-| Change | Files to update |
-|---|---|
-| Skill/command/rule count changes | `contexts/augment-infrastructure.md` (count + category table) |
-| New skill category | `contexts/augment-infrastructure.md` + `contexts/skills-and-commands.md` |
-| New workflow chain | `contexts/skills-and-commands.md` (workflow chains section) |
-
-## Cross-reference updates
-
-When a skill is **added or its scope changes**, check and update:
-
-| What | Where to check |
-|---|---|
-| Inline routing hints | "see X skill" or "use X instead" references in other skills |
-| Guideline cross-references | Guidelines that reference the changed skill |
-| Command skill references | Commands that use the changed skill |
 
 ## Settings template sync
 
@@ -1925,54 +1593,15 @@ exist in `.augment/templates/agent-settings.md`:
 **This step is mandatory.** If the template gains a new key but the local `.agent-settings.yml`
 is not updated, the user cannot discover the new setting exists.
 
-## Distribution manifests and hook registries
+## Lookup tables and details — see mechanics
 
-`.augment/`-internal sync (counts, contexts, cross-refs) is one half. The
-other half is **distribution manifests** that ship the package to consumers
-and **hook registries** that wire engine code into platform lifecycles.
-These are not auto-derived — they drift silently until CI catches them, and
-on cooperative platforms (no pre-commit) they can sit broken in a branch
-for hours.
-
-When a **skill** is added, renamed, or deleted under
-`.agent-src.uncompressed/skills/`:
-
-| Manifest | Required update |
-|---|---|
-| `.claude-plugin/marketplace.json` | Add/remove the `./.claude/skills/<name>` entry in `plugins[0].skills[]`, alphabetical position. Caught by `scripts/lint_marketplace.py` in CI. |
-| `.augment-plugin/marketplace.json` | Skill-name-agnostic — no update needed. Touch only when plugin metadata (description, tags) changes. |
-| `.github/plugin/marketplace.json` | Same as above — metadata-only manifest. |
-
-When a **hook** is added, renamed, or deleted under
-`.agent-src.uncompressed/templates/scripts/work_engine/hooks/builtin/`:
-
-| Registry | Required update |
-|---|---|
-| `templates/scripts/work_engine/hooks/builtin/__init__.py` | New hook class → add the import + `__all__` entry. Single source of truth for engine-side registration. |
-| `templates/consumer-settings/claude-settings.json` | Only when a **new platform event** is wired (e.g. first time a hook listens on `SessionEnd`). Existing hooks reuse the `./agent-config chat-history:hook --platform claude` dispatcher — no per-hook entry needed. |
-| `templates/consumer-settings/augment-cli-hooks.json` | Same logic — new platform event → new `command` block; new hook on existing event → no update. |
-
-Failure mode that motivated this section: a skill on disk without its
-`marketplace.json` entry passes local edits, builds, and tests — only
-CI catches it via `lint_marketplace`. The cooperative path is
-"agent updates the manifest in the same response as the skill"; the
-structural backstop is a pre-commit hook installed by
-`scripts/install-hooks.sh` that runs `lint_marketplace` on every
-commit. Run the installer once per clone; bypass for an unrelated WIP
-commit is `git commit --no-verify`.
-
-## Content consistency
-
-**CRITICAL — MANDATORY CHECK:** When a rule, skill, or guideline's **content** is changed
-(not just metadata), you MUST search for **all other rules, skills, and guidelines that cover
-the same topic** and verify they are consistent.
-
-```bash
-grep -rl "TOPIC" .augment/rules/ .augment/skills/ .augment/guidelines/ --include="*.md"
-```
-
-If any file contradicts or is missing the updated information → **update it in the same response**.
-Inconsistent documentation is worse than no documentation.
+The exact "what to update" tables, cross-reference targets,
+distribution-manifest update tables (`marketplace.json` etc.), hook
+registry update tables (`__init__.py`, consumer-settings JSON), the
+failure mode that motivated the manifest section, and the content
+consistency `grep` snippet all live in
+[`contexts/communication/rules-auto/docs-sync-mechanics.md`](../contexts/communication/rules-auto/docs-sync-mechanics.md).
+Pull it whenever a sync trigger fires.
 
 ## Do NOT
 
@@ -2293,96 +1922,72 @@ NO MOMENTUM EXCEPTION. NO TECHNICAL-CONTEXT EXCEPTION.
 NO "SWITCH MID-PARAGRAPH". NO "LAST 20 TURNS WERE ENGLISH".
 ```
 
-**Overrides** conversation momentum, tool-output habits, prior-reply
-language, codebase language, open-file language, files-just-edited
-language, convenience. First thing to check on every reply, last thing
-to check before sending.
-
-Trigger is the user's last chat message, not turn count or message
-length — short German (`3`, `weiter`, `mach das`) after many English
-turns still flips the reply to German.
-
-### Source of language truth — chat messages ONLY
-
-Only the most recent **chat message** sets the language. `.md` files,
-file contents read via `view` / `grep`, quoted commits / tickets / PRs,
-code identifiers, and the agent's own previous replies do **not** count.
-User opens an English roadmap and types German → reply in German.
+Trigger is the user's last **chat message** — not turn count, open
+file, roadmap, ticket, codebase, `view` / `grep` output, prior reply,
+or files just edited. Short German (`3`, `weiter`, `mach das`) after
+many English turns flips the reply to German.
 
 ### Pre-send gate — MANDATORY before every reply
 
-Run silently **before** emitting any tokens:
+Run silently before any output:
 
-1. **Detect** — language of user's last **chat message** (not the open
-   file, not the roadmap, not the prior reply). Mixed → mirror the
-   **dominant** language; tie → German wins (project default).
-2. **Check** — is drafted prose (not code, not file contents) in that language?
-3. **Rewrite** — if no, rewrite whole prose before sending. No exceptions, no
-   "just this sentence", no "the technical term is English anyway".
-4. **Confirm** — first sentence must be in target language. No English opener
+1. **Detect** — language of the user's last chat message. Mixed →
+   **dominant** language; tie → German (project default).
+2. **Check** — is drafted prose (not code, not file contents) in
+   that language?
+3. **Rewrite** — if no, rewrite whole prose. No "just this sentence",
+   no "technical term is English anyway".
+4. **Confirm** — first sentence in target language. No English opener
    before switching mid-paragraph.
 
-### The rule, spelled out
+### Spelled out
 
-- User writes German → **MUST** respond in German (informal "Du", never "Sie").
-  "Du" capitalized at sentence start, lowercase otherwise.
-- User writes English → respond in English.
-- User switches mid-conversation → switch on the **very next** reply. No
-  grace period, no "let me finish this thought in the old language".
-- Code blocks, command output, file contents, quoted tool output stay in
-  their native language. Only the **prose around them** mirrors the user.
-- "I've been answering in English for a while" is NOT a reason to keep going.
-  Trigger is the **latest user message**, not conversation momentum.
-- Numbered option lists (per `user-interaction`) mirror the user's language —
-  `.md` source is English, rendered reply is translated at runtime.
+- German → respond in German, informal "Du" (never "Sie"). "Du"
+  capitalized at sentence start, lowercase otherwise.
+- Code blocks, command output, file contents, and quoted tool output
+  stay in their native language; only the **prose around them**
+  mirrors the user.
+- Numbered options (per `user-interaction`) — `.md` source English,
+  rendered reply translated at runtime.
 
-### When the user calls out a language slip
+### Slip handling
 
-Acknowledge **once**, briefly, in the correct language ("Entschuldigung" /
-"Sorry"). Switch immediately on the same reply. Do **not** re-explain in
-the wrong language. Do **not** promise "from now on" — just do it. If
-user asks to harden the rule, harden it on this turn.
+Acknowledge **once**, briefly, in the correct language
+("Entschuldigung" / "Sorry"). Switch on the same reply. Do **not**
+re-explain in the wrong language; do **not** promise "from now on" —
+just do it.
 
-### Failure modes
-
-See [`../../docs/guidelines/agent-infra/language-and-tone-examples.md`](../../docs/guidelines/agent-infra/language-and-tone-examples.md)
-for the full failure-mode list.
+Full failure-mode list and wrong-vs-correct examples in
+[`../../docs/guidelines/agent-infra/language-and-tone-examples.md`](../../docs/guidelines/agent-infra/language-and-tone-examples.md).
 
 ## Other language rules
 
-- All code comments must be in English.
-- All `.md` documentation files must be in English (see section below). If
-  an existing file is in German, translate it when you touch it.
-- Use two spaces after icons like ❌, ✅, ⚠️ in CLI output. One space is not enough. For other icons, one space is fine.
-- Avoid double and triple blank lines in code and output — one blank line is enough.
-- Every file MUST end with exactly one newline — no trailing blank lines.
+- Code comments in English.
+- `.md` documentation files in English (see section below).
+  Translate existing German `.md` files when you touch them.
+- Two spaces after icons `❌`, `✅`, `⚠️` in CLI output; one space
+  for other icons.
+- One blank line max; no double or triple blank lines.
+- Every file ends with exactly one newline.
 
 ## `.md` files are ALWAYS English — no exceptions
 
-**Every** piece of text inside `.md` files in `.augment/` and `agents/`
-must be in English: headings, paragraphs, bullets, example option labels,
-example prompts/questions, template placeholders, ASCII-art labels in
-formatted output blocks, table headers and content.
+**Every** piece of text inside `.md` files in `.augment/`,
+`.agent-src/`, `.agent-src.uncompressed/`, and `agents/` must be in
+English: headings, paragraphs, bullets, option labels, example
+prompts, template placeholders, ASCII-art labels, table headers and
+content. The agent translates to the user's language **at runtime**.
 
-The agent translates to the user's language **at runtime** when
-presenting options. The `.md` source files are the English blueprint —
-they define WHAT to say, not in which language. Concrete wrong-vs-correct
-examples live in [`../../docs/guidelines/agent-infra/language-and-tone-examples.md`](../../docs/guidelines/agent-infra/language-and-tone-examples.md).
+### Labeled-anchor exception
 
-### Quoted user-input examples — labeled-anchor exception
+Quoting German examples inside English prose is **not allowed**.
+Two correct ways:
 
-Drift pattern: a rule writes quoted German examples inside English prose.
-**Not allowed**. Two correct ways:
-
-1. **Translate to English.** Trigger recognition is semantic; the agent
-   matches intent across languages regardless of the example.
-2. **Use a labeled `DE: … · EN: …` anchor list** when the multilingual
-   nature of recognition is the point — the **only** allowed location
-   for German prose in an English `.md`. Reference established phrases
-   abstractly later and link back to the anchor block.
-
-Wrong-vs-correct snippets in
-[`../../docs/guidelines/agent-infra/language-and-tone-examples.md`](../../docs/guidelines/agent-infra/language-and-tone-examples.md).
+1. **Translate to English** — trigger recognition is semantic.
+2. **Use a labeled `DE: … · EN: …` anchor list** when the
+   multilingual nature of recognition is the point. This is the
+   **only** allowed location for German prose in an English `.md`;
+   reference phrases abstractly elsewhere and link to the anchor.
 
 ### Detection heuristic
 
@@ -2397,7 +2002,7 @@ Before saving an `.md` file under `.augment/`, `.agent-src/`,
 - Non-English quoted phrases in body text (paragraphs, list items,
   table cells) when the surrounding prose is English.
 
-Hit → translate the fragment or move it into a `DE: … · EN: …` block.
+Hit → translate it or move it into a `DE: … · EN: …` block.
 
 ---
 
@@ -2670,14 +2275,14 @@ Show the same numbered options as above. Repeat once if dismissed — then accep
 # No Cheap Questions
 
 A question is **cheap** when the answer follows from stated context,
-when an option would breach an Iron Law, when choices differ only in
-sequencing or format, or when one option is obviously dominant. Cheap
-questions are noise, regardless of `personal.autonomy`.
+an option breaches an Iron Law, choices differ only in sequencing /
+format, or one option is obviously dominant. Cheap questions are
+noise, regardless of `personal.autonomy`.
 
-Mode-independent. The "trivial" failure modes in
-[`autonomous-execution`](autonomous-execution.md) are scoped to
-`personal.autonomy: on` (or `auto`-after-opt-in); this rule lifts the
-**no-trade-off** subset to apply in `off` and pre-opt-in `auto` too.
+Mode-independent. [`autonomous-execution`](autonomous-execution.md)'s
+"trivial" failure modes scope to `personal.autonomy: on` (or
+`auto`-after-opt-in); this rule lifts the **no-trade-off** subset to
+`off` and pre-opt-in `auto` too.
 
 ## The Iron Laws
 
@@ -2691,63 +2296,56 @@ Hold in `off`, `auto`, and `on`. Autonomy never lifts them.
 
 ## What counts as cheap
 
-| Class | Pattern · why cheap |
-|---|---|
-| **Sequencing** | "Step 2 or 3 next?" when roadmap orders them — answer is in the roadmap |
-| **Format-only** | "Table or paragraph?" — no semantic trade-off |
-| **Commit asks** | "Commit now?" — [`commit-policy`](commit-policy.md): never ask |
-| **CI / test asks** | "Run tests now?" — [`verify-before-complete`](verify-before-complete.md) decides |
-| **Fenced-step re-asks** | "Start Phase 1?" after "plan only" — [`scope-control § fenced step`](scope-control.md#fenced-step--user-set-review-gates) |
-| **Iron-Law option** | Option breaches `commit-policy`, `scope-control § git-ops`, or `non-destructive-by-default` — does not exist |
-| **Context-derived** | Answer follows from prior turn / standing instruction / roadmap — act, state assumption inline |
-| **Dominant option** | One choice obviously correct; alternatives carry no upside — pick it |
-| **Re-ask after decline** | Same path after user said no — [`scope-control § decline = silence`](scope-control.md#decline--silence--no-re-asking-on-the-same-task) |
+- **Sequencing** — "Step 2 or 3 next?" when the roadmap orders them.
+- **Format-only** — "Table or paragraph?"; no semantic trade-off.
+- **Commit asks** — forbidden by [`commit-policy`](commit-policy.md).
+- **CI / test asks** — [`verify-before-complete`](verify-before-complete.md) decides, not the user.
+- **Fenced-step re-asks** — "Start Phase 1?" after *"plan only"*; see
+  [`scope-control § fenced step`](scope-control.md#fenced-step--user-set-review-gates).
+- **Iron-Law option** — option breaches `commit-policy`,
+  `scope-control § git-ops`, or `non-destructive-by-default`.
+- **Context-derived** — answer follows from prior turn / standing
+  instruction / roadmap; act, state the assumption inline.
+- **Dominant option** — one choice obviously correct; alternatives
+  carry no upside.
+- **Re-ask after decline** — forbidden per
+  [`scope-control § decline = silence`](scope-control.md#decline--silence--no-re-asking-on-the-same-task).
+
+Concrete examples per class:
+[`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
 
 ## Pre-Send Self-Check — MANDATORY before every question
 
-Before drafting any numbered-options block, run silently:
+Run silently before any numbered-options block:
 
-1. Does the answer follow from already-stated context?
-2. Does any option violate [`commit-policy`](commit-policy.md),
-   [`scope-control § git-ops`](scope-control.md), or
-   [`non-destructive-by-default`](non-destructive-by-default.md)?
-3. Are options pure sequencing / format with no trade-off?
-4. Is one option obviously dominant?
-5. Did the user fence the next step (*"plan only"*, *"review first"*)?
-   → deliver + handback per [`scope-control § fenced step`](scope-control.md#fenced-step--user-set-review-gates).
-6. Did the user already decline? Re-asking is forbidden per
-   [`scope-control § decline = silence`](scope-control.md#decline--silence--no-re-asking-on-the-same-task).
+1. Answer already in stated context?
+2. Any option violates [`commit-policy`](commit-policy.md), [`scope-control § git-ops`](scope-control.md), or [`non-destructive-by-default`](non-destructive-by-default.md)?
+3. Options pure sequencing / format, no trade-off?
+4. One option obviously dominant?
+5. User fenced next step (*"plan only"*, *"review first"*) → deliver + handback per [`scope-control § fenced step`](scope-control.md#fenced-step--user-set-review-gates).
+6. User already declined? Re-ask forbidden per [`scope-control § decline = silence`](scope-control.md#decline--silence--no-re-asking-on-the-same-task).
 
-Any "yes" → **do not ask**. Pick the dominant path, state the
-assumption inline (*"assuming X — adjust if wrong"*), hand back. The
-one-question-per-turn Iron Law from
-[`ask-when-uncertain`](ask-when-uncertain.md) still applies when the
-question is genuine.
+Any "yes" → **do not ask**. Pick the dominant path, state assumption
+inline (*"assuming X — adjust if wrong"*), hand back. One-question-per-turn
+from [`ask-when-uncertain`](ask-when-uncertain.md) still applies when
+the question is genuine.
 
 ## When asking IS allowed
 
 - Real architectural / scope decision with non-obvious trade-offs.
-- Vague-request trigger per
-  [`ask-when-uncertain`](ask-when-uncertain.md#vague-request-triggers--must-ask).
-- Security-sensitive path per
-  [`security-sensitive-stop`](security-sensitive-stop.md).
-- Hard Floor in [`non-destructive-by-default`](non-destructive-by-default.md)
-  fires — confirmation is mandatory, never cheap.
+- Vague-request trigger per [`ask-when-uncertain`](ask-when-uncertain.md#vague-request-triggers--must-ask).
+- Security-sensitive path per [`security-sensitive-stop`](security-sensitive-stop.md).
+- Hard Floor in [`non-destructive-by-default`](non-destructive-by-default.md) — confirmation mandatory.
 - Two genuinely-equivalent paths; user preference is the tiebreaker.
 
-In doubt → genuine. Ask. This rule narrows asking, never widens silence.
+In doubt → ask. This rule narrows asking, never widens silence.
 
 ## Interactions
 
-- [`ask-when-uncertain`](ask-when-uncertain.md) — vague triggers +
-  one-question-per-turn; this rule narrows the cheap subset.
-- [`autonomous-execution`](autonomous-execution.md) — mode-scoped
-  triviality there; mode-independent floor here.
-- [`commit-policy`](commit-policy.md) · [`scope-control`](scope-control.md) ·
-  [`non-destructive-by-default`](non-destructive-by-default.md) —
-  the Iron Laws this rule defends.
-- [`user-interaction`](user-interaction.md) — numbered-options shape;
-  this rule decides whether the block is sent at all.
+- [`ask-when-uncertain`](ask-when-uncertain.md) — vague triggers + one-question-per-turn; narrows the cheap subset.
+- [`autonomous-execution`](autonomous-execution.md) — mode-scoped triviality there; mode-independent floor here.
+- [`commit-policy`](commit-policy.md) · [`scope-control`](scope-control.md) · [`non-destructive-by-default`](non-destructive-by-default.md) — Iron Laws this rule defends.
+- [`user-interaction`](user-interaction.md) — numbered-options shape; this rule decides whether to send.
 - [`direct-answers`](direct-answers.md) — brevity, no flattery.
 
 ---
@@ -2921,7 +2519,10 @@ gate. This protects projects that were set up before this rule shipped.
 
 # Package CI Checks
 
-Before **any** push/PR in agent-config: run ALL CI checks locally.
+## When this applies
+
+Before **any** push to remote or PR creation in the **agent-config** package.
+This rule is specific to this package — it does NOT apply to consumer projects.
 
 ## The Iron Law
 
@@ -2931,72 +2532,27 @@ NEVER push without running ALL CI checks locally first.
 
 Every CI pipeline failure is preventable by running these checks before pushing.
 
-## Required checks
+## Required checks — see mechanics
 
-### 1. Sync
+Five checks must pass locally before push, in this order:
 
-```bash
-bash scripts/compress.sh --check          # .agent-src/ matches .agent-src.uncompressed/
-bash scripts/compress.sh --check-hashes   # compression hashes are clean
-```
+1. **Sync** — `compress.sh --check` and `--check-hashes`.
+2. **Consistency** — `check_compression.py`, `check_references.py`, `check_portability.py`.
+3. **Linter** — `skill_linter.py --all`, 0 FAIL required.
+4. **Tests** — `pytest tests/`.
+5. **README** — `readme_linter.py`.
 
-### 2. Consistency
-
-```bash
-python3 scripts/check_compression.py   # compressed variants are valid
-python3 scripts/check_references.py     # no broken cross-references
-python3 scripts/check_portability.py    # no project-specific references in shared files
-```
-
-### 3. Linter (0 FAIL required)
-
-```bash
-python3 scripts/skill_linter.py --all   # 0 FAIL required
-```
-
-### 4. Tests
-
-```bash
-python3 -m pytest tests/ --tb=short     # all tests must pass
-```
-
-### 5. README
-
-```bash
-python3 scripts/readme_linter.py README.md --root .
-```
-
-## Quick one-liner
-
-```bash
-bash scripts/compress.sh --check && \
-bash scripts/compress.sh --check-hashes && \
-python3 scripts/check_compression.py && \
-python3 scripts/check_references.py && \
-python3 scripts/check_portability.py && \
-python3 scripts/skill_linter.py --all && \
-python3 -m pytest tests/ --tb=short && \
-python3 scripts/readme_linter.py README.md --root .
-```
-
-## After editing skills/rules in .agent-src.uncompressed/
-
-1. Edit uncompressed file
-2. Edit compressed file in `.agent-src/` to match
-3. `bash scripts/compress.sh --mark-done {relative-path}` — update hash
-4. `bash scripts/compress.sh --check-hashes` — verify
-
-**Skip step 3 → CI WILL fail.**
-
-## After editing scripts/compress.py
-
-Run `python3 -m pytest tests/test_compress.py -v` **immediately** — don't wait.
+The full command snippets, common-failure notes per step, the quick
+chained one-liner, and the post-edit workflow ("after editing
+skills/rules", "after editing `scripts/compress.py`") all live in
+[`contexts/communication/rules-auto/package-ci-checks-mechanics.md`](../contexts/communication/rules-auto/package-ci-checks-mechanics.md).
+Pull it whenever pre-push verification is needed.
 
 ## Do NOT
 
-- Push "to see if CI passes" — wastes pipeline minutes
-- Skip hash checks for "small changes"
-- Assume tests pass because linter passes
+- Do NOT push "to see if CI passes" — that wastes pipeline minutes
+- Do NOT skip hash checks because "I only changed one file"
+- Do NOT assume tests pass because linter passes — they check different things
 
 ---
 
@@ -3137,24 +2693,13 @@ Look, in order, for:
 - `.github/historical-bug-patterns.yml` (or
   `agents/historical-bug-patterns.yml`)
 
-If neither file exists, fall back to the engineering-memory layer via
-[`memory-access`](../../docs/guidelines/agent-infra/memory-access.md):
-
-```python
-from scripts.memory_lookup import retrieve
-extra = retrieve(
-    types=["ownership", "historical-patterns"],
-    keys=<changed file paths>,
-    limit=5,
-)
-```
-
-Curated memory (`agents/memory/ownership.yml`,
-`agents/memory/historical-patterns.yml`) carries the same schema as the
-project-local YAMLs and is merged into the routing output alongside
-them. If both memory and project YAMLs are absent, skip this rule and
-rely on [`reviewer-awareness`](reviewer-awareness.md) defaults. **Do
-not invent owners or patterns** from context.
+If neither file exists, fall back to the engineering-memory layer.
+Memory-lookup snippet and merge semantics live in
+[`contexts/communication/rules-auto/review-routing-awareness-mechanics.md`](../contexts/communication/rules-auto/review-routing-awareness-mechanics.md)
+§ Memory-lookup fallback. If both memory and project YAMLs are absent,
+skip this rule and rely on
+[`reviewer-awareness`](reviewer-awareness.md) defaults. **Do not
+invent owners or patterns** from context.
 
 ### 2. Match the diff
 
@@ -3171,25 +2716,19 @@ for the schema).
 
 ### 3. Surface findings
 
-When producing a review plan, include:
-
-- **Owner-mapped roles** — explicitly preferred over generic roles. If
-  the ownership map says `app/Billing/**` is owned by `finance-engineering
-  + security`, use those, not "backend + security".
-- **Historical-pattern warnings** — list every matched pattern with a
-  short label and the required control, e.g. _"Pattern: N+1 on tenant
-  listings → add an eager-load regression test"_.
-- **Confidence note** — if the ownership map is stale (last updated > 6
-  months ago per the `updated` field), say so. Ownership maps rot.
+When producing a review plan, include owner-mapped roles (preferred
+over generic), historical-pattern warnings (with required control),
+and a staleness note if the ownership map's `updated` field is older
+than 6 months. Worked examples for each in
+[`contexts/communication/rules-auto/review-routing-awareness-mechanics.md`](../contexts/communication/rules-auto/review-routing-awareness-mechanics.md)
+§ Surface findings.
 
 ### 4. Do NOT overreach
 
-- **Never rename paths** or add ownership entries as a side effect of a
-  code change. Ownership map edits are a separate, explicit task.
-- **Never mark a change safe** only because no pattern matched. Pattern
-  absence means "no known hit", not "no risk".
-- **Never copy historical-pattern names into the diff** as code comments
-  or commit messages — they are routing metadata, not commentary.
+The "do NOT overreach" guardrails (no path renames as side effects, no
+"safe because no match", no pattern names in diffs/commits) live in
+[`contexts/communication/rules-auto/review-routing-awareness-mechanics.md`](../contexts/communication/rules-auto/review-routing-awareness-mechanics.md)
+§ Do NOT overreach.
 
 ## Interaction with other rules
 
@@ -3202,16 +2741,12 @@ When producing a review plan, include:
   matched pattern is a reason to **add a test**, never a reason to
   expand scope into unrelated refactors.
 
-## Anti-patterns — reject them
+## Anti-patterns
 
-- Suggesting owners "because this looks like billing code" without
-  consulting the ownership map when one exists.
-- Inventing historical patterns from general knowledge — patterns must
-  come from the project's own registry.
-- Downgrading a matched high-severity pattern because "the author said
-  it's fine" — the pattern was registered because it bit before.
-- Treating an out-of-date map as absent. Flag staleness; do not silently
-  skip.
+The four anti-pattern rejections (invented owners, invented patterns,
+downgrading high-severity hits, treating stale maps as absent) live in
+[`contexts/communication/rules-auto/review-routing-awareness-mechanics.md`](../contexts/communication/rules-auto/review-routing-awareness-mechanics.md)
+§ Anti-patterns.
 
 ## See also
 
@@ -3398,33 +2933,6 @@ roadmap left under `agents/roadmaps/` is a rule violation, not an
 optional cleanup. See `roadmap-management` skill for the archive vs
 skipped decision table.
 
-## How to regenerate
-
-```bash
-./agent-config roadmap:progress
-```
-
-The `./agent-config` wrapper is written into the project root by the
-package installer and delegates to the master CLI inside
-`node_modules/@event4u/agent-config/` or `vendor/event4u/agent-config/`.
-No global tooling required.
-
-## Triggers
-
-| Edit | Must run, same response |
-|---|---|
-| **Create a new roadmap file** | regenerate dashboard |
-| **Rename or delete a roadmap file** | regenerate dashboard |
-| Mark step `[x]`, `[~]`, `[-]`, or unmark back to `[ ]` | regenerate dashboard |
-| Add, rename, or remove a phase | regenerate dashboard |
-| **Last `[ ]` flips** — roadmap reaches `count_open == 0` | `git mv` → `archive/` (or `skipped/`) **then** regenerate dashboard |
-| Move roadmap between `roadmaps/` ↔ `archive/` ↔ `skipped/` | regenerate dashboard |
-
-**Batching rule:** if you edit multiple checkboxes in one response, a
-**single** regeneration at the end of that response is enough — but
-the response must not end without it. If one of those edits closes a
-roadmap, archive it first, then run the single regen.
-
 ## Autonomous execution — checkbox cadence
 
 When executing a roadmap autonomously (multi-turn, no per-step user
@@ -3456,50 +2964,14 @@ user sees one row move from `[ ]` to `[~]` to `[x]` instead of
 silent rows. `[~]` is treated as open for `count_open` but moves
 the phase percentage forward in the dashboard.
 
-## Pre-send self-check — MANDATORY
+## Mechanics — triggers, regen command, self-check, failures
 
-Before sending any reply that touched `agents/roadmaps/`, run this
-silent gate:
-
-1. Did this turn create, rename, delete, or move a roadmap file? → regen MUST be in the reply.
-2. Did this turn flip any checkbox in a roadmap file? → regen MUST be in the reply.
-3. Did the regen output (`✅ Wrote agents/roadmaps-progress.md · …`) actually appear this turn? → if no, run it now before sending.
-4. **Autonomous roadmap execution gate** — did this turn complete a roadmap step (code saved + verification passed) without flipping its checkbox? → flip `[x]` (or `[~]` if multi-turn) and regen before sending.
-5. **Trackable-roadmap gate** — did this turn create or substantially edit a roadmap file? → does it now contain at least one `- [ ]` per non-intro phase, **or** carry `status: draft` in frontmatter? → if neither, add the checklist or the draft flag before sending.
-
-Any "yes" + no regen run = rule violation. Rerun before sending.
-
-## Failure modes
-
-- **Created the roadmap, marked Phase 1 done across multiple turns,
-  never regenerated** — dashboard silently lies "this roadmap does
-  not exist" to the next reader. Canonical failure of this rule;
-  the rule was hardened in response to it.
-- **Regenerated yesterday, edited today, "I'll regen at session
-  end"** — session ends from a crash, regen never lands.
-- **Closed a roadmap (last `[ ]` → `[x]`) and regenerated before
-  `git mv`** — the closed roadmap reappears in "Open roadmaps".
-- **Edited the dashboard by hand to "fix it quickly"** — next regen
-  overwrites the manual edit; no audit trail of why.
-- **Autonomous run, four steps shipped across four turns, dashboard
-  flat the whole time, single regen at the end** — user lost
-  progress visibility for the entire run. Each completed step must
-  flip its checkbox in the reply that ships it.
-- **Decision-only roadmap shipped without checkboxes** — file
-  contains decisions / ICE / block-sequencing but zero `- [ ]`,
-  dashboard shows `0/0` or omits it. Pair with a `## Phase N`
-  section or mark `status: draft` (CI catches this now).
-- **Headings off-canon (`### P0 #N`, `## Block A`, `### Sequencing
-  — Phase 1`)** — `PHASE_RE` skips them, roadmap invisible to the
-  dashboard. Rename to `## Phase <id>` or mark `status: draft`.
-
-## Do NOT
-
-- Do NOT edit `agents/roadmaps-progress.md` by hand — always regenerate.
-- Do NOT defer the regen to "next commit" or "before push" — same response.
-- Do NOT rely on CI (`--check` mode) as the first line of defence — CI is last-line, not real-time.
-- Do NOT skip the regen because "only one checkbox changed" — the dashboard aggregates counts and phase percentages that shift on single edits.
-- Do NOT leave a 100%-complete roadmap in `agents/roadmaps/` "for review" — `git mv` to archive **before** regenerating, otherwise it reappears in "Open roadmaps".
+The triggers table, the regen command (`./agent-config roadmap:progress`),
+the mandatory pre-send self-check, the failure-mode catalog, and the
+`Do NOT` list live in
+[`contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md`](../contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md).
+Pull it whenever a trigger fires — the rule above is the obligation
+surface; the mechanics file is the lookup material.
 
 ---
 
@@ -3904,26 +3376,13 @@ and fail `python3 scripts/validate_frontmatter.py` and the full CI pipeline.
 
 ## Description Triggering
 
-Claude routes skills by reading the frontmatter `description`. Polite, generic,
-or hedged descriptions cause **undertriggering** — the skill never loads when it
-should, and the user never learns it exists.
-
-Make descriptions "pushy" — explicit about when to fire:
-
-- Start with a concrete verb phrase: `Use when ...`, `Creates ...`, `Reviews ...`.
-- Name 2+ concrete triggers — domains, symptoms, file types, user phrasing.
-- End with: `... even if they don't explicitly ask for \`<skill-name>\`.`
-- Avoid hedges: `may help with`, `can be useful for`, `covers various`.
-- **Keep it ≤ 200 characters.** `scripts/skill_linter.py` warns at
-  `description_too_long` above this. If the pushy tail pushes you over, cut
-  adjectives, drop the second example phrasing, or collapse a list — do
-  **not** drop the trigger vocabulary or the `even if ...` tail.
-
-Source: [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md).
-
-**Litmus test:** Read the description cold, without the skill's body. If you
-cannot name at least two phrasings a user would realistically type that should
-route to this skill, the description is too polite. Rewrite it.
+Claude routes skills by their frontmatter `description`. Pushy,
+trigger-rich descriptions are required — polite or hedged ones cause
+undertriggering. The full recipe (concrete verb phrase, ≥2 triggers,
+`even if they don't explicitly ask for …` tail, ≤200 chars,
+litmus test) lives in
+[`contexts/communication/rules-auto/skill-quality-mechanics.md`](../contexts/communication/rules-auto/skill-quality-mechanics.md)
+§ Description Triggering.
 
 ## Skill Independence
 
@@ -3938,35 +3397,14 @@ If a skill is not executable without opening a guideline, it is broken.
 **Litmus test:** Cover all guideline references in the Procedure. Is it still executable?
 If not → the skill needs more own steps, decisions, and validation — not more guideline links.
 
-## Merge Preservation
+## Merge & Compression Preservation
 
-When merging or refactoring skills, the merged result MUST preserve:
-
-1. **Strongest validation** from each source skill
-2. **Strongest example** (good/bad contrast) from each source
-3. **Strongest anti-pattern** from each source
-4. **All concrete decision criteria** that differ between sources
-
-A merge is invalid if:
-- Validation got weaker than the strongest source
-- Examples were lost without replacement
-- Anti-pattern coverage decreased
-- The merged skill became a generic umbrella doc
-
-## Compression Preservation
-
-When compressing a skill, the compressed version MUST preserve:
-
-- Trigger quality (description + When to use)
-- All procedure steps that contain decisions
-- All concrete validation checks
-- All gotchas and anti-patterns
-- Strongest example (at minimum one good/bad contrast)
-
-Compression may remove:
-- Verbose explanations
-- Redundant examples (keep the strongest)
-- Commentary that doesn't affect execution
+When merging or compressing skills, the result MUST preserve the
+strongest validation, strongest examples, all anti-patterns, all
+decision criteria, and trigger quality. Full preservation invariants
+and "merge is invalid if …" / "compression may remove …" lists in
+[`contexts/communication/rules-auto/skill-quality-mechanics.md`](../contexts/communication/rules-auto/skill-quality-mechanics.md)
+§ Merge Preservation and § Compression Preservation.
 
 ## Refactor Safety
 
@@ -4267,19 +3705,6 @@ Any precondition fails at edit time → stop, reclassify as
 `ui-improve`, re-enter the gate. Backend-only edits and
 documentation work were never in scope for this rule.
 
-## What "audit findings" means
-
-`state.ui_audit` is a non-empty dict carrying at least one of:
-
-- `components_found` — `{path, name, kind, similarity?}` inventory
-  entries from [`existing-ui-audit`](../skills/existing-ui-audit/SKILL.md).
-- `greenfield: true` plus `greenfield_decision` ∈
-  `{scaffold, bare, external_reference}`.
-- Legacy `components` alias — back-compat for the same shape.
-
-`null`, `{}`, or a dict without those keys is **not** findings;
-emit `@agent-directive: existing-ui-audit` instead of writing code.
-
 ## What to do when the gate fires
 
 1. Stop. Do not open an editor on a component file.
@@ -4291,36 +3716,33 @@ emit `@agent-directive: existing-ui-audit` instead of writing code.
    external-reference halt **before** code; record the pick in
    `state.ui_audit.greenfield_decision`.
 
+## What "audit findings" means
+
+`state.ui_audit` is a non-empty dict carrying at least one of:
+
+- `components_found` — inventory entries from `existing-ui-audit`.
+- `greenfield: true` plus `greenfield_decision` ∈
+  `{scaffold, bare, external_reference}`.
+- Legacy `components` alias — back-compat for the same shape.
+
+`null`, `{}`, or a dict without those keys is **not** findings —
+the empty dict is rejected on purpose. An audit that finds nothing
+must record either ≥1 `components_found` or the greenfield branch.
+
 ## Failure modes
 
 - Writing the component first and "thinking about reuse later".
-- Citing a similar-looking component from memory without verifying
-  it via the audit.
-- Treating `state.ui_audit = {}` as "audit ran, found nothing" —
-  empty dict is rejected on purpose; an audit that finds nothing
-  must record either ≥1 `components_found` or the greenfield branch.
+- Citing a similar-looking component from memory without verifying.
+- Treating `state.ui_audit = {}` as "audit ran, found nothing".
 - Bypassing the gate for "just one tile".
 
-## Interactions
+## Lookup material — see mechanics
 
-- [`improve-before-implement`](improve-before-implement.md) — runs
-  first when the request is ambiguous; this rule is the next gate.
-- [`ask-when-uncertain`](ask-when-uncertain.md) — "just build it"
-  does **not** drop the audit; acknowledge, run audit, continue.
-- [`directives/ui/audit.py`](../templates/scripts/work_engine/directives/ui/audit.py)
-  — code-layer twin; this rule covers the cases where the engine
-  is not in the loop.
-- [`existing-ui-audit`](../skills/existing-ui-audit/SKILL.md) — the
-  skill that produces the findings.
-
-## Cloud Behavior
-
-On cloud surfaces the engine is not shipped, so `state.ui_audit`
-does not exist. The Iron Law still applies: take the visible
-inventory of files in conversation context as the audit, and
-surface a one-line audit summary in the reply before writing the
-component. The gate is satisfied by an explicit summary, not by
-silently skipping.
+The full failure-mode catalog, cross-rule interactions, and the
+cloud-surface adaptation live in
+[`contexts/communication/rules-auto/ui-audit-gate-mechanics.md`](../contexts/communication/rules-auto/ui-audit-gate-mechanics.md).
+Pull it whenever the gate fires or the agent is unsure whether a
+recorded `state.ui_audit` qualifies.
 
 ---
 
@@ -4446,7 +3868,7 @@ recommendation line is mandatory.
 - Hiding behind "you know the project better"
 - Inline `(recommended)` tag with no follow-up `Recommendation: N` line
 
-**Slip handling — same protocol as [`language-and-tone`](language-and-tone.md#when-the-user-calls-out-a-language-slip).**
+**Slip handling — same protocol as [`language-and-tone`](language-and-tone.md#slip-handling).**
 User calls out a missing or wrong recommendation → acknowledge once
 in the user's language, rewrite the reply with a recommendation,
 ship. No "from now on" promises — only the next reply proves
@@ -4475,12 +3897,11 @@ Mechanical backstop: `python3 scripts/check_reply_consistency.py --stdin < draft
 (non-zero exit on any rule above). Self-scan is the primary gate; the
 script is the deterministic safety net for ambiguous cases.
 
-### Common failure modes — known, named, no excuses
-
-- **End-of-turn menu skipped.** Reply answers the question fine, then ends with `> 1. Foo > 2. Bar > 3. Stop` and no `Empfehlung:`. Iron Law 1 was violated — these are numbered options, position is irrelevant.
-- **"Genuinely no preference" hedge.** Pick anyway. The agent has more context than the user on the trade-off; refusing to pick dumps the work back. Pick the safest option, name the flip-condition.
-- **"User knows the project better" hedge.** Same failure mode, different costume. The user asked for an opinion by virtue of accepting the options block; deliver it.
-- **Multi-block reply with one recommendation.** Two options blocks but only one `Empfehlung:` line — the second block is unguarded. Rule 5 above closes this.
+Common failure modes (end-of-turn menu skipped, "no preference"
+hedges, multi-block reply with one recommendation) and the named
+slip catalog live in
+[`contexts/communication/rules-auto/user-interaction-mechanics.md`](../contexts/communication/rules-auto/user-interaction-mechanics.md)
+§ Common failure modes.
 
 ## Numbered Options — Always
 
@@ -4508,68 +3929,12 @@ just a number (e.g., `1`) instead of typing a sentence.
 - **Use the user's language** for the question and options.
 - **Accept both** the number and a natural language answer (e.g., "1" or "the first one").
 
-### Examples
+### Examples and "when NOT to use" — see mechanics
 
-**Binary choice:**
-
-```
-> 1. Interactive — ask before each comment
-> 2. Automatic — handle all independently
-
-**Recommendation: 1 — Interactive** — the comments touch security-sensitive code,
-so a wrong auto-fix is more expensive than approving each one. Caveat: flip to 2
-if the comments turn out to be pure formatting.
-```
-
-**Multiple choice with skip:**
-
-```
-> 1. Fix the code
-> 2. Fix the test
-> 3. Skip
-
-**Recommendation: 1 — Fix the code** — the test asserts the documented behaviour;
-the production code drifted from the contract. Caveat: pick 2 only if the contract
-itself is wrong.
-```
-
-**Confirmation with context:**
-
-```
-> Found PR #1399 on branch `chore/refactor-agent-setup-2`.
->
-> 1. Yes, that's the right PR
-> 2. No, different PR — I'll provide the URL
-
-**Recommendation: 1 — Yes** — the branch name matches the PR title exactly.
-Caveat: flip to 2 if the PR was reopened from a different branch.
-```
-
-### When NOT to use numbered options
-
-- **Open-ended questions** where the answer is free text (e.g., "What should the class be named?").
-- **Simple yes/no** can use numbered options OR accept "ja"/"nein" directly.
-  Even for yes/no, prefer numbered options if there's additional context to show.
-
-## Progress Indicators
-
-When processing multiple items (e.g., review comments, test failures), show progress:
-
-```
-**Comment 3/7** — `filename.php:42`
-```
-
-## Summaries
-
-After completing a batch of actions, provide a summary table:
-
-```
-| # | File | Action |
-|---|---|---|
-| 1 | `file.php` | Fixed null check |
-| 2 | `test.php` | Updated assertion |
-| 3 | `config.php` | Skipped (intentional) |
-```
+Worked examples (binary choice, multiple choice with skip,
+confirmation with context), the "when NOT to use numbered options"
+catalog, progress indicators, and summary-table patterns live in
+[`contexts/communication/rules-auto/user-interaction-mechanics.md`](../contexts/communication/rules-auto/user-interaction-mechanics.md).
 
 ---
 

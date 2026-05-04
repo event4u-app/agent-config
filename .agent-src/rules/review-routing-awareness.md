@@ -2,6 +2,8 @@
 type: "auto"
 description: "When routing reviewers or flagging risk hotspots — consult ownership-map and historical-bug-patterns before suggesting reviewers or claiming a change is safe"
 source: package
+load_context:
+  - .agent-src.uncompressed/contexts/communication/rules-auto/review-routing-awareness-mechanics.md
 ---
 
 # Review Routing Awareness
@@ -37,24 +39,13 @@ Look, in order, for:
 - `.github/historical-bug-patterns.yml` (or
   `agents/historical-bug-patterns.yml`)
 
-If neither file exists, fall back to the engineering-memory layer via
-[`memory-access`](../../docs/guidelines/agent-infra/memory-access.md):
-
-```python
-from scripts.memory_lookup import retrieve
-extra = retrieve(
-    types=["ownership", "historical-patterns"],
-    keys=<changed file paths>,
-    limit=5,
-)
-```
-
-Curated memory (`agents/memory/ownership.yml`,
-`agents/memory/historical-patterns.yml`) carries the same schema as the
-project-local YAMLs and is merged into the routing output alongside
-them. If both memory and project YAMLs are absent, skip this rule and
-rely on [`reviewer-awareness`](reviewer-awareness.md) defaults. **Do
-not invent owners or patterns** from context.
+If neither file exists, fall back to the engineering-memory layer.
+Memory-lookup snippet and merge semantics live in
+[`contexts/communication/rules-auto/review-routing-awareness-mechanics.md`](../contexts/communication/rules-auto/review-routing-awareness-mechanics.md)
+§ Memory-lookup fallback. If both memory and project YAMLs are absent,
+skip this rule and rely on
+[`reviewer-awareness`](reviewer-awareness.md) defaults. **Do not
+invent owners or patterns** from context.
 
 ### 2. Match the diff
 
@@ -71,25 +62,19 @@ for the schema).
 
 ### 3. Surface findings
 
-When producing a review plan, include:
-
-- **Owner-mapped roles** — explicitly preferred over generic roles. If
-  the ownership map says `app/Billing/**` is owned by `finance-engineering
-  + security`, use those, not "backend + security".
-- **Historical-pattern warnings** — list every matched pattern with a
-  short label and the required control, e.g. _"Pattern: N+1 on tenant
-  listings → add an eager-load regression test"_.
-- **Confidence note** — if the ownership map is stale (last updated > 6
-  months ago per the `updated` field), say so. Ownership maps rot.
+When producing a review plan, include owner-mapped roles (preferred
+over generic), historical-pattern warnings (with required control),
+and a staleness note if the ownership map's `updated` field is older
+than 6 months. Worked examples for each in
+[`contexts/communication/rules-auto/review-routing-awareness-mechanics.md`](../contexts/communication/rules-auto/review-routing-awareness-mechanics.md)
+§ Surface findings.
 
 ### 4. Do NOT overreach
 
-- **Never rename paths** or add ownership entries as a side effect of a
-  code change. Ownership map edits are a separate, explicit task.
-- **Never mark a change safe** only because no pattern matched. Pattern
-  absence means "no known hit", not "no risk".
-- **Never copy historical-pattern names into the diff** as code comments
-  or commit messages — they are routing metadata, not commentary.
+The "do NOT overreach" guardrails (no path renames as side effects, no
+"safe because no match", no pattern names in diffs/commits) live in
+[`contexts/communication/rules-auto/review-routing-awareness-mechanics.md`](../contexts/communication/rules-auto/review-routing-awareness-mechanics.md)
+§ Do NOT overreach.
 
 ## Interaction with other rules
 
@@ -102,16 +87,12 @@ When producing a review plan, include:
   matched pattern is a reason to **add a test**, never a reason to
   expand scope into unrelated refactors.
 
-## Anti-patterns — reject them
+## Anti-patterns
 
-- Suggesting owners "because this looks like billing code" without
-  consulting the ownership map when one exists.
-- Inventing historical patterns from general knowledge — patterns must
-  come from the project's own registry.
-- Downgrading a matched high-severity pattern because "the author said
-  it's fine" — the pattern was registered because it bit before.
-- Treating an out-of-date map as absent. Flag staleness; do not silently
-  skip.
+The four anti-pattern rejections (invented owners, invented patterns,
+downgrading high-severity hits, treating stale maps as absent) live in
+[`contexts/communication/rules-auto/review-routing-awareness-mechanics.md`](../contexts/communication/rules-auto/review-routing-awareness-mechanics.md)
+§ Anti-patterns.
 
 ## See also
 

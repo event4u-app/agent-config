@@ -53,7 +53,8 @@ jobs:
         uses: arduino/setup-task@v2
 
       - name: Install Python dependencies
-        run: pip install pytest
+        # pyyaml: required by check_always_budget.py (parses rule frontmatter).
+        run: pip install pytest pyyaml
 
       - name: Show tool versions
         run: |

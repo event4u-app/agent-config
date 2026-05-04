@@ -72,6 +72,9 @@ evals/results/
 # Opt-in to commit for team review — default is local-only.
 /agents/logs/implement-ticket/
 
+# Phase 5.3 always-rule budget trend log (per-run JSONL, local-only).
+/.github/budget-trend.jsonl
+
 # Golden Transcript freeze-guard staging output (produced by
 # `python3 -m tests.golden.capture --target tests/golden/.staging`,
 # diffed against the committed baseline; never committed).

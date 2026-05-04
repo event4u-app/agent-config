@@ -161,11 +161,20 @@ tasks:
 
   install-anthropic-key:
     desc: |
-      Install the Anthropic API key used by live trigger evals.
-      Interactive: key is read with no echo and stored in
-      ~/.config/agent-config/anthropic.key (mode 0600). Piped stdin is
-      refused. Rerun to rotate.
+      Install the Anthropic API key used by live trigger evals and the
+      AI Council `anthropic` member. Interactive: key is read with no
+      echo and stored in ~/.config/agent-config/anthropic.key (mode
+      0600). Piped stdin is refused. Rerun to rotate.
     cmd: bash scripts/install_anthropic_key.sh
+    interactive: true
+
+  install-openai-key:
+    desc: |
+      Install the OpenAI API key used by the AI Council `openai`
+      member. Interactive: key is read with no echo and stored in
+      ~/.config/agent-config/openai.key (mode 0600). Piped stdin is
+      refused. Rerun to rotate.
+    cmd: bash scripts/install_openai_key.sh
     interactive: true
 
   test-triggers-live:
@@ -300,6 +309,10 @@ tasks:
     desc: Fail when a new atomic command lands without a `cluster:` field (P0.8c)
     cmd: python3 scripts/lint_no_new_atomic_commands.py
 
+  check-cluster-patterns:
+    desc: Verify Phase-2 cluster dispatchers match Phase-1 reference structure (Phase 1 § 1.4.1)
+    cmd: python3 scripts/check_cluster_patterns.py
+
   lint-rule-interactions:
     desc: Validate docs/contracts/rule-interactions.yml schema, slugs, evidence paths, and anchor-pair coverage (P2.2)
     cmd: python3 scripts/lint_rule_interactions.py
@@ -307,6 +320,18 @@ tasks:
   lint-load-context:
     desc: Validate the `load_context:` / `load_context_eager:` frontmatter schema (docs/contracts/load-context-schema.md)
     cmd: python3 scripts/lint_load_context.py
+
+  check-context-paths:
+    desc: Validate context-file path tree, basename collisions, and orphans (docs/contracts/context-paths.md)
+    cmd: python3 scripts/check_context_paths.py
+
+  generate-ownership-matrix:
+    desc: Regenerate the file-ownership matrix JSON + MD (docs/contracts/file-ownership-matrix.md)
+    cmd: python3 scripts/generate_ownership_matrix.py
+
+  check-ownership-matrix:
+    desc: Verify the committed ownership matrix matches a fresh regeneration (CI gate)
+    cmd: python3 scripts/generate_ownership_matrix.py --check
 
   check-reply-consistency:
     desc: Scan shipped sources for legacy (recommended) inline tags on numbered options
@@ -319,6 +344,10 @@ tasks:
   check-always-budget:
     desc: Always-rule budget gate (warn at 80%, fail at 90% of 49,000 chars)
     cmd: python3 scripts/check_always_budget.py --quiet
+
+  check-phase-coupling:
+    desc: Phase 6 → 2B decoupling guard (no chat-history-* rule refs from 13 Phase-2B targets)
+    cmd: python3 scripts/check_phase_coupling.py --quiet
 
   check-compression:
     desc: Check compression quality (headings, code blocks, frontmatter, word count)
@@ -481,11 +510,15 @@ tasks:
       - task: check-public-catalog-links
       - task: check-command-count
       - task: lint-no-new-atomic-commands
+      - task: check-cluster-patterns
       - task: lint-rule-interactions
       - task: lint-load-context
+      - task: check-context-paths
+      - task: check-ownership-matrix
       - task: check-reply-consistency
       - task: check-iron-law-prominence
       - task: check-always-budget
+      - task: check-phase-coupling
       - task: validate-schema
       - task: lint-skills
       - task: lint-marketplace

@@ -67,6 +67,8 @@ those sections.
 | `ai_council.cost_budget.max_total_usd` | `0.0` | Per-invocation USD ceiling. `0` disables (token caps still apply). |
 | `ai_council.cost_budget.daily_limit_usd` | `0.0` | Rolling 24h USD ceiling across all `/council` calls. `0` disables. Ledger lives at `~/.config/agent-config/council-spend.jsonl` (mode 0600). |
 
+> **Experimental.** AI Council is not yet validated by external users. API costs apply per consultation.
+
 Council API tokens are installed via `./agent-config keys:install-anthropic`
 and `./agent-config keys:install-openai` — they prompt on `/dev/tty`, write to
 `~/.config/agent-config/<provider>.key` with mode `0600`, and never accept env

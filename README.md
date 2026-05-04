@@ -7,8 +7,18 @@ Give your AI agents an audit-disciplined orchestration contract — testing, Git
 > Your agent picks up the project's stack, runs tests, prepares PRs, fixes CI — and follows your team's coding standards while doing it. Stack-aware skill sets ship for PHP (Laravel · Symfony · Zend/Laminas), JavaScript (Next.js · React · Node), and cross-stack concerns (API · testing · security · observability).
 
 <p align="center">
-  <strong>129 Skills</strong> · <strong>57 Rules</strong> · <strong>69 Commands</strong> · <strong>47 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>129 Skills</strong> · <strong>57 Rules</strong> · <strong>49 Commands</strong> · <strong>48 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
+
+---
+
+## Start here
+
+New to agent-config? 60 seconds, three links:
+
+1. **[Install](#quickstart)** — `composer require` or `npm install`, then run the installer.
+2. **[First command](#2-minute-demo-implement-ticket)** — `/implement-ticket` or `/work` walkthrough.
+3. **[Where the rules live](#documentation)** — `.augment/`, `.claude/`, `.cursor/`, and friends.
 
 ---
 
@@ -322,7 +332,7 @@ Nothing runs automatically without your control. [Configure modes →](docs/cust
 | [`/jira-ticket`](.agent-src/commands/jira-ticket.md) | Read ticket from branch, implement feature |
 | [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
 
-→ [Browse all 69 active commands](.agent-src/commands/) &nbsp;<sub>(84 files total — 15 are deprecation shims that redirect to clustered commands)</sub>
+→ [Browse all 49 active commands](.agent-src/commands/) &nbsp;<sub>(95 files total — 46 are deprecation shims that redirect to clustered commands)</sub>
 
 ---
 
@@ -347,7 +357,7 @@ Every developer gets the same behavior. No per-user setup needed.
 native slash-commands)
 
 > **What this means in practice:** Augment Code and Claude Code get the full
-> package (rules + 129 skills + 69 native commands). Cursor, Cline, Windsurf,
+> package (rules + 129 skills + 49 native commands). Cursor, Cline, Windsurf,
 > Gemini CLI, and GitHub Copilot only get the **rules** natively; skills and
 > commands are available to them as documentation the agent can read, not as
 > first-class features.
@@ -479,20 +489,11 @@ task lint-skills   # Lint skills, rules, commands
   orchestrator skips bridges and completes the payload sync.
 - **Composer or npm** — to pull the package itself.
 
-**Platform support:**
-
-| Platform | Status |
-|---|---|
-| macOS 12.3+ | ✅ Supported |
-| Linux (modern distros) | ✅ Supported |
-| Windows (WSL2) | ✅ Supported |
-| Windows (Git Bash) | ⚠️ Works; symlinks need Developer Mode |
-| Windows (native PowerShell/cmd) | ❌ Not supported |
-
-**For contributors only** (rebuilding `.augment/` locally):
-
-- [Task](https://taskfile.dev/) — runs the CI pipeline (`task ci`).
+**Platform support:** macOS 12.3+, Linux (modern distros), and Windows
+(WSL2) are fully supported. Git Bash works but symlinks require
+Developer Mode; native PowerShell / cmd is not supported. Contributors
+rebuilding `.augment/` locally also need [Task](https://taskfile.dev/).
 
 ## License
 
-[MIT](LICENSE) — you can use, fork, and redistribute this freely.
+[MIT](LICENSE).

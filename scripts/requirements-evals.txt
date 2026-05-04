@@ -5,3 +5,4 @@
 # be upgraded, bump the version here and rerun the setup script.
 
 anthropic==0.96.0
+openai==1.109.1

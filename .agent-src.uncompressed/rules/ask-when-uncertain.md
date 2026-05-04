@@ -17,16 +17,13 @@ ONE QUESTION PER TURN. NO EXCEPTIONS.
 ASK. WAIT FOR THE ANSWER. THEN ASK THE NEXT.
 ```
 
-This is absolute. Not a default, not a guideline, not "usually".
-Every turn that contains a question contains **exactly one** question.
-Even if the questions look trivial. Even if they look independent.
-Even if they would fit on one screen. Even if batching "feels more
-efficient". Full self-check, ordering, and handoff rules under
-[How to ask](#how-to-ask).
+Absolute. Not a default, not "usually". Every turn with a question
+has **exactly one**. Even if trivial, independent, or batchable.
+Self-check, ordering, handoff under [How to ask](#how-to-ask).
 
 ## When to ask
 
-- Requirement is ambiguous or could be interpreted multiple ways
+- Requirement ambiguous or multi-interpretable
 - Not 100% sure which approach is correct
 - About to touch code you haven't fully understood
 - Choosing between multiple valid approaches
@@ -34,47 +31,35 @@ efficient". Full self-check, ordering, and handoff rules under
 
 ## Vague-request triggers — MUST ask
 
-The following patterns are almost always too vague to execute safely. When the user's
-request matches one of these without further context, ask **before** touching code:
+These patterns are too vague to execute safely. Match without further
+context → ask **before** touching code:
 
-| Pattern | Missing info | Example question |
-|---|---|---|
-| "improve / optimize this" | What metric? Speed, readability, memory? | "Optimize for what — execution speed or readability?" |
-| "add caching" | Cache store? Scope? Invalidation rules? | "Which cache driver, and what invalidates it?" |
-| "make it better / cleaner" | By what standard? | "What specifically feels wrong in the current code?" |
-| "clean up this file" | Dead code? Formatting? Refactor? | "Remove unused code, reformat, or restructure?" |
-| "fix this" (without specifying) | What's the symptom? | "What output/behavior is wrong right now?" |
-| "refactor X" | Target pattern? Boundaries? | "Refactor toward what — smaller methods, extract class, or something else?" |
-| "use best practices" | Whose? For what? | "Best practices for what specifically — testing, naming, structure?" |
-| "handle errors properly" | Which errors? How? Log, retry, propagate? | "For which failure modes, and what should happen on error?" |
-| "add a UI / component / tile / page" when the repo mixes frameworks | Which stack? Tailwind? Flux? Livewire? Custom? | "This repo uses {A} and {B} for UI — which one for this?" |
+- "improve / optimize this" — metric? speed, readability, memory?
+- "add caching" — store? scope? invalidation?
+- "make it better / cleaner" — by what standard?
+- "clean up this file" — dead code? format? refactor?
+- "fix this" (no symptom) — what output is wrong?
+- "refactor X" — target pattern? boundaries?
+- "use best practices" — whose? for what?
+- "handle errors properly" — which errors? log/retry/propagate?
+- "add a UI/component/tile/page" in mixed-framework repo — which stack?
 
-**Escape hatch:** If surrounding context (ticket, open file, prior conversation)
-makes the answer unambiguous, proceed — but state the assumption explicitly.
+Example questions per pattern:
+[`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#vague-request-triggers--example-questions).
+
+**Escape hatch:** if context (ticket, open file, prior turn) makes
+the answer unambiguous, proceed — but state the assumption.
 
 ## How to ask
 
-Be specific. Present numbered options (per `user-interaction`). Keep it short.
+Numbered options (per `user-interaction`). Short. The Iron Law is at
+the top; this section adds self-check and ordering.
 
-The Iron Law (one question per turn) is at the top of this file.
-This section adds the rationale, self-check, and ordering.
-
-The user must never have to track sub-numbers, scroll through stacked
-option blocks, or split their reply across multiple questions. One
-question, numbered options (per `user-interaction`), one short
-answer, next turn.
-
-Rationale — why even "trivial" batches fail:
-
-| Situation | Why serial always wins |
-|---|---|
-| Design / architecture decisions | Answer to Q1 reframes Q2 |
-| Naming / command-syntax / API shape | Later choices depend on it |
-| Scope / PR boundaries | Changes what the other questions even mean |
-| Tool / library selection | Downstream choices branch from it |
-| "Which approach: A vs B vs C" | Each answer opens a different follow-up |
-| Even "independent" yes/no pairs | User still has to parse two contexts |
-| Any question the user has to **think** about, not just pick | Thinking load compounds when stacked |
+The user must never track sub-numbers, scroll stacked option blocks,
+or split a reply across multiple questions. Rationale shorthand: if
+the user has to *think* about an answer, that answer almost always
+reframes the next question. Full rationale:
+[`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#one-question-per-turn--why-serial-always-wins).
 
 ### Self-check before asking
 

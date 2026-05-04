@@ -5,7 +5,12 @@ disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Explicit resume mechanic with foreign/returning state machine."
+superseded_by: chat-history resume
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /chat-history-resume is deprecated; use /chat-history resume instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 <!-- cloud_safe: noop -->
 

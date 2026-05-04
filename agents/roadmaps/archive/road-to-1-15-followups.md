@@ -1,6 +1,6 @@
 # Road to 1.15 Followups
 
-**Status:** COMPLETE — P0, P1, and P2 all verified shipped. Pending maintainer sign-off only.
+**Status:** archived — P0, P1, and P2 all verified shipped with inline commit-SHA evidence (Phase 1.2.2 of `road-to-1-16-followups`, 2026-05-03).
 **Started:** 2026-05-02
 **Trigger:** External review of the 1.15.0 release. Release scored 9.1 / 10 overall (8.8 / 10 as a consistent release) — strong consolidation, real progress on `docs/contracts/`, Stability Policy, Migration Guide, count-drift fix, public-link check, rule-interaction linter. The remaining gap is **public identity + governance surface**.
 **Mode:** Sequential — P0 items land before P1; P2 stays gated until P0 #1 + #2 are done. **P0 verified complete 2026-05-02 → P1 + P2 now eligible to execute.**
@@ -50,7 +50,7 @@ Consolidate the 1.15.0 review into actionable, scoped phases — without resurfa
 
 > Granularity: F-step, each row is a single PR-able commit.
 
-- [x] **F1.1** Audit every file under `README.md`, `AGENTS.md`, `.github/copilot-instructions.md`, `docs/architecture.md`, `docs/contracts/*.md` for Laravel-coloured identity language (greppable list: "Laravel-first", "for PHP / Laravel teams", "primary audience: Laravel", "built for Laravel", "Laravel = primary"). Produce a deliverable list of locations + current wording + proposed neutral wording.
+- [x] **F1.1** Audit every file under `README.md`, `AGENTS.md`, `.github/copilot-instructions.md`, `docs/architecture.md`, `docs/contracts/*.md` for Laravel-coloured identity language (greppable list: "Laravel-first", "for PHP / Laravel teams", "primary audience: Laravel", "built for Laravel", "Laravel = primary"). Produce a deliverable list of locations + current wording + proposed neutral wording. <!-- verified: audit-only · agents/roadmaps/archive/road-to-1-15-followups.md (this roadmap, audit table below) · 2026-05-02 -->
 
   **Audit results (2026-05-02).** None of the explicit banned phrases hit (`Laravel-first`, `for PHP / Laravel teams`, `primary audience: Laravel`, `built for Laravel`). Identity-frame-leaning lines that still need neutralization:
 
@@ -64,13 +64,13 @@ Consolidate the 1.15.0 review into actionable, scoped phases — without resurfa
   | `docs/contracts/STABILITY.md` | — | No Laravel mentions. | F1.6 — no edit needed; record as audited. |
 
   Banned-phrase grep is empty, so the F1.5 lint can ship with an authoritative starter list. P0 #4 (Token-overhead wording) cell verified: the literal "Zero" sits under header "Token overhead" in the Cost-profiles table at `README.md` line 255–257.
-- [x] **F1.2** Rewrite `README.md` opener (lines 1–11) — universal framing first; Laravel referenced only as "deepest reference stack".
-- [x] **F1.3** Rewrite `README.md` § "Who this is for" / quickstart prose so the opener doesn't get contradicted three sections later.
-- [x] **F1.4** Apply the same neutral framing to `AGENTS.md` opener and the `.github/copilot-instructions.md` opener if they currently read Laravel-first.
-- [x] **F1.5** Add a CI lint (`scripts/check_identity_framing.py` or extend an existing linter) that fails when README/AGENTS opener prose contains the banned phrases. Same source-of-truth as `check-public-links`.
+- [x] **F1.2** Rewrite `README.md` opener (lines 1–11) — universal framing first; Laravel referenced only as "deepest reference stack". <!-- verified: d26bf68 · README.md · 2026-05-02 -->
+- [x] **F1.3** Rewrite `README.md` § "Who this is for" / quickstart prose so the opener doesn't get contradicted three sections later. <!-- verified: 2fa8022 · README.md · 2026-05-02 -->
+- [x] **F1.4** Apply the same neutral framing to `AGENTS.md` opener and the `.github/copilot-instructions.md` opener if they currently read Laravel-first. <!-- verified: c282ae3 · AGENTS.md, .github/copilot-instructions.md · 2026-05-02 -->
+- [x] **F1.5** Add a CI lint (`scripts/check_identity_framing.py` or extend an existing linter) that fails when README/AGENTS opener prose contains the banned phrases. Same source-of-truth as `check-public-links`. <!-- verified: 9245f3b · scripts/check_portability.py (Layer 5) · 2026-05-02 -->
 
   **Implemented as Layer 5 of `scripts/check_portability.py`** — `check_identity_framing()` scans `README.md`, `AGENTS.md`, `.github/copilot-instructions.md` for 7 banned phrases (`Laravel-first`, `for PHP/Laravel teams`, `for Laravel teams`, `primary audience: Laravel`, `built for Laravel`, `Laravel = primary`, bolded `**Reference implementation: Laravel.**`). All hit synthetic violations cleanly; current files pass. No separate `check_identity_framing.py` script — consolidating into `check_portability.py` keeps the portability contract in one place and re-uses the existing `Violation` machinery + CI wiring.
-- [x] **F1.6** Update `docs/contracts/STABILITY.md` if it inherits any Laravel-coloured language; the contract layer must be stack-neutral by definition.
+- [x] **F1.6** Update `docs/contracts/STABILITY.md` if it inherits any Laravel-coloured language; the contract layer must be stack-neutral by definition. <!-- verified: audit-only (no edit needed; grep returned 0 hits) · docs/contracts/STABILITY.md · 2026-05-02 -->
 
   **Verified clean (2026-05-02).** `grep -niE "laravel|php|symfony|next\.js|react|node"` against `docs/contracts/STABILITY.md` returns zero hits across all 95 lines. The contract describes stability levels (`stable | beta | experimental`), promotion rules, and the contract surface — entirely stack-agnostic. No edit needed.
 
@@ -91,7 +91,7 @@ Measurement (2026-05-02, `.agent-src/rules/*.md` with `type: always`):
 
 Top-5 always rules: `non-destructive-by-default` (1 582t) · `scope-control` (1 439t) · `language-and-tone` (1 421t) · `ask-when-uncertain` (1 291t) · `direct-answers` (1 151t). All eight always rules are doctrinal Iron-Law surfaces — no demotion candidate without weakening the floor. Auto rules (44) are not budget-bound by the targets above; they only fire when the trigger description matches.
 
-- [x] **Verified under budget** — measurement above, no demotions required (2026-05-02).
+- [x] **Verified under budget** — measurement above, no demotions required (2026-05-02). <!-- verified: measurement-only (no commit) · .agent-src/rules/*.md · 2026-05-02 -->
 
 ### Phase 3 — Command-collapse phase 1 (P0 #3)
 
@@ -105,7 +105,7 @@ Net: 16 atomic commands collapsed into 3 cluster commands. Old atomic command fi
 
 Linter status: `task lint-no-new-atomic-commands` is green. The shim mechanism (existing files declare `cluster:`) avoids needing a temporary allowlist.
 
-- [x] **Shipped** — orchestrators + shims + locked contract in place (2026-05-02 verification).
+- [x] **Shipped** — orchestrators + shims + locked contract in place (2026-05-02 verification). <!-- verified: 5db2d1a (clusters) · 84283cb (shims) · 5f1ebb7 (contract+linter) · .agent-src.uncompressed/commands/{fix,feature,optimize}.md, docs/contracts/command-clusters.md · 2026-05-02 -->
 
 ### Phase 4 — Token-overhead wording fix (P0 #4)
 
@@ -117,7 +117,7 @@ Replaced. `README.md` § "You don't need everything" Cost-profiles table at L255
 
 Single-table edit, zero downstream callers, `task ci` green.
 
-- [x] **Replace** `Token overhead` → `Runtime process overhead` and `Zero` → `None` in README cost-profiles table (commit 1bcdb26, 2026-05-02).
+- [x] **Replace** `Token overhead` → `Runtime process overhead` and `Zero` → `None` in README cost-profiles table (commit 1bcdb26, 2026-05-02). <!-- verified: 1bcdb26 · README.md · 2026-05-02 -->
 
 ## P1
 
@@ -142,7 +142,7 @@ Split shipped. `templates/scripts/work_engine/` is already broken into focused m
 
 Plus sub-packages: `directives/`, `hooks/`, `intent/`, `migration/`, `resolvers/`, `scoring/`, `stack/`. The naming divergence (`dispatcher.py` for `runner.py`) is intentional — the file dispatches to phase-step handlers, "dispatcher" reads more accurately than "runner".
 
-- [x] **Shipped** — modular split in place; future extension surfaces (memory, telemetry, council integration) hook into the dispatcher cleanly (2026-05-02 verification).
+- [x] **Shipped** — modular split in place; future extension surfaces (memory, telemetry, council integration) hook into the dispatcher cleanly (2026-05-02 verification). <!-- verified: ad92366 · .agent-src.uncompressed/templates/scripts/work_engine/ · 2026-05-02 -->
 
 ### Phase 6 — Public artefact catalog (P1 #6)
 
@@ -153,13 +153,13 @@ Catalog shipped. Two generated indices live under `docs/`:
 
 Both files declare `Auto-generated — do not edit manually` and ship with the package; agents can navigate them directly.
 
-- [x] **Shipped** — generated catalog + skills-only view from frontmatter (2026-05-02 verification).
+- [x] **Shipped** — generated catalog + skills-only view from frontmatter (2026-05-02 verification). <!-- verified: 58ec2e9 · docs/catalog.md, docs/skills-catalog.md, scripts/generate_index.py, scripts/generate_catalog.py · 2026-05-02 -->
 
 ### Phase 7 — Outcome demos (P1 #7)
 
 Backend `/implement-ticket` walkthrough, `/work` free-form walkthrough, UI track walkthrough, blocked / partial-completion path walkthrough. The package today demonstrates inputs and outputs separately; the demo gap is end-to-end traces.
 
-- [x] **Shipped** — four cycle-by-cycle walkthroughs in [`docs/end-to-end-walkthroughs.md`](../../docs/end-to-end-walkthroughs.md), each anchored to a checked-in golden transcript (GT-1 backend, GT-P1 free-form, GT-U2 UI track, GT-2 blocked); cross-linked from `docs/showcase.md` (2026-05-02).
+- [x] **Shipped** — four cycle-by-cycle walkthroughs in [`docs/end-to-end-walkthroughs.md`](../../docs/end-to-end-walkthroughs.md), each anchored to a checked-in golden transcript (GT-1 backend, GT-P1 free-form, GT-U2 UI track, GT-2 blocked); cross-linked from `docs/showcase.md` (2026-05-02). <!-- verified: fa29fc4 · docs/end-to-end-walkthroughs.md, tests/golden/baseline/ · 2026-05-02 -->
 
 ## P2 — Capture-only
 
@@ -171,13 +171,13 @@ State (2026-05-02): **9 rules declared, 13 pairs**. Anchor coverage complete (`n
 
 Each pair carries `id`, `rules`, `relation` (one of: overrides, narrows, defers_to, restates, gates, complements), `conflict`, `resolution`, and `evidence` with file-anchor citations. `task lint-rule-interactions` green.
 
-- [x] **Shipped** — matrix populated with 13 pairs covering Hard-Floor anchors, autonomy-vs-gate semantics, Priority Index routing, and user-interaction composition (2026-05-02).
+- [x] **Shipped** — matrix populated with 13 pairs covering Hard-Floor anchors, autonomy-vs-gate semantics, Priority Index routing, and user-interaction composition (2026-05-02). <!-- verified: 0ce5891 · docs/contracts/rule-interactions.yml · 2026-05-02 -->
 
 ### Phase 9 — Outcome-aware telemetry (P2 #9)
 
 Current artefact-engagement telemetry records "consulted / applied". Extend to: `blocked`, `partial`, `memory_influenced_decision`, `verification_failed`, `stop_rule_triggered`. Outcomes, not just artefact hits.
 
-- [x] **Shipped** — five outcome categories on `EngagementEvent` schema (`ALLOWED_OUTCOMES`), aggregator counts (`AggregateResult.outcomes`), Markdown + JSON report sections, `telemetry:record --outcome` CLI flag, full test coverage in `tests/telemetry/` (2026-05-02).
+- [x] **Shipped** — five outcome categories on `EngagementEvent` schema (`ALLOWED_OUTCOMES`), aggregator counts (`AggregateResult.outcomes`), Markdown + JSON report sections, `telemetry:record --outcome` CLI flag, full test coverage in `tests/telemetry/` (2026-05-02). <!-- verified: bb8a7c3 · tests/telemetry/, EngagementEvent schema, telemetry:record CLI · 2026-05-02 -->
 
 ## Out of scope for this roadmap
 

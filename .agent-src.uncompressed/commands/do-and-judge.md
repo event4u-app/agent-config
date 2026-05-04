@@ -6,7 +6,12 @@ disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Subagent orchestration — overlaps /work and judge skills; keep explicit."
+superseded_by: judge on-diff
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /do-and-judge is deprecated; use /judge on-diff instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # do-and-judge
 

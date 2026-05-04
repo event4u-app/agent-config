@@ -133,9 +133,9 @@ against actual engine output rather than synthetic fixtures.
 Prompt envelopes (`input.kind="prompt"`) carry a free-form goal
 instead of a refined ticket. The `refine` step routes on shape
 (presence of `raw` key) and on the first pass emits an
-`@agent-directive: refine-prompt` halt — the agent runs the
-matching skill, which reconstructs `acceptance_criteria` +
-`assumptions`. On the rebound, `scoring/confidence.py` produces a
+`@agent-directive: refine-prompt` halt — the host agent is
+instructed to run the matching skill, which reconstructs
+`acceptance_criteria` + `assumptions`. On the rebound, `scoring/confidence.py` produces a
 frozen `ConfidenceScore(band, score, dimensions, reasons,
 ui_intent)` and the dispatcher branches on `band`:
 

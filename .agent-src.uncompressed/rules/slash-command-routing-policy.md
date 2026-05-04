@@ -3,6 +3,8 @@ type: "auto"
 description: "When user types a slash command like /create-pr, /commit, or pastes command file content"
 alwaysApply: false
 source: package
+load_context:
+  - .agent-src.uncompressed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md
 ---
 
 # Commands

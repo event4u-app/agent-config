@@ -138,6 +138,59 @@ def test_unknown_user_keys_preserved_under_user_block(workspace: Path):
     assert "legacy_thing.flag: custom_value" in body
 
 
+def test_user_block_round_trip_is_idempotent(workspace: Path):
+    """Regression: unknown keys under `_user:` must not re-prefix on each sync.
+
+    Pre-fix bug: every sync prepended another ``_user.`` segment to each
+    dotted key, so after N syncs the leaf carried ``_user. * N`` prefixes.
+    """
+    target = workspace / ".agent-settings.yml"
+    target.write_text(
+        "cost_profile: minimal\n"
+        "legacy_thing:\n"
+        "  flag: custom_value\n"
+        "  nested:\n"
+        "    deep: 42\n",
+        encoding="utf-8",
+    )
+    # Run sync many times; output must stabilize after the first write.
+    assert _run(workspace) == 0
+    snapshots = [target.read_text(encoding="utf-8")]
+    for _ in range(5):
+        assert _run(workspace) == 0
+        snapshots.append(target.read_text(encoding="utf-8"))
+    # All snapshots after the first sync are byte-identical.
+    assert all(s == snapshots[1] for s in snapshots[1:])
+    # No `_user._user.` accumulation in the body.
+    assert "_user._user." not in snapshots[-1]
+    # Original dotted keys still present, single level only.
+    assert "  legacy_thing.flag: custom_value" in snapshots[-1]
+    assert "  legacy_thing.nested.deep: 42" in snapshots[-1]
+
+
+def test_user_block_repairs_legacy_corruption(workspace: Path):
+    """A file that was corrupted by the old bug must heal on next sync."""
+    target = workspace / ".agent-settings.yml"
+    # Simulate the worst-case pre-fix corruption: a dotted key carrying
+    # many leading `_user.` segments accumulated over many sync runs.
+    corrupted_key = "_user." * 50 + "legacy_thing.flag"
+    target.write_text(
+        "cost_profile: minimal\n"
+        "_user:\n"
+        f"  {corrupted_key}: custom_value\n",
+        encoding="utf-8",
+    )
+    assert _run(workspace) == 0
+    body = target.read_text(encoding="utf-8")
+    # The leading `_user.` chain is fully stripped on the first heal pass.
+    assert "_user._user." not in body
+    assert "  legacy_thing.flag: custom_value" in body
+    # Subsequent runs are no-ops.
+    first = body
+    assert _run(workspace) == 0
+    assert target.read_text(encoding="utf-8") == first
+
+
 def test_bare_identifier_not_requoted(workspace: Path):
     """Regression: cosmetic requoting would break idempotency."""
     assert _run(workspace) == 0

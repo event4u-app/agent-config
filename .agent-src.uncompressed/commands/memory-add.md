@@ -7,7 +7,12 @@ suggestion:
   eligible: true
   trigger_description: "remember this for later, add this to engineering memory, capture this learning"
   trigger_context: "post-incident or post-decision conversation"
+superseded_by: memory add
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /memory-add is deprecated; use /memory add instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # /memory-add
 
