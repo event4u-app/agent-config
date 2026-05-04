@@ -6,10 +6,10 @@
 
 ## Overall
 
-**32 / 136 steps done · 24%**
+**37 / 136 steps done · 27%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   24%
+███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   27%
 ```
 
 ## Open roadmaps
@@ -19,7 +19,7 @@
 | 1 | [road-to-always-budget-relief.md](roadmaps/road-to-always-budget-relief.md) | 4 | 14 | 14 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 1 | 34 | 34 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-feedback-consolidation.md](roadmaps/road-to-feedback-consolidation.md) | 7 | 47 | 14 | 32 | 0 | 1 | ███████░░░ 70% |
+| 4 | [road-to-feedback-consolidation.md](roadmaps/road-to-feedback-consolidation.md) | 7 | 47 | 9 | 37 | 0 | 1 | ████████░░ 80% |
 | 5 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
@@ -58,7 +58,7 @@
 
 ### [road-to-feedback-consolidation.md](roadmaps/road-to-feedback-consolidation.md)
 
-**Road to Feedback Consolidation** — 32 / 46 done (70%)
+**Road to Feedback Consolidation** — 37 / 46 done (80%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -66,7 +66,7 @@
 | 2 | Tier-Bulk-Retrofit + Linter | ✅ done | 0 | 5 | 0 | 1 | 100% |
 | 3 | Decision-Engine Surfacing + Rule-Interaction Tests | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 4 | Memory Visibility | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 5 | Tier-1 Hooks for `verify-before-complete` + `minimal-safe-diff` | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 5 | Tier-1 Hooks for `verify-before-complete` + `minimal-safe-diff` | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 6 | Hygiene Sweep (Taskfile, One-Off Purge, README, Counts, Untracked Report, Council CLI) | 🟡 in progress | 4 | 3 | 0 | 0 | 43% |
 | 7 | Cross-Agent Hook Coverage | ✅ done | 0 | 12 | 0 | 0 | 100% |
 

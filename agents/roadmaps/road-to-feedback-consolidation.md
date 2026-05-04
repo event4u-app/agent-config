@@ -283,26 +283,26 @@ dispatcher + Augment/Claude refactored to dispatcher pattern).
 Phase 5 does not author per-platform trampolines — it adds two
 **concerns** to the manifest and lets the dispatcher route them.
 
-- [ ] **5.1 `verify_before_complete_hook.py`.** Concern script (no
+- [x] **5.1 `verify_before_complete_hook.py`.** Concern script (no
       platform code). Pre-completion gate: blocks the assistant from
       claiming "done" if no fresh verification command was logged
       this turn (per the rule's Iron Law). Reads platform name +
       event payload from the dispatcher's stdin contract.
-- [ ] **5.2 `minimal_safe_diff_hook.py`.** Concern script. Pre-edit
+- [x] **5.2 `minimal_safe_diff_hook.py`.** Concern script. Pre-edit
       gate: warns (not blocks) when a planned edit touches > N
       unrelated files or reformats untouched code. Threshold
       tunable in `.agent-settings.yml`
       `hooks.minimal_safe_diff.threshold`.
-- [ ] **5.3 Manifest registration.** Add both concerns to
+- [x] **5.3 Manifest registration.** Add both concerns to
       `scripts/hook_manifest.yaml` against every platform whose
       event surface supports the matching slot (per
       `agents/contexts/chat-history-platform-hooks.md`). Copilot
       gets the rule-only fallback path.
-- [ ] **5.4 Parity tests under `tests/hooks/`.** Run both concerns
+- [x] **5.4 Parity tests under `tests/hooks/`.** Run both concerns
       against fixture transcripts for every platform listed in the
       manifest; assert identical fire/skip decisions across
       harnesses.
-- [ ] **5.5 Tier promotion.** Update tier frontmatter on
+- [x] **5.5 Tier promotion.** Update tier frontmatter on
       `verify-before-complete` and `minimal-safe-diff` from 3 →
       2a (now hook-backed). Run `lint_rule_tiers.py` to confirm.
 
