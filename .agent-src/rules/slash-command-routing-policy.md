@@ -32,3 +32,41 @@ This is **irrelevant** for command detection.
 - If command file content appears in the context alongside an open file, the **command invocation takes priority**.
 - Do NOT confuse "file is open" with "user wants to discuss this file".
 - The user's typed message determines intent — not editor state.
+
+## Read the whole prompt — command is the operator, prose is the target
+
+```
+/<command> IS THE OPERATOR.
+THE REST OF THE USER MESSAGE NAMES THE TARGET.
+NEVER ASSUME THE COMMAND NAME IS THE TARGET.
+```
+
+Slash token = **what to do**; surrounding prose = **what to do it on**.
+
+- `/council and analyse chat-history` → target is `chat-history`,
+  not `council`. Council is the *tool*, prose names the *artefact*.
+- `/work the memory bug from PROJ-123` → target is "the memory bug
+  from PROJ-123".
+- `/fix ci and then open a PR` → target is "CI failure"; trailing
+  "open a PR" is a follow-up needing separate permission (per
+  `scope-control`).
+
+### Pre-flight before expensive operations
+
+Before any operation costing real time or money — external API call,
+large codebase analysis, multi-file refactor, council run, generated
+test suite — run silently:
+
+1. Re-read the **whole** user message, not just slash + first token.
+2. Identify the target the prose actually names.
+3. Target unambiguous → execute, no question.
+4. Target **genuinely** ambiguous after re-reading (prose names *two*
+   artefacts, can't tell which is the operand) → ask ONE
+   disambiguating numbered-options question per
+   [`ask-when-uncertain`](ask-when-uncertain.md), then proceed.
+
+**Not** a license to re-introduce cheap questions (`no-cheap-questions`
+still binds). Threshold: *"would this guess waste the user's tokens,
+money, or trust?"* — not *"I'd feel safer asking"*. Single failure
+mode to avoid: spending API spend on the wrong artefact because the
+agent fixated on the command name.
