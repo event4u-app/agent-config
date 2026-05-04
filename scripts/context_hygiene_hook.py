@@ -6,7 +6,7 @@ freshness threshold, the 3-failure stop, and tool-loop detection. The
 agent's job shrinks from "remember three counters" to "read this file
 before responding".
 
-Output: `.augment/state/context-hygiene.json`
+Output: `agents/state/context-hygiene.json`
   {
     "tool_calls": <int>,                 // running PostToolUse count
     "consecutive_same_tool": <int>,      // includes the latest call
@@ -30,7 +30,7 @@ import json
 import sys
 from pathlib import Path
 
-STATE_DIR = Path(".augment") / "state"
+STATE_DIR = Path("agents") / "state"
 STATE_FILE = STATE_DIR / "context-hygiene.json"
 
 LOOP_THRESHOLD = 3                  # 3+ consecutive same-tool calls

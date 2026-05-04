@@ -9,7 +9,7 @@ source: package
 
 > **Enforced by:** [`scripts/onboarding_gate_hook.py`](../../scripts/onboarding_gate_hook.py)
 > on Augment + Claude Code (`SessionStart`). The hook refreshes
-> `.augment/state/onboarding-gate.json` from `.agent-settings.yml`; the
+> `agents/state/onboarding-gate.json` from `.agent-settings.yml`; the
 > prose below is the spec the hook implements and the fallback for
 > platforms without a hook surface.
 

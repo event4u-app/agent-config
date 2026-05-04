@@ -5,7 +5,7 @@ Reads `.agent-settings.yml` from the consumer repo and writes a
 deterministic state file the rule body can cite as the source of
 truth for "do I need to prompt the user about /onboard?".
 
-Output is written to `.augment/state/onboarding-gate.json` with:
+Output is written to `agents/state/onboarding-gate.json` with:
   {
     "required": <bool>,         // true → rule fires on first turn
     "reason":   "<string>",     // why this state was set
@@ -32,7 +32,7 @@ import sys
 from pathlib import Path
 
 SETTINGS_FILE = ".agent-settings.yml"
-STATE_DIR = Path(".augment") / "state"
+STATE_DIR = Path("agents") / "state"
 STATE_FILE = STATE_DIR / "onboarding-gate.json"
 
 
@@ -79,7 +79,7 @@ def _read_onboarded(settings_path: Path) -> tuple[bool, str]:
 
 def _write_state(consumer_root: Path, required: bool, reason: str,
                  settings_present: bool) -> None:
-    """Write `.augment/state/onboarding-gate.json` atomically."""
+    """Write `agents/state/onboarding-gate.json` atomically."""
     state_dir = consumer_root / STATE_DIR
     state_dir.mkdir(parents=True, exist_ok=True)
     payload = {

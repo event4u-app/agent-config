@@ -274,11 +274,11 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
                         if (prefix / rel).exists():
                             resolved = True
                             break
-                # `.augment/state/*.json` are runtime hook state files —
+                # `agents/state/*.json` are runtime hook state files —
                 # gitignored, written by hooks at session/turn time, never
                 # committed. Prose references to them are descriptive, not
                 # checkable file paths.
-                if not resolved and raw_ref.startswith(".augment/state/"):
+                if not resolved and raw_ref.startswith("agents/state/"):
                     resolved = True
             if not resolved:
                 broken.append(BrokenRef(

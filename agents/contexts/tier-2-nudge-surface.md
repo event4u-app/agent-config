@@ -48,7 +48,7 @@ agent to self-detect.
 - **Hook surface:** `PostToolUse` (state write) + `PreToolUse` (read +
   optional deny) on Augment + Claude Code.
 - **What the hook does:** maintains a state file
-  (`.augment/state/<rule>.json`) with the rule's structured field
+  (`agents/state/<rule>.json`) with the rule's structured field
   (e.g. `{"verified": false, "last_verified_at": null}`). On
   `PreToolUse` for the gated tool (commit, push, PR), the hook reads
   the state and either passes through or denies with a structured

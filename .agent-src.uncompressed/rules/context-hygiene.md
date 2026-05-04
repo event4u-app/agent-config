@@ -9,7 +9,7 @@ source: package
 
 > **Enforced by:** [`scripts/context_hygiene_hook.py`](../../scripts/context_hygiene_hook.py)
 > on Augment + Claude Code (`PostToolUse`). The hook maintains
-> `.augment/state/context-hygiene.json` (turn count, loop signal,
+> `agents/state/context-hygiene.json` (turn count, loop signal,
 > freshness milestones at 20/40/60); the prose below is the spec the
 > hook implements and the agent-side fallback.
 

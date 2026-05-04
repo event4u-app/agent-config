@@ -517,7 +517,7 @@ def ensure_augment_user_hooks(package_root: Path, force: bool) -> None:
       - augment-roadmap-progress.sh → PostToolUse (path-filtered to
         agents/roadmaps/ — see scripts/roadmap_progress_hook.py)
       - augment-onboarding-gate.sh  → SessionStart (refresh
-        .augment/state/onboarding-gate.json from .agent-settings.yml)
+        agents/state/onboarding-gate.json from .agent-settings.yml)
       - augment-context-hygiene.sh  → PostToolUse (per-turn counter,
         loop detection, freshness milestones)
     """
