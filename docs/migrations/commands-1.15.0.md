@@ -88,13 +88,12 @@ the deprecation cycle for Phase 1 closes. Tracked in
 ## Related rule split — `chat-history` (post-1.15.0, superseded)
 
 > **Superseded · 2026-05-04** by
-> [`agents/roadmaps/road-to-chat-history-hook-only.md`](../../agents/roadmaps/road-to-chat-history-hook-only.md).
+> [`agents/contexts/chat-history-platform-hooks.md`](../../agents/contexts/chat-history-platform-hooks.md).
 > The three sibling rules (`chat-history-ownership`,
 > `chat-history-cadence`, `chat-history-visibility`) and the heartbeat
 > marker no longer exist. Persistence is now a pure platform-hook
 > contract — `session_start` auto-adopts foreign sessions silently;
 > the agent never reads or writes `.agent-chat-history` cooperatively.
-> Live contract: [`agents/contexts/chat-history-platform-hooks.md`](../../agents/contexts/chat-history-platform-hooks.md).
 > Manual recovery lever: `./agent-config chat-history:adopt`.
 
 For historical context: the monolithic `rules/chat-history.md` was
