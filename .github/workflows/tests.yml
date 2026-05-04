@@ -41,10 +41,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run install.sh integration tests
-        run: bash tests/test_install.sh
+        run: bash tests/test_install.sh --parallel
 
       - name: Run install orchestrator integration tests
-        run: bash tests/test_install_orchestrator.sh
+        run: bash tests/test_install_orchestrator.sh --parallel
 
       - name: Run install_openai_key.sh contract tests
         run: bash tests/test_install_openai_key.sh
@@ -74,10 +74,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install test deps
-        # pytest drives the suite; pyyaml is a runtime dep of the memory
+        # pytest drives the suite; pytest-xdist parallelises across CPU
+        # cores (`-n auto`); pyyaml is a runtime dep of the memory
         # tooling (check_memory / check_proposal / memory_lookup) that
         # the tests invoke via subprocess.
-        run: pip install pytest pyyaml
+        run: pip install pytest pytest-xdist pyyaml
 
       - name: Golden Replay — smoke subset (P2.4 PR budget)
         # Replays the smoke-tagged Golden Transcripts (~6 of 25) for
@@ -94,8 +95,9 @@ jobs:
 
       - name: Run Python tests
         # pytest discovers every test module in tests/. Prevents new test
-        # files from silently missing CI coverage.
-        run: python3 -m pytest tests/ -v
+        # files from silently missing CI coverage. `-n auto` fans the
+        # suite across available CPU cores via pytest-xdist.
+        run: python3 -m pytest tests/ -n auto -q
 
       - name: Runtime E2E (dispatch pilot skills via CLI)
         # Guards the public dispatcher CLI contract for runnable skills.

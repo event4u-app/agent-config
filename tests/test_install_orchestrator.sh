@@ -160,20 +160,51 @@ test_postinstall_exits_zero_even_on_failure() {
 }
 
 # --- Runner ---
+TESTS=(
+    test_full_run_creates_payload_and_bridges
+    test_skip_sync_runs_bridges_only
+    test_skip_bridges_runs_sync_only
+    test_dry_run_creates_no_files
+    test_profile_forwarded_to_bridges
+    test_subagent_keys_seeded
+    test_idempotent
+    test_help_flag
+    test_unknown_flag_errors
+    test_bin_install_php_routes_through_orchestrator
+    test_postinstall_exits_zero_even_on_failure
+)
+
+if [[ "${1:-}" == "--list" ]]; then
+    printf '%s\n' "${TESTS[@]}"
+    exit 0
+fi
+
+if [[ "${1:-}" == "--single" ]]; then
+    "$2"
+    [[ $FAIL -eq 0 ]] && exit 0 || exit 1
+fi
+
+if [[ "${1:-}" == "--parallel" ]]; then
+    jobs="${2:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)}"
+    log="$(mktemp)"
+    echo "🧪  Running scripts/install orchestrator tests (parallel, jobs=$jobs)..."
+    echo ""
+    printf '%s\n' "${TESTS[@]}" | xargs -n1 -P "$jobs" -I {} bash "$0" --single {} > "$log" 2>&1
+    rc=$?
+    cat "$log"
+    pass=$(grep -c '✅' "$log" || true)
+    fail=$(grep -c '❌' "$log" || true)
+    rm -f "$log"
+    echo ""
+    echo "Results: $pass passed, $fail failed ($(( pass + fail )) total) [parallel jobs=$jobs]"
+    [[ $rc -eq 0 ]] || exit 1
+    exit 0
+fi
+
 echo "🧪  Running scripts/install orchestrator tests..."
 echo ""
 
-test_full_run_creates_payload_and_bridges
-test_skip_sync_runs_bridges_only
-test_skip_bridges_runs_sync_only
-test_dry_run_creates_no_files
-test_profile_forwarded_to_bridges
-test_subagent_keys_seeded
-test_idempotent
-test_help_flag
-test_unknown_flag_errors
-test_bin_install_php_routes_through_orchestrator
-test_postinstall_exits_zero_even_on_failure
+for t in "${TESTS[@]}"; do "$t"; done
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed ($(( PASS + FAIL )) total)"

@@ -14,26 +14,26 @@ tasks:
     cmd: bash scripts/first-run.sh
 
   test:
-    desc: Run all tests (bash + Python)
+    desc: Run all tests (bash + Python, parallel where safe)
     cmds:
-      - bash tests/test_install.sh
-      - bash tests/test_install_orchestrator.sh
+      - bash tests/test_install.sh --parallel
+      - bash tests/test_install_orchestrator.sh --parallel
       - bash tests/test_install_openai_key.sh
       - bash tests/test_install_anthropic_key.sh
-      - python3 -m pytest tests/ -v
+      - python3 -m pytest tests/ -n auto -q
 
   test-install:
     desc: Run install.sh + orchestrator + install.py + key-script tests
     cmds:
-      - bash tests/test_install.sh
-      - bash tests/test_install_orchestrator.sh
+      - bash tests/test_install.sh --parallel
+      - bash tests/test_install_orchestrator.sh --parallel
       - bash tests/test_install_openai_key.sh
       - bash tests/test_install_anthropic_key.sh
-      - python3 -m pytest tests/test_install_py.py -v
+      - python3 -m pytest tests/test_install_py.py -n auto -q
 
   test-python:
     desc: Run all Python unit tests (pytest-discovered)
-    cmd: python3 -m pytest tests/ -v
+    cmd: python3 -m pytest tests/ -n auto -q
 
   test-triggers:
     desc: "Run trigger eval for one skill (MockRouter, no API call). Usage: task test-triggers -- eloquent"

@@ -16,11 +16,17 @@ import memory_status  # noqa: E402
 
 @pytest.fixture(autouse=True)
 def _clear_cache(monkeypatch, tmp_path):
-    """Start every test with a clean cache — env var + file."""
+    """Start every test with a clean cache — env var + file.
+
+    Also raise the health-probe timeout so the subprocess fork+exec stays
+    inside the budget when the suite runs under pytest-xdist on a busy
+    host (default 2s gets hit on macOS under heavy parallel load).
+    """
     monkeypatch.chdir(tmp_path)
     monkeypatch.delenv(memory_status._CACHE_ENV, raising=False)
     monkeypatch.setattr(memory_status, "_CACHE_FILE",
                         tmp_path / ".agent-memory" / "status.cache")
+    monkeypatch.setattr(memory_status, "_HEALTH_TIMEOUT_SECONDS", 30.0)
 
 
 def test_absent_when_no_cli(monkeypatch):
