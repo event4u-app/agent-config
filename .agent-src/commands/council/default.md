@@ -97,71 +97,65 @@ Council calls to billable members spend money. Even under
 `personal.autonomy: on`, the agent **must** ask before invoking any
 billable member.
 
-Compute `orchestrator.estimate(question, members, table)` over the
-**billable** subset only (`getattr(m, "billable", True)`). Manual
-members contribute `$0` and skip the estimate.
+Run the CLI in **estimate** mode first — it bundles the artefact, runs
+redaction, and prints the per-member preview without spending:
 
-Render the cost-confirmation numbered-options block per the
-`ai-council` skill (§ Pre-call estimate format) — per-member tokens
-+ USD, projected total, budget caps, then `1. Run / 2. Cancel`. If
-the resolved member set is **all-manual**, skip the gate entirely
+```bash
+./agent-config council:estimate <question-file> \
+    [--input-mode prompt|roadmap] \
+    [--max-tokens N] \
+    [--mode-override api|manual] \
+    [--original-ask "<framing sentence>"]
+```
+
+For `prompt:"<text>"` mode, write the text to a temp file first
+(`mktemp` is fine) and pass that path. For `roadmap:<path>`, pass the
+roadmap file with `--input-mode roadmap`. `diff` and `files` modes
+remain Phase 4 — for now ask the user to convert into a `prompt`.
+
+The CLI prints a `council:estimate · members=N (billable=M)` line
+followed by per-member projected USD and a TOTAL. Render that to the
+user inside the cost-confirmation numbered-options block per the
+`ai-council` skill (§ Pre-call estimate format) — then `1. Run /
+2. Cancel`. If the billable count is `0`, skip the gate entirely
 (spend = $0) and proceed directly to Step 4.
 
 Wait for the user's pick. `1` proceeds; anything else aborts.
 
-### 4. Bundle the context
+### 4. Run the CLI
 
-Use `scripts.ai_council.bundler`:
+Once the user picks `1`, invoke the same arguments with `run` plus
+`--confirm` and an output path under `agents/council-sessions/`:
 
-- `prompt` mode → `bundle_prompt(text)`
-- `roadmap` mode → `bundle_roadmap(path)`
-- `diff` mode → `bundle_diff(base, head)`
-- `files` mode → `bundle_files(paths)`
-
-The bundler runs redaction + size guard. If `BundleTooLarge` raises,
-surface the byte count and ask the user to narrow scope. Do **not**
-truncate silently.
-
-Print the manifest (what was included) and the excluded list before
-sending — gives the user a chance to abort if scope is wrong.
-
-### 5. Run the orchestrator
-
-Members are constructed from the settings file plus
-`load_anthropic_key()` / `load_openai_key()`. Cost budget comes from
-`ai_council.cost_budget`.
-
-Detect project context once via
-`scripts.ai_council.project_context.detect_project_context()` (reads
-`composer.json`, `package.json`, root `README.md` — never raises;
-empty-fields fall back to bare neutrality preamble).
-
-Call:
-
-```python
-consult(
-    members, question, budget,
-    table=table,
-    on_overrun=_handle_overrun,
-    project=project,
-    original_ask=original_ask,
-    rounds=rounds,  # 1 by default; 2-3 enables multi-round debate
-)
+```bash
+./agent-config council:run <question-file> \
+    --output agents/council-sessions/<UTC-timestamp>.json \
+    --confirm \
+    [--rounds 1|2|3] \
+    [--input-mode …] [--max-tokens …] [--mode-override …] \
+    [--original-ask "<framing sentence>"]
 ```
 
-`project` + `original_ask` flow into `handoff_preamble()` so each
-member receives a neutral context-handoff alongside the artefact
-(see `ai-council` skill § Neutrality — context-handoff). Members run
-**sequentially**; per-member errors are normalised — one failure
-does not abort the others. Define `_handle_overrun(event)` per the
-`ai-council` skill (§ Mid-flow overrun callback) to surface the user
-prompt before each breaching member.
+The CLI:
 
-### 6. Render the report
+- bundles the artefact via `scripts.ai_council.bundler` (redaction +
+  size guard — `BundleTooLarge` exits 2 with the byte count),
+- builds members from `.agent-settings.yml` (refusing if
+  `ai_council.enabled` is false or no member is wired up),
+- detects project context via `detect_project_context()`,
+- calls `orchestrator.consult(...)` with the `cost_budget` from
+  settings,
+- writes the responses JSON to `--output`.
 
-Use `scripts.ai_council.orchestrator.render(responses)` for the
-per-member sections (stacked, not side-by-side — narrow terminals).
-Then write the **Convergence / Divergence** section yourself:
+Per-member errors are normalised — one failure does not abort the
+others. Exit code `1` means **all** members errored; `0` means at
+least one succeeded; `2` means the gate refused before any spend.
+
+### 5. Render the report
+
+Use `./agent-config council:render <output.json>` for the per-member
+sections (stacked, not side-by-side — narrow terminals). Then write
+the **Convergence / Divergence** section yourself:
 
 - **Agreements** — points all members made (or did not contradict).
 - **Disagreements** — points where members took opposing positions.
@@ -173,49 +167,53 @@ End with a numbered-options block asking the user how to proceed
 (e.g. update the roadmap, request a second round, ignore the
 critique).
 
-### 7. Hard floor — text only
+### 6. Hard floor — text only
 
 `/council` produces **text**. It does **NOT**:
 
 - Edit any file in the project.
 - Open, comment on, or merge any PR.
 - Run `git` commands beyond `git diff` (read-only).
-- Persist API responses outside the current chat unless the user
-  explicitly asks (Phase 4 — out of scope for v1).
 
-This is restated in step 7 deliberately. The neutrality framing
-loses meaning if the council can act on the project directly.
+The CLI persists the responses JSON under `agents/council-sessions/`
+for traceability, but the agent never edits other project files on
+the user's behalf. The neutrality framing loses meaning if the
+council can act on the project directly.
 
 ## Failure modes
 
-- **Member SDK not installed** → tell the user exactly which `pip
-  install` runs (`pip install anthropic` / `pip install openai`).
-  Do not fall back to mocks.
-- **Key file mode drift** → refuse and point at the install script.
+- **CLI exits 2, "ai_council.enabled is false"** → tell the user how
+  to flip it on; do not flip it autonomously.
+- **CLI exits 2, "no council member has `enabled: true`"** → list the
+  install commands (`./agent-config keys:install-anthropic`,
+  `./agent-config keys:install-openai`) and stop.
+- **CLI raises `BundleTooLarge`** → surface the byte count and ask the
+  user to narrow scope. Do not truncate silently.
+- **Member SDK not installed** → CLI prints the missing-package
+  message; tell the user exactly which `pip install` runs
+  (`pip install anthropic` / `pip install openai`). Do not fall back
+  to mocks.
+- **Key file mode drift** → CLI refuses; point at the install script.
   The 0600 contract is non-negotiable.
-- **Manual mode + non-interactive stdin** → `ManualClient` reads
-  pasted replies from stdin terminated by a line containing only
-  `END`. If stdin is closed before any reply lands, the member
-  returns empty text with `error="manual_aborted"`; render the
-  partial result and ask the user.
-- **Invalid mode value** → `resolve_mode()` raises
-  `InvalidModeError` with the exact settings path. Surface verbatim
-  and stop.
-- **Cost budget exceeded mid-fan-out** → render the partial
-  responses and clearly mark the unfinished members with their
-  `cost_budget_exceeded` error. Do not silently retry.
+- **Invalid mode value** → CLI surfaces `InvalidModeError` with the
+  exact settings path. Surface verbatim and stop.
+- **Cost budget exceeded mid-fan-out** → render the partial responses
+  and clearly mark unfinished members with `cost_budget_exceeded`. Do
+  not silently retry.
 - **Stale price table, refresher fails (offline)** → state the
   failure, re-offer "continue with stale table / cancel", do not
   proceed silently.
 - **`.agent-prices.md` corrupt (missing frontmatter or columns)** →
   surface the parse error, suggest deleting the file to bootstrap
   fresh from defaults; never silently fall back.
-- **All members error** → render the errors and ask the user
-  whether to fix and retry, or abort.
+- **All members error (CLI exit 1)** → render the errors via
+  `council:render` and ask the user whether to fix and retry, or
+  abort.
 
 ## See also
 
 - `/council` — cluster dispatcher.
 - `ai-council` skill — neutrality guidelines, anti-patterns, redaction expectations.
 - `subagent-orchestration` skill — internal multi-agent variant (no network calls).
+- `scripts/council_cli.py` — the CLI entry point this command wraps.
 - `docs/customization.md` § Available settings → `ai_council.*`.

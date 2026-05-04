@@ -8,6 +8,28 @@
 > `scripts/check_one_off_location.py` enforces that no new
 > `_one_off_*.py` lands outside this folder.
 
+## Going forward — use the CLI, not new one-offs
+
+> **Canonical pattern (Phase 6.7+):** new council runs go through
+> `./agent-config council:{estimate,run,render}`. The CLI handles
+> bundling, redaction, the cost gate, the `0600` key contract, the
+> `enabled` check, and session persistence — every concern these
+> archived one-offs reimplemented inline.
+>
+> ```bash
+> ./agent-config council:estimate <question.md>
+> ./agent-config council:run <question.md> \
+>     --output agents/council-sessions/<UTC-ts>.json --confirm
+> ./agent-config council:render agents/council-sessions/<UTC-ts>.json
+> ```
+>
+> Wire-level access (`scripts.ai_council.orchestrator`,
+> `scripts.ai_council.bundler`) is still public for tests and library
+> use, but writing a new `_one_off_*.py` purely to fan out to the
+> council members is **not** the path. The scripts below are kept as
+> historical evidence of the runs that produced specific roadmap
+> decisions; they are not a template for new work.
+
 ## Lifecycle rule (uniform — Phase 0.2 of context-layer-maturity)
 
 > A one-off is **archived**, never deleted. The session manifest under
