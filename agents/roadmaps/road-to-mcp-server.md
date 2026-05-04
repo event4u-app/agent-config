@@ -1,3 +1,7 @@
+---
+complexity: lightweight
+---
+
 # Road to MCP Server
 
 **Status:** READY FOR EXECUTION (Phase 1 only) — decisions synthesized 2026-05-01.

@@ -293,6 +293,14 @@ tasks:
     desc: Check package portability (no project-specific references)
     cmd: python3 scripts/check_portability.py
 
+  check-examples-shape:
+    desc: Lint docs/guidelines/agent-infra/*-demos.md for wrong/right/why shape (Phase 3.4 of road-to-context-layer-maturity)
+    cmd: python3 scripts/lint_examples.py
+
+  lint-roadmap-complexity:
+    desc: Enforce roadmap-complexity-standard contract on agents/roadmaps/*.md (Phase 5.2 of road-to-context-layer-maturity)
+    cmd: python3 scripts/lint_roadmap_complexity.py
+
   check-public-links:
     desc: Validate README/AGENTS.md/docs/architecture.md links into docs/contracts/ against stability frontmatter
     cmd: python3 scripts/check_public_links.py
@@ -352,6 +360,10 @@ tasks:
   check-phase-coupling:
     desc: Phase 6 → 2B decoupling guard (no chat-history-* rule refs from 13 Phase-2B targets)
     cmd: python3 scripts/check_phase_coupling.py --quiet
+
+  check-one-off-location:
+    desc: Fail if any _one_off_*.py script lands outside scripts/ai_council/one_off_archive/<YYYY-MM>/
+    cmd: python3 scripts/check_one_off_location.py --quiet
 
   check-compression:
     desc: Check compression quality (headings, code blocks, frontmatter, word count)
@@ -510,6 +522,8 @@ tasks:
       - task: check-compression
       - task: check-refs
       - task: check-portability
+      - task: check-examples-shape
+      - task: lint-roadmap-complexity
       - task: check-public-links
       - task: check-public-catalog-links
       - task: check-command-count
@@ -524,6 +538,7 @@ tasks:
       - task: check-iron-law-prominence
       - task: check-always-budget
       - task: check-phase-coupling
+      - task: check-one-off-location
       - task: validate-schema
       - task: lint-skills
       - task: lint-marketplace

@@ -69,6 +69,12 @@ TOLERANCE_BAND = 0.02
 PER_RULE_CAP = 6_000
 TOP3_CAP = TOTAL_CAP // 2
 MAX_DEPTH = 2
+# Phase 1.3 Q2 (road-to-context-layer-maturity) — per-rule context count
+# cap. Counts top-level `load_context:` + `load_context_eager:` entries
+# per rule (not transitive depth). Empirical max in the rule set is 3
+# (autonomous-execution); a 4th declared context is the structural
+# signal that the rule should split, not load more.
+MAX_CONTEXTS_PER_RULE = 3
 
 # Recovery band (AI Council session 2026-05-03T12-02-42Z, verdict A1).
 # When enabled, a branch in the 90–100 % gap zone passes as WARN iff its
@@ -169,6 +175,29 @@ def _walk_contexts(rule: Path) -> tuple[set[Path], list[tuple[str, str]]]:
 
 def _always_rules() -> list[Path]:
     return sorted(p for p in RULES_DIR.glob("*.md") if _is_always(p))
+
+
+def _all_rules() -> list[Path]:
+    return sorted(RULES_DIR.glob("*.md"))
+
+
+def _context_count(rule: Path) -> int:
+    fm = _frontmatter(rule)
+    lazy = fm.get("load_context") or []
+    eager = fm.get("load_context_eager") or []
+    return (len(lazy) if isinstance(lazy, list) else 0) + (
+        len(eager) if isinstance(eager, list) else 0
+    )
+
+
+def _per_rule_count_breaches() -> list[tuple[str, int]]:
+    """Phase 1.3 Q2 — return rules whose declared context count exceeds the cap."""
+    out: list[tuple[str, int]] = []
+    for rule in _all_rules():
+        n = _context_count(rule)
+        if n > MAX_CONTEXTS_PER_RULE:
+            out.append((rule.name, n))
+    return out
 
 
 def _extended_size(rule: Path) -> tuple[int, list[tuple[str, str]]]:
@@ -298,6 +327,7 @@ def main() -> int:
     single_breaches, top3_concentration_breach = _concentration_check(
         sizes, total_ext
     )
+    count_breaches = _per_rule_count_breaches()
     failing = (
         (
             pct >= FAIL_THRESHOLD
@@ -312,6 +342,7 @@ def main() -> int:
         or all_violations
         or single_breaches
         or top3_concentration_breach is not None
+        or count_breaches
     )
     if failing:
         status, rc = "❌  FAIL", 1
@@ -400,6 +431,14 @@ def main() -> int:
             f"\n      Concentration breach (top-3 non-allowlisted > "
             f"{CONCENTRATION_TOP3_PCT * 100:.0f}% of used budget): "
             f"{sum_:,} ({frac * 100:.1f}%)"
+        )
+
+    if count_breaches:
+        details = ", ".join(f"{n}={c}" for n, c in count_breaches)
+        print(
+            f"\n      Per-rule context-count cap breach "
+            f"(> {MAX_CONTEXTS_PER_RULE} declared contexts, Q2 "
+            f"road-to-context-layer-maturity Phase 1.3): {details}"
         )
 
     # Phase 5.3 — per-rule trend delta vs. previous run.

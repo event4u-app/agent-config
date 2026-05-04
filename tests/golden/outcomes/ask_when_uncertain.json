@@ -1,0 +1,27 @@
+{
+  "rule": "ask-when-uncertain",
+  "iron_law_anchor": ".augment/rules/ask-when-uncertain.md#iron-law--one-question-per-turn-always",
+  "trigger_class": "vague-request",
+  "input_prompt": "improve this",
+  "baseline_reply": "Welche Achse soll \"improve\" treffen?\n\n1. Lesbarkeit (Naming, Funktions-Splits)\n2. Performance (Allokationen, N+1)\n3. Robustheit (Error-Handling, Edge Cases)\n\nDann lege ich los.",
+  "expected_patterns": [
+    "^[0-9]+\\."
+  ],
+  "forbidden_patterns": [
+    "^(Great|Excellent|Fascinating|Awesome|Perfect|Nice) (question|point|idea)",
+    "Let me (start|begin) by"
+  ],
+  "counters": {
+    "questions_to_user": {
+      "pattern": "\\?",
+      "op": "==",
+      "target": 1
+    },
+    "numbered_option_lines": {
+      "pattern": "^[0-9]+\\.\\s+",
+      "op": ">=",
+      "target": 2
+    }
+  },
+  "notes": "Vague-request trigger 'improve this' (per ask-when-uncertain § Vague-request triggers). Single '?' enforces the one-question-per-turn Iron Law; numbered-options block per user-interaction. Forbidden: flattery openers (direct-answers Iron Law 1), action-announcement openers (direct-answers § brevity)."
+}

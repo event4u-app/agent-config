@@ -33,6 +33,11 @@
       "type": "array",
       "items": {"type": "string", "pattern": "\\.md$"},
       "description": "Eager auto-loaded context references. Counts against the per-rule char budget; enforced by scripts/lint_load_context.py."
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["1", "2a", "2b", "3", "safety-floor", "mechanical-already"],
+      "description": "Hardening tier per road-to-rule-hardening.md. Optional today, recommended for new rules. Tracked in agents/contexts/rule-trigger-matrix.md. Tier 3 rules also referenced in agents/contexts/tier-3-dispositions.md."
     }
   }
 }

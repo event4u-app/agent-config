@@ -1328,6 +1328,12 @@ clearly and unambiguously (e.g. "Commit phase X: chore: …").
 
 # Context Hygiene
 
+> **Enforced by:** [`scripts/context_hygiene_hook.py`](../../scripts/context_hygiene_hook.py)
+> on Augment + Claude Code (`PostToolUse`). The hook maintains
+> `agents/state/context-hygiene.json` (turn count, loop signal,
+> freshness milestones at 20/40/60); the prose below is the spec the
+> hook implements and the agent-side fallback.
+
 ## Conversation Freshness
 
 Monitor for **context decay** — long conversations degrade quality and waste tokens.
@@ -1429,8 +1435,7 @@ ANSWER THE SUBSTANCE. SHIP THE TRUTH.
 - No subjective judgments on user's code/decisions ("nice approach", "boring") unless evaluation was asked.
 - "Good catch" / "you're right" only when literally true and load-bearing.
 - Acknowledge mistakes without performative apologies — one sentence, switch behavior.
-
-Failure mode: praise as a hedge before bad news. Drop the cushion, deliver the news.
+- Failure mode — praise hedging bad news; drop the cushion, deliver the news.
 
 ## Iron Law 2 — No Invented Facts (severity-tiered)
 
@@ -1446,11 +1451,10 @@ WHEN VERIFICATION IS NOT WORTH THE COST → ASK.
 | **Medium — project-shape** ("uses X for Y", conventions, file location) | Verify if one tool call reaches it; otherwise hedge: *"I'd guess X — not checked"*. |
 | **Low — well-known idioms** (generic language/framework idioms, public APIs) | Inference acceptable. Mark as inference if not 100% sure. |
 
-Concrete examples and hedge-language patterns:
+Examples + hedge-language patterns:
 [`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#direct-answers--severity-tiered-claim-examples).
-
-User override: "just guess", "rough estimate is fine", "skip the
-verify" → drop to Low for that turn.
+Override: "just guess", "rough estimate is fine", "skip the verify"
+→ drop to Low for that turn.
 
 ## Iron Law 3 — Brevity by Default
 
@@ -1467,33 +1471,26 @@ LONG ANSWERS ARE A FAILURE MODE, NOT A SIGN OF EFFORT.
 - One-true-answer question → one sentence + the answer.
 
 `token-efficiency` covers the loop side; this rule covers per-reply
-length. **Never overrides** `user-interaction` (numbered options
-stay) or command-mandated steps.
+length. **Never overrides** `user-interaction` (numbered options stay)
+or command-mandated steps.
 
 ## Emoji Scope — functional markers only
 
-**Whitelist (allowed):**
+**Whitelist:** `📒` (chat-history heartbeat, verbatim per
+`chat-history-visibility`); mode markers from `role-mode-adherence`;
+CLI status `❌` / `✅` / `⚠️` (two-space rule from `language-and-tone`);
+roadmap checkboxes `[x]` / `[~]` / `[-]`.
 
-- Mandated markers: `📒` (chat-history heartbeat, verbatim per
-  `chat-history-visibility`), mode markers from `role-mode-adherence`.
-- CLI status: `❌`, `✅`, `⚠️` (two-space rule from `language-and-tone`).
-- Roadmap checkboxes: `[x]`, `[~]`, `[-]`.
+**Blacklist (never in prose):** opening flair (✨, 🚀, 🎉, 💡, 🔥, 👍);
+empathy (❤️, 🤗, 😊); section dividers, headline ornaments, reaction
+emojis. Unsure → assume blacklist.
 
-**Blacklist (never in prose):**
+## Failure modes
 
-- Opening flair: ✨, 🚀, 🎉, 💡, 🔥, 👍.
-- Empathy: ❤️, 🤗, 😊.
-- Section dividers, headline ornaments, reaction emojis.
-
-Unsure → assume blacklist.
-
-## Failure modes the user will call out
-
-Trigger phrases per Iron Law and the in-language correction pattern:
+Trigger phrases + in-language correction pattern:
 [`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#direct-answers--failure-modes-the-user-will-call-out).
-
-When called out: acknowledge once in the user's language, switch,
-no excuses (mirrors `language-and-tone` § slip handling).
+On call-out: acknowledge once in the user's language, switch, no
+excuses (mirrors `language-and-tone` § slip handling).
 
 ## Interactions
 
@@ -2285,13 +2282,10 @@ Show the same numbered options as above. Repeat once if dismissed — then accep
 
 A question is **cheap** when the answer follows from stated context,
 an option breaches an Iron Law, choices differ only in sequencing /
-format, or one option is obviously dominant. Cheap questions are
-noise, regardless of `personal.autonomy`.
-
-Mode-independent. [`autonomous-execution`](autonomous-execution.md)'s
-"trivial" failure modes scope to `personal.autonomy: on` (or
-`auto`-after-opt-in); this rule lifts the **no-trade-off** subset to
-`off` and pre-opt-in `auto` too.
+format, or one option is obviously dominant. Mode-independent — holds
+in `off`, `auto`, and `on`; autonomy never lifts the no-trade-off
+floor (cf. [`autonomous-execution`](autonomous-execution.md), whose
+"trivial" failure modes only scope to `on` / opted-in `auto`).
 
 ## The Iron Laws
 
@@ -2311,16 +2305,12 @@ Hold in `off`, `auto`, and `on`. Autonomy never lifts them.
 - **CI / test asks** — [`verify-before-complete`](verify-before-complete.md) decides, not the user.
 - **Fenced-step re-asks** — "Start Phase 1?" after *"plan only"*; see
   [`scope-control § fenced step`](scope-control.md#fenced-step--user-set-review-gates).
-- **Iron-Law option** — option breaches `commit-policy`,
-  `scope-control § git-ops`, or `non-destructive-by-default`.
-- **Context-derived** — answer follows from prior turn / standing
-  instruction / roadmap; act, state the assumption inline.
-- **Dominant option** — one choice obviously correct; alternatives
-  carry no upside.
-- **Re-ask after decline** — forbidden per
-  [`scope-control § decline = silence`](scope-control.md#decline--silence--no-re-asking-on-the-same-task).
+- **Iron-Law option** — breaches `commit-policy`, `scope-control` § git-ops, or `non-destructive-by-default`.
+- **Context-derived** — answer follows from prior turn / standing instruction / roadmap; act, state the assumption inline.
+- **Dominant option** — one choice obviously correct; alternatives carry no upside.
+- **Re-ask after decline** — forbidden per [`scope-control § decline = silence`](scope-control.md#decline--silence--no-re-asking-on-the-same-task).
 
-Concrete examples per class:
+Examples per class:
 [`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
 
 ## Pre-Send Self-Check — MANDATORY before every question
@@ -2328,11 +2318,11 @@ Concrete examples per class:
 Run silently before any numbered-options block:
 
 1. Answer already in stated context?
-2. Any option violates [`commit-policy`](commit-policy.md), [`scope-control § git-ops`](scope-control.md), or [`non-destructive-by-default`](non-destructive-by-default.md)?
+2. Any option violates `commit-policy`, `scope-control` § git-ops, or `non-destructive-by-default`?
 3. Options pure sequencing / format, no trade-off?
 4. One option obviously dominant?
-5. User fenced next step (*"plan only"*, *"review first"*) → deliver + handback per [`scope-control § fenced step`](scope-control.md#fenced-step--user-set-review-gates).
-6. User already declined? Re-ask forbidden per [`scope-control § decline = silence`](scope-control.md#decline--silence--no-re-asking-on-the-same-task).
+5. User fenced next step (*"plan only"*, *"review first"*) → deliver + handback per `scope-control` § fenced step.
+6. User already declined? Re-ask forbidden per `scope-control` § decline = silence.
 
 Any "yes" → **do not ask**. Pick the dominant path, state assumption
 inline (*"assuming X — adjust if wrong"*), hand back. One-question-per-turn
@@ -2344,7 +2334,7 @@ the question is genuine.
 - Real architectural / scope decision with non-obvious trade-offs.
 - Vague-request trigger per [`ask-when-uncertain`](ask-when-uncertain.md#vague-request-triggers--must-ask).
 - Security-sensitive path per [`security-sensitive-stop`](security-sensitive-stop.md).
-- Hard Floor in [`non-destructive-by-default`](non-destructive-by-default.md) — confirmation mandatory.
+- Hard Floor per `non-destructive-by-default` — confirmation mandatory.
 - Two genuinely-equivalent paths; user preference is the tiebreaker.
 
 In doubt → ask. This rule narrows asking, never widens silence.
@@ -2507,6 +2497,12 @@ floor predates and outranks any platform-specific autonomy default.
 
 # Onboarding Gate
 
+> **Enforced by:** [`scripts/onboarding_gate_hook.py`](../../scripts/onboarding_gate_hook.py)
+> on Augment + Claude Code (`SessionStart`). The hook refreshes
+> `agents/state/onboarding-gate.json` from `.agent-settings.yml`; the
+> prose below is the spec the hook implements and the fallback for
+> platforms without a hook surface.
+
 Forces a one-time `/onboard` run for each developer on each project. This
 replaces the previously scattered "ask once" patterns across `user_name`,
 `personal.ide`, `personal.rtk_installed`, and cost profile confirmation.
@@ -2592,6 +2588,7 @@ gate. This protects projects that were set up before this rule shipped.
 - [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md) — merge rules for mid-life edits
 - [`agent-settings` template](../templates/agent-settings.md) — `onboarding.onboarded` reference
 - [`rule-type-governance`](rule-type-governance.md) — why this is `always`
+- [`hardening-pattern`](../../agents/contexts/hardening-pattern.md) — Tier 1 mechanical-rule contract
 
 ---
 
@@ -2968,6 +2965,11 @@ same diff), not from seniority.
 
 # Roadmap Progress Sync
 
+> **Enforced by:** [`scripts/roadmap_progress_hook.py`](../../scripts/roadmap_progress_hook.py)
+> on Augment + Claude Code (`PostToolUse`). Hook is primary; the prose
+> below is the specification the hook implements and the fallback when
+> the platform has no hook surface.
+
 ## Iron Law — dashboard sync
 
 ```
@@ -3045,6 +3047,28 @@ at all) **before** regenerating the dashboard. A 100%-complete
 roadmap left under `agents/roadmaps/` is a rule violation, not an
 optional cleanup. See `roadmap-management` skill for the archive vs
 skipped decision table.
+
+## Agent-authored roadmaps — placement is mandatory
+
+```
+A FILE THE AGENT DROPS INTO agents/roadmaps/ MUST EITHER
+(a) PASS check_roadmap_trackable.py AND LAND IN THE DASHBOARD, OR
+(b) NOT BE IN agents/roadmaps/ AT ALL.
+NO "DECISION MATRIX" / "DESIGN NOTE" SHORTCUT.
+```
+
+When the agent autonomously creates a roadmap, it owns the placement
+in the **same response**:
+
+- **Phase plan** (checkboxes, multi-turn execution) → `agents/roadmaps/<name>.md`, `status: ready` (default), regen dashboard.
+- **Decision matrix / ADR / pattern / lookup** (no `Phase N`, durable rationale) → `agents/contexts/<name>.md`.
+- **Completed work snapshot** → `agents/roadmaps/archive/<name>.md`.
+
+A non-trackable file in `agents/roadmaps/` is a rule violation — the
+trackable CI fails it, the dashboard hides it. The agent that
+created it moves it the same response. If the autonomous run also
+**finishes** the roadmap within the session (every box `[x]`/`[~]`/`[-]`),
+the completion-archival rule above fires too — same response.
 
 ## Autonomous execution — checkbox cadence
 
@@ -3177,6 +3201,34 @@ The `description` field IS the trigger. It must describe **when** the rule appli
 - Default to `auto`. Justify `always`.
 - If >50% of conversations don't need a rule → it must be `auto`.
 - `optimize-agents` command checks this and suggests changes.
+
+## Hardening tier — required on new or edited rules
+
+Every new rule, and every edited rule whose body changes the trigger
+or the obligation, MUST classify itself against the hardening tiers
+documented in [`rule-trigger-matrix.md`](../../agents/contexts/rule-trigger-matrix.md):
+
+| Tier | Meaning |
+|---|---|
+| `1` | Mechanically enforceable — hook acts, rule body stays minimal. |
+| `2a` | Marker nudge — hook injects signal, agent acts on it. |
+| `2b` | Structured injection / tool-call gate — hook reads/writes state, may deny. |
+| `3` | Soft, judgment-bound — no platform surface; self-check rule. |
+| `safety-floor` | Iron-Law subset, never modified. |
+| `mechanical-already` | Precedent — script enforces, rule body documents. |
+
+Classification surface: the optional `tier:` frontmatter field
+(declared in `scripts/schemas/rule.schema.json`). Recommended for new
+rules; bulk-retrofit of existing rules is tracked separately.
+
+Tier 3 dispositions are recorded centrally in
+[`agents/contexts/tier-3-dispositions.md`](../../agents/contexts/tier-3-dispositions.md)
+with a 6-month re-audit clock. New Tier 3 rules append to that list
+on landing.
+
+The `optimize-agents` command checks the tier alongside `type`/`source`
+and suggests escalations when a rule's trigger matches a hardening
+opportunity that has shipped since the rule was authored.
 
 ---
 

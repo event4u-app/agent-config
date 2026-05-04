@@ -85,6 +85,26 @@ Single-rule contexts that don't fit one of the canonical topics live
 directly under `contexts/` (see `contexts/model-recommendations.md`,
 `contexts/skills-and-commands.md`).
 
+## Per-rule context-count cap (Q2)
+
+A rule's combined count of `load_context:` + `load_context_eager:`
+top-level entries MUST be ≤ **3**. Enforced by
+`scripts/check_always_budget.py` (`MAX_CONTEXTS_PER_RULE`); see
+[`load-context-budget-model.md § Per-rule context-count cap (Q2)`](load-context-budget-model.md#per-rule-context-count-cap-q2--3-contexts-per-rule)
+for the locking contract.
+
+A 4th context is the structural signal that the rule should split,
+not load more. Authors hitting the cap should extract a sibling rule
+with its own obligation surface, not stretch the existing one.
+
+## Load order
+
+Entries load in **frontmatter list order**, top-to-bottom. Author
+your list in "first read" order so prose citations and frontmatter
+agree. See
+[`load-context-budget-model.md § Load order (Q1)`](load-context-budget-model.md#load-order-q1--file-order-in-frontmatter)
+for the locking rationale.
+
 ## Combined char-budget guard
 
 `load_context_eager:` triggers a budget check:

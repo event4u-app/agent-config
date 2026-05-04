@@ -1,3 +1,7 @@
+---
+complexity: structural
+---
+
 # Road to Better Skills (Thinking Layer)
 
 **Status:** READY FOR EXECUTION — decisions synthesized 2026-05-01,

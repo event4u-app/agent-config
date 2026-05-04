@@ -466,6 +466,8 @@ AUGMENT_USER_DIR = Path.home() / ".augment"
 AUGMENT_USER_HOOKS_DIR = AUGMENT_USER_DIR / "hooks"
 AUGMENT_CHAT_HISTORY_TRAMPOLINE = "augment-chat-history.sh"
 AUGMENT_ROADMAP_PROGRESS_TRAMPOLINE = "augment-roadmap-progress.sh"
+AUGMENT_ONBOARDING_GATE_TRAMPOLINE = "augment-onboarding-gate.sh"
+AUGMENT_CONTEXT_HYGIENE_TRAMPOLINE = "augment-context-hygiene.sh"
 # (trampoline name, list of events it should fire on). Each trampoline
 # is a self-contained workspace router; mapping them per-event keeps the
 # wiring explicit and lets a future hook bind to a different surface
@@ -474,6 +476,10 @@ AUGMENT_HOOK_BINDINGS = (
     (AUGMENT_CHAT_HISTORY_TRAMPOLINE,
      ("SessionStart", "SessionEnd", "Stop", "PostToolUse")),
     (AUGMENT_ROADMAP_PROGRESS_TRAMPOLINE,
+     ("PostToolUse",)),
+    (AUGMENT_ONBOARDING_GATE_TRAMPOLINE,
+     ("SessionStart",)),
+    (AUGMENT_CONTEXT_HYGIENE_TRAMPOLINE,
      ("PostToolUse",)),
 )
 
@@ -505,10 +511,15 @@ def ensure_augment_user_hooks(package_root: Path, force: bool) -> None:
     payload and dispatches into whichever project is active at hook-fire
     time.
 
-    Two trampolines are deployed:
-      - augment-chat-history.sh   → SessionStart/SessionEnd/Stop/PostToolUse
+    Trampolines deployed (see AUGMENT_HOOK_BINDINGS for the source of
+    truth):
+      - augment-chat-history.sh    → SessionStart/SessionEnd/Stop/PostToolUse
       - augment-roadmap-progress.sh → PostToolUse (path-filtered to
         agents/roadmaps/ — see scripts/roadmap_progress_hook.py)
+      - augment-onboarding-gate.sh  → SessionStart (refresh
+        agents/state/onboarding-gate.json from .agent-settings.yml)
+      - augment-context-hygiene.sh  → PostToolUse (per-turn counter,
+        loop detection, freshness milestones)
     """
     per_event: dict[str, list] = {}
     for name, events in AUGMENT_HOOK_BINDINGS:
@@ -531,36 +542,64 @@ def ensure_augment_user_hooks(package_root: Path, force: bool) -> None:
     )
 
 
-def _chat_history_hook_block(platform: str) -> dict:
-    """Single hook entry that calls ./agent-config chat-history:hook --platform <name>."""
+def _claude_hook_block(subcommand: str) -> dict:
+    """Single hook entry that calls ./agent-config <subcommand> --platform claude."""
     return {
         "hooks": [
             {
                 "type": "command",
-                "command": f"./agent-config chat-history:hook --platform {platform}",
+                "command": f"./agent-config {subcommand} --platform claude",
             },
         ],
     }
 
 
-def ensure_claude_bridge(project_root: Path, force: bool) -> None:
-    """Deploy .claude/settings.json with plugin enablement and chat-history hooks.
+# Claude Code Tier 1 hook bindings — keep in sync with AUGMENT_HOOK_BINDINGS.
+# `chat-history:hook` is the cross-cutting transcript hook; the three
+# rule-specific hooks are the Phase 4 Tier 1 set from
+# `road-to-rule-hardening.md`.
+CLAUDE_HOOK_SUBCOMMANDS = {
+    "chat-history":     "chat-history:hook",
+    "roadmap-progress": "roadmap-progress:hook",
+    "onboarding-gate":  "onboarding-gate:hook",
+    "context-hygiene":  "context-hygiene:hook",
+}
+# (subcommand-key, list of Claude Code lifecycle events). Mirrors
+# AUGMENT_HOOK_BINDINGS so each rule fires on the same logical surface
+# on both platforms — the contract from
+# `agents/contexts/hardening-pattern.md` § Cross-platform parity.
+CLAUDE_HOOK_BINDINGS = (
+    ("chat-history",
+     ("SessionStart", "UserPromptSubmit", "PostToolUse", "Stop", "SessionEnd")),
+    ("roadmap-progress",
+     ("PostToolUse",)),
+    ("onboarding-gate",
+     ("SessionStart",)),
+    ("context-hygiene",
+     ("PostToolUse",)),
+)
 
-    Hooks dispatch to scripts/chat_history.py via the project-root ./agent-config
-    wrapper. They are no-ops when chat_history.enabled is false in
-    .agent-settings.yml. Idempotent: reruns merge cleanly without duplicating
-    entries (deep_merge replaces hook arrays rather than appending).
+
+def ensure_claude_bridge(project_root: Path, force: bool) -> None:
+    """Deploy .claude/settings.json with plugin enablement and Tier 1 hooks.
+
+    Hooks dispatch to the project-root ./agent-config wrapper, which routes
+    to the per-rule Python implementation (chat_history.py,
+    roadmap_progress_hook.py, onboarding_gate_hook.py,
+    context_hygiene_hook.py). They are no-ops when the relevant feature is
+    disabled in .agent-settings.yml. Idempotent: reruns merge cleanly
+    without duplicating entries (deep_merge replaces hook arrays rather
+    than appending).
     """
-    claude_hook = _chat_history_hook_block("claude")
+    per_event: dict[str, list] = {}
+    for key, events in CLAUDE_HOOK_BINDINGS:
+        block = _claude_hook_block(CLAUDE_HOOK_SUBCOMMANDS[key])
+        for event in events:
+            per_event.setdefault(event, []).append(block)
+
     bridge = {
         "enabledPlugins": {"agent-conf@event4u": True},
-        "hooks": {
-            "SessionStart":     [claude_hook],
-            "UserPromptSubmit": [claude_hook],
-            "PostToolUse":      [claude_hook],
-            "Stop":             [claude_hook],
-            "SessionEnd":       [claude_hook],
-        },
+        "hooks": per_event,
     }
     merge_json_file(project_root / ".claude" / "settings.json", bridge, force, ".claude/settings.json")
 

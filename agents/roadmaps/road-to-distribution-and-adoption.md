@@ -1,3 +1,7 @@
+---
+complexity: lightweight
+---
+
 # Road to Distribution and Adoption
 
 **Status:** READY FOR EXECUTION — split out of `road-to-better-skills-and-profiles.md` 2026-05-01.

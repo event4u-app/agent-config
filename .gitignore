@@ -98,3 +98,8 @@ evals/results/
 # for local audit + replay. Contains real provider output and
 # user-pasted manual replies — never commit.
 agents/council-sessions/
+
+# Tier 1 hook runtime state (context-hygiene.json, onboarding-gate.json).
+# Written by SessionStart / PostToolUse hooks on Augment + Claude Code;
+# regenerated on demand, never committed.
+/agents/state/

@@ -36,6 +36,13 @@ Templates for roadmap files stored in `agents/roadmaps/` or `app/Modules/{Module
     creating the roadmap — not during execution. Default: stay on the
     current branch. If the user declines, the topic is closed for this
     roadmap. See [`scope-control`](../rules/scope-control.md#decline--silence--no-re-asking-on-the-same-task).
+15. **Declare complexity tier.** Every roadmap declares
+    `complexity: lightweight` or `complexity: structural` in frontmatter.
+    Lightweight (default): ≤ 6 phases, ≤ 600 lines, no nested council
+    debates inside the roadmap. Structural (rare, opt-in): contract-layer
+    or budget-invariant changes; multi-round council, file-ownership
+    matrices, > 600 lines. Enforced by `task lint-roadmap-complexity`.
+    Standard: [`docs/contracts/roadmap-complexity-standard.md`](../../docs/contracts/roadmap-complexity-standard.md).
 
 ---
 
@@ -64,6 +71,10 @@ Check `AGENTS.md` or `Makefile` / `Taskfile.yml` for the exact commands.
 Copy the structure below into a new file:
 
 ```markdown
+---
+complexity: lightweight
+---
+
 # Roadmap: {Short descriptive title}
 
 > {One sentence: What is the expected outcome?}

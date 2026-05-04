@@ -11,6 +11,14 @@
                         "command": "./agent-config chat-history:hook --platform claude"
                     }
                 ]
+            },
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "./agent-config onboarding-gate:hook --platform claude"
+                    }
+                ]
             }
         ],
         "UserPromptSubmit": [
@@ -29,6 +37,22 @@
                     {
                         "type": "command",
                         "command": "./agent-config chat-history:hook --platform claude"
+                    }
+                ]
+            },
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "./agent-config roadmap-progress:hook --platform claude"
+                    }
+                ]
+            },
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "./agent-config context-hygiene:hook --platform claude"
                     }
                 ]
             }

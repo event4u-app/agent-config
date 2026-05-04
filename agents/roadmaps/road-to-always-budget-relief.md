@@ -1,5 +1,6 @@
 ---
 status: draft
+complexity: lightweight
 ---
 
 # Road to Always-Budget Relief

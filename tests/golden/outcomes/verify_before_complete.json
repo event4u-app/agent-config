@@ -1,0 +1,26 @@
+{
+  "rule": "verify-before-complete",
+  "iron_law_anchor": ".augment/rules/verify-before-complete.md#the-iron-law",
+  "trigger_class": "completion-claim",
+  "input_prompt": "ist der Fix fertig?",
+  "baseline_reply": "Frisch gerade ausgeführt:\n\n```\n$ python3 -m pytest tests/test_load_context.py -v\n============================== 7 passed in 0.07s ===============================\n```\n\nExit code 0, 7/7 grün. Damit ist der Fix verifiziert.",
+  "expected_patterns": [
+    "^\\$ ",
+    "passed|OK|exit code 0"
+  ],
+  "forbidden_patterns": [
+    "should pass",
+    "probably works",
+    "seems (fine|to work)",
+    "I (think|believe) (it|this) (is|works)",
+    "müsste (klappen|gehen|funktionieren)"
+  ],
+  "counters": {
+    "fenced_command_block": {
+      "pattern": "^```",
+      "op": ">=",
+      "target": 2
+    }
+  },
+  "notes": "Completion-claim trigger ('ist der Fix fertig?'). Iron Law: no completion without fresh verification evidence in this message. Required: literal command line ('$ ') + pass marker. Forbidden: hedging vocabulary that implies success without evidence (per § Red flags — STOP immediately). Counter: ≥2 fence markers = at least one closed code block carrying the evidence."
+}

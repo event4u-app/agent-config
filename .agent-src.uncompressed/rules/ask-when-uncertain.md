@@ -93,3 +93,11 @@ are related".
 For skill/rule/command/guideline creation or major rewrite, follow
 [`artifact-drafting-protocol`](artifact-drafting-protocol.md) — structured
 Understand → Research → Draft. Don't improvise questions.
+
+## Examples
+
+Pattern Memory — wrong / right / why demos for the Iron Laws above:
+[`ask-when-uncertain-demos`](../../docs/guidelines/agent-infra/ask-when-uncertain-demos.md)
+(vague-request triggers, multi-question stacks, handoff ordering).
+Outcome baseline locked at
+[`tests/golden/outcomes/ask_when_uncertain.json`](../../tests/golden/outcomes/ask_when_uncertain.json).

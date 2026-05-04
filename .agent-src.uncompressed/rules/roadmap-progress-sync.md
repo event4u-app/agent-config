@@ -12,6 +12,11 @@ load_context:
 
 # Roadmap Progress Sync
 
+> **Enforced by:** [`scripts/roadmap_progress_hook.py`](../../scripts/roadmap_progress_hook.py)
+> on Augment + Claude Code (`PostToolUse`). Hook is primary; the prose
+> below is the specification the hook implements and the fallback when
+> the platform has no hook surface.
+
 ## Iron Law — dashboard sync
 
 ```
@@ -89,6 +94,28 @@ at all) **before** regenerating the dashboard. A 100%-complete
 roadmap left under `agents/roadmaps/` is a rule violation, not an
 optional cleanup. See `roadmap-management` skill for the archive vs
 skipped decision table.
+
+## Agent-authored roadmaps — placement is mandatory
+
+```
+A FILE THE AGENT DROPS INTO agents/roadmaps/ MUST EITHER
+(a) PASS check_roadmap_trackable.py AND LAND IN THE DASHBOARD, OR
+(b) NOT BE IN agents/roadmaps/ AT ALL.
+NO "DECISION MATRIX" / "DESIGN NOTE" SHORTCUT.
+```
+
+When the agent autonomously creates a roadmap, it owns the placement
+in the **same response**:
+
+- **Phase plan** (checkboxes, multi-turn execution) → `agents/roadmaps/<name>.md`, `status: ready` (default), regen dashboard.
+- **Decision matrix / ADR / pattern / lookup** (no `Phase N`, durable rationale) → `agents/contexts/<name>.md`.
+- **Completed work snapshot** → `agents/roadmaps/archive/<name>.md`.
+
+A non-trackable file in `agents/roadmaps/` is a rule violation — the
+trackable CI fails it, the dashboard hides it. The agent that
+created it moves it the same response. If the autonomous run also
+**finishes** the roadmap within the session (every box `[x]`/`[~]`/`[-]`),
+the completion-archival rule above fires too — same response.
 
 ## Autonomous execution — checkbox cadence
 
