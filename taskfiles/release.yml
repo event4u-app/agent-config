@@ -1,0 +1,51 @@
+version: '3'
+
+tasks:
+  release:
+    desc: |
+      Release a new version end-to-end with auto-detected bump.
+      Auto-detects major/minor/patch from Conventional Commits since the
+      last tag (feat!: → major, feat: → minor, fix:/perf: → patch). Runs
+      scripts/release.py, which bumps package.json + marketplace.json +
+      CHANGELOG, opens a release PR, waits for checks, merges, tags
+      main, and creates a GitHub Release. The tag push triggers
+      publish-npm.yml. Pass --yes to skip the confirmation prompt,
+      --no-wait to merge without waiting for CI, or --dry-run to preview
+      without touching git/gh. Usage:
+      task release                     # interactive, auto-detect
+      task release -- --dry-run        # preview only
+      task release -- --yes --no-wait  # non-interactive
+    cmd: python3 scripts/release.py {{.CLI_ARGS}}
+
+  release:major:
+    desc: |
+      Force a major release (X+1.0.0) overriding auto-detect. Same
+      pipeline and flags as `task release`. Usage:
+      task release:major
+      task release:major -- --dry-run
+    cmd: python3 scripts/release.py --as major {{.CLI_ARGS}}
+
+  release:minor:
+    desc: |
+      Force a minor release (X.Y+1.0) overriding auto-detect. Same
+      pipeline and flags as `task release`. Usage:
+      task release:minor
+      task release:minor -- --dry-run
+    cmd: python3 scripts/release.py --as minor {{.CLI_ARGS}}
+
+  release:patch:
+    desc: |
+      Force a patch release (X.Y.Z+1) overriding auto-detect. Same
+      pipeline and flags as `task release`. Usage:
+      task release:patch
+      task release:patch -- --dry-run
+    cmd: python3 scripts/release.py --as patch {{.CLI_ARGS}}
+
+  release:version:
+    desc: |
+      Release an exact pinned version (e.g. to jump past a yanked
+      version). Pass the target X.Y.Z as the first positional arg. Same
+      pipeline and flags as `task release`. Usage:
+      task release:version -- 2.0.0
+      task release:version -- 2.0.0 --dry-run
+    cmd: python3 scripts/release.py --version {{.CLI_ARGS}}

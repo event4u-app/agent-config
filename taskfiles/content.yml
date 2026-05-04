@@ -1,0 +1,122 @@
+version: '3'
+
+tasks:
+  sync:
+    desc: Sync .agent-src.uncompressed/ → .agent-src/, then project → .augment/, then refresh doc counts and local agent-settings
+    cmds:
+      - bash scripts/compress.sh --sync
+      - python3 scripts/update_counts.py
+      - task: sync-agent-settings
+
+  sync-agent-settings:
+    desc: Reconcile local .agent-settings.yml with the canonical template (skipped on fresh clones)
+    cmds:
+      - |
+        if [ -f .agent-settings.yml ]; then
+          python3 scripts/sync_agent_settings.py --quiet
+        else
+          echo "ℹ️  .agent-settings.yml absent — skipping sync (run scripts/install.py for first-run setup)"
+        fi
+
+  project-augment:
+    desc: Rebuild the .augment/ projection from .agent-src/ (copies rules, symlinks rest)
+    cmd: python3 scripts/compress.py --project-augment
+
+  sync-list:
+    desc: List ALL .md files (regardless of change status)
+    cmd: bash scripts/compress.sh --list
+
+  sync-changed:
+    desc: List .md files changed since last compression (hash-based)
+    cmd: bash scripts/compress.sh --changed
+
+  sync-check:
+    desc: Check if .agent-src/ is in sync with .agent-src.uncompressed/ (for CI)
+    cmd: bash scripts/compress.sh --check
+
+  sync-check-hashes:
+    desc: Check if all compressed .md files match their source hashes (for CI)
+    cmd: bash scripts/compress.sh --check-hashes
+
+  sync-clean-hashes:
+    desc: Remove stale hashes for deleted source files
+    cmd: bash scripts/compress.sh --clean-hashes
+
+  sync-mark-done:
+    desc: Mark a single file as compressed (updates hash)
+    cmd: bash scripts/compress.sh --mark-done {{.CLI_ARGS}}
+
+  sync-mark-all-done:
+    desc: Mark ALL .md files as compressed (run after initial full compression)
+    cmd: bash scripts/compress.sh --mark-all-done
+
+  generate-tools:
+    desc: Generate tool-specific directories (.claude/, .cursor/, .clinerules/, .windsurfrules, GEMINI.md)
+    cmd: python3 scripts/compress.py --generate-tools
+
+  clean-tools:
+    desc: Remove all generated tool directories and files
+    cmd: python3 scripts/compress.py --clean-tools
+
+  generate-catalog:
+    desc: Regenerate llms.txt and docs/skills-catalog.md from SKILL.md frontmatter
+    cmd: python3 scripts/generate_catalog.py
+
+  generate-index:
+    desc: Regenerate agents/index.md (internal) and docs/catalog.md (public)
+    cmd: python3 scripts/generate_index.py
+
+  check-index:
+    desc: Verify agents/index.md and docs/catalog.md are in sync (fails on drift)
+    cmd: python3 scripts/generate_index.py --check
+
+  check-augmentignore:
+    desc: Advisory check — reminds to refresh .augmentignore (non-blocking, always exits 0)
+    cmd: python3 scripts/check_augmentignore.py
+
+  counts-update:
+    desc: Sync skill/rule/command/guideline counts in README.md, AGENTS.md, docs/getting-started.md, docs/architecture.md
+    cmd: python3 scripts/update_counts.py
+
+  counts-check:
+    desc: Verify doc counts match reality (fails if stale)
+    cmd: python3 scripts/update_counts.py --check
+
+  consistency:
+    desc: Verify sync + generated tool outputs are clean
+    cmds:
+      - task: sync-check
+      - task: sync-check-hashes
+      - task: sync
+      - task: generate-tools
+      - git diff --quiet
+
+  consistency-fix:
+    desc: Regenerate all derived outputs from source-of-truth
+    cmds:
+      - task: sync
+      - task: generate-tools
+
+  check-compression:
+    desc: Check compression quality (headings, code blocks, frontmatter, word count)
+    cmd: python3 scripts/check_compression.py
+
+  generate-ownership-matrix:
+    desc: Regenerate the file-ownership matrix JSON + MD (docs/contracts/file-ownership-matrix.md)
+    cmd: python3 scripts/generate_ownership_matrix.py
+
+  check-ownership-matrix:
+    desc: Verify the committed ownership matrix matches a fresh regeneration (CI gate)
+    cmd: python3 scripts/generate_ownership_matrix.py --check
+
+  roadmap-progress:
+    desc: Regenerate agents/roadmaps-progress.md from all open roadmaps
+    cmd: python3 .augment/scripts/update_roadmap_progress.py
+
+  roadmap-progress-check:
+    desc: Fail if agents/roadmaps-progress.md is stale (for CI)
+    cmd: python3 .augment/scripts/update_roadmap_progress.py --check
+
+  check-roadmap-trackable:
+    desc: Fail if any active roadmap has unparseable headings or zero-checkbox phases (roadmap-progress-sync rule)
+    cmd: python3 scripts/check_roadmap_trackable.py

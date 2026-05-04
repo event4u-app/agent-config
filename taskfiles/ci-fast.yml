@@ -1,0 +1,146 @@
+version: '3'
+
+tasks:
+  lint-skills:
+    desc: Lint all skills and rules
+    cmd: python3 scripts/skill_linter.py --all
+
+  lint-skills-strict:
+    desc: Lint all skills and rules, warnings fail too
+    cmd: python3 scripts/skill_linter.py --all --strict-warnings
+
+  lint-skills-changed:
+    desc: Lint changed skills and rules
+    cmd: python3 scripts/skill_linter.py --changed
+
+  lint-skills-json:
+    desc: Lint all skills and rules with JSON output
+    cmd: python3 scripts/skill_linter.py --all --format json
+
+  lint-skills-report:
+    desc: Generate quality report for all skills and rules
+    cmd: python3 scripts/skill_linter.py --all --report
+
+  lint-skills-pairs:
+    desc: Check compression quality between uncompressed and compressed pairs
+    cmd: python3 scripts/skill_linter.py --all --pairs --compression-quality
+
+  lint-skills-regression:
+    desc: Compare lint results between current branch and main (detect regressions)
+    cmd: python3 scripts/lint_regression.py --baseline main
+
+  lint-rule-tiers:
+    desc: Validate that every rule under .agent-src.uncompressed/rules/ declares a `tier:` frontmatter key with a known value
+    cmd: python3 scripts/lint_rule_tiers.py
+
+  lint-hook-manifest:
+    desc: Validate scripts/hook_manifest.yaml — concern scripts exist, platform/event names are known, no orphan trampolines
+    cmd: python3 scripts/lint_hook_manifest.py
+
+  audit-descriptions:
+    desc: Audit skill descriptions for pushy-description pattern compliance (worst 15)
+    cmd: python3 scripts/audit_skill_descriptions.py
+
+  audit-descriptions-full:
+    desc: Audit skill descriptions (full list of all flagged)
+    cmd: python3 scripts/audit_skill_descriptions.py --full
+
+  lint-readme:
+    desc: Lint README.md for quality, correctness, and completeness
+    cmd: python3 scripts/readme_linter.py README.md --root .
+
+  lint-readme-strict:
+    desc: Lint README.md with warnings as errors
+    cmd: python3 scripts/readme_linter.py README.md --root . --strict
+
+  lint-marketplace:
+    desc: Lint .claude-plugin/marketplace.json against the Claude Code Plugin schema
+    cmd: python3 scripts/lint_marketplace.py
+
+  check-refs:
+    desc: Check for broken cross-references in .md files
+    cmd: python3 scripts/check_references.py
+
+  check-refs-json:
+    desc: Check for broken cross-references (JSON output)
+    cmd: python3 scripts/check_references.py --format json
+
+  check-portability:
+    desc: Check package portability (no project-specific references)
+    cmd: python3 scripts/check_portability.py
+
+  check-examples-shape:
+    desc: Lint docs/guidelines/agent-infra/*-demos.md for wrong/right/why shape (Phase 3.4 of road-to-context-layer-maturity)
+    cmd: python3 scripts/lint_examples.py
+
+  lint-roadmap-complexity:
+    desc: Enforce roadmap-complexity-standard contract on agents/roadmaps/*.md (Phase 5.2 of road-to-context-layer-maturity)
+    cmd: python3 scripts/lint_roadmap_complexity.py
+
+  check-public-links:
+    desc: Validate README/AGENTS.md/docs/architecture.md links into docs/contracts/ against stability frontmatter
+    cmd: python3 scripts/check_public_links.py
+
+  check-public-catalog-links:
+    desc: Verify docs/catalog.md links resolve to shipped surfaces (no .agent-src.uncompressed/, all paths under package.json#files)
+    cmd: python3 scripts/check_public_catalog_links.py
+
+  check-command-count:
+    desc: Verify README/AGENTS.md/docs/getting-started.md command counts match the cluster registry (active vs. shim split)
+    cmd: python3 scripts/check_command_count_messaging.py
+
+  lint-no-new-atomic-commands:
+    desc: Fail when a new atomic command lands without a `cluster:` field (P0.8c)
+    cmd: python3 scripts/lint_no_new_atomic_commands.py
+
+  check-cluster-patterns:
+    desc: Verify Phase-2 cluster dispatchers match Phase-1 reference structure (Phase 1 § 1.4.1)
+    cmd: python3 scripts/check_cluster_patterns.py
+
+  lint-rule-interactions:
+    desc: Validate docs/contracts/rule-interactions.yml schema, slugs, evidence paths, and anchor-pair coverage (P2.2)
+    cmd: python3 scripts/lint_rule_interactions.py
+
+  lint-load-context:
+    desc: Validate the `load_context:` / `load_context_eager:` frontmatter schema (docs/contracts/load-context-schema.md)
+    cmd: python3 scripts/lint_load_context.py
+
+  check-context-paths:
+    desc: Validate context-file path tree, basename collisions, and orphans (docs/contracts/context-paths.md)
+    cmd: python3 scripts/check_context_paths.py
+
+  check-no-roadmap-refs:
+    desc: Stable artifacts must not cite specific files in agents/roadmaps/ (no-roadmap-references rule)
+    cmd: python3 scripts/check_no_roadmap_refs.py
+
+  lint-one-off-age:
+    desc: Enforce the one-off-script lifecycle (docs/contracts/one-off-script-lifecycle.md)
+    cmd: python3 scripts/lint_one_off_age.py
+
+  check-reply-consistency:
+    desc: Scan shipped sources for legacy (recommended) inline tags on numbered options
+    cmd: python3 scripts/check_reply_consistency.py --scan-dir .agent-src.uncompressed
+
+  check-iron-law-prominence:
+    desc: Verify Iron Laws sit at the top of every rule file (H2, first 2 positions)
+    cmd: python3 scripts/check_iron_law_prominence.py
+
+  check-always-budget:
+    desc: Always-rule budget gate (warn at 80%, fail at 90% of 49,000 chars)
+    cmd: python3 scripts/check_always_budget.py --quiet
+
+  check-phase-coupling:
+    desc: Phase 6 → 2B decoupling guard (no chat-history-* rule refs from 13 Phase-2B targets)
+    cmd: python3 scripts/check_phase_coupling.py --quiet
+
+  check-one-off-location:
+    desc: Fail if any _one_off_*.py script lands outside scripts/ai_council/one_off_archive/<YYYY-MM>/
+    cmd: python3 scripts/check_one_off_location.py --quiet
+
+  validate-schema:
+    desc: Validate artefact frontmatter against JSON-Schema (scripts/schemas/)
+    cmd: python3 scripts/validate_frontmatter.py
+
+  quality-report:
+    desc: Generate quality score report (per artifact type)
+    cmd: python3 scripts/skill_linter.py --report
