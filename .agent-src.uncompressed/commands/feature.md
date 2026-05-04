@@ -18,10 +18,10 @@ commands with a single entry point + sub-command dispatch.
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/feature explore` | `feature-explore.md` | Brainstorm an idea before committing to a plan |
-| `/feature plan` | `feature-plan.md` | Interactively plan a feature, produce a structured plan doc |
-| `/feature refactor` | `feature-refactor.md` | Refine and update an existing feature plan |
-| `/feature roadmap` | `feature-roadmap.md` | Generate implementation roadmap(s) from a plan |
+| `/feature explore` | `commands/feature/explore.md` | Brainstorm an idea before committing to a plan |
+| `/feature plan` | `commands/feature/plan.md` | Interactively plan a feature, produce a structured plan doc |
+| `/feature refactor` | `commands/feature/refactor.md` | Refine and update an existing feature plan |
+| `/feature roadmap` | `commands/feature/roadmap.md` | Generate implementation roadmap(s) from a plan |
 | `/feature dev` | `feature-dev.md` | Full 7-phase feature development workflow (heavyweight) |
 
 ## Workflow ordering
@@ -45,9 +45,7 @@ implementation). Use `refactor` whenever an existing plan needs an update.
 
 ## Migration
 
-The 5 standalone `/feature-*` commands continue to work for one release
-cycle as deprecation shims. They emit a notice and route to the same
-content. New invocations should use `/feature <sub>`.
+The flat `/feature-*` commands have been removed. Use `/feature <sub>` instead.
 
 ## Rules
 

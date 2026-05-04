@@ -18,9 +18,9 @@ commands with a single entry point + sub-command dispatch.
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/judge solo` | `judge-solo.md` | Standalone verdict on an existing diff — no implementer, no revision loop |
-| `/judge on-diff` | `do-and-judge.md` | Implementer→judge loop on a single change with a two-revision ceiling |
-| `/judge steps` | `do-in-steps.md` | Execute an ordered plan step by step, judge gate between steps |
+| `/judge solo` | `commands/judge/solo.md` | Standalone verdict on an existing diff — no implementer, no revision loop |
+| `/judge on-diff` | `commands/judge/on-diff.md` | Implementer→judge loop on a single change with a two-revision ceiling |
+| `/judge steps` | `commands/judge/steps.md` | Execute an ordered plan step by step, judge gate between steps |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -41,9 +41,7 @@ The standalone reviewer surface lives at [`/review`](review-changes.md).
 
 ## Migration
 
-The 3 standalone commands (`/judge-solo`, `/do-and-judge`, `/do-in-steps`)
-continue to work for one release cycle as deprecation shims. New
-invocations should use `/judge <sub>`.
+The standalone `/do-and-judge`, `/do-in-steps`, and `/judge-solo` commands have been removed. Use `/judge <sub>` instead; bare `/judge` invocations show the menu.
 
 ## Rules
 

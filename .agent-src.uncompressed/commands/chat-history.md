@@ -20,10 +20,10 @@ standalone commands with a single entry point + sub-command dispatch.
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/chat-history show` | `chat-history-show.md` | Inspect the log — size, entries, fingerprint, last entries |
-| `/chat-history resume` | `chat-history-resume.md` | Adopt and load the persistent log into the current conversation |
-| `/chat-history clear` | `chat-history-clear.md` | Wipe the log (with optional archival backup) |
-| `/chat-history checkpoint` | `chat-history-checkpoint.md` | Append a phase-boundary entry on CHECKPOINT-class platforms |
+| `/chat-history show` | `commands/chat-history/show.md` | Inspect the log — size, entries, fingerprint, last entries |
+| `/chat-history resume` | `commands/chat-history/resume.md` | Adopt and load the persistent log into the current conversation |
+| `/chat-history clear` | `commands/chat-history/clear.md` | Wipe the log (with optional archival backup) |
+| `/chat-history checkpoint` | `commands/chat-history/checkpoint.md` | Append a phase-boundary entry on CHECKPOINT-class platforms |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -44,10 +44,7 @@ Sub-command names match the locked contract in
 
 ## Migration
 
-The 4 standalone commands (`/chat-history-show`, `/chat-history-resume`,
-`/chat-history-clear`, `/chat-history-checkpoint`) continue to work for
-one release cycle as deprecation shims. New invocations should use
-`/chat-history <sub>`.
+The flat `/chat-history-*` commands and the bare `/chat-history` status form have been removed. Use `/chat-history <sub>` instead; bare `/chat-history` invocations show the menu, `/chat-history show` keeps the previous status output.
 
 ## Rules
 
