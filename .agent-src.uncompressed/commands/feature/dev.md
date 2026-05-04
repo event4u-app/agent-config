@@ -1,5 +1,7 @@
 ---
-name: feature-dev
+name: feature:dev
+cluster: feature
+sub: dev
 description: Full 7-phase feature development workflow for complex features.
 skills: [laravel, php-coder]
 disable-model-invocation: true
@@ -9,20 +11,13 @@ suggestion:
   trigger_context: "long-form feature description spanning multiple components"
 ---
 
-<!-- F2-deprecation-banner -->
-> **Deprecated — use `/feature dev`.** This standalone command
-> is kept as a deprecation shim for one release cycle and routes to
-> the same instructions below. New invocations should go through the
-> `/feature` orchestrator (`commands/feature.md`).
-<!-- /F2-deprecation-banner -->
-
-# /feature-dev
+# /feature:dev
 
 > Full 7-phase feature development workflow for complex features.
 
 ## Trigger
 
-`/feature-dev {description}` or `/feature-dev` (interactive)
+`/feature:dev {description}` or `/feature:dev` (interactive)
 
 ## When to use
 

@@ -22,7 +22,7 @@ commands with a single entry point + sub-command dispatch.
 | `/feature plan` | `commands/feature/plan.md` | Interactively plan a feature, produce a structured plan doc |
 | `/feature refactor` | `commands/feature/refactor.md` | Refine and update an existing feature plan |
 | `/feature roadmap` | `commands/feature/roadmap.md` | Generate implementation roadmap(s) from a plan |
-| `/feature dev` | `feature-dev.md` | Full 7-phase feature development workflow (heavyweight) |
+| `/feature dev` | `commands/feature/dev.md` | Full 7-phase feature development workflow (heavyweight) |
 
 ## Workflow ordering
 
@@ -33,7 +33,7 @@ implementation). Use `refactor` whenever an existing plan needs an update.
 
 1. Parse the user's argument: `/feature <sub-command> [args]`.
 2. Look up the sub-command in the table above.
-3. Load the body of the corresponding `commands/feature-<sub>.md` file and
+3. Load the body of the corresponding `commands/feature/<sub>.md` file and
    follow its `## Instructions` (or `## Steps`) section verbatim.
 4. If the sub-command is unknown or missing, print the menu and ask:
 

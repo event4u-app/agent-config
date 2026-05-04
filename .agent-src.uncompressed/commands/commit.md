@@ -1,5 +1,6 @@
 ---
 name: commit
+cluster: commit
 skills: [git-workflow]
 description: Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits
 disable-model-invocation: true
@@ -9,9 +10,33 @@ suggestion:
   trigger_context: "git status shows uncommitted changes"
 ---
 
-# commit
+# /commit
 
-## Instructions
+Top-level entry point for the `/commit` family. Bare `/commit` runs the
+interactive split-and-confirm flow described below. The `:in-chunks`
+sub-command runs the same split logic without the confirmation prompt.
+
+## Sub-commands
+
+| Sub-command | Routes to | Purpose |
+|---|---|---|
+| `/commit` (bare) | this file (`## Default flow`) | Interactive — split, present plan, wait for approval, commit |
+| `/commit:in-chunks` | `commands/commit/in-chunks.md` | Autonomous — split and commit without confirmation |
+
+## Dispatch
+
+1. Parse the user's argument: `/commit[:<sub>] [args]`.
+2. Bare `/commit` → run the `## Default flow` below verbatim.
+3. `/commit:in-chunks` → load `commands/commit/in-chunks.md` and follow
+   its `## Instructions` section verbatim.
+4. Unknown sub-command → print the table above and ask which one.
+
+## Migration
+
+Replaces the standalone `/commit-in-chunks` command (deprecated in
+`1.17.0`, removed in next minor). Use `/commit:in-chunks` instead.
+
+## Default flow
 
 ### 1. Detect uncommitted changes
 
