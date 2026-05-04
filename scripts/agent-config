@@ -72,6 +72,10 @@ Commands:
                              (CHECKPOINT fallback for platforms without native hooks)
   roadmap-progress:hook      PostToolUse hook entry point (read JSON from stdin)
                              Regenerates roadmaps-progress.md when a tool wrote under agents/roadmaps/
+  onboarding-gate:hook       Hook entry point (drains stdin)
+                             Writes .augment/state/onboarding-gate.json from .agent-settings.yml
+  context-hygiene:hook       PostToolUse hook entry point (read JSON from stdin)
+                             Maintains .augment/state/context-hygiene.json (turn count, loop, freshness)
   telemetry:record           Append one artefact-engagement event (default-off)
   telemetry:status           Print artefact-engagement telemetry status (read-only)
   telemetry:report           Aggregate the engagement log into a quartile report
@@ -325,6 +329,20 @@ cmd_roadmap_progress_hook() {
   exec python3 "$script" "$@"
 }
 
+cmd_onboarding_gate_hook() {
+  require_python3
+  local script
+  script="$(resolve_script "scripts/onboarding_gate_hook.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
+cmd_context_hygiene_hook() {
+  require_python3
+  local script
+  script="$(resolve_script "scripts/context_hygiene_hook.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
 cmd_chat_history_checkpoint() {
   require_python3
   local script
@@ -446,6 +464,8 @@ main() {
     chat-history:hook)       cmd_chat_history_hook "$@" ;;
     chat-history:checkpoint) cmd_chat_history_checkpoint "$@" ;;
     roadmap-progress:hook)   cmd_roadmap_progress_hook "$@" ;;
+    onboarding-gate:hook)    cmd_onboarding_gate_hook "$@" ;;
+    context-hygiene:hook)    cmd_context_hygiene_hook "$@" ;;
     telemetry:record)        cmd_telemetry_record "$@" ;;
     telemetry:status)        cmd_telemetry_status "$@" ;;
     telemetry:report)        cmd_telemetry_report "$@" ;;

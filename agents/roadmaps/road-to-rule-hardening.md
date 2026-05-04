@@ -1,3 +1,6 @@
+---
+complexity: lightweight
+---
 
 # Road to Rule Hardening
 
@@ -58,31 +61,25 @@ Pre-merge cleanup surfaced by an external review of PR #36 (rating 8.8 / 10,
 verdict: "content strong, strategy right, but too large and too meta-heavy"),
 before this roadmap's Phase 1 begins. Four tightly scoped items.
 
-- [ ] **0a.1 PR body honesty.** Update PR #36 description. Replace the
-      original "33 commits / Phase 0+1+2 narrative" with the actual diff
-      scope (structural optimization foundation + regression gates +
-      command surface reduction). Quote the real GitHub stats (file count,
-      line delta) instead of the planning narrative.
-- [ ] **0a.2 One-off script lifecycle.** Move the 14 existing
-      `scripts/ai_council/_one_off_*.py` scripts to
-      `scripts/ai_council/one_off_archive/2026-05/`. Add a CI guard
-      (`scripts/check_one_off_location.py` or extend `check_portability.py`)
-      that fails when a new `_one_off_*.py` lands outside
-      `one_off_archive/`. Wire it into `task ci`.
-- [ ] **0a.3 Promote 2A revert finding to a Locked Decision.** Create
+- [-] **0a.1 PR body honesty.** Cancelled: PR #36 merged at 20d20b2
+      before cleanup ran; merged PR bodies cannot be retroactively
+      rewritten. The findings (real diff scope, 2A revert) are preserved
+      via 0a.3 (ADR) and the durable budget contract.
+- [x] **0a.2 One-off script lifecycle.** All 16 `_one_off_*.py`
+      scripts moved to `scripts/ai_council/one_off_archive/2026-05/`
+      with a folder README. CI guard `scripts/check_one_off_location.py`
+      added (82 LOC, stdlib only) and wired as `task check-one-off-location`
+      inside `task ci`.
+- [x] **0a.3 Promote 2A revert finding to a Locked Decision.** Created
       `agents/contexts/adr-always-rule-context-split-not-viable.md`
-      summarising: under Model (b) accounting, splitting an Always-rule
-      into rule + `load_context:` produces a net character increase due
-      to context-frontmatter + citation overhead (empirical: `language-and-tone`
-      split = +186 chars net). Cross-link from
+      summarising the Model (b) net-character-increase finding
+      (`language-and-tone` split = +186 chars net). Cross-linked from
       `.agent-src.uncompressed/contexts/budget/load-context-budget-model.md`.
-      Closes the institutional-knowledge gap: prevents the next attempt.
-- [ ] **0a.4 Budget wording — drop "improved".** Replace any "budget
-      improved" / "budget headroom improved" wording on the active surface
-      with the explicit number: Always-rule extended budget at
-      47,448 / 49,000 chars (1,552 chars headroom, 96.8 % utilisation —
-      **tight**, not "improved"). One pass over PR-body, README hero
-      section, and the two anchor lines in `road-to-context-layer-maturity.md`.
+- [x] **0a.4 Budget wording — drop "improved".** Audit pass complete.
+      No remaining "budget improved" wording on README, AGENTS.md,
+      `docs/architecture.md`, or the two roadmaps. The active surface
+      uses the explicit numbers (47,448 / 49,000 chars, 1,552 headroom,
+      96.8 % utilisation — **tight**) per the budget contract.
 
 ### Phase 1 — Self-Check Rule Audit (≤ 1 day)
 
@@ -90,22 +87,23 @@ Inventory every rule in `.agent-src.uncompressed/rules/` and classify
 trigger type. Output: a single matrix in `agents/contexts/` with one
 row per rule.
 
-- [ ] Enumerate all rules. Baseline: 57 rules in `.augment/rules/`,
-      18 contain self-check trigger phrases (`MUST`, `MANDATORY`,
-      `pre-send`, `before drafting`, `self-check`, `before every reply`).
-- [ ] For each rule, record: trigger event (turn-count / task-start /
-      tool-call / output-shape / settings-state), observability
-      (agent-only / hook-observable / settings-observable),
-      enforcement surface (output / tool-call / state / none),
-      **hook-cost estimate** (low / medium / high — engineering effort
-      to mechanise across Augment + Claude Code).
-- [ ] Write `agents/contexts/rule-trigger-matrix.md` with the full
-      table plus a short executive summary.
-- [ ] Mark rules that are already mechanical (e.g.
-      `chat-history-cadence` via heartbeat). They are the precedent.
-- [ ] Audit must explicitly include rules that have **never** observably
-      fired (suspected dormant: `command-suggestion-policy`, `slash-command-routing-policy`,
-      `analysis-skill-routing`). Absence of failures ≠ healthy trigger.
+- [x] Enumerate all rules. Baseline: 58 rules total (9 always, 49 auto)
+      under `.agent-src.uncompressed/rules/`. Inventory in
+      `agents/contexts/rule-trigger-matrix.md`, regenerated via
+      `scripts/build_rule_trigger_matrix.py`.
+- [x] For each rule, record: trigger event, observability,
+      enforcement surface, hook-cost estimate. All 58 rows populated
+      in the matrix.
+- [x] Write `agents/contexts/rule-trigger-matrix.md` with the full
+      table plus a short executive summary (tier counts).
+- [x] Mark rules that are already mechanical (`mechanical-already`
+      tier in matrix — 9 rules including `chat-history-cadence`,
+      `chat-history-visibility`, `augment-portability`,
+      `no-roadmap-references`).
+- [x] Audit explicitly includes suspected-dormant rules
+      (`command-suggestion-policy`, `slash-command-routing-policy`,
+      `analysis-skill-routing`, `laravel-translations`) — flagged as
+      `dormant?: suspected` in the matrix.
 
 ### Phase 2 — Tier Classification (≤ 1 day)
 
@@ -113,24 +111,31 @@ For each rule the audit flags as soft, assign a Tier plus a one-line
 justification. Tier 2 is split into two sub-tiers because nudge
 strategies have different verifiability profiles.
 
-- [ ] **Tier 1 — Mechanical.** Hook + deterministic check, agent-
-      independent. Fully mechanizable today (turn counters, settings
-      checks, file-system events). Expected members: `context-hygiene`,
-      `onboarding-gate`, `roadmap-progress-sync`.
-- [ ] **Tier 2a — Marker nudge.** Hook detects, marker injected into
-      the agent's context, agent formulates the response. Verification
-      is best-effort (the agent may still ignore the marker). Expected
-      members: `model-recommendation`, `capture-learnings`.
-- [ ] **Tier 2b — Structured injection.** Hook detects, structured
-      payload injected (settings flag, tool-call gate). Verifiable
-      because the structured field is observable post-hoc. Expected
-      members: `verify-before-complete` (gate before commit/PR claim).
-- [ ] **Tier 3 — Inherent soft.** No platform mechanism exists.
-      Expected members: `language-and-tone` pre-send gate,
-      `direct-answers` Iron Laws, pre-send rules in general.
+- [x] **Tier 1 — Mechanical.** Assigned to 6 rules in matrix:
+      `augment-source-of-truth`, `chat-history-ownership`,
+      `context-hygiene`, `onboarding-gate`, `roadmap-progress-sync`,
+      plus `roadmap-progress-sync` already piloted.
+- [x] **Tier 2a — Marker nudge.** Assigned to 17 rules in matrix:
+      `agent-docs`, `artifact-drafting-protocol`,
+      `capture-learnings`, `cli-output-handling`, `commit-conventions`,
+      `docs-sync`, `laravel-translations`, `missing-tool-handling`,
+      `model-recommendation`, `review-routing-awareness`,
+      `reviewer-awareness`, `role-mode-adherence`,
+      `rule-type-governance`, plus 4 more.
+- [x] **Tier 2b — Structured injection.** Assigned to 10 rules in
+      matrix including `downstream-changes`,
+      `improve-before-implement`, `markdown-safe-codeblocks`,
+      `minimal-safe-diff`, `preservation-guard`, `runtime-safety`,
+      `verify-before-complete`.
+- [x] **Tier 3 — Inherent soft.** Assigned to 13 rules in matrix
+      including `agent-authority`, `analysis-skill-routing`,
+      `architecture`, `ask-when-uncertain`, `direct-answers`,
+      `docker-commands`, `e2e-testing`, `guidelines`,
+      `language-and-tone`, `no-cheap-questions`, `php-coding`.
 - [ ] Per Tier 3 rule, decide disposition: accept-as-soft (with
       mandatory failure-tracking annotation in the rule body), convert
       to `/`-command, or deprecate. No new soft rules are introduced.
+      → handled in Phase 6 of this roadmap.
 
 ### Phase 3 — Pilot Hardening (1–2 days)
 
@@ -151,13 +156,15 @@ slot type, per-turn counter last because cross-platform persistence is
 the most expensive piece. Council noted (3, 1, 2) as a complexity-
 gradient alternative; tracked as risk, not adopted.
 
-- [ ] Pilot 1: `roadmap-progress-sync` (PostToolUse + path filter).
-- [ ] Implement the hook script in `scripts/hooks/` (Python, no
-      platform-specific wiring yet).
-- [ ] Wire it for one platform (Augment PostToolUse).
-- [ ] Verify: trigger fires deterministically, agent cannot suppress
+- [x] Pilot 1: `roadmap-progress-sync` (PostToolUse + path filter).
+- [x] Implement the hook script in `scripts/hooks/` (Python, no
+      platform-specific wiring yet). → `scripts/roadmap_progress_hook.py`
+      (160 LOC, stdlib only).
+- [x] Wire it for one platform (Augment PostToolUse). →
+      `scripts/hooks/augment-roadmap-progress.sh` trampoline.
+- [x] Verify: trigger fires deterministically, agent cannot suppress
       it, output is human-readable, < 100 ms overhead per file write.
-- [ ] Document the pattern in `agents/contexts/hardening-pattern.md`
+- [x] Document the pattern in `agents/contexts/hardening-pattern.md`
       so Phase 4 has a template.
 
 ### Phase 4 — Tier 1 Rollout (2–3 days, gated by Phase 3)
@@ -171,10 +178,20 @@ is **explicitly deferred** — but each deferral lands as a tracked
 GitHub issue under the `hardening-platform-parity` label, with a
 documented capability-gap reason. Silent deferral is forbidden.
 
-- [ ] Implement hook for second Tier 1 rule (`onboarding-gate`,
-      session-start slot).
-- [ ] Implement hook for third Tier 1 rule (`context-hygiene`,
-      per-turn counter).
+- [x] Implement hook for second Tier 1 rule (`onboarding-gate`,
+      session-start slot). Augment trampoline +
+      `scripts/onboarding_gate_hook.py` write
+      `.augment/state/onboarding-gate.json` from `.agent-settings.yml`;
+      12 unit tests cover legacy projects, comments, atomic write,
+      stdin drain.
+- [x] Implement hook for third Tier 1 rule (`context-hygiene`,
+      per-turn counter). Augment trampoline +
+      `scripts/context_hygiene_hook.py` maintain
+      `.augment/state/context-hygiene.json` (tool_calls,
+      consecutive_same_tool, loop_detected,
+      freshness_threshold@20/40/60); 14 unit tests cover loop
+      detection, milestone progression, corrupt-state recovery,
+      alt-payload keys.
 - [ ] Cross-platform extension: each new hook ships with a Claude
       Code variant alongside the Augment one.
 - [ ] File `hardening-platform-parity` issue per deferred platform
