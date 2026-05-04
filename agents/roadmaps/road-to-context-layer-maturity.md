@@ -255,8 +255,9 @@ alternative strategies remain:
       stay in scope only for 4d (hard compress).
 - [x] **4.1** Decision matrix: per always-rule, evaluate 4a/4b/4c/4d
       feasibility *given the locked Phase 2 + 3 baselines*. Output
-      (created by this step): `budget-v2-matrix.md` next to this
-      roadmap.
+      (created by this step):
+      [`agents/contexts/budget-v2-matrix.md`](../contexts/budget-v2-matrix.md)
+      — durable decision rationale, not a roadmap.
 - [x] **4.2** Pick the highest-leverage two paths from the matrix.
       No "do all four" — Feedback #2 explicit warning. **Picked:**
       4d on `direct-answers` + 4d on `no-cheap-questions`.
@@ -271,7 +272,8 @@ alternative strategies remain:
       (currently 1,552). Not a hard gate — a goal.
       **Result:** 44,928 / 49,000 = 91.7 %, **headroom 4,072** —
       goal hit. Top-3 sum unchanged (22,197). Actuals logged in
-      `budget-v2-matrix.md` § Exit-gate actuals.
+      [`agents/contexts/budget-v2-matrix.md`](../contexts/budget-v2-matrix.md)
+      § Exit-gate actuals.
 - [ ] **4.5** Council audit on the resulting state. Lock decisions
       that did not pan out as deferred-or-rejected (Feedback #2
       "decline = silence" applies — re-asking forbidden in the next

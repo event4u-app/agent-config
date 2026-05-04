@@ -1,13 +1,17 @@
----
-complexity: lightweight
----
-
 # Always-Budget v2 — Decision Matrix
 
-> Output of Phase 4.1 of `road-to-context-layer-maturity.md`. One row
-> per `type: always` rule. Pick the **two** highest-leverage paths;
-> safety-floor rules are untouchable; outcome-untested rules are
-> 4d-only per the Phase 4.0 inputs gate.
+> **Status:** Locked · Phase 4 of
+> [`road-to-context-layer-maturity.md`](../roadmaps/road-to-context-layer-maturity.md)
+> shipped (4.1–4.4 done; 4.5 council audit pending) · 2026-05-04
+> **Context:** durable decision rationale — explains **why exactly**
+> `direct-answers` and `no-cheap-questions` were trimmed and the four
+> safety-floor rules (`scope-control`, `non-destructive-by-default`,
+> `commit-policy`, `agent-authority`) were not. Future contributors
+> ref this matrix before re-evaluating any always-rule budget.
+
+> Output of Phase 4.1. One row per `type: always` rule. Pick the **two**
+> highest-leverage paths; safety-floor rules are untouchable;
+> outcome-untested rules are 4d-only per the Phase 4.0 inputs gate.
 
 ## Baseline (run 2026-05-04)
 
