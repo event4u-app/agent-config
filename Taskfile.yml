@@ -142,6 +142,14 @@ tasks:
     desc: Compare lint results between current branch and main (detect regressions)
     cmd: python3 scripts/lint_regression.py --baseline main
 
+  lint-rule-tiers:
+    desc: Validate that every rule under .agent-src.uncompressed/rules/ declares a `tier:` frontmatter key with a known value
+    cmd: python3 scripts/lint_rule_tiers.py
+
+  lint-hook-manifest:
+    desc: Validate scripts/hook_manifest.yaml — concern scripts exist, platform/event names are known, no orphan trampolines
+    cmd: python3 scripts/lint_hook_manifest.py
+
   audit-descriptions:
     desc: Audit skill descriptions for pushy-description pattern compliance (worst 15)
     cmd: python3 scripts/audit_skill_descriptions.py
@@ -336,6 +344,10 @@ tasks:
   check-no-roadmap-refs:
     desc: Stable artifacts must not cite specific files in agents/roadmaps/ (no-roadmap-references rule)
     cmd: python3 scripts/check_no_roadmap_refs.py
+
+  lint-one-off-age:
+    desc: Enforce the one-off-script lifecycle (docs/contracts/one-off-script-lifecycle.md)
+    cmd: python3 scripts/lint_one_off_age.py
 
   generate-ownership-matrix:
     desc: Regenerate the file-ownership matrix JSON + MD (docs/contracts/file-ownership-matrix.md)
@@ -533,6 +545,7 @@ tasks:
       - task: lint-load-context
       - task: check-context-paths
       - task: check-no-roadmap-refs
+      - task: lint-one-off-age
       - task: check-ownership-matrix
       - task: check-reply-consistency
       - task: check-iron-law-prominence
@@ -541,6 +554,8 @@ tasks:
       - task: check-one-off-location
       - task: validate-schema
       - task: lint-skills
+      - task: lint-rule-tiers
+      - task: lint-hook-manifest
       - task: lint-marketplace
       - task: ci-cloud-bundle
       - task: ci-linear-digest
