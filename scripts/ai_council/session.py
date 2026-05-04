@@ -23,6 +23,8 @@ from __future__ import annotations
 
 import datetime as _dt
 import json
+import re
+import shutil
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -33,6 +35,10 @@ from scripts.ai_council.orchestrator import render
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SESSIONS_DIR = REPO_ROOT / "agents" / "council-sessions"
+SETTINGS_FILE = REPO_ROOT / ".agent-settings.yml"
+
+DEFAULT_RETENTION_DAYS = 14
+_TS_RE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})T(\d{2})-(\d{2})-(\d{2})Z$")
 
 
 @dataclass
@@ -69,12 +75,90 @@ def _serialise_response(r: CouncilResponse) -> dict[str, object]:
     }
 
 
+def _load_retention_days(settings_path: Path | None = None) -> int:
+    """Read `ai_council.session_retention_days` from `.agent-settings.yml`.
+
+    Returns `DEFAULT_RETENTION_DAYS` on any read/parse failure (missing
+    file, invalid YAML, missing key, non-int value). Pruning never
+    blocks the council on a settings error.
+    """
+    path = settings_path or SETTINGS_FILE
+    if not path.exists():
+        return DEFAULT_RETENTION_DAYS
+    try:
+        import yaml  # type: ignore[import-not-found]
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except Exception:  # noqa: BLE001 - never block on settings parse
+        return DEFAULT_RETENTION_DAYS
+    ai = data.get("ai_council") if isinstance(data, dict) else None
+    if not isinstance(ai, dict):
+        return DEFAULT_RETENTION_DAYS
+    raw = ai.get("session_retention_days", DEFAULT_RETENTION_DAYS)
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return DEFAULT_RETENTION_DAYS
+
+
+def _parse_session_timestamp(name: str) -> _dt.datetime | None:
+    """Parse `YYYY-MM-DDTHH-MM-SSZ` directory name to a UTC datetime."""
+    m = _TS_RE.match(name)
+    if not m:
+        return None
+    try:
+        y, mo, d, h, mi, s = (int(g) for g in m.groups())
+        return _dt.datetime(y, mo, d, h, mi, s, tzinfo=_dt.timezone.utc)
+    except ValueError:
+        return None
+
+
+def prune_old_sessions(
+    sessions_dir: Path,
+    retention_days: int,
+    *,
+    now: _dt.datetime | None = None,
+) -> list[Path]:
+    """Delete session subdirectories older than `retention_days`.
+
+    A session is "old" when its directory-name timestamp predates
+    `now - retention_days`. Non-matching names (e.g. JSON reports at
+    the root, custom folders) are skipped. Never raises — disk
+    failures are logged to stderr.
+
+    Returns the list of deleted directories. `retention_days <= 0`
+    disables pruning and returns an empty list.
+    """
+    if retention_days <= 0 or not sessions_dir.exists():
+        return []
+    cutoff = (now or _dt.datetime.now(_dt.timezone.utc)) - _dt.timedelta(days=retention_days)
+    removed: list[Path] = []
+    try:
+        entries = list(sessions_dir.iterdir())
+    except OSError as exc:  # noqa: BLE001 - never block the report
+        print(f"[council:session] prune iterdir failed: {exc}", file=sys.stderr)
+        return removed
+    for entry in entries:
+        if not entry.is_dir():
+            continue
+        ts = _parse_session_timestamp(entry.name)
+        if ts is None or ts >= cutoff:
+            continue
+        try:
+            shutil.rmtree(entry)
+            removed.append(entry)
+        except OSError as exc:  # noqa: BLE001 - never block the report
+            print(f"[council:session] prune rmtree failed for {entry}: {exc}",
+                  file=sys.stderr)
+    return removed
+
+
 def save(
     *,
     manifest: SessionManifest,
     responses: list[CouncilResponse] | Iterable[list[CouncilResponse]],
     sessions_dir: Path | None = None,
     timestamp: str | None = None,
+    retention_days: int | None = None,
 ) -> Path:
     """Persist a council call. Returns the session directory.
 
@@ -82,6 +166,11 @@ def save(
     - `list[CouncilResponse]` — single round (round 1 only).
     - `Iterable[list[CouncilResponse]]` — multi-round, one list per
       round in execution order.
+
+    `retention_days` controls auto-pruning of older sibling sessions
+    after the new one is written. `None` reads the value from
+    `.agent-settings.yml` (`ai_council.session_retention_days`,
+    default `14`); `0` disables pruning.
 
     Disk-write failures are surfaced via a stderr line but do not
     raise; the caller's text report is the source of truth.
@@ -140,5 +229,8 @@ def save(
         )
     except OSError as exc:  # noqa: BLE001 - never block the report
         print(f"[council:session] write failed: {exc}", file=sys.stderr)
+
+    days = _load_retention_days() if retention_days is None else retention_days
+    prune_old_sessions(base, days)
 
     return session_dir

@@ -213,6 +213,11 @@ ai_council:
     max_calls: 10
     max_total_usd: 0.50
 
+  # Retention for `agents/council-sessions/` audit folders. Sessions
+  # older than this are pruned automatically on the next `save()`.
+  # `0` disables pruning (keep forever — disk grows unbounded).
+  session_retention_days: 14
+
 # --- Onboarding ---
 #
 # Tracks whether the initial setup flow (/onboard) has been completed
