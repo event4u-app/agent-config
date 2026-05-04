@@ -325,11 +325,14 @@ untracked files explicitly; council passes run via a stable
 `./agent-config council:*` CLI that respects the `ai_council.enabled`
 gate and the cost-confirmation contract.
 
-- [ ] **6.1 Taskfile modularization.** Split top-level `Taskfile.yml`
+- [x] **6.1 Taskfile modularization.** Split top-level `Taskfile.yml`
       into `taskfiles/ci-fast.yml`, `taskfiles/content.yml`,
       `taskfiles/engine.yml`, `taskfiles/release.yml`; root file
-      includes them. Tasks unchanged; namespace prefixes only where
-      ambiguous.
+      includes them with `flatten: true` so all 107 tasks stay in the
+      root namespace (verified: old=107 / new=105 visible + 2
+      internal). `readme_linter.py` now scans `taskfiles/*.yml` and
+      accepts colon-named tasks; CI workflow path filters
+      (`skill-lint`, `consistency`, `tests`) include `taskfiles/**`.
 - [x] **6.2 One-off purge policy contract.**
       `docs/contracts/one-off-script-lifecycle.md` — naming
       (`_one_off_*.py`), location (`scripts/_one_off/<YYYY-MM>/`),
@@ -338,14 +341,20 @@ gate and the cost-confirmation contract.
 - [x] **6.3 `lint_one_off_age.py`.** Fails CI for any
       `scripts/_one_off/` script older than the contract age and
       not explicitly extended via a TTL frontmatter line.
-- [ ] **6.4 README 3-path entry.** Add a "3 ways to start" block
-      near the top of `README.md`: (a) `/onboard` for new users,
-      (b) `task ci` for contributors, (c) `task generate-tools` for
-      multi-agent users. Link each into the relevant file.
-- [ ] **6.5 Counts drift sentinel.** Extend the existing README
-      drift test to cover `commands count = 47`, `rules count =
-      58`, and `tier coverage` (after Phase 2). Test fails if
-      headline numbers diverge from the actual filesystem state.
+- [x] **6.4 README 3-path entry.** Three-row table at the top of
+      `README.md` covering (a) `/onboard` for new users, (b)
+      `task ci` for contributors, (c) `task generate-tools` for
+      multi-agent users. Each row links to the canonical doc.
+- [x] **6.5 Counts drift sentinel.** Extended
+      `tests/test_readme_hero_counts.py` with
+      `test_every_rule_declares_a_valid_tier`, which asserts every
+      rule under `.agent-src.uncompressed/rules/` declares a `tier:`
+      from the locked vocabulary (`1`, `2a`, `2b`, `3`,
+      `safety-floor`, `mechanical-already`). Mirrors the
+      `lint-rule-tiers` Taskfile gate at the pytest layer so a
+      stand-alone `pytest` run also fails on drift. Hero counts
+      (Skills/Rules/Commands/Guidelines) and AGENTS.md
+      skill/rule headline counts already covered by sibling tests.
 - [x] **6.6 Untracked-files report contract.** Soft-rule patch in
       `commit-policy` notes is **out of scope here** (rule-prose
       change). Instead, update the
@@ -353,7 +362,7 @@ gate and the cost-confirmation contract.
       `git status --short` line in the report whenever there are
       untracked files in the working tree. Frontmatter-only +
       mechanical rendering text addition.
-- [ ] **6.7 Council CLI entry-point.** Today the `agent-config` CLI
+- [x] **6.7 Council CLI entry-point.** Today the `agent-config` CLI
       has `keys:install-anthropic` / `keys:install-openai` but **no
       runtime council subcommand** — every council pass requires a
       one-off Python script under
