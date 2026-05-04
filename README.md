@@ -20,16 +20,6 @@ New to agent-config? 60 seconds, three links:
 2. **[First command](#2-minute-demo-implement-ticket)** — `/implement-ticket` or `/work` walkthrough.
 3. **[Where the rules live](#documentation)** — `.augment/`, `.claude/`, `.cursor/`, and friends.
 
-### Three paths in — pick by role
-
-| Audience | First command | Why |
-|---|---|---|
-| **New user** (just installed in a project) | `/onboard` ([skill](.agent-src.uncompressed/commands/onboard.md)) | Captures name, IDE, cost profile, and rtk preference; sets `onboarding.onboarded: true` so other rules stop nagging. |
-| **Contributor** (working on this package) | `task ci` ([Taskfile](Taskfile.yml)) | Full pipeline — sync-check, hash-check, lint-skills, check-refs, check-portability, tests, golden-replay. Must exit 0 before any PR. |
-| **Multi-agent user** (Cursor / Cline / Windsurf / Gemini alongside Augment / Claude) | `task generate-tools` ([Taskfile](Taskfile.yml)) | Regenerates `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`, and `GEMINI.md` from the canonical `.agent-src/` payload. |
-
----
-
 ## Quickstart
 
 Two minutes from `composer require` to a better-behaved agent.
@@ -71,19 +61,13 @@ project-locally for all supported AI tools. Task is required for
 *contributors* who want to rebuild the compressed content locally — see
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
-**Verify hook coverage** after installing — every supported agent
-platform (Augment, Claude Code, Cursor, Cline, Windsurf, Gemini CLI,
-Copilot fallback) is wired through one universal dispatcher per
-[`docs/contracts/hook-architecture-v1.md`](docs/contracts/hook-architecture-v1.md):
-
-```bash
-./agent-config hooks:status            # readable matrix per platform
-./agent-config hooks:status --strict   # CI-friendly: non-zero on missing bridge
-./agent-config hooks:status --format json
-```
-
-The installer also dry-fires the dispatcher against every installed
-bridge as a post-install smoke test (skip with `--no-smoke`).
+**Verify hook coverage** after installing — every supported platform
+(Augment, Claude, Cursor, Cline, Windsurf, Gemini CLI, Copilot fallback)
+is wired through one universal dispatcher per
+[`hook-architecture-v1`](docs/contracts/hook-architecture-v1.md). Run
+`./agent-config hooks:status` for the matrix (`--strict` for CI,
+`--format json` for tooling). The installer also dry-fires the
+dispatcher per bridge as a post-install smoke test (skip: `--no-smoke`).
 
 ### For individual use (optional)
 
