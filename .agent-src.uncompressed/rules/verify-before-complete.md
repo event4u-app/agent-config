@@ -63,3 +63,12 @@ all live in
 The Iron Law and the Gate above are the obligation surface; the
 mechanics context is the lookup material the agent pulls when the
 gate fires.
+
+## Examples
+
+Pattern Memory — wrong / right / why demos for the Iron Law and the
+red-flags list:
+[`verify-before-complete-demos`](../../docs/guidelines/agent-infra/verify-before-complete-demos.md)
+(hedged claims, trusting earlier runs, partial-verification creep).
+Outcome baseline locked at
+[`tests/golden/outcomes/verify_before_complete.json`](../../tests/golden/outcomes/verify_before_complete.json).

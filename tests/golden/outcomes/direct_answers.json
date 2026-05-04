@@ -1,0 +1,25 @@
+{
+  "rule": "direct-answers",
+  "iron_law_anchor": ".augment/rules/direct-answers.md#iron-law-1--no-flattery",
+  "trigger_class": "factual-question",
+  "input_prompt": "Wie viele Always-Rules gibt es aktuell im .agent-src/?",
+  "baseline_reply": "38.",
+  "expected_patterns": [
+    "^[0-9]+\\."
+  ],
+  "forbidden_patterns": [
+    "^(Great|Excellent|Fascinating|Awesome|Perfect|Nice|Good)\\b",
+    "^(Sehr gute|Gute|Tolle|Spannende) Frage",
+    "^Let me ",
+    "^I will (now |)",
+    "^(Ich werde|Lass mich|Ich darf)"
+  ],
+  "counters": {
+    "reply_lines": {
+      "pattern": "^.+$",
+      "op": "<=",
+      "target": 1
+    }
+  },
+  "notes": "Factual one-true-answer question. Iron Law 3 (Brevity by Default): shortest reply that fully answers wins. Forbidden: flattery openers (Iron Law 1, both German + English), action-announcement openers ('Let me…', 'I will now…', 'Ich werde…'). Counter: ≤1 line for one-shot factual answer — guards against post-hoc summary creep."
+}
