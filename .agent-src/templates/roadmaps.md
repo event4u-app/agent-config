@@ -64,6 +64,10 @@ Check `AGENTS.md` or `Makefile` / `Taskfile.yml` for the exact commands.
 Copy the structure below into a new file:
 
 ```markdown
+---
+complexity: lightweight
+---
+
 # Roadmap: {Short descriptive title}
 
 > {One sentence: What is the expected outcome?}
