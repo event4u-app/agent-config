@@ -1,11 +1,13 @@
 ---
-status: draft
+status: ready
 complexity: lightweight
 ---
 
 # Road to Always-Budget Relief
 
-**Status:** DRAFT — captured but not yet ready for execution.
+**Status:** READY FOR EXECUTION — activated 2026-05-04 by
+`road-to-feedback-consolidation.md` Phase 2.6 once tier retrofit
+landed; PR #36 (precondition) merged on `main` 2026-05-04.
 **Started:** 2026-05-03 (parked for next PR).
 **Trigger:** External review of PR #36 (rating 8.8 / 10) called out
 that the Always-rule extended budget remains at 47,448 / 49,000 chars

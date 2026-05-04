@@ -138,7 +138,10 @@ ship first; without orchestrated pipelines there are no repeated
 patterns to mine.
 
 - [ ] **Q1** — Append-only audit log schema (extends existing
-      chat-history split).
+      chat-history split). **Input feed:** consumes the memory-visibility
+      line shipped by `road-to-feedback-consolidation.md` Phase 4
+      (contract: [`memory-visibility-v1.md`](../../docs/contracts/memory-visibility-v1.md)) —
+      counts + ids only, no bodies, redaction floor preserved.
 - [ ] **Q2** — Pattern-extraction script + human review gate (no
       auto-promotion).
 - [ ] **Q3** — Integration with `learning-to-rule-or-skill` skill.

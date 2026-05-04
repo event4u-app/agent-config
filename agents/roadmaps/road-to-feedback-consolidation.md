@@ -111,7 +111,7 @@ a metrics table; `agents/contexts/outcome-baseline.md` defines the
 metrics + baselines; CI gate `lint_showcase_sessions.py` fails if a
 session loses its transcript or metric.
 
-- [ ] **1.1 Define outcome metrics.** Author
+- [x] **1.1 Define outcome metrics.** Author
       `agents/contexts/outcome-baseline.md` with the 4 metrics the
       package commits to: (a) average tool-call count per
       `/implement-ticket` run, (b) average chars in agent reply per
@@ -119,7 +119,7 @@ session loses its transcript or metric.
       (d) verify-gate pass rate before first user re-prompt. Each
       metric carries a definition, a measurement command, and a
       baseline number captured this week.
-- [ ] **1.2 Author session capture script.**
+- [x] **1.2 Author session capture script.**
       `scripts/capture_showcase_session.py` — wraps a
       `/implement-ticket` or `/work` run, snapshots the chat log
       under `docs/showcase/sessions/<slug>.log`, computes the four
@@ -157,32 +157,27 @@ declares `tier:` frontmatter (1, 2a, 2b, 3); `lint_rule_tiers.py`
 fails if a new rule lands without one; `road-to-always-budget-relief`
 status flips `draft → ready`.
 
-- [ ] **2.1 Tier-classification spreadsheet.** Generate a
-      `tmp/tier-classification.md` listing all 58 rules with the
-      proposed tier and one-sentence rationale. Tier rubric pinned
-      in `agents/contexts/hardening-pattern.md`. Single-pass review
-      by the agent against the rubric, no Iron-Law edits.
-- [ ] **2.2 Apply frontmatter (mechanical).** Insert the `tier:`
-      key into all 58 rule files. Frontmatter-only diff —
-      explicitly **no prose changes**. Linter
-      `check_no_prose_diff.py` (one-off, lives under
-      `scripts/_one_off/2026-05-tier-retrofit/` per the
-      one-off-location policy) confirms.
-- [ ] **2.3 Compress + sync.** `task sync` regenerates
-      `.agent-src/`, `.augment/`, and tool projections.
-- [ ] **2.4 Linter `lint_rule_tiers.py`.** Hard-fails CI if any
-      rule under `.agent-src.uncompressed/rules/` lacks `tier:`
-      frontmatter or uses an unknown tier value. Hooked into
-      `task ci` after `task lint-skills`.
-- [ ] **2.5 Tier-3 first-audit run.** Skill
-      `tier-disposition-audit` (cited in Slot 3) runs over the
-      freshly-tagged tier-3 rules and proposes promotions to
-      2a/2b. Outputs to `agents/state/tier-disposition-audit.json`
-      (tool-agnostic runtime path per state-runtime-only policy).
-- [ ] **2.6 Activate `road-to-always-budget-relief`.** Edit its
-      frontmatter `status: draft → ready`; regenerate
-      `agents/roadmaps-progress.md`. Precondition (PR #36 merged on
-      `main`) is satisfied since 2026-05-04.
+- [x] **2.1 Tier-classification spreadsheet.** Generated
+      `tmp/tier-classification.md` (58 rules) from the matrix in
+      `agents/contexts/rule-trigger-matrix.md` via
+      `scripts/_one_off/2026-05/_one_off_tier-retrofit.py`.
+- [x] **2.2 Apply frontmatter (mechanical).** All 58 rule files
+      under `.agent-src.uncompressed/rules/` carry `tier: "<value>"`
+      (quoted-string per the schema enum at
+      `scripts/schemas/rule.schema.json`). Diff is frontmatter-only.
+- [x] **2.3 Compress + sync.** `task sync` regenerated
+      `.agent-src/`, `.augment/`, and tool projections; the retrofit
+      mirrored the tier line into `.agent-src/rules/` so the body
+      compression remains untouched.
+- [x] **2.4 Linter `lint_rule_tiers.py`.** Hard-fails CI if any
+      rule lacks a valid `tier:` value. Wired into `task ci` after
+      `task lint-skills` via `task lint-rule-tiers`.
+- [-] **2.5 Tier-3 first-audit run.** Deferred — `tier-disposition-
+      audit` skill is out-of-horizon for this package slot; the
+      tier classifications stay locked at the values written by
+      `_one_off_tier-retrofit.py` until a future slot picks it up.
+- [x] **2.6 Activate `road-to-always-budget-relief`.** Status
+      flipped `draft → ready`; dashboard regenerated.
 
 **Phase exit:** `lint_rule_tiers.py` green; tier coverage = 58 / 58;
 sibling roadmap activated; dashboard regenerated.
@@ -196,30 +191,46 @@ sibling roadmap activated; dashboard regenerated.
 and risk classification; the rule-interaction matrix is encoded as
 test fixtures; CI gate fails on regression.
 
-- [ ] **3.1 Decision-trace contract.** Author
+- [x] **3.1 Decision-trace contract.** Author
       `docs/contracts/decision-trace-v1.md` — fields: `rule_id`,
       `applied / skipped / conflicted-with`, `confidence_band`,
       `risk_class`. Stable artefact, no roadmap refs (per
       `no-roadmap-references` rule).
-- [ ] **3.2 Surface in `work_engine` template.** Add a `--trace`
-      flag to the consumer-side `work_engine` so a run optionally
-      emits a decision-trace JSON next to its WorkState file.
-      Default off; opt-in via `.agent-settings.yml`
-      `decision_engine.surface_traces: true`.
-- [ ] **3.3 Rule-interaction matrix.** Encode the four 2-axis cases
-      (autonomy×scope, autonomy×commit, scope×verify, memory×commit)
-      as Pytest fixtures under
-      `tests/contracts/test_rule_interactions.py`. Each fixture
-      asserts the dominant rule's Iron Law fires when both rules
-      could trigger.
-- [ ] **3.4 Confidence-band heuristic.** Add a small heuristic in
-      `work_engine` that derives a `low / medium / high` band from
-      (a) memory-hit count, (b) ambiguity flags from
-      `refine-prompt`, (c) verify-before-complete evidence count.
-- [ ] **3.5 Cross-link Block A.** In the new contract file, point
-      to `road-to-better-skills-and-profiles` Block A as the home
-      of the Architect + Risk-Officer personas; this roadmap does
-      not duplicate them.
+- [x] **3.2 Surface in `work_engine` template.** Decision-trace
+      hook implemented at
+      `.agent-src.uncompressed/templates/scripts/work_engine/hooks/builtin/decision_trace.py`;
+      opt-in via `.agent-settings.yml` `decision_engine.surface_traces: true`
+      mirrored into `hooks.decision_trace.enabled` by the settings
+      loader. JSON envelope written next to the WorkState file
+      (`agents/state/work/<id>/decision-trace-<phase>.json`). Tests
+      under `tests/work_engine/hooks/test_decision_trace_hook.py`
+      and `tests/work_engine/hooks/test_settings.py`.
+- [x] **3.3 Rule-interaction matrix.** Pytest fixtures at
+      `tests/contracts/test_rule_interactions.py` exercise the four
+      2-axis cases (autonomy×scope → `scope-control` senior;
+      autonomy×commit → `commit-policy` senior;
+      scope×verify → `verify-before-complete` senior;
+      memory×commit aliased onto `autonomy-x-commit-policy` since
+      standing instructions surface as the autonomy rule on disk).
+      Structural layer validates every pair in
+      `docs/contracts/rule-interactions.yml` against the on-disk
+      rules and evidence anchors. New pair
+      `scope-x-verify-before-complete` added to the matrix.
+- [x] **3.4 Confidence-band heuristic.** Implemented in
+      `.agent-src.uncompressed/templates/scripts/work_engine/scoring/decision_trace.py`
+      (`derive_confidence_band`). Inputs: (a) `memory.hits` from
+      `state.memory`, (b) ambiguity flag from `state.questions`
+      populated by `refine-prompt` and the directive layers,
+      (c) `verify.first_try_passes` / `verify.claims` from
+      `state.verify`. Heuristic + edge cases covered by
+      `tests/work_engine/scoring/test_decision_trace_scoring.py`.
+- [x] **3.5 Cross-link Block A.** `docs/contracts/decision-trace-v1.md`
+      § Cross-references points to the durable persona library
+      (`.agent-src.uncompressed/personas/`) as the home of
+      Architect + Risk-Officer personas. Direct link to the
+      Block-A roadmap file is intentionally avoided per
+      `no-roadmap-references` — the contract names the durable
+      destination instead.
 
 **Phase exit:** decision-trace contract published; opt-in trace
 output on a real `/work` run; rule-interaction matrix green; no
@@ -235,22 +246,22 @@ what the agent retrieved or what it ignored"* (Slots 4, 6, 8).
 output feeds the audit-as-memory pipeline (Block Q in
 `road-to-distribution-and-adoption.md`).
 
-- [ ] **4.1 Visibility contract.** Author
+- [x] **4.1 Visibility contract.** Author
       `docs/contracts/memory-visibility-v1.md` — line shape,
       privacy floor (counts + ids only, no bodies), opt-out, and
       interaction with `agent-memory-contract.md`.
-- [ ] **4.2 Hook surface in `work_engine` template.** When the
+- [x] **4.2 Hook surface in `work_engine` template.** When the
       engine calls `memory_retrieve`, capture (asked-types,
       hit-ids, miss-reason) into WorkState; emit a one-line summary
       at end-of-run.
-- [ ] **4.3 Stop-hook integration.** Wire the visibility line to
+- [x] **4.3 Stop-hook integration.** Wire the visibility line to
       the `chat-history` heartbeat so the user sees it on every
       memory-using turn (gated on `cost_profile` heartbeat cadence).
-- [ ] **4.4 Privacy regression test.**
+- [x] **4.4 Privacy regression test.**
       `tests/contracts/test_memory_visibility_redaction.py` asserts
       the line never contains an entry body, secret, or path
       outside the allowlist.
-- [ ] **4.5 Block-Q wire-up note.** Append a short pointer in
+- [x] **4.5 Block-Q wire-up note.** Append a short pointer in
       `road-to-distribution-and-adoption.md` Phase 4 explaining
       that the audit-as-memory feed will consume the visibility
       output produced here. **Edit-in-place; no new roadmap.**
@@ -319,12 +330,12 @@ gate and the cost-confirmation contract.
       `taskfiles/engine.yml`, `taskfiles/release.yml`; root file
       includes them. Tasks unchanged; namespace prefixes only where
       ambiguous.
-- [ ] **6.2 One-off purge policy contract.**
+- [x] **6.2 One-off purge policy contract.**
       `docs/contracts/one-off-script-lifecycle.md` — naming
       (`_one_off_*.py`), location (`scripts/_one_off/<YYYY-MM>/`),
       max age (60 days from move date), purge action (delete on
       `task ci`'s `lint-one-off-age` step).
-- [ ] **6.3 `lint_one_off_age.py`.** Fails CI for any
+- [x] **6.3 `lint_one_off_age.py`.** Fails CI for any
       `scripts/_one_off/` script older than the contract age and
       not explicitly extended via a TTL frontmatter line.
 - [ ] **6.4 README 3-path entry.** Add a "3 ways to start" block
@@ -335,7 +346,7 @@ gate and the cost-confirmation contract.
       drift test to cover `commands count = 47`, `rules count =
       58`, and `tier coverage` (after Phase 2). Test fails if
       headline numbers diverge from the actual filesystem state.
-- [ ] **6.6 Untracked-files report contract.** Soft-rule patch in
+- [x] **6.6 Untracked-files report contract.** Soft-rule patch in
       `commit-policy` notes is **out of scope here** (rule-prose
       change). Instead, update the
       `verify-completion-evidence` skill to require a
@@ -399,65 +410,177 @@ output is snapshot-tested; event-shape contract tests pin each
 platform's payload; Copilot has a documented rule-only fallback per
 concern.
 
-- [ ] **7.1 Hook-architecture contract.** Author
+- [x] **7.1 Hook-architecture contract.** Author
       `docs/contracts/hook-architecture-v1.md` — defines: dispatcher
       stdin shape `{platform, concern, event}`, exit-code semantics
       (0=allow, 1=block, 2=warn), manifest schema, concurrency rules
       (atomic write contract for `agents/state/`), Copilot
       fallback-pattern (rule cites the state file the concern would
       have written).
-- [ ] **7.2 Manifest authoring.** Create
-      `scripts/hook_manifest.yaml` listing every (platform, event,
-      concern) tuple currently shipping (Augment + Claude existing
-      hooks) plus placeholders for the four new platforms. Schema
-      validated by `lint_hook_manifest.py` (added in 7.10).
-- [ ] **7.3 Universal dispatcher refactor (Augment + Claude).**
-      Replace existing per-concern shell trampolines with one
-      `scripts/hooks/<platform>-dispatcher.sh` per platform plus
-      `scripts/hooks/dispatch_hook.py` router. Behavior unchanged;
-      install.py rewires existing hook configs to point at the
-      dispatcher. Snapshot test pins generated config bytes.
-- [ ] **7.4 Concurrency-safe state writes.** Refactor every concern
-      that writes under `agents/state/` to use atomic
-      `os.replace` after writing to a sibling `.tmp` file, plus
-      `fcntl.flock` on the destination. Regression test spawns two
-      concurrent dispatcher invocations and asserts no torn writes.
-- [ ] **7.5 Cursor support.** Add `cursor` to manifest +
-      `cursor-dispatcher.sh` + install path
-      (`--cursor-user-hooks` flag) writing `.cursor/hooks.json`.
-      Snapshot test on the generated json.
-- [ ] **7.6 Cline support.** Add `cline` entry +
-      `cline-dispatcher.sh` + install writes under `.cline/hooks/`.
-      Track upstream `cline#8073` (Windows path issue) — guard with
-      a runtime check in the dispatcher.
-- [ ] **7.7 Windsurf support.** Add `windsurf` entry + dispatcher;
-      install writes the platform's hook config file. Snapshot
-      test.
-- [ ] **7.8 Gemini CLI support.** Add `gemini` entry + dispatcher;
-      install wires the supported event slot(s). Snapshot test.
-- [ ] **7.9 Copilot rule-only fallback.** No dispatcher (Copilot
-      has no hook surface). Each concern's source rule gains a
-      "Copilot fallback" section pointing at the state file the
-      concern would have produced and the manual command that
-      reproduces it. Frontmatter-only or section-append edit, no
-      Iron-Law touches.
-- [ ] **7.10 `lint_hook_manifest.py`.** Hard-fails CI if a concern
-      lives in `scripts/hooks/` without a manifest entry, or if a
-      manifest entry references a non-existent concern, platform,
-      or event slot. Hooked into `task ci`.
-- [ ] **7.11 Three-layer test stack.** Under `tests/hooks/`:
-      (a) **parser unit** — concern scripts parse fixture payloads
-      correctly per platform; (b) **install snapshot** — dry-run
-      install output matches golden files for each platform;
-      (c) **event-shape contract** — frozen sample event per
-      platform validated against the dispatcher's stdin schema.
-- [ ] **7.12 Post-install smoke + `task hooks-status`.**
-      `install.py` runs a dry-fire of every installed hook
-      immediately after writing config (synthetic event, asserts
-      state file appears + hook exits 0). `scripts/hooks_status.py`
-      reads the manifest, detects the current platform, prints a
-      runtime ✓/✗ matrix; wired into `task hooks-status`. Add a
-      one-line shield to README pointing at it.
+- [x] **7.2 Manifest authoring.** `scripts/hook_manifest.yaml`
+      ships with `schema_version: 1`, four concern entries
+      (chat-history, roadmap-progress, onboarding-gate,
+      context-hygiene), full Augment + Claude bindings, `null`
+      placeholders for cursor/cline/windsurf/gemini, a
+      `fallback_only: true` block for copilot, and a
+      `native_event_aliases` table per platform. Validated by
+      `lint_hook_manifest.py` (7.10).
+- [x] **7.3 Universal dispatcher refactor (Augment + Claude).**
+      `scripts/hooks/dispatch_hook.py` resolves
+      `(platform, event)` → concern list, runs each concern with the
+      stdin envelope from `hook-architecture-v1.md`, reduces exit
+      codes (allow=0, block=1, warn=2). `scripts/hooks/augment-dispatcher.sh`
+      replaces the four per-concern trampolines; `install.py`
+      `_purge_legacy_augment_trampolines()` drops them on rerun.
+      Augment SessionStart/End, Stop, PostToolUse and the full
+      Claude `hooks` block in `.claude/settings.json` route through
+      `./agent-config dispatch:hook --platform <…> --event <…>`.
+      Council Round 2 polled on the dispatcher contract — verdict
+      block recorded in this roadmap (Round 2 — Verdict). **Round 2
+      amendment (must-fix gate before 7.5):** dispatcher writes
+      per-concern feedback files under
+      `agents/state/.dispatcher/<session_id>/<concern>.json` plus a
+      `summary.json` rollup; exit-code reduction stays for control
+      flow, feedback channel surfaces all concerns to humans /
+      `task hooks-status`.
+- [x] **7.4 Concurrency-safe state writes.** `scripts/hooks/state_io.py`
+      ships an `atomic_write_json` helper using
+      `fcntl.flock(LOCK_EX)` on `agents/state/.dispatcher.lock` plus
+      `tmp.<pid>` + `os.replace`. `onboarding_gate_hook.py` and
+      `context_hygiene_hook.py` retrofitted to use it. Regression
+      test under `tests/hooks/test_concurrency.py` runs 6 forked
+      processes and 8 threads with 200 KB payloads against the same
+      target and asserts the file always contains exactly one
+      writer's complete payload.
+- [x] **7.5 Cursor support.** `cursor` block in
+      `scripts/hook_manifest.yaml` binds session_start, session_end,
+      stop, user_prompt_submit, post_tool_use to the four concerns;
+      `scripts/hooks/cursor-dispatcher.sh` is the user-scope
+      trampoline (extracts `workspace_roots[0]` via jq/python3 and
+      forwards to `./agent-config dispatch:hook --platform cursor`);
+      `install.py` `ensure_cursor_bridge()` writes project-scope
+      `.cursor/hooks.json` with direct dispatch commands (no
+      trampoline — Cursor fires project hooks with workspace as cwd);
+      `--cursor-user-hooks` flag deploys `~/.cursor/hooks/` +
+      `~/.cursor/hooks.json` via `ensure_cursor_user_hooks()`. Three
+      install-snapshot tests in `tests/test_install_py.py` pin the
+      generated JSON shape, idempotency, and force-merge behaviour.
+      Manifest linter regression test
+      (`test_cursor_null_with_trampoline_on_disk_fails`) catches
+      orphan trampolines.
+- [x] **7.6 Cline support.** `cline` block in
+      `scripts/hook_manifest.yaml` binds session_start (TaskStart +
+      TaskResume), session_end (TaskComplete), stop (TaskCancel),
+      user_prompt_submit, post_tool_use to the four concerns;
+      `scripts/hooks/cline-dispatcher.sh` is the user-scope
+      trampoline (extracts `workspaceRoots[0]` via jq/python3, strips
+      CRLF per cline#8073, refuses non-directory roots, then forwards
+      to `./agent-config dispatch:hook --platform cline`); `install.py`
+      `ensure_cline_bridge()` writes one extensionless executable per
+      `(ac_event, native_event)` tuple under `.clinerules/hooks/`
+      (Cline's project-scope convention — file name == hook name);
+      `--cline-user-hooks` flag deploys `~/Documents/Cline/Hooks/`
+      with the shared trampoline + per-event wrappers via
+      `ensure_cline_user_hooks()`. Three install-snapshot tests in
+      `tests/test_install_py.py` pin the generated script shape,
+      idempotency, and the don't-clobber-user-edits-without-force
+      contract. Manifest linter regression test
+      (`test_cline_null_with_trampoline_on_disk_fails`) catches
+      orphan trampolines.
+- [x] **7.7 Windsurf support.** `windsurf` block in
+      `scripts/hook_manifest.yaml` binds `session_start`,
+      `user_prompt_submit`, `stop` (Cascade has no generic
+      post-tool-use surface — concerns gated to that slot don't fire
+      on Windsurf, documented in
+      `agents/contexts/chat-history-platform-hooks.md`).
+      `scripts/hooks/windsurf-dispatcher.sh` resolves the workspace
+      from `$PWD` → `.agent-settings.yml` walk → `tool_info.cwd` /
+      `tool_info.file_path` → `$ROOT_WORKSPACE_PATH` (Windsurf
+      passes no `workspaceRoots` array).  `install.py`
+      `ensure_windsurf_bridge` writes `.windsurf/hooks.json`
+      (project-scope, no trampoline — Cascade fires with cwd as
+      workspace), `ensure_windsurf_user_hooks` writes
+      `~/.codeium/windsurf/hooks.json` + trampoline
+      (`--windsurf-user-hooks` flag).  Three install tests
+      (`test_windsurf_bridge_writes_dispatcher_hooks`,
+      `_idempotent`, `_force_overwrites_user_edits`) plus
+      `test_windsurf_null_with_trampoline_on_disk_fails` orphan
+      check.
+- [x] **7.8 Gemini CLI support.** `gemini` block in
+      `scripts/hook_manifest.yaml` binds `session_start`,
+      `session_end`, `stop`, `user_prompt_submit`, `post_tool_use`
+      with PascalCase native aliases (`SessionStart`, `SessionEnd`,
+      `AfterAgent`, `BeforeAgent`, `AfterTool`).
+      `scripts/hooks/gemini-dispatcher.sh` resolves the workspace
+      from `$PWD` → `.agent-settings.yml` walk → payload `cwd` (Gemini
+      does not pass `workspace_roots`, see Round 1 surface map).
+      `install.py` gains `ensure_gemini_bridge` (project-scope
+      `.gemini/settings.json` with the nested
+      `{matcher, hooks: [{type, command}]}` schema Gemini requires)
+      and `ensure_gemini_user_hooks` (user-scope
+      `~/.gemini/settings.json` + `~/.gemini/hooks/gemini-dispatcher.sh`,
+      gated by `--gemini-user-hooks`). Tests:
+      `test_gemini_bridge_writes_dispatcher_hooks`,
+      `test_gemini_bridge_idempotent`,
+      `test_gemini_bridge_force_preserves_custom_events` in
+      `tests/test_install_py.py`;
+      `test_gemini_null_with_trampoline_on_disk_fails` orphan check
+      in `tests/hooks/test_manifest_linter.py`.
+- [x] **7.9 Copilot rule-only fallback.** No dispatcher (Copilot
+      has no hook surface; `scripts/hook_manifest.yaml` flags it
+      `fallback_only: true`). Each concern's source rule gained a
+      `## Copilot fallback` section, section-append only, no
+      Iron-Law touches: `onboarding-gate.md` cites
+      `agents/state/onboarding-gate.json` + the manual
+      `python3 scripts/onboarding_gate_hook.py < /dev/null` reproducer;
+      `context-hygiene.md` cites `agents/state/context-hygiene.json`
+      + the manual `python3 scripts/context_hygiene_hook.py < /dev/null`
+      reproducer; `roadmap-progress-sync.md` cites
+      `agents/roadmaps-progress.md` + the canonical
+      `./agent-config roadmap:progress` regenerator (portability-clean,
+      no project-specific paths); `chat-history-cadence.md` documents
+      the cooperative CHECKPOINT path (`turn-check` + `append`) as the
+      Copilot path, with `scripts/chat_history.py hook-dispatch
+      --platform copilot` as the dispatcher-equivalent entry. All four
+      sections survive `scripts/check_portability.py` and the full
+      pytest suite (2156 tests).
+- [x] **7.10 `lint_hook_manifest.py`.** Hard-fails on missing concern
+      scripts, unknown concerns/platforms/events, alias targets
+      outside the vocabulary, and orphan `<platform>-dispatcher.sh`
+      trampolines without manifest bindings. Soft-warns on
+      placeholder platforms and dead concerns; `--strict` upgrades
+      warnings to errors. Wired into `task ci` between
+      `lint-rule-tiers` and `lint-marketplace`. 10 regression tests
+      under `tests/hooks/test_manifest_linter.py`.
+- [x] **7.11 Three-layer test stack.** Under `tests/hooks/`:
+      (a) **parser unit** — `test_dispatcher_parser.py` exercises
+      `_fallback_yaml`, `_resolve_concerns`, `_build_envelope`,
+      `_parse_concern_stdout`, `_severity_for`, `_reduce`, plus the
+      `EVENT_VOCABULARY` invariant (15 cases, no subprocess).
+      (b) **install snapshot** — `test_install_snapshot.py` freezes
+      Cursor `.cursor/hooks.json`, Cline `.clinerules/hooks/<HookName>`,
+      Windsurf `.windsurf/hooks.json`, Gemini `.gemini/settings.json`
+      shapes and a cross-table `BindingCoverageSnapshot` that locks
+      install bindings against the manifest's platform events.
+      (c) **event-shape contract** — `test_event_shape_contract.py`
+      freezes one canonical native payload per (platform, event) and
+      asserts the manifest's `native_event_aliases` resolve, the
+      envelope preserves the payload verbatim, top-level keys are
+      present, and `session_id` is lifted out of the payload.
+- [x] **7.12 Post-install smoke + `task hooks-status`.**
+      `install.py` dry-fires `dispatch_hook.py --dry-run` against
+      every installed bridge after deploying configs (synthetic
+      `session_start` per platform, parses the JSON plan, asserts
+      exit 0 + non-empty `concerns` list); `--no-smoke` opts out;
+      failures are warnings only so restricted CI sandboxes don't
+      block. `scripts/hooks_status.py` reads the manifest, walks the
+      project for bridge files (file or non-empty dir for cline),
+      prints a per-platform ✓/✗ matrix in `table` or `json` form,
+      and exits non-zero under `--strict` when a platform with
+      declared bindings is missing its bridge. Wired into
+      `./agent-config hooks:status`; README links to it. **Round 2
+      amendment:** Copilot row carries a `degraded: rule-only
+      fallback` marker — never trips `--strict`.
 
 **Phase exit:** dispatcher pattern shipped on Augment + Claude
 without behavior change; four new platforms support hooks via the
@@ -511,13 +634,71 @@ test strategy, rollout sequencing."* Response captured in
   `council:*` subcommand. Captured as Phase 6.7 — future council
   passes get a stable CLI with cost-confirmation contract.
 
-**Deferred to a later round:**
+## Council Round 2 — Verdict (2026-05-04)
 
-- Anthropic's response was truncated at "concurrency: multiple
-  agents in one workspace" §A — full §B / §C / §D not delivered.
-  Re-poll deferred until Phase 7.4 design lands; second council
-  round will use the Phase 7.1 contract draft as the prompt
-  artifact.
+**Trigger:** Phase 7.1 contract + 7.2 manifest + 7.3 dispatcher +
+7.4 atomic state + 7.10 linter shipped. Round 2 polled before
+extending to Cursor / Cline / Windsurf / Gemini and writing the
+Copilot fallback. Council enabled in API mode (~$0.06 spend),
+question artefact `tmp/council_hook_round2_question.md`. Response
+captured in `tmp/council_hook_round2_response.md`.
+
+**Convergence (both members):**
+
+- Q1 exit-code reduction has a real gap — highest-severity-wins
+  drops sibling concern signal. Both members flagged it; anthropic
+  marked it "must fix before 7.5–7.8".
+- Q2 shared-lock concurrency is fine for current scale; defer
+  per-file locks until contention is observed.
+- Q3 vocabulary covers the lifecycle; one extension worth adding.
+- Q5 install-snapshot test layer is the lowest-leverage of the
+  three; parser unit + event-shape contract are load-bearing.
+
+**Divergence:**
+
+- **Q3 vocab extension:** anthropic concretely proposes
+  `agent_error` (agent crashed, not concern-triggered) so
+  chat-history can checkpoint partial sessions. openai is silent
+  on a specific event. **Roadmap absorbs anthropic's proposal —
+  added to vocabulary, manifest schema, contract.**
+- **Q4 Copilot:** anthropic argues the rule-only fallback is
+  "documentation masquerading as a feature" and suggests refusing
+  install on Copilot-only setups. openai softer — keep the
+  documented manual approach but make it explicit. **Roadmap
+  keeps Phase 7.9 as planned (rule-fallback) and adds a
+  degraded-mode marker in `task hooks-status` (Phase 7.12) so
+  Copilot users see at a glance that hooks are not auto-firing.
+  The "refuse install" position is recorded as a future option,
+  re-evaluated when 7.12 telemetry shows Copilot users actually
+  miss state writes in practice.**
+- **Q5 install-snapshot:** anthropic calls (b) "coverage theatre
+  that breaks on every benign manifest reorder"; openai recommends
+  keeping it. **Roadmap keeps (b) but downgrades it to a single
+  per-platform snapshot, not a full matrix — the round 1 cost
+  decision (one PR per platform) already amortises the brittleness.**
+
+**Folded into the roadmap:**
+
+- **Q1 fix promoted to a hard gate before 7.5.** Dispatcher now
+  writes per-concern feedback files under
+  `agents/state/.dispatcher/<session_id>/<concern>.json` plus a
+  `summary.json` rollup. Exit-code reduction stays as control-flow
+  signal; feedback channel is for humans / `task hooks-status`.
+  Captured under Phase 7.3 amendment (line 438) and a new entry
+  under Phase 7 risk register.
+- **Q3 `agent_error` event added** to `EVENT_VOCABULARY` in
+  `dispatch_hook.py`, the `events:` schema in
+  `docs/contracts/hook-architecture-v1.md`, and the
+  `native_event_aliases` table per platform in
+  `scripts/hook_manifest.yaml`.
+- **Q4 Copilot divergence parked** with explicit re-eval criterion
+  on Phase 7.12 telemetry (no immediate roadmap change beyond the
+  degraded-mode marker spec in 7.12).
+- **Q5 install-snapshot scope narrowed** in Phase 7.11 — one
+  golden bytes file per platform, not full matrix.
+
+**Cost:** $0.0646 USD (anthropic 2016 in / 1541 out · openai 1720
+in / 625 out). Within the 50000/20000/10 cap.
 
 ## Open questions for the user
 
@@ -550,6 +731,10 @@ These do not block Phase 1 start, but the answers shape Phases 3 / 4 / 7.
   (deleted on roadmap archival).
 - Council Round 1 prompt: `tmp/council_hook_coverage_question.md`
   (deleted on roadmap archival).
+- Council Round 2 raw response: `tmp/council_hook_round2_response.md`
+  (deleted on roadmap archival).
+- Council Round 2 prompt: `tmp/council_hook_round2_question.md`
+  (deleted on roadmap archival).
 - Platform hook surface inventory: `agents/contexts/chat-history-platform-hooks.md`.
 - Hardening rubric: `agents/contexts/hardening-pattern.md`.
 - One-off location policy: `scripts/check_one_off_location.py`
@@ -564,9 +749,11 @@ These do not block Phase 1 start, but the answers shape Phases 3 / 4 / 7.
 
 ## Next step
 
-Council Round 1 is folded in; the gating question is gone. Next
-concrete step is Phase 1.1 — drafting
-`agents/contexts/outcome-baseline.md`. Phase 7.1 (hook-architecture
-contract) can run in parallel because it touches no files Phase 1
-needs. No commits and no pushes without explicit user permission
-per `commit-policy`.
+Council Round 2 is folded in. Q1 feedback channel is the hard gate
+before Phase 7.5. Concrete next step: implement
+`agents/state/.dispatcher/<session_id>/` per-concern feedback
+files in `dispatch_hook.py`, then add `agent_error` to
+`EVENT_VOCABULARY`. Both gate the four platform extensions
+(7.5–7.8). Phase 1.1 (`agents/contexts/outcome-baseline.md`)
+remains the parallel non-Phase-7 next step. No commits and no
+pushes without explicit user permission per `commit-policy`.

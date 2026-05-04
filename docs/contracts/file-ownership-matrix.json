@@ -6251,6 +6251,13 @@
     },
     {
       "source": ".agent-src.uncompressed/skills/roadmap-management/SKILL.md",
+      "target": ".agent-src.uncompressed/commands/roadmap/create.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/roadmap-management/SKILL.md",
       "target": ".agent-src.uncompressed/rules/roadmap-progress-sync.md",
       "type": "READ_ONLY",
       "via": "body_link",
