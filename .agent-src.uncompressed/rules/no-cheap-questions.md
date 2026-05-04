@@ -9,13 +9,10 @@ source: package
 
 A question is **cheap** when the answer follows from stated context,
 an option breaches an Iron Law, choices differ only in sequencing /
-format, or one option is obviously dominant. Cheap questions are
-noise, regardless of `personal.autonomy`.
-
-Mode-independent. [`autonomous-execution`](autonomous-execution.md)'s
-"trivial" failure modes scope to `personal.autonomy: on` (or
-`auto`-after-opt-in); this rule lifts the **no-trade-off** subset to
-`off` and pre-opt-in `auto` too.
+format, or one option is obviously dominant. Mode-independent — holds
+in `off`, `auto`, and `on`; autonomy never lifts the no-trade-off
+floor (cf. [`autonomous-execution`](autonomous-execution.md), whose
+"trivial" failure modes only scope to `on` / opted-in `auto`).
 
 ## The Iron Laws
 
@@ -35,16 +32,12 @@ Hold in `off`, `auto`, and `on`. Autonomy never lifts them.
 - **CI / test asks** — [`verify-before-complete`](verify-before-complete.md) decides, not the user.
 - **Fenced-step re-asks** — "Start Phase 1?" after *"plan only"*; see
   [`scope-control § fenced step`](scope-control.md#fenced-step--user-set-review-gates).
-- **Iron-Law option** — option breaches `commit-policy`,
-  `scope-control § git-ops`, or `non-destructive-by-default`.
-- **Context-derived** — answer follows from prior turn / standing
-  instruction / roadmap; act, state the assumption inline.
-- **Dominant option** — one choice obviously correct; alternatives
-  carry no upside.
-- **Re-ask after decline** — forbidden per
-  [`scope-control § decline = silence`](scope-control.md#decline--silence--no-re-asking-on-the-same-task).
+- **Iron-Law option** — breaches `commit-policy`, `scope-control` § git-ops, or `non-destructive-by-default`.
+- **Context-derived** — answer follows from prior turn / standing instruction / roadmap; act, state the assumption inline.
+- **Dominant option** — one choice obviously correct; alternatives carry no upside.
+- **Re-ask after decline** — forbidden per [`scope-control § decline = silence`](scope-control.md#decline--silence--no-re-asking-on-the-same-task).
 
-Concrete examples per class:
+Examples per class:
 [`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
 
 ## Pre-Send Self-Check — MANDATORY before every question

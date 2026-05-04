@@ -65,6 +65,86 @@ extraction pattern (Q1) and the **one-rule + three-contexts** consolidation
 (Q2); model (b) literal is the accounting that makes both patterns
 honest about their cost.
 
+## Load order (Q1) — file order in frontmatter
+
+Locked by Phase 1.2 of `road-to-context-layer-maturity` (council
+session `2026-05-03T17-56-21Z`, v2 lock).
+
+When a rule declares multiple `load_context:` and / or
+`load_context_eager:` entries, the agent processes them in the order
+they appear in the YAML list, top to bottom. `load_context_eager:`
+entries are concatenated into the active context in declaration
+order; `load_context:` entries are available for lazy retrieval in
+the same order, surfaced first-listed-first when the rule body cites
+them in prose.
+
+**Rejected alternatives:**
+
+- *Citation order in prose* — non-machine-readable; would force every
+  rule to embed a sort hint and the linter to parse rule body text.
+- *Priority field per entry* — adds frontmatter surface area without
+  observable benefit. The current rule with the most contexts
+  (`autonomous-execution`, 3 contexts) reads each in declaration
+  order without ambiguity.
+
+This contract treats list order as the canonical signal. Authors
+must order their `load_context:` entries from "load this first" to
+"load this last" so prose citations and frontmatter agree.
+
+## Per-rule context-count cap (Q2) — ≤ 3 contexts per rule
+
+Locked by Phase 1.3 of `road-to-context-layer-maturity` (council
+session `2026-05-03T17-56-21Z`, v2 lock). Enforced by
+`scripts/check_always_budget.py` as `MAX_CONTEXTS_PER_RULE = 3`.
+
+A rule's combined count of `load_context:` + `load_context_eager:`
+top-level entries must not exceed **3**. The cap is on *declared*
+entries (depth 1 from the rule), not transitive closure — depth-2
+context citations are governed by the depth-2 nesting cap below.
+
+**Rationale:**
+
+- Empirical max in the current rule set is 3
+  (`autonomous-execution`); the cap locks the ceiling without forcing
+  any rewrite.
+- A 4th declared context is the structural signal that the rule
+  should split (one rule, one obligation surface), not load more.
+- Cross-platform mechanical: a count check is O(N), no semantic
+  analysis, identical observable on Augment and Claude Code.
+
+The cap applies to **all rule types** (`always` and `auto`) — Q2 is
+a structural constraint on rule shape, not a budget concern.
+
+## Cross-rule sharing (Q3) — Model (b) literal locked
+
+Locked by Phase 1.4 of `road-to-context-layer-maturity` (decision
+3a). The accounting model in § The locked model above stands without
+shared-context discount.
+
+**Decision:** when context X is loaded by N rules, each rule pays
+the full `RawSize(X)` under Model (b). No `chars(X) / N` discount.
+
+**Rationale (3a over 3b):**
+
+- The linter is correct as-is — `RECOVERY_BAND_ENABLED` plus the
+  per-rule allowlist is already a working ratchet to drive total
+  utilization below 100 %.
+- 3b would require a linter rewrite plus a new failure-mode test
+  family (cross-rule attribution, divisor-stability invariants).
+  Phase 1.4a's 4-hour / 200-LOC feasibility cap was structured to
+  reject 3b on cost; with no current shared-context patterns
+  exceeding 1 loader per context (verified Phase 1.1 inventory), 3b
+  has no measurable upside.
+- Phase 4c (shared-context discount) becomes a no-op under 3a.
+  Phase 4 leverage shifts to 4a (demote), 4b (merge), and 4d
+  (hard-compress) — see `road-to-context-layer-maturity` Phase 4
+  inputs gate.
+
+**Reopener:** if a future inventory shows ≥ 3 shared-context loaders
+and total utilization re-enters the 95–100 % zone after Phase 4
+completes, run the Phase 1.4a feasibility spike and propose 3b via
+contract version bump.
+
 ## Nesting cap — depth 2
 
 A rule's `load_context:` may cite a context (depth 1). A context may
