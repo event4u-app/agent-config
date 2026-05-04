@@ -93,13 +93,13 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/commands/commit-in-chunks.md": {
+    ".agent-src.uncompressed/commands/commit.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/commands/commit.md": {
+    ".agent-src.uncompressed/commands/commit/in-chunks.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
@@ -177,13 +177,13 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/commands/create-pr-description.md": {
+    ".agent-src.uncompressed/commands/create-pr.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/commands/create-pr.md": {
+    ".agent-src.uncompressed/commands/create-pr/description-only.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
@@ -207,13 +207,13 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/commands/feature-dev.md": {
+    ".agent-src.uncompressed/commands/feature.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/commands/feature.md": {
+    ".agent-src.uncompressed/commands/feature/dev.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
@@ -2085,46 +2085,46 @@
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/commands/commit-in-chunks.md",
-      "target": ".agent-src.uncompressed/commands/commit-in-chunks.md",
+      "source": ".agent-src.uncompressed/commands/commit.md",
+      "target": ".agent-src.uncompressed/commands/commit.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/commands/commit-in-chunks.md",
+      "source": ".agent-src.uncompressed/commands/commit/in-chunks.md",
       "target": ".agent-src.uncompressed/commands/commit.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/commands/commit-in-chunks.md",
+      "source": ".agent-src.uncompressed/commands/commit/in-chunks.md",
+      "target": ".agent-src.uncompressed/commands/commit/in-chunks.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/commit/in-chunks.md",
       "target": ".agent-src.uncompressed/rules/autonomous-execution.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/commands/commit-in-chunks.md",
+      "source": ".agent-src.uncompressed/commands/commit/in-chunks.md",
       "target": ".agent-src.uncompressed/rules/commit-conventions.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/commands/commit-in-chunks.md",
+      "source": ".agent-src.uncompressed/commands/commit/in-chunks.md",
       "target": ".agent-src.uncompressed/rules/scope-control.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/commands/commit.md",
-      "target": ".agent-src.uncompressed/commands/commit.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
     },
     {
       "source": ".agent-src.uncompressed/commands/compress.md",
@@ -2211,15 +2211,15 @@
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/commands/create-pr-description.md",
-      "target": ".agent-src.uncompressed/commands/create-pr-description.md",
+      "source": ".agent-src.uncompressed/commands/create-pr.md",
+      "target": ".agent-src.uncompressed/commands/create-pr.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/commands/create-pr.md",
-      "target": ".agent-src.uncompressed/commands/create-pr.md",
+      "source": ".agent-src.uncompressed/commands/create-pr/description-only.md",
+      "target": ".agent-src.uncompressed/commands/create-pr/description-only.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -2267,15 +2267,15 @@
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/commands/feature-dev.md",
-      "target": ".agent-src.uncompressed/commands/feature-dev.md",
+      "source": ".agent-src.uncompressed/commands/feature.md",
+      "target": ".agent-src.uncompressed/commands/feature.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/commands/feature.md",
-      "target": ".agent-src.uncompressed/commands/feature.md",
+      "source": ".agent-src.uncompressed/commands/feature/dev.md",
+      "target": ".agent-src.uncompressed/commands/feature/dev.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -3794,14 +3794,14 @@
     },
     {
       "source": ".agent-src.uncompressed/rules/autonomous-execution.md",
-      "target": ".agent-src.uncompressed/commands/commit-in-chunks.md",
+      "target": ".agent-src.uncompressed/commands/commit.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/rules/autonomous-execution.md",
-      "target": ".agent-src.uncompressed/commands/commit.md",
+      "target": ".agent-src.uncompressed/commands/commit/in-chunks.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -4081,14 +4081,14 @@
     },
     {
       "source": ".agent-src.uncompressed/rules/commit-policy.md",
-      "target": ".agent-src.uncompressed/commands/commit-in-chunks.md",
+      "target": ".agent-src.uncompressed/commands/commit.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/rules/commit-policy.md",
-      "target": ".agent-src.uncompressed/commands/commit.md",
+      "target": ".agent-src.uncompressed/commands/commit/in-chunks.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -5362,14 +5362,14 @@
     },
     {
       "source": ".agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md",
-      "target": ".agent-src.uncompressed/commands/create-pr-description.md",
+      "target": ".agent-src.uncompressed/commands/create-pr.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md",
-      "target": ".agent-src.uncompressed/commands/create-pr.md",
+      "target": ".agent-src.uncompressed/commands/create-pr/description-only.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -6167,14 +6167,14 @@
     },
     {
       "source": ".agent-src.uncompressed/skills/requesting-code-review/SKILL.md",
-      "target": ".agent-src.uncompressed/commands/create-pr-description.md",
+      "target": ".agent-src.uncompressed/commands/create-pr.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/requesting-code-review/SKILL.md",
-      "target": ".agent-src.uncompressed/commands/create-pr.md",
+      "target": ".agent-src.uncompressed/commands/create-pr/description-only.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1

@@ -16,10 +16,10 @@
 | `.agent-src.uncompressed/commands/check-current-md.md` | `.agent-src.uncompressed/rules/augment-source-of-truth.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/check-current-md.md` | `.agent-src.uncompressed/rules/language-and-tone.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/check-current-md.md` | `.agent-src.uncompressed/skills/md-language-check/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/commit-in-chunks.md` | `.agent-src.uncompressed/commands/commit.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/commit-in-chunks.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/commit-in-chunks.md` | `.agent-src.uncompressed/rules/commit-conventions.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/commit-in-chunks.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/commit/in-chunks.md` | `.agent-src.uncompressed/commands/commit.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/commit/in-chunks.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/commit/in-chunks.md` | `.agent-src.uncompressed/rules/commit-conventions.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/commit/in-chunks.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/estimate-ticket.md` | `.agent-src.uncompressed/commands/jira-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/estimate-ticket.md` | `.agent-src.uncompressed/commands/refine-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/estimate-ticket.md` | `.agent-src.uncompressed/skills/estimate-ticket/SKILL.md` | `body_link` | 1 |
@@ -135,8 +135,8 @@
 | `.agent-src.uncompressed/rules/augment-portability.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/augment-portability-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/augment-source-of-truth.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/augment-source-of-truth.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md` | `load_context` | 1 |
-| `.agent-src.uncompressed/rules/autonomous-execution.md` | `.agent-src.uncompressed/commands/commit-in-chunks.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/autonomous-execution.md` | `.agent-src.uncompressed/commands/commit.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/autonomous-execution.md` | `.agent-src.uncompressed/commands/commit/in-chunks.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/autonomous-execution.md` | `.agent-src.uncompressed/contexts/execution/autonomy-detection.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/autonomous-execution.md` | `.agent-src.uncompressed/contexts/execution/autonomy-detection.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/autonomous-execution.md` | `.agent-src.uncompressed/contexts/execution/autonomy-examples.md` | `body_link` | 1 |
@@ -168,8 +168,8 @@
 | `.agent-src.uncompressed/rules/command-suggestion-policy.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/command-suggestion-policy.md` | `.agent-src.uncompressed/rules/slash-command-routing-policy.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/command-suggestion-policy.md` | `.agent-src.uncompressed/rules/user-interaction.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/commit-policy.md` | `.agent-src.uncompressed/commands/commit-in-chunks.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/commit-policy.md` | `.agent-src.uncompressed/commands/commit.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/commit-policy.md` | `.agent-src.uncompressed/commands/commit/in-chunks.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/commit-policy.md` | `.agent-src.uncompressed/contexts/authority/commit-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/commit-policy.md` | `.agent-src.uncompressed/contexts/authority/commit-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/commit-policy.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
@@ -269,8 +269,8 @@
 | `.agent-src.uncompressed/skills/fe-design/SKILL.md` | `.agent-src.uncompressed/skills/livewire/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/fe-design/SKILL.md` | `.agent-src.uncompressed/skills/react-shadcn-ui/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` | `.agent-src.uncompressed/commands/commit.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` | `.agent-src.uncompressed/commands/create-pr-description.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` | `.agent-src.uncompressed/commands/create-pr.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` | `.agent-src.uncompressed/commands/create-pr/description-only.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` | `.agent-src.uncompressed/commands/prepare-for-review.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` | `.agent-src.uncompressed/commands/review-changes.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` | `.agent-src.uncompressed/skills/conventional-commits-writing/SKILL.md` | `body_link` | 1 |
@@ -325,8 +325,8 @@
 | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `.agent-src.uncompressed/skills/validate-feature-fit/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/requesting-code-review/SKILL.md` | `.agent-src.uncompressed/commands/commit.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/requesting-code-review/SKILL.md` | `.agent-src.uncompressed/commands/create-pr-description.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/requesting-code-review/SKILL.md` | `.agent-src.uncompressed/commands/create-pr.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/requesting-code-review/SKILL.md` | `.agent-src.uncompressed/commands/create-pr/description-only.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/requesting-code-review/SKILL.md` | `.agent-src.uncompressed/commands/prepare-for-review.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/requesting-code-review/SKILL.md` | `.agent-src.uncompressed/commands/review-changes.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/requesting-code-review/SKILL.md` | `.agent-src.uncompressed/skills/conventional-commits-writing/SKILL.md` | `body_link` | 1 |

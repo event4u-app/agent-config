@@ -70,7 +70,7 @@
         "./.claude/skills/council-optimize",
         "./.claude/skills/council-pr",
         "./.claude/skills/create-pr",
-        "./.claude/skills/create-pr-description",
+        "./.claude/skills/create-pr-description-only",
         "./.claude/skills/dashboard-design",
         "./.claude/skills/data-flow-mapper",
         "./.claude/skills/database",

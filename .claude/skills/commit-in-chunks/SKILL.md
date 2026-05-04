@@ -1,1 +1,1 @@
-../../../.agent-src/commands/commit-in-chunks.md
+../../../.agent-src/commands/commit/in-chunks.md

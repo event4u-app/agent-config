@@ -223,8 +223,8 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`chat-history:show`](../.agent-src.uncompressed/commands/chat-history/show.md) | cluster: chat-history | Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries |
 | command | [`chat-history`](../.agent-src.uncompressed/commands/chat-history.md) | cluster: chat-history | Chat-history orchestrator — routes to show, resume, clear, checkpoint |
 | command | [`check-current-md`](../.agent-src.uncompressed/commands/check-current-md.md) |  | Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes. |
-| shim | [`commit-in-chunks`](../.agent-src.uncompressed/commands/commit-in-chunks.md) | shim → /commit --in-chunks | Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows |
-| command | [`commit`](../.agent-src.uncompressed/commands/commit.md) |  | Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits |
+| command | [`commit:in-chunks`](../.agent-src.uncompressed/commands/commit/in-chunks.md) | cluster: commit | Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows |
+| command | [`commit`](../.agent-src.uncompressed/commands/commit.md) | cluster: commit | Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits |
 | command | [`compress`](../.agent-src.uncompressed/commands/compress.md) |  | Compress .md files from .agent-src.uncompressed/ into caveman format and write to .agent-src/ |
 | command | [`context:create`](../.agent-src.uncompressed/commands/context/create.md) | cluster: context | Analyze a codebase area and create a structured context document |
 | command | [`context:refactor`](../.agent-src.uncompressed/commands/context/refactor.md) | cluster: context | Analyze, update, and extend an existing context document |
@@ -237,16 +237,16 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`council:optimize`](../.agent-src.uncompressed/commands/council/optimize.md) | cluster: council | Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice. |
 | command | [`council:pr`](../.agent-src.uncompressed/commands/council/pr.md) | cluster: council | Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in. |
 | command | [`council`](../.agent-src.uncompressed/commands/council.md) | cluster: council | Council orchestrator — routes to default, pr, design, optimize |
-| shim | [`create-pr-description`](../.agent-src.uncompressed/commands/create-pr-description.md) | shim → /create-pr --description-only | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
-| command | [`create-pr`](../.agent-src.uncompressed/commands/create-pr.md) |  | Create a GitHub PR with structured description from Jira ticket and code changes |
+| command | [`create-pr:description-only`](../.agent-src.uncompressed/commands/create-pr/description-only.md) | cluster: create-pr | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
+| command | [`create-pr`](../.agent-src.uncompressed/commands/create-pr.md) | cluster: create-pr | Create a GitHub PR with structured description from Jira ticket and code changes |
 | command | [`e2e-heal`](../.agent-src.uncompressed/commands/e2e-heal.md) |  | Find, debug, and fix failing Playwright E2E tests |
 | command | [`e2e-plan`](../.agent-src.uncompressed/commands/e2e-plan.md) |  | Explore the application and create a structured E2E test plan in Markdown |
 | command | [`estimate-ticket`](../.agent-src.uncompressed/commands/estimate-ticket.md) |  | Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt |
+| command | [`feature:dev`](../.agent-src.uncompressed/commands/feature/dev.md) | cluster: feature | Full 7-phase feature development workflow for complex features. |
 | command | [`feature:explore`](../.agent-src.uncompressed/commands/feature/explore.md) | cluster: feature | Brainstorm and explore a feature idea before committing to a full plan |
 | command | [`feature:plan`](../.agent-src.uncompressed/commands/feature/plan.md) | cluster: feature | Interactively plan a feature — research, discuss, and create a structured feature document |
 | command | [`feature:refactor`](../.agent-src.uncompressed/commands/feature/refactor.md) | cluster: feature | Refine and update an existing feature plan through interactive discussion |
 | command | [`feature:roadmap`](../.agent-src.uncompressed/commands/feature/roadmap.md) | cluster: feature | Generate implementation roadmap(s) from a feature plan and link them |
-| command | [`feature-dev`](../.agent-src.uncompressed/commands/feature-dev.md) |  | Full 7-phase feature development workflow for complex features. |
 | command | [`feature`](../.agent-src.uncompressed/commands/feature.md) | cluster: feature | Feature orchestrator — routes to explore, plan, refactor, roadmap, dev |
 | command | [`fix:ci`](../.agent-src.uncompressed/commands/fix/ci.md) | cluster: fix | Fetch CI errors from GitHub Actions and fix them |
 | command | [`fix:portability`](../.agent-src.uncompressed/commands/fix/portability.md) | cluster: fix | Find and fix project-specific references in shared .augment/ package files |
