@@ -318,6 +318,95 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.17.0](https://github.com/event4u-app/agent-config/compare/1.16.0...1.17.0) (2026-05-04)
+
+### Features
+
+* **commands:** nest commit/create-pr/feature sub-commands under colon namespace ([ceef48b](https://github.com/event4u-app/agent-config/commit/ceef48bd5b5ff550bc560e722516037a4f45e895))
+* **rules:** add no-roadmap-references rule + CI linter ([a2882a8](https://github.com/event4u-app/agent-config/commit/a2882a8a424b6bee8829426f19e531931e9c77c2))
+* **hooks:** add roadmap-progress-sync pilot hook ([48484f2](https://github.com/event4u-app/agent-config/commit/48484f28cf1ca8857c54d65e7965f62aed552ea2))
+* **budget:** add concentration gate + trend logging ([06f3855](https://github.com/event4u-app/agent-config/commit/06f385518e8326bc4528a7bf7ebfc0c639ddd89a))
+* **council:** add /council cluster dispatcher ([e7aa0c6](https://github.com/event4u-app/agent-config/commit/e7aa0c6970db634b484046f5899165e8fd3ac8a2))
+* **rules:** slim 12 auto-rules — extract mechanics to load_context (Phase 2B) ([9d211c6](https://github.com/event4u-app/agent-config/commit/9d211c68824dde0e7c21592a3079f76deae8cd96))
+* **commands:** Phase 1 — command cluster Phase 2 dispatchers + shims ([2e9d8e0](https://github.com/event4u-app/agent-config/commit/2e9d8e0fcb85f1b34d528a3f3e991e6cd5ba1388))
+* **followups:** land Phase 1 — load_context: rollout regression test + 1.15 archive verification (F2, F12) ([4ce552a](https://github.com/event4u-app/agent-config/commit/4ce552a8181668ee4c7ac20d669ce179dbdd4ab6))
+* **followups:** land Phase 0b.2 budget headroom recovery (F10) ([62838b3](https://github.com/event4u-app/agent-config/commit/62838b3df6fe7493876594ed84c908241cc286c7))
+* **structural:** lock Phase 0.4 2A.4 contract after council acceptance ([70a13d3](https://github.com/event4u-app/agent-config/commit/70a13d3a17bbea11a7b55af3bd8c16f130d954f2))
+* **structural:** land Phase 0.5 3a-spike scoring protocol + persona-voice rubric ([0fac3eb](https://github.com/event4u-app/agent-config/commit/0fac3ebafa00855d69dc9ca4cbade1a8b3797244))
+* **structural:** land Phase 0.4 2A.4 worked example ([e1412d3](https://github.com/event4u-app/agent-config/commit/e1412d345eb5432e4443b3e077bc1693d2cf3855))
+* **structural:** land Phase 0.3 Phase 6 -> 2B decoupling proof ([67b1024](https://github.com/event4u-app/agent-config/commit/67b1024560552547d79019c3566c1dec0299a948))
+* **structural:** land Phase 0.2 load_context: budget accounting model ([32cfcd4](https://github.com/event4u-app/agent-config/commit/32cfcd41d23998a705128c78f2c0a2bcdf341c87))
+* **structural:** land Phase 0.1 file-ownership matrix schema + generator ([d1dfb02](https://github.com/event4u-app/agent-config/commit/d1dfb024d4ef31aab88bfd749a6e5e5167ac5d75))
+* **structural:** land Phase 0.6 context-file path conventions ([e9c72f4](https://github.com/event4u-app/agent-config/commit/e9c72f4bde948c38bde6e5e740852c29582df91c))
+
+### Bug Fixes
+
+* **refs:** repair 4 broken cross-references ([7b0f014](https://github.com/event4u-app/agent-config/commit/7b0f014db19af0e9d68979a3ff9d12555f1ee6f5))
+* **sync:** prevent recursive _user prefixing and heal legacy corruption ([0cb0845](https://github.com/event4u-app/agent-config/commit/0cb0845320e14584348505fa0540315091ba7ef9))
+* **ci:** install pyyaml in consistency workflow ([bbad5d0](https://github.com/event4u-app/agent-config/commit/bbad5d06009a3f204051ca3b01102827162fe2f3))
+* **check-refs:** skip references into SKIP_DIRS (gitignored audit trails) ([cd6fcce](https://github.com/event4u-app/agent-config/commit/cd6fcce5411c35baaf228dc3fe0a4202acab6eca))
+* **roadmaps:** mark example/spike/coupling docs as status: draft ([d84dcf4](https://github.com/event4u-app/agent-config/commit/d84dcf44a9f777d87ef273b700ef66389216157d))
+* **compress:** carry load_context into compressed slash-command-routing-policy ([8332fb0](https://github.com/event4u-app/agent-config/commit/8332fb06a4c61ec65e9e21a6a123ea10484477de))
+
+### Documentation
+
+* repoint cross-references to nested command paths ([fbfb048](https://github.com/event4u-app/agent-config/commit/fbfb0481113aa065779ace75cbd0914eaf002d7c))
+* **roadmap:** add Phase 0a closeout hygiene to rule-hardening ([d68c4f2](https://github.com/event4u-app/agent-config/commit/d68c4f22d09ed9c3b567e996834c0148ffd17492))
+* sync command-count messaging in README/AGENTS/getting-started ([c683e9a](https://github.com/event4u-app/agent-config/commit/c683e9a4bc93294940a8f07402f88510796d91d8))
+* **roadmap:** rule-hardening v2 — council-reviewed revisions ([4d9e225](https://github.com/event4u-app/agent-config/commit/4d9e225108b9c647157eb1f6df9b55c13665588e))
+* **roadmaps:** add context-layer-maturity v2 and rule-hardening ([620961b](https://github.com/event4u-app/agent-config/commit/620961b3f469ddf0ac40ee491c3b65cab0e1000a))
+* **phase6:** chat-history-* trigger overlap audit — Path B (orthogonal) ([62ffad2](https://github.com/event4u-app/agent-config/commit/62ffad234c50ab9930115813e6801a2a8e976199))
+* **phase3:** consolidation audit — DO NOT CONSOLIDATE verdict ([03dc6aa](https://github.com/event4u-app/agent-config/commit/03dc6aad88aee2ebd85bd1d95f402742fcce05d1))
+* **readme:** trim Requirements section to clear lint-readme overload threshold ([30bf18d](https://github.com/event4u-app/agent-config/commit/30bf18da26ce69fe8bf1d688309ad375a082de6b))
+* **counts:** sync command-count messaging after Phase 1 clusters ([8902f49](https://github.com/event4u-app/agent-config/commit/8902f49f3239274828d13ce61a2b28a415dda3f5))
+* **roadmap:** drop slow-rollout protocol; lock single-PR execution (v3.2) ([35885b0](https://github.com/event4u-app/agent-config/commit/35885b01ee3c1510b2e30ad9a3bd40b686efefdf))
+* **followups:** land Phase 2 — README onboarding anchor + host-agent terminology (F1, F3, F4) ([cd12f97](https://github.com/event4u-app/agent-config/commit/cd12f9717c6b6e34efa01e55046d9f0ba0276286))
+* **roadmap:** close out 1.16 followups Phase 0a (F9 + F14 = no-op) ([6171f80](https://github.com/event4u-app/agent-config/commit/6171f805729d45084fee80704be9ec6908f1c84e))
+* **ai-council:** add experimental banner per F11 ([17308e1](https://github.com/event4u-app/agent-config/commit/17308e124fa436fac47f42649a5d1abcdb20f503))
+* **roadmap:** add 1.16.0 follow-ups roadmap v1.1 ([e402e1d](https://github.com/event4u-app/agent-config/commit/e402e1d599d1797a04a70b9fb538fa0bae913645))
+* **roadmap:** add structural-optimization roadmap v3.1 ([547f802](https://github.com/event4u-app/agent-config/commit/547f8024671e1f79570b2a5d69218f93ef1a346c))
+
+### Refactoring
+
+* **commands:** nest cluster commands into subdirectories ([5fd0df3](https://github.com/event4u-app/agent-config/commit/5fd0df387f0f2182e029fc3f40e5bce3fc4ed598))
+* **refs:** purge roadmap-file links from stable artifacts ([b5a1429](https://github.com/event4u-app/agent-config/commit/b5a1429e3f6a7fa754e816d9ddb1c4b0a6034735))
+* **rules:** amortize shared brevity examples to guideline ([ee581f6](https://github.com/event4u-app/agent-config/commit/ee581f69cc1106ec485dfb7f3ac07ffc2e2886cb))
+
+### Tests
+
+* **followups:** land Phase 0b.1 failure-mode coverage (F13) ([9560667](https://github.com/event4u-app/agent-config/commit/9560667a328f746316828ab44f0a7ba1fe8c254c))
+
+### Chores
+
+* **generated:** regenerate compressed dispatchers + hash registry ([552ddfe](https://github.com/event4u-app/agent-config/commit/552ddfeef4837b9681fc3ee72a1a01cf6c230d1a))
+* **commands:** drop ## Migration sections from cluster dispatchers ([02a03e7](https://github.com/event4u-app/agent-config/commit/02a03e7b7fbcc62c1203b7fedef38f0685e85321))
+* **generated:** regenerate compressed sources, tool projections, marketplace, ownership matrix ([f1dddd2](https://github.com/event4u-app/agent-config/commit/f1dddd2499625382b7f7902268bdd468426ce515))
+* **test:** align command-suggester golden + count gate to colon naming ([e1aad41](https://github.com/event4u-app/agent-config/commit/e1aad41624b877e4cb066d6e5075326de79f3693))
+* **generated:** regenerate file-ownership-matrix after command nesting ([12dc0f3](https://github.com/event4u-app/agent-config/commit/12dc0f3b266d6cdec6a53c918fc86098103d0373))
+* **generated:** regenerate compressed sources, tool projections,                    marketplace, and ownership matrix ([6724878](https://github.com/event4u-app/agent-config/commit/67248786c7589a63c2dabc80b683ace602611ddf))
+* **tooling:** teach scripts to walk nested command directories ([fe5913e](https://github.com/event4u-app/agent-config/commit/fe5913ef2ab6766a042d5e9470e0871d80804ddd))
+* **generated:** regenerate counts, hashes, windsurfrules ([5613b48](https://github.com/event4u-app/agent-config/commit/5613b4858da531a23aa27e23a2bda561152d3809))
+* **roadmaps:** archive 4 closed phase-evidence reports ([d5995c3](https://github.com/event4u-app/agent-config/commit/d5995c31febb3dad31df95d72970de1e1bcf3181))
+* **generated:** regenerate file-ownership-matrix ([75ff69f](https://github.com/event4u-app/agent-config/commit/75ff69fdb45952e00320918d597ea2db239a7f0b))
+* **generated:** regenerate windsurfrules + counts + claude council-default ([02ad3e1](https://github.com/event4u-app/agent-config/commit/02ad3e1079f797f8a72c33f800f1d395499b951e))
+* add ai council scripts ([4cf513c](https://github.com/event4u-app/agent-config/commit/4cf513c90649292324579444f586becd78cfad96))
+* **roadmap:** close & archive road-to-structural-optimization ([3bfef51](https://github.com/event4u-app/agent-config/commit/3bfef5118cdb66db5809fddb3688bb22d3aa8aff))
+* **compression:** refresh compression hashes ([20717d7](https://github.com/event4u-app/agent-config/commit/20717d798c86dd99f17d4c851ea0a8754e249333))
+* regenerate ownership matrix after Phase 2B rule slimming ([17ac19c](https://github.com/event4u-app/agent-config/commit/17ac19cf1938c7fca945b4500c6232cfa4549f2c))
+* **structural:** regenerate file-ownership-matrix after Phase 1 clusters ([29aabb1](https://github.com/event4u-app/agent-config/commit/29aabb11351f9fe648644b508eb6d24a5870b160))
+* **sync:** regenerate agents/index.md + docs/catalog.md after Phase 1 clusters ([f07987a](https://github.com/event4u-app/agent-config/commit/f07987ac12aaa77cbc4c7584ac00607e5a438318))
+* **sync:** regenerate compressed outputs + tool projections for Phase 1 clusters ([99466c0](https://github.com/event4u-app/agent-config/commit/99466c0a77116c7ed70db38fd957d061ad18e307))
+* **sync:** compress contexts/judges/persona-voice-rubric.md into .agent-src/ ([4060d01](https://github.com/event4u-app/agent-config/commit/4060d01af0680c2a913295166b978b605b1453db))
+* **roadmap:** archive road-to-1-16-followups (100% done) + regen dashboard ([f78a9ad](https://github.com/event4u-app/agent-config/commit/f78a9ada649c01c03aa4e866e20bb32b547cd9d0))
+* **roadmap:** regenerate progress dashboard after 1.16 followups Phase 1+2 ([780db39](https://github.com/event4u-app/agent-config/commit/780db39b68230b68c51f158d8cc8b78e7937a40c))
+* **ai-council:** add multi-provider council scripts and openai sdk ([3c2360d](https://github.com/event4u-app/agent-config/commit/3c2360d137069287b7e2547a6132d36ebed09978))
+* add task command, to install chatgpt key ([1acea8b](https://github.com/event4u-app/agent-config/commit/1acea8b6dc329c70079cec42d5a98886c913acfd))
+
+### Other
+
+* **commands:** update cross-references to colon-namespaced sub-commands ([13caa6d](https://github.com/event4u-app/agent-config/commit/13caa6d9c116012f726947fa50a281ca34ce16c2))
+* fix_: thinking drift ([1d2d158](https://github.com/event4u-app/agent-config/commit/1d2d15833e6b9764e7c734e66b25cecdf1dc12ab))
+
 ## [1.16.0](https://github.com/event4u-app/agent-config/compare/1.15.0...1.16.0) (2026-05-03)
 
 ### Features
