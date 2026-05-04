@@ -44,3 +44,31 @@ The `description` field IS the trigger. It must describe **when** the rule appli
 - Default to `auto`. Justify `always`.
 - If >50% of conversations don't need a rule → it must be `auto`.
 - `optimize-agents` command checks this and suggests changes.
+
+## Hardening tier — required on new or edited rules
+
+Every new rule, and every edited rule whose body changes the trigger
+or the obligation, MUST classify itself against the hardening tiers
+documented in [`rule-trigger-matrix.md`](../../agents/contexts/rule-trigger-matrix.md):
+
+| Tier | Meaning |
+|---|---|
+| `1` | Mechanically enforceable — hook acts, rule body stays minimal. |
+| `2a` | Marker nudge — hook injects signal, agent acts on it. |
+| `2b` | Structured injection / tool-call gate — hook reads/writes state, may deny. |
+| `3` | Soft, judgment-bound — no platform surface; self-check rule. |
+| `safety-floor` | Iron-Law subset, never modified. |
+| `mechanical-already` | Precedent — script enforces, rule body documents. |
+
+Classification surface: the optional `tier:` frontmatter field
+(declared in `scripts/schemas/rule.schema.json`). Recommended for new
+rules; bulk-retrofit of existing rules is tracked separately.
+
+Tier 3 dispositions are recorded centrally in
+[`agents/contexts/tier-3-dispositions.md`](../../agents/contexts/tier-3-dispositions.md)
+with a 6-month re-audit clock. New Tier 3 rules append to that list
+on landing.
+
+The `optimize-agents` command checks the tier alongside `type`/`source`
+and suggests escalations when a rule's trigger matches a hardening
+opportunity that has shipped since the rule was authored.
