@@ -35,10 +35,6 @@ Sub-command names match the locked contract in
    > 1. create — author a new context document
    > 2. refactor — update an existing context document
 
-## Migration
-
-The flat `/context-*` commands have been removed. Use `/context <sub>` instead.
-
 ## Rules
 
 - **Do NOT commit, push, or open a PR** unless the sub-command explicitly

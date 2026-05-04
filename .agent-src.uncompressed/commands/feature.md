@@ -43,10 +43,6 @@ implementation). Use `refactor` whenever an existing plan needs an update.
    > 4. roadmap — generate roadmap(s) from a plan
    > 5. dev — run the full 7-phase development workflow
 
-## Migration
-
-The flat `/feature-*` commands have been removed. Use `/feature <sub>` instead.
-
 ## Rules
 
 - **Do NOT chain sub-commands.** One `/feature <sub>` per turn — except

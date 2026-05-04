@@ -35,10 +35,6 @@ Sub-command names match the locked contract in
    > 1. create — scaffold a new module from the template
    > 2. explore — load a module's docs and structure
 
-## Migration
-
-The flat `/module-*` commands have been removed. Use `/module <sub>` instead.
-
 ## Rules
 
 - **Do NOT commit, push, or open a PR** unless the sub-command explicitly

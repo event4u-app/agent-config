@@ -39,10 +39,6 @@ Sub-command names match the locked contract in
    > 3. augmentignore — create or refine `.augmentignore`
    > 4. rtk — create or refine project-local rtk filters
 
-## Migration
-
-The flat `/optimize-*` commands have been removed. Use `/optimize <sub>` instead.
-
 ## Rules
 
 - **Suggest only — never auto-apply.** All `/optimize` sub-commands are

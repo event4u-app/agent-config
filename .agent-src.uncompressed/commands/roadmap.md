@@ -35,10 +35,6 @@ Sub-command names match the locked contract in
    > 1. create — scaffold a new roadmap interactively
    > 2. execute — run an existing roadmap step by step
 
-## Migration
-
-The flat `/roadmap-*` commands have been removed. Use `/roadmap <sub>` instead.
-
 ## Rules
 
 - **Do NOT commit, push, or open a PR** unless the sub-command explicitly

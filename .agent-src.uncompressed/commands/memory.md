@@ -39,10 +39,6 @@ Sub-command names match the locked contract in
    > 3. promote — promote an intake signal to a curated entry
    > 4. propose — drop a provisional signal into the intake stream
 
-## Migration
-
-The flat `/memory-*`, `/memory-full`, and `/propose-memory` commands have been removed. Use `/memory <sub>` instead.
-
 ## Rules
 
 - **Do NOT commit, push, or open a PR** unless the sub-command explicitly

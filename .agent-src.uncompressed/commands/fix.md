@@ -45,10 +45,6 @@ Sub-command names match the locked contract in
    > 6. pr-bots — address bot reviewer comments only
    > 7. pr-developers — address human reviewer comments only
 
-## Migration
-
-The flat `/fix-*` commands have been removed. Use `/fix <sub>` instead.
-
 ## Rules
 
 - **Do NOT commit, push, or open a PR** unless the sub-command explicitly

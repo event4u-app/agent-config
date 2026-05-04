@@ -42,10 +42,6 @@ Sub-command names match the locked contract in
    > 3. clear — wipe the file
    > 4. checkpoint — append a phase-boundary entry
 
-## Migration
-
-The flat `/chat-history-*` commands and the bare `/chat-history` status form have been removed. Use `/chat-history <sub>` instead; bare `/chat-history` invocations show the menu, `/chat-history show` keeps the previous status output.
-
 ## Rules
 
 - **Do NOT commit, push, or open a PR** unless the sub-command

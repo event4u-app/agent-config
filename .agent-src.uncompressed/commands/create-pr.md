@@ -32,11 +32,6 @@ sub-command produces a copyable PR description without creating the PR.
    `## Instructions` section verbatim.
 4. Unknown sub-command → print the table above and ask which one.
 
-## Migration
-
-Replaces the standalone `/create-pr-description` command (deprecated in
-`1.17.0`, removed in next minor). Use `/create-pr:description-only` instead.
-
 ## Default flow
 
 Uses `/create-pr:description-only` to generate the PR content, then creates the PR via GitHub API.

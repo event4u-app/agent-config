@@ -35,10 +35,6 @@ Sub-command names match the locked contract in
    > 1. init — scaffold AGENTS.md + copilot-instructions.md from scratch
    > 2. optimize — refactor existing files for budget and audience
 
-## Migration
-
-The flat `/copilot-agents-*` commands have been removed. Use `/copilot-agents <sub>` instead.
-
 ## Rules
 
 - **Do NOT commit, push, or open a PR** unless the sub-command explicitly
