@@ -267,11 +267,10 @@ Default-off; opt-in via `.agent-settings.yml`. Zero overhead when disabled.
 
 The schema, CLI, and storage layer are owned by
 [`scripts/telemetry/`](../../../scripts/telemetry/) and the
-`./agent-config telemetry:record` / `telemetry:status` commands shipped
-in Phase 1+2 of the
-[`road-to-artifact-engagement-telemetry`](../../../agents/roadmaps/road-to-artifact-engagement-telemetry.md)
-roadmap. This rule says **when** to call the CLI, not how the file is
-structured.
+`./agent-config telemetry:record` / `telemetry:status` commands. The
+recording contract lives in
+[`docs/contracts/artifact-engagement-flow.md`](../../docs/contracts/artifact-engagement-flow.md).
+This rule says **when** to call the CLI, not how the file is structured.
 
 ## Activation gate — read settings ONCE per task, then cache
 
@@ -322,7 +321,6 @@ catalog live in
 
 ## See also
 
-- [`road-to-artifact-engagement-telemetry`](../../../agents/roadmaps/road-to-artifact-engagement-telemetry.md) — phase contract
 - [`docs/contracts/artifact-engagement-flow.md`](../../docs/contracts/artifact-engagement-flow.md) — recording contract details
 - [`/implement-ticket`](../commands/implement-ticket.md) and [`/work`](../commands/work.md) — boundary points where this rule fires
 - [`scripts/telemetry/`](../../../scripts/telemetry/) — engine source
@@ -1115,8 +1113,10 @@ path.
 The deterministic engine lives in `scripts/command_suggester/`. The
 locked eligibility table lives in
 [`agents/contexts/command-suggestion-eligibility.md`](../../agents/contexts/command-suggestion-eligibility.md).
-The full design lives in
-[`road-to-context-aware-command-suggestion`](../../agents/roadmaps/road-to-context-aware-command-suggestion.md).
+The scoring contract and hardening list live in
+[`docs/contracts/adr-command-suggestion.md`](../../docs/contracts/adr-command-suggestion.md)
+and
+[`docs/contracts/command-suggestion-flow.md`](../../docs/contracts/command-suggestion-flow.md).
 
 ## Iron Law — never auto-execute
 
@@ -2347,6 +2347,75 @@ In doubt → ask. This rule narrows asking, never widens silence.
 - [`commit-policy`](commit-policy.md) · [`scope-control`](scope-control.md) · [`non-destructive-by-default`](non-destructive-by-default.md) — Iron Laws this rule defends.
 - [`user-interaction`](user-interaction.md) — numbered-options shape; this rule decides whether to send.
 - [`direct-answers`](direct-answers.md) — brevity, no flattery.
+
+---
+
+# No Roadmap References from Stable Artifacts
+
+Roadmaps in `agents/roadmaps/` are **transient** — archived, skipped,
+or deleted as work completes. Stable artifacts (rules, skills,
+commands, contexts, guidelines, AGENTS.md, README) outlive them. A
+stable artifact citing a specific roadmap file becomes a broken
+reference the moment that roadmap is deleted.
+
+## The Iron Law
+
+```
+NEVER LINK TO A SPECIFIC FILE IN agents/roadmaps/ FROM A STABLE ARTIFACT.
+PROMOTE DURABLE CONCLUSIONS TO agents/contexts/ AND CITE THAT INSTEAD.
+```
+
+Stable artifact = anything that is **not** a roadmap, council
+session, chat-history archive, commit message, or PR description.
+
+## Forbidden patterns
+
+These paths must not appear inside a stable artifact:
+
+- `agents/roadmaps/<file>.md`, `agents/roadmaps/archive/<file>.md`,
+  `agents/roadmaps/skipped/<file>.md`
+
+Stable artifact = any file under `.agent-src.uncompressed/{rules,
+skills,commands,contexts,templates,personas}/`, `agents/contexts/`,
+`docs/guidelines/`, `docs/contracts/`, `docs/architecture.md`,
+`docs/customization.md`, `docs/getting-started.md`, `docs/catalog.md`,
+`AGENTS.md`, `README.md`, `copilot-instructions.md`.
+
+CI enforcement: `scripts/check_no_roadmap_refs.py` (companion linter
+— fails the build on any new violation).
+
+## Allowed patterns
+
+- `agents/roadmaps/` and its subdirectories as directory mentions
+  (talking about the layer, not a specific file)
+- Roadmap → roadmap references (siblings within the transient layer)
+- Council sessions, `.agent-chat-history`, commit messages, PR
+  descriptions — transient by construction, not part of the package
+  surface
+
+## What to do instead
+
+When a stable artifact needs to cite a roadmap finding:
+
+1. Identify the durable conclusion — decision, contract, lesson,
+   mechanic.
+2. Promote it to a context file under `agents/contexts/` (ADR,
+   mechanics doc, locked decision). The roadmap can then point at
+   the context, not the other way around.
+3. Reference the context from the stable artifact.
+
+Failure mode: *"I'll just link to the roadmap, it's evidence."* The
+roadmap gets archived, then deleted, then the link rots. **Promote
+first, link second.**
+
+## See also
+
+- [`docs-sync`](docs-sync.md) — cross-reference sync after rename / delete
+- [`agent-docs`](agent-docs.md) — roadmap layer conventions
+- [`roadmap-progress-sync`](roadmap-progress-sync.md) — sync dashboard on
+  roadmap touch
+- [`augment-source-of-truth`](augment-source-of-truth.md) — edit
+  `.agent-src.uncompressed/`
 
 ---
 
