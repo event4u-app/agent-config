@@ -6,34 +6,38 @@ description: "When a CLI tool needed for the task is not installed — ask befor
 
 # Missing Tool Handling
 
-When a CLI tool is needed and **not installed** (`command not found`,
-`which X` empty), **STOP and ask** before working around it or installing it.
+When a CLI tool is needed to solve the task cleanly and is **not installed**
+(`command not found`, `which X` empty, missing from `$PATH`), **STOP and ask**
+before working around it or installing it.
 
 ## The rule
 
-- **Never install silently.** Installing changes the user's system —
-  requires explicit permission (`scope-control`).
+- **Never install silently.** Installing is an action that changes the user's
+  system — it requires explicit permission (see `scope-control`).
 - **Never silently work around** a missing tool with a brittle substitute
-  (awk for YAML, `grep` for JSON, string splicing) when a proper tool is
-  the standard answer. The workaround hides the dependency.
-- **Ask with numbered options** (`user-interaction`). State the tool, why
-  it fits, the install command, and the workaround cost.
+  (awk-regex for YAML, `grep` for JSON, string splicing) when a proper tool
+  is the standard answer for the job. The workaround hides the real
+  dependency and makes the decision invisible to the user.
+- **Ask with numbered options** (see `user-interaction`). State which tool,
+  why it's the best fit, the install command, and the workaround cost.
 
 ## When it applies
 
-- Shell returns `command not found` for a tool the task genuinely needs
-  (yq, jq, rtk, gh, docker, mkcert, terraform, …).
-- A skill or spike needs the idiomatic tool but it's absent locally.
-- You're about to substitute a verbose script for a single tool call
+- Any shell command fails with `command not found` for a tool the task
+  genuinely needs (yq, jq, rtk, gh, docker, mkcert, terraform, …).
+- A skill or spike requires a tool that is the idiomatic answer but is
+  absent locally.
+- You are about to substitute a verbose script for a single tool invocation
   because the tool isn't there.
 
 ## When it does NOT apply
 
-- Nice-to-have — clean substitute already present (e.g. `jq` available →
-  no `yq` needed just for JSON).
-- Tool is forbidden by project policy (check `scope-control` and
-  tool-allowlists first).
-- Missing library dependency → use `composer`, `npm`, `pip` per package
+- The tool is a nice-to-have and a clean substitute already exists in the
+  repo (e.g. `jq` present → no need for `yq` just for JSON).
+- The tool is explicitly forbidden by project policy (check
+  `scope-control` and tool-allowlists first).
+- The missing artefact is a library dependency — those go through
+  `composer require`, `npm install`, `pip install` per the package-manager
   rules, still with explicit permission.
 
 ## How to ask
@@ -49,14 +53,16 @@ When a CLI tool is needed and **not installed** (`command not found`,
 > 4. Skip this path — I propose a different approach
 ```
 
-After the user picks: if **install**, wait for confirmation or run the
-documented command only if explicitly authorised this turn. If
-**workaround**, record the decision in the artefact (comment or ADR).
+After the user picks: if **install**, wait for confirmation that it is
+done (or run the documented install command only if the user explicitly
+authorises it in this turn). If **workaround**, record the decision in
+the artefact (comment or ADR) so the cost is visible.
 
 ## Capture the learning
 
-If the same tool keeps missing across tasks, flag it in the project's
-setup docs or `.agent-settings.yml` prerequisites.
+If the same tool keeps coming up as missing across multiple tasks, flag
+it in the project's setup docs or `.agent-settings.yml` prerequisites.
+Don't make every session re-discover the gap.
 
 See also: `scope-control` · `ask-when-uncertain` · `user-interaction` ·
 `tool-safety`.

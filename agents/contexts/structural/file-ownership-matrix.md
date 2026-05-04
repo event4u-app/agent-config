@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **317**
-- Edges (incl. self-WRITE): **740**
+- Files indexed: **318**
+- Edges (incl. self-WRITE): **745**
 
 ## READ_ONLY edges
 
@@ -242,6 +242,10 @@
 | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/security-sensitive-stop.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/verify-before-complete.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/no-roadmap-references.md` | `.agent-src.uncompressed/rules/agent-docs.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/no-roadmap-references.md` | `.agent-src.uncompressed/rules/augment-source-of-truth.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/no-roadmap-references.md` | `.agent-src.uncompressed/rules/docs-sync.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/no-roadmap-references.md` | `.agent-src.uncompressed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `.agent-src.uncompressed/contexts/authority/destructive-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `.agent-src.uncompressed/contexts/authority/destructive-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
@@ -443,6 +447,6 @@
 | `command` | 95 |
 | `context` | 28 |
 | `persona` | 8 |
-| `rule` | 57 |
+| `rule` | 58 |
 | `skill` | 129 |
 

@@ -17,15 +17,15 @@ execution:
 - Auditing README quality across repos
 - Checking for hallucinated setup, commands, or features
 
-Do NOT use for:
+Do NOT use when:
 
-- Grammar or formatting proofreading only
+- Only proofreading grammar or formatting
 - Writing a README from scratch → use `readme-writing` or `readme-writing-package`
 
 ## Goal
 
-Ensure README is correct (no invented content), aligned with the repo,
-useful for the audience, with a strong quickstart path.
+Ensure the README is correct (no invented content), aligned with the repo,
+useful for the intended audience, and has a strong quickstart path.
 
 ## Core principles
 
@@ -39,8 +39,8 @@ useful for the audience, with a strong quickstart path.
 
 ### 1. Identify README type and audience
 
-Determine repo type (package, app, CLI, internal, framework) and audience
-(consumers, contributors, team). Check if structure matches type.
+Determine repo type (package, app, CLI, internal, framework) and target audience
+(consumers, contributors, team). Check if README structure matches this type.
 
 ### 2. Cross-check against repository
 
@@ -53,16 +53,17 @@ Inspect truth-defining files:
 - Source entrypoints — actual public API
 - Config files, tests, existing docs
 
-Verify: install steps exist, commands work, features implemented, dependencies real.
+Verify: install steps exist, commands work, features are implemented,
+dependencies are real.
 
 ### 3. Validate installation and setup
 
 Check:
 
-- Install command correct and complete
-- Required post-install steps documented
+- Install command is correct and complete
+- Required post-install steps are documented
 - No hidden setup assumptions
-- Environment/config requirements listed
+- Environment/config requirements are listed
 
 Flag: missing steps, incorrect steps, implied-but-unwritten steps.
 
@@ -70,10 +71,10 @@ Flag: missing steps, incorrect steps, implied-but-unwritten steps.
 
 Check:
 
-- First example minimal and realistic
+- First example is minimal and realistic
 - Example matches actual API (verify against source)
-- Example doesn't rely on undocumented setup
-- Example not overly complex or abstract
+- Example does not rely on undocumented setup
+- Example is not overly complex or abstract
 
 Flag: pseudo-code, oversized examples, API mismatches.
 
@@ -82,8 +83,8 @@ Flag: pseudo-code, oversized examples, API mismatches.
 Check:
 
 - Runtime versions stated (PHP, Node, etc.)
-- Framework compatibility explicit
-- Dependencies declared
+- Framework compatibility is explicit
+- Dependencies are declared
 
 Flag: missing compatibility, vague claims ("works with most versions"),
 unconfirmed broad support.
@@ -92,19 +93,19 @@ unconfirmed broad support.
 
 Check:
 
-- Strong first screen (what + why + quickstart before scroll)
+- Strong first screen (what + why + quickstart visible before scrolling)
 - Logical section order for repo type
 - No unnecessary sections (padded boilerplate)
 - No missing critical sections
 
-Common issues: architecture before installation, no quickstart, buried
-usage, generic template sections.
+Common issues: architecture before installation, no quickstart,
+buried usage instructions, generic template sections.
 
 ### 7. Detect hallucinations
 
-Search for:
+Explicitly search for:
 
-- Commands not in repo
+- Commands not present in repo
 - Features not implemented
 - Setup steps not supported by scripts/configs
 - Assumptions about environment or tools
@@ -133,11 +134,11 @@ Structure checks:
 - ToC present if > 150 lines or > 6 top-level (`##`) sections
 - Multi-platform install (> 5 variants) uses a table with deep links, not stacked blocks
 - `<details>` used only for secondary, bulky content — never for install, first example, or requirements
-- No duplication between README and `/docs/` (drifts over time)
+- No duplication between README and `/docs/` (same content in two places drifts)
 - Each `/docs/` file linked from README is self-contained (not just a fragment)
 
 → See `docs/guidelines/docs/readme-size-and-splitting.md` for full thresholds,
-splitting strategies, anti-patterns.
+splitting strategies, and anti-patterns.
 
 ## Output format
 
@@ -159,9 +160,9 @@ splitting strategies, anti-patterns.
 
 Severity levels:
 
-- **❌ Critical** — breaks onboarding or factually incorrect
+- **❌ Critical** — breaks onboarding or is factually incorrect
 - **⚠️ Major** — confusing, incomplete, or misleading
-- **ℹ️ Minor** — clarity, formatting, structure
+- **ℹ️ Minor** — clarity improvement, formatting, structure
 
 ### 3. Confidence
 
@@ -171,11 +172,11 @@ Severity levels:
 
 ## Gotcha
 
-- Model trusts the README instead of verifying against the repo
+- Model tends to trust the README instead of verifying against the repo
 - Model may miss subtle mismatches between examples and real APIs
-- Model focuses on wording/style instead of correctness
-- Well-formatted README with wrong commands worse than ugly but correct
-- Model accepts "looks reasonable" compatibility without checking CI matrix
+- Model may focus on wording/style instead of correctness
+- A well-formatted README with wrong commands is worse than ugly but correct
+- Model may accept "looks reasonable" compatibility without checking CI matrix
 
 ## Do NOT
 

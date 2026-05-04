@@ -7,43 +7,78 @@ source: package
 
 # Preservation Guard
 
-Transformations (merge, refactor, compress, split) must produce output **at least as strong** as input.
+When transforming any agent artifact (merge, refactor, compress, split, restructure),
+the result must be **at least as strong** as the original.
 
 ## Iron Laws — every passage stays, caveman is fine
 
-Sections marked **Iron Law** (heading matches `# Iron Law`, `# Iron Laws`,
-`# The Iron Law`, any level, numbered like `Iron Law 1`, `Iron Law 2`)
-are **non-negotiable**, strictest preservation:
+Sections marked **Iron Law** (any heading matching `# Iron Law`, `# Iron Laws`,
+`# The Iron Law`, at any heading level, including numbered variants like
+`Iron Law 1`, `Iron Law 2`) are **non-negotiable** and require the strictest
+preservation:
 
-- [ ] **Heading verbatim** — exact text, exact level. Drop heading → law gone, even if code block survives.
-- [ ] **Fenced code blocks byte-for-byte** — the law itself.
-- [ ] **Negation clauses kept** — `NO X`, `NEVER Y`, `NOT Z` stay. Load-bearing exception denials, not filler.
-- [ ] **Every passage stays** — every paragraph, every list item, every fenced code block from source survives in compressed output, in order. One paragraph → one paragraph; one bullet → one bullet. Dropping whole sentences, merging two paragraphs, skipping a list item is forbidden, even if surviving prose still "makes the point".
-- [ ] **No Iron Law downgrades** — `## Iron Law` MUST NOT become `### Iron Law`, `**Iron Law:**`, or inline prose. Heading level is part of prominence.
+- [ ] **Heading preserved verbatim** — exact text and exact heading level. Drop the
+  heading → the law is gone, even if the code block underneath survives.
+- [ ] **Fenced code blocks preserved byte-for-byte** — the law itself.
+- [ ] **Negation clauses preserved** — `NO X`, `NEVER Y`, `NOT Z` stay in. These
+  are the load-bearing exception denials, not filler.
+- [ ] **Every passage stays** — every paragraph, every list item, and every
+  fenced code block from the source survives in the compressed output, in
+  order. One paragraph → one paragraph; one bullet → one bullet. Dropping
+  whole sentences, merging two paragraphs into one, or skipping a list item
+  is forbidden, even if the surviving prose still "makes the point".
+- [ ] **No Iron Law downgrades** — `## Iron Law` MUST NOT become `### Iron Law`,
+  `**Iron Law:**`, or inline prose. Heading level is part of the prominence.
 
-**Caveman style encouraged for Iron Law bodies** — drop articles ("the", "a"), shorten phrasing, primitive grammar, terse cave-speak. Word count not a budget; structural unit count is. Every paragraph, bullet, code block from source present → compress as hard as you want. Forbidden is **deletion**: rationale paragraph stays, canonical-failure example stays, every "NEVER X" bullet stays.
+**Caveman style is encouraged for Iron Law bodies** — drop articles ("the",
+"a"), shorten phrasing, primitive grammar, terse cave-speak. Word count is
+not a budget; the structural unit count is. As long as every paragraph,
+bullet, and code block from the source is present, compress as hard as you
+want. What's forbidden is **deletion**: the rationale paragraph stays, the
+canonical-failure example stays, every "NEVER X" bullet stays.
 
-`scripts/check_compression.py` enforces mechanically — any violation is `error`, not warning.
+`scripts/check_compression.py` enforces these mechanically — any violation is
+an `error`, not a warning.
 
-## Checklist — verify before completing
+## Mandatory preservation checklist
 
-- [ ] **Iron Law sections** preserved per rules above — heading, body, fenced blocks, rationale
-- [ ] Strongest validation step preserved
-- [ ] Strongest example preserved
-- [ ] Strongest anti-pattern / "Do NOT" preserved
-- [ ] Essential decision hints (if/when/unless) preserved
-- [ ] Required sections preserved
-- [ ] Single clear responsibility preserved
-- [ ] Strong language ("MUST"/"NEVER") not weakened
+Before completing any transformation, verify:
 
-## Reject if
+- [ ] **Iron Law sections** preserved per the rules above — heading, body, fenced blocks, rationale
+- [ ] **Strongest validation step** preserved — concrete verify/confirm actions survive
+- [ ] **Strongest example** preserved — the most illustrative code block or scenario stays
+- [ ] **Strongest anti-pattern** preserved — the most important "Do NOT" or failure mode stays
+- [ ] **Essential decision hints** preserved — if/when/unless logic that prevents mistakes
+- [ ] **Required sections** preserved — When to use, Procedure, Output, Gotchas, Do NOT
+- [ ] **Single clear responsibility** preserved — no scope creep from merging unrelated concerns
+- [ ] **Strong language** preserved — "MUST", "NEVER", "Do NOT" not weakened to "should", "avoid"
 
-- Iron Law heading removed or downgraded
-- Paragraph, list item, or fenced code block dropped from Iron Law section
-- Negation clauses or canonical-failure prose stripped from Iron Law
-- Validation, example, or anti-pattern removed without replacement
-- Decision logic weakened
-- Scope broadened by merging unrelated concerns
-- Strong language downgraded
+## Reject criteria
 
-→ Skills: `skill-management`, `skill-reviewer` · Command: `/compress` · Linter: `check_compression_quality()`
+**REJECT** the transformation if it:
+
+- Removes or downgrades an Iron Law heading
+- Drops a paragraph, list item, or fenced code block from an Iron Law section
+- Strips negation clauses or canonical-failure prose from an Iron Law
+- Removes a concrete validation step without equivalent replacement
+- Removes the strongest example without equivalent replacement
+- Removes the strongest anti-pattern without equivalent replacement
+- Weakens routing or decision logic
+- Broadens scope by merging unrelated workflows
+- Weakens strong enforcement language
+
+## Applies to
+
+- Skill merges (combining two skills into one)
+- Skill splits (extracting part of a skill)
+- Refactoring (restructuring without behavior change)
+- Compression (`.agent-src.uncompressed/` → `.agent-src/`)
+- Rule consolidation
+- Guideline restructuring
+
+## References
+
+- Skill: `skill-management` — compression/refactoring modes
+- Skill: `skill-reviewer` — compression safety checks
+- Command: `/compress` — compression quality checklist
+- Linter: `scripts/skill_linter.py` — `check_compression_quality()`

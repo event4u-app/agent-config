@@ -1,1 +1,1 @@
-../../../.agent-src/commands/fix-ci.md
+../../../.agent-src/commands/fix/ci.md

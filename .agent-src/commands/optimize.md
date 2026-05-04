@@ -18,10 +18,10 @@ commands with a single entry point + sub-command dispatch.
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/optimize skills` | `optimize-skills.md` | Audit skills — measure baseline, find duplicates, run linter |
-| `/optimize agents` | `optimize-agents.md` | Audit agent infrastructure — token overhead, rule triggers, AGENTS.md |
-| `/optimize augmentignore` | `optimize-augmentignore.md` | Create or refine `.augmentignore` based on actual stack |
-| `/optimize rtk` | `optimize-rtk-filters.md` | Create or refine project-local rtk filters |
+| `/optimize skills` | `commands/optimize/skills.md` | Audit skills — measure baseline, find duplicates, run linter |
+| `/optimize agents` | `commands/optimize/agents.md` | Audit agent infrastructure — token overhead, rule triggers, AGENTS.md |
+| `/optimize augmentignore` | `commands/optimize/augmentignore.md` | Create or refine `.augmentignore` based on actual stack |
+| `/optimize rtk` | `commands/optimize/rtk.md` | Create or refine project-local rtk filters |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -41,9 +41,7 @@ Sub-command names match the locked contract in
 
 ## Migration
 
-The 4 standalone `/optimize-*` commands continue to work for one release
-cycle as deprecation shims. They emit a notice and route to the same
-content. New invocations should use `/optimize <sub>`.
+The flat `/optimize-*` commands have been removed. Use `/optimize <sub>` instead.
 
 ## Rules
 

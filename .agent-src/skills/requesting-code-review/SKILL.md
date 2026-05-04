@@ -11,17 +11,19 @@ source: package
 ## When to use
 
 * About to run `/create-pr` or `/prepare-for-review`
-* Feature or bug fix is code-complete and the next step is "get eyes on it"
-* A stacked PR is ready and the parent-branch reviewer needs to
+* A feature or bug fix is code-complete and the next step is "get
+  eyes on it"
+* A stacked PR is ready and you need the parent branch reviewer to
   context-switch smoothly
-* Asking a human for a quick sanity check on a specific commit or diff
+* Asking a human for a quick sanity check on a specific commit or
+  diff
 
 Do NOT use when:
 
 * You are *processing* review feedback — use [`receiving-code-review`](../receiving-code-review/SKILL.md)
-* Branch is not yet code-complete — the review-request gate requires
-  green tests and a clean diff
-* Change is documentation-only with no behavior impact
+* The branch is not yet code-complete — the review-request gate
+  requires green tests and a clean diff
+* The change is documentation-only and has no behavior impact
 
 ## Goal
 
@@ -36,9 +38,9 @@ process. A well-framed review request **halves** review time and
 NEVER REQUEST REVIEW FROM A BRANCH YOU HAVE NOT REVIEWED YOURSELF.
 ```
 
-Self-review is the single cheapest filter. Catches the issues a human
-reviewer would flag in round one, so the human can spend time on
-issues only they can see.
+Self-review is the single cheapest filter. It catches the issues a
+human reviewer would flag in round one, so the human reviewer can
+spend time on the issues only they can see.
 
 ## Procedure
 
@@ -46,18 +48,19 @@ issues only they can see.
 
 Before asking anyone else:
 
-* Read the full diff (`git diff <base>...<head>`), not just files you
-  remember touching
+* Read the full diff (`git diff <base>...<head>`), not just the files
+  you remember touching
 * Check for accidental debug output, dead code, leftover `dd()`,
   `console.log`, commented-out blocks
 * Check for secrets in diff — API keys, connection strings, tokens
 * Check file-system side effects — generated files, lockfile churn,
   IDE configs, `.env` changes
 * Run the linter + tests (see [`verify-before-complete`](../verify-before-complete/SKILL.md))
-* Find issues → fix them, do **not** ship and hope the reviewer flags
+* If you find issues → fix them, do **not** ship them and hope the
+  reviewer flags them
 
-Use [`review-changes`](../../commands/review-changes.md) as the
-structured walk-through.
+Use the [`review-changes`](../../commands/review-changes.md) command
+as the structured walk-through.
 
 ### 2. Establish the diff baseline
 
@@ -78,8 +81,8 @@ review 80 unrelated commits.
 
 ### 3. Write the review request context
 
-Any review request must answer four questions. Missing any → the
-reviewer will ask, and that round trip is preventable.
+Any review request must answer four questions. If any is missing, the
+reviewer will ask — and that round trip is preventable.
 
 | Question | Where it lives |
 |---|---|
@@ -96,22 +99,24 @@ for the title format.
 ### 4. Keep the PR reviewable in size
 
 * Target < 400 lines of real diff (excluding generated / lockfiles)
-* Bigger — consider splitting into a stack (refactor PR → feature PR)
-  so reviewers can handle each in one sitting
-* Flag generated files explicitly in the description so reviewers skip
-* Never mix a refactor + behavior change in one PR — reviewers cannot
-  isolate the risk
+* If bigger — consider splitting into a stack (refactor PR → feature
+  PR) so reviewers can handle each in one sitting
+* Flag generated files explicitly in the description so reviewers
+  skip them
+* Never mix a refactor + behavior change in the same PR — reviewers
+  cannot isolate the risk
 
 ### 5. Pick the right reviewer set
 
-* **Architectural impact** → code owner for the affected area
-* **Security-sensitive** → a security-reviewer role if the project has one
+* **Architectural impact** → the code owner for the affected area
+* **Security-sensitive** → a security-reviewer role if the project has
+  one
 * **Bots** → let Copilot / Greptile / Augment run automatically; do not
   gate human review on bot completion
 * **Cross-team change** → each affected team's owner
 
-Project with a `CODEOWNERS` file → GitHub handles this automatically;
-do not override without a reason.
+If the project has a `CODEOWNERS` file, GitHub handles this
+automatically — do not override without a reason.
 
 ### 6. Send and wait — do not nudge early
 
@@ -119,8 +124,8 @@ After the PR is open:
 
 * Respond to questions, not to the implicit "where is my review?"
   schedule
-* Review blocking and overdue → a single short nudge is appropriate;
-  do not re-open or force-push to bump the PR list
+* If the review is blocking and overdue → a single short nudge is
+  appropriate; do not re-open or force-push to bump the PR list
 
 When review comments arrive → switch to
 [`receiving-code-review`](../receiving-code-review/SKILL.md).
@@ -144,9 +149,9 @@ When handing the review request to the reviewer (PR body, Slack, email):
 * A 1000-line PR with "no behavior change" still needs review — the
   reviewer has no way to confirm "no behavior change" without reading
   every line
-* Auto-merge on approval bypasses re-review after later force-pushes —
-  use deliberately, not by habit
-* A PR description saying "see the code" is not a description —
+* Auto-merge on approval bypasses re-review after later force-pushes
+  — use deliberately, not by habit
+* A PR description that says "see the code" is not a description —
   reviewers need the why
 * Requesting review from someone without context (new hire, other
   team) without a longer pairing — they cannot do a deep review cold

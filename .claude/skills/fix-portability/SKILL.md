@@ -1,1 +1,1 @@
-../../../.agent-src/commands/fix-portability.md
+../../../.agent-src/commands/fix/portability.md

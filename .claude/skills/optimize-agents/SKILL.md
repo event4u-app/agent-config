@@ -1,1 +1,1 @@
-../../../.agent-src/commands/optimize-agents.md
+../../../.agent-src/commands/optimize/agents.md

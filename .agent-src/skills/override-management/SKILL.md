@@ -31,11 +31,11 @@ Changes to `.augment/` affect ALL projects. Use overrides instead.
 
 ## Procedure: Create an override
 
-Before creating, understand the original:
+Before creating an override, understand the original:
 
-1. **Read the original** from `.augment/{type}/{name}` — understand purpose and behavior
-2. **Check existing overrides** in `agents/overrides/{type}/` — avoid duplicates
-3. **Identify what needs changing** — only override specific behavior that differs
+1. **Read the original** from `.augment/{type}/{name}` — understand its purpose, structure, and behavior.
+2. **Check for existing overrides** in `agents/overrides/{type}/` — avoid duplicates.
+3. **Identify what needs changing** — only override the specific behavior that differs for this project.
 
 When loading any skill, rule, or command:
 
@@ -69,7 +69,7 @@ Override files **must match the original filename** exactly:
 |---|---|
 | `.augment/rules/php-coding.md` | `agents/overrides/rules/php-coding.md` |
 | `.augment/skills/eloquent/SKILL.md` | `agents/overrides/skills/eloquent.md` |
-| `.augment/commands/feature-plan.md` | `agents/overrides/commands/feature-plan.md` |
+| `.augment/commands/feature/plan.md` | `agents/overrides/commands/feature/plan.md` |
 | `../../../docs/guidelines/php/controllers.md` | `agents/overrides/guidelines/php-controllers.md` |
 | `.augment/templates/roadmaps.md` | `agents/overrides/templates/roadmaps.md` |
 

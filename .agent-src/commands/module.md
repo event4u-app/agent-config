@@ -18,8 +18,8 @@ commands with a single entry point + sub-command dispatch.
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/module create` | `module-create.md` | Create a new module from `.module-template` |
-| `/module explore` | `module-explore.md` | Load a module's structure, docs, and context into the conversation |
+| `/module create` | `commands/module/create.md` | Create a new module from `.module-template` |
+| `/module explore` | `commands/module/explore.md` | Load a module's structure, docs, and context into the conversation |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -37,8 +37,7 @@ Sub-command names match the locked contract in
 
 ## Migration
 
-The 2 standalone `/module-*` commands continue to work for one release
-cycle as deprecation shims. New invocations should use `/module <sub>`.
+The flat `/module-*` commands have been removed. Use `/module <sub>` instead.
 
 ## Rules
 

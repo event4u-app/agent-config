@@ -18,11 +18,11 @@ Use this skill when:
 
 ### 0. Understand current setup
 
-Before changing routing:
+Before changing any routing configuration:
 
-1. Check existing proxy — `docker ps | grep traefik`
-2. Review docker-compose for existing labels and network config
-3. Check `/etc/hosts` or dnsmasq for existing domain mappings
+1. **Check existing proxy setup** — is Traefik already running? Check `docker ps | grep traefik`.
+2. **Review docker-compose** — read `docker-compose.yml` for existing labels and network config.
+3. **Check DNS/hosts** — review `/etc/hosts` or dnsmasq for existing domain mappings.
 
 ### Architecture
 

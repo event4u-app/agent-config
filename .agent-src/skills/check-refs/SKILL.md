@@ -16,57 +16,76 @@ execution:
 
 ## When to use
 
-- Skill/rule/command/guideline/context renamed, moved, or deleted
-- Linking newly added artifact from elsewhere in `.agent-src.uncompressed/`
-- Pre-PR when changes touch cross-references
-- CI `check-refs` job failed and target ref needs locating
+Use this skill when:
 
-NOT: body-only edits, frontmatter shape (use `lint-skills`), compressed pairs
-(use `bash scripts/compress.sh --check`).
+- A skill, rule, command, guideline, or context has been renamed or deleted
+- Linking a newly added artifact from elsewhere in `.agent-src.uncompressed/`
+- Preparing a PR that touches cross-references between agent artifacts
+- CI's `check-refs` job failed and the broken reference needs to be located
+
+Do NOT use when:
+
+- Only the body of a single file changed and no names or paths were touched
+- Checking frontmatter shape or required sections — use `lint-skills` instead
+- Verifying compressed vs uncompressed pairs — use `bash scripts/compress.sh --check` instead
 
 ## Procedure
 
-1. **Inspect scope** — confirm at least one rename/move/remove since last clean
-   run. Body-only edits cannot break refs.
-2. **Dispatch via runtime** —
+### 1. Inspect the scope of recent changes
 
-   ```bash
-   python3 scripts/runtime_dispatcher.py run --skill check-refs
-   ```
+Identify whether any artifact was renamed, moved, or removed since the last
+clean run. Cross-reference checks are relevant only when names or paths shift;
+pure body edits cannot break references.
 
-   Handler runs `python3 scripts/check_references.py`, captures stdout/stderr,
-   returns typed `ExecutionResult`.
-3. **Verify result** —
-   - `exit_code: 0` → all refs resolve
-   - `exit_code: 1` → broken refs — read stdout for `file:line → target`
-   - `status: timeout` → investigate, do not raise limit blindly
-   - `status: error` → interpreter or script missing, or wrong cwd
+### 2. Dispatch via the runtime layer
 
-## Output
+Invoke the skill through the runtime dispatcher so the `execution:` block in
+this skill's frontmatter governs the call:
 
-1. One-line summary: status, exit code, duration (ms)
-2. Count of broken refs if any
-3. First 10 broken refs: `file:line → missing-target`
-4. Next action: fix, re-run, or surface raw stdout
+```bash
+python3 scripts/runtime_dispatcher.py run --skill check-refs
+```
 
-## Gotcha
+The dispatcher resolves the request, the shell handler runs
+`python3 scripts/check_references.py`, captures stdout/stderr, and returns a
+typed `ExecutionResult`.
 
-- Checker is read-only — clean re-run must be produced by re-invoking, not
-  assumed
-- Running outside repo root → zero files inspected, false pass
-- Refs inside fenced code blocks may still be parsed — verify a "false
-  positive" before suppressing it
+### 3. Verify the result
+
+Check the returned `ExecutionResult`:
+
+- `exit_code: 0` → all cross-references resolve
+- `exit_code: 1` → at least one broken reference — read `stdout` for file,
+  line, and the offending ref, then fix the source or update the target
+- `status: timeout` → the checker exceeded `timeout_seconds` — investigate
+- `status: error` → interpreter or script missing — confirm `python3` and
+  `scripts/check_references.py` are available at the repository root
+
+## Output format
+
+1. One-line summary: `success | failure | timeout | error`, exit code,
+   duration in milliseconds
+2. Count of broken references found, if any
+3. First 10 broken references with `file:line → missing-target`
+4. Next action: fix references, re-run the skill, or surface `stdout` for
+   review
+
+## Gotchas
+
+- The checker is read-only — it never rewrites references, so a clean run
+  after a fix must be produced by re-invoking the skill, not by assumption
+- Running outside the agent-config repo root makes the checker inspect zero
+  files and report a false pass
+- Relative links inside comments or fenced code blocks may still be parsed as
+  references depending on the checker's current rules; do not suppress a
+  broken ref without confirming it is a genuine false positive
 
 ## Do NOT
 
-- Do NOT call `check_references.py` directly when the intent is to exercise
-  the runtime path — go through the dispatcher
-- Do NOT raise `timeout_seconds` to mask a real slowdown
-- Do NOT add pipes/redirection — handler uses `shell=False`, argv form only
-
-## References
-
-- Skill: `lint-skills` — sibling pilot for skill/rule shape
-- Rule: `runtime-safety` — execution metadata constraints
-- Script: `scripts/check_references.py`, `scripts/runtime_dispatcher.py`,
-  `scripts/runtime_handler.py`
+- Do NOT invoke `scripts/check_references.py` directly when the intent is to
+  verify the runtime path — always go through the dispatcher so the
+  `ExecutionResult` is produced and inspectable
+- Do NOT raise `timeout_seconds` to mask a slowdown — investigate which part
+  of the tree grew large enough to push past 60 seconds
+- Do NOT add piping or redirection to `command` — the handler uses
+  `shell=False` and will refuse anything outside pure argv form

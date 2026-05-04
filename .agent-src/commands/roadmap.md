@@ -18,8 +18,8 @@ commands with a single entry point + sub-command dispatch.
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/roadmap create` | `roadmap-create.md` | Interactively create a new roadmap in `agents/roadmaps/` |
-| `/roadmap execute` | `roadmap-execute.md` | Read and interactively execute a roadmap |
+| `/roadmap create` | `commands/roadmap/create.md` | Interactively create a new roadmap in `agents/roadmaps/` |
+| `/roadmap execute` | `commands/roadmap/execute.md` | Read and interactively execute a roadmap |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -37,8 +37,7 @@ Sub-command names match the locked contract in
 
 ## Migration
 
-The 2 standalone `/roadmap-*` commands continue to work for one release
-cycle as deprecation shims. New invocations should use `/roadmap <sub>`.
+The flat `/roadmap-*` commands have been removed. Use `/roadmap <sub>` instead.
 
 ## Rules
 

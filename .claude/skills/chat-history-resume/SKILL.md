@@ -1,1 +1,1 @@
-../../../.agent-src/commands/chat-history-resume.md
+../../../.agent-src/commands/chat-history/resume.md

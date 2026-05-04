@@ -1,1 +1,1 @@
-../../../.agent-src/commands/fix-seeder.md
+../../../.agent-src/commands/fix/seeder.md

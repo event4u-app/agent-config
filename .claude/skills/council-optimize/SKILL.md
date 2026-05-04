@@ -1,1 +1,1 @@
-../../../.agent-src/commands/council-optimize.md
+../../../.agent-src/commands/council/optimize.md

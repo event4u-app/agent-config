@@ -1,1 +1,1 @@
-../../../.agent-src/commands/feature-roadmap.md
+../../../.agent-src/commands/feature/roadmap.md

@@ -150,13 +150,12 @@ Runtime boundary: the judge does not execute tools.
 ## References
 
 - **LLM-as-a-Judge foundations** — Zheng et al., "Judging LLM-as-a-Judge
-  with MT-Bench and Chatbot Arena" (2023),
-  [arxiv.org/abs/2306.05685](https://arxiv.org/abs/2306.05685).
-  Establishes the specialized-judge pattern and failure modes (position
-  bias, self-consistency) this skill defends against.
+  with MT-Bench and Chatbot Arena" (2023), [arxiv.org/abs/2306.05685](https://arxiv.org/abs/2306.05685).
+  Establishes the specialized-judge pattern and its known failure modes
+  (position bias, self-consistency) this skill must defend against.
 - **Security rubric** — OWASP Application Security Verification Standard
   (ASVS), [owasp.org/www-project-application-security-verification-standard](https://owasp.org/www-project-application-security-verification-standard/).
-  Finding categories (authentication, access control, validation,
+  The finding categories (authentication, access control, validation,
   cryptography, error handling) the judge walks on every diff.
 - [`subagent-orchestration`](../subagent-orchestration/SKILL.md) —
   model-pairing rules (`subagents.judge_model` one tier above implementer).

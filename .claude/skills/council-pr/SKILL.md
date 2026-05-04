@@ -1,1 +1,1 @@
-../../../.agent-src/commands/council-pr.md
+../../../.agent-src/commands/council/pr.md

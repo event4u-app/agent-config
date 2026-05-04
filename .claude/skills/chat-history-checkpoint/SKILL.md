@@ -1,1 +1,1 @@
-../../../.agent-src/commands/chat-history-checkpoint.md
+../../../.agent-src/commands/chat-history/checkpoint.md

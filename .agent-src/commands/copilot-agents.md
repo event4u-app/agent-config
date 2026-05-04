@@ -18,8 +18,8 @@ standalone commands with a single entry point + sub-command dispatch.
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/copilot-agents init` | `copilot-agents-init.md` | Create AGENTS.md and `.github/copilot-instructions.md` from scratch |
-| `/copilot-agents optimize` | `copilot-agents-optimize.md` | Refactor existing AGENTS.md and copilot-instructions.md for line budgets |
+| `/copilot-agents init` | `commands/copilot-agents/init.md` | Create AGENTS.md and `.github/copilot-instructions.md` from scratch |
+| `/copilot-agents optimize` | `commands/copilot-agents/optimize.md` | Refactor existing AGENTS.md and copilot-instructions.md for line budgets |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -37,9 +37,7 @@ Sub-command names match the locked contract in
 
 ## Migration
 
-The 2 standalone `/copilot-agents-*` commands continue to work for one
-release cycle as deprecation shims. New invocations should use
-`/copilot-agents <sub>`.
+The flat `/copilot-agents-*` commands have been removed. Use `/copilot-agents <sub>` instead.
 
 ## Rules
 

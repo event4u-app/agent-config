@@ -1,1 +1,1 @@
-../../../.agent-src/commands/agents-prepare.md
+../../../.agent-src/commands/agents/prepare.md

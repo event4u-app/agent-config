@@ -9,23 +9,23 @@ source: package
 ## When to use
 
 * Adding a new function, method, or behavior
-* Fixing a bug (bug needs a regression test before the fix)
+* Fixing a bug (the bug needs a regression test before the fix)
 * Refactoring a unit whose current behavior is unclear
 * Any task where expected behavior can be expressed as an assertion
 
 Do NOT use when:
 
-* Throwaway prototype or spike code explicitly marked as exploration
-* Boilerplate generation (migrations, config, scaffolding)
-* Pure documentation (`.md`, `AGENTS.md`, README)
+* Writing throwaway prototype or spike code explicitly marked as exploration
+* Generating boilerplate (migrations, config files, scaffolding)
+* Editing pure documentation (`.md`, `AGENTS.md`, README)
 * Working inside this `agent-config` package on skill/rule markdown
 
 ## Goal
 
-* Drive implementation from a verified-failing test, not the agent's
-  belief that code "should work".
-* Catch edge cases **before** production bugs.
-* Leave every change with a regression test running in CI.
+* Drive implementation from a verified-failing test, not from the agent's
+  belief that the code "should work".
+* Catch edge cases **before** they become production bugs.
+* Leave every change with a regression test that runs in CI.
 
 ## The core discipline
 
@@ -38,7 +38,7 @@ Do NOT use when:
 ```
 
 If step 2 is skipped, the test is not trusted — a test that has never
-failed proves nothing.
+failed proves nothing about the code under test.
 
 ## Procedure
 
@@ -46,21 +46,21 @@ failed proves nothing.
 
 State in one sentence: *"When X happens, the system should do Y."*
 
-Cannot state in one sentence? Scope too big — split into multiple tests,
-one sentence each.
+If you cannot state it in one sentence, the scope is too big — split into
+multiple tests, each covering one sentence.
 
 ### 2. Write the failing test first
 
-Smallest test expressing step-1 sentence.
+Write the smallest test that expresses the sentence from step 1.
 
-* One assertion per behavior (multiple assertions OK only when describing
-  the same single behavior).
+* One assertion per behavior (multiple assertions are OK only when they
+  describe the same single behavior).
 * Real code paths, not mocks — mock only at I/O boundaries (HTTP, DB, time).
-* Descriptive name: `it_rejects_empty_email`, not `test_email_1`.
+* Use a descriptive name: `it_rejects_empty_email`, not `test_email_1`.
 
 ### 3. Run the test and watch it fail
 
-Execute the single test (targeted, not full suite):
+Execute the single test (targeted, not the full suite):
 
 ```bash
 # PHP/Pest
@@ -72,26 +72,27 @@ npx vitest run --testNamePattern "rejects empty email"
 
 Required observations **before proceeding**:
 
-* Test **fails** (not errors).
-* Failure message matches expectation (missing behavior, not typo).
-* Passes immediately → it does not test what you think. Fix the test,
-  do not start writing production code.
+* The test **fails** (not errors).
+* The failure message matches what you expected (missing behavior, not typo).
+* If the test passes immediately → it does not test what you think. Fix
+  the test, do not start writing production code.
 
 ### 4. Write minimum code to pass
 
-**Just enough** production code to make the test green. No extra
+Add **just enough** production code to make the test green. No extra
 features, no unrelated refactoring, no "while I'm here" cleanups.
 
-Urge to add a parameter, edge case, or helper not covered by current
-test → stop. Belongs in the next RED step, not this GREEN step.
+If you feel the urge to add a parameter, edge case, or helper not covered
+by the current test — stop. That belongs in the next RED step, not this
+GREEN step.
 
 ### 5. Run again and watch it pass
 
 Re-run the same targeted command. Required:
 
-* New test passes.
-* No previously green tests turned red.
-* Output clean (no new warnings, deprecations, or noise).
+* The new test passes.
+* No previously green tests have turned red.
+* Test output is clean (no new warnings, deprecations, or noise).
 
 ### 6. Refactor (only if green)
 
@@ -101,8 +102,8 @@ With all tests green, you may:
 * Extract duplication into helpers
 * Tighten types
 
-Do **not** add new behavior during refactor — needs its own failing test
-first. Re-run tests after refactor to confirm still-green.
+Do **not** add new behavior during refactor — that needs its own failing
+test first. Re-run tests after the refactor to confirm still-green.
 
 ### 7. Repeat for the next behavior
 
@@ -110,25 +111,25 @@ Back to step 1 with the next single-sentence behavior.
 
 ## Output format
 
-1. Failing test (file + test name) with captured failure output
-2. Minimum-code diff that makes it pass
+1. The failing test (file + test name) with captured failure output
+2. The minimum-code diff that makes it pass
 3. Captured green-run output
-4. Refactor diff (optional)
+4. Any refactor diff (optional)
 
 ## Anti-rationalizations table
 
-The urge to skip TDD is strongest when TDD matters most. Name the
-rationalization and reject it:
+The urge to skip TDD is strongest on tasks where TDD matters most. Name
+the rationalization and reject it:
 
 | Thought | Reality |
 |---|---|
-| "Too simple to need a test" | Simple code still breaks. A test costs less than one debug cycle. |
-| "I'll add the test after the code works" | A test written after code passes on first run — never failed. Proves nothing. |
-| "I already ran it manually" | Manual runs not repeatable. Next edit breaks it silently. |
-| "Deleting code I just wrote is wasteful" | Sunk cost. Cheap path: delete, write test, reimplement minimally. |
-| "I'll keep the code as reference while I write the test" | You will adapt it. That is test-after-the-fact with extra steps. Delete it. |
-| "I just need to explore the API first" | Spike on a throwaway branch. Then delete and restart with TDD. |
-| "The test is too hard to write" | Signals a design problem in the code, not the test. Listen. |
+| "This is too simple to need a test" | Simple code still breaks. A test takes less time than one debug cycle. |
+| "I'll add the test after the code works" | A test written after code passes on the first run — it has never failed. It does not prove the code is correct. |
+| "I already ran it manually" | Manual runs are not repeatable. The next edit breaks it silently. |
+| "Deleting this code I just wrote is wasteful" | Sunk cost. The cheap path is: delete, write the test, reimplement minimally. |
+| "I'll keep the code as reference while I write the test" | You will read it and adapt it. That is test-after-the-fact with extra steps. Delete it. |
+| "I just need to explore the API first" | Spike it on a throwaway branch. Then delete it and restart with TDD. |
+| "The test is too hard to write" | That signals a design problem in the code, not in the test. Listen to it. |
 | "This bug is urgent, no time for a test" | The test **is** the fastest path to a verified fix. Guessing takes longer. |
 
 
@@ -162,7 +163,7 @@ final class EmailValidator
 }
 ```
 
-Run filter again → passes. No additional rules (format, MX, length)
+Run the filter again → passes. No additional rules (format, MX, length)
 until a next failing test drives them.
 
 ### JS / Vitest
@@ -184,7 +185,7 @@ it('retries a failing operation up to 3 times', async () => {
 ```
 
 Run: `npx vitest run --testNamePattern "retries a failing"` → fails
-(`retry` undefined).
+(`retry` is undefined).
 
 ```ts
 // src/retry.ts — GREEN (minimum)
@@ -197,21 +198,22 @@ export async function retry<T>(op: () => Promise<T>): Promise<T> {
 }
 ```
 
-Run again → passes. Configurable attempt count, backoff, jitter all
+Run again → passes. Configurable attempt count, backoff, and jitter all
 wait for their own failing tests.
 
 ## Gotchas
 
 * Running the full suite instead of a filtered test hides the RED→GREEN
   signal in noise. Always target first.
-* A test that passes on the very first run is not TDD — written against
-  existing code.
+* A test that passes on the very first run is not TDD — it was written
+  against code that already exists.
 * `expect()` with three or four assertions on unrelated fields describes
   multiple behaviors. Split them.
-* Snapshot tests invert the discipline — they generate the expected
-  value from the code. Only use where human-readable output is the
-  contract (CLI, SQL strings).
-* Mocking the thing under test (instead of its I/O) tests the mock.
+* Snapshot tests invert the discipline — they generate the expected value
+  from the code. Only use snapshots where human-readable output is the
+  contract (CLI output, SQL strings).
+* Mocking the thing under test (instead of its I/O) tests the mock, not
+  the code.
 
 ## Do NOT
 
@@ -219,22 +221,22 @@ wait for their own failing tests.
   and has been observed to fail
 * Do NOT accept a test that never failed as evidence the code works
 * Do NOT bundle refactors into the GREEN step
-* Do NOT silence a flaky test — diagnose or delete it
-* Do NOT skip the targeted RED-run because "I know it fails"
+* Do NOT silence a flaky test — diagnose it, or delete it
+* Do NOT skip the targeted RED-run because "I just wrote it, I know it fails"
 
 ## Anti-patterns
 
 * `it('works')` — no behavior described
 * One test covering "and/and/and" — split per behavior
-* Test reaching into private state instead of observable behavior
-* Test duplicating the production code's algorithm (tautology)
+* Test that reaches into private state instead of testing observable behavior
+* Test that duplicates the production code's algorithm (tautology)
 
 ## When to hand over to another skill
 
 * Quality tools, PHPStan, ECS, Rector → [`quality-tools`](../quality-tools/SKILL.md)
 * Full Pest conventions, Laravel testing helpers → [`pest-testing`](../pest-testing/SKILL.md)
 * Running tests inside Docker → [`tests-execute`](../tests-execute/SKILL.md)
-* Investigating why a test fails for non-obvious reasons →
+* Investigating why a test is failing for non-obvious reasons →
   [`systematic-debugging`](../systematic-debugging/SKILL.md)
 
 ## Validation checklist
@@ -243,10 +245,10 @@ Before marking TDD work complete:
 
 * [ ] Every new behavior has a test
 * [ ] Each test was observed to fail first, with a matching failure message
-* [ ] Minimum code was written to turn each RED into GREEN
+* [ ] The minimum code was written to turn each RED into GREEN
 * [ ] All targeted tests pass
-* [ ] No adjacent test turned red
-* [ ] Output clean (no new warnings or deprecations)
+* [ ] No adjacent test has turned red
+* [ ] Test output is clean (no new warnings or deprecations)
 
 See also [`developer-like-execution`](../developer-like-execution/SKILL.md)
 for the broader think → analyze → verify loop this skill plugs into.

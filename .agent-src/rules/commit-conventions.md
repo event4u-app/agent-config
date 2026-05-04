@@ -7,13 +7,15 @@ source: package
 
 # Commit Conventions
 
-All commit messages and squash/merge titles follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
+All commit messages and squash/merge titles must follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
 ## Format
 
 - With scope: `<type>(<scope>): <description>`
-- Without scope: `<type>: <description>`
-- Always English. Imperative mood. Max 72 chars first line.
+- Without scope: `<type>: <description>` (omit parentheses when no scope)
+- **Always English** — regardless of user's language.
+- **Imperative mood** ("add feature", not "added feature").
+- **First line max 72 characters.**
 
 ## Types
 
@@ -21,24 +23,24 @@ All commit messages and squash/merge titles follow [Conventional Commits](https:
 |---|---|
 | `feat` | New user-facing functionality |
 | `fix` | Bug fix |
-| `refactor` | Structure change, no behavior change |
+| `refactor` | Code/structure change, no behavior change |
 | `docs` | Documentation only |
 | `test` | Tests only |
-| `chore` | Maintenance, deps, cleanup |
-| `ci` | CI/CD, workflows |
-| `style` | Formatting only |
+| `chore` | Maintenance (deps, configs, tooling, cleanup) |
+| `ci` | CI/CD and workflow changes |
+| `style` | Code style (formatting, no logic change) |
 | `perf` | Performance improvement |
-| `build` | Build tooling, packaging |
+| `build` | Build tooling / packaging changes |
 
 ## Scope
 
-- Jira ticket ID when branch has one: `DEV-1234`
-- Otherwise short area name: `api`, `auth`, `skills`
-- Optional — only add when it improves clarity.
+- Use the **Jira ticket ID** as scope when the branch contains one (e.g. `DEV-1234`).
+- Otherwise use a short module or area name (e.g. `api`, `auth`, `skills`).
+- Scope is optional — only add when it improves clarity.
 
 ## Breaking changes
 
-Mark with `!` or `BREAKING CHANGE:` footer:
+Mark explicitly with `!` after type/scope or `BREAKING CHANGE:` in footer:
 
 ```
 feat(api)!: rename invoice status values
@@ -47,7 +49,8 @@ refactor(auth)!: remove legacy session flow
 
 ## Commit splitting
 
-Mixed concerns → split into multiple commits. Don't hide unrelated changes in one.
+If a change mixes unrelated concerns, split into multiple commits.
+Do NOT hide bug fixes, CI work, docs, and refactors in one commit.
 
 ## Examples
 
@@ -61,4 +64,4 @@ ci(lint): add skill-lint workflow
 docs(roadmap): add phase 3 implementation plan
 ```
 
-→ Type selection rules, anti-patterns, decision checklist: `docs/guidelines/php/git.md`
+→ Full type selection rules and anti-patterns: see guideline `docs/guidelines/php/git.md`.

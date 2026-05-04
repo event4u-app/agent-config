@@ -1,1 +1,1 @@
-../../../.agent-src/commands/memory-add.md
+../../../.agent-src/commands/memory/add.md

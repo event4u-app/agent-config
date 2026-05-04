@@ -11,9 +11,9 @@ source: package
 * Just before claiming a task, feature, fix, or refactor is complete
 * Just before proposing `/commit`, `/create-pr`, or pushing
 * Before answering "is it ready?", "can I merge?", "does it work?"
-* After a sequence of edits, when next step is reporting to the user
-* Whenever "should work", "looks good", "probably fine" is about to
-  appear in a reply
+* After a sequence of edits, when next step would be reporting to the user
+* Whenever the wording "should work", "looks good", "probably fine" is
+  about to appear in a reply
 
 Do NOT use when:
 
@@ -40,11 +40,11 @@ runs are stale the moment another edit lands.
 
 ### 1. Identify the claim you are about to make
 
-Examples: *"all tests pass"*, *"ready for PR"*, *"refactor is done"*,
-*"bug is fixed"*.
+Examples: *"all tests pass"*, *"this is ready for PR"*, *"the refactor
+is done"*, *"the bug is fixed"*.
 
-Each claim maps to a specific verification command. Write the mapping
-before running anything:
+Each claim maps to a specific verification command. Write down the
+mapping before running anything:
 
 | Claim | Evidence command |
 |---|---|
@@ -58,11 +58,11 @@ before running anything:
 
 ### 2. Run the command fresh
 
-* Run against current working tree, not a cached summary.
-* PHP projects inside Docker: run inside the container (see
+* Run against the current working tree, not a cached summary.
+* For PHP projects inside Docker: run inside the container (see
   [`docker`](../docker/SKILL.md) and [`tests-execute`](../tests-execute/SKILL.md)).
 * Use targeted runs during iteration (`--filter=`, `--testNamePattern`).
-  Run full suite only in the final verification pass.
+  Run the full suite only in the final verification pass.
 
 ### 3. Read the full output
 
@@ -87,20 +87,20 @@ errors on `app/Services/`."* — not *"everything looks good"*.
 
 ## The end-of-work sequence (PHP projects)
 
-When all code changes are done and ready to report completion:
+When all code changes are done and you are ready to report completion:
 
-1. **Targeted tests** — test(s) covering the changed code pass
+1. **Targeted tests** — the test(s) covering the changed code pass
 2. **Full test suite** — only after targeted pass is green
 3. **PHPStan** → **Rector --dry-run** → **ECS** → **PHPStan** (second pass
-   catches issues Rector / ECS introduced)
+   catches issues Rector / ECS may have introduced)
 4. Fix any output from steps 1–3 and restart the sequence
 5. Only then: claim completion or suggest `/commit`, push, or PR
 
-Do not run the full quality pipeline between intermediate edits — burns
-time and tokens. Use it once, at the end.
+Do not run the full quality pipeline between intermediate edits — it
+burns time and tokens. Use it once, at the end.
 
-See [`quality-tools`](../quality-tools/SKILL.md) for exact commands per
-tool.
+See [`quality-tools`](../quality-tools/SKILL.md) for the exact commands
+per tool.
 
 ## Minimum evidence per task type
 
@@ -124,7 +124,7 @@ is sound", "compiles" (unless compilation itself is the contract).
 When reporting completion to the user:
 
 1. **What was changed** — one line summary per changed file / component
-2. **Verification run** — exact command and its exit code
+2. **Verification run** — the exact command and its exit code
 3. **Result** — numeric breakdown (tests passed/failed/skipped, errors,
    warnings)
 4. **Caveats** — anything the output flagged but you chose to accept
@@ -132,14 +132,16 @@ When reporting completion to the user:
 
 ## Gotchas
 
-* "No output" from a linter is not proof it ran — check exit code and
-  analyzed-file count.
+* A "no output" result from a linter is not proof it ran — check the
+  exit code and the analyzed-file count.
 * Silencing a warning with `@phpstan-ignore-next-line` or `// @ts-expect-error`
   without a reason code passes the linter but defers the real problem.
-* Running tests with `--stop-on-failure` then reporting "passed" — only
-  ran until the first failure; the green streak after is unexamined.
+* Running tests with `--stop-on-failure` then reporting "passed" — it
+  only ran until the first failure; the green streak after it is
+  unexamined.
 * Cached static-analysis results (`--cache` directories) can report
-  clean after you broke something; clear the cache for large changes.
+  clean after you have broken something; clear the cache when the
+  change is large.
 * Running the test suite on the wrong branch (forgot to switch or
   rebase) — verify `git status` and `git log -1` before the final gate.
 * A previously green PHPStan run in the same conversation is stale as
@@ -165,13 +167,13 @@ When reporting completion to the user:
 * Do NOT suppress warnings or skip tests to pass the gate
 * Do NOT report only the last line of output — read the whole thing
 * Do NOT run the full quality pipeline between intermediate edits —
-  run once at the end
+  run it once at the end
 
 ## When to hand over to another skill
 
 * Exact PHPStan / Rector / ECS commands → [`quality-tools`](../quality-tools/SKILL.md)
 * Running tests inside Docker → [`tests-execute`](../tests-execute/SKILL.md)
-* Writing the regression test the gate requires →
+* Writing the regression test that the gate requires →
   [`test-driven-development`](../test-driven-development/SKILL.md)
 * Diagnosing why the gate failed → [`systematic-debugging`](../systematic-debugging/SKILL.md)
 * Committing once the gate is green → [`git-workflow`](../git-workflow/SKILL.md)
@@ -180,7 +182,7 @@ When reporting completion to the user:
 
 Before sending a completion message:
 
-* [ ] Every claim maps to a command run in this turn
+* [ ] Every claim in the message maps to a command run in this turn
 * [ ] Exit code of each command is read and matches the claim
 * [ ] Output is quoted with numeric counts, not paraphrased
 * [ ] No warnings or skips are hidden

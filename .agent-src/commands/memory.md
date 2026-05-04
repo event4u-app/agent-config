@@ -18,10 +18,10 @@ commands with a single entry point + sub-command dispatch.
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/memory add` | `memory-add.md` | Interactively add a validated entry to a memory file |
-| `/memory load` | `memory-full.md` | Load ALL curated entries of a given memory type into context |
-| `/memory promote` | `memory-promote.md` | Promote an intake signal to a curated memory entry |
-| `/memory propose` | `propose-memory.md` | Append a provisional signal to the intake stream |
+| `/memory add` | `commands/memory/add.md` | Interactively add a validated entry to a memory file |
+| `/memory load` | `commands/memory/load.md` | Load ALL curated entries of a given memory type into context |
+| `/memory promote` | `commands/memory/promote.md` | Promote an intake signal to a curated memory entry |
+| `/memory propose` | `commands/memory/propose.md` | Append a provisional signal to the intake stream |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -41,9 +41,7 @@ Sub-command names match the locked contract in
 
 ## Migration
 
-The 4 standalone commands (`/memory-add`, `/memory-full`,
-`/memory-promote`, `/propose-memory`) continue to work for one release
-cycle as deprecation shims. New invocations should use `/memory <sub>`.
+The flat `/memory-*`, `/memory-full`, and `/propose-memory` commands have been removed. Use `/memory <sub>` instead.
 
 ## Rules
 

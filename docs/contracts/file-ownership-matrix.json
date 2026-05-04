@@ -147,31 +147,31 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/commands/council-default.md": {
-      "kind": "command",
-      "rule_type": null,
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/commands/council-design.md": {
-      "kind": "command",
-      "rule_type": null,
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/commands/council-optimize.md": {
-      "kind": "command",
-      "rule_type": null,
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/commands/council-pr.md": {
-      "kind": "command",
-      "rule_type": null,
-      "load_context": [],
-      "load_context_eager": []
-    },
     ".agent-src.uncompressed/commands/council.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/council/default.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/council/design.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/council/optimize.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/council/pr.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
@@ -1002,6 +1002,12 @@
     ".agent-src.uncompressed/rules/no-cheap-questions.md": {
       "kind": "rule",
       "rule_type": "always",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/rules/no-roadmap-references.md": {
+      "kind": "rule",
+      "rule_type": "auto",
       "load_context": [],
       "load_context_eager": []
     },
@@ -2317,36 +2323,36 @@
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/commands/council-default.md",
-      "target": ".agent-src.uncompressed/commands/council-default.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/commands/council-design.md",
-      "target": ".agent-src.uncompressed/commands/council-design.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/commands/council-optimize.md",
-      "target": ".agent-src.uncompressed/commands/council-optimize.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/commands/council-pr.md",
-      "target": ".agent-src.uncompressed/commands/council-pr.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
       "source": ".agent-src.uncompressed/commands/council.md",
       "target": ".agent-src.uncompressed/commands/council.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/council/default.md",
+      "target": ".agent-src.uncompressed/commands/council/default.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/council/design.md",
+      "target": ".agent-src.uncompressed/commands/council/design.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/council/optimize.md",
+      "target": ".agent-src.uncompressed/commands/council/optimize.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/council/pr.md",
+      "target": ".agent-src.uncompressed/commands/council/pr.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -4699,6 +4705,41 @@
     {
       "source": ".agent-src.uncompressed/rules/no-cheap-questions.md",
       "target": ".agent-src.uncompressed/rules/verify-before-complete.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/no-roadmap-references.md",
+      "target": ".agent-src.uncompressed/rules/agent-docs.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/no-roadmap-references.md",
+      "target": ".agent-src.uncompressed/rules/augment-source-of-truth.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/no-roadmap-references.md",
+      "target": ".agent-src.uncompressed/rules/docs-sync.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/no-roadmap-references.md",
+      "target": ".agent-src.uncompressed/rules/no-roadmap-references.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/no-roadmap-references.md",
+      "target": ".agent-src.uncompressed/rules/roadmap-progress-sync.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1

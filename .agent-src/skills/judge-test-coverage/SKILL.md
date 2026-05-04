@@ -134,10 +134,9 @@ as a follow-up for the implementer — the judge does not execute tools.
 ## References
 
 - **LLM-as-a-Judge foundations** — Zheng et al., "Judging LLM-as-a-Judge
-  with MT-Bench and Chatbot Arena" (2023),
-  [arxiv.org/abs/2306.05685](https://arxiv.org/abs/2306.05685).
-  Establishes the specialized-judge pattern and failure modes (position
-  bias, self-consistency) this skill defends against.
+  with MT-Bench and Chatbot Arena" (2023), [arxiv.org/abs/2306.05685](https://arxiv.org/abs/2306.05685).
+  Establishes the specialized-judge pattern and its known failure modes
+  (position bias, self-consistency) this skill must defend against.
 - **Test-value rubric** — Martin Fowler, "Test Pyramid",
   [martinfowler.com/bliki/TestPyramid.html](https://martinfowler.com/bliki/TestPyramid.html),
   and Kent Beck, "Test Desiderata",

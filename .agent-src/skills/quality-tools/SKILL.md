@@ -52,8 +52,8 @@ Use the **first matching** command style:
 | `symplify/easy-coding-standard` | `vendor/bin/ecs` | `vendor/bin/ecs check --fix` |
 
 **Priority:** If a project ships a `quality:*` wrapper (Artisan or Composer script), always prefer it —
-wrappers typically add
-git-aware execution, caching, automatic baseline regeneration, and memory management.
+wrappers typically add git-aware execution, caching, automatic baseline regeneration, and memory
+management on top of the native tools.
 
 If none of the above is installed → skip quality checks, inform the user.
 
