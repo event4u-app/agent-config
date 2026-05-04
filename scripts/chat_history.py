@@ -17,8 +17,6 @@ Usage:
     python3 scripts/chat_history.py init --first-user-msg "..." [--freq per_phase]
     python3 scripts/chat_history.py append --type phase --json '{...}'
     python3 scripts/chat_history.py status
-    python3 scripts/chat_history.py heartbeat --first-user-msg "..."
-    python3 scripts/chat_history.py check --first-user-msg "..."
     python3 scripts/chat_history.py state --first-user-msg "..."
     python3 scripts/chat_history.py adopt --first-user-msg "..."
     python3 scripts/chat_history.py reset --first-user-msg "..." --entries-json '[...]' [--freq per_phase]
@@ -53,9 +51,6 @@ _WS_RE = re.compile(r"\s+")
 EXIT_OK = 0
 EXIT_BAD_ARGS = 2
 EXIT_OWNERSHIP_REFUSED = 3
-EXIT_MISSING = 10
-EXIT_FOREIGN = 11
-EXIT_RETURNING = 12
 
 
 class OwnershipError(RuntimeError):
@@ -172,19 +167,6 @@ def append(entry: dict[str, Any], *, path: Path | None = None,
         fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
-def check_ownership(first_user_msg: str, *,
-                    path: Path | None = None) -> str:
-    """Return 'match', 'mismatch', or 'missing' (legacy 3-state).
-
-    Kept for backward compatibility. Prefer `ownership_state()` for the
-    4-state view that distinguishes foreign from returning sessions.
-    """
-    header = read_header(path)
-    if not header:
-        return "missing"
-    return "match" if header.get("fp") == fingerprint(first_user_msg) else "mismatch"
-
-
 def ownership_state(first_user_msg: str, *,
                     path: Path | None = None) -> str:
     """Return 'match', 'returning', 'foreign', or 'missing'.
@@ -216,14 +198,48 @@ def _push_former_fp(former_fps: list[str], old_fp: str,
     return seen[:FORMER_FPS_CAP]
 
 
+def _atomic_write_text(p: Path, text: str) -> None:
+    """Write ``text`` to ``p`` atomically with a per-call unique tmp path.
+
+    Multiple processes writing to the same target use disjoint tmp paths
+    (PID + uuid), so concurrent ``session_start`` hooks no longer collide
+    on a shared ``.tmp`` file. The final ``replace`` is atomic on POSIX.
+    """
+    tmp = p.with_suffix(
+        f"{p.suffix}.{os.getpid()}.{uuid.uuid4().hex[:8]}.tmp",
+    )
+    try:
+        tmp.write_text(text, encoding="utf-8")
+        tmp.replace(p)
+    except Exception:
+        try:
+            tmp.unlink()
+        except OSError:
+            pass
+        raise
+
+
 def adopt(first_user_msg: str, *, path: Path | None = None) -> dict[str, Any]:
     """Rewrite the header's fingerprint to the current conversation's.
 
     Preserves all body entries. Pushes the previous `fp` onto
-    `former_fps` (dedup, capped at FORMER_FPS_CAP) so this former owner
-    can later be detected as 'returning' if the original chat comes back.
+    `former_fps` (dedup, capped at ``FORMER_FPS_CAP``) so this former
+    owner can later be detected as 'returning' if the original chat
+    comes back.
+
+    ``former_fps`` overflow: when the rotation reaches
+    ``FORMER_FPS_CAP`` the oldest fingerprint is dropped silently
+    (see ``_push_former_fp``). No exception is raised.
+
+    Test hook: ``AGENT_CHAT_HISTORY_FORCE_ADOPT_FAIL`` raises ``OSError``
+    with the env var's value as the message before any disk write. Used
+    by the concurrency / disk-failure subprocess tests; never set in
+    production.
     """
     p = path or file_path()
+    _force = os.environ.get("AGENT_CHAT_HISTORY_FORCE_ADOPT_FAIL")
+    if _force:
+        raise OSError(_force)
     header = read_header(p)
     if not header:
         raise FileNotFoundError(f"no header in {p}")
@@ -239,9 +255,7 @@ def adopt(first_user_msg: str, *, path: Path | None = None) -> dict[str, Any]:
     with p.open(encoding="utf-8") as fh:
         lines = fh.readlines()
     lines[0] = json.dumps(header, ensure_ascii=False) + "\n"
-    tmp = p.with_suffix(p.suffix + ".tmp")
-    tmp.write_text("".join(lines), encoding="utf-8")
-    tmp.replace(p)
+    _atomic_write_text(p, "".join(lines))
     return header
 
 
@@ -290,9 +304,7 @@ def reset_with_entries(first_user_msg: str,
     p.parent.mkdir(parents=True, exist_ok=True)
     lines = [json.dumps(header, ensure_ascii=False)]
     lines += [json.dumps(e, ensure_ascii=False) for e in body]
-    tmp = p.with_suffix(p.suffix + ".tmp")
-    tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    tmp.replace(p)
+    _atomic_write_text(p, "\n".join(lines) + "\n")
     return header
 
 
@@ -315,10 +327,9 @@ def prepend_entries(entries: list[dict[str, Any]], *,
     body = existing[1:]
     new_lines = [json.dumps(e, ensure_ascii=False) + "\n"
                  for e in _normalize_entries(entries)]
-    tmp = p.with_suffix(p.suffix + ".tmp")
-    tmp.write_text(header_line + "".join(new_lines) + "".join(body),
-                   encoding="utf-8")
-    tmp.replace(p)
+    _atomic_write_text(
+        p, header_line + "".join(new_lines) + "".join(body),
+    )
     return len(new_lines)
 
 
@@ -399,9 +410,6 @@ def _read_chat_history_enabled(settings_path: Path) -> bool:
         return False
     return bool(section.get("enabled", False))
 
-
-VALID_HEARTBEAT_MODES = ("on", "off", "hybrid")
-DRIFT_STATES = ("missing", "foreign", "returning")
 
 # Hook events that the platform-hook wrapper accepts. Mapped to entry
 # types in HOOK_EVENT_ENTRY_TYPE; cadence filtering in
@@ -536,183 +544,8 @@ def write_sidecar(first_user_msg: str, *,
         "fp": fingerprint(first_user_msg),
         "started_at": _now(),
     }
-    tmp = sp.with_suffix(sp.suffix + ".tmp")
-    with tmp.open("w", encoding="utf-8") as fh:
-        json.dump(payload, fh, ensure_ascii=False)
-    tmp.replace(sp)
+    _atomic_write_text(sp, json.dumps(payload, ensure_ascii=False))
     return payload
-
-
-def _read_chat_history_heartbeat_mode(settings_path: Path) -> str:
-    """Read chat_history.heartbeat from .agent-settings.yml.
-
-    Returns one of 'on' | 'off' | 'hybrid'. Default 'hybrid' (marker
-    surfaces only on drift states — missing/foreign/returning — and
-    stays silent on 'ok'/'disabled'). Unknown values fall back to
-    'hybrid'. Mirrors the default-deny policy of `_read_chat_history_enabled`
-    for the `enabled` flag, but here the default is the safer-by-design
-    hybrid mode rather than off.
-    """
-    if not settings_path.is_file():
-        return "hybrid"
-    try:
-        import yaml  # type: ignore[import-untyped]
-    except ImportError:
-        return "hybrid"
-    try:
-        with settings_path.open(encoding="utf-8") as fh:
-            data = yaml.safe_load(fh) or {}
-    except (OSError, yaml.YAMLError):
-        return "hybrid"
-    section = data.get("chat_history") if isinstance(data, dict) else None
-    if not isinstance(section, dict):
-        return "hybrid"
-    raw = section.get("heartbeat", "hybrid")
-    # YAML 1.1 (PyYAML default) booleanizes bare on/off to True/False.
-    # Coerce back so users can write `heartbeat: on` without quoting.
-    if raw is True:
-        return "on"
-    if raw is False:
-        return "off"
-    val = str(raw).lower()
-    if val in VALID_HEARTBEAT_MODES:
-        return val
-    return "hybrid"
-
-
-def turn_check(first_user_msg: str, *, path: Path | None = None,
-               settings_path: Path | None = None) -> dict[str, Any]:
-    """Compute the turn-start ownership state.
-
-    Returns a structured dict the CLI renders to stdout/stderr. Pure
-    function — no I/O outside the two paths it reads.
-    """
-    sp = settings_path or Path(DEFAULT_SETTINGS_FILE)
-    if not _read_chat_history_enabled(sp):
-        return {"state": "disabled", "exit": EXIT_OK}
-    p = path or file_path()
-    state = ownership_state(first_user_msg, path=p)
-    if state == "match":
-        st = status(path=p)
-        return {
-            "state": "ok",
-            "exit": EXIT_OK,
-            "entries": st.get("entries", 0),
-        }
-    header = read_header(p) or {}
-    out: dict[str, Any] = {
-        "state": state,
-        "current_fp": fingerprint(first_user_msg),
-        "header_fp": str(header.get("fp", "")),
-        "preview": str(header.get("preview", "")),
-    }
-    if state == "missing":
-        out["exit"] = EXIT_MISSING
-    elif state == "foreign":
-        out["exit"] = EXIT_FOREIGN
-        st = status(path=p)
-        out["entries"] = st.get("entries", 0)
-    else:  # returning
-        out["exit"] = EXIT_RETURNING
-        st = status(path=p)
-        out["entries"] = st.get("entries", 0)
-    return out
-
-
-def _format_age(seconds: int) -> str:
-    """Render a relative duration as a compact human-readable string."""
-    if seconds < 0:
-        return "just now"
-    if seconds < 60:
-        return f"{seconds}s ago"
-    if seconds < 3600:
-        return f"{seconds // 60}m ago"
-    if seconds < 86400:
-        return f"{seconds // 3600}h ago"
-    return f"{seconds // 86400}d ago"
-
-
-def _last_entry_age_seconds(path: Path) -> int | None:
-    """Return age of the latest non-header entry in seconds, or None.
-
-    Reads the file once, takes the last non-empty line, parses its `ts`
-    field. Tolerant of malformed lines and missing timestamps — returns
-    None instead of raising. Used by `heartbeat()` to surface stale
-    appends in the in-band marker.
-    """
-    if not path.is_file():
-        return None
-    last_line: str | None = None
-    try:
-        with path.open(encoding="utf-8") as fh:
-            for raw in fh:
-                stripped = raw.strip()
-                if stripped:
-                    last_line = stripped
-    except OSError:
-        return None
-    if not last_line:
-        return None
-    try:
-        obj = json.loads(last_line)
-    except json.JSONDecodeError:
-        return None
-    if not isinstance(obj, dict) or obj.get("t") == "header":
-        return None
-    ts = obj.get("ts")
-    if not ts or not isinstance(ts, str):
-        return None
-    try:
-        parsed = dt.datetime.fromisoformat(ts)
-    except ValueError:
-        return None
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=dt.timezone.utc)
-    now = dt.datetime.now(dt.timezone.utc)
-    return int((now - parsed).total_seconds())
-
-
-def heartbeat(first_user_msg: str, *, path: Path | None = None,
-              settings_path: Path | None = None) -> dict[str, Any]:
-    """Compute the in-band reply marker proving the rule was executed.
-
-    The marker is a single-line string the agent must include verbatim
-    at the end of every reply. Fields surface state, entry count,
-    cadence, and age of the last entry — so a stale gap (no append
-    across two replies at `per_turn`/`per_phase`) is immediately
-    visible to the user without any out-of-band tooling.
-
-    Always returns exit-equivalent 0; this is observability, not a
-    gate. Ownership refusal lives in `append`, the turn-start gate
-    lives in `turn_check`. `heartbeat` only reports.
-    """
-    sp = settings_path or Path(DEFAULT_SETTINGS_FILE)
-    if not _read_chat_history_enabled(sp):
-        return {"state": "disabled",
-                "marker": "📒 chat-history: disabled"}
-    p = path or file_path()
-    state = ownership_state(first_user_msg, path=p)
-    st = status(path=p)
-    entries = int(st.get("entries", 0)) if st.get("exists") else 0
-    header = st.get("header") or {}
-    freq = str(header.get("freq", "?")) if header else "?"
-    if state == "match":
-        age = _last_entry_age_seconds(p)
-        age_str = _format_age(age) if age is not None else "no entries"
-        marker = (f"📒 chat-history: ok · {entries} entries · "
-                  f"{freq} · last {age_str}")
-        return {"state": "ok", "entries": entries, "freq": freq,
-                "last_age_seconds": age, "marker": marker}
-    if state == "missing":
-        return {"state": "missing",
-                "marker": "📒 chat-history: missing — run init"}
-    if state == "foreign":
-        return {"state": "foreign", "entries": entries,
-                "marker": (f"📒 chat-history: foreign · {entries} "
-                           f"entries on file — render Foreign-Prompt")}
-    return {"state": "returning", "entries": entries,
-            "marker": (f"📒 chat-history: returning · {entries} "
-                       f"entries on file — render Returning-Prompt")}
 
 
 def overflow_handle(max_kb: int, mode: str = "rotate", *,
@@ -746,9 +579,7 @@ def overflow_handle(max_kb: int, mode: str = "rotate", *,
             total += size
         kept.reverse()
         dropped = len(entries) - len(kept)
-        tmp = p.with_suffix(p.suffix + ".tmp")
-        tmp.write_text(header_line + "".join(kept), encoding="utf-8")
-        tmp.replace(p)
+        _atomic_write_text(p, header_line + "".join(kept))
         return {"action": "rotate", "kept": len(kept), "dropped": dropped}
     marker = {
         "t": "needs_compress",
@@ -763,7 +594,8 @@ def hook_append(event: str, *,
                 first_user_msg: str | None = None,
                 payload: dict[str, Any] | None = None,
                 path: Path | None = None,
-                settings_path: Path | None = None) -> dict[str, Any]:
+                settings_path: Path | None = None,
+                auto_adopt_on_session_start: bool = True) -> dict[str, Any]:
     """Platform-hook entry point — wraps init/append/sidecar.
 
     Designed for `SessionStart`, `UserPromptSubmit`, `PostToolUse`,
@@ -775,10 +607,21 @@ def hook_append(event: str, *,
     Cadence-aware: events that don't match `chat_history.frequency`
     are silently skipped. `enabled: false` short-circuits to a noop.
 
+    ``auto_adopt_on_session_start`` (default ``True``): when the
+    session_start hook fires against an existing history whose header
+    fingerprint does not match this session, the hook silently rewrites
+    the header (auto-adopts) instead of leaving the file in a foreign
+    state that would refuse subsequent appends. The runtime kill-switch
+    ``AGENT_CHAT_HISTORY_AUTO_ADOPT=false`` overrides the parameter and
+    forces ``ownership_refused`` (pre-merge behavior). On disk errors
+    inside ``adopt`` the action is reported as ``adopt_failed`` and the
+    file is left untouched (silent-failure contract preserved).
+
     Returns a structured dict the CLI emits as JSON. Never raises for
     non-fatal control-plane states (missing sidecar, cadence skip,
-    disabled) — these surface as `action` values so hooks can choose
-    fail_open vs fail_closed by inspecting the result.
+    disabled, foreign ownership, adopt_failed) — these surface as
+    `action` values so hooks can choose fail_open vs fail_closed by
+    inspecting the result.
     """
     if event not in VALID_HOOK_EVENTS:
         raise ValueError(f"event must be one of {sorted(VALID_HOOK_EVENTS)}")
@@ -796,6 +639,28 @@ def hook_append(event: str, *,
             freq = _read_chat_history_frequency(sp)
             init(first_user_msg, freq=freq, path=p)
             return {"action": "initialized", "event": event,
+                    "fp": fingerprint(first_user_msg)}
+        # Header exists — auto-adopt foreign sessions so the rest of the
+        # hook lifecycle can append. Kill-switch via env var lets us
+        # disable the adopt at runtime without redeploying.
+        state = ownership_state(first_user_msg, path=p)
+        if state == "foreign" and auto_adopt_on_session_start:
+            kill = os.environ.get(
+                "AGENT_CHAT_HISTORY_AUTO_ADOPT", "true",
+            ).strip().lower()
+            if kill == "false":
+                return {"action": "ownership_refused", "event": event,
+                        "state": state,
+                        "fp": fingerprint(first_user_msg)}
+            try:
+                adopt(first_user_msg, path=p)
+            except Exception as exc:  # noqa: BLE001
+                sys.stderr.write(
+                    f"chat-history adopt_failed: {exc}\n",
+                )
+                return {"action": "adopt_failed", "event": event,
+                        "reason": str(exc)}
+            return {"action": "adopted", "event": event,
                     "fp": fingerprint(first_user_msg)}
         return {"action": "sidecar_written", "event": event,
                 "fp": fingerprint(first_user_msg)}
@@ -1040,83 +905,9 @@ def _cmd_status(_args) -> int:
     return 0
 
 
-def _cmd_check(args) -> int:
-    print(check_ownership(args.first_user_msg))
-    return 0
-
-
 def _cmd_state(args) -> int:
     print(ownership_state(args.first_user_msg))
     return 0
-
-
-def _format_turn_check_stdout(result: dict[str, Any]) -> str:
-    """Render turn_check() result as a single key=value line for shell parsing."""
-    state = result["state"]
-    parts = [f"state={state}"]
-    if "entries" in result:
-        parts.append(f"entries={result['entries']}")
-    if state in {"foreign", "returning"}:
-        parts.append(f"header_fp={str(result.get('header_fp', ''))[:8]}")
-        parts.append(f"current_fp={str(result.get('current_fp', ''))[:8]}")
-        preview = str(result.get("preview", "")).replace('"', "'")
-        if preview:
-            parts.append(f'preview="{preview[:80]}"')
-    return " ".join(parts)
-
-
-def _turn_check_action_hint(state: str) -> str:
-    """Stderr hint telling the agent which prompt to render."""
-    if state == "ok":
-        return ""
-    if state == "disabled":
-        return ""
-    if state == "missing":
-        return ("ACTION REQUIRED: state=missing — run "
-                "`chat_history.py init --first-user-msg \"...\" "
-                "--freq <frequency-from-settings>` before any other reply.")
-    if state == "foreign":
-        return ("ACTION REQUIRED: state=foreign — render the Foreign-Prompt "
-                "from the chat-history rule (3 numbered options: Resume / "
-                "New start / Ignore) before any other reply. Do not append "
-                "to this file until the user picks.")
-    if state == "returning":
-        return ("ACTION REQUIRED: state=returning — render the "
-                "Returning-Prompt from the chat-history rule (3 numbered "
-                "options: Merge / Replace / Continue) before any other "
-                "reply. Do not append to this file until the user picks.")
-    return f"ACTION REQUIRED: unknown state={state}"
-
-
-def _cmd_turn_check(args) -> int:
-    settings_path = Path(args.settings) if args.settings else None
-    result = turn_check(args.first_user_msg, settings_path=settings_path)
-    print(_format_turn_check_stdout(result))
-    hint = _turn_check_action_hint(result["state"])
-    if hint:
-        print(hint, file=sys.stderr)
-    return int(result["exit"])
-
-
-def _cmd_heartbeat(args) -> int:
-    settings_path = Path(args.settings) if args.settings else None
-    result = heartbeat(args.first_user_msg, settings_path=settings_path)
-    if args.json:
-        # JSON consumers want the full record regardless of mode.
-        print(json.dumps(result, ensure_ascii=False))
-        return EXIT_OK
-    mode = _read_chat_history_heartbeat_mode(
-        settings_path or Path(DEFAULT_SETTINGS_FILE)
-    )
-    state = str(result.get("state", ""))
-    # off → never print. hybrid → only on drift states.
-    # on → always (current behavior).
-    if mode == "off":
-        return EXIT_OK
-    if mode == "hybrid" and state not in DRIFT_STATES:
-        return EXIT_OK
-    print(result["marker"])
-    return EXIT_OK
 
 
 def _cmd_adopt(args) -> int:
@@ -1189,42 +980,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_app.set_defaults(func=_cmd_append)
     sub.add_parser("status").set_defaults(func=_cmd_status)
-    p_chk = sub.add_parser("check")
-    p_chk.add_argument("--first-user-msg", required=True)
-    p_chk.set_defaults(func=_cmd_check)
     p_state = sub.add_parser("state")
     p_state.add_argument("--first-user-msg", required=True)
     p_state.set_defaults(func=_cmd_state)
-    p_tc = sub.add_parser(
-        "turn-check",
-        help=("turn-start ownership gate; exit 0=ok/disabled, "
-              f"{EXIT_MISSING}=missing, {EXIT_FOREIGN}=foreign, "
-              f"{EXIT_RETURNING}=returning"),
-    )
-    p_tc.add_argument("--first-user-msg", required=True)
-    p_tc.add_argument(
-        "--settings",
-        default=None,
-        help=f"path to agent settings (default: {DEFAULT_SETTINGS_FILE})",
-    )
-    p_tc.set_defaults(func=_cmd_turn_check)
-    p_hb = sub.add_parser(
-        "heartbeat",
-        help=("emit the in-band reply marker; always exit 0. "
-              "Agent must include the stdout line verbatim in every reply."),
-    )
-    p_hb.add_argument("--first-user-msg", required=True)
-    p_hb.add_argument(
-        "--settings",
-        default=None,
-        help=f"path to agent settings (default: {DEFAULT_SETTINGS_FILE})",
-    )
-    p_hb.add_argument(
-        "--json",
-        action="store_true",
-        help="emit the full result dict instead of just the marker",
-    )
-    p_hb.set_defaults(func=_cmd_heartbeat)
     p_ado = sub.add_parser("adopt")
     p_ado.add_argument("--first-user-msg", required=True)
     p_ado.set_defaults(func=_cmd_adopt)

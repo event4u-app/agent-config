@@ -89,20 +89,6 @@ def test_read_header_malformed_returns_none(hist: Path):
     assert ch.read_header(hist) is None
 
 
-def test_check_ownership_match(hist: Path):
-    ch.init("my msg", path=hist)
-    assert ch.check_ownership("my msg", path=hist) == "match"
-
-
-def test_check_ownership_mismatch(hist: Path):
-    ch.init("my msg", path=hist)
-    assert ch.check_ownership("other msg", path=hist) == "mismatch"
-
-
-def test_check_ownership_missing(hist: Path):
-    assert ch.check_ownership("anything", path=hist) == "missing"
-
-
 def test_adopt_preserves_entries_rewrites_fingerprint(hist: Path):
     ch.init("old", path=hist)
     ch.append({"t": "user", "text": "work"}, path=hist)
@@ -115,7 +101,7 @@ def test_adopt_preserves_entries_rewrites_fingerprint(hist: Path):
     assert len(lines) == 3
     assert json.loads(lines[1])["text"] == "work"
     assert json.loads(lines[2])["name"] == "analyze"
-    assert ch.check_ownership("new msg", path=hist) == "match"
+    assert ch.ownership_state("new msg", path=hist) == "match"
 
 
 def test_adopt_without_header_raises(hist: Path):
@@ -217,18 +203,6 @@ def test_cli_init_and_status(tmp_path: Path, monkeypatch, capsys):
     assert data["exists"] is True
     assert data["header"]["freq"] == "per_turn"
     assert data["header"]["fp"] == ch.fingerprint("hello cli")
-
-
-def test_cli_append_and_check(tmp_path: Path, monkeypatch, capsys):
-    target = tmp_path / "cli.jsonl"
-    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
-    ch.main(["init", "--first-user-msg", "orig msg"])
-    ch.main(["append", "--type", "user", "--json", '{"text":"hi"}'])
-    capsys.readouterr()
-    ch.main(["check", "--first-user-msg", "orig msg"])
-    assert capsys.readouterr().out.strip() == "match"
-    ch.main(["check", "--first-user-msg", "different"])
-    assert capsys.readouterr().out.strip() == "mismatch"
 
 
 def test_read_entries_empty_when_file_missing(hist: Path):
@@ -567,17 +541,14 @@ def test_cli_append_first_user_msg_foreign_exit_3(
     assert ch.read_entries(path=target) == []
 
 
-# --- B: turn-check ---------------------------------------------------
+# --- Settings fixtures shared by hook-append + crash-recovery -------
 
 
 @pytest.fixture
 def settings_enabled(tmp_path: Path) -> Path:
     p = tmp_path / "agent-settings.yml"
-    # heartbeat: on keeps legacy CLI tests asserting "marker is printed
-    # whenever the rule is enabled". The shipping default is hybrid;
-    # mode-specific tests below pin their own value.
     p.write_text(
-        "chat_history:\n  enabled: true\n  heartbeat: on\n",
+        "chat_history:\n  enabled: true\n",
         encoding="utf-8",
     )
     return p
@@ -588,452 +559,6 @@ def settings_disabled(tmp_path: Path) -> Path:
     p = tmp_path / "agent-settings.yml"
     p.write_text("chat_history:\n  enabled: false\n", encoding="utf-8")
     return p
-
-
-@pytest.fixture
-def settings_heartbeat_hybrid(tmp_path: Path) -> Path:
-    p = tmp_path / "agent-settings.yml"
-    p.write_text(
-        "chat_history:\n  enabled: true\n  heartbeat: hybrid\n",
-        encoding="utf-8",
-    )
-    return p
-
-
-@pytest.fixture
-def settings_heartbeat_off(tmp_path: Path) -> Path:
-    p = tmp_path / "agent-settings.yml"
-    p.write_text(
-        "chat_history:\n  enabled: true\n  heartbeat: off\n",
-        encoding="utf-8",
-    )
-    return p
-
-
-def test_turn_check_disabled_short_circuits(
-    hist: Path, settings_disabled: Path,
-):
-    # Even with a foreign file present, disabled wins.
-    ch.init("orig", path=hist)
-    result = ch.turn_check("anything", path=hist,
-                           settings_path=settings_disabled)
-    assert result == {"state": "disabled", "exit": ch.EXIT_OK}
-
-
-def test_turn_check_match(hist: Path, settings_enabled: Path):
-    ch.init("orig", path=hist)
-    ch.append({"t": "phase", "name": "x"}, path=hist)
-    result = ch.turn_check("orig", path=hist,
-                           settings_path=settings_enabled)
-    assert result["state"] == "ok"
-    assert result["exit"] == ch.EXIT_OK
-    assert result["entries"] == 1
-
-
-def test_turn_check_missing(tmp_path: Path, settings_enabled: Path):
-    hist = tmp_path / "absent.jsonl"
-    result = ch.turn_check("orig", path=hist,
-                           settings_path=settings_enabled)
-    assert result["state"] == "missing"
-    assert result["exit"] == ch.EXIT_MISSING
-
-
-def test_turn_check_foreign(hist: Path, settings_enabled: Path):
-    ch.init("orig", path=hist)
-    result = ch.turn_check("DIFFERENT", path=hist,
-                           settings_path=settings_enabled)
-    assert result["state"] == "foreign"
-    assert result["exit"] == ch.EXIT_FOREIGN
-    assert result["header_fp"] == ch.fingerprint("orig")
-    assert result["current_fp"] == ch.fingerprint("DIFFERENT")
-
-
-def test_turn_check_returning(hist: Path, settings_enabled: Path):
-    ch.init("orig", path=hist)
-    ch.adopt("new", path=hist)
-    result = ch.turn_check("orig", path=hist,
-                           settings_path=settings_enabled)
-    assert result["state"] == "returning"
-    assert result["exit"] == ch.EXIT_RETURNING
-
-
-def test_turn_check_settings_missing_treated_as_disabled(
-    tmp_path: Path, hist: Path,
-):
-    ch.init("orig", path=hist)
-    result = ch.turn_check("orig", path=hist,
-                           settings_path=tmp_path / "absent.yml")
-    assert result["state"] == "disabled"
-
-
-def test_turn_check_settings_no_chat_history_section_disabled(
-    tmp_path: Path, hist: Path,
-):
-    ch.init("orig", path=hist)
-    settings = tmp_path / "agent-settings.yml"
-    settings.write_text("cost_profile: minimal\n", encoding="utf-8")
-    result = ch.turn_check("orig", path=hist, settings_path=settings)
-    assert result["state"] == "disabled"
-
-
-def test_cli_turn_check_match_exit_0(
-    tmp_path: Path, monkeypatch, capsys,
-):
-    target = tmp_path / "cli.jsonl"
-    settings = tmp_path / "agent-settings.yml"
-    settings.write_text("chat_history:\n  enabled: true\n", encoding="utf-8")
-    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
-    ch.main(["init", "--first-user-msg", "orig"])
-    capsys.readouterr()
-    rc = ch.main([
-        "turn-check", "--first-user-msg", "orig",
-        "--settings", str(settings),
-    ])
-    assert rc == ch.EXIT_OK
-    out = capsys.readouterr()
-    assert "state=ok" in out.out
-    assert out.err == ""  # no ACTION-REQUIRED hint on match
-
-
-def test_cli_turn_check_foreign_exit_11_with_hint(
-    tmp_path: Path, monkeypatch, capsys,
-):
-    target = tmp_path / "cli.jsonl"
-    settings = tmp_path / "agent-settings.yml"
-    settings.write_text("chat_history:\n  enabled: true\n", encoding="utf-8")
-    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
-    ch.main(["init", "--first-user-msg", "orig"])
-    capsys.readouterr()
-    rc = ch.main([
-        "turn-check", "--first-user-msg", "DIFFERENT",
-        "--settings", str(settings),
-    ])
-    assert rc == ch.EXIT_FOREIGN
-    captured = capsys.readouterr()
-    assert "state=foreign" in captured.out
-    assert "header_fp=" in captured.out
-    assert "current_fp=" in captured.out
-    assert "ACTION REQUIRED" in captured.err
-    assert "Foreign-Prompt" in captured.err
-
-
-def test_cli_turn_check_missing_exit_10(
-    tmp_path: Path, monkeypatch, capsys,
-):
-    settings = tmp_path / "agent-settings.yml"
-    settings.write_text("chat_history:\n  enabled: true\n", encoding="utf-8")
-    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE",
-                       str(tmp_path / "absent.jsonl"))
-    rc = ch.main([
-        "turn-check", "--first-user-msg", "anything",
-        "--settings", str(settings),
-    ])
-    assert rc == ch.EXIT_MISSING
-    captured = capsys.readouterr()
-    assert "state=missing" in captured.out
-    assert "ACTION REQUIRED" in captured.err
-    assert "init" in captured.err
-
-
-def test_cli_turn_check_disabled_exit_0_no_hint(
-    tmp_path: Path, monkeypatch, capsys,
-):
-    settings = tmp_path / "agent-settings.yml"
-    settings.write_text("chat_history:\n  enabled: false\n", encoding="utf-8")
-    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE",
-                       str(tmp_path / "absent.jsonl"))
-    rc = ch.main([
-        "turn-check", "--first-user-msg", "anything",
-        "--settings", str(settings),
-    ])
-    assert rc == ch.EXIT_OK
-    captured = capsys.readouterr()
-    assert "state=disabled" in captured.out
-    assert captured.err == ""
-
-
-# --- C: heartbeat ----------------------------------------------------
-
-
-def test_format_age_units():
-    assert ch._format_age(0) == "0s ago"
-    assert ch._format_age(45) == "45s ago"
-    assert ch._format_age(60) == "1m ago"
-    assert ch._format_age(3599) == "59m ago"
-    assert ch._format_age(3600) == "1h ago"
-    assert ch._format_age(86399) == "23h ago"
-    assert ch._format_age(86400) == "1d ago"
-    assert ch._format_age(-5) == "just now"
-
-
-def test_last_entry_age_no_file(tmp_path: Path):
-    assert ch._last_entry_age_seconds(tmp_path / "absent") is None
-
-
-def test_last_entry_age_header_only(hist: Path):
-    ch.init("msg", path=hist)
-    assert ch._last_entry_age_seconds(hist) is None
-
-
-def test_last_entry_age_recent(hist: Path):
-    ch.init("msg", path=hist)
-    ch.append({"t": "phase", "name": "x"}, path=hist)
-    age = ch._last_entry_age_seconds(hist)
-    assert age is not None
-    assert 0 <= age <= 5
-
-
-def test_heartbeat_disabled(hist: Path, settings_disabled: Path):
-    ch.init("orig", path=hist)
-    result = ch.heartbeat("anything", path=hist,
-                          settings_path=settings_disabled)
-    assert result["state"] == "disabled"
-    assert result["marker"] == "📒 chat-history: disabled"
-
-
-def test_heartbeat_match_no_entries(hist: Path, settings_enabled: Path):
-    ch.init("orig", path=hist)
-    result = ch.heartbeat("orig", path=hist,
-                          settings_path=settings_enabled)
-    assert result["state"] == "ok"
-    assert result["entries"] == 0
-    assert result["freq"] == "per_phase"
-    assert result["last_age_seconds"] is None
-    assert "ok" in result["marker"]
-    assert "0 entries" in result["marker"]
-    assert "no entries" in result["marker"]
-
-
-def test_heartbeat_match_with_entries(hist: Path, settings_enabled: Path):
-    ch.init("orig", path=hist)
-    ch.append({"t": "phase", "name": "x"}, path=hist)
-    ch.append({"t": "phase", "name": "y"}, path=hist)
-    result = ch.heartbeat("orig", path=hist,
-                          settings_path=settings_enabled)
-    assert result["state"] == "ok"
-    assert result["entries"] == 2
-    assert result["last_age_seconds"] is not None
-    assert result["last_age_seconds"] >= 0
-    assert "2 entries" in result["marker"]
-    assert "per_phase" in result["marker"]
-    assert "last " in result["marker"]
-
-
-def test_heartbeat_missing(tmp_path: Path, settings_enabled: Path):
-    hist = tmp_path / "absent.jsonl"
-    result = ch.heartbeat("orig", path=hist,
-                          settings_path=settings_enabled)
-    assert result["state"] == "missing"
-    assert "missing" in result["marker"]
-
-
-def test_heartbeat_foreign(hist: Path, settings_enabled: Path):
-    ch.init("orig", path=hist)
-    ch.append({"t": "phase", "name": "x"}, path=hist)
-    result = ch.heartbeat("DIFFERENT", path=hist,
-                          settings_path=settings_enabled)
-    assert result["state"] == "foreign"
-    assert result["entries"] == 1
-    assert "foreign" in result["marker"]
-    assert "Foreign-Prompt" in result["marker"]
-
-
-def test_heartbeat_returning(hist: Path, settings_enabled: Path):
-    ch.init("orig", path=hist)
-    ch.append({"t": "phase", "name": "x"}, path=hist)
-    ch.adopt("new", path=hist)
-    result = ch.heartbeat("orig", path=hist,
-                          settings_path=settings_enabled)
-    assert result["state"] == "returning"
-    assert result["entries"] == 1
-    assert "returning" in result["marker"]
-    assert "Returning-Prompt" in result["marker"]
-
-
-def test_cli_heartbeat_match(
-    hist: Path, settings_enabled: Path, monkeypatch, capsys,
-):
-    ch.init("orig", path=hist)
-    ch.append({"t": "phase", "name": "x"}, path=hist)
-    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
-    rc = ch.main([
-        "heartbeat", "--first-user-msg", "orig",
-        "--settings", str(settings_enabled),
-    ])
-    assert rc == ch.EXIT_OK
-    captured = capsys.readouterr()
-    assert captured.out.startswith("📒 chat-history: ok")
-    assert "1 entries" in captured.out
-    assert captured.err == ""
-
-
-def test_cli_heartbeat_json_flag(
-    hist: Path, settings_enabled: Path, monkeypatch, capsys,
-):
-    ch.init("orig", path=hist)
-    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
-    rc = ch.main([
-        "heartbeat", "--first-user-msg", "orig",
-        "--settings", str(settings_enabled), "--json",
-    ])
-    assert rc == ch.EXIT_OK
-    captured = capsys.readouterr()
-    payload = json.loads(captured.out)
-    assert payload["state"] == "ok"
-    assert "marker" in payload
-
-
-def test_cli_heartbeat_disabled(tmp_path: Path, monkeypatch, capsys):
-    # heartbeat: on forces the disabled marker to surface — without it
-    # the default hybrid mode suppresses informational states.
-    settings = tmp_path / "agent-settings.yml"
-    settings.write_text(
-        "chat_history:\n  enabled: false\n  heartbeat: on\n",
-        encoding="utf-8",
-    )
-    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE",
-                       str(tmp_path / "absent.jsonl"))
-    rc = ch.main([
-        "heartbeat", "--first-user-msg", "anything",
-        "--settings", str(settings),
-    ])
-    assert rc == ch.EXIT_OK
-    captured = capsys.readouterr()
-    assert "disabled" in captured.out
-
-
-
-# --- D: heartbeat visibility modes (on / off / hybrid) -------------
-
-
-def test_read_heartbeat_mode_default_hybrid(tmp_path: Path):
-    p = tmp_path / "agent-settings.yml"
-    # No heartbeat key at all → default
-    p.write_text("chat_history:\n  enabled: true\n", encoding="utf-8")
-    assert ch._read_chat_history_heartbeat_mode(p) == "hybrid"
-
-
-def test_read_heartbeat_mode_yaml_on_off_coerced(tmp_path: Path):
-    p = tmp_path / "agent-settings.yml"
-    # YAML 1.1 booleanizes bare on/off — reader must coerce back
-    p.write_text(
-        "chat_history:\n  enabled: true\n  heartbeat: on\n",
-        encoding="utf-8",
-    )
-    assert ch._read_chat_history_heartbeat_mode(p) == "on"
-    p.write_text(
-        "chat_history:\n  enabled: true\n  heartbeat: off\n",
-        encoding="utf-8",
-    )
-    assert ch._read_chat_history_heartbeat_mode(p) == "off"
-
-
-def test_read_heartbeat_mode_unknown_falls_back_to_hybrid(tmp_path: Path):
-    p = tmp_path / "agent-settings.yml"
-    p.write_text(
-        "chat_history:\n  enabled: true\n  heartbeat: chatty\n",
-        encoding="utf-8",
-    )
-    assert ch._read_chat_history_heartbeat_mode(p) == "hybrid"
-
-
-def test_cli_heartbeat_off_silent_on_ok(
-    hist: Path, settings_heartbeat_off: Path, monkeypatch, capsys,
-):
-    ch.init("orig", path=hist)
-    ch.append({"t": "phase", "name": "x"}, path=hist)
-    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
-    rc = ch.main([
-        "heartbeat", "--first-user-msg", "orig",
-        "--settings", str(settings_heartbeat_off),
-    ])
-    assert rc == ch.EXIT_OK
-    captured = capsys.readouterr()
-    assert captured.out == ""
-    assert captured.err == ""
-
-
-def test_cli_heartbeat_off_silent_on_drift(
-    hist: Path, settings_heartbeat_off: Path, monkeypatch, capsys,
-):
-    # off suppresses even drift states — user opted into full silence
-    ch.init("orig", path=hist)
-    ch.append({"t": "phase", "name": "x"}, path=hist)
-    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
-    rc = ch.main([
-        "heartbeat", "--first-user-msg", "DIFFERENT",
-        "--settings", str(settings_heartbeat_off),
-    ])
-    assert rc == ch.EXIT_OK
-    captured = capsys.readouterr()
-    assert captured.out == ""
-
-
-def test_cli_heartbeat_hybrid_silent_on_ok(
-    hist: Path, settings_heartbeat_hybrid: Path, monkeypatch, capsys,
-):
-    ch.init("orig", path=hist)
-    ch.append({"t": "phase", "name": "x"}, path=hist)
-    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
-    rc = ch.main([
-        "heartbeat", "--first-user-msg", "orig",
-        "--settings", str(settings_heartbeat_hybrid),
-    ])
-    assert rc == ch.EXIT_OK
-    captured = capsys.readouterr()
-    assert captured.out == ""
-
-
-def test_cli_heartbeat_hybrid_visible_on_foreign(
-    hist: Path, settings_heartbeat_hybrid: Path, monkeypatch, capsys,
-):
-    ch.init("orig", path=hist)
-    ch.append({"t": "phase", "name": "x"}, path=hist)
-    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
-    rc = ch.main([
-        "heartbeat", "--first-user-msg", "DIFFERENT",
-        "--settings", str(settings_heartbeat_hybrid),
-    ])
-    assert rc == ch.EXIT_OK
-    captured = capsys.readouterr()
-    assert "foreign" in captured.out
-
-
-def test_cli_heartbeat_hybrid_silent_on_disabled(
-    tmp_path: Path, monkeypatch, capsys,
-):
-    # disabled + hybrid → silent (chat_history globally off, no signal)
-    settings = tmp_path / "agent-settings.yml"
-    settings.write_text(
-        "chat_history:\n  enabled: false\n  heartbeat: hybrid\n",
-        encoding="utf-8",
-    )
-    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE",
-                       str(tmp_path / "absent.jsonl"))
-    rc = ch.main([
-        "heartbeat", "--first-user-msg", "anything",
-        "--settings", str(settings),
-    ])
-    assert rc == ch.EXIT_OK
-    captured = capsys.readouterr()
-    assert captured.out == ""
-
-
-def test_cli_heartbeat_json_unaffected_by_mode(
-    hist: Path, settings_heartbeat_off: Path, monkeypatch, capsys,
-):
-    # --json bypasses the visibility filter — consumers want full record
-    ch.init("orig", path=hist)
-    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
-    rc = ch.main([
-        "heartbeat", "--first-user-msg", "orig",
-        "--settings", str(settings_heartbeat_off), "--json",
-    ])
-    assert rc == ch.EXIT_OK
-    captured = capsys.readouterr()
-    payload = json.loads(captured.out)
-    assert payload["state"] == "ok"
-
 
 
 # --- Phase 2: hook-append wrapper -----------------------------------
@@ -1260,7 +785,7 @@ def test_cli_hook_append_invalid_payload_returns_bad_args(
 # These simulate the HOOK lifecycle when the agent process dies between
 # the `session_start` hook and the matching `session_end` hook. The file
 # must survive intact, all pre-crash entries must remain readable, and a
-# fresh session must be able to resume via `turn_check` and continue
+# fresh session must rebind via session_start auto-adopt and continue
 # appending without corrupting the prior log.
 
 
@@ -1290,11 +815,11 @@ def test_crash_recovery_preserves_pre_crash_entries(
     assert [e["text"] for e in entries] == ["step 1", "step 2", "step 3"]
 
 
-def test_crash_recovery_same_user_resumes_via_turn_check(
+def test_crash_recovery_same_user_resumes_after_crash(
     hist: Path, settings_enabled: Path,
 ):
-    """Same first-user-msg after a crash → turn_check returns `ok`
-    and the next hook append lands after the pre-crash tail."""
+    """Same first-user-msg after a crash → ownership_state returns
+    `match` and the next hook append lands after the pre-crash tail."""
     ch.hook_append("session_start", first_user_msg="same prompt",
                    path=hist, settings_path=settings_enabled)
     ch.hook_append("user_prompt", payload={"text": "before crash"},
@@ -1302,11 +827,8 @@ def test_crash_recovery_same_user_resumes_via_turn_check(
 
     # --- crash ---
 
-    # Resume turn — agent's first tool call is turn_check.
-    state = ch.turn_check("same prompt", path=hist,
-                          settings_path=settings_enabled)
-    assert state["state"] == "ok"
-    assert state["entries"] == 1
+    # Resume turn — fresh process inspects ownership state.
+    assert ch.ownership_state("same prompt", path=hist) == "match"
 
     # Hook appends keep flowing; pre-crash entry is preserved.
     ch.hook_append("user_prompt", payload={"text": "after crash"},
@@ -1314,30 +836,6 @@ def test_crash_recovery_same_user_resumes_via_turn_check(
 
     entries = ch.read_entries(path=hist)
     assert [e["text"] for e in entries] == ["before crash", "after crash"]
-
-
-def test_crash_recovery_foreign_user_does_not_clobber_log(
-    hist: Path, settings_enabled: Path,
-):
-    """Different user starts a session against the same project after
-    a crash — turn_check returns `foreign`, the prior log is intact,
-    and no append fires until the agent renders the Foreign-Prompt and
-    the user picks a branch."""
-    ch.hook_append("session_start", first_user_msg="user A",
-                   path=hist, settings_path=settings_enabled)
-    ch.hook_append("user_prompt", payload={"text": "A's work"},
-                   path=hist, settings_path=settings_enabled)
-
-    # --- crash ---
-
-    state = ch.turn_check("user B with different prompt", path=hist,
-                          settings_path=settings_enabled)
-    assert state["state"] == "foreign"
-    assert state["exit"] == ch.EXIT_FOREIGN
-
-    # File untouched until the user resolves the handshake.
-    entries = ch.read_entries(path=hist)
-    assert [e["text"] for e in entries] == ["A's work"]
 
 
 def test_crash_recovery_via_cli_round_trip(
@@ -1376,15 +874,10 @@ def test_crash_recovery_via_cli_round_trip(
 
     # --- Process A dies. session_end never runs. ---
 
-    # Process B: turn_check on the same prompt + a fresh append.
-    rc = ch.main([
-        "turn-check", "--first-user-msg", "crash-test",
-        "--settings", str(settings_enabled),
-    ])
+    # Process B: state subcommand on the same prompt + a fresh append.
+    rc = ch.main(["state", "--first-user-msg", "crash-test"])
     assert rc == ch.EXIT_OK
-    out = capsys.readouterr().out
-    assert "state=ok" in out
-    assert "entries=2" in out
+    assert capsys.readouterr().out.strip() == "match"
 
     rc = ch.main([
         "hook-append", "--event", "user_prompt",
@@ -1396,3 +889,151 @@ def test_crash_recovery_via_cli_round_trip(
 
     entries = ch.read_entries(path=target)
     assert [e["text"] for e in entries] == ["alpha", "beta", "gamma"]
+
+
+# --- Phase 6: hook-only auto-adopt on session_start ------------------
+#
+# session_start against a foreign chat-history file silently rewrites
+# the header (auto-adopts). Kill-switch via AGENT_CHAT_HISTORY_AUTO_ADOPT,
+# and any disk error inside adopt() surfaces as adopt_failed without
+# corrupting the file.
+
+
+def test_hook_append_session_start_foreign_auto_adopts(
+    hist: Path, settings_enabled: Path, monkeypatch,
+):
+    monkeypatch.delenv("AGENT_CHAT_HISTORY_AUTO_ADOPT", raising=False)
+    ch.init("orig", path=hist)
+    ch.append({"t": "user", "text": "x"}, path=hist, first_user_msg="orig")
+    old_fp = ch.fingerprint("orig")
+
+    result = ch.hook_append(
+        "session_start", first_user_msg="newcomer",
+        path=hist, settings_path=settings_enabled,
+    )
+    assert result["action"] == "adopted"
+    assert result["fp"] == ch.fingerprint("newcomer")
+
+    header = ch.read_header(hist)
+    assert header["fp"] == ch.fingerprint("newcomer")
+    # Most recent former owner is at index 0 (see _push_former_fp).
+    assert header["former_fps"][0] == old_fp
+
+    follow = ch.hook_append(
+        "user_prompt", payload={"text": "second"},
+        path=hist, settings_path=settings_enabled,
+    )
+    assert follow["action"] == "appended"
+
+
+def test_hook_append_session_start_foreign_kill_switch(
+    hist: Path, settings_enabled: Path, monkeypatch,
+):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_AUTO_ADOPT", "false")
+    ch.init("orig", path=hist)
+    old_fp = ch.fingerprint("orig")
+
+    result = ch.hook_append(
+        "session_start", first_user_msg="newcomer",
+        path=hist, settings_path=settings_enabled,
+    )
+    assert result["action"] == "ownership_refused"
+    assert result["state"] == "foreign"
+
+    header = ch.read_header(hist)
+    assert header["fp"] == old_fp
+    assert header.get("former_fps") == []
+
+
+def test_hook_append_session_start_foreign_adopt_failed_on_oserror(
+    hist: Path, settings_enabled: Path, monkeypatch,
+):
+    monkeypatch.delenv("AGENT_CHAT_HISTORY_AUTO_ADOPT", raising=False)
+    ch.init("orig", path=hist)
+    pre = hist.read_text(encoding="utf-8")
+    old_fp = ch.fingerprint("orig")
+
+    def boom(_first, *, path=None):
+        raise OSError("disk full simulated")
+
+    monkeypatch.setattr(ch, "adopt", boom)
+    result = ch.hook_append(
+        "session_start", first_user_msg="newcomer",
+        path=hist, settings_path=settings_enabled,
+    )
+    assert result["action"] == "adopt_failed"
+    assert "disk full" in result["reason"]
+
+    assert hist.read_text(encoding="utf-8") == pre
+    header = ch.read_header(hist)
+    assert header["fp"] == old_fp
+
+
+def test_hook_append_session_start_foreign_former_fps_overflow(
+    hist: Path, settings_enabled: Path, monkeypatch,
+):
+    monkeypatch.delenv("AGENT_CHAT_HISTORY_AUTO_ADOPT", raising=False)
+    ch.init("orig", path=hist)
+    cap = ch.FORMER_FPS_CAP
+    fillers = [ch.fingerprint(f"filler-{i}") for i in range(cap)]
+    header = ch.read_header(hist)
+    header["former_fps"] = list(fillers)
+    lines = hist.read_text(encoding="utf-8").splitlines(keepends=True)
+    lines[0] = json.dumps(header, ensure_ascii=False) + "\n"
+    hist.write_text("".join(lines), encoding="utf-8")
+
+    # _push_former_fp prepends old_fp and truncates the tail, so the
+    # last filler (oldest in the input list) is the one that drops.
+    oldest_dropped = fillers[-1]
+    old_fp = ch.fingerprint("orig")
+
+    result = ch.hook_append(
+        "session_start", first_user_msg="newcomer",
+        path=hist, settings_path=settings_enabled,
+    )
+    assert result["action"] == "adopted"
+
+    header = ch.read_header(hist)
+    assert len(header["former_fps"]) == cap
+    assert oldest_dropped not in header["former_fps"]
+    assert header["former_fps"][0] == old_fp
+
+
+def test_hook_dispatch_augment_owner_switch_produces_append_stream(
+    hist: Path, settings_enabled: Path, monkeypatch,
+):
+    """Augment platform: a fresh session_start after an owner switch
+    auto-adopts the header so the next cadence-eligible event lands
+    on disk instead of being silently dropped as ownership_refused."""
+    monkeypatch.delenv("AGENT_CHAT_HISTORY_AUTO_ADOPT", raising=False)
+
+    init_payload = json.dumps({
+        "hook_event_name": "SessionStart",
+        "prompt": "first owner",
+    })
+    r1 = ch.hook_dispatch(
+        "augment", init_payload,
+        path=hist, settings_path=settings_enabled,
+    )
+    assert r1["action"] == "initialized"
+
+    switch_payload = json.dumps({
+        "hook_event_name": "SessionStart",
+        "prompt": "second owner",
+    })
+    r2 = ch.hook_dispatch(
+        "augment", switch_payload,
+        path=hist, settings_path=settings_enabled,
+    )
+    assert r2["action"] == "adopted"
+    assert r2["fp"] == ch.fingerprint("second owner")
+
+    stop_payload = json.dumps({"hook_event_name": "Stop"})
+    r3 = ch.hook_dispatch(
+        "augment", stop_payload,
+        path=hist, settings_path=settings_enabled,
+    )
+    assert r3["action"] == "appended"
+
+    entries = ch.read_entries(path=hist)
+    assert len(entries) >= 1
