@@ -73,6 +73,7 @@ tasks:
       - task: lint-skills
       - task: lint-rule-tiers
       - task: lint-hook-manifest
+      - task: lint-showcase-sessions
       - task: lint-marketplace
       - task: ci-cloud-bundle
       - task: ci-linear-digest

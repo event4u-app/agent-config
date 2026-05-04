@@ -37,6 +37,10 @@ tasks:
     desc: Validate scripts/hook_manifest.yaml — concern scripts exist, platform/event names are known, no orphan trampolines
     cmd: python3 scripts/lint_hook_manifest.py
 
+  lint-showcase-sessions:
+    desc: Gate docs/showcase.md ↔ docs/showcase/sessions/ — every reference resolves to a file with frontmatter + metrics block
+    cmd: python3 scripts/lint_showcase_sessions.py
+
   audit-descriptions:
     desc: Audit skill descriptions for pushy-description pattern compliance (worst 15)
     cmd: python3 scripts/audit_skill_descriptions.py
