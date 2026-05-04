@@ -84,16 +84,21 @@ def main() -> int:
         # README.md
         (README, r"<strong>(\d+) Commands</strong>", active, "hero row"),
         (README, r"Browse all (\d+) active commands", active, "browse line"),
-        (README, r"\((\d+) files total ", total, "browse meta · total files"),
-        (README, r"— (\d+) are deprecation shims", shims, "browse meta · shims"),
         (README, r"\+ (\d+) native commands\)", active, "tools blurb"),
-        # AGENTS.md (`commands/  (84 files — 69 active + 15 deprecation shims)`)
-        (AGENTS, r"commands/\s+\((\d+) files —", total, "tree · total files"),
-        (AGENTS, r"files — (\d+) active", active, "tree · active"),
-        (AGENTS, r"active \+ (\d+) deprecation shims", shims, "tree · shims"),
         # docs/getting-started.md
         (GETTING_STARTED, r"Browse all (\d+) active commands", active, "browse line"),
     ]
+    # Shim-specific messaging only applies during a deprecation window.
+    # When shims == 0 the clauses are dropped from public docs entirely;
+    # re-add these patterns when a new deprecation cycle starts.
+    if shims > 0:
+        checks.extend([
+            (README, r"\((\d+) files total ", total, "browse meta · total files"),
+            (README, r"— (\d+) are deprecation shims", shims, "browse meta · shims"),
+            (AGENTS, r"commands/\s+\((\d+) files —", total, "tree · total files"),
+            (AGENTS, r"files — (\d+) active", active, "tree · active"),
+            (AGENTS, r"active \+ (\d+) deprecation shims", shims, "tree · shims"),
+        ])
 
     errors: list[str] = []
     for path, pattern, expected, label in checks:
