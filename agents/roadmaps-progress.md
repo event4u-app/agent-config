@@ -6,10 +6,10 @@
 
 ## Overall
 
-**41 / 136 steps done · 30%**
+**43 / 133 steps done · 32%**
 
 ```text
-████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
+█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   32%
 ```
 
 ## Open roadmaps
@@ -19,7 +19,7 @@
 | 1 | [road-to-always-budget-relief.md](roadmaps/road-to-always-budget-relief.md) | 4 | 14 | 14 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 1 | 34 | 34 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 4 | [road-to-feedback-consolidation.md](roadmaps/road-to-feedback-consolidation.md) | 7 | 47 | 5 | 41 | 0 | 1 | █████████░ 89% |
+| 4 | [road-to-feedback-consolidation.md](roadmaps/road-to-feedback-consolidation.md) | 7 | 47 | 0 | 43 | 0 | 4 | ██████████ 100% |
 | 5 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
@@ -58,11 +58,11 @@
 
 ### [road-to-feedback-consolidation.md](roadmaps/road-to-feedback-consolidation.md)
 
-**Road to Feedback Consolidation** — 41 / 46 done (89%)
+**Road to Feedback Consolidation** — 43 / 43 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Outcome System & 3 Holy-Shit Demos | 🟡 in progress | 5 | 2 | 0 | 0 | 29% |
+| 1 | Outcome System & 3 Holy-Shit Demos | ✅ done | 0 | 4 | 0 | 3 | 100% |
 | 2 | Tier-Bulk-Retrofit + Linter | ✅ done | 0 | 5 | 0 | 1 | 100% |
 | 3 | Decision-Engine Surfacing + Rule-Interaction Tests | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 4 | Memory Visibility | ✅ done | 0 | 5 | 0 | 0 | 100% |

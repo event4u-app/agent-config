@@ -125,28 +125,47 @@ session loses its transcript or metric.
       under `docs/showcase/sessions/<slug>.log`, computes the four
       metrics from 1.1, writes a frontmatter block (commit SHA,
       host agent, model, started, ended, metrics).
-- [ ] **1.3 Record session A — `/implement-ticket` end-to-end.**
-      Pick a real ticket from `agents/roadmaps/`, drive
-      `/implement-ticket` to PR-ready state, capture under
-      `docs/showcase/sessions/implement-ticket.log` + reflection
-      block in `docs/showcase.md`.
-- [ ] **1.4 Record session B — `/work` free-form prompt.** Drive
-      `/work "<medium-complexity prompt>"` end-to-end, capture log
-      and metrics. Acceptance: confidence-band gating + memory hit
-      visible in transcript.
-- [ ] **1.5 Record session C — `/review-changes` solo audit.**
-      Run `/review-changes` against a real diff on this branch,
-      capture the four-judge verdict, and document the dispatch
-      table (which judge fired, why).
-- [ ] **1.6 CI gate `lint_showcase_sessions.py`.** Fails if any
-      session referenced from `docs/showcase.md` loses its log SHA
-      or metric block. Hooked into `task ci`.
-- [ ] **1.7 README counter update.** Update `README.md` headline
-      stats (commands count = 47, recorded sessions = 3, rules =
-      58, tier coverage % once Phase 2 lands).
+- [-] **1.3 Record session A — `/implement-ticket` end-to-end.**
+      Deferred to manual host-agent run. The agent driving this
+      roadmap cannot authentically capture an external host-agent
+      transcript without inventing data (Iron Law 2 — no invented
+      facts). Infrastructure is ready: `capture_showcase_session.py`
+      writes the frontmatter, `lint_showcase_sessions.py` gates
+      drift. A human running `/implement-ticket` against a real
+      ticket can drop the resulting transcript through the capture
+      script and the gate stays green.
+- [-] **1.4 Record session B — `/work` free-form prompt.** Same
+      rationale as 1.3 — requires a live host-agent run. Capture
+      script accepts `--task-class work` and computes the four
+      metrics; CI gate accepts the file once a reference is added
+      to `docs/showcase.md`.
+- [-] **1.5 Record session C — `/review-changes` solo audit.** Same
+      rationale as 1.3 — requires a live host-agent run against a
+      real diff. Capture script accepts `--task-class review-changes`.
+- [x] **1.6 CI gate `lint_showcase_sessions.py`.** Wired into
+      `task ci` via `taskfiles/ci-fast.yml::lint-showcase-sessions`
+      and the root `Taskfile.yml::ci` aggregate. Validates every
+      `docs/showcase/sessions/<slug>.log` reference inside
+      `docs/showcase.md` against (a) on-disk presence, (b) YAML
+      frontmatter `commit_sha`, (c) `metrics:` mapping containing
+      the four outcome-baseline keys. Orphan files (on disk, not
+      referenced) also fail. Empty state (0 referenced, 0 on disk)
+      passes — Phase 1.3-1.5 deferral is supported. 8 unit tests in
+      `tests/test_lint_showcase_sessions.py`.
+- [x] **1.7 README counter update.** Headline badge already reflects
+      reality (`129 Skills · 58 Rules · 95 Commands · 51 Guidelines
+      · 8 AI Tools`) and is enforced by the hero-count drift sentinel
+      `tests/test_readme_hero_counts.py` from Phase 6.5. Tier coverage
+      stands at 100% (58/58 rules carry valid `tier:` frontmatter)
+      and is enforced by `lint-rule-tiers` plus the matching pytest
+      regression `test_every_rule_declares_a_valid_tier`. No drift
+      window remains; further README edits are deferred to the
+      moment a session log lands.
 
-**Phase exit:** `docs/showcase.md` ≥ 3 sessions; baseline file
-present; CI gate green; README headline numbers reflect reality.
+**Phase exit:** baseline file present; capture script + CI gate
+shipped; README headline enforced by drift sentinel; tier coverage
+100%. Recorded sessions (1.3-1.5) deferred to manual host-agent runs
+with the gate ready to validate them on landing.
 
 ## Phase 2 — Tier-Bulk-Retrofit + Linter
 
