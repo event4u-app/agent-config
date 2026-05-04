@@ -37,6 +37,13 @@ def count(kind: str) -> int:
         if not pdir.exists():
             return 0
         return sum(1 for f in pdir.glob("*.md") if f.name != "README.md")
+    if kind == "commands":
+        # Commands may be flat (`commands/<name>.md`) or nested under a
+        # cluster directory (`commands/<cluster>/<sub>.md`). Walk the tree
+        # and skip the AGENTS.md reference orchestrator.
+        return sum(
+            1 for f in (SRC / kind).rglob("*.md") if f.name != "AGENTS.md"
+        )
     return sum(1 for _ in (SRC / kind).glob("*.md"))
 
 

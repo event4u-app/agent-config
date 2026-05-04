@@ -312,6 +312,29 @@ def generate_gemini_md() -> None:
     print("  ✅  Created GEMINI.md → AGENTS.md symlink")
 
 
+def _command_slug(source_file: Path) -> str:
+    """Return the flat .claude/skills/ slug for a command source file.
+
+    Top-level commands keep their stem (`commit.md` → `commit`). Nested
+    commands flatten the relative path with `-` (`council/default.md` →
+    `council-default`). Keeps slug collisions out of `.claude/skills/`
+    while preserving native nested invocation in `.agent-src/commands/`.
+    """
+    rel = source_file.relative_to(COMMANDS_SOURCE)
+    return "-".join(rel.with_suffix("").parts)
+
+
+def _iter_commands():
+    """Yield (source_file, slug) for every command .md file (recursive)."""
+    if not COMMANDS_SOURCE.exists():
+        return
+    for source_file in sorted(COMMANDS_SOURCE.rglob("*.md")):
+        # Skip the cluster AGENTS.md authoring doc (not a command).
+        if source_file.name == "AGENTS.md":
+            continue
+        yield source_file, _command_slug(source_file)
+
+
 def generate_claude_skills() -> None:
     """Create .claude/skills/ symlinks for ALL skills in .agent-src/skills/.
     """
@@ -321,16 +344,14 @@ def generate_claude_skills() -> None:
 
     # All skill directories in .agent-src/skills/
     skills = sorted([d.name for d in SKILLS_SOURCE.iterdir() if d.is_dir()])
-    # All command names (to protect from stale cleanup)
-    command_names = set()
-    if COMMANDS_SOURCE.exists():
-        command_names = {f.stem for f in COMMANDS_SOURCE.glob("*.md")}
+    # All command slugs (to protect from stale cleanup)
+    command_slugs = {slug for _, slug in _iter_commands()}
 
     CLAUDE_SKILLS_DIR.mkdir(parents=True, exist_ok=True)
 
     # Clean stale symlinks (but not converted commands or README)
     for item in CLAUDE_SKILLS_DIR.iterdir():
-        if item.is_symlink() and item.name not in skills and item.name not in command_names and item.name != "README.md":
+        if item.is_symlink() and item.name not in skills and item.name not in command_slugs and item.name != "README.md":
             item.unlink()
 
     count = 0
@@ -357,11 +378,15 @@ def extract_description_from_md(content: str) -> str:
 
 
 def generate_claude_commands() -> None:
-    """Create .claude/skills/{name}/SKILL.md symlinks for ALL Augment commands.
+    """Create .claude/skills/{slug}/SKILL.md symlinks for ALL Augment commands.
 
     Commands in .agent-src/commands/ are the single source of truth.
     They must include name: and disable-model-invocation: true in frontmatter
     (added once, then maintained as part of the command file).
+
+    Top-level commands use their filename stem as the slug. Nested
+    cluster commands (e.g. `commands/council/default.md`) are flattened
+    to `council-default` so directories never collide in `.claude/skills/`.
     """
     if not COMMANDS_SOURCE.exists():
         print("  ⚠️  .agent-src/commands/ not found — skipping commands")
@@ -374,32 +399,53 @@ def generate_claude_commands() -> None:
     if SKILLS_SOURCE.exists():
         skill_names = {d.name for d in SKILLS_SOURCE.iterdir() if d.is_dir()}
 
+    # Track current command slugs for stale-directory cleanup
+    current_slugs: set[str] = set()
     count = 0
     skipped = 0
-    for source_file in sorted(COMMANDS_SOURCE.glob("*.md")):
-        name = source_file.stem
-
+    for source_file, slug in _iter_commands():
         # Skip if a real skill with the same name exists — skill takes priority
-        if name in skill_names:
+        if slug in skill_names:
             skipped += 1
             continue
 
+        current_slugs.add(slug)
+
         # Create skill directory (real dir, symlinked SKILL.md inside)
-        skill_dir = CLAUDE_SKILLS_DIR / name
+        skill_dir = CLAUDE_SKILLS_DIR / slug
         skill_dir.mkdir(parents=True, exist_ok=True)
 
         skill_file = skill_dir / "SKILL.md"
         if skill_file.exists() or skill_file.is_symlink():
             skill_file.unlink()
 
-        # Symlink: .claude/skills/{name}/SKILL.md → ../../../.agent-src/commands/{name}.md
-        rel_target = Path("../../../.agent-src/commands") / source_file.name
+        # Symlink: .claude/skills/{slug}/SKILL.md → ../../../.agent-src/commands/<rel-path>
+        rel_path = source_file.relative_to(COMMANDS_SOURCE)
+        rel_target = Path("../../../.agent-src/commands") / rel_path
         skill_file.symlink_to(rel_target)
         count += 1
+
+    # Clean stale command skill directories — real dirs from removed commands.
+    # Only delete if the directory contains exactly the SKILL.md symlink we created.
+    removed_dirs = 0
+    for item in CLAUDE_SKILLS_DIR.iterdir():
+        if not item.is_dir() or item.is_symlink():
+            continue
+        if item.name in skill_names or item.name in current_slugs:
+            continue
+        skill_md = item / "SKILL.md"
+        if skill_md.is_symlink():
+            entries = list(item.iterdir())
+            if len(entries) == 1 and entries[0].name == "SKILL.md":
+                skill_md.unlink()
+                item.rmdir()
+                removed_dirs += 1
 
     msg = f"  ✅  Created {count} command symlinks in .claude/skills/"
     if skipped:
         msg += f" ({skipped} skipped — same-name skill exists)"
+    if removed_dirs:
+        msg += f" ({removed_dirs} stale dirs removed)"
     print(msg)
 
 

@@ -53,7 +53,9 @@ def canonical_counts() -> tuple[int, int, int]:
         print(f"❌  {COMMANDS_DIR.relative_to(ROOT)} not found", file=sys.stderr)
         sys.exit(1)
     total = shims = 0
-    for f in COMMANDS_DIR.glob("*.md"):
+    for f in COMMANDS_DIR.rglob("*.md"):
+        if f.name == "AGENTS.md":
+            continue
         total += 1
         m = FM_RE.match(f.read_text(encoding="utf-8"))
         fm = m.group(1) if m else ""
