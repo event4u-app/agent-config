@@ -101,7 +101,7 @@ a different sub-procedure (steps 5a–5d).
 1. Ensure the branch is up to date with the base →
    [`prepare-for-review`](../../commands/prepare-for-review.md)
 2. Self-review the full diff → [`review-changes`](../../commands/review-changes.md)
-3. Write the PR description → [`create-pr-description`](../../commands/create-pr-description.md)
+3. Write the PR description → [`create-pr-description`](../../commands/create-pr/description-only.md)
 4. Open the PR → [`create-pr`](../../commands/create-pr.md)
 5. Confirm the PR opened green, not red
 

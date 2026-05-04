@@ -26,7 +26,7 @@ Do NOT use when:
 - The diff is low-risk and no ownership map exists — fall back to
   [`reviewer-awareness`](../../rules/reviewer-awareness.md) defaults.
 - A full PR description is requested — route to
-  [`create-pr-description`](../create-pr-description/SKILL.md) and let
+  [`create-pr-description`](../create-pr:description-only/SKILL.md) and let
   it call this skill for the routing block.
 - A threat model is wanted — route to
   [`threat-modeling`](../threat-modeling/SKILL.md).
@@ -190,6 +190,6 @@ Data source: <"ownership-map.yml + historical-bug-patterns.yml"
 - [`reviewer-awareness`](../../rules/reviewer-awareness.md)
 - [`review-routing-awareness`](../../rules/review-routing-awareness.md)
 - [`review-routing-data-format`](../../../docs/guidelines/agent-infra/review-routing-data-format.md)
-- [`create-pr-description`](../create-pr-description/SKILL.md)
+- [`create-pr-description`](../create-pr:description-only/SKILL.md)
 - [`judge-test-coverage`](../judge-test-coverage/SKILL.md) — consumes
   the `required_test` entries from matched patterns.

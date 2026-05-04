@@ -36,7 +36,7 @@ Exactly four ways the agent may commit:
    the conversation "commit after every phase" or similar, and has not
    revoked it. Cache and honor.
 3. **Commit command invoked** — `/commit` (with confirmation) or
-   `/commit-in-chunks` (auto-split, no confirmation).
+   `/commit:in-chunks` (auto-split, no confirmation).
 4. **Roadmap authorization** — the roadmap file lists explicit commit
    steps and the user invoked roadmap execution.
 
@@ -77,5 +77,5 @@ clearly and unambiguously (e.g. "Commit phase X: chore: …").
 - [`scope-control`](scope-control.md) — git-ops permission gate
   (push, merge, branch, PR, tag stay separately permission-gated).
 - [`/commit`](../commands/commit.md) — split and commit with confirmation.
-- [`/commit-in-chunks`](../commands/commit-in-chunks.md) — auto-split
+- [`/commit:in-chunks`](../commands/commit/in-chunks.md) — auto-split
   and commit without confirmation.

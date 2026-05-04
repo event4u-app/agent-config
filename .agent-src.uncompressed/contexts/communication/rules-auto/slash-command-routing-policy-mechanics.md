@@ -25,8 +25,8 @@ this file mirrors that contract for runtime lookup. Linter:
 | `/override` | 2 | `create` · `manage` | `/override-create` · `/override-manage` |
 | `/copilot-agents` | 2 | `init` · `optimize` | `/copilot-agents-init` · `/copilot-agents-optimize` |
 | `/judge` | 2 | `solo` · `on-diff` · `steps` | `/judge` (legacy standalone) · `/do-and-judge` · `/do-in-steps` |
-| `/commit` | 2 | flag: `--in-chunks` | `/commit-in-chunks` |
-| `/create-pr` | 2 | flag: `--description-only` | `/create-pr-description` |
+| `/commit` | 2 | flag: `--in-chunks` | `/commit:in-chunks` |
+| `/create-pr` | 2 | flag: `--description-only` | `/create-pr:description-only` |
 
 ## Routing semantics
 

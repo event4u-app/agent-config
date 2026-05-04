@@ -552,7 +552,7 @@ our recommendation order, not its support status.
 * **linear:** Phase 3 — Linear AI rules digest builder + three-layer split ([3dcbf0a](https://github.com/event4u-app/agent-config/commit/3dcbf0af3c2dca70ef70f18af70a3568516f0147))
 * **rules:** add commit-policy as canonical no-commit-no-ask rule ([fd208ea](https://github.com/event4u-app/agent-config/commit/fd208ea1c0f95aaa58d930c99ff0e51dd27600ed))
 * **rules:** add autonomous-execution rule with intent-based opt-in ([fbff529](https://github.com/event4u-app/agent-config/commit/fbff5299b32606b7f13f06c856a4d4556c908fcb))
-* **commands:** add /commit-in-chunks for autonomous commit splitting ([b53fa7b](https://github.com/event4u-app/agent-config/commit/b53fa7b277a107af8acc6076baf8c985f0fbb901))
+* **commands:** add /commit:in-chunks for autonomous commit splitting ([b53fa7b](https://github.com/event4u-app/agent-config/commit/b53fa7b277a107af8acc6076baf8c985f0fbb901))
 * **cloud:** mark T3-H artifacts cloud-safe (4 noop + 4 degrade) ([0eb7eb3](https://github.com/event4u-app/agent-config/commit/0eb7eb3cdbf590e3ef87f372c3fd09d85aa5cfd5))
 * **cloud:** cloud-safe marker detection + variant rendering ([67bf28b](https://github.com/event4u-app/agent-config/commit/67bf28b8f85384333f5d26807ad92e6d0b456288))
 * **cloud:** cloud-bundle builder with T3-H gating + tests ([f749edc](https://github.com/event4u-app/agent-config/commit/f749edc8c0f16cded153eb24580c4b262a6065ae))

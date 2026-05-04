@@ -64,7 +64,7 @@ which one's Iron Law gets the final say.
 | Situation | Bands that fire | Winner | Why |
 |---|---|---|---|
 | Standing autonomy + roadmap step says "merge to `main`" | 1, 7 | **1** | Hard Floor predates and outranks autonomy; surface the merge, ask. |
-| `/commit-in-chunks` on a diff that removes a directory | 1, 5 | **1** | Commit exception authorizes *commits*, not *bulk deletions*. Confirm diff this turn. |
+| `/commit:in-chunks` on a diff that removes a directory | 1, 5 | **1** | Commit exception authorizes *commits*, not *bulk deletions*. Confirm diff this turn. |
 | User asks "improve this" with no metric named | 4, 7 | **4** | Vague-request trigger fires before any autonomy decision; ask the one clarifying question. |
 | Editing `app/Auth/PasswordReset.php` mid-feature | 2, 7 | **2** | Security-sensitive surface stops the edit until threat-model is recorded. |
 | Agent about to claim "ready to merge" with no fresh test output | 5, 6 | **6** | Verification gate fires before the commit/push question is even valid. |
