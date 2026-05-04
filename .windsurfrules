@@ -1328,6 +1328,12 @@ clearly and unambiguously (e.g. "Commit phase X: chore: …").
 
 # Context Hygiene
 
+> **Enforced by:** [`scripts/context_hygiene_hook.py`](../../scripts/context_hygiene_hook.py)
+> on Augment + Claude Code (`PostToolUse`). The hook maintains
+> `.augment/state/context-hygiene.json` (turn count, loop signal,
+> freshness milestones at 20/40/60); the prose below is the spec the
+> hook implements and the agent-side fallback.
+
 ## Conversation Freshness
 
 Monitor for **context decay** — long conversations degrade quality and waste tokens.
@@ -2491,6 +2497,12 @@ floor predates and outranks any platform-specific autonomy default.
 
 # Onboarding Gate
 
+> **Enforced by:** [`scripts/onboarding_gate_hook.py`](../../scripts/onboarding_gate_hook.py)
+> on Augment + Claude Code (`SessionStart`). The hook refreshes
+> `.augment/state/onboarding-gate.json` from `.agent-settings.yml`; the
+> prose below is the spec the hook implements and the fallback for
+> platforms without a hook surface.
+
 Forces a one-time `/onboard` run for each developer on each project. This
 replaces the previously scattered "ask once" patterns across `user_name`,
 `personal.ide`, `personal.rtk_installed`, and cost profile confirmation.
@@ -2576,6 +2588,7 @@ gate. This protects projects that were set up before this rule shipped.
 - [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md) — merge rules for mid-life edits
 - [`agent-settings` template](../templates/agent-settings.md) — `onboarding.onboarded` reference
 - [`rule-type-governance`](rule-type-governance.md) — why this is `always`
+- [`hardening-pattern`](../../agents/contexts/hardening-pattern.md) — Tier 1 mechanical-rule contract
 
 ---
 
@@ -2951,6 +2964,11 @@ same diff), not from seniority.
 <!-- Authoring discipline applies in cloud; local script + regen are no-ops there. -->
 
 # Roadmap Progress Sync
+
+> **Enforced by:** [`scripts/roadmap_progress_hook.py`](../../scripts/roadmap_progress_hook.py)
+> on Augment + Claude Code (`PostToolUse`). Hook is primary; the prose
+> below is the specification the hook implements and the fallback when
+> the platform has no hook surface.
 
 ## Iron Law — dashboard sync
 
