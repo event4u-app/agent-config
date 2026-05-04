@@ -148,7 +148,6 @@ Replace dynamic `getPdo()` probing with explicit config:
 
 ## Related project docs
 
-- `agents/roadmaps/test-performance-refactor.md` — active roadmap for this project
 - `agents/docs/seeders.md` — seeder conventions (if exists)
 
 ## Output format

@@ -4,10 +4,9 @@ stability: beta
 
 # `/implement-ticket` — Flow Contract
 
-> Technical contracts for the delivery orchestrator shipped under
-> [`road-to-implement-ticket.md`](../../agents/roadmaps/road-to-implement-ticket.md).
-> This document is the stable reference; the roadmap tracks phased
-> delivery.
+> Technical contracts for the `/implement-ticket` delivery orchestrator.
+> This document is the stable reference for engine boundaries, state
+> schema, and replay protocol.
 >
 > - **Created:** 2026-04-22
 > - **Status:** Phase 1 shipped 2026-04-23 — `DeliveryState` +
@@ -616,8 +615,6 @@ are blocked by `freeze-guard.yml::manifest-integrity` at PR time.
 
 ## See also
 
-- [`agents/roadmaps/road-to-implement-ticket.md`](../../agents/roadmaps/road-to-implement-ticket.md)
-- [`agents/roadmaps/road-to-universal-execution-engine.md`](../../agents/roadmaps/road-to-universal-execution-engine.md)
 - `tests/golden/` — capture sandbox, recipes, and Capture Packs
 - [`../../tests/golden/harness.py`](../../tests/golden/harness.py) — Strict-Verb replay harness
 - [`../../.github/workflows/freeze-guard.yml`](../../.github/workflows/freeze-guard.yml) — manifest-integrity + live-replay gates

@@ -17,11 +17,10 @@ Default-off; opt-in via `.agent-settings.yml`. Zero overhead when disabled.
 
 The schema, CLI, and storage layer are owned by
 [`scripts/telemetry/`](../../../scripts/telemetry/) and the
-`./agent-config telemetry:record` / `telemetry:status` commands shipped
-in Phase 1+2 of the
-[`road-to-artifact-engagement-telemetry`](../../../agents/roadmaps/road-to-artifact-engagement-telemetry.md)
-roadmap. This rule says **when** to call the CLI, not how the file is
-structured.
+`./agent-config telemetry:record` / `telemetry:status` commands. The
+recording contract lives in
+[`docs/contracts/artifact-engagement-flow.md`](../../docs/contracts/artifact-engagement-flow.md).
+This rule says **when** to call the CLI, not how the file is structured.
 
 ## Activation gate — read settings ONCE per task, then cache
 
@@ -72,7 +71,6 @@ catalog live in
 
 ## See also
 
-- [`road-to-artifact-engagement-telemetry`](../../../agents/roadmaps/road-to-artifact-engagement-telemetry.md) — phase contract
 - [`docs/contracts/artifact-engagement-flow.md`](../../docs/contracts/artifact-engagement-flow.md) — recording contract details
 - [`/implement-ticket`](../commands/implement-ticket.md) and [`/work`](../commands/work.md) — boundary points where this rule fires
 - [`scripts/telemetry/`](../../../scripts/telemetry/) — engine source

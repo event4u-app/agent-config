@@ -97,5 +97,3 @@ itself is annotated with this deviation.
   one of these paths in frontmatter.
 - [`rule-priority-hierarchy.md`](rule-priority-hierarchy.md) — which rule
   wins when several fire on the same turn (independent of context paths).
-- [`agents/roadmaps/road-to-structural-optimization.md`](../../agents/roadmaps/road-to-structural-optimization.md)
-  — Phase 0.6 (this contract's origin) and the DAG that follows.

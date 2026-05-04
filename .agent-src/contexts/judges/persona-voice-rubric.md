@@ -4,12 +4,9 @@ stability: beta
 
 # Persona-Voice Rubric for `judge-*` Skills
 
-> **Audience:** authors and reviewers of the Phase 3a spike. Also loaded
-> via `load_context:` by future `judge-*` slim shapes when the 3a A-shape
-> ships.
-> **Owner phase:** `road-to-structural-optimization.md` § 0.5 / 3a.0.1.
-> **Companion:** [`structural-optimization-3a-scoring-protocol.md`](../../../agents/roadmaps/structural-optimization-3a-scoring-protocol.md)
-> — the 3-scorer process that consumes this rubric.
+> **Audience:** authors and reviewers of any future `judge-*`
+> consolidation spike. Also loaded via `load_context:` by future
+> `judge-*` slim shapes when an A-shape ships.
 
 This rubric defines **what "persona voice" means** for the four
 `judge-*` skills (`judge-bug-hunter`, `judge-code-quality`,
@@ -136,9 +133,6 @@ files `contexts/judges/no-consolidate-rationale.md`.
 
 ## References
 
-- `road-to-structural-optimization.md` § 0.5, § 3a — owner phases.
-- [`structural-optimization-3a-scoring-protocol.md`](../../../agents/roadmaps/structural-optimization-3a-scoring-protocol.md)
-  — process around this rubric.
 - [`docs/contracts/context-paths.md`](../../../docs/contracts/context-paths.md)
   — locked path tree (this file lives at `contexts/judges/`).
 - [`docs/contracts/load-context-schema.md`](../../../docs/contracts/load-context-schema.md)

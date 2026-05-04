@@ -47,7 +47,7 @@ Stop.
 ### 2. Analyze the feature
 
 - Read the feature file completely.
-- Read `agents/roadmaps/template.md` for the roadmap structure.
+- Read the roadmap template at `.augment/templates/roadmaps.md` for the structure.
 - Research the codebase for affected areas mentioned in the feature.
 
 Determine how many roadmaps are needed:
@@ -185,7 +185,7 @@ What's next?
   requested them. See [`commit-policy`](../rules/commit-policy.md#never-write-commit-steps-into-roadmaps-unsolicited).
 - **Do NOT modify the feature plan** beyond updating the Roadmaps section and status.
 - **Always link roadmaps back to the feature** and vice versa.
-- **Use the roadmap template** from `agents/roadmaps/template.md`.
+- **Use the roadmap template** at `.augment/templates/roadmaps.md`.
 - **Reference specific files** in roadmap tasks — not vague descriptions.
 - **Include quality gates** (PHPStan, Rector, tests) in every phase.
 - **Research the codebase** to make tasks concrete and realistic.

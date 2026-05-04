@@ -136,7 +136,5 @@ for the contract and the transitional allowlist.
 
 ## See also
 
-- [`agents/roadmaps/road-to-post-pr29-optimize.md`](../../agents/roadmaps/road-to-post-pr29-optimize.md) — P0.1, P0.1a, P0.1b
-- [`agents/roadmaps/road-to-pr-34-followups.md`](../../agents/roadmaps/road-to-pr-34-followups.md) — Phase 7 (budget hardening)
 - [`docs/architecture.md`](../architecture.md) — package architecture overview
 - [`rule-priority-hierarchy.md`](rule-priority-hierarchy.md) — which always-rule wins on conflict

@@ -8,9 +8,7 @@ Companion examples for three always-rules:
 The rules carry the Iron Laws and the obligation surface. This file
 carries the illustrative material (example questions, rationale
 tables, failure-mode catalogs) that does not need to live in the
-always-loaded rule body. Phase 5.1 of
-[`road-to-structural-optimization`](../../../agents/roadmaps/road-to-structural-optimization.md)
-extracted this material to fit the always-rule budget.
+always-loaded rule body — extracted to fit the always-rule budget.
 
 ## Vague-request triggers — example questions
 

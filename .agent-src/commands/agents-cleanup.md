@@ -6,7 +6,12 @@ disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Consumes prior audit output; only meaningful right after /agents-audit."
+superseded_by: agents cleanup
+deprecated_in: "1.17.0"
 ---
+
+> ⚠️  /agents-cleanup is deprecated; use /agents cleanup instead.
+> This shim is retained for one release cycle (1.17.0 → next minor) and forwards to the same instructions below. See [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
 
 # agents-cleanup
 
@@ -14,9 +19,14 @@ suggestion:
 
 ### 1. Check for audit roadmap
 
-- Check if `agents/roadmaps/agents-cleanup.md` exists (created by `/agents-audit`).
-- If yes → load it and show the phases.
-- If no → ask:
+Check the audit-roadmap path created by `/agents audit`:
+
+```
+agents/roadmaps/agents-cleanup.md
+```
+
+- If it exists → load it and show the phases.
+- If not → ask:
 
 ```
 ⚠️  No audit roadmap found.

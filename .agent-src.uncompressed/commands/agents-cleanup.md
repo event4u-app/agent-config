@@ -19,9 +19,14 @@ deprecated_in: "1.17.0"
 
 ### 1. Check for audit roadmap
 
-- Check if `agents/roadmaps/agents-cleanup.md` exists (created by `/agents-audit`).
-- If yes → load it and show the phases.
-- If no → ask:
+Check the audit-roadmap path created by `/agents audit`:
+
+```
+agents/roadmaps/agents-cleanup.md
+```
+
+- If it exists → load it and show the phases.
+- If not → ask:
 
 ```
 ⚠️  No audit roadmap found.

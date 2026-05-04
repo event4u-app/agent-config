@@ -7,8 +7,6 @@ stability: beta
 > **Status:** beta — Phase 1 locked for `1.15.0` (top-3 clusters);
 > Phase 2 locked for `1.17.0` (the remaining 12 clusters);
 > Phase 3 locked for `1.17.0` (`council` cluster).
-> Source roadmap: [`agents/roadmaps/road-to-structural-optimization.md`](../../agents/roadmaps/road-to-structural-optimization.md)
-> § Phase 1 / § Phase 4 (which builds on `archive/road-to-governance-cleanup.md` § F2).
 
 The agent-config command surface collapses related atomic commands
 into **verb clusters**. A cluster is a single top-level command
@@ -138,8 +136,5 @@ future cluster expansion.
 
 ## See also
 
-- [`agents/roadmaps/road-to-structural-optimization.md`](../../agents/roadmaps/road-to-structural-optimization.md) — Phase 1 (Phase 2 cluster lock-in for 1.17.0).
-- [`agents/roadmaps/archive/road-to-governance-cleanup.md`](../../agents/roadmaps/archive/road-to-governance-cleanup.md) — F2 phased-collapse decision.
-- [`agents/roadmaps/road-to-post-pr29-optimize.md`](../../agents/roadmaps/road-to-post-pr29-optimize.md) — P0.8 anchors this contract in 1.15.0.
 - [`docs/migrations/commands-1.15.0.md`](../migrations/commands-1.15.0.md) — user-facing migration notes.
 - [`docs/contracts/STABILITY.md`](STABILITY.md) — `beta` level rules apply.
