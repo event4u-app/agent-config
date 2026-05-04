@@ -182,16 +182,12 @@ If yes → switch to the `roadmap-execute` command workflow with the newly creat
   violates [`roadmap-progress-sync`](../rules/roadmap-progress-sync.md)
   Iron Law #2.
 - **Status is binary: `ready` (default) or `draft`.** Create new
-  roadmaps as **ready** — no `status:` field needed, ready is
-  implicit. Only mark `status: draft` (in YAML frontmatter) when the
+  roadmaps as **ready** — no `status:` field needed.
+  Only mark `status: draft` (in YAML frontmatter) when the
   user explicitly says it should be hidden from the dashboard (still
   being authored, awaiting upstream decisions, capture-only synthesis
   without executable phases). If the user wants draft, ask once at
   step 3 — do not infer it.
-- **Write the roadmap in English** (per project convention for `.md` files).
-- Follow the roadmap template from `.augment/templates/roadmaps.md`.
+- Follow the roadmap template from `.augment/templates/roadmaps.md`; write in English (project convention).
 - Keep the file focused: 500–1000 lines max. If larger, suggest splitting.
-- **Never overwrite an existing roadmap.** Step 6's collision check
-  scans active, `archive/`, and `skipped/` (plus nested subdirs).
-  On hit → STOP and present the rename / open / abort options. Auto-
-  suffixing (`-v2`, `-2026-05`) requires explicit user pick.
+- **Never overwrite an existing roadmap.** Step 6 scans `active/`, `archive/`, `skipped/` (+ subdirs); on collision → STOP, present rename / open / abort. Auto-suffix requires explicit pick.

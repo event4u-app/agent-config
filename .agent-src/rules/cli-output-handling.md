@@ -10,8 +10,7 @@ load_context:
 
 # Development Efficiency
 
-Loaded when actively working with code, tests, quality tools, CLI, or analysis.
-For communication and response style rules → see the always-loaded `token-efficiency` rule.
+Loaded for code, tests, quality tools, CLI, analysis. Communication / response style → always-loaded `token-efficiency`.
 
 ## Iron Law — rtk first, tail/grep fallback
 
