@@ -1,6 +1,7 @@
 ---
 stability: beta
 status: draft
+complexity: lightweight
 ---
 
 # Phase 3a Spike — Scoring Protocol

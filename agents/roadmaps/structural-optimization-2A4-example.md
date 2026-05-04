@@ -3,6 +3,7 @@ title: "2A.4 worked example — direct-answers"
 phase: 0.4
 status: draft
 lock_state: locked
+complexity: lightweight
 sandbox:
   - agents/roadmaps/examples/2A4-direct-answers/direct-answers.slim.md
   - agents/roadmaps/examples/2A4-direct-answers/direct-answers-mechanics.md

@@ -6,10 +6,10 @@
 
 ## Overall
 
-**0 / 140 steps done · 0%**
+**45 / 135 steps done · 33%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   33%
 ```
 
 ## Open roadmaps
@@ -17,10 +17,10 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 1 | 34 | 34 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-context-layer-maturity.md](roadmaps/road-to-context-layer-maturity.md) | 6 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-context-layer-maturity.md](roadmaps/road-to-context-layer-maturity.md) | 6 | 31 | 1 | 26 | 0 | 4 | ██████████ 96% |
 | 3 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-rule-hardening.md](roadmaps/road-to-rule-hardening.md) | 7 | 33 | 33 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 5 | [road-to-rule-hardening.md](roadmaps/road-to-rule-hardening.md) | 7 | 33 | 13 | 19 | 0 | 1 | ██████░░░░ 59% |
 
 ---
 
@@ -36,16 +36,16 @@
 
 ### [road-to-context-layer-maturity.md](roadmaps/road-to-context-layer-maturity.md)
 
-**Road to Context Layer Maturity** — 0 / 31 done (0%)
+**Road to Context Layer Maturity** — 26 / 27 done (96%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | PR #36 Closeout (≤ 1 day) — P0, blocking merge | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 1 | Context Activation Contract (1–2 days) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 2 | Outcome Measurement (2–3 days) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 3 | Examples → Holy Shit Demos (1–2 days) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 4 | Always-Budget v2 (3–5 days, gated by Phase 2 + Phase 3) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 5 | Roadmap Complexity Standard (≤ 1 day) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 0 | PR #36 Closeout (≤ 1 day) — P0, blocking merge | ✅ done | 0 | 1 | 0 | 3 | 100% |
+| 1 | Context Activation Contract (1–2 days) | ✅ done | 0 | 5 | 0 | 1 | 100% |
+| 2 | Outcome Measurement (2–3 days) | ✅ done | 0 | 7 | 0 | 0 | 100% |
+| 3 | Examples → Holy Shit Demos (1–2 days) | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 4 | Always-Budget v2 (3–5 days, gated by Phase 2 + Phase 3) | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
+| 5 | Roadmap Complexity Standard (≤ 1 day) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 
 ### [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md)
 
@@ -73,15 +73,15 @@
 
 ### [road-to-rule-hardening.md](roadmaps/road-to-rule-hardening.md)
 
-**Road to Rule Hardening** — 0 / 33 done (0%)
+**Road to Rule Hardening** — 19 / 32 done (59%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0a | PR #36 Closeout Hygiene (≤ 0.5 day, blocks merge) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 1 | Self-Check Rule Audit (≤ 1 day) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | Tier Classification (≤ 1 day) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 3 | Pilot Hardening (1–2 days) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 4 | Tier 1 Rollout (2–3 days, gated by Phase 3) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 0a | PR #36 Closeout Hygiene (≤ 0.5 day, blocks merge) | ✅ done | 0 | 3 | 0 | 1 | 100% |
+| 1 | Self-Check Rule Audit (≤ 1 day) | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 2 | Tier Classification (≤ 1 day) | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
+| 3 | Pilot Hardening (1–2 days) | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 4 | Tier 1 Rollout (2–3 days, gated by Phase 3) | 🟡 in progress | 3 | 2 | 0 | 0 | 40% |
 | 5 | Tier 2 Nudge Strategy (1–2 days) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 6 | Tier 3 Disposition (≤ 1 day) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 

@@ -5,6 +5,7 @@ phase: 0.3
 stability: beta
 locked_at: 2026-05-03
 status: draft
+complexity: lightweight
 ---
 
 # Phase 6 → 2B coupling proof
