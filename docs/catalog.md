@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **327 public artefacts** shipped by
+Consumer-facing catalog of all **330 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -301,14 +301,16 @@ are excluded.
 | command | [`upstream-contribute`](../.agent-src/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
 | command | [`work`](../.agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (48)
+## Guidelines (51)
 
 | kind | name | category | description |
 |---|---|---|---|
 | guideline | [`agent-interaction-and-decision-quality`](../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md) | agent-infra |  |
+| guideline | [`ask-when-uncertain-demos`](../docs/guidelines/agent-infra/ask-when-uncertain-demos.md) | agent-infra |  |
 | guideline | [`asking-and-brevity-examples`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md) | agent-infra |  |
 | guideline | [`break-glass-usage`](../docs/guidelines/agent-infra/break-glass-usage.md) | agent-infra |  |
 | guideline | [`developer-judgment`](../docs/guidelines/agent-infra/developer-judgment.md) | agent-infra |  |
+| guideline | [`direct-answers-demos`](../docs/guidelines/agent-infra/direct-answers-demos.md) | agent-infra |  |
 | guideline | [`engineering-memory-data-format`](../docs/guidelines/agent-infra/engineering-memory-data-format.md) | agent-infra |  |
 | guideline | [`language-and-tone-examples`](../docs/guidelines/agent-infra/language-and-tone-examples.md) | agent-infra |  |
 | guideline | [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md) | agent-infra |  |
@@ -322,6 +324,7 @@ are excluded.
 | guideline | [`self-improvement-pipeline`](../docs/guidelines/agent-infra/self-improvement-pipeline.md) | agent-infra |  |
 | guideline | [`size-and-scope`](../docs/guidelines/agent-infra/size-and-scope.md) | agent-infra |  |
 | guideline | [`tool-integration`](../docs/guidelines/agent-infra/tool-integration.md) | agent-infra |  |
+| guideline | [`verify-before-complete-demos`](../docs/guidelines/agent-infra/verify-before-complete-demos.md) | agent-infra |  |
 | guideline | [`readme-size-and-splitting`](../docs/guidelines/docs/readme-size-and-splitting.md) | docs |  |
 | guideline | [`playwright`](../docs/guidelines/e2e/playwright.md) | e2e |  |
 | guideline | [`api-design`](../docs/guidelines/php/api-design.md) | php |  |

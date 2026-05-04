@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2a"
 description: "When roles.active_role is set in .agent-settings.yml — closing outputs must match the mode's contract and emit the structured mode marker"
 alwaysApply: false
 source: package
@@ -12,8 +13,7 @@ one of the six modes defined in
 [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md):
 `developer`, `reviewer`, `tester`, `po`, `incident`, `planner`.
 
-Read `roles.active_role` from `.agent-settings.yml` at session start.
-Empty or missing → rule is inert. Do NOT guess a mode.
+Read `roles.active_role` from `.agent-settings.yml` at session start. Empty / missing → rule is inert; do NOT guess a mode.
 
 When active, every closing output MUST:
 

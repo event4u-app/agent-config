@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2a"
 alwaysApply: false
 description: "Running CLI commands that produce verbose output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk when installed; tail/grep is fallback."
 source: package
@@ -9,8 +10,7 @@ load_context:
 
 # Development Efficiency
 
-Loaded when actively working with code, tests, quality tools, CLI, or analysis.
-For communication and response style rules → see the always-loaded `token-efficiency` rule.
+Loaded for code, tests, quality tools, CLI, analysis. Communication / response style → always-loaded `token-efficiency`.
 
 ## Iron Law — rtk first, tail/grep fallback
 

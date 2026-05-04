@@ -117,11 +117,28 @@ Every roadmap follows this structure:
 
 ### Quality gates
 
-Every roadmap implicitly includes these gates (run after each step that changes code):
+Every roadmap implicitly includes the project's quality pipeline
+(static analysis, autofixes, tests). What's configurable is **when**
+the pipeline runs during `/roadmap execute`, controlled by
+`roadmap.quality_cadence` in `.agent-settings.yml`:
 
-- PHPStan must pass (detect command: artisan vs composer, see `rules/docker-commands.md`)
-- Rector: run with fix flag, verify no new PHPStan errors
-- Tests: run affected tests
+| Cadence | Pipeline runs | Trade-off |
+|---|---|---|
+| `end_of_roadmap` (default) | Once before archiving | Fastest, fewest tokens; errors compound across phases |
+| `per_phase` | After every completed phase + final | Balanced; catches drift at phase boundaries |
+| `per_step` | After every completed step + final | Legacy verbose; highest token cost |
+
+The default is `end_of_roadmap` because most steps are checkbox-only
+content edits and a final pipeline run is the cheapest way to satisfy
+`verify-before-complete`. Switch to `per_phase` for risky migrations or
+unfamiliar codebases.
+
+**Always-on, regardless of cadence:**
+
+- Step checkboxes flip `[ ] → [x]` and the dashboard regenerates **same
+  response** (enforced by `roadmap-progress-sync`).
+- Before any "roadmap complete" claim or archival, the pipeline runs
+  fresh (enforced by `verify-before-complete`).
 
 ### Step granularity
 
@@ -149,6 +166,14 @@ Every roadmap implicitly includes these gates (run after each step that changes 
    the roadmap text. If the user declines, do **not** re-propose during
    `roadmap-execute`. Decline = silence. See [`scope-control`](../../rules/scope-control.md#decline--silence--no-re-asking-on-the-same-task).
 5. Save with a kebab-case filename (e.g. `optimize-webhook-jobs.md`).
+   **Before writing**, scan the entire roadmap namespace for a
+   collision — active, `archive/`, `skipped/`, and nested subdirs —
+   with `find agents/roadmaps -type f -iname "<name>.md"`. If any
+   hit comes back, stop and ask the user to rename, open the
+   existing file, or abort. Never silently overwrite an archived
+   or skipped roadmap. Detailed prompt in
+   [`commands/roadmap/create.md`](../../commands/roadmap/create.md)
+   step 6.
 6. Regenerate the dashboard so the new roadmap is included.
 
 ### Executing a roadmap

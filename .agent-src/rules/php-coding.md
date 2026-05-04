@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "3"
 description: "Writing or reviewing PHP code — strict types, naming, comparisons, early returns, Eloquent conventions"
 alwaysApply: false
 source: package

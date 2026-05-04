@@ -119,3 +119,61 @@ def test_agents_md_skill_rule_counts_match_disk() -> None:
     if claimed_r != actual_r:
         drift.append(f"  rules: AGENTS.md claims {claimed_r}, disk has {actual_r}")
     assert not drift, "AGENTS.md headline counts drifted:\n" + "\n".join(drift)
+
+
+# --- Tier coverage drift sentinel (roadmap 6.5) ---
+#
+# Extend the README drift surface to cover the rule-tier classification.
+# After Phase 2 (Tier-Bulk-Retrofit), every rule must declare a `tier:`
+# frontmatter value from the locked set. `lint_rule_tiers.py` enforces
+# this in the CI Taskfile pipeline; this test mirrors the assertion at
+# the pytest layer so a stand-alone `pytest` run also fails on drift.
+#
+# Locked tier vocabulary lives in agents/contexts/hardening-pattern.md
+# and agents/contexts/rule-trigger-matrix.md.
+VALID_TIERS = frozenset({"1", "2a", "2b", "3", "safety-floor", "mechanical-already"})
+
+
+def _rule_tier(path: Path) -> str | None:
+    text = path.read_text(encoding="utf-8")
+    if not text.startswith("---\n"):
+        return None
+    end = text.find("\n---\n", 4)
+    if end == -1:
+        return None
+    for line in text[4:end].splitlines():
+        if ":" not in line:
+            continue
+        k, _, v = line.partition(":")
+        if k.strip() == "tier":
+            return v.strip().strip('"').strip("'")
+    return None
+
+
+def test_every_rule_declares_a_valid_tier() -> None:
+    """Every rule must declare a `tier:` from the locked vocabulary.
+
+    Drift sentinel: a new rule added without a tier (or with an unknown
+    value) should fail this test the same way the CI Taskfile gate
+    `lint-rule-tiers` does, even when the rest of the pipeline is skipped.
+    """
+    rules = sorted((SRC / "rules").glob("*.md"))
+    assert rules, "no rules found under .agent-src.uncompressed/rules/"
+    missing: list[str] = []
+    invalid: list[tuple[str, str]] = []
+    for rule in rules:
+        tier = _rule_tier(rule)
+        if tier is None:
+            missing.append(rule.name)
+        elif tier not in VALID_TIERS:
+            invalid.append((rule.name, tier))
+    drift_lines = [f"  missing tier: {n}" for n in missing] + [
+        f"  invalid tier '{t}': {n}" for n, t in invalid
+    ]
+    assert not drift_lines, (
+        "rule-tier coverage drifted (Phase 2 lock):\n"
+        + "\n".join(drift_lines)
+        + "\n\nDeclare `tier:` from "
+        + ", ".join(sorted(VALID_TIERS))
+        + " in the rule frontmatter."
+    )

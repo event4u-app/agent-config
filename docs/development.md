@@ -17,7 +17,10 @@
 
 ## Task Commands
 
-All commands use [Task](https://taskfile.dev/). See `Taskfile.yml` for the full list.
+All commands use [Task](https://taskfile.dev/). The root `Taskfile.yml` orchestrates
+`ci`/`_ci-*` and includes the four task groups under `taskfiles/`
+(`ci-fast.yml`, `content.yml`, `engine.yml`, `release.yml`) with `flatten: true`,
+so every task stays in the root namespace. Run `task --list` for the full list.
 
 ### CI & Verification
 

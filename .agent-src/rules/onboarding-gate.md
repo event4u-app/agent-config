@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "1"
 description: "First turn of a conversation on a project — check onboarding.onboarded in .agent-settings.yml; when false, prompt the user to run /onboard before executing any other request"
 alwaysApply: false
 source: package
@@ -91,6 +92,31 @@ gate. This protects projects that were set up before this rule shipped.
   runtime; `.md` source stays English.
 - `scope-control` — option `2` writes exactly one key; no side effects.
 - `role-mode-adherence` — gate runs BEFORE the mode marker is emitted.
+
+## Copilot fallback
+
+GitHub Copilot has no `SessionStart` hook surface, so
+`scripts/onboarding_gate_hook.py` cannot run structurally and
+`agents/state/onboarding-gate.json` is not refreshed for the agent.
+On the first turn of a Copilot conversation:
+
+1. Read `onboarding.onboarded` from `.agent-settings.yml` directly
+   (one read per conversation, then cache as the prose above
+   describes).
+2. Optionally refresh the state file manually so other tooling sees
+   the same value the hook would have written:
+
+   ```bash
+   python3 scripts/onboarding_gate_hook.py < /dev/null
+   ```
+
+   The script reads `.agent-settings.yml`, atomically writes
+   `agents/state/onboarding-gate.json`, and exits 0 — same payload
+   the Augment / Claude / Cursor / Cline / Windsurf / Gemini hook
+   would have produced.
+3. Apply the gate behavior from "Gate behavior when `onboarded:
+   false`" above. The cooperative path is the spec; the hook is the
+   cache.
 
 ## See also
 

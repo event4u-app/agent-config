@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2a"
 alwaysApply: false
 description: "Security-sensitive paths — auth, billing, tenant boundaries, secrets, file uploads, external integrations, webhooks, public endpoints — stop and run threat analysis BEFORE editing"
 source: package

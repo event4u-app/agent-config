@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2a"
 description: "When suggesting reviewers for a change — anchor the choice in paths and risk, never prestige or seniority; require primary + secondary role for medium/high risk"
 source: package
 ---

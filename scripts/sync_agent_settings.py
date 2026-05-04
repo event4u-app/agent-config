@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
-"""Sync `.agent-settings.yml` against the template + profile.
+"""Sync `.agent-settings.yml` against the template + profile (additive merge).
 
 Applies the section-aware merge rules documented in
 `docs/guidelines/agent-infra/layered-settings.md`:
 
-- Template section order always wins — reorder keys to match.
-- Existing user scalar values are preserved verbatim (as parsed).
-- Missing keys land with their template / profile default.
-- Template comments replace user comments in the same position.
-- Unknown user keys (not in the template) are preserved in a trailing
-  `_user:` block so custom additions never get silently dropped.
+- **User lines are preserved verbatim** — comments, quoting, and key order
+  survive every sync. Existing values, custom inline comments, and
+  user-chosen ordering are never modified.
+- Missing template keys are inserted (leaf into existing parent section,
+  full subtree at EOF for entirely missing top-level sections).
+- Top-level user-only sections (no home in the template) are moved to a
+  single-level `_user:` block at the end of the file.
+- The `_user:` block is single-level only — legacy multi-prefix
+  corruption (`_user._user.foo`) heals to `foo` on the next sync.
+- Template comment changes on already-existing user keys do **not**
+  propagate (existing line untouched is the deal).
 
 Idempotent — writing a file that is already in sync is a no-op.
 
@@ -33,7 +38,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import install as _install  # noqa: E402 — shares _yaml_scalar + _replace_template_value
+import install as _install  # noqa: E402 — profile parsing + template rendering
+import sync_yaml_rt as _rt  # noqa: E402 — additive round-trip merge
 
 try:
     import yaml  # type: ignore
@@ -44,126 +50,6 @@ except ImportError:
 DEFAULT_SETTINGS = ".agent-settings.yml"
 DEFAULT_TEMPLATE = Path(__file__).resolve().parent.parent / "config" / "agent-settings.template.yml"
 DEFAULT_PROFILE_DIR = Path(__file__).resolve().parent.parent / "config" / "profiles"
-
-
-def _flatten(data: dict, prefix: str = "") -> dict[str, object]:
-    """Flatten nested dicts to dotted keys — recurses to all leaves.
-
-    Lists, scalars, and ``None`` are leaves. Dicts are walked and their
-    keys folded into the dotted path.
-    """
-    out: dict[str, object] = {}
-    for key, value in data.items():
-        path = f"{prefix}{key}"
-        if isinstance(value, dict):
-            out.update(_flatten(value, prefix=f"{path}."))
-        else:
-            out[path] = value
-    return out
-
-
-def _as_yaml_value(value: object) -> str | None:
-    """Format *value* as an inline-YAML literal.
-
-    Returns ``None`` when the value cannot be safely represented as a
-    scalar / flow-style sequence (e.g. unsupported types). Callers
-    must skip those keys so the template default sticks instead of
-    producing malformed YAML.
-    """
-    if isinstance(value, bool):
-        return "true" if value else "false"
-    if isinstance(value, int):
-        return str(value)
-    if isinstance(value, float):
-        return repr(value)
-    if value is None:
-        return "~"
-    if isinstance(value, list):
-        items: list[str] = []
-        for item in value:
-            rendered = _as_yaml_value(item)
-            if rendered is None:
-                return None
-            items.append(rendered)
-        return "[" + ", ".join(items) + "]"
-    if isinstance(value, str):
-        return _install._yaml_scalar(value)
-    return None
-
-
-def _template_keys(template_body: str) -> set[str]:
-    """Return the set of dotted keys declared by the rendered template."""
-    data = yaml.safe_load(template_body) or {}
-    if not isinstance(data, dict):
-        return set()
-    return set(_flatten(data).keys())
-
-
-def _apply_user_values(template_body: str, user_flat: dict[str, object]) -> str:
-    """Overlay every known user value on the rendered template body.
-
-    Keys whose value cannot be rendered inline (see :func:`_as_yaml_value`)
-    are skipped so the template default survives instead of corrupting
-    the file.
-    """
-    body = template_body
-    for dotted, value in user_flat.items():
-        rendered = _as_yaml_value(value)
-        if rendered is None:
-            continue
-        body = _install._replace_template_value_raw(body, dotted, rendered)
-    return body
-
-
-def _append_unknown(body: str, user_flat: dict[str, object], known: set[str]) -> str:
-    """Emit user keys that have no home in the template under `_user:`."""
-    unknown = sorted(k for k in user_flat if k not in known)
-    if not unknown:
-        return body
-    lines = [
-        "",
-        "# Unknown keys preserved by sync_agent_settings.py — review and move",
-        "# them into the template or drop them.",
-        "_user:",
-    ]
-    for key in unknown:
-        rendered = _as_yaml_value(user_flat[key])
-        if rendered is None:
-            continue
-        lines.append(f"  {key}: {rendered}")
-    suffix = "\n".join(lines) + "\n"
-    return body + (suffix if body.endswith("\n") else "\n" + suffix)
-
-
-def render_target(template_body: str, user_data: dict) -> str:
-    """Return the desired `.agent-settings.yml` body for the given user data.
-
-    The trailing ``_user:`` block (emitted by :func:`_append_unknown`) is
-    already in dotted-key form on every read after the first sync. Re-
-    flattening it would prepend another ``_user.`` segment on every run
-    and accumulate forever, so we strip the wrapper and merge its
-    contents straight into the flat dict.
-    """
-    if user_data:
-        user_only = user_data.pop("_user", None) if isinstance(user_data, dict) else None
-        user_flat = _flatten(user_data)
-        if isinstance(user_only, dict):
-            for key, value in user_only.items():
-                # Dotted keys round-trip verbatim — never re-flatten them.
-                if isinstance(key, str):
-                    # Heal legacy corruption: pre-fix syncs prepended a
-                    # `_user.` segment per run, so a key may carry an
-                    # arbitrary number of them. Strip them all back to
-                    # the original leaf path.
-                    healed = key
-                    while healed.startswith("_user."):
-                        healed = healed[len("_user."):]
-                    user_flat[healed] = value
-    else:
-        user_flat = {}
-    known = _template_keys(template_body)
-    body = _apply_user_values(template_body, user_flat)
-    return _append_unknown(body, user_flat, known)
 
 
 def load_profile(profile_dir: Path, profile: str) -> dict[str, str]:
@@ -231,9 +117,26 @@ def main(argv: list[str] | None = None) -> int:
     except FileNotFoundError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+    except yaml.YAMLError as exc:
+        print(f"error: cannot parse {target}: {exc}", file=sys.stderr)
+        return 2
 
-    new_text = render_target(template_body, user_data)
     existing_text = target.read_text(encoding="utf-8") if target.is_file() else ""
+
+    if existing_text:
+        # Additive merge — preserves user lines verbatim, inserts only
+        # the template keys the user is missing.
+        try:
+            new_text = _rt.sync(existing_text, template_body)
+        except ValueError as exc:
+            print(
+                f"error: cannot parse {target}: {exc}",
+                file=sys.stderr,
+            )
+            return 2
+    else:
+        # First-run / file absent — write the rendered template as-is.
+        new_text = template_body
 
     if new_text == existing_text:
         if not args.quiet:

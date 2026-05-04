@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2a"
 description: "Keeping .augment/ contexts, counts, and cross-references in sync when creating, renaming, or deleting skills, commands, rules, guidelines, templates, or any agent infrastructure files"
 source: package
 load_context:

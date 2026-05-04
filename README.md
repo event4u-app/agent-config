@@ -14,13 +14,15 @@ Give your AI agents an audit-disciplined orchestration contract — testing, Git
 
 ## Start here
 
-New to agent-config? 60 seconds, three links:
+Three ways in, depending on what you're doing today:
 
-1. **[Install](#quickstart)** — `composer require` or `npm install`, then run the installer.
-2. **[First command](#2-minute-demo-implement-ticket)** — `/implement-ticket` or `/work` walkthrough.
-3. **[Where the rules live](#documentation)** — `.augment/`, `.claude/`, `.cursor/`, and friends.
+| Path | Audience | What it does |
+|---|---|---|
+| **[`/onboard`](.agent-src/commands/onboard.md)** | New user, fresh install | Captures name, IDE, rtk, and cost profile; sets `onboarding.onboarded=true` |
+| **[`task ci`](docs/development.md#ci--verification)** | Contributor working **on** this package | Runs the full sync + lint + test pipeline; must be green before push |
+| **[`task generate-tools`](docs/development.md#tool-generation)** | Multi-agent user / consumer project | Rebuilds `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules` from the source |
 
----
+If none of those apply yet — start with the [Quickstart](#quickstart) and pick a path once it's installed.
 
 ## Quickstart
 
@@ -62,6 +64,14 @@ continues. The package makes rules, skills, and commands available
 project-locally for all supported AI tools. Task is required for
 *contributors* who want to rebuild the compressed content locally — see
 [CONTRIBUTING.md](CONTRIBUTING.md).
+
+**Verify hook coverage** after installing — every supported platform
+(Augment, Claude, Cursor, Cline, Windsurf, Gemini CLI, Copilot fallback)
+is wired through one universal dispatcher per
+[`hook-architecture-v1`](docs/contracts/hook-architecture-v1.md). Run
+`./agent-config hooks:status` for the matrix (`--strict` for CI,
+`--format json` for tooling). The installer also dry-fires the
+dispatcher per bridge as a post-install smoke test (skip: `--no-smoke`).
 
 ### For individual use (optional)
 
@@ -479,20 +489,10 @@ task lint-skills   # Lint skills, rules, commands
 
 ## Requirements
 
-**To install the package into a consumer project:**
-
-- **Bash** — primary installer is `scripts/install`, orchestrating
-  `scripts/install.sh` (payload sync) and `scripts/install.py` (bridges).
-  Available on macOS, Linux, and WSL.
-- **Python 3.10+** — required for the bridge stage only. Pre-installed
-  on macOS 12.3+ and all major Linux distros. If missing, the
-  orchestrator skips bridges and completes the payload sync.
-- **Composer or npm** — to pull the package itself.
-
-**Platform support:** macOS 12.3+, Linux (modern distros), and Windows
-(WSL2) are fully supported. Git Bash works but symlinks require
-Developer Mode; native PowerShell / cmd is not supported. Contributors
-rebuilding `.augment/` locally also need [Task](https://taskfile.dev/).
+- **Bash** — `scripts/install` orchestrates payload sync (`install.sh`) and bridges (`install.py`).
+- **Python 3.10+** — bridge stage only; missing → orchestrator skips bridges.
+- **Composer or npm** — to pull the package.
+- **Platform:** macOS 12.3+, Linux, WSL2. Git Bash needs Developer Mode for symlinks; native PowerShell / cmd unsupported. Contributors rebuilding `.augment/` also need [Task](https://taskfile.dev/).
 
 ## License
 

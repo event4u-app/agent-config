@@ -15,8 +15,10 @@ from .chat_history_append import ChatHistoryAppendHook
 from .chat_history_halt_append import ChatHistoryHaltAppendHook
 from .chat_history_heartbeat import ChatHistoryHeartbeatHook
 from .chat_history_turn_check import ChatHistoryTurnCheckHook
+from .decision_trace import DecisionTraceHook
 from .directive_set_guard import DirectiveSetGuardHook
 from .halt_surface_audit import HaltSurfaceAuditHook
+from .memory_visibility import MemoryVisibilityHook
 from .state_shape_validation import StateShapeValidationHook
 from .trace import TraceHook
 
@@ -25,8 +27,10 @@ __all__ = [
     "ChatHistoryHaltAppendHook",
     "ChatHistoryHeartbeatHook",
     "ChatHistoryTurnCheckHook",
+    "DecisionTraceHook",
     "DirectiveSetGuardHook",
     "HaltSurfaceAuditHook",
+    "MemoryVisibilityHook",
     "StateShapeValidationHook",
     "TraceHook",
 ]

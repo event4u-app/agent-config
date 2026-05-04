@@ -344,7 +344,7 @@ clean_stale() {
             log_verbose "preserve: $entry"
             continue
         fi
-        if is_excluded_rule "$entry" || ! echo "$source_manifest" | grep -qxF "$entry"; then
+        if is_excluded_rule "$entry" || ! grep -qxF -- "$entry" <<<"$source_manifest"; then
             local path="$target_dir/$entry"
             if $DRY_RUN; then
                 log_verbose "remove stale: $entry"

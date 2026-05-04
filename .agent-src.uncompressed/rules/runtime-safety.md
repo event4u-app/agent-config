@@ -1,5 +1,6 @@
 ---
 type: auto
+tier: "2b"
 source: package
 description: "When a skill declares execution metadata — enforce safety constraints for assisted and automated execution types"
 ---

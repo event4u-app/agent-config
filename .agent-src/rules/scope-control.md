@@ -1,5 +1,6 @@
 ---
 type: "always"
+tier: "safety-floor"
 description: "Scope control — no unsolicited architectural changes, refactors, or library replacements"
 alwaysApply: true
 source: package

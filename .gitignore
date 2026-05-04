@@ -43,6 +43,7 @@ __pycache__/
 .agent-chat-history
 .agent-chat-history.bak
 .agent-chat-history.*.bak
+.agent-chat-history.session
 
 # Artefact engagement telemetry log (default-off, maintainer-only;
 # written by `./agent-config telemetry:record` when

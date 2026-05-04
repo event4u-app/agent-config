@@ -92,9 +92,14 @@ BASELINE_FILE = REPO_ROOT / ".github" / "budget-baseline.txt"
 # growth above the ceiling fails CI even while the entry remains.
 # When Phase 2A retires a rule, drop its entry here AND in
 # `tests/test_always_budget.py::KNOWN_PER_RULE_BREACHES`.
+#
+# Phase 2 of road-to-feedback-consolidation.md added a single-line
+# `tier: "safety-floor"` frontmatter key (21 chars) to every safety-floor
+# rule. Both ceilings below were re-baselined +21 to absorb that
+# frontmatter-only growth without trimming Iron-Law content.
 KNOWN_PER_RULE_BREACHES: dict[str, int] = {
-    "non-destructive-by-default.md": 7_887,
-    "scope-control.md": 8_529,
+    "non-destructive-by-default.md": 7_908,
+    "scope-control.md": 8_550,
 }
 
 

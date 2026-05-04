@@ -319,36 +319,70 @@ test_cli_wrapper_errors_without_install() {
 }
 
 # --- Runner ---
+TESTS=(
+    test_rules_are_real_copies
+    test_skills_are_symlinks
+    test_commands_are_symlinks
+    test_symlinks_resolve_correctly
+    test_stale_files_removed
+    test_broken_symlinks_removed
+    test_idempotent
+    test_migration_real_to_symlink
+    test_gitignore_marker_added
+    test_gitignore_idempotent
+    test_gitignore_not_created_if_missing
+    test_gitignore_reinstall_adds_missing_entry
+    test_gitignore_skip_flag
+    test_tool_symlinks_created
+    test_stale_tool_symlinks_removed
+    test_skill_symlinks_in_claude
+    test_stale_skill_symlinks_removed
+    test_windsurfrules_generated
+    test_gemini_md_created
+    test_dry_run_no_files
+    test_agents_md_copied
+    test_symlink_replaced_by_copy_for_rules
+    test_cli_wrapper_installed
+    test_cli_wrapper_gitignored
+    test_cli_wrapper_overwrites_on_reinstall
+    test_cli_wrapper_delegates_to_master
+    test_cli_wrapper_errors_without_install
+)
+
+# --list: print test names (used by parallel runner). --single NAME: run one
+# test (used by parallel runner). --parallel [N]: dispatch all tests via
+# xargs -P, default jobs = nproc. No args: sequential (legacy behaviour).
+if [[ "${1:-}" == "--list" ]]; then
+    printf '%s\n' "${TESTS[@]}"
+    exit 0
+fi
+
+if [[ "${1:-}" == "--single" ]]; then
+    "$2"
+    [[ $FAIL -eq 0 ]] && exit 0 || exit 1
+fi
+
+if [[ "${1:-}" == "--parallel" ]]; then
+    jobs="${2:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)}"
+    log="$(mktemp)"
+    echo "🧪  Running install.sh integration tests (parallel, jobs=$jobs)..."
+    echo ""
+    printf '%s\n' "${TESTS[@]}" | xargs -n1 -P "$jobs" -I {} bash "$0" --single {} > "$log" 2>&1
+    rc=$?
+    cat "$log"
+    pass=$(grep -c '✅' "$log" || true)
+    fail=$(grep -c '❌' "$log" || true)
+    rm -f "$log"
+    echo ""
+    echo "Results: $pass passed, $fail failed ($(( pass + fail )) total) [parallel jobs=$jobs]"
+    [[ $rc -eq 0 ]] || exit 1
+    exit 0
+fi
+
 echo "🧪  Running install.sh integration tests..."
 echo ""
 
-test_rules_are_real_copies
-test_skills_are_symlinks
-test_commands_are_symlinks
-test_symlinks_resolve_correctly
-test_stale_files_removed
-test_broken_symlinks_removed
-test_idempotent
-test_migration_real_to_symlink
-test_gitignore_marker_added
-test_gitignore_idempotent
-test_gitignore_not_created_if_missing
-test_gitignore_reinstall_adds_missing_entry
-test_gitignore_skip_flag
-test_tool_symlinks_created
-test_stale_tool_symlinks_removed
-test_skill_symlinks_in_claude
-test_stale_skill_symlinks_removed
-test_windsurfrules_generated
-test_gemini_md_created
-test_dry_run_no_files
-test_agents_md_copied
-test_symlink_replaced_by_copy_for_rules
-test_cli_wrapper_installed
-test_cli_wrapper_gitignored
-test_cli_wrapper_overwrites_on_reinstall
-test_cli_wrapper_delegates_to_master
-test_cli_wrapper_errors_without_install
+for t in "${TESTS[@]}"; do "$t"; done
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed ($(( PASS + FAIL )) total)"

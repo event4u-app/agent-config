@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2b"
 alwaysApply: false
 description: "After EVERY code edit, find ALL downstream changes needed to existing files, including callers, tests, imports, types, and documentation"
 source: package

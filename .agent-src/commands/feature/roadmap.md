@@ -111,6 +111,28 @@ For each roadmap, work through the phases interactively:
 - Single: `agents/roadmaps/{feature-name}.md`
 - Multiple: `agents/roadmaps/{feature-name}-{aspect}.md`
 
+**Collision check before writing.** For each planned filename, scan
+the entire roadmap namespace — active, `archive/`, `skipped/`, and
+nested subdirs:
+
+```bash
+find agents/roadmaps -type f -iname "{feature-name}.md" 2>/dev/null
+# Module-scoped:
+find app/Modules/{Module}/agents/roadmaps -type f -iname "{feature-name}.md" 2>/dev/null
+```
+
+If any planned name already exists anywhere under the namespace,
+**STOP** and ask (in the user's language):
+
+> Filename `{feature-name}.md` already exists at `<path>` (archived/skipped/active).
+>
+> 1. Pick a different name — suggest `{feature-name}-v2` or `{feature-name}-{scope}`
+> 2. Open the existing roadmap first — revival or extension may fit
+> 3. Abort
+
+Re-run the check after a rename. Never silently overwrite, never
+auto-suffix without the user's pick.
+
 ### 5. Link roadmaps in the feature plan
 
 Update the feature file's `## Roadmaps` section:

@@ -1,0 +1,15 @@
+# Settings with legacy multi-prefix corruption (healer fixture)
+cost_profile: minimal
+
+personal:
+  ide: "phpstorm"
+  user_name: "Matze"
+
+# Legacy block accumulated by repeated buggy syncs
+_user:
+  _user:
+    _user:
+      cost_profile: balanced
+  personal:
+    user_name: "Matze"
+  unknown_legacy_key: "keep me"

@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "1"
 alwaysApply: false
 description: "When debugging, fixing errors, or running long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers"
 source: package
@@ -94,3 +95,24 @@ If you need an ignored skill: read its SKILL.md directly, apply guidance, then a
 > 1. Remove from ignore — relevant for this project
 > 2. Keep ignored — one-off
 ```
+
+## Copilot fallback
+
+GitHub Copilot has no `PostToolUse` hook surface, so
+`scripts/context_hygiene_hook.py` cannot run structurally and
+`agents/state/context-hygiene.json` is not maintained automatically
+(turn count, loop signal, freshness milestones at 20/40/60).
+
+The cooperative path: track turns and tool-loop signals from memory
+during the conversation and apply the suggest-a-new-chat / 3-failure
+stop / loop-detection rules above. To refresh the state file
+manually so the dashboard or another tool can read the latest
+counters, run:
+
+```bash
+python3 scripts/context_hygiene_hook.py < /dev/null
+```
+
+The script reads from stdin if a JSON envelope is provided and
+otherwise writes a no-op snapshot under the shared dispatcher lock.
+Exit code is always 0 — hooks must never block the agent loop.

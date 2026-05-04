@@ -1,14 +1,19 @@
-"""One-off Phase-1 round-trip runner.
+"""One-off Phase-1 round-trip runner — HISTORICAL ARCHIVE.
 
-Used exactly once to generate the evidence artefact required to lift
-the capture-only fence on `road-to-ai-council.md` Phase 2+ and the
-end-to-end verification on `road-to-council-modes.md` Phase 2a.
+Going forward, council runs go through the CLI:
 
-Not part of the public CLI surface — `/council` remains the supported
-entry point. This script is committed under `scripts/ai_council/` so
-the evidence is reproducible from the git history alone.
+    ./agent-config council:estimate <question.md>
+    ./agent-config council:run <question.md> \
+        --output agents/council-sessions/<UTC-ts>.json --confirm
+    ./agent-config council:render agents/council-sessions/<UTC-ts>.json
 
-Invocation:
+This script predates `scripts/council_cli.py` (Phase 6.7) and is kept
+only as the evidence artefact that lifted the capture-only fence on
+`road-to-ai-council.md` Phase 2+ and the end-to-end verification on
+`road-to-council-modes.md` Phase 2a. Do **not** copy it as a template
+for new one-offs — write a question file and use the CLI instead.
+
+Invocation (historical):
     .venv/bin/python -m scripts.ai_council._one_off_roundtrip
 """
 from __future__ import annotations

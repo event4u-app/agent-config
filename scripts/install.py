@@ -29,6 +29,8 @@ import copy
 import json
 import os
 import re
+import shlex
+import subprocess
 import sys
 from pathlib import Path
 
@@ -464,23 +466,31 @@ def ensure_augment_bridge(project_root: Path, force: bool) -> None:
 # .augment/settings.json is plugin enablement, not hooks.
 AUGMENT_USER_DIR = Path.home() / ".augment"
 AUGMENT_USER_HOOKS_DIR = AUGMENT_USER_DIR / "hooks"
-AUGMENT_CHAT_HISTORY_TRAMPOLINE = "augment-chat-history.sh"
-AUGMENT_ROADMAP_PROGRESS_TRAMPOLINE = "augment-roadmap-progress.sh"
-AUGMENT_ONBOARDING_GATE_TRAMPOLINE = "augment-onboarding-gate.sh"
-AUGMENT_CONTEXT_HYGIENE_TRAMPOLINE = "augment-context-hygiene.sh"
-# (trampoline name, list of events it should fire on). Each trampoline
-# is a self-contained workspace router; mapping them per-event keeps the
-# wiring explicit and lets a future hook bind to a different surface
-# without touching the chat-history one.
-AUGMENT_HOOK_BINDINGS = (
-    (AUGMENT_CHAT_HISTORY_TRAMPOLINE,
-     ("SessionStart", "SessionEnd", "Stop", "PostToolUse")),
-    (AUGMENT_ROADMAP_PROGRESS_TRAMPOLINE,
-     ("PostToolUse",)),
-    (AUGMENT_ONBOARDING_GATE_TRAMPOLINE,
-     ("SessionStart",)),
-    (AUGMENT_CONTEXT_HYGIENE_TRAMPOLINE,
-     ("PostToolUse",)),
+
+# Phase 7.3 (hook-architecture-v1.md): one universal trampoline per
+# platform replaces the per-concern fan-out. The trampoline cd's into
+# the consumer workspace and pipes stdin into
+# `./agent-config dispatch:hook`, which reads scripts/hook_manifest.yaml
+# to resolve which concerns fire on (platform, event).
+AUGMENT_DISPATCHER_TRAMPOLINE = "augment-dispatcher.sh"
+
+# Pre-Phase-7 trampolines deployed at ~/.augment/hooks/ — install removes
+# them on rerun so the manifest stays the single source of truth.
+AUGMENT_LEGACY_TRAMPOLINES = (
+    "augment-chat-history.sh",
+    "augment-roadmap-progress.sh",
+    "augment-onboarding-gate.sh",
+    "augment-context-hygiene.sh",
+)
+
+# (agent-config event, Augment native event). Augment fires the same
+# trampoline once per binding; the trampoline forwards both names to the
+# dispatcher so concerns can branch on either.
+AUGMENT_DISPATCHER_BINDINGS = (
+    ("session_start", "SessionStart"),
+    ("session_end",   "SessionEnd"),
+    ("stop",          "Stop"),
+    ("post_tool_use", "PostToolUse"),
 )
 
 
@@ -501,37 +511,59 @@ def _deploy_augment_trampoline(package_root: Path, name: str, force: bool) -> Pa
     return dst
 
 
-def ensure_augment_user_hooks(package_root: Path, force: bool) -> None:
-    """Deploy the Augment lifecycle-hook trampolines at user scope.
+def _remove_legacy_augment_trampolines() -> None:
+    """Phase 7.3 cleanup: drop pre-dispatcher trampolines on rerun.
 
-    Augment hook scripts must use the .sh extension and be referenced by
-    absolute path; user scope is the only surface that fires for both the
-    CLI and the IDE plugins. This installs once per developer (not per
-    project) — each trampoline reads workspace_roots from the event
-    payload and dispatches into whichever project is active at hook-fire
-    time.
-
-    Trampolines deployed (see AUGMENT_HOOK_BINDINGS for the source of
-    truth):
-      - augment-chat-history.sh    → SessionStart/SessionEnd/Stop/PostToolUse
-      - augment-roadmap-progress.sh → PostToolUse (path-filtered to
-        agents/roadmaps/ — see scripts/roadmap_progress_hook.py)
-      - augment-onboarding-gate.sh  → SessionStart (refresh
-        agents/state/onboarding-gate.json from .agent-settings.yml)
-      - augment-context-hygiene.sh  → PostToolUse (per-turn counter,
-        loop detection, freshness milestones)
+    The manifest is now the single source of truth; leaving the old
+    per-concern .sh files at ~/.augment/hooks/ would not break anything
+    (settings.json no longer references them), but it produces stale
+    artefacts that confuse `task hooks-status` and look like a partial
+    install. Removal is best-effort and silent on missing files.
     """
-    per_event: dict[str, list] = {}
-    for name, events in AUGMENT_HOOK_BINDINGS:
-        dst = _deploy_augment_trampoline(package_root, name, force)
-        if dst is None:
-            continue
-        entry = {"hooks": [{"type": "command", "command": str(dst)}]}
-        for event in events:
-            per_event.setdefault(event, []).append(entry)
+    for name in AUGMENT_LEGACY_TRAMPOLINES:
+        legacy = AUGMENT_USER_HOOKS_DIR / name
+        try:
+            if legacy.is_file():
+                legacy.unlink()
+                skip(f"removed legacy ~/.augment/hooks/{name}")
+        except OSError:
+            pass
 
-    if not per_event:
+
+def ensure_augment_user_hooks(package_root: Path, force: bool) -> None:
+    """Deploy the Augment universal-dispatcher trampoline at user scope.
+
+    Phase 7.3 (hook-architecture-v1.md): one trampoline replaces the
+    four per-concern .sh files. The trampoline reads the event JSON
+    from stdin, extracts workspace_roots[0], cd's there, and pipes the
+    payload into `./agent-config dispatch:hook --platform augment
+    --event <agent-config-event> --native-event <native>`. The
+    dispatcher then loads scripts/hook_manifest.yaml and runs the
+    resolved concern chain.
+
+    Augment hook scripts must use the .sh extension and be referenced
+    by absolute path; user scope is the only surface that fires for
+    both the CLI and the IDE plugins. Installs once per developer.
+
+    Settings entries (Phase 7.3, see AUGMENT_DISPATCHER_BINDINGS):
+      - SessionStart → augment-dispatcher.sh session_start SessionStart
+      - SessionEnd   → augment-dispatcher.sh session_end   SessionEnd
+      - Stop         → augment-dispatcher.sh stop          Stop
+      - PostToolUse  → augment-dispatcher.sh post_tool_use PostToolUse
+    """
+    dst = _deploy_augment_trampoline(package_root, AUGMENT_DISPATCHER_TRAMPOLINE, force)
+    if dst is None:
         return
+
+    _remove_legacy_augment_trampolines()
+
+    per_event: dict[str, list] = {}
+    for ac_event, native in AUGMENT_DISPATCHER_BINDINGS:
+        # Augment's `command` is a shell line — pass agent-config event
+        # and Augment-native event as positional args.
+        cmd = f"{dst} {ac_event} {native}"
+        entry = {"hooks": [{"type": "command", "command": cmd}]}
+        per_event.setdefault(native, []).append(entry)
 
     settings_patch: dict = {"hooks": per_event}
     merge_json_file(
@@ -542,66 +574,523 @@ def ensure_augment_user_hooks(package_root: Path, force: bool) -> None:
     )
 
 
-def _claude_hook_block(subcommand: str) -> dict:
-    """Single hook entry that calls ./agent-config <subcommand> --platform claude."""
+# Claude Code lifecycle events → agent-config event vocabulary.
+# Phase 7.3: one universal dispatch:hook entry per event replaces the
+# per-concern subcommand fan-out. The dispatcher reads
+# scripts/hook_manifest.yaml to resolve which concerns fire on each
+# (platform, event) tuple. Mirrors AUGMENT_DISPATCHER_BINDINGS so each
+# concern fires on the same logical surface across platforms — the
+# contract from agents/contexts/hardening-pattern.md § Cross-platform
+# parity.
+CLAUDE_DISPATCHER_BINDINGS = (
+    ("session_start",      "SessionStart"),
+    ("session_end",        "SessionEnd"),
+    ("stop",               "Stop"),
+    ("user_prompt_submit", "UserPromptSubmit"),
+    ("post_tool_use",      "PostToolUse"),
+)
+
+
+def _claude_dispatch_block(ac_event: str, native: str) -> dict:
+    """Single hook entry routing the event through the universal dispatcher."""
     return {
         "hooks": [
             {
                 "type": "command",
-                "command": f"./agent-config {subcommand} --platform claude",
+                "command": (
+                    f"./agent-config dispatch:hook "
+                    f"--platform claude --event {ac_event} "
+                    f"--native-event {native}"
+                ),
             },
         ],
     }
 
 
-# Claude Code Tier 1 hook bindings — keep in sync with AUGMENT_HOOK_BINDINGS.
-# `chat-history:hook` is the cross-cutting transcript hook; the three
-# rule-specific hooks are the Phase 4 Tier 1 set from
-# `road-to-rule-hardening.md`.
-CLAUDE_HOOK_SUBCOMMANDS = {
-    "chat-history":     "chat-history:hook",
-    "roadmap-progress": "roadmap-progress:hook",
-    "onboarding-gate":  "onboarding-gate:hook",
-    "context-hygiene":  "context-hygiene:hook",
-}
-# (subcommand-key, list of Claude Code lifecycle events). Mirrors
-# AUGMENT_HOOK_BINDINGS so each rule fires on the same logical surface
-# on both platforms — the contract from
-# `agents/contexts/hardening-pattern.md` § Cross-platform parity.
-CLAUDE_HOOK_BINDINGS = (
-    ("chat-history",
-     ("SessionStart", "UserPromptSubmit", "PostToolUse", "Stop", "SessionEnd")),
-    ("roadmap-progress",
-     ("PostToolUse",)),
-    ("onboarding-gate",
-     ("SessionStart",)),
-    ("context-hygiene",
-     ("PostToolUse",)),
-)
-
-
 def ensure_claude_bridge(project_root: Path, force: bool) -> None:
-    """Deploy .claude/settings.json with plugin enablement and Tier 1 hooks.
+    """Deploy .claude/settings.json with plugin enablement and the Phase 7
+    universal dispatcher hooks.
 
-    Hooks dispatch to the project-root ./agent-config wrapper, which routes
-    to the per-rule Python implementation (chat_history.py,
-    roadmap_progress_hook.py, onboarding_gate_hook.py,
-    context_hygiene_hook.py). They are no-ops when the relevant feature is
-    disabled in .agent-settings.yml. Idempotent: reruns merge cleanly
-    without duplicating entries (deep_merge replaces hook arrays rather
-    than appending).
+    Each Claude Code lifecycle event is wired to a single
+    `./agent-config dispatch:hook` invocation. The dispatcher reads
+    scripts/hook_manifest.yaml at runtime and runs the resolved concern
+    chain — concerns are no-ops when the relevant feature is disabled
+    in .agent-settings.yml. Idempotent: reruns merge cleanly without
+    duplicating entries (deep_merge replaces hook arrays rather than
+    appending).
     """
     per_event: dict[str, list] = {}
-    for key, events in CLAUDE_HOOK_BINDINGS:
-        block = _claude_hook_block(CLAUDE_HOOK_SUBCOMMANDS[key])
-        for event in events:
-            per_event.setdefault(event, []).append(block)
+    for ac_event, native in CLAUDE_DISPATCHER_BINDINGS:
+        per_event.setdefault(native, []).append(
+            _claude_dispatch_block(ac_event, native)
+        )
 
     bridge = {
         "enabledPlugins": {"agent-conf@event4u": True},
         "hooks": per_event,
     }
     merge_json_file(project_root / ".claude" / "settings.json", bridge, force, ".claude/settings.json")
+
+
+# Cursor lifecycle events → agent-config event vocabulary.
+# Phase 7.5 (hook-architecture-v1.md, scripts/hook_manifest.yaml):
+# Cursor's project-scope `.cursor/hooks.json` fires hooks with the
+# project as cwd, so the dispatch:hook command runs directly with no
+# trampoline. User-scope `~/.cursor/hooks.json` is a separate opt-in
+# (--cursor-user-hooks) and routes through cursor-dispatcher.sh because
+# the user-scope hooks fire across all projects.
+#
+# Native event names per https://cursor.com/docs/reference/third-party-hooks
+# (camelCase). UserPromptSubmit lives at `beforeSubmitPrompt`. Stop is
+# IDE-only — CLI-only Cursor users get the rule-only checkpoint
+# fallback per agents/contexts/chat-history-platform-hooks.md.
+CURSOR_DISPATCHER_BINDINGS = (
+    ("session_start",       "sessionStart"),
+    ("session_end",         "sessionEnd"),
+    ("stop",                "stop"),
+    ("user_prompt_submit",  "beforeSubmitPrompt"),
+    ("post_tool_use",       "postToolUse"),
+)
+
+
+def _cursor_dispatch_command(ac_event: str, native: str) -> str:
+    return (
+        f"./agent-config dispatch:hook "
+        f"--platform cursor --event {ac_event} "
+        f"--native-event {native}"
+    )
+
+
+def ensure_cursor_bridge(project_root: Path, force: bool) -> None:
+    """Deploy `.cursor/hooks.json` (project scope) with the Phase 7
+    universal dispatcher hooks.
+
+    Each Cursor lifecycle event is wired to a single
+    `./agent-config dispatch:hook` invocation. Cursor fires project
+    hooks with the project as cwd, so no trampoline is needed at this
+    scope — concerns are no-ops when disabled in .agent-settings.yml.
+    Idempotent: deep_merge replaces hook arrays on rerun rather than
+    appending duplicates.
+    """
+    hooks: dict[str, list] = {}
+    for ac_event, native in CURSOR_DISPATCHER_BINDINGS:
+        hooks.setdefault(native, []).append(
+            {"command": _cursor_dispatch_command(ac_event, native)}
+        )
+
+    bridge = {"version": 1, "hooks": hooks}
+    merge_json_file(project_root / ".cursor" / "hooks.json", bridge, force, ".cursor/hooks.json")
+
+
+# Cursor user-scope hooks fire across every project the developer opens
+# in the Cursor IDE / CLI. The trampoline reads `workspace_roots[0]`
+# from the event payload (per https://cursor.com/docs/hooks) and routes
+# the JSON into the active project's `./agent-config dispatch:hook`,
+# silent no-op when the workspace is not an agent-config consumer.
+CURSOR_USER_DIR = Path.home() / ".cursor"
+CURSOR_USER_HOOKS_DIR = CURSOR_USER_DIR / "hooks"
+CURSOR_DISPATCHER_TRAMPOLINE = "cursor-dispatcher.sh"
+
+
+def ensure_cursor_user_hooks(package_root: Path, force: bool) -> None:
+    """Deploy the Cursor universal-dispatcher trampoline at user scope.
+
+    Phase 7.5 (hook-architecture-v1.md): mirrors ensure_augment_user_hooks
+    for the Cursor surface. Writes:
+      - ~/.cursor/hooks/cursor-dispatcher.sh  (trampoline)
+      - ~/.cursor/hooks.json                  (event → trampoline call)
+
+    Each hooks.json command line is `<dispatcher> <ac_event> <native>`
+    so the trampoline can forward both names to the dispatcher for
+    traceability. Hooks fire across all projects the developer opens.
+    """
+    src = package_root / "scripts" / "hooks" / CURSOR_DISPATCHER_TRAMPOLINE
+    if not src.exists():
+        skip(f"cursor trampoline missing in package: {src}")
+        return
+
+    CURSOR_USER_HOOKS_DIR.mkdir(parents=True, exist_ok=True)
+    dst = CURSOR_USER_HOOKS_DIR / CURSOR_DISPATCHER_TRAMPOLINE
+    src_text = src.read_text(encoding="utf-8")
+    if dst.exists() and dst.read_text(encoding="utf-8") == src_text and not force:
+        skip(f"~/.cursor/hooks/{CURSOR_DISPATCHER_TRAMPOLINE} already up to date")
+    else:
+        dst.write_text(src_text, encoding="utf-8")
+        dst.chmod(0o755)
+        success(f"~/.cursor/hooks/{CURSOR_DISPATCHER_TRAMPOLINE} installed")
+
+    hooks: dict[str, list] = {}
+    for ac_event, native in CURSOR_DISPATCHER_BINDINGS:
+        hooks.setdefault(native, []).append(
+            {"command": f"{dst} {ac_event} {native}"}
+        )
+
+    settings_patch: dict = {"version": 1, "hooks": hooks}
+    merge_json_file(
+        CURSOR_USER_DIR / "hooks.json",
+        settings_patch,
+        force,
+        "~/.cursor/hooks.json",
+    )
+
+
+# Cline lifecycle events → agent-config event vocabulary.
+# Phase 7.6 (hook-architecture-v1.md, scripts/hook_manifest.yaml):
+# Cline reads scripts at `.clinerules/hooks/<HookName>` (project) or
+# `~/Documents/Cline/Hooks/<HookName>` (global) — file names match
+# the hook type exactly, no extension, executable bit required.
+# Both TaskStart (new) and TaskResume (resumed) map to session_start;
+# TaskCancel maps to stop because the session is interrupted with
+# partial state (mirrors Augment Stop semantics).
+CLINE_DISPATCHER_BINDINGS = (
+    ("session_start",       "TaskStart"),
+    ("session_start",       "TaskResume"),
+    ("session_end",         "TaskComplete"),
+    ("stop",                "TaskCancel"),
+    ("user_prompt_submit",  "UserPromptSubmit"),
+    ("post_tool_use",       "PostToolUse"),
+)
+
+# Each project-scope script is generated from this template — one file
+# per native hook name. The script reads stdin (Cline's payload), forwards
+# it into `./agent-config dispatch:hook`, then emits the empty JSON
+# envelope Cline expects (`{}` = no cancel, no context modification).
+# `cd "$WORKSPACE_ROOT"` is intentional even though Cline fires project
+# hooks with cwd already set: the workspace path lands in $WORKSPACE_ROOT
+# at install time and the cd guards against future Cline behaviour
+# changes (cline#8073-class shifts in cwd handling).
+CLINE_PROJECT_HOOK_TEMPLATE = """\
+#!/usr/bin/env bash
+# Generated by event4u/agent-config install.py — DO NOT EDIT.
+# Project-scope Cline hook for {native_event} → agent-config {ac_event}.
+# Phase 7.6 (docs/contracts/hook-architecture-v1.md).
+set -u
+EVENT_DATA="$(cat)"
+WORKSPACE_ROOT={workspace_quoted}
+cd "$WORKSPACE_ROOT" 2>/dev/null || {{ printf '%s\\n' '{{}}'; exit 0; }}
+if [ ! -x ./agent-config ]; then
+    printf '%s\\n' '{{}}'
+    exit 0
+fi
+printf '%s' "$EVENT_DATA" \\
+    | ./agent-config dispatch:hook \\
+        --platform cline \\
+        --event {ac_event} \\
+        --native-event {native_event} \\
+        >/dev/null 2>&1 || true
+printf '%s\\n' '{{}}'
+exit 0
+"""
+
+
+def ensure_cline_bridge(project_root: Path, force: bool) -> None:
+    """Deploy `.clinerules/hooks/<HookName>` per-event scripts.
+
+    Phase 7.6: Cline project hooks are individual executable scripts
+    named exactly after the hook (no extension). install writes one
+    script per (ac_event, native_event) tuple in
+    CLINE_DISPATCHER_BINDINGS; rerunning is idempotent — the script
+    body is overwritten only when content differs (or --force).
+    """
+    hooks_dir = project_root / ".clinerules" / "hooks"
+    hooks_dir.mkdir(parents=True, exist_ok=True)
+
+    workspace_quoted = shlex.quote(str(project_root.resolve()))
+    written = 0
+    for ac_event, native_event in CLINE_DISPATCHER_BINDINGS:
+        target = hooks_dir / native_event
+        body = CLINE_PROJECT_HOOK_TEMPLATE.format(
+            native_event=native_event,
+            ac_event=ac_event,
+            workspace_quoted=workspace_quoted,
+        )
+        if target.exists() and target.read_text(encoding="utf-8") == body and not force:
+            continue
+        if target.exists() and not force:
+            skip(f".clinerules/hooks/{native_event} exists, needs update (use --force)")
+            continue
+        target.write_text(body, encoding="utf-8")
+        target.chmod(0o755)
+        written += 1
+    if written:
+        success(f".clinerules/hooks/ — {written} script(s) installed")
+    else:
+        skip(".clinerules/hooks/ already up to date")
+
+
+# Cline user-scope hooks live at `~/Documents/Cline/Hooks/<HookName>`
+# (per docs.cline.bot/customization/hooks) and fire across every
+# project the developer opens. The trampoline reads `workspaceRoots[0]`
+# from the event payload and routes the JSON into the active project's
+# `./agent-config dispatch:hook`. Silent no-op when the workspace is
+# not an agent-config consumer.
+CLINE_USER_DIR = Path.home() / "Documents" / "Cline" / "Hooks"
+CLINE_DISPATCHER_TRAMPOLINE = "cline-dispatcher.sh"
+
+
+def ensure_cline_user_hooks(package_root: Path, force: bool) -> None:
+    """Deploy the Cline universal-dispatcher trampoline at user scope.
+
+    Phase 7.6 (hook-architecture-v1.md): mirrors ensure_cursor_user_hooks
+    for Cline. Writes:
+      - ~/Documents/Cline/Hooks/cline-dispatcher.sh   (shared trampoline)
+      - ~/Documents/Cline/Hooks/<HookName>            (per-event wrapper)
+
+    Each per-event wrapper is a tiny shim that exec's the trampoline
+    with `<ac_event> <native_event>` arguments and re-pipes stdin —
+    this matches Cline's "file name == hook name, no extension"
+    convention while still routing through one shared dispatcher.
+    """
+    src = package_root / "scripts" / "hooks" / CLINE_DISPATCHER_TRAMPOLINE
+    if not src.exists():
+        skip(f"cline trampoline missing in package: {src}")
+        return
+
+    CLINE_USER_DIR.mkdir(parents=True, exist_ok=True)
+    trampoline = CLINE_USER_DIR / CLINE_DISPATCHER_TRAMPOLINE
+    src_text = src.read_text(encoding="utf-8")
+    if trampoline.exists() and trampoline.read_text(encoding="utf-8") == src_text and not force:
+        skip(f"~/Documents/Cline/Hooks/{CLINE_DISPATCHER_TRAMPOLINE} already up to date")
+    else:
+        trampoline.write_text(src_text, encoding="utf-8")
+        trampoline.chmod(0o755)
+        success(f"~/Documents/Cline/Hooks/{CLINE_DISPATCHER_TRAMPOLINE} installed")
+
+    trampoline_quoted = shlex.quote(str(trampoline))
+    for ac_event, native_event in CLINE_DISPATCHER_BINDINGS:
+        wrapper = CLINE_USER_DIR / native_event
+        body = (
+            "#!/usr/bin/env bash\n"
+            "# Generated by event4u/agent-config install.py — DO NOT EDIT.\n"
+            f"# User-scope Cline hook for {native_event} → agent-config {ac_event}.\n"
+            f"exec {trampoline_quoted} {ac_event} {native_event}\n"
+        )
+        if wrapper.exists() and wrapper.read_text(encoding="utf-8") == body and not force:
+            continue
+        wrapper.write_text(body, encoding="utf-8")
+        wrapper.chmod(0o755)
+
+
+# Windsurf (Cascade) lifecycle events → agent-config event vocabulary.
+# Phase 7.7 (hook-architecture-v1.md, scripts/hook_manifest.yaml):
+# Windsurf reads `.windsurf/hooks.json` (project) or
+# `~/.codeium/windsurf/hooks.json` (user). Cascade has no generic
+# post-tool-use surface — concerns gated to that slot don't fire on
+# Windsurf (documented platform limitation in chat-history-platform-hooks.md).
+WINDSURF_DISPATCHER_BINDINGS = (
+    ("session_start",       "post_setup_worktree"),
+    ("user_prompt_submit",  "pre_user_prompt"),
+    ("stop",                "post_cascade_response"),
+)
+
+
+def _windsurf_dispatch_command(ac_event: str, native: str) -> str:
+    return (
+        f"./agent-config dispatch:hook "
+        f"--platform windsurf --event {ac_event} "
+        f"--native-event {native}"
+    )
+
+
+def ensure_windsurf_bridge(project_root: Path, force: bool) -> None:
+    """Deploy `.windsurf/hooks.json` (project scope) with the Phase 7
+    universal dispatcher hooks.
+
+    Each Windsurf lifecycle event is wired to a single
+    `./agent-config dispatch:hook` invocation. Cascade fires project
+    hooks with the workspace as cwd, so no trampoline is needed at this
+    scope. Idempotent via deep_merge — rerunning replaces hook arrays
+    rather than appending duplicates. `show_output: false` keeps post
+    hooks silent (per Windsurf docs); concerns stream their own output
+    via agents/state/.dispatcher/.
+    """
+    hooks: dict[str, list] = {}
+    for ac_event, native in WINDSURF_DISPATCHER_BINDINGS:
+        hooks.setdefault(native, []).append({
+            "command": _windsurf_dispatch_command(ac_event, native),
+            "show_output": False,
+        })
+
+    bridge = {"hooks": hooks}
+    merge_json_file(
+        project_root / ".windsurf" / "hooks.json",
+        bridge,
+        force,
+        ".windsurf/hooks.json",
+    )
+
+
+# Windsurf user-scope hooks live at `~/.codeium/windsurf/hooks.json`
+# (per docs.windsurf.com/windsurf/cascade/hooks). The trampoline
+# resolves the active workspace from $PWD / .agent-settings.yml /
+# tool_info.cwd|file_path / $ROOT_WORKSPACE_PATH and routes the JSON
+# into that project's `./agent-config dispatch:hook`. Silent no-op
+# when the workspace is not an agent-config consumer.
+WINDSURF_USER_DIR = Path.home() / ".codeium" / "windsurf"
+WINDSURF_USER_HOOKS_DIR = WINDSURF_USER_DIR / "hooks"
+WINDSURF_DISPATCHER_TRAMPOLINE = "windsurf-dispatcher.sh"
+
+
+def ensure_windsurf_user_hooks(package_root: Path, force: bool) -> None:
+    """Deploy the Windsurf universal-dispatcher trampoline at user scope.
+
+    Phase 7.7 (hook-architecture-v1.md): mirrors ensure_cursor_user_hooks
+    for the Windsurf surface. Writes:
+      - ~/.codeium/windsurf/hooks/windsurf-dispatcher.sh  (trampoline)
+      - ~/.codeium/windsurf/hooks.json                    (event → trampoline call)
+
+    Each hooks.json command line is `<dispatcher> <ac_event> <native>`
+    so the trampoline forwards both names to the dispatcher for
+    traceability. Hooks fire across all projects the developer opens.
+    """
+    src = package_root / "scripts" / "hooks" / WINDSURF_DISPATCHER_TRAMPOLINE
+    if not src.exists():
+        skip(f"windsurf trampoline missing in package: {src}")
+        return
+
+    WINDSURF_USER_HOOKS_DIR.mkdir(parents=True, exist_ok=True)
+    dst = WINDSURF_USER_HOOKS_DIR / WINDSURF_DISPATCHER_TRAMPOLINE
+    src_text = src.read_text(encoding="utf-8")
+    if dst.exists() and dst.read_text(encoding="utf-8") == src_text and not force:
+        skip(f"~/.codeium/windsurf/hooks/{WINDSURF_DISPATCHER_TRAMPOLINE} already up to date")
+    else:
+        dst.write_text(src_text, encoding="utf-8")
+        dst.chmod(0o755)
+        success(f"~/.codeium/windsurf/hooks/{WINDSURF_DISPATCHER_TRAMPOLINE} installed")
+
+    hooks: dict[str, list] = {}
+    for ac_event, native in WINDSURF_DISPATCHER_BINDINGS:
+        hooks.setdefault(native, []).append({
+            "command": f"{dst} {ac_event} {native}",
+            "show_output": False,
+        })
+
+    settings_patch: dict = {"hooks": hooks}
+    merge_json_file(
+        WINDSURF_USER_DIR / "hooks.json",
+        settings_patch,
+        force,
+        "~/.codeium/windsurf/hooks.json",
+    )
+
+
+# Gemini CLI lifecycle events → agent-config event vocabulary.
+# Phase 7.8 (hook-architecture-v1.md, scripts/hook_manifest.yaml):
+# Gemini reads `.gemini/settings.json` (project) or
+# `~/.gemini/settings.json` (user). Each event maps to an array of
+# hook groups; each group has a `matcher` (exact string for lifecycle,
+# regex for tool events) and a `hooks` array of `{type: "command",
+# command: "..."}`.
+#
+# Native event names per geminicli.com/docs/hooks/reference/
+# (PascalCase). BeforeAgent fires after the user submits a prompt
+# and before agent planning — our user_prompt_submit slot. AfterAgent
+# fires when the agent loop ends — our stop slot. SessionStart /
+# SessionEnd are advisory (continue/decision ignored). For lifecycle
+# events the matcher filters on `source` ("startup"|"resume"|"clear"
+# for SessionStart, etc.); empty matcher == match all.
+GEMINI_DISPATCHER_BINDINGS = (
+    ("session_start",       "SessionStart",  ""),
+    ("session_end",         "SessionEnd",    ""),
+    ("stop",                "AfterAgent",    ""),
+    ("user_prompt_submit",  "BeforeAgent",   ""),
+    ("post_tool_use",       "AfterTool",     ".*"),
+)
+
+
+def _gemini_dispatch_command(ac_event: str, native: str) -> str:
+    return (
+        f"./agent-config dispatch:hook "
+        f"--platform gemini --event {ac_event} "
+        f"--native-event {native}"
+    )
+
+
+def _gemini_hooks_dict(command_factory) -> dict[str, list]:
+    """Build the nested {event: [{matcher, hooks: [{type, command}]}]}
+    payload Gemini expects. command_factory(ac_event, native) returns
+    the command string for one binding."""
+    out: dict[str, list] = {}
+    for ac_event, native, matcher in GEMINI_DISPATCHER_BINDINGS:
+        out.setdefault(native, []).append({
+            "matcher": matcher,
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": command_factory(ac_event, native),
+                },
+            ],
+        })
+    return out
+
+
+def ensure_gemini_bridge(project_root: Path, force: bool) -> None:
+    """Deploy `.gemini/settings.json` (project scope) with the Phase 7
+    universal dispatcher hooks.
+
+    Each Gemini lifecycle event is wired to a single
+    `./agent-config dispatch:hook` invocation. Project-scope hooks
+    fire with the project as cwd, so no trampoline is needed at this
+    scope. Idempotent via deep_merge — rerunning replaces hook arrays
+    rather than appending duplicates.
+    """
+    bridge = {"hooks": _gemini_hooks_dict(_gemini_dispatch_command)}
+    merge_json_file(
+        project_root / ".gemini" / "settings.json",
+        bridge,
+        force,
+        ".gemini/settings.json",
+    )
+
+
+# Gemini user-scope hooks live at `~/.gemini/settings.json` and fire
+# across every project the developer opens. The trampoline resolves
+# the active workspace from $PWD / .agent-settings.yml / payload.cwd
+# and routes the JSON into that project's `./agent-config dispatch:hook`.
+# Silent no-op when the workspace is not an agent-config consumer.
+GEMINI_USER_DIR = Path.home() / ".gemini"
+GEMINI_USER_HOOKS_DIR = GEMINI_USER_DIR / "hooks"
+GEMINI_DISPATCHER_TRAMPOLINE = "gemini-dispatcher.sh"
+
+
+def ensure_gemini_user_hooks(package_root: Path, force: bool) -> None:
+    """Deploy the Gemini universal-dispatcher trampoline at user scope.
+
+    Phase 7.8 (hook-architecture-v1.md): mirrors ensure_windsurf_user_hooks
+    for the Gemini surface. Writes:
+      - ~/.gemini/hooks/gemini-dispatcher.sh  (trampoline)
+      - ~/.gemini/settings.json               (event → trampoline call)
+
+    Each settings.json command line is `<dispatcher> <ac_event> <native>`
+    so the trampoline forwards both names to the dispatcher for
+    traceability. Hooks fire across all projects the developer opens.
+    """
+    src = package_root / "scripts" / "hooks" / GEMINI_DISPATCHER_TRAMPOLINE
+    if not src.exists():
+        skip(f"gemini trampoline missing in package: {src}")
+        return
+
+    GEMINI_USER_HOOKS_DIR.mkdir(parents=True, exist_ok=True)
+    dst = GEMINI_USER_HOOKS_DIR / GEMINI_DISPATCHER_TRAMPOLINE
+    src_text = src.read_text(encoding="utf-8")
+    if dst.exists() and dst.read_text(encoding="utf-8") == src_text and not force:
+        skip(f"~/.gemini/hooks/{GEMINI_DISPATCHER_TRAMPOLINE} already up to date")
+    else:
+        dst.write_text(src_text, encoding="utf-8")
+        dst.chmod(0o755)
+        success(f"~/.gemini/hooks/{GEMINI_DISPATCHER_TRAMPOLINE} installed")
+
+    settings_patch = {
+        "hooks": _gemini_hooks_dict(
+            lambda ac_event, native: f"{dst} {ac_event} {native}",
+        ),
+    }
+    merge_json_file(
+        GEMINI_USER_DIR / "settings.json",
+        settings_patch,
+        force,
+        "~/.gemini/settings.json",
+    )
 
 
 def ensure_copilot_bridge(project_root: Path, force: bool) -> None:
@@ -627,6 +1116,107 @@ def ensure_copilot_bridge(project_root: Path, force: bool) -> None:
     success(".github/plugin/marketplace.json created")
 
 
+# --- Post-install smoke test ---
+
+# (platform, native event used for the dry-fire). Probe events are
+# chosen so the dispatcher resolves at least one concern per platform
+# from the canonical manifest. Copilot is intentionally excluded —
+# rule-only fallback per Phase 7.9.
+SMOKE_PROBE_EVENTS = (
+    ("augment",  "session_start"),
+    ("claude",   "SessionStart"),
+    ("cursor",   "beforeShellExecution"),
+    ("cline",    "session_start"),
+    ("windsurf", "post_setup_worktree"),
+    ("gemini",   "SessionStart"),
+)
+
+# Map platform → bridge file/dir we expect to exist before probing.
+# Mirrors PLATFORM_BRIDGES in scripts/hooks_status.py.
+SMOKE_BRIDGE_PATHS = {
+    "augment":  ".augment/settings.json",
+    "claude":   ".claude/settings.json",
+    "cursor":   ".cursor/hooks.json",
+    "cline":    ".clinerules/hooks",
+    "windsurf": ".windsurf/hooks.json",
+    "gemini":   ".gemini/settings.json",
+}
+
+
+def _smoke_test_hooks(project_root: Path, package_root: Path) -> int:
+    """Dry-fire dispatch_hook.py against every installed bridge.
+
+    Per Phase 7.12: uses `--dry-run` so resolution-only — no concern
+    invocation, no state writes outside the dispatcher's own report.
+    Failure is non-fatal (warn only); install always exits 0 even
+    when smoke fails so consumers in restricted CI sandboxes are not
+    blocked. CI-side strict mode lives in `hooks_status --strict`.
+    """
+    dispatcher = package_root / "scripts" / "hooks" / "dispatch_hook.py"
+    manifest = package_root / "scripts" / "hook_manifest.yaml"
+    if not dispatcher.is_file() or not manifest.is_file():
+        return 0  # package layout doesn't ship the dispatcher; skip silently
+
+    failed: list[str] = []
+    skipped: list[str] = []
+    passed: list[str] = []
+
+    for platform, native in SMOKE_PROBE_EVENTS:
+        rel_bridge = SMOKE_BRIDGE_PATHS.get(platform, "")
+        bridge_path = project_root / rel_bridge if rel_bridge else None
+        bridge_present = bool(
+            bridge_path and (bridge_path.is_file() or
+                             (bridge_path.is_dir() and any(bridge_path.iterdir())))
+        )
+        if not bridge_present:
+            skipped.append(platform)
+            continue
+        # Map native → agent-config event using the dispatcher's own
+        # alias resolution. We re-use the dispatcher in --dry-run mode,
+        # passing both --platform + --event=<canonical>. Since the
+        # canonical event is what the manifest binds against, we feed
+        # it directly: 'session_start' is the cross-platform anchor
+        # that every bridge wires up. This avoids re-implementing
+        # alias resolution here.
+        cmd = [
+            sys.executable, str(dispatcher),
+            "--manifest", str(manifest),
+            "--platform", platform,
+            "--event", "session_start",
+            "--native-event", native,
+            "--dry-run",
+        ]
+        try:
+            proc = subprocess.run(
+                cmd, input="{}", capture_output=True, text=True,
+                cwd=str(project_root), timeout=10, check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            failed.append(f"{platform}: {exc}")
+            continue
+        if proc.returncode != 0:
+            failed.append(f"{platform}: exit={proc.returncode} {proc.stderr.strip()[:120]}")
+            continue
+        try:
+            plan = json.loads(proc.stdout or "{}")
+        except json.JSONDecodeError:
+            failed.append(f"{platform}: dispatcher did not emit JSON plan")
+            continue
+        if not isinstance(plan.get("concerns"), list):
+            failed.append(f"{platform}: plan.concerns missing or not a list")
+            continue
+        passed.append(platform)
+
+    if not QUIET:
+        if passed:
+            success(f"hook smoke passed: {', '.join(passed)}")
+        if skipped:
+            skip(f"hook smoke skipped (bridge not installed): {', '.join(skipped)}")
+        for line in failed:
+            warn(f"hook smoke failed — {line}")
+    return 1 if failed else 0
+
+
 # --- Argument parsing ---
 
 def parse_options(argv: list[str]) -> argparse.Namespace:
@@ -647,9 +1237,34 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="also deploy ~/.augment/settings.json + ~/.augment/hooks/ (user-scope, all projects)",
     )
+    parser.add_argument(
+        "--cursor-user-hooks",
+        action="store_true",
+        help="also deploy ~/.cursor/hooks.json + ~/.cursor/hooks/cursor-dispatcher.sh (user-scope, all projects)",
+    )
+    parser.add_argument(
+        "--cline-user-hooks",
+        action="store_true",
+        help="also deploy ~/Documents/Cline/Hooks/ trampoline + per-event wrappers (user-scope, all projects)",
+    )
+    parser.add_argument(
+        "--windsurf-user-hooks",
+        action="store_true",
+        help="also deploy ~/.codeium/windsurf/hooks.json + hooks/windsurf-dispatcher.sh (user-scope, all projects)",
+    )
+    parser.add_argument(
+        "--gemini-user-hooks",
+        action="store_true",
+        help="also deploy ~/.gemini/settings.json + ~/.gemini/hooks/gemini-dispatcher.sh (user-scope, all projects)",
+    )
     parser.add_argument("--project", default=None, help="project root (default: cwd or PROJECT_ROOT env)")
     parser.add_argument("--package", default=None, help="package root (default: auto-detect under project)")
     parser.add_argument("--quiet", action="store_true", help="suppress info/success output (warnings/errors still shown)")
+    parser.add_argument(
+        "--no-smoke",
+        action="store_true",
+        help="skip the post-install hook smoke test (default: dry-fire dispatch:hook against every installed bridge)",
+    )
     return parser.parse_args(argv)
 
 
@@ -690,10 +1305,32 @@ def main(argv: list[str]) -> int:
         ensure_vscode_bridge(project_root, package_type, opts.force)
         ensure_augment_bridge(project_root, opts.force)
         ensure_claude_bridge(project_root, opts.force)
+        ensure_cursor_bridge(project_root, opts.force)
+        ensure_cline_bridge(project_root, opts.force)
+        ensure_windsurf_bridge(project_root, opts.force)
+        ensure_gemini_bridge(project_root, opts.force)
         ensure_copilot_bridge(project_root, opts.force)
 
     if opts.augment_user_hooks:
         ensure_augment_user_hooks(package_root, opts.force)
+
+    if opts.cursor_user_hooks:
+        ensure_cursor_user_hooks(package_root, opts.force)
+
+    if opts.cline_user_hooks:
+        ensure_cline_user_hooks(package_root, opts.force)
+
+    if opts.windsurf_user_hooks:
+        ensure_windsurf_user_hooks(package_root, opts.force)
+
+    if opts.gemini_user_hooks:
+        ensure_gemini_user_hooks(package_root, opts.force)
+
+    if not opts.skip_bridges and not opts.no_smoke:
+        if not QUIET:
+            print()
+            info("Smoke-testing installed hook bridges (dry-run)")
+        _smoke_test_hooks(project_root, package_root)
 
     if not QUIET:
         print()
@@ -707,6 +1344,7 @@ def main(argv: list[str]) -> int:
         print("  Next steps:")
         print("    • Commit .agent-settings.yml and bridge files to your repo")
         print("    • New team members just run composer install / npm install — done")
+        print("    • Inspect hook coverage: ./agent-config hooks:status")
         print("    • Full walkthrough: https://github.com/event4u-app/agent-config/blob/main/docs/getting-started.md")
         print()
     return 0

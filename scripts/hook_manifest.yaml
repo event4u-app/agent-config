@@ -1,0 +1,184 @@
+# Hook manifest — single source of truth for which concerns fire on which
+# (platform, event) tuples. Consumed by:
+#   - scripts/hooks/dispatch_hook.py   (runtime resolver)
+#   - scripts/lint_hook_manifest.py    (CI gate; Phase 7.10)
+#   - scripts/install.py               (per-platform config writer)
+#
+# Schema and event vocabulary: docs/contracts/hook-architecture-v1.md.
+# Per-platform event-name mapping: agents/contexts/chat-history-platform-hooks.md.
+#
+# When you add or remove a concern, also update:
+#   - scripts/agent-config         (CLI subcommand wiring, if exposed)
+#   - the source rule's "Copilot fallback" section (Phase 7.9)
+#   - the relevant snapshot tests under tests/hooks/ (Phase 7.11)
+schema_version: 1
+
+concerns:
+  chat-history:
+    script: scripts/chat_history.py
+    args: [hook-dispatch]
+    fail_closed: false
+  roadmap-progress:
+    script: scripts/roadmap_progress_hook.py
+    args: []
+    fail_closed: false
+  onboarding-gate:
+    script: scripts/onboarding_gate_hook.py
+    args: []
+    fail_closed: false
+  context-hygiene:
+    script: scripts/context_hygiene_hook.py
+    args: []
+    fail_closed: false
+  # Phase 5 — Tier-1 hook for the verify-before-complete rule. Records
+  # observable evidence of verification commands (tests, quality tools,
+  # builds) into agents/state/verify-before-complete.json. The rule body
+  # cites that file as the source of truth for "verified this turn?".
+  verify-before-complete:
+    script: scripts/verify_before_complete_hook.py
+    args: []
+    fail_closed: false
+  # Phase 5 — Tier-1 hook for the minimal-safe-diff rule. Counts unique
+  # files touched per turn into agents/state/minimal-safe-diff.json and
+  # flips warning=true past hooks.minimal_safe_diff.threshold.
+  minimal-safe-diff:
+    script: scripts/minimal_safe_diff_hook.py
+    args: []
+    fail_closed: false
+
+platforms:
+  augment:
+    session_start:    [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
+    session_end:      [chat-history]
+    stop:             [chat-history, verify-before-complete]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff]
+
+  claude:
+    session_start:    [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
+    session_end:      [chat-history]
+    stop:             [chat-history, verify-before-complete]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff]
+
+  # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the
+  # IDE and CLI; `~/.cursor/hooks.json` (user) is opt-in via
+  # `install.py --cursor-user-hooks` and uses scripts/hooks/cursor-dispatcher.sh
+  # to route into the active workspace. UserPromptSubmit maps to
+  # `beforeSubmitPrompt` (Cursor third-party-hooks table). Stop is
+  # IDE-only — CLI-only users fall back to /checkpoint per
+  # agents/contexts/chat-history-platform-hooks.md.
+  cursor:
+    session_start:      [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
+    session_end:        [chat-history]
+    stop:               [chat-history, verify-before-complete]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff]
+
+  # Phase 7.6 — Cline. Hooks live under `.clinerules/hooks/<HookName>`
+  # (project, no file extension, must be executable per Cline docs) or
+  # `~/Documents/Cline/Hooks/<HookName>` (global). Each script reads a
+  # JSON payload from stdin (`taskId`, `hookName`, `workspaceRoots`,
+  # `model`, plus a hook-specific field). Cline emits two distinct
+  # task-start events — TaskStart (new) and TaskResume (continue) —
+  # both map to session_start. TaskCancel maps to stop because the
+  # session is interrupted with partial state (mirrors Augment Stop).
+  cline:
+    session_start:      [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
+    session_end:        [chat-history]
+    stop:               [chat-history, verify-before-complete]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff]
+
+  # Phase 7.7 — Windsurf (Cascade). Hooks live at `.windsurf/hooks.json`
+  # (project) or `~/.codeium/windsurf/hooks.json` (user). Cascade has
+  # no generic post-tool-use surface — roadmap-progress and
+  # context-hygiene therefore have no Windsurf binding (documented
+  # platform limitation). chat-history wires through the per-turn
+  # cycle: pre_user_prompt for the turn-check, post_cascade_response
+  # for the per-turn append, and post_setup_worktree for first-run
+  # init (rare, fires only on worktree creation; advisory not
+  # blocking — Windsurf docs).
+  # Windsurf — verify-before-complete tracks lifecycle only (no post_tool_use
+  # surface to record verification commands; documented limitation).
+  # minimal-safe-diff is omitted entirely on Windsurf for the same reason.
+  windsurf:
+    session_start:      [chat-history, onboarding-gate, verify-before-complete]
+    stop:               [chat-history, verify-before-complete]
+    user_prompt_submit: [chat-history, verify-before-complete]
+
+  # Phase 7.8 — Gemini CLI. Hooks live at `.gemini/settings.json`
+  # (project) or `~/.gemini/settings.json` (user). Per Gemini docs
+  # (geminicli.com/docs/hooks/reference/), each event maps to an
+  # array of hook groups; each group has a `matcher` (regex for
+  # tool events, exact string for lifecycle) and a `hooks` array of
+  # `{type: "command", command: "..."}`. SessionStart/SessionEnd are
+  # advisory (cannot block); BeforeAgent fires after the user
+  # submits a prompt and before agent planning, so it carries the
+  # turn-check semantics. AfterAgent fires when the agent loop ends
+  # — this is our `stop` slot.
+  gemini:
+    session_start:      [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
+    session_end:        [chat-history]
+    stop:               [chat-history, verify-before-complete]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff]
+
+  # Phase 7.9 — Copilot has no hook surface. Concerns route through
+  # rule-only fallback; the dispatcher silently no-ops on --platform copilot.
+  copilot:
+    fallback_only: true
+
+# Native-event → agent-config-event translation table. Used by per-platform
+# trampolines when the platform speaks a different vocabulary. Trampolines
+# pass --native-event for traceability; the dispatcher does NOT branch on it.
+native_event_aliases:
+  augment:
+    SessionStart:    session_start
+    SessionEnd:      session_end
+    Stop:            stop
+    PostToolUse:     post_tool_use
+    PreToolUse:      pre_tool_use
+  claude:
+    SessionStart:      session_start
+    SessionEnd:        session_end
+    Stop:              stop
+    UserPromptSubmit:  user_prompt_submit
+    PostToolUse:       post_tool_use
+    PreToolUse:        pre_tool_use
+    PreCompact:        pre_compact
+  cursor:
+    sessionStart:        session_start
+    sessionEnd:          session_end
+    stop:                stop
+    beforeSubmitPrompt:  user_prompt_submit
+    postToolUse:         post_tool_use
+    preToolUse:          pre_tool_use
+    preCompact:          pre_compact
+  cline:
+    TaskStart:         session_start
+    TaskResume:        session_start
+    TaskComplete:      session_end
+    TaskCancel:        stop
+    UserPromptSubmit:  user_prompt_submit
+    PostToolUse:       post_tool_use
+    PreToolUse:        pre_tool_use
+    PreCompact:        pre_compact
+  # Windsurf (Cascade) — snake_case event names per
+  # docs.windsurf.com/windsurf/cascade/hooks. post_cascade_response is
+  # async (off the critical path) so the per-turn append safely lands
+  # in the `stop` slot rather than `session_end`.
+  windsurf:
+    pre_user_prompt:        user_prompt_submit
+    post_cascade_response:  stop
+    post_setup_worktree:    session_start
+  # Gemini CLI — PascalCase event names per geminicli.com/docs/hooks/.
+  # BeforeAgent fires after the user submits a prompt and before
+  # planning (carries the turn-check / append-on-prompt semantics).
+  # AfterAgent fires when the agent loop ends — our `stop` slot.
+  gemini:
+    SessionStart:  session_start
+    SessionEnd:    session_end
+    BeforeAgent:   user_prompt_submit
+    AfterAgent:    stop
+    BeforeTool:    pre_tool_use
+    AfterTool:     post_tool_use

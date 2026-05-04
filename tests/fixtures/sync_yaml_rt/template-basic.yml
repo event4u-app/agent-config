@@ -1,0 +1,17 @@
+# Basic template fixture used by Phase 3 merge tests.
+cost_profile: minimal
+
+personal:
+  ide: ""
+  open_edited_files: false
+  user_name: ""
+  rtk_installed: false
+  minimal_output: true
+
+project:
+  pr_template: ".github/pull_request_template.md"
+  upstream_repo: ""
+  improvement_pr_branch_prefix: "improve/agent-"
+
+onboarding:
+  onboarded: false

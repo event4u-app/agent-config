@@ -1,0 +1,190 @@
+version: '3'
+
+tasks:
+  install:
+    desc: Run the installer orchestrator (sync + bridges)
+    cmd: bash scripts/install {{.CLI_ARGS}}
+
+  install-hooks:
+    desc: Install git hooks (pre-commit marketplace lint, pre-push sync check, chat-history bridges)
+    cmd: bash scripts/install-hooks.sh
+
+  first-run:
+    desc: Show the recommended first-run experience for new users
+    cmd: bash scripts/first-run.sh
+
+  test:
+    desc: Run all tests (bash + Python, parallel where safe)
+    cmds:
+      - bash tests/test_install.sh --parallel
+      - bash tests/test_install_orchestrator.sh --parallel
+      - bash tests/test_install_openai_key.sh
+      - bash tests/test_install_anthropic_key.sh
+      - python3 -m pytest tests/ -n auto -q
+
+  test-install:
+    desc: Run install.sh + orchestrator + install.py + key-script tests
+    cmds:
+      - bash tests/test_install.sh --parallel
+      - bash tests/test_install_orchestrator.sh --parallel
+      - bash tests/test_install_openai_key.sh
+      - bash tests/test_install_anthropic_key.sh
+      - python3 -m pytest tests/test_install_py.py -n auto -q
+
+  test-python:
+    desc: Run all Python unit tests (pytest-discovered)
+    cmd: python3 -m pytest tests/ -n auto -q
+
+  test-triggers:
+    desc: "Run trigger eval for one skill (MockRouter, no API call). Usage: task test-triggers -- eloquent"
+    cmd: python3 scripts/skill_trigger_eval.py --skill {{.CLI_ARGS}} --dry-run
+
+  setup-evals:
+    desc: "Bootstrap .venv/ with the pinned anthropic SDK for live trigger evals (idempotent)."
+    cmd: bash scripts/setup_eval_venv.sh
+    interactive: true
+
+  install-anthropic-key:
+    desc: |
+      Install the Anthropic API key used by live trigger evals and the
+      AI Council `anthropic` member. Interactive: key is read with no
+      echo and stored in ~/.config/agent-config/anthropic.key (mode
+      0600). Piped stdin is refused. Rerun to rotate.
+    cmd: bash scripts/install_anthropic_key.sh
+    interactive: true
+
+  install-openai-key:
+    desc: |
+      Install the OpenAI API key used by the AI Council `openai`
+      member. Interactive: key is read with no echo and stored in
+      ~/.config/agent-config/openai.key (mode 0600). Piped stdin is
+      refused. Rerun to rotate.
+    cmd: bash scripts/install_openai_key.sh
+    interactive: true
+
+  test-triggers-live:
+    desc: |
+      Run trigger eval against Claude API. The runner enforces:
+        1) key file ~/.config/agent-config/anthropic.key (mode 0600)
+        2) interactive tty stdin
+        3) explicit 'yes' at the pre-run cost preview
+      Bootstrap once:        task setup-evals
+      Install the key once:  task install-anthropic-key
+      Usage: task test-triggers-live -- eloquent
+    cmd: .venv/bin/python3 scripts/skill_trigger_eval.py --skill {{.CLI_ARGS}}
+    preconditions:
+      - sh: test -x .venv/bin/python3
+        msg: ".venv missing — run 'task setup-evals' first"
+    interactive: true
+
+  test-linter:
+    desc: Run skill linter tests
+    cmd: python3 -m pytest tests/test_skill_linter.py -v
+
+  test-readme-linter:
+    desc: Run README linter tests
+    cmd: python3 -m pytest tests/test_readme_linter.py -v
+
+  test-marketplace-linter:
+    desc: Run marketplace linter tests
+    cmd: python3 -m pytest tests/test_lint_marketplace.py -v
+
+  test-runtime:
+    desc: Run runtime registry and dispatcher tests
+    cmd: python3 -m pytest tests/test_runtime_registry.py tests/test_runtime_dispatcher.py -v
+
+  test-ai-council:
+    desc: Run AI Council tests (clients, bundler, orchestrator, prompts)
+    cmd: python3 -m pytest tests/ai_council/ -v
+
+  runtime-list:
+    desc: List all runtime-capable skills
+    cmd: python3 scripts/runtime_registry.py
+
+  runtime-list-json:
+    desc: List all runtime-capable skills (JSON output)
+    cmd: python3 scripts/runtime_registry.py --format json
+
+  runtime-validate:
+    desc: Validate runtime registry consistency
+    cmd: python3 scripts/runtime_registry.py --validate
+
+  tool-list:
+    desc: List all registered tools
+    cmd: python3 scripts/tool_registry.py
+
+  tool-validate:
+    desc: Validate tool declarations
+    cmd: python3 scripts/tool_registry.py --validate-tools {{.CLI_ARGS}}
+
+  test-tools:
+    desc: Run tool registry and adapter tests
+    cmd: python3 -m pytest tests/test_tool_registry.py tests/test_tool_adapters.py -v
+
+  test-runtime-all:
+    desc: Run all runtime and tools tests
+    cmd: python3 -m pytest tests/test_runtime_registry.py tests/test_runtime_dispatcher.py tests/test_runtime_handler.py tests/test_tool_registry.py tests/test_tool_adapters.py tests/test_ci_summary.py -v
+
+  runtime-e2e:
+    desc: End-to-end gate — dispatch each runnable pilot skill and fail on any non-zero exit
+    cmds:
+      - python3 scripts/runtime_dispatcher.py run --skill lint-skills
+      - python3 scripts/runtime_dispatcher.py run --skill check-refs
+
+  golden-replay:
+    desc: Replay all Golden Transcripts against work_engine — fail on any structural drift (R1 P6)
+    cmd: python3 -m pytest tests/golden/test_replay.py -v
+
+  golden-replay-smoke:
+    desc: Replay only the smoke-tagged Golden Transcripts — sub-second PR feedback (P2.4)
+    cmd: python3 -m pytest tests/golden/test_replay.py -m smoke -v
+
+  build-cloud-bundle:
+    desc: "Build one cloud-skill ZIP (Anthropic Skills format) — usage: task build-cloud-bundle -- SKILL=name"
+    cmd: python3 scripts/build_cloud_bundle.py --skill {{.SKILL}}
+
+  build-cloud-bundles-all:
+    desc: Build every eligible skill into dist/cloud/<name>.zip (T3-H skipped)
+    cmd: python3 scripts/build_cloud_bundle.py --all --clean
+
+  ci-cloud-bundle:
+    desc: Validate cloud-bundle invariants without producing files (CI gate)
+    cmd: python3 scripts/build_cloud_bundle.py --check
+
+  audit-cloud:
+    desc: Tier classification for cloud-distribution readiness
+    cmd: python3 scripts/audit_cloud_compatibility.py {{.CLI_ARGS}}
+
+  build-linear-digest:
+    desc: Build the Linear AI rules digest (workspace + team + personal) into dist/linear/
+    cmd: python3 scripts/build_linear_digest.py {{.CLI_ARGS}}
+
+  ci-linear-digest:
+    desc: Validate the Linear AI digest builds clean (CI gate, no per-rule drift, under budget)
+    cmd: python3 scripts/build_linear_digest.py --strict-missing
+
+  mcp:render:
+    desc: "Render mcp.json → .cursor/mcp.json, .windsurf/mcp.json (add --claude-desktop for user-scope)"
+    cmd: python3 scripts/mcp_render.py {{.CLI_ARGS}}
+
+  mcp:check:
+    desc: "Check MCP targets are in sync with mcp.json (non-zero exit if stale)"
+    cmd: python3 scripts/mcp_render.py --check {{.CLI_ARGS}}
+
+  memory:status:
+    desc: "Engineering-memory observability — backend status, intake counts, curated staleness"
+    cmd: python3 scripts/memory_report.py {{.CLI_ARGS}}
+
+  check-memory:
+    desc: "Validate agents/memory/ schema, statuses, and staleness (short-circuits if empty)"
+    cmd: |
+      if [ -d "agents/memory" ] && [ "$(find agents/memory -name '*.yml' 2>/dev/null | wc -l)" -gt 0 ]; then
+        python3 scripts/check_memory.py --path agents/memory
+      else
+        echo "  ℹ️  no agents/memory/*.yml files — skipping"
+      fi
+
+  memory:shadow-report:
+    desc: "Per-type shadow counts from the repo-vs-operational conflict rule (weekly cron target)"
+    cmd: python3 scripts/check_memory.py --shadow-report {{.CLI_ARGS}}
+

@@ -238,6 +238,10 @@ def test_package_operational_provider_returns_callable_when_present(
     monkeypatch.setattr(memory_status, "_CACHE_FILE",
                         tmp_path / ".agent-memory" / "status.cache")
     monkeypatch.delenv(memory_status._CACHE_ENV, raising=False)
+    # Raise the probe timeout so a fork+exec under pytest-xdist load on
+    # macOS stays inside budget (default 2s gets hit under heavy parallel
+    # CPU pressure).
+    monkeypatch.setattr(memory_status, "_HEALTH_TIMEOUT_SECONDS", 30.0)
     provider = memory_lookup.package_operational_provider()
     assert provider is not None
     assert callable(provider)

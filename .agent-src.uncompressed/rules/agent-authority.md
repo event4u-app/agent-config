@@ -1,5 +1,6 @@
 ---
 type: "always"
+tier: "3"
 description: "Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule"
 alwaysApply: true
 source: package

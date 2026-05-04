@@ -1,5 +1,6 @@
 ---
 type: "always"
+tier: "safety-floor"
 description: "Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass"
 alwaysApply: true
 source: package

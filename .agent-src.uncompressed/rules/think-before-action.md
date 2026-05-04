@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2b"
 description: "Before coding, modifying, or debugging — analyze first, verify with real tools, never guess or trial-and-error"
 alwaysApply: false
 source: package

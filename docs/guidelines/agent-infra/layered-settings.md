@@ -152,27 +152,46 @@ MUST follow these rules. Initial file creation and legacy migration
 are owned by `scripts/install.py`; these rules govern every edit
 after that.
 
-For each section in the template
-([`agent-settings.md`](../../templates/agent-settings.md)), walked in
-template order:
+The contract is **additive merge with user-line preservation** —
+the user's file is the ground truth, the template only contributes
+keys the user is missing. Round-trip parser and merger live in
+[`scripts/sync_yaml_rt.py`](../../scripts/sync_yaml_rt.py); the
+supported YAML subset (block-mappings, scalars, lists, comments,
+CRLF/LF) is documented in its module docstring. The stdlib-only
+choice (vs. `ruamel.yaml`) and its revisit triggers are recorded in
+[`docs/contracts/adr-settings-sync-engine.md`](../../contracts/adr-settings-sync-engine.md).
 
-- Keep the section header and its comments verbatim from the template.
+For each section in the template
+([`agent-settings.md`](../../templates/agent-settings.md)):
+
 - For each key under the section:
-  - **Key exists in user's file** → use the user's current value.
-  - **Key missing** → use the template default.
-- **Unknown sections/keys** the user has added → preserve at the end
-  of the section (or in a trailing `_user:` block if no matching
-  section exists).
+  - **Key exists in user's file** → keep the user's line **verbatim**
+    (value, quoting, inline comment, indent — all preserved).
+  - **Key missing** → insert the template's line at the position
+    after the user's last preceding sibling that is also in the
+    template (max-index insertion).
+- **Unknown sections/keys** the user has added → preserved verbatim
+  at their existing position. They are not moved to a trailing
+  `_user:` block, not re-prefixed, not flattened.
 
 Invariants:
 
-- Template section **order** always wins — reorder existing keys to
-  match.
+- **User order wins.** Template order is only consulted to decide
+  where to insert missing keys; existing user keys are never
+  reordered.
 - Existing scalar values are **never overwritten** unless the user
   asked for that specific change.
-- New keys added to the template land with their default value.
-- Comments from the template replace user comments in the same
-  position — comments are documentation, not user data.
+- New keys added to the template land with their default value and
+  the template's leading comments.
+- **User comments are preserved verbatim** on every existing key.
+  Template comments only land with keys the merger inserts; once a
+  key is in the user's file, its surrounding comments are owned by
+  the user.
+- Legacy `_user._user.foo` corruption (accumulated by older buggy
+  syncs) heals on the next sync — the leading `_user.` chain is
+  stripped and the leaf is re-homed at its template path, or kept
+  as a single-level orphan under `_user:` if no template home
+  exists.
 - Write with 2-space indent, no tabs, no trailing whitespace.
 - Never commit — `.agent-settings.yml` is git-ignored.
 - If a legacy flat `.agent-settings` (key=value) is still present,

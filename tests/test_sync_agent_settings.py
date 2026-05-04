@@ -124,7 +124,14 @@ def test_dry_run_does_not_write(workspace: Path):
     assert target.read_text(encoding="utf-8") == before
 
 
-def test_unknown_user_keys_preserved_under_user_block(workspace: Path):
+def test_unknown_user_keys_preserved_verbatim(workspace: Path):
+    """Additive contract: unknown user blocks stay at top level, verbatim.
+
+    Pre-rewrite the sync would re-home unknown keys into a synthetic
+    ``_user:`` block with dotted names. The additive sync preserves
+    the user's structure as-is — the merger only adds missing
+    template keys, never moves or rewrites user keys.
+    """
     target = workspace / ".agent-settings.yml"
     target.write_text(
         "cost_profile: minimal\n"
@@ -134,15 +141,18 @@ def test_unknown_user_keys_preserved_under_user_block(workspace: Path):
     )
     assert _run(workspace) == 0
     body = target.read_text(encoding="utf-8")
-    assert "_user:" in body
-    assert "legacy_thing.flag: custom_value" in body
+    # User's block is kept verbatim at top level — not re-homed under _user:.
+    assert "legacy_thing:\n  flag: custom_value\n" in body
+    assert "_user:" not in body
 
 
 def test_user_block_round_trip_is_idempotent(workspace: Path):
-    """Regression: unknown keys under `_user:` must not re-prefix on each sync.
+    """Regression: nested user blocks must not mutate across syncs.
 
-    Pre-fix bug: every sync prepended another ``_user.`` segment to each
-    dotted key, so after N syncs the leaf carried ``_user. * N`` prefixes.
+    Pre-rewrite bug: every sync prepended another ``_user.`` segment to
+    synthetic dotted keys, so after N syncs the leaf carried
+    ``_user. * N`` prefixes. The additive rewrite never synthesises
+    such keys — user blocks round-trip byte-identical.
     """
     target = workspace / ".agent-settings.yml"
     target.write_text(
@@ -163,9 +173,8 @@ def test_user_block_round_trip_is_idempotent(workspace: Path):
     assert all(s == snapshots[1] for s in snapshots[1:])
     # No `_user._user.` accumulation in the body.
     assert "_user._user." not in snapshots[-1]
-    # Original dotted keys still present, single level only.
-    assert "  legacy_thing.flag: custom_value" in snapshots[-1]
-    assert "  legacy_thing.nested.deep: 42" in snapshots[-1]
+    # User's nested block survives round-trip verbatim, no synthesis.
+    assert "legacy_thing:\n  flag: custom_value\n  nested:\n    deep: 42\n" in snapshots[-1]
 
 
 def test_user_block_repairs_legacy_corruption(workspace: Path):
@@ -271,6 +280,43 @@ def test_three_level_idempotent(nested_workspace: Path):
     assert _run(nested_workspace) == 0
     second = target.read_text(encoding="utf-8")
     assert first == second
+
+
+def test_profile_cli_override_wins_over_inferred(workspace: Path):
+    """``--profile balanced`` overrides the cost_profile inferred from file."""
+    # Seed a balanced.ini so the override has a target to load.
+    (workspace / "config" / "profiles" / "balanced.ini").write_text(
+        "cost_profile=balanced\n"
+        "chat_history_frequency=per_phase\n"
+        "chat_history_max_size_kb=256\n"
+        "chat_history_on_overflow=rotate\n",
+        encoding="utf-8",
+    )
+    target = workspace / ".agent-settings.yml"
+    # File declares cost_profile: minimal — the CLI override must win.
+    target.write_text("cost_profile: minimal\n", encoding="utf-8")
+    assert _run(workspace, ["--profile", "balanced"]) == 0
+    body = target.read_text(encoding="utf-8")
+    # User's existing scalar is preserved verbatim (additive contract).
+    assert "cost_profile: minimal\n" in body
+    # But the template-rendered values reflect the overriding profile.
+    data = yaml.safe_load(body)
+    assert data["chat_history"]["frequency"] == "per_phase"
+    assert data["chat_history"]["max_size_kb"] == 256
+
+
+def test_malformed_user_yaml_exits_2_with_message(workspace: Path, capsys):
+    """Tab-indented user file → friendly error + exit 2 (not a crash)."""
+    target = workspace / ".agent-settings.yml"
+    # Tab in indent — both PyYAML and the round-trip parser reject it.
+    target.write_text("section:\n\tchild: value\n", encoding="utf-8")
+    assert _run(workspace) == 2
+    captured = capsys.readouterr()
+    # Error goes to stderr and references the file we tried to parse.
+    assert "error:" in captured.err
+    assert ".agent-settings.yml" in captured.err
+    # File is not modified on the error path.
+    assert target.read_text(encoding="utf-8") == "section:\n\tchild: value\n"
 
 
 def test_list_values_round_trip(nested_workspace: Path):

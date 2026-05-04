@@ -26,10 +26,15 @@ from __future__ import annotations
 
 import argparse
 import datetime as _dt
-import json
 import re
 import sys
 from pathlib import Path
+
+# Re-use the shared atomic-write helper so concerns honour the single
+# `agents/state/.dispatcher.lock` discipline (hook-architecture-v1.md
+# § Concurrency, Phase 7.4).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from hooks.state_io import atomic_write_json  # noqa: E402
 
 SETTINGS_FILE = ".agent-settings.yml"
 STATE_DIR = Path("agents") / "state"
@@ -79,9 +84,12 @@ def _read_onboarded(settings_path: Path) -> tuple[bool, str]:
 
 def _write_state(consumer_root: Path, required: bool, reason: str,
                  settings_present: bool) -> None:
-    """Write `agents/state/onboarding-gate.json` atomically."""
-    state_dir = consumer_root / STATE_DIR
-    state_dir.mkdir(parents=True, exist_ok=True)
+    """Write `agents/state/onboarding-gate.json` atomically.
+
+    Uses the shared `agents/state/.dispatcher.lock` so concurrent
+    dispatcher invocations across platforms cannot tear the file
+    (hook-architecture-v1.md § Concurrency, Phase 7.4).
+    """
     payload = {
         "required": required,
         "reason": reason,
@@ -89,10 +97,7 @@ def _write_state(consumer_root: Path, required: bool, reason: str,
             timespec="seconds"),
         "settings_present": settings_present,
     }
-    target = consumer_root / STATE_FILE
-    tmp = target.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    tmp.replace(target)
+    atomic_write_json(consumer_root / STATE_FILE, payload)
 
 
 def run(*, consumer_root: Path, verbose: bool = False) -> int:

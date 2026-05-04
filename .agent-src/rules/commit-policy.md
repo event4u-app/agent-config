@@ -1,5 +1,6 @@
 ---
 type: "always"
+tier: "safety-floor"
 description: "Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked"
 alwaysApply: true
 source: package

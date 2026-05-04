@@ -15,6 +15,7 @@ on:
       - "scripts/lint_marketplace.py"
       - "tests/**"
       - "Taskfile.yml"
+      - "taskfiles/**"
       - ".github/workflows/consistency.yml"
   push:
     branches:
@@ -33,6 +34,7 @@ on:
       - "scripts/lint_marketplace.py"
       - "tests/**"
       - "Taskfile.yml"
+      - "taskfiles/**"
       - ".github/workflows/consistency.yml"
 
 jobs:

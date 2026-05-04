@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2a"
 alwaysApply: false
 description: "When writing or reviewing a diff — the smallest change that solves the stated problem; no drive-by edits, no opportunistic refactors, no reformatting of untouched code"
 source: package

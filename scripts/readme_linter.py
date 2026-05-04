@@ -193,15 +193,24 @@ def _detect_repo_type(root: Path, ctx: RepoContext) -> RepoType:
 
 
 def _extract_taskfile_tasks(root: Path) -> list[str]:
+    tasks: list[str] = []
+    pattern = r"^\s{2}([\w:-]+):"
     for name in ("Taskfile.yml", "Taskfile.yaml"):
         path = root / name
         if path.exists():
             try:
-                text = path.read_text()
-                return re.findall(r"^\s{2}([\w_-]+):", text, re.MULTILINE)
+                tasks.extend(re.findall(pattern, path.read_text(), re.MULTILINE))
             except OSError:
                 pass
-    return []
+            break
+    taskfiles_dir = root / "taskfiles"
+    if taskfiles_dir.is_dir():
+        for path in sorted(taskfiles_dir.glob("*.yml")):
+            try:
+                tasks.extend(re.findall(pattern, path.read_text(), re.MULTILINE))
+            except OSError:
+                pass
+    return tasks
 
 
 def _extract_npm_scripts(root: Path) -> list[str]:

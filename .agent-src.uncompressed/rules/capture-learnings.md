@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2a"
 description: "After completing a task where a repeated mistake or successful pattern appeared — capture as rule or skill"
 alwaysApply: false
 source: package

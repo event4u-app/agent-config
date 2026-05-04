@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "3"
 alwaysApply: false
 description: "Playwright E2E tests — locators, assertions, Page Objects, fixtures, CI, and flaky test prevention"
 source: package

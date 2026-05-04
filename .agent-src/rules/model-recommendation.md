@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2a"
 description: "Starting a new task, switching task type, or invoking a command — detect task complexity and recommend the optimal model (Opus/Sonnet/GPT) before any work"
 alwaysApply: false
 source: package

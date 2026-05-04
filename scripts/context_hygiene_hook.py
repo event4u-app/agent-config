@@ -30,6 +30,12 @@ import json
 import sys
 from pathlib import Path
 
+# Re-use the shared atomic-write helper so concerns honour the single
+# `agents/state/.dispatcher.lock` discipline (hook-architecture-v1.md
+# § Concurrency, Phase 7.4).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from hooks.state_io import atomic_write_json  # noqa: E402
+
 STATE_DIR = Path("agents") / "state"
 STATE_FILE = STATE_DIR / "context-hygiene.json"
 
@@ -118,12 +124,9 @@ def _update(state: dict, tool: str | None) -> dict:
 
 
 def _write_state(consumer_root: Path, state: dict) -> None:
-    state_dir = consumer_root / STATE_DIR
-    state_dir.mkdir(parents=True, exist_ok=True)
-    target = consumer_root / STATE_FILE
-    tmp = target.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
-    tmp.replace(target)
+    """Write the state file atomically under the shared dispatcher lock
+    (hook-architecture-v1.md § Concurrency, Phase 7.4)."""
+    atomic_write_json(consumer_root / STATE_FILE, state)
 
 
 def run(stdin_text: str, *, consumer_root: Path, verbose: bool = False) -> int:
@@ -135,6 +138,11 @@ def run(stdin_text: str, *, consumer_root: Path, verbose: bool = False) -> int:
                 payload = decoded
         except json.JSONDecodeError:
             pass  # silent no-op, never block
+
+    # Unwrap dispatcher envelope (Phase 7.3, hook-architecture-v1.md).
+    if all(k in payload for k in ("schema_version", "platform", "event", "payload")):
+        inner = payload.get("payload")
+        payload = inner if isinstance(inner, dict) else {}
 
     target = consumer_root / STATE_FILE
     state = _load_state(target)

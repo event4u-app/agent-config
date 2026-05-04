@@ -837,6 +837,39 @@ On cloud surfaces (Claude.ai Web, Skills API) cadence is **inert** —
 no append calls, no `scripts/`, no JSONL file. Treat
 `chat_history.enabled` as `false`.
 
+## Copilot fallback
+
+GitHub Copilot has no `SessionStart` / `PostToolUse` / `Stop` hook
+surface, so `scripts/chat_history.py hook-dispatch` cannot fire
+structurally. `.agent-chat-history` is not maintained for the agent
+unless the agent runs the cooperative path itself.
+
+Treat Copilot as the **CHECKPOINT path** described above — gates 1 +
+2 are cooperative:
+
+1. Run `turn-check` on the first turn (and after any ownership
+   reset) to establish ownership against the first user message.
+2. Run `append --first-user-msg "<msg>" --type <…> --json '<…>'` at
+   every cadence boundary, exactly as the cooperative path
+   specifies.
+3. Surface ownership-refusal exit `3` to the user; do not swallow it.
+
+The state "file" the hook would have written is `.agent-chat-history`
+itself (JSONL, project root). The manual command that reproduces a
+single hook-dispatch step is the same one the dispatcher would
+have invoked:
+
+```bash
+scripts/chat_history.py hook-dispatch \
+  --platform copilot \
+  --event <session_start|post_tool_use|stop> \
+  < envelope.json
+```
+
+— but in practice the cooperative `turn-check` + `append` calls
+above are the supported Copilot path; `hook-dispatch` is mainly the
+dispatcher's entry point.
+
 ## Interactions & references
 
 - Sibling rules: [`chat-history-ownership`](chat-history-ownership.md) (gate 1 — turn-check) · [`chat-history-visibility`](chat-history-visibility.md) (gate 3 — heartbeat marker).
@@ -1058,8 +1091,7 @@ no marker line, no `scripts/`. Treat `chat_history.enabled` as `false`.
 
 # Development Efficiency
 
-Loaded when actively working with code, tests, quality tools, CLI, or analysis.
-For communication and response style rules → see the always-loaded `token-efficiency` rule.
+Loaded for code, tests, quality tools, CLI, analysis. Communication / response style → always-loaded `token-efficiency`.
 
 ## Iron Law — rtk first, tail/grep fallback
 
@@ -1415,6 +1447,27 @@ If you need an ignored skill: read its SKILL.md directly, apply guidance, then a
 > 1. Remove from ignore — relevant for this project
 > 2. Keep ignored — one-off
 ```
+
+## Copilot fallback
+
+GitHub Copilot has no `PostToolUse` hook surface, so
+`scripts/context_hygiene_hook.py` cannot run structurally and
+`agents/state/context-hygiene.json` is not maintained automatically
+(turn count, loop signal, freshness milestones at 20/40/60).
+
+The cooperative path: track turns and tool-loop signals from memory
+during the conversation and apply the suggest-a-new-chat / 3-failure
+stop / loop-detection rules above. To refresh the state file
+manually so the dashboard or another tool can read the latest
+counters, run:
+
+```bash
+python3 scripts/context_hygiene_hook.py < /dev/null
+```
+
+The script reads from stdin if a JSON envelope is provided and
+otherwise writes a no-op snapshot under the shared dispatcher lock.
+Exit code is always 0 — hooks must never block the agent loop.
 
 ---
 
@@ -2582,6 +2635,31 @@ gate. This protects projects that were set up before this rule shipped.
 - `scope-control` — option `2` writes exactly one key; no side effects.
 - `role-mode-adherence` — gate runs BEFORE the mode marker is emitted.
 
+## Copilot fallback
+
+GitHub Copilot has no `SessionStart` hook surface, so
+`scripts/onboarding_gate_hook.py` cannot run structurally and
+`agents/state/onboarding-gate.json` is not refreshed for the agent.
+On the first turn of a Copilot conversation:
+
+1. Read `onboarding.onboarded` from `.agent-settings.yml` directly
+   (one read per conversation, then cache as the prose above
+   describes).
+2. Optionally refresh the state file manually so other tooling sees
+   the same value the hook would have written:
+
+   ```bash
+   python3 scripts/onboarding_gate_hook.py < /dev/null
+   ```
+
+   The script reads `.agent-settings.yml`, atomically writes
+   `agents/state/onboarding-gate.json`, and exits 0 — same payload
+   the Augment / Claude / Cursor / Cline / Windsurf / Gemini hook
+   would have produced.
+3. Apply the gate behavior from "Gate behavior when `onboarded:
+   false`" above. The cooperative path is the spec; the hook is the
+   cache.
+
 ## See also
 
 - [`/onboard`](../commands/onboard.md) — the command this gate invokes
@@ -3110,6 +3188,27 @@ the mandatory pre-send self-check, the failure-mode catalog, and the
 Pull it whenever a trigger fires — the rule above is the obligation
 surface; the mechanics file is the lookup material.
 
+## Copilot fallback
+
+GitHub Copilot has no `PostToolUse` hook surface, so
+`scripts/roadmap_progress_hook.py` cannot detect roadmap-file writes
+structurally. The dashboard at `agents/roadmaps-progress.md` will
+not regenerate on its own.
+
+The cooperative path: every time a roadmap touch fires (per the
+trigger list in the mechanics context above), the agent regenerates
+the dashboard in the same response — which is the same Iron Law the
+hook enforces, just executed manually:
+
+```bash
+./agent-config roadmap:progress
+```
+
+The hook implementation is the specification; on Copilot the agent
+runs the regenerator itself after the same triggers fire. Skipping
+it is a rule violation, not a hook gap — the Iron Law on dashboard
+sync survives the missing hook surface.
+
 ---
 
 # Role Mode Adherence
@@ -3119,8 +3218,7 @@ one of the six modes defined in
 [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md):
 `developer`, `reviewer`, `tester`, `po`, `incident`, `planner`.
 
-Read `roles.active_role` from `.agent-settings.yml` at session start.
-Empty or missing → rule is inert. Do NOT guess a mode.
+Read `roles.active_role` from `.agent-settings.yml` at session start. Empty / missing → rule is inert; do NOT guess a mode.
 
 When active, every closing output MUST:
 
@@ -3607,6 +3705,44 @@ This is **irrelevant** for command detection.
 - If command file content appears in the context alongside an open file, the **command invocation takes priority**.
 - Do NOT confuse "file is open" with "user wants to discuss this file".
 - The user's typed message determines intent — not editor state.
+
+## Read the whole prompt — command is the operator, prose is the target
+
+```
+/<command> IS THE OPERATOR.
+THE REST OF THE USER MESSAGE NAMES THE TARGET.
+NEVER ASSUME THE COMMAND NAME IS THE TARGET.
+```
+
+Slash token = **what to do**; surrounding prose = **what to do it on**.
+
+- `/council and analyse chat-history` → target is `chat-history`,
+  not `council`. Council is the *tool*, prose names the *artefact*.
+- `/work the memory bug from PROJ-123` → target is "the memory bug
+  from PROJ-123".
+- `/fix ci and then open a PR` → target is "CI failure"; trailing
+  "open a PR" is a follow-up needing separate permission (per
+  `scope-control`).
+
+### Pre-flight before expensive operations
+
+Before any operation costing real time or money — external API call,
+large codebase analysis, multi-file refactor, council run, generated
+test suite — run silently:
+
+1. Re-read the **whole** user message, not just slash + first token.
+2. Identify the target the prose actually names.
+3. Target unambiguous → execute, no question.
+4. Target **genuinely** ambiguous after re-reading (prose names *two*
+   artefacts, can't tell which is the operand) → ask ONE
+   disambiguating numbered-options question per
+   [`ask-when-uncertain`](ask-when-uncertain.md), then proceed.
+
+**Not** a license to re-introduce cheap questions (`no-cheap-questions`
+still binds). Threshold: *"would this guess waste the user's tokens,
+money, or trust?"* — not *"I'd feel safer asking"*. Single failure
+mode to avoid: spending API spend on the wrong artefact because the
+agent fixated on the command name.
 
 ---
 

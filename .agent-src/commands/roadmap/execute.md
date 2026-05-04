@@ -33,7 +33,26 @@ suggestion:
   > "Phase 2: {name} — noch nicht begonnen"
   > "Next open step: {step description}"
 
-### 3. Execute step by step
+### 3. Resolve quality cadence (read once, before any step runs)
+
+Read `roadmap.quality_cadence` from `.agent-settings.yml`:
+
+| Value | When the project's quality pipeline runs |
+|---|---|
+| `end_of_roadmap` (default) | Once, in step 7 — before archiving |
+| `per_phase` | Once after every completed phase, plus step 7 |
+| `per_step` | After every completed step, plus step 7 (legacy verbose) |
+
+Missing key, unreadable file, or unknown value → fall back to `end_of_roadmap`.
+Cite the resolved cadence once in step 2's summary so the user can override it.
+
+The Iron Law `verify-before-complete` still applies — fresh quality
+output is mandatory before any "roadmap complete" claim, regardless of
+cadence. Step checkboxes and `agents/roadmaps-progress.md` are ALWAYS
+updated in the same response per `roadmap-progress-sync`; cadence only
+gates the *quality pipeline*, not progress tracking.
+
+### 4. Execute step by step
 
 For each open step:
 
@@ -41,28 +60,35 @@ For each open step:
 2. **Analyze** the codebase to understand what's needed for this step.
 3. **Present a plan** — what files to change, what approach to take.
 4. **Ask for confirmation**: "Should I implement this step?"
-   - If yes → implement, run quality checks, mark step as done in the roadmap file.
+   - If yes → implement, mark the step `[x]` in the roadmap file.
    - If no / skip → move to the next step.
    - If the user wants to stop → stop and summarize progress.
 
-### 4. After each step
+### 5. After each step
 
-- Update the roadmap file: mark the completed step (e.g. `[x]` or add a completion note).
-- Run quality tools if code was changed (PHPStan at minimum).
+- Update the roadmap file: mark the completed step `[x]` (or `[~]` / `[-]`).
 - Regenerate `agents/roadmaps-progress.md` — `./agent-config roadmap:progress`.
+- **Quality pipeline** — run only when `quality_cadence: per_step`.
+  Otherwise skip and proceed.
 - Ask: "Continue with the next step?"
 
-### 5. After all steps in a phase
+### 6. After all steps in a phase
 
 - Summarize what was accomplished in the phase.
+- **Quality pipeline** — run when `quality_cadence: per_phase` (or `per_step`).
+  Skip when `end_of_roadmap`.
 - Ask: "Phase {N} complete. Continue with Phase {N+1}?"
 
-### 6. When done (or stopped)
+### 7. When done (or stopped)
 
 - Summarize total progress: steps completed, steps remaining.
 - Update the roadmap file with the current status.
 - Regenerate the dashboard one last time so it matches the final state.
-- **If ALL steps are done** → trigger the completion & archiving workflow from the `roadmap-management` skill.
+- **If ALL steps are done** → run the project's quality pipeline now
+  (this is the `verify-before-complete` evidence gate; required for
+  every cadence value, including `end_of_roadmap`). On green, trigger
+  the completion & archiving workflow from the `roadmap-management`
+  skill. On red, stop, surface the failures, do not archive.
 
 ### Rules
 
@@ -77,6 +103,7 @@ For each open step:
       to execute the listed commit steps, then proceed silently per the answer.
 - **Push, merge, branch, PR, tag** stay permission-gated by [`scope-control`](../rules/scope-control.md#git-operations--permission-gated).
 - **Always ask before implementing** a step — never auto-execute.
-- **Run quality checks** after each code change.
+- **Quality cadence** is set by `roadmap.quality_cadence` (see step 3).
+  Step 7 always runs the pipeline before archival regardless of cadence.
 - If a step is unclear or too large, suggest breaking it down further.
 - If a step reveals a problem not covered in the roadmap, flag it to the user.

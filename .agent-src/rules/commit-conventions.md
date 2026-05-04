@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2a"
 alwaysApply: false
 description: "Git commit message format, branch naming, conventional commits, committing, pushing, or creating pull requests"
 source: package

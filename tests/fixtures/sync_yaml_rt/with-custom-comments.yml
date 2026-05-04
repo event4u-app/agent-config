@@ -1,0 +1,22 @@
+# Personal Agent Settings — hand-tweaked
+# Last reviewed: 2026-04-15
+
+cost_profile: balanced  # I run balanced locally
+
+# --- Personal preferences (custom order: user_name first) ---
+personal:
+  # I want my name at the top of this block
+  user_name: "Matze"
+
+  # IDE — phpstorm because of Xdebug
+  ide: "phpstorm"
+  open_edited_files: true
+
+  # rtk filtering — installed via brew
+  rtk_installed: true
+
+# --- Project ---
+project:
+  pr_template: ".github/pull_request_template.md"
+  upstream_repo: "event4u/agent-config"
+  improvement_pr_branch_prefix: "improve/agent-"

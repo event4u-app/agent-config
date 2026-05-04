@@ -1,0 +1,16 @@
+# Different blocks use different indent widths.
+# Within a single block the indent is consistent — that is the rule.
+personal:
+  ide: "phpstorm"
+  user_name: "Matze"
+
+# 4-space indented section
+ai_council:
+    enabled: true
+    mode: api
+    members:
+        anthropic:
+            enabled: true
+            model: "claude-opus-4-1"
+        openai:
+            enabled: false

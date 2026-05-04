@@ -1,0 +1,20 @@
+# Pytest configuration only.
+#
+# event4u/agent-config is a distribution package, not a Python project —
+# composer/npm own the manifest. This file exists solely to pin pytest's
+# import mode because the test tree contains:
+#
+#   - tests/hooks/                       (Phase 7 universal dispatcher)
+#   - tests/work_engine/hooks/           (work-engine hooks primitives)
+#   - tests/telemetry/test_settings.py
+#   - tests/work_engine/hooks/test_settings.py
+#
+# Under the default `prepend` import mode pytest tries to import both
+# `hooks` packages under one name and both `test_settings` modules under
+# one name, leading to ModuleNotFoundError + "import file mismatch"
+# errors during collection. `importlib` mode resolves each test file by
+# its full path and side-steps both collisions cleanly.
+#
+# See https://docs.pytest.org/en/stable/explanation/pythonpath.html.
+[tool.pytest.ini_options]
+addopts = "--import-mode=importlib"

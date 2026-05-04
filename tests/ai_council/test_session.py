@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime as _dt
 import json
 import sys
 from pathlib import Path
@@ -11,7 +12,9 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from scripts.ai_council.clients import CouncilResponse  # noqa: E402
-from scripts.ai_council.session import SessionManifest, save  # noqa: E402
+from scripts.ai_council.session import (  # noqa: E402
+    SessionManifest, prune_old_sessions, save,
+)
 
 
 def _r(provider: str, text: str = "ok", error: str | None = None) -> CouncilResponse:
@@ -144,3 +147,93 @@ def test_error_response_serialised(tmp_path: Path) -> None:
     )
     payload = json.loads((session_dir / "manifest.json").read_text())
     assert payload["responses_per_round"][0][0]["error"] == "cost_budget_exceeded"
+
+
+def _make_session(base: Path, name: str) -> Path:
+    d = base / name
+    d.mkdir(parents=True)
+    (d / "manifest.json").write_text("{}", encoding="utf-8")
+    (d / "response.md").write_text("body\n", encoding="utf-8")
+    (d / "raw-text.md").write_text("body\n", encoding="utf-8")
+    return d
+
+
+def test_prune_removes_old_sessions_keeps_recent(tmp_path: Path) -> None:
+    now = _dt.datetime(2026, 5, 4, 12, 0, 0, tzinfo=_dt.timezone.utc)
+    old = _make_session(tmp_path, "2026-04-15T10-00-00Z")  # 19 days old
+    edge = _make_session(tmp_path, "2026-04-20T11-30-00Z")  # >14d (14d 30m)
+    fresh = _make_session(tmp_path, "2026-05-03T09-00-00Z")  # 1 day old
+
+    removed = prune_old_sessions(tmp_path, retention_days=14, now=now)
+
+    assert old in removed
+    assert edge in removed
+    assert fresh not in removed
+    assert not old.exists()
+    assert not edge.exists()
+    assert fresh.exists()
+
+
+def test_prune_skips_non_directories_and_unparseable_names(tmp_path: Path) -> None:
+    now = _dt.datetime(2026, 5, 4, 12, 0, 0, tzinfo=_dt.timezone.utc)
+    (tmp_path / "report.json").write_text("{}", encoding="utf-8")
+    custom = tmp_path / "custom-folder"
+    custom.mkdir()
+    old = _make_session(tmp_path, "2026-01-01T00-00-00Z")
+
+    removed = prune_old_sessions(tmp_path, retention_days=14, now=now)
+
+    assert removed == [old]
+    assert (tmp_path / "report.json").exists()
+    assert custom.exists()
+
+
+def test_prune_disabled_when_retention_zero(tmp_path: Path) -> None:
+    now = _dt.datetime(2026, 5, 4, 12, 0, 0, tzinfo=_dt.timezone.utc)
+    old = _make_session(tmp_path, "2026-01-01T00-00-00Z")
+
+    removed = prune_old_sessions(tmp_path, retention_days=0, now=now)
+
+    assert removed == []
+    assert old.exists()
+
+
+def test_prune_handles_missing_directory(tmp_path: Path) -> None:
+    missing = tmp_path / "does-not-exist"
+    assert prune_old_sessions(missing, retention_days=14) == []
+
+
+def test_save_triggers_prune_via_retention_days_param(tmp_path: Path) -> None:
+    old = _make_session(tmp_path, "2026-01-01T00-00-00Z")
+    fresh_ts = "2026-05-04T12-00-00Z"
+
+    session_dir = save(
+        manifest=SessionManifest(
+            mode="prompt", artefact="<inline>", original_ask="x",
+            members=["anthropic/claude-x"],
+        ),
+        responses=[_r("anthropic")],
+        sessions_dir=tmp_path,
+        timestamp=fresh_ts,
+        retention_days=14,
+    )
+
+    assert session_dir.exists()
+    assert not old.exists()
+
+
+def test_save_with_retention_zero_keeps_old_sessions(tmp_path: Path) -> None:
+    old = _make_session(tmp_path, "2026-01-01T00-00-00Z")
+
+    save(
+        manifest=SessionManifest(
+            mode="prompt", artefact="<inline>", original_ask="x",
+            members=["anthropic/claude-x"],
+        ),
+        responses=[_r("anthropic")],
+        sessions_dir=tmp_path,
+        timestamp="2026-05-04T12-00-00Z",
+        retention_days=0,
+    )
+
+    assert old.exists()

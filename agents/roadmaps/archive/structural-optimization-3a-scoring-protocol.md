@@ -7,7 +7,7 @@ complexity: lightweight
 # Phase 3a Spike — Scoring Protocol
 
 > **Owner phase:** `road-to-structural-optimization.md` § 0.5.
-> **Companion:** [`persona-voice-rubric.md`](../../.agent-src.uncompressed/contexts/judges/persona-voice-rubric.md)
+> **Companion:** [`persona-voice-rubric.md`](../../../.agent-src.uncompressed/contexts/judges/persona-voice-rubric.md)
 > — measurement instrument; this file is the **process** around it.
 > **Spike report (future):** `agents/roadmaps/structural-optimization-3a-spike.md`
 > (lands in 3a.0.2).
@@ -138,8 +138,8 @@ What the spike does **not** test:
 
 - `road-to-structural-optimization.md` § 0.5, § 3a, § Definitions
   (Internal vs. External lock).
-- [`persona-voice-rubric.md`](../../.agent-src.uncompressed/contexts/judges/persona-voice-rubric.md)
+- [`persona-voice-rubric.md`](../../../.agent-src.uncompressed/contexts/judges/persona-voice-rubric.md)
   — measurement instrument.
-- [`docs/contracts/context-paths.md`](../../docs/contracts/context-paths.md)
+- [`docs/contracts/context-paths.md`](../../../docs/contracts/context-paths.md)
   — `contexts/judges/` allow-list (rubric + future
   `no-consolidate-rationale.md` already named).

@@ -1,5 +1,6 @@
 ---
 type: "always"
+tier: "3"
 description: "No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on)"
 alwaysApply: true
 source: package

@@ -141,3 +141,53 @@ def test_openai_handles_empty_choices() -> None:
     r = client.ask("sys", "user")
     assert r.text == ""
     assert r.input_tokens == 0
+
+
+# ── reasoning-model parameter shape (o1/o3/o4) ──────────────────────────────
+
+
+class _CapturingOpenAI:
+    """Records kwargs passed to chat.completions.create."""
+
+    def __init__(self) -> None:
+        self.last_kwargs: dict | None = None
+        self.chat = SimpleNamespace(completions=SimpleNamespace(
+            create=self._create,
+        ))
+
+    def _create(self, **kw):  # type: ignore[no-untyped-def]
+        self.last_kwargs = kw
+        return SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content="ok"))],
+            usage=SimpleNamespace(prompt_tokens=1, completion_tokens=2),
+        )
+
+
+@pytest.mark.parametrize("model", ["o1", "o1-preview", "o1-mini", "o3-mini", "o4-large"])
+def test_openai_reasoning_models_use_max_completion_tokens(model: str) -> None:
+    capture = _CapturingOpenAI()
+    client = OpenAIClient(client=capture, model=model)
+    r = client.ask("sys-prompt", "user-prompt", max_tokens=512)
+    assert r.error is None
+    assert capture.last_kwargs is not None
+    assert "max_tokens" not in capture.last_kwargs
+    assert capture.last_kwargs["max_completion_tokens"] == 512
+    # No system role on reasoning models — system is folded into user content.
+    messages = capture.last_kwargs["messages"]
+    assert len(messages) == 1
+    assert messages[0]["role"] == "user"
+    assert "sys-prompt" in messages[0]["content"]
+    assert "user-prompt" in messages[0]["content"]
+
+
+@pytest.mark.parametrize("model", ["gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"])
+def test_openai_chat_models_keep_max_tokens_and_system_role(model: str) -> None:
+    capture = _CapturingOpenAI()
+    client = OpenAIClient(client=capture, model=model)
+    client.ask("sys-prompt", "user-prompt", max_tokens=256)
+    assert capture.last_kwargs is not None
+    assert capture.last_kwargs["max_tokens"] == 256
+    assert "max_completion_tokens" not in capture.last_kwargs
+    messages = capture.last_kwargs["messages"]
+    assert messages[0]["role"] == "system"
+    assert messages[1]["role"] == "user"

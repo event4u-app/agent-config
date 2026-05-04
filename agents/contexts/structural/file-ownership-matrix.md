@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
 - Files indexed: **318**
-- Edges (incl. self-WRITE): **681**
+- Edges (incl. self-WRITE): **682**
 
 ## READ_ONLY edges
 
@@ -335,6 +335,7 @@
 | `.agent-src.uncompressed/skills/review-routing/SKILL.md` | `.agent-src.uncompressed/rules/reviewer-awareness.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/review-routing/SKILL.md` | `.agent-src.uncompressed/skills/judge-test-coverage/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/review-routing/SKILL.md` | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/roadmap-management/SKILL.md` | `.agent-src.uncompressed/commands/roadmap/create.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/roadmap-management/SKILL.md` | `.agent-src.uncompressed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/roadmap-management/SKILL.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/rtk-output-filtering/SKILL.md` | `.agent-src.uncompressed/commands/onboard.md` | `body_link` | 1 |

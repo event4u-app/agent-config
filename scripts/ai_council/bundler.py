@@ -38,11 +38,11 @@ class CouncilContext:
 # placeholder. Order matters — the most specific pattern goes first.
 
 _REDACTION_LINE_PATTERNS: list[tuple[re.Pattern[str], str]] = [
-    (re.compile(r".*~?/?\.config/agent-config/[^/\s]+\.key.*"),
+    (re.compile(r"~?/?\.config/agent-config/[^/\s]+\.key"),
      "[redacted: agent-config key path]"),
-    (re.compile(r"^\s*Authorization:\s.*", re.IGNORECASE),
+    (re.compile(r"^\s*Authorization:\s", re.IGNORECASE),
      "[redacted: Authorization header]"),
-    (re.compile(r"(?i).*(api[_-]?key|secret|token|password)\s*[:=].*"),
+    (re.compile(r"(?i)(api[_-]?key|secret|token|password)\s*[:=]"),
      "[redacted: secret-like assignment]"),
     (re.compile(r"sk-ant-[A-Za-z0-9_\-]{8,}"), "[redacted: anthropic-key-like token]"),
     (re.compile(r"sk-[A-Za-z0-9_\-]{20,}"), "[redacted: openai-key-like token]"),

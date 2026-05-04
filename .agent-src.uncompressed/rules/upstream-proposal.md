@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2a"
 description: "After creating or significantly improving a skill, rule, guideline, or command — ask if it should be contributed upstream to the shared package"
 alwaysApply: false
 source: package
