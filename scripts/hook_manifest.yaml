@@ -30,20 +30,35 @@ concerns:
     script: scripts/context_hygiene_hook.py
     args: []
     fail_closed: false
+  # Phase 5 — Tier-1 hook for the verify-before-complete rule. Records
+  # observable evidence of verification commands (tests, quality tools,
+  # builds) into agents/state/verify-before-complete.json. The rule body
+  # cites that file as the source of truth for "verified this turn?".
+  verify-before-complete:
+    script: scripts/verify_before_complete_hook.py
+    args: []
+    fail_closed: false
+  # Phase 5 — Tier-1 hook for the minimal-safe-diff rule. Counts unique
+  # files touched per turn into agents/state/minimal-safe-diff.json and
+  # flips warning=true past hooks.minimal_safe_diff.threshold.
+  minimal-safe-diff:
+    script: scripts/minimal_safe_diff_hook.py
+    args: []
+    fail_closed: false
 
 platforms:
   augment:
-    session_start:    [chat-history, onboarding-gate]
+    session_start:    [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
     session_end:      [chat-history]
-    stop:             [chat-history]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene]
+    stop:             [chat-history, verify-before-complete]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff]
 
   claude:
-    session_start:    [chat-history, onboarding-gate]
+    session_start:    [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
     session_end:      [chat-history]
-    stop:             [chat-history]
-    user_prompt_submit: [chat-history]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene]
+    stop:             [chat-history, verify-before-complete]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff]
 
   # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the
   # IDE and CLI; `~/.cursor/hooks.json` (user) is opt-in via
@@ -53,11 +68,11 @@ platforms:
   # IDE-only — CLI-only users fall back to /checkpoint per
   # agents/contexts/chat-history-platform-hooks.md.
   cursor:
-    session_start:      [chat-history, onboarding-gate]
+    session_start:      [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
     session_end:        [chat-history]
-    stop:               [chat-history]
-    user_prompt_submit: [chat-history]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene]
+    stop:               [chat-history, verify-before-complete]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff]
 
   # Phase 7.6 — Cline. Hooks live under `.clinerules/hooks/<HookName>`
   # (project, no file extension, must be executable per Cline docs) or
@@ -68,11 +83,11 @@ platforms:
   # both map to session_start. TaskCancel maps to stop because the
   # session is interrupted with partial state (mirrors Augment Stop).
   cline:
-    session_start:      [chat-history, onboarding-gate]
+    session_start:      [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
     session_end:        [chat-history]
-    stop:               [chat-history]
-    user_prompt_submit: [chat-history]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene]
+    stop:               [chat-history, verify-before-complete]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff]
 
   # Phase 7.7 — Windsurf (Cascade). Hooks live at `.windsurf/hooks.json`
   # (project) or `~/.codeium/windsurf/hooks.json` (user). Cascade has
@@ -83,10 +98,13 @@ platforms:
   # for the per-turn append, and post_setup_worktree for first-run
   # init (rare, fires only on worktree creation; advisory not
   # blocking — Windsurf docs).
+  # Windsurf — verify-before-complete tracks lifecycle only (no post_tool_use
+  # surface to record verification commands; documented limitation).
+  # minimal-safe-diff is omitted entirely on Windsurf for the same reason.
   windsurf:
-    session_start:      [chat-history, onboarding-gate]
-    stop:               [chat-history]
-    user_prompt_submit: [chat-history]
+    session_start:      [chat-history, onboarding-gate, verify-before-complete]
+    stop:               [chat-history, verify-before-complete]
+    user_prompt_submit: [chat-history, verify-before-complete]
 
   # Phase 7.8 — Gemini CLI. Hooks live at `.gemini/settings.json`
   # (project) or `~/.gemini/settings.json` (user). Per Gemini docs
@@ -99,11 +117,11 @@ platforms:
   # turn-check semantics. AfterAgent fires when the agent loop ends
   # — this is our `stop` slot.
   gemini:
-    session_start:      [chat-history, onboarding-gate]
+    session_start:      [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
     session_end:        [chat-history]
-    stop:               [chat-history]
-    user_prompt_submit: [chat-history]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene]
+    stop:               [chat-history, verify-before-complete]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff]
 
   # Phase 7.9 — Copilot has no hook surface. Concerns route through
   # rule-only fallback; the dispatcher silently no-ops on --platform copilot.
