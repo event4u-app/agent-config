@@ -121,6 +121,24 @@ pipelines:
   # want a silent agent; `custom` profile ignores this default entirely.
   skill_improvement: true
 
+# --- Roadmap execution ---
+#
+# Controls when /roadmap execute runs the project's quality pipeline
+# (the `task ci` / `make test` / `npm run check` style command).
+# Steps are ALWAYS marked `[x]` and the dashboard is ALWAYS regenerated
+# in the same response — that cadence is governed by `roadmap-progress-sync`
+# and is non-negotiable. This setting only governs *quality tool runs*.
+roadmap:
+  # When to run quality tools during /roadmap execute.
+  #   end_of_roadmap = once, before archiving the completed roadmap (default — fastest, fewest tokens)
+  #   per_phase      = once after every completed phase
+  #   per_step       = after every completed step (legacy verbose; highest token cost)
+  # Trade-off: end_of_roadmap saves tokens and time but lets errors compound
+  # across phases. Pick per_phase if the work is risky or unfamiliar.
+  # Iron Law `verify-before-complete` still applies — fresh quality output
+  # is mandatory before any "roadmap complete" claim regardless of cadence.
+  quality_cadence: end_of_roadmap
+
 # --- Subagent orchestration ---
 #
 # Controls model selection and parallelism for subagent-based workflows

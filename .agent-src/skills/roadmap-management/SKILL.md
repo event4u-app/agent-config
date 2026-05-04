@@ -117,11 +117,29 @@ Every roadmap follows this structure:
 
 ### Quality gates
 
-Every roadmap implicitly includes these gates (run after each step that changes code):
+Every roadmap implicitly includes the project's quality pipeline (static
+analysis, autofixes, tests — e.g. PHPStan + Rector + Pest, or `task ci`,
+or `npm run check`). What's configurable is **when** the pipeline runs
+during `/roadmap execute`, controlled by `roadmap.quality_cadence` in
+`.agent-settings.yml`:
 
-- PHPStan must pass (detect command: artisan vs composer, see `rules/docker-commands.md`)
-- Rector: run with fix flag, verify no new PHPStan errors
-- Tests: run affected tests
+| Cadence | Pipeline runs | Trade-off |
+|---|---|---|
+| `end_of_roadmap` (default) | Once before archiving | Fastest, fewest tokens; errors compound across phases |
+| `per_phase` | After every completed phase + final | Balanced; catches drift at phase boundaries |
+| `per_step` | After every completed step + final | Legacy verbose; highest token cost |
+
+The default is `end_of_roadmap` because most steps are checkbox-only
+content edits and a final pipeline run is the cheapest way to satisfy
+`verify-before-complete`. Switch to `per_phase` for risky migrations or
+unfamiliar codebases.
+
+**Always-on, regardless of cadence:**
+
+- Step checkboxes flip `[ ] → [x]` and the dashboard regenerates **same
+  response** (enforced by `roadmap-progress-sync`).
+- Before any "roadmap complete" claim or archival, the pipeline runs
+  fresh (enforced by `verify-before-complete`).
 
 ### Step granularity
 
