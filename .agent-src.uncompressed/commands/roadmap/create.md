@@ -92,8 +92,40 @@ Show the complete roadmap to the user and ask (in their language) if anything sh
 ### 6. Save the file
 
 - Generate a filename from the title: kebab-case, e.g. `optimize-webhook-jobs.md`.
-- Save to the chosen location.
-- Show the final path.
+
+**Before saving, check for filename collisions across the entire
+roadmap namespace** — active, `archive/`, `skipped/`, and any nested
+subdirs (e.g. `agent-memory/`). A new roadmap that shadows an
+archived or skipped one silently buries history; never overwrite,
+never auto-suffix without the user's pick.
+
+```bash
+NAME="<kebab-case-name>.md"
+# Project-root roadmaps:
+find agents/roadmaps -type f -iname "$NAME" 2>/dev/null
+# Module-scoped roadmaps (only if step 1 picked a module):
+find app/Modules/<Module>/agents/roadmaps -type f -iname "$NAME" 2>/dev/null
+```
+
+Use `-iname` (case-insensitive) so case-only differences still count
+as a collision on case-sensitive filesystems.
+
+If the search returns one or more hits → **STOP**. Show the matches
+and ask (in the user's language):
+
+> Found N existing roadmap(s) with this name:
+>   - `agents/roadmaps/archive/<file>.md` (archived)
+>   - `agents/roadmaps/skipped/<file>.md` (skipped)
+>
+> 1. Pick a different name — suggest `<name>-v2`, `<name>-<scope>`, or `<name>-<YYYY-MM>`
+> 2. Open the existing file first — revival or extension may be the right move
+> 3. Abort creation
+
+- **1** → re-prompt for name, re-run the collision check, repeat until clean.
+- **2** → read the existing roadmap, summarize state, hand back to the user.
+- **3** → stop without writing anything.
+
+Only when the search is empty: save to the chosen location and show the final path.
 
 ### 7. Update the progress dashboard
 
@@ -159,3 +191,7 @@ If yes → switch to the `roadmap-execute` command workflow with the newly creat
 - **Write the roadmap in English** (per project convention for `.md` files).
 - Follow the roadmap template from `.augment/templates/roadmaps.md`.
 - Keep the file focused: 500–1000 lines max. If larger, suggest splitting.
+- **Never overwrite an existing roadmap.** Step 6's collision check
+  scans active, `archive/`, and `skipped/` (plus nested subdirs).
+  On hit → STOP and present the rename / open / abort options. Auto-
+  suffixing (`-v2`, `-2026-05`) requires explicit user pick.

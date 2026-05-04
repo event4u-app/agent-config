@@ -149,6 +149,14 @@ Every roadmap implicitly includes these gates (run after each step that changes 
    the roadmap text. If the user declines, do **not** re-propose during
    `roadmap-execute`. Decline = silence. See [`scope-control`](../../rules/scope-control.md#decline--silence--no-re-asking-on-the-same-task).
 5. Save with a kebab-case filename (e.g. `optimize-webhook-jobs.md`).
+   **Before writing**, scan the entire roadmap namespace for a
+   collision — active, `archive/`, `skipped/`, and nested subdirs —
+   with `find agents/roadmaps -type f -iname "<name>.md"`. If any
+   hit comes back, stop and ask the user to rename, open the
+   existing file, or abort. Never silently overwrite an archived
+   or skipped roadmap. Detailed prompt in
+   [`commands/roadmap/create.md`](../../commands/roadmap/create.md)
+   step 6.
 6. Regenerate the dashboard so the new roadmap is included.
 
 ### Executing a roadmap
