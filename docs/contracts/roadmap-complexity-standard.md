@@ -7,11 +7,10 @@ stability: beta
 > **Audience:** roadmap authors and reviewers in `agents/roadmaps/`.
 > **Linter:** `scripts/lint_roadmap_complexity.py` (run via
 > `task lint-roadmap-complexity`).
-> **Source:** Phase 5 of
-> [`road-to-context-layer-maturity`](../../agents/roadmaps/road-to-context-layer-maturity.md);
-> reviewer-flagged drift after the structural-optimization roadmap
-> proved that "heavy" is correct for structural work but wrong for
-> normal feature work.
+> **Source:** Phase 5 of the `road-to-context-layer-maturity` work
+> (now archived); reviewer-flagged drift after the
+> structural-optimization roadmap proved that "heavy" is correct for
+> structural work but wrong for normal feature work.
 
 Roadmaps drift toward heavyweight whenever the previous one was
 heavyweight. This contract pins **two tiers**, names exemplars, and
@@ -36,12 +35,11 @@ Almost every roadmap is lightweight. The shape:
 
 **Exemplars:**
 
-- [`road-to-context-layer-maturity.md`](../../agents/roadmaps/road-to-context-layer-maturity.md)
-  — six phases, ~376 lines, no nested council; the seed roadmap that
-  triggered this standard. Self-tags as `lightweight`.
-- [`road-to-rule-hardening.md`](../../agents/roadmaps/road-to-rule-hardening.md)
-  — five phases, ~263 lines; mechanizes the rule layer; sibling of
-  the seed, also lightweight.
+- `road-to-context-layer-maturity.md` (archived) — six phases,
+  ~376 lines, no nested council; the seed roadmap that triggered this
+  standard. Self-tagged as `lightweight`.
+- `road-to-rule-hardening.md` (archived) — five phases, ~263 lines;
+  mechanized the rule layer; sibling of the seed, also lightweight.
 
 **Typical use:** feature work, follow-ups, bounded refactors,
 mechanization passes, telemetry plumbing.

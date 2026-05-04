@@ -110,4 +110,4 @@ the hook script lives outside the always-budget surface.
 - Hook: [`scripts/roadmap_progress_hook.py`](../../scripts/roadmap_progress_hook.py)
 - Trampoline: [`scripts/hooks/augment-roadmap-progress.sh`](../../scripts/hooks/augment-roadmap-progress.sh)
 - Rule body: `.agent-src.uncompressed/rules/roadmap-progress-sync.md`
-- Roadmap step: Phase 3 of `agents/roadmaps/road-to-rule-hardening.md`
+- Tier classification: [`rule-trigger-matrix.md`](rule-trigger-matrix.md) (`roadmap-progress-sync` → Tier 1)
