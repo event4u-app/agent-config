@@ -14,11 +14,15 @@ Give your AI agents an audit-disciplined orchestration contract — testing, Git
 
 ## Start here
 
-New to agent-config? 60 seconds, three links:
+Three ways in, depending on what you're doing today:
 
-1. **[Install](#quickstart)** — `composer require` or `npm install`, then run the installer.
-2. **[First command](#2-minute-demo-implement-ticket)** — `/implement-ticket` or `/work` walkthrough.
-3. **[Where the rules live](#documentation)** — `.augment/`, `.claude/`, `.cursor/`, and friends.
+| Path | Audience | What it does |
+|---|---|---|
+| **[`/onboard`](.agent-src/commands/onboard.md)** | New user, fresh install | Captures name, IDE, rtk, and cost profile; sets `onboarding.onboarded=true` |
+| **[`task ci`](docs/development.md#ci--verification)** | Contributor working **on** this package | Runs the full sync + lint + test pipeline; must be green before push |
+| **[`task generate-tools`](docs/development.md#tool-generation)** | Multi-agent user / consumer project | Rebuilds `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules` from the source |
+
+If none of those apply yet — start with the [Quickstart](#quickstart) and pick a path once it's installed.
 
 ## Quickstart
 
