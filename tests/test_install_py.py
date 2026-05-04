@@ -363,6 +363,181 @@ class TestBridges(SilentTest):
         data = json.loads(target.read_text())
         self.assertEqual(data["marketplace"]["name"], "custom")
 
+    def test_cursor_bridge_writes_dispatcher_hooks(self) -> None:
+        # Phase 7.5 — `.cursor/hooks.json` must wire all five lifecycle
+        # events (sessionStart/End, stop, beforeSubmitPrompt, postToolUse)
+        # to ./agent-config dispatch:hook commands. Project-scope hooks
+        # fire with the workspace as cwd, so no trampoline is used.
+        install.ensure_cursor_bridge(self.project, force=False)
+        data = json.loads((self.project / ".cursor" / "hooks.json").read_text())
+        self.assertEqual(data["version"], 1)
+        hooks = data["hooks"]
+        for native in ("sessionStart", "sessionEnd", "stop",
+                       "beforeSubmitPrompt", "postToolUse"):
+            self.assertIn(native, hooks, f"missing native event {native}")
+            self.assertEqual(len(hooks[native]), 1)
+            cmd = hooks[native][0]["command"]
+            self.assertIn("./agent-config dispatch:hook", cmd)
+            self.assertIn("--platform cursor", cmd)
+            self.assertIn(f"--native-event {native}", cmd)
+
+    def test_cursor_bridge_idempotent(self) -> None:
+        install.ensure_cursor_bridge(self.project, force=False)
+        first = (self.project / ".cursor" / "hooks.json").read_text()
+        install.ensure_cursor_bridge(self.project, force=False)
+        second = (self.project / ".cursor" / "hooks.json").read_text()
+        self.assertEqual(first, second)
+
+    def test_cursor_bridge_force_overwrites_user_edits(self) -> None:
+        # User-edited hooks.json gets re-written under --force, but a
+        # missing-event scenario (custom keys) is preserved by deep_merge.
+        target = self.project / ".cursor" / "hooks.json"
+        target.parent.mkdir(parents=True)
+        target.write_text(json.dumps({
+            "version": 1,
+            "hooks": {"afterFileEdit": [{"command": "custom.sh"}]},
+        }), encoding="utf-8")
+        install.ensure_cursor_bridge(self.project, force=True)
+        data = json.loads(target.read_text())
+        self.assertIn("sessionStart", data["hooks"])
+        self.assertIn("afterFileEdit", data["hooks"])
+        self.assertEqual(data["hooks"]["afterFileEdit"][0]["command"], "custom.sh")
+
+    def test_cline_bridge_writes_per_event_scripts(self) -> None:
+        # Phase 7.6 — Cline reads `.clinerules/hooks/<HookName>` as
+        # individual executable files (no extension). install must emit
+        # one script per (ac_event, native_event) tuple.
+        install.ensure_cline_bridge(self.project, force=False)
+        hooks_dir = self.project / ".clinerules" / "hooks"
+        self.assertTrue(hooks_dir.is_dir())
+        for ac_event, native in install.CLINE_DISPATCHER_BINDINGS:
+            target = hooks_dir / native
+            self.assertTrue(target.exists(), f"missing hook script {native}")
+            # Must be executable (chmod 0o755).
+            self.assertTrue(target.stat().st_mode & 0o111,
+                            f"{native} is not executable")
+            body = target.read_text(encoding="utf-8")
+            self.assertIn("#!/usr/bin/env bash", body)
+            self.assertIn("./agent-config dispatch:hook", body)
+            self.assertIn("--platform cline", body)
+            self.assertIn(f"--event {ac_event}", body)
+            self.assertIn(f"--native-event {native}", body)
+
+    def test_cline_bridge_idempotent(self) -> None:
+        install.ensure_cline_bridge(self.project, force=False)
+        first = {p.name: p.read_text(encoding="utf-8")
+                 for p in (self.project / ".clinerules" / "hooks").iterdir()}
+        install.ensure_cline_bridge(self.project, force=False)
+        second = {p.name: p.read_text(encoding="utf-8")
+                  for p in (self.project / ".clinerules" / "hooks").iterdir()}
+        self.assertEqual(first, second)
+
+    def test_cline_bridge_skips_user_edits_without_force(self) -> None:
+        # Phase 7.6 — when a script already exists with different content
+        # and --force is not set, install must skip rather than overwrite.
+        hooks_dir = self.project / ".clinerules" / "hooks"
+        hooks_dir.mkdir(parents=True)
+        custom = hooks_dir / "TaskStart"
+        custom.write_text("#!/usr/bin/env bash\necho custom\n", encoding="utf-8")
+        custom.chmod(0o755)
+        install.ensure_cline_bridge(self.project, force=False)
+        self.assertEqual(custom.read_text(encoding="utf-8"),
+                         "#!/usr/bin/env bash\necho custom\n")
+        # Force overwrites.
+        install.ensure_cline_bridge(self.project, force=True)
+        self.assertIn("./agent-config dispatch:hook",
+                      custom.read_text(encoding="utf-8"))
+
+    def test_windsurf_bridge_writes_dispatcher_hooks(self) -> None:
+        # Phase 7.7 — `.windsurf/hooks.json` must wire all three lifecycle
+        # events (post_setup_worktree, pre_user_prompt, post_cascade_response)
+        # to ./agent-config dispatch:hook commands. Project-scope hooks
+        # fire with the workspace as cwd, so no trampoline is used.
+        install.ensure_windsurf_bridge(self.project, force=False)
+        data = json.loads((self.project / ".windsurf" / "hooks.json").read_text())
+        hooks = data["hooks"]
+        for native in ("post_setup_worktree", "pre_user_prompt",
+                       "post_cascade_response"):
+            self.assertIn(native, hooks, f"missing native event {native}")
+            self.assertEqual(len(hooks[native]), 1)
+            entry = hooks[native][0]
+            cmd = entry["command"]
+            self.assertIn("./agent-config dispatch:hook", cmd)
+            self.assertIn("--platform windsurf", cmd)
+            self.assertIn(f"--native-event {native}", cmd)
+            self.assertIs(entry["show_output"], False)
+
+    def test_windsurf_bridge_idempotent(self) -> None:
+        install.ensure_windsurf_bridge(self.project, force=False)
+        first = (self.project / ".windsurf" / "hooks.json").read_text()
+        install.ensure_windsurf_bridge(self.project, force=False)
+        second = (self.project / ".windsurf" / "hooks.json").read_text()
+        self.assertEqual(first, second)
+
+    def test_windsurf_bridge_force_overwrites_user_edits(self) -> None:
+        # User-edited hooks.json gets re-written under --force, but a
+        # custom event key (post_write_code) is preserved by deep_merge.
+        target = self.project / ".windsurf" / "hooks.json"
+        target.parent.mkdir(parents=True)
+        target.write_text(json.dumps({
+            "hooks": {"post_write_code": [{"command": "custom.sh"}]},
+        }), encoding="utf-8")
+        install.ensure_windsurf_bridge(self.project, force=True)
+        data = json.loads(target.read_text())
+        self.assertIn("pre_user_prompt", data["hooks"])
+        self.assertIn("post_write_code", data["hooks"])
+        self.assertEqual(data["hooks"]["post_write_code"][0]["command"], "custom.sh")
+
+    def test_gemini_bridge_writes_dispatcher_hooks(self) -> None:
+        # Phase 7.8 — `.gemini/settings.json` must wire each lifecycle
+        # event to a hook-group entry with `matcher` + `hooks: [{type,
+        # command}]`. Project-scope hooks fire with the workspace as
+        # cwd, so no trampoline is used.
+        install.ensure_gemini_bridge(self.project, force=False)
+        data = json.loads((self.project / ".gemini" / "settings.json").read_text())
+        hooks = data["hooks"]
+        for ac_event, native, matcher in install.GEMINI_DISPATCHER_BINDINGS:
+            self.assertIn(native, hooks, f"missing native event {native}")
+            self.assertEqual(len(hooks[native]), 1)
+            group = hooks[native][0]
+            self.assertEqual(group["matcher"], matcher)
+            self.assertEqual(len(group["hooks"]), 1)
+            entry = group["hooks"][0]
+            self.assertEqual(entry["type"], "command")
+            cmd = entry["command"]
+            self.assertIn("./agent-config dispatch:hook", cmd)
+            self.assertIn("--platform gemini", cmd)
+            self.assertIn(f"--event {ac_event}", cmd)
+            self.assertIn(f"--native-event {native}", cmd)
+
+    def test_gemini_bridge_idempotent(self) -> None:
+        install.ensure_gemini_bridge(self.project, force=False)
+        first = (self.project / ".gemini" / "settings.json").read_text()
+        install.ensure_gemini_bridge(self.project, force=False)
+        second = (self.project / ".gemini" / "settings.json").read_text()
+        self.assertEqual(first, second)
+
+    def test_gemini_bridge_force_preserves_custom_events(self) -> None:
+        # User-edited settings.json gets re-written under --force, but
+        # custom event keys (BeforeTool with custom matcher) are
+        # preserved by deep_merge.
+        target = self.project / ".gemini" / "settings.json"
+        target.parent.mkdir(parents=True)
+        target.write_text(json.dumps({
+            "hooks": {
+                "BeforeTool": [
+                    {"matcher": "Bash", "hooks": [{"type": "command",
+                                                    "command": "custom.sh"}]},
+                ],
+            },
+        }), encoding="utf-8")
+        install.ensure_gemini_bridge(self.project, force=True)
+        data = json.loads(target.read_text())
+        self.assertIn("SessionStart", data["hooks"])
+        self.assertIn("BeforeTool", data["hooks"])
+        self.assertEqual(data["hooks"]["BeforeTool"][0]["hooks"][0]["command"],
+                         "custom.sh")
+
 
 # --- main() integration ---
 
@@ -393,6 +568,10 @@ class TestMainIntegration(unittest.TestCase):
         self.assertTrue((self.project / ".agent-settings.yml").exists())
         self.assertTrue((self.project / ".vscode" / "settings.json").exists())
         self.assertTrue((self.project / ".augment" / "settings.json").exists())
+        self.assertTrue((self.project / ".cursor" / "hooks.json").exists())
+        self.assertTrue((self.project / ".clinerules" / "hooks" / "TaskStart").exists())
+        self.assertTrue((self.project / ".windsurf" / "hooks.json").exists())
+        self.assertTrue((self.project / ".gemini" / "settings.json").exists())
         self.assertTrue((self.project / ".github" / "plugin" / "marketplace.json").exists())
 
     def test_skip_bridges_only_creates_settings(self) -> None:
@@ -400,6 +579,10 @@ class TestMainIntegration(unittest.TestCase):
         self.assertTrue((self.project / ".agent-settings.yml").exists())
         self.assertFalse((self.project / ".vscode").exists())
         self.assertFalse((self.project / ".augment").exists())
+        self.assertFalse((self.project / ".cursor").exists())
+        self.assertFalse((self.project / ".clinerules").exists())
+        self.assertFalse((self.project / ".windsurf").exists())
+        self.assertFalse((self.project / ".gemini").exists())
         self.assertFalse((self.project / ".github").exists())
 
     def test_invalid_profile_exits_nonzero(self) -> None:
@@ -418,6 +601,59 @@ class TestMainIntegration(unittest.TestCase):
         self.assertEqual(self._run("--profile=full"), 0)
         content = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
         self.assertIn("cost_profile: full", content)
+
+
+class TestPostInstallSmoke(unittest.TestCase):
+    """Phase 7.12 — `_smoke_test_hooks` dry-fires the dispatcher
+    against every installed bridge and reports per-platform results.
+
+    Uses REPO_ROOT as package_root so dispatch_hook.py + the canonical
+    manifest are present. The fake-package fixture under
+    `make_fake_package` deliberately omits them — that path is
+    covered by the silent-skip assertion below.
+    """
+
+    def setUp(self) -> None:
+        self.tmpdir = Path(tempfile.mkdtemp())
+        self.project = self.tmpdir / "proj"
+        self.project.mkdir()
+        install.QUIET = True
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.tmpdir)
+        install.QUIET = False
+
+    def test_smoke_passes_when_all_bridges_installed(self) -> None:
+        buf = io.StringIO()
+        with redirect_stdout(buf), redirect_stderr(buf):
+            exit_code = install.main([
+                "--project", str(self.project),
+                "--package", str(REPO_ROOT),
+                "--quiet",
+            ])
+        self.assertEqual(exit_code, 0)
+        # Direct smoke call against the now-populated project tree
+        # — the install run already exercised it; this asserts the
+        # contract surface so failures are localized.
+        rc = install._smoke_test_hooks(self.project, REPO_ROOT)
+        self.assertEqual(rc, 0)
+
+    def test_smoke_silent_skip_when_dispatcher_missing(self) -> None:
+        # Fake package without dispatch_hook.py / hook_manifest.yaml.
+        package = make_fake_package(self.tmpdir)
+        rc = install._smoke_test_hooks(self.project, package)
+        self.assertEqual(rc, 0)
+
+    def test_no_smoke_flag_skips_smoke(self) -> None:
+        buf = io.StringIO()
+        with redirect_stdout(buf), redirect_stderr(buf):
+            exit_code = install.main([
+                "--project", str(self.project),
+                "--package", str(REPO_ROOT),
+                "--no-smoke",
+            ])
+        self.assertEqual(exit_code, 0)
+        self.assertNotIn("Smoke-testing", buf.getvalue())
 
 
 if __name__ == "__main__":

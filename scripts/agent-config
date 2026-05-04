@@ -76,6 +76,11 @@ Commands:
                              Writes .augment/state/onboarding-gate.json from .agent-settings.yml
   context-hygiene:hook       PostToolUse hook entry point (read JSON from stdin)
                              Maintains .augment/state/context-hygiene.json (turn count, loop, freshness)
+  dispatch:hook              Universal hook dispatcher (Phase 7, hook-architecture-v1.md)
+                             Usage: dispatch:hook --platform <name> --event <event> [--native-event <native>]
+                             Reads scripts/hook_manifest.yaml and runs the resolved concern chain.
+  hooks:status               Print the runtime hook matrix (per-platform install + bindings)
+                             Flags: --format json|table, --strict (CI), --project-root <path>
   telemetry:record           Append one artefact-engagement event (default-off)
   telemetry:status           Print artefact-engagement telemetry status (read-only)
   telemetry:report           Aggregate the engagement log into a quartile report
@@ -343,6 +348,20 @@ cmd_context_hygiene_hook() {
   exec python3 "$script" "$@"
 }
 
+cmd_dispatch_hook() {
+  require_python3
+  local script
+  script="$(resolve_script "scripts/hooks/dispatch_hook.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
+cmd_hooks_status() {
+  require_python3
+  local script
+  script="$(resolve_script "scripts/hooks_status.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
 cmd_chat_history_checkpoint() {
   require_python3
   local script
@@ -466,6 +485,8 @@ main() {
     roadmap-progress:hook)   cmd_roadmap_progress_hook "$@" ;;
     onboarding-gate:hook)    cmd_onboarding_gate_hook "$@" ;;
     context-hygiene:hook)    cmd_context_hygiene_hook "$@" ;;
+    dispatch:hook)           cmd_dispatch_hook "$@" ;;
+    hooks:status)            cmd_hooks_status "$@" ;;
     telemetry:record)        cmd_telemetry_record "$@" ;;
     telemetry:status)        cmd_telemetry_status "$@" ;;
     telemetry:report)        cmd_telemetry_report "$@" ;;
