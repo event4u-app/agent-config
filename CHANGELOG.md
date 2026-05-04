@@ -318,6 +318,68 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.19.0](https://github.com/event4u-app/agent-config/compare/1.18.0...1.19.0) (2026-05-05)
+
+### Features
+
+* **rules:** treat slash command as operator and prose as target ([f73947e](https://github.com/event4u-app/agent-config/commit/f73947e93bc8121524d811a5f17d548499023751))
+* **ai-council:** auto-prune session folders past retention window ([bbfaa93](https://github.com/event4u-app/agent-config/commit/bbfaa93fd28bc3a84030c30ab9cea429ac68bea5))
+* **settings-sync:** additive sync with verbatim user-line preservation ([f996cf3](https://github.com/event4u-app/agent-config/commit/f996cf3811e924d2ffecbc3d11bac447308efc5a))
+* **roadmap:** add quality_cadence setting to throttle /roadmap execute pipeline runs ([d5ef7bf](https://github.com/event4u-app/agent-config/commit/d5ef7bf85e70c95103c6fc65507f99fdd35050dd))
+* **ci:** add lint_showcase_sessions gate ([c4f48bb](https://github.com/event4u-app/agent-config/commit/c4f48bba05d266899282742320b7f83bc636cc7c))
+* **council:** add CLI entry-point with estimate/run/render subcommands (Phase 6.7) ([f20f599](https://github.com/event4u-app/agent-config/commit/f20f5993dda1325f19f8e26a130ef37f995b5a9d))
+* **taskfile:** modularize Taskfile.yml into taskfiles/ groups (Phase 6.1) ([41cbe46](https://github.com/event4u-app/agent-config/commit/41cbe46d6f9289c98bb3f717dcac74c44154fc21))
+* **hooks:** add verify-before-complete and minimal-safe-diff concerns ([2507aef](https://github.com/event4u-app/agent-config/commit/2507aefcc88857fd120cfd09d5c93555cb89b868))
+* **governance:** one-off-script lifecycle + showcase capture + tier-retrofit archive ([0940f91](https://github.com/event4u-app/agent-config/commit/0940f91d74a759de6601f5367e8fd3e2925f4c51))
+* **work_engine:** decision-trace + memory-visibility hooks, scoring, contracts ([91cb0a5](https://github.com/event4u-app/agent-config/commit/91cb0a547971ff5f9597997bc36607ca6049be89))
+* **rules:** tier frontmatter sweep across all 58 rules + lint + budget rebaseline ([a9c3694](https://github.com/event4u-app/agent-config/commit/a9c3694bb22cbd87574c1ffd53d0cb9b76a60479))
+* **hooks:** per-platform bridges, install integration, hooks:status, smoke ([c33058a](https://github.com/event4u-app/agent-config/commit/c33058a49a20c6d4d21a7933b85ea3b618a6d433))
+* **hooks:** universal dispatcher, manifest, envelope, state I/O ([28c4f8c](https://github.com/event4u-app/agent-config/commit/28c4f8c7f0e7bd50b6403dfeab0dcaa623dd5ca3))
+* add collision check to roadmap creation flow ([19b65d5](https://github.com/event4u-app/agent-config/commit/19b65d5f2500ddb7c8bfcbb7466c33de0d64043c))
+
+### Bug Fixes
+
+* **ai-council:** use max_completion_tokens for OpenAI o1 models ([8d9e179](https://github.com/event4u-app/agent-config/commit/8d9e179a36d3ba2c68de09ba426782fd43792b85))
+* **skills/roadmap-management:** drop task-ci literal to satisfy portability lint ([790af5e](https://github.com/event4u-app/agent-config/commit/790af5e61a3af3472027d2eef1d939106c95d6ea))
+* **install.sh:** avoid SIGPIPE race in clean_stale that deleted live files ([08670d6](https://github.com/event4u-app/agent-config/commit/08670d66c6285a84d15e44d00e5cfecc6870a4e7))
+* **roadmaps:** re-anchor relative paths in archived 3a protocol ([e0017de](https://github.com/event4u-app/agent-config/commit/e0017de1b55b43e2c8ea5b3f9b51f077cb68e0e3))
+
+### Performance
+
+* **ci:** parallelise test suite — bash xargs -P + pytest-xdist ([2e74b31](https://github.com/event4u-app/agent-config/commit/2e74b3104d0a881832cbebb4dcaddecc865b65c3))
+* **ai-council/bundler:** fix catastrophic regex backtracking in redact() ([0e277e7](https://github.com/event4u-app/agent-config/commit/0e277e7ca36b452cc1cc4d8abdeaaa14e9aebbaf))
+
+### Documentation
+
+* **roadmaps:** add chat-history hook-only reduction roadmap ([529f3b7](https://github.com/event4u-app/agent-config/commit/529f3b7c06fae8b560ce0bb436fc701b1418a024))
+* **roadmaps:** add road-to-proof-not-features draft ([4664bd4](https://github.com/event4u-app/agent-config/commit/4664bd42a0e0bd8ff9eddc6d8907ff9a217a8f11))
+* tighten wording in three rules and one command ([14ed864](https://github.com/event4u-app/agent-config/commit/14ed8640f18e3bfc52819bb150066ecc453fb17a))
+* **roadmap:** archive road-to-feedback-consolidation (43/43 done) ([f053c6d](https://github.com/event4u-app/agent-config/commit/f053c6df94620a4cbf89e75ba73a7bb369c9395b))
+* **roadmap:** close Phase 1 — showcase infra shipped, sessions deferred ([49a156b](https://github.com/event4u-app/agent-config/commit/49a156b40eecd728841b2eaef3565850f1020e0a))
+* **roadmap:** close Phase 6 — mark 6.1/6.4/6.5/6.7 complete (89%) ([4b645cf](https://github.com/event4u-app/agent-config/commit/4b645cf9fc9acb7b7bc227f790e00c3efae66790))
+* **readme:** 3-path entry table + tier-coverage drift sentinel (Phase 6.4 + 6.5) ([ae712f0](https://github.com/event4u-app/agent-config/commit/ae712f034e5eb67481175835d7a9eded921ee222))
+* **roadmap:** mark Phase 5 complete (Tier-1 hook concerns shipped) ([433c5d1](https://github.com/event4u-app/agent-config/commit/433c5d1efb352de26671caed0e24a6b1e673eab6))
+* **readme:** trim under 500-line linter ceiling ([2c3b496](https://github.com/event4u-app/agent-config/commit/2c3b496552cdd73b02e7b08d5c231a9f86e326c3))
+* **agents:** roadmap progress, ownership matrix, agents index sync ([2368e37](https://github.com/event4u-app/agent-config/commit/2368e37aee886125997bfda4299599ebea9a14ec))
+* add feedback consolidation roadmap and regenerate dashboard ([96fce45](https://github.com/event4u-app/agent-config/commit/96fce45055b2da367b8a45536c7a5bdcd1e03d84))
+
+### Refactoring
+
+* **hooks:** concerns share atomic-write state I/O + dispatcher-friendly stdin ([5cac705](https://github.com/event4u-app/agent-config/commit/5cac705edfd46ad8d27ffd0008bdf4723317a4eb))
+
+### Tests
+
+* **hooks:** parity tests for tier-1 hook concerns ([540468c](https://github.com/event4u-app/agent-config/commit/540468cd150447d6b588d3015865660a555e4f8d))
+
+### Chores
+
+* **tools:** regenerate .windsurfrules with slash-command-routing-policy operator/target sections ([7825600](https://github.com/event4u-app/agent-config/commit/78256000a2da9cc313eb272059bb363acbc5290e))
+* **rules:** sync compressed slash-command-routing-policy with operator/target sections ([916357c](https://github.com/event4u-app/agent-config/commit/916357c7d185d717187845478e8318025330d3a9))
+* **rules:** promote verify-before-complete and minimal-safe-diff to tier 2a ([d62fb84](https://github.com/event4u-app/agent-config/commit/d62fb845a14065706c46c4425b261b57ac155c27))
+* ignore .agent-chat-history.session sidecar ([42741c8](https://github.com/event4u-app/agent-config/commit/42741c87f83bf24416eb3916cbced865ae642688))
+* **infra:** wire lint-rule-tiers + lint-hook-manifest + lint-one-off-age tasks; pyproject pytest importlib; .windsurfrules Copilot fallback ([5b88093](https://github.com/event4u-app/agent-config/commit/5b8809398dd332a3ebad3478f7a38cf48ef119e1))
+* **roadmaps:** archive structural-optimization companion artefacts ([928c884](https://github.com/event4u-app/agent-config/commit/928c88469787cd037c54acd0006039ee9b86f9bb))
+
 ## [1.18.0](https://github.com/event4u-app/agent-config/compare/1.17.0...1.18.0) (2026-05-04)
 
 ### Features
