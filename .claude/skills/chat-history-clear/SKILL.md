@@ -1,1 +1,0 @@
-../../../.agent-src/commands/chat-history/clear.md

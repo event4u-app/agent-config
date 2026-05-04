@@ -1,1 +1,0 @@
-../../../.agent-src/commands/chat-history/checkpoint.md

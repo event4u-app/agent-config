@@ -11,8 +11,9 @@ suggestion:
 <!-- cloud_safe: noop -->
 
 # /chat-history show
-Inspect `.agent-chat-history` — the JSONL log maintained by the
-[`chat-history`](../rules/chat-history-ownership.md) rule for crash recovery.
+Inspect `.agent-chat-history` — the JSONL log appended by the
+structural chat-history hooks (`ChatHistoryAppendHook`,
+`ChatHistoryHaltAppendHook`) for crash recovery.
 
 Shows:
 
@@ -26,9 +27,10 @@ Read-only — this command never writes to the file.
 
 ## When NOT to use
 
-- Load the log back into the conversation for context →
-  [`/chat-history resume`](chat-history-resume.md).
-- Wipe the file → [`/chat-history clear`](chat-history-clear.md).
+- Force-adopt a foreign log → run `./agent-config chat-history:adopt`
+  directly (manual recovery lever; auto-adopt covers the steady state).
+- Wipe the file → delete `.agent-chat-history` manually; it is
+  git-ignored and will be recreated on the next hook fire.
 - Configure logging behavior → edit `.agent-settings.yml` directly
   (`chat_history.*`); see
   [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
@@ -85,7 +87,9 @@ data, see [`token-efficiency`](../rules/token-efficiency.md)).
 ### 5. Offer follow-ups (optional)
 
 If the file exists and the fingerprint does **not** match the current
-session, suggest `/chat-history resume` to adopt it.
+session, mention that auto-adopt should have re-bound the log on
+`session_start`; if the user reports it did not, point them at the
+manual recovery lever `./agent-config chat-history:adopt`.
 
 If the file is close to `max_size_kb` (> 80 %), mention it — the next
 append may trigger overflow handling.
@@ -100,8 +104,6 @@ append may trigger overflow handling.
 
 ## See also
 
-- [`chat-history`](../rules/chat-history-ownership.md) — the rule that writes the file
-- [`/chat-history resume`](chat-history-resume.md) — adopt + load
-- [`/chat-history clear`](chat-history-clear.md) — wipe
+- [`chat-history-platform-hooks`](../../../agents/contexts/chat-history-platform-hooks.md) — the hook-only contract
 - [`agent-settings` template](../templates/agent-settings.md) — `chat_history.*` reference
-- [`scripts/chat_history.py`](../../../scripts/chat_history.py) — helper API
+- [`scripts/chat_history.py`](../../../scripts/chat_history.py) — helper API + `chat-history:adopt` manual lever
