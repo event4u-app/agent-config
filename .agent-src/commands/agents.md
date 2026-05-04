@@ -37,10 +37,6 @@ Sub-command names match the locked contract in
    > 2. cleanup — execute actions from a prior audit
    > 3. prepare — scaffold the agents/ tree
 
-## Migration
-
-The flat `/agents-*` commands have been removed. Use `/agents <sub>` instead.
-
 ## Rules
 
 - **Do NOT commit, push, or open a PR** unless the sub-command explicitly

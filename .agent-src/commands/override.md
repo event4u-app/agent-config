@@ -35,10 +35,6 @@ Sub-command names match the locked contract in
    > 1. create — author a new project-level override
    > 2. manage — review, update, refactor existing overrides
 
-## Migration
-
-The flat `/override-*` commands have been removed. Use `/override <sub>` instead.
-
 ## Rules
 
 - **Do NOT commit, push, or open a PR** unless the sub-command explicitly

@@ -41,13 +41,6 @@ Sub-command names match the locked contract in
    > 3. design — review a design doc / ADR / architecture proposal
    > 4. optimize — ranked, evidence-based optimization advice
 
-## Migration
-
-The flat `/council-*` commands have been removed (deprecated in
-1.17.0). Use `/council <sub>` instead. The previously-bare `/council`
-(default lens) is now `/council default`; bare `/council` invocations
-show the menu.
-
 ## Rules
 
 - **Do NOT commit, push, or open a PR** unless the sub-command explicitly

@@ -35,10 +35,6 @@ Sub-command names match the locked contract in
    > 1. create — author tests for current-branch changes
    > 2. execute — run the test suite in Docker
 
-## Migration
-
-The flat `/tests-*` commands have been removed. Use `/tests <sub>` instead.
-
 ## Rules
 
 - **Do NOT commit, push, or open a PR** unless the sub-command explicitly

@@ -39,10 +39,6 @@ The standalone reviewer surface lives at [`/review`](review-changes.md).
    > 2. on-diff — implementer→judge revision loop
    > 3. steps — judge gate between ordered steps
 
-## Migration
-
-The standalone `/do-and-judge`, `/do-in-steps`, and `/judge-solo` commands have been removed. Use `/judge <sub>` instead; bare `/judge` invocations show the menu.
-
 ## Rules
 
 - **Do NOT commit, push, or open a PR** unless the sub-command
