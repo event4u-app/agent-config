@@ -14,8 +14,8 @@
 Mirrors the roadmap's authoritative definitions:
 
 - **HOOK** — platform fires a lifecycle event, our wrapper runs `chat_history.py append`. Zero agent involvement. Crash-safe.
-- **CHECKPOINT** — no automatic hook, but a thin user- or agent-invoked command (e.g. `/checkpoint`) takes ~1 s and is socially enforceable. Fallback when HOOK is impossible.
-- **MANUAL** — accept that the platform cannot be automated; document the gap; keep the cooperative rule active **only** for that platform.
+- **CHECKPOINT** — no automatic hook, but a thin user-invoked command (e.g. `./agent-config chat-history:adopt`) takes ~1 s. Fallback when HOOK is impossible or misfires.
+- **MANUAL** — accept that the platform cannot be automated; document the gap. The agent never reads or writes `.agent-chat-history` cooperatively.
 
 ## Decision matrix
 
@@ -35,7 +35,7 @@ Mirrors the roadmap's authoritative definitions:
 - **Execution model:** subprocess; JSON on stdin, JSON on stdout. Synchronous for blocking events (`PreToolUse` can `deny`); `Stop` can `block`.
 - **Failure semantics:** non-zero exit on a blocking hook denies the action. `Stop` hooks that loop are explicitly called out as a failure mode in the docs.
 - **stdout reach:** `additionalContext` from `SessionStart`/`UserPromptSubmit` is injected into the model context. Decision fields use a most-restrictive merge across multiple hooks.
-- **Decision: HOOK.** Best-fit target; map `SessionStart` → init/turn-check, `Stop`/`UserPromptSubmit` → append at cadence boundaries.
+- **Decision: HOOK.** Best-fit target; map `SessionStart` → init/auto-adopt, `Stop`/`UserPromptSubmit` → append at cadence boundaries.
 - **Sources:**
   - <https://docs.claude.com/en/docs/claude-code/hooks>
   - <https://docs.claude.com/en/docs/claude-code/hooks-guide>
@@ -75,7 +75,7 @@ Mirrors the roadmap's authoritative definitions:
 - **Execution model:** shell commands. Pre-hooks block via exit code 2. Post-hooks are observe-only.
 - **Failure semantics:** non-zero non-2 exits are warnings; exit 2 in a pre-hook cancels the action. `post_cascade_response` runs **asynchronously** — not on the critical path.
 - **stdout reach:** `post_cascade_response_with_transcript` receives the full Cascade response; ideal for our append.
-- **Decision: HOOK.** Map `pre_user_prompt` → init/turn-check, `post_cascade_response` → append (async OK for cadence ≥ `per_phase`).
+- **Decision: HOOK.** Map `pre_user_prompt` → init/auto-adopt, `post_cascade_response` → append (async OK for cadence ≥ `per_phase`).
 - **Sources:**
   - <https://docs.windsurf.com/windsurf/cascade/hooks>
   - <https://docs.windsurf.com/windsurf/cascade/worktrees>
@@ -103,7 +103,7 @@ Mirrors the roadmap's authoritative definitions:
 - **Failure semantics:** `PreToolUse` can deny tool calls; `PostToolUse` cannot block; `Stop` can block agent finish.
 - **Workspace routing:** hooks fire at user scope (one install per developer, shared across all projects). The trampoline reads `workspace_roots[0]` from the event payload and dispatches into the active project's `./agent-config chat-history:hook --platform augment`. Silent no-op when the workspace has no `agent-config` wrapper.
 - **Deployment:** opt-in via `python3 scripts/install.py --augment-user-hooks`. Writes `~/.augment/hooks/augment-chat-history.sh` and merges hook entries into `~/.augment/settings.json`.
-- **Decision: HOOK.** Map `SessionStart` → init/turn-check, `Stop` → append at end-of-turn, `PostToolUse` → per-tool cadence, `SessionEnd` → consolidation.
+- **Decision: HOOK.** Map `SessionStart` → init/auto-adopt, `Stop` → append at end-of-turn, `PostToolUse` → per-tool cadence, `SessionEnd` → consolidation.
 - **Sources:**
   - <https://docs.augmentcode.com/cli/hooks>
   - <https://docs.augmentcode.com/cli/hooks-examples>
@@ -114,3 +114,26 @@ Mirrors the roadmap's authoritative definitions:
 1. **Cursor CLI parity** — `beforeSubmitPrompt`/`stop` are IDE-only as of 2026-01. Track the changelog and flip the CLI row when they ship.
 2. **Cline Windows parity** — patch landed in `cline/cline#8201`; verify before Phase 4 dogfooding on a Windows host.
 3. **Async vs sync semantics** — Windsurf's `post_cascade_response` is async; Gemini's `SessionEnd` is best-effort. Phase 2 wrapper must tolerate both (write-then-fsync, single-line append, no read-modify-write).
+
+## Manual recovery
+
+The agent never reads or writes `.agent-chat-history` cooperatively.
+`session_start` hooks auto-adopt the active session — when a foreign
+header is detected, the previous fingerprint is rotated into
+`former_fps[]` and the new session takes over silently. No
+Foreign-Prompt rendering, no Adopt/Replace/Merge handshake.
+
+For the rare case where a hook misfires, the file is corrupted, or a
+user needs to force-rebind outside a `session_start` event, run:
+
+```
+./agent-config chat-history:adopt --first-user-msg "<the prompt>"
+```
+
+This is the only manual lever the user has; it is documented in
+`./agent-config chat-history:adopt --help`.
+
+The runtime kill-switch is `AGENT_CHAT_HISTORY_AUTO_ADOPT=false`,
+which forces hooks back to `ownership_refused` semantics without a
+code redeploy. Use only as a last resort while a regression is
+investigated.
