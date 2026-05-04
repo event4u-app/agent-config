@@ -34,6 +34,16 @@ OPENAI_KEY_PATH = Path.home() / ".config" / "agent-config" / "openai.key"
 DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-5"
 DEFAULT_OPENAI_MODEL = "gpt-4o"
 
+# OpenAI reasoning models (o1, o3, o4 families) reject `max_tokens` and the
+# `system` role; they require `max_completion_tokens` and accept only `user`
+# (and `developer`) messages.
+_REASONING_PREFIXES = ("o1", "o3", "o4")
+
+
+def _is_reasoning_model(model: str) -> bool:
+    name = model.lower()
+    return any(name == p or name.startswith(p + "-") for p in _REASONING_PREFIXES)
+
 
 class KeyGateError(RuntimeError):
     """Raised when a provider key file violates the 0600 contract."""
@@ -189,15 +199,21 @@ class OpenAIClient(ExternalAIClient):
 
     def ask(self, system_prompt: str, user_prompt: str, max_tokens: int = 1024) -> CouncilResponse:
         t0 = time.monotonic()
+        kwargs: dict[str, object] = {"model": self.model}
+        if _is_reasoning_model(self.model):
+            # o1/o3/o4 reasoning models reject `max_tokens` and `system` role.
+            kwargs["max_completion_tokens"] = max_tokens
+            kwargs["messages"] = [
+                {"role": "user", "content": f"{system_prompt}\n\n---\n\n{user_prompt}"},
+            ]
+        else:
+            kwargs["max_tokens"] = max_tokens
+            kwargs["messages"] = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ]
         try:
-            response = self._client.chat.completions.create(
-                model=self.model,
-                max_tokens=max_tokens,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-            )
+            response = self._client.chat.completions.create(**kwargs)
         except Exception as exc:  # noqa: BLE001 - normalise all SDK errors
             return CouncilResponse(
                 provider=self.name, model=self.model, text="",
