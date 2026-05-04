@@ -117,11 +117,10 @@ Every roadmap follows this structure:
 
 ### Quality gates
 
-Every roadmap implicitly includes the project's quality pipeline (static
-analysis, autofixes, tests — e.g. PHPStan + Rector + Pest, or `task ci`,
-or `npm run check`). What's configurable is **when** the pipeline runs
-during `/roadmap execute`, controlled by `roadmap.quality_cadence` in
-`.agent-settings.yml`:
+Every roadmap implicitly includes the project's quality pipeline
+(static analysis, autofixes, tests). What's configurable is **when**
+the pipeline runs during `/roadmap execute`, controlled by
+`roadmap.quality_cadence` in `.agent-settings.yml`:
 
 | Cadence | Pipeline runs | Trade-off |
 |---|---|---|
