@@ -318,6 +318,41 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.18.0](https://github.com/event4u-app/agent-config/compare/1.17.0...1.18.0) (2026-05-04)
+
+### Features
+
+* **rules:** mandate hardening tier classification on new and edited rules ([42ff7c1](https://github.com/event4u-app/agent-config/commit/42ff7c1765e931a3e5e487ef83d01ca597a65800))
+* **hooks:** wire Tier 1 hooks on Claude Code for hardening parity ([55ede24](https://github.com/event4u-app/agent-config/commit/55ede24e65b5ab7e827fa3a40b04fe9dab091392))
+* **rules:** enforce placement for agent-authored roadmaps ([1624ede](https://github.com/event4u-app/agent-config/commit/1624ede571bcdd28adb7d8dd4868a92b9dbde646))
+* roadmap complexity standard with shape and tier linters ([bd1bac6](https://github.com/event4u-app/agent-config/commit/bd1bac650013e449e7318c60586b7648dbcc144e))
+* **hardening:** tier-1 hooks for onboarding-gate and context-hygiene ([5d107cd](https://github.com/event4u-app/agent-config/commit/5d107cd6fa1352d609491df12604ae0ddb7d7113))
+* **always-budget:** hard-compress direct-answers and no-cheap-questions ([2cb9b0b](https://github.com/event4u-app/agent-config/commit/2cb9b0be7b3e6486c3689fec75e7672507ca97cb))
+* outcome baselines and pattern-memory demos for foundational rules ([f43ede7](https://github.com/event4u-app/agent-config/commit/f43ede70a59cb7460557e6d76b041562056e78ee))
+
+### Bug Fixes
+
+* **check-refs:** treat .augment/state/*.json as runtime-only paths ([3d4c766](https://github.com/event4u-app/agent-config/commit/3d4c76695af38e764facc8630a97e553f5aac67f))
+* **rules:** sync compressed rules with hardening callouts ([89bd072](https://github.com/event4u-app/agent-config/commit/89bd07267d04d6346a1f36df92759c9208777a9a))
+
+### Documentation
+
+* **contexts,contracts:** unlink stable artifacts from archived roadmaps ([af4e5c2](https://github.com/event4u-app/agent-config/commit/af4e5c2de6dfb0d2143f48213e04d41c9354deca))
+* **contexts:** lock Tier 2 nudge surface, Tier 3 dispositions, platform parity ([10685a7](https://github.com/event4u-app/agent-config/commit/10685a7f3fceec1b93365cef3531a5e81f55396f))
+* **roadmaps:** relocate budget-v2-matrix to contexts as durable rationale ([33b903a](https://github.com/event4u-app/agent-config/commit/33b903a36feeacffddedde11ff9b1bc3bd5173e3))
+
+### Refactoring
+
+* **state:** move hook runtime state from .augment/state/ to agents/state/ ([ef5265e](https://github.com/event4u-app/agent-config/commit/ef5265e1ead67b089c4438efcbd4e94f120c6d3e))
+
+### Chores
+
+* **plugin:** restructure marketplace.json to registry shape ([f3e6f24](https://github.com/event4u-app/agent-config/commit/f3e6f2425fefef2cc5fc338d27e8628ab45a4d41))
+* **council:** archive Budget-v2 audit one-off ([00bf46e](https://github.com/event4u-app/agent-config/commit/00bf46e680e3a66bdbddac35e1ec3a08a8aa11f4))
+* **roadmaps:** archive hardening and context-layer-maturity tracks ([21dec26](https://github.com/event4u-app/agent-config/commit/21dec26b7a6455ab95df6704773426e3dd35574f))
+* regenerate dashboards, hashes, and roadmap progress ([06c50a9](https://github.com/event4u-app/agent-config/commit/06c50a9653bf4250a557ba2fe5a39b8609b3df30))
+* archive ai_council one-off scripts and add location guard ([63e6dbd](https://github.com/event4u-app/agent-config/commit/63e6dbdc49749e97621bcaeaa49f81beb5ffc98c))
+
 ## [1.17.0](https://github.com/event4u-app/agent-config/compare/1.16.0...1.17.0) (2026-05-04)
 
 ### Features
