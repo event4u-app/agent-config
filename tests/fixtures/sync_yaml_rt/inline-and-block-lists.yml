@@ -1,0 +1,15 @@
+# Mixes inline flow lists and block lists
+commands:
+  suggestion:
+    # inline list
+    blocklist: ["/refine-ticket", "/work"]
+
+    # block list (same semantic shape)
+    allowlist:
+      - /commit
+      - /create-pr
+      - /fix-ci
+
+# Empty inline list
+project:
+  tags: []

@@ -1,0 +1,10 @@
+# Konfiguration mit Umlauten — ä ö ü ß
+cost_profile: minimal
+
+personal:
+  # Benutzername — wird vom Agenten verwendet
+  user_name: "Mätze"
+  ide: "phpstorm"
+
+  # Grüße in der Konsole
+  greeting: "Schönen Tag — 你好 — مرحبا"
