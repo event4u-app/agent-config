@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2a"
 description: "Creating or editing rules, or auditing rule types — decides when a rule should be always vs auto"
 alwaysApply: false
 source: package

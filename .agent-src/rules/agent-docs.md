@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2a"
 description: "Reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md"
 source: package
 ---

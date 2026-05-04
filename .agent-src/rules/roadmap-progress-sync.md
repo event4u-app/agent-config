@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "1"
 description: "Any touch to agents/roadmaps/ — create/rename/delete/move, edit checkboxes ([x]/[~]/[-]), add/rename/remove phases — must regenerate dashboard and archive if 0 open items, same response"
 alwaysApply: false
 source: package
@@ -156,3 +157,24 @@ the mandatory pre-send self-check, the failure-mode catalog, and the
 [`contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md`](../contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md).
 Pull it whenever a trigger fires — the rule above is the obligation
 surface; the mechanics file is the lookup material.
+
+## Copilot fallback
+
+GitHub Copilot has no `PostToolUse` hook surface, so
+`scripts/roadmap_progress_hook.py` cannot detect roadmap-file writes
+structurally. The dashboard at `agents/roadmaps-progress.md` will
+not regenerate on its own.
+
+The cooperative path: every time a roadmap touch fires (per the
+trigger list in the mechanics context above), the agent regenerates
+the dashboard in the same response — which is the same Iron Law the
+hook enforces, just executed manually:
+
+```bash
+./agent-config roadmap:progress
+```
+
+The hook implementation is the specification; on Copilot the agent
+runs the regenerator itself after the same triggers fire. Skipping
+it is a rule violation, not a hook gap — the Iron Law on dashboard
+sync survives the missing hook surface.

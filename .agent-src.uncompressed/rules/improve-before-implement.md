@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2b"
 description: "Before implementing features or architectural changes — validate the request against existing code, challenge weak requirements, and suggest improvements"
 alwaysApply: false
 source: package

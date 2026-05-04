@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "mechanical-already"
 description: "Creating, editing, or reviewing skills — minimum quality standard, every skill must be executable, validated, and self-contained"
 alwaysApply: false
 source: package

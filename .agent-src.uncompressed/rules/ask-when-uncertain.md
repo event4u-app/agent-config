@@ -1,5 +1,6 @@
 ---
 type: "always"
+tier: "3"
 description: "Ask when uncertain — don't guess, assume, or improvise"
 alwaysApply: true
 source: package

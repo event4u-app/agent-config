@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "mechanical-already"
 description: "Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md — enforce size and scope limits"
 alwaysApply: false
 source: package

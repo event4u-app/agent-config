@@ -1,5 +1,6 @@
 ---
 type: auto
+tier: "2b"
 source: package
 description: "When a skill uses external tools — enforce allowlist, deny-by-default, and no hidden credential patterns"
 ---

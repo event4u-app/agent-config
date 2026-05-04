@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2a"
 description: "When roles.active_role is set in .agent-settings.yml — closing outputs must match the mode's contract and emit the structured mode marker"
 alwaysApply: false
 source: package

@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "1"
 description: "First turn or reference to .agent-chat-history — detects ownership (match/returning/foreign/missing) and HOOK/ENGINE/CHECKPOINT/MANUAL path classification with numbered-options prompt"
 alwaysApply: false
 source: package

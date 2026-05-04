@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "3"
 description: "Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators"
 alwaysApply: false
 source: package

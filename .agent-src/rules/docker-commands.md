@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "3"
 alwaysApply: false
 description: "Running PHP commands inside Docker containers — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, and any CLI tool execution"
 source: package

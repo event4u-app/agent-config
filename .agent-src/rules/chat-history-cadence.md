@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "mechanical-already"
 description: "Appending to .agent-chat-history — cadence boundaries (per_turn/per_phase/per_tool), turn-check ownership refusal handling, never writing the file directly; cadence is the trigger, not reply length"
 alwaysApply: false
 source: package
@@ -101,6 +102,39 @@ the configured frequency, period.
 On cloud surfaces (Claude.ai Web, Skills API) cadence is **inert** —
 no append calls, no `scripts/`, no JSONL file. Treat
 `chat_history.enabled` as `false`.
+
+## Copilot fallback
+
+GitHub Copilot has no `SessionStart` / `PostToolUse` / `Stop` hook
+surface, so `scripts/chat_history.py hook-dispatch` cannot fire
+structurally. `.agent-chat-history` is not maintained for the agent
+unless the agent runs the cooperative path itself.
+
+Treat Copilot as the **CHECKPOINT path** described above — gates 1 +
+2 are cooperative:
+
+1. Run `turn-check` on the first turn (and after any ownership
+   reset) to establish ownership against the first user message.
+2. Run `append --first-user-msg "<msg>" --type <…> --json '<…>'` at
+   every cadence boundary, exactly as the cooperative path
+   specifies.
+3. Surface ownership-refusal exit `3` to the user; do not swallow it.
+
+The state "file" the hook would have written is `.agent-chat-history`
+itself (JSONL, project root). The manual command that reproduces a
+single hook-dispatch step is the same one the dispatcher would
+have invoked:
+
+```bash
+scripts/chat_history.py hook-dispatch \
+  --platform copilot \
+  --event <session_start|post_tool_use|stop> \
+  < envelope.json
+```
+
+— but in practice the cooperative `turn-check` + `append` calls
+above are the supported Copilot path; `hook-dispatch` is mainly the
+dispatcher's entry point.
 
 ## Interactions & references
 

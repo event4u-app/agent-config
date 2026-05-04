@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "mechanical-already"
 description: "User prompt without /command but matching an eligible slash command — surface matches as numbered options with as-is escape hatch; never auto-executes, user always picks"
 alwaysApply: false
 source: package

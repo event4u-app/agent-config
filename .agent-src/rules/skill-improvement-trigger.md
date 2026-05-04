@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2a"
 description: "After completing a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled"
 alwaysApply: false
 source: package

@@ -66,9 +66,11 @@ MAX_DEPTH = 2
 
 # Mirrors `scripts/check_always_budget.py::KNOWN_PER_RULE_BREACHES`.
 # Phase 2A retires entries; growth above the recorded ceiling fails CI.
+# Phase 2 of road-to-feedback-consolidation.md re-baselined both entries
+# +21 to absorb the `tier: "safety-floor"` frontmatter-only growth.
 KNOWN_PER_RULE_BREACHES: dict[str, int] = {
-    "non-destructive-by-default.md": 7_887,
-    "scope-control.md": 8_529,
+    "non-destructive-by-default.md": 7_908,
+    "scope-control.md": 8_550,
 }
 
 

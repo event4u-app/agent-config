@@ -1,5 +1,6 @@
 ---
 type: "always"
+tier: "2b"
 description: "Verify before completion — run tests and quality tools before claiming done"
 alwaysApply: true
 source: package

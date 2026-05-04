@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2a"
 alwaysApply: false
 description: "Running CLI commands that produce verbose output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk when installed; tail/grep is fallback."
 source: package

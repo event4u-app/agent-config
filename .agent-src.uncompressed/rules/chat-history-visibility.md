@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "mechanical-already"
 description: "Emitting the chat-history heartbeat marker — paste subprocess stdout verbatim or nothing, never type from memory, hybrid mode prints on drift only, slip handling per language-and-tone"
 alwaysApply: false
 source: package

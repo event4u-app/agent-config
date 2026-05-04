@@ -1,5 +1,6 @@
 ---
 type: "always"
+tier: "3"
 description: "Always — direct, unembellished answers. No flattery, no invented facts (verify load-bearing claims, otherwise ask). Emojis only as functional markers. Brevity is the default."
 alwaysApply: true
 source: package

@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2a"
 alwaysApply: false
 description: "Creating a new skill, rule, command, or guideline, or significantly rewriting one — runs a mandatory Understand → Research → Draft sequence before any artifact content is written."
 source: package

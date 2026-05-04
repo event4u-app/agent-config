@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "1"
 description: "When user types a slash command like /create-pr, /commit, or pastes command file content"
 alwaysApply: false
 source: package

@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "2a"
 description: "When routing reviewers or flagging risk hotspots — consult ownership-map and historical-bug-patterns before suggesting reviewers or claiming a change is safe"
 source: package
 load_context:

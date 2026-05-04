@@ -1,5 +1,6 @@
 ---
 type: "auto"
+tier: "3"
 description: "Writing or reviewing code — check relevant guideline before writing or reviewing code"
 alwaysApply: false
 source: package
