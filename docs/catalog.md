@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **330 public artefacts** shipped by
+Consumer-facing catalog of all **324 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -141,7 +141,7 @@ are excluded.
 | skill | [`verify-completion-evidence`](../.agent-src/skills/verify-completion-evidence/SKILL.md) |  | Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs. |
 | skill | [`websocket`](../.agent-src/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (55)
+## Rules (52)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -154,9 +154,6 @@ are excluded.
 | rule | [`ask-when-uncertain`](../.agent-src/rules/ask-when-uncertain.md) | always | Ask when uncertain — don't guess, assume, or improvise |
 | rule | [`autonomous-execution`](../.agent-src/rules/autonomous-execution.md) | auto | Deciding whether to ask the user or just act on a workflow step — trivial-vs-blocking classification, autonomy opt-in detection, commit default; defers to non-destructive-by-default for the Hard Floor |
 | rule | [`capture-learnings`](../.agent-src/rules/capture-learnings.md) | auto | After completing a task where a repeated mistake or successful pattern appeared — capture as rule or skill |
-| rule | [`chat-history-cadence`](../.agent-src/rules/chat-history-cadence.md) | auto | Appending to .agent-chat-history — cadence boundaries (per_turn/per_phase/per_tool), turn-check ownership refusal handling, never writing the file directly; cadence is the trigger, not reply length |
-| rule | [`chat-history-ownership`](../.agent-src/rules/chat-history-ownership.md) | auto | First turn or reference to .agent-chat-history — detects ownership (match/returning/foreign/missing) and HOOK/ENGINE/CHECKPOINT/MANUAL path classification with numbered-options prompt |
-| rule | [`chat-history-visibility`](../.agent-src/rules/chat-history-visibility.md) | auto | Emitting the chat-history heartbeat marker — paste subprocess stdout verbatim or nothing, never type from memory, hybrid mode prints on drift only, slip handling per language-and-tone |
 | rule | [`cli-output-handling`](../.agent-src/rules/cli-output-handling.md) | auto | Running CLI commands that produce verbose output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk when installed; tail/grep is fallback. |
 | rule | [`command-suggestion-policy`](../.agent-src/rules/command-suggestion-policy.md) | auto | User prompt without /command but matching an eligible slash command — surface matches as numbered options with as-is escape hatch; never auto-executes, user always picks |
 | rule | [`commit-conventions`](../.agent-src/rules/commit-conventions.md) | auto | Git commit message format, branch naming, conventional commits, committing, pushing, or creating pull requests |
@@ -201,7 +198,7 @@ are excluded.
 | rule | [`user-interaction`](../.agent-src/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (95)
+## Commands (92)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -214,11 +211,8 @@ are excluded.
 | command | [`analyze-reference-repo`](../.agent-src/commands/analyze-reference-repo.md) |  | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`bug-fix`](../.agent-src/commands/bug-fix.md) |  | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
 | command | [`bug-investigate`](../.agent-src/commands/bug-investigate.md) |  | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
-| command | [`chat-history:checkpoint`](../.agent-src/commands/chat-history/checkpoint.md) | cluster: chat-history | Append a phase-boundary entry to .agent-chat-history — CHECKPOINT fallback for platforms without a native hook (Augment IDE, Cursor pre-1.7, Cline non-Mac/Linux). ~1s. |
-| command | [`chat-history:clear`](../.agent-src/commands/chat-history/clear.md) | cluster: chat-history | Manually delete the persistent chat-history log — asks for confirmation, optionally archives to a timestamped backup before wiping |
-| command | [`chat-history:resume`](../.agent-src/commands/chat-history/resume.md) | cluster: chat-history | Load the persistent chat-history log into the current conversation — picks match/returning/foreign flow and supports resume, merge, replace, or continue |
 | command | [`chat-history:show`](../.agent-src/commands/chat-history/show.md) | cluster: chat-history | Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries |
-| command | [`chat-history`](../.agent-src/commands/chat-history.md) | cluster: chat-history | Chat-history orchestrator — routes to show, resume, clear, checkpoint |
+| command | [`chat-history`](../.agent-src/commands/chat-history.md) | cluster: chat-history | Chat-history orchestrator — routes to show |
 | command | [`check-current-md`](../.agent-src/commands/check-current-md.md) |  | Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes. |
 | command | [`commit:in-chunks`](../.agent-src/commands/commit/in-chunks.md) | cluster: commit | Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows |
 | command | [`commit`](../.agent-src/commands/commit.md) | cluster: commit | Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits |

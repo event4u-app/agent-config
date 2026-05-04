@@ -115,7 +115,7 @@ Your agent is now:
 - **Respecting your codebase** — no conflicting patterns
 - **Following standards** — consistent code quality
 
-This is enforced automatically by 58 rules. No configuration needed.
+This is enforced automatically by 55 rules. No configuration needed.
 
 ---
 
@@ -151,9 +151,7 @@ Your agent now understands slash commands:
 | `/optimize skills` | Audit skills, find duplicates, run linter |
 | `/feature plan` | Interactively plan a feature |
 | `/quality-fix` | Run and fix all quality checks |
-| `/chat-history` | Inspect the persistent chat-history log |
-| `/chat-history-resume` | Recover context after a crashed or switched session |
-| `/chat-history-clear` | Wipe the chat-history log (with confirmation) |
+| `/chat-history` | Inspect the persistent chat-history log (read-only `show`) |
 
 → [Browse all 95 active commands](../.agent-src/commands/)
 
@@ -167,25 +165,19 @@ for every profile), the agent keeps a JSONL log of your conversation in
 rotates at the size configured in the profile (`128 KB` on `minimal`,
 `256 KB` on `balanced`, `512 KB` on `full`).
 
-When a chat opens and finds an existing log, the host agent is
-instructed to run a 4-state ownership check and choose the right
-flow:
+Logging is **hook-only**: a structural Augment hook fires on
+`session_start` and binds the log to the current session via auto-adopt
+— no agent prompts, no ownership questions. The file is rewritten
+transparently if the fingerprint does not match (fresh chat) and
+otherwise appended to.
 
-- **match** — this chat already owns the file. Append silently.
-- **foreign** — a different session's file. You get 3 options:
-  Resume (adopt), New start (archive + init), Ignore (skip logging).
-- **returning** — this chat once owned the file, but another session
-  took over in between. You get 3 options: Merge (your history in front
-  of the foreign entries), Replace (wipe foreign entries, keep yours
-  only), Continue (just leave the file and append from now on).
-- **missing** — no file yet. Init and proceed.
+Run `/chat-history` (a.k.a. `/chat-history show`) any time to inspect
+the log size, last entries, and current fingerprint. For the rare case
+where auto-adopt misfires (corrupted file, hook misconfiguration), run
+`./agent-config chat-history:adopt` as the manual recovery lever.
 
-Run `/chat-history-resume` to walk through the prompts explicitly, or
-let the agent ask on the first turn of a new chat. All merge/replace/
-resume paths read the on-disk entries into context before any write.
-
-See the [`chat-history` rule](../.agent-src/rules/chat-history-ownership.md) and
-[`scripts/chat_history.py`](../scripts/chat_history.py) for the mechanics.
+See [`agents/contexts/chat-history-platform-hooks.md`](../agents/contexts/chat-history-platform-hooks.md)
+and [`scripts/chat_history.py`](../scripts/chat_history.py) for the mechanics.
 
 ---
 

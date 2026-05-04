@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **333 artefacts** in this package.
+Maintainer-facing index of all **327 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -141,7 +141,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`verify-completion-evidence`](../.agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md) |  | Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs. |
 | skill | [`websocket`](../.agent-src.uncompressed/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (58)
+## Rules (55)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -156,9 +156,6 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`augment-source-of-truth`](../.agent-src.uncompressed/rules/augment-source-of-truth.md) | auto | Creating, editing, or modifying files inside .agent-src/ or .augment/ — the source of truth is .agent-src.uncompressed/, never edit the generated directories directly |
 | rule | [`autonomous-execution`](../.agent-src.uncompressed/rules/autonomous-execution.md) | auto | Deciding whether to ask the user or just act on a workflow step — trivial-vs-blocking classification, autonomy opt-in detection, commit default; defers to non-destructive-by-default for the Hard Floor |
 | rule | [`capture-learnings`](../.agent-src.uncompressed/rules/capture-learnings.md) | auto | After completing a task where a repeated mistake or successful pattern appeared — capture as rule or skill |
-| rule | [`chat-history-cadence`](../.agent-src.uncompressed/rules/chat-history-cadence.md) | auto | Appending to .agent-chat-history — cadence boundaries (per_turn/per_phase/per_tool), turn-check ownership refusal handling, never writing the file directly; cadence is the trigger, not reply length |
-| rule | [`chat-history-ownership`](../.agent-src.uncompressed/rules/chat-history-ownership.md) | auto | First turn or reference to .agent-chat-history — detects ownership (match/returning/foreign/missing) and HOOK/ENGINE/CHECKPOINT/MANUAL path classification with numbered-options prompt |
-| rule | [`chat-history-visibility`](../.agent-src.uncompressed/rules/chat-history-visibility.md) | auto | Emitting the chat-history heartbeat marker — paste subprocess stdout verbatim or nothing, never type from memory, hybrid mode prints on drift only, slip handling per language-and-tone |
 | rule | [`cli-output-handling`](../.agent-src.uncompressed/rules/cli-output-handling.md) | auto | Running CLI commands that produce verbose output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk when installed; tail/grep is fallback. |
 | rule | [`command-suggestion-policy`](../.agent-src.uncompressed/rules/command-suggestion-policy.md) | auto | User prompt without /command but matching an eligible slash command — surface matches as numbered options with as-is escape hatch; never auto-executes, user always picks |
 | rule | [`commit-conventions`](../.agent-src.uncompressed/rules/commit-conventions.md) | auto | Git commit message format, branch naming, conventional commits, committing, pushing, or creating pull requests |
@@ -204,7 +201,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`user-interaction`](../.agent-src.uncompressed/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src.uncompressed/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (95)
+## Commands (92)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -217,11 +214,8 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`analyze-reference-repo`](../.agent-src.uncompressed/commands/analyze-reference-repo.md) |  | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`bug-fix`](../.agent-src.uncompressed/commands/bug-fix.md) |  | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
 | command | [`bug-investigate`](../.agent-src.uncompressed/commands/bug-investigate.md) |  | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
-| command | [`chat-history:checkpoint`](../.agent-src.uncompressed/commands/chat-history/checkpoint.md) | cluster: chat-history | Append a phase-boundary entry to .agent-chat-history — CHECKPOINT fallback for platforms without a native hook (Augment IDE, Cursor pre-1.7, Cline non-Mac/Linux). ~1s. |
-| command | [`chat-history:clear`](../.agent-src.uncompressed/commands/chat-history/clear.md) | cluster: chat-history | Manually delete the persistent chat-history log — asks for confirmation, optionally archives to a timestamped backup before wiping |
-| command | [`chat-history:resume`](../.agent-src.uncompressed/commands/chat-history/resume.md) | cluster: chat-history | Load the persistent chat-history log into the current conversation — picks match/returning/foreign flow and supports resume, merge, replace, or continue |
 | command | [`chat-history:show`](../.agent-src.uncompressed/commands/chat-history/show.md) | cluster: chat-history | Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries |
-| command | [`chat-history`](../.agent-src.uncompressed/commands/chat-history.md) | cluster: chat-history | Chat-history orchestrator — routes to show, resume, clear, checkpoint |
+| command | [`chat-history`](../.agent-src.uncompressed/commands/chat-history.md) | cluster: chat-history | Chat-history orchestrator — routes to show |
 | command | [`check-current-md`](../.agent-src.uncompressed/commands/check-current-md.md) |  | Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes. |
 | command | [`commit:in-chunks`](../.agent-src.uncompressed/commands/commit/in-chunks.md) | cluster: commit | Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows |
 | command | [`commit`](../.agent-src.uncompressed/commands/commit.md) | cluster: commit | Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits |

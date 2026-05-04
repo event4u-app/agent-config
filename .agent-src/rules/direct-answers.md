@@ -64,8 +64,7 @@ or command-mandated steps.
 
 ## Emoji Scope — functional markers only
 
-**Whitelist:** `📒` (chat-history heartbeat, verbatim per
-`chat-history-visibility`); mode markers from `role-mode-adherence`;
+**Whitelist:** mode markers from `role-mode-adherence`;
 CLI status `❌` / `✅` / `⚠️` (two-space rule from `language-and-tone`);
 roadmap checkboxes `[x]` / `[~]` / `[-]`.
 
@@ -89,3 +88,12 @@ excuses (mirrors `language-and-tone` § slip handling).
 - `verify-before-complete` — completion-claim evidence gate.
 - `token-efficiency` — loop-side brevity.
 - `user-interaction` — numbered-options Iron Law overrides brevity.
+
+## Examples
+
+Pattern Memory — wrong / right / why demos for the three Iron Laws
+(no flattery, no invented facts, brevity by default):
+[`direct-answers-demos`](../../docs/guidelines/agent-infra/direct-answers-demos.md)
+(flattery openers, hedged claims, post-hoc-summary creep,
+emoji scope). Outcome baseline locked at
+[`tests/golden/outcomes/direct_answers.json`](../../tests/golden/outcomes/direct_answers.json).

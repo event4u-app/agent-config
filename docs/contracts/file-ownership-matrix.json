@@ -63,24 +63,6 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/commands/chat-history/checkpoint.md": {
-      "kind": "command",
-      "rule_type": null,
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/commands/chat-history/clear.md": {
-      "kind": "command",
-      "rule_type": null,
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/commands/chat-history/resume.md": {
-      "kind": "command",
-      "rule_type": null,
-      "load_context": [],
-      "load_context_eager": []
-    },
     ".agent-src.uncompressed/commands/chat-history/show.md": {
       "kind": "command",
       "rule_type": null,
@@ -860,24 +842,6 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/capture-learnings.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/rules/chat-history-cadence.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/rules/chat-history-ownership.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/rules/chat-history-visibility.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
@@ -1959,13 +1923,6 @@
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/commands/agent-handoff.md",
-      "target": ".agent-src.uncompressed/rules/chat-history-ownership.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
       "source": ".agent-src.uncompressed/commands/agent-status.md",
       "target": ".agent-src.uncompressed/commands/agent-status.md",
       "type": "WRITE",
@@ -2024,27 +1981,6 @@
     {
       "source": ".agent-src.uncompressed/commands/chat-history.md",
       "target": ".agent-src.uncompressed/commands/chat-history.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/commands/chat-history/checkpoint.md",
-      "target": ".agent-src.uncompressed/commands/chat-history/checkpoint.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/commands/chat-history/clear.md",
-      "target": ".agent-src.uncompressed/commands/chat-history/clear.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/commands/chat-history/resume.md",
-      "target": ".agent-src.uncompressed/commands/chat-history/resume.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -3912,90 +3848,6 @@
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/rules/chat-history-cadence.md",
-      "target": ".agent-src.uncompressed/rules/chat-history-cadence.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/chat-history-cadence.md",
-      "target": ".agent-src.uncompressed/rules/chat-history-ownership.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/chat-history-cadence.md",
-      "target": ".agent-src.uncompressed/rules/chat-history-visibility.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/chat-history-ownership.md",
-      "target": ".agent-src.uncompressed/commands/chat-history.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/chat-history-ownership.md",
-      "target": ".agent-src.uncompressed/rules/chat-history-cadence.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/chat-history-ownership.md",
-      "target": ".agent-src.uncompressed/rules/chat-history-ownership.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/chat-history-ownership.md",
-      "target": ".agent-src.uncompressed/rules/chat-history-visibility.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/chat-history-ownership.md",
-      "target": ".agent-src.uncompressed/rules/rule-type-governance.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/chat-history-visibility.md",
-      "target": ".agent-src.uncompressed/rules/chat-history-cadence.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/chat-history-visibility.md",
-      "target": ".agent-src.uncompressed/rules/chat-history-ownership.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/chat-history-visibility.md",
-      "target": ".agent-src.uncompressed/rules/chat-history-visibility.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/chat-history-visibility.md",
-      "target": ".agent-src.uncompressed/rules/direct-answers.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
       "source": ".agent-src.uncompressed/rules/cli-output-handling.md",
       "target": ".agent-src.uncompressed/contexts/communication/rules-auto/cli-output-handling-mechanics.md",
       "type": "READ_ONLY",
@@ -4700,6 +4552,13 @@
       "target": ".agent-src.uncompressed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md",
       "type": "READ_ONLY",
       "via": "load_context",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/slash-command-routing-policy.md",
+      "target": ".agent-src.uncompressed/rules/ask-when-uncertain.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
       "depth": 1
     },
     {

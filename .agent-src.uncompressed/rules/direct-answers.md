@@ -64,8 +64,7 @@ stay) or command-mandated steps.
 
 ## Emoji Scope — functional markers only
 
-**Whitelist:** `📒` (chat-history heartbeat, verbatim per
-`chat-history-visibility`); mode markers from `role-mode-adherence`;
+**Whitelist:** mode markers from `role-mode-adherence`;
 CLI status `❌` / `✅` / `⚠️` (two-space rule from `language-and-tone`);
 roadmap checkboxes `[x]` / `[~]` / `[-]`.
 

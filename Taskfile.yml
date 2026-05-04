@@ -67,7 +67,6 @@ tasks:
       - task: check-reply-consistency
       - task: check-iron-law-prominence
       - task: check-always-budget
-      - task: check-phase-coupling
       - task: check-one-off-location
       - task: validate-schema
       - task: lint-skills

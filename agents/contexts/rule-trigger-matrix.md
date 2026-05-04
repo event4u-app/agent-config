@@ -44,9 +44,7 @@ table; size and context-chain columns are derived from the rule files.
 | `augment-source-of-truth.md` | auto | 2789 | 6852 | file save on .agent-src/ or .augment/ | hook | tool-call | low | 1 | no | Pre-write hook: refuse writes to generated dirs |
 | `autonomous-execution.md` | auto | 6175 | 14628 | workflow decision (trivial vs blocking) | agent-only | output | NA-soft | 3 | no | Disposition rule; trivial classification is judgment |
 | `capture-learnings.md` | auto | 3030 | 3030 | task completion | hook | output | medium | 2a | no | Post-task marker; learning detection is fuzzy |
-| `chat-history-cadence.md` | auto | 4920 | 4920 | per-turn / per-tool / per-phase | mechanical-already | hook | NA-mechanical | mechanical-already | no | PRECEDENT — heartbeat + chat_history.py + hooks. Reference pattern. |
-| `chat-history-ownership.md` | auto | 7200 | 7200 | first turn | hook | state | low | 1 | no | Detectable: ownership classification at session start |
-| `chat-history-visibility.md` | auto | 4280 | 4280 | heartbeat marker emit | mechanical-already | hook | NA-mechanical | mechanical-already | no | Subprocess marker print is already mechanical |
+
 | `cli-output-handling.md` | auto | 2228 | 5668 | tool-call (verbose CLI) | hook | tool-call | low | 2a | no | Pre-tool-call marker on git/test/lint invocations |
 | `command-suggestion-policy.md` | auto | 4350 | 7181 | user prompt match (engine-driven) | mechanical-already | hook | NA-mechanical | mechanical-already | suspected | Engine in scripts/command_suggester/ exists; live-fire signal unverified — needs telemetry pass |
 | `commit-conventions.md` | auto | 2126 | 2126 | commit message draft | hook | output | low | 2a | no | Hook on /commit invocation, marker for conventional-commits format |
@@ -145,5 +143,5 @@ Order locked in RH Phase 3: 1 → 2 → 3 (smallest hook first).
 ## Cross-references
 
 - Budget contract: [`docs/contracts/load-context-budget-model.md`](../../docs/contracts/load-context-budget-model.md)
-- Pattern precedent: `chat-history-cadence` (heartbeat hook + `scripts/chat_history.py`)
+- Pattern precedent: `scripts/chat_history.py` + work-engine hooks (hook-only contract)
 - Phase 2A finding: [`adr-always-rule-context-split-not-viable.md`](adr-always-rule-context-split-not-viable.md)

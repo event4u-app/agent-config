@@ -133,10 +133,6 @@ tasks:
     desc: Always-rule budget gate (warn at 80%, fail at 90% of 49,000 chars)
     cmd: python3 scripts/check_always_budget.py --quiet
 
-  check-phase-coupling:
-    desc: Phase 6 → 2B decoupling guard (no chat-history-* rule refs from 13 Phase-2B targets)
-    cmd: python3 scripts/check_phase_coupling.py --quiet
-
   check-one-off-location:
     desc: Fail if any _one_off_*.py script lands outside scripts/ai_council/one_off_archive/<YYYY-MM>/
     cmd: python3 scripts/check_one_off_location.py --quiet

@@ -85,18 +85,24 @@ the deprecation cycle for Phase 1 closes. Tracked in
 [`agents/roadmaps/archive/road-to-governance-cleanup.md`](../../agents/roadmaps/archive/road-to-governance-cleanup.md)
 § F2.
 
-## Related rule split — `chat-history` (post-1.15.0)
+## Related rule split — `chat-history` (post-1.15.0, superseded)
 
-The monolithic `rules/chat-history.md` was split into three sibling
-`always` rules in the post-1.15.0 optimization phase:
+> **Superseded · 2026-05-04** by
+> [`agents/roadmaps/road-to-chat-history-hook-only.md`](../../agents/roadmaps/road-to-chat-history-hook-only.md).
+> The three sibling rules (`chat-history-ownership`,
+> `chat-history-cadence`, `chat-history-visibility`) and the heartbeat
+> marker no longer exist. Persistence is now a pure platform-hook
+> contract — `session_start` auto-adopts foreign sessions silently;
+> the agent never reads or writes `.agent-chat-history` cooperatively.
+> Live contract: [`agents/contexts/chat-history-platform-hooks.md`](../../agents/contexts/chat-history-platform-hooks.md).
+> Manual recovery lever: `./agent-config chat-history:adopt`.
 
-- [`chat-history-ownership`](../../.agent-src/rules/chat-history-ownership.md) — sole owner of file I/O + first-turn handshake.
-- [`chat-history-cadence`](../../.agent-src/rules/chat-history-cadence.md) — when to persist (SessionStart / StepEnd / append boundaries).
-- [`chat-history-visibility`](../../.agent-src/rules/chat-history-visibility.md) — heartbeat marker contract for user-facing reporting.
-
-Decision record: [`docs/contracts/adr-chat-history-split.md`](../contracts/adr-chat-history-split.md).
-Cross-references in commands and contexts now point to
-`chat-history-ownership` as the entry point.
+For historical context: the monolithic `rules/chat-history.md` was
+first split into three sibling `always` rules in the post-1.15.0
+optimization phase, recorded in
+[`docs/contracts/adr-chat-history-split.md`](../contracts/adr-chat-history-split.md)
+(also marked superseded). The hook-only roadmap then collapsed all
+three rules into structural-only artefacts.
 
 ## Rollback
 
