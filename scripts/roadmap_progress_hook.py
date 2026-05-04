@@ -114,6 +114,11 @@ def run(stdin_text: str, *, consumer_root: Path, verbose: bool = False) -> int:
         except json.JSONDecodeError:
             return 0  # malformed stdin → silent no-op, never block
 
+    # Unwrap dispatcher envelope (Phase 7.3, hook-architecture-v1.md).
+    if all(k in payload for k in ("schema_version", "platform", "event", "payload")):
+        inner = payload.get("payload")
+        payload = inner if isinstance(inner, dict) else {}
+
     tool = payload.get("tool_name") or payload.get("toolName") or payload.get("tool")
     if not isinstance(tool, str) or tool not in WRITE_TOOLS:
         return 0

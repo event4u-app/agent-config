@@ -912,7 +912,17 @@ def hook_dispatch(platform: str, raw_json: str, *,
         if not isinstance(payload, dict):
             raise ValueError("stdin JSON must decode to an object")
 
-    raw_event = (event_override or _extract_hook_event(payload) or "").strip()
+    # Unwrap dispatcher envelope (Phase 7.3, hook-architecture-v1.md). When
+    # the dispatcher invoked us, stdin carries {schema_version, platform,
+    # event, payload, …}; pull the platform-native data out of `payload`
+    # and let the envelope's `event` override the per-platform mapping.
+    envelope_event = ""
+    if all(k in payload for k in ("schema_version", "platform", "event", "payload")):
+        envelope_event = (payload.get("native_event") or payload.get("event") or "").strip()
+        inner = payload.get("payload")
+        payload = inner if isinstance(inner, dict) else {}
+
+    raw_event = (event_override or envelope_event or _extract_hook_event(payload) or "").strip()
     event = PLATFORM_EVENT_MAP[platform].get(raw_event)
     if not event:
         return {"action": "skipped_unmapped_event", "platform": platform,
