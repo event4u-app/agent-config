@@ -39,6 +39,10 @@ class HookSettings:
     halt_surface_audit: bool = False
     state_shape_validation: bool = False
     directive_set_guard: bool = False
+    decision_trace: bool = False
+    memory_visibility: bool = False
+    memory_visibility_off: bool = False
+    cost_profile: str = "standard"
     chat_history_enabled: bool = False
     chat_history_script: str = DEFAULT_CHAT_HISTORY_SCRIPT
 
@@ -102,6 +106,34 @@ def _settings_from_raw(data: dict[str, Any]) -> HookSettings:
         and _coerce_bool(global_chat.get("enabled"), False)
     )
 
+    decision_engine = data.get("decision_engine")
+    decision_trace_on = (
+        isinstance(decision_engine, dict)
+        and _coerce_bool(decision_engine.get("surface_traces"), False)
+    )
+
+    memory_section = data.get("memory")
+    visibility_off = False
+    if isinstance(memory_section, dict):
+        raw = memory_section.get("visibility")
+        if isinstance(raw, str) and raw.strip().lower() == "off":
+            visibility_off = True
+        elif isinstance(raw, bool) and raw is False:
+            visibility_off = True
+
+    memory_hooks = hooks.get("memory_visibility")
+    if isinstance(memory_hooks, dict):
+        memory_visibility_on = _coerce_bool(
+            memory_hooks.get("enabled"), True,
+        )
+    else:
+        memory_visibility_on = True
+
+    cost_profile_raw = data.get("cost_profile") or "standard"
+    cost_profile = (
+        str(cost_profile_raw).strip().lower() or "standard"
+    )
+
     return HookSettings(
         enabled=True,
         trace=_coerce_bool(hooks.get("trace"), False),
@@ -114,6 +146,10 @@ def _settings_from_raw(data: dict[str, Any]) -> HookSettings:
         directive_set_guard=_coerce_bool(
             hooks.get("directive_set_guard"), True
         ),
+        decision_trace=decision_trace_on,
+        memory_visibility=memory_visibility_on,
+        memory_visibility_off=visibility_off,
+        cost_profile=cost_profile,
         chat_history_enabled=chat_block_enabled and global_chat_on,
         chat_history_script=chat_script,
     )

@@ -174,3 +174,26 @@ def test_string_booleans_are_coerced(tmp_path: Path) -> None:
 def test_string_falsy_disables_master(flag: str, tmp_path: Path) -> None:
     cfg = _write(tmp_path / "settings.yml", f"hooks:\n  enabled: \"{flag}\"\n")
     assert load_hook_settings(cfg).enabled is False
+
+
+def test_decision_trace_default_off(tmp_path: Path) -> None:
+    cfg = _write(tmp_path / "settings.yml", "hooks:\n  enabled: true\n")
+    assert load_hook_settings(cfg).decision_trace is False
+
+
+def test_decision_trace_opt_in_via_decision_engine_block(tmp_path: Path) -> None:
+    cfg = _write(
+        tmp_path / "settings.yml",
+        "hooks:\n  enabled: true\n"
+        "decision_engine:\n  surface_traces: true\n",
+    )
+    assert load_hook_settings(cfg).decision_trace is True
+
+
+def test_decision_trace_off_when_master_off(tmp_path: Path) -> None:
+    cfg = _write(
+        tmp_path / "settings.yml",
+        "hooks:\n  enabled: false\n"
+        "decision_engine:\n  surface_traces: true\n",
+    )
+    assert load_hook_settings(cfg).decision_trace is False

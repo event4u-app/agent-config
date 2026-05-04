@@ -19,8 +19,10 @@ from .hooks.builtin import (
     ChatHistoryHaltAppendHook,
     ChatHistoryHeartbeatHook,
     ChatHistoryTurnCheckHook,
+    DecisionTraceHook,
     DirectiveSetGuardHook,
     HaltSurfaceAuditHook,
+    MemoryVisibilityHook,
     StateShapeValidationHook,
     TraceHook,
 )
@@ -56,6 +58,13 @@ def _build_hook_registry(args: argparse.Namespace) -> HookRegistry:
         StateShapeValidationHook().register(registry)
     if settings.directive_set_guard:
         DirectiveSetGuardHook().register(registry)
+    if settings.decision_trace:
+        DecisionTraceHook().register(registry)
+    if settings.memory_visibility:
+        MemoryVisibilityHook(
+            cost_profile=settings.cost_profile,
+            visibility_off=settings.memory_visibility_off,
+        ).register(registry)
     if settings.chat_history_enabled:
         _register_chat_history_hooks(registry, settings)
 

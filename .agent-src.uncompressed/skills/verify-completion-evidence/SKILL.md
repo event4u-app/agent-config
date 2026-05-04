@@ -128,7 +128,12 @@ When reporting completion to the user:
 3. **Result** — numeric breakdown (tests passed/failed/skipped, errors,
    warnings)
 4. **Caveats** — anything the output flagged but you chose to accept
-5. **Next step** — e.g. "Ready for `/commit`" or "Awaiting review"
+5. **Untracked files** — if `git status --short` shows any untracked
+   files in the working tree, list them verbatim in the report. This
+   prevents silently-shipped artefacts (logs, scratch scripts, ad-hoc
+   notes) from disappearing into a future commit. Empty list means
+   omit the section.
+6. **Next step** — e.g. "Ready for `/commit`" or "Awaiting review"
 
 ## Gotchas
 
@@ -188,3 +193,5 @@ Before sending a completion message:
 * [ ] No warnings or skips are hidden
 * [ ] Targeted tests green → full suite green → quality pipeline clean
 * [ ] `git status` reflects only the intended change set
+* [ ] If `git status --short` shows untracked files, the report lists
+      them verbatim under "Untracked files"

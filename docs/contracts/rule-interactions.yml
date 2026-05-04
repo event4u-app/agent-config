@@ -221,6 +221,28 @@ pairs:
       - .agent-src.uncompressed/rules/ask-when-uncertain.md#iron-law--one-question-per-turn-always
       - .agent-src.uncompressed/rules/direct-answers.md#iron-law-3--brevity-by-default
 
+  - id: scope-x-verify-before-complete
+    rules: [verify-before-complete, scope-control]
+    relation: complements
+    conflict: >-
+      Agent has just finished a change that touches user-permission-gated
+      operations (push, branch, PR, tag) and is preparing to claim "done"
+      in the same turn. Both rules can fire: `verify-before-complete`
+      gates the completion claim on fresh evidence; `scope-control`
+      gates the git operation on explicit permission this turn.
+    resolution: >-
+      Both rules apply independently and compose. The
+      `verify-before-complete` Iron Law still requires fresh
+      verification output in this message before any "done" claim,
+      regardless of whether the user has authorised the next git op.
+      Conversely, verification passing does not authorise pushing or
+      merging — those stay behind the `scope-control` permission gate.
+      Skipping either is a rule violation; satisfying one does not
+      satisfy the other.
+    evidence:
+      - .agent-src.uncompressed/rules/verify-before-complete.md#the-iron-law
+      - .agent-src.uncompressed/rules/scope-control.md#git-operations--permission-gated
+
   - id: language-x-direct-answers
     rules: [language-and-tone, direct-answers]
     relation: complements

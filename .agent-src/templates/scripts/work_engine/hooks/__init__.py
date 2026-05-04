@@ -24,8 +24,10 @@ from .builtin import (
     ChatHistoryHaltAppendHook,
     ChatHistoryHeartbeatHook,
     ChatHistoryTurnCheckHook,
+    DecisionTraceHook,
     DirectiveSetGuardHook,
     HaltSurfaceAuditHook,
+    MemoryVisibilityHook,
     StateShapeValidationHook,
     TraceHook,
 )
@@ -40,6 +42,7 @@ __all__ = [
     "ChatHistoryHaltAppendHook",
     "ChatHistoryHeartbeatHook",
     "ChatHistoryTurnCheckHook",
+    "DecisionTraceHook",
     "DirectiveSetGuardHook",
     "HaltSurfaceAuditHook",
     "HookCallback",
@@ -49,6 +52,7 @@ __all__ = [
     "HookHalt",
     "HookRegistry",
     "HookRunner",
+    "MemoryVisibilityHook",
     "StateShapeValidationHook",
     "TraceHook",
 ]
