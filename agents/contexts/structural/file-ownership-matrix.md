@@ -6,33 +6,13 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
 - Files indexed: **318**
-- Edges (incl. self-WRITE): **745**
+- Edges (incl. self-WRITE): **681**
 
 ## READ_ONLY edges
 
 | Source | Target | Via | Depth |
 |---|---|---|---:|
-| `.agent-src.uncompressed/commands/agent-handoff.md` | `.agent-src.uncompressed/commands/chat-history-resume.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/agent-handoff.md` | `.agent-src.uncompressed/rules/chat-history-ownership.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/bug-fix.md` | `.agent-src.uncompressed/commands/propose-memory.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/chat-history-checkpoint.md` | `.agent-src.uncompressed/commands/chat-history-clear.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/chat-history-checkpoint.md` | `.agent-src.uncompressed/commands/chat-history-resume.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/chat-history-checkpoint.md` | `.agent-src.uncompressed/commands/chat-history.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/chat-history-checkpoint.md` | `.agent-src.uncompressed/rules/chat-history-ownership.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/chat-history-checkpoint.md` | `.agent-src.uncompressed/rules/user-interaction.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/chat-history-clear.md` | `.agent-src.uncompressed/commands/chat-history-resume.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/chat-history-clear.md` | `.agent-src.uncompressed/commands/chat-history.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/chat-history-clear.md` | `.agent-src.uncompressed/rules/chat-history-ownership.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/chat-history-resume.md` | `.agent-src.uncompressed/commands/agent-handoff.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/chat-history-resume.md` | `.agent-src.uncompressed/commands/chat-history-clear.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/chat-history-resume.md` | `.agent-src.uncompressed/commands/chat-history.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/chat-history-resume.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/chat-history-resume.md` | `.agent-src.uncompressed/rules/chat-history-ownership.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/chat-history-resume.md` | `.agent-src.uncompressed/rules/token-efficiency.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/chat-history-show.md` | `.agent-src.uncompressed/commands/chat-history-clear.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/chat-history-show.md` | `.agent-src.uncompressed/commands/chat-history-resume.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/chat-history-show.md` | `.agent-src.uncompressed/rules/chat-history-ownership.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/chat-history-show.md` | `.agent-src.uncompressed/rules/token-efficiency.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/check-current-md.md` | `.agent-src.uncompressed/rules/augment-source-of-truth.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/check-current-md.md` | `.agent-src.uncompressed/rules/language-and-tone.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/check-current-md.md` | `.agent-src.uncompressed/skills/md-language-check/SKILL.md` | `body_link` | 1 |
@@ -40,55 +20,29 @@
 | `.agent-src.uncompressed/commands/commit-in-chunks.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/commit-in-chunks.md` | `.agent-src.uncompressed/rules/commit-conventions.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/commit-in-chunks.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/commit.md` | `.agent-src.uncompressed/commands/do-and-judge.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/do-and-judge.md` | `.agent-src.uncompressed/commands/commit.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/do-and-judge.md` | `.agent-src.uncompressed/contexts/subagent-configuration.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/do-and-judge.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/do-and-judge.md` | `.agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/do-in-steps.md` | `.agent-src.uncompressed/commands/do-and-judge.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/do-in-steps.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/do-in-steps.md` | `.agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/estimate-ticket.md` | `.agent-src.uncompressed/commands/feature-plan.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/estimate-ticket.md` | `.agent-src.uncompressed/commands/jira-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/estimate-ticket.md` | `.agent-src.uncompressed/commands/refine-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/estimate-ticket.md` | `.agent-src.uncompressed/skills/estimate-ticket/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/feature-plan.md` | `.agent-src.uncompressed/commands/estimate-ticket.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/feature-plan.md` | `.agent-src.uncompressed/commands/refine-ticket.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/feature-roadmap.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/implement-ticket.md` | `.agent-src.uncompressed/commands/commit.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/implement-ticket.md` | `.agent-src.uncompressed/commands/create-pr.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/implement-ticket.md` | `.agent-src.uncompressed/commands/feature-plan.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/implement-ticket.md` | `.agent-src.uncompressed/commands/jira-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/implement-ticket.md` | `.agent-src.uncompressed/commands/refine-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/implement-ticket.md` | `.agent-src.uncompressed/commands/review-changes.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/implement-ticket.md` | `.agent-src.uncompressed/commands/tests-execute.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/implement-ticket.md` | `.agent-src.uncompressed/rules/artifact-engagement-recording.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/implement-ticket.md` | `.agent-src.uncompressed/rules/minimal-safe-diff.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/implement-ticket.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/implement-ticket.md` | `.agent-src.uncompressed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/implement-ticket.md` | `.agent-src.uncompressed/rules/verify-before-complete.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/judge-solo.md` | `.agent-src.uncompressed/commands/do-and-judge.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/judge-solo.md` | `.agent-src.uncompressed/commands/review-changes.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/judge-solo.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/judge.md` | `.agent-src.uncompressed/commands/review-changes.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/judge.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/memory-add.md` | `.agent-src.uncompressed/rules/capture-learnings.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/memory-full.md` | `.agent-src.uncompressed/commands/memory-add.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/memory-full.md` | `.agent-src.uncompressed/commands/memory-promote.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/memory-promote.md` | `.agent-src.uncompressed/commands/memory-add.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/memory-promote.md` | `.agent-src.uncompressed/commands/propose-memory.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/mode.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/mode.md` | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/onboard.md` | `.agent-src.uncompressed/commands/set-cost-profile.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/onboard.md` | `.agent-src.uncompressed/rules/onboarding-gate.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/onboard.md` | `.agent-src.uncompressed/skills/rtk-output-filtering/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/propose-memory.md` | `.agent-src.uncompressed/commands/memory-add.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/refine-ticket.md` | `.agent-src.uncompressed/commands/estimate-ticket.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/refine-ticket.md` | `.agent-src.uncompressed/commands/feature-explore.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/refine-ticket.md` | `.agent-src.uncompressed/commands/feature-plan.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/refine-ticket.md` | `.agent-src.uncompressed/commands/jira-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/refine-ticket.md` | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/review-changes.md` | `.agent-src.uncompressed/commands/do-and-judge.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/review-changes.md` | `.agent-src.uncompressed/commands/judge.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/review-changes.md` | `.agent-src.uncompressed/commands/prepare-for-review.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/review-changes.md` | `.agent-src.uncompressed/skills/code-review/SKILL.md` | `body_link` | 1 |
@@ -101,10 +55,6 @@
 | `.agent-src.uncompressed/commands/review-routing.md` | `.agent-src.uncompressed/rules/reviewer-awareness.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/review-routing.md` | `.agent-src.uncompressed/rules/verify-before-complete.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/review-routing.md` | `.agent-src.uncompressed/skills/review-routing/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/roadmap-create.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/roadmap-create.md` | `.agent-src.uncompressed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/roadmap-execute.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/roadmap-execute.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/set-cost-profile.md` | `.agent-src.uncompressed/commands/mode.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/set-cost-profile.md` | `.agent-src.uncompressed/commands/onboard.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/sync-agent-settings.md` | `.agent-src.uncompressed/commands/sync-gitignore.md` | `body_link` | 1 |
@@ -165,8 +115,6 @@
 | `.agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md` | `.agent-src.uncompressed/skills/judge-code-quality/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md` | `.agent-src.uncompressed/skills/judge-security-auditor/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md` | `.agent-src.uncompressed/skills/judge-test-coverage/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/contexts/subagent-configuration.md` | `.agent-src.uncompressed/commands/do-and-judge.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/contexts/subagent-configuration.md` | `.agent-src.uncompressed/commands/do-in-steps.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/subagent-configuration.md` | `.agent-src.uncompressed/commands/judge.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/subagent-configuration.md` | `.agent-src.uncompressed/contexts/model-recommendations.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/subagent-configuration.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
@@ -204,9 +152,6 @@
 | `.agent-src.uncompressed/rules/autonomous-execution.md` | `.agent-src.uncompressed/rules/security-sensitive-stop.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/chat-history-cadence.md` | `.agent-src.uncompressed/rules/chat-history-ownership.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/chat-history-cadence.md` | `.agent-src.uncompressed/rules/chat-history-visibility.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/chat-history-ownership.md` | `.agent-src.uncompressed/commands/chat-history-checkpoint.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/chat-history-ownership.md` | `.agent-src.uncompressed/commands/chat-history-clear.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/chat-history-ownership.md` | `.agent-src.uncompressed/commands/chat-history-resume.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/chat-history-ownership.md` | `.agent-src.uncompressed/commands/chat-history.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/chat-history-ownership.md` | `.agent-src.uncompressed/rules/chat-history-cadence.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/chat-history-ownership.md` | `.agent-src.uncompressed/rules/chat-history-visibility.md` | `body_link` | 1 |
@@ -314,7 +259,6 @@
 | `.agent-src.uncompressed/skills/data-flow-mapper/SKILL.md` | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/description-assist/SKILL.md` | `.agent-src.uncompressed/rules/skill-quality.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/description-assist/SKILL.md` | `.agent-src.uncompressed/rules/user-interaction.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/estimate-ticket/SKILL.md` | `.agent-src.uncompressed/commands/feature-plan.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/estimate-ticket/SKILL.md` | `.agent-src.uncompressed/commands/jira-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/estimate-ticket/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/estimate-ticket/SKILL.md` | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `body_link` | 1 |
@@ -327,7 +271,6 @@
 | `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` | `.agent-src.uncompressed/commands/commit.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` | `.agent-src.uncompressed/commands/create-pr-description.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` | `.agent-src.uncompressed/commands/create-pr.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` | `.agent-src.uncompressed/commands/fix-pr-comments.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` | `.agent-src.uncompressed/commands/prepare-for-review.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` | `.agent-src.uncompressed/commands/review-changes.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` | `.agent-src.uncompressed/skills/conventional-commits-writing/SKILL.md` | `body_link` | 1 |
@@ -371,16 +314,11 @@
 | `.agent-src.uncompressed/skills/livewire/SKILL.md` | `.agent-src.uncompressed/skills/fe-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/livewire/SKILL.md` | `.agent-src.uncompressed/skills/flux/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/md-language-check/SKILL.md` | `.agent-src.uncompressed/rules/language-and-tone.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/receiving-code-review/SKILL.md` | `.agent-src.uncompressed/commands/fix-pr-bot-comments.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/receiving-code-review/SKILL.md` | `.agent-src.uncompressed/commands/fix-pr-comments.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/receiving-code-review/SKILL.md` | `.agent-src.uncompressed/commands/fix-pr-developer-comments.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/receiving-code-review/SKILL.md` | `.agent-src.uncompressed/skills/conventional-commits-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/receiving-code-review/SKILL.md` | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-prompt/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-prompt/SKILL.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-prompt/SKILL.md` | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `.agent-src.uncompressed/commands/feature-explore.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `.agent-src.uncompressed/commands/feature-plan.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `.agent-src.uncompressed/commands/jira-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `.agent-src.uncompressed/skills/adversarial-review/SKILL.md` | `body_link` | 1 |
@@ -415,8 +353,6 @@
 | `.agent-src.uncompressed/skills/security/SKILL.md` | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/skill-writing/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/skill-writing/SKILL.md` | `.agent-src.uncompressed/skills/description-assist/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/commands/do-and-judge.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/commands/do-in-steps.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/commands/judge.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/contexts/subagent-configuration.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/skills/ai-council/SKILL.md` | `body_link` | 1 |
