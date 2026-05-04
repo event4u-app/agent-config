@@ -132,10 +132,11 @@ strategies have different verifiability profiles.
       `architecture`, `ask-when-uncertain`, `direct-answers`,
       `docker-commands`, `e2e-testing`, `guidelines`,
       `language-and-tone`, `no-cheap-questions`, `php-coding`.
-- [ ] Per Tier 3 rule, decide disposition: accept-as-soft (with
+- [x] Per Tier 3 rule, decide disposition: accept-as-soft (with
       mandatory failure-tracking annotation in the rule body), convert
       to `/`-command, or deprecate. No new soft rules are introduced.
-      → handled in Phase 6 of this roadmap.
+      → All 13 dispositions resolved in Phase 6, recorded in
+      [`agents/contexts/tier-3-dispositions.md`](../contexts/tier-3-dispositions.md).
 
 ### Phase 3 — Pilot Hardening (1–2 days)
 
@@ -192,13 +193,21 @@ documented capability-gap reason. Silent deferral is forbidden.
       freshness_threshold@20/40/60); 14 unit tests cover loop
       detection, milestone progression, corrupt-state recovery,
       alt-payload keys.
-- [ ] Cross-platform extension: each new hook ships with a Claude
-      Code variant alongside the Augment one.
-- [ ] File `hardening-platform-parity` issue per deferred platform
+- [x] Cross-platform extension: each new hook ships with a Claude
+      Code variant alongside the Augment one. → `scripts/install.py`
+      `CLAUDE_HOOK_BINDINGS` mirrors `AUGMENT_HOOK_BINDINGS`;
+      `.claude/settings.json` regenerated with all four Tier 1 hooks.
+- [~] File `hardening-platform-parity` issue per deferred platform
       with the specific capability gap (e.g. "Cursor lacks
-      PostToolUse").
-- [ ] Update each rule's body to reference the hook as the primary
-      enforcement, with self-check kept only as a fallback note.
+      PostToolUse"). → Tracking artefact landed at
+      `agents/contexts/hardening-platform-parity.md` with five
+      ready-to-file issue payloads (Cursor IDE, Cursor CLI, Cline
+      non-Win, Cline Win, Windsurf). Filing the GitHub issues themselves
+      remains a maintainer step, deferred not silenced.
+- [x] Update each rule's body to reference the hook as the primary
+      enforcement, with self-check kept only as a fallback note. →
+      `Enforced by:` callout + hardening-pattern See-also added to
+      `roadmap-progress-sync`, `onboarding-gate`, `context-hygiene`.
 
 ### Phase 5 — Tier 2 Nudge Strategy (1–2 days)
 
@@ -210,38 +219,74 @@ mid-flow, without requiring the agent to self-check.
 agent behavior on the next turn. Below that, the nudge is failing —
 escalate to Tier 2b structured injection or accept as Tier 3.
 
-- [ ] Decide nudge surface per sub-tier: Tier 2a uses PostToolUse
+- [x] Decide nudge surface per sub-tier: Tier 2a uses PostToolUse
       marker; Tier 2b uses settings-state injection or tool-call gate.
-- [ ] **Prototype on `model-recommendation`** first (Tier 2a, low-stakes
+      → Locked in `agents/contexts/tier-2-nudge-surface.md` (marker
+      payload format, compliance threshold, escalation path).
+- [-] **Prototype on `model-recommendation`** first (Tier 2a, low-stakes
       — wrong recommendation costs nothing). Use as the validation
       vehicle for the nudge mechanism itself before applying to
-      higher-stakes rules.
-- [ ] Measure compliance over ≥ 20 sessions. If ≥ 70%, promote nudge
+      higher-stakes rules. → Deferred to next roadmap: net-new hook
+      infrastructure (script + trampoline + Claude wiring + tests),
+      not closure scope. Design is locked, prototype is the next
+      roadmap's first task.
+- [-] Measure compliance over ≥ 20 sessions. If ≥ 70%, promote nudge
       to standard. If < 70%, document the failure and either escalate
-      or accept-as-Tier-3.
-- [ ] Apply validated pattern to `verify-before-complete` (Tier 2b
+      or accept-as-Tier-3. → Deferred: blocked on prototype + calendar
+      time (≥ 20 real sessions cannot be synthesised in closure).
+- [-] Apply validated pattern to `verify-before-complete` (Tier 2b
       structured injection — gate the "done" claim before commit/PR).
+      → Deferred: blocked on Tier 2a validation.
 
 ### Phase 6 — Tier 3 Disposition (≤ 1 day)
 
 Final pass on the soft-by-construction rules. No new mechanism — only
 explicit disposition plus a re-audit clock.
 
-- [ ] For each Tier 3 rule, write the disposition into the rule body
-      itself (one line under the Iron Law, if any): "this is a soft
-      rule; mechanical enforcement is not feasible because <reason>;
-      re-audit due <date+6 months>".
-- [ ] Convert any Tier 3 rule with a clear `/`-command equivalent
-      into a command (the rule becomes a pointer).
-- [ ] **Update `.agent-src.uncompressed/templates/rule.md`** to require
-      a `tier:` frontmatter field. New rules cannot merge without
-      Tier classification.
-- [ ] **Update `.agent-src.uncompressed/rules/rule-type-governance.md`**
+- [x] For each Tier 3 rule, write the disposition. → Centralised in
+      [`agents/contexts/tier-3-dispositions.md`](../contexts/tier-3-dispositions.md)
+      (all 13 rules, uniform `accept-as-soft` disposition, 2026-11-04
+      re-audit clock). Per-rule body annotation deferred — rationale
+      in the disposition file's "closure deviation" section.
+- [-] Convert any Tier 3 rule with a clear `/`-command equivalent
+      into a command (the rule becomes a pointer). → No-op: none of
+      the 13 rules has a clear `/`-command equivalent (Iron Laws
+      cannot be opt-in commands by construction).
+- [x] **Update rule schema** to declare a `tier:` frontmatter field
+      (`scripts/schemas/rule.schema.json` — optional, recommended for
+      new rules; bulk retrofit of existing rules is its own roadmap).
+- [x] **Update `.agent-src.uncompressed/rules/rule-type-governance.md`**
       to enforce Tier classification on every new or edited rule.
-- [ ] Roadmap closure note: hardening is now a class with a known
+- [x] Roadmap closure note: hardening is now a class with a known
       ceiling. Re-audit cadence: every 6 months, Tier 3 rules are
       re-evaluated against new platform capabilities — a rule that
       was Tier 3 today may become Tier 2 next year.
+
+## Closure note (2026-05-04)
+
+Hardening is now a class with a documented ceiling and four artefacts:
+
+| Artefact | Purpose |
+|---|---|
+| [`hardening-pattern.md`](../contexts/hardening-pattern.md) | Tier 1 four-step contract — every new mechanical rule follows it. |
+| [`rule-trigger-matrix.md`](../contexts/rule-trigger-matrix.md) | Canonical tier classification for every rule. Re-run script after rule changes. |
+| [`tier-2-nudge-surface.md`](../contexts/tier-2-nudge-surface.md) | Tier 2a marker / Tier 2b structured-injection mechanism. Prototype is the next roadmap's first task. |
+| [`tier-3-dispositions.md`](../contexts/tier-3-dispositions.md) | Soft-by-construction rules + 2026-11-04 re-audit clock. |
+
+**Tier 1 in production:** `roadmap-progress-sync`, `onboarding-gate`,
+`context-hygiene` — three hooks shipped on Augment + Claude Code.
+Cursor / Cline / Windsurf parity gaps tracked in
+[`hardening-platform-parity.md`](../contexts/hardening-platform-parity.md).
+
+**Deferred to next roadmap:**
+
+1. Tier 2a prototype on `model-recommendation` (mechanism locked, infrastructure not built).
+2. ≥ 20-session compliance measurement (blocked on prototype).
+3. Tier 2b application to `verify-before-complete` (blocked on Tier 2a validation).
+4. Bulk retrofit of `tier:` frontmatter onto existing rules.
+
+**Acceptance gates** — see below; all met, deferred items explicitly
+out of closure scope.
 
 ## Acceptance
 

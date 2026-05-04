@@ -4,9 +4,10 @@ complexity: lightweight
 
 # Road to Context Layer Maturity
 
-**Status:** v2 — council-greenlit (`agents/council-sessions/2026-05-03T17-56-21Z/`),
-ready for execution.
+**Status:** Done — all phases shipped, Phase 4.5 council-greenlit
+(`agents/council-sessions/2026-05-04T06-36-13Z/`), ready for archival.
 **Started:** 2026-05-03
+**Closed:** 2026-05-04
 **Trigger:** Two independent reviewers converged on the same gap after
 the structural-optimization roadmap closed: the **rule layer is now
 mature; the context layer is unproven**. Feedback #1 named it the
@@ -274,10 +275,16 @@ alternative strategies remain:
       goal hit. Top-3 sum unchanged (22,197). Actuals logged in
       [`agents/contexts/budget-v2-matrix.md`](../contexts/budget-v2-matrix.md)
       § Exit-gate actuals.
-- [ ] **4.5** Council audit on the resulting state. Lock decisions
+- [x] **4.5** Council audit on the resulting state. Lock decisions
       that did not pan out as deferred-or-rejected (Feedback #2
       "decline = silence" applies — re-asking forbidden in the next
-      roadmap).
+      roadmap). **Result:** both members (claude-sonnet-4-5 +
+      gpt-4o) verdict YES — archive. Trim soundness, path selection,
+      and missed-leverage scan all clean. Anthropic flagged headroom
+      durability (+72 over goal is fragile against safety-floor
+      edits or new always-rules); tracked as risk, not adopted this
+      roadmap (see Decision log entry 2026-05-04). Session:
+      `agents/council-sessions/2026-05-04T06-36-13Z/`.
 
 **Exit gate:** budget-v2-matrix locked, two paths executed, council
 greenlit, headroom honestly reported (≥ 4k or stated reason it is
@@ -334,6 +341,7 @@ open roadmaps tagged.
 | 5 | Phase 4 demotes / merges a rule whose behaviour was not outcome-tested | Step 4.0 inputs gate: only 4d (hard compress) is permitted on outcome-untested rules; 4a / 4b require a locked Phase 2 baseline |
 | 6 | Phase 5 roadmap-complexity linter is gamed (split a heavy roadmap into two lightweight ones) | The trigger is contract-layer change, not line count alone — reviewer judgment required |
 | 7 | This roadmap itself violates Phase 5's lightweight tier | It does — by design, this is the seed; the standard locks afterwards |
+| 8 | Headroom margin (4,072 chars, +72 over goal) is fragile against safety-floor edits or new always-rules (Phase 4.5 Anthropic finding) | Re-open trigger: any always-rule edit that consumes ≥ 200 chars headroom OR allowlist breach resolution (`scope-control` / `non-destructive-by-default`) → spawn a Budget-v3 evaluation; do not silently absorb |
 
 ## Sequencing
 
@@ -367,6 +375,7 @@ as the closing phase that locks the standard for sibling roadmaps.
 | 2026-05-03 | Q3 default is 3a (Model (b) literal); 3b gated on 4-hr / 200-LOC feasibility spike | Sonnet binding rev #1 |
 | 2026-05-03 | Outcome scorer hard-capped at 50 LOC stdlib-only; rules whose signals don't fit the cap defer to a future phase | Sonnet binding rev #2 |
 | 2026-05-04 | Q1 locked: file order in frontmatter (no priority field). Q2 locked: ≤ 3 contexts per rule, enforced by `check_always_budget.py`. Q3 locked: 3a (Model (b) literal); 1.4a feasibility spike skipped because no current pattern has > 1 shared loader. | Phase 1.2/1.3/1.4 execution |
+| 2026-05-04 | Phase 4.5 council audit: trim choices sound, archive ok. Anthropic durability finding (raise headroom target to ≥ 4,500 chars or sperr neue always-rules bis Phase 2A allowlist-breaches resolved sind) tracked as risk #8, **not adopted in this roadmap** — Feedback #2 "decline = silence" applies; re-evaluation only on a future trigger event. | Council session `2026-05-04T06-36-13Z` (claude-sonnet-4-5 + gpt-4o, $0.0738 actual) |
 
 ## Sources
 
