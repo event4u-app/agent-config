@@ -217,4 +217,3 @@ For `low`, the question replaces the AC list:
 - [`work_engine.scoring.confidence`](../../templates/scripts/work_engine/scoring/confidence.py) — rubric + band thresholds
 - [`ask-when-uncertain`](../../rules/ask-when-uncertain.md) — one-question-per-turn Iron Law
 - [`artifact-drafting-protocol`](../../rules/artifact-drafting-protocol.md) — this skill was drafted under it
-- `agents/roadmaps/archive/road-to-prompt-driven-execution.md` — Phase 3 owns this skill (archived on completion)

@@ -1,1 +1,1 @@
-../../../.agent-src/commands/module-explore.md
+../../../.agent-src/commands/module/explore.md

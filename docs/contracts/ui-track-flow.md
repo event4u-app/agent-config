@@ -4,8 +4,7 @@ stability: beta
 
 # UI Track — Flow Contract
 
-> Technical contracts for the UI directive sets shipped under
-> [`road-to-product-ui-track.md`](../../agents/roadmaps/road-to-product-ui-track.md).
+> Technical contracts for the UI directive sets.
 > Sibling of [`implement-ticket-flow.md`](implement-ticket-flow.md) — that
 > doc covers `backend`; this one covers `ui`, `ui-trivial`, and the
 > `mixed` set that stitches both.
@@ -14,11 +13,10 @@ stability: beta
 > - **Status:** Phase 1–6 shipped — audit / design / apply / review /
 >   polish handlers live under
 >   [`.agent-src.uncompressed/templates/scripts/work_engine/directives/ui/`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/ui/).
->   Mixed (Phase 4) under `directives/mixed/`. `ui-trivial` (Phase 2 Step 6)
->   under `directives/ui_trivial/`. R4 (Visual Review Loop) added the
+>   Mixed under `directives/mixed/`. `ui-trivial` under
+>   `directives/ui_trivial/`. R4 (Visual Review Loop) added the
 >   a11y gate, the preview envelope, and a polish-termination rewrite
->   that splits subjective ceilings from objective a11y blocks — see
->   [`road-to-visual-review-loop.md`](../../agents/roadmaps/road-to-visual-review-loop.md).
+>   that splits subjective ceilings from objective a11y blocks.
 >   Golden Transcripts GT-U1..U4, U7, U8, U9..U12 plus GT-U5 (mixed
 >   flow), GT-U6A/B (stack dispatch), and R4's GT-U13..U15 (a11y polish,
 >   a11y ceiling, preview render failure) pin happy-path, ambiguity,
@@ -42,8 +40,6 @@ sentinels that release each gate.
   `SKILL.md` files.
 - A migration guide for the schema — see
   [`implement-ticket-flow.md`](implement-ticket-flow.md#state-schema-v1).
-- A roadmap — phased delivery lives in
-  [`road-to-product-ui-track.md`](../../agents/roadmaps/road-to-product-ui-track.md).
 
 ## The four directive sets
 
@@ -323,15 +319,9 @@ suite asserts every `BLOCKED` path has a matching declaration.
 - [`implement-ticket-flow.md`](implement-ticket-flow.md) — sibling
   contract for the `backend` set; covers `DeliveryState`, schema v1,
   hooks, persona policies, replay protocol.
-- [`road-to-product-ui-track.md`](../../agents/roadmaps/road-to-product-ui-track.md)
-  — phased delivery and Golden-Transcript matrix.
-- [`road-to-product-ui-track-followup.md`](../../agents/roadmaps/archive/road-to-product-ui-track-followup.md)
-  — pinned GT-U5 (mixed flow), GT-U6A/B (stack dispatch), GT-U7
-  (trivial happy path), GT-U8 (trivial reclassification).
-- [`road-to-visual-review-loop.md`](../../agents/roadmaps/road-to-visual-review-loop.md)
-  — R4 contract: a11y gate, preview envelope, polish-termination
-  rewrite. Pinned by GT-U13 (a11y polish), GT-U14 (a11y ceiling),
-  GT-U15 (preview render failure).
+- [`adr-product-ui-track.md`](adr-product-ui-track.md) — locked
+  decisions for the UI track (R3) and the visual-review-loop
+  amendment (R4: a11y gate, preview envelope, polish-termination).
 - [`existing-ui-audit` SKILL](../../.agent-src.uncompressed/skills/existing-ui-audit/SKILL.md)
   — producer of `state.ui_audit`.
 - [`ui-audit-gate` rule](../../.agent-src.uncompressed/rules/ui-audit-gate.md)

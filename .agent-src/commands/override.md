@@ -18,8 +18,8 @@ commands with a single entry point + sub-command dispatch.
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/override create` | `override-create.md` | Create a project-level override for a shared skill, rule, or command |
-| `/override manage` | `override-manage.md` | Review, update, and refactor existing overrides |
+| `/override create` | `commands/override/create.md` | Create a project-level override for a shared skill, rule, or command |
+| `/override manage` | `commands/override/manage.md` | Review, update, and refactor existing overrides |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -34,11 +34,6 @@ Sub-command names match the locked contract in
 
    > 1. create — author a new project-level override
    > 2. manage — review, update, refactor existing overrides
-
-## Migration
-
-The 2 standalone `/override-*` commands continue to work for one release
-cycle as deprecation shims. New invocations should use `/override <sub>`.
 
 ## Rules
 

@@ -53,7 +53,12 @@ def _count_rules() -> int:
 def _count_active_commands() -> int:
     total = 0
     deprecated = 0
-    for p in (SRC / "commands").glob("*.md"):
+    # Commands may be flat (`commands/<name>.md`) or nested under a cluster
+    # directory (`commands/<cluster>/<sub>.md`). Walk recursively and skip the
+    # AGENTS.md reference orchestrator that lives under .agent-src/commands/.
+    for p in (SRC / "commands").rglob("*.md"):
+        if p.name == "AGENTS.md":
+            continue
         total += 1
         text = p.read_text(encoding="utf-8")
         if re.search(r"^deprecated_in:\s*", text, re.MULTILINE):

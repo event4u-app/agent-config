@@ -95,7 +95,10 @@ def _collect_rules() -> list[Entry]:
 
 def _collect_commands() -> list[Entry]:
     out = []
-    for cmd_md in sorted((SRC / "commands").glob("*.md")):
+    cmd_dir = SRC / "commands"
+    for cmd_md in sorted(cmd_dir.rglob("*.md")):
+        if cmd_md.name == "AGENTS.md":
+            continue
         fm = _parse_frontmatter(cmd_md.read_text(encoding="utf-8"))
         is_shim = bool(fm.get("superseded_by"))
         extra = ""
@@ -103,12 +106,13 @@ def _collect_commands() -> list[Entry]:
             extra = f"shim → /{fm['superseded_by']}"
         elif fm.get("cluster"):
             extra = f"cluster: {fm['cluster']}"
+        rel = cmd_md.relative_to(cmd_dir)
         out.append(Entry(
             kind="shim" if is_shim else "command",
             name=fm.get("name") or cmd_md.stem,
             description=_truncate(fm.get("description", "")),
             extra=extra,
-            path=f".agent-src.uncompressed/commands/{cmd_md.name}",
+            path=f".agent-src.uncompressed/commands/{rel}",
         ))
     return out
 

@@ -18,13 +18,13 @@ with a single entry point + sub-command dispatch.
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/fix ci` | `fix-ci.md` | Fetch CI errors from GitHub Actions and fix them |
-| `/fix refs` | `fix-references.md` | Find and fix broken cross-references in `.augment/` and `agents/` |
-| `/fix portability` | `fix-portability.md` | Find and fix project-specific references in shared `.augment/` files |
-| `/fix seeder` | `fix-seeder.md` | Scan seeder data files for broken FK references |
-| `/fix pr` | `fix-pr-comments.md` | Fix and reply to **all** open review comments (bots + humans) |
-| `/fix pr-bots` | `fix-pr-bot-comments.md` | Fix and reply to **bot** review comments only |
-| `/fix pr-developers` | `fix-pr-developer-comments.md` | Fix and reply to **human** reviewer comments only |
+| `/fix ci` | `commands/fix/ci.md` | Fetch CI errors from GitHub Actions and fix them |
+| `/fix refs` | `commands/fix/refs.md` | Find and fix broken cross-references in `.augment/` and `agents/` |
+| `/fix portability` | `commands/fix/portability.md` | Find and fix project-specific references in shared `.augment/` files |
+| `/fix seeder` | `commands/fix/seeder.md` | Scan seeder data files for broken FK references |
+| `/fix pr` | `commands/fix/pr.md` | Fix and reply to **all** open review comments (bots + humans) |
+| `/fix pr-bots` | `commands/fix/pr-bots.md` | Fix and reply to **bot** review comments only |
+| `/fix pr-developers` | `commands/fix/pr-developers.md` | Fix and reply to **human** reviewer comments only |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -44,12 +44,6 @@ Sub-command names match the locked contract in
    > 5. pr — address all open review comments
    > 6. pr-bots — address bot reviewer comments only
    > 7. pr-developers — address human reviewer comments only
-
-## Migration
-
-The 7 standalone `/fix-*` commands continue to work for one release cycle as
-deprecation shims. They emit a notice and route to the same content. New
-invocations should use `/fix <sub>`.
 
 ## Rules
 

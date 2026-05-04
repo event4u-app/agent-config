@@ -73,7 +73,7 @@ After the block, ask:
 ```
 
 - On **1**: hand off to
-  [`create-pr-description`](../skills/create-pr-description/SKILL.md).
+  [`create-pr-description`](../skills/create-pr:description-only/SKILL.md).
 - On **2**: respect CODEOWNERS — request the *roles* resolved to people
   by the consumer's own mapping, never invent usernames.
 - On **3**: the user wants to curate the map first. Stop.
@@ -109,7 +109,7 @@ After the block, ask:
   data-source rules
 - [`review-routing-data-format`](../../docs/guidelines/agent-infra/review-routing-data-format.md)
   — YAML schemas
-- [`create-pr-description`](../skills/create-pr-description/SKILL.md) —
+- [`create-pr-description`](../skills/create-pr:description-only/SKILL.md) —
   consumes the routing block
 - [`verify-before-complete`](../rules/verify-before-complete.md) —
   consumes the `required_test` list

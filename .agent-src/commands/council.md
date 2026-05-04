@@ -20,10 +20,10 @@ sub-command swaps the mode-specific addendum.
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/council default` | `council-default.md` | Generic neutral lens — prompt, roadmap, diff, or files |
-| `/council pr` | `council-pr.md` | Pull a GitHub PR via `gh` and run the council on the diff with PR-specific framing |
-| `/council design` | `council-design.md` | Run the council on a design doc / ADR / architecture proposal |
-| `/council optimize` | `council-optimize.md` | Run the council on an optimization target — ranked, evidence-based suggestions |
+| `/council default` | `commands/council/default.md` | Generic neutral lens — prompt, roadmap, diff, or files |
+| `/council pr` | `commands/council/pr.md` | Pull a GitHub PR via `gh` and run the council on the diff with PR-specific framing |
+| `/council design` | `commands/council/design.md` | Run the council on a design doc / ADR / architecture proposal |
+| `/council optimize` | `commands/council/optimize.md` | Run the council on an optimization target — ranked, evidence-based suggestions |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -40,14 +40,6 @@ Sub-command names match the locked contract in
    > 2. pr — review a GitHub PR (read-only by default)
    > 3. design — review a design doc / ADR / architecture proposal
    > 4. optimize — ranked, evidence-based optimization advice
-
-## Migration
-
-The 3 standalone `/council-*` commands continue to work for one release
-cycle as deprecation shims. They emit a notice and route to the same
-content. New invocations should use `/council <sub>`. The
-previously-bare `/council` (default lens) is now `/council default`;
-bare `/council` invocations show the menu.
 
 ## Rules
 

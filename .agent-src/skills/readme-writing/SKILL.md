@@ -15,28 +15,33 @@ execution:
 - Creating a new README for an **application, CLI tool, internal tool, template, or framework**
 - Rewriting an outdated or weak README
 - Improving after major repo changes (new tooling, restructure)
+- Adapting README for a different audience
 
-Do NOT use for:
+Do NOT use when:
 
-- **Packages/libraries** → use `readme-writing-package` instead
-- Minor typos, single-section updates, reference docs in separate files
+- Writing a README for a **reusable package or library** → use `readme-writing-package` instead
+- Fixing minor typos or updating a single section
+- Writing reference docs that belong in separate files
+- Only adding a badge or version bump
 
 ## Goal
 
-Accurate, evidence-based, scannable README for the intended audience.
-Reflects the real repository — not assumptions.
+Write a README that is accurate, evidence-based, scannable, and useful for
+the intended audience. Reflects the real repository — not assumptions.
 
 ## Core principles
 
-- Analyze first, write second — inspect repo before writing
-- Evidence-based — every command, step, feature must exist in repo
-- Strong quickstart over exhaustive noise — get started in 30 seconds
-- Right scope — overview in README, deep content in dedicated docs
-- Match repo type — package README ≠ app ≠ CLI tool ≠ framework
+- **Analyze first, write second** — inspect the repo before writing a single line
+- **Evidence-based only** — every command, setup step, and feature must exist in the repo
+- **Strong quickstart over exhaustive noise** — a reader should get started in 30 seconds
+- **Right scope** — high-level overview in README, deep content in dedicated docs
+- **Match the repo type** — a package README differs from an app, CLI tool, or framework
 
 ## Procedure
 
 ### 1. Identify README type and audience
+
+Determine repository type:
 
 | Type | Audience | Priority |
 |---|---|---|
@@ -49,94 +54,114 @@ Reflects the real repository — not assumptions.
 
 ### 2. Inspect the repository
 
-Read truth-defining files:
+Read these files to extract truth:
 
-- `README.md` (existing), `package.json`, `composer.json`
-- `Dockerfile`, `docker-compose.yml`
-- `Taskfile.yml`, `Makefile`
-- CI workflows, config files, `docs/`, `agents/`
+- `README.md` (existing, if any)
+- `package.json`, `composer.json` — name, description, scripts, dependencies
+- `Dockerfile`, `docker-compose.yml` — runtime setup
+- `Taskfile.yml`, `Makefile` — available commands
+- CI workflows — what gets tested, how
+- `docs/`, `agents/` — existing documentation
+- Config files — what tools are used
 
-Extract: purpose, install path, commands, requirements, workflows, testing, contribution flow.
+Extract: project purpose, install path, main commands, requirements,
+key workflows, testing/linting commands, contribution flow.
 
 ### 3. Choose sections
 
-Only include sections that provide value:
+Only include sections that provide value. Candidates:
 
 1. **Title + one-line summary** — always
-2. **Why / what problem** — if not obvious from name
-3. **Key features** — if more than trivial
+2. **Why / what problem it solves** — if not obvious from name
+3. **Key features or capabilities** — if more than a trivial tool
 4. **Requirements** — only if non-obvious
 5. **Installation / setup** — always
-6. **Usage / quickstart** — always (most important)
-7. **Configuration** — if applicable
-8. **Development workflow** — if accepts contributions
+6. **Usage / quickstart** — always (most important section)
+7. **Configuration / customization** — if applicable
+8. **Development workflow** — if repo accepts contributions
 9. **Testing / quality** — if tooling exists
 10. **Project structure** — if non-trivial
-11. **Contributing** — if open/team project
+11. **Contributing** — if open or team project
 12. **License** — if applicable
 
+Do NOT include sections "because READMEs usually have them."
 Skip empty or near-empty sections entirely.
 
 ### 4. Write evidence-based content
 
-- Only document commands that exist in the repo
+Rules:
+
+- Only document commands that actually exist in the repo
 - Only describe setup steps supported by scripts/configs
 - Only claim features confirmed by code or docs
-- Unclear? Inspect more or ask — never invent
+- If something is unclear: inspect more or ask — never invent
 
-Formatting: tables for comparisons, code blocks for commands (copy-pasteable),
-short paragraphs (max 3 sentences), directory trees for structure.
+Formatting:
 
-### 5. Optimize for first screen
+- Tables for structured comparisons (tools, options, features)
+- Code blocks for every command (copy-pasteable)
+- Short paragraphs — max 3 sentences before a break
+- Directory trees for project structure (use `tree` format)
+- Badges only if they link to live CI/release status
 
-Reader must answer within 10 seconds: What is this? Why? How to start?
+### 5. Optimize for the first screen
 
-First screen (before scroll): title, summary, install or quickstart.
+A reader scanning the README should answer within 10 seconds:
+
+1. What is this?
+2. Why does it exist?
+3. How do I install/start it?
+
+The first screen (before scrolling) must contain the title, summary,
+and either install command or quickstart. Everything else comes after.
 
 ### 6. Size and structure
 
-Keep README scannable. Past ~150 lines: add Table of Contents. Past ~300
-lines: split deep content to `/docs/` or `references/`. Use `<details>`
-only for secondary, bulky content — never for install, first example, or
-requirements.
+Keep the README scannable. If it grows past ~150 lines, add a Table of
+Contents; past ~300 lines, split deep content out to `/docs/` or
+`references/`. Use `<details>` only for secondary, bulky content (never
+for install, first example, or requirements).
 
 → See `docs/guidelines/docs/readme-size-and-splitting.md` for thresholds,
 splitting strategies (reference-split, deep-link tables, collapsibles),
-multi-audience handling, anti-patterns.
+multi-audience handling, and anti-patterns.
 
 ### 7. Validate
 
-- [ ] Every command exists in repo (`Taskfile.yml`, `Makefile`, `package.json`, etc.)
-- [ ] Setup steps are reproducible
-- [ ] No invented features or capabilities
+After writing, verify:
+
+- [ ] Every documented command exists in the repo (`Taskfile.yml`, `Makefile`, `package.json scripts`, etc.)
+- [ ] Setup steps are reproducible (no missing prerequisites)
+- [ ] No features or capabilities are invented
 - [ ] First screen answers: what, why, how-to-start
 - [ ] No dead sections (heading with 1-2 trivial sentences)
-- [ ] Deep content in dedicated docs, not crammed in README
-- [ ] Size below "overloaded" threshold, or splitting in place (see size guideline)
-- [ ] ToC present if > 150 lines or > 6 top-level sections
+- [ ] Scope is right — deep content moved to dedicated docs, not crammed in
+- [ ] Size below the "overloaded" threshold, or splitting is in place (see size guideline)
+- [ ] ToC present if README > 150 lines or > 6 top-level sections
+- [ ] Matches existing tonality if repo has established voice
 - [ ] All file paths and references are valid
 
 ## Output format
 
 1. Full README draft
 2. Short note: detected repo type + audience
-3. Uncertainties or assumptions needing confirmation
+3. Any uncertainties or assumptions that need confirmation
 
 ## Gotcha
 
-- Model writes generic boilerplate instead of repo-specific docs
-- Model includes commands/steps that don't exist in the repo
-- Model over-documents, burying the quickstart under walls of text
-- Existing README structure can mislead — don't preserve weak structure blindly
-- Package READMEs need install/usage focus, not internal dev workflow
-- Model forgets to validate commands against `Taskfile.yml` / `Makefile` / `package.json`
+- The model tends to write generic boilerplate instead of repo-specific documentation
+- The model tends to include commands or setup steps that don't actually exist in the repo
+- The model tends to over-document and bury the quickstart under walls of text
+- Existing README structure can be misleading — don't preserve weak structure blindly
+- READMEs for packages consumed by others need install/usage focus, not internal dev workflow
+- The model forgets to validate commands against `Taskfile.yml` / `Makefile` / `package.json scripts`
 
 ## Do NOT
 
-- Do NOT invent features, setup steps, or commands not in the repo
-- Do NOT copy generic templates without adapting to the project
-- Do NOT overload with deep reference material — link to docs
+- Do NOT invent features, setup steps, or commands not found in the repo
+- Do NOT copy generic README templates without adapting to the actual project
+- Do NOT overload with deep reference material — link to docs instead
 - Do NOT write for "everyone" — choose a real audience
 - Do NOT skip repository inspection before writing
-- Do NOT preserve weak structure just because it exists
-- Do NOT add marketing language ("blazing fast", "revolutionary")
+- Do NOT preserve weak structure from an existing README just because it exists
+- Do NOT add marketing language ("blazing fast", "revolutionary", "next-gen")

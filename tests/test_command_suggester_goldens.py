@@ -75,7 +75,7 @@ def test_GT_CS2_multi_match_commit_and_pr(specs, specs_by_name) -> None:
     )
     names = [m.command for m in ranked]
     assert "commit" in names
-    assert "create-pr-description" in names
+    assert "create-pr:description-only" in names
     # As-is option index = len(matches) + 1.
     assert f"> {len(ranked) + 1}. Just run the prompt as-is, no command" in block
 

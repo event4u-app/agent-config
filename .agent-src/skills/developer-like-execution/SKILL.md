@@ -129,10 +129,10 @@ If important information is missing:
 - **Consult memory — invariants and prior decisions.** Via
   [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md), call
   `retrieve(types=["domain-invariants", "architecture-decisions"], keys=<touched paths>, limit=3)`.
-  A matching `domain-invariant` is a hard constraint — violating it =
-  regression, surface the conflict before proceeding. A matching
-  `architecture-decision` explains *why* the current shape exists; plan
-  around it, do not silently overturn it. Cite matching `id`s in the plan.
+  A matching `domain-invariant` is a hard constraint — violating it = regression,
+  surface the conflict to the user before proceeding. A matching
+  `architecture-decision` explains *why* the current shape exists; plan around
+  it, do not silently overturn it. Cite matching `id`s in the plan.
   See [`engineering-memory-data-format`](../../../docs/guidelines/agent-infra/engineering-memory-data-format.md)
   for the schema.
 

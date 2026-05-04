@@ -26,7 +26,10 @@ def load_commands(commands_dir: Path) -> list[CommandSpec]:
     this loader.
     """
     specs: list[CommandSpec] = []
-    for path in sorted(commands_dir.glob("*.md")):
+    for path in sorted(commands_dir.rglob("*.md")):
+        # Skip cluster authoring docs — not commands.
+        if path.name == "AGENTS.md":
+            continue
         text = path.read_text(encoding="utf-8")
         data, _offset = parse_frontmatter(text)
         if data is None:

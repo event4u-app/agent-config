@@ -69,7 +69,7 @@ Override files **must match the original filename** exactly:
 |---|---|
 | `.augment/rules/php-coding.md` | `agents/overrides/rules/php-coding.md` |
 | `.augment/skills/eloquent/SKILL.md` | `agents/overrides/skills/eloquent.md` |
-| `.augment/commands/feature-plan.md` | `agents/overrides/commands/feature-plan.md` |
+| `.augment/commands/feature/plan.md` | `agents/overrides/commands/feature/plan.md` |
 | `../../../docs/guidelines/php/controllers.md` | `agents/overrides/guidelines/php-controllers.md` |
 | `.augment/templates/roadmaps.md` | `agents/overrides/templates/roadmaps.md` |
 

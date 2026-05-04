@@ -39,16 +39,19 @@ Before editing code, read the minimum set that defines its behavior:
 3. **Tests** — if a test file exists, it encodes the contract.
 4. **One layer of related abstractions** — interface, parent class, or trait (one hop, not the full hierarchy).
 5. **Data changes:** the migration that created the column + any seeder/factory that references it.
-6. **Memory layer — prior decisions and invariants.** Via
-   [`memory-access`](../../docs/guidelines/agent-infra/memory-access.md), call
-   `retrieve(types=["architecture-decisions", "domain-invariants"], keys=<touched paths>, limit=3)`.
-   A matching `architecture-decision` explains *why* the current shape
-   exists; a matching `domain-invariant` is a hard constraint you cannot
-   violate. Cite the `id` if a match influences the plan.
 
 Stop expanding once you can explain, in your own words, what the symbol does, who calls
 it, and what breaks if you change its behavior. If you cannot → read more. Never write
 code based on guessed behavior.
+
+### Consult memory before editing
+
+Prior decisions and invariants live in the memory layer. Via
+[`memory-access`](../../docs/guidelines/agent-infra/memory-access.md), call
+`retrieve(types=["architecture-decisions", "domain-invariants"], keys=<touched paths>, limit=3)`.
+A matching `architecture-decision` explains *why* the current shape
+exists; a matching `domain-invariant` is a hard constraint you cannot
+violate. Cite the `id` if a match influences the plan.
 
 ## Verify with real tools
 

@@ -83,7 +83,7 @@ def added_command_files(baseline: str) -> list[Path]:
               file=sys.stderr)
         sys.exit(3)
     files = [Path(p) for p in result.stdout.splitlines()
-             if p.endswith(".md") and p != ""]
+             if p.endswith(".md") and p != "" and Path(p).name != "AGENTS.md"]
     # Also include untracked (newly added, uncommitted) files.
     try:
         wt = subprocess.run(
@@ -97,7 +97,7 @@ def added_command_files(baseline: str) -> list[Path]:
             if status.strip() not in ("A", "??", "AM"):
                 continue
             path = line[3:].strip().split(" -> ")[-1]
-            if path.endswith(".md"):
+            if path.endswith(".md") and Path(path).name != "AGENTS.md":
                 p = Path(path)
                 if p not in files:
                     files.append(p)
@@ -107,7 +107,8 @@ def added_command_files(baseline: str) -> list[Path]:
 
 
 def all_command_files() -> list[Path]:
-    return sorted((ROOT / COMMANDS_DIR).glob("*.md"))
+    return sorted(p for p in (ROOT / COMMANDS_DIR).rglob("*.md")
+                  if p.name != "AGENTS.md")
 
 
 def parse_frontmatter(path: Path) -> dict[str, str]:

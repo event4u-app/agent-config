@@ -1,1 +1,1 @@
-../../../.agent-src/commands/council-design.md
+../../../.agent-src/commands/council/design.md

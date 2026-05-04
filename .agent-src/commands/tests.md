@@ -18,8 +18,8 @@ commands with a single entry point + sub-command dispatch.
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/tests create` | `tests-create.md` | Write meaningful tests for the changes in the current branch |
-| `/tests execute` | `tests-execute.md` | Run PHP tests inside the Docker container |
+| `/tests create` | `commands/tests/create.md` | Write meaningful tests for the changes in the current branch |
+| `/tests execute` | `commands/tests/execute.md` | Run PHP tests inside the Docker container |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -34,11 +34,6 @@ Sub-command names match the locked contract in
 
    > 1. create — author tests for current-branch changes
    > 2. execute — run the test suite in Docker
-
-## Migration
-
-The 2 standalone `/tests-*` commands continue to work for one release
-cycle as deprecation shims. New invocations should use `/tests <sub>`.
 
 ## Rules
 

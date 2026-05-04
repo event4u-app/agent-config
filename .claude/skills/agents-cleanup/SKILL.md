@@ -1,1 +1,1 @@
-../../../.agent-src/commands/agents-cleanup.md
+../../../.agent-src/commands/agents/cleanup.md

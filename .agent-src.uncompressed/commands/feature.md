@@ -18,11 +18,11 @@ commands with a single entry point + sub-command dispatch.
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/feature explore` | `feature-explore.md` | Brainstorm an idea before committing to a plan |
-| `/feature plan` | `feature-plan.md` | Interactively plan a feature, produce a structured plan doc |
-| `/feature refactor` | `feature-refactor.md` | Refine and update an existing feature plan |
-| `/feature roadmap` | `feature-roadmap.md` | Generate implementation roadmap(s) from a plan |
-| `/feature dev` | `feature-dev.md` | Full 7-phase feature development workflow (heavyweight) |
+| `/feature explore` | `commands/feature/explore.md` | Brainstorm an idea before committing to a plan |
+| `/feature plan` | `commands/feature/plan.md` | Interactively plan a feature, produce a structured plan doc |
+| `/feature refactor` | `commands/feature/refactor.md` | Refine and update an existing feature plan |
+| `/feature roadmap` | `commands/feature/roadmap.md` | Generate implementation roadmap(s) from a plan |
+| `/feature dev` | `commands/feature/dev.md` | Full 7-phase feature development workflow (heavyweight) |
 
 ## Workflow ordering
 
@@ -33,7 +33,7 @@ implementation). Use `refactor` whenever an existing plan needs an update.
 
 1. Parse the user's argument: `/feature <sub-command> [args]`.
 2. Look up the sub-command in the table above.
-3. Load the body of the corresponding `commands/feature-<sub>.md` file and
+3. Load the body of the corresponding `commands/feature/<sub>.md` file and
    follow its `## Instructions` (or `## Steps`) section verbatim.
 4. If the sub-command is unknown or missing, print the menu and ask:
 
@@ -42,12 +42,6 @@ implementation). Use `refactor` whenever an existing plan needs an update.
    > 3. refactor — update an existing feature plan
    > 4. roadmap — generate roadmap(s) from a plan
    > 5. dev — run the full 7-phase development workflow
-
-## Migration
-
-The 5 standalone `/feature-*` commands continue to work for one release
-cycle as deprecation shims. They emit a notice and route to the same
-content. New invocations should use `/feature <sub>`.
 
 ## Rules
 

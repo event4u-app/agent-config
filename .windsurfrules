@@ -267,11 +267,10 @@ Default-off; opt-in via `.agent-settings.yml`. Zero overhead when disabled.
 
 The schema, CLI, and storage layer are owned by
 [`scripts/telemetry/`](../../../scripts/telemetry/) and the
-`./agent-config telemetry:record` / `telemetry:status` commands shipped
-in Phase 1+2 of the
-[`road-to-artifact-engagement-telemetry`](../../../agents/roadmaps/road-to-artifact-engagement-telemetry.md)
-roadmap. This rule says **when** to call the CLI, not how the file is
-structured.
+`./agent-config telemetry:record` / `telemetry:status` commands. The
+recording contract lives in
+[`docs/contracts/artifact-engagement-flow.md`](../../docs/contracts/artifact-engagement-flow.md).
+This rule says **when** to call the CLI, not how the file is structured.
 
 ## Activation gate — read settings ONCE per task, then cache
 
@@ -322,7 +321,6 @@ catalog live in
 
 ## See also
 
-- [`road-to-artifact-engagement-telemetry`](../../../agents/roadmaps/road-to-artifact-engagement-telemetry.md) — phase contract
 - [`docs/contracts/artifact-engagement-flow.md`](../../docs/contracts/artifact-engagement-flow.md) — recording contract details
 - [`/implement-ticket`](../commands/implement-ticket.md) and [`/work`](../commands/work.md) — boundary points where this rule fires
 - [`scripts/telemetry/`](../../../scripts/telemetry/) — engine source
@@ -1115,8 +1113,10 @@ path.
 The deterministic engine lives in `scripts/command_suggester/`. The
 locked eligibility table lives in
 [`agents/contexts/command-suggestion-eligibility.md`](../../agents/contexts/command-suggestion-eligibility.md).
-The full design lives in
-[`road-to-context-aware-command-suggestion`](../../agents/roadmaps/road-to-context-aware-command-suggestion.md).
+The scoring contract and hardening list live in
+[`docs/contracts/adr-command-suggestion.md`](../../docs/contracts/adr-command-suggestion.md)
+and
+[`docs/contracts/command-suggestion-flow.md`](../../docs/contracts/command-suggestion-flow.md).
 
 ## Iron Law — never auto-execute
 
@@ -1190,13 +1190,15 @@ The exact rendered options block, the `Recommendation:` rules, the
 
 # Commit Conventions
 
-All commit messages and squash/merge titles follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
+All commit messages and squash/merge titles must follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
 ## Format
 
 - With scope: `<type>(<scope>): <description>`
-- Without scope: `<type>: <description>`
-- Always English. Imperative mood. Max 72 chars first line.
+- Without scope: `<type>: <description>` (omit parentheses when no scope)
+- **Always English** — regardless of user's language.
+- **Imperative mood** ("add feature", not "added feature").
+- **First line max 72 characters.**
 
 ## Types
 
@@ -1204,24 +1206,24 @@ All commit messages and squash/merge titles follow [Conventional Commits](https:
 |---|---|
 | `feat` | New user-facing functionality |
 | `fix` | Bug fix |
-| `refactor` | Structure change, no behavior change |
+| `refactor` | Code/structure change, no behavior change |
 | `docs` | Documentation only |
 | `test` | Tests only |
-| `chore` | Maintenance, deps, cleanup |
-| `ci` | CI/CD, workflows |
-| `style` | Formatting only |
+| `chore` | Maintenance (deps, configs, tooling, cleanup) |
+| `ci` | CI/CD and workflow changes |
+| `style` | Code style (formatting, no logic change) |
 | `perf` | Performance improvement |
-| `build` | Build tooling, packaging |
+| `build` | Build tooling / packaging changes |
 
 ## Scope
 
-- Jira ticket ID when branch has one: `DEV-1234`
-- Otherwise short area name: `api`, `auth`, `skills`
-- Optional — only add when it improves clarity.
+- Use the **Jira ticket ID** as scope when the branch contains one (e.g. `DEV-1234`).
+- Otherwise use a short module or area name (e.g. `api`, `auth`, `skills`).
+- Scope is optional — only add when it improves clarity.
 
 ## Breaking changes
 
-Mark with `!` or `BREAKING CHANGE:` footer:
+Mark explicitly with `!` after type/scope or `BREAKING CHANGE:` in footer:
 
 ```
 feat(api)!: rename invoice status values
@@ -1230,7 +1232,8 @@ refactor(auth)!: remove legacy session flow
 
 ## Commit splitting
 
-Mixed concerns → split into multiple commits. Don't hide unrelated changes in one.
+If a change mixes unrelated concerns, split into multiple commits.
+Do NOT hide bug fixes, CI work, docs, and refactors in one commit.
 
 ## Examples
 
@@ -1244,7 +1247,7 @@ ci(lint): add skill-lint workflow
 docs(roadmap): add phase 3 implementation plan
 ```
 
-→ Type selection rules, anti-patterns, decision checklist: `docs/guidelines/php/git.md`
+→ Full type selection rules and anti-patterns: see guideline `docs/guidelines/php/git.md`.
 
 ---
 
@@ -1543,11 +1546,11 @@ docker compose exec -T <php-service> vendor/bin/phpunit
 
 ## Build / Task Runner
 
-Before using raw `docker compose exec`, check if the consumer project
-ships a `Makefile` — it often wraps common ops (`make console`,
-`make test`, `make phpstan`). Read the Makefile first. If the project
-uses another task runner, inspect its config before falling back to
-raw `docker compose exec`.
+Before using raw `docker compose exec` commands, check if the consumer
+project ships a `Makefile` for common targets (e.g. `make console`,
+`make test`, `make phpstan`). Read the Makefile first to discover
+available shortcuts. If the project uses a different task runner,
+inspect its config file before defaulting to raw `docker compose exec`.
 
 Frontend commands (npm, webpack) run on the host or in the node container.
 
@@ -2149,34 +2152,38 @@ See also: `scope-control` · `downstream-changes` · `think-before-action` · `p
 
 # Missing Tool Handling
 
-When a CLI tool is needed and **not installed** (`command not found`,
-`which X` empty), **STOP and ask** before working around it or installing it.
+When a CLI tool is needed to solve the task cleanly and is **not installed**
+(`command not found`, `which X` empty, missing from `$PATH`), **STOP and ask**
+before working around it or installing it.
 
 ## The rule
 
-- **Never install silently.** Installing changes the user's system —
-  requires explicit permission (`scope-control`).
+- **Never install silently.** Installing is an action that changes the user's
+  system — it requires explicit permission (see `scope-control`).
 - **Never silently work around** a missing tool with a brittle substitute
-  (awk for YAML, `grep` for JSON, string splicing) when a proper tool is
-  the standard answer. The workaround hides the dependency.
-- **Ask with numbered options** (`user-interaction`). State the tool, why
-  it fits, the install command, and the workaround cost.
+  (awk-regex for YAML, `grep` for JSON, string splicing) when a proper tool
+  is the standard answer for the job. The workaround hides the real
+  dependency and makes the decision invisible to the user.
+- **Ask with numbered options** (see `user-interaction`). State which tool,
+  why it's the best fit, the install command, and the workaround cost.
 
 ## When it applies
 
-- Shell returns `command not found` for a tool the task genuinely needs
-  (yq, jq, rtk, gh, docker, mkcert, terraform, …).
-- A skill or spike needs the idiomatic tool but it's absent locally.
-- You're about to substitute a verbose script for a single tool call
+- Any shell command fails with `command not found` for a tool the task
+  genuinely needs (yq, jq, rtk, gh, docker, mkcert, terraform, …).
+- A skill or spike requires a tool that is the idiomatic answer but is
+  absent locally.
+- You are about to substitute a verbose script for a single tool invocation
   because the tool isn't there.
 
 ## When it does NOT apply
 
-- Nice-to-have — clean substitute already present (e.g. `jq` available →
-  no `yq` needed just for JSON).
-- Tool is forbidden by project policy (check `scope-control` and
-  tool-allowlists first).
-- Missing library dependency → use `composer`, `npm`, `pip` per package
+- The tool is a nice-to-have and a clean substitute already exists in the
+  repo (e.g. `jq` present → no need for `yq` just for JSON).
+- The tool is explicitly forbidden by project policy (check
+  `scope-control` and tool-allowlists first).
+- The missing artefact is a library dependency — those go through
+  `composer require`, `npm install`, `pip install` per the package-manager
   rules, still with explicit permission.
 
 ## How to ask
@@ -2192,14 +2199,16 @@ When a CLI tool is needed and **not installed** (`command not found`,
 > 4. Skip this path — I propose a different approach
 ```
 
-After the user picks: if **install**, wait for confirmation or run the
-documented command only if explicitly authorised this turn. If
-**workaround**, record the decision in the artefact (comment or ADR).
+After the user picks: if **install**, wait for confirmation that it is
+done (or run the documented install command only if the user explicitly
+authorises it in this turn). If **workaround**, record the decision in
+the artefact (comment or ADR) so the cost is visible.
 
 ## Capture the learning
 
-If the same tool keeps missing across tasks, flag it in the project's
-setup docs or `.agent-settings.yml` prerequisites.
+If the same tool keeps coming up as missing across multiple tasks, flag
+it in the project's setup docs or `.agent-settings.yml` prerequisites.
+Don't make every session re-discover the gap.
 
 See also: `scope-control` · `ask-when-uncertain` · `user-interaction` ·
 `tool-safety`.
@@ -2347,6 +2356,75 @@ In doubt → ask. This rule narrows asking, never widens silence.
 - [`commit-policy`](commit-policy.md) · [`scope-control`](scope-control.md) · [`non-destructive-by-default`](non-destructive-by-default.md) — Iron Laws this rule defends.
 - [`user-interaction`](user-interaction.md) — numbered-options shape; this rule decides whether to send.
 - [`direct-answers`](direct-answers.md) — brevity, no flattery.
+
+---
+
+# No Roadmap References from Stable Artifacts
+
+Roadmaps in `agents/roadmaps/` are **transient** — archived, skipped,
+or deleted as work completes. Stable artifacts (rules, skills,
+commands, contexts, guidelines, AGENTS.md, README) outlive them. A
+stable artifact citing a specific roadmap file becomes a broken
+reference the moment that roadmap is deleted.
+
+## The Iron Law
+
+```
+NEVER LINK TO A SPECIFIC FILE IN agents/roadmaps/ FROM A STABLE ARTIFACT.
+PROMOTE DURABLE CONCLUSIONS TO agents/contexts/ AND CITE THAT INSTEAD.
+```
+
+Stable artifact = anything that is **not** a roadmap, council
+session, chat-history archive, commit message, or PR description.
+
+## Forbidden patterns
+
+These paths must not appear inside a stable artifact:
+
+- `agents/roadmaps/<file>.md`, `agents/roadmaps/archive/<file>.md`,
+  `agents/roadmaps/skipped/<file>.md`
+
+Stable artifact = any file under `.agent-src.uncompressed/{rules,
+skills,commands,contexts,templates,personas}/`, `agents/contexts/`,
+`docs/guidelines/`, `docs/contracts/`, `docs/architecture.md`,
+`docs/customization.md`, `docs/getting-started.md`, `docs/catalog.md`,
+`AGENTS.md`, `README.md`, `copilot-instructions.md`.
+
+CI enforcement: `scripts/check_no_roadmap_refs.py` (companion linter
+— fails the build on any new violation).
+
+## Allowed patterns
+
+- `agents/roadmaps/` and its subdirectories as directory mentions
+  (talking about the layer, not a specific file)
+- Roadmap → roadmap references (siblings within the transient layer)
+- Council sessions, `.agent-chat-history`, commit messages, PR
+  descriptions — transient by construction, not part of the package
+  surface
+
+## What to do instead
+
+When a stable artifact needs to cite a roadmap finding:
+
+1. Identify the durable conclusion — decision, contract, lesson,
+   mechanic.
+2. Promote it to a context file under `agents/contexts/` (ADR,
+   mechanics doc, locked decision). The roadmap can then point at
+   the context, not the other way around.
+3. Reference the context from the stable artifact.
+
+Failure mode: *"I'll just link to the roadmap, it's evidence."* The
+roadmap gets archived, then deleted, then the link rots. **Promote
+first, link second.**
+
+## See also
+
+- [`docs-sync`](docs-sync.md) — cross-reference sync after rename / delete
+- [`agent-docs`](agent-docs.md) — roadmap layer conventions
+- [`roadmap-progress-sync`](roadmap-progress-sync.md) — sync dashboard on
+  roadmap touch
+- [`augment-source-of-truth`](augment-source-of-truth.md) — edit
+  `.agent-src.uncompressed/`
 
 ---
 
@@ -2617,46 +2695,81 @@ Default: `getters_setters`. See the `eloquent` skill for the full reference tabl
 
 # Preservation Guard
 
-Transformations (merge, refactor, compress, split) must produce output **at least as strong** as input.
+When transforming any agent artifact (merge, refactor, compress, split, restructure),
+the result must be **at least as strong** as the original.
 
 ## Iron Laws — every passage stays, caveman is fine
 
-Sections marked **Iron Law** (heading matches `# Iron Law`, `# Iron Laws`,
-`# The Iron Law`, any level, numbered like `Iron Law 1`, `Iron Law 2`)
-are **non-negotiable**, strictest preservation:
+Sections marked **Iron Law** (any heading matching `# Iron Law`, `# Iron Laws`,
+`# The Iron Law`, at any heading level, including numbered variants like
+`Iron Law 1`, `Iron Law 2`) are **non-negotiable** and require the strictest
+preservation:
 
-- [ ] **Heading verbatim** — exact text, exact level. Drop heading → law gone, even if code block survives.
-- [ ] **Fenced code blocks byte-for-byte** — the law itself.
-- [ ] **Negation clauses kept** — `NO X`, `NEVER Y`, `NOT Z` stay. Load-bearing exception denials, not filler.
-- [ ] **Every passage stays** — every paragraph, every list item, every fenced code block from source survives in compressed output, in order. One paragraph → one paragraph; one bullet → one bullet. Dropping whole sentences, merging two paragraphs, skipping a list item is forbidden, even if surviving prose still "makes the point".
-- [ ] **No Iron Law downgrades** — `## Iron Law` MUST NOT become `### Iron Law`, `**Iron Law:**`, or inline prose. Heading level is part of prominence.
+- [ ] **Heading preserved verbatim** — exact text and exact heading level. Drop the
+  heading → the law is gone, even if the code block underneath survives.
+- [ ] **Fenced code blocks preserved byte-for-byte** — the law itself.
+- [ ] **Negation clauses preserved** — `NO X`, `NEVER Y`, `NOT Z` stay in. These
+  are the load-bearing exception denials, not filler.
+- [ ] **Every passage stays** — every paragraph, every list item, and every
+  fenced code block from the source survives in the compressed output, in
+  order. One paragraph → one paragraph; one bullet → one bullet. Dropping
+  whole sentences, merging two paragraphs into one, or skipping a list item
+  is forbidden, even if the surviving prose still "makes the point".
+- [ ] **No Iron Law downgrades** — `## Iron Law` MUST NOT become `### Iron Law`,
+  `**Iron Law:**`, or inline prose. Heading level is part of the prominence.
 
-**Caveman style encouraged for Iron Law bodies** — drop articles ("the", "a"), shorten phrasing, primitive grammar, terse cave-speak. Word count not a budget; structural unit count is. Every paragraph, bullet, code block from source present → compress as hard as you want. Forbidden is **deletion**: rationale paragraph stays, canonical-failure example stays, every "NEVER X" bullet stays.
+**Caveman style is encouraged for Iron Law bodies** — drop articles ("the",
+"a"), shorten phrasing, primitive grammar, terse cave-speak. Word count is
+not a budget; the structural unit count is. As long as every paragraph,
+bullet, and code block from the source is present, compress as hard as you
+want. What's forbidden is **deletion**: the rationale paragraph stays, the
+canonical-failure example stays, every "NEVER X" bullet stays.
 
-`scripts/check_compression.py` enforces mechanically — any violation is `error`, not warning.
+`scripts/check_compression.py` enforces these mechanically — any violation is
+an `error`, not a warning.
 
-## Checklist — verify before completing
+## Mandatory preservation checklist
 
-- [ ] **Iron Law sections** preserved per rules above — heading, body, fenced blocks, rationale
-- [ ] Strongest validation step preserved
-- [ ] Strongest example preserved
-- [ ] Strongest anti-pattern / "Do NOT" preserved
-- [ ] Essential decision hints (if/when/unless) preserved
-- [ ] Required sections preserved
-- [ ] Single clear responsibility preserved
-- [ ] Strong language ("MUST"/"NEVER") not weakened
+Before completing any transformation, verify:
 
-## Reject if
+- [ ] **Iron Law sections** preserved per the rules above — heading, body, fenced blocks, rationale
+- [ ] **Strongest validation step** preserved — concrete verify/confirm actions survive
+- [ ] **Strongest example** preserved — the most illustrative code block or scenario stays
+- [ ] **Strongest anti-pattern** preserved — the most important "Do NOT" or failure mode stays
+- [ ] **Essential decision hints** preserved — if/when/unless logic that prevents mistakes
+- [ ] **Required sections** preserved — When to use, Procedure, Output, Gotchas, Do NOT
+- [ ] **Single clear responsibility** preserved — no scope creep from merging unrelated concerns
+- [ ] **Strong language** preserved — "MUST", "NEVER", "Do NOT" not weakened to "should", "avoid"
 
-- Iron Law heading removed or downgraded
-- Paragraph, list item, or fenced code block dropped from Iron Law section
-- Negation clauses or canonical-failure prose stripped from Iron Law
-- Validation, example, or anti-pattern removed without replacement
-- Decision logic weakened
-- Scope broadened by merging unrelated concerns
-- Strong language downgraded
+## Reject criteria
 
-→ Skills: `skill-management`, `skill-reviewer` · Command: `/compress` · Linter: `check_compression_quality()`
+**REJECT** the transformation if it:
+
+- Removes or downgrades an Iron Law heading
+- Drops a paragraph, list item, or fenced code block from an Iron Law section
+- Strips negation clauses or canonical-failure prose from an Iron Law
+- Removes a concrete validation step without equivalent replacement
+- Removes the strongest example without equivalent replacement
+- Removes the strongest anti-pattern without equivalent replacement
+- Weakens routing or decision logic
+- Broadens scope by merging unrelated workflows
+- Weakens strong enforcement language
+
+## Applies to
+
+- Skill merges (combining two skills into one)
+- Skill splits (extracting part of a skill)
+- Refactoring (restructuring without behavior change)
+- Compression (`.agent-src.uncompressed/` → `.agent-src/`)
+- Rule consolidation
+- Guideline restructuring
+
+## References
+
+- Skill: `skill-management` — compression/refactoring modes
+- Skill: `skill-reviewer` — compression safety checks
+- Command: `/compress` — compression quality checklist
+- Linter: `scripts/skill_linter.py` — `check_compression_quality()`
 
 ---
 
@@ -3236,8 +3349,8 @@ STOP writing code. Run the matching analysis skill first:
 | Data flows to logs / API / external | `data-flow-mapper` |
 | Wide refactor of security-sensitive code | `blast-radius-analyzer` |
 
-**Before the analysis, consult memory for prior incidents** on this
-surface. Via [`memory-access`](../../docs/guidelines/agent-infra/memory-access.md):
+**Before running the analysis, consult memory for prior incidents** on
+this surface. Via [`memory-access`](../../docs/guidelines/agent-infra/memory-access.md):
 
 ```python
 from scripts.memory_lookup import retrieve
@@ -3248,14 +3361,14 @@ priors = retrieve(
 )
 ```
 
-A prior security incident on the same path is the cheapest input to a
-threat pass — cite any matching `id` so the required control or
-regression test ships with the fix.
+A prior security incident on the same path is the cheapest possible
+input to a threat pass — cite any matching `id` in the analysis output
+so the required control or regression test ships with the fix.
 
 Capture the analysis output (abuse cases, missing controls, required
-negative tests) — implement against that list, not your first instinct.
-Never silently fall back to editing without the analysis; if blocked,
-ask the user.
+negative tests) — implement against that list, not against your first
+instinct. Never silently fall back to editing without the analysis; if
+it is blocked, ask the user.
 
 ## When NOT to fire
 
@@ -3435,12 +3548,13 @@ When the user types a command (`/create-pr`, `# create-pr`, or pastes a command 
 
 ## Open files are irrelevant for command detection
 
-Editor may report an open file (e.g., "user has `compress.md` open"). **Irrelevant** for commands.
+The editor may report that the user has a file open (e.g., "The user has file `compress.md` open").
+This is **irrelevant** for command detection.
 
-- `/compress` typed → **run** compress command — even if `compress.md` is open in editor.
-- Command content in context + open file → **command invocation takes priority**.
+- If the user types `/compress`, they want to **run** the compress command — even if `compress.md` is open in the editor.
+- If command file content appears in the context alongside an open file, the **command invocation takes priority**.
 - Do NOT confuse "file is open" with "user wants to discuss this file".
-- User's typed message determines intent — not editor state.
+- The user's typed message determines intent — not editor state.
 
 ---
 
@@ -3455,78 +3569,88 @@ Editor may report an open file (e.g., "user has `compress.md` open"). **Irreleva
 - If requirements are unclear, ask a precise clarification question instead of making hidden assumptions
 - Refactors must preserve behavior, validation, examples, and anti-failure guidance unless there is an explicit reason to change them
 - Do NOT modify code you do not fully understand — read it first, trace the flow, then change it
-- Multiple valid frameworks/patterns already in the codebase (Tailwind + Flux, multiple form libs, competing state stores) → do NOT pick one silently, ask. See [`no blind implementation`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation)
+- When multiple valid frameworks/patterns already exist in the codebase (e.g. Tailwind + Flux, multiple form libraries, competing state stores), do NOT pick one silently — ask which to use. See [`no blind implementation`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation)
 
 ## The Developer Workflow
 
-Work like a real developer. Follow this order strictly:
+Work like a real developer — not a text generator. Follow this order strictly:
 
-1. **Understand** — Read task, ticket, acceptance criteria. Unclear? Ask, don't assume.
-2. **Analyze** — Read affected code, trace data flow, compare with requirements.
-3. **Plan** — What to change, what NOT to change, how to verify.
-4. **Implement** — Focused changes. Follow existing patterns. No unrelated rewrites.
-5. **Verify** — Run tests, hit endpoint, check UI. Real execution, not "should work".
+1. **Understand** — Read the task, ticket, acceptance criteria. If unclear: ask, don't assume.
+2. **Analyze** — Read affected code, trace data flow, compare with requirements and existing patterns.
+3. **Plan** — Decide what to change, what NOT to change, and how to verify success.
+4. **Implement** — Make focused changes. Follow existing patterns. No unrelated rewrites.
+5. **Verify** — Run tests, hit the endpoint, check the UI. Real execution, not "should work".
 
-Skipping steps 1-3 = #1 cause of wrong implementations and wasted retries.
+Skipping steps 1-3 is the #1 cause of wrong implementations and wasted retries.
 
-## Consult memory before editing
+## Minimum read set — read before you write
 
-Before writing code for the touched paths, call
-[`memory-access`](../../docs/guidelines/agent-infra/memory-access.md):
+Before editing code, read the minimum set that defines its behavior:
 
-```python
-from scripts.memory_lookup import retrieve
-priors = retrieve(
-    types=["architecture-decisions", "domain-invariants"],
-    keys=<touched paths>,
-    limit=3,
-)
-```
+1. **Symbol under edit** — full method/function body, not just the planned line.
+2. **Direct callers** — one level up (`grep -rn "<symbol>"` + open the matches).
+3. **Tests** — if a test file exists, it encodes the contract.
+4. **One layer of related abstractions** — interface, parent class, or trait (one hop, not the full hierarchy).
+5. **Data changes:** the migration that created the column + any seeder/factory that references it.
 
+Stop expanding once you can explain, in your own words, what the symbol does, who calls
+it, and what breaks if you change its behavior. If you cannot → read more. Never write
+code based on guessed behavior.
+
+### Consult memory before editing
+
+Prior decisions and invariants live in the memory layer. Via
+[`memory-access`](../../docs/guidelines/agent-infra/memory-access.md), call
+`retrieve(types=["architecture-decisions", "domain-invariants"], keys=<touched paths>, limit=3)`.
 A matching `architecture-decision` explains *why* the current shape
 exists; a matching `domain-invariant` is a hard constraint you cannot
-violate. Cite the `id` if a match influences the plan. No match → no
-overhead; proceed.
+violate. Cite the `id` if a match influences the plan.
 
 ## Verify with real tools
 
+Always verify changes with actual execution — not by reading code and assuming it works.
+
 | What changed | How to verify |
 |---|---|
-| **Backend/API** | `curl`, Postman (or Postman MCP), test endpoint |
-| **Frontend/UI** | Playwright MCP or browser — rendered state, interactions |
-| **Logic/flow** | Xdebug (or Xdebug MCP) — trace execution, inspect variables |
-| **CLI/Jobs** | Run command, check side effects, exit code |
-| **Database** | Query result, check migrations |
+| **Backend/API** | `curl`, Postman (or Postman MCP if available), test endpoint |
+| **Frontend/UI** | Playwright MCP or browser — check rendered state, interactions |
+| **Logic/flow** | Xdebug (or Xdebug MCP if available) — trace execution, inspect variables |
+| **CLI/Jobs** | Run the command, check side effects, verify exit code |
+| **Database** | Query the result, check migrations ran correctly |
 
-If debugging/testing tool available as MCP server — prefer it.
+If a debugging/testing tool is available as MCP server — prefer it over manual alternatives.
 
-If verification not possible: state what is missing and how change should be tested.
+If verification is not possible (no endpoint, no UI, no test): explicitly state what is missing
+and explain how the change should be tested.
 
 ## Reduce output — targeted tools over full dumps
 
 Never load full datasets into context. Extract what you need:
 
-- `jq` for JSON: `curl -s /api/users | jq '.[0] | {id, email}'`
-- `rg` / `grep` for text — specific patterns, not full files
-- `head`, `tail`, `cut`, `sort`, `uniq` to narrow results
-- `--filter`, `--json`, `--format` flags on CLI tools
-- Logs: filter by request ID, timestamp, error type — not full files
+- `jq` for JSON: `curl -s /api/users | jq '.[0] | {id, email}'` — not the full response
+- `rg` / `grep` for text: search specific patterns, not full files
+- `head`, `tail`, `cut`, `sort`, `uniq` for narrowing results
+- `--filter`, `--json`, `--format` flags on CLI tools — use them
+- Laravel: `route:list --json | jq` over raw `route:list` dump
+- Logs: filter by request ID, timestamp, or error type — not full log files
 
 ## No blind retries
 
-- Fail? **Read the error**, analyze cause, then fix
-- Do NOT retry same approach hoping for different result
-- Do NOT loop trial-and-error when one inspection reveals the cause
-- Max 2 retries same approach — then stop and rethink
+- If something fails: **read the error**, analyze the cause, then fix it
+- Do NOT retry the same approach hoping for a different result
+- Do NOT loop through trial-and-error when one targeted inspection would reveal the cause
+- Max 2 retries for the same approach — then stop and rethink
 
 ## Open files are context, not intent
 
-The editor may report an open file. This is **background context only** — NOT the user's intent.
+The editor may report that the user has a file open. This is **background context only** —
+it does NOT mean the user's message is about that file.
 
-- **User's message determines intent** — not which file is open.
-- User has `README.md` open + types `/compress` → intent is compress, not README.
-- User has `UserController.php` open + asks "how do tests work?" → intent is testing, not the controller.
-- Only treat open file as relevant when the user explicitly references it ("fix this file", "what does this do?").
+- **The user's message determines intent** — not which file is open.
+- A user can have `README.md` open and type `/compress` — the intent is to compress, not to discuss the README.
+- A user can have `UserController.php` open and ask "how do tests work?" — the intent is testing, not the controller.
+- Only treat the open file as relevant when the user's message explicitly references it
+  (e.g., "fix this file", "what does this do?", "update the open file").
 
 If analysis is skipped → results are unreliable.
 
@@ -3629,34 +3753,37 @@ When `personal.minimal_output: true`:
 
 # Tool Safety
 
+## Core principle
+
 Tools are permissions, not abilities. Every tool access must be declared and reviewable.
 
 ## Constraints
 
-- **Deny by default** — no access unless in `allowed_tools`
-- **Allowlist only** — names must match tool registry
-- **Read-first** — write requires explicit approval
-- **No hidden credentials** — no API keys in skill files
-- **No arbitrary execution** — adapters have fixed interfaces
-- **Audit trail** — tool usage must be observable
+- **Deny by default** — no tool access unless explicitly listed in `allowed_tools`
+- **Allowlist only** — tool names must match the tool registry
+- **Read-first** — prefer read-only actions; write requires explicit approval
+- **No hidden credentials** — tools must not embed API keys or tokens in skill files
+- **No arbitrary execution** — tool adapters have fixed interfaces, not free-form calls
+- **Audit trail** — tool usage should be observable and logged
 
 ## When this applies
 
-- Skills declaring `allowed_tools`
-- Skills referencing external APIs (GitHub, Jira)
-- Runtime execution accessing external services
+- Skills that declare `allowed_tools` in their execution block
+- Skills that reference external APIs (GitHub, Jira, etc.)
+- Any runtime execution that accesses external services
 
 ## Escalation
 
-1. Do NOT use unregistered tools
-2. Flag as registry extension suggestion
-3. Tool must be added to registry before use
+If a skill needs a tool that is not in the registry:
+1. Do NOT use the tool
+2. Flag it as a suggestion for registry extension
+3. The tool must be added to the registry before use
 
-## Not covered
+## What this rule does NOT cover
 
-- Internal agent capabilities (not external tools)
-- MCP server configuration (`mcp` skill)
-- Credential management (environment config)
+- Internal agent capabilities (file reading, code analysis) — these are not external tools
+- MCP server configuration — handled by the `mcp` skill
+- Credential management — handled by environment configuration
 
 ---
 

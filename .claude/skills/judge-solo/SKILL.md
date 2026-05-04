@@ -1,1 +1,1 @@
-../../../.agent-src/commands/judge-solo.md
+../../../.agent-src/commands/judge/solo.md

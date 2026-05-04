@@ -67,7 +67,7 @@ Explore → Plan → Refine → Roadmap → Implement
 ### Full workflow (complex features, 7 phases)
 
 Use the full workflow for features that span multiple files, require architecture decisions,
-or have unclear requirements. Trigger with `/feature-dev`.
+or have unclear requirements. Trigger with `/feature:dev`.
 
 ```
 Discovery → Exploration → Questions → Architecture → Implementation → Review → Summary

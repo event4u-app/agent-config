@@ -112,8 +112,8 @@ Required fields (ordered):
    a codebase convention; omit only when verdict is `apply`
 
 If a finding needs runtime confirmation (running a formatter, linter,
-or static analyzer), note it as a follow-up for the implementer — the
-judge does not execute tools.
+or static analyzer to see the actual report), note it as a follow-up
+for the implementer — the judge does not execute tools.
 
 ## Gotcha
 
@@ -140,16 +140,15 @@ judge does not execute tools.
 ## References
 
 - **LLM-as-a-Judge foundations** — Zheng et al., "Judging LLM-as-a-Judge
-  with MT-Bench and Chatbot Arena" (2023),
-  [arxiv.org/abs/2306.05685](https://arxiv.org/abs/2306.05685).
-  Establishes the specialized-judge pattern and failure modes (position
-  bias, self-consistency) this skill defends against.
+  with MT-Bench and Chatbot Arena" (2023), [arxiv.org/abs/2306.05685](https://arxiv.org/abs/2306.05685).
+  Establishes the specialized-judge pattern and its known failure modes
+  (position bias, self-consistency) this skill must defend against.
 - **Code-review rubric** — Google Engineering Practices, "The Standard
   of Code Review" and "What to look for in a code review",
   [google.github.io/eng-practices/review/reviewer](https://google.github.io/eng-practices/review/reviewer/).
   The lenses (design, functionality, complexity, tests, naming, comments,
-  style, consistency) the judge applies — codebase conventions over
-  external style preferences.
+  style, consistency) the judge applies — prioritizing codebase conventions
+  over external style preferences.
 - [`subagent-orchestration`](../subagent-orchestration/SKILL.md) —
   model-pairing rules (`subagents.judge_model` one tier above implementer).
 - Sibling judges: [`judge-bug-hunter`](../judge-bug-hunter/SKILL.md),

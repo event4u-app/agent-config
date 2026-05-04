@@ -91,7 +91,7 @@ reviewer will ask — and that round trip is preventable.
 | **How do I verify it?** | Test plan: commands to run, URLs to hit, expected behavior |
 | **What should I look at first?** | Highlights: "pay attention to X because Y" or "skip Z, it is generated" |
 
-See [`create-pr-description`](../../commands/create-pr-description.md)
+See [`create-pr-description`](../../commands/create-pr/description-only.md)
 for the full structured template, and
 [`conventional-commits-writing`](../conventional-commits-writing/SKILL.md)
 for the title format.
@@ -183,7 +183,7 @@ When handing the review request to the reviewer (PR body, Slack, email):
 * Self-review walkthrough → [`review-changes`](../../commands/review-changes.md)
 * Bringing a stacked branch up to date first →
   [`prepare-for-review`](../../commands/prepare-for-review.md)
-* Writing the PR description → [`create-pr-description`](../../commands/create-pr-description.md)
+* Writing the PR description → [`create-pr-description`](../../commands/create-pr/description-only.md)
 * Actually opening the PR → [`create-pr`](../../commands/create-pr.md)
 * Writing the commits themselves → [`commit`](../../commands/commit.md),
   [`conventional-commits-writing`](../conventional-commits-writing/SKILL.md)

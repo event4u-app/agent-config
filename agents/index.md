@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **329 artefacts** in this package.
+Maintainer-facing index of all **330 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -141,7 +141,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`verify-completion-evidence`](../.agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md) |  | Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs. |
 | skill | [`websocket`](../.agent-src.uncompressed/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (57)
+## Rules (58)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -178,6 +178,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`missing-tool-handling`](../.agent-src.uncompressed/rules/missing-tool-handling.md) | auto | When a CLI tool needed for the task is not installed — ask before working around it; do NOT install silently |
 | rule | [`model-recommendation`](../.agent-src.uncompressed/rules/model-recommendation.md) | auto | Starting a new task, switching task type, or invoking a command — detect task complexity and recommend the optimal model (Opus/Sonnet/GPT) before any work |
 | rule | [`no-cheap-questions`](../.agent-src.uncompressed/rules/no-cheap-questions.md) | always | No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on) |
+| rule | [`no-roadmap-references`](../.agent-src.uncompressed/rules/no-roadmap-references.md) | auto | Adding a link to a specific file in agents/roadmaps/ from any stable artifact (rule, skill, command, context, guideline) — roadmaps are transient; promote durable findings to agents/contexts/ instead |
 | rule | [`non-destructive-by-default`](../.agent-src.uncompressed/rules/non-destructive-by-default.md) | always | Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass |
 | rule | [`onboarding-gate`](../.agent-src.uncompressed/rules/onboarding-gate.md) | auto | First turn of a conversation on a project — check onboarding.onboarded in .agent-settings.yml; when false, prompt the user to run /onboard before executing any other request |
 | rule | [`package-ci-checks`](../.agent-src.uncompressed/rules/package-ci-checks.md) | auto | Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first |
@@ -209,94 +210,94 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 |---|---|---|---|
 | command | [`agent-handoff`](../.agent-src.uncompressed/commands/agent-handoff.md) |  | Generate a context summary for continuing work in a fresh chat. Replaces the session system. |
 | command | [`agent-status`](../.agent-src.uncompressed/commands/agent-status.md) |  | Show current conversation stats — message count, token costs, task progress, next freshness check. |
-| shim | [`agents-audit`](../.agent-src.uncompressed/commands/agents-audit.md) | shim → /agents audit | Audits agents/ and module agents/ directories — finds outdated docs, structural issues, duplicates, orphaned overrides, and creates an improvement roadmap. |
-| shim | [`agents-cleanup`](../.agent-src.uncompressed/commands/agents-cleanup.md) | shim → /agents cleanup | Execute cleanup actions from an agents-audit — move, merge, delete, and update agent docs |
-| shim | [`agents-prepare`](../.agent-src.uncompressed/commands/agents-prepare.md) | shim → /agents prepare | Scaffold the agents/ directory structure with all required subdirectories and .gitkeep files |
+| command | [`agents:audit`](../.agent-src.uncompressed/commands/agents/audit.md) | cluster: agents | Audits agents/ and module agents/ directories — finds outdated docs, structural issues, duplicates, orphaned overrides, and creates an improvement roadmap. |
+| command | [`agents:cleanup`](../.agent-src.uncompressed/commands/agents/cleanup.md) | cluster: agents | Execute cleanup actions from an agents-audit — move, merge, delete, and update agent docs |
+| command | [`agents:prepare`](../.agent-src.uncompressed/commands/agents/prepare.md) | cluster: agents | Scaffold the agents/ directory structure with all required subdirectories and .gitkeep files |
 | command | [`agents`](../.agent-src.uncompressed/commands/agents.md) | cluster: agents | Agents-folder orchestrator — routes to audit, cleanup, prepare |
 | command | [`analyze-reference-repo`](../.agent-src.uncompressed/commands/analyze-reference-repo.md) |  | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`bug-fix`](../.agent-src.uncompressed/commands/bug-fix.md) |  | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
 | command | [`bug-investigate`](../.agent-src.uncompressed/commands/bug-investigate.md) |  | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
-| shim | [`chat-history-checkpoint`](../.agent-src.uncompressed/commands/chat-history-checkpoint.md) | shim → /chat-history checkpoint | Append a phase-boundary entry to .agent-chat-history — CHECKPOINT fallback for platforms without a native hook (Augment IDE, Cursor pre-1.7, Cline non-Mac/Linux). ~1s. |
-| shim | [`chat-history-clear`](../.agent-src.uncompressed/commands/chat-history-clear.md) | shim → /chat-history clear | Manually delete the persistent chat-history log — asks for confirmation, optionally archives to a timestamped backup before wiping |
-| shim | [`chat-history-resume`](../.agent-src.uncompressed/commands/chat-history-resume.md) | shim → /chat-history resume | Load the persistent chat-history log into the current conversation — picks match/returning/foreign flow and supports resume, merge, replace, or continue |
-| shim | [`chat-history-show`](../.agent-src.uncompressed/commands/chat-history-show.md) | shim → /chat-history show | Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries |
+| command | [`chat-history:checkpoint`](../.agent-src.uncompressed/commands/chat-history/checkpoint.md) | cluster: chat-history | Append a phase-boundary entry to .agent-chat-history — CHECKPOINT fallback for platforms without a native hook (Augment IDE, Cursor pre-1.7, Cline non-Mac/Linux). ~1s. |
+| command | [`chat-history:clear`](../.agent-src.uncompressed/commands/chat-history/clear.md) | cluster: chat-history | Manually delete the persistent chat-history log — asks for confirmation, optionally archives to a timestamped backup before wiping |
+| command | [`chat-history:resume`](../.agent-src.uncompressed/commands/chat-history/resume.md) | cluster: chat-history | Load the persistent chat-history log into the current conversation — picks match/returning/foreign flow and supports resume, merge, replace, or continue |
+| command | [`chat-history:show`](../.agent-src.uncompressed/commands/chat-history/show.md) | cluster: chat-history | Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries |
 | command | [`chat-history`](../.agent-src.uncompressed/commands/chat-history.md) | cluster: chat-history | Chat-history orchestrator — routes to show, resume, clear, checkpoint |
 | command | [`check-current-md`](../.agent-src.uncompressed/commands/check-current-md.md) |  | Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes. |
-| shim | [`commit-in-chunks`](../.agent-src.uncompressed/commands/commit-in-chunks.md) | shim → /commit --in-chunks | Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows |
-| command | [`commit`](../.agent-src.uncompressed/commands/commit.md) |  | Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits |
+| command | [`commit:in-chunks`](../.agent-src.uncompressed/commands/commit/in-chunks.md) | cluster: commit | Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows |
+| command | [`commit`](../.agent-src.uncompressed/commands/commit.md) | cluster: commit | Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits |
 | command | [`compress`](../.agent-src.uncompressed/commands/compress.md) |  | Compress .md files from .agent-src.uncompressed/ into caveman format and write to .agent-src/ |
-| shim | [`context-create`](../.agent-src.uncompressed/commands/context-create.md) | shim → /context create | Analyze a codebase area and create a structured context document |
-| shim | [`context-refactor`](../.agent-src.uncompressed/commands/context-refactor.md) | shim → /context refactor | Analyze, update, and extend an existing context document |
+| command | [`context:create`](../.agent-src.uncompressed/commands/context/create.md) | cluster: context | Analyze a codebase area and create a structured context document |
+| command | [`context:refactor`](../.agent-src.uncompressed/commands/context/refactor.md) | cluster: context | Analyze, update, and extend an existing context document |
 | command | [`context`](../.agent-src.uncompressed/commands/context.md) | cluster: context | Context orchestrator — routes to create, refactor |
-| shim | [`copilot-agents-init`](../.agent-src.uncompressed/commands/copilot-agents-init.md) | shim → /copilot-agents init | Create AGENTS.md and .github/copilot-instructions.md from scratch in the consumer project — interactive, auto-detects stack, never leaks other projects' identifiers. |
-| shim | [`copilot-agents-optimize`](../.agent-src.uncompressed/commands/copilot-agents-optimize.md) | shim → /copilot-agents optimize | Analyzes and refactors AGENTS.md and copilot-instructions.md — removes duplications, enforces line budgets, and ensures both files are optimized for their audience. |
+| command | [`copilot-agents:init`](../.agent-src.uncompressed/commands/copilot-agents/init.md) | cluster: copilot-agents | Create AGENTS.md and .github/copilot-instructions.md from scratch in the consumer project — interactive, auto-detects stack, never leaks other projects' identifiers. |
+| command | [`copilot-agents:optimize`](../.agent-src.uncompressed/commands/copilot-agents/optimize.md) | cluster: copilot-agents | Analyzes and refactors AGENTS.md and copilot-instructions.md — removes duplications, enforces line budgets, and ensures both files are optimized for their audience. |
 | command | [`copilot-agents`](../.agent-src.uncompressed/commands/copilot-agents.md) | cluster: copilot-agents | Copilot agents-doc orchestrator — routes to init, optimize |
-| command | [`council-default`](../.agent-src.uncompressed/commands/council-default.md) | cluster: council | Default council lens — neutral framing, redacted context, advisory output only. Run `/council default <input>` for prompt/roadmap/diff/files; the cluster shows a menu when invoked bare. |
-| shim | [`council-design`](../.agent-src.uncompressed/commands/council-design.md) | shim → /council design | Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment. |
-| shim | [`council-optimize`](../.agent-src.uncompressed/commands/council-optimize.md) | shim → /council optimize | Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice. |
-| shim | [`council-pr`](../.agent-src.uncompressed/commands/council-pr.md) | shim → /council pr | Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in. |
+| command | [`council:default`](../.agent-src.uncompressed/commands/council/default.md) | cluster: council | Default council lens — neutral framing, redacted context, advisory output only. Run `/council default <input>` for prompt/roadmap/diff/files; the cluster shows a menu when invoked bare. |
+| command | [`council:design`](../.agent-src.uncompressed/commands/council/design.md) | cluster: council | Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment. |
+| command | [`council:optimize`](../.agent-src.uncompressed/commands/council/optimize.md) | cluster: council | Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice. |
+| command | [`council:pr`](../.agent-src.uncompressed/commands/council/pr.md) | cluster: council | Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in. |
 | command | [`council`](../.agent-src.uncompressed/commands/council.md) | cluster: council | Council orchestrator — routes to default, pr, design, optimize |
-| shim | [`create-pr-description`](../.agent-src.uncompressed/commands/create-pr-description.md) | shim → /create-pr --description-only | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
-| command | [`create-pr`](../.agent-src.uncompressed/commands/create-pr.md) |  | Create a GitHub PR with structured description from Jira ticket and code changes |
-| shim | [`do-and-judge`](../.agent-src.uncompressed/commands/do-and-judge.md) | shim → /judge on-diff | Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user |
-| shim | [`do-in-steps`](../.agent-src.uncompressed/commands/do-in-steps.md) | shim → /judge steps | Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict |
+| command | [`create-pr:description-only`](../.agent-src.uncompressed/commands/create-pr/description-only.md) | cluster: create-pr | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
+| command | [`create-pr`](../.agent-src.uncompressed/commands/create-pr.md) | cluster: create-pr | Create a GitHub PR with structured description from Jira ticket and code changes |
 | command | [`e2e-heal`](../.agent-src.uncompressed/commands/e2e-heal.md) |  | Find, debug, and fix failing Playwright E2E tests |
 | command | [`e2e-plan`](../.agent-src.uncompressed/commands/e2e-plan.md) |  | Explore the application and create a structured E2E test plan in Markdown |
 | command | [`estimate-ticket`](../.agent-src.uncompressed/commands/estimate-ticket.md) |  | Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt |
-| command | [`feature-dev`](../.agent-src.uncompressed/commands/feature-dev.md) |  | Full 7-phase feature development workflow for complex features. |
-| shim | [`feature-explore`](../.agent-src.uncompressed/commands/feature-explore.md) | shim → /feature explore | Brainstorm and explore a feature idea before committing to a full plan |
-| shim | [`feature-plan`](../.agent-src.uncompressed/commands/feature-plan.md) | shim → /feature plan | Interactively plan a feature — research, discuss, and create a structured feature document |
-| shim | [`feature-refactor`](../.agent-src.uncompressed/commands/feature-refactor.md) | shim → /feature refactor | Refine and update an existing feature plan through interactive discussion |
-| shim | [`feature-roadmap`](../.agent-src.uncompressed/commands/feature-roadmap.md) | shim → /feature roadmap | Generate implementation roadmap(s) from a feature plan and link them |
+| command | [`feature:dev`](../.agent-src.uncompressed/commands/feature/dev.md) | cluster: feature | Full 7-phase feature development workflow for complex features. |
+| command | [`feature:explore`](../.agent-src.uncompressed/commands/feature/explore.md) | cluster: feature | Brainstorm and explore a feature idea before committing to a full plan |
+| command | [`feature:plan`](../.agent-src.uncompressed/commands/feature/plan.md) | cluster: feature | Interactively plan a feature — research, discuss, and create a structured feature document |
+| command | [`feature:refactor`](../.agent-src.uncompressed/commands/feature/refactor.md) | cluster: feature | Refine and update an existing feature plan through interactive discussion |
+| command | [`feature:roadmap`](../.agent-src.uncompressed/commands/feature/roadmap.md) | cluster: feature | Generate implementation roadmap(s) from a feature plan and link them |
 | command | [`feature`](../.agent-src.uncompressed/commands/feature.md) | cluster: feature | Feature orchestrator — routes to explore, plan, refactor, roadmap, dev |
-| shim | [`fix-ci`](../.agent-src.uncompressed/commands/fix-ci.md) | shim → /fix ci | Fetch CI errors from GitHub Actions and fix them |
-| shim | [`fix-portability`](../.agent-src.uncompressed/commands/fix-portability.md) | shim → /fix portability | Find and fix project-specific references in shared .augment/ package files |
-| shim | [`fix-pr-bot-comments`](../.agent-src.uncompressed/commands/fix-pr-bot-comments.md) | shim → /fix pr-bots | Fix and reply to bot review comments (Copilot, Augment, Greptile, etc.) on a GitHub PR |
-| shim | [`fix-pr-comments`](../.agent-src.uncompressed/commands/fix-pr-comments.md) | shim → /fix pr | Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR |
-| shim | [`fix-pr-developer-comments`](../.agent-src.uncompressed/commands/fix-pr-developer-comments.md) | shim → /fix pr-developers | Fix and reply to human reviewer comments on a GitHub PR |
-| shim | [`fix-references`](../.agent-src.uncompressed/commands/fix-references.md) | shim → /fix refs | Find and fix broken cross-references in .augment/ and agents/ files |
-| shim | [`fix-seeder`](../.agent-src.uncompressed/commands/fix-seeder.md) | shim → /fix seeder | Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them |
+| command | [`fix:ci`](../.agent-src.uncompressed/commands/fix/ci.md) | cluster: fix | Fetch CI errors from GitHub Actions and fix them |
+| command | [`fix:portability`](../.agent-src.uncompressed/commands/fix/portability.md) | cluster: fix | Find and fix project-specific references in shared .augment/ package files |
+| command | [`fix:pr-bots`](../.agent-src.uncompressed/commands/fix/pr-bots.md) | cluster: fix | Fix and reply to bot review comments (Copilot, Augment, Greptile, etc.) on a GitHub PR |
+| command | [`fix:pr-developers`](../.agent-src.uncompressed/commands/fix/pr-developers.md) | cluster: fix | Fix and reply to human reviewer comments on a GitHub PR |
+| command | [`fix:pr`](../.agent-src.uncompressed/commands/fix/pr.md) | cluster: fix | Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR |
+| command | [`fix:refs`](../.agent-src.uncompressed/commands/fix/refs.md) | cluster: fix | Find and fix broken cross-references in .augment/ and agents/ files |
+| command | [`fix:seeder`](../.agent-src.uncompressed/commands/fix/seeder.md) | cluster: fix | Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them |
 | command | [`fix`](../.agent-src.uncompressed/commands/fix.md) | cluster: fix | Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, pr-bot-comments, pr-developer-comments |
 | command | [`implement-ticket`](../.agent-src.uncompressed/commands/implement-ticket.md) |  | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git. |
 | command | [`jira-ticket`](../.agent-src.uncompressed/commands/jira-ticket.md) |  | Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug |
-| shim | [`judge-solo`](../.agent-src.uncompressed/commands/judge-solo.md) | shim → /judge solo | Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only |
+| command | [`judge:on-diff`](../.agent-src.uncompressed/commands/judge/on-diff.md) | cluster: judge | Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user |
+| command | [`judge:solo`](../.agent-src.uncompressed/commands/judge/solo.md) | cluster: judge | Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only |
+| command | [`judge:steps`](../.agent-src.uncompressed/commands/judge/steps.md) | cluster: judge | Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict |
 | command | [`judge`](../.agent-src.uncompressed/commands/judge.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff |
-| shim | [`memory-add`](../.agent-src.uncompressed/commands/memory-add.md) | shim → /memory add | Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules) |
-| shim | [`memory-full`](../.agent-src.uncompressed/commands/memory-full.md) | shim → /memory load | Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered |
-| shim | [`memory-promote`](../.agent-src.uncompressed/commands/memory-promote.md) | shim → /memory promote | Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate. |
+| command | [`memory:add`](../.agent-src.uncompressed/commands/memory/add.md) | cluster: memory | Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules) |
+| command | [`memory:load`](../.agent-src.uncompressed/commands/memory/load.md) | cluster: memory | Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered |
+| command | [`memory:promote`](../.agent-src.uncompressed/commands/memory/promote.md) | cluster: memory | Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate. |
+| command | [`memory:propose`](../.agent-src.uncompressed/commands/memory/propose.md) | cluster: memory | Append a provisional memory signal to the intake stream — the universal fallback for any producer (human or agent) to record a finding without committing to a curated entry. |
 | command | [`memory`](../.agent-src.uncompressed/commands/memory.md) | cluster: memory | Memory orchestrator — routes to add, load, promote, propose |
 | command | [`mode`](../.agent-src.uncompressed/commands/mode.md) |  | Set the active role mode — prints the contract, lists default skills, and refuses work outside the contract (see role-contracts) |
-| shim | [`module-create`](../.agent-src.uncompressed/commands/module-create.md) | shim → /module create | Create a new module from .module-template with interactive setup |
-| shim | [`module-explore`](../.agent-src.uncompressed/commands/module-explore.md) | shim → /module explore | Explore a module — load its structure, docs, and context into the current conversation |
+| command | [`module:create`](../.agent-src.uncompressed/commands/module/create.md) | cluster: module | Create a new module from .module-template with interactive setup |
+| command | [`module:explore`](../.agent-src.uncompressed/commands/module/explore.md) | cluster: module | Explore a module — load its structure, docs, and context into the current conversation |
 | command | [`module`](../.agent-src.uncompressed/commands/module.md) | cluster: module | Module orchestrator — routes to create, explore |
 | command | [`onboard`](../.agent-src.uncompressed/commands/onboard.md) |  | First-run setup for a developer on this project — captures name, IDE, bot-icon preference, rtk, cost_profile, and learning opt-out, then sets onboarding.onboarded=true |
-| shim | [`optimize-agents`](../.agent-src.uncompressed/commands/optimize-agents.md) | shim → /optimize agents | Audits agent infrastructure — measures token overhead, checks rule triggers, verifies AGENTS.md. Suggest only, never auto-apply. |
-| shim | [`optimize-augmentignore`](../.agent-src.uncompressed/commands/optimize-augmentignore.md) | shim → /optimize augmentignore | Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules. |
-| shim | [`optimize-rtk-filters`](../.agent-src.uncompressed/commands/optimize-rtk-filters.md) | shim → /optimize rtk | Create or optimize project-local rtk filters based on the actual toolchain |
-| shim | [`optimize-skills`](../.agent-src.uncompressed/commands/optimize-skills.md) | shim → /optimize skills | Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply. |
+| command | [`optimize:agents`](../.agent-src.uncompressed/commands/optimize/agents.md) | cluster: optimize | Audits agent infrastructure — measures token overhead, checks rule triggers, verifies AGENTS.md. Suggest only, never auto-apply. |
+| command | [`optimize:augmentignore`](../.agent-src.uncompressed/commands/optimize/augmentignore.md) | cluster: optimize | Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules. |
+| command | [`optimize:rtk`](../.agent-src.uncompressed/commands/optimize/rtk.md) | cluster: optimize | Create or optimize project-local rtk filters based on the actual toolchain |
+| command | [`optimize:skills`](../.agent-src.uncompressed/commands/optimize/skills.md) | cluster: optimize | Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply. |
 | command | [`optimize`](../.agent-src.uncompressed/commands/optimize.md) | cluster: optimize | Optimize orchestrator — routes to skills, agents, augmentignore, rtk-filters |
-| shim | [`override-create`](../.agent-src.uncompressed/commands/override-create.md) | shim → /override create | Creates a project-level override for a shared skill, rule, or command. |
-| shim | [`override-manage`](../.agent-src.uncompressed/commands/override-manage.md) | shim → /override manage | Reviews, updates, and refactors existing project-level overrides. |
+| command | [`override:create`](../.agent-src.uncompressed/commands/override/create.md) | cluster: override | Creates a project-level override for a shared skill, rule, or command. |
+| command | [`override:manage`](../.agent-src.uncompressed/commands/override/manage.md) | cluster: override | Reviews, updates, and refactors existing project-level overrides. |
 | command | [`override`](../.agent-src.uncompressed/commands/override.md) | cluster: override | Override orchestrator — routes to create, manage |
 | command | [`package-reset`](../.agent-src.uncompressed/commands/package-reset.md) |  | /package-reset |
 | command | [`package-test`](../.agent-src.uncompressed/commands/package-test.md) |  | /package-test |
 | command | [`prepare-for-review`](../.agent-src.uncompressed/commands/prepare-for-review.md) |  | Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date |
 | command | [`project-analyze`](../.agent-src.uncompressed/commands/project-analyze.md) |  | Full project analysis — detect stack, inventory modules, audit docs, create missing contexts |
 | command | [`project-health`](../.agent-src.uncompressed/commands/project-health.md) |  | Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything |
-| shim | [`propose-memory`](../.agent-src.uncompressed/commands/propose-memory.md) | shim → /memory propose | Append a provisional memory signal to the intake stream — the universal fallback for any producer (human or agent) to record a finding without committing to a curated entry. |
 | command | [`quality-fix`](../.agent-src.uncompressed/commands/quality-fix.md) |  | Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files |
 | command | [`refine-ticket`](../.agent-src.uncompressed/commands/refine-ticket.md) |  | Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates validate-feature-fit and threat-modeling, ends with a close-prompt |
 | command | [`review-changes`](../.agent-src.uncompressed/commands/review-changes.md) |  | Self-review local changes before creating a PR — dispatches to four specialized judges (bug, security, tests, quality) and consolidates verdicts |
 | command | [`review-routing`](../.agent-src.uncompressed/commands/review-routing.md) |  | Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml |
-| shim | [`roadmap-create`](../.agent-src.uncompressed/commands/roadmap-create.md) | shim → /roadmap create | Interactively create a new roadmap file in agents/roadmaps/ |
-| shim | [`roadmap-execute`](../.agent-src.uncompressed/commands/roadmap-execute.md) | shim → /roadmap execute | Read and interactively execute a roadmap from agents/roadmaps/ |
+| command | [`roadmap:create`](../.agent-src.uncompressed/commands/roadmap/create.md) | cluster: roadmap | Interactively create a new roadmap file in agents/roadmaps/ |
+| command | [`roadmap:execute`](../.agent-src.uncompressed/commands/roadmap/execute.md) | cluster: roadmap | Read and interactively execute a roadmap from agents/roadmaps/ |
 | command | [`roadmap`](../.agent-src.uncompressed/commands/roadmap.md) | cluster: roadmap | Roadmap orchestrator — routes to create, execute |
 | command | [`rule-compliance-audit`](../.agent-src.uncompressed/commands/rule-compliance-audit.md) |  | Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules |
 | command | [`set-cost-profile`](../.agent-src.uncompressed/commands/set-cost-profile.md) |  | Change the cost_profile in .agent-settings.yml — shows each profile's meaning and applies the selection |
 | command | [`sync-agent-settings`](../.agent-src.uncompressed/commands/sync-agent-settings.md) |  | Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing |
 | command | [`sync-gitignore`](../.agent-src.uncompressed/commands/sync-gitignore.md) |  | Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing |
-| shim | [`tests-create`](../.agent-src.uncompressed/commands/tests-create.md) | shim → /tests create | Write meaningful tests for the changes in the current branch |
-| shim | [`tests-execute`](../.agent-src.uncompressed/commands/tests-execute.md) | shim → /tests execute | Run PHP tests inside the Docker container |
+| command | [`tests:create`](../.agent-src.uncompressed/commands/tests/create.md) | cluster: tests | Write meaningful tests for the changes in the current branch |
+| command | [`tests:execute`](../.agent-src.uncompressed/commands/tests/execute.md) | cluster: tests | Run PHP tests inside the Docker container |
 | command | [`tests`](../.agent-src.uncompressed/commands/tests.md) | cluster: tests | Tests orchestrator — routes to create, execute |
 | command | [`threat-model`](../.agent-src.uncompressed/commands/threat-model.md) |  | Run a pre-implementation threat model on a proposed change — enumerates abuse cases, trust boundaries, and authorization gaps before the first line of code is written |
 | command | [`update-form-request-messages`](../.agent-src.uncompressed/commands/update-form-request-messages.md) |  | Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones |

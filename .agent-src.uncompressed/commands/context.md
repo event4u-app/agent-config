@@ -18,8 +18,8 @@ commands with a single entry point + sub-command dispatch.
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/context create` | `context-create.md` | Analyze a codebase area and create a structured context document |
-| `/context refactor` | `context-refactor.md` | Analyze, update, and extend an existing context document |
+| `/context create` | `commands/context/create.md` | Analyze a codebase area and create a structured context document |
+| `/context refactor` | `commands/context/refactor.md` | Analyze, update, and extend an existing context document |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -34,11 +34,6 @@ Sub-command names match the locked contract in
 
    > 1. create — author a new context document
    > 2. refactor — update an existing context document
-
-## Migration
-
-The 2 standalone `/context-*` commands continue to work for one release
-cycle as deprecation shims. New invocations should use `/context <sub>`.
 
 ## Rules
 

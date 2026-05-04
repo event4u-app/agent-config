@@ -27,12 +27,12 @@ Do NOT use when:
 
 ### 0. Analyze current state
 
-Before changing anything:
+Before changing anything, read and understand:
 
-1. Read `AGENTS.md` — content, line count, what's duplicated vs. unique
-2. Read `.github/copilot-instructions.md` — same analysis
-3. Scan `.augment/` — which skills/rules already cover topics from above
-4. Identify duplication — what exists in both AGENTS.md and `.augment/`?
+1. **Read `AGENTS.md`** — current content, line count, what's duplicated vs. unique.
+2. **Read `.github/copilot-instructions.md`** — same analysis.
+3. **Scan `.augment/`** — which skills, rules, and guidelines already cover topics from the files above.
+4. **Identify duplication** — what content exists in both AGENTS.md and `.augment/`?
 
 Only after this analysis, proceed with optimization.
 

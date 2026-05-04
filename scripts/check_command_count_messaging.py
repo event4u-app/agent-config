@@ -53,7 +53,9 @@ def canonical_counts() -> tuple[int, int, int]:
         print(f"❌  {COMMANDS_DIR.relative_to(ROOT)} not found", file=sys.stderr)
         sys.exit(1)
     total = shims = 0
-    for f in COMMANDS_DIR.glob("*.md"):
+    for f in COMMANDS_DIR.rglob("*.md"):
+        if f.name == "AGENTS.md":
+            continue
         total += 1
         m = FM_RE.match(f.read_text(encoding="utf-8"))
         fm = m.group(1) if m else ""
@@ -82,16 +84,21 @@ def main() -> int:
         # README.md
         (README, r"<strong>(\d+) Commands</strong>", active, "hero row"),
         (README, r"Browse all (\d+) active commands", active, "browse line"),
-        (README, r"\((\d+) files total ", total, "browse meta · total files"),
-        (README, r"— (\d+) are deprecation shims", shims, "browse meta · shims"),
         (README, r"\+ (\d+) native commands\)", active, "tools blurb"),
-        # AGENTS.md (`commands/  (84 files — 69 active + 15 deprecation shims)`)
-        (AGENTS, r"commands/\s+\((\d+) files —", total, "tree · total files"),
-        (AGENTS, r"files — (\d+) active", active, "tree · active"),
-        (AGENTS, r"active \+ (\d+) deprecation shims", shims, "tree · shims"),
         # docs/getting-started.md
         (GETTING_STARTED, r"Browse all (\d+) active commands", active, "browse line"),
     ]
+    # Shim-specific messaging only applies during a deprecation window.
+    # When shims == 0 the clauses are dropped from public docs entirely;
+    # re-add these patterns when a new deprecation cycle starts.
+    if shims > 0:
+        checks.extend([
+            (README, r"\((\d+) files total ", total, "browse meta · total files"),
+            (README, r"— (\d+) are deprecation shims", shims, "browse meta · shims"),
+            (AGENTS, r"commands/\s+\((\d+) files —", total, "tree · total files"),
+            (AGENTS, r"files — (\d+) active", active, "tree · active"),
+            (AGENTS, r"active \+ (\d+) deprecation shims", shims, "tree · shims"),
+        ])
 
     errors: list[str] = []
     for path, pattern, expected, label in checks:

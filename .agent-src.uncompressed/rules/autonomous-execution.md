@@ -118,5 +118,5 @@ For Hard-Floor failure modes see
   Iron-Law-violating asks (applies in `off` and pre-opt-in `auto` too)
 - [`direct-answers`](direct-answers.md) — Iron Laws on brevity and
   no-flattery (this rule extends to no-trivial-questions)
-- [`/commit-in-chunks`](../commands/commit-in-chunks.md) — auto-split and commit without confirmation
+- [`/commit:in-chunks`](../commands/commit/in-chunks.md) — auto-split and commit without confirmation
 - [`/commit`](../commands/commit.md) — split and commit with confirmation

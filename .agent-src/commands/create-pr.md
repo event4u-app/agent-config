@@ -1,5 +1,6 @@
 ---
 name: create-pr
+cluster: create-pr
 skills: [git-workflow]
 description: Create a GitHub PR with structured description from Jira ticket and code changes
 disable-model-invocation: true
@@ -9,11 +10,31 @@ suggestion:
   trigger_context: "branch is ahead of base and not yet on a PR"
 ---
 
-# create-pr
+# /create-pr
 
-Uses `/create-pr-description` to generate the PR content, then creates the PR via GitHub API.
+Top-level entry point for the `/create-pr` family. Bare `/create-pr`
+runs the full create-PR flow described below. The `:description-only`
+sub-command produces a copyable PR description without creating the PR.
 
-## Instructions
+## Sub-commands
+
+| Sub-command | Routes to | Purpose |
+|---|---|---|
+| `/create-pr` (bare) | this file (`## Default flow`) | Full flow — generate description, push, create PR |
+| `/create-pr:description-only` | `commands/create-pr/description-only.md` | Generate the PR description as a copyable markdown block, no PR creation |
+
+## Dispatch
+
+1. Parse the user's argument: `/create-pr[:<sub>] [args]`.
+2. Bare `/create-pr` → run the `## Default flow` below verbatim.
+3. `/create-pr:description-only` → load
+   `commands/create-pr/description-only.md` and follow its
+   `## Instructions` section verbatim.
+4. Unknown sub-command → print the table above and ask which one.
+
+## Default flow
+
+Uses `/create-pr:description-only` to generate the PR content, then creates the PR via GitHub API.
 
 ### 1. Check prerequisites
 
@@ -24,12 +45,12 @@ Uses `/create-pr-description` to generate the PR content, then creates the PR vi
 
 ### 2. Generate PR content
 
-Run `/create-pr-description` to generate the PR title and body.
+Run `/create-pr:description-only` to generate the PR title and body.
 This handles: Jira ticket extraction, diff analysis, commit messages, **PR template filling**.
 
 **CRITICAL**: The PR body MUST use the project's PR template (`.github/pull_request_template.md`).
 Read the template file and fill in its sections. If the template does not exist, use the
-fallback structure defined in `/create-pr-description`. NEVER invent a custom body structure.
+fallback structure defined in `/create-pr:description-only`. NEVER invent a custom body structure.
 
 The user reviews and adjusts the content in that step.
 

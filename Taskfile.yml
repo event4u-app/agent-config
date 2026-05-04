@@ -325,6 +325,10 @@ tasks:
     desc: Validate context-file path tree, basename collisions, and orphans (docs/contracts/context-paths.md)
     cmd: python3 scripts/check_context_paths.py
 
+  check-no-roadmap-refs:
+    desc: Stable artifacts must not cite specific files in agents/roadmaps/ (no-roadmap-references rule)
+    cmd: python3 scripts/check_no_roadmap_refs.py
+
   generate-ownership-matrix:
     desc: Regenerate the file-ownership matrix JSON + MD (docs/contracts/file-ownership-matrix.md)
     cmd: python3 scripts/generate_ownership_matrix.py
@@ -514,6 +518,7 @@ tasks:
       - task: lint-rule-interactions
       - task: lint-load-context
       - task: check-context-paths
+      - task: check-no-roadmap-refs
       - task: check-ownership-matrix
       - task: check-reply-consistency
       - task: check-iron-law-prominence

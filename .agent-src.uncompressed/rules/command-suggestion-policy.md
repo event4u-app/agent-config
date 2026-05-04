@@ -19,8 +19,10 @@ path.
 The deterministic engine lives in `scripts/command_suggester/`. The
 locked eligibility table lives in
 [`agents/contexts/command-suggestion-eligibility.md`](../../agents/contexts/command-suggestion-eligibility.md).
-The full design lives in
-[`road-to-context-aware-command-suggestion`](../../agents/roadmaps/road-to-context-aware-command-suggestion.md).
+The scoring contract and hardening list live in
+[`docs/contracts/adr-command-suggestion.md`](../../docs/contracts/adr-command-suggestion.md)
+and
+[`docs/contracts/command-suggestion-flow.md`](../../docs/contracts/command-suggestion-flow.md).
 
 ## Iron Law — never auto-execute
 

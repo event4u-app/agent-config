@@ -17,7 +17,6 @@ Required structure:
     - `## Sub-commands` section with a markdown table whose header is
       exactly `Sub-command | Routes to | Purpose`
     - `## Dispatch` section
-    - `## Migration` section
     - `## Rules` section
 
 Cluster files are detected by reading the locked-clusters table in
@@ -36,7 +35,7 @@ ROOT = Path(__file__).resolve().parent.parent
 COMMANDS_DIR = ROOT / ".agent-src.uncompressed/commands"
 CONTRACT = ROOT / "docs/contracts/command-clusters.md"
 
-REQUIRED_SECTIONS = ["## Sub-commands", "## Dispatch", "## Migration", "## Rules"]
+REQUIRED_SECTIONS = ["## Sub-commands", "## Dispatch", "## Rules"]
 TABLE_HEADER_RE = re.compile(
     r"\|\s*Sub-command\s*\|\s*Routes to\s*\|\s*Purpose\s*\|", re.IGNORECASE
 )

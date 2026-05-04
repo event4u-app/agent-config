@@ -58,7 +58,7 @@ the diff (paths + counts), get confirmation, then commit.
 - Committing a diff that removes a directory, deletes ≥5 unrelated
   files, or touches Terraform / k8s manifests / Ansible without
   surfacing the diff first — even when [`commit-policy`](../../rules/commit-policy.md)
-  otherwise authorizes commits (e.g. `/commit-in-chunks`, roadmap
+  otherwise authorizes commits (e.g. `/commit:in-chunks`, roadmap
   pre-scan, an explicit "commit this now"). Bulk-deletion / infra
   commits need their own ask, every time.
 - Reading a roadmap step listing files to delete as authorization to

@@ -1,1 +1,1 @@
-../../../.agent-src/commands/tests-execute.md
+../../../.agent-src/commands/tests/execute.md

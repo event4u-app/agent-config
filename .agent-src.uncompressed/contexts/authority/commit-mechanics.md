@@ -19,7 +19,7 @@ Hard Floor still fires when the diff:
 - Touches Terraform / Pulumi / k8s manifests / Ansible / cloud-config
 
 In those cases, **surface the diff** (paths + counts) and confirm
-this turn before committing — even under `/commit-in-chunks`,
+this turn before committing — even under `/commit:in-chunks`,
 roadmap pre-scan authorization, or an explicit "commit this now". The
 four exceptions cover *whether* commits happen; the Hard Floor covers
 *which diffs* still need a separate confirmation.

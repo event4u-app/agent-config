@@ -14,7 +14,7 @@ Use this skill when working with GitHub Actions workflows, CI pipeline configura
 
 1. Read `.github/workflows/` to understand the full pipeline.
 2. Check `AGENTS.md` for quality tool commands and testing setup.
-3. Read `.augment/commands/fix-ci.md` for CI failure debugging workflow.
+3. Read `commands/fix/ci.md` for CI failure debugging workflow.
 
 ## Workflow overview
 
@@ -91,7 +91,7 @@ Check `.github/workflows/` for the runner types used. Common patterns:
 3. Get logs: `GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs`
 4. Fix locally, verify in container, then push.
 
-See `.augment/commands/fix-ci.md` for the full debugging workflow.
+See `commands/fix/ci.md` for the full debugging workflow.
 
 
 ## Output format

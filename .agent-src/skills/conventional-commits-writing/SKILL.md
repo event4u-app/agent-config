@@ -12,48 +12,106 @@ execution:
 
 ## When to use
 
-- Generating commit message from staged changes
-- Generating squash merge title from PR
-- Deciding correct type for a change
-- Reviewing/correcting commit messages
-- Splitting vague changes into multiple commits
+Use this skill when:
 
-NOT: explaining standard (reference rule), git workflow (use `git-workflow`)
+- Generating a commit message from staged changes
+- Generating a squash merge title from a PR
+- Deciding the correct Conventional Commit type for a change
+- Reviewing whether a commit message is correct
+- Splitting one vague change into multiple commit messages
 
-## Procedure: Generate
+Do NOT use when:
 
-1. **Intent** — feat/fix/refactor/docs/test/ci/chore/perf/build/style. Classify by intent, not file type.
-2. **Mixed concerns?** — split into multiple commits or choose dominant net effect for squash title.
-3. **Scope** — Jira ID or area name. Only if it adds clarity.
-4. **Description** — intent, not implementation. Imperative. Max 72 chars. No generic filler.
-5. **Breaking?** — add `!` or `BREAKING CHANGE:` footer:
+- Only explaining the Conventional Commits standard (just reference the rule)
+- The message is already correct and does not need review
+- Following the Git workflow (use `git-workflow` skill)
+
+## Procedure: Generate commit message
+
+### 1. Identify the actual intent
+
+Determine whether the change is:
+
+- New behavior → `feat`
+- Bug fix → `fix`
+- Structural cleanup → `refactor`
+- Docs only → `docs`
+- Tests only → `test`
+- CI/build/tooling → `ci` or `build`
+- Maintenance → `chore`
+- Performance → `perf`
+- Formatting only → `style`
+
+Classify by **user-visible or system-relevant intent**, not by file type alone.
+
+### 2. Detect mixed concerns
+
+Check whether the change includes more than one unrelated concern.
+
+If yes:
+
+- Suggest splitting into multiple commits
+- Or choose the dominant net effect for squash merge title
+
+### 3. Choose scope
+
+Add a scope only if it improves clarity:
+
+- Jira ticket ID: `DEV-1234`
+- Module/area: `api`, `auth`, `skills`, `rules`, `ci`
+
+### 4. Write the description
+
+- State the intent clearly
+- Avoid generic filler (`update stuff`, `fix things`)
+- Stay concise — max 72 chars total for first line
+- Imperative mood: "add", "fix", "remove" — not "added", "fixed", "removed"
+
+### 5. Check for breaking change
+
+If compatibility is broken, add `!` after type/scope:
 
 ```
 feat(api)!: rename invoice status values
 ```
 
-6. **Validate** — type matches intent? scope useful? not hiding multiple concerns?
+Or add `BREAKING CHANGE:` in the commit body/footer.
 
-## Procedure: Review
+### 6. Validate
 
-Parse → check type vs diff → check scope → check description clarity → suggest corrections.
+- Type matches intent?
+- Scope is useful (not noise)?
+- Description is specific (not generic)?
+- Not hiding multiple unrelated changes?
+- Breaking changes are marked?
 
-## Procedure: Squash merge title
+## Procedure: Review existing commit message
 
-Read all PR commits → identify net effect → write single Conventional Commit summarizing it.
+1. Parse the message into type, scope, description
+2. Check type accuracy against the actual diff
+3. Check scope usefulness
+4. Check description clarity and specificity
+5. Suggest corrections if any check fails
 
-## Output
+## Procedure: Generate squash merge title
 
-1. Recommended message(s)
-2. Brief type rationale
-3. Split suggestion if needed
+1. Read all commits in the PR
+2. Identify the **net effect** — what does the PR accomplish overall?
+3. Write a single Conventional Commit message summarizing the net effect
+4. Do not list every internal commit — summarize
+
+## Output format
+
+1. Recommended commit message(s)
+2. Brief rationale for type choice
+3. Split suggestion if the change should be multiple commits
 
 ## Gotcha
 
-- Model overuses `chore`/`refactor` — classify by intent, not effort
-- File type ≠ commit type (`.md` change can be `feat`)
-- `refactor` = NO behavior change — if behavior changes, use `feat`/`fix`
-- Squash title = net effect, not internal details
+- The model tends to overuse `chore` and `refactor` — classify by intent, not by effort
+- File type alone does not determine commit type (e.g. a `.md` change can be `feat` if it's a new feature doc)
+- Squash merge titles should describe the net effect, not every internal detail
+- `refactor` means NO behavior change — if behavior changes, use `feat` or `fix`
 
 ## Do NOT
 
@@ -65,6 +123,6 @@ Read all PR commits → identify net effect → write single Conventional Commit
 
 ## References
 
-- Rule: `commit-conventions` — format, types, scope
-- Guideline: `docs/guidelines/php/git.md` — selection rules, anti-patterns, checklist
-- Command: `/commit` — uses this skill
+- Rule: `commit-conventions` — base format, types, scope, examples
+- Guideline: `docs/guidelines/php/git.md` — type selection rules, anti-patterns, decision checklist
+- Command: `/commit` — uses this skill for message generation

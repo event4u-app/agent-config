@@ -19,9 +19,7 @@ Stability tiers follow [`docs/contracts/STABILITY.md`](contracts/STABILITY.md):
 - **experimental** = scaffold or pilot status; breaks allowed in any release.
 
 > The previous "observability, feedback, lifecycle" layers were removed in
-> 1.5 — they were scaffolds without production consumers. See the
-> [`archive/road-to-9.md`](../agents/roadmaps/archive/road-to-9.md) roadmap,
-> phase 4, for the rationale.
+> 1.5 — they were scaffolds without production consumers.
 
 ## Content pipeline
 
@@ -65,7 +63,7 @@ fails on any source-side violation, without producing artifacts.
 | Layer | Count | Purpose |
 |---|---|---|
 | **Skills** | 129 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
-| **Rules** | 57 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
+| **Rules** | 58 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
 | **Commands** | 95 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/compress`, … |
 | **Guidelines** | 48 | Reference material cited by skills — PHP patterns, Eloquent, Playwright, agent-infra, … |
 | **Templates** | 7 | Scaffolds for features, roadmaps, contexts, skills, overrides |

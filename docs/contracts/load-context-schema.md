@@ -93,9 +93,7 @@ directly under `contexts/` (see `contexts/model-recommendations.md`,
 chars(rule.md) + sum(chars(eager_target.md) for each entry) ≤ rule_cap
 ```
 
-`rule_cap` is the per-rule budget from
-[`road-to-rebalancing.md`](../../agents/roadmaps/road-to-rebalancing.md)
-§ Target architecture:
+`rule_cap` is the per-rule budget:
 
 - Always rule: 2,500
 - Auto rule: 4,000

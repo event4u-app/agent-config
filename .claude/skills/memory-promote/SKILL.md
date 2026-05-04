@@ -1,1 +1,1 @@
-../../../.agent-src/commands/memory-promote.md
+../../../.agent-src/commands/memory/promote.md

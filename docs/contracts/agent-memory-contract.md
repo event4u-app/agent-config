@@ -20,9 +20,9 @@ Last refreshed: 2026-04-22.
 
 ## What this doc is *not*
 
-- Not a replacement for
-  [`road-to-retrieval-contract.md`](../../agents/roadmaps/agent-memory/road-to-retrieval-contract.md)
-  — that is the spec we hand to the agent-memory implementer.
+- Not a replacement for the agent-memory retrieval-contract spec —
+  that lives in the agent-memory package and is the spec we hand to
+  the implementer.
 - Not a commitment that consumer code looks exactly like this forever
   — it is a point-in-time pin.
 - Not an agent-facing skill. Humans read this when the package lands.
@@ -64,9 +64,9 @@ If the released package diverges from these names, we update
 
 ## Expected retrieval shape (present path)
 
-Source of truth:
-[`road-to-retrieval-contract.md`](../../agents/roadmaps/agent-memory/road-to-retrieval-contract.md).
-Consumer skills call the shared abstraction, not the package directly.
+Source of truth: the retrieval-contract spec in the agent-memory
+package. Consumer skills call the shared abstraction, not the package
+directly.
 
 **Request** (Python):
 
@@ -139,11 +139,6 @@ holds:
 
 ## See also
 
-- [`road-to-memory-self-consumption.md`](../../agents/roadmaps/road-to-memory-self-consumption.md)
-- [`road-to-agent-memory-integration.md`](../../agents/roadmaps/road-to-agent-memory-integration.md)
-- [`agent-memory/road-to-retrieval-contract.md`](../../agents/roadmaps/agent-memory/road-to-retrieval-contract.md)
-- [`agent-memory/road-to-promotion-flow.md`](../../agents/roadmaps/agent-memory/road-to-promotion-flow.md)
 - [`memory-access guideline`](../../docs/guidelines/agent-infra/memory-access.md)
 - [`scripts/memory_status.py`](../../.agent-src.uncompressed/templates/scripts/memory_status.py)
 - [`scripts/memory_lookup.py`](../../.agent-src.uncompressed/templates/scripts/memory_lookup.py)
-- [`open-questions-2.md`](../../agents/roadmaps/archive/open-questions-2.md) — Q29

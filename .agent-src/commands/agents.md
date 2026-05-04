@@ -18,9 +18,9 @@ commands with a single entry point + sub-command dispatch.
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/agents audit` | `agents-audit.md` | Audit `agents/` for outdated docs, duplicates, orphaned overrides |
-| `/agents cleanup` | `agents-cleanup.md` | Execute cleanup actions from a prior audit |
-| `/agents prepare` | `agents-prepare.md` | Scaffold the `agents/` directory structure |
+| `/agents audit` | `commands/agents/audit.md` | Audit `agents/` for outdated docs, duplicates, orphaned overrides |
+| `/agents cleanup` | `commands/agents/cleanup.md` | Execute cleanup actions from a prior audit |
+| `/agents prepare` | `commands/agents/prepare.md` | Scaffold the `agents/` directory structure |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -36,12 +36,6 @@ Sub-command names match the locked contract in
    > 1. audit — find outdated docs, duplicates, orphaned overrides
    > 2. cleanup — execute actions from a prior audit
    > 3. prepare — scaffold the agents/ tree
-
-## Migration
-
-The 3 standalone `/agents-*` commands continue to work for one release
-cycle as deprecation shims. They emit a notice and route to the same
-content. New invocations should use `/agents <sub>`.
 
 ## Rules
 

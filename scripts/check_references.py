@@ -126,8 +126,20 @@ def collect_artifacts(root: Path) -> dict[str, set[str]]:
             arts["skills"].add(d.name)
     for f in (augment / "rules").glob("*.md") if (augment / "rules").exists() else []:
         arts["rules"].add(f.stem)
-    for f in (augment / "commands").glob("*.md") if (augment / "commands").exists() else []:
-        arts["commands"].add(f.stem)
+    cmd_dir = augment / "commands"
+    if cmd_dir.exists():
+        for f in cmd_dir.rglob("*.md"):
+            if f.name == "AGENTS.md":
+                continue
+            # Top-level: bare stem ("commit"). Nested: cluster-sub ("council-default")
+            # AND the cluster:sub form, since references may use either.
+            rel = f.relative_to(cmd_dir).with_suffix("")
+            parts = rel.parts
+            if len(parts) == 1:
+                arts["commands"].add(parts[0])
+            else:
+                arts["commands"].add("-".join(parts))
+                arts["commands"].add(":".join(parts))
     gdir = augment / "guidelines"
     if gdir.exists():
         for f in gdir.rglob("*.md"):

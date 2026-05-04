@@ -12,9 +12,7 @@ purpose: >
 
 # Why `judge-*` skills are NOT consolidated
 
-The Phase 3a spike on the road-to-structural-optimization roadmap
-(see `agents/roadmaps/archive/road-to-structural-optimization.md` § 3a)
-evaluated extracting a shared procedure file
+A Phase 3a spike evaluated extracting a shared procedure file
 (`contexts/judges/judge-shared-procedure.md`) loaded by all four
 `judge-*` skills. The locked Q1=A shape (separate skills + shared
 procedure context) was implemented and benchmarked. **Outcome: net
@@ -94,11 +92,9 @@ across the judges" proposal as a regression and cite this file.
 
 ## See also
 
-- [`road-to-structural-optimization`](../../../agents/roadmaps/road-to-structural-optimization.md)
-  § Phase 3a — the spike that produced this decision.
 - [`persona-voice-rubric`](persona-voice-rubric.md) — the voice
-  preservation rubric used during the spike (still applies if Phase
-  3b or 3c needs the same check).
+  preservation rubric used during the spike (still applies if a future
+  consolidation attempt needs the same check).
 - Sibling judges, all kept inline:
   [`judge-bug-hunter`](../../skills/judge-bug-hunter/SKILL.md),
   [`judge-code-quality`](../../skills/judge-code-quality/SKILL.md),

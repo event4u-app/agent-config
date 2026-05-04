@@ -1,1 +1,1 @@
-../../../.agent-src/commands/copilot-agents-init.md
+../../../.agent-src/commands/copilot-agents/init.md
