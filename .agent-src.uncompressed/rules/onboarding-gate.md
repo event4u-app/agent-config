@@ -7,6 +7,12 @@ source: package
 
 # Onboarding Gate
 
+> **Enforced by:** [`scripts/onboarding_gate_hook.py`](../../scripts/onboarding_gate_hook.py)
+> on Augment + Claude Code (`SessionStart`). The hook refreshes
+> `.augment/state/onboarding-gate.json` from `.agent-settings.yml`; the
+> prose below is the spec the hook implements and the fallback for
+> platforms without a hook surface.
+
 Forces a one-time `/onboard` run for each developer on each project. This
 replaces the previously scattered "ask once" patterns across `user_name`,
 `personal.ide`, `personal.rtk_installed`, and cost profile confirmation.
@@ -92,3 +98,4 @@ gate. This protects projects that were set up before this rule shipped.
 - [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md) — merge rules for mid-life edits
 - [`agent-settings` template](../templates/agent-settings.md) — `onboarding.onboarded` reference
 - [`rule-type-governance`](rule-type-governance.md) — why this is `always`
+- [`hardening-pattern`](../../agents/contexts/hardening-pattern.md) — Tier 1 mechanical-rule contract

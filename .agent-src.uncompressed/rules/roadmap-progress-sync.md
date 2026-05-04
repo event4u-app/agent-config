@@ -12,6 +12,11 @@ load_context:
 
 # Roadmap Progress Sync
 
+> **Enforced by:** [`scripts/roadmap_progress_hook.py`](../../scripts/roadmap_progress_hook.py)
+> on Augment + Claude Code (`PostToolUse`). Hook is primary; the prose
+> below is the specification the hook implements and the fallback when
+> the platform has no hook surface.
+
 ## Iron Law — dashboard sync
 
 ```
