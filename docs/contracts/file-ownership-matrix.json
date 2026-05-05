@@ -1319,6 +1319,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/dcf-modeling/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/dependency-upgrade/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1404,6 +1410,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/flux/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/funnel-analysis/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -1589,6 +1601,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/openapi/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1763,6 +1781,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/rice-prioritization/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/roadmap-management/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1884,6 +1908,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/traefik/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -4638,10 +4668,24 @@
     },
     {
       "source": ".agent-src.uncompressed/rules/skill-quality.md",
+      "target": ".agent-src.uncompressed/rules/direct-answers.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/skill-quality.md",
       "target": ".agent-src.uncompressed/rules/skill-quality.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/skill-quality.md",
+      "target": ".agent-src.uncompressed/rules/tool-safety.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/rules/slash-command-routing-policy.md",
@@ -5141,6 +5185,34 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/skills/dcf-modeling/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/dcf-modeling/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/dcf-modeling/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/dcf-modeling/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/rice-prioritization/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/dcf-modeling/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/dependency-upgrade/SKILL.md",
       "target": ".agent-src.uncompressed/skills/dependency-upgrade/SKILL.md",
       "type": "WRITE",
@@ -5402,6 +5474,41 @@
     {
       "source": ".agent-src.uncompressed/skills/flux/SKILL.md",
       "target": ".agent-src.uncompressed/skills/livewire/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/funnel-analysis/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/dcf-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/funnel-analysis/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/funnel-analysis/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/funnel-analysis/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/funnel-analysis/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/rice-prioritization/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/funnel-analysis/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -5855,6 +5962,34 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/dcf-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/funnel-analysis/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/rice-prioritization/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/openapi/SKILL.md",
       "target": ".agent-src.uncompressed/skills/openapi/SKILL.md",
       "type": "WRITE",
@@ -6205,6 +6340,41 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/skills/rice-prioritization/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/dcf-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/rice-prioritization/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/funnel-analysis/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/rice-prioritization/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/rice-prioritization/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/rice-prioritization/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/rice-prioritization/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/roadmap-management/SKILL.md",
       "target": ".agent-src.uncompressed/commands/roadmap/create.md",
       "type": "READ_ONLY",
@@ -6444,10 +6614,24 @@
     },
     {
       "source": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
       "target": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/using-git-worktrees/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/systematic-debugging/SKILL.md",
@@ -6599,6 +6783,41 @@
     {
       "source": ".agent-src.uncompressed/skills/traefik/SKILL.md",
       "target": ".agent-src.uncompressed/skills/traefik/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/dcf-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/funnel-analysis/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/rice-prioritization/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
