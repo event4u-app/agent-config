@@ -63,6 +63,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/commands/chat-history/import.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/commands/chat-history/learn.md": {
       "kind": "command",
       "rule_type": null,
@@ -1992,18 +1998,53 @@
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/commands/chat-history/learn.md",
-      "target": ".agent-src.uncompressed/commands/chat-history/learn.md",
+      "source": ".agent-src.uncompressed/commands/chat-history/import.md",
+      "target": ".agent-src.uncompressed/commands/chat-history/import.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/commands/chat-history/learn.md",
+      "source": ".agent-src.uncompressed/commands/chat-history/import.md",
+      "target": ".agent-src.uncompressed/commands/chat-history/learn.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/chat-history/import.md",
       "target": ".agent-src.uncompressed/commands/chat-history/show.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/chat-history/import.md",
+      "target": ".agent-src.uncompressed/rules/ask-when-uncertain.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/chat-history/import.md",
+      "target": ".agent-src.uncompressed/rules/user-interaction.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/chat-history/learn.md",
+      "target": ".agent-src.uncompressed/commands/chat-history/import.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/chat-history/learn.md",
+      "target": ".agent-src.uncompressed/commands/chat-history/learn.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncompressed/commands/chat-history/learn.md",
@@ -2015,6 +2056,20 @@
     {
       "source": ".agent-src.uncompressed/commands/chat-history/learn.md",
       "target": ".agent-src.uncompressed/rules/user-interaction.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/chat-history/learn.md",
+      "target": ".agent-src.uncompressed/skills/learning-to-rule-or-skill/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/chat-history/learn.md",
+      "target": ".agent-src.uncompressed/skills/upstream-contribute/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -4104,6 +4159,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/language-and-tone.md",
+      "target": ".agent-src.uncompressed/rules/user-interaction.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/rules/laravel-translations.md",
