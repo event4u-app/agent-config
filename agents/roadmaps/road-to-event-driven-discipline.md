@@ -60,7 +60,7 @@ Phase 0.
 | C2 | `chat-length-warner` | `stop`, `user_prompt_submit` | **warn** | — | context-hygiene § chat-length | 1 | high |
 | C3 | `model-mismatch-warner` | `session_start`, `user_prompt_submit` | **warn** | A4 platform-capability-map (active-model field) | model-recommendation | 1 | high |
 | C4 | `md-language-check` | `post_tool_use` | **warn** | A5 concern-composition rules | language-and-tone § `.md`-always-English | 2 | medium |
-| C5 | `size-enforcement` | `post_tool_use` | **warn** | A6 `--budget-only` skill-linter mode · A5 | size-enforcement | 2 | medium |
+| C5 | `size-enforcement` | `post_tool_use` | **warn** | A6 skill-linter `--budget-only` mode · A5 | size-enforcement | 2 | medium |
 | C6 | `markdown-safe-codeblocks` | `post_tool_use` | **warn** | A5 | markdown-safe-codeblocks | 2 | medium |
 | C7 | `docs-sync-check` | `post_tool_use` | **warn** | A7 path-glob suppression · A5 | docs-sync | 2 | medium |
 | C8 | `artifact-engagement-telemetry` | `stop` | **allow** (record-only) | — | artifact-engagement-recording | 3 | medium |
@@ -113,7 +113,7 @@ above and individual concern Steps can reference them.
 - [ ] **A3: Protected-ref list.** Settings key
       `git_ops.protected_refs: ["main", "master", "prod",
       "release/*", "production"]` plus per-project override.
-      Default list ships in `templates/consumer-settings/agent-settings.yml`.
+      Default list ships in `config/agent-settings.template.yml`.
       `git-ops-gate` matches via fnmatch.
 - [ ] **A4: Platform-capability map.** YAML at
       `docs/contracts/platform-capabilities.yaml` listing per
