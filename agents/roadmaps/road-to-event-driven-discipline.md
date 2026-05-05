@@ -125,6 +125,36 @@ above and individual concern Steps can reference them.
       Concerns SHOULD branch on this; the dispatcher does NOT
       filter dispatch by capability — silent skipping is worse
       than an explicit warn entry.
+      **Platform tiers.** Aggregates the per-flag matrix into
+      one `tier: 1 | 2 | 3 | unsupported` per platform plus an
+      optional `tier_reason` (free text — e.g.
+      `"upstream-blocked: anthropics/claude-code#40495"`) and an
+      optional `re_assess_after: <YYYY-MM-DD>` (soft monitor; on
+      hit the dispatcher emits one `severity=warn` feedback
+      entry per session pointing at the YAML line — no
+      auto-action, no auto-downgrade).
+      **Degradation rules** keyed off the tier:
+      - Tier 1 — all concerns active as authored.
+      - Tier 2 — `block` decisions degrade to `warn`, the
+        concern's `additional_context` is prefixed
+        `[tier-2: block→warn]`. User sees the degradation; the
+        operation proceeds.
+      - Tier 3 — only `allow` concerns run; `warn` and `block`
+        concerns are no-op AND emit one `severity=warn`
+        feedback entry per session naming concern + tier (so
+        the gap is visible, never silent).
+      - Unsupported — dispatcher refuses to initialise hooks on
+        this platform. `task hooks-doctor` (Phase 0 Step 4)
+        prints the reason and the migration target from the
+        appendix below.
+      Concerns MAY override the default by declaring
+      `min_tier: 1 | 2 | 3` in their manifest entry;
+      lower-tier registrations are rejected by
+      `lint_hook_manifest.py`. The Council session that shaped
+      this design is recorded at
+      `agents/council-sessions/_inputs/deferred-hook-execution-iter1.json`
+      (Opus + GPT-4o, iter1, 2026-05-05) — a Deferred-Execution
+      alternative was evaluated and rejected on `block`-cannot-be-deferred grounds.
 - [ ] **A5: Concern-composition rules.** Section in
       `docs/contracts/hook-architecture-v1.md` (extends the
       existing contract). Reduce semantics for multiple concerns
@@ -220,8 +250,12 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
       `tests/hooks/benchmarks/`.
 - [ ] **Step 4:** Ship `task hooks-doctor` — surfaces enabled
       concerns, last 50 invocations, p95 per concern, recent blocks.
-      Backed by `scripts/hooks_status.py`; reads A8
-      `feedback.jsonl` exclusively (no live re-execution).
+      Adds a **Platform status** section: detected platform, its
+      tier from A4, the active degradation rule, the list of
+      concerns currently no-op'd or downgraded on this tier, and
+      any `re_assess_after` date that has passed. Backed by
+      `scripts/hooks_status.py`; reads A8 `feedback.jsonl`
+      exclusively (no live re-execution).
 - [ ] **Step 5:** Lock the concern-author template at
       `scripts/hooks/concerns/_template.py` and document the move
       from `scripts/<name>_hook.py` to
@@ -262,7 +296,7 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
       `cursor`, `cline`, `gemini`. (Windsurf — no PreTool surface;
       see Platform Capabilities Appendix for the manual fallback.)
 - [ ] **Step 2:** `chat-length-warner` (C2). Reads
-      `.agent-chat-history` size + estimated turn-token budget on
+      `agents/.agent-chat-history` size + estimated turn-token budget on
       `stop` and `user_prompt_submit`. Thresholds from
       `chat_history.warn_size_kb` / `warn_token_budget` (defaults
       256 KB / 80% of model context). Decision: `warn` with a
@@ -470,20 +504,38 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
 Source of truth: `docs/contracts/platform-capabilities.yaml`
 (lands in Phase -1 / A4). Snapshot at roadmap-write time:
 
-| platform | pre_tool_use | post_tool_use | user_prompt_submit | session_start | stop | additional_context_surfaced | active_model_in_envelope | block_decision_honoured |
-|---|---|---|---|---|---|---|---|---|
-| augment | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | partial | ✅ |
-| claude | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| cowork | ✅ | ✅ | ✅ | partial | ✅ | partial | ❌ | ✅ |
-| cursor | ✅ | ✅ | ✅ | ❌ | ✅ | partial | ❌ | partial |
-| cline | partial | partial | ✅ | ❌ | ✅ | ❌ | ❌ | partial |
-| gemini | ✅ | ✅ | ✅ | ❌ | partial | partial | ❌ | partial |
-| windsurf | ❌ | ❌ | ✅ | ❌ | partial | ❌ | ❌ | ❌ |
+| platform | tier | pre_tool_use | post_tool_use | user_prompt_submit | session_start | stop | additional_context_surfaced | active_model_in_envelope | block_decision_honoured |
+|---|---|---|---|---|---|---|---|---|---|
+| augment | 1 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | partial | ✅ |
+| claude | 1 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| cowork | 3 | ✅ | ✅ | ✅ | partial | ✅ | partial | ❌ | ✅ |
+| cursor (IDE) | 2 | ✅ | ✅ | ✅ | ❌ | ✅ | partial | ❌ | partial |
+| cursor (CLI) | 3 | partial | partial | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| cline (non-Windows) | 2 | partial | partial | ✅ | ❌ | ✅ | ❌ | ❌ | partial |
+| cline (Windows) | unsupported | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| gemini | 2 | ✅ | ✅ | ✅ | ❌ | partial | partial | ❌ | partial |
+| windsurf | 2 | ❌ | ❌ | ✅ | ❌ | partial | ❌ | ❌ | ❌ |
+
+Tier reasons (snapshot — authoritative source is the YAML):
+
+- **cowork — tier 3:** upstream-blocked by
+  `anthropics/claude-code#40495` and `#27398`; hooks do not
+  fire at all until the fix lands. `re_assess_after`
+  recommended ≈ one upstream cycle from roadmap-write date.
+- **cursor (CLI) — tier 3:** only `before/afterShellExecution`
+  fire; the IDE surface (full hooks) is the migration target.
+- **cline (Windows) — unsupported:** `cline/cline#8073`;
+  fix-in-flight `cline/cline#8201`. Migration target =
+  WSL2 + cline (non-Windows).
 
 Concerns C1, C4, C5, C6, C7 require `pre_tool_use` or
 `post_tool_use` and therefore do not run on Windsurf. Concern C3
 requires `active_model_in_envelope` and runs only on Claude Code
-(and partially on Augment) at roadmap-write time.
+(and partially on Augment) at roadmap-write time. Tier-driven
+degradation (per A4) applies on top of these per-flag gaps:
+e.g. `git-ops-gate` (C1, `block`) downgrades to `warn` on Tier 2
+and is no-op on Tier 3 / unsupported, with one feedback entry per
+session naming the concern + tier.
 
 **Manual fallback for low-capability platforms.** A concern that
 cannot run as a hook on a given platform is reachable via slash
