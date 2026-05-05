@@ -108,3 +108,4 @@ agents/council-sessions/
 # Written by SessionStart / PostToolUse hooks on Augment + Claude Code;
 # regenerated on demand, never committed.
 /agents/state/
+.council-tmp/
