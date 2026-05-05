@@ -66,8 +66,9 @@ project-locally for all supported AI tools. Task is required for
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
 **Verify hook coverage** after installing — every supported platform
-(Augment, Claude, Cursor, Cline, Windsurf, Gemini CLI, Copilot fallback)
-is wired through one universal dispatcher per
+(Augment, Claude Code, [Cowork](agents/contexts/chat-history-platform-hooks.md#cowork-claude-desktop-app--local-agent-mode),
+Cursor, Cline, Windsurf, Gemini CLI, Copilot fallback) is wired through
+one universal dispatcher per
 [`hook-architecture-v1`](docs/contracts/hook-architecture-v1.md). Run
 `./agent-config hooks:status` for the matrix (`--strict` for CI,
 `--format json` for tooling). The installer also dry-fires the
