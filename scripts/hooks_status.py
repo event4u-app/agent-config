@@ -25,9 +25,20 @@ import dispatch_hook  # noqa: E402  — reuse the manifest loader
 
 # (label, project-relative bridge path, install hint).
 # Path may be a directory (cline) — existence => any file inside.
+#
+# Cowork has no project-scope bridge path: the Claude desktop app's
+# local-agent-mode runtime is upstream-blocked from reading any of
+# Claude Code's three settings sources (anthropics/claude-code#40495,
+# #27398). We register cowork here so the manifest's `cowork:`
+# bindings are surfaced in the status report, but the empty bridge
+# path resolves to status="n/a" — strict mode does not fail on
+# n/a (see _final_exit_code), matching Copilot's no-bridge posture.
+# Once upstream lands the fix and a stable settings location is
+# documented, swap the empty path here for that location.
 PLATFORM_BRIDGES: dict[str, tuple[str, str]] = {
     "augment":  (".augment/settings.json",      "scripts/install.py"),
     "claude":   (".claude/settings.json",       "scripts/install.py"),
+    "cowork":   ("",                            "upstream-blocked: anthropics/claude-code#40495 + #27398 (settings.json ignored in Cowork sandbox)"),
     "cursor":   (".cursor/hooks.json",          "scripts/install.py"),
     "cline":    (".clinerules/hooks",           "scripts/install.py"),
     "windsurf": (".windsurf/hooks.json",        "scripts/install.py"),
@@ -65,7 +76,7 @@ def collect(project_root: Path, manifest: dict) -> dict:
             "bridge_path": rel or None,
             "fallback_only": fallback_only,
             "bindings": bindings,
-            "hint": hint if status in {"missing", "empty", "degraded"} else None,
+            "hint": hint if status in {"missing", "empty", "degraded", "n/a"} else None,
         })
     return {"schema_version": 1, "platforms": rows}
 
