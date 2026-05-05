@@ -190,8 +190,8 @@ ai_council:
   #   manual     = copy-paste loop, user is the transport (free).
   #   playwright = browser automation (Phase 2c, not yet wired).
   #
-  # Precedence: invocation flag > per-member mode > global mode > "api".
-  mode: "api"
+  # Precedence: invocation flag > per-member mode > global mode > "manual".
+  mode: "manual"
 
   # Per-member configuration. Set enabled=true on the providers you want
   # to consult. The model field selects which model receives the query.

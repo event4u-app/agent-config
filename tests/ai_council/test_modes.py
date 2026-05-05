@@ -23,7 +23,7 @@ from scripts.ai_council.modes import (  # noqa: E402
 
 def test_resolve_returns_default_when_all_layers_empty():
     assert resolve_mode("anthropic") == DEFAULT_MODE
-    assert DEFAULT_MODE == "api"
+    assert DEFAULT_MODE == "manual"
 
 
 def test_default_is_in_valid_modes():
