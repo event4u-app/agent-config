@@ -11,7 +11,7 @@ Resolution precedence — first non-empty wins:
     1. Invocation flag      e.g. ``/council mode:manual``
     2. Per-member setting   ``ai_council.members.<name>.mode``
     3. Global setting       ``ai_council.mode``
-    4. Built-in default     ``api``
+    4. Built-in default     ``manual``
 
 This mirrors how ``cost_profile`` resolves in
 ``.augment/guidelines/agent-infra/layered-settings.md``.
@@ -26,7 +26,7 @@ from typing import Mapping
 
 VALID_MODES: frozenset[str] = frozenset({"api", "manual", "playwright"})
 
-DEFAULT_MODE: str = "api"
+DEFAULT_MODE: str = "manual"
 
 
 class InvalidModeError(ValueError):
