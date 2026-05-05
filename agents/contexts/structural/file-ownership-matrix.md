@@ -5,13 +5,16 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **312**
-- Edges (incl. self-WRITE): **667**
+- Files indexed: **313**
+- Edges (incl. self-WRITE): **671**
 
 ## READ_ONLY edges
 
 | Source | Target | Via | Depth |
 |---|---|---|---:|
+| `.agent-src.uncompressed/commands/chat-history/learn.md` | `.agent-src.uncompressed/commands/chat-history/show.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/chat-history/learn.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/chat-history/learn.md` | `.agent-src.uncompressed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/check-current-md.md` | `.agent-src.uncompressed/rules/augment-source-of-truth.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/check-current-md.md` | `.agent-src.uncompressed/rules/language-and-tone.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/check-current-md.md` | `.agent-src.uncompressed/skills/md-language-check/SKILL.md` | `body_link` | 1 |
@@ -372,7 +375,7 @@
 
 | Kind | Count |
 |---|---:|
-| `command` | 92 |
+| `command` | 93 |
 | `context` | 28 |
 | `persona` | 8 |
 | `rule` | 55 |
