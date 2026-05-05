@@ -28,8 +28,7 @@ The user invoked `/council default` on exactly one input mode:
 - `files:<path>,<path>` — a comma-separated file list
 
 Optional invocation flag: `mode:api|manual` overrides the per-member
-and global mode for this call only (see Step 2.5). `mode:playwright`
-is reserved for Phase 2c — refuse politely if invoked.
+and global mode for this call only (see Step 2.5).
 
 Optional **rounds**: `rounds:N` (1-3) enables multi-round debate. Round
 1 sees the artefact alone. Round 2+ sees the artefact plus anonymised
@@ -81,15 +80,13 @@ continuing.
 For each enabled member, resolve its mode via
 `scripts.ai_council.modes.resolve_mode(name, invocation_mode,
 member_settings, global_mode)`. Precedence: invocation flag >
-per-member setting > global setting > default (`api`).
+per-member setting > global setting > default (`manual`).
 
 Construct each member from the resolved mode:
 
 - `api` → `AnthropicClient` / `OpenAIClient` (billable, cost-gated).
 - `manual` → `ManualClient` from `scripts.ai_council.clients`
   (`billable=False`, no API key, no SDK call).
-- `playwright` → reserved for Phase 2c. If a settings/invocation
-  resolves to it, refuse with a one-line note.
 
 ### 3. Cost confirmation — ALWAYS ASK for billable members
 
