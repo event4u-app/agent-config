@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **325 public artefacts** shipped by
+Consumer-facing catalog of all **326 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -198,7 +198,7 @@ are excluded.
 | rule | [`user-interaction`](../.agent-src/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (93)
+## Commands (94)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -211,9 +211,10 @@ are excluded.
 | command | [`analyze-reference-repo`](../.agent-src/commands/analyze-reference-repo.md) |  | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`bug-fix`](../.agent-src/commands/bug-fix.md) |  | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
 | command | [`bug-investigate`](../.agent-src/commands/bug-investigate.md) |  | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
-| command | [`chat-history:learn`](../.agent-src/commands/chat-history/learn.md) | cluster: chat-history | Surface prior chat-history sessions as numbered options, let the user pick exactly one, then read its entries verbatim — selective, user-driven cross-session learning |
+| command | [`chat-history:import`](../.agent-src/commands/chat-history/import.md) | cluster: chat-history | Surface prior chat-history sessions as numbered options, let the user pick exactly one, then render its entries verbatim into the current chat — selective, user-driven cross-session import |
+| command | [`chat-history:learn`](../.agent-src/commands/chat-history/learn.md) | cluster: chat-history | Pick a prior chat-history session and mine it for project-improving learnings — runs learning-to-rule-or-skill on the picked session, drafts proposal(s) under agents/proposals/ |
 | command | [`chat-history:show`](../.agent-src/commands/chat-history/show.md) | cluster: chat-history | Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries |
-| command | [`chat-history`](../.agent-src/commands/chat-history.md) | cluster: chat-history | Chat-history orchestrator — routes to show, learn |
+| command | [`chat-history`](../.agent-src/commands/chat-history.md) | cluster: chat-history | Chat-history orchestrator — routes to show, import, learn |
 | command | [`check-current-md`](../.agent-src/commands/check-current-md.md) |  | Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes. |
 | command | [`commit:in-chunks`](../.agent-src/commands/commit/in-chunks.md) | cluster: commit | Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows |
 | command | [`commit`](../.agent-src/commands/commit.md) | cluster: commit | Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits |
