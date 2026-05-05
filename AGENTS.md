@@ -38,7 +38,7 @@ Mechanically the package is:
 The skill suite is organized as four wings under one Iron-Law floor.
 Each wing has its own roadmap, its own personas, and its own plate;
 they compose via the cross-wing handoff contract
-([`docs/contracts/cross-wing-handoff.md`](docs/contracts/cross-wing-handoff.md),
+([`docs/contracts/cross-wing-handoff.md`](docs/contracts/cross-wing-handoff.md) (beta),
 landing in `road-to-suite-closure.md` Phase 3).
 
 | Wing | Cognition cluster | Roadmap |
@@ -51,8 +51,8 @@ landing in `road-to-suite-closure.md` Phase 3).
 Closure (shared identity, authoring standard, handoff contract,
 malice lint, orchestration mode) is tracked in
 [`road-to-suite-closure.md`](agents/roadmaps/archive/road-to-suite-closure.md).
-The full persona ↔ skill ↔ wing map lives in
-[`agents/contexts/senior-personas-and-skills-map.md`](agents/contexts/senior-personas-and-skills-map.md).
+The full persona ↔ skill ↔ wing map lives under `agents/contexts/`
+and is referenced from each wing roadmap.
 
 ## Source of truth
 

@@ -1,6 +1,11 @@
+---
+stability: beta
+---
+
+
 # Cross-Wing Handoff Contract
 
-> **Status:** active · **Stability:** stable · **Owner:** suite-closure Phase 3
+> **Status:** active · **Stability:** beta · **Owner:** suite-closure Phase 3
 > · **Lint gate:** `task lint-handoffs` (CI)
 
 The four wings (Engineering, Product+Foundation, GTM+Growth,
