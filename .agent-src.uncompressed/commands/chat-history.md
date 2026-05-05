@@ -1,12 +1,12 @@
 ---
 name: chat-history
-description: Chat-history orchestrator — routes to show
+description: Chat-history orchestrator — routes to show, learn
 cluster: chat-history
 disable-model-invocation: true
 suggestion:
   eligible: true
-  trigger_description: "show chat-history status, inspect .agent-chat-history log size, entries, fingerprint"
-  trigger_context: "user wants to inspect the persistent .agent-chat-history log"
+  trigger_description: "show chat-history status, inspect .agent-chat-history log, learn from a prior session, import context from past sessions"
+  trigger_context: "user wants to inspect the persistent .agent-chat-history log or selectively read a prior session"
 ---
 
 <!-- cloud_safe: noop -->
@@ -14,16 +14,17 @@ suggestion:
 # /chat-history
 
 Top-level orchestrator for the `/chat-history` family. After the
-hook-only reduction (`road-to-chat-history-hook-only`) only the
-read-only `show` sub-command remains — log writes, adoption, and
-overflow handling are now driven entirely by platform hooks +
-`scripts/chat_history.py` internals.
+hook-only reduction (`road-to-chat-history-hook-only`) writes,
+adoption, and overflow handling are driven entirely by platform
+hooks + `scripts/chat_history.py` internals; the surfaced
+sub-commands are read-only.
 
 ## Sub-commands
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
 | `/chat-history show` | `commands/chat-history/show.md` | Inspect the log — size, entries, fingerprint, last entries |
+| `/chat-history learn` | `commands/chat-history/learn.md` | List prior sessions, pick one, render its entries verbatim — selective cross-session import |
 
 For manual recovery (force-adopt a foreign log when auto-adopt
 misfires), run `./agent-config chat-history:adopt` directly — it is
@@ -36,10 +37,14 @@ not exposed as a `/chat-history` sub-command.
 3. Load the body of the routed file and follow its `## Steps`
    section verbatim with the remaining args.
 4. If the sub-command is unknown or missing (including the bare
-   `/chat-history` invocation), route to `show` — it is the only
-   remaining sub-command and the safe default.
+   `/chat-history` invocation), route to `show` — the safe,
+   current-session inspector default. `learn` is opt-in only.
 
 ## Rules
 
-- **Do NOT commit, push, or open a PR** — `show` is read-only.
+- **Do NOT commit, push, or open a PR** — both sub-commands are read-only.
 - **Do NOT chain sub-commands.** One `/chat-history <sub>` per turn.
+- **`learn` crosses the session boundary** — only run it when the
+  user explicitly asked for cross-session reading. The default
+  read path (filtered to current session) stays in effect for
+  every other tool.
