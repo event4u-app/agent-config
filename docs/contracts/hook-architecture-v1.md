@@ -211,3 +211,10 @@ Beta. Breaking changes between v1 and v2 are allowed in a minor
 release if the change appears in `CHANGELOG.md` under a `### Breaking`
 heading. Concerns MUST gate on `schema_version` and refuse unknown
 majors.
+
+## See also
+
+- [`docs/hook-payload-capture.md`](../hook-payload-capture.md) —
+  operational how-to for capturing redacted live payloads to upgrade
+  a platform's chat-history extractor from `docs-verified` to
+  `payload-verified`.
