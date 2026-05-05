@@ -100,6 +100,10 @@ evals/results/
 # user-pasted manual replies — never commit.
 agents/council-sessions/
 
+# AI Council per-run cache (raw provider responses keyed by run id).
+# Regenerated on demand from the council session JSON; never commit.
+.agent-cache/
+
 # Tier 1 hook runtime state (context-hygiene.json, onboarding-gate.json).
 # Written by SessionStart / PostToolUse hooks on Augment + Claude Code;
 # regenerated on demand, never committed.

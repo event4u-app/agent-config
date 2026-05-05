@@ -1,3 +1,8 @@
+---
+status: ready
+complexity: lightweight
+---
+
 # Roadmap: Chat-History Sidecar Shrink
 
 > Drop `first_user_msg` from `.agent-chat-history.session`; keep only

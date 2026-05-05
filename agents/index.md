@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **327 artefacts** in this package.
+Maintainer-facing index of all **328 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -201,7 +201,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`user-interaction`](../.agent-src.uncompressed/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src.uncompressed/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (92)
+## Commands (93)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -214,8 +214,9 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`analyze-reference-repo`](../.agent-src.uncompressed/commands/analyze-reference-repo.md) |  | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`bug-fix`](../.agent-src.uncompressed/commands/bug-fix.md) |  | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
 | command | [`bug-investigate`](../.agent-src.uncompressed/commands/bug-investigate.md) |  | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
+| command | [`chat-history:learn`](../.agent-src.uncompressed/commands/chat-history/learn.md) | cluster: chat-history | Surface prior chat-history sessions as numbered options, let the user pick exactly one, then read its entries verbatim — selective, user-driven cross-session learning |
 | command | [`chat-history:show`](../.agent-src.uncompressed/commands/chat-history/show.md) | cluster: chat-history | Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries |
-| command | [`chat-history`](../.agent-src.uncompressed/commands/chat-history.md) | cluster: chat-history | Chat-history orchestrator — routes to show |
+| command | [`chat-history`](../.agent-src.uncompressed/commands/chat-history.md) | cluster: chat-history | Chat-history orchestrator — routes to show, learn |
 | command | [`check-current-md`](../.agent-src.uncompressed/commands/check-current-md.md) |  | Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes. |
 | command | [`commit:in-chunks`](../.agent-src.uncompressed/commands/commit/in-chunks.md) | cluster: commit | Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows |
 | command | [`commit`](../.agent-src.uncompressed/commands/commit.md) | cluster: commit | Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits |
