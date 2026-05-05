@@ -99,6 +99,17 @@ TYPE_PATTERN = re.compile(r'^type:\s*"?(always|auto)"?\s*$', re.MULTILINE)
 SOURCE_PATTERN = re.compile(r'^source:\s*"?(package|project)"?\s*$', re.MULTILINE)
 STATUS_PATTERN = re.compile(r'^status:\s*"?(active|deprecated|superseded)"?\s*$', re.MULTILINE)
 REPLACED_BY_PATTERN = re.compile(r'^replaced_by:\s*"?([\w-]+)"?\s*$', re.MULTILINE)
+TIER_PATTERN = re.compile(r'^tier:\s*"?([\w-]+)"?\s*$', re.MULTILINE)
+
+# --- Senior-tier required-block patterns (skill-quality.md § Senior-Tier Required Structure) ---
+# Heading-only checks; detail-shape lives in skill-quality-mechanics.md.
+SENIOR_RELATED_SKILLS_PATTERN = re.compile(r"^##\s+Related Skills\s*$", re.MULTILINE)
+SENIOR_RELATED_WHEN_PATTERN = re.compile(r"\*\*WHEN to use this\*\*", re.IGNORECASE)
+SENIOR_RELATED_WHEN_NOT_PATTERN = re.compile(r"\*\*WHEN NOT to use this\*\*", re.IGNORECASE)
+SENIOR_PROACTIVE_PATTERN = re.compile(
+    r"^##\s+When the agent should load this\s*$", re.MULTILINE
+)
+SENIOR_OUTPUT_PATTERN = re.compile(r"^##\s+Output\s*$", re.MULTILINE)
 H1_PATTERN = re.compile(r"^# .+", re.MULTILINE)
 DOUBLE_BLANK_PATTERN = re.compile(r"\n{3,}")
 
@@ -415,6 +426,11 @@ def lint_skill(path: Path, text: str) -> LintResult:
         if execution is not None:
             issues.extend(lint_execution_metadata(execution))
 
+        # --- Senior-tier required-block check (skill-quality.md § Senior-Tier Required Structure) ---
+        tier_match = TIER_PATTERN.search(frontmatter)
+        if tier_match and tier_match.group(1) == "senior":
+            issues.extend(lint_senior_tier_blocks(text))
+
     procedure_block = find_procedure_block(text)
     if procedure_block is not None:
         if not procedure_block:
@@ -601,6 +617,57 @@ def parse_execution_block(frontmatter: str) -> Optional[dict]:
 
     result.pop('_current_list', None)
     return result
+
+
+def lint_senior_tier_blocks(text: str) -> List[Issue]:
+    """Validate the four required blocks for `tier: senior` skills.
+
+    Per .agent-src.uncompressed/rules/skill-quality.md § Senior-Tier
+    Required Structure: Context-First lead (description), Related Skills
+    (with WHEN / WHEN NOT lists), Proactive Triggers, Output Artifacts.
+
+    The Context-First lead is checked structurally via description length
+    + content; here we enforce the three section blocks and the WHEN /
+    WHEN NOT two-list pattern inside Related Skills.
+    """
+    issues: List[Issue] = []
+
+    if not SENIOR_RELATED_SKILLS_PATTERN.search(text):
+        issues.append(Issue(
+            "error",
+            "missing_senior_related_skills",
+            "Senior-tier skill missing `## Related Skills` block (skill-quality.md § Senior-Tier Required Structure)",
+        ))
+    else:
+        related_block = extract_section_block(text, "Related Skills") or ""
+        if not SENIOR_RELATED_WHEN_PATTERN.search(related_block):
+            issues.append(Issue(
+                "error",
+                "missing_senior_related_when",
+                "Senior-tier `## Related Skills` block missing `**WHEN to use this**` list",
+            ))
+        if not SENIOR_RELATED_WHEN_NOT_PATTERN.search(related_block):
+            issues.append(Issue(
+                "error",
+                "missing_senior_related_when_not",
+                "Senior-tier `## Related Skills` block missing `**WHEN NOT to use this**` list",
+            ))
+
+    if not SENIOR_PROACTIVE_PATTERN.search(text):
+        issues.append(Issue(
+            "error",
+            "missing_senior_proactive_triggers",
+            "Senior-tier skill missing `## When the agent should load this` block",
+        ))
+
+    if not SENIOR_OUTPUT_PATTERN.search(text):
+        issues.append(Issue(
+            "error",
+            "missing_senior_output_artifacts",
+            "Senior-tier skill missing `## Output` block declaring artifact name + shape",
+        ))
+
+    return issues
 
 
 def lint_execution_metadata(execution: dict) -> List[Issue]:
@@ -1656,6 +1723,70 @@ def lint_governance(path: Path, text: str, artifact_type: str, repo_root: Path |
     return issues
 
 
+# --- Structural malice check (see road-to-suite-closure Phase 5) ---
+#
+# Five regex patterns scan skill / rule / command bodies for **structural**
+# (not semantic) malice. Findings surface as ``Issue("error",
+# "malice:<pattern>", "<line>:<matched>")`` so ``compute_exit_code`` can
+# emit exit code 3 (security-failure), distinct from 2 (build-failure).
+# Semantic checks (PII leakage, prompt injection) are deferred to v2.
+
+# (a) credential exfil — curl|wget piping ${TOKEN}/${KEY}/${SECRET}/...
+#     env vars or hitting ~/.aws/ ~/.ssh/ secrets.
+_MALICE_CRED_EXFIL = re.compile(
+    r"\b(?:curl|wget)\b[^\n]*"
+    r"(?:\$\{?[A-Z_]*(?:TOKEN|KEY|SECRET|PASSWORD|CREDENTIAL|API)[A-Z_]*\}?"
+    r"|~/\.(?:aws|ssh)/)"
+)
+# (b) arbitrary execution — eval/exec over a network-fetched payload, or
+#     `bash <(curl ...)` / `sh <(wget ...)` style remote-execution.
+_MALICE_REMOTE_EXEC = re.compile(
+    r"(?:\b(?:eval|exec)\s*\([^)]*(?:curl|wget|requests\.get|urllib)"
+    r"|\b(?:bash|sh|zsh)\s*<\s*\(\s*(?:curl|wget))"
+)
+# (c) force-push to a protected ref.
+_MALICE_FORCE_PUSH = re.compile(
+    r"\bgit\s+push\b[^\n]*--force(?:-with-lease)?\b[^\n]*"
+    r"\b(?:main|master|prod|production|release)\b"
+)
+# (d) world-readable secrets — chmod 0?[4567]xx on .pem/.key/.env files.
+_MALICE_CHMOD_SECRETS = re.compile(
+    r"\bchmod\s+0?[4567]\d{2}\s+[^\n]*\.(?:pem|key|env)\b"
+)
+# (e) unbounded subprocess shell injection — shell=True interpolating ${VAR}.
+_MALICE_SHELL_INJECT = re.compile(
+    r"\bsubprocess\.[A-Za-z_]+\s*\([^)]*shell\s*=\s*True[^)]*\$\{"
+)
+
+_MALICE_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
+    ("cred_exfil", _MALICE_CRED_EXFIL),
+    ("remote_exec", _MALICE_REMOTE_EXEC),
+    ("force_push_protected", _MALICE_FORCE_PUSH),
+    ("chmod_secrets", _MALICE_CHMOD_SECRETS),
+    ("shell_injection", _MALICE_SHELL_INJECT),
+]
+
+
+def check_structural_malice(text: str) -> List[Issue]:
+    """Return one Issue per malice match. Empty list when clean.
+
+    Issue shape: ``Issue("error", f"malice:{name}", f"{line}:{matched}")``.
+    The ``format_text`` renderer special-cases the ``malice:`` code prefix
+    to emit ``<path>:<line>:malice:<pattern>:<matched>`` per Phase 5.2.
+    """
+    issues: List[Issue] = []
+    for lineno, raw in enumerate(text.splitlines(), start=1):
+        for name, pattern in _MALICE_PATTERNS:
+            match = pattern.search(raw)
+            if match:
+                issues.append(Issue(
+                    severity="error",
+                    code=f"malice:{name}",
+                    message=f"{lineno}:{match.group(0).strip()}",
+                ))
+    return issues
+
+
 # --- Output-schema check (see road-to-trigger-evals Phase 3.5) ---
 #
 # Skills that freeze an output shape (`refine-ticket`, `estimate-ticket`)
@@ -1865,11 +1996,36 @@ def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
             result.issues.extend(schema_issues)
             result.status = classify_status(result.issues)
 
+    # Post-processing: structural malice scan (errors). Skills, rules,
+    # and commands carry executable patterns; guidelines/personas are
+    # prose-only and skipped to keep noise low.
+    if artifact_type in ("skill", "rule", "command"):
+        malice_issues = check_structural_malice(text)
+        if malice_issues:
+            result.issues.extend(malice_issues)
+            result.status = classify_status(result.issues)
+
     return result
 
 
 def format_text(results: list[LintResult]) -> str:
     lines: list[str] = []
+    # Phase 5.2: malice findings render in the spec shape
+    # ``<path>:<line>:malice:<pattern>:<matched>`` ahead of the badge
+    # block so security-failures are grep-able from the top.
+    malice_total = 0
+    for result in results:
+        for issue in result.issues:
+            if issue.code.startswith("malice:"):
+                pattern_name = issue.code.split(":", 1)[1]
+                lineno, _, matched = issue.message.partition(":")
+                lines.append(
+                    f"{result.file}:{lineno}:malice:{pattern_name}:{matched}"
+                )
+                malice_total += 1
+    if malice_total:
+        lines.append("")
+
     for result in results:
         badge = {"pass": "[PASS]", "pass_with_warnings": "[WARN]", "fail": "[FAIL]"}[result.status]
         lines.append(f"{badge} {result.file} ({result.artifact_type})")
@@ -1888,7 +2044,8 @@ def format_text(results: list[LintResult]) -> str:
     fails = sum(1 for r in results if r.status == "fail")
     warns = sum(1 for r in results if r.status == "pass_with_warnings")
     passes = sum(1 for r in results if r.status == "pass")
-    lines.append(f"Summary: {passes} pass, {warns} warn, {fails} fail, {total} total")
+    suffix = f", {malice_total} malice" if malice_total else ""
+    lines.append(f"Summary: {passes} pass, {warns} warn, {fails} fail, {total} total{suffix}")
     return "\n".join(lines)
 
 
@@ -2087,6 +2244,11 @@ def check_duplication(root: Path) -> list[LintResult]:
 
 
 def compute_exit_code(results: list[LintResult], strict_warnings: bool) -> int:
+    # Phase 5.2: structural-malice findings emit exit code 3 (security-
+    # failure), distinct from 2 (build-failure) so CI surfaces can split.
+    for r in results:
+        if any(issue.code.startswith("malice:") for issue in r.issues):
+            return 3
     if any(r.status == "fail" for r in results):
         return 2
     if any(r.status == "pass_with_warnings" for r in results) and strict_warnings:

@@ -3369,6 +3369,55 @@ When refactoring or optimizing skills:
 - NEVER merge skills if the result is broader than either source
 - ALWAYS run linter before and after — fail count must not increase
 
+## Senior-Tier Required Structure
+
+Skills with `tier: senior` in YAML frontmatter MUST carry four named
+blocks beyond the standard required sections:
+
+| # | Block | Heading / Location | Standard |
+|---|---|---|---|
+| 1 | Context-First lead | Frontmatter `description` | First sentence anchors the cognition cluster (domain + senior role); second sentence names the trigger. |
+| 2 | Related Skills | `## Related Skills` | Two-list pattern — `**WHEN to use this**` (situations this skill resolves) + `**WHEN NOT to use this**` (route-elsewhere peers, named). |
+| 3 | Proactive Triggers | `## When the agent should load this` | 3–5 concrete user-prompt patterns (paraphrases users actually type), not abstract categories. |
+| 4 | Output Artifacts | `## Output` | 1–4 named artifacts with shape (file path, table, markdown structure) — orchestrator-citable identifier each. |
+
+**Forward-only.** `scripts/skill_linter.py` enforces these blocks for
+`tier: senior` skills only; mid-tier and untiered skills skip the
+check. No retrofit pass on existing Wing-1 skills.
+
+Subsection specs (≤ 6-line spec + 1 reference example each), good /
+bad pattern pairs, and the WHEN-NOT routing peer rules live in
+[`contexts/communication/rules-auto/skill-quality-mechanics.md`](../contexts/communication/rules-auto/skill-quality-mechanics.md)
+§ Senior-tier patterns.
+
+## Structural Malice Floor
+
+`scripts/skill_linter.py` runs five regex patterns against every
+skill / rule / command body — credential exfiltration, remote
+execution, force-push to a protected ref, world-readable secret
+files, and shell-injection in subprocess calls. A match emits
+``Issue("error", "malice:<pattern>", "<line>:<matched>")`` and the
+linter exits with code **3** (security-failure), distinct from
+exit 2 (build-failure) so CI surfaces can split the two.
+
+The check is **structural**, not semantic — it catches the shapes
+the [`tool-safety`](tool-safety.md) rule denies in prose: hidden
+credentials, arbitrary execution, write-without-approval. Fixtures
+and the exit-code-3 contract live in
+[`tests/test_skill_linter_malice.py`](../../tests/test_skill_linter_malice.py).
+
+## Confidence Tagging
+
+Senior-tier procedure steps MAY append `[CONFIDENCE: high|medium|low]`
+at the end of multi-step chains where the agent's evidence varies
+across steps. Optional but recommended when a step's output feeds a
+downstream decision.
+
+Text-tag form is deliberate. Emoji 🟢 / 🟡 / 🔴 is **not** allowed —
+collides with [`direct-answers`](direct-answers.md) § Emoji scope
+(functional markers only). Linter does not enforce the tag itself;
+the rule documents the placement so authors converge on one form.
+
 ---
 
 # Commands
