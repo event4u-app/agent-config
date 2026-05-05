@@ -19,7 +19,39 @@ This roadmap tracks the remaining four platforms. They are independent (differen
 
 - Platform matrix + payload schemas — [`agents/contexts/chat-history-platform-hooks.md`](../contexts/chat-history-platform-hooks.md)
 - Dispatcher + extractor — [`scripts/chat_history.py`](../../scripts/chat_history.py) (`_extract_hook_text`, `_extract_augment_conversation`, `_extract_claude_transcript_response`, `hook_dispatch`)
+- Capture tooling — [`scripts/hooks/dispatch_hook.py`](../../scripts/hooks/dispatch_hook.py) (`_maybe_capture_payload`, env-gated by `AGENT_HOOK_CAPTURE_DIR`) + [`scripts/redact_hook_capture.py`](../../scripts/redact_hook_capture.py) (sanitises captures before they land in this roadmap)
 - Council ruling — [`agents/council-sessions/20260505T050924Z-chat-history-unified.json`](../council-sessions/20260505T050924Z-chat-history-unified.json)
+
+## One-shot capture protocol
+
+Every discovery phase reuses the same loop. Tooling is shipped — only the platform-side enable + the actual session run are user actions.
+
+```bash
+# 1. Pick a capture dir (gitignored — never commit raw captures)
+export AGENT_HOOK_CAPTURE_DIR="$HOME/.agent-config-captures/<platform>"
+mkdir -p "$AGENT_HOOK_CAPTURE_DIR"
+
+# 2. Run ONE representative session on the platform (e.g. "what time is it?")
+#    The dispatcher writes raw payloads as JSON before any concern fires.
+
+# 3. Redact (replaces userPrompt / agentTextResponse / prompt / response /
+#    message / content with <REDACTED>; envelope keys preserved)
+python3 scripts/redact_hook_capture.py "$AGENT_HOOK_CAPTURE_DIR" --strict
+
+# 4. Inspect <platform>__<event>__*.redacted.json — paste the smallest
+#    representative one into the relevant phase below as a fenced JSON block.
+
+# 5. Lock the schema in agents/contexts/chat-history-platform-hooks.md
+#    (flip the platform's `Verification` column to `payload-verified`).
+
+# 6. Add an _extract_<platform>_* branch in scripts/chat_history.py
+#    ONLY if the captured shape diverges from the existing top-level
+#    fallback. Otherwise document that the fallback is sufficient.
+
+# 7. Tests cover the captured envelope with synthetic non-sensitive content.
+```
+
+The redaction step is non-negotiable — the goal is to lock schemas, not to archive conversations.
 
 ## Horizon
 
@@ -37,30 +69,38 @@ Capture-only on all four discovery phases until the user decides which platform 
 
 ## Phase 2 — Cursor (capture-only)
 
-- [ ] Confirm Cursor version + hook config location (`.cursor/hooks.json` vs `~/.cursor/hooks.json`); note that Cursor also reads `.claude/settings.json`
-- [ ] Wire a one-shot debug hook that dumps `stop` and `afterAgentResponse` payloads to `~/.cursor/.chat-history-debug.jsonl`
+- [x] Confirm Cursor version + hook config location (`.cursor/hooks.json` project-scope vs `~/.cursor/hooks.json` user-scope; Cursor also reads `.claude/settings.json`) — captured in [`chat-history-platform-hooks.md § Cursor`](../contexts/chat-history-platform-hooks.md#cursor)
+- [x] Wire a one-shot debug hook — capture is now universal via `AGENT_HOOK_CAPTURE_DIR` (no per-platform script needed). Cursor enable: keep the existing dispatcher install + run with the env set.
 - [ ] Capture one real session, redact, paste payload into this roadmap
 - [ ] Lock schema in [`chat-history-platform-hooks.md`](../contexts/chat-history-platform-hooks.md) — flip `Verification` to `payload-verified`
 - [ ] Add `_extract_cursor_*` branch to `_extract_hook_text` if shape diverges from Augment/Claude; otherwise document that top-level fallback is sufficient
 - [ ] Tests covering the captured shape (positive + negative path)
 
+> Cursor enable steps (one-time): ensure `~/.cursor/hooks.json` (or project-scope `.cursor/hooks.json`) routes `stop` + `afterAgentResponse` through `scripts/hooks/cursor-dispatcher.sh` (already shipped by `python3 scripts/install.py --cursor`). Then run `export AGENT_HOOK_CAPTURE_DIR="$HOME/.agent-config-captures/cursor"`, restart Cursor, run one session, and execute the redact step from § One-shot capture protocol.
+
 ## Phase 3 — Cline (capture-only)
 
-- [ ] Confirm Cline build (non-Windows; hooks unsupported on Windows per `cline/cline#8073`)
-- [ ] Debug hook on `TaskComplete` and `UserPromptSubmit`
+- [x] Confirm Cline build constraint (non-Windows; hooks unsupported on Windows per [`cline/cline#8073`](https://github.com/cline/cline/issues/8073)) — captured in [`chat-history-platform-hooks.md § Cline`](../contexts/chat-history-platform-hooks.md#cline)
+- [x] Wire a debug hook for `TaskComplete` + `UserPromptSubmit` — covered by `AGENT_HOOK_CAPTURE_DIR` + the shipped `scripts/hooks/cline-dispatcher.sh`
 - [ ] Capture, redact, lock schema, branch + tests as in Phase 2
+
+> Cline enable steps: drop a hook entry in `.cline/hooks/` that calls `scripts/hooks/cline-dispatcher.sh` for `TaskComplete` and `UserPromptSubmit` (template via `python3 scripts/install.py --cline`). Set `AGENT_HOOK_CAPTURE_DIR`, restart Cline, run one task, redact.
 
 ## Phase 4 — Windsurf (capture-only)
 
-- [ ] Confirm Windsurf ≥ v1.12.41 (hooks shipped there)
-- [ ] Debug hook on `pre_user_prompt` and `post_cascade_response`
+- [x] Confirm Windsurf ≥ v1.12.41 (hooks shipped there) — captured in [`chat-history-platform-hooks.md § Windsurf`](../contexts/chat-history-platform-hooks.md#windsurf)
+- [x] Wire a debug hook for `pre_user_prompt` + `post_cascade_response` — covered by `AGENT_HOOK_CAPTURE_DIR` + `scripts/hooks/windsurf-dispatcher.sh`
 - [ ] Capture, redact, lock schema, branch + tests as in Phase 2
+
+> Windsurf enable steps: ensure `.windsurf/hooks.json` routes `pre_user_prompt` + `post_cascade_response` through the dispatcher (template via `python3 scripts/install.py --windsurf`). `post_cascade_response` is async — capture is observe-only, no critical-path risk. Set `AGENT_HOOK_CAPTURE_DIR`, run one Cascade exchange, redact.
 
 ## Phase 5 — Gemini CLI (capture-only)
 
-- [ ] Confirm Gemini CLI version + hook config path
-- [ ] Debug hook on `BeforeAgent` / `AfterAgent` (note: `SessionStart` is advisory and cannot block)
+- [x] Confirm Gemini CLI version + hook config path (`SessionStart` is advisory and cannot block per [`#15746`](https://github.com/google-gemini/gemini-cli/pull/15746)) — captured in [`chat-history-platform-hooks.md § Gemini CLI`](../contexts/chat-history-platform-hooks.md#gemini-cli)
+- [x] Wire a debug hook for `BeforeAgent` + `AfterAgent` — covered by `AGENT_HOOK_CAPTURE_DIR` + `scripts/hooks/gemini-dispatcher.sh`
 - [ ] Capture, redact, lock schema, branch + tests as in Phase 2
+
+> Gemini enable steps: configure Gemini CLI hooks for `BeforeAgent` + `AfterAgent` to route through the dispatcher (template via `python3 scripts/install.py --gemini`). `SessionStart` payloads are also captured but advisory (`continue` / `decision` are ignored upstream). Set `AGENT_HOOK_CAPTURE_DIR`, run one CLI session, redact.
 
 ## Phase 6 — Cross-platform consolidation (gated on Phases 2–5)
 
@@ -73,15 +113,4 @@ Capture-only on all four discovery phases until the user decides which platform 
 - Auto-writing privacy-sensitive opt-in flags (`includeConversationData`, equivalents on other platforms) into user `settings.json` from the installer — council ruled this is a per-machine privacy decision and stays manual.
 - A unified design across all six platforms before evidence — premature per council; this roadmap exists to gather the evidence first.
 - Changing the dispatch cadence (`per_session` / `per_turn` / `per_phase`) or the session-fingerprint scheme — both are stable from `road-to-stable-chat-history.md` and out of scope here.
-
-## Capture-and-redact protocol
-
-For every discovery phase, the same protocol applies:
-
-1. Enable debug logging at the platform level (per-platform mechanism documented in the matrix).
-2. Run a single representative session (e.g. "what's the time" → response). Avoid sessions that touch real secrets.
-3. Read the captured JSONL, **redact** any user content (replace `userPrompt` / `agentTextResponse` strings with `<REDACTED>`, keep envelope keys + types).
-4. Paste the redacted payload into this roadmap under the relevant phase.
-5. Only then add a code branch + tests. Tests use synthetic payloads that mirror the captured envelope but with non-sensitive content.
-
-The redaction step is non-negotiable — the goal is to lock schemas, not to archive conversations.
+- Auto-enabling capture in CI or installer flows. `AGENT_HOOK_CAPTURE_DIR` is opt-in-per-developer-machine; raw captures are gitignored and never committed.

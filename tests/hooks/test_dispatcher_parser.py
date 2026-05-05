@@ -158,3 +158,65 @@ def test_event_vocabulary_includes_agent_error() -> None:
     """Round 2 Q3 — `agent_error` must stay in the vocabulary."""
     assert "agent_error" in dispatch_hook.EVENT_VOCABULARY
     assert "session_start" in dispatch_hook.EVENT_VOCABULARY
+
+
+
+# --- capture --------------------------------------------------------
+
+def test_maybe_capture_payload_writes_when_env_set(
+    tmp_path, monkeypatch
+) -> None:
+    """AGENT_HOOK_CAPTURE_DIR set → raw payload written as JSON."""
+    monkeypatch.setenv("AGENT_HOOK_CAPTURE_DIR", str(tmp_path))
+    args = argparse.Namespace(
+        platform="cursor", event="stop", native_event="stop")
+    payload = '{"hook_event_name": "stop", "session_id": "abc"}'
+    dispatch_hook._maybe_capture_payload(args, payload)
+    files = list(tmp_path.glob("cursor__stop__*.json"))
+    assert len(files) == 1, f"expected 1 capture, got {files}"
+    import json as _json
+    record = _json.loads(files[0].read_text(encoding="utf-8"))
+    assert record["platform"] == "cursor"
+    assert record["event"] == "stop"
+    assert record["native_event"] == "stop"
+    assert record["raw_payload"]["session_id"] == "abc"
+    assert "captured_at" in record
+
+
+def test_maybe_capture_payload_silent_without_env(
+    tmp_path, monkeypatch
+) -> None:
+    """No env var → no file written."""
+    monkeypatch.delenv("AGENT_HOOK_CAPTURE_DIR", raising=False)
+    args = argparse.Namespace(
+        platform="cursor", event="stop", native_event="stop")
+    dispatch_hook._maybe_capture_payload(args, '{"x": 1}')
+    assert list(tmp_path.glob("*.json")) == []
+
+
+def test_maybe_capture_payload_tolerates_invalid_json(
+    tmp_path, monkeypatch
+) -> None:
+    """Non-JSON stdin still captures as `_raw_text`."""
+    monkeypatch.setenv("AGENT_HOOK_CAPTURE_DIR", str(tmp_path))
+    args = argparse.Namespace(
+        platform="windsurf", event="stop", native_event="post_cascade_response")
+    dispatch_hook._maybe_capture_payload(args, "not-json{garbage")
+    files = list(tmp_path.glob("windsurf__post_cascade_response__*.json"))
+    assert len(files) == 1
+    import json as _json
+    record = _json.loads(files[0].read_text(encoding="utf-8"))
+    assert record["raw_payload"] == {"_raw_text": "not-json{garbage"}
+
+
+def test_maybe_capture_payload_creates_dir_lazily(
+    tmp_path, monkeypatch
+) -> None:
+    """Capture dir is created on first hit."""
+    target = tmp_path / "fresh" / "captures"
+    monkeypatch.setenv("AGENT_HOOK_CAPTURE_DIR", str(target))
+    args = argparse.Namespace(
+        platform="gemini", event="stop", native_event="AfterAgent")
+    dispatch_hook._maybe_capture_payload(args, "{}")
+    assert target.is_dir()
+    assert len(list(target.glob("gemini__AfterAgent__*.json"))) == 1
