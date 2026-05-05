@@ -4,7 +4,7 @@ complexity: lightweight
 
 # Road to verified chat-history platforms
 
-**Status:** Phases 1–5 docs-verified (2026-05-05). Payload-verified upgrade gated on live captures (opportunistic). Phase 6 evaluation triggered.
+**Status:** ARCHIVED 2026-05-05 — Phases 1–6 docs-verified shipping. The 8 remaining open items are deferred-watch with explicit external trigger events (4× opportunistic payload-verified upgrade gated on live IDE sessions; 3× Cowork install plumbing gated on [anthropics/claude-code#40495](https://github.com/anthropics/claude-code/issues/40495); 1× Phase 6 re-evaluation secondary-gated on the payload-verified upgrades). No active execution remaining; reopen via `git mv` back to `agents/roadmaps/` if/when a trigger fires.
 **Started:** 2026-05-05
 **Trigger:** AI Council session `agents/council-sessions/20260505T050924Z-chat-history-unified.json` flagged that only Augment Code and Claude Code have a payload-shape that has been verified against vendor docs. Cursor, Cline, Windsurf, and Gemini CLI relied on top-level-key guesses inside `scripts/chat_history.py::_extract_hook_text` and had never been observed end-to-end.
 **Mode:** Two-tier verification — `docs-verified` (extractor branch matches vendor docs + tests cover documented shapes) ships now; `payload-verified` (same branch confirmed against a redacted live capture) is the optional upgrade path. Council ruling 2026-05-05 (anthropic/claude-opus-4-1 + openai/gpt-4o, mixed verdict): proceed with docs-verified for all four remaining platforms; flag Cursor + Windsurf as schema-volatile and revisit if a live capture becomes available.
