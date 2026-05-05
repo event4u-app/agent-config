@@ -561,8 +561,8 @@ no concern silently disappears.
   Every concern also honours `hooks.<concern>.disabled: true`
   as a kill-switch (per the per-phase Kill-switch sections).
 - **Phase -1 artefact references.** Phases 0–5 reference
-  artefacts as `A1`–`A7`. Adding a Phase that depends on a new
-  artefact requires extending Phase -1 with `A8+`, NOT
+  artefacts as `A1`–`A8`. Adding a Phase that depends on a new
+  artefact requires extending Phase -1 with `A9+`, NOT
   inlining the design.
 - **No release pinning.** Per `scope-control`, no version numbers
   or release dates in this roadmap. Phase ordering is the
