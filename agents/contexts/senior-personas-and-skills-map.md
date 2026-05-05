@@ -6,11 +6,12 @@
 **Council sessions:**
 - `agents/council-sessions/senior-personas-map-iter1.json` (map iter-1, Anthropic + GPT-4o, $0.0992)
 - `agents/council-sessions/joint-wing3-wing4-iter2.json` (joint Wing 3 + Wing 4 iter-2, Anthropic + GPT-4o, $0.1529)
-**Sibling roadmaps:**
-- `agents/roadmaps/road-to-better-skills-and-profiles.md` (Wing 1 — Engineering)
-- `agents/roadmaps/road-to-unified-senior-roles.md` (Foundation cognition core + Wing 2 Product, post-iter1)
-- `agents/roadmaps/road-to-gtm-and-growth.md` (Wing 3 — GTM + Growth, ready-for-execution post-iter2)
-- `agents/roadmaps/road-to-money-strategy-ops.md` (Wing 4 — Money + Strategy + Ops, ready-for-execution post-iter2)
+**Sibling roadmaps** live under `agents/roadmaps/` — one plate per
+wing (Wing 1 — Engineering; Wing 2 — Foundation cognition core +
+Product, post-iter1; Wing 3 — GTM + Growth, ready-for-execution
+post-iter2; Wing 4 — Money + Strategy + Ops, ready-for-execution
+post-iter2). Lookup is by wing number, not file path
+(per `no-roadmap-references`).
 
 **v3 delta** (joint iter-2 OQ6 verdict): persona handles in this map dropped the `senior-` prefix to converge with the sibling-roadmap A-block + unified-senior-roles Q7 verdict (filename = `{slug}.md`, `tier: senior` in YAML frontmatter, not in slug). Cognition-domain identifier unchanged — only the surface form. 81 replacements across 17 handles; prose terms (`senior-cognition`, `senior-individual-contributor`, `senior-people-manager`) untouched.
 

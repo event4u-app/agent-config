@@ -130,5 +130,4 @@ Three shipped chains across the suite illustrate the contract:
 - `.agent-src.uncompressed/rules/skill-quality.md` § Senior-Tier
   Required Structure — defines the `## Related Skills` and `## Output`
   blocks the contract reads.
-- `agents/roadmaps/road-to-suite-closure.md` Phase 3 — work tracking.
 - `scripts/lint_handoffs.py` — mechanical enforcement.

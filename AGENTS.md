@@ -41,18 +41,17 @@ they compose via the cross-wing handoff contract
 ([`docs/contracts/cross-wing-handoff.md`](docs/contracts/cross-wing-handoff.md) (beta),
 landing in `road-to-suite-closure.md` Phase 3).
 
-| Wing | Cognition cluster | Roadmap |
-|---|---|---|
-| **1 — Engineering** | Code craft, debugging, refactoring, release discipline; depth-first | [`road-to-better-skills-and-profiles.md`](agents/roadmaps/road-to-better-skills-and-profiles.md) |
-| **2 — Product + Foundation** | Roles cluster (PM, designer, QA, EM); product discovery, prioritization, delivery shape | [`road-to-unified-senior-roles.md`](agents/roadmaps/road-to-unified-senior-roles.md) |
-| **3 — GTM + Growth** | CMO + marketing + sales + lifecycle; channel-agnostic positioning + funnel cognition | [`road-to-gtm-and-growth.md`](agents/roadmaps/road-to-gtm-and-growth.md) |
-| **4 — Money + Strategy + Ops** | CFO + COO + board-level strategy, valuation, org-design; stage-agnostic financial + operational cognition | [`road-to-money-strategy-ops.md`](agents/roadmaps/road-to-money-strategy-ops.md) |
+| Wing | Cognition cluster |
+|---|---|
+| **1 — Engineering** | Code craft, debugging, refactoring, release discipline; depth-first |
+| **2 — Product + Foundation** | Roles cluster (PM, designer, QA, EM); product discovery, prioritization, delivery shape |
+| **3 — GTM + Growth** | CMO + marketing + sales + lifecycle; channel-agnostic positioning + funnel cognition |
+| **4 — Money + Strategy + Ops** | CFO + COO + board-level strategy, valuation, org-design; stage-agnostic financial + operational cognition |
 
-Closure (shared identity, authoring standard, handoff contract,
-malice lint, orchestration mode) is tracked in
-[`road-to-suite-closure.md`](agents/roadmaps/archive/road-to-suite-closure.md).
-The full persona ↔ skill ↔ wing map lives under `agents/contexts/`
-and is referenced from each wing roadmap.
+Per-wing plates (roadmaps, persona maps, decision logs) live under
+`agents/roadmaps/` and `agents/contexts/`. Roadmaps are transient
+working layers — agents that need a wing's plate look it up by wing
+number rather than by file path (per `no-roadmap-references`).
 
 ## Source of truth
 
@@ -84,13 +83,11 @@ manifests.
 **Cognition-only floor for Wings 2–4.** Wings 2, 3, and 4 enforce a
 no-SaaS-auth, no-vendor-SDK, no-stage-prescription floor: cognition
 artifacts (markdown tables, scoring rubrics, walkthroughs) must work
-in any host without external dependencies. Linters in
-[`road-to-gtm-and-growth.md`](agents/roadmaps/road-to-gtm-and-growth.md)
-G2 and
-[`road-to-money-strategy-ops.md`](agents/roadmaps/road-to-money-strategy-ops.md)
-J2 hold this boundary; per `road-to-suite-closure.md` Phase 5 the
-structural-malice check in `skill_linter.py` enforces it
-mechanically.
+in any host without external dependencies. The structural-malice
+check in `skill_linter.py` enforces this boundary mechanically (no
+credential exfiltration, no remote execution, no shell injection in
+subprocess calls — see `.agent-src.uncompressed/rules/skill-quality.md`
+§ Structural Malice Floor).
 
 ## Working on this repo
 
