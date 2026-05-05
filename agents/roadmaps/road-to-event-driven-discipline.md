@@ -271,7 +271,7 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
       measured Phase 0 baseline; tier reassignments (if any)
       recorded in this roadmap before Phase 1 begins.
 
-### Phase 0 Kill-switch
+#### Phase 0 Kill-switch
 
 - Settings: `hooks.parallel_execution: false` reverts to sequential.
   No concern is shipped in Phase 0; rollback = revert the PRs.
@@ -332,7 +332,7 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
       bench (Phase 0 Step 1 realistic set) → p95 stays ≤ 1.3× the
       synthetic baseline.
 
-### Phase 1 Kill-switch
+#### Phase 1 Kill-switch
 
 - `hooks.git_ops_gate.disabled: true` removes C1 entirely.
 - Auto-disable rule: 3 consecutive sessions with `git-ops-gate`
@@ -375,7 +375,7 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
 - [ ] Suppression mechanism (A7) verified on `task sync` — zero
       warnings emitted during deliberate sync.
 
-### Phase 2 Kill-switch
+#### Phase 2 Kill-switch
 
 - Per-concern: `hooks.<concern>.disabled: true`.
 - Auto-disable rule: ≥10 warnings per session for 3 consecutive
@@ -412,7 +412,7 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
 - [ ] Command-suggestion concern verified on Augment + Claude Code;
       no-op verified on Cursor / Cline / Windsurf / Gemini fixtures.
 
-### Phase 3 Kill-switch
+#### Phase 3 Kill-switch
 
 - Per-concern: `hooks.<concern>.disabled: true`.
 - Telemetry kill is also reachable via the existing
@@ -438,7 +438,7 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
 - [ ] No concern script reads `sys.argv` for platform — fixture
       replay covers the stdin-only path for all seven platforms.
 
-### Phase 4 Kill-switch
+#### Phase 4 Kill-switch
 
 - Migration is an in-tree refactor; rollback = revert the PR.
   The previous concern files are kept in git history; no
@@ -474,7 +474,7 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
 - [ ] Audit log under `log` mode populated with realistic
       payloads after a 5-session dogfood window.
 
-### Phase 5 Kill-switch
+#### Phase 5 Kill-switch
 
 - `hooks.strict_floor: log` reduces the strict mode to
   recording-only without touching concern wiring.
