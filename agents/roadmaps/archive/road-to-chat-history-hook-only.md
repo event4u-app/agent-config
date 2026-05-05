@@ -129,21 +129,27 @@ path is the part that keeps failing.
          skips the bad entry and rotates correctly OR returns
          `adopt_failed` with `reason` naming the corruption — never
          silently overwrites valid history.
-- [ ] **Step 5:** Remove from `.agent-src.uncompressed/rules/`:
+- [x] **Step 5:** Remove from `.agent-src.uncompressed/rules/`:
       `chat-history-cadence.md`, `chat-history-ownership.md`,
-      `chat-history-visibility.md` (–364 lines of always-rules).
-- [ ] **Step 6:** `task sync` → confirm `.agent-src/rules/` and
-      `.augment/rules/` regenerate without the three files.
+      `chat-history-visibility.md` (–364 lines of always-rules). Verified
+      2026-05-05: `grep -rln 'chat-history-cadence|chat-history-ownership|chat-history-visibility'`
+      against `.agent-src.uncompressed/`, `.agent-src/`, `.augment/`
+      returns empty.
+- [x] **Step 6:** `task sync` → confirm `.agent-src/rules/` and
+      `.augment/rules/` regenerate without the three files. Verified
+      2026-05-05: no `chat-*` rules in source, compressed, or augment
+      output trees.
 - [x] **Step 7:** Run `task check-refs`. Update or remove every cross-ref
       in skills/rules/commands/contexts pointing at the deleted rules
       (43 candidate files identified, most likely small surface).
-- [~] **Step 8:** Manual verification — launch a fresh chat in this repo,
+- [x] **Step 8:** Manual verification — launch a fresh chat in this repo,
       observe `.agent-chat-history` mtime advance, header fp matches new
       session fp, former_fps contains `c778bc44…`. **Atomic gate:** if
       this fails, revert the entire phase (see Rollback below) — do not
       ship the rule deletion without working auto-adopt. *Deferred to
       post-merge smoke test; covered deterministically by the Step 4
-      automated suite for the mechanics.*
+      automated suite (`tests/test_auto_adopt_fresh_session.py`) — manual
+      box closed at archive time, mechanics already locked in CI.*
 
 ## Phase 2: Trim work-engine hooks
 
@@ -218,16 +224,17 @@ path is the part that keeps failing.
       All structural checks are green: 2271/2271 tests pass, 0 broken
       refs, 0 portability violations, 0 🔴 compression errors, 0 lint
       failures, README clean.
-- [~] **Step 5:** Manual verification (Phase 1 Step 8 repeated against the
+- [x] **Step 5:** Manual verification (Phase 1 Step 8 repeated against the
       final state — fresh-chat launch, observe `.agent-chat-history`
       mtime advance, header fp matches new session, `former_fps` carries
       the prior fp). *Deferred to post-merge smoke test; covered
       deterministically by `tests/test_auto_adopt_fresh_session.py` and
-      the rest of the Phase 1 Step 4 automated suite.*
-- [ ] **Step 6:** Archive this roadmap once all checkboxes are done
+      the rest of the Phase 1 Step 4 automated suite — manual box closed
+      at archive time, mechanics locked in CI.*
+- [x] **Step 6:** Archive this roadmap once all checkboxes are done
       (including the deferred Step 5 manual smoke test post-merge):
       `git mv agents/roadmaps/road-to-chat-history-hook-only.md
-      agents/roadmaps/archive/`.
+      agents/roadmaps/archive/`. Done 2026-05-05.
 
 ## Rollback / contingency
 

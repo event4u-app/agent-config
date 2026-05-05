@@ -6,10 +6,10 @@
 
 ## Overall
 
-**18 / 130 steps done · 14%**
+**0 / 137 steps done · 0%**
 
 ```text
-██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   14%
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-always-budget-relief.md](roadmaps/road-to-always-budget-relief.md) | 4 | 14 | 14 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 1 | 34 | 34 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-chat-history-hook-only.md](roadmaps/road-to-chat-history-hook-only.md) | 5 | 23 | 3 | 18 | 2 | 0 | █████████░ 86% |
+| 3 | [road-to-chat-history-sidecar-shrink.md](roadmaps/road-to-chat-history-sidecar-shrink.md) | 6 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-proof-not-features.md](roadmaps/road-to-proof-not-features.md) | 3 | 19 | 19 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -46,17 +46,18 @@
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Thinking Layer execution | ⬜ not started | 34 | 0 | 0 | 0 | 0% |
 
-### [road-to-chat-history-hook-only.md](roadmaps/road-to-chat-history-hook-only.md)
+### [road-to-chat-history-sidecar-shrink.md](roadmaps/road-to-chat-history-sidecar-shrink.md)
 
-**Road to Chat-History Hook-Only** — 18 / 21 done (86%)
+**Chat-History Sidecar Shrink** — 0 / 28 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Atomic transition — auto-adopt + cooperative rules deleted | 🟡 in progress | 2 | 5 | 1 | 0 | 71% |
-| 2 | Trim work-engine hooks | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | Trim agent-facing sub-commands | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 4 | Trim CLI surface and contexts | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 5 | Settings, docs, CI green, archive | 🟡 in progress | 1 | 4 | 1 | 0 | 80% |
+| 1 | Additive: `expected_fp=` on append() and helpers | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Hook write path uses `sidecar.fp` directly | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Drop `first_user_msg` from sidecar writes (privacy win) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | Cleanup + docs | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 5 | AI Council pass on the diff | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 6 | Archive + unblock session-isolation | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
 
 ### [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md)
 
