@@ -15,6 +15,7 @@ source: package
 * Experimenting with a refactor that may be thrown away — a throwaway
   worktree is cheaper than a throwaway commit
 * A long-running build or test suite is busy in the current worktree
+* `subagent-orchestration` mode 6 (`do-in-worktrees`) was selected for a cross-wing chain — this skill is the executor that creates the per-step isolated worktrees the chain expects
 
 Do NOT use when:
 

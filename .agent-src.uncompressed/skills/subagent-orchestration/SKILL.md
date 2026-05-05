@@ -1,6 +1,6 @@
 ---
 name: subagent-orchestration
-description: "Use when orchestrating implementer/judge subagents — five modes (do-and-judge, do-in-steps, do-in-parallel, do-competitively, judge-with-debate) — models from .agent-settings.yml."
+description: "Use when orchestrating implementer/judge subagents — six modes (do-and-judge, do-in-steps, do-in-parallel, do-competitively, judge-with-debate, do-in-worktrees) — models from .agent-settings.yml."
 source: package
 ---
 
@@ -44,7 +44,7 @@ judge is a fresh pair of eyes. If `.agent-settings.yml` resolves to
 identical implementer and judge models, surface the mismatch before
 running — do not silently continue.
 
-## The five modes
+## The six modes
 
 Each mode has a decision row: when to use, when not, and the expected
 model pairing. Defaults come from
@@ -99,6 +99,38 @@ migration, public API) where a single judge is too easy to fool.
 | When to use | When not | Model pairing |
 |---|---|---|
 | Security, data integrity, public API change | Routine internal refactor | judges = same tier (2x); meta-judge = one tier up |
+
+### 6. do-in-worktrees
+
+Cross-wing or cross-skill chain executed across isolated git
+worktrees — each handoff in the chain runs in its own worktree, so
+the workspace state of one step never leaks into the next. Operationalizes
+the worktree boundary clause in
+[`docs/contracts/cross-wing-handoff.md`](../../../docs/contracts/cross-wing-handoff.md)
+§ 3. State-machine layer only — worktree creation/destruction lives
+in [`using-git-worktrees`](../using-git-worktrees/SKILL.md) and
+[`finishing-a-development-branch`](../finishing-a-development-branch/SKILL.md).
+
+| When to use | When not | Model pairing |
+|---|---|---|
+| Multi-step cross-wing chain (≥2 senior skills, each ≥30 min) where one step's open files / branch state would confuse the next | Fast iteration where each step < 30 min — worktree overhead exceeds isolation benefit | implementers = same tier per step; judge = one tier up at chain end |
+
+**Handoff shape:** initiator-skill emits the typed output declared in
+its `## Output` block → control passes to delegated-skill in a fresh
+worktree → delegated-skill consumes the input shape declared in its
+`## Input` (or `## When the agent should load this`) block. The
+handoff is auditable; `lint_handoffs.py` validates the chain.
+
+**Example chain (W3 launch):** `positioning` (worktree A) →
+`messaging-architecture` (worktree B, consumes positioning's
+`positioning-statement.md`) → `gtm-launch` (worktree C, consumes
+both prior artifacts). Each worktree carries one branch; the chain
+end produces a single integration PR.
+
+**Anti-pattern:** do not use for fast iteration loops where each
+step is under ~30 minutes. The branch-creation, context-switch, and
+worktree-cleanup cost dominates. Stick with mode 1 (do-and-judge)
+or mode 2 (do-in-steps) for those.
 
 ## Procedure
 
