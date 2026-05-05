@@ -6,10 +6,10 @@
 
 ## Overall
 
-**7 / 134 steps done · 5%**
+**15 / 134 steps done · 11%**
 
 ```text
-██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   5%
+████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   11%
 ```
 
 ## Open roadmaps
@@ -21,7 +21,7 @@
 | 3 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-proof-not-features.md](roadmaps/road-to-proof-not-features.md) | 3 | 19 | 19 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 6 | [road-to-verified-chat-history-platforms.md](roadmaps/road-to-verified-chat-history-platforms.md) | 6 | 25 | 18 | 7 | 0 | 0 | ███░░░░░░░ 28% |
+| 6 | [road-to-verified-chat-history-platforms.md](roadmaps/road-to-verified-chat-history-platforms.md) | 6 | 25 | 10 | 15 | 0 | 0 | ██████░░░░ 60% |
 
 ---
 
@@ -82,14 +82,14 @@
 
 ### [road-to-verified-chat-history-platforms.md](roadmaps/road-to-verified-chat-history-platforms.md)
 
-**Road to verified chat-history platforms** — 7 / 25 done (28%)
+**Road to verified chat-history platforms** — 15 / 25 done (60%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Augment + Claude (DONE 2026-05-05) | ✅ done | 0 | 7 | 0 | 0 | 100% |
-| 2 | Cursor (capture-only) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 3 | Cline (capture-only) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 4 | Windsurf (capture-only) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | Gemini CLI (capture-only) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Cursor (capture-only) | 🟡 in progress | 4 | 2 | 0 | 0 | 33% |
+| 3 | Cline (capture-only) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
+| 4 | Windsurf (capture-only) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
+| 5 | Gemini CLI (capture-only) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 | 6 | Cross-platform consolidation (gated on Phases 2–5) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
