@@ -188,6 +188,47 @@ def init(freq: str = "per_phase", *,
     return header
 
 
+def migrate_header(path: Path | None = None, *,
+                   freq: str | None = None) -> dict[str, Any] | None:
+    """Rewrite a stale header in-place, preserving body and ``started``.
+
+    Returns the new header on migration, ``None`` when the file is
+    missing/empty/unreadable or the header is already at
+    :data:`SCHEMA_VERSION`. v3 headers carry parseable ``v``/``freq``/
+    ``started`` fields that are forward-compatible (see
+    :func:`read_header`); this helper is the only writer that flips
+    ``v`` without destroying the body. Atomic — the body never
+    diverges from the header version mid-write.
+    """
+    p = path or file_path()
+    existing = read_header(p)
+    if existing is None:
+        return None
+    try:
+        current_v = int(existing.get("v", 0))
+    except (TypeError, ValueError):
+        current_v = 0
+    if current_v >= SCHEMA_VERSION:
+        return None
+    chosen_freq = freq or existing.get("freq") or "per_phase"
+    if chosen_freq not in VALID_FREQS:
+        chosen_freq = "per_phase"
+    new_header = _build_header(chosen_freq)
+    # Preserve the original session start so chronology survives.
+    if isinstance(existing.get("started"), str):
+        new_header["started"] = existing["started"]
+    raw = p.read_text(encoding="utf-8")
+    # splitlines() drops the trailing newline; rebuild it on write so
+    # downstream readers (which expect newline-delimited JSONL) stay
+    # happy. Empty body → just the header line + newline.
+    lines = raw.splitlines()
+    if not lines:
+        return None
+    lines[0] = json.dumps(new_header, ensure_ascii=False)
+    _atomic_write_text(p, "\n".join(lines) + "\n")
+    return new_header
+
+
 def append(entry: dict[str, Any], *, path: Path | None = None,
            session: str | None = None) -> None:
     """Append one entry. Entry must be a dict; `ts` is auto-filled.
@@ -830,10 +871,17 @@ def hook_append(event: str, *,
 
     # Lazily initialise the v4 header on first use so callers don't
     # have to invoke `init` separately. Reset is still an explicit
-    # operation via reset_with_entries / clear.
+    # operation via reset_with_entries / clear. When the file already
+    # has a parseable but stale header (v3 in the wild), rewrite the
+    # header in-place — body is preserved, version flips to v4. Without
+    # this branch, v3 headers parse as non-None and the lazy-init path
+    # never fires, leaving the file in a mixed v3-header / v4-body
+    # state forever.
     if not p.is_file() or read_header(p) is None:
         freq = _read_chat_history_frequency(sp)
         init(freq=freq, path=p)
+    else:
+        migrate_header(p, freq=_read_chat_history_frequency(sp))
 
     # Detect session change BEFORE appending so the new entry's `s`
     # doesn't shadow the previous one. Actual prune fires AFTER the

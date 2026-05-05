@@ -139,6 +139,97 @@ def test_read_header_malformed_returns_none(hist: Path):
     assert ch.read_header(hist) is None
 
 
+# ---------------------------------------------------------------------------
+# migrate_header
+# ---------------------------------------------------------------------------
+
+
+def _write_v3_file(p: Path, *, body: list[dict] | None = None) -> dict:
+    """Synthesize a v3 file: legacy header + optional body lines."""
+    legacy_header = {
+        "t": "header", "v": 3, "started": "2025-01-01T00:00:00Z",
+        "freq": "per_turn", "fp": "deadbeef", "former_fps": [],
+        "preview": "legacy", "adopted_at": None, "session": "old-sess",
+    }
+    lines = [json.dumps(legacy_header, ensure_ascii=False)]
+    for e in body or []:
+        lines.append(json.dumps(e, ensure_ascii=False))
+    p.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return legacy_header
+
+
+def test_migrate_header_flips_v3_to_v4(hist: Path):
+    legacy = _write_v3_file(hist, body=[
+        {"t": "user", "ts": "2025-01-01T00:00:01Z", "text": "hi", "s": "abc"},
+        {"t": "agent", "ts": "2025-01-01T00:00:02Z", "text": "yo", "s": "abc"},
+    ])
+    new = ch.migrate_header(hist)
+    assert new is not None
+    assert new["v"] == 4
+    assert new["t"] == "header"
+    # started preserved from the legacy header
+    assert new["started"] == legacy["started"]
+    # freq preserved from the legacy header (not overwritten by default)
+    assert new["freq"] == "per_turn"
+    # legacy-only fields (fp, former_fps, preview, adopted_at, session)
+    # do NOT survive migration — clean v4 header.
+    assert set(new.keys()) == {"t", "v", "started", "freq"}
+
+
+def test_migrate_header_preserves_body(hist: Path):
+    body = [
+        {"t": "user", "ts": "2025-01-01T00:00:01Z", "text": "hi", "s": "abc"},
+        {"t": "agent", "ts": "2025-01-01T00:00:02Z", "text": "yo", "s": "abc"},
+    ]
+    _write_v3_file(hist, body=body)
+    ch.migrate_header(hist)
+    entries = ch.read_entries(path=hist)
+    assert len(entries) == 2
+    assert entries[0]["text"] == "hi"
+    assert entries[1]["text"] == "yo"
+    # Trailing newline preserved so JSONL readers don't choke.
+    assert hist.read_text(encoding="utf-8").endswith("\n")
+
+
+def test_migrate_header_noop_on_v4(hist: Path):
+    ch.init(freq="per_phase", path=hist)
+    before = hist.read_text(encoding="utf-8")
+    assert ch.migrate_header(hist) is None
+    assert hist.read_text(encoding="utf-8") == before
+
+
+def test_migrate_header_noop_on_missing_file(tmp_path: Path):
+    p = tmp_path / "absent.jsonl"
+    assert ch.migrate_header(p) is None
+    assert not p.exists()
+
+
+def test_migrate_header_overrides_freq_when_arg_supplied(hist: Path):
+    _write_v3_file(hist)
+    new = ch.migrate_header(hist, freq="per_phase")
+    assert new is not None
+    assert new["freq"] == "per_phase"
+
+
+def test_hook_append_migrates_v3_header_in_place(
+    hist: Path, settings_enabled: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    legacy = _write_v3_file(hist)
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    ch.hook_append(
+        "user_prompt", session_id="sess-new",
+        payload={"text": "after-migration"},
+        settings_path=settings_enabled,
+    )
+    header = ch.read_header(hist)
+    assert header is not None
+    assert header["v"] == 4
+    # `started` survives the flip — chronological continuity.
+    assert header["started"] == legacy["started"]
+    entries = ch.read_entries(path=hist)
+    assert len(entries) == 1
+    assert entries[0]["text"] == "after-migration"
+
 
 # ---------------------------------------------------------------------------
 # append / prepend / reset_with_entries / clear
