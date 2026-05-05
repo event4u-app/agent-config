@@ -225,7 +225,7 @@ per-invocation caps from `ai_council.cost_budget`:
   if the callback returns False or is absent, tags the member
   `daily_budget_exceeded` instead of `cost_budget_exceeded`.
 
-Prices come from `.agent-prices.md` (gitignored, refreshed weekly).
+Prices come from `agents/.agent-prices.md` (gitignored, refreshed weekly).
 The pricing module bootstraps it from `_default_prices.py` on first
 use and flags it stale when older than the most recent Monday 00:00
 UTC.

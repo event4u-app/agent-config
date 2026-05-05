@@ -5,8 +5,8 @@ cluster: chat-history
 disable-model-invocation: true
 suggestion:
   eligible: true
-  trigger_description: "show chat-history status, inspect .agent-chat-history log, import a prior session into the current chat, mine a prior session for project-improving learnings"
-  trigger_context: "user wants to inspect the persistent .agent-chat-history log, pull a prior session in verbatim, or extract learnings from a prior session"
+  trigger_description: "show chat-history status, inspect agents/.agent-chat-history log, import a prior session into the current chat, mine a prior session for project-improving learnings"
+  trigger_context: "user wants to inspect the persistent agents/.agent-chat-history log, pull a prior session in verbatim, or extract learnings from a prior session"
 ---
 
 <!-- cloud_safe: noop -->

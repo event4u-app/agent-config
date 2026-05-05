@@ -32,7 +32,7 @@ Do NOT use when:
 
 - Editing project content outside the trees listed above (READMEs of
   consumer projects, application docs that follow a different policy)
-- Reviewing chat history files (`.agent-chat-history` is JSONL, not `.md`)
+- Reviewing chat history files (`agents/.agent-chat-history` is JSONL, not `.md`)
 - Inspecting non-`.md` files — the checker rejects them with a warning
 
 ## Procedure

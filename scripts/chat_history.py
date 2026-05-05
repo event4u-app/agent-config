@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Persistent chat-history log for crash recovery.
 
-Maintains `.agent-chat-history` in the project root — a JSONL file whose
+Maintains `agents/.agent-chat-history` — a JSONL file whose
 first line is a header (schema version, started timestamp, cadence
 frequency) and whose remaining lines are append-only entries (user
 messages, phases, tool calls, questions, answers, decisions, commits).
@@ -12,8 +12,8 @@ sessions coexist in one file; each entry self-identifies. No ownership
 layer, no sidecar, no auto-adopt — every hook invocation simply appends
 with its own session tag.
 
-File path defaults to `.agent-chat-history` in CWD and can be overridden
-via `$AGENT_CHAT_HISTORY_FILE` (used by tests).
+File path defaults to `agents/.agent-chat-history` (relative to CWD) and
+can be overridden via `$AGENT_CHAT_HISTORY_FILE` (used by tests).
 
 Usage:
     python3 scripts/chat_history.py init [--freq per_phase]
@@ -41,7 +41,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-DEFAULT_FILE = ".agent-chat-history"
+DEFAULT_FILE = "agents/.agent-chat-history"
 DEFAULT_SETTINGS_FILE = ".agent-settings.yml"
 SCHEMA_VERSION = 4
 DEFAULT_MAX_SESSIONS = 5

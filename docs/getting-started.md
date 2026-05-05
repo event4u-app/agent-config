@@ -157,13 +157,13 @@ Your agent now understands slash commands:
 
 ---
 
-## Crash recovery — `.agent-chat-history`
+## Crash recovery — `agents/.agent-chat-history`
 
 When `chat_history.enabled: true` in `.agent-settings.yml` (on by default
 for every profile), the agent keeps a JSONL log of your conversation in
-`.agent-chat-history` at the project root. The file is git-ignored and
-rotates at the size configured in the profile (`128 KB` on `minimal`,
-`256 KB` on `balanced`, `512 KB` on `full`).
+`agents/.agent-chat-history`. The file is git-ignored and rotates at the
+size configured in the profile (`128 KB` on `minimal`, `256 KB` on
+`balanced`, `512 KB` on `full`).
 
 Logging is **hook-only**: a structural Augment hook fires on
 `session_start` and binds the log to the current session via auto-adopt

@@ -14,7 +14,7 @@ suggestion:
 # /chat-history import
 
 Read-only, **user-driven** cross-session import. Surfaces prior
-sessions logged in `.agent-chat-history` as numbered options, the
+sessions logged in `agents/.agent-chat-history` as numbered options, the
 user picks **one**, the agent reads that session's entries
 **verbatim** and renders them in the chat. Any subsequent
 extraction or summarisation happens in dialogue, user-directed —
@@ -63,7 +63,7 @@ sessions with at least one body entry are surfaced.
 If the array is empty, stop:
 
 ```
-> 📒 No prior sessions found in .agent-chat-history.
+> 📒 No prior sessions found in agents/.agent-chat-history.
 ```
 
 ### 3. Surface as numbered options
@@ -139,7 +139,7 @@ behalf without an explicit instruction.
   extraction.
 - **One pick per invocation.** Multi-pick is v2. If the user wants
   a second session, run `/chat-history import` again.
-- **Read-only.** This command never writes to `.agent-chat-history`
+- **Read-only.** This command never writes to `agents/.agent-chat-history`
   and never rotates.
 - **`<legacy>` and `<unknown>` buckets** show up like any other
   session id when they have body entries — the user can pick them

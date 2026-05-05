@@ -66,12 +66,12 @@ Show the handoff prompt in a fenced code block and say:
 - **Decisions are important** — prevents the new chat from re-asking settled questions.
 - **File list is optional** — only include if the new chat will need to edit specific files.
 
-## When to use this vs. `.agent-chat-history`
+## When to use this vs. `agents/.agent-chat-history`
 
 - `/agent-handoff` is **push-based**: you copy a short summary into the
   new chat. Works across tools (Augment → Claude Code), across machines,
   and without any persistent file.
-- `.agent-chat-history` is **pull-based** and **multi-session**: every
+- `agents/.agent-chat-history` is **pull-based** and **multi-session**: every
   session writes its own entries tagged with a 16-char session
   fingerprint derived from the platform `session_id` (schema v4, see
   [`chat-history-platform-hooks`](../../agents/contexts/chat-history-platform-hooks.md)).

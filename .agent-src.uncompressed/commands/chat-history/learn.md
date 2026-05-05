@@ -15,7 +15,7 @@ suggestion:
 # /chat-history learn
 
 User-driven **learning extraction** from a prior session. Surfaces
-prior sessions logged in `.agent-chat-history` as numbered options,
+prior sessions logged in `agents/.agent-chat-history` as numbered options,
 the user picks **one**, the agent reads that session's entries and
 runs the [`learning-to-rule-or-skill`](../../skills/learning-to-rule-or-skill/SKILL.md)
 workflow on the content — surfacing repeated mistakes, successful
@@ -60,7 +60,7 @@ sessions with at least one body entry are surfaced.
 If the array is empty, stop:
 
 ```
-> 📒 No prior sessions found in .agent-chat-history.
+> 📒 No prior sessions found in agents/.agent-chat-history.
 ```
 
 ### 3. Surface as numbered options
@@ -151,7 +151,7 @@ project policy) for the user to review and route via
 - **One pick per invocation.** Multi-pick is v2. If the user wants
   to mine a second session, run `/chat-history learn` again.
 - **Read-only on the log.** This command never writes to
-  `.agent-chat-history`. It writes proposal drafts under
+  `agents/.agent-chat-history`. It writes proposal drafts under
   `agents/proposals/` only.
 - **No auto-promotion.** Drafted proposals stay in `proposals/`
   until the user routes them. `learn` never invokes

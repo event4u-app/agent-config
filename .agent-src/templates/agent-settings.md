@@ -122,7 +122,7 @@ eloquent:
 
 # --- Chat history (crash recovery) ---
 #
-# Persistent JSONL log at .agent-chat-history (project root, git-ignored).
+# Persistent JSONL log at agents/.agent-chat-history (project root, git-ignored).
 # Keeps a durable record of the conversation so a crashed or switched
 # agent session can be resumed. See scripts/chat_history.py for the API.
 #
@@ -177,7 +177,7 @@ hooks:
   # routing drift.
   directive_set_guard: true
 
-  # Chat-history hooks — populate .agent-chat-history structurally from
+  # Chat-history hooks — populate agents/.agent-chat-history structurally from
   # the engine. Gated by BOTH this block AND the global
   # chat_history.enabled above; either off → no chat-history hook
   # registers. Keep both on for the HOOK path; flip either off to fall
@@ -343,7 +343,7 @@ lives under `personal:` in YAML.
 | `project.improvement_pr_branch_prefix` | string | `improve/agent-` | Branch prefix for agent improvement PRs. |
 | `github.pr_reply_method` | `replies_endpoint`, `create_review_comment`, `auto` | `create_review_comment` | GitHub API method for replying to PR review comments. `auto` detects on first use. |
 | `eloquent.access_style` | `getters_setters`, `get_attribute`, `magic_properties` | `getters_setters` | How to access Eloquent model attributes. See `eloquent` skill for details. |
-| `chat_history.enabled` | `true`, `false` | `true` | Persist chat events to `.agent-chat-history` (JSONL) for crash recovery. |
+| `chat_history.enabled` | `true`, `false` | `true` | Persist chat events to `agents/.agent-chat-history` (JSONL) for crash recovery. |
 | `chat_history.frequency` | `per_turn`, `per_phase`, `per_tool` | per profile | Logging granularity. Defaults: `minimal`→`per_turn`, `balanced`→`per_phase`, `full`→`per_tool`. |
 | `chat_history.max_size_kb` | integer | per profile | Max file size before overflow handling. Defaults: `minimal`→`128`, `balanced`→`256`, `full`→`512`. |
 | `chat_history.on_overflow` | `rotate`, `compress` | per profile | On overflow: `rotate` drops oldest entries; `compress` marks the file for summarization on the next turn. Defaults: `minimal`/`balanced`→`rotate`, `full`→`compress`. |

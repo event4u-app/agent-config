@@ -93,7 +93,7 @@ the deprecation cycle for Phase 1 closes. Tracked in
 > `chat-history-cadence`, `chat-history-visibility`) and the heartbeat
 > marker no longer exist. Persistence is now a pure platform-hook
 > contract — `session_start` auto-adopts foreign sessions silently;
-> the agent never reads or writes `.agent-chat-history` cooperatively.
+> the agent never reads or writes `agents/.agent-chat-history` cooperatively.
 > Manual recovery lever: `./agent-config chat-history:adopt`.
 
 For historical context: the monolithic `rules/chat-history.md` was

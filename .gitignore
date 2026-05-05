@@ -40,10 +40,10 @@ __pycache__/
 # Persistent chat-history log (crash recovery; written by
 # scripts/chat_history.py, governed by the chat-history rule). Never
 # commit — contains conversation content and session fingerprints.
-.agent-chat-history
-.agent-chat-history.bak
-.agent-chat-history.*.bak
-.agent-chat-history.session
+/agents/.agent-chat-history
+/agents/.agent-chat-history.bak
+/agents/.agent-chat-history.*.bak
+/agents/.agent-chat-history.session
 
 # Artefact engagement telemetry log (default-off, maintainer-only;
 # written by `./agent-config telemetry:record` when
@@ -92,7 +92,7 @@ evals/results/
 # `python3 scripts/update_prices.py`; bootstrapped on first /council
 # call from scripts/ai_council/_default_prices.py). User-editable —
 # never commit, prices drift constantly.
-.agent-prices.md
+/agents/.agent-prices.md
 
 # AI Council session persistence (D2). Each /council run writes
 # request + raw responses + manifest to a per-UTC-timestamp folder

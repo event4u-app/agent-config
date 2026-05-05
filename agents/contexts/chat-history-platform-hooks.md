@@ -15,7 +15,7 @@ Mirrors the roadmap's authoritative definitions:
 
 - **HOOK** — platform fires a lifecycle event, our wrapper runs `chat_history.py append`. Zero agent involvement. Crash-safe.
 - **CHECKPOINT** — no automatic hook, but a thin user-invoked command (e.g. `./agent-config chat-history:checkpoint`) takes ~1 s. Fallback when HOOK is impossible or misfires.
-- **MANUAL** — accept that the platform cannot be automated; document the gap. The agent never reads or writes `.agent-chat-history` cooperatively.
+- **MANUAL** — accept that the platform cannot be automated; document the gap. The agent never reads or writes `agents/.agent-chat-history` cooperatively.
 
 ## Decision matrix
 
@@ -280,7 +280,7 @@ to `transcript_path` parsing using the Claude walker.
 
 ## Multi-session coexistence
 
-The agent never reads or writes `.agent-chat-history` cooperatively.
+The agent never reads or writes `agents/.agent-chat-history` cooperatively.
 Schema v4 treats the file as a **multi-session** log: every body
 entry self-tags via `s = derive_session_tag(session_id)` (16-char
 SHA-256 prefix of the platform's `session_id`). Sessions coexist in
@@ -295,7 +295,7 @@ When a hook fires:
 
 There is no manual recovery lever in v4. A "wrong" session writing
 to the file is not a failure mode — the entry simply joins the log
-under its own `s`. To wipe the file, delete `.agent-chat-history`
+under its own `s`. To wipe the file, delete `agents/.agent-chat-history`
 manually (it is git-ignored and recreated on the next hook fire). To
 pull a prior session into the current chat verbatim, use
 `/chat-history import`; to mine a prior session for project-improving
@@ -361,7 +361,7 @@ never commits them and never auto-promotes them upstream.
 
 Schema v4 is **fully stateless** between hook invocations. There is
 no sidecar, no ownership file, no header-tracked former-session
-registry. The single source of truth is `.agent-chat-history`
+registry. The single source of truth is `agents/.agent-chat-history`
 itself:
 
 - **Header** (line 1): `{t:"header", v:4, started, freq}`. Written
@@ -386,4 +386,4 @@ timestamps).
 | `AGENT_CHAT_HISTORY_SESSION_FILTER` | `true` | `read_entries_for_current` returns all entries (rolls back filtering) |
 
 `AGENT_CHAT_HISTORY_FILE` overrides the default file path
-(`.agent-chat-history` in CWD); used by tests.
+(`agents/.agent-chat-history` in CWD); used by tests.

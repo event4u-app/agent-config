@@ -84,7 +84,7 @@ eloquent:
 
 # --- Chat history (crash recovery) ---
 #
-# Persistent JSONL log at .agent-chat-history (project root, git-ignored).
+# Persistent JSONL log at agents/.agent-chat-history (git-ignored).
 # Keeps a durable record of the conversation so a crashed or switched
 # agent session can be resumed. See scripts/chat_history.py for the API.
 chat_history:
@@ -211,7 +211,7 @@ ai_council:
   # the user to continue. `max_total_usd: 0` disables the USD ceiling
   # (token caps still apply).
   #
-  # Prices come from `.agent-prices.md` (gitignored, refreshed weekly
+  # Prices come from `agents/.agent-prices.md` (gitignored, refreshed weekly
   # by `python3 scripts/update_prices.py`; bootstrapped from
   # scripts/ai_council/_default_prices.py on first run).
   cost_budget:

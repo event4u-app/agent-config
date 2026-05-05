@@ -45,7 +45,7 @@ CI enforcement: `scripts/check_no_roadmap_refs.py` (companion linter
 - `agents/roadmaps/` and its subdirectories as directory mentions
   (talking about the layer, not a specific file)
 - Roadmap → roadmap references (siblings within the transient layer)
-- Council sessions, `.agent-chat-history`, commit messages, PR
+- Council sessions, `agents/.agent-chat-history`, commit messages, PR
   descriptions — transient by construction, not part of the package
   surface
 

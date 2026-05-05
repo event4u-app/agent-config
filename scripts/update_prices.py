@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Refresh `.agent-prices.md` from the LiteLLM model-prices feed.
+"""Refresh `agents/.agent-prices.md` from the LiteLLM model-prices feed.
 
 Source: https://raw.githubusercontent.com/BerriAI/litellm/main/
         model_prices_and_context_window.json
@@ -9,7 +9,7 @@ Network failure or invalid response → fall back to
 always written. Stdlib only; no extra dependency.
 
 Usage:
-    python3 scripts/update_prices.py            # writes .agent-prices.md
+    python3 scripts/update_prices.py            # writes agents/.agent-prices.md
     python3 scripts/update_prices.py --check    # exit 1 if file is stale
 """
 
@@ -81,7 +81,7 @@ def _to_rows_from_litellm(payload: dict[str, dict[str, object]]) -> list[tuple[s
 
 
 def refresh(path: Path = PRICES_FILE) -> str:
-    """Write a fresh `.agent-prices.md`. Returns the source label used."""
+    """Write a fresh `agents/.agent-prices.md`. Returns the source label used."""
     payload = _fetch_litellm()
     if payload is not None:
         rows = _to_rows_from_litellm(payload)

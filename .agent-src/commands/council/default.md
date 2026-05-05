@@ -71,7 +71,7 @@ Read `.agent-settings.yml` → `ai_council`:
   to env vars. Ever.
 
 Load the price table via `scripts.ai_council.pricing.load_prices()`
-(auto-bootstraps `.agent-prices.md` from defaults if missing). Run
+(auto-bootstraps `agents/.agent-prices.md` from defaults if missing). Run
 `pricing.is_stale(table)` and, if stale, surface the staleness gate
 from the `ai-council` skill (§ Stale price-table gate) before
 continuing.
@@ -203,7 +203,7 @@ council can act on the project directly.
 - **Stale price table, refresher fails (offline)** → state the
   failure, re-offer "continue with stale table / cancel", do not
   proceed silently.
-- **`.agent-prices.md` corrupt (missing frontmatter or columns)** →
+- **`agents/.agent-prices.md` corrupt (missing frontmatter or columns)** →
   surface the parse error, suggest deleting the file to bootstrap
   fresh from defaults; never silently fall back.
 - **All members error (CLI exit 1)** → render the errors via

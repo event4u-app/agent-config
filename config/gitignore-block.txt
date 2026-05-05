@@ -19,13 +19,13 @@
 .agent-settings.backup.key-value
 
 # Agent config — persistent chat history (crash recovery, never commit)
-.agent-chat-history
-.agent-chat-history.bak
-.agent-chat-history.*.bak
+/agents/.agent-chat-history
+/agents/.agent-chat-history.bak
+/agents/.agent-chat-history.*.bak
 
 # Agent config — artefact engagement telemetry (default-off, maintainer-only, never commit)
 .agent-engagement.jsonl
 .agent-engagement.jsonl.bak
 
 # Agent config — AI Council price table (refreshed weekly, never commit)
-.agent-prices.md
+/agents/.agent-prices.md

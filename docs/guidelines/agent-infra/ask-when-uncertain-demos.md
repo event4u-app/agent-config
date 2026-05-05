@@ -106,7 +106,7 @@ Agent: Bevor ich die Roadmap übergebe:
 - Welcher Branch?
 - Soll ich PRs erwähnen?
 - Welches Modell für die Fortsetzung?
-- Soll ich .agent-chat-history zitieren?
+- Soll ich agents/.agent-chat-history zitieren?
 
 Antworte als 1, 2, 3, 4.
 ```
