@@ -4,7 +4,6 @@ Each council member runs in exactly one transport mode per invocation:
 
 - ``api``      — direct SDK call against the provider's API (billable).
 - ``manual``   — copy-paste loop with the user as transport (free).
-- ``playwright`` — browser automation (Phase 2c, not yet wired).
 
 Resolution precedence — first non-empty wins:
 
@@ -24,7 +23,7 @@ from __future__ import annotations
 
 from typing import Mapping
 
-VALID_MODES: frozenset[str] = frozenset({"api", "manual", "playwright"})
+VALID_MODES: frozenset[str] = frozenset({"api", "manual"})
 
 DEFAULT_MODE: str = "manual"
 

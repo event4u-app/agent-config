@@ -186,9 +186,8 @@ ai_council:
   # Default transport mode for every member (overridable per-member
   # below, and per-invocation via `/council mode:<x>`).
   #
-  #   api        = direct SDK call against the provider's API (billable).
-  #   manual     = copy-paste loop, user is the transport (free).
-  #   playwright = browser automation (Phase 2c, not yet wired).
+  #   api    = direct SDK call against the provider's API (billable).
+  #   manual = copy-paste loop, user is the transport (free).
   #
   # Precedence: invocation flag > per-member mode > global mode > "manual".
   mode: "manual"

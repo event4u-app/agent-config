@@ -100,7 +100,7 @@ class ExternalAIClient(ABC):
 
     name: str = ""
     model: str = ""
-    billable: bool = True  # API-mode subclasses spend money; manual/playwright don't.
+    billable: bool = True  # API-mode subclasses spend money; manual doesn't.
 
     @abstractmethod
     def ask(
