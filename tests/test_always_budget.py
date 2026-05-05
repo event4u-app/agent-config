@@ -57,11 +57,20 @@ def _load_baseline() -> int | None:
 # questions` trim). Phase 0b.2 (F10) trim of `language-and-tone` dropped
 # the rule from rank 3 to rank 8 (5,832 → 3,969 chars), pulling the top-5
 # sum down to 32,874 with `ask-when-uncertain` (5,196) entering rank 5.
+# Re-baselined to 33,313 on `feat/chat-history-relocation-and-cleanup`
+# after commit `66a9f91` re-synced the `language-and-tone` mirror to its
+# source (Iron-Law passages restored — code block +2 lines, new
+# 'user-visible prose' section, expanded pre-send gate; rule grew from
+# 3,969 → 5,561 chars and re-entered top-5 at rank 4). The growth is
+# legitimate: source had been tightened in `57fa47d` but the mirror drifted
+# for 8 commits — semantic integrity (Iron-Law text 1:1 with source) wins
+# over budget headroom for safety-floor rules. Total budget still has
+# 2,023 char headroom (46,977 / 49,000).
 # Failure mode pinned: the top-5 always-rule extended sum grows beyond this
-# ceiling without an accompanying trim, signalling that Phase 0b.2 budget
-# headroom is regressing. Trims that push the ceiling DOWN must update this
-# constant in the same commit.
-TOP5_CEILING = 32_874
+# ceiling without an accompanying trim, signalling that budget headroom is
+# regressing. Trims that push the ceiling DOWN must update this constant
+# in the same commit.
+TOP5_CEILING = 33_313
 MAX_DEPTH = 2
 
 # Mirrors `scripts/check_always_budget.py::KNOWN_PER_RULE_BREACHES`.

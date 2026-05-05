@@ -11,14 +11,15 @@ suggestion:
 <!-- cloud_safe: noop -->
 
 # /chat-history show
-Inspect `.agent-chat-history` — the JSONL log maintained by the
-[`chat-history`](../rules/chat-history-ownership.md) rule for crash recovery.
+Inspect `agents/.agent-chat-history` — the JSONL log appended by the
+structural chat-history hooks (`ChatHistoryAppendHook`,
+`ChatHistoryHaltAppendHook`) for crash recovery.
 
 Shows:
 
 - Whether the file exists and whether logging is currently enabled
 - File size vs `max_size_kb`
-- Header metadata: fingerprint preview, created-at, `frequency`
+- Header metadata: schema version, `started`, `frequency`
 - Entry count and age of the oldest/newest entry
 - A peek at the last 3–5 entries so the user can see what was captured
 
@@ -26,9 +27,8 @@ Read-only — this command never writes to the file.
 
 ## When NOT to use
 
-- Load the log back into the conversation for context →
-  [`/chat-history resume`](chat-history-resume.md).
-- Wipe the file → [`/chat-history clear`](chat-history-clear.md).
+- Wipe the file → delete `agents/.agent-chat-history` manually; it is
+  git-ignored and will be recreated on the next hook fire.
 - Configure logging behavior → edit `.agent-settings.yml` directly
   (`chat_history.*`); see
   [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
@@ -66,10 +66,10 @@ Render a concise report:
 ```
 > 📒 chat-history status
 >
-> File:       .agent-chat-history  ({size_kb} KB / {max_size_kb} KB)
+> File:       agents/.agent-chat-history  ({size_kb} KB / {max_size_kb} KB)
 > Entries:    {entries}
-> Fingerprint:{short_fp}  (session started {created_at_relative})
-> Frequency:  {frequency}
+> Schema:     v{header.v}  (started {header.started})
+> Frequency:  {header.freq}
 > Overflow:   {on_overflow}
 >
 > Last entries:
@@ -84,15 +84,16 @@ data, see [`token-efficiency`](../rules/token-efficiency.md)).
 
 ### 5. Offer follow-ups (optional)
 
-If the file exists and the fingerprint does **not** match the current
-session, suggest `/chat-history resume` to adopt it.
-
 If the file is close to `max_size_kb` (> 80 %), mention it — the next
-append may trigger overflow handling.
+append may trigger overflow handling. To pull a specific prior
+session into the current chat verbatim, point the user at
+`/chat-history import`; to mine a prior session for project-improving
+learnings, `/chat-history learn`. The body filter on `s` is the v4
+isolation surface in both cases.
 
 ## Gotchas
 
-- `.agent-chat-history` is git-ignored. This command never commits.
+- `agents/.agent-chat-history` is git-ignored. This command never commits.
 - The helper is the only way to read the file — do not cat or parse
   the JSONL directly; entry shape is owned by `scripts/chat_history.py`.
 - If `exists: false` but the rule says logging is enabled, the file is
@@ -100,8 +101,6 @@ append may trigger overflow handling.
 
 ## See also
 
-- [`chat-history`](../rules/chat-history-ownership.md) — the rule that writes the file
-- [`/chat-history resume`](chat-history-resume.md) — adopt + load
-- [`/chat-history clear`](chat-history-clear.md) — wipe
+- [`chat-history-platform-hooks`](../../../agents/contexts/chat-history-platform-hooks.md) — the hook-only contract
 - [`agent-settings` template](../templates/agent-settings.md) — `chat_history.*` reference
-- [`scripts/chat_history.py`](../../../scripts/chat_history.py) — helper API
+- [`scripts/chat_history.py`](../../../scripts/chat_history.py) — helper API (`status`, `read`, `sessions`, `prune-sessions`)

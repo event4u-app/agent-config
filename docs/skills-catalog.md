@@ -1,6 +1,6 @@
 # Skills Catalog
 
-All **128 skills** available in this package, in alphabetical order.
+All **129 skills** available in this package, in alphabetical order.
 Click a skill name to open its SKILL.md and read the full guidance.
 
 > **Regenerate:** `python3 scripts/generate_catalog.py`
@@ -10,6 +10,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 |---|---|
 | [`adversarial-review`](../.agent-src/skills/adversarial-review/SKILL.md) | ONLY when user explicitly requests adversarial review, devil's advocate analysis, stress-testing a plan, or 'poke holes in this' — NOT for regular code review or design feedback. |
 | [`agent-docs-writing`](../.agent-src/skills/agent-docs-writing/SKILL.md) | Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure. |
+| [`ai-council`](../.agent-src/skills/ai-council/SKILL.md) | Use when polling external AIs (OpenAI, Anthropic) outside the host session for a neutral second opinion on a roadmap, diff, prompt, or file set — or 'cross-check with another model'. |
 | [`analysis-autonomous-mode`](../.agent-src/skills/analysis-autonomous-mode/SKILL.md) | ONLY when user explicitly requests autonomous analysis, deep investigation, multi-step research, or 'dig into this end-to-end without asking me each step' — NOT for normal feature work. |
 | [`analysis-skill-router`](../.agent-src/skills/analysis-skill-router/SKILL.md) | Use when picking which analysis or project-analysis-* skill fits a request — routes by scope, framework, and symptom — even if the user just says 'analyze this' or 'dig into the codebase'. |
 | [`api-design`](../.agent-src/skills/api-design/SKILL.md) | Use when designing APIs, planning endpoints, REST conventions, versioning, or deprecation — even when the user just says 'expose this as an endpoint' without naming API design. |
@@ -18,7 +19,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`artisan-commands`](../.agent-src/skills/artisan-commands/SKILL.md) | Use when creating or modifying Artisan commands. Covers clear signatures, safe execution flow, helpful output, and project conventions for console tooling. |
 | [`authz-review`](../.agent-src/skills/authz-review/SKILL.md) | Use when reviewing authorization end-to-end — route → gate → policy → query scope → response filter — before changes to permissions, tenants, ownership, or admin flows. |
 | [`aws-infrastructure`](../.agent-src/skills/aws-infrastructure/SKILL.md) | Use when working with AWS resources — ECS Fargate, ECR, EFS, Secrets Manager, gomplate templates, multi-env deployments — even when the user says 'deploy to staging' without naming AWS. |
-| [`blade-ui`](../.agent-src/skills/blade-ui/SKILL.md) | Stack-implementation skill for Laravel Blade — dispatched by `directives/ui/apply.py` (and `review.py` / `polish.py`) when the project's frontend stack is Blade. Covers views, components, partials, layouts, and view logic. |
+| [`blade-ui`](../.agent-src/skills/blade-ui/SKILL.md) | Use when the project's frontend stack is Blade — dispatched by `directives/ui/{apply,review,polish}.py`. Covers views, components, partials, layouts, and view logic. |
 | [`blast-radius-analyzer`](../.agent-src/skills/blast-radius-analyzer/SKILL.md) | Use BEFORE editing shared code — enumerates every call site, event consumer, queue worker, API client, migration, and test that a planned change will touch, with a file:line citation per dependency. |
 | [`bug-analyzer`](../.agent-src/skills/bug-analyzer/SKILL.md) | Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs. |
 | [`check-refs`](../.agent-src/skills/check-refs/SKILL.md) | Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions. |
@@ -49,7 +50,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`feature-planning`](../.agent-src/skills/feature-planning/SKILL.md) | Use when the user says "plan a feature", "brainstorm", "explore this idea", or wants to go from idea to structured plan and roadmap. |
 | [`file-editor`](../.agent-src/skills/file-editor/SKILL.md) | Use when opening edited files in the user's IDE. Reads settings from .agent-settings.yml to determine IDE and whether auto-open is enabled. |
 | [`finishing-a-development-branch`](../.agent-src/skills/finishing-a-development-branch/SKILL.md) | Use when the feature is implementation-complete and the next step is 'ship it' — verifies, cleans up, and routes to merge/PR/park/discard — even when the user just says 'I'm done, what now?'. |
-| [`flux`](../.agent-src/skills/flux/SKILL.md) | Stack-implementation skill for Laravel Flux — dispatched by `directives/ui/apply.py` (and `review.py` / `polish.py`) when the project uses `livewire/flux`. Covers Flux components, slots, variants, and form primitives. |
+| [`flux`](../.agent-src/skills/flux/SKILL.md) | Use when the project uses `livewire/flux` — dispatched by `directives/ui/{apply,review,polish}.py`. Covers Flux components, slots, variants, and form primitives. |
 | [`git-workflow`](../.agent-src/skills/git-workflow/SKILL.md) | Use when working with Git — branch naming, commit messages, PR creation, rebasing, or the code review process — even when the user says 'push this' or 'merge the branch' without naming Git. |
 | [`github-ci`](../.agent-src/skills/github-ci/SKILL.md) | Use when working with GitHub Actions — workflow YAML, quality gates, test matrices, deployment triggers, reusable workflows — even when the user just says 'my CI is failing' or 'add a check'. |
 | [`grafana`](../.agent-src/skills/grafana/SKILL.md) | Use when working with Grafana — dashboards, Loki LogQL queries, alerting rules, monitoring panels — even when the user just says 'build me a dashboard' or 'query the logs' without naming Grafana. |
@@ -72,7 +73,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`laravel-validation`](../.agent-src/skills/laravel-validation/SKILL.md) | Use when writing validation — Form Requests, rules, custom rule objects, request-boundary design — even when the user just says 'validate this input' or 'check the request' without naming it. |
 | [`learning-to-rule-or-skill`](../.agent-src/skills/learning-to-rule-or-skill/SKILL.md) | Use when a repeated learning, mistake, or successful pattern should be turned into a new rule or skill. Also use after completing a task to capture learnings from the work. |
 | [`lint-skills`](../.agent-src/skills/lint-skills/SKILL.md) | Use when running the package's skill linter against all skills and rules to validate frontmatter, required sections, and execution metadata. |
-| [`livewire`](../.agent-src/skills/livewire/SKILL.md) | Stack-implementation skill for Livewire — dispatched by `directives/ui/apply.py` (and `review.py` / `polish.py`) when the project's frontend stack is Livewire. Covers reactive state, events, lifecycle hooks, and component/view separation. |
+| [`livewire`](../.agent-src/skills/livewire/SKILL.md) | Use when the project's frontend stack is Livewire — dispatched by `directives/ui/{apply,review,polish}.py`. Covers reactive state, events, lifecycle hooks, and component/view separation. |
 | [`logging-monitoring`](../.agent-src/skills/logging-monitoring/SKILL.md) | Use when working with logging or monitoring — Sentry error tracking, Grafana/Loki log aggregation, structured logging channels, or monitoring helpers. |
 | [`mcp`](../.agent-src/skills/mcp/SKILL.md) | Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows. |
 | [`md-language-check`](../.agent-src/skills/md-language-check/SKILL.md) | Use BEFORE saving any .md under .augment/, .agent-src*/, or agents/ — scans umlauts, German function words, and quoted German phrases outside DE:/EN: anchor blocks. Hard gate per language-and-tone. |

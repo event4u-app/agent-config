@@ -1,16 +1,16 @@
-"""End-to-end integration of the chat-history hooks (P5 of road-to-work-engine-hooks).
+"""End-to-end integration of the chat-history hooks (hook-only contract).
 
-Drives the full eight-step flow with all four chat-history hooks
-registered and a fake :func:`subprocess.run` capturing every
-``scripts/chat_history.py`` invocation. The point is to lock down the
-structural contract:
+Drives the full eight-step flow with the structural chat-history hooks
+registered (append + halt_append) and a fake :func:`subprocess.run`
+capturing every ``scripts/chat_history.py`` invocation. The point is
+to lock down the contract:
 
-- ``turn-check`` fires once per dispatch cycle on ``before_dispatch``.
 - ``append --type phase`` fires once per successful step boundary.
-- ``heartbeat`` fires once per dispatch cycle on ``before_save`` (after
-  ``cli._sync_back`` so the marker survives onto the persisted report).
-- A ``foreign`` / ``returning`` ``turn-check`` exit halts the cycle
-  with CLI exit code 2 and never reaches ``_save``.
+- ``append --type decision`` fires when the engine halts with a
+  surfaceable decision.
+
+Cooperative ``turn-check`` and ``heartbeat`` hooks were removed in
+``road-to-chat-history-hook-only`` Phase 2.
 """
 from __future__ import annotations
 
@@ -69,66 +69,28 @@ def _well_formed_ticket(tmp_path: Path) -> Path:
     return ticket
 
 
-def _install_fake_runner(monkeypatch, *, turn_check_exit: int = 0):
+def _install_fake_runner(monkeypatch):
     """Monkeypatch ``_default_runner`` to capture every chat-history call."""
     captured: list[list[str]] = []
 
     def fake_runner(cmd):
         captured.append(list(cmd))
-        # cmd[2] is the chat_history.py subcommand (sys.executable, script, sub).
-        sub = cmd[2] if len(cmd) > 2 else ""
-        if sub == "turn-check":
-            return subprocess.CompletedProcess(
-                args=cmd, returncode=turn_check_exit,
-                stdout="", stderr="ACTION REQUIRED: drift" if turn_check_exit else "",
-            )
-        if sub == "heartbeat":
-            return subprocess.CompletedProcess(
-                args=cmd, returncode=0,
-                stdout="📒 chat-history: ok · per_phase", stderr="",
-            )
         return subprocess.CompletedProcess(args=cmd, returncode=0, stdout="", stderr="")
 
     monkeypatch.setattr(_chat_history_base, "_default_runner", fake_runner)
     return captured
 
 
-def test_turn_check_halt_exits_two_without_save(
+def test_one_dispatch_cycle_fires_phase_and_decision_appends(
     tmp_path: Path, monkeypatch, capsys, fake_memory_lookup,
 ) -> None:
-    """``turn-check`` exit 11 (foreign) → CLI exit 2 + no state on disk."""
+    """Structural append hooks fire once per phase boundary + on halt."""
     script = tmp_path / "chat_history.py"
     script.write_text("# stub", encoding="utf-8")
     cfg = _settings_with_chat_history(tmp_path, script)
     state_file = tmp_path / "state.json"
 
-    captured = _install_fake_runner(monkeypatch, turn_check_exit=11)
-
-    exit_code = main([
-        "--state-file", str(state_file),
-        "--ticket-file", str(_well_formed_ticket(tmp_path)),
-        "--hooks-config", str(cfg),
-    ])
-
-    assert exit_code == 2
-    assert not state_file.exists()
-    sub_commands = [c[2] for c in captured if len(c) > 2]
-    assert "turn-check" in sub_commands
-    # No append / heartbeat reached after halt.
-    assert "append" not in sub_commands
-    assert "heartbeat" not in sub_commands
-
-
-def test_one_dispatch_cycle_fires_turn_check_and_heartbeat(
-    tmp_path: Path, monkeypatch, capsys, fake_memory_lookup,
-) -> None:
-    """``turn-check`` and ``heartbeat`` fire exactly once per cycle."""
-    script = tmp_path / "chat_history.py"
-    script.write_text("# stub", encoding="utf-8")
-    cfg = _settings_with_chat_history(tmp_path, script)
-    state_file = tmp_path / "state.json"
-
-    captured = _install_fake_runner(monkeypatch, turn_check_exit=0)
+    captured = _install_fake_runner(monkeypatch)
 
     exit_code = main([
         "--state-file", str(state_file),
@@ -140,8 +102,9 @@ def test_one_dispatch_cycle_fires_turn_check_and_heartbeat(
     assert exit_code == 1
     assert state_file.exists()
     sub_commands = [c[2] for c in captured if len(c) > 2]
-    assert sub_commands.count("turn-check") == 1
-    assert sub_commands.count("heartbeat") == 1
+    # No cooperative hooks fire — they were removed.
+    assert "turn-check" not in sub_commands
+    assert "heartbeat" not in sub_commands
     # refine + memory + analyze succeeded before plan blocked → 3 phase
     # appends + 1 decision append for the create-plan halt = 4 total.
     append_calls = [c for c in captured if len(c) > 2 and c[2] == "append"]

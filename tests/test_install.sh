@@ -155,7 +155,7 @@ test_gitignore_not_created_if_missing() {
 
 test_gitignore_reinstall_adds_missing_entry() {
     setup
-    # Seed a legacy block missing a newer entry (.agent-chat-history).
+    # Seed a legacy block missing a newer entry (agents/.agent-chat-history).
     cat > "$TMPDIR/.gitignore" <<'EOF'
 /vendor/
 
@@ -169,7 +169,7 @@ test_gitignore_reinstall_adds_missing_entry() {
 EOF
     run_install
     assert_contains "chat-history entry added on re-install" \
-        "$TMPDIR/.gitignore" ".agent-chat-history"
+        "$TMPDIR/.gitignore" "/agents/.agent-chat-history"
     assert_contains "pre-existing user entry preserved" \
         "$TMPDIR/.gitignore" "/vendor/"
     teardown
@@ -318,6 +318,58 @@ test_cli_wrapper_errors_without_install() {
     teardown
 }
 
+test_legacy_infra_files_migrated_to_agents_dir() {
+    setup
+    # Seed pre-2.x layout: chat history, backup, and prices file at project root.
+    printf 'legacy-history\n' > "$TMPDIR/.agent-chat-history"
+    printf 'legacy-backup\n' > "$TMPDIR/.agent-chat-history.bak"
+    printf 'legacy-prices\n' > "$TMPDIR/.agent-prices.md"
+    run_install
+    assert_false ".agent-chat-history removed from root" test -e "$TMPDIR/.agent-chat-history"
+    assert_false ".agent-chat-history.bak removed from root" test -e "$TMPDIR/.agent-chat-history.bak"
+    assert_false ".agent-prices.md removed from root" test -e "$TMPDIR/.agent-prices.md"
+    assert_true ".agent-chat-history moved into agents/" test -f "$TMPDIR/agents/.agent-chat-history"
+    assert_true ".agent-chat-history.bak moved into agents/" test -f "$TMPDIR/agents/.agent-chat-history.bak"
+    assert_true ".agent-prices.md moved into agents/" test -f "$TMPDIR/agents/.agent-prices.md"
+    assert_contains "history content preserved" \
+        "$TMPDIR/agents/.agent-chat-history" "legacy-history"
+    assert_contains "prices content preserved" \
+        "$TMPDIR/agents/.agent-prices.md" "legacy-prices"
+    teardown
+}
+
+test_legacy_infra_migration_skips_when_target_exists() {
+    setup
+    printf 'old\n' > "$TMPDIR/.agent-chat-history"
+    mkdir -p "$TMPDIR/agents"
+    printf 'new\n' > "$TMPDIR/agents/.agent-chat-history"
+    run_install
+    # Target untouched, source kept (warned, not destroyed).
+    assert_contains "existing target preserved" \
+        "$TMPDIR/agents/.agent-chat-history" "new"
+    assert_true "root file kept when target exists" test -f "$TMPDIR/.agent-chat-history"
+    teardown
+}
+
+test_legacy_infra_migration_idempotent() {
+    setup
+    printf 'history\n' > "$TMPDIR/.agent-chat-history"
+    run_install
+    run_install  # Second install must be a no-op for the migration step.
+    assert_true "agents/.agent-chat-history present" test -f "$TMPDIR/agents/.agent-chat-history"
+    assert_false "no orphan file at root" test -e "$TMPDIR/.agent-chat-history"
+    teardown
+}
+
+test_legacy_infra_migration_dry_run_no_move() {
+    setup
+    printf 'x\n' > "$TMPDIR/.agent-chat-history"
+    bash "$INSTALL_SH" --target "$TMPDIR" --quiet --dry-run 2>&1 >/dev/null
+    assert_true "dry-run: file stays at root" test -f "$TMPDIR/.agent-chat-history"
+    assert_false "dry-run: agents/ not created with the file" test -f "$TMPDIR/agents/.agent-chat-history"
+    teardown
+}
+
 # --- Runner ---
 TESTS=(
     test_rules_are_real_copies
@@ -347,6 +399,10 @@ TESTS=(
     test_cli_wrapper_overwrites_on_reinstall
     test_cli_wrapper_delegates_to_master
     test_cli_wrapper_errors_without_install
+    test_legacy_infra_files_migrated_to_agents_dir
+    test_legacy_infra_migration_skips_when_target_exists
+    test_legacy_infra_migration_idempotent
+    test_legacy_infra_migration_dry_run_no_move
 )
 
 # --list: print test names (used by parallel runner). --single NAME: run one

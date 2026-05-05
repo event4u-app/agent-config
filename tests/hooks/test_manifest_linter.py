@@ -23,6 +23,8 @@ VALID_BODY = textwrap.dedent("""\
     platforms:
       augment:
         session_start: [chat-history]
+      cowork:
+        session_start: [chat-history]
       cursor:
         session_start: [chat-history]
       cline:
@@ -105,6 +107,8 @@ _BODY_WITH_DEAD_CONCERN = textwrap.dedent("""\
         fail_closed: false
     platforms:
       augment:
+        session_start: [chat-history]
+      cowork:
         session_start: [chat-history]
       cursor:
         session_start: [chat-history]
@@ -215,3 +219,20 @@ def test_gemini_null_with_trampoline_on_disk_fails(tmp_path: Path, capsys) -> No
     assert rc == 1
     err = capsys.readouterr().err
     assert "orphan trampoline gemini-dispatcher.sh" in err
+
+
+def test_cowork_null_with_trampoline_on_disk_fails(tmp_path: Path, capsys) -> None:
+    """Cowork — cowork-dispatcher.sh on disk MUST have a non-empty
+    cowork block in the manifest, mirroring the cursor/cline/windsurf/
+    gemini orphan checks. Cowork shares Claude Code's hook surface but
+    is listed as a separate platform so chat-history entries can carry
+    `agent: cowork` and distinguish from CLI Claude Code."""
+    body = VALID_BODY.replace(
+        "  cowork:\n    session_start: [chat-history]\n",
+        "  cowork: null\n",
+    )
+    assert "cowork: null" in body, "fixture replace did not match"
+    rc = linter.lint(_write(tmp_path, body), strict=False)
+    assert rc == 1
+    err = capsys.readouterr().err
+    assert "orphan trampoline cowork-dispatcher.sh" in err

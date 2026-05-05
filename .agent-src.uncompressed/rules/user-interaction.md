@@ -22,6 +22,9 @@ THE OPTION BLOCK STAYS NEUTRAL. THE RECOMMENDATION LINE IS THE ONLY SOURCE OF TR
 DRIFT BETWEEN OPTION-BLOCK AND PROSE IS STRUCTURALLY IMPOSSIBLE WHEN THE TAG DOES NOT EXIST.
 MISSING RECOMMENDATION = RULE VIOLATION, NOT A SLIP.
 POSITION-AGNOSTIC. END-OF-TURN MENUS COUNT. NEXT-STEP LISTS COUNT. NO EXCEPTIONS.
+THE RECOMMENDATION LINE LIVES DIRECTLY UNDER THE OPTIONS BLOCK. NOWHERE ELSE.
+PROSE NAMING A "RECOMMENDED" PATH ABOVE OR BEFORE THE OPTIONS BLOCK = NO RECOMMENDATION.
+WRONG-LANGUAGE LABEL (`Recommendation:` WHEN USER IS GERMAN, OR VICE VERSA) = NO RECOMMENDATION.
 ```
 
 The agent has read the code, the contracts, the trade-offs. Refusing
@@ -49,6 +52,17 @@ recommendation line is mandatory.
   (`escalate to 3 if …`, `flip to 1 when …`). NEVER as a primary recommendation.
 - If the agent genuinely cannot pick (rare — true 50/50 with missing data),
   say what data would break the tie and ask for that instead.
+
+**No trailing open-ended question after numbered options:**
+
+If the reply contains numbered options, the recommendation line IS
+the closer. No `Welcher Pfad?` / `What's it gonna be?` / `Was meinst
+Du?` / `Was sagst Du?` / `Welche willst Du?` / `What do you think?`
+after the recommendation — that reframes the vote as an opinion poll
+and is hedging in disguise. The user picks a number; the agent does
+not re-ask. Permitted: a clarifying caveat sentence on the
+recommendation line itself (`Caveat: flip to 2 if …`). Forbidden:
+any standalone trailing question that re-opens the choice.
 
 **What does NOT count as a recommendation:**
 
@@ -87,11 +101,13 @@ Mechanical backstop: `python3 scripts/check_reply_consistency.py --stdin < draft
 (non-zero exit on any rule above). Self-scan is the primary gate; the
 script is the deterministic safety net for ambiguous cases.
 
-Common failure modes (end-of-turn menu skipped, "no preference"
-hedges, multi-block reply with one recommendation) and the named
-slip catalog live in
-[`contexts/communication/rules-auto/user-interaction-mechanics.md`](../contexts/communication/rules-auto/user-interaction-mechanics.md)
-§ Common failure modes.
+### Common failure modes — known, named, no excuses
+
+- **End-of-turn menu skipped.** Reply answers the question fine, then ends with `1. … 2. … 3. …` and no `Empfehlung:`. Iron Law 1 was violated — these are numbered options, position is irrelevant.
+- **Trailing-question hedge.** Reply has options + recommendation, but ends with `Welcher Pfad?` / `What's it gonna be?` / `Was meinst Du?` — the open question reframes the vote as opinion-poll. Banned by Iron Law 1; the recommendation line is the closer.
+- **"Genuinely no preference" hedge.** Pick anyway. The agent has more context than the user on the trade-off; refusing to pick dumps the work back. Pick the safest option, name the flip-condition.
+- **"User knows the project better" hedge.** Same failure mode, different costume. The user asked for an opinion by virtue of accepting the options block; deliver it.
+- **Multi-block reply with one recommendation.** Two options blocks but only one `Empfehlung:` line — the second block is unguarded. Rule 5 of Iron Law 2 closes this.
 
 ## Numbered Options — Always
 

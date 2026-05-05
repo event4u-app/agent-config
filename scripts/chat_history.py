@@ -1,29 +1,29 @@
 #!/usr/bin/env python3
 """Persistent chat-history log for crash recovery.
 
-Maintains `.agent-chat-history` in the project root — a JSONL file whose
-first line is a header (session id, fingerprint, frequency mode) and
-whose remaining lines are append-only entries (user messages, phases,
-tool calls, questions, answers, decisions, commits).
+Maintains `agents/.agent-chat-history` — a JSONL file whose
+first line is a header (schema version, started timestamp, cadence
+frequency) and whose remaining lines are append-only entries (user
+messages, phases, tool calls, questions, answers, decisions, commits).
 
-Ownership is established via SHA-256 of the first user message in the
-conversation, stored in the header. Agents read this on every turn to
-detect whether the file belongs to the current conversation.
+Sessions are identified per-entry via the `s` field — a deterministic
+16-char prefix derived from the platform's `session_id`. Multiple
+sessions coexist in one file; each entry self-identifies. No ownership
+layer, no sidecar, no auto-adopt — every hook invocation simply appends
+with its own session tag.
 
-File path defaults to `.agent-chat-history` in CWD and can be overridden
-via `$AGENT_CHAT_HISTORY_FILE` (used by tests).
+File path defaults to `agents/.agent-chat-history` (relative to CWD) and
+can be overridden via `$AGENT_CHAT_HISTORY_FILE` (used by tests).
 
 Usage:
-    python3 scripts/chat_history.py init --first-user-msg "..." [--freq per_phase]
+    python3 scripts/chat_history.py init [--freq per_phase]
     python3 scripts/chat_history.py append --type phase --json '{...}'
     python3 scripts/chat_history.py status
-    python3 scripts/chat_history.py heartbeat --first-user-msg "..."
-    python3 scripts/chat_history.py check --first-user-msg "..."
-    python3 scripts/chat_history.py state --first-user-msg "..."
-    python3 scripts/chat_history.py adopt --first-user-msg "..."
-    python3 scripts/chat_history.py reset --first-user-msg "..." --entries-json '[...]' [--freq per_phase]
+    python3 scripts/chat_history.py reset --entries-json '[...]' [--freq per_phase]
     python3 scripts/chat_history.py prepend --entries-json '[...]'
-    python3 scripts/chat_history.py read [--last N | --all]
+    python3 scripts/chat_history.py read [--last N | --all] [--session <id>]
+    python3 scripts/chat_history.py sessions [--limit N] [--json]
+    python3 scripts/chat_history.py prune-sessions [--max N] [--dry-run]
     python3 scripts/chat_history.py clear
     python3 scripts/chat_history.py rotate --max-kb 256 --mode rotate
 """
@@ -41,34 +41,26 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-DEFAULT_FILE = ".agent-chat-history"
+DEFAULT_FILE = "agents/.agent-chat-history"
 DEFAULT_SETTINGS_FILE = ".agent-settings.yml"
-SCHEMA_VERSION = 2
-FORMER_FPS_CAP = 10
+SCHEMA_VERSION = 4
+DEFAULT_MAX_SESSIONS = 5
 VALID_FREQS = {"per_turn", "per_phase", "per_tool"}
 VALID_OVERFLOW = {"rotate", "compress"}
 _WS_RE = re.compile(r"\s+")
+SESSION_ID_LEN = 16
+SESSION_ID_UNKNOWN = "<unknown>"
+SESSION_ID_LEGACY = "<legacy>"
+
+# Per-entry-type text-length caps. 0 = full text, no whitespace collapse,
+# verbatim. N > 0 = collapse whitespace then slice to N chars and append a
+# "… [+K chars]" suffix so the log self-reports truncation. Overridable via
+# chat_history.text_limits.{user,agent,tool,phase} in .agent-settings.yml.
+DEFAULT_TEXT_LIMITS = {"user": 0, "agent": 5000, "tool": 200, "phase": 200}
 
 # Exit codes for the CLI. Distinct codes let shell callers branch on state.
 EXIT_OK = 0
 EXIT_BAD_ARGS = 2
-EXIT_OWNERSHIP_REFUSED = 3
-EXIT_MISSING = 10
-EXIT_FOREIGN = 11
-EXIT_RETURNING = 12
-
-
-class OwnershipError(RuntimeError):
-    """Raised when an operation is rejected because the caller's session
-    does not own the chat-history file. `state` is one of
-    `foreign` | `returning` | `missing`."""
-
-    def __init__(self, state: str, *, header_fp: str = "",
-                 current_fp: str = "") -> None:
-        super().__init__(f"chat-history ownership refused: state={state}")
-        self.state = state
-        self.header_fp = header_fp
-        self.current_fp = current_fp
 
 
 def file_path() -> Path:
@@ -79,10 +71,27 @@ def _now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 
-def fingerprint(first_user_msg: str) -> str:
-    """SHA-256 of the normalized first user message (whitespace collapsed)."""
-    normalized = _WS_RE.sub(" ", first_user_msg or "").strip()
+def fingerprint(value: str) -> str:
+    """SHA-256 of the normalized input (whitespace collapsed).
+
+    In v4 the input is the platform's ``session_id`` (or any stable
+    string). In v3 callers passed the first user message; the function
+    is signature-stable so v3 readers continue to work.
+    """
+    normalized = _WS_RE.sub(" ", value or "").strip()
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
+def derive_session_tag(session_id: str) -> str:
+    """Map a platform's ``session_id`` to the 16-char ``s`` body tag.
+
+    Deterministic — same input always yields the same tag, so stateless
+    hook invocations within one session converge on a single ``s``
+    without needing any cached state on disk.
+    """
+    if not session_id:
+        return SESSION_ID_UNKNOWN
+    return fingerprint(session_id)[:SESSION_ID_LEN]
 
 
 def _preview(msg: str, n: int = 80) -> str:
@@ -90,11 +99,56 @@ def _preview(msg: str, n: int = 80) -> str:
     return flat[:n]
 
 
-def read_header(path: Path | None = None) -> dict[str, Any] | None:
-    """Read the header. Migrates v1 headers in memory (adds `former_fps: []`).
+def _session_tag_enabled() -> bool:
+    """True iff `append()` should auto-fill the `s` field when missing.
 
-    The on-disk file is not rewritten by this read; migration is lazy and
-    happens on the next write (init/adopt/reset).
+    Default is on (v3+ contract). Kill-switch via
+    `AGENT_CHAT_HISTORY_SESSION_TAG=false` reverts to v2 entry shape
+    so a bad rollout can be reverted without code change.
+    """
+    return os.environ.get(
+        "AGENT_CHAT_HISTORY_SESSION_TAG", "true"
+    ).strip().lower() != "false"
+
+
+def _last_body_session_id(path: Path | None = None) -> str:
+    """Return the ``s`` of the most recent body entry, or ``<unknown>``.
+
+    Used as a fallback ``s`` for CLI-driven appends that have no
+    platform session context. Reads the file tail-first to keep the
+    cost constant on large logs.
+    """
+    p = path or file_path()
+    if not p.is_file() or p.stat().st_size == 0:
+        return SESSION_ID_UNKNOWN
+    try:
+        with p.open(encoding="utf-8") as fh:
+            lines = fh.readlines()
+    except OSError:
+        return SESSION_ID_UNKNOWN
+    for line in reversed(lines):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            obj = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(obj, dict) or obj.get("t") == "header":
+            continue
+        sid = obj.get("s")
+        if isinstance(sid, str) and sid:
+            return sid
+    return SESSION_ID_UNKNOWN
+
+
+def read_header(path: Path | None = None) -> dict[str, Any] | None:
+    """Read the header.
+
+    Forward-compatible: v3 headers (`fp`, `preview`, `former_fps`,
+    `session`) parse fine; their legacy fields are returned verbatim
+    so older readers keep working. The next write (init/reset)
+    rewrites the file with a clean v4 header.
     """
     p = path or file_path()
     if not p.is_file() or p.stat().st_size == 0:
@@ -107,142 +161,121 @@ def read_header(path: Path | None = None) -> dict[str, Any] | None:
         obj = json.loads(first)
         if not (isinstance(obj, dict) and obj.get("t") == "header"):
             return None
-        obj.setdefault("former_fps", [])
-        if not isinstance(obj["former_fps"], list):
-            obj["former_fps"] = []
         return obj
     except (json.JSONDecodeError, OSError):
         return None
 
 
-def _build_header(first_user_msg: str, freq: str,
-                  former_fps: list[str] | None = None) -> dict[str, Any]:
+def _build_header(freq: str) -> dict[str, Any]:
     return {
         "t": "header",
         "v": SCHEMA_VERSION,
-        "session": str(uuid.uuid4()),
         "started": _now(),
-        "fp": fingerprint(first_user_msg),
-        "preview": _preview(first_user_msg),
         "freq": freq,
-        "former_fps": list(former_fps or []),
     }
 
 
-def init(first_user_msg: str, freq: str = "per_phase", *,
+def init(freq: str = "per_phase", *,
          path: Path | None = None) -> dict[str, Any]:
-    """Overwrite the file with a fresh header for a new session."""
+    """Overwrite the file with a fresh v4 header."""
     if freq not in VALID_FREQS:
         raise ValueError(f"freq must be one of {sorted(VALID_FREQS)}")
     p = path or file_path()
-    header = _build_header(first_user_msg, freq)
+    header = _build_header(freq)
     p.parent.mkdir(parents=True, exist_ok=True)
     with p.open("w", encoding="utf-8") as fh:
         fh.write(json.dumps(header, ensure_ascii=False) + "\n")
     return header
 
 
+def migrate_header(path: Path | None = None, *,
+                   freq: str | None = None) -> dict[str, Any] | None:
+    """Rewrite a stale header in-place, preserving body and ``started``.
+
+    Returns the new header on migration, ``None`` when the file is
+    missing/empty/unreadable or the header is already at
+    :data:`SCHEMA_VERSION`. v3 headers carry parseable ``v``/``freq``/
+    ``started`` fields that are forward-compatible (see
+    :func:`read_header`); this helper is the only writer that flips
+    ``v`` without destroying the body. Atomic — the body never
+    diverges from the header version mid-write.
+    """
+    p = path or file_path()
+    existing = read_header(p)
+    if existing is None:
+        return None
+    try:
+        current_v = int(existing.get("v", 0))
+    except (TypeError, ValueError):
+        current_v = 0
+    if current_v >= SCHEMA_VERSION:
+        return None
+    chosen_freq = freq or existing.get("freq") or "per_phase"
+    if chosen_freq not in VALID_FREQS:
+        chosen_freq = "per_phase"
+    new_header = _build_header(chosen_freq)
+    # Preserve the original session start so chronology survives.
+    if isinstance(existing.get("started"), str):
+        new_header["started"] = existing["started"]
+    raw = p.read_text(encoding="utf-8")
+    # splitlines() drops the trailing newline; rebuild it on write so
+    # downstream readers (which expect newline-delimited JSONL) stay
+    # happy. Empty body → just the header line + newline.
+    lines = raw.splitlines()
+    if not lines:
+        return None
+    lines[0] = json.dumps(new_header, ensure_ascii=False)
+    _atomic_write_text(p, "\n".join(lines) + "\n")
+    return new_header
+
+
 def append(entry: dict[str, Any], *, path: Path | None = None,
-           first_user_msg: str | None = None) -> None:
+           session: str | None = None) -> None:
     """Append one entry. Entry must be a dict; `ts` is auto-filled.
 
-    When `first_user_msg` is provided, the call validates ownership
-    before writing: only `state == match` proceeds. Any other state
-    (`foreign`, `returning`, `missing`) raises `OwnershipError`. This
-    is the second line of defense against silent writes to a foreign
-    session's file. Existing callers without `first_user_msg` keep the
-    legacy unguarded behavior for back-compat.
+    Schema v4 stamps every body entry with `s` (16-char session tag).
+    Resolution order: caller-supplied `session=` wins; pre-filled
+    `entry['s']` is preserved; otherwise the most recent body entry's
+    `s` is reused (CLI fallback). Kill-switch
+    `AGENT_CHAT_HISTORY_SESSION_TAG=false` skips auto-fill for
+    downgrade-friendly rollouts.
+
+    No ownership validation: each entry self-identifies via `s`, so
+    multiple sessions coexist in one file without conflict.
     """
     if not isinstance(entry, dict) or not entry.get("t"):
         raise ValueError("entry must be a dict with non-empty 't' key")
     if entry["t"] == "header":
         raise ValueError("use init() to write the header, not append()")
     p = path or file_path()
-    if first_user_msg is not None:
-        state = ownership_state(first_user_msg, path=p)
-        if state != "match":
-            header = read_header(p) or {}
-            raise OwnershipError(
-                state,
-                header_fp=str(header.get("fp", "")),
-                current_fp=fingerprint(first_user_msg),
-            )
     entry.setdefault("ts", _now())
+    if session is not None:
+        entry["s"] = session
+    elif "s" not in entry and _session_tag_enabled():
+        entry["s"] = _last_body_session_id(p)
     with p.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
-def check_ownership(first_user_msg: str, *,
-                    path: Path | None = None) -> str:
-    """Return 'match', 'mismatch', or 'missing' (legacy 3-state).
+def _atomic_write_text(p: Path, text: str) -> None:
+    """Write ``text`` to ``p`` atomically with a per-call unique tmp path.
 
-    Kept for backward compatibility. Prefer `ownership_state()` for the
-    4-state view that distinguishes foreign from returning sessions.
+    Multiple processes writing to the same target use disjoint tmp paths
+    (PID + uuid), so concurrent writes no longer collide on a shared
+    ``.tmp`` file. The final ``replace`` is atomic on POSIX.
     """
-    header = read_header(path)
-    if not header:
-        return "missing"
-    return "match" if header.get("fp") == fingerprint(first_user_msg) else "mismatch"
-
-
-def ownership_state(first_user_msg: str, *,
-                    path: Path | None = None) -> str:
-    """Return 'match', 'returning', 'foreign', or 'missing'.
-
-    `match`     — current fp equals header.fp (silent append)
-    `returning` — current fp appears in header.former_fps (this chat once
-                  owned the file; another session took it over since)
-    `foreign`   — current fp is neither match nor former (new chat finds
-                  an existing file from an unknown session)
-    `missing`   — no file or no valid header
-    """
-    header = read_header(path)
-    if not header:
-        return "missing"
-    fp = fingerprint(first_user_msg)
-    if header.get("fp") == fp:
-        return "match"
-    former = header.get("former_fps") or []
-    return "returning" if fp in former else "foreign"
-
-
-def _push_former_fp(former_fps: list[str], old_fp: str,
-                    new_fp: str) -> list[str]:
-    """Move old_fp into former_fps with dedup + cap. Never include new_fp."""
-    seen: list[str] = []
-    for fp in [old_fp, *former_fps]:
-        if fp and fp != new_fp and fp not in seen:
-            seen.append(fp)
-    return seen[:FORMER_FPS_CAP]
-
-
-def adopt(first_user_msg: str, *, path: Path | None = None) -> dict[str, Any]:
-    """Rewrite the header's fingerprint to the current conversation's.
-
-    Preserves all body entries. Pushes the previous `fp` onto
-    `former_fps` (dedup, capped at FORMER_FPS_CAP) so this former owner
-    can later be detected as 'returning' if the original chat comes back.
-    """
-    p = path or file_path()
-    header = read_header(p)
-    if not header:
-        raise FileNotFoundError(f"no header in {p}")
-    old_fp = header.get("fp", "")
-    new_fp = fingerprint(first_user_msg)
-    header["v"] = SCHEMA_VERSION
-    header["fp"] = new_fp
-    header["preview"] = _preview(first_user_msg)
-    header["adopted_at"] = _now()
-    header["former_fps"] = _push_former_fp(
-        header.get("former_fps") or [], old_fp, new_fp,
+    tmp = p.with_suffix(
+        f"{p.suffix}.{os.getpid()}.{uuid.uuid4().hex[:8]}.tmp",
     )
-    with p.open(encoding="utf-8") as fh:
-        lines = fh.readlines()
-    lines[0] = json.dumps(header, ensure_ascii=False) + "\n"
-    tmp = p.with_suffix(p.suffix + ".tmp")
-    tmp.write_text("".join(lines), encoding="utf-8")
-    tmp.replace(p)
-    return header
+    try:
+        tmp.write_text(text, encoding="utf-8")
+        tmp.replace(p)
+    except Exception:
+        try:
+            tmp.unlink()
+        except OSError:
+            pass
+        raise
 
 
 def _normalize_entries(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -259,40 +292,25 @@ def _normalize_entries(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return out
 
 
-def reset_with_entries(first_user_msg: str,
-                       entries: list[dict[str, Any]],
+def reset_with_entries(entries: list[dict[str, Any]],
                        freq: str = "per_phase", *,
-                       former_fps: list[str] | None = None,
                        path: Path | None = None) -> dict[str, Any]:
     """Discard current file contents and rewrite with a fresh header + entries.
 
-    Used for the 'Replace' flow: the in-memory history supersedes whatever
-    is on disk. If `former_fps` is None and a header exists, the old fp is
-    preserved via `_push_former_fp` so the returning/foreign state logic
-    still works on later switches.
+    Used for the 'Replace' flow: the in-memory history supersedes
+    whatever is on disk. v4 carries no per-session header state, so
+    the rewrite is a clean slate; pre-existing entries' ``s`` tags
+    survive only if the caller passes them through ``entries``.
     """
     if freq not in VALID_FREQS:
         raise ValueError(f"freq must be one of {sorted(VALID_FREQS)}")
     p = path or file_path()
-    new_fp = fingerprint(first_user_msg)
-    if former_fps is None:
-        existing = read_header(p)
-        if existing:
-            former_fps = _push_former_fp(
-                existing.get("former_fps") or [],
-                existing.get("fp", ""),
-                new_fp,
-            )
-        else:
-            former_fps = []
-    header = _build_header(first_user_msg, freq, former_fps=former_fps)
+    header = _build_header(freq)
     body = _normalize_entries(entries)
     p.parent.mkdir(parents=True, exist_ok=True)
     lines = [json.dumps(header, ensure_ascii=False)]
     lines += [json.dumps(e, ensure_ascii=False) for e in body]
-    tmp = p.with_suffix(p.suffix + ".tmp")
-    tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    tmp.replace(p)
+    _atomic_write_text(p, "\n".join(lines) + "\n")
     return header
 
 
@@ -315,10 +333,9 @@ def prepend_entries(entries: list[dict[str, Any]], *,
     body = existing[1:]
     new_lines = [json.dumps(e, ensure_ascii=False) + "\n"
                  for e in _normalize_entries(entries)]
-    tmp = p.with_suffix(p.suffix + ".tmp")
-    tmp.write_text(header_line + "".join(new_lines) + "".join(body),
-                   encoding="utf-8")
-    tmp.replace(p)
+    _atomic_write_text(
+        p, header_line + "".join(new_lines) + "".join(body),
+    )
     return len(new_lines)
 
 
@@ -329,10 +346,15 @@ def clear(*, path: Path | None = None) -> None:
 
 
 def read_entries(last: int | None = None, *,
-                 path: Path | None = None) -> list[dict[str, Any]]:
+                 path: Path | None = None,
+                 session: str | None = None) -> list[dict[str, Any]]:
     """Return entries (excluding the header) as a list of dicts.
 
     `last=None` returns all entries; `last=N` returns the trailing N.
+    `session=None` keeps legacy "return everything" behaviour; an explicit
+    string filters by exact match on each entry's `s` field. The `last`
+    slice is applied **after** the session filter so callers always get
+    the trailing N within the selected session.
     Malformed lines are skipped silently.
     """
     p = path or file_path()
@@ -352,9 +374,99 @@ def read_entries(last: int | None = None, *,
                 continue
             if isinstance(obj, dict):
                 entries.append(obj)
+    if session is not None:
+        entries = [e for e in entries if e.get("s") == session]
     if last is not None and last >= 0:
         entries = entries[-last:]
     return entries
+
+
+def read_entries_for_current(path: Path | None = None,
+                             last: int | None = None) -> list[dict[str, Any]]:
+    """Return entries scoped to the most recent session in the file.
+
+    The "current" session in v4 is the ``s`` of the most recent body
+    entry; entries with that ``s`` are returned. Kill-switch
+    ``AGENT_CHAT_HISTORY_SESSION_FILTER=false`` short-circuits to
+    ``read_entries(session=None)`` for the v2 "return everything"
+    behaviour.
+    """
+    p = path or file_path()
+    kill = os.environ.get(
+        "AGENT_CHAT_HISTORY_SESSION_FILTER", "true",
+    ).strip().lower()
+    if kill == "false":
+        return read_entries(last=last, path=p, session=None)
+    return read_entries(last=last, path=p, session=_last_body_session_id(p))
+
+
+def list_sessions(path: Path | None = None) -> list[dict[str, Any]]:
+    """Return one bucket per distinct session id observed in the body.
+
+    Each bucket carries ``id``, ``count``, ``first_ts``, ``last_ts``,
+    ``preview``. Preview = the first ``t == "user"`` entry's ``text``
+    in the session, truncated to 80 chars; falls back to the first
+    entry of any type when no user-typed entry exists.
+
+    v4 has no per-session header state, so buckets are derived from
+    body ``s`` values only. ``<legacy>`` and ``<unknown>`` appear as
+    their own buckets when present in the body. Order is by
+    ``last_ts`` descending.
+    """
+    p = path or file_path()
+    buckets: dict[str, dict[str, Any]] = {}
+
+    def _bucket(sid: str) -> dict[str, Any]:
+        b = buckets.get(sid)
+        if b is None:
+            b = {"id": sid, "count": 0, "first_ts": None,
+                 "last_ts": None, "preview": ""}
+            buckets[sid] = b
+        return b
+
+    if p.is_file():
+        with p.open(encoding="utf-8") as fh:
+            for i, line in enumerate(fh):
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if not isinstance(obj, dict):
+                    continue
+                if i == 0 and obj.get("t") == "header":
+                    continue
+                sid = obj.get("s")
+                if not isinstance(sid, str) or not sid:
+                    sid = SESSION_ID_LEGACY
+                b = _bucket(sid)
+                b["count"] += 1
+                ts = obj.get("ts")
+                if isinstance(ts, str) and ts:
+                    if b["first_ts"] is None or ts < b["first_ts"]:
+                        b["first_ts"] = ts
+                    if b["last_ts"] is None or ts > b["last_ts"]:
+                        b["last_ts"] = ts
+                if not b["preview"] or b.get("_preview_from") != "user":
+                    if obj.get("t") == "user":
+                        text = obj.get("text") or obj.get("payload", {}).get("text", "")
+                        if isinstance(text, str) and text:
+                            b["preview"] = _preview(text)
+                            b["_preview_from"] = "user"
+                    elif not b["preview"]:
+                        text = obj.get("text") or ""
+                        if isinstance(text, str) and text:
+                            b["preview"] = _preview(text)
+                            b["_preview_from"] = "any"
+
+    out: list[dict[str, Any]] = []
+    for b in buckets.values():
+        b.pop("_preview_from", None)
+        out.append(b)
+    out.sort(key=lambda x: x["last_ts"] or "", reverse=True)
+    return out
 
 
 def status(*, path: Path | None = None) -> dict[str, Any]:
@@ -400,9 +512,6 @@ def _read_chat_history_enabled(settings_path: Path) -> bool:
     return bool(section.get("enabled", False))
 
 
-VALID_HEARTBEAT_MODES = ("on", "off", "hybrid")
-DRIFT_STATES = ("missing", "foreign", "returning")
-
 # Hook events that the platform-hook wrapper accepts. Mapped to entry
 # types in HOOK_EVENT_ENTRY_TYPE; cadence filtering in
 # CADENCE_EVENTS decides whether the event actually lands in the log
@@ -423,7 +532,7 @@ HOOK_EVENT_ENTRY_TYPE = {
 # events are control plane (sidecar / init), not log entries, so they
 # are absent from these sets.
 CADENCE_EVENTS = {
-    "per_turn": frozenset({"stop", "agent_response"}),
+    "per_turn": frozenset({"stop", "agent_response", "user_prompt"}),
     "per_phase": frozenset({"phase", "stop", "user_prompt"}),
     "per_tool": frozenset({"tool_use"}),
 }
@@ -435,6 +544,30 @@ CADENCE_EVENTS = {
 # from agents/contexts/chat-history-platform-hooks.md.
 PLATFORM_EVENT_MAP: dict[str, dict[str, str]] = {
     "claude": {
+        "SessionStart": "session_start",
+        "UserPromptSubmit": "user_prompt",
+        "PostToolUse": "tool_use",
+        "Stop": "stop",
+        "SessionEnd": "session_end",
+        "PreCompact": "phase",
+    },
+    # Cowork is the Claude desktop app's local-agent-mode runtime —
+    # built on top of the Claude Code CLI, so it speaks the same hook
+    # vocabulary (PascalCase, identical event payload shape including
+    # `transcript_path` for Stop). Listed as a separate platform so the
+    # `agent` field on body entries can distinguish Cowork sessions
+    # from plain Claude Code CLI / IDE sessions when both run against
+    # the same project.
+    #
+    # Upstream caveat: anthropics/claude-code#40495 reports that
+    # Cowork sessions silently ignore all three Claude Code settings
+    # sources (user, project, env), and #27398 reports plugin-scope
+    # `hooks/hooks.json` is excluded because Cowork spawns the CLI
+    # with `--setting-sources user`. Until those are resolved, the
+    # mapping below is dispatcher-ready but the lifecycle events do
+    # not actually fire from Cowork. See
+    # `agents/contexts/chat-history-platform-hooks.md` § Cowork.
+    "cowork": {
         "SessionStart": "session_start",
         "UserPromptSubmit": "user_prompt",
         "PostToolUse": "tool_use",
@@ -502,217 +635,152 @@ def _read_chat_history_frequency(settings_path: Path) -> str:
     return val if val in VALID_FREQS else "per_phase"
 
 
-def sidecar_path(path: Path | None = None) -> Path:
-    """Return the path to the session sidecar (.agent-chat-history.session).
+def _read_chat_history_max_sessions(settings_path: Path) -> int:
+    """Read chat_history.max_sessions from .agent-settings.yml.
 
-    Sidecar carries the first-user-msg for the active session so hook
-    invocations after `session_start` don't need the agent to pass it
-    on every call. Lives next to the JSONL file.
-    """
-    base = path or file_path()
-    return base.with_name(base.name + ".session")
-
-
-def read_sidecar(path: Path | None = None) -> dict[str, Any] | None:
-    """Read and parse the sidecar; returns None on missing or malformed."""
-    sp = sidecar_path(path)
-    if not sp.is_file():
-        return None
-    try:
-        with sp.open(encoding="utf-8") as fh:
-            data = json.load(fh)
-        return data if isinstance(data, dict) else None
-    except (OSError, json.JSONDecodeError):
-        return None
-
-
-def write_sidecar(first_user_msg: str, *,
-                  path: Path | None = None) -> dict[str, Any]:
-    """Write the session sidecar atomically. Overwrites on session_start."""
-    sp = sidecar_path(path)
-    sp.parent.mkdir(parents=True, exist_ok=True)
-    payload = {
-        "first_user_msg": first_user_msg,
-        "fp": fingerprint(first_user_msg),
-        "started_at": _now(),
-    }
-    tmp = sp.with_suffix(sp.suffix + ".tmp")
-    with tmp.open("w", encoding="utf-8") as fh:
-        json.dump(payload, fh, ensure_ascii=False)
-    tmp.replace(sp)
-    return payload
-
-
-def _read_chat_history_heartbeat_mode(settings_path: Path) -> str:
-    """Read chat_history.heartbeat from .agent-settings.yml.
-
-    Returns one of 'on' | 'off' | 'hybrid'. Default 'hybrid' (marker
-    surfaces only on drift states — missing/foreign/returning — and
-    stays silent on 'ok'/'disabled'). Unknown values fall back to
-    'hybrid'. Mirrors the default-deny policy of `_read_chat_history_enabled`
-    for the `enabled` flag, but here the default is the safer-by-design
-    hybrid mode rather than off.
+    Default ``DEFAULT_MAX_SESSIONS`` (5). Values < 1 are clamped to 1.
+    Used by ``prune_sessions`` to decide how many distinct ``s`` tags
+    survive in the body.
     """
     if not settings_path.is_file():
-        return "hybrid"
+        return DEFAULT_MAX_SESSIONS
     try:
         import yaml  # type: ignore[import-untyped]
     except ImportError:
-        return "hybrid"
+        return DEFAULT_MAX_SESSIONS
     try:
         with settings_path.open(encoding="utf-8") as fh:
             data = yaml.safe_load(fh) or {}
     except (OSError, yaml.YAMLError):
-        return "hybrid"
+        return DEFAULT_MAX_SESSIONS
     section = data.get("chat_history") if isinstance(data, dict) else None
     if not isinstance(section, dict):
-        return "hybrid"
-    raw = section.get("heartbeat", "hybrid")
-    # YAML 1.1 (PyYAML default) booleanizes bare on/off to True/False.
-    # Coerce back so users can write `heartbeat: on` without quoting.
-    if raw is True:
-        return "on"
-    if raw is False:
-        return "off"
-    val = str(raw).lower()
-    if val in VALID_HEARTBEAT_MODES:
-        return val
-    return "hybrid"
+        return DEFAULT_MAX_SESSIONS
+    try:
+        n = int(section.get("max_sessions", DEFAULT_MAX_SESSIONS))
+    except (TypeError, ValueError):
+        return DEFAULT_MAX_SESSIONS
+    return max(1, n)
 
 
-def turn_check(first_user_msg: str, *, path: Path | None = None,
-               settings_path: Path | None = None) -> dict[str, Any]:
-    """Compute the turn-start ownership state.
+def _read_text_limits(settings_path: Path) -> dict[str, int]:
+    """Read chat_history.text_limits from .agent-settings.yml.
 
-    Returns a structured dict the CLI renders to stdout/stderr. Pure
-    function — no I/O outside the two paths it reads.
+    Returns a dict keyed by entry type (``user``, ``agent``, ``tool``,
+    ``phase``) with int caps. Missing keys fall back to
+    ``DEFAULT_TEXT_LIMITS``. ``0`` means "no slice, full text". Negative
+    values are clamped to 0. Non-int values are silently dropped.
     """
-    sp = settings_path or Path(DEFAULT_SETTINGS_FILE)
-    if not _read_chat_history_enabled(sp):
-        return {"state": "disabled", "exit": EXIT_OK}
-    p = path or file_path()
-    state = ownership_state(first_user_msg, path=p)
-    if state == "match":
-        st = status(path=p)
-        return {
-            "state": "ok",
-            "exit": EXIT_OK,
-            "entries": st.get("entries", 0),
-        }
-    header = read_header(p) or {}
-    out: dict[str, Any] = {
-        "state": state,
-        "current_fp": fingerprint(first_user_msg),
-        "header_fp": str(header.get("fp", "")),
-        "preview": str(header.get("preview", "")),
-    }
-    if state == "missing":
-        out["exit"] = EXIT_MISSING
-    elif state == "foreign":
-        out["exit"] = EXIT_FOREIGN
-        st = status(path=p)
-        out["entries"] = st.get("entries", 0)
-    else:  # returning
-        out["exit"] = EXIT_RETURNING
-        st = status(path=p)
-        out["entries"] = st.get("entries", 0)
+    out = dict(DEFAULT_TEXT_LIMITS)
+    if not settings_path.is_file():
+        return out
+    try:
+        import yaml  # type: ignore[import-untyped]
+    except ImportError:
+        return out
+    try:
+        with settings_path.open(encoding="utf-8") as fh:
+            data = yaml.safe_load(fh) or {}
+    except (OSError, yaml.YAMLError):
+        return out
+    section = data.get("chat_history") if isinstance(data, dict) else None
+    if not isinstance(section, dict):
+        return out
+    overrides = section.get("text_limits")
+    if not isinstance(overrides, dict):
+        return out
+    for kind, val in overrides.items():
+        if not isinstance(kind, str):
+            continue
+        try:
+            n = int(val)
+        except (TypeError, ValueError):
+            continue
+        out[kind] = max(0, n)
     return out
 
 
-def _format_age(seconds: int) -> str:
-    """Render a relative duration as a compact human-readable string."""
-    if seconds < 0:
-        return "just now"
-    if seconds < 60:
-        return f"{seconds}s ago"
-    if seconds < 3600:
-        return f"{seconds // 60}m ago"
-    if seconds < 86400:
-        return f"{seconds // 3600}h ago"
-    return f"{seconds // 86400}d ago"
+def _apply_text_limit(text: str, kind: str,
+                      limits: dict[str, int]) -> str:
+    """Slice ``text`` to the configured cap for ``kind``.
 
-
-def _last_entry_age_seconds(path: Path) -> int | None:
-    """Return age of the latest non-header entry in seconds, or None.
-
-    Reads the file once, takes the last non-empty line, parses its `ts`
-    field. Tolerant of malformed lines and missing timestamps — returns
-    None instead of raising. Used by `heartbeat()` to surface stale
-    appends in the in-band marker.
+    ``limits[kind] == 0`` returns the text verbatim (whitespace
+    preserved). ``> 0`` collapses whitespace, slices to N chars, and
+    appends ``" … [+K chars]"`` when truncation actually happened so
+    the log self-reports the cut. Empty / missing kind falls back to
+    ``DEFAULT_TEXT_LIMITS``.
     """
-    if not path.is_file():
-        return None
-    last_line: str | None = None
-    try:
-        with path.open(encoding="utf-8") as fh:
-            for raw in fh:
-                stripped = raw.strip()
-                if stripped:
-                    last_line = stripped
-    except OSError:
-        return None
-    if not last_line:
-        return None
-    try:
-        obj = json.loads(last_line)
-    except json.JSONDecodeError:
-        return None
-    if not isinstance(obj, dict) or obj.get("t") == "header":
-        return None
-    ts = obj.get("ts")
-    if not ts or not isinstance(ts, str):
-        return None
-    try:
-        parsed = dt.datetime.fromisoformat(ts)
-    except ValueError:
-        return None
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=dt.timezone.utc)
-    now = dt.datetime.now(dt.timezone.utc)
-    return int((now - parsed).total_seconds())
+    if not text:
+        return ""
+    n = limits.get(kind, DEFAULT_TEXT_LIMITS.get(kind, 0))
+    if n <= 0:
+        return text
+    flat = _WS_RE.sub(" ", text).strip()
+    if len(flat) <= n:
+        return flat
+    return f"{flat[:n]} … [+{len(flat) - n} chars]"
 
 
-def heartbeat(first_user_msg: str, *, path: Path | None = None,
-              settings_path: Path | None = None) -> dict[str, Any]:
-    """Compute the in-band reply marker proving the rule was executed.
+def prune_sessions(max_sessions: int = DEFAULT_MAX_SESSIONS, *,
+                   path: Path | None = None) -> dict[str, Any]:
+    """Keep only the ``max_sessions`` most-recent sessions in the body.
 
-    The marker is a single-line string the agent must include verbatim
-    at the end of every reply. Fields surface state, entry count,
-    cadence, and age of the last entry — so a stale gap (no append
-    across two replies at `per_turn`/`per_phase`) is immediately
-    visible to the user without any out-of-band tooling.
+    Recency is the body line index of a session's last entry — the body
+    is append-only, so position is canonical (and stable when multiple
+    sessions share a wall-clock second). The trailing ``max_sessions``
+    win, the rest of their entries are dropped. Header untouched.
+    ``<unknown>`` and ``<legacy>`` count as ordinary sessions for the
+    purpose of this cap.
 
-    Always returns exit-equivalent 0; this is observability, not a
-    gate. Ownership refusal lives in `append`, the turn-start gate
-    lives in `turn_check`. `heartbeat` only reports.
+    Returns ``{action, kept_sessions, dropped_sessions, dropped_entries}``.
+    Noop when the file is missing, has no body, or carries fewer than
+    ``max_sessions`` distinct sessions.
     """
-    sp = settings_path or Path(DEFAULT_SETTINGS_FILE)
-    if not _read_chat_history_enabled(sp):
-        return {"state": "disabled",
-                "marker": "📒 chat-history: disabled"}
+    if max_sessions < 1:
+        max_sessions = 1
     p = path or file_path()
-    state = ownership_state(first_user_msg, path=p)
-    st = status(path=p)
-    entries = int(st.get("entries", 0)) if st.get("exists") else 0
-    header = st.get("header") or {}
-    freq = str(header.get("freq", "?")) if header else "?"
-    if state == "match":
-        age = _last_entry_age_seconds(p)
-        age_str = _format_age(age) if age is not None else "no entries"
-        marker = (f"📒 chat-history: ok · {entries} entries · "
-                  f"{freq} · last {age_str}")
-        return {"state": "ok", "entries": entries, "freq": freq,
-                "last_age_seconds": age, "marker": marker}
-    if state == "missing":
-        return {"state": "missing",
-                "marker": "📒 chat-history: missing — run init"}
-    if state == "foreign":
-        return {"state": "foreign", "entries": entries,
-                "marker": (f"📒 chat-history: foreign · {entries} "
-                           f"entries on file — render Foreign-Prompt")}
-    return {"state": "returning", "entries": entries,
-            "marker": (f"📒 chat-history: returning · {entries} "
-                       f"entries on file — render Returning-Prompt")}
+    if not p.is_file():
+        return {"action": "noop", "kept_sessions": 0,
+                "dropped_sessions": 0, "dropped_entries": 0}
+    with p.open(encoding="utf-8") as fh:
+        lines = fh.readlines()
+    if len(lines) <= 1:
+        return {"action": "noop", "kept_sessions": 0,
+                "dropped_sessions": 0, "dropped_entries": 0}
+    header_line = lines[0]
+    body = lines[1:]
+    # Rank sessions by body position — last appearance wins. Body is
+    # append-only, so position is canonical recency; ts is only a
+    # secondary signal (tied on second-level resolution in practice).
+    last_pos: dict[str, int] = {}
+    parsed: list[tuple[str, str]] = []  # (sid, raw_line)
+    for idx, line in enumerate(body):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        try:
+            obj = json.loads(stripped)
+        except json.JSONDecodeError:
+            parsed.append((SESSION_ID_LEGACY, line))
+            last_pos[SESSION_ID_LEGACY] = idx
+            continue
+        if not isinstance(obj, dict):
+            continue
+        sid = obj.get("s") if isinstance(obj.get("s"), str) else SESSION_ID_LEGACY
+        parsed.append((sid, line))
+        last_pos[sid] = idx
+    if len(last_pos) <= max_sessions:
+        return {"action": "noop", "kept_sessions": len(last_pos),
+                "dropped_sessions": 0, "dropped_entries": 0}
+    ranked = sorted(last_pos.items(), key=lambda kv: kv[1], reverse=True)
+    keep_set = {sid for sid, _ in ranked[:max_sessions]}
+    drop_set = {sid for sid, _ in ranked[max_sessions:]}
+    kept_lines = [line for sid, line in parsed if sid in keep_set]
+    dropped_entries = len(parsed) - len(kept_lines)
+    _atomic_write_text(p, header_line + "".join(kept_lines))
+    return {"action": "pruned", "kept_sessions": len(keep_set),
+            "dropped_sessions": len(drop_set),
+            "dropped_entries": dropped_entries}
 
 
 def overflow_handle(max_kb: int, mode: str = "rotate", *,
@@ -746,9 +814,7 @@ def overflow_handle(max_kb: int, mode: str = "rotate", *,
             total += size
         kept.reverse()
         dropped = len(entries) - len(kept)
-        tmp = p.with_suffix(p.suffix + ".tmp")
-        tmp.write_text(header_line + "".join(kept), encoding="utf-8")
-        tmp.replace(p)
+        _atomic_write_text(p, header_line + "".join(kept))
         return {"action": "rotate", "kept": len(kept), "dropped": dropped}
     marker = {
         "t": "needs_compress",
@@ -760,25 +826,39 @@ def overflow_handle(max_kb: int, mode: str = "rotate", *,
 
 
 def hook_append(event: str, *,
-                first_user_msg: str | None = None,
+                session_id: str | None = None,
                 payload: dict[str, Any] | None = None,
                 path: Path | None = None,
                 settings_path: Path | None = None) -> dict[str, Any]:
-    """Platform-hook entry point — wraps init/append/sidecar.
+    """Platform-hook entry point — stateless append per session tag.
 
-    Designed for `SessionStart`, `UserPromptSubmit`, `PostToolUse`,
-    `Stop`, `SessionEnd` style hooks across platforms. Stateless: every
-    invocation reads the sidecar for the active session's first-user-msg.
-    The very first call (`event == "session_start"`) writes the sidecar
-    and initializes the JSONL header if missing.
+    Designed for ``SessionStart``, ``UserPromptSubmit``, ``PostToolUse``,
+    ``Stop``, ``SessionEnd`` style hooks. Each call derives an ``s`` tag
+    from ``session_id`` via :func:`derive_session_tag`; entries from
+    different sessions coexist in one file because every body line
+    self-identifies. No sidecar, no ownership, no auto-adopt.
 
-    Cadence-aware: events that don't match `chat_history.frequency`
-    are silently skipped. `enabled: false` short-circuits to a noop.
+    The first non-disabled call to this function on a missing/empty
+    file initialises the v4 header. ``session_start`` is otherwise a
+    control-plane noop — useful only as an explicit hint that a new
+    session is about to begin (and to trigger pruning of old
+    sessions). All other events go through cadence filtering and
+    append a body entry whose ``text`` is sliced per
+    :func:`_apply_text_limit`.
+
+    Pruning: when the incoming ``s`` is new (differs from the most
+    recent body entry's ``s``), :func:`prune_sessions` runs with
+    ``chat_history.max_sessions`` so the file never accumulates more
+    than the configured number of distinct sessions. The prune is a
+    noop when the cap is not reached.
+
+    Cadence-aware: events that don't match ``chat_history.frequency``
+    are silently skipped. ``enabled: false`` short-circuits to a noop.
 
     Returns a structured dict the CLI emits as JSON. Never raises for
-    non-fatal control-plane states (missing sidecar, cadence skip,
-    disabled) — these surface as `action` values so hooks can choose
-    fail_open vs fail_closed by inspecting the result.
+    non-fatal control-plane states (cadence skip, disabled,
+    unknown-session) — these surface as ``action`` values so hooks
+    can choose fail_open vs fail_closed by inspecting the result.
     """
     if event not in VALID_HOOK_EVENTS:
         raise ValueError(f"event must be one of {sorted(VALID_HOOK_EVENTS)}")
@@ -787,62 +867,296 @@ def hook_append(event: str, *,
         return {"action": "disabled", "event": event}
     p = path or file_path()
     payload = payload or {}
+    s_tag = derive_session_tag(session_id) if session_id else SESSION_ID_UNKNOWN
+
+    # Lazily initialise the v4 header on first use so callers don't
+    # have to invoke `init` separately. Reset is still an explicit
+    # operation via reset_with_entries / clear. When the file already
+    # has a parseable but stale header (v3 in the wild), rewrite the
+    # header in-place — body is preserved, version flips to v4. Without
+    # this branch, v3 headers parse as non-None and the lazy-init path
+    # never fires, leaving the file in a mixed v3-header / v4-body
+    # state forever.
+    if not p.is_file() or read_header(p) is None:
+        freq = _read_chat_history_frequency(sp)
+        init(freq=freq, path=p)
+    else:
+        migrate_header(p, freq=_read_chat_history_frequency(sp))
+
+    # Detect session change BEFORE appending so the new entry's `s`
+    # doesn't shadow the previous one. Actual prune fires AFTER the
+    # append so the cap is enforced against the post-append body
+    # (otherwise the effective cap would be max_sessions + 1).
+    is_new_session = (
+        s_tag != SESSION_ID_UNKNOWN
+        and _last_body_session_id(p) != s_tag
+    )
+
+    def _maybe_prune() -> None:
+        if not is_new_session:
+            return
+        max_n = _read_chat_history_max_sessions(sp)
+        try:
+            prune_sessions(max_n, path=p)
+        except OSError as exc:
+            sys.stderr.write(f"chat-history prune_failed: {exc}\n")
 
     if event == "session_start":
-        if not first_user_msg:
-            return {"action": "skipped_no_first_user_msg", "event": event}
-        write_sidecar(first_user_msg, path=p)
-        if not p.is_file() or read_header(p) is None:
-            freq = _read_chat_history_frequency(sp)
-            init(first_user_msg, freq=freq, path=p)
-            return {"action": "initialized", "event": event,
-                    "fp": fingerprint(first_user_msg)}
-        return {"action": "sidecar_written", "event": event,
-                "fp": fingerprint(first_user_msg)}
-
-    side = read_sidecar(p)
-    fum = first_user_msg or (side or {}).get("first_user_msg")
-    if not fum:
-        return {"action": "skipped_no_sidecar", "event": event,
-                "hint": "session_start hook never ran or sidecar was deleted"}
-
+        _maybe_prune()
+        return {"action": "session_start_noop", "event": event, "s": s_tag}
     if event == "session_end":
-        # Control plane only — touch sidecar's last-seen but do not append.
-        return {"action": "session_end_noop", "event": event}
+        _maybe_prune()
+        return {"action": "session_end_noop", "event": event, "s": s_tag}
 
     freq = _read_chat_history_frequency(sp)
     if event not in CADENCE_EVENTS.get(freq, frozenset()):
-        return {"action": "skipped_cadence", "event": event, "frequency": freq}
+        return {"action": "skipped_cadence", "event": event,
+                "frequency": freq}
 
     entry_type = HOOK_EVENT_ENTRY_TYPE.get(event, "agent")
+    limits = _read_text_limits(sp)
     entry: dict[str, Any] = {"t": entry_type}
-    text = str(payload.get("text", "")).strip()
+    text = str(payload.get("text", ""))
     if text:
-        entry["text"] = _preview(text, 200)
+        sliced = _apply_text_limit(text, entry_type, limits)
+        if sliced:
+            entry["text"] = sliced
     if event == "tool_use":
         tool = payload.get("tool")
         if tool:
             entry["tool"] = str(tool)
-    for k in ("source", "phase", "decision"):
+    for k in ("agent", "source", "phase", "decision"):
         if payload.get(k):
             entry[k] = str(payload[k])
+    append(entry, path=p, session=s_tag)
+    _maybe_prune()
+    return {"action": "appended", "event": event,
+            "type": entry_type, "s": s_tag}
+
+
+def _extract_augment_conversation(
+    payload: dict[str, Any],
+) -> tuple[str, str]:
+    """Return ``(user_prompt, agent_response)`` from an Augment payload.
+
+    Augment Code with ``includeConversationData: true`` nests the
+    turn under ``conversation`` (``userPrompt`` + ``agentTextResponse``).
+    Returns empty strings when the block is absent or malformed.
+    """
+    conv = payload.get("conversation")
+    if not isinstance(conv, dict):
+        return ("", "")
+    user = conv.get("userPrompt")
+    agent = conv.get("agentTextResponse")
+    user_s = user.strip() if isinstance(user, str) else ""
+    agent_s = agent.strip() if isinstance(agent, str) else ""
+    return (user_s, agent_s)
+
+
+def _extract_claude_transcript_response(transcript_path: str) -> str:
+    """Read Claude Code's JSONL transcript and return the last assistant text.
+
+    Claude Code's ``Stop`` hook payload only carries ``session_id`` and
+    ``transcript_path``; the actual response lives inside the JSONL file
+    as a sequence of ``{"type": "assistant", "message": {"content": …}}``
+    entries. Best-effort: silently returns ``""`` on missing file, decode
+    error, or unexpected shape so the caller falls back to other paths.
+    """
+    if not transcript_path:
+        return ""
+    p = Path(transcript_path)
+    if not p.is_file():
+        return ""
+    last_text = ""
     try:
-        append(entry, path=p, first_user_msg=fum)
-    except OwnershipError as exc:
-        return {"action": "ownership_refused", "event": event,
-                "state": exc.state,
-                "header_fp": exc.header_fp[:8],
-                "current_fp": exc.current_fp[:8]}
-    return {"action": "appended", "event": event, "type": entry_type}
+        with p.open(encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if not isinstance(obj, dict):
+                    continue
+                if obj.get("type") != "assistant":
+                    continue
+                msg = obj.get("message")
+                if not isinstance(msg, dict):
+                    continue
+                content = msg.get("content")
+                if isinstance(content, str):
+                    last_text = content
+                elif isinstance(content, list):
+                    parts: list[str] = []
+                    for blk in content:
+                        if (isinstance(blk, dict)
+                                and blk.get("type") == "text"):
+                            t = blk.get("text", "")
+                            if isinstance(t, str):
+                                parts.append(t)
+                    if parts:
+                        last_text = "\n".join(parts)
+    except OSError:
+        return ""
+    return last_text.strip()
 
 
-def _extract_hook_text(payload: dict[str, Any]) -> str:
+def _extract_cursor_text(
+    payload: dict[str, Any], event: str | None,
+) -> str:
+    """Cursor hook payload extractor (docs-verified, 2026-05).
+
+    Cursor's ``afterAgentResponse`` and ``stop`` hooks ship a
+    ``transcript_path`` pointing at a Claude-format JSONL file (Cursor
+    reuses Claude Code's transcript schema). For ``beforeSubmitPrompt``
+    the prompt is in the top-level ``prompt`` key. The fallback walker
+    handles both, but we route here so the transcript is preferred over
+    any stale top-level field.
+
+    Sources: <https://cursor.com/docs/hooks>,
+    <https://cursor.com/docs/reference/third-party-hooks>.
+    """
+    if event in ("stop", "agent_response"):
+        tp = payload.get("transcript_path") or payload.get("transcriptPath")
+        if isinstance(tp, str):
+            txt = _extract_claude_transcript_response(tp)
+            if txt:
+                return txt
+    return ""
+
+
+def _extract_cline_text(
+    payload: dict[str, Any], event: str | None,
+) -> str:
+    """Cline hook payload extractor (docs-verified, 2026-05).
+
+    Cline ships PascalCase event names (``UserPromptSubmit``,
+    ``TaskComplete``) but body keys are camelCase. ``UserPromptSubmit``
+    carries the prompt as ``prompt``; ``TaskComplete`` is mapped to
+    ``session_end`` (no body text emitted by default). The top-level
+    fallback already covers ``prompt``, but we route here so future
+    schema extensions land in one place.
+
+    Sources: <https://docs.cline.bot/customization/hooks>,
+    <https://docs.cline.bot/features/hooks>.
+    """
+    if event == "user_prompt":
+        v = payload.get("prompt") or payload.get("userPrompt")
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    return ""
+
+
+def _extract_gemini_text(
+    payload: dict[str, Any], event: str | None,
+) -> str:
+    """Gemini CLI hook payload extractor (docs-verified, 2026-05).
+
+    Gemini CLI's ``AfterAgent`` payload carries the agent text directly
+    as ``prompt_response`` (snake_case, matching the rest of Gemini's
+    hook keys). When absent, the dispatcher may still receive a
+    ``transcript_path`` — Gemini transcripts use the same JSONL shape
+    as Claude, so the Claude walker applies. The top-level fallback
+    does not include ``prompt_response``, which is why this branch is
+    necessary.
+
+    Sources: <https://www.geminicli.com/docs/hooks/>,
+    <https://www.geminicli.com/docs/hooks/reference/>.
+    """
+    if event in ("agent_response", "stop"):
+        v = payload.get("prompt_response") or payload.get("promptResponse")
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+        tp = payload.get("transcript_path") or payload.get("transcriptPath")
+        if isinstance(tp, str):
+            txt = _extract_claude_transcript_response(tp)
+            if txt:
+                return txt
+    return ""
+
+
+def _extract_windsurf_text(
+    payload: dict[str, Any], event: str | None,
+) -> str:
+    """Windsurf hook payload extractor (docs-verified, 2026-05).
+
+    Windsurf has two agent-response variants. ``post_cascade_response``
+    (synchronous) nests the response under ``tool_info.response`` as a
+    markdown string; ``post_cascade_response_with_transcript`` carries
+    a ``transcript_path`` to a JSONL file (Claude-format). The
+    ``pre_user_prompt`` event keeps the prompt under the top-level
+    ``prompt`` (covered by the fallback).
+
+    Sources: <https://docs.windsurf.com/windsurf/cascade/hooks>.
+    """
+    if event in ("agent_response", "stop"):
+        info = payload.get("tool_info") or payload.get("toolInfo")
+        if isinstance(info, dict):
+            v = info.get("response") or info.get("text")
+            if isinstance(v, str) and v.strip():
+                return v.strip()
+        tp = payload.get("transcript_path") or payload.get("transcriptPath")
+        if isinstance(tp, str):
+            txt = _extract_claude_transcript_response(tp)
+            if txt:
+                return txt
+    return ""
+
+
+def _extract_hook_text(
+    payload: dict[str, Any],
+    *,
+    platform: str | None = None,
+    event: str | None = None,
+) -> str:
     """Pull a textual snippet out of a platform's hook payload.
 
-    Tries common field names across Claude Code, Augment Code, Cursor,
-    Cline, Windsurf, and Gemini CLI. Returns the first non-empty string
-    found, stripped; empty string when nothing usable is present.
+    Platform-aware when ``platform`` is supplied: prefers nested keys
+    that the platform documents (Augment ``conversation.*``, Claude Code
+    ``transcript_path`` JSONL, Cursor/Gemini/Windsurf docs-verified
+    branches). Falls back to common top-level keys so legacy callers
+    and simple platforms keep working.
     """
+    # Augment Code (with includeConversationData: true) — Stop payloads
+    # arrive nested under "conversation".
+    if platform == "augment":
+        user, agent = _extract_augment_conversation(payload)
+        if event == "user_prompt" and user:
+            return user
+        if event in ("stop", "agent_response") and agent:
+            return agent
+        if agent:
+            return agent
+        if user:
+            return user
+    # Claude Code — Stop payload only has transcript_path; parse JSONL
+    # to recover the last assistant message. Cowork (the Claude desktop
+    # app's local-agent-mode runtime) shares the same payload shape, so
+    # the same extractor applies.
+    if platform in ("claude", "cowork") and event in ("stop", "agent_response"):
+        tp = payload.get("transcript_path") or payload.get("transcriptPath")
+        if isinstance(tp, str):
+            txt = _extract_claude_transcript_response(tp)
+            if txt:
+                return txt
+    if platform == "cursor":
+        txt = _extract_cursor_text(payload, event)
+        if txt:
+            return txt
+    if platform == "cline":
+        txt = _extract_cline_text(payload, event)
+        if txt:
+            return txt
+    if platform == "gemini":
+        txt = _extract_gemini_text(payload, event)
+        if txt:
+            return txt
+    if platform == "windsurf":
+        txt = _extract_windsurf_text(payload, event)
+        if txt:
+            return txt
     for key in ("prompt", "user_prompt", "first_user_msg", "firstUserMsg",
                 "userMessage", "user_message", "text", "response", "message",
                 "content"):
@@ -877,24 +1191,39 @@ def _extract_hook_event(payload: dict[str, Any]) -> str:
     return ""
 
 
+def _extract_session_id(payload: dict[str, Any]) -> str:
+    """Pull a stable session identifier out of a platform's hook payload.
+
+    Used by hook_dispatch as a fallback first-user-msg source on
+    platforms whose SessionStart payload does not include the user
+    prompt (notably Augment Code).
+    """
+    for key in ("session_id", "sessionId", "task_id", "taskId",
+                "conversation_id", "conversationId"):
+        v = payload.get(key)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    return ""
+
+
 def hook_dispatch(platform: str, raw_json: str, *,
                   event_override: str | None = None,
                   path: Path | None = None,
                   settings_path: Path | None = None) -> dict[str, Any]:
     """Read a platform's stdin JSON, translate to our hook vocabulary, dispatch.
 
-    Used by `chat_history.py hook-dispatch --platform <name>` so consumer
-    projects can wire their `.claude/settings.json` / `.augment/settings.json`
-    / `.cursor/hooks.json` etc. to a single command. The mapping comes from
-    PLATFORM_EVENT_MAP; unmapped events are silently skipped (returned as
-    `skipped_unmapped_event` so the caller can decide fail-open vs
-    fail-closed).
+    Used by ``chat_history.py hook-dispatch --platform <name>`` so
+    consumer projects can wire their per-platform hook config to a
+    single command. The mapping comes from ``PLATFORM_EVENT_MAP``;
+    unmapped events are silently skipped (returned as
+    ``skipped_unmapped_event``).
 
-    Bootstrap: when the platform fires the very first non-`session_start`
-    event (e.g. `UserPromptSubmit`) and no sidecar exists yet, the
-    dispatcher synthesizes a `session_start` first using the prompt as the
-    `first_user_msg`. This handles platforms whose `SessionStart` payload
-    does not carry the prompt itself.
+    Schema v4: every dispatch extracts the platform's stable
+    ``session_id`` from the payload and forwards it to
+    :func:`hook_append`, where :func:`derive_session_tag` produces the
+    16-char ``s`` tag carried on every body entry. No sidecar, no
+    ownership, no auto-adopt — multi-session coexistence is implicit
+    via the ``s`` field.
     """
     if platform not in PLATFORM_EVENT_MAP:
         raise ValueError(
@@ -928,39 +1257,47 @@ def hook_dispatch(platform: str, raw_json: str, *,
         return {"action": "skipped_unmapped_event", "platform": platform,
                 "raw_event": raw_event}
 
-    text = _extract_hook_text(payload)
+    text = _extract_hook_text(payload, platform=platform, event=event)
     tool = _extract_hook_tool(payload)
-    # The user's first message is what we hash for ownership. We can only
-    # extract it from prompt-bearing events; for stop / tool_use / *_end
-    # the sidecar must already exist.
-    fum = text if event in {"session_start", "user_prompt"} else None
+    session_id = _extract_session_id(payload)
 
-    hook_payload: dict[str, Any] = {"source": f"hook:{platform}:{raw_event}"}
+    # Augment dual-emit: with includeConversationData: true the Stop
+    # payload carries both the user prompt and the agent response in one
+    # call (Augment has no UserPromptSubmit equivalent). Synthesize a
+    # user_prompt append before the stop append so both sides land in
+    # history under the active cadence.
+    augment_user_prompt = ""
+    if platform == "augment" and event == "stop":
+        u, _a = _extract_augment_conversation(payload)
+        augment_user_prompt = u
+
+    hook_payload: dict[str, Any] = {
+        "source": f"hook:{platform}:{raw_event}",
+        "agent": platform,
+    }
     if text and event != "session_start":
         hook_payload["text"] = text
     if tool:
         hook_payload["tool"] = tool
 
-    p = path or file_path()
+    if augment_user_prompt:
+        hook_append(
+            "user_prompt",
+            session_id=session_id,
+            payload={
+                "text": augment_user_prompt,
+                "source": f"hook:{platform}:{raw_event}:user",
+                "agent": platform,
+            },
+            path=path, settings_path=settings_path,
+        )
 
-    if event == "session_start":
-        return hook_append("session_start", first_user_msg=fum,
-                           path=path, settings_path=settings_path)
-
-    # Bootstrap: the first non-session_start event from a platform whose
-    # SessionStart did not carry the prompt (e.g. Claude Code) needs an
-    # implicit init so ownership and the sidecar exist before append.
-    side = read_sidecar(p)
-    if side is None and fum:
-        hook_append("session_start", first_user_msg=fum,
-                    path=path, settings_path=settings_path)
-
-    return hook_append(event, first_user_msg=fum, payload=hook_payload,
+    return hook_append(event, session_id=session_id, payload=hook_payload,
                        path=path, settings_path=settings_path)
 
 
 def _cmd_init(args) -> int:
-    h = init(args.first_user_msg, freq=args.freq)
+    h = init(freq=args.freq)
     print(json.dumps(h, ensure_ascii=False))
     return 0
 
@@ -982,7 +1319,7 @@ def _cmd_hook_append(args) -> int:
     try:
         result = hook_append(
             args.event,
-            first_user_msg=args.first_user_msg,
+            session_id=args.session_id,
             payload=payload,
             settings_path=settings_path,
         )
@@ -990,8 +1327,6 @@ def _cmd_hook_append(args) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return EXIT_BAD_ARGS
     print(json.dumps(result, ensure_ascii=False))
-    if result.get("action") == "ownership_refused":
-        return EXIT_OWNERSHIP_REFUSED
     return EXIT_OK
 
 
@@ -1009,8 +1344,6 @@ def _cmd_hook_dispatch(args) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return EXIT_BAD_ARGS
     print(json.dumps(result, ensure_ascii=False))
-    if result.get("action") == "ownership_refused":
-        return EXIT_OWNERSHIP_REFUSED
     return EXIT_OK
 
 
@@ -1021,107 +1354,13 @@ def _cmd_append(args) -> int:
         print("error: --type or a 't' key in --json is required",
               file=sys.stderr)
         return EXIT_BAD_ARGS
-    try:
-        append(entry, first_user_msg=args.first_user_msg)
-    except OwnershipError as exc:
-        print(
-            f"error: append refused — state={exc.state}; "
-            f"header_fp={exc.header_fp[:8]} current_fp={exc.current_fp[:8]}. "
-            f"Run `chat_history.py turn-check --first-user-msg \"...\"` "
-            f"and resolve ownership before retrying.",
-            file=sys.stderr,
-        )
-        return EXIT_OWNERSHIP_REFUSED
+    session = derive_session_tag(args.session_id) if args.session_id else None
+    append(entry, session=session)
     return EXIT_OK
 
 
 def _cmd_status(_args) -> int:
     print(json.dumps(status(), ensure_ascii=False, indent=2))
-    return 0
-
-
-def _cmd_check(args) -> int:
-    print(check_ownership(args.first_user_msg))
-    return 0
-
-
-def _cmd_state(args) -> int:
-    print(ownership_state(args.first_user_msg))
-    return 0
-
-
-def _format_turn_check_stdout(result: dict[str, Any]) -> str:
-    """Render turn_check() result as a single key=value line for shell parsing."""
-    state = result["state"]
-    parts = [f"state={state}"]
-    if "entries" in result:
-        parts.append(f"entries={result['entries']}")
-    if state in {"foreign", "returning"}:
-        parts.append(f"header_fp={str(result.get('header_fp', ''))[:8]}")
-        parts.append(f"current_fp={str(result.get('current_fp', ''))[:8]}")
-        preview = str(result.get("preview", "")).replace('"', "'")
-        if preview:
-            parts.append(f'preview="{preview[:80]}"')
-    return " ".join(parts)
-
-
-def _turn_check_action_hint(state: str) -> str:
-    """Stderr hint telling the agent which prompt to render."""
-    if state == "ok":
-        return ""
-    if state == "disabled":
-        return ""
-    if state == "missing":
-        return ("ACTION REQUIRED: state=missing — run "
-                "`chat_history.py init --first-user-msg \"...\" "
-                "--freq <frequency-from-settings>` before any other reply.")
-    if state == "foreign":
-        return ("ACTION REQUIRED: state=foreign — render the Foreign-Prompt "
-                "from the chat-history rule (3 numbered options: Resume / "
-                "New start / Ignore) before any other reply. Do not append "
-                "to this file until the user picks.")
-    if state == "returning":
-        return ("ACTION REQUIRED: state=returning — render the "
-                "Returning-Prompt from the chat-history rule (3 numbered "
-                "options: Merge / Replace / Continue) before any other "
-                "reply. Do not append to this file until the user picks.")
-    return f"ACTION REQUIRED: unknown state={state}"
-
-
-def _cmd_turn_check(args) -> int:
-    settings_path = Path(args.settings) if args.settings else None
-    result = turn_check(args.first_user_msg, settings_path=settings_path)
-    print(_format_turn_check_stdout(result))
-    hint = _turn_check_action_hint(result["state"])
-    if hint:
-        print(hint, file=sys.stderr)
-    return int(result["exit"])
-
-
-def _cmd_heartbeat(args) -> int:
-    settings_path = Path(args.settings) if args.settings else None
-    result = heartbeat(args.first_user_msg, settings_path=settings_path)
-    if args.json:
-        # JSON consumers want the full record regardless of mode.
-        print(json.dumps(result, ensure_ascii=False))
-        return EXIT_OK
-    mode = _read_chat_history_heartbeat_mode(
-        settings_path or Path(DEFAULT_SETTINGS_FILE)
-    )
-    state = str(result.get("state", ""))
-    # off → never print. hybrid → only on drift states.
-    # on → always (current behavior).
-    if mode == "off":
-        return EXIT_OK
-    if mode == "hybrid" and state not in DRIFT_STATES:
-        return EXIT_OK
-    print(result["marker"])
-    return EXIT_OK
-
-
-def _cmd_adopt(args) -> int:
-    h = adopt(args.first_user_msg)
-    print(json.dumps(h, ensure_ascii=False))
     return 0
 
 
@@ -1141,9 +1380,21 @@ def _load_entries_arg(args) -> list[dict[str, Any]]:
 
 def _cmd_reset(args) -> int:
     entries = _load_entries_arg(args)
-    h = reset_with_entries(args.first_user_msg, entries, freq=args.freq)
+    h = reset_with_entries(entries, freq=args.freq)
     print(json.dumps(h, ensure_ascii=False))
     return 0
+
+
+def _cmd_prune_sessions(args) -> int:
+    settings_path = Path(args.settings) if args.settings else None
+    if args.max_sessions is not None:
+        max_n = max(1, int(args.max_sessions))
+    else:
+        sp = settings_path or Path(DEFAULT_SETTINGS_FILE)
+        max_n = _read_chat_history_max_sessions(sp)
+    result = prune_sessions(max_n)
+    print(json.dumps(result, ensure_ascii=False))
+    return EXIT_OK
 
 
 def _cmd_prepend(args) -> int:
@@ -1160,8 +1411,41 @@ def _cmd_clear(_args) -> int:
 
 def _cmd_read(args) -> int:
     last = None if args.all else args.last
-    entries = read_entries(last=last)
+    if args.all:
+        entries = read_entries(last=last, session=None)
+    elif args.session is not None:
+        entries = read_entries(last=last, session=args.session)
+    else:
+        entries = read_entries_for_current(last=last)
     print(json.dumps(entries, ensure_ascii=False, indent=2))
+    return 0
+
+
+def _cmd_sessions(args) -> int:
+    sessions = list_sessions()
+    if not args.include_empty:
+        sessions = [s for s in sessions if s["count"] > 0]
+    sessions = sessions[: args.limit]
+    if args.json:
+        print(json.dumps(sessions, ensure_ascii=False, indent=2))
+        return 0
+    if not sessions:
+        print("(no sessions)")
+        return 0
+    rows = [("ID", "COUNT", "LAST_TS", "PREVIEW")]
+    for s in sessions:
+        rows.append((
+            s["id"],
+            str(s["count"]),
+            s["last_ts"] or "-",
+            s["preview"] or "-",
+        ))
+    widths = [max(len(r[i]) for r in rows) for i in range(4)]
+    for i, r in enumerate(rows):
+        line = "  ".join(r[j].ljust(widths[j]) for j in range(4))
+        print(line)
+        if i == 0:
+            print("  ".join("-" * widths[j] for j in range(4)))
     return 0
 
 
@@ -1175,61 +1459,20 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest="cmd", required=True)
     p_init = sub.add_parser("init")
-    p_init.add_argument("--first-user-msg", required=True)
     p_init.add_argument("--freq", default="per_phase", choices=sorted(VALID_FREQS))
     p_init.set_defaults(func=_cmd_init)
     p_app = sub.add_parser("append")
     p_app.add_argument("--type", help="entry type (t field)")
     p_app.add_argument("--json", help="JSON object with entry fields")
     p_app.add_argument(
-        "--first-user-msg",
+        "--session-id",
         default=None,
-        help=("validate ownership before writing — refuses with exit "
-              f"{EXIT_OWNERSHIP_REFUSED} on foreign/returning/missing"),
+        help=("platform session id; hashed to derive the body 's' tag. "
+              "Omit to write entries with s=<unknown>."),
     )
     p_app.set_defaults(func=_cmd_append)
     sub.add_parser("status").set_defaults(func=_cmd_status)
-    p_chk = sub.add_parser("check")
-    p_chk.add_argument("--first-user-msg", required=True)
-    p_chk.set_defaults(func=_cmd_check)
-    p_state = sub.add_parser("state")
-    p_state.add_argument("--first-user-msg", required=True)
-    p_state.set_defaults(func=_cmd_state)
-    p_tc = sub.add_parser(
-        "turn-check",
-        help=("turn-start ownership gate; exit 0=ok/disabled, "
-              f"{EXIT_MISSING}=missing, {EXIT_FOREIGN}=foreign, "
-              f"{EXIT_RETURNING}=returning"),
-    )
-    p_tc.add_argument("--first-user-msg", required=True)
-    p_tc.add_argument(
-        "--settings",
-        default=None,
-        help=f"path to agent settings (default: {DEFAULT_SETTINGS_FILE})",
-    )
-    p_tc.set_defaults(func=_cmd_turn_check)
-    p_hb = sub.add_parser(
-        "heartbeat",
-        help=("emit the in-band reply marker; always exit 0. "
-              "Agent must include the stdout line verbatim in every reply."),
-    )
-    p_hb.add_argument("--first-user-msg", required=True)
-    p_hb.add_argument(
-        "--settings",
-        default=None,
-        help=f"path to agent settings (default: {DEFAULT_SETTINGS_FILE})",
-    )
-    p_hb.add_argument(
-        "--json",
-        action="store_true",
-        help="emit the full result dict instead of just the marker",
-    )
-    p_hb.set_defaults(func=_cmd_heartbeat)
-    p_ado = sub.add_parser("adopt")
-    p_ado.add_argument("--first-user-msg", required=True)
-    p_ado.set_defaults(func=_cmd_adopt)
     p_reset = sub.add_parser("reset")
-    p_reset.add_argument("--first-user-msg", required=True)
     p_reset.add_argument("--freq", default="per_phase",
                          choices=sorted(VALID_FREQS))
     g_r = p_reset.add_mutually_exclusive_group(required=True)
@@ -1238,6 +1481,23 @@ def main(argv: list[str] | None = None) -> int:
     g_r.add_argument("--entries-stdin", action="store_true",
                      help="read JSON array from stdin")
     p_reset.set_defaults(func=_cmd_reset)
+    p_prune = sub.add_parser(
+        "prune-sessions",
+        help=("keep only the N most-recent sessions in the body; "
+              "N defaults to chat_history.max_sessions"),
+    )
+    p_prune.add_argument(
+        "--max-sessions",
+        type=int,
+        default=None,
+        help=f"max distinct sessions to keep (default: settings or {DEFAULT_MAX_SESSIONS})",
+    )
+    p_prune.add_argument(
+        "--settings",
+        default=None,
+        help=f"path to agent settings (default: {DEFAULT_SETTINGS_FILE})",
+    )
+    p_prune.set_defaults(func=_cmd_prune_sessions)
     p_prep = sub.add_parser("prepend")
     g_p = p_prep.add_mutually_exclusive_group(required=True)
     g_p.add_argument("--entries-json",
@@ -1251,28 +1511,42 @@ def main(argv: list[str] | None = None) -> int:
     grp.add_argument("--last", type=int, default=5,
                      help="return the trailing N entries (default: 5)")
     grp.add_argument("--all", action="store_true",
-                     help="return all entries")
+                     help="return all entries (across all sessions)")
+    p_read.add_argument(
+        "--session", default=None,
+        help=("filter to entries with this session tag "
+              "(16-char sha256(session_id), '<legacy>', or '<unknown>'); "
+              "defaults to the most recent session"),
+    )
     p_read.set_defaults(func=_cmd_read)
+    p_sess = sub.add_parser("sessions")
+    p_sess.add_argument("--limit", type=int, default=20,
+                        help="max non-empty sessions to print (default: 20)")
+    p_sess.add_argument("--include-empty", action="store_true",
+                        help="include sessions with zero body entries")
+    p_sess.add_argument("--json", action="store_true",
+                        help="emit JSON instead of a human-readable table")
+    p_sess.set_defaults(func=_cmd_sessions)
     p_rot = sub.add_parser("rotate")
     p_rot.add_argument("--max-kb", type=int, default=256)
     p_rot.add_argument("--mode", default="rotate", choices=sorted(VALID_OVERFLOW))
     p_rot.set_defaults(func=_cmd_rotate)
     p_hook = sub.add_parser(
         "hook-append",
-        help=("platform-hook entry point — wraps init/append/sidecar; "
-              "stateless after the first session_start call"),
+        help=("platform-hook entry point — stateless append per session; "
+              "derives the body 's' tag from --session-id"),
     )
     p_hook.add_argument(
         "--event",
         required=True,
         choices=sorted(VALID_HOOK_EVENTS),
-        help="hook event name (session_start required first)",
+        help="hook event name",
     )
     p_hook.add_argument(
-        "--first-user-msg",
+        "--session-id",
         default=None,
-        help=("required on session_start; subsequent events read it from "
-              "the sidecar"),
+        help=("platform session id; hashed to derive the body 's' tag. "
+              "Omit to write entries with s=<unknown>."),
     )
     p_hook.add_argument(
         "--payload",

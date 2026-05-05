@@ -21,8 +21,8 @@ TEMPLATE_CONTENT = """\
 /agent-config
 
 # Agent config — chat history
-.agent-chat-history
-.agent-chat-history.bak
+/agents/.agent-chat-history
+/agents/.agent-chat-history.bak
 """
 
 
@@ -48,7 +48,7 @@ def test_template_entries_extracts_paths_only(template: Path):
     assert entries == [
         ".augment/skills/", ".augment/commands/",
         "/agent-config",
-        ".agent-chat-history", ".agent-chat-history.bak",
+        "/agents/.agent-chat-history", "/agents/.agent-chat-history.bak",
     ]
 
 
@@ -224,7 +224,7 @@ def test_sync_dry_run_prints_diff_without_writing(gitignore: Path,
     assert gitignore.stat().st_mtime_ns == mtime_before
     out = capsys.readouterr()
     assert "# event4u/agent-config" in out.out
-    assert "+.agent-chat-history" in out.out
+    assert "+/agents/.agent-chat-history" in out.out
     assert "(dry-run)" in out.err
 
 
@@ -261,4 +261,4 @@ def test_sync_real_config_template_works_on_package_repo():
     lines = sg.load_template(default)
     entries = sg.template_entries(lines)
     assert len(entries) >= 5
-    assert ".agent-chat-history" in entries
+    assert "/agents/.agent-chat-history" in entries

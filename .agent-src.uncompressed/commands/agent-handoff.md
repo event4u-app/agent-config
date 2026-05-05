@@ -66,17 +66,21 @@ Show the handoff prompt in a fenced code block and say:
 - **Decisions are important** — prevents the new chat from re-asking settled questions.
 - **File list is optional** — only include if the new chat will need to edit specific files.
 
-## When to use this vs. `/chat-history-resume`
+## When to use this vs. `agents/.agent-chat-history`
 
 - `/agent-handoff` is **push-based**: you copy a short summary into the
   new chat. Works across tools (Augment → Claude Code), across machines,
   and without any persistent file.
-- [`/chat-history-resume`](chat-history-resume.md) is **pull-based**: the
-  new chat reads `.agent-chat-history` from disk (written by the
-  [`chat-history`](../rules/chat-history-ownership.md) rule). Works only on the
-  same machine and same repo, but captures more detail (every phase /
-  tool call / decision the prior session logged).
+- `agents/.agent-chat-history` is **pull-based** and **multi-session**: every
+  session writes its own entries tagged with a 16-char session
+  fingerprint derived from the platform `session_id` (schema v4, see
+  [`chat-history-platform-hooks`](../../agents/contexts/chat-history-platform-hooks.md)).
+  Works only on the same machine and same repo, but captures every
+  phase / decision any session logged. Inspect with `/chat-history show`;
+  pull prior-session context into the current chat verbatim with
+  `/chat-history import`; mine a prior session for project-improving
+  learnings with `/chat-history learn`.
 
-Prefer `/agent-handoff` for planned context switches; prefer
-`/chat-history-resume` after a crash or after switching tools within the
-same workspace.
+Prefer `/agent-handoff` for planned context switches across tools or
+machines; use `/chat-history import` after a crash or fresh-chat reopen
+on the same workspace to surface prior-session context verbatim.

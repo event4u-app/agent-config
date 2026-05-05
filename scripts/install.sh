@@ -563,6 +563,40 @@ copy_if_missing() {
     cp "$source" "$target"
 }
 
+# Migrate legacy infra files from project root to agents/.
+# Pre-2.x layout: .agent-chat-history (+ .bak), .agent-prices.md lived at
+# the project root. They now live under agents/. Move them in place before
+# any other content sync so the updated gitignore block (which lists
+# /agents/.agent-chat-history*) and the chat-history hooks operate on the
+# already-migrated layout. Idempotent: skips silently if the target already
+# exists; never overwrites.
+migrate_legacy_root_infra() {
+    local project_root="$1"
+    local agents_dir="$project_root/agents"
+    local items=(".agent-chat-history" ".agent-chat-history.bak" ".agent-prices.md")
+
+    for name in "${items[@]}"; do
+        local old="$project_root/$name"
+        local new="$agents_dir/$name"
+
+        [[ -e "$old" ]] || continue
+
+        if [[ -e "$new" ]]; then
+            log_warn "Legacy $name found at project root, but agents/$name already exists — leaving root copy in place"
+            continue
+        fi
+
+        if $DRY_RUN; then
+            log_verbose "would migrate $name → agents/$name"
+            continue
+        fi
+
+        mkdir -p "$agents_dir"
+        mv "$old" "$new"
+        log_info "Migrated $name → agents/$name"
+    done
+}
+
 # Ensure .gitignore contains the managed agent-config block.
 # Delegates to scripts/sync_gitignore.py so the installer and the
 # standalone /sync-gitignore command share one source of truth
@@ -631,6 +665,9 @@ main() {
     $QUIET || echo "    Target: $TARGET_DIR"
     $DRY_RUN && ! $QUIET && echo "    Mode: DRY RUN"
     echo ""
+
+    # 0. Migrate legacy infra files (root → agents/) before any content sync.
+    migrate_legacy_root_infra "$TARGET_DIR"
 
     # 1. Hybrid sync payload → target/.augment/
     sync_hybrid "$SOURCE_PAYLOAD" "$TARGET_DIR/.augment"

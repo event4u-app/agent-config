@@ -11,10 +11,9 @@ Complements [`agent-memory-contract.md`](agent-memory-contract.md):
 that doc describes the **CLI surface and backend states**; this doc
 describes the **operator-facing surface** the engine emits per turn.
 
-**Scope.** Defines the line shape, the privacy floor, the opt-out
-toggle, and the interaction with the chat-history heartbeat. Does
-**not** define how memory entries are scored or routed — that is the
-sibling agent-memory package.
+**Scope.** Defines the line shape, the privacy floor, and the opt-out
+toggle. Does **not** define how memory entries are scored or routed —
+that is the sibling agent-memory package.
 
 Last refreshed: 2026-05-04.
 
@@ -78,28 +77,13 @@ Off-mode does not silence the underlying memory calls; it only stops
 the line from rendering. The decision-trace JSON still records the
 counts and ids for downstream metrics.
 
-## Interaction with chat-history heartbeat
-
-The chat-history heartbeat (`📒` marker) and the memory-visibility
-line are **independent**:
-
-- Heartbeat fires on cadence boundaries
-  (`per_turn` / `per_phase` / `per_tool`).
-- Visibility line fires whenever `asks ≥ 1` for the current turn,
-  regardless of cadence.
-- Both render on the same reply when both fire — heartbeat first,
-  visibility line second, separated by a single newline.
-
-The visibility line is **not** part of the heartbeat payload — that
-keeps the heartbeat contract bytes-stable.
-
 ## Cadence interaction
 
-| Cost profile | Visibility line | Heartbeat |
-|---|---|---|
-| `lean` | suppress unless `asks ≥ 3` | per-phase |
-| `standard` | always when `asks ≥ 1` | per-turn |
-| `verbose` | always when `asks ≥ 1` | per-tool |
+| Cost profile | Visibility line |
+|---|---|
+| `lean` | suppress unless `asks ≥ 3` |
+| `standard` | always when `asks ≥ 1` |
+| `verbose` | always when `asks ≥ 1` |
 
 Cost-profile lookup respects `.agent-settings.yml`'s `cost_profile`
 key. Default is `standard`.

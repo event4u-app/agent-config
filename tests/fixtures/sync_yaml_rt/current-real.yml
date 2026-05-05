@@ -84,7 +84,7 @@ eloquent:
 
 # --- Chat history (crash recovery) ---
 #
-# Persistent JSONL log at .agent-chat-history (project root, git-ignored).
+# Persistent JSONL log at agents/.agent-chat-history (git-ignored).
 # Keeps a durable record of the conversation so a crashed or switched
 # agent session can be resumed. See scripts/chat_history.py for the API.
 chat_history:
@@ -104,13 +104,6 @@ chat_history:
   #   rotate   = drop oldest entries to stay under max_size_kb
   #   compress = mark for summarization on the next agent turn
   on_overflow: rotate
-
-  # Heartbeat marker visibility (token-cost knob)
-  #   on     = print the 📒 marker every reply (~20 tokens/reply, legacy)
-  #   off    = never print (zero tokens, drift only visible by reading the file)
-  #   hybrid = print only on drift states (missing/foreign/returning); silent otherwise
-  # YAML 1.1 booleanizes bare on/off — both are accepted, no quoting needed.
-  heartbeat: hybrid
 
 # --- Optional pipelines ---
 pipelines:
@@ -206,7 +199,7 @@ ai_council:
   # the user to continue. `max_total_usd: 0` disables the USD ceiling
   # (token caps still apply).
   #
-  # Prices come from `.agent-prices.md` (gitignored, refreshed weekly
+  # Prices come from `agents/.agent-prices.md` (gitignored, refreshed weekly
   # by `python3 scripts/update_prices.py`; bootstrapped from
   # scripts/ai_council/_default_prices.py on first run).
   cost_budget:

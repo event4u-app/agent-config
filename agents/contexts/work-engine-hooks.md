@@ -138,7 +138,6 @@ engine state; failures surface as `HookError` (non-fatal).
 | `ChatHistoryTurnCheckHook` | CLI | `before_dispatch` | Runs `chat_history.py turn-check`; halts on `foreign` / `returning` |
 | `ChatHistoryAppendHook` | Dispatcher | `after_step` | Appends one phase entry per successful step at the configured cadence |
 | `ChatHistoryHaltAppendHook` | Dispatcher | `on_halt` | Appends a `decision` entry whenever a step halts so the log captures user-visible boundaries |
-| `ChatHistoryHeartbeatHook` | CLI | `before_save` | Emits the chat-history heartbeat onto `state.report`; runs after `_sync_back` so the marker survives onto the persisted report |
 
 ## Configuration
 

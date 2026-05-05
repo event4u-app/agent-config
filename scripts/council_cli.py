@@ -62,12 +62,17 @@ def build_members(
     settings: dict[str, Any],
     *,
     invocation_mode: str | None = None,
+    model_overrides: dict[str, str] | None = None,
 ) -> list[ExternalAIClient]:
     """Construct enabled council members from settings.
 
     Honours `ai_council.enabled` (master switch) and per-member
     `enabled` flags. Raises `CouncilDisabledError` when the council is
     off or no member is wired up.
+
+    `model_overrides` is a per-invocation `{member_name: model_id}`
+    map that wins over the per-member `model` in settings. Members not
+    listed fall back to the settings value, then the per-client default.
     """
     ai = (settings.get("ai_council") or {}) if isinstance(settings, dict) else {}
     if not ai.get("enabled"):
@@ -77,6 +82,13 @@ def build_members(
         )
     members_cfg = ai.get("members") or {}
     global_mode = ai.get("mode")
+    overrides = model_overrides or {}
+    unknown = set(overrides) - set(members_cfg)
+    if unknown:
+        raise CouncilDisabledError(
+            f"--model targets unknown member(s) {sorted(unknown)!r}; "
+            f"known members: {sorted(members_cfg)!r}."
+        )
     members: list[ExternalAIClient] = []
     for name, cfg in members_cfg.items():
         cfg = cfg or {}
@@ -88,7 +100,7 @@ def build_members(
             member_settings=cfg,
             global_mode=global_mode,
         )
-        model = cfg.get("model")
+        model = overrides.get(name) or cfg.get("model")
         if mode == "api" and name == "anthropic":
             members.append(AnthropicClient(model=model or "claude-sonnet-4-5",
                                            api_key=load_anthropic_key()))
@@ -163,7 +175,11 @@ def cmd_estimate(
     if settings is None:
         settings = load_settings()
     if members is None:
-        members = build_members(settings, invocation_mode=args.mode_override)
+        members = build_members(
+            settings,
+            invocation_mode=args.mode_override,
+            model_overrides=_parse_model_overrides(getattr(args, "model", None)),
+        )
     if table is None:
         table = load_prices()
     question, _ = build_question(
@@ -219,7 +235,11 @@ def cmd_run(
     if settings is None:
         settings = load_settings()
     if members is None:
-        members = build_members(settings, invocation_mode=args.mode_override)
+        members = build_members(
+            settings,
+            invocation_mode=args.mode_override,
+            model_overrides=_parse_model_overrides(getattr(args, "model", None)),
+        )
     if table is None:
         table = load_prices()
     question, artefact = build_question(
@@ -295,6 +315,28 @@ def cmd_render(args: argparse.Namespace) -> int:
 # ── argparse + main ─────────────────────────────────────────────────
 
 
+def _parse_model_overrides(items: list[str] | None) -> dict[str, str]:
+    """Parse repeated `--model name=model-id` flags into a dict.
+
+    Empty/None list → empty dict (no override). Bad shape raises
+    `argparse.ArgumentTypeError` so the CLI surfaces the error.
+    """
+    out: dict[str, str] = {}
+    for raw in items or []:
+        if "=" not in raw:
+            raise argparse.ArgumentTypeError(
+                f"--model expects '<member>=<model-id>', got {raw!r}."
+            )
+        name, model = raw.split("=", 1)
+        name, model = name.strip(), model.strip()
+        if not name or not model:
+            raise argparse.ArgumentTypeError(
+                f"--model member and model-id must both be non-empty: {raw!r}."
+            )
+        out[name] = model
+    return out
+
+
 def _add_common_input_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("question", type=str,
                    help="Path to the question file (text or roadmap).")
@@ -305,6 +347,13 @@ def _add_common_input_args(p: argparse.ArgumentParser) -> None:
                    help="Per-member output budget (default: 1024).")
     p.add_argument("--mode-override", choices=["api", "manual"], default=None,
                    help="Override every member's transport mode.")
+    p.add_argument("--model", action="append", default=None, dest="model",
+                   metavar="MEMBER=MODEL_ID",
+                   help="Per-invocation model override, e.g. "
+                        "--model anthropic=claude-sonnet-4-5. Repeatable. "
+                        "Wins over `ai_council.members.<name>.model` in "
+                        ".agent-settings.yml; the settings file is not "
+                        "modified.")
     p.add_argument("--original-ask", default="",
                    help="The user's framing sentence (flows into handoff).")
 
@@ -347,7 +396,8 @@ def main(argv: list[str] | None = None) -> int:
     except CouncilDisabledError as exc:
         sys.stderr.write(f"❌  council:{args.cmd}: {exc}\n")
         return 2
-    except (BundleTooLarge, InvalidModeError, FileNotFoundError) as exc:
+    except (BundleTooLarge, InvalidModeError, FileNotFoundError,
+            argparse.ArgumentTypeError) as exc:
         sys.stderr.write(f"❌  council:{args.cmd}: {exc}\n")
         return 2
     return 1

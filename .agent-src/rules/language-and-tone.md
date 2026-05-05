@@ -13,9 +13,11 @@ source: package
 ```
 MIRROR THE LANGUAGE OF THE USER'S LAST/CURRENT MESSAGE. ALWAYS.
 THE FIRST TOKEN OF EVERY REPLY MUST BE IN THAT LANGUAGE.
+EVERY USER-VISIBLE TOKEN MUST BE IN THAT LANGUAGE — NO EXCEPTIONS.
 A REPLY IN THE WRONG LANGUAGE IS A RULE VIOLATION, NOT A SLIP.
 NO MOMENTUM EXCEPTION. NO TECHNICAL-CONTEXT EXCEPTION.
 NO "SWITCH MID-PARAGRAPH". NO "LAST 20 TURNS WERE ENGLISH".
+NO "INTER-TOOL COMMENT IS JUST A NOTE" EXCEPTION.
 ```
 
 Trigger is the user's last **chat message** — not turn count, open
@@ -23,18 +25,47 @@ file, roadmap, ticket, codebase, `view` / `grep` output, prior reply,
 or files just edited. Short German (`3`, `weiter`, `mach das`) after
 many English turns flips the reply to German.
 
+### What counts as "user-visible prose" — exhaustive
+
+The Iron Law applies to **every** token the user sees in the reply,
+not just the main answer. All of these MUST mirror the user's
+language:
+
+- The opening line and the closing line.
+- **Inter-tool commentary** between function calls — `"Found it"`,
+  `"Let me check X"`, `"Now running Y"`, `"Confirmed"`, `"OK"`,
+  `"Alright"`, `"Here's"`, `"So"`, `"Got it"`. These are prose, not
+  internal notes — the user reads them.
+- Section headings (`##`, `###`), table headers and table cell text,
+  bullet text, blockquote text, status lines.
+- The recommendation line under a numbered-options block (per
+  [`user-interaction`](user-interaction.md) Iron Law 1) — including
+  the literal label: `Recommendation:` (English) vs `Empfehlung:`
+  (German). Wrong label = violation.
+- Error explanations, "what this means" summaries, status tables.
+
+Stays in source language: code blocks, command output, file
+contents, quoted tool output, frontmatter keys, file paths,
+identifier names, log lines.
+
 ### Pre-send gate — MANDATORY before every reply
 
 Run silently before any output:
 
 1. **Detect** — language of the user's last chat message. Mixed →
    **dominant** language; tie → German (project default).
-2. **Check** — is drafted prose (not code, not file contents) in
-   that language?
-3. **Rewrite** — if no, rewrite whole prose. No "just this sentence",
-   no "technical term is English anyway".
-4. **Confirm** — first sentence in target language. No English opener
-   before switching mid-paragraph.
+2. **Scan** — every user-visible token per the catalog above. Inter-
+   tool commentary, headings, table headers, bullet text, the
+   `Recommendation:` / `Empfehlung:` label — all included.
+3. **Rewrite** — if any token is in the wrong language, rewrite
+   the whole reply. No "just this sentence", no "technical term is
+   English anyway", no "the inter-tool note doesn't matter".
+4. **Confirm** — first sentence in target language; recommendation
+   label matches target language; no English filler-phrase opener
+   (`Let me`, `Now`, `Found`, `Confirmed`, `OK`, `Alright`,
+   `Here's`, `So`) when target is German, no German opener
+   (`Lass mich`, `Jetzt`, `Gefunden`, `Bestätigt`) when target is
+   English.
 
 ### Spelled out
 

@@ -122,7 +122,7 @@ eloquent:
 
 # --- Chat history (crash recovery) ---
 #
-# Persistent JSONL log at .agent-chat-history (project root, git-ignored).
+# Persistent JSONL log at agents/.agent-chat-history (project root, git-ignored).
 # Keeps a durable record of the conversation so a crashed or switched
 # agent session can be resumed. See scripts/chat_history.py for the API.
 #
@@ -140,26 +140,6 @@ chat_history:
 
   # Overflow behavior: rotate (drop oldest) | compress (summarize)
   on_overflow: rotate
-
-  # Heartbeat marker visibility: on | off | hybrid
-  #   on     — print marker every reply (~20 tokens/reply, legacy)
-  #   off    — never print (zero tokens, no drift signal)
-  #   hybrid — print only on drift (missing/foreign/returning); silent otherwise
-  # YAML 1.1 booleanizes bare on/off — both are accepted, no quoting needed.
-  heartbeat: hybrid
-
-  # Population path: hook | checkpoint | manual
-  #   hook       — platform fires lifecycle hooks; agent observes only
-  #                (Claude Code, Augment CLI, Cursor 1.7+, Cline non-Windows,
-  #                 Windsurf, Gemini CLI). scripts/install.py wires hooks.
-  #   checkpoint — agent invokes /chat-history-checkpoint at phase boundaries
-  #                (Augment IDE plugin, Cursor < 1.7, Cline on Windows).
-  #                Cooperative three-gate Iron Law applies.
-  #   manual     — rule is inert (cloud surfaces). Persistence is local-only.
-  # Default `checkpoint` is the safest cooperative fallback. HOOK platforms
-  # set this to `hook` automatically when scripts/install.py merges the
-  # platform's settings file.
-  path: checkpoint
 
 # --- Work-engine hooks ---
 #
@@ -197,7 +177,7 @@ hooks:
   # routing drift.
   directive_set_guard: true
 
-  # Chat-history hooks — populate .agent-chat-history structurally from
+  # Chat-history hooks — populate agents/.agent-chat-history structurally from
   # the engine. Gated by BOTH this block AND the global
   # chat_history.enabled above; either off → no chat-history hook
   # registers. Keep both on for the HOOK path; flip either off to fall
@@ -363,18 +343,17 @@ lives under `personal:` in YAML.
 | `project.improvement_pr_branch_prefix` | string | `improve/agent-` | Branch prefix for agent improvement PRs. |
 | `github.pr_reply_method` | `replies_endpoint`, `create_review_comment`, `auto` | `create_review_comment` | GitHub API method for replying to PR review comments. `auto` detects on first use. |
 | `eloquent.access_style` | `getters_setters`, `get_attribute`, `magic_properties` | `getters_setters` | How to access Eloquent model attributes. See `eloquent` skill for details. |
-| `chat_history.enabled` | `true`, `false` | `true` | Persist chat events to `.agent-chat-history` (JSONL) for crash recovery. |
+| `chat_history.enabled` | `true`, `false` | `true` | Persist chat events to `agents/.agent-chat-history` (JSONL) for crash recovery. |
 | `chat_history.frequency` | `per_turn`, `per_phase`, `per_tool` | per profile | Logging granularity. Defaults: `minimal`→`per_turn`, `balanced`→`per_phase`, `full`→`per_tool`. |
 | `chat_history.max_size_kb` | integer | per profile | Max file size before overflow handling. Defaults: `minimal`→`128`, `balanced`→`256`, `full`→`512`. |
 | `chat_history.on_overflow` | `rotate`, `compress` | per profile | On overflow: `rotate` drops oldest entries; `compress` marks the file for summarization on the next turn. Defaults: `minimal`/`balanced`→`rotate`, `full`→`compress`. |
-| `chat_history.heartbeat` | `on`, `off`, `hybrid` | `hybrid` | Visibility of the `📒 chat-history:` marker. `on` = every reply (~20 tokens), `off` = silent, `hybrid` = print only on drift states (`missing`/`foreign`/`returning`). YAML `on`/`off` accepted bare. |
-| `chat_history.path` | `hook`, `checkpoint`, `manual` | `checkpoint` | Population path. `hook` = platform fires lifecycle hooks; `checkpoint` = agent invokes `/chat-history-checkpoint` at phase boundaries; `manual` = rule inert (cloud). `scripts/install.py` flips this to `hook` when the platform's hook config is deployed. See [`agents/contexts/chat-history-platform-hooks.md`](../../../agents/contexts/chat-history-platform-hooks.md). |
+| `chat_history.text_limits.{user,agent,tool,phase}` | integer (chars) | `user=0`, `agent=5000`, `tool=200`, `phase=200` | Per-entry-type text-length cap. `0` = verbatim, no slice. `N > 0` = collapse whitespace, slice to N chars, append `" … [+K chars]"` so the log self-reports truncation. Defaults match `DEFAULT_TEXT_LIMITS` in `scripts/chat_history.py`. |
 | `hooks.enabled` | `true`, `false` | `false` | Master switch for the work-engine hook layer. When `false` (default) the registry stays empty and golden replay is byte-stable. See [`agents/contexts/work-engine-hooks.md`](../../../agents/contexts/work-engine-hooks.md). |
 | `hooks.trace` | `true`, `false` | `false` | Emit per-event trace lines on stderr. Useful for debugging; off by default because it is noisy. |
 | `hooks.halt_surface_audit` | `true`, `false` | `true` | Defense-in-depth check that every halt surfaced by the dispatcher carries the expected shape. Cheap. |
 | `hooks.state_shape_validation` | `true`, `false` | `true` | Re-run the state schema validator on `AFTER_LOAD` and `BEFORE_SAVE`. Cheap, catches drift. |
 | `hooks.directive_set_guard` | `true`, `false` | `true` | Verify the dispatcher-resolved directive set matches the input envelope intent. Cheap, catches routing drift. |
-| `hooks.chat_history.enabled` | `true`, `false` | `true` | Register the four chat-history hooks (turn-check, append, halt-append, heartbeat). Gated by **both** this flag AND `chat_history.enabled`; either off → no chat-history hook registers. |
+| `hooks.chat_history.enabled` | `true`, `false` | `true` | Register the chat-history hooks (`append` on `after_step`, `halt_append` on `on_halt`). Gated by **both** this flag AND `chat_history.enabled`; either off → no chat-history hook registers. Schema v4: every entry self-identifies via a 16-char session fingerprint, no ownership/sidecar layer. |
 | `hooks.chat_history.script` | path | `scripts/chat_history.py` | Override path to the chat-history CLI. Set only when the script lives outside the standard location. |
 | `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
 | `roadmap.quality_cadence` | `end_of_roadmap`, `per_phase`, `per_step` | `end_of_roadmap` | When `/roadmap execute` runs the project's quality pipeline. Default skips per-step / per-phase runs and gates only the final archival. `per_phase` runs once after every phase; `per_step` is the legacy verbose mode. Step checkboxes and the dashboard are always updated regardless. `verify-before-complete` still requires fresh output before any "roadmap complete" claim. |

@@ -8,6 +8,7 @@ Catalog: docs/skills-catalog.md
 
 adversarial-review: ONLY when user explicitly requests adversarial review, devil's advocate analysis, stress-testing a plan, or 'poke holes in this' — NOT for regular code review or design feedback.
 agent-docs-writing: Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure.
+ai-council: Use when polling external AIs (OpenAI, Anthropic) outside the host session for a neutral second opinion on a roadmap, diff, prompt, or file set — or 'cross-check with another model'.
 analysis-autonomous-mode: ONLY when user explicitly requests autonomous analysis, deep investigation, multi-step research, or 'dig into this end-to-end without asking me each step' — NOT for normal feature work.
 analysis-skill-router: Use when picking which analysis or project-analysis-* skill fits a request — routes by scope, framework, and symptom — even if the user just says 'analyze this' or 'dig into the codebase'.
 api-design: Use when designing APIs, planning endpoints, REST conventions, versioning, or deprecation — even when the user just says 'expose this as an endpoint' without naming API design.
@@ -16,7 +17,7 @@ api-testing: Use when writing API endpoint tests — integration tests, contract
 artisan-commands: Use when creating or modifying Artisan commands. Covers clear signatures, safe execution flow, helpful output, and project conventions for console tooling.
 authz-review: Use when reviewing authorization end-to-end — route → gate → policy → query scope → response filter — before changes to permissions, tenants, ownership, or admin flows.
 aws-infrastructure: Use when working with AWS resources — ECS Fargate, ECR, EFS, Secrets Manager, gomplate templates, multi-env deployments — even when the user says 'deploy to staging' without naming AWS.
-blade-ui: Stack-implementation skill for Laravel Blade — dispatched by `directives/ui/apply.py` (and `review.py` / `polish.py`) when the project's frontend stack is Blade. Covers views, components, partials, layouts, and view logic.
+blade-ui: Use when the project's frontend stack is Blade — dispatched by `directives/ui/{apply,review,polish}.py`. Covers views, components, partials, layouts, and view logic.
 blast-radius-analyzer: Use BEFORE editing shared code — enumerates every call site, event consumer, queue worker, API client, migration, and test that a planned change will touch, with a file:line citation per dependency.
 bug-analyzer: Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs.
 check-refs: Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions.
@@ -47,7 +48,7 @@ fe-design: Reference for frontend-design heuristics — component architecture, 
 feature-planning: Use when the user says "plan a feature", "brainstorm", "explore this idea", or wants to go from idea to structured plan and roadmap.
 file-editor: Use when opening edited files in the user's IDE. Reads settings from .agent-settings.yml to determine IDE and whether auto-open is enabled.
 finishing-a-development-branch: Use when the feature is implementation-complete and the next step is 'ship it' — verifies, cleans up, and routes to merge/PR/park/discard — even when the user just says 'I'm done, what now?'.
-flux: Stack-implementation skill for Laravel Flux — dispatched by `directives/ui/apply.py` (and `review.py` / `polish.py`) when the project uses `livewire/flux`. Covers Flux components, slots, variants, and form primitives.
+flux: Use when the project uses `livewire/flux` — dispatched by `directives/ui/{apply,review,polish}.py`. Covers Flux components, slots, variants, and form primitives.
 git-workflow: Use when working with Git — branch naming, commit messages, PR creation, rebasing, or the code review process — even when the user says 'push this' or 'merge the branch' without naming Git.
 github-ci: Use when working with GitHub Actions — workflow YAML, quality gates, test matrices, deployment triggers, reusable workflows — even when the user just says 'my CI is failing' or 'add a check'.
 grafana: Use when working with Grafana — dashboards, Loki LogQL queries, alerting rules, monitoring panels — even when the user just says 'build me a dashboard' or 'query the logs' without naming Grafana.
@@ -70,7 +71,7 @@ laravel-scheduling: Use when configuring Laravel task scheduling — cron expres
 laravel-validation: Use when writing validation — Form Requests, rules, custom rule objects, request-boundary design — even when the user just says 'validate this input' or 'check the request' without naming it.
 learning-to-rule-or-skill: Use when a repeated learning, mistake, or successful pattern should be turned into a new rule or skill. Also use after completing a task to capture learnings from the work.
 lint-skills: Use when running the package's skill linter against all skills and rules to validate frontmatter, required sections, and execution metadata.
-livewire: Stack-implementation skill for Livewire — dispatched by `directives/ui/apply.py` (and `review.py` / `polish.py`) when the project's frontend stack is Livewire. Covers reactive state, events, lifecycle hooks, and component/view separation.
+livewire: Use when the project's frontend stack is Livewire — dispatched by `directives/ui/{apply,review,polish}.py`. Covers reactive state, events, lifecycle hooks, and component/view separation.
 logging-monitoring: Use when working with logging or monitoring — Sentry error tracking, Grafana/Loki log aggregation, structured logging channels, or monitoring helpers.
 mcp: Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows.
 md-language-check: Use BEFORE saving any .md under .augment/, .agent-src*/, or agents/ — scans umlauts, German function words, and quoted German phrases outside DE:/EN: anchor blocks. Hard gate per language-and-tone.

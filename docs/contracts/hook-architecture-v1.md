@@ -20,7 +20,7 @@ Last refreshed: 2026-05-04.
 
 | Term | Meaning |
 |---|---|
-| **Platform** | Host agent surface — one of `augment`, `claude`, `cursor`, `cline`, `windsurf`, `gemini`, `copilot`. The `claude` value covers both Claude Code (CLI) and Claude.ai Web; the canonical platform identifier is `claude` (matches `chat_history.PLATFORM_EVENT_MAP`). |
+| **Platform** | Host agent surface — one of `augment`, `claude`, `cowork`, `cursor`, `cline`, `windsurf`, `gemini`, `copilot`. The `claude` value covers both Claude Code (CLI) and Claude.ai Web; `cowork` covers the Claude desktop app's local-agent-mode runtime separately so chat-history entries can attribute events to Cowork vs CLI Claude Code via the `agent` field. Cowork shares Claude Code's lifecycle vocabulary and payload shape but is upstream-blocked from reading any settings source as of writing (anthropics/claude-code#40495, #27398). The canonical platform identifier is `claude` for the CLI/IDE surface and `cowork` for the desktop sandbox (both match `chat_history.PLATFORM_EVENT_MAP`). |
 | **Concern** | A single agent-config behaviour wired to one or more lifecycle events — e.g. `chat-history`, `roadmap-progress`, `verify-before-complete`. Lives as a Python script under `scripts/hooks/concerns/<name>.py`. |
 | **Event** | The agent-config-internal event vocabulary the dispatcher exposes — `session_start`, `session_end`, `user_prompt_submit`, `pre_tool_use`, `post_tool_use`, `stop`, `pre_compact`, `agent_error`. Per-platform native names map to these. `agent_error` is synthetic — fired by the agent (or wrapper) when the host crashes outside a concern, so chat-history can checkpoint partial sessions on abnormal exit. (Added in Round 2 — 2026-05-04.) |
 | **Trampoline** | A 5–10 line per-platform shell script that reads the platform's native payload, calls the dispatcher with `--platform <name>`, and forwards the platform's exit-code semantics. |
@@ -211,3 +211,10 @@ Beta. Breaking changes between v1 and v2 are allowed in a minor
 release if the change appears in `CHANGELOG.md` under a `### Breaking`
 heading. Concerns MUST gate on `schema_version` and refuse unknown
 majors.
+
+## See also
+
+- [`docs/hook-payload-capture.md`](../hook-payload-capture.md) —
+  operational how-to for capturing redacted live payloads to upgrade
+  a platform's chat-history extractor from `docs-verified` to
+  `payload-verified`.

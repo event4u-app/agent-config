@@ -1,9 +1,9 @@
 # Command-Suggestion Eligibility — Locked Audit Table
 
 > Source-of-truth audit feeding Phase 2 (frontmatter migration) of the
-> `road-to-context-aware-command-suggestion` roadmap. Every one of the
-> 75 commands under `.agent-src.uncompressed/commands/` is listed
-> exactly once with an explicit `eligible` decision.
+> `road-to-context-aware-command-suggestion` roadmap. Every command
+> under `.agent-src.uncompressed/commands/` is listed exactly once
+> with an explicit `eligible` decision.
 
 ## Rules
 
@@ -22,9 +22,9 @@
 
 | Status | Count |
 |---|---|
-| Total commands | 75 |
+| Total commands | 73 |
 | Eligible | 48 |
-| Ineligible | 27 |
+| Ineligible | 25 |
 
 ## Ineligible — intentional invocation only
 
@@ -35,8 +35,6 @@
 | `/agents-cleanup` | Consumes prior audit output; only meaningful right after `/agents-audit`. |
 | `/agents-prepare` | One-shot project scaffolding; only run during initial setup. |
 | `/chat-history` | Status display only; no NL trigger distinct from "show status". |
-| `/chat-history-clear` | Destructive log wipe — must be deliberate. |
-| `/chat-history-resume` | Explicit resume mechanic with foreign/returning state machine. |
 | `/compress` | Package-internal tooling; only the `event4u/agent-config` repo runs this. |
 | `/copilot-agents-init` | Project init — only deliberately during onboarding. |
 | `/copilot-agents-optimize` | Maintenance refactor; only run when the maintainer chooses to. |

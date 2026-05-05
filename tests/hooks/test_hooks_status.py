@@ -39,8 +39,8 @@ def test_collect_returns_every_platform(tmp_path: Path, manifest: dict) -> None:
 def test_missing_bridges_reported_when_project_empty(tmp_path: Path, manifest: dict) -> None:
     matrix = hooks_status.collect(tmp_path, manifest)
     by_platform = {row["platform"]: row for row in matrix["platforms"]}
-    # All non-Copilot platforms have a real bridge_path and should
-    # report 'missing' in a fresh tmp dir.
+    # All non-Copilot, non-Cowork platforms have a real bridge_path and
+    # should report 'missing' in a fresh tmp dir.
     for platform in ("augment", "claude", "cursor", "cline", "windsurf", "gemini"):
         row = by_platform[platform]
         assert row["status"] == "missing", row
@@ -48,6 +48,16 @@ def test_missing_bridges_reported_when_project_empty(tmp_path: Path, manifest: d
     # Copilot is always degraded.
     assert by_platform["copilot"]["status"] == "degraded"
     assert by_platform["copilot"]["fallback_only"] is True
+    # Cowork has manifest bindings but no project-scope bridge path
+    # (upstream-blocked by anthropics/claude-code#40495 + #27398).
+    # The empty bridge path resolves to status="n/a"; strict mode
+    # never fails on n/a (matches Copilot's no-bridge posture).
+    cowork = by_platform["cowork"]
+    assert cowork["status"] == "n/a", cowork
+    assert cowork["bridge_path"] is None
+    assert cowork["bindings"], "cowork must declare manifest bindings"
+    assert cowork["fallback_only"] is False
+    assert "upstream-blocked" in (cowork["hint"] or "")
 
 
 def test_installed_bridge_detected(tmp_path: Path, manifest: dict) -> None:

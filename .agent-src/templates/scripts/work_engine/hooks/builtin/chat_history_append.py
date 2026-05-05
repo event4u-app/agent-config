@@ -29,10 +29,9 @@ class ChatHistoryAppendHook(_ChatHistoryHookBase):
         result = ctx.result
         if result is None or getattr(result, "outcome", None) != Outcome.SUCCESS:
             return
-        msg = self._resolve_msg(ctx)
         payload: dict[str, Any] = {"step": ctx.step_name or "<unknown>"}
         proc = self._invoke(
-            "append", "--first-user-msg", msg,
+            "append",
             "--type", "phase", "--json", json.dumps(payload),
         )
         if proc.returncode != EXIT_OK:

@@ -167,6 +167,40 @@ def _resolve_concerns(manifest: dict, platform: str, event: str) -> list[dict]:
     return out
 
 
+def _maybe_capture_payload(args: argparse.Namespace, payload_text: str) -> None:
+    """Write the raw stdin payload to a capture directory when
+    ``AGENT_HOOK_CAPTURE_DIR`` is set. Used by the verified-platforms
+    discovery roadmap (`agents/roadmaps/road-to-verified-chat-history-platforms.md`)
+    to lock real payload shapes before extractor branches are added.
+
+    Fail-silent: any IO / JSON error must not break dispatch.
+    """
+    capture_dir = os.environ.get("AGENT_HOOK_CAPTURE_DIR", "").strip()
+    if not capture_dir:
+        return
+    try:
+        target = Path(capture_dir).expanduser()
+        target.mkdir(parents=True, exist_ok=True)
+        try:
+            payload = json.loads(payload_text) if payload_text.strip() else {}
+        except (ValueError, TypeError):
+            payload = {"_raw_text": payload_text}
+        record = {
+            "captured_at": _now_iso(),
+            "platform": args.platform,
+            "event": args.event,
+            "native_event": args.native_event or "",
+            "raw_payload": payload,
+        }
+        ts = int(time.time() * 1000)
+        native = (args.native_event or args.event).replace("/", "_")
+        fname = f"{args.platform}__{native}__{ts}__{os.getpid()}.json"
+        (target / fname).write_text(
+            json.dumps(record, indent=2) + "\n", encoding="utf-8")
+    except OSError:
+        return
+
+
 def _build_envelope(args: argparse.Namespace, payload_text: str) -> dict:
     try:
         payload = json.loads(payload_text) if payload_text.strip() else {}
@@ -298,6 +332,7 @@ def main(argv: list[str] | None = None) -> int:
     manifest = _load_yaml(manifest_path)
 
     payload_text = "" if sys.stdin.isatty() else sys.stdin.read()
+    _maybe_capture_payload(args, payload_text)
     concerns = _resolve_concerns(manifest, args.platform, args.event)
 
     if args.dry_run:

@@ -1,7 +1,7 @@
 """Shipped baseline prices for the AI Council.
 
-This file is the bootstrap source for `.agent-prices.md` when the
-runtime file is missing. It is also the network-fallback source for
+This file is the bootstrap source for `agents/.agent-prices.md` when
+the runtime file is missing. It is also the network-fallback source for
 `scripts/update_prices.py` when the upstream feed (LiteLLM) is
 unreachable.
 
@@ -9,8 +9,8 @@ Prices are USD per **1 000 000** tokens. Models are identified by the
 exact `model:` string the user puts into `.agent-settings.yml`.
 
 Numbers below are a hand-curated snapshot — they will drift. The
-runtime never reads them directly once `.agent-prices.md` exists; the
-weekly refresh and user edits are the live source of truth.
+runtime never reads them directly once `agents/.agent-prices.md`
+exists; the weekly refresh and user edits are the live source of truth.
 """
 
 from __future__ import annotations

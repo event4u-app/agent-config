@@ -4,10 +4,9 @@ Implements the producer side of
 ``docs/contracts/memory-visibility-v1.md``: derive ``asks/hits/ids``
 from ``state.memory`` and thread the rendered line into
 ``state.report`` so the agent's reply naturally carries the memory
-heartbeat.
+visibility marker.
 
-Fires on ``before_save`` for the same reason as
-``ChatHistoryHeartbeatHook``: ``cli._sync_back`` runs between
+Fires on ``before_save``: ``cli._sync_back`` runs between
 ``after_dispatch`` and ``before_save`` and reassigns
 ``work.report = delivery.report``. A line written on
 ``after_dispatch`` would be overwritten before ``_save``; firing on

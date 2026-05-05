@@ -1,17 +1,10 @@
 # User Interaction — mechanics
 
-Format examples, common failure modes, progress indicators, and
-summary patterns for the [`user-interaction`](../../../rules/user-interaction.md)
-rule. Iron Law 1 (single-source recommendation) and Iron Law 2
-(pre-send self-check) live in the rule; this file is the lookup
-material for the format details.
-
-## Common failure modes — known, named, no excuses
-
-- **End-of-turn menu skipped.** Reply answers the question fine, then ends with `> 1. Foo > 2. Bar > 3. Stop` and no `Empfehlung:`. Iron Law 1 was violated — these are numbered options, position is irrelevant.
-- **"Genuinely no preference" hedge.** Pick anyway. The agent has more context than the user on the trade-off; refusing to pick dumps the work back. Pick the safest option, name the flip-condition.
-- **"User knows the project better" hedge.** Same failure mode, different costume. The user asked for an opinion by virtue of accepting the options block; deliver it.
-- **Multi-block reply with one recommendation.** Two options blocks but only one `Empfehlung:` line — the second block is unguarded. Rule 5 of Iron Law 2 closes this.
+Format examples, progress indicators, and summary patterns for the
+[`user-interaction`](../../../rules/user-interaction.md) rule. Iron
+Law 1 (single-source recommendation), Iron Law 2 (pre-send
+self-check), and the named failure-mode catalog live in the rule
+itself; this file is the lookup material for the format details.
 
 ## Examples
 

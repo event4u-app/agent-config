@@ -71,14 +71,6 @@ add("no-cheap-questions.md", "pre-send Q&A check", "agent-only", "output",
     "NA-soft", "3", notes="Pre-send self-check, no platform surface")
 
 # ── Auto-rules — Tier 1 candidates (mechanizable, deterministic) ──────
-add("chat-history-cadence.md", "per-turn / per-tool / per-phase", "mechanical-already",
-    "hook", "NA-mechanical", "mechanical-already",
-    notes="PRECEDENT — heartbeat + chat_history.py + hooks. Reference pattern.")
-add("chat-history-ownership.md", "first turn", "hook", "state",
-    "low", "1", notes="Detectable: ownership classification at session start")
-add("chat-history-visibility.md", "heartbeat marker emit", "mechanical-already",
-    "hook", "NA-mechanical", "mechanical-already",
-    notes="Subprocess marker print is already mechanical")
 add("onboarding-gate.md", "first turn (settings.onboarded == false)", "settings",
     "state", "low", "1",
     notes="Pilot candidate — frequency 100% on un-onboarded projects, binary verifiable")
@@ -341,7 +333,7 @@ def emit():
     lines.append("## Cross-references")
     lines.append("")
     lines.append("- Budget contract: [`docs/contracts/load-context-budget-model.md`](../../docs/contracts/load-context-budget-model.md)")
-    lines.append("- Pattern precedent: `chat-history-cadence` (heartbeat hook + `scripts/chat_history.py`)")
+    lines.append("- Pattern precedent: `roadmap-progress-sync` (PostToolUse path-filter hook)")
     lines.append("- Phase 2A finding: [`adr-always-rule-context-split-not-viable.md`](adr-always-rule-context-split-not-viable.md)")
     lines.append("")
 

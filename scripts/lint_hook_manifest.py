@@ -57,7 +57,8 @@ EVENT_VOCABULARY: set[str] = {
 # Known platform identifiers. New platforms MUST be added here as they
 # land — the linter is the gate that proves no orphan slot escapes.
 KNOWN_PLATFORMS: set[str] = {
-    "augment", "claude", "cursor", "cline", "windsurf", "gemini", "copilot",
+    "augment", "claude", "cowork",
+    "cursor", "cline", "windsurf", "gemini", "copilot",
 }
 
 

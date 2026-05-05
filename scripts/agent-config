@@ -68,7 +68,7 @@ Commands:
   refine-ticket:detect       Run the deterministic refine-ticket detection helper
   chat-history:hook          Platform hook entry point (read JSON from stdin)
                              Usage: chat-history:hook --platform <claude|augment|cursor|cline|windsurf|gemini>
-  chat-history:checkpoint    Append a phase-boundary entry to .agent-chat-history
+  chat-history:checkpoint    Append a phase-boundary entry to agents/.agent-chat-history
                              (CHECKPOINT fallback for platforms without native hooks)
   roadmap-progress:hook      PostToolUse hook entry point (read JSON from stdin)
                              Regenerates roadmaps-progress.md when a tool wrote under agents/roadmaps/

@@ -21,6 +21,16 @@ set -u
 
 EVENT_DATA="$(cat)"
 
+# Debug-only: when ~/.augment/.chat-history-debug exists, dump the raw
+# stdin payload for offline inspection. No-op otherwise. Used to probe
+# what Augment's hook events actually carry.
+if [ -f "$HOME/.augment/.chat-history-debug" ]; then
+    DUMP_DIR="$HOME/.augment/chat-history-debug"
+    mkdir -p "$DUMP_DIR" 2>/dev/null
+    printf '%s' "$EVENT_DATA" \
+        > "$DUMP_DIR/event-$(date +%Y%m%d-%H%M%S)-$$.json" 2>/dev/null || true
+fi
+
 # Extract workspace_roots[0] using whichever JSON tool is available.
 WORKSPACE=""
 if command -v jq >/dev/null 2>&1; then

@@ -84,7 +84,7 @@ eloquent:
 
 # --- Chat history (crash recovery) ---
 #
-# Persistent JSONL log at .agent-chat-history (project root, git-ignored).
+# Persistent JSONL log at agents/.agent-chat-history (git-ignored).
 # Keeps a durable record of the conversation so a crashed or switched
 # agent session can be resumed. See scripts/chat_history.py for the API.
 chat_history:
@@ -105,12 +105,19 @@ chat_history:
   #   compress = mark for summarization on the next agent turn
   on_overflow: __CHAT_HISTORY_ON_OVERFLOW__
 
-  # Heartbeat marker visibility (token-cost knob)
-  #   on     = print the 📒 marker every reply (~20 tokens/reply, legacy)
-  #   off    = never print (zero tokens, drift only visible by reading the file)
-  #   hybrid = print only on drift states (missing/foreign/returning); silent otherwise
-  # YAML 1.1 booleanizes bare on/off — both are accepted, no quoting needed.
-  heartbeat: hybrid
+  # Per-entry-type text-length caps (chars). 0 = verbatim, no slice.
+  # N > 0 = collapse whitespace, slice to N chars, append " … [+K chars]"
+  # so the log self-reports truncation. Defaults match the hardcoded
+  # fallback in scripts/chat_history.py (DEFAULT_TEXT_LIMITS).
+  #   user  = your messages — full text by default (most valuable for crash recovery)
+  #   agent = agent replies — capped to keep the log compact under load
+  #   tool  = tool inputs/outputs — short by default; bump for noisy debugging
+  #   phase = workflow phase markers — short by default
+  text_limits:
+    user: 0
+    agent: 5000
+    tool: 200
+    phase: 200
 
 # --- Optional pipelines ---
 pipelines:
@@ -204,7 +211,7 @@ ai_council:
   # the user to continue. `max_total_usd: 0` disables the USD ceiling
   # (token caps still apply).
   #
-  # Prices come from `.agent-prices.md` (gitignored, refreshed weekly
+  # Prices come from `agents/.agent-prices.md` (gitignored, refreshed weekly
   # by `python3 scripts/update_prices.py`; bootstrapped from
   # scripts/ai_council/_default_prices.py on first run).
   cost_budget:

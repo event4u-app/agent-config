@@ -4,7 +4,16 @@ stability: beta
 
 # ADR — Chat-history rule split
 
-> **Status:** Decided · 2026-05-02
+> **Status:** Superseded · 2026-05-04 · by
+> [`agents/contexts/chat-history-platform-hooks.md`](../../agents/contexts/chat-history-platform-hooks.md).
+> The cooperative three-rule split this ADR locked in
+> (`chat-history-ownership` / `-cadence` / `-visibility`) has been
+> reduced to a hook-only structural artifact. The three always-rules,
+> the heartbeat marker, and the Foreign-Prompt handshake are gone;
+> `session_start` hooks auto-adopt foreign sessions silently. The text
+> below is preserved for historical context only.
+>
+> **Original status:** Decided · 2026-05-02
 > **Context:** AI #1, AI #3, AI #5 review of PR #29 flagged the
 > 200-line monolithic `rules/chat-history.md` as the rule the agent
 > revisited 12+ times during the 1.14.0 cycle — three independent

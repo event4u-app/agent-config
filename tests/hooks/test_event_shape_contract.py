@@ -50,6 +50,19 @@ SAMPLES: dict[str, list[tuple[str, str, str]]] = {
         ("PostToolUse", "post_tool_use",
          '{"session_id": "cl-1", "tool_name": "Read"}'),
     ],
+    # Cowork — Claude desktop's local-agent-mode runtime. Same payload
+    # shape as Claude Code (Cowork is Claude Code under the hood). The
+    # `cwd` field is the project the user selected; the trampoline
+    # also accepts `workspace_roots[0]` as a fallback once upstream
+    # lands the fix for anthropics/claude-code#40495.
+    "cowork": [
+        ("SessionStart", "session_start",
+         '{"session_id": "co-1", "cwd": "/work", "transcript_path": "/tmp/co.json"}'),
+        ("UserPromptSubmit", "user_prompt_submit",
+         '{"session_id": "co-1", "cwd": "/work", "prompt": "hello cowork"}'),
+        ("PostToolUse", "post_tool_use",
+         '{"session_id": "co-1", "cwd": "/work", "tool_name": "Read"}'),
+    ],
     "cursor": [
         ("sessionStart", "session_start",
          '{"session_id": "cu-1", "workspace_roots": ["/work"]}'),

@@ -22,8 +22,6 @@ from __future__ import annotations
 from .builtin import (
     ChatHistoryAppendHook,
     ChatHistoryHaltAppendHook,
-    ChatHistoryHeartbeatHook,
-    ChatHistoryTurnCheckHook,
     DecisionTraceHook,
     DirectiveSetGuardHook,
     HaltSurfaceAuditHook,
@@ -40,8 +38,6 @@ from .runner import HookRunner
 __all__ = [
     "ChatHistoryAppendHook",
     "ChatHistoryHaltAppendHook",
-    "ChatHistoryHeartbeatHook",
-    "ChatHistoryTurnCheckHook",
     "DecisionTraceHook",
     "DirectiveSetGuardHook",
     "HaltSurfaceAuditHook",

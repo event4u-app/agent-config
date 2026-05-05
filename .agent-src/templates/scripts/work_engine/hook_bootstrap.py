@@ -17,8 +17,6 @@ from .hooks import HookRegistry
 from .hooks.builtin import (
     ChatHistoryAppendHook,
     ChatHistoryHaltAppendHook,
-    ChatHistoryHeartbeatHook,
-    ChatHistoryTurnCheckHook,
     DecisionTraceHook,
     DirectiveSetGuardHook,
     HaltSurfaceAuditHook,
@@ -74,12 +72,16 @@ def _build_hook_registry(args: argparse.Namespace) -> HookRegistry:
 def _register_chat_history_hooks(
     registry: HookRegistry, settings: HookSettings,
 ) -> None:
-    """Register the four chat-history hooks bound to the configured script."""
+    """Register the structural chat-history hooks bound to the configured script.
+
+    Hook-only contract (post road-to-chat-history-hook-only): only the
+    append + halt-append hooks remain; cooperative ``turn-check`` /
+    ``heartbeat`` hooks were removed when the cooperative always-rules
+    were retired.
+    """
     script = Path(settings.chat_history_script)
-    ChatHistoryTurnCheckHook(script).register(registry)
     ChatHistoryAppendHook(script).register(registry)
     ChatHistoryHaltAppendHook(script).register(registry)
-    ChatHistoryHeartbeatHook(script).register(registry)
 
 
 __all__ = ["_build_hook_registry", "_register_chat_history_hooks"]
