@@ -1,3 +1,8 @@
+---
+complexity: structural
+---
+
+
 # Road to Money, Strategy and Operations (Wing 4)
 
 > Sibling roadmap to `road-to-better-skills-and-profiles.md` (Wing 1),

@@ -1,3 +1,8 @@
+---
+complexity: structural
+---
+
+
 # Road to Unified Senior Roles
 
 > Sibling roadmap to `road-to-better-skills-and-profiles.md`. Where the

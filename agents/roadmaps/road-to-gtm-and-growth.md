@@ -1,3 +1,8 @@
+---
+complexity: structural
+---
+
+
 # Road to GTM and Growth (Wing 3)
 
 > Sibling roadmap to `road-to-better-skills-and-profiles.md` (Wing 1)
