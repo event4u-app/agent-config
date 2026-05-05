@@ -38,6 +38,7 @@ import os
 import re
 import sys
 import uuid
+from collections import Counter, deque
 from pathlib import Path
 from typing import Any
 
@@ -97,6 +98,63 @@ def derive_session_tag(session_id: str) -> str:
 def _preview(msg: str, n: int = 80) -> str:
     flat = _WS_RE.sub(" ", msg or "").strip()
     return flat[:n]
+
+
+def _extract_text(obj: dict[str, Any]) -> str:
+    """Return the most-meaningful text payload of an entry, or empty.
+
+    Mirrors the fallback used by ``list_sessions`` for the ``preview``
+    field: top-level ``text`` first, then ``payload.text``.
+    """
+    text = obj.get("text")
+    if not isinstance(text, str) or not text:
+        payload = obj.get("payload")
+        if isinstance(payload, dict):
+            text = payload.get("text")
+    return text if isinstance(text, str) else ""
+
+
+def _summarize_session(head: list[dict[str, Any]],
+                       tail: list[dict[str, Any]],
+                       total: int,
+                       n: int = 60) -> str:
+    """Build a one-line summary from sampled head/tail entries.
+
+    Sample = head (≤5 oldest) + tail (≤5 newest), deduplicated by
+    object identity (overlap is possible when ``total`` ≤ 9). Format:
+
+    - both first and last user prose:  ``"<first> → <last>"``
+    - one user prose only / both same: ``"<first>"``
+    - no user prose:                   ``"(<total> entries — no user
+                                          prompts; t-mix: …)"``
+
+    Each side capped at ``n`` chars via :func:`_preview`. Designed for
+    token-cheap session listings — caller never needs the full body.
+    """
+    seen: set[int] = set()
+    sample: list[dict[str, Any]] = []
+    for e in list(head) + list(tail):
+        oid = id(e)
+        if oid in seen:
+            continue
+        seen.add(oid)
+        sample.append(e)
+
+    user_texts = [
+        _extract_text(e)
+        for e in sample
+        if e.get("t") == "user" and _extract_text(e)
+    ]
+    if user_texts:
+        first = _preview(user_texts[0], n)
+        if len(user_texts) > 1 and user_texts[-1] != user_texts[0]:
+            last = _preview(user_texts[-1], n)
+            return f"{first} → {last}"
+        return first
+
+    kinds = Counter(e.get("t", "?") for e in sample)
+    mix = " ".join(f"{k}×{v}" for k, v in kinds.most_common())
+    return f"({total} entries — no user prompts; t-mix: {mix})"
 
 
 def _session_tag_enabled() -> bool:
@@ -400,13 +458,20 @@ def read_entries_for_current(path: Path | None = None,
     return read_entries(last=last, path=p, session=_last_body_session_id(p))
 
 
-def list_sessions(path: Path | None = None) -> list[dict[str, Any]]:
+def list_sessions(path: Path | None = None,
+                  *, summary: bool = False) -> list[dict[str, Any]]:
     """Return one bucket per distinct session id observed in the body.
 
     Each bucket carries ``id``, ``count``, ``first_ts``, ``last_ts``,
     ``preview``. Preview = the first ``t == "user"`` entry's ``text``
     in the session, truncated to 80 chars; falls back to the first
     entry of any type when no user-typed entry exists.
+
+    When ``summary=True``, each bucket also carries a ``summary`` field
+    built from at most 10 sampled entries per session (5 oldest + 5
+    newest, deduplicated). Designed for token-cheap listings: callers
+    can render ``summary`` instead of pulling all entries via
+    :func:`read`. See :func:`_summarize_session` for the format.
 
     v4 has no per-session header state, so buckets are derived from
     body ``s`` values only. ``<legacy>`` and ``<unknown>`` appear as
@@ -421,6 +486,9 @@ def list_sessions(path: Path | None = None) -> list[dict[str, Any]]:
         if b is None:
             b = {"id": sid, "count": 0, "first_ts": None,
                  "last_ts": None, "preview": ""}
+            if summary:
+                b["_head"] = []
+                b["_tail"] = deque(maxlen=5)
             buckets[sid] = b
         return b
 
@@ -449,6 +517,10 @@ def list_sessions(path: Path | None = None) -> list[dict[str, Any]]:
                         b["first_ts"] = ts
                     if b["last_ts"] is None or ts > b["last_ts"]:
                         b["last_ts"] = ts
+                if summary:
+                    if len(b["_head"]) < 5:
+                        b["_head"].append(obj)
+                    b["_tail"].append(obj)
                 if not b["preview"] or b.get("_preview_from") != "user":
                     if obj.get("t") == "user":
                         text = obj.get("text") or obj.get("payload", {}).get("text", "")
@@ -464,6 +536,10 @@ def list_sessions(path: Path | None = None) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for b in buckets.values():
         b.pop("_preview_from", None)
+        if summary:
+            head = b.pop("_head", [])
+            tail = list(b.pop("_tail", ()))
+            b["summary"] = _summarize_session(head, tail, b["count"])
         out.append(b)
     out.sort(key=lambda x: x["last_ts"] or "", reverse=True)
     return out
@@ -1422,7 +1498,7 @@ def _cmd_read(args) -> int:
 
 
 def _cmd_sessions(args) -> int:
-    sessions = list_sessions()
+    sessions = list_sessions(summary=args.summary)
     if not args.include_empty:
         sessions = [s for s in sessions if s["count"] > 0]
     sessions = sessions[: args.limit]
@@ -1432,13 +1508,15 @@ def _cmd_sessions(args) -> int:
     if not sessions:
         print("(no sessions)")
         return 0
-    rows = [("ID", "COUNT", "LAST_TS", "PREVIEW")]
+    last_col = "SUMMARY" if args.summary else "PREVIEW"
+    rows = [("ID", "COUNT", "LAST_TS", last_col)]
     for s in sessions:
+        last_val = s.get("summary") if args.summary else s.get("preview")
         rows.append((
             s["id"],
             str(s["count"]),
             s["last_ts"] or "-",
-            s["preview"] or "-",
+            last_val or "-",
         ))
     widths = [max(len(r[i]) for r in rows) for i in range(4)]
     for i, r in enumerate(rows):
@@ -1526,6 +1604,10 @@ def main(argv: list[str] | None = None) -> int:
                         help="include sessions with zero body entries")
     p_sess.add_argument("--json", action="store_true",
                         help="emit JSON instead of a human-readable table")
+    p_sess.add_argument("--summary", action="store_true",
+                        help=("include a head-5 + tail-5 sampled summary "
+                              "(max 10 entries) per session — token-cheap "
+                              "alternative to the bare preview"))
     p_sess.set_defaults(func=_cmd_sessions)
     p_rot = sub.add_parser("rotate")
     p_rot.add_argument("--max-kb", type=int, default=256)
