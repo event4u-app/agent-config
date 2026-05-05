@@ -2,6 +2,7 @@
 name: chat-history:learn
 cluster: chat-history
 sub: learn
+skills: [learning-to-rule-or-skill]
 description: Surface prior chat-history sessions as numbered options, let the user pick exactly one, then read its entries verbatim — selective, user-driven cross-session learning
 disable-model-invocation: true
 suggestion:
