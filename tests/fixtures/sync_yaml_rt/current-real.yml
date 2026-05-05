@@ -105,13 +105,6 @@ chat_history:
   #   compress = mark for summarization on the next agent turn
   on_overflow: rotate
 
-  # Heartbeat marker visibility (token-cost knob)
-  #   on     = print the 📒 marker every reply (~20 tokens/reply, legacy)
-  #   off    = never print (zero tokens, drift only visible by reading the file)
-  #   hybrid = print only on drift states (missing/foreign/returning); silent otherwise
-  # YAML 1.1 booleanizes bare on/off — both are accepted, no quoting needed.
-  heartbeat: hybrid
-
 # --- Optional pipelines ---
 pipelines:
   # Skill improvement pipeline (true, false)
