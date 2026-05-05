@@ -102,6 +102,31 @@ Capture-only on all four discovery phases until the user decides which platform 
 
 > Gemini enable steps: configure Gemini CLI hooks for `BeforeAgent` + `AfterAgent` to route through the dispatcher (template via `python3 scripts/install.py --gemini`). `SessionStart` payloads are also captured but advisory (`continue` / `decision` are ignored upstream). Set `AGENT_HOOK_CAPTURE_DIR`, run one CLI session, redact.
 
+## Cowork — upstream-blocked, deferred (no phase number, runtime-only)
+
+Cowork (Claude desktop app's `local-agent-mode` runtime) is registered as a first-class platform — runtime hook bindings + dispatcher are shipped — but install plumbing is intentionally absent until upstream Anthropic resolves the sandbox-settings bugs. No capture phase is possible while hooks do not fire.
+
+Upstream blockers:
+
+- [`anthropics/claude-code#40495`](https://github.com/anthropics/claude-code/issues/40495) — Cowork sessions ignore all three Claude Code settings sources (user / project / env). Sandbox platform mismatch breaks all settings resolution.
+- [`anthropics/claude-code#27398`](https://github.com/anthropics/claude-code/issues/27398) — Cowork spawns the CLI with `--setting-sources user`, excluding plugin-scope `hooks/hooks.json`.
+
+What is already shipped (runtime-ready):
+
+- [x] `cowork` registered in [`scripts/hook_manifest.yaml`](../../scripts/hook_manifest.yaml) with bindings for `session_start`, `user_prompt_submit`, `post_tool_use`, `stop`, `session_end`
+- [x] [`scripts/hooks/cowork-dispatcher.sh`](../../scripts/hooks/cowork-dispatcher.sh) shipped
+- [x] `_extract_hook_text` falls back through generic envelope keys (sufficient until a real payload is captured)
+- [x] [`scripts/hook_status.py`](../../scripts/hook_status.py) reports `status: "n/a"`, `bridge_path: null`, `hint: "upstream-blocked: anthropics/claude-code#40495 + #27398"` for cowork
+- [x] [`scripts/install.py`](../../scripts/install.py) deliberately has zero `cowork` references — guessing a `.cowork/settings.json` path before upstream defines it would write disk noise the agent never reads
+
+What unblocks each item below:
+
+- [ ] **When `#40495` resolves** — read the canonical Cowork settings location from the resolution (do NOT guess); add `COWORK_DISPATCHER_BINDINGS` + `ensure_cowork_bridge()` + `ensure_cowork_user_hooks()` to `scripts/install.py`; wire a `--cowork-user-hooks` flag mirroring the `--claude-user-hooks` pattern; extend `PLATFORM_BRIDGES`; add install snapshot tests
+- [ ] **Once hooks fire** — run the standard one-shot capture protocol from § Capture protocol; lock the payload schema in [`chat-history-platform-hooks.md`](../contexts/chat-history-platform-hooks.md) → flip Cowork's `Verification` to `payload-verified`
+- [ ] **Once schema is locked** — add `_extract_cowork_*` branch only if the shape diverges from the existing fallback; otherwise document the fallback as sufficient + add tests covering the captured envelope
+
+Tracking signal: when [`anthropics/claude-code#40495`](https://github.com/anthropics/claude-code/issues/40495) is closed, this phase moves from upstream-blocked to capture-ready and follows the same loop as Phases 2–5.
+
 ## Phase 6 — Cross-platform consolidation (gated on Phases 2–5)
 
 - [ ] Once at least 4 of 6 platforms are `payload-verified`, evaluate whether the per-platform branches in `_extract_hook_text` collapse into a small descriptor table (platform → key path)
