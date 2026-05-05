@@ -185,10 +185,35 @@ honest v1 contract is verbatim, not pre-summarised). v1 is
 single-pick and read-only; multi-pick, fuzzy search, and
 summarisation are explicitly out of scope.
 
+## Sidecar shape — privacy-minimal (v3, post-shrink)
+
+The session sidecar (`.agent-chat-history.session`) is the only piece
+of cross-call state. Stateless hook invocations after `session_start`
+read it to validate ownership without re-deriving the fingerprint or
+walking the JSONL header.
+
+Default payload (`write_sidecar`, see `road-to-chat-history-sidecar-shrink`):
+
+```json
+{
+  "fp": "<sha256 hex of first user message>",
+  "started_at": "<iso-8601 utc>"
+}
+```
+
+The raw prompt is **not** persisted on disk. Cross-hook identity is
+the fingerprint, not the prompt — every consumer (`hook_append`,
+`_current_session_id`, ownership guard, auto-adopt) uses `fp`
+directly. `read_sidecar` is forward- and backward-compatible: a
+legacy v2 payload with `first_user_msg` is returned verbatim and the
+extra key is silently ignored, so existing on-disk sidecars keep
+working until the next `session_start` rewrites them in v3 shape.
+
 ### Kill-switches
 
-| Variable | Default | Effect when `false` |
+| Variable | Default | Effect when `false` / `true` |
 |---|---|---|
-| `AGENT_CHAT_HISTORY_SESSION_TAG` | `true` | Body entries written without `s` (rolls back tagging) |
-| `AGENT_CHAT_HISTORY_SESSION_FILTER` | `true` | `read_entries_for_current` returns all entries (rolls back filtering) |
-| `AGENT_CHAT_HISTORY_AUTO_ADOPT` | `true` | `session_start` hooks no longer auto-adopt foreign headers |
+| `AGENT_CHAT_HISTORY_SESSION_TAG` | `true` | `false` → body entries written without `s` (rolls back tagging) |
+| `AGENT_CHAT_HISTORY_SESSION_FILTER` | `true` | `false` → `read_entries_for_current` returns all entries (rolls back filtering) |
+| `AGENT_CHAT_HISTORY_AUTO_ADOPT` | `true` | `false` → `session_start` hooks no longer auto-adopt foreign headers |
+| `AGENT_CHAT_HISTORY_SIDECAR_LEGACY` | `false` | `true` → `write_sidecar` restores the v2 payload `{first_user_msg, fp, started_at}` for downgrade-friendly rollouts |
