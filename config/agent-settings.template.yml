@@ -105,6 +105,20 @@ chat_history:
   #   compress = mark for summarization on the next agent turn
   on_overflow: __CHAT_HISTORY_ON_OVERFLOW__
 
+  # Per-entry-type text-length caps (chars). 0 = verbatim, no slice.
+  # N > 0 = collapse whitespace, slice to N chars, append " … [+K chars]"
+  # so the log self-reports truncation. Defaults match the hardcoded
+  # fallback in scripts/chat_history.py (DEFAULT_TEXT_LIMITS).
+  #   user  = your messages — full text by default (most valuable for crash recovery)
+  #   agent = agent replies — capped to keep the log compact under load
+  #   tool  = tool inputs/outputs — short by default; bump for noisy debugging
+  #   phase = workflow phase markers — short by default
+  text_limits:
+    user: 0
+    agent: 5000
+    tool: 200
+    phase: 200
+
 # --- Optional pipelines ---
 pipelines:
   # Skill improvement pipeline (true, false)
