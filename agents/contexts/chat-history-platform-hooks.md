@@ -28,10 +28,10 @@ not yet at all.
 |---|---|---|---|---|---|
 | Claude Code | CLI + IDE | **HOOK** | docs-verified | `SessionStart`, `Stop`, `UserPromptSubmit`, `PostToolUse` | 3 cadences (per session / per turn / per tool); most mature. `Stop` carries only `session_id` + `transcript_path`; dispatcher reads the JSONL and pulls the last assistant text-block. |
 | Cowork (Claude desktop) | local-agent-mode VM | **HOOK** (blocked upstream) · **MANUAL** (today) | docs-verified · upstream-blocked | `SessionStart`, `Stop`, `UserPromptSubmit`, `PostToolUse` | Claude Code under the hood — same vocabulary and payload shape. `anthropics/claude-code#40495`: Cowork sandbox ignores all three settings sources (user / project / env). `#27398`: `--setting-sources user` excludes plugin-scope `hooks/hooks.json`. Mapping + trampoline shipped (cowork-dispatcher.sh) but lifecycle events do not fire until upstream resolves. |
-| Cursor | IDE (full) · CLI (partial) | **HOOK** (IDE) · **CHECKPOINT** (CLI) | discovery-pending | `sessionStart`, `stop`, `afterAgentResponse` | Beta since 1.7. CLI fires only `beforeShellExecution`/`afterShellExecution`. Payload shape unverified — falls back to top-level keys. |
-| Cline | VS Code + JetBrains | **HOOK** (non-Windows) | discovery-pending | `TaskStart`, `TaskComplete`, `UserPromptSubmit`, `PreCompact` | Hooks unsupported on Windows as of `cline/cline#8073`. Payload shape unverified — falls back to top-level keys. |
-| Windsurf | Cascade | **HOOK** | discovery-pending | `pre_user_prompt`, `post_cascade_response`, `post_setup_worktree` | 12 events; shipped v1.12.41. Payload shape unverified — falls back to top-level keys. |
-| Gemini CLI | CLI | **HOOK** | discovery-pending | `SessionStart`, `SessionEnd`, `BeforeAgent`, `AfterAgent` | `SessionStart` is advisory (cannot block). Payload shape unverified — falls back to top-level keys. |
+| Cursor | IDE (full) · CLI (partial) | **HOOK** (IDE) · **CHECKPOINT** (CLI) | docs-verified | `sessionStart`, `stop`, `afterAgentResponse` | Beta since 1.7. CLI fires only `beforeShellExecution`/`afterShellExecution`. Dispatcher (`_extract_cursor_text`) parses the `transcript_path` JSONL on `afterAgentResponse`/`stop`; falls back to top-level `prompt` for `beforeSubmitPrompt`. |
+| Cline | VS Code + JetBrains | **HOOK** (non-Windows) | docs-verified | `TaskStart`, `TaskComplete`, `UserPromptSubmit`, `PreCompact` | Hooks unsupported on Windows as of `cline/cline#8073`. Dispatcher (`_extract_cline_text`) reads top-level `prompt`/`userPrompt` on `UserPromptSubmit`; `TaskComplete` maps to `session_end`. |
+| Windsurf | Cascade | **HOOK** | docs-verified | `pre_user_prompt`, `post_cascade_response`, `post_setup_worktree` | 12 events; shipped v1.12.41. Dispatcher (`_extract_windsurf_text`) reads `tool_info.response` on `post_cascade_response`, parses `transcript_path` JSONL on `post_cascade_response_with_transcript`. |
+| Gemini CLI | CLI | **HOOK** | docs-verified | `SessionStart`, `SessionEnd`, `BeforeAgent`, `AfterAgent` | `SessionStart` is advisory (cannot block). Dispatcher (`_extract_gemini_text`) reads top-level `prompt_response` on `AfterAgent`; falls back to `transcript_path` JSONL when absent. |
 | Augment Code | CLI + IDE plugin (VSCode + IntelliJ) | **HOOK** | docs-verified | `SessionStart`, `SessionEnd`, `Stop`, `PreToolUse`, `PostToolUse` | Hooks read from `~/.augment/settings.json` (user scope) or `/etc/augment/settings.json` (system); same surface for CLI and IDE. With `includeConversationData: true` the `Stop` payload nests `conversation.userPrompt` + `conversation.agentTextResponse`; without the flag both fields are absent. |
 
 ### Augment payload shape — `Stop` with `includeConversationData`
@@ -68,6 +68,80 @@ The transcript is JSONL with one event per line; the dispatcher walks
 to the last `{"type": "assistant", …}` line and concatenates its text
 content blocks. Returns empty when the file is missing, partial, or
 holds no assistant message yet (best-effort; never raises).
+
+### Cursor payload shape — `afterAgentResponse` / `beforeSubmitPrompt`
+
+```json
+// afterAgentResponse / stop
+{
+  "hook_event_name": "afterAgentResponse",
+  "session_id": "…",
+  "transcript_path": "/Users/…/.cursor/transcripts/<sid>.jsonl"
+}
+
+// beforeSubmitPrompt
+{
+  "hook_event_name": "beforeSubmitPrompt",
+  "session_id": "…",
+  "prompt": "what time is it?"
+}
+```
+
+Cursor reuses Claude Code's transcript JSONL schema, so the same
+walker (`_extract_claude_transcript_response`) applies for the agent
+response. `beforeSubmitPrompt` carries the prompt at the top level.
+
+### Cline payload shape — `UserPromptSubmit`
+
+```json
+{
+  "hook_event_name": "UserPromptSubmit",
+  "session_id": "<task-id>",
+  "prompt": "refactor this"
+}
+```
+
+Cline event names are PascalCase but body keys are camelCase. The
+dispatcher accepts both `prompt` and `userPrompt` for forward
+compatibility. `TaskComplete` maps to `session_end` and emits no body
+text by default.
+
+### Windsurf payload shape — `post_cascade_response` / `_with_transcript`
+
+```json
+// post_cascade_response (synchronous)
+{
+  "hook_event_name": "post_cascade_response",
+  "session_id": "…",
+  "tool_info": { "response": "**Done.** Updated 3 files." }
+}
+
+// post_cascade_response_with_transcript (async)
+{
+  "hook_event_name": "post_cascade_response_with_transcript",
+  "session_id": "…",
+  "transcript_path": "/Users/…/.windsurf/transcripts/<sid>.jsonl"
+}
+```
+
+Windsurf has two agent-response variants. The synchronous one nests
+the response markdown under `tool_info.response`; the transcript
+variant uses the same Claude-format JSONL as Cursor / Claude Code.
+
+### Gemini CLI payload shape — `AfterAgent`
+
+```json
+{
+  "hook_event_name": "AfterAgent",
+  "session_id": "…",
+  "prompt_response": "the time is now …"
+}
+```
+
+`prompt_response` is the canonical agent-response key (snake_case,
+matching the rest of Gemini's hook schema). When absent (e.g. when
+the agent emits a transcript-style event), the dispatcher falls back
+to `transcript_path` parsing using the Claude walker.
 
 ## Claude Code
 

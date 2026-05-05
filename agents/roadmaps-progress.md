@@ -6,10 +6,10 @@
 
 ## Overall
 
-**20 / 142 steps done · 14%**
+**35 / 152 steps done · 23%**
 
 ```text
-██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   14%
+█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   23%
 ```
 
 ## Open roadmaps
@@ -21,7 +21,7 @@
 | 3 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-proof-not-features.md](roadmaps/road-to-proof-not-features.md) | 3 | 19 | 19 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 6 | [road-to-verified-chat-history-platforms.md](roadmaps/road-to-verified-chat-history-platforms.md) | 6 | 33 | 13 | 20 | 0 | 0 | ██████░░░░ 61% |
+| 6 | [road-to-verified-chat-history-platforms.md](roadmaps/road-to-verified-chat-history-platforms.md) | 6 | 43 | 8 | 35 | 0 | 0 | ████████░░ 81% |
 
 ---
 
@@ -82,14 +82,14 @@
 
 ### [road-to-verified-chat-history-platforms.md](roadmaps/road-to-verified-chat-history-platforms.md)
 
-**Road to verified chat-history platforms** — 20 / 33 done (61%)
+**Road to verified chat-history platforms** — 35 / 43 done (81%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Augment + Claude (DONE 2026-05-05) | ✅ done | 0 | 7 | 0 | 0 | 100% |
-| 2 | Cursor (capture-only) | 🟡 in progress | 4 | 2 | 0 | 0 | 33% |
-| 3 | Cline (capture-only) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 4 | Windsurf (capture-only) | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 5 | Gemini CLI (capture-only) | 🟡 in progress | 4 | 7 | 0 | 0 | 64% |
-| 6 | Cross-platform consolidation (gated on Phases 2–5) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Cursor (docs-verified 2026-05-05) | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
+| 3 | Cline (docs-verified 2026-05-05) | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
+| 4 | Windsurf (docs-verified 2026-05-05) | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
+| 5 | Gemini CLI (docs-verified 2026-05-05) | 🟡 in progress | 4 | 10 | 0 | 0 | 71% |
+| 6 | Cross-platform consolidation (evaluation 2026-05-05) | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
 

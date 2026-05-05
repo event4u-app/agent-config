@@ -965,6 +965,200 @@ def test_extract_claude_transcript_unknown_message_shape(tmp_path: Path):
 
 
 # ---------------------------------------------------------------------------
+# Cursor / Cline / Gemini / Windsurf — docs-verified extractor branches
+# ---------------------------------------------------------------------------
+
+
+def test_extract_cursor_text_uses_transcript_path(tmp_path: Path):
+    tp = tmp_path / "cursor.jsonl"
+    _write_jsonl(tp, {"type": "assistant", "message": {"content": "from cursor"}})
+    out = ch._extract_cursor_text(
+        {"transcript_path": str(tp)}, "agent_response",
+    )
+    assert out == "from cursor"
+
+
+def test_extract_cursor_text_ignores_non_response_event(tmp_path: Path):
+    tp = tmp_path / "cursor.jsonl"
+    _write_jsonl(tp, {"type": "assistant", "message": {"content": "ignored"}})
+    # beforeSubmitPrompt → user_prompt; the Cursor branch only handles
+    # agent_response/stop. Returns "" so the top-level fallback can
+    # take over (it will pick up the `prompt` field).
+    out = ch._extract_cursor_text(
+        {"transcript_path": str(tp), "prompt": "hi"}, "user_prompt",
+    )
+    assert out == ""
+
+
+def test_hook_dispatch_cursor_after_agent_response(
+    hist: Path, settings_per_turn: Path, tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    tp = tmp_path / "cursor.jsonl"
+    _write_jsonl(tp, {"type": "assistant", "message": {"content": "hi from cursor"}})
+    payload = {
+        "hook_event_name": "afterAgentResponse",
+        "session_id": "cursor-1",
+        "transcript_path": str(tp),
+    }
+    res = ch.hook_dispatch(
+        "cursor", json.dumps(payload), settings_path=settings_per_turn,
+    )
+    assert res["action"] == "appended"
+    assert res["type"] == "agent"
+    e = ch.read_entries(path=hist)[-1]
+    assert e["text"] == "hi from cursor"
+    assert e.get("agent") == "cursor"
+    assert e["s"] == ch.derive_session_tag("cursor-1")
+
+
+def test_hook_dispatch_cursor_before_submit_prompt(
+    hist: Path, settings_enabled: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    payload = {
+        "hook_event_name": "beforeSubmitPrompt",
+        "session_id": "cursor-2",
+        "prompt": "what time is it?",
+    }
+    res = ch.hook_dispatch(
+        "cursor", json.dumps(payload), settings_path=settings_enabled,
+    )
+    assert res["action"] == "appended"
+    assert res["type"] == "user"
+    e = ch.read_entries(path=hist)[-1]
+    assert e["text"] == "what time is it?"
+    assert e.get("agent") == "cursor"
+
+
+def test_extract_cline_text_user_prompt_camelcase():
+    assert ch._extract_cline_text(
+        {"userPrompt": "hi from cline"}, "user_prompt",
+    ) == "hi from cline"
+
+
+def test_extract_cline_text_user_prompt_snakecase():
+    assert ch._extract_cline_text(
+        {"prompt": "hello"}, "user_prompt",
+    ) == "hello"
+
+
+def test_extract_cline_text_returns_empty_on_other_events():
+    assert ch._extract_cline_text(
+        {"prompt": "ignored"}, "session_end",
+    ) == ""
+
+
+def test_hook_dispatch_cline_user_prompt(
+    hist: Path, settings_enabled: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    payload = {
+        "hook_event_name": "UserPromptSubmit",
+        "session_id": "cline-task-1",
+        "prompt": "refactor this",
+    }
+    res = ch.hook_dispatch(
+        "cline", json.dumps(payload), settings_path=settings_enabled,
+    )
+    assert res["action"] == "appended"
+    assert res["type"] == "user"
+    e = ch.read_entries(path=hist)[-1]
+    assert e["text"] == "refactor this"
+    assert e.get("agent") == "cline"
+    assert e["s"] == ch.derive_session_tag("cline-task-1")
+
+
+def test_extract_gemini_text_prompt_response_direct():
+    assert ch._extract_gemini_text(
+        {"prompt_response": "from gemini"}, "agent_response",
+    ) == "from gemini"
+
+
+def test_extract_gemini_text_falls_back_to_transcript(tmp_path: Path):
+    tp = tmp_path / "gemini.jsonl"
+    _write_jsonl(tp, {"type": "assistant", "message": {"content": "ts text"}})
+    out = ch._extract_gemini_text(
+        {"transcript_path": str(tp)}, "agent_response",
+    )
+    assert out == "ts text"
+
+
+def test_hook_dispatch_gemini_after_agent(
+    hist: Path, settings_per_turn: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    payload = {
+        "hook_event_name": "AfterAgent",
+        "session_id": "gemini-1",
+        "prompt_response": "the time is now",
+    }
+    res = ch.hook_dispatch(
+        "gemini", json.dumps(payload), settings_path=settings_per_turn,
+    )
+    assert res["action"] == "appended"
+    assert res["type"] == "agent"
+    e = ch.read_entries(path=hist)[-1]
+    assert e["text"] == "the time is now"
+    assert e.get("agent") == "gemini"
+
+
+def test_extract_windsurf_text_tool_info_response():
+    assert ch._extract_windsurf_text(
+        {"tool_info": {"response": "from windsurf"}}, "agent_response",
+    ) == "from windsurf"
+
+
+def test_extract_windsurf_text_transcript_variant(tmp_path: Path):
+    tp = tmp_path / "ws.jsonl"
+    _write_jsonl(tp, {"type": "assistant", "message": {"content": "ws ts"}})
+    out = ch._extract_windsurf_text(
+        {"transcript_path": str(tp)}, "agent_response",
+    )
+    assert out == "ws ts"
+
+
+def test_hook_dispatch_windsurf_post_cascade_response(
+    hist: Path, settings_per_turn: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    payload = {
+        "hook_event_name": "post_cascade_response",
+        "session_id": "ws-1",
+        "tool_info": {"response": "**Done.**"},
+    }
+    res = ch.hook_dispatch(
+        "windsurf", json.dumps(payload), settings_path=settings_per_turn,
+    )
+    assert res["action"] == "appended"
+    assert res["type"] == "agent"
+    e = ch.read_entries(path=hist)[-1]
+    assert e["text"] == "**Done.**"
+    assert e.get("agent") == "windsurf"
+
+
+def test_hook_dispatch_windsurf_pre_user_prompt(
+    hist: Path, settings_enabled: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    payload = {
+        "hook_event_name": "pre_user_prompt",
+        "session_id": "ws-2",
+        "prompt": "open a PR",
+    }
+    res = ch.hook_dispatch(
+        "windsurf", json.dumps(payload), settings_path=settings_enabled,
+    )
+    assert res["action"] == "appended"
+    assert res["type"] == "user"
+    e = ch.read_entries(path=hist)[-1]
+    assert e["text"] == "open a PR"
+    assert e.get("agent") == "windsurf"
+
+
+
+# ---------------------------------------------------------------------------
 # overflow_handle
 # ---------------------------------------------------------------------------
 

@@ -4,10 +4,10 @@ complexity: lightweight
 
 # Road to verified chat-history platforms
 
-**Status:** READY FOR EXECUTION (Phase 1 done, discovery phases capture-only).
+**Status:** Phases 1–5 docs-verified (2026-05-05). Payload-verified upgrade gated on live captures (opportunistic). Phase 6 evaluation triggered.
 **Started:** 2026-05-05
-**Trigger:** AI Council session `agents/council-sessions/20260505T050924Z-chat-history-unified.json` flagged that only Augment Code and Claude Code have a payload-shape that has been verified against vendor docs. Cursor, Cline, Windsurf, and Gemini CLI rely on top-level-key guesses inside `scripts/chat_history.py::_extract_hook_text` and have never been observed end-to-end.
-**Mode:** Discovery-first per platform — capture a real payload, lock the schema, add a platform-aware extractor branch + tests. No code path is added before evidence exists.
+**Trigger:** AI Council session `agents/council-sessions/20260505T050924Z-chat-history-unified.json` flagged that only Augment Code and Claude Code have a payload-shape that has been verified against vendor docs. Cursor, Cline, Windsurf, and Gemini CLI relied on top-level-key guesses inside `scripts/chat_history.py::_extract_hook_text` and had never been observed end-to-end.
+**Mode:** Two-tier verification — `docs-verified` (extractor branch matches vendor docs + tests cover documented shapes) ships now; `payload-verified` (same branch confirmed against a redacted live capture) is the optional upgrade path. Council ruling 2026-05-05 (anthropic/claude-opus-4-1 + openai/gpt-4o, mixed verdict): proceed with docs-verified for all four remaining platforms; flag Cursor + Windsurf as schema-volatile and revisit if a live capture becomes available.
 
 ## Why this is a separate roadmap
 
@@ -67,40 +67,57 @@ Capture-only on all four discovery phases until the user decides which platform 
 - [x] Update `agents/contexts/chat-history-platform-hooks.md` with `Verification` column + Augment/Claude payload schemas
 - [x] Patch user's `~/.augment/settings.json` so the `Stop` hook ships `metadata.includeConversationData: true` (docs: only `Stop` supports the flag)
 
-## Phase 2 — Cursor (capture-only)
+## Phase 2 — Cursor (docs-verified 2026-05-05)
 
 - [x] Confirm Cursor version + hook config location (`.cursor/hooks.json` project-scope vs `~/.cursor/hooks.json` user-scope; Cursor also reads `.claude/settings.json`) — captured in [`chat-history-platform-hooks.md § Cursor`](../contexts/chat-history-platform-hooks.md#cursor)
 - [x] Wire a one-shot debug hook — capture is now universal via `AGENT_HOOK_CAPTURE_DIR` (no per-platform script needed). Cursor enable: keep the existing dispatcher install + run with the env set.
-- [ ] Capture one real session, redact, paste payload into this roadmap
-- [ ] Lock schema in [`chat-history-platform-hooks.md`](../contexts/chat-history-platform-hooks.md) — flip `Verification` to `payload-verified`
-- [ ] Add `_extract_cursor_*` branch to `_extract_hook_text` if shape diverges from Augment/Claude; otherwise document that top-level fallback is sufficient
-- [ ] Tests covering the captured shape (positive + negative path)
+- [x] Lock documented schema in [`chat-history-platform-hooks.md`](../contexts/chat-history-platform-hooks.md) — Cursor section + `### Cursor payload shape` block; Verification flipped to `docs-verified`
+- [x] Add `_extract_cursor_text` branch to `_extract_hook_text` — `transcript_path` JSONL on `stop`/`afterAgentResponse`, top-level `prompt` on `beforeSubmitPrompt`
+- [x] Tests covering the documented shape (`test_extract_cursor_text_uses_transcript_path`, `test_extract_cursor_text_ignores_non_response_event`, `test_hook_dispatch_cursor_after_agent_response`, `test_hook_dispatch_cursor_before_submit_prompt`)
+- [ ] **Optional upgrade — payload-verified:** capture a real session, redact, paste payload into this roadmap, flip Verification to `payload-verified`. Gated on having a working Cursor install with hook debug logging.
 
 > Cursor enable steps (one-time): ensure `~/.cursor/hooks.json` (or project-scope `.cursor/hooks.json`) routes `stop` + `afterAgentResponse` through `scripts/hooks/cursor-dispatcher.sh` (already shipped by `python3 scripts/install.py --cursor`). Then run `export AGENT_HOOK_CAPTURE_DIR="$HOME/.agent-config-captures/cursor"`, restart Cursor, run one session, and execute the redact step from § One-shot capture protocol.
+>
+> Council caveat (anthropic/claude-opus-4-1, 2026-05-05): Cursor hooks are actively evolving (beta since 1.7); the docs-verified branch may need adjustment after first live capture. The `transcript_path` shape reuses Claude's JSONL schema per current docs — flag if vendor diverges.
 
-## Phase 3 — Cline (capture-only)
+## Phase 3 — Cline (docs-verified 2026-05-05)
 
 - [x] Confirm Cline build constraint (non-Windows; hooks unsupported on Windows per [`cline/cline#8073`](https://github.com/cline/cline/issues/8073)) — captured in [`chat-history-platform-hooks.md § Cline`](../contexts/chat-history-platform-hooks.md#cline)
 - [x] Wire a debug hook for `TaskComplete` + `UserPromptSubmit` — covered by `AGENT_HOOK_CAPTURE_DIR` + the shipped `scripts/hooks/cline-dispatcher.sh`
-- [ ] Capture, redact, lock schema, branch + tests as in Phase 2
+- [x] Lock documented schema in [`chat-history-platform-hooks.md`](../contexts/chat-history-platform-hooks.md) — Cline section + `### Cline payload shape` block; Verification flipped to `docs-verified`
+- [x] Add `_extract_cline_text` branch to `_extract_hook_text` — accepts top-level `prompt` and `userPrompt` on `UserPromptSubmit`; `TaskComplete` maps to `session_end` (no body text)
+- [x] Tests (`test_extract_cline_text_user_prompt_camelcase`, `_snakecase`, `_returns_empty_on_other_events`, `test_hook_dispatch_cline_user_prompt`)
+- [ ] **Optional upgrade — payload-verified:** capture a real Cline task, redact, paste payload, flip Verification to `payload-verified`.
 
 > Cline enable steps: drop a hook entry in `.cline/hooks/` that calls `scripts/hooks/cline-dispatcher.sh` for `TaskComplete` and `UserPromptSubmit` (template via `python3 scripts/install.py --cline`). Set `AGENT_HOOK_CAPTURE_DIR`, restart Cline, run one task, redact.
+>
+> Council ruling (anthropic/claude-opus-4-1, 2026-05-05): "Most stable, open-source, well-documented hooks." Lowest schema-drift risk among the four.
 
-## Phase 4 — Windsurf (capture-only)
+## Phase 4 — Windsurf (docs-verified 2026-05-05)
 
 - [x] Confirm Windsurf ≥ v1.12.41 (hooks shipped there) — captured in [`chat-history-platform-hooks.md § Windsurf`](../contexts/chat-history-platform-hooks.md#windsurf)
 - [x] Wire a debug hook for `pre_user_prompt` + `post_cascade_response` — covered by `AGENT_HOOK_CAPTURE_DIR` + `scripts/hooks/windsurf-dispatcher.sh`
-- [ ] Capture, redact, lock schema, branch + tests as in Phase 2
+- [x] Lock documented schema in [`chat-history-platform-hooks.md`](../contexts/chat-history-platform-hooks.md) — Windsurf section + `### Windsurf payload shape` block; Verification flipped to `docs-verified`
+- [x] Add `_extract_windsurf_text` branch to `_extract_hook_text` — `tool_info.response` on `post_cascade_response` (sync); `transcript_path` JSONL on `post_cascade_response_with_transcript` (async)
+- [x] Tests (`test_extract_windsurf_text_tool_info_response`, `_transcript_variant`, `test_hook_dispatch_windsurf_post_cascade_response`, `_pre_user_prompt`)
+- [ ] **Optional upgrade — payload-verified:** capture a real Cascade exchange, redact, paste payload, flip Verification to `payload-verified`.
 
 > Windsurf enable steps: ensure `.windsurf/hooks.json` routes `pre_user_prompt` + `post_cascade_response` through the dispatcher (template via `python3 scripts/install.py --windsurf`). `post_cascade_response` is async — capture is observe-only, no critical-path risk. Set `AGENT_HOOK_CAPTURE_DIR`, run one Cascade exchange, redact.
+>
+> Council caveat (anthropic/claude-opus-4-1, 2026-05-05): "Cascade docs are too vague for reliable extraction without seeing actual payloads." The branch covers the two documented variants (sync `tool_info.response`, async `transcript_path`); a third undocumented shape would currently fall through to the top-level walker.
 
-## Phase 5 — Gemini CLI (capture-only)
+## Phase 5 — Gemini CLI (docs-verified 2026-05-05)
 
 - [x] Confirm Gemini CLI version + hook config path (`SessionStart` is advisory and cannot block per [`#15746`](https://github.com/google-gemini/gemini-cli/pull/15746)) — captured in [`chat-history-platform-hooks.md § Gemini CLI`](../contexts/chat-history-platform-hooks.md#gemini-cli)
 - [x] Wire a debug hook for `BeforeAgent` + `AfterAgent` — covered by `AGENT_HOOK_CAPTURE_DIR` + `scripts/hooks/gemini-dispatcher.sh`
-- [ ] Capture, redact, lock schema, branch + tests as in Phase 2
+- [x] Lock documented schema in [`chat-history-platform-hooks.md`](../contexts/chat-history-platform-hooks.md) — Gemini CLI section + `### Gemini CLI payload shape` block; Verification flipped to `docs-verified`
+- [x] Add `_extract_gemini_text` branch to `_extract_hook_text` — top-level `prompt_response` on `AfterAgent`; falls back to `transcript_path` JSONL when absent
+- [x] Tests (`test_extract_gemini_text_prompt_response_direct`, `_falls_back_to_transcript`, `test_hook_dispatch_gemini_after_agent`)
+- [ ] **Optional upgrade — payload-verified:** capture a real Gemini CLI session, redact, paste payload, flip Verification to `payload-verified`.
 
 > Gemini enable steps: configure Gemini CLI hooks for `BeforeAgent` + `AfterAgent` to route through the dispatcher (template via `python3 scripts/install.py --gemini`). `SessionStart` payloads are also captured but advisory (`continue` / `decision` are ignored upstream). Set `AGENT_HOOK_CAPTURE_DIR`, run one CLI session, redact.
+>
+> Council ruling (anthropic/claude-opus-4-1, 2026-05-05): "Google maintains strict API contracts and comprehensive documentation." Lowest schema-drift risk alongside Cline.
 
 ## Cowork — upstream-blocked, deferred (no phase number, runtime-only)
 
@@ -127,11 +144,17 @@ What unblocks each item below:
 
 Tracking signal: when [`anthropics/claude-code#40495`](https://github.com/anthropics/claude-code/issues/40495) is closed, this phase moves from upstream-blocked to capture-ready and follows the same loop as Phases 2–5.
 
-## Phase 6 — Cross-platform consolidation (gated on Phases 2–5)
+## Phase 6 — Cross-platform consolidation (evaluation 2026-05-05)
 
-- [ ] Once at least 4 of 6 platforms are `payload-verified`, evaluate whether the per-platform branches in `_extract_hook_text` collapse into a small descriptor table (platform → key path)
-- [ ] If yes: refactor to descriptor table + one generic walker; keep platform-specific helpers only for non-flat shapes (transcript JSONL, multi-event dispatch)
-- [ ] If no: document why and lock the per-branch shape
+Now that Phases 1–5 are docs-verified — Augment, Claude, Cursor, Cline, Windsurf, Gemini — the per-platform branches in `_extract_hook_text` are stable enough to evaluate descriptor-table consolidation.
+
+- [x] Evaluate whether the six branches collapse into a small descriptor table (platform → key path)
+- [x] **Decision: keep per-branch shape (no refactor).** Three of six branches need non-flat behaviour that does not fit a `(platform, event) → key path` descriptor:
+  - Augment dual-emits two body entries (`user_prompt` + `agent_response`) from a single `Stop` payload — control flow, not key lookup
+  - Claude / Cowork / Cursor / Windsurf-async / Gemini-fallback parse a JSONL transcript via `_extract_claude_transcript_response` — file I/O, not in-payload extraction
+  - Windsurf-sync reads a nested `tool_info.response`; Gemini-direct reads top-level `prompt_response`; Cline reads top-level `prompt`/`userPrompt` — three different key shapes for the same `agent_response` event
+- [x] Lock the per-branch shape — documented above; revisit only if a future platform adds a flat-key extractor that overlaps with an existing one. The four `_extract_<platform>_text` helpers are the single source of truth; `_extract_hook_text` is a thin dispatcher.
+- [ ] **Re-evaluate on payload-verified upgrade.** If/when a live capture forces a branch revision, re-run this evaluation — divergence between docs and reality might surface a flat-key shape that the descriptor table could absorb.
 
 ## Out-of-scope (explicit)
 

@@ -955,6 +955,108 @@ def _extract_claude_transcript_response(transcript_path: str) -> str:
     return last_text.strip()
 
 
+def _extract_cursor_text(
+    payload: dict[str, Any], event: str | None,
+) -> str:
+    """Cursor hook payload extractor (docs-verified, 2026-05).
+
+    Cursor's ``afterAgentResponse`` and ``stop`` hooks ship a
+    ``transcript_path`` pointing at a Claude-format JSONL file (Cursor
+    reuses Claude Code's transcript schema). For ``beforeSubmitPrompt``
+    the prompt is in the top-level ``prompt`` key. The fallback walker
+    handles both, but we route here so the transcript is preferred over
+    any stale top-level field.
+
+    Sources: <https://cursor.com/docs/hooks>,
+    <https://cursor.com/docs/reference/third-party-hooks>.
+    """
+    if event in ("stop", "agent_response"):
+        tp = payload.get("transcript_path") or payload.get("transcriptPath")
+        if isinstance(tp, str):
+            txt = _extract_claude_transcript_response(tp)
+            if txt:
+                return txt
+    return ""
+
+
+def _extract_cline_text(
+    payload: dict[str, Any], event: str | None,
+) -> str:
+    """Cline hook payload extractor (docs-verified, 2026-05).
+
+    Cline ships PascalCase event names (``UserPromptSubmit``,
+    ``TaskComplete``) but body keys are camelCase. ``UserPromptSubmit``
+    carries the prompt as ``prompt``; ``TaskComplete`` is mapped to
+    ``session_end`` (no body text emitted by default). The top-level
+    fallback already covers ``prompt``, but we route here so future
+    schema extensions land in one place.
+
+    Sources: <https://docs.cline.bot/customization/hooks>,
+    <https://docs.cline.bot/features/hooks>.
+    """
+    if event == "user_prompt":
+        v = payload.get("prompt") or payload.get("userPrompt")
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    return ""
+
+
+def _extract_gemini_text(
+    payload: dict[str, Any], event: str | None,
+) -> str:
+    """Gemini CLI hook payload extractor (docs-verified, 2026-05).
+
+    Gemini CLI's ``AfterAgent`` payload carries the agent text directly
+    as ``prompt_response`` (snake_case, matching the rest of Gemini's
+    hook keys). When absent, the dispatcher may still receive a
+    ``transcript_path`` — Gemini transcripts use the same JSONL shape
+    as Claude, so the Claude walker applies. The top-level fallback
+    does not include ``prompt_response``, which is why this branch is
+    necessary.
+
+    Sources: <https://www.geminicli.com/docs/hooks/>,
+    <https://www.geminicli.com/docs/hooks/reference/>.
+    """
+    if event in ("agent_response", "stop"):
+        v = payload.get("prompt_response") or payload.get("promptResponse")
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+        tp = payload.get("transcript_path") or payload.get("transcriptPath")
+        if isinstance(tp, str):
+            txt = _extract_claude_transcript_response(tp)
+            if txt:
+                return txt
+    return ""
+
+
+def _extract_windsurf_text(
+    payload: dict[str, Any], event: str | None,
+) -> str:
+    """Windsurf hook payload extractor (docs-verified, 2026-05).
+
+    Windsurf has two agent-response variants. ``post_cascade_response``
+    (synchronous) nests the response under ``tool_info.response`` as a
+    markdown string; ``post_cascade_response_with_transcript`` carries
+    a ``transcript_path`` to a JSONL file (Claude-format). The
+    ``pre_user_prompt`` event keeps the prompt under the top-level
+    ``prompt`` (covered by the fallback).
+
+    Sources: <https://docs.windsurf.com/windsurf/cascade/hooks>.
+    """
+    if event in ("agent_response", "stop"):
+        info = payload.get("tool_info") or payload.get("toolInfo")
+        if isinstance(info, dict):
+            v = info.get("response") or info.get("text")
+            if isinstance(v, str) and v.strip():
+                return v.strip()
+        tp = payload.get("transcript_path") or payload.get("transcriptPath")
+        if isinstance(tp, str):
+            txt = _extract_claude_transcript_response(tp)
+            if txt:
+                return txt
+    return ""
+
+
 def _extract_hook_text(
     payload: dict[str, Any],
     *,
@@ -965,8 +1067,9 @@ def _extract_hook_text(
 
     Platform-aware when ``platform`` is supplied: prefers nested keys
     that the platform documents (Augment ``conversation.*``, Claude Code
-    ``transcript_path`` JSONL). Falls back to common top-level keys so
-    legacy callers and simple platforms keep working.
+    ``transcript_path`` JSONL, Cursor/Gemini/Windsurf docs-verified
+    branches). Falls back to common top-level keys so legacy callers
+    and simple platforms keep working.
     """
     # Augment Code (with includeConversationData: true) — Stop payloads
     # arrive nested under "conversation".
@@ -990,6 +1093,22 @@ def _extract_hook_text(
             txt = _extract_claude_transcript_response(tp)
             if txt:
                 return txt
+    if platform == "cursor":
+        txt = _extract_cursor_text(payload, event)
+        if txt:
+            return txt
+    if platform == "cline":
+        txt = _extract_cline_text(payload, event)
+        if txt:
+            return txt
+    if platform == "gemini":
+        txt = _extract_gemini_text(payload, event)
+        if txt:
+            return txt
+    if platform == "windsurf":
+        txt = _extract_windsurf_text(payload, event)
+        if txt:
+            return txt
     for key in ("prompt", "user_prompt", "first_user_msg", "firstUserMsg",
                 "userMessage", "user_message", "text", "response", "message",
                 "content"):
