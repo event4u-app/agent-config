@@ -85,9 +85,11 @@ data, see [`token-efficiency`](../rules/token-efficiency.md)).
 ### 5. Offer follow-ups (optional)
 
 If the file is close to `max_size_kb` (> 80 %), mention it — the next
-append may trigger overflow handling. To inspect a specific prior
-session by id, point the user at `/chat-history learn`; the body
-filter on `s` is the v4 isolation surface.
+append may trigger overflow handling. To pull a specific prior
+session into the current chat verbatim, point the user at
+`/chat-history import`; to mine a prior session for project-improving
+learnings, `/chat-history learn`. The body filter on `s` is the v4
+isolation surface in both cases.
 
 ## Gotchas
 

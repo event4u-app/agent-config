@@ -3,43 +3,47 @@ name: chat-history:learn
 cluster: chat-history
 sub: learn
 skills: [learning-to-rule-or-skill]
-description: Surface prior chat-history sessions as numbered options, let the user pick exactly one, then read its entries verbatim — selective, user-driven cross-session learning
+description: Pick a prior chat-history session and mine it for project-improving learnings — runs learning-to-rule-or-skill on the picked session, drafts proposal(s) under agents/proposals/
 disable-model-invocation: true
 suggestion:
   eligible: true
-  trigger_description: "import a past session into the current chat, learn from a prior session, pick a session to read"
-  trigger_context: "user wants to selectively pull context from one earlier session into the current one"
+  trigger_description: "extract a learning from a past session, mine chat-history for proposals, what did we learn last session, codify a pattern from a prior session"
+  trigger_context: "user wants to derive a rule/skill/guideline proposal from the content of one prior session"
 ---
 <!-- cloud_safe: noop -->
 
 # /chat-history learn
 
-Read-only, **user-driven** cross-session import. Surfaces prior
-sessions in `.agent-chat-history` as numbered options, user picks
-**one**, agent reads that session's entries **verbatim**. Any
-extraction or summarisation happens in dialogue, user-directed —
-agent does **not** auto-summarise, auto-import, or rewrite user
-context (Council Round 2 / R2-2 — verbatim is honest v1 contract).
+User-driven **learning extraction** from a prior session. Surfaces
+prior sessions logged in `.agent-chat-history` as numbered options,
+the user picks **one**, the agent reads that session's entries and
+runs the [`learning-to-rule-or-skill`](../../skills/learning-to-rule-or-skill/SKILL.md)
+workflow on the content — surfacing repeated mistakes, successful
+patterns, or constraints worth codifying as a rule, skill, or
+guideline proposal.
 
-Opt-in counterpart to read-path filter (Phase 3 of
-`road-to-chat-history-session-isolation`): default reads stay
-session-scoped; `learn` is the explicit cross-boundary surface.
+This is the **project-improvement** counterpart to
+[`/chat-history import`](import.md): `import` renders a session
+verbatim into the current chat for the user to act on; `learn`
+mines a session for proposals that improve the agent or the
+project itself.
 
 ## When NOT to use
 
-- Inspect current session — default of `/chat-history show` plus
-  `scripts/chat_history.py read`.
-- Bulk-import all sessions — out of scope for v1. One session per
+- Pull a prior session into the current chat verbatim — use
+  [`/chat-history import`](import.md).
+- Capture a learning that originated **in the current** session —
+  invoke the [`learning-to-rule-or-skill`](../../skills/learning-to-rule-or-skill/SKILL.md)
+  skill directly. `learn` is for prior-session mining only.
+- Bulk-mine all sessions — out of scope for v1. One session per
   invocation; multi-pick is v2.
-- Search prior sessions by content — out of scope for v1; no fuzzy
-  search, no full-text grep. User picks by `id`, `last_ts`, `preview`.
 
 ## Steps
 
 ### 1. Check if enabled
 
 Read `chat_history.enabled` from `.agent-settings.yml`. If `false`
-or section missing, say so and stop:
+or the section is missing, say so and stop:
 
 ```
 > 📒 chat-history is disabled (chat_history.enabled = false).
@@ -48,12 +52,12 @@ or section missing, say so and stop:
 
 ### 2. List sessions
 
-Run `scripts/chat_history.py sessions --json --limit 20`. Helper
-returns array of `{id, count, first_ts, last_ts, preview}` sorted
-by `last_ts` desc. Default excludes empty buckets — only sessions
-with at least one body entry.
+Run `scripts/chat_history.py sessions --json --limit 20`. The
+helper returns an array of `{id, count, first_ts, last_ts, preview}`
+sorted by `last_ts` desc. Default excludes empty buckets — only
+sessions with at least one body entry are surfaced.
 
-If empty array, stop:
+If the array is empty, stop:
 
 ```
 > 📒 No prior sessions found in .agent-chat-history.
@@ -61,86 +65,103 @@ If empty array, stop:
 
 ### 3. Surface as numbered options
 
-Render each session as numbered option (per `user-interaction` —
-Iron Law: numbered options for any picker). Format:
+Render each session as a numbered option (per the `user-interaction`
+rule — Iron Law: numbered options for any picker):
 
 ```
-> Pick a session to read verbatim:
+> Pick a session to mine for learnings:
 >
 > 1. {id}  ·  {count} entries  ·  {last_ts}
 >    {preview}
 > 2. ...
 > ...
-> N. abort — do not read any session
+> N. abort — do not extract any learning
 ```
 
-Keep preview ≤ 80 chars (helper truncates). Always include explicit
-abort option as last numbered choice.
+Keep the preview ≤ 80 chars. Always include an explicit abort
+option as the last numbered choice.
 
 ### 4. Wait for the pick
 
 **One question per turn** (per `ask-when-uncertain`). Do not chain
-listing with anything else; do not auto-pick; do not surface a
-default. Wait for user response.
+the listing with anything else; do not auto-pick; do not surface a
+default. Wait for the user's response.
 
-If user picks abort, stop without reading.
+If the user picks the abort option, stop without reading.
 
-### 5. Read picked session verbatim
+### 5. Read the picked session
 
-Run `scripts/chat_history.py read --session <id>` with picked `id`.
-Helper returns entries as JSON.
+Run `scripts/chat_history.py read --session <id>` with the picked
+`id`. Hold the entries in working memory — do **not** render them
+verbatim into the chat. The verbatim path is `import`'s job; here
+the entries are input to step 6.
 
-Render **verbatim** in chat — do not summarise, do not re-format,
-do not drop fields. One entry per line acceptable; preserve `t`,
-`text`, `name`, `ts`, and any other fields helper emits. Use fenced
-block so timestamps and JSON survive markdown:
+### 6. Run `learning-to-rule-or-skill`
 
-````
-> 📒 Session {id} — {count} entries
+Apply the [`learning-to-rule-or-skill`](../../skills/learning-to-rule-or-skill/SKILL.md)
+procedure on the session content:
 
-```json
-{...entry 1...}
-{...entry 2...}
-...
+1. **Scan** the entries for candidate learnings — repeated
+   mistakes, successful patterns, friction points, or constraints
+   stated by the user.
+2. **Pass each candidate through the Promotion Gate** (§ 0 of the
+   skill): repetition, impact, failure pattern, non-duplication,
+   scope fit, minimal. Drop candidates that fail any gate.
+3. **For each surviving candidate**, run § 4 (search protocol — all
+   four steps), then decide rule / skill / guideline / update / no
+   action per § 3 of the skill.
+4. **Draft a proposal** for every candidate that warrants one,
+   following § 8 of the skill (proposal template under
+   `agents/proposals/<id>.md`).
+
+If multiple candidates survive, draft them as **separate**
+proposals — do not merge unrelated learnings into one.
+
+### 7. Surface the result
+
+Hand back to the user with a structured summary per surviving
+candidate:
+
 ```
-````
+> 📒 Mined session {id} — {N} candidate(s) surfaced
 
-If session is large (>50 entries), still render verbatim — but
-prepend one-line note that listing is long, so user can scroll.
-Do not silently truncate.
-
-### 6. Hand back
-
-After rendering, **do not** auto-act on content. Hand back with
-short prompt:
-
-```
-> Picked session is rendered above. What would you like to extract?
+> 1. {learning title}
+>    Decision: {rule|skill|guideline|update|no action}
+>    Proposal: agents/proposals/{proposal_id}.md
+>    Gate: {pass|fail — reason}
+> 2. ...
 ```
 
-Any follow-up (extract decisions, copy entries into current
-session, etc.) is user-directed in subsequent turns. Agent does
-not write to current session's log on user's behalf without
-explicit instruction.
+If no candidate cleared the Promotion Gate, say so explicitly:
+
+```
+> 📒 Mined session {id} — no candidate cleared the Promotion Gate.
+```
+
+Do **not** open a PR, do **not** commit the proposals — proposal
+files land in `agents/proposals/` (gitignored or curated per
+project policy) for the user to review and route via
+`upstream-contribute` or merge into `agents/overrides/`.
 
 ## Gotchas
 
-- **Verbatim, not structured.** Council Round 2 (R2-2) resolved
-  earlier contradiction in favour of verbatim. Do not "helpfully"
-  pre-summarise — user reads source, then directs extraction.
-- **One pick per invocation.** Multi-pick is v2. For second
-  session, run `/chat-history learn` again.
-- **Read-only.** Never writes to `.agent-chat-history`, never
-  rotates.
-- **`<legacy>` and `<unknown>` buckets** appear like any session
-  id when they have body entries — user can pick them too. Helper
-  aggregates entries with no `s` field into `<legacy>` and entries
-  with `s == "<unknown>"` into `<unknown>`.
+- **Promotion Gate is hard.** A grep miss is not proof of
+  non-duplication — § 4 of the skill mandates the four-step search
+  protocol. Do not skip it.
+- **One pick per invocation.** Multi-pick is v2. If the user wants
+  to mine a second session, run `/chat-history learn` again.
+- **Read-only on the log.** This command never writes to
+  `.agent-chat-history`. It writes proposal drafts under
+  `agents/proposals/` only.
+- **No auto-promotion.** Drafted proposals stay in `proposals/`
+  until the user routes them. `learn` never invokes
+  `upstream-contribute` itself.
 
 ## See also
 
-- [`chat-history-platform-hooks`](../../../agents/contexts/chat-history-platform-hooks.md) — read contract, isolation default, learn opt-in path
-- [`/chat-history show`](show.md) — current-session inspector
+- [`/chat-history import`](import.md) — verbatim render of a prior session
+- [`learning-to-rule-or-skill`](../../skills/learning-to-rule-or-skill/SKILL.md) — the workflow this command orchestrates
+- [`upstream-contribute`](../../skills/upstream-contribute/SKILL.md) — promote a project-scoped proposal upstream
 - [`scripts/chat_history.py`](../../../scripts/chat_history.py) — `sessions` and `read --session` CLI surface
 - [`user-interaction`](../../rules/user-interaction.md) — numbered-options Iron Law
 - [`ask-when-uncertain`](../../rules/ask-when-uncertain.md) — one-question-per-turn Iron Law

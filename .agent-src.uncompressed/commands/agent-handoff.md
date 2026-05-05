@@ -77,8 +77,10 @@ Show the handoff prompt in a fenced code block and say:
   [`chat-history-platform-hooks`](../../agents/contexts/chat-history-platform-hooks.md)).
   Works only on the same machine and same repo, but captures every
   phase / decision any session logged. Inspect with `/chat-history show`;
-  read prior-session context with `/chat-history learn`.
+  pull prior-session context into the current chat verbatim with
+  `/chat-history import`; mine a prior session for project-improving
+  learnings with `/chat-history learn`.
 
 Prefer `/agent-handoff` for planned context switches across tools or
-machines; use `/chat-history learn` after a crash or fresh-chat reopen
-on the same workspace to surface prior-session context.
+machines; use `/chat-history import` after a crash or fresh-chat reopen
+on the same workspace to surface prior-session context verbatim.

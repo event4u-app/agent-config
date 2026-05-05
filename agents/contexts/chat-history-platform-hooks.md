@@ -297,7 +297,9 @@ There is no manual recovery lever in v4. A "wrong" session writing
 to the file is not a failure mode — the entry simply joins the log
 under its own `s`. To wipe the file, delete `.agent-chat-history`
 manually (it is git-ignored and recreated on the next hook fire). To
-inspect or import a prior session, use `/chat-history learn`.
+pull a prior session into the current chat verbatim, use
+`/chat-history import`; to mine a prior session for project-improving
+learnings, use `/chat-history learn`.
 
 
 ## Read contract — session isolation (schema v4)
@@ -335,9 +337,9 @@ CLI surface:
 | `chat-history:read` | current session | `--all` (all sessions), `--session <id>` (exact match) |
 | `chat-history:sessions` | top 20 buckets by `last_ts` desc | `--limit N`, `--json` (`--include-empty` is a v3 vestige; v4 has no empty buckets to surface) |
 
-### `learn` opt-in path
+### `import` and `learn` opt-in paths
 
-`/chat-history learn` is the only sanctioned cross-session import
+`/chat-history import` is the sanctioned **verbatim** cross-session
 surface. It runs `chat-history:sessions`, surfaces sessions as
 numbered options (per `user-interaction`), waits for the user's
 pick (per `ask-when-uncertain` — one question per turn), and
@@ -346,6 +348,14 @@ renders the picked session's entries **verbatim** via
 honest v1 contract is verbatim, not pre-summarised). v1 is
 single-pick and read-only; multi-pick, fuzzy search, and
 summarisation are explicitly out of scope.
+
+`/chat-history learn` is the sanctioned **learning-extraction**
+counterpart. Same picker UX, but instead of rendering the picked
+session verbatim it runs `learning-to-rule-or-skill` on the
+content — surfacing repeated mistakes, successful patterns, or
+constraints worth codifying as a rule / skill / guideline proposal
+under `agents/proposals/`. `learn` writes proposal drafts only; it
+never commits them and never auto-promotes them upstream.
 
 ## State on disk
 

@@ -104,7 +104,7 @@ and
 .agent-src.uncompressed/      ← edit here
   skills/       (129 skills)
   rules/        (55 rules)
-  commands/     (93 commands)
+  commands/     (94 commands)
   personas/     (7 personas)
   templates/    (AGENTS.md, copilot-instructions.md, skill.md, …)
   contexts/
