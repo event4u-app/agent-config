@@ -137,3 +137,58 @@ The runtime kill-switch is `AGENT_CHAT_HISTORY_AUTO_ADOPT=false`,
 which forces hooks back to `ownership_refused` semantics without a
 code redeploy. Use only as a last resort while a regression is
 investigated.
+
+
+## Read contract — session isolation (schema v3)
+
+Schema v3 (see `road-to-chat-history-session-isolation`) tags every
+body entry with `s = fp[:16]` — the first 16 chars of the SHA-256
+fingerprint of the session's first user message — and treats the
+log as a **multi-session** file partitioned by `s`.
+
+Read paths must respect the partition by default; cross-session
+reads are an explicit opt-in:
+
+- **`read_entries_for_current(path, last)`** — the default reader.
+  Filters to the current session derived from
+  `_current_session_id(path)` (sidecar → header → `<unknown>`).
+  Used by every internal reader unless the caller has an explicit
+  reason to widen the scope.
+- **`read_entries(path, last, session=None)`** — the low-level
+  reader. With `session=None` it returns all entries (legacy
+  behavior, used by `--all`); with `session=<id>` it filters to an
+  exact `s` match. The literals `<legacy>` (no `s` field) and
+  `<unknown>` (no header / sidecar at write time) are valid filter
+  values.
+- **`list_sessions(path)`** — returns
+  `[{id, count, first_ts, last_ts, preview}]` for every session id
+  observed in the body **and** every id in `header.former_fps[]`,
+  even when a former owner has no body entries (Council R2-4 — the
+  user must be able to see "this session existed" before picking).
+
+CLI surface:
+
+| Command | Default scope | Override |
+|---|---|---|
+| `chat-history:read` | current session | `--all` (all sessions), `--session <id>` (exact match) |
+| `chat-history:sessions` | non-empty buckets, top 20 by `last_ts` desc | `--include-empty` (former_fps with no body), `--limit N`, `--json` |
+
+### `learn` opt-in path
+
+`/chat-history learn` is the only sanctioned cross-session import
+surface. It runs `chat-history:sessions`, surfaces sessions as
+numbered options (per `user-interaction`), waits for the user's
+pick (per `ask-when-uncertain` — one question per turn), and
+renders the picked session's entries **verbatim** via
+`chat-history:read --session <id>` (Council Round 2 / R2-2 — the
+honest v1 contract is verbatim, not pre-summarised). v1 is
+single-pick and read-only; multi-pick, fuzzy search, and
+summarisation are explicitly out of scope.
+
+### Kill-switches
+
+| Variable | Default | Effect when `false` |
+|---|---|---|
+| `AGENT_CHAT_HISTORY_SESSION_TAG` | `true` | Body entries written without `s` (rolls back tagging) |
+| `AGENT_CHAT_HISTORY_SESSION_FILTER` | `true` | `read_entries_for_current` returns all entries (rolls back filtering) |
+| `AGENT_CHAT_HISTORY_AUTO_ADOPT` | `true` | `session_start` hooks no longer auto-adopt foreign headers |
