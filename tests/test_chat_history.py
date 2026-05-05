@@ -264,14 +264,14 @@ def test_cli_read_all(tmp_path: Path, monkeypatch, capsys):
 # --- Schema v2 --------------------------------------------------------
 
 
-def test_schema_version_is_two():
-    assert ch.SCHEMA_VERSION == 2
+def test_schema_version_is_three():
+    assert ch.SCHEMA_VERSION == 3
 
 
 def test_init_writes_former_fps_empty(hist: Path):
     h = ch.init("msg", path=hist)
     assert h["former_fps"] == []
-    assert h["v"] == 2
+    assert h["v"] == 3
 
 
 def test_read_header_migrates_v1_in_memory(hist: Path):
@@ -348,7 +348,7 @@ def test_adopt_bumps_schema_version_for_v1_file(hist: Path):
     }
     hist.write_text(json.dumps(v1) + "\n", encoding="utf-8")
     h = ch.adopt("new", path=hist)
-    assert h["v"] == 2
+    assert h["v"] == 3
     assert ch.fingerprint("old") in h["former_fps"]
 
 
@@ -506,6 +506,64 @@ def test_append_without_first_user_msg_unchanged(hist: Path):
     ch.init("orig", path=hist)
     ch.append({"t": "phase", "name": "legacy"}, path=hist)
     assert [e.get("name") for e in ch.read_entries(path=hist)] == ["legacy"]
+
+
+# --- Phase 1 (schema v3) — session id helper + tagging -----------------------
+
+
+def test_current_session_id_from_header(hist: Path):
+    h = ch.init("hello", path=hist)
+    assert ch._current_session_id(hist) == h["fp"][:16]
+
+
+def test_current_session_id_falls_back_to_sidecar(hist: Path, tmp_path: Path):
+    ch.write_sidecar("only-sidecar", path=hist)
+    expected = ch.fingerprint("only-sidecar")[:16]
+    assert ch._current_session_id(hist) == expected
+
+
+def test_current_session_id_unknown_when_both_missing(tmp_path: Path):
+    target = tmp_path / "missing.jsonl"
+    assert ch._current_session_id(target) == ch.SESSION_ID_UNKNOWN
+
+
+def test_current_session_id_unknown_on_malformed_header(hist: Path):
+    hist.write_text("not-json\n", encoding="utf-8")
+    assert ch._current_session_id(hist) == ch.SESSION_ID_UNKNOWN
+
+
+def test_append_auto_stamps_session_from_header(hist: Path):
+    h = ch.init("owner", path=hist)
+    ch.append({"t": "phase", "name": "p1"}, path=hist)
+    entries = ch.read_entries(path=hist)
+    assert entries[-1]["s"] == h["fp"][:16]
+
+
+def test_append_session_kwarg_wins_over_auto(hist: Path):
+    ch.init("owner", path=hist)
+    ch.append({"t": "phase", "name": "p1"}, path=hist, session="custom-id-xyz")
+    assert ch.read_entries(path=hist)[-1]["s"] == "custom-id-xyz"
+
+
+def test_append_preserves_pre_filled_s(hist: Path):
+    ch.init("owner", path=hist)
+    ch.append({"t": "phase", "name": "p1", "s": "pre-set-id"}, path=hist)
+    assert ch.read_entries(path=hist)[-1]["s"] == "pre-set-id"
+
+
+def test_append_kill_switch_skips_tag(hist: Path, monkeypatch):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_SESSION_TAG", "false")
+    ch.init("owner", path=hist)
+    ch.append({"t": "phase", "name": "p1"}, path=hist)
+    assert "s" not in ch.read_entries(path=hist)[-1]
+
+
+def test_append_unknown_session_when_no_header(hist: Path):
+    """append() called against a file that has no header surfaces <unknown>."""
+    # Create file with malformed first line (no header).
+    hist.write_text("garbage\n", encoding="utf-8")
+    ch.append({"t": "phase", "name": "p1"}, path=hist)
+    assert ch.read_entries(path=hist)[-1]["s"] == ch.SESSION_ID_UNKNOWN
 
 
 def test_cli_append_first_user_msg_match_exit_0(
@@ -1037,3 +1095,556 @@ def test_hook_dispatch_augment_owner_switch_produces_append_stream(
 
     entries = ch.read_entries(path=hist)
     assert len(entries) >= 1
+
+
+
+def test_hook_dispatch_augment_session_start_falls_back_to_session_id(
+    hist: Path, settings_per_turn: Path,
+):
+    """Augment SessionStart payloads do not carry the user prompt. When
+    a session_id is present and no prompt-bearing field is, the
+    dispatcher must synthesize a stable fum so the sidecar is written
+    and subsequent Stop hooks can append per-turn entries."""
+    init_payload = json.dumps({
+        "hook_event_name": "SessionStart",
+        "session_id": "augment-sess-001",
+        "workspace_roots": ["/tmp/proj"],
+    })
+    r1 = ch.hook_dispatch(
+        "augment", init_payload,
+        path=hist, settings_path=settings_per_turn,
+    )
+    assert r1["action"] == "initialized"
+    assert r1["fp"] == ch.fingerprint("<session:augment:augment-sess-001>")
+
+    stop_payload = json.dumps({"hook_event_name": "Stop"})
+    r2 = ch.hook_dispatch(
+        "augment", stop_payload,
+        path=hist, settings_path=settings_per_turn,
+    )
+    assert r2["action"] == "appended"
+
+    entries = ch.read_entries(path=hist)
+    assert len(entries) == 1
+    assert entries[0]["t"] == "agent"
+
+
+def test_hook_dispatch_augment_session_start_distinguishes_sessions(
+    hist: Path, settings_per_turn: Path, monkeypatch,
+):
+    """Two different Augment session_ids must produce different
+    fingerprints so auto-adopt can switch ownership cleanly."""
+    monkeypatch.delenv("AGENT_CHAT_HISTORY_AUTO_ADOPT", raising=False)
+
+    r1 = ch.hook_dispatch(
+        "augment",
+        json.dumps({
+            "hook_event_name": "SessionStart",
+            "session_id": "sess-A",
+        }),
+        path=hist, settings_path=settings_per_turn,
+    )
+    assert r1["action"] == "initialized"
+
+    r2 = ch.hook_dispatch(
+        "augment",
+        json.dumps({
+            "hook_event_name": "SessionStart",
+            "session_id": "sess-B",
+        }),
+        path=hist, settings_path=settings_per_turn,
+    )
+    assert r2["action"] == "adopted"
+    assert r2["fp"] != r1["fp"]
+
+
+def test_hook_dispatch_augment_session_start_without_id_still_skips(
+    hist: Path, settings_per_turn: Path,
+):
+    """Defensive: when neither prompt nor session_id is present, the
+    current skip-then-bootstrap behavior is preserved (no silent
+    initialization with a non-unique fum)."""
+    payload = json.dumps({"hook_event_name": "SessionStart"})
+    result = ch.hook_dispatch(
+        "augment", payload,
+        path=hist, settings_path=settings_per_turn,
+    )
+    assert result["action"] == "skipped_no_first_user_msg"
+    assert not hist.exists()
+
+
+# --- Phase 2 (schema v3) — hook write integration ---------------------------
+
+
+def test_hook_append_fresh_session_tags_entries_with_header_fp(
+    hist: Path, settings_enabled: Path,
+):
+    """All entries written in a single session carry the same s = header.fp[:16]."""
+    ch.hook_append("session_start", first_user_msg="alice",
+                   path=hist, settings_path=settings_enabled)
+    ch.hook_append("user_prompt", payload={"text": "hi"},
+                   path=hist, settings_path=settings_enabled)
+    ch.hook_append("user_prompt", payload={"text": "again"},
+                   path=hist, settings_path=settings_enabled)
+    expected = ch.fingerprint("alice")[:16]
+    entries = ch.read_entries(path=hist)
+    assert len(entries) == 2
+    assert all(e["s"] == expected for e in entries)
+
+
+def test_hook_append_foreign_adopt_tags_new_entries_with_new_fp(
+    hist: Path, settings_enabled: Path,
+):
+    """After auto-adopt: old entries keep their s; new entries carry new fp[:16]."""
+    ch.hook_append("session_start", first_user_msg="alice",
+                   path=hist, settings_path=settings_enabled)
+    ch.hook_append("user_prompt", payload={"text": "from-alice"},
+                   path=hist, settings_path=settings_enabled)
+    alice_s = ch.fingerprint("alice")[:16]
+
+    # Bob's session_start auto-adopts alice's file.
+    result = ch.hook_append("session_start", first_user_msg="bob",
+                            path=hist, settings_path=settings_enabled)
+    assert result["action"] == "adopted"
+    bob_s = ch.fingerprint("bob")[:16]
+
+    ch.hook_append("user_prompt", payload={"text": "from-bob"},
+                   path=hist, settings_path=settings_enabled)
+
+    entries = ch.read_entries(path=hist)
+    assert entries[0]["text"] == "from-alice"
+    assert entries[0]["s"] == alice_s
+    assert entries[1]["text"] == "from-bob"
+    assert entries[1]["s"] == bob_s
+
+    # Header rotation correctness: alice's fp lands in former_fps[].
+    header = ch.read_header(hist)
+    assert header["fp"] == ch.fingerprint("bob")
+    assert ch.fingerprint("alice") in header["former_fps"]
+
+
+def test_hook_append_returning_owner_tags_with_returning_fp(
+    hist: Path, settings_enabled: Path,
+):
+    """alice → bob → adopt(alice): returning entries carry alice's fp[:16].
+
+    Matches the documented semantics (test_append_with_first_user_msg_returning_raises):
+    `returning` state requires an explicit `adopt()` — only `foreign` is
+    auto-adopted via session_start. Once alice re-adopts, her hook-driven
+    appends carry her fp[:16] and bob's fp lands in former_fps.
+    """
+    ch.hook_append("session_start", first_user_msg="alice",
+                   path=hist, settings_path=settings_enabled)
+    ch.hook_append("session_start", first_user_msg="bob",
+                   path=hist, settings_path=settings_enabled)
+    # Alice returns — explicit adopt rotates header back; sidecar follows.
+    ch.adopt("alice", path=hist)
+    ch.write_sidecar("alice", path=hist)
+    ch.hook_append("user_prompt", payload={"text": "alice-back"},
+                   path=hist, settings_path=settings_enabled)
+
+    alice_s = ch.fingerprint("alice")[:16]
+    last = ch.read_entries(path=hist)[-1]
+    assert last["text"] == "alice-back"
+    assert last["s"] == alice_s
+
+    header = ch.read_header(hist)
+    assert header["fp"] == ch.fingerprint("alice")
+    assert ch.fingerprint("bob") in header["former_fps"]
+
+
+def test_hook_append_sidecar_deleted_falls_back_to_header_fp(
+    hist: Path, settings_enabled: Path,
+):
+    """Sidecar deleted mid-run → _current_session_id() falls back to header.fp[:16].
+
+    Hook needs first_user_msg supplied directly (sidecar was the cache);
+    once provided, append() still tags via header.fp — no <unknown> regression.
+    """
+    ch.hook_append("session_start", first_user_msg="alice",
+                   path=hist, settings_path=settings_enabled)
+    ch.hook_append("user_prompt", payload={"text": "before"},
+                   path=hist, settings_path=settings_enabled)
+    ch.sidecar_path(hist).unlink()
+
+    # Without sidecar, hook needs first_user_msg passed in directly.
+    result = ch.hook_append("user_prompt",
+                            first_user_msg="alice",
+                            payload={"text": "after"},
+                            path=hist, settings_path=settings_enabled)
+    assert result["action"] == "appended"
+
+    expected = ch.fingerprint("alice")[:16]
+    entries = ch.read_entries(path=hist)
+    assert all(e["s"] == expected for e in entries)
+
+
+def test_hook_append_both_deleted_returns_skipped_no_sidecar(
+    hist: Path, settings_enabled: Path,
+):
+    """Both header and sidecar gone → hook surfaces skipped_no_sidecar, no crash.
+
+    The append-time <unknown> stamping is reserved for direct append() calls
+    against malformed files (covered by test_append_unknown_session_when_no_header
+    in Phase 1); the hook flow has its own short-circuit before reaching append().
+    """
+    ch.hook_append("session_start", first_user_msg="alice",
+                   path=hist, settings_path=settings_enabled)
+    ch.sidecar_path(hist).unlink()
+    hist.unlink()
+
+    result = ch.hook_append("user_prompt", payload={"text": "after"},
+                            path=hist, settings_path=settings_enabled)
+    assert result["action"] == "skipped_no_sidecar"
+
+
+
+# --- Phase 3 (schema v3) — read path filtering -----------------------------
+
+
+def test_read_entries_session_none_returns_everything(hist: Path):
+    ch.init("alice", path=hist)
+    ch.append({"t": "user", "text": "a"}, path=hist)
+    ch.append({"t": "user", "text": "b", "s": "<legacy>"}, path=hist)
+    ch.append({"t": "user", "text": "c", "s": "<unknown>"}, path=hist)
+    out = ch.read_entries(path=hist, session=None)
+    assert [e["text"] for e in out] == ["a", "b", "c"]
+
+
+def test_read_entries_session_filters_exact_match(hist: Path):
+    ch.init("alice", path=hist)
+    ch.append({"t": "user", "text": "a"}, path=hist)
+    ch.append({"t": "user", "text": "legacy", "s": "<legacy>"}, path=hist)
+    ch.append({"t": "user", "text": "unknown", "s": "<unknown>"}, path=hist)
+    alice_s = ch.fingerprint("alice")[:16]
+    assert [e["text"] for e in ch.read_entries(path=hist, session=alice_s)] == ["a"]
+    assert [e["text"] for e in ch.read_entries(path=hist, session="<legacy>")] == ["legacy"]
+    assert [e["text"] for e in ch.read_entries(path=hist, session="<unknown>")] == ["unknown"]
+
+
+def test_read_entries_session_filter_then_last_slice(hist: Path):
+    ch.init("alice", path=hist)
+    for i in range(5):
+        ch.append({"t": "user", "text": f"a{i}"}, path=hist)
+    ch.append({"t": "user", "text": "legacy-x", "s": "<legacy>"}, path=hist)
+    alice_s = ch.fingerprint("alice")[:16]
+    out = ch.read_entries(path=hist, last=2, session=alice_s)
+    assert [e["text"] for e in out] == ["a3", "a4"]
+
+
+def test_read_entries_for_current_uses_header_fp(hist: Path):
+    ch.init("alice", path=hist)
+    ch.append({"t": "user", "text": "mine"}, path=hist)
+    ch.append({"t": "user", "text": "legacy", "s": "<legacy>"}, path=hist)
+    out = ch.read_entries_for_current(path=hist)
+    assert [e["text"] for e in out] == ["mine"]
+
+
+def test_read_entries_for_current_kill_switch_returns_everything(
+    hist: Path, monkeypatch,
+):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_SESSION_FILTER", "false")
+    ch.init("alice", path=hist)
+    ch.append({"t": "user", "text": "mine"}, path=hist)
+    ch.append({"t": "user", "text": "legacy", "s": "<legacy>"}, path=hist)
+    out = ch.read_entries_for_current(path=hist)
+    assert [e["text"] for e in out] == ["mine", "legacy"]
+
+
+def test_read_entries_for_current_sidecar_missing_falls_back_to_header(
+    hist: Path,
+):
+    ch.init("alice", path=hist)
+    ch.append({"t": "user", "text": "mine"}, path=hist)
+    ch.append({"t": "user", "text": "legacy", "s": "<legacy>"}, path=hist)
+    # No sidecar was written by init() — current_session_id must derive from header.
+    assert ch.read_sidecar(hist) is None
+    out = ch.read_entries_for_current(path=hist)
+    assert [e["text"] for e in out] == ["mine"]
+
+
+def test_read_entries_for_current_both_missing_returns_unknown_only(
+    hist: Path,
+):
+    # File exists but malformed → no header → _current_session_id() = <unknown>.
+    hist.write_text(
+        '{"t":"user","text":"orphan","s":"<unknown>"}\n'
+        '{"t":"user","text":"alice","s":"abcdef0123456789"}\n',
+        encoding="utf-8",
+    )
+    out = ch.read_entries_for_current(path=hist)
+    assert [e["text"] for e in out] == ["orphan"]
+
+
+def test_cli_read_default_filters_to_current_session(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    target = tmp_path / "read.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "alice"])
+    ch.main(["append", "--type", "user", "--json", '{"text":"mine"}'])
+    # Inject a foreign-session entry directly.
+    with target.open("a", encoding="utf-8") as fh:
+        fh.write('{"t":"user","text":"foreign","s":"deadbeefdeadbeef"}\n')
+    capsys.readouterr()
+    ch.main(["read", "--last", "10"])  # default → current session only
+    out = json.loads(capsys.readouterr().out)
+    assert [e["text"] for e in out] == ["mine"]
+
+
+def test_cli_read_all_returns_every_session(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    target = tmp_path / "read.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "alice"])
+    ch.main(["append", "--type", "user", "--json", '{"text":"mine"}'])
+    with target.open("a", encoding="utf-8") as fh:
+        fh.write('{"t":"user","text":"foreign","s":"deadbeefdeadbeef"}\n')
+    capsys.readouterr()
+    ch.main(["read", "--all"])
+    out = json.loads(capsys.readouterr().out)
+    assert [e["text"] for e in out] == ["mine", "foreign"]
+
+
+def test_cli_read_explicit_session_filter(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    target = tmp_path / "read.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "alice"])
+    ch.main(["append", "--type", "user", "--json", '{"text":"mine"}'])
+    with target.open("a", encoding="utf-8") as fh:
+        fh.write('{"t":"user","text":"legacy"}\n')
+        fh.write('{"t":"user","text":"orphan","s":"<unknown>"}\n')
+    capsys.readouterr()
+    ch.main(["read", "--last", "10", "--session", "<unknown>"])
+    out = json.loads(capsys.readouterr().out)
+    assert [e["text"] for e in out] == ["orphan"]
+
+
+def test_cli_read_kill_switch_overrides_default_filter(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_SESSION_FILTER", "false")
+    target = tmp_path / "read.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "alice"])
+    ch.main(["append", "--type", "user", "--json", '{"text":"mine"}'])
+    with target.open("a", encoding="utf-8") as fh:
+        fh.write('{"t":"user","text":"foreign","s":"deadbeefdeadbeef"}\n')
+    capsys.readouterr()
+    ch.main(["read", "--last", "10"])  # default but kill-switch active
+    out = json.loads(capsys.readouterr().out)
+    assert [e["text"] for e in out] == ["mine", "foreign"]
+
+
+def test_read_entries_for_current_10k_under_100ms(hist: Path):
+    """Council R9 — flagged but acceptable: 10k entries < 100 ms with filter."""
+    import time
+
+    ch.init("alice", path=hist)
+    alice_s = ch.fingerprint("alice")[:16]
+    with hist.open("a", encoding="utf-8") as fh:
+        for i in range(10_000):
+            fh.write(json.dumps({
+                "t": "user", "text": f"m{i}",
+                "s": alice_s if i % 2 == 0 else "deadbeefdeadbeef",
+            }) + "\n")
+    start = time.perf_counter()
+    out = ch.read_entries_for_current(path=hist)
+    elapsed_ms = (time.perf_counter() - start) * 1000
+    assert len(out) == 5_000
+    assert elapsed_ms < 100, f"filter took {elapsed_ms:.1f} ms (>=100)"
+
+
+
+# --- Phase 4 (schema v3) — session listing ---------------------------------
+
+
+def test_list_sessions_empty_file_returns_empty(hist: Path):
+    assert ch.list_sessions(path=hist) == []
+
+
+def test_list_sessions_single_session_one_bucket(hist: Path):
+    ch.init("alice", path=hist)
+    ch.append({"t": "user", "text": "hello"}, path=hist)
+    ch.append({"t": "phase", "name": "design"}, path=hist)
+    out = ch.list_sessions(path=hist)
+    alice_s = ch.fingerprint("alice")[:16]
+    assert len(out) == 1
+    assert out[0]["id"] == alice_s
+    assert out[0]["count"] == 2
+    assert out[0]["preview"] == "hello"
+    assert out[0]["first_ts"] is not None
+    assert out[0]["last_ts"] is not None
+
+
+def test_list_sessions_two_sessions_after_adopt(hist: Path):
+    ch.init("alice", path=hist)
+    ch.append({"t": "user", "text": "alice msg"}, path=hist)
+    ch.adopt("bob", path=hist)
+    ch.append({"t": "user", "text": "bob msg"}, path=hist)
+    out = ch.list_sessions(path=hist)
+    alice_s = ch.fingerprint("alice")[:16]
+    bob_s = ch.fingerprint("bob")[:16]
+    ids = {b["id"] for b in out}
+    assert alice_s in ids
+    assert bob_s in ids
+
+
+def test_list_sessions_legacy_bucket_for_untagged_entries(hist: Path):
+    ch.init("alice", path=hist)
+    ch.append({"t": "user", "text": "tagged"}, path=hist)
+    # Inject untagged legacy entry directly.
+    with hist.open("a", encoding="utf-8") as fh:
+        fh.write('{"t":"user","text":"old","ts":"2025-01-01T00:00:00+00:00"}\n')
+    out = ch.list_sessions(path=hist)
+    ids = {b["id"]: b for b in out}
+    assert ch.SESSION_ID_LEGACY in ids
+    assert ids[ch.SESSION_ID_LEGACY]["count"] == 1
+    assert ids[ch.SESSION_ID_LEGACY]["preview"] == "old"
+
+
+def test_list_sessions_unknown_bucket(hist: Path):
+    ch.init("alice", path=hist)
+    with hist.open("a", encoding="utf-8") as fh:
+        fh.write('{"t":"user","text":"orphan","s":"<unknown>",'
+                 '"ts":"2025-01-01T00:00:00+00:00"}\n')
+    out = ch.list_sessions(path=hist)
+    ids = {b["id"]: b for b in out}
+    assert ch.SESSION_ID_UNKNOWN in ids
+    assert ids[ch.SESSION_ID_UNKNOWN]["count"] == 1
+
+
+def test_list_sessions_former_fps_empty_bucket_when_no_body(hist: Path):
+    """Council R2-4: header.former_fps[] surfaces even without body entries."""
+    ch.init("alice", path=hist)
+    ch.adopt("bob", path=hist)
+    # No appends after adopt → alice has no body entries; only header tracks her.
+    out = ch.list_sessions(path=hist)
+    alice_s = ch.fingerprint("alice")[:16]
+    bob_s = ch.fingerprint("bob")[:16]
+    by_id = {b["id"]: b for b in out}
+    assert alice_s in by_id
+    assert by_id[alice_s]["count"] == 0  # empty bucket from former_fps[]
+    assert bob_s in by_id
+
+
+def test_list_sessions_sort_by_last_ts_desc(hist: Path):
+    ch.init("alice", path=hist)
+    with hist.open("a", encoding="utf-8") as fh:
+        fh.write('{"t":"user","text":"old","s":"aaaaaaaaaaaaaaaa",'
+                 '"ts":"2024-01-01T00:00:00+00:00"}\n')
+        fh.write('{"t":"user","text":"new","s":"bbbbbbbbbbbbbbbb",'
+                 '"ts":"2026-01-01T00:00:00+00:00"}\n')
+    out = ch.list_sessions(path=hist)
+    non_empty = [b for b in out if b["count"] > 0]
+    # newest first
+    assert non_empty[0]["id"] == "bbbbbbbbbbbbbbbb"
+    # alice header bucket may have count=0 (empty) and goes after non-empty ones
+    empty = [b for b in out if b["count"] == 0]
+    if empty:
+        assert empty[0]["id"] == ch.fingerprint("alice")[:16]
+
+
+def test_list_sessions_10k_under_200ms(hist: Path):
+    """Council R2-3: O(n) over body entries — same trade-off as read_entries."""
+    import time
+
+    ch.init("alice", path=hist)
+    alice_s = ch.fingerprint("alice")[:16]
+    with hist.open("a", encoding="utf-8") as fh:
+        for i in range(10_000):
+            fh.write(json.dumps({
+                "t": "user", "text": f"m{i}",
+                "s": alice_s if i % 2 == 0 else "deadbeefdeadbeef",
+                "ts": f"2026-01-{(i % 28) + 1:02d}T00:00:00+00:00",
+            }) + "\n")
+    start = time.perf_counter()
+    out = ch.list_sessions(path=hist)
+    elapsed_ms = (time.perf_counter() - start) * 1000
+    counts = {b["id"]: b["count"] for b in out}
+    assert counts.get(alice_s) == 5_000
+    assert counts.get("deadbeefdeadbeef") == 5_000
+    assert elapsed_ms < 200, f"list took {elapsed_ms:.1f} ms (>=200)"
+
+
+def test_cli_sessions_default_excludes_empty(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    target = tmp_path / "h.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "alice"])
+    ch.main(["adopt", "--first-user-msg", "bob"])  # creates empty alice bucket
+    ch.main(["append", "--type", "user", "--json", '{"text":"bob says hi"}'])
+    capsys.readouterr()
+    ch.main(["sessions", "--json"])
+    out = json.loads(capsys.readouterr().out)
+    bob_s = ch.fingerprint("bob")[:16]
+    assert all(b["count"] > 0 for b in out)
+    assert any(b["id"] == bob_s for b in out)
+
+
+def test_cli_sessions_include_empty_shows_former_fps(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    target = tmp_path / "h.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "alice"])
+    ch.main(["adopt", "--first-user-msg", "bob"])
+    capsys.readouterr()
+    ch.main(["sessions", "--include-empty", "--json"])
+    out = json.loads(capsys.readouterr().out)
+    alice_s = ch.fingerprint("alice")[:16]
+    assert any(b["id"] == alice_s and b["count"] == 0 for b in out)
+
+
+def test_cli_sessions_limit_truncates(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    target = tmp_path / "h.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "alice"])
+    # Inject 5 distinct sessions in body.
+    with target.open("a", encoding="utf-8") as fh:
+        for i in range(5):
+            fh.write(json.dumps({
+                "t": "user", "text": f"m{i}",
+                "s": f"sess{i:012d}",
+                "ts": f"2026-01-{i + 1:02d}T00:00:00+00:00",
+            }) + "\n")
+    capsys.readouterr()
+    ch.main(["sessions", "--limit", "2", "--json"])
+    out = json.loads(capsys.readouterr().out)
+    assert len(out) == 2
+    # newest first
+    assert out[0]["id"] == "sess000000000004"
+    assert out[1]["id"] == "sess000000000003"
+
+
+def test_cli_sessions_table_renders_header(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    target = tmp_path / "h.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    ch.main(["init", "--first-user-msg", "alice"])
+    ch.main(["append", "--type", "user", "--json", '{"text":"hi"}'])
+    capsys.readouterr()
+    ch.main(["sessions"])
+    out = capsys.readouterr().out
+    assert "ID" in out
+    assert "COUNT" in out
+    assert "PREVIEW" in out
+    assert "hi" in out
+
+
+def test_cli_sessions_empty_file_prints_no_sessions(
+    tmp_path: Path, monkeypatch, capsys,
+):
+    target = tmp_path / "h.jsonl"
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(target))
+    capsys.readouterr()
+    ch.main(["sessions"])
+    out = capsys.readouterr().out
+    assert "(no sessions)" in out

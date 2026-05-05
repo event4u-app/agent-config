@@ -21,7 +21,8 @@ Usage:
     python3 scripts/chat_history.py adopt --first-user-msg "..."
     python3 scripts/chat_history.py reset --first-user-msg "..." --entries-json '[...]' [--freq per_phase]
     python3 scripts/chat_history.py prepend --entries-json '[...]'
-    python3 scripts/chat_history.py read [--last N | --all]
+    python3 scripts/chat_history.py read [--last N | --all] [--session <id>]
+    python3 scripts/chat_history.py sessions [--limit N] [--include-empty] [--json]
     python3 scripts/chat_history.py clear
     python3 scripts/chat_history.py rotate --max-kb 256 --mode rotate
 """
@@ -41,11 +42,14 @@ from typing import Any
 
 DEFAULT_FILE = ".agent-chat-history"
 DEFAULT_SETTINGS_FILE = ".agent-settings.yml"
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 FORMER_FPS_CAP = 10
 VALID_FREQS = {"per_turn", "per_phase", "per_tool"}
 VALID_OVERFLOW = {"rotate", "compress"}
 _WS_RE = re.compile(r"\s+")
+SESSION_ID_LEN = 16
+SESSION_ID_UNKNOWN = "<unknown>"
+SESSION_ID_LEGACY = "<legacy>"
 
 # Exit codes for the CLI. Distinct codes let shell callers branch on state.
 EXIT_OK = 0
@@ -83,6 +87,41 @@ def fingerprint(first_user_msg: str) -> str:
 def _preview(msg: str, n: int = 80) -> str:
     flat = _WS_RE.sub(" ", msg or "").strip()
     return flat[:n]
+
+
+def _session_tag_enabled() -> bool:
+    """True iff `append()` should auto-fill the `s` field when missing.
+
+    Default is on (v3 contract). Kill-switch via
+    `AGENT_CHAT_HISTORY_SESSION_TAG=false` reverts to v2 entry shape
+    so a bad rollout can be reverted without code change.
+    """
+    return os.environ.get(
+        "AGENT_CHAT_HISTORY_SESSION_TAG", "true"
+    ).strip().lower() != "false"
+
+
+def _current_session_id(path: Path | None = None) -> str:
+    """Return the active session id for the chat-history at `path`.
+
+    Reads `header.fp[:16]` first; falls back to `sidecar.fp[:16]` when
+    the header is missing or unreadable (header and sidecar are written
+    together in `hook_append`'s `session_start` branch, so both carry
+    the same fp; the sidecar acts as a redundant cache for stateless
+    hook calls). Both missing → `"<unknown>"`.
+
+    The 16-hex-char prefix of the SHA-256 fingerprint is the
+    per-session marker stamped onto every body entry as `s` from
+    schema v3 on.
+    """
+    header = read_header(path)
+    fp = (header or {}).get("fp") if isinstance(header, dict) else None
+    if not isinstance(fp, str) or not fp:
+        side = read_sidecar(path)
+        fp = (side or {}).get("fp") if isinstance(side, dict) else None
+    if not isinstance(fp, str) or not fp:
+        return SESSION_ID_UNKNOWN
+    return fp[:SESSION_ID_LEN]
 
 
 def read_header(path: Path | None = None) -> dict[str, Any] | None:
@@ -138,7 +177,8 @@ def init(first_user_msg: str, freq: str = "per_phase", *,
 
 
 def append(entry: dict[str, Any], *, path: Path | None = None,
-           first_user_msg: str | None = None) -> None:
+           first_user_msg: str | None = None,
+           session: str | None = None) -> None:
     """Append one entry. Entry must be a dict; `ts` is auto-filled.
 
     When `first_user_msg` is provided, the call validates ownership
@@ -147,6 +187,13 @@ def append(entry: dict[str, Any], *, path: Path | None = None,
     is the second line of defense against silent writes to a foreign
     session's file. Existing callers without `first_user_msg` keep the
     legacy unguarded behavior for back-compat.
+
+    Schema v3 (default) auto-stamps the entry with `s` (session id =
+    `header.fp[:16]`) so reads can filter to the current session.
+    Resolution order: caller-supplied `session=` wins; pre-filled
+    `entry['s']` is preserved; otherwise `_current_session_id(path)`
+    is used. Kill-switch `AGENT_CHAT_HISTORY_SESSION_TAG=false` skips
+    auto-fill for downgrade-friendly rollouts.
     """
     if not isinstance(entry, dict) or not entry.get("t"):
         raise ValueError("entry must be a dict with non-empty 't' key")
@@ -163,6 +210,10 @@ def append(entry: dict[str, Any], *, path: Path | None = None,
                 current_fp=fingerprint(first_user_msg),
             )
     entry.setdefault("ts", _now())
+    if session is not None:
+        entry["s"] = session
+    elif "s" not in entry and _session_tag_enabled():
+        entry["s"] = _current_session_id(p)
     with p.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
@@ -340,10 +391,15 @@ def clear(*, path: Path | None = None) -> None:
 
 
 def read_entries(last: int | None = None, *,
-                 path: Path | None = None) -> list[dict[str, Any]]:
+                 path: Path | None = None,
+                 session: str | None = None) -> list[dict[str, Any]]:
     """Return entries (excluding the header) as a list of dicts.
 
     `last=None` returns all entries; `last=N` returns the trailing N.
+    `session=None` keeps legacy "return everything" behaviour; an explicit
+    string filters by exact match on each entry's `s` field. The `last`
+    slice is applied **after** the session filter so callers always get
+    the trailing N within the selected session.
     Malformed lines are skipped silently.
     """
     p = path or file_path()
@@ -363,9 +419,123 @@ def read_entries(last: int | None = None, *,
                 continue
             if isinstance(obj, dict):
                 entries.append(obj)
+    if session is not None:
+        entries = [e for e in entries if e.get("s") == session]
     if last is not None and last >= 0:
         entries = entries[-last:]
     return entries
+
+
+def read_entries_for_current(path: Path | None = None,
+                             last: int | None = None) -> list[dict[str, Any]]:
+    """Return entries scoped to the current session by default.
+
+    Resolves the session via `_current_session_id(path)`; entries whose
+    `s` matches that session are returned. The kill-switch
+    `AGENT_CHAT_HISTORY_SESSION_FILTER=false` short-circuits to
+    `read_entries(session=None)` so the v2 "return everything" behaviour
+    can be restored at runtime without redeploying.
+    """
+    p = path or file_path()
+    kill = os.environ.get(
+        "AGENT_CHAT_HISTORY_SESSION_FILTER", "true",
+    ).strip().lower()
+    if kill == "false":
+        return read_entries(last=last, path=p, session=None)
+    return read_entries(last=last, path=p, session=_current_session_id(p))
+
+
+def list_sessions(path: Path | None = None) -> list[dict[str, Any]]:
+    """Return one bucket per distinct session id observed in the file.
+
+    Each bucket carries `id`, `count`, `first_ts`, `last_ts`, `preview`.
+    Preview = the first `t == "user"` entry's `text` in the session,
+    truncated to 80 chars; falls back to the first entry of any type
+    when no user-typed entry exists.
+
+    Buckets are also created for `header.fp[:16]` and every fp in
+    `header.former_fps[]` even when the body has no entries tagged for
+    them, so historical sessions whose entries were never written
+    (e.g. session_start with no follow-up) still surface (Council R2-4).
+    Empty buckets carry `count == 0` and no `first_ts` / `last_ts` /
+    `preview`.
+
+    `<legacy>` and `<unknown>` appear as their own buckets when present
+    in the body. Order is by `last_ts` descending; empty buckets sort
+    after non-empty ones.
+    """
+    p = path or file_path()
+    buckets: dict[str, dict[str, Any]] = {}
+
+    def _bucket(sid: str) -> dict[str, Any]:
+        b = buckets.get(sid)
+        if b is None:
+            b = {"id": sid, "count": 0, "first_ts": None,
+                 "last_ts": None, "preview": ""}
+            buckets[sid] = b
+        return b
+
+    header = read_header(p)
+    if isinstance(header, dict):
+        fp = header.get("fp")
+        if isinstance(fp, str) and fp:
+            _bucket(fp[:SESSION_ID_LEN])
+        for old_fp in header.get("former_fps") or []:
+            if isinstance(old_fp, str) and old_fp:
+                _bucket(old_fp[:SESSION_ID_LEN])
+
+    if p.is_file():
+        with p.open(encoding="utf-8") as fh:
+            for i, line in enumerate(fh):
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if not isinstance(obj, dict):
+                    continue
+                if i == 0 and obj.get("t") == "header":
+                    continue
+                sid = obj.get("s")
+                if not isinstance(sid, str) or not sid:
+                    sid = SESSION_ID_LEGACY
+                b = _bucket(sid)
+                b["count"] += 1
+                ts = obj.get("ts")
+                if isinstance(ts, str) and ts:
+                    if b["first_ts"] is None or ts < b["first_ts"]:
+                        b["first_ts"] = ts
+                    if b["last_ts"] is None or ts > b["last_ts"]:
+                        b["last_ts"] = ts
+                if not b["preview"] or b.get("_preview_from") != "user":
+                    if obj.get("t") == "user":
+                        text = obj.get("text") or obj.get("payload", {}).get("text", "")
+                        if isinstance(text, str) and text:
+                            b["preview"] = _preview(text)
+                            b["_preview_from"] = "user"
+                    elif not b["preview"]:
+                        text = obj.get("text") or ""
+                        if isinstance(text, str) and text:
+                            b["preview"] = _preview(text)
+                            b["_preview_from"] = "any"
+
+    out: list[dict[str, Any]] = []
+    for b in buckets.values():
+        b.pop("_preview_from", None)
+        out.append(b)
+    out.sort(key=lambda x: (
+        0 if x["count"] > 0 else 1,
+        -(0 if x["last_ts"] is None else 1),
+        x["last_ts"] or "",
+    ), reverse=True)
+    # Re-sort: non-empty first by last_ts desc, then empty buckets last.
+    non_empty = [b for b in out if b["count"] > 0]
+    empty = [b for b in out if b["count"] == 0]
+    non_empty.sort(key=lambda x: x["last_ts"] or "", reverse=True)
+    empty.sort(key=lambda x: x["id"])
+    return non_empty + empty
 
 
 def status(*, path: Path | None = None) -> dict[str, Any]:
@@ -692,7 +862,8 @@ def hook_append(event: str, *,
         if payload.get(k):
             entry[k] = str(payload[k])
     try:
-        append(entry, path=p, first_user_msg=fum)
+        append(entry, path=p, first_user_msg=fum,
+               session=_current_session_id(p))
     except OwnershipError as exc:
         return {"action": "ownership_refused", "event": event,
                 "state": exc.state,
@@ -736,6 +907,21 @@ def _extract_hook_tool(payload: dict[str, Any]) -> str:
 def _extract_hook_event(payload: dict[str, Any]) -> str:
     """Pull the platform's native hook event name out of the payload."""
     for key in ("hook_event_name", "event", "eventName", "event_name"):
+        v = payload.get(key)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    return ""
+
+
+def _extract_session_id(payload: dict[str, Any]) -> str:
+    """Pull a stable session identifier out of a platform's hook payload.
+
+    Used by hook_dispatch as a fallback first-user-msg source on
+    platforms whose SessionStart payload does not include the user
+    prompt (notably Augment Code).
+    """
+    for key in ("session_id", "sessionId", "task_id", "taskId",
+                "conversation_id", "conversationId"):
         v = payload.get(key)
         if isinstance(v, str) and v.strip():
             return v.strip()
@@ -795,6 +981,14 @@ def hook_dispatch(platform: str, raw_json: str, *,
 
     text = _extract_hook_text(payload)
     tool = _extract_hook_tool(payload)
+    # Some platforms (Augment Code) fire SessionStart without the user
+    # prompt and offer no UserPromptSubmit equivalent. Synthesize a
+    # stable pseudo-prompt from session_id so the sidecar gets written
+    # and Stop / PostToolUse hooks can append per-turn entries.
+    if event == "session_start" and not text:
+        sid = _extract_session_id(payload)
+        if sid:
+            text = f"<session:{platform}:{sid}>"
     # The user's first message is what we hash for ownership. We can only
     # extract it from prompt-bearing events; for stop / tool_use / *_end
     # the sidecar must already exist.
@@ -951,8 +1145,41 @@ def _cmd_clear(_args) -> int:
 
 def _cmd_read(args) -> int:
     last = None if args.all else args.last
-    entries = read_entries(last=last)
+    if args.all:
+        entries = read_entries(last=last, session=None)
+    elif args.session is not None:
+        entries = read_entries(last=last, session=args.session)
+    else:
+        entries = read_entries_for_current(last=last)
     print(json.dumps(entries, ensure_ascii=False, indent=2))
+    return 0
+
+
+def _cmd_sessions(args) -> int:
+    sessions = list_sessions()
+    if not args.include_empty:
+        sessions = [s for s in sessions if s["count"] > 0]
+    sessions = sessions[: args.limit]
+    if args.json:
+        print(json.dumps(sessions, ensure_ascii=False, indent=2))
+        return 0
+    if not sessions:
+        print("(no sessions)")
+        return 0
+    rows = [("ID", "COUNT", "LAST_TS", "PREVIEW")]
+    for s in sessions:
+        rows.append((
+            s["id"],
+            str(s["count"]),
+            s["last_ts"] or "-",
+            s["preview"] or "-",
+        ))
+    widths = [max(len(r[i]) for r in rows) for i in range(4)]
+    for i, r in enumerate(rows):
+        line = "  ".join(r[j].ljust(widths[j]) for j in range(4))
+        print(line)
+        if i == 0:
+            print("  ".join("-" * widths[j] for j in range(4)))
     return 0
 
 
@@ -1009,8 +1236,21 @@ def main(argv: list[str] | None = None) -> int:
     grp.add_argument("--last", type=int, default=5,
                      help="return the trailing N entries (default: 5)")
     grp.add_argument("--all", action="store_true",
-                     help="return all entries")
+                     help="return all entries (across all sessions)")
+    p_read.add_argument(
+        "--session", default=None,
+        help=("filter to entries with this session id (e.g. fp[:16], "
+              "'<legacy>', '<unknown>'); defaults to the current session"),
+    )
     p_read.set_defaults(func=_cmd_read)
+    p_sess = sub.add_parser("sessions")
+    p_sess.add_argument("--limit", type=int, default=20,
+                        help="max non-empty sessions to print (default: 20)")
+    p_sess.add_argument("--include-empty", action="store_true",
+                        help="include former_fps[] sessions with no body entries")
+    p_sess.add_argument("--json", action="store_true",
+                        help="emit JSON instead of a human-readable table")
+    p_sess.set_defaults(func=_cmd_sessions)
     p_rot = sub.add_parser("rotate")
     p_rot.add_argument("--max-kb", type=int, default=256)
     p_rot.add_argument("--mode", default="rotate", choices=sorted(VALID_OVERFLOW))
