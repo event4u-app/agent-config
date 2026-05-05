@@ -178,6 +178,7 @@ def init(first_user_msg: str, freq: str = "per_phase", *,
 
 def append(entry: dict[str, Any], *, path: Path | None = None,
            first_user_msg: str | None = None,
+           expected_fp: str | None = None,
            session: str | None = None) -> None:
     """Append one entry. Entry must be a dict; `ts` is auto-filled.
 
@@ -187,6 +188,14 @@ def append(entry: dict[str, Any], *, path: Path | None = None,
     is the second line of defense against silent writes to a foreign
     session's file. Existing callers without `first_user_msg` keep the
     legacy unguarded behavior for back-compat.
+
+    `expected_fp` is the fp-only equivalent of `first_user_msg`: same
+    ownership guard, but the caller passes the SHA-256 hex directly
+    (e.g. read from the sidecar's `fp` field) instead of the raw
+    prompt. At most one of `first_user_msg` / `expected_fp` may be
+    set; passing both raises `ValueError`. Used by `hook_append` so
+    stateless hook calls don't have to re-derive the fingerprint from
+    a cached prompt on every event.
 
     Schema v3 (default) auto-stamps the entry with `s` (session id =
     `header.fp[:16]`) so reads can filter to the current session.
@@ -199,6 +208,10 @@ def append(entry: dict[str, Any], *, path: Path | None = None,
         raise ValueError("entry must be a dict with non-empty 't' key")
     if entry["t"] == "header":
         raise ValueError("use init() to write the header, not append()")
+    if first_user_msg is not None and expected_fp is not None:
+        raise ValueError(
+            "pass at most one of first_user_msg / expected_fp, not both",
+        )
     p = path or file_path()
     if first_user_msg is not None:
         state = ownership_state(first_user_msg, path=p)
@@ -209,6 +222,15 @@ def append(entry: dict[str, Any], *, path: Path | None = None,
                 header_fp=str(header.get("fp", "")),
                 current_fp=fingerprint(first_user_msg),
             )
+    elif expected_fp is not None:
+        state = ownership_state_for_fp(expected_fp, path=p)
+        if state != "match":
+            header = read_header(p) or {}
+            raise OwnershipError(
+                state,
+                header_fp=str(header.get("fp", "")),
+                current_fp=expected_fp,
+            )
     entry.setdefault("ts", _now())
     if session is not None:
         entry["s"] = session
@@ -218,25 +240,38 @@ def append(entry: dict[str, Any], *, path: Path | None = None,
         fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
-def ownership_state(first_user_msg: str, *,
-                    path: Path | None = None) -> str:
-    """Return 'match', 'returning', 'foreign', or 'missing'.
+def ownership_state_for_fp(fp: str, *,
+                           path: Path | None = None) -> str:
+    """fp-only variant of `ownership_state` — same return contract.
 
-    `match`     — current fp equals header.fp (silent append)
-    `returning` — current fp appears in header.former_fps (this chat once
+    `match`     — fp equals header.fp (silent append)
+    `returning` — fp appears in header.former_fps (this chat once
                   owned the file; another session took it over since)
-    `foreign`   — current fp is neither match nor former (new chat finds
+    `foreign`   — fp is neither match nor former (new chat finds
                   an existing file from an unknown session)
     `missing`   — no file or no valid header
+
+    Used by hook callers that have the cached fingerprint (from the
+    sidecar) but no longer hold the raw first user message.
     """
     header = read_header(path)
     if not header:
         return "missing"
-    fp = fingerprint(first_user_msg)
     if header.get("fp") == fp:
         return "match"
     former = header.get("former_fps") or []
     return "returning" if fp in former else "foreign"
+
+
+def ownership_state(first_user_msg: str, *,
+                    path: Path | None = None) -> str:
+    """Return 'match', 'returning', 'foreign', or 'missing'.
+
+    Thin wrapper over `ownership_state_for_fp` — fingerprints the
+    prompt and delegates. Kept for back-compat with callers that
+    still pass the raw first user message (CLI, tests, fixtures).
+    """
+    return ownership_state_for_fp(fingerprint(first_user_msg), path=path)
 
 
 def _push_former_fp(former_fps: list[str], old_fp: str,
@@ -683,16 +718,24 @@ def _read_chat_history_frequency(settings_path: Path) -> str:
 def sidecar_path(path: Path | None = None) -> Path:
     """Return the path to the session sidecar (.agent-chat-history.session).
 
-    Sidecar carries the first-user-msg for the active session so hook
-    invocations after `session_start` don't need the agent to pass it
-    on every call. Lives next to the JSONL file.
+    Sidecar carries the SHA-256 fingerprint of the active session's
+    first user message (`fp`) so stateless hook invocations after
+    `session_start` can validate ownership without re-deriving the
+    fingerprint or persisting the raw prompt. Lives next to the JSONL
+    file.
     """
     base = path or file_path()
     return base.with_name(base.name + ".session")
 
 
 def read_sidecar(path: Path | None = None) -> dict[str, Any] | None:
-    """Read and parse the sidecar; returns None on missing or malformed."""
+    """Read and parse the sidecar; returns None on missing or malformed.
+
+    Forward- and backward-compatible: a v3-shape sidecar `{fp, started_at}`
+    and a legacy v2-shape sidecar `{first_user_msg, fp, started_at}` are
+    both returned verbatim. Callers read `fp` directly (Phase 2);
+    `first_user_msg` is silently ignored when present.
+    """
     sp = sidecar_path(path)
     if not sp.is_file():
         return None
@@ -706,14 +749,28 @@ def read_sidecar(path: Path | None = None) -> dict[str, Any] | None:
 
 def write_sidecar(first_user_msg: str, *,
                   path: Path | None = None) -> dict[str, Any]:
-    """Write the session sidecar atomically. Overwrites on session_start."""
+    """Write the session sidecar atomically. Overwrites on session_start.
+
+    Default payload is the privacy-minimal `{fp, started_at}` (v3 shape):
+    the SHA-256 fingerprint is sufficient for every cross-call use case
+    (ownership guard, foreign detection, auto-adopt). The raw prompt is
+    not persisted on disk.
+
+    Kill-switch `AGENT_CHAT_HISTORY_SIDECAR_LEGACY=true` reverts to the
+    v2 payload `{first_user_msg, fp, started_at}` for downgrade-friendly
+    rollouts. Old code paths that still read `first_user_msg` keep
+    working under the kill-switch.
+    """
     sp = sidecar_path(path)
     sp.parent.mkdir(parents=True, exist_ok=True)
-    payload = {
-        "first_user_msg": first_user_msg,
+    payload: dict[str, Any] = {
         "fp": fingerprint(first_user_msg),
         "started_at": _now(),
     }
+    if os.environ.get(
+        "AGENT_CHAT_HISTORY_SIDECAR_LEGACY", "false",
+    ).strip().lower() == "true":
+        payload = {"first_user_msg": first_user_msg, **payload}
     _atomic_write_text(sp, json.dumps(payload, ensure_ascii=False))
     return payload
 
@@ -770,9 +827,11 @@ def hook_append(event: str, *,
 
     Designed for `SessionStart`, `UserPromptSubmit`, `PostToolUse`,
     `Stop`, `SessionEnd` style hooks across platforms. Stateless: every
-    invocation reads the sidecar for the active session's first-user-msg.
-    The very first call (`event == "session_start"`) writes the sidecar
-    and initializes the JSONL header if missing.
+    invocation reads `sidecar.fp` (the SHA-256 fingerprint of the
+    active session's first user message) to validate ownership without
+    re-deriving the fingerprint or persisting the raw prompt. The very
+    first call (`event == "session_start"`) writes the sidecar and
+    initializes the JSONL header if missing.
 
     Cadence-aware: events that don't match `chat_history.frequency`
     are silently skipped. `enabled: false` short-circuits to a noop.
@@ -836,8 +895,19 @@ def hook_append(event: str, *,
                 "fp": fingerprint(first_user_msg)}
 
     side = read_sidecar(p)
-    fum = first_user_msg or (side or {}).get("first_user_msg")
-    if not fum:
+    # Cross-call identity is the cached fingerprint, not the raw prompt.
+    # Caller-supplied first_user_msg (legacy CLI path) is fingerprinted
+    # on the fly; otherwise we read sidecar.fp directly. Falling back to
+    # sidecar.first_user_msg keeps legacy v2-shape sidecars readable
+    # until the next session_start rewrites them in v3 shape.
+    if first_user_msg:
+        sidecar_fp: str | None = fingerprint(first_user_msg)
+    else:
+        sidecar_fp = (side or {}).get("fp")
+        if not sidecar_fp:
+            legacy_fum = (side or {}).get("first_user_msg")
+            sidecar_fp = fingerprint(legacy_fum) if legacy_fum else None
+    if not sidecar_fp:
         return {"action": "skipped_no_sidecar", "event": event,
                 "hint": "session_start hook never ran or sidecar was deleted"}
 
@@ -862,7 +932,7 @@ def hook_append(event: str, *,
         if payload.get(k):
             entry[k] = str(payload[k])
     try:
-        append(entry, path=p, first_user_msg=fum,
+        append(entry, path=p, expected_fp=sidecar_fp,
                session=_current_session_id(p))
     except OwnershipError as exc:
         return {"action": "ownership_refused", "event": event,

@@ -508,6 +508,100 @@ def test_append_without_first_user_msg_unchanged(hist: Path):
     assert [e.get("name") for e in ch.read_entries(path=hist)] == ["legacy"]
 
 
+# --- sidecar-shrink Phase 1 — expected_fp= parity with first_user_msg --------
+
+
+def test_ownership_state_for_fp_match(hist: Path):
+    h = ch.init("hello", path=hist)
+    assert ch.ownership_state_for_fp(h["fp"], path=hist) == "match"
+
+
+def test_ownership_state_for_fp_missing(hist: Path):
+    assert ch.ownership_state_for_fp("deadbeef", path=hist) == "missing"
+
+
+def test_ownership_state_for_fp_foreign(hist: Path):
+    ch.init("owner", path=hist)
+    assert ch.ownership_state_for_fp(ch.fingerprint("intruder"),
+                                     path=hist) == "foreign"
+
+
+def test_ownership_state_for_fp_returning(hist: Path):
+    ch.init("A", path=hist)
+    ch.adopt("B", path=hist)
+    assert ch.ownership_state_for_fp(ch.fingerprint("A"),
+                                     path=hist) == "returning"
+
+
+def test_ownership_state_delegates_to_for_fp(hist: Path):
+    """`ownership_state(prompt)` and `ownership_state_for_fp(fingerprint(prompt))`
+    must agree across all four states."""
+    ch.init("orig", path=hist)
+    ch.adopt("new-owner", path=hist)
+    cases = ["new-owner", "orig", "stranger"]  # match / returning / foreign
+    for prompt in cases:
+        assert (
+            ch.ownership_state(prompt, path=hist)
+            == ch.ownership_state_for_fp(ch.fingerprint(prompt), path=hist)
+        )
+
+
+def test_append_with_expected_fp_match(hist: Path):
+    h = ch.init("orig", path=hist)
+    ch.append({"t": "phase", "name": "ok"}, path=hist, expected_fp=h["fp"])
+    assert [e.get("name") for e in ch.read_entries(path=hist)] == ["ok"]
+
+
+def test_append_with_expected_fp_foreign_raises(hist: Path):
+    ch.init("orig", path=hist)
+    intruder_fp = ch.fingerprint("intruder")
+    with pytest.raises(ch.OwnershipError) as excinfo:
+        ch.append({"t": "phase", "name": "nope"}, path=hist,
+                  expected_fp=intruder_fp)
+    assert excinfo.value.state == "foreign"
+    assert excinfo.value.header_fp == ch.fingerprint("orig")
+    assert excinfo.value.current_fp == intruder_fp
+    assert ch.read_entries(path=hist) == []
+
+
+def test_append_with_expected_fp_returning_raises(hist: Path):
+    ch.init("orig", path=hist)
+    ch.adopt("new-owner", path=hist)
+    with pytest.raises(ch.OwnershipError) as excinfo:
+        ch.append({"t": "phase", "name": "stale"}, path=hist,
+                  expected_fp=ch.fingerprint("orig"))
+    assert excinfo.value.state == "returning"
+    assert ch.read_entries(path=hist) == []
+
+
+def test_append_with_expected_fp_missing_raises(hist: Path):
+    with pytest.raises(ch.OwnershipError) as excinfo:
+        ch.append({"t": "phase", "name": "x"}, path=hist,
+                  expected_fp="0" * 64)
+    assert excinfo.value.state == "missing"
+
+
+def test_append_parity_first_user_msg_vs_expected_fp(hist: Path):
+    """Same accept/reject behaviour and same OwnershipError payload."""
+    ch.init("owner", path=hist)
+    fum = "intruder"
+    fp = ch.fingerprint(fum)
+    with pytest.raises(ch.OwnershipError) as via_msg:
+        ch.append({"t": "phase", "name": "a"}, path=hist, first_user_msg=fum)
+    with pytest.raises(ch.OwnershipError) as via_fp:
+        ch.append({"t": "phase", "name": "a"}, path=hist, expected_fp=fp)
+    assert via_msg.value.state == via_fp.value.state == "foreign"
+    assert via_msg.value.header_fp == via_fp.value.header_fp
+    assert via_msg.value.current_fp == via_fp.value.current_fp == fp
+
+
+def test_append_rejects_both_first_user_msg_and_expected_fp(hist: Path):
+    ch.init("orig", path=hist)
+    with pytest.raises(ValueError, match="at most one"):
+        ch.append({"t": "phase", "name": "x"}, path=hist,
+                  first_user_msg="orig", expected_fp=ch.fingerprint("orig"))
+
+
 # --- Phase 1 (schema v3) — session id helper + tagging -----------------------
 
 
@@ -652,8 +746,10 @@ def test_write_and_read_sidecar_roundtrip(hist: Path):
     payload = ch.write_sidecar("hello", path=hist)
     loaded = ch.read_sidecar(hist)
     assert loaded == payload
-    assert loaded["first_user_msg"] == "hello"
     assert loaded["fp"] == ch.fingerprint("hello")
+    # v3 privacy-minimal shape: no raw prompt persisted on disk.
+    assert "first_user_msg" not in loaded
+    assert set(loaded.keys()) == {"fp", "started_at"}
 
 
 def test_read_sidecar_missing_returns_none(hist: Path):
@@ -676,7 +772,10 @@ def test_hook_append_session_start_initializes(hist: Path,
     header = ch.read_header(hist)
     assert header is not None
     assert header["fp"] == ch.fingerprint("first")
-    assert ch.read_sidecar(hist)["first_user_msg"] == "first"
+    side = ch.read_sidecar(hist)
+    assert side is not None
+    assert side["fp"] == ch.fingerprint("first")
+    assert "first_user_msg" not in side
 
 
 def test_hook_append_session_start_existing_history(hist: Path,
@@ -1297,6 +1396,134 @@ def test_hook_append_both_deleted_returns_skipped_no_sidecar(
                             path=hist, settings_path=settings_enabled)
     assert result["action"] == "skipped_no_sidecar"
 
+
+# --- sidecar-shrink Phase 2 — hook write path uses sidecar.fp directly ------
+
+
+def test_hook_append_uses_sidecar_fp_for_ownership(
+    hist: Path, settings_enabled: Path, monkeypatch,
+):
+    """Non-session_start branch must use sidecar.fp directly — no
+    fingerprint(first_user_msg) recompute on every event."""
+    ch.hook_append("session_start", first_user_msg="alice",
+                   path=hist, settings_path=settings_enabled)
+
+    calls: list[str] = []
+    real = ch.fingerprint
+
+    def spy(msg: str) -> str:
+        calls.append(msg)
+        return real(msg)
+
+    monkeypatch.setattr(ch, "fingerprint", spy)
+    result = ch.hook_append("user_prompt", payload={"text": "hello"},
+                            path=hist, settings_path=settings_enabled)
+    assert result["action"] == "appended"
+    # No fingerprint() call against the cached prompt — the sidecar's
+    # fp is consumed verbatim. (CLI-style first_user_msg= would still
+    # fingerprint, but no caller passes it on the per-event path.)
+    assert calls == []
+
+
+def test_hook_append_legacy_v2_sidecar_still_works(
+    hist: Path, settings_enabled: Path,
+):
+    """A pre-shrink sidecar (with first_user_msg, no fp) must still drive
+    appends — fp is recovered from the cached prompt as a one-shot
+    fallback until the next session_start rewrites the sidecar."""
+    ch.init("alice", path=hist)
+    # Hand-craft a v2-shape sidecar (no fp key).
+    ch.sidecar_path(hist).write_text(
+        '{"first_user_msg": "alice", "started_at": "x"}',
+        encoding="utf-8",
+    )
+    result = ch.hook_append("user_prompt", payload={"text": "hi"},
+                            path=hist, settings_path=settings_enabled)
+    assert result["action"] == "appended"
+    assert [e.get("text") for e in ch.read_entries(path=hist)] == ["hi"]
+
+
+def test_hook_append_corrupted_sidecar_no_fp_no_legacy_skips(
+    hist: Path, settings_enabled: Path,
+):
+    """Sidecar present but missing both fp and first_user_msg → skip."""
+    ch.init("alice", path=hist)
+    ch.sidecar_path(hist).write_text(
+        '{"started_at": "x"}', encoding="utf-8",
+    )
+    result = ch.hook_append("user_prompt", payload={"text": "hi"},
+                            path=hist, settings_path=settings_enabled)
+    assert result["action"] == "skipped_no_sidecar"
+
+
+def test_hook_append_foreign_adopt_then_subsequent_event_uses_new_fp(
+    hist: Path, settings_enabled: Path,
+):
+    """After session_start adopts a foreign file, the rewritten sidecar
+    carries the new fp; the next event reads sidecar.fp and appends
+    without re-deriving from a cached prompt."""
+    ch.hook_append("session_start", first_user_msg="alice",
+                   path=hist, settings_path=settings_enabled)
+    # New owner adopts the file (rewrites both header and sidecar).
+    ch.hook_append("session_start", first_user_msg="bob",
+                   path=hist, settings_path=settings_enabled)
+    side = ch.read_sidecar(hist)
+    assert side and side.get("fp") == ch.fingerprint("bob")
+    # Subsequent non-session_start event uses sidecar.fp.
+    result = ch.hook_append("user_prompt", payload={"text": "after-adopt"},
+                            path=hist, settings_path=settings_enabled)
+    assert result["action"] == "appended"
+
+
+# --- sidecar-shrink Phase 3 — write_sidecar payload shape -------------------
+
+
+def test_write_sidecar_default_shape_no_first_user_msg(hist: Path):
+    """Privacy regression test: written sidecar must contain no raw prompt."""
+    payload = ch.write_sidecar("super secret prompt", path=hist)
+    assert "first_user_msg" not in payload
+    on_disk = json.loads(ch.sidecar_path(hist).read_text(encoding="utf-8"))
+    assert "first_user_msg" not in on_disk
+    assert set(on_disk.keys()) == {"fp", "started_at"}
+    # Raw prompt must not be retrievable from disk by any obvious means.
+    raw = ch.sidecar_path(hist).read_text(encoding="utf-8")
+    assert "super secret prompt" not in raw
+
+
+def test_write_sidecar_legacy_kill_switch_restores_v2_shape(
+    hist: Path, monkeypatch,
+):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_SIDECAR_LEGACY", "true")
+    payload = ch.write_sidecar("hello", path=hist)
+    assert payload["first_user_msg"] == "hello"
+    assert payload["fp"] == ch.fingerprint("hello")
+    on_disk = json.loads(ch.sidecar_path(hist).read_text(encoding="utf-8"))
+    assert on_disk["first_user_msg"] == "hello"
+    assert set(on_disk.keys()) == {"first_user_msg", "fp", "started_at"}
+
+
+def test_write_sidecar_legacy_kill_switch_case_and_whitespace(
+    hist: Path, monkeypatch,
+):
+    """Kill-switch parsing matches `_session_tag_enabled` style: trim + lower."""
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_SIDECAR_LEGACY", "  TRUE  ")
+    payload = ch.write_sidecar("hi", path=hist)
+    assert "first_user_msg" in payload
+
+
+def test_legacy_v2_sidecar_remains_readable(hist: Path):
+    """Existing v2-shape sidecars on disk stay readable; `read_sidecar`
+    surfaces both `fp` and the redundant `first_user_msg` verbatim."""
+    legacy = {
+        "first_user_msg": "old prompt",
+        "fp": ch.fingerprint("old prompt"),
+        "started_at": "2026-01-01T00:00:00Z",
+    }
+    ch.sidecar_path(hist).write_text(
+        json.dumps(legacy), encoding="utf-8",
+    )
+    loaded = ch.read_sidecar(hist)
+    assert loaded == legacy
 
 
 # --- Phase 3 (schema v3) — read path filtering -----------------------------
