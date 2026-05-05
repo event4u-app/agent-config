@@ -14,21 +14,18 @@ suggestion:
 # /chat-history
 
 Top-level orchestrator for the `/chat-history` family. After the
-hook-only reduction (`road-to-chat-history-hook-only`) writes,
-adoption, and overflow handling are driven entirely by platform
-hooks + `scripts/chat_history.py` internals; the surfaced
-sub-commands are read-only.
+hook-only reduction (`road-to-chat-history-hook-only`) writes and
+overflow handling are driven entirely by platform hooks +
+`scripts/chat_history.py` internals; the surfaced sub-commands are
+read-only. Sessions coexist in one log file — each entry self-tags
+via the `s` field — so there is no ownership layer to recover from.
 
 ## Sub-commands
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/chat-history show` | `commands/chat-history/show.md` | Inspect the log — size, entries, fingerprint, last entries |
+| `/chat-history show` | `commands/chat-history/show.md` | Inspect the log — size, entries, header, last entries |
 | `/chat-history learn` | `commands/chat-history/learn.md` | List prior sessions, pick one, render its entries verbatim — selective cross-session import |
-
-For manual recovery (force-adopt a foreign log when auto-adopt
-misfires), run `./agent-config chat-history:adopt` directly — it is
-not exposed as a `/chat-history` sub-command.
 
 ## Dispatch
 

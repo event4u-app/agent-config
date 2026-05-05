@@ -71,14 +71,14 @@ Show the handoff prompt in a fenced code block and say:
 - `/agent-handoff` is **push-based**: you copy a short summary into the
   new chat. Works across tools (Augment → Claude Code), across machines,
   and without any persistent file.
-- `.agent-chat-history` is **pull-based**: a structural Augment hook
-  binds the log to the new session via auto-adopt on `session_start`
-  (see [`chat-history-platform-hooks`](../../agents/contexts/chat-history-platform-hooks.md)).
-  Works only on the same machine and same repo, but captures more detail
-  (every phase / decision the prior session logged). Inspect with
-  `/chat-history`; force-rebind manually with
-  `./agent-config chat-history:adopt`.
+- `.agent-chat-history` is **pull-based** and **multi-session**: every
+  session writes its own entries tagged with a 16-char session
+  fingerprint derived from platform `session_id` (schema v4, see
+  [`chat-history-platform-hooks`](../../agents/contexts/chat-history-platform-hooks.md)).
+  Works only on the same machine and same repo, but captures every
+  phase / decision any session logged. Inspect with `/chat-history show`;
+  read prior-session context with `/chat-history learn`.
 
 Prefer `/agent-handoff` for planned context switches across tools or
-machines; rely on the auto-adopted `.agent-chat-history` after a crash
-or fresh-chat reopen on the same workspace.
+machines; use `/chat-history learn` after a crash or fresh-chat reopen
+on the same workspace to surface prior-session context.

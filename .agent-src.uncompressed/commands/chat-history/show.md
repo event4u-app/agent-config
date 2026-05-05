@@ -19,7 +19,7 @@ Shows:
 
 - Whether the file exists and whether logging is currently enabled
 - File size vs `max_size_kb`
-- Header metadata: fingerprint preview, created-at, `frequency`
+- Header metadata: schema version, `started`, `frequency`
 - Entry count and age of the oldest/newest entry
 - A peek at the last 3–5 entries so the user can see what was captured
 
@@ -27,8 +27,6 @@ Read-only — this command never writes to the file.
 
 ## When NOT to use
 
-- Force-adopt a foreign log → run `./agent-config chat-history:adopt`
-  directly (manual recovery lever; auto-adopt covers the steady state).
 - Wipe the file → delete `.agent-chat-history` manually; it is
   git-ignored and will be recreated on the next hook fire.
 - Configure logging behavior → edit `.agent-settings.yml` directly
@@ -70,8 +68,8 @@ Render a concise report:
 >
 > File:       .agent-chat-history  ({size_kb} KB / {max_size_kb} KB)
 > Entries:    {entries}
-> Fingerprint:{short_fp}  (session started {created_at_relative})
-> Frequency:  {frequency}
+> Schema:     v{header.v}  (started {header.started})
+> Frequency:  {header.freq}
 > Overflow:   {on_overflow}
 >
 > Last entries:
@@ -86,13 +84,10 @@ data, see [`token-efficiency`](../rules/token-efficiency.md)).
 
 ### 5. Offer follow-ups (optional)
 
-If the file exists and the fingerprint does **not** match the current
-session, mention that auto-adopt should have re-bound the log on
-`session_start`; if the user reports it did not, point them at the
-manual recovery lever `./agent-config chat-history:adopt`.
-
 If the file is close to `max_size_kb` (> 80 %), mention it — the next
-append may trigger overflow handling.
+append may trigger overflow handling. To inspect a specific prior
+session by id, point the user at `/chat-history learn`; the body
+filter on `s` is the v4 isolation surface.
 
 ## Gotchas
 
@@ -106,4 +101,4 @@ append may trigger overflow handling.
 
 - [`chat-history-platform-hooks`](../../../agents/contexts/chat-history-platform-hooks.md) — the hook-only contract
 - [`agent-settings` template](../templates/agent-settings.md) — `chat_history.*` reference
-- [`scripts/chat_history.py`](../../../scripts/chat_history.py) — helper API + `chat-history:adopt` manual lever
+- [`scripts/chat_history.py`](../../../scripts/chat_history.py) — helper API (`status`, `read`, `sessions`, `prune-sessions`)

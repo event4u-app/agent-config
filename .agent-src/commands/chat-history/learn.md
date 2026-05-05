@@ -32,7 +32,6 @@ session-scoped; `learn` is the explicit cross-boundary surface.
   invocation; multi-pick is v2.
 - Search prior sessions by content — out of scope for v1; no fuzzy
   search, no full-text grep. User picks by `id`, `last_ts`, `preview`.
-- Force-adopt foreign log → `./agent-config chat-history:adopt`.
 
 ## Steps
 
@@ -131,7 +130,7 @@ explicit instruction.
 - **One pick per invocation.** Multi-pick is v2. For second
   session, run `/chat-history learn` again.
 - **Read-only.** Never writes to `.agent-chat-history`, never
-  adopts, never rotates.
+  rotates.
 - **`<legacy>` and `<unknown>` buckets** appear like any session
   id when they have body entries — user can pick them too. Helper
   aggregates entries with no `s` field into `<legacy>` and entries

@@ -22,7 +22,6 @@ class ChatHistoryHaltAppendHook(_ChatHistoryHookBase):
         registry.register(HookEvent.ON_HALT, self._on_halt)
 
     def _on_halt(self, ctx: HookContext) -> None:
-        msg = self._resolve_msg(ctx)
         questions: list[str] = []
         if ctx.result is not None:
             questions = list(getattr(ctx.result, "questions", []) or [])
@@ -30,7 +29,7 @@ class ChatHistoryHaltAppendHook(_ChatHistoryHookBase):
             questions = list(getattr(ctx.delivery, "questions", []) or [])
         payload = {"step": ctx.step_name or "<unknown>", "questions": questions}
         proc = self._invoke(
-            "append", "--first-user-msg", msg,
+            "append",
             "--type", "decision", "--json", json.dumps(payload),
         )
         if proc.returncode != EXIT_OK:

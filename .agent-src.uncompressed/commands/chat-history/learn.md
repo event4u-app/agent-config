@@ -36,7 +36,6 @@ session boundary.
 - Search prior sessions by content — out of scope for v1; no fuzzy
   search, no full-text grep. The user picks by `id`, `last_ts`, and
   `preview` from the listing.
-- Force-adopt a foreign log → `./agent-config chat-history:adopt`.
 
 ## Steps
 
@@ -136,8 +135,8 @@ behalf without an explicit instruction.
   extraction.
 - **One pick per invocation.** Multi-pick is v2. If the user wants
   a second session, run `/chat-history learn` again.
-- **Read-only.** This command never writes to `.agent-chat-history`,
-  never adopts, never rotates.
+- **Read-only.** This command never writes to `.agent-chat-history`
+  and never rotates.
 - **`<legacy>` and `<unknown>` buckets** show up like any other
   session id when they have body entries — the user can pick them
   too. The helper aggregates body entries with no `s` field into
