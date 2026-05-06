@@ -3,6 +3,7 @@ name: bug-fix
 skills: [bug-analyzer, pest-testing]
 description: Plan and implement a bug fix — based on investigation, with quality checks and test verification
 disable-model-invocation: true
+council_depth: deep
 suggestion:
   eligible: true
   trigger_description: "fix this bug, patch the issue, resolve this error"

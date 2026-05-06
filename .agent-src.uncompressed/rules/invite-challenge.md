@@ -4,6 +4,7 @@ tier: "2b"
 description: "Before executing a complex plan or non-trivial design — proactively ask 'am I solving the right problem?' and pause for user confirmation, even when no ambiguity is detected"
 alwaysApply: false
 source: package
+council_depth: deep
 triggers:
   - intent: "complex plan"
   - intent: "design decision"

@@ -3,6 +3,7 @@ name: bug-investigate
 skills: [bug-analyzer, sentry-integration]
 description: Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause
 disable-model-invocation: true
+council_depth: deep
 suggestion:
   eligible: true
   trigger_description: "why is this broken, investigate this error, trace the root cause"
