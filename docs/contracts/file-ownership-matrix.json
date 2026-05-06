@@ -3819,6 +3819,13 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/rules/ask-when-uncertain.md",
+      "target": ".agent-src.uncompressed/rules/user-interaction.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/rules/augment-portability.md",
       "target": ".agent-src.uncompressed/contexts/communication/rules-auto/augment-portability-mechanics.md",
       "type": "READ_ONLY",

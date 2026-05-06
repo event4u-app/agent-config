@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
 - Files indexed: **320**
-- Edges (incl. self-WRITE): **711**
+- Edges (incl. self-WRITE): **712**
 
 ## READ_ONLY edges
 
@@ -140,6 +140,7 @@
 | `.agent-src.uncompressed/rules/artifact-engagement-recording.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/artifact-engagement-recording-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `.agent-src.uncompressed/rules/model-recommendation.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `.agent-src.uncompressed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/augment-portability.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/augment-portability-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/augment-portability.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/augment-portability-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/augment-source-of-truth.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md` | `body_link` | 1 |
