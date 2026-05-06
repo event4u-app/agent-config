@@ -159,7 +159,7 @@
   "rules/minimal-safe-diff.md": "40ff3669c6d3f319a64c7e35921b28fc7d8042daead4fe3a3b660f5f8799618e",
   "rules/missing-tool-handling.md": "eaa1b26a54842819ff2c717741bd713c456e48a1e5802cac9dcecfd9b7fe7ccf",
   "rules/model-recommendation.md": "a2fd3be15f5f3b9784e7d9852461b0ed5c815d201b54f79ccc907230ec84d289",
-  "rules/no-attribution-footers.md": "8d95f9a8586eae4b0bedcc6d88e6c57bc49a693b38428d6264ae560be3906aab",
+  "rules/no-attribution-footers.md": "fcd15e24ce1065c732e211cb822e12dbf319d7cdba782bcf20d19bbf4bb91673",
   "rules/no-cheap-questions.md": "aa65515c5375d1c0330f3145b91e68b64aa1d8b3e954db1e11b78364d51d7a5c",
   "rules/no-roadmap-references.md": "f88dc41b15d2cfd6fec8527b00941916e740bff6db4990d10a22bda6dfae06e3",
   "rules/non-destructive-by-default.md": "e0e1ea886969c423268e605340b612d1d86578c8c34e1b18af452b85f2bfeeff",
