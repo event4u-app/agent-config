@@ -169,7 +169,7 @@ When the drift is severe (whole sections are wrong), recommend
 `/copilot-agents-init` to scaffold a clean replacement rather than
 patching forever.
 
-## Agent-Config Path Conventions — Preserve, Don't "Fix"
+## agent-config Path Conventions — Preserve, Don't "Fix"
 
 `copilot-instructions.md` ships a "Known False Positives" section that
 tells Copilot Code Review not to flag agent-config path patterns as

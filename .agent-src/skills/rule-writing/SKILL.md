@@ -85,8 +85,8 @@ no silent edits, max two rounds.
 ### 3b. Path conventions in frontmatter and body — load-bearing
 
 Three different surfaces, three different rules. Mixing them up will
-either fail the schema (`task validate-schema`) or fail
-`task lint-load-context`. Canonical reference:
+either fail the schema (`python3 scripts/validate_frontmatter.py`) or
+fail `python3 scripts/lint_load_context.py`. Canonical reference:
 [`templates/rule.md`](../../templates/rule.md) § Path conventions and
 [`docs/contracts/load-context-schema.md`](../../../docs/contracts/load-context-schema.md).
 
