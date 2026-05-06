@@ -43,12 +43,20 @@ prompt that asks them to think on their own merits.
 THE COUNCIL DOES NOT SEE THE HOST AGENT'S ANALYSIS.
 THE COUNCIL DOES NOT SEE PRIOR REPLIES.
 THE COUNCIL SEES THE ARTEFACT + THE NEUTRAL SYSTEM PROMPT. NOTHING ELSE.
+THE HOST AGENT IS THE CONVENER, NEVER A REVIEWER.
 ```
 
 If you find yourself wanting to "frame" the artefact for the council,
 stop. Framing is exactly what kills the second-opinion value. Use the
 unbiased system prompts in `scripts/ai_council/prompts.py`; do not
 roll your own.
+
+The host runs the council and synthesises convergence — it is the
+convener, not a reviewer. The reviewer-ban is structural: the host
+wrote (or framed) the artefact and cannot critique it independently.
+Anonymising the host as "Reviewer C" is worse than excluding it — the
+user is told they got an outside vote when they did not. Externals
+down → surface and skip; never substitute the host as a reviewer.
 
 ### Neutrality — context-handoff
 
@@ -119,6 +127,27 @@ short-circuit for that member, but still records the response's
 token counts (from the manual-paste length heuristic or the
 provider's reply, when available) for observability. Mixed runs
 (one manual + one api) gate only the api members.
+
+## Degradation modes
+
+How the council behaves when fewer than two billable members are
+reachable. The orchestrator never silently substitutes — degradation
+is visible to the user.
+
+| Reachable | Behaviour | Independence |
+|---|---|---|
+| **2+** | Full fan-out, multi-round debate. Default. | High — cross-provider diversity. |
+| **1** | Single-voice critique with a degraded-run warning. Multi-round mode lets the model see its own anonymised reply, but convergence ≠ correctness. | Low — shared blind spots. |
+| **0** | Council skipped. Surface the failure, proceed without external review. **Never** substitute the host or an unrequested manual pass. | None. |
+
+Rejected anti-patterns (council convergence, 2026-05-06): persona
+prompts (same model, same blind spots, more cost), temperature
+spread (noise, not signal), host-as-fallback (Iron Law breach).
+Supported single-provider strategy is **sibling models on the same
+provider** (e.g. Sonnet ↔ Opus, gpt-4o ↔ o1) — different training
+cutoffs / reasoning architectures within one provider family. Cost
+is real (siblings price-tier higher); explicit opt-in per invocation,
+not a default.
 
 ## Procedure
 
