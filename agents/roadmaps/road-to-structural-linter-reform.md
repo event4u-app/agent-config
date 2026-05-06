@@ -1,6 +1,6 @@
 ---
 status: ready
-complexity: medium
+complexity: structural
 ---
 
 # Road to Structural Linter Reform

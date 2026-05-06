@@ -279,7 +279,7 @@ are excluded.
 | command | [`optimize:augmentignore`](../.agent-src/commands/optimize/augmentignore.md) | cluster: optimize | Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules. |
 | command | [`optimize:rtk`](../.agent-src/commands/optimize/rtk.md) | cluster: optimize | Create or optimize project-local rtk filters based on the actual toolchain |
 | command | [`optimize:skills`](../.agent-src/commands/optimize/skills.md) | cluster: optimize | Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply. |
-| command | [`optimize-prompt`](../.agent-src/commands/optimize-prompt.md) |  | Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt. |
+| command | [`optimize-prompt`](../.agent-src/commands/optimize-prompt.md) | cluster: optimize | Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt. |
 | command | [`optimize`](../.agent-src/commands/optimize.md) | cluster: optimize | Optimize orchestrator — routes to skills, agents, augmentignore, rtk-filters |
 | command | [`override:create`](../.agent-src/commands/override/create.md) | cluster: override | Creates a project-level override for a shared skill, rule, or command. |
 | command | [`override:manage`](../.agent-src/commands/override/manage.md) | cluster: override | Reviews, updates, and refactors existing project-level overrides. |
