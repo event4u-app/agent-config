@@ -40,7 +40,7 @@ Do NOT use this skill to:
 `directives/ui/design.py` produces the design brief (layout, components,
 states, microcopy, a11y). The brief picks heuristics from this reference
 when the audit doesn't already pin a project pattern. Stack-specific
-choices come from the dispatched implementation skill, not from here.
+choices come from the dispatched impl skill, not from here.
 
 ## Component Architecture
 
@@ -203,7 +203,7 @@ When `directives/ui/design.py` (or any caller) cites this skill:
 1. **Confirm the audit ran first** — `state.ui_audit` from [`existing-ui-audit`](../existing-ui-audit/SKILL.md) is mandatory. Stop and request the audit if missing.
 2. **Pick the smallest matching section** — Component Architecture, Form Design, Table Design, Responsive Strategy, Accessibility, or UX Principles. Cite by H2/H3 heading, never paste the whole skill.
 3. **Defer to audit findings** — when the audit pins a project pattern (token, primitive, layout convention), use it. The heuristics here are fallbacks for gaps, not overrides.
-4. **Defer to the stack apply skill** — Blade vs. Livewire vs. Flux vs. React-shadcn choices come from the dispatched implementation skill, never from this reference.
+4. **Defer to the stack apply skill** — Blade vs. Livewire vs. Flux vs. React-shadcn choices come from the dispatched impl skill, never from this reference.
 5. **Surface conflicts** — if a heuristic here contradicts an audit finding or stack convention, name both and let the caller decide; do not silently pick.
 
 ## Output format
@@ -220,8 +220,8 @@ When this skill's content is folded into a design brief or review:
 - **Orchestrator:** [`directives/ui/`](../../templates/scripts/work_engine/directives/ui/) — owns the UI flow
 - **Pre-step (mandatory):** [`existing-ui-audit`](../existing-ui-audit/SKILL.md) — inventory before design
 - **Stack apply skills (dispatched, not standalone):**
-  - [`blade-ui`](../blade-ui/SKILL.md) — Blade template implementation
-  - [`livewire`](../livewire/SKILL.md) — Livewire component implementation
+  - [`blade-ui`](../blade-ui/SKILL.md) — Blade template impl
+  - [`livewire`](../livewire/SKILL.md) — Livewire component impl
   - [`flux`](../flux/SKILL.md) — Flux component library usage
   - [`react-shadcn-ui`](../react-shadcn-ui/SKILL.md) — React + shadcn primitives
 - **Adjacent reference:** [`dashboard-design`](../dashboard-design/SKILL.md) — monitoring dashboard design (different domain)

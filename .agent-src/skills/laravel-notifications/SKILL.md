@@ -9,7 +9,7 @@ source: package
 ## When to use
 
 Use this skill when sending notifications to users or external systems:
-- Email, Slack, SMS, or database notifications
+- Email, Slack, SMS, or DB notifications
 - Custom notification channels
 - On-demand notifications (to non-user recipients)
 - Notification preferences and opt-out logic
@@ -19,7 +19,7 @@ For **Mailables** (complex email templates, attachments), see [laravel-mail](../
 ## Procedure: Create a notification
 
 1. **Generate class** — `php artisan make:notification InvoiceCreated`.
-2. **Choose channels** — Mail, database, Slack, or custom. Implement `via()`.
+2. **Choose channels** — Mail, DB, Slack, or custom. Implement `via()`.
 3. **Build content** — Implement `toMail()`, `toArray()`, etc. for each channel.
 4. **Queue it** — Add `ShouldQueue` interface for non-blocking delivery.
 5. **Verify** — Send test notification, confirm delivery on all channels.
@@ -154,15 +154,15 @@ public function via(object $notifiable): array
 - Notifiable
 - MailMessage
 - SlackMessage
-- database notification
+- DB notification
 
 ## Gotcha
 
 - Don't send notifications synchronously in request lifecycle — always queue them.
-- The model forgets to implement `toArray()` for database notifications — it throws silently.
+- The model forgets to implement `toArray()` for DB notifications — it throws silently.
 - `via()` method must return an array even for a single channel — `return ['mail']`, not `return 'mail'`.
 
 ## Do NOT
 
-- Do NOT store large objects in database notification `data` — use IDs and fetch on read.
+- Do NOT store large objects in DB notification `data` — use IDs and fetch on read.
 - Do NOT use notifications for complex emails — use [Mailables](../laravel-mail/SKILL.md) instead.

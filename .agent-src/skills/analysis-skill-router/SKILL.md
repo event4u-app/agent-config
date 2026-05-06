@@ -106,18 +106,18 @@ Check:
 
 **Choose `project-analysis-core` if:** broad discovery needed, framework deep-dive not yet justified.
 
-**Choose `project-analysis-hypothesis-driven` if:** problem is concrete, multiple causes plausible, main job is explanation not discovery.
+**Choose `project-analysis-hypothesis-driven` if:** problem is concrete, multiple → plausible, main job is explanation not discovery.
 
 **Choose framework-specific analysis if:** framework is explicit, failure pattern is framework-shaped.
 
-**Do NOT route broadly if:** one component or file is enough, fix is obvious and local, task is implementation not investigation.
+**Do NOT route broadly if:** one component or file is enough, fix is obvious and local, task is impl not investigation.
 
 ## Examples
 
 **"Analyze this whole Laravel project"** → `universal-project-analysis` → chain `project-analysis-laravel`
 **"Hydration mismatch in Next.js"** → `project-analysis-nextjs` (no full-project needed)
 **"Bug could be cache, queue, or version mismatch"** → `project-analysis-hypothesis-driven`
-**"Change one React component"** → no analysis skill, use implementation skill
+**"Change one React component"** → no analysis skill, use impl skill
 
 ## Gotcha
 

@@ -233,7 +233,7 @@ Each module gets its own file in `agents/analysis/modules/`. Format:
 ### Phase 3: Data layer
 
 - List all models with their connections, tables, and key relationships
-- Map database schema: tables, foreign keys, indexes
+- Map DB schema: tables, foreign keys, indexes
 - Document multi-tenant split (which tables in which DB)
 - **Output:** `agents/analysis/models/api-database.md`, `customer-database.md`
 
@@ -242,7 +242,7 @@ Each module gets its own file in `agents/analysis/modules/`. Format:
 - Identify domains from models, services, routes, and directory structure
 - For each domain: map models → services → controllers → jobs → events
 - Document business rules and data flows
-- Document inter-domain dependencies
+- Document inter-domain deps
 - **Output:** `agents/analysis/domains/{domain}.md` (one per domain)
 
 ### Phase 5: API surface
@@ -254,7 +254,7 @@ Each module gets its own file in `agents/analysis/modules/`. Format:
 
 ### Phase 6: Service map
 
-- List all services with purpose, key methods, and dependencies
+- List all services with purpose, key methods, and deps
 - Map service → repository → model relationships
 - Identify God services (too many responsibilities)
 - **Output:** `agents/analysis/services/service-map.md`
@@ -315,7 +315,7 @@ Each module gets its own file in `agents/analysis/modules/`. Format:
 ## Output format
 
 1. Structured analysis document in agents/analysis/
-2. Tech stack inventory with versions and dependencies
+2. Tech stack inventory with versions and deps
 3. Architecture diagram or module map
 
 ## Auto-trigger keywords

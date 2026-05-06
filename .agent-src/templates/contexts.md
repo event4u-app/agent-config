@@ -24,7 +24,7 @@ agents (and developers) quickly orient themselves when working in that area.
 |---|---|---|
 | **Module** | Document a module's structure and purpose | `client-software.md` |
 | **Domain** | Document a business domain across modules | `import-pipeline.md` |
-| **Service** | Document a complex service and its dependencies | `customer-service.md` |
+| **Service** | Document a complex service and its deps | `customer-service.md` |
 | **Integration** | Document an external API/system integration | `probaus-api.md` |
 | **Infrastructure** | Document infrastructure or DevOps concerns | `queue-system.md` |
 

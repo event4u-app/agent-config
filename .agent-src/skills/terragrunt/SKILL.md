@@ -12,7 +12,7 @@ Use this skill when working with Terragrunt configurations (`.hcl` files), manag
 
 ## Procedure: Write Terragrunt config
 
-1. Read the `root.hcl` in the target environment (`environments/pro/root.hcl` or `environments/sta/root.hcl`).
+1. Read the `root.hcl` in the target env (`environments/pro/root.hcl` or `environments/sta/root.hcl`).
 2. Check existing `terragrunt.hcl` files in sibling directories for patterns.
 3. Read the target module's `variables.tf` to understand required inputs.
 
@@ -36,7 +36,7 @@ environments/
 
 ## Root configuration (`root.hcl`)
 
-The root HCL defines shared settings for all modules in an environment:
+The root HCL defines shared settings for all modules in an env:
 
 ### Environment variables
 
@@ -50,9 +50,9 @@ locals {
 }
 ```
 
-- `.env.yaml` — committed, shared environment config
+- `.env.yaml` — committed, shared env config
 - `.env.local.yaml` — gitignored, local overrides (AWS profiles, etc.)
-- Real environment variables take precedence over file values.
+- Real env variables take precedence over file values.
 
 ### Remote state
 
@@ -101,7 +101,7 @@ Each module directory contains a `terragrunt.hcl` that:
 1. **Loads module-specific variables** from a YAML file
 2. **Includes the root config** for backend and providers
 3. **Points to the Terraform module source**
-4. **Declares dependencies** on other modules
+4. **Declares deps** on other modules
 5. **Passes inputs** by merging dependency outputs with local variables
 
 ### Example pattern
@@ -183,19 +183,19 @@ devbox run d           # terragrunt destroy
 
 ## Output format
 
-1. Terragrunt HCL files with DRY environment configuration
+1. Terragrunt HCL files with DRY env configuration
 2. Dependency graph and remote state references
 
 ## Auto-trigger keywords
 
 - Terragrunt
-- multi-environment
+- multi-env
 - DRY config
 - remote state
 
 ## Gotcha
 
-- Terragrunt `dependency` blocks create implicit ordering — circular dependencies cause cryptic errors.
+- Terragrunt `dependency` blocks create implicit ordering — circular deps cause cryptic errors.
 - Don't duplicate Terraform variables in terragrunt.hcl — use `inputs` to pass them through.
 - The model tends to hardcode values that should come from `include` blocks — use DRY patterns.
 

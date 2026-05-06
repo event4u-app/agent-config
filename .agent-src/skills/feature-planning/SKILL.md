@@ -100,7 +100,7 @@ Discovery → Exploration → Questions → Architecture → Implementation → 
 - **Wait for answers before proceeding.**
 
 #### Phase 4: Architecture Design
-- Design 2-3 implementation approaches with different tradeoffs:
+- Design 2-3 impl approaches with different tradeoffs:
   - **Minimal changes** — smallest change, maximum reuse.
   - **Clean architecture** — maintainability, elegant abstractions.
   - **Pragmatic balance** — speed + quality.
@@ -114,7 +114,7 @@ Discovery → Exploration → Questions → Architecture → Implementation → 
 - Track progress via task list or roadmap.
 
 #### Phase 6: Quality Review
-- Review the implementation for:
+- Review the impl for:
   - Simplicity, DRY, elegance.
   - Bugs and correctness.
   - Convention adherence.
@@ -183,7 +183,7 @@ module's `agents/` directory:
 Before creating a feature plan, always:
 1. **Search the codebase** for related code, existing patterns, and affected areas.
 2. **Read module docs** if the feature touches a specific module.
-3. **Check existing features** in `agents/features/` for overlap or dependencies.
+3. **Check existing features** in `agents/features/` for overlap or deps.
 
 ### Be collaborative
 
@@ -194,7 +194,7 @@ Before creating a feature plan, always:
 
 ### Keep it navigational
 
-Feature plans are decision documents, not implementation guides.
+Feature plans are decision documents, not impl guides.
 Implementation details belong in roadmaps.
 
 ## Output format
@@ -221,6 +221,6 @@ Implementation details belong in roadmaps.
 
 - Do NOT create feature plans without user input — always collaborate.
 - Do NOT skip codebase research — always check what exists.
-- Do NOT put implementation steps in the feature plan — that's the roadmap's job.
+- Do NOT put impl steps in the feature plan — that's the roadmap's job.
 - Do NOT commit or push without permission.
 - Do NOT duplicate information from `AGENTS.md` or module docs.

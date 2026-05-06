@@ -33,7 +33,7 @@ Do NOT use when:
 - Rename, extract, move, or restructure the target code.
 - Keep the change minimal and focused.
 
-### Step 2: Update all downstream dependencies
+### Step 2: Update all downstream deps
 
 For each affected file (from the impact analysis):
 
@@ -141,9 +141,9 @@ After the code changes are verified, update all affected documentation:
 1. Update controller + request + resource + OpenAPI schemas + route → present test changes →
    update docs (`agents/docs/controller.md`, `agents/docs/api-resources.md`) → run PHPStan → run tests.
 
-### Replace implementation (e.g. switch service)
-1. Create new implementation → update binding → find all direct references → update → present test
-   changes → update docs → run PHPStan → run tests → remove old implementation.
+### Replace impl (e.g. switch service)
+1. Create new impl → update binding → find all direct references → update → present test
+   changes → update docs → run PHPStan → run tests → remove old impl.
 
 ### Move/restructure module
 1. Move files → update namespaces → update `ModuleServiceProvider` if needed → update module routes →

@@ -11,7 +11,7 @@ source: package
 Use this skill when upgrading Composer packages, npm packages, or any project dependency.
 
 Do NOT use when:
-- Installing new dependencies for the first time
+- Installing new deps for the first time
 - Routine code changes unrelated to package versions
 
 ## Procedure: Upgrade a dependency
@@ -164,7 +164,7 @@ npm audit
 |---|---|---|
 | **Known CVEs** | `composer audit` / `npm audit` | Direct vulnerabilities |
 | **Maintenance status** | GitHub: last commit, open issues | Abandoned packages are a risk |
-| **Dependency tree** | `composer show -t vendor/pkg` / `npm ls new-package` | Transitive dependencies may conflict |
+| **Dependency tree** | `composer show -t vendor/pkg` / `npm ls new-package` | Transitive deps may conflict |
 | **License compatibility** | `composer licenses` / check `package.json` | Legal compliance |
 | **Bundle size** (npm) | `npx bundlephobia new-package` | Impact on frontend bundle |
 

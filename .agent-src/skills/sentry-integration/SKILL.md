@@ -152,7 +152,7 @@ search_events(organizationSlug='my-org', naturalLanguageQuery='count of database
 
 ## Gotcha
 
-- Sentry groups errors by stacktrace — different root causes may appear as the same issue. Check multiple events.
+- Sentry groups errors by stacktrace — different root → may appear as the same issue. Check multiple events.
 - The model tends to analyze only the latest event — check the "Events" tab for patterns across time.
 - Don't use Sentry MCP tools for simple lookups — use the Sentry web UI link instead (saves tokens).
 

@@ -176,7 +176,7 @@ Feature::for($users)->load(['new-dashboard', 'advanced-reporting']);
 
 ## Gotcha
 
-- Feature flags in database driver require migration — don't forget `php artisan pennant:purge` for cleanup.
+- Feature flags in DB driver require migration — don't forget `php artisan pennant:purge` for cleanup.
 - The model tends to check flags without a scope — always pass the authenticated user or a default scope.
 - Don't nest feature flag checks — it makes the logic impossible to reason about.
 

@@ -97,4 +97,4 @@ Do NOT use for ranking features, valuation, or OKR decomposition (see Related Sk
 
 1. **`funnel-table.md`** — 5-stage funnel with cohort rates, 95% CI, and 12-week trend (sparkline or compact ASCII). One row per cohort week or month.
 2. **`segment-breakdown.md`** — table of the broken stage segmented by channel · device · plan · geo. Rates with CIs. Suspect segments highlighted.
-3. **`hypothesis-list.md`** — top 3 causes for the broken segment-stage with cheapest-falsification experiment per cause and an explicit prediction for the next measurement.
+3. **`hypothesis-list.md`** — top 3 → for the broken segment-stage with cheapest-falsification experiment per cause and an explicit prediction for the next measurement.

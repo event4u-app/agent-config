@@ -38,7 +38,7 @@ It is the lens that refuses to confuse coverage with confidence.
   test would catch?
 - Which assertion is missing — the one that would have caught the
   bug we just fixed, or the bug one ticket away?
-- Where is the test verifying the implementation instead of the
+- Where is the test verifying the impl instead of the
   behavior?
 - Which boundary — empty, null, max, concurrent, re-entrant — is
   not represented in the test suite for this code path?

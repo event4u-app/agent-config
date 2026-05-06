@@ -168,4 +168,4 @@ Runtime confirmation (e.g. *"reproduce the cross-tenant read against staging"*,
   [`data-exposure-review`](../data-exposure-review/SKILL.md),
   [`judge-security-auditor`](../judge-security-auditor/SKILL.md),
   [`security`](../security/SKILL.md),
-  [`security-audit`](../security-audit/SKILL.md) — sibling review / implementation skills.
+  [`security-audit`](../security-audit/SKILL.md) — sibling review / impl skills.

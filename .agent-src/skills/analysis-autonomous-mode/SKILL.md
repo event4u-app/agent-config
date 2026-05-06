@@ -80,7 +80,7 @@ Route to the primary skill. Monitor findings for signals to chain additional ski
 
 Merge all specialist findings into ONE prioritized output:
 
-1. Confirmed root causes (with evidence)
+1. Confirmed root → (with evidence)
 2. Contributing factors
 3. Risks not yet proven but worth checking
 4. Concrete fixes (ordered by priority)

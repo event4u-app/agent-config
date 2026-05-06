@@ -164,4 +164,4 @@ Schedule::command('reports:weekly')->weeklyOn(1, '07:00');
 - Do NOT add multiple cron entries — use Laravel's scheduler for everything.
 - Do NOT schedule heavy work directly — dispatch a queued job instead.
 - Do NOT forget `withoutOverlapping()` for tasks that may run longer than their interval.
-- Do NOT hardcode times — use environment-based config when schedules vary per environment.
+- Do NOT hardcode times — use environment-based config when schedules vary per env.

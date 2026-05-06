@@ -123,7 +123,7 @@ Then add these **Laravel-specific** checks:
 ## Config and environment
 
 - Read configuration from config files, not directly from `env()` outside config files.
-- Do not introduce new environment variables unless necessary.
+- Do not introduce new env variables unless necessary.
 - Reuse existing config structure and naming patterns.
 
 ## Database interaction

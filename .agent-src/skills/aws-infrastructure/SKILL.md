@@ -16,9 +16,9 @@ Do NOT use when:
 
 ## Procedure: Modify AWS infrastructure
 
-1. Read the `.aws/` directory (or equivalent) for environment configs and templates.
+1. Read the `.aws/` directory (or equivalent) for env configs and templates.
 2. Read CI/CD workflows (e.g., `.github/workflows/`) for the deployment pipeline.
-3. Check the environment-specific vars files.
+3. Check the env-specific vars files.
 4. **Read project-level overrides** — check `agents/overrides/skills/aws-infrastructure.md` for project-specific service names, prefixes, and infrastructure details.
 
 ## Architecture overview
@@ -38,7 +38,7 @@ Do NOT use when:
 | **ECS Fargate** | Container orchestration (no EC2 instances) |
 | **ECR** | Docker image registry |
 | **EFS** | Shared filesystem (private + public access points) |
-| **Secrets Manager** | `.env` file storage per environment |
+| **Secrets Manager** | `.env` file storage per env |
 | **IAM Roles** | OIDC-based GitHub Actions authentication |
 | **VPC** | Networking (security groups, subnets) |
 
@@ -97,7 +97,7 @@ Template variables:
 ### Authentication
 
 - GitHub Actions uses **OIDC** (no long-lived AWS credentials).
-- Role ARN is per-environment in the vars file.
+- Role ARN is per-env in the vars file.
 - `aws-actions/configure-aws-credentials` handles the OIDC exchange.
 
 ### Image tagging
@@ -139,7 +139,7 @@ See the `terraform` and `terragrunt` skills for general IaC conventions.
 
 ## Gotcha
 
-- Never hardcode AWS credentials — always use Secrets Manager or environment variables.
+- Never hardcode AWS credentials — always use Secrets Manager or env variables.
 - ECS task definitions are immutable — you create new revisions, not edit existing ones.
 - gomplate templates use `{{ }}` which conflicts with other template engines — escape carefully.
 

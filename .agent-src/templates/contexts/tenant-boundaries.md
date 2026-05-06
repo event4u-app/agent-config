@@ -16,10 +16,10 @@
 - [ ] **Single-tenant** — one database per deployment. No cross-tenant
       leakage is possible at the infra layer. Delete this file if true
       and the app will never shard.
-- [ ] **Multi-tenant, shared database** — one table with a tenant key
+- [ ] **Multi-tenant, shared DB** — one table with a tenant key
       column (e.g., `tenant_id`, `workspace_id`).
 - [ ] **Multi-tenant, schema per tenant** — one DB, one schema each.
-- [ ] **Multi-tenant, database per tenant** — each tenant has its own
+- [ ] **Multi-tenant, DB per tenant** — each tenant has its own
       connection.
 
 ## Tenant identifier

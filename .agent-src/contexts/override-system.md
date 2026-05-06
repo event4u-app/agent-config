@@ -155,7 +155,7 @@ When a project using this package wants to **optimize** a shared rule or skill:
 
 ### Anti-patterns
 
-- Keeping the override after upstream merge → causes drift
+- Keeping the override after upstream merge → → drift
 - Submitting only the compressed version → breaks source-of-truth workflow
 - Submitting project-specific behavior as universal improvement
 - Forgetting to create the PR → improvement stays siloed

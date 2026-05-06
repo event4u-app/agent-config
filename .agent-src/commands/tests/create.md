@@ -59,7 +59,7 @@ suggestion:
 - Place tests in the matching directory structure under `tests/` (mirror the source structure).
 - Group related tests with `describe` blocks (Pest) or separate test methods (PHPUnit).
 - Use data providers for testing multiple input/output combinations.
-- Mock external dependencies (database, HTTP, file system) — don't test infrastructure.
+- Mock external deps (database, HTTP, file system) — don't test infrastructure.
 
 ### 6. Verify
 
@@ -70,7 +70,7 @@ suggestion:
 
 - **Do NOT commit or push.**
 - **Quality over quantity** — 5 meaningful tests beat 20 trivial ones.
-- If a class is hard to test (too many dependencies, global state), flag it and suggest a refactoring approach instead of writing brittle
+- If a class is hard to test (too many deps, global state), flag it and suggest a refactoring approach instead of writing brittle
   tests.
 
 ## See also

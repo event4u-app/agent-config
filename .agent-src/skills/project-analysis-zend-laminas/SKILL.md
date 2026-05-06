@@ -44,7 +44,7 @@ Check:
 
 * merge order surprises
 * missing overrides
-* environment config mismatches
+* env config mismatches
 * heavy bootstrap logic
 
 ### 3. Analyze ServiceManager behavior
@@ -96,7 +96,7 @@ Check:
 ## Gotcha
 
 * Many Zend/Laminas issues are caused by config order and service resolution, not controller code.
-* Shared services and legacy migration remnants can create cross-request or environment-specific bugs.
+* Shared services and legacy migration remnants can create cross-request or env-specific bugs.
 * Old project behavior may depend on historical bootstrap side effects that are easy to miss.
 
 ## Do NOT

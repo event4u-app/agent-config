@@ -59,7 +59,7 @@ app/Modules/{Module}/agents/contexts/    # Module-scoped contexts
 |---|---|---|
 | **Module** | Single module's structure and purpose | `client-software.md` |
 | **Domain** | Business domain across modules | `import-pipeline.md` |
-| **Service** | Complex service with its dependencies | `customer-service.md` |
+| **Service** | Complex service with its deps | `customer-service.md` |
 | **Integration** | External API/system integration | `probaus-api.md` |
 | **Infrastructure** | DevOps or infrastructure concern | `queue-system.md` |
 

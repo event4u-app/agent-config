@@ -148,7 +148,7 @@ Packages are published to a private Composer registry. Check the organization's 
 ## Output format
 
 1. Package files following standard Composer structure
-2. Updated composer.json with correct autoloading and dependencies
+2. Updated composer.json with correct autoloading and deps
 3. Service provider and config publishing (if Laravel package)
 
 ## Auto-trigger keywords
@@ -167,6 +167,6 @@ Packages are published to a private Composer registry. Check the organization's 
 
 - Do NOT use `*` version constraints in library packages.
 - Do NOT require specific patch versions — use `^` or `||` ranges.
-- Do NOT include dev dependencies in `require` — use `require-dev`.
+- Do NOT include dev deps in `require` — use `require-dev`.
 - Do NOT forget to run `composer validate` before publishing.
 - Do NOT publish without updating the changelog and tagging.

@@ -116,7 +116,7 @@ This is especially important for:
 
 - Find **working examples** of similar code paths in the codebase.
 - Compare the broken path against the working reference.
-- Identify the **specific difference** that causes the failure.
+- Identify the **specific difference** that → the failure.
 - Check if the issue is isolated or part of a broader pattern.
 
 ### Phase 3: Hypothesis and Testing
@@ -129,11 +129,11 @@ This is especially important for:
   - Each fix reveals new shared state or coupling in a different place.
   - Fixes require "massive refactoring" to implement.
   - Each fix creates new symptoms elsewhere.
-- Common root causes in this project:
+- Common root → in this project:
   - **Missing validation** on external sync data (CSV, XML, JSON imports).
   - **Null values** from optional DB columns not handled.
   - **Type mismatches** between legacy DB columns and PHP code.
-  - **Race conditions** in multi-tenant database switching.
+  - **Race conditions** in multi-tenant DB switching.
   - **Missing fallbacks** when external services are unavailable.
 
 ### Phase 4: Implementation
@@ -221,10 +221,10 @@ Focus on the "Bug fixes" attack questions: Is this the root cause or a symptom? 
 |---|---|
 | "Should work now" | RUN the verification — confidence ≠ evidence |
 | "It's probably X, let me fix that" | "Probably" = guessing. Complete Phase 1 first |
-| "Quick fix for now" | Quick fixes mask root causes and create technical debt |
+| "Quick fix for now" | Quick fixes mask root → and create technical debt |
 | "I'll investigate later" | Later never comes. Investigate now |
 | "One more fix attempt" (after 2+) | 3+ failures = architectural problem. Stop and discuss |
-| "Issue is simple, don't need process" | Simple issues have root causes too. Process is fast for simple bugs |
+| "Issue is simple, don't need process" | Simple issues have root → too. Process is fast for simple bugs |
 | "Emergency, no time for process" | Systematic debugging is FASTER than guess-and-check thrashing |
 
 ## Output format

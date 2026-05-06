@@ -65,7 +65,7 @@ Before producing numbers, check:
 - Is there a rollback plan implied?
 
 If the ticket scores low on estimability (vague AC, no out-of-scope,
-no mention of dependencies), set `uncertainty = Underspecified` and
+no mention of deps), set `uncertainty = Underspecified` and
 emit a single-line redirect to `/refine-ticket` at the top of the output.
 
 ### 3. Apply sizing heuristics
@@ -166,7 +166,7 @@ copy-paste instructions if missing.
 - Estimators default to optimism. Every size must cite evidence for at least one of the four axes — not "feels like M".
 - `Underspecified` is not a safe default. Use it only when estimability actually fails; otherwise pick a size and state the risk.
 - `Split: Yes` without concrete split points is useless. Name the slices or drop the recommendation.
-- Persona voices drift into general feedback. Each sentence must be about **sizing** — developer talks implementation size, stakeholder talks timeline fit, etc.
+- Persona voices drift into general feedback. Each sentence must be about **sizing** — developer talks impl size, stakeholder talks timeline fit, etc.
 - Story-point mapping (`S=2 / M=3 / L=5 / XL=8`) is the default; projects may override — do NOT hardcode their scale into this skill.
 
 ## Do NOT
