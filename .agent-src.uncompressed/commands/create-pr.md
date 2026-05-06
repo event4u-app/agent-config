@@ -106,19 +106,54 @@ Once the user approves the content from step 2:
 
 ### 4. After creation
 
-- Show the PR URL.
-- If a Jira ticket was linked, ask:
-  ```
-  > Transition Jira ticket {TICKET-ID} to "In Review"?
-  >
-  > 1. Yes — update status
-  > 2. No — leave as-is
-  ```
+#### 4a. Strip attribution footers (mandatory)
+
+Some `github-api` tool surfaces append attribution server-side after
+the agent has sent a clean body. Per
+[`no-attribution-footers`](../rules/no-attribution-footers.md), every
+PR body must be re-checked and stripped after every write.
+
+Run this strip-pass **after PR creation and after every body PATCH**:
+
+1. Re-fetch the PR body:
+   ```
+   GET /repos/{owner}/{repo}/pulls/{number}
+   ```
+2. Search the body (case-insensitive) for any of:
+   - `Generated with [Augment Code]` / `🤖 Generated with`
+   - `Pull Request opened by [Augment Code]`
+   - `Co-authored by Augment Code`
+   - Any `augmentcode.com` link the user did not ask for
+3. If any pattern is present, remove it together with surrounding
+   `---` separators and trailing whitespace, then:
+   ```
+   PATCH /repos/{owner}/{repo}/pulls/{number}
+   { "body": "<cleaned body>" }
+   ```
+4. Re-fetch the body once more to verify the strip stuck. If a
+   pattern reappears (server re-injection), repeat steps 2–4 once;
+   if it still reappears, surface the issue to the user and stop
+   (do not enter a strip/PATCH loop).
+5. Briefly note in the reply how many footers were removed (or
+   "no footers found" if clean).
+
+#### 4b. Show the PR URL
+
+#### 4c. Jira transition
+
+If a Jira ticket was linked, ask:
+```
+> Transition Jira ticket {TICKET-ID} to "In Review"?
+>
+> 1. Yes — update status
+> 2. No — leave as-is
+```
 
 ### Rules
 
 - **Always use the PR template** from `.github/pull_request_template.md` — read it, fill its sections.
 - **Always show the PR content before creating it** — never create blindly.
 - **Push the branch first** if it hasn't been pushed (with user permission).
+- **Never add attribution footers to the body** — see [`no-attribution-footers`](../rules/no-attribution-footers.md). The agent does not self-credit; the strip-pass in step 4a defends against tool-injected footers.
 - Only create the PR — never merge it.
 - Only commit or push with explicit user permission.
