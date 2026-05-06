@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **332 public artefacts** shipped by
+Consumer-facing catalog of all **339 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > Auto-generated — do not edit manually.
 
-## Skills (134)
+## Skills (135)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -137,6 +137,7 @@ are excluded.
 | skill | [`test-driven-development`](../.agent-src/skills/test-driven-development/SKILL.md) |  | Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — even if the user just says 'add this function' or 'fix this bug'. |
 | skill | [`test-performance`](../.agent-src/skills/test-performance/SKILL.md) |  | Use when optimizing test suite performance — database setup, seeder optimization, parallel testing, CI pipeline efficiency, or RefreshDatabase alternatives. |
 | skill | [`threat-modeling`](../.agent-src/skills/threat-modeling/SKILL.md) |  | Use when adding auth, webhooks, uploads, queues, secrets, tenant boundaries, or public endpoints — produces trust boundaries + abuse cases mapped to files, BEFORE implementation. |
+| skill | [`token-optimizer`](../.agent-src/skills/token-optimizer/SKILL.md) |  | Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — single decision tree keyed by intent that cites the canonical token-saving asset. Consult before the action. |
 | skill | [`traefik`](../.agent-src/skills/traefik/SKILL.md) |  | Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing. |
 | skill | [`unit-economics-modeling`](../.agent-src/skills/unit-economics-modeling/SKILL.md) |  | Use when modeling CAC, LTV, gross-margin payback, or contribution margin per customer — for SaaS, marketplace, or transactional businesses. |
 | skill | [`universal-project-analysis`](../.agent-src/skills/universal-project-analysis/SKILL.md) |  | ONLY when user explicitly requests: full project analysis, deep codebase audit, or comprehensive architecture review. Routes to core and framework-specific analysis skills. |
@@ -146,7 +147,7 @@ are excluded.
 | skill | [`verify-completion-evidence`](../.agent-src/skills/verify-completion-evidence/SKILL.md) |  | Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs. |
 | skill | [`websocket`](../.agent-src/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (53)
+## Rules (54)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -198,6 +199,7 @@ are excluded.
 | rule | [`slash-command-routing-policy`](../.agent-src/rules/slash-command-routing-policy.md) | auto | When user types a slash command like /create-pr, /commit, or pastes command file content |
 | rule | [`think-before-action`](../.agent-src/rules/think-before-action.md) | auto | Before coding, modifying, or debugging — analyze first, verify with real tools, never guess or trial-and-error |
 | rule | [`token-efficiency`](../.agent-src/rules/token-efficiency.md) | auto | When running CLI tools, fetching logs, or producing replies — redirect verbose output, minimize tool calls, keep replies concise |
+| rule | [`token-optimizer-maintenance`](../.agent-src/rules/token-optimizer-maintenance.md) | auto | Editing a token-optimizer-cited asset (cli-output-handling, rtk-output-filtering, token-efficiency, agent-handoff, direct-answers, markitdown) — keep the catalog row in sync in the same commit. |
 | rule | [`tool-safety`](../.agent-src/rules/tool-safety.md) | auto | When a skill uses external tools — enforce allowlist, deny-by-default, and no hidden credential patterns |
 | rule | [`ui-audit-gate`](../.agent-src/rules/ui-audit-gate.md) | auto | Writing or editing UI — components, screens, partials, layouts, design tokens — require existing-ui-audit findings in state.ui_audit before non-trivial UI change; gate, not suggestion |
 | rule | [`upstream-proposal`](../.agent-src/rules/upstream-proposal.md) | auto | After creating or significantly improving a skill, rule, guideline, or command — ask if it should be contributed upstream to the shared package |
@@ -303,7 +305,7 @@ are excluded.
 | command | [`upstream-contribute`](../.agent-src/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
 | command | [`work`](../.agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (51)
+## Guidelines (56)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -320,13 +322,17 @@ are excluded.
 | guideline | [`naming`](../docs/guidelines/agent-infra/naming.md) | agent-infra |  |
 | guideline | [`output-patterns`](../docs/guidelines/agent-infra/output-patterns.md) | agent-infra |  |
 | guideline | [`review-routing-data-format`](../docs/guidelines/agent-infra/review-routing-data-format.md) | agent-infra |  |
+| guideline | [`roadmap-progress-mechanics`](../docs/guidelines/agent-infra/roadmap-progress-mechanics.md) | agent-infra |  |
 | guideline | [`role-contracts`](../docs/guidelines/agent-infra/role-contracts.md) | agent-infra |  |
 | guideline | [`role-mode-router`](../docs/guidelines/agent-infra/role-mode-router.md) | agent-infra |  |
+| guideline | [`rule-type-governance`](../docs/guidelines/agent-infra/rule-type-governance.md) | agent-infra |  |
 | guideline | [`runtime-layer`](../docs/guidelines/agent-infra/runtime-layer.md) | agent-infra |  |
 | guideline | [`self-improvement-pipeline`](../docs/guidelines/agent-infra/self-improvement-pipeline.md) | agent-infra |  |
 | guideline | [`size-and-scope`](../docs/guidelines/agent-infra/size-and-scope.md) | agent-infra |  |
+| guideline | [`skill-quality-checklist`](../docs/guidelines/agent-infra/skill-quality-checklist.md) | agent-infra |  |
 | guideline | [`tool-integration`](../docs/guidelines/agent-infra/tool-integration.md) | agent-infra |  |
 | guideline | [`verify-before-complete-demos`](../docs/guidelines/agent-infra/verify-before-complete-demos.md) | agent-infra |  |
+| guideline | [`augment-portability-patterns`](../docs/guidelines/augment-portability-patterns.md) | (root) |  |
 | guideline | [`readme-size-and-splitting`](../docs/guidelines/docs/readme-size-and-splitting.md) | docs |  |
 | guideline | [`playwright`](../docs/guidelines/e2e/playwright.md) | e2e |  |
 | guideline | [`api-design`](../docs/guidelines/php/api-design.md) | php |  |
@@ -353,6 +359,7 @@ are excluded.
 | guideline | [`strategy`](../docs/guidelines/php/patterns/strategy.md) | patterns |  |
 | guideline | [`patterns`](../docs/guidelines/php/patterns.md) | php |  |
 | guideline | [`performance`](../docs/guidelines/php/performance.md) | php |  |
+| guideline | [`php-coding-patterns`](../docs/guidelines/php/php-coding-patterns.md) | php |  |
 | guideline | [`resources`](../docs/guidelines/php/resources.md) | php |  |
 | guideline | [`security`](../docs/guidelines/php/security.md) | php |  |
 | guideline | [`sql`](../docs/guidelines/php/sql.md) | php |  |

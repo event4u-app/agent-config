@@ -7,7 +7,7 @@ Give your AI agents an audit-disciplined orchestration contract — testing, Git
 > Your agent picks up the project's stack, runs tests, prepares PRs, fixes CI — and follows your team's coding standards while doing it. Stack-aware skill sets ship for PHP (Laravel · Symfony · Zend/Laminas), JavaScript (Next.js · React · Node), and cross-stack concerns (API · testing · security · observability).
 
 <p align="center">
-  <strong>134 Skills</strong> · <strong>56 Rules</strong> · <strong>94 Commands</strong> · <strong>51 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>135 Skills</strong> · <strong>57 Rules</strong> · <strong>94 Commands</strong> · <strong>56 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -55,15 +55,11 @@ bash vendor/event4u/agent-config/scripts/install
 bash node_modules/@event4u/agent-config/scripts/install --profile=balanced
 ```
 
-**To install the package:** no Task, no Make, no build tools required.
-`scripts/install` orchestrates two stages: a bash payload sync and a
-Python bridge generator. **Python 3** (stdlib only, pre-installed on
-macOS 12.3+ and all major Linux distros) is required for the bridge
-stage; without it the orchestrator warns, runs the payload sync, and
-continues. The package makes rules, skills, and commands available
-project-locally for all supported AI tools. Task is required for
-*contributors* who want to rebuild the compressed content locally — see
-[CONTRIBUTING.md](CONTRIBUTING.md).
+**To install:** no Task / Make / build tools — `scripts/install` runs a
+bash payload sync plus a Python 3 bridge generator (stdlib only, default
+on macOS 12.3+ / major Linux distros). Python missing → orchestrator
+warns and continues payload-only. Task is needed only for *contributors*
+rebuilding compressed content — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 **Verify hook coverage** after installing — every supported platform
 (Augment, Claude Code, Cowork, Cursor, Cline, Windsurf, Gemini CLI,
@@ -270,15 +266,20 @@ session is explicitly not.
 
 ## You don't need everything
 
-Start with **Rules + Skills**. Everything else is optional.
+`cost_profile` is the master switch for **rule-tier loading**. The kernel
+(always-loaded Iron-Law floor, ≤ 26k chars across 9 rules) ships in every
+profile; tier-1 and tier-2 rules are gated by profile and resolved at
+session start from `router.json`.
 
-| Mode | What's active | Runtime process overhead |
-|---|---|---|
-| **Minimal** (default) | Rules, Skills, Commands | None |
-| **Balanced** | + Runtime Dispatcher for skills that declare a shell command | Low |
-| **Full** | + Tool Adapters (GitHub / Jira read-only, opt-in) | Moderate |
+| Profile | Rule tiers loaded | Token footprint | Best for |
+|---|---|---|---|
+| **`minimal`** | kernel only (no router, no auto-rules) | lowest | Cost-sensitive sessions; trivial Q&A; CI runs |
+| **`balanced`** (default) | kernel + tier-1 auto-rules | medium | Day-to-day work — current behaviour superset |
+| **`full`** | kernel + tier-1 + tier-2 (everything) | highest | Agent-config development; full rule fidelity |
 
-Nothing runs automatically without your control. [Configure modes →](docs/customization.md)
+Architecture: [`docs/contracts/rule-router.md`](docs/contracts/rule-router.md) (beta) ·
+kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-membership.md) (beta) ·
+[Configure profiles →](docs/customization.md)
 
 > **Stability tiers** — [`STABILITY.md`](docs/contracts/STABILITY.md) for
 > the full matrix. Runtime Dispatcher: **stable** (`php` / `node` handlers
@@ -367,7 +368,7 @@ Every developer gets the same behavior. No per-user setup needed.
 native slash-commands)
 
 > **What this means in practice:** Augment Code and Claude Code get the full
-> package (rules + 134 skills + 94 native commands). Cursor, Cline, Windsurf,
+> package (rules + 135 skills + 94 native commands). Cursor, Cline, Windsurf,
 > Gemini CLI, and GitHub Copilot only get the **rules** natively; skills and
 > commands are available to them as documentation the agent can read, not as
 > first-class features.
