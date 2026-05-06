@@ -231,6 +231,42 @@ def extract_sections(text: str) -> set[str]:
     return {match.group(1).strip() for match in SECTION_PATTERN.finditer(text)}
 
 
+def _count_code_blocks(text: str) -> int:
+    """Return the number of fenced code blocks (``` … ```) in *text*."""
+    fence_count = 0
+    for line in text.splitlines():
+        stripped = line.lstrip()
+        if stripped.startswith("```"):
+            fence_count += 1
+    return fence_count // 2
+
+
+def _fenced_content_ratio(text: str) -> float:
+    """Return the fraction of non-empty lines that sit inside fenced blocks.
+
+    Used as a structural signal: rules / files dominated by verbatim Iron-Law
+    blocks or worked examples score high and are exempted from raw line-count
+    warnings (council review 2026-05-06).
+    """
+    inside = False
+    fenced_lines = 0
+    non_empty = 0
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            inside = not inside
+            if stripped:
+                non_empty += 1
+            continue
+        if stripped:
+            non_empty += 1
+            if inside:
+                fenced_lines += 1
+    if non_empty == 0:
+        return 0.0
+    return fenced_lines / non_empty
+
+
 def extract_description(text: str) -> Optional[str]:
     frontmatter = FRONTMATTER_PATTERN.search(text)
     if not frontmatter:
@@ -506,8 +542,12 @@ def lint_skill(path: Path, text: str) -> LintResult:
             suggestions.append("Add a requirement-checking or validation step before implementation")
 
     # --- Size check (see guidelines/agent-infra/size-and-scope.md) ---
+    # Threshold raised from 300 → 400 (council review 2026-05-06): reference-rich
+    # skills (quality-tools 411, ai-council 399, project-analyzer 341) legitimately
+    # exceed 300 lines without being split-candidates. Structural follow-up tracked
+    # in agents/roadmaps/road-to-structural-linter-reform.md.
     total_lines = len(text.splitlines())
-    if total_lines > 300:
+    if total_lines > 400:
         issues.append(Issue("warning", "skill_too_large", f"Skill has {total_lines} lines; review for split (see size-and-scope guideline)"))
 
     # --- Pointer-only / guideline-dependent skill detection ---
@@ -956,14 +996,18 @@ def lint_rule(path: Path, text: str) -> LintResult:
         issues.append(Issue("warning", "double_blank_lines", "File contains double or triple blank lines"))
 
     # --- Content checks (see guidelines/agent-infra/size-and-scope.md) ---
+    # Length thresholds gated by fenced-content density (council review 2026-05-06):
+    # rules dominated by verbatim Iron-Law blocks / worked examples are protected
+    # from the > 40 / > 60 warnings. Hard error at 200 stays unconditional.
     line_count = len([line for line in text.splitlines() if line.strip()])
     total_lines = len(text.splitlines())
+    fenced_ratio = _fenced_content_ratio(text)
     if total_lines > 200:
         issues.append(Issue("error", "rule_too_large", f"Rule has {total_lines} lines (hard limit: 200); must split or move to guideline"))
-    elif line_count > 60:
-        issues.append(Issue("warning", "long_rule", f"Rule has {line_count} non-empty lines; prefer < 60 (see size-and-scope guideline)"))
-    elif line_count > 40:
-        issues.append(Issue("warning", "long_rule", f"Rule has {line_count} non-empty lines; rules should be concise"))
+    elif line_count > 60 and fenced_ratio < 0.30:
+        issues.append(Issue("warning", "long_rule", f"Rule has {line_count} non-empty lines (fenced-content {fenced_ratio:.0%}); prefer < 60 (see size-and-scope guideline)"))
+    elif line_count > 40 and fenced_ratio < 0.30:
+        issues.append(Issue("warning", "long_rule", f"Rule has {line_count} non-empty lines (fenced-content {fenced_ratio:.0%}); rules should be concise"))
 
     for bad_sign in RULE_BAD_SIGNS:
         if bad_sign in text:
@@ -1108,9 +1152,16 @@ def lint_command(path: Path, text: str) -> LintResult:
         issues.append(Issue("warning", "no_steps", "Command has no Steps section or numbered sub-headings"))
 
     # --- Size check (see guidelines/agent-infra/size-and-scope.md) ---
+    # Word threshold (1000) gated by structural delegation signal (council review
+    # 2026-05-06): well-factored orchestrators with ≥ 5 sub-sections AND ≥ 3 code
+    # blocks are exempt — the size reflects dispatch breadth, not bloat.
     word_count = len(text.split())
     if word_count > 1000:
-        issues.append(Issue("warning", "large_command", f"Command has {word_count} words (target: 200-600, max ~1000)"))
+        section_count = len(sections)
+        code_block_count = _count_code_blocks(text)
+        delegation_signal = section_count >= 5 and code_block_count >= 3
+        if not delegation_signal:
+            issues.append(Issue("warning", "large_command", f"Command has {word_count} words (target: 200-600, max ~1000); {section_count} sub-sections, {code_block_count} code blocks — lacks delegation structure"))
 
     # File must end with exactly one newline
     if not text.endswith("\n"):
