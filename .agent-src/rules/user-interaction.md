@@ -5,7 +5,7 @@ description: "Asking the user a question, presenting options, or summarizing pro
 alwaysApply: false
 source: package
 load_context:
-  - .agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md
+  - ../contexts/communication/rules-auto/user-interaction-mechanics.md
 triggers:
   - intent: "ask user a question"
   - intent: "numbered options"

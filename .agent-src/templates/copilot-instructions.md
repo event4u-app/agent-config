@@ -86,6 +86,27 @@ This repository contains {{project_description_oneline}}.
 - Do NOT review or suggest changes to unmodified code in the same file.
 - Do NOT nitpick style issues that linters/formatters auto-fix.
 
+## ✅ Known False Positives — Do NOT Flag
+
+The repo ships agent-config rules and skills under `.augment/`,
+`.agent-src/`, and `.agent-src.uncompressed/`. These trees use a
+deliberate path convention; the following patterns are **correct by
+design** — do not flag them as broken:
+
+- **Relative cross-references inside markdown rules / skills** like
+  `[x](../docs/guidelines/foo.md)` or `[y](../contexts/bar.md)`. The
+  base resolves from the file's delivered location (e.g.
+  `.augment/rules/<rule>.md`) — these paths are valid via the
+  `.augment/` tree, even when the file is symlinked into
+  `.claude/rules/`, `.cursor/rules/`, or `.clinerules/`.
+- **`path_prefix:` triggers containing `.agent-src.uncompressed/`**
+  in YAML frontmatter. This is a literal match pattern for the
+  host's router, **not** a file reference — keeping the verbatim
+  source path is required for the rule to fire on the right edits.
+- **Symlinked rule files** under `.claude/rules/`, `.cursor/rules/`,
+  `.clinerules/`. Targets resolve into `.augment/rules/`; missing-file
+  reports here are renderer artifacts, not real bugs.
+
 ## ✅ Code Review Comment Behavior
 
 - **Never create duplicate comments** — one comment per concern per location.

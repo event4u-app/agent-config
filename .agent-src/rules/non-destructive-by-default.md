@@ -5,7 +5,7 @@ description: "Agent is never destructive — Hard Floor always asks for prod-tru
 alwaysApply: true
 source: package
 load_context:
-  - .agent-src.uncompressed/contexts/authority/destructive-mechanics.md
+  - ../contexts/authority/destructive-mechanics.md
 ---
 
 # Non-Destructive by Default

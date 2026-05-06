@@ -114,6 +114,17 @@ Required sections in this order:
 * If the command calls external APIs, list required keys / permissions.
 * If the command edits agent files, target `.agent-src.uncompressed/` only.
 
+### 3b. Path conventions in command body
+
+Body links to guidelines / contracts use the verbatim relative form
+(`../../docs/guidelines/...`, `../../docs/contracts/...`); the
+compress-time rewriter handles depth. Do not pre-rewrite in source. Do
+not write `.agent-src.uncompressed/` in any markdown link target — the
+file ships into `.augment/commands/` and the prefix breaks consumer
+resolution. The only legitimate `.agent-src.uncompressed/` strings in a
+command file are prose mentions and step instructions about where to
+edit (per § 2 above). Canonical reference: `rule-writing` § 3b.
+
 ### 4. Enforce the size budget
 
 Normative source: [`size-enforcement`](../../rules/size-enforcement.md) +

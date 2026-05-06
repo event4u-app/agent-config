@@ -5,9 +5,9 @@ description: "Deciding whether to ask the user or just act on a workflow step â€
 alwaysApply: false
 source: package
 load_context:
-  - .agent-src.uncompressed/contexts/execution/autonomy-detection.md
-  - .agent-src.uncompressed/contexts/execution/autonomy-mechanics.md
-  - .agent-src.uncompressed/contexts/execution/autonomy-examples.md
+  - contexts/execution/autonomy-detection.md
+  - contexts/execution/autonomy-mechanics.md
+  - contexts/execution/autonomy-examples.md
 triggers:
   - intent: "trivial workflow question"
   - intent: "autonomy mode"

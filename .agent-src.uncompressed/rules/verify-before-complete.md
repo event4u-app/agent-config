@@ -5,7 +5,7 @@ description: "Verify before completion — run tests and quality tools before cl
 alwaysApply: true
 source: package
 load_context:
-  - .agent-src.uncompressed/contexts/execution/verification-mechanics.md
+  - contexts/execution/verification-mechanics.md
 ---
 
 # Verify Before Completion

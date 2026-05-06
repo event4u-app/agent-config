@@ -82,6 +82,29 @@ no silent edits, max two rounds.
 * No numbered procedures — if you need steps, it is a skill.
 * Link out to guidelines for deep reference instead of inlining them.
 
+### 3b. Path conventions in frontmatter and body — load-bearing
+
+Three different surfaces, three different rules. Mixing them up will
+either fail the schema (`task validate-schema`) or fail
+`task lint-load-context`. Canonical reference:
+[`templates/rule.md`](../../templates/rule.md) § Path conventions and
+[`docs/contracts/load-context-schema.md`](../../../docs/contracts/load-context-schema.md).
+
+| Field | Form | Example |
+|---|---|---|
+| `load_context:` / `load_context_eager:` | **Logical name** rooted at the source — never `.agent-src.uncompressed/` | `contexts/execution/verification-mechanics.md` |
+| `triggers[].path_prefix:` | **Literal match pattern** the host evaluates against the file the agent is editing — not rewritten | `.agent-src.uncompressed/skills/` (source-of-truth rules) or `agents/`, `app/`, `.augment/` |
+| Body links to guidelines / contracts | **Verbatim relative form** — `../../docs/...` works in any markdown viewer; rewriter handles depth | `[guideline](../../docs/guidelines/<group>/<name>.md)` |
+
+The compress-time rewriter (`scripts/compress.py::_rewrite_paths`) is
+idempotent and depth-aware — it resolves logical names and body links
+to the deployment-correct relative path at compress time, leaving
+`path_prefix:` literally as written. The schema regex
+(`scripts/schemas/rule.schema.json`) and `scripts/lint_load_context.py`
+both reject the `.agent-src.uncompressed/` prefix in `load_context:` /
+`load_context_eager:` with an error pointing at the canonical logical
+name.
+
 ### 4. Enforce the size budget
 
 Normative source: [`size-enforcement`](../../rules/size-enforcement.md) +
@@ -113,8 +136,18 @@ type: "auto"              # or "always"
 description: "Trigger-shaped sentence — domain + symptoms — soft cap 200 chars"
 alwaysApply: false        # true only if type: always
 source: package           # or project for consumer-local rules
+load_context:             # logical names only — `contexts/<area>/<file>.md`
+  - contexts/execution/verification-mechanics.md
+triggers:                 # path_prefix is literal, not rewritten
+  - path_prefix: ".agent-src.uncompressed/rules/"
+routes_to:
+  - "skill:related-skill"
 ---
 ```
+
+See § 3b above for the load-bearing distinction between `load_context:`
+(logical, rewritten), `triggers[].path_prefix:` (literal, verbatim),
+and body links (relative `../../docs/...`, rewriter handles depth).
 
 ## Output format
 

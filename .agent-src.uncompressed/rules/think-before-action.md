@@ -5,7 +5,7 @@ description: "Before coding, modifying, or debugging — analyze first, verify w
 alwaysApply: false
 source: package
 load_context:
-  - .agent-src.uncompressed/contexts/communication/rules-auto/think-before-action-mechanics.md
+  - contexts/communication/rules-auto/think-before-action-mechanics.md
 triggers:
   - intent: "before coding"
   - intent: "before debugging"

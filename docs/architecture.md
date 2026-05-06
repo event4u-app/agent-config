@@ -36,6 +36,35 @@ Stability tiers follow [`docs/contracts/STABILITY.md`](contracts/STABILITY.md):
 dist/cloud/<skill>.zip          ← Anthropic Skills bundles (Claude.ai Web / Skills API)
 ```
 
+### Installer layout
+
+In a consumer project, the installer (`scripts/install.sh`) and the
+package's own `project_to_augment()` projection produce a `.augment/`
+tree where:
+
+- `.augment/rules/` — **copies** of compressed rule files. Augment
+  Code does not load symlinked rules, so each rule is a real file.
+- `.augment/skills/`, `.augment/commands/`, `.augment/personas/`,
+  `.augment/contexts/`, `.augment/templates/` — **symlinks** into
+  `.agent-src/<subdir>/`. Reading a context follows the symlink to
+  the package payload.
+- `.augment/docs/guidelines/` — **symlink** into the package's
+  `docs/guidelines/` (consumer side: `vendor/event4u/agent-config/docs/guidelines/`;
+  package self-projection: `../docs/guidelines/`). This is the only
+  `docs/` subdirectory exposed in `.augment/`; `docs/contracts/` and
+  `docs/decisions/` are package-internal — rules that reference
+  contracts inline a 2–3 line excerpt instead of linking out.
+
+Cross-references inside `.agent-src/rules/*.md` are written
+**relative to `.agent-src/rules/`** (e.g. `../contexts/execution/foo.md`,
+`../docs/guidelines/agent-infra/foo.md`). Source files under
+`.agent-src.uncompressed/rules/` use **logical names** without a
+directory prefix (e.g. `contexts/execution/foo.md`); the
+compress-time path rewriter in `scripts/compress.py` translates
+them to the relative form when writing into `.agent-src/`. Hardcoding
+`.agent-src.uncompressed/` in source frontmatter or body links is
+forbidden and caught by `scripts/check_compressed_paths.py`.
+
 ### Cloud-bundle pipeline
 
 `task build-cloud-bundles-all` produces one ZIP per skill at
@@ -63,7 +92,7 @@ fails on any source-side violation, without producing artifacts.
 | Layer | Count | Purpose |
 |---|---|---|
 | **Skills** | 135 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
-| **Rules** | 57 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
+| **Rules** | 58 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
 | **Commands** | 94 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/compress`, … |
 | **Guidelines** | 56 | Reference material cited by skills — PHP patterns, Eloquent, Playwright, agent-infra, … |
 | **Templates** | 7 | Scaffolds for features, roadmaps, contexts, skills, overrides |

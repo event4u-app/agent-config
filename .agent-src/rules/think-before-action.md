@@ -5,7 +5,7 @@ description: "Before coding, modifying, or debugging — analyze first, verify w
 alwaysApply: false
 source: package
 load_context:
-  - .agent-src.uncompressed/contexts/communication/rules-auto/think-before-action-mechanics.md
+  - ../contexts/communication/rules-auto/think-before-action-mechanics.md
 triggers:
   - intent: "before coding"
   - intent: "before debugging"
@@ -29,7 +29,7 @@ NO BLIND TRIAL-AND-ERROR. MAX 2 RETRIES PER APPROACH.
 - Unclear requirements → precise clarification question, not hidden assumptions.
 - Refactors must preserve behavior, validation, examples, and anti-failure guidance unless explicitly changed.
 - Do NOT modify code you do not fully understand — read it, trace the flow, then change it.
-- Multiple valid frameworks/patterns coexist (Tailwind + Flux, multiple form libs, competing state stores) → do NOT pick one silently — ask. See [`no blind implementation`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation).
+- Multiple valid frameworks/patterns coexist (Tailwind + Flux, multiple form libs, competing state stores) → do NOT pick one silently — ask. See [`no blind implementation`](../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation).
 
 ## Mechanics — workflow, minimum read set, verify-with-real-tools, no blind retries
 

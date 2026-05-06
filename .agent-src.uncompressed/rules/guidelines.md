@@ -5,7 +5,7 @@ description: "Writing or reviewing code — check relevant guideline before writ
 alwaysApply: false
 source: package
 load_context:
-  - .agent-src.uncompressed/contexts/communication/rules-auto/guidelines-mechanics.md
+  - contexts/communication/rules-auto/guidelines-mechanics.md
 triggers:
   - intent: "writing code"
   - intent: "reviewing code"

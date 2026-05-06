@@ -5,7 +5,7 @@ description: "Commit policy — never commit and never ask about committing unle
 alwaysApply: true
 source: package
 load_context:
-  - .agent-src.uncompressed/contexts/authority/commit-mechanics.md
+  - contexts/authority/commit-mechanics.md
 ---
 
 # Commit Policy

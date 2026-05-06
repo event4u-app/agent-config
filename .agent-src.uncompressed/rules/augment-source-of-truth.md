@@ -4,7 +4,7 @@ tier: "1"
 description: "Creating, editing, or modifying files inside .agent-src/ or .augment/ — the source of truth is .agent-src.uncompressed/, never edit the generated directories directly"
 source: package
 load_context:
-  - .agent-src.uncompressed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md
+  - contexts/communication/rules-auto/augment-source-of-truth-mechanics.md
 triggers:
   - path_prefix: ".agent-src/"
   - path_prefix: ".augment/"

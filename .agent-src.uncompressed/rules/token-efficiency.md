@@ -5,7 +5,7 @@ description: "When running CLI tools, fetching logs, or producing replies — re
 alwaysApply: false
 source: package
 load_context:
-  - .agent-src.uncompressed/contexts/communication/rules-auto/token-efficiency-mechanics.md
+  - contexts/communication/rules-auto/token-efficiency-mechanics.md
 triggers:
   - intent: "verbose CLI output"
   - intent: "fetching logs"

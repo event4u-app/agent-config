@@ -5,7 +5,7 @@ description: "Scope control — no unsolicited architectural changes, refactors,
 alwaysApply: true
 source: package
 load_context:
-  - .agent-src.uncompressed/contexts/authority/scope-mechanics.md
+  - ../contexts/authority/scope-mechanics.md
 ---
 
 # Scope Control
