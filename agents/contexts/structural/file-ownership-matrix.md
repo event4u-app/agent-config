@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **319**
-- Edges (incl. self-WRITE): **684**
+- Files indexed: **321**
+- Edges (incl. self-WRITE): **691**
 
 ## READ_ONLY edges
 
@@ -49,6 +49,7 @@
 | `.agent-src.uncompressed/commands/onboard.md` | `.agent-src.uncompressed/commands/set-cost-profile.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/onboard.md` | `.agent-src.uncompressed/rules/onboarding-gate.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/onboard.md` | `.agent-src.uncompressed/skills/rtk-output-filtering/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/optimize-prompt.md` | `.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/refine-ticket.md` | `.agent-src.uncompressed/commands/estimate-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/refine-ticket.md` | `.agent-src.uncompressed/commands/jira-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/refine-ticket.md` | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `body_link` | 1 |
@@ -300,6 +301,10 @@
 | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `.agent-src.uncompressed/skills/dcf-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `.agent-src.uncompressed/skills/rice-prioritization/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md` | `.agent-src.uncompressed/commands/optimize-prompt.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md` | `.agent-src.uncompressed/commands/review-changes.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md` | `.agent-src.uncompressed/skills/description-assist/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md` | `.agent-src.uncompressed/skills/refine-prompt/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/receiving-code-review/SKILL.md` | `.agent-src.uncompressed/skills/conventional-commits-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/receiving-code-review/SKILL.md` | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-prompt/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
@@ -382,9 +387,9 @@
 
 | Kind | Count |
 |---|---:|
-| `command` | 94 |
+| `command` | 95 |
 | `context` | 24 |
 | `persona` | 8 |
 | `rule` | 58 |
-| `skill` | 135 |
+| `skill` | 136 |
 
