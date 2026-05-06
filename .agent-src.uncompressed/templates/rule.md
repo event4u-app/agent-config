@@ -73,6 +73,7 @@ type: "always"
 tier: "kernel"
 description: "{One-line trigger sentence — what fires this rule}"
 source: package
+# council_depth: deep   # uncomment for rules that gate architecture/refactor/bug-diagnose flows
 load_context:
   - contexts/{area}/{file}.md
 triggers:
@@ -119,6 +120,7 @@ for full detail; rules are pointers, not playbooks.}
 | `triggers` | no | Required on non-kernel rules per `rule-router.md`. |
 | `routes_to` | no | `skill:`, `guideline:`, `command:`, `contract:` targets. Forbidden on kernel rules. |
 | `alwaysApply` | no | Cursor/Cline sidecar — by convention `true` for `type: always`. |
+| `council_depth` | no | Only `deep` is accepted; **omit the key for default depth** (`standard` is the implicit default and is rejected by the schema — every frontmatter byte counts). Set `deep` when this rule gates AI Council on architecture, refactoring, or bug-diagnosis flows. Host translates to `--depth deep` on the council CLI. See `.augment/skills/ai-council/SKILL.md`. |
 
 ## Size budget
 

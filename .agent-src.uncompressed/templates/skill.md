@@ -41,6 +41,23 @@ status: active
   See guidelines/agent-infra/runtime-layer.md for details.
 -->
 
+<!-- COUNCIL DEPTH (optional — delete this comment when done):
+  Add `council_depth: deep` to the frontmatter when this skill triggers
+  AI Council on architecture, refactoring, or bug-diagnosis artefacts.
+  The host translates `deep` into `--depth deep` on the council CLI,
+  raising the round floor to `max(ai_council.deep_min_rounds,
+  ai_council.min_rounds)`.
+
+  Only `deep` is accepted. **Omit the key for default depth** —
+  `standard` is the implicit default and is rejected by the schema
+  (every frontmatter byte counts against the context window).
+
+  Example:
+    council_depth: deep
+
+  See .augment/skills/ai-council/SKILL.md.
+-->
+
 <!-- DESCRIPTION RULES (delete this comment when done):
   - Start with "Use when..." — this is a TRIGGER, not a summary
   - Include 2-3 phrases users actually say: "create a DTO", "add column", "fix tests"

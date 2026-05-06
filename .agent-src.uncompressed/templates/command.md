@@ -24,6 +24,7 @@ suggestion:
   eligible: true
   trigger_description: "natural-language pattern, comma-separated examples"
   trigger_context: "concrete signal — branch name, file pattern, recent tool output"
+# council_depth: deep   # uncomment for architecture/refactor/bug-diagnose commands
 ---
 
 <!-- FRONTMATTER RULES (delete this comment when done):
@@ -35,6 +36,13 @@ suggestion:
     - eligible: true  → set trigger_description + trigger_context
     - eligible: false → set rationale (why never auto-suggested)
     See agents/contexts/command-suggestion-eligibility.md for guidance.
+  - council_depth: optional — only `deep` is accepted. **Omit the key
+    for default depth** (`standard` is the implicit default and is
+    rejected by the schema — every frontmatter byte counts). Set `deep`
+    when this command triggers AI Council on architecture, refactoring,
+    or bug-diagnosis artefacts. The host translates `deep` into
+    `--depth deep` on the council CLI, raising the round floor to
+    `ai_council.deep_min_rounds`. See .augment/skills/ai-council/SKILL.md.
 -->
 
 # /{command-name}
