@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **339 public artefacts** shipped by
+Consumer-facing catalog of all **340 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -147,7 +147,7 @@ are excluded.
 | skill | [`verify-completion-evidence`](../.agent-src/skills/verify-completion-evidence/SKILL.md) |  | Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs. |
 | skill | [`websocket`](../.agent-src/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (54)
+## Rules (55)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -179,6 +179,7 @@ are excluded.
 | rule | [`model-recommendation`](../.agent-src/rules/model-recommendation.md) | auto | Starting a new task, switching task type, or invoking a command — detect task complexity and recommend the optimal model (Opus/Sonnet/GPT) before any work |
 | rule | [`no-attribution-footers`](../.agent-src/rules/no-attribution-footers.md) | auto | Generating PR/issue/comment/commit-message bodies — forbids unsolicited 'Generated with', 'Co-authored by', or 'Pull Request opened by' attribution footers in any user-owned artifact |
 | rule | [`no-cheap-questions`](../.agent-src/rules/no-cheap-questions.md) | always | No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on) |
+| rule | [`no-council-references`](../.agent-src/rules/no-council-references.md) | auto | Linking a specific file in agents/council-{questions,responses,sessions}/ from any artifact — council files are gitignored, local-only, auto-pruned; inline the convergence instead |
 | rule | [`no-roadmap-references`](../.agent-src/rules/no-roadmap-references.md) | auto | Adding a link to a specific file in agents/roadmaps/ from any stable artifact (rule, skill, command, context, guideline) — roadmaps are transient; promote durable findings to agents/contexts/ instead |
 | rule | [`non-destructive-by-default`](../.agent-src/rules/non-destructive-by-default.md) | always | Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass |
 | rule | [`onboarding-gate`](../.agent-src/rules/onboarding-gate.md) | auto | First turn of a conversation on a project — check onboarding.onboarded in .agent-settings.yml; when false, prompt the user to run /onboard before executing any other request |
@@ -219,7 +220,7 @@ are excluded.
 | command | [`analyze-reference-repo`](../.agent-src/commands/analyze-reference-repo.md) |  | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`bug-fix`](../.agent-src/commands/bug-fix.md) |  | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
 | command | [`bug-investigate`](../.agent-src/commands/bug-investigate.md) |  | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
-| command | [`chat-history:import`](../.agent-src/commands/chat-history/import.md) | cluster: chat-history | Surface prior chat-history sessions as numbered options, let the user pick exactly one, then render its entries verbatim into the current chat — selective, user-driven cross-session import |
+| command | [`chat-history:import`](../.agent-src/commands/chat-history/import.md) | cluster: chat-history | Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import |
 | command | [`chat-history:learn`](../.agent-src/commands/chat-history/learn.md) | cluster: chat-history | Pick a prior chat-history session and mine it for project-improving learnings — runs learning-to-rule-or-skill on the picked session, drafts proposal(s) under agents/proposals/ |
 | command | [`chat-history:show`](../.agent-src/commands/chat-history/show.md) | cluster: chat-history | Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries |
 | command | [`chat-history`](../.agent-src/commands/chat-history.md) | cluster: chat-history | Chat-history orchestrator — routes to show, import, learn |

@@ -217,6 +217,24 @@
       "routes_to": []
     },
     {
+      "id": "no-council-references",
+      "triggers": [
+        {
+          "path_prefix": "agents/council-questions/"
+        },
+        {
+          "path_prefix": "agents/council-responses/"
+        },
+        {
+          "path_prefix": "agents/council-sessions/"
+        },
+        {
+          "intent": "link to council artefact"
+        }
+      ],
+      "routes_to": []
+    },
+    {
       "id": "no-roadmap-references",
       "triggers": [
         {
