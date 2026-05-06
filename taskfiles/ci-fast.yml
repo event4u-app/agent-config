@@ -33,6 +33,10 @@ tasks:
     desc: Validate that every rule under .agent-src.uncompressed/rules/ declares a `tier:` frontmatter key with a known value
     cmd: python3 scripts/lint_rule_tiers.py
 
+  lint-handoffs:
+    desc: Validate cross-wing handoff graph from senior-tier skills' `## Related Skills` blocks (no cycles, no dangling refs, no tier mismatch) — see docs/contracts/cross-wing-handoff.md
+    cmd: python3 scripts/lint_handoffs.py
+
   lint-hook-manifest:
     desc: Validate scripts/hook_manifest.yaml — concern scripts exist, platform/event names are known, no orphan trampolines
     cmd: python3 scripts/lint_hook_manifest.py

@@ -82,12 +82,11 @@ travel changes.
 |---|---|---|---|---|
 | `api` | `AnthropicClient` / `OpenAIClient` | yes | provider SDK + key from `~/.config/agent-config/<provider>.key` | shipped |
 | `manual` | `ManualClient` | no | `stdout` (prompt block) + `stdin` (user pastes the web-UI reply, terminated by a line containing only `END`) | shipped (Phase 2b) |
-| `playwright` | `PlaywrightClient` | no | persistent-profile browser at the provider's chat URL via DOM adapter | reserved (Phase 2c — capture-only) |
 
 Resolution lives in `scripts/ai_council/modes.py`:
 `resolve_mode(name, invocation_mode, member_settings, global_mode)`
 with precedence **invocation flag > per-member setting > global
-setting > default (`api`)**. Whitespace-and-case insensitive; empty
+setting > default (`manual`)**. Whitespace-and-case insensitive; empty
 strings fall through; unknown values raise `InvalidModeError` with
 the offending settings path (`ai_council.mode`,
 `ai_council.members.<name>.mode`, or `/council mode=`).
@@ -113,8 +112,8 @@ that member and the orchestrator stops the fan-out.
 ### Cost-gate bypass for non-billable members
 
 `ExternalAIClient.billable` is the contract. Clients with
-`billable=False` (today: `ManualClient`; future: `PlaywrightClient`)
-bypass the cost gate entirely — the orchestrator skips the
+`billable=False` (`ManualClient`) bypass the cost gate entirely —
+the orchestrator skips the
 projection check, the `on_overrun` callback, and the USD-budget
 short-circuit for that member, but still records the response's
 token counts (from the manual-paste length heuristic or the

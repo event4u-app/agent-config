@@ -71,6 +71,7 @@ tasks:
       - task: validate-schema
       - task: lint-skills
       - task: lint-rule-tiers
+      - task: lint-handoffs
       - task: lint-hook-manifest
       - task: lint-showcase-sessions
       - task: lint-marketplace

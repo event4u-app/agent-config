@@ -106,19 +106,39 @@ Once the user approves the content from step 2:
 
 ### 4. After creation
 
-- Show the PR URL.
-- If a Jira ticket was linked, ask:
-  ```
-  > Transition Jira ticket {TICKET-ID} to "In Review"?
-  >
-  > 1. Yes — update status
-  > 2. No — leave as-is
-  ```
+#### 4a. Strip attribution footers (mandatory)
+
+`github-api` may server-side-append attribution after a clean send.
+Per [`no-attribution-footers`](../rules/no-attribution-footers.md),
+re-check the body after creation **and after every body PATCH**:
+
+1. `GET /repos/{owner}/{repo}/pulls/{number}` — re-fetch body.
+2. Search (case-insensitive) for: `Generated with [Augment Code]`,
+   `🤖 Generated with`, `Pull Request opened by [Augment Code]`,
+   `Co-authored by Augment Code`, unsolicited `augmentcode.com` link.
+3. If any present, strip with surrounding `---` and trailing
+   whitespace, then `PATCH /pulls/{number}` with cleaned body.
+4. Re-fetch to verify. If the pattern reappears, repeat once; if
+   still present, surface to user and stop (no strip/PATCH loop).
+5. Note in the reply how many footers were removed (or "clean").
+
+#### 4b. Show the PR URL
+
+#### 4c. Jira transition
+
+If a Jira ticket was linked, ask:
+```
+> Transition Jira ticket {TICKET-ID} to "In Review"?
+>
+> 1. Yes — update status
+> 2. No — leave as-is
+```
 
 ### Rules
 
 - **Always use the PR template** from `.github/pull_request_template.md` — read it, fill its sections.
 - **Always show the PR content before creating it** — never create blindly.
 - **Push the branch first** if it hasn't been pushed (with user permission).
+- **Never add attribution footers** — see [`no-attribution-footers`](../rules/no-attribution-footers.md). Strip-pass in 4a defends against tool-injected footers.
 - Only create the PR — never merge it.
 - Only commit or push with explicit user permission.

@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **329 artefacts** in this package.
+Maintainer-facing index of all **335 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > **Drift check:** `python3 scripts/generate_index.py --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (129)
+## Skills (134)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -39,6 +39,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`dashboard-design`](../.agent-src.uncompressed/skills/dashboard-design/SKILL.md) |  | Use when designing monitoring dashboards — visualization selection, layout principles, observability strategies (RED/USE/Golden Signals), and data storytelling. |
 | skill | [`data-flow-mapper`](../.agent-src.uncompressed/skills/data-flow-mapper/SKILL.md) |  | Use BEFORE editing code that touches user data — traces the value from entry → validation → transformation → storage → egress, every hop cited with file:line. |
 | skill | [`database`](../.agent-src.uncompressed/skills/database/SKILL.md) |  | Use when working with database architecture, MariaDB/MySQL tuning, indexing strategies, slow queries, or multi-connection patterns — even when the user just says 'this query is slow'. |
+| skill | [`dcf-modeling`](../.agent-src.uncompressed/skills/dcf-modeling/SKILL.md) |  | Wing-4 valuation cognition for a CFO / finance-partner. Use when a deal, internal investment, or board ask names DCF, intrinsic value, WACC, terminal value, or 'what's it worth on a 5-year hold'. |
 | skill | [`dependency-upgrade`](../.agent-src.uncompressed/skills/dependency-upgrade/SKILL.md) |  | Use when upgrading dependencies — "update Laravel", "bump PHP version", or "upgrade packages". Covers changelog review, breaking change detection, and verification. |
 | skill | [`description-assist`](../.agent-src.uncompressed/skills/description-assist/SKILL.md) |  | Use when polishing a skill/rule/command/guideline frontmatter description — pushier phrasing, trigger coverage, undertrigger audit — even if the user just says 'make this pushier'. |
 | skill | [`design-review`](../.agent-src.uncompressed/skills/design-review/SKILL.md) |  | Use when the user says "review the design", "check the UI", or wants a comprehensive UI/UX review. Uses a 7-phase methodology covering interaction, responsiveness, accessibility, and more. |
@@ -54,6 +55,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`file-editor`](../.agent-src.uncompressed/skills/file-editor/SKILL.md) |  | Use when opening edited files in the user's IDE. Reads settings from .agent-settings.yml to determine IDE and whether auto-open is enabled. |
 | skill | [`finishing-a-development-branch`](../.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md) |  | Use when the feature is implementation-complete and the next step is 'ship it' — verifies, cleans up, and routes to merge/PR/park/discard — even when the user just says 'I'm done, what now?'. |
 | skill | [`flux`](../.agent-src.uncompressed/skills/flux/SKILL.md) |  | Use when the project uses `livewire/flux` — dispatched by `directives/ui/{apply,review,polish}.py`. Covers Flux components, slots, variants, and form primitives. |
+| skill | [`funnel-analysis`](../.agent-src.uncompressed/skills/funnel-analysis/SKILL.md) |  | Use when diagnosing where a SaaS or product funnel leaks — visitor → signup → activation → paid → retained — channel-agnostic, conversion-rate-driven. |
 | skill | [`git-workflow`](../.agent-src.uncompressed/skills/git-workflow/SKILL.md) |  | Use when working with Git — branch naming, commit messages, PR creation, rebasing, or the code review process — even when the user says 'push this' or 'merge the branch' without naming Git. |
 | skill | [`github-ci`](../.agent-src.uncompressed/skills/github-ci/SKILL.md) |  | Use when working with GitHub Actions — workflow YAML, quality gates, test matrices, deployment triggers, reusable workflows — even when the user just says 'my CI is failing' or 'add a check'. |
 | skill | [`grafana`](../.agent-src.uncompressed/skills/grafana/SKILL.md) |  | Use when working with Grafana — dashboards, Loki LogQL queries, alerting rules, monitoring panels — even when the user just says 'build me a dashboard' or 'query the logs' without naming Grafana. |
@@ -84,6 +86,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`migration-creator`](../.agent-src.uncompressed/skills/migration-creator/SKILL.md) |  | Use when the user says "create migration", "add column", or "new table". Creates migrations with correct table prefixes, column naming, and multi-tenant awareness. |
 | skill | [`module-management`](../.agent-src.uncompressed/skills/module-management/SKILL.md) |  | Use when the user says "create module", "explore module", or works within app/Modules/. Understands module structure, auto-loading, route registration, and namespace conventions. |
 | skill | [`multi-tenancy`](../.agent-src.uncompressed/skills/multi-tenancy/SKILL.md) |  | Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations. |
+| skill | [`okr-tree-modeling`](../.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md) |  | Use when decomposing a company objective into team OKRs, auditing a draft OKR tree, or stress-testing an existing one for measurability and laddering. |
 | skill | [`openapi`](../.agent-src.uncompressed/skills/openapi/SKILL.md) |  | Use when documenting APIs — OpenAPI/Swagger, PHP attributes, Redocly validation, versioned specs — even when the user just says 'document this endpoint' without naming OpenAPI. |
 | skill | [`override-management`](../.agent-src.uncompressed/skills/override-management/SKILL.md) |  | Creates and manages project-level overrides for shared skills, rules, and commands — extending or replacing originals from .augment/ with project-specific behavior in agents/overrides/. |
 | skill | [`performance`](../.agent-src.uncompressed/skills/performance/SKILL.md) |  | Use when optimizing application performance — caching strategies, eager loading, query optimization, Redis patterns, or background job design. |
@@ -113,6 +116,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`refine-ticket`](../.agent-src.uncompressed/skills/refine-ticket/SKILL.md) |  | Refine a Jira/Linear ticket before planning — 'refine ticket', 'tighten AC on PROJ-123', 'ist das Ticket klar?' — rewritten ticket, Top-5 risks, persona voices, sub-skills orchestrated, close-prompt. |
 | skill | [`requesting-code-review`](../.agent-src.uncompressed/skills/requesting-code-review/SKILL.md) |  | Use when asking for a review or creating a PR — self-review first, frame the right context, test plan included — even when the user just says 'open a PR' or 'ready to merge'. |
 | skill | [`review-routing`](../.agent-src.uncompressed/skills/review-routing/SKILL.md) |  | Use when preparing a PR description, suggesting reviewers, or flagging risk — produces owner-mapped roles plus historical bug-pattern matches from project-local YAML. |
+| skill | [`rice-prioritization`](../.agent-src.uncompressed/skills/rice-prioritization/SKILL.md) |  | Use when ranking competing initiatives for a roadmap, breaking a tie between two features, or auditing a backlog for hidden low-value work via Reach × Impact × Confidence ÷ Effort. |
 | skill | [`roadmap-management`](../.agent-src.uncompressed/skills/roadmap-management/SKILL.md) |  | Use when the user says "create roadmap", "show roadmap", or "execute roadmap". Creates, reads, and manages roadmap files with phase tracking. |
 | skill | [`rtk-output-filtering`](../.agent-src.uncompressed/skills/rtk-output-filtering/SKILL.md) |  | Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns. |
 | skill | [`rule-writing`](../.agent-src.uncompressed/skills/rule-writing/SKILL.md) |  | Use when creating or editing a rule in .agent-src.uncompressed/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'. |
@@ -125,7 +129,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`skill-reviewer`](../.agent-src.uncompressed/skills/skill-reviewer/SKILL.md) |  | Use when reviewing, auditing, or optimizing skills — validates against the 7 Skill Killers checklist and produces fix recommendations. |
 | skill | [`skill-writing`](../.agent-src.uncompressed/skills/skill-writing/SKILL.md) |  | Use when deciding 'should this be a skill or a rule?', creating/improving/reviewing agent skills, SKILL.md frontmatter, or procedure sections — even without saying 'skill-writing'. |
 | skill | [`sql-writing`](../.agent-src.uncompressed/skills/sql-writing/SKILL.md) |  | Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement` — even when the user just pastes a query and asks 'why is this slow' without naming SQL. |
-| skill | [`subagent-orchestration`](../.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md) |  | Use when orchestrating implementer/judge subagents — five modes (do-and-judge, do-in-steps, do-in-parallel, do-competitively, judge-with-debate) — models from .agent-settings.yml. |
+| skill | [`subagent-orchestration`](../.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md) |  | Use when orchestrating implementer/judge subagents — six modes (do-and-judge, do-in-steps, do-in-parallel, do-competitively, judge-with-debate, do-in-worktrees) — models from .agent-settings.yml. |
 | skill | [`systematic-debugging`](../.agent-src.uncompressed/skills/systematic-debugging/SKILL.md) |  | Use when hitting a bug, test failure, crash, or unexpected behavior — enforces reproduce → isolate → hypothesize → verify before any fix — even when the user just says 'this is broken' or 'quick fix'. |
 | skill | [`technical-specification`](../.agent-src.uncompressed/skills/technical-specification/SKILL.md) |  | Use when the user says "write a spec", "create RFC", or "document this decision". Writes technical specifications, RFCs, and ADRs with clear structure. |
 | skill | [`terraform`](../.agent-src.uncompressed/skills/terraform/SKILL.md) |  | Use when writing Terraform — AWS modules, resources, variables, outputs, remote state — even when the user just says 'provision this infra' or 'add an S3 bucket' without naming Terraform. |
@@ -134,6 +138,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`test-performance`](../.agent-src.uncompressed/skills/test-performance/SKILL.md) |  | Use when optimizing test suite performance — database setup, seeder optimization, parallel testing, CI pipeline efficiency, or RefreshDatabase alternatives. |
 | skill | [`threat-modeling`](../.agent-src.uncompressed/skills/threat-modeling/SKILL.md) |  | Use when adding auth, webhooks, uploads, queues, secrets, tenant boundaries, or public endpoints — produces trust boundaries + abuse cases mapped to files, BEFORE implementation. |
 | skill | [`traefik`](../.agent-src.uncompressed/skills/traefik/SKILL.md) |  | Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing. |
+| skill | [`unit-economics-modeling`](../.agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md) |  | Use when modeling CAC, LTV, gross-margin payback, or contribution margin per customer — for SaaS, marketplace, or transactional businesses. |
 | skill | [`universal-project-analysis`](../.agent-src.uncompressed/skills/universal-project-analysis/SKILL.md) |  | ONLY when user explicitly requests: full project analysis, deep codebase audit, or comprehensive architecture review. Routes to core and framework-specific analysis skills. |
 | skill | [`upstream-contribute`](../.agent-src.uncompressed/skills/upstream-contribute/SKILL.md) |  | Use when a learning, new skill, rule improvement, or bug fix from a consumer project should be contributed back to the shared agent-config package. |
 | skill | [`using-git-worktrees`](../.agent-src.uncompressed/skills/using-git-worktrees/SKILL.md) |  | Use when starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety checks and a clean test baseline — even when the user says 'try this on the side'. |
@@ -141,7 +146,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`verify-completion-evidence`](../.agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md) |  | Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs. |
 | skill | [`websocket`](../.agent-src.uncompressed/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (55)
+## Rules (56)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -174,6 +179,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`minimal-safe-diff`](../.agent-src.uncompressed/rules/minimal-safe-diff.md) | auto | When writing or reviewing a diff — the smallest change that solves the stated problem; no drive-by edits, no opportunistic refactors, no reformatting of untouched code |
 | rule | [`missing-tool-handling`](../.agent-src.uncompressed/rules/missing-tool-handling.md) | auto | When a CLI tool needed for the task is not installed — ask before working around it; do NOT install silently |
 | rule | [`model-recommendation`](../.agent-src.uncompressed/rules/model-recommendation.md) | auto | Starting a new task, switching task type, or invoking a command — detect task complexity and recommend the optimal model (Opus/Sonnet/GPT) before any work |
+| rule | [`no-attribution-footers`](../.agent-src.uncompressed/rules/no-attribution-footers.md) | auto | Generating PR/issue/comment/commit-message bodies — forbids unsolicited 'Generated with', 'Co-authored by', or 'Pull Request opened by' attribution footers in any user-owned artifact |
 | rule | [`no-cheap-questions`](../.agent-src.uncompressed/rules/no-cheap-questions.md) | always | No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on) |
 | rule | [`no-roadmap-references`](../.agent-src.uncompressed/rules/no-roadmap-references.md) | auto | Adding a link to a specific file in agents/roadmaps/ from any stable artifact (rule, skill, command, context, guideline) — roadmaps are transient; promote durable findings to agents/contexts/ instead |
 | rule | [`non-destructive-by-default`](../.agent-src.uncompressed/rules/non-destructive-by-default.md) | always | Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass |

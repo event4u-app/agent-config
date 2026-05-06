@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **314**
-- Edges (incl. self-WRITE): **679**
+- Files indexed: **320**
+- Edges (incl. self-WRITE): **711**
 
 ## READ_ONLY edges
 
@@ -28,6 +28,7 @@
 | `.agent-src.uncompressed/commands/commit/in-chunks.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/commit/in-chunks.md` | `.agent-src.uncompressed/rules/commit-conventions.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/commit/in-chunks.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/create-pr.md` | `.agent-src.uncompressed/rules/no-attribution-footers.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/estimate-ticket.md` | `.agent-src.uncompressed/commands/jira-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/estimate-ticket.md` | `.agent-src.uncompressed/commands/refine-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/estimate-ticket.md` | `.agent-src.uncompressed/skills/estimate-ticket/SKILL.md` | `body_link` | 1 |
@@ -178,6 +179,9 @@
 | `.agent-src.uncompressed/rules/docs-sync.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/docs-sync-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/improve-before-implement.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/language-and-tone.md` | `.agent-src.uncompressed/rules/user-interaction.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/no-attribution-footers.md` | `.agent-src.uncompressed/commands/create-pr.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/no-attribution-footers.md` | `.agent-src.uncompressed/rules/commit-conventions.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/no-attribution-footers.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
@@ -223,6 +227,8 @@
 | `.agent-src.uncompressed/rules/scope-control.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/skill-quality.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/skill-quality-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/skill-quality.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/skill-quality-mechanics.md` | `load_context` | 1 |
+| `.agent-src.uncompressed/rules/skill-quality.md` | `.agent-src.uncompressed/rules/direct-answers.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/skill-quality.md` | `.agent-src.uncompressed/rules/tool-safety.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/slash-command-routing-policy.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/slash-command-routing-policy.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/ui-audit-gate.md` | `.agent-src.uncompressed/commands/implement-ticket.md` | `body_link` | 1 |
@@ -258,6 +264,9 @@
 | `.agent-src.uncompressed/skills/data-flow-mapper/SKILL.md` | `.agent-src.uncompressed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/data-flow-mapper/SKILL.md` | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/data-flow-mapper/SKILL.md` | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/dcf-modeling/SKILL.md` | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/dcf-modeling/SKILL.md` | `.agent-src.uncompressed/skills/rice-prioritization/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/dcf-modeling/SKILL.md` | `.agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/description-assist/SKILL.md` | `.agent-src.uncompressed/rules/skill-quality.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/description-assist/SKILL.md` | `.agent-src.uncompressed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/estimate-ticket/SKILL.md` | `.agent-src.uncompressed/commands/jira-ticket.md` | `body_link` | 1 |
@@ -281,6 +290,10 @@
 | `.agent-src.uncompressed/skills/flux/SKILL.md` | `.agent-src.uncompressed/skills/existing-ui-audit/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/flux/SKILL.md` | `.agent-src.uncompressed/skills/fe-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/flux/SKILL.md` | `.agent-src.uncompressed/skills/livewire/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `.agent-src.uncompressed/skills/dcf-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `.agent-src.uncompressed/skills/rice-prioritization/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `.agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/guideline-writing/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/guideline-writing/SKILL.md` | `.agent-src.uncompressed/rules/preservation-guard.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/guideline-writing/SKILL.md` | `.agent-src.uncompressed/skills/description-assist/SKILL.md` | `body_link` | 1 |
@@ -315,6 +328,9 @@
 | `.agent-src.uncompressed/skills/livewire/SKILL.md` | `.agent-src.uncompressed/skills/fe-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/livewire/SKILL.md` | `.agent-src.uncompressed/skills/flux/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/md-language-check/SKILL.md` | `.agent-src.uncompressed/rules/language-and-tone.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `.agent-src.uncompressed/skills/dcf-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `.agent-src.uncompressed/skills/rice-prioritization/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/receiving-code-review/SKILL.md` | `.agent-src.uncompressed/skills/conventional-commits-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/receiving-code-review/SKILL.md` | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-prompt/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
@@ -336,6 +352,10 @@
 | `.agent-src.uncompressed/skills/review-routing/SKILL.md` | `.agent-src.uncompressed/rules/reviewer-awareness.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/review-routing/SKILL.md` | `.agent-src.uncompressed/skills/judge-test-coverage/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/review-routing/SKILL.md` | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/rice-prioritization/SKILL.md` | `.agent-src.uncompressed/skills/dcf-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/rice-prioritization/SKILL.md` | `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/rice-prioritization/SKILL.md` | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/rice-prioritization/SKILL.md` | `.agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/roadmap-management/SKILL.md` | `.agent-src.uncompressed/commands/roadmap/create.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/roadmap-management/SKILL.md` | `.agent-src.uncompressed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/roadmap-management/SKILL.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
@@ -358,6 +378,8 @@
 | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/commands/judge.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/contexts/subagent-configuration.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/skills/ai-council/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/skills/using-git-worktrees/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncompressed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncompressed/skills/data-flow-mapper/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncompressed/skills/php-debugging/SKILL.md` | `body_link` | 1 |
@@ -372,6 +394,10 @@
 | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `.agent-src.uncompressed/skills/judge-security-auditor/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `.agent-src.uncompressed/skills/security-audit/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `.agent-src.uncompressed/skills/security/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md` | `.agent-src.uncompressed/skills/dcf-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md` | `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md` | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md` | `.agent-src.uncompressed/skills/rice-prioritization/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md` | `.agent-src.uncompressed/skills/docker/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md` | `.agent-src.uncompressed/skills/git-workflow/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md` | `.agent-src.uncompressed/skills/quality-tools/SKILL.md` | `body_link` | 1 |
@@ -385,6 +411,6 @@
 | `command` | 94 |
 | `context` | 28 |
 | `persona` | 8 |
-| `rule` | 55 |
-| `skill` | 129 |
+| `rule` | 56 |
+| `skill` | 134 |
 

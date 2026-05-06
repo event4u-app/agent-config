@@ -37,6 +37,11 @@
         "pattern": "^[a-z][a-z0-9-]*$"
       }
     },
+    "tier": {
+      "type": "string",
+      "enum": ["senior"],
+      "description": "Optional tier marker. `senior` opts the skill into the Senior-Tier Required Structure check (Context-First lead, Related Skills, Proactive Triggers, Output Artifacts) per .agent-src.uncompressed/rules/skill-quality.md."
+    },
     "execution": {
       "type": "object",
       "additionalProperties": false,

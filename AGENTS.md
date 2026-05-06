@@ -14,12 +14,44 @@ when they install the package.
 
 ## What this repo is
 
+`event4u/agent-config` is a **governed skill suite** for two cognition
+clusters: engineering depth (Wing 1) and senior cross-department
+cognition (Wings 2–4: Product + Foundation, GTM + Growth, Money +
+Strategy + Ops). The differentiator is **depth over breadth, decisions
+over boilerplate, under a shared Iron-Law floor** (`commit-policy`,
+`non-destructive-by-default`, `language-and-tone`, `skill-quality`,
+`direct-answers`). The same agent that ships a refactor commit also
+runs DCF sensitivity, OKR-tree decomposition, and launch-funnel
+diagnosis — under the same governance.
+
+Mechanically the package is:
+
 - A distribution package, not an application of any framework.
 - `type: library` in `composer.json`; no `app/` directory, no application
   runtime (no Laravel, Symfony, Next.js, or other framework app code).
 - Published to Composer and npm as `event4u/agent-config` / `@event4u/agent-config`.
 - Installed into consumer projects via `scripts/install.sh` (Bash) and
   `scripts/install.py` (Python bridge).
+
+## The four wings
+
+The skill suite is organized as four wings under one Iron-Law floor.
+Each wing has its own roadmap, its own personas, and its own plate;
+they compose via the cross-wing handoff contract
+([`docs/contracts/cross-wing-handoff.md`](docs/contracts/cross-wing-handoff.md) (beta),
+landing in `road-to-suite-closure.md` Phase 3).
+
+| Wing | Cognition cluster |
+|---|---|
+| **1 — Engineering** | Code craft, debugging, refactoring, release discipline; depth-first |
+| **2 — Product + Foundation** | Roles cluster (PM, designer, QA, EM); product discovery, prioritization, delivery shape |
+| **3 — GTM + Growth** | CMO + marketing + sales + lifecycle; channel-agnostic positioning + funnel cognition |
+| **4 — Money + Strategy + Ops** | CFO + COO + board-level strategy, valuation, org-design; stage-agnostic financial + operational cognition |
+
+Per-wing plates (roadmaps, persona maps, decision logs) live under
+`agents/roadmaps/` and `agents/contexts/`. Roadmaps are transient
+working layers — agents that need a wing's plate look it up by wing
+number rather than by file path (per `no-roadmap-references`).
 
 ## Source of truth
 
@@ -47,6 +79,15 @@ and run `task sync` (or `task ci`) to compress + regenerate the tool directories
 No application code or framework runtime (no Laravel / Symfony / Next.js /
 Express). The `composer.json` / `package.json` are thin distribution
 manifests.
+
+**Cognition-only floor for Wings 2–4.** Wings 2, 3, and 4 enforce a
+no-SaaS-auth, no-vendor-SDK, no-stage-prescription floor: cognition
+artifacts (markdown tables, scoring rubrics, walkthroughs) must work
+in any host without external dependencies. The structural-malice
+check in `skill_linter.py` enforces this boundary mechanically (no
+credential exfiltration, no remote execution, no shell injection in
+subprocess calls — see `.agent-src.uncompressed/rules/skill-quality.md`
+§ Structural Malice Floor).
 
 ## Working on this repo
 
@@ -102,8 +143,8 @@ and
 
 ```
 .agent-src.uncompressed/      ← edit here
-  skills/       (129 skills)
-  rules/        (55 rules)
+  skills/       (134 skills)
+  rules/        (56 rules)
   commands/     (94 commands)
   personas/     (7 personas)
   templates/    (AGENTS.md, copilot-instructions.md, skill.md, …)

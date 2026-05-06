@@ -4,14 +4,13 @@ Each council member runs in exactly one transport mode per invocation:
 
 - ``api``      — direct SDK call against the provider's API (billable).
 - ``manual``   — copy-paste loop with the user as transport (free).
-- ``playwright`` — browser automation (Phase 2c, not yet wired).
 
 Resolution precedence — first non-empty wins:
 
     1. Invocation flag      e.g. ``/council mode:manual``
     2. Per-member setting   ``ai_council.members.<name>.mode``
     3. Global setting       ``ai_council.mode``
-    4. Built-in default     ``api``
+    4. Built-in default     ``manual``
 
 This mirrors how ``cost_profile`` resolves in
 ``.augment/guidelines/agent-infra/layered-settings.md``.
@@ -24,9 +23,9 @@ from __future__ import annotations
 
 from typing import Mapping
 
-VALID_MODES: frozenset[str] = frozenset({"api", "manual", "playwright"})
+VALID_MODES: frozenset[str] = frozenset({"api", "manual"})
 
-DEFAULT_MODE: str = "api"
+DEFAULT_MODE: str = "manual"
 
 
 class InvalidModeError(ValueError):

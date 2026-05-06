@@ -118,6 +118,35 @@ Do NOT use when:
 - Do NOT {anti-pattern 1}.
 - Do NOT {anti-pattern 2}.
 - Do NOT {anti-pattern 3}.
+
+<!-- SENIOR-TIER STUB BLOCKS (delete entire section if not `tier: senior`):
+  Senior-tier skills (frontmatter `tier: senior`) require four extra
+  blocks per `.agent-src.uncompressed/rules/skill-quality.md` §
+  Senior-Tier Required Structure. Mid-tier and untiered skills MUST
+  remove this section entirely. The four blocks are enforced by
+  `scripts/skill_linter.py` for `tier: senior` skills only.
+
+  ## Related Skills
+
+  **WHEN to use this**
+  - {situation A this skill resolves better than peer skill}
+  - {situation B}
+
+  **WHEN NOT to use this**
+  - {situation C} — route to [`{peer-skill}`](../{peer-skill}/SKILL.md)
+  - {situation D} — route to [`{peer-skill}`](../{peer-skill}/SKILL.md)
+
+  ## When the agent should load this
+
+  - "{user phrase 1 — concrete paraphrase}"
+  - "{user phrase 2}"
+  - "{user phrase 3}"
+
+  ## Output
+
+  1. **{artifact-name.md}** — {shape: markdown table / tree / report}
+  2. **{artifact-name-2.md}** — {shape}
+-->
 ````
 
 ## Quality Checklist (5 Skill Killers)
@@ -132,5 +161,5 @@ Before considering a skill complete, verify it passes all 5 checks:
 - [ ] **K6: Under 500 lines** — if larger, extract reference tables or templates into separate files in the skill folder
 - [ ] **English only** — all content in English
 - [ ] **No duplication** — doesn't repeat rules or guidelines that are already enforced elsewhere
-- [ ] **No "Related skills" section** — the agent discovers skills via `<available_skills>` descriptions; cross-links waste tokens and create maintenance burden
+- [ ] **No "Related skills" section for mid-tier / untiered skills** — the agent discovers them via `<available_skills>` descriptions; cross-links waste tokens. Senior-tier skills (`tier: senior`) MUST include the block per `skill-quality.md` § Senior-Tier Required Structure (linter-enforced).
 

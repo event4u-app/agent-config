@@ -1390,3 +1390,169 @@ def test_output_schema_repo_estimate_ticket_passes() -> None:
         return
     result = lint_file(skill_path, repo_root=repo_root)
     assert not any(i.code == "output_schema_drift" for i in result.issues)
+
+
+
+# --- Senior-tier required-block tests (skill-quality.md § Senior-Tier Required Structure) ---
+
+
+SENIOR_SKILL_TEMPLATE = """---
+name: example
+description: "Use when prioritizing the backlog. Product cognition for the senior PO — produces opportunity-tree.md."
+source: project
+tier: senior
+---
+
+# example
+
+## When to use
+
+* Prioritizing competing opportunities
+
+## Procedure
+
+1. Inspect current backlog
+2. Apply ICE scoring
+3. Validate evidence rank
+
+## Output format
+
+1. opportunity-tree.md
+2. prioritization-table.md
+
+## Gotchas
+
+* Scoring without evidence rank inflates ICE
+
+## Do NOT
+
+* Do NOT skip the evidence-rank column
+{extra_blocks}"""
+
+
+SENIOR_RELATED_BLOCK = """
+## Related Skills
+
+**WHEN to use this**
+- Backlog prioritization with competing opportunities
+- Opportunity-tree decomposition
+
+**WHEN NOT to use this**
+- Single-feature scoping — route to [`refine-ticket`](../refine-ticket/SKILL.md)
+- Estimation only — route to [`estimate-ticket`](../estimate-ticket/SKILL.md)
+"""
+
+SENIOR_PROACTIVE_BLOCK = """
+## When the agent should load this
+
+- "should we build feature X or Y first"
+- "what's the ICE on this backlog"
+- "how do I split this epic into shippable slices"
+"""
+
+SENIOR_OUTPUT_BLOCK = """
+## Output
+
+1. **opportunity-tree.md** — markdown tree, root = north-star metric
+2. **prioritization-table.md** — markdown table, columns = opportunity / ICE / evidence
+"""
+
+
+def test_senior_skill_with_all_blocks_passes(tmp_path: Path) -> None:
+    """Senior-tier skill with all four required blocks lints clean."""
+    extra = SENIOR_RELATED_BLOCK + SENIOR_PROACTIVE_BLOCK + SENIOR_OUTPUT_BLOCK
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/example/SKILL.md",
+        SENIOR_SKILL_TEMPLATE.format(extra_blocks=extra),
+    )
+    result = lint_file(path)
+    senior_codes = {
+        "missing_senior_related_skills",
+        "missing_senior_related_when",
+        "missing_senior_related_when_not",
+        "missing_senior_proactive_triggers",
+        "missing_senior_output_artifacts",
+    }
+    assert not any(i.code in senior_codes for i in result.issues)
+
+
+def test_senior_skill_missing_related_skills_fails(tmp_path: Path) -> None:
+    extra = SENIOR_PROACTIVE_BLOCK + SENIOR_OUTPUT_BLOCK
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/example/SKILL.md",
+        SENIOR_SKILL_TEMPLATE.format(extra_blocks=extra),
+    )
+    result = lint_file(path)
+    assert any(
+        i.code == "missing_senior_related_skills" and i.severity == "error"
+        for i in result.issues
+    )
+
+
+def test_senior_skill_missing_when_not_list_fails(tmp_path: Path) -> None:
+    truncated_related = """
+## Related Skills
+
+**WHEN to use this**
+- Backlog prioritization
+"""
+    extra = truncated_related + SENIOR_PROACTIVE_BLOCK + SENIOR_OUTPUT_BLOCK
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/example/SKILL.md",
+        SENIOR_SKILL_TEMPLATE.format(extra_blocks=extra),
+    )
+    result = lint_file(path)
+    assert any(
+        i.code == "missing_senior_related_when_not" and i.severity == "error"
+        for i in result.issues
+    )
+
+
+def test_senior_skill_missing_proactive_triggers_fails(tmp_path: Path) -> None:
+    extra = SENIOR_RELATED_BLOCK + SENIOR_OUTPUT_BLOCK
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/example/SKILL.md",
+        SENIOR_SKILL_TEMPLATE.format(extra_blocks=extra),
+    )
+    result = lint_file(path)
+    assert any(
+        i.code == "missing_senior_proactive_triggers" and i.severity == "error"
+        for i in result.issues
+    )
+
+
+def test_senior_skill_missing_output_artifacts_fails(tmp_path: Path) -> None:
+    """Senior skill with only `## Output format` lacks the artifact-declaration `## Output` block."""
+    extra = SENIOR_RELATED_BLOCK + SENIOR_PROACTIVE_BLOCK
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/example/SKILL.md",
+        SENIOR_SKILL_TEMPLATE.format(extra_blocks=extra),
+    )
+    result = lint_file(path)
+    assert any(
+        i.code == "missing_senior_output_artifacts" and i.severity == "error"
+        for i in result.issues
+    )
+
+
+def test_non_senior_skill_skips_senior_checks(tmp_path: Path) -> None:
+    """Mid-tier / untiered skills are exempt from senior-tier block checks (forward-only)."""
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/example/SKILL.md",
+        SENIOR_SKILL_TEMPLATE.replace("tier: senior\n", "").format(extra_blocks=""),
+    )
+    result = lint_file(path)
+    senior_codes = {
+        "missing_senior_related_skills",
+        "missing_senior_related_when",
+        "missing_senior_related_when_not",
+        "missing_senior_proactive_triggers",
+        "missing_senior_output_artifacts",
+    }
+    assert not any(i.code in senior_codes for i in result.issues)
