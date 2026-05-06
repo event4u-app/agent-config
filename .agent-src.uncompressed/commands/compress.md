@@ -50,6 +50,16 @@ For each changed `.md` file:
      pleasantries, hedging, connective fluff (however, furthermore, additionally),
      redundant wording, obvious framework knowledge, repeated explanations, decorative prose
    - **Shorten:** "in order to" → "to", "make sure to" → "ensure", use short synonyms
+   - **Abbreviate** common terms when context is unambiguous: `DB`, `auth`,
+     `config`, `req`, `res`, `fn`, `impl`, `env`, `deps`, `ctx`. Skip if it
+     would be the first occurrence of the concept in the file, or if the
+     abbreviation collides with a domain term (e.g. `auth` stays
+     `authentication` inside an auth-module file). Never abbreviate inside
+     code blocks, frontmatter, file paths, command strings, or Iron Law
+     fenced blocks.
+   - **Arrows for causality:** "X causes Y" / "X leads to Y" / "X, then Y"
+     → `X → Y`. Keep arrows out of code blocks, frontmatter, and Iron Law
+     fenced blocks; only the surrounding prose uses them.
    - **Fragments OK:** "Run tests before commit" not "You should always run tests before committing"
    - **Drop:** "you should", "make sure to", "remember to" — state action directly
    - **Merge** redundant bullets that say the same thing differently
