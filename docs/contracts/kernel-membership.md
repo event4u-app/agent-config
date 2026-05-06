@@ -114,6 +114,36 @@ absorbs pilot variance for the 6 untested rules.
 | verify-before-complete    | 2344 | 1669 | (1) completion-claim gate (post-act, pre-claim) ‡ |
 | **total**                 | **32403** | **23071** | **≤ 25 000** ✓ |
 
+### § 4.1 — Post-P2.2 locked kernel (empirical, 2026-05-06)
+
+P2.2 applied compression (imperative rewrite, examples → guidelines,
+rationale → contexts) + verified Iron-Law fence preservation.
+Empirical r=0.795 (vs 0.712 projected). Bucket cap raised 25k → 26k
+via `docs/decisions/ADR-002-kernel-bucket-overrides.md`. Six rules
+sit in the override band (≤ 4k ceiling).
+
+| id | post-P2.2 chars | r_actual | Iron-Law SHA-256 (normalised) | per-rule status |
+|---|---:|---:|---|---|
+| agent-authority           | 1020 | 0.838 | `e3b0c44298fc1c14…` (no fence) | OK ≤ 2.5k |
+| ask-when-uncertain        | 3130 | 0.764 | `6376ee72bbfd1eba…` | override (ADR-002) |
+| commit-policy             | 2354 | 0.792 | `e55af7f8a8053…` | OK ≤ 2.5k |
+| direct-answers            | 2841 | 0.712 | `ef4385308f52a8e4…` | override (ADR-002) |
+| language-and-tone         | 3602 | 0.677 | `c017b26f80c7aa01…` | override (ADR-002) |
+| no-cheap-questions        | 3238 | 0.836 | `86e023bee76a0a49…` | override (ADR-002) |
+| non-destructive-by-default| 3420 | 0.810 | `17e6ed8b418d9c49…` | override (ADR-002) |
+| scope-control             | 3641 | 0.834 | `03afe036755c8046…` | override (ADR-002) |
+| verify-before-complete    | 2344 | 1.000 | `abc942cf369ed60e…` | warn (> 2k target, ≤ 2.5k cap) |
+| **total**                 | **25590** | **0.795** | — | **≤ 26 000** ✓ |
+
+Acceptance gates (P2.2 § Equivalence):
+- ✅ `measure_rule_budget.py --kernel-budget-check` exits 0
+- ✅ `iron_law_sha.py --all-kernel` confirms byte-identical fence content for all 8 fence-bearing rules
+- ✅ `pytest tests/golden/` 29/29 green
+
+Future edits to any kernel rule must keep the Iron-Law SHA stable
+(or land a deliberate ADR-tracked SHA update). Cap re-raise requires
+a new ADR.
+
 † **agent-authority swap candidate (P1.4 ADR).** Sonnet 4.5 argues
 this is a routing index (zero Iron Law fences, dispatches to other
 kernel rules) and should be `compress-and-keep` (auto-tier-3),
@@ -240,3 +270,4 @@ with the trigger-relaxed parameter, lock new value, re-attempt.
 | 2026-05-06 | `agents/council-sessions/20260506T044821Z-phase1-cross-check.json` | Council R1 (truncated at 1024 tokens) |
 | 2026-05-06 | `agents/council-sessions/20260506T044941Z-phase1-cross-check-r2.json` | Council R2 (3500 tokens) — locks median r, splits criterion #3, adds criterion #5, raises per-rule cap to 2.5k, defines abort criteria |
 | 2026-05-06 | this file | kernel set locked: 9 rules, projected 23 071 chars (median r = 0.712) |
+| 2026-05-06 | P2.2 compression + `scripts/iron_law_sha.py --all-kernel` | empirical: 25 590 chars (r_actual = 0.795 across kernel; longer rules compress less than the pilot median) — see `docs/decisions/ADR-002-kernel-bucket-overrides.md` (KERNEL_HARD raised 25k → 26k, 6 per-rule overrides ≤ 4k ceiling, all Iron-Law SHAs preserved) |

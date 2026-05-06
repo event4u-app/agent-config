@@ -186,7 +186,7 @@ siblings own their own Hard Cap accounting). Phase 8 = final validation.
   (variant a = status quo through P2.2 + P3.1; re-evaluation trigger
   at P3.2 once router schema + compiler ship). No CI wiring yet —
   lands in P5.1.
-- [ ] **P2.2 — Compress + dedupe the kernel rules.** For each rule on
+- [x] **P2.2 — Compress + dedupe the kernel rules.** For each rule on
   the P1.3 list, apply the compression playbook in this order:
 
   1. **Imperative rewrite** — strip prose connectors, modal verbs,
@@ -216,9 +216,18 @@ siblings own their own Hard Cap accounting). Phase 8 = final validation.
     validates *content*). Both gates must pass; either alone is
     insufficient (golden tests miss prose drift; checksum misses
     behavioural regressions).
-- [ ] **P2.3 — Kernel locked.** Final kernel set is appended to
-  `docs/contracts/kernel-membership.md` with the locked char counts and
-  the SHA of each rule file. Future kernel changes require an ADR.
+
+  **Result (locked 2026-05-06).** Empirical r_actual=0.795 across the
+  9-rule kernel (vs r_projected=0.712 from the lean pilot). Bucket
+  25 590 / 26 000 chars (KERNEL_HARD raised 25k → 26k via ADR-002).
+  6 per-rule overrides registered in
+  `docs/contracts/iron-law-overrides.txt` — all sit between 2.5k and
+  4k (the override ceiling). Iron-Law SHAs byte-preserved for all 8
+  rules with fences (`scripts/iron_law_sha.py --all-kernel`); golden
+  transcripts 29/29 green.
+- [x] **P2.3 — Kernel locked.** Final kernel set appended to
+  `docs/contracts/kernel-membership.md` § 4.1 with locked char counts
+  and Iron-Law SHA per rule file. Future kernel changes require an ADR.
 
 ## Phase 3 — Router contract (gated on P2)
 

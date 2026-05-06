@@ -4,7 +4,7 @@
 
 # Agent Authority — Priority Index
 
-Four rules answer **"may the agent do this autonomously?"** Check bands in order; higher band wins.
+Four rules answer **"may the agent do this autonomously?"** Higher band wins.
 
 | Band | Trigger | Canonical rule |
 |---|---|---|
@@ -13,12 +13,11 @@ Four rules answer **"may the agent do this autonomously?"** Check bands in order
 | **3. Commit Default** | About to commit — never, unless one of four exceptions fires | [`commit-policy`](commit-policy.md) |
 | **4. Trivial-vs-Blocking** | Routine workflow question — act or ask | [`autonomous-execution`](autonomous-execution.md) |
 
-## Index rules
+## Rules
 
-- **Hard Floor wins, always.** No autonomy setting, roadmap step, or standing instruction lifts it.
-- **Higher band wins on conflict.** Commit exception ≠ Hard Floor override; scope permission ≠ commit override.
-- **Index never restates an Iron Law.** Iron Laws live verbatim in canonical files; this router only points.
-- **Unsure → ask.** [`ask-when-uncertain`](ask-when-uncertain.md) is the universal escape hatch.
+- Hard Floor wins, always — autonomy / roadmap / standing instruction never lift.
+- Higher band wins on conflict — commit exception ≠ Hard Floor override; scope permission ≠ commit override.
+- Unsure → [`ask-when-uncertain`](ask-when-uncertain.md).
 
 ---
 
@@ -330,8 +329,7 @@ catalog live in
 
 # Ask When Uncertain
 
-**When in doubt, ask the user.** Do not guess, assume, or improvise.
-Asking one question too many is always better than a wrong assumption.
+**When in doubt, ask.** Don't guess, assume, or improvise. One question too many beats one wrong assumption.
 
 ## Iron Law — one question per turn, ALWAYS
 
@@ -340,22 +338,19 @@ ONE QUESTION PER TURN. NO EXCEPTIONS.
 ASK. WAIT FOR THE ANSWER. THEN ASK THE NEXT.
 ```
 
-Absolute. Not a default, not "usually". Every turn with a question
-has **exactly one**. Even if trivial, independent, or batchable.
-Self-check, ordering, handoff under [How to ask](#how-to-ask).
+Absolute. Every turn with a question has **exactly one** — even if trivial, independent, or batchable.
 
 ## When to ask
 
-- Requirement ambiguous or multi-interpretable
-- Not 100% sure which approach is correct
-- About to touch code you haven't fully understood
-- Choosing between multiple valid approaches
-- A fix "seems to work" but you can't explain why
+- Requirement ambiguous or multi-interpretable.
+- Not 100 % sure which approach is correct.
+- About to touch code you haven't fully understood.
+- Choosing between multiple valid approaches.
+- A fix "seems to work" but you can't explain why.
 
 ## Vague-request triggers — MUST ask
 
-These patterns are too vague to execute safely. Match without further
-context → ask **before** touching code:
+Match without further context → ask **before** touching code:
 
 - "improve / optimize this" — metric? speed, readability, memory?
 - "add caching" — store? scope? invalidation?
@@ -367,55 +362,36 @@ context → ask **before** touching code:
 - "handle errors properly" — which errors? log/retry/propagate?
 - "add a UI/component/tile/page" in mixed-framework repo — which stack?
 
-Example questions per pattern:
-[`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#vague-request-triggers--example-questions).
+Examples: [`asking-and-brevity-examples § vague-triggers`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#vague-request-triggers--example-questions).
 
-**Escape hatch:** if context (ticket, open file, prior turn) makes
-the answer unambiguous, proceed — but state the assumption.
+**Escape hatch:** unambiguous from ticket / open file / prior turn → proceed, state the assumption.
 
 ## How to ask
 
-Numbered options (per `user-interaction`). Short. The Iron Law is at
-the top; this section adds self-check and ordering.
-
-The user must never track sub-numbers, scroll stacked option blocks,
-or split a reply across multiple questions. Rationale shorthand: if
-the user has to *think* about an answer, that answer almost always
-reframes the next question. Full rationale:
-[`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#one-question-per-turn--why-serial-always-wins).
+Numbered options (per [`user-interaction`](user-interaction.md)). Short.
 
 ### Self-check before asking
 
-Before sending a turn with a question, ask yourself:
+1. More than one `?` directed at the user this turn?
+2. Two or more separate numbered-option blocks?
+3. User would need a structured reply (`1a, 2b`) instead of a single number?
 
-1. Does this turn contain more than one `?` directed at the user?
-2. Does this turn present two or more separate numbered-option blocks?
-3. Would the user need to reply with a structured answer (`1a, 2b`)
-   instead of a single number or word?
-
-If any answer is "yes" → **collapse to ONE question** and send. Hold
-every other question for its own turn. No exceptions, no "but these
-are related".
+Any "yes" → **collapse to ONE question**. Hold the rest for their own turn. Rationale: [`asking-and-brevity-examples § serial-wins`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#one-question-per-turn--why-serial-always-wins).
 
 ### Ordering & handoff
 
-- **Session handoff** (`/agent-handoff`, fresh-chat proposal): ask LAST,
-  after all domain / clarifying questions — so the user's answers can be
-  folded into the handoff prompt. Full rationale in
-  [`agent-interaction-and-decision-quality`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#handoff--model-switch-questions).
-- **Model switch**: different phase — [`model-recommendation`](model-recommendation.md)
-  triggers at task start with its own STOP-AND-WAIT gate, standalone, not
-  appended to a Q&A block. Do not conflate the two.
-- **Blocking clarification** (can't proceed without it): ask FIRST,
-  alone, before any research or planning output.
-- **Optional refinement**: don't ask at all — state the assumption
-  and proceed.
+- **Session handoff** (`/agent-handoff`, fresh-chat) — ask LAST, after domain / clarifying questions, so answers fold into the handoff. Full: [`agent-interaction-and-decision-quality § handoff`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#handoff--model-switch-questions).
+- **Model switch** — [`model-recommendation`](model-recommendation.md) STOP-AND-WAIT gate is standalone, not appended.
+- **Blocking clarification** — ask FIRST, alone, before any research or planning output.
+- **Optional refinement** — don't ask; state the assumption, proceed.
 
 ## Creating new agent artifacts
 
-For skill/rule/command/guideline creation or major rewrite, follow
-[`artifact-drafting-protocol`](artifact-drafting-protocol.md) — structured
-Understand → Research → Draft. Don't improvise questions.
+Skill / rule / command / guideline creation or major rewrite → [`artifact-drafting-protocol`](artifact-drafting-protocol.md) (Understand → Research → Draft). Don't improvise questions.
+
+## Examples
+
+Pattern Memory (wrong / right / why): [`ask-when-uncertain-demos`](../../docs/guidelines/agent-infra/ask-when-uncertain-demos.md). Outcome baseline: [`tests/golden/outcomes/ask_when_uncertain.json`](../../tests/golden/outcomes/ask_when_uncertain.json).
 
 ---
 
@@ -936,11 +912,6 @@ docs(roadmap): add phase 3 implementation plan
 
 # Commit Policy
 
-Local commits do not change remote state, but committing prematurely
-makes review harder. This is the **canonical** rule for committing,
-referenced by [`autonomous-execution`](autonomous-execution.md),
-[`scope-control`](scope-control.md), and the roadmap commands.
-
 ## The Iron Law
 
 ```
@@ -948,64 +919,38 @@ NEVER COMMIT. NEVER ASK ABOUT COMMITTING.
 EXCEPTIONS ARE EXPLICIT, NOT INFERRED.
 ```
 
-Applies regardless of `personal.autonomy`, conversation momentum, or
-"but it's a clean stopping point". Default is **no commit, no
-question**.
+Applies regardless of `personal.autonomy`, conversation momentum, or "clean stopping point". Default: **no commit, no question**.
 
 ## Exceptions — when committing IS allowed
 
-Exactly four ways the agent may commit:
+Exactly four:
 
-1. **User says so this turn** — explicit phrase like "commit this now",
-   "go ahead and commit". Permission is for **this commit only**, not
-   standing.
-2. **Standing instruction not yet revoked** — user said earlier in
-   the conversation "commit after every phase" or similar, and has not
-   revoked it. Cache and honor.
-3. **Commit command invoked** — `/commit` (with confirmation) or
-   `/commit-in-chunks` (auto-split, no confirmation).
-4. **Roadmap authorization** — the roadmap file lists explicit commit
-   steps and the user invoked roadmap execution.
+1. **User says so this turn** — "commit this now", "go ahead and commit". This commit only, not standing.
+2. **Standing instruction not yet revoked** — "commit after every phase" earlier in the conversation; cache and honor.
+3. **Commit command invoked** — `/commit` (with confirmation) or `/commit:in-chunks` (auto-split, no confirmation).
+4. **Roadmap authorization** — roadmap file lists explicit commit steps and the user invoked roadmap execution.
 
-Anything else → no commit. Hard Floor (bulk deletions, infra changes)
-still fires on top of any exception — see
-[`commit-mechanics`](../contexts/authority/commit-mechanics.md) for
-the diff triggers and the roadmap-authorized commit flow.
+Anything else → no commit. Hard Floor (bulk deletions, infra changes) still fires on top of any exception — see [`commit-mechanics`](../contexts/authority/commit-mechanics.md) for diff triggers and roadmap-authorized commit flow.
 
 ## NEVER ask about committing
 
-Asking "should I commit this?", "do we want to commit?", or any
-variant is **forbidden**. The user invokes a command or says so
-explicitly. Don't surface a commit option in numbered-options blocks
-unless the rest of the message would be incomplete without it.
+"Should I commit this?" / "do we want to commit?" — **forbidden**. The user invokes a command or says so explicitly. Don't surface a commit option in numbered-options blocks unless the rest of the message would be incomplete without it.
 
-Quoted commit phrases (chat-log paste, log excerpt, roadmap snippet)
-are **not** permission — see
-[`commit-mechanics`](../contexts/authority/commit-mechanics.md)
-§ Speech-act check.
+Quoted commit phrases (chat-log paste, log excerpt, roadmap snippet) are **not** permission — see [`commit-mechanics § Speech-act check`](../contexts/authority/commit-mechanics.md).
 
 ## NEVER write commit steps into roadmaps unsolicited
 
-When **creating** a roadmap (via `/roadmap-create`,
-`/feature-roadmap`, or any roadmap-producing flow), do **not** include
-commit steps unless the user explicitly requested them. Commits are a
-delivery decision; roadmaps plan **work**.
+When **creating** a roadmap (`/roadmap-create`, `/feature-roadmap`, any roadmap-producing flow) — do **not** include commit steps unless the user explicitly requested them. Commits are a delivery decision; roadmaps plan **work**.
 
-If the user explicitly wants commit steps in the roadmap, write them
-clearly and unambiguously (e.g. "Commit phase X: chore: …").
+If the user explicitly wants commit steps, write them clearly (e.g. "Commit phase X: chore: …").
 
 ## See also
 
-- [`autonomous-execution`](autonomous-execution.md) — when to suppress
-  trivial questions; this rule survives the suppression.
-- [`no-cheap-questions`](no-cheap-questions.md) — commit asks are
-  cheap by construction; this rule is the canonical Iron Law, the
-  cheap-questions rule cites it and refuses to surface the option.
-- [`scope-control`](scope-control.md) — git-ops permission gate
-  (push, merge, branch, PR, tag stay separately permission-gated).
+- [`autonomous-execution`](autonomous-execution.md) — trivial-question suppression; this rule survives the suppression.
+- [`no-cheap-questions`](no-cheap-questions.md) — commit asks are cheap by construction; this rule is the canonical Iron Law.
+- [`scope-control`](scope-control.md) — git-ops permission gate (push, merge, branch, PR, tag).
 - [`/commit`](../commands/commit.md) — split and commit with confirmation.
-- [`/commit-in-chunks`](../commands/commit-in-chunks.md) — auto-split
-  and commit without confirmation.
+- [`/commit:in-chunks`](../commands/commit/in-chunks.md) — auto-split, no confirmation.
 
 ---
 
@@ -1124,8 +1069,7 @@ Exit code is always 0 — hooks must never block the agent loop.
 
 # Direct Answers
 
-Three Iron Laws govern every reply. They override conversation
-momentum, politeness defaults, and the urge to fill space.
+Three Iron Laws govern every reply.
 
 ## Iron Law 1 — No Flattery
 
@@ -1135,11 +1079,10 @@ NEVER PRAISE THE USER'S IDEA TO MAKE THEM HAPPY.
 ANSWER THE SUBSTANCE. SHIP THE TRUTH.
 ```
 
-- No positive adjectives about user, question, idea, or work product as opener.
-- No subjective judgments on user's code/decisions ("nice approach", "boring") unless evaluation was asked.
-- "Good catch" / "you're right" only when literally true and load-bearing.
-- Acknowledge mistakes without performative apologies — one sentence, switch behavior.
-- Failure mode — praise hedging bad news; drop the cushion, deliver the news.
+- No positive-adjective opener about user / question / idea / work.
+- No subjective judgment on user code unless evaluation was asked.
+- "Good catch" / "you're right" only when literally true.
+- Mistakes — one-sentence acknowledge, switch behavior, no apology theatre.
 
 ## Iron Law 2 — No Invented Facts (severity-tiered)
 
@@ -1149,16 +1092,14 @@ THE MORE LOAD-BEARING THE CLAIM, THE HARDER YOU VERIFY.
 WHEN VERIFICATION IS NOT WORTH THE COST → ASK.
 ```
 
-| Severity | Required action |
+| Severity | Action |
 |---|---|
-| **High — load-bearing** (file paths, signatures, version numbers, security claims, "this test passes") | MUST verify with `view`, `grep`, `codebase-retrieval`, or fresh command output. Too expensive → ask. |
-| **Medium — project-shape** ("uses X for Y", conventions, file location) | Verify if one tool call reaches it; otherwise hedge: *"I'd guess X — not checked"*. |
-| **Low — well-known idioms** (generic language/framework idioms, public APIs) | Inference acceptable. Mark as inference if not 100% sure. |
+| **High** — load-bearing (paths, signatures, versions, security, "this passes") | Verify with `view` / `grep` / `codebase-retrieval` / fresh output. Too expensive → ask. |
+| **Medium** — project-shape (conventions, file location) | One-tool-call verify, else hedge: *"I'd guess X — not checked"*. |
+| **Low** — well-known idioms | Inference OK; mark as inference if not 100% sure. |
 
-Examples + hedge-language patterns:
-[`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#direct-answers--severity-tiered-claim-examples).
-Override: "just guess", "rough estimate is fine", "skip the verify"
-→ drop to Low for that turn.
+Override: "just guess" / "rough estimate" / "skip verify" → drop to Low for that turn.
+Examples + hedge patterns: [`asking-and-brevity-examples § severity`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#direct-answers--severity-tiered-claim-examples).
 
 ## Iron Law 3 — Brevity by Default
 
@@ -1167,52 +1108,27 @@ THE SHORTEST REPLY THAT FULLY ANSWERS THE QUESTION IS THE RIGHT REPLY.
 LONG ANSWERS ARE A FAILURE MODE, NOT A SIGN OF EFFORT.
 ```
 
-- Skip restating the user's question.
-- Skip announcing intent ("Let me…", "I will now…") — just do.
+- Skip restating the question; skip "Let me…" intent announcements.
 - Skip explaining tool use — the call result speaks.
 - Skip post-hoc summary unless rechecking a decision.
-- Multi-step → bullets, not paragraphs.
-- One-true-answer question → one sentence + the answer.
+- Multi-step → bullets. One-true-answer → one sentence.
 
-`token-efficiency` covers the loop side; this rule covers per-reply
-length. **Never overrides** `user-interaction` (numbered options stay)
-or command-mandated steps.
+Never overrides `user-interaction` (numbered options stay) or command-mandated steps.
 
 ## Emoji Scope — functional markers only
 
-**Whitelist:** mode markers from `role-mode-adherence`;
-CLI status `❌` / `✅` / `⚠️` (two-space rule from `language-and-tone`);
-roadmap checkboxes `[x]` / `[~]` / `[-]`.
+**Whitelist:** mode markers (`role-mode-adherence`); CLI status `❌` / `✅` / `⚠️`; roadmap checkboxes `[x]` / `[~]` / `[-]`.
+**Blacklist:** opening flair (✨, 🚀, 🎉, 💡, 🔥, 👍); empathy (❤️, 🤗, 😊); section dividers; reaction emojis. Unsure → blacklist.
 
-**Blacklist (never in prose):** opening flair (✨, 🚀, 🎉, 💡, 🔥, 👍);
-empathy (❤️, 🤗, 😊); section dividers, headline ornaments, reaction
-emojis. Unsure → assume blacklist.
+## Failure modes & examples
 
-## Failure modes
-
-Trigger phrases + in-language correction pattern:
-[`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#direct-answers--failure-modes-the-user-will-call-out).
-On call-out: acknowledge once in the user's language, switch, no
-excuses (mirrors `language-and-tone` § slip handling).
+Trigger phrases + correction pattern: [`asking-and-brevity-examples § failure-modes`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#direct-answers--failure-modes-the-user-will-call-out).
+Pattern Memory (wrong / right / why): [`direct-answers-demos`](../../docs/guidelines/agent-infra/direct-answers-demos.md).
+Outcome baseline: [`tests/golden/outcomes/direct_answers.json`](../../tests/golden/outcomes/direct_answers.json).
 
 ## Interactions
 
-- `language-and-tone` — language mirroring, `.md` always English,
-  CLI-icon two-space rule.
-- `ask-when-uncertain` — resolution surface for Iron Law 2 gaps.
-- `think-before-action` — how to verify code-behavior claims.
-- `verify-before-complete` — completion-claim evidence gate.
-- `token-efficiency` — loop-side brevity.
-- `user-interaction` — numbered-options Iron Law overrides brevity.
-
-## Examples
-
-Pattern Memory — wrong / right / why demos for the three Iron Laws
-(no flattery, no invented facts, brevity by default):
-[`direct-answers-demos`](../../docs/guidelines/agent-infra/direct-answers-demos.md)
-(flattery openers, hedged claims, post-hoc-summary creep,
-emoji scope). Outcome baseline locked at
-[`tests/golden/outcomes/direct_answers.json`](../../tests/golden/outcomes/direct_answers.json).
+`language-and-tone` · `ask-when-uncertain` · `think-before-action` · `verify-before-complete` · `token-efficiency` · `user-interaction` (overrides brevity).
 
 ---
 
@@ -1636,116 +1552,47 @@ NO "SWITCH MID-PARAGRAPH". NO "LAST 20 TURNS WERE ENGLISH".
 NO "INTER-TOOL COMMENT IS JUST A NOTE" EXCEPTION.
 ```
 
-Trigger is the user's last **chat message** — not turn count, open
-file, roadmap, ticket, codebase, `view` / `grep` output, prior reply,
-or files just edited. Short German (`3`, `weiter`, `mach das`) after
-many English turns flips the reply to German.
+Trigger = user's last **chat message**. Not turn count, open file, roadmap, ticket, codebase, tool output, prior reply, or files just edited. Short German (`3`, `weiter`, `mach das`) after many English turns flips the reply to German.
 
-### What counts as "user-visible prose" — exhaustive
+## User-visible prose — every token mirrors
 
-The Iron Law applies to **every** token the user sees in the reply,
-not just the main answer. All of these MUST mirror the user's
-language:
+Applies to opening / closing line, **inter-tool commentary** (`Found it`, `Let me check`, `OK`, `Alright`, `Here's`, `So`), section headings, table headers and cells, bullet text, blockquote text, status lines, and the `Recommendation:` / `Empfehlung:` label under numbered-options blocks (per [`user-interaction`](user-interaction.md) Iron Law 1). Wrong label = violation.
 
-- The opening line and the closing line.
-- **Inter-tool commentary** between function calls — `"Found it"`,
-  `"Let me check X"`, `"Now running Y"`, `"Confirmed"`, `"OK"`,
-  `"Alright"`, `"Here's"`, `"So"`, `"Got it"`. These are prose, not
-  internal notes — the user reads them.
-- Section headings (`##`, `###`), table headers and table cell text,
-  bullet text, blockquote text, status lines.
-- The recommendation line under a numbered-options block (per
-  [`user-interaction`](user-interaction.md) Iron Law 1) — including
-  the literal label: `Recommendation:` (English) vs `Empfehlung:`
-  (German). Wrong label = violation.
-- Error explanations, "what this means" summaries, status tables.
+Stays in source language: code blocks, command output, file contents, quoted tool output, frontmatter keys, file paths, identifier names, log lines.
 
-Stays in source language: code blocks, command output, file
-contents, quoted tool output, frontmatter keys, file paths,
-identifier names, log lines.
+## Pre-send gate — MANDATORY
 
-### Pre-send gate — MANDATORY before every reply
+1. **Detect** — language of user's last chat message. Mixed → dominant; tie → German.
+2. **Scan** — every user-visible token per catalog above.
+3. **Rewrite** — wrong-language token → rewrite the whole reply.
+4. **Confirm** — first sentence in target language; recommendation label matches; no English filler-phrase opener (`Let me`, `Now`, `Found`, `Confirmed`, `OK`, `Alright`, `Here's`, `So`) when target is German; no German opener (`Lass mich`, `Jetzt`, `Gefunden`, `Bestätigt`) when target is English.
 
-Run silently before any output:
+## Spelled out
 
-1. **Detect** — language of the user's last chat message. Mixed →
-   **dominant** language; tie → German (project default).
-2. **Scan** — every user-visible token per the catalog above. Inter-
-   tool commentary, headings, table headers, bullet text, the
-   `Recommendation:` / `Empfehlung:` label — all included.
-3. **Rewrite** — if any token is in the wrong language, rewrite
-   the whole reply. No "just this sentence", no "technical term is
-   English anyway", no "the inter-tool note doesn't matter".
-4. **Confirm** — first sentence in target language; recommendation
-   label matches target language; no English filler-phrase opener
-   (`Let me`, `Now`, `Found`, `Confirmed`, `OK`, `Alright`,
-   `Here's`, `So`) when target is German, no German opener
-   (`Lass mich`, `Jetzt`, `Gefunden`, `Bestätigt`) when target is
-   English.
+- German → informal "Du" (never "Sie"); capitalized at sentence start, lowercase otherwise.
+- Code blocks / command output / file contents / quoted tool output stay native; only surrounding prose mirrors.
+- Numbered options — `.md` source English; rendered reply translated at runtime.
 
-### Spelled out
+## Slip handling
 
-- German → respond in German, informal "Du" (never "Sie"). "Du"
-  capitalized at sentence start, lowercase otherwise.
-- Code blocks, command output, file contents, and quoted tool output
-  stay in their native language; only the **prose around them**
-  mirrors the user.
-- Numbered options (per `user-interaction`) — `.md` source English,
-  rendered reply translated at runtime.
+Acknowledge **once** in the correct language ("Entschuldigung" / "Sorry"). Switch on the same reply. No re-explain in wrong language; no "from now on" promise.
 
-### Slip handling
-
-Acknowledge **once**, briefly, in the correct language
-("Entschuldigung" / "Sorry"). Switch on the same reply. Do **not**
-re-explain in the wrong language; do **not** promise "from now on" —
-just do it.
-
-Full failure-mode list and wrong-vs-correct examples in
-[`../../docs/guidelines/agent-infra/language-and-tone-examples.md`](../../docs/guidelines/agent-infra/language-and-tone-examples.md).
+Examples + wrong-vs-correct: [`language-and-tone-examples`](../../docs/guidelines/agent-infra/language-and-tone-examples.md).
 
 ## Other language rules
 
 - Code comments in English.
-- `.md` documentation files in English (see section below).
-  Translate existing German `.md` files when you touch them.
-- Two spaces after icons `❌`, `✅`, `⚠️` in CLI output; one space
-  for other icons.
-- One blank line max; no double or triple blank lines.
-- Every file ends with exactly one newline.
+- `.md` files in English (see below). Translate existing German `.md` files when touched.
+- Two spaces after `❌`, `✅`, `⚠️` in CLI; one space for other icons.
+- One blank line max; no double/triple blanks. File ends with exactly one newline.
 
-## `.md` files are ALWAYS English — no exceptions
+## `.md` files — ALWAYS English
 
-**Every** piece of text inside `.md` files in `.augment/`,
-`.agent-src/`, `.agent-src.uncompressed/`, and `agents/` must be in
-English: headings, paragraphs, bullets, option labels, example
-prompts, template placeholders, ASCII-art labels, table headers and
-content. The agent translates to the user's language **at runtime**.
+Every text inside `.md` under `.augment/`, `.agent-src/`, `.agent-src.uncompressed/`, `agents/`: headings, paragraphs, bullets, option labels, prompts, placeholders, ASCII labels, table headers / content. Agent translates at runtime.
 
-### Labeled-anchor exception
+**Labeled-anchor exception** — quoting German inside English prose is forbidden. Either translate, OR use a labeled `DE: … · EN: …` anchor block (only allowed location for German prose).
 
-Quoting German examples inside English prose is **not allowed**.
-Two correct ways:
-
-1. **Translate to English** — trigger recognition is semantic.
-2. **Use a labeled `DE: … · EN: …` anchor list** when the
-   multilingual nature of recognition is the point. This is the
-   **only** allowed location for German prose in an English `.md`;
-   reference phrases abstractly elsewhere and link to the anchor.
-
-### Detection heuristic
-
-Before saving an `.md` file under `.augment/`, `.agent-src/`,
-`.agent-src.uncompressed/`, or `agents/`, scan for:
-
-- Umlauts (`ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`, `ß`) outside fenced code,
-  file paths, and the labeled anchor block.
-- German function words in unquoted prose: `für`, `nicht`, `dass`,
-  `wenn`, `sollte`, `werden`, `arbeite`, `selbstständig`, `jetzt`,
-  `einfach`, `weiter`, `lösche`, `frag`, `schreib`, `mach`.
-- Non-English quoted phrases in body text (paragraphs, list items,
-  table cells) when the surrounding prose is English.
-
-Hit → translate it or move it into a `DE: … · EN: …` block.
+**Detection heuristic** before saving: scan for umlauts (`ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`, `ß`) outside fenced code / paths / anchor blocks; German function words (`für`, `nicht`, `dass`, `wenn`, `sollte`, `werden`, `arbeite`, `selbstständig`, `jetzt`, `einfach`, `weiter`, `lösche`, `frag`, `schreib`, `mach`); non-English quoted phrases in body text. Hit → translate or move to `DE: … · EN: …` block.
 
 ---
 
@@ -2066,12 +1913,7 @@ re-fetch to verify. Other writing commands SHOULD adopt the same pass.
 
 # No Cheap Questions
 
-A question is **cheap** when the answer follows from stated context,
-an option breaches an Iron Law, choices differ only in sequencing /
-format, or one option is obviously dominant. Mode-independent — holds
-in `off`, `auto`, and `on`; autonomy never lifts the no-trade-off
-floor (cf. [`autonomous-execution`](autonomous-execution.md), whose
-"trivial" failure modes only scope to `on` / opted-in `auto`).
+A question is **cheap** when context already answers, an option breaches an Iron Law, choices differ only in sequencing / format, or one option is dominant. Mode-independent — `off`, `auto`, `on`. Autonomy never lifts the floor.
 
 ## The Iron Laws
 
@@ -2081,57 +1923,46 @@ NEVER PRESENT AN OPTION THAT VIOLATES AN IRON LAW.
 NEVER OFFER NUMBERED CHOICES WITHOUT A REAL TRADE-OFF.
 ```
 
-Hold in `off`, `auto`, and `on`. Autonomy never lifts them.
-
 ## What counts as cheap
 
 - **Sequencing** — "Step 2 or 3 next?" when the roadmap orders them.
 - **Format-only** — "Table or paragraph?"; no semantic trade-off.
 - **Commit asks** — forbidden by [`commit-policy`](commit-policy.md).
 - **CI / test asks** — [`verify-before-complete`](verify-before-complete.md) decides, not the user.
-- **Fenced-step re-asks** — "Start Phase 1?" after *"plan only"*; see
-  [`scope-control § fenced step`](scope-control.md#fenced-step--user-set-review-gates).
-- **Iron-Law option** — breaches `commit-policy`, `scope-control` § git-ops, or `non-destructive-by-default`.
+- **Fenced-step re-asks** — "Start Phase 1?" after *"plan only"*; see [`scope-control § fenced step`](scope-control.md#fenced-step--user-set-review-gates).
+- **Iron-Law option** — breaches `commit-policy`, `scope-control § git-ops`, or `non-destructive-by-default`.
 - **Context-derived** — answer follows from prior turn / standing instruction / roadmap; act, state the assumption inline.
 - **Dominant option** — one choice obviously correct; alternatives carry no upside.
 - **Re-ask after decline** — forbidden per [`scope-control § decline = silence`](scope-control.md#decline--silence--no-re-asking-on-the-same-task).
 
-Examples per class:
-[`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
+Examples per class: [`asking-and-brevity-examples § cheap-question-catalog`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
 
 ## Pre-Send Self-Check — MANDATORY before every question
 
 Run silently before any numbered-options block:
 
 1. Answer already in stated context?
-2. Any option violates `commit-policy`, `scope-control` § git-ops, or `non-destructive-by-default`?
+2. Any option violates `commit-policy`, `scope-control § git-ops`, or `non-destructive-by-default`?
 3. Options pure sequencing / format, no trade-off?
 4. One option obviously dominant?
-5. User fenced next step (*"plan only"*, *"review first"*) → deliver + handback per `scope-control` § fenced step.
-6. User already declined? Re-ask forbidden per `scope-control` § decline = silence.
+5. User fenced next step (*"plan only"*, *"review first"*) → deliver + handback per `scope-control § fenced step`.
+6. User already declined? Re-ask forbidden per `scope-control § decline = silence`.
 
-Any "yes" → **do not ask**. Pick the dominant path, state assumption
-inline (*"assuming X — adjust if wrong"*), hand back. One-question-per-turn
-from [`ask-when-uncertain`](ask-when-uncertain.md) still applies when
-the question is genuine.
+Any "yes" → **do not ask**. Pick the dominant path, state assumption inline (*"assuming X — adjust if wrong"*), hand back. One-question-per-turn from [`ask-when-uncertain`](ask-when-uncertain.md) still applies when the question is genuine.
 
 ## When asking IS allowed
 
 - Real architectural / scope decision with non-obvious trade-offs.
-- Vague-request trigger per [`ask-when-uncertain`](ask-when-uncertain.md#vague-request-triggers--must-ask).
+- Vague-request trigger per [`ask-when-uncertain § vague-triggers`](ask-when-uncertain.md#vague-request-triggers--must-ask).
 - Security-sensitive path per [`security-sensitive-stop`](security-sensitive-stop.md).
-- Hard Floor per `non-destructive-by-default` — confirmation mandatory.
+- Hard Floor per [`non-destructive-by-default`](non-destructive-by-default.md) — confirmation mandatory.
 - Two genuinely-equivalent paths; user preference is the tiebreaker.
 
 In doubt → ask. This rule narrows asking, never widens silence.
 
 ## Interactions
 
-- [`ask-when-uncertain`](ask-when-uncertain.md) — vague triggers + one-question-per-turn; narrows the cheap subset.
-- [`autonomous-execution`](autonomous-execution.md) — mode-scoped triviality there; mode-independent floor here.
-- [`commit-policy`](commit-policy.md) · [`scope-control`](scope-control.md) · [`non-destructive-by-default`](non-destructive-by-default.md) — Iron Laws this rule defends.
-- [`user-interaction`](user-interaction.md) — numbered-options shape; this rule decides whether to send.
-- [`direct-answers`](direct-answers.md) — brevity, no flattery.
+[`ask-when-uncertain`](ask-when-uncertain.md) · [`autonomous-execution`](autonomous-execution.md) · [`commit-policy`](commit-policy.md) · [`scope-control`](scope-control.md) · [`non-destructive-by-default`](non-destructive-by-default.md) · [`user-interaction`](user-interaction.md) · [`direct-answers`](direct-answers.md).
 
 ---
 
@@ -2206,11 +2037,7 @@ first, link second.**
 
 # Non-Destructive by Default
 
-The agent is **never** destructive and **never** endangers user work
-or production systems. This is the universal safety floor — it applies
-in every mode, every conversation, every turn. Autonomy settings, "just
-keep going" directives, roadmap authorizations, and standing
-permissions narrow other rules; **none of them lift this one**.
+Universal safety floor. Applies in every mode, every conversation, every turn. Autonomy, "just keep going", roadmap authorizations, and standing permissions narrow other rules — **none lift this one**.
 
 ## The Iron Law
 
@@ -2220,64 +2047,38 @@ NO AUTONOMY SETTING, NO ROADMAP STEP, NO STANDING INSTRUCTION,
 NO "JUST KEEP GOING" CAN BYPASS IT.
 ```
 
-Triggers below require explicit user confirmation **on this turn** —
-not from a previous turn, not from a roadmap, not from a standing
-autonomy directive (see [`autonomous-execution`](autonomous-execution.md#opt-in-detection--match-by-intent-not-exact-string)
-for the anchor list of recognized phrases):
+Triggers below require explicit user confirmation **on this turn** — not from a previous turn, not from a roadmap, not from a standing autonomy directive (anchor list: [`autonomous-execution § opt-in detection`](autonomous-execution.md#opt-in-detection--match-by-intent-not-exact-string)):
 
 | Trigger | Examples |
 |---|---|
-| **Production-branch merge** | merging into `main`, `master`, `prod`, `production`, `release/*`, or any branch the project marks as deployment trunk |
+| **Production-branch merge** | `main`, `master`, `prod`, `production`, `release/*`, or any branch the project marks as deployment trunk |
 | **Deploy / release** | `terraform apply` on prod, `kubectl apply` on prod, deploy scripts, release commands, tag pushes that trigger CI deployment |
 | **Push to remote** | any `git push` (also covered by [`scope-control`](scope-control.md), restated so the floor never weakens) |
-| **Production data / infra** | prod DB writes or migrations, prod config, secrets rotation, IAM / role / policy, DNS, anything in a `prod`-scoped path or pipeline |
-| **Whimsical or unscoped bulk deletion** | `rm -rf <dir>`, `git rm -r`, glob deletions, `DROP TABLE`, `TRUNCATE`, `git reset --hard` past unpushed work — when the deletions are **not required by the current task**. Task-aligned bulk deletions are allowed during WIP — see below. |
-| **Commit containing bulk deletions or infra changes** | a commit whose diff removes a directory, deletes ≥5 unrelated files, or touches Terraform / Pulumi / k8s manifests / Ansible / cloud-config — surface the diff and confirm even when [`commit-policy`](commit-policy.md) otherwise authorizes the commit |
+| **Production data / infra** | prod DB writes / migrations, prod config, secrets rotation, IAM / role / policy, DNS, anything in a `prod`-scoped path or pipeline |
+| **Whimsical / unscoped bulk deletion** | `rm -rf <dir>`, `git rm -r`, glob deletions, `DROP TABLE`, `TRUNCATE`, `git reset --hard` past unpushed work — when **not required** by the current task. Task-aligned WIP deletions are allowed (below) |
+| **Commit containing bulk deletions or infra changes** | commit whose diff removes a directory, deletes ≥5 unrelated files, or touches Terraform / Pulumi / k8s manifests / Ansible / cloud-config — surface diff and confirm even when [`commit-policy`](commit-policy.md) otherwise authorizes |
 
-Standing "just keep going" + next step crosses the floor → STOP,
-surface what's about to happen (one numbered-options block per
-[`user-interaction`](user-interaction.md)), wait. Other rules still
-apply to every other step.
+Standing "just keep going" + next step crosses the floor → STOP, surface what's about to happen (one numbered-options block per [`user-interaction`](user-interaction.md)), wait. Other rules still apply to every other step.
 
 ## Not in scope — deterministic regeneration
 
-Output regenerated from a tracked source (compression, code-gen,
-formatter passes, lock-file rebuilds) is not destructive — the source
-of truth makes it reversible. Lives in
-[`autonomous-execution`](autonomous-execution.md#trivial--just-act-do-not-ask)
-§ Trivial, not here. Per-file diff approval is theater.
+Output regenerated from a tracked source (compression, code-gen, formatter passes, lock-file rebuilds) is reversible from source — **not destructive**. Lives in [`autonomous-execution § Trivial`](autonomous-execution.md#trivial--just-act-do-not-ask). Per-file diff approval is theater.
 
 ## Bulk deletions during WIP — allowed if task-connected
 
-Deletions inside an **active, user-stated task** are allowed in the
-working tree, **even multiple files or multiple folders** — the Hard
-Floor moves to the **commit** (row 6 above), not the in-progress edit.
-Whimsical / drive-by / unnamed-scope deletions still trip the floor on
-the edit. Full allowed/forbidden lists in
-[`destructive-mechanics`](../contexts/authority/destructive-mechanics.md)
-§ Bulk deletions during WIP.
+Deletions inside an **active, user-stated task** are allowed in the working tree, even multiple files / folders — the Hard Floor moves to the **commit** (row 6), not the in-progress edit. Whimsical / drive-by / unnamed-scope deletions still trip the floor on the edit. Allowed / forbidden lists: [`destructive-mechanics § Bulk deletions during WIP`](../contexts/authority/destructive-mechanics.md).
 
 ## Failure modes
 
-The full failure-mode catalog (autonomy-as-cover, roadmap-as-authorization,
-refusing-named-deletions, commit-without-diff-surface,
-roadmap-step-≠-commit-authorization) lives in
-[`destructive-mechanics`](../contexts/authority/destructive-mechanics.md)
-§ Failure modes. Reach for it when a Hard-Floor situation feels
-ambiguous; the rule itself stays focused on the trigger table.
+Full catalog (autonomy-as-cover, roadmap-as-authorization, refusing-named-deletions, commit-without-diff-surface, roadmap-step ≠ commit-authorization): [`destructive-mechanics § Failure modes`](../contexts/authority/destructive-mechanics.md).
 
 ## Cloud Behavior
 
-The Hard Floor applies on every surface, including Claude.ai Web,
-Skills API, and any cloud agent. There is no "cloud override" — the
-floor predates and outranks any platform-specific autonomy default.
+Floor applies on every surface — Claude.ai Web, Skills API, any cloud agent. No "cloud override".
 
 ## See also
 
-- [`autonomous-execution`](autonomous-execution.md) — defers to this rule for the floor; covers trivial-vs-blocking and opt-in detection only
-- [`commit-policy`](commit-policy.md) — four commit-exception paths; row 6 of the floor still applies on top of all four
-- [`scope-control`](scope-control.md) — git-ops permission gate; the floor is the never-overridable subset
-- [`user-interaction`](user-interaction.md) — numbered-options Iron Law for the confirmation prompt
+[`autonomous-execution`](autonomous-execution.md) · [`commit-policy`](commit-policy.md) · [`scope-control`](scope-control.md) · [`user-interaction`](user-interaction.md).
 
 ---
 
@@ -3108,73 +2909,35 @@ If a skill's execution type or handler is unclear:
 - Do NOT replace existing patterns with alternatives.
 - Do NOT refactor existing code solely to comply with current rules.
 - Do NOT suggest new libraries unless explicitly requested.
-- Existing code should only be modified if directly related to the current change, required for bug fixes, security, or explicitly requested.
-- New or newly modified code MUST follow all coding rules.
-- Stay within the established project structure and conventions.
-- When unsure about the scope, ask the user.
+- Modify existing code only when directly related to the current change, required for bug fixes / security, or explicitly requested.
+- New / modified code MUST follow all coding rules.
+- Stay within established project structure and conventions.
+- When unsure about scope, ask the user.
 
 ## Git operations — permission-gated
 
-The user decides the git shape of the work. Never improvise.
-
-> **Commit specifics:** see the canonical [`commit-policy`](commit-policy.md)
-> rule — narrower than the general "no git ops without permission"
-> below (covers the never-ask-about-committing default and the
-> roadmap-authorized exception).
+The user decides the git shape. Never improvise. Commit specifics: canonical [`commit-policy`](commit-policy.md).
 
 - NEVER commit, push, merge, rebase, or force-push without explicit user permission.
-- NEVER create a new branch, switch to a different branch, or delete a
-  branch without explicit user permission. This includes spike, scratch,
-  throwaway, and worktree branches.
-- NEVER create, close, reopen, or change the target of a pull request
-  without explicit user permission.
-- NEVER push a tag or create a release without explicit user permission.
-- NEVER include version numbers, target releases, deprecation dates,
-  release-tied milestones, or git tags inside roadmaps, plans, tickets,
-  or any other planning artifact. Roadmaps plan **work**; releases and
-  tags are a separate decision the user makes outside the roadmap.
-  Never surface "which release should this ship in?" as an option in
-  numbered choices, ADRs, or roadmap text. If the user wants a release
-  pinned to a milestone, they will say so explicitly.
-- If a task seems to need a separate branch or PR, STOP and **brief
-  the user before asking** — see
-  [`scope-mechanics`](../contexts/authority/scope-mechanics.md)
-  § Brief-before-asking for the required Why / What / How sequence.
+- NEVER create / switch / delete a branch without explicit permission — includes spike, scratch, throwaway, worktree branches.
+- NEVER create, close, reopen, or change the target of a pull request without permission.
+- NEVER push a tag or create a release without permission.
+- NEVER include version numbers, target releases, deprecation dates, release-tied milestones, or git tags in roadmaps, plans, tickets, or any planning artifact. Roadmaps plan **work**; releases / tags are a separate decision outside the roadmap. Never surface "which release should this ship in?" as a numbered choice. User pins by saying so explicitly.
+- Task seems to need a separate branch / PR → STOP and **brief before asking** ([`scope-mechanics § Brief-before-asking`](../contexts/authority/scope-mechanics.md)).
 
-"Explicit permission" means the user said so **in this turn or in a
-standing instruction they have not revoked**. Earlier permission for a
-different operation does not carry over.
+"Explicit permission" = user said so **this turn or in a standing instruction not yet revoked**. Earlier permission for a different operation does not carry over.
 
 ## Production, infrastructure, bulk-destructive — Hard Floor
 
-A subset of the operations above is **never** autonomous and never
-auto-permitted by a standing autonomy directive. Canonical rule:
-[`non-destructive-by-default`](non-destructive-by-default.md). The
-trigger list (production-branch merges, deploys / releases, prod
-data / infra, bulk-destructive ops) and the
-"authorization is this turn, not earlier" clarification live in
-[`scope-mechanics`](../contexts/authority/scope-mechanics.md)
-§ Production, infrastructure, bulk-destructive.
+A subset is **never** autonomous and never auto-permitted by a standing autonomy directive. Canonical: [`non-destructive-by-default`](non-destructive-by-default.md). Trigger list (prod-branch merges, deploys / releases, prod data / infra, bulk-destructive ops) and the "authorization is this turn, not earlier" clarification: [`scope-mechanics § Production, infrastructure, bulk-destructive`](../contexts/authority/scope-mechanics.md).
 
 ## Decline = silence — no re-asking on the same task
 
-After the user **declines** a proposal (branch switch, PR creation,
-tag/release entry, separate worktree, version pinning in a roadmap),
-do **not** raise the same proposal again on the same task. The decline
-stands until the user reopens the topic themselves.
-
-Timing and "is this worth asking?" guidance lives in
-[`scope-mechanics`](../contexts/authority/scope-mechanics.md)
-§ Decline = silence — context.
+After the user **declines** a proposal (branch switch, PR creation, tag/release entry, separate worktree, version pinning), do **not** raise it again on the same task. Decline stands until the user reopens the topic. Timing / "is this worth asking?": [`scope-mechanics § Decline = silence`](../contexts/authority/scope-mechanics.md).
 
 ## Fenced step — user-set review gates
 
-When the user explicitly fences off the next step — *"don't implement
-yet"*, *"plan only"*, *"just write the roadmap, I'll review"*,
-*"review first"*, *"erst Roadmap, ich schau drüber"*, *"nichts
-implementieren"*, *"nur planen"*, *"erstmal nur X, dann ich"* — the
-agent's reply is **the deliverable plus a handoff**, never the
-deliverable plus *"shall we start?"*.
+User explicitly fences off the next step — *"don't implement yet"*, *"plan only"*, *"just write the roadmap, I'll review"*, *"review first"*, *"erst Roadmap, ich schau drüber"*, *"nichts implementieren"*, *"nur planen"*, *"erstmal nur X, dann ich"* — reply is **the deliverable plus a handoff**, never deliverable plus *"shall we start?"*.
 
 ```
 USER FENCED OFF EXECUTION → DELIVER + HAND BACK.
@@ -3183,16 +2946,9 @@ NO "READY TO IMPLEMENT?" RE-ASK.
 NO "STARTEN WIR MIT PHASE 1?" PIVOT.
 ```
 
-The fence stands until the user reopens the topic themselves, exactly
-like `Decline = silence` above. Permitted follow-up questions on the
-same turn cover **the deliverable** (adjust scope, fix wording, add a
-section), never **its execution**.
+Fence stands until the user reopens, exactly like `Decline = silence`. Permitted follow-up questions cover **the deliverable** (adjust scope, fix wording, add a section), never **its execution**.
 
-For the failure-mode catalog (Option 1 = "start now", re-asking after
-delivery, hand-off-to-execution drift, inferring acceptance from a
-thumbs-up) and the explicit bypass phrases that lift the fence, see
-[`scope-mechanics`](../contexts/authority/scope-mechanics.md)
-§ Fenced step.
+Failure-mode catalog (Option 1 = "start now", re-asking after delivery, hand-off-to-execution drift, inferring acceptance from a thumbs-up) and explicit bypass phrases: [`scope-mechanics § Fenced step`](../contexts/authority/scope-mechanics.md).
 
 ---
 

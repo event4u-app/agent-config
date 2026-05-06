@@ -8,7 +8,7 @@ source: package
 
 # Agent Authority — Priority Index
 
-Four rules answer **"may the agent do this autonomously?"** Check bands in order; higher band wins.
+Four rules answer **"may the agent do this autonomously?"** Higher band wins.
 
 | Band | Trigger | Canonical rule |
 |---|---|---|
@@ -17,9 +17,8 @@ Four rules answer **"may the agent do this autonomously?"** Check bands in order
 | **3. Commit Default** | About to commit — never, unless one of four exceptions fires | [`commit-policy`](commit-policy.md) |
 | **4. Trivial-vs-Blocking** | Routine workflow question — act or ask | [`autonomous-execution`](autonomous-execution.md) |
 
-## Index rules
+## Rules
 
-- **Hard Floor wins, always.** No autonomy setting, roadmap step, or standing instruction lifts it.
-- **Higher band wins on conflict.** Commit exception ≠ Hard Floor override; scope permission ≠ commit override.
-- **Index never restates an Iron Law.** Iron Laws live verbatim in canonical files; this router only points.
-- **Unsure → ask.** [`ask-when-uncertain`](ask-when-uncertain.md) is the universal escape hatch.
+- Hard Floor wins, always — autonomy / roadmap / standing instruction never lift.
+- Higher band wins on conflict — commit exception ≠ Hard Floor override; scope permission ≠ commit override.
+- Unsure → [`ask-when-uncertain`](ask-when-uncertain.md).
