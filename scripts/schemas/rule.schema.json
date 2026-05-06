@@ -28,8 +28,8 @@
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^(contexts/|agents/contexts/|\\.agent-src/contexts/)[^\\s]+\\.md$",
-        "description": "Logical name (preferred — `contexts/<area>/<file>.md`) or project-local (`agents/contexts/<file>.md`). The `.agent-src.uncompressed/` prefix is rejected by the regex; the rewriter (`scripts/compress.py::_rewrite_paths`) resolves logical names at compress time."
+        "pattern": "^((\\.\\./)*contexts/|agents/contexts/|\\.agent-src/contexts/)[^\\s]+\\.md$",
+        "description": "Logical name (preferred — `contexts/<area>/<file>.md`) or project-local (`agents/contexts/<file>.md`). The `.agent-src.uncompressed/` prefix is rejected by the regex; the rewriter (`scripts/compress.py::_rewrite_paths`) resolves logical names at compress time. Rewritten relative forms (`../contexts/...`, `../../contexts/...`) are accepted so the linter passes on the compressed mirror in CI."
       },
       "description": "Lazy on-demand context references. Use logical names rooted at the source (e.g. `contexts/execution/foo.md`); the `.agent-src.uncompressed/` prefix is forbidden by the regex (road-to-path-fixes.md P5.3). Path rules and budget caps enforced by scripts/lint_load_context.py. Contract: docs/contracts/load-context-schema.md."
     },
@@ -37,7 +37,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^(contexts/|agents/contexts/|\\.agent-src/contexts/)[^\\s]+\\.md$",
+        "pattern": "^((\\.\\./)*contexts/|agents/contexts/|\\.agent-src/contexts/)[^\\s]+\\.md$",
         "description": "Same logical-name rule as `load_context`."
       },
       "description": "Eager auto-loaded context references. Same logical-name rule as `load_context`. Counts against the per-rule char budget; enforced by scripts/lint_load_context.py."
