@@ -231,23 +231,30 @@ siblings own their own Hard Cap accounting). Phase 8 = final validation.
 
 ## Phase 3 — Router contract (gated on P2)
 
-- [ ] **P3.1 — Router frontmatter schema.** Document in
+- [x] **P3.1 — Router frontmatter schema.** Document in
   `docs/contracts/rule-router.md`. Fields: `triggers:` (list of keyword
   / phrase patterns), `routes_to:` (list of skill / guideline ids),
   `tier:` (`kernel` | `tier-1` | `tier-2`), `profile:` (`minimal` |
   `balanced` | `full`). Schema validated by `scripts/skill_linter.py`
   extension.
-- [ ] **P3.2 — Router compiler.** Author
+- [x] **P3.2 — Router compiler.** Author
   `scripts/compile_router.py` (≤ 200 LOC, stdlib-only). Reads
   rule frontmatter from `.agent-src.uncompressed/rules/`, emits the
   compiled `router.json` (deterministic key order, sorted). Wired into
-  `task generate-tools` after the existing compress step.
-- [ ] **P3.3 — Linter extension.** `scripts/skill_linter.py` validates: every
-  `routes_to:` target exists, every kernel rule has no `triggers:` (kernel
-  is unconditional), every non-kernel rule has at least one `triggers:`
-  entry, every `routes_to:` skill / guideline back-references the rule via
-  `triggered_by:` frontmatter (bidirectional check, mirrors
-  `check-refs.py` § back-ref pattern).
+  `task ci` via `task check-router` (drift gate) and into `task
+  consistency` / `consistency-fix` (regen). New tasks
+  `compile-router` + `check-router` in `taskfiles/content.yml`.
+- [x] **P3.3 — Linter extension.** `scripts/skill_linter.py` validates
+  router schema via `lint_router_frontmatter`: kernel rules must not
+  declare `triggers:` / `routes_to:` (errors); non-kernel rules without
+  these fields emit info-level notices (will harden to errors after P4
+  migration); `triggers:` items must use an allowed key
+  (`keyword | phrase | intent | file_pattern | path_prefix |
+  command`); `routes_to:` items must follow `kind:id` with kind ∈
+  {`skill`, `guideline`} and the target file must exist. Bidirectional
+  back-ref check (skill / guideline → rule via `triggered_by:`)
+  deferred to P4 — rules don't yet emit `routes_to:` targets, so no
+  back-refs to validate.
 
 ## Phase 4 — Migration (gated on P3)
 
