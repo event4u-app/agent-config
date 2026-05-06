@@ -320,13 +320,20 @@ prompt as `<original artefact> + <prior round, anonymised>` so each
 member can refine, agree, or push back on the previous critique
 without seeing which provider produced which point.
 
+Default count comes from `ai_council.min_rounds` in
+`.agent-settings.yml` (default `2` so members critique each other
+at least once). Host agent does **not** ask "how many rounds?"
+when the requested count `<= min_rounds` — settings owner already
+decided. Ask only when a complex artefact justifies more depth.
+
 | Property | Behaviour |
 |---|---|
-| Anonymisation | Provider/model identity is stripped. Reviewers are labelled `Reviewer A / B / C…` in input order. |
-| Errored prior responses | Skipped — they reveal nothing useful and can leak provider error formats. |
-| Cost budget | Accumulates across rounds. A round-2 call that breaches the cap fires `on_overrun` exactly like a round-1 breach. |
+| Default count | `ai_council.min_rounds` (default `2`). Override per-call with `rounds:N` (CLI: `--rounds N`). |
+| Anonymisation | Provider/model identity stripped. Reviewers labelled `Reviewer A / B / C…` in input order. |
+| Errored prior responses | Skipped — leak nothing useful and can leak provider error formats. |
+| Cost budget | Accumulates across rounds. Round-2 breach fires `on_overrun` like round-1. |
 | Daily limit | Same — every billable round-2 call records spend in the rolling 24h ledger. |
-| Return value | Final round only. Use `on_round_complete(round_idx, responses)` to capture intermediate rounds for rendering. |
+| Return value | Final round only. Use `on_round_complete(round_idx, responses)` for intermediates. |
 
 > Iron Law: anonymisation is non-negotiable. If you ever need to
 > surface "which model said what" between rounds, that is a different
@@ -347,6 +354,19 @@ Round 2: artefact + anonymised round 1 critiques
 | openai/gpt-4o      |   $0.0121 | $0.0242 |
 | **total**          |           | $0.0594 |
 ```
+
+### Manual-mode parity
+
+Orchestrator drives rounds the same way for `api` and `manual`.
+One round = one full pass over every enabled member, top-to-bottom,
+then `_augment_for_next_round()` folds anonymised critiques into
+round-N+1 user prompt. For manual mode: emit round-1 block for
+member A → user pastes A's reply → next member B → user pastes B
+→ host consolidates round 1 → emit round-2 block (with anonymised
+round-1 critiques) for member A → … until configured count
+reached. ManualClient's "more feedback" follow-up loop (1/2/3
+menu) is **inside** a single member's chat thread and orthogonal
+to orchestrator-level rounds.
 
 ## See also
 

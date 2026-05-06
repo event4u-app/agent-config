@@ -207,10 +207,25 @@ ai_council:
       model: "gpt-4o"
       # mode: "manual"   # uncomment to override ai_council.mode
 
+  # Default number of debate rounds per /council invocation.
+  #
+  # Round 1 sees the artefact alone. Round 2+ sees the artefact plus
+  # anonymised critiques from the previous round (provider/model
+  # identity stripped per the neutrality Iron Law). Applies identically
+  # to api and manual transports — manual mode runs round 1 across all
+  # members, the host agent consolidates, then round 2 starts with the
+  # anonymised round-1 critiques folded in.
+  #
+  # Default is 2 so council members critique each other at least once
+  # before convergence. The agent does NOT ask "how many rounds?" when
+  # the requested rounds <= min_rounds; pass `rounds:N` on the
+  # invocation (or `--rounds N` to the CLI) to override.
+  min_rounds: 2
+
   # Hard cost ceiling per /council invocation. The orchestrator pauses
   # before any member whose projected spend would breach a cap and asks
   # the user to continue. `max_total_usd: 0` disables the USD ceiling
-  # (token caps still apply).
+  # (token caps still apply). Total spend = rounds * single-round cost.
   #
   # Prices come from `agents/.agent-prices.md` (gitignored, refreshed weekly
   # by `python3 scripts/update_prices.py`; bootstrapped from

@@ -263,17 +263,19 @@ def cmd_run(
         )
         return 0
 
-    cost_cfg = (settings.get("ai_council") or {}).get("cost_budget") or {}
+    ai_cfg = settings.get("ai_council") or {}
+    cost_cfg = ai_cfg.get("cost_budget") or {}
     budget = CostBudget(
         max_input_tokens=int(cost_cfg.get("max_input_tokens", 50_000)),
         max_output_tokens=int(cost_cfg.get("max_output_tokens", 20_000)),
         max_calls=int(cost_cfg.get("max_calls", 10)),
         max_total_usd=float(cost_cfg.get("max_total_usd", 0.0) or 0.0),
     )
+    rounds = args.rounds if args.rounds is not None else int(ai_cfg.get("min_rounds", 2))
     responses = consult(
         members, question, budget,
         table=table, project=project,
-        original_ask=args.original_ask, rounds=args.rounds,
+        original_ask=args.original_ask, rounds=rounds,
     )
     estimated_total = sum(e.total_usd for e in estimates)
     actual_total = 0.0
@@ -288,7 +290,7 @@ def cmd_run(
         "artefact": artefact,
         "original_ask": args.original_ask,
         "members": [f"{m.name}/{m.model}" for m in members],
-        "rounds": args.rounds,
+        "rounds": rounds,
         "cost_usd_estimated": round(estimated_total, 6),
         "cost_usd_actual": round(actual_total, 6),
         "responses": _serialise_responses(responses),
@@ -374,8 +376,10 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Path to write the responses JSON.")
     p_run.add_argument("--confirm", action="store_true",
                        help="Required to actually invoke the council.")
-    p_run.add_argument("--rounds", type=int, default=1,
-                       help="Number of debate rounds (1-3).")
+    p_run.add_argument("--rounds", type=int, default=None,
+                       help="Number of debate rounds (1-3). Defaults to "
+                            "ai_council.min_rounds in .agent-settings.yml "
+                            "(or 2 if unset).")
 
     p_ren = sub.add_parser("render", help="Re-render a saved responses JSON.")
     p_ren.add_argument("responses",

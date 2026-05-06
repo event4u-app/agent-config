@@ -336,8 +336,16 @@ prompt as `<original artefact> + <prior round, anonymised>` so each
 member can refine, agree, or push back on the previous critique
 without seeing which provider produced which point.
 
+The default round count comes from `ai_council.min_rounds` in
+`.agent-settings.yml` (default `2` so members critique each other
+at least once before convergence). The host agent does **not** ask
+"how many rounds?" when the requested count is `<= min_rounds` —
+the settings owner already made that decision. Ask only when a
+genuinely complex artefact justifies more depth than the default.
+
 | Property | Behaviour |
 |---|---|
+| Default count | `ai_council.min_rounds` (default `2`). Override per-invocation with `rounds:N` (or `--rounds N` to the CLI). |
 | Anonymisation | Provider/model identity is stripped. Reviewers are labelled `Reviewer A / B / C…` in input order. |
 | Errored prior responses | Skipped — they reveal nothing useful and can leak provider error formats. |
 | Cost budget | Accumulates across rounds. A round-2 call that breaches the cap fires `on_overrun` exactly like a round-1 breach. |
@@ -363,6 +371,21 @@ Round 2: artefact + anonymised round 1 critiques
 | openai/gpt-4o      |   $0.0121 | $0.0242 |
 | **total**          |           | $0.0594 |
 ```
+
+### Manual-mode parity
+
+The orchestrator drives rounds the same way for `api` and `manual`
+transports. One round = one full pass over every enabled member,
+top-to-bottom, then `_augment_for_next_round()` folds the
+anonymised critiques into the round-N+1 user prompt. For manual
+mode this means: emit the round-1 block for member A → user
+pastes A's reply → next member B → user pastes B's reply → host
+agent consolidates round 1 → emit the round-2 block (now carrying
+the anonymised round-1 critiques) for member A → … and so on
+until the configured round count is reached. ManualClient's
+internal "more feedback" follow-up loop (1 / 2 / 3 menu) is
+**inside** a single member's chat thread and is orthogonal to the
+orchestrator-level rounds.
 
 ## See also
 

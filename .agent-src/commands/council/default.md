@@ -30,11 +30,17 @@ The user invoked `/council default` on exactly one input mode:
 Optional invocation flag: `mode:api|manual` overrides the per-member
 and global mode for this call only (see Step 2.5).
 
-Optional **rounds**: `rounds:N` (1-3) enables multi-round debate. Round
-1 sees the artefact alone. Round 2+ sees the artefact plus anonymised
-critiques from the previous round (provider/model identity stripped).
-Total spend = N × single-round cost; surface this in the cost gate.
-Default `rounds:1`.
+Optional **rounds**: `rounds:N` (1-3) overrides the multi-round debate
+count. Round 1 sees the artefact alone. Round 2+ sees the artefact plus
+anonymised critiques from the previous round (provider/model identity
+stripped). Total spend = N × single-round cost; surface in cost gate.
+
+Default comes from `ai_council.min_rounds` in `.agent-settings.yml`
+(default `2` so members critique each other at least once before
+convergence). **Do NOT ask "how many rounds?"** when `rounds:N` is
+unset or `N <= min_rounds` — proceed with the settings default. Ask
+only when the artefact is genuinely complex; surface as a numbered
+choice with the cost delta.
 
 Optional **mode_override**: `mode_override=pr|design|optimize` swaps
 the system-prompt addendum for one of the specialised lenses
@@ -132,6 +138,12 @@ Once the user picks `1`, invoke the same arguments with `run` plus
     [--input-mode …] [--max-tokens …] [--mode-override …] \
     [--original-ask "<framing sentence>"]
 ```
+
+`--rounds` defaults to `ai_council.min_rounds` from
+`.agent-settings.yml` (or `2` if unset). Pass `--rounds N` only when
+the user explicitly asked for a different count or a complex
+artefact justifies more depth — do not pass `--rounds 1` to "save
+money" by default; settings owner already chose `min_rounds`.
 
 The CLI:
 
