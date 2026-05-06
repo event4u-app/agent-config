@@ -73,6 +73,20 @@
       "type": "string",
       "enum": ["minimal", "balanced", "full"],
       "description": "Optional profile override; rare. Tier-derived default applies otherwise."
+    },
+    "validator_ignore": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "pattern"],
+        "properties": {
+          "type": {"type": "string", "enum": ["substring", "regex"]},
+          "pattern": {"type": "string", "minLength": 1},
+          "reason": {"type": "string", "description": "Human-readable rationale for the suppression — surfaced in audit logs."}
+        }
+      },
+      "description": "Per-rule allowlist consumed by the post-compression validator (scripts/check_compressed_paths.py). Rules that document forbidden path substrings as their subject matter (e.g. augment-portability, no-roadmap-references) declare the literal strings here so the gate does not flag itself. road-to-path-fixes.md P5.1."
     }
   }
 }

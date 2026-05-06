@@ -670,7 +670,15 @@ def lint_router_frontmatter(rule_id: str, frontmatter: str,
             elif kind == "command":
                 target = repo_root / ".agent-src.uncompressed" / "commands" / f"{target_id}.md"
             elif kind == "contract":
+                # Contracts live in two places: stable host docs in
+                # docs/contracts/ and load-bearing flows in
+                # .agent-src.uncompressed/contexts/contracts/ (road-to-path-fixes
+                # P4 / Council R2). Try both before failing.
                 target = repo_root / "docs" / "contracts" / f"{target_id}.md"
+                if not target.exists():
+                    alt = repo_root / ".agent-src.uncompressed" / "contexts" / "contracts" / f"{target_id}.md"
+                    if alt.exists():
+                        target = alt
             else:
                 issues.append(Issue("error", "route_kind_unknown",
                     f"routes_to[{idx}] kind '{kind}' must be 'skill', 'guideline', 'command', or 'contract'"))
