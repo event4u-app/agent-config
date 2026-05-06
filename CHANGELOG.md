@@ -318,6 +318,72 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.21.0](https://github.com/event4u-app/agent-config/compare/1.20.0...1.21.0) (2026-05-06)
+
+### Features
+
+* **linter:** add council-reference guard with pragma suppressions ([734b7ae](https://github.com/event4u-app/agent-config/commit/734b7ae61d53c17fadb78f6f68bb54e3fe7cdde8))
+* **linter:** density-gated size warnings (council Option 2) ([281b9aa](https://github.com/event4u-app/agent-config/commit/281b9aa6f52640a93cf55c7b13678fbd2ea85077))
+* **skills:** add prompt-optimizer skill and /optimize-prompt command ([4f99e50](https://github.com/event4u-app/agent-config/commit/4f99e50ae46b19eab3eed2629bb94ac5d017151e))
+* **path-fixes:** finalize Phase 5-7 — checker, smoke, copilot review, contracts move ([3c5fc5d](https://github.com/event4u-app/agent-config/commit/3c5fc5d100ea7c542a48778e4e0669f551fad946))
+* **install:** rules_use_symlinks toggle for both compress.py and install.sh ([927adc3](https://github.com/event4u-app/agent-config/commit/927adc35002588eef4d24825c313e6a9511d6ca1))
+* **ai-council:** default rounds via ai_council.min_rounds (default 2) ([26da301](https://github.com/event4u-app/agent-config/commit/26da30125a0b5a2c74c9c48cf6a2f8e2e5d021dd))
+* **ai-council:** isolate council artefacts as gitignored, auto-pruned scratch ([ab0e245](https://github.com/event4u-app/agent-config/commit/ab0e245734c8560f6d93df927b8af6d105c1d8dc))
+* **rules:** enforce logical-name path conventions for load_context ([fd12ff6](https://github.com/event4u-app/agent-config/commit/fd12ff6b37cec7d2be8ea88d3ec055333fea13e2))
+* **rules:** land kernel + router architecture ([d4fe80e](https://github.com/event4u-app/agent-config/commit/d4fe80e1ce2a956eb86df328de32e3252515553f))
+* **linter:** validate router frontmatter schema (P3.3) ([124e4d7](https://github.com/event4u-app/agent-config/commit/124e4d7387c4f6b90dba5a60179580af5ba5ed45))
+* **router:** compile router.json + wire into CI (P3.2) ([a050a5c](https://github.com/event4u-app/agent-config/commit/a050a5c7b1ba4900be8d7439eadf5cd2953f15d1))
+* **router:** add rule-router schema contract (P3.1) ([e7b1088](https://github.com/event4u-app/agent-config/commit/e7b108809d2fc1f26b4f8f4254044c6019b75a90))
+* **kernel:** add Iron-Law SHA tooling + raise bucket cap to 26k (ADR-002) ([2f8b867](https://github.com/event4u-app/agent-config/commit/2f8b867bb1c306d8c03a754f68f8c82a53013689))
+* **kernel:** land P2.1 — kernel-budget enforcement + ADR-001 ([dd7d50a](https://github.com/event4u-app/agent-config/commit/dd7d50aeb81ca53c430d84d1c0ba36a93008c7f8))
+* **scripts:** add rule-budget measurement + Phase-1 pilot tooling ([396a85f](https://github.com/event4u-app/agent-config/commit/396a85fef25578871566c6c463f57e23b7f95ef2))
+
+### Bug Fixes
+
+* **commands:** add cluster: optimize to optimize-prompt frontmatter ([bdc3907](https://github.com/event4u-app/agent-config/commit/bdc390772086fa4c13dba1142eb2b82ab133f5a7))
+* **compress:** protect rule examples with inline-code backticks ([c5ea62b](https://github.com/event4u-app/agent-config/commit/c5ea62ba8937d52651544b8509b955498e109579))
+* **schema:** accept rewritten ../contexts/ paths in load_context ([8101320](https://github.com/event4u-app/agent-config/commit/8101320c9a014e02bddfa60fb433b09bd3646b0a))
+* **linter:** support validator_ignore frontmatter + dual-location contracts ([031bd7d](https://github.com/event4u-app/agent-config/commit/031bd7df79deb35a53b8f1d49384056cfcea7711))
+* **templates:** compressed mirror of templates/rule.md + placeholder fix for check-refs ([c182723](https://github.com/event4u-app/agent-config/commit/c18272386d1c5f31efdd14f6d2cca8b8d8b876c8))
+* **skills:** portability — script paths in rule-writing, lower-case agent-config in copilot-agents-optimization ([7e5a86f](https://github.com/event4u-app/agent-config/commit/7e5a86f5dda9a095e3d887c19df718555f7f347c))
+* **tests:** align load_context tests with logical-name path format ([924e52e](https://github.com/event4u-app/agent-config/commit/924e52ed4005d2fb8d22167899058ed9eeb61449))
+* **commit-mechanics:** trim four-exceptions block to fit 6k extended-size cap ([0b6391f](https://github.com/event4u-app/agent-config/commit/0b6391f08d23af71f8945a7e685c7a979e229d61))
+* **contexts:** restore obligation-keyword baseline after P2.2 rule compression ([8996bcd](https://github.com/event4u-app/agent-config/commit/8996bcd83621670f175f93d73ee1c577695d3b34))
+* **linear-digest:** update language-and-tone strip-section title after P2.2 rename ([9643a82](https://github.com/event4u-app/agent-config/commit/9643a82c15a9904ceefcc6a9f1b90a4ef2225b47))
+
+### Documentation
+
+* **roadmap:** add road-to-structural-linter-reform (council Option 3) ([ac62e56](https://github.com/event4u-app/agent-config/commit/ac62e563f17f697401c8d9045847b3c12ec1c927))
+* update package docs for kernel + router model ([8fef804](https://github.com/event4u-app/agent-config/commit/8fef804aa00ce578ee2b1a96c7002081f07bc538))
+* **kernel:** land Phase 1 classification + kernel set + Council R2 amendments ([a179487](https://github.com/event4u-app/agent-config/commit/a179487dd6fef2b548cd1b886a1e7d54a4c00a39))
+
+### Refactoring
+
+* compression logic ([6701f9f](https://github.com/event4u-app/agent-config/commit/6701f9f12568ddc409ccad62a7690d64ba885122))
+* **chat-history:** import emits summary + resume offer instead of verbatim entries ([dfafd9c](https://github.com/event4u-app/agent-config/commit/dfafd9cd62d740a7137f6a6e648acfb377f46b1b))
+* **kernel:** compress 8 kernel rules per P2.2 playbook + lock kernel (P2.3) ([4e771da](https://github.com/event4u-app/agent-config/commit/4e771da5c4ceea2e6d2e8935098f1cd231c80c30))
+
+### Chores
+
+* **router:** add routes_to to no-council-references rule ([fb50540](https://github.com/event4u-app/agent-config/commit/fb505404c9b03cb9fa597ac36793eb3f552585f7))
+* **roadmaps:** archive completed agent-memory roadmaps ([a35b680](https://github.com/event4u-app/agent-config/commit/a35b6803ff545ce2e9098a55cfa8ecb1fbcf624d))
+* **ownership:** regenerate matrix after road-to-structural-linter-reform ([174dd24](https://github.com/event4u-app/agent-config/commit/174dd24989f112eab89c628807acbbb0e10b6aae))
+* **ci:** regenerate index, catalog, roadmap complexity fix ([d61dc9c](https://github.com/event4u-app/agent-config/commit/d61dc9ce96f2ccdab8efd11281bf00d80ed755ef))
+* **docs:** bump getting-started command count from 94 to 95 ([6751897](https://github.com/event4u-app/agent-config/commit/6751897cdf2744683731fc9230183a38834e9b9c))
+* **sync:** regenerate agents/index.md + docs/catalog.md after prompt-optimizer ([cfe2367](https://github.com/event4u-app/agent-config/commit/cfe236759671792a9b49ff10f664fbed10edc4c4))
+* **readme:** bump command count from 94 to 95 after prompt-optimizer addition ([62a59a4](https://github.com/event4u-app/agent-config/commit/62a59a427986ff428d1c1e729d311914ce3be0e5))
+* **sync:** regenerate .windsurfrules after caveman arrow update ([509ba00](https://github.com/event4u-app/agent-config/commit/509ba0061500a47129c77da5bae1f8384636a09c))
+* **compression:** apply caveman abbreviation and arrow rules to mirror ([34e5b1f](https://github.com/event4u-app/agent-config/commit/34e5b1f85da99de94ea8b5f932011583c844a0c8))
+* **sync:** regenerate compressed mirror + ownership matrix after Phase 5-7 ([b421e8e](https://github.com/event4u-app/agent-config/commit/b421e8e3aae6c1ee739bbdd35ed4f44cd78eed85))
+* **roadmap:** archive road-to-path-fixes after Phase 7 closure ([651fd3e](https://github.com/event4u-app/agent-config/commit/651fd3e6586e552dab6368be1853141b2b2fb0ff))
+* **portability:** replace 'Galawork'/'galawork' with 'Consumer'/'consumer' ([bac0433](https://github.com/event4u-app/agent-config/commit/bac0433c13e007910564e6b21b82ca6e6dcccdf9))
+* regenerate router, index, catalog, windsurf rules, tool symlinks ([93685bb](https://github.com/event4u-app/agent-config/commit/93685bb0fbe7c9f671f3a49672e693a8e4a44b85))
+* **commands:** sync compressed mirror of chat-history/import.md to summary+resume ([0063941](https://github.com/event4u-app/agent-config/commit/0063941c69d011a8935ddbcc7ea1266cd4d2c692))
+* **roadmaps:** add road-to-path-fixes and refresh progress ([34f9c23](https://github.com/event4u-app/agent-config/commit/34f9c23ccf67f79758e7dd293c66bc4c443ccc29))
+* **roadmaps:** close kernel-router, package-opt, token-opt plates ([445ef25](https://github.com/event4u-app/agent-config/commit/445ef2574772358ca278ce2d334a08431e82ed68))
+* **roadmap:** close Phase 3 (Router contract) in kernel-and-router ([30b834f](https://github.com/event4u-app/agent-config/commit/30b834fceb9c1198ffae5f0d35d1c84e5bd44c24))
+* **ownership:** regenerate file-ownership matrix after P2.2 kernel compression ([0e82da1](https://github.com/event4u-app/agent-config/commit/0e82da18399cd1e9ecff57769116d7a3317c2949))
+
 ## [1.20.0](https://github.com/event4u-app/agent-config/compare/1.19.0...1.20.0) (2026-05-06)
 
 ### Features
