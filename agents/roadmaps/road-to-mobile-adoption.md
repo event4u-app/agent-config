@@ -13,7 +13,7 @@ AI Council (claude-sonnet-4-5 + gpt-4o, $0.0371 actual run).
 6-week plate; this plate uses **3 of 5 slots** intentionally. Phase 2
 is gated on Phase-1 evidence + cross-project demand signal. Phase 3
 addresses the governance gap surfaced during analysis (council
-recommendation: `domain-adoption-policy` rule).
+recommendation: a planned domain-adoption-policy rule).
 
 ## Purpose
 
@@ -45,7 +45,7 @@ is volatile via authoritative links, defer what would rot in months.
   Appium vs Maestro selection, simulator/emulator prereqs as
   authoritative links, no implementation details. Closes the "missing
   link in cross-platform E2E" gap.
-- **Phase 3 governance:** author `domain-adoption-policy` rule
+- **Phase 3 governance:** author the domain-adoption-policy rule
   (≤200 lines) to gate future domain tracks (mobile, ML, blockchain,
   scientific computing) on demand-signal + maintenance ownership.
 

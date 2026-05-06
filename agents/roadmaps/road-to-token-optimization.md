@@ -7,7 +7,7 @@ complexity: structural
 **Status:** READY FOR EXECUTION — decisions synthesized 2026-05-06 from
 AI Council (claude-sonnet-4-5 + gpt-4o, $0.0390 actual run).
 **Started:** 2026-05-06
-**Trigger:** User ask — standing `token-optimizer` skill that ties all
+**Trigger:** User ask — a standing planned token-optimizer skill that ties all
 existing token-saving assets together as a decision tree consulted at
 the *moment of decision*, with mechanical drift-detection so it stays
 honest as new tools/rules land.

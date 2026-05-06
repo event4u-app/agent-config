@@ -7,7 +7,7 @@ complexity: structural
 **Status:** READY FOR EXECUTION — decisions synthesized 2026-05-06 from
 AI Council (claude-sonnet-4-5 + gpt-4o, $0.0327 actual run).
 **Started:** 2026-05-06
-**Trigger:** User ask — `package-optimizer` skill / command to audit
+**Trigger:** User ask — a planned package-optimizer skill / command to audit
 rules+skills+commands+contexts cross-artifact-type, classify deletion
 candidates with explicit user gate, integrate AI council opt-in. Today's
 optimization surface is siloed by artifact type.
@@ -92,7 +92,7 @@ unified design is premature and ships nothing.
 - [ ] **P2.1 — `/optimize package` sub-command.** Reopen only when
   P1.2 has caught **≥1 real contradiction** that a maintainer actioned
   AND P1.3 has produced a deletion-candidate list that resulted in **≥1
-  artifact pruned**. Adoption shape: `commands/optimize/package.md`,
+  artifact pruned**. Adoption shape: the planned optimize/package command,
   routes through `/optimize` orchestrator, dispatches to P1.2 + P1.3
   scripts, surfaces a unified report, gates deletion via GPT-4o's
   up-front prompt + per-file confirmation. Hard floor: bulk delete
@@ -109,7 +109,7 @@ unified design is premature and ships nothing.
 - [ ] **P2.3 — AI Council integration at tier-B surfaces only.** Reopen
   only when P2.1 logs **≥3 deterministic ambiguous cases** (cases the
   linter flags but cannot resolve from `rule-interactions.yml`).
-  Adoption shape: `commands/optimize/package.md` adds `--council` flag,
+  Adoption shape: the planned optimize/package command adds `--council` flag,
   cost estimate printed before any API call, hard-stop if estimate
   exceeds `cost_profile` budget. Council Q + responses land in
   `agents/council-questions/` with `package-optimizer-` prefix per

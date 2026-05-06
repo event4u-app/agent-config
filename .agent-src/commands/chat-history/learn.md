@@ -55,11 +55,10 @@ or the section is missing, say so and stop:
 Run `scripts/chat_history.py sessions --json --limit 20 --summary`.
 The helper returns an array of
 `{id, count, first_ts, last_ts, preview, summary}` sorted by
-`last_ts` desc. The `summary` field is built **inside the helper**
-from at most 10 sampled entries per session (5 oldest + 5 newest) —
-token-cheap, no need to ever read the full body for the picker.
-Default excludes empty buckets — only sessions with at least one
-body entry are surfaced.
+`last_ts` desc. The `summary` field is built inside the helper
+from ≤10 sampled entries per session (5 oldest + 5 newest) —
+token-cheap, no full-body read needed for the picker. Empty
+buckets are excluded by default.
 
 If the array is empty, stop:
 
@@ -71,12 +70,11 @@ If the array is empty, stop:
 
 Render each session as a numbered option (per the `user-interaction`
 rule — Iron Law: numbered options for any picker). Lead with the
-helper's `summary` field — that is the rough arc the user picks by
-(`<first user msg> → <last user msg>` for normal sessions, or
+helper's `summary` field — the rough arc the user picks by
+(`<first user msg> → <last user msg>`, or
 `(N entries — no user prompts; t-mix: …)` for tool-only sessions).
-The session `id` is noise to humans; keep it **internal** for step
-5's `read --session <id>` call and never render it in the listing.
-Format:
+Keep the session `id` **internal** for step 5's `read --session <id>`
+call; never render it in the listing. Format:
 
 ```
 > Pick a session to mine for learnings:
@@ -88,11 +86,10 @@ Format:
 > N. abort — do not extract any learning
 ```
 
-Format the timestamp as `YYYY-MM-DD HH:MM` (drop seconds and
-timezone — the listing is for orientation, not forensics). Do
-**not** truncate or rewrite `summary` — the helper already shapes
-it. Always include an explicit abort option as the last numbered
-choice. Track option-number → `id` internally so step 5 can call
+Format the timestamp as `YYYY-MM-DD HH:MM` (drop seconds + timezone
+— orientation, not forensics). Do not truncate or rewrite `summary`
+— the helper already shapes it. Always include an explicit abort
+option last. Track option-number → `id` internally so step 5 calls
 `scripts/chat_history.py read --session <id>` with the right id.
 
 ### 4. Wait for the pick

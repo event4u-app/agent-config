@@ -33,8 +33,10 @@ class BrokenRef:
 
 SCAN_DIRS = [".agent-src", "agents"]
 SKIP_DIRS = [
-    "agents/roadmaps/archive",  # archived roadmaps have historical refs
-    "agents/council-sessions",  # per-user audit trail (gitignored), captured provider output
+    "agents/roadmaps/archive",   # archived roadmaps have historical refs
+    "agents/council-sessions",   # per-user audit trail (gitignored), captured provider output
+    "agents/council-questions",  # design Q&A trail — forward-refs to planned artifacts
+    "agents/analysis",           # plate-comparison working docs — forward-refs to planned artifacts
 ]
 ROOT = Path(".")
 
