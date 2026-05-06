@@ -84,7 +84,7 @@ WORKSPACE: list[RuleEntry] = [
     RuleEntry("downstream-changes"),
     RuleEntry("improve-before-implement"),
     RuleEntry("language-and-tone", "degraded",
-              strip_sections=["`.md` files are ALWAYS English — no exceptions"]),
+              strip_sections=["`.md` files — ALWAYS English"]),
     RuleEntry("missing-tool-handling"),
     RuleEntry("token-efficiency"),
     RuleEntry("user-interaction"),
