@@ -35,6 +35,11 @@ concerns:
 A roadmap step or earlier turn does **not** count as authorization
 for these. Authorization is "the user said so on this turn".
 
+Earlier permission for a different operation does **not** carry over —
+permission is per-operation, this-turn. Standing autonomy directives
+narrow other rules but never grant permission for items in this Hard
+Floor subset.
+
 ## Brief-before-asking — separate branch / PR / worktree
 
 If a task seems to need a separate branch or PR (spike, hotfix,

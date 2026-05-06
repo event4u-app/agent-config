@@ -9,6 +9,19 @@ context holds everything an agent reaches for once those have fired.
 **Size budget:** ≤ 3,500 chars. Tracked under Phase 7.4 of
 `road-to-pr-34-followups`.
 
+## Iron Law — restatement
+
+The rule's Iron Law ("HARD FLOOR OVERRIDES EVERYTHING") is the universal
+non-destructive-by-default safety net. No autonomy setting, roadmap step,
+or standing instruction can lift it. This is the same Iron Law restated
+in `commit-policy` (row 6 of its trigger table) and in `scope-control`
+(production / infra / bulk-destructive subset).
+
+The trigger surface covers production-branch merges, deploys / releases,
+production data and infrastructure changes, pushes to remote, and
+whimsical or unscoped bulk-destructive operations. Authorization is
+"user said so this turn", never inferred from a previous turn.
+
 ## Bulk deletions during WIP — allowed if task-connected
 
 Deletions inside an **active, user-stated task** are allowed in the
