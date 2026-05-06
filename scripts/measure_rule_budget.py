@@ -30,7 +30,9 @@ OVERRIDES_FILE = REPO_ROOT / "docs" / "contracts" / "iron-law-overrides.txt"
 
 # Council R2 amendments (2026-05-06) — see docs/contracts/kernel-membership.md § 5.1.
 # Per-rule cap raised 1.5k → 2.5k; warning band raised 1.2k → 2.0k.
-KERNEL_HARD = 25_000
+# ADR-002 (2026-05-06) — KERNEL_HARD raised 25k → 26k after empirical r_actual=0.795
+# vs r_projected=0.712; see docs/decisions/ADR-002-kernel-bucket-overrides.md.
+KERNEL_HARD = 26_000
 KERNEL_TARGET = 20_000
 PER_RULE_HARD = 2_500
 PER_RULE_TARGET = 2_000

@@ -11,6 +11,15 @@
 # safely externalised, pre-send/pre-act gate that loses meaning if split).
 #
 # Format: one rule-id per line. Comments start with '#'. Blank lines OK.
-#
-# Currently empty. P2.2 measures real post-compression sizes; rules that
-# breach the 2.5k cap land here together with their ADR file.
+
+# ADR-002 (2026-05-06) — kernel-bucket cap raise + per-rule overrides.
+# Source: docs/decisions/ADR-002-kernel-bucket-overrides.md
+# Empirical r_actual=0.795 vs r_projected=0.712. The 6 rules below carry
+# Iron-Law fences + non-externalisable enumerations; further compression
+# would force semantic loss. All sit ≤ 4 000-char override ceiling.
+ask-when-uncertain
+direct-answers
+language-and-tone
+no-cheap-questions
+non-destructive-by-default
+scope-control
