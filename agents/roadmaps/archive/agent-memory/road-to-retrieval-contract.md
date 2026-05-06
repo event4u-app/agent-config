@@ -12,7 +12,7 @@ status: draft
 **Accepted (v1, 2026-04-23).** Frozen as the canonical contract. The
 consumer-side implementation shipped schema + fixtures + conformance
 harness in this repo on 2026-04-23
-([`../archive/road-to-retrieval-contract-consumer.md`](../archive/road-to-retrieval-contract-consumer.md));
+([`../archive/road-to-retrieval-contract-consumer.md`](../road-to-retrieval-contract-consumer.md));
 the `agent-memory` repo adopts this file verbatim as its
 implementation reference.
 
@@ -20,7 +20,7 @@ implementation reference.
 
 - **Additive changes (minor bump)** — new optional response fields or
   new error codes land via PR that updates this spec, the JSON schema
-  under [`/schemas/retrieval-v1.schema.json`](../../../schemas/retrieval-v1.schema.json),
+  under [`/schemas/retrieval-v1.schema.json`](../../../../schemas/retrieval-v1.schema.json),
   and adds a fixture under
   [`/tests/fixtures/retrieval/`](../../../tests/fixtures/retrieval/)
   covering the new field. Existing fixtures MUST keep passing.
@@ -184,11 +184,11 @@ neither side's dashboard is polluted with the other's open items.
 ### Consumer deliverables (`agent-config` side)
 
 Shipped 2026-04-23 — archived as
-[`../archive/road-to-retrieval-contract-consumer.md`](../archive/road-to-retrieval-contract-consumer.md):
+[`../archive/road-to-retrieval-contract-consumer.md`](../road-to-retrieval-contract-consumer.md):
 
 - Spec accepted as canonical contract (this file marked `accepted`).
 - JSON schema published under
-  [`/schemas/retrieval-v1.schema.json`](../../../schemas/retrieval-v1.schema.json).
+  [`/schemas/retrieval-v1.schema.json`](../../../../schemas/retrieval-v1.schema.json).
 - Golden fixtures committed under
   [`/tests/fixtures/retrieval/`](../../../tests/fixtures/retrieval/).
 - `scripts/memory_status.py` exposes `health()` returning a v1 envelope.
@@ -233,7 +233,7 @@ accepted here:
 
 ## See also
 
-- [`../archive/road-to-retrieval-contract-consumer.md`](../archive/road-to-retrieval-contract-consumer.md) —
+- [`../archive/road-to-retrieval-contract-consumer.md`](../road-to-retrieval-contract-consumer.md) —
   agent-config consumer implementation (archived 2026-04-23)
 - [`../road-to-agent-memory-integration.md`](../road-to-agent-memory-integration.md) —
   the caller side that depends on this contract

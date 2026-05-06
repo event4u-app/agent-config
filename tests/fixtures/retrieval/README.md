@@ -23,7 +23,7 @@ each fixture against
 2. Adjust fields to demonstrate exactly one new concept — not a kitchen sink.
 3. Run `python3 -m pytest tests/conformance/retrieval/` — must pass.
 4. Reference the fixture from the spec
-   ([`/agents/roadmaps/agent-memory/road-to-retrieval-contract.md`](../../../agents/roadmaps/agent-memory/road-to-retrieval-contract.md))
+   ([`/agents/roadmaps/agent-memory/road-to-retrieval-contract.md`](../../../agents/roadmaps/archive/agent-memory/road-to-retrieval-contract.md))
    when it demonstrates a resolved open question.
 
 ## Invariants
