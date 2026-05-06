@@ -9,6 +9,8 @@ triggers:
   - path_prefix: "agents/council-responses/"
   - path_prefix: "agents/council-sessions/"
   - intent: "link to council artefact"
+routes_to:
+  - "skill:ai-council"
 validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncompressed/"

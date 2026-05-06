@@ -232,7 +232,9 @@
           "intent": "link to council artefact"
         }
       ],
-      "routes_to": []
+      "routes_to": [
+        "skill:ai-council"
+      ]
     },
     {
       "id": "no-roadmap-references",
