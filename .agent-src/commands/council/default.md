@@ -35,12 +35,26 @@ count. Round 1 sees the artefact alone. Round 2+ sees the artefact plus
 anonymised critiques from the previous round (provider/model identity
 stripped). Total spend = N × single-round cost; surface in cost gate.
 
+Optional **depth**: `depth:deep` raises the round floor to
+`ai_council.deep_min_rounds` (default `3`, max'd with `min_rounds`)
+for architecture, refactoring, or bug-diagnosis artefacts. Set
+explicitly by the user, or derived from `council_depth: deep`
+declared in the frontmatter of the active rule, skill, or command —
+the host translates that to `--depth deep` on the CLI. If multiple
+active artefacts disagree, **deep wins** (max policy). Explicit
+`rounds:N` overrides depth.
+
 Default comes from `ai_council.min_rounds` in `.agent-settings.yml`
 (default `2` so members critique each other at least once before
 convergence). **Do NOT ask "how many rounds?"** when `rounds:N` is
 unset or `N <= min_rounds` — proceed with the settings default. Ask
 only when the artefact is genuinely complex; surface as a numbered
 choice with the cost delta.
+
+Resolution chain (highest priority first):
+1. `rounds:N` / `--rounds N` — explicit user override.
+2. `depth:deep` / `--depth deep` — floors at `max(deep_min_rounds, min_rounds)`.
+3. `ai_council.min_rounds` — default.
 
 Optional **mode_override**: `mode_override=pr|design|optimize` swaps
 the system-prompt addendum for one of the specialised lenses
@@ -135,6 +149,7 @@ Once the user picks `1`, invoke the same arguments with `run` plus
     --output agents/council-sessions/<UTC-timestamp>.json \
     --confirm \
     [--rounds 1|2|3] \
+    [--depth standard|deep] \
     [--input-mode …] [--max-tokens …] [--mode-override …] \
     [--original-ask "<framing sentence>"]
 ```
@@ -144,6 +159,12 @@ Once the user picks `1`, invoke the same arguments with `run` plus
 the user explicitly asked for a different count or a complex
 artefact justifies more depth — do not pass `--rounds 1` to "save
 money" by default; settings owner already chose `min_rounds`.
+
+`--depth` defaults to `standard`. Set `--depth deep` when the
+active rule, skill, or command declares `council_depth: deep` in
+its frontmatter; the floor becomes
+`max(ai_council.deep_min_rounds, ai_council.min_rounds)` (default
+`3`). If `--rounds N` is also passed, `--rounds` wins.
 
 The CLI:
 

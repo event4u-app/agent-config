@@ -372,9 +372,39 @@ at least once before convergence). The host agent does **not** ask
 the settings owner already made that decision. Ask only when a
 genuinely complex artefact justifies more depth than the default.
 
+### Deep-reasoning tier (`council_depth: deep`)
+
+Architecture review, refactoring proposals, and bug-diagnosis runs
+benefit from an extra critique round. The deep tier is opt-in per
+artefact:
+
+1. The consuming **rule, skill, or command** declares
+   `council_depth: deep` in its frontmatter. The schema accepts
+   **only `deep`** — `standard` is the implicit default and is
+   rejected by the linter (every frontmatter byte costs context
+   window; see `scripts/schemas/{rule,skill,command}.schema.json`).
+   To return an artefact to default depth, **delete the key**.
+2. The **host agent** reads that frontmatter when it dispatches the
+   council and passes `--depth deep` to `council_cli`. If multiple
+   active artefacts disagree, **deep wins** (max policy).
+3. The **CLI** floors the round count at
+   `max(ai_council.deep_min_rounds, ai_council.min_rounds)` —
+   defaults to `3` and `2` respectively. Lowering `deep_min_rounds`
+   below `min_rounds` has no effect (defensive max).
+
+The CLI itself has no knowledge of frontmatter; the contract is the
+flag. Resolution chain (highest priority first):
+
+```
+--rounds N           → explicit, any value (user override)
+--depth deep         → max(deep_min_rounds, min_rounds)
+(no flag)            → min_rounds (default 2)
+```
+
 | Property | Behaviour |
 |---|---|
 | Default count | `ai_council.min_rounds` (default `2`). Override per-invocation with `rounds:N` (or `--rounds N` to the CLI). |
+| Deep floor | `ai_council.deep_min_rounds` (default `3`). Activated by `council_depth: deep` in artefact frontmatter (host translates to `--depth deep`) or explicit `--depth deep` on the CLI. Floored at `min_rounds`. |
 | Anonymisation | Provider/model identity is stripped. Reviewers are labelled `Reviewer A / B / C…` in input order. |
 | Errored prior responses | Skipped — they reveal nothing useful and can leak provider error formats. |
 | Cost budget | Accumulates across rounds. A round-2 call that breaches the cap fires `on_overrun` exactly like a round-1 breach. |

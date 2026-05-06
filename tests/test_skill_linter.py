@@ -310,6 +310,58 @@ Always run commands inside the container.
     assert not any(issue.code == "auto_missing_description" for issue in result.issues)
 
 
+def test_rule_council_depth_standard_rejected(tmp_path: Path) -> None:
+    """council_depth only accepts 'deep'; 'standard' is the implicit default
+    and must be rejected so artefacts don't waste frontmatter bytes."""
+    path = write_file(
+        tmp_path,
+        ".agent-src/rules/council-depth-standard.md",
+        """---
+type: "auto"
+source: package
+description: "Apply when reviewing architecture decisions"
+council_depth: standard
+---
+
+# Council Depth Standard Rule
+
+Some directives.
+""",
+    )
+
+    result = lint_file(path)
+    assert result.status == "fail"
+    assert any(
+        issue.code == "schema_enum" and "council_depth" in issue.message
+        for issue in result.issues
+    ), f"Expected schema_enum error on council_depth, got: {result.issues}"
+
+
+def test_rule_council_depth_deep_passes(tmp_path: Path) -> None:
+    """council_depth: deep is the only accepted value."""
+    path = write_file(
+        tmp_path,
+        ".agent-src/rules/council-depth-deep.md",
+        """---
+type: "auto"
+source: package
+description: "Apply when reviewing architecture decisions"
+council_depth: deep
+---
+
+# Council Depth Deep Rule
+
+Some directives.
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(
+        issue.code == "schema_enum" and "council_depth" in issue.message
+        for issue in result.issues
+    )
+
+
 def test_rule_missing_h1_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,

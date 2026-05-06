@@ -75,6 +75,47 @@ def test_parser_run_accepts_confirm_and_rounds() -> None:
     assert parsed.confirm is True and parsed.rounds == 2
 
 
+def test_parser_run_depth_defaults_to_standard() -> None:
+    parsed = council_cli.build_parser().parse_args(
+        ["run", "q.txt", "--output", "o.json"],
+    )
+    assert parsed.depth == "standard"
+
+
+def test_parser_run_accepts_depth_deep() -> None:
+    parsed = council_cli.build_parser().parse_args(
+        ["run", "q.txt", "--output", "o.json", "--depth", "deep"],
+    )
+    assert parsed.depth == "deep"
+
+
+# ── _resolve_rounds resolution chain ─────────────────────────────────
+
+
+def test_resolve_rounds_defaults_to_min_rounds() -> None:
+    args = _ns(rounds=None, depth="standard")
+    assert council_cli._resolve_rounds(args, {"min_rounds": 2}) == 2
+
+
+def test_resolve_rounds_depth_deep_uses_deep_min_rounds() -> None:
+    args = _ns(rounds=None, depth="deep")
+    cfg = {"min_rounds": 2, "deep_min_rounds": 3}
+    assert council_cli._resolve_rounds(args, cfg) == 3
+
+
+def test_resolve_rounds_explicit_rounds_wins_over_depth_deep() -> None:
+    args = _ns(rounds=1, depth="deep")
+    cfg = {"min_rounds": 2, "deep_min_rounds": 3}
+    assert council_cli._resolve_rounds(args, cfg) == 1
+
+
+def test_resolve_rounds_deep_floored_at_min_rounds() -> None:
+    """Defensive max: misconfigured deep_min_rounds < min_rounds is ignored."""
+    args = _ns(rounds=None, depth="deep")
+    cfg = {"min_rounds": 3, "deep_min_rounds": 1}
+    assert council_cli._resolve_rounds(args, cfg) == 3
+
+
 # ── build_members guards ─────────────────────────────────────────────
 
 

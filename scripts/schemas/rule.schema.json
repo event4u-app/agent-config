@@ -47,6 +47,11 @@
       "enum": ["1", "2a", "2b", "3", "safety-floor", "mechanical-already", "kernel", "tier-1", "tier-2"],
       "description": "Hardening tier. Legacy values (1/2a/2b/3/safety-floor/mechanical-already) accepted; new router-canonical values (kernel/tier-1/tier-2) introduced by road-to-kernel-and-router.md Phase 4."
     },
+    "council_depth": {
+      "type": "string",
+      "enum": ["deep"],
+      "description": "Optional reasoning-depth marker for AI Council invocations triggered while this rule is active. The only accepted value is 'deep'; omit the key for default depth (setting 'standard' is rejected — every frontmatter byte counts against the context window, and 'standard' is the implicit default). 'deep' instructs the host agent to pass --depth deep to council_cli, which floors rounds at max(ai_council.deep_min_rounds, ai_council.min_rounds). Use for rules that gate architecture, refactoring, or bug-diagnosis flows. See .agent-src.uncompressed/skills/ai-council/SKILL.md."
+    },
     "triggers": {
       "type": "array",
       "items": {

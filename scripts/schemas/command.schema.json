@@ -49,6 +49,11 @@
       "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
       "description": "Semver release in which this command became a shim (e.g. '1.15.0')."
     },
+    "council_depth": {
+      "type": "string",
+      "enum": ["deep"],
+      "description": "Optional reasoning-depth marker for AI Council invocations triggered by this command. The only accepted value is 'deep'; omit the key for default depth (setting 'standard' is rejected — every frontmatter byte counts against the context window, and 'standard' is the implicit default). 'deep' instructs the host agent to pass --depth deep to council_cli, which floors rounds at max(ai_council.deep_min_rounds, ai_council.min_rounds). Use for architecture, refactoring, or bug-diagnosis commands. See .agent-src.uncompressed/skills/ai-council/SKILL.md."
+    },
     "suggestion": {
       "type": "object",
       "additionalProperties": false,

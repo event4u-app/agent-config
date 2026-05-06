@@ -207,6 +207,29 @@ def format_estimate_table(
 # ── subcommands ─────────────────────────────────────────────────────
 
 
+def _resolve_rounds(args: argparse.Namespace, ai_cfg: dict[str, Any]) -> int:
+    """Resolve effective debate round count from CLI args + settings.
+
+    Resolution chain (highest priority first):
+      1. ``--rounds N`` — explicit user override, any value.
+      2. ``--depth deep`` — uses ``ai_council.deep_min_rounds``,
+         floored at ``min_rounds`` so the deep tier is monotonic.
+      3. ``ai_council.min_rounds`` — default 2.
+
+    Sub-commands (rule/skill/command) declare ``council_depth: deep``
+    in their frontmatter; the host agent reads that and translates it
+    to ``--depth deep`` on the CLI invocation. The CLI itself stays
+    unaware of frontmatter — the contract is the flag.
+    """
+    if getattr(args, "rounds", None) is not None:
+        return int(args.rounds)
+    min_rounds = int(ai_cfg.get("min_rounds", 2))
+    if getattr(args, "depth", "standard") == "deep":
+        deep = int(ai_cfg.get("deep_min_rounds", min_rounds))
+        return max(deep, min_rounds)
+    return min_rounds
+
+
 def cmd_estimate(
     args: argparse.Namespace,
     *,
@@ -316,7 +339,7 @@ def cmd_run(
         max_calls=int(cost_cfg.get("max_calls", 10)),
         max_total_usd=float(cost_cfg.get("max_total_usd", 0.0) or 0.0),
     )
-    rounds = args.rounds if args.rounds is not None else int(ai_cfg.get("min_rounds", 2))
+    rounds = _resolve_rounds(args, ai_cfg)
     responses = consult(
         members, question, budget,
         table=table, project=project,
@@ -464,9 +487,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument("--confirm", action="store_true",
                        help="Required to actually invoke the council.")
     p_run.add_argument("--rounds", type=int, default=None,
-                       help="Number of debate rounds (1-3). Defaults to "
-                            "ai_council.min_rounds in .agent-settings.yml "
-                            "(or 2 if unset).")
+                       help="Number of debate rounds (1-3). Explicit override; "
+                            "wins over --depth. Defaults to ai_council.min_rounds "
+                            "in .agent-settings.yml (or 2 if unset).")
+    p_run.add_argument("--depth", choices=["standard", "deep"], default="standard",
+                       help="Reasoning-depth tier. 'deep' floors rounds at "
+                            "ai_council.deep_min_rounds (max'd with min_rounds) "
+                            "for architecture, refactoring, or bug-diagnosis "
+                            "artefacts. Set by the host agent when the consuming "
+                            "rule/skill/command declares council_depth: deep. "
+                            "Overridden by explicit --rounds.")
 
     p_ren = sub.add_parser("render", help="Re-render a saved responses JSON.")
     p_ren.add_argument("responses",
