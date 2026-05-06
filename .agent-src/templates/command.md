@@ -20,6 +20,10 @@ name: {command-name}
 description: {Short description of what the command does}
 disable-model-invocation: true
 skills: [{optional-skill-1}, {optional-skill-2}]
+suggestion:
+  eligible: true
+  trigger_description: "natural-language pattern, comma-separated examples"
+  trigger_context: "concrete signal — branch name, file pattern, recent tool output"
 ---
 
 <!-- FRONTMATTER RULES (delete this comment when done):
@@ -27,6 +31,10 @@ skills: [{optional-skill-1}, {optional-skill-2}]
   - description: short, human-readable — what the command does
   - disable-model-invocation: ALWAYS true for commands (prevents Claude from auto-invoking)
   - skills: optional — list skills this command references or delegates to
+  - suggestion: REQUIRED — drives the in-host command suggester
+    - eligible: true  → set trigger_description + trigger_context
+    - eligible: false → set rationale (why never auto-suggested)
+    See agents/contexts/command-suggestion-eligibility.md for guidance.
 -->
 
 # /{command-name}
@@ -74,7 +82,7 @@ Ask the user:
 
 Before considering a command complete:
 
-- [ ] **Frontmatter**: has `name`, `description`, `disable-model-invocation: true`
+- [ ] **Frontmatter**: has `name`, `description`, `disable-model-invocation: true`, `suggestion` block
 - [ ] **Steps**: numbered sub-headings (`### 1.`, `### 2.`, ...)
 - [ ] **Source of truth**: works on `.agent-src.uncompressed/`, not `.agent-src/` or `.augment/`
 - [ ] **No auto-apply**: presents findings, asks before destructive changes
