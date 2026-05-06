@@ -4,9 +4,13 @@ complexity: structural
 
 # Road to Token Optimization
 
-**Status:** READY FOR EXECUTION — decisions synthesized 2026-05-06 from
-AI Council (claude-sonnet-4-5 + gpt-4o, $0.0390 actual run).
+**Status:** PHASE 1 SHIPPED — closed for active execution 2026-05-06.
+Phase 2 / Phase 3 are deferred-with-trigger by design and reopen
+autonomously when their declared signals fire (telemetry threshold,
+`/cost:report` ship, one-cycle audit cadence). They do not block
+roadmap closure.
 **Started:** 2026-05-06
+**Phase 1 closed:** 2026-05-06
 **Trigger:** User ask — a standing planned token-optimizer skill that ties all
 existing token-saving assets together as a decision tree consulted at
 the *moment of decision*, with mechanical drift-detection so it stays
@@ -75,7 +79,7 @@ governance cross-cut runs after Phase 1 has been live one full cycle.
 
 ## Phase 1 — token-optimizer Phase-1 plate (READY)
 
-- [ ] **P1.1 — `token-optimizer` skill (tree + catalog hybrid).**
+- [x] **P1.1 — `token-optimizer` skill (tree + catalog hybrid).**
   Author new skill at `.agent-src.uncompressed/skills/token-optimizer/SKILL.md`.
   Frontmatter: `type: auto`, `tier: 2a`, hybrid trigger description.
   Body: ~30-line decision tree keyed by intent (verbose CLI → cite
@@ -87,7 +91,7 @@ governance cross-cut runs after Phase 1 has been live one full cycle.
   it does); explicit "consult BEFORE the action" Iron Law inside skill
   body; never restate any rule. Lines budget: ≤300.
 
-- [ ] **P1.2 — `token-optimizer-maintenance` rule.** Author new rule at
+- [x] **P1.2 — `token-optimizer-maintenance` rule.** Author new rule at
   `.agent-src.uncompressed/rules/token-optimizer-maintenance.md`.
   `type: auto`, `tier: 2a`. Triggers when the agent intends to edit
   any of the tracked assets (`rtk-output-filtering`, `markitdown`,
@@ -98,7 +102,7 @@ governance cross-cut runs after Phase 1 has been live one full cycle.
   link validator (P1.3) is a backstop, not a substitute." Lines
   budget: ≤120.
 
-- [ ] **P1.3 — `scripts/check_token_optimizer_freshness.py` link
+- [x] **P1.3 — `scripts/check_token_optimizer_freshness.py` link
   validator.** Implement CI gate. Parse `token-optimizer.md` for
   every `[asset](path/to/asset.md)` citation. For each citation:
   (a) verify the target file exists; (b) extract the trigger keywords
@@ -107,7 +111,7 @@ governance cross-cut runs after Phase 1 has been live one full cycle.
   a structured diff (which leaf, which keyword, which target). Wire
   into `task ci` after `check-refs`. Lines budget: ≤150.
 
-- [ ] **P1.4 — Telemetry stub.** Append `<!-- TELEMETRY: consulted=
+- [x] **P1.4 — Telemetry stub.** Append `<!-- TELEMETRY: consulted=
   [timestamp] context=[CLI|doc|handoff|cost] -->` line at end of
   `token-optimizer.md`. Add `scripts/count_token_optimizer_usage.sh`
   (≤30 lines: `grep -c "TELEMETRY: consulted=" token-optimizer.md`,
@@ -116,7 +120,7 @@ governance cross-cut runs after Phase 1 has been live one full cycle.
   rule: if <5 consults in 2 weeks of live use → P3.1 sunset audit
   fires.
 
-- [ ] **P1.5 — Suite integration.** Add new skill, new rule, new
+- [x] **P1.5 — Suite integration.** Add new skill, new rule, new
   scripts to manifests. Run `task sync` → `.agent-src/` regenerated.
   Run `task generate-tools` → `.claude/`, `.cursor/`, `.clinerules/`,
   `.windsurfrules` regenerated. Verify `task ci` exits 0 with the
@@ -127,7 +131,7 @@ governance cross-cut runs after Phase 1 has been live one full cycle.
 
 ## Phase 2 — Out-of-horizon (deferred-with-trigger)
 
-- [ ] **P2.1 — Cost-telemetry feedback loop.** Reopen only when **both**
+- [~] **P2.1 — Cost-telemetry feedback loop.** *Deferred-with-trigger by design.* Reopen only when **both**
   triggers fire: (a) P1.2 of `road-to-ruflo-adoption.md` shipped and
   `/cost:report` is producing JSONL, AND (b) P1.4 telemetry shows
   ≥5 token-optimizer consults/week sustained for 2 weeks. Adoption
@@ -135,14 +139,14 @@ governance cross-cut runs after Phase 1 has been live one full cycle.
   saved $X with rtk on commands Y/Z" in the next handoff. Citation
   hooks land in `token-optimizer.md` cost-aware leaf.
 
-- [ ] **P2.2 — Decision-tree expansion for new tooling.** Reopen when
+- [~] **P2.2 — Decision-tree expansion for new tooling.** *Deferred-with-trigger by design.* Reopen when
   ≥2 net-new token-saving tools (CLI filters, conversion utilities,
   context-management primitives) have landed since Phase 1 ship.
   Adoption shape: add catalog rows + tree leaves; never grow the
   decision tree beyond ~50 lines (tree must remain scannable). Tools
   that don't fit go to catalog only.
 
-- [ ] **P2.3 — Rule slimming against `token-optimizer`.** Reopen only
+- [~] **P2.3 — Rule slimming against `token-optimizer`.** *Deferred-with-trigger by design.* Reopen only
   after P3.1 Sunset Audit confirms ≥5 consults/week sustained over a
   full cycle (i.e., the skill is load-bearing, not ghost
   infrastructure). Adoption shape: replace catalog/example material
@@ -160,7 +164,7 @@ governance cross-cut runs after Phase 1 has been live one full cycle.
 
 ## Phase 3 — Governance cross-cut
 
-- [ ] **P3.1 — Sunset audit.** After Phase 1 has been live one full
+- [~] **P3.1 — Sunset audit.** *Deferred-with-trigger by design.* After Phase 1 has been live one full
   cycle: read 7-day and 30-day telemetry counts. If <5 consults/week
   sustained → sunset the skill, strengthen the underlying rules
   instead, document the null result in this roadmap so the same

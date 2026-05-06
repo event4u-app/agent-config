@@ -45,14 +45,19 @@ made by the user directly or by the agent on request, following the
 
 # --- Cost profile ---
 #
-# Controls which agent surfaces are active. See `docs/customization.md` for
-# the authoritative description.
+# Master switch that controls which rule tiers load each session.
+# See `docs/customization.md` for the authoritative description and
+# `docs/contracts/rule-router.md` for the kernel + router architecture.
 #
-# minimal  = rules, skills, and commands only (zero extra surface, default)
-# balanced = + runtime dispatcher for skills that declare a shell command
-# full     = + tool adapters (GitHub / Jira, read-only, opt-in)
-# custom   = ignore profile — every matrix value must be set explicitly
-cost_profile: minimal
+# minimal  = kernel only (always-loaded Iron-Law floor, ≤ 26k chars).
+#            No router, no auto-rules. Lowest token footprint.
+# balanced = kernel + router + tier-1 auto-rules (default — current behaviour
+#            superset; matches what existing consumer projects expect).
+# full     = kernel + tier-1 + tier-2 (everything). Highest fidelity,
+#            highest token cost. Pick this when working on agent-config
+#            itself or when you need every behavioural rule active.
+# custom   = ignore profile — every matrix value must be set explicitly.
+cost_profile: balanced
 
 # --- Personal preferences ---
 personal:
@@ -353,7 +358,7 @@ lives under `personal:` in YAML.
 | `hooks.halt_surface_audit` | `true`, `false` | `true` | Defense-in-depth check that every halt surfaced by the dispatcher carries the expected shape. Cheap. |
 | `hooks.state_shape_validation` | `true`, `false` | `true` | Re-run the state schema validator on `AFTER_LOAD` and `BEFORE_SAVE`. Cheap, catches drift. |
 | `hooks.directive_set_guard` | `true`, `false` | `true` | Verify the dispatcher-resolved directive set matches the input envelope intent. Cheap, catches routing drift. |
-| `hooks.chat_history.enabled` | `true`, `false` | `true` | Register chat-history hooks (`append` on `after_step`, `halt_append` on `on_halt`). Gated by **both** this flag AND `chat_history.enabled`; either off → no chat-history hook registers. Schema v4: every entry self-identifies via 16-char session fingerprint, no ownership/sidecar layer. |
+| `hooks.chat_history.enabled` | `true`, `false` | `true` | Register the chat-history hooks (`append` on `after_step`, `halt_append` on `on_halt`). Gated by **both** this flag AND `chat_history.enabled`; either off → no chat-history hook registers. Schema v4: every entry self-identifies via a 16-char session fingerprint, no ownership/sidecar layer. |
 | `hooks.chat_history.script` | path | `scripts/chat_history.py` | Override path to the chat-history CLI. Set only when the script lives outside the standard location. |
 | `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
 | `roadmap.quality_cadence` | `end_of_roadmap`, `per_phase`, `per_step` | `end_of_roadmap` | When `/roadmap execute` runs the project's quality pipeline. Default skips per-step / per-phase runs and gates only the final archival. `per_phase` runs once after every phase; `per_step` is the legacy verbose mode. Step checkboxes and the dashboard are always updated regardless. `verify-before-complete` still requires fresh output before any "roadmap complete" claim. |

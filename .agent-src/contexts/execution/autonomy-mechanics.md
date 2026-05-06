@@ -27,3 +27,47 @@ The Hard Floor still applies on every surface, including cloud. There
 is no "cloud override" for production-branch merges, deploys, pushes,
 prod data/infra, or whimsical bulk deletions — see
 [`non-destructive-by-default`](../../rules/non-destructive-by-default.md#cloud-behavior).
+
+## Blocking — STILL ASK regardless of `personal.autonomy`
+
+Beyond the Hard Floor, the autonomy setting also never overrides:
+
+- **Vague-request triggers** in
+  [`ask-when-uncertain`](../../rules/ask-when-uncertain.md) —
+  ambiguous requirements stay ambiguous; pick-one-and-pray is wrong.
+- **Architectural / structural choices** the codebase doesn't already
+  settle (multi-stack picks, library introductions).
+- **Security-sensitive paths** — see
+  [`security-sensitive-stop`](../../rules/security-sensitive-stop.md).
+- **Scope expansion** beyond the stated task — see
+  [`scope-control`](../../rules/scope-control.md).
+- **Remote-state operations** — push, merge, rebase, force-push,
+  branch create/delete/switch, PR create/close/retarget, tag/release.
+  Permission-gated by
+  [`scope-control`](../../rules/scope-control.md); the prod-trunk
+  and deploy-tied subset is governed by
+  [`non-destructive-by-default`](../../rules/non-destructive-by-default.md).
+- **Destructive ops** — see
+  [`non-destructive-by-default`](../../rules/non-destructive-by-default.md)
+  for the full taxonomy (whimsical bulk deletions, content
+  destruction, commits containing bulk deletions or infra changes).
+
+In doubt whether something is trivial or blocking → it is blocking.
+Ask.
+
+## Commit policy summary
+
+Committing is governed by the canonical
+[`commit-policy`](../../rules/commit-policy.md) rule, which applies
+regardless of `personal.autonomy`:
+
+- NEVER commit unless user said so this turn, a commit command was
+  invoked, a standing instruction is active, or the roadmap
+  authorizes it.
+- NEVER ask about committing. The user invokes a command or says so.
+- In autonomous mode, the **only** permitted commit-related question
+  is the one-shot pre-scan ask at the start of roadmap execution.
+
+Push, merge, rebase, branch creation, PR operations, and tags
+remain permission-gated by
+[`scope-control § git-operations`](../../rules/scope-control.md#git-operations--permission-gated).

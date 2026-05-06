@@ -4,9 +4,21 @@ complexity: structural
 
 # Road to Package Optimization
 
-**Status:** READY FOR EXECUTION — decisions synthesized 2026-05-06 from
-AI Council (claude-sonnet-4-5 + gpt-4o, $0.0327 actual run).
+**Status:** CLOSED WITH NULL RESULT — 2026-05-06.
+P1.1 prototype gate ran deterministically (317 artefacts scanned in
+0.034 s, well under the 5 s budget) and flagged **zero**
+cross-artefact contradictions. Per the binary acceptance bullet on
+P1.1 ("on failure, this entire roadmap is closed with the null
+result documented; no Phase 2 work begins") and the matching risk-
+register entry ("null result closes roadmap honestly — that's a
+*feature*, not a failure mode"), P1.2 / P1.3 / Phase 2 / Phase 3 are
+cancelled. The artefact surface is empirically already well-governed
+on the heuristics this prototype tested (frontmatter routing, shared
+trigger imperative conflict). This roadmap will not be reopened
+without a fresh evidence trigger (e.g., a real contradiction caught
+manually that the prototype missed → broader heuristic → re-run).
 **Started:** 2026-05-06
+**Closed:** 2026-05-06
 **Trigger:** User ask — a planned package-optimizer skill / command to audit
 rules+skills+commands+contexts cross-artifact-type, classify deletion
 candidates with explicit user gate, integrate AI council opt-in. Today's
@@ -52,7 +64,9 @@ unified design is premature and ships nothing.
 
 ## Phase 1 — Prove the gap with deterministic primitives (READY)
 
-- [ ] **P1.1 — Prototype gate: `scripts/prototype_lint_contradictions.py`.**
+- [x] **P1.1 — Prototype gate: `scripts/prototype_lint_contradictions.py`.**
+  *Shipped 2026-05-06. Ran in 0.034 s, scanned 317 artefacts, flagged
+  0 contradictions. Null result documented above; closes roadmap.*
   ≤200 LOC Python. Reads `.agent-src.uncompressed/{rules,skills,commands}/`
   + `agents/contexts/`. For each artifact, extracts `description`
   frontmatter + section headings (`## When to use`, `## Procedure`,
@@ -65,7 +79,8 @@ unified design is premature and ships nothing.
   closed with the null result documented; no Phase 2 work begins.
   Output: stdout JSON `[{artifact_a, artifact_b, conflict_type, evidence}]`.
 
-- [ ] **P1.2 — Production linter: `scripts/lint_contradictions.py`.**
+- [-] **P1.2 — Production linter: `scripts/lint_contradictions.py`.**
+  *Cancelled per P1.1 binary acceptance gate (null result).*
   Promote prototype after P1.1 acceptance. Lock the heuristic set, add
   `--ignore-pair RULE+SKILL` allowlist (false positives surfaced during
   P1.1 land here, justified inline), wire into `task ci` after
@@ -74,7 +89,9 @@ unified design is premature and ships nothing.
   allowlist + CI integration). Companion: `docs/contracts/contradictions-
   ignore.yml` for the allowlist with `evidence:` field per entry.
 
-- [ ] **P1.3 — Deterministic deletion-candidate scorer:
+- [-] **P1.3 — Deterministic deletion-candidate scorer:
+  *Cancelled per P1.1 binary acceptance gate (entire roadmap closed
+  on null result).*
   `scripts/audit_deletion_candidates.py`.** Read every artifact across
   the four types. For each, compute (a) inbound `[link](path)` reference
   count from other artifacts, (b) days since last `git log -1`, (c)
@@ -89,7 +106,7 @@ unified design is premature and ships nothing.
 
 ## Phase 2 — Build the consult surface (deferred-with-trigger)
 
-- [ ] **P2.1 — `/optimize package` sub-command.** Reopen only when
+- [-] **P2.1 — `/optimize package` sub-command.** Reopen only when
   P1.2 has caught **≥1 real contradiction** that a maintainer actioned
   AND P1.3 has produced a deletion-candidate list that resulted in **≥1
   artifact pruned**. Adoption shape: the planned optimize/package command,
@@ -99,14 +116,14 @@ unified design is premature and ships nothing.
   rejected by construction; the command emits per-file `git rm` lines
   for the maintainer to copy/paste, never executes. Lines budget: ≤180.
 
-- [ ] **P2.2 — `package-optimizer` skill.** Reopen only when P2.1
+- [-] **P2.2 — package-optimizer skill (proposed name).** Reopen only when P2.1
   invocations show maintainers asking the same procedural questions
   (decision tree for "what does Tier-A mean?", ICE rubric for
   prioritization, council-prompt template). Adoption shape: skill body
   with handbook material + decision tree + deletion-gate flow. Skill
   cites P2.1 command for execution; no overlap. Lines budget: ≤300.
 
-- [ ] **P2.3 — AI Council integration at tier-B surfaces only.** Reopen
+- [-] **P2.3 — AI Council integration at tier-B surfaces only.** Reopen
   only when P2.1 logs **≥3 deterministic ambiguous cases** (cases the
   linter flags but cannot resolve from `rule-interactions.yml`).
   Adoption shape: the planned optimize/package command adds `--council` flag,
@@ -119,7 +136,7 @@ unified design is premature and ships nothing.
 
 ## Phase 3 — Governance cross-cut
 
-- [ ] **P3.1 — Sunset audit.** After Phase 1 has been live one full
+- [-] **P3.1 — Sunset audit.** After Phase 1 has been live one full
   cycle (4 weeks): count contradictions caught by P1.2 in production
   CI runs. **Zero hits → sunset both scripts**, document null result so
   nobody reproposes them; do not advance Phase 2. **≥1 hit → keep**,
@@ -127,7 +144,7 @@ unified design is premature and ships nothing.
   but `/optimize package` invocation rate < 2/month sustained → demote
   command to skill-only (P2.2 standalone, P2.1 retired).
 
-- [ ] **P3.2 — Stale-context detector** (GPT-4o's Q4 net-new). Reopen
+- [-] **P3.2 — Stale-context detector** (GPT-4o's Q4 net-new). Reopen
   on its own trigger (independent of P1/P2 outcomes): when
   `agents/contexts/` has > 20 files AND ≥3 are last-touched > 90 d AND
   zero inbound refs. Adoption shape: `scripts/audit_stale_contexts.py`
