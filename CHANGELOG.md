@@ -318,6 +318,117 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.20.0](https://github.com/event4u-app/agent-config/compare/1.19.0...1.20.0) (2026-05-06)
+
+### Features
+
+* **rules:** add no-attribution-footers + create-pr strip-pass ([7f72630](https://github.com/event4u-app/agent-config/commit/7f72630e0f334b30df6bc8ffc0fabb82fcca2fe3))
+* **orchestration:** mode-6 do-in-worktrees for cross-wing chains ([9087e50](https://github.com/event4u-app/agent-config/commit/9087e50f753fa5c4ef0eb1a048a64f7ccb4994af))
+* **cognition:** port five senior-tier cognition skills (Wings 3+4) ([aa958e7](https://github.com/event4u-app/agent-config/commit/aa958e772f82f05f3b23f9bbdd38ff0c8a89bd51))
+* **handoff:** cross-wing handoff contract + lint ([cb8e73a](https://github.com/event4u-app/agent-config/commit/cb8e73a8e0dd433d8e166ab926f585914aa5dbf1))
+* **skill-quality:** senior-tier authoring standard + structural malice lint ([bcbf8de](https://github.com/event4u-app/agent-config/commit/bcbf8de61f4d6b47fe244c80722886f512315caf))
+* **chat-history:** surface helper-built summary in session picker ([0bdd61b](https://github.com/event4u-app/agent-config/commit/0bdd61b1f00ed911ee5dbf764e9598f24d80fb54))
+* **infra:** relocate chat-history + prices to agents/ folder ([2727f26](https://github.com/event4u-app/agent-config/commit/2727f26bb986b4ed7414f466561ae600ca3a24ba))
+* **council:** add --model per-invocation override ([b21a20c](https://github.com/event4u-app/agent-config/commit/b21a20c16b49392070c62fc21af8ab887b8df978))
+* **settings:** expose chat_history.text_limits in template ([7941d7f](https://github.com/event4u-app/agent-config/commit/7941d7fd9a4a66fde046646661c0f8a467fc6900))
+* add docs-verified hook extractors for cursor/cline/windsurf/gemini ([5fa2e14](https://github.com/event4u-app/agent-config/commit/5fa2e14dd5cd2b88156d36d5cc47d9fad918758a))
+* **hooks:** universal capture + redact tooling for verified-platforms roadmap ([32a6ecd](https://github.com/event4u-app/agent-config/commit/32a6ecdc1f68c7187aa73a98e2116fb2f26ee201))
+* **hooks:** cowork platform support + hook-manifest tightening ([6016286](https://github.com/event4u-app/agent-config/commit/601628601dde7bb15e0e5ae4d3d23fbdeac8d3a9))
+* **chat-history:** schema v4 — stateless multi-session, position-based pruning, work-engine hook fix ([364990b](https://github.com/event4u-app/agent-config/commit/364990b3768af8d19bb6ecca916d3e5dac8c56c4))
+* **chat-history:** shrink session sidecar to {fp, started_at} ([c00a3e2](https://github.com/event4u-app/agent-config/commit/c00a3e27691637c1ffe9ca6b05d1f0531c95e85d))
+* **chat-history:** add /chat-history learn for selective historical context import ([2a88511](https://github.com/event4u-app/agent-config/commit/2a885111399eac7a5756edfaea5981e403e93177))
+* **chat-history:** add session isolation (schema v3) with read filter and sessions API ([6fd118d](https://github.com/event4u-app/agent-config/commit/6fd118d0f138068789e2167226a524ef92b82eab))
+* **contexts:** drop handshake context, slim platform-hooks doc ([ad39197](https://github.com/event4u-app/agent-config/commit/ad39197a089d79b00263625a4c84bb1ed1937193))
+* **commands:** trim /chat-history to show-only ([ba1d305](https://github.com/event4u-app/agent-config/commit/ba1d305e2ca6365a0668113ce94a3c3afc78bcee))
+* **work-engine:** drop chat-history turn-check + heartbeat hooks ([7883e64](https://github.com/event4u-app/agent-config/commit/7883e640bf880bf371ad1dd14a37b1f79d9aaf88))
+* **chat-history:** auto-adopt on session_start + delete cooperative rules ([579a1bc](https://github.com/event4u-app/agent-config/commit/579a1bcdea2b4fe7dbff8d650997c35d5366d292))
+
+### Bug Fixes
+
+* **no-roadmap-refs:** drop roadmap file links from stable artifacts ([b4a56f4](https://github.com/event4u-app/agent-config/commit/b4a56f499d1c070ad658fb9a87b6d272f1d05b79))
+* **public-links:** tag cross-wing-handoff as beta, drop link into agents/contexts/ ([89ac1ac](https://github.com/event4u-app/agent-config/commit/89ac1ac13ce52d26914abe14de2336f68f4e252f))
+* **check-refs:** allow runtime-bootstrapped agents/.agent-prices.md ([5b45a17](https://github.com/event4u-app/agent-config/commit/5b45a176cc42a04a771a01aa9384a0ad8da0b222))
+* **roadmap:** demote Kill-switch headings so check-roadmap-trackable stops parsing them as phases ([3029195](https://github.com/event4u-app/agent-config/commit/3029195c75eb16b95f57dd2c04401f8ead63f5e9))
+* **roadmap:** repair remaining check-refs errors in event-driven-discipline ([bd8f908](https://github.com/event4u-app/agent-config/commit/bd8f908f9d5955cb8aa8a6b8c841076f0ee4dc91))
+* **roadmap:** repair broken refs in event-driven-discipline ([6584a52](https://github.com/event4u-app/agent-config/commit/6584a5221a0fdb05b2f69d7a6b5c9c4c7b8ee163))
+* **chat-history:** migrate stale v3 header in-place on first hook write ([d239a39](https://github.com/event4u-app/agent-config/commit/d239a3903a81a569ee2cd372dd3c6c709153bbb8))
+* **lint:** add skills frontmatter to /chat-history learn ([01e8db3](https://github.com/event4u-app/agent-config/commit/01e8db31a1822c275dff6410fed2622ba9683fad))
+* **readme:** drop agents/contexts/ deep-link, mark hook-architecture-v1 as beta ([eeacbeb](https://github.com/event4u-app/agent-config/commit/eeacbeb1e748e98613102f0008756a5db155159b))
+
+### Documentation
+
+* **roadmaps:** add productization + kernel-and-router roadmaps ([1f7fbd4](https://github.com/event4u-app/agent-config/commit/1f7fbd4aca67e33a086d90e8a9e316ab0d7d8815))
+* **roadmap:** add road-to-package-optimization + dashboard sync ([016597f](https://github.com/event4u-app/agent-config/commit/016597ff468bc74cfefa0af9e86052cce872d865))
+* **analysis:** add package-optimizer design comparison ([607cf7f](https://github.com/event4u-app/agent-config/commit/607cf7f2b1786b62b36265798f66daa057d37e8f))
+* **council:** add package-optimizer design Q&A ([2211a59](https://github.com/event4u-app/agent-config/commit/2211a59fc8ae408a18a01101ac33711eda8a8285))
+* **roadmap:** add road-to-token-optimization + dashboard sync ([6348108](https://github.com/event4u-app/agent-config/commit/6348108162993e5947eea3d5612e43c4fdc18686))
+* **analysis:** add token-optimizer design comparison ([05462cf](https://github.com/event4u-app/agent-config/commit/05462cf17ebab4dd9c02b9683bc741e5be3c8a12))
+* **council:** add token-optimizer skill design Q&A ([eb6f9c3](https://github.com/event4u-app/agent-config/commit/eb6f9c3aad9c4ef20707181f8f3454f37f405761))
+* **roadmap:** add road-to-ruflo-adoption + dashboard sync ([009d94d](https://github.com/event4u-app/agent-config/commit/009d94d26c83c28dc0b2bac52b7109ff5f6a72d9))
+* **analysis:** add ruflo harvest comparison ([55d371c](https://github.com/event4u-app/agent-config/commit/55d371c1d427d20391f875430541d47b81fb9095))
+* **council:** add ruflo harvest prioritization Q&A ([7452d39](https://github.com/event4u-app/agent-config/commit/7452d3966bd6f7ce8e8f6e03e88a6bc6acb6fef8))
+* **roadmap:** add road-to-mobile-adoption + dashboard sync ([ca092df](https://github.com/event4u-app/agent-config/commit/ca092df913d00870d3227e212e507075462f0d87))
+* **analysis:** add mobile harvest comparison ([6791a78](https://github.com/event4u-app/agent-config/commit/6791a780276da3fccd100d6f5fd6b6e29c466673))
+* **council:** add mobile harvest prioritization Q&A ([48cc665](https://github.com/event4u-app/agent-config/commit/48cc6655927447e18fea455c89c7c7066c4ec9f6))
+* **roadmap:** add road-to-deep-research-adoption + dashboard sync ([9adc2d8](https://github.com/event4u-app/agent-config/commit/9adc2d8b0dd7ee0cdd2b919a4d776cab0f9f4b7a))
+* **analysis:** add deep-research harvest comparison ([4f5ead5](https://github.com/event4u-app/agent-config/commit/4f5ead50ee02de32016262fe6189208c7f9c6cbc))
+* **council:** add deep-research harvest prioritization Q&A ([1b08ea5](https://github.com/event4u-app/agent-config/commit/1b08ea5bdac158bb119f0851684f391e69e26c72))
+* add Microck deep-scan harvest analysis, council artifacts, and roadmap ([36baf23](https://github.com/event4u-app/agent-config/commit/36baf23ef898ab860163fcacfa9239a403032df0))
+* add Microck methodology comparison analysis ([1e34e78](https://github.com/event4u-app/agent-config/commit/1e34e788877a9f6101af5426587de63156e267dd))
+* add markitdown adoption analysis, council artifacts, and roadmap ([276b5d4](https://github.com/event4u-app/agent-config/commit/276b5d4374547386d407b1a01995620c90754363))
+* **suite:** lock identity as four-wing governed skill suite ([47c8211](https://github.com/event4u-app/agent-config/commit/47c8211ab7b42fa97352f747e2081fba82fe92b5))
+* **roadmap:** expand event-driven-discipline with platform tiers ([11edf9b](https://github.com/event4u-app/agent-config/commit/11edf9bb7666eaac18f7b8937437ff07db2b28f7))
+* sync active command count to 94 (drift fix) ([9be26bc](https://github.com/event4u-app/agent-config/commit/9be26bc6f4a2dbfd2bb53fe7052ce5717a6f9c47))
+* **roadmap:** event-driven agent discipline v3 ([71728cd](https://github.com/event4u-app/agent-config/commit/71728cde49a08f74c9fb44b133befcd4b6b89796))
+* **hooks:** relocate payload capture guide to docs/ ([4d39510](https://github.com/event4u-app/agent-config/commit/4d395108d461137e4df15adb04eed5fdd2a27dbb))
+* **rules,roadmap:** inline user-interaction failure-mode catalog + chat-history verified-platforms roadmap ([7ec07a0](https://github.com/event4u-app/agent-config/commit/7ec07a0733179373bcf3df6affcefe75ce341440))
+* **chat-history:** document v3 sidecar shape and legacy kill-switch ([2d1a393](https://github.com/event4u-app/agent-config/commit/2d1a39316c595810b24cc5e14fb153a2cf6a48c3))
+* bump remaining 92 → 93 command counts in browse + tools blurb ([1eeb019](https://github.com/event4u-app/agent-config/commit/1eeb019e34f1dfa0747e65eee304b8897c650389))
+* regenerate index/catalog and tag sidecar-shrink complexity ([c8e25d8](https://github.com/event4u-app/agent-config/commit/c8e25d86f6b19b10c06a7d845dc81da840ea6fb6))
+* bump command count to 93 across README, AGENTS, and architecture ([1902f22](https://github.com/event4u-app/agent-config/commit/1902f2230c433f1f33bf2ae4ad2cfbf2cfc3274c))
+* **chat-history:** document session-isolation read contract in platform-hooks context ([a59602e](https://github.com/event4u-app/agent-config/commit/a59602e8ad160f2da90ca8553b4e7c5fd8f62a60))
+
+### Refactoring
+
+* **work-engine:** remove obsolete chat-history heartbeat hook ([df2c6f1](https://github.com/event4u-app/agent-config/commit/df2c6f101edd60f77877c6162753c5b7d13f1992))
+* **chat-history:** split learn into import + project-learning workflow ([e11daa5](https://github.com/event4u-app/agent-config/commit/e11daa5c389ca1a4f3dd9b5ca123c57e145476c8))
+
+### Tests
+
+* **budget:** re-baseline TOP5_CEILING after language-and-tone re-sync ([3ac7b7b](https://github.com/event4u-app/agent-config/commit/3ac7b7b5b92d7a1cdfd6b80c6d77151034847939))
+
+### Chores
+
+* **matrix:** regenerate ownership matrix after no-attribution-footers add ([1bb7a9e](https://github.com/event4u-app/agent-config/commit/1bb7a9e452089f57f29c5aa74673fe682ecc682b))
+* **index:** regenerate after no-attribution-footers rule add ([0a95647](https://github.com/event4u-app/agent-config/commit/0a9564795b7d1c0a9e353927c07d9f15459f5ee8))
+* **tools:** regenerate .windsurfrules after no-attribution-footers trim ([d2a780b](https://github.com/event4u-app/agent-config/commit/d2a780b9c538c22fdc56ebcb1c245b23dababdee))
+* **rules:** trim no-attribution-footers to satisfy long_rule budget ([c407192](https://github.com/event4u-app/agent-config/commit/c40719271caddb1ccb0bf7e144aa42a295e391a5))
+* **ci:** unblock PR #44 — broken refs + word-count regression ([eccede0](https://github.com/event4u-app/agent-config/commit/eccede000451c4cec5b547deca1d78e0d3d916b5))
+* regenerate roadmap progress dashboard ([0c68f5b](https://github.com/event4u-app/agent-config/commit/0c68f5b354a61865836cde2e07fbfb19a3446e31))
+* **ownership-matrix:** regenerate after suite-closure work ([0b7f992](https://github.com/event4u-app/agent-config/commit/0b7f9920702df1e8b5b7db47d596caec312e0c17))
+* **roadmaps:** tag wing roadmaps with complexity: structural ([1e0c9c6](https://github.com/event4u-app/agent-config/commit/1e0c9c6b32e5ba16f34e62efb56a5a563a42b11c))
+* **index:** regenerate agents/index and docs/catalog ([9a3c1cb](https://github.com/event4u-app/agent-config/commit/9a3c1cb5c6730e5d48c85b85cf055f6e0302a5a7))
+* **sync:** refresh compression hashes and gitignore ([5f91975](https://github.com/event4u-app/agent-config/commit/5f91975f81c2c1ba0bf079b8366750e2aec1e984))
+* **roadmaps:** regenerate roadmaps-progress dashboard ([3d85dbd](https://github.com/event4u-app/agent-config/commit/3d85dbd854cbabc0c85c47685bdb96a22338a9fa))
+* **council:** remove unused playwright transport-mode scaffold ([672c512](https://github.com/event4u-app/agent-config/commit/672c5126e477ec43e4cc50d17e34f7ee3bca9a53))
+* **council:** default transport mode to manual instead of api ([4a41dfb](https://github.com/event4u-app/agent-config/commit/4a41dfbbaf879f5333ba5b665d5a0e32c4fac82d))
+* **roadmap:** regenerate roadmaps-progress dashboard ([6b01795](https://github.com/event4u-app/agent-config/commit/6b01795a267d5f69c5754ef7d59fbb125187be3a))
+* **ownership:** regenerate file-ownership matrix ([383d580](https://github.com/event4u-app/agent-config/commit/383d5808d5a0234149a69deb744625b1bc983b95))
+* **compress:** re-compress language-and-tone + user-interaction mirrors ([66a9f91](https://github.com/event4u-app/agent-config/commit/66a9f91520775f0097e33f688b2a2fa458c2d14b))
+* **index:** regenerate index + catalog after command-count sync ([03cf603](https://github.com/event4u-app/agent-config/commit/03cf603e84feedb7eea1845f39f258dbf0225f3a))
+* **hashes:** refresh compression hashes for language-and-tone + user-interaction ([fc361b4](https://github.com/event4u-app/agent-config/commit/fc361b49f19c14ddc3e4b8aa33093d1f9fa4ca7c))
+* add chat history cross agend hardening ([b9b9adb](https://github.com/event4u-app/agent-config/commit/b9b9adb2fb14ca089e92070a57821762269517b6))
+* **rules:** tighten language-and-tone and user-interaction iron laws ([57fa47d](https://github.com/event4u-app/agent-config/commit/57fa47d4331f0c2043165d82a3cbb2941c6278f9))
+* **roadmap:** archive road-to-verified-chat-history-platforms ([b1881f0](https://github.com/event4u-app/agent-config/commit/b1881f084d2d2f9eba225d7144345163fcb0e1b3))
+* **handoff:** close cowork chat-history handoff after council verification ([99190c9](https://github.com/event4u-app/agent-config/commit/99190c9f0f3c475ca11bab0e0482b20e82c1717c))
+* **roadmap:** regenerate roadmap-progress dashboard ([c7e2ff1](https://github.com/event4u-app/agent-config/commit/c7e2ff14b6d7afc593a2d9b12775f16fe491e452))
+* **roadmap:** archive sidecar-shrink roadmap with council notes ([3cd3826](https://github.com/event4u-app/agent-config/commit/3cd3826d86197e8e5297cef300d97ca23d7efc40))
+* regenerate file-ownership matrix for /chat-history learn ([537e13e](https://github.com/event4u-app/agent-config/commit/537e13e2ccea293d9f15a0a68ee27bf21f1ddbb7))
+* **roadmaps:** archive hook-only and session-isolation; add sidecar-shrink follow-up ([099a81d](https://github.com/event4u-app/agent-config/commit/099a81de5b90bd28dd7e4748612cf2efaf71ff28))
+* **docs:** drop roadmap citations from superseded markers ([369eb7e](https://github.com/event4u-app/agent-config/commit/369eb7e33b831daf3cf3a1348637596913923bbe))
+* **docs:** sync command counts to 92 after chat-history trim ([0b20e8f](https://github.com/event4u-app/agent-config/commit/0b20e8f05332974ad6ace222dfa152b086a42bf8))
+* **docs+settings:** hook-only sweep + remove dead phase-coupling guard ([5a66dc9](https://github.com/event4u-app/agent-config/commit/5a66dc954959c0dd02babb0661014fbf387ffec4))
+
 ## [1.19.0](https://github.com/event4u-app/agent-config/compare/1.18.0...1.19.0) (2026-05-05)
 
 ### Features
