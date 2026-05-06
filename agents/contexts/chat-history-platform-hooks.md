@@ -297,9 +297,9 @@ There is no manual recovery lever in v4. A "wrong" session writing
 to the file is not a failure mode — the entry simply joins the log
 under its own `s`. To wipe the file, delete `agents/.agent-chat-history`
 manually (it is git-ignored and recreated on the next hook fire). To
-pull a prior session into the current chat verbatim, use
-`/chat-history import`; to mine a prior session for project-improving
-learnings, use `/chat-history learn`.
+pull a prior session into the current chat as a 2–5 sentence summary
+plus a resume offer, use `/chat-history import`; to mine a prior
+session for project-improving learnings, use `/chat-history learn`.
 
 
 ## Read contract — session isolation (schema v4)
@@ -339,15 +339,16 @@ CLI surface:
 
 ### `import` and `learn` opt-in paths
 
-`/chat-history import` is the sanctioned **verbatim** cross-session
-surface. It runs `chat-history:sessions`, surfaces sessions as
-numbered options (per `user-interaction`), waits for the user's
-pick (per `ask-when-uncertain` — one question per turn), and
-renders the picked session's entries **verbatim** via
-`chat-history:read --session <id>` (Council Round 2 / R2-2 — the
-honest v1 contract is verbatim, not pre-summarised). v1 is
-single-pick and read-only; multi-pick, fuzzy search, and
-summarisation are explicitly out of scope.
+`/chat-history import` is the sanctioned **summary** cross-session
+surface. It runs `chat-history:sessions`, surfaces sessions as a
+numbered table (per `user-interaction`), waits for the user's pick
+(per `ask-when-uncertain` — one question per turn), and reads the
+picked session **silently** via `chat-history:read --session <id>`,
+then emits a 2–5 sentence summary plus a numbered resume/stop
+offer. Council Round 2 (R2-2) originally favoured verbatim
+rendering; reversed in practice — token cost and scroll fatigue
+outweighed the verbatim contract. v1 is single-pick and read-only;
+multi-pick and fuzzy search remain out of scope.
 
 `/chat-history learn` is the sanctioned **learning-extraction**
 counterpart. Same picker UX, but instead of rendering the picked
