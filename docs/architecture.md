@@ -27,7 +27,8 @@ Stability tiers follow [`docs/contracts/STABILITY.md`](contracts/STABILITY.md):
 .agent-src.uncompressed/          ← Source of truth (verbose, human-readable)
     ↓ /compress command
 .agent-src/                     ← Compressed output (token-efficient, shipped in the package)
-    ↓ project_to_augment() — copies rules, symlinks rest
+    ↓ project_to_augment() — copies rules by default, symlinks rest
+                              (toggle: augment.rules_use_symlinks)
 .augment/                       ← Local projection for Augment Code (gitignored)
     ↓ install.sh (Cursor, Cline, Windsurf, Augment VSCode) / plugin system
 .claude/ .cursor/ .clinerules/  ← Tool-specific symlinks/copies (auto-generated)
@@ -42,8 +43,12 @@ In a consumer project, the installer (`scripts/install.sh`) and the
 package's own `project_to_augment()` projection produce a `.augment/`
 tree where:
 
-- `.augment/rules/` — **copies** of compressed rule files. Augment
-  Code does not load symlinked rules, so each rule is a real file.
+- `.augment/rules/` — **copies** of compressed rule files by default.
+  Augment Code historically does not load symlinked rules, so each
+  rule is a real file. Set `augment.rules_use_symlinks: true` in
+  `.agent-settings.yml` to switch them to symlinks once Augment Code
+  supports it (the toggle is honored by both `scripts/install.sh` on
+  the consumer side and `project_to_augment()` in the package).
 - `.augment/skills/`, `.augment/commands/`, `.augment/personas/`,
   `.augment/contexts/`, `.augment/templates/` — **symlinks** into
   `.agent-src/<subdir>/`. Reading a context follows the symlink to

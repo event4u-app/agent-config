@@ -562,6 +562,133 @@ class TestGenerateClaudeCommands(unittest.TestCase):
         self.assertTrue((claude_skills / "feature-dev" / "SKILL.md").is_symlink())
 
 
+class TestProjectToAugmentRulesMode(unittest.TestCase):
+    """Test project_to_augment() rules-mode toggle (copy vs symlink)."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.project_root = Path(self.tmpdir)
+        # Lay out a minimal .agent-src/ with rules + a symlinked subdir.
+        (self.project_root / ".agent-src" / "rules").mkdir(parents=True)
+        (self.project_root / ".agent-src" / "rules" / "alpha.md").write_text("rule alpha")
+        (self.project_root / ".agent-src" / "rules" / "beta.md").write_text("rule beta")
+        (self.project_root / ".agent-src" / "skills").mkdir()
+        (self.project_root / ".agent-src" / "README.md").write_text("readme")
+
+        self._orig_target = compress.TARGET_DIR
+        self._orig_augment = compress.AUGMENT_DIR
+        self._orig_settings = compress.SETTINGS_FILE
+        compress.TARGET_DIR = self.project_root / ".agent-src"
+        compress.AUGMENT_DIR = self.project_root / ".augment"
+        compress.SETTINGS_FILE = self.project_root / ".agent-settings.yml"
+
+    def tearDown(self):
+        compress.TARGET_DIR = self._orig_target
+        compress.AUGMENT_DIR = self._orig_augment
+        compress.SETTINGS_FILE = self._orig_settings
+        shutil.rmtree(self.tmpdir)
+
+    def _write_setting(self, value):
+        if value is None:
+            return
+        (self.project_root / ".agent-settings.yml").write_text(
+            f"augment:\n  rules_use_symlinks: {value}\n"
+        )
+
+    def test_default_copies_rules(self):
+        """No settings file → rules are real copies."""
+        compress.project_to_augment()
+        alpha = self.project_root / ".augment" / "rules" / "alpha.md"
+        self.assertTrue(alpha.is_file())
+        self.assertFalse(alpha.is_symlink())
+        self.assertEqual(alpha.read_text(), "rule alpha")
+
+    def test_explicit_false_copies_rules(self):
+        """augment.rules_use_symlinks: false → rules are real copies."""
+        self._write_setting("false")
+        compress.project_to_augment()
+        alpha = self.project_root / ".augment" / "rules" / "alpha.md"
+        self.assertTrue(alpha.is_file())
+        self.assertFalse(alpha.is_symlink())
+
+    def test_true_symlinks_rules(self):
+        """augment.rules_use_symlinks: true → rules are symlinks → .agent-src/rules/."""
+        self._write_setting("true")
+        compress.project_to_augment()
+        alpha = self.project_root / ".augment" / "rules" / "alpha.md"
+        self.assertTrue(alpha.is_symlink())
+        # Symlink resolves to the .agent-src/ source
+        self.assertEqual(alpha.resolve(), (self.project_root / ".agent-src" / "rules" / "alpha.md").resolve())
+
+    def test_toggle_replaces_existing_files(self):
+        """Switching modes must rewrite the entries (no copy↔symlink mismatch)."""
+        # First: copy mode
+        self._write_setting("false")
+        compress.project_to_augment()
+        alpha = self.project_root / ".augment" / "rules" / "alpha.md"
+        self.assertFalse(alpha.is_symlink())
+        # Switch to symlink mode
+        self._write_setting("true")
+        compress.project_to_augment()
+        self.assertTrue(alpha.is_symlink())
+        # And back
+        self._write_setting("false")
+        compress.project_to_augment()
+        self.assertFalse(alpha.is_symlink())
+        self.assertTrue(alpha.is_file())
+
+
+class TestReadAugmentRulesUseSymlinks(unittest.TestCase):
+    """Test the .agent-settings.yml reader for augment.rules_use_symlinks."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.project_root = Path(self.tmpdir)
+        self._orig_settings = compress.SETTINGS_FILE
+        compress.SETTINGS_FILE = self.project_root / ".agent-settings.yml"
+
+    def tearDown(self):
+        compress.SETTINGS_FILE = self._orig_settings
+        shutil.rmtree(self.tmpdir)
+
+    def _write(self, content: str) -> None:
+        (self.project_root / ".agent-settings.yml").write_text(content)
+
+    def test_missing_file_returns_false(self):
+        self.assertFalse(compress._read_augment_rules_use_symlinks())
+
+    def test_missing_block_returns_false(self):
+        self._write("project:\n  pr_template: foo\n")
+        self.assertFalse(compress._read_augment_rules_use_symlinks())
+
+    def test_true_value(self):
+        self._write("augment:\n  rules_use_symlinks: true\n")
+        self.assertTrue(compress._read_augment_rules_use_symlinks())
+
+    def test_false_value(self):
+        self._write("augment:\n  rules_use_symlinks: false\n")
+        self.assertFalse(compress._read_augment_rules_use_symlinks())
+
+    def test_truthy_aliases(self):
+        for alias in ("True", "yes", "ON", "1"):
+            self._write(f"augment:\n  rules_use_symlinks: {alias}\n")
+            self.assertTrue(
+                compress._read_augment_rules_use_symlinks(),
+                f"expected truthy for {alias!r}",
+            )
+
+    def test_inline_comment_stripped(self):
+        self._write("augment:\n  rules_use_symlinks: true  # opt-in\n")
+        self.assertTrue(compress._read_augment_rules_use_symlinks())
+
+    def test_block_scoping(self):
+        """rules_use_symlinks under a different block must not match."""
+        self._write(
+            "project:\n  rules_use_symlinks: true\naugment:\n  enabled: true\n"
+        )
+        self.assertFalse(compress._read_augment_rules_use_symlinks())
+
+
 class TestCleanTools(unittest.TestCase):
     """Test clean_tools() — removes all generated directories."""
 

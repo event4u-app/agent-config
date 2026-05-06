@@ -76,6 +76,22 @@ github:
   # auto                  = detect on first use and update this setting
   pr_reply_method: create_review_comment
 
+# --- Augment Code projection (.augment/) ---
+#
+# Controls how rule files are written into .augment/rules/ during
+# install (scripts/install.sh) and the package's own projection
+# (scripts/compress.py --project-augment).
+#
+# Augment Code historically does not load symlinked rule files, so the
+# default is to write each rule as a real copy. Flip the toggle to true
+# once Augment Code supports symlinked rules — symlinks keep the files
+# in sync without re-running install/sync, and remove a class of stale-
+# copy path bugs.
+augment:
+  # When true, .augment/rules/*.md are symlinked into .agent-src/rules/.
+  # When false (default) or missing, they are copied as real files.
+  rules_use_symlinks: false
+
 # --- Eloquent (Laravel) ---
 eloquent:
   # Model property access style

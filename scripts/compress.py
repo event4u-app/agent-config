@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 Agent-config sync — compress .agent-src.uncompressed/ → .agent-src/
-and project .agent-src/ → .augment/ (copies for rules, symlinks for the rest).
+and project .agent-src/ → .augment/ (copies for rules by default,
+symlinks for the rest; opt into rule symlinks via
+augment.rules_use_symlinks in .agent-settings.yml).
 
 Copies non-.md files as-is. Lists .md files that need compression (done by the
 Augment agent interactively). Tracks SHA-256 hashes of source files to detect
@@ -29,9 +31,39 @@ SOURCE_DIR = PROJECT_ROOT / ".agent-src.uncompressed"
 TARGET_DIR = PROJECT_ROOT / ".agent-src"
 AUGMENT_DIR = PROJECT_ROOT / ".augment"
 HASH_FILE = PROJECT_ROOT / ".compression-hashes.json"
+SETTINGS_FILE = PROJECT_ROOT / ".agent-settings.yml"
 
 # Files to copy as-is even if .md (not compressed by agent)
 COPY_AS_IS = {"README.md"}
+
+
+def _read_augment_rules_use_symlinks() -> bool:
+    """Read augment.rules_use_symlinks from .agent-settings.yml.
+
+    Returns True only when the setting is present under the top-level
+    ``augment:`` block and resolves to a truthy YAML scalar
+    (true/yes/on/1, case-insensitive). Missing file, missing block, or
+    any other value → False (preserve copy default).
+    """
+    if not SETTINGS_FILE.exists():
+        return False
+    try:
+        text = SETTINGS_FILE.read_text(encoding="utf-8")
+    except OSError:
+        return False
+    in_augment = False
+    for line in text.splitlines():
+        stripped = line.lstrip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if not line.startswith((" ", "\t")):
+            in_augment = stripped.startswith("augment:")
+            continue
+        if in_augment:
+            m = re.match(r"^\s+rules_use_symlinks\s*:\s*([^\s#]+)", line)
+            if m:
+                return m.group(1).strip().lower() in ("true", "yes", "on", "1")
+    return False
 
 
 
@@ -663,8 +695,10 @@ def generate_tools() -> None:
 # ── .augment/ projection ──────────────────────────────────────────────
 # The package uses .agent-src/ as the tool-agnostic compressed source of truth.
 # .augment/ is a generated projection so that Augment Code (which reads from
-# .augment/ and cannot follow symlinked rule files) works on the package repo
-# itself. Rules are copied (real files); everything else is symlinked.
+# .augment/) works on the package repo itself. Rules default to copies
+# because Augment Code historically does not load symlinked rule files;
+# flip augment.rules_use_symlinks: true in .agent-settings.yml to switch
+# them to symlinks (everything else is always symlinked).
 
 # Subdirectories of .agent-src/ that map into .augment/ as symlinks.
 AUGMENT_SYMLINK_DIRS = ("skills", "commands", "guidelines", "personas", "templates", "contexts", "scripts")
@@ -673,34 +707,44 @@ AUGMENT_SYMLINK_FILES = ("README.md",)
 
 
 def project_to_augment() -> None:
-    """Mirror .agent-src/ into .augment/. Copy rules, symlink everything else."""
+    """Mirror .agent-src/ into .augment/. Symlink everything except rules,
+    which default to copies; opt into rule symlinks via
+    augment.rules_use_symlinks in .agent-settings.yml."""
     if not TARGET_DIR.exists():
         print(f"  ⚠️  {TARGET_DIR.name}/ not found — nothing to project")
         return
 
     AUGMENT_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Rules: copy each .md file (Augment Code cannot load symlinked rules)
+    use_symlinks = _read_augment_rules_use_symlinks()
+
+    # Rules: copy by default (Augment Code historically does not load
+    # symlinked rules), or symlink when augment.rules_use_symlinks is true.
     src_rules = TARGET_DIR / "rules"
     dst_rules = AUGMENT_DIR / "rules"
     dst_rules.mkdir(parents=True, exist_ok=True)
     existing = {f.name for f in dst_rules.iterdir() if f.is_file() or f.is_symlink()}
     current = set()
-    copied = 0
+    written = 0
     if src_rules.exists():
         for rule in sorted(src_rules.glob("*.md")):
             target = dst_rules / rule.name
-            if target.is_symlink():
+            # Always remove first to avoid copy↔symlink mode mismatch.
+            if target.is_symlink() or target.exists():
                 target.unlink()
-            shutil.copy2(rule, target)
+            if use_symlinks:
+                target.symlink_to(Path("..") / ".." / ".agent-src" / "rules" / rule.name)
+            else:
+                shutil.copy2(rule, target)
             current.add(rule.name)
-            copied += 1
+            written += 1
     # Remove stale rule files
     removed_rules = 0
     for name in existing - current:
         (dst_rules / name).unlink()
         removed_rules += 1
-    print(f"  ✅  Copied {copied} rules to .augment/rules/" + (f" ({removed_rules} stale removed)" if removed_rules else ""))
+    mode_label = "Symlinked" if use_symlinks else "Copied"
+    print(f"  ✅  {mode_label} {written} rules to .augment/rules/" + (f" ({removed_rules} stale removed)" if removed_rules else ""))
 
     # Subdirectories: replace each with a symlink → ../.agent-src/<subdir>
     for sub in AUGMENT_SYMLINK_DIRS:

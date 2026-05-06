@@ -129,6 +129,62 @@ test_migration_real_to_symlink() {
     teardown
 }
 
+test_rules_default_copy_when_setting_absent() {
+    setup
+    # No .agent-settings.yml present → default behaviour (copy).
+    run_install
+    assert_true "rule is real file (default)" test -f "$TMPDIR/.augment/rules/php-coding.md"
+    assert_false "rule is NOT a symlink (default)" test -L "$TMPDIR/.augment/rules/php-coding.md"
+    teardown
+}
+
+test_rules_copy_when_setting_false() {
+    setup
+    cat > "$TMPDIR/.agent-settings.yml" <<'EOF'
+augment:
+  rules_use_symlinks: false
+EOF
+    run_install
+    assert_true "rule is real file (false)" test -f "$TMPDIR/.augment/rules/php-coding.md"
+    assert_false "rule is NOT a symlink (false)" test -L "$TMPDIR/.augment/rules/php-coding.md"
+    teardown
+}
+
+test_rules_symlink_when_setting_true() {
+    setup
+    cat > "$TMPDIR/.agent-settings.yml" <<'EOF'
+augment:
+  rules_use_symlinks: true
+EOF
+    run_install
+    assert_true "rule is a symlink (true)" test -L "$TMPDIR/.augment/rules/php-coding.md"
+    assert_true "rule symlink resolves" test -e "$TMPDIR/.augment/rules/php-coding.md"
+    teardown
+}
+
+test_rules_toggle_switches_modes() {
+    setup
+    # Start with copy (default).
+    run_install
+    assert_false "first run: not a symlink" test -L "$TMPDIR/.augment/rules/php-coding.md"
+    # Flip to symlink mode and re-install.
+    cat > "$TMPDIR/.agent-settings.yml" <<'EOF'
+augment:
+  rules_use_symlinks: true
+EOF
+    run_install
+    assert_true "after toggle: now a symlink" test -L "$TMPDIR/.augment/rules/php-coding.md"
+    # Flip back.
+    cat > "$TMPDIR/.agent-settings.yml" <<'EOF'
+augment:
+  rules_use_symlinks: false
+EOF
+    run_install
+    assert_false "after second toggle: not a symlink again" test -L "$TMPDIR/.augment/rules/php-coding.md"
+    assert_true "after second toggle: real file again" test -f "$TMPDIR/.augment/rules/php-coding.md"
+    teardown
+}
+
 test_gitignore_marker_added() {
     setup; run_install
     assert_contains "gitignore has marker" "$TMPDIR/.gitignore" "# event4u/agent-config"
@@ -380,6 +436,10 @@ TESTS=(
     test_broken_symlinks_removed
     test_idempotent
     test_migration_real_to_symlink
+    test_rules_default_copy_when_setting_absent
+    test_rules_copy_when_setting_false
+    test_rules_symlink_when_setting_true
+    test_rules_toggle_switches_modes
     test_gitignore_marker_added
     test_gitignore_idempotent
     test_gitignore_not_created_if_missing
