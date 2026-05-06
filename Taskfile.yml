@@ -48,6 +48,7 @@ tasks:
       - task: consistency
       - task: counts-check
       - task: check-index
+      - task: check-router
       - task: check-compression
       - task: check-refs
       - task: check-portability

@@ -70,6 +70,14 @@ tasks:
     desc: Verify agents/index.md and docs/catalog.md are in sync (fails on drift)
     cmd: python3 scripts/generate_index.py --check
 
+  compile-router:
+    desc: Compile rule frontmatter into router.json (kernel + tier-1/2 routing)
+    cmd: python3 scripts/compile_router.py
+
+  check-router:
+    desc: Verify router.json matches a fresh compile (fails on drift)
+    cmd: python3 scripts/compile_router.py --check
+
   check-augmentignore:
     desc: Advisory check — reminds to refresh .augmentignore (non-blocking, always exits 0)
     cmd: python3 scripts/check_augmentignore.py
@@ -89,6 +97,7 @@ tasks:
       - task: sync-check-hashes
       - task: sync
       - task: generate-tools
+      - task: compile-router
       - git diff --quiet
 
   consistency-fix:
@@ -96,6 +105,7 @@ tasks:
     cmds:
       - task: sync
       - task: generate-tools
+      - task: compile-router
 
   check-compression:
     desc: Check compression quality (headings, code blocks, frontmatter, word count)

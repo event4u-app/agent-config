@@ -1,0 +1,267 @@
+{
+  "schema_version": 1,
+  "kernel": [
+    "agent-authority",
+    "ask-when-uncertain",
+    "commit-policy",
+    "direct-answers",
+    "language-and-tone",
+    "no-cheap-questions",
+    "non-destructive-by-default",
+    "scope-control",
+    "verify-before-complete"
+  ],
+  "tier_1": [
+    {
+      "id": "analysis-skill-routing",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "architecture",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "artifact-engagement-recording",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "augment-portability",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "augment-source-of-truth",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "autonomous-execution",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "command-suggestion-policy",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "context-hygiene",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "docker-commands",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "e2e-testing",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "guidelines",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "no-attribution-footers",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "no-roadmap-references",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "onboarding-gate",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "package-ci-checks",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "php-coding",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "roadmap-progress-sync",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "size-enforcement",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "skill-quality",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "slash-command-routing-policy",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "user-interaction",
+      "triggers": [],
+      "routes_to": []
+    }
+  ],
+  "tier_2": [
+    {
+      "id": "agent-docs",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "artifact-drafting-protocol",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "capture-learnings",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "cli-output-handling",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "commit-conventions",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "docs-sync",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "downstream-changes",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "improve-before-implement",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "laravel-translations",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "markdown-safe-codeblocks",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "minimal-safe-diff",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "missing-tool-handling",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "model-recommendation",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "preservation-guard",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "review-routing-awareness",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "reviewer-awareness",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "role-mode-adherence",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "rule-type-governance",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "runtime-safety",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "security-sensitive-stop",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "skill-improvement-trigger",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "think-before-action",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "token-efficiency",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "tool-safety",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "ui-audit-gate",
+      "triggers": [],
+      "routes_to": []
+    },
+    {
+      "id": "upstream-proposal",
+      "triggers": [],
+      "routes_to": []
+    }
+  ],
+  "profiles": {
+    "minimal": [
+      "__kernel__"
+    ],
+    "balanced": [
+      "__kernel__",
+      "__tier_1__"
+    ],
+    "full": [
+      "__kernel__",
+      "__tier_1__",
+      "__tier_2__"
+    ]
+  }
+}
