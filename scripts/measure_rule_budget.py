@@ -20,6 +20,7 @@ deterministic, stdlib-only, no network.
 from __future__ import annotations
 
 import argparse
+import datetime as _dt
 import json
 import sys
 from pathlib import Path
@@ -27,6 +28,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 RULES_DIR = REPO_ROOT / ".agent-src.uncompressed" / "rules"
 OVERRIDES_FILE = REPO_ROOT / "docs" / "contracts" / "iron-law-overrides.txt"
+TREND_FILE = REPO_ROOT / "agents" / ".rule-budget-history.jsonl"
 
 # Council R2 amendments (2026-05-06) — see docs/contracts/kernel-membership.md § 5.1.
 # Per-rule cap raised 1.5k → 2.5k; warning band raised 1.2k → 2.0k.
@@ -238,6 +240,39 @@ def kernel_budget_check(
     return 0, out
 
 
+def trend_append(agg: dict[str, object]) -> tuple[int, str]:
+    """Append a daily snapshot to agents/.rule-budget-history.jsonl.
+
+    Idempotent per UTC day: if today's date already has a row, the file
+    is not modified. Snapshot fields: date, kernel_chars, auto_chars,
+    rule_count, total_chars. Read by `roadmap:progress` for the Kernel
+    track per `road-to-kernel-and-router.md` P5.3.
+    """
+    today = _dt.datetime.now(_dt.timezone.utc).date().isoformat()
+    snapshot = {
+        "date": today,
+        "kernel_chars": int(agg["kernel_chars"]),
+        "auto_chars": int(agg["auto_chars"]),
+        "rule_count": int(agg["rule_count"]),
+        "total_chars": int(agg["total_chars"]),
+    }
+    TREND_FILE.parent.mkdir(parents=True, exist_ok=True)
+    if TREND_FILE.exists():
+        for line in TREND_FILE.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if row.get("date") == today:
+                return 0, f"trend: {today} already recorded — no-op"
+    with TREND_FILE.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(snapshot, sort_keys=True) + "\n")
+    return 0, f"trend: appended {today} → {TREND_FILE.relative_to(REPO_ROOT)}"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--json", action="store_true", help="emit JSON instead of a table")
@@ -245,6 +280,11 @@ def main(argv: list[str] | None = None) -> int:
         "--kernel-budget-check",
         action="store_true",
         help="enforce Council R2 kernel-bucket + per-rule caps; exit 1 on breach",
+    )
+    parser.add_argument(
+        "--trend-append",
+        action="store_true",
+        help="append today's snapshot to agents/.rule-budget-history.jsonl (idempotent per UTC day)",
     )
     args = parser.parse_args(argv)
 
@@ -255,6 +295,11 @@ def main(argv: list[str] | None = None) -> int:
         overrides = load_overrides()
         code, report = kernel_budget_check(rules, agg, overrides)
         print("\n".join(report))
+        return code
+
+    if args.trend_append:
+        code, msg = trend_append(agg)
+        print(msg)
         return code
 
     if args.json:

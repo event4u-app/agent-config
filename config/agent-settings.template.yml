@@ -7,13 +7,15 @@
 
 # --- Cost profile ---
 #
-# Selects which agent surfaces are active. See docs/customization.md for
-# the authoritative description.
+# Master switch that controls which rule tiers load each session.
+# See docs/customization.md for the authoritative description and
+# docs/contracts/rule-router.md for the kernel + router architecture.
 #
-# minimal  = rules, skills, and commands only (zero extra surface, default)
-# balanced = + runtime dispatcher for skills that declare a shell command
-# full     = + tool adapters (GitHub / Jira, read-only, opt-in)
-# custom   = ignore profile — every matrix value must be set explicitly
+# minimal  = kernel only (always-loaded Iron-Law floor, ≤ 26k chars).
+#            No router, no auto-rules. Lowest token footprint.
+# balanced = kernel + tier-1 auto-rules (default — current behaviour superset).
+# full     = kernel + tier-1 + tier-2 (everything, highest token cost).
+# custom   = ignore profile — every matrix value must be set explicitly.
 cost_profile: __COST_PROFILE__
 
 # --- Personal preferences ---

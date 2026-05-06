@@ -4,6 +4,11 @@ tier: "2a"
 alwaysApply: false
 description: "Creating a new skill, rule, command, or guideline, or significantly rewriting one — runs a mandatory Understand → Research → Draft sequence before any artifact content is written."
 source: package
+triggers:
+  - intent: "create new skill"
+  - intent: "create new rule"
+  - intent: "create new command"
+  - intent: "create new guideline"
 ---
 
 # Artifact Drafting Protocol

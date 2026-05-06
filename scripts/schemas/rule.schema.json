@@ -36,8 +36,35 @@
     },
     "tier": {
       "type": "string",
-      "enum": ["1", "2a", "2b", "3", "safety-floor", "mechanical-already"],
-      "description": "Hardening tier per road-to-rule-hardening.md. Optional today, recommended for new rules. Tracked in agents/contexts/rule-trigger-matrix.md. Tier 3 rules also referenced in agents/contexts/tier-3-dispositions.md."
+      "enum": ["1", "2a", "2b", "3", "safety-floor", "mechanical-already", "kernel", "tier-1", "tier-2"],
+      "description": "Hardening tier. Legacy values (1/2a/2b/3/safety-floor/mechanical-already) accepted; new router-canonical values (kernel/tier-1/tier-2) introduced by road-to-kernel-and-router.md Phase 4."
+    },
+    "triggers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "keyword": {"type": "string"},
+          "phrase": {"type": "string"},
+          "intent": {"type": "string"},
+          "file_pattern": {"type": "string"},
+          "path_prefix": {"type": "string"},
+          "command": {"type": "string"},
+          "reason": {"type": "string"}
+        }
+      },
+      "description": "Router activation triggers (Phase 3 of road-to-kernel-and-router.md). Forbidden on kernel rules, required on non-kernel rules. Schema: docs/contracts/rule-router.md."
+    },
+    "routes_to": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^(skill|guideline|command|contract):"},
+      "description": "Router targets (skill / guideline / command / contract). Forbidden on kernel rules. Schema: docs/contracts/rule-router.md."
+    },
+    "profile": {
+      "type": "string",
+      "enum": ["minimal", "balanced", "full"],
+      "description": "Optional profile override; rare. Tier-derived default applies otherwise."
     }
   }
 }

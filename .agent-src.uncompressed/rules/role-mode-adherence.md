@@ -4,6 +4,10 @@ tier: "2a"
 description: "When roles.active_role is set in .agent-settings.yml — closing outputs must match the mode's contract and emit the structured mode marker"
 alwaysApply: false
 source: package
+triggers:
+  - keyword: "active_role"
+  - keyword: "role-mode"
+  - intent: "mode marker"
 ---
 
 # Role Mode Adherence

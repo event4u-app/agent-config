@@ -33,6 +33,10 @@ tasks:
     desc: Validate that every rule under .agent-src.uncompressed/rules/ declares a `tier:` frontmatter key with a known value
     cmd: python3 scripts/lint_rule_tiers.py
 
+  lint-rule-budget:
+    desc: Enforce kernel-bucket + per-rule size caps (Council R2 amendments) — see road-to-kernel-and-router.md P5.1
+    cmd: python3 scripts/measure_rule_budget.py --kernel-budget-check
+
   lint-handoffs:
     desc: Validate cross-wing handoff graph from senior-tier skills' `## Related Skills` blocks (no cycles, no dangling refs, no tier mismatch) — see docs/contracts/cross-wing-handoff.md
     cmd: python3 scripts/lint_handoffs.py
@@ -76,6 +80,10 @@ tasks:
   check-portability:
     desc: Check package portability (no project-specific references)
     cmd: python3 scripts/check_portability.py
+
+  check-token-optimizer-freshness:
+    desc: Verify token-optimizer catalog rows still match their cited assets (P1.3 of road-to-token-optimization)
+    cmd: python3 scripts/check_token_optimizer_freshness.py
 
   check-examples-shape:
     desc: Lint docs/guidelines/agent-infra/*-demos.md for wrong/right/why shape (Phase 3.4 of road-to-context-layer-maturity)

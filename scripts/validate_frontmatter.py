@@ -165,7 +165,13 @@ def _consume_block_list(lines: list[str], start: int) -> tuple[list[Any], int]:
         stripped = line.lstrip()
         if not stripped.startswith("- "):
             break
-        items.append(_coerce(stripped[2:]))
+        item_body = stripped[2:].strip()
+        # Inline mapping inside the list: `- key: value`
+        m = re.match(r"^([\w-]+):\s*(.+)$", item_body)
+        if m:
+            items.append({m.group(1): _coerce(m.group(2).strip())})
+        else:
+            items.append(_coerce(item_body))
         i += 1
     return items, i - start
 

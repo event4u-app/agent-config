@@ -5,6 +5,11 @@ description: "Creating, editing, or modifying files inside .agent-src/ or .augme
 source: package
 load_context:
   - .agent-src.uncompressed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md
+triggers:
+  - path_prefix: ".agent-src/"
+  - path_prefix: ".augment/"
+  - path_prefix: ".claude/"
+  - path_prefix: ".cursor/"
 ---
 
 # Source of Truth

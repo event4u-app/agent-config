@@ -667,9 +667,13 @@ def lint_router_frontmatter(rule_id: str, frontmatter: str,
                 target = repo_root / ".agent-src.uncompressed" / "skills" / target_id / "SKILL.md"
             elif kind == "guideline":
                 target = repo_root / "docs" / "guidelines" / f"{target_id}.md"
+            elif kind == "command":
+                target = repo_root / ".agent-src.uncompressed" / "commands" / f"{target_id}.md"
+            elif kind == "contract":
+                target = repo_root / "docs" / "contracts" / f"{target_id}.md"
             else:
                 issues.append(Issue("error", "route_kind_unknown",
-                    f"routes_to[{idx}] kind '{kind}' must be 'skill' or 'guideline'"))
+                    f"routes_to[{idx}] kind '{kind}' must be 'skill', 'guideline', 'command', or 'contract'"))
                 continue
             if not target.exists():
                 issues.append(Issue("error", "route_target_missing",

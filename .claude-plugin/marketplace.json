@@ -229,6 +229,7 @@
         "./.claude/skills/tests-execute",
         "./.claude/skills/threat-model",
         "./.claude/skills/threat-modeling",
+        "./.claude/skills/token-optimizer",
         "./.claude/skills/traefik",
         "./.claude/skills/unit-economics-modeling",
         "./.claude/skills/universal-project-analysis",

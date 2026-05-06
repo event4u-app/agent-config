@@ -4,6 +4,11 @@ tier: "2b"
 alwaysApply: false
 description: "When merging, refactoring, compressing, or restructuring skills, rules, commands, or guidelines — prevent quality loss"
 source: package
+triggers:
+  - intent: "merge skill"
+  - intent: "compress rule"
+  - intent: "refactor artifact"
+  - keyword: "Iron Law"
 ---
 
 # Preservation Guard

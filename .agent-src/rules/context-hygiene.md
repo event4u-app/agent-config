@@ -4,6 +4,11 @@ tier: "1"
 alwaysApply: false
 description: "When debugging, fixing errors, or running long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers"
 source: package
+triggers:
+  - intent: "long conversation"
+  - intent: "tool loop"
+  - intent: "fresh chat"
+  - keyword: "3-failure"
 ---
 
 # Context Hygiene

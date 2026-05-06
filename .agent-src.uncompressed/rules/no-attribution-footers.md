@@ -4,6 +4,11 @@ tier: "3"
 alwaysApply: false
 description: "Generating PR/issue/comment/commit-message bodies — forbids unsolicited 'Generated with', 'Co-authored by', or 'Pull Request opened by' attribution footers in any user-owned artifact"
 source: package
+triggers:
+  - intent: "PR body"
+  - intent: "commit message"
+  - intent: "Jira comment"
+  - keyword: "co-authored"
 ---
 
 # No Attribution Footers

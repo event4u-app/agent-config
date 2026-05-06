@@ -1,3 +1,8 @@
+---
+stability: beta
+---
+
+
 # Rule Router — Frontmatter Schema and Compiled Output
 
 Status: locked for Phase 3 of `road-to-kernel-and-router.md`.
@@ -56,11 +61,23 @@ Plain string list. Each entry is `<kind>:<id>`:
 routes_to:
   - skill:php-coder
   - guideline:agent-infra/asking-and-brevity-examples
+  - command:onboard
+  - contract:command-suggestion-flow
 ```
 
-`kind` is `skill` or `guideline`. `id` is the directory name under
-`.agent-src.uncompressed/skills/` or path under `docs/guidelines/`
-(without `.md`). Linter checks each target exists.
+`kind` is one of `skill`, `guideline`, `command`, `contract`. `id`
+resolves to the target file under:
+
+| kind | path |
+|---|---|
+| `skill` | `.agent-src.uncompressed/skills/<id>/SKILL.md` |
+| `guideline` | `docs/guidelines/<id>.md` |
+| `command` | `.agent-src.uncompressed/commands/<id>.md` |
+| `contract` | `docs/contracts/<id>.md` |
+
+Linter checks each target exists. `command` is for procedural rules
+that route to a slash-command's source file. `contract` is for rules
+whose body is fully covered by an existing architectural contract.
 
 ## Compiled output — `router.json`
 

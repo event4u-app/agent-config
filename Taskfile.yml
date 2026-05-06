@@ -51,6 +51,7 @@ tasks:
       - task: check-router
       - task: check-compression
       - task: check-refs
+      - task: check-token-optimizer-freshness
       - task: check-portability
       - task: check-examples-shape
       - task: lint-roadmap-complexity
@@ -70,6 +71,7 @@ tasks:
       - task: check-always-budget
       - task: check-one-off-location
       - task: validate-schema
+      - task: lint-rule-budget
       - task: lint-skills
       - task: lint-rule-tiers
       - task: lint-handoffs
