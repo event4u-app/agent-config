@@ -12,7 +12,7 @@ status: draft
 ## Status
 
 **Bug spec.** Spotted in Claude's review: the `AGENTS.md` at the root
-of the `agent-memory` repository still shows a Galawork/Laravel stack
+of the `agent-memory` repository still shows a Consumer/Laravel stack
 and treats the repo as if it were a Laravel application. The actual
 repository is a TypeScript/Node ≥ 20 package with PostgreSQL + pgvector.
 
@@ -48,7 +48,7 @@ None. This is a documentation fix inside the `agent-memory` repo.
 
 ## Fix checklist (for the `agent-memory` repo)
 
-- [ ] Remove all Laravel / Galawork references from `AGENTS.md`
+- [ ] Remove all Laravel / Consumer references from `AGENTS.md`
 - [ ] Replace stack section with TypeScript / Node / pgvector
 - [ ] Describe the package layout: `src/`, `tests/unit/`,
       `migrations/`, `cli/`, `mcp-server/` (adjust to actual layout)

@@ -84,10 +84,10 @@ tests/                ← Entwicklung (ausgeschlossen)
 Taskfile.yml          ← Entwicklung (ausgeschlossen)
 ```
 
-**Rolle 3: Die Galawork-Konfiguration des Autors**
+**Rolle 3: Die Consumer-Konfiguration des Autors**
 ```
-AGENTS.md             ← Galawork-Inhalt (fälschlicherweise im Root)
-agents/               ← Möglicherweise Galawork-spezifisch
+AGENTS.md             ← Consumer-Inhalt (fälschlicherweise im Root)
+agents/               ← Möglicherweise Consumer-spezifisch
 ```
 
 **Rolle 4: Templates für Consumer**

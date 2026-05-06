@@ -17,7 +17,7 @@ es bedenkenlos in ein Produktionsprojekt integrieren sollte.
 | Kriterium | Status | Risiko |
 |-----------|--------|--------|
 | Klare Lizenz | ❌ Fehlt | Rechtlich nicht nutzbar |
-| Kein projektspezifischer Content | ❌ AGENTS.md ist Galawork | Falscher Content in fremden Projekten |
+| Kein projektspezifischer Content | ❌ AGENTS.md ist Consumer | Falscher Content in fremden Projekten |
 | Sauberer Uninstall | ❌ Fehlt | Nicht rückgängig machbar |
 | CHANGELOG | ❌ Fehlt | Updates sind riskant |
 | Troubleshooting-Doku | ❌ Fehlt | Support-Last beim Autor |

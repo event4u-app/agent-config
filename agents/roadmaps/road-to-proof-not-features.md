@@ -89,7 +89,7 @@ already compute the four metrics natively (verified 2026-05-04 in
       metrics is wasted work. **No new metric implementation here**;
       strictly verification of existing extractors.
 - [ ] **P1.1** — Run `/implement-ticket` against a **non-production
-      target**: a `Galawork` staging-tenant ticket, a sandbox
+      target**: a `Consumer` staging-tenant ticket, a sandbox
       database, or a synthetic ticket on a throwaway branch. Production
       backend is **forbidden** in this phase — see Risk register
       "Beweis Theater". Capture the chat-log, pipe through

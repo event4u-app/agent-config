@@ -15,25 +15,25 @@ the original claims, how they validated, and the commits that resolved them.
 
 The review made 10 concrete claims. Ground truth before starting work:
 
-| # | Claim | Status after check |
-|---|---|---|
-| 1 | `package.json` version 1.0.0 vs latest tag 1.3.3 | ✅ Valid — drift confirmed |
-| 2 | License: `UNLICENSED` + `proprietary` + no LICENSE file | ✅ Valid — **resolved: MIT** |
-| 3 | `.gitignore` marker still reads `# galawork/agent-config` | ✅ Valid — present in `scripts/install.sh` |
-| 4 | CI runs only 2 of 17 Python test files | ✅ Valid — all 15 missing tests pass locally |
-| 5 | Postinstall uses `\|\| true` and swallows errors | ✅ Valid |
-| 6 | Runtime layer is scaffold, not a real execution engine | ✅ Valid — intentional, but README phrasing has drifted |
-| 7 | Tool adapters mostly scaffold | ✅ Valid — same |
-| 8 | README overclaims vs actual surface | Partially valid — Phase 5 of the archived README roadmap already simplified wording |
-| 9 | Split into core vs optional layers | ❌ Rejected — user already moved multi-package split to `skipped/` |
-| 10 | Windows support audit | Deferred — no Windows user to validate against |
+| # | Claim                                                     | Status after check |
+|---|-----------------------------------------------------------|---|
+| 1 | `package.json` version 1.0.0 vs latest tag 1.3.3          | ✅ Valid — drift confirmed |
+| 2 | License: `UNLICENSED` + `proprietary` + no LICENSE file   | ✅ Valid — **resolved: MIT** |
+| 3 | `.gitignore` marker still reads `# consumer/agent-config` | ✅ Valid — present in `scripts/install.sh` |
+| 4 | CI runs only 2 of 17 Python test files                    | ✅ Valid — all 15 missing tests pass locally |
+| 5 | Postinstall uses `\|\| true` and swallows errors          | ✅ Valid |
+| 6 | Runtime layer is scaffold, not a real execution engine    | ✅ Valid — intentional, but README phrasing has drifted |
+| 7 | Tool adapters mostly scaffold                             | ✅ Valid — same |
+| 8 | README overclaims vs actual surface                       | Partially valid — Phase 5 of the archived README roadmap already simplified wording |
+| 9 | Split into core vs optional layers                        | ❌ Rejected — user already moved multi-package split to `skipped/` |
+| 10 | Windows support audit                                     | Deferred — no Windows user to validate against |
 
 ## Items fixed
 
 | # | Task | Commit |
 |---|---|---|
 | 1 | Version sync `package.json` + `composer.json` → latest git tag | `193a9e4` |
-| 3 | Rename gitignore marker `galawork/agent-config` → `event4u/agent-config` with idempotent migration (migration later dropped — no public release shipped the old marker) | `193a9e4` |
+| 3 | Rename gitignore marker `consumer/agent-config` → `event4u/agent-config` with idempotent migration (migration later dropped — no public release shipped the old marker) | `193a9e4` |
 | 4 | Add all 15 passing Python test files to `tests.yml` | `786b958` |
 | 5 | Postinstall no longer swallows errors; prints actionable message and exits 0 only when the fault is environmental (e.g. no Python) | `f32bedc` |
 | 6 | Runtime + tool-adapter modules now carry an explicit `EXPERIMENTAL` header; README section on what's executable gets a qualifier | `9368b16` |

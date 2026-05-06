@@ -21,7 +21,7 @@ not as a roadmap checkbox.
 ### Case 1 — `DEV-6182` (Story · Urgent · In Progress)
 
 - **Repo of invocation:** `event4u/agent-config`
-- **Ticket project:** `galawork-api` (different repo)
+- **Ticket project:** `consumer-api` (different repo)
 - **Topic:** Foundation work for an external-system integration
   (multi-tenant configuration, activation per tenant, credential
   handling, observability hooks).
@@ -38,7 +38,7 @@ not as a roadmap checkbox.
   decisions that belong in the foundation ticket, not in follow-ups.
 - Repo-aware mode fired, but pulled context from the invocation
   repo (`event4u/agent-config`), not the ticket's repo
-  (`galawork-api`). Skill **correctly surfaced the mismatch** in a
+  (`consumer-api`). Skill **correctly surfaced the mismatch** in a
   notes paragraph — this is the desired fail-safe behaviour, but
   the heuristic itself is binary and noisy (see F1).
 - `threat-modeling` triggered on a substring match of `password`
@@ -49,7 +49,7 @@ not as a roadmap checkbox.
 ### Case 2 — `DEV-6155` (Task · Medium · POOL)
 
 - **Repo of invocation:** `event4u/agent-config`
-- **Ticket project:** `galawork-api`
+- **Ticket project:** `consumer-api`
 - **Topic:** Test-level refactor + enforcement policy for an
   enum-vs-string rule.
 - **What was tested:** Smaller-scope ticket, no external-system
@@ -82,7 +82,7 @@ the two runs. Each is tracked as a phase in
 `composer.json` — without checking whether the repo actually
 **belongs to the ticket**. In the two case studies, 17 branches +
 30 commits + 1 context-doc from `event4u/agent-config` were loaded
-for a `galawork-api` ticket. Signal was not wrong (the repo
+for a `consumer-api` ticket. Signal was not wrong (the repo
 exists), but not useful — the skill then cited domain-foreign
 vocabulary.
 
@@ -146,7 +146,7 @@ options 1 and 2 in the close prompt.
 
 ### F7 — Cross-repo invocation is a real use case
 
-Monorepo setups (here: `galawork-packages`) make it likely that
+Monorepo setups (here: `consumer-packages`) make it likely that
 developers invoke `/refine-ticket` from one package against
 tickets of another. Currently no warning line — user has to
 detect the mismatch themselves.

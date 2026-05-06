@@ -188,7 +188,7 @@ public function install(Event $event): void
         $projectRoot . '/.github/copilot-instructions.md'
     );
 
-    $this->io->write('<info>galawork/agent-config: agent configuration installed.</info>');
+    $this->io->write('<info>consumer/agent-config: agent configuration installed.</info>');
 }
 ```
 
@@ -208,7 +208,7 @@ Add to `install()`:
 
 ```php
 $this->ensureGitignoreEntries($projectRoot, [
-    '# Agent config — symlinked from vendor (auto-managed by galawork/agent-config)',
+    '# Agent config — symlinked from vendor (auto-managed by consumer/agent-config)',
     '.augment/skills/',
     '.augment/commands/',
     '.augment/guidelines/',
@@ -226,7 +226,7 @@ $this->ensureGitignoreEntries($projectRoot, [
 private function ensureGitignoreEntries(string $projectRoot, array $entries): void
 {
     $gitignore = $projectRoot . '/.gitignore';
-    $marker = '# galawork/agent-config';
+    $marker = '# consumer/agent-config';
 
     if (!file_exists($gitignore)) {
         return; // No .gitignore, don't create one

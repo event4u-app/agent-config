@@ -16,7 +16,7 @@ Das Paket wurde als **persönliches Entwicklungs-Tooling** aufgebaut und
 Das ist kein Vorwurf. Es ist ein häufiges Muster. Aber es erklärt die meisten
 Probleme in dieser Review:
 
-- `AGENTS.md` mit Galawork-Inhalt → war nie als öffentliches Template gedacht
+- `AGENTS.md` mit Consumer-Inhalt → war nie als öffentliches Template gedacht
 - `language: de` als Default → persönliche Präferenz, nie hinterfragt
 - `ide: cursor` als Default → persönliche Präferenz
 - Augment-first Architektur → der Autor nutzt Augment Code
@@ -30,10 +30,10 @@ Probleme in dieser Review:
 
 **Beschreibung:** Das Paket ist primär für den Autor selbst. Es ist öffentlich,
 weil andere davon profitieren könnten — aber die primäre Referenz-Implementierung
-ist Galawork.
+ist Consumer.
 
 **Was das bedeutet:**
-- README ehrlich umschreiben: "This is my personal agent setup for Galawork. Use it as inspiration."
+- README ehrlich umschreiben: "This is my personal agent setup for Consumer. Use it as inspiration."
 - Proprietäre Lizenz ist OK, aber MIT wäre freundlicher für andere
 - Keine Verpflichtung zu generischen Installern, Windows-Support, etc.
 - 0 Stars und 0 Forks sind nicht das Ziel

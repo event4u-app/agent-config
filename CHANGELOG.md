@@ -1298,7 +1298,7 @@ our recommendation order, not its support status.
 
 * add iron rule for skill independence ([b060730](https://github.com/event4u-app/agent-config/commit/b060730e98b15b6bc498ad68a111035fab72907f))
 * address Copilot PR review feedback ([11b4d20](https://github.com/event4u-app/agent-config/commit/11b4d2060084d1739bfc9e6550fc78c4a4a0bcb7))
-* address galawork-api PR [#1466](https://github.com/event4u-app/agent-config/issues/1466) bot feedback ([c5f8e18](https://github.com/event4u-app/agent-config/commit/c5f8e18a6c429e2f8f0224e1d9130233107ce65e))
+* address consumer-api PR [#1466](https://github.com/event4u-app/agent-config/issues/1466) bot feedback ([c5f8e18](https://github.com/event4u-app/agent-config/commit/c5f8e18a6c429e2f8f0224e1d9130233107ce65e))
 * **check-refs:** resolve .augment/X as alias for .agent-src/X ([ff3b094](https://github.com/event4u-app/agent-config/commit/ff3b09479a7fa266606467d862f8de9277ef1fc4))
 * **check-refs:** skip forward refs in unchecked TODO items ([1458a18](https://github.com/event4u-app/agent-config/commit/1458a181eb5bbe3189777b87bd9ad210b8cc00c5))
 * **check-refs:** validate paths inside memory YAML + exempt consumer dirs ([ec4e8aa](https://github.com/event4u-app/agent-config/commit/ec4e8aae2a0f8e7c489442441b8cfa7f9242be2f))
@@ -1474,8 +1474,8 @@ our recommendation order, not its support status.
   for scope questions; Issues remain for bugs and feature requests.
 
 ### Removed
-- Hardcoded `galawork` references removed from installer and portability
-  checker. No public release ever shipped the legacy `# galawork/agent-config`
+- Hardcoded `consumer` references removed from installer and portability
+  checker. No public release ever shipped the legacy `# consumer/agent-config`
   gitignore marker, so the in-place migration path was also removed.
 
 ## [1.3.3] — 2026-04-17
