@@ -57,9 +57,11 @@ For each changed `.md` file:
      `authentication` inside an auth-module file). Never abbreviate
      inside code blocks, frontmatter, file paths, command strings, or
      Iron Law fenced blocks.
-   - **Arrows for causality:** "X causes Y" / "X leads to Y" / "X, then Y"
+   - **Arrows for causality:** `X causes Y` / `X leads to Y` / `X, then Y`
      → `X → Y`. Keep arrows out of code blocks, frontmatter, and Iron
-     Law fenced blocks; surrounding prose only.
+     Law fenced blocks; surrounding prose only. (Example phrases
+     backticked on purpose — inline-code protection skips them; never
+     strip the backticks.)
    - **Fragments OK:** "Run tests before commit" not "You should always run tests before committing"
    - **Drop:** "you should", "make sure to", "remember to" — state action directly
    - **Merge** redundant bullets that say the same thing differently
