@@ -975,6 +975,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/rules/no-attribution-footers.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/rules/no-cheap-questions.md": {
       "kind": "rule",
       "rule_type": "always",
@@ -2271,6 +2277,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/create-pr.md",
+      "target": ".agent-src.uncompressed/rules/no-attribution-footers.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/commands/create-pr/description-only.md",
@@ -4231,6 +4244,34 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/no-attribution-footers.md",
+      "target": ".agent-src.uncompressed/commands/create-pr.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/no-attribution-footers.md",
+      "target": ".agent-src.uncompressed/rules/commit-conventions.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/no-attribution-footers.md",
+      "target": ".agent-src.uncompressed/rules/no-attribution-footers.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/no-attribution-footers.md",
+      "target": ".agent-src.uncompressed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/rules/no-cheap-questions.md",

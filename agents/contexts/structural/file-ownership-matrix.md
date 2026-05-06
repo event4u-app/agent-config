@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **319**
-- Edges (incl. self-WRITE): **706**
+- Files indexed: **320**
+- Edges (incl. self-WRITE): **711**
 
 ## READ_ONLY edges
 
@@ -28,6 +28,7 @@
 | `.agent-src.uncompressed/commands/commit/in-chunks.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/commit/in-chunks.md` | `.agent-src.uncompressed/rules/commit-conventions.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/commit/in-chunks.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/create-pr.md` | `.agent-src.uncompressed/rules/no-attribution-footers.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/estimate-ticket.md` | `.agent-src.uncompressed/commands/jira-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/estimate-ticket.md` | `.agent-src.uncompressed/commands/refine-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/estimate-ticket.md` | `.agent-src.uncompressed/skills/estimate-ticket/SKILL.md` | `body_link` | 1 |
@@ -178,6 +179,9 @@
 | `.agent-src.uncompressed/rules/docs-sync.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/docs-sync-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/improve-before-implement.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/language-and-tone.md` | `.agent-src.uncompressed/rules/user-interaction.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/no-attribution-footers.md` | `.agent-src.uncompressed/commands/create-pr.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/no-attribution-footers.md` | `.agent-src.uncompressed/rules/commit-conventions.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/no-attribution-footers.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
@@ -407,6 +411,6 @@
 | `command` | 94 |
 | `context` | 28 |
 | `persona` | 8 |
-| `rule` | 55 |
+| `rule` | 56 |
 | `skill` | 134 |
 
