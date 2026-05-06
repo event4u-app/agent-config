@@ -167,8 +167,8 @@ Three directories, three modes:
 | **Ad-hoc session** (no durable artefact yet) | `agents/council-sessions/<UTC-timestamp>.json` | JSON from `council:run --output` |
 
 `<topic-slug>` is kebab-case and **must match** the corresponding
-roadmap / ADR slug if one exists (e.g. `path-fixes` for
-`agents/roadmaps/road-to-path-fixes.md`).
+roadmap / ADR slug if one exists (e.g. `path-fixes` mirrors the
+matching `road-to-<topic-slug>` roadmap under `agents/roadmaps/`).
 
 ### Forbidden
 

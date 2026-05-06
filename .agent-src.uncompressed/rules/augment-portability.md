@@ -9,6 +9,10 @@ triggers:
   - keyword: "portable"
 routes_to:
   - "guideline:augment-portability-patterns"
+validator_ignore:
+  - type: "substring"
+    pattern: ".agent-src.uncompressed/"
+    reason: "Rule scopes the portability gate to the uncompressed authoring tree."
 ---
 
 # Augment Portability

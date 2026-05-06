@@ -37,9 +37,8 @@ load_context_eager:          # opt-in eager — auto-loaded on rule fire
 > by `scripts/lint_load_context.py`. The compress-time rewriter
 > (`scripts/compress.py::_rewrite_paths`) resolves logical names to the
 > deployment-correct relative path (e.g. `../contexts/<area>/<file>.md`
-> for a rule at `rules/<name>.md`). See
-> `agents/roadmaps/road-to-path-fixes.md` Phase 1-2 + P5.3 for the full
-> migration history.
+> for a rule at `rules/<name>.md`). The full migration history lives
+> in the archived path-fixes roadmap under `agents/roadmaps/archive/`.
 
 | Key | Loading | When to use |
 |---|---|---|

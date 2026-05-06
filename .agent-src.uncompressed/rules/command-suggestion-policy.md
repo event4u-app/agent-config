@@ -8,17 +8,16 @@ triggers:
   - phrase: "command suggestion"
 routes_to:
   - "contract:command-suggestion-flow"
+load_context:
+  - "contexts/contracts/command-suggestion-flow.md"
 ---
 
 # Command Suggestion Policy
 
 When the user's prompt matches an eligible slash command, surface it as a
 **numbered option** alongside an "as-is" escape hatch. The user always
-picks. **Nothing auto-executes.**
-
-Body migrated to [`contract:command-suggestion-flow`](../../docs/contracts/command-suggestion-flow.md)
-(per P4 of `road-to-kernel-and-router.md`). Trigger-set above activates
-this routing under the `balanced` and `full` profiles.
+picks. **Nothing auto-executes.** Flow contract + senior-gate map:
+[`contexts/contracts/command-suggestion-flow.md`](../contexts/contracts/command-suggestion-flow.md).
 
 ## Iron Law — never auto-execute
 

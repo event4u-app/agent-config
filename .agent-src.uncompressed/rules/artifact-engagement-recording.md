@@ -10,6 +10,8 @@ triggers:
   - keyword: "telemetry"
 routes_to:
   - "contract:artifact-engagement-flow"
+load_context:
+  - "contexts/contracts/artifact-engagement-flow.md"
 ---
 
 <!-- cloud_safe: noop -->
@@ -19,11 +21,8 @@ routes_to:
 **Iron Law.** After a `/implement-ticket` or `/work` phase-step, emit one
 `telemetry:record` call with consulted + applied ids when telemetry is
 enabled. Default-off; opt-in via `.agent-settings.yml`. Zero overhead when
-disabled.
-
-Body migrated to [`contract:artifact-engagement-flow`](../../docs/contracts/artifact-engagement-flow.md)
-(per P4 of `road-to-kernel-and-router.md`). Trigger-set above activates this
-routing under the `balanced` and `full` profiles.
+disabled. Recording contract + privacy floor:
+[`contexts/contracts/artifact-engagement-flow.md`](../contexts/contracts/artifact-engagement-flow.md).
 
 The schema, CLI, and storage layer are owned by `scripts/telemetry/` and
 the `./agent-config telemetry:record` / `telemetry:status` commands.

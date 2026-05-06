@@ -12,6 +12,10 @@ triggers:
   - keyword: "token-optimizer"
 routes_to:
   - "skill:token-optimizer"
+validator_ignore:
+  - type: "substring"
+    pattern: ".agent-src.uncompressed/"
+    reason: "Rule lists the authoring-tree paths that must stay in sync with the catalog."
 ---
 
 # Token Optimizer Maintenance

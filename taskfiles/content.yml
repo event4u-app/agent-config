@@ -111,6 +111,10 @@ tasks:
     desc: Check compression quality (headings, code blocks, frontmatter, word count)
     cmd: python3 scripts/check_compression.py
 
+  check-compressed-paths:
+    desc: "Validate compressed-output paths in .agent-src/rules/*.md (road-to-path-fixes P5.2)"
+    cmd: python3 scripts/check_compressed_paths.py
+
   generate-ownership-matrix:
     desc: Regenerate the file-ownership matrix JSON + MD (docs/contracts/file-ownership-matrix.md)
     cmd: python3 scripts/generate_ownership_matrix.py

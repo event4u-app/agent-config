@@ -721,6 +721,7 @@ main() {
     #    into consumer projects.
     copy_if_missing "$SOURCE_PAYLOAD/templates/AGENTS.md" "$TARGET_DIR/AGENTS.md"
     copy_if_missing "$SOURCE_PAYLOAD/templates/copilot-instructions.md" "$TARGET_DIR/.github/copilot-instructions.md"
+    copy_if_missing "$SOURCE_PAYLOAD/templates/copilot-review-instructions.md" "$TARGET_DIR/.github/copilot-review-instructions.md"
 
     # 3. Create tool-specific symlinks
     create_tool_symlinks "$TARGET_DIR"

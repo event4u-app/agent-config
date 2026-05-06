@@ -8,6 +8,10 @@ triggers:
   - intent: "implement feature"
   - intent: "architectural change"
   - keyword: "refactor"
+validator_ignore:
+  - type: "substring"
+    pattern: ".agent-src.uncompressed/"
+    reason: "Rule cites the authoring tree when describing where examples live."
 ---
 
 # Improve Before Implement

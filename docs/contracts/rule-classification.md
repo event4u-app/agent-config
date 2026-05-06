@@ -130,7 +130,7 @@ Reference / examples / mechanics. Body migrates into
 
 | id | chars | target guideline | rationale |
 |---|---:|---|---|
-| artifact-engagement-recording | 3462 | `artifact-engagement-flow` | Mechanics doc already exists in `docs/contracts/` |
+| artifact-engagement-recording | 3462 | `artifact-engagement-flow` | Mechanics doc lives in `.agent-src.uncompressed/contexts/contracts/` (P4.1) |
 | augment-portability | 2956 | `augment-portability-patterns` | Project-agnostic-patterns reference |
 | command-suggestion-policy | 3954 | `command-suggestion-flow` | Flow doc already exists |
 | php-coding | 3433 | `php-coding-patterns` | Reference table; per-stack |

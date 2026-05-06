@@ -4,6 +4,10 @@ tier: "3"
 description: "Language and tone — informal German Du, English code comments, .md files always English"
 alwaysApply: true
 source: package
+validator_ignore:
+  - type: "substring"
+    pattern: ".agent-src.uncompressed/"
+    reason: "Rule scopes the .md-English mandate to the authoring tree."
 ---
 
 # Language and Tone

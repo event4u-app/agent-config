@@ -7,6 +7,10 @@ source: package
 triggers:
   - path_prefix: "agents/roadmaps/"
   - intent: "link from stable artifact"
+validator_ignore:
+  - type: "substring"
+    pattern: ".agent-src.uncompressed/"
+    reason: "Rule contrasts the authoring tree with transient roadmap files."
 ---
 
 # No Roadmap References from Stable Artifacts

@@ -50,6 +50,7 @@ tasks:
       - task: check-index
       - task: check-router
       - task: check-compression
+      - task: check-compressed-paths
       - task: check-refs
       - task: check-token-optimizer-freshness
       - task: check-portability

@@ -9,6 +9,10 @@ triggers:
   - intent: "compress rule"
   - intent: "refactor artifact"
   - keyword: "Iron Law"
+validator_ignore:
+  - type: "substring"
+    pattern: ".agent-src.uncompressed/"
+    reason: "Rule references the authoring tree as the operand of compression/preservation."
 ---
 
 # Preservation Guard

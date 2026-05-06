@@ -9,6 +9,10 @@ triggers:
   - path_prefix: "agents/council-responses/"
   - path_prefix: "agents/council-sessions/"
   - intent: "link to council artefact"
+validator_ignore:
+  - type: "substring"
+    pattern: ".agent-src.uncompressed/"
+    reason: "Rule references the authoring tree when contrasting transient council files."
 ---
 
 # No Council References from Any Artifact

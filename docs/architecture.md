@@ -249,4 +249,51 @@ adjustments (description budget, sandbox note, package-internal path-swap).
 
 ---
 
+## Path resolution and Copilot integration
+
+Cross-references inside `.augment/rules/`, `.augment/skills/`, and the
+mirrored `.claude/`, `.cursor/`, `.clinerules/` trees use **relative
+paths from the delivered location**. They resolve through the symlinks
+created by `scripts/install.sh`, not via raw git checkout. This means
+GitHub Copilot's static checker — which walks the git tree — will see
+broken paths where there are none. **The gap is intentional, not a bug.**
+
+The package ships two complementary suppression artefacts:
+
+| File | Read by | Purpose |
+|---|---|---|
+| `.github/copilot-instructions.md` | Copilot Chat + PR review | Repo-wide coding standards, self-contained behavior |
+| `.github/copilot-review-instructions.md` | Copilot PR review | Path-resolution suppression floor (this section's mate) |
+
+Both are installed (copy-if-missing) by `scripts/install.sh` from
+`.agent-src.uncompressed/templates/`. Consumers can edit them freely;
+the installer never overwrites.
+
+The mechanical floor is `scripts/check_compressed_paths.py`, wired into
+`task ci` as `check-compressed-paths`. It validates `.agent-src/rules/*.md`:
+
+- `load_context:` entries must resolve to existing files.
+- Forbidden substrings (`.agent-src.uncompressed/`, `../../docs/`,
+  `../../agents/`) must not survive compression — unless declared
+  per-rule via the `validator_ignore:` frontmatter primitive (audited).
+- Body links to `../docs/guidelines/...` are intentionally **not**
+  checked (they are package-internal reference material, silenced by
+  the Copilot suppression floor above).
+
+### Verifying path fixes in a consumer
+
+If a regression is suspected, replay the smoke test against the
+package's own `.augment/` projection:
+
+```bash
+task sync                              # regenerate .agent-src/ → .augment/
+python3 scripts/smoke_path_resolution.py
+```
+
+The script walks `.augment/rules/*.md` and resolves every
+`load_context:` entry to a file under `.augment/`. A non-zero exit
+means a consumer would also see the same broken reference.
+
+---
+
 ← [Back to README](../README.md)

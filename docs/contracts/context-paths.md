@@ -34,6 +34,7 @@ a roadmap revision (per `road-to-structural-optimization.md` § Definitions).
 | `contexts/chat-history/` | Phase 6 | `cadence.md`, `ownership.md`, `visibility.md` |
 | `contexts/execution/` | PR #34 (existing) | `<topic>-mechanics.md`, `<topic>-detection.md`, `<topic>-examples.md` |
 | `contexts/authority/` | PR #34 (existing) | `<topic>-mechanics.md` |
+| `contexts/contracts/` | road-to-path-fixes Phase 4 | `<topic>-flow.md` (load-bearing flow contracts cited via `load_context:`) |
 
 ## Grandfathered files
 
@@ -54,7 +55,7 @@ contexts/subagent-configuration.md
 
 1. **Sub-tree allow-list.** Every `*.md` under
    `.agent-src.uncompressed/contexts/` must be either (a) in one of the
-   eight locked sub-trees above, or (b) one of the six grandfathered
+   nine locked sub-trees above, or (b) one of the six grandfathered
    root-level files. Anything else fails CI.
 2. **No collisions.** No two context files may share the same basename
    across sub-trees. `judges/persona-voice-rubric.md` and
