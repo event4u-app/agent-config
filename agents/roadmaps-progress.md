@@ -6,10 +6,10 @@
 
 ## Overall
 
-**1 / 390 steps done · 0%**
+**5 / 391 steps done · 1%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   1%
 ```
 
 ## Open roadmaps
@@ -23,7 +23,7 @@
 | 5 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-event-driven-discipline.md](roadmaps/road-to-event-driven-discipline.md) | 12 | 42 | 42 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 7 | [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md) | 1 | 26 | 26 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 8 | [road-to-kernel-and-router.md](roadmaps/road-to-kernel-and-router.md) | 8 | 22 | 22 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 8 | [road-to-kernel-and-router.md](roadmaps/road-to-kernel-and-router.md) | 8 | 23 | 19 | 4 | 0 | 0 | ██░░░░░░░░ 17% |
 | 9 | [road-to-markitdown-adoption.md](roadmaps/road-to-markitdown-adoption.md) | 3 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 10 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 11 | [road-to-microck-harvest.md](roadmaps/road-to-microck-harvest.md) | 3 | 14 | 14 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -121,11 +121,11 @@
 
 ### [road-to-kernel-and-router.md](roadmaps/road-to-kernel-and-router.md)
 
-**Road to Rule Kernel and Router** — 0 / 22 done (0%)
+**Road to Rule Kernel and Router** — 4 / 23 done (17%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Baseline + classification (READY) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Baseline + classification (READY) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | Kernel definition (gated on P1) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 3 | Router contract (gated on P2) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 4 | Migration (gated on P3) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |

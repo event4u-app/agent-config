@@ -85,6 +85,31 @@ The Kernel survives every fresh session. Everything else is on-demand.
   `road-to-token-optimization.md` is `[x]`, AND (c) every step in
   `road-to-package-optimization.md` is `[x]`. Partial completion is partial.
 
+### Council R2 amendments (2026-05-06)
+
+After P1.4 cross-check the following original locks are amended;
+subsequent phases bind to the amended values:
+
+- **Per-rule cap raised: 1.5k → 2.5k.** The 1.5k cap forced 8 of 9
+  kernel rules into ADR territory (process theatre, not governance).
+  2.5k fits 7 of 9 rules without ADR; only `direct-answers` and
+  `language-and-tone` remain as legitimate Iron-Law-density exceptions.
+  Iron-Law-override ADRs may lift individual rules above 2.5k (max
+  4.0k hard ceiling per override, was 2.0k).
+- **Compression rate locked at median, not mean.** `r = 0.712`
+  (median) replaces `r = 0.742` (mean). Outlier skew from
+  `agent-authority` (already-lean floor at `r = 0.838`) inflated
+  the mean above the typical band. Risk asymmetry favours the
+  median (under-projection blows the bucket cap; over-projection
+  yields headroom).
+- **CI gate threshold updated.** `task ci` exits non-zero on
+  always-bucket > 25k OR any single rule > **2.5k** chars (was
+  1.5k). Warning threshold at 22k always-bucket and 2.0k per rule
+  (was 20k / 1.2k).
+- **P2.2 abort criteria authored.** Iron-Law SHA drift, bucket
+  overflow > 27.5k, single-rule runaway > 4k, empirical r drift
+  > 0.10 from locked 0.712. See `kernel-membership.md` § 6.
+
 ## Horizon
 
 Phase 1-5 = Kernel + Router work, **5/5 Hard Cap slots** for this plate.
@@ -93,18 +118,18 @@ siblings own their own Hard Cap accounting). Phase 8 = final validation.
 
 ## Phase 1 — Baseline + classification (READY)
 
-- [ ] **P1.1 — Baseline measurement script.** Author
+- [x] **P1.1 — Baseline measurement script.** Author
   `scripts/measure_rule_budget.py` (≤ 120 LOC, stdlib-only). Reads
   `.agent-src.uncompressed/rules/*.md`, strips frontmatter, reports per-rule
   char count, total always-bucket, total auto-bucket, top-5 oversize rules.
   Output: stdout table + JSON. Acceptance: re-runnable, deterministic, no
   network.
-- [ ] **P1.2 — Classification pass.** For each of 56 source rules produce
+- [x] **P1.2 — Classification pass.** For each of 56 source rules produce
   one row in `docs/contracts/rule-classification.md`: current type
   (always / auto), proposed disposition (`keep-in-kernel` /
   `compress-and-keep` / `move-to-skill:<id>` / `move-to-guideline:<id>`),
   one-line rationale. No edits yet — this is the migration plan.
-- [ ] **P1.3 — Kernel candidate list.** From P1.2 select 10-15 rules
+- [x] **P1.3 — Kernel candidate list.** From P1.2 select 10-15 rules
   marked `keep-in-kernel`. Project compressed char count using the
   algorithm below; iterate until projected sum ≤ 25k or abort criterion
   fires.
@@ -124,12 +149,43 @@ siblings own their own Hard Cap accounting). Phase 8 = final validation.
   inclusion criteria (Iron Law floor, behaviour, safety, tone,
   ask-policy) AND the pilot compression rate `r` AND the demotion log
   if any rounds fired.
+- [x] **P1.4 — Council cross-check.** Run the AI Council against the
+  P1.2 + P1.3 deliverables (`rule-classification.md` +
+  `kernel-membership.md` + pilot files) for an independent review
+  before P2 ships any compression. Output: a `agents/council-sessions/`
+  JSON log + a synthesis amendment-block in `kernel-membership.md`
+  recording which Council findings were accepted, deferred, or
+  rejected. Acceptance: at least one Council member returns a
+  non-trivial, rule-id-specific critique; the agent applies all
+  unambiguous wins (statistical, criteria, abort-paths) and surfaces
+  contested calls as P2.1 ADR candidates.
+
+  **Result (locked 2026-05-06).** Sonnet 4.5 R2 (3500 tokens)
+  delivered 5 substantive findings; GPT-4o concurred on 2.
+  Applied: median r = 0.712 (was mean 0.742), per-rule cap raised
+  to 2.5k (was 1.5k), criterion #3 split into pre-send (#3a) /
+  pre-act (#3b), criterion #5 added (ask-policy floor), P2.2 abort
+  criteria authored (`kernel-membership.md` § 6). Deferred to P2.1
+  ADR: `agent-authority` ↔ `autonomous-execution` swap (three
+  resolution variants documented in § 5.2). Rejected (GPT-4o):
+  demoting `non-destructive-by-default` and `ask-when-uncertain` —
+  both are Hard Floor / Iron Law per the locked criteria. Logs:
+  `agents/council-sessions/20260506T044821Z-phase1-cross-check.json`
+  (R1, truncated) +
+  `agents/council-sessions/20260506T044941Z-phase1-cross-check-r2.json`
+  (R2, full).
 
 ## Phase 2 — Kernel definition (gated on P1)
 
 - [ ] **P2.1 — Kernel size budget enforced.** Add `--kernel-budget-check` to
   `scripts/measure_rule_budget.py` (P1.1). Returns exit 1 if always-bucket >
-  25k chars or any rule > 1.5k chars. No CI wiring yet — that lands in P5.
+  25k chars or any rule > **2.5k** chars (Council R2 amendment, was 1.5k —
+  see `kernel-membership.md` § 5.1). Iron-Law-override ADRs may lift
+  individual rules above 2.5k; the script honours an
+  `iron-law-overrides.txt` allowlist alongside the ADR. P2.1 also
+  resolves the `agent-authority` ↔ `autonomous-execution` kernel-swap
+  ADR (three variants in `kernel-membership.md` § 5.2). No CI wiring
+  yet — that lands in P5.
 - [ ] **P2.2 — Compress + dedupe the kernel rules.** For each rule on
   the P1.3 list, apply the compression playbook in this order:
 
