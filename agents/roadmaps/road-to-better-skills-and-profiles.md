@@ -198,7 +198,7 @@ this phase.
 | 2 | AI #2 (deep comparison + roadmap-architect hat) | 2026-05-01 | Repo dimensions table, PR #29 critique, claude-skills weaknesses, proposed roadmap blocks A–F | Captured below (multi-part) |
 | 3 | AI #3 (positioning recommendation) | 2026-05-01 | One-paragraph strategic stance + top-3 next-improvement framing | Captured below |
 | 4 | Benchmark — `alirezarezvani/claude-skills` (deep read, not external AI) | 2026-05-01 | `ORCHESTRATION.md`, persona `TEMPLATE` + 3 reference personas, `SKILL-AUTHORING-STANDARD.md`, `SKILL_PIPELINE.md`, `/plugin-audit`, multi-tool `INSTALLATION.md` | Captured below |
-| 5 | AI Council iter-1 (`anthropic/claude-sonnet-4-5` + `openai/gpt-4o`, mode=prompt, 12 OQs) | 2026-05-05 | Schema-lock (A-OQ1–A-OQ3), domain taxonomy (B-OQ1–B-OQ2), naming/integration collisions (C-OQ1–C-OQ2, F-OQ1–F-OQ2), Python pilot scoping (D-OQ1–D-OQ2), cross-cutting (CC-OQ1: AgentHub adoption · CC-OQ2: 178-step legacy cleanup) | `agents/council-sessions/road-to-better-skills-iter1.json` |
+| 5 | AI Council iter-1 (`anthropic/claude-sonnet-4-5` + `openai/gpt-4o`, mode=prompt, 12 OQs) | 2026-05-05 | Schema-lock (A-OQ1–A-OQ3), domain taxonomy (B-OQ1–B-OQ2), naming/integration collisions (C-OQ1–C-OQ2, F-OQ1–F-OQ2), Python pilot scoping (D-OQ1–D-OQ2), cross-cutting (CC-OQ1: AgentHub adoption · CC-OQ2: 178-step legacy cleanup) | Verdicts folded into checklist below |
 
 ## Council iter-1 verdicts (applied to checklist)
 

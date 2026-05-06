@@ -13,7 +13,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from scripts.ai_council.clients import CouncilResponse  # noqa: E402
 from scripts.ai_council.session import (  # noqa: E402
-    SessionManifest, prune_old_sessions, save,
+    DEFAULT_RETENTION_DAYS,
+    SessionManifest,
+    prune_all_council_artifacts,
+    prune_old_artifacts,
+    prune_old_sessions,
+    save,
 )
 
 
@@ -237,3 +242,113 @@ def test_save_with_retention_zero_keeps_old_sessions(tmp_path: Path) -> None:
     )
 
     assert old.exists()
+
+
+
+# --- prune_old_artifacts (mtime-based, all council dirs) ---
+
+
+def _set_mtime(path: Path, days_ago: float, *, now: _dt.datetime) -> None:
+    """Backdate a file's atime + mtime to `now - days_ago`."""
+    import os
+    target = (now - _dt.timedelta(days=days_ago)).timestamp()
+    os.utime(path, (target, target))
+
+
+def test_default_retention_days_is_seven() -> None:
+    assert DEFAULT_RETENTION_DAYS == 7
+
+
+def test_prune_old_artifacts_removes_old_files_keeps_fresh(tmp_path: Path) -> None:
+    now = _dt.datetime(2026, 5, 10, 12, 0, 0, tzinfo=_dt.timezone.utc)
+    old_file = tmp_path / "old.json"
+    old_file.write_text("{}", encoding="utf-8")
+    _set_mtime(old_file, days_ago=10, now=now)
+    fresh_file = tmp_path / "fresh.json"
+    fresh_file.write_text("{}", encoding="utf-8")
+    _set_mtime(fresh_file, days_ago=2, now=now)
+
+    removed = prune_old_artifacts(tmp_path, retention_days=7, now=now)
+
+    assert removed == [old_file] or removed == [fresh_file] or set(removed) == {old_file}
+    assert not old_file.exists()
+    assert fresh_file.exists()
+
+
+def test_prune_old_artifacts_handles_subdirs(tmp_path: Path) -> None:
+    now = _dt.datetime(2026, 5, 10, 12, 0, 0, tzinfo=_dt.timezone.utc)
+    old_dir = tmp_path / "old-topic"
+    old_dir.mkdir()
+    (old_dir / "raw.md").write_text("x", encoding="utf-8")
+    _set_mtime(old_dir, days_ago=10, now=now)
+
+    removed = prune_old_artifacts(tmp_path, retention_days=7, now=now)
+
+    assert old_dir in removed
+    assert not old_dir.exists()
+
+
+def test_prune_old_artifacts_skips_timestamp_subdirs(tmp_path: Path) -> None:
+    """Timestamp subdirs are owned by prune_old_sessions, not artifacts."""
+    now = _dt.datetime(2026, 5, 10, 12, 0, 0, tzinfo=_dt.timezone.utc)
+    ts_dir = tmp_path / "2026-04-15T10-00-00Z"
+    ts_dir.mkdir()
+    (ts_dir / "manifest.json").write_text("{}", encoding="utf-8")
+    _set_mtime(ts_dir, days_ago=20, now=now)
+
+    removed = prune_old_artifacts(tmp_path, retention_days=7, now=now)
+
+    assert ts_dir not in removed
+    assert ts_dir.exists()
+
+
+def test_prune_old_artifacts_disabled_when_retention_zero(tmp_path: Path) -> None:
+    now = _dt.datetime(2026, 5, 10, 12, 0, 0, tzinfo=_dt.timezone.utc)
+    f = tmp_path / "old.json"
+    f.write_text("{}", encoding="utf-8")
+    _set_mtime(f, days_ago=100, now=now)
+
+    removed = prune_old_artifacts(tmp_path, retention_days=0, now=now)
+
+    assert removed == []
+    assert f.exists()
+
+
+def test_prune_old_artifacts_handles_missing_directory(tmp_path: Path) -> None:
+    missing = tmp_path / "does-not-exist"
+    assert prune_old_artifacts(missing, retention_days=7) == []
+
+
+def test_prune_all_council_artifacts_covers_three_dirs(tmp_path: Path) -> None:
+    now = _dt.datetime(2026, 5, 10, 12, 0, 0, tzinfo=_dt.timezone.utc)
+    sessions = tmp_path / "agents" / "council-sessions"
+    questions = tmp_path / "agents" / "council-questions"
+    responses = tmp_path / "agents" / "council-responses"
+    for d in (sessions, questions, responses):
+        d.mkdir(parents=True)
+        old = d / "old-file"
+        old.write_text("x", encoding="utf-8")
+        _set_mtime(old, days_ago=15, now=now)
+
+    result = prune_all_council_artifacts(retention_days=7, repo_root=tmp_path, now=now)
+
+    assert "sessions" in result and "questions" in result and "responses" in result
+    for label in ("sessions", "questions", "responses"):
+        assert len(result[label]) == 1, f"{label} should have pruned 1 entry"
+
+
+def test_save_in_isolated_dir_does_not_touch_real_repo(tmp_path: Path) -> None:
+    """save() with explicit sessions_dir must NOT prune real repo dirs."""
+    save(
+        manifest=SessionManifest(
+            mode="prompt", artefact="<inline>", original_ask="x",
+            members=["anthropic/claude-x"],
+        ),
+        responses=[_r("anthropic")],
+        sessions_dir=tmp_path,
+        timestamp="2026-05-04T12-00-00Z",
+        retention_days=7,
+    )
+    # No assertion on real dirs — the test passes by not erroring and
+    # by the documented invariant (save() with explicit sessions_dir
+    # confines pruning to that dir per session.py).

@@ -221,10 +221,11 @@ ai_council:
     max_calls: 10
     max_total_usd: 0.50
 
-  # Retention for `agents/council-sessions/` audit folders. Sessions
-  # older than this are pruned automatically on the next `save()`.
+  # Retention for council artefacts. Files older than this in
+  # `agents/council-{questions,responses,sessions}/` are pruned
+  # automatically on the next `save()` and on `task council-prune`.
   # `0` disables pruning (keep forever — disk grows unbounded).
-  session_retention_days: 14
+  session_retention_days: 7
 
 # --- Onboarding ---
 #

@@ -6,9 +6,8 @@ complexity: lightweight
 
 **Status:** READY FOR EXECUTION (Phase 1 only) — decisions synthesized
 2026-05-05 from the analysis pair `compare-microck-ordinary-claude-skills.md`
-+ `compare-microsoft-markitdown.md` and the AI-Council round
-(anthropic/claude-sonnet-4-5 + openai/gpt-4o, response file
-`agents/council-responses/markitdown-adoption.json`).
++ `compare-microsoft-markitdown.md` and an AI-Council round
+(anthropic/claude-sonnet-4-5 + openai/gpt-4o; convergence inlined below).
 **Started:** 2026-05-05
 **Trigger:** User pointed at the Microck markitdown skill stub and
 asked whether the upstream Microsoft tool is worth integrating to
@@ -173,8 +172,7 @@ evidence exists.
 
 - **2026-05-05 — Option A confirmed** by AI-Council
   (claude-sonnet-4-5 + gpt-4o), peer-side MCP server, markdown-only
-  skill, no Python deps in our package. Council file:
-  `agents/council-responses/markitdown-adoption.json`.
+  skill, no Python deps in our package.
 - **2026-05-05 — Token claim calibrated.** Original draft "5-15×
   typical" replaced with measured-where-possible language:
   "3-5× comprehension lift on text-heavy, 10-50× tokens on
@@ -210,8 +208,6 @@ evidence exists.
 
 - Compare doc — Microck: `agents/analysis/compare-microck-ordinary-claude-skills.md`
 - Compare doc — markitdown upstream: `agents/analysis/compare-microsoft-markitdown.md`
-- AI-Council brief: `agents/council-questions/markitdown-adoption.md`
-- AI-Council responses: `agents/council-responses/markitdown-adoption.json`
 - Upstream tool: https://github.com/microsoft/markitdown (MIT,
   120k stars at fetch time 2026-05-05)
 - Upstream MCP server: `packages/markitdown-mcp/README.md` in

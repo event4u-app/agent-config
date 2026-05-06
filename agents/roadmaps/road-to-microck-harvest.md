@@ -134,7 +134,5 @@ Phase 1 is the visible plate. Phase 2 + 3 are **out-of-horizon**.
 ## Provenance
 
 - Analysis: `agents/analysis/compare-microck-deepscan-harvest.md`
-- Council question: `agents/council-questions/microck-harvest-prioritization.md`
-- Council responses: `agents/council-responses/microck-harvest-prioritization.json`
 - Original Microck verdict: `agents/analysis/compare-microck-ordinary-claude-skills.md`
 - Sibling roadmap (markitdown adoption): `agents/roadmaps/road-to-markitdown-adoption.md`

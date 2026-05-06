@@ -311,7 +311,7 @@ new evidence).
 - `docs/showcase.md` — Phase 1.4 deliverable surface.
 - `scripts/capture_showcase_session.py`, `scripts/lint_showcase_sessions.py` — Phase 1 tooling. Native metric extraction verified 2026-05-04; `memory_hit_ratio` returns `None` until P2.1b emits hit/miss markers, all other metrics work today.
 - `scripts/work_engine/scoring/memory_visibility.py` + `.../hooks/builtin/memory_visibility.py` — P2.1 edit sites.
-- `agents/council-sessions/proof-roadmap-draft/responses.json` — AI Council critique that shaped this revision (Anthropic + OpenAI, 2026-05-04).
+- AI Council critique (Anthropic + OpenAI, 2026-05-04) shaped this revision — captured during drafting.
 
 ### Two uses of "Council" (do not conflate)
 

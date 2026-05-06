@@ -150,10 +150,8 @@ above and individual concern Steps can reference them.
       Concerns MAY override the default by declaring
       `min_tier: 1 | 2 | 3` in their manifest entry;
       lower-tier registrations are rejected by
-      `lint_hook_manifest.py`. The Council session that shaped
-      this design is recorded at
-      `agents/council-sessions/_inputs/deferred-hook-execution-iter1.json`
-      (Opus + GPT-4o, iter1, 2026-05-05) — a Deferred-Execution
+      `lint_hook_manifest.py`. AI Council iter-1 (Opus + GPT-4o,
+      2026-05-05) shaped this design — a Deferred-Execution
       alternative was evaluated and rejected on `block`-cannot-be-deferred grounds.
 - [ ] **A5: Concern-composition rules.** Section in
       `docs/contracts/hook-architecture-v1.md` (extends the

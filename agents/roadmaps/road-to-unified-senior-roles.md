@@ -23,8 +23,7 @@ heuristics, not the marketing surface area.
 ## Status
 
 `v2` — post-council (Anthropic `claude-sonnet-4-5` + OpenAI `gpt-4o`,
-2026-05-05). Session file:
-`agents/council-sessions/road-to-unified-senior-roles-iter1.json`.
+2026-05-05).
 Verdicts on Q1–Q7 folded back below; sequencing locked. Block K starts
 only after the sibling roadmap's **Block A (Personas) ships ≥ 50 %**
 (A1–A4); Wave-2 personas (Block N here) compose on top of the same
@@ -239,8 +238,8 @@ cross-references between roadmaps stay collision-free.
 
 ## Council verdicts (resolved 2026-05-05)
 
-Iter-1 review: Anthropic `claude-sonnet-4-5` + OpenAI `gpt-4o`. Session
-file `agents/council-sessions/road-to-unified-senior-roles-iter1.json`.
+Iter-1 review: Anthropic `claude-sonnet-4-5` + OpenAI `gpt-4o`,
+2026-05-05.
 Q1–Q6 resolved per Anthropic-stronger / convergent answers; Q7 resolved
 per GPT-4o (Anthropic truncated at max-tokens). Out-of-scope table
 stayed locked — no Q8 raised.

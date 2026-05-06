@@ -144,6 +144,32 @@ provider's reply, when available) for observability. Mixed runs
    into concrete numbered options for the user. The user decides;
    the council advises.
 
+## Output path convention
+
+Council artefacts are **dev-time scratch** — gitignored in package
+and consumer repos. Roadmap / ADR / skill body cites convergence
+inline. Do **not** link to council files from durable artefacts —
+links break for any reviewer who clones without ignored content.
+
+| Mode | Path | Format |
+|---|---|---|
+| Topic-anchored question | `agents/council-questions/<slug>.md` | Markdown |
+| Topic-anchored response | `agents/council-responses/<slug>.json` | JSON from `council:run --output` |
+| Ad-hoc session | `agents/council-sessions/<UTC-timestamp>.json` | JSON from `council:run --output` |
+
+`<slug>` is kebab-case; must match the paired roadmap / ADR slug
+when one exists (e.g. `path-fixes` for `road-to-path-fixes.md`).
+
+**Forbidden:** files at `agents/` root, dot-prefix scratch
+(`agents/.council-question-foo.md`), other subdirectories under
+`agents/`, cross-refs from durable artefacts to council files —
+inline the convergence summary instead with date + member list
+(`Council (claude-sonnet-4-5 + gpt-4o, YYYY-MM-DD) reviewed N
+candidates; converged on …`).
+
+`scripts/check_council_layout.py` is the mechanical check; wire it
+into the package's CI pipeline.
+
 ## Output format
 
 Every council reply MUST contain, in this order:

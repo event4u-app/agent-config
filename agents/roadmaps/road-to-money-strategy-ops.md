@@ -23,7 +23,7 @@ roadmap is the plate-realistic slice.
 ## Status
 
 `ready-for-execution` — joint council-iter2 landed
-(`agents/council-sessions/joint-wing3-wing4-iter2.json`, $0.1529).
+(Anthropic + GPT-4o, 2026-05-05, $0.1529).
 Inherits iter-1 verdicts (Q2 Wing-5 absorbed into Wing-4 — legal
 folded into strategist, people-ops + part of EM cognition merged
 into people-strategist; Q5 split-3A/3B; Q6 founder-mode as cross-
@@ -244,9 +244,8 @@ This roadmap = R37–R45.
 
 ## Council iter-2 verdicts (resolved)
 
-Joint council with `road-to-gtm-and-growth.md` ran on the prompt
-`.council-tmp/prompt-joint-iter2.md`; verdicts at
-`agents/council-sessions/joint-wing3-wing4-iter2.json` ($0.1529 actual).
+Joint council with `road-to-gtm-and-growth.md` ran on a shared
+joint-iter2 prompt; verdicts captured 2026-05-05 ($0.1529 actual).
 Anthropic + GPT-4o; on the six divergent verdicts Anthropic wins —
 evidence-anchored to map iter-1 + unified iter-1 locks vs. GPT
 re-litigation of locked items.

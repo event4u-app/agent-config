@@ -29,3 +29,10 @@
 
 # Agent config — AI Council price table (refreshed weekly, never commit)
 /agents/.agent-prices.md
+
+# Agent config — AI Council artefacts (questions, responses, sessions).
+# Dev-time scratch — informs decisions, never the durable contract.
+# See ai-council § Output path convention.
+/agents/council-questions/
+/agents/council-responses/
+/agents/council-sessions/

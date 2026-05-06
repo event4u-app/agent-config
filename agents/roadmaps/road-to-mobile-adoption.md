@@ -161,8 +161,6 @@ authoritative links resolve in CI).
 
 ## Provenance
 
-- Council artefacts: `agents/council-questions/mobile-harvest-prioritization.md`,
-  `agents/council-responses/mobile-harvest-prioritization.json`
 - Analysis: `agents/analysis/compare-mobile-harvest.md`
 - Microck source SHA: `8f5c83174f7aa683b4ddc7433150471983b93131`
 - Upstream sources: `aj-geddes/useful-ai-prompts` (flutter, dropped),

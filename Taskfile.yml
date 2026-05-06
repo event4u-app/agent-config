@@ -85,5 +85,6 @@ tasks:
       - task: test
       - task: runtime-e2e
       - task: check-roadmap-trackable
+      - task: check-council-layout
       - task: roadmap-progress-check
       - task: lint-readme
