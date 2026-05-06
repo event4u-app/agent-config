@@ -1812,7 +1812,7 @@ If you catch yourself repeating a tool call — STOP, rethink, try a different a
 
 ## Fresh Output Over Memory
 
-When a tool or command returns a value (branch name, file path, PR number), use that EXACT value in subsequent API calls. NEVER substitute a value from earlier in the conversation. Context decay causes silent mismatches — fresh output is the only source of truth.
+When a tool or command returns a value (branch name, file path, PR number), use that EXACT value in subsequent API calls. NEVER substitute a value from earlier in the conversation. Context decay → silent mismatches — fresh output is the only source of truth.
 
 ## Mechanics — anti-loop patterns, conversation efficiency, exceptions
 
