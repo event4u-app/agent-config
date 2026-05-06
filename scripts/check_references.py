@@ -103,6 +103,8 @@ EXAMPLE_PATH_PATTERNS = [
     re.compile(r"skills/[\w-]+/SKILL\.md"),    # example skill paths in commands
     re.compile(r"\{"),                         # template placeholders like {module}
     re.compile(r"\.compression-hashes\.json"), # JSON file, not .md
+    re.compile(r"-foo\.(md|json|yml|yaml)$"),  # `-foo.<ext>` placeholder examples
+    re.compile(r"-bar\.(md|json|yml|yaml)$"),  # `-bar.<ext>` placeholder examples
     # Forward references inside in-flight planning docs (road-to-
     # structural-optimization.md and its companion spike protocols).
     # Each pattern below is removed once the matching phase lands.

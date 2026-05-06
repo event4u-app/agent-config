@@ -126,9 +126,9 @@ Pulse::record('api_call', 'stripe', 250)  // type, key, value
 
 ## Core rules
 
-- **Trim old data** — configure retention to prevent database bloat.
+- **Trim old data** — configure retention to prevent DB bloat.
 - **Use sample rates** in production — not every request needs recording.
-- **Separate database** — consider a dedicated DB connection for Pulse data.
+- **Separate DB** — consider a dedicated DB connection for Pulse data.
 - **Restrict access** — always gate the dashboard behind authentication.
 - **Monitor what matters** — don't enable all recorders if you don't need them.
 
@@ -148,7 +148,7 @@ Pulse::record('api_call', 'stripe', 250)  // type, key, value
 
 ## Gotcha
 
-- Pulse stores data in the same database by default — configure a separate connection for production.
+- Pulse stores data in the same DB by default — configure a separate connection for production.
 - The model forgets that Pulse data is sampled, not exact — don't use it for billing or exact counts.
 - Custom recorders must be registered in a service provider — they don't auto-discover.
 
@@ -157,4 +157,4 @@ Pulse::record('api_call', 'stripe', 250)  // type, key, value
 - Do NOT expose the Pulse dashboard without authentication.
 - Do NOT set sample rate to 1.0 on high-traffic production — use 0.1 or lower.
 - Do NOT forget to run `pulse:check` for server metrics.
-- Do NOT store Pulse data in the main application database on large apps.
+- Do NOT store Pulse data in the main application DB on large apps.

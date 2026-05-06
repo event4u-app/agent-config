@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **332 public artefacts** shipped by
+Consumer-facing catalog of all **342 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > Auto-generated — do not edit manually.
 
-## Skills (134)
+## Skills (136)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -106,6 +106,7 @@ are excluded.
 | skill | [`project-analysis-zend-laminas`](../.agent-src/skills/project-analysis-zend-laminas/SKILL.md) |  | Use for deep Zend Framework or Laminas project analysis: bootstrap, config merge order, service manager, MVC flow, data layer, and migration-specific risks. |
 | skill | [`project-analyzer`](../.agent-src/skills/project-analyzer/SKILL.md) |  | ONLY when user explicitly requests: full project analysis, tech stack detection, or structured analysis documents for agents/analysis/. NOT for regular feature work. |
 | skill | [`project-docs`](../.agent-src/skills/project-docs/SKILL.md) |  | Use when looking for project-specific documentation. Knows which docs exist in agents/docs/ and agents/contexts/ and maps work areas to relevant docs. |
+| skill | [`prompt-optimizer`](../.agent-src/skills/prompt-optimizer/SKILL.md) |  | Use when the user wants a prompt optimized for ChatGPT, Claude, Gemini, or another AI — 'make this prompt better', 'optimize for ChatGPT', 'rewrite my prompt' — even without saying 'optimize'. |
 | skill | [`quality-tools`](../.agent-src/skills/quality-tools/SKILL.md) |  | Use when PHPStan, Rector, or ECS output appears — \"phpstan says mixed\", type errors, \"fix code style\", \"run rector\" — even when Eloquent/Laravel/model code is also mentioned. |
 | skill | [`react-shadcn-ui`](../.agent-src/skills/react-shadcn-ui/SKILL.md) |  | Use when building React UI on shadcn/ui primitives + Tailwind — the apply/review/polish skill dispatched by `directives/ui/*` for the `react-shadcn` stack. |
 | skill | [`readme-reviewer`](../.agent-src/skills/readme-reviewer/SKILL.md) |  | Use when reviewing a README for accuracy, usability, and alignment with the actual repository. Detects invented content, broken setup steps, and structural issues. |
@@ -137,6 +138,7 @@ are excluded.
 | skill | [`test-driven-development`](../.agent-src/skills/test-driven-development/SKILL.md) |  | Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — even if the user just says 'add this function' or 'fix this bug'. |
 | skill | [`test-performance`](../.agent-src/skills/test-performance/SKILL.md) |  | Use when optimizing test suite performance — database setup, seeder optimization, parallel testing, CI pipeline efficiency, or RefreshDatabase alternatives. |
 | skill | [`threat-modeling`](../.agent-src/skills/threat-modeling/SKILL.md) |  | Use when adding auth, webhooks, uploads, queues, secrets, tenant boundaries, or public endpoints — produces trust boundaries + abuse cases mapped to files, BEFORE implementation. |
+| skill | [`token-optimizer`](../.agent-src/skills/token-optimizer/SKILL.md) |  | Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — single decision tree keyed by intent that cites the canonical token-saving asset. Consult before the action. |
 | skill | [`traefik`](../.agent-src/skills/traefik/SKILL.md) |  | Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing. |
 | skill | [`unit-economics-modeling`](../.agent-src/skills/unit-economics-modeling/SKILL.md) |  | Use when modeling CAC, LTV, gross-margin payback, or contribution margin per customer — for SaaS, marketplace, or transactional businesses. |
 | skill | [`universal-project-analysis`](../.agent-src/skills/universal-project-analysis/SKILL.md) |  | ONLY when user explicitly requests: full project analysis, deep codebase audit, or comprehensive architecture review. Routes to core and framework-specific analysis skills. |
@@ -146,7 +148,7 @@ are excluded.
 | skill | [`verify-completion-evidence`](../.agent-src/skills/verify-completion-evidence/SKILL.md) |  | Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs. |
 | skill | [`websocket`](../.agent-src/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (53)
+## Rules (55)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -178,6 +180,7 @@ are excluded.
 | rule | [`model-recommendation`](../.agent-src/rules/model-recommendation.md) | auto | Starting a new task, switching task type, or invoking a command — detect task complexity and recommend the optimal model (Opus/Sonnet/GPT) before any work |
 | rule | [`no-attribution-footers`](../.agent-src/rules/no-attribution-footers.md) | auto | Generating PR/issue/comment/commit-message bodies — forbids unsolicited 'Generated with', 'Co-authored by', or 'Pull Request opened by' attribution footers in any user-owned artifact |
 | rule | [`no-cheap-questions`](../.agent-src/rules/no-cheap-questions.md) | always | No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on) |
+| rule | [`no-council-references`](../.agent-src/rules/no-council-references.md) | auto | Linking a specific file in agents/council-{questions,responses,sessions}/ from any artifact — council files are gitignored, local-only, auto-pruned; inline the convergence instead |
 | rule | [`no-roadmap-references`](../.agent-src/rules/no-roadmap-references.md) | auto | Adding a link to a specific file in agents/roadmaps/ from any stable artifact (rule, skill, command, context, guideline) — roadmaps are transient; promote durable findings to agents/contexts/ instead |
 | rule | [`non-destructive-by-default`](../.agent-src/rules/non-destructive-by-default.md) | always | Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass |
 | rule | [`onboarding-gate`](../.agent-src/rules/onboarding-gate.md) | auto | First turn of a conversation on a project — check onboarding.onboarded in .agent-settings.yml; when false, prompt the user to run /onboard before executing any other request |
@@ -198,13 +201,14 @@ are excluded.
 | rule | [`slash-command-routing-policy`](../.agent-src/rules/slash-command-routing-policy.md) | auto | When user types a slash command like /create-pr, /commit, or pastes command file content |
 | rule | [`think-before-action`](../.agent-src/rules/think-before-action.md) | auto | Before coding, modifying, or debugging — analyze first, verify with real tools, never guess or trial-and-error |
 | rule | [`token-efficiency`](../.agent-src/rules/token-efficiency.md) | auto | When running CLI tools, fetching logs, or producing replies — redirect verbose output, minimize tool calls, keep replies concise |
+| rule | [`token-optimizer-maintenance`](../.agent-src/rules/token-optimizer-maintenance.md) | auto | Editing a token-optimizer-cited asset (cli-output-handling, rtk-output-filtering, token-efficiency, agent-handoff, direct-answers, markitdown) — keep the catalog row in sync in the same commit. |
 | rule | [`tool-safety`](../.agent-src/rules/tool-safety.md) | auto | When a skill uses external tools — enforce allowlist, deny-by-default, and no hidden credential patterns |
 | rule | [`ui-audit-gate`](../.agent-src/rules/ui-audit-gate.md) | auto | Writing or editing UI — components, screens, partials, layouts, design tokens — require existing-ui-audit findings in state.ui_audit before non-trivial UI change; gate, not suggestion |
 | rule | [`upstream-proposal`](../.agent-src/rules/upstream-proposal.md) | auto | After creating or significantly improving a skill, rule, guideline, or command — ask if it should be contributed upstream to the shared package |
 | rule | [`user-interaction`](../.agent-src/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (94)
+## Commands (95)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -217,7 +221,7 @@ are excluded.
 | command | [`analyze-reference-repo`](../.agent-src/commands/analyze-reference-repo.md) |  | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`bug-fix`](../.agent-src/commands/bug-fix.md) |  | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
 | command | [`bug-investigate`](../.agent-src/commands/bug-investigate.md) |  | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
-| command | [`chat-history:import`](../.agent-src/commands/chat-history/import.md) | cluster: chat-history | Surface prior chat-history sessions as numbered options, let the user pick exactly one, then render its entries verbatim into the current chat — selective, user-driven cross-session import |
+| command | [`chat-history:import`](../.agent-src/commands/chat-history/import.md) | cluster: chat-history | Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import |
 | command | [`chat-history:learn`](../.agent-src/commands/chat-history/learn.md) | cluster: chat-history | Pick a prior chat-history session and mine it for project-improving learnings — runs learning-to-rule-or-skill on the picked session, drafts proposal(s) under agents/proposals/ |
 | command | [`chat-history:show`](../.agent-src/commands/chat-history/show.md) | cluster: chat-history | Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries |
 | command | [`chat-history`](../.agent-src/commands/chat-history.md) | cluster: chat-history | Chat-history orchestrator — routes to show, import, learn |
@@ -275,6 +279,7 @@ are excluded.
 | command | [`optimize:augmentignore`](../.agent-src/commands/optimize/augmentignore.md) | cluster: optimize | Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules. |
 | command | [`optimize:rtk`](../.agent-src/commands/optimize/rtk.md) | cluster: optimize | Create or optimize project-local rtk filters based on the actual toolchain |
 | command | [`optimize:skills`](../.agent-src/commands/optimize/skills.md) | cluster: optimize | Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply. |
+| command | [`optimize-prompt`](../.agent-src/commands/optimize-prompt.md) | cluster: optimize | Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt. |
 | command | [`optimize`](../.agent-src/commands/optimize.md) | cluster: optimize | Optimize orchestrator — routes to skills, agents, augmentignore, rtk-filters |
 | command | [`override:create`](../.agent-src/commands/override/create.md) | cluster: override | Creates a project-level override for a shared skill, rule, or command. |
 | command | [`override:manage`](../.agent-src/commands/override/manage.md) | cluster: override | Reviews, updates, and refactors existing project-level overrides. |
@@ -303,7 +308,7 @@ are excluded.
 | command | [`upstream-contribute`](../.agent-src/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
 | command | [`work`](../.agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (51)
+## Guidelines (56)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -320,13 +325,17 @@ are excluded.
 | guideline | [`naming`](../docs/guidelines/agent-infra/naming.md) | agent-infra |  |
 | guideline | [`output-patterns`](../docs/guidelines/agent-infra/output-patterns.md) | agent-infra |  |
 | guideline | [`review-routing-data-format`](../docs/guidelines/agent-infra/review-routing-data-format.md) | agent-infra |  |
+| guideline | [`roadmap-progress-mechanics`](../docs/guidelines/agent-infra/roadmap-progress-mechanics.md) | agent-infra |  |
 | guideline | [`role-contracts`](../docs/guidelines/agent-infra/role-contracts.md) | agent-infra |  |
 | guideline | [`role-mode-router`](../docs/guidelines/agent-infra/role-mode-router.md) | agent-infra |  |
+| guideline | [`rule-type-governance`](../docs/guidelines/agent-infra/rule-type-governance.md) | agent-infra |  |
 | guideline | [`runtime-layer`](../docs/guidelines/agent-infra/runtime-layer.md) | agent-infra |  |
 | guideline | [`self-improvement-pipeline`](../docs/guidelines/agent-infra/self-improvement-pipeline.md) | agent-infra |  |
 | guideline | [`size-and-scope`](../docs/guidelines/agent-infra/size-and-scope.md) | agent-infra |  |
+| guideline | [`skill-quality-checklist`](../docs/guidelines/agent-infra/skill-quality-checklist.md) | agent-infra |  |
 | guideline | [`tool-integration`](../docs/guidelines/agent-infra/tool-integration.md) | agent-infra |  |
 | guideline | [`verify-before-complete-demos`](../docs/guidelines/agent-infra/verify-before-complete-demos.md) | agent-infra |  |
+| guideline | [`augment-portability-patterns`](../docs/guidelines/augment-portability-patterns.md) | (root) |  |
 | guideline | [`readme-size-and-splitting`](../docs/guidelines/docs/readme-size-and-splitting.md) | docs |  |
 | guideline | [`playwright`](../docs/guidelines/e2e/playwright.md) | e2e |  |
 | guideline | [`api-design`](../docs/guidelines/php/api-design.md) | php |  |
@@ -353,6 +362,7 @@ are excluded.
 | guideline | [`strategy`](../docs/guidelines/php/patterns/strategy.md) | patterns |  |
 | guideline | [`patterns`](../docs/guidelines/php/patterns.md) | php |  |
 | guideline | [`performance`](../docs/guidelines/php/performance.md) | php |  |
+| guideline | [`php-coding-patterns`](../docs/guidelines/php/php-coding-patterns.md) | php |  |
 | guideline | [`resources`](../docs/guidelines/php/resources.md) | php |  |
 | guideline | [`security`](../docs/guidelines/php/security.md) | php |  |
 | guideline | [`sql`](../docs/guidelines/php/sql.md) | php |  |

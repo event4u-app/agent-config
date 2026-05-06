@@ -91,7 +91,7 @@ produce opus-level quality by enforcing habits that weaker models skip by defaul
 - **Default to `sonnet`** — it's the cost-efficient workhorse.
 - **Escalate to `opus`** only when architecture, refactoring, or unclear debugging is involved.
 - **After Opus work** (architecture plan, refactoring design, root cause found):
-  → Recommend switching back to `sonnet` for implementation.
+  → Recommend switching back to `sonnet` for impl.
 - **Use `gpt`** for large-scale analysis, searching across many files, or automation.
 
 ## Recommendation Flow
@@ -121,7 +121,7 @@ When user says they want to continue with the current model:
 ### Downgrade reminder
 
 After completing an opus-level task (architecture plan done, refactoring complete, root cause found),
-remind the user to switch back to sonnet for the implementation phase:
+remind the user to switch back to sonnet for the impl phase:
 
 ```
 > 💡 The {architecture/debugging/design} phase is done.

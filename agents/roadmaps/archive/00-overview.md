@@ -43,7 +43,7 @@ warten (Consumer-Projekt, Plugin-API-Stabilität, kreative Design-Arbeit).
 
 ### P0 — Sofortiger Handlungsbedarf
 
-1. **AGENTS.md enthält Galawork-Projektdaten** — ein Installationsfehler für externe Nutzer
+1. **AGENTS.md enthält Consumer-Projektdaten** — ein Installationsfehler für externe Nutzer
 2. **Proprietäre Lizenz ohne Terms** — rechtliche Grauzone für jedes Team, das das Paket einbindet
 3. **Augment-Lock-in ist nicht kommuniziert** — das README behauptet Multi-Tool-Support, der de facto eingeschränkt ist
 

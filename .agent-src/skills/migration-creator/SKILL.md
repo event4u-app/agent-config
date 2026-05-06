@@ -26,9 +26,9 @@ Use this skill when the user asks to create a database migration, add a column, 
 
 ## Laravel projects
 
-### Multi-database architecture
+### Multi-DB architecture
 
-Some projects use multiple database connections. Check `config/database.php` for connections.
+Some projects use multiple DB connections. Check `config/database.php` for connections.
 
 | Check | How |
 |---|---|
@@ -36,9 +36,9 @@ Some projects use multiple database connections. Check `config/database.php` for
 | Migration directories | `database/migrations/` (default), check for additional directories |
 | Custom migrate commands | `php artisan list migrate` — look for project-specific commands |
 
-**Always determine which database the table belongs to before creating a migration.**
+**Always determine which DB the table belongs to before creating a migration.**
 
-### API database migration
+### API DB migration
 
 ```bash
 php artisan make:migration create_example_table
@@ -72,13 +72,13 @@ return new class extends Migration {
 };
 ```
 
-### Customer database migration
+### Customer DB migration
 
 ```bash
 php artisan make:migration:customer AddWeatherColumn --table=cl_lv_weather
 ```
 
-Customer database tables use the `cl_` prefix (e.g. `cl_user`, `cl_lv_weather`).
+Customer DB tables use the `cl_` prefix (e.g. `cl_user`, `cl_lv_weather`).
 
 ### Adding a column (with explicit connection)
 
@@ -152,7 +152,7 @@ Focus on the "Database migrations" attack questions: Can this destroy data? Is r
 
 ## Auto-trigger keywords
 
-- database migration
+- DB migration
 - create migration
 - table prefix
 - column naming

@@ -12,7 +12,7 @@
 
 ## Context
 
-The `galawork/agent-config` Composer plugin syncs `.augment/` into every target project on
+The `consumer/agent-config` Composer plugin syncs `.augment/` into every target project on
 `composer install/update`. All `.md` files (rules, skills, commands, etc.) are loaded into the
 agent's system prompt on **every request** — uncompressed prose wastes ~40-50% tokens.
 
@@ -30,7 +30,7 @@ target projects receive pre-compressed files with zero extra dependencies.
 Additionally, the current `syncDirectory()` only copies — it never deletes files that were removed
 from the package. This causes stale rules/skills to persist in target projects.
 
-- **Package:** `galawork/agent-config` (Composer plugin)
+- **Package:** `consumer/agent-config` (Composer plugin)
 - **Entry point:** `src/AgentConfigPlugin.php`
 - **Jira:** none
 
@@ -95,7 +95,7 @@ from the package. This causes stale rules/skills to persist in target projects.
 - [x] **Step 2:** Spot-check compressed files for quality — verified during compression
 - [x] **Step 3:** Measure token savings: 83.705 → 45.052 words (**46.2% saved**)
 - [x] **Step 4:** Committed both directories (4 commits)
-- [-] **Step 5:** Tag new release of `galawork/agent-config` — deferred, not needed now
+- [-] **Step 5:** Tag new release of `consumer/agent-config` — deferred, not needed now
 - [-] **Step 6:** Test in one target project — not applicable in this repo, will be verified on next `composer update` in a target project
 
 ## Acceptance Criteria

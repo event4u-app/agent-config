@@ -13,7 +13,7 @@ helpers.
 **Ownership.** `agent-memory` is ours; we decide release timing. This
 doc is internal, not a spec handed to an external team. The
 authoritative spec-side documents live under
-[`agents/roadmaps/agent-memory/`](../../agents/roadmaps/agent-memory/); this context
+[`agents/roadmaps/agent-memory/`](../../agents/roadmaps/archive/agent-memory/); this context
 is the **consumer-side snapshot** — what our wired code assumes today.
 
 Last refreshed: 2026-04-22.

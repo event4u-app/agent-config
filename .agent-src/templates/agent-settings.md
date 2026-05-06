@@ -14,7 +14,7 @@ Keep the format regular — 2-space indent, no tabs, no lists, one nesting
 level only. The installer's YAML handler is a restricted stdlib parser, not
 a full YAML engine. Ask the agent to normalize after manual edits — it
 follows the merge rules in
-[`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
+[`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
 
 ### Migration from the legacy `.agent-settings` (key=value)
 
@@ -36,7 +36,7 @@ This block defines the personal and project-level settings that
 `scripts/install.py` (via `config/agent-settings.template.yml`)
 writes to `.agent-settings.yml` on first install. Subsequent edits are
 made by the user directly or by the agent on request, following the
-[section-aware merge rules](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
+[section-aware merge rules](../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules).
 
 ```yaml
 # Agent Settings
@@ -45,14 +45,19 @@ made by the user directly or by the agent on request, following the
 
 # --- Cost profile ---
 #
-# Controls which agent surfaces are active. See `docs/customization.md` for
-# the authoritative description.
+# Master switch that controls which rule tiers load each session.
+# See `docs/customization.md` for the authoritative description and
+# `docs/contracts/rule-router.md` for the kernel + router architecture.
 #
-# minimal  = rules, skills, and commands only (zero extra surface, default)
-# balanced = + runtime dispatcher for skills that declare a shell command
-# full     = + tool adapters (GitHub / Jira, read-only, opt-in)
-# custom   = ignore profile — every matrix value must be set explicitly
-cost_profile: minimal
+# minimal  = kernel only (always-loaded Iron-Law floor, ≤ 26k chars).
+#            No router, no auto-rules. Lowest token footprint.
+# balanced = kernel + router + tier-1 auto-rules (default — current behaviour
+#            superset; matches what existing consumer projects expect).
+# full     = kernel + tier-1 + tier-2 (everything). Highest fidelity,
+#            highest token cost. Pick this when working on agent-config
+#            itself or when you need every behavioural rule active.
+# custom   = ignore profile — every matrix value must be set explicitly.
+cost_profile: balanced
 
 # --- Personal preferences ---
 personal:
@@ -294,8 +299,8 @@ commands:
 # rules, commands, guidelines, personas) the agent consulted and
 # applied. Local only, append-only JSONL, never reaches a consumer
 # repo (gitignored). Maintainer-targeted feature; consumers leave it
-# off. See `docs/contracts/artifact-engagement-flow.md` (once Phase 3
-# of road-to-artifact-engagement-telemetry lands).
+# off. See `.augment/contexts/contracts/artifact-engagement-flow.md`
+# (once Phase 3 of road-to-artifact-engagement-telemetry lands).
 telemetry:
   artifact_engagement:
     # Master switch. `false` (default) produces zero file IO and zero
@@ -323,7 +328,7 @@ telemetry:
 
 Personal and project-level settings (initial file written by
 `scripts/install.py`, edits follow the merge rules in
-[`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)).
+[`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)).
 **Key paths use dot-notation** to denote nesting: `personal.user_name`
 lives under `personal:` in YAML.
 
@@ -353,16 +358,16 @@ lives under `personal:` in YAML.
 | `hooks.halt_surface_audit` | `true`, `false` | `true` | Defense-in-depth check that every halt surfaced by the dispatcher carries the expected shape. Cheap. |
 | `hooks.state_shape_validation` | `true`, `false` | `true` | Re-run the state schema validator on `AFTER_LOAD` and `BEFORE_SAVE`. Cheap, catches drift. |
 | `hooks.directive_set_guard` | `true`, `false` | `true` | Verify the dispatcher-resolved directive set matches the input envelope intent. Cheap, catches routing drift. |
-| `hooks.chat_history.enabled` | `true`, `false` | `true` | Register chat-history hooks (`append` on `after_step`, `halt_append` on `on_halt`). Gated by **both** this flag AND `chat_history.enabled`; either off → no chat-history hook registers. Schema v4: every entry self-identifies via 16-char session fingerprint, no ownership/sidecar layer. |
+| `hooks.chat_history.enabled` | `true`, `false` | `true` | Register the chat-history hooks (`append` on `after_step`, `halt_append` on `on_halt`). Gated by **both** this flag AND `chat_history.enabled`; either off → no chat-history hook registers. Schema v4: every entry self-identifies via a 16-char session fingerprint, no ownership/sidecar layer. |
 | `hooks.chat_history.script` | path | `scripts/chat_history.py` | Override path to the chat-history CLI. Set only when the script lives outside the standard location. |
 | `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
 | `roadmap.quality_cadence` | `end_of_roadmap`, `per_phase`, `per_step` | `end_of_roadmap` | When `/roadmap execute` runs the project's quality pipeline. Default skips per-step / per-phase runs and gates only the final archival. `per_phase` runs once after every phase; `per_step` is the legacy verbose mode. Step checkboxes and the dashboard are always updated regardless. `verify-before-complete` still requires fresh output before any "roadmap complete" claim. |
 | `subagents.implementer_model` | model alias or empty | _(empty)_ | Model for implementer subagents. Empty = same tier as session model. See [subagent-configuration](../contexts/subagent-configuration.md). |
 | `subagents.judge_model` | model alias or empty | _(empty)_ | Model for judge subagents. Empty = one tier above implementer (opus if sonnet, sonnet if haiku). |
 | `subagents.max_parallel` | integer | `3` | Maximum parallel subagent invocations. `1` serializes. |
-| `roles.default_role` | `""`, `developer`, `reviewer`, `tester`, `po`, `incident`, `planner` | _(empty)_ | Role the agent defaults to at the start of a session. See [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md). |
+| `roles.default_role` | `""`, `developer`, `reviewer`, `tester`, `po`, `incident`, `planner` | _(empty)_ | Role the agent defaults to at the start of a session. See [`role-contracts`](../docs/guidelines/agent-infra/role-contracts.md). |
 | `roles.active_role` | same as `default_role` | _(empty)_ | Role currently active; set by `/mode <name>`, cleared by `/mode none`. Enables the `role-mode-adherence` rule. |
-| `personas.override` | list of persona ids | `[]` | Developer-local override of the team default lens cast. Empty = inherit `personas.default` from `.agent-project-settings.yml`. See [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md). |
+| `personas.override` | list of persona ids | `[]` | Developer-local override of the team default lens cast. Empty = inherit `personas.default` from `.agent-project-settings.yml`. See [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md). |
 | `personas.ignore` | list of persona ids | `[]` | Persona ids dropped from the default cast locally. Ignored personas stay invokable via `--personas=<id>`. |
 | `onboarding.onboarded` | `true`, `false` | `false` | Whether `/onboard` has run on this project. The `onboarding-gate` rule prompts for `/onboard` when this is `false`. Missing entirely = legacy project, treated as onboarded. |
 | `commands.suggestion.enabled` | `true`, `false` | `true` | Master switch for the command-suggestion layer. `false` = the layer is silent; explicit `/commands` still work. See `rules/command-suggestion-policy.md`. |
@@ -427,7 +432,7 @@ they ship with a live consumer in code and get documented here, not before.
 ## Sync rules
 
 When new settings are added to this template, the
-[section-aware merge rules](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
+[section-aware merge rules](../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
 govern the update:
 
 1. Missing keys are added with their **default value** from this template,

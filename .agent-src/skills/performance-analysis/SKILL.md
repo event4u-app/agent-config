@@ -80,7 +80,7 @@ Focus on code paths with high execution frequency or large data volumes:
 - Missing CDN for static assets
 - Missing response caching for read-heavy endpoints
 - Database connection pooling and limits
-- Queue worker concurrency vs database connection limits
+- Queue worker concurrency vs DB connection limits
 
 ## Output format
 
@@ -101,12 +101,12 @@ For each bottleneck:
 - **performance** — complementary: performance is about writing fast code, this is about finding slow code
 - **test-performance** — for test suite speed specifically
 - **bug-analyzer** — some performance issues are actually bugs (N+1, infinite loops)
-- **database** — for deep DB optimization guidance
+- **DB** — for deep DB optimization guidance
 
 ## Gotcha
 
 - Don't present raw numbers without context — "200ms" means nothing without knowing the baseline.
-- The model tends to focus on code-level optimization when the bottleneck is a database query.
+- The model tends to focus on code-level optimization when the bottleneck is a DB query.
 - Profiling in development differs from production — different data volumes, different query plans.
 
 ## Do NOT

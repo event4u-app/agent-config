@@ -4,7 +4,7 @@ Lookup table for the `slash-command-routing-policy` rule. Lists the
 locked clusters and their sub-commands so the rule itself can stay at
 its current LOC while still reflecting the full surface. Source of
 truth for the cluster names is
-[`docs/contracts/command-clusters.md`](../../../../docs/contracts/command-clusters.md);
+[`docs/contracts/command-clusters.md`](../../../../../docs/contracts/command-clusters.md);
 this file mirrors that contract for runtime lookup. Linter:
 `scripts/check_cluster_patterns.py` (verifies dispatcher shape).
 

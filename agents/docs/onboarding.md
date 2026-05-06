@@ -6,7 +6,7 @@ Quick-start guide for new team members using this agent configuration package.
 
 A shared package of AI agent instructions (skills, rules, commands, guidelines) that makes
 AI coding assistants (Augment, Cursor, Claude Code, Cline, Windsurf, Gemini) work consistently
-and effectively across all Galawork projects.
+and effectively across all Consumer projects.
 
 ## 3-Step Setup
 

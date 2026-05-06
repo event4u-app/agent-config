@@ -71,7 +71,7 @@ Produce one combined report with these sections, in order:
 5. **Required controls** — the minimum set of validations, authorization
    checks, logging, and negative tests that must exist before the change ships
 6. **Open questions** — anything the skills flagged as uncertain and the user
-   must answer before implementation starts
+   must answer before impl starts
 
 ### 5. Decide next step
 
@@ -83,7 +83,7 @@ After the report, ask:
 > 3. Stop here — threat model is the deliverable, no implementation yet
 ```
 
-- On **1**: hand off to the implementation flow (e.g., `feature-plan`,
+- On **1**: hand off to the impl flow (e.g., `feature-plan`,
   `bug-fix`, or direct edit) with the required-controls list pinned
 - On **2**: re-gather context and re-dispatch
 - On **3**: save the report as the deliverable, stop
@@ -106,7 +106,7 @@ After the report, ask:
 - NEVER merge `threat-modeling` and `authz-review` outputs into a single
   block — each skill owns its format
 - NEVER write production code in the same turn as this command — the
-  deliverable is the report; implementation is a separate step
+  deliverable is the report; impl is a separate step
 - NEVER mark the change "safe" if any 🔴 abuse case has no control
 
 ## See also
@@ -116,4 +116,4 @@ After the report, ask:
 - [`data-flow-mapper`](../skills/data-flow-mapper/SKILL.md) — trace specific data through the change
 - [`blast-radius-analyzer`](../skills/blast-radius-analyzer/SKILL.md) — enumerate affected call sites
 - [`security-sensitive-stop`](../rules/security-sensitive-stop.md) — the trigger rule
-- [`minimal-safe-diff`](../rules/minimal-safe-diff.md) — keep the implementation scoped
+- [`minimal-safe-diff`](../rules/minimal-safe-diff.md) — keep the impl scoped

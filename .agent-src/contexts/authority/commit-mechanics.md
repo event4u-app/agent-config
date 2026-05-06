@@ -8,6 +8,19 @@ in autonomous vs. non-autonomous mode.
 **Size budget:** ≤ 3,000 chars. Tracked under Phase 6 of
 `road-to-pr-34-followups`.
 
+## The four commit exceptions — restated
+
+Outside the four below, no commit is allowed and no commit ask is allowed.
+
+1. **User says so this turn** — "commit this now", "commit it", "go
+   ahead and commit". Single commit, not standing.
+2. **Standing instruction not yet revoked** — earlier "commit after
+   every phase"; cache the instruction and commit per its terms.
+3. **Commit command invoked** — `/commit` (split + confirm per commit)
+   or `/commit:in-chunks` (auto-split, Hard Floor still applies).
+4. **Roadmap authorization** — roadmap lists explicit commit steps and
+   the user invoked roadmap execution; each commit matches a step.
+
 ## Hard Floor still applies — bulk deletions and infra changes
 
 Even when one of the four `commit-policy` exceptions authorizes a
@@ -19,7 +32,7 @@ Hard Floor still fires when the diff:
 - Touches Terraform / Pulumi / k8s manifests / Ansible / cloud-config
 
 In those cases, **surface the diff** (paths + counts) and confirm
-this turn before committing — even under `/commit-in-chunks`,
+this turn before committing — even under `/commit:in-chunks`,
 roadmap pre-scan authorization, or an explicit "commit this now". The
 four exceptions cover *whether* commits happen; the Hard Floor covers
 *which diffs* still need a separate confirmation.

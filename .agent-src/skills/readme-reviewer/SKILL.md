@@ -54,7 +54,7 @@ Inspect truth-defining files:
 - Config files, tests, existing docs
 
 Verify: install steps exist, commands work, features are implemented,
-dependencies are real.
+deps are real.
 
 ### 3. Validate installation and setup
 

@@ -7,13 +7,15 @@
 
 # --- Cost profile ---
 #
-# Selects which agent surfaces are active. See docs/customization.md for
-# the authoritative description.
+# Master switch that controls which rule tiers load each session.
+# See docs/customization.md for the authoritative description and
+# docs/contracts/rule-router.md for the kernel + router architecture.
 #
-# minimal  = rules, skills, and commands only (zero extra surface, default)
-# balanced = + runtime dispatcher for skills that declare a shell command
-# full     = + tool adapters (GitHub / Jira, read-only, opt-in)
-# custom   = ignore profile — every matrix value must be set explicitly
+# minimal  = kernel only (always-loaded Iron-Law floor, ≤ 26k chars).
+#            No router, no auto-rules. Lowest token footprint.
+# balanced = kernel + tier-1 auto-rules (default — current behaviour superset).
+# full     = kernel + tier-1 + tier-2 (everything, highest token cost).
+# custom   = ignore profile — every matrix value must be set explicitly.
 cost_profile: __COST_PROFILE__
 
 # --- Personal preferences ---
@@ -73,6 +75,22 @@ github:
   # create_review_comment = POST /pulls/{number}/reviews (fallback)
   # auto                  = detect on first use and update this setting
   pr_reply_method: create_review_comment
+
+# --- Augment Code projection (.augment/) ---
+#
+# Controls how rule files are written into .augment/rules/ during
+# install (scripts/install.sh) and the package's own projection
+# (scripts/compress.py --project-augment).
+#
+# Augment Code historically does not load symlinked rule files, so the
+# default is to write each rule as a real copy. Flip the toggle to true
+# once Augment Code supports symlinked rules — symlinks keep the files
+# in sync without re-running install/sync, and remove a class of stale-
+# copy path bugs.
+augment:
+  # When true, .augment/rules/*.md are symlinked into .agent-src/rules/.
+  # When false (default) or missing, they are copied as real files.
+  rules_use_symlinks: false
 
 # --- Eloquent (Laravel) ---
 eloquent:
@@ -205,10 +223,25 @@ ai_council:
       model: "gpt-4o"
       # mode: "manual"   # uncomment to override ai_council.mode
 
+  # Default number of debate rounds per /council invocation.
+  #
+  # Round 1 sees the artefact alone. Round 2+ sees the artefact plus
+  # anonymised critiques from the previous round (provider/model
+  # identity stripped per the neutrality Iron Law). Applies identically
+  # to api and manual transports — manual mode runs round 1 across all
+  # members, the host agent consolidates, then round 2 starts with the
+  # anonymised round-1 critiques folded in.
+  #
+  # Default is 2 so council members critique each other at least once
+  # before convergence. The agent does NOT ask "how many rounds?" when
+  # the requested rounds <= min_rounds; pass `rounds:N` on the
+  # invocation (or `--rounds N` to the CLI) to override.
+  min_rounds: 2
+
   # Hard cost ceiling per /council invocation. The orchestrator pauses
   # before any member whose projected spend would breach a cap and asks
   # the user to continue. `max_total_usd: 0` disables the USD ceiling
-  # (token caps still apply).
+  # (token caps still apply). Total spend = rounds * single-round cost.
   #
   # Prices come from `agents/.agent-prices.md` (gitignored, refreshed weekly
   # by `python3 scripts/update_prices.py`; bootstrapped from
@@ -219,10 +252,11 @@ ai_council:
     max_calls: 10
     max_total_usd: 0.50
 
-  # Retention for `agents/council-sessions/` audit folders. Sessions
-  # older than this are pruned automatically on the next `save()`.
+  # Retention for council artefacts. Files older than this in
+  # `agents/council-{questions,responses,sessions}/` are pruned
+  # automatically on the next `save()` and on `task council-prune`.
   # `0` disables pruning (keep forever — disk grows unbounded).
-  session_retention_days: 14
+  session_retention_days: 7
 
 # --- Onboarding ---
 #

@@ -316,6 +316,8 @@ _TASK_FENCE_RE = re.compile(r"^\s*task\s+([a-z][a-z0-9:_-]*)\b")
 _TASK_DETECTOR_SKIP = (
     "rules/augment-portability.md",
     "contexts/communication/rules-auto/augment-portability-mechanics.md",
+    "rules/package-ci-checks.md",
+    "contexts/communication/rules-auto/package-ci-checks-mechanics.md",
 )
 
 

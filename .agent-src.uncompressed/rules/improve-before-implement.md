@@ -4,6 +4,14 @@ tier: "2b"
 description: "Before implementing features or architectural changes — validate the request against existing code, challenge weak requirements, and suggest improvements"
 alwaysApply: false
 source: package
+triggers:
+  - intent: "implement feature"
+  - intent: "architectural change"
+  - keyword: "refactor"
+validator_ignore:
+  - type: "substring"
+    pattern: ".agent-src.uncompressed/"
+    reason: "Rule cites the authoring tree when describing where examples live."
 ---
 
 # Improve Before Implement

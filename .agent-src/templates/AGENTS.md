@@ -113,7 +113,7 @@ Regenerate: `task generate-tools` · Clean: `task clean-tools`
 |---|---|
 | `.env` | Main environment |
 | `.env.local` | Local overrides |
-| `.env.testing` | Testing environment |
+| `.env.testing` | Testing env |
 
 ---
 

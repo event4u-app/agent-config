@@ -34,7 +34,7 @@ Do NOT use when:
 ### 1. Confirm Symfony version and app shape
 
 Check: `composer.lock`, `composer.json`, Symfony packages/components, PHP version, environment config structure.
-Validate: Symfony version is explicit, major bundles/components are identified, environment-specific config layout is known.
+Validate: Symfony version is explicit, major bundles/components are identified, env-specific config layout is known.
 
 ### 2. Analyze kernel and container boot
 

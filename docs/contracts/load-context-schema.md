@@ -25,12 +25,20 @@ Two keys, both optional, both top-level frontmatter:
 type: "always"
 description: "..."
 load_context:                # lazy — on-demand reference list
-  - .agent-src.uncompressed/contexts/<file>.md
-  - agents/contexts/<file>.md
+  - contexts/<area>/<file>.md         # logical name (canonical)
+  - agents/contexts/<file>.md         # project-local
 load_context_eager:          # opt-in eager — auto-loaded on rule fire
-  - .agent-src.uncompressed/contexts/<file>.md
+  - contexts/<area>/<file>.md
 ---
 ```
+
+> **Logical names only.** The `.agent-src.uncompressed/` prefix is
+> rejected by the schema regex (`scripts/schemas/rule.schema.json`) and
+> by `scripts/lint_load_context.py`. The compress-time rewriter
+> (`scripts/compress.py::_rewrite_paths`) resolves logical names to the
+> deployment-correct relative path (e.g. `../contexts/<area>/<file>.md`
+> for a rule at `rules/<name>.md`). The full migration history lives
+> in the archived path-fixes roadmap under `agents/roadmaps/archive/`.
 
 | Key | Loading | When to use |
 |---|---|---|
@@ -43,15 +51,22 @@ opt-in and budget-gated.
 
 ## Path rules
 
-- Paths are repo-root relative.
+- Logical names rooted at the source. The rewriter resolves them at
+  compress time.
 - Paths MUST end in `.md`.
-- Allowed roots: `.agent-src.uncompressed/contexts/`, `agents/contexts/`,
-  `.agent-src/contexts/` (compressed mirror). Any other root → linter
-  error.
-- A rule MAY reference contexts under either tree, but a
-  `.agent-src.uncompressed/` rule SHOULD NOT eager-load an
-  `agents/contexts/` file (project-local leak into shared package).
-  Linter warns on this combination.
+- Allowed roots:
+  - `contexts/<area>/<file>.md` — canonical logical name (resolves
+    against `.agent-src.uncompressed/`).
+  - `agents/contexts/<file>.md` — project-local material (consumer
+    repo only).
+  - `.agent-src/contexts/<file>.md` — compressed mirror; tolerated
+    defensively, not authored.
+- The `.agent-src.uncompressed/` prefix is **rejected** by the schema
+  regex and by `lint_load_context.py` with a remediation hint pointing
+  at the canonical logical name.
+- A rule MAY reference contexts under either tree, but a package-shipped
+  rule SHOULD NOT eager-load an `agents/contexts/` file (project-local
+  leak into shared package). Linter warns on this combination.
 - A context file may itself declare `load_context:` (chain reasoning).
   The linter rejects cycles.
 

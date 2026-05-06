@@ -27,7 +27,7 @@ with a single entry point + sub-command dispatch.
 | `/fix pr-developers` | `commands/fix/pr-developers.md` | Fix and reply to **human** reviewer comments only |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Dispatch
 

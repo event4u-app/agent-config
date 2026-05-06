@@ -144,6 +144,48 @@ provider's reply, when available) for observability. Mixed runs
    into concrete numbered options for the user. The user decides;
    the council advises.
 
+## Output path convention
+
+Council artefacts (questions, responses, sessions) are **dev-time
+scratch** — gitignored in both the package repo and consumer repos
+and auto-pruned after `ai_council.session_retention_days` (default
+7). They inform a decision; they are not the durable contract. The
+durable contract lives in the roadmap / ADR / skill body that cites
+the council's convergence inline.
+
+**Linking to a specific council file is forbidden by
+[`no-council-references`](../../rules/no-council-references.md)** —
+gitignored, not in the cloned repo, gone after the retention window.
+Inline the convergence with date + members instead.
+
+Three directories, three modes:
+
+| Mode | Path | Format |
+|---|---|---|
+| **Topic-anchored question** (paired with a roadmap or ADR) | `agents/council-questions/<topic-slug>.md` | Markdown |
+| **Topic-anchored response** (paired with the question above) | `agents/council-responses/<topic-slug>.json` | JSON from `council:run --output` |
+| **Ad-hoc session** (no durable artefact yet) | `agents/council-sessions/<UTC-timestamp>.json` | JSON from `council:run --output` |
+
+`<topic-slug>` is kebab-case and **must match** the corresponding
+roadmap / ADR slug if one exists (e.g. `path-fixes` mirrors the
+matching `road-to-<topic-slug>` roadmap under `agents/roadmaps/`).
+
+### Forbidden
+
+- Files at `agents/` root (e.g. `agents/council-question-foo.md`).
+- Dot-prefix scratch (e.g. `agents/.council-question-foo.md`).
+- Any other directory below `agents/` (e.g. `agents/scratch/`,
+  `agents/tmp/`).
+- Cross-references from any artefact to specific council files —
+  see [`no-council-references`](../../rules/no-council-references.md).
+  Inline the convergence summary instead, with date and member list
+  for traceability (`Council (claude-sonnet-4-5 + gpt-4o, YYYY-MM-DD)
+  reviewed N candidate strategies; converged on …`).
+
+`scripts/check_council_layout.py` is the mechanical check for the
+output path convention — wire it into the package's CI pipeline so
+violations break the build.
+
 ## Output format
 
 Every council reply MUST contain, in this order:
@@ -294,8 +336,16 @@ prompt as `<original artefact> + <prior round, anonymised>` so each
 member can refine, agree, or push back on the previous critique
 without seeing which provider produced which point.
 
+The default round count comes from `ai_council.min_rounds` in
+`.agent-settings.yml` (default `2` so members critique each other
+at least once before convergence). The host agent does **not** ask
+"how many rounds?" when the requested count is `<= min_rounds` —
+the settings owner already made that decision. Ask only when a
+genuinely complex artefact justifies more depth than the default.
+
 | Property | Behaviour |
 |---|---|
+| Default count | `ai_council.min_rounds` (default `2`). Override per-invocation with `rounds:N` (or `--rounds N` to the CLI). |
 | Anonymisation | Provider/model identity is stripped. Reviewers are labelled `Reviewer A / B / C…` in input order. |
 | Errored prior responses | Skipped — they reveal nothing useful and can leak provider error formats. |
 | Cost budget | Accumulates across rounds. A round-2 call that breaches the cap fires `on_overrun` exactly like a round-1 breach. |
@@ -321,6 +371,21 @@ Round 2: artefact + anonymised round 1 critiques
 | openai/gpt-4o      |   $0.0121 | $0.0242 |
 | **total**          |           | $0.0594 |
 ```
+
+### Manual-mode parity
+
+The orchestrator drives rounds the same way for `api` and `manual`
+transports. One round = one full pass over every enabled member,
+top-to-bottom, then `_augment_for_next_round()` folds the
+anonymised critiques into the round-N+1 user prompt. For manual
+mode this means: emit the round-1 block for member A → user
+pastes A's reply → next member B → user pastes B's reply → host
+agent consolidates round 1 → emit the round-2 block (now carrying
+the anonymised round-1 critiques) for member A → … and so on
+until the configured round count is reached. ManualClient's
+internal "more feedback" follow-up loop (1 / 2 / 3 menu) is
+**inside** a single member's chat thread and is orthogonal to the
+orchestrator-level rounds.
 
 ## See also
 

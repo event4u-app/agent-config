@@ -22,7 +22,7 @@ commands with a single entry point + sub-command dispatch.
 | `/context refactor` | `commands/context/refactor.md` | Analyze, update, and extend an existing context document |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Dispatch
 

@@ -4,6 +4,10 @@ tier: "2b"
 description: "Generating markdown output that contains code blocks — prevent broken nesting"
 alwaysApply: false
 source: package
+triggers:
+  - intent: "markdown with code blocks"
+  - keyword: "triple backticks"
+  - file_pattern: "*.md"
 ---
 
 # Markdown Safe Codeblocks

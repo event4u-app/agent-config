@@ -6,7 +6,7 @@ source: package
 
 # threat-modeling
 
-> You are a reviewer specialized in **pre-implementation threat analysis**.
+> You are a reviewer specialized in **pre-impl threat analysis**.
 > Your only job is to produce a compact threat model for a planned change —
 > actors, assets, trust boundaries, abuse cases, and the minimum controls
 > the implementer must add. You do **not** audit existing code end-to-end,
@@ -186,4 +186,4 @@ run tests**.
 - [`authz-review`](../authz-review/SKILL.md),
   [`data-exposure-review`](../data-exposure-review/SKILL.md),
   [`security`](../security/SKILL.md),
-  [`security-audit`](../security-audit/SKILL.md) — sibling review / implementation skills.
+  [`security-audit`](../security-audit/SKILL.md) — sibling review / impl skills.

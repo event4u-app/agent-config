@@ -2,31 +2,30 @@
 name: chat-history:import
 cluster: chat-history
 sub: import
-description: Surface prior chat-history sessions as numbered options, let the user pick exactly one, then render its entries verbatim into the current chat — selective, user-driven cross-session import
+description: Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import
 disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "import a past session into the current chat, pull a prior session into context, pick a session to read"
-  trigger_context: "user wants to selectively pull verbatim context from one earlier session into the current one"
+  trigger_context: "user wants to selectively pull a prior session's context into the current one as a short summary"
 ---
 <!-- cloud_safe: noop -->
 
 # /chat-history import
 
 Read-only, **user-driven** cross-session import. Surfaces prior
-sessions logged in `agents/.agent-chat-history` as numbered options, the
-user picks **one**, the agent reads that session's entries
-**verbatim** and renders them in the chat. Any subsequent
-extraction or summarisation happens in dialogue, user-directed —
-the agent does **not** auto-summarise, auto-import, or rewrite the
-user's context (Council Round 2 / R2-2 — verbatim is the honest v1
-contract).
+sessions logged in `agents/.agent-chat-history` as a numbered table,
+the user picks **one**, the agent reads that session **silently**
+and emits a 2–5 sentence summary, then offers to resume the last
+task from that session. The agent does **not** render entries
+verbatim, auto-import, or rewrite the user's context without an
+explicit instruction.
 
 This is the opt-in counterpart to the read-path filter (Phase 3 of
 `road-to-chat-history-session-isolation`): default reads stay
 session-scoped; `import` is the explicit surface for crossing the
-session boundary verbatim. For project-improving learnings derived
-from a prior session, see [`/chat-history learn`](learn.md).
+session boundary. For project-improving learnings derived from a
+prior session, see [`/chat-history learn`](learn.md).
 
 ## When NOT to use
 
@@ -70,33 +69,35 @@ If the array is empty, stop:
 > 📒 No prior sessions found in agents/.agent-chat-history.
 ```
 
-### 3. Surface as numbered options
+### 3. Surface as a numbered table
 
-Render each session as a numbered option (per the `user-interaction`
-rule — Iron Law: numbered options for any picker). Lead with the
-helper's `summary` field — that is the rough arc the user picks by
-(`<first user msg> → <last user msg>` for normal sessions, or
-`(N entries — no user prompts; t-mix: …)` for tool-only sessions).
-The session `id` is noise to humans; keep it **internal** for step
-5's `read --session <id>` call and never render it in the listing.
+Render the sessions as a markdown table — the row number is the
+option (per `user-interaction` Iron Law: numbered options for any
+picker). The session `id` is noise to humans; keep it **internal**
+for step 5's `read --session <id>` call and never render it.
 Format:
 
 ```
-> Pick a session to import verbatim:
->
-> 1. {summary}
->    {YYYY-MM-DD HH:MM}  ·  {count} entries
-> 2. ...
-> ...
-> N. abort — do not read any session
+Pick a session to import:
+
+| #  | Date             | Entries | Summary |
+|----|------------------|---------|---------|
+| 1  | YYYY-MM-DD HH:MM | N       | {summary} |
+| 2  | YYYY-MM-DD HH:MM | N       | {summary} |
+| …  |                  |         |           |
+| N  | —                | —       | abort — do not read any session |
 ```
 
 Format the timestamp as `YYYY-MM-DD HH:MM` (drop seconds and
-timezone — the listing is for orientation, not forensics). Do
-**not** truncate or rewrite `summary` — the helper already shapes
-it. Always include an explicit abort option as the last numbered
-choice. Track option-number → `id` internally so step 5 can call
-`scripts/chat_history.py read --session <id>` with the right id.
+timezone — the listing is for orientation, not forensics). Lead the
+`Summary` cell with the helper's `summary` field — that is the
+rough arc the user picks by (`<first user msg> → <last user msg>`
+for normal sessions, or `(N entries — no user prompts; t-mix: …)`
+for tool-only sessions). Do **not** truncate or rewrite `summary` —
+markdown table wrap handles long values. Always include an explicit
+`abort` row as the last numbered option. Track option-number → `id`
+internally so step 5 can call `scripts/chat_history.py read
+--session <id>` with the right id.
 
 ### 4. Wait for the pick
 
@@ -106,51 +107,46 @@ default. Wait for the user's response.
 
 If the user picks the abort option, stop without reading.
 
-### 5. Read the picked session verbatim
+### 5. Read the picked session silently
 
-Run `scripts/chat_history.py read --session <id>` with the picked
-`id`. The helper returns the entries as JSON.
+Run `scripts/chat_history.py read --session <id> --last <count>`,
+where `<count>` is the picked row's `count` from step 2. The
+`--last` flag is **required** — the helper defaults to 5 entries,
+which would silently truncate any longer session. The helper returns
+the entries as JSON.
 
-Render them **verbatim** in the chat — do not summarise, do not
-re-format, do not drop fields. One entry per line is acceptable;
-preserve `t`, `text`, `name`, `ts`, and any other fields the helper
-emits. Use a fenced block so timestamps and JSON survive markdown
-rendering:
+**Do not render the entries.** The verbose dump was reversed by the
+user — token cost and scroll fatigue outweighed the verbatim
+contract. Read the JSON in-context, then proceed to step 6.
 
-````
-> 📒 Session {id} — {count} entries
+### 6. Summarise and offer to resume
 
-```json
-{...entry 1...}
-{...entry 2...}
-...
-```
-````
+Emit a **2–5 sentence** summary of the picked session: the topic,
+what was decided or built, and where it left off (the last task in
+progress, if any). Plain prose — no bullets, no headings, no
+verbatim quotes.
 
-If the session is large (>50 entries), still render verbatim — but
-prepend a one-line note that the listing is long, so the user can
-scroll. Do not silently truncate.
-
-### 6. Hand back
-
-After rendering, **do not** auto-act on the content. Hand back to
-the user with a short prompt:
+Then offer the resume choice as numbered options
+(per `user-interaction`), one question per turn:
 
 ```
-> Picked session is rendered above. What would you like to extract?
+1. resume — pick up the last task from that session
+2. stop — keep the summary in context, do nothing else
 ```
 
-Any follow-up (extract decisions, copy specific entries into the
-current session, etc.) is user-directed in subsequent turns. The
-agent does not write to the current session's log on the user's
-behalf without an explicit instruction.
+Wait for the pick. Do **not** auto-resume. If the user picks
+`resume`, hand off to the relevant skill or command for that work;
+do not silently start editing files. The agent does not write to
+the current session's log on the user's behalf without an explicit
+instruction.
 
 ## Gotchas
 
-- **Verbatim, not structured.** Council Round 2 (R2-2) resolved an
-  earlier contradiction in favour of verbatim. Do not "helpfully"
-  pre-summarise — the user reads the source, then directs the
-  extraction.
+- **Summary, not verbatim.** Earlier Council R2-2 favoured verbatim
+  rendering; reversed in practice — too slow, too token-expensive.
+  The agent reads the picked session in-context and emits a 2–5
+  sentence summary. Verbatim rendering is no longer part of the
+  contract.
 - **One pick per invocation.** Multi-pick is v2. If the user wants
   a second session, run `/chat-history import` again.
 - **Read-only.** This command never writes to `agents/.agent-chat-history`

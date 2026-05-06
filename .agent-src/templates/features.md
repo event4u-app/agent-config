@@ -22,7 +22,7 @@ Templates for feature plan files stored in `agents/features/` or `app/Modules/{M
 | 💡 | Idea | Rough concept, not yet validated |
 | 🔍 | Exploring | Being researched and brainstormed |
 | 📋 | Planned | Structured plan complete, ready for roadmap |
-| 🗺️ | Roadmapped | Roadmap(s) generated, ready for implementation |
+| 🗺️ | Roadmapped | Roadmap(s) generated, ready for impl |
 | 🔄 | In Progress | Implementation started |
 | ✅ | Complete | Feature shipped |
 | ❌ | Rejected | Decided not to build |

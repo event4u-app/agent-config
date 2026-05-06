@@ -106,8 +106,8 @@ Used for workers and schedulers:
 
 ### GitHub OIDC IAM role
 
-Each environment has a GitHub IAM role with:
-- OIDC trust policy (scoped to repo + environment)
+Each env has a GitHub IAM role with:
+- OIDC trust policy (scoped to repo + env)
 - Policies for ECR push/pull, ECS deployment, Secrets Manager read, CloudWatch logs
 
 ## Output format

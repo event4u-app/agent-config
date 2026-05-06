@@ -48,7 +48,7 @@ bug is unfixed.
 | **PO/discovery/stakeholder skills scope** | **In scope** for this package, Wing-1 boundary. Block C ships: `po-discovery`, `risk-officer`, `decision-record`, `tech-debt-tracker`, `migration-architect` (strategic — calls existing `migration-creator`), `incident-commander`, `stakeholder-tradeoff`, `architecture-review-lens` (council iter-1 C-OQ2 verdict (c) — renamed from `code-review-multi-lens`, ships as 5th judge in `/review-changes`). C-level / marketing / compliance cognition is **not** out-of-suite — it ships in Wings 2–4 under their own roadmaps and personas. Block C stays Wing-1 (engineering-adjacent roles); Wings 2–4 own the broader cluster. |
 | **Per-skill Python tools (D1)** | **Net-new surface, hard-bounded pilot (revised 2026-05-01 after AI #5 review).** Stdlib-only, CLI-first, `--help` + `--json`, `snake_case_verb_noun.py`, embedded sample data, scoring 0–100. Engine CLI stays separate (orchestration). **Pilot exactly 3 tools (Block D weeks 1–3)** with a hard kill-switch: if the pilot misses the eval thresholds (≥85% pass-rate, ≥+30% delta) or exceeds the maintenance budget (1 day/week per tool average), Block D pauses and remaining tools move **out-of-horizon**. No "pilot 3 then scale" auto-promotion. Each pilot tool ships with mandatory test coverage; linter (`scripts/lint_skill_tools.py`) blocks tools that import non-stdlib modules, exceed 200 LOC, or lack a `--json` mode. |
 | **Star/adoption signal goal** | **Yes — but secondary to depth.** Identity is OSS-light. Block H targets 200 stars / 5 external consumers / 1 talk in 6 months. Hard cap: 1 day/week per person on marketing. A+C+D ship regardless of H success. |
-| **Audience (A5)** | **Primary = teams with own stack** (Galawork pattern, leverages override system). **Secondary = agencies** (multi-tenant override consumers). Solo devs and enterprise/compliance: explicit non-targets. |
+| **Audience (A5)** | **Primary = teams with own stack** (Consumer pattern, leverages override system). **Secondary = agencies** (multi-tenant override consumers). Solo devs and enterprise/compliance: explicit non-targets. |
 | **UI/frontend skills (Block F)** | **In scope** for this package, not a sibling. UI-track engine work in `road-to-post-pr29-optimize.md` already shipped `react-shadcn-ui`. Block F adds `livewire-architect` (council iter-1 F-OQ1 (a) — renamed from `livewire-developer`, calls existing `livewire`), `tailwind-engineer`, `accessibility-auditor`, `playwright-architect` (renamed from `playwright-engineer`, calls existing `playwright-testing`), `ui-component-architect`, `form-handler`. Pre-condition: Block E phase 4 from sibling roadmap. |
 | **Roadmap horizon** | **6-week visible cap** per AI #2. Anything past 6 weeks labelled **out-of-horizon**. Existing 178-step plans collapsed to: current 6-week plate + out-of-horizon backlog. Reflected in `agents/roadmaps-progress.md` columns. |
 | **Skill versioning** | **No per-skill semver.** Package version = skill version (current model). Defer until external consumer asks. State-schema versioning (work_engine) stays as-is. |
@@ -198,7 +198,7 @@ this phase.
 | 2 | AI #2 (deep comparison + roadmap-architect hat) | 2026-05-01 | Repo dimensions table, PR #29 critique, claude-skills weaknesses, proposed roadmap blocks A–F | Captured below (multi-part) |
 | 3 | AI #3 (positioning recommendation) | 2026-05-01 | One-paragraph strategic stance + top-3 next-improvement framing | Captured below |
 | 4 | Benchmark — `alirezarezvani/claude-skills` (deep read, not external AI) | 2026-05-01 | `ORCHESTRATION.md`, persona `TEMPLATE` + 3 reference personas, `SKILL-AUTHORING-STANDARD.md`, `SKILL_PIPELINE.md`, `/plugin-audit`, multi-tool `INSTALLATION.md` | Captured below |
-| 5 | AI Council iter-1 (`anthropic/claude-sonnet-4-5` + `openai/gpt-4o`, mode=prompt, 12 OQs) | 2026-05-05 | Schema-lock (A-OQ1–A-OQ3), domain taxonomy (B-OQ1–B-OQ2), naming/integration collisions (C-OQ1–C-OQ2, F-OQ1–F-OQ2), Python pilot scoping (D-OQ1–D-OQ2), cross-cutting (CC-OQ1: AgentHub adoption · CC-OQ2: 178-step legacy cleanup) | `agents/council-sessions/road-to-better-skills-iter1.json` |
+| 5 | AI Council iter-1 (`anthropic/claude-sonnet-4-5` + `openai/gpt-4o`, mode=prompt, 12 OQs) | 2026-05-05 | Schema-lock (A-OQ1–A-OQ3), domain taxonomy (B-OQ1–B-OQ2), naming/integration collisions (C-OQ1–C-OQ2, F-OQ1–F-OQ2), Python pilot scoping (D-OQ1–D-OQ2), cross-cutting (CC-OQ1: AgentHub adoption · CC-OQ2: 178-step legacy cleanup) | Verdicts folded into checklist below |
 
 ## Council iter-1 verdicts (applied to checklist)
 
@@ -308,7 +308,7 @@ Acknowledged weaknesses:
   no migration-architect, no incident-commander.
 - **Domain lock-in to Laravel/PHP.** Sharp focus internally, but excludes ~90% of the
   coding world if open-source growth is the goal.
-- **Marketing / reach.** 0 stars / 0 forks / 0 issues. README starts with "Galawork API"
+- **Marketing / reach.** 0 stars / 0 forks / 0 issues. README starts with "Consumer API"
   (PR template artifact?), no marketplace plugin listings, no Medium/Twitter presence,
   examples are very Laravel-specific.
 - **Skills are a flat list, not a hierarchy.** 93 skills in one folder vs. claude-skills'
@@ -357,7 +357,7 @@ Acknowledged weaknesses:
 3. Group skills by **domain hierarchy**, not flat folder.
 4. Define an **orchestration grammar** (Solo Sprint / Deep Dive / Handoff / Chain).
 5. Constrain **roadmap horizon to 6 weeks** + label deeper plans as out-of-horizon.
-6. **Marketing model is a separate question** — pick one (Galawork-internal vs. OSS growth).
+6. **Marketing model is a separate question** — pick one (Consumer-internal vs. OSS growth).
 7. Backlog **GT-6 real-SIGTERM** test as a follow-up to PR #29.
 8. Borrow `skill-security-auditor` *concept* (not the file).
 
@@ -393,10 +393,10 @@ skills (agent-config has *state* schema v0→v1, but skills themselves have no v
 
 ### AI #2 (continued) — strategic decisions to settle BEFORE any block executes
 
-1. **Identity:** Galawork-internal · OSS product · OSS-light ("governed alternative").
+1. **Identity:** Consumer-internal · OSS product · OSS-light ("governed alternative").
    AI #2 recommends OSS-light: less skills, higher quality, compression magic,
    override-system as the moat.
-2. **Audience:** solo devs · teams with own stack (Galawork pattern) · enterprise+
+2. **Audience:** solo devs · teams with own stack (Consumer pattern) · enterprise+
    compliance · agencies. AI #2 recommends *teams with own stack* primary, *agencies*
    secondary — both leverage the override system.
 3. **Wow-moment in first 5 min:** today the value is *invisible* (PHPStan-baseline-
@@ -414,7 +414,7 @@ skills (agent-config has *state* schema v0→v1, but skills themselves have no v
 | **D — Python tools per skill** | At least one stdlib-only tool per skill, `--help` + `--json`. Standardised folder layout, linter extension, `tool-registry.json`, marketplace listing. | 6-8 weeks | 60-80 of 93 skills have a useful tool in 6 months. |
 | **E — Engine R1 phases 3-7 + GT-6** | Module lift, directive sets (ui, ui-trivial, mixed), wrapper writes v1, GT verify, legacy removal. Each phase tied to user-visible value. GT-6 = real SIGTERM kill. | 6-10 weeks | Phase 7 done with no behavioural drift, UI tickets functional. |
 | **F — UI/frontend skills (NEW)** | `livewire-developer`, `tailwind-engineer`, `accessibility-auditor`, `playwright-engineer`, `ui-component-architect`, `form-handler`. Pre-condition for Block E phase 4. | 4-5 weeks | UI tickets in `/implement-ticket` work. |
-| **G — Orchestration DSL** | YAML pipelines in `.agent-src.uncompressed/orchestrations/<name>.yml` chaining persona+skills with structured hand-off (Markdown + JSON sidecar) and `/orchestrate <name>` slash. Audit-trail in `.work-state.json`. | 3-4 weeks | 3-5 documented orchestrations, ≥1 in regular Galawork use. |
+| **G — Orchestration DSL** | YAML pipelines in `.agent-src.uncompressed/orchestrations/<name>.yml` chaining persona+skills with structured hand-off (Markdown + JSON sidecar) and `/orchestrate <name>` slash. Audit-trail in `.work-state.json`. | 3-4 weeks | 3-5 documented orchestrations, ≥1 in regular Consumer use. |
 | **H — Marketing & reach** | README restructure (5-line pitch, diff vs claude-skills, 2-min Quick Win, architecture diagram), plugin-marketplace listings + bundles (`backend-engineering`, `product-discovery`, `quality-eng`), 1 Medium article per quarter, Laracon talk submission, comparison page (SEO), 3-5 showcase consumers. | ~1 day/week over 6 months | 200 stars in 6 months · 5+ external consumers · 1 talk accepted. |
 | **I — Multi-tool expansion** | Add Aider (`CONVENTIONS.md`), Kilo Code (`.kilocode/rules/`), OpenCode (`.opencode/skills/`), Codex (`.codex/skills/`) as projections from the existing single source via `task generate-tools`. | 2 weeks | ≥10 tools, all projected from one source. |
 | **Q — Audit-as-Memory** | Persistent audit log `agents/audit/<date>/<session-id>.json` + `audit:search` CLI; per-skill `memory:lookup` returning relevant decisions from last 30 days; promotion gate that proposes a rule when 2+ audits show the same pattern (manual maintainer promotion); `task audit:dashboard` static HTML output. | 4-6 weeks | 1-3 rules per month emerge from audit log; per-module skill-hit-rate measurable. |
@@ -618,7 +618,7 @@ agent-config today (`task generate-tools` + `scripts/install.sh|.py`):
 | No explicit orchestration grammar | AI #2, Benchmark | medium (cross-source — names settle) | AI #2: Solo Sprint / Deep Dive / Handoff / Chain naming. Benchmark: same 4 patterns documented + verbatim handoff format. Names borrowable as-is; spec, not refactor. |
 | Roadmap horizon should be ≤ 6 weeks | AI #2 | low (single source) | Recommends "out-of-horizon" label past 6 weeks. Conflicts with current multi-roadmap planning style. |
 | Marketing / reach gap (0 stars) | AI #2 | low (single source) | Treat as strategic question, not a backlog item. Open: is OSS growth a goal? |
-| README starts with "Galawork API" | AI #2 | low (single source) | Possible PR-template artifact; cheap verification. |
+| README starts with "Consumer API" | AI #2 | low (single source) | Possible PR-template artifact; cheap verification. |
 | `skill-security-auditor` concept worth borrowing | AI #2, Benchmark | medium (cross-source — benchmark = pipeline) | AI #2: scan skills for malicious code pre-install. Benchmark: `/plugin-audit` 8-phase pipeline (discovery · structure ≥75 · quality ≥60 · script test · security 0-crit/0-high · marketplace · ecosystem · domain review). Borrowable as orchestrated audit, not flat lint. |
 | UI/frontend skills missing entirely | AI #2 | low (single source) | Pre-condition for engine R1 phase 4 (directive set `ui`). Candidates: livewire, tailwind, a11y, playwright, ui-arch, form-handler. |
 | Identity decision required (internal vs OSS-light) | AI #2 | low (single source, strategic) | Blocks marketing/reach work. AI #2 recommendation: OSS-light "governed alternative". |
@@ -634,7 +634,7 @@ agent-config today (`task generate-tools` + `scripts/install.sh|.py`):
 | Orchestration DSL (YAML pipelines + hand-off) | AI #2 | low (single source) | Block G. Cross-skill / cross-persona pipelines with structured hand-off. |
 | Audit-as-Memory needs concrete impl | AI #2 | low (single source) | Block Q. Operationalises existing "audit IS the memory" stance with persistent log + promotion. |
 | Cross-session memory absent today | AI #2 | low (single source) | `.work-state.json` is per-phase only. Tied to Block Q. |
-| Showcase consumers (3-5 public) needed | AI #2 | low (single source) | Part of Block H. Galawork is showcase #1. |
+| Showcase consumers (3-5 public) needed | AI #2 | low (single source) | Part of Block H. Consumer is showcase #1. |
 | Comparison page for SEO ("claude-skills alternative") | AI #2 | low (single source) | Part of Block H. Honest, not bashing. |
 | Context-first skill pattern (`<domain>-context.md`) | Benchmark | low (single source — but novel) | Skill checks for project context file before asking. 5 named domains (company / marketing / project / product / regulatory). Maps cleanly to existing `agents/contexts/` directory. Cheap upgrade to skill spine. |
 | Practitioner-voice opener (`You are an expert in X. Your goal is Y.`) | Benchmark | low (single source) | Voice convention with explicit anti-patterns. Borrowable as skill-linter rule (style check, not blocker). |
@@ -697,7 +697,7 @@ agent-config today (`task generate-tools` + `scripts/install.sh|.py`):
 3. Do not chase 235+ skills. Target 100-130 high-quality skills, curated depth over breadth.
 4. No "self-improving agent" marketing stunt. Honest version is Block Q (audit-as-memory).
 5. No plugin-marketplace spam. 3-5 meaningful bundles, not 20 micro-bundles.
-6. No compliance domain (ISO/MDR/FDA) unless Galawork-internal need; if so, internal or override.
+6. No compliance domain (ISO/MDR/FDA) unless Consumer-internal need; if so, internal or override.
 
 ### AI #2 (continued) — risk register
 

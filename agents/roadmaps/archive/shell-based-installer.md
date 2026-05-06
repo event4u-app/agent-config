@@ -92,7 +92,7 @@ Port `.windsurfrules` generation and `GEMINI.md` symlink.
 
 Port `ensureGitignoreEntries()`.
 
-- [x] Check for `# galawork/agent-config` marker in `.gitignore`
+- [x] Check for `# consumer/agent-config` marker in `.gitignore`
 - [x] If missing and `.gitignore` exists: append symlinked dirs block
 - [x] Idempotent: don't duplicate on re-run
 - [x] Don't create `.gitignore` if it doesn't exist

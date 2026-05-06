@@ -63,7 +63,7 @@ def test_parser_has_three_subcommands() -> None:
     parsed = parser.parse_args(["estimate", "x.txt"])
     assert parsed.cmd == "estimate" and parsed.question == "x.txt"
     parsed = parser.parse_args(["run", "x.txt", "--output", "o.json"])
-    assert parsed.cmd == "run" and parsed.confirm is False and parsed.rounds == 1
+    assert parsed.cmd == "run" and parsed.confirm is False and parsed.rounds is None
     parsed = parser.parse_args(["render", "r.json"])
     assert parsed.cmd == "render"
 
@@ -160,6 +160,63 @@ def test_cmd_run_with_confirm_writes_responses_json(tmp_path, capsys) -> None:
     assert payload["rounds"] == 1
     assert payload["cost_usd_actual"] > 0
     assert payload["responses"][0]["text"] == "reply text"
+
+
+def test_cmd_run_resolves_rounds_from_min_rounds_setting(tmp_path) -> None:
+    q = tmp_path / "ask.txt"; q.write_text("hello", encoding="utf-8")
+    out_path = tmp_path / "out.json"
+    response = CouncilResponse(provider="openai", model="gpt-x", text="r",
+                               input_tokens=4, output_tokens=2, latency_ms=1)
+    members = [_StubMember("openai", "gpt-x", response)]
+    args = _ns(question=str(q), input_mode="prompt", max_tokens=16,
+               mode_override=None, original_ask="",
+               confirm=True, output=str(out_path), rounds=None)
+    rc = council_cli.cmd_run(
+        args,
+        settings={"ai_council": {"enabled": True, "min_rounds": 3}},
+        members=members, table=_fake_table(),
+    )
+    assert rc == 0
+    payload = json.loads(out_path.read_text(encoding="utf-8"))
+    assert payload["rounds"] == 3
+
+
+def test_cmd_run_defaults_to_two_rounds_when_min_rounds_unset(tmp_path) -> None:
+    q = tmp_path / "ask.txt"; q.write_text("hi", encoding="utf-8")
+    out_path = tmp_path / "out.json"
+    response = CouncilResponse(provider="openai", model="gpt-x", text="r",
+                               input_tokens=4, output_tokens=2, latency_ms=1)
+    members = [_StubMember("openai", "gpt-x", response)]
+    args = _ns(question=str(q), input_mode="prompt", max_tokens=16,
+               mode_override=None, original_ask="",
+               confirm=True, output=str(out_path), rounds=None)
+    rc = council_cli.cmd_run(
+        args,
+        settings={"ai_council": {"enabled": True}},
+        members=members, table=_fake_table(),
+    )
+    assert rc == 0
+    payload = json.loads(out_path.read_text(encoding="utf-8"))
+    assert payload["rounds"] == 2
+
+
+def test_cmd_run_explicit_rounds_overrides_min_rounds_setting(tmp_path) -> None:
+    q = tmp_path / "ask.txt"; q.write_text("hi", encoding="utf-8")
+    out_path = tmp_path / "out.json"
+    response = CouncilResponse(provider="openai", model="gpt-x", text="r",
+                               input_tokens=4, output_tokens=2, latency_ms=1)
+    members = [_StubMember("openai", "gpt-x", response)]
+    args = _ns(question=str(q), input_mode="prompt", max_tokens=16,
+               mode_override=None, original_ask="",
+               confirm=True, output=str(out_path), rounds=1)
+    rc = council_cli.cmd_run(
+        args,
+        settings={"ai_council": {"enabled": True, "min_rounds": 3}},
+        members=members, table=_fake_table(),
+    )
+    assert rc == 0
+    payload = json.loads(out_path.read_text(encoding="utf-8"))
+    assert payload["rounds"] == 1
 
 
 def test_cmd_run_with_confirm_returns_1_when_all_members_error(tmp_path) -> None:

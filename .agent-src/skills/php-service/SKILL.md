@@ -38,7 +38,7 @@ Do NOT use when:
 1. Location: `app/Services/{Domain}/` or `app/Modules/{Module}/App/Services/`.
 2. `declare(strict_types=1)`, proper namespace.
 3. Constructor inject dependencies (repositories, other services).
-4. Max 4 constructor dependencies — if more, split the service.
+4. Max 4 constructor deps — if more, split the service.
 
 ### Step 2: Implement methods
 
@@ -69,7 +69,7 @@ public function __invoke(
 
 - Run PHPStan on the service — must pass at level 9.
 - Verify single responsibility: service does one thing, no mixed concerns.
-- Confirm all dependencies are constructor-injected (no `app()` or facades in service).
+- Confirm all deps are constructor-injected (no `app()` or facades in service).
 - Run affected tests — must pass.
 
 ## Output format

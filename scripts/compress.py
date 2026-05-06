@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 Agent-config sync — compress .agent-src.uncompressed/ → .agent-src/
-and project .agent-src/ → .augment/ (copies for rules, symlinks for the rest).
+and project .agent-src/ → .augment/ (copies for rules by default,
+symlinks for the rest; opt into rule symlinks via
+augment.rules_use_symlinks in .agent-settings.yml).
 
 Copies non-.md files as-is. Lists .md files that need compression (done by the
 Augment agent interactively). Tracks SHA-256 hashes of source files to detect
@@ -19,6 +21,7 @@ Usage:
 
 import hashlib
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -28,9 +31,39 @@ SOURCE_DIR = PROJECT_ROOT / ".agent-src.uncompressed"
 TARGET_DIR = PROJECT_ROOT / ".agent-src"
 AUGMENT_DIR = PROJECT_ROOT / ".augment"
 HASH_FILE = PROJECT_ROOT / ".compression-hashes.json"
+SETTINGS_FILE = PROJECT_ROOT / ".agent-settings.yml"
 
 # Files to copy as-is even if .md (not compressed by agent)
 COPY_AS_IS = {"README.md"}
+
+
+def _read_augment_rules_use_symlinks() -> bool:
+    """Read augment.rules_use_symlinks from .agent-settings.yml.
+
+    Returns True only when the setting is present under the top-level
+    ``augment:`` block and resolves to a truthy YAML scalar
+    (true/yes/on/1, case-insensitive). Missing file, missing block, or
+    any other value → False (preserve copy default).
+    """
+    if not SETTINGS_FILE.exists():
+        return False
+    try:
+        text = SETTINGS_FILE.read_text(encoding="utf-8")
+    except OSError:
+        return False
+    in_augment = False
+    for line in text.splitlines():
+        stripped = line.lstrip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if not line.startswith((" ", "\t")):
+            in_augment = stripped.startswith("augment:")
+            continue
+        if in_augment:
+            m = re.match(r"^\s+rules_use_symlinks\s*:\s*([^\s#]+)", line)
+            if m:
+                return m.group(1).strip().lower() in ("true", "yes", "on", "1")
+    return False
 
 
 
@@ -59,15 +92,40 @@ def save_hashes(hashes: dict) -> None:
 
 
 def mark_done(relative_path: str) -> None:
-    """Mark a single file as compressed by storing its current source hash."""
+    """Mark a single file as compressed by storing its current source hash.
+
+    Also runs the path rewriter on the just-written `.agent-src/<path>` so
+    logical names from the source frontmatter resolve to deployment-correct
+    relative paths in the shipped layer (P1 of road-to-path-fixes.md).
+    Idempotent — re-running is a no-op.
+    """
     source_file = SOURCE_DIR / relative_path
     if not source_file.exists():
         print(f"❌  Source file not found: {relative_path}")
         sys.exit(1)
+    apply_path_rewriter(relative_path)
     hashes = load_hashes()
     hashes[relative_path] = file_hash(source_file)
     save_hashes(hashes)
     print(f"✅  Marked as compressed: {relative_path}")
+
+
+def apply_path_rewriter(relative_path: str) -> bool:
+    """Apply `_rewrite_paths` to `.agent-src/<relative_path>` in-place.
+
+    Returns True if the file was modified, False otherwise. Silently
+    returns False if the target doesn't exist (compression hasn't run
+    yet) — `--mark-done` is also valid before content exists.
+    """
+    target = TARGET_DIR / relative_path
+    if not target.exists() or not relative_path.endswith(".md"):
+        return False
+    original = target.read_text(encoding="utf-8")
+    rewritten = _rewrite_paths(original, relative_path)
+    if rewritten == original:
+        return False
+    target.write_text(rewritten, encoding="utf-8")
+    return True
 
 
 def mark_all_done() -> None:
@@ -248,6 +306,144 @@ def strip_frontmatter(content: str) -> str:
         if end != -1:
             content = content[end + 3:].lstrip("\n")
     return content
+
+
+# ── Path rewriter (P1 of road-to-path-fixes.md) ───────────────────────────
+# Source files use logical names that the rewriter resolves at compress
+# time, so the shipped `.agent-src/` (and `.augment/` projection) carry
+# deployment-correct relative paths without the agent author having to
+# know how deep their file lives.
+#
+# Frontmatter rewrites:
+#   load_context: / load_context_eager:
+#     contexts/<area>/<file>.md                          (logical, preferred)
+#     .agent-src.uncompressed/contexts/<area>/<file>.md  (legacy)
+#       → ../contexts/<area>/<file>.md  (relative from .agent-src/rules/)
+#   triggers[].path_prefix:
+#     LEFT ALONE — `path_prefix:` is a literal match pattern, not a
+#     file reference. Source-of-truth rules that fire on edits under
+#     `.agent-src.uncompressed/` keep that prefix verbatim (see
+#     road-to-path-fixes.md P2.2 / Modified Option 1).
+#
+# Body-link rewrites:
+#   ../../docs/guidelines/<file>.md  →  ../docs/guidelines/<file>.md
+#   ../../docs/contracts/<file>.md   →  ../docs/contracts/<file>.md
+#
+# Idempotent: applying twice is a no-op (rewritten patterns no longer
+# match the source patterns).
+
+_LEGACY_SRC_PREFIX = ".agent-src.uncompressed/"
+_PROJECTED_SRC_PREFIX = ".agent-src/"
+
+# A YAML list item under load_context*: `  - some/path.md` (optionally quoted)
+_FM_LIST_ITEM_RE = re.compile(r'^(\s*-\s*)(["\']?)([^"\'\n]+?\.md)(["\']?)\s*$')
+
+# `path_prefix:` line — top-level or under `triggers:` (with leading dash)
+_FM_PATH_PREFIX_RE = re.compile(
+    r'^(\s*(?:-\s+)?path_prefix:\s*)(["\']?)([^"\'\n]+?)(["\']?)\s*$'
+)
+
+# Body-link patterns (relative two-up to docs/) — capture the docs/... tail
+_BODY_DOCS_RE = re.compile(r'\.\./\.\./(docs/(?:guidelines|contracts)/[^)\s]+\.md)')
+
+
+def _depth_prefix(source_relative_path: str) -> str:
+    """Return the `../` chain to climb from `<source_relative_path>` back to
+    the source root. A file at `rules/X.md` (1 dir deep) needs `../`; a
+    file at `commands/council/default.md` (2 dirs deep) needs `../../`.
+    """
+    parts = Path(source_relative_path).parts
+    depth = max(len(parts) - 1, 1)
+    return "../" * depth
+
+
+def _split_frontmatter(content: str):
+    """Return (frontmatter_lines, body) — frontmatter_lines is None if no FM."""
+    if not content.startswith("---\n"):
+        return None, content
+    end = content.find("\n---\n", 4)
+    if end == -1:
+        return None, content
+    fm_text = content[4:end]
+    body = content[end + len("\n---\n"):]
+    return fm_text.split("\n"), body
+
+
+def _rewrite_load_context_value(value: str, prefix: str) -> str:
+    """Rewrite a single `load_context` list-item value to a deployment path."""
+    # Already relative or absolute → leave alone (idempotence).
+    if value.startswith(("../", "./", "/")):
+        return value
+    # Legacy fully-qualified source prefix.
+    if value.startswith(_LEGACY_SRC_PREFIX):
+        return prefix + value[len(_LEGACY_SRC_PREFIX):]
+    # Projected source prefix (defensive — also strip).
+    if value.startswith(_PROJECTED_SRC_PREFIX):
+        return prefix + value[len(_PROJECTED_SRC_PREFIX):]
+    # Logical name (e.g. `contexts/execution/foo.md`).
+    return prefix + value
+
+
+def _rewrite_path_prefix_value(value: str) -> str:
+    """No-op for `triggers[].path_prefix:` values.
+
+    `path_prefix:` is a literal match pattern the host evaluates against
+    the file the agent is editing — not a file reference. Rewriting it
+    breaks the workflow it was authored for: source-of-truth rules that
+    fire when the agent edits files under `.agent-src.uncompressed/`
+    keep that prefix verbatim. The prefix ban therefore applies only to
+    `load_context:` entries and body links (see road-to-path-fixes.md
+    P2.2 + the AI-Council convergence on 2026-05-06).
+    """
+    return value
+
+
+def _rewrite_frontmatter_lines(lines, prefix):
+    """Apply load_context / path_prefix rewrites to a frontmatter line list."""
+    in_load_context = False
+    out = []
+    for line in lines:
+        bare = line.lstrip()
+        if bare.startswith(("load_context:", "load_context_eager:")):
+            in_load_context = True
+            out.append(line)
+            continue
+        if in_load_context:
+            m = _FM_LIST_ITEM_RE.match(line)
+            if m:
+                indent, q1, value, q2 = m.groups()
+                rewritten = _rewrite_load_context_value(value, prefix)
+                out.append(f"{indent}{q1}{rewritten}{q2}")
+                continue
+            in_load_context = False
+            # fall through to path_prefix / passthrough
+        m = _FM_PATH_PREFIX_RE.match(line)
+        if m:
+            head, q1, value, q2 = m.groups()
+            out.append(f"{head}{q1}{_rewrite_path_prefix_value(value)}{q2}")
+            continue
+        out.append(line)
+    return out
+
+
+def _rewrite_body_links(body: str, prefix: str) -> str:
+    """Rewrite `../../docs/{guidelines,contracts}/...` to use depth-prefix."""
+    return _BODY_DOCS_RE.sub(prefix + r"\1", body)
+
+
+def _rewrite_paths(content: str, source_relative_path: str) -> str:
+    """Rewrite logical / legacy paths in `content` for a file shipped at
+    `.agent-src/{source_relative_path}`. Idempotent.
+
+    See module-level comment above for the full pattern catalog.
+    """
+    prefix = _depth_prefix(source_relative_path)
+    fm_lines, body = _split_frontmatter(content)
+    body = _rewrite_body_links(body, prefix)
+    if fm_lines is None:
+        return body
+    new_fm = _rewrite_frontmatter_lines(fm_lines, prefix)
+    return "---\n" + "\n".join(new_fm) + "\n---\n" + body
 
 
 def generate_rule_symlinks() -> int:
@@ -499,8 +695,10 @@ def generate_tools() -> None:
 # ── .augment/ projection ──────────────────────────────────────────────
 # The package uses .agent-src/ as the tool-agnostic compressed source of truth.
 # .augment/ is a generated projection so that Augment Code (which reads from
-# .augment/ and cannot follow symlinked rule files) works on the package repo
-# itself. Rules are copied (real files); everything else is symlinked.
+# .augment/) works on the package repo itself. Rules default to copies
+# because Augment Code historically does not load symlinked rule files;
+# flip augment.rules_use_symlinks: true in .agent-settings.yml to switch
+# them to symlinks (everything else is always symlinked).
 
 # Subdirectories of .agent-src/ that map into .augment/ as symlinks.
 AUGMENT_SYMLINK_DIRS = ("skills", "commands", "guidelines", "personas", "templates", "contexts", "scripts")
@@ -509,34 +707,44 @@ AUGMENT_SYMLINK_FILES = ("README.md",)
 
 
 def project_to_augment() -> None:
-    """Mirror .agent-src/ into .augment/. Copy rules, symlink everything else."""
+    """Mirror .agent-src/ into .augment/. Symlink everything except rules,
+    which default to copies; opt into rule symlinks via
+    augment.rules_use_symlinks in .agent-settings.yml."""
     if not TARGET_DIR.exists():
         print(f"  ⚠️  {TARGET_DIR.name}/ not found — nothing to project")
         return
 
     AUGMENT_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Rules: copy each .md file (Augment Code cannot load symlinked rules)
+    use_symlinks = _read_augment_rules_use_symlinks()
+
+    # Rules: copy by default (Augment Code historically does not load
+    # symlinked rules), or symlink when augment.rules_use_symlinks is true.
     src_rules = TARGET_DIR / "rules"
     dst_rules = AUGMENT_DIR / "rules"
     dst_rules.mkdir(parents=True, exist_ok=True)
     existing = {f.name for f in dst_rules.iterdir() if f.is_file() or f.is_symlink()}
     current = set()
-    copied = 0
+    written = 0
     if src_rules.exists():
         for rule in sorted(src_rules.glob("*.md")):
             target = dst_rules / rule.name
-            if target.is_symlink():
+            # Always remove first to avoid copy↔symlink mode mismatch.
+            if target.is_symlink() or target.exists():
                 target.unlink()
-            shutil.copy2(rule, target)
+            if use_symlinks:
+                target.symlink_to(Path("..") / ".." / ".agent-src" / "rules" / rule.name)
+            else:
+                shutil.copy2(rule, target)
             current.add(rule.name)
-            copied += 1
+            written += 1
     # Remove stale rule files
     removed_rules = 0
     for name in existing - current:
         (dst_rules / name).unlink()
         removed_rules += 1
-    print(f"  ✅  Copied {copied} rules to .augment/rules/" + (f" ({removed_rules} stale removed)" if removed_rules else ""))
+    mode_label = "Symlinked" if use_symlinks else "Copied"
+    print(f"  ✅  {mode_label} {written} rules to .augment/rules/" + (f" ({removed_rules} stale removed)" if removed_rules else ""))
 
     # Subdirectories: replace each with a symlink → ../.agent-src/<subdir>
     for sub in AUGMENT_SYMLINK_DIRS:

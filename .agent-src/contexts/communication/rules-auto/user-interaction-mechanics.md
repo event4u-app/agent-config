@@ -1,10 +1,133 @@
 # User Interaction — mechanics
 
-Format examples, progress indicators, and summary patterns for the
-[`user-interaction`](../../../rules/user-interaction.md) rule. Iron
-Law 1 (single-source recommendation), Iron Law 2 (pre-send
-self-check), and the named failure-mode catalog live in the rule
-itself; this file is the lookup material for the format details.
+Rationale, failure-mode catalog, format examples, progress
+indicators, and summary patterns for the
+[`user-interaction`](../../../rules/user-interaction.md) rule. The
+rule body holds the two Iron Law fenced blocks (single-source
+recommendation, pre-send self-check); this file is the lookup
+material for everything else.
+
+## Why the agent must take a position
+
+The agent has read the code, the contracts, the trade-offs.
+Refusing to take a position dumps that work back on the user. Take
+the position; be wrong out loud if needed. "Egal, was bevorzugst
+Du?" / "no preference" is NEVER acceptable.
+
+## Position-agnostic — the most common slip
+
+End-of-turn "Wie weiter?" / "What next?" / "How to proceed?" / "How
+should we continue?" blocks with numbered options ARE numbered-options
+blocks. Same Iron Law applies — exactly one `Empfehlung: N` /
+`Recommendation: N` line, every time. No "these are just follow-up
+suggestions" exception, no "the user knows better here" exception, no
+"I genuinely don't have a preference" exception. If the agent prints
+`1. … 2. … 3. …` anywhere in the reply, the recommendation line is
+mandatory.
+
+## Format — non-negotiable
+
+- Options block stays NEUTRAL — no `(recommended)`, no `(rec)`, no
+  `←`, no bold, no checkmark.
+- Directly after the options block, ONE line, bolded, in the user's
+  language:
+  - English: `**Recommendation: N — <option-name>** — <why>. Caveat: <flip-condition>.`
+  - German:  `**Empfehlung: N — <option-name>** — <warum>. Caveat: <flip-bedingung>.`
+- Other numbers MAY appear later in the prose, but ONLY as caveats
+  (`escalate to 3 if …`, `flip to 1 when …`). NEVER as a primary
+  recommendation.
+- Genuine tie (rare — true 50/50 with missing data) → say what data
+  would break the tie and ask for that instead.
+
+## No trailing open-ended question
+
+Reply contains numbered options → the recommendation line IS the
+closer. No `Welcher Pfad?` / `What's it gonna be?` / `Was meinst
+Du?` / `Was sagst Du?` / `Welche willst Du?` / `What do you think?`
+after the recommendation — that reframes the vote as opinion-poll
+and is hedging in disguise. The user picks a number; the agent does
+not re-ask. Permitted: a clarifying caveat sentence on the
+recommendation line itself (`Caveat: flip to 2 if …`). Forbidden:
+any standalone trailing question that re-opens the choice.
+
+## What does NOT count as a recommendation
+
+- "Both work" / "either is fine" / "depends on what you prefer"
+- Listing pros and cons without picking a number
+- "I'd lean towards X" without a reason
+- Hiding behind "you know the project better"
+- Inline `(recommended)` tag with no follow-up `Recommendation: N` line
+
+## Pre-send self-check details
+
+Before emitting any reply that contains numbered options, scan the
+**entire drafted reply** — top to bottom, including end-of-turn
+"Wie weiter?" / "What next?" continuation menus, follow-up
+suggestion blocks, and any list of `1. … 2. … 3. …` regardless of
+position or framing:
+
+1. Count occurrences of `(recommended)` / `(rec)` / `(empfohlen)`
+   inline next to a numbered option → MUST be **zero**. Found one →
+   rewrite, drop the tag.
+2. Count `1\\.\\s` / `2\\.\\s` / `3\\.\\s` patterns inside blockquotes
+   or top-level prose → if **any** numbered-option block exists
+   anywhere in the reply, the recommendation line is mandatory.
+3. Count distinct `Recommendation:\\s*N` / `Empfehlung:\\s*N` lines
+   (case-insensitive) → MUST be **exactly one per options block**.
+   Zero → add one. Two or more distinct numbers → rewrite, pick one.
+4. The number on the recommendation line MUST exist in the option
+   block it follows.
+5. Multiple options blocks (e.g. clarification block AND end-of-turn
+   menu) → each block gets its own `Recommendation: N` line directly
+   underneath.
+
+Mechanical backstop:
+`python3 scripts/check_reply_consistency.py --stdin < draft.md`
+(non-zero exit on any rule above). Self-scan is the primary gate;
+the script is the deterministic safety net for ambiguous cases.
+
+## Common failure modes — known, named, no excuses
+
+- **End-of-turn menu skipped.** Reply answers fine, then ends with
+  `1. … 2. … 3. …` and no `Empfehlung:`. Iron Law 1 violated — these
+  are numbered options, position is irrelevant.
+- **Trailing-question hedge.** Reply has options + recommendation,
+  but ends with `Welcher Pfad?` / `What's it gonna be?` — reframes
+  the vote as opinion-poll. Banned by Iron Law 1.
+- **"Genuinely no preference" hedge.** Pick anyway. Agent has more
+  context than user on the trade-off; refusing to pick dumps the
+  work back. Pick the safest option, name the flip-condition.
+- **"User knows the project better" hedge.** Same failure mode,
+  different costume. The user asked for an opinion by virtue of
+  accepting the options block; deliver it.
+- **Multi-block reply with one recommendation.** Two options blocks
+  but only one `Empfehlung:` line — second block unguarded. Rule 5
+  of Iron Law 2 closes this.
+
+## Slip handling
+
+Same protocol as
+[`language-and-tone § slip-handling`](../../../rules/language-and-tone.md#slip-handling).
+User calls out a missing or wrong recommendation → acknowledge once
+in the user's language, rewrite the reply with a recommendation,
+ship. No "from now on" promises — only the next reply proves
+compliance.
+
+## Numbered Options — rules
+
+- **Every question with choices** must use numbered options — no
+  exceptions.
+- **Every numbered list with `1. … 2. … 3. …`** is a
+  numbered-options block, regardless of position. End-of-turn "Wie
+  weiter?" / "What next?" / "How to proceed?" menus, mid-reply
+  continuation prompts, and clarification blocks all count.
+- **Keep options short** — one line each, with a brief explanation
+  after the dash.
+- **Always include a "skip" or "no change" option** when applicable.
+- **Always state a recommendation** — Iron Law 1.
+- **Use the user's language** for the question and options.
+- **Accept both** the number and a natural-language answer ("1" or
+  "the first one").
 
 ## Examples
 

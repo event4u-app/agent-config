@@ -1,0 +1,863 @@
+{
+  "schema_version": 1,
+  "kernel": [
+    "agent-authority",
+    "ask-when-uncertain",
+    "commit-policy",
+    "direct-answers",
+    "language-and-tone",
+    "no-cheap-questions",
+    "non-destructive-by-default",
+    "scope-control",
+    "verify-before-complete"
+  ],
+  "tier_1": [
+    {
+      "id": "analysis-skill-routing",
+      "triggers": [
+        {
+          "keyword": "analyze"
+        },
+        {
+          "keyword": "analysis"
+        },
+        {
+          "phrase": "dig into the codebase"
+        }
+      ],
+      "routes_to": [
+        "skill:analysis-skill-router"
+      ]
+    },
+    {
+      "id": "architecture",
+      "triggers": [
+        {
+          "keyword": "controller"
+        },
+        {
+          "keyword": "service"
+        },
+        {
+          "keyword": "module"
+        },
+        {
+          "intent": "structural decision"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "artifact-engagement-recording",
+      "triggers": [
+        {
+          "phrase": "/implement-ticket"
+        },
+        {
+          "phrase": "/work"
+        },
+        {
+          "keyword": "telemetry"
+        }
+      ],
+      "routes_to": [
+        "contract:artifact-engagement-flow"
+      ]
+    },
+    {
+      "id": "augment-portability",
+      "triggers": [
+        {
+          "path_prefix": ".augment/"
+        },
+        {
+          "path_prefix": ".agent-src.uncompressed/"
+        },
+        {
+          "keyword": "portable"
+        }
+      ],
+      "routes_to": [
+        "guideline:augment-portability-patterns"
+      ]
+    },
+    {
+      "id": "augment-source-of-truth",
+      "triggers": [
+        {
+          "path_prefix": ".agent-src/"
+        },
+        {
+          "path_prefix": ".augment/"
+        },
+        {
+          "path_prefix": ".claude/"
+        },
+        {
+          "path_prefix": ".cursor/"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "autonomous-execution",
+      "triggers": [
+        {
+          "intent": "trivial workflow question"
+        },
+        {
+          "intent": "autonomy mode"
+        },
+        {
+          "keyword": "personal.autonomy"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "command-suggestion-policy",
+      "triggers": [
+        {
+          "phrase": "free-form prompt"
+        },
+        {
+          "phrase": "command suggestion"
+        }
+      ],
+      "routes_to": [
+        "contract:command-suggestion-flow"
+      ]
+    },
+    {
+      "id": "context-hygiene",
+      "triggers": [
+        {
+          "intent": "long conversation"
+        },
+        {
+          "intent": "tool loop"
+        },
+        {
+          "intent": "fresh chat"
+        },
+        {
+          "keyword": "3-failure"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "docker-commands",
+      "triggers": [
+        {
+          "keyword": "docker"
+        },
+        {
+          "keyword": "artisan"
+        },
+        {
+          "keyword": "composer"
+        },
+        {
+          "phrase": "inside the container"
+        }
+      ],
+      "routes_to": [
+        "skill:docker"
+      ]
+    },
+    {
+      "id": "e2e-testing",
+      "triggers": [
+        {
+          "keyword": "playwright"
+        },
+        {
+          "keyword": "e2e"
+        },
+        {
+          "phrase": "page object"
+        }
+      ],
+      "routes_to": [
+        "command:e2e-heal"
+      ]
+    },
+    {
+      "id": "guidelines",
+      "triggers": [
+        {
+          "intent": "writing code"
+        },
+        {
+          "intent": "reviewing code"
+        },
+        {
+          "keyword": "convention"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "no-attribution-footers",
+      "triggers": [
+        {
+          "intent": "PR body"
+        },
+        {
+          "intent": "commit message"
+        },
+        {
+          "intent": "Jira comment"
+        },
+        {
+          "keyword": "co-authored"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "no-council-references",
+      "triggers": [
+        {
+          "path_prefix": "agents/council-questions/"
+        },
+        {
+          "path_prefix": "agents/council-responses/"
+        },
+        {
+          "path_prefix": "agents/council-sessions/"
+        },
+        {
+          "intent": "link to council artefact"
+        }
+      ],
+      "routes_to": [
+        "skill:ai-council"
+      ]
+    },
+    {
+      "id": "no-roadmap-references",
+      "triggers": [
+        {
+          "path_prefix": "agents/roadmaps/"
+        },
+        {
+          "intent": "link from stable artifact"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "onboarding-gate",
+      "triggers": [
+        {
+          "phrase": "first turn"
+        },
+        {
+          "keyword": "onboarding"
+        },
+        {
+          "path_prefix": ".agent-settings.yml"
+        }
+      ],
+      "routes_to": [
+        "command:onboard"
+      ]
+    },
+    {
+      "id": "package-ci-checks",
+      "triggers": [
+        {
+          "phrase": "task ci"
+        },
+        {
+          "phrase": "before push"
+        },
+        {
+          "phrase": "before pr"
+        }
+      ],
+      "routes_to": [
+        "skill:lint-skills"
+      ]
+    },
+    {
+      "id": "php-coding",
+      "triggers": [
+        {
+          "file_pattern": "*.php"
+        },
+        {
+          "keyword": "phpstan"
+        },
+        {
+          "keyword": "ecs"
+        }
+      ],
+      "routes_to": [
+        "guideline:php/php-coding-patterns"
+      ]
+    },
+    {
+      "id": "roadmap-progress-sync",
+      "triggers": [
+        {
+          "path_prefix": "agents/roadmaps/"
+        }
+      ],
+      "routes_to": [
+        "guideline:agent-infra/roadmap-progress-mechanics"
+      ]
+    },
+    {
+      "id": "size-enforcement",
+      "triggers": [
+        {
+          "intent": "create rule"
+        },
+        {
+          "intent": "create skill"
+        },
+        {
+          "intent": "create command"
+        },
+        {
+          "intent": "create guideline"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "skill-quality",
+      "triggers": [
+        {
+          "path_prefix": ".agent-src.uncompressed/skills/"
+        }
+      ],
+      "routes_to": [
+        "guideline:agent-infra/skill-quality-checklist"
+      ]
+    },
+    {
+      "id": "slash-command-routing-policy",
+      "triggers": [
+        {
+          "keyword": "/create-pr"
+        },
+        {
+          "keyword": "/commit"
+        },
+        {
+          "keyword": "/fix-ci"
+        },
+        {
+          "phrase": "slash command"
+        }
+      ],
+      "routes_to": [
+        "skill:command-routing"
+      ]
+    },
+    {
+      "id": "user-interaction",
+      "triggers": [
+        {
+          "intent": "ask user a question"
+        },
+        {
+          "intent": "numbered options"
+        },
+        {
+          "intent": "summarizing progress"
+        }
+      ],
+      "routes_to": []
+    }
+  ],
+  "tier_2": [
+    {
+      "id": "agent-docs",
+      "triggers": [
+        {
+          "path_prefix": "agents/"
+        },
+        {
+          "path_prefix": ".github/copilot-instructions"
+        },
+        {
+          "keyword": "AGENTS.md"
+        },
+        {
+          "keyword": "roadmap"
+        }
+      ],
+      "routes_to": [
+        "skill:agent-docs-writing"
+      ]
+    },
+    {
+      "id": "artifact-drafting-protocol",
+      "triggers": [
+        {
+          "intent": "create new skill"
+        },
+        {
+          "intent": "create new rule"
+        },
+        {
+          "intent": "create new command"
+        },
+        {
+          "intent": "create new guideline"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "capture-learnings",
+      "triggers": [
+        {
+          "phrase": "after completing a task"
+        },
+        {
+          "keyword": "learning"
+        },
+        {
+          "keyword": "lesson"
+        }
+      ],
+      "routes_to": [
+        "skill:learning-to-rule-or-skill"
+      ]
+    },
+    {
+      "id": "cli-output-handling",
+      "triggers": [
+        {
+          "keyword": "git"
+        },
+        {
+          "keyword": "phpstan"
+        },
+        {
+          "keyword": "rector"
+        },
+        {
+          "keyword": "phpunit"
+        },
+        {
+          "keyword": "composer"
+        }
+      ],
+      "routes_to": [
+        "skill:rtk-output-filtering"
+      ]
+    },
+    {
+      "id": "commit-conventions",
+      "triggers": [
+        {
+          "keyword": "commit"
+        },
+        {
+          "keyword": "branch"
+        },
+        {
+          "phrase": "conventional commits"
+        }
+      ],
+      "routes_to": [
+        "skill:conventional-commits-writing"
+      ]
+    },
+    {
+      "id": "docs-sync",
+      "triggers": [
+        {
+          "path_prefix": ".agent-src.uncompressed/"
+        },
+        {
+          "path_prefix": ".augment/"
+        },
+        {
+          "keyword": "rename"
+        },
+        {
+          "keyword": "delete"
+        }
+      ],
+      "routes_to": [
+        "skill:agent-docs-writing"
+      ]
+    },
+    {
+      "id": "downstream-changes",
+      "triggers": [
+        {
+          "intent": "after code edit"
+        },
+        {
+          "keyword": "callers"
+        },
+        {
+          "keyword": "imports"
+        },
+        {
+          "keyword": "downstream"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "improve-before-implement",
+      "triggers": [
+        {
+          "intent": "implement feature"
+        },
+        {
+          "intent": "architectural change"
+        },
+        {
+          "keyword": "refactor"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "laravel-translations",
+      "triggers": [
+        {
+          "path_prefix": "lang/"
+        },
+        {
+          "keyword": "translation"
+        },
+        {
+          "keyword": "__()"
+        },
+        {
+          "keyword": "trans("
+        }
+      ],
+      "routes_to": [
+        "skill:laravel"
+      ]
+    },
+    {
+      "id": "markdown-safe-codeblocks",
+      "triggers": [
+        {
+          "intent": "markdown with code blocks"
+        },
+        {
+          "keyword": "triple backticks"
+        },
+        {
+          "file_pattern": "*.md"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "minimal-safe-diff",
+      "triggers": [
+        {
+          "intent": "writing a diff"
+        },
+        {
+          "intent": "reviewing a diff"
+        },
+        {
+          "keyword": "drive-by"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "missing-tool-handling",
+      "triggers": [
+        {
+          "keyword": "command not found"
+        },
+        {
+          "keyword": "not installed"
+        },
+        {
+          "intent": "install tool"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "model-recommendation",
+      "triggers": [
+        {
+          "phrase": "switch task"
+        },
+        {
+          "phrase": "new task"
+        },
+        {
+          "phrase": "which model"
+        }
+      ],
+      "routes_to": [
+        "command:set-cost-profile"
+      ]
+    },
+    {
+      "id": "preservation-guard",
+      "triggers": [
+        {
+          "intent": "merge skill"
+        },
+        {
+          "intent": "compress rule"
+        },
+        {
+          "intent": "refactor artifact"
+        },
+        {
+          "keyword": "Iron Law"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "review-routing-awareness",
+      "triggers": [
+        {
+          "keyword": "reviewer"
+        },
+        {
+          "phrase": "risk hotspot"
+        },
+        {
+          "phrase": "ownership map"
+        }
+      ],
+      "routes_to": [
+        "skill:review-routing"
+      ]
+    },
+    {
+      "id": "reviewer-awareness",
+      "triggers": [
+        {
+          "keyword": "reviewer"
+        },
+        {
+          "phrase": "suggest reviewers"
+        }
+      ],
+      "routes_to": [
+        "skill:review-routing"
+      ]
+    },
+    {
+      "id": "role-mode-adherence",
+      "triggers": [
+        {
+          "keyword": "active_role"
+        },
+        {
+          "keyword": "role-mode"
+        },
+        {
+          "intent": "mode marker"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "rule-type-governance",
+      "triggers": [
+        {
+          "path_prefix": ".agent-src.uncompressed/rules/"
+        }
+      ],
+      "routes_to": [
+        "guideline:agent-infra/rule-type-governance"
+      ]
+    },
+    {
+      "id": "runtime-safety",
+      "triggers": [
+        {
+          "keyword": "execution"
+        },
+        {
+          "keyword": "automated"
+        },
+        {
+          "keyword": "assisted"
+        },
+        {
+          "keyword": "handler"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "security-sensitive-stop",
+      "triggers": [
+        {
+          "keyword": "auth"
+        },
+        {
+          "keyword": "billing"
+        },
+        {
+          "keyword": "tenant"
+        },
+        {
+          "keyword": "secret"
+        },
+        {
+          "keyword": "webhook"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "skill-improvement-trigger",
+      "triggers": [
+        {
+          "phrase": "after completing"
+        },
+        {
+          "keyword": "improvement"
+        },
+        {
+          "keyword": "pipeline"
+        }
+      ],
+      "routes_to": [
+        "skill:skill-improvement-pipeline"
+      ]
+    },
+    {
+      "id": "think-before-action",
+      "triggers": [
+        {
+          "intent": "before coding"
+        },
+        {
+          "intent": "before debugging"
+        },
+        {
+          "intent": "before modifying"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "token-efficiency",
+      "triggers": [
+        {
+          "intent": "verbose CLI output"
+        },
+        {
+          "intent": "fetching logs"
+        },
+        {
+          "keyword": "minimize tool calls"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "token-optimizer-maintenance",
+      "triggers": [
+        {
+          "keyword": "cli-output-handling"
+        },
+        {
+          "keyword": "rtk-output-filtering"
+        },
+        {
+          "keyword": "token-efficiency"
+        },
+        {
+          "keyword": "agent-handoff"
+        },
+        {
+          "keyword": "markitdown"
+        },
+        {
+          "keyword": "token-optimizer"
+        }
+      ],
+      "routes_to": [
+        "skill:token-optimizer"
+      ]
+    },
+    {
+      "id": "tool-safety",
+      "triggers": [
+        {
+          "keyword": "allowed_tools"
+        },
+        {
+          "keyword": "tool registry"
+        },
+        {
+          "intent": "external API"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "ui-audit-gate",
+      "triggers": [
+        {
+          "path_prefix": "resources/views/"
+        },
+        {
+          "path_prefix": "resources/js/"
+        },
+        {
+          "keyword": "component"
+        },
+        {
+          "keyword": "design token"
+        }
+      ],
+      "routes_to": [
+        "skill:existing-ui-audit"
+      ]
+    },
+    {
+      "id": "upstream-proposal",
+      "triggers": [
+        {
+          "phrase": "after creating"
+        },
+        {
+          "phrase": "after improving"
+        },
+        {
+          "keyword": "upstream"
+        }
+      ],
+      "routes_to": [
+        "skill:upstream-contribute"
+      ]
+    }
+  ],
+  "profiles": {
+    "minimal": [
+      "__kernel__"
+    ],
+    "balanced": [
+      "__kernel__",
+      "__tier_1__"
+    ],
+    "full": [
+      "__kernel__",
+      "__tier_1__",
+      "__tier_2__"
+    ]
+  }
+}

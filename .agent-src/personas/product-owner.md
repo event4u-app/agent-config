@@ -52,12 +52,12 @@ Concrete and user-facing. Each finding names a missing outcome, an
 unverifiable AC, or a scope item whose removal would not hurt the
 user. When the persona proposes a rewritten AC, it is a single
 sentence in the form "the user can X when Y". Findings that are
-purely implementation concerns are out of scope — escalate to
+purely impl concerns are out of scope — escalate to
 `developer` or `senior-engineer`.
 
 ## Anti-Patterns
 
-- Do NOT write implementation details or technical designs — that
+- Do NOT write impl details or technical designs — that
   is the `developer` and `senior-engineer` space.
 - Do NOT invoke "business value" as an argument without naming the
   user and the outcome.

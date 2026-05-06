@@ -277,7 +277,7 @@ fi
 
 ---
 
-## Problem 13: `.agent-settings` Default-Werte sind Galawork-spezifisch
+## Problem 13: `.agent-settings` Default-Werte sind Consumer-spezifisch
 
 ### Diagnose
 

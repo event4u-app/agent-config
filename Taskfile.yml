@@ -48,8 +48,11 @@ tasks:
       - task: consistency
       - task: counts-check
       - task: check-index
+      - task: check-router
       - task: check-compression
+      - task: check-compressed-paths
       - task: check-refs
+      - task: check-token-optimizer-freshness
       - task: check-portability
       - task: check-examples-shape
       - task: lint-roadmap-complexity
@@ -62,6 +65,7 @@ tasks:
       - task: lint-load-context
       - task: check-context-paths
       - task: check-no-roadmap-refs
+      - task: check-council-references
       - task: lint-one-off-age
       - task: check-ownership-matrix
       - task: check-reply-consistency
@@ -69,6 +73,7 @@ tasks:
       - task: check-always-budget
       - task: check-one-off-location
       - task: validate-schema
+      - task: lint-rule-budget
       - task: lint-skills
       - task: lint-rule-tiers
       - task: lint-handoffs
@@ -82,5 +87,6 @@ tasks:
       - task: test
       - task: runtime-e2e
       - task: check-roadmap-trackable
+      - task: check-council-layout
       - task: roadmap-progress-check
       - task: lint-readme

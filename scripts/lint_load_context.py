@@ -28,13 +28,36 @@ SCAN_DIRS = [
 ]
 
 ALLOWED_PREFIXES = (
-    ".agent-src.uncompressed/contexts/",
-    ".agent-src/contexts/",
-    "agents/contexts/",
+    "contexts/",                               # logical name (canonical — P1.1 / P5.3)
+    ".agent-src/contexts/",                    # projected (defensive — only seen in compressed inputs)
+    "agents/contexts/",                        # project-local
 )
+
+# `.agent-src.uncompressed/contexts/` was the legacy fully-qualified form
+# (pre road-to-path-fixes.md P5.3). It is now a hard error: P2.1 migrated
+# all in-tree rules to logical names, the rewriter resolves them at
+# compress time, and the schema regex in `scripts/schemas/rule.schema.json`
+# rejects the prefix at validate-schema time. Keeping a separate runtime
+# diagnostic so the failure points authors at the canonical
+# `contexts/<area>/<file>.md` form rather than a generic schema mismatch.
+LEGACY_PREFIX = ".agent-src.uncompressed/contexts/"
+
+# Logical names resolve against the source root.
+SOURCE_ROOT = ROOT / ".agent-src.uncompressed"
 
 PUBLIC_RULE_PREFIX = ".agent-src.uncompressed/rules/"
 PROJECT_LOCAL_PREFIX = "agents/contexts/"
+
+
+def resolve_entry(entry: str) -> Path:
+    """Resolve a `load_context:` entry to an absolute path on disk.
+
+    Logical names (`contexts/...`) live under `.agent-src.uncompressed/`;
+    fully-qualified entries are repo-root-relative.
+    """
+    if entry.startswith("contexts/"):
+        return SOURCE_ROOT / entry
+    return ROOT / entry
 
 HARD_FLOOR_RULES = {"non-destructive-by-default", "security-sensitive-stop"}
 
@@ -126,10 +149,17 @@ def main() -> int:
             if not isinstance(entry, str) or not entry.endswith(".md"):
                 errors.append(f"{rel(f)}: entry not str ending in .md → {entry!r}")
                 continue
+            if entry.startswith(LEGACY_PREFIX):
+                logical = entry[len(".agent-src.uncompressed/"):]
+                errors.append(
+                    f"{rel(f)}: legacy `.agent-src.uncompressed/` prefix in load_context → {entry} "
+                    f"— use logical name `{logical}` instead (road-to-path-fixes.md P5.3)"
+                )
+                continue
             if not entry.startswith(ALLOWED_PREFIXES):
                 errors.append(f"{rel(f)}: disallowed root → {entry}")
                 continue
-            target = ROOT / entry
+            target = resolve_entry(entry)
             if not target.exists():
                 errors.append(f"{rel(f)}: target missing → {entry}")
                 continue
@@ -140,7 +170,7 @@ def main() -> int:
             cap = cap_for(f, fm)
             total = len(f.read_text(encoding="utf-8"))
             for entry in eager:
-                tgt = ROOT / entry
+                tgt = resolve_entry(entry)
                 if tgt.exists():
                     total += len(tgt.read_text(encoding="utf-8"))
             if total > cap:

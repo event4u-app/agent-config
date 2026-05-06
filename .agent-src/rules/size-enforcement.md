@@ -4,6 +4,11 @@ tier: "mechanical-already"
 description: "Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md — enforce size and scope limits"
 alwaysApply: false
 source: package
+triggers:
+  - intent: "create rule"
+  - intent: "create skill"
+  - intent: "create command"
+  - intent: "create guideline"
 ---
 
 # size-enforcement
@@ -23,7 +28,7 @@ source: package
   - Rules and system instructions should stay well below 200 lines
   - Smaller (≈60 lines) is strongly preferred
 
-→ Size limits and details: `../../docs/guidelines/agent-infra/size-and-scope.md`
+→ Size limits and details: `../docs/guidelines/agent-infra/size-and-scope.md`
 
 → Frontmatter contract: schemas live in `scripts/schemas/` and are enforced by
 `python3 scripts/validate_frontmatter.py`.

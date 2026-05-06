@@ -217,7 +217,7 @@ Never load full output into context when a filter gives you the answer.
 
 Tests are mandatory when behavior changes or bugs are fixed.
 
-Prefer: failing test first → implementation → passing test.
+Prefer: failing test first → impl → passing test.
 
 Test types: unit (isolated logic), feature/integration (behavior), UI (frontend), regression (bugs).
 

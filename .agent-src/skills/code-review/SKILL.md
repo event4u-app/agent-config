@@ -113,7 +113,7 @@ When receiving code review feedback, follow this sequence:
 6. **IMPLEMENT** — One item at a time, test each.
 
 If **any item is unclear**, STOP — do not implement anything yet. Items may be related;
-partial understanding leads to wrong implementation.
+partial understanding → wrong impl.
 
 ### No performative agreement
 
@@ -131,7 +131,7 @@ partial understanding leads to wrong implementation.
 **External / Copilot / bot feedback** (less context):
 - Check: Technically correct for THIS codebase?
 - Check: Does it break existing functionality?
-- Check: Is there a reason for the current implementation?
+- Check: Is there a reason for the current impl?
 - Check: Does the reviewer understand the full context?
 - **YAGNI check:** If the reviewer suggests "implementing properly", grep the codebase
   for actual usage. If unused → suggest removing (YAGNI).

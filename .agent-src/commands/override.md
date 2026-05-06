@@ -22,7 +22,7 @@ commands with a single entry point + sub-command dispatch.
 | `/override manage` | `commands/override/manage.md` | Review, update, and refactor existing overrides |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Dispatch
 

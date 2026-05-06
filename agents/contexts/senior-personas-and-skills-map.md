@@ -4,8 +4,8 @@
 **Owner:** maintainer (matze4u)
 **Last updated:** 2026-05-05
 **Council sessions:**
-- `agents/council-sessions/senior-personas-map-iter1.json` (map iter-1, Anthropic + GPT-4o, $0.0992)
-- `agents/council-sessions/joint-wing3-wing4-iter2.json` (joint Wing 3 + Wing 4 iter-2, Anthropic + GPT-4o, $0.1529)
+- `agents/council-sessions/senior-personas-map-iter1.json` (map iter-1, Anthropic + GPT-4o, $0.0992) <!-- council-ref-allowed: persona-map decision trace -->
+- `agents/council-sessions/joint-wing3-wing4-iter2.json` (joint Wing 3 + Wing 4 iter-2, Anthropic + GPT-4o, $0.1529) <!-- council-ref-allowed: persona-map decision trace -->
 **Sibling roadmaps** live under `agents/roadmaps/` — one plate per
 wing (Wing 1 — Engineering; Wing 2 — Foundation cognition core +
 Product, post-iter1; Wing 3 — GTM + Growth, ready-for-execution
@@ -321,7 +321,7 @@ remain explicitly out of scope across all four roadmaps (Wings 1–4):
 
 ## Council iter-1 verdicts (resolved)
 
-Council session: `agents/council-sessions/senior-personas-map-iter1.json`.
+Council session: `agents/council-sessions/senior-personas-map-iter1.json`. <!-- council-ref-allowed: persona-map decision trace -->
 Verdicts folded per Anthropic-stronger heuristic where divergent;
 convergent verdicts (Q3, Q5, Q6) folded directly.
 

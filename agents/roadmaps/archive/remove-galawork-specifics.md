@@ -1,6 +1,6 @@
-# Roadmap: Remove Galawork-specific references from shared agent config
+# Roadmap: Remove project-specific references from shared agent config
 
-> Make all `.augment/` files project-agnostic by replacing hardcoded galawork commands with tool-detection logic, so the package works for any PHP/JS project.
+> Make all `.augment/` files project-agnostic by replacing hardcoded consumer commands with tool-detection logic, so the package works for any PHP/JS project.
 
 ## Prerequisites
 
@@ -11,9 +11,9 @@
 ## Context
 
 The `event4u/agent-config` package ships `.augment/` to all target projects. Currently, 14+ files
-contain references to `galawork/php-quality` commands (`quality:phpstan`, `quality:rector`, etc.),
-galawork-specific config paths (`config-dev/php-quality/`), and project-specific commands
-(`migrate:customers`, `local.galawork.de`).
+contain references to `consumer/php-quality` commands (`quality:phpstan`, `quality:rector`, etc.),
+project-specific config paths (`config-dev/php-quality/`), and project-specific commands
+(`migrate:customers`, `local.consumer.de`).
 
 These should be replaced with **tool-detection logic**: check what's installed in the target project
 and use the appropriate native commands.
@@ -26,19 +26,19 @@ and use the appropriate native commands.
 The agent should detect which tools are available and use the correct commands:
 
 ```
-composer.json has "galawork/php-quality"          → php artisan quality:* (wrapper)
+composer.json has "consumer/php-quality"          → php artisan quality:* (wrapper)
 composer.json has "phpstan/phpstan" or "larastan"  → vendor/bin/phpstan analyse
 composer.json has "rector/rector"                  → vendor/bin/rector process
 composer.json has "symplify/easy-coding-standard"  → vendor/bin/ecs check
 none installed                                     → skip, inform user
 ```
 
-**Priority:** galawork/php-quality wrapper wins if installed (it wraps all three with extras like
+**Priority:** consumer/php-quality wrapper wins if installed (it wraps all three with extras like
 git-aware execution, caching, baseline management).
 
 Config file locations:
 
-| Tool | galawork/php-quality | Native |
+| Tool | consumer/php-quality | Native |
 |---|---|---|
 | PHPStan | `config-dev/php-quality/phpstan.neon` or `phpstan.neon` (root) | `phpstan.neon` or `phpstan.neon.dist` |
 | Rector | `config-dev/php-quality/rector.php` or `rector.php` (root) | `rector.php` |
@@ -79,23 +79,23 @@ Files referencing `config-dev/php-quality/`:
 | 2 | `skills/copilot/SKILL.md` | Config path table |
 | 3 | `rules/quality-workflow.md` | Config file table |
 
-### Category 3: galawork/php-quality wrapper internals (1 file)
+### Category 3: consumer/php-quality wrapper internals (1 file)
 
 | # | File | References |
 |---|---|---|
-| 1 | `skills/quality-tools/SKILL.md` | `galawork-quality` CLI, EcsPreset, RectorPreset |
+| 1 | `skills/quality-tools/SKILL.md` | `consumer-quality` CLI, EcsPreset, RectorPreset |
 
 ### Category 4: Multi-tenant specifics (1 file)
 
 | # | File | References |
 |---|---|---|
-| 1 | `skills/migration-creator/SKILL.md` | `migrate:customers`, `local.galawork.de`, FQDN routing |
+| 1 | `skills/migration-creator/SKILL.md` | `migrate:customers`, `local.consumer.de`, FQDN routing |
 
 ### Category 5: Package name example (1 file)
 
 | # | File | References |
 |---|---|---|
-| 1 | `commands/optimize-augmentignore.md` | `galawork/galawork-api` example |
+| 1 | `commands/optimize-augmentignore.md` | `consumer/consumer-api` example |
 
 ### Category 6: Composer skill (1 file)
 
@@ -114,12 +114,12 @@ Source: `.agent-src.uncompressed/skills/quality-tools/SKILL.md`
 
 ### Step 1.1: Replace prerequisite section
 
-Current: `Requires galawork/php-quality in composer.json.`
+Current: `Requires consumer/php-quality in composer.json.`
 
 New: Tool detection table — check `composer.json` for installed tools, use first matching style.
-Priority: `galawork/php-quality` wrapper wins if installed (adds git-aware execution, caching, baseline mgmt).
+Priority: `consumer/php-quality` wrapper wins if installed (adds git-aware execution, caching, baseline mgmt).
 
-- [x] Replace prerequisite with tool detection table (galawork wrapper, phpstan, rector, ecs)
+- [x] Replace prerequisite with tool detection table (consumer wrapper, phpstan, rector, ecs)
 - [x] Remove "NEVER call tools directly" rule — tools ARE called directly when no wrapper
 
 ### Step 1.2: Add dual command format for all commands
@@ -129,7 +129,7 @@ For every command, show both wrapper and native. Native first, wrapper as altern
 ```bash
 # Native (default):
 vendor/bin/phpstan analyse
-# With galawork/php-quality wrapper:
+# With consumer/php-quality wrapper:
 php artisan quality:phpstan
 ```
 
@@ -149,8 +149,8 @@ New: detect config from project:
 - Fallback: `config-dev/php-quality/` if directory exists
 
 - [x] Replace hardcoded config path table with detection logic
-- [x] Remove `EcsPreset`, `RectorPreset` references (galawork wrapper classes)
-- [x] Remove `galawork-quality` CLI wrapper description (internal detail)
+- [x] Remove `EcsPreset`, `RectorPreset` references (consumer wrapper classes)
+- [x] Remove `consumer-quality` CLI wrapper description (internal detail)
 - [x] Keep config file descriptions (phpstan.neon, ecs.php, rector.php) — universal
 
 ### Step 1.4: Update workflow section
@@ -169,12 +169,12 @@ Detect commands from project (see Tool Detection above).
 
 ### Step 1.5: Split flags table
 
-Current flags table is all galawork/php-quality specific. Split into:
+Current flags table is all consumer/php-quality specific. Split into:
 
 - [x] Native PHPStan flags: `--memory-limit`, `--debug`, `--pro`
 - [x] Native Rector flags: `--dry-run`, `--clear-cache`
 - [x] Native ECS flags: `--fix`, `--clear-cache`
-- [x] Wrapper-only flags: `--ignore-git`, `--clear-cache`, `--source-branch`, `--target-branch`, `--paths-to-scan` — marked as "Only with galawork/php-quality"
+- [x] Wrapper-only flags: `--ignore-git`, `--clear-cache`, `--source-branch`, `--target-branch`, `--paths-to-scan` — marked as "Only with consumer/php-quality"
 
 ---
 
@@ -184,7 +184,7 @@ Source: `.agent-src.uncompressed/rules/quality-workflow.md`
 
 ### Step 2.1: Replace prerequisite
 
-- [x] Replace `Requires galawork/php-quality` with: "Check `composer.json` for quality tools. See `quality-tools` skill for detection and commands."
+- [x] Replace `Requires consumer/php-quality` with: "Check `composer.json` for quality tools. See `quality-tools` skill for detection and commands."
 
 ### Step 2.2: Replace command examples
 
@@ -268,7 +268,7 @@ Source: `.agent-src.uncompressed/skills/migration-creator/SKILL.md`
 
 ### Step 4.1: Generalize multi-tenant section
 
-Replace `migrate:customers`, `local.galawork.de`, FQDN examples with:
+Replace `migrate:customers`, `local.consumer.de`, FQDN examples with:
 
 ```
 ## Multi-tenant migrations
@@ -281,8 +281,8 @@ Some projects use separate databases per tenant. Check for:
 Read `AGENTS.md` or module docs for project-specific multi-tenant commands.
 ```
 
-- [x] Replace galawork-specific examples with generic guidance
-- [x] Remove `local.galawork.de` reference
+- [x] Replace project-specific examples with generic guidance
+- [x] Remove `local.consumer.de` reference
 - [x] Keep concept (multi-tenant migrations exist), lose specifics
 
 ### Step 4.2: Generalize database connection table
@@ -295,7 +295,7 @@ Read `AGENTS.md` or module docs for project-specific multi-tenant commands.
 
 Source: `.agent-src.uncompressed/commands/optimize-augmentignore.md`
 
-- [x] Replace `galawork/galawork-api` with generic `your-org/project-name`
+- [x] Replace `consumer/consumer-api` with generic `your-org/project-name`
 
 ---
 
@@ -328,27 +328,27 @@ Source: `.agent-src.uncompressed/commands/optimize-augmentignore.md`
 
 - [x] `python3 scripts/compress.py --mark-all-done`
 
-### Step 6.3: Verify no galawork references remain
+### Step 6.3: Verify no consumer references remain
 
 ```bash
-grep -rn "galawork\|config-dev/php-quality\|EcsPreset\|RectorPreset\|galawork-quality\|migrate:customers\|local\.galawork" \
+grep -rn "consumer\|config-dev/php-quality\|EcsPreset\|RectorPreset\|consumer-quality\|migrate:customers\|local\.consumer" \
   .augment/ --include="*.md"
 ```
 
-Acceptable remaining: `galawork/php-quality` as ONE option in quality-tools detection table.
+Acceptable remaining: `consumer/php-quality` as ONE option in quality-tools detection table.
 
 - [x] Verify grep returns only the detection table entry
-- [x] Verify `migrate:customers` and `local.galawork.de` are gone
+- [x] Verify `migrate:customers` and `local.consumer.de` are gone
 - [x] Verify `config-dev/php-quality/` as assumed default path is gone
 
 ### Step 6.4: Verify quality stays identical
 
-**For galawork projects** (with `galawork/php-quality`):
+**For consumer projects** (with `consumer/php-quality`):
 - [x] Wrapper commands still fully documented as preferred option
 - [x] All wrapper flags still documented (`--ignore-git`, `--clear-cache`, `--source-branch`, etc.)
 - [x] Workflow sequence identical (PHPStan → Rector → ECS → PHPStan)
 
-**For non-galawork projects:**
+**For non-consumer projects:**
 - [x] Native commands documented and correct (`vendor/bin/phpstan`, `vendor/bin/rector`, `vendor/bin/ecs`)
 - [x] Detection logic works (check composer.json for installed packages)
 - [x] Workflow identical, just different commands
@@ -359,7 +359,7 @@ Acceptable remaining: `galawork/php-quality` as ONE option in quality-tools dete
 
 | # | Scope | Commit message |
 |---|---|---|
-| 1 | Quality tools skill + workflow rule | `refactor: replace galawork-specific quality commands with tool detection` |
+| 1 | Quality tools skill + workflow rule | `refactor: replace project-specific quality commands with tool detection` |
 | 2 | All 14 referencing files | `refactor: update referencing files to use generic quality tool commands` |
 | 3 | Migration + package ref | `refactor: generalize multi-tenant migration and package name examples` |
 | 4 | Compression + hashes | `chore: compress all modified files and update hashes` |
@@ -370,14 +370,14 @@ Acceptable remaining: `galawork/php-quality` as ONE option in quality-tools dete
 
 - [x] No hardcoded `quality:*` as ONLY option in any file
 - [x] Every quality command reference shows native commands OR links to quality-tools skill
-- [x] `galawork/php-quality` documented as ONE option in detection table, not the sole default
+- [x] `consumer/php-quality` documented as ONE option in detection table, not the sole default
 - [x] Native tools (`vendor/bin/phpstan`, `vendor/bin/rector`, `vendor/bin/ecs`) are primary examples
 - [x] Config paths default to project root, `config-dev/php-quality/` as detected alternative
-- [x] `migrate:customers` and `local.galawork.de` replaced with generic guidance
-- [x] `galawork/galawork-api` example replaced
+- [x] `migrate:customers` and `local.consumer.de` replaced with generic guidance
+- [x] `consumer/consumer-api` example replaced
 - [x] All `.augment/` files compressed and hashes updated
-- [x] Quality for galawork projects is identical (wrapper still documented and preferred)
-- [x] Quality for non-galawork projects is now fully supported
+- [x] Quality for consumer projects is identical (wrapper still documented and preferred)
+- [x] Quality for non-consumer projects is now fully supported
 
 ## Notes
 

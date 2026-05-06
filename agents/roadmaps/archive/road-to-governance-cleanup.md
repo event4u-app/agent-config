@@ -249,7 +249,7 @@ D is only acceptable if the identity question stays explicitly open.
 - Building new framework-specific skill suites (Django, Rails, Spring, …) — that is `road-to-better-skills-and-profiles.md` territory.
 - Translating user-facing docs to other languages — out of scope.
 
-**Cross-roadmap note:** the identity question ("Galawork-internal vs OSS
+**Cross-roadmap note:** the identity question ("Consumer-internal vs OSS
 product vs OSS-light") is open in `road-to-better-skills-and-profiles.md`.
 Finding 7 here is the *positioning surface* — even after the identity is
 decided, the surface needs reframing. The two questions are independent.
@@ -546,4 +546,4 @@ Stack-specific skills (`laravel`, `eloquent`, `pest-testing`, `php-coding`)
 - OSS distribution strategy, Medium articles, sponsorship — still out of scope.
   **Note:** the *positioning surface* (README tagline, audience matrix, docs
   framing, GitHub topics) is now in scope via Finding 7; the *identity decision*
-  (Galawork-internal vs OSS product) stays in `road-to-better-skills-and-profiles.md`.
+  (Consumer-internal vs OSS product) stays in `road-to-better-skills-and-profiles.md`.

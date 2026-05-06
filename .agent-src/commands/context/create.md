@@ -76,9 +76,9 @@ Based on the type, analyze the relevant code area:
 - Identify all models and tables involved
 
 **Service context:**
-- Read the service class and its dependencies
+- Read the service class and its deps
 - Trace call chain (who calls it, what it calls)
-- Identify configuration and env dependencies
+- Identify configuration and env deps
 
 **Integration context:**
 - Find API client classes, HTTP calls

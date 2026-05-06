@@ -187,7 +187,7 @@ After completing a significant code change, run this mental checklist:
 | New API endpoint | OpenAPI annotations, `AGENTS.md` API section |
 | New module created | Create `app/Modules/{Module}/agents/` |
 | Service/repository signature changed | Check if referenced in `agents/docs/services-and-repos.md` |
-| New environment variable | `.env.example`, `AGENTS.md` environment section |
+| New environment variable | `.env.example`, `AGENTS.md` env section |
 | Docker/compose change | `agents/docs/docker.md`, `Makefile` documentation |
 | New Artisan command | `AGENTS.md` commands section |
 | New pattern/convention introduced | Relevant guideline in `.augment/guidelines/` |

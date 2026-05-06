@@ -2,126 +2,18 @@
 type: "auto"
 tier: "1"
 description: "First turn of a conversation on a project — check onboarding.onboarded in .agent-settings.yml; when false, prompt the user to run /onboard before executing any other request"
-alwaysApply: false
 source: package
+triggers:
+  - phrase: "first turn"
+  - keyword: "onboarding"
+  - path_prefix: ".agent-settings.yml"
+routes_to:
+  - "command:onboard"
 ---
 
 # Onboarding Gate
 
-> **Enforced by:** [`scripts/onboarding_gate_hook.py`](../../scripts/onboarding_gate_hook.py)
-> on Augment + Claude Code (`SessionStart`). The hook refreshes
-> `agents/state/onboarding-gate.json` from `.agent-settings.yml`; the
-> prose below is the spec the hook implements and the fallback for
-> platforms without a hook surface.
+**Iron Law.** First turn of a project: if `onboarding.onboarded` is false, prompt `/onboard` before executing any other request.
 
-Forces a one-time `/onboard` run for each developer on each project. This
-replaces the previously scattered "ask once" patterns across `user_name`,
-`personal.ide`, `personal.rtk_installed`, and cost profile confirmation.
-
-## When to activate
-
-Read `onboarding.onboarded` from `.agent-settings.yml` **once per
-conversation**, on the very first agent turn.
-
-- Key missing entirely → **legacy project**. Treat as onboarded, do
-  nothing. Do not write the key.
-- `true` → do nothing. Rule is inert for the rest of the conversation.
-- `false` → gate is active for this conversation (see below).
-
-Cache the result for the whole conversation. Do not re-read on every turn.
-
-## Gate behavior when `onboarded: false`
-
-On the **first** turn of the conversation, before executing the user's
-request, emit this prompt and stop:
-
-```
-> 👋 First-run setup hasn't been completed for this project.
->
-> Run /onboard once (≈2 minutes) to capture:
-> • your name, IDE, and rtk status
-> • cost profile + learning loop confirmation
->
-> 1. Run /onboard now
-> 2. Skip — mark as onboarded and continue with the request
-> 3. Snooze — continue just this turn; ask again next conversation
-```
-
-- `1` → invoke `/onboard`. Resume the user's original request afterwards.
-- `2` → set `onboarding.onboarded: true` in `.agent-settings.yml` (touch
-  only that field; preserve comments and order). Then execute the
-  original request.
-- `3` → proceed with the original request. Do not ask again in this
-  conversation. Do not write the file.
-
-Free-text replies (`"mach weiter"`, `"just do it"`) count as `3`.
-
-## Exceptions — do NOT block
-
-Skip the gate when the user's request already is an onboarding or
-settings operation, so we don't prompt users mid-setup:
-
-- `/onboard`, `/set-cost-profile`, `/mode`
-- The user explicitly asks about `.agent-settings.yml` or onboarding
-- Incident / break-glass signals (`hotfix`, `break-glass`, `"prod is
-  down"`). The gate waits for normal operations to resume.
-
-## Non-blocking for legacy projects
-
-If `.agent-settings.yml` exists but has no `onboarding` section at all,
-treat as onboarded. Only `onboarded: false` (explicit) triggers the
-gate. This protects projects that were set up before this rule shipped.
-
-## What this rule does NOT do
-
-- Write `onboarded: true` automatically. Only `/onboard` (step 6) and
-  the user's explicit `2` choice do that.
-- Re-prompt across turns in the same conversation. One prompt per
-  conversation, max.
-- Replace normal settings edits. Mid-life changes are ad-hoc (edit the
-  file directly or ask the agent, which follows
-  [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules));
-  this rule is a one-time gate.
-- Run on every agent turn. First turn only.
-
-## Interactions
-
-- `ask-when-uncertain` — the gate uses its numbered-options iron law;
-  one question per turn.
-- `language-and-tone` — prompt is translated to the user's language at
-  runtime; `.md` source stays English.
-- `scope-control` — option `2` writes exactly one key; no side effects.
-- `role-mode-adherence` — gate runs BEFORE the mode marker is emitted.
-
-## Copilot fallback
-
-GitHub Copilot has no `SessionStart` hook surface, so
-`scripts/onboarding_gate_hook.py` cannot run structurally and
-`agents/state/onboarding-gate.json` is not refreshed for the agent.
-On the first turn of a Copilot conversation:
-
-1. Read `onboarding.onboarded` from `.agent-settings.yml` directly
-   (one read per conversation, then cache as the prose above
-   describes).
-2. Optionally refresh the state file manually so other tooling sees
-   the same value the hook would have written:
-
-   ```bash
-   python3 scripts/onboarding_gate_hook.py < /dev/null
-   ```
-
-   The script reads `.agent-settings.yml`, atomically writes
-   `agents/state/onboarding-gate.json`, and exits 0 — same payload
-   the Augment / Claude / Cursor / Cline / Windsurf / Gemini hook
-   would have produced.
-3. Apply the gate behavior from "Gate behavior when `onboarded:
-   false`" above. The cooperative path is the spec; the hook is the
-   cache.
-
-## See also
-
-- [`/onboard`](../commands/onboard.md) — the command this gate invokes
-- [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md) — merge rules for mid-life edits
-- [`agent-settings` template](../templates/agent-settings.md) — `onboarding.onboarded` reference
-- [`rule-type-governance`](rule-type-governance.md) — why this is `always`
-- [`hardening-pattern`](../../agents/contexts/hardening-pattern.md) — Tier 1 mechanical-rule contract
+Body migrated to `command:onboard` (per P4 of `road-to-kernel-and-router.md`).
+Trigger-set above activates this routing under the `balanced` and `full` profiles.

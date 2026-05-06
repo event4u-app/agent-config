@@ -71,7 +71,7 @@ Goal: understand structure, identify major components, detect investigation path
 ### Investigation mode
 
 Use when there is a concrete issue inside a large or unclear system.
-Goal: isolate the affected area, route into root-cause analysis, verify likely causes with evidence.
+Goal: isolate the affected area, route into root-cause analysis, verify likely → with evidence.
 
 ### Optimization mode
 

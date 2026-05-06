@@ -94,10 +94,13 @@ evals/results/
 # never commit, prices drift constantly.
 /agents/.agent-prices.md
 
-# AI Council session persistence (D2). Each /council run writes
-# request + raw responses + manifest to a per-UTC-timestamp folder
-# for local audit + replay. Contains real provider output and
-# user-pasted manual replies — never commit.
+# AI Council artefacts (questions, responses, sessions). Council
+# output is dev-time scratch — informs decisions, never the durable
+# contract. The roadmap / ADR / skill body cites convergence inline.
+# Linking to council files would break for any reviewer who clones
+# without the ignored content. See ai-council § Output path convention.
+agents/council-questions/
+agents/council-responses/
 agents/council-sessions/
 
 # AI Council per-run cache (raw provider responses keyed by run id).
@@ -108,4 +111,3 @@ agents/council-sessions/
 # Written by SessionStart / PostToolUse hooks on Augment + Claude Code;
 # regenerated on demand, never committed.
 /agents/state/
-.council-tmp/

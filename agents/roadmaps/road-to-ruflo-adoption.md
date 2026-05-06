@@ -162,8 +162,6 @@ runs in parallel with Phase 1 + 2.
 
 ## Provenance
 
-- Council artefacts: `agents/council-questions/ruflo-harvest-prioritization.md`,
-  `agents/council-responses/ruflo-harvest-prioritization.json`
 - Analysis: `agents/analysis/compare-ruflo-harvest.md`
 - Upstream source: `ruvnet/ruflo` (SHA captured during harvest in
   `/tmp/ruflo-harvest/ruflo.sha`; not committed — re-captured per audit)

@@ -70,6 +70,14 @@ tasks:
     desc: Verify agents/index.md and docs/catalog.md are in sync (fails on drift)
     cmd: python3 scripts/generate_index.py --check
 
+  compile-router:
+    desc: Compile rule frontmatter into router.json (kernel + tier-1/2 routing)
+    cmd: python3 scripts/compile_router.py
+
+  check-router:
+    desc: Verify router.json matches a fresh compile (fails on drift)
+    cmd: python3 scripts/compile_router.py --check
+
   check-augmentignore:
     desc: Advisory check — reminds to refresh .augmentignore (non-blocking, always exits 0)
     cmd: python3 scripts/check_augmentignore.py
@@ -89,6 +97,7 @@ tasks:
       - task: sync-check-hashes
       - task: sync
       - task: generate-tools
+      - task: compile-router
       - git diff --quiet
 
   consistency-fix:
@@ -96,10 +105,15 @@ tasks:
     cmds:
       - task: sync
       - task: generate-tools
+      - task: compile-router
 
   check-compression:
     desc: Check compression quality (headings, code blocks, frontmatter, word count)
     cmd: python3 scripts/check_compression.py
+
+  check-compressed-paths:
+    desc: "Validate compressed-output paths in .agent-src/rules/*.md (road-to-path-fixes P5.2)"
+    cmd: python3 scripts/check_compressed_paths.py
 
   generate-ownership-matrix:
     desc: Regenerate the file-ownership matrix JSON + MD (docs/contracts/file-ownership-matrix.md)
@@ -120,3 +134,11 @@ tasks:
   check-roadmap-trackable:
     desc: Fail if any active roadmap has unparseable headings or zero-checkbox phases (roadmap-progress-sync rule)
     cmd: python3 scripts/check_roadmap_trackable.py
+
+  check-council-layout:
+    desc: Fail if council-* artefacts are placed outside the canonical agents/council-{questions,responses,sessions}/ dirs (ai-council § Output path convention)
+    cmd: python3 scripts/check_council_layout.py
+
+  council-prune:
+    desc: Prune council artefacts older than ai_council.session_retention_days (default 7) across questions, responses, and sessions dirs
+    cmd: python3 scripts/council_prune.py

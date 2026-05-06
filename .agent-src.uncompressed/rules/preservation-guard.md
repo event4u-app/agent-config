@@ -4,6 +4,15 @@ tier: "2b"
 alwaysApply: false
 description: "When merging, refactoring, compressing, or restructuring skills, rules, commands, or guidelines — prevent quality loss"
 source: package
+triggers:
+  - intent: "merge skill"
+  - intent: "compress rule"
+  - intent: "refactor artifact"
+  - keyword: "Iron Law"
+validator_ignore:
+  - type: "substring"
+    pattern: ".agent-src.uncompressed/"
+    reason: "Rule references the authoring tree as the operand of compression/preservation."
 ---
 
 # Preservation Guard

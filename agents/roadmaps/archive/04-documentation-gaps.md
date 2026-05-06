@@ -261,7 +261,7 @@ wsl --install
 Der CI-Step "Portability check — No project-specific paths in shared files" prüft
 Dateien in `.augment/`. Die `AGENTS.md` im Root liegt außerhalb dieses Checks.
 
-Wie in Roadmap 01 beschrieben, enthält `AGENTS.md` Galawork-spezifische Inhalte.
+Wie in Roadmap 01 beschrieben, enthält `AGENTS.md` Consumer-spezifische Inhalte.
 Der Portability-Check hätte das erkennen müssen — er hat es nicht.
 
 ### Lösungsvorschlag
@@ -270,7 +270,7 @@ Der Portability-Check hätte das erkennen müssen — er hat es nicht.
 # In scripts/skill_linter.py oder einem separaten check-portability.py:
 
 PROHIBITED_STRINGS = [
-    "Galawork", "galawork",
+    "Consumer", "consumer",
     "landscaping",
     "make start", "make console",  # Projekt-spezifische Makefile-Targets
     # Füge hier weitere projektspezifische Strings hinzu
@@ -346,11 +346,11 @@ This package follows Semantic Versioning (semver.org).
 
 ## Status-Tracking
 
-| Problem | Status | Branch |
-|---------|--------|--------|
-| CHANGELOG erstellen | ✅ Erledigt (`CHANGELOG.md`, 14 Releases) | `feat/improve-agent-setup-2` |
+| Problem | Status                                                                            | Branch |
+|---------|-----------------------------------------------------------------------------------|--------|
+| CHANGELOG erstellen | ✅ Erledigt (`CHANGELOG.md`, 14 Releases)                                          | `feat/improve-agent-setup-2` |
 | README-Behauptungen korrigieren | ✅ Erledigt (Tool-Support-Legende, Requirements, "What your agent is asked to do") | `feat/improve-agent-setup-2` |
-| CONTRIBUTING.md erstellen | ✅ Erledigt (`CONTRIBUTING.md` inkl. SemVer-Policy) | `feat/improve-agent-setup-2` |
-| Troubleshooting-Doku erstellen | ✅ Erledigt (`docs/troubleshooting.md`) | `feat/improve-agent-setup-2` |
-| Portability-Check erweitern | ✅ Erledigt (Root-Dateien + Identifier-Blocklist, galawork hardcoding entfernt) | `feat/improve-agent-setup` + `feat/improve-agent-setup-2` |
-| Versioning-Strategie dokumentieren | ✅ Erledigt (CONTRIBUTING.md Versioning-Policy-Abschnitt) | `feat/improve-agent-setup-2` |
+| CONTRIBUTING.md erstellen | ✅ Erledigt (`CONTRIBUTING.md` inkl. SemVer-Policy)                                | `feat/improve-agent-setup-2` |
+| Troubleshooting-Doku erstellen | ✅ Erledigt (`docs/troubleshooting.md`)                                            | `feat/improve-agent-setup-2` |
+| Portability-Check erweitern | ✅ Erledigt (Root-Dateien + Identifier-Blocklist, consumer hardcoding entfernt)    | `feat/improve-agent-setup` + `feat/improve-agent-setup-2` |
+| Versioning-Strategie dokumentieren | ✅ Erledigt (CONTRIBUTING.md Versioning-Policy-Abschnitt)                          | `feat/improve-agent-setup-2` |

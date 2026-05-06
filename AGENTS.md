@@ -111,7 +111,7 @@ want to measure which skills/rules/commands the agent actually applies set
 `telemetry.artifact_engagement.enabled: true` in `.agent-settings.yml`. The
 log is local-only JSONL (no upload, no cross-project share) and is bound
 by the redaction floor described in
-[`docs/contracts/artifact-engagement-flow.md`](docs/contracts/artifact-engagement-flow.md) (beta).
+[`contexts/contracts/artifact-engagement-flow.md`](.agent-src.uncompressed/contexts/contracts/artifact-engagement-flow.md) (beta).
 The recording rule lives at
 [`.agent-src/rules/artifact-engagement-recording.md`](.agent-src/rules/artifact-engagement-recording.md).
 
@@ -125,7 +125,7 @@ picks every time. Engine: `scripts/command_suggester/`. Rule:
 Locked eligibility table, scoring contract, and hardening list:
 [`docs/contracts/adr-command-suggestion.md`](docs/contracts/adr-command-suggestion.md)
 and
-[`docs/contracts/command-suggestion-flow.md`](docs/contracts/command-suggestion-flow.md) (beta).
+[`contexts/contracts/command-suggestion-flow.md`](.agent-src.uncompressed/contexts/contracts/command-suggestion-flow.md) (beta).
 
 ## Key rules for agents editing this repo
 
@@ -139,19 +139,46 @@ and
 | Keep `.agent-src/` / `agents/` cross-refs in sync on add/rename/delete | [`docs-sync`](.agent-src/rules/docs-sync.md) |
 | Creating a new skill/rule/command/guideline runs Understand → Research → Draft | [`artifact-drafting-protocol`](.agent-src/rules/artifact-drafting-protocol.md) |
 
+## Kernel + Router
+
+The rule set runs on a **Kernel + Router** model (locked 2026-05-06,
+see [`docs/decisions/ADR-rule-kernel-and-router.md`](docs/decisions/ADR-rule-kernel-and-router.md)):
+
+- **Kernel** = 9 always-loaded Iron-Law rules, ≤ 26k chars
+  (`agent-authority`, `ask-when-uncertain`, `commit-policy`,
+  `direct-answers`, `language-and-tone`, `no-cheap-questions`,
+  `non-destructive-by-default`, `scope-control`, `verify-before-complete`).
+  Locked set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-membership.md) (beta).
+- **Router** = frontmatter `tier:` + `triggers:` + `routes_to:` keys
+  on every rule. `scripts/compile_router.py` builds `router.json`
+  deterministically. Contract: [`docs/contracts/rule-router.md`](docs/contracts/rule-router.md) (beta).
+- **Cost profiles** gate which tiers load:
+  `minimal` = kernel only · `balanced` = kernel + tier-1 (default) ·
+  `full` = kernel + tier-1 + tier-2.
+
+Hard caps enforced by `task lint-rule-budget`: kernel-bucket ≤ 26k chars,
+per-rule ≤ 2.5k chars (Iron-Law overrides up to 4.0k via ADR in
+[`docs/decisions/`](docs/decisions/) and
+[`docs/contracts/iron-law-overrides.txt`](docs/contracts/iron-law-overrides.txt)).
+Daily snapshots: `python3 scripts/measure_rule_budget.py --trend-append`
+appends to `agents/.rule-budget-history.jsonl`.
+
 ## Repository layout
 
 ```
 .agent-src.uncompressed/      ← edit here
-  skills/       (134 skills)
-  rules/        (56 rules)
-  commands/     (94 commands)
+  skills/       (136 skills)
+  rules/        (58 rules)
+  commands/     (95 commands)
   personas/     (7 personas)
   templates/    (AGENTS.md, copilot-instructions.md, skill.md, …)
   contexts/
 
 docs/guidelines/            (47 guidelines — reference material, not packaged)
+docs/contracts/             (kernel-membership, rule-router, rule-classification, …)
+docs/decisions/             (ADRs — kernel overrides, scope decisions)
 .agent-src/                 ← compressed output shipped in the package
+.agent-src/router.json      ← compiled router manifest (consumed at runtime)
 .augment/                   ← local projection for Augment Code (gitignored)
 scripts/                    ← install.sh, install.py, compress.py, linters
 tests/                      ← pytest (324 tests) + test_install.sh

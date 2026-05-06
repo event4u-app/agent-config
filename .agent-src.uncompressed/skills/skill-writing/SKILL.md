@@ -258,6 +258,20 @@ Example:
 * Validation must be concrete
 * One skill = one job
 
+### Cross-references and paths
+
+* Body links to guidelines / contracts use the verbatim relative form
+  (`../../docs/guidelines/<group>/<name>.md`,
+  `../../docs/contracts/<name>.md`). The compress-time rewriter
+  resolves them to depth-aware single-up form — do not pre-rewrite in
+  source.
+* Skills do **not** declare `load_context:` / `load_context_eager:`;
+  those frontmatter keys are rule-only. If a skill needs to point at a
+  context, link to it inline (`[context-name](../../contexts/<area>/<file>.md)`).
+* Never write `.agent-src.uncompressed/` in any skill body link or
+  example — it ships into `.augment/skills/` and breaks consumer
+  resolution. See `rule-writing` § 3b for the canonical reference.
+
 ### Execution metadata (optional)
 
 Skills may declare an `execution` frontmatter block (`type`, `handler`,

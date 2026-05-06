@@ -33,6 +33,11 @@ Size is a signal — not the goal.
 - Acceptable: **< 100–120 lines**
 - Hard limit: **< 200 lines**
 
+Linter (council review 2026-05-06): the > 40 / > 60 line warnings are
+**density-gated** — rules with ≥ 30 % fenced content (verbatim Iron-Law
+blocks, worked-example fences) are exempt from the line-count warning.
+The 200-line hard error stays unconditional.
+
 Reason:
 - Loaded frequently
 - Must be reliably followed
@@ -43,8 +48,10 @@ Reason:
 ## Skills
 
 - Target: **300–900 words**
-- Warning: **>1200 words**
-- Strong split signal: **>1500 words**
+- Warning: **> 400 lines** (raised from 300, council review 2026-05-06)
+- Strong split signal: reference-rich skills (analyzer, quality-tool
+  catalog, council orchestration) may legitimately sit between 300 and
+  400 lines without being split-candidates
 
 Focus:
 - scanability
@@ -57,6 +64,10 @@ Focus:
 
 - Target: **200–600 words**
 - Acceptable: **up to ~1000 words**
+- Warning: **> 1000 words AND lacks delegation structure** (< 5
+  sub-sections OR < 3 code blocks). Well-factored orchestrators with ≥ 5
+  sub-sections AND ≥ 3 code blocks are exempt — the size reflects
+  dispatch breadth, not bloat (council review 2026-05-06).
 
 Commands orchestrate — not implement.
 

@@ -35,6 +35,7 @@ LOCKED_SUBTREES = (
     "chat-history",
     "execution",
     "authority",
+    "contracts",
 )
 
 # Files allowed to remain at the contexts root. Anything else at the root

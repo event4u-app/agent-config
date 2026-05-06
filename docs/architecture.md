@@ -27,7 +27,8 @@ Stability tiers follow [`docs/contracts/STABILITY.md`](contracts/STABILITY.md):
 .agent-src.uncompressed/          ← Source of truth (verbose, human-readable)
     ↓ /compress command
 .agent-src/                     ← Compressed output (token-efficient, shipped in the package)
-    ↓ project_to_augment() — copies rules, symlinks rest
+    ↓ project_to_augment() — copies rules by default, symlinks rest
+                              (toggle: augment.rules_use_symlinks)
 .augment/                       ← Local projection for Augment Code (gitignored)
     ↓ install.sh (Cursor, Cline, Windsurf, Augment VSCode) / plugin system
 .claude/ .cursor/ .clinerules/  ← Tool-specific symlinks/copies (auto-generated)
@@ -35,6 +36,39 @@ Stability tiers follow [`docs/contracts/STABILITY.md`](contracts/STABILITY.md):
     ↓ scripts/build_cloud_bundle.py    (Phase 1 — cloud distribution)
 dist/cloud/<skill>.zip          ← Anthropic Skills bundles (Claude.ai Web / Skills API)
 ```
+
+### Installer layout
+
+In a consumer project, the installer (`scripts/install.sh`) and the
+package's own `project_to_augment()` projection produce a `.augment/`
+tree where:
+
+- `.augment/rules/` — **copies** of compressed rule files by default.
+  Augment Code historically does not load symlinked rules, so each
+  rule is a real file. Set `augment.rules_use_symlinks: true` in
+  `.agent-settings.yml` to switch them to symlinks once Augment Code
+  supports it (the toggle is honored by both `scripts/install.sh` on
+  the consumer side and `project_to_augment()` in the package).
+- `.augment/skills/`, `.augment/commands/`, `.augment/personas/`,
+  `.augment/contexts/`, `.augment/templates/` — **symlinks** into
+  `.agent-src/<subdir>/`. Reading a context follows the symlink to
+  the package payload.
+- `.augment/docs/guidelines/` — **symlink** into the package's
+  `docs/guidelines/` (consumer side: `vendor/event4u/agent-config/docs/guidelines/`;
+  package self-projection: `../docs/guidelines/`). This is the only
+  `docs/` subdirectory exposed in `.augment/`; `docs/contracts/` and
+  `docs/decisions/` are package-internal — rules that reference
+  contracts inline a 2–3 line excerpt instead of linking out.
+
+Cross-references inside `.agent-src/rules/*.md` are written
+**relative to `.agent-src/rules/`** (e.g. `../contexts/execution/foo.md`,
+`../docs/guidelines/agent-infra/foo.md`). Source files under
+`.agent-src.uncompressed/rules/` use **logical names** without a
+directory prefix (e.g. `contexts/execution/foo.md`); the
+compress-time path rewriter in `scripts/compress.py` translates
+them to the relative form when writing into `.agent-src/`. Hardcoding
+`.agent-src.uncompressed/` in source frontmatter or body links is
+forbidden and caught by `scripts/check_compressed_paths.py`.
 
 ### Cloud-bundle pipeline
 
@@ -62,10 +96,10 @@ fails on any source-side violation, without producing artifacts.
 
 | Layer | Count | Purpose |
 |---|---|---|
-| **Skills** | 134 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
-| **Rules** | 56 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
-| **Commands** | 94 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/compress`, … |
-| **Guidelines** | 51 | Reference material cited by skills — PHP patterns, Eloquent, Playwright, agent-infra, … |
+| **Skills** | 136 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
+| **Rules** | 58 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
+| **Commands** | 95 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/compress`, … |
+| **Guidelines** | 56 | Reference material cited by skills — PHP patterns, Eloquent, Playwright, agent-infra, … |
 | **Templates** | 7 | Scaffolds for features, roadmaps, contexts, skills, overrides |
 | **Contexts** | 5 | Shared knowledge about the system itself |
 
@@ -212,6 +246,53 @@ Skills use a `SKILL.md` format with YAML frontmatter, compatible with the
 Agent Skills specification. Cloud bundles produced by
 `scripts/build_cloud_bundle.py` follow the same format with cloud-side
 adjustments (description budget, sandbox note, package-internal path-swap).
+
+---
+
+## Path resolution and Copilot integration
+
+Cross-references inside `.augment/rules/`, `.augment/skills/`, and the
+mirrored `.claude/`, `.cursor/`, `.clinerules/` trees use **relative
+paths from the delivered location**. They resolve through the symlinks
+created by `scripts/install.sh`, not via raw git checkout. This means
+GitHub Copilot's static checker — which walks the git tree — will see
+broken paths where there are none. **The gap is intentional, not a bug.**
+
+The package ships two complementary suppression artefacts:
+
+| File | Read by | Purpose |
+|---|---|---|
+| `.github/copilot-instructions.md` | Copilot Chat + PR review | Repo-wide coding standards, self-contained behavior |
+| `.github/copilot-review-instructions.md` | Copilot PR review | Path-resolution suppression floor (this section's mate) |
+
+Both are installed (copy-if-missing) by `scripts/install.sh` from
+`.agent-src.uncompressed/templates/`. Consumers can edit them freely;
+the installer never overwrites.
+
+The mechanical floor is `scripts/check_compressed_paths.py`, wired into
+`task ci` as `check-compressed-paths`. It validates `.agent-src/rules/*.md`:
+
+- `load_context:` entries must resolve to existing files.
+- Forbidden substrings (`.agent-src.uncompressed/`, `../../docs/`,
+  `../../agents/`) must not survive compression — unless declared
+  per-rule via the `validator_ignore:` frontmatter primitive (audited).
+- Body links to `../docs/guidelines/...` are intentionally **not**
+  checked (they are package-internal reference material, silenced by
+  the Copilot suppression floor above).
+
+### Verifying path fixes in a consumer
+
+If a regression is suspected, replay the smoke test against the
+package's own `.augment/` projection:
+
+```bash
+task sync                              # regenerate .agent-src/ → .augment/
+python3 scripts/smoke_path_resolution.py
+```
+
+The script walks `.augment/rules/*.md` and resolves every
+`load_context:` entry to a file under `.augment/`. A non-zero exit
+means a consumer would also see the same broken reference.
 
 ---
 

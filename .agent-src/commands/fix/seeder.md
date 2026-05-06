@@ -63,9 +63,9 @@ where the seeder class is NOT the owner of the data file.
 
 ### Known Exceptions
 
-Currently there are **no exceptions**. All circular dependencies have been resolved.
+Currently there are **no exceptions**. All circular deps have been resolved.
 
-**Pattern for resolving circular dependencies:** Use two-phase seeding. The data file seeds
+**Pattern for resolving circular deps:** Use two-phase seeding. The data file seeds
 records with placeholder values (e.g., empty arrays). The Seeder's `run()` method then updates
 records with the real values using `getReference()`. Since `run()` is called after all seeders
 are initialized, the circular dependency is broken.

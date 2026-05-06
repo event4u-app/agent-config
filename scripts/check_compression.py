@@ -24,6 +24,15 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import List, Literal
 
+# Import the rewriter so frontmatter comparison can normalise the source
+# side through the same path transformations the compressor applies. Without
+# this, every `load_context:` logical name (e.g. `contexts/foo.md`) and every
+# `../../docs/...` body link looks like a frontmatter / body mismatch even
+# though the rewriter is doing exactly what road-to-path-fixes.md P2/P3
+# specified.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from compress import _rewrite_paths  # noqa: E402
+
 Severity = Literal["error", "warning", "info"]
 
 SOURCE_DIR = Path(".agent-src.uncompressed")
@@ -275,6 +284,12 @@ def scan_all(root: Path) -> List[Issue]:
 
         source_text = source_file.read_text(encoding="utf-8")
         target_text = target_file.read_text(encoding="utf-8")
+        # Normalise source through the path rewriter (idempotent) so logical
+        # `load_context:` names and `../../docs/...` body links match the
+        # depth-aware form the compressor produced. Compression word-count
+        # checks downstream are unaffected because rewriting only edits
+        # frontmatter list values and link targets, not prose tokens.
+        source_text = _rewrite_paths(source_text, rel_str)
         issues.extend(check_pair(rel_str, source_text, target_text))
 
     return issues

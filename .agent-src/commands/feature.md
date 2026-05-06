@@ -27,7 +27,7 @@ commands with a single entry point + sub-command dispatch.
 ## Workflow ordering
 
 Typical sequence: `explore` → `plan` → `roadmap` → `dev` (or per-step
-implementation). Use `refactor` whenever an existing plan needs an update.
+impl). Use `refactor` whenever an existing plan needs an update.
 
 ## Dispatch
 

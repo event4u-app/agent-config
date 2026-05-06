@@ -53,9 +53,9 @@ For bug fixes and new features, prefer test-driven development:
 
 ### Why test-first matters
 
-Tests written **after** implementation pass immediately. Passing immediately proves nothing:
+Tests written **after** impl pass immediately. Passing immediately proves nothing:
 - The test might test the wrong thing.
-- The test might test implementation, not behavior.
+- The test might test impl, not behavior.
 - You never saw it catch the bug — so you don't know if it would.
 
 ### Bug fix TDD
@@ -120,7 +120,7 @@ The test proves the fix works AND prevents regression.
 - For JSON APIs, assert:
     - exact relevant fields
     - error structure when applicable
-    - database state after the request
+    - DB state after the request
 - Do not only assert `200` — verify meaningful behavior.
 
 ## Validation tests
@@ -258,7 +258,7 @@ When reviewing or auditing existing tests, check for these anti-patterns:
 
 - Do not test private methods directly.
 - Do not over-mock Laravel internals.
-- Do not assert implementation details when behavior assertions are enough.
+- Do not assert impl details when behavior assertions are enough.
 - Do not write brittle tests tied to formatting or irrelevant response noise.
 - Do not create giant tests that cover many behaviors at once.
 - Do not skip authorization or validation coverage for important endpoints.
@@ -285,7 +285,7 @@ When generating Pest tests:
 - Don't use `readonly` or `final` on Pest test helper classes — it breaks mocking.
 - Don't add `use` statements for global classes (`Exception`, `DateTimeImmutable`) in Pest files — they're auto-imported.
 - The model forgets `$this->travel(5)->seconds()` for time-dependent tests — never rely on `now()` differing between lines.
-- Parallel tests share the database — don't assume column values are null unless you explicitly set them.
+- Parallel tests share the DB — don't assume column values are null unless you explicitly set them.
 
 ## Do NOT
 
@@ -297,7 +297,7 @@ When generating Pest tests:
 When generating new tests, focus on:
 - **Business logic**: calculations, status transitions, validation rules, data transformations
 - **Edge cases**: null, empty string, zero, negative numbers, boundary values, max length
-- **Error paths**: invalid input, missing dependencies, exception handling
+- **Error paths**: invalid input, missing deps, exception handling
 - **Different code branches**: if/else, early returns, fallback behavior
 
 What NOT to test:

@@ -107,7 +107,7 @@ Check:
 ## Gotcha
 
 * React bugs often come from stale state, not broken logic.
-* Missing dependencies in hooks are one of the most common root causes.
+* Missing deps in hooks are one of the most common root causes.
 * Overusing memoization can make code harder to reason about without solving real problems.
 
 ## Do NOT

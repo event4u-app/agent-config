@@ -101,7 +101,7 @@ Always check `composer.json` for DTO-related packages before choosing the approa
 
 - DTOs must extend `SimpleDto` — don't create plain PHP classes as DTOs.
 - The model forgets to add the model linkage (`$modelClass`) when the DTO maps to an Eloquent model.
-- Attribute names in the DTO must match the database column names (snake_case), not the PHP property names.
+- Attribute names in the DTO must match the DB column names (snake_case), not the PHP property names.
 
 ## Do NOT
 

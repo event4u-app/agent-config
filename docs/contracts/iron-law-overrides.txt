@@ -1,0 +1,25 @@
+# Iron-Law-override allowlist for the kernel-budget check.
+#
+# Source contract: docs/contracts/kernel-membership.md § 5.1
+# Enforced by:     scripts/measure_rule_budget.py --kernel-budget-check
+#
+# A rule listed here is allowed to exceed the per-rule hard cap
+# (PER_RULE_HARD = 2 500 chars) up to the override ceiling
+# (PER_RULE_OVERRIDE_CEILING = 4 000 chars). Adding an entry requires a
+# numbered ADR in docs/decisions/ that justifies the Iron-Law density
+# (e.g. multiple Iron-Law fences, exhaustive enumeration that cannot be
+# safely externalised, pre-send/pre-act gate that loses meaning if split).
+#
+# Format: one rule-id per line. Comments start with '#'. Blank lines OK.
+
+# ADR-002 (2026-05-06) — kernel-bucket cap raise + per-rule overrides.
+# Source: docs/decisions/ADR-002-kernel-bucket-overrides.md
+# Empirical r_actual=0.795 vs r_projected=0.712. The 6 rules below carry
+# Iron-Law fences + non-externalisable enumerations; further compression
+# would force semantic loss. All sit ≤ 4 000-char override ceiling.
+ask-when-uncertain
+direct-answers
+language-and-tone
+no-cheap-questions
+non-destructive-by-default
+scope-control

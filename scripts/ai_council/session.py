@@ -35,9 +35,15 @@ from scripts.ai_council.orchestrator import render
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SESSIONS_DIR = REPO_ROOT / "agents" / "council-sessions"
+QUESTIONS_DIR = REPO_ROOT / "agents" / "council-questions"
+RESPONSES_DIR = REPO_ROOT / "agents" / "council-responses"
 SETTINGS_FILE = REPO_ROOT / ".agent-settings.yml"
 
-DEFAULT_RETENTION_DAYS = 14
+# Default retention for all council artefacts (questions, responses,
+# sessions). Overridden by `ai_council.session_retention_days`
+# in `.agent-settings.yml`. Council files are local-only scratch — short
+# retention keeps the working tree from accumulating dead weight.
+DEFAULT_RETENTION_DAYS = 7
 _TS_RE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})T(\d{2})-(\d{2})-(\d{2})Z$")
 
 
@@ -152,6 +158,92 @@ def prune_old_sessions(
     return removed
 
 
+def prune_old_artifacts(
+    artifact_dir: Path,
+    retention_days: int,
+    *,
+    now: _dt.datetime | None = None,
+) -> list[Path]:
+    """Delete files and timestamp-less directories older than `retention_days`.
+
+    mtime-based — used for `agents/council-questions/`,
+    `agents/council-responses/`, and root-level files in
+    `agents/council-sessions/` that don't match the
+    timestamp-subdir convention handled by `prune_old_sessions`.
+
+    Walks the directory non-recursively. For files: deletes when
+    mtime predates the cutoff. For sub-directories without a
+    timestamp name: deletes recursively when mtime predates the
+    cutoff. Never raises — disk failures log to stderr.
+
+    Returns the list of deleted paths. `retention_days <= 0`
+    disables pruning and returns an empty list.
+    """
+    if retention_days <= 0 or not artifact_dir.exists():
+        return []
+    cutoff = (now or _dt.datetime.now(_dt.timezone.utc)) - _dt.timedelta(days=retention_days)
+    cutoff_ts = cutoff.timestamp()
+    removed: list[Path] = []
+    try:
+        entries = list(artifact_dir.iterdir())
+    except OSError as exc:  # noqa: BLE001 - never block the report
+        print(f"[council:session] artifact iterdir failed: {exc}", file=sys.stderr)
+        return removed
+    for entry in entries:
+        # Timestamp subdirs are owned by prune_old_sessions; skip them
+        # so the two pruners don't race.
+        if entry.is_dir() and _parse_session_timestamp(entry.name) is not None:
+            continue
+        try:
+            mtime = entry.stat().st_mtime
+        except OSError as exc:  # noqa: BLE001 - never block the report
+            print(f"[council:session] artifact stat failed for {entry}: {exc}",
+                  file=sys.stderr)
+            continue
+        if mtime >= cutoff_ts:
+            continue
+        try:
+            if entry.is_dir():
+                shutil.rmtree(entry)
+            else:
+                entry.unlink()
+            removed.append(entry)
+        except OSError as exc:  # noqa: BLE001 - never block the report
+            print(f"[council:session] artifact remove failed for {entry}: {exc}",
+                  file=sys.stderr)
+    return removed
+
+
+def prune_all_council_artifacts(
+    retention_days: int | None = None,
+    *,
+    repo_root: Path | None = None,
+    now: _dt.datetime | None = None,
+) -> dict[str, list[Path]]:
+    """Prune every council artefact dir under `repo_root` in one pass.
+
+    Reads `retention_days` from settings if not supplied. Used by the
+    `task council-prune` target and by `save()`. Never raises.
+
+    Returns a dict keyed by directory label — `sessions`,
+    `questions`, `responses` — each mapped to the list of
+    paths actually removed.
+    """
+    root = repo_root or REPO_ROOT
+    days = _load_retention_days() if retention_days is None else retention_days
+    sessions = root / "agents" / "council-sessions"
+    questions = root / "agents" / "council-questions"
+    responses = root / "agents" / "council-responses"
+    return {
+        "sessions": (
+            prune_old_sessions(sessions, days, now=now)
+            + prune_old_artifacts(sessions, days, now=now)
+        ),
+        "questions": prune_old_artifacts(questions, days, now=now),
+        "responses": prune_old_artifacts(responses, days, now=now),
+    }
+
+
 def save(
     *,
     manifest: SessionManifest,
@@ -167,10 +259,12 @@ def save(
     - `Iterable[list[CouncilResponse]]` — multi-round, one list per
       round in execution order.
 
-    `retention_days` controls auto-pruning of older sibling sessions
-    after the new one is written. `None` reads the value from
-    `.agent-settings.yml` (`ai_council.session_retention_days`,
-    default `14`); `0` disables pruning.
+    `retention_days` controls auto-pruning of older council artefacts
+    after the new one is written — sibling sessions plus, when
+    `sessions_dir` is not overridden, files in `council-questions/`
+    and `council-responses/`. `None` reads the value
+    from `.agent-settings.yml` (`ai_council.session_retention_days`,
+    default `7`); `0` disables pruning.
 
     Disk-write failures are surfaced via a stderr line but do not
     raise; the caller's text report is the source of truth.
@@ -232,5 +326,13 @@ def save(
 
     days = _load_retention_days() if retention_days is None else retention_days
     prune_old_sessions(base, days)
+    prune_old_artifacts(base, days)
+    # In production (no sessions_dir override), also prune the sibling
+    # council artefact dirs so questions/responses aren't left as dead
+    # weight. Tests that pass an explicit sessions_dir stay isolated
+    # from the wider tree.
+    if sessions_dir is None:
+        prune_old_artifacts(QUESTIONS_DIR, days)
+        prune_old_artifacts(RESPONSES_DIR, days)
 
     return session_dir

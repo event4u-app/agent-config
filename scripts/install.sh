@@ -2,7 +2,9 @@
 # install.sh — Agent-config payload sync (one of two installer stages).
 #
 # Reads from vendor's .agent-src/ (fallback: .augment/ for pre-2.0 packages) and
-# writes the target project's .augment/ tree: copies rules, symlinks everything else.
+# writes the target project's .augment/ tree: copies rules, symlinks everything
+# else. When augment.rules_use_symlinks: true is set in the target's
+# .agent-settings.yml, rules are symlinked instead of copied.
 # Creates tool-specific directories for Claude Code, Cursor, Cline, Windsurf, Gemini.
 #
 # Does NOT render .agent-settings.yml or bridge JSONs — that is the job of
@@ -35,6 +37,9 @@ DRY_RUN=false
 VERBOSE=false
 QUIET=false
 SKIP_GITIGNORE=false
+# Resolved from <TARGET>/.agent-settings.yml in resolve_settings(); when
+# true, .augment/rules/ files are symlinked instead of copied.
+USE_RULES_SYMLINKS=false
 
 # --- Logging ---
 log_info()    { $QUIET || echo "  ✅  $*"; }
@@ -114,6 +119,30 @@ EOF
 
 # --- Utility functions ---
 
+# Read augment.rules_use_symlinks from <TARGET>/.agent-settings.yml.
+# Sets USE_RULES_SYMLINKS=true|false. Missing file or absent key → false.
+# Minimal scoped parser; avoids a hard yq/python dependency.
+resolve_settings() {
+    USE_RULES_SYMLINKS=false
+    local settings_file="$TARGET_DIR/.agent-settings.yml"
+    [[ -f "$settings_file" ]] || return 0
+    local val
+    val=$(awk '
+        /^[^[:space:]#]/ { in_block = ($0 ~ /^augment:[[:space:]]*$/) }
+        in_block && /^[[:space:]]+rules_use_symlinks[[:space:]]*:/ {
+            line = $0
+            sub(/^[[:space:]]*rules_use_symlinks[[:space:]]*:[[:space:]]*/, "", line)
+            sub(/[[:space:]]*#.*$/, "", line)
+            gsub(/[[:space:]]/, "", line)
+            print tolower(line)
+            exit
+        }
+    ' "$settings_file" 2>/dev/null || true)
+    case "$val" in
+        true|yes|on|1) USE_RULES_SYMLINKS=true ;;
+    esac
+}
+
 # Check if a relative path should be copied (true=copy) or symlinked (false=symlink)
 should_copy() {
     local rel_path="$1"
@@ -127,6 +156,10 @@ should_copy() {
     # Check against COPY_DIRS
     for dir in $COPY_DIRS; do
         if [[ "$first_segment" == "$dir" ]]; then
+            # Honor augment.rules_use_symlinks toggle for the rules dir.
+            if [[ "$dir" == "rules" ]] && $USE_RULES_SYMLINKS; then
+                return 1
+            fi
             return 0
         fi
     done
@@ -669,9 +702,17 @@ main() {
     # 0. Migrate legacy infra files (root → agents/) before any content sync.
     migrate_legacy_root_infra "$TARGET_DIR"
 
+    # 0b. Resolve settings (e.g. augment.rules_use_symlinks). On first
+    #     install the file does not exist yet → defaults preserved.
+    resolve_settings
+
     # 1. Hybrid sync payload → target/.augment/
     sync_hybrid "$SOURCE_PAYLOAD" "$TARGET_DIR/.augment"
-    log_info "Synced .augment/ (rules copied, rest symlinked)"
+    if $USE_RULES_SYMLINKS; then
+        log_info "Synced .augment/ (rules symlinked, rest symlinked)"
+    else
+        log_info "Synced .augment/ (rules copied, rest symlinked)"
+    fi
 
     # 2. Copy standalone files from templates if missing on the target.
     #    We copy from templates/ (generic placeholders), NOT from the package's
@@ -680,6 +721,7 @@ main() {
     #    into consumer projects.
     copy_if_missing "$SOURCE_PAYLOAD/templates/AGENTS.md" "$TARGET_DIR/AGENTS.md"
     copy_if_missing "$SOURCE_PAYLOAD/templates/copilot-instructions.md" "$TARGET_DIR/.github/copilot-instructions.md"
+    copy_if_missing "$SOURCE_PAYLOAD/templates/copilot-review-instructions.md" "$TARGET_DIR/.github/copilot-review-instructions.md"
 
     # 3. Create tool-specific symlinks
     create_tool_symlinks "$TARGET_DIR"

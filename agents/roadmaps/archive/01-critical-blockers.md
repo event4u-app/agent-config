@@ -6,16 +6,16 @@
 
 ---
 
-## Problem 1: AGENTS.md enthält Galawork-Projektdaten
+## Problem 1: AGENTS.md enthält Consumer-Projektdaten
 
 ### Diagnose
 
 Die Datei `AGENTS.md` im Repository-Root ist keine generische Vorlage. Sie ist die
-echte Agent-Konfiguration des "Galawork"-Projekts des Paket-Autors. Inhalt:
+echte Agent-Konfiguration des "Consumer"-Projekts des Paket-Autors. Inhalt:
 
 ```
-# Galawork API
-A governed AI development layer for the Galawork platform —
+# Consumer API
+A governed AI development layer for the Consumer platform —
 a Laravel SaaS application for the landscaping industry.
 
 ## Tech Stack
@@ -38,7 +38,7 @@ aufruft, bekommt eine AGENTS.md, die von MariaDB-Multi-Tenancy, Redis Horizon un
 ### Warum das passiert ist
 
 Das Repo dient dem Autor gleichzeitig als Entwicklungsumgebung für sein eigenes
-Galawork-Projekt und als Paket-Quelle. Die AGENTS.md wurde nie sauber getrennt.
+Consumer-Projekt und als Paket-Quelle. Die AGENTS.md wurde nie sauber getrennt.
 
 ### Woraus das Richtige aussehen würde
 
@@ -49,7 +49,7 @@ kopiert wird, und eine **entwicklungsinterne Version**, die nicht ausgeliefert w
 
 ```
 # Vorher (fehlerhaft):
-AGENTS.md                ← Galawork-Inhalt, wird kopiert
+AGENTS.md                ← Consumer-Inhalt, wird kopiert
 
 # Nachher (korrekt):
 AGENTS.md                ← Paket-eigene Konfiguration für agent-config selbst
@@ -103,7 +103,7 @@ Der bestehende "Portability check — No project-specific paths in shared files"
 die Root-AGENTS.md nicht, weil sie außerhalb von `.augment/` liegt. Das ist eine CI-Lücke.
 
 Lösung: CI-Check erweitern, der sicherstellt, dass die `templates/AGENTS.md` keine
-projektspezifischen Strings enthält (z.B. "Galawork", "galawork", "landscaping").
+projektspezifischen Strings enthält (z.B. "Consumer", "consumer", "landscaping").
 
 ### Aufwand: Klein (2–4 Stunden)
 

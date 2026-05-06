@@ -169,10 +169,33 @@ When the drift is severe (whole sections are wrong), recommend
 `/copilot-agents-init` to scaffold a clean replacement rather than
 patching forever.
 
+## agent-config Path Conventions — Preserve, Don't "Fix"
+
+`copilot-instructions.md` ships a "Known False Positives" section that
+tells Copilot Code Review not to flag agent-config path patterns as
+broken. When optimizing, **keep that section intact** — never delete
+it as "redundant" and never trim its bullets. The patterns it covers:
+
+- Relative cross-references inside `.augment/` rules / skills
+  (`../docs/guidelines/foo.md`, `../contexts/bar.md`) — paths resolve
+  from the file's delivered location, not from the symlink in
+  `.claude/rules/` etc. (per `road-to-path-fixes.md` Strategy A).
+- `path_prefix:` triggers containing `.agent-src.uncompressed/` —
+  literal match patterns, not file refs (per Modified Option 1,
+  P2.2).
+- Symlinked rule files under `.claude/rules/`, `.cursor/rules/`,
+  `.clinerules/` — targets resolve into `.augment/rules/`.
+
+If the consumer project's `copilot-instructions.md` is missing the
+section, **add it** during optimization using the canonical block
+from `.augment/templates/copilot-instructions.md`. Surfaces include
+`/copilot-agents init` and `/copilot-agents optimize`.
+
 ## Optimization Checklist
 
 When optimizing either file, check:
 
+- [ ] "Known False Positives" section present and unmodified?
 - [ ] No identifiers from other projects (FORBIDDEN_IDENTIFIERS blocklist)?
 - [ ] Tech stack claims match actual project dependencies?
 - [ ] All referenced commands/targets exist (Makefile, composer scripts, artisan, task)?

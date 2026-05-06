@@ -20,7 +20,7 @@ universe; this roadmap is the plate-realistic slice.
 ## Status
 
 `ready-for-execution` — joint council-iter2 landed
-(`agents/council-sessions/joint-wing3-wing4-iter2.json`, $0.1529).
+(Anthropic + GPT-4o, 2026-05-05, $0.1529).
 Inherits iter-1 verdicts (Q1 content-strategist folded into CMO; Q5
 split-3A/3B; Q6 founder-mode as cross-cutting stance; Q7 channel-
 cognition vs channel-tooling boundary) and applies iter-2 deltas (G2
@@ -213,9 +213,8 @@ unified-senior-roles = R21–R30). This roadmap = R31–R36.
 
 ## Council iter-2 verdicts (resolved)
 
-Joint council with `road-to-money-strategy-ops.md` ran on the prompt
-`.council-tmp/prompt-joint-iter2.md`; verdicts at
-`agents/council-sessions/joint-wing3-wing4-iter2.json` ($0.1529 actual).
+Joint council with `road-to-money-strategy-ops.md` ran on a shared
+joint-iter2 prompt; verdicts captured 2026-05-05 ($0.1529 actual).
 Anthropic + GPT-4o; on the six divergent verdicts Anthropic wins —
 evidence-anchored to map iter-1 + unified iter-1 locks vs. GPT
 re-litigation of locked items.

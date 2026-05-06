@@ -117,6 +117,17 @@ VALID_RULE_TYPES = {"always", "auto"}
 VALID_RULE_SOURCES = {"package", "project"}
 VALID_STATUSES = {"active", "deprecated", "superseded"}
 
+# --- Router schema (docs/contracts/rule-router.md) ---
+ROUTER_ALLOWED_TRIGGER_KEYS = {"keyword", "phrase", "intent", "file_pattern",
+                               "path_prefix", "command"}
+ROUTER_ALLOWED_PROFILES = {"minimal", "balanced", "full"}
+KERNEL_RULE_IDS: set[str] = {
+    "agent-authority", "ask-when-uncertain", "commit-policy",
+    "direct-answers", "language-and-tone", "no-cheap-questions",
+    "non-destructive-by-default", "scope-control",
+    "verify-before-complete",
+}
+
 # --- Runtime execution metadata constants ---
 VALID_EXECUTION_TYPES = {"manual", "assisted", "automated"}
 VALID_EXECUTION_HANDLERS = {"none", "shell", "php", "node", "internal"}
@@ -218,6 +229,42 @@ def lint_role_contract_refs(text: str) -> List[Issue]:
 
 def extract_sections(text: str) -> set[str]:
     return {match.group(1).strip() for match in SECTION_PATTERN.finditer(text)}
+
+
+def _count_code_blocks(text: str) -> int:
+    """Return the number of fenced code blocks (``` … ```) in *text*."""
+    fence_count = 0
+    for line in text.splitlines():
+        stripped = line.lstrip()
+        if stripped.startswith("```"):
+            fence_count += 1
+    return fence_count // 2
+
+
+def _fenced_content_ratio(text: str) -> float:
+    """Return the fraction of non-empty lines that sit inside fenced blocks.
+
+    Used as a structural signal: rules / files dominated by verbatim Iron-Law
+    blocks or worked examples score high and are exempted from raw line-count
+    warnings (council review 2026-05-06).
+    """
+    inside = False
+    fenced_lines = 0
+    non_empty = 0
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            inside = not inside
+            if stripped:
+                non_empty += 1
+            continue
+        if stripped:
+            non_empty += 1
+            if inside:
+                fenced_lines += 1
+    if non_empty == 0:
+        return 0.0
+    return fenced_lines / non_empty
 
 
 def extract_description(text: str) -> Optional[str]:
@@ -495,8 +542,12 @@ def lint_skill(path: Path, text: str) -> LintResult:
             suggestions.append("Add a requirement-checking or validation step before implementation")
 
     # --- Size check (see guidelines/agent-infra/size-and-scope.md) ---
+    # Threshold raised from 300 → 400 (council review 2026-05-06): reference-rich
+    # skills (quality-tools 411, ai-council 399, project-analyzer 341) legitimately
+    # exceed 300 lines without being split-candidates. Structural follow-up tracked
+    # in agents/roadmaps/road-to-structural-linter-reform.md.
     total_lines = len(text.splitlines())
-    if total_lines > 300:
+    if total_lines > 400:
         issues.append(Issue("warning", "skill_too_large", f"Skill has {total_lines} lines; review for split (see size-and-scope guideline)"))
 
     # --- Pointer-only / guideline-dependent skill detection ---
@@ -551,6 +602,131 @@ def lint_skill(path: Path, text: str) -> LintResult:
 def extract_frontmatter(text: str) -> Optional[str]:
     match = FRONTMATTER_PATTERN.search(text)
     return match.group(1) if match else None
+
+
+def _parse_yaml_list(frontmatter: str, key: str) -> Optional[list]:
+    """Parse a simple top-level YAML list `key:` from frontmatter.
+
+    Supports the two shapes we emit in rule frontmatter:
+      triggers:
+        - keyword: "foo"
+        - phrase: "bar baz"
+      routes_to:
+        - skill:php-coder
+        - guideline:agent-infra/asking-and-brevity-examples
+
+    Returns ``None`` if the key is absent (so the caller can distinguish
+    "missing" from "empty"); returns ``[]`` for an explicitly empty list.
+    """
+    lines = frontmatter.splitlines()
+    out: list = []
+    in_block = False
+    for line in lines:
+        if not in_block:
+            if line.startswith(f"{key}:"):
+                rhs = line[len(key) + 1:].strip()
+                if rhs in ("", "[]"):
+                    if rhs == "[]":
+                        return []
+                    in_block = True
+                else:
+                    return None  # unexpected scalar shape
+            continue
+        if line.startswith("  - "):
+            item = line[4:].strip()
+            if ":" in item and not item.startswith(("'", '"')):
+                k, _, v = item.partition(":")
+                out.append({k.strip(): v.strip().strip('"').strip("'")})
+            else:
+                out.append(item.strip('"').strip("'"))
+        elif line.strip() == "" or line.startswith("    "):
+            continue
+        else:
+            break
+    return out if in_block else None
+
+
+def lint_router_frontmatter(rule_id: str, frontmatter: str,
+                             rule_type: Optional[str]) -> List[Issue]:
+    """Validate `triggers:` / `routes_to:` per docs/contracts/rule-router.md.
+
+    Strict checks (always errors): kernel rules MUST NOT carry router fields;
+    `triggers:` items must use one allowed key; `routes_to:` items must
+    follow `kind:id` with kind ∈ {skill, guideline} and the target file
+    must exist on disk.
+
+    Lenient checks (info-level until Phase 4 migrations land): non-kernel
+    rules without `triggers:` / `routes_to:` get an informational note,
+    not an error — the existing description-matching path still works.
+    """
+    issues: List[Issue] = []
+    triggers = _parse_yaml_list(frontmatter, "triggers")
+    routes_to = _parse_yaml_list(frontmatter, "routes_to")
+
+    is_kernel = rule_id in KERNEL_RULE_IDS or rule_type == "always"
+
+    if is_kernel:
+        if triggers is not None:
+            issues.append(Issue("error", "kernel_has_triggers",
+                "Kernel rules MUST NOT declare triggers: (kernel is unconditional)"))
+        if routes_to is not None:
+            issues.append(Issue("error", "kernel_has_routes_to",
+                "Kernel rules MUST NOT declare routes_to: (kernel body stays inline)"))
+        return issues
+
+    # Non-kernel rule path
+    if triggers is None:
+        issues.append(Issue("info", "router_triggers_missing",
+            "Non-kernel rule has no triggers: — falls back to description matching "
+            "until Phase 4 migration lands"))
+    else:
+        for idx, item in enumerate(triggers):
+            if not isinstance(item, dict) or len(item) != 1:
+                issues.append(Issue("error", "trigger_shape_invalid",
+                    f"triggers[{idx}] must be a single-key mapping"))
+                continue
+            (k,) = item.keys()
+            if k not in ROUTER_ALLOWED_TRIGGER_KEYS:
+                allowed = ", ".join(sorted(ROUTER_ALLOWED_TRIGGER_KEYS))
+                issues.append(Issue("error", "trigger_key_unknown",
+                    f"triggers[{idx}] key '{k}' not in allowed set ({allowed})"))
+
+    if routes_to is None:
+        issues.append(Issue("info", "router_routes_to_missing",
+            "Non-kernel rule has no routes_to: — body should migrate to skill / "
+            "guideline in Phase 4"))
+    else:
+        repo_root = Path(__file__).resolve().parent.parent
+        for idx, item in enumerate(routes_to):
+            if not isinstance(item, str) or ":" not in item:
+                issues.append(Issue("error", "route_shape_invalid",
+                    f"routes_to[{idx}] must be 'kind:id'"))
+                continue
+            kind, _, target_id = item.partition(":")
+            if kind == "skill":
+                target = repo_root / ".agent-src.uncompressed" / "skills" / target_id / "SKILL.md"
+            elif kind == "guideline":
+                target = repo_root / "docs" / "guidelines" / f"{target_id}.md"
+            elif kind == "command":
+                target = repo_root / ".agent-src.uncompressed" / "commands" / f"{target_id}.md"
+            elif kind == "contract":
+                # Contracts live in two places: stable host docs in
+                # docs/contracts/ and load-bearing flows in
+                # .agent-src.uncompressed/contexts/contracts/ (road-to-path-fixes
+                # P4 / Council R2). Try both before failing.
+                target = repo_root / "docs" / "contracts" / f"{target_id}.md"
+                if not target.exists():
+                    alt = repo_root / ".agent-src.uncompressed" / "contexts" / "contracts" / f"{target_id}.md"
+                    if alt.exists():
+                        target = alt
+            else:
+                issues.append(Issue("error", "route_kind_unknown",
+                    f"routes_to[{idx}] kind '{kind}' must be 'skill', 'guideline', 'command', or 'contract'"))
+                continue
+            if not target.exists():
+                issues.append(Issue("error", "route_target_missing",
+                    f"routes_to[{idx}] target '{item}' not found at {target}"))
+    return issues
 
 
 def extract_frontmatter_field(frontmatter: str, pattern: re.Pattern[str]) -> Optional[str]:
@@ -801,6 +977,9 @@ def lint_rule(path: Path, text: str) -> LintResult:
                                     f"Always-rule with topic-specific description ({', '.join(topic_keywords)}) — "
                                     f"consider auto type per rule-type-governance"))
 
+        # Router schema validation (docs/contracts/rule-router.md, Phase 3.3).
+        issues.extend(lint_router_frontmatter(path.stem, frontmatter, rule_type))
+
     # --- Structure checks ---
     # H1 heading
     if not H1_PATTERN.search(text):
@@ -817,14 +996,18 @@ def lint_rule(path: Path, text: str) -> LintResult:
         issues.append(Issue("warning", "double_blank_lines", "File contains double or triple blank lines"))
 
     # --- Content checks (see guidelines/agent-infra/size-and-scope.md) ---
+    # Length thresholds gated by fenced-content density (council review 2026-05-06):
+    # rules dominated by verbatim Iron-Law blocks / worked examples are protected
+    # from the > 40 / > 60 warnings. Hard error at 200 stays unconditional.
     line_count = len([line for line in text.splitlines() if line.strip()])
     total_lines = len(text.splitlines())
+    fenced_ratio = _fenced_content_ratio(text)
     if total_lines > 200:
         issues.append(Issue("error", "rule_too_large", f"Rule has {total_lines} lines (hard limit: 200); must split or move to guideline"))
-    elif line_count > 60:
-        issues.append(Issue("warning", "long_rule", f"Rule has {line_count} non-empty lines; prefer < 60 (see size-and-scope guideline)"))
-    elif line_count > 40:
-        issues.append(Issue("warning", "long_rule", f"Rule has {line_count} non-empty lines; rules should be concise"))
+    elif line_count > 60 and fenced_ratio < 0.30:
+        issues.append(Issue("warning", "long_rule", f"Rule has {line_count} non-empty lines (fenced-content {fenced_ratio:.0%}); prefer < 60 (see size-and-scope guideline)"))
+    elif line_count > 40 and fenced_ratio < 0.30:
+        issues.append(Issue("warning", "long_rule", f"Rule has {line_count} non-empty lines (fenced-content {fenced_ratio:.0%}); rules should be concise"))
 
     for bad_sign in RULE_BAD_SIGNS:
         if bad_sign in text:
@@ -969,9 +1152,16 @@ def lint_command(path: Path, text: str) -> LintResult:
         issues.append(Issue("warning", "no_steps", "Command has no Steps section or numbered sub-headings"))
 
     # --- Size check (see guidelines/agent-infra/size-and-scope.md) ---
+    # Word threshold (1000) gated by structural delegation signal (council review
+    # 2026-05-06): well-factored orchestrators with ≥ 5 sub-sections AND ≥ 3 code
+    # blocks are exempt — the size reflects dispatch breadth, not bloat.
     word_count = len(text.split())
     if word_count > 1000:
-        issues.append(Issue("warning", "large_command", f"Command has {word_count} words (target: 200-600, max ~1000)"))
+        section_count = len(sections)
+        code_block_count = _count_code_blocks(text)
+        delegation_signal = section_count >= 5 and code_block_count >= 3
+        if not delegation_signal:
+            issues.append(Issue("warning", "large_command", f"Command has {word_count} words (target: 200-600, max ~1000); {section_count} sub-sections, {code_block_count} code blocks — lacks delegation structure"))
 
     # File must end with exactly one newline
     if not text.endswith("\n"):

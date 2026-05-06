@@ -157,15 +157,55 @@ def _parse_yaml_block(body: str) -> dict[str, Any]:
 def _consume_block_list(lines: list[str], start: int) -> tuple[list[Any], int]:
     items: list[Any] = []
     i = start
+    item_indent: int | None = None
     while i < len(lines):
         line = lines[i]
         if not line.strip():
             i += 1
             continue
         stripped = line.lstrip()
+        leading = len(line) - len(stripped)
         if not stripped.startswith("- "):
+            # Out of the list — caller resumes.
             break
-        items.append(_coerce(stripped[2:]))
+        if item_indent is None:
+            item_indent = leading
+        elif leading != item_indent:
+            break
+        item_body = stripped[2:].strip()
+        # Inline mapping inside the list: `- key: value`
+        m = re.match(r"^([\w-]+):\s*(.*)$", item_body)
+        if m:
+            mapping: dict[str, Any] = {}
+            key = m.group(1)
+            raw = m.group(2).strip()
+            mapping[key] = _coerce(raw) if raw != "" else ""
+            # Consume continuation lines that are indented past the dash —
+            # they belong to the same mapping item (`pattern: …`, `reason: …`).
+            cont_indent = item_indent + 2  # `- ` is two chars
+            i += 1
+            while i < len(lines):
+                cont = lines[i]
+                if not cont.strip():
+                    i += 1
+                    continue
+                cont_stripped = cont.lstrip()
+                cont_leading = len(cont) - len(cont_stripped)
+                if cont_stripped.startswith("- "):
+                    break
+                if cont_leading <= item_indent:
+                    break
+                cm = re.match(r"^([\w-]+):\s*(.*)$", cont_stripped)
+                if cm and cont_leading >= cont_indent:
+                    ckey = cm.group(1)
+                    cval = cm.group(2).strip()
+                    mapping[ckey] = _coerce(cval) if cval != "" else ""
+                    i += 1
+                else:
+                    break
+            items.append(mapping)
+            continue
+        items.append(_coerce(item_body))
         i += 1
     return items, i - start
 
