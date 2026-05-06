@@ -46,7 +46,7 @@ skill / guideline per `rule-classification.md`.
 > the ask-policy floor that the original four-gate test left as an
 > implicit consequence of #1+#4. Both amendments preserve the
 > existing 9-rule kernel set. See
-> `agents/council-sessions/20260506T044941Z-phase1-cross-check-r2.json`.
+> `agents/council-sessions/20260506T044941Z-phase1-cross-check-r2.json`. <!-- council-ref-allowed: contract decision trace -->
 
 ## § 2 — Empirical compression rate (pilot)
 
@@ -75,7 +75,7 @@ outlier and sits inside the roadmap-stated 0.6–0.75 band. Risk
 asymmetry confirms the choice: under-estimating compressed size
 blows the 25k cap mid-P2.2 (no abort path); over-estimating just
 yields headroom. GPT-4o concurred. Source:
-`agents/council-sessions/20260506T044941Z-phase1-cross-check-r2.json`.
+`agents/council-sessions/20260506T044941Z-phase1-cross-check-r2.json`. <!-- council-ref-allowed: contract decision trace -->
 
 **Pilot caveat — already-lean floor.** `agent-authority` (1217 chars
 pre-pilot) yielded only `r = 0.838`. Pre-compressed rules give less
@@ -267,7 +267,7 @@ with the trigger-relaxed parameter, lock new value, re-attempt.
 |---|---|---|
 | 2026-05-06 | `scripts/measure_rule_budget.py` | baseline (32 403 chars across 9 always-rules) |
 | 2026-05-06 | `docs/contracts/pilot/*.md` + `scripts/_pilot_measure.py` | empirical r distribution (3 pilots) |
-| 2026-05-06 | `agents/council-sessions/20260506T044821Z-phase1-cross-check.json` | Council R1 (truncated at 1024 tokens) |
-| 2026-05-06 | `agents/council-sessions/20260506T044941Z-phase1-cross-check-r2.json` | Council R2 (3500 tokens) — locks median r, splits criterion #3, adds criterion #5, raises per-rule cap to 2.5k, defines abort criteria |
+| 2026-05-06 | `agents/council-sessions/20260506T044821Z-phase1-cross-check.json` | Council R1 (truncated at 1024 tokens) | <!-- council-ref-allowed: contract decision trace -->
+| 2026-05-06 | `agents/council-sessions/20260506T044941Z-phase1-cross-check-r2.json` | Council R2 (3500 tokens) — locks median r, splits criterion #3, adds criterion #5, raises per-rule cap to 2.5k, defines abort criteria | <!-- council-ref-allowed: contract decision trace -->
 | 2026-05-06 | this file | kernel set locked: 9 rules, projected 23 071 chars (median r = 0.712) |
 | 2026-05-06 | P2.2 compression + `scripts/iron_law_sha.py --all-kernel` | empirical: 25 590 chars (r_actual = 0.795 across kernel; longer rules compress less than the pilot median) — see `docs/decisions/ADR-002-kernel-bucket-overrides.md` (KERNEL_HARD raised 25k → 26k, 6 per-rule overrides ≤ 4k ceiling, all Iron-Law SHAs preserved) |
