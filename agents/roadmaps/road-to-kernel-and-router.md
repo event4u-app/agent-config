@@ -177,15 +177,15 @@ siblings own their own Hard Cap accounting). Phase 8 = final validation.
 
 ## Phase 2 — Kernel definition (gated on P1)
 
-- [ ] **P2.1 — Kernel size budget enforced.** Add `--kernel-budget-check` to
-  `scripts/measure_rule_budget.py` (P1.1). Returns exit 1 if always-bucket >
-  25k chars or any rule > **2.5k** chars (Council R2 amendment, was 1.5k —
-  see `kernel-membership.md` § 5.1). Iron-Law-override ADRs may lift
-  individual rules above 2.5k; the script honours an
-  `iron-law-overrides.txt` allowlist alongside the ADR. P2.1 also
-  resolves the `agent-authority` ↔ `autonomous-execution` kernel-swap
-  ADR (three variants in `kernel-membership.md` § 5.2). No CI wiring
-  yet — that lands in P5.
+- [x] **P2.1 — Kernel size budget enforced.** `scripts/measure_rule_budget.py`
+  ships `--kernel-budget-check` (returns exit 1 if kernel-bucket >
+  25k chars or any kernel rule > **2.5k** chars per Council R2;
+  `docs/contracts/iron-law-overrides.txt` allowlist lifts individual
+  rules to a 4k ceiling when paired with an ADR). Kernel-swap ADR
+  resolved as `docs/decisions/ADR-001-kernel-swap-deferred.md`
+  (variant a = status quo through P2.2 + P3.1; re-evaluation trigger
+  at P3.2 once router schema + compiler ship). No CI wiring yet —
+  lands in P5.1.
 - [ ] **P2.2 — Compress + dedupe the kernel rules.** For each rule on
   the P1.3 list, apply the compression playbook in this order:
 

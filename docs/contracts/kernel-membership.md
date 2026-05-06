@@ -120,10 +120,10 @@ kernel rules) and should be `compress-and-keep` (auto-tier-3),
 freeing 867 projected chars. The Council also recommends promoting
 `autonomous-execution` (5631 → 4009 projected) into kernel as a
 mode-independent Band-4 authority. Net effect: 23071 − 867 + 4009 =
-26213, **over the 25k cap by 1213 chars**. Resolution deferred to
-P2.1 ADR (`docs/decisions/`); options: (a) accept swap + raise hard
-cap to 27k, (b) accept swap + demote `verify-before-complete`,
-(c) reject swap, keep current 9-rule set under median r.
+26213, **over the 25k cap by 1213 chars**. **Resolved by
+`docs/decisions/ADR-001-kernel-swap-deferred.md` (variant a):**
+status quo through P2.2 + P3.1, swap re-evaluated as a P3.2 ADR
+once the router schema and compiler ship.
 
 ‡ **verify-before-complete borderline.** Council split criterion #3
 into pre-send (#3a) / pre-act (#3b); this rule fires post-act,
@@ -178,9 +178,13 @@ that fires on every action decision. Swap proposal: `agent-authority`
 | (b) swap, raise hard cap to 27k     | 26 213 | ✓ ≤ 27k | 3 (+`autonomous-execution`) |
 | (c) swap + demote verify-before-complete | 24 545 | ✓ ≤ 25k | 3 (+`autonomous-execution`) |
 
-Resolution: P2.1 ADR. The swap is architecturally cleaner (Iron-Law
-purity), but raises the hard cap or forces a borderline demotion.
-Status quo preserves the locked 25k cap and the 9-rule set.
+**Resolution: `docs/decisions/ADR-001-kernel-swap-deferred.md`
+(accepted variant a).** Status quo preserves the locked 25k cap and
+the 9-rule set through P2.2. Re-evaluation trigger fires at P3.2
+once the router schema and compiler ship; at that point
+`agent-authority`'s routing role becomes redundant (each kernel rule
+carries its own band as frontmatter, compiled into `router.json`),
+clearing the way for the swap under a fresh ADR.
 
 ## § 6 — Abort criteria for P2.2
 

@@ -26,11 +26,32 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 RULES_DIR = REPO_ROOT / ".agent-src.uncompressed" / "rules"
+OVERRIDES_FILE = REPO_ROOT / "docs" / "contracts" / "iron-law-overrides.txt"
 
+# Council R2 amendments (2026-05-06) — see docs/contracts/kernel-membership.md § 5.1.
+# Per-rule cap raised 1.5k → 2.5k; warning band raised 1.2k → 2.0k.
 KERNEL_HARD = 25_000
 KERNEL_TARGET = 20_000
-PER_RULE_HARD = 1_500
-PER_RULE_TARGET = 1_200
+PER_RULE_HARD = 2_500
+PER_RULE_TARGET = 2_000
+PER_RULE_OVERRIDE_CEILING = 4_000  # Iron-Law-override ADR ceiling.
+
+# Locked kernel set — docs/contracts/kernel-membership.md § 4.
+# This is the *kernel* (P1.3 lock), not "every always-rule". After P4 the
+# `type:` frontmatter no longer maps 1:1 to kernel; the kernel is this set.
+KERNEL_RULES: frozenset[str] = frozenset(
+    {
+        "agent-authority",
+        "ask-when-uncertain",
+        "commit-policy",
+        "direct-answers",
+        "language-and-tone",
+        "no-cheap-questions",
+        "non-destructive-by-default",
+        "scope-control",
+        "verify-before-complete",
+    }
+)
 
 
 def strip_frontmatter(text: str) -> tuple[str, dict[str, str]]:
@@ -72,21 +93,37 @@ def collect() -> list[dict[str, object]]:
     return rules
 
 
+def load_overrides() -> set[str]:
+    """Read iron-law-override allowlist (one rule-id per line, '#' comments)."""
+    if not OVERRIDES_FILE.exists():
+        return set()
+    out: set[str] = set()
+    for line in OVERRIDES_FILE.read_text(encoding="utf-8").splitlines():
+        s = line.split("#", 1)[0].strip()
+        if s:
+            out.add(s)
+    return out
+
+
 def aggregate(rules: list[dict[str, object]]) -> dict[str, object]:
     always = [r for r in rules if r["type"] == "always"]
     auto = [r for r in rules if r["type"] == "auto"]
+    kernel = [r for r in rules if r["id"] in KERNEL_RULES]
     total_chars = sum(int(r["chars"]) for r in rules)
     return {
         "always_count": len(always),
         "auto_count": len(auto),
+        "kernel_count": len(kernel),
         "rule_count": len(rules),
         "always_chars": sum(int(r["chars"]) for r in always),
         "auto_chars": sum(int(r["chars"]) for r in auto),
+        "kernel_chars": sum(int(r["chars"]) for r in kernel),
         "total_chars": total_chars,
         "kernel_hard": KERNEL_HARD,
         "kernel_target": KERNEL_TARGET,
         "per_rule_hard": PER_RULE_HARD,
         "per_rule_target": PER_RULE_TARGET,
+        "per_rule_override_ceiling": PER_RULE_OVERRIDE_CEILING,
         "oversize_rules": sorted(
             (r for r in rules if int(r["chars"]) > PER_RULE_HARD),
             key=lambda r: (-int(r["chars"]), r["id"]),
@@ -110,8 +147,12 @@ def render_table(rules: list[dict[str, object]], agg: dict[str, object]) -> str:
         )
     lines.append("")
     lines.append(
-        f"always-bucket: {agg['always_chars']:>6} chars across {agg['always_count']} rules "
+        f"kernel-bucket: {agg['kernel_chars']:>6} chars across {agg['kernel_count']} rules "
         f"(target ≤ {KERNEL_TARGET}, hard ≤ {KERNEL_HARD})"
+    )
+    lines.append(
+        f"always-bucket: {agg['always_chars']:>6} chars across {agg['always_count']} rules "
+        f"(legacy frontmatter `type: always`)"
     )
     lines.append(
         f"  auto-bucket: {agg['auto_chars']:>6} chars across {agg['auto_count']} rules"
@@ -128,13 +169,91 @@ def render_table(rules: list[dict[str, object]], agg: dict[str, object]) -> str:
     return "\n".join(lines)
 
 
+def kernel_budget_check(
+    rules: list[dict[str, object]], agg: dict[str, object], overrides: set[str]
+) -> tuple[int, list[str]]:
+    """Enforce kernel budget per Council R2 amendments.
+
+    Returns (exit_code, report_lines). Exit 0 = pass, 1 = breach.
+
+    Checks:
+    - Kernel-bucket sum ≤ KERNEL_HARD (25k).
+    - Each kernel rule ≤ PER_RULE_HARD (2.5k), unless listed in
+      `iron-law-overrides.txt` (then ≤ PER_RULE_OVERRIDE_CEILING = 4k).
+    - Missing kernel rules (rule-id in KERNEL_RULES but no file) → fail.
+    """
+    out: list[str] = []
+    fails: list[str] = []
+
+    kernel_rules = [r for r in rules if r["id"] in KERNEL_RULES]
+    found_ids = {str(r["id"]) for r in kernel_rules}
+    missing = sorted(KERNEL_RULES - found_ids)
+    for mid in missing:
+        fails.append(f"missing kernel rule: {mid} (declared in KERNEL_RULES, no file found)")
+
+    bucket = int(agg["kernel_chars"])
+    out.append(
+        f"kernel-bucket: {bucket} / {KERNEL_HARD} chars "
+        f"({agg['kernel_count']} rules)"
+    )
+    if bucket > KERNEL_HARD:
+        fails.append(f"kernel-bucket {bucket} > hard cap {KERNEL_HARD}")
+
+    out.append(
+        f"per-rule cap: {PER_RULE_HARD} (override ceiling {PER_RULE_OVERRIDE_CEILING} "
+        f"with ADR; allowlist {OVERRIDES_FILE.relative_to(REPO_ROOT)})"
+    )
+    out.append("")
+    out.append(f"{'id':<28} {'chars':>6} {'cap':>6} {'status':<24}")
+    out.append("-" * 68)
+    for r in sorted(kernel_rules, key=lambda r: r["id"]):
+        rid = str(r["id"])
+        chars = int(r["chars"])
+        if rid in overrides:
+            cap = PER_RULE_OVERRIDE_CEILING
+            label = "OK (override)"
+            if chars > cap:
+                label = f"FAIL (>{cap} ceiling)"
+                fails.append(f"{rid} {chars} > override ceiling {cap}")
+        else:
+            cap = PER_RULE_HARD
+            if chars > cap:
+                label = "FAIL (needs override ADR)"
+                fails.append(f"{rid} {chars} > per-rule hard cap {cap} (no override)")
+            elif chars > PER_RULE_TARGET:
+                label = "warn (> target)"
+            else:
+                label = "OK"
+        out.append(f"{rid:<28} {chars:>6} {cap:>6} {label:<24}")
+
+    out.append("")
+    if fails:
+        out.append(f"❌  kernel budget check: {len(fails)} breach(es)")
+        for f in fails:
+            out.append(f"  - {f}")
+        return 1, out
+    out.append(f"✅  kernel budget check: pass")
+    return 0, out
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--json", action="store_true", help="emit JSON instead of a table")
+    parser.add_argument(
+        "--kernel-budget-check",
+        action="store_true",
+        help="enforce Council R2 kernel-bucket + per-rule caps; exit 1 on breach",
+    )
     args = parser.parse_args(argv)
 
     rules = collect()
     agg = aggregate(rules)
+
+    if args.kernel_budget_check:
+        overrides = load_overrides()
+        code, report = kernel_budget_check(rules, agg, overrides)
+        print("\n".join(report))
+        return code
 
     if args.json:
         payload = {"rules": sorted(rules, key=lambda r: r["id"]), "summary": agg}
