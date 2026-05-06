@@ -26,7 +26,7 @@ sub-command swaps the mode-specific addendum.
 | `/council optimize` | `commands/council/optimize.md` | Run the council on an optimization target — ranked, evidence-based suggestions |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Dispatch
 

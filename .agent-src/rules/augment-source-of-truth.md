@@ -10,6 +10,10 @@ triggers:
   - path_prefix: ".augment/"
   - path_prefix: ".claude/"
   - path_prefix: ".cursor/"
+validator_ignore:
+  - type: "substring"
+    pattern: ".agent-src.uncompressed/"
+    reason: "Rule documents the source-of-truth boundary; mentioning the path is its purpose."
 ---
 
 # Source of Truth

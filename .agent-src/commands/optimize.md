@@ -24,7 +24,7 @@ commands with a single entry point + sub-command dispatch.
 | `/optimize rtk` | `commands/optimize/rtk.md` | Create or refine project-local rtk filters |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Dispatch
 

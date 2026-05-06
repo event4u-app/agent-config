@@ -44,7 +44,7 @@ Trigger-set above activates this routing under the `balanced` and `full` profile
 ## General Principles
 
 - **Controllers are thin** — no business logic, delegate to services.
-- **Only Single Action Controllers** — every new controller MUST use `__invoke()`. No multi-action / resource controllers. See `../../docs/guidelines/php/controllers.md` for naming conventions.
+- **Only Single Action Controllers** — every new controller MUST use `__invoke()`. No multi-action / resource controllers. See `../docs/guidelines/php/controllers.md` for naming conventions.
 - **Every controller needs a FormRequest** — never validate inline with `$request->validate()`. Use a dedicated `FormRequest` subclass.
 - **Services contain business logic** — calculations, orchestration, validation.
 - **Models have no business logic** — only relationships, scopes, accessors/mutators.
@@ -178,11 +178,8 @@ Extends (cross-link, don't restate): `ask-when-uncertain`,
 **Iron Law.** After a `/implement-ticket` or `/work` phase-step, emit one
 `telemetry:record` call with consulted + applied ids when telemetry is
 enabled. Default-off; opt-in via `.agent-settings.yml`. Zero overhead when
-disabled.
-
-Body migrated to [`contract:artifact-engagement-flow`](../../docs/contracts/artifact-engagement-flow.md)
-(per P4 of `road-to-kernel-and-router.md`). Trigger-set above activates this
-routing under the `balanced` and `full` profiles.
+disabled. Recording contract + privacy floor:
+[`contexts/contracts/artifact-engagement-flow.md`](../contexts/contracts/artifact-engagement-flow.md).
 
 The schema, CLI, and storage layer are owned by `scripts/telemetry/` and
 the `./agent-config telemetry:record` / `telemetry:status` commands.
@@ -238,7 +235,7 @@ Match without further context → ask **before** touching code:
 - "handle errors properly" — which errors? log/retry/propagate?
 - "add a UI/component/tile/page" in mixed-framework repo — which stack?
 
-Examples: [`asking-and-brevity-examples § vague-triggers`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#vague-request-triggers--example-questions).
+Examples: [`asking-and-brevity-examples § vague-triggers`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#vague-request-triggers--example-questions).
 
 **Escape hatch:** unambiguous from ticket / open file / prior turn → proceed, state the assumption.
 
@@ -252,11 +249,11 @@ Numbered options (per [`user-interaction`](user-interaction.md)). Short.
 2. Two or more separate numbered-option blocks?
 3. User would need a structured reply (`1a, 2b`) instead of a single number?
 
-Any "yes" → **collapse to ONE question**. Hold the rest for their own turn. Rationale: [`asking-and-brevity-examples § serial-wins`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#one-question-per-turn--why-serial-always-wins).
+Any "yes" → **collapse to ONE question**. Hold the rest for their own turn. Rationale: [`asking-and-brevity-examples § serial-wins`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#one-question-per-turn--why-serial-always-wins).
 
 ### Ordering & handoff
 
-- **Session handoff** (`/agent-handoff`, fresh-chat) — ask LAST, after domain / clarifying questions, so answers fold into the handoff. Full: [`agent-interaction-and-decision-quality § handoff`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#handoff--model-switch-questions).
+- **Session handoff** (`/agent-handoff`, fresh-chat) — ask LAST, after domain / clarifying questions, so answers fold into the handoff. Full: [`agent-interaction-and-decision-quality § handoff`](../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#handoff--model-switch-questions).
 - **Model switch** — [`model-recommendation`](model-recommendation.md) STOP-AND-WAIT gate is standalone, not appended.
 - **Blocking clarification** — ask FIRST, alone, before any research or planning output.
 - **Optional refinement** — don't ask; state the assumption, proceed.
@@ -267,7 +264,7 @@ Skill / rule / command / guideline creation or major rewrite → [`artifact-draf
 
 ## Examples
 
-Pattern Memory (wrong / right / why): [`ask-when-uncertain-demos`](../../docs/guidelines/agent-infra/ask-when-uncertain-demos.md). Outcome baseline: [`tests/golden/outcomes/ask_when_uncertain.json`](../../tests/golden/outcomes/ask_when_uncertain.json).
+Pattern Memory (wrong / right / why): [`ask-when-uncertain-demos`](../docs/guidelines/agent-infra/ask-when-uncertain-demos.md). Outcome baseline: [`tests/golden/outcomes/ask_when_uncertain.json`](../../tests/golden/outcomes/ask_when_uncertain.json).
 
 ---
 
@@ -388,11 +385,8 @@ Trigger-set above activates this routing under the `balanced` and `full` profile
 
 When the user's prompt matches an eligible slash command, surface it as a
 **numbered option** alongside an "as-is" escape hatch. The user always
-picks. **Nothing auto-executes.**
-
-Body migrated to [`contract:command-suggestion-flow`](../../docs/contracts/command-suggestion-flow.md)
-(per P4 of `road-to-kernel-and-router.md`). Trigger-set above activates
-this routing under the `balanced` and `full` profiles.
+picks. **Nothing auto-executes.** Flow contract + senior-gate map:
+[`contexts/contracts/command-suggestion-flow.md`](../contexts/contracts/command-suggestion-flow.md).
 
 ## Iron Law — never auto-execute
 
@@ -620,7 +614,7 @@ WHEN VERIFICATION IS NOT WORTH THE COST → ASK.
 | **Low** — well-known idioms | Inference OK; mark as inference if not 100% sure. |
 
 Override: "just guess" / "rough estimate" / "skip verify" → drop to Low for that turn.
-Examples + hedge patterns: [`asking-and-brevity-examples § severity`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#direct-answers--severity-tiered-claim-examples).
+Examples + hedge patterns: [`asking-and-brevity-examples § severity`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#direct-answers--severity-tiered-claim-examples).
 
 ## Iron Law 3 — Brevity by Default
 
@@ -643,8 +637,8 @@ Never overrides `user-interaction` (numbered options stay) or command-mandated s
 
 ## Failure modes & examples
 
-Trigger phrases + correction pattern: [`asking-and-brevity-examples § failure-modes`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#direct-answers--failure-modes-the-user-will-call-out).
-Pattern Memory (wrong / right / why): [`direct-answers-demos`](../../docs/guidelines/agent-infra/direct-answers-demos.md).
+Trigger phrases + correction pattern: [`asking-and-brevity-examples § failure-modes`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#direct-answers--failure-modes-the-user-will-call-out).
+Pattern Memory (wrong / right / why): [`direct-answers-demos`](../docs/guidelines/agent-infra/direct-answers-demos.md).
 Outcome baseline: [`tests/golden/outcomes/direct_answers.json`](../../tests/golden/outcomes/direct_answers.json).
 
 ## Interactions
@@ -801,10 +795,10 @@ Before coding, quickly verify:
 - Does it follow established patterns in the codebase?
 - Does it contradict existing conventions?
 - Do **multiple valid patterns/frameworks** already exist (e.g. Tailwind + Flux, multiple form libraries, competing state stores)? If yes, do NOT pick one arbitrarily — ask which to use.
-- Is the change a **second branch on the same discriminator** — second `match`/`switch` arm, second `if/elseif`, or second class hardcoded to one enum value (e.g. `Provider::FOO`, `'stripe'`)? If yes, run the Strategy sniff test before adding the branch — see [`docs/guidelines/php/patterns/strategy.md`](../../docs/guidelines/php/patterns/strategy.md#sniff-test--when-an-enumstring-discriminator-wants-to-become-a-strategy).
+- Is the change a **second branch on the same discriminator** — second `match`/`switch` arm, second `if/elseif`, or second class hardcoded to one enum value (e.g. `Provider::FOO`, `'stripe'`)? If yes, run the Strategy sniff test before adding the branch — see [`docs/guidelines/php/patterns/strategy.md`](../docs/guidelines/php/patterns/strategy.md#sniff-test--when-an-enumstring-discriminator-wants-to-become-a-strategy).
 
 **If misfit** → show evidence (file references), propose alternative.
-**If multiple valid options** → list them, ask which to use. See [`no blind implementation`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation).
+**If multiple valid options** → list them, ask which to use. See [`no blind implementation`](../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation).
 
 ### 3. Is the approach sound?
 
@@ -899,7 +893,7 @@ Stays in source language: code blocks, command output, file contents, quoted too
 
 Acknowledge **once** in the correct language ("Entschuldigung" / "Sorry"). Switch on the same reply. No re-explain in wrong language; no "from now on" promise.
 
-Examples + wrong-vs-correct: [`language-and-tone-examples`](../../docs/guidelines/agent-infra/language-and-tone-examples.md).
+Examples + wrong-vs-correct: [`language-and-tone-examples`](../docs/guidelines/agent-infra/language-and-tone-examples.md).
 
 ## Other language rules
 
@@ -1165,7 +1159,7 @@ NEVER OFFER NUMBERED CHOICES WITHOUT A REAL TRADE-OFF.
 - **Dominant option** — one choice obviously correct; alternatives carry no upside.
 - **Re-ask after decline** — forbidden per [`scope-control § decline = silence`](scope-control.md#decline--silence--no-re-asking-on-the-same-task).
 
-Examples per class: [`asking-and-brevity-examples § cheap-question-catalog`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
+Examples per class: [`asking-and-brevity-examples § cheap-question-catalog`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
 
 ## Pre-Send Self-Check — MANDATORY before every question
 
@@ -1510,7 +1504,7 @@ Trigger-set above activates this routing under the `balanced` and `full` profile
 
 Auto-activates when `.agent-settings.yml` sets `roles.active_role` to
 one of the six modes defined in
-[`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md):
+[`role-contracts`](../docs/guidelines/agent-infra/role-contracts.md):
 `developer`, `reviewer`, `tester`, `po`, `incident`, `planner`.
 
 Read `roles.active_role` from `.agent-settings.yml` at session start. Empty / missing → rule is inert; do NOT guess a mode.
@@ -1547,7 +1541,7 @@ Infer the mode (Phase-3 router does that). Touch `.agent-settings.yml`
 
 ## See also
 
-- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md)
+- [`role-contracts`](../docs/guidelines/agent-infra/role-contracts.md)
 - [`/mode`](../commands/mode.md)
 - [`ask-when-uncertain`](ask-when-uncertain.md)
 - [`scope-control`](scope-control.md)
@@ -1689,7 +1683,7 @@ STOP writing code. Run the matching analysis skill first:
 | Wide refactor of security-sensitive code | `blast-radius-analyzer` |
 
 **Before running the analysis, consult memory for prior incidents** on
-this surface. Via [`memory-access`](../../docs/guidelines/agent-infra/memory-access.md):
+this surface. Via [`memory-access`](../docs/guidelines/agent-infra/memory-access.md):
 
 ```python
 from scripts.memory_lookup import retrieve
@@ -1742,7 +1736,7 @@ See also: `threat-modeling` · `authz-review` · `data-flow-mapper` · `minimal-
   - Rules and system instructions should stay well below 200 lines
   - Smaller (≈60 lines) is strongly preferred
 
-→ Size limits and details: `../../docs/guidelines/agent-infra/size-and-scope.md`
+→ Size limits and details: `../docs/guidelines/agent-infra/size-and-scope.md`
 
 → Frontmatter contract: schemas live in `scripts/schemas/` and are enforced by
 `python3 scripts/validate_frontmatter.py`.

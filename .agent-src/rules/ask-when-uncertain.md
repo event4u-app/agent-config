@@ -41,7 +41,7 @@ Match without further context → ask **before** touching code:
 - "handle errors properly" — which errors? log/retry/propagate?
 - "add a UI/component/tile/page" in mixed-framework repo — which stack?
 
-Examples: [`asking-and-brevity-examples § vague-triggers`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#vague-request-triggers--example-questions).
+Examples: [`asking-and-brevity-examples § vague-triggers`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#vague-request-triggers--example-questions).
 
 **Escape hatch:** unambiguous from ticket / open file / prior turn → proceed, state the assumption.
 
@@ -55,11 +55,11 @@ Numbered options (per [`user-interaction`](user-interaction.md)). Short.
 2. Two or more separate numbered-option blocks?
 3. User would need a structured reply (`1a, 2b`) instead of a single number?
 
-Any "yes" → **collapse to ONE question**. Hold the rest for their own turn. Rationale: [`asking-and-brevity-examples § serial-wins`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#one-question-per-turn--why-serial-always-wins).
+Any "yes" → **collapse to ONE question**. Hold the rest for their own turn. Rationale: [`asking-and-brevity-examples § serial-wins`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#one-question-per-turn--why-serial-always-wins).
 
 ### Ordering & handoff
 
-- **Session handoff** (`/agent-handoff`, fresh-chat) — ask LAST, after domain / clarifying questions, so answers fold into the handoff. Full: [`agent-interaction-and-decision-quality § handoff`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#handoff--model-switch-questions).
+- **Session handoff** (`/agent-handoff`, fresh-chat) — ask LAST, after domain / clarifying questions, so answers fold into the handoff. Full: [`agent-interaction-and-decision-quality § handoff`](../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#handoff--model-switch-questions).
 - **Model switch** — [`model-recommendation`](model-recommendation.md) STOP-AND-WAIT gate is standalone, not appended.
 - **Blocking clarification** — ask FIRST, alone, before any research or planning output.
 - **Optional refinement** — don't ask; state the assumption, proceed.
@@ -70,4 +70,4 @@ Skill / rule / command / guideline creation or major rewrite → [`artifact-draf
 
 ## Examples
 
-Pattern Memory (wrong / right / why): [`ask-when-uncertain-demos`](../../docs/guidelines/agent-infra/ask-when-uncertain-demos.md). Outcome baseline: [`tests/golden/outcomes/ask_when_uncertain.json`](../../tests/golden/outcomes/ask_when_uncertain.json).
+Pattern Memory (wrong / right / why): [`ask-when-uncertain-demos`](../docs/guidelines/agent-infra/ask-when-uncertain-demos.md). Outcome baseline: [`tests/golden/outcomes/ask_when_uncertain.json`](../../tests/golden/outcomes/ask_when_uncertain.json).

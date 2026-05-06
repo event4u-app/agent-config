@@ -28,7 +28,7 @@ triggers:
   - Rules and system instructions should stay well below 200 lines
   - Smaller (≈60 lines) is strongly preferred
 
-→ Size limits and details: `../../docs/guidelines/agent-infra/size-and-scope.md`
+→ Size limits and details: `../docs/guidelines/agent-infra/size-and-scope.md`
 
 → Frontmatter contract: schemas live in `scripts/schemas/` and are enforced by
 `python3 scripts/validate_frontmatter.py`.

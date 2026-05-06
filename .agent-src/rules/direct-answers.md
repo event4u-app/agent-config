@@ -38,7 +38,7 @@ WHEN VERIFICATION IS NOT WORTH THE COST → ASK.
 | **Low** — well-known idioms | Inference OK; mark as inference if not 100% sure. |
 
 Override: "just guess" / "rough estimate" / "skip verify" → drop to Low for that turn.
-Examples + hedge patterns: [`asking-and-brevity-examples § severity`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#direct-answers--severity-tiered-claim-examples).
+Examples + hedge patterns: [`asking-and-brevity-examples § severity`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#direct-answers--severity-tiered-claim-examples).
 
 ## Iron Law 3 — Brevity by Default
 
@@ -61,8 +61,8 @@ Never overrides `user-interaction` (numbered options stay) or command-mandated s
 
 ## Failure modes & examples
 
-Trigger phrases + correction pattern: [`asking-and-brevity-examples § failure-modes`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#direct-answers--failure-modes-the-user-will-call-out).
-Pattern Memory (wrong / right / why): [`direct-answers-demos`](../../docs/guidelines/agent-infra/direct-answers-demos.md).
+Trigger phrases + correction pattern: [`asking-and-brevity-examples § failure-modes`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#direct-answers--failure-modes-the-user-will-call-out).
+Pattern Memory (wrong / right / why): [`direct-answers-demos`](../docs/guidelines/agent-infra/direct-answers-demos.md).
 Outcome baseline: [`tests/golden/outcomes/direct_answers.json`](../../tests/golden/outcomes/direct_answers.json).
 
 ## Interactions

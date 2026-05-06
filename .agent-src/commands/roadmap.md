@@ -22,7 +22,7 @@ commands with a single entry point + sub-command dispatch.
 | `/roadmap execute` | `commands/roadmap/execute.md` | Read and interactively execute a roadmap |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Dispatch
 

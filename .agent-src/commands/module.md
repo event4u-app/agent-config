@@ -22,7 +22,7 @@ commands with a single entry point + sub-command dispatch.
 | `/module explore` | `commands/module/explore.md` | Load a module's structure, docs, and context into the conversation |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Dispatch
 

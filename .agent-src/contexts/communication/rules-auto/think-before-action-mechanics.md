@@ -43,7 +43,7 @@ behavior. Cannot → read more.
 ## Consult memory before editing
 
 Prior decisions and invariants live in the memory layer. Via
-[`memory-access`](../../../../docs/guidelines/agent-infra/memory-access.md),
+[`memory-access`](../../../../../docs/guidelines/agent-infra/memory-access.md),
 call `retrieve(types=["architecture-decisions", "domain-invariants"], keys=<touched paths>, limit=3)`.
 A matching `architecture-decision` explains *why* the current shape
 exists; a matching `domain-invariant` is a hard constraint. Cite the

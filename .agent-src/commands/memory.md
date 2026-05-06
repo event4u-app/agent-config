@@ -24,7 +24,7 @@ commands with a single entry point + sub-command dispatch.
 | `/memory propose` | `commands/memory/propose.md` | Append a provisional signal to the intake stream |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Dispatch
 

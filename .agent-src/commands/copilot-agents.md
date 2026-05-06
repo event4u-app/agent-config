@@ -22,7 +22,7 @@ standalone commands with a single entry point + sub-command dispatch.
 | `/copilot-agents optimize` | `commands/copilot-agents/optimize.md` | Refactor existing AGENTS.md and copilot-instructions.md for line budgets |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Dispatch
 

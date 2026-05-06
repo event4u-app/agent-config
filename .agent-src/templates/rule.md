@@ -62,8 +62,8 @@ A rule at `rules/{name}.md` resolves `contexts/{area}/{file}.md` to
 `../contexts/{area}/{file}.md` in the compressed output; a nested
 file at `commands/{cluster}/{sub}.md` resolves to
 `../../contexts/{area}/{file}.md`. Re-running the rewriter does not
-double-prefix. See Phase 1-3 of `agents/roadmaps/road-to-path-fixes.md`
-for the full decision history.
+double-prefix. The full decision history lives in the archived
+path-fixes roadmap under `agents/roadmaps/archive/`.
 
 ## Template
 

@@ -450,7 +450,7 @@ telemetry:
 
 Reports: `./agent-config telemetry:report`. Full contract,
 privacy/redaction floor, and quartile semantics:
-[`docs/contracts/artifact-engagement-flow.md`](docs/contracts/artifact-engagement-flow.md) (beta).
+[`contexts/contracts/artifact-engagement-flow.md`](.agent-src.uncompressed/contexts/contracts/artifact-engagement-flow.md) (beta).
 
 ### Context-aware command suggestion
 
@@ -471,7 +471,7 @@ commands:
 Per-conversation: `/command-suggestion-off` disables the layer until
 re-enabled or the chat ends. Full scoring contract and hardening:
 [`adr-command-suggestion`](docs/contracts/adr-command-suggestion.md),
-[`command-suggestion-flow`](docs/contracts/command-suggestion-flow.md) (beta).
+[`command-suggestion-flow`](.agent-src.uncompressed/contexts/contracts/command-suggestion-flow.md) (beta).
 
 ---
 

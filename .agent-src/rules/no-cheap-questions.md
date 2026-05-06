@@ -30,7 +30,7 @@ NEVER OFFER NUMBERED CHOICES WITHOUT A REAL TRADE-OFF.
 - **Dominant option** — one choice obviously correct; alternatives carry no upside.
 - **Re-ask after decline** — forbidden per [`scope-control § decline = silence`](scope-control.md#decline--silence--no-re-asking-on-the-same-task).
 
-Examples per class: [`asking-and-brevity-examples § cheap-question-catalog`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
+Examples per class: [`asking-and-brevity-examples § cheap-question-catalog`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
 
 ## Pre-Send Self-Check — MANDATORY before every question
 

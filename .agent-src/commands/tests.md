@@ -22,7 +22,7 @@ commands with a single entry point + sub-command dispatch.
 | `/tests execute` | `commands/tests/execute.md` | Run PHP tests inside the Docker container |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Dispatch
 

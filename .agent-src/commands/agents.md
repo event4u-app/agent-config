@@ -23,7 +23,7 @@ commands with a single entry point + sub-command dispatch.
 | `/agents prepare` | `commands/agents/prepare.md` | Scaffold the `agents/` directory structure |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 
 ## Dispatch
 

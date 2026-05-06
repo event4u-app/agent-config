@@ -23,7 +23,7 @@ commands with a single entry point + sub-command dispatch.
 | `/judge steps` | `commands/judge/steps.md` | Execute an ordered plan step by step, judge gate between steps |
 
 Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
 The standalone reviewer surface lives at [`/review`](review-changes.md).
 
 ## Dispatch
@@ -51,4 +51,4 @@ The standalone reviewer surface lives at [`/review`](review-changes.md).
 
 - [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md)
 - [`/review`](review-changes.md) — human-oriented self-review (Reviewer-mode contract)
-- [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md#reviewer)
+- [`role-contracts`](../docs/guidelines/agent-infra/role-contracts.md#reviewer)

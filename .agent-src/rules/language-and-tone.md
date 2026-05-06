@@ -4,6 +4,10 @@ tier: "3"
 description: "Language and tone — informal German Du, English code comments, .md files always English"
 alwaysApply: true
 source: package
+validator_ignore:
+  - type: "substring"
+    pattern: ".agent-src.uncompressed/"
+    reason: "Rule scopes the .md-English mandate to the authoring tree."
 ---
 
 # Language and Tone
@@ -45,7 +49,7 @@ Stays in source language: code blocks, command output, file contents, quoted too
 
 Acknowledge **once** in the correct language ("Entschuldigung" / "Sorry"). Switch on the same reply. No re-explain in wrong language; no "from now on" promise.
 
-Examples + wrong-vs-correct: [`language-and-tone-examples`](../../docs/guidelines/agent-infra/language-and-tone-examples.md).
+Examples + wrong-vs-correct: [`language-and-tone-examples`](../docs/guidelines/agent-infra/language-and-tone-examples.md).
 
 ## Other language rules
 
