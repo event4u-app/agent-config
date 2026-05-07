@@ -7,7 +7,7 @@ description: Execute an ordered plan step by step with a judge gate between step
 disable-model-invocation: true
 suggestion:
   eligible: false
-  rationale: "Subagent orchestration — overlaps /work and /roadmap-execute; keep explicit."
+  rationale: "Subagent orchestration — overlaps /work and /roadmap:process-*; keep explicit."
 ---
 
 # /judge steps

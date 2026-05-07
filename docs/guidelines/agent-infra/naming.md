@@ -41,7 +41,7 @@ source: package
 | Pattern | When | Examples |
 |---|---|---|
 | `{verb}-{target}` | Action commands | `create-pr`, `fix-ci`, `commit` |
-| `{target}-{verb}` | Target-first grouping | `roadmap-create`, `roadmap-execute` |
+| `{target}-{verb}` | Target-first grouping | `roadmap-create` (legacy atomic; current cluster form is `/roadmap:create` and `/roadmap:process-step|phase|full`) |
 | `{scope}-{action}` | Scoped actions | `optimize-agents`, `review-changes` |
 
 ### Guidelines

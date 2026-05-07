@@ -1,7 +1,8 @@
 ---
 name: technical-specification
-description: "Use when the user says "write a spec", "create RFC", or "document this decision". Writes technical specifications, RFCs, and ADRs with clear structure."
+description: "Use when the user says "write a spec", "create RFC", "write a PRD", or "document this decision". Writes technical specifications, PRDs, RFCs, and ADRs with clear structure."
 source: package
+council_depth: deep
 ---
 
 # technical-specification
@@ -10,6 +11,7 @@ source: package
 
 Use this skill when:
 - Writing a technical specification for a new feature or system
+- Writing a Product Requirements Document (PRD) when user pain leads and solution shape follows
 - Creating an architecture decision record (ADR)
 - Documenting a technical RFC (Request for Comments)
 - Planning a significant technical change that needs team review
@@ -68,6 +70,59 @@ For complex features or systems. Stored in `agents/features/` or module `agents/
 ## References
 - {Links to related docs, tickets, or external resources}
 ```
+
+### Product Requirements Document (PRD)
+
+For features whose **shape is product-driven** rather than implementation-driven —
+when "what users get" matters more than "how the code is wired". Use a PRD
+when a Technical Specification would over-index on internals and under-index
+on user value. Stored in `agents/features/` next to the technical spec when
+both exist.
+
+```markdown
+# PRD: {Title}
+
+## Status
+{ Draft | In Review | Approved | Shipped | Parked }
+
+## Problem
+{The user-visible pain. One paragraph. Cite evidence — support tickets,
+analytics, user quotes — not assumptions.}
+
+## Success Criteria
+- {Measurable outcome with a number and a timeframe}
+- {Another measurable outcome}
+
+## Non-Goals
+- {What this PRD explicitly does NOT cover — protect scope}
+
+## User Stories
+- As a {role}, I want to {action}, so that {outcome}.
+- As a {role}, I want to {action}, so that {outcome}.
+
+## Major Modules
+{The 3-7 functional building blocks the feature decomposes into. One
+sentence each — what it does, not how. Implementation lives in the
+technical spec, not here.}
+
+- **{Module name}** — {one-sentence responsibility}
+- **{Module name}** — {one-sentence responsibility}
+
+## Open Questions
+- [ ] {Unresolved product question — pricing, permission, copy, edge case}
+
+## References
+- {Links to research, related PRDs, technical spec when it exists}
+```
+
+**PRD vs Technical Specification — when to pick which:**
+
+- **PRD first** when the user pain is clear but the solution shape is not
+  ("users can't share dashboards" → PRD scopes the problem; spec follows).
+- **Spec first** when the solution shape is clear but the implementation
+  is non-trivial ("rebuild auth on OAuth2" → spec leads; PRD often skipped).
+- **Both** when the feature is large enough that product and engineering
+  decisions belong in different artifacts.
 
 ### Architecture Decision Record (ADR)
 
@@ -161,6 +216,8 @@ If a developer reads only this document, they should be able to build it.
 ## Auto-trigger keywords
 
 - technical spec
+- PRD
+- product requirements
 - RFC
 - ADR
 - architecture decision

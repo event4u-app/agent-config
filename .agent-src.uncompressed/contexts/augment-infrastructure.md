@@ -106,7 +106,7 @@ Commands organized by workflow:
 | **Bugs** | `bug-investigate`, `bug-fix` |
 | **Contexts** | `context-create`, `context-refactor` |
 | **Modules** | `module-create`, `module-explore` |
-| **Roadmaps** | `roadmap-create`, `roadmap-execute` |
+| **Roadmaps** | `roadmap:create`, `roadmap:process-step`, `roadmap:process-phase`, `roadmap:process-full` |
 | **Quality** | `quality-fix`, `review-changes`, `prepare-for-review`, `update-form-request-messages`, `fix-seeder` |
 | **CI/PR** | `fix-ci`, `create-pr`, `create-pr-description`, `fix-pr-comments`, `fix-pr-bot-comments`, `fix-pr-developer-comments` |
 | **Testing** | `tests-create`, `tests-execute` |

@@ -63,6 +63,7 @@ def build_members(
     *,
     invocation_mode: str | None = None,
     model_overrides: dict[str, str] | None = None,
+    siblings_overrides: dict[str, list[str]] | None = None,
 ) -> list[ExternalAIClient]:
     """Construct enabled council members from settings.
 
@@ -73,6 +74,13 @@ def build_members(
     `model_overrides` is a per-invocation `{member_name: model_id}`
     map that wins over the per-member `model` in settings. Members not
     listed fall back to the settings value, then the per-client default.
+
+    `siblings_overrides` is a per-invocation `{member_name: [model, ...]}`
+    map that fans the named provider out to multiple sibling models in
+    one run (e.g. claude-sonnet-4-5 + claude-opus-4-1). Each model
+    becomes its own billable member with independent cost tracking.
+    Mutually exclusive with `model_overrides` for the same provider;
+    requires `mode=api`; provider must be enabled in settings.
     """
     ai = (settings.get("ai_council") or {}) if isinstance(settings, dict) else {}
     if not ai.get("enabled"):
@@ -83,16 +91,34 @@ def build_members(
     members_cfg = ai.get("members") or {}
     global_mode = ai.get("mode")
     overrides = model_overrides or {}
+    siblings = siblings_overrides or {}
     unknown = set(overrides) - set(members_cfg)
     if unknown:
         raise CouncilDisabledError(
             f"--model targets unknown member(s) {sorted(unknown)!r}; "
             f"known members: {sorted(members_cfg)!r}."
         )
+    unknown_sib = set(siblings) - set(members_cfg)
+    if unknown_sib:
+        raise CouncilDisabledError(
+            f"--siblings targets unknown member(s) {sorted(unknown_sib)!r}; "
+            f"known members: {sorted(members_cfg)!r}."
+        )
+    conflict = set(overrides) & set(siblings)
+    if conflict:
+        raise CouncilDisabledError(
+            f"--model and --siblings target the same member(s) {sorted(conflict)!r}; "
+            f"pick one per provider per invocation."
+        )
     members: list[ExternalAIClient] = []
     for name, cfg in members_cfg.items():
         cfg = cfg or {}
         if not cfg.get("enabled"):
+            if name in siblings:
+                raise CouncilDisabledError(
+                    f"--siblings targets member {name!r} but it is not "
+                    f"enabled in .agent-settings.yml (ai_council.members.{name}.enabled)."
+                )
             continue
         mode = resolve_mode(
             name,
@@ -100,13 +126,17 @@ def build_members(
             member_settings=cfg,
             global_mode=global_mode,
         )
+        if name in siblings:
+            if mode != "api":
+                raise CouncilDisabledError(
+                    f"--siblings requires mode=api for member {name!r} (got {mode!r})."
+                )
+            for sib_model in siblings[name]:
+                members.append(_construct_api_member(name, sib_model))
+            continue
         model = overrides.get(name) or cfg.get("model")
-        if mode == "api" and name == "anthropic":
-            members.append(AnthropicClient(model=model or "claude-sonnet-4-5",
-                                           api_key=load_anthropic_key()))
-        elif mode == "api" and name == "openai":
-            members.append(OpenAIClient(model=model or "gpt-4o",
-                                        api_key=load_openai_key()))
+        if mode == "api" and name in {"anthropic", "openai"}:
+            members.append(_construct_api_member(name, model))
         elif mode == "manual":
             members.append(ManualClient(name=name, model=model or "manual"))
         elif mode == "playwright":
@@ -123,6 +153,19 @@ def build_members(
             ".agent-settings.yml under ai_council.members.*."
         )
     return members
+
+
+def _construct_api_member(name: str, model: str | None) -> ExternalAIClient:
+    """Build an api-mode client for a known provider name."""
+    if name == "anthropic":
+        return AnthropicClient(model=model or "claude-sonnet-4-5",
+                               api_key=load_anthropic_key())
+    if name == "openai":
+        return OpenAIClient(model=model or "gpt-4o",
+                            api_key=load_openai_key())
+    raise CouncilDisabledError(
+        f"member {name!r} has no api transport (known: anthropic, openai)."
+    )
 
 
 def build_question(
@@ -164,6 +207,29 @@ def format_estimate_table(
 # ── subcommands ─────────────────────────────────────────────────────
 
 
+def _resolve_rounds(args: argparse.Namespace, ai_cfg: dict[str, Any]) -> int:
+    """Resolve effective debate round count from CLI args + settings.
+
+    Resolution chain (highest priority first):
+      1. ``--rounds N`` — explicit user override, any value.
+      2. ``--depth deep`` — uses ``ai_council.deep_min_rounds``,
+         floored at ``min_rounds`` so the deep tier is monotonic.
+      3. ``ai_council.min_rounds`` — default 2.
+
+    Sub-commands (rule/skill/command) declare ``council_depth: deep``
+    in their frontmatter; the host agent reads that and translates it
+    to ``--depth deep`` on the CLI invocation. The CLI itself stays
+    unaware of frontmatter — the contract is the flag.
+    """
+    if getattr(args, "rounds", None) is not None:
+        return int(args.rounds)
+    min_rounds = int(ai_cfg.get("min_rounds", 2))
+    if getattr(args, "depth", "standard") == "deep":
+        deep = int(ai_cfg.get("deep_min_rounds", min_rounds))
+        return max(deep, min_rounds)
+    return min_rounds
+
+
 def cmd_estimate(
     args: argparse.Namespace,
     *,
@@ -179,6 +245,7 @@ def cmd_estimate(
             settings,
             invocation_mode=args.mode_override,
             model_overrides=_parse_model_overrides(getattr(args, "model", None)),
+            siblings_overrides=_parse_siblings_overrides(getattr(args, "siblings", None)),
         )
     if table is None:
         table = load_prices()
@@ -239,6 +306,7 @@ def cmd_run(
             settings,
             invocation_mode=args.mode_override,
             model_overrides=_parse_model_overrides(getattr(args, "model", None)),
+            siblings_overrides=_parse_siblings_overrides(getattr(args, "siblings", None)),
         )
     if table is None:
         table = load_prices()
@@ -271,7 +339,7 @@ def cmd_run(
         max_calls=int(cost_cfg.get("max_calls", 10)),
         max_total_usd=float(cost_cfg.get("max_total_usd", 0.0) or 0.0),
     )
-    rounds = args.rounds if args.rounds is not None else int(ai_cfg.get("min_rounds", 2))
+    rounds = _resolve_rounds(args, ai_cfg)
     responses = consult(
         members, question, budget,
         table=table, project=project,
@@ -339,6 +407,38 @@ def _parse_model_overrides(items: list[str] | None) -> dict[str, str]:
     return out
 
 
+def _parse_siblings_overrides(items: list[str] | None) -> dict[str, list[str]]:
+    """Parse repeated `--siblings name=model1,model2[,...]` flags.
+
+    Requires ≥ 2 distinct, non-empty models per provider — sibling
+    mode without diversity has no purpose. Repeating the same provider
+    flag is rejected as ambiguous.
+    """
+    out: dict[str, list[str]] = {}
+    for raw in items or []:
+        if "=" not in raw:
+            raise argparse.ArgumentTypeError(
+                f"--siblings expects '<member>=<model1>,<model2>[,...]', got {raw!r}."
+            )
+        name, models_csv = raw.split("=", 1)
+        name = name.strip()
+        models = [m.strip() for m in models_csv.split(",") if m.strip()]
+        if not name or not models:
+            raise argparse.ArgumentTypeError(
+                f"--siblings member and model list must both be non-empty: {raw!r}."
+            )
+        if len(set(models)) < 2:
+            raise argparse.ArgumentTypeError(
+                f"--siblings requires ≥ 2 distinct models for {name!r}, got {models!r}."
+            )
+        if name in out:
+            raise argparse.ArgumentTypeError(
+                f"--siblings repeated for member {name!r}; combine into one flag."
+            )
+        out[name] = models
+    return out
+
+
 def _add_common_input_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("question", type=str,
                    help="Path to the question file (text or roadmap).")
@@ -356,6 +456,16 @@ def _add_common_input_args(p: argparse.ArgumentParser) -> None:
                         "Wins over `ai_council.members.<name>.model` in "
                         ".agent-settings.yml; the settings file is not "
                         "modified.")
+    p.add_argument("--siblings", action="append", default=None, dest="siblings",
+                   metavar="MEMBER=MODEL1,MODEL2[,...]",
+                   help="Fan one provider out to ≥ 2 sibling models in a "
+                        "single run, e.g. --siblings anthropic=claude-sonnet-4-5,"
+                        "claude-opus-4-1. Each model becomes its own billable "
+                        "member with independent cost tracking. Mutually "
+                        "exclusive with --model for the same provider; "
+                        "requires the provider to be enabled with mode=api. "
+                        "Single-provider degraded-run strategy per ai-council "
+                        "skill.")
     p.add_argument("--original-ask", default="",
                    help="The user's framing sentence (flows into handoff).")
 
@@ -377,9 +487,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument("--confirm", action="store_true",
                        help="Required to actually invoke the council.")
     p_run.add_argument("--rounds", type=int, default=None,
-                       help="Number of debate rounds (1-3). Defaults to "
-                            "ai_council.min_rounds in .agent-settings.yml "
-                            "(or 2 if unset).")
+                       help="Number of debate rounds (1-3). Explicit override; "
+                            "wins over --depth. Defaults to ai_council.min_rounds "
+                            "in .agent-settings.yml (or 2 if unset).")
+    p_run.add_argument("--depth", choices=["standard", "deep"], default="standard",
+                       help="Reasoning-depth tier. 'deep' floors rounds at "
+                            "ai_council.deep_min_rounds (max'd with min_rounds) "
+                            "for architecture, refactoring, or bug-diagnosis "
+                            "artefacts. Set by the host agent when the consuming "
+                            "rule/skill/command declares council_depth: deep. "
+                            "Overridden by explicit --rounds.")
 
     p_ren = sub.add_parser("render", help="Re-render a saved responses JSON.")
     p_ren.add_argument("responses",

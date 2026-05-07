@@ -49,8 +49,9 @@ Templates for roadmap files stored in `agents/roadmaps/` or `app/Modules/{Module
 ## Quality Gates (always apply at completion)
 
 Every roadmap must pass the project's quality pipeline before it is
-considered done. **When** the pipeline runs during `/roadmap execute` is
-governed by `roadmap.quality_cadence` in `.agent-settings.yml`
+considered done. **When** the pipeline runs during
+`/roadmap:process-step|phase|full` is governed by
+`roadmap.quality_cadence` in `.agent-settings.yml`
 (`end_of_roadmap` default → once before archival; `per_phase` → after
 every phase; `per_step` → after every step). Either way, a final fresh
 run is mandatory before "complete" per `verify-before-complete`.

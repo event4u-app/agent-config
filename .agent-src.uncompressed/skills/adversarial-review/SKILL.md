@@ -4,6 +4,7 @@ description: "ONLY when user explicitly requests adversarial review, devil's adv
 personas:
   - critical-challenger
 source: package
+council_depth: deep
 ---
 
 # Adversarial Review

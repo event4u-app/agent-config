@@ -238,6 +238,16 @@ ai_council:
   # invocation (or `--rounds N` to the CLI) to override.
   min_rounds: 2
 
+  # Higher floor for deep-reasoning artefacts (architecture review,
+  # refactoring proposals, bug-diagnosis runs). Activated when the
+  # consuming rule, skill, or command declares `council_depth: deep`
+  # in its frontmatter, or the user passes `--depth deep` to the CLI.
+  # Effective rounds = max(deep_min_rounds, min_rounds), so this floor
+  # is monotonic — lowering it below `min_rounds` has no effect.
+  # Standard tasks keep `min_rounds`; cost rises only when an artefact
+  # opts in. Set to `min_rounds` to disable the deep tier.
+  deep_min_rounds: 3
+
   # Hard cost ceiling per /council invocation. The orchestrator pauses
   # before any member whose projected spend would breach a cap and asks
   # the user to continue. `max_total_usd: 0` disables the USD ceiling
@@ -298,3 +308,15 @@ commands:
     # Commands to never suggest. Still work when typed explicitly.
     # Example: ["/refine-ticket", "/work"]
     blocklist: []
+
+  # --- /create-pr behavior ---
+  #
+  # Pre-creation preview of the generated PR description.
+  # false (default): skip the title/body preview + adjust loop in
+  # /create-pr; use the generated content directly. Saves agent tokens
+  # by avoiding a re-render of the full description in chat.
+  # true: show title and body in copyable code blocks and ask for
+  # adjustments before creating the PR.
+  # /create-pr:description-only always previews — that is its sole purpose.
+  create_pr:
+    preview_description: false

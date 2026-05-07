@@ -75,6 +75,47 @@ def test_parser_run_accepts_confirm_and_rounds() -> None:
     assert parsed.confirm is True and parsed.rounds == 2
 
 
+def test_parser_run_depth_defaults_to_standard() -> None:
+    parsed = council_cli.build_parser().parse_args(
+        ["run", "q.txt", "--output", "o.json"],
+    )
+    assert parsed.depth == "standard"
+
+
+def test_parser_run_accepts_depth_deep() -> None:
+    parsed = council_cli.build_parser().parse_args(
+        ["run", "q.txt", "--output", "o.json", "--depth", "deep"],
+    )
+    assert parsed.depth == "deep"
+
+
+# ── _resolve_rounds resolution chain ─────────────────────────────────
+
+
+def test_resolve_rounds_defaults_to_min_rounds() -> None:
+    args = _ns(rounds=None, depth="standard")
+    assert council_cli._resolve_rounds(args, {"min_rounds": 2}) == 2
+
+
+def test_resolve_rounds_depth_deep_uses_deep_min_rounds() -> None:
+    args = _ns(rounds=None, depth="deep")
+    cfg = {"min_rounds": 2, "deep_min_rounds": 3}
+    assert council_cli._resolve_rounds(args, cfg) == 3
+
+
+def test_resolve_rounds_explicit_rounds_wins_over_depth_deep() -> None:
+    args = _ns(rounds=1, depth="deep")
+    cfg = {"min_rounds": 2, "deep_min_rounds": 3}
+    assert council_cli._resolve_rounds(args, cfg) == 1
+
+
+def test_resolve_rounds_deep_floored_at_min_rounds() -> None:
+    """Defensive max: misconfigured deep_min_rounds < min_rounds is ignored."""
+    args = _ns(rounds=None, depth="deep")
+    cfg = {"min_rounds": 3, "deep_min_rounds": 1}
+    assert council_cli._resolve_rounds(args, cfg) == 3
+
+
 # ── build_members guards ─────────────────────────────────────────────
 
 
@@ -89,6 +130,128 @@ def test_build_members_raises_when_no_member_enabled() -> None:
     }}}
     with pytest.raises(council_cli.CouncilDisabledError, match="no council member"):
         council_cli.build_members(settings)
+
+
+# ── --siblings parser + build_members fan-out ────────────────────────
+
+
+def test_parse_siblings_overrides_accepts_two_models() -> None:
+    out = council_cli._parse_siblings_overrides(
+        ["anthropic=claude-sonnet-4-5,claude-opus-4-1"],
+    )
+    assert out == {"anthropic": ["claude-sonnet-4-5", "claude-opus-4-1"]}
+
+
+def test_parse_siblings_overrides_rejects_single_model() -> None:
+    import argparse as ap
+    with pytest.raises(ap.ArgumentTypeError, match="≥ 2 distinct"):
+        council_cli._parse_siblings_overrides(["anthropic=claude-sonnet-4-5"])
+
+
+def test_parse_siblings_overrides_rejects_duplicate_models() -> None:
+    import argparse as ap
+    with pytest.raises(ap.ArgumentTypeError, match="≥ 2 distinct"):
+        council_cli._parse_siblings_overrides(
+            ["anthropic=claude-sonnet-4-5,claude-sonnet-4-5"],
+        )
+
+
+def test_parse_siblings_overrides_rejects_repeated_provider() -> None:
+    import argparse as ap
+    with pytest.raises(ap.ArgumentTypeError, match="repeated"):
+        council_cli._parse_siblings_overrides([
+            "anthropic=a,b", "anthropic=c,d",
+        ])
+
+
+def test_parse_siblings_overrides_rejects_missing_equals() -> None:
+    import argparse as ap
+    with pytest.raises(ap.ArgumentTypeError, match="expects"):
+        council_cli._parse_siblings_overrides(["anthropic-a-b"])
+
+
+def test_build_members_siblings_unknown_provider_raises(monkeypatch) -> None:
+    settings = {"ai_council": {"enabled": True, "mode": "api", "members": {
+        "anthropic": {"enabled": True, "model": "claude-sonnet-4-5"},
+    }}}
+    with pytest.raises(council_cli.CouncilDisabledError, match="unknown member"):
+        council_cli.build_members(
+            settings, siblings_overrides={"openai": ["gpt-4o", "o1"]},
+        )
+
+
+def test_build_members_siblings_disabled_provider_raises(monkeypatch) -> None:
+    settings = {"ai_council": {"enabled": True, "mode": "api", "members": {
+        "anthropic": {"enabled": False, "model": "claude-sonnet-4-5"},
+    }}}
+    with pytest.raises(council_cli.CouncilDisabledError, match="not.*enabled"):
+        council_cli.build_members(
+            settings,
+            siblings_overrides={"anthropic": ["claude-sonnet-4-5", "claude-opus-4-1"]},
+        )
+
+
+def test_build_members_siblings_conflicts_with_model_override() -> None:
+    settings = {"ai_council": {"enabled": True, "mode": "api", "members": {
+        "anthropic": {"enabled": True, "model": "claude-sonnet-4-5"},
+    }}}
+    with pytest.raises(council_cli.CouncilDisabledError, match="same member"):
+        council_cli.build_members(
+            settings,
+            model_overrides={"anthropic": "claude-opus-4-1"},
+            siblings_overrides={"anthropic": ["claude-sonnet-4-5", "claude-opus-4-1"]},
+        )
+
+
+def test_build_members_siblings_rejects_manual_mode() -> None:
+    settings = {"ai_council": {"enabled": True, "mode": "manual", "members": {
+        "anthropic": {"enabled": True, "mode": "manual"},
+    }}}
+    with pytest.raises(council_cli.CouncilDisabledError, match="mode=api"):
+        council_cli.build_members(
+            settings,
+            siblings_overrides={"anthropic": ["claude-sonnet-4-5", "claude-opus-4-1"]},
+        )
+
+
+def test_build_members_siblings_fans_out_to_n_clients(monkeypatch) -> None:
+    monkeypatch.setattr(council_cli, "load_anthropic_key", lambda: "sk-ant-test")
+    constructed: list[tuple[str, str]] = []
+
+    class _FakeAnthropic:
+        name = "anthropic"
+        billable = True
+
+        def __init__(self, model: str, api_key: str | None = None):
+            self.model = model
+            constructed.append(("anthropic", model))
+
+        def ask(self, *a, **kw):  # pragma: no cover
+            return CouncilResponse("anthropic", self.model, "x")
+
+    monkeypatch.setattr(council_cli, "AnthropicClient", _FakeAnthropic)
+    settings = {"ai_council": {"enabled": True, "mode": "api", "members": {
+        "anthropic": {"enabled": True, "model": "claude-sonnet-4-5"},
+    }}}
+    members = council_cli.build_members(
+        settings,
+        siblings_overrides={"anthropic": ["claude-sonnet-4-5", "claude-opus-4-1"]},
+    )
+    assert len(members) == 2
+    assert [m.model for m in members] == ["claude-sonnet-4-5", "claude-opus-4-1"]
+    assert all(m.name == "anthropic" for m in members)
+    assert constructed == [
+        ("anthropic", "claude-sonnet-4-5"),
+        ("anthropic", "claude-opus-4-1"),
+    ]
+
+
+def test_parser_accepts_siblings_flag() -> None:
+    parsed = council_cli.build_parser().parse_args([
+        "estimate", "q.txt",
+        "--siblings", "anthropic=claude-sonnet-4-5,claude-opus-4-1",
+    ])
+    assert parsed.siblings == ["anthropic=claude-sonnet-4-5,claude-opus-4-1"]
 
 
 # ── cmd_estimate ─────────────────────────────────────────────────────

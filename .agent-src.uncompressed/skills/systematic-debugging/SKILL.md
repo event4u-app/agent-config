@@ -2,6 +2,7 @@
 name: systematic-debugging
 description: "Use when hitting a bug, test failure, crash, or unexpected behavior — enforces reproduce → isolate → hypothesize → verify before any fix — even when the user just says 'this is broken' or 'quick fix'."
 source: package
+council_depth: deep
 ---
 
 # systematic-debugging
@@ -35,10 +36,28 @@ papers over an unknown cause is a regression waiting to happen.
 
 ```
 NO FIX WITHOUT ROOT CAUSE. NO ROOT CAUSE WITHOUT EVIDENCE.
+NO BUG MARKED FIXED WITHOUT A REGRESSION TEST.
 ```
 
 "I think it's probably X" is not evidence. A log line, a stack trace, a
-diff, a reproduced failure — those are evidence.
+diff, a reproduced failure — those are evidence. A green run after a
+manual edit is not a regression test — a test that fails without the fix
+and passes with it, is.
+
+## The 6-phase loop (the spine)
+
+Every debug session walks these six phases in order. Treat them as a
+checklist — tick each box before claiming the bug fixed:
+
+- [ ] **1. Reproduce** — bug triggers on demand, smallest possible setup _(Phase 1)_
+- [ ] **2. Minimize** — smallest failing case isolated, irrelevant context stripped _(Phase 1, step 2)_
+- [ ] **3. Hypothesize** — one testable theory stated in one sentence _(Phase 3)_
+- [ ] **4. Instrument** — log / breakpoint / trace at the boundary where expected ≠ actual _(Phase 2)_
+- [ ] **5. Fix** — single, minimal change targeting the root cause _(Phase 4, step 2)_
+- [ ] **6. Regression-test** — failing test added that catches the bug returning **(MANDATORY — no exception)** _(Phase 4, step 1 + Validation checklist)_
+
+Skipping a box (especially #2 or #6) is the single biggest cause of
+wasted debug time and re-opened bugs.
 
 ## Procedure
 
@@ -242,10 +261,11 @@ When reporting debug findings to the user:
 
 Before declaring a bug fixed:
 
+* [ ] **6-phase loop** — all six boxes (Reproduce → Minimize → Hypothesize → Instrument → Fix → Regression-test) ticked
 * [ ] The failure was reproduced before any code changed
 * [ ] The root cause is named explicitly, not "probably"
 * [ ] Evidence (log, trace, diff) supports the named root cause
-* [ ] A failing test reproducing the bug was added or updated
+* [ ] **Regression test added — MANDATORY**: a test that fails without the fix and passes with it. No exception. "Manual reproduction confirmed gone" is not a regression test
 * [ ] The fix is minimal and targets the root cause, not the symptom
 * [ ] The regression test now passes
 * [ ] Adjacent tests still pass

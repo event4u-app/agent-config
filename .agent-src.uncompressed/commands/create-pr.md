@@ -45,14 +45,24 @@ Uses `/create-pr:description-only` to generate the PR content, then creates the 
 
 ### 2. Generate PR content
 
-Run `/create-pr:description-only` to generate the PR title and body.
+Run `/create-pr:description-only` Steps 1–4 to generate the PR title and body.
 This handles: Jira ticket extraction, diff analysis, commit messages, **PR template filling**.
 
 **CRITICAL**: The PR body MUST use the project's PR template (`.github/pull_request_template.md`).
 Read the template file and fill in its sections. If the template does not exist, use the
 fallback structure defined in `/create-pr:description-only`. NEVER invent a custom body structure.
 
-The user reviews and adjusts the content in that step.
+**Preview gate** — read `commands.create_pr.preview_description` from
+`.agent-settings.yml` (default `false` when unset):
+
+- `false` (default): skip Steps 5–6 of `/create-pr:description-only` (the
+  copyable preview block + adjust loop). Use the generated title and body
+  directly in Step 3 below. This saves agent tokens by avoiding a full
+  re-render of the description in chat. The user can still edit the PR
+  body in the GitHub UI after creation.
+- `true`: run Steps 5–6 of `/create-pr:description-only` — present the
+  title and body as copyable blocks and ask for adjustments before
+  proceeding. The user reviews and adjusts the content in that step.
 
 ### 2b. Offer council review (B2 hook)
 
@@ -152,7 +162,7 @@ If a Jira ticket was linked, ask:
 ### Rules
 
 - **Always use the PR template** from `.github/pull_request_template.md` — read it, fill its sections.
-- **Always show the PR content before creating it** — never create blindly.
+- **Preview before creating is opt-in** — controlled by `commands.create_pr.preview_description` in `.agent-settings.yml` (default `false`). When `false`, the bare `/create-pr` flow uses the generated description directly without a chat preview to save tokens. When `true`, the title and body are previewed and the user can adjust before creation. `/create-pr:description-only` always previews — that is its sole purpose.
 - **Push the branch first** if it hasn't been pushed (with user permission).
 - **Never add attribution footers to the body** — see [`no-attribution-footers`](../rules/no-attribution-footers.md). The agent does not self-credit; the strip-pass in step 4a defends against tool-injected footers.
 - Only create the PR — never merge it.

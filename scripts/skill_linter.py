@@ -1042,7 +1042,7 @@ def _lint_command_suggestion_block(text: str) -> List[Issue]:
     suggestion = data.get("suggestion")
     if suggestion is None:
         issues.append(Issue(
-            "warning", "missing_suggestion_block",
+            "error", "missing_suggestion_block",
             "Command frontmatter is missing the 'suggestion' block — required by "
             "road-to-context-aware-command-suggestion Phase 2.",
         ))

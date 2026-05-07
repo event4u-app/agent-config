@@ -33,7 +33,7 @@ column 1 of this table.
 | `chat-history` | 2 | `show` · `import` · `learn` | `chat-history` (legacy status) — `resume` / `clear` / `checkpoint` removed in `road-to-chat-history-hook-only` (auto-adopt + structural hooks); `import` (verbatim cross-session render) and `learn` (project-improving learning extraction) added in the v4 stateless schema |
 | `agents` | 2 | `audit` · `cleanup` · `prepare` | `agents-audit` · `agents-cleanup` · `agents-prepare` |
 | `memory` | 2 | `add` · `load` · `promote` · `propose` | `memory-add` · `memory-full` · `memory-promote` · `propose-memory` |
-| `roadmap` | 2 | `create` · `execute` | `roadmap-create` · `roadmap-execute` |
+| `roadmap` | 2 | `create` · `ai-council` · `process-step` · `process-phase` · `process-full` | `roadmap-create` · `roadmap-execute` (replaced — autonomous, no per-step gate; `process-phase` is the default execution scope); `ai-council` added 2026-05-07 — wraps `/council default` with `--input-mode roadmap --depth deep` |
 | `module` | 2 | `create` · `explore` | `module-create` · `module-explore` |
 | `tests` | 2 | `create` · `execute` | `tests-create` · `tests-execute` |
 | `context` | 2 | `create` · `refactor` | `context-create` · `context-refactor` |
@@ -43,6 +43,7 @@ column 1 of this table.
 | `commit` | 2 | `in-chunks` | `commit-in-chunks` |
 | `create-pr` | 2 | `description-only` | `create-pr-description` |
 | `council` | 3 | `default` · `pr` · `design` · `optimize` | `council` (legacy default lens) · `council-pr` · `council-design` · `council-optimize` |
+| `challenge-me` | — | `vision` · `with-docs` | new — Pocock-inspired one-question-at-a-time interview; `vision` is the standard 95%-confidence variant, `with-docs` adds doc/glossary awareness with a session-scoped glossary and load-bearing claim-vs-code verification |
 
 **Net change:** Phase 1 collapsed 15 atomics → 3 clusters; Phase 2
 collapses 26 atomics → 11 sub-command clusters. Sub-commands use
@@ -50,6 +51,49 @@ colon syntax (`/cluster:sub`) so Claude Code's command palette can
 autocomplete them. The standalone `/review` surface that mirrors
 `judge solo` lives at
 [`commands/review-changes.md`](../../.agent-src.uncompressed/commands/review-changes.md).
+
+## Cluster depth and sub-command naming
+
+Locked by [ADR-003](../decisions/ADR-003-flat-cluster-subs-and-colon-syntax.md)
+(2026-05-07). The shape is the default for **every** new cluster and
+every new sub-command added to an existing cluster.
+
+1. **Flat only.** A cluster has exactly one level of sub-commands.
+   No sub-sub-commands. A dispatcher routes `/cluster <sub>` to a
+   single sub-file; sub-files do not dispatch further. Two-level
+   dispatch is a deliberate contract change requiring a new ADR
+   superseding ADR-003.
+
+2. **Composite sub-names for verb+scope.** When a cluster carries
+   multiple verbs (e.g. authoring + execution), encode the verb in
+   the sub-name, joined with `-`:
+
+   - ✅ `/roadmap:create` · `/roadmap:process-step` ·
+     `/roadmap:process-phase` · `/roadmap:process-full`
+   - ❌ `/roadmap:process:phase` (sub-sub — forbidden)
+   - ❌ `/roadmap:step` · `/roadmap:phase` · `/roadmap:full`
+     (verb hidden — breaks symmetry with `create`)
+   - ❌ separate `/roadmap-process` cluster (domain split — forbidden
+     when one cluster can carry both verbs flat)
+
+   Sibling sub-names stay in the same shape: either all bare verbs,
+   all bare nouns/scopes, or all composite. Mixing bare and composite
+   in the same cluster is allowed only when the bare sibling is the
+   cluster's primary verb (e.g. `/roadmap:create` + `process-*`
+   composites).
+
+3. **Sub-name format.** kebab-case (`pr-bots`, `process-phase`),
+   ≤ 24 chars, no leading verb that duplicates the cluster name
+   (use `/fix:ci`, not `/fix:fix-ci`).
+
+4. **Colon-canonical invocation.**
+   `/<cluster>:<sub>` is the canonical form everywhere — catalog,
+   docs, examples, deprecation warnings. The space-separated form
+   `/<cluster> <sub>` is a first-class equivalent and routes to the
+   same dispatcher; it must keep working. Autocompletion-aware UIs
+   surface the colon form because it stays a single token. Full
+   semantics: [`slash-command-routing-policy-mechanics.md`](../../.agent-src.uncompressed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md)
+   § Routing semantics.
 
 ## Frontmatter contract
 

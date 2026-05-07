@@ -9,8 +9,8 @@ source: package
 ## When to use
 
 Use this skill when:
-- Creating a new roadmap (`roadmap-create` command)
-- Executing a roadmap (`roadmap-execute` command)
+- Creating a new roadmap (`/roadmap:create` command)
+- Executing a roadmap (`/roadmap:process-step|phase|full` commands)
 - Checking roadmap progress
 - Updating roadmap status after completing work
 
@@ -119,8 +119,8 @@ Every roadmap follows this structure:
 
 Every roadmap implicitly includes the project's quality pipeline
 (static analysis, autofixes, tests). What's configurable is **when**
-the pipeline runs during `/roadmap execute`, controlled by
-`roadmap.quality_cadence` in `.agent-settings.yml`:
+the pipeline runs during `/roadmap:process-step|phase|full`,
+controlled by `roadmap.quality_cadence` in `.agent-settings.yml`:
 
 | Cadence | Pipeline runs | Trade-off |
 |---|---|---|
@@ -164,7 +164,7 @@ unfamiliar codebases.
    evidence-based reason (e.g. risky migration benefits from a spike).
    Never include release versions, deprecation dates, or git tags in
    the roadmap text. If the user declines, do **not** re-propose during
-   `roadmap-execute`. Decline = silence. See [`scope-control`](../../rules/scope-control.md#decline--silence--no-re-asking-on-the-same-task).
+   `/roadmap:process-*`. Decline = silence. See [`scope-control`](../../rules/scope-control.md#decline--silence--no-re-asking-on-the-same-task).
 5. Save with a kebab-case filename (e.g. `optimize-webhook-jobs.md`).
    **Before writing**, scan the entire roadmap namespace for a
    collision — active, `archive/`, `skipped/`, and nested subdirs —
@@ -289,8 +289,8 @@ is rewritten by `.augment/scripts/update_roadmap_progress.py`.
 **Always regenerate in the SAME response** after any of the following
 (enforced by [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)):
 
-- Creating a new roadmap (`roadmap-create`)
-- Marking a step `[x]`, `[~]`, or `[-]` during `roadmap-execute`
+- Creating a new roadmap (`/roadmap:create`)
+- Marking a step `[x]`, `[~]`, or `[-]` during `/roadmap:process-*`
 - Archiving or moving a roadmap to `skipped/`
 - Adding, renaming, or removing a phase
 
