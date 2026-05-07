@@ -308,3 +308,15 @@ commands:
     # Commands to never suggest. Still work when typed explicitly.
     # Example: ["/refine-ticket", "/work"]
     blocklist: []
+
+  # --- /create-pr behavior ---
+  #
+  # Pre-creation preview of the generated PR description.
+  # false (default): skip the title/body preview + adjust loop in
+  # /create-pr; use the generated content directly. Saves agent tokens
+  # by avoiding a re-render of the full description in chat.
+  # true: show title and body in copyable code blocks and ask for
+  # adjustments before creating the PR.
+  # /create-pr:description-only always previews — that is its sole purpose.
+  create_pr:
+    preview_description: false
