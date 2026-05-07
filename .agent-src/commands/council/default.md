@@ -30,10 +30,11 @@ The user invoked `/council default` on exactly one input mode:
 Optional invocation flag: `mode:api|manual` overrides the per-member
 and global mode for this call only (see Step 2.5).
 
-Optional **rounds**: `rounds:N` (1-3) overrides the multi-round debate
-count. Round 1 sees the artefact alone. Round 2+ sees the artefact plus
-anonymised critiques from the previous round (provider/model identity
-stripped). Total spend = N × single-round cost; surface in cost gate.
+Optional **rounds**: `rounds:N` (1-3) overrides the multi-round
+debate count. Round 1 sees the artefact alone. Round 2+ sees the
+artefact plus anonymised critiques from the previous round
+(provider/model identity stripped). Total spend = N × single-round
+cost; surface this in the cost gate.
 
 Optional **depth**: `depth:deep` raises the round floor to
 `ai_council.deep_min_rounds` (default `3`, max'd with `min_rounds`)
@@ -44,12 +45,14 @@ the host translates that to `--depth deep` on the CLI. If multiple
 active artefacts disagree, **deep wins** (max policy). Explicit
 `rounds:N` overrides depth.
 
-Default comes from `ai_council.min_rounds` in `.agent-settings.yml`
-(default `2` so members critique each other at least once before
-convergence). **Do NOT ask "how many rounds?"** when `rounds:N` is
-unset or `N <= min_rounds` — proceed with the settings default. Ask
-only when the artefact is genuinely complex; surface as a numbered
-choice with the cost delta.
+The default comes from `ai_council.min_rounds` in
+`.agent-settings.yml` (default `2` so members critique each other at
+least once before convergence). **Do NOT ask the user "how many
+rounds?"** when `rounds:N` is unset or `N <= min_rounds` — proceed
+with the settings default. Ask only when the artefact is genuinely
+complex and you want more depth than `min_rounds` provides; surface
+the proposal as a numbered choice (per `ask-when-uncertain`) with
+the cost delta.
 
 Resolution chain (highest priority first):
 1. `rounds:N` / `--rounds N` — explicit user override.
@@ -158,7 +161,7 @@ Once the user picks `1`, invoke the same arguments with `run` plus
 `.agent-settings.yml` (or `2` if unset). Pass `--rounds N` only when
 the user explicitly asked for a different count or a complex
 artefact justifies more depth — do not pass `--rounds 1` to "save
-money" by default; settings owner already chose `min_rounds`.
+money" by default; the settings owner already chose `min_rounds`.
 
 `--depth` defaults to `standard`. Set `--depth deep` when the
 active rule, skill, or command declares `council_depth: deep` in
@@ -190,12 +193,35 @@ the **Convergence / Divergence** section yourself:
 - **Agreements** — points all members made (or did not contradict).
 - **Disagreements** — points where members took opposing positions.
 - **Unique insights** — points raised by exactly one member.
-- **Suggested next actions** — translated into concrete options for
-  the user.
 
-End with a numbered-options block asking the user how to proceed
-(e.g. update the roadmap, request a second round, ignore the
-critique).
+### 5a. Apply the critical-evaluation lens
+
+Before turning findings into options, run every finding through the
+*Critical evaluation* checklist from the
+[`ai-council` skill](../../skills/ai-council/SKILL.md#critical-evaluation--convener-skeptic-stance):
+codebase fit · locked-decision conflict · already addressed · cost
+/ benefit · hallucination. Cite host evidence (file:line, ADR,
+contract) for each verdict.
+
+Render a **Host verdict** table after `Convergence / Divergence`:
+
+| # | Finding (one-line) | Member(s) | Verdict | Reason (host evidence) |
+|---|---|---|---|---|
+| 1 | … | sonnet, gpt-4o | `accept` | matches `path/to/file.py:42` |
+| 2 | … | sonnet | `accept-with-modification` | scope creep — narrow to module X |
+| 3 | … | gpt-4o | `reject` | contradicts ADR `docs/decisions/foo.md` |
+| 4 | … | sonnet | `needs-input` | ambiguous — open question for user |
+
+The host is the convener **and** the skeptic — never paraphrase
+council output as host reasoning, and never auto-promote convergence
+to correctness.
+
+### 5b. Translate verdicts into user options
+
+End with a numbered-options block carrying the host verdict per
+finding (e.g. `1. [accept] Apply finding 1 — <patch summary>`,
+`2. [reject] Skip finding 2 — <reason>` — user can override). Always
+include "discard council input" as an option.
 
 ### 6. Hard floor — text only
 

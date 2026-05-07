@@ -193,12 +193,35 @@ the **Convergence / Divergence** section yourself:
 - **Agreements** — points all members made (or did not contradict).
 - **Disagreements** — points where members took opposing positions.
 - **Unique insights** — points raised by exactly one member.
-- **Suggested next actions** — translated into concrete options for
-  the user.
 
-End with a numbered-options block asking the user how to proceed
-(e.g. update the roadmap, request a second round, ignore the
-critique).
+### 5a. Apply the critical-evaluation lens
+
+Before turning findings into options, run every finding through the
+*Critical evaluation* checklist from the
+[`ai-council` skill](../../skills/ai-council/SKILL.md#critical-evaluation--convener-skeptic-stance):
+codebase fit · locked-decision conflict · already addressed · cost
+/ benefit · hallucination. Cite host evidence (file:line, ADR,
+contract) for each verdict.
+
+Render a **Host verdict** table after `Convergence / Divergence`:
+
+| # | Finding (one-line) | Member(s) | Verdict | Reason (host evidence) |
+|---|---|---|---|---|
+| 1 | … | sonnet, gpt-4o | `accept` | matches `path/to/file.py:42` |
+| 2 | … | sonnet | `accept-with-modification` | scope creep — narrow to module X |
+| 3 | … | gpt-4o | `reject` | contradicts ADR `docs/decisions/foo.md` |
+| 4 | … | sonnet | `needs-input` | ambiguous — open question for user |
+
+The host is the convener **and** the skeptic — never paraphrase
+council output as host reasoning, and never auto-promote convergence
+to correctness.
+
+### 5b. Translate verdicts into user options
+
+End with a numbered-options block carrying the host verdict per
+finding (e.g. `1. [accept] Apply finding 1 — <patch summary>`,
+`2. [reject] Skip finding 2 — <reason>` — user can override). Always
+include "discard council input" as an option.
 
 ### 6. Hard floor — text only
 

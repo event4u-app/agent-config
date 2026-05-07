@@ -169,9 +169,61 @@ not a default.
    into the host agent's voice.
 6. **Summarise.** Write a `Convergence / Divergence` block listing
    agreements, disagreements, and unique insights — provider-attributed.
-7. **Translate to options.** Convert actionable council suggestions
-   into concrete numbered options for the user. The user decides;
-   the council advises.
+7. **Critically evaluate** every finding before it leaves the host
+   (see *Critical evaluation* below). The host is the convener **and**
+   the skeptic — never a reviewer of the artefact itself, but always a
+   reviewer of the **council's output**.
+8. **Translate validated findings to options.** Convert each finding
+   the host accepts (or accepts with modification) into a concrete
+   numbered option for the user. Tag every option with the host's
+   verdict so the user sees the agent's reasoned position, not the
+   council's raw output. The user decides; the council advises; the
+   host filters.
+
+## Critical evaluation — convener-skeptic stance
+
+```
+COUNCIL CONVERGENCE IS NOT CORRECTNESS.
+DO NOT BLINDLY ACCEPT FINDINGS. DO NOT BLINDLY REJECT THEM.
+EVERY FINDING GETS A REASONED VERDICT BEFORE IT REACHES THE USER.
+```
+
+The council is **uninformed about the codebase, ADRs, locked
+contracts, prior decisions, and project history** — it sees only the
+artefact + neutrality preamble. That is the source of its diversity
+**and** its blind spots. Convergence between members can mean shared
+generic best-practice priors, not project-specific correctness.
+
+The host applies a critical lens to **every finding** (convergence
+**and** divergence) before surfacing it as a numbered option:
+
+| Check | Question | Tool |
+|---|---|---|
+| **Codebase fit** | Does the finding match the actual code, files, signatures, conventions? | `view` / `codebase-retrieval` / `grep` |
+| **Locked-decision conflict** | Does it contradict an ADR, kernel rule, contract under `docs/contracts/`, or `docs/decisions/`? | `view` |
+| **Already addressed** | Is it a generic best-practice already covered by an existing rule, skill, or test? | `view` / `grep` |
+| **Cost / benefit** | Is the change worth the diff size, churn, and review cost vs. the marginal benefit? | reasoning |
+| **Hallucination** | Does the finding cite a file, function, or behavior that does not exist? | `view` |
+
+Each finding receives one of three verdicts:
+
+- **`accept`** — codebase fits, no locked-decision conflict, benefit clears cost. Surface as a normal numbered option.
+- **`accept-with-modification`** — core insight valid, but the proposed shape needs adjusting (wrong file, contradicts ADR detail, scope creep). Surface with the **modified** patch and a one-line note.
+- **`reject`** — finding is wrong (hallucinated reference, contradicts a locked decision, already addressed, generic noise). Surface as a **Rejected by host** entry with a one-line reason. Still visible — the user can override.
+
+The verdict is the host's **own** reasoning, not the council's.
+Pretending convergence equals correctness, or paraphrasing council
+output as host analysis, both breach the [`direct-answers`](../../rules/direct-answers.md)
+no-invented-facts rule. When the host cannot reach a confident
+verdict on a finding (mixed evidence, ambiguous scope), it surfaces
+the finding as `needs-input` with the open question — the user
+decides, the host does not guess.
+
+### What this is NOT
+
+- **Not a re-review by the host.** The host did not write the artefact independently and cannot critique it independently — that boundary still holds.
+- **Not a vote against the council.** Rejecting a finding requires evidence (file, line, contract reference), not preference.
+- **Not silent filtering.** Every finding reaches the user with its verdict and reason. The user can pick a `reject` option and override the host.
 
 ## Output path convention
 
@@ -224,16 +276,26 @@ Every council reply MUST contain, in this order:
    containing the member's verbatim output.
 3. **Convergence / Divergence summary** — bullet list, every claim
    attributed by provider name.
-4. **User-facing options** — numbered block per `user-interaction`,
-   with "discard council input" always present as an option.
+4. **Host verdict per finding** — one row per finding with `accept`
+   / `accept-with-modification` / `reject` / `needs-input` plus a
+   one-line reason citing host evidence (file:line, ADR, contract).
+   See *Critical evaluation* above.
+5. **User-facing options** — numbered block per `user-interaction`,
+   carrying the host verdict in each option, with "discard council
+   input" always present as an option.
 
-The host agent NEVER ships council output as its own reasoning.
-Provider attribution stays visible in every render.
+The host agent NEVER ships council output as its own reasoning, and
+NEVER ships the host verdict as council output. Provider attribution
+stays visible in the per-member sections; host verdicts stay
+attributed to the host.
 
 ## Do NOT
 
 - Do NOT paraphrase council output into the host agent's voice — strip
   attribution and you've stripped the value.
+- Do NOT surface council findings to the user without a host verdict
+  — convergence ≠ correctness, and the user deserves the agent's
+  reasoned filter, not a raw forward.
 - Do NOT pre-warm the council with the host agent's analysis or
   identity — that primes the reviewer and collapses diversity.
 - Do NOT silently truncate a too-large bundle — surface the size and
@@ -265,6 +327,9 @@ Real failure modes seen in the wild:
 | Silently truncate a too-large bundle. | Misleads the reviewer into thinking they saw the whole thing. | Bundler raises `BundleTooLarge`; surface and ask for narrower scope. |
 | Reuse the same SDK client across calls without re-loading the key. | Leaks the key in long-lived process state. | Each invocation builds fresh clients from `load_*_key()`. |
 | Auto-spend tokens under `personal.autonomy: on`. | Autonomy ≠ permission to spend money. | Always ask before consultation, even under autonomy. |
+| Forward council convergence to the user as numbered options without a host verdict. | Convergence ≠ correctness; the council never saw the codebase. | Apply the *Critical evaluation* lens; tag every finding `accept` / `accept-with-modification` / `reject` / `needs-input` with one-line reason. |
+| Reject a finding on preference, not evidence. | "I don't like this" is not a verdict. | Cite the file, line, ADR, or contract that justifies the rejection — or surface as `needs-input`. |
+| Paraphrase council output into the host's own analysis to defend a verdict. | Strips attribution, breaches `direct-answers` no-invented-facts. | Verdict cites host evidence (file:line); council output stays attributed in the per-member sections. |
 
 ## Redaction expectations
 
