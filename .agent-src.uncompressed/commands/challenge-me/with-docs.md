@@ -15,8 +15,10 @@ suggestion:
 > Same one-question-at-a-time interview as `/challenge-me vision`, plus:
 > a **session glossary** against `CONTEXT.md`, **load-bearing claim-vs-code
 > verification**, and an optional `CONTEXT.md` **patch** + **ADR candidates**
-> appended to the final pitch. Nothing is written to disk — the pitch is
-> the only artefact.
+> appended to the final pitch. `/challenge-me` itself never writes to
+> disk — the in-interview triggers (`!roadmap`, `!ai`) route to
+> `/roadmap:create` and `/council default`, which run under their own
+> contracts.
 
 ## Welcome
 
@@ -29,7 +31,10 @@ CONTEXT.md and verify load-bearing claims against the code. At the end
 you get a pitch — plus an optional CONTEXT.md patch and ADR candidates
 to copy / apply yourself.
 
-Stop early any time by typing `!pitch` (or `!Vision pitchen`).
+End the interview early any time:
+  `!pitch`              — emit pitch, hand back
+  `!roadmap`            — emit pitch + auto-route to `/roadmap:create`
+  `!ai` / `!council`    — poll the AI council for the open question(s), continue (cost auto-accepted)
 ```
 
 Skip the welcome if the user invokes `/challenge-me with-docs <seed>`
@@ -49,18 +54,26 @@ If neither file exists and the user invoked `with-docs` anyway, fall
 back gracefully to `vision`-style flow and skip the doc inventory; note
 the absence in a single line at the end of Step 0.
 
-## Stop condition, flags, pitch trigger
+## Stop condition, flags, triggers
 
 Inherits **verbatim** from [`vision.md`](vision.md):
 
 - Default stop = the four 95%-conditions (AND, not OR).
 - Load-bearing test = answer changes goal / scope / hard constraint / AC.
 - `--until=95%` (default) · `--until=N` · `--keep-going`.
-- Pitch trigger: `!pitch`, `/pitch`, or whole reply `pitch`.
-- Step 1 question-block shape, Step 4 pitch validation.
+- Triggers (full syntax + match rules in `vision.md` § Triggers):
+  - `!pitch` / `/pitch` / whole reply `pitch` — emit pitch, hand back.
+  - `!roadmap` / `!roadmap:create` (and `/`-prefixed) — emit pitch + auto-route to `/roadmap:create` with the pitch as seed.
+  - `!ai` / `!ai-council` / `!council` (and `/`-prefixed) — invoke `/council default` on the open question(s), cost auto-accepted, integrate, resume.
+- Step 1 question-block shape, Step 4 pitch validation, Step 4-bis council poll.
 
 The deltas below replace / extend Step 0, Step 1, Step 2, Step 4 and
-Step 5. Steps 3 and 6 are unchanged.
+Step 5. Steps 3 and 6 are unchanged. **`!roadmap` routing in Step 6**
+includes the optional `CONTEXT.md` patch + ADR candidates from this
+variant in the seed handed to `/roadmap:create` (so the roadmap can
+reference them under "Context"). Step 4-bis council poll is identical
+to `vision.md`; pass the doc inventory + glossary as additional context
+in the council prompt.
 
 ## Steps
 

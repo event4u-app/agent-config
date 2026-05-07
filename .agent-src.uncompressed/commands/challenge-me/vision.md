@@ -27,7 +27,10 @@ Drop the seed — a plan, idea, ticket draft, or design sketch — and I'll
 walk you through a decision tree, one question per turn, until I'm 95%
 sure what you want. Then you get a copyable Markdown pitch.
 
-Stop early any time by typing `!pitch` (or `!Vision pitchen`).
+End the interview early any time:
+  `!pitch`              — emit pitch, hand back
+  `!roadmap`            — emit pitch + auto-route to `/roadmap:create`
+  `!ai` / `!council`    — poll the AI council for the open question(s), continue (cost auto-accepted)
 ```
 
 Skip the welcome if the user invokes `/challenge-me vision <seed>` directly.
@@ -157,9 +160,11 @@ constraint this unblocks>.
 3. <alternative option>
 4. Skip / not relevant
 
-> Reply with a number, a free-form answer, or type **`!pitch`**
-> (or **`!Vision pitchen`**) to lock in the current understanding and
-> get the Markdown pitch.
+> Reply with a number, a free-form answer, or one of:
+> **`!pitch`** — emit pitch and hand back ·
+> **`!roadmap`** (or **`!roadmap:create`**) — emit pitch + auto-route to `/roadmap:create` ·
+> **`!ai`** (alias **`!ai-council`** / **`!council`**) — poll the council on the open question(s),
+> cost auto-accepted, then continue the interview.
 ````
 
 **Rules for the question block.**
@@ -181,25 +186,37 @@ constraint this unblocks>.
 1. Number reply (`1`, `2`, …) → adopt that option.
 2. Free-form reply → integrate verbatim, do not re-interpret.
 3. "Skip" / "skip" / "n/a" → branch closed, do not revisit unless reopened.
-4. Pitch trigger fired → jump straight to Step 4, even if confidence < 95%.
+4. Trigger fired → branch by trigger type (see table below):
+   - `!pitch` → jump to Step 4, then Step 5 (emit pitch), then Step 6 hand-back.
+   - `!roadmap` / `!roadmap:create` → Step 4 → Step 5 (emit pitch) → Step 6 with **roadmap routing**.
+   - `!ai` / `!ai-council` / `!council` → jump to **Step 4-bis (Council poll)**, then resume Step 1 with the answers integrated.
 
-#### Pitch trigger — strict matching
+#### Triggers — strict matching
 
-The pitch trigger requires **explicit syntax** to avoid false positives
-on natural sentences like "I'd pitch this to the team".
+Three trigger families end or branch the interview. All require
+**explicit syntax** to avoid false positives on natural prose
+("I'd pitch this to the team", "let's run a council later").
+
+| Trigger | Action | Cost gate |
+|---|---|---|
+| `!pitch` · `/pitch` · whole reply `pitch` | Emit pitch (Step 5), hand back (Step 6) | none |
+| `!roadmap` · `!roadmap:create` · `/roadmap` · `/roadmap:create` · whole reply `roadmap` | Emit pitch (Step 5), then route to `/roadmap:create` with the pitch as seed (Step 6) | none — roadmap creation is text-only |
+| `!ai` · `!ai-council` · `!council` · `/ai` · `/ai-council` · `/council` · whole reply `ai` / `council` | Snapshot open question(s), invoke `/council default` to draft answers, integrate, resume Step 1 | **auto-accepted** — typing the trigger is the consent (per user opt-in to the trigger contract) |
+
+Match rules apply to **every** trigger above:
 
 | Match | Example | Fires? |
 |---|---|---|
-| `!pitch` (or any `!`-prefixed variant) at line start | `!pitch`, `!Vision pitchen`, `!pitch it` | yes |
-| `/pitch` at line start | `/pitch` | yes |
-| Whole reply is exactly `pitch` (case-insensitive, no other words) | `pitch` | yes |
-| `pitch` inside a sentence | "I would pitch this on Monday" | **no** |
-| `pitch mich` / `ship vision` inside prose | natural-language fragment | **no** |
+| `!<trigger>` at line start | `!pitch`, `!roadmap`, `!council`, `!Vision pitchen` | yes |
+| `/<trigger>` at line start | `/pitch`, `/roadmap:create`, `/ai-council` | yes |
+| Whole reply exactly the trigger word (case-insensitive) | `pitch`, `roadmap`, `council` | yes |
+| Trigger word inside a sentence | "I would pitch this on Monday", "let's poll the council later" | **no** |
+| Natural-language fragment (`pitch mich`, `ship vision`) | prose | **no** |
 
-`DE: "!Vision pitchen", "/Vision pitchen", "/pitche das", whole reply "pitch" · EN: "!pitch the vision", "/pitch the vision", whole reply "pitch"`
+`DE: "!Vision pitchen", "!roadmap erstellen", "!Council befragen", whole reply "pitch" · EN: "!pitch the vision", "!roadmap it", "!council on this", whole reply "pitch"`
 
-If the agent is unsure whether the user pitched, it confirms once
-(numbered options: `1. emit pitch · 2. continue interview`) instead of
+If the agent is unsure **which** trigger fired (e.g. `!council and pitch`),
+it confirms once with numbered options listing the candidates instead of
 guessing.
 
 ### Step 3: Re-score and continue
@@ -211,13 +228,48 @@ the next question. If reached, go to Step 4 without asking.
 
 Before emitting the pitch, run this checklist internally:
 
-1. All four 95%-conditions hold (or the user fired the pitch trigger).
+1. All four 95%-conditions hold (or the user fired `!pitch` / `!roadmap`).
 2. Every adopted answer is reflected in the pitch — no orphan branches.
 3. Acceptance criteria are observable and testable in the project's
    existing test surface — not "works correctly" / "looks better".
 4. The recommended next-step command actually exists in this project.
 
 If any check fails, ask one more question instead of pitching.
+
+### Step 4-bis: Council poll (`!ai` / `!ai-council` / `!council` only)
+
+Fires **instead of** Step 4/5 when an AI trigger matches. Cost gate is
+auto-accepted by the trigger contract — do **not** re-ask.
+
+1. **Snapshot** the current interview state:
+   - The seed (verbatim).
+   - All adopted answers so far (as `<question> → <answer>` lines).
+   - Open branches and the very-next question on the table.
+   - Any open assumptions surfaced so far.
+2. **Build the council prompt** as a single block:
+
+   ```
+   You are reviewing an in-progress /challenge-me vision interview.
+   Seed: <verbatim>
+   Adopted: <list>
+   Open question(s): <list>
+   For each open question, recommend an answer with one-line rationale,
+   plus any unstated risk you spot. Be terse.
+   ```
+3. **Invoke** `/council default prompt:"<above>"` non-interactively
+   (auto-accepted cost gate). Pass the host's `ai_council.min_rounds`
+   default — do **not** raise rounds inside the trigger.
+4. **Integrate** the council output:
+   - Surface each council answer **labelled with the source** (e.g.
+     `Council recommends: <answer> — rationale: <one line>`).
+   - Do **not** silently adopt — the user still picks (`1` to accept,
+     free-form to refine, `skip` to discard).
+5. **Resume Step 1** with the very-next question, now showing the
+   council's recommendation as option 1 (with the existing recommended
+   option pushed to option 2 if they differ).
+
+If the council call fails (network, budget, missing member), report the
+error in one line and resume Step 1 unchanged — do **not** re-trigger.
 
 ### Step 5: Emit the pitch
 
@@ -257,20 +309,36 @@ literal when the user copies it.
 
 ### Step 6: Hand back
 
-After the pitch is emitted, end the turn. Do **not** propose to also
-implement the pitch, write it to a roadmap, or commit anything — the
-pitch is conversational output the user copies into the next command
-(`/work`, `/roadmap-create`, `/feature-plan`, …).
+Branch on which trigger fired (or the natural 95%-stop):
 
-If the user wants the next step run, they invoke it explicitly.
+- **Natural stop or `!pitch`** — end the turn after emitting the pitch.
+  Do **not** propose to also implement, write to a roadmap, or commit —
+  the pitch is conversational output the user copies into the next
+  command (`/work`, `/roadmap:create`, `/feature-plan`, …).
+- **`!roadmap` / `!roadmap:create`** — emit the pitch (Step 5) **and**
+  immediately route to [`/roadmap:create`](../roadmap/create.md) using
+  the pitch as the seed for its Step 1 ("Title / goal", "Context",
+  "Phases"). The user keeps full control inside `/roadmap:create` —
+  this is opt-in routing, not silent execution. Mention the route in a
+  single line under the pitch (e.g. *"Routing to `/roadmap:create` —
+  this pitch becomes the seed for title + context + phase 1."*).
+- **`!ai` / `!ai-council` / `!council`** — handled by Step 4-bis, never
+  reaches Step 6.
+
+If the user wants any other follow-up, they invoke it explicitly.
 
 ## Output format
 
 1. **Per-turn question block** — one numbered question with a recommended
-   option, until 95% or pitch trigger.
+   option, until 95% or a trigger (`!pitch` / `!roadmap` / `!ai`).
 2. **Final pitch** — a single copyable fenced Markdown block (Step 5 shape).
 3. **One-line handoff suggestion** under the pitch — which command to run
-   next (`/work`, `/roadmap-create`, `/feature-plan`, etc.).
+   next (`/work`, `/roadmap:create`, `/feature-plan`, etc.).
+   - For `!roadmap` triggers, this line is the route announcement
+     instead of a suggestion (Step 6).
+4. **Council-poll output** (only if `!ai` fired) — labelled council
+   answers integrated into the next question block (Step 4-bis), not a
+   final pitch. The interview resumes.
 
 ## Examples
 
@@ -303,17 +371,24 @@ If the user wants the next step run, they invoke it explicitly.
 - **One question per turn** — non-negotiable, per
   [`ask-when-uncertain`](../../rules/ask-when-uncertain.md) Iron Law.
 - **No auto-execution** — emit the pitch, not the implementation it
-  describes. Do not chain into `/work` or `/roadmap-create` without
-  explicit user invocation.
-- **No file writes** — the pitch is conversational. No commits, no
-  roadmap edits, no `agents/` writes.
+  describes. Do not chain into `/work` or `/roadmap:create` without
+  explicit user invocation. The `!roadmap` trigger **is** explicit
+  invocation by user opt-in; routing under it is permitted.
+- **No file writes from /challenge-me itself** — the pitch is
+  conversational. No commits, no roadmap edits, no `agents/` writes.
+  The `!roadmap` trigger routes to `/roadmap:create`, which writes
+  under its own contract (with its own user confirmation in Step 6).
+- **Council cost gate is auto-accepted under `!ai`** — typing the
+  trigger is the consent. Do not surface a second confirmation. If
+  `personal.autonomy: auto`, the trigger still consents on its own —
+  the user explicitly opted in by typing it.
 - **Codebase first** — Step 0 forbids asking what `grep`, `view`, or
   `codebase-retrieval` would answer in seconds.
 - **Welcome once** — render the welcome only on the first no-body
   invocation per session.
 - **Mirror the user's language** — the question blocks and pitch use
-  the language the user wrote in (`language-and-tone` Iron Law). The
-  pitch trigger syntax (`!pitch`, `/pitch`, whole reply `pitch`) stays
+  the language the user wrote in (`language-and-tone` Iron Law). All
+  trigger syntax (`!pitch`, `!roadmap`, `!ai` and their aliases) stays
   literal in any language.
 
 ## Do NOT
