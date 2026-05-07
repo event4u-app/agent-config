@@ -36,14 +36,22 @@ Templates for roadmap files stored in `agents/roadmaps/` or `app/Modules/{Module
     creating the roadmap — not during execution. Default: stay on the
     current branch. If the user declines, the topic is closed for this
     roadmap. See [`scope-control`](../rules/scope-control.md#decline--silence--no-re-asking-on-the-same-task).
+15. **Declare complexity tier.** Every roadmap declares
+    `complexity: lightweight` or `complexity: structural` in frontmatter.
+    Lightweight (default): ≤ 6 phases, ≤ 600 lines, no nested council
+    debates inside the roadmap. Structural (rare, opt-in): contract-layer
+    or budget-invariant changes; multi-round council, file-ownership
+    matrices, > 600 lines. Enforced by `task lint-roadmap-complexity`.
+    Standard: [`docs/contracts/roadmap-complexity-standard.md`](../docs/contracts/roadmap-complexity-standard.md).
 
 ---
 
 ## Quality Gates (always apply at completion)
 
 Every roadmap must pass the project's quality pipeline before it is
-considered done. **When** the pipeline runs during `/roadmap execute` is
-governed by `roadmap.quality_cadence` in `.agent-settings.yml`
+considered done. **When** the pipeline runs during
+`/roadmap:process-step|phase|full` is governed by
+`roadmap.quality_cadence` in `.agent-settings.yml`
 (`end_of_roadmap` default → once before archival; `per_phase` → after
 every phase; `per_step` → after every step). Either way, a final fresh
 run is mandatory before "complete" per `verify-before-complete`.

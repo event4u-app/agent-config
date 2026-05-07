@@ -25,7 +25,7 @@ PHASE2_SHIMS: list[tuple[str, str]] = [
     ("propose-memory", "memory propose"),
     # roadmap cluster
     ("roadmap-create",  "roadmap create"),
-    ("roadmap-execute", "roadmap execute"),
+    ("roadmap-execute", "roadmap process-phase"),
     # module cluster
     ("module-create",  "module create"),
     ("module-explore", "module explore"),

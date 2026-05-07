@@ -30,7 +30,7 @@ Commands often chain together. Here are the main workflows:
 ### Feature Development
 
 ```
-/feature-explore → /feature-plan → /feature-roadmap → /roadmap-execute
+/feature-explore → /feature-plan → /feature-roadmap → /roadmap:process-phase
      ↓                  ↓                ↓                    ↓
   Brainstorm        Structure         Phases/Steps        Implement
 ```

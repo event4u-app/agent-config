@@ -525,6 +525,36 @@
       "routes_to": []
     },
     {
+      "id": "invite-challenge",
+      "triggers": [
+        {
+          "intent": "complex plan"
+        },
+        {
+          "intent": "design decision"
+        },
+        {
+          "intent": "architectural plan"
+        },
+        {
+          "intent": "multi-step implementation"
+        },
+        {
+          "keyword": "plan"
+        },
+        {
+          "keyword": "design"
+        },
+        {
+          "keyword": "architecture"
+        },
+        {
+          "keyword": "approach"
+        }
+      ],
+      "routes_to": []
+    },
+    {
       "id": "laravel-translations",
       "triggers": [
         {

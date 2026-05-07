@@ -168,7 +168,12 @@ If the user picks **2** → continue.
 
 After saving (and any council review), ask the user (in their language) whether to start executing the roadmap immediately.
 
-If yes → switch to the `roadmap-execute` command workflow with the newly created file.
+If yes → switch to [`/roadmap:process-phase`](process-phase.md) with
+the newly created file (the default execution scope of the `/roadmap`
+cluster). Offer [`process-step`](process-step.md) and
+[`process-full`](process-full.md) as alternatives. The legacy
+`/roadmap execute` command was removed — autonomous execution is the
+only path now.
 
 ### Rules
 

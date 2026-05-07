@@ -169,7 +169,7 @@ appends to `agents/.rule-budget-history.jsonl`.
 .agent-src.uncompressed/      ← edit here
   skills/       (136 skills)
   rules/        (59 rules)
-  commands/     (98 commands)
+  commands/     (100 commands)
   personas/     (7 personas)
   templates/    (AGENTS.md, copilot-instructions.md, skill.md, …)
   contexts/
