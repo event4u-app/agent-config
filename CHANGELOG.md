@@ -318,6 +318,44 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.22.0](https://github.com/event4u-app/agent-config/compare/1.21.0...1.22.0) (2026-05-07)
+
+### Features
+
+* **commands:** add /grill-me alias for /challenge-me + expand triggers ([d2be4ee](https://github.com/event4u-app/agent-config/commit/d2be4ee1a97d2ca2374c6543e0fd908eca0a0f1a))
+* **challenge-me:** add !roadmap and !ai triggers ([7bfbd69](https://github.com/event4u-app/agent-config/commit/7bfbd6943852d781ca7ad29e51750de24d3ef413))
+* **create-pr:** default to skipping description preview to save tokens ([80e77ae](https://github.com/event4u-app/agent-config/commit/80e77aed76a13c26fac8316bc5d58a3533dbbe44))
+* **council:** add critical-evaluation stance for council findings ([7e2524b](https://github.com/event4u-app/agent-config/commit/7e2524b75fd84ca4b6afb6deae0b8777e8b81ac7))
+* **council:** add /roadmap:ai-council deep-tier sub-command ([c5933e4](https://github.com/event4u-app/agent-config/commit/c5933e4b2301a0f9d1c116d2843ed4953bd92163))
+* replace /roadmap-execute with autonomous /roadmap:process-* cluster ([9d4ffd0](https://github.com/event4u-app/agent-config/commit/9d4ffd0815fb7923b337bfd0b3847d9bc5a01e54))
+* **council:** mark architecture/refactor/bug-diagnose artefacts as deep ([6f903c1](https://github.com/event4u-app/agent-config/commit/6f903c194e4bc54512e93a32e1876e84d0292401))
+* **council:** add deep reasoning depth tier with schema enforcement ([f4efd7a](https://github.com/event4u-app/agent-config/commit/f4efd7a11b9d57e93153e6e4605c968565c8924d))
+* **linter:** require suggestion block on commands ([231df91](https://github.com/event4u-app/agent-config/commit/231df918b2d15ea9cc2fa8fe12bae4c2482990df))
+* add --siblings council mode and refine convener wording ([9075647](https://github.com/event4u-app/agent-config/commit/9075647ba520efb5f10ab7612970111e9f9d16e9))
+* add PRD template to technical-specification ([f9ee749](https://github.com/event4u-app/agent-config/commit/f9ee7496434f9342d6b46b95dce14c4703d07d96))
+* add 6-phase loop checklist to systematic-debugging ([29c9e94](https://github.com/event4u-app/agent-config/commit/29c9e9419c9d08dd93c4fc7364e51b93bc771131))
+* add invite-challenge rule for pre-execution goal restatement ([e96da5f](https://github.com/event4u-app/agent-config/commit/e96da5fdf124da3582e454fc625fe32a27ada634))
+* add /challenge-me cluster with vision and with-docs sub-commands ([74481ef](https://github.com/event4u-app/agent-config/commit/74481ef7e7850d3e015ff0f9853be6ea618ac1d9))
+
+### Documentation
+
+* **roadmap:** drop council-response file links per no-council-references ([d792100](https://github.com/event4u-app/agent-config/commit/d792100ef6b2727cca1338c89fefc4c591513265))
+* **readme:** bump hero command count from 100 to 102 ([3212db4](https://github.com/event4u-app/agent-config/commit/3212db48fb1d62a70f9e87cf9307ee73059b7e4e))
+* **roadmap:** integrate R5 council verdict for caveman-insurance ([38b26e2](https://github.com/event4u-app/agent-config/commit/38b26e2f00504a7c6c821c356964cb0cabefd905))
+* **roadmap:** incorporate R4 verdict + structural findings into caveman integration ([c50f39b](https://github.com/event4u-app/agent-config/commit/c50f39bc9b08c8d59c4cf547aeec7fffbff38bc0))
+* **roadmap:** convert caveman integration Phase 2 to hard cutover ([fb459be](https://github.com/event4u-app/agent-config/commit/fb459be70a093eea1814a38a3b1fec9cf9261363))
+* **harvest:** add Superpowers harvest roadmap, hardened by council R2 ([e559259](https://github.com/event4u-app/agent-config/commit/e559259f789014603067e87141d9feb815b480ab))
+* **harvest:** analyze obra/superpowers v5.1.0 for adoption candidates ([e89e0ee](https://github.com/event4u-app/agent-config/commit/e89e0eeadc4b76517b181c559422e88df5c8122a))
+* **council:** document council_depth frontmatter convention in templates ([ba56412](https://github.com/event4u-app/agent-config/commit/ba56412c76204bbe49366bbceb62e4d31c994fc2))
+
+### Chores
+
+* **sync:** re-sync compressed mirror with create-pr preview-gate + agent-settings preview_description ([ceab79e](https://github.com/event4u-app/agent-config/commit/ceab79e23be2c1d4ba504b80426d1b91ffdaadd1))
+* bump artefact counts and refresh compression hashes ([2801342](https://github.com/event4u-app/agent-config/commit/28013424668177fc23df45cc56390faba6fd010e))
+* regenerate tool-dir symlinks for challenge-me and invite-challenge ([b3b0ada](https://github.com/event4u-app/agent-config/commit/b3b0ada9ce108b220289c9f044b3f3d0209f0a12))
+* bump artefact counts and refresh compression hashes ([4147de3](https://github.com/event4u-app/agent-config/commit/4147de3b4da24494128a847be194ac901e506df9))
+* sync compressed projection for challenge-me cluster ([9165762](https://github.com/event4u-app/agent-config/commit/91657620e6d822fbe28923e3b008e218f13e5cea))
+
 ## [1.21.0](https://github.com/event4u-app/agent-config/compare/1.20.0...1.21.0) (2026-05-06)
 
 ### Features
