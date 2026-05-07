@@ -139,8 +139,14 @@ Only runs **after** A1-A7 are green and a real client renders prompts.
 ## Phase 6 — Distribution polish (deferred)
 
 - [ ] **F1** — Versioning strategy: server version vs skill-set version vs package version.
-- [ ] **F2** — SSE transport for cloud / remote.
-- [ ] **F3** — Cloud bundle equivalent — running server image (Docker?) for hosted scenarios.
+- [ ] **F2** — SSE transport for cloud / remote. Build on the
+  [`mcp-request-signing § Appendix — HTTP-bridge stdio-kernel pattern`](../../docs/guidelines/agent-infra/mcp-request-signing.md#appendix--http-bridge-stdio-kernel-pattern-reference)
+  — supervisor + framing + correlation + verify gate + allowlist +
+  backpressure are mandatory; HMAC verification from the same guideline
+  layers under the **D4** allowlist.
+- [ ] **F3** — Cloud bundle equivalent — running server image (Docker?)
+  for hosted scenarios. Same appendix as F2 applies; the cloud bundle
+  is the deployment target, not a different transport.
 - [ ] **F4** — Plugin marketplace listing (tied to identity decision in `road-to-better-skills-and-profiles.md`).
 
 ## Risk register
@@ -199,6 +205,7 @@ one confirmed client.
 - `docs/architecture.md` — projection model description.
 - `road-to-better-skills-and-profiles.md` § "Multi-client expansion" — sister roadmap, file-projection axis.
 - `.agent-src.uncompressed/skills/mcp/SKILL.md` — current consumer-side MCP skill (will be expanded once we ship our own server).
+- [`docs/guidelines/agent-infra/mcp-request-signing.md`](../../docs/guidelines/agent-infra/mcp-request-signing.md) — HMAC-SHA256 signing primitive for any non-stdio transport. Pairs with **D4** allowlist; load-bearing once **F2** (SSE) or **F3** (cloud bundle) ship.
 - Anthropic MCP spec — verify URL + version in A1 before locking.
 
 ## Next step
