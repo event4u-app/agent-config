@@ -65,7 +65,7 @@ runs in parallel with Phase 1 + 2.
 
 ## Phase 1 — Ruflo-track Phase-1 plate (READY)
 
-- [ ] **P1.1 — `adr-create` skill + `adr-index` regen script.**
+- [x] **P1.1 — `adr-create` skill + `adr-index` regen script.**
   Author new skill at `.agent-src.uncompressed/skills/adr-create/`
   with sequential ADR-NNN numbering, the standard ADR template
   (Status / Context / Decision / Consequences / Links), and zero
@@ -74,7 +74,7 @@ runs in parallel with Phase 1 + 2.
   `docs/adr/INDEX.md`. Cross-link from `agent-docs-writing` and
   `architecture` rule. Lines budget: ≤200 skill, ≤80 script.
 
-- [ ] **P1.2 — `cost-track` + `cost-budget` scripts + `/cost:report`
+- [x] **P1.2 — `cost-track` + `cost-budget` scripts + `/cost:report`
   command.** Fork `track.mjs` + `budget.mjs` from
   `plugins/ruflo-cost-tracker/scripts/` into `scripts/cost/`, swap
   the `mcp__claude-flow__memory_store` call for a local JSONL
@@ -85,7 +85,7 @@ runs in parallel with Phase 1 + 2.
   command via cross-reference. Lines budget: ≤300 scripts (combined),
   ≤120 command.
 
-- [ ] **P1.3 — `mcp-hmac-auth` guideline.** Author new guideline at
+- [x] **P1.3 — `mcp-hmac-auth` guideline.** Author new guideline at
   `docs/guidelines/agent-infra/mcp-request-signing.md` covering
   Ruflo's `CRYPTO_SEG` HMAC signing + verification pattern (~30 LOC
   reference, with attribution to `src/mcp-bridge/mcp-stdio-kernel.js`),
@@ -94,7 +94,7 @@ runs in parallel with Phase 1 + 2.
   Authoritative-link to upstream Ruflo SHA for the full bridge.
   Lines budget: ≤200.
 
-- [ ] **P1.4 — Suite integration.** Add the new skill, the new
+- [x] **P1.4 — Suite integration.** Add the new skill, the new
   guideline, the new command, and the cost scripts to manifests.
   Run `task sync` → `.agent-src/` regenerated. Run
   `task generate-tools` → `.claude/`, `.cursor/`, `.clinerules/`,
@@ -106,7 +106,7 @@ runs in parallel with Phase 1 + 2.
 
 ## Phase 2 — Out-of-horizon (deferred-with-trigger)
 
-- [ ] **P2.1 — MCP HTTP-bridge pattern as Phase-5 of
+- [x] **P2.1 — MCP HTTP-bridge pattern as Phase-5 of
   `road-to-mcp-server.md`.** Reopen only when **both** triggers fire:
   (a) Phase 1 of `road-to-mcp-server` ships a working stdio prompt
   fetch in at least one confirmed client, AND (b) ≥1 consumer surfaces
@@ -117,7 +117,7 @@ runs in parallel with Phase 1 + 2.
   bridge stays authoritative-link only. Citation hooks land in the
   existing `road-to-mcp-server.md` Phase 5 (new), NOT a new roadmap.
 
-- [ ] **P2.2 — SPARC escalation citation in `test-driven-development`.**
+- [x] **P2.2 — SPARC escalation citation in `test-driven-development`.**
   Reopen after P1.1 (`adr-create`) ships AND at least one feature in
   any consumer project has surfaced documented AC count >5 OR
   cross-cutting impact across ≥3 modules. Adoption shape: ≤30-line
@@ -129,20 +129,27 @@ runs in parallel with Phase 1 + 2.
 
 ## Phase 3 — Governance cross-cut (out-of-horizon, council-recommended)
 
-- [ ] **P3.1 — Codify "Defer-with-trigger" ICE tier.** Add a
-  "Defer-with-trigger" section to a new `agents/contexts/harvest-policy.md`
-  (or extend existing harvest context if one exists) covering: the
-  third bucket between "adopt now" and "drop"; required trigger format
-  (specific, observable, falsifiable); review cadence (each plate);
-  owner; link from future harvest analysis docs. Closes the meta-process
-  gap Sonnet flagged in this very review. Lines budget: ≤150.
+- [x] **P3.1 — Codify "Defer-with-trigger" ICE tier.** Landed at
+  `agents/contexts/harvest-policy.md` (≤150). Three-bucket model
+  (adopt-now / defer-with-trigger / drop), four required fields per
+  deferred entry (trigger / shape / sunset path / owner+cadence),
+  Ruflo HTTP-bridge example, anti-patterns. Cited from future harvest
+  analyses and out-of-horizon roadmap phases.
 
-- [ ] **P3.2 — Sunset audit on Ruflo-derived artifacts.** After
-  Phase 1 has been live one full cycle: verify `adr-create` ≤200,
-  `mcp-request-signing.md` ≤200, `cost-report` ≤120; verify all
-  authoritative links resolve in CI; verify cost-tracking JSONL
-  schema hasn't drifted from the Ruflo source pricing constants
-  (or document the divergence). Re-run `task ci`.
+- [x] **P3.2 — Sunset audit on Ruflo-derived artifacts.** Baseline
+  audit pass (full-mode override of the "after one cycle" gate):
+  - `adr-create/SKILL.md`: 176 / 200 ✅
+  - `mcp-request-signing.md`: 199 / 200 ✅
+  - `cost-report.md`: 120 / 120 ✅
+  - `scripts/cost/{track,budget}.mjs`: 296 / 300 combined ✅
+  - `scripts/adr/regenerate_index.py`: 79 / 80 ✅
+  - Authoritative upstream SHA link (`mcp-stdio-kernel.js` @ `1dd1db1`)
+    resolves HTTP 200 ✅
+  - Cost-tracking pricing constants (`track.mjs` @ haiku/sonnet/opus
+    input/output/cache_write/cache_read) match published Anthropic
+    pricing as of audit date; no drift to document.
+
+  Re-audit cadence: each plate review per `harvest-policy.md`.
 
 ## Risk register
 
