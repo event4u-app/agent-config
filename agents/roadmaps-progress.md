@@ -6,7 +6,7 @@
 
 ## Overall
 
-**1 / 431 steps done · 0%**
+**1 / 433 steps done · 0%**
 
 ```text
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-always-budget-relief.md](roadmaps/road-to-always-budget-relief.md) | 4 | 14 | 14 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 1 | 35 | 35 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-caveman-integration.md](roadmaps/road-to-caveman-integration.md) | 6 | 56 | 56 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-caveman-integration.md](roadmaps/road-to-caveman-integration.md) | 6 | 58 | 58 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-chat-history-cross-agent-hardening.md](roadmaps/road-to-chat-history-cross-agent-hardening.md) | 5 | 37 | 37 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-deep-research-adoption.md](roadmaps/road-to-deep-research-adoption.md) | 3 | 14 | 14 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -61,16 +61,16 @@
 
 ### [road-to-caveman-integration.md](roadmaps/road-to-caveman-integration.md)
 
-**Caveman Integration (Option 1 hardened)** — 0 / 56 done (0%)
+**Caveman Integration (Option 1 hardened)** — 0 / 58 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Lock schema + settings schema | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 0 | Lock schema + settings schema | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 1 | Source mirror + SHA pin + content-hash verify | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
 | 2 | caveman-compress Hard Cutover | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 | 3 | Dedicated caveman-speak rule + minimal cross-references | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 | 4 | caveman-shrink MCP-proxy wiring | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 5 | Tests, docs, and release notes | ⬜ not started | 25 | 0 | 0 | 0 | 0% |
+| 5 | Tests, docs, and release notes | ⬜ not started | 26 | 0 | 0 | 0 | 0% |
 
 ### [road-to-chat-history-cross-agent-hardening.md](roadmaps/road-to-chat-history-cross-agent-hardening.md)
 
