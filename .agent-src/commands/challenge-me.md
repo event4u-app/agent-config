@@ -5,8 +5,8 @@ cluster: challenge-me
 disable-model-invocation: true
 suggestion:
   eligible: true
-  trigger_description: "challenge me on this plan, grill me until it's clear, frag mich durch, dreh mich durch die Mangel, challenge against existing docs/glossary"
-  trigger_context: "user has a fuzzy plan/idea/feature draft and wants it sharpened interactively rather than reconstructed in one shot"
+  trigger_description: "challenge me on this plan, grill me, grill me on this, grill me on this plan, grill me through this, grill me until it's clear, grill me hard, frag mich durch, dreh mich durch die Mangel, challenge against existing docs/glossary"
+  trigger_context: "user has a fuzzy plan/idea/feature draft and wants it sharpened interactively rather than reconstructed in one shot — also reachable via /grill-me alias"
 ---
 
 # /challenge-me
@@ -14,6 +14,9 @@ suggestion:
 Top-level orchestrator for the `/challenge-me` family. Walks a decision
 tree by asking one question at a time until the agent is confident
 enough to emit a copyable Markdown pitch.
+
+> Also reachable as [`/grill-me`](grill-me.md) — thin alias, identical
+> behaviour, identical sub-commands and triggers.
 
 ## Sub-commands
 

@@ -6,7 +6,7 @@ description: "Doc-aware /challenge-me — 95%-confidence interview with session 
 disable-model-invocation: true
 suggestion:
   eligible: true
-  trigger_description: "challenge me against the docs, grill me with our context, frag mich durch und prüf gegen CONTEXT.md, challenge plan with domain docs"
+  trigger_description: "challenge me against the docs, grill me with our context, grill me against the docs, grill me against CONTEXT.md, grill me with the project context, frag mich durch und prüf gegen CONTEXT.md, challenge plan with domain docs"
   trigger_context: "user wants the seed challenged against existing project glossary, CONTEXT.md, or ADRs — not a greenfield interview"
 ---
 

@@ -112,6 +112,7 @@
         "./.claude/skills/git-workflow",
         "./.claude/skills/github-ci",
         "./.claude/skills/grafana",
+        "./.claude/skills/grill-me",
         "./.claude/skills/guideline-writing",
         "./.claude/skills/implement-ticket",
         "./.claude/skills/jira-integration",
