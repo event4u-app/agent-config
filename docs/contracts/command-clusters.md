@@ -33,7 +33,7 @@ column 1 of this table.
 | `chat-history` | 2 | `show` · `import` · `learn` | `chat-history` (legacy status) — `resume` / `clear` / `checkpoint` removed in `road-to-chat-history-hook-only` (auto-adopt + structural hooks); `import` (verbatim cross-session render) and `learn` (project-improving learning extraction) added in the v4 stateless schema |
 | `agents` | 2 | `audit` · `cleanup` · `prepare` | `agents-audit` · `agents-cleanup` · `agents-prepare` |
 | `memory` | 2 | `add` · `load` · `promote` · `propose` | `memory-add` · `memory-full` · `memory-promote` · `propose-memory` |
-| `roadmap` | 2 | `create` · `process-step` · `process-phase` · `process-full` | `roadmap-create` · `roadmap-execute` (replaced — autonomous, no per-step gate; `process-phase` is the default execution scope) |
+| `roadmap` | 2 | `create` · `ai-council` · `process-step` · `process-phase` · `process-full` | `roadmap-create` · `roadmap-execute` (replaced — autonomous, no per-step gate; `process-phase` is the default execution scope); `ai-council` added 2026-05-07 — wraps `/council default` with `--input-mode roadmap --depth deep` |
 | `module` | 2 | `create` · `explore` | `module-create` · `module-explore` |
 | `tests` | 2 | `create` · `execute` | `tests-create` · `tests-execute` |
 | `context` | 2 | `create` · `refactor` | `context-create` · `context-refactor` |

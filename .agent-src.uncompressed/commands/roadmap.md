@@ -22,6 +22,7 @@ paused for confirmation before every step) was removed —
 | Sub-command | Routes to | Purpose |
 |---|---|---|
 | `/roadmap:create` | `commands/roadmap/create.md` | Interactively scaffold a new roadmap in `agents/roadmaps/` |
+| `/roadmap:ai-council` | `commands/roadmap/ai-council.md` | Challenge an existing roadmap with the AI council (deep tier) and refactor from convergence findings |
 | `/roadmap:process-step` | `commands/roadmap/process-step.md` | Autonomously process the next open step, then stop |
 | `/roadmap:process-phase` (**default execution scope**) | `commands/roadmap/process-phase.md` | Autonomously process every open step in the current phase |
 | `/roadmap:process-full` | `commands/roadmap/process-full.md` | Autonomously process every open step across every phase |
@@ -51,9 +52,10 @@ each only binds a scope delta.
    and ask:
 
    > 1. create — scaffold a new roadmap interactively
-   > 2. process-step — process the next open step, then stop
-   > 3. process-phase — process the current phase (default)
-   > 4. process-full — process every open step across every phase
+   > 2. ai-council — challenge + refactor an existing roadmap (deep tier)
+   > 3. process-step — process the next open step, then stop
+   > 4. process-phase — process the current phase (default)
+   > 5. process-full — process every open step across every phase
 
 ## Rules
 
