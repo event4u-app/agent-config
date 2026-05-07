@@ -40,8 +40,9 @@ exception classes: numbered-options blocks and Iron-Law responses.
   content-hash-verify, `.local`-override). Trace: `agents/council-responses/caveman-integration.json`.
 - **Predecessor:** `agents/roadmaps/archive/caveman-compress-integration.md` — earlier roadmap
   that explicitly replaced caveman-compress with manual agent-driven compression. This roadmap
-  reverses that decision; the agent-driven `compress` command becomes a fallback path behind
-  the `caveman.compress: false` toggle.
+  reverses that decision via Phase 2 (Hard Cutover variant): caveman-compress is the only
+  compression path; the 225-line agent-driven compress procedure is removed; `caveman.compress:
+  false` makes `task generate-tools` copy uncompressed sources directly to projections.
 - **Feature:** none (challenge-vision pitch)
 - **Jira:** none
 
@@ -57,7 +58,7 @@ Resolves the council-flagged ordering issues: Phase 2's settings reads and Phase
 
 ## Phase 1: Source mirror + SHA pin + content-hash verify
 
-- [ ] **Step 1:** Add `.build-deps.lock` schema with one entry per inlined caveman artifact: upstream URL, pinned commit SHA, expected SHA-256 content hash. Initial entry: `caveman-speak.md`.
+- [ ] **Step 1:** Populate `.build-deps.lock` (schema defined in Phase 0 Step 1) with the initial upstream entry for `caveman-speak.md`: upstream URL, pinned commit SHA, expected SHA-256 content hash.
 - [ ] **Step 2:** Implement `scripts/sync-upstream.sh` — fetch each `.build-deps.lock` entry from `https://raw.githubusercontent.com/juliusbrussee/caveman/<SHA>/<path>` into `.agent-src.uncompressed/contexts/communication/caveman-speak.md.vendor`, recompute SHA-256, fail hard on hash mismatch with a clear error message that names the drifted file.
 - [ ] **Step 3:** Add `.local`-override path: when `.agent-src.uncompressed/contexts/communication/caveman-speak.md.local` exists, `sync-upstream.sh` copies it to `.vendor` instead of fetching upstream and prints a dev-mode warning.
 - [ ] **Step 4:** Wire `task sync-upstream` into the existing `task sync` task before `task generate-tools` runs.
@@ -66,40 +67,50 @@ Resolves the council-flagged ordering issues: Phase 2's settings reads and Phase
 - [ ] **Step 7:** Write the SHA-drift recovery runbook in `docs/troubleshooting.md` covering three named scenarios — (a) transient outage / GitHub unreachable: retry policy + last-known-good window, (b) intentional upstream update: PR template requiring upstream-diff review + local test run + maintainer sign-off + lock-file bump, (c) suspected compromise: halt builds + revert to `.local` override + notify security contact.
 - [ ] **Step 8:** Add CI escalation: after >3 consecutive `sync-upstream` failures, the workflow surfaces a clearly-labeled job failure (paging hook is project-policy, not in scope of this roadmap).
 
-## Phase 2: caveman-compress migration
+## Phase 2: caveman-compress Hard Cutover
 
-- [ ] **Step 1:** Add `caveman-compress` to `package.json` `dependencies` (npm).
-- [ ] **Step 2:** Refactor `scripts/compress.py` so the compression invocation is delegated to `caveman-compress` when `caveman.enabled` and `caveman.compress` are both true; fall back to the existing agent-driven path otherwise.
-- [ ] **Step 3:** Update `scripts/compress.sh --sync` to call the new code path; preserve the existing `.compression-hashes.json` tracker semantics.
-- [ ] **Step 4:** Update `tests/test_compress.py` so the existing 22 tests cover both paths (caveman-on / caveman-off) via a fixture parameter.
-- [ ] **Step 5:** Update the `compress` command spec in `.agent-src.uncompressed/commands/compress.md` to reflect the new dual-path behavior.
-- [ ] **Step 6:** Define and document the failure-mode precedence table in `docs/architecture.md` for caveman-compress: (a) `caveman.enabled: false` → always use agent-driven path, no caveman checks; (b) `caveman.enabled: true` + `caveman.compress: true` + binary present → delegate to caveman-compress; (c) `caveman.enabled: true` + `caveman.compress: true` + binary missing → fail hard with a clearly-labeled error naming the missing binary and the install command; (d) `caveman.enabled: true` + `caveman.compress: false` → use agent-driven path, no caveman checks. Apply the same matrix shape to caveman-shrink in Phase 4.
+Variant A from the 2026-05-07 follow-up: caveman-compress is the **only** compression path. The 225-line agent-driven compress procedure is removed; the dual-path / fall-back design is rejected because (a) caveman is a required dep — a fallback contradicts that, (b) two implementations drift, (c) the agent-driven path defeats the whole token-saving rationale of the integration. The Step 5 "Enrich (SKILL.md only)" agent work is *out of scope* for this roadmap and stays inline in `commands/compress.md` for now (separate roadmap item will extract it into `/skill:enrich`).
 
-## Phase 3: Iron-Law rewrites with sub-switch reads
+- [ ] **Step 1:** Add `caveman-compress` to `package.json` `dependencies` (npm). Required dep — no `optionalDependencies` clause.
+- [ ] **Step 2:** Refactor `scripts/compress.py` into a thin caveman-compress wrapper: keep the SHA-256 hash-tracking (`.compression-hashes.json`), keep `check_compression.py` post-checks, delegate the actual prose compression to caveman-compress. Delete every inline grammar rule, every Iron-Law fence, every "copy-paste-first" branch — that logic lives in caveman-compress now.
+- [ ] **Step 3:** Update `scripts/compress.sh --sync` to call the simplified Python wrapper; preserve `.compression-hashes.json` tracker semantics.
+- [ ] **Step 4:** Make `task generate-tools` honor `caveman.compress: false` by copying `.agent-src.uncompressed/` sources directly to the seven projection paths (no compression, no agent-time work). When `caveman.compress: true` (default), it consumes `.agent-src/` (caveman-compressed output) as today.
+- [ ] **Step 5:** Slim `.agent-src.uncompressed/commands/compress.md` from 225 lines to ≤ 30 lines: it now describes "run `task compress`" + the hash-tracking workflow + the toggle behavior. Move the deleted grammar-rule content to a one-paragraph upstream-reference pointing at caveman-compress's own docs. The Step 5 "Enrich (SKILL.md only)" block stays as a "Skill enrichment" appendix until the future `/skill:enrich` extraction.
+- [ ] **Step 6:** Update `tests/test_compress.py`: drop dual-path fixtures, assert only the simplified wrapper behavior (caveman.compress true → caveman invoked + hashes tracked; caveman.compress false → no compression invoked, sources passed through). Existing 22 tests collapse into the smaller, single-path set.
+- [ ] **Step 7:** Define the simplified failure-mode precedence in `docs/architecture.md`: (a) `caveman.enabled: false` OR `caveman.compress: false` → no compression, sources pass through; (b) `caveman.enabled: true` + `caveman.compress: true` + binary present → delegate to caveman-compress; (c) `caveman.enabled: true` + `caveman.compress: true` + binary missing → fail hard with a clearly-labeled error naming the missing binary and the install command. Apply the same matrix shape to caveman-shrink in Phase 4.
 
-- [ ] **Step 1:** Rewrite `.agent-src.uncompressed/rules/language-and-tone.md` to make caveman-speak the global default for free prose, with two explicit exception classes (numbered-options blocks, Iron-Law responses) preserved in full prose. Reference `caveman.speak` so consumers know the runtime switch.
-- [ ] **Step 2:** Rewrite `.agent-src.uncompressed/rules/direct-answers.md` Iron Law 3 ("brevity") so caveman-speak grammar coexists with the "shortest reply" rule; add the same two exception classes.
-- [ ] **Step 3:** Rewrite `.agent-src.uncompressed/rules/user-interaction.md` so the `Recommendation:` label and option text inside numbered-options blocks remain full-prose under all settings.
-- [ ] **Step 4:** Add a new context `.agent-src.uncompressed/contexts/communication/caveman-speak-grammar.md` that quotes the locked `caveman-speak.md.vendor` mirror under a stable anchor and documents the exception classes in one canonical place.
-- [ ] **Step 5:** Update `.agent-src.uncompressed/templates/AGENTS.md` and `.agent-src.uncompressed/templates/copilot-instructions.md` with a one-paragraph "caveman-speak default + exceptions" notice for consumer projects.
+## Phase 3: Dedicated caveman-speak rule + minimal cross-references
 
-(Note: the original Phase 3 Step 6 — manual inspection of projected outputs for caveman co-writes — has been replaced by `tests/test_projection_isolation.py` in Phase 5 Step 1, per council convergence.)
+Restructured per follow-up convergence (2026-05-07): a single new tier-1 rule owns the entire caveman-speak behavior. The three existing Iron-Law rules get only one-line cross-references, so toggling `caveman.speak: false` is a router-level no-load (no fall-back branches in three rules) and removal collapses to deleting one file.
+
+- [ ] **Step 1:** Add new tier-1 rule `.agent-src.uncompressed/rules/caveman-speak.md` — frontmatter `tier: 1`, `triggers: [always]` (gated by `caveman.speak: true` at router-compile time, see Step 6); body covers (a) caveman-speak grammar applies to all free prose, (b) two exception classes preserved in full prose: numbered-options blocks and Iron-Law responses, (c) cross-reference to `.agent-src.uncompressed/contexts/communication/caveman-speak-grammar.md` for the locked grammar source. Size budget ≤ 800 chars (≤ 3 % of the 26k kernel/tier-1 bucket).
+- [ ] **Step 2:** Add the locked grammar context `.agent-src.uncompressed/contexts/communication/caveman-speak-grammar.md` that quotes the `caveman-speak.md.vendor` mirror (from Phase 1) under a stable anchor and documents the exception classes in one canonical place. The new rule from Step 1 is the only caller.
+- [ ] **Step 3:** Add a one-line cross-reference to `.agent-src.uncompressed/rules/language-and-tone.md` pointing at `caveman-speak` for output grammar; do NOT inline caveman-specific content. Iron Law 1 (mirror user language) stays unchanged.
+- [ ] **Step 4:** Add a one-line cross-reference to `.agent-src.uncompressed/rules/direct-answers.md` Iron Law 3 (brevity) noting that caveman-speak grammar from `caveman-speak` rule coexists with "shortest reply"; do NOT inline grammar.
+- [ ] **Step 5:** Add a one-line cross-reference to `.agent-src.uncompressed/rules/user-interaction.md` confirming numbered-options blocks fall under the exception class defined in `caveman-speak`; the `Recommendation:` label rule stays unchanged.
+- [ ] **Step 6:** Extend `scripts/compile_router.py` so the new `caveman-speak` rule is omitted from `router.json` when `caveman.speak: false`. No runtime branching inside the rule body — load decision is a build-time toggle.
+- [ ] **Step 7:** Update `.agent-src.uncompressed/templates/AGENTS.md` and `.agent-src.uncompressed/templates/copilot-instructions.md` with a one-paragraph "caveman-speak default + exceptions" notice that points consumers at the `caveman-speak` rule.
+
+(Note: the original Phase 3 step 6 — manual inspection of projected outputs for caveman co-writes — has been replaced by `tests/test_projection_isolation.py` in Phase 5 Step 1, per first-pass council convergence.)
 
 ## Phase 4: caveman-shrink MCP-proxy wiring
 
 - [ ] **Step 1:** Add `caveman-shrink` to `package.json` `dependencies` (npm).
 - [ ] **Step 2:** Add a configuration block in `.agent-src.uncompressed/templates/.augment/mcp.json` (or the equivalent MCP wiring spec) that starts `caveman-shrink` only when `caveman.enabled` and `caveman.shrink` are both true.
 - [ ] **Step 3:** Document the wiring in the `mcp` skill (`.agent-src.uncompressed/skills/mcp/SKILL.md`) with the toggle precedence and a short troubleshooting block.
-- [ ] **Step 4:** Add a settings-template entry in `.agent-src.uncompressed/templates/.agent-settings.yml` for the full `caveman:` block (`enabled` + three sub-switches), default all `true`.
+- [ ] **Step 4:** Apply the failure-mode precedence matrix from Phase 2 Step 6 to caveman-shrink (binary-missing case fails hard with named error + install hint).
+
+(Note: the previous Phase 4 Step 4 — adding the `caveman:` block to the settings template — was pulled forward to Phase 0 Step 3.)
 
 ## Phase 5: Tests, docs, and release notes
 
-- [ ] **Step 1:** Add a Pytest case in `tests/test_caveman_toggle.py` that flips `caveman.enabled: false` and asserts: caveman-speak grammar is absent from sample outputs, no caveman-compress process is spawned, no caveman-shrink MCP child is started.
-- [ ] **Step 2:** Add a Pytest case that flips each sub-switch independently and asserts only the corresponding subsystem is affected.
-- [ ] **Step 3:** Add a Pytest case that asserts numbered-options blocks and Iron-Law responses keep full prose under every toggle combination, using a "≥ 6 words per option line" heuristic on rendered samples.
-- [ ] **Step 4:** Add a Pytest case that simulates a SHA-drift on `caveman-speak.md.vendor` and asserts the build fails with the documented error message.
-- [ ] **Step 5:** Update `README.md`, `AGENTS.md`, and `docs/architecture.md` with the caveman section: required dependency, three-switch toggle, exception classes, predecessor reference to the archived `caveman-compress-integration.md`.
-- [ ] **Step 6:** Run the full quality pipeline (`task ci`) and capture a fresh-output evidence block for the verification gate.
+- [ ] **Step 1:** Add `tests/test_projection_isolation.py` — runs `task generate-tools` in a clean checkout and asserts that none of the seven projection paths (`.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`, `GEMINI.md`, `AGENTS.md`, `copilot-instructions.md`) contains files matching `caveman-shrink|juliusbrussee/caveman` markers. Replaces the manual-inspection step from the original Phase 3 Step 6.
+- [ ] **Step 2:** Add a Pytest case in `tests/test_caveman_toggle.py` that flips `caveman.enabled: false` and asserts: caveman-speak grammar is absent from sample outputs, no caveman-compress process is spawned, no caveman-shrink MCP child is started.
+- [ ] **Step 3:** Add a Pytest case that flips each sub-switch independently and asserts only the corresponding subsystem is affected.
+- [ ] **Step 4:** Add a Pytest case that asserts numbered-options blocks and Iron-Law responses keep full prose under every toggle combination, using a "≥ 6 words per option line" heuristic on rendered samples.
+- [ ] **Step 5:** Add a Pytest case that simulates a SHA-drift on `caveman-speak.md.vendor` and asserts the build fails with the documented error message.
+- [ ] **Step 6:** Update `README.md`, `AGENTS.md`, and `docs/architecture.md` with the caveman section: required dependency, three-switch toggle, exception classes, predecessor reference to the archived `caveman-compress-integration.md`.
+- [ ] **Step 7:** Run the full quality pipeline (`task ci`) and capture a fresh-output evidence block for the verification gate.
 
 ## Acceptance Criteria
 
@@ -110,11 +121,21 @@ Resolves the council-flagged ordering issues: Phase 2's settings reads and Phase
 - [ ] Every numbered-options block and every Iron-Law response in the rendered output remains in full prose under all toggle combinations (asserted by tests).
 - [ ] `scripts/install.sh` fails with a clear, actionable error when `caveman-compress` or `caveman-shrink` cannot be installed via npm.
 - [ ] `.agent-src.uncompressed/contexts/communication/caveman-speak.md.local` (when present) overrides the locked upstream mirror in dev mode; CI rejects the file on non-feature branches.
+- [ ] `docs/architecture.md` documents the lock / no-lock decision tree (Phase 0 Step 2) covering upstream artifacts, derivative artifacts, and exempt projections.
+- [ ] `docs/troubleshooting.md` documents the SHA-drift recovery runbook with the three named scenarios (transient outage, intentional update, suspected compromise); CI escalates after >3 consecutive `sync-upstream` failures.
+- [ ] `docs/architecture.md` documents the failure-mode precedence matrix for `caveman-compress` and `caveman-shrink`; runtime invocation with `caveman.enabled: true` + binary missing fails hard with a clearly-labeled error naming the missing binary and the install command (no silent degradation).
+- [ ] `tests/test_projection_isolation.py` passes against a fresh `task generate-tools` run, asserting no caveman markers in any of the seven projection paths.
+- [ ] The new `caveman-speak` rule owns 100 % of the caveman output-grammar logic; `language-and-tone`, `direct-answers`, and `user-interaction` contain only one-line cross-references and zero inline caveman grammar (asserted by grep + size-diff check).
+- [ ] `caveman.speak: false` removes the rule from `router.json` at build time (no runtime branching inside the rule body).
+- [ ] `caveman-speak.md` rule body fits the per-rule budget (≤ 2.5k chars, target ≤ 800).
+- [ ] `.agent-src.uncompressed/commands/compress.md` is ≤ 30 lines after the Hard Cutover; the previous 225-line agent-driven grammar procedure is removed (zero inline grammar rules, zero "copy-paste-first" branches in `scripts/compress.py`).
+- [ ] `caveman.compress: false` makes `task generate-tools` copy `.agent-src.uncompressed/` sources directly to the seven projection paths with zero agent-time work and zero caveman invocation.
+- [ ] `task compress` is a thin caveman-compress wrapper: it preserves SHA-256 hash-tracking and `check_compression.py` post-checks, and contains no LLM-driven prose-rewrite logic.
 - [ ] All quality gates pass (`task lint-skills`, `task check-portability`, `task check-refs`, `task lint-rule-budget`, `pytest`, `tests/test_install.sh`).
 
 ## Notes
 
-- **Out of scope:** caveman's stats / tracking features, Classical-Chinese mode and other caveman-output variants, the upstream PR for npm-`exports` (Council's "Option 5" — separate roadmap item, only after this one ships).
+- **Out of scope:** caveman's stats / tracking features, Classical-Chinese mode and other caveman-output variants, the upstream PR for npm-`exports` (Council's "Option 5" — separate roadmap item, only after this one ships), extraction of the Step 5 "Enrich (SKILL.md only)" agent procedure into a dedicated `/skill:enrich` command (separate roadmap item; stays inline in `commands/compress.md` until then).
 - **Open assumption:** pitch / plan / roadmap markdown is currently NOT an extra exception class — caveman-speak applies. If reviewer feedback flags this as friction, a follow-up ADR widens the exception list.
 - **Open assumption:** caveman-shrink and caveman-compress remain maintained on npm; stagnation > 6 months triggers re-evaluation.
 - **Open assumption:** caveman-speak's upstream path stays stable. Content-hash catches drift in place; an upstream path move requires a manual SHA + URL update in `.build-deps.lock`.
