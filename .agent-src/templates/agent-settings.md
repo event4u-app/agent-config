@@ -293,6 +293,16 @@ commands:
     # Commands to never suggest. Still work when typed explicitly.
     blocklist: []
 
+  # Pre-creation preview of the generated PR description in `/create-pr`.
+  # When `false` (default): skip the title/body preview + adjust loop;
+  # use the generated content directly to create the PR. Saves agent
+  # tokens by avoiding a re-render of the full description in chat.
+  # When `true`: show title and body in copyable code blocks and ask
+  # for adjustments before creating the PR.
+  # `/create-pr:description-only` always previews — that is its sole purpose.
+  create_pr:
+    preview_description: false
+
 # --- Telemetry (artefact engagement, default-off) ---
 #
 # Records — at task / phase-step boundaries — which artefacts (skills,
@@ -375,6 +385,7 @@ lives under `personal:` in YAML.
 | `commands.suggestion.cooldown_seconds` | integer | `600` | Cooldown between re-suggestions of the same `(command, evidence)` pair. `600` = 10m. |
 | `commands.suggestion.max_options` | integer | `4` | Max number of command suggestions before the always-present "run as-is" option (total rendered = `max_options + 1`). |
 | `commands.suggestion.blocklist` | list of command names | `[]` | Commands that never appear as a suggestion. They still work when typed explicitly. |
+| `commands.create_pr.preview_description` | `true`, `false` | `false` | When `false`: `/create-pr` skips the title/body preview + adjust loop and uses the generated content directly. Saves agent tokens. When `true`: show title and body before creating and ask for adjustments. `/create-pr:description-only` always previews regardless of this setting. |
 | `telemetry.artifact_engagement.enabled` | `true`, `false` | `false` | Master switch for the artefact engagement log. Default-off; zero file IO and zero token cost when `false`. Maintainer-targeted; consumers leave it off. |
 | `telemetry.artifact_engagement.granularity` | `task`, `phase-step`, `tool-call` | `task` | Boundary at which events are recorded. `tool-call` is expensive — opt-in only. |
 | `telemetry.artifact_engagement.record.consulted` | `true`, `false` | `true` | When `true`: record artefacts loaded into context. |
