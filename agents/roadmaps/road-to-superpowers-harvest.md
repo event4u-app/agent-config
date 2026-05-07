@@ -10,7 +10,7 @@ Round 2 surfaced 5 substantive gaps (CI contract, B↔D latent cycle,
 HARD-GATE API audit, kill-switch criteria, Phase-1→2 promotion gate);
 all five are now addressed in §§ Verification & CI Contract,
 Kill-switch / abort criteria, Phase 1 → 2 promotion gate, and the
-risk register. Saved to `agents/council-responses/superpowers-{analysis-r1,roadmap-r2}.json`.
+risk register. Council convergence captured inline below (Provenance section).
 **Started:** 2026-05-06
 **Trigger:** User ask — "harvest what's useful from obra/superpowers v5.1.0,
 challenge with two AIs, then build a roadmap and challenge that too."
@@ -206,7 +206,7 @@ Phase 2 unlocks **only** when **all** of these hold (objective, not "feels stabl
 ## Provenance
 
 - Analysis: `agents/analysis/compare-obra-superpowers.md`
-- Council Round 1 (analysis): `agents/council-responses/superpowers-analysis-r1.json` (anthropic/claude-sonnet-4-5 + openai/gpt-4o, $0.0465)
-- Council Round 2 (this roadmap): `agents/council-responses/superpowers-roadmap-r2.json` (anthropic/claude-sonnet-4-5 + openai/gpt-4o, $0.0446)
+- Council Round 1 (analysis): anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-05-07, $0.0465
+- Council Round 2 (this roadmap): anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-05-07, $0.0446
 - Upstream pin: `obra/superpowers@main` v5.1.0 (2026-05-04 release)
 - Sibling roadmaps: `road-to-microck-harvest.md`, `road-to-markitdown-adoption.md`

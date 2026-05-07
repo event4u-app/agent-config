@@ -39,7 +39,7 @@ exception classes: numbered-options blocks and Iron-Law responses.
 
 - **Council convergence (Sonnet + GPT-4o, 2026-05-07):** both confirmed Option 1 as
   structurally sound. Sonnet contributed the three hardening additions (SHA-pin,
-  content-hash-verify, `.local`-override). Trace: `agents/council-responses/caveman-integration.json`.
+  content-hash-verify, `.local`-override).
 - **Predecessor:** `agents/roadmaps/archive/caveman-compress-integration.md` — earlier roadmap
   that explicitly replaced caveman-compress with manual agent-driven compression. This roadmap
   reverses that decision via Phase 2 (Hard Cutover variant): caveman-compress is the only
@@ -76,7 +76,7 @@ Variant A from the 2026-05-07 follow-up: caveman-compress is the **only** compre
 
 **Package reality (2026-05-07 correction):** `caveman-compress` is **not** an independent npm package. It lives as a Python/Shell source tree at `caveman-compress/` in the upstream `juliusbrussee/caveman` repo (MIT). Three install-mechanism candidates exist for getting it onto consumer machines across all distribution channels (npm, composer, marketplace, manual copy): (1) **vendor-under-SHA-pin** — extend the Phase 1 `.build-deps.lock` mechanism to a directory tree, (2) **postinstall-bridge** — call upstream `install.sh` from a postinstall hook (requires Node + bash on consumer), (3) **bundled binary** — pre-build and ship `caveman-compress` as a platform-binary alongside the package (no consumer toolchain needed).
 
-**Council R4 verdict (2026-05-07):** mechanism (3) **bundled binary** is the primary path; mechanism (1) **vendor-under-SHA-pin** is the transparent fallback when the platform slug is unsupported. Mechanism (2) is rejected — postinstall hooks do not run inside marketplace ZIP / manual-copy channels. Trace: `agents/council-responses/road-to-caveman-integration-roadmap-r4.json` (deep tier, $0.117 actual). The verdict-rationale and the cross-channel scoring matrix are reproduced in the new R4 review section at the bottom of this roadmap.
+**Council R4 verdict (Sonnet + GPT-4o, 2026-05-07, deep tier, $0.117 actual):** mechanism (3) **bundled binary** is the primary path; mechanism (1) **vendor-under-SHA-pin** is the transparent fallback when the platform slug is unsupported. Mechanism (2) is rejected — postinstall hooks do not run inside marketplace ZIP / manual-copy channels. The verdict-rationale and the cross-channel scoring matrix are reproduced in the new R4 review section at the bottom of this roadmap.
 
 **R4-C2 clarification — maintainer vs. consumer:** Both maintainer-side (agent-config development → `.agent-src/` build) and consumer-side (downstream projects re-compressing local overrides under `agents/overrides/`) treat `caveman-compress` as a required dep so consumers also benefit from token savings. `caveman.compress: false` is a runtime mode where pass-through is acceptable (uncompressed sources flow to projections); it is **not** a graceful-degradation path for install failures. Install failures are handled by the bundled-binary → vendor-fallback chain in Step 1, which terminates in a clear, named error only when **both** paths fail.
 
@@ -157,15 +157,15 @@ Restructured per follow-up convergence (2026-05-07): a single new tier-1 rule ow
 - **Open assumption:** pitch / plan / roadmap markdown is currently NOT an extra exception class — caveman-speak applies. If reviewer feedback flags this as friction, a follow-up ADR widens the exception list.
 - **Open assumption:** caveman-shrink remains maintained on npm and the upstream `juliusbrussee/caveman` repo continues to host `caveman-compress/` under MIT; stagnation > 6 months on either triggers re-evaluation.
 - **Open assumption:** caveman-speak's upstream path stays stable. Content-hash catches drift in place; an upstream path move requires a manual SHA + URL update in `.build-deps.lock`.
-- **Council trace (pitch):** `agents/council-responses/caveman-integration.json` (Sonnet + GPT-4o, 2026-05-07).
-- **Council trace (this roadmap):** `agents/council-responses/caveman-integration-roadmap.json` (Sonnet + GPT-4o, 2026-05-07).
-- **Council trace (R3, post-Hard-Cutover):** `agents/council-responses/road-to-caveman-integration-roadmap.json` (Sonnet + GPT-4o, 2026-05-07, deep tier, $0.0645).
-- **Council trace (R4, install-mechanism + structural review):** `agents/council-responses/road-to-caveman-integration-roadmap-r4.json` (Sonnet + GPT-4o, 2026-05-07, deep tier, $0.117 actual).
+- **Council convergence (pitch):** Sonnet + GPT-4o, 2026-05-07.
+- **Council convergence (this roadmap):** Sonnet + GPT-4o, 2026-05-07.
+- **Council convergence (R3, post-Hard-Cutover):** Sonnet + GPT-4o, 2026-05-07, deep tier, $0.0645.
+- **Council convergence (R4, install-mechanism + structural review):** Sonnet + GPT-4o, 2026-05-07, deep tier, $0.117 actual.
 - **Predecessor:** `agents/roadmaps/archive/caveman-compress-integration.md` is reversed by Phase 2 of this roadmap.
 
 ## Council review (2026-05-07)
 
-Pre-execution review by `anthropic/claude-sonnet-4-5` + `openai/gpt-4o` (mode: roadmap, 2 rounds, total $0.0684). Trace: `agents/council-responses/caveman-integration-roadmap.json`. Findings surfaced as-is — the roadmap body above is not auto-rewritten; act on the items deliberately.
+Pre-execution review by `anthropic/claude-sonnet-4-5` + `openai/gpt-4o` (mode: roadmap, 2 rounds, total $0.0684). Findings surfaced as-is — the roadmap body above is not auto-rewritten; act on the items deliberately.
 
 ### Convergence (both reviewers agree)
 
@@ -201,13 +201,13 @@ Sonnet's response hit the 2048-token output cap mid-list at amendment 5 of an an
 
 ## Council review R3 (2026-05-07, post-Hard-Cutover)
 
-Deep-tier review by `anthropic/claude-sonnet-4-5` + `openai/gpt-4o` (mode: roadmap, deep, total $0.0645). Trace: `agents/council-responses/road-to-caveman-integration-roadmap.json`. The host has applied a critical-evaluation pass — see the verdict block below. Member text is preserved verbatim in the trace.
+Deep-tier review by `anthropic/claude-sonnet-4-5` + `openai/gpt-4o` (mode: roadmap, deep, total $0.0645). The host has applied a critical-evaluation pass — see the verdict block below. Member text is preserved verbatim in the locally-retained council trace.
 
 ### Sonnet's findings (Round 3)
 
 1. **Phase 0 Settings-File-Instantiation gap** — Phase 0 Step 3 adds the `caveman:` block to the *template*, but the roadmap never specifies when/how the consumer's actual `.agent-settings.yml` is instantiated, what happens on upgrade, or how schema-evolution is verified. Phase 0 Step 4 assumes the file exists with the schema intact.
 2. **Hard Cutover contradiction (claimed)** — Sonnet asserts `caveman.enabled: false` + required dep + fail-hard form an incompatible triangle, breaking the "no reinstall" promise.
-3. **Phase 5 tests runtime, not compile-time `router.json`** — AC mandates `caveman-speak` rule absence at compile time; no test parses `router.json` directly to verify the rule is excluded by the compiler when toggled off.
+3. **Phase 5 tests runtime, not compile-time `router.json`** — AC mandates absence of the planned caveman-speak rule at compile time; no test parses `router.json` directly to verify the rule is excluded by the compiler when toggled off.
 4. **SHA-drift runbook untestability** *(truncated at token cap; partial reasoning only)*.
 
 ### GPT-4o's findings (Round 3)
@@ -241,14 +241,14 @@ Critical-evaluation pass per `ai-council` SKILL § convener-skeptic stance. Each
 ### Patches to apply (`accept` + `accept-with-modification`)
 
 - **P-A (Finding 1):** Add Phase 0 Step 3.5 — *Document the settings-file instantiation contract* (template → consumer, first-install vs upgrade, schema-evolution policy) with a CI check that the template stays a superset of all runtime-read keys.
-- **P-B (Finding 3):** Add Phase 5 Step 2.5 — *Pytest case parses `router.json` and asserts the `caveman-speak` rule's `id` is absent from the loaded rule set when `caveman.speak: false`*.
+- **P-B (Finding 3):** Add Phase 5 Step 2.5 — *Pytest case parses `router.json` and asserts the planned caveman-speak rule's `id` is absent from the loaded rule set when `caveman.speak: false`*.
 - **P-C (Finding 8):** Add an AC bullet + a Phase 5 step covering the consumer-install path — when agent-config is installed as a composer/npm dep into a consumer project, the consumer's `npm install` (or equivalent) must pull `caveman-compress` / `caveman-shrink` transitively, OR the consumer install path must be explicitly documented as out-of-scope (e.g. compression runs only at agent-config maintainer-time, not in consumer projects).
 - **P-D (Finding 4):** Convert the tripwire line into a `## Note` listing three response options (fork, switch alternative, remove caveman path) without prescribing which.
 
 
 ## Council review R4 (2026-05-07, install-mechanism + structural review)
 
-Deep-tier review by `anthropic/claude-sonnet-4-5` + `openai/gpt-4o` (mode: roadmap, deep, total $0.117 actual). Trace: `agents/council-responses/road-to-caveman-integration-roadmap-r4.json`. Original ask: pick the install mechanism for `caveman-compress` across all distribution channels (npm, composer, marketplace ZIP, manual copy) and score the three candidates A / B / C. Both members pivoted from a direct A/B/C scorecard into a broader structural review; the verdict below is therefore host-synthesised from Sonnet's B1 analysis (cross-channel scoring is contained within it) plus the user's prior greenlight on Bundled Binary + Postinstall-Bridge.
+Deep-tier review by `anthropic/claude-sonnet-4-5` + `openai/gpt-4o` (mode: roadmap, deep, total $0.117 actual). Original ask: pick the install mechanism for `caveman-compress` across all distribution channels (npm, composer, marketplace ZIP, manual copy) and score the three candidates A / B / C. Both members pivoted from a direct A/B/C scorecard into a broader structural review; the verdict below is therefore host-synthesised from Sonnet's B1 analysis (cross-channel scoring is contained within it) plus the user's prior greenlight on Bundled Binary + Postinstall-Bridge.
 
 ### Sonnet's findings (Round 4)
 
