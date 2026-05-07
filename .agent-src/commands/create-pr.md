@@ -55,31 +55,25 @@ fallback structure defined in `/create-pr:description-only`. NEVER invent a cust
 **Preview gate** — read `commands.create_pr.preview_description` from
 `.agent-settings.yml` (default `false` when unset):
 
-- `false` (default): skip Steps 5–6 of `/create-pr:description-only` (preview + adjust loop). Use the generated title and body directly in Step 3. Saves tokens; user can still edit in the GitHub UI after creation.
-- `true`: run Steps 5–6 — present title and body as copyable blocks and ask for adjustments before proceeding.
+- `false` (default): skip Steps 5–6 of `/create-pr:description-only` (the
+  copyable preview block + adjust loop). Use the generated title and body
+  directly in Step 3 below. This saves agent tokens by avoiding a full
+  re-render of the description in chat. The user can still edit the PR
+  body in the GitHub UI after creation.
+- `true`: run Steps 5–6 of `/create-pr:description-only` — present the
+  title and body as copyable blocks and ask for adjustments before
+  proceeding. The user reviews and adjusts the content in that step.
 
-### 2b. Offer council review (B2 hook)
+### 2b. Council review — explicitly excluded
 
-If `.agent-settings.yml` has `ai_council.enabled: true` **and** at least
-one member is enabled, ask (in the user's language):
+`/create-pr` does **not** prompt for council review, even when
+`ai_council.enabled: true`. Invoking the PR command is an explicit
+delivery action; interrupting it with a billable opt-in question is
+out of scope.
 
-> 1. Run the council on this diff before opening the PR? (billable)
-> 2. Skip council review
-
-Suppress when `personal.autonomy: on` (council is billable; autonomy
-must not silently spend — see `road-to-ai-council.md` Decision 3).
-
-If picked **1**:
-
-- Compute the diff range — `origin/<default>..HEAD` from step 1.
-- Run `/council diff:<base>..<head>` with `original_ask` set to the
-  PR title from step 2 (the user's framing of the change).
-- Surface findings to the user before step 3. **Do not** auto-edit
-  the PR body or block PR creation — output is advisory.
-- Optional: offer to append a one-paragraph "Council notes" section
-  to the PR description for reviewer transparency. Default: skip.
-
-If picked **2** → continue.
+Users who want a council pass on the diff run `/council diff:<base>..<head>`
+**before** `/create-pr`. Do not re-add the prompt here without an explicit
+user request.
 
 ### 3. Create the PR
 
@@ -112,19 +106,34 @@ Once the user approves the content from step 2:
 
 #### 4a. Strip attribution footers (mandatory)
 
-`github-api` may server-side-append attribution after a clean send.
-Per [`no-attribution-footers`](../rules/no-attribution-footers.md),
-re-check the body after creation **and after every body PATCH**:
+Some `github-api` tool surfaces append attribution server-side after
+the agent has sent a clean body. Per
+[`no-attribution-footers`](../rules/no-attribution-footers.md), every
+PR body must be re-checked and stripped after every write.
 
-1. `GET /repos/{owner}/{repo}/pulls/{number}` — re-fetch body.
-2. Search (case-insensitive) for: `Generated with [Augment Code]`,
-   `🤖 Generated with`, `Pull Request opened by [Augment Code]`,
-   `Co-authored by Augment Code`, unsolicited `augmentcode.com` link.
-3. If any present, strip with surrounding `---` and trailing
-   whitespace, then `PATCH /pulls/{number}` with cleaned body.
-4. Re-fetch to verify. If the pattern reappears, repeat once; if
-   still present, surface to user and stop (no strip/PATCH loop).
-5. Note in the reply how many footers were removed (or "clean").
+Run this strip-pass **after PR creation and after every body PATCH**:
+
+1. Re-fetch the PR body:
+   ```
+   GET /repos/{owner}/{repo}/pulls/{number}
+   ```
+2. Search the body (case-insensitive) for any of:
+   - `Generated with [Augment Code]` / `🤖 Generated with`
+   - `Pull Request opened by [Augment Code]`
+   - `Co-authored by Augment Code`
+   - Any `augmentcode.com` link the user did not ask for
+3. If any pattern is present, remove it together with surrounding
+   `---` separators and trailing whitespace, then:
+   ```
+   PATCH /repos/{owner}/{repo}/pulls/{number}
+   { "body": "<cleaned body>" }
+   ```
+4. Re-fetch the body once more to verify the strip stuck. If a
+   pattern reappears (server re-injection), repeat steps 2–4 once;
+   if it still reappears, surface the issue to the user and stop
+   (do not enter a strip/PATCH loop).
+5. Briefly note in the reply how many footers were removed (or
+   "no footers found" if clean).
 
 #### 4b. Show the PR URL
 
@@ -141,8 +150,8 @@ If a Jira ticket was linked, ask:
 ### Rules
 
 - **Always use the PR template** from `.github/pull_request_template.md` — read it, fill its sections.
-- **Preview before creating is opt-in** — controlled by `commands.create_pr.preview_description` in `.agent-settings.yml` (default `false`). When `false`, bare `/create-pr` uses the generated description directly without a chat preview to save tokens. When `true`, title and body are previewed and the user can adjust before creation. `/create-pr:description-only` always previews — that is its sole purpose.
+- **Preview before creating is opt-in** — controlled by `commands.create_pr.preview_description` in `.agent-settings.yml` (default `false`). When `false`, the bare `/create-pr` flow uses the generated description directly without a chat preview to save tokens. When `true`, the title and body are previewed and the user can adjust before creation. `/create-pr:description-only` always previews — that is its sole purpose.
 - **Push the branch first** if it hasn't been pushed (with user permission).
-- **Never add attribution footers** — see [`no-attribution-footers`](../rules/no-attribution-footers.md). Strip-pass in 4a defends against tool-injected footers.
+- **Never add attribution footers to the body** — see [`no-attribution-footers`](../rules/no-attribution-footers.md). The agent does not self-credit; the strip-pass in step 4a defends against tool-injected footers.
 - Only create the PR — never merge it.
 - Only commit or push with explicit user permission.

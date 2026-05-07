@@ -40,6 +40,15 @@ Each project documents its own architecture in `./agents/` and/or `AGENTS.md`.
 **Always read those files** before making structural decisions. Do not rely on this rule file
 for project-specific directory layouts, database conventions, or module systems.
 
+## Architectural Decision Records (ADRs)
+
+When a structural decision is non-trivial (kernel membership, contract change, library swap,
+deprecation, scope re-cut), record it as an ADR. Use the [`adr-create`](../skills/adr-create/SKILL.md)
+skill — it numbers the file (`ADR-NNN-<slug>.md`), writes the standard template
+(Status / Context / Decision / Consequences / Alternatives / References), and regenerates the
+index via `scripts/adr/regenerate_index.py`. ADRs land in `docs/adr/` by default; legacy
+projects use `docs/decisions/`. Reversible refactors and minor cleanups do **not** need ADRs.
+
 ## Module-Level Documentation
 
 Some projects use a module system (e.g. `app/Modules/` in Laravel projects).

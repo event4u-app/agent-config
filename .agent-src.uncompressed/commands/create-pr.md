@@ -64,28 +64,16 @@ fallback structure defined in `/create-pr:description-only`. NEVER invent a cust
   title and body as copyable blocks and ask for adjustments before
   proceeding. The user reviews and adjusts the content in that step.
 
-### 2b. Offer council review (B2 hook)
+### 2b. Council review — explicitly excluded
 
-If `.agent-settings.yml` has `ai_council.enabled: true` **and** at least
-one member is enabled, ask (in the user's language):
+`/create-pr` does **not** prompt for council review, even when
+`ai_council.enabled: true`. Invoking the PR command is an explicit
+delivery action; interrupting it with a billable opt-in question is
+out of scope.
 
-> 1. Run the council on this diff before opening the PR? (billable)
-> 2. Skip council review
-
-Suppress when `personal.autonomy: on` (council is billable; autonomy
-must not silently spend — see `road-to-ai-council.md` Decision 3).
-
-If picked **1**:
-
-- Compute the diff range — `origin/<default>..HEAD` from step 1.
-- Run `/council diff:<base>..<head>` with `original_ask` set to the
-  PR title from step 2 (the user's framing of the change).
-- Surface findings to the user before step 3. **Do not** auto-edit
-  the PR body or block PR creation — output is advisory.
-- Optional: offer to append a one-paragraph "Council notes" section
-  to the PR description for reviewer transparency. Default: skip.
-
-If picked **2** → continue.
+Users who want a council pass on the diff run `/council diff:<base>..<head>`
+**before** `/create-pr`. Do not re-add the prompt here without an explicit
+user request.
 
 ### 3. Create the PR
 

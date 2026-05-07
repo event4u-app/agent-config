@@ -15,6 +15,7 @@
       "source": "./",
       "strict": false,
       "skills": [
+        "./.claude/skills/adr-create",
         "./.claude/skills/adversarial-review",
         "./.claude/skills/agent-docs-writing",
         "./.claude/skills/agent-handoff",
@@ -61,6 +62,7 @@
         "./.claude/skills/context-document",
         "./.claude/skills/context-refactor",
         "./.claude/skills/conventional-commits-writing",
+        "./.claude/skills/cost-report",
         "./.claude/skills/copilot-agents",
         "./.claude/skills/copilot-agents-init",
         "./.claude/skills/copilot-agents-optimization",

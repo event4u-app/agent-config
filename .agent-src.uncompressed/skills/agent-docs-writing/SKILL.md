@@ -168,6 +168,7 @@ When starting work, read documentation in this order:
 | Significant multi-step change | Ask user about creating a roadmap in `agents/roadmaps/` |
 | New convention introduced | Update relevant doc in `./agents/` or `.augment/guidelines/` |
 | Database schema changed | Update `agents/docs/database-setup.md` |
+| Architectural decision made | Use the [`adr-create`](../adr-create/SKILL.md) skill — writes a numbered ADR under `docs/adr/` (or `docs/decisions/`) and regenerates the index |
 
 ## When to update documentation
 

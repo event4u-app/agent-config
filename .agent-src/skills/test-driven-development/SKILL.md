@@ -27,6 +27,30 @@ Do NOT use when:
 * Catch edge cases **before** they become production bugs.
 * Leave every change with a regression test that runs in CI.
 
+## Escalate to a SPARC-style 5-phase workflow when
+
+Plain TDD (red → green → refactor) is the right size for **most** work.
+A small subset benefits from a gated 5-phase wrapper —
+**S**pec → **P**seudocode → **A**rchitecture → **R**efine → **C**omplete —
+where each gate produces a written artifact before the next phase runs.
+
+Decision tree — escalate if **any** branch is true:
+
+* The ticket has **AC count > 5** (the spec itself is non-trivial — write
+  it down before testing it).
+* The change **modifies a contract** consumed by ≥1 other module
+  (public API signature, persisted schema, event payload, queue message).
+* The change cuts across **≥3 modules / bounded contexts** at once.
+
+When escalating: drop the `Spec` artifact in `agents/roadmaps/` (or the
+project's planning location), capture it as an ADR via [`adr-create`](../adr-create/SKILL.md)
+when the decision is load-bearing, then run plain TDD inside each
+`Refine` cycle. Do **not** skip RED→GREEN inside a SPARC phase — the
+wrapper adds gates, not exemptions.
+
+For everything else (single-AC ticket, leaf-module change, bug fix),
+stay on plain TDD — the section above.
+
 ## The core discipline
 
 ```
