@@ -168,6 +168,7 @@ When starting work, read documentation in this order:
 | Significant multi-step change | Ask user about creating a roadmap in `agents/roadmaps/` |
 | New convention introduced | Update relevant doc in `./agents/` or `.augment/guidelines/` |
 | Database schema changed | Update `agents/docs/database-setup.md` |
+| Architectural decision made | Use the [`adr-create`](../adr-create/SKILL.md) skill — writes a numbered ADR under `docs/adr/` (or `docs/decisions/`) and regenerates the index |
 
 ## When to update documentation
 
@@ -187,7 +188,7 @@ After completing a significant code change, run this mental checklist:
 | New API endpoint | OpenAPI annotations, `AGENTS.md` API section |
 | New module created | Create `app/Modules/{Module}/agents/` |
 | Service/repository signature changed | Check if referenced in `agents/docs/services-and-repos.md` |
-| New environment variable | `.env.example`, `AGENTS.md` env section |
+| New environment variable | `.env.example`, `AGENTS.md` environment section |
 | Docker/compose change | `agents/docs/docker.md`, `Makefile` documentation |
 | New Artisan command | `AGENTS.md` commands section |
 | New pattern/convention introduced | Relevant guideline in `.augment/guidelines/` |
