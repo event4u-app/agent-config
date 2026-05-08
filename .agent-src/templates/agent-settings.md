@@ -343,6 +343,23 @@ verbosity:
   # it") in skill bodies. false = act and emit the result.
   intent_announcements: false
 
+  # Script stdout chatter from `scripts/*.py`, `scripts/*.sh`, and
+  # `.augment/scripts/`. Read by the helper module
+  # `scripts/_lib/script_output.py`.
+  #   silent  = stderr only; success = no output
+  #   minimal = one summary line per script (default)
+  #   verbose = pre-Phase-10 behaviour (per-step prints)
+  # Override per-process: AGENT_SCRIPT_VERBOSITY={silent,minimal,verbose}
+  # Iron-Law surfaces (release confirms, install secrets prompts,
+  # error markers) ignore this key and stay loud.
+  script_output: minimal
+
+  # Suppress the `task: [name] cmd...` echo line that Taskfile prints
+  # before each task body. false = keep echoes (default Taskfile
+  # behaviour). true = the Taskfile sets `silent: true` on every
+  # safe task per Phase 10.3.
+  taskfile_command_echo: false
+
 # --- Caveman speak (authoring-only) ---
 #
 # Caveman-style compression scope for newly authored prose. The
