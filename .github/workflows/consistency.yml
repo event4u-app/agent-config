@@ -13,6 +13,8 @@ on:
       - "scripts/build_cloud_bundle.py"
       - "scripts/build_linear_digest.py"
       - "scripts/lint_marketplace.py"
+      - "scripts/lint_agents_md.py"
+      - "AGENTS.md"
       - "tests/**"
       - "Taskfile.yml"
       - "taskfiles/**"
@@ -32,6 +34,8 @@ on:
       - "scripts/build_cloud_bundle.py"
       - "scripts/build_linear_digest.py"
       - "scripts/lint_marketplace.py"
+      - "scripts/lint_agents_md.py"
+      - "AGENTS.md"
       - "tests/**"
       - "Taskfile.yml"
       - "taskfiles/**"
@@ -101,6 +105,9 @@ jobs:
 
       - name: Lint marketplace.json
         run: task lint-marketplace
+
+      - name: Lint AGENTS.md (Thin-Root contract)
+        run: task lint-agents-md
 
       - name: Cloud bundle dry-run (source invariants)
         run: task ci-cloud-bundle

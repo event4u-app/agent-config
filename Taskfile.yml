@@ -89,6 +89,7 @@ tasks:
       - task: lint-hook-manifest
       - task: lint-showcase-sessions
       - task: lint-marketplace
+      - task: lint-agents-md
       - task: ci-cloud-bundle
       - task: ci-linear-digest
       - task: check-memory
