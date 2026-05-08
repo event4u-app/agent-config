@@ -10,6 +10,8 @@ execution:
 
 # agents-md-thin-root
 
+<!-- cloud_safe: noop -->
+
 ## When to use
 
 Use when:
@@ -116,6 +118,10 @@ When invoked as a planning step, produce:
 3. Pointer ratio before / after (predicted).
 4. Specific outboarding edits as a numbered diff plan.
 5. The four lint commands the agent must run before claiming completion.
+
+## Cloud Behavior
+
+Inert on cloud surfaces. The skill governs the package-root `AGENTS.md` and the consumer-shipped template — both authoring artifacts inside this repository. Cloud agents working on consumer projects never edit those files directly; their copy is delivered by the package install pipeline and refreshed by the package sync pipeline. The Thin-Root contract therefore has no cloud-side procedure to execute, which is why this skill is marked `cloud_safe: noop`.
 
 ## See also
 
