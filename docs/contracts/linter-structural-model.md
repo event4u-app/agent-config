@@ -4,10 +4,9 @@ stability: beta
 
 # Linter Structural Model
 
-**Status:** LOCKED — shipped 2026-05-08. Phases 1–4 of
-[`agents/roadmaps/road-to-structural-linter-reform.md`](../../agents/roadmaps/road-to-structural-linter-reform.md)
-landed in `feat/road-to-structural-linter-reform`; the linter now
-applies the structural model to skills, rules, and commands.
+**Status:** LOCKED — shipped 2026-05-08 on
+`feat/road-to-structural-linter-reform`. The linter now applies the
+structural model to skills, rules, and commands.
 
 ## Why a structural model
 
