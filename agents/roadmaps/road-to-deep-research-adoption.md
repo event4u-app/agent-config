@@ -79,7 +79,7 @@ Phase 1 is the visible plate. Phase 2 + 3 are **out-of-horizon**.
 
 ## Phase 1 — Five-artifact adoption plate (READY)
 
-- [ ] **P1.1 — `deep-reading-analyst` skill (CHUNKED, Sunset split path).**
+- [x] **P1.1 — `deep-reading-analyst` skill (CHUNKED, Sunset split path).**
   Author ≤300-line core SKILL in
   `.agent-src.uncompressed/skills/deep-reading-analyst/`. Core handles
   the depth-level orchestrator (Quick / Standard / Deep / Research)
@@ -89,25 +89,25 @@ Phase 1 is the visible plate. Phase 2 + 3 are **out-of-horizon**.
   `5w2h`, `comparison_matrix`) link to the SHA-pinned ginobefun URL
   in the SKILL frontmatter. Pass `lint-skills` + `check-portability`.
   Effort: 1.5 days.
-- [ ] **P1.2 — `mental-models` guideline.** Pure adopt of the 298-line
+- [x] **P1.2 — `mental-models` guideline.** Pure adopt of the 298-line
   module as `docs/guidelines/agent-infra/mental-models.md`. Strip
   ginobefun-specific phrasing, add ADOPT citation footer
   (commit SHA + path). Cross-link from `deep-reading-analyst` SKILL,
   `refine-prompt` skill, and `judge-bug-hunter` skill. Effort: 0.5 day.
-- [ ] **P1.3 — `scqa-framework` guideline (full adopt, Sunset
+- [x] **P1.3 — `scqa-framework` guideline (full adopt, Sunset
   authoritative-link path).** Adopt full 499-line module as
   `docs/guidelines/agent-infra/scqa-framework.md`. Frontmatter must
   include `external_source` (SHA URL), `refresh_trigger`,
   `sunset_criterion`. Cross-link from `agent-docs-writing`,
   `requesting-code-review`, `refine-prompt`, `refine-ticket`. Effort:
   0.5 day.
-- [ ] **P1.4 — `inversion-thinking` guideline.** Pure adopt of the
+- [x] **P1.4 — `inversion-thinking` guideline.** Pure adopt of the
   362-line module as `docs/guidelines/agent-infra/inversion-thinking.md`.
   Strip overlap-prone phrasing with `adversarial-review`; the
   guideline targets pre-mortem on **decisions**, not diff stress-tests
   on **code**. Cross-link from `refine-prompt`, `refine-ticket`,
   `threat-modeling`, `improve-before-implement`. Effort: 0.5 day.
-- [ ] **P1.5 — `/research` command (refactored).** Port Weizhena's
+- [x] **P1.5 — `/research` command (refactored).** Port Weizhena's
   145-line `/research` command as
   `.agent-src.uncompressed/commands/research.md`. Refactor every
   `~/.claude/` path to `$PROJECT_ROOT/agents/research/`. Drop the
@@ -115,7 +115,7 @@ Phase 1 is the visible plate. Phase 2 + 3 are **out-of-horizon**.
   reference link (no runtime dependency). Defer `/research-deep` and
   `/research-report` to Phase 2. Pass `lint-skills` +
   `check-portability`. Effort: 1.0 day.
-- [ ] **P1.6 — Suite integration.** Add the new skill, three
+- [~] **P1.6 — Suite integration.** Add the new skill, three
   guidelines, and one command to the index (`AGENTS.md` skill /
   guideline / command counts). Regenerate compressed output (`task
   sync`), regenerate tool projections (`task generate-tools`), run

@@ -6,10 +6,10 @@
 
 ## Overall
 
-**1 / 316 steps done · 0%**
+**6 / 315 steps done · 2%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   2%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 1 | 35 | 35 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-chat-history-cross-agent-hardening.md](roadmaps/road-to-chat-history-cross-agent-hardening.md) | 5 | 37 | 37 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-deep-research-adoption.md](roadmaps/road-to-deep-research-adoption.md) | 3 | 14 | 14 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-deep-research-adoption.md](roadmaps/road-to-deep-research-adoption.md) | 3 | 14 | 8 | 5 | 1 | 0 | ████░░░░░░ 38% |
 | 4 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-event-driven-discipline.md](roadmaps/road-to-event-driven-discipline.md) | 12 | 42 | 42 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md) | 1 | 26 | 26 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -56,11 +56,11 @@
 
 ### [road-to-deep-research-adoption.md](roadmaps/road-to-deep-research-adoption.md)
 
-**Road to Deep-Research Adoption** — 0 / 14 done (0%)
+**Road to Deep-Research Adoption** — 5 / 13 done (38%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Five-artifact adoption plate (READY) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 1 | Five-artifact adoption plate (READY) | ✅ done | 0 | 5 | 1 | 0 | 100% |
 | 2 | Out-of-horizon (gated on Phase 1 evidence) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | Sunset enforcement and periodic rescan (out-of-horizon) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
