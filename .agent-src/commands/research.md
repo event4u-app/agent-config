@@ -1,5 +1,6 @@
 ---
 name: research
+cluster: research
 description: "Conduct preliminary research on a topic — pick objects, define fields, generate `outline.yaml` + `fields.yaml` scaffolding for downstream deep research. Use for academic surveys, benchmark research, technology selection, competitive scans."
 disable-model-invocation: true
 skills: [project-analyzer, deep-reading-analyst]
