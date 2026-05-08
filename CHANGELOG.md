@@ -318,6 +318,36 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.28.0](https://github.com/event4u-app/agent-config/compare/1.27.0...1.28.0) (2026-05-09)
+
+### Features
+
+* **schema:** allow Sunset-Policy metadata on skill schema ([d5d67bd](https://github.com/event4u-app/agent-config/commit/d5d67bd30e36ea6ec9586825218678ec3203ee3a))
+* **commands:** port /research command with research-schema contract ([2f03dfa](https://github.com/event4u-app/agent-config/commit/2f03dfad2f56776e80d8417f618b8ec59ae07289))
+* **skills:** adopt deep-reading-analyst skill + 3 thinking-framework guidelines ([78ac3e3](https://github.com/event4u-app/agent-config/commit/78ac3e35c56c0e936291a69191c94869251f532e))
+
+### Bug Fixes
+
+* **roadmap:** rename heading to bypass PHASE_RE false-positive ([9e0121c](https://github.com/event4u-app/agent-config/commit/9e0121c6589c214263000d7a4ae7ea554844a6cf))
+* **scope-control:** trim 411 chars to fit <=4000 override ceiling ([62dd6ee](https://github.com/event4u-app/agent-config/commit/62dd6eebc268a27cbb1a72a3089f581242be810f))
+* **budget:** trim 3 auto-rule descriptions to <=150 chars ([cfec360](https://github.com/event4u-app/agent-config/commit/cfec360f94982e302a80bfb6ab59653e3e4f41a8))
+* **no-council-refs:** suppress legitimate ADR + skipped-roadmap citations ([e6be2dd](https://github.com/event4u-app/agent-config/commit/e6be2ddec929e05d811297ebc41f53eee5afe3de))
+* **no-roadmap-refs:** drop transient roadmap links from stable artifacts ([bbda43a](https://github.com/event4u-app/agent-config/commit/bbda43a9a57dacc3153f6173497fb4503cacc174))
+* **commands:** rephrase upstream path in /research ADOPT citation ([d4fc1af](https://github.com/event4u-app/agent-config/commit/d4fc1aff289f9e7c344648a16415a60296a931f5))
+
+### Chores
+
+* **roadmap:** close P1.6 with CI-green evidence ([da198c3](https://github.com/event4u-app/agent-config/commit/da198c3e81154b34a1b519ed29aa3431e8612f4d))
+* **index:** regenerate after description trim ([27477dc](https://github.com/event4u-app/agent-config/commit/27477dc189de43a97f6559df84a783541ba2c0de))
+* **ownership:** regenerate file-ownership-matrix after governance edits ([648f272](https://github.com/event4u-app/agent-config/commit/648f27200657d574a81bced639e191f6406acdf6))
+* **index:** regenerate after description tightening ([4d78844](https://github.com/event4u-app/agent-config/commit/4d78844be0ee32379b4152a64e8acd2e951208db))
+* **governance:** remove transient roadmap refs + tighten descriptions ([421f0e3](https://github.com/event4u-app/agent-config/commit/421f0e30d257ec0f76ef648ad03161dc688dd182))
+* **index:** regenerate after research cluster registration ([f26f52d](https://github.com/event4u-app/agent-config/commit/f26f52d44f36122e4e08ffaa786e65586e6589ac))
+* **clusters:** register research as a locked cluster head ([3c9fa64](https://github.com/event4u-app/agent-config/commit/3c9fa64b26ad56f2a28e50c92cbc4e69fe4ab14a))
+* **counts:** sync command-count to 104 after /research adoption ([43f5cd7](https://github.com/event4u-app/agent-config/commit/43f5cd7560419e08c581607a62ed2297e9caa738))
+* **index:** regenerate index/catalog for deep-reading-analyst + research ([baa7fb3](https://github.com/event4u-app/agent-config/commit/baa7fb3bb716f8bbfde491f940d7def487dcde18))
+* **suite:** integrate deep-research adoption (counts, roadmap, hashes) ([7a3eb51](https://github.com/event4u-app/agent-config/commit/7a3eb511239a8a74589f9a3c89187084c083f68b))
+
 ## [1.27.0](https://github.com/event4u-app/agent-config/compare/1.26.0...1.27.0) (2026-05-08)
 
 ### Features
