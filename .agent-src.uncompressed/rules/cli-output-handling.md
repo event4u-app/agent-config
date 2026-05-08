@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Running CLI commands that produce verbose output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk when installed; tail/grep is fallback."
+description: "Running CLI commands that produce verbose output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk; tail/grep fallback"
 source: package
 triggers:
   - keyword: "git"

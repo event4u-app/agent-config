@@ -78,6 +78,8 @@ tasks:
       - task: check-reply-consistency
       - task: check-iron-law-prominence
       - task: check-always-budget
+      - task: check-augment-description-cap
+      - task: check-augment-budget-strict
       - task: check-one-off-location
       - task: validate-schema
       - task: lint-rule-budget

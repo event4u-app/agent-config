@@ -163,7 +163,7 @@ tasks:
 
   check-council-references:
     silent: true
-    desc: Stable artifacts must not link specific files in agents/council-{questions,responses,sessions}/ (no-council-references rule)
+    desc: Stable artifacts must not link specific files in agents/council-{questions,responses,sessions}/ (no-transient-references rule, council clause)
     cmd: python3 scripts/check_council_references.py {{.QUIET_FLAG}}
 
   lint-one-off-age:
@@ -190,6 +190,21 @@ tasks:
     silent: true
     desc: Fail PRs that touch > 1 kernel rule (override label `bundled-always-rules-acknowledged`)
     cmd: python3 scripts/check_kernel_rule_bundle.py
+
+  check-augment-description-cap:
+    silent: true
+    desc: Auto-rule description-length gate (≤ 150 chars) — see road-to-augment-limit-fit P1.3
+    cmd: python3 scripts/check_augment_description_cap.py
+
+  check-augment-budget:
+    silent: true
+    desc: Augment workspace-guidelines budget meter (cap 49,512; informational, never fails CI yet) — see road-to-augment-limit-fit P1.4
+    cmd: python3 scripts/measure_augment_budget.py
+
+  check-augment-budget-strict:
+    silent: true
+    desc: Augment workspace-guidelines budget gate (fails ≥95%) — wired into CI after road-to-augment-limit-fit Phase 4
+    cmd: python3 scripts/measure_augment_budget.py --check
 
   check-one-off-location:
     silent: true

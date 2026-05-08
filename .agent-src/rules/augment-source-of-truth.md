@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "1"
-description: "Creating, editing, or modifying files inside .agent-src/ or .augment/ — the source of truth is .agent-src.uncompressed/, never edit the generated directories directly"
+description: "Creating, editing, or modifying files in .agent-src/ or .augment/ — source of truth is .agent-src.uncompressed/, never edit generated dirs directly"
 source: package
 load_context:
   - ../contexts/communication/rules-auto/augment-source-of-truth-mechanics.md

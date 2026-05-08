@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Keeping .augment/ contexts, counts, and cross-references in sync when creating, renaming, or deleting skills, commands, rules, guidelines, templates, or any agent infrastructure files"
+description: "Keeping .augment/ contexts, counts, cross-references in sync when creating, renaming, or deleting skills, rules, commands, templates, agent infra"
 source: package
 triggers:
   - path_prefix: ".agent-src.uncompressed/"
