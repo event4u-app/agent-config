@@ -1,0 +1,1102 @@
+{
+  "rule_count": 49,
+  "rules": [
+    {
+      "body_chars": 310,
+      "description": "Reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md",
+      "description_chars": 87,
+      "file_chars": 637,
+      "name": "agent-docs",
+      "routes_to": [
+        "skill:agent-docs-writing"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/agent-docs.md",
+      "stub_chars": 187,
+      "tier": "2a",
+      "trigger_count": 4,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "AGENTS.md",
+          "roadmap"
+        ],
+        "path_prefixes": [
+          "agents/",
+          ".github/copilot-instructions"
+        ]
+      }
+    },
+    {
+      "body_chars": 314,
+      "description": "When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis",
+      "description_chars": 110,
+      "file_chars": 626,
+      "name": "analysis-skill-routing",
+      "routes_to": [
+        "skill:analysis-skill-router"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/analysis-skill-routing.md",
+      "stub_chars": 222,
+      "tier": "3",
+      "trigger_count": 2,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "analyze",
+          "analysis"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 3086,
+      "description": "Architecture rules for creating new files, classes, controllers, modules, or making structural decisions about project organization",
+      "description_chars": 131,
+      "file_chars": 3415,
+      "name": "architecture",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/architecture.md",
+      "stub_chars": 233,
+      "tier": "3",
+      "trigger_count": 4,
+      "triggers": {
+        "intents": [
+          "structural decision"
+        ],
+        "keywords": [
+          "controller",
+          "service",
+          "module"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 2956,
+      "description": "Creating a new skill, rule, command, or guideline, or significantly rewriting one \u2014 runs mandatory Understand \u2192 Research \u2192 Draft before drafting",
+      "description_chars": 144,
+      "file_chars": 3323,
+      "name": "artifact-drafting-protocol",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/artifact-drafting-protocol.md",
+      "stub_chars": 260,
+      "tier": "2a",
+      "trigger_count": 4,
+      "triggers": {
+        "intents": [
+          "create new skill",
+          "create new rule",
+          "create new command",
+          "create new guideline"
+        ],
+        "keywords": [],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 1039,
+      "description": "After a /implement-ticket or /work phase-step (refine/memory/analyze/plan/implement/test/verify/report) or full task \u2014 emit one telemetry:record call",
+      "description_chars": 149,
+      "file_chars": 1493,
+      "name": "artifact-engagement-recording",
+      "routes_to": [
+        "contract:artifact-engagement-flow"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/artifact-engagement-recording.md",
+      "stub_chars": 268,
+      "tier": "mechanical-already",
+      "trigger_count": 1,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "telemetry"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 343,
+      "description": "Editing or creating files inside .augment/ directory \u2014 skills, rules, commands, templates, contexts must be project-agnostic",
+      "description_chars": 124,
+      "file_chars": 874,
+      "name": "augment-portability",
+      "routes_to": [
+        "guideline:augment-portability-patterns"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/augment-portability.md",
+      "stub_chars": 233,
+      "tier": "mechanical-already",
+      "trigger_count": 3,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "portable"
+        ],
+        "path_prefixes": [
+          ".augment/",
+          ".agent-src.uncompressed/"
+        ]
+      }
+    },
+    {
+      "body_chars": 2438,
+      "description": "Creating, editing, or modifying files in .agent-src/ or .augment/ \u2014 source of truth is .agent-src.uncompressed/, never edit generated dirs directly",
+      "description_chars": 147,
+      "file_chars": 3039,
+      "name": "augment-source-of-truth",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/augment-source-of-truth.md",
+      "stub_chars": 260,
+      "tier": "1",
+      "trigger_count": 4,
+      "triggers": {
+        "intents": [],
+        "keywords": [],
+        "path_prefixes": [
+          ".agent-src/",
+          ".augment/",
+          ".claude/",
+          ".cursor/"
+        ]
+      }
+    },
+    {
+      "body_chars": 2832,
+      "description": "Whether to ask or act on a workflow step \u2014 trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor in non-destructive-by-default",
+      "description_chars": 137,
+      "file_chars": 3311,
+      "name": "autonomous-execution",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/autonomous-execution.md",
+      "stub_chars": 247,
+      "tier": "3",
+      "trigger_count": 3,
+      "triggers": {
+        "intents": [
+          "trivial workflow question",
+          "autonomy mode"
+        ],
+        "keywords": [
+          "personal.autonomy"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 322,
+      "description": "After completing a task where a repeated mistake or successful pattern appeared \u2014 capture as rule or skill",
+      "description_chars": 106,
+      "file_chars": 636,
+      "name": "capture-learnings",
+      "routes_to": [
+        "skill:learning-to-rule-or-skill"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/capture-learnings.md",
+      "stub_chars": 213,
+      "tier": "2a",
+      "trigger_count": 2,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "learning",
+          "lesson"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 2692,
+      "description": "When caveman.speak_scope != off \u2014 compress reply prose to caveman grammar with carve-outs for numbered options, Iron-Law, code, paths, error markers",
+      "description_chars": 148,
+      "file_chars": 2938,
+      "name": "caveman-speak",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/caveman-speak.md",
+      "stub_chars": 251,
+      "tier": "1",
+      "trigger_count": 1,
+      "triggers": {
+        "intents": [
+          "any reply"
+        ],
+        "keywords": [],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 308,
+      "description": "Running CLI commands that produce verbose output \u2014 git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk; tail/grep fallback",
+      "description_chars": 150,
+      "file_chars": 688,
+      "name": "cli-output-handling",
+      "routes_to": [
+        "skill:rtk-output-filtering"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/cli-output-handling.md",
+      "stub_chars": 259,
+      "tier": "2a",
+      "trigger_count": 5,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "git",
+          "phpstan",
+          "rector",
+          "phpunit",
+          "composer"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 1233,
+      "description": "User prompt without /command matching an eligible slash command \u2014 surface matches as numbered options with as-is escape; never auto-executes",
+      "description_chars": 140,
+      "file_chars": 1644,
+      "name": "command-suggestion-policy",
+      "routes_to": [
+        "contract:command-suggestion-flow"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/command-suggestion-policy.md",
+      "stub_chars": 255,
+      "tier": "mechanical-already",
+      "trigger_count": 0,
+      "triggers": {
+        "intents": [],
+        "keywords": [],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 336,
+      "description": "Git commit message format, branch naming, conventional commits, committing, pushing, or creating pull requests",
+      "description_chars": 110,
+      "file_chars": 652,
+      "name": "commit-conventions",
+      "routes_to": [
+        "skill:conventional-commits-writing"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/commit-conventions.md",
+      "stub_chars": 218,
+      "tier": "2a",
+      "trigger_count": 2,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "commit",
+          "branch"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 3810,
+      "description": "When debugging, fixing errors, or running long conversations \u2014 3-failure stop rule, tool-loop detection, fresh-chat triggers",
+      "description_chars": 124,
+      "file_chars": 4133,
+      "name": "context-hygiene",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/context-hygiene.md",
+      "stub_chars": 229,
+      "tier": "1",
+      "trigger_count": 4,
+      "triggers": {
+        "intents": [
+          "long conversation",
+          "tool loop",
+          "fresh chat"
+        ],
+        "keywords": [
+          "3-failure"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 306,
+      "description": "Running PHP commands inside Docker containers \u2014 artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, and any CLI tool execution",
+      "description_chars": 143,
+      "file_chars": 657,
+      "name": "docker-commands",
+      "routes_to": [
+        "skill:docker"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/docker-commands.md",
+      "stub_chars": 248,
+      "tier": "3",
+      "trigger_count": 3,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "docker",
+          "artisan",
+          "composer"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 320,
+      "description": "Keeping .augment/ contexts, counts, cross-references in sync when creating, renaming, or deleting skills, rules, commands, templates, agent infra",
+      "description_chars": 145,
+      "file_chars": 699,
+      "name": "docs-sync",
+      "routes_to": [
+        "skill:agent-docs-writing"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/docs-sync.md",
+      "stub_chars": 244,
+      "tier": "2a",
+      "trigger_count": 4,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "rename",
+          "delete"
+        ],
+        "path_prefixes": [
+          ".agent-src.uncompressed/",
+          ".augment/"
+        ]
+      }
+    },
+    {
+      "body_chars": 2939,
+      "description": "After EVERY code edit, find ALL downstream changes needed to existing files, including callers, tests, imports, types, and documentation",
+      "description_chars": 136,
+      "file_chars": 3271,
+      "name": "downstream-changes",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/downstream-changes.md",
+      "stub_chars": 244,
+      "tier": "2b",
+      "trigger_count": 4,
+      "triggers": {
+        "intents": [
+          "after code edit"
+        ],
+        "keywords": [
+          "callers",
+          "imports",
+          "downstream"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 306,
+      "description": "Playwright E2E tests \u2014 locators, assertions, Page Objects, fixtures, CI, and flaky test prevention",
+      "description_chars": 98,
+      "file_chars": 583,
+      "name": "e2e-testing",
+      "routes_to": [
+        "command:e2e-heal"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/e2e-testing.md",
+      "stub_chars": 199,
+      "tier": "3",
+      "trigger_count": 2,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "playwright",
+          "e2e"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 946,
+      "description": "Writing or reviewing code \u2014 check relevant guideline before writing or reviewing code",
+      "description_chars": 85,
+      "file_chars": 1282,
+      "name": "guidelines",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/guidelines.md",
+      "stub_chars": 185,
+      "tier": "3",
+      "trigger_count": 3,
+      "triggers": {
+        "intents": [
+          "writing code",
+          "reviewing code"
+        ],
+        "keywords": [
+          "convention"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 3837,
+      "description": "Before implementing features or architectural changes \u2014 validate the request against existing code, challenge weak requirements, suggest improvements",
+      "description_chars": 149,
+      "file_chars": 4352,
+      "name": "improve-before-implement",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/improve-before-implement.md",
+      "stub_chars": 263,
+      "tier": "2b",
+      "trigger_count": 3,
+      "triggers": {
+        "intents": [
+          "implement feature",
+          "architectural change"
+        ],
+        "keywords": [
+          "refactor"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 2515,
+      "description": "Before executing a complex plan or non-trivial design \u2014 ask 'am I solving the right problem?' and pause for user confirmation, even when no ambiguity",
+      "description_chars": 149,
+      "file_chars": 3002,
+      "name": "invite-challenge",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/invite-challenge.md",
+      "stub_chars": 255,
+      "tier": "2b",
+      "trigger_count": 8,
+      "triggers": {
+        "intents": [
+          "complex plan",
+          "design decision",
+          "architectural plan",
+          "multi-step implementation"
+        ],
+        "keywords": [
+          "plan",
+          "design",
+          "architecture",
+          "approach"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 313,
+      "description": "Laravel language files, translations, i18n, lang/de, lang/en, __() helper, localization, multilingual text",
+      "description_chars": 106,
+      "file_chars": 619,
+      "name": "laravel-translations",
+      "routes_to": [
+        "skill:laravel"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/laravel-translations.md",
+      "stub_chars": 216,
+      "tier": "2a",
+      "trigger_count": 4,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "translation",
+          "__()",
+          "trans("
+        ],
+        "path_prefixes": [
+          "lang/"
+        ]
+      }
+    },
+    {
+      "body_chars": 678,
+      "description": "Generating markdown output that contains code blocks \u2014 prevent broken nesting",
+      "description_chars": 77,
+      "file_chars": 946,
+      "name": "markdown-safe-codeblocks",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/markdown-safe-codeblocks.md",
+      "stub_chars": 191,
+      "tier": "2b",
+      "trigger_count": 2,
+      "triggers": {
+        "intents": [
+          "markdown with code blocks"
+        ],
+        "keywords": [
+          "triple backticks"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 3323,
+      "description": "When writing or reviewing a diff \u2014 the smallest change that solves the stated problem; no drive-by edits, opportunistic refactors, or reformatting",
+      "description_chars": 146,
+      "file_chars": 3647,
+      "name": "minimal-safe-diff",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/minimal-safe-diff.md",
+      "stub_chars": 253,
+      "tier": "2a",
+      "trigger_count": 3,
+      "triggers": {
+        "intents": [
+          "writing a diff",
+          "reviewing a diff"
+        ],
+        "keywords": [
+          "drive-by"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 2632,
+      "description": "When a CLI tool needed for the task is not installed \u2014 ask before working around it; do NOT install silently",
+      "description_chars": 108,
+      "file_chars": 2902,
+      "name": "missing-tool-handling",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/missing-tool-handling.md",
+      "stub_chars": 219,
+      "tier": "2a",
+      "trigger_count": 3,
+      "triggers": {
+        "intents": [
+          "install tool"
+        ],
+        "keywords": [
+          "command not found",
+          "not installed"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 310,
+      "description": "Starting a new task, switching task type, or invoking a command \u2014 detect complexity and recommend optimal model (Opus/Sonnet/GPT) before work",
+      "description_chars": 141,
+      "file_chars": 643,
+      "name": "model-recommendation",
+      "routes_to": [
+        "command:set-cost-profile"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/model-recommendation.md",
+      "stub_chars": 251,
+      "tier": "2a",
+      "trigger_count": 0,
+      "triggers": {
+        "intents": [],
+        "keywords": [],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 1461,
+      "description": "Generating PR/issue/comment/commit-message bodies \u2014 forbids 'Generated with', 'Co-authored by', or 'Pull Request opened by' attribution footers",
+      "description_chars": 143,
+      "file_chars": 1802,
+      "name": "no-attribution-footers",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/no-attribution-footers.md",
+      "stub_chars": 255,
+      "tier": "3",
+      "trigger_count": 4,
+      "triggers": {
+        "intents": [
+          "PR body",
+          "commit message",
+          "Jira comment"
+        ],
+        "keywords": [
+          "co-authored"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 3965,
+      "description": "Linking transient files (agents/roadmaps/, agents/council-{questions,responses,sessions}/) from a stable artifact \u2014 both layers expire; promote findings",
+      "description_chars": 152,
+      "file_chars": 4661,
+      "name": "no-roadmap-references",
+      "routes_to": [
+        "skill:ai-council"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/no-roadmap-references.md",
+      "stub_chars": 263,
+      "tier": "mechanical-already",
+      "trigger_count": 6,
+      "triggers": {
+        "intents": [
+          "link from stable artifact",
+          "link to council artefact"
+        ],
+        "keywords": [],
+        "path_prefixes": [
+          "agents/roadmaps/",
+          "agents/council-questions/",
+          "agents/council-responses/",
+          "agents/council-sessions/"
+        ]
+      }
+    },
+    {
+      "body_chars": 311,
+      "description": "First turn of a conversation on a project \u2014 check onboarding.onboarded in .agent-settings.yml; when false, prompt to run /onboard before any request",
+      "description_chars": 148,
+      "file_chars": 656,
+      "name": "onboarding-gate",
+      "routes_to": [
+        "command:onboard"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/onboarding-gate.md",
+      "stub_chars": 253,
+      "tier": "1",
+      "trigger_count": 2,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "onboarding"
+        ],
+        "path_prefixes": [
+          ".agent-settings.yml"
+        ]
+      }
+    },
+    {
+      "body_chars": 288,
+      "description": "Before pushing to remote or creating a PR in the agent-config package \u2014 run all CI checks locally first",
+      "description_chars": 103,
+      "file_chars": 589,
+      "name": "package-ci-checks",
+      "routes_to": [
+        "skill:lint-skills"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/package-ci-checks.md",
+      "stub_chars": 210,
+      "tier": "mechanical-already",
+      "trigger_count": 0,
+      "triggers": {
+        "intents": [],
+        "keywords": [],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 324,
+      "description": "Writing or reviewing PHP code \u2014 strict types, naming, comparisons, early returns, Eloquent conventions",
+      "description_chars": 102,
+      "file_chars": 619,
+      "name": "php-coding",
+      "routes_to": [
+        "guideline:php/php-coding-patterns"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/php-coding.md",
+      "stub_chars": 202,
+      "tier": "3",
+      "trigger_count": 2,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "phpstan",
+          "ecs"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 3824,
+      "description": "When merging, refactoring, compressing, or restructuring skills, rules, commands, or guidelines \u2014 prevent quality loss",
+      "description_chars": 118,
+      "file_chars": 4319,
+      "name": "preservation-guard",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/preservation-guard.md",
+      "stub_chars": 226,
+      "tier": "2b",
+      "trigger_count": 4,
+      "triggers": {
+        "intents": [
+          "merge skill",
+          "compress rule",
+          "refactor artifact"
+        ],
+        "keywords": [
+          "Iron Law"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 586,
+      "description": "When suggesting reviewers or flagging risk hotspots \u2014 anchor in paths/risk + ownership-map + bug-patterns; medium/high needs primary + secondary",
+      "description_chars": 144,
+      "file_chars": 954,
+      "name": "reviewer-awareness",
+      "routes_to": [
+        "skill:review-routing"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/reviewer-awareness.md",
+      "stub_chars": 252,
+      "tier": "2a",
+      "trigger_count": 1,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "reviewer"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 2318,
+      "description": "Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open. Autonomous runs flip checkboxes inline",
+      "description_chars": 148,
+      "file_chars": 2642,
+      "name": "roadmap-progress-sync",
+      "routes_to": [
+        "guideline:agent-infra/roadmap-progress-mechanics"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/roadmap-progress-sync.md",
+      "stub_chars": 259,
+      "tier": "1",
+      "trigger_count": 1,
+      "triggers": {
+        "intents": [],
+        "keywords": [],
+        "path_prefixes": [
+          "agents/roadmaps/"
+        ]
+      }
+    },
+    {
+      "body_chars": 1681,
+      "description": "When roles.active_role is set in .agent-settings.yml \u2014 closing outputs must match the mode's contract and emit the structured mode marker",
+      "description_chars": 137,
+      "file_chars": 1990,
+      "name": "role-mode-adherence",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/role-mode-adherence.md",
+      "stub_chars": 246,
+      "tier": "2a",
+      "trigger_count": 3,
+      "triggers": {
+        "intents": [
+          "mode marker"
+        ],
+        "keywords": [
+          "active_role",
+          "role-mode"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 333,
+      "description": "Creating or editing rules, or auditing rule types \u2014 decides when a rule should be always vs auto",
+      "description_chars": 96,
+      "file_chars": 614,
+      "name": "rule-type-governance",
+      "routes_to": [
+        "guideline:agent-infra/rule-type-governance"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/rule-type-governance.md",
+      "stub_chars": 206,
+      "tier": "2a",
+      "trigger_count": 1,
+      "triggers": {
+        "intents": [],
+        "keywords": [],
+        "path_prefixes": [
+          ".agent-src.uncompressed/rules/"
+        ]
+      }
+    },
+    {
+      "body_chars": 1132,
+      "description": "When a skill declares execution metadata \u2014 enforce safety constraints for assisted and automated execution types",
+      "description_chars": 112,
+      "file_chars": 1414,
+      "name": "runtime-safety",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/runtime-safety.md",
+      "stub_chars": 216,
+      "tier": "2b",
+      "trigger_count": 4,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "execution",
+          "automated",
+          "assisted",
+          "handler"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 3003,
+      "description": "Security-sensitive paths \u2014 auth, billing, tenant boundaries, secrets, uploads, integrations, webhooks, public endpoints \u2014 threat-model BEFORE editing",
+      "description_chars": 149,
+      "file_chars": 3356,
+      "name": "security-sensitive-stop",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/security-sensitive-stop.md",
+      "stub_chars": 262,
+      "tier": "2a",
+      "trigger_count": 5,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "auth",
+          "billing",
+          "tenant",
+          "secret",
+          "webhook"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 864,
+      "description": "Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md \u2014 enforce size and scope limits",
+      "description_chars": 126,
+      "file_chars": 1213,
+      "name": "size-enforcement",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/size-enforcement.md",
+      "stub_chars": 232,
+      "tier": "mechanical-already",
+      "trigger_count": 4,
+      "triggers": {
+        "intents": [
+          "create rule",
+          "create skill",
+          "create command",
+          "create guideline"
+        ],
+        "keywords": [],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 332,
+      "description": "After completing a meaningful task \u2014 trigger post-task learning capture if pipelines.skill_improvement is enabled",
+      "description_chars": 113,
+      "file_chars": 652,
+      "name": "skill-improvement-trigger",
+      "routes_to": [
+        "skill:skill-improvement-pipeline"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/skill-improvement-trigger.md",
+      "stub_chars": 228,
+      "tier": "2a",
+      "trigger_count": 2,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "improvement",
+          "pipeline"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 321,
+      "description": "Creating, editing, or reviewing skills \u2014 minimum quality standard, every skill must be executable, validated, and self-contained",
+      "description_chars": 128,
+      "file_chars": 654,
+      "name": "skill-quality",
+      "routes_to": [
+        "guideline:agent-infra/skill-quality-checklist"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/skill-quality.md",
+      "stub_chars": 231,
+      "tier": "mechanical-already",
+      "trigger_count": 1,
+      "triggers": {
+        "intents": [],
+        "keywords": [],
+        "path_prefixes": [
+          ".agent-src.uncompressed/skills/"
+        ]
+      }
+    },
+    {
+      "body_chars": 322,
+      "description": "When user types a slash command like /create-pr, /commit, or pastes command file content",
+      "description_chars": 88,
+      "file_chars": 623,
+      "name": "slash-command-routing-policy",
+      "routes_to": [
+        "skill:command-routing"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/slash-command-routing-policy.md",
+      "stub_chars": 206,
+      "tier": "1",
+      "trigger_count": 3,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "/create-pr",
+          "/commit",
+          "/fix-ci"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 1700,
+      "description": "Before coding, modifying, or debugging \u2014 analyze first, verify with real tools, never guess or trial-and-error",
+      "description_chars": 110,
+      "file_chars": 2079,
+      "name": "think-before-action",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/think-before-action.md",
+      "stub_chars": 219,
+      "tier": "2b",
+      "trigger_count": 3,
+      "triggers": {
+        "intents": [
+          "before coding",
+          "before debugging",
+          "before modifying"
+        ],
+        "keywords": [],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 853,
+      "description": "When running CLI tools, fetching logs, or producing replies \u2014 redirect verbose output, minimize tool calls, keep replies concise",
+      "description_chars": 128,
+      "file_chars": 1253,
+      "name": "token-efficiency",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/token-efficiency.md",
+      "stub_chars": 234,
+      "tier": "2a",
+      "trigger_count": 3,
+      "triggers": {
+        "intents": [
+          "verbose CLI output",
+          "fetching logs"
+        ],
+        "keywords": [
+          "minimize tool calls"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 1576,
+      "description": "Editing a token-optimizer-cited asset (cli-output-handling, rtk-output-filtering, token-efficiency, markitdown) \u2014 sync catalog same commit",
+      "description_chars": 138,
+      "file_chars": 2188,
+      "name": "token-optimizer-maintenance",
+      "routes_to": [
+        "skill:token-optimizer"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/token-optimizer-maintenance.md",
+      "stub_chars": 255,
+      "tier": "2a",
+      "trigger_count": 6,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "cli-output-handling",
+          "rtk-output-filtering",
+          "token-efficiency",
+          "agent-handoff",
+          "markitdown",
+          "token-optimizer"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 1241,
+      "description": "When a skill uses external tools \u2014 enforce allowlist, deny-by-default, and no hidden credential patterns",
+      "description_chars": 104,
+      "file_chars": 1503,
+      "name": "tool-safety",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/tool-safety.md",
+      "stub_chars": 205,
+      "tier": "2b",
+      "trigger_count": 3,
+      "triggers": {
+        "intents": [
+          "external API"
+        ],
+        "keywords": [
+          "allowed_tools",
+          "tool registry"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 1444,
+      "description": "Writing or editing UI \u2014 components, screens, partials, layouts, design tokens \u2014 require existing-ui-audit findings before non-trivial UI change",
+      "description_chars": 143,
+      "file_chars": 1844,
+      "name": "ui-audit-gate",
+      "routes_to": [
+        "skill:existing-ui-audit"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/ui-audit-gate.md",
+      "stub_chars": 246,
+      "tier": "2b",
+      "trigger_count": 4,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "component",
+          "design token"
+        ],
+        "path_prefixes": [
+          "resources/views/",
+          "resources/js/"
+        ]
+      }
+    },
+    {
+      "body_chars": 316,
+      "description": "After creating or significantly improving a skill, rule, guideline, or command \u2014 ask if it should be contributed upstream to the shared package",
+      "description_chars": 143,
+      "file_chars": 660,
+      "name": "upstream-proposal",
+      "routes_to": [
+        "skill:upstream-contribute"
+      ],
+      "src_path": ".agent-src.uncompressed/rules/upstream-proposal.md",
+      "stub_chars": 250,
+      "tier": "2a",
+      "trigger_count": 1,
+      "triggers": {
+        "intents": [],
+        "keywords": [
+          "upstream"
+        ],
+        "path_prefixes": []
+      }
+    },
+    {
+      "body_chars": 2061,
+      "description": "Asking the user a question, presenting options, or summarizing progress \u2014 numbered-options Iron Law, single-recommendation rule, progress indicators",
+      "description_chars": 148,
+      "file_chars": 2484,
+      "name": "user-interaction",
+      "routes_to": [],
+      "src_path": ".agent-src.uncompressed/rules/user-interaction.md",
+      "stub_chars": 254,
+      "tier": "3",
+      "trigger_count": 3,
+      "triggers": {
+        "intents": [
+          "ask user a question",
+          "numbered options",
+          "summarizing progress"
+        ],
+        "keywords": [],
+        "path_prefixes": []
+      }
+    }
+  ]
+}

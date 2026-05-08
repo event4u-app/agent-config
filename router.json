@@ -13,23 +13,6 @@
   ],
   "tier_1": [
     {
-      "id": "analysis-skill-routing",
-      "triggers": [
-        {
-          "keyword": "analyze"
-        },
-        {
-          "keyword": "analysis"
-        },
-        {
-          "phrase": "dig into the codebase"
-        }
-      ],
-      "routes_to": [
-        "skill:analysis-skill-router"
-      ]
-    },
-    {
       "id": "architecture",
       "triggers": [
         {
@@ -193,21 +176,6 @@
       ]
     },
     {
-      "id": "guidelines",
-      "triggers": [
-        {
-          "intent": "writing code"
-        },
-        {
-          "intent": "reviewing code"
-        },
-        {
-          "keyword": "convention"
-        }
-      ],
-      "routes_to": []
-    },
-    {
       "id": "no-attribution-footers",
       "triggers": [
         {
@@ -269,23 +237,6 @@
       ]
     },
     {
-      "id": "package-ci-checks",
-      "triggers": [
-        {
-          "phrase": "task ci"
-        },
-        {
-          "phrase": "before push"
-        },
-        {
-          "phrase": "before pr"
-        }
-      ],
-      "routes_to": [
-        "skill:lint-skills"
-      ]
-    },
-    {
       "id": "php-coding",
       "triggers": [
         {
@@ -312,24 +263,6 @@
       "routes_to": [
         "guideline:agent-infra/roadmap-progress-mechanics"
       ]
-    },
-    {
-      "id": "size-enforcement",
-      "triggers": [
-        {
-          "intent": "create rule"
-        },
-        {
-          "intent": "create skill"
-        },
-        {
-          "intent": "create command"
-        },
-        {
-          "intent": "create guideline"
-        }
-      ],
-      "routes_to": []
     },
     {
       "id": "skill-quality",

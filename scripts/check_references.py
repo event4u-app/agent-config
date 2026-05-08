@@ -228,6 +228,10 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
             ))
 
     in_code_block = False
+    # Track whether we are inside an unchecked-TODO bullet (multi-line
+    # roadmap items wrap continuation text under the `- [ ]` line and
+    # those continuation lines must inherit the forward-ref exemption).
+    in_unchecked_todo = False
     for i, line in enumerate(text.splitlines(), 1):
         stripped = line.strip()
         if stripped.startswith("```"):
@@ -237,9 +241,25 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
             continue
 
         # Unchecked TODO checkboxes document future work — their refs are
-        # forward-looking and will not resolve yet.
+        # forward-looking and will not resolve yet. Track multi-line bullets:
+        # any `- [ ]` opens a TODO context; a new top-level bullet, heading,
+        # or blank line closes it.
         if UNCHECKED_TODO_PATTERN.match(line):
+            in_unchecked_todo = True
             continue
+        if in_unchecked_todo:
+            if not stripped:
+                in_unchecked_todo = False
+                continue
+            # A new bullet (checked or unchecked) or a heading closes the
+            # current TODO context. An indented continuation line keeps it.
+            if re.match(r"^[-*+]\s+\[", line) or stripped.startswith("#"):
+                in_unchecked_todo = False
+            elif line[:1] in (" ", "\t"):
+                # Indented continuation of the unchecked TODO — skip.
+                continue
+            else:
+                in_unchecked_todo = False
 
         # File path references
         for m in PATH_PATTERN.finditer(line):

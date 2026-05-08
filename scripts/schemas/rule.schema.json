@@ -9,7 +9,8 @@
   "properties": {
     "type": {
       "type": "string",
-      "enum": ["always", "auto"]
+      "enum": ["always", "auto", "manual"],
+      "description": "`always` = injected verbatim every turn (kernel). `auto` = description stub injected, body loaded on trigger match. `manual` = no auto-injection (zero workspace-budget cost); file remains as a reference document linkable from skills/contexts. Introduced by ADR-004 to demote thin pointer-rules without breaking cross-references."
     },
     "source": {
       "type": "string",

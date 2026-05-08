@@ -1,0 +1,79 @@
+{
+  "pair_count": 4,
+  "pairs": [
+    {
+      "rule_a": "augment-portability",
+      "rule_b": "docs-sync",
+      "path_jaccard": 1.0,
+      "keyword_overlap": 0.5,
+      "shared_paths": [
+        ".agent-src.uncompressed/",
+        ".augment/"
+      ],
+      "shared_keywords": [
+        "augment",
+        "commands",
+        "contexts",
+        "creating",
+        "rules",
+        "skills",
+        "templates"
+      ],
+      "rule_a_desc": "Editing or creating files inside .augment/ directory \u2014 skills, rules, commands, templates, contexts must be project-agnostic",
+      "rule_b_desc": "Keeping .augment/ contexts, counts, cross-references in sync when creating, renaming, or deleting skills, rules, commands, templates, agent infra"
+    },
+    {
+      "rule_a": "cli-output-handling",
+      "rule_b": "docker-commands",
+      "path_jaccard": 0.0,
+      "keyword_overlap": 0.588,
+      "shared_paths": [],
+      "shared_keywords": [
+        "artisan",
+        "cli",
+        "commands",
+        "composer",
+        "docker",
+        "phpstan",
+        "phpunit",
+        "rector",
+        "running",
+        "tests"
+      ],
+      "rule_a_desc": "Running CLI commands that produce verbose output \u2014 git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk; tail/grep fallback",
+      "rule_b_desc": "Running PHP commands inside Docker containers \u2014 artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, and any CLI tool execution"
+    },
+    {
+      "rule_a": "artifact-drafting-protocol",
+      "rule_b": "upstream-proposal",
+      "path_jaccard": 0.0,
+      "keyword_overlap": 0.462,
+      "shared_paths": [],
+      "shared_keywords": [
+        "command",
+        "creating",
+        "guideline",
+        "rule",
+        "significantly",
+        "skill"
+      ],
+      "rule_a_desc": "Creating a new skill, rule, command, or guideline, or significantly rewriting one \u2014 runs mandatory Understand \u2192 Research \u2192 Draft before drafting",
+      "rule_b_desc": "After creating or significantly improving a skill, rule, guideline, or command \u2014 ask if it should be contributed upstream to the shared package"
+    },
+    {
+      "rule_a": "rule-type-governance",
+      "rule_b": "size-enforcement",
+      "path_jaccard": 0.0,
+      "keyword_overlap": 0.4,
+      "shared_paths": [],
+      "shared_keywords": [
+        "creating",
+        "editing",
+        "rule",
+        "rules"
+      ],
+      "rule_a_desc": "Creating or editing rules, or auditing rule types \u2014 decides when a rule should be always vs auto",
+      "rule_b_desc": "Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md \u2014 enforce size and scope limits"
+    }
+  ]
+}

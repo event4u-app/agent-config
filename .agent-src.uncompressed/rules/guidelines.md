@@ -1,5 +1,5 @@
 ---
-type: "auto"
+type: "manual"
 tier: "3"
 description: "Writing or reviewing code — check relevant guideline before writing or reviewing code"
 alwaysApply: false
