@@ -318,6 +318,24 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.27.0](https://github.com/event4u-app/agent-config/compare/1.26.0...1.27.0) (2026-05-08)
+
+### Features
+
+* **governance:** add no-unsolicited-rebase rule ([b17e4bc](https://github.com/event4u-app/agent-config/commit/b17e4bc8482342a8f3b9c47f40994e17a6eab626))
+* **governance:** add domain-adoption-policy rule ([30a45c3](https://github.com/event4u-app/agent-config/commit/30a45c352a7c9b16dfe455f31bf87c253fe95014))
+* **mobile:** add mobile track skills and iOS simulator guideline ([f4dbb5c](https://github.com/event4u-app/agent-config/commit/f4dbb5cc32065e76d39981d18bc4513551a5da8b))
+
+### Bug Fixes
+
+* **governance:** set tier 2a on no-unsolicited-rebase rule ([284ced0](https://github.com/event4u-app/agent-config/commit/284ced0c7b53ec9a394234a37ee5b370d2278802))
+* **governance:** allowlist .agent-src.uncompressed/ substring in domain-adoption-policy ([e2091dc](https://github.com/event4u-app/agent-config/commit/e2091dc660ce4c437c1b5035aaa1179f469e7abe))
+
+### Chores
+
+* **roadmap:** archive road-to-mobile-adoption ([cc5e6ea](https://github.com/event4u-app/agent-config/commit/cc5e6ea4228666b9784fd468095bb2c096430672))
+* regenerate tool projections and counts for mobile + governance ([b36d495](https://github.com/event4u-app/agent-config/commit/b36d4957a43b26d0786ae73f11097091ca28fbbb))
+
 ## [1.26.0](https://github.com/event4u-app/agent-config/compare/1.25.0...1.26.0) (2026-05-08)
 
 ### Features
