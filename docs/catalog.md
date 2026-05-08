@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **359 public artefacts** shipped by
+Consumer-facing catalog of all **357 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -153,7 +153,7 @@ are excluded.
 | skill | [`verify-completion-evidence`](../.agent-src/skills/verify-completion-evidence/SKILL.md) |  | Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs. |
 | skill | [`websocket`](../.agent-src/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (57)
+## Rules (55)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -161,14 +161,14 @@ are excluded.
 | rule | [`agent-docs`](../.agent-src/rules/agent-docs.md) | auto | Reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md |
 | rule | [`analysis-skill-routing`](../.agent-src/rules/analysis-skill-routing.md) | auto | When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis |
 | rule | [`architecture`](../.agent-src/rules/architecture.md) | auto | Architecture rules for creating new files, classes, controllers, modules, or making structural decisions about project organization |
-| rule | [`artifact-drafting-protocol`](../.agent-src/rules/artifact-drafting-protocol.md) | auto | Creating a new skill, rule, command, or guideline, or significantly rewriting one — runs a mandatory Understand → Research → Draft sequence before any artifact content is written. |
-| rule | [`artifact-engagement-recording`](../.agent-src/rules/artifact-engagement-recording.md) | auto | After a /implement-ticket or /work phase-step (refine/memory/analyze/plan/implement/test/verify/report) or full task — emit one telemetry:record call with consulted+applied ids when enabled |
+| rule | [`artifact-drafting-protocol`](../.agent-src/rules/artifact-drafting-protocol.md) | auto | Creating a new skill, rule, command, or guideline, or significantly rewriting one — runs mandatory Understand → Research → Draft before drafting |
+| rule | [`artifact-engagement-recording`](../.agent-src/rules/artifact-engagement-recording.md) | auto | After a /implement-ticket or /work phase-step (refine/memory/analyze/plan/implement/test/verify/report) or full task — emit one telemetry:record call |
 | rule | [`ask-when-uncertain`](../.agent-src/rules/ask-when-uncertain.md) | always | Ask when uncertain — don't guess, assume, or improvise |
-| rule | [`autonomous-execution`](../.agent-src/rules/autonomous-execution.md) | auto | Deciding whether to ask the user or just act on a workflow step — trivial-vs-blocking classification, autonomy opt-in detection, commit default; defers to non-destructive-by-default for the Hard Floor |
+| rule | [`autonomous-execution`](../.agent-src/rules/autonomous-execution.md) | auto | Whether to ask or act on a workflow step — trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor in non-destructive-by-default |
 | rule | [`capture-learnings`](../.agent-src/rules/capture-learnings.md) | auto | After completing a task where a repeated mistake or successful pattern appeared — capture as rule or skill |
-| rule | [`caveman-speak`](../.agent-src/rules/caveman-speak.md) | auto | When caveman.speak_scope != off — compress reply prose to caveman grammar with byte-for-byte carve-outs for numbered options, Iron-Law literals, code, paths, and error markers. |
-| rule | [`cli-output-handling`](../.agent-src/rules/cli-output-handling.md) | auto | Running CLI commands that produce verbose output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk when installed; tail/grep is fallback. |
-| rule | [`command-suggestion-policy`](../.agent-src/rules/command-suggestion-policy.md) | auto | User prompt without /command but matching an eligible slash command — surface matches as numbered options with as-is escape hatch; never auto-executes, user always picks |
+| rule | [`caveman-speak`](../.agent-src/rules/caveman-speak.md) | auto | When caveman.speak_scope != off — compress reply prose to caveman grammar with carve-outs for numbered options, Iron-Law, code, paths, error markers |
+| rule | [`cli-output-handling`](../.agent-src/rules/cli-output-handling.md) | auto | Running CLI commands that produce verbose output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk; tail/grep fallback |
+| rule | [`command-suggestion-policy`](../.agent-src/rules/command-suggestion-policy.md) | auto | User prompt without /command matching an eligible slash command — surface matches as numbered options with as-is escape; never auto-executes |
 | rule | [`commit-conventions`](../.agent-src/rules/commit-conventions.md) | auto | Git commit message format, branch naming, conventional commits, committing, pushing, or creating pull requests |
 | rule | [`commit-policy`](../.agent-src/rules/commit-policy.md) | always | Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked |
 | rule | [`context-hygiene`](../.agent-src/rules/context-hygiene.md) | auto | When debugging, fixing errors, or running long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers |
@@ -177,40 +177,38 @@ are excluded.
 | rule | [`downstream-changes`](../.agent-src/rules/downstream-changes.md) | auto | After EVERY code edit, find ALL downstream changes needed to existing files, including callers, tests, imports, types, and documentation |
 | rule | [`e2e-testing`](../.agent-src/rules/e2e-testing.md) | auto | Playwright E2E tests — locators, assertions, Page Objects, fixtures, CI, and flaky test prevention |
 | rule | [`guidelines`](../.agent-src/rules/guidelines.md) | auto | Writing or reviewing code — check relevant guideline before writing or reviewing code |
-| rule | [`improve-before-implement`](../.agent-src/rules/improve-before-implement.md) | auto | Before implementing features or architectural changes — validate the request against existing code, challenge weak requirements, and suggest improvements |
-| rule | [`invite-challenge`](../.agent-src/rules/invite-challenge.md) | auto | Before executing a complex plan or non-trivial design — proactively ask 'am I solving the right problem?' and pause for user confirmation, even when no ambiguity is detected |
+| rule | [`improve-before-implement`](../.agent-src/rules/improve-before-implement.md) | auto | Before implementing features or architectural changes — validate the request against existing code, challenge weak requirements, suggest improvements |
+| rule | [`invite-challenge`](../.agent-src/rules/invite-challenge.md) | auto | Before executing a complex plan or non-trivial design — ask 'am I solving the right problem?' and pause for user confirmation, even when no ambiguity |
 | rule | [`language-and-tone`](../.agent-src/rules/language-and-tone.md) | always | Language and tone — informal German Du, English code comments, .md files always English |
 | rule | [`laravel-translations`](../.agent-src/rules/laravel-translations.md) | auto | Laravel language files, translations, i18n, lang/de, lang/en, __() helper, localization, multilingual text |
 | rule | [`markdown-safe-codeblocks`](../.agent-src/rules/markdown-safe-codeblocks.md) | auto | Generating markdown output that contains code blocks — prevent broken nesting |
-| rule | [`minimal-safe-diff`](../.agent-src/rules/minimal-safe-diff.md) | auto | When writing or reviewing a diff — the smallest change that solves the stated problem; no drive-by edits, no opportunistic refactors, no reformatting of untouched code |
+| rule | [`minimal-safe-diff`](../.agent-src/rules/minimal-safe-diff.md) | auto | When writing or reviewing a diff — the smallest change that solves the stated problem; no drive-by edits, opportunistic refactors, or reformatting |
 | rule | [`missing-tool-handling`](../.agent-src/rules/missing-tool-handling.md) | auto | When a CLI tool needed for the task is not installed — ask before working around it; do NOT install silently |
-| rule | [`model-recommendation`](../.agent-src/rules/model-recommendation.md) | auto | Starting a new task, switching task type, or invoking a command — detect task complexity and recommend the optimal model (Opus/Sonnet/GPT) before any work |
-| rule | [`no-attribution-footers`](../.agent-src/rules/no-attribution-footers.md) | auto | Generating PR/issue/comment/commit-message bodies — forbids unsolicited 'Generated with', 'Co-authored by', or 'Pull Request opened by' attribution footers in any user-owned artifact |
+| rule | [`model-recommendation`](../.agent-src/rules/model-recommendation.md) | auto | Starting a new task, switching task type, or invoking a command — detect complexity and recommend optimal model (Opus/Sonnet/GPT) before work |
+| rule | [`no-attribution-footers`](../.agent-src/rules/no-attribution-footers.md) | auto | Generating PR/issue/comment/commit-message bodies — forbids 'Generated with', 'Co-authored by', or 'Pull Request opened by' attribution footers |
 | rule | [`no-cheap-questions`](../.agent-src/rules/no-cheap-questions.md) | always | No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on) |
-| rule | [`no-council-references`](../.agent-src/rules/no-council-references.md) | auto | Linking a specific file in agents/council-{questions,responses,sessions}/ from any artifact — council files are gitignored, local-only, auto-pruned; inline the convergence instead |
-| rule | [`no-roadmap-references`](../.agent-src/rules/no-roadmap-references.md) | auto | Adding a link to a specific file in agents/roadmaps/ from any stable artifact (rule, skill, command, context, guideline) — roadmaps are transient; promote durable findings to agents/contexts/ instead |
+| rule | [`no-roadmap-references`](../.agent-src/rules/no-roadmap-references.md) | auto | Linking transient files (agents/roadmaps/, agents/council-{questions,responses,sessions}/) from a stable artifact — both layers expire; promote findings |
 | rule | [`non-destructive-by-default`](../.agent-src/rules/non-destructive-by-default.md) | always | Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass |
-| rule | [`onboarding-gate`](../.agent-src/rules/onboarding-gate.md) | auto | First turn of a conversation on a project — check onboarding.onboarded in .agent-settings.yml; when false, prompt the user to run /onboard before executing any other request |
+| rule | [`onboarding-gate`](../.agent-src/rules/onboarding-gate.md) | auto | First turn of a conversation on a project — check onboarding.onboarded in .agent-settings.yml; when false, prompt to run /onboard before any request |
 | rule | [`package-ci-checks`](../.agent-src/rules/package-ci-checks.md) | auto | Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first |
 | rule | [`php-coding`](../.agent-src/rules/php-coding.md) | auto | Writing or reviewing PHP code — strict types, naming, comparisons, early returns, Eloquent conventions |
 | rule | [`preservation-guard`](../.agent-src/rules/preservation-guard.md) | auto | When merging, refactoring, compressing, or restructuring skills, rules, commands, or guidelines — prevent quality loss |
-| rule | [`review-routing-awareness`](../.agent-src/rules/review-routing-awareness.md) | auto | When routing reviewers or flagging risk hotspots — consult ownership-map and historical-bug-patterns before suggesting reviewers or claiming a change is safe |
-| rule | [`reviewer-awareness`](../.agent-src/rules/reviewer-awareness.md) | auto | When suggesting reviewers for a change — anchor the choice in paths and risk, never prestige or seniority; require primary + secondary role for medium/high risk |
-| rule | [`roadmap-progress-sync`](../.agent-src/rules/roadmap-progress-sync.md) | auto | Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open. Autonomous runs flip each checkbox the SAME reply, never batched at the end. |
+| rule | [`reviewer-awareness`](../.agent-src/rules/reviewer-awareness.md) | auto | When suggesting reviewers or flagging risk hotspots — anchor in paths/risk + ownership-map + bug-patterns; medium/high needs primary + secondary |
+| rule | [`roadmap-progress-sync`](../.agent-src/rules/roadmap-progress-sync.md) | auto | Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open. Autonomous runs flip checkboxes inline |
 | rule | [`role-mode-adherence`](../.agent-src/rules/role-mode-adherence.md) | auto | When roles.active_role is set in .agent-settings.yml — closing outputs must match the mode's contract and emit the structured mode marker |
 | rule | [`rule-type-governance`](../.agent-src/rules/rule-type-governance.md) | auto | Creating or editing rules, or auditing rule types — decides when a rule should be always vs auto |
 | rule | [`runtime-safety`](../.agent-src/rules/runtime-safety.md) | auto | When a skill declares execution metadata — enforce safety constraints for assisted and automated execution types |
 | rule | [`scope-control`](../.agent-src/rules/scope-control.md) | always | Scope control — no unsolicited architectural changes, refactors, or library replacements |
-| rule | [`security-sensitive-stop`](../.agent-src/rules/security-sensitive-stop.md) | auto | Security-sensitive paths — auth, billing, tenant boundaries, secrets, file uploads, external integrations, webhooks, public endpoints — stop and run threat analysis BEFORE editing |
+| rule | [`security-sensitive-stop`](../.agent-src/rules/security-sensitive-stop.md) | auto | Security-sensitive paths — auth, billing, tenant boundaries, secrets, uploads, integrations, webhooks, public endpoints — threat-model BEFORE editing |
 | rule | [`size-enforcement`](../.agent-src/rules/size-enforcement.md) | auto | Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md — enforce size and scope limits |
 | rule | [`skill-improvement-trigger`](../.agent-src/rules/skill-improvement-trigger.md) | auto | After completing a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled |
 | rule | [`skill-quality`](../.agent-src/rules/skill-quality.md) | auto | Creating, editing, or reviewing skills — minimum quality standard, every skill must be executable, validated, and self-contained |
 | rule | [`slash-command-routing-policy`](../.agent-src/rules/slash-command-routing-policy.md) | auto | When user types a slash command like /create-pr, /commit, or pastes command file content |
 | rule | [`think-before-action`](../.agent-src/rules/think-before-action.md) | auto | Before coding, modifying, or debugging — analyze first, verify with real tools, never guess or trial-and-error |
 | rule | [`token-efficiency`](../.agent-src/rules/token-efficiency.md) | auto | When running CLI tools, fetching logs, or producing replies — redirect verbose output, minimize tool calls, keep replies concise |
-| rule | [`token-optimizer-maintenance`](../.agent-src/rules/token-optimizer-maintenance.md) | auto | Editing a token-optimizer-cited asset (cli-output-handling, rtk-output-filtering, token-efficiency, agent-handoff, direct-answers, markitdown) — keep the catalog row in sync in the same commit. |
+| rule | [`token-optimizer-maintenance`](../.agent-src/rules/token-optimizer-maintenance.md) | auto | Editing a token-optimizer-cited asset (cli-output-handling, rtk-output-filtering, token-efficiency, markitdown) — sync catalog same commit |
 | rule | [`tool-safety`](../.agent-src/rules/tool-safety.md) | auto | When a skill uses external tools — enforce allowlist, deny-by-default, and no hidden credential patterns |
-| rule | [`ui-audit-gate`](../.agent-src/rules/ui-audit-gate.md) | auto | Writing or editing UI — components, screens, partials, layouts, design tokens — require existing-ui-audit findings in state.ui_audit before non-trivial UI change; gate, not suggestion |
+| rule | [`ui-audit-gate`](../.agent-src/rules/ui-audit-gate.md) | auto | Writing or editing UI — components, screens, partials, layouts, design tokens — require existing-ui-audit findings before non-trivial UI change |
 | rule | [`upstream-proposal`](../.agent-src/rules/upstream-proposal.md) | auto | After creating or significantly improving a skill, rule, guideline, or command — ask if it should be contributed upstream to the shared package |
 | rule | [`user-interaction`](../.agent-src/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
