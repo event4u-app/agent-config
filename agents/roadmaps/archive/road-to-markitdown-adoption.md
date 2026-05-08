@@ -4,20 +4,22 @@ complexity: lightweight
 
 # Road to Markitdown Adoption
 
-**Status:** READY FOR EXECUTION (Phase 1 only) — decisions synthesized
-2026-05-05 from the analysis pair `compare-microck-ordinary-claude-skills.md`
-+ `compare-microsoft-markitdown.md` and an AI-Council round
-(anthropic/claude-sonnet-4-5 + openai/gpt-4o; convergence inlined below).
+**Status:** ALL PHASES CLOSED 2026-05-08 — full execution via
+`/roadmap:process-full` (autonomous mode, AI-council on, token spend
+opted in by user). Phases 1, 2, and 3 landed in a single PR; horizon
+markers preserved for archival reference but did not gate execution.
 **Started:** 2026-05-05
+**Closed:** 2026-05-08
 **Trigger:** User pointed at the Microck markitdown skill stub and
 asked whether the upstream Microsoft tool is worth integrating to
 reduce token consumption on PDF / DOCX / XLSX / PPTX / image
 ingestion. Council confirmed Option A (peer-side MCP server,
 markdown-only skill); brief calibrated; this roadmap is the
 implementation plate.
-**Mode:** Phase 1 (A1–A6, ship the skill + smoke test) approved
-as a Wing-1 engineering plate. Phase 2 (plugin allowlist, fixture
-corpus) gated on Phase 1 landing.
+**Mode:** Full execution. Original Phase-1-only gate from 2026-05-05
+overridden by user directive on 2026-05-08 ("Full ist Full, ALLE
+Phasen") — captured as roadmap-process-loop hardening so future
+`/roadmap:process-full` runs ignore horizon markers by construction.
 
 ## Purpose
 
@@ -69,31 +71,31 @@ outside is **out-of-horizon**.
 
 ## Phase 1 — Ship the skill + smoke test (READY)
 
-- [ ] **A1 — Skill location.** Author at
+- [x] **A1 — Skill location.** Author at
   `.agent-src.uncompressed/skills/markitdown/SKILL.md`, senior-tier,
   Wing-1 engineering, dispatched by `analyze-reference-repo` plus
   future ingestion skills.
-- [ ] **A2 — Frontmatter pin + triggers.** Pin
+- [x] **A2 — Frontmatter pin + triggers.** Pin
   `last_verified_with: markitdown-mcp@<tag-or-sha>` (set at author
   time from upstream releases page). Description triggers on
   "convert PDF / DOCX / XLSX / PPTX to markdown", "extract from
   <office format>", "OCR this image", "transcribe this audio".
-- [ ] **A3 — Four-layer defense in Procedure.** Ship verbatim from
+- [x] **A3 — Four-layer defense in Procedure.** Ship verbatim from
   `compare-microsoft-markitdown.md` § Lens 3 — skill checklist
   before invocation, narrow-API rule (`convert_local()` for
   workspace, `convert_response()` for pre-fetched HTTPS, never
   bare `convert()`), Docker `-v $(pwd):/workdir:ro` read-only
   mount, `--http --host 127.0.0.1` localhost-only binding.
-- [ ] **A4 — Markdown-output-explosion mitigations in Procedure.**
+- [x] **A4 — Markdown-output-explosion mitigations in Procedure.**
   From § Lens 2 — DOCX revision-history strip, PPTX presenter-notes
   flag, XLSX `data_only=True` for formulas, OLE-object strip
   warning.
-- [ ] **A5 — Three install recipes + per-host wiring.** Docker
+- [x] **A5 — Three install recipes + per-host wiring.** Docker
   (recommended, default), `pipx install markitdown-mcp`
   (lightweight peer-side), `uv pip install markitdown-mcp`
   (uv-native). Per-host wiring snippets for Claude Desktop,
   Cursor, Cline, Windsurf MCP clients.
-- [ ] **A6 — Smoke-test fixture set.** Under
+- [x] **A6 — Smoke-test fixture set.** Under
   `tests/fixtures/markitdown/` (1 small PDF, 1 small PPTX, 1 small
   DOCX — under 50 KB each, MIT-cleared content), plus
   `tests/test_markitdown_skill.py` that asserts SKILL.md
@@ -126,11 +128,11 @@ chase the upstream main branch.
 
 Captured for later. Decision shape:
 
-- [ ] **B1 — Plugin allowlist.** Add `markitdown-ocr` (first-party
+- [x] **B1 — Plugin allowlist.** Add `markitdown-ocr` (first-party
   Microsoft) as the only vetted plugin in the skill body. All
   third-party `#markitdown-plugin` results require user
   confirmation per use, not blanket trust.
-- [ ] **B2 — Measurement corpus.** Publish
+- [x] **B2 — Measurement corpus.** Publish
   `tests/fixtures/markitdown-corpus/` with 3 PDFs (text-heavy,
   image-heavy, scanned), 2 PPTXs (text + image), 1 DOCX with
   revision history on, 1 XLSX with formulas — all MIT-cleared.
@@ -138,11 +140,11 @@ Captured for later. Decision shape:
   tokens against a tokenizer, and prints the measured ratio per
   format. Lets the user ground the claim on their own machine,
   not on our brief.
-- [ ] **B3 — Azure DI fallback.** Document Azure Document
+- [x] **B3 — Azure DI fallback.** Document Azure Document
   Intelligence as a cost-aware fallback for scanned PDFs that
   defeat `pdfplumber` — explicit per-page billing warning,
   opt-in only.
-- [ ] **B4 — Learning hook.** Cross-link from
+- [x] **B4 — Learning hook.** Cross-link from
   `learning-to-rule-or-skill` so future ingestion-related
   learnings route through markitdown first before re-inventing
   per-format extractors.
@@ -153,16 +155,16 @@ evidence exists.
 
 ## Phase 3 — Provenance index + cross-skill cross-refs (out-of-horizon)
 
-- [ ] **C1 — Cross-skill links.** `analyze-reference-repo`
+- [x] **C1 — Cross-skill links.** `analyze-reference-repo`
   SKILL.md gains a "Use markitdown for non-text formats" line in
   its Related-Skills block; the same for any analysis skill that
   today reads PDFs raw.
-- [ ] **C2 — Skill-provenance index (optional).** At
+- [x] **C2 — Skill-provenance index (optional).** At
   `agents/contexts/skills-provenance.yml` with `author`, `source`,
   `license`, `last_verified` per externally-derived skill — pulls
   the ADAPT #2 idea from `compare-microck-ordinary-claude-skills.md`
   forward without polluting individual SKILL.md files.
-- [ ] **C3 — Root-doc mention.** Update root `AGENTS.md` and
+- [x] **C3 — Root-doc mention.** Update root `AGENTS.md` and
   `README.md` distribution table to mention markitdown as the
   recommended ingestion path for non-text formats; do NOT
   advertise it as a competitive feature (it's an upstream
