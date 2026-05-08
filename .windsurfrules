@@ -1766,6 +1766,10 @@ The user decides the git shape. Never improvise. Commit specifics: canonical [`c
 
 A subset is **never** autonomous and never auto-permitted by a standing autonomy directive. Canonical: [`non-destructive-by-default`](non-destructive-by-default.md). Trigger list (prod-branch merges, deploys / releases, prod data / infra, bulk-destructive ops) and the "authorization is this turn, not earlier" clarification: [`scope-mechanics § Production, infrastructure, bulk-destructive`](../contexts/authority/scope-mechanics.md).
 
+## Kernel-rule edits — slow-rollout guarantee
+
+Each kernel-rule edit (`.agent-src.uncompressed/rules/<kernel-member>.md`) ships in **its own PR**, with **≥ 24 h between merges**. Autonomous mandate does NOT lift this — it is a behaviour-soak guarantee, not a governance preference. CI fails any PR that touches > 1 kernel rule unless labeled `bundled-always-rules-acknowledged`. Trigger / scope / out-of-scope: [`kernel-rule-edits`](../contexts/authority/kernel-rule-edits.md).
+
 ## Decline = silence — no re-asking on the same task
 
 After the user **declines** a proposal (branch switch, PR creation, tag/release entry, separate worktree, version pinning), do **not** raise it again on the same task. Decline stands until the user reopens the topic. Timing / "is this worth asking?": [`scope-mechanics § Decline = silence`](../contexts/authority/scope-mechanics.md).

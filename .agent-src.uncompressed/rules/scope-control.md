@@ -6,6 +6,7 @@ alwaysApply: true
 source: package
 load_context:
   - contexts/authority/scope-mechanics.md
+  - contexts/authority/kernel-rule-edits.md
 ---
 
 # Scope Control
@@ -35,6 +36,10 @@ The user decides the git shape. Never improvise. Commit specifics: canonical [`c
 ## Production, infrastructure, bulk-destructive — Hard Floor
 
 A subset is **never** autonomous and never auto-permitted by a standing autonomy directive. Canonical: [`non-destructive-by-default`](non-destructive-by-default.md). Trigger list (prod-branch merges, deploys / releases, prod data / infra, bulk-destructive ops) and the "authorization is this turn, not earlier" clarification: [`scope-mechanics § Production, infrastructure, bulk-destructive`](../contexts/authority/scope-mechanics.md).
+
+## Kernel-rule edits — slow-rollout guarantee
+
+Each kernel-rule edit ships in **its own PR**, ≥ 24 h between merges. Autonomous mandate does NOT lift this — soak guarantee, not preference. CI fails > 1 kernel rule per PR unless labeled `bundled-always-rules-acknowledged`. Trigger / scope: [`kernel-rule-edits`](../contexts/authority/kernel-rule-edits.md).
 
 ## Decline = silence — no re-asking on the same task
 
