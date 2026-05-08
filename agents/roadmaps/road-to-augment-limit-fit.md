@@ -22,10 +22,11 @@ D/E, kernel bodies (Lever C) explicitly off-limits per ADR
 gpt-4o, o1; 2026-05-08):** post-PR-#56 strategic council on a
 **Thin-Root AGENTS.md + progressive disclosure** restructure
 prompted by external research (aihero, coding-nexus, netresearch).
-Final-round render:
-[`agents/council-responses/agents-md-thin-root.json`](../council-responses/agents-md-thin-root.json).
-Convergence + key dissent inlined under
-[Strategic council R2 convergence](#strategic-council-r2-convergence).
+The verbatim final-round render lives under `agents/council-responses/`
+locally (gitignored, ephemeral). Convergence + key dissent inlined
+under [Strategic council R2 convergence](#strategic-council-r2-convergence);
+durable decision captured in
+[`docs/decisions/ADR-004-rule-governance-pruning.md`](../../docs/decisions/ADR-004-rule-governance-pruning.md).
 
 ## Status
 
@@ -102,8 +103,9 @@ Both members converged on:
 ## Strategic council R2 convergence
 
 Five rounds, four members. Three-way alignment + one principled
-dissent. Verbatim render in
-[`agents/council-responses/agents-md-thin-root.json`](../council-responses/agents-md-thin-root.json).
+dissent. Verbatim final-round render lives under
+`agents/council-responses/` locally (gitignored, ephemeral); the
+durable decision is captured below and in ADR-004.
 
 **Strong consensus (Sonnet 4.5, gpt-4o, o1):**
 
