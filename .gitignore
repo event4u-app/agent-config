@@ -83,6 +83,13 @@ evals/results/
 # agents/contexts/adr-frugality-savings-baseline.md. Never commit.
 /agents/.frugality-baseline.jsonl
 
+# Linter structural-density calibration logs (per-run JSONL / JSON,
+# produced by scripts/measure_density.py + skill_linter.py for
+# road-to-structural-linter-reform). Canonical numbers are locked in
+# docs/contracts/linter-structural-model.md. Never commit.
+/agents/.density-snapshot.jsonl
+/agents/.density-baseline-lint.json
+
 # Golden Transcript freeze-guard staging output (produced by
 # `python3 -m tests.golden.capture --target tests/golden/.staging`,
 # diffed against the committed baseline; never committed).
