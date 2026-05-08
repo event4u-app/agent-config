@@ -258,15 +258,21 @@ created by `scripts/install.sh`, not via raw git checkout. This means
 GitHub Copilot's static checker — which walks the git tree — will see
 broken paths where there are none. **The gap is intentional, not a bug.**
 
-The package ships two complementary suppression artefacts:
+The package ships **one** Copilot instruction artefact:
 
 | File | Read by | Purpose |
 |---|---|---|
-| `.github/copilot-instructions.md` | Copilot Chat + PR review | Repo-wide coding standards, self-contained behavior |
-| `.github/copilot-review-instructions.md` | Copilot PR review | Path-resolution suppression floor (this section's mate) |
+| `.github/copilot-instructions.md` | Copilot Chat + PR review | Repo-wide coding standards plus the path-resolution suppression floor (Known False Positives) |
 
-Both are installed (copy-if-missing) by `scripts/install.sh` from
-`.agent-src.uncompressed/templates/`. Consumers can edit them freely;
+Per [GitHub's documented convention](https://docs.github.com/en/copilot/reference/custom-instructions-support),
+Copilot Code Review reads `.github/copilot-instructions.md`
+repository-wide and `.github/instructions/**/*.instructions.md` for
+path-specific rules — there is no separate "review-only" instruction
+file. The first 4000 characters are the budget; keep
+high-priority rules (Scope Control, Known False Positives) up top.
+
+Installed (copy-if-missing) by `scripts/install.sh` from
+`.agent-src.uncompressed/templates/`. Consumers can edit it freely;
 the installer never overwrites.
 
 The mechanical floor is `scripts/check_compressed_paths.py`, wired into
