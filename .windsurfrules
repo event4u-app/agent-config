@@ -1768,7 +1768,7 @@ A subset is **never** autonomous and never auto-permitted by a standing autonomy
 
 ## Kernel-rule edits — slow-rollout guarantee
 
-Each kernel-rule edit (`.agent-src.uncompressed/rules/<kernel-member>.md`) ships in **its own PR**, with **≥ 24 h between merges**. Autonomous mandate does NOT lift this — it is a behaviour-soak guarantee, not a governance preference. CI fails any PR that touches > 1 kernel rule unless labeled `bundled-always-rules-acknowledged`. Trigger / scope / out-of-scope: [`kernel-rule-edits`](../contexts/authority/kernel-rule-edits.md).
+Each kernel-rule edit ships in **its own PR**, ≥ 24 h between merges. Autonomous mandate does NOT lift this — soak guarantee, not preference. CI fails > 1 kernel rule per PR unless labeled `bundled-always-rules-acknowledged`. Trigger / scope: [`kernel-rule-edits`](../contexts/authority/kernel-rule-edits.md).
 
 ## Decline = silence — no re-asking on the same task
 
