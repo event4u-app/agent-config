@@ -166,6 +166,29 @@ multi-paragraph explanation, extract it into a skill and call it.
   `.agent-src.uncompressed/`.
 * Duplicating another command's workflow instead of delegating via `skills:`.
 
+## Frugality Standards
+
+Apply the [Frugality Charter](../../contexts/contracts/frugality-charter.md)
+to every command you author.
+
+**Examples in this artifact:**
+- Per the charter's default-terse rule, command output blocks state
+  the action result, not "Now we will execute…".
+- Per the post-action summary suppression, the success path emits
+  the artifact (PR URL, commit hash) without a wrapping summary.
+- Per the cheap-question check, never offer "preview vs. execute"
+  as a numbered option when the command's role is to execute.
+
+**Pre-save self-check:**
+1. Does any command step prescribe a "Let me…" or "Found it" output
+   line?
+2. Does the command default to multi-line summaries when a one-line
+   outcome suffices?
+3. Is a confirmation gate used outside the Iron-Law / Routine /
+   Contextual taxonomy?
+4. Are template placeholders (`{{var}}`) accompanied by setup prose
+   instead of action prose?
+
 ## Do NOT
 
 * Do NOT set `disable-model-invocation: false`

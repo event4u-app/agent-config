@@ -113,6 +113,29 @@ Or add `BREAKING CHANGE:` in the commit body/footer.
 - Squash merge titles should describe the net effect, not every internal detail
 - `refactor` means NO behavior change — if behavior changes, use `feat` or `fix`
 
+## Frugality Standards
+
+Apply the [Frugality Charter](../../contexts/contracts/frugality-charter.md)
+to every commit message you author.
+
+**Examples in this artifact:**
+- Per the charter's default-terse rule, the subject states the
+  change in 50 chars; no scaffolding ("This commit will…").
+- Per the post-action summary suppression, the body lists changed
+  surfaces in bullets — no closing paragraph re-summarizing them.
+- Per the cheap-question check, never propose a `feat` vs. `chore`
+  numbered choice when the type is decidable from the diff.
+
+**Pre-save self-check:**
+1. Does the subject line carry filler ("various improvements",
+   "general updates")?
+2. Does the body re-narrate the diff instead of stating intent?
+3. Are co-author / attribution footers present without explicit user
+   request (per
+   [`no-attribution-footers`](../../rules/no-attribution-footers.md))?
+4. Is the type / scope chosen from the diff, not from the asker's
+   framing?
+
 ## Do NOT
 
 - Do NOT use vague messages: `update stuff`, `fix bug`, `changes`

@@ -156,6 +156,29 @@ schema regex and by `scripts/lint_load_context.py`. Body links to
 Canonical reference: `rule-writing` § 3b and
 `docs/contracts/load-context-schema.md`.
 
+## Frugality Standards
+
+Apply the [Frugality Charter](../../contexts/contracts/frugality-charter.md)
+to every context file you author.
+
+**Examples in this artifact:**
+- Per the charter's index nature, context files are reviewer fuel —
+  they hold mechanics, not Iron-Law obligations.
+- Per the cite-don't-restate principle, when a section mirrors a
+  rule, link the rule and stop.
+- Per the act-skip-narration rule, lookup tables open the section;
+  explanatory prose follows only if the table is ambiguous.
+
+**Pre-save self-check:**
+1. Does the context file restate Iron-Law text instead of linking
+   the rule?
+2. Does any section open with "This document explains…" instead of
+   the lookup material?
+3. Are placeholders (`<add me>`, `TBD`) shipped instead of actual
+   content?
+4. Are the cited rules linked with stable anchors (verified to
+   exist)?
+
 ## Do NOT
 
 - Do NOT copy content between projects. Every context file is local to its

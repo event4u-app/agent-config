@@ -156,6 +156,26 @@ After writing, verify:
 - READMEs for packages consumed by others need install/usage focus, not internal dev workflow
 - The model forgets to validate commands against `Taskfile.yml` / `Makefile` / `package.json scripts`
 
+## Frugality Standards
+
+Apply the [Frugality Charter](../../contexts/contracts/frugality-charter.md)
+to every README you author.
+
+**Examples in this artifact:**
+- Per the charter's default-terse rule, the README opens with one
+  sentence stating what the project is.
+- Per the cite-don't-restate principle, "Installation" links to the
+  canonical install script, not its full contents.
+- Per the cheap-question check, "Quick start vs. full guide" is
+  offered only when the two paths produce different artifacts.
+
+**Pre-save self-check:**
+1. Does the opening paragraph carry marketing adjectives ("modern",
+   "comprehensive", "powerful")?
+2. Are setup steps narrated instead of bulleted commands?
+3. Are screenshots / GIFs present without explicit user request?
+4. Is content duplicated from `AGENTS.md` rather than linked?
+
 ## Do NOT
 
 - Do NOT invent features, setup steps, or commands not found in the repo

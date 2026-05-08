@@ -136,6 +136,38 @@ Do NOT use when:
 - Do NOT {anti-pattern 2}.
 - Do NOT {anti-pattern 3}.
 
+<!-- FRUGALITY STANDARDS (writer skills only — REQUIRED for skills whose
+  name ends in `-writing`, `-authoring`, or `-create`, AND for any
+  skill on the `FRUGALITY_WRITER_SKILLS` allowlist in
+  `scripts/skill_linter.py`. Mid-/untiered non-writer skills MUST
+  remove this section entirely.
+
+  Layer-1 of the linter checks for:
+    1. The literal H2 `## Frugality Standards`,
+    2. A markdown link matching the regex
+       `\[[^\]]+\]\([^)]*frugality-charter\.md[^)]*\)`.
+
+  Body shape — single charter cite, then 3–5 decidable pre-save
+  questions framed as *applying the charter*, not parallel rules
+  (council Pass #4 finding 0.B):
+
+  ## Frugality Standards
+
+  Per the [Frugality Charter](../../contexts/contracts/frugality-charter.md),
+  this writer applies the default-terse standard: no narrative intros,
+  no preview-then-confirm gates, no numbered options without a real
+  trade-off.
+
+  Pre-save self-check:
+  1. Does every body section start with the obligation, not an intro?
+  2. Are numbered options absent unless options differ in *consequence*?
+  3. Is every cited rule linked, not restated?
+  4. {artifact-specific question — e.g., for `command-writing`:
+     "Does the command honor `verbosity.routine_confirmations: false`?"}
+  5. {artifact-specific question — e.g., for `rule-writing`:
+     "Does the rule body open with the Iron Law, no preamble?"}
+-->
+
 <!-- SENIOR-TIER STUB BLOCKS (delete entire section if not `tier: senior`):
   Senior-tier skills (frontmatter `tier: senior`) require four extra
   blocks per `.agent-src.uncompressed/rules/skill-quality.md` §

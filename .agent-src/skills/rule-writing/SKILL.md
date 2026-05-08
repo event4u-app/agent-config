@@ -165,6 +165,28 @@ and body links (relative `../../docs/...`, rewriter handles depth).
 * Forgetting to run `python3 scripts/compress.py --generate-tools` — downstream tools stay stale.
 * Editing `.agent-src/rules/` or `.augment/rules/` directly — those are generated.
 
+## Frugality Standards
+
+Apply the [Frugality Charter](../../contexts/contracts/frugality-charter.md)
+to every rule you author.
+
+**Examples in this artifact:**
+- Per the charter's default-terse rule, no intent prose in the rule
+  body — start with the obligation, not a setup paragraph.
+- Per the Iron-Law literal predicate, ALL-CAPS fenced obligations
+  belong only when the rule sits on the
+  [`kernel-membership`](../../../docs/contracts/kernel-membership.md)
+  list.
+- Per the cheap-question check, the rule's "When to ask" guidance
+  must list decidable triggers, not vibe-based judgment.
+
+**Pre-save self-check:**
+1. Does the rule body open with the obligation, or with a setup
+   paragraph?
+2. Are any examples mere narration (no decidable test)?
+3. Are ALL-CAPS Iron-Law blocks used outside a kernel-listed rule?
+4. Are interactions duplicated from another rule rather than linked?
+
 ## Do NOT
 
 * Do NOT inline long procedures

@@ -76,6 +76,26 @@ RULE_BAD_SIGNS = [
     "## Gotchas",
 ]
 
+# --- Frugality charter validator (see road-to-token-frugality Phase 0.4) ---
+# Layer 1 = writer-cite check (every writer skill carries the section + link).
+# Layer 2 = charter index integrity (the four canonical rules referenced by
+# the charter resolve to real H2/H3 anchors in the rule files).
+
+FRUGALITY_WRITER_SKILLS = {
+    "skill-writing", "rule-writing", "command-writing",
+    "guideline-writing", "context-authoring", "agent-docs-writing",
+    "conventional-commits-writing", "readme-writing",
+    "readme-writing-package", "adr-create",
+    "persona-writing", "roadmap-writing",
+}
+FRUGALITY_CHARTER_RELPATH = "contexts/communication/frugality-charter.md"
+FRUGALITY_CHARTER_INDEX_RULES = {
+    "direct-answers.md": "iron-law-3",
+    "user-interaction.md": "iron-law-1",
+    "no-cheap-questions.md": "pre-send-self-check",
+    "token-efficiency.md": "the-iron-laws",
+}
+
 VAGUE_VALIDATION_PATTERNS = [
     r"\bcheck if it works\b",
     r"\bverify it works\b",
@@ -1381,6 +1401,15 @@ def gather_all_candidate_files(root: Path) -> list[Path]:
             if not f.is_symlink():
                 candidates.append(f)
 
+    # Frugality charter (Phase 0.4 Layer 2). Lives in contexts/, not
+    # walked by the artifact-type loops above, but still needs the
+    # index-integrity check.
+    for base in (root / ".agent-src.uncompressed", root / ".agent-src"):
+        charter = base / FRUGALITY_CHARTER_RELPATH
+        if charter.exists() and not charter.is_symlink():
+            candidates.append(charter)
+            break
+
     return sorted(set(candidates))
 
 
@@ -1860,6 +1889,156 @@ def lint_verification_maturity(path: Path, text: str, artifact_type: str) -> Lis
 # --- Governance & packaging checks ---
 
 
+# --- Frugality validator helpers + Layers 1 & 2 ---
+
+def _heading_to_slug(heading: str) -> str:
+    """Slugify a markdown heading using GitHub's algorithm: lowercase,
+    drop punctuation (em-dash, period, etc.), spaces -> hyphens,
+    preserve adjacent hyphens (so `Iron Law 3 — Brevity` becomes
+    `iron-law-3--brevity`, matching the anchor GitHub renders)."""
+    s = heading.strip().lower()
+    s = re.sub(r"[^a-z0-9 \-]", "", s)
+    s = s.replace(" ", "-")
+    return s.strip("-")
+
+
+def _extract_heading_slugs(text: str) -> set[str]:
+    """Return the set of slugs for every H2/H3 heading in a markdown body."""
+    slugs: set[str] = set()
+    for line in text.splitlines():
+        if line.startswith("## ") or line.startswith("### "):
+            heading = line.split(" ", 1)[1].strip()
+            slugs.add(_heading_to_slug(heading))
+    return slugs
+
+
+def _skill_id_from_path(path: Path) -> Optional[str]:
+    """Extract the writer-skill id from a SKILL.md path. Returns the
+    parent-directory name, or None if the file is not a SKILL.md."""
+    if path.name.lower() != "skill.md":
+        return None
+    return path.parent.name
+
+
+def _is_frugality_charter(path: Path) -> bool:
+    """True iff the path ends in the canonical charter relpath, regardless
+    of whether it lives under .agent-src/ or .agent-src.uncompressed/."""
+    norm = str(path).replace("\\", "/")
+    return norm.endswith("/" + FRUGALITY_CHARTER_RELPATH)
+
+
+# Section header recognised by Layer 1. Literal H2 only — sub-headings
+# inside the section do not count as the section itself.
+_FRUGALITY_STANDARDS_PATTERN = re.compile(
+    r"^##\s+Frugality Standards\s*$", re.MULTILINE
+)
+_FRUGALITY_CHARTER_LINK_PATTERN = re.compile(
+    r"\]\([^)]*frugality-charter\.md[^)]*\)"
+)
+
+
+def lint_frugality_writer_cite(path: Path, text: str,
+                                artifact_type: str) -> List[Issue]:
+    """Layer 1 — every writer skill must carry a `## Frugality Standards`
+    section that links to the charter. No-op for non-writer skills and
+    non-skill artifacts."""
+    if artifact_type != "skill":
+        return []
+    skill_id = _skill_id_from_path(path)
+    if skill_id is None or skill_id not in FRUGALITY_WRITER_SKILLS:
+        return []
+    issues: List[Issue] = []
+    section_match = _FRUGALITY_STANDARDS_PATTERN.search(text)
+    if not section_match:
+        issues.append(Issue(
+            "error", "frugality_section_missing",
+            "Writer skill must carry a `## Frugality Standards` section "
+            "(road-to-token-frugality Phase 0.4 Layer 1)",
+        ))
+        return issues
+    # Section body = from match-end to next H2 or EOF.
+    body_start = section_match.end()
+    next_h2 = re.search(r"^##\s+", text[body_start:], re.MULTILINE)
+    body_end = body_start + next_h2.start() if next_h2 else len(text)
+    body = text[body_start:body_end]
+    if not _FRUGALITY_CHARTER_LINK_PATTERN.search(body):
+        issues.append(Issue(
+            "error", "frugality_charter_cite_missing",
+            "`## Frugality Standards` section must link to "
+            "`frugality-charter.md` (road-to-token-frugality Phase 0.4 "
+            "Layer 1)",
+        ))
+    return issues
+
+
+# Markdown link pattern: [text](path#anchor) — anchor optional.
+_MD_LINK_PATTERN = re.compile(
+    r"\[[^\]]+\]\(([^)#]+)(?:#([^)]+))?\)"
+)
+
+
+def lint_frugality_charter_index(path: Path, text: str) -> List[Issue]:
+    """Layer 2 — every cited anchor must resolve to a real H2/H3 heading
+    in the target rule file, AND each of the four canonical rules must
+    be cited at least once with the required canonical anchor substring.
+    Additional citations to the same rule (net-new sections referencing
+    other anchors) are validated for resolution but do not need the
+    canonical substring."""
+    if not _is_frugality_charter(path):
+        return []
+    issues: List[Issue] = []
+    rules_dir = path.parent.parent.parent / "rules"
+    rule_slugs_cache: dict[str, set[str]] = {}
+    canonical_satisfied: set[str] = set()
+    for link_match in _MD_LINK_PATTERN.finditer(text):
+        link_path, link_anchor = link_match.group(1), link_match.group(2)
+        rule_name = Path(link_path).name
+        if rule_name not in FRUGALITY_CHARTER_INDEX_RULES:
+            continue
+        if link_anchor is None:
+            continue
+        anchor_lc = link_anchor.lower()
+        required_substr = FRUGALITY_CHARTER_INDEX_RULES[rule_name]
+        if required_substr in anchor_lc:
+            canonical_satisfied.add(rule_name)
+        if rule_name not in rule_slugs_cache:
+            rule_file = rules_dir / rule_name
+            if not rule_file.exists():
+                issues.append(Issue(
+                    "error", "frugality_charter_rule_missing",
+                    f"Charter cites {rule_name} but the rule file does "
+                    f"not exist at {rule_file}",
+                ))
+                rule_slugs_cache[rule_name] = set()
+                continue
+            try:
+                rule_text = rule_file.read_text(encoding="utf-8")
+            except OSError as e:
+                issues.append(Issue(
+                    "error", "frugality_charter_rule_unreadable",
+                    f"Cannot read {rule_name}: {e}",
+                ))
+                rule_slugs_cache[rule_name] = set()
+                continue
+            rule_slugs_cache[rule_name] = _extract_heading_slugs(rule_text)
+        if anchor_lc not in rule_slugs_cache[rule_name]:
+            issues.append(Issue(
+                "error", "frugality_charter_anchor_unresolved",
+                f"Charter cites {rule_name}#{link_anchor} but no H2/H3 "
+                f"heading with that slug exists in the rule file",
+            ))
+    missing = set(FRUGALITY_CHARTER_INDEX_RULES) - canonical_satisfied
+    for rule_name in sorted(missing):
+        required_substr = FRUGALITY_CHARTER_INDEX_RULES[rule_name]
+        issues.append(Issue(
+            "error", "frugality_charter_canonical_missing",
+            f"Charter index lacks a canonical citation of {rule_name} "
+            f"with anchor containing '{required_substr}' "
+            f"(road-to-token-frugality Phase 0.4 Layer 2)",
+        ))
+    return issues
+
+
 def lint_governance(path: Path, text: str, artifact_type: str, repo_root: Path | None = None) -> List[Issue]:
     """Check governance and packaging consistency.
 
@@ -2139,6 +2318,17 @@ def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
     elif artifact_type == "persona":
         result = lint_persona(display_path, text)
     else:
+        # Frugality charter lives in contexts/ (artifact_type == unknown)
+        # but still needs Layer 2 index-integrity validation.
+        if _is_frugality_charter(path):
+            charter_issues = lint_frugality_charter_index(path, text)
+            return LintResult(
+                file=str(display_path),
+                artifact_type="unknown",
+                status=classify_status(charter_issues),
+                issues=charter_issues,
+                suggestions=[],
+            )
         return lint_unknown(display_path, text)
 
     # Post-processing: frontmatter schema validation (errors). Runs first
@@ -2195,10 +2385,20 @@ def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
             result.issues.extend(malice_issues)
             result.status = classify_status(result.issues)
 
+    # Post-processing: frugality validator Layer 1 (writer-cite). Errors
+    # if a writer skill lacks the `## Frugality Standards` section or its
+    # link to the charter.
+    frugality_issues = lint_frugality_writer_cite(
+        display_path, text, artifact_type
+    )
+    if frugality_issues:
+        result.issues.extend(frugality_issues)
+        result.status = classify_status(result.issues)
+
     return result
 
 
-def format_text(results: list[LintResult]) -> str:
+def format_text(results: list[LintResult], quiet: bool = False) -> str:
     lines: list[str] = []
     # Phase 5.2: malice findings render in the spec shape
     # ``<path>:<line>:malice:<pattern>:<matched>`` ahead of the badge
@@ -2216,7 +2416,10 @@ def format_text(results: list[LintResult]) -> str:
     if malice_total:
         lines.append("")
 
+    # P10.5: quiet mode skips PASS-without-issues; malice + WARN/FAIL still rendered.
     for result in results:
+        if quiet and result.status == "pass" and not result.issues and not result.suggestions:
+            continue
         badge = {"pass": "[PASS]", "pass_with_warnings": "[WARN]", "fail": "[FAIL]"}[result.status]
         lines.append(f"{badge} {result.file} ({result.artifact_type})")
         if result.issues:
@@ -2458,6 +2661,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--strict-warnings", action="store_true", help="Return non-zero on warnings")
     parser.add_argument("--report", action="store_true", help="Output quality score report")
     parser.add_argument("--repo-root", default=".", help="Repository root")
+    parser.add_argument("--quiet", action="store_true",
+                        help="suppress per-file PASS lines; keep malice + WARN/FAIL + summary (P10.5)")
     return parser.parse_args()
 
 
@@ -2604,7 +2809,7 @@ def main() -> int:
         elif args.format == "json":
             print(format_json(results))
         else:
-            print(format_text(results))
+            print(format_text(results, quiet=args.quiet))
 
         return compute_exit_code(results, strict_warnings=args.strict_warnings)
 
