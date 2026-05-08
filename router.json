@@ -226,8 +226,11 @@
       "routes_to": []
     },
     {
-      "id": "no-council-references",
+      "id": "no-roadmap-references",
       "triggers": [
+        {
+          "path_prefix": "agents/roadmaps/"
+        },
         {
           "path_prefix": "agents/council-questions/"
         },
@@ -238,24 +241,15 @@
           "path_prefix": "agents/council-sessions/"
         },
         {
+          "intent": "link from stable artifact"
+        },
+        {
           "intent": "link to council artefact"
         }
       ],
       "routes_to": [
         "skill:ai-council"
       ]
-    },
-    {
-      "id": "no-roadmap-references",
-      "triggers": [
-        {
-          "path_prefix": "agents/roadmaps/"
-        },
-        {
-          "intent": "link from stable artifact"
-        }
-      ],
-      "routes_to": []
     },
     {
       "id": "onboarding-gate",
@@ -664,23 +658,6 @@
       "routes_to": []
     },
     {
-      "id": "review-routing-awareness",
-      "triggers": [
-        {
-          "keyword": "reviewer"
-        },
-        {
-          "phrase": "risk hotspot"
-        },
-        {
-          "phrase": "ownership map"
-        }
-      ],
-      "routes_to": [
-        "skill:review-routing"
-      ]
-    },
-    {
       "id": "reviewer-awareness",
       "triggers": [
         {
@@ -688,6 +665,12 @@
         },
         {
           "phrase": "suggest reviewers"
+        },
+        {
+          "phrase": "risk hotspot"
+        },
+        {
+          "phrase": "ownership map"
         }
       ],
       "routes_to": [
