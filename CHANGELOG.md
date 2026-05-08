@@ -318,6 +318,50 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.25.0](https://github.com/event4u-app/agent-config/compare/1.24.0...1.25.0) (2026-05-08)
+
+### Features
+
+* **scope-control:** mandate branch-base inventory before first commit ([b038c26](https://github.com/event4u-app/agent-config/commit/b038c2660f8e317f09156ff00120bcdf31d7db92))
+* **ci:** agents-md linter + CI integration (Phase 7) ([dd86beb](https://github.com/event4u-app/agent-config/commit/dd86bebd929bb3dde96e4100e96645a674f137fa))
+* **agents-md:** Thin-Root refactor — agents-md-thin-root skill + content (Phase 6) ([7d31204](https://github.com/event4u-app/agent-config/commit/7d31204659a0ce085bb8a8f45b16de34cae06a78))
+* **rules:** rule-governance audit — demote 4 auto-rules to manual (Phase 5) ([5071ff5](https://github.com/event4u-app/agent-config/commit/5071ff5855cf67c61303bb4cb07c4229fbbb4dd4))
+* **rules:** consolidate auto-rules — merge council into no-roadmap-references and review-routing-awareness into reviewer-awareness (Lever D) ([18c42a3](https://github.com/event4u-app/agent-config/commit/18c42a33af0d950e07c50615615d4deb076071ff))
+* **docs:** outboard AGENTS.md tech-stack details to context (Lever B) ([9b7bcfd](https://github.com/event4u-app/agent-config/commit/9b7bcfd374ce3325dd7013e530ce71f4b92df4eb))
+* **budget:** augment workspace-guidelines budget meter + description cap (Lever A) ([da75061](https://github.com/event4u-app/agent-config/commit/da750615acbf9a687b81b1ecaff6d517a11203fb))
+* **ci:** enforce one kernel-rule edit per PR ([a91ce92](https://github.com/event4u-app/agent-config/commit/a91ce927dc2a98129a7b685f803f7650863b31fa))
+
+### Bug Fixes
+
+* **roadmap:** repoint sibling-roadmap reference to archived path ([f7ee632](https://github.com/event4u-app/agent-config/commit/f7ee632800290d3cd90f2dd1274e47e8127f1f63))
+* **tests:** align update_counts + linter + hero-counts tests with Thin-Root ([5556c8c](https://github.com/event4u-app/agent-config/commit/5556c8ce1a8cf4df7a7b4a957030d5b5d2d0fd7e))
+* **skills:** mark agents-md-thin-root cloud_safe noop ([17a3824](https://github.com/event4u-app/agent-config/commit/17a3824ddd1ea567fca8b699113b2c62050c5507))
+* **docs:** move agents-md-tech-stack from agents/contexts/ to docs/contracts/ ([77eef8c](https://github.com/event4u-app/agent-config/commit/77eef8c61d2561ef5a563518f2bdb1dff80541c7))
+* **rules:** drop forbidden agents/ link from reviewer-awareness body ([8a573a4](https://github.com/event4u-app/agent-config/commit/8a573a48bc959f0c16ea8b56fc0e6bd0d3139238))
+* **refs:** point to archived roadmap, inline council convergence ([bf56b70](https://github.com/event4u-app/agent-config/commit/bf56b7084dae68fe2a21e52d7cb644ed6b3bb670))
+
+### Documentation
+
+* **roadmap:** archive road-to-augment-limit-fit and repoint references ([58e101c](https://github.com/event4u-app/agent-config/commit/58e101c8a3421004929f47f4c760e44b97c124bc))
+* **roadmap:** flip 8.3 + 8.4 — strategic phases committed and CI green ([712c414](https://github.com/event4u-app/agent-config/commit/712c4141103dbdc6db7fa6d1fa94d31943bd40e1))
+* **roadmap:** drop gitignored council-response link ([74206a5](https://github.com/event4u-app/agent-config/commit/74206a592f47b9254c788b162ea3d99c54057506))
+* **roadmap:** close road-to-augment-limit-fit (Phase 8) ([ac062ad](https://github.com/event4u-app/agent-config/commit/ac062ad184764f04f639eb52d59b1d63419b4b9b))
+* **index:** regenerate agents/index.md + docs/catalog.md after rule consolidation ([3aa347c](https://github.com/event4u-app/agent-config/commit/3aa347c1e814a9c289891c350d69f8b9fda6783f))
+* **roadmap:** land road-to-augment-limit-fit + ADR + regen derived artefacts ([5e54d22](https://github.com/event4u-app/agent-config/commit/5e54d220579658c4fc2310f123908b8cba97683e))
+* **adr:** park always-budget relief strategy with reactivation triggers ([487e736](https://github.com/event4u-app/agent-config/commit/487e7366de6e99db60906906d61033486a0a6aa3))
+* **rules:** add kernel-rule slow-rollout guarantee to scope-control ([26c43a2](https://github.com/event4u-app/agent-config/commit/26c43a2c96ede95319990b4ba578a986e46768a2))
+
+### Refactoring
+
+* **copilot:** collapse copilot-review-instructions.md into copilot-instructions.md ([6c6ac25](https://github.com/event4u-app/agent-config/commit/6c6ac25a5958c3bbc0ffc7bb38422a6b9d855b50))
+
+### Chores
+
+* **tools:** regen .windsurfrules for branch-base inventory ([a87641c](https://github.com/event4u-app/agent-config/commit/a87641cc0db84e705a9afe7aa36afbd451fb1467))
+* **rebase:** restore compression hashes for files inherited from PR #55 ([863ba1c](https://github.com/event4u-app/agent-config/commit/863ba1cd71dc00559db905eb0d11b96951a9c5bd))
+* regenerate .windsurfrules ([822b95e](https://github.com/event4u-app/agent-config/commit/822b95e1dcf48b05ec4e9bec0a4f481583ae6de7))
+* **roadmap:** close + archive road-to-always-budget-relief, regen index ([350bfb1](https://github.com/event4u-app/agent-config/commit/350bfb1e75602769f6a1cfa535ed5d30adcd5eba))
+
 ## [1.24.0](https://github.com/event4u-app/agent-config/compare/1.23.0...1.24.0) (2026-05-08)
 
 ### Features
