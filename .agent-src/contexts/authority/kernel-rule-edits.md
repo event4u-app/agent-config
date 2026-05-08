@@ -25,7 +25,7 @@ A PR is a "kernel-rule edit" iff it modifies any file in
 `.agent-src.uncompressed/rules/` that is in the locked kernel set
 (see [`docs/contracts/kernel-membership.md`](../../../docs/contracts/kernel-membership.md)).
 
-The CI guard (Phase 4.2 of `road-to-always-budget-relief.md`) fails
+The CI guard (Phase 4.2 of the always-budget-relief roadmap) fails
 any PR that touches **> 1** kernel rule in the same diff. Override is
 a single PR label: `bundled-always-rules-acknowledged` — the maintainer
 records why the bundle is necessary in the PR body.
@@ -42,7 +42,7 @@ records why the bundle is necessary in the PR body.
 
 ## Source
 
-- Roadmap Phase 4: [`agents/roadmaps/road-to-always-budget-relief.md`](../../../agents/roadmaps/road-to-always-budget-relief.md) § Phase 4.
+- Roadmap Phase 4: always-budget-relief roadmap § Phase 4 (transient — see `agents/roadmaps/archive/`).
 - Lesson: PR #36 (2026-05-04) compressed the rollout schedule under
   autonomous mandate; the slow-rollout note was deferred until this
   ADR pass.

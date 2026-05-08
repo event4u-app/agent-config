@@ -4,7 +4,7 @@
 > **Expiry:** 2026-11-08 (re-pick if reactivation fires before then)
 > **Source:** road-to-always-budget-relief roadmap (transient — `agents/roadmaps/`)
 > **Predecessor:** `adr-always-rule-context-split-not-viable.md` (closed Model (b) split)
-> **Council:** Sonnet-4.5 + GPT-4o, 2026-05-08 (raw transcript: `agents/council-responses/always-budget-relief.json`) <!-- council-ref-allowed: ADR contract decision trace -->
+> **Council:** Sonnet-4.5 + GPT-4o, 2026-05-08 — convergence on park-with-reactivation-triggers (transcript: gitignored under `agents/council-responses/`)
 
 
 ## Decision
@@ -102,5 +102,5 @@ Phase 3 (rule edits), Phase 3.3 (baseline update), and the recovery-band retirem
 - Empirical predecessor: [`adr-always-rule-context-split-not-viable.md`](adr-always-rule-context-split-not-viable.md)
 - Kernel contract: [`docs/contracts/kernel-membership.md`](../../docs/contracts/kernel-membership.md)
 - Router: [`docs/contracts/rule-router.md`](../../docs/contracts/rule-router.md)
-- Council raw: `agents/council-responses/always-budget-relief.json` <!-- council-ref-allowed: ADR contract decision trace -->
+- Council convergence: Sonnet-4.5 + GPT-4o, 2026-05-08 — both models picked **park-with-reactivation-triggers** over forced execution; primary strategy = per-rule overrides + 4000 ceiling; fallback = extend ceiling to 4500. Raw transcript gitignored under `agents/council-responses/`.
 - Roadmap source (transient): see `agents/roadmaps/` — title `road-to-always-budget-relief`
