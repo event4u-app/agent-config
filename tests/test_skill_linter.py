@@ -251,11 +251,19 @@ Some directives.
 
 
 def test_rule_invalid_type_fails(tmp_path: Path) -> None:
+    """A rule with an unknown `type:` value must fail validation.
+
+    The rule type vocabulary is `{always, auto, manual}` (post-Phase 5
+    governance pruning). An unknown value like `"sometimes"` is rejected
+    by the JSON-schema layer (`schema_enum`); the legacy `TYPE_PATTERN`
+    regex emits `missing_type` because it only captures known values.
+    Either signal is sufficient to prove the rule was rejected.
+    """
     path = write_file(
         tmp_path,
         ".agent-src/rules/bad-type.md",
         """---
-type: "manual"
+type: "sometimes"
 source: package
 ---
 
@@ -267,7 +275,10 @@ Some directives.
 
     result = lint_file(path)
     assert result.status == "fail"
-    assert any(issue.code == "missing_type" for issue in result.issues)
+    assert any(
+        issue.code in {"schema_enum", "invalid_type", "missing_type"}
+        for issue in result.issues
+    )
 
 
 def test_rule_auto_without_description_fails(tmp_path: Path) -> None:

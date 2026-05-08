@@ -67,16 +67,12 @@ TARGETS: list[tuple[str, list[tuple[str, str]]]] = [
             # the raw file count this script computes.
         ],
     ),
-    (
-        "AGENTS.md",
-        [
-            (r"(skills/\s+\()(\d+)( skills\))", "skills"),
-            (r"(rules/\s+\()(\d+)( rules\))", "rules"),
-            (r"(commands/\s+\()(\d+)( commands\))", "commands"),
-            (r"(guidelines/\s+\()(\d+)( guidelines\))", "guidelines"),
-            (r"(personas/\s+\()(\d+)( personas\))", "personas"),
-        ],
-    ),
+    # Note: AGENTS.md previously held the per-directory count annotations
+    # (`skills/ (N skills)`, `rules/ (N rules)`, ...). The Thin-Root
+    # refactor (Phase 6, road-to-augment-limit-fit, 2026-05-08) made
+    # AGENTS.md a navigation-only surface — counts now live in README.md
+    # and docs/architecture.md. The corresponding pytest sentinel lives
+    # in tests/test_readme_hero_counts.py::test_agents_md_is_thin_root_navigation_surface.
     (
         "docs/getting-started.md",
         [
