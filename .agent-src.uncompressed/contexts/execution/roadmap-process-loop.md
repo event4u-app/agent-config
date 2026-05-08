@@ -86,10 +86,17 @@ For each open step in the working set (scope-bound — see wrapper):
    - **Council on** → invoke per [`ai-council`](../../skills/ai-council/SKILL.md),
      integrate convergence, proceed. Token spend was opted in.
    - **Council off** → halt, surface once, wait. Resume on next turn.
-5. Mark the checkbox: `[x]` done · `[~]` partial · `[-]` skipped.
-6. Regenerate the dashboard — `./agent-config roadmap:progress` — in
-   the **same response** per [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md).
-7. Run quality pipeline if cadence is `per_step`.
+5. **Atomic flip + regen** — before moving to step N+1, in the **same
+   reply** that landed step N's work:
+   1. Flip the checkbox in `agents/roadmaps/<file>.md`: `[x]` done ·
+      `[~]` partial · `[-]` skipped.
+   2. Run `./agent-config roadmap:progress` to regenerate the
+      dashboard.
+   This pair is **non-skippable** and **non-batchable** per Iron Law 2
+   of [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md). A
+   loop iteration that lands work without flipping its box is a rule
+   violation. Do not save flips for the archive commit.
+6. Run quality pipeline if cadence is `per_step`.
 
 ### Halt conditions
 
@@ -100,6 +107,20 @@ For each open step in the working set (scope-bound — see wrapper):
 - Council off + true ambiguity
 
 On halt: stop, surface state, do **not** auto-fix outside the failing step.
+
+### Non-halt — horizon markers, gating notes, "optional" tags
+
+The following are **authoring annotations**, never halt conditions. Do
+**not** stop execution when the roadmap text contains them:
+
+- `Horizon (N-week visible plate)` section headers
+- `(out-of-horizon, gated on Phase N)` phase-header suffixes
+- `(deferred)` / `(later)` / `(optional)` tags on a step
+- "Gate: Phase 1 ships and …" prose inside an out-of-horizon phase
+
+`process-step` and `process-phase` honor scope by stopping at their
+configured boundary anyway. `process-full` is **defined by** ignoring
+these markers — see [`/roadmap:process-full § Iron Law`](../../commands/roadmap/process-full.md#iron-law--full-is-full).
 
 ## 6. Final report and archival
 
@@ -118,8 +139,10 @@ On halt: stop, surface state, do **not** auto-fix outside the failing step.
 |---|---|---|
 | `process-step` | Single first open step | One iteration of § 5 |
 | `process-phase` | All open steps in first phase with `count_open > 0` | Phase boundary; per-phase quality if cadence ≠ `end_of_roadmap` |
-| `process-full` | Every open step across every phase, in order | Roadmap fully closed (or halt) |
+| `process-full` | Every open step across every phase, in order — **horizon markers do not narrow this set** | Roadmap fully closed (or halt) |
 
 `process-full` runs the per-phase quality pipeline at every phase
 boundary when cadence is `per_phase` or `per_step`; on red it halts
-before the next phase.
+before the next phase. It does **not** stop at horizon markers,
+"out-of-horizon" labels, or "gated on Phase N" notes — those are
+archival annotations, not halt conditions.

@@ -80,6 +80,17 @@ No application code or framework runtime (no Laravel / Symfony / Next.js /
 Express). The `composer.json` / `package.json` are thin distribution
 manifests.
 
+**Recommended ingestion path for non-text formats.** PDF, DOCX, XLSX,
+PPTX, EPUB, image, and audio inputs route through the
+[`markitdown`](.agent-src/skills/markitdown/SKILL.md) skill — a thin
+markdown-only wrapper over Microsoft's MIT-licensed `markitdown-mcp`
+server (peer-side install, zero Python in this package). The skill
+ships the four-layer security defense (skill checklist · narrow API ·
+Docker read-only · localhost binding) and a calibrated token claim
+(3-5× comprehension on text-heavy, 10-50× on image-heavy). Measure
+locally with `python3 scripts/measure_markitdown_lift.py` against
+`tests/fixtures/markitdown-corpus/`.
+
 **Cognition-only floor for Wings 2–4.** Wings 2, 3, and 4 enforce a
 no-SaaS-auth, no-vendor-SDK, no-stage-prescription floor: cognition
 artifacts (markdown tables, scoring rubrics, walkthroughs) must work
@@ -167,7 +178,7 @@ appends to `agents/.rule-budget-history.jsonl`.
 
 ```
 .agent-src.uncompressed/      ← edit here
-  skills/       (140 skills)
+  skills/       (141 skills)
   rules/        (60 rules)
   commands/     (103 commands)
   personas/     (7 personas)

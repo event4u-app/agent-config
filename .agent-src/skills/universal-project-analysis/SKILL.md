@@ -144,6 +144,14 @@ Check:
 * `performance-analysis`
 * `security-audit`
 
+### Ingestion preprocessor
+
+* `markitdown` — when the project ships PDFs, DOCX, XLSX, PPTX, EPUB,
+  images, or audio that need to feed into any of the analysis skills
+  above. Convert first via the upstream `markitdown-mcp` server, then
+  route the resulting Markdown into the relevant deep-dive skill.
+  Never read a binary office format raw.
+
 ## When to add a new framework analysis skill
 
 A framework gets its own `project-analysis-*` skill ONLY if:

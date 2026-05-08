@@ -285,6 +285,15 @@ Decision: Create focused skill for Laravel route inspection via JSON and jq.
 Learning: "I forgot to run PHPStan once."
 Decision: No action — one-off, already covered by verify-before-complete rule.
 
+Learning: "We re-invented a per-format PDF extractor in three different
+analysis skills."
+Decision: Update the affected skills to dispatch to
+[`markitdown`](../markitdown/SKILL.md) instead of writing new
+extractors. Non-text ingestion (PDF / DOCX / XLSX / PPTX / image /
+audio) goes through the upstream `markitdown-mcp` server first; only
+write a custom extractor if `markitdown` cannot handle the format and
+the gap is documented in its skill body.
+
 ## Environment notes
 
 Prefer updating existing rule/skill when possible.
