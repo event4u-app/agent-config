@@ -28,7 +28,8 @@ with the **scope delta below**.
 ## Scope delta
 
 - **Working set:** every open step across every phase, in document
-  order.
+  order. **Horizon markers do not narrow the working set** — see
+  Iron Law below.
 - **Stop after:** the entire roadmap reaches `count_open == 0`, or a
   halt condition fires (Hard-Floor, council-off + ambiguity,
   security-sensitive, scope-out-of-roadmap, test/quality red).
@@ -40,10 +41,30 @@ with the **scope delta below**.
   archival check from
   [`roadmap-process-loop § 6`](../../contexts/execution/roadmap-process-loop.md#6-final-report-and-archival).
 
+## Iron Law — Full is Full
+
+```
+/roadmap:process-full PROCESSES EVERY OPEN STEP IN THE FILE.
+HORIZON MARKERS, "OUT-OF-HORIZON" LABELS, "GATED ON PHASE X"
+NOTES, AND PHASE-INTERNAL "OPTIONAL" TAGS DO NOT NARROW THE
+WORKING SET. ONLY THE FIVE HALT CONDITIONS STOP THE RUN.
+```
+
+Roadmaps frequently carry a "Horizon (N-week visible plate)" section
+or "(out-of-horizon, gated on Phase N)" sub-headings as an authoring
+device. Those are **archival annotations**, not execution gates.
+`/roadmap:process-full` ignores them by construction. If the user
+wants horizon-respecting execution, they invoke `/roadmap:process-phase`
+(scope = single phase) or `/roadmap:process-step` (scope = single
+step) instead.
+
 ## Rules
 
 - **No silent acceleration past a halt.** Every halt condition stops
   the run; the user resumes on the next turn.
+- **No silent stop at a horizon marker.** Encountering "out-of-horizon",
+  "gated on Phase N", "deferred", or any equivalent annotation is
+  **not** a halt condition. Continue.
 - **Phase quality pipeline runs at every phase boundary** when cadence
   is `per_phase` or `per_step`. `end_of_roadmap` skips per-phase and
   runs only at the final archival check.
