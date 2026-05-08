@@ -163,7 +163,7 @@ A Phase-1 unit is **aborted and reverted** (not "debugged forever") when:
 | P1.5 fixture validation cannot distinguish structural vs lightweight | Drop the complexity-gating; ship E behind an explicit opt-in flag instead. |
 | Any P1.x lands red CI on `main` after merge | Revert merge commit. Re-open as failed-spike issue. |
 
-## Phase 1 → 2 promotion gate
+## Promotion gate (Phase 1 → 2)
 
 Phase 2 unlocks **only** when **all** of these hold (objective, not "feels stable"):
 

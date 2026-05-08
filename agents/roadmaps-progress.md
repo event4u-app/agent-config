@@ -27,7 +27,7 @@
 | 9 | [road-to-money-strategy-ops.md](roadmaps/road-to-money-strategy-ops.md) | 1 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 10 | [road-to-productization.md](roadmaps/road-to-productization.md) | 8 | 27 | 27 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 11 | [road-to-proof-not-features.md](roadmaps/road-to-proof-not-features.md) | 3 | 19 | 19 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 12 | [road-to-superpowers-harvest.md](roadmaps/road-to-superpowers-harvest.md) | 3 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 12 | [road-to-superpowers-harvest.md](roadmaps/road-to-superpowers-harvest.md) | 2 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 13 | [road-to-unified-senior-roles.md](roadmaps/road-to-unified-senior-roles.md) | 1 | 19 | 18 | 1 | 0 | 0 | ░░░░░░░░░░ 5% |
 
 ---
@@ -165,7 +165,6 @@
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Five-unit adoption plate (READY) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 1 | → 2 promotion gate | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 | 2 | Out-of-horizon (gated on Phase 1 evidence) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [road-to-unified-senior-roles.md](roadmaps/road-to-unified-senior-roles.md)
