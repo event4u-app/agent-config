@@ -11,6 +11,8 @@ suggestion:
 
 # e2e-plan
 
+> **Mobile scope:** this command targets browser/web E2E only. For native iOS, native Android, or React Native E2E planning, switch to the `mobile-e2e-strategy` skill — Playwright is not the right tool for native UI flows.
+
 ## Instructions
 
 ### 1. Gather context
