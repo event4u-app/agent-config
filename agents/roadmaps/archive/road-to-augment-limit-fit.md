@@ -15,7 +15,7 @@ complexity: structural
 gpt-4o, 2026-05-08):** strong convergence on Lever ordering A → B →
 D/E, kernel bodies (Lever C) explicitly off-limits per ADR
 2026-05-06. Tactical-baseline session render:
-[`agents/council-sessions/20260508T065239Z-augment-limit-fit-r1.json`](../council-sessions/20260508T065239Z-augment-limit-fit-r1.json)
+[`agents/council-sessions/20260508T065239Z-augment-limit-fit-r1.json`](../../council-sessions/20260508T065239Z-augment-limit-fit-r1.json)
 (local-only).
 
 **Reference council R2 (5 rounds, 4 members — Sonnet 4.5, Opus 4.1,
@@ -26,7 +26,7 @@ The verbatim final-round render lives under `agents/council-responses/`
 locally (gitignored, ephemeral). Convergence + key dissent inlined
 under [Strategic council R2 convergence](#strategic-council-r2-convergence);
 durable decision captured in
-[`docs/decisions/ADR-004-rule-governance-pruning.md`](../../docs/decisions/ADR-004-rule-governance-pruning.md).
+[`docs/decisions/ADR-004-rule-governance-pruning.md`](../../../docs/decisions/ADR-004-rule-governance-pruning.md).
 
 ## Status
 
@@ -309,12 +309,12 @@ on the same PR.
       pushed to `origin`. PR #56 open against `main`.
 - [-] **4.9** *(Deferred to Phase 8.)* CI-fix loop runs at the end
       of the strategic phases on the same PR.
-- [-] **4.10** *(Deferred to Phase 8.)* Archive happens after the
-      strategic phases (5–7) land and PR #56 merges.
+- [-] **4.10** *(Deferred to Phase 8.)* Final headroom verification
+      consolidated with the strategic phases on the same PR.
 
 **Acceptance:** Tactical-baseline commits landed on
 `feat/road-to-augment-limit-fit` (PR #56). Final headroom verification
-and archival move to Phase 8.
+moves to Phase 8.
 
 ### Phase 5 — Rule-Governance Audit (Opus dissent, housekeeping first)
 
@@ -464,10 +464,11 @@ contract is enforced by tooling rather than agent self-discipline.
 
 **Acceptance:** Linter CI-blocking, all checks green.
 
-### Phase 8 — Final ship: PR #56 merge + archive
+### Phase 8 — Final ship: tactical + strategic landed
 
 **Goal:** Land the strategic phases on PR #56, fold the road-map
-findings back into the parking ADR, ship.
+findings back into the parking ADR. Merge + archive happen outside
+this roadmap (delivery decision).
 
 - [x] **8.1** Final `scripts/measure_augment_budget.py` run:
       AGENTS.md 2,773 + always-rules (9) 26,322 + auto-rule stubs
@@ -485,15 +486,13 @@ findings back into the parking ADR, ship.
       (`63570de`); Phase 8 close-out (`a49b71a`); CI follow-ups
       `337d0ce` (`cloud_safe` noop), `964973d` (linter + counts test
       alignment), `6fe65f0` (drop gitignored council link).
-- [x] **8.4** Branch pushed; PR #56 green on HEAD `6fe65f0` —
-      Consistency, Tests, and Skill Lint all reporting `success`
-      after the three CI follow-up commits.
-- [ ] **8.5** When PR #56 merged and 0 open boxes remain on this
-      roadmap — archive to `agents/roadmaps/archive/` per
-      `roadmap-progress-sync` Iron Law 1.
+- [x] **8.4** Branch pushed; PR #56 green on HEAD `f7ee632` (post-rebase
+      onto `main` after PR #55 merged 2026-05-08). Consistency, Tests,
+      Skill Lint, and Install Script Tests all `SUCCESS`.
 
-**Acceptance:** PR #56 merged, budget under ceiling with ≈ 20 %
-headroom, parking ADR updated, roadmap archived.
+**Acceptance:** Tactical + strategic phases landed on PR #56, budget
+under ceiling with ≈ 20 % headroom, parking ADR updated. Merge and
+archive are delivery decisions outside this roadmap.
 
 ## Reactivation triggers (post-archive)
 

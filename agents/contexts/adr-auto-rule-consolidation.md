@@ -137,7 +137,7 @@ Re-open this ADR if:
 
 ## See also
 
-- [`road-to-augment-limit-fit`](../roadmaps/road-to-augment-limit-fit.md)
+- [`road-to-augment-limit-fit`](../roadmaps/archive/road-to-augment-limit-fit.md)
   — parent roadmap (Phase 3).
 - [`adr-always-budget-relief-strategy`](adr-always-budget-relief-strategy.md)
   — superseded sibling roadmap; this ADR closes Phase 3.

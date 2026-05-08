@@ -223,7 +223,7 @@ documentation rewrite for marginal additional savings.
 
 ## References
 
-- `agents/roadmaps/road-to-augment-limit-fit.md` § Phase 5
+- `agents/roadmaps/archive/road-to-augment-limit-fit.md` § Phase 5
 - `agents/reports/auto-rules-audit.md` (full audit findings,
   council walk, host verdicts)
 - `agents/reports/auto-rules-overlap.json` (Phase 5.2 data)
