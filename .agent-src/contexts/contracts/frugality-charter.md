@@ -3,7 +3,8 @@
 Cross-rule index for **writer skills** (skill-writing, rule-writing,
 command-writing, guideline-writing, context-authoring,
 agent-docs-writing, conventional-commits-writing, readme-writing,
-readme-writing-package, adr-create, persona-writing, roadmap-writing).
+readme-writing-package, adr-create, persona-writing, roadmap-writing,
+script-writing).
 The canon is held by the named rules below; this file is index-only,
 plus the settings-hooks section that has no other canonical home.
 

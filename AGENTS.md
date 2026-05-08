@@ -167,7 +167,7 @@ appends to `agents/.rule-budget-history.jsonl`.
 
 ```
 .agent-src.uncompressed/      ← edit here
-  skills/       (139 skills)
+  skills/       (140 skills)
   rules/        (60 rules)
   commands/     (103 commands)
   personas/     (7 personas)

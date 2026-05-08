@@ -86,7 +86,7 @@ FRUGALITY_WRITER_SKILLS = {
     "guideline-writing", "context-authoring", "agent-docs-writing",
     "conventional-commits-writing", "readme-writing",
     "readme-writing-package", "adr-create",
-    "persona-writing", "roadmap-writing",
+    "persona-writing", "roadmap-writing", "script-writing",
 }
 FRUGALITY_CHARTER_RELPATH = "contexts/communication/frugality-charter.md"
 FRUGALITY_CHARTER_INDEX_RULES = {

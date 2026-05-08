@@ -218,6 +218,7 @@
         "./.claude/skills/rtk-output-filtering",
         "./.claude/skills/rule-compliance-audit",
         "./.claude/skills/rule-writing",
+        "./.claude/skills/script-writing",
         "./.claude/skills/security",
         "./.claude/skills/security-audit",
         "./.claude/skills/sentry-integration",
