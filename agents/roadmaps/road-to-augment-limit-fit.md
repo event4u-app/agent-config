@@ -287,12 +287,12 @@ on the same PR.
       (10 % headroom), document as stretch met; otherwise note the
       remaining gap and a follow-up trigger.
 - [x] **4.2** Mark sibling roadmap
-      `agents/roadmaps/road-to-always-budget-relief.md` as
+      `agents/roadmaps/archive/road-to-always-budget-relief.md` as
       `status: superseded` with a note pointing to this roadmap (the
-      parking ADR `adr-always-budget-relief-strategy.md` lives on
-      open PR #55 and was never merged to main; this roadmap
-      supersedes that PR's plan but **does not invalidate** the
-      slow-rollout CI guard from #55, which lands independently).
+      parking ADR `adr-always-budget-relief-strategy.md` and the
+      slow-rollout CI guard landed via PR #55 which archived that
+      roadmap; this roadmap supersedes the *strategy* documented
+      there but **does not invalidate** the slow-rollout CI guard).
 - [-] **4.3** *(Deferred to Phase 8.)* Full local `task ci` only
       green post-commit (the `consistency` task ends in
       `git diff --quiet` and fails on any uncommitted tracked
