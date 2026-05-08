@@ -264,9 +264,9 @@ def _count_code_blocks(text: str) -> int:
 def _fenced_content_ratio(text: str) -> float:
     """Return the fraction of non-empty lines that sit inside fenced blocks.
 
-    Used as a structural signal: rules / files dominated by verbatim Iron-Law
-    blocks or worked examples score high and are exempted from raw line-count
-    warnings (council review 2026-05-06).
+    Retained as a helper for backwards compatibility; the size gates use
+    :func:`_density_score` from the structural model instead (Phase 3 of
+    road-to-structural-linter-reform).
     """
     inside = False
     fenced_lines = 0
@@ -285,6 +285,106 @@ def _fenced_content_ratio(text: str) -> float:
     if non_empty == 0:
         return 0.0
     return fenced_lines / non_empty
+
+
+# --- Structural-density model (docs/contracts/linter-structural-model.md) ---
+# Replaces the raw line/word/fenced-ratio gates with four primitives that
+# distinguish complexity from bloat. Calibrated 2026-05-08 against the full
+# 310-artefact corpus (agents/.density-snapshot.jsonl).
+
+PROCEDURE_HEADING_PATTERN = re.compile(
+    r"^##\s+Procedure(\s*[:\u2014\-].*)?\s*$", re.MULTILINE
+)
+COMMAND_FRONTMATTER_DELEGATION_KEYS = ("cluster:", "routes_to:")
+MD_LINK_PATTERN = re.compile(r"\[[^\]]+\]\(([^)]+\.md[^)]*)\)")
+
+
+def _density_score(text: str) -> float:
+    """Return structural density 0.0–1.0 — see docs/contracts/linter-structural-model.md.
+
+    density = structured_lines / non_blank_lines, where structured_lines =
+    fenced + table + bullet + numbered + heading. Higher = more structured
+    (catalogue, table, code, list); lower = prose-dominant.
+    """
+    inside_fence = False
+    structured = 0
+    non_blank = 0
+    for raw in text.splitlines():
+        stripped = raw.strip()
+        if not stripped:
+            continue
+        non_blank += 1
+        if stripped.startswith("```"):
+            inside_fence = not inside_fence
+            structured += 1
+            continue
+        if inside_fence:
+            structured += 1
+            continue
+        if stripped.startswith("#"):
+            structured += 1
+            continue
+        if stripped.startswith("|") and stripped.endswith("|"):
+            structured += 1
+            continue
+        if stripped.startswith(("- ", "* ", "+ ")):
+            structured += 1
+            continue
+        if re.match(r"^\d+\.\s", stripped):
+            structured += 1
+            continue
+    if non_blank == 0:
+        return 0.0
+    return round(structured / non_blank, 3)
+
+
+def _count_procedure_sections(text: str) -> int:
+    """Count `## Procedure` (or `## Procedure: <name>`) blocks in *text*."""
+    return len(PROCEDURE_HEADING_PATTERN.findall(text))
+
+
+def _command_delegation_signal(text: str, frontmatter: Optional[str]) -> bool:
+    """Return True when a command has a delegation signal.
+
+    Signals: frontmatter declares ``cluster:`` or ``routes_to:`` — OR — the
+    body contains ≥ 3 markdown links to other ``.md`` files. Either signal
+    is sufficient (council review 2026-05-08).
+    """
+    if frontmatter:
+        for key in COMMAND_FRONTMATTER_DELEGATION_KEYS:
+            if re.search(rf"^{re.escape(key)}", frontmatter, re.MULTILINE):
+                return True
+    if len(MD_LINK_PATTERN.findall(text)) >= 3:
+        return True
+    return False
+
+
+def _iron_law_blocks(text: str) -> int:
+    """Count fenced blocks that look like verbatim Iron-Law imperatives.
+
+    Heuristic: fenced block whose body has ≥ 30 alphabetical chars and
+    ≥ 60 % uppercase across ≥ 1 non-empty line. The 30-char floor filters
+    short ALL-CAPS markers (``OK``, ``WIP``); the 60 %-uppercase floor
+    catches verbatim imperatives (``NEVER COMMIT.``).
+    """
+    blocks = 0
+    inside = False
+    body: list[str] = []
+    for raw in text.splitlines():
+        if raw.strip().startswith("```"):
+            if inside and body:
+                non_empty = [b for b in body if b.strip()]
+                letters = "".join(non_empty)
+                upper = sum(1 for c in letters if c.isalpha() and c.isupper())
+                total = sum(1 for c in letters if c.isalpha())
+                if total >= 30 and upper / total >= 0.6 and non_empty:
+                    blocks += 1
+            inside = not inside
+            body = []
+            continue
+        if inside:
+            body.append(raw)
+    return blocks
 
 
 def extract_description(text: str) -> Optional[str]:
@@ -561,14 +661,28 @@ def lint_skill(path: Path, text: str) -> LintResult:
                               "Assisted skill has no validation/challenge step in procedure"))
             suggestions.append("Add a requirement-checking or validation step before implementation")
 
-    # --- Size check (see guidelines/agent-infra/size-and-scope.md) ---
-    # Threshold raised from 300 → 400 (council review 2026-05-06): reference-rich
-    # skills (quality-tools 411, ai-council 399, project-analyzer 341) legitimately
-    # exceed 300 lines without being split-candidates. Structural follow-up tracked
-    # in agents/roadmaps/road-to-structural-linter-reform.md.
+    # --- Size check (docs/contracts/linter-structural-model.md) ---
+    # Structural-density gate replaces raw line count (Phase 3 of
+    # road-to-structural-linter-reform, 2026-05-08): warn only when the skill
+    # is *both* large AND prose-dominant OR ships ≥ 2 independently invocable
+    # procedures. Reference catalogues (quality-tools 411 L / density 0.83)
+    # pass; multi-procedure skills are flagged for split.
     total_lines = len(text.splitlines())
     if total_lines > 400:
-        issues.append(Issue("warning", "skill_too_large", f"Skill has {total_lines} lines; review for split (see size-and-scope guideline)"))
+        density = _density_score(text)
+        procedures = _count_procedure_sections(text)
+        if density < 0.6 or procedures >= 2:
+            reason = (
+                f"density {density:.2f} < 0.60"
+                if density < 0.6
+                else f"{procedures} ## Procedure blocks (≥ 2)"
+            )
+            issues.append(Issue(
+                "warning",
+                "skill_too_large",
+                f"Skill has {total_lines} lines and {reason}; review for split "
+                f"(see linter-structural-model contract)",
+            ))
 
     # --- Pointer-only / guideline-dependent skill detection ---
     if procedure_block:
@@ -1021,19 +1135,26 @@ def lint_rule(path: Path, text: str) -> LintResult:
     if DOUBLE_BLANK_PATTERN.search(text):
         issues.append(Issue("warning", "double_blank_lines", "File contains double or triple blank lines"))
 
-    # --- Content checks (see guidelines/agent-infra/size-and-scope.md) ---
-    # Length thresholds gated by fenced-content density (council review 2026-05-06):
-    # rules dominated by verbatim Iron-Law blocks / worked examples are protected
-    # from the > 40 / > 60 warnings. Hard error at 200 stays unconditional.
+    # --- Content checks (docs/contracts/linter-structural-model.md) ---
+    # Structural-density gate replaces fenced-ratio + dual-threshold (Phase 3
+    # of road-to-structural-linter-reform, 2026-05-08): warn only when the
+    # rule is long, prose-dominant, AND ships no Iron-Law block. Hard error
+    # at 200 lines stays unconditional.
     line_count = len([line for line in text.splitlines() if line.strip()])
     total_lines = len(text.splitlines())
-    fenced_ratio = _fenced_content_ratio(text)
     if total_lines > 200:
         issues.append(Issue("error", "rule_too_large", f"Rule has {total_lines} lines (hard limit: 200); must split or move to guideline"))
-    elif line_count > 60 and fenced_ratio < 0.30:
-        issues.append(Issue("warning", "long_rule", f"Rule has {line_count} non-empty lines (fenced-content {fenced_ratio:.0%}); prefer < 60 (see size-and-scope guideline)"))
-    elif line_count > 40 and fenced_ratio < 0.30:
-        issues.append(Issue("warning", "long_rule", f"Rule has {line_count} non-empty lines (fenced-content {fenced_ratio:.0%}); rules should be concise"))
+    elif line_count > 60:
+        density = _density_score(text)
+        iron_blocks = _iron_law_blocks(text)
+        if density < 0.5 and iron_blocks == 0:
+            issues.append(Issue(
+                "warning",
+                "long_rule",
+                f"Rule has {line_count} non-empty lines, density {density:.2f} < 0.50, "
+                f"no Iron-Law block; rules should be concise "
+                f"(see linter-structural-model contract)",
+            ))
 
     for bad_sign in RULE_BAD_SIGNS:
         if bad_sign in text:
@@ -1177,17 +1298,25 @@ def lint_command(path: Path, text: str) -> LintResult:
     if not has_steps and not has_numbered:
         issues.append(Issue("warning", "no_steps", "Command has no Steps section or numbered sub-headings"))
 
-    # --- Size check (see guidelines/agent-infra/size-and-scope.md) ---
-    # Word threshold (1000) gated by structural delegation signal (council review
-    # 2026-05-06): well-factored orchestrators with ≥ 5 sub-sections AND ≥ 3 code
-    # blocks are exempt — the size reflects dispatch breadth, not bloat.
+    # --- Size check (docs/contracts/linter-structural-model.md) ---
+    # Structural-density gate replaces sub-section + code-block heuristic
+    # (Phase 3 of road-to-structural-linter-reform, 2026-05-08): warn only
+    # when the command is large, lacks a delegation signal (frontmatter
+    # cluster:/routes_to: OR ≥ 3 markdown links to other .md files), AND
+    # has density < 0.65.
     word_count = len(text.split())
     if word_count > 1000:
-        section_count = len(sections)
-        code_block_count = _count_code_blocks(text)
-        delegation_signal = section_count >= 5 and code_block_count >= 3
-        if not delegation_signal:
-            issues.append(Issue("warning", "large_command", f"Command has {word_count} words (target: 200-600, max ~1000); {section_count} sub-sections, {code_block_count} code blocks — lacks delegation structure"))
+        density = _density_score(text)
+        delegated = _command_delegation_signal(text, frontmatter)
+        if not delegated and density < 0.65:
+            issues.append(Issue(
+                "warning",
+                "large_command",
+                f"Command has {word_count} words, density {density:.2f} < 0.65, "
+                f"no delegation signal (frontmatter cluster:/routes_to: or "
+                f"≥ 3 .md links); review for split or delegation "
+                f"(see linter-structural-model contract)",
+            ))
 
     # File must end with exactly one newline
     if not text.endswith("\n"):
