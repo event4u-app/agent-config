@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "mechanical-already"
-description: "Linking transient files (agents/roadmaps/, agents/council-{questions,responses,sessions}/) from a stable artifact — both layers expire; promote findings"
+description: "Linking transient files (agents/roadmaps/, agents/council-*/) from a stable artifact — both layers expire; promote findings"
 alwaysApply: false
 source: package
 triggers:

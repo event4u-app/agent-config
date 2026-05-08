@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
-description: "Working with git history — never rewrite, rebase, squash, fixup, or amend without explicit user request; the linear/squashed shape is the user's call, not a tidiness reflex"
+description: "Working with git history — never rewrite, rebase, squash, fixup, or amend without explicit user request; shape is the user's call, not tidiness"
 source: package
 triggers:
   - intent: "rebase the branch"

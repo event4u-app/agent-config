@@ -228,10 +228,10 @@ documentation rewrite for marginal additional savings.
   council walk, host verdicts)
 - `agents/reports/auto-rules-overlap.json` (Phase 5.2 data)
 - `agents/reports/auto-rules-likelihood.json` (Phase 5.3 data)
-- `agents/council-questions/augment-limit-fit-rule-governance.md`
+- `agents/council-questions/augment-limit-fit-rule-governance.md` <!-- council-ref-allowed: ADR decision trace -->
   (Phase 5.4 prompt)
-- `agents/council-responses/augment-limit-fit-rule-governance.json`
-  (Phase 5.4 R3 raw debate) <!-- council-ref-allowed: ADR decision trace -->
+- `agents/council-responses/augment-limit-fit-rule-governance.json` <!-- council-ref-allowed: ADR decision trace -->
+  (Phase 5.4 R3 raw debate)
 - `docs/decisions/ADR-rule-kernel-and-router.md` (kernel-membership
   contract — Phase 5 changes leave kernel untouched per Lever C lock)
 - `.agent-src.uncompressed/rules/guidelines.md` (deprecated subject)

@@ -42,6 +42,21 @@
       "enum": ["senior"],
       "description": "Optional tier marker. `senior` opts the skill into the Senior-Tier Required Structure check (Context-First lead, Related Skills, Proactive Triggers, Output Artifacts) per .agent-src.uncompressed/rules/skill-quality.md."
     },
+    "external_source": {
+      "type": "string",
+      "format": "uri",
+      "description": "SHA-pinned upstream URL for skills adopted under the Reference-Guideline Sunset Policy split path (skill body links to upstream reference modules). Required together with `refresh_trigger` and `sunset_criterion`."
+    },
+    "refresh_trigger": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Event that mandates a rewrite of this skill (e.g. upstream major rewrite, dispatch table reshape, SHA pin invalidation). Required when `external_source` is set."
+    },
+    "sunset_criterion": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Conditions under which the skill should be archived and replaced with a 50-line pointer (e.g. all referenced modules adopted as project-local guidelines, dispatch logic moved to a project-native router). Required when `external_source` is set."
+    },
     "council_depth": {
       "type": "string",
       "enum": ["deep"],

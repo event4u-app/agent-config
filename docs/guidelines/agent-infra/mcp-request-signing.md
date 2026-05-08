@@ -6,9 +6,8 @@ trusted parent-child pipe is **outside** the scope of this guideline; only
 network-exposed transports require signing.
 
 Lands ahead of any HTTP-MCP transport so the security floor is in place
-when one becomes a real consumer use case (see
-[`road-to-mcp-server.md`](../../../agents/roadmaps/road-to-mcp-server.md)
-Phase 4 D4 — allowlist).
+when one becomes a real consumer use case (paired with the allowlist
+gate tracked in the active mcp-server plate under `agents/roadmaps/`).
 
 Adapted from
 [`ruvnet/ruflo`](https://github.com/ruvnet/ruflo) — commit
@@ -105,20 +104,18 @@ plain `setInterval` sweep every minute is enough.
 | **Clock skew abuse** — long-lived request | `MAX_SKEW_MS = 5 min` rejects out-of-window timestamps |
 | **Timing oracle on signature compare** | `timingSafeEqual`, never `===` |
 | **Secret exfil via repo / log** | `KERNEL_SECRET` from env or secrets store; never log raw headers; redact `X-MCP-Signature` in any audit trail |
-| **Allowlist bypass** | Signing **does not** authorize what's called — pair with the allowlist enforced at server boot ([`road-to-mcp-server.md`](../../../agents/roadmaps/road-to-mcp-server.md) Phase 4 **D4**); a valid signature on a non-allowlisted tool name still rejects |
+| **Allowlist bypass** | Signing **does not** authorize what's called — pair with the allowlist enforced at server boot (mcp-server plate under `agents/roadmaps/`, Phase 4 **D4**); a valid signature on a non-allowlisted tool name still rejects |
 
 ## Citation hooks
 
-- [`road-to-mcp-server.md`](../../../agents/roadmaps/road-to-mcp-server.md)
-  **Phase 4 D4** — allowlist enforced at server boot. Signing layers
-  *under* the allowlist: verify signature → look up tool in allowlist →
-  execute. Both gates must pass.
-- [`road-to-mcp-server.md`](../../../agents/roadmaps/road-to-mcp-server.md)
-  **Phase 6 F2 / F3** — SSE transport, cloud bundle. These are the
-  triggers that make this guideline load-bearing; until then it is
-  reference material for the deferred-with-trigger HTTP-bridge slot of
-  [`road-to-ruflo-adoption.md`](../../../agents/roadmaps/road-to-ruflo-adoption.md)
-  Phase 2 P2.1.
+- mcp-server plate under `agents/roadmaps/` — **Phase 4 D4** allowlist
+  enforced at server boot. Signing layers *under* the allowlist: verify
+  signature → look up tool in allowlist → execute. Both gates must pass.
+- mcp-server plate under `agents/roadmaps/` — **Phase 6 F2 / F3** SSE
+  transport, cloud bundle. These are the triggers that make this
+  guideline load-bearing; until then it is reference material for the
+  deferred-with-trigger HTTP-bridge slot of the ruflo-adoption plate
+  (Phase 2 P2.1) under `agents/roadmaps/`.
 
 ## Operational notes
 

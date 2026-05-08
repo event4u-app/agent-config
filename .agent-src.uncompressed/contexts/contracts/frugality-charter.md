@@ -21,9 +21,10 @@ Cite the source rule in writer artifacts; do **not** restate it here.
 
 ## Confirmation taxonomy
 
-Iron-Law / Routine / Contextual classification with carve-outs
-lives in the roadmap [`§ Confirmation taxonomy`](../../../agents/roadmaps/road-to-token-frugality.md#confirmation-taxonomy).
-Charter does not duplicate the table.
+Iron-Law / Routine / Contextual classification with carve-outs is
+canonical in the active token-frugality plate under `agents/roadmaps/`
+(or `agents/roadmaps/archive/` once closed). Charter does not duplicate
+the table.
 
 ## Settings hooks
 

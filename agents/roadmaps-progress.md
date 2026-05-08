@@ -6,10 +6,10 @@
 
 ## Overall
 
-**1 / 316 steps done · 0%**
+**7 / 316 steps done · 2%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   2%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 1 | 35 | 35 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-chat-history-cross-agent-hardening.md](roadmaps/road-to-chat-history-cross-agent-hardening.md) | 5 | 37 | 37 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-deep-research-adoption.md](roadmaps/road-to-deep-research-adoption.md) | 3 | 14 | 14 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-deep-research-adoption.md](roadmaps/road-to-deep-research-adoption.md) | 3 | 14 | 8 | 6 | 0 | 0 | ████░░░░░░ 43% |
 | 4 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-event-driven-discipline.md](roadmaps/road-to-event-driven-discipline.md) | 12 | 42 | 42 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md) | 1 | 26 | 26 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -27,7 +27,7 @@
 | 9 | [road-to-money-strategy-ops.md](roadmaps/road-to-money-strategy-ops.md) | 1 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 10 | [road-to-productization.md](roadmaps/road-to-productization.md) | 8 | 27 | 27 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 11 | [road-to-proof-not-features.md](roadmaps/road-to-proof-not-features.md) | 3 | 19 | 19 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 12 | [road-to-superpowers-harvest.md](roadmaps/road-to-superpowers-harvest.md) | 3 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 12 | [road-to-superpowers-harvest.md](roadmaps/road-to-superpowers-harvest.md) | 2 | 10 | 10 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 13 | [road-to-unified-senior-roles.md](roadmaps/road-to-unified-senior-roles.md) | 1 | 19 | 18 | 1 | 0 | 0 | ░░░░░░░░░░ 5% |
 
 ---
@@ -56,11 +56,11 @@
 
 ### [road-to-deep-research-adoption.md](roadmaps/road-to-deep-research-adoption.md)
 
-**Road to Deep-Research Adoption** — 0 / 14 done (0%)
+**Road to Deep-Research Adoption** — 6 / 14 done (43%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Five-artifact adoption plate (READY) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 1 | Five-artifact adoption plate (READY) | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 2 | Out-of-horizon (gated on Phase 1 evidence) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | Sunset enforcement and periodic rescan (out-of-horizon) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
@@ -165,7 +165,6 @@
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Five-unit adoption plate (READY) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 1 | → 2 promotion gate | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 | 2 | Out-of-horizon (gated on Phase 1 evidence) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [road-to-unified-senior-roles.md](roadmaps/road-to-unified-senior-roles.md)

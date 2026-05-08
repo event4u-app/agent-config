@@ -152,6 +152,6 @@ to every roadmap you author.
 
 ## Examples
 
-See `agents/roadmaps/archive/road-to-token-frugality.md`
-(structural, multi-phase, council-integrated) and any
-`agents/roadmaps/road-to-*.md` for canonical structure.
+Browse `agents/roadmaps/` (active plate) and `agents/roadmaps/archive/`
+(closed work) for canonical structural / tactical / structural-with-council
+examples.
