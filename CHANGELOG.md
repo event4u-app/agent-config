@@ -318,6 +318,20 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.26.0](https://github.com/event4u-app/agent-config/compare/1.25.0...1.26.0) (2026-05-08)
+
+### Features
+
+* **linter:** replace size heuristics with structural-density model ([95584ac](https://github.com/event4u-app/agent-config/commit/95584ac5e74948b71a9d13ff5ec6870c110be489))
+
+### Documentation
+
+* **contracts:** add linter structural model + update size-and-scope ([32fa8b2](https://github.com/event4u-app/agent-config/commit/32fa8b2b7cc65148f7bc28fb782f20670d6640bc))
+
+### Chores
+
+* gitignore density logs + archive completed structural-linter roadmap ([0a94ece](https://github.com/event4u-app/agent-config/commit/0a94ece8ac724386a5d49451b1e0d3058f2644cf))
+
 ## [1.25.0](https://github.com/event4u-app/agent-config/compare/1.24.0...1.25.0) (2026-05-08)
 
 ### Features
