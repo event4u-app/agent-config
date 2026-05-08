@@ -318,6 +318,32 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.24.0](https://github.com/event4u-app/agent-config/compare/1.23.0...1.24.0) (2026-05-08)
+
+### Features
+
+* **rules:** harden roadmap-progress-sync — real-time checkbox cadence ([bdaaf0c](https://github.com/event4u-app/agent-config/commit/bdaaf0caff6d312ab87aabc8d170793cbbc6513a))
+* **measurement:** markitdown lift benchmark + corpus ([e606c7a](https://github.com/event4u-app/agent-config/commit/e606c7afae9977ab3c19f2a7f99a6ec18b31b483))
+* **skill:** add markitdown skill with four-layer defense ([21514f4](https://github.com/event4u-app/agent-config/commit/21514f4bf8b77d00480fc5dfab54a1a04e34f4f1))
+
+### Bug Fixes
+
+* drop markitdown roadmap link + trim README to 500 lines ([da8240d](https://github.com/event4u-app/agent-config/commit/da8240d6fce74555d08a8bfb4f4d15379d10de54))
+* **refs:** update markitdown roadmap path to archive/ after archival ([f7679de](https://github.com/event4u-app/agent-config/commit/f7679debb851bd721f671e26fe962186e56a1e86))
+
+### Documentation
+
+* feature markitdown in README, AGENTS, architecture ([fa1babc](https://github.com/event4u-app/agent-config/commit/fa1babcb344c5f090aa4cea0eafb58e5732cf872))
+* cross-link markitdown from analysis and learning skills ([14f9d72](https://github.com/event4u-app/agent-config/commit/14f9d7290dbcb341d2ff97280dbfb54b32e39057))
+
+### Chores
+
+* **generate-tools:** refresh .windsurfrules after roadmap-progress-sync body expansion ([3fdba11](https://github.com/event4u-app/agent-config/commit/3fdba11cd4e91425a05ef9ad82b0e7c611180668))
+* **compress:** sync .agent-src/ with hardened roadmap-progress-sync rule ([30e7d1a](https://github.com/event4u-app/agent-config/commit/30e7d1ab455da823afbe7602f01d543d3fe91c5d))
+* **roadmap:** archive markitdown-adoption + refresh progress dashboard ([5481d90](https://github.com/event4u-app/agent-config/commit/5481d9025f4c85f33e11533099cf725eeb306455))
+* add skills-provenance registry for upstream attribution ([65c2eeb](https://github.com/event4u-app/agent-config/commit/65c2eeb3d1c9d0f86957757ce22221ed0e255292))
+* **roadmap:** harden process-full to ignore horizon markers ([36d0fa6](https://github.com/event4u-app/agent-config/commit/36d0fa6c263721618999b7fa27ddb9cb336dd6c2))
+
 ## [1.23.0](https://github.com/event4u-app/agent-config/compare/1.22.0...1.23.0) (2026-05-08)
 
 ### Features
