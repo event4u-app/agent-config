@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **362 public artefacts** shipped by
+Consumer-facing catalog of all **363 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -156,7 +156,7 @@ are excluded.
 | skill | [`verify-completion-evidence`](../.agent-src/skills/verify-completion-evidence/SKILL.md) |  | Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs. |
 | skill | [`websocket`](../.agent-src/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (56)
+## Rules (57)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -192,6 +192,7 @@ are excluded.
 | rule | [`no-attribution-footers`](../.agent-src/rules/no-attribution-footers.md) | auto | Generating PR/issue/comment/commit-message bodies — forbids 'Generated with', 'Co-authored by', or 'Pull Request opened by' attribution footers |
 | rule | [`no-cheap-questions`](../.agent-src/rules/no-cheap-questions.md) | always | No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on) |
 | rule | [`no-roadmap-references`](../.agent-src/rules/no-roadmap-references.md) | auto | Linking transient files (agents/roadmaps/, agents/council-{questions,responses,sessions}/) from a stable artifact — both layers expire; promote findings |
+| rule | [`no-unsolicited-rebase`](../.agent-src/rules/no-unsolicited-rebase.md) | auto | Working with git history — never rewrite, rebase, squash, fixup, or amend without explicit user request; the linear/squashed shape is the user's call, not a tidiness reflex |
 | rule | [`non-destructive-by-default`](../.agent-src/rules/non-destructive-by-default.md) | always | Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass |
 | rule | [`onboarding-gate`](../.agent-src/rules/onboarding-gate.md) | auto | First turn of a conversation on a project — check onboarding.onboarded in .agent-settings.yml; when false, prompt to run /onboard before any request |
 | rule | [`package-ci-checks`](../.agent-src/rules/package-ci-checks.md) | manual | Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first |

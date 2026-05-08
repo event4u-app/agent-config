@@ -173,6 +173,7 @@
   "rules/no-attribution-footers.md": "b23bbce6af84e57614c0b63632fb209ae4a1a6429039732d04df127450a2507a",
   "rules/no-cheap-questions.md": "8c6c9e0b5d9b36728f316eb6a96b93bd9d8baf113a397a258ba9b4e256da1cf4",
   "rules/no-roadmap-references.md": "2eb170dd65c97c096b8c8b70660b9eb2966b6c28efe0f8ffbf7f9d2e1945492e",
+  "rules/no-unsolicited-rebase.md": "0343ac622739531f8b00a65c01f76819e6f299623a577d75d382bc7ae4daca32",
   "rules/non-destructive-by-default.md": "2a0124e3c38e2a37f17e944988372c161c810bb9db784a7bc8d95c356b51a011",
   "rules/onboarding-gate.md": "46099479295afe620beb145216a3576cebd56315b6015a7955229fcb2dd07687",
   "rules/package-ci-checks.md": "f1db851770270ea3e42f0d609a471ffd6451923a23ad3b1535c2fd19c88ca52d",

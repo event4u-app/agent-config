@@ -600,6 +600,39 @@
       ]
     },
     {
+      "id": "no-unsolicited-rebase",
+      "triggers": [
+        {
+          "intent": "rebase the branch"
+        },
+        {
+          "intent": "squash commits"
+        },
+        {
+          "intent": "clean up commit history"
+        },
+        {
+          "intent": "fold this into the previous commit"
+        },
+        {
+          "keyword": "git rebase"
+        },
+        {
+          "keyword": "fixup"
+        },
+        {
+          "keyword": "--amend"
+        },
+        {
+          "keyword": "force-push"
+        },
+        {
+          "keyword": "squash-merge"
+        }
+      ],
+      "routes_to": []
+    },
+    {
       "id": "preservation-guard",
       "triggers": [
         {
