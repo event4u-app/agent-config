@@ -86,10 +86,17 @@ For each open step in the working set (scope-bound — see wrapper):
    - **Council on** → invoke per [`ai-council`](../../skills/ai-council/SKILL.md),
      integrate convergence, proceed. Token spend was opted in.
    - **Council off** → halt, surface once, wait. Resume on next turn.
-5. Mark the checkbox: `[x]` done · `[~]` partial · `[-]` skipped.
-6. Regenerate the dashboard — `./agent-config roadmap:progress` — in
-   the **same response** per [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md).
-7. Run quality pipeline if cadence is `per_step`.
+5. **Atomic flip + regen** — before moving to step N+1, in the **same
+   reply** that landed step N's work:
+   1. Flip the checkbox in `agents/roadmaps/<file>.md`: `[x]` done ·
+      `[~]` partial · `[-]` skipped.
+   2. Run `./agent-config roadmap:progress` to regenerate the
+      dashboard.
+   This pair is **non-skippable** and **non-batchable** per Iron Law 2
+   of [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md). A
+   loop iteration that lands work without flipping its box is a rule
+   violation. Do not save flips for the archive commit.
+6. Run quality pipeline if cadence is `per_step`.
 
 ### Halt conditions
 
@@ -103,8 +110,8 @@ On halt: stop, surface state, do **not** auto-fix outside the failing step.
 
 ### Non-halt — horizon markers, gating notes, "optional" tags
 
-Authoring annotations, never halt conditions. Do **not** stop execution
-when the roadmap text contains:
+The following are **authoring annotations**, never halt conditions. Do
+**not** stop execution when the roadmap text contains them:
 
 - `Horizon (N-week visible plate)` section headers
 - `(out-of-horizon, gated on Phase N)` phase-header suffixes

@@ -50,12 +50,30 @@ NOTES, AND PHASE-INTERNAL "OPTIONAL" TAGS DO NOT NARROW THE
 WORKING SET. ONLY THE FIVE HALT CONDITIONS STOP THE RUN.
 ```
 
-Roadmaps frequently carry "Horizon (N-week visible plate)" sections or
-"(out-of-horizon, gated on Phase N)" sub-headings as authoring devices.
-Those are **archival annotations**, not execution gates.
-`/roadmap:process-full` ignores them by construction. Horizon-respecting
-execution → invoke `/roadmap:process-phase` (single phase) or
-`/roadmap:process-step` (single step) instead.
+Roadmaps frequently carry a "Horizon (N-week visible plate)" section
+or "(out-of-horizon, gated on Phase N)" sub-headings as an authoring
+device. Those are **archival annotations**, not execution gates.
+`/roadmap:process-full` ignores them by construction. If the user
+wants horizon-respecting execution, they invoke `/roadmap:process-phase`
+(scope = single phase) or `/roadmap:process-step` (scope = single
+step) instead.
+
+## Iron Law — Real-time dashboard
+
+```
+EVERY DONE STEP FLIPS [ ] → [x] BEFORE THE LOOP MOVES TO THE NEXT STEP.
+DASHBOARD REGENERATES IN THE SAME REPLY THAT FLIPPED THE BOX.
+NO BATCH FLIP AT THE ARCHIVE COMMIT. NO "I'LL DO IT AT THE END."
+```
+
+`/roadmap:process-full` is the worst offender for batching because it
+runs continuously across many steps. Flipping all 13 boxes in the
+single archive commit defeats the dashboard's purpose — the user
+loses progress visibility for the entire run. Per Iron Law 2 of
+[`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md): the
+flip + regen pair is atomic with the step's work, executed inside
+[`roadmap-process-loop § 5`](../../contexts/execution/roadmap-process-loop.md#5-step-loop)
+step 5.
 
 ## Rules
 
@@ -64,6 +82,8 @@ execution → invoke `/roadmap:process-phase` (single phase) or
 - **No silent stop at a horizon marker.** Encountering "out-of-horizon",
   "gated on Phase N", "deferred", or any equivalent annotation is
   **not** a halt condition. Continue.
+- **No silent batch flip.** Each step's checkbox flips in the same
+  reply that lands its work — never deferred to the archive commit.
 - **Phase quality pipeline runs at every phase boundary** when cadence
   is `per_phase` or `per_step`. `end_of_roadmap` skips per-phase and
   runs only at the final archival check.
