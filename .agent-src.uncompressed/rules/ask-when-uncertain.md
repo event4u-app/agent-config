@@ -17,7 +17,7 @@ ONE QUESTION PER TURN. NO EXCEPTIONS.
 ASK. WAIT FOR THE ANSWER. THEN ASK THE NEXT.
 ```
 
-Absolute. Every turn with a question has **exactly one** — even if trivial, independent, or batchable.
+Even if trivial, independent, or batchable — exactly one.
 
 ## When to ask
 
@@ -29,19 +29,9 @@ Absolute. Every turn with a question has **exactly one** — even if trivial, in
 
 ## Vague-request triggers — MUST ask
 
-Match without further context → ask **before** touching code:
+Nine patterns — "improve / optimize" · "add caching" · "make it better / cleaner" · "clean up this file" · "fix this" (no symptom) · "refactor X" · "use best practices" · "handle errors properly" · "add a UI / component / tile / page" in a mixed-framework repo. Match without further context → ask **before** touching code.
 
-- "improve / optimize this" — metric? speed, readability, memory?
-- "add caching" — store? scope? invalidation?
-- "make it better / cleaner" — by what standard?
-- "clean up this file" — dead code? format? refactor?
-- "fix this" (no symptom) — what output is wrong?
-- "refactor X" — target pattern? boundaries?
-- "use best practices" — whose? for what?
-- "handle errors properly" — which errors? log/retry/propagate?
-- "add a UI/component/tile/page" in mixed-framework repo — which stack?
-
-Examples: [`asking-and-brevity-examples § vague-triggers`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#vague-request-triggers--example-questions).
+Per-pattern missing-info and clarifying questions: [`asking-and-brevity-examples § vague-triggers`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#vague-request-triggers--example-questions).
 
 **Escape hatch:** unambiguous from ticket / open file / prior turn → proceed, state the assumption.
 

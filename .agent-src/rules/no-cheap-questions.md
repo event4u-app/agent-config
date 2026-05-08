@@ -20,17 +20,9 @@ NEVER OFFER NUMBERED CHOICES WITHOUT A REAL TRADE-OFF.
 
 ## What counts as cheap
 
-- **Sequencing** — "Step 2 or 3 next?" when the roadmap orders them.
-- **Format-only** — "Table or paragraph?"; no semantic trade-off.
-- **Commit asks** — forbidden by [`commit-policy`](commit-policy.md).
-- **CI / test asks** — [`verify-before-complete`](verify-before-complete.md) decides, not the user.
-- **Fenced-step re-asks** — "Start Phase 1?" after *"plan only"*; see [`scope-control § fenced step`](scope-control.md#fenced-step--user-set-review-gates).
-- **Iron-Law option** — breaches `commit-policy`, `scope-control § git-ops`, or `non-destructive-by-default`.
-- **Context-derived** — answer follows from prior turn / standing instruction / roadmap; act, state the assumption inline.
-- **Dominant option** — one choice obviously correct; alternatives carry no upside.
-- **Re-ask after decline** — forbidden per [`scope-control § decline = silence`](scope-control.md#decline--silence--no-re-asking-on-the-same-task).
+Nine classes — sequencing · format-only · commit asks (forbidden by [`commit-policy`](commit-policy.md)) · CI / test asks ([`verify-before-complete`](verify-before-complete.md) decides) · fenced-step re-asks ([`scope-control § fenced step`](scope-control.md#fenced-step--user-set-review-gates)) · Iron-Law option (breaches `commit-policy`, `scope-control § git-ops`, or `non-destructive-by-default`) · context-derived · dominant option · re-ask after decline ([`scope-control § decline = silence`](scope-control.md#decline--silence--no-re-asking-on-the-same-task)).
 
-Examples per class: [`asking-and-brevity-examples § cheap-question-catalog`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
+Per-class patterns and examples: [`asking-and-brevity-examples § cheap-question-catalog`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
 
 ## Pre-Send Self-Check — MANDATORY before every question
 
@@ -55,6 +47,4 @@ Any "yes" → **do not ask**. Pick the dominant path, state assumption inline (*
 
 In doubt → ask. This rule narrows asking, never widens silence.
 
-## Interactions
-
-[`ask-when-uncertain`](ask-when-uncertain.md) · [`autonomous-execution`](autonomous-execution.md) · [`commit-policy`](commit-policy.md) · [`scope-control`](scope-control.md) · [`non-destructive-by-default`](non-destructive-by-default.md) · [`user-interaction`](user-interaction.md) · [`direct-answers`](direct-answers.md).
+Cross-rule index: [`frugality-charter § cross-references`](../contexts/contracts/frugality-charter.md#cross-references--frugality-canon-rules).
