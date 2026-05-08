@@ -22,7 +22,7 @@ Usage:
 
 If --ownership-map / --patterns are omitted, the script searches
 `.github/` first and falls back to `agents/` — matching what the
-review-routing-awareness rule and review-routing skill document.
+reviewer-awareness rule and review-routing skill document.
 Missing data files are not an error; the script emits a generic
 fallback block.
 

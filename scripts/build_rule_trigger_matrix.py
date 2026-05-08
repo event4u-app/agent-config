@@ -117,11 +117,9 @@ add("agent-docs.md", "file-edit on agents/docs/, AGENTS.md", "hook",
     "tool-call", "medium", "2a", notes="Path-pattern based marker")
 add("upstream-proposal.md", "skill/rule create event", "hook", "output",
     "medium", "2a", notes="Marker after new artifact lands")
-add("review-routing-awareness.md", "PR-prep / risk flagging", "hook",
-    "output", "medium", "2a",
-    notes="Marker when /create-pr or risk-tagging keywords detected")
-add("reviewer-awareness.md", "PR-prep", "hook", "output",
-    "medium", "2a", notes="Reviewer-suggestion marker at PR creation")
+add("reviewer-awareness.md", "PR-prep / reviewer-suggestion / risk flagging",
+    "hook", "output", "medium", "2a",
+    notes="Reviewer-suggestion + risk-tagging marker at PR creation; consolidates former review-routing-awareness")
 add("security-sensitive-stop.md", "file-edit on auth/billing/secrets paths",
     "hook", "tool-call", "low", "2a",
     notes="Path-pattern based marker — strong candidate for low-cost hook")

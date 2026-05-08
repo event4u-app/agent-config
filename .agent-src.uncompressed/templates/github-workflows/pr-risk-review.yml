@@ -106,7 +106,7 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         # The script auto-discovers ownership-map.yml and
         # historical-bug-patterns.yml under .github/ first and falls
-        # back to agents/ — matching the review-routing-awareness rule.
+        # back to agents/ — matching the reviewer-awareness rule.
         # Missing data files emit a generic fallback, not an error.
         run: |
           python3 scripts/pr_review_routing.py \

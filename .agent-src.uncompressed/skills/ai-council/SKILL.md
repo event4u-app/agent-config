@@ -235,9 +235,10 @@ durable contract lives in the roadmap / ADR / skill body that cites
 the council's convergence inline.
 
 **Linking to a specific council file is forbidden by
-[`no-council-references`](../../rules/no-council-references.md)** —
-gitignored, not in the cloned repo, gone after the retention window.
-Inline the convergence with date + members instead.
+[`no-roadmap-references`](../../rules/no-roadmap-references.md)
+(council clause)** — gitignored, not in the cloned repo, gone after
+the retention window. Inline the convergence with date + members
+instead.
 
 Three directories, three modes:
 
@@ -258,10 +259,11 @@ matching `road-to-<topic-slug>` roadmap under `agents/roadmaps/`).
 - Any other directory below `agents/` (e.g. `agents/scratch/`,
   `agents/tmp/`).
 - Cross-references from any artefact to specific council files —
-  see [`no-council-references`](../../rules/no-council-references.md).
-  Inline the convergence summary instead, with date and member list
-  for traceability (`Council (claude-sonnet-4-5 + gpt-4o, YYYY-MM-DD)
-  reviewed N candidate strategies; converged on …`).
+  see [`no-roadmap-references`](../../rules/no-roadmap-references.md)
+  (council clause). Inline the convergence summary instead, with
+  date and member list for traceability (`Council (claude-sonnet-4-5
+  + gpt-4o, YYYY-MM-DD) reviewed N candidate strategies; converged
+  on …`).
 
 `scripts/check_council_layout.py` is the mechanical check for the
 output path convention — wire it into the package's CI pipeline so

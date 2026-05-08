@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CI guard for the `no-council-references` rule.
+"""CI guard for the council clause of the `no-roadmap-references` rule.
 
 Council artefacts under `agents/council-{questions,responses,sessions}/`
 are gitignored, local-only, and auto-pruned. A link to a specific
@@ -68,7 +68,7 @@ ALLOWLIST_PREFIXES: tuple[str, ...] = (
     # the SKIP_DIRS contract in scripts/check_references.py).
     "agents/analysis/",
     # The rule itself documents forbidden vs. allowed forms.
-    ".agent-src.uncompressed/rules/no-council-references.md",
+    ".agent-src.uncompressed/rules/no-roadmap-references.md",
     # ai-council skill documents the output-path schema.
     ".agent-src.uncompressed/skills/ai-council/",
     # Council commands document the output-path schema.
@@ -134,7 +134,7 @@ def main() -> int:
     for path, ln, ref in violations:
         print(f"  - {path.as_posix()}:{ln}: {ref}")
     print(
-        "\nRule: .agent-src/rules/no-council-references.md\n"
+        "\nRule: .agent-src/rules/no-roadmap-references.md (council clause)\n"
         "Fix: inline the convergence summary (members + date) instead of\n"
         "linking the file. Append "
         "<!-- council-ref-allowed: <reason> --> on the same line to\n"

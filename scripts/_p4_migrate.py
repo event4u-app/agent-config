@@ -52,12 +52,12 @@ SKILL_MIGRATIONS = [
     ("package-ci-checks", "skill:lint-skills",
      [("phrase", "task ci"), ("phrase", "before push"), ("phrase", "before pr")],
      "Run `task ci` locally and confirm green before pushing or opening a PR in this package."),
-    ("review-routing-awareness", "skill:review-routing",
-     [("keyword", "reviewer"), ("phrase", "risk hotspot"), ("phrase", "ownership map")],
-     "Consult ownership-map and historical-bug-patterns before suggesting reviewers or claiming a change is safe."),
+    # review-routing-awareness was merged into reviewer-awareness on 2026-05-08
+    # (see agents/contexts/adr-auto-rule-consolidation.md) as part of the
+    # Augment literal-budget relief work — Lever D consolidation.
     ("reviewer-awareness", "skill:review-routing",
-     [("keyword", "reviewer"), ("phrase", "suggest reviewers")],
-     "Anchor reviewer choice in paths and risk, never seniority; medium / high risk requires primary + secondary role."),
+     [("keyword", "reviewer"), ("phrase", "suggest reviewers"), ("phrase", "risk hotspot"), ("phrase", "ownership map")],
+     "Anchor reviewer choice in paths and risk, never seniority; consult ownership-map + historical-bug-patterns; medium / high risk requires primary + secondary role."),
     ("skill-improvement-trigger", "skill:skill-improvement-pipeline",
      [("phrase", "after completing"), ("keyword", "improvement"), ("keyword", "pipeline")],
      "After a meaningful task, trigger the post-task learning capture if `pipelines.skill_improvement` is enabled."),

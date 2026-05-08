@@ -1,18 +1,25 @@
 ---
 type: "auto"
 tier: "2a"
-description: "When suggesting reviewers for a change — anchor the choice in paths and risk, never prestige or seniority; require primary + secondary role for medium/high risk"
+description: "When suggesting reviewers or flagging risk hotspots — anchor in paths/risk + ownership-map + bug-patterns; medium/high needs primary + secondary"
 source: package
 triggers:
   - keyword: "reviewer"
   - phrase: "suggest reviewers"
+  - phrase: "risk hotspot"
+  - phrase: "ownership map"
 routes_to:
   - "skill:review-routing"
 ---
 
 # Reviewer Awareness
 
-**Iron Law.** Anchor reviewer choice in paths and risk, never seniority; medium / high risk requires primary + secondary role.
+**Iron Law (reviewer choice).** Anchor reviewer choice in paths and risk, never seniority; medium / high risk requires primary + secondary role.
+
+**Iron Law (routing / risk).** Consult ownership-map and historical-bug-patterns before suggesting reviewers or claiming a change is safe.
 
 Body migrated to `skill:review-routing` (per P4 of `road-to-kernel-and-router.md`).
 Trigger-set above activates this routing under the `balanced` and `full` profiles.
+
+Consolidates the former `review-routing-awareness` rule per
+[`adr-auto-rule-consolidation`](../../agents/contexts/adr-auto-rule-consolidation.md).

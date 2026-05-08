@@ -194,4 +194,5 @@ to every ADR you author.
 - Reuse an existing ADR number — the index regenerator hard-fails.
 - Author ADRs for reversible refactors or minor cleanups.
 - Cite a council session id without ensuring the file is committed
-  or otherwise reachable from the repo (per `no-council-references`).
+  or otherwise reachable from the repo (per `no-roadmap-references`,
+  council clause).

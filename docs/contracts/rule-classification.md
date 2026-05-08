@@ -116,8 +116,7 @@ existing skills under `.agent-src.uncompressed/skills/`.
 | model-recommendation | 2909 | `set-cost-profile` | Routing procedure |
 | onboarding-gate | 4881 | `onboard` | Mechanical: meta-rule about /onboard |
 | package-ci-checks | 1342 | `lint-skills` | Repo-specific procedure |
-| review-routing-awareness | 4220 | `review-routing` | Skill exists; large overlap |
-| reviewer-awareness | 3573 | `review-routing` | Merges with above into one skill |
+| reviewer-awareness | 3573 | `review-routing` | Skill exists; consolidates former `review-routing-awareness` (2026-05-08, see `agents/contexts/adr-auto-rule-consolidation.md`) |
 | skill-improvement-trigger | 1597 | `skill-improvement-pipeline` | Trigger procedure |
 | slash-command-routing-policy | 3218 | `command-routing` | Routing procedure |
 | ui-audit-gate | 3285 | `existing-ui-audit` | Audit procedure |
@@ -151,8 +150,9 @@ Reference / examples / mechanics. Body migrates into
 1. **Kernel swap ADR (P2.1).** `agent-authority` ↔
    `autonomous-execution`. See `kernel-membership.md` § 5.2 for the
    three resolution variants; this file syncs once the ADR lands.
-2. **`reviewer-awareness` + `review-routing-awareness` merge.** Both
-   target the same skill — P4.1 must consolidate, not duplicate.
+2. **`reviewer-awareness` + `review-routing-awareness` merge.** ✅ resolved
+   2026-05-08 — merged into `reviewer-awareness` per
+   `agents/contexts/adr-auto-rule-consolidation.md`.
 3. **`onboarding-gate` migration shape.** The rule fires only on the
    first turn; the migrated form must keep that trigger latch.
    Router state-machine primitives (once / every-turn / on-mode-

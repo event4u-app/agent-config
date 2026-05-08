@@ -98,7 +98,7 @@ def test_allowed_in_analysis(tmp_path: Path) -> None:
 
 def test_allowed_in_rule_itself(tmp_path: Path) -> None:
     _write(
-        tmp_path / ".agent-src.uncompressed/rules/no-council-references.md",
+        tmp_path / ".agent-src.uncompressed/rules/no-roadmap-references.md",
         "Forbidden: `agents/council-sessions/<file>.json`",
     )
     assert ccr.main() == 0
