@@ -11,6 +11,8 @@ suggestion:
 
 # e2e-heal
 
+> **Mobile scope:** this command targets Playwright (browser/web) tests only. For Detox / Maestro / Appium / XCUITest / Espresso failures, use the `mobile-e2e-strategy` skill plus the framework's own diagnostic tooling — the Playwright-specific steps below do not apply to native mobile.
+
 ## Instructions
 
 ### 1. Identify failing tests

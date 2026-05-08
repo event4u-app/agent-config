@@ -428,6 +428,33 @@
       ]
     },
     {
+      "id": "domain-adoption-policy",
+      "triggers": [
+        {
+          "intent": "adopt new domain"
+        },
+        {
+          "intent": "harvest new domain track"
+        },
+        {
+          "intent": "open a domain plate"
+        },
+        {
+          "keyword": "mobile track"
+        },
+        {
+          "keyword": "ml track"
+        },
+        {
+          "keyword": "blockchain track"
+        },
+        {
+          "path_prefix": ".agent-src.uncompressed/skills/"
+        }
+      ],
+      "routes_to": []
+    },
+    {
       "id": "downstream-changes",
       "triggers": [
         {
@@ -571,6 +598,39 @@
       "routes_to": [
         "command:set-cost-profile"
       ]
+    },
+    {
+      "id": "no-unsolicited-rebase",
+      "triggers": [
+        {
+          "intent": "rebase the branch"
+        },
+        {
+          "intent": "squash commits"
+        },
+        {
+          "intent": "clean up commit history"
+        },
+        {
+          "intent": "fold this into the previous commit"
+        },
+        {
+          "keyword": "git rebase"
+        },
+        {
+          "keyword": "fixup"
+        },
+        {
+          "keyword": "--amend"
+        },
+        {
+          "keyword": "force-push"
+        },
+        {
+          "keyword": "squash-merge"
+        }
+      ],
+      "routes_to": []
     },
     {
       "id": "preservation-guard",
