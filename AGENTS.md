@@ -14,32 +14,22 @@ when they install the package.
 
 ## What this repo is
 
-`event4u/agent-config` is a **governed skill suite** for two cognition
-clusters: engineering depth (Wing 1) and senior cross-department
-cognition (Wings 2–4: Product + Foundation, GTM + Growth, Money +
-Strategy + Ops). The differentiator is **depth over breadth, decisions
-over boilerplate, under a shared Iron-Law floor** (`commit-policy`,
-`non-destructive-by-default`, `language-and-tone`, `skill-quality`,
-`direct-answers`). The same agent that ships a refactor commit also
-runs DCF sensitivity, OKR-tree decomposition, and launch-funnel
-diagnosis — under the same governance.
+A **governed skill suite** for two cognition clusters: engineering
+depth (Wing 1) and senior cross-department cognition (Wings 2–4).
+**Depth over breadth, decisions over boilerplate, under a shared
+Iron-Law floor** (`commit-policy`, `non-destructive-by-default`,
+`language-and-tone`, `skill-quality`, `direct-answers`).
 
-Mechanically the package is:
-
-- A distribution package, not an application of any framework.
-- `type: library` in `composer.json`; no `app/` directory, no application
-  runtime (no Laravel, Symfony, Next.js, or other framework app code).
-- Published to Composer and npm as `event4u/agent-config` / `@event4u/agent-config`.
-- Installed into consumer projects via `scripts/install.sh` (Bash) and
-  `scripts/install.py` (Python bridge).
+`type: library` distribution package — published to Composer and npm
+as `event4u/agent-config` / `@event4u/agent-config`. No application
+runtime. Installed via `scripts/install.sh` (Bash) and
+`scripts/install.py` (Python bridge). Distribution mechanics:
+[`agents/contexts/agents-md-tech-stack.md`](agents/contexts/agents-md-tech-stack.md).
 
 ## The four wings
 
-The skill suite is organized as four wings under one Iron-Law floor.
-Each wing has its own roadmap, its own personas, and its own plate;
-they compose via the cross-wing handoff contract
-([`docs/contracts/cross-wing-handoff.md`](docs/contracts/cross-wing-handoff.md) (beta),
-landing in `road-to-suite-closure.md` Phase 3).
+Four wings compose via [`docs/contracts/cross-wing-handoff.md`](docs/contracts/cross-wing-handoff.md) (beta).
+Per-wing plates live under `agents/roadmaps/` and `agents/contexts/`.
 
 | Wing | Cognition cluster |
 |---|---|
@@ -47,11 +37,6 @@ landing in `road-to-suite-closure.md` Phase 3).
 | **2 — Product + Foundation** | Roles cluster (PM, designer, QA, EM); product discovery, prioritization, delivery shape |
 | **3 — GTM + Growth** | CMO + marketing + sales + lifecycle; channel-agnostic positioning + funnel cognition |
 | **4 — Money + Strategy + Ops** | CFO + COO + board-level strategy, valuation, org-design; stage-agnostic financial + operational cognition |
-
-Per-wing plates (roadmaps, persona maps, decision logs) live under
-`agents/roadmaps/` and `agents/contexts/`. Roadmaps are transient
-working layers — agents that need a wing's plate look it up by wing
-number rather than by file path (per `no-roadmap-references`).
 
 ## Source of truth
 
@@ -68,75 +53,42 @@ and run `task sync` (or `task ci`) to compress + regenerate the tool directories
 
 ## Tech stack of this package
 
-- **Bash** — install scripts, compression driver
-- **Python 3.10+** — linters (`scripts/skill_linter.py`, `scripts/check_portability.py`,
-  `scripts/check_references.py`, `scripts/readme_linter.py`), compression tooling,
-  test suite (pytest)
-- **Markdown** — all content (skills, rules, commands, guidelines, templates)
-- **Taskfile** — developer entrypoints (`task ci`, `task sync`, `task test`)
-- **GitHub Actions** — CI workflow under `.github/workflows/`
-
-No application code or framework runtime (no Laravel / Symfony / Next.js /
-Express). The `composer.json` / `package.json` are thin distribution
-manifests.
-
-**Recommended ingestion path for non-text formats.** PDF, DOCX, XLSX,
-PPTX, EPUB, image, and audio inputs route through the
-[`markitdown`](.agent-src/skills/markitdown/SKILL.md) skill — a thin
-markdown-only wrapper over Microsoft's MIT-licensed `markitdown-mcp`
-server (peer-side install, zero Python in this package). The skill
-ships the four-layer security defense (skill checklist · narrow API ·
-Docker read-only · localhost binding) and a calibrated token claim
-(3-5× comprehension on text-heavy, 10-50× on image-heavy). Measure
-locally with `python3 scripts/measure_markitdown_lift.py` against
-`tests/fixtures/markitdown-corpus/`.
-
-**Cognition-only floor for Wings 2–4.** Wings 2, 3, and 4 enforce a
-no-SaaS-auth, no-vendor-SDK, no-stage-prescription floor: cognition
-artifacts (markdown tables, scoring rubrics, walkthroughs) must work
-in any host without external dependencies. The structural-malice
-check in `skill_linter.py` enforces this boundary mechanically (no
-credential exfiltration, no remote execution, no shell injection in
-subprocess calls — see `.agent-src.uncompressed/rules/skill-quality.md`
-§ Structural Malice Floor).
+Bash (install scripts) · Python 3.10+ (linters, compression, pytest) ·
+Markdown (all content) · Taskfile (`task ci/sync/test`) · GitHub
+Actions (`.github/workflows/`). Non-text inputs (PDF, DOCX, XLSX,
+images, audio) route through [`markitdown`](.agent-src/skills/markitdown/SKILL.md).
+Wings 2–4 enforce a cognition-only floor (no SaaS auth, no vendor
+SDKs) — `skill_linter.py` enforces it mechanically. Deep detail:
+[`agents/contexts/agents-md-tech-stack.md`](agents/contexts/agents-md-tech-stack.md).
 
 ## Working on this repo
 
 ```bash
-task sync                  # .agent-src.uncompressed/ → .agent-src/, then project → .augment/
-task generate-tools        # Regenerate .claude/, .cursor/, .clinerules/, .windsurfrules
-task test                  # pytest tests/ + tests/test_install.sh
-task lint-skills           # python3 scripts/skill_linter.py --all
-task build-cloud-bundles-all  # ZIP every eligible skill → dist/cloud/ (Claude.ai Web / Skills API)
-task ci                    # Full pipeline — must be green before PR
+task sync              # regenerate .agent-src/, .augment/
+task generate-tools    # regenerate .claude/, .cursor/, .clinerules/, .windsurfrules
+task test              # pytest + test_install.sh
+task lint-skills       # skill_linter.py --all
+task ci                # full pipeline — must be green before PR
 ```
 
-All checks must pass before a PR: sync-check, consistency, check-compression,
-check-refs, check-portability, lint-skills, test, lint-readme.
+PR-blocking checks: sync-check, consistency, check-compression, check-refs,
+check-portability, lint-skills, test, lint-readme.
 
 ## Maintainer telemetry (opt-in)
 
-The artefact-engagement telemetry pipeline (`./agent-config telemetry:record`
-and `./agent-config telemetry:report`) is **default-off**. Maintainers who
-want to measure which skills/rules/commands the agent actually applies set
-`telemetry.artifact_engagement.enabled: true` in `.agent-settings.yml`. The
-log is local-only JSONL (no upload, no cross-project share) and is bound
-by the redaction floor described in
-[`contexts/contracts/artifact-engagement-flow.md`](.agent-src.uncompressed/contexts/contracts/artifact-engagement-flow.md) (beta).
-The recording rule lives at
-[`.agent-src/rules/artifact-engagement-recording.md`](.agent-src/rules/artifact-engagement-recording.md).
+Default-off. `telemetry.artifact_engagement.enabled: true` in
+`.agent-settings.yml` enables local-only JSONL logging. Redaction floor
++ pipeline: [`contexts/contracts/artifact-engagement-flow.md`](.agent-src.uncompressed/contexts/contracts/artifact-engagement-flow.md) (beta).
+Rule: [`.agent-src/rules/artifact-engagement-recording.md`](.agent-src/rules/artifact-engagement-recording.md).
 
 ## Context-aware command suggestion
 
-When a user's free-form prompt matches a command's purpose, the agent
-surfaces matches as a numbered-options block with an always-present
-"run the prompt as-is" escape. **Nothing auto-executes** — the user
-picks every time. Engine: `scripts/command_suggester/`. Rule:
+When a free-form prompt matches a command's purpose, the agent surfaces
+matches as numbered options with a "run as-is" escape; **nothing
+auto-executes**. Engine: `scripts/command_suggester/`. Rule:
 [`.agent-src/rules/command-suggestion-policy.md`](.agent-src/rules/command-suggestion-policy.md).
-Locked eligibility table, scoring contract, and hardening list:
-[`docs/contracts/adr-command-suggestion.md`](docs/contracts/adr-command-suggestion.md)
-and
-[`contexts/contracts/command-suggestion-flow.md`](.agent-src.uncompressed/contexts/contracts/command-suggestion-flow.md) (beta).
+Eligibility + scoring + hardening: [`docs/contracts/adr-command-suggestion.md`](docs/contracts/adr-command-suggestion.md)
+and [`contexts/contracts/command-suggestion-flow.md`](.agent-src.uncompressed/contexts/contracts/command-suggestion-flow.md) (beta).
 
 ## Key rules for agents editing this repo
 
@@ -179,7 +131,7 @@ appends to `agents/.rule-budget-history.jsonl`.
 ```
 .agent-src.uncompressed/      ← edit here
   skills/       (141 skills)
-  rules/        (60 rules)
+  rules/        (58 rules)
   commands/     (103 commands)
   personas/     (7 personas)
   templates/    (AGENTS.md, copilot-instructions.md, skill.md, …)
@@ -199,22 +151,11 @@ agents/                     ← this package's own roadmaps / sessions / context
 
 ## Multi-agent tool support
 
-`task generate-tools` builds:
-
-| Tool | Output | Strategy |
-|---|---|---|
-| Augment Code | `.augment/` | Native (source) |
-| Claude Code | `.claude/rules/`, `.claude/skills/` | Symlinks + Agent Skills standard |
-| Cursor | `.cursor/rules/` | Symlinks |
-| Cline | `.clinerules/` | Symlinks |
-| Windsurf | `.windsurfrules` | Concatenated file |
-| Gemini CLI | `GEMINI.md` | Symlink → AGENTS.md |
-| Claude.ai Web / Skills API | `dist/cloud/<skill>.zip` | `task build-cloud-bundles-all` (T3-H gated) |
-
-Skills follow the [Agent Skills open standard](https://agentskills.io). Commands
-are converted to Claude Code Skills with `disable-model-invocation: true`.
-Cloud bundles enforce description budgets and prepend a sandbox note for
-T2/T3-S skills — see [`docs/architecture.md`](docs/architecture.md#cloud-bundle-pipeline).
+`task generate-tools` projects `.agent-src/` into Augment Code, Claude
+Code (Agent Skills standard), Cursor, Cline, Windsurf, Gemini CLI, and
+Claude.ai cloud bundles. Skills follow [agentskills.io](https://agentskills.io);
+commands are converted to Claude Code Skills with `disable-model-invocation: true`.
+Per-tool layout + cloud-bundle pipeline: [`docs/architecture.md`](docs/architecture.md#cloud-bundle-pipeline).
 
 ## Contributing
 
