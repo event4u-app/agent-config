@@ -24,7 +24,7 @@ Iron-Law floor** (`commit-policy`, `non-destructive-by-default`,
 as `event4u/agent-config` / `@event4u/agent-config`. No application
 runtime. Installed via `scripts/install.sh` (Bash) and
 `scripts/install.py` (Python bridge). Distribution mechanics:
-[`agents/contexts/agents-md-tech-stack.md`](agents/contexts/agents-md-tech-stack.md).
+[`docs/contracts/agents-md-tech-stack.md`](docs/contracts/agents-md-tech-stack.md) (beta).
 
 ## The four wings
 
@@ -59,7 +59,7 @@ Actions (`.github/workflows/`). Non-text inputs (PDF, DOCX, XLSX,
 images, audio) route through [`markitdown`](.agent-src/skills/markitdown/SKILL.md).
 Wings 2–4 enforce a cognition-only floor (no SaaS auth, no vendor
 SDKs) — `skill_linter.py` enforces it mechanically. Deep detail:
-[`agents/contexts/agents-md-tech-stack.md`](agents/contexts/agents-md-tech-stack.md).
+[`docs/contracts/agents-md-tech-stack.md`](docs/contracts/agents-md-tech-stack.md) (beta).
 
 ## Working on this repo
 

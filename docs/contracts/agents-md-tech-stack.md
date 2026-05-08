@@ -1,3 +1,7 @@
+---
+stability: beta
+---
+
 # Tech stack — deep detail
 
 Outboarded from `AGENTS.md` Phase 2 of `road-to-augment-limit-fit` to
