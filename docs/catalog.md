@@ -1,16 +1,17 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **342 public artefacts** shipped by
+Consumer-facing catalog of all **359 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > Auto-generated — do not edit manually.
 
-## Skills (136)
+## Skills (141)
 
 | kind | name | extra | description |
 |---|---|---|---|
+| skill | [`adr-create`](../.agent-src/skills/adr-create/SKILL.md) |  | Use when capturing an architectural decision — naming the file, picking the next ADR number, filling Status / Context / Decision / Consequences, and regenerating the index — even without saying 'ADR'. |
 | skill | [`adversarial-review`](../.agent-src/skills/adversarial-review/SKILL.md) |  | ONLY when user explicitly requests adversarial review, devil's advocate analysis, stress-testing a plan, or 'poke holes in this' — NOT for regular code review or design feedback. |
 | skill | [`agent-docs-writing`](../.agent-src/skills/agent-docs-writing/SKILL.md) |  | Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure. |
 | skill | [`ai-council`](../.agent-src/skills/ai-council/SKILL.md) |  | Use when polling external AIs (OpenAI, Anthropic) outside the host session for a neutral second opinion on a roadmap, diff, prompt, or file set — or 'cross-check with another model'. |
@@ -80,6 +81,7 @@ are excluded.
 | skill | [`lint-skills`](../.agent-src/skills/lint-skills/SKILL.md) |  | Use when running the package's skill linter against all skills and rules to validate frontmatter, required sections, and execution metadata. |
 | skill | [`livewire`](../.agent-src/skills/livewire/SKILL.md) |  | Use when the project's frontend stack is Livewire — dispatched by `directives/ui/{apply,review,polish}.py`. Covers reactive state, events, lifecycle hooks, and component/view separation. |
 | skill | [`logging-monitoring`](../.agent-src/skills/logging-monitoring/SKILL.md) |  | Use when working with logging or monitoring — Sentry error tracking, Grafana/Loki log aggregation, structured logging channels, or monitoring helpers. |
+| skill | [`markitdown`](../.agent-src/skills/markitdown/SKILL.md) |  | Use when converting PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown for LLM ingestion via the upstream markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'. |
 | skill | [`mcp`](../.agent-src/skills/mcp/SKILL.md) |  | Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows. |
 | skill | [`md-language-check`](../.agent-src/skills/md-language-check/SKILL.md) |  | Use BEFORE saving any .md under .augment/, .agent-src*/, or agents/ — scans umlauts, German function words, and quoted German phrases outside DE:/EN: anchor blocks. Hard gate per language-and-tone. |
 | skill | [`merge-conflicts`](../.agent-src/skills/merge-conflicts/SKILL.md) |  | Use when the user has merge conflicts or says "resolve conflicts". Understands conflict markers, resolution strategies, and verification workflow. |
@@ -91,6 +93,7 @@ are excluded.
 | skill | [`override-management`](../.agent-src/skills/override-management/SKILL.md) |  | Creates and manages project-level overrides for shared skills, rules, and commands — extending or replacing originals from .augment/ with project-specific behavior in agents/overrides/. |
 | skill | [`performance`](../.agent-src/skills/performance/SKILL.md) |  | Use when optimizing application performance — caching strategies, eager loading, query optimization, Redis patterns, or background job design. |
 | skill | [`performance-analysis`](../.agent-src/skills/performance-analysis/SKILL.md) |  | ONLY when user explicitly requests: performance audit, bottleneck analysis, or N+1 query detection. NOT for regular feature work. |
+| skill | [`persona-writing`](../.agent-src/skills/persona-writing/SKILL.md) |  | Use when creating or editing a persona in .agent-src.uncompressed/personas/ — voice / focus / unique questions / output expectations — even when the user just says 'add a reviewer voice for X'. |
 | skill | [`pest-testing`](../.agent-src/skills/pest-testing/SKILL.md) |  | Use when writing, generating, or improving Pest tests for Laravel — clear intent, good coverage, maintainable structure, and alignment with project testing conventions. |
 | skill | [`php-coder`](../.agent-src/skills/php-coder/SKILL.md) |  | Writes or edits PHP code — controllers, classes, type hints, SOLID refactors, modern idioms — even without naming PHP. NOT for writing tests (use pest-testing) or explaining PHP concepts. |
 | skill | [`php-debugging`](../.agent-src/skills/php-debugging/SKILL.md) |  | Use when debugging PHP with Xdebug — breakpoints, step-through, dual-container setup, IDE configuration, header-based routing — even when the user just says 'why does this blow up on request X'. |
@@ -119,8 +122,10 @@ are excluded.
 | skill | [`review-routing`](../.agent-src/skills/review-routing/SKILL.md) |  | Use when preparing a PR description, suggesting reviewers, or flagging risk — produces owner-mapped roles plus historical bug-pattern matches from project-local YAML. |
 | skill | [`rice-prioritization`](../.agent-src/skills/rice-prioritization/SKILL.md) |  | Use when ranking competing initiatives for a roadmap, breaking a tie between two features, or auditing a backlog for hidden low-value work via Reach × Impact × Confidence ÷ Effort. |
 | skill | [`roadmap-management`](../.agent-src/skills/roadmap-management/SKILL.md) |  | Use when the user says "create roadmap", "show roadmap", or "execute roadmap". Creates, reads, and manages roadmap files with phase tracking. |
+| skill | [`roadmap-writing`](../.agent-src/skills/roadmap-writing/SKILL.md) |  | Use when authoring or rewriting a roadmap in agents/roadmaps/ — phase prose, goal sentence, acceptance criteria, council notes — even when the user just says 'write a plan for X' or 'draft a roadmap'. |
 | skill | [`rtk-output-filtering`](../.agent-src/skills/rtk-output-filtering/SKILL.md) |  | Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns. |
 | skill | [`rule-writing`](../.agent-src/skills/rule-writing/SKILL.md) |  | Use when creating or editing a rule in .agent-src.uncompressed/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'. |
+| skill | [`script-writing`](../.agent-src/skills/script-writing/SKILL.md) |  | Use when adding or editing any script under `scripts/` — `--quiet` flag, `_lib/script_output` helpers, silent Taskfile wiring, Iron-Law carve-outs — even when you just say 'add a check script for X'. |
 | skill | [`security`](../.agent-src/skills/security/SKILL.md) |  | Use when applying security best practices — authentication, authorization via Policies, CSRF protection, input sanitization, rate limiting, or secure coding. |
 | skill | [`security-audit`](../.agent-src/skills/security-audit/SKILL.md) |  | ONLY when user explicitly requests: security audit, vulnerability scan, or penetration test review. NOT for regular feature work. |
 | skill | [`sentry-integration`](../.agent-src/skills/sentry-integration/SKILL.md) |  | Use when the user shares a Sentry URL, says "check Sentry", or wants to investigate production errors. Uses Sentry MCP tools for deep analysis. |
@@ -132,7 +137,7 @@ are excluded.
 | skill | [`sql-writing`](../.agent-src/skills/sql-writing/SKILL.md) |  | Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement` — even when the user just pastes a query and asks 'why is this slow' without naming SQL. |
 | skill | [`subagent-orchestration`](../.agent-src/skills/subagent-orchestration/SKILL.md) |  | Use when orchestrating implementer/judge subagents — six modes (do-and-judge, do-in-steps, do-in-parallel, do-competitively, judge-with-debate, do-in-worktrees) — models from .agent-settings.yml. |
 | skill | [`systematic-debugging`](../.agent-src/skills/systematic-debugging/SKILL.md) |  | Use when hitting a bug, test failure, crash, or unexpected behavior — enforces reproduce → isolate → hypothesize → verify before any fix — even when the user just says 'this is broken' or 'quick fix'. |
-| skill | [`technical-specification`](../.agent-src/skills/technical-specification/SKILL.md) |  | Use when the user says "write a spec", "create RFC", or "document this decision". Writes technical specifications, RFCs, and ADRs with clear structure. |
+| skill | [`technical-specification`](../.agent-src/skills/technical-specification/SKILL.md) |  | Use when the user says "write a spec", "create RFC", "write a PRD", or "document this decision". Writes technical specifications, PRDs, RFCs, and ADRs with clear structure. |
 | skill | [`terraform`](../.agent-src/skills/terraform/SKILL.md) |  | Use when writing Terraform — AWS modules, resources, variables, outputs, remote state — even when the user just says 'provision this infra' or 'add an S3 bucket' without naming Terraform. |
 | skill | [`terragrunt`](../.agent-src/skills/terragrunt/SKILL.md) |  | Use when working with Terragrunt — DRY multi-env configs, module dependencies, remote state orchestration — even when the user just says 'deploy this to staging and prod' without naming Terragrunt. |
 | skill | [`test-driven-development`](../.agent-src/skills/test-driven-development/SKILL.md) |  | Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — even if the user just says 'add this function' or 'fix this bug'. |
@@ -148,7 +153,7 @@ are excluded.
 | skill | [`verify-completion-evidence`](../.agent-src/skills/verify-completion-evidence/SKILL.md) |  | Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs. |
 | skill | [`websocket`](../.agent-src/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (55)
+## Rules (57)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -161,6 +166,7 @@ are excluded.
 | rule | [`ask-when-uncertain`](../.agent-src/rules/ask-when-uncertain.md) | always | Ask when uncertain — don't guess, assume, or improvise |
 | rule | [`autonomous-execution`](../.agent-src/rules/autonomous-execution.md) | auto | Deciding whether to ask the user or just act on a workflow step — trivial-vs-blocking classification, autonomy opt-in detection, commit default; defers to non-destructive-by-default for the Hard Floor |
 | rule | [`capture-learnings`](../.agent-src/rules/capture-learnings.md) | auto | After completing a task where a repeated mistake or successful pattern appeared — capture as rule or skill |
+| rule | [`caveman-speak`](../.agent-src/rules/caveman-speak.md) | auto | When caveman.speak_scope != off — compress reply prose to caveman grammar with byte-for-byte carve-outs for numbered options, Iron-Law literals, code, paths, and error markers. |
 | rule | [`cli-output-handling`](../.agent-src/rules/cli-output-handling.md) | auto | Running CLI commands that produce verbose output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk when installed; tail/grep is fallback. |
 | rule | [`command-suggestion-policy`](../.agent-src/rules/command-suggestion-policy.md) | auto | User prompt without /command but matching an eligible slash command — surface matches as numbered options with as-is escape hatch; never auto-executes, user always picks |
 | rule | [`commit-conventions`](../.agent-src/rules/commit-conventions.md) | auto | Git commit message format, branch naming, conventional commits, committing, pushing, or creating pull requests |
@@ -172,6 +178,7 @@ are excluded.
 | rule | [`e2e-testing`](../.agent-src/rules/e2e-testing.md) | auto | Playwright E2E tests — locators, assertions, Page Objects, fixtures, CI, and flaky test prevention |
 | rule | [`guidelines`](../.agent-src/rules/guidelines.md) | auto | Writing or reviewing code — check relevant guideline before writing or reviewing code |
 | rule | [`improve-before-implement`](../.agent-src/rules/improve-before-implement.md) | auto | Before implementing features or architectural changes — validate the request against existing code, challenge weak requirements, and suggest improvements |
+| rule | [`invite-challenge`](../.agent-src/rules/invite-challenge.md) | auto | Before executing a complex plan or non-trivial design — proactively ask 'am I solving the right problem?' and pause for user confirmation, even when no ambiguity is detected |
 | rule | [`language-and-tone`](../.agent-src/rules/language-and-tone.md) | always | Language and tone — informal German Du, English code comments, .md files always English |
 | rule | [`laravel-translations`](../.agent-src/rules/laravel-translations.md) | auto | Laravel language files, translations, i18n, lang/de, lang/en, __() helper, localization, multilingual text |
 | rule | [`markdown-safe-codeblocks`](../.agent-src/rules/markdown-safe-codeblocks.md) | auto | Generating markdown output that contains code blocks — prevent broken nesting |
@@ -208,7 +215,7 @@ are excluded.
 | rule | [`user-interaction`](../.agent-src/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (95)
+## Commands (103)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -221,6 +228,9 @@ are excluded.
 | command | [`analyze-reference-repo`](../.agent-src/commands/analyze-reference-repo.md) |  | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`bug-fix`](../.agent-src/commands/bug-fix.md) |  | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
 | command | [`bug-investigate`](../.agent-src/commands/bug-investigate.md) |  | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
+| command | [`challenge-me:vision`](../.agent-src/commands/challenge-me/vision.md) | cluster: challenge-me | Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Markdown vision pitch for tickets, roadmaps, or fresh-chat handoff. |
+| command | [`challenge-me:with-docs`](../.agent-src/commands/challenge-me/with-docs.md) | cluster: challenge-me | Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-vs-code verification, optional CONTEXT.md patch + ADR candidates in the pitch. |
+| command | [`challenge-me`](../.agent-src/commands/challenge-me.md) | cluster: challenge-me | Challenge-me orchestrator — routes to vision, with-docs |
 | command | [`chat-history:import`](../.agent-src/commands/chat-history/import.md) | cluster: chat-history | Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import |
 | command | [`chat-history:learn`](../.agent-src/commands/chat-history/learn.md) | cluster: chat-history | Pick a prior chat-history session and mine it for project-improving learnings — runs learning-to-rule-or-skill on the picked session, drafts proposal(s) under agents/proposals/ |
 | command | [`chat-history:show`](../.agent-src/commands/chat-history/show.md) | cluster: chat-history | Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries |
@@ -235,6 +245,7 @@ are excluded.
 | command | [`copilot-agents:init`](../.agent-src/commands/copilot-agents/init.md) | cluster: copilot-agents | Create AGENTS.md and .github/copilot-instructions.md from scratch in the consumer project — interactive, auto-detects stack, never leaks other projects' identifiers. |
 | command | [`copilot-agents:optimize`](../.agent-src/commands/copilot-agents/optimize.md) | cluster: copilot-agents | Analyzes and refactors AGENTS.md and copilot-instructions.md — removes duplications, enforces line budgets, and ensures both files are optimized for their audience. |
 | command | [`copilot-agents`](../.agent-src/commands/copilot-agents.md) | cluster: copilot-agents | Copilot agents-doc orchestrator — routes to init, optimize |
+| command | [`cost-report`](../.agent-src/commands/cost-report.md) |  | Capture token cost from the active Claude Code session, append to the local sessions store, and surface the 50/75/90/100% budget alert ladder with cost-profile suggestions. |
 | command | [`council:default`](../.agent-src/commands/council/default.md) | cluster: council | Default council lens — neutral framing, redacted context, advisory output only. Run `/council default <input>` for prompt/roadmap/diff/files; the cluster shows a menu when invoked bare. |
 | command | [`council:design`](../.agent-src/commands/council/design.md) | cluster: council | Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment. |
 | command | [`council:optimize`](../.agent-src/commands/council/optimize.md) | cluster: council | Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice. |
@@ -259,6 +270,7 @@ are excluded.
 | command | [`fix:refs`](../.agent-src/commands/fix/refs.md) | cluster: fix | Find and fix broken cross-references in .augment/ and agents/ files |
 | command | [`fix:seeder`](../.agent-src/commands/fix/seeder.md) | cluster: fix | Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them |
 | command | [`fix`](../.agent-src/commands/fix.md) | cluster: fix | Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, pr-bot-comments, pr-developer-comments |
+| command | [`grill-me`](../.agent-src/commands/grill-me.md) | cluster: challenge-me | Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch |
 | command | [`implement-ticket`](../.agent-src/commands/implement-ticket.md) |  | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git. |
 | command | [`jira-ticket`](../.agent-src/commands/jira-ticket.md) |  | Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug |
 | command | [`judge:on-diff`](../.agent-src/commands/judge/on-diff.md) | cluster: judge | Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user |
@@ -293,9 +305,12 @@ are excluded.
 | command | [`refine-ticket`](../.agent-src/commands/refine-ticket.md) |  | Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates validate-feature-fit and threat-modeling, ends with a close-prompt |
 | command | [`review-changes`](../.agent-src/commands/review-changes.md) |  | Self-review local changes before creating a PR — dispatches to four specialized judges (bug, security, tests, quality) and consolidates verdicts |
 | command | [`review-routing`](../.agent-src/commands/review-routing.md) |  | Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml |
+| command | [`roadmap:ai-council`](../.agent-src/commands/roadmap/ai-council.md) | cluster: roadmap | Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options. |
 | command | [`roadmap:create`](../.agent-src/commands/roadmap/create.md) | cluster: roadmap | Interactively create a new roadmap file in agents/roadmaps/ |
-| command | [`roadmap:execute`](../.agent-src/commands/roadmap/execute.md) | cluster: roadmap | Read and interactively execute a roadmap from agents/roadmaps/ |
-| command | [`roadmap`](../.agent-src/commands/roadmap.md) | cluster: roadmap | Roadmap orchestrator — routes to create, execute |
+| command | [`roadmap:process-full`](../.agent-src/commands/roadmap/process-full.md) | cluster: roadmap | Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries. |
+| command | [`roadmap:process-phase`](../.agent-src/commands/roadmap/process-phase.md) | cluster: roadmap | Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster. |
+| command | [`roadmap:process-step`](../.agent-src/commands/roadmap/process-step.md) | cluster: roadmap | Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out. |
+| command | [`roadmap`](../.agent-src/commands/roadmap.md) | cluster: roadmap | Roadmap orchestrator — routes to create (authoring) and process-step / process-phase / process-full (autonomous execution). |
 | command | [`rule-compliance-audit`](../.agent-src/commands/rule-compliance-audit.md) |  | Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules |
 | command | [`set-cost-profile`](../.agent-src/commands/set-cost-profile.md) |  | Change the cost_profile in .agent-settings.yml — shows each profile's meaning and applies the selection |
 | command | [`sync-agent-settings`](../.agent-src/commands/sync-agent-settings.md) |  | Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing |
@@ -308,7 +323,7 @@ are excluded.
 | command | [`upstream-contribute`](../.agent-src/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
 | command | [`work`](../.agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (56)
+## Guidelines (58)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -316,11 +331,13 @@ are excluded.
 | guideline | [`ask-when-uncertain-demos`](../docs/guidelines/agent-infra/ask-when-uncertain-demos.md) | agent-infra |  |
 | guideline | [`asking-and-brevity-examples`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md) | agent-infra |  |
 | guideline | [`break-glass-usage`](../docs/guidelines/agent-infra/break-glass-usage.md) | agent-infra |  |
+| guideline | [`carve-out-predicates`](../docs/guidelines/agent-infra/carve-out-predicates.md) | agent-infra |  |
 | guideline | [`developer-judgment`](../docs/guidelines/agent-infra/developer-judgment.md) | agent-infra |  |
 | guideline | [`direct-answers-demos`](../docs/guidelines/agent-infra/direct-answers-demos.md) | agent-infra |  |
 | guideline | [`engineering-memory-data-format`](../docs/guidelines/agent-infra/engineering-memory-data-format.md) | agent-infra |  |
 | guideline | [`language-and-tone-examples`](../docs/guidelines/agent-infra/language-and-tone-examples.md) | agent-infra |  |
 | guideline | [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md) | agent-infra |  |
+| guideline | [`mcp-request-signing`](../docs/guidelines/agent-infra/mcp-request-signing.md) | agent-infra |  |
 | guideline | [`memory-access`](../docs/guidelines/agent-infra/memory-access.md) | agent-infra |  |
 | guideline | [`naming`](../docs/guidelines/agent-infra/naming.md) | agent-infra |  |
 | guideline | [`output-patterns`](../docs/guidelines/agent-infra/output-patterns.md) | agent-infra |  |
