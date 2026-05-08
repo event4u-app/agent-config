@@ -1,0 +1,38 @@
+# skills-provenance — externally-derived skill index
+#
+# Lists skills in this package whose body wraps, dispatches into, or is
+# materially derived from a third-party tool, repository, or methodology.
+# Pulled forward as the ADAPT #2 idea from
+# `agents/analysis/compare-microck-ordinary-claude-skills.md` so that
+# attribution and last-verified-with metadata stay in one auditable
+# place instead of polluting individual SKILL.md frontmatter.
+#
+# Schema:
+#   <skill-name>:
+#     author:        <upstream maintainer / org>
+#     source:        <canonical repo or product URL>
+#     license:       <SPDX identifier>
+#     license_clean: <true|false>     # true = MIT/BSD/Apache-2.0/etc.
+#     kind:          <wrapper|methodology|fork|inspired_by>
+#     last_verified: <YYYY-MM-DD>
+#     pinned_to:     <upstream tag or sha at last verification>
+#     notes:         <one-line context if needed>
+#
+# Add an entry whenever a new skill ships that materially leans on an
+# external project. Re-verify entries when the upstream releases a
+# breaking minor; bump `last_verified` and `pinned_to` together. Drop
+# the entry when the skill is removed or when it has been rewritten
+# from scratch with no upstream lineage.
+
+markitdown:
+  author: Microsoft (microsoft/markitdown maintainers)
+  source: https://github.com/microsoft/markitdown
+  license: MIT
+  license_clean: true
+  kind: wrapper
+  last_verified: 2026-05-08
+  pinned_to: markitdown-mcp@0.0.1a4
+  notes: |
+    Peer-side MCP server install. Zero Python in this package.
+    Calibrated token claim grounded by `scripts/measure_markitdown_lift.py`
+    against `tests/fixtures/markitdown-corpus/`.
