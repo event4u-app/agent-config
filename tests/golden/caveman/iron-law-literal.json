@@ -1,0 +1,12 @@
+{
+  "name": "iron-law-literal",
+  "carve_out_class": "Triple-backtick ALL-CAPS Iron-Law fences",
+  "input": "Rule body explains intent. Iron Law itself stays literal:\n\n```\nNEVER COMMIT. NEVER ASK ABOUT COMMITTING.\nEXCEPTIONS ARE EXPLICIT, NOT INFERRED.\n```\n\nRest of prose follows.",
+  "carve_out_regex": "^(```|[A-Z][A-Z \\.,'\\-]+[A-Z\\.]|EXCEPTIONS ARE EXPLICIT, NOT INFERRED\\.)$",
+  "expected_preserved_lines": [
+    "```",
+    "NEVER COMMIT. NEVER ASK ABOUT COMMITTING.",
+    "EXCEPTIONS ARE EXPLICIT, NOT INFERRED.",
+    "```"
+  ]
+}
