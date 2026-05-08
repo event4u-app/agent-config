@@ -7,7 +7,7 @@ Give your AI agents an audit-disciplined orchestration contract — testing, Git
 > Your agent picks up the project's stack, runs tests, prepares PRs, fixes CI — and follows your team's coding standards while doing it. Stack-aware skill sets ship for PHP (Laravel · Symfony · Zend/Laminas), JavaScript (Next.js · React · Node), and cross-stack concerns (API · testing · security · observability).
 
 <p align="center">
-  <strong>140 Skills</strong> · <strong>60 Rules</strong> · <strong>103 Commands</strong> · <strong>58 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>141 Skills</strong> · <strong>60 Rules</strong> · <strong>103 Commands</strong> · <strong>58 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -323,6 +323,7 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 | [`security`](.agent-src/skills/security/SKILL.md) | Auth, policies, CSRF, rate limiting, secure coding |
 | [`api-design`](.agent-src/skills/api-design/SKILL.md) | REST conventions, versioning, deprecation |
 | [`database`](.agent-src/skills/database/SKILL.md) | MariaDB optimization, indexing, query performance |
+| [`markitdown`](.agent-src/skills/markitdown/SKILL.md) | Token-cheap PDF / DOCX / XLSX / PPTX / image / audio ingestion via the upstream `markitdown-mcp` server (peer-side install, zero Python in this package) |
 
 → [Public catalog](docs/catalog.md) (all rules, skills, commands, guidelines) · [Skills only](docs/skills-catalog.md) · [llms.txt](llms.txt)
 
@@ -368,7 +369,7 @@ Every developer gets the same behavior. No per-user setup needed.
 native slash-commands)
 
 > **What this means in practice:** Augment Code and Claude Code get the full
-> package (rules + 140 skills + 103 native commands). Cursor, Cline, Windsurf,
+> package (rules + 141 skills + 103 native commands). Cursor, Cline, Windsurf,
 > Gemini CLI, and GitHub Copilot only get the **rules** natively; skills and
 > commands are available to them as documentation the agent can read, not as
 > first-class features.
