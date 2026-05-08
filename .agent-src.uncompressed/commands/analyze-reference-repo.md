@@ -192,4 +192,7 @@ Never create the roadmap without explicit confirmation.
 - Skill: `project-analyzer` — base analysis workflow.
 - Skill: `learning-to-rule-or-skill` — turn adopt items into content.
 - Skill: `upstream-contribute` — push learnings back to this package.
+- Skill: `markitdown` — preferred ingestion path when the reference
+  ships PDFs, DOCX, XLSX, PPTX, EPUB, images, or audio. Never read a
+  binary office format raw — convert first, then analyze.
 - Roadmaps: `agents/roadmaps/` — consumers of findings (e.g. `archive/road-to-anthropic-alignment.md`).
