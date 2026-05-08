@@ -9,10 +9,17 @@ _Origin: migrated from `.agent-src.uncompressed/rules/roadmap-progress-sync.md` 
 
 # Roadmap Progress Sync
 
-> **Enforced by:** [`scripts/roadmap_progress_hook.py`](../../scripts/roadmap_progress_hook.py)
-> on Augment + Claude Code (`PostToolUse`). Hook is primary; the prose
-> below is the specification the hook implements and the fallback when
-> the platform has no hook surface.
+> **Enforced by (defence in depth):**
+> 1. [`scripts/roadmap_progress_hook.py`](../../scripts/roadmap_progress_hook.py)
+>    on Augment + Claude Code (`PostToolUse`) — auto-regen on write.
+> 2. `.git/hooks/pre-commit` (installed by `scripts/install-hooks.sh`) —
+>    blocks any commit whose staged set touches `agents/roadmaps/` or
+>    `agents/roadmaps-progress.md` while the dashboard is stale.
+> 3. `task ci` runs `roadmap-progress-check` so a PR cannot land with a
+>    stale dashboard even if local hooks were bypassed.
+>
+> Hook is primary; the prose below is the specification the hook
+> implements and the fallback when the platform has no hook surface.
 
 ## Iron Law — dashboard sync
 

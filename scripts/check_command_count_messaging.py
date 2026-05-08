@@ -38,6 +38,8 @@ import re
 import sys
 from pathlib import Path
 
+QUIET = "--quiet" in sys.argv
+
 ROOT = Path(__file__).resolve().parent.parent
 COMMANDS_DIR = ROOT / ".agent-src.uncompressed" / "commands"
 README = ROOT / "README.md"
@@ -107,7 +109,8 @@ def main() -> int:
             errors.append(err)
 
     if not errors:
-        print("✅  All command-count messaging in sync with registry.")
+        if not QUIET:
+            print("✅  All command-count messaging in sync with registry.")
         return 0
 
     print(f"❌  Command-count messaging drift — {len(errors)} mismatch(es):")

@@ -50,18 +50,18 @@ For each changed `.md` file:
      pleasantries, hedging, connective fluff (however, furthermore, additionally),
      redundant wording, obvious framework knowledge, repeated explanations, decorative prose
    - **Shorten:** "in order to" → "to", "make sure to" → "ensure", use short synonyms
-   - **Abbreviate** common terms when context unambiguous: `DB`, `auth`,
-     `config`, `req`, `res`, `fn`, `impl`, `env`, `deps`, `ctx`. Skip on
-     first occurrence of the concept in the file, or when the
-     abbreviation collides with a domain term (`auth` stays
-     `authentication` inside an auth-module file). Never abbreviate
-     inside code blocks, frontmatter, file paths, command strings, or
-     Iron Law fenced blocks.
+   - **Abbreviate** common terms when context is unambiguous: `DB`, `auth`,
+     `config`, `req`, `res`, `fn`, `impl`, `env`, `deps`, `ctx`. Skip if it
+     would be the first occurrence of the concept in the file, or if the
+     abbreviation collides with a domain term (e.g. `auth` stays
+     `authentication` inside an auth-module file). Never abbreviate inside
+     code blocks, frontmatter, file paths, command strings, or Iron Law
+     fenced blocks.
    - **Arrows for causality:** `X causes Y` / `X leads to Y` / `X, then Y`
-     → `X → Y`. Keep arrows out of code blocks, frontmatter, and Iron
-     Law fenced blocks; surrounding prose only. (Example phrases
-     backticked on purpose — inline-code protection skips them; never
-     strip the backticks.)
+     → `X → Y`. Keep arrows out of code blocks, frontmatter, and Iron Law
+     fenced blocks; only the surrounding prose uses them. (The example
+     phrases here are intentionally backticked so the inline-code
+     protection skips them — never strip those backticks.)
    - **Fragments OK:** "Run tests before commit" not "You should always run tests before committing"
    - **Drop:** "you should", "make sure to", "remember to" — state action directly
    - **Merge** redundant bullets that say the same thing differently
@@ -142,9 +142,15 @@ python3 scripts/check_compression.py
 Must show **zero 🔴 errors**. Warnings (🟡) are acceptable.
 If any 🔴 errors remain: go back and fix those files before finishing.
 
-## Step 5: Summary
+## Step 5: Summary (verbosity-gated)
 
-Show a summary table with per-category stats (files compressed, avg savings).
+Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
+`minimal`).
+
+- `off` → emit nothing on success; surface errors only.
+- `minimal` (default) → one line: `→ N files compressed (avg X% savings)`.
+- `full` → multi-line table with per-category stats (files compressed,
+  avg savings).
 
 ## Hash management
 

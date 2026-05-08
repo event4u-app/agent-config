@@ -103,17 +103,22 @@ Run a quick test to confirm rtk picks up the filters:
 rtk config 2>&1 | tail -5
 ```
 
-### 7. Present results
+### 7. Present results (verbosity-gated)
 
-Show a summary table:
+Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
+`minimal`).
 
-```
-| # | Filter | Match | Max Lines |
-|---|---|---|---|
-| 1 | phpstan | phpstan\|quality:phpstan\|vendor/bin/phpstan | 80 |
-| 2 | pest | pest\|phpunit\|artisan test | 60 |
-| ... | ... | ... | ... |
-```
+- `off` → emit nothing on success; surface errors only.
+- `minimal` (default) → one line: `→ N filters configured in .rtk/rtk.toml`.
+- `full` → multi-line summary table:
+
+  ```
+  | # | Filter | Match | Max Lines |
+  |---|---|---|---|
+  | 1 | phpstan | phpstan\|quality:phpstan\|vendor/bin/phpstan | 80 |
+  | 2 | pest | pest\|phpunit\|artisan test | 60 |
+  | ... | ... | ... | ... |
+  ```
 
 ### Rules
 

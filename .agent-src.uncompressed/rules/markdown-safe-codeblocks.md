@@ -12,12 +12,11 @@ triggers:
 
 # Markdown Safe Codeblocks
 
-When generating markdown with code blocks:
+When generating markdown that contains code blocks:
 
-- **NEVER** nest triple backticks inside triple backticks — this breaks rendering and copy/paste.
-- If content already contains triple backticks, use one of:
-  - Plain text blocks (indented by 4 spaces) — **preferred**
-  - `~~~` fences instead of backtick fences
-  - Four backticks (``````) as outer fence
+- **NEVER** nest triple backticks inside triple backticks — breaks rendering and copy/paste.
+- Content to be wrapped contains ``` blocks → **use `~~~` as the outer fence. This is the default.** Inner ``` renders correctly inside `~~~`.
+- Four-backtick outer fences render inconsistently across clients — **do not use**.
+- 4-space indented blocks: acceptable fallback only when plain text without language highlighting is enough.
 - Prefer stability over pretty formatting.
-- Always validate: no broken rendering, no prematurely closed blocks, entire content is selectable and copyable.
+- Always validate before sending: no broken rendering, no prematurely closed blocks, entire content selectable and copyable.

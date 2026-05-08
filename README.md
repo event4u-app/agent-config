@@ -7,7 +7,7 @@ Give your AI agents an audit-disciplined orchestration contract — testing, Git
 > Your agent picks up the project's stack, runs tests, prepares PRs, fixes CI — and follows your team's coding standards while doing it. Stack-aware skill sets ship for PHP (Laravel · Symfony · Zend/Laminas), JavaScript (Next.js · React · Node), and cross-stack concerns (API · testing · security · observability).
 
 <p align="center">
-  <strong>137 Skills</strong> · <strong>59 Rules</strong> · <strong>103 Commands</strong> · <strong>57 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>140 Skills</strong> · <strong>60 Rules</strong> · <strong>103 Commands</strong> · <strong>58 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -368,7 +368,7 @@ Every developer gets the same behavior. No per-user setup needed.
 native slash-commands)
 
 > **What this means in practice:** Augment Code and Claude Code get the full
-> package (rules + 137 skills + 103 native commands). Cursor, Cline, Windsurf,
+> package (rules + 140 skills + 103 native commands). Cursor, Cline, Windsurf,
 > Gemini CLI, and GitHub Copilot only get the **rules** natively; skills and
 > commands are available to them as documentation the agent can read, not as
 > first-class features.
@@ -413,6 +413,8 @@ for the per-rule routing.
 - **Challenge to improve** — agents are thought partners, not yes-machines
 - **Strict by design** — quality over flexibility
 - **Zero overhead by default** — nothing runs until you ask for it
+- **Terse-by-default chat output** — verbosity flags off, intent narration off,
+  caveman-speak prose-only — flip back via [`docs/customization.md` § Verbosity](docs/customization.md#verbosity)
 
 ---
 
@@ -480,10 +482,8 @@ re-enabled or the chat ends. Full scoring contract and hardening:
 Edit in `.agent-src.uncompressed/`, compress, verify:
 
 ```bash
-task sync          # Sync non-.md files
 task ci            # Run all CI checks
 task test          # Run all tests
-task lint-skills   # Lint skills, rules, commands
 ```
 
 → Full commands and project structure: [**docs/development.md**](docs/development.md)

@@ -145,30 +145,44 @@ After each action:
 
 Progress Phase {n}: [{completed}/{total}]
 ██████████░░░░░░ 60%
-
-> 1. Continue with next action
-> 2. Stop here
 ```
 
-### 5. Summary
+Per `verbosity.routine_confirmations` (default `false`):
 
-After completing a phase or all actions:
+- `false` → continue to the next action silently. User can interrupt
+  any time; "continue" is dominant once cleanup is in flight.
+- `true` → ask:
+  ```
+  > 1. Continue with next action
+  > 2. Stop here
+  ```
 
-```
-═══════════════════════════════════════════════
-  ✅  CLEANUP SUMMARY
-═══════════════════════════════════════════════
+### 5. Summary (verbosity-gated)
 
-  📁 Moved:     {count} files
-  🔗 Merged:    {count} files
-  🗑️  Deleted:   {count} files
-  ✏️  Updated:   {count} files
-  📄 Created:   {count} contexts
+After completing a phase or all actions, read
+`verbosity.post_action_reports` from `.agent-settings.yml` (default
+`minimal`).
 
-  Remaining:        {count} actions in {phases} phases
+- `off` → emit nothing on success; surface errors only.
+- `minimal` (default) → one line:
+  `→ Cleanup: {moved} moved · {deleted} deleted · {updated} updated · {remaining} remaining`.
+- `full` → multi-line block:
 
-═══════════════════════════════════════════════
-```
+  ```
+  ═══════════════════════════════════════════════
+    ✅  CLEANUP SUMMARY
+  ═══════════════════════════════════════════════
+
+    📁 Moved:     {count} files
+    🔗 Merged:    {count} files
+    🗑️  Deleted:   {count} files
+    ✏️  Updated:   {count} files
+    📄 Created:   {count} contexts
+
+    Remaining:        {count} actions in {phases} phases
+
+  ═══════════════════════════════════════════════
+  ```
 
 ### Rules
 

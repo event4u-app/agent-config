@@ -221,6 +221,27 @@ Do NOT auto-update docs without the user's knowledge. Flag what needs updating a
 - AGENTS.md and copilot-instructions.md have different audiences — don't copy content between them.
 - Module docs go in `app/Modules/*/agents/`, NOT in the central `agents/` directory.
 
+## Frugality Standards
+
+Apply the [Frugality Charter](../../contexts/contracts/frugality-charter.md)
+to every agent-doc update you author.
+
+**Examples in this artifact:**
+- Per the charter's default-terse rule, doc updates state what
+  changed; no "In this section we will…" frames.
+- Per the cheap-question check, AGENTS.md surface offers options
+  only where the project genuinely diverges.
+- Per the post-action summary suppression, doc edits append change
+  notes to the existing log entry; no new "Summary of changes" block.
+
+**Pre-save self-check:**
+1. Does the doc open with a narrative intro instead of the actual
+   content?
+2. Are paragraphs added that summarize an existing table?
+3. Does the doc duplicate the rule index instead of linking the
+   relevant rule?
+4. Is German prose present outside `DE: / EN:` anchor blocks?
+
 ## Do NOT
 
 - Do NOT create docs unless there's a real need (new module, significant change).

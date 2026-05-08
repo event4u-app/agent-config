@@ -177,6 +177,25 @@ README = enough to adopt. Docs = enough to master.
 - Existing README may be outdated — verify against actual `composer.json` / source, not old text
 - Model forgets post-install steps (config publish, service provider, env vars)
 
+## Frugality Standards
+
+Apply the [Frugality Charter](../../contexts/contracts/frugality-charter.md)
+to every package README you author.
+
+**Examples in this artifact:**
+- Per the charter's default-terse rule, the package README opens
+  with one sentence: what installs, what it does.
+- Per the cite-don't-restate principle, link upstream docs for
+  advanced topics; ship the minimal usage example only.
+- Per the post-action summary suppression, no "What's new" block —
+  that belongs in `CHANGELOG.md`.
+
+**Pre-save self-check:**
+1. Does the opening pitch include marketing adjectives?
+2. Is the minimal usage example over 10 lines when 5 would suffice?
+3. Are CI badges shipped without verifying that they resolve?
+4. Does the doc duplicate CHANGELOG content?
+
 ## Do NOT
 
 - Do NOT invent package capabilities or compatibility

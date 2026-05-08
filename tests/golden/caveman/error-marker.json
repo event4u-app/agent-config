@@ -1,0 +1,11 @@
+{
+  "name": "error-marker",
+  "carve_out_class": "CLI status markers \u274c / \u26a0\ufe0f / \u2705",
+  "input": "Ran lint:\n\n\u274c  kernel budget check: 1 breach(es)\n\u26a0\ufe0f  warn: verify-before-complete > target\n\u2705  sync-check passed\n\nFix breach first.",
+  "carve_out_regex": "^(\u274c|\u26a0\ufe0f|\u2705)\\s+.*$",
+  "expected_preserved_lines": [
+    "\u274c  kernel budget check: 1 breach(es)",
+    "\u26a0\ufe0f  warn: verify-before-complete > target",
+    "\u2705  sync-check passed"
+  ]
+}

@@ -120,6 +120,78 @@ behavior — the per-profile table is just the initial default.
 
 `custom` ignores these defaults — set every value explicitly.
 
+### Verbosity
+
+The `verbosity:` block and `caveman.speak_scope` control how much narration
+the agent emits around routine actions. Defaults are tuned for token
+frugality — flip values to `true` (or higher tier) to restore legacy verbose
+output. Iron-Law gates (`commit-policy`, `scope-control` git-ops,
+`non-destructive-by-default`) ALWAYS confirm regardless of these flags.
+
+| Setting | Values | Default | Description |
+|---|---|---|---|
+| `verbosity.preview_artifacts` | `true`, `false` | `false` | Show generated commit messages, PR titles/bodies, and branch names before acting. `false` = use the generated content directly. |
+| `verbosity.routine_confirmations` | `true`, `false` | `false` | Confirmation prompts for routine workflow steps when there is one obvious answer ("looks good — commit?"). Iron-Law gates always ask regardless. |
+| `verbosity.offer_council_in_delivery` | `true`, `false` | `false` | Offer "run AI Council on this?" inside delivery commands (`/feature-plan`, `/review-changes`, `/roadmap-create`). The `/council` command itself is unaffected. |
+| `verbosity.post_action_reports` | `off`, `minimal`, `full` | `minimal` | Multi-line status / summary blocks after a successful action. `off` = no report; `minimal` = one-line confirmation; `full` = bullet list. |
+| `verbosity.intent_announcements` | `true`, `false` | `false` | Intent announcements ("Let me check…", "Now I will…", "Found it") in skill bodies. `false` = act and emit the result. |
+| `verbosity.script_output` | `silent`, `minimal`, `verbose` | `minimal` | Stdout chatter from `scripts/*.py`, `scripts/*.sh`, and `.augment/scripts/`. `silent` = stderr only; `minimal` = one summary line per script; `verbose` = pre-Phase-10 per-step prints. Iron-Law surfaces (release confirms, install secrets prompts, error markers) ignore this key. |
+| `verbosity.taskfile_command_echo` | `true`, `false` | `false` | Suppress the `task: [name] cmd...` echo Taskfile prints before each task body. `true` = echoes preserved (legacy behaviour); `false` = `silent: true` is set on every Phase-10 safe task. |
+| `caveman.speak_scope` | `off`, `prose_only`, `aggressive` | `prose_only` | How widely caveman-speak grammar applies in chat. `off` = no caveman; `prose_only` = caveman in body prose, numbered options + Iron-Law-literal blocks stay full prose; `aggressive` = caveman everywhere except Iron-Law literals. |
+
+The cross-rule index for these defaults lives in
+[`.agent-src.uncompressed/contexts/contracts/frugality-charter.md`](../.agent-src.uncompressed/contexts/contracts/frugality-charter.md).
+Writer skills (`skill-writing`, `rule-writing`, `command-writing`,
+`guideline-writing`, `roadmap-writing`, `persona-writing`,
+`agent-docs-writing`, `context-authoring`, `conventional-commits-writing`,
+`readme-writing`, `readme-writing-package`, `adr-create`) cite the charter
+under their `## Frugality Standards` section.
+
+#### Behavior change vs. legacy — `/create-pr` silent draft default
+
+When `verbosity.routine_confirmations: false` (the new default),
+`/create-pr` creates the PR as a **draft silently** instead of asking
+"draft or ready?". A one-line postscript surfaces the override:
+
+```
+→ #42 opened: https://github.com/org/repo/pull/42
+→ created as draft — run `gh pr ready 42` to flip
+```
+
+Per-invocation overrides (no settings change required):
+
+| You want | Argument |
+|---|---|
+| Ready-for-review immediately | `/create-pr:ready` or `/create-pr:final` |
+| Explicit draft (no postscript change) | `/create-pr:draft` |
+| Numbered prompt restored | set `verbosity.routine_confirmations: true` |
+
+`/create-pr` still skips the AI council prompt unconditionally per the
+existing carve-out — `verbosity.offer_council_in_delivery` does not
+re-enable it. Use `/council diff:<base>..<head>` separately.
+
+#### Script-output level — env-var overrides
+
+`verbosity.script_output` is read by `scripts/_lib/script_output.py`.
+For incident debugging when editing `.agent-settings.yml` is awkward,
+two env vars override the file for the current process tree:
+
+| Env var | Value | Effect |
+|---|---|---|
+| `AGENT_SCRIPT_VERBOSITY` | `silent`, `minimal`, `verbose` | Authoritative — wins over the settings file |
+| `SCRIPT_OUTPUT_VERBOSE` | `1` | Alias — equivalent to `AGENT_SCRIPT_VERBOSITY=verbose` |
+
+Once the helper resolves the level, it exports the resolved value back
+into `AGENT_SCRIPT_VERBOSITY` so child processes inherit the same level
+without re-reading the settings file. Per-call `--quiet` flags on a
+child script still win at the call site (per-call override > inherited
+level).
+
+Iron-Law surfaces — production-deploy confirmation prompts in
+`scripts/release.py`, secret-installer prompts in `install_*_key.sh`,
+and any output via `error()` — bypass the helper and stay loud at every
+level.
+
 ---
 
 ## Project documentation

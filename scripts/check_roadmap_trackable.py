@@ -43,6 +43,8 @@ from update_roadmap_progress import (  # noqa: E402
     parse_frontmatter,
 )
 
+QUIET = "--quiet" in sys.argv
+
 ROADMAP_ROOT = Path("agents/roadmaps")
 
 
@@ -103,7 +105,8 @@ def main() -> int:
         )
         return 1
     count = len(find_active_roadmaps(ROADMAP_ROOT))
-    print(f"✅  {count} active roadmap(s) — all parseable, all phases have checkboxes.")
+    if not QUIET:
+        print(f"✅  {count} active roadmap(s) — all parseable, all phases have checkboxes.")
     return 0
 
 

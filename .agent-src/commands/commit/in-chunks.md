@@ -63,7 +63,16 @@ Splitting rules:
 
 Generate commit messages per [`commit-conventions`](../../rules/commit-conventions.md).
 
-### 4. Commit immediately
+### 4. Validate, then commit immediately
+
+Before staging anything, run the same `preview-on-error` validator as
+[`/commit`](../commit.md) step 5. Each generated message must match
+`^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`.
+
+- **All valid** → proceed silently.
+- **Any invalid** → stop, print the failed message(s) + the regex,
+  hand back to the user. Do **not** auto-commit broken messages even
+  though confirmation is otherwise suppressed.
 
 For each planned commit in order:
 
@@ -75,18 +84,29 @@ git commit -m "{message}"
 No "looks good?" prompt. No confirmation step. The user invoked this
 command knowing the plan would be executed.
 
-### 5. Report
+### 5. Report (verbosity-gated)
 
-Show a summary:
+Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
+`minimal`). Same contract as [`/commit`](../commit.md) step 7.
 
-```
-Created N commits:
-1. {sha1}  feat(DEV-1234): {summary}
-2. {sha2}  test(DEV-1234): {summary}
-3. {sha3}  chore: {summary}
-```
+- `off` → emit nothing (still run `git log --oneline -N` silently for
+  the agent's own verification).
+- `minimal` (default) → one line:
 
-Include `git log --oneline -N` output for verification.
+  ```
+  → N commits created
+  ```
+
+- `full` → full summary:
+
+  ```
+  Created N commits:
+  1. {sha1}  feat(DEV-1234): {summary}
+  2. {sha2}  test(DEV-1234): {summary}
+  3. {sha3}  chore: {summary}
+  ```
+
+  Include `git log --oneline -N` output for verification.
 
 ## Rules
 

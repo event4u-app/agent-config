@@ -1,0 +1,12 @@
+{
+  "name": "code-block",
+  "carve_out_class": "Triple-backtick fenced code (any language)",
+  "input": "Run command:\n\n```bash\ntask lint-rule-budget\necho \"done\"\n```\n\nThen check output.",
+  "carve_out_regex": "^(```bash|task lint-rule-budget|echo \"done\"|```)$",
+  "expected_preserved_lines": [
+    "```bash",
+    "task lint-rule-budget",
+    "echo \"done\"",
+    "```"
+  ]
+}

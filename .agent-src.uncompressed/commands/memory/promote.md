@@ -120,15 +120,23 @@ git push -u origin memory/promote-<curated-id>
 # Then route to /create-pr with the memory-promote template hint.
 ```
 
-### 7. Report
+### 7. Report (verbosity-gated)
 
-```
-> ✅ Promotion drafted.
-> - Signal:   <sig-id>
-> - Curated:  <curated-id> in agents/memory/<type>.yml
-> - PR:       <url or branch name>
-> - Next:     review + merge
-```
+Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
+`minimal`).
+
+- `off` → emit nothing on success; surface errors only.
+- `minimal` (default) → one line:
+  `→ Promoted <sig-id> → <curated-id> (PR: <url or branch>)`.
+- `full` → multi-line block:
+
+  ```
+  > ✅ Promotion drafted.
+  > - Signal:   <sig-id>
+  > - Curated:  <curated-id> in agents/memory/<type>.yml
+  > - PR:       <url or branch name>
+  > - Next:     review + merge
+  ```
 
 ## Safety
 

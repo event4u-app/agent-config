@@ -295,6 +295,29 @@ utility libs, or simple state managers.
 * Renaming a heading to "Procedure:" without numbered steps or `###` sub-headings
 * **Always run `python3 scripts/skill_linter.py` before saving — 0 FAIL required**
 
+## Frugality Standards
+
+Apply the [Frugality Charter](../../contexts/contracts/frugality-charter.md)
+to every skill you author.
+
+**Examples in this artifact:**
+- Per the charter's default-terse rule, the SKILL.md `## Procedure`
+  opens with the action ("Run the linter"), not "Let me walk you
+  through…".
+- Per the cheap-question check, only emit numbered-options output
+  when consequences differ — never as a stylistic choice.
+- Per the post-action summary suppression, the example output ships
+  the artifact, not a wrapping `## Status` / `## Summary` block.
+
+**Pre-save self-check:**
+1. Does any procedure step open with "Let me", "Now I will", "Found
+   it", "OK", or "Alright"?
+2. Does the skill prescribe numbered-options output without a real
+   consequence trade-off?
+3. Does the example output include a post-action summary block?
+4. Does the description carry filler ("comprehensive", "advanced",
+   "powerful")?
+
 ## Do NOT
 
 * Write documentation-style, pointer-only, or too-broad skills ("Laravel skill")

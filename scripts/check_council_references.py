@@ -34,6 +34,8 @@ import sys
 from pathlib import Path
 from typing import Iterable
 
+QUIET = "--quiet" in sys.argv
+
 ROOT = Path(".")
 
 # A specific file inside a council dir: must end with .md or .json,
@@ -124,7 +126,8 @@ def main() -> int:
             violations.append((path, ln, ref))
 
     if not violations:
-        print("✅  No forbidden council references in durable artefacts.")
+        if not QUIET:
+            print("✅  No forbidden council references in durable artefacts.")
         return 0
 
     print(f"❌  {len(violations)} forbidden council reference(s):\n")

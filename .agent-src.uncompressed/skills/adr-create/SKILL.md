@@ -167,6 +167,27 @@ table row per ADR plus broken-supersede warnings on stderr.
 - Never delete an ADR file — supersede it. Deletion breaks
   historical links and round-trips through git history checks.
 
+## Frugality Standards
+
+Apply the [Frugality Charter](../../contexts/contracts/frugality-charter.md)
+to every ADR you author.
+
+**Examples in this artifact:**
+- Per the charter's default-terse rule, `## Context` states the
+  forcing function in 2–3 sentences; no historical narrative.
+- Per the cite-don't-restate principle, `## Decision` links the
+  rules / contracts it overrides; no rule body is quoted in full.
+- Per the cheap-question check, `## Alternatives considered` lists
+  genuine design alternatives, not strawmen.
+
+**Pre-save self-check:**
+1. Does `## Context` carry more than 5 sentences of setup?
+2. Does `## Decision` restate rule text instead of citing the rule?
+3. Are alternatives evaluated with a real consequence each, or with
+   stylistic preference?
+4. Does the ADR forecast consequences with hedge phrases ("might",
+   "could potentially") instead of decidable claims?
+
 ## Do NOT
 
 - Skip Context — a decision without context is folklore.

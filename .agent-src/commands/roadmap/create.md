@@ -137,18 +137,23 @@ Regenerate `agents/roadmaps-progress.md` so the new roadmap shows up:
 
 Mention the new overall count to the user.
 
-### 8. Offer council review (B1 hook)
+### 8. Offer council review (B1 hook, verbosity-gated)
 
-If `.agent-settings.yml` has `ai_council.enabled: true` **and** at least
-one member is enabled (`anthropic` or `openai`), ask the user (in their
-language):
+Read `verbosity.offer_council_in_delivery` from `.agent-settings.yml`
+(default `false`):
 
-> 1. Run the council on this roadmap before execution? (billable)
-> 2. Skip council review
+- `false` (default): skip the prompt silently. When `ai_council.enabled:
+  true` AND at least one member enabled, emit one line: `→ council
+  skipped (set verbosity.offer_council_in_delivery: true to enable, or
+  run /council roadmap:<path> directly)`. Otherwise emit nothing.
+- `true`: when `ai_council.enabled: true` **and** at least one member
+  enabled (`anthropic` or `openai`), ask (in the user's language):
 
-Suppress this question entirely when `personal.autonomy: on` is set —
-council is billable, autonomous mode must not silently spend tokens
-(see `road-to-ai-council.md` Decision 3 / Q47).
+  > 1. Run the council on this roadmap before execution? (billable)
+  > 2. Skip council review
+
+  Also suppress when `personal.autonomy: on` (council is billable; see
+  `road-to-ai-council.md` Decision 3 / Q47).
 
 If the user picks **1**:
 

@@ -115,14 +115,22 @@ link resolves. Broken link → block and ask the user to fix.
 - Duplicate of an existing entry (step 2) — update instead.
 - Missing `source:` — an entry without evidence cannot be reviewed.
 
-## Output format
+## Output format (verbosity-gated)
 
-```
-✅  Added <type>/<id> (confidence: <high|medium|low>)
-   Path: agents/memory/<type>.yml (or agents/memory/<type>/<hash>.yml)
-   Gate: scripts/check_memory.py → PASS
-   Next: commit and link from the relevant skill/command.
-```
+Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
+`minimal`).
+
+- `off` → emit nothing on success; surface gate failures only.
+- `minimal` (default) → one line:
+  `✅  Added <type>/<id> (gate: PASS)`.
+- `full` → multi-line block:
+
+  ```
+  ✅  Added <type>/<id> (confidence: <high|medium|low>)
+     Path: agents/memory/<type>.yml (or agents/memory/<type>/<hash>.yml)
+     Gate: scripts/check_memory.py → PASS
+     Next: commit and link from the relevant skill/command.
+  ```
 
 ## See also
 

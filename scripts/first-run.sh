@@ -5,9 +5,7 @@ SETTINGS_FILE=".agent-settings.yml"
 LEGACY_SETTINGS_FILE=".agent-settings"
 
 echo ""
-echo "========================================"
-echo "  Agent Config — First Run"
-echo "========================================"
+echo "Agent Config — First Run"
 echo ""
 
 # --- Profile detection ---
@@ -63,9 +61,7 @@ echo "  ✅  Zero token overhead in minimal mode"
 echo ""
 
 # --- 3 test prompts ---
-echo "========================================" 
-echo "  Try these 3 prompts now"
-echo "========================================"
+echo "Try these 3 prompts now:"
 echo ""
 
 echo "1️⃣  Refactoring check"
@@ -94,9 +90,7 @@ echo "   → Agent challenges weak requirements"
 echo ""
 
 # --- Next steps ---
-echo "========================================"
-echo "  Next steps"
-echo "========================================"
+echo "Next steps:"
 echo ""
 echo "Cost profiles:"
 echo "  minimal   rules, skills, commands only"

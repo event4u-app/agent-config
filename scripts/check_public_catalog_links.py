@@ -27,6 +27,8 @@ import re
 import sys
 from pathlib import Path
 
+QUIET = "--quiet" in sys.argv
+
 ROOT = Path(__file__).resolve().parent.parent
 CATALOG = ROOT / "docs" / "catalog.md"
 PACKAGE_JSON = ROOT / "package.json"
@@ -95,7 +97,8 @@ def main() -> int:
 
     total_violations = len(forbidden) + len(missing) + len(unshipped)
     if not total_violations:
-        print(f"✅  docs/catalog.md — all links resolve to shipped surfaces.")
+        if not QUIET:
+            print(f"✅  docs/catalog.md — all links resolve to shipped surfaces.")
         return 0
 
     print(f"❌  docs/catalog.md — {total_violations} violation(s):")

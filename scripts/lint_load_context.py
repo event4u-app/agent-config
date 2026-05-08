@@ -19,6 +19,8 @@ from typing import Iterable
 
 import yaml
 
+QUIET = "--quiet" in sys.argv
+
 ROOT = Path(__file__).resolve().parent.parent
 
 SCAN_DIRS = [
@@ -185,7 +187,8 @@ def main() -> int:
         print(f"❌  {e}")
     if errors:
         return 1
-    print(f"✅  load_context schema clean ({len(graph)} declarer(s))")
+    if not QUIET:
+        print(f"✅  load_context schema clean ({len(graph)} declarer(s))")
     return 0
 
 

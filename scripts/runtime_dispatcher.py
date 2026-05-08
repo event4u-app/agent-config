@@ -30,6 +30,7 @@ from typing import List, Optional
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from runtime_registry import SkillRuntime, build_registry
 from runtime_handler import ExecutionResult, HandlerError, execute_shell
+from _lib.script_output import resolve_level  # type: ignore[import-not-found]
 
 
 @dataclass
@@ -186,6 +187,16 @@ def _print_dispatch(result: DispatchResult, fmt: str) -> None:
 def _print_execution(result: ExecutionResult, fmt: str) -> None:
     if fmt == "json":
         print(json.dumps(asdict(result), indent=2))
+        return
+    level = resolve_level()
+    if level == "silent" and result.is_success:
+        return
+    if level == "minimal" and result.is_success:
+        marker = "✅" if result.is_success else "❌"
+        print(
+            f"{marker}  {result.skill_name} · {result.handler} · "
+            f"exit={result.exit_code} ({result.duration_ms}ms)"
+        )
         return
     print(f"Skill: {result.skill_name}")
     print(f"Handler: {result.handler}")

@@ -21,6 +21,8 @@ import re
 import sys
 from pathlib import Path
 
+QUIET = "--quiet" in sys.argv
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 ROADMAP_GLOB = "agents/roadmaps/*.md"
 LIGHTWEIGHT_LINE_CAP = 600
@@ -107,7 +109,8 @@ def main() -> int:
             for p in problems:
                 print(f"    - {p}", file=sys.stderr)
         else:
-            print(f"✅  {rel}  [{complexity}]")
+            if not QUIET:
+                print(f"✅  {rel}  [{complexity}]")
     print()
     light = sum(1 for _, c in summary if c == "lightweight")
     structural = sum(1 for _, c in summary if c == "structural")
@@ -119,7 +122,8 @@ def main() -> int:
     if failed:
         print(f"\n❌  {failed} roadmap(s) failed complexity lint", file=sys.stderr)
         return 1
-    print(f"\n✅  {len(roadmaps)} roadmap(s) complexity-clean")
+    if not QUIET:
+        print(f"\n✅  {len(roadmaps)} roadmap(s) complexity-clean")
     return 0
 
 

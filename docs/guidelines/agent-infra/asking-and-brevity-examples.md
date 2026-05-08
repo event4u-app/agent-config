@@ -12,21 +12,22 @@ always-loaded rule body — extracted to fit the always-rule budget.
 
 ## Vague-request triggers — example questions
 
-Companion to `ask-when-uncertain` § Vague-request triggers. The rule
-lists the trigger patterns and the "missing info" columns; this file
-adds the example question to ask back at the user.
+Companion to `ask-when-uncertain` § Vague-request triggers. This
+section is the canonical home for the nine trigger patterns, the
+missing-info each one hides, and the example clarifying question —
+the rule cites it instead of restating the catalog.
 
-| Pattern | Example clarifying question |
-|---|---|
-| "improve / optimize this" | "Optimize for what — execution speed or readability?" |
-| "add caching" | "Which cache driver, and what invalidates it?" |
-| "make it better / cleaner" | "What specifically feels wrong in the current code?" |
-| "clean up this file" | "Remove unused code, reformat, or restructure?" |
-| "fix this" (without specifying) | "What output/behavior is wrong right now?" |
-| "refactor X" | "Refactor toward what — smaller methods, extract class, or something else?" |
-| "use best practices" | "Best practices for what specifically — testing, naming, structure?" |
-| "handle errors properly" | "For which failure modes, and what should happen on error?" |
-| "add a UI / component / tile / page" when the repo mixes frameworks | "This repo uses {A} and {B} for UI — which one for this?" |
+| Pattern | Missing info | Example clarifying question |
+|---|---|---|
+| "improve / optimize this" | metric — speed, readability, memory? | "Optimize for what — execution speed or readability?" |
+| "add caching" | store, scope, invalidation | "Which cache driver, and what invalidates it?" |
+| "make it better / cleaner" | by what standard? | "What specifically feels wrong in the current code?" |
+| "clean up this file" | dead code, format, refactor? | "Remove unused code, reformat, or restructure?" |
+| "fix this" (no symptom) | what output is wrong? | "What output/behavior is wrong right now?" |
+| "refactor X" | target pattern, boundaries | "Refactor toward what — smaller methods, extract class, or something else?" |
+| "use best practices" | whose, for what? | "Best practices for what specifically — testing, naming, structure?" |
+| "handle errors properly" | which errors — log/retry/propagate? | "For which failure modes, and what should happen on error?" |
+| "add a UI / component / tile / page" in mixed-framework repo | which stack? | "This repo uses {A} and {B} for UI — which one for this?" |
 
 ## One-question-per-turn — why serial always wins
 
@@ -49,8 +50,10 @@ next. Serial preserves the framing; parallel destroys it.
 
 ## Cheap-question class catalog — extended examples
 
-Companion to `no-cheap-questions` § What counts as cheap. The rule
-lists the classes; this file adds longer-form examples per class.
+Companion to `no-cheap-questions` § What counts as cheap. This
+section is the canonical home for the nine cheap-question classes
+and their per-class patterns — the rule cites it instead of
+restating the catalog.
 
 | Class | Pattern · why cheap | Concrete example |
 |---|---|---|
@@ -66,15 +69,20 @@ lists the classes; this file adds longer-form examples per class.
 
 ## Direct-answers — severity-tiered claim examples
 
-Companion to `direct-answers` § Iron Law 2 (no invented facts). The
-rule lists the severity table; this file adds concrete examples and
-hedge-language patterns.
+Companion to `direct-answers` § Iron Law 2 (no invented facts). This
+section is the canonical home for the severity tiers, per-tier
+verification actions, and the override carve-out — the rule cites it
+instead of restating the table.
 
 | Severity | Examples | Verification action |
 |---|---|---|
 | **High — load-bearing** | "Method `X::y()` exists at `path/to/file.php:142`", "version 12.4.1 added the API", "this test passes" | MUST verify with `view`, `grep`, `codebase-retrieval`, or fresh command output **before** claiming. Too expensive → ask. |
 | **Medium — project-shape** | "This project uses Pest for testing", "controllers live under `app/Http/Controllers`" | Verify if one tool call reaches it; otherwise hedge: *"I'd guess X — not checked"*. |
 | **Low — well-known idioms** | "PHP `array_map` returns a new array", "git tags are immutable", "JS arrays are zero-indexed" | Inference acceptable. Mark as inference if not 100% sure. |
+
+**Override:** "just guess" / "rough estimate" / "skip verify" in the
+user's turn drops every claim to **Low** for that turn only. Reverts
+on the next turn unless the user repeats the override.
 
 Hedge-language patterns:
 

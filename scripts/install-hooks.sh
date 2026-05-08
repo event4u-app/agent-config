@@ -39,7 +39,9 @@ echo "✅  Pre-push hook installed."
 cat > "$HOOKS_DIR/pre-commit" << 'EOF'
 #!/usr/bin/env bash
 # Pre-commit hook: verify .claude-plugin/marketplace.json lists every skill
-# that exists on disk under .claude/skills/.
+# that exists on disk under .claude/skills/, AND verify
+# agents/roadmaps-progress.md is in sync with the current state of
+# agents/roadmaps/ (roadmap-progress-sync Iron Law).
 
 python3 scripts/lint_marketplace.py
 status=$?
@@ -51,6 +53,22 @@ if [ $status -ne 0 ]; then
     echo "   then re-stage and commit. To bypass for an unrelated WIP commit:"
     echo "       git commit --no-verify"
     exit 1
+fi
+
+# Roadmap dashboard sync — only fires when staged changes touch a roadmap
+# file or the dashboard itself, so unrelated commits stay fast.
+if git diff --cached --name-only | grep -qE '^agents/roadmaps(-progress\.md|/)'; then
+    python3 .augment/scripts/update_roadmap_progress.py --check
+    rstatus=$?
+    if [ $rstatus -ne 0 ]; then
+        echo ""
+        echo "❌  Commit blocked — agents/roadmaps-progress.md is stale."
+        echo "   Run './agent-config roadmap:progress' (or"
+        echo "   'python3 .augment/scripts/update_roadmap_progress.py'),"
+        echo "   stage agents/roadmaps-progress.md, then re-commit."
+        echo "   To bypass for an unrelated WIP commit: git commit --no-verify"
+        exit 1
+    fi
 fi
 EOF
 

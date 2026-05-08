@@ -111,6 +111,7 @@ def main() -> int:
         help="Files or directories to scan (default: .agent-src.uncompressed/rules)",
     )
     parser.add_argument("--format", choices=["text", "json"], default="text")
+    parser.add_argument("--quiet", action="store_true", help="Only print on failure")
     args = parser.parse_args()
 
     targets = _resolve_targets(args.paths)
@@ -125,7 +126,8 @@ def main() -> int:
         print(json.dumps([asdict(v) for v in all_violations], indent=2, ensure_ascii=False))
     else:
         if not all_violations:
-            print(f"✅  Iron Law prominence clean ({len(targets)} file(s) scanned).")
+            if not args.quiet:
+                print(f"✅  Iron Law prominence clean ({len(targets)} file(s) scanned).")
         else:
             print(f"❌  {len(all_violations)} Iron-Law prominence violation(s):\n")
             for v in all_violations:

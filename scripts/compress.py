@@ -26,6 +26,9 @@ import shutil
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _lib.script_output import info, success, flush_summary, resolve_level  # noqa: E402
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SOURCE_DIR = PROJECT_ROOT / ".agent-src.uncompressed"
 TARGET_DIR = PROJECT_ROOT / ".agent-src"
@@ -479,11 +482,11 @@ def generate_rule_symlinks() -> int:
         if tool_count != source_count:
             print(f"  ⚠️  {tool_dir}: {tool_count} rules (expected {source_count})")
 
-    print(f"  ✅  Created {total} rule symlinks across {len(TOOL_DIRS)} tool directories ({source_count} rules each)")
+    info(f"  ✅  Created {total} rule symlinks across {len(TOOL_DIRS)} tool directories ({source_count} rules each)")
     return total
 
 
-def generate_windsurfrules() -> None:
+def generate_windsurfrules() -> int:
     """Generate .windsurfrules by concatenating all rules (no frontmatter).
     """
     rules = sorted([f.name for f in RULES_SOURCE.glob("*.md")])
@@ -496,7 +499,8 @@ def generate_windsurfrules() -> None:
 
     output = PROJECT_ROOT / ".windsurfrules"
     output.write_text("\n".join(parts) + "\n")
-    print(f"  ✅  Generated .windsurfrules ({len(rules)} rules)")
+    info(f"  ✅  Generated .windsurfrules ({len(rules)} rules)")
+    return len(rules)
 
 
 def generate_gemini_md() -> None:
@@ -505,7 +509,7 @@ def generate_gemini_md() -> None:
     if link.exists() or link.is_symlink():
         link.unlink()
     link.symlink_to("AGENTS.md")
-    print("  ✅  Created GEMINI.md → AGENTS.md symlink")
+    info("  ✅  Created GEMINI.md → AGENTS.md symlink")
 
 
 def _command_slug(source_file: Path) -> str:
@@ -531,12 +535,12 @@ def _iter_commands():
         yield source_file, _command_slug(source_file)
 
 
-def generate_claude_skills() -> None:
+def generate_claude_skills() -> int:
     """Create .claude/skills/ symlinks for ALL skills in .agent-src/skills/.
     """
     if not SKILLS_SOURCE.exists():
-        print("  ⚠️  .agent-src/skills/ not found — skipping skills")
-        return
+        print("  ⚠️  .agent-src/skills/ not found — skipping skills", file=sys.stderr)
+        return 0
 
     # All skill directories in .agent-src/skills/
     skills = sorted([d.name for d in SKILLS_SOURCE.iterdir() if d.is_dir()])
@@ -559,7 +563,8 @@ def generate_claude_skills() -> None:
         link.symlink_to(rel_target)
         count += 1
 
-    print(f"  ✅  Created {count} skill symlinks in .claude/skills/")
+    info(f"  ✅  Created {count} skill symlinks in .claude/skills/")
+    return count
 
 
 def extract_description_from_md(content: str) -> str:
@@ -573,7 +578,7 @@ def extract_description_from_md(content: str) -> str:
     return ""
 
 
-def generate_claude_commands() -> None:
+def generate_claude_commands() -> int:
     """Create .claude/skills/{slug}/SKILL.md symlinks for ALL Augment commands.
 
     Commands in .agent-src/commands/ are the single source of truth.
@@ -585,8 +590,8 @@ def generate_claude_commands() -> None:
     to `council-default` so directories never collide in `.claude/skills/`.
     """
     if not COMMANDS_SOURCE.exists():
-        print("  ⚠️  .agent-src/commands/ not found — skipping commands")
-        return
+        print("  ⚠️  .agent-src/commands/ not found — skipping commands", file=sys.stderr)
+        return 0
 
     CLAUDE_SKILLS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -642,7 +647,8 @@ def generate_claude_commands() -> None:
         msg += f" ({skipped} skipped — same-name skill exists)"
     if removed_dirs:
         msg += f" ({removed_dirs} stale dirs removed)"
-    print(msg)
+    info(msg)
+    return count
 
 
 def generate_persona_symlinks() -> int:
@@ -676,20 +682,28 @@ def generate_persona_symlinks() -> int:
             link.symlink_to(target)
             total += 1
 
-    print(f"  ✅  Created {total} persona symlinks across {len(PERSONA_TOOL_DIRS)} tool directories ({len(personas)} personas each)")
+    info(f"  ✅  Created {total} persona symlinks across {len(PERSONA_TOOL_DIRS)} tool directories ({len(personas)} personas each)")
     return total
 
 
 def generate_tools() -> None:
     """Generate all tool-specific directories and files."""
-    print("🔧  Generating multi-agent tool directories...\n")
-    generate_rule_symlinks()
+    info("🔧  Generating multi-agent tool directories...\n")
+    rules = generate_rule_symlinks()
     generate_windsurfrules()
     generate_gemini_md()
-    generate_claude_skills()
-    generate_claude_commands()
-    generate_persona_symlinks()
-    print("\n✅  All tool directories generated")
+    skills = generate_claude_skills()
+    commands = generate_claude_commands()
+    personas = generate_persona_symlinks()
+    summary = (
+        f"✅  generate-tools — rules={rules} skills={skills} "
+        f"commands={commands} personas={personas}"
+    )
+    if resolve_level() == "verbose":
+        print(f"\n{summary}")
+    else:
+        success(summary)
+        flush_summary()
 
 
 # ── .augment/ projection ──────────────────────────────────────────────

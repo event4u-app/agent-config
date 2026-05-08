@@ -24,6 +24,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
+QUIET = "--quiet" in sys.argv
+
 REPO = Path(__file__).resolve().parents[1]
 SKILLS_DIR = REPO / ".agent-src.uncompressed" / "skills"
 
@@ -202,7 +204,8 @@ def main(argv: list[str] | None = None) -> int:
         skills_dir = Path(argv[0]).resolve()
     violations = lint(skills_dir)
     if not violations:
-        print(f"✅  lint_handoffs: no violations under {skills_dir.relative_to(REPO)}")
+        if not QUIET:
+            print(f"✅  lint_handoffs: no violations under {skills_dir.relative_to(REPO)}")
         return 0
     for v in violations:
         print(v.render(REPO))

@@ -130,6 +130,28 @@ Above the split signal, break by sub-topic into sibling files in the same folder
 * Hollowing out a skill into "see guideline" — the skill must remain
   executable (see `preservation-guard`).
 
+## Frugality Standards
+
+Apply the [Frugality Charter](../../contexts/contracts/frugality-charter.md)
+to every guideline you author.
+
+**Examples in this artifact:**
+- Per the charter's index nature, guidelines describe practice
+  patterns; they do **not** restate Iron-Laws from rules.
+- Per the act-skip-narration rule, code examples lead with the
+  pattern, not its motivation.
+- Per the cheap-question check, guidelines do not prescribe stylistic
+  forks ("table vs. paragraph") — pick one.
+
+**Pre-save self-check:**
+1. Does the guideline restate text from a rule body instead of
+   linking the rule?
+2. Are code examples preceded by narrative ramp-up?
+3. Does the guideline introduce a new convention without citing the
+   rule that holds the obligation?
+4. Are sections labeled "Overview" / "Background" carrying only
+   restatement?
+
 ## Do NOT
 
 * Do NOT add `type:` or `alwaysApply:` to the frontmatter

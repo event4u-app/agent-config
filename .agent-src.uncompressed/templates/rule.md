@@ -85,6 +85,12 @@ routes_to:
 
 # {Rule Title}
 
+<!-- Default-terse per the
+  [Frugality Charter](../contexts/contracts/frugality-charter.md):
+  start with the obligation. No "This rule explains…" / "The purpose of
+  this rule is…" / narrative intro before the Iron Law. Body sections
+  are pointers, not playbooks — defer detail to skills/guidelines. -->
+
 **Iron Law.** {The single non-negotiable behavior the rule enforces.}
 
 ## When this fires

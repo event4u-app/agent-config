@@ -67,16 +67,21 @@ suggestion:
 
 ### N. Present findings
 
-<!-- For audit/analysis commands: always present findings before applying changes.
-     For action commands: show summary of what was done. -->
+<!-- For audit/analysis commands: state findings, then act or hand back.
+     For action commands: state what was done.
 
-Ask the user:
+     Default-terse per the
+     [Frugality Charter](../contexts/contracts/frugality-charter.md):
+     no preview-then-confirm pair, no "Ready to proceed?" gate, no
+     numbered options unless options differ in *consequence* (per
+     `no-cheap-questions § Pre-Send Self-Check`). Routine confirmations
+     are governed by `verbosity.routine_confirmations: false` (default).
 
-```
-> 1. {Option 1}
-> 2. {Option 2}
-> 3. Skip — report only
-```
+     Only emit a numbered-options block when ALL of:
+       1. Two or more options carry distinct consequences (not sequencing/format),
+       2. The user has not fenced the next step (per `scope-control § fenced step`),
+       3. No option violates `commit-policy`, `scope-control § git-ops`,
+          or `non-destructive-by-default`. -->
 
 ## Rules
 

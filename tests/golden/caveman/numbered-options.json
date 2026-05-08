@@ -1,0 +1,12 @@
+{
+  "name": "numbered-options",
+  "carve_out_class": "Numbered options + Recommendation/Empfehlung label",
+  "input": "Need pick path forward. Options:\n\n1. Ship now without tests \u2014 fastest, riskiest.\n2. Add unit tests first \u2014 standard.\n3. Full integration suite \u2014 slowest, safest.\n\n**Recommendation:** option 2.\n\nProceed?",
+  "carve_out_regex": "^(>?\\s*\\d+\\.\\s.*|\\*\\*Recommendation:\\*\\*.*|\\*\\*Empfehlung:\\*\\*.*)$",
+  "expected_preserved_lines": [
+    "1. Ship now without tests \u2014 fastest, riskiest.",
+    "2. Add unit tests first \u2014 standard.",
+    "3. Full integration suite \u2014 slowest, safest.",
+    "**Recommendation:** option 2."
+  ]
+}
