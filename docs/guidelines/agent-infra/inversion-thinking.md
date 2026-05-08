@@ -6,9 +6,8 @@ diffs. The pre-mortem on a strategy, an argument, or a written plan;
 distinct from
 [`adversarial-review`](../../../.agent-src.uncompressed/skills/adversarial-review/SKILL.md)
 which stress-tests **diffs**. Adopted under the **Reference-Guideline
-Sunset Policy** (see
-[`road-to-deep-research-adoption.md`](../../../agents/roadmaps/road-to-deep-research-adoption.md)
-§ Reference-Guideline Sunset Policy) and cross-referenced from:
+Sunset Policy** (see frontmatter `upstream` / `refresh_trigger` keys)
+and cross-referenced from:
 
 - [`refine-prompt`](../../../.agent-src.uncompressed/skills/refine-prompt/SKILL.md)
   — pre-mortem on a free-form prompt before planning.
@@ -386,4 +385,4 @@ Before any plan, do 15-minute pre-mortem:
 
 ## ADOPT citation
 
-Adopted from [`ginobefun/deep-reading-analyst-skill`](https://github.com/ginobefun/deep-reading-analyst-skill) @ commit `26cd7dc9` · `src/deep-reading-analyst/references/inversion_thinking.md` · MIT License. Roadmap entry: [`road-to-deep-research-adoption.md`](../../../agents/roadmaps/road-to-deep-research-adoption.md).
+Adopted from [`ginobefun/deep-reading-analyst-skill`](https://github.com/ginobefun/deep-reading-analyst-skill) @ commit `26cd7dc9` · `src/deep-reading-analyst/references/inversion_thinking.md` · MIT License.

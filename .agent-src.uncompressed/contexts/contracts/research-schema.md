@@ -4,9 +4,8 @@ Project-local JSON-Schema reference for the
 [`/research`](../../commands/research.md) command's two output files —
 `outline.yaml` and `fields.yaml`. The agent reads the schemas below and
 self-validates the YAML before writing; **no runtime Python validator
-ships in this package** (see
-[`road-to-deep-research-adoption.md`](../../../agents/roadmaps/road-to-deep-research-adoption.md)
-§ Phase 1 — Pydantic validator dropped, replaced with this reference).
+ships in this package** — the Pydantic validator from upstream was
+dropped at adoption time and replaced with this reference contract.
 
 ## `outline.yaml` schema
 
@@ -114,6 +113,5 @@ can pipe the YAML through any JSON-Schema validator they prefer
 
 - [`/research`](../../commands/research.md) — the command this schema
   validates.
-- Phase 2 of [`road-to-deep-research-adoption.md`](../../../agents/roadmaps/road-to-deep-research-adoption.md)
-  — `/research-deep` and `/research-report` commands will reference
-  this same schema once ported.
+- Future `/research:deep` and `/research:report` sub-commands will
+  reference this same schema once ported.

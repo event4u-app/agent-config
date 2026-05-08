@@ -1,6 +1,6 @@
 ---
 name: deep-reading-analyst
-description: "Use when deeply analyzing articles, papers, or long-form content with thinking frameworks (SCQA, mental models, inversion, critical thinking, systems, six hats, first principles, 5W2H) — 'analyze this article', 'help me understand', 'deep dive into', 'extract insights from', or when the user pastes a URL / long text and wants depth, not summary."
+description: "Deep analysis of articles/long-form via thinking frameworks (SCQA, mental models, inversion) — 'analyze article', 'deep dive', 'extract insights', URL/text wanting depth not summary."
 status: active
 source: package
 external_source: "https://github.com/ginobefun/deep-reading-analyst-skill/tree/26cd7dc9920e025d39751e396e707399022e49ef/src/deep-reading-analyst"

@@ -11,10 +11,9 @@ Reference guideline for Wing-1 structured-communication and
 analysis work — McKinsey's S-C-Q-A decomposition for transforming
 complex problems into clear narrative structures. Full-body adopt
 under the **Reference-Guideline Sunset Policy authoritative-link
-path** (see
-[`road-to-deep-research-adoption.md`](../../../agents/roadmaps/road-to-deep-research-adoption.md)
-§ Reference-Guideline Sunset Policy). The reference frontmatter
-above pins the upstream SHA and names the refresh trigger.
+path** (see frontmatter `upstream` / `refresh_trigger` keys). The
+reference frontmatter above pins the upstream SHA and names the
+refresh trigger.
 
 Cross-referenced from:
 
@@ -524,4 +523,4 @@ Take your own writing, reorganize using SCQA
 
 ## ADOPT citation
 
-Adopted from [`ginobefun/deep-reading-analyst-skill`](https://github.com/ginobefun/deep-reading-analyst-skill) @ commit `26cd7dc9` · `src/deep-reading-analyst/references/scqa_framework.md` · MIT License. Roadmap entry: [`road-to-deep-research-adoption.md`](../../../agents/roadmaps/road-to-deep-research-adoption.md).
+Adopted from [`ginobefun/deep-reading-analyst-skill`](https://github.com/ginobefun/deep-reading-analyst-skill) @ commit `26cd7dc9` · `src/deep-reading-analyst/references/scqa_framework.md` · MIT License.

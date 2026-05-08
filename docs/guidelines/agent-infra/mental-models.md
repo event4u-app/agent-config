@@ -3,8 +3,8 @@
 Reference guideline for Wing-1 deep-thinking work — Charlie Munger's
 multi-discipline lattice for analyzing problems through more than one
 lens at a time. Adopted under the **Reference-Guideline Sunset Policy**
-(see [`road-to-deep-research-adoption.md`](../../../agents/roadmaps/road-to-deep-research-adoption.md)
-§ Reference-Guideline Sunset Policy) and cross-referenced from:
+(see frontmatter `upstream` / `refresh_trigger` keys) and cross-referenced
+from:
 
 - [`deep-reading-analyst`](../../../.agent-src.uncompressed/skills/deep-reading-analyst/SKILL.md)
   — L3 Deep analysis depth.
@@ -311,4 +311,4 @@ Meta-cognitive check:
 
 ## ADOPT citation
 
-Adopted from [`ginobefun/deep-reading-analyst-skill`](https://github.com/ginobefun/deep-reading-analyst-skill) @ commit `26cd7dc9` · `src/deep-reading-analyst/references/mental_models.md` · MIT License. Roadmap entry: [`road-to-deep-research-adoption.md`](../../../agents/roadmaps/road-to-deep-research-adoption.md).
+Adopted from [`ginobefun/deep-reading-analyst-skill`](https://github.com/ginobefun/deep-reading-analyst-skill) @ commit `26cd7dc9` · `src/deep-reading-analyst/references/mental_models.md` · MIT License.

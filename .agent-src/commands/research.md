@@ -1,7 +1,7 @@
 ---
 name: research
 cluster: research
-description: "Conduct preliminary research on a topic — pick objects, define fields, generate `outline.yaml` + `fields.yaml` scaffolding for downstream deep research. Use for academic surveys, benchmark research, technology selection, competitive scans."
+description: "Preliminary research scaffolder — pick objects, define fields, emit `outline.yaml` + `fields.yaml` for downstream deep research. Use for surveys, benchmarks, tech selection, competitive scans."
 disable-model-invocation: true
 skills: [project-analyzer, deep-reading-analyst]
 suggestion:
@@ -13,10 +13,9 @@ suggestion:
 # /research
 
 Entry point for **preliminary research**: pick the objects to study, name
-the fields to fill, and emit a YAML scaffold that downstream deep-research
-runs (Phase 2 of [`road-to-deep-research-adoption.md`](../../agents/roadmaps/road-to-deep-research-adoption.md))
-will populate. Use this when the user names a topic and wants a structured
-plan, not an immediate answer.
+the fields to fill, and emit a YAML scaffold that a downstream deep-research
+run will populate. Use this when the user names a topic and wants a
+structured plan, not an immediate answer.
 
 Routes thinking-framework support to
 [`deep-reading-analyst`](../skills/deep-reading-analyst/SKILL.md) (SCQA
@@ -116,8 +115,7 @@ and present a summary block to the user:
 - Topic + slug.
 - Item count + field count.
 - Path to the two files.
-- Next-step pointer: deep-research orchestration ships in Phase 2 of
-  [`road-to-deep-research-adoption.md`](../../agents/roadmaps/road-to-deep-research-adoption.md);
+- Next-step pointer: deep-research orchestration is a follow-up port;
   use the YAML scaffold as input when that lands.
 
 ## Output paths
@@ -131,9 +129,8 @@ $PROJECT_ROOT/agents/research/{topic_slug}/
 ## Out of scope (Phase 2)
 
 `/research-deep`, `/research-add-items`, `/research-add-fields`, and the
-Python `validate_json.py` validator are **not** ported in Phase 1. Track
-in [`road-to-deep-research-adoption.md`](../../agents/roadmaps/road-to-deep-research-adoption.md)
-§ Phase 2.
+Python `validate_json.py` validator are **not** ported in Phase 1 — they
+are queued as follow-up cluster sub-commands.
 
 ## ADOPT citation
 
