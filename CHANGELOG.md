@@ -318,6 +318,41 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.23.0](https://github.com/event4u-app/agent-config/compare/1.22.0...1.23.0) (2026-05-08)
+
+### Features
+
+* **skills:** add script-writing skill for scripts/ conventions ([1f8655d](https://github.com/event4u-app/agent-config/commit/1f8655d6cbf007410e3846ab502eea5745a7f66f))
+* **scripts:** Phase 10.7 --quiet flag + silent Taskfile + caveman compile-time toggle ([1d319e6](https://github.com/event4u-app/agent-config/commit/1d319e61a3c782eb5c86075f34275306a67c621c))
+* **linter:** frugality charter writer-cite validator + writer skill citations ([0e34709](https://github.com/event4u-app/agent-config/commit/0e3470965d5e2f4a8b11f27137d4ba43d2471be2))
+* **verbosity:** add verbosity toggles + gate routine outputs ([580d4cc](https://github.com/event4u-app/agent-config/commit/580d4cc2d1f4d4b091b6128f0a29d1f7e619895d))
+* **roadmap-sync:** pre-commit backstop blocks stale dashboard ([c577fc0](https://github.com/event4u-app/agent-config/commit/c577fc0aabc13faaae64c88d20d8ca66338ae5fc))
+* **create-pr:** drop council-review prompt ([e694811](https://github.com/event4u-app/agent-config/commit/e694811f7ca06b3db275cc70e83e6dbc4db72e42))
+* cite SPARC escalation thresholds in test-driven-development ([836f2ed](https://github.com/event4u-app/agent-config/commit/836f2edc2c288bcc7f878e97f42de954add8bb5b))
+* add mcp-request-signing guideline with HTTP-bridge appendix ([2ab67cd](https://github.com/event4u-app/agent-config/commit/2ab67cd401333ea61f47d43e952e7b07958feff3))
+* add cost-report command with token cost tracking ([262d865](https://github.com/event4u-app/agent-config/commit/262d865072d613647a439e89f83ded7334b60b1b))
+* add adr-create skill with index regeneration script ([7225105](https://github.com/event4u-app/agent-config/commit/7225105797d6810cad75bfa851f02b100e41ba29))
+
+### Bug Fixes
+
+* **docs:** bump command counts to 103 after cost-report addition ([2810fa5](https://github.com/event4u-app/agent-config/commit/2810fa5a54b7099123ae65e6c7c1325430bf3b77))
+
+### Documentation
+
+* sync counts (139 skills, 60 rules) + meta cleanups ([00c8b21](https://github.com/event4u-app/agent-config/commit/00c8b211edbc86cbe2f886107227e6bd46049c3b))
+* codify defer-with-trigger harvest policy ([b30dcd7](https://github.com/event4u-app/agent-config/commit/b30dcd72d0ffbd1fb2dbdd8ca28493a5b05a6bed))
+
+### Refactoring
+
+* **rules:** apply trim-frugality-canon Phase 1-3 trims ([ea1828a](https://github.com/event4u-app/agent-config/commit/ea1828af7bc69426386f6852cb69891309dce65f))
+
+### Chores
+
+* regenerate stale generated mirrors ([ea52e94](https://github.com/event4u-app/agent-config/commit/ea52e94415c4db5598e91d001e0fbeee10cae9be))
+* regenerate auto-generated artefacts ([fbe7d9e](https://github.com/event4u-app/agent-config/commit/fbe7d9ef137c9e584d7f88ce660afe29ab1a8d00))
+* bump skill/command/guideline counts and compression hashes ([18f4fad](https://github.com/event4u-app/agent-config/commit/18f4fad2372fd4347210199986909319c24ea0ec))
+* archive ruflo-adoption, move caveman-integration to skipped ([4c6c1eb](https://github.com/event4u-app/agent-config/commit/4c6c1eb1e00356421e0038704a82e1f10ac9a3e5))
+
 ## [1.22.0](https://github.com/event4u-app/agent-config/compare/1.21.0...1.22.0) (2026-05-07)
 
 ### Features
