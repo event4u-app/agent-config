@@ -428,6 +428,33 @@
       ]
     },
     {
+      "id": "domain-adoption-policy",
+      "triggers": [
+        {
+          "intent": "adopt new domain"
+        },
+        {
+          "intent": "harvest new domain track"
+        },
+        {
+          "intent": "open a domain plate"
+        },
+        {
+          "keyword": "mobile track"
+        },
+        {
+          "keyword": "ml track"
+        },
+        {
+          "keyword": "blockchain track"
+        },
+        {
+          "path_prefix": ".agent-src.uncompressed/skills/"
+        }
+      ],
+      "routes_to": []
+    },
+    {
       "id": "downstream-changes",
       "triggers": [
         {

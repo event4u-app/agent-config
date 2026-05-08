@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **361 artefacts** in this package.
+Maintainer-facing index of all **365 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > **Drift check:** `python3 scripts/generate_index.py --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (142)
+## Skills (144)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -87,6 +87,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`md-language-check`](../.agent-src.uncompressed/skills/md-language-check/SKILL.md) |  | Use BEFORE saving any .md under .augment/, .agent-src*/, or agents/ — scans umlauts, German function words, and quoted German phrases outside DE:/EN: anchor blocks. Hard gate per language-and-tone. |
 | skill | [`merge-conflicts`](../.agent-src.uncompressed/skills/merge-conflicts/SKILL.md) |  | Use when the user has merge conflicts or says "resolve conflicts". Understands conflict markers, resolution strategies, and verification workflow. |
 | skill | [`migration-creator`](../.agent-src.uncompressed/skills/migration-creator/SKILL.md) |  | Use when the user says "create migration", "add column", or "new table". Creates migrations with correct table prefixes, column naming, and multi-tenant awareness. |
+| skill | [`mobile-e2e-strategy`](../.agent-src.uncompressed/skills/mobile-e2e-strategy/SKILL.md) |  | Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Simulator / Android Emulator coverage in CI for RN, Expo, or native apps. |
 | skill | [`module-management`](../.agent-src.uncompressed/skills/module-management/SKILL.md) |  | Use when the user says "create module", "explore module", or works within app/Modules/. Understands module structure, auto-loading, route registration, and namespace conventions. |
 | skill | [`multi-tenancy`](../.agent-src.uncompressed/skills/multi-tenancy/SKILL.md) |  | Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations. |
 | skill | [`okr-tree-modeling`](../.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md) |  | Use when decomposing a company objective into team OKRs, auditing a draft OKR tree, or stress-testing an existing one for measurability and laddering. |
@@ -112,6 +113,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`project-docs`](../.agent-src.uncompressed/skills/project-docs/SKILL.md) |  | Use when looking for project-specific documentation. Knows which docs exist in agents/docs/ and agents/contexts/ and maps work areas to relevant docs. |
 | skill | [`prompt-optimizer`](../.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md) |  | Use when the user wants a prompt optimized for ChatGPT, Claude, Gemini, or another AI — 'make this prompt better', 'optimize for ChatGPT', 'rewrite my prompt' — even without saying 'optimize'. |
 | skill | [`quality-tools`](../.agent-src.uncompressed/skills/quality-tools/SKILL.md) |  | Use when PHPStan, Rector, or ECS output appears — \"phpstan says mixed\", type errors, \"fix code style\", \"run rector\" — even when Eloquent/Laravel/model code is also mentioned. |
+| skill | [`react-native-setup`](../.agent-src.uncompressed/skills/react-native-setup/SKILL.md) |  | Use when setting up React Native or Expo dev environments — Xcode, Android Studio, CocoaPods, EAS, Metro, New Architecture — even when the user just says 'my RN build won't start'. |
 | skill | [`react-shadcn-ui`](../.agent-src.uncompressed/skills/react-shadcn-ui/SKILL.md) |  | Use when building React UI on shadcn/ui primitives + Tailwind — the apply/review/polish skill dispatched by `directives/ui/*` for the `react-shadcn` stack. |
 | skill | [`readme-reviewer`](../.agent-src.uncompressed/skills/readme-reviewer/SKILL.md) |  | Use when reviewing a README for accuracy, usability, and alignment with the actual repository. Detects invented content, broken setup steps, and structural issues. |
 | skill | [`readme-writing`](../.agent-src.uncompressed/skills/readme-writing/SKILL.md) |  | Use when creating, rewriting, or significantly improving a README based on the actual repository structure, commands, and intended audience. |
@@ -154,7 +156,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`verify-completion-evidence`](../.agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md) |  | Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs. |
 | skill | [`websocket`](../.agent-src.uncompressed/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (58)
+## Rules (59)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -178,6 +180,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`direct-answers`](../.agent-src.uncompressed/rules/direct-answers.md) | always | Always — direct, unembellished answers. No flattery, no invented facts (verify load-bearing claims, otherwise ask). Emojis only as functional markers. Brevity is the default. |
 | rule | [`docker-commands`](../.agent-src.uncompressed/rules/docker-commands.md) | auto | Running PHP commands inside Docker containers — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, and any CLI tool execution |
 | rule | [`docs-sync`](../.agent-src.uncompressed/rules/docs-sync.md) | auto | Keeping .augment/ contexts, counts, cross-references in sync when creating, renaming, or deleting skills, rules, commands, templates, agent infra |
+| rule | [`domain-adoption-policy`](../.agent-src.uncompressed/rules/domain-adoption-policy.md) | auto | Adopting a new domain track (mobile, ML, blockchain, scientific computing, IoT, gaming) into the suite — gates the import on demand, ownership, CI fit, and Sunset compatibility BEFORE any harvest |
 | rule | [`downstream-changes`](../.agent-src.uncompressed/rules/downstream-changes.md) | auto | After EVERY code edit, find ALL downstream changes needed to existing files, including callers, tests, imports, types, and documentation |
 | rule | [`e2e-testing`](../.agent-src.uncompressed/rules/e2e-testing.md) | auto | Playwright E2E tests — locators, assertions, Page Objects, fixtures, CI, and flaky test prevention |
 | rule | [`guidelines`](../.agent-src.uncompressed/rules/guidelines.md) | manual | Writing or reviewing code — check relevant guideline before writing or reviewing code |
@@ -325,7 +328,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`upstream-contribute`](../.agent-src.uncompressed/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
 | command | [`work`](../.agent-src.uncompressed/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (58)
+## Guidelines (59)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -337,6 +340,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | guideline | [`developer-judgment`](../docs/guidelines/agent-infra/developer-judgment.md) | agent-infra |  |
 | guideline | [`direct-answers-demos`](../docs/guidelines/agent-infra/direct-answers-demos.md) | agent-infra |  |
 | guideline | [`engineering-memory-data-format`](../docs/guidelines/agent-infra/engineering-memory-data-format.md) | agent-infra |  |
+| guideline | [`ios-simulator-guide`](../docs/guidelines/agent-infra/ios-simulator-guide.md) | agent-infra |  |
 | guideline | [`language-and-tone-examples`](../docs/guidelines/agent-infra/language-and-tone-examples.md) | agent-infra |  |
 | guideline | [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md) | agent-infra |  |
 | guideline | [`mcp-request-signing`](../docs/guidelines/agent-infra/mcp-request-signing.md) | agent-infra |  |
