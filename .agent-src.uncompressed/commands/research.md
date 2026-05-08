@@ -137,7 +137,7 @@ in [`road-to-deep-research-adoption.md`](../../agents/roadmaps/road-to-deep-rese
 ## ADOPT citation
 
 Adopted from [`Weizhena/Deep-Research-skills`](https://github.com/Weizhena/Deep-Research-skills)
-@ commit `dc18cf4` · `skills/research-en/research/SKILL.md` · MIT License.
+@ commit `dc18cf4` · upstream file research/SKILL.md inside skills/research-en/ · MIT License.
 Refactored: dropped `web-search-agent` persona (portability), dropped
 Pydantic validator (replaced with JSON-Schema reference), repathed
 `./` → `$PROJECT_ROOT/agents/research/`, deferred `/research-deep` +
