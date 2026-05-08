@@ -1956,15 +1956,15 @@ The user decides the git shape. Never improvise. Commit specifics: canonical [`c
 - NEVER create / switch / delete a branch without explicit permission — includes spike, scratch, throwaway, worktree branches.
 - NEVER create, close, reopen, or change the target of a pull request without permission.
 - NEVER push a tag or create a release without permission.
-- NEVER include version numbers, target releases, deprecation dates, release-tied milestones, or git tags in roadmaps, plans, tickets, or any planning artifact. Roadmaps plan **work**; releases / tags are a separate decision outside the roadmap. Never surface "which release should this ship in?" as a numbered choice. User pins by saying so explicitly.
+- NEVER include version numbers, target releases, deprecation dates, release-tied milestones, or git tags in roadmaps, plans, tickets, or any planning artifact. Roadmaps plan **work**; releases / tags are a separate decision. User pins by saying so explicitly.
 - Task seems to need a separate branch / PR → STOP and **brief before asking** ([`scope-mechanics § Brief-before-asking`](../contexts/authority/scope-mechanics.md)).
-- BEFORE the first commit on related work, **inventory** existing branches and open PRs (`git branch --show-current`, `gh pr list --state open`). If a plausible base beyond the current branch exists, STOP and ask with numbered options — never improvise the base. Inventory + 4-option template + diverging-stack failure mode: [`scope-mechanics § Branch-base inventory`](../contexts/authority/scope-mechanics.md).
+- BEFORE the first commit on related work, **inventory** existing branches and open PRs. Plausible base beyond the current branch → STOP and ask with numbered options — never improvise. Commands + 4-option template + diverging-stack failure mode: [`scope-mechanics § Branch-base inventory`](../contexts/authority/scope-mechanics.md).
 
 "Explicit permission" = user said so **this turn or in a standing instruction not yet revoked**. Earlier permission for a different operation does not carry over.
 
 ## Production, infrastructure, bulk-destructive — Hard Floor
 
-A subset is **never** autonomous and never auto-permitted by a standing autonomy directive. Canonical: [`non-destructive-by-default`](non-destructive-by-default.md). Trigger list (prod-branch merges, deploys / releases, prod data / infra, bulk-destructive ops) and the "authorization is this turn, not earlier" clarification: [`scope-mechanics § Production, infrastructure, bulk-destructive`](../contexts/authority/scope-mechanics.md).
+A subset is **never** autonomous, regardless of standing autonomy. Canonical: [`non-destructive-by-default`](non-destructive-by-default.md). Triggers (prod-branch merges, deploys, prod data / infra, bulk-destructive) + this-turn-only clarification: [`scope-mechanics § Production, infrastructure, bulk-destructive`](../contexts/authority/scope-mechanics.md).
 
 ## Kernel-rule edits — slow-rollout guarantee
 
@@ -1972,11 +1972,11 @@ Each kernel-rule edit ships in **its own PR**, ≥ 24 h between merges. Autonomo
 
 ## Decline = silence — no re-asking on the same task
 
-After the user **declines** a proposal (branch switch, PR creation, tag/release entry, separate worktree, version pinning), do **not** raise it again on the same task. Decline stands until the user reopens the topic. Timing / "is this worth asking?": [`scope-mechanics § Decline = silence`](../contexts/authority/scope-mechanics.md).
+After the user **declines** a proposal (branch switch, PR creation, tag/release, separate worktree, version pinning), do **not** raise it again on the same task. Decline stands until reopened. Timing: [`scope-mechanics § Decline = silence`](../contexts/authority/scope-mechanics.md).
 
 ## Fenced step — user-set review gates
 
-User explicitly fences off the next step — *"don't implement yet"*, *"plan only"*, *"just write the roadmap, I'll review"*, *"review first"*, *"erst Roadmap, ich schau drüber"*, *"nichts implementieren"*, *"nur planen"*, *"erstmal nur X, dann ich"* — reply is **the deliverable plus a handoff**, never deliverable plus *"shall we start?"*.
+User explicitly fences off the next step (*"plan only"*, *"review first"*, *"don't implement yet"*, German equivalents) — reply is **deliverable + handoff**, never deliverable + *"shall we start?"*.
 
 ```
 USER FENCED OFF EXECUTION → DELIVER + HAND BACK.
@@ -1985,9 +1985,7 @@ NO "READY TO IMPLEMENT?" RE-ASK.
 NO "STARTEN WIR MIT PHASE 1?" PIVOT.
 ```
 
-Fence stands until the user reopens, exactly like `Decline = silence`. Permitted follow-up questions cover **the deliverable** (adjust scope, fix wording, add a section), never **its execution**.
-
-Failure-mode catalog (Option 1 = "start now", re-asking after delivery, hand-off-to-execution drift, inferring acceptance from a thumbs-up) and explicit bypass phrases: [`scope-mechanics § Fenced step`](../contexts/authority/scope-mechanics.md).
+Fence stands until reopened (like `Decline = silence`). Follow-ups cover **the deliverable** (scope, wording, sections), never its execution. Failure modes + bypass phrases: [`scope-mechanics § Fenced step`](../contexts/authority/scope-mechanics.md).
 
 ---
 
