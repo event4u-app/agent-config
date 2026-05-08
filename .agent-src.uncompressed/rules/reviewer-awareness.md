@@ -21,5 +21,5 @@ routes_to:
 Body migrated to `skill:review-routing` (per P4 of `road-to-kernel-and-router.md`).
 Trigger-set above activates this routing under the `balanced` and `full` profiles.
 
-Consolidates the former `review-routing-awareness` rule per
-[`adr-auto-rule-consolidation`](../../agents/contexts/adr-auto-rule-consolidation.md).
+Consolidates the former review-routing-awareness rule per the
+package's adr-auto-rule-consolidation decision.
