@@ -115,11 +115,15 @@ Phase 1 is the visible plate. Phase 2 + 3 are **out-of-horizon**.
   reference link (no runtime dependency). Defer `/research-deep` and
   `/research-report` to Phase 2. Pass `lint-skills` +
   `check-portability`. Effort: 1.0 day.
-- [~] **P1.6 — Suite integration.** Add the new skill, three
+- [x] **P1.6 — Suite integration.** Add the new skill, three
   guidelines, and one command to the index (`AGENTS.md` skill /
   guideline / command counts). Regenerate compressed output (`task
   sync`), regenerate tool projections (`task generate-tools`), run
   full CI (`task ci`). No PR until evidence is captured.
+  **Closure (2026-05-08):** counts synced to skills=145, commands=104,
+  guidelines=62; `task ci` green locally (1m 44s); compressed mirrors
+  + hashes regenerated; `marketplace.json` clean; ownership matrix +
+  index regenerated.
 
 ## Phase 2 — Out-of-horizon (gated on Phase 1 evidence)
 
