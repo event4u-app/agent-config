@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **366 artefacts** in this package.
+Maintainer-facing index of all **371 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > **Drift check:** `python3 scripts/generate_index.py --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (144)
+## Skills (145)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -42,6 +42,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`data-flow-mapper`](../.agent-src.uncompressed/skills/data-flow-mapper/SKILL.md) |  | Use BEFORE editing code that touches user data — traces the value from entry → validation → transformation → storage → egress, every hop cited with file:line. |
 | skill | [`database`](../.agent-src.uncompressed/skills/database/SKILL.md) |  | Use when working with database architecture, MariaDB/MySQL tuning, indexing strategies, slow queries, or multi-connection patterns — even when the user just says 'this query is slow'. |
 | skill | [`dcf-modeling`](../.agent-src.uncompressed/skills/dcf-modeling/SKILL.md) |  | Wing-4 valuation cognition for a CFO / finance-partner. Use when a deal, internal investment, or board ask names DCF, intrinsic value, WACC, terminal value, or 'what's it worth on a 5-year hold'. |
+| skill | [`deep-reading-analyst`](../.agent-src.uncompressed/skills/deep-reading-analyst/SKILL.md) |  | Use when deeply analyzing articles, papers, or long-form content with thinking frameworks (SCQA, mental models, inversion, critical thinking, systems, six hats, first principles, 5W2H) — 'analyze thi… |
 | skill | [`dependency-upgrade`](../.agent-src.uncompressed/skills/dependency-upgrade/SKILL.md) |  | Use when upgrading dependencies — "update Laravel", "bump PHP version", or "upgrade packages". Covers changelog review, breaking change detection, and verification. |
 | skill | [`description-assist`](../.agent-src.uncompressed/skills/description-assist/SKILL.md) |  | Use when polishing a skill/rule/command/guideline frontmatter description — pushier phrasing, trigger coverage, undertrigger audit — even if the user just says 'make this pushier'. |
 | skill | [`design-review`](../.agent-src.uncompressed/skills/design-review/SKILL.md) |  | Use when the user says "review the design", "check the UI", or wants a comprehensive UI/UX review. Uses a 7-phase methodology covering interaction, responsiveness, accessibility, and more. |
@@ -221,7 +222,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`user-interaction`](../.agent-src.uncompressed/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src.uncompressed/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (103)
+## Commands (104)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -309,6 +310,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`project-health`](../.agent-src.uncompressed/commands/project-health.md) |  | Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything |
 | command | [`quality-fix`](../.agent-src.uncompressed/commands/quality-fix.md) |  | Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files |
 | command | [`refine-ticket`](../.agent-src.uncompressed/commands/refine-ticket.md) |  | Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates validate-feature-fit and threat-modeling, ends with a close-prompt |
+| command | [`research`](../.agent-src.uncompressed/commands/research.md) |  | Conduct preliminary research on a topic — pick objects, define fields, generate `outline.yaml` + `fields.yaml` scaffolding for downstream deep research. Use for academic surveys, benchmark research,… |
 | command | [`review-changes`](../.agent-src.uncompressed/commands/review-changes.md) |  | Self-review local changes before creating a PR — dispatches to four specialized judges (bug, security, tests, quality) and consolidates verdicts |
 | command | [`review-routing`](../.agent-src.uncompressed/commands/review-routing.md) |  | Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml |
 | command | [`roadmap:ai-council`](../.agent-src.uncompressed/commands/roadmap/ai-council.md) | cluster: roadmap | Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options. |
@@ -329,7 +331,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`upstream-contribute`](../.agent-src.uncompressed/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
 | command | [`work`](../.agent-src.uncompressed/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (59)
+## Guidelines (62)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -341,11 +343,13 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | guideline | [`developer-judgment`](../docs/guidelines/agent-infra/developer-judgment.md) | agent-infra |  |
 | guideline | [`direct-answers-demos`](../docs/guidelines/agent-infra/direct-answers-demos.md) | agent-infra |  |
 | guideline | [`engineering-memory-data-format`](../docs/guidelines/agent-infra/engineering-memory-data-format.md) | agent-infra |  |
+| guideline | [`inversion-thinking`](../docs/guidelines/agent-infra/inversion-thinking.md) | agent-infra |  |
 | guideline | [`ios-simulator-guide`](../docs/guidelines/agent-infra/ios-simulator-guide.md) | agent-infra |  |
 | guideline | [`language-and-tone-examples`](../docs/guidelines/agent-infra/language-and-tone-examples.md) | agent-infra |  |
 | guideline | [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md) | agent-infra |  |
 | guideline | [`mcp-request-signing`](../docs/guidelines/agent-infra/mcp-request-signing.md) | agent-infra |  |
 | guideline | [`memory-access`](../docs/guidelines/agent-infra/memory-access.md) | agent-infra |  |
+| guideline | [`mental-models`](../docs/guidelines/agent-infra/mental-models.md) | agent-infra |  |
 | guideline | [`naming`](../docs/guidelines/agent-infra/naming.md) | agent-infra |  |
 | guideline | [`output-patterns`](../docs/guidelines/agent-infra/output-patterns.md) | agent-infra |  |
 | guideline | [`review-routing-data-format`](../docs/guidelines/agent-infra/review-routing-data-format.md) | agent-infra |  |
@@ -354,6 +358,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | guideline | [`role-mode-router`](../docs/guidelines/agent-infra/role-mode-router.md) | agent-infra |  |
 | guideline | [`rule-type-governance`](../docs/guidelines/agent-infra/rule-type-governance.md) | agent-infra |  |
 | guideline | [`runtime-layer`](../docs/guidelines/agent-infra/runtime-layer.md) | agent-infra |  |
+| guideline | [`scqa-framework`](../docs/guidelines/agent-infra/scqa-framework.md) | agent-infra |  |
 | guideline | [`self-improvement-pipeline`](../docs/guidelines/agent-infra/self-improvement-pipeline.md) | agent-infra |  |
 | guideline | [`size-and-scope`](../docs/guidelines/agent-infra/size-and-scope.md) | agent-infra |  |
 | guideline | [`skill-quality-checklist`](../docs/guidelines/agent-infra/skill-quality-checklist.md) | agent-infra |  |
