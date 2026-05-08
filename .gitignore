@@ -76,6 +76,12 @@ evals/results/
 # Phase 5.3 always-rule budget trend log (per-run JSONL, local-only).
 /.github/budget-trend.jsonl
 
+# Frugality canon baseline (per-run JSONL produced by
+# scripts/measure_frugality_savings.py for road-to-trim-frugality-canon
+# Phase 0). Local measurement log — canonical numbers are locked in
+# agents/contexts/adr-frugality-savings-baseline.md. Never commit.
+/agents/.frugality-baseline.jsonl
+
 # Golden Transcript freeze-guard staging output (produced by
 # `python3 -m tests.golden.capture --target tests/golden/.staging`,
 # diffed against the committed baseline; never committed).
