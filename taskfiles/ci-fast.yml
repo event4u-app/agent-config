@@ -186,6 +186,11 @@ tasks:
     desc: Always-rule budget gate (warn at 80%, fail at 90% of 49,000 chars)
     cmd: python3 scripts/check_always_budget.py {{.QUIET_FLAG}} --quiet
 
+  check-kernel-rule-bundle:
+    silent: true
+    desc: Fail PRs that touch > 1 kernel rule (override label `bundled-always-rules-acknowledged`)
+    cmd: python3 scripts/check_kernel_rule_bundle.py
+
   check-one-off-location:
     silent: true
     desc: Fail if any _one_off_*.py script lands outside scripts/ai_council/one_off_archive/<YYYY-MM>/

@@ -90,6 +90,15 @@ jobs:
       - name: Check always-rule budget (warn 80% / fail 90%)
         run: task check-always-budget
 
+      - name: Check kernel-rule bundle (one rule per PR; label override)
+        # Phase 4.2 of road-to-always-budget-relief — slow-rollout guarantee.
+        # Override: PR label `bundled-always-rules-acknowledged`.
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+          python3 scripts/check_kernel_rule_bundle.py \
+            --base-ref "origin/${{ github.base_ref }}"
+
       - name: Lint marketplace.json
         run: task lint-marketplace
 
