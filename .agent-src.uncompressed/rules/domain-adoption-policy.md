@@ -12,6 +12,10 @@ triggers:
   - keyword: "ml track"
   - keyword: "blockchain track"
   - path_prefix: ".agent-src.uncompressed/skills/"
+validator_ignore:
+  - type: "substring"
+    pattern: ".agent-src.uncompressed/"
+    reason: "Rule names the authoring tree as the gated-entry location for new domain plates."
 ---
 
 # Domain Adoption Policy
