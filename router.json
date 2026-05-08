@@ -115,6 +115,15 @@
       "routes_to": []
     },
     {
+      "id": "caveman-speak",
+      "triggers": [
+        {
+          "intent": "any reply"
+        }
+      ],
+      "routes_to": []
+    },
+    {
       "id": "command-suggestion-policy",
       "triggers": [
         {
