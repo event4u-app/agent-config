@@ -323,7 +323,6 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 | [`security`](.agent-src/skills/security/SKILL.md) | Auth, policies, CSRF, rate limiting, secure coding |
 | [`api-design`](.agent-src/skills/api-design/SKILL.md) | REST conventions, versioning, deprecation |
 | [`database`](.agent-src/skills/database/SKILL.md) | MariaDB optimization, indexing, query performance |
-| [`markitdown`](.agent-src/skills/markitdown/SKILL.md) | Token-cheap PDF / DOCX / XLSX / PPTX / image / audio ingestion via the upstream `markitdown-mcp` server (peer-side install, zero Python in this package) |
 
 → [Public catalog](docs/catalog.md) (all rules, skills, commands, guidelines) · [Skills only](docs/skills-catalog.md) · [llms.txt](llms.txt)
 
