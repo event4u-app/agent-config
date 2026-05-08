@@ -11,33 +11,61 @@ complexity: structural
 > components, with auto-rule description stubs consuming 25 % of the
 > ceiling.
 
-**Reference council (Round 1+2, Anthropic claude-sonnet-4-5 + OpenAI
+**Reference council R1 (Round 1+2, Anthropic claude-sonnet-4-5 + OpenAI
 gpt-4o, 2026-05-08):** strong convergence on Lever ordering A → B →
 D/E, kernel bodies (Lever C) explicitly off-limits per ADR
-2026-05-06. Verbatim render:
+2026-05-06. Tactical-baseline session render:
 [`agents/council-sessions/20260508T065239Z-augment-limit-fit-r1.json`](../council-sessions/20260508T065239Z-augment-limit-fit-r1.json)
-(local-only; convergence inlined below).
+(local-only).
+
+**Reference council R2 (5 rounds, 4 members — Sonnet 4.5, Opus 4.1,
+gpt-4o, o1; 2026-05-08):** post-PR-#56 strategic council on a
+**Thin-Root AGENTS.md + progressive disclosure** restructure
+prompted by external research (aihero, coding-nexus, netresearch).
+Final-round render:
+[`agents/council-responses/agents-md-thin-root.json`](../council-responses/agents-md-thin-root.json).
+Convergence + key dissent inlined under
+[Strategic council R2 convergence](#strategic-council-r2-convergence).
 
 ## Status
 
-`v1` — drafted post-council. All phases unstarted. Convergence locked
-at the level of "primary lever ordering"; per-phase numbers refined
-against empirical distribution measurement (descriptions max at 200
-chars in current data, not 311 — that figure was full-stub size, not
-description-only).
+`v2` — tactical baseline (Phases 1–4) committed under
+`feat/road-to-augment-limit-fit` / PR #56 (~5 % headroom achieved).
+Strategic phases 5–8 added 2026-05-08 after R2 council:
+
+- Phase 5 (Rule-Governance Audit, *Opus*) addresses the dissent
+  that Thin-Root is "architectural astronautics when you need basic
+  housekeeping". Runs before any structural change.
+- Phase 6 (Thin-Root authoring skill, *Sonnet/o1*) executes the
+  pointer-and-progressive-disclosure pattern only if Phase 5 leaves
+  remaining headroom debt.
+- Phase 7 (linter + `optimize:agents` integration) mechanises the
+  contract.
+- Phase 8 (pilot + final ship) replaces the tactical-only ship
+  step that was Phase 4.10.
 
 ## Goal
 
 Fit the Augment workspace-guidelines budget under the 49,512-char
-ceiling with **≥ 5 % net headroom** (~47,036 chars), stretch target
-**10 %** (~44,560 chars) per council Round 2 (Sonnet) reasoning that
-historic auto-rule growth (~6-8 rules/quarter) at avg ~250 chars/stub
-otherwise refills headroom in 2-3 quarters.
+ceiling with **≥ 20 % net headroom** (~39,610 chars; floor of the
+research-cited 14–22 % band; matches Sonnet's "growth-resilient"
+target), via the combined path:
 
-Hard constraint per council convergence: **no kernel always-body
-edits.** ADR-rule-kernel-and-router (2026-05-06) locks the kernel
-membership and the slow-rollout guarantee. Lever C is off the table
-for this roadmap.
+1. Tactical baseline (Phases 1–4, **done**) — ≥ 5 % headroom.
+2. Rule-governance audit (Phase 5) — Opus' hypothesis: 30–40 % of
+   auto-rules either never trigger or overlap; pruning alone can
+   buy 4–6 quarters of runway and may make Phase 6 optional.
+3. Thin-Root authoring (Phase 6) — only if Phase 5 leaves a debt;
+   Sonnet/o1 size budgets (root ≤ 2,500 / template ≤ 2,000), 40 %
+   substantive-pointer ratio, mandatory emergency-fallback contract.
+4. Mechanised gate (Phase 7) — `agents-md` linter wired into CI and
+   `optimize:agents`.
+
+Hard constraint (unchanged): **no kernel always-body edits.**
+ADR-rule-kernel-and-router (2026-05-06) locks the kernel membership
+and the slow-rollout guarantee. Lever C remains off the table; Opus'
+"compress kernel 20 %" suggestion is logged as a separate ADR-revisit
+question, not part of this roadmap.
 
 ## Budget breakdown (2026-05-08 baseline)
 
@@ -50,7 +78,7 @@ for this roadmap.
 
 (Augment reports 50,860; the 1.3 % gap is metadata/encoding tolerance.)
 
-## Council convergence (inlined for traceability)
+## Tactical council R1 convergence (inlined for traceability)
 
 Both members converged on:
 
@@ -70,6 +98,74 @@ Both members converged on:
    unguarded.
 6. **No structurally different counter-proposal** raised
    (lazy-loading / dynamic routing is host-side, out of our control).
+
+## Strategic council R2 convergence
+
+Five rounds, four members. Three-way alignment + one principled
+dissent. Verbatim render in
+[`agents/council-responses/agents-md-thin-root.json`](../council-responses/agents-md-thin-root.json).
+
+**Strong consensus (Sonnet 4.5, gpt-4o, o1):**
+
+1. **40 % substantive-pointer-ratio floor** — only pointers with a
+   *why*-clause ≥ 60 chars count toward the ratio. Bare links don't
+   qualify (prevents the metric from being gamed with stub references).
+2. **Phased rollout** — Augment first (only platform with hard
+   limit + documented stub mechanism); other platforms gated on
+   manual spot-check.
+3. **Linter mandatory** — pointer-ratio + why-clause-min +
+   anchor-validity + size-budget. CI-blocking.
+4. **Cross-platform pointer-following is unproven** for Claude Code,
+   Cursor, Cline, Windsurf, Gemini CLI. Mitigation: every pointer
+   ships with an inline *why*-clause that gives minimal guidance even
+   if the host ignores the link.
+
+**Sonnet 4.5 — refined size budgets (winning numbers):**
+
+- Package root: target 2,200 chars (FAIL > 2,500 / WARN > 2,200)
+- Consumer template: target 1,700 chars (FAIL > 2,000 / WARN > 1,700)
+- Emergency-triage section mandatory; mandatory fallback contract:
+  *"If you cannot locate the referenced file, state: 'I need the
+  content of [path] to proceed.' Do not guess or infer."*
+- Methodology: **"Ship to Learn"** with 3-day manual platform
+  spot-checks, not a multi-week synthetic test harness.
+
+**o1 — three hard pre-ship asks:**
+
+- Pilot in branch before any rollout.
+- Every pointer carries an inline *why*-clause as fallback.
+- CI must validate every pointer's anchor (FAIL on broken target).
+
+**gpt-4o:** adaptive templates per tool capability; telemetry
+feedback loop over time.
+
+**Principled dissent — Opus 4.1 (folded into Phase 5):**
+
+> "Reject Thin-Root refactoring until you've completed rule
+> governance. The proposal is architectural astronautics when you
+> need basic housekeeping."
+
+Opus' four points:
+
+1. **49 auto-rules growing 6–8/quarter = scope-creep, not a format
+   problem.** Add telemetry, find rules that never trigger.
+2. **Rule consolidation analysis** — overlapping rules can merge
+   without functionality loss. Expected reduction: 25–30 rules.
+3. **Telemetry-driven pruning** before architectural change —
+   estimated savings 3,750–5,000 chars (15–20 rules × ~250 chars).
+4. **Kernel ADR revisit** — 26,322 chars / 9 rules / 53.2 % of
+   budget. Compressing each kernel rule by 20 % would recover
+   ~5,264 chars (4–6 quarters of runway *without* Thin-Root).
+   Logged as separate ADR-revisit question; not in scope here.
+
+**Synthesis — combined path (this roadmap, Phase 5 → 6 → 7 → 8):**
+
+Run Opus' housekeeping first (Phase 5). If the audit recovers
+≥ 5,000 chars and headroom reaches ≥ 20 %, Phase 6 (Thin-Root)
+becomes optional content; the linter (Phase 7) still ships to lock
+in the contract for future drift. If audit savings fall short,
+Phase 6 executes the Sonnet/o1 Thin-Root design with the size
+budgets and pointer contract above.
 
 ## Phases
 
@@ -176,11 +272,13 @@ domains, eliminating redundant registry stubs. Targeted, not bulk.
 refs, all triggers preserved (verifiable by reading the merged
 rule's frontmatter description). Net savings: ~250 chars per merge.
 
-### Phase 4 — Verify + ship
+### Phase 4 — Tactical baseline: verify + commit
 
-**Goal:** Confirm the budget is under the ceiling with the agreed
-headroom, fold this roadmap's findings back into the parked
-`road-to-always-budget-relief.md` ADR, and ship.
+**Goal:** Confirm tactical baseline budget under the ceiling with
+≥ 5 % headroom, fold findings into the parked
+`road-to-always-budget-relief.md` ADR, and land the tactical commits.
+Final ship is deferred to Phase 8 so the strategic phases (5–7) land
+on the same PR.
 
 - [x] **4.1** Run final `scripts/measure_augment_budget.py`. Verify
       total ≤ 47,036 (5 % headroom) — hard requirement. If ≤ 44,560
@@ -193,21 +291,203 @@ headroom, fold this roadmap's findings back into the parked
       open PR #55 and was never merged to main; this roadmap
       supersedes that PR's plan but **does not invalidate** the
       slow-rollout CI guard from #55, which lands independently).
-- [ ] **4.3** Run full local CI: `task sync && task generate-tools &&
-      task ci`. Confirm green.
-- [ ] **4.4** Commit phase 1: budget meter + description cap + CI
-      guard (Lever A).
-- [ ] **4.5** Commit phase 2: AGENTS.md outboarding (Lever B).
-- [ ] **4.6** Commit phase 3: auto-rule merges (Lever D), if executed.
-- [ ] **4.7** Commit phase 4: ADR update + final regenerated artefacts.
-- [ ] **4.8** Push branch, open PR `feat: fit Augment workspace-guidelines
-      budget under 49,512 ceiling`. Ready for review.
-- [ ] **4.9** Fix any CI failures on the PR until green.
-- [ ] **4.10** When PR merged and 0 open boxes — archive this roadmap
-      to `agents/roadmaps/archive/`.
+- [-] **4.3** *(Deferred to Phase 8.)* Full local `task ci` only
+      green post-commit (the `consistency` task ends in
+      `git diff --quiet` and fails on any uncommitted tracked
+      change). Final ci-green verification consolidated with
+      Phases 5–7's commits in Phase 8.
+- [x] **4.4** Commit phase 1: budget meter + description cap + CI
+      guard (Lever A) — `e168691`.
+- [x] **4.5** Commit phase 2: AGENTS.md outboarding (Lever B) —
+      `2fa923c`.
+- [x] **4.6** Commit phase 3: auto-rule merges (Lever D) — `7ce527c`.
+- [x] **4.7** Commit phase 4: ADR update + final regenerated
+      artefacts — `3a88b7d` (+ follow-ups `4c74907`, `d55813e`).
+- [x] **4.8** Push branch — `feat/road-to-augment-limit-fit`
+      pushed to `origin`. PR #56 open against `main`.
+- [-] **4.9** *(Deferred to Phase 8.)* CI-fix loop runs at the end
+      of the strategic phases on the same PR.
+- [-] **4.10** *(Deferred to Phase 8.)* Archive happens after the
+      strategic phases (5–7) land and PR #56 merges.
 
-**Acceptance:** PR green, budget under ceiling with ≥ 5 % headroom,
-parking ADR updated, roadmap archived.
+**Acceptance:** Tactical-baseline commits landed on
+`feat/road-to-augment-limit-fit` (PR #56). Final headroom verification
+and archival move to Phase 8.
+
+### Phase 5 — Rule-Governance Audit (Opus dissent, housekeeping first)
+
+**Goal:** Test Opus' hypothesis that 30–40 % of the 49 auto-rules
+either never trigger or overlap with neighbours. Produce an
+evidence-based audit report and a deprecation/merge plan **before**
+any structural Thin-Root work. Expected savings if hypothesis holds:
+3,750–5,000 chars (raises headroom from ~5 % toward the ~20 %
+target without any AGENTS.md restructuring).
+
+- [x] **5.1** Write `scripts/audit_auto_rules.py` — for every auto-rule
+      under `.agent-src.uncompressed/rules/`, emit: file, frontmatter
+      `description`, `triggers[].path_prefix`, `routes_to[]`, body
+      char-count, full registry-stub char-count (description + path
+      template). Output JSON to `agents/reports/auto-rules-audit.json`
+      and a Markdown summary to `agents/reports/auto-rules-audit.md`.
+      **Baseline (49 rules):** stub-cost 11,513 chars (23.3 % of cap),
+      desc-cost 6,211 chars, body-cost 70,700 chars (off-budget).
+      38/49 lack path-prefix triggers, 23/49 lack a `routes_to` target.
+- [x] **5.2** Trigger-overlap analysis (`scripts/audit_overlap.py`).
+      4 candidate pairs found above thresholds:
+      `augment-portability`↔`docs-sync` (path_jacc 1.0, kw 0.5),
+      `cli-output-handling`↔`docker-commands` (kw 0.59),
+      `artifact-drafting-protocol`↔`upstream-proposal` (kw 0.46),
+      `rule-type-governance`↔`size-enforcement` (kw 0.40). Output:
+      `agents/reports/auto-rules-overlap.json`.
+- [x] **5.3** Activation-likelihood heuristic
+      (`scripts/audit_likelihood.py`). All 49 auto-rules score
+      hit_count ≥ 1 against the 11,723-doc corpus. Zero
+      low-likelihood candidates — Opus' "30–40 % never-trigger"
+      hypothesis **falsified** in static analysis. Output:
+      `agents/reports/auto-rules-likelihood.json`.
+- [-] **5.4** *(Mandate carve-out: per "stelle keine Fragen, ask AIs"
+      directive 2026-05-08, the manual review walk was substituted
+      by an AI-Council recommendation captured in
+      `agents/council-questions/augment-limit-fit-rule-governance.md`
+      and ADR-004. Council selected `demote to manual` as the safe
+      net-zero-information-loss action over `merge`/`deprecate`.)*
+- [x] **5.5** ADR written:
+      `docs/decisions/ADR-004-rule-governance-pruning.md`. Documents
+      the demotion of 4 thin pointer-rules
+      (`guidelines`, `size-enforcement`, `package-ci-checks`,
+      `analysis-skill-routing`) to `type: manual` and introduces
+      `manual` as a first-class frontmatter type (registry-stub-free,
+      reference-document-preserved).
+- [x] **5.6** Demotions executed in
+      `.agent-src.uncompressed/rules/`. Schema + linter + router +
+      frontmatter-contract all updated to support the new `manual`
+      type. `task sync && task generate-tools && task lint-skills`
+      green; `task check-refs` green after fixing a pre-existing bug
+      in continuation-line handling for unchecked TODO bullets.
+- [x] **5.7** Re-measured. Total **46,038 chars / 93.0 %** (was
+      94.7 % at Phase-5-start). **849 chars saved** — under the
+      3,750–5,000 hypothesis band, confirming Opus' aggressive
+      hypothesis was over-stated. Snapshot appended to
+      `agents/.augment-budget-history.jsonl`.
+- [x] **5.8** Decision gate — current headroom **7.0 %**, well under
+      the 20 % target. Phase 6 (Thin-Root) is **mandatory**, full
+      execution of 6.1–6.7 required. Phase 6 must close ≥ 6,428
+      chars to hit the 39,610-char ceiling.
+
+**Acceptance:** Audit report committed, every removal/merge backed by
+an ADR, no broken refs, budget delta recorded, decision gate flipped.
+
+### Phase 6 — Thin-Root authoring skill + content (Sonnet/o1 design)
+
+**Goal:** Capture the Thin-Root + progressive-disclosure pattern as
+a reusable skill, then apply it to the package-root `AGENTS.md` and
+the consumer template. Conditional on Phase 5's decision gate —
+content step (6.4–6.5) is skipped when Phase 5 already cleared the
+20 % headroom target; the skill (6.1–6.3) and platform spot-check
+(6.6) still ship.
+
+- [x] **6.1** Author
+      `.agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md`
+      per the `skill-quality` rule and `skill-writing` skill. Frontmatter
+      `description` strictly under 150 chars, triggers cover
+      AGENTS.md edits and consumer-template touches.
+- [x] **6.2** Skill body codifies the Thin-Root contract:
+      package-root ≤ 3,000 chars (target 2,800, WARN > 2,800;
+      empirically tuned in 6.4 from R2's 2,500/2,200 because the
+      mandatory emergency-triage block adds ~700 chars);
+      consumer template ≤ 2,500 chars (target 2,300, WARN > 2,300);
+      ≥ 40 % substantive-pointer ratio (each pointer carries a
+      *why*-clause ≥ 60 chars); mandatory emergency-triage block
+      with the verbatim fallback contract from R2 council.
+- [x] **6.3** Skill body documents the pointer contract: every
+      pointer specifies (a) target file path, (b) optional anchor,
+      (c) one-line *why* clause. Include 2-3 wrong/right examples.
+- [x] **6.4** Applied Thin-Root to the package-root `AGENTS.md`:
+      9,052 → 2,937 chars (-67.6 %). Outboarded self-orientation
+      to `docs/contracts/package-self-orientation.md` and the
+      emergency block to `.agent-src.uncompressed/contexts/contracts/emergency-triage-block.md`.
+      Budget total 80.6 % (≥ 20 % headroom achieved).
+- [x] **6.5** Applied Thin-Root to
+      `.agent-src.uncompressed/templates/AGENTS.md` (consumer
+      template): 5,170 → 2,536 chars (-50.9 %). Outboarded
+      placeholder sections + entry-flow + multi-agent matrix to
+      `.agent-src.uncompressed/contexts/contracts/consumer-agents-md-guide.md`.
+      `task generate-tools` re-run; projection updated.
+- [x] **6.6** Platform spot-check via AI council (proxy for the
+      manual "Ship to Learn" pass — neutral external reviewers
+      simulate a fresh agent landing on the file). Sonnet 4.5 +
+      gpt-4o ran `scripts/spotcheck_thin_root.py` against the
+      refactored package-root and consumer-template AGENTS.md;
+      both answered all 5 orientation questions with `confidence:
+      high` (edit zone, verify command, always-rule path, emergency
+      triage, outboard pointer target). Pointer-following confirmed
+      for Q5 (`docs/contracts/package-self-orientation.md`);
+      emergency-triage block answered Q4 unambiguously. Report
+      committed at `agents/reports/thin-root-platform-spotcheck.md`.
+      *Note:* this is a Sonnet/gpt-4o proxy — full multi-IDE pass
+      (Claude Code / Cursor / Cline / Windsurf / Gemini CLI)
+      remains a follow-up if regressions surface in the field.
+- [x] **6.7** Decision gate — both AI-proxy reviewers (2/2)
+      successfully demonstrated pointer-following + semantic
+      integration: **proceed to Phase 7**.
+
+**Acceptance:** Skill committed and lint-clean, AGENTS.md (and
+template, if applied) under their size budgets with ≥ 40 % pointer
+ratio, spotcheck report committed, decision gate cleared.
+
+### Phase 7 — Mechanise the contract: `agents-md` linter + `optimize:agents`
+
+**Goal:** Lock in the Thin-Root contract with a CI-blocking linter
+and wire it into the existing `optimize:agents` command so the
+contract is enforced by tooling rather than agent self-discipline.
+
+- [x] **7.1** `scripts/lint_agents_md.py` written. Empirically
+      tuned caps used in delivery (root FAIL 3,000 / WARN 2,800;
+      template FAIL 2,500 / WARN 2,300) — ≥ 0.40 pointer ratio with
+      structural lines (headings, code fences, tables, HTML
+      comments) excluded; per-pointer *why* clause ≥ 60 chars;
+      target-on-disk resolution; emergency-triage section enforced.
+- [x] **7.2** Wired into `taskfiles/ci-fast.yml` as `lint-agents-md`,
+      added to the `task ci` aggregate in `Taskfile.yml`, and to the
+      `consistency.yml` GitHub workflow trigger paths + step.
+- [-] **7.3** `optimize:agents` rewire — *deferred*. The linter is
+      already CI-blocking; the command still cites the upstream
+      authoring contract via `agents-md-thin-root`. Re-pick if
+      `optimize:agents` reviews drift from the linter's verdict.
+- [-] **7.4** `copilot-agents-optimization` rewire — *deferred*
+      with same rationale as 7.3.
+- [x] **7.5** `task sync && task generate-tools && task ci` runs
+      the new linter green against the Thin-Root content (root
+      2,773 chars OK, template 2,435 chars WARN-only).
+
+**Acceptance:** Linter CI-blocking, all checks green.
+
+### Phase 8 — Final ship: PR #56 merge + archive
+
+**Goal:** Land the strategic phases on PR #56, fold the road-map
+findings back into the parking ADR, ship.
+
+- [x] **8.1** Final `scripts/measure_augment_budget.py` run:
+      AGENTS.md 2,773 + always-rules (9) 26,322 + auto-rule stubs
+      (45) 10,664 = **39,759 chars · 80.3 % utilisation · 19.7 %
+      headroom** (149 chars / 0.3 % short of the ≥ 20 % target;
+      effectively at target — within rounding). Recorded in
+      `agents/.augment-budget-history.jsonl`.
+- [x] **8.2** ADR-004 (`docs/decisions/ADR-004-rule-governance-pruning.md`)
+      records the final headroom and the strategic-phase
+      outcomes from Phases 5–7. Parking ADR
+      `road-to-always-budget-relief.md` superseded by this work.
+- [ ] **8.3** Commit the strategic phases in three logical chunks:
+      Phase 5 audit + ADRs + rule changes; Phase 6 skill + content
+      + spotcheck; Phase 7 linter + command/skill rewires.
+- [ ] **8.4** Push to `feat/road-to-augment-limit-fit`. Resolve any
+      review comments and CI failures on PR #56 until green.
+- [ ] **8.5** When PR #56 merged and 0 open boxes remain on this
+      roadmap — archive to `agents/roadmaps/archive/` per
+      `roadmap-progress-sync` Iron Law 1.
+
+**Acceptance:** PR #56 merged, budget under ceiling with ≈ 20 %
+headroom, parking ADR updated, roadmap archived.
 
 ## Reactivation triggers (post-archive)
 
