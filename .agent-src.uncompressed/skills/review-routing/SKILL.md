@@ -187,8 +187,7 @@ Data source: <"ownership-map.yml + historical-bug-patterns.yml"
 
 ## See also
 
-- [`reviewer-awareness`](../../rules/reviewer-awareness.md)
-- [`review-routing-awareness`](../../rules/review-routing-awareness.md)
+- [`reviewer-awareness`](../../rules/reviewer-awareness.md) — role vocabulary + data-source rules
 - [`review-routing-data-format`](../../../docs/guidelines/agent-infra/review-routing-data-format.md)
 - [`create-pr-description`](../create-pr:description-only/SKILL.md)
 - [`judge-test-coverage`](../judge-test-coverage/SKILL.md) — consumes

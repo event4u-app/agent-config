@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "1"
-description: "First turn of a conversation on a project — check onboarding.onboarded in .agent-settings.yml; when false, prompt the user to run /onboard before executing any other request"
+description: "First turn of a conversation on a project — check onboarding.onboarded in .agent-settings.yml; when false, prompt to run /onboard before any request"
 source: package
 triggers:
   - phrase: "first turn"

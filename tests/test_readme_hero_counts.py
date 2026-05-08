@@ -20,10 +20,14 @@ where the counts come from disk:
                   are documented separately in AGENTS.md)
   * Guidelines  = `docs/guidelines/**/*.md` recursive count
 
-`AGENTS.md` carries the same skill/rule headline numbers and is checked
-in the same pass. AI-tool count is held constant at 8 (Augment, Claude,
-Cursor, Cline, Windsurf, Gemini, Copilot, Claude.ai) — drift in that
-number requires documentation work, not a count update.
+AI-tool count is held constant at 8 (Augment, Claude, Cursor, Cline,
+Windsurf, Gemini, Copilot, Claude.ai) — drift in that number requires
+documentation work, not a count update.
+
+Note: `AGENTS.md` previously carried the same skill/rule headline
+numbers, but the Thin-Root refactor (2026-05-08, Phase 6) made
+AGENTS.md a navigation surface only. Counts now live solely in
+README.md and `docs/architecture.md`.
 """
 
 from __future__ import annotations
@@ -101,24 +105,26 @@ def test_readme_hero_counts_match_disk() -> None:
     )
 
 
-def test_agents_md_skill_rule_counts_match_disk() -> None:
+def test_agents_md_is_thin_root_navigation_surface() -> None:
+    """AGENTS.md is a Thin-Root navigation surface — not a count source.
+
+    Phase 6 of the road-to-augment-limit-fit roadmap removed the
+    `skills/ (N skills)` / `rules/ (N rules)` headline lines from
+    AGENTS.md to keep the file under the Thin-Root cap (≤ 2,800 chars).
+    Counts now live in README.md and `docs/architecture.md`.
+
+    This test guards against accidental re-introduction of count
+    annotations that would inflate AGENTS.md back above the cap.
+    """
     agents = (REPO_ROOT / "AGENTS.md").read_text(encoding="utf-8")
-    skill_m = re.search(r"skills/\s*\((\d+) skills?\)", agents)
-    rule_m = re.search(r"rules/\s*\((\d+) rules?\)", agents)
-    assert skill_m and rule_m, (
-        "AGENTS.md is missing the `skills/ (N skills)` / `rules/ (N rules)` "
-        "headline lines under `## Repository layout`."
+    assert not re.search(r"skills/\s*\(\d+ skills?\)", agents), (
+        "AGENTS.md re-introduced `skills/ (N skills)` count annotation; "
+        "Thin-Root contract forbids count display in AGENTS.md."
     )
-    claimed_s = int(skill_m.group(1))
-    claimed_r = int(rule_m.group(1))
-    actual_s = _count_skills()
-    actual_r = _count_rules()
-    drift = []
-    if claimed_s != actual_s:
-        drift.append(f"  skills: AGENTS.md claims {claimed_s}, disk has {actual_s}")
-    if claimed_r != actual_r:
-        drift.append(f"  rules: AGENTS.md claims {claimed_r}, disk has {actual_r}")
-    assert not drift, "AGENTS.md headline counts drifted:\n" + "\n".join(drift)
+    assert not re.search(r"rules/\s*\(\d+ rules?\)", agents), (
+        "AGENTS.md re-introduced `rules/ (N rules)` count annotation; "
+        "Thin-Root contract forbids count display in AGENTS.md."
+    )
 
 
 # --- Tier coverage drift sentinel (roadmap 6.5) ---

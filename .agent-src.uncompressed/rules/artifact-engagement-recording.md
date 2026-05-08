@@ -2,7 +2,7 @@
 type: "auto"
 tier: "mechanical-already"
 alwaysApply: false
-description: "After a /implement-ticket or /work phase-step (refine/memory/analyze/plan/implement/test/verify/report) or full task — emit one telemetry:record call with consulted+applied ids when enabled"
+description: "After a /implement-ticket or /work phase-step (refine/memory/analyze/plan/implement/test/verify/report) or full task — emit one telemetry:record call"
 source: package
 triggers:
   - phrase: "/implement-ticket"

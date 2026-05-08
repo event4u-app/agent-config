@@ -1,7 +1,7 @@
 # Review Routing Data Format
 
 Schema and conventions for the two project-local YAML files that feed the
-[`review-routing-awareness`](../../rules/review-routing-awareness.md) rule
+[`reviewer-awareness`](../../rules/reviewer-awareness.md) rule
 and the [`review-routing`](../../skills/review-routing/SKILL.md) skill.
 
 Both files are **optional** and live in the consumer repository — never
@@ -139,6 +139,5 @@ Field semantics:
 
 ## See also
 
-- [`review-routing-awareness`](../../rules/review-routing-awareness.md)
 - [`reviewer-awareness`](../../rules/reviewer-awareness.md)
 - [`review-routing`](../../skills/review-routing/SKILL.md)

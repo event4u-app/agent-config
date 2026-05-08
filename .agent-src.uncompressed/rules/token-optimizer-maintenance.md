@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Editing a token-optimizer-cited asset (cli-output-handling, rtk-output-filtering, token-efficiency, agent-handoff, direct-answers, markitdown) — keep the catalog row in sync in the same commit."
+description: "Editing a token-optimizer-cited asset (cli-output-handling, rtk-output-filtering, token-efficiency, markitdown) — sync catalog same commit"
 source: package
 triggers:
   - keyword: "cli-output-handling"

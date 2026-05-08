@@ -1,5 +1,5 @@
 ---
-type: "auto"
+type: "manual"
 tier: "3"
 description: "When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis"
 source: package

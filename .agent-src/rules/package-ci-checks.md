@@ -1,5 +1,5 @@
 ---
-type: "auto"
+type: "manual"
 tier: "mechanical-already"
 description: "Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first"
 source: package

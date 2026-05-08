@@ -1,1 +1,0 @@
-../../.agent-src/rules/no-council-references.md

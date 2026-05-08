@@ -115,7 +115,7 @@ ORDERED_STEP_PATTERN = re.compile(r"^(?:\s*|\#{1,4}\s*)(\d+)\.\s+", re.MULTILINE
 SECTION_PATTERN = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 FRONTMATTER_PATTERN = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
 DESCRIPTION_PATTERN = re.compile(r'^description:\s*"?(.*?)"?\s*$', re.MULTILINE)
-TYPE_PATTERN = re.compile(r'^type:\s*"?(always|auto)"?\s*$', re.MULTILINE)
+TYPE_PATTERN = re.compile(r'^type:\s*"?(always|auto|manual)"?\s*$', re.MULTILINE)
 SOURCE_PATTERN = re.compile(r'^source:\s*"?(package|project)"?\s*$', re.MULTILINE)
 STATUS_PATTERN = re.compile(r'^status:\s*"?(active|deprecated|superseded)"?\s*$', re.MULTILINE)
 REPLACED_BY_PATTERN = re.compile(r'^replaced_by:\s*"?([\w-]+)"?\s*$', re.MULTILINE)
@@ -133,7 +133,7 @@ SENIOR_OUTPUT_PATTERN = re.compile(r"^##\s+Output\s*$", re.MULTILINE)
 H1_PATTERN = re.compile(r"^# .+", re.MULTILINE)
 DOUBLE_BLANK_PATTERN = re.compile(r"\n{3,}")
 
-VALID_RULE_TYPES = {"always", "auto"}
+VALID_RULE_TYPES = {"always", "auto", "manual"}
 VALID_RULE_SOURCES = {"package", "project"}
 VALID_STATUSES = {"active", "deprecated", "superseded"}
 
@@ -683,6 +683,12 @@ def lint_router_frontmatter(rule_id: str, frontmatter: str,
     triggers = _parse_yaml_list(frontmatter, "triggers")
     routes_to = _parse_yaml_list(frontmatter, "routes_to")
 
+    # Manual rules are reference-only — not auto-injected, not router-routed
+    # (ADR-004). Skip router validation so legacy triggers/routes_to fields
+    # remain documented in the rule body without forcing maintenance.
+    if rule_type == "manual":
+        return issues
+
     is_kernel = rule_id in KERNEL_RULE_IDS or rule_type == "always"
 
     if is_kernel:
@@ -961,9 +967,9 @@ def lint_rule(path: Path, text: str) -> LintResult:
         # type field
         rule_type = extract_frontmatter_field(frontmatter, TYPE_PATTERN)
         if rule_type is None:
-            issues.append(Issue("error", "missing_type", "Frontmatter missing 'type' field (must be 'always' or 'auto')"))
+            issues.append(Issue("error", "missing_type", "Frontmatter missing 'type' field (must be 'always', 'auto', or 'manual')"))
         elif rule_type not in VALID_RULE_TYPES:
-            issues.append(Issue("error", "invalid_type", f"Invalid type '{rule_type}'; must be 'always' or 'auto'"))
+            issues.append(Issue("error", "invalid_type", f"Invalid type '{rule_type}'; must be 'always', 'auto', or 'manual'"))
 
         # source field
         rule_source = extract_frontmatter_field(frontmatter, SOURCE_PATTERN)

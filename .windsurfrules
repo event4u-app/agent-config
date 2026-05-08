@@ -1297,79 +1297,31 @@ Cross-rule index: [`frugality-charter § cross-references`](../contexts/contract
 
 ---
 
-# No Council References from Any Artifact
+# No Transient References from Stable Artifacts
 
-Council artefacts under `agents/council-{questions,responses,sessions}/`
-are **gitignored, local-only, and auto-pruned** after
-`ai_council.session_retention_days` (default 7). They are
-disposable scratch — never part of the repo, never visible to a
-reviewer who clones, never durable across the retention window.
+Two transient layers under `agents/` outlive nothing: roadmaps in
+`agents/roadmaps/` are archived, skipped, or deleted as work
+completes; council artefacts in `agents/council-{questions,responses,
+sessions}/` are **gitignored, local-only, and auto-pruned** after
+`ai_council.session_retention_days` (default 7). Stable artifacts
+(rules, skills, commands, contexts, guidelines, AGENTS.md, README,
+copilot-instructions) outlive both. A stable artifact citing a
+specific transient file becomes a broken reference the moment that
+file is deleted or pruned.
 
-A link to a specific council file rots three ways: gitignored
-(not in cloned repo), pruned after retention window (gone even
-locally), and the installed `.augment/` projection cannot follow a
-path that does not exist in the consumer.
-
-## The Iron Law
-
-```
-NEVER LINK TO A SPECIFIC FILE INSIDE
-agents/council-{questions,responses,sessions}/
-FROM ANY ARTIFACT — ROADMAPS INCLUDED.
-INLINE THE CONVERGENCE WITH DATE + MEMBERS, NEVER THE PATH.
-```
-
-Applies to **every** artifact. Council artefacts are more transient
-than roadmaps — the local copy disappears too.
-
-## Forbidden vs allowed
-
-**Forbidden** in any `*.md` / `*.yml` / `*.json` / `*.py`:
-`agents/council-questions/<file>.md`,
-`agents/council-responses/<file>.json`,
-`agents/council-sessions/<file>.json` or `<timestamp>/...`.
-
-**Allowed**: directory mentions (talking about the output convention,
-not a specific file); the `ai-council` skill and `/council:*` commands
-documenting the output path schema; inline convergence summary —
-e.g. *"Council (claude-sonnet-4-5 + gpt-4o, 2026-05-06) converged
-on …"* with date + members, no filepath.
-
-## What to do instead
-
-Identify the durable conclusion (decision, contract, lesson),
-inline a convergence-summary block (members, date, cost if relevant
-— see `ai-council` § Output format), and optionally promote the
-lesson to `agents/contexts/`. The context is durable; the council
-file was the catalyst.
-
-Failure mode: *"I'll just link to the session JSON, it's evidence."*
-The session is gone in 7 days. **Inline first, link never.**
-
-## See also
-
-- [`no-roadmap-references`](no-roadmap-references.md) — sibling rule
-  for the roadmap layer
-- [`augment-source-of-truth`](augment-source-of-truth.md) — edit
-  `.agent-src.uncompressed/`
-- [`ai-council`](../skills/ai-council/SKILL.md) — output path
-  convention and convergence-summary format
-
----
-
-# No Roadmap References from Stable Artifacts
-
-Roadmaps in `agents/roadmaps/` are **transient** — archived, skipped,
-or deleted as work completes. Stable artifacts (rules, skills,
-commands, contexts, guidelines, AGENTS.md, README) outlive them. A
-stable artifact citing a specific roadmap file becomes a broken
-reference the moment that roadmap is deleted.
+Council links rot three ways: gitignored (not in cloned repo),
+pruned after retention window (gone even locally), and the installed
+`.augment/` projection cannot follow a path that does not exist in
+the consumer.
 
 ## The Iron Law
 
 ```
-NEVER LINK TO A SPECIFIC FILE IN agents/roadmaps/ FROM A STABLE ARTIFACT.
+NEVER LINK TO A SPECIFIC FILE IN agents/roadmaps/
+OR IN agents/council-{questions,responses,sessions}/
+FROM A STABLE ARTIFACT.
 PROMOTE DURABLE CONCLUSIONS TO agents/contexts/ AND CITE THAT INSTEAD.
+INLINE COUNCIL CONVERGENCE WITH DATE + MEMBERS, NEVER THE PATH.
 ```
 
 Stable artifact = anything that is **not** a roadmap, council
@@ -1381,6 +1333,9 @@ These paths must not appear inside a stable artifact:
 
 - `agents/roadmaps/<file>.md`, `agents/roadmaps/archive/<file>.md`,
   `agents/roadmaps/skipped/<file>.md`
+- `agents/council-questions/<file>.md`,
+  `agents/council-responses/<file>.json`,
+  `agents/council-sessions/<file>.json` or `<timestamp>/...`
 
 Stable artifact = any file under `.agent-src.uncompressed/{rules,
 skills,commands,contexts,templates,personas}/`, `agents/contexts/`,
@@ -1388,41 +1343,56 @@ skills,commands,contexts,templates,personas}/`, `agents/contexts/`,
 `docs/customization.md`, `docs/getting-started.md`, `docs/catalog.md`,
 `AGENTS.md`, `README.md`, `copilot-instructions.md`.
 
-CI enforcement: `scripts/check_no_roadmap_refs.py` (companion linter
-— fails the build on any new violation).
+CI enforcement: `scripts/check_no_roadmap_refs.py` (roadmap layer)
+and `scripts/check_council_references.py` (council layer) — both
+fail the build on any new violation.
 
 ## Allowed patterns
 
-- `agents/roadmaps/` and its subdirectories as directory mentions
+- `agents/roadmaps/` and `agents/council-*/` as **directory** mentions
   (talking about the layer, not a specific file)
 - Roadmap → roadmap references (siblings within the transient layer)
+- The `ai-council` skill and `/council:*` commands documenting the
+  output path schema
+- Inline council convergence summary — e.g. *"Council
+  (claude-sonnet-4-5 + gpt-4o, 2026-05-06) converged on …"* with
+  date + members, no filepath
 - Council sessions, `agents/.agent-chat-history`, commit messages, PR
   descriptions — transient by construction, not part of the package
   surface
 
 ## What to do instead
 
-When a stable artifact needs to cite a roadmap finding:
+When a stable artifact needs to cite a transient finding:
 
 1. Identify the durable conclusion — decision, contract, lesson,
    mechanic.
 2. Promote it to a context file under `agents/contexts/` (ADR,
-   mechanics doc, locked decision). The roadmap can then point at
-   the context, not the other way around.
+   mechanics doc, locked decision). The roadmap or council session
+   can then point at the context, not the other way around.
 3. Reference the context from the stable artifact.
+4. For council convergences specifically: inline a convergence-summary
+   block (members, date, cost if relevant — see `ai-council`
+   § Output format) instead of linking the session JSON.
 
-Failure mode: *"I'll just link to the roadmap, it's evidence."* The
-roadmap gets archived, then deleted, then the link rots. **Promote
-first, link second.**
+Failure modes:
+
+- *"I'll just link to the roadmap, it's evidence."* The roadmap
+  gets archived, then deleted, then the link rots. **Promote first,
+  link second.**
+- *"I'll just link to the session JSON, it's evidence."* The session
+  is gone in 7 days. **Inline first, link never.**
 
 ## See also
 
 - [`docs-sync`](docs-sync.md) — cross-reference sync after rename / delete
 - [`agent-docs`](agent-docs.md) — roadmap layer conventions
-- [`roadmap-progress-sync`](roadmap-progress-sync.md) — sync dashboard on
-  roadmap touch
+- [`roadmap-progress-sync`](roadmap-progress-sync.md) — sync dashboard
+  on roadmap touch
 - [`augment-source-of-truth`](augment-source-of-truth.md) — edit
   `.agent-src.uncompressed/`
+- [`ai-council`](../skills/ai-council/SKILL.md) — output path
+  convention and convergence-summary format
 
 ---
 
@@ -1580,21 +1550,17 @@ Before completing any transformation, verify:
 
 ---
 
-# Review Routing Awareness
-
-**Iron Law.** Consult ownership-map and historical-bug-patterns before suggesting reviewers or claiming a change is safe.
-
-Body migrated to `skill:review-routing` (per P4 of `road-to-kernel-and-router.md`).
-Trigger-set above activates this routing under the `balanced` and `full` profiles.
-
----
-
 # Reviewer Awareness
 
-**Iron Law.** Anchor reviewer choice in paths and risk, never seniority; medium / high risk requires primary + secondary role.
+**Iron Law (reviewer choice).** Anchor reviewer choice in paths and risk, never seniority; medium / high risk requires primary + secondary role.
+
+**Iron Law (routing / risk).** Consult ownership-map and historical-bug-patterns before suggesting reviewers or claiming a change is safe.
 
 Body migrated to `skill:review-routing` (per P4 of `road-to-kernel-and-router.md`).
 Trigger-set above activates this routing under the `balanced` and `full` profiles.
+
+Consolidates the former review-routing-awareness rule per the
+package's adr-auto-rule-consolidation decision.
 
 ---
 
@@ -1759,6 +1725,7 @@ The user decides the git shape. Never improvise. Commit specifics: canonical [`c
 - NEVER push a tag or create a release without permission.
 - NEVER include version numbers, target releases, deprecation dates, release-tied milestones, or git tags in roadmaps, plans, tickets, or any planning artifact. Roadmaps plan **work**; releases / tags are a separate decision outside the roadmap. Never surface "which release should this ship in?" as a numbered choice. User pins by saying so explicitly.
 - Task seems to need a separate branch / PR → STOP and **brief before asking** ([`scope-mechanics § Brief-before-asking`](../contexts/authority/scope-mechanics.md)).
+- BEFORE the first commit on related work, **inventory** existing branches and open PRs (`git branch --show-current`, `gh pr list --state open`). If a plausible base beyond the current branch exists, STOP and ask with numbered options — never improvise the base. Inventory + 4-option template + diverging-stack failure mode: [`scope-mechanics § Branch-base inventory`](../contexts/authority/scope-mechanics.md).
 
 "Explicit permission" = user said so **this turn or in a standing instruction not yet revoked**. Earlier permission for a different operation does not carry over.
 

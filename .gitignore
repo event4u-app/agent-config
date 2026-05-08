@@ -26,6 +26,7 @@ __pycache__/
 
 # Temp
 /tmp/
+/.tmp/
 
 # Playwright
 /.playwright-mcp/*

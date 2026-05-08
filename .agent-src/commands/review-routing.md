@@ -1,6 +1,6 @@
 ---
 name: review-routing
-skills: [review-routing, reviewer-awareness, review-routing-awareness]
+skills: [review-routing, reviewer-awareness]
 description: Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml
 disable-model-invocation: true
 suggestion:
@@ -18,10 +18,9 @@ reviewer roles plus any matched historical bug patterns — so the author
 knows *who* to request and *what* to test before opening a PR.
 
 Dispatches to [`review-routing`](../skills/review-routing/SKILL.md) for
-the core resolution logic. The rules
-[`reviewer-awareness`](../rules/reviewer-awareness.md) and
-[`review-routing-awareness`](../rules/review-routing-awareness.md) govern
-the output format and data handling.
+the core resolution logic. The rule
+[`reviewer-awareness`](../rules/reviewer-awareness.md) governs reviewer
+choice, routing, and data handling.
 
 ### 1. Gather the diff
 
@@ -73,7 +72,7 @@ After the block, ask:
 ```
 
 - On **1**: hand off to
-  [`create-pr-description`](../skills/create-pr-description/SKILL.md).
+  [`create-pr-description`](../skills/create-pr:description-only/SKILL.md).
 - On **2**: respect CODEOWNERS — request the *roles* resolved to people
   by the consumer's own mapping, never invent usernames.
 - On **3**: the user wants to curate the map first. Stop.
@@ -104,12 +103,10 @@ After the block, ask:
 ## See also
 
 - [`review-routing`](../skills/review-routing/SKILL.md) — the resolver
-- [`reviewer-awareness`](../rules/reviewer-awareness.md) — role vocabulary
-- [`review-routing-awareness`](../rules/review-routing-awareness.md) —
-  data-source rules
+- [`reviewer-awareness`](../rules/reviewer-awareness.md) — role vocabulary + data-source rules
 - [`review-routing-data-format`](../docs/guidelines/agent-infra/review-routing-data-format.md)
   — YAML schemas
-- [`create-pr-description`](../skills/create-pr-description/SKILL.md) —
+- [`create-pr-description`](../skills/create-pr:description-only/SKILL.md) —
   consumes the routing block
 - [`verify-before-complete`](../rules/verify-before-complete.md) —
   consumes the `required_test` list

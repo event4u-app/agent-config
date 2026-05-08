@@ -89,7 +89,7 @@ agent that does not maintain `event4u/agent-config`.
 `agent-docs`, `architecture`, `artifact-drafting-protocol`,
 `augment-portability`, `augment-source-of-truth`, `capture-learnings`,
 `docs-sync`, `guidelines`, `package-ci-checks`, `preservation-guard`,
-`review-routing-awareness`, `roadmap-progress-sync`,
+`reviewer-awareness`, `roadmap-progress-sync`,
 `role-mode-adherence`, `rule-type-governance`, `runtime-safety`,
 `size-enforcement`, `skill-improvement-trigger`, `skill-quality`,
 `tool-safety`, `upstream-proposal`.

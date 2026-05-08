@@ -13,23 +13,6 @@
   ],
   "tier_1": [
     {
-      "id": "analysis-skill-routing",
-      "triggers": [
-        {
-          "keyword": "analyze"
-        },
-        {
-          "keyword": "analysis"
-        },
-        {
-          "phrase": "dig into the codebase"
-        }
-      ],
-      "routes_to": [
-        "skill:analysis-skill-router"
-      ]
-    },
-    {
       "id": "architecture",
       "triggers": [
         {
@@ -193,21 +176,6 @@
       ]
     },
     {
-      "id": "guidelines",
-      "triggers": [
-        {
-          "intent": "writing code"
-        },
-        {
-          "intent": "reviewing code"
-        },
-        {
-          "keyword": "convention"
-        }
-      ],
-      "routes_to": []
-    },
-    {
       "id": "no-attribution-footers",
       "triggers": [
         {
@@ -226,8 +194,11 @@
       "routes_to": []
     },
     {
-      "id": "no-council-references",
+      "id": "no-roadmap-references",
       "triggers": [
+        {
+          "path_prefix": "agents/roadmaps/"
+        },
         {
           "path_prefix": "agents/council-questions/"
         },
@@ -238,24 +209,15 @@
           "path_prefix": "agents/council-sessions/"
         },
         {
+          "intent": "link from stable artifact"
+        },
+        {
           "intent": "link to council artefact"
         }
       ],
       "routes_to": [
         "skill:ai-council"
       ]
-    },
-    {
-      "id": "no-roadmap-references",
-      "triggers": [
-        {
-          "path_prefix": "agents/roadmaps/"
-        },
-        {
-          "intent": "link from stable artifact"
-        }
-      ],
-      "routes_to": []
     },
     {
       "id": "onboarding-gate",
@@ -272,23 +234,6 @@
       ],
       "routes_to": [
         "command:onboard"
-      ]
-    },
-    {
-      "id": "package-ci-checks",
-      "triggers": [
-        {
-          "phrase": "task ci"
-        },
-        {
-          "phrase": "before push"
-        },
-        {
-          "phrase": "before pr"
-        }
-      ],
-      "routes_to": [
-        "skill:lint-skills"
       ]
     },
     {
@@ -318,24 +263,6 @@
       "routes_to": [
         "guideline:agent-infra/roadmap-progress-mechanics"
       ]
-    },
-    {
-      "id": "size-enforcement",
-      "triggers": [
-        {
-          "intent": "create rule"
-        },
-        {
-          "intent": "create skill"
-        },
-        {
-          "intent": "create command"
-        },
-        {
-          "intent": "create guideline"
-        }
-      ],
-      "routes_to": []
     },
     {
       "id": "skill-quality",
@@ -664,23 +591,6 @@
       "routes_to": []
     },
     {
-      "id": "review-routing-awareness",
-      "triggers": [
-        {
-          "keyword": "reviewer"
-        },
-        {
-          "phrase": "risk hotspot"
-        },
-        {
-          "phrase": "ownership map"
-        }
-      ],
-      "routes_to": [
-        "skill:review-routing"
-      ]
-    },
-    {
       "id": "reviewer-awareness",
       "triggers": [
         {
@@ -688,6 +598,12 @@
         },
         {
           "phrase": "suggest reviewers"
+        },
+        {
+          "phrase": "risk hotspot"
+        },
+        {
+          "phrase": "ownership map"
         }
       ],
       "routes_to": [

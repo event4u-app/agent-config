@@ -62,7 +62,7 @@ source: package
 |---|---|---|---|
 | `description` | string | ≤ 200 chars recommended | For `type: auto`, this is the trigger matcher. |
 | `source` | enum | `package` \| `project` | 43/43 currently `package`. |
-| `type` | enum | `always` \| `auto` | `always` = loaded every turn; `auto` = matched by description. |
+| `type` | enum | `always` \| `auto` \| `manual` | `always` = loaded every turn (kernel); `auto` = description stub injected, body loaded on trigger match; `manual` = reference-only, zero workspace-budget cost (ADR-004). |
 
 ### Optional
 

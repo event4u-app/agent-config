@@ -125,6 +125,9 @@ def _collect(rules_dir: Path) -> dict:
             if not COMPILE_TIME_TOGGLES[rule_id](settings):
                 continue
         rule_type = str(fm.get("type", "auto"))
+        # Manual rules are reference-only (ADR-004) — no router emission.
+        if rule_type == "manual":
+            continue
         tier = _resolve_tier(rule_type, fm.get("tier", ""))
         if tier not in ALLOWED_TIERS:
             continue
