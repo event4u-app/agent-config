@@ -6,10 +6,10 @@
 
 ## Overall
 
-**46 / 402 steps done · 11%**
+**48 / 402 steps done · 12%**
 
 ```text
-████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   11%
+█████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   12%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-always-budget-relief.md](roadmaps/road-to-always-budget-relief.md) | 4 | 14 | 14 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-augment-limit-fit.md](roadmaps/road-to-augment-limit-fit.md) | 8 | 54 | 3 | 45 | 0 | 6 | █████████░ 94% |
+| 2 | [road-to-augment-limit-fit.md](roadmaps/road-to-augment-limit-fit.md) | 8 | 54 | 1 | 47 | 0 | 6 | ██████████ 98% |
 | 3 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 1 | 35 | 35 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-chat-history-cross-agent-hardening.md](roadmaps/road-to-chat-history-cross-agent-hardening.md) | 5 | 37 | 37 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-deep-research-adoption.md](roadmaps/road-to-deep-research-adoption.md) | 3 | 14 | 14 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -51,7 +51,7 @@
 
 ### [road-to-augment-limit-fit.md](roadmaps/road-to-augment-limit-fit.md)
 
-**Road to Augment Workspace-Guidelines Limit Fit** — 45 / 48 done (94%)
+**Road to Augment Workspace-Guidelines Limit Fit** — 47 / 48 done (98%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -62,7 +62,7 @@
 | 5 | Rule-Governance Audit (Opus dissent, housekeeping first) | ✅ done | 0 | 7 | 0 | 1 | 100% |
 | 6 | Thin-Root authoring skill + content (Sonnet/o1 design) | ✅ done | 0 | 7 | 0 | 0 | 100% |
 | 7 | Mechanise the contract: `agents-md` linter + `optimize:agents` | ✅ done | 0 | 3 | 0 | 2 | 100% |
-| 8 | Final ship: PR #56 merge + archive | 🟡 in progress | 3 | 2 | 0 | 0 | 40% |
+| 8 | Final ship: PR #56 merge + archive | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
 
 ### [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md)
 

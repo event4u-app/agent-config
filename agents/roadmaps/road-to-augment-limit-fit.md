@@ -479,11 +479,15 @@ findings back into the parking ADR, ship.
       records the final headroom and the strategic-phase
       outcomes from Phases 5–7. Parking ADR
       `road-to-always-budget-relief.md` superseded by this work.
-- [ ] **8.3** Commit the strategic phases in three logical chunks:
-      Phase 5 audit + ADRs + rule changes; Phase 6 skill + content
-      + spotcheck; Phase 7 linter + command/skill rewires.
-- [ ] **8.4** Push to `feat/road-to-augment-limit-fit`. Resolve any
-      review comments and CI failures on PR #56 until green.
+- [x] **8.3** Strategic phases committed in logical chunks: Phase 5
+      audit + ADRs + rule changes (`dfc87d2`); Phase 6 skill + content
+      + spotcheck (`05d5e73`); Phase 7 linter + CI integration
+      (`63570de`); Phase 8 close-out (`a49b71a`); CI follow-ups
+      `337d0ce` (`cloud_safe` noop), `964973d` (linter + counts test
+      alignment), `6fe65f0` (drop gitignored council link).
+- [x] **8.4** Branch pushed; PR #56 green on HEAD `6fe65f0` —
+      Consistency, Tests, and Skill Lint all reporting `success`
+      after the three CI follow-up commits.
 - [ ] **8.5** When PR #56 merged and 0 open boxes remain on this
       roadmap — archive to `agents/roadmaps/archive/` per
       `roadmap-progress-sync` Iron Law 1.
