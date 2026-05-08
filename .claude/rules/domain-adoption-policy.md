@@ -1,0 +1,1 @@
+../../.agent-src/rules/domain-adoption-policy.md
