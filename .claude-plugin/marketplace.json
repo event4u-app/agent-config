@@ -23,6 +23,7 @@
         "./.claude/skills/agents",
         "./.claude/skills/agents-audit",
         "./.claude/skills/agents-cleanup",
+        "./.claude/skills/agents-md-thin-root",
         "./.claude/skills/agents-prepare",
         "./.claude/skills/ai-council",
         "./.claude/skills/analysis-autonomous-mode",

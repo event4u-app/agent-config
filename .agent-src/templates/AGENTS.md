@@ -1,164 +1,34 @@
 # {{project_name}}
 
 <!--
-  AGENTS.md — entry point for AI coding agents working on this project.
-
-  This file was installed by `event4u/agent-config` as a starting template.
-  Fill in the placeholders below (or run `/copilot-agents-init` to do it
-  interactively) and then delete this HTML comment.
-
-  Keep it short. Detailed conventions belong in `.augment/` (read-only from
-  the shared package) or in `agents/overrides/` (project-specific).
+  AGENTS.md entry point for AI coding agents. Installed by
+  `event4u/agent-config`. Fill placeholders (or run `/copilot-agents-init`)
+  and delete this comment. Keep thin; bulk prose belongs in the linked guide.
 -->
 
 {{project_description}}
 
-## Agent Infrastructure
+## Layers
 
 | Layer | Location | Purpose |
 |---|---|---|
-| **Shared package** | `.augment/` | Skills, rules, commands, guidelines, templates — read-only |
+| **Shared package** | `.augment/`, `.agent-src/` | Installed skills / rules / commands — do not hand-edit |
 | **Project overrides** | `agents/overrides/` | Customizations of shared resources |
 | **Project docs** | `agents/` | Architecture, features, roadmaps, sessions, contexts |
-| **Agent settings** | `.agent-settings.yml` | Project-specific config consumed by skills (YAML) |
+| **Agent settings** | `.agent-settings.yml` | Project-specific config consumed by skills |
 
-### Key References
+## Pointers
 
-| What | Where |
-|---|---|
-| Behavior rules (always active) | `.augment/rules/` |
-| Coding guidelines | `.augment/guidelines/` |
-| Skills (on-demand expertise) | `.augment/skills/` |
-| Commands (workflows) | `.augment/commands/` |
-| Copilot instructions | `.github/copilot-instructions.md` |
+- **Filling out this AGENTS.md** — tech-stack / dev-setup / testing / quality / project-structure templates plus `/work` + `/implement-ticket` entry flow and multi-agent matrix: [`.augment/contexts/contracts/consumer-agents-md-guide.md`](.augment/contexts/contracts/consumer-agents-md-guide.md).
+- **Behavior rules (always active)** — Iron Laws and routed rules that fire automatically while you work in this project: [`.augment/rules/`](.augment/rules/).
+- **Skills (on-demand expertise)** — domain skills surfaced by description; invoked when their trigger fires: [`.augment/skills/`](.augment/skills/).
+- **Commands (workflows)** — slash-commands the agent runs end-to-end (`/work`, `/implement-ticket`, `/commit`, `/create-pr`, …): [`.augment/commands/`](.augment/commands/).
+- **Project-specific docs** — your own architecture notes, roadmaps, sessions, contexts: [`agents/`](agents/).
 
-### Recommended entry flow
+## Emergency triage — read this when nothing else is reachable
 
-Two entrypoints share the same engine and Option-A loop; pick by input shape:
-
-| You have | Command | Envelope |
-|---|---|---|
-| Ticket id, URL, or pasted ticket payload | [`/implement-ticket`](.augment/commands/implement-ticket.md) | `input.kind="ticket"` |
-| Free-form goal, no ticket | [`/work`](.augment/commands/work.md) | `input.kind="prompt"` |
-
-Both drive the linear flow `refine → memory → analyze → plan → implement →
-test → verify → report` with block-on-ambiguity semantics and no auto-git.
-
-`/work` adds a confidence-band gate at `refine`: the
-[`refine-prompt`](.augment/skills/refine-prompt/SKILL.md) skill scores the
-prompt on five dimensions and the engine proceeds **silently** on `high`,
-halts with an **assumptions report** on `medium`, or halts with **one
-clarifying question** on `low` (per the `ask-when-uncertain` Iron Law).
-UI-shaped prompts route through the product UI track (`directive_set`
-`ui` / `ui-trivial` / `mixed`) — `audit → design → apply → review →
-polish` with a hard audit gate before any `apply`.
-
-Persona comes from `.agent-settings.yml` (`roles.active_role`). Use
-`/commit` and `/create-pr` explicitly after the delivery report. The two
-flows are mutually exclusive at the state-file level: one
-`.work-state.json` carries one envelope at a time; the engine refuses to
-switch mid-flight.
-
-### Multi-Agent Support
-
-| Tool | Rules | Skills | How |
-|---|---|---|---|
-| **Augment Code** | `.augment/rules/` | `.augment/skills/` | Native (source) |
-| **Claude Code** | `.claude/rules/` | `.claude/skills/` | Symlinks + Agent Skills standard |
-| **Cursor** | `.cursor/rules/` | — | Symlinks |
-| **Cline** | `.clinerules/` | — | Symlinks |
-| **Windsurf** | `.windsurfrules` | — | Concatenated file |
-| **Gemini CLI** | `GEMINI.md` | — | Symlink → AGENTS.md |
-
-Regenerate: `task generate-tools` · Clean: `task clean-tools`
-(Requires the `task` binary; see https://taskfile.dev if missing.)
-
----
-
-## Tech Stack
-
-<!-- Replace with your actual stack. Examples:
-  - Framework: Laravel 11 (PHP ^8.2) / Next.js 15 / Rails 7 / Django 5
-  - Database: PostgreSQL / MySQL / MariaDB / SQLite
-  - Queue: Redis / RabbitMQ / SQS
-  - Testing: Pest / PHPUnit / Jest / Vitest / pytest
-  - Code style / linters: ECS / PHPStan / Ruff / ESLint
--->
-
-- **Language:** {{primary_language}}
-- **Framework:** {{framework}}
-- **Database:** {{database}}
-- **Testing:** {{test_framework}}
-- **Code style:** {{code_style_tool}}
-
----
-
-## Development Setup
-
-<!-- Replace with your project's actual setup commands. Examples:
-  - `make start` / `make console` / `make test`
-  - `docker compose up` / `docker compose exec app bash`
-  - `npm run dev` / `npm test`
-  - `php artisan serve` / `php artisan test`
--->
-
-```bash
-{{dev_start_command}}
-{{dev_test_command}}
-```
-
-### Environment files
-
-| File | Purpose |
-|---|---|
-| `.env` | Main environment |
-| `.env.local` | Local overrides |
-| `.env.testing` | Testing env |
-
----
-
-## Project Structure
-
-<!-- Document your directory conventions:
-  - Where new features go
-  - Module/component boundaries
-  - Namespace conventions
--->
-
-{{project_structure_notes}}
-
----
-
-## Testing
-
-<!-- Document:
-  - Test framework and its quirks
-  - How to run all tests / targeted tests
-  - Test data strategy (seeders, factories, fixtures)
-  - Performance-critical tests or suites
--->
-
-{{testing_notes}}
-
----
-
-## Quality Tools
-
-<!-- Document:
-  - Which linters/formatters run
-  - Whether they auto-fix or report only
-  - CI enforcement level
--->
-
-{{quality_tools_notes}}
-
----
-
-## Additional Documentation
-
-| Document | Topic |
-|---|---|
-| `.github/copilot-instructions.md` | Coding standards for GitHub Copilot (self-contained) |
-| `agents/` | Project-specific architecture docs and roadmaps |
-| `.augment/contexts/` | Shared cross-cutting concepts from the package |
-| `.agent-settings.yml` | Project-specific agent configuration (YAML) |
+1. **What is this repo?** — Consumer project; agent-config is installed as a shared skill / rule / command suite at `.augment/` and `.agent-src/`.
+2. **What language?** — Project-specific; agents mirror the user's language at runtime.
+3. **Where do I edit agent-config?** — Do not edit `.augment/` or `.agent-src/` here; they are installed artifacts. Project edits live in `agents/` and project source.
+4. **Lint / test / sync entry point?** — Project-specific (see project README); agent-config reinstalls via `composer update event4u/agent-config` or `npm update @event4u/agent-config`.
+5. **Where do the always-active rules live?** — `.agent-src/rules/` (kernel = 9 Iron-Law rules; tier-1 / tier-2 routed via `.agent-src/router.json`).

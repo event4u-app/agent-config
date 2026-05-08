@@ -1,19 +1,20 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **357 public artefacts** shipped by
+Consumer-facing catalog of all **358 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > Auto-generated — do not edit manually.
 
-## Skills (141)
+## Skills (142)
 
 | kind | name | extra | description |
 |---|---|---|---|
 | skill | [`adr-create`](../.agent-src/skills/adr-create/SKILL.md) |  | Use when capturing an architectural decision — naming the file, picking the next ADR number, filling Status / Context / Decision / Consequences, and regenerating the index — even without saying 'ADR'. |
 | skill | [`adversarial-review`](../.agent-src/skills/adversarial-review/SKILL.md) |  | ONLY when user explicitly requests adversarial review, devil's advocate analysis, stress-testing a plan, or 'poke holes in this' — NOT for regular code review or design feedback. |
 | skill | [`agent-docs-writing`](../.agent-src/skills/agent-docs-writing/SKILL.md) |  | Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure. |
+| skill | [`agents-md-thin-root`](../.agent-src/skills/agents-md-thin-root/SKILL.md) |  | Use when editing AGENTS.md (package root) or templates/AGENTS.md (consumer) — enforces Thin-Root contract: hard char ceilings, ≥40% pointer ratio, mandatory emergency-triage block. |
 | skill | [`ai-council`](../.agent-src/skills/ai-council/SKILL.md) |  | Use when polling external AIs (OpenAI, Anthropic) outside the host session for a neutral second opinion on a roadmap, diff, prompt, or file set — or 'cross-check with another model'. |
 | skill | [`analysis-autonomous-mode`](../.agent-src/skills/analysis-autonomous-mode/SKILL.md) |  | ONLY when user explicitly requests autonomous analysis, deep investigation, multi-step research, or 'dig into this end-to-end without asking me each step' — NOT for normal feature work. |
 | skill | [`analysis-skill-router`](../.agent-src/skills/analysis-skill-router/SKILL.md) |  | Use when picking which analysis or project-analysis-* skill fits a request — routes by scope, framework, and symptom — even if the user just says 'analyze this' or 'dig into the codebase'. |
@@ -159,7 +160,7 @@ are excluded.
 |---|---|---|---|
 | rule | [`agent-authority`](../.agent-src/rules/agent-authority.md) | always | Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule |
 | rule | [`agent-docs`](../.agent-src/rules/agent-docs.md) | auto | Reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md |
-| rule | [`analysis-skill-routing`](../.agent-src/rules/analysis-skill-routing.md) | auto | When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis |
+| rule | [`analysis-skill-routing`](../.agent-src/rules/analysis-skill-routing.md) | manual | When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis |
 | rule | [`architecture`](../.agent-src/rules/architecture.md) | auto | Architecture rules for creating new files, classes, controllers, modules, or making structural decisions about project organization |
 | rule | [`artifact-drafting-protocol`](../.agent-src/rules/artifact-drafting-protocol.md) | auto | Creating a new skill, rule, command, or guideline, or significantly rewriting one — runs mandatory Understand → Research → Draft before drafting |
 | rule | [`artifact-engagement-recording`](../.agent-src/rules/artifact-engagement-recording.md) | auto | After a /implement-ticket or /work phase-step (refine/memory/analyze/plan/implement/test/verify/report) or full task — emit one telemetry:record call |
@@ -176,7 +177,7 @@ are excluded.
 | rule | [`docker-commands`](../.agent-src/rules/docker-commands.md) | auto | Running PHP commands inside Docker containers — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, and any CLI tool execution |
 | rule | [`downstream-changes`](../.agent-src/rules/downstream-changes.md) | auto | After EVERY code edit, find ALL downstream changes needed to existing files, including callers, tests, imports, types, and documentation |
 | rule | [`e2e-testing`](../.agent-src/rules/e2e-testing.md) | auto | Playwright E2E tests — locators, assertions, Page Objects, fixtures, CI, and flaky test prevention |
-| rule | [`guidelines`](../.agent-src/rules/guidelines.md) | auto | Writing or reviewing code — check relevant guideline before writing or reviewing code |
+| rule | [`guidelines`](../.agent-src/rules/guidelines.md) | manual | Writing or reviewing code — check relevant guideline before writing or reviewing code |
 | rule | [`improve-before-implement`](../.agent-src/rules/improve-before-implement.md) | auto | Before implementing features or architectural changes — validate the request against existing code, challenge weak requirements, suggest improvements |
 | rule | [`invite-challenge`](../.agent-src/rules/invite-challenge.md) | auto | Before executing a complex plan or non-trivial design — ask 'am I solving the right problem?' and pause for user confirmation, even when no ambiguity |
 | rule | [`language-and-tone`](../.agent-src/rules/language-and-tone.md) | always | Language and tone — informal German Du, English code comments, .md files always English |
@@ -190,7 +191,7 @@ are excluded.
 | rule | [`no-roadmap-references`](../.agent-src/rules/no-roadmap-references.md) | auto | Linking transient files (agents/roadmaps/, agents/council-{questions,responses,sessions}/) from a stable artifact — both layers expire; promote findings |
 | rule | [`non-destructive-by-default`](../.agent-src/rules/non-destructive-by-default.md) | always | Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass |
 | rule | [`onboarding-gate`](../.agent-src/rules/onboarding-gate.md) | auto | First turn of a conversation on a project — check onboarding.onboarded in .agent-settings.yml; when false, prompt to run /onboard before any request |
-| rule | [`package-ci-checks`](../.agent-src/rules/package-ci-checks.md) | auto | Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first |
+| rule | [`package-ci-checks`](../.agent-src/rules/package-ci-checks.md) | manual | Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first |
 | rule | [`php-coding`](../.agent-src/rules/php-coding.md) | auto | Writing or reviewing PHP code — strict types, naming, comparisons, early returns, Eloquent conventions |
 | rule | [`preservation-guard`](../.agent-src/rules/preservation-guard.md) | auto | When merging, refactoring, compressing, or restructuring skills, rules, commands, or guidelines — prevent quality loss |
 | rule | [`reviewer-awareness`](../.agent-src/rules/reviewer-awareness.md) | auto | When suggesting reviewers or flagging risk hotspots — anchor in paths/risk + ownership-map + bug-patterns; medium/high needs primary + secondary |
@@ -200,7 +201,7 @@ are excluded.
 | rule | [`runtime-safety`](../.agent-src/rules/runtime-safety.md) | auto | When a skill declares execution metadata — enforce safety constraints for assisted and automated execution types |
 | rule | [`scope-control`](../.agent-src/rules/scope-control.md) | always | Scope control — no unsolicited architectural changes, refactors, or library replacements |
 | rule | [`security-sensitive-stop`](../.agent-src/rules/security-sensitive-stop.md) | auto | Security-sensitive paths — auth, billing, tenant boundaries, secrets, uploads, integrations, webhooks, public endpoints — threat-model BEFORE editing |
-| rule | [`size-enforcement`](../.agent-src/rules/size-enforcement.md) | auto | Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md — enforce size and scope limits |
+| rule | [`size-enforcement`](../.agent-src/rules/size-enforcement.md) | manual | Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md — enforce size and scope limits |
 | rule | [`skill-improvement-trigger`](../.agent-src/rules/skill-improvement-trigger.md) | auto | After completing a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled |
 | rule | [`skill-quality`](../.agent-src/rules/skill-quality.md) | auto | Creating, editing, or reviewing skills — minimum quality standard, every skill must be executable, validated, and self-contained |
 | rule | [`slash-command-routing-policy`](../.agent-src/rules/slash-command-routing-policy.md) | auto | When user types a slash command like /create-pr, /commit, or pastes command file content |
