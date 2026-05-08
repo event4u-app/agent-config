@@ -75,32 +75,35 @@ Users who want a council pass on the diff run `/council diff:<base>..<head>`
 **before** `/create-pr`. Do not re-add the prompt here without an explicit
 user request.
 
-### 3. Create the PR
+### 3. Create the PR (draft-vs-ready, verbosity-gated)
 
-Once the user approves the content from step 2:
+- **Head branch**: EXACT output of `git branch --show-current` from step 1.
+- **Base branch**: default branch (`main` / `master`).
 
-- **Head branch**: Use the EXACT output of `git branch --show-current` from step 1.
-  **NEVER** reuse a branch name from earlier in the conversation — always use the fresh value.
-- **Base branch**: Default branch (`main` / `master`).
-- Ask the user:
-  ```
-  > 1. Create as draft
-  > 2. Create as ready for review
-  ```
-- Create the PR via GitHub API with the approved title and body.
-- **CRITICAL**: Set the `draft` parameter based on the user's choice:
-  - Option 1 → `"draft": true`
-  - Option 2 → `"draft": false`
-  - Do NOT default to draft. The user's choice is the ONLY factor.
-- **After creating with `draft: false`**: The GitHub REST API sometimes ignores
-  `draft: false` and creates a draft anyway. Always verify by running:
-  ```bash
-  gh pr view {number} --json isDraft --jq '.isDraft'
-  ```
-  If it returns `true`, fix it immediately:
-  ```bash
-  gh pr ready {number}
-  ```
+**Behavior change vs. legacy:** with `verbosity.routine_confirmations:
+false` (default), `/create-pr` creates the PR as draft silently. Override
+per-invocation with `:ready` / `:final` / `:draft`. Restore the prompt
+by flipping `routine_confirmations: true`. See
+[`docs/customization.md` § Verbosity](../../docs/customization.md#verbosity).
+
+Resolve `"draft"` (first match wins):
+
+1. `:ready` / `:final` arg → `false`.
+2. `:draft` arg → `true`.
+3. `routine_confirmations: true` → ask `1. draft / 2. ready`.
+4. Default → `true` (silent draft).
+
+Create the PR with the approved title/body and the resolved `draft`.
+
+**Verify after `draft: false`** — the GitHub REST API sometimes ignores
+the flag:
+
+```bash
+gh pr view {number} --json isDraft --jq '.isDraft'
+# returns true → gh pr ready {number}
+```
+
+**Silent-draft postscript** (rule 4) → see step 4b.
 
 ### 4. After creation
 
@@ -135,23 +138,26 @@ Run this strip-pass **after PR creation and after every body PATCH**:
 5. Briefly note in the reply how many footers were removed (or
    "no footers found" if clean).
 
-#### 4b. Show the PR URL
+#### 4b. Show the PR URL (verbosity-gated)
 
-#### 4c. Jira transition
+Per `verbosity.post_action_reports` (default `minimal`):
 
-If a Jira ticket was linked, ask:
-```
-> Transition Jira ticket {TICKET-ID} to "In Review"?
->
-> 1. Yes — update status
-> 2. No — leave as-is
-```
+- `off` → nothing.
+- `minimal` → `→ #N opened: <url>`. Append `→ created as draft — run
+  \`gh pr ready N\` to flip` when silent-draft (rule 4); omit on ready.
+- `full` → multi-line: PR number, URL, draft state, base/head, ready-reminder.
+
+#### 4c. Jira transition (only when transitioned)
+
+Linked ticket + `routine_confirmations: true` → ask `1. Yes / 2. No`.
+Default (`false`) → skip silently. **Only emit a transition line when
+an actual Jira API call succeeded** — never announce "skipped".
 
 ### Rules
 
-- **Always use the PR template** from `.github/pull_request_template.md` — read it, fill its sections.
-- **Preview before creating is opt-in** — controlled by `commands.create_pr.preview_description` in `.agent-settings.yml` (default `false`). When `false`, the bare `/create-pr` flow uses the generated description directly without a chat preview to save tokens. When `true`, the title and body are previewed and the user can adjust before creation. `/create-pr:description-only` always previews — that is its sole purpose.
-- **Push the branch first** if it hasn't been pushed (with user permission).
-- **Never add attribution footers to the body** — see [`no-attribution-footers`](../rules/no-attribution-footers.md). The agent does not self-credit; the strip-pass in step 4a defends against tool-injected footers.
-- Only create the PR — never merge it.
-- Only commit or push with explicit user permission.
+- **Always use the PR template** from `.github/pull_request_template.md`.
+- **Preview is opt-in** — `commands.create_pr.preview_description` (default `false`). `/create-pr:description-only` always previews.
+- **Push the branch first** if needed (with permission).
+- **No attribution footers** — see [`no-attribution-footers`](../rules/no-attribution-footers.md); strip-pass at 4a defends against tool injection.
+- Only create the PR — never merge.
+- Only commit or push with explicit permission.

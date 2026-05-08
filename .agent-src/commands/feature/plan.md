@@ -209,16 +209,22 @@ Mir sind noch ein paar offene Fragen aufgefallen:
 Hast du dazu schon eine Meinung?
 ```
 
-### 5d. Offer council idea-validation (B4 hook)
+### 5d. Offer council idea-validation (B4 hook, verbosity-gated)
 
-Once the conversation has converged on a problem statement, proposal,
-and rough scope (rounds 1–4), but **before** step 6 writes the file,
-ask (in the user's language):
+Once rounds 1–4 have converged but **before** step 6 writes the file,
+read `verbosity.offer_council_in_delivery` from `.agent-settings.yml`
+(default `false`):
 
-> 1. Run the council on this idea before writing the plan? (billable)
-> 2. Skip — write the plan now
+- `false` (default): skip the prompt silently. When `ai_council.enabled:
+  true`, emit one line: `→ council skipped (set
+  verbosity.offer_council_in_delivery: true to enable, or run
+  /council directly)`. When `ai_council.enabled: false`, emit nothing.
+- `true`: ask (in the user's language):
 
-Suppress when `personal.autonomy: on` (council is billable).
+  > 1. Run the council on this idea before writing the plan? (billable)
+  > 2. Skip — write the plan now
+
+  Also suppress when `personal.autonomy: on` (council is billable).
 
 If picked **1**:
 

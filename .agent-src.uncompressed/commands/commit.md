@@ -79,7 +79,33 @@ Rules for splitting:
 - **Style-only changes** (ECS/Rector formatting) may get their own `style:` or `chore:` commit
   if they are large and mixed with logic changes.
 
-### 5. Present the commit plan
+### 5. Present the commit plan (verbosity-gated)
+
+Read `verbosity.preview_artifacts` and `verbosity.routine_confirmations`
+from `.agent-settings.yml`. Both default to `false`.
+
+**Terse path** — `preview_artifacts: false` AND `routine_confirmations: false`:
+
+1. Validate every generated commit message against the
+   conventional-commits regex
+   `^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`.
+2. **All messages valid** → skip the preview block and the confirmation
+   prompt. Print one line summarising the plan and proceed to step 6:
+
+   ```
+   → 3 commits planned: feat, test, chore (scope: DEV-1234)
+   ```
+
+3. **Any message invalid** → `preview-on-error` safety net fires:
+   force the full preview block below + the numbered confirm prompt,
+   regardless of the two flags. The user must approve before step 6.
+4. **Hard-Floor diff** (bulk deletion ≥5 unrelated files, infra changes
+   touching Terraform / Pulumi / k8s / Ansible / cloud-config) →
+   ALWAYS preview + confirm regardless of flags, per
+   [`non-destructive-by-default`](../rules/non-destructive-by-default.md).
+
+**Preview path** — `preview_artifacts: true` OR `routine_confirmations: true`
+(or `preview-on-error` triggered):
 
 Show the proposed commits as a numbered list, including which files go into each:
 
@@ -107,19 +133,33 @@ Then ask:
 
 Wait for the user's response before doing anything.
 
+**Override:** the user may force the preview at any time with
+*"show me the commit plan first"* / *"preview commits"* — treat as a
+one-shot `preview_artifacts: true` for this invocation.
+
 ### 6. Commit
 
-Only after the user confirms (option 1):
+On the **terse path** proceed directly. On the **preview path** only after
+the user confirms (option 1).
 
 For each planned commit in order:
 1. Stage only the files for that commit: `git add {files...}`
 2. Commit: `git commit -m "{message}"`
 
-### 7. Report
+### 7. Report (verbosity-gated)
 
-Show a summary:
-- Number of commits created
-- Commit messages (one per line)
+Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
+`minimal`).
+
+- `off` → emit nothing.
+- `minimal` (default) → one line:
+
+  ```
+  → 3 commits created
+  ```
+
+- `full` → multi-line summary: number of commits + commit messages
+  (one per line).
 
 ## Rules
 

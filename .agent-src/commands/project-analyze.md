@@ -75,12 +75,15 @@ LEGACY CHECK (indicators):
 ═══════════════════════════════════════════════
 ```
 
-Ask the user with numbered options:
+Per `verbosity.routine_confirmations` (default `false`):
 
-```
-> 1. Continue with Phase 2 — architecture analysis
-> 2. Stop here — keep the overview only
-```
+- `false` → continue to Phase 2 silently (user invoked `/project-analyze`
+  for the full pass; "continue" is dominant).
+- `true` → ask:
+  ```
+  > 1. Continue with Phase 2 — architecture analysis
+  > 2. Stop here — keep the overview only
+  ```
 
 ### Phase 2: Architecture mapping
 
@@ -192,12 +195,15 @@ BUSINESS DOMAINS:
 ═══════════════════════════════════════════════
 ```
 
-Ask the user with numbered options:
+Per `verbosity.routine_confirmations` (default `false`):
 
-```
-> 1. Yes — create domain analysis files
-> 2. Skip — continue with next phase
-```
+- `false` → create domain analysis files silently (user invoked
+  `/project-analyze`; "yes, create" is dominant).
+- `true` → ask:
+  ```
+  > 1. Yes — create domain analysis files
+  > 2. Skip — continue with next phase
+  ```
 
 For each confirmed domain, create `agents/analysis/domains/{domain}.md` using the template
 from the `project-analyzer` skill.
@@ -226,12 +232,14 @@ SERVICE MAP:
 ═══════════════════════════════════════════════
 ```
 
-Ask the user with numbered options:
+Per `verbosity.routine_confirmations` (default `false`):
 
-```
-> 1. Yes — create API and service analysis files
-> 2. Skip — continue with next phase
-```
+- `false` → create API + service analysis files silently.
+- `true` → ask:
+  ```
+  > 1. Yes — create API and service analysis files
+  > 2. Skip — continue with next phase
+  ```
 
 Create:
 - `agents/analysis/api/endpoints-v1.md`
@@ -253,12 +261,15 @@ Write all remaining analysis files that haven't been created yet:
 - `agents/analysis/modules/{module}.md` — one per module
 - `agents/analysis/testing/test-map.md` — test suites, coverage, strategy
 
-For each file, ask with numbered options:
+Per `verbosity.routine_confirmations` (default `false`):
 
-```
-> 1. Create — {filename}
-> 2. Skip
-```
+- `false` → create all listed files silently (per-file picker is pure
+  noise once the user invoked `/project-analyze`).
+- `true` → for each file, ask:
+  ```
+  > 1. Create — {filename}
+  > 2. Skip
+  ```
 
 ### Phase 8: Gap analysis & action plan
 

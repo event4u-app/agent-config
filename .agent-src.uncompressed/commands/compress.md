@@ -142,9 +142,15 @@ python3 scripts/check_compression.py
 Must show **zero 🔴 errors**. Warnings (🟡) are acceptable.
 If any 🔴 errors remain: go back and fix those files before finishing.
 
-## Step 5: Summary
+## Step 5: Summary (verbosity-gated)
 
-Show a summary table with per-category stats (files compressed, avg savings).
+Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
+`minimal`).
+
+- `off` → emit nothing on success; surface errors only.
+- `minimal` (default) → one line: `→ N files compressed (avg X% savings)`.
+- `full` → multi-line table with per-category stats (files compressed,
+  avg savings).
 
 ## Hash management
 

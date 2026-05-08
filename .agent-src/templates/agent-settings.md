@@ -311,6 +311,52 @@ commands:
 # repo (gitignored). Maintainer-targeted feature; consumers leave it
 # off. See `.augment/contexts/contracts/artifact-engagement-flow.md`
 # (once Phase 3 of road-to-artifact-engagement-telemetry lands).
+# --- Verbosity (token frugality) ---
+#
+# Five toggles controlling what the agent shows after acting.
+# Default = terse. Flip to true to restore legacy verbose output.
+# See agents/roadmaps/road-to-token-frugality.md for the full rationale
+# and the contexts/contracts/frugality-charter.md for the writer-side
+# standard.
+verbosity:
+  # Show generated commit messages, PR titles/bodies, branch names
+  # before acting. false = use generated content directly.
+  preview_artifacts: false
+
+  # Confirmation prompts for routine workflow steps when there is
+  # one obvious answer ("looks good — commit?"). Iron-Law gates
+  # (commit-policy, scope-control git-ops, non-destructive) ALWAYS
+  # ask regardless of this flag.
+  routine_confirmations: false
+
+  # Offer "run AI Council on this?" inside delivery commands
+  # (/feature-plan, /review-changes, /roadmap-create). Council
+  # commands themselves (/council, /create-pr → already excluded)
+  # are unaffected.
+  offer_council_in_delivery: false
+
+  # Multi-line status / summary blocks after a successful action.
+  # off | minimal | full — default minimal (one-line confirmation).
+  post_action_reports: minimal
+
+  # Intent announcements ("Let me check…", "Now I will…", "Found
+  # it") in skill bodies. false = act and emit the result.
+  intent_announcements: false
+
+# --- Caveman speak (authoring-only) ---
+#
+# Caveman-style compression scope for newly authored prose. The
+# compile-time toggle (`caveman.speak`) is added in Phase 8.
+# `speak_scope` lands now so the charter and consumers can pin it.
+caveman:
+  # speak_scope = how widely caveman-speak grammar applies in chat
+  #   off          = no caveman grammar in output (compile-time still
+  #                  governed by caveman.speak)
+  #   prose_only   = caveman in body prose; numbered options +
+  #                  Iron-Law-literal blocks stay full prose
+  #   aggressive   = caveman everywhere except Iron-Law literals
+  speak_scope: prose_only
+
 telemetry:
   artifact_engagement:
     # Master switch. `false` (default) produces zero file IO and zero
@@ -341,6 +387,10 @@ Personal and project-level settings (initial file written by
 [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)).
 **Key paths use dot-notation** to denote nesting: `personal.user_name`
 lives under `personal:` in YAML.
+
+The `verbosity.*` and `caveman.speak_scope` rows are summarized below;
+the canonical narrative lives in
+[`docs/customization.md` § Verbosity](../../docs/customization.md#verbosity).
 
 | Key path | Values | Default | Description |
 |---|---|---|---|
@@ -386,6 +436,12 @@ lives under `personal:` in YAML.
 | `commands.suggestion.max_options` | integer | `4` | Max number of command suggestions before the always-present "run as-is" option (total rendered = `max_options + 1`). |
 | `commands.suggestion.blocklist` | list of command names | `[]` | Commands that never appear as a suggestion. They still work when typed explicitly. |
 | `commands.create_pr.preview_description` | `true`, `false` | `false` | When `false`: `/create-pr` skips the title/body preview + adjust loop and uses the generated content directly. Saves agent tokens. When `true`: show title and body before creating and ask for adjustments. `/create-pr:description-only` always previews regardless of this setting. |
+| `verbosity.preview_artifacts` | `true`, `false` | `false` | Show generated commit messages, PR titles/bodies, branch names before acting. `false` = use generated content directly. See [`road-to-token-frugality`](../../../agents/roadmaps/road-to-token-frugality.md) Phase 2/3. |
+| `verbosity.routine_confirmations` | `true`, `false` | `false` | Confirmation prompts for routine workflow steps when there is one obvious answer ("looks good — commit?"). Iron-Law gates (`commit-policy`, `scope-control` git-ops, `non-destructive-by-default`) ALWAYS ask regardless. |
+| `verbosity.offer_council_in_delivery` | `true`, `false` | `false` | Offer "run AI Council on this?" inside delivery commands (`/feature-plan`, `/review-changes`, `/roadmap-create`). Council commands themselves are unaffected. |
+| `verbosity.post_action_reports` | `off`, `minimal`, `full` | `minimal` | Multi-line status / summary blocks after a successful action. `off` = no report; `minimal` = one-line confirmation; `full` = bullet list. |
+| `verbosity.intent_announcements` | `true`, `false` | `false` | Intent announcements ("Let me check…", "Now I will…", "Found it") in skill bodies. `false` = act and emit the result. |
+| `caveman.speak_scope` | `off`, `prose_only`, `aggressive` | `prose_only` | How widely caveman-speak grammar applies in chat. `off` = no caveman grammar; `prose_only` = caveman in body prose, numbered options + Iron-Law-literal blocks stay full prose; `aggressive` = caveman everywhere except Iron-Law literals. Compile-time toggle (`caveman.speak`) lands in Phase 8. |
 | `telemetry.artifact_engagement.enabled` | `true`, `false` | `false` | Master switch for the artefact engagement log. Default-off; zero file IO and zero token cost when `false`. Maintainer-targeted; consumers leave it off. |
 | `telemetry.artifact_engagement.granularity` | `task`, `phase-step`, `tool-call` | `task` | Boundary at which events are recorded. `tool-call` is expensive — opt-in only. |
 | `telemetry.artifact_engagement.record.consulted` | `true`, `false` | `true` | When `true`: record artefacts loaded into context. |

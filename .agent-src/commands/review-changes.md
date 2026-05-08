@@ -81,15 +81,22 @@ Pick dispatch mode based on diff size and environment:
 Each judge returns its own `Judge / Model / Target / Verdict /
 Issues` block in the format defined by that skill.
 
-### 4b. Optional external council (B3 hook)
+### 4b. Optional external council (B3 hook, verbosity-gated)
 
-If `.agent-settings.yml` has `ai_council.enabled: true` **and** at least
-one member is enabled, ask (in the user's language):
+Read `verbosity.offer_council_in_delivery` from `.agent-settings.yml`
+(default `false`):
 
-> 1. Add an external council review alongside the four internal judges? (billable)
-> 2. Skip — internal judges only
+- `false` (default): skip the prompt silently. When `ai_council.enabled:
+  true` AND at least one member enabled, emit one line: `→ council
+  skipped (set verbosity.offer_council_in_delivery: true to enable, or
+  run /council diff:<base>..<head> directly)`. Otherwise emit nothing.
+- `true`: when `ai_council.enabled: true` **and** at least one member
+  enabled, ask (in the user's language):
 
-Suppress when `personal.autonomy: on` (council is billable).
+  > 1. Add an external council review alongside the four internal judges? (billable)
+  > 2. Skip — internal judges only
+
+  Also suppress when `personal.autonomy: on` (council is billable).
 
 If picked **1**:
 
@@ -124,17 +131,19 @@ Produce one combined report:
   ask before fixing 🟡 findings, report 🟢 as suggestions
 - If all four returned `apply` → the diff is ready; report and stop
 
-### 7. Quality tools (optional)
+### 7. Quality tools (verbosity-gated)
 
-After the consolidated report, ask:
+Per `verbosity.routine_confirmations` (default `false`):
 
-```
-> 1. Yes — run quality tools (formatter, static analyzer, linters)
-> 2. No — review done
-```
-
-If yes, hand off to the project's quality workflow (e.g. `/quality-fix`
-or the equivalent configured command).
+- `false` (default) → emit `→ run /quality-fix to format + lint` as a
+  single follow-up line; do not auto-invoke. User runs explicitly.
+- `true` → ask:
+  ```
+  > 1. Yes — run quality tools (formatter, static analyzer, linters)
+  > 2. No — review done
+  ```
+  If yes, hand off to the project's quality workflow (e.g.
+  `/quality-fix` or the equivalent configured command).
 
 ## Backward compatibility
 
