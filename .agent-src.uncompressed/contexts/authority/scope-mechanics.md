@@ -58,6 +58,21 @@ Then present numbered options (`user-interaction`) with "stay on the
 current branch" as the default. The user decides. Do not branch
 first and explain later.
 
+## Branch-base inventory — ALWAYS before starting work
+
+Before the first commit on related work, scan: `git branch --show-current` (is this branch shaped for the task?), `gh pr list --state open --limit 10` (overlapping open PR?), `git branch --sort=-committerdate | head -10` (in-flight branch to extend?).
+
+A plausible base beyond the current branch exists → STOP and ask with numbered options:
+
+1. Branch off the **current branch** — stacked PR.
+2. Branch off **`main`** — independent PR.
+3. **Continue on the current branch** — extend the in-flight PR.
+4. **Cancel**.
+
+User decides. Default: **3** when the current branch's name and scope match the task; otherwise **2**. Never improvise the base.
+
+**Failure mode — diverging stacked PRs.** Skipping the inventory and committing to the wrong base creates two PRs that should have been one stack: merge conflicts when the parent lands, rebase / force-push churn, duplicate review effort. The 30-second inventory cost up front beats hours of rebase reconciliation later.
+
 ## Decline = silence — context
 
 The right moment to ask is **before** the work starts (writing the

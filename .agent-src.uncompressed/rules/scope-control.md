@@ -30,6 +30,7 @@ The user decides the git shape. Never improvise. Commit specifics: canonical [`c
 - NEVER push a tag or create a release without permission.
 - NEVER include version numbers, target releases, deprecation dates, release-tied milestones, or git tags in roadmaps, plans, tickets, or any planning artifact. Roadmaps plan **work**; releases / tags are a separate decision outside the roadmap. Never surface "which release should this ship in?" as a numbered choice. User pins by saying so explicitly.
 - Task seems to need a separate branch / PR → STOP and **brief before asking** ([`scope-mechanics § Brief-before-asking`](../contexts/authority/scope-mechanics.md)).
+- BEFORE the first commit on related work, **inventory** existing branches and open PRs (`git branch --show-current`, `gh pr list --state open`). If a plausible base beyond the current branch exists, STOP and ask with numbered options — never improvise the base. Inventory + 4-option template + diverging-stack failure mode: [`scope-mechanics § Branch-base inventory`](../contexts/authority/scope-mechanics.md).
 
 "Explicit permission" = user said so **this turn or in a standing instruction not yet revoked**. Earlier permission for a different operation does not carry over.
 
