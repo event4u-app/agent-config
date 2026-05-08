@@ -6,10 +6,10 @@
 
 ## Overall
 
-**7 / 316 steps done · 2%**
+**13 / 316 steps done · 4%**
 
 ```text
-█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   2%
+██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   4%
 ```
 
 ## Open roadmaps
@@ -23,7 +23,7 @@
 | 5 | [road-to-event-driven-discipline.md](roadmaps/road-to-event-driven-discipline.md) | 12 | 42 | 42 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md) | 1 | 26 | 26 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 7 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 8 | [road-to-microck-harvest.md](roadmaps/road-to-microck-harvest.md) | 3 | 14 | 14 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 8 | [road-to-microck-harvest.md](roadmaps/road-to-microck-harvest.md) | 3 | 14 | 8 | 6 | 0 | 0 | ████░░░░░░ 43% |
 | 9 | [road-to-money-strategy-ops.md](roadmaps/road-to-money-strategy-ops.md) | 1 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 10 | [road-to-productization.md](roadmaps/road-to-productization.md) | 8 | 27 | 27 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 11 | [road-to-proof-not-features.md](roadmaps/road-to-proof-not-features.md) | 3 | 19 | 19 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -117,11 +117,11 @@
 
 ### [road-to-microck-harvest.md](roadmaps/road-to-microck-harvest.md)
 
-**Road to Microck Harvest** — 0 / 14 done (0%)
+**Road to Microck Harvest** — 6 / 14 done (43%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Five-skill adoption plate (READY) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 1 | Five-skill adoption plate (READY) | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 2 | Out-of-horizon (gated on Phase 1 evidence) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | Sunset enforcement and periodic rescan (out-of-horizon) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 

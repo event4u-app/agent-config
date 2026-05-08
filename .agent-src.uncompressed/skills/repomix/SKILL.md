@@ -132,5 +132,4 @@ Cite the snapshot path so the consumer skill can read it.
 - Upstream tool: https://github.com/yamadashy/repomix (MIT).
 - Adopted from: `Microck/ordinary-claude-skills@8f5c83174f7aa683b4ddc7433150471983b93131:skills_all/repomix/SKILL.md` (MIT, © 2025 Microck) — wrapper-style adoption, no upstream code vendored.
 - Provenance registry: `agents/contexts/skills-provenance.yml` (entry: `repomix`).
-- Roadmap: `agents/roadmaps/road-to-microck-harvest.md` § Phase 1 (P1.3).
 - Iron-Law floor: `non-destructive-by-default`, `missing-tool-handling`, `tool-safety`.

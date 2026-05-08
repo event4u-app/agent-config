@@ -36,3 +36,70 @@ markitdown:
     Peer-side MCP server install. Zero Python in this package.
     Calibrated token claim grounded by `scripts/measure_markitdown_lift.py`
     against `tests/fixtures/markitdown-corpus/`.
+
+defense-in-depth:
+  author: Microck (Microck/ordinary-claude-skills maintainers)
+  source: https://github.com/Microck/ordinary-claude-skills
+  license: MIT
+  license_clean: true
+  kind: inspired_by
+  last_verified: 2026-05-08
+  pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
+  notes: |
+    Four-layer validation pattern (entry / business-logic / environment / instrumentation)
+    plus gate function. Examples generalized from Microck-specific code paths to
+    Laravel-flavored PHP patterns. Adopted under road-to-microck-harvest § P1.1.
+
+testing-anti-patterns:
+  author: Microck (Microck/ordinary-claude-skills maintainers)
+  source: https://github.com/Microck/ordinary-claude-skills
+  license: MIT
+  license_clean: true
+  kind: inspired_by
+  last_verified: 2026-05-08
+  pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
+  notes: |
+    Five Iron Laws + per-anti-pattern gate functions. Cross-linked to pest-testing,
+    test-driven-development, judge-test-coverage. Adopted under road-to-microck-harvest § P1.2.
+
+repomix:
+  author: yamadashy (yamadashy/repomix maintainers)
+  source: https://github.com/yamadashy/repomix
+  license: MIT
+  license_clean: true
+  kind: wrapper
+  last_verified: 2026-05-08
+  pinned_to: repomix CLI (peer-side)
+  notes: |
+    Peer-side CLI wrapper. Skill never installs the binary silently — surfaces npm/brew
+    recipes and stops. Wrapper structure adopted from Microck@8f5c831. Adopted under
+    road-to-microck-harvest § P1.3.
+
+mcp-builder:
+  author: Microck (Microck/ordinary-claude-skills maintainers)
+  source: https://github.com/Microck/ordinary-claude-skills
+  license: MIT
+  license_clean: true
+  kind: inspired_by
+  last_verified: 2026-05-08
+  pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
+  notes: |
+    MCP server authoring guide (FastMCP / TS SDK), four-phase plan-implement-review-eval,
+    10-question evaluation harness. Microck's external ./reference/*.md file refs
+    replaced with inline guidance plus upstream SDK URLs. Adopted under
+    road-to-microck-harvest § P1.4.
+
+error-handling-patterns:
+  author: Microck (Microck/ordinary-claude-skills maintainers)
+  source: https://github.com/Microck/ordinary-claude-skills
+  license: MIT
+  license_clean: true
+  kind: inspired_by
+  last_verified: 2026-05-08
+  pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
+  notes: |
+    Sunset Policy applied: 636-line source compressed to a ~150-line decision framework;
+    language catalogues externalized to Python, PHP, JS/TS, Go, Rust upstream docs plus
+    Fowler/AWS resilience pattern references. refresh_trigger and sunset_criterion
+    set in skill frontmatter. Adopted under road-to-microck-harvest § P1.5.
+

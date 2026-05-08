@@ -9,7 +9,7 @@ sunset_criterion: "When the upstream framework docs (Laravel, FastAPI, Express, 
 
 # error-handling-patterns
 
-Decision framework for picking an error-handling strategy. **Catalogues of language-specific code live upstream** (links in § Provenance) — this skill is the predicate, not the pattern library. Sunset-policy compliant per `road-to-microck-harvest.md` § Sunset Policy.
+Decision framework for picking an error-handling strategy. **Catalogues of language-specific code live upstream** (links in § Provenance) — this skill is the predicate, not the pattern library. Sunset-policy compliant: large language-specific catalogues stay in authoritative upstream docs.
 
 ## When to use
 
@@ -131,5 +131,4 @@ Exactly **one** layer translates internal errors to the egress format (HTTP stat
   - Resilience patterns: https://martinfowler.com/bliki/CircuitBreaker.html · https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/
 - Cross-linked: [`defense-in-depth`](../defense-in-depth/SKILL.md), [`laravel-validation`](../laravel-validation/SKILL.md), [`bug-analyzer`](../bug-analyzer/SKILL.md), [`api-design`](../api-design/SKILL.md).
 - Provenance registry: `agents/contexts/skills-provenance.yml` (entry: `error-handling-patterns`).
-- Roadmap: `agents/roadmaps/road-to-microck-harvest.md` § Phase 1 (P1.5).
 - Iron-Law floor: `verify-before-complete`, `skill-quality`, `non-destructive-by-default`.

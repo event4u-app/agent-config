@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **371 artefacts** in this package.
+Maintainer-facing index of all **376 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > **Drift check:** `python3 scripts/generate_index.py --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (145)
+## Skills (150)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -43,6 +43,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`database`](../.agent-src.uncompressed/skills/database/SKILL.md) |  | Use when working with database architecture, MariaDB/MySQL tuning, indexing strategies, slow queries, or multi-connection patterns — even when the user just says 'this query is slow'. |
 | skill | [`dcf-modeling`](../.agent-src.uncompressed/skills/dcf-modeling/SKILL.md) |  | Wing-4 valuation cognition for a CFO / finance-partner. Use when a deal, internal investment, or board ask names DCF, intrinsic value, WACC, terminal value, or 'what's it worth on a 5-year hold'. |
 | skill | [`deep-reading-analyst`](../.agent-src.uncompressed/skills/deep-reading-analyst/SKILL.md) |  | Deep analysis of articles/long-form via thinking frameworks (SCQA, mental models, inversion) — 'analyze article', 'deep dive', 'extract insights', URL/text wanting depth not summary. |
+| skill | [`defense-in-depth`](../.agent-src.uncompressed/skills/defense-in-depth/SKILL.md) |  | Use when validation needs entry, business-logic, environment, and instrumentation guards so a bad value cannot reach the failure point — turns a local bug fix into a structural one. |
 | skill | [`dependency-upgrade`](../.agent-src.uncompressed/skills/dependency-upgrade/SKILL.md) |  | Use when upgrading dependencies — "update Laravel", "bump PHP version", or "upgrade packages". Covers changelog review, breaking change detection, and verification. |
 | skill | [`description-assist`](../.agent-src.uncompressed/skills/description-assist/SKILL.md) |  | Use when polishing a skill/rule/command/guideline frontmatter description — pushier phrasing, trigger coverage, undertrigger audit — even if the user just says 'make this pushier'. |
 | skill | [`design-review`](../.agent-src.uncompressed/skills/design-review/SKILL.md) |  | Use when the user says "review the design", "check the UI", or wants a comprehensive UI/UX review. Uses a 7-phase methodology covering interaction, responsiveness, accessibility, and more. |
@@ -51,6 +52,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`docker`](../.agent-src.uncompressed/skills/docker/SKILL.md) |  | Use when working with Docker — Dockerfile edits, docker-compose services, containers, or the dual-container (fast + Xdebug) setup — even when the user just says 'my container won't start'. |
 | skill | [`dto-creator`](../.agent-src.uncompressed/skills/dto-creator/SKILL.md) |  | Use when the user says "create a DTO", "new data transfer object", or needs to convert request/response data into a typed PHP class. Creates DTOs with SimpleDto base class and attribute mapping. |
 | skill | [`eloquent`](../.agent-src.uncompressed/skills/eloquent/SKILL.md) |  | Use when writing Eloquent models, relationships, scopes, or queries via Model:: — 'fetch users with their orders'. NOT for PHPStan output, non-Eloquent services, or raw SQL questions. |
+| skill | [`error-handling-patterns`](../.agent-src.uncompressed/skills/error-handling-patterns/SKILL.md) |  | Use when picking a failure-reporting strategy — exceptions vs Result types, recoverable vs not, retry / circuit-breaker / graceful degradation — decision framework only, catalogues externalized. |
 | skill | [`estimate-ticket`](../.agent-src.uncompressed/skills/estimate-ticket/SKILL.md) |  | Estimate a Jira/Linear ticket — 'estimate PROJ-123', 'wie groß ist das?', 'should we split this?' — size + risk + split + uncertainty, sibling of /refine-ticket, close-prompt. |
 | skill | [`existing-ui-audit`](../.agent-src.uncompressed/skills/existing-ui-audit/SKILL.md) |  | Use BEFORE writing or editing any non-trivial UI — inventories components, design tokens, shadcn primitives, and reusable patterns into state.ui_audit. Hard gate for the ui directive set. |
 | skill | [`fe-design`](../.agent-src.uncompressed/skills/fe-design/SKILL.md) |  | Reference for frontend-design heuristics — component architecture, layout patterns, form/table design, responsive strategy, a11y, UX principles. Stack-agnostic; cited by directives/ui/design.py. |
@@ -85,6 +87,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`logging-monitoring`](../.agent-src.uncompressed/skills/logging-monitoring/SKILL.md) |  | Use when working with logging or monitoring — Sentry error tracking, Grafana/Loki log aggregation, structured logging channels, or monitoring helpers. |
 | skill | [`markitdown`](../.agent-src.uncompressed/skills/markitdown/SKILL.md) |  | Use when converting PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown for LLM ingestion via the upstream markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'. |
 | skill | [`mcp`](../.agent-src.uncompressed/skills/mcp/SKILL.md) |  | Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows. |
+| skill | [`mcp-builder`](../.agent-src.uncompressed/skills/mcp-builder/SKILL.md) |  | Use when building an MCP server in Python (FastMCP) or Node/TypeScript (MCP SDK) — agent-centric tool design, input schemas, error handling, and the 10-question evaluation harness. |
 | skill | [`md-language-check`](../.agent-src.uncompressed/skills/md-language-check/SKILL.md) |  | Use BEFORE saving any .md under .augment/, .agent-src*/, or agents/ — scans umlauts, German function words, and quoted German phrases outside DE:/EN: anchor blocks. Hard gate per language-and-tone. |
 | skill | [`merge-conflicts`](../.agent-src.uncompressed/skills/merge-conflicts/SKILL.md) |  | Use when the user has merge conflicts or says "resolve conflicts". Understands conflict markers, resolution strategies, and verification workflow. |
 | skill | [`migration-creator`](../.agent-src.uncompressed/skills/migration-creator/SKILL.md) |  | Use when the user says "create migration", "add column", or "new table". Creates migrations with correct table prefixes, column naming, and multi-tenant awareness. |
@@ -122,6 +125,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`receiving-code-review`](../.agent-src.uncompressed/skills/receiving-code-review/SKILL.md) |  | Use when processing code review feedback (bot or human) before changing anything — triages, verifies, and pushes back with technical reasoning — even when the user just says 'fix the comments'. |
 | skill | [`refine-prompt`](../.agent-src.uncompressed/skills/refine-prompt/SKILL.md) |  | Reconstruct a free-form prompt into actionable AC + assumptions + confidence band before the engine plans — '/work \"…\"', 'baue X', 'ist der Prompt klar genug für die Engine?'. |
 | skill | [`refine-ticket`](../.agent-src.uncompressed/skills/refine-ticket/SKILL.md) |  | Refine a Jira/Linear ticket before planning — 'refine ticket', 'tighten AC on PROJ-123', 'ist das Ticket klar?' — rewritten ticket, Top-5 risks, persona voices, sub-skills orchestrated, close-prompt. |
+| skill | [`repomix`](../.agent-src.uncompressed/skills/repomix/SKILL.md) |  | Use when packaging a codebase to a single AI-friendly file for LLM analysis — local or remote, XML/Markdown/JSON, token counting, gitignore filtering, peer-side `repomix` CLI. |
 | skill | [`requesting-code-review`](../.agent-src.uncompressed/skills/requesting-code-review/SKILL.md) |  | Use when asking for a review or creating a PR — self-review first, frame the right context, test plan included — even when the user just says 'open a PR' or 'ready to merge'. |
 | skill | [`review-routing`](../.agent-src.uncompressed/skills/review-routing/SKILL.md) |  | Use when preparing a PR description, suggesting reviewers, or flagging risk — produces owner-mapped roles plus historical bug-pattern matches from project-local YAML. |
 | skill | [`rice-prioritization`](../.agent-src.uncompressed/skills/rice-prioritization/SKILL.md) |  | Use when ranking competing initiatives for a roadmap, breaking a tie between two features, or auditing a backlog for hidden low-value work via Reach × Impact × Confidence ÷ Effort. |
@@ -146,6 +150,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`terragrunt`](../.agent-src.uncompressed/skills/terragrunt/SKILL.md) |  | Use when working with Terragrunt — DRY multi-env configs, module dependencies, remote state orchestration — even when the user just says 'deploy this to staging and prod' without naming Terragrunt. |
 | skill | [`test-driven-development`](../.agent-src.uncompressed/skills/test-driven-development/SKILL.md) |  | Use when implementing a feature, fixing a bug, or refactoring — write a failing test first, then the code — even if the user just says 'add this function' or 'fix this bug'. |
 | skill | [`test-performance`](../.agent-src.uncompressed/skills/test-performance/SKILL.md) |  | Use when optimizing test suite performance — database setup, seeder optimization, parallel testing, CI pipeline efficiency, or RefreshDatabase alternatives. |
+| skill | [`testing-anti-patterns`](../.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md) |  | Use BEFORE writing or changing tests, adding mocks, or putting test-only methods on production classes — five Iron Laws and gates against mocking-the-mock, production pollution, silent partial mocks. |
 | skill | [`threat-modeling`](../.agent-src.uncompressed/skills/threat-modeling/SKILL.md) |  | Use when adding auth, webhooks, uploads, queues, secrets, tenant boundaries, or public endpoints — produces trust boundaries + abuse cases mapped to files, BEFORE implementation. |
 | skill | [`token-optimizer`](../.agent-src.uncompressed/skills/token-optimizer/SKILL.md) |  | Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — single decision tree keyed by intent that cites the canonical token-saving asset. Consult before the action. |
 | skill | [`traefik`](../.agent-src.uncompressed/skills/traefik/SKILL.md) |  | Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing. |
