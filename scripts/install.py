@@ -1280,6 +1280,7 @@ def main(argv: list[str]) -> int:
         fail(f"Unsupported profile: {opts.profile}. Supported: {', '.join(SUPPORTED_PROFILES)}")
 
     project_root = Path(opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()).resolve()
+    is_first_run = not (project_root / SETTINGS_FILE).exists()
 
     if opts.package:
         package_root = Path(opts.package).resolve()
@@ -1335,18 +1336,22 @@ def main(argv: list[str]) -> int:
     if not QUIET:
         print()
         success("Done.")
-        print()
-        print("  Try these 3 prompts with your agent:")
-        print('    1. "Refactor this function"   → agent analyzes first')
-        print('    2. "Add caching to this"      → agent asks instead of guessing')
-        print('    3. "Implement this feature"   → agent respects your codebase')
-        print()
-        print("  Next steps:")
-        print("    • Commit .agent-settings.yml and bridge files to your repo")
-        print("    • New team members just run composer install / npm install — done")
-        print("    • Inspect hook coverage: ./agent-config hooks:status")
-        print("    • Full walkthrough: https://github.com/event4u-app/agent-config/blob/main/docs/getting-started.md")
-        print()
+        if is_first_run:
+            print()
+            print("  Try these 3 prompts with your agent:")
+            print('    1. "Refactor this function"   → agent analyzes first')
+            print('    2. "Add caching to this"      → agent asks instead of guessing')
+            print('    3. "Implement this feature"   → agent respects your codebase')
+            print()
+            print("  Next steps:")
+            print("    • Commit .agent-settings.yml and bridge files to your repo")
+            print("    • New team members just run composer install / npm install — done")
+            print("    • Inspect hook coverage: ./agent-config hooks:status")
+            print("    • Full walkthrough: https://github.com/event4u-app/agent-config/blob/main/docs/getting-started.md")
+            print()
+        else:
+            print("  Re-run complete. Walkthrough: https://github.com/event4u-app/agent-config/blob/main/docs/getting-started.md")
+            print()
     return 0
 
 

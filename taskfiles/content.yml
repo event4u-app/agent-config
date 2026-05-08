@@ -2,6 +2,7 @@ version: '3'
 
 tasks:
   sync:
+    silent: true
     desc: Sync .agent-src.uncompressed/ → .agent-src/, then project → .augment/, then refresh doc counts and local agent-settings
     cmds:
       - bash scripts/compress.sh --sync
@@ -9,6 +10,7 @@ tasks:
       - task: sync-agent-settings
 
   sync-agent-settings:
+    silent: true
     desc: Reconcile local .agent-settings.yml with the canonical template (skipped on fresh clones)
     cmds:
       - |
@@ -19,78 +21,97 @@ tasks:
         fi
 
   project-augment:
+    silent: true
     desc: Rebuild the .augment/ projection from .agent-src/ (copies rules, symlinks rest)
     cmd: python3 scripts/compress.py --project-augment
 
   sync-list:
+    silent: true
     desc: List ALL .md files (regardless of change status)
     cmd: bash scripts/compress.sh --list
 
   sync-changed:
+    silent: true
     desc: List .md files changed since last compression (hash-based)
     cmd: bash scripts/compress.sh --changed
 
   sync-check:
+    silent: true
     desc: Check if .agent-src/ is in sync with .agent-src.uncompressed/ (for CI)
     cmd: bash scripts/compress.sh --check
 
   sync-check-hashes:
+    silent: true
     desc: Check if all compressed .md files match their source hashes (for CI)
     cmd: bash scripts/compress.sh --check-hashes
 
   sync-clean-hashes:
+    silent: true
     desc: Remove stale hashes for deleted source files
     cmd: bash scripts/compress.sh --clean-hashes
 
   sync-mark-done:
+    silent: true
     desc: Mark a single file as compressed (updates hash)
     cmd: bash scripts/compress.sh --mark-done {{.CLI_ARGS}}
 
   sync-mark-all-done:
+    silent: true
     desc: Mark ALL .md files as compressed (run after initial full compression)
     cmd: bash scripts/compress.sh --mark-all-done
 
   generate-tools:
+    silent: true
     desc: Generate tool-specific directories (.claude/, .cursor/, .clinerules/, .windsurfrules, GEMINI.md)
     cmd: python3 scripts/compress.py --generate-tools
 
   clean-tools:
+    silent: true
     desc: Remove all generated tool directories and files
     cmd: python3 scripts/compress.py --clean-tools
 
   generate-catalog:
+    silent: true
     desc: Regenerate llms.txt and docs/skills-catalog.md from SKILL.md frontmatter
     cmd: python3 scripts/generate_catalog.py
 
   generate-index:
+    silent: true
     desc: Regenerate agents/index.md (internal) and docs/catalog.md (public)
     cmd: python3 scripts/generate_index.py
 
   check-index:
+    silent: true
     desc: Verify agents/index.md and docs/catalog.md are in sync (fails on drift)
     cmd: python3 scripts/generate_index.py --check
 
   compile-router:
+    silent: true
     desc: Compile rule frontmatter into router.json (kernel + tier-1/2 routing)
     cmd: python3 scripts/compile_router.py
 
   check-router:
+    silent: true
     desc: Verify router.json matches a fresh compile (fails on drift)
     cmd: python3 scripts/compile_router.py --check
 
   check-augmentignore:
+    silent: true
     desc: Advisory check — reminds to refresh .augmentignore (non-blocking, always exits 0)
-    cmd: python3 scripts/check_augmentignore.py
+    cmd: python3 scripts/check_augmentignore.py {{.QUIET_FLAG}}
 
   counts-update:
+    silent: true
     desc: Sync skill/rule/command/guideline counts in README.md, AGENTS.md, docs/getting-started.md, docs/architecture.md
     cmd: python3 scripts/update_counts.py
 
   counts-check:
+    silent: true
     desc: Verify doc counts match reality (fails if stale)
     cmd: python3 scripts/update_counts.py --check
 
   consistency:
+    silent: true
     desc: Verify sync + generated tool outputs are clean
     cmds:
       - task: sync-check
@@ -101,6 +122,7 @@ tasks:
       - git diff --quiet
 
   consistency-fix:
+    silent: true
     desc: Regenerate all derived outputs from source-of-truth
     cmds:
       - task: sync
@@ -108,36 +130,44 @@ tasks:
       - task: compile-router
 
   check-compression:
+    silent: true
     desc: Check compression quality (headings, code blocks, frontmatter, word count)
     cmd: python3 scripts/check_compression.py
 
   check-compressed-paths:
+    silent: true
     desc: "Validate compressed-output paths in .agent-src/rules/*.md (road-to-path-fixes P5.2)"
-    cmd: python3 scripts/check_compressed_paths.py
+    cmd: python3 scripts/check_compressed_paths.py {{.QUIET_FLAG}}
 
   generate-ownership-matrix:
+    silent: true
     desc: Regenerate the file-ownership matrix JSON + MD (docs/contracts/file-ownership-matrix.md)
     cmd: python3 scripts/generate_ownership_matrix.py
 
   check-ownership-matrix:
+    silent: true
     desc: Verify the committed ownership matrix matches a fresh regeneration (CI gate)
     cmd: python3 scripts/generate_ownership_matrix.py --check
 
   roadmap-progress:
+    silent: true
     desc: Regenerate agents/roadmaps-progress.md from all open roadmaps
     cmd: python3 .augment/scripts/update_roadmap_progress.py
 
   roadmap-progress-check:
+    silent: true
     desc: Fail if agents/roadmaps-progress.md is stale (for CI)
     cmd: python3 .augment/scripts/update_roadmap_progress.py --check
 
   check-roadmap-trackable:
+    silent: true
     desc: Fail if any active roadmap has unparseable headings or zero-checkbox phases (roadmap-progress-sync rule)
-    cmd: python3 scripts/check_roadmap_trackable.py
+    cmd: python3 scripts/check_roadmap_trackable.py {{.QUIET_FLAG}}
 
   check-council-layout:
+    silent: true
     desc: Fail if council-* artefacts are placed outside the canonical agents/council-{questions,responses,sessions}/ dirs (ai-council § Output path convention)
-    cmd: python3 scripts/check_council_layout.py
+    cmd: python3 scripts/check_council_layout.py {{.QUIET_FLAG}}
 
   council-prune:
     desc: Prune council artefacts older than ai_council.session_retention_days (default 7) across questions, responses, and sessions dirs

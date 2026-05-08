@@ -20,6 +20,8 @@ import sys
 import time
 from pathlib import Path
 
+QUIET = "--quiet" in sys.argv
+
 STALE_DAYS = 90
 MIN_USEFUL_LINES = 5
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -57,7 +59,8 @@ def check() -> int:
 
 def _emit(notes: list[str]) -> None:
     if not notes:
-        print("✅  .augmentignore advisory: nothing to suggest.")
+        if not QUIET:
+            print("✅  .augmentignore advisory: nothing to suggest.")
         return
     print("📒  .augmentignore advisory (non-blocking):")
     for n in notes:

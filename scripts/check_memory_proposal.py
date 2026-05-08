@@ -152,6 +152,7 @@ def main() -> int:
     grp.add_argument("--intake-id", help="Promote an intake record by id")
     grp.add_argument("--proposal", help="Promote a proposal YAML file")
     ap.add_argument("--format", choices=["text", "json"], default="text")
+    ap.add_argument("--quiet", action="store_true", help="Only print on failure")
     args = ap.parse_args()
     if args.intake_id:
         record = _find_intake(args.intake_id)
@@ -172,7 +173,8 @@ def main() -> int:
             for f in failures:
                 print(f"  🔴 {f}")
         else:
-            print(f"✅  {source} — gate passed")
+            if not args.quiet:
+                print(f"✅  {source} — gate passed")
     return 1 if failures else 0
 
 

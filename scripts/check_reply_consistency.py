@@ -21,6 +21,8 @@ import re
 import sys
 from pathlib import Path
 
+QUIET = "--quiet" in sys.argv
+
 OPTION_LINE_RE = re.compile(r"^\s*>?\s*(\d+)\.\s+\S")
 REC_LINE_RE = re.compile(
     r"(?:Recommendation|Empfehlung)\s*:\s*(\d+)\b", re.IGNORECASE
@@ -108,7 +110,8 @@ def cmd_scan_dir(root: Path) -> int:
             print(f"  🔴 {path}:{line} — inline-tag — {snippet}", file=sys.stderr)
         print(f"\n❌  {len(violations)} legacy-pattern violation(s)", file=sys.stderr)
         return 6
-    print(f"✅  No legacy (recommended) tags found under {root}")
+    if not QUIET:
+        print(f"✅  No legacy (recommended) tags found under {root}")
     return 0
 
 
@@ -121,6 +124,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--strict", action="store_true",
                    help="numbered options REQUIRE recommendation line (rule 5)")
     p.add_argument("-v", "--verbose", action="store_true")
+    p.add_argument("--quiet", action="store_true",
+                   help="suppress success messages (P10.5)")
     args = p.parse_args(argv)
 
     if args.scan_dir:
@@ -130,7 +135,8 @@ def main(argv: list[str] | None = None) -> int:
     code, msg = validate(text, strict=args.strict)
     if code == 0:
         if args.verbose:
-            print(f"✅  {msg}")
+            if not QUIET:
+                print(f"✅  {msg}")
         return 0
     print(f"❌  [exit {code}] {msg}", file=sys.stderr)
     return code

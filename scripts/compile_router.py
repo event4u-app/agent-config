@@ -17,7 +17,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 RULES_DIR = ROOT / ".agent-src.uncompressed" / "rules"
 OUT_PATH = ROOT / "router.json"
+SETTINGS_PATH = ROOT / ".agent-settings.yml"
 SCHEMA_VERSION = 1
+
+# Compile-time rule toggles. Maps rule-id → settings predicate.
+# Rule omitted from router.json when predicate returns False.
+# Per road-to-token-frugality § Phase 8.2 — caveman.speak compile-time toggle.
+COMPILE_TIME_TOGGLES = {
+    "caveman-speak": lambda s: bool(
+        s.get("caveman", {}).get("enabled", True)
+    ) and bool(s.get("caveman", {}).get("speak", True)),
+}
 
 # Maps legacy tier values to the router-canonical names. See
 # docs/contracts/rule-router.md § Backward compatibility.
@@ -89,7 +99,21 @@ def _normalize_trigger(item) -> dict | None:
     return {keys[0]: str(item[keys[0]])}
 
 
+def _load_settings() -> dict:
+    """Read .agent-settings.yml for compile-time toggles. Stdlib-only fallback."""
+    if not SETTINGS_PATH.exists():
+        return {}
+    text = SETTINGS_PATH.read_text(encoding="utf-8")
+    try:
+        import yaml  # type: ignore
+        data = yaml.safe_load(text) or {}
+        return data if isinstance(data, dict) else {}
+    except ImportError:
+        return {}
+
+
 def _collect(rules_dir: Path) -> dict:
+    settings = _load_settings()
     kernel: list[str] = []
     tiered: dict[str, list[dict]] = {"tier-1": [], "tier-2": []}
     for path in sorted(rules_dir.glob("*.md")):
@@ -97,6 +121,9 @@ def _collect(rules_dir: Path) -> dict:
         if not fm:
             continue
         rule_id = path.stem
+        if rule_id in COMPILE_TIME_TOGGLES:
+            if not COMPILE_TIME_TOGGLES[rule_id](settings):
+                continue
         rule_type = str(fm.get("type", "auto"))
         tier = _resolve_tier(rule_type, fm.get("tier", ""))
         if tier not in ALLOWED_TIERS:

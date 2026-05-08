@@ -22,6 +22,8 @@ from pathlib import Path
 
 import yaml
 
+QUIET = "--quiet" in sys.argv
+
 ROOT = Path(__file__).resolve().parent.parent
 MATRIX = ROOT / "docs" / "contracts" / "rule-interactions.yml"
 RULES_DIR = ROOT / ".agent-src.uncompressed" / "rules"
@@ -141,7 +143,8 @@ def main() -> int:
     if errors:
         fail(errors)
 
-    print(f"✅  rule-interactions.yml clean — {len(declared_rules)} rules, {len(pairs)} pairs.")
+    if not QUIET:
+        print(f"✅  rule-interactions.yml clean — {len(declared_rules)} rules, {len(pairs)} pairs.")
     return 0
 
 

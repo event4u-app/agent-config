@@ -693,11 +693,18 @@ install_cli_wrapper() {
 main() {
     parse_args "$@"
 
-    $QUIET || echo "🔧  Syncing agent-config payload..."
-    $QUIET || echo "    Source: $SOURCE_DIR"
-    $QUIET || echo "    Target: $TARGET_DIR"
-    $DRY_RUN && ! $QUIET && echo "    Mode: DRY RUN"
-    echo ""
+    # First-run detection: gate the verbose source/target banner behind the
+    # absence of .agent-settings.yml. Re-runs print a single status line.
+    local is_first_run=false
+    [[ ! -f "$TARGET_DIR/.agent-settings.yml" ]] && is_first_run=true
+
+    if $is_first_run && ! $QUIET; then
+        echo "🔧  Syncing agent-config payload..."
+        echo "    Source: $SOURCE_DIR"
+        echo "    Target: $TARGET_DIR"
+        $DRY_RUN && echo "    Mode: DRY RUN"
+        echo ""
+    fi
 
     # 0. Migrate legacy infra files (root → agents/) before any content sync.
     migrate_legacy_root_infra "$TARGET_DIR"
@@ -737,9 +744,13 @@ main() {
     # 6. Manage .gitignore
     ensure_gitignore "$TARGET_DIR"
 
-    echo ""
-    $QUIET || echo "✅  agent-config payload synced."
-    $QUIET || echo "    Run scripts/install (or python3 scripts/install.py) to render .agent-settings.yml and bridges."
+    if $is_first_run && ! $QUIET; then
+        echo ""
+        echo "✅  agent-config payload synced."
+        echo "    Run scripts/install (or python3 scripts/install.py) to render .agent-settings.yml and bridges."
+    elif ! $QUIET; then
+        echo "✅  agent-config payload synced."
+    fi
 }
 
 main "$@"

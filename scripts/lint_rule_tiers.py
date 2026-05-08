@@ -17,6 +17,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+QUIET = "--quiet" in sys.argv
+
 REPO = Path(__file__).resolve().parents[1]
 RULES_DIR = REPO / ".agent-src.uncompressed" / "rules"
 
@@ -70,7 +72,8 @@ def main() -> int:
         )
         return 1
 
-    print(f"✅  lint_rule_tiers: {len(rules)} rules, all tier values valid")
+    if not QUIET:
+        print(f"✅  lint_rule_tiers: {len(rules)} rules, all tier values valid")
     return 0
 
 

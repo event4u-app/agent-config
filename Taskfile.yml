@@ -5,6 +5,13 @@ version: '3'
 # so existing invocations (`task ci`, `task sync`, `task lint-skills`, …) keep
 # working unchanged.
 
+# Phase 10.7 — verbosity-aware --quiet injection.
+# `--quiet` is passed to scripts that support it unless
+# AGENT_SCRIPT_VERBOSITY=verbose. Scripts that ignore the flag are unaffected.
+vars:
+  QUIET_FLAG:
+    sh: '[ "$AGENT_SCRIPT_VERBOSITY" = "verbose" ] && echo "" || echo "--quiet"'
+
 includes:
   content:
     taskfile: ./taskfiles/content.yml

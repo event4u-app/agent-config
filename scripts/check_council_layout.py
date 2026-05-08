@@ -32,6 +32,8 @@ import re
 import sys
 from pathlib import Path
 
+QUIET = "--quiet" in sys.argv
+
 AGENTS_ROOT = Path("agents")
 CANONICAL_DIRS = {
     "council-questions": ".md",
@@ -97,7 +99,8 @@ def main() -> int:
             '§ "Output path convention"'
         )
         return 1
-    print("✅  Council layout clean.")
+    if not QUIET:
+        print("✅  Council layout clean.")
     return 0
 
 

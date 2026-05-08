@@ -15,6 +15,8 @@ import re
 import sys
 from pathlib import Path
 
+QUIET = "--quiet" in sys.argv
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEMO_GLOB = "docs/guidelines/agent-infra/*-demos.md"
 REQUIRED_FM_KEYS = ("demo_for:", "layer: pattern-memory", "prose_delta:")
@@ -86,11 +88,13 @@ def main() -> int:
             for p in problems:
                 print(f"    - {p}", file=sys.stderr)
         else:
-            print(f"✅  {rel}")
+            if not QUIET:
+                print(f"✅  {rel}")
     if failed:
         print(f"\n❌  {failed} demo file(s) failed shape lint", file=sys.stderr)
         return 1
-    print(f"\n✅  {len(demos)} demo file(s) shape-clean")
+    if not QUIET:
+        print(f"\n✅  {len(demos)} demo file(s) shape-clean")
     return 0
 
 

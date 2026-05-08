@@ -40,6 +40,8 @@ from pathlib import Path
 
 import yaml
 
+QUIET = "--quiet" in sys.argv
+
 ROOT = Path(__file__).resolve().parent.parent
 RULES_DIR = ROOT / ".agent-src" / "rules"
 
@@ -205,7 +207,8 @@ def main() -> int:
         print(f"\n{len(viols)} violation(s) in .agent-src/rules/")
         return 1
     rule_count = len(list(RULES_DIR.glob('*.md')))
-    print(f"✅  compressed-path check clean ({rule_count} rules, {len(audited)} ignore(s) audited)")
+    if not QUIET:
+        print(f"✅  compressed-path check clean ({rule_count} rules, {len(audited)} ignore(s) audited)")
     return 0
 
 

@@ -124,6 +124,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("paths", nargs="+", help="One or more .md files to scan")
     parser.add_argument("--format", choices=["text", "json"], default="text")
+    parser.add_argument("--quiet", action="store_true", help="Only print on failure")
     args = parser.parse_args()
 
     all_violations: list[Violation] = []
@@ -141,7 +142,8 @@ def main() -> int:
         print(json.dumps([asdict(v) for v in all_violations], indent=2, ensure_ascii=False))
     else:
         if not all_violations:
-            print("✅  No German content detected.")
+            if not args.quiet:
+                print("✅  No German content detected.")
         else:
             print(f"❌  {len(all_violations)} violation(s) found:\n")
             for v in all_violations:
