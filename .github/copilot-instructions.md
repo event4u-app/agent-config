@@ -120,9 +120,44 @@ If Copilot reviews a PR that fails any of these, reference the specific task.
 - User-facing prose in `.agent-src.uncompressed/` `.md` files: English.
 - PR comments: English.
 
-## ✅ Known non-issues
+## ✅ Known False Positives — Do NOT Flag
 
-- `source: package` in skill frontmatter is required — do not remove.
-- `disable-model-invocation: true` on commands is required — do not remove.
-- Symlinks in `.claude/`, `.cursor/` etc. point to `.augment/` — that is
-  intentional, do not "fix" broken-looking paths.
+The repo ships agent-config rules and skills under `.augment/`,
+`.agent-src/`, and (during authoring) `.agent-src.uncompressed/`.
+Cross-references inside those trees resolve via the **delivered**
+`.augment/` layout — not via raw git checkout. Copilot's static
+checker walks the git tree, so it sees broken paths where there are
+none. **Intentional, not a bug.** The patterns below are correct by
+design:
+
+- **Relative cross-references inside markdown rules / skills /
+  commands** like `[x](../docs/guidelines/foo.md)` or
+  `[y](../contexts/bar.md)`. The base resolves from the file's
+  delivered location (e.g. `.augment/rules/<rule>.md`) — these paths
+  are valid via the `.augment/` tree, even when the file is symlinked
+  into `.claude/rules/`, `.cursor/rules/`, or `.clinerules/`.
+- **`path_prefix:` triggers containing `.agent-src.uncompressed/`**
+  in YAML frontmatter. This is a literal match pattern for the
+  host's router, **not** a file reference — source-of-truth meta-rules
+  (`augment-source-of-truth`, `augment-portability`, `skill-quality`,
+  `docs-sync`, `rule-type-governance`) legitimately match against the
+  authoring tree.
+- **Symlinked rule / skill / command files** under `.claude/`,
+  `.cursor/`, `.clinerules/`. Targets resolve into `.augment/rules/`,
+  `.augment/skills/`, `.augment/commands/` via installer-managed
+  symlinks. Missing-file reports here are renderer artifacts.
+- **Body-link forms `../docs/guidelines/...`** (single-up). This is
+  the post-rewrite shape produced by `scripts/compress.py`. The
+  compressed `.agent-src/rules/` tree is one level deeper than the
+  source `.agent-src.uncompressed/rules/`, so the rewriter collapses
+  `../../docs/...` to `../docs/...`. Both forms are expected — one in
+  source, one in compressed output.
+- **`source: package` in skill frontmatter** — required marker, do
+  not remove.
+- **`disable-model-invocation: true` on commands** — required marker,
+  do not remove.
+
+**What TO flag:** code defects, security issues, broken tests, type
+errors, and any new `.agent-src.uncompressed/` substring introduced
+into `.agent-src/rules/` body content (the `check-compressed-paths`
+task gates this — flag it as a regression if it slips through).
