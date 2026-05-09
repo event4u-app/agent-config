@@ -813,7 +813,19 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/personas/_template-specialist/persona.md": {
+      "kind": "persona",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/personas/ai-agent.md": {
+      "kind": "persona",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/personas/backend-architect.md": {
       "kind": "persona",
       "rule_type": null,
       "load_context": [],
@@ -831,6 +843,18 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/personas/eloquent-tamer.md": {
+      "kind": "persona",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/personas/frontend-engineer.md": {
+      "kind": "persona",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/personas/product-owner.md": {
       "kind": "persona",
       "rule_type": null,
@@ -838,6 +862,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/personas/qa.md": {
+      "kind": "persona",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/personas/security-engineer.md": {
       "kind": "persona",
       "rule_type": null,
       "load_context": [],
@@ -4633,14 +4663,35 @@
     },
     {
       "source": ".agent-src.uncompressed/personas/README.md",
+      "target": ".agent-src.uncompressed/personas/_template-specialist/persona.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/personas/README.md",
       "target": ".agent-src.uncompressed/rules/artifact-drafting-protocol.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/personas/_template-specialist/persona.md",
+      "target": ".agent-src.uncompressed/personas/_template-specialist/persona.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/personas/ai-agent.md",
       "target": ".agent-src.uncompressed/personas/ai-agent.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/personas/backend-architect.md",
+      "target": ".agent-src.uncompressed/personas/backend-architect.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -4660,6 +4711,20 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/personas/eloquent-tamer.md",
+      "target": ".agent-src.uncompressed/personas/eloquent-tamer.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/personas/frontend-engineer.md",
+      "target": ".agent-src.uncompressed/personas/frontend-engineer.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/personas/product-owner.md",
       "target": ".agent-src.uncompressed/personas/product-owner.md",
       "type": "WRITE",
@@ -4669,6 +4734,13 @@
     {
       "source": ".agent-src.uncompressed/personas/qa.md",
       "target": ".agent-src.uncompressed/personas/qa.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/personas/security-engineer.md",
+      "target": ".agent-src.uncompressed/personas/security-engineer.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -8190,6 +8262,13 @@
     {
       "source": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
       "target": ".agent-src.uncompressed/contexts/subagent-configuration.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
+      "target": ".agent-src.uncompressed/rules/non-destructive-by-default.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1

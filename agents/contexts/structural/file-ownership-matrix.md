@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **364**
-- Edges (incl. self-WRITE): **943**
+- Files indexed: **369**
+- Edges (incl. self-WRITE): **950**
 
 ## READ_ONLY edges
 
@@ -222,6 +222,7 @@
 | `.agent-src.uncompressed/contexts/subagent-configuration.md` | `.agent-src.uncompressed/commands/judge.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/subagent-configuration.md` | `.agent-src.uncompressed/contexts/model-recommendations.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/subagent-configuration.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/personas/README.md` | `.agent-src.uncompressed/personas/_template-specialist/persona.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/personas/README.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/agent-authority.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/agent-authority.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
@@ -529,6 +530,7 @@
 | `.agent-src.uncompressed/skills/skill-writing/SKILL.md` | `.agent-src.uncompressed/skills/description-assist/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/commands/judge.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/contexts/subagent-configuration.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/skills/ai-council/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md` | `body_link` | 1 |
@@ -598,7 +600,7 @@
 |---|---:|
 | `command` | 103 |
 | `context` | 31 |
-| `persona` | 8 |
+| `persona` | 13 |
 | `rule` | 60 |
 | `skill` | 162 |
 
