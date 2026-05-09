@@ -170,4 +170,4 @@ Phase 1 is the visible plate. Phase 2 + 3 are **out-of-horizon**.
 ## Provenance
 
 - Analysis: `agents/analysis/compare-deep-research-harvest.md`
-- Sibling roadmaps: `agents/roadmaps/road-to-microck-harvest.md`, `agents/roadmaps/archive/road-to-markitdown-adoption.md`
+- Sibling roadmaps: `agents/roadmaps/archive/road-to-microck-harvest.md`, `agents/roadmaps/archive/road-to-markitdown-adoption.md`

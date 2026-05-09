@@ -1308,6 +1308,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/async-python-patterns/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/authz-review/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1434,6 +1440,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/defense-in-depth/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/dependency-upgrade/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1477,6 +1489,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/eloquent/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/error-handling-patterns/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -1680,6 +1698,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/mcp-builder/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/mcp/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1848,6 +1872,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/prompt-engineering-patterns/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/prompt-optimizer/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1908,6 +1938,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/repomix/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/requesting-code-review/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1951,6 +1987,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/script-writing/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/secrets-management/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -2047,6 +2089,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/test-performance/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -5650,6 +5698,41 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/skills/async-python-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/api-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/async-python-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/async-python-patterns/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/async-python-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/error-handling-patterns/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/async-python-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/mcp-builder/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/async-python-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/performance/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/authz-review/SKILL.md",
       "target": ".agent-src.uncompressed/skills/authz-review/SKILL.md",
       "type": "WRITE",
@@ -6007,6 +6090,20 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/skills/defense-in-depth/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/defense-in-depth/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/defense-in-depth/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/laravel-validation/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/dependency-upgrade/SKILL.md",
       "target": ".agent-src.uncompressed/skills/dependency-upgrade/SKILL.md",
       "type": "WRITE",
@@ -6075,6 +6172,41 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/error-handling-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/api-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/error-handling-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/bug-analyzer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/error-handling-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/defense-in-depth/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/error-handling-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/error-handling-patterns/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/error-handling-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/laravel-validation/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/estimate-ticket/SKILL.md",
@@ -6735,6 +6867,34 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/skills/mcp-builder/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/api-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/mcp-builder/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/mcp-builder/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/mcp-builder/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/mcp/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/mcp-builder/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/mcp/SKILL.md",
       "target": ".agent-src.uncompressed/skills/mcp/SKILL.md",
       "type": "WRITE",
@@ -6987,6 +7147,41 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/skills/prompt-engineering-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/async-python-patterns/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/prompt-engineering-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/mcp-builder/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/prompt-engineering-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/prompt-engineering-patterns/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/prompt-engineering-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/prompt-optimizer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/prompt-engineering-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/refine-prompt/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/prompt-optimizer/SKILL.md",
       "target": ".agent-src.uncompressed/commands/optimize-prompt.md",
       "type": "READ_ONLY",
@@ -7167,6 +7362,48 @@
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "target": ".agent-src.uncompressed/commands/analyze-reference-repo.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/blast-radius-analyzer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/judge-security-auditor/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/markitdown/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncompressed/skills/requesting-code-review/SKILL.md",
@@ -7454,6 +7691,41 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/secrets-management/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/aws-infrastructure/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/secrets-management/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/secrets-management/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/secrets-management/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/security-audit/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/secrets-management/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/security/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/secrets-management/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/threat-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/security-audit/SKILL.md",
@@ -7759,6 +8031,48 @@
     {
       "source": ".agent-src.uncompressed/skills/test-performance/SKILL.md",
       "target": ".agent-src.uncompressed/skills/test-performance/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/defense-in-depth/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/judge-test-coverage/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/pest-testing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/systematic-debugging/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/test-driven-development/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0

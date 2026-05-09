@@ -62,7 +62,7 @@ compress + regenerate the tool directories.
 
 ```
 .agent-src.uncompressed/      ← edit here
-  skills/       (141 skills)
+  skills/       (150 skills)
   rules/        (58 rules)
   commands/     (103 commands)
   personas/     (7 personas)

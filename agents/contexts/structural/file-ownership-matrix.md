@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **347**
-- Edges (incl. self-WRITE): **835**
+- Files indexed: **355**
+- Edges (incl. self-WRITE): **873**
 
 ## READ_ONLY edges
 
@@ -304,6 +304,10 @@
 | `.agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md` | `.agent-src.uncompressed/skills/copilot-agents-optimization/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/ai-council/SKILL.md` | `.agent-src.uncompressed/rules/direct-answers.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/ai-council/SKILL.md` | `.agent-src.uncompressed/rules/no-roadmap-references.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/async-python-patterns/SKILL.md` | `.agent-src.uncompressed/skills/api-design/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/async-python-patterns/SKILL.md` | `.agent-src.uncompressed/skills/error-handling-patterns/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/async-python-patterns/SKILL.md` | `.agent-src.uncompressed/skills/mcp-builder/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/async-python-patterns/SKILL.md` | `.agent-src.uncompressed/skills/performance/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/authz-review/SKILL.md` | `.agent-src.uncompressed/skills/judge-security-auditor/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/authz-review/SKILL.md` | `.agent-src.uncompressed/skills/security-audit/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/authz-review/SKILL.md` | `.agent-src.uncompressed/skills/security/SKILL.md` | `body_link` | 1 |
@@ -334,8 +338,13 @@
 | `.agent-src.uncompressed/skills/dcf-modeling/SKILL.md` | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/dcf-modeling/SKILL.md` | `.agent-src.uncompressed/skills/rice-prioritization/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/dcf-modeling/SKILL.md` | `.agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/defense-in-depth/SKILL.md` | `.agent-src.uncompressed/skills/laravel-validation/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/description-assist/SKILL.md` | `.agent-src.uncompressed/rules/skill-quality.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/description-assist/SKILL.md` | `.agent-src.uncompressed/rules/user-interaction.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/error-handling-patterns/SKILL.md` | `.agent-src.uncompressed/skills/api-design/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/error-handling-patterns/SKILL.md` | `.agent-src.uncompressed/skills/bug-analyzer/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/error-handling-patterns/SKILL.md` | `.agent-src.uncompressed/skills/defense-in-depth/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/error-handling-patterns/SKILL.md` | `.agent-src.uncompressed/skills/laravel-validation/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/estimate-ticket/SKILL.md` | `.agent-src.uncompressed/commands/jira-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/estimate-ticket/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/estimate-ticket/SKILL.md` | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `body_link` | 1 |
@@ -397,6 +406,9 @@
 | `.agent-src.uncompressed/skills/livewire/SKILL.md` | `.agent-src.uncompressed/skills/fe-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/livewire/SKILL.md` | `.agent-src.uncompressed/skills/flux/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/markitdown/SKILL.md` | `.agent-src.uncompressed/commands/analyze-reference-repo.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/mcp-builder/SKILL.md` | `.agent-src.uncompressed/skills/api-design/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/mcp-builder/SKILL.md` | `.agent-src.uncompressed/skills/mcp/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/mcp-builder/SKILL.md` | `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/md-language-check/SKILL.md` | `.agent-src.uncompressed/rules/language-and-tone.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `.agent-src.uncompressed/skills/dcf-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |
@@ -405,6 +417,10 @@
 | `.agent-src.uncompressed/skills/persona-writing/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/persona-writing/SKILL.md` | `.agent-src.uncompressed/skills/rule-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/persona-writing/SKILL.md` | `.agent-src.uncompressed/skills/skill-writing/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/prompt-engineering-patterns/SKILL.md` | `.agent-src.uncompressed/skills/async-python-patterns/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/prompt-engineering-patterns/SKILL.md` | `.agent-src.uncompressed/skills/mcp-builder/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/prompt-engineering-patterns/SKILL.md` | `.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/prompt-engineering-patterns/SKILL.md` | `.agent-src.uncompressed/skills/refine-prompt/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md` | `.agent-src.uncompressed/commands/optimize-prompt.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md` | `.agent-src.uncompressed/commands/review-changes.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md` | `.agent-src.uncompressed/skills/description-assist/SKILL.md` | `body_link` | 1 |
@@ -421,6 +437,11 @@
 | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `.agent-src.uncompressed/skills/adversarial-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `.agent-src.uncompressed/skills/validate-feature-fit/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/repomix/SKILL.md` | `.agent-src.uncompressed/commands/analyze-reference-repo.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/repomix/SKILL.md` | `.agent-src.uncompressed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/repomix/SKILL.md` | `.agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/repomix/SKILL.md` | `.agent-src.uncompressed/skills/judge-security-auditor/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/repomix/SKILL.md` | `.agent-src.uncompressed/skills/markitdown/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/requesting-code-review/SKILL.md` | `.agent-src.uncompressed/commands/commit.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/requesting-code-review/SKILL.md` | `.agent-src.uncompressed/commands/create-pr.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/requesting-code-review/SKILL.md` | `.agent-src.uncompressed/commands/create-pr/description-only.md` | `body_link` | 1 |
@@ -454,6 +475,10 @@
 | `.agent-src.uncompressed/skills/script-writing/SKILL.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/script-writing/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/script-writing/SKILL.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/secrets-management/SKILL.md` | `.agent-src.uncompressed/skills/aws-infrastructure/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/secrets-management/SKILL.md` | `.agent-src.uncompressed/skills/security-audit/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/secrets-management/SKILL.md` | `.agent-src.uncompressed/skills/security/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/secrets-management/SKILL.md` | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/security-audit/SKILL.md` | `.agent-src.uncompressed/skills/authz-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/security-audit/SKILL.md` | `.agent-src.uncompressed/skills/bug-analyzer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/security-audit/SKILL.md` | `.agent-src.uncompressed/skills/performance-analysis/SKILL.md` | `body_link` | 1 |
@@ -482,6 +507,11 @@
 | `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `.agent-src.uncompressed/skills/pest-testing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `.agent-src.uncompressed/skills/quality-tools/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `.agent-src.uncompressed/skills/defense-in-depth/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `.agent-src.uncompressed/skills/judge-test-coverage/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `.agent-src.uncompressed/skills/pest-testing/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `.agent-src.uncompressed/skills/authz-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `.agent-src.uncompressed/skills/judge-security-auditor/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `.agent-src.uncompressed/skills/security-audit/SKILL.md` | `body_link` | 1 |
@@ -509,5 +539,5 @@
 | `context` | 30 |
 | `persona` | 8 |
 | `rule` | 60 |
-| `skill` | 145 |
+| `skill` | 153 |
 
