@@ -39,6 +39,16 @@ for narrative structure, mental-models lens for object selection).
    `## Workflow` section verbatim.
 5. Unknown sub-command → print the table above and ask which one.
 
+## Rules
+
+- **Do NOT commit, push, or open a PR** unless the sub-command explicitly
+  authorizes it.
+- **Do NOT chain sub-commands.** One `/research[:<sub>]` per turn.
+- If the user invokes `/research` with no argument, **show the menu** —
+  do not guess whether they meant the bare workflow or a sub-command.
+- **Edit `.agent-src.uncompressed/` only.** `.agent-src/` and `.augment/`
+  regenerate from source.
+
 ## Trigger
 
 `/research <topic>`
