@@ -1,26 +1,27 @@
 ---
 name: optimize
-description: Optimize orchestrator — routes to skills, agents, augmentignore, rtk-filters
+description: Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters
 cluster: optimize
 disable-model-invocation: true
 suggestion:
   eligible: true
-  trigger_description: "optimize my skills, audit agents, tune augmentignore, optimize rtk filters"
-  trigger_context: "maintainer auditing or trimming agent infrastructure"
+  trigger_description: "optimize my skills, manage agents directory, tune augmentignore, optimize rtk filters"
+  trigger_context: "maintainer auditing or trimming the agent layer (NOT AGENTS.md — that's /agents)"
 ---
 
 # /optimize
 
-Top-level orchestrator for the `/optimize` family. Replaces 4 standalone
-commands with a single entry point + sub-command dispatch.
+Top-level orchestrator for the `/optimize` family.
+
+> Looking for `AGENTS.md` operations (init, refactor, audit)? Those
+> live under [`/agents`](agents.md) (`init / optimize / audit`).
 
 ## Sub-commands
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
 | `/optimize skills` | `commands/optimize/skills.md` | Audit skills — measure baseline, find duplicates, run linter |
-| `/optimize agents` | `commands/optimize/agents.md` | Audit agent infrastructure — token overhead, rule triggers, AGENTS.md |
-| `/optimize agents-md` | `commands/optimize/agents-md.md` | Refactor `AGENTS.md` to Thin-Root contract — caps, capability bullets, pointer ratio, emergency triage |
+| `/optimize agents-dir` | `commands/optimize/agents-dir.md` | Manage the `agents/` directory — `--scaffold` / `--audit` / `--fix` (interactive wizard if no flag) |
 | `/optimize augmentignore` | `commands/optimize/augmentignore.md` | Create or refine `.augmentignore` based on actual stack |
 | `/optimize rtk` | `commands/optimize/rtk.md` | Create or refine project-local rtk filters |
 
@@ -31,15 +32,14 @@ Sub-command names match the locked contract in
 
 1. Parse the user's argument: `/optimize <sub-command> [args]`.
 2. Look up the sub-command in the table above.
-3. Load the body of the corresponding `commands/optimize-<sub>.md` file and
+3. Load the body of the corresponding `commands/optimize/<sub>.md` file and
    follow its `## Steps` (or `## Instructions`) section verbatim.
 4. If the sub-command is unknown or missing, print the menu and ask:
 
    > 1. skills — audit skills (find duplicates, run linter)
-   > 2. agents — audit agent infrastructure (token overhead, rule triggers)
-   > 3. agents-md — refactor AGENTS.md to Thin-Root contract
-   > 4. augmentignore — create or refine `.augmentignore`
-   > 5. rtk — create or refine project-local rtk filters
+   > 2. agents-dir — scaffold / audit / fix the `agents/` tree
+   > 3. augmentignore — create or refine `.augmentignore`
+   > 4. rtk — create or refine project-local rtk filters
 
 ## Rules
 

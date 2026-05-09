@@ -1,23 +1,25 @@
 ---
-name: optimize:agents-md
-cluster: optimize
-sub: agents-md
-description: Refactor AGENTS.md to the Thin-Root contract — caps, pointer ratio, capability bullets, emergency-triage block. Suggest only, never auto-apply.
-skills: [agents-md-thin-root, agent-docs-writing]
+name: agents:optimize
+cluster: agents
+sub: optimize
+description: Refactor AGENTS.md to the Thin-Root contract (caps, pointer ratio, capability bullets, emergency-triage) and propagate to tool stubs. Suggest only, never auto-apply.
+skills: [agents-md-thin-root, copilot-agents-optimization, copilot-config, agent-docs-writing]
 disable-model-invocation: true
 suggestion:
   eligible: true
-  trigger_description: "refactor AGENTS.md, shrink AGENTS.md, capability bullets, thin-root"
-  trigger_context: "maintainer working on AGENTS.md (root or consumer template)"
+  trigger_description: "refactor AGENTS.md, shrink AGENTS.md, capability bullets, thin-root, optimize agent layer"
+  trigger_context: "maintainer working on AGENTS.md (root or consumer template) or its tool stubs"
 ---
 
-# /optimize agents-md
+# /agents optimize
 
-Focused refactor of a single `AGENTS.md` file (project root, package
-root, or consumer template) into the Thin-Root contract: hard char
-caps, ≥ 40 % substantive-pointer ratio, Capabilities-over-Structure
-Iron Law, mandatory emergency-triage block. **Suggest only — never
-auto-apply.**
+Refactor of a single `AGENTS.md` file (project root, package root, or
+consumer template) into the Thin-Root contract: hard char caps, ≥ 40 %
+substantive-pointer ratio, Capabilities-over-Structure Iron Law,
+mandatory emergency-triage block. Propagates the result to the
+multi-tool stubs the consumer ships (`copilot-instructions.md`,
+`CLAUDE.md`, `GEMINI.md`, `.cursorrules`) per the symlink-or-stub
+strategy. **Suggest only — never auto-apply.**
 
 **Source of truth:** the canonical contract lives in
 [`agents-md-thin-root`](../../skills/agents-md-thin-root/SKILL.md);
@@ -116,7 +118,30 @@ Never auto-apply. Edits land only after explicit user approval per
 [`scope-control`](../../rules/scope-control.md) and
 [`commit-policy`](../../rules/commit-policy.md).
 
-### 8. Verify before claiming done
+### 8. Multi-tool propagation
+
+After AGENTS.md is updated, check for the four common tool stubs and
+keep them in sync:
+
+```bash
+ls .github/copilot-instructions.md CLAUDE.md GEMINI.md .cursorrules 2>/dev/null
+```
+
+For each present file, decide per
+[`agents-md-anatomy § Multi-tool symlink strategy`](../../contexts/contracts/agents-md-anatomy.md#multi-tool-symlink-strategy):
+
+- **Symlink target** (`CLAUDE.md`, `GEMINI.md`, `.cursorrules` → `AGENTS.md`)
+  → no edit needed; the link already resolves to the new content.
+- **Stub** (one-line "see AGENTS.md" pointer) → no edit needed.
+- **Independent file** (`.github/copilot-instructions.md` is the
+  canonical one — Copilot reads its own path) → present a side-by-side
+  diff against AGENTS.md and let the user choose what to copy across.
+  Never auto-overwrite.
+
+If a tool stub has drifted into a long independent file, surface that
+as a finding in the step-7 numbered options instead of editing here.
+
+### 9. Verify before claiming done
 
 ```bash
 python3 scripts/lint_agents_md.py
@@ -142,7 +167,9 @@ final reply per
 - **No commits, no push, no PR** — finishing the refactor is a user
   decision; cite [`commit-policy`](../../rules/commit-policy.md).
 - **No broader agent-infra audit** — for token overhead, rule
-  triggers, and skill-level findings, route to `/optimize agents`.
+  triggers, and skill-level findings, route to `/agents audit`.
+- **No `agents/` folder ops** — scaffolding, folder-audit, and folder
+  cleanup live in `/optimize agents-dir`.
 
 ## See also
 
