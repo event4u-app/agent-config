@@ -12,14 +12,32 @@ suggestion:
 
 # /research
 
-Entry point for **preliminary research**: pick the objects to study, name
-the fields to fill, and emit a YAML scaffold that a downstream deep-research
-run will populate. Use this when the user names a topic and wants a
-structured plan, not an immediate answer.
+Top-level entry point for the `/research` family. Bare `/research <topic>`
+runs the preliminary scaffolder described under `## Default flow`. Sub-commands
+drive the downstream phases (`:deep` populates the scaffold, `:report`
+summarises the results).
 
 Routes thinking-framework support to
 [`deep-reading-analyst`](../skills/deep-reading-analyst/SKILL.md) (SCQA
 for narrative structure, mental-models lens for object selection).
+
+## Sub-commands
+
+| Sub-command | Routes to | Purpose |
+|---|---|---|
+| `/research <topic>` (bare) | this file (`## Default flow`) | Pick objects, define fields, emit `outline.yaml` + `fields.yaml` |
+| `/research:deep` | `commands/research/deep.md` | Read scaffold, research each item in batches, write per-item JSON |
+| `/research:report` | `commands/research/report.md` | Summarise per-item JSON into a markdown report (+ optional `jq` template) |
+
+## Dispatch
+
+1. Parse the user's argument: `/research[:<sub>] [args]`.
+2. Bare `/research <topic>` → run the `## Workflow` below verbatim.
+3. `/research:deep` → load `commands/research/deep.md` and follow its
+   `## Workflow` section verbatim.
+4. `/research:report` → load `commands/research/report.md` and follow its
+   `## Workflow` section verbatim.
+5. Unknown sub-command → print the table above and ask which one.
 
 ## Trigger
 
@@ -126,17 +144,19 @@ $PROJECT_ROOT/agents/research/{topic_slug}/
   └── fields.yaml     # field definitions
 ```
 
-## Out of scope (Phase 2)
+## Out of scope
 
-`/research-deep`, `/research-add-items`, `/research-add-fields`, and the
-Python `validate_json.py` validator are **not** ported in Phase 1 — they
-are queued as follow-up cluster sub-commands.
+`/research:add-items` and `/research:add-fields` are **not** ported —
+the existing scaffolder + sub-commands cover the round-trip; the
+upstream incremental-edit commands are too thin to justify their own
+sub-command. Re-run `/research <topic>` and merge by hand if the
+field framework needs a follow-up adjustment.
 
 ## ADOPT citation
 
 Adopted from [`Weizhena/Deep-Research-skills`](https://github.com/Weizhena/Deep-Research-skills)
-@ commit `dc18cf4` · upstream file research/SKILL.md inside skills/research-en/ · MIT License.
-Refactored: dropped `web-search-agent` persona (portability), dropped
-Pydantic validator (replaced with JSON-Schema reference), repathed
-`./` → `$PROJECT_ROOT/agents/research/`, deferred `/research-deep` +
-`/research-add-*` to Phase 2.
+@ commit `dc18cf4` · upstream file `skills/research-en/research/SKILL.md`
+· MIT License. Refactored: dropped `web-search-agent` persona
+(portability), dropped Pydantic validator (replaced with JSON-Schema
+reference), repathed `./` → `$PROJECT_ROOT/agents/research/`. Phase 2
+ported `/research:deep` and `/research:report` as cluster sub-commands.
