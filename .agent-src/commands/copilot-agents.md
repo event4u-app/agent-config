@@ -1,44 +1,54 @@
 ---
 name: copilot-agents
-description: Copilot agents-doc orchestrator — routes to init, optimize
-cluster: copilot-agents
+description: "[DEPRECATED 2026-05-09] Use /agents — routes init/optimize to the new /agents cluster."
+superseded_by: agents
 disable-model-invocation: true
 suggestion:
-  eligible: true
-  trigger_description: "create AGENTS.md, optimize copilot-instructions.md, scaffold copilot agent docs"
-  trigger_context: "user wants to author or tune AGENTS.md / copilot-instructions.md"
+  eligible: false
+  rationale: "Deprecation shim — surface /agents instead."
 ---
 
-# /copilot-agents
+# /copilot-agents — DEPRECATED
 
-Top-level orchestrator for the `/copilot-agents` family. Replaces 2
-standalone commands with a single entry point + sub-command dispatch.
+> ⚠️  **This command was retired on 2026-05-09.** The `AGENTS.md` file
+> family moved to the [`/agents`](agents.md) cluster. This file remains
+> for one release as a routing shim; remove after the next minor bump.
 
-## Sub-commands
+## Migration
 
-| Sub-command | Routes to | Purpose |
-|---|---|---|
-| `/copilot-agents init` | `commands/copilot-agents/init.md` | Create AGENTS.md and `.github/copilot-instructions.md` from scratch |
-| `/copilot-agents optimize` | `commands/copilot-agents/optimize.md` | Refactor existing AGENTS.md and copilot-instructions.md for line budgets |
+| Old invocation | New invocation |
+|---|---|
+| `/copilot-agents init` | [`/agents init`](agents/init.md) |
+| `/copilot-agents optimize` | [`/agents optimize`](agents/optimize.md) |
+| `/copilot-agents` (no sub) | [`/agents`](agents.md) (no sub) |
 
-Sub-command names match the locked contract in
-[`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
+## Behavior when invoked
 
-## Dispatch
+1. Emit a single-line warning:
 
-1. Parse the user's argument: `/copilot-agents <sub-command> [args]`.
-2. Look up the sub-command in the table above.
-3. Load the body of the routed file and follow its `## Instructions` section
-   verbatim with the remaining args.
-4. If the sub-command is unknown or missing, print the table above and ask:
+   ```
+   ⚠️  /copilot-agents is deprecated; use /agents instead.
+   ```
 
-   > 1. init — scaffold AGENTS.md + copilot-instructions.md from scratch
-   > 2. optimize — refactor existing files for budget and audience
+2. Map the sub-command verbatim:
+   - `init` → load [`commands/agents/init.md`](agents/init.md) and follow its `## Instructions`.
+   - `optimize` → load [`commands/agents/optimize.md`](agents/optimize.md) and follow its `## Instructions`.
+   - anything else (or empty) → load [`commands/agents.md`](agents.md) and let its dispatch handle the menu.
 
-## Rules
+3. Do **not** announce the rename more than once per turn. The redirect
+   is silent after the first warning.
 
-- **Do NOT commit, push, or open a PR** unless the sub-command explicitly
-  authorizes it.
-- **Do NOT chain sub-commands.** One `/copilot-agents <sub>` per turn.
-- If the user invokes `/copilot-agents` with no argument, **show the
-  menu** — do not guess which sub-command they meant.
+## Why the rename
+
+The old `/copilot-agents` namespace implied tool-specific (GitHub
+Copilot) coupling. `AGENTS.md` is the universal contract for every
+agent surface (Claude Code, Cursor, Cline, Windsurf, Augment, Gemini,
+Codex). The new `/agents` cluster carries that semantics; the
+`copilot-instructions.md` stub is still emitted by `/agents init` and
+synced by `/agents optimize` — only the entry-point name changed.
+
+## See also
+
+- [`/agents`](agents.md) — current cluster (`init` · `optimize` · `audit`).
+- [`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md) — migration table + locked cluster surface.
+- [`agents-md-thin-root`](../skills/agents-md-thin-root/SKILL.md) — Thin-Root contract enforced by `/agents optimize`.

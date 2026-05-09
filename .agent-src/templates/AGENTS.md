@@ -1,7 +1,7 @@
 # {{project_name}}
 
 <!--
-  Fill placeholders or run `/copilot-agents-init`, then delete this
+  Fill placeholders or run `/agents init`, then delete this
   comment. Iron Law — capability bullets, not path lists; paths rot.
   Tool stubs (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`) link here.
   Anatomy + recipes: `.augment/contexts/contracts/agents-md-anatomy.md`.

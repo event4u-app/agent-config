@@ -2,247 +2,151 @@
 name: agents:audit
 cluster: agents
 sub: audit
-description: Audits agents/ and module agents/ directories — finds outdated docs, structural issues, duplicates, orphaned overrides, and creates an improvement roadmap.
-skills: [agents-audit, agent-docs-writing, override-management, module-management]
+description: Audit agent infrastructure — token overhead, rule triggers, AGENTS.md health, Capability-over-Structure adherence, stale references. Read-only, suggest-only, never auto-apply.
+skills: [copilot-agents-optimization, agents-audit, agent-docs-writing, agents-md-thin-root, quality-tools]
 disable-model-invocation: true
 suggestion:
   eligible: true
-  trigger_description: "audit my agent docs, check the state of the agents/ directory"
-  trigger_context: "stale files under agents/ or recent edits to .augment/ without doc updates"
+  trigger_description: "audit agent infrastructure, check rule triggers, verify AGENTS.md health, agent-layer health-check"
+  trigger_context: "maintainer working on .augment/ files, AGENTS.md, or planning a refactor"
 ---
 
 # /agents audit
-Audits all agent documentation across the project — root `agents/`, module `app/Modules/*/agents/`,
-and `agents/overrides/`.
+
+Read-only health check of the **agent layer** — `AGENTS.md` (and tool stubs),
+rules, skills, and pointer/anchor integrity. Measures token overhead, surfaces
+duplicate triggers, verifies the Thin-Root contract, and flags stale references.
+**Suggest only — never auto-apply.** Fixes happen via `/agents optimize` (file
+refactor) or rule-/skill-level commands.
+
+**Source of truth:** `.agent-src.uncompressed/` — never read or edit
+`.agent-src/` or `.augment/` directly.
 
 ## Steps
 
-### 1. Inventory all agent docs
+### 1. Measure baseline
 
-Scan all directories:
-
-```bash
-# Root-level docs
-find agents/ -maxdepth 1 -name '*.md' | sort
-
-# Subdirectories
-find agents/features/ agents/contexts/ -name '*.md' 2>/dev/null | sort
-
-# Overrides
-find agents/overrides/ -name '*.md' -not -name '.gitkeep' 2>/dev/null | sort
-
-# Guidelines
-find .augment/guidelines/ -name '*.md' | sort
-
-# Module-level docs (excluding roadmaps)
-find app/Modules/*/agents/ -name '*.md' -not -path '*/roadmaps/*' 2>/dev/null | sort
-```
-
-For each file, extract:
-- Filename and path
-- First heading (title)
-- File size and last git modification date (`git log -1 --format='%ai' -- {file}`)
-
-### 2. Scan module agents coverage
-
-Check every module for agent docs:
+Count lines affecting token consumption:
 
 ```bash
-for dir in app/Modules/*/; do
-  name=$(basename "$dir")
-  if [ -d "$dir/agents" ]; then
-    count=$(find "$dir/agents" -name '*.md' | wc -l | tr -d ' ')
-    echo "✅  $name — $count docs"
-  else
-    echo "❌  $name — no agents/ dir"
-  fi
-done
+# Always-loaded (per chat)
+for f in .agent-src.uncompressed/rules/*.md; do
+  type=$(head -5 "$f" | grep 'type:' | sed 's/.*"\(.*\)"/\1/')
+  [ "$type" = "auto" ] && continue
+  lines=$(wc -l < "$f"); echo "always | $lines | $(basename "$f")"
+done | sort -t'|' -k2 -rn
+agents=$(wc -l < AGENTS.md); echo "always | $agents | AGENTS.md"
+
+# Auto-loaded rules
+for f in .agent-src.uncompressed/rules/*.md; do
+  type=$(head -5 "$f" | grep 'type:' | sed 's/.*"\(.*\)"/\1/')
+  [ "$type" != "auto" ] && continue
+  lines=$(wc -l < "$f"); echo "auto | $lines | $(basename "$f")"
+done | sort -t'|' -k2 -rn
+
+# Skills (top 20 by size)
+for f in .agent-src.uncompressed/skills/*/SKILL.md; do
+  name=$(echo "$f" | sed 's|.agent-src.uncompressed/skills/||;s|/SKILL.md||')
+  lines=$(wc -l < "$f"); echo "$lines | $name"
+done | sort -rn | head -20
 ```
 
-For each module WITH agents, check structure:
+Report totals (always + auto + skills + AGENTS.md).
 
-| Check | Expected | Severity |
-|---|---|---|
-| Module description file exists | `agents/{name}.md` or `agents/README.md` | 🟡 Warning |
+### 2. Check rules
 
-| Features dir (if planned work) | `agents/features/` | 🔵 Info |
-| Contexts dir (if complex domain) | `agents/contexts/` | 🔵 Info |
-| Consistent format across modules | Same heading structure, same sections | 🔵 Info |
-
-### 3. Scan overrides
-
-For each override in `agents/overrides/`:
+- **Frontmatter**: every rule has `type: "always"` or `type: "auto"` with `description`.
+- **Duplicate triggers**: same `description` → both rules load simultaneously (waste).
+- **Redundancy**: a rule's content duplicated in AGENTS.md or a skill.
+- **Merge candidates**: rules under 15 lines that belong inside a sibling rule.
 
 ```bash
-find agents/overrides/ -name '*.md' -not -name '.gitkeep' | while read f; do
-  # Extract Mode and Original path from header
-  mode=$(grep -m1 'Mode:' "$f" | sed 's/.*`\(.*\)`.*/\1/')
-  original=$(grep -m1 'Original:' "$f" | sed 's/.*`\(.*\)`.*/\1/')
-  # Check if original exists
-  if [ -f "$original" ]; then
-    echo "✅  $f → $original ($mode)"
-  else
-    echo "❌  $f → $original (ORPHANED — original missing)"
-  fi
-done
+for f in .agent-src.uncompressed/rules/*.md; do
+  desc=$(head -5 "$f" | grep 'description:' | sed 's/.*"\(.*\)"/\1/')
+  [ -n "$desc" ] && echo "$desc | $(basename "$f")"
+done | sort | awk -F' \\| ' '{descs[$1]=descs[$1] " " $2} END {for (d in descs) {n=split(descs[d], a, " "); if (n>1) print "⚠️  " d " →" descs[d]}}'
 ```
 
-| Check | Severity |
-|---|---|
-| Override has valid `Mode` header (`extend` or `replace`) | 🔴 Critical if missing |
-| Override has valid `Original` path | 🔴 Critical if missing |
-| Original file exists | 🟡 Warning if orphaned |
-| Override content is not empty (beyond template) | 🟡 Warning if empty |
+### 3. Check `always` → `auto` candidates
 
-### 4. Classify each document
+Apply `rule-type-governance`:
 
-For each doc, determine its category:
+1. Applies to EVERY conversation? → keep `always`.
+2. Triggered by a specific topic? → candidate for `auto`.
+3. Core behavior constraint (`scope-control`, `verify-before-complete`, `token-efficiency`, `commit-policy`, `non-destructive-by-default`)? → **NEVER change to auto**.
 
-- **Architecture** — project-level architecture docs (DB, auth, tenancy)
-- **Convention** — coding guidelines and standards
-- **Pattern** — design pattern documentation
-- **Feature plan** — planned features
-- **Context** — codebase area snapshots
-- **Module doc** — module-specific documentation
-- **Override** — project-level override of shared resource
-- **Unclear** — doesn't fit a clear category
+Surface candidates with explicit justification. Never auto-apply.
 
-### 5. Check for issues
+### 4. Check AGENTS.md — Thin-Root + Capability-over-Structure
 
-**Structural issues:**
-- Files in wrong directories (e.g., a guideline in `agents/` root)
-- Missing expected directories
-- Naming inconsistencies (not kebab-case)
-- Module docs that should be root-level (cross-module concern)
-- Root docs that should be module-level (single-module concern)
+Run the linter and inspect output:
 
-**Content issues (for each doc):**
-- Read the file and extract referenced file paths, class names, method names
-- Use `codebase-retrieval` or file checks to verify references still exist
-- Flag references to deleted/renamed code
-
-**Duplication:**
-- Compare doc topics — are two docs covering the same thing?
-- Check overlap between `agents/` docs and `.augment/skills/` content
-- Check overlap between root docs and `.augment/guidelines/` docs
-- Check overlap between module docs and root docs
-
-**Coverage gaps:**
-- Active modules without any agent docs
-- Complex areas (many files, many services) without documentation
-- Overrides that reference sections no longer in the original
-
-### 6. Display audit report
-
-```
-═══════════════════════════════════════════════
-  🔍  AGENTS AUDIT
-═══════════════════════════════════════════════
-
-📁  Scanned: {total} files in {dirs} directories
-
-───────────────────────────────────────────────
-INVENTAR
-───────────────────────────────────────────────
-
-  Category         Count   Files
-  ───────────────  ──────  ────────────────────────────
-  Architecture     {n}     database-setup.md, ...
-  Convention       {n}     guidelines/controllers.md, ...
-  Pattern          {n}     guidelines/patterns/service-layer.md, ...
-  Feature          {n}     {or "keine"}
-  Context          {n}     {or "keine"}
-  Module Doc       {n}     Import/agents/import.md, ...
-  Override         {n}     overrides/skills/eloquent.md, ...
-  Unklar           {n}     {files that don't fit}
-
-───────────────────────────────────────────────
-MODULE AGENTS
-───────────────────────────────────────────────
-
-  Module             Status  Docs  Description   Features  Contexts
-  ─────────────────  ──────  ────  ────────────  ────────  ────────
-  Import             ✅      3     ✅            ✅        ❌
-  Backoff            ✅      1     ✅            ❌        ❌
-  Grafana            ✅      2     ✅            ❌        ❌
-  ClientSoftware     ❌      0     ❌            ❌        ❌
-  ...
-
-───────────────────────────────────────────────
-OVERRIDES
-───────────────────────────────────────────────
-
-  Override                          Mode     Original  Status
-  ────────────────────────────────  ───────  ────────  ──────
-  {or "No overrides found"}
-
-───────────────────────────────────────────────
-ISSUES
-───────────────────────────────────────────────
-
-🔴  Kritisch ({count}):
-  •  {file} — {issue description}
-
-🟡  Warnung ({count}):
-  •  {file} — {issue description}
-
-🔵  Info ({count}):
-  •  {file} — {improvement suggestion}
-
-⚪  Clean ({count} files without issues)
-
-───────────────────────────────────────────────
-DUPLICATES / OVERLAPS
-───────────────────────────────────────────────
-
-  •  {file1} ↔ {file2} — {what overlaps}
-
-───────────────────────────────────────────────
-GAPS
-───────────────────────────────────────────────
-
-  ⚠️  Modules without docs: {list}
-  ⚠️  Missing contexts: {list}
-  ⚠️  Orphaned overrides: {list}
-
-═══════════════════════════════════════════════
+```bash
+python3 scripts/lint_agents_md.py
+wc -c AGENTS.md
 ```
 
-### 7. Create improvement roadmap
+Then audit against the **Capability-over-Structure heuristic** (canonical:
+[`agents-md-anatomy § Iron Law`](../../contexts/contracts/agents-md-anatomy.md#iron-law--capability-over-structure)):
 
-```
-Create an improvement roadmap?
+- Every section answers a *what-the-agent-does* question, not *what-files-exist*.
+- Path bullets without why-clauses ≥ 60 chars → flag for rewrite as capability bullets.
+- Pointer ratio ≥ 0.40; emergency-triage block present and matches the canonical variant.
 
-1. ✅  Yes — create roadmap in agents/roadmaps/agents-cleanup.md
-2. 📋  Show recommendations only (no file creation)
-3. ❌  No — the audit was all that was needed
-```
+Failures route to `/agents optimize` — this command does **not** edit.
 
-**Option 1:** Create a roadmap using `.augment/templates/roadmaps.md` with phases:
+### 5. Check docs sync + stale references
 
-- **Phase 1: Critical fixes** — orphaned overrides, broken references, broken structure
-- **Phase 2: Structural cleanup** — move misplaced files, merge duplicates
-- **Phase 3: Module docs** — create missing module descriptions and contexts
-- **Phase 4: Cleanup** — delete obsolete docs, clean up naming, align formats
-
-**Option 2:** Show recommendations inline without creating a file.
-
-### 8. Offer next steps
-
-```
-What next?
-
-1. 🧹  Start cleanup → /agents-cleanup
-2. 📄  Update a specific doc → /context-refactor
-3. ✅  Done
+```bash
+python3 scripts/check_references.py
 ```
 
-## Rules
+Confirm counts/lists in `.augment/contexts/augment-infrastructure.md` and
+`docs/architecture.md` match the actual `.agent-src.uncompressed/` tree.
 
-- **Do NOT modify or delete any files** — this command is analysis only.
-- **Do NOT commit or push.**
-- **Do NOT audit `agents/roadmaps/` or `app/Modules/*/agents/roadmaps/`** — roadmaps have their own lifecycle.
-- **Do NOT audit `.augment/`** — skills and rules are managed separately.
-- **Verify references against the actual codebase** — don't guess.
-- **Be specific about issues** — name the file, the reference, and what's wrong.
-- **Don't flag missing module docs for tiny/inactive modules** — only for active modules with significant code.
+### 6. Run skill linter
+
+```bash
+python3 scripts/skill_linter.py --all --pairs --duplicates 2>&1 | grep "Summary:"
+```
+
+Report FAIL/WARN counts. Don't fix here — delegate to `skill-reviewer` or
+`/optimize skills`.
+
+### 7. Present findings
+
+Single table, no auto-edits:
+
+| # | Category | Finding | Impact | Suggested fix |
+|---|---|---|---|---|
+| 1 | Rule | `{name}` duplicate trigger | Both load simultaneously | Tighten `description` |
+| 2 | Rule | `{name}` is `always` but topic-specific | ~{n} lines saved/chat | Switch to `auto` (with safety gate) |
+| 3 | AGENTS.md | Path enumeration without why-clauses | Capability-over-Structure violation | Run `/agents optimize` |
+| ... | | | | |
+
+Then ask:
+
+```
+> 1. Walk through suggestions one at a time
+> 2. Apply only high-impact changes (saves > 50 lines or fixes a FAIL)
+> 3. Report only — no edits
+```
+
+## What this command does NOT do
+
+- **No edits** — read-only audit. Fixes route to `/agents optimize`,
+  `skill-reviewer`, or `/optimize skills`.
+- **No edits to `.agent-src/` or `.augment/`** — those regenerate from
+  `.agent-src.uncompressed/`. Edit the source.
+- **No `agents/` folder ops** — scaffolding, folder-audit, folder-cleanup
+  live in `/optimize agents-dir`.
+- **No commits, no push, no PR** — finishing the audit is a user decision
+  per [`commit-policy`](../../rules/commit-policy.md).
+
+## See also
+
+- [`agents-md-thin-root`](../../skills/agents-md-thin-root/SKILL.md) — caps, pointer-ratio, anatomy.
+- [`agents-md-anatomy`](../../contexts/contracts/agents-md-anatomy.md) — Iron Law, Capability-over-Structure heuristic.
+- [`rule-type-governance`](../../rules/rule-type-governance.md) — `always` vs `auto` decision rules.
+- [`/agents optimize`](optimize.md) — apply Thin-Root contract fixes.
+- [`/optimize agents-dir`](../optimize/agents-dir.md) — `agents/` folder operations (Phase 3).

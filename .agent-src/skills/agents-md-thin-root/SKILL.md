@@ -126,7 +126,7 @@ When invoked as a planning step, produce:
 ## See also
 
 - [`agents-md-anatomy`](../../contexts/contracts/agents-md-anatomy.md) — Capabilities-over-Structure Iron Law, multi-tool symlink strategy, monorepo per-package layout, refactor recipe, full gotcha catalog.
-- [`copilot-agents-optimization`](../copilot-agents-optimization/SKILL.md) — sibling skill for `.github/copilot-instructions.md`; runs alongside Thin-Root in `/optimize/agents`.
+- [`copilot-agents-optimization`](../copilot-agents-optimization/SKILL.md) — sibling skill for `.github/copilot-instructions.md`; runs alongside Thin-Root in `/agents optimize`.
 - [`agent-docs-writing`](../agent-docs-writing/SKILL.md) — broader documentation-structure context for navigating outboard targets.
 - [`size-enforcement`](../../rules/size-enforcement.md) — covers per-skill / per-rule / per-command size budgets; AGENTS.md caps live in this skill instead.
 - [`ADR-004-rule-governance-pruning`](../../../docs/decisions/ADR-004-rule-governance-pruning.md) — captures the rule-governance pruning that freed the workspace-guidelines budget; the Thin-Root caps build on that headroom.

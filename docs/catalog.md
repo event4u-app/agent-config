@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **376 public artefacts** shipped by
+Consumer-facing catalog of all **374 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -127,7 +127,7 @@ are excluded.
 | skill | [`receiving-code-review`](../.agent-src/skills/receiving-code-review/SKILL.md) |  | Use when processing code review feedback (bot or human) before changing anything — triages, verifies, and pushes back with technical reasoning — even when the user just says 'fix the comments'. |
 | skill | [`refine-prompt`](../.agent-src/skills/refine-prompt/SKILL.md) |  | Reconstruct a free-form prompt into actionable AC + assumptions + confidence band before the engine plans — '/work \"…\"', 'baue X', 'ist der Prompt klar genug für die Engine?'. |
 | skill | [`refine-ticket`](../.agent-src/skills/refine-ticket/SKILL.md) |  | Refine a Jira/Linear ticket before planning — 'refine ticket', 'tighten AC on PROJ-123', 'ist das Ticket klar?' — rewritten ticket, Top-5 risks, persona voices, sub-skills orchestrated, close-prompt. |
-| skill | [`repomix`](../.agent-src/skills/repomix/SKILL.md) |  | Use when packaging a codebase to a single AI-friendly file for LLM analysis — local or remote, XML/Markdown/JSON, token counting, gitignore filtering, peer-side `repomix` CLI. |
+| skill | [`repomix-packer`](../.agent-src/skills/repomix-packer/SKILL.md) |  | Use when packaging a codebase to a single AI-friendly file for LLM analysis — local or remote, XML/Markdown/JSON, token counting, gitignore filtering, peer-side `repomix` CLI. |
 | skill | [`requesting-code-review`](../.agent-src/skills/requesting-code-review/SKILL.md) |  | Use when asking for a review or creating a PR — self-review first, frame the right context, test plan included — even when the user just says 'open a PR' or 'ready to merge'. |
 | skill | [`review-routing`](../.agent-src/skills/review-routing/SKILL.md) |  | Use when preparing a PR description, suggesting reviewers, or flagging risk — produces owner-mapped roles plus historical bug-pattern matches from project-local YAML. |
 | skill | [`rice-prioritization`](../.agent-src/skills/rice-prioritization/SKILL.md) |  | Use when ranking competing initiatives for a roadmap, breaking a tie between two features, or auditing a backlog for hidden low-value work via Reach × Impact × Confidence ÷ Effort. |
@@ -227,16 +227,16 @@ are excluded.
 | rule | [`user-interaction`](../.agent-src/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (104)
+## Commands (101)
 
 | kind | name | cluster | description |
 |---|---|---|---|
 | command | [`agent-handoff`](../.agent-src/commands/agent-handoff.md) |  | Generate a context summary for continuing work in a fresh chat. Replaces the session system. |
 | command | [`agent-status`](../.agent-src/commands/agent-status.md) |  | Show current conversation stats — message count, token costs, task progress, next freshness check. |
-| command | [`agents:audit`](../.agent-src/commands/agents/audit.md) | cluster: agents | Audits agents/ and module agents/ directories — finds outdated docs, structural issues, duplicates, orphaned overrides, and creates an improvement roadmap. |
-| command | [`agents:cleanup`](../.agent-src/commands/agents/cleanup.md) | cluster: agents | Execute cleanup actions from an agents-audit — move, merge, delete, and update agent docs |
-| command | [`agents:prepare`](../.agent-src/commands/agents/prepare.md) | cluster: agents | Scaffold the agents/ directory structure with all required subdirectories and .gitkeep files |
-| command | [`agents`](../.agent-src/commands/agents.md) | cluster: agents | Agents-folder orchestrator — routes to audit, cleanup, prepare |
+| command | [`agents:audit`](../.agent-src/commands/agents/audit.md) | cluster: agents | Audit agent infrastructure — token overhead, rule triggers, AGENTS.md health, Capability-over-Structure adherence, stale references. Read-only, suggest-only, never auto-apply. |
+| command | [`agents:init`](../.agent-src/commands/agents/init.md) | cluster: agents | Initialize the agent layer for a consumer project — creates AGENTS.md and .github/copilot-instructions.md from package templates, auto-detects stack, never leaks other projects' identifiers. |
+| command | [`agents:optimize`](../.agent-src/commands/agents/optimize.md) | cluster: agents | Refactor AGENTS.md to the Thin-Root contract (caps, pointer ratio, capability bullets, emergency-triage) and propagate to tool stubs. Suggest only, never auto-apply. |
+| command | [`agents`](../.agent-src/commands/agents.md) | cluster: agents | Agent-layer orchestrator — routes to init, optimize, audit. Covers AGENTS.md and its multi-tool stubs (CLAUDE.md, GEMINI.md, copilot-instructions.md, .cursorrules). |
 | command | [`analyze-reference-repo`](../.agent-src/commands/analyze-reference-repo.md) |  | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`bug-fix`](../.agent-src/commands/bug-fix.md) |  | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
 | command | [`bug-investigate`](../.agent-src/commands/bug-investigate.md) |  | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
@@ -254,9 +254,6 @@ are excluded.
 | command | [`context:create`](../.agent-src/commands/context/create.md) | cluster: context | Analyze a codebase area and create a structured context document |
 | command | [`context:refactor`](../.agent-src/commands/context/refactor.md) | cluster: context | Analyze, update, and extend an existing context document |
 | command | [`context`](../.agent-src/commands/context.md) | cluster: context | Context orchestrator — routes to create, refactor |
-| command | [`copilot-agents:init`](../.agent-src/commands/copilot-agents/init.md) | cluster: copilot-agents | Create AGENTS.md and .github/copilot-instructions.md from scratch in the consumer project — interactive, auto-detects stack, never leaks other projects' identifiers. |
-| command | [`copilot-agents:optimize`](../.agent-src/commands/copilot-agents/optimize.md) | cluster: copilot-agents | Analyzes and refactors AGENTS.md and copilot-instructions.md — removes duplications, enforces line budgets, and ensures both files are optimized for their audience. |
-| command | [`copilot-agents`](../.agent-src/commands/copilot-agents.md) | cluster: copilot-agents | Copilot agents-doc orchestrator — routes to init, optimize |
 | command | [`cost-report`](../.agent-src/commands/cost-report.md) |  | Capture token cost from the active Claude Code session, append to the local sessions store, and surface the 50/75/90/100% budget alert ladder with cost-profile suggestions. |
 | command | [`council:default`](../.agent-src/commands/council/default.md) | cluster: council | Default council lens — neutral framing, redacted context, advisory output only. Run `/council default <input>` for prompt/roadmap/diff/files; the cluster shows a menu when invoked bare. |
 | command | [`council:design`](../.agent-src/commands/council/design.md) | cluster: council | Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment. |
@@ -299,12 +296,12 @@ are excluded.
 | command | [`module:explore`](../.agent-src/commands/module/explore.md) | cluster: module | Explore a module — load its structure, docs, and context into the current conversation |
 | command | [`module`](../.agent-src/commands/module.md) | cluster: module | Module orchestrator — routes to create, explore |
 | command | [`onboard`](../.agent-src/commands/onboard.md) |  | First-run setup for a developer on this project — captures name, IDE, bot-icon preference, rtk, cost_profile, and learning opt-out, then sets onboarding.onboarded=true |
-| command | [`optimize:agents`](../.agent-src/commands/optimize/agents.md) | cluster: optimize | Audits agent infrastructure — measures token overhead, checks rule triggers, verifies AGENTS.md. Suggest only, never auto-apply. |
+| command | [`optimize:agents-dir`](../.agent-src/commands/optimize/agents-dir.md) | cluster: optimize | Manage the agents/ directory — scaffold, folder-audit, fix. Single command with three modes (--scaffold / --audit / --fix); default = interactive wizard. |
 | command | [`optimize:augmentignore`](../.agent-src/commands/optimize/augmentignore.md) | cluster: optimize | Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules. |
 | command | [`optimize:rtk`](../.agent-src/commands/optimize/rtk.md) | cluster: optimize | Create or optimize project-local rtk filters based on the actual toolchain |
 | command | [`optimize:skills`](../.agent-src/commands/optimize/skills.md) | cluster: optimize | Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply. |
 | command | [`optimize-prompt`](../.agent-src/commands/optimize-prompt.md) | cluster: optimize | Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt. |
-| command | [`optimize`](../.agent-src/commands/optimize.md) | cluster: optimize | Optimize orchestrator — routes to skills, agents, augmentignore, rtk-filters |
+| command | [`optimize`](../.agent-src/commands/optimize.md) | cluster: optimize | Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters |
 | command | [`override:create`](../.agent-src/commands/override/create.md) | cluster: override | Creates a project-level override for a shared skill, rule, or command. |
 | command | [`override:manage`](../.agent-src/commands/override/manage.md) | cluster: override | Reviews, updates, and refactors existing project-level overrides. |
 | command | [`override`](../.agent-src/commands/override.md) | cluster: override | Override orchestrator — routes to create, manage |
@@ -336,7 +333,7 @@ are excluded.
 | command | [`upstream-contribute`](../.agent-src/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
 | command | [`work`](../.agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (62)
+## Guidelines (63)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -370,6 +367,7 @@ are excluded.
 | guideline | [`tool-integration`](../docs/guidelines/agent-infra/tool-integration.md) | agent-infra |  |
 | guideline | [`verify-before-complete-demos`](../docs/guidelines/agent-infra/verify-before-complete-demos.md) | agent-infra |  |
 | guideline | [`augment-portability-patterns`](../docs/guidelines/augment-portability-patterns.md) | (root) |  |
+| guideline | [`code-clarity`](../docs/guidelines/code-clarity.md) | (root) |  |
 | guideline | [`readme-size-and-splitting`](../docs/guidelines/docs/readme-size-and-splitting.md) | docs |  |
 | guideline | [`playwright`](../docs/guidelines/e2e/playwright.md) | e2e |  |
 | guideline | [`api-design`](../docs/guidelines/php/api-design.md) | php |  |

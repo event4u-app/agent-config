@@ -1,1 +1,0 @@
-../../../.agent-src/commands/copilot-agents/init.md
