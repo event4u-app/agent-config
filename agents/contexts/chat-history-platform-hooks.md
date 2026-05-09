@@ -388,3 +388,121 @@ timestamps).
 
 `AGENT_CHAT_HISTORY_FILE` overrides the default file path
 (`agents/.agent-chat-history` in CWD); used by tests.
+
+## Smoke testing the dispatcher
+
+Two complementary patterns let any agent (Cowork, Augment, Claude
+Code, …) verify that a platform's hook config reaches `hook_append`
+without rotating the live session:
+
+### `--dry-run` — resolve, don't write
+
+`hook-dispatch` and `hook-append` accept `--dry-run`. The platform
+→ raw_event → mapped event → cadence chain runs end-to-end; the
+header init, body append, and prune are skipped. The returned dict
+carries `action: "dry_run"`, `would_action: <real-action>`, and
+(for events that survive cadence) an `entry_preview`. Session
+rotation warnings still fire to stderr — that's the whole point of
+the pre-flight.
+
+```bash
+# Pre-flight an Augment Stop payload without touching the live file.
+echo '{"hook_event_name":"Stop","session_id":"abc","conversation":{"userPrompt":"hi","agentTextResponse":"ok"}}' \
+  | ./agent-config chat-history:hook --platform augment --dry-run
+# → {"action":"dry_run","would_action":"appended","event":"stop", …,
+#    "entry_preview":{"t":"agent","text":"ok","agent":"augment","s":"…"}, "dry_run":true}
+```
+
+### `AGENT_CHAT_HISTORY_FILE` — isolate, don't pollute
+
+When the test must verify on-disk state (header, body row, prune),
+point the writer at a unique tmp file. The default path
+(`agents/.agent-chat-history` in CWD) is the live session log;
+smoke tests MUST never write there directly.
+
+```bash
+export AGENT_CHAT_HISTORY_FILE="/tmp/smoke-$(uuidgen).jsonl"
+echo '{"hook_event_name":"Stop","session_id":"abc","conversation":{"userPrompt":"hi","agentTextResponse":"ok"}}' \
+  | ./agent-config chat-history:hook --platform augment
+cat "$AGENT_CHAT_HISTORY_FILE"
+rm -f "$AGENT_CHAT_HISTORY_FILE"
+unset AGENT_CHAT_HISTORY_FILE
+```
+
+### Session rotation warning
+
+Every `hook_append` (dry-run or real) compares the incoming `s` tag
+against the most recent body entry's `s`. When they differ on a
+non-empty file, a one-line warning is written to stderr **before**
+the entry lands:
+
+```
+chat-history session_rotation event=user_prompt prior_s=ed1e1dcf971990c1 new_s=e063cdf36f817a24
+```
+
+Cross-agent setups (Cowork + Augment writing to the same file) use
+this signal to catch unintended session takeovers without parsing
+the JSONL body. The warning is advisory; the append still proceeds
+and the prune still runs.
+
+## Multi-agent attribution surface
+
+Body rows carry an `agent` field set by `hook_dispatch` (`augment`,
+`claude`, `cowork`, `cursor`, `cline`, `windsurf`, `gemini`,
+`generic`). The read-side surface lets agents slice the log by who
+produced the entry without re-implementing the JSONL parse.
+
+### `read --agent <name>`
+
+Exact-match filter on the `agent` field. The sentinel `<unknown>`
+matches body rows without an `agent` field (legacy entries or
+direct `append` calls that bypassed the hook surface).
+
+```bash
+# Last 5 augment-authored rows in the current session.
+./agent-config chat-history:read --agent augment
+
+# Every claude-authored row across the file.
+./agent-config chat-history:read --all --agent claude
+
+# Spot unattributed traffic.
+./agent-config chat-history:read --all --agent '<unknown>'
+```
+
+When `--session` is omitted, `--agent` narrows within the most
+recent session — the filter never widens scope, only narrows.
+`--all --agent <name>` ignores session boundaries.
+
+### `sessions` AGENTS column
+
+`chat-history:sessions` (table + `--json`) reports the distinct
+agents observed per bucket, sorted alphabetically. Buckets without
+an `agent` field show `<unknown>` alongside any tagged entries:
+
+```
+ID                COUNT  AGENTS          LAST_TS                    PREVIEW
+----------------  -----  --------------  -------------------------  -------
+d153a3a4756989f0  2      augment,claude  2026-05-09T08:16:10+00:00  a
+3b56e04da60ea049  1      augment         2026-05-09T08:16:10+00:00  c
+```
+
+`--json` exposes the same data as a sorted `agents: [...]` array
+per session — token-cheap input for cross-agent dashboards.
+
+### `status` agents aggregation
+
+`chat-history:status` adds an `agents` block that totals distinct
+agents and counts rows per agent across the entire file:
+
+```json
+{
+  "agents": {
+    "total": 2,
+    "per_agent": {"augment": 2, "claude": 1}
+  }
+}
+```
+
+`<unknown>` appears as its own key when the file contains
+unattributed rows. Use the count to validate hook coverage —
+zero `<unknown>` after a backfill means every row is attributable.
