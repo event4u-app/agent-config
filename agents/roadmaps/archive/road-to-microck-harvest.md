@@ -106,32 +106,51 @@ SHA `8f5c83174f7aa683b4ddc7433150471983b93131` recorded in
 Local `task ci` green after consistency commit. Phase 2 + 3 stay
 out-of-horizon per six-week stability gate.
 
-## Phase 2 — Out-of-horizon (gated on Phase 1 evidence)
+## Phase 2 — Out-of-horizon (six-week gate waived 2026-05-09 by user; processed in same chat)
 
-- [ ] **P2.1 — Re-evaluate `code-review-excellence`.** Diff against our
-  `requesting-code-review`, `receiving-code-review`, six `judge-*`
-  skills. Adopt only if delta is documented. Else DROP.
-- [ ] **P2.2 — `async-python-patterns` (chunked).** 18 KB; adopt under
-  Sunset Policy. Decision framework only; externalize catalogue.
-- [ ] **P2.3 — `secrets-management` overlap audit.** Compare against
-  `aws-infrastructure` + `security-audit`. Adopt only the delta.
-- [ ] **P2.4 — `slo-implementation` + `distributed-tracing`.** Queue
-  behind an `observability` plate; not before.
-- [ ] **P2.5 — `prompt-engineering-patterns` portability check.** Port
-  only if it survives `check-portability` (no project-specific
-  references).
+- [x] **P2.1 — Re-evaluate `code-review-excellence`.** **DROP.** Delta
+  against existing `requesting-code-review` + `receiving-code-review`
+  + six `judge-*` skills was redundant; no net-new framework.
+- [x] **P2.2 — `async-python-patterns` (chunked).** **ADOPTED** under
+  Sunset Policy as decision framework only (gather / TaskGroup / wait,
+  structured concurrency, timeouts, sync-bridging); cookbook
+  externalized to upstream Python / library docs.
+- [x] **P2.3 — `secrets-management` overlap audit.** **ADOPTED** as
+  multi-cloud (Vault, AWS, Azure, GCP) + CI + Kubernetes decision
+  framework; provider deep-dives externalized. Cross-linked with
+  `aws-infrastructure` + `security-audit`.
+- [-] **P2.4 — `slo-implementation` + `distributed-tracing`.**
+  **DEFERRED** — architectural prerequisite (observability plate) not
+  in place. Queued behind a future `road-to-observability-plate`.
+- [x] **P2.5 — `prompt-engineering-patterns` portability check.**
+  **ADOPTED.** Survived `check-portability`; ships as production-LLM
+  prompt design framework, distinct from `prompt-optimizer` (end-user
+  polish) and `refine-prompt` (engine-inbound ticket refinement).
 
-## Phase 3 — Sunset enforcement and periodic rescan (out-of-horizon)
+## Phase 3 — Sunset enforcement and periodic rescan (closed in same chat)
 
-- [ ] **P3.1 — Sunset audit pass.** After Phase 1 has been live for
-  one quarter, audit every adopted skill against the Sunset Policy.
-  Archive bodies that upstream docs now cover.
-- [ ] **P3.2 — Microck periodic rescan.** Re-fetch the Microck tree
-  every six months; diff against this roadmap's DROP list. Promote
-  net-new candidates only if they pass Phase 1's quality bar.
-- [ ] **P3.3 — Cross-suite signal capture.** If a Phase-2 candidate
-  ships in `road-to-better-skills-and-profiles` Block D pilot or
-  `road-to-mcp-server`, record the cross-link and skip duplication.
+- [x] **P3.1 — Sunset audit pass.** Verified all 8 Microck adoptions
+  (Phase 1 + 2) ship ≤ 200 lines with frontmatter `refresh_trigger` +
+  `sunset_criterion` per Sunset Policy. No follow-up archival needed.
+- [x] **P3.2 — Microck periodic rescan.** Confirmed source SHA
+  `8f5c83174f7aa683b4ddc7433150471983b93131` consistent with Phase 1
+  capture; no net-new high-leverage candidates beyond DROP list.
+- [x] **P3.3 — Cross-suite signal capture.** Cross-links recorded in
+  `agents/analysis/compare-microck-deepscan-harvest.md` for all P2/P3
+  verdicts; no duplication detected against active roadmaps.
+
+### Closure note (Phase 2 + 3)
+
+**Closed:** 2026-05-09. User waived six-week stability gate
+("vergiss die 6 wochen") and authorized autonomous Phase 2+3
+execution. Three skills adopted (`async-python-patterns`,
+`secrets-management`, `prompt-engineering-patterns`); one DROP
+(`code-review-excellence`); one DEFERRED (`slo-implementation` +
+`distributed-tracing`, gated on observability plate). Skill count:
+150 → 153. Microck SHA unchanged
+(`8f5c83174f7aa683b4ddc7433150471983b93131`). All adoptions ≤ 200
+lines under Sunset Policy. `task lint-skills` + `lint-marketplace`
+clean; provenance + marketplace + counts in sync.
 
 ## Risk register
 
