@@ -318,6 +318,33 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.29.0](https://github.com/event4u-app/agent-config/compare/1.28.0...1.29.0) (2026-05-09)
+
+### Features
+
+* **skills:** port 3 Microck skills under Sunset Policy (P2.2, P2.3, P2.5) ([78fdfeb](https://github.com/event4u-app/agent-config/commit/78fdfebf5f515e67072f9cb4a75ca7f56ca9b1b2))
+* **skills:** port error-handling-patterns from Microck under Sunset Policy (P1.5) ([c24589c](https://github.com/event4u-app/agent-config/commit/c24589c2c5e27e7182061660b98cca3d1e97fbae))
+* **skills:** port mcp-builder from Microck (P1.4) ([b192b38](https://github.com/event4u-app/agent-config/commit/b192b38c58245d7e8d33bdf5d577e41ba968cba5))
+* **skills:** port repomix from Microck (P1.3) ([825fd17](https://github.com/event4u-app/agent-config/commit/825fd175082b78fb2fd6250befb8cea86f1c3a0d))
+* **skills:** port testing-anti-patterns from Microck (P1.2) ([8bca47f](https://github.com/event4u-app/agent-config/commit/8bca47fab1db5811eada9bbb1f9545ebd1a68a4d))
+* **skills:** port defense-in-depth from Microck (P1.1) ([fb9bbb1](https://github.com/event4u-app/agent-config/commit/fb9bbb1e74890a63a1499a22ead0e79ab0a73ed6))
+
+### Bug Fixes
+
+* **refs:** point sibling roadmap link to archived microck-harvest ([92586a9](https://github.com/event4u-app/agent-config/commit/92586a9339e66b57121356ff644f2e3a706050e0))
+
+### Documentation
+
+* **microck-harvest:** record P2/P3 verdicts in provenance + analysis ([5200097](https://github.com/event4u-app/agent-config/commit/5200097a42bca40df03f4ecb232fea269ce6aacf))
+
+### Chores
+
+* **microck-harvest:** regenerate ownership matrix for 3 new skills ([855e331](https://github.com/event4u-app/agent-config/commit/855e3310729b0f359425c3c3e75541d98162cab4))
+* **microck-harvest:** regenerate index + catalog for 153 skills ([1d5f265](https://github.com/event4u-app/agent-config/commit/1d5f2654fbf2997a1465e965097eff8bce9f7ca2))
+* **roadmap:** close + archive microck-harvest (Phase 2 + 3 \u2014 100%) ([48c18f0](https://github.com/event4u-app/agent-config/commit/48c18f07a68342782d7d079e2371a613ee7a7c2e))
+* **microck-harvest:** register 3 new skills in marketplace + counts (150 \u2192 153) ([0e8b351](https://github.com/event4u-app/agent-config/commit/0e8b3518853add4b28e1e45f5babc550eaa974d1))
+* **microck-harvest:** suite integration + Phase 1 closure (P1.6) ([6450e9d](https://github.com/event4u-app/agent-config/commit/6450e9deea5806f4f8bfcddf12df9eeeae37c9cb))
+
 ## [1.28.0](https://github.com/event4u-app/agent-config/compare/1.27.0...1.28.0) (2026-05-09)
 
 ### Features
