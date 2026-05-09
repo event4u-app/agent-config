@@ -34,6 +34,10 @@ Do NOT use when:
 
 ## Procedure: Run the gate before each anti-pattern
 
+### 1. Inspect the diff before any new mock
+
+Before writing or extending a test, **inspect** the code under test and identify which collaborators are real, which are mocked, and which produce side effects the assertion depends on. Open the file, read the dependency chain, and write the chain down. Do not start mocking until the chain is on paper.
+
 ### Anti-Pattern 1 — Asserting on mock elements
 
 Symptom: `expect(screen.getByTestId('sidebar-mock')).toBeInTheDocument()` or `$this->assertSee('mock-sidebar')`. Test passes when the mock is present, fails when it is not — proves nothing about the component.
@@ -102,6 +106,8 @@ BEFORE creating a mock response object:
   3. If the shape is unknown, capture a real response into `tests/fixtures/` instead of inventing one.
 ```
 
+**Concrete capture tools** for recording the real shape: `curl -s <url> | jq '.'` against a staging endpoint, Postman's "Save Response", Laravel's `Http::fake()` in record mode, or a Playwright network-trace export. Filter the captured payload with `jq` / `grep` to keep only the fields your fixture documents — **do not** dump unredacted secrets into `tests/fixtures/`.
+
 ### Anti-Pattern 5 — Tests as an afterthought
 
 Symptom: "Implementation complete, ready for testing." Implementation went in without tests. TDD was skipped, anti-patterns 1–4 are now likely.
@@ -120,6 +126,7 @@ Gate: a feature is not complete until a failing-then-passing test cycle ran for 
 - A "complete" mock that mirrors a v1 API silently rots when v2 ships — link mock fixtures to a real recorded response and re-record on schema changes.
 - Layer 3 environment guards from [`defense-in-depth`](../defense-in-depth/SKILL.md) often expose anti-pattern 2: if a production guard fires only in tests, the test setup is wrong, not the guard.
 - Long mock setups (> 50% of the test) are a signal that integration tests would be simpler — consider it before piling on more mocks.
+- **Diagnose, do not brute-force.** If a test fails after a mock change, **never guess** at another mock tweak — drop a debugger / Xdebug breakpoint at the seam, observe the real call shape, then mock minimally. Two retries without a root-cause hypothesis = STOP and rethink.
 
 ## Do NOT
 
