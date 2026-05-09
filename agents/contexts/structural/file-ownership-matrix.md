@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **377**
-- Edges (incl. self-WRITE): **975**
+- Files indexed: **383**
+- Edges (incl. self-WRITE): **999**
 
 ## READ_ONLY edges
 
@@ -326,6 +326,9 @@
 | `.agent-src.uncompressed/rules/user-interaction.md` | `contexts/communication/rules-auto/user-interaction-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/verify-before-complete.md` | `.agent-src.uncompressed/contexts/execution/verification-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/verify-before-complete.md` | `contexts/execution/verification-mechanics.md` | `load_context` | 1 |
+| `.agent-src.uncompressed/skills/accessibility-auditor/SKILL.md` | `.agent-src.uncompressed/skills/fe-design/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/accessibility-auditor/SKILL.md` | `.agent-src.uncompressed/skills/tailwind-engineer/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/accessibility-auditor/SKILL.md` | `.agent-src.uncompressed/skills/ui-component-architect/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/adr-create/SKILL.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/agent-docs-writing/SKILL.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/agent-docs-writing/SKILL.md` | `.agent-src.uncompressed/skills/adr-create/SKILL.md` | `body_link` | 1 |
@@ -402,6 +405,10 @@
 | `.agent-src.uncompressed/skills/flux/SKILL.md` | `.agent-src.uncompressed/skills/existing-ui-audit/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/flux/SKILL.md` | `.agent-src.uncompressed/skills/fe-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/flux/SKILL.md` | `.agent-src.uncompressed/skills/livewire/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/form-handler/SKILL.md` | `.agent-src.uncompressed/skills/accessibility-auditor/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/form-handler/SKILL.md` | `.agent-src.uncompressed/skills/fe-design/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/form-handler/SKILL.md` | `.agent-src.uncompressed/skills/laravel-validation/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/form-handler/SKILL.md` | `.agent-src.uncompressed/skills/tailwind-engineer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `.agent-src.uncompressed/skills/dcf-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `.agent-src.uncompressed/skills/rice-prioritization/SKILL.md` | `body_link` | 1 |
@@ -441,6 +448,9 @@
 | `.agent-src.uncompressed/skills/laravel-notifications/SKILL.md` | `.agent-src.uncompressed/skills/laravel-mail/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/laravel-reverb/SKILL.md` | `.agent-src.uncompressed/skills/websocket/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/learning-to-rule-or-skill/SKILL.md` | `.agent-src.uncompressed/skills/markitdown/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/livewire-architect/SKILL.md` | `.agent-src.uncompressed/skills/blade-ui/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/livewire-architect/SKILL.md` | `.agent-src.uncompressed/skills/livewire/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/livewire-architect/SKILL.md` | `.agent-src.uncompressed/skills/react-shadcn-ui/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/livewire/SKILL.md` | `.agent-src.uncompressed/skills/blade-ui/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/livewire/SKILL.md` | `.agent-src.uncompressed/skills/existing-ui-audit/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/livewire/SKILL.md` | `.agent-src.uncompressed/skills/fe-design/SKILL.md` | `body_link` | 1 |
@@ -463,6 +473,8 @@
 | `.agent-src.uncompressed/skills/pest-testing/SKILL.md` | `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/pest-testing/SKILL.md` | `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/pest-testing/SKILL.md` | `.agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/playwright-architect/SKILL.md` | `.agent-src.uncompressed/skills/mobile-e2e-strategy/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/playwright-architect/SKILL.md` | `.agent-src.uncompressed/skills/playwright-testing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/po-discovery/SKILL.md` | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/prompt-engineering-patterns/SKILL.md` | `.agent-src.uncompressed/skills/async-python-patterns/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/prompt-engineering-patterns/SKILL.md` | `.agent-src.uncompressed/skills/mcp-builder/SKILL.md` | `body_link` | 1 |
@@ -574,6 +586,10 @@
 | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncompressed/skills/playwright-testing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncompressed/skills/quality-tools/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/tailwind-engineer/SKILL.md` | `.agent-src.uncompressed/skills/accessibility-auditor/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/tailwind-engineer/SKILL.md` | `.agent-src.uncompressed/skills/existing-ui-audit/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/tailwind-engineer/SKILL.md` | `.agent-src.uncompressed/skills/fe-design/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/tailwind-engineer/SKILL.md` | `.agent-src.uncompressed/skills/ui-component-architect/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `.agent-src.uncompressed/skills/adr-create/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `.agent-src.uncompressed/skills/developer-like-execution/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `.agent-src.uncompressed/skills/pest-testing/SKILL.md` | `body_link` | 1 |
@@ -601,6 +617,8 @@
 | `.agent-src.uncompressed/skills/token-optimizer/SKILL.md` | `.agent-src.uncompressed/rules/token-efficiency.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/token-optimizer/SKILL.md` | `.agent-src.uncompressed/rules/token-optimizer-maintenance.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/token-optimizer/SKILL.md` | `.agent-src.uncompressed/skills/rtk-output-filtering/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/ui-component-architect/SKILL.md` | `.agent-src.uncompressed/skills/existing-ui-audit/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/ui-component-architect/SKILL.md` | `.agent-src.uncompressed/skills/tailwind-engineer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md` | `.agent-src.uncompressed/skills/dcf-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md` | `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md` | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `body_link` | 1 |
@@ -619,5 +637,5 @@
 | `context` | 31 |
 | `persona` | 13 |
 | `rule` | 60 |
-| `skill` | 170 |
+| `skill` | 176 |
 

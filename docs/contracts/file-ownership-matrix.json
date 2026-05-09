@@ -1272,6 +1272,12 @@
       ],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/accessibility-auditor/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/adr-create/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1584,6 +1590,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/form-handler/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/funnel-analysis/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1728,6 +1740,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/livewire-architect/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/livewire/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1855,6 +1873,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/php-service/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/playwright-architect/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -2184,6 +2208,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/tech-debt-tracker/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2245,6 +2275,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/traefik/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/ui-component-architect/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -5942,6 +5978,34 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/skills/accessibility-auditor/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/accessibility-auditor/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/accessibility-auditor/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/fe-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/accessibility-auditor/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/accessibility-auditor/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/ui-component-architect/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/adr-create/SKILL.md",
       "target": ".agent-src.uncompressed/contexts/contracts/frugality-charter.md",
       "type": "READ_ONLY",
@@ -6838,6 +6902,41 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/skills/form-handler/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/accessibility-auditor/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/form-handler/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/fe-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/form-handler/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/form-handler/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/form-handler/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/laravel-validation/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/form-handler/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/funnel-analysis/SKILL.md",
       "target": ".agent-src.uncompressed/skills/dcf-modeling/SKILL.md",
       "type": "READ_ONLY",
@@ -7279,6 +7378,34 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/skills/livewire-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/blade-ui/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/livewire-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/livewire-architect/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/livewire-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/livewire/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/livewire-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/react-shadcn-ui/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/livewire/SKILL.md",
       "target": ".agent-src.uncompressed/skills/blade-ui/SKILL.md",
       "type": "READ_ONLY",
@@ -7585,6 +7712,27 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/playwright-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/mobile-e2e-strategy/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/playwright-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/playwright-architect/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/playwright-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/playwright-testing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/playwright-testing/SKILL.md",
@@ -8742,6 +8890,41 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/accessibility-auditor/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/existing-ui-audit/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/fe-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/ui-component-architect/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/tech-debt-tracker/SKILL.md",
       "target": ".agent-src.uncompressed/skills/tech-debt-tracker/SKILL.md",
       "type": "WRITE",
@@ -9003,6 +9186,27 @@
     {
       "source": ".agent-src.uncompressed/skills/traefik/SKILL.md",
       "target": ".agent-src.uncompressed/skills/traefik/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/ui-component-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/existing-ui-audit/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/ui-component-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/ui-component-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/ui-component-architect/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
