@@ -4,7 +4,7 @@ complexity: lightweight
 
 # Road to chat-history cross-agent hardening
 
-**Status:** IN EXECUTION — Phases 1 & 2 already landed on `main` via the schema-v4 cleanup commits (`364990b` and follow-ups); the test surface is green (117 / 117 in `tests/test_chat_history.py`, 2471 / 2471 across `tests/`). Phase 5 is superseded — the manual capture flow it automated lived in a `PAYLOAD-CAPTURE-GUIDE.md` that was retired together with `road-to-verified-chat-history-platforms.md` (archived 2026-05-05); the docs-verified extractors it would have orchestrated already cover all six target platforms. Phases 3 (smoke-test isolation) and 4 (multi-agent attribution surface) are the live work.
+**Status:** LANDED (2026-05-09) — Phases 1 & 2 landed on `main` via the schema-v4 cleanup commits (`364990b` and follow-ups); Phases 3 (smoke-test isolation) and 4 (multi-agent attribution surface) landed on branch `feat/chat-history-cross-agent-hardening`. Phase 5 is superseded — the manual capture flow it automated lived in a `PAYLOAD-CAPTURE-GUIDE.md` that was retired together with `road-to-verified-chat-history-platforms.md` (archived 2026-05-05); the docs-verified extractors it would have orchestrated already cover all six target platforms. Test surface is green (132 / 132 in `tests/test_chat_history.py`, 2486 / 2486 across `tests/`).
 **Started:** 2026-05-05
 **Trigger:** Cowork session 2026-05-05 (working with Augment in parallel) surfaced cross-agent debt that affects every chat-history consumer — Cowork, Claude Code CLI/IDE, Augment, Cursor, Cline, Windsurf, Gemini CLI:
 
