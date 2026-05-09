@@ -27,8 +27,9 @@ Python tools for skill / persona corpus maintenance:
 | D3 | `audit_persona_coverage.py` | Tier-aware persona-citation matrix (specialist < 3, core < 5 → flag) |
 | D4 | `suggest_skill_for_task.py` | Top-N skill + persona combos with one-line justification (wraps D2 + D3) |
 
-The pilot was gated by **iter-1 AI-Council verdict**
-([`block-d-python-tools-pilot-verdict`](../../agents/council-responses/block-d-python-tools-pilot-verdict.md))
+The pilot was gated by **iter-1 AI-Council verdict** (members:
+claude-sonnet-4-5 + gpt-4o · 2 rounds · 2026-05-01) <!-- council-ref-allowed: ADR decision trace -->
+([`block-d-python-tools-pilot-verdict`](../../agents/council-responses/block-d-python-tools-pilot-verdict.md)) <!-- council-ref-allowed: ADR decision trace -->
 under strict invariants: stdlib-only (internal package imports
 allowed), ≤ 200 LOC per tool, machine-readable output (`--json`),
 embedded `_SAMPLE`, blind-labelled eval corpora, and a kill-switch if
@@ -104,8 +105,9 @@ dir, and the `lint-skill-tools` task entry. Mark this ADR
 
 ## References
 
-- Roadmap: [`road-to-better-skills-and-profiles`](../../agents/roadmaps/road-to-better-skills-and-profiles.md) Block D.
-- Council: [`block-d-python-tools-pilot-verdict`](../../agents/council-responses/block-d-python-tools-pilot-verdict.md).
+- Roadmap: [`road-to-better-skills-and-profiles`](../../agents/roadmaps/archive/road-to-better-skills-and-profiles.md) Block D.
+- Council: [`block-d-python-tools-pilot-verdict`](../../agents/council-responses/block-d-python-tools-pilot-verdict.md). <!-- council-ref-allowed: ADR decision trace -->
+
 - Tools: [`scripts/skill_tools/`](../../scripts/skill_tools/).
 - Linter: [`scripts/lint_skill_tools.py`](../../scripts/lint_skill_tools.py).
 - Corpora + report: [`agents/eval-corpora/block-d/`](../../agents/eval-corpora/block-d/).
