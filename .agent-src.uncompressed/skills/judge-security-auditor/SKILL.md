@@ -1,6 +1,8 @@
 ---
 name: judge-security-auditor
 description: "Use when a diff may introduce security risk — authZ, injection, secrets, unsafe deserialization, SSRF, XSS, mass assignment — dispatched by /review-changes, /do-and-judge, /judge."
+personas:
+  - security-engineer
 source: package
 domain: quality
 ---
