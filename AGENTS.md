@@ -19,8 +19,7 @@ task ci                # full pipeline — green before PR
 - **Package self-orientation** — identity, four-wing cognition map, repo layout, tech stack, key-rules table, telemetry, command-suggester: [`docs/contracts/package-self-orientation.md`](docs/contracts/package-self-orientation.md).
 - **Kernel + Router** — 9 always-loaded Iron-Law rules, tier-1 / tier-2 routing, cost profiles, per-rule char caps enforced by `task lint-rule-budget`: [`kernel-membership`](docs/contracts/kernel-membership.md) + [`rule-router`](docs/contracts/rule-router.md).
 - **Multi-tool projection** — Augment, Claude Code, Cursor, Cline, Windsurf, Gemini CLI, Claude.ai bundle pipeline that ships from `.agent-src/` to consumer surfaces: [`docs/architecture.md`](docs/architecture.md#cloud-bundle-pipeline).
-- **Iron-Law rules when editing this repo** — portability, source-of-truth, skill-quality: [`augment-portability`](.agent-src/rules/augment-portability.md), [`augment-source-of-truth`](.agent-src/rules/augment-source-of-truth.md), [`skill-quality`](.agent-src/rules/skill-quality.md).
-- **Thin-Root contract** governing **this** file (cap, pointer ratio, emergency-triage block) — read before editing AGENTS.md: [`agents-md-thin-root`](.agent-src/skills/agents-md-thin-root/SKILL.md).
+- **Editing this repo** — Iron-Law rules (portability, source-of-truth, skill-quality) and the Thin-Root contract (caps · pointer-ratio · triage block) governing AGENTS.md: [`augment-portability`](.agent-src/rules/augment-portability.md), [`augment-source-of-truth`](.agent-src/rules/augment-source-of-truth.md), [`skill-quality`](.agent-src/rules/skill-quality.md), [`agents-md-thin-root`](.agent-src/skills/agents-md-thin-root/SKILL.md).
 - **Consumer story + architecture deep-dive** — what the package does for installers and how it ships: [`README.md`](README.md), [`docs/architecture.md`](docs/architecture.md).
 
 ## Emergency triage — read this when nothing else is reachable
