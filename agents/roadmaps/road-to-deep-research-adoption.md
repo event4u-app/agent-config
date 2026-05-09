@@ -33,7 +33,9 @@ synthesis, and DROP list live in
   Principles, Critical Thinking, Comparison Matrix) — gated on
   Phase-1 evidence.
 - `/research-deep` + `/research-report` + `validate_json.py` — Python
-  validator and Claude-Desktop path assumptions deferred to Phase 2.
+  validator and Claude-Desktop path assumptions deferred to Phase 2
+  (P2.4 closed: ported as `/research:deep` + `/research:report`,
+  validator replaced by JSON-Schema + `jq` escape hatch).
 - `web-search-agent` persona — vendor-locked routes + Claude Opus
   model id violate `augment-portability`. DROPPED.
 - `output_templates` (ginobefun, 402 lines) — overlaps with
@@ -127,21 +129,60 @@ Phase 1 is the visible plate. Phase 2 + 3 are **out-of-horizon**.
 
 ## Phase 2 — Out-of-horizon (gated on Phase 1 evidence)
 
-- [ ] **P2.1 — `5w2h-analysis` guideline.** Adopt 376-line module.
+- [x] **P2.1 — `5w2h-analysis` guideline.** Adopt 376-line module.
   Cross-link from `refine-ticket`, `bug-investigate`.
-- [ ] **P2.2 — `six-hats` guideline.** Adopt 356-line module. Cross-link
+  **Closure (2026-05-09):** authored as
+  `docs/guidelines/agent-infra/5w2h-analysis.md` (261 lines, under
+  400-line Sunset threshold so no frontmatter required); 7-question
+  framework + Quick / Deep templates + integration cross-links
+  (Critical Thinking, SCQA, Inversion); ADOPT citation footer.
+- [x] **P2.2 — `six-hats` guideline.** Adopt 356-line module. Cross-link
   from `council` orchestrator skill (multi-perspective decision aid).
-- [ ] **P2.3 — `systems-thinking` + `first-principles` +
+  **Closure (2026-05-09):** authored as
+  `docs/guidelines/agent-infra/six-hats.md` (354 lines, under 400-line
+  Sunset threshold); six perspectives (White / Red / Black / Yellow /
+  Green / Blue) with per-hat templates, four usage patterns, and
+  cross-links to `ai-council`, `/council`, plus `first-principles`,
+  `systems-thinking`, `critical-thinking` for the integration map.
+- [x] **P2.3 — `systems-thinking` + `first-principles` +
   `critical-thinking` guidelines.** Triple adopt — small files, high
   ROI as a "decision-reasoning triad" alongside `mental-models` and
   `inversion-thinking`.
-- [ ] **P2.4 — `/research-deep` + `/research-report` (refactored, validator
+- [x] **P2.4 — `/research:deep` + `/research:report` (refactored, validator
   rebuilt).** Rebuild `validate_json.py` as a JSON-Schema reference or
   native PHP-typed classes (no Python runtime). Refactor remaining
   `~/.claude/` paths.
-- [ ] **P2.5 — `output_templates` salvage.** Only if `agent-docs-writing`
+  **Closure (2026-05-09):** ported as cluster sub-commands
+  `.agent-src.uncompressed/commands/research/deep.md` +
+  `.agent-src.uncompressed/commands/research/report.md`. Validator
+  replaced with the JSON-Schema reference at
+  `contexts/contracts/research-schema.md` + `jq -e` well-formedness
+  escape hatch (jq optional, agent skips gracefully). `web-search-agent`
+  persona dropped — native web-search tool only. `generate_report.py`
+  replaced with agent-side rendering + optional `jq` template
+  (`report-template.jq`). Council validation
+  (`agents/council-sessions/research-deep-port.json`, $0.0359 actual)
+  confirmed colon syntax (`/research:deep` · `/research:report`),
+  `--batch-confirm=each|once|auto` flag, and `jq`-template fallback.
+  `command-clusters.md` registry updated (cluster head + 2 subs).
+  `add-items` / `add-fields` intentionally **not** ported.
+- [-] **P2.5 — `output_templates` salvage.** Only if `agent-docs-writing`
   audit reveals a gap — extract Executive Summary + SWOT as
   ≤100-line snippets.
+  **Closure (2026-05-09, DROPPED — audit gate negative):** audited
+  `agent-docs-writing` (256 lines, 8-layer hierarchy + procedure
+  +rules); the skill scopes **doc placement and freshness**, not
+  document templates. Searched the full source tree (`.agent-src.uncompressed/`,
+  `docs/`) for `swot` and `executive summary` — zero hits. Analytical
+  reasoning is already covered by the eight in-tree guidelines
+  (`5w2h-analysis`, `six-hats`, `systems-thinking`, `first-principles`,
+  `critical-thinking`, `mental-models`, `inversion-thinking`,
+  `scqa-framework`); research-report shaping is owned by
+  `/research:report` (P2.4). Adding a 100-line SWOT/Executive-Summary
+  snippet to fill a non-existent gap would inflate the guideline
+  count without ROI. Salvage **not** performed; consistent with the
+  Phase-1 DROP rationale (`output_templates`, 402 lines, dropped for
+  overlap with `agent-docs-writing` + `project-docs`).
 
 ## Phase 3 — Sunset enforcement and periodic rescan (out-of-horizon)
 

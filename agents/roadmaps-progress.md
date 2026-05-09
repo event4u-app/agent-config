@@ -6,10 +6,10 @@
 
 ## Overall
 
-**18 / 268 steps done · 7%**
+**22 / 267 steps done · 8%**
 
 ```text
-███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   7%
+███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 1 | 35 | 35 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-deep-research-adoption.md](roadmaps/road-to-deep-research-adoption.md) | 3 | 14 | 8 | 6 | 0 | 0 | ████░░░░░░ 43% |
+| 2 | [road-to-deep-research-adoption.md](roadmaps/road-to-deep-research-adoption.md) | 3 | 14 | 3 | 10 | 0 | 1 | ████████░░ 77% |
 | 3 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-event-driven-discipline.md](roadmaps/road-to-event-driven-discipline.md) | 12 | 42 | 42 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-feedback-followups.md](roadmaps/road-to-feedback-followups.md) | 6 | 13 | 2 | 11 | 0 | 0 | ████████░░ 85% |
@@ -42,12 +42,12 @@
 
 ### [road-to-deep-research-adoption.md](roadmaps/road-to-deep-research-adoption.md)
 
-**Road to Deep-Research Adoption** — 6 / 14 done (43%)
+**Road to Deep-Research Adoption** — 10 / 13 done (77%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Five-artifact adoption plate (READY) | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 2 | Out-of-horizon (gated on Phase 1 evidence) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Out-of-horizon (gated on Phase 1 evidence) | ✅ done | 0 | 4 | 0 | 1 | 100% |
 | 3 | Sunset enforcement and periodic rescan (out-of-horizon) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md)
