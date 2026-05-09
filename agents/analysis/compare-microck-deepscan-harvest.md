@@ -69,6 +69,26 @@ Promoted only if Phase 1 lands clean and the Sunset Policy holds.
 | `pdf-processing`, `docx`, `xlsx`, `excel-analysis` | **Superseded by `road-to-markitdown-adoption`** (Phase 1 ready). markitdown-mcp covers all four formats with one tool. Adopting these would create double-maintenance. |
 | `competitive-ads-extractor` | Strong skill (8 KB) but belongs in `road-to-gtm-and-growth` Wing-3 plate, not the engineering harvest. Cross-referenced there. |
 
+## Phase 2 verdicts (executed 2026-05-09; six-week stability gate dropped at user direction)
+
+| Step | Skill | Verdict | Rationale |
+|---|---|---|---|
+| **P2.1** | `code-review-excellence` (520 lines) | **DROP** | No delta. Local agent-dispatched suite (`judge-bug-hunter`, `judge-code-quality`, `judge-security-auditor`, `judge-test-coverage`) plus `requesting-code-review`, `receiving-code-review`, `adversarial-review`, `review-routing`, `skill-reviewer`, `readme-reviewer`, `design-review`, `authz-review`, `code-review` already cover every functional review need. Microck source is generic human-mentoring content (mindset, feedback phrasing, severity labels, language-specific checklists) — pure prose, no agent-dispatch hooks. Adopting would dilute the local dispatch surface without adding novel content. |
+| **P2.2** | `async-python-patterns` (694 lines) | **ADOPT under Sunset Policy** | Local has zero Python-async coverage. Source is a portable pattern cookbook. Sunset Policy mandatory at 694 lines: keep ~150-line decision framework + pitfalls; externalize cookbook to `https://docs.python.org/3/library/asyncio.html` plus library docs (`aiohttp`, `httpx`, `trio`). |
+| **P2.3** | `secrets-management` (346 lines) | **ADOPT delta** | Real delta vs local `aws-infrastructure` (only AWS Secrets Manager) and `security-audit` (high-level, no tooling depth): Vault, Azure Key Vault, GCP Secret Manager, GitHub/GitLab CI secrets, External Secrets Operator (k8s), rotation patterns, secret-scanning gates (TruffleHog, gitleaks, pre-commit). Sunset Policy applies (patterns/guidelines style): keep tool-selection decision framework; externalize provider deep-dives. |
+| **P2.4** | `slo-implementation` + `distributed-tracing` | **DEFER** (architectural prereq, not time gate) | Roadmap explicit: "Queue behind an `observability` plate; not before." User dropped the six-week time gate, but the architectural prerequisite is independent — these would be orphan skills without an observability cluster (`grafana`, `logging-monitoring`, `dashboard-design` exist; SLI/SLO + tracing don't form a coherent plate without `metrics-collection`, `alerting-policy`, `incident-response`). Mark `[~]` deferred with prereq note; reopen when an observability plate ships. |
+| **P2.5** | `prompt-engineering-patterns` (201 lines) | **ADOPT** | Portable (zero project-specific refs). Distinct from local `prompt-optimizer` (end-user prompt polish, "Lyra" persona) and `refine-prompt` (engine-inbound ticket refinement) — Microck skill is **production LLM patterns** (few-shot, CoT, system-prompt design, template systems). Under 400 lines, no Sunset Policy needed; keep concise. |
+
+**Council note.** AI Council externals were unavailable for this Phase-2 pass (no `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` configured at the host). Per `ai-council` rule "Externals down → surface and skip; never substitute the host as a reviewer", the verdicts above are **roadmap-criteria-driven** (each step's roadmap acceptance criteria mapped to the deep-scan evidence), not council-led. The adoption budget remains within the original 5-skill cap (3 adopt + 1 drop + 2 defer).
+
+## Phase 3 verdicts (executed 2026-05-09)
+
+| Step | Action | Result |
+|---|---|---|
+| **P3.1 — Sunset audit pass** | Line-count + frontmatter audit on all 8 Microck adoptions | All Sunset-Policy candidates carry `refresh_trigger` + `sunset_criterion` frontmatter; line counts verified under target. |
+| **P3.2 — Microck periodic rescan** | Re-fetched `Microck/ordinary-claude-skills@HEAD` | Same SHA `8f5c83174f7aa683b4ddc7433150471983b93131`; no net-new candidates since 2026-05-05. Next rescan trigger: SHA change OR 6-month wall-clock from this audit, whichever first. |
+| **P3.3 — Cross-suite signal capture** | Cross-link audit | `prompt-engineering-patterns` flagged for `road-to-mcp-server` (LLM tool design). `async-python-patterns` flagged for `road-to-mcp-server` (FastMCP server patterns). `secrets-management` cross-linked with `aws-infrastructure` + `security-audit`. No double-adoption risk. |
+
 ## Reference Guideline Sunset Policy (council mitigation)
 
 Council surfaced the **biggest harvest risk**: adopting 5 ≥400-line
