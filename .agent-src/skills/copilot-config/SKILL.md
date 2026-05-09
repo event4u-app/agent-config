@@ -2,6 +2,7 @@
 name: copilot-config
 description: "Use when configuring GitHub Copilot — copilot-instructions.md, PR review patterns, output optimization — even when the user just says 'tune Copilot' or 'why is Copilot commenting on X'."
 source: package
+domain: process
 ---
 
 # Copilot Skill

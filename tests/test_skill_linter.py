@@ -24,6 +24,7 @@ def test_valid_skill_passes(tmp_path: Path) -> None:
 name: example
 description: "Use when testing a concrete workflow."
 source: project
+domain: process
 ---
 
 # example
@@ -67,6 +68,7 @@ def test_complete_skill_passes(tmp_path: Path) -> None:
 name: example
 description: "Use when testing."
 source: project
+domain: process
 ---
 
 # example

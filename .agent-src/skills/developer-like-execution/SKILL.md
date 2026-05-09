@@ -2,6 +2,7 @@
 name: developer-like-execution
 description: "Use when implementing, debugging, refactoring, or reviewing code — enforces the think → analyze → verify → execute workflow — even when the user just says 'implement X' without naming it."
 source: package
+domain: process
 execution:
   type: assisted
   handler: internal

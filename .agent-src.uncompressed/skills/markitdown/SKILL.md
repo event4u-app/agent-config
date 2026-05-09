@@ -4,6 +4,7 @@ description: "Use when converting PDF, DOCX, XLSX, PPTX, EPUB, images, or audio 
 status: active
 tier: senior
 source: package
+domain: process
 ---
 
 > **Pinned upstream:** `markitdown-mcp@0.0.1a4` (PyPI, released 2025-05-23, MIT, Beta). Re-verify per minor bump.

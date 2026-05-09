@@ -2,6 +2,7 @@
 name: playwright-testing
 description: "Use when writing Playwright E2E tests — browser automation, visual regression testing, Page Objects, fixtures, and reliable test patterns."
 source: package
+domain: quality
 ---
 
 # playwright-testing

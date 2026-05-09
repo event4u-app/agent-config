@@ -2,6 +2,7 @@
 name: project-analysis-core
 description: "Use for the universal deep-analysis workflow: project discovery, version resolution, docs loading, architecture mapping, execution flow, and package research."
 source: package
+domain: discovery
 ---
 
 # project-analysis-core

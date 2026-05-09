@@ -2,6 +2,7 @@
 name: multi-tenancy
 description: "Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations."
 source: package
+domain: engineering
 ---
 
 # multi-tenancy

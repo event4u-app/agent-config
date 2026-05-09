@@ -2,6 +2,7 @@
 name: pest-testing
 description: "Use when writing, generating, or improving Pest tests for Laravel — clear intent, good coverage, maintainable structure, and alignment with project testing conventions."
 source: package
+domain: quality
 ---
 
 # pest-testing

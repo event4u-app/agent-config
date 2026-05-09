@@ -2,6 +2,7 @@
 name: sequential-thinking
 description: "ONLY when user explicitly requests: step-by-step reasoning, structured problem decomposition, or iterative analysis. NOT for regular coding tasks."
 source: package
+domain: process
 ---
 
 # sequential-thinking

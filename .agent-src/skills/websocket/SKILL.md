@@ -2,6 +2,7 @@
 name: websocket
 description: "Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'."
 source: package
+domain: engineering
 ---
 
 # websocket

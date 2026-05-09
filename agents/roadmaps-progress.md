@@ -6,17 +6,17 @@
 
 ## Overall
 
-**1 / 199 steps done · 1%**
+**5 / 199 steps done · 3%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   1%
+█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   3%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 1 | 35 | 35 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md) | 1 | 35 | 31 | 4 | 0 | 0 | █░░░░░░░░░ 11% |
 | 2 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md) | 1 | 26 | 26 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -31,11 +31,11 @@
 
 ### [road-to-better-skills-and-profiles.md](roadmaps/road-to-better-skills-and-profiles.md)
 
-**Road to Better Skills (Thinking Layer)** — 0 / 35 done (0%)
+**Road to Better Skills (Thinking Layer)** — 4 / 35 done (11%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Thinking Layer execution | ⬜ not started | 35 | 0 | 0 | 0 | 0% |
+| 1 | Thinking Layer execution | 🟡 in progress | 31 | 4 | 0 | 0 | 11% |
 
 ### [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md)
 

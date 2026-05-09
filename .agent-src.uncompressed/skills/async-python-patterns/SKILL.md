@@ -2,6 +2,7 @@
 name: async-python-patterns
 description: "Use when writing Python asyncio code — picking between gather / TaskGroup / wait, structured concurrency, timeouts, cancellation, sync-bridging — decision framework only, cookbook externalized."
 source: package
+domain: engineering
 status: active
 refresh_trigger: "Python ships a new structured-concurrency primitive (post-TaskGroup), OR ≥30% of cited upstream cookbook examples become deprecated, OR the cited libraries (aiohttp, httpx, anyio, trio) cut a major version with breaking async surface changes."
 sunset_criterion: "When `https://docs.python.org/3/library/asyncio.html` ships an in-tree decision framework AND consumer projects no longer cite this skill in PR reviews for two consecutive review cycles."

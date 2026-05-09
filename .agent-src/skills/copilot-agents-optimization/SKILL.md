@@ -2,6 +2,7 @@
 name: copilot-agents-optimization
 description: "Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience."
 source: package
+domain: process
 execution:
   type: assisted
   handler: internal

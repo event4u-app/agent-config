@@ -2,6 +2,7 @@
 name: api-endpoint
 description: "Use when the user says "create endpoint", "new API route", or "add controller". Creates a complete endpoint with Controller, FormRequest, Resource, route, and OpenAPI docs."
 source: package
+domain: engineering
 ---
 
 # api-endpoint

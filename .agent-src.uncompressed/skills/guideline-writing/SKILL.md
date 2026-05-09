@@ -2,6 +2,7 @@
 name: guideline-writing
 description: "Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'."
 source: package
+domain: process
 ---
 
 <!-- cloud_safe: degrade -->

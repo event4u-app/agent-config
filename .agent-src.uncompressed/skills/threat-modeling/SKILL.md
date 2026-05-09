@@ -2,6 +2,7 @@
 name: threat-modeling
 description: "Use when adding auth, webhooks, uploads, queues, secrets, tenant boundaries, or public endpoints — produces trust boundaries + abuse cases mapped to files, BEFORE implementation."
 source: package
+domain: quality
 council_depth: deep
 ---
 

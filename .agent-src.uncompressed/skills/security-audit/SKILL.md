@@ -2,6 +2,7 @@
 name: security-audit
 description: "ONLY when user explicitly requests: security audit, vulnerability scan, or penetration test review. NOT for regular feature work."
 source: package
+domain: quality
 ---
 
 # security-audit

@@ -2,6 +2,7 @@
 name: subagent-orchestration
 description: "Use when orchestrating implementer/judge subagents — seven modes (do-and-judge ±two-stage, do-in-steps/parallel/worktrees, do-competitively, judge-with-debate) — models from .agent-settings.yml."
 source: package
+domain: process
 ---
 
 # subagent-orchestration

@@ -23,6 +23,7 @@
 | `name` | string | `^[a-z][a-z0-9-]*$` | Must match the parent directory name. |
 | `description` | string | ≤ 200 chars, starts with `Use when` or `ONLY when` | Loaded into every system prompt; keep it a trigger, not a summary. |
 | `source` | enum | `package` \| `project` | `project` exists for 3 project-owned skills; default is `package`. |
+| `domain` | enum | `engineering` \| `product` \| `quality` \| `devops` \| `process` \| `discovery` | Classification axis for routing / inventory. See [`docs/contracts/skill-domains.md`](../../docs/contracts/skill-domains.md) for scope statements and exemplars. Exactly one. |
 
 ### Optional
 
@@ -50,6 +51,7 @@
 name: adversarial-review
 description: "ONLY when user explicitly requests adversarial review…"
 source: package
+domain: quality
 ```
 
 ## rules — `.agent-src.uncompressed/rules/*.md`

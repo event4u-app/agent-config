@@ -4,6 +4,7 @@ description: "Wing-4 valuation cognition for a CFO / finance-partner. Use when a
 status: active
 tier: senior
 source: package
+domain: product
 ---
 
 # dcf-modeling

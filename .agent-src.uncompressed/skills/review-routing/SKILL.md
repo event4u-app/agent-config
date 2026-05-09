@@ -2,6 +2,7 @@
 name: review-routing
 description: "Use when preparing a PR description, suggesting reviewers, or flagging risk — produces owner-mapped roles plus historical bug-pattern matches from project-local YAML."
 source: package
+domain: quality
 ---
 
 # review-routing

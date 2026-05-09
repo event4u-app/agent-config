@@ -2,6 +2,7 @@
 name: aws-infrastructure
 description: "Use when working with AWS resources — ECS Fargate, ECR, EFS, Secrets Manager, gomplate templates, multi-env deployments — even when the user says 'deploy to staging' without naming AWS."
 source: package
+domain: devops
 ---
 
 # aws-infrastructure

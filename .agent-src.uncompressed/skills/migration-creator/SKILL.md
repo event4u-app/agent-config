@@ -2,6 +2,7 @@
 name: migration-creator
 description: "Use when the user says "create migration", "add column", or "new table". Creates migrations with correct table prefixes, column naming, and multi-tenant awareness."
 source: package
+domain: engineering
 ---
 
 # migration-creator

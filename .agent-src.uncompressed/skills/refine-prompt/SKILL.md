@@ -6,6 +6,7 @@ personas:
   - senior-engineer
   - ai-agent
 source: package
+domain: product
 execution:
   type: assisted
   handler: internal

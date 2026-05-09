@@ -4,6 +4,7 @@ description: "Use when modeling CAC, LTV, gross-margin payback, or contribution 
 status: active
 tier: senior
 source: package
+domain: product
 ---
 
 # unit-economics-modeling

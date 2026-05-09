@@ -2,6 +2,7 @@
 name: flux
 description: "Use when the project uses `livewire/flux` — dispatched by `directives/ui/{apply,review,polish}.py`. Covers Flux components, slots, variants, and form primitives."
 source: package
+domain: engineering
 ---
 
 # flux

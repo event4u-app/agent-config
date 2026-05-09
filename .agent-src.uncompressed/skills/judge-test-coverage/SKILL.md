@@ -4,6 +4,7 @@ description: "Use when a diff may lack tests — missing assertions, uncovered b
 personas:
   - qa
 source: package
+domain: quality
 ---
 
 # judge-test-coverage

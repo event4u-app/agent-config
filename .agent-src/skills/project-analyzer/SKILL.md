@@ -2,6 +2,7 @@
 name: project-analyzer
 description: "ONLY when user explicitly requests: full project analysis, tech stack detection, or structured analysis documents for agents/analysis/. NOT for regular feature work."
 source: package
+domain: discovery
 ---
 
 # project-analyzer

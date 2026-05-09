@@ -2,6 +2,7 @@
 name: md-language-check
 description: "Use BEFORE saving any .md under .augment/, .agent-src*/, or agents/ — scans umlauts, German function words, and quoted German phrases outside DE:/EN: anchor blocks. Hard gate per language-and-tone."
 source: package
+domain: process
 execution:
   type: assisted
   handler: shell

@@ -2,6 +2,7 @@
 name: project-analysis-hypothesis-driven
 description: "Use when a bug has multiple plausible causes across layers — competing hypotheses, validation loops, evidence-based conclusions — even when the user just says 'why is this happening?'."
 source: package
+domain: discovery
 ---
 
 # project-analysis-hypothesis-driven

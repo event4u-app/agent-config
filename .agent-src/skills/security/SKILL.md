@@ -2,6 +2,7 @@
 name: security
 description: "Use when applying security best practices — authentication, authorization via Policies, CSRF protection, input sanitization, rate limiting, or secure coding."
 source: package
+domain: quality
 ---
 
 # security

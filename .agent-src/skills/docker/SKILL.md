@@ -2,6 +2,7 @@
 name: docker
 description: "Use when working with Docker — Dockerfile edits, docker-compose services, containers, or the dual-container (fast + Xdebug) setup — even when the user just says 'my container won't start'."
 source: package
+domain: devops
 ---
 
 # docker

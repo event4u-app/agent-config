@@ -4,6 +4,7 @@ description: "Use when decomposing a company objective into team OKRs, auditing 
 status: active
 tier: senior
 source: package
+domain: product
 ---
 
 # okr-tree-modeling
