@@ -20,6 +20,7 @@ commands with a single entry point + sub-command dispatch.
 |---|---|---|
 | `/optimize skills` | `commands/optimize/skills.md` | Audit skills — measure baseline, find duplicates, run linter |
 | `/optimize agents` | `commands/optimize/agents.md` | Audit agent infrastructure — token overhead, rule triggers, AGENTS.md |
+| `/optimize agents-md` | `commands/optimize/agents-md.md` | Refactor `AGENTS.md` to Thin-Root contract — caps, capability bullets, pointer ratio, emergency triage |
 | `/optimize augmentignore` | `commands/optimize/augmentignore.md` | Create or refine `.augmentignore` based on actual stack |
 | `/optimize rtk` | `commands/optimize/rtk.md` | Create or refine project-local rtk filters |
 
@@ -36,8 +37,9 @@ Sub-command names match the locked contract in
 
    > 1. skills — audit skills (find duplicates, run linter)
    > 2. agents — audit agent infrastructure (token overhead, rule triggers)
-   > 3. augmentignore — create or refine `.augmentignore`
-   > 4. rtk — create or refine project-local rtk filters
+   > 3. agents-md — refactor AGENTS.md to Thin-Root contract
+   > 4. augmentignore — create or refine `.augmentignore`
+   > 5. rtk — create or refine project-local rtk filters
 
 ## Rules
 

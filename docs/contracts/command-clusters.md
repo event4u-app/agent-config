@@ -28,7 +28,7 @@ column 1 of this table.
 | Cluster | Phase | Sub-commands | Replaces |
 |---|:-:|---|---|
 | `fix` | 1 | `ci` · `pr` · `pr-bots` · `pr-developers` · `portability` · `refs` · `seeder` | `fix-ci` · `fix-pr-comments` · `fix-pr-bot-comments` · `fix-pr-developer-comments` · `fix-portability` · `fix-references` · `fix-seeder` |
-| `optimize` | 1 | `agents` · `augmentignore` · `rtk` · `skills` | `optimize-agents` · `optimize-augmentignore` · `optimize-rtk-filters` · `optimize-skills` |
+| `optimize` | 1 | `agents` · `agents-md` · `augmentignore` · `rtk` · `skills` | `optimize-agents` · `optimize-augmentignore` · `optimize-rtk-filters` · `optimize-skills` (`agents-md` added 2026-05-09 — focused Thin-Root refactor of `AGENTS.md`, distinct from broader `/optimize agents` audit) |
 | `feature` | 1 | `explore` · `plan` · `refactor` · `roadmap` · `dev` | `feature-explore` · `feature-plan` · `feature-refactor` · `feature-roadmap` · `feature-dev` |
 | `chat-history` | 2 | `show` · `import` · `learn` | `chat-history` (legacy status) — `resume` / `clear` / `checkpoint` removed in `road-to-chat-history-hook-only` (auto-adopt + structural hooks); `import` (verbatim cross-session render) and `learn` (project-improving learning extraction) added in the v4 stateless schema |
 | `agents` | 2 | `audit` · `cleanup` · `prepare` | `agents-audit` · `agents-cleanup` · `agents-prepare` |

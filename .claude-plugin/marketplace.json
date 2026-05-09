@@ -170,6 +170,7 @@
         "./.claude/skills/openapi",
         "./.claude/skills/optimize",
         "./.claude/skills/optimize-agents",
+        "./.claude/skills/optimize-agents-md",
         "./.claude/skills/optimize-augmentignore",
         "./.claude/skills/optimize-prompt",
         "./.claude/skills/optimize-rtk",

@@ -9,6 +9,9 @@ contract from `.agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md`:
   (c) every pointer's *why* clause >= 60 chars
   (d) every pointer target resolves on disk (anchor validity)
   (e) emergency-triage section present with the five canonical questions
+  (f) path-enumeration WARN — bare `path/` bullets without a *why*
+      clause and without a markdown link signal Capability-over-Structure
+      drift; >= 3 such lines emits a WARN (not FAIL).
 
 Exit non-zero on any (a) FAIL, (b)–(e) error. WARN is informational.
 """
@@ -23,6 +26,9 @@ ROOT = Path(__file__).resolve().parent.parent
 QUIET = "--quiet" in sys.argv
 
 LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+PATH_BACKTICK_RE = re.compile(r"`[^`]*/[^`]*`")
+BULLET_RE = re.compile(r"^\s*[-*+]\s+")
+PATH_ENUM_THRESHOLD = 3
 TRIAGE_KEYWORDS = (
     "what is this repo",
     "what language",
@@ -30,6 +36,21 @@ TRIAGE_KEYWORDS = (
     "lint / test / sync",
     "where do the always",
 )
+
+
+def _is_path_enumeration(line: str) -> bool:
+    """A bullet line with a backticked path-like token and no link.
+
+    These lines describe **where** a file lives without explaining
+    **why** the agent should care — the Capabilities-over-Structure
+    Iron Law forbids them in AGENTS.md. We accept up to two such
+    lines (illustration / contrast); >= 3 = warn.
+    """
+    if not BULLET_RE.match(line):
+        return False
+    if LINK_RE.search(line):
+        return False
+    return bool(PATH_BACKTICK_RE.search(line))
 
 
 @dataclass
@@ -113,8 +134,11 @@ def lint_file(t: Target) -> tuple[bool, list[str], list[str]]:
 
     non_blank = prose
     pointer_lines = 0
+    path_enum_lines: list[str] = []
 
     for ln in non_blank:
+        if _is_path_enumeration(ln):
+            path_enum_lines.append(ln.strip())
         m = LINK_RE.search(ln)
         if not m:
             continue
@@ -134,6 +158,15 @@ def lint_file(t: Target) -> tuple[bool, list[str], list[str]]:
         errors.append(
             f"{t.label}: substantive-pointer ratio {ratio:.2f} < 0.40 "
             f"({pointer_lines}/{len(non_blank)} non-blank lines)"
+        )
+
+    # (f) path-enumeration WARN
+    if len(path_enum_lines) >= PATH_ENUM_THRESHOLD:
+        sample = path_enum_lines[0][:80]
+        warnings.append(
+            f"{t.label}: {len(path_enum_lines)} path-enumeration lines "
+            f"(>= {PATH_ENUM_THRESHOLD}) — Capabilities-over-Structure drift; "
+            f"first: {sample!r}"
         )
 
     # (e) emergency-triage block

@@ -33,6 +33,10 @@ Use when:
 
 Augment Code injects `AGENTS.md` verbatim into every workspace prompt. Each kilobyte spent here permanently consumes the 49,512-char workspace-guidelines budget shared with always-rules and auto-rule registry stubs. The Thin-Root pattern keeps the entry point a navigation surface (pointers + intent) and pushes deep detail into files Augment loads on demand via `load_context` or that other tools fetch only when their search retrieves them. Strategic council R2 (2026-05-08, Sonnet 4.5 / Opus 4.1 / gpt-4o / o1) converged on the contract codified below as the minimum guard against AGENTS.md re-bloat.
 
+## Iron Law — Capabilities over Structure
+
+Every entry describes **what** the project does or **where** to learn more — never **where** individual files live. Path lists rot every refactor and poison context; capability pointers survive structural churn. Full anatomy with rewrite recipes, monorepo guidance, and multi-tool symlink strategy: [`agents-md-anatomy`](../../contexts/contracts/agents-md-anatomy.md).
+
 ## The contract — hard caps
 
 | File | FAIL above | WARN above | Target |
@@ -108,6 +112,8 @@ Same procedure, applied to `.agent-src.uncompressed/templates/AGENTS.md`. Hard c
 - **Emergency-triage drift.** Editing the in-file emergency-triage block instead of the canonical `.agent-src.uncompressed/contexts/contracts/emergency-triage-block.md` causes the package-root and consumer-template versions to diverge silently. Always edit the canonical file and let the lint diff pull both back in sync.
 - **Cap inversion under WARN.** A 2,250-char AGENTS.md (above 2,200 WARN, below 2,500 FAIL) is a yellow signal not a green one — every additional sentence raises the probability of the next FAIL. Treat WARN as the spend boundary, not a buffer.
 - **Char-count includes frontmatter.** `wc -c` counts every byte including the YAML preamble, blank lines, and the trailing newline. Stripping a section to "look smaller" without re-running `wc -c` understates the true budget impact.
+- **Path enumeration.** A run of three or more bare `` `path/to/dir/` `` bullets without *why*-clauses is the classic re-bloat pattern. The lint emits a WARN at ≥ 3 such lines. Collapse them into one capability-style pointer — see the recipe in [`agents-md-anatomy § Iron Law`](../../contexts/contracts/agents-md-anatomy.md#iron-law--capabilities-over-structure).
+- **Tool-specific duplicates.** Copy-pasting AGENTS.md into `CLAUDE.md` / `GEMINI.md` / `.cursorrules` doubles the budget cost across tools. Use the symlink-or-stub pattern in [`agents-md-anatomy § Multi-tool symlink strategy`](../../contexts/contracts/agents-md-anatomy.md#multi-tool-symlink-strategy) instead.
 
 ## Output format
 
@@ -125,6 +131,7 @@ Inert on cloud surfaces. The skill governs the package-root `AGENTS.md` and the 
 
 ## See also
 
+- [`agents-md-anatomy`](../../contexts/contracts/agents-md-anatomy.md) — Capabilities-over-Structure Iron Law, multi-tool symlink strategy, monorepo per-package layout, refactor recipe, full gotcha catalog.
 - [`copilot-agents-optimization`](../copilot-agents-optimization/SKILL.md) — sibling skill for `.github/copilot-instructions.md`; runs alongside Thin-Root in `/optimize/agents`.
 - [`agent-docs-writing`](../agent-docs-writing/SKILL.md) — broader documentation-structure context for navigating outboard targets.
 - [`size-enforcement`](../../rules/size-enforcement.md) — covers per-skill / per-rule / per-command size budgets; AGENTS.md caps live in this skill instead.
