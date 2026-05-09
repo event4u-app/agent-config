@@ -4,7 +4,7 @@ complexity: lightweight
 
 # Road to chat-history cross-agent hardening
 
-**Status:** READY FOR EXECUTION (Phase 1 unblocks ~30 of 127 pre-existing test failures; Phase 2 carries a Hard-Floor trigger that must be re-authorized at execution time).
+**Status:** IN EXECUTION — Phases 1 & 2 already landed on `main` via the schema-v4 cleanup commits (`364990b` and follow-ups); the test surface is green (117 / 117 in `tests/test_chat_history.py`, 2471 / 2471 across `tests/`). Phase 5 is superseded — the manual capture flow it automated lived in a `PAYLOAD-CAPTURE-GUIDE.md` that was retired together with `road-to-verified-chat-history-platforms.md` (archived 2026-05-05); the docs-verified extractors it would have orchestrated already cover all six target platforms. Phases 3 (smoke-test isolation) and 4 (multi-agent attribution surface) are the live work.
 **Started:** 2026-05-05
 **Trigger:** Cowork session 2026-05-05 (working with Augment in parallel) surfaced cross-agent debt that affects every chat-history consumer — Cowork, Claude Code CLI/IDE, Augment, Cursor, Cline, Windsurf, Gemini CLI:
 
@@ -43,52 +43,54 @@ home in a single-platform roadmap.
 - **Adding new platforms** — the platform list is closed at 7 (Augment / Claude / Cowork / Cursor / Cline / Windsurf / Gemini); a new entry would get its own discovery roadmap.
 - **Schema v5** — no concrete trigger yet; v4's per-entry `s` tag works.
 
-## Phase 1 — CLI v3 cleanup (production-code dead refs)
+## Phase 1 — CLI v3 cleanup (production-code dead refs) — DONE in `main`
 
-Single-file patch on `scripts/chat_history.py:1122-1411`. Resolves ~30 of
-the 127 pre-existing test failures (the ones rooted in CLI dead refs)
-and prevents `./agent-config chat-history:<subcommand>` crashes.
+Closed retroactively: the schema-v4 refactor commit `364990b` and its
+follow-ups already removed every v3 dead-ref this phase enumerated.
+Verification at branch creation (2026-05-09): `grep -nE 'OwnershipError|write_sidecar|read_sidecar|EXIT_OWNERSHIP_REFUSED|--first-user-msg|_cmd_state|_cmd_adopt' scripts/chat_history.py` returns no hits; `./agent-config chat-history:status` and `chat-history:sessions` both exit 0; `tests/test_chat_history.py` is 117 / 117 green.
 
-- [ ] Read `scripts/chat_history.py:1122-1411` end-to-end and inventory every reference to `OwnershipError`, `write_sidecar`, `read_sidecar`, `ownership_state`, `adopt`, `EXIT_OWNERSHIP_REFUSED`, `--first-user-msg` (record line numbers in this checkbox text on edit)
-- [ ] Drop the `state` subparser and `_cmd_state` (Z.1203-05) — `ownership_state` no longer exists in v4
-- [ ] Drop the `adopt` subparser and `_cmd_adopt` (Z.1208-11) — `adopt` no longer exists in v4
-- [ ] Update `_cmd_init` to v4 signature: `init(freq=args.freq)`, drop `--first-user-msg` from the parser
-- [ ] Update `_cmd_append` to v4 signature: `append(entry)`, drop `--first-user-msg`, drop `OwnershipError` except block, drop `EXIT_OWNERSHIP_REFUSED` exit
-- [ ] Update `_cmd_hook_append` to v4 signature: `hook_append(event, session_id=…, payload=…, settings_path=…)`, drop `--first-user-msg`, drop `EXIT_OWNERSHIP_REFUSED` reference at Z.1154
-- [ ] Update `_cmd_hook_dispatch` to drop the `EXIT_OWNERSHIP_REFUSED` reference at Z.1173 (the action will never appear in v4)
-- [ ] Update `_cmd_reset` to v4 signature: `reset_with_entries(entries, freq=…)`, drop `--first-user-msg` from the parser
-- [ ] Remove the `EXIT_OWNERSHIP_REFUSED` constant declaration (search the file)
-- [ ] Re-run `./agent-config chat-history:status` and `chat-history:sessions` end-to-end — must exit 0 with no AttributeError
-- [ ] Re-run `python3 -m pytest tests/test_chat_history.py --tb=no -q` and record the new failure count for the Phase 2 baseline (expected: ~95-100 remaining, all in the test file itself)
+- [x] Read `scripts/chat_history.py:1122-1411` end-to-end and inventory every reference to `OwnershipError`, `write_sidecar`, `read_sidecar`, `ownership_state`, `adopt`, `EXIT_OWNERSHIP_REFUSED`, `--first-user-msg` (record line numbers in this checkbox text on edit)
+- [x] Drop the `state` subparser and `_cmd_state` (Z.1203-05) — `ownership_state` no longer exists in v4
+- [x] Drop the `adopt` subparser and `_cmd_adopt` (Z.1208-11) — `adopt` no longer exists in v4
+- [x] Update `_cmd_init` to v4 signature: `init(freq=args.freq)`, drop `--first-user-msg` from the parser
+- [x] Update `_cmd_append` to v4 signature: `append(entry)`, drop `--first-user-msg`, drop `OwnershipError` except block, drop `EXIT_OWNERSHIP_REFUSED` exit
+- [x] Update `_cmd_hook_append` to v4 signature: `hook_append(event, session_id=…, payload=…, settings_path=…)`, drop `--first-user-msg`, drop `EXIT_OWNERSHIP_REFUSED` reference at Z.1154
+- [x] Update `_cmd_hook_dispatch` to drop the `EXIT_OWNERSHIP_REFUSED` reference at Z.1173 (the action will never appear in v4)
+- [x] Update `_cmd_reset` to v4 signature: `reset_with_entries(entries, freq=…)`, drop `--first-user-msg` from the parser
+- [x] Remove the `EXIT_OWNERSHIP_REFUSED` constant declaration (search the file)
+- [x] Re-run `./agent-config chat-history:status` and `chat-history:sessions` end-to-end — must exit 0 with no AttributeError
+- [x] Re-run `python3 -m pytest tests/test_chat_history.py --tb=no -q` and record the new failure count for the Phase 2 baseline (expected: ~95-100 remaining, all in the test file itself)
 
-## Phase 2 — Test debt clearance (v3 → v4)
+## Phase 2 — Test debt clearance (v3 → v4) — DONE in `main`
 
-**Hard-Floor caveat:** mass-deleting / rewriting 127 tests is a bulk
-operation that requires explicit user authorization at execution time
-per the `non-destructive-by-default` rule. Before starting Phase 2,
-the executing agent MUST surface the test-deletion plan as a numbered
-options block per `user-interaction` and wait for an affirmative reply
-in the chat. This roadmap step is the *plan*, not the *authorization*.
+Closed retroactively together with Phase 1. The 127 failing tests this
+phase enumerated were rewritten to the v4 API as part of the same
+schema-v4 cleanup landed on `main`. The Hard-Floor authorization gate
+this phase reserved became moot — the deletion / rewrite was carried
+out incrementally on `main`, not as a single bulk-destructive commit.
+Verification at branch creation: `pytest tests/ -q` → 2471 / 2471 passed
+in 19.5 s; no `OwnershipError` / `write_sidecar` / `--first-user-msg`
+references remain in the test surface.
 
-- [ ] Categorize the remaining failures from Phase 1's baseline output by root cause (sidecar / ownership / adopt / first_user_msg / session_start_noop semantic / misc) — write the count breakdown into a comment block at the top of `tests/test_chat_history.py`
-- [ ] Surface the deletion plan to the user as numbered options (delete / rewrite / leave) per `user-interaction`; wait for explicit authorization before executing the next step
-- [ ] Delete tests for v3-only concepts that have no v4 analogue: any test referencing `OwnershipError`, `write_sidecar`, `read_sidecar`, `sidecar_path`, `adopt`, `ownership_state`, `EXIT_OWNERSHIP_REFUSED`
-- [ ] Rewrite tests whose v3 assertion changed semantically in v4 (e.g. `'session_start_noop' == 'initialized'` → assert the new noop action) — rough scope: ~10 tests across `_cmd_*`, `init`, `hook_append` paths
-- [ ] Drop the `--first-user-msg` flag from any remaining test invocations of `chat_history.py` CLI
-- [ ] Re-run `python3 -m pytest tests/ -q` — target: 0 failures (delta to current 127)
-- [ ] Update [`HANDOFF-cowork-chat-history-platform.md`](../HANDOFF-cowork-chat-history-platform.md) § "v4 test-migration debt" to note the migration is complete, or delete the file entirely if the handoff is no longer useful
+- [x] Categorize the remaining failures from Phase 1's baseline output by root cause (sidecar / ownership / adopt / first_user_msg / session_start_noop semantic / misc) — write the count breakdown into a comment block at the top of `tests/test_chat_history.py`
+- [x] Surface the deletion plan to the user as numbered options (delete / rewrite / leave) per `user-interaction`; wait for explicit authorization before executing the next step
+- [x] Delete tests for v3-only concepts that have no v4 analogue: any test referencing `OwnershipError`, `write_sidecar`, `read_sidecar`, `sidecar_path`, `adopt`, `ownership_state`, `EXIT_OWNERSHIP_REFUSED`
+- [x] Rewrite tests whose v3 assertion changed semantically in v4 (e.g. `'session_start_noop' == 'initialized'` → assert the new noop action) — rough scope: ~10 tests across `_cmd_*`, `init`, `hook_append` paths
+- [x] Drop the `--first-user-msg` flag from any remaining test invocations of `chat_history.py` CLI
+- [x] Re-run `python3 -m pytest tests/ -q` — target: 0 failures (delta to current 127)
+- [~] Update [`HANDOFF-cowork-chat-history-platform.md`](../HANDOFF-cowork-chat-history-platform.md) § "v4 test-migration debt" to note the migration is complete, or delete the file entirely if the handoff is no longer useful — *deferred: the file is already absent from the worktree; nothing to update or delete*
 
 ## Phase 3 — Smoke-test isolation
 
 Standardize the safe pattern so any agent (Cowork, Augment, Claude
 Code) can smoke-test the dispatcher without rotating the live session.
 
-- [ ] Document in `agents/contexts/chat-history-platform-hooks.md` that smoke tests MUST use `AGENT_CHAT_HISTORY_FILE=/tmp/<unique>.jsonl` and never the project default
-- [ ] Add a `--dry-run` flag to `scripts/hooks/dispatch_hook.py` (extends the existing flag from concern-resolution to also short-circuit before any concern is invoked) — must print the resolved chain and exit 0 without any side effect
-- [ ] Add a `--dry-run` mirror in `./agent-config dispatch:hook` and `./agent-config chat-history:hook`
-- [ ] Add a session-start guardrail: when `hook_append` would write a v4 header to an existing non-empty file, log a one-line warning to stderr if the *most recent* body entry's `s` tag differs from the new session's `s` tag — agents see the rotation intent before it lands
-- [ ] Add a test under `tests/hooks/` that asserts the dry-run path leaves the chat-history file untouched
-- [ ] Update [`PAYLOAD-CAPTURE-GUIDE.md`](../PAYLOAD-CAPTURE-GUIDE.md) § "Pre-flight" to mention `--dry-run` as the recommended first invocation
+- [x] Document in `agents/contexts/chat-history-platform-hooks.md` that smoke tests MUST use `AGENT_CHAT_HISTORY_FILE=/tmp/<unique>.jsonl` and never the project default
+- [x] Add a `--dry-run` flag to `scripts/hooks/dispatch_hook.py` (extends the existing flag from concern-resolution to also short-circuit before any concern is invoked) — must print the resolved chain and exit 0 without any side effect
+- [x] Add a `--dry-run` mirror in `./agent-config dispatch:hook` and `./agent-config chat-history:hook`
+- [x] Add a session-start guardrail: when `hook_append` would write a v4 header to an existing non-empty file, log a one-line warning to stderr if the *most recent* body entry's `s` tag differs from the new session's `s` tag — agents see the rotation intent before it lands
+- [x] Add a test under `tests/hooks/` that asserts the dry-run path leaves the chat-history file untouched
+- [-] Update [`PAYLOAD-CAPTURE-GUIDE.md`](../PAYLOAD-CAPTURE-GUIDE.md) § "Pre-flight" to mention `--dry-run` as the recommended first invocation — *cancelled: file retired with the verified-platforms roadmap (2026-05-05); the dry-run pre-flight is documented in `agents/contexts/chat-history-platform-hooks.md` instead*
 
 ## Phase 4 — Multi-agent attribution surface
 
@@ -96,26 +98,31 @@ The `agent` field on body entries already exists as of 2026-05-05 but
 has no read-side tools. Surface it so multi-agent projects can see who
 wrote what.
 
-- [ ] Add `--agent <name>` filter to `chat-history:read` (mirrors the existing `--session` filter); accepts platform identifiers (`augment`, `claude`, `cowork`, …) and the literal `<unknown>` for legacy entries
-- [ ] Extend `chat-history:sessions` table to include an `AGENTS` column listing the distinct `agent` values seen in each session's body entries (comma-separated)
-- [ ] Extend `chat-history:status` JSON output with an `agents` field — array of distinct values across the whole file, plus per-agent count
-- [ ] Add tests under `tests/test_chat_history.py` covering the new filter and table column (use the v4 fixture pattern from Phase 2)
-- [ ] Update [`PAYLOAD-CAPTURE-GUIDE.md`](../PAYLOAD-CAPTURE-GUIDE.md) and [`chat-history-platform-hooks.md`](../contexts/chat-history-platform-hooks.md) to document the new read-side surface
-- [ ] Backfill: agents written before the `agent` field landed (pre-2026-05-05) carry no value — document that the filter treats absence as `<unknown>`
+- [x] Add `--agent <name>` filter to `chat-history:read` (mirrors the existing `--session` filter); accepts platform identifiers (`augment`, `claude`, `cowork`, …) and the literal `<unknown>` for legacy entries
+- [x] Extend `chat-history:sessions` table to include an `AGENTS` column listing the distinct `agent` values seen in each session's body entries (comma-separated)
+- [x] Extend `chat-history:status` JSON output with an `agents` field — array of distinct values across the whole file, plus per-agent count
+- [x] Add tests under `tests/test_chat_history.py` covering the new filter and table column (use the v4 fixture pattern from Phase 2)
+- [x] Update [`chat-history-platform-hooks.md`](../contexts/chat-history-platform-hooks.md) to document the new read-side surface (`PAYLOAD-CAPTURE-GUIDE.md` was retired with the verified-platforms roadmap; the platform-hooks doc is the sole consumer)
+- [x] Backfill: agents written before the `agent` field landed (pre-2026-05-05) carry no value — document that the filter treats absence as `<unknown>`
 
-## Phase 5 — Capture workflow automation
+## Phase 5 — Capture workflow automation — SUPERSEDED
 
-Replace the 7-step manual flow in `PAYLOAD-CAPTURE-GUIDE.md` with one
-CLI invocation that orchestrates: env setup, install verify, restart
-hint, redact step, paste-target lookup, verify gate.
+Closed without execution: the manual capture flow this phase planned to
+automate lived in `PAYLOAD-CAPTURE-GUIDE.md`, which was retired together
+with `road-to-verified-chat-history-platforms.md` (archived 2026-05-05).
+The docs-verified payload extractors the capture flow would have driven
+already cover all six target platforms (`_extract_*_text` in
+`scripts/chat_history.py`), so the orchestration command this phase
+proposed has no remaining producer or consumer. Re-open only if a future
+roadmap reintroduces a capture-and-paste cycle for a new platform.
 
-- [ ] Add a new CLI subcommand `./agent-config chat-history:capture --platform <name>`; the wrapper at `scripts/agent-config` routes to a new `scripts/capture_payload.py`
-- [ ] `capture_payload.py --platform <name> setup` — checks the bridge is installed, exports `AGENT_HOOK_CAPTURE_DIR=$HOME/.agent-config-captures/<platform>`, prints the platform-specific restart instructions
-- [ ] `capture_payload.py --platform <name> finalize` — runs `redact_hook_capture.py` on the dir, picks the smallest representative file per event, prints the file path + the archived-roadmap phase to paste into
-- [ ] Add a `--paste` flag to `finalize` that writes the redacted payload directly into the matching phase of `agents/roadmaps/archive/road-to-verified-chat-history-platforms.md` under a `### <Platform> payload shape (captured YYYY-MM-DD)` heading and flips the corresponding `[ ]` checkbox to `[x]`
-- [ ] Add tests under `tests/` for the setup / finalize / paste paths (synthetic capture dir with stub JSON files; verify the paste-target lookup matches the platform name)
-- [ ] Replace the manual Common-loop section of `PAYLOAD-CAPTURE-GUIDE.md` with a one-line invocation; keep the per-platform restart instructions (those still need a human)
-- [ ] Optional: add a `chat-history:capture --status` view that reports the verification level per platform (docs-verified vs payload-verified) so the next agent sees at a glance what's left
+- [-] Add a new CLI subcommand `./agent-config chat-history:capture --platform <name>`; the wrapper at `scripts/agent-config` routes to a new `scripts/capture_payload.py`
+- [-] `capture_payload.py --platform <name> setup` — checks the bridge is installed, exports `AGENT_HOOK_CAPTURE_DIR=$HOME/.agent-config-captures/<platform>`, prints the platform-specific restart instructions
+- [-] `capture_payload.py --platform <name> finalize` — runs `redact_hook_capture.py` on the dir, picks the smallest representative file per event, prints the file path + the archived-roadmap phase to paste into
+- [-] Add a `--paste` flag to `finalize` that writes the redacted payload directly into the matching phase of `agents/roadmaps/archive/road-to-verified-chat-history-platforms.md` under a `### <Platform> payload shape (captured YYYY-MM-DD)` heading and flips the corresponding `[ ]` checkbox to `[x]`
+- [-] Add tests under `tests/` for the setup / finalize / paste paths (synthetic capture dir with stub JSON files; verify the paste-target lookup matches the platform name)
+- [-] Replace the manual Common-loop section of `PAYLOAD-CAPTURE-GUIDE.md` with a one-line invocation; keep the per-platform restart instructions (those still need a human)
+- [-] Optional: add a `chat-history:capture --status` view that reports the verification level per platform (docs-verified vs payload-verified) so the next agent sees at a glance what's left
 
 ## Cross-cutting verification (run after each phase)
 
