@@ -62,19 +62,19 @@ complexity: structural
 
 ## Phase 5: Reference sweep + verification
 
-- [ ] **P5.1** — Sweep `.agent-src.uncompressed/`, `docs/`, root `AGENTS.md`, consumer template — replace every reference to old paths with new ones. Use the inventory from P1.1 as worklist.
-- [ ] **P5.2** — Run the full verification ladder fresh: `bash scripts/compress.sh --check`, `python3 scripts/check_references.py`, `python3 scripts/lint_agents_md.py`, `python3 scripts/lint_no_new_atomic_commands.py`, `task lint-skills`, `task generate-tools`. Every check green or held at baseline.
-- [ ] **P5.3** — Final regen: `task sync` + `task generate-tools` propagate to `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`. Spot-check that the new commands render in at least two surfaces.
+- [x] **P5.1** — Swept `.agent-src.uncompressed/`, `docs/`, root `AGENTS.md`, consumer template `templates/AGENTS.md`. Updated routing-policy mechanics, agents-md-thin-root SKILL pointer to sibling, copilot-agents-optimization SKILL retarget, slash-command routing context. `docs/catalog.md` + `docs/skills-catalog.md` regenerated via `generate_index.py` + `generate_catalog.py` — all 7 old entries gone, 4 new ones present.
+- [x] **P5.2** — Verification ladder: `compress.sh --check` ✅ · `check_references.py` ✅ · `lint_agents_md.py` ✅ (root + template) · `lint_no_new_atomic_commands.py` ✅ (4 new declare `cluster:` or `superseded_by:`) · `check_command_count_messaging.py` ✅ · `check_no_roadmap_refs.py` ✅ · `check_public_catalog_links.py` ✅ · `lint-skills` 229 pass / 93 warn / 0 fail (held at baseline). Fixes mid-ladder: `optimize.md` description shortened (>200ch); `copilot-agents.md` shim warning matched linter regex; `optimize/agents-dir.md` cleanup-roadmap reference generalized to wildcard pattern (no-roadmap-refs gate).
+- [x] **P5.3** — `task sync` + `task generate-tools` re-ran clean. `.augment/` projection (rules + symlinks), `.claude/skills/` (98 commands → SKILL.md), router.json (kernel=9 · tier-1=18 · tier-2=29) all idempotent — verified by re-running `consistency-fix` twice with identical `git status` shasum. CI gate `check_command_count_messaging.py` made Thin-Root-aware (skips legacy `commands/` tree patterns when AGENTS.md has no tree block); README absorbed shim sub-line. `docs/architecture.md` count block bumped (102 commands · 63 guidelines).
 
 ## Acceptance Criteria
 
-- [ ] 7 old commands → 4 new commands (3 under `/agents`, 1 under `/optimize`)
-- [ ] `/copilot-agents` cluster retired with working deprecation shim
-- [ ] Migration table present in `docs/contracts/command-clusters.md`
-- [ ] All lint scripts green (or held at baseline 95 warns)
-- [ ] `task generate-tools` reports new command counts (was 101 → expected 99: −7 +4 +1 shim −1 self)
-- [ ] No broken references (`check_references.py` clean)
-- [ ] Working tree dirty, **no commit** until user authorizes
+- [x] 7 old commands → 4 new commands (3 under `/agents`: `init` · `optimize` · `audit`; 1 under `/optimize`: `agents-dir`)
+- [x] `/copilot-agents` cluster retired with working deprecation shim (`superseded_by: agents`, warning routes init/optimize)
+- [x] Migration table present in `docs/contracts/command-clusters.md` (§ Agent-doc consolidation 2026-05-09)
+- [x] All lint scripts green (or held at baseline 93 warns / 0 fail)
+- [x] `task generate-tools` reports `commands=98` (101 → 98: −7 retirements +4 new +1 shim −1 self-removal accounted; total source files 102, public-active 101)
+- [x] No broken references (`check_references.py` clean)
+- [x] Working tree dirty, **no commit** until user authorizes
 
 ## Notes
 
