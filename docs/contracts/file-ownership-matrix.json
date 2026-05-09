@@ -495,6 +495,18 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/commands/research/deep.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/research/report.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/commands/review-changes.md": {
       "kind": "command",
       "rule_type": null,
@@ -3376,6 +3388,48 @@
     {
       "source": ".agent-src.uncompressed/commands/research.md",
       "target": ".agent-src.uncompressed/skills/deep-reading-analyst/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/research/deep.md",
+      "target": ".agent-src.uncompressed/commands/research.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/research/deep.md",
+      "target": ".agent-src.uncompressed/commands/research/deep.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/research/deep.md",
+      "target": ".agent-src.uncompressed/contexts/contracts/research-schema.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/research/report.md",
+      "target": ".agent-src.uncompressed/commands/research/deep.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/research/report.md",
+      "target": ".agent-src.uncompressed/commands/research/report.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/research/report.md",
+      "target": ".agent-src.uncompressed/rules/user-interaction.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
