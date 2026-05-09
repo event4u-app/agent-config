@@ -68,4 +68,7 @@ Reopen P1.4b when **any** of:
 ## Citation
 
 - Roadmap: `agents/roadmaps/archive/road-to-superpowers-harvest.md` § P1.4a, § Kill-switch
-- Council validation: `agents/council-responses/superpowers-harvest-drift-adapted-plan.md` Q3 (both members AGREE on defer)
+- Council convergence (anthropic/claude-sonnet-4-5 + openai/gpt-4o,
+  2026-05-07, Q3): both members AGREE on defer — no rule-side
+  `confidence_band` API exists, so HARD-GATE wording would have to
+  improvise an interface (regression risk on the work_engine boundary).
