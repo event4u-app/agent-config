@@ -157,7 +157,7 @@ flip to `[x]` only after every sub-step under them ships.
 
 ### Block C — Stakeholder / PO skills (4–6 weeks, parallel start with A's last week)
 
-- [ ] **C** — Stakeholder skills shipped (block marker; flips when C1–C8 are all done).
+- [x] **C** — Stakeholder skills shipped (block marker; flips when C1–C8 are all done). All 8 skills landed, `architecture-review-lens` integrated as 5th judge in `/review-changes`.
 - [x] **C1** — `po-discovery` (problem framing, user-story shaping, AC tightening).
 - [x] **C2** — `risk-officer` (risk surfacing, blast-radius framing, mitigations).
 - [x] **C3** — `decision-record` (ADR drafting, locking trade-offs, supersession chains).
