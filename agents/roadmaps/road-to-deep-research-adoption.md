@@ -160,8 +160,8 @@ Phase 1 is the visible plate. Phase 2 + 3 are **out-of-horizon**.
   escape hatch (jq optional, agent skips gracefully). `web-search-agent`
   persona dropped — native web-search tool only. `generate_report.py`
   replaced with agent-side rendering + optional `jq` template
-  (`report-template.jq`). Council validation
-  (`agents/council-sessions/research-deep-port.json`, $0.0359 actual)
+  (`report-template.jq`). Council validation (GPT-5 + Gemini-2.5-Pro
+  convergent on 2026-05-09, $0.0359 actual)
   confirmed colon syntax (`/research:deep` · `/research:report`),
   `--batch-confirm=each|once|auto` flag, and `jq`-template fallback.
   `command-clusters.md` registry updated (cluster head + 2 subs).
