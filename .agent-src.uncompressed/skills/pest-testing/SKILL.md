@@ -22,6 +22,13 @@ Use this skill for all Laravel testing tasks, especially when working with:
 
 This skill extends `php-coder`, `laravel`, and `eloquent`.
 
+For prevention layers that fire **before** writing a test — TDD
+discipline, mock-isolation gates, and the 12 process rationalizations
+("I'll add the test after", "patch first, test later") — see
+[`test-driven-development`](../test-driven-development/SKILL.md),
+[`testing-anti-patterns`](../testing-anti-patterns/SKILL.md), and
+[`process-anti-patterns.md`](../testing-anti-patterns/process-anti-patterns.md).
+
 ## Procedure: Write Pest tests
 
 1. **Read the base skills first** — apply `php-coder`, `laravel`, and `eloquent` where relevant.

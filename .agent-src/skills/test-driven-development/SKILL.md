@@ -64,6 +64,20 @@ stay on plain TDD — the section above.
 If step 2 is skipped, the test is not trusted — a test that has never
 failed proves nothing about the code under test.
 
+### Iron Law — delete-and-restart over keep-as-reference
+
+```
+WHEN UNTESTED CODE EXISTS AND A TEST IS NEEDED — DELETE THE CODE,
+WRITE THE TEST, REIMPLEMENT. NEVER KEEP IT "AS REFERENCE".
+```
+
+Reading the existing implementation while writing its test is
+test-after-the-fact with extra steps. The 12-row anti-rationalization
+table that follows expands the most common ways this Iron Law gets
+talked-around. Externalized to
+[`testing-anti-patterns/process-anti-patterns.md`](../testing-anti-patterns/process-anti-patterns.md)
+to keep this skill under the 400-line sunset trigger.
+
 ## Procedure
 
 ### 1. Identify the behavior to test
@@ -140,22 +154,20 @@ Back to step 1 with the next single-sentence behavior.
 3. Captured green-run output
 4. Any refactor diff (optional)
 
-## Anti-rationalizations table
+## Anti-rationalizations
 
-The urge to skip TDD is strongest on tasks where TDD matters most. Name
-the rationalization and reject it:
+Twelve common rationalizations that fire *before* the test is written —
+plus the delete-and-restart Iron Law — live in
+[`testing-anti-patterns/process-anti-patterns.md`](../testing-anti-patterns/process-anti-patterns.md).
+Read the table when:
 
-| Thought | Reality |
-|---|---|
-| "This is too simple to need a test" | Simple code still breaks. A test takes less time than one debug cycle. |
-| "I'll add the test after the code works" | A test written after code passes on the first run — it has never failed. It does not prove the code is correct. |
-| "I already ran it manually" | Manual runs are not repeatable. The next edit breaks it silently. |
-| "Deleting this code I just wrote is wasteful" | Sunk cost. The cheap path is: delete, write the test, reimplement minimally. |
-| "I'll keep the code as reference while I write the test" | You will read it and adapt it. That is test-after-the-fact with extra steps. Delete it. |
-| "I just need to explore the API first" | Spike it on a throwaway branch. Then delete it and restart with TDD. |
-| "The test is too hard to write" | That signals a design problem in the code, not in the test. Listen to it. |
-| "This bug is urgent, no time for a test" | The test **is** the fastest path to a verified fix. Guessing takes longer. |
+- You catch yourself thinking "I'll add the test after" — row 2.
+- You want to keep the code "as reference" while writing the test — row 5.
+- "CI is red, patch first, test later" — row 9.
+- "Follow-up PR will add the test" — row 12.
 
+For mock-isolation failure modes (separate concern), see
+[`testing-anti-patterns`](../testing-anti-patterns/SKILL.md).
 
 ## Examples
 

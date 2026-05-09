@@ -34,6 +34,10 @@ If both PHP and JS/TS files changed → run **both** pipelines.
 - `verify-before-complete` rule — timing: run quality tools ONCE at the end, not after each edit
 - `php-coding` rule → PHPStan section — inline ignores, PHPDoc rules
 - `verify-before-complete` rule — must run quality checks before claiming work is done
+- [`testing-anti-patterns`](../testing-anti-patterns/SKILL.md) and
+  [`process-anti-patterns.md`](../testing-anti-patterns/process-anti-patterns.md) —
+  test-side rationalizations these tools cannot catch (e.g. "CI is red,
+  patch first, test later").
 
 ---
 
