@@ -155,8 +155,8 @@ field framework needs a follow-up adjustment.
 ## ADOPT citation
 
 Adopted from [`Weizhena/Deep-Research-skills`](https://github.com/Weizhena/Deep-Research-skills)
-@ commit `dc18cf4` · upstream file `skills/research-en/research/SKILL.md`
-· MIT License. Refactored: dropped `web-search-agent` persona
+`@dc18cf4:skills/research-en/research/SKILL.md` · MIT License.
+Refactored: dropped `web-search-agent` persona
 (portability), dropped Pydantic validator (replaced with JSON-Schema
 reference), repathed `./` → `$PROJECT_ROOT/agents/research/`. Phase 2
 ported `/research:deep` and `/research:report` as cluster sub-commands.

@@ -127,8 +127,7 @@ $PROJECT_ROOT/agents/research/{topic_slug}/
 ## ADOPT citation
 
 Adopted from [`Weizhena/Deep-Research-skills`](https://github.com/Weizhena/Deep-Research-skills)
-@ commit `dc18cf4` · upstream file
-`skills/research-en/research-report/SKILL.md` · MIT License.
+`@dc18cf4:skills/research-en/research-report/SKILL.md` · MIT License.
 Refactored: dropped the `generate_report.py` Python script (replaced
 with agent-side rendering + optional `jq` template), kept the
 multilingual category mapping + complex-value formatting rules,

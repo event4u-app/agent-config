@@ -142,8 +142,8 @@ $PROJECT_ROOT/agents/research/{topic_slug}/
 ## ADOPT citation
 
 Adopted from [`Weizhena/Deep-Research-skills`](https://github.com/Weizhena/Deep-Research-skills)
-@ commit `dc18cf4` · upstream file
-`skills/research-en/research-deep/SKILL.md` · MIT License. Refactored:
+`@dc18cf4:skills/research-en/research-deep/SKILL.md` · MIT License.
+Refactored:
 dropped Pydantic validator + `~/.claude/` paths + `web-search-agent`
 persona, added `--batch-confirm` flag, kept the per-item prompt
 structure verbatim except for the validation block.
