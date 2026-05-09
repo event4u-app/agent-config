@@ -134,13 +134,13 @@ Tier 2), not demo media.
 Phase items remain unticked on purpose — they record an open commitment,
 not a missed target.
 
-- [ ] P4.1 — Record one showcase session (≤10 min) on the
+- [~] P4.1 — Record one showcase session (≤10 min) on the
   `/work` + `refine-prompt` + `judge-*` happy path. **Content
   rubric:** must show (a) a concrete failure mode the council /
   judge skills catch, (b) one user clarification turn,
   (c) the resulting PR-ready diff. Publish on the README's social
   block. _(Deferred — owner action, see re-entry trigger above.)_
-- [ ] P4.2 — Open a `discussions` thread on the GitHub repo asking
+- [~] P4.2 — Open a `discussions` thread on the GitHub repo asking
   the two stargazers what brought them in. No spam — one thread.
   _(Deferred — owner action, see re-entry trigger above.)_
 
