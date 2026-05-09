@@ -121,7 +121,7 @@ Phase 1 is the visible plate. Phase 2 + 3 are **out-of-horizon**.
   guidelines, and one command to the index (`AGENTS.md` skill /
   guideline / command counts). Regenerate compressed output (`task
   sync`), regenerate tool projections (`task generate-tools`), run
-  full CI (`task ci`). No PR until evidence is captured.
+  full CI (`task ci`).
   **Closure (2026-05-08):** counts synced to skills=145, commands=104,
   guidelines=62; `task ci` green locally (1m 44s); compressed mirrors
   + hashes regenerated; `marketplace.json` clean; ownership matrix +
@@ -184,28 +184,46 @@ Phase 1 is the visible plate. Phase 2 + 3 are **out-of-horizon**.
   Phase-1 DROP rationale (`output_templates`, 402 lines, dropped for
   overlap with `agent-docs-writing` + `project-docs`).
 
-## Phase 3 — Sunset enforcement and periodic rescan (out-of-horizon)
+## Phase 3 — Sunset enforcement and periodic rescan (recurring — out of roadmap scope)
 
-- [ ] **P3.1 — Sunset audit pass.** After Phase 1 has been live for
+Phase 3 items are **recurring calendar / external-trigger work**, not
+one-shot deliverables. They are intentionally not closeable inside this
+roadmap and were dropped on 2026-05-09 with the rationale below;
+tracking moves to ad-hoc reminders / future ICE rescans.
+
+- [-] **P3.1 — Sunset audit pass.** After Phase 1 has been live for
   one quarter, audit every adopted artifact against the Sunset Policy
   (`scqa-framework` first — authoritative-link path needs an annual
   refresh-trigger check).
-- [ ] **P3.2 — `mcpmarket/deep-analysis-2` retry.** Re-attempt access
+  **Closure (2026-05-09, DROPPED — recurring):** quarterly audit
+  has no fixed deliverable inside this roadmap; folded into the
+  general Sunset-Policy maintenance cadence. The `refresh_trigger` +
+  `sunset_criterion` frontmatter on each adopted artifact carries the
+  audit signal forward without a roadmap checkbox.
+- [-] **P3.2 — `mcpmarket/deep-analysis-2` retry.** Re-attempt access
   every six months. If the source becomes available and curation
   quality is high, ICE-score against this roadmap's DROP list.
-- [ ] **P3.3 — Cross-suite signal capture.** If Phase-2 candidates ship
+  **Closure (2026-05-09, DROPPED — recurring + external-gated):**
+  source remains Cloudflare-blocked; retry is an external-trigger
+  watch task, not roadmap work. If the source unblocks, a fresh
+  ICE-scoring round opens a new harvest roadmap.
+- [-] **P3.3 — Cross-suite signal capture.** If Phase-2 candidates ship
   in `road-to-better-skills-and-profiles` Block D pilot or any other
   active plate, record the cross-link and skip duplication.
+  **Closure (2026-05-09, DROPPED — moot):** Phase 2 already shipped
+  in this roadmap (P2.1 – P2.4); no cross-suite duplication remains
+  to capture. Future cross-suite signals are handled inline by the
+  receiving roadmap, not retroactively here.
 
 ## Risk register
 
 | Risk | Mitigation |
 |---|---|
-| Sunset bitrot — `scqa-framework` upstream may drift | `refresh_trigger` + `sunset_criterion` enforced in frontmatter; P3.1 quarterly audit. |
+| Sunset bitrot — `scqa-framework` upstream may drift | `refresh_trigger` + `sunset_criterion` enforced in frontmatter; quarterly Sunset-Policy maintenance cadence. |
 | `deep-reading-analyst` core drifts from referenced modules | SHA-pinned upstream URL; refresh trigger fires on ginobefun major rewrite. |
-| `/research` path-refactor leaks Claude-Desktop assumptions | `check-portability` linter mandatory in P1.5; no merge without clean run. |
+| `/research` path-refactor leaks Claude-Desktop assumptions | `check-portability` linter run in P1.5 closure; CI gate enforces on every later touch. |
 | `inversion-thinking` overlaps with `adversarial-review` | Explicit framing in guideline header — pre-mortem on **decisions**, not diff stress-tests. Cross-link, don't merge. |
-| Hidden duplicates with our 134 skills | `lint-skills` + `check-refs` mandatory in P1.6 before any merge. |
+| Hidden duplicates with our 134 skills | `lint-skills` + `check-refs` run in P1.6 closure; CI gate enforces on every later touch. |
 | Phase-2 auto-promotion creep | Phase 2 stays out-of-horizon; promotion requires explicit Phase 1 evidence in closure note. |
 
 ## Provenance
