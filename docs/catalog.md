@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **381 public artefacts** shipped by
+Consumer-facing catalog of all **389 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > Auto-generated — do not edit manually.
 
-## Skills (153)
+## Skills (161)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -21,6 +21,7 @@ are excluded.
 | skill | [`api-design`](../.agent-src/skills/api-design/SKILL.md) |  | Use when designing APIs, planning endpoints, REST conventions, versioning, or deprecation — even when the user just says 'expose this as an endpoint' without naming API design. |
 | skill | [`api-endpoint`](../.agent-src/skills/api-endpoint/SKILL.md) |  | Use when the user says "create endpoint", "new API route", or "add controller". Creates a complete endpoint with Controller, FormRequest, Resource, route, and OpenAPI docs. |
 | skill | [`api-testing`](../.agent-src/skills/api-testing/SKILL.md) |  | Use when writing API endpoint tests — integration tests, contract validation, response assertions, mocked external services — even when the user says 'test this route' without naming API testing. |
+| skill | [`architecture-review-lens`](../.agent-src/skills/architecture-review-lens/SKILL.md) |  | Use when a diff may break system boundaries, dependency direction, or cross-service contracts — fifth judge dispatched by /review-changes alongside the four standard judges. |
 | skill | [`artisan-commands`](../.agent-src/skills/artisan-commands/SKILL.md) |  | Use when creating or modifying Artisan commands. Covers clear signatures, safe execution flow, helpful output, and project conventions for console tooling. |
 | skill | [`async-python-patterns`](../.agent-src/skills/async-python-patterns/SKILL.md) |  | Use when writing Python asyncio code — picking between gather / TaskGroup / wait, structured concurrency, timeouts, cancellation, sync-bridging — decision framework only, cookbook externalized. |
 | skill | [`authz-review`](../.agent-src/skills/authz-review/SKILL.md) |  | Use when reviewing authorization end-to-end — route → gate → policy → query scope → response filter — before changes to permissions, tenants, ownership, or admin flows. |
@@ -43,6 +44,7 @@ are excluded.
 | skill | [`data-flow-mapper`](../.agent-src/skills/data-flow-mapper/SKILL.md) |  | Use BEFORE editing code that touches user data — traces the value from entry → validation → transformation → storage → egress, every hop cited with file:line. |
 | skill | [`database`](../.agent-src/skills/database/SKILL.md) |  | Use when working with database architecture, MariaDB/MySQL tuning, indexing strategies, slow queries, or multi-connection patterns — even when the user just says 'this query is slow'. |
 | skill | [`dcf-modeling`](../.agent-src/skills/dcf-modeling/SKILL.md) |  | Wing-4 valuation cognition for a CFO / finance-partner. Use when a deal, internal investment, or board ask names DCF, intrinsic value, WACC, terminal value, or 'what's it worth on a 5-year hold'. |
+| skill | [`decision-record`](../.agent-src/skills/decision-record/SKILL.md) |  | Use when locking a trade-off, structuring an ADR draft, or wiring supersession chains — frames options · trade-offs · consequences before the file is written by `adr-create`. |
 | skill | [`deep-reading-analyst`](../.agent-src/skills/deep-reading-analyst/SKILL.md) |  | Deep analysis of articles/long-form via thinking frameworks (SCQA, mental models, inversion) — 'analyze article', 'deep dive', 'extract insights', URL/text wanting depth not summary. |
 | skill | [`defense-in-depth`](../.agent-src/skills/defense-in-depth/SKILL.md) |  | Use when validation needs entry, business-logic, environment, and instrumentation guards so a bad value cannot reach the failure point — turns a local bug fix into a structural one. |
 | skill | [`dependency-upgrade`](../.agent-src/skills/dependency-upgrade/SKILL.md) |  | Use when upgrading dependencies — "update Laravel", "bump PHP version", or "upgrade packages". Covers changelog review, breaking change detection, and verification. |
@@ -66,6 +68,7 @@ are excluded.
 | skill | [`github-ci`](../.agent-src/skills/github-ci/SKILL.md) |  | Use when working with GitHub Actions — workflow YAML, quality gates, test matrices, deployment triggers, reusable workflows — even when the user just says 'my CI is failing' or 'add a check'. |
 | skill | [`grafana`](../.agent-src/skills/grafana/SKILL.md) |  | Use when working with Grafana — dashboards, Loki LogQL queries, alerting rules, monitoring panels — even when the user just says 'build me a dashboard' or 'query the logs' without naming Grafana. |
 | skill | [`guideline-writing`](../.agent-src/skills/guideline-writing/SKILL.md) |  | Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'. |
+| skill | [`incident-commander`](../.agent-src/skills/incident-commander/SKILL.md) |  | Use during or right after an incident — frames severity, sets comms cadence, drafts the post-mortem skeleton — even when the user just says 'production is down' or 'wir haben einen Vorfall'. |
 | skill | [`jira-integration`](../.agent-src/skills/jira-integration/SKILL.md) |  | Use when the user says "check Jira", "create ticket", "update issue", or needs JQL queries, ticket transitions, or branch-to-ticket linking. |
 | skill | [`jobs-events`](../.agent-src/skills/jobs-events/SKILL.md) |  | Use when creating Laravel jobs, queued workflows, events, or listeners. Covers clear responsibilities, safe serialization, and retry/failure handling. |
 | skill | [`judge-bug-hunter`](../.agent-src/skills/judge-bug-hunter/SKILL.md) |  | Use when a diff needs correctness review — null-safety, edge cases, off-by-one, races, error handling — dispatched by /review-changes, /do-and-judge, /judge, even without 'judge'. |
@@ -91,6 +94,7 @@ are excluded.
 | skill | [`mcp-builder`](../.agent-src/skills/mcp-builder/SKILL.md) |  | Use when building an MCP server in Python (FastMCP) or Node/TypeScript (MCP SDK) — agent-centric tool design, input schemas, error handling, and the 10-question evaluation harness. |
 | skill | [`md-language-check`](../.agent-src/skills/md-language-check/SKILL.md) |  | Use BEFORE saving any .md under .augment/, .agent-src*/, or agents/ — scans umlauts, German function words, and quoted German phrases outside DE:/EN: anchor blocks. Hard gate per language-and-tone. |
 | skill | [`merge-conflicts`](../.agent-src/skills/merge-conflicts/SKILL.md) |  | Use when the user has merge conflicts or says "resolve conflicts". Understands conflict markers, resolution strategies, and verification workflow. |
+| skill | [`migration-architect`](../.agent-src/skills/migration-architect/SKILL.md) |  | Use when shaping a non-trivial migration — rollout phases, dual-write windows, cutover sequencing, deprecation cycles — hands off to `migration-creator` for DDL once locked. |
 | skill | [`migration-creator`](../.agent-src/skills/migration-creator/SKILL.md) |  | Use when the user says "create migration", "add column", or "new table". Creates migrations with correct table prefixes, column naming, and multi-tenant awareness. |
 | skill | [`mobile-e2e-strategy`](../.agent-src/skills/mobile-e2e-strategy/SKILL.md) |  | Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Simulator / Android Emulator coverage in CI for RN, Expo, or native apps. |
 | skill | [`module-management`](../.agent-src/skills/module-management/SKILL.md) |  | Use when the user says "create module", "explore module", or works within app/Modules/. Understands module structure, auto-loading, route registration, and namespace conventions. |
@@ -106,6 +110,7 @@ are excluded.
 | skill | [`php-debugging`](../.agent-src/skills/php-debugging/SKILL.md) |  | Use when debugging PHP with Xdebug — breakpoints, step-through, dual-container setup, IDE configuration, header-based routing — even when the user just says 'why does this blow up on request X'. |
 | skill | [`php-service`](../.agent-src/skills/php-service/SKILL.md) |  | Use when the user says 'create service', 'new service class', or needs a PHP service following SOLID principles with proper DI and repository usage. |
 | skill | [`playwright-testing`](../.agent-src/skills/playwright-testing/SKILL.md) |  | Use when writing Playwright E2E tests — browser automation, visual regression testing, Page Objects, fixtures, and reliable test patterns. |
+| skill | [`po-discovery`](../.agent-src/skills/po-discovery/SKILL.md) |  | Use when shaping a fuzzy product ask into a refined backlog item — problem framing, user-story rewrite, AC tightening — even if the user just says 'help me write this ticket'. |
 | skill | [`project-analysis-core`](../.agent-src/skills/project-analysis-core/SKILL.md) |  | Use for the universal deep-analysis workflow: project discovery, version resolution, docs loading, architecture mapping, execution flow, and package research. |
 | skill | [`project-analysis-hypothesis-driven`](../.agent-src/skills/project-analysis-hypothesis-driven/SKILL.md) |  | Use when a bug has multiple plausible causes across layers — competing hypotheses, validation loops, evidence-based conclusions — even when the user just says 'why is this happening?'. |
 | skill | [`project-analysis-laravel`](../.agent-src/skills/project-analysis-laravel/SKILL.md) |  | Use for deep Laravel project analysis: boot flow, request lifecycle, container usage, Eloquent/data flow, async systems, and Laravel-specific failure patterns. |
@@ -131,6 +136,7 @@ are excluded.
 | skill | [`requesting-code-review`](../.agent-src/skills/requesting-code-review/SKILL.md) |  | Use when asking for a review or creating a PR — self-review first, frame the right context, test plan included — even when the user just says 'open a PR' or 'ready to merge'. |
 | skill | [`review-routing`](../.agent-src/skills/review-routing/SKILL.md) |  | Use when preparing a PR description, suggesting reviewers, or flagging risk — produces owner-mapped roles plus historical bug-pattern matches from project-local YAML. |
 | skill | [`rice-prioritization`](../.agent-src/skills/rice-prioritization/SKILL.md) |  | Use when ranking competing initiatives for a roadmap, breaking a tie between two features, or auditing a backlog for hidden low-value work via Reach × Impact × Confidence ÷ Effort. |
+| skill | [`risk-officer`](../.agent-src/skills/risk-officer/SKILL.md) |  | Use when surfacing and prioritising risk before commit — blast-radius framing, mitigations, residual-risk verdict — even if the user just says 'what could go wrong here?'. |
 | skill | [`roadmap-management`](../.agent-src/skills/roadmap-management/SKILL.md) |  | Use when the user says "create roadmap", "show roadmap", or "execute roadmap". Creates, reads, and manages roadmap files with phase tracking. |
 | skill | [`roadmap-writing`](../.agent-src/skills/roadmap-writing/SKILL.md) |  | Use when authoring or rewriting a roadmap in agents/roadmaps/ — phase prose, goal sentence, acceptance criteria, council notes — even when the user just says 'write a plan for X' or 'draft a roadmap'. |
 | skill | [`rtk-output-filtering`](../.agent-src/skills/rtk-output-filtering/SKILL.md) |  | Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns. |
@@ -146,8 +152,10 @@ are excluded.
 | skill | [`skill-reviewer`](../.agent-src/skills/skill-reviewer/SKILL.md) |  | Use when reviewing, auditing, or optimizing skills — validates against the 7 Skill Killers checklist and produces fix recommendations. |
 | skill | [`skill-writing`](../.agent-src/skills/skill-writing/SKILL.md) |  | Use when deciding 'should this be a skill or a rule?', creating/improving/reviewing agent skills, SKILL.md frontmatter, or procedure sections — even without saying 'skill-writing'. |
 | skill | [`sql-writing`](../.agent-src/skills/sql-writing/SKILL.md) |  | Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement` — even when the user just pastes a query and asks 'why is this slow' without naming SQL. |
+| skill | [`stakeholder-tradeoff`](../.agent-src/skills/stakeholder-tradeoff/SKILL.md) |  | Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, surfaces the cost of every choice — even if the user just says 'PO and ops disagree'. |
 | skill | [`subagent-orchestration`](../.agent-src/skills/subagent-orchestration/SKILL.md) |  | Use when orchestrating implementer/judge subagents — seven modes (do-and-judge ±two-stage, do-in-steps/parallel/worktrees, do-competitively, judge-with-debate) — models from .agent-settings.yml. |
 | skill | [`systematic-debugging`](../.agent-src/skills/systematic-debugging/SKILL.md) |  | Use when hitting a bug, test failure, crash, or unexpected behavior — enforces reproduce → isolate → hypothesize → verify before any fix — even when the user just says 'this is broken' or 'quick fix'. |
+| skill | [`tech-debt-tracker`](../.agent-src/skills/tech-debt-tracker/SKILL.md) |  | Use when surfacing tech debt as trackable items — interest-vs-principal framing, prioritisation by carrying cost, repayment plan — even if the user just says 'this codebase is a mess'. |
 | skill | [`technical-specification`](../.agent-src/skills/technical-specification/SKILL.md) |  | Use when the user says "write a spec", "create RFC", "write a PRD", or "document this decision". Writes technical specifications, PRDs, RFCs, and ADRs with clear structure. |
 | skill | [`terraform`](../.agent-src/skills/terraform/SKILL.md) |  | Use when writing Terraform — AWS modules, resources, variables, outputs, remote state — even when the user just says 'provision this infra' or 'add an S3 bucket' without naming Terraform. |
 | skill | [`terragrunt`](../.agent-src/skills/terragrunt/SKILL.md) |  | Use when working with Terragrunt — DRY multi-env configs, module dependencies, remote state orchestration — even when the user just says 'deploy this to staging and prod' without naming Terragrunt. |
@@ -315,7 +323,7 @@ are excluded.
 | command | [`research:deep`](../.agent-src/commands/research/deep.md) | cluster: research | Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths. |
 | command | [`research:report`](../.agent-src/commands/research/report.md) | cluster: research | Summarise per-item JSON results from `/research:deep` into `report.md`. Agent renders directly + emits an optional `jq` template for deterministic regeneration. No Python runtime. |
 | command | [`research`](../.agent-src/commands/research.md) | cluster: research | Preliminary research scaffolder — pick objects, define fields, emit `outline.yaml` + `fields.yaml` for downstream deep research. Use for surveys, benchmarks, tech selection, competitive scans. |
-| command | [`review-changes`](../.agent-src/commands/review-changes.md) |  | Self-review local changes before creating a PR — dispatches to four specialized judges (bug, security, tests, quality) and consolidates verdicts |
+| command | [`review-changes`](../.agent-src/commands/review-changes.md) |  | Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts |
 | command | [`review-routing`](../.agent-src/commands/review-routing.md) |  | Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml |
 | command | [`roadmap:ai-council`](../.agent-src/commands/roadmap/ai-council.md) | cluster: roadmap | Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options. |
 | command | [`roadmap:create`](../.agent-src/commands/roadmap/create.md) | cluster: roadmap | Interactively create a new roadmap file in agents/roadmaps/ |
