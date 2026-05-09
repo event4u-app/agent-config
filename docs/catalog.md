@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **373 public artefacts** shipped by
+Consumer-facing catalog of all **376 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > Auto-generated — do not edit manually.
 
-## Skills (150)
+## Skills (153)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -22,6 +22,7 @@ are excluded.
 | skill | [`api-endpoint`](../.agent-src/skills/api-endpoint/SKILL.md) |  | Use when the user says "create endpoint", "new API route", or "add controller". Creates a complete endpoint with Controller, FormRequest, Resource, route, and OpenAPI docs. |
 | skill | [`api-testing`](../.agent-src/skills/api-testing/SKILL.md) |  | Use when writing API endpoint tests — integration tests, contract validation, response assertions, mocked external services — even when the user says 'test this route' without naming API testing. |
 | skill | [`artisan-commands`](../.agent-src/skills/artisan-commands/SKILL.md) |  | Use when creating or modifying Artisan commands. Covers clear signatures, safe execution flow, helpful output, and project conventions for console tooling. |
+| skill | [`async-python-patterns`](../.agent-src/skills/async-python-patterns/SKILL.md) |  | Use when writing Python asyncio code — picking between gather / TaskGroup / wait, structured concurrency, timeouts, cancellation, sync-bridging — decision framework only, cookbook externalized. |
 | skill | [`authz-review`](../.agent-src/skills/authz-review/SKILL.md) |  | Use when reviewing authorization end-to-end — route → gate → policy → query scope → response filter — before changes to permissions, tenants, ownership, or admin flows. |
 | skill | [`aws-infrastructure`](../.agent-src/skills/aws-infrastructure/SKILL.md) |  | Use when working with AWS resources — ECS Fargate, ECR, EFS, Secrets Manager, gomplate templates, multi-env deployments — even when the user says 'deploy to staging' without naming AWS. |
 | skill | [`blade-ui`](../.agent-src/skills/blade-ui/SKILL.md) |  | Use when the project's frontend stack is Blade — dispatched by `directives/ui/{apply,review,polish}.py`. Covers views, components, partials, layouts, and view logic. |
@@ -115,6 +116,7 @@ are excluded.
 | skill | [`project-analysis-zend-laminas`](../.agent-src/skills/project-analysis-zend-laminas/SKILL.md) |  | Use for deep Zend Framework or Laminas project analysis: bootstrap, config merge order, service manager, MVC flow, data layer, and migration-specific risks. |
 | skill | [`project-analyzer`](../.agent-src/skills/project-analyzer/SKILL.md) |  | ONLY when user explicitly requests: full project analysis, tech stack detection, or structured analysis documents for agents/analysis/. NOT for regular feature work. |
 | skill | [`project-docs`](../.agent-src/skills/project-docs/SKILL.md) |  | Use when looking for project-specific documentation. Knows which docs exist in agents/docs/ and agents/contexts/ and maps work areas to relevant docs. |
+| skill | [`prompt-engineering-patterns`](../.agent-src/skills/prompt-engineering-patterns/SKILL.md) |  | Use when designing production-LLM prompts — few-shot, chain-of-thought, system prompts, templates, self-verification — distinct from prompt-optimizer and refine-prompt. |
 | skill | [`prompt-optimizer`](../.agent-src/skills/prompt-optimizer/SKILL.md) |  | Use when the user wants a prompt optimized for ChatGPT, Claude, Gemini, or another AI — 'make this prompt better', 'optimize for ChatGPT', 'rewrite my prompt' — even without saying 'optimize'. |
 | skill | [`quality-tools`](../.agent-src/skills/quality-tools/SKILL.md) |  | Use when PHPStan, Rector, or ECS output appears — \"phpstan says mixed\", type errors, \"fix code style\", \"run rector\" — even when Eloquent/Laravel/model code is also mentioned. |
 | skill | [`react-native-setup`](../.agent-src/skills/react-native-setup/SKILL.md) |  | Use when setting up React Native or Expo dev environments — Xcode, Android Studio, CocoaPods, EAS, Metro, New Architecture — even when the user just says 'my RN build won't start'. |
@@ -134,6 +136,7 @@ are excluded.
 | skill | [`rtk-output-filtering`](../.agent-src/skills/rtk-output-filtering/SKILL.md) |  | Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns. |
 | skill | [`rule-writing`](../.agent-src/skills/rule-writing/SKILL.md) |  | Use when creating or editing a rule in .agent-src.uncompressed/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'. |
 | skill | [`script-writing`](../.agent-src/skills/script-writing/SKILL.md) |  | Use when adding or editing any script under `scripts/` — `--quiet` flag, `_lib/script_output` helpers, silent Taskfile wiring, Iron-Law carve-outs — even when you just say 'add a check script for X'. |
+| skill | [`secrets-management`](../.agent-src/skills/secrets-management/SKILL.md) |  | Use when picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI, and Kubernetes — decision framework, provider deep-dives externalized. |
 | skill | [`security`](../.agent-src/skills/security/SKILL.md) |  | Use when applying security best practices — authentication, authorization via Policies, CSRF protection, input sanitization, rate limiting, or secure coding. |
 | skill | [`security-audit`](../.agent-src/skills/security-audit/SKILL.md) |  | ONLY when user explicitly requests: security audit, vulnerability scan, or penetration test review. NOT for regular feature work. |
 | skill | [`sentry-integration`](../.agent-src/skills/sentry-integration/SKILL.md) |  | Use when the user shares a Sentry URL, says "check Sentry", or wants to investigate production errors. Uses Sentry MCP tools for deep analysis. |
