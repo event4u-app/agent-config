@@ -59,6 +59,28 @@ Ask: **"Does the model need this to do its job correctly?"**
 * If the model knows it but does it wrong in THIS project → **Rule or Guideline**
 * If the model needs a multi-step workflow to get it right → **Skill**
 
+### Skills and commands share the `.claude/skills/` namespace
+
+Skills in `.agent-src.uncompressed/skills/{name}/SKILL.md` AND commands in
+`.agent-src.uncompressed/commands/{name}.md` both project into
+`.claude/skills/` (see `scripts/compress.py` →
+`generate_claude_skills` + `generate_claude_commands`). Claude treats
+the whole directory as native skills.
+
+Implications for skill authors:
+
+* If a same-name command already exists, the skill takes priority and
+  the command is skipped (`generate_claude_commands` honors this).
+  Don't reuse a command's slug for a skill unless the command should
+  retire.
+* Both artifacts compete on `description` for routing. A weak skill
+  description is shadowed by a stronger same-domain command — and vice
+  versa. Make trigger phrasing precise (§ 1b below).
+* When the workflow has both a "user types `/foo`" path AND a "model
+  picks this up from intent" path, author the skill first and let the
+  command delegate (`skills:` frontmatter). Two artifacts with the same
+  trigger surface fight each other in the router.
+
 ### When "Nothing" is the right answer
 
 Do NOT create a skill or rule for:
