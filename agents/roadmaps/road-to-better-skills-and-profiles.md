@@ -158,14 +158,14 @@ flip to `[x]` only after every sub-step under them ships.
 ### Block C — Stakeholder / PO skills (4–6 weeks, parallel start with A's last week)
 
 - [ ] **C** — Stakeholder skills shipped (block marker; flips when C1–C8 are all done).
-- [ ] **C1** — `po-discovery` (problem framing, user-story shaping, AC tightening).
-- [ ] **C2** — `risk-officer` (risk surfacing, blast-radius framing, mitigations).
-- [ ] **C3** — `decision-record` (ADR drafting, locking trade-offs, supersession chains).
-- [ ] **C4** — `tech-debt-tracker` (debt surfacing, prioritisation, repayment-plan framing).
-- [ ] **C5** — `migration-architect` (council iter-1 C-OQ1 verdict (a) — strategic-only, coexists with existing `migration-creator`): rollout shape, dual-write windows, cutover sequencing, deprecation cycles, cross-service coordination. **Calls** existing `migration-creator` for tactical DDL generation after rollout plan locked. Cite personas: `backend-architect`, `senior-engineer`. 60–80 lines.
-- [ ] **C6** — `incident-commander` (incident framing, comms cadence, post-mortem skeleton).
-- [ ] **C7** — `stakeholder-tradeoff` (multi-stakeholder framing, trade-off matrix).
-- [ ] **C8** — `architecture-review-lens` (council iter-1 C-OQ2 verdict (c) — renamed from `code-review-multi-lens`; ships as **5th judge** dispatched by `/review-changes` alongside the four existing judges, not a meta-skill): system-boundary adherence, dependency-direction checks, layer-violation detection, cross-service contract stability. Cite personas: `backend-architect`, `senior-engineer`. 60–80 lines. **Integration:** add to `/review-changes` dispatch list; update consolidated-verdict logic to weight architecture equally with bug-hunter, security-auditor, test-coverage, code-quality.
+- [x] **C1** — `po-discovery` (problem framing, user-story shaping, AC tightening).
+- [x] **C2** — `risk-officer` (risk surfacing, blast-radius framing, mitigations).
+- [x] **C3** — `decision-record` (ADR drafting, locking trade-offs, supersession chains).
+- [x] **C4** — `tech-debt-tracker` (debt surfacing, prioritisation, repayment-plan framing).
+- [x] **C5** — `migration-architect` (council iter-1 C-OQ1 verdict (a) — strategic-only, coexists with existing `migration-creator`): rollout shape, dual-write windows, cutover sequencing, deprecation cycles, cross-service coordination. **Calls** existing `migration-creator` for tactical DDL generation after rollout plan locked. Cite personas: `backend-architect`, `senior-engineer`. 60–80 lines.
+- [x] **C6** — `incident-commander` (incident framing, comms cadence, post-mortem skeleton).
+- [x] **C7** — `stakeholder-tradeoff` (multi-stakeholder framing, trade-off matrix).
+- [x] **C8** — `architecture-review-lens` (council iter-1 C-OQ2 verdict (c) — renamed from `code-review-multi-lens`; ships as **5th judge** dispatched by `/review-changes` alongside the four existing judges, not a meta-skill): system-boundary adherence, dependency-direction checks, layer-violation detection, cross-service contract stability. Cite personas: `backend-architect`, `senior-engineer`. 60–80 lines. **Integration:** add to `/review-changes` dispatch list; update consolidated-verdict logic to weight architecture equally with bug-hunter, security-auditor, test-coverage, code-quality.
 
 ### Block D — Python tools pilot (3 weeks, hard-bounded, kill-switch on miss)
 
