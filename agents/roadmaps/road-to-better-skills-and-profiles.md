@@ -178,13 +178,13 @@ flip to `[x]` only after every sub-step under them ships.
 
 ### Block F — UI skills (4–5 weeks, gated by sibling roadmap)
 
-- [ ] **F** — UI skills shipped (block marker; flips when F1–F6 are all done). Pre-condition: engine R1 phase 4 from `road-to-post-pr29-optimize.md`. **Persona linkage:** all six skills cite the `frontend-engineer` specialist persona shipped in A3 (council iter-1 F-OQ2 verdict — single persona, multiple skills as lenses).
-- [ ] **F1** — `livewire-architect` (council iter-1 F-OQ1 verdict — renamed from `livewire-developer` to avoid `developer` collision with the existing Core persona): component shape, lifecycle, event flow, state-vs-props boundaries, full-page-component vs partial decisions. Cite persona: `frontend-engineer`. Coexists with the existing `livewire` skill (which stays tactical — Flux-component patterns, hydration debugging); F1 is the architectural lens above it.
-- [ ] **F2** — `tailwind-engineer` (utility-first patterns, design-token discipline, no inline-style drift). Cite persona: `frontend-engineer`.
-- [ ] **F3** — `accessibility-auditor` (WCAG checklist, keyboard nav, ARIA boundaries). Cite persona: `frontend-engineer`.
-- [ ] **F4** — `playwright-architect` (council iter-1 F-OQ1 verdict — renamed from `playwright-engineer` to mirror F1's `architect`-tier positioning): locator strategy, Page Object boundaries, fixture composition, flake-prevention architecture, CI-vs-local execution split. Cite persona: `frontend-engineer`. Coexists with the existing `playwright-testing` skill (tactical assertions, selectors, visual-regression mechanics); F4 is the test-design lens above it.
-- [ ] **F5** — `ui-component-architect` (component-tree shape, composition vs inheritance, slot patterns). Cite persona: `frontend-engineer`.
-- [ ] **F6** — `form-handler` (validation, error display, submission lifecycle, optimistic UI). Cite persona: `frontend-engineer`.
+- [x] **F** — UI skills shipped (block marker; flips when F1–F6 are all done). Pre-condition: engine R1 phase 4 from `road-to-post-pr29-optimize.md`. **Persona linkage:** all six skills cite the `frontend-engineer` specialist persona shipped in A3 (council iter-1 F-OQ2 verdict — single persona, multiple skills as lenses).
+- [x] **F1** — `livewire-architect` (council iter-1 F-OQ1 verdict — renamed from `livewire-developer` to avoid `developer` collision with the existing Core persona): component shape, lifecycle, event flow, state-vs-props boundaries, full-page-component vs partial decisions. Cite persona: `frontend-engineer`. Coexists with the existing `livewire` skill (which stays tactical — Flux-component patterns, hydration debugging); F1 is the architectural lens above it.
+- [x] **F2** — `tailwind-engineer` (utility-first patterns, design-token discipline, no inline-style drift). Cite persona: `frontend-engineer`.
+- [x] **F3** — `accessibility-auditor` (WCAG checklist, keyboard nav, ARIA boundaries). Cite persona: `frontend-engineer`.
+- [x] **F4** — `playwright-architect` (council iter-1 F-OQ1 verdict — renamed from `playwright-engineer` to mirror F1's `architect`-tier positioning): locator strategy, Page Object boundaries, fixture composition, flake-prevention architecture, CI-vs-local execution split. Cite persona: `frontend-engineer`. Coexists with the existing `playwright-testing` skill (tactical assertions, selectors, visual-regression mechanics); F4 is the test-design lens above it.
+- [x] **F5** — `ui-component-architect` (component-tree shape, composition vs inheritance, slot patterns). Cite persona: `frontend-engineer`.
+- [x] **F6** — `form-handler` (validation, error display, submission lifecycle, optimistic UI). Cite persona: `frontend-engineer`.
 
 Distribution / adoption / orchestration blocks (H · I · G · Q) live
 in `road-to-distribution-and-adoption.md` and are out of scope for
