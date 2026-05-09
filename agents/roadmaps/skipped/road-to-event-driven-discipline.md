@@ -1,5 +1,6 @@
 ---
 complexity: structural
+status: cancelled
 ---
 
 # Roadmap: event-driven agent discipline
@@ -9,12 +10,48 @@ complexity: structural
 > the always-rule budget and turning "agent forgot" failure modes into
 > deterministic platform events.
 
+## Closure (2026-05-09 — CANCELLED, all steps DROPPED)
+
+This roadmap is closed without execution. Every open step below is
+marked `[-]` (dropped) under the same shared rationale rather than
+individually annotated, since none of the work was started.
+
+**Why cancelled.** The dispatcher (`scripts/hooks/dispatch_hook.py`,
+`hook_manifest.yaml`, `docs/contracts/hook-architecture-v1.md`) is in
+production with six concerns and the always-rule budget is currently
+tolerable; the projected fan-out from 6 → 16 concerns is not the
+binding constraint right now. Shipping eight architectural artefacts
+(A1–A8) plus six implementation phases plus ten concerns plus
+seven-platform snapshot tests is multi-week engineering whose payoff
+(context-window reduction + deterministic enforcement) is not
+load-bearing for any active workstream. Closing keeps the planning
+artefact in git history, available for re-open if any of the trigger
+conditions below fire.
+
+**Re-open triggers** (any of these flips this back to active):
+
+- Dispatcher concern count crosses 10 in production, OR
+- A "agent forgot" failure mode (commit-policy bypass, MD-language
+  drift, size-budget breach) ships to a user-facing incident, OR
+- An always-rule body breaches its tier budget and the natural fix
+  is a hook concern, not a rule shrink, OR
+- An upstream platform (Augment, Claude Code) ships a
+  `block`-decision-honoured surface that makes Tier-1 concerns
+  cheap to wire across all platforms.
+
+**What remains usable.** The platform-capability matrix, decision
+matrix (ICE table), kill-switch ladder, and concern-decision
+semantics ("block/warn/allow") in this file are reusable design
+notes — anyone re-opening this roadmap should start by re-scoring
+the matrix against the then-current baseline rather than
+implementing the snapshot above verbatim.
+
 ## Prerequisites
 
-- [ ] Read `docs/contracts/hook-architecture-v1.md` (dispatcher contract)
-- [ ] Read `scripts/hook_manifest.yaml` (current concern wiring)
-- [ ] Read `agents/contexts/chat-history-platform-hooks.md` (per-platform surface)
-- [ ] Confirm `task hooks-status` runs cleanly on a clean working tree
+- [-] Read `docs/contracts/hook-architecture-v1.md` (dispatcher contract)
+- [-] Read `scripts/hook_manifest.yaml` (current concern wiring)
+- [-] Read `agents/contexts/chat-history-platform-hooks.md` (per-platform surface)
+- [-] Confirm `task hooks-status` runs cleanly on a clean working tree
 
 ## Context
 
@@ -75,7 +112,7 @@ contracts, schemas, and one linter mode that downstream phases will
 import. Each artefact gets a unique ID (`A1`–`A8`) so the matrix
 above and individual concern Steps can reference them.
 
-- [ ] **A1: Permission-cache contract.** Spec at
+- [-] **A1: Permission-cache contract.** Spec at
       `docs/contracts/git-ops-permission-cache-v1.md`. Defines:
       storage path (`agents/state/git-ops-permissions.jsonl`,
       mode 0600), schema (one JSON line per grant: `granted_at`,
@@ -95,7 +132,7 @@ above and individual concern Steps can reference them.
       A8. **Index:** when the post-compaction file has > 100 lines,
       the dispatcher caches an in-memory `tool_name → grants` index
       for the session — performance contract, not on-disk format.
-- [ ] **A2: Roadmap-state API.** Spec at
+- [-] **A2: Roadmap-state API.** Spec at
       `docs/contracts/roadmap-state-api-v1.md` + helper module
       `scripts/roadmap_state.py` exposing
       `roadmap_authorises(operation: str, ref: str) -> tuple[bool, str]`.
@@ -110,12 +147,12 @@ above and individual concern Steps can reference them.
       step contains a parsable `Commit:` or `Push:` directive
       matching the operation. Out of scope: roadmap discovery
       heuristics (deferred to consumer use).
-- [ ] **A3: Protected-ref list.** Settings key
+- [-] **A3: Protected-ref list.** Settings key
       `git_ops.protected_refs: ["main", "master", "prod",
       "release/*", "production"]` plus per-project override.
       Default list ships in `config/agent-settings.template.yml`.
       `git-ops-gate` matches via fnmatch.
-- [ ] **A4: Platform-capability map.** YAML at
+- [-] **A4: Platform-capability map.** YAML at
       `docs/contracts/platform-capabilities.yaml` listing per
       platform the support flags concerns must check before
       attempting a behaviour: `pre_tool_use`, `post_tool_use`,
@@ -153,7 +190,7 @@ above and individual concern Steps can reference them.
       `lint_hook_manifest.py`. AI Council iter-1 (Opus + GPT-4o,
       2026-05-05) shaped this design — a Deferred-Execution
       alternative was evaluated and rejected on `block`-cannot-be-deferred grounds.
-- [ ] **A5: Concern-composition rules.** Section in
+- [-] **A5: Concern-composition rules.** Section in
       `docs/contracts/hook-architecture-v1.md` (extends the
       existing contract). Reduce semantics for multiple concerns
       on the same `(platform, event)`:
@@ -177,20 +214,20 @@ above and individual concern Steps can reference them.
         syscall. Parallel-eligible concerns (`parallel: true`,
         see Phase 0 Step 3) MAY only read paths that no parallel
         sibling writes; the same lint rule enforces it.
-- [ ] **A6: Skill-linter `--budget-only` mode.** Add to
+- [-] **A6: Skill-linter `--budget-only` mode.** Add to
       `scripts/skill_linter.py`. Skips structural checks; runs
       only the line-budget check from `size-enforcement` rule
       and emits one machine-readable line per breach
       (`{path}\t{actual}\t{ceiling}\t{tier}`). Used by C5
       directly without re-implementing the budget logic.
-- [ ] **A7: Concern-suppression flag.** Settings key
+- [-] **A7: Concern-suppression flag.** Settings key
       `hooks.<concern>.suppress_paths: [glob, …]` plus runtime
       env var `AGENT_HOOKS_SUPPRESS=<concern-list>`. Used by C7
       (`docs-sync-check`) to disable itself during deliberate
       sync sessions (`task sync`, `task generate-tools`,
       manual roadmap edits). Dispatcher honours both — env var
       wins on conflict.
-- [ ] **A8: Hook-feedback contract.** Spec at
+- [-] **A8: Hook-feedback contract.** Spec at
       `docs/contracts/hook-feedback-v1.md`. Defines the
       dispatcher-owned write path for every per-concern
       execution record: storage at
@@ -213,7 +250,7 @@ above and individual concern Steps can reference them.
 
 ### Phase -1 Validation Checkpoint
 
-- [ ] All eight artefacts (A1–A8) merged. CI lint added to
+- [-] All eight artefacts (A1–A8) merged. CI lint added to
       `scripts/lint_hook_manifest.py` blocks Phase 0+ work that
       references an unmerged artefact, and rejects manifests
       with overlapping `state_writes` per A5.
@@ -222,18 +259,18 @@ above and individual concern Steps can reference them.
 
 Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
 
-- [ ] **Step 1:** Measure current per-concern p95 wall time on `augment`
+- [-] **Step 1:** Measure current per-concern p95 wall time on `augment`
       `post_tool_use` against two fixture sets:
       `tests/hooks/fixtures/synthetic/` (deterministic, in-tree) and
       `tests/hooks/fixtures/realistic/` (replayed redacted production
       payloads). Bench script lands at `scripts/bench_hooks.py`.
       Record baseline in `tests/hooks/benchmarks/baseline.json`
       (test infrastructure, not `agents/state/`).
-- [ ] **Step 2:** Add a per-concern `timeout_ms` field to
+- [-] **Step 2:** Add a per-concern `timeout_ms` field to
       `hook_manifest.yaml` (default 5000); thread through
       `dispatch_hook._run_concern`. Concerns that breach are
       surfaced as `severity=warn` and recorded in feedback.
-- [ ] **Step 3:** Introduce parallel concern execution behind a
+- [-] **Step 3:** Introduce parallel concern execution behind a
       `parallel: true` flag in the manifest (per-event). Default off.
       Constraint: only concerns with `decision: warn|allow` may run
       in parallel; `block`-capable concerns stay sequential to keep
@@ -246,7 +283,7 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
       Document resource-contention observations (CPU, FD count,
       `agents/state/` lock contention) in the bench README under
       `tests/hooks/benchmarks/`.
-- [ ] **Step 4:** Ship `task hooks-doctor` — surfaces enabled
+- [-] **Step 4:** Ship `task hooks-doctor` — surfaces enabled
       concerns, last 50 invocations, p95 per concern, recent blocks.
       Adds a **Platform status** section: detected platform, its
       tier from A4, the active degradation rule, the list of
@@ -254,7 +291,7 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
       any `re_assess_after` date that has passed. Backed by
       `scripts/hooks_status.py`; reads A8 `feedback.jsonl`
       exclusively (no live re-execution).
-- [ ] **Step 5:** Lock the concern-author template at
+- [-] **Step 5:** Lock the concern-author template at
       `scripts/hooks/concerns/_template.py` and document the move
       from `scripts/<name>_hook.py` to
       `scripts/hooks/concerns/<name>.py`. No retro-migration of
@@ -262,10 +299,10 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
 
 ### Phase 0 Validation Checkpoint
 
-- [ ] `task hooks-bench` green against both fixture sets; baseline
+- [-] `task hooks-bench` green against both fixture sets; baseline
       committed under `tests/hooks/benchmarks/`.
-- [ ] `task hooks-doctor` runs cleanly on a freshly cloned repo.
-- [ ] **ICE re-score:** decision matrix above re-evaluated against
+- [-] `task hooks-doctor` runs cleanly on a freshly cloned repo.
+- [-] **ICE re-score:** decision matrix above re-evaluated against
       measured Phase 0 baseline; tier reassignments (if any)
       recorded in this roadmap before Phase 1 begins.
 
@@ -276,7 +313,7 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
 
 ## Phase 1: Tier-1 concerns (block-capable, highest impact)
 
-- [ ] **Step 1:** `git-ops-gate` (C1). Concern reads `tool_name` +
+- [-] **Step 1:** `git-ops-gate` (C1). Concern reads `tool_name` +
       `tool_input` from envelope, intercepts `git commit`,
       `git push`, `git merge`, `git rebase`, `git tag`,
       `gh pr create`, `gh pr merge`. Decision matrix:
@@ -293,14 +330,14 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
       Wired on `pre_tool_use` for `augment`, `claude`, `cowork`,
       `cursor`, `cline`, `gemini`. (Windsurf — no PreTool surface;
       see Platform Capabilities Appendix for the manual fallback.)
-- [ ] **Step 2:** `chat-length-warner` (C2). Reads
+- [-] **Step 2:** `chat-length-warner` (C2). Reads
       `agents/.agent-chat-history` size + estimated turn-token budget on
       `stop` and `user_prompt_submit`. Thresholds from
       `chat_history.warn_size_kb` / `warn_token_budget` (defaults
       256 KB / 80% of model context). Decision: `warn` with a
       one-line `additional_context` ("history at 240 KB / 80%
       context — consider /agent-handoff").
-- [ ] **Step 3:** `model-mismatch-warner` (C3). On `session_start`,
+- [-] **Step 3:** `model-mismatch-warner` (C3). On `session_start`,
       reads first `user_prompt_submit` text + the platform-reported
       active model when present (per A4 capability map; concern
       no-ops on platforms that do not surface `active_model`).
@@ -309,13 +346,13 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
       threshold and active model is below the recommended tier,
       surface `additional_context` ("complexity: high, active:
       Sonnet, recommended: Opus"). Never blocks.
-- [ ] **Step 4:** Snapshot tests under `tests/hooks/concerns/`
+- [-] **Step 4:** Snapshot tests under `tests/hooks/concerns/`
       cover each Tier-1 concern × 7 platforms × 3 payload shapes
       (allow / warn / block). Reuse the `tests/hooks/fixtures/`
       pattern shipped with `verify-before-complete`. Composition
       tests (per A5): two concerns on the same event, verify the
       dispatcher's reduce semantics produce the contracted merge.
-- [ ] **Step 5:** Source rules updated: `commit-policy`,
+- [-] **Step 5:** Source rules updated: `commit-policy`,
       `scope-control`, `non-destructive-by-default`,
       `model-recommendation` get a "Copilot fallback" section that
       points at the new concern and shrinks the inline-checklist
@@ -323,10 +360,10 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
 
 ### Phase 1 Validation Checkpoint
 
-- [ ] Live dogfooding for ≥5 sessions on this repo without a
+- [-] Live dogfooding for ≥5 sessions on this repo without a
       false-positive `block` on `git-ops-gate`. Audit log
       reviewed manually.
-- [ ] Ten redacted production-trace samples replayed through the
+- [-] Ten redacted production-trace samples replayed through the
       bench (Phase 0 Step 1 realistic set) → p95 stays ≤ 1.3× the
       synthetic baseline.
 
@@ -343,18 +380,18 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
 
 ## Phase 2: Tier-2 concerns (`post_tool_use` advisors)
 
-- [ ] **Step 1:** `md-language-check` (C4). Concern reads written
+- [-] **Step 1:** `md-language-check` (C4). Concern reads written
       file path; if it ends in `.md` and is under `.augment/`,
       `.agent-src*/`, or `agents/`, runs the same scanner the
       `md-language-check` skill uses. Decision: `warn` with file +
       line list of hits.
-- [ ] **Step 2:** `size-enforcement` (C5). On writes to
+- [-] **Step 2:** `size-enforcement` (C5). On writes to
       `.agent-src.uncompressed/{rules,skills,commands}/`, runs the
       skill linter in `--budget-only` mode (per A6). Warns when the
       hard ceiling is breached.
-- [ ] **Step 3:** `markdown-safe-codeblocks` (C6). On writes to any
+- [-] **Step 3:** `markdown-safe-codeblocks` (C6). On writes to any
       `.md`, runs the nesting check from the rule body. Warn-only.
-- [ ] **Step 4:** `docs-sync-check` (C7). On create/rename/delete
+- [-] **Step 4:** `docs-sync-check` (C7). On create/rename/delete
       under `.agent-src.uncompressed/`, runs `check-refs` +
       counter-update preview. Warn when counts in `AGENTS.md` /
       `copilot-instructions.md` would drift. **Suppression (A7):**
@@ -362,15 +399,15 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
       `AGENT_HOOKS_SUPPRESS=docs-sync-check` so deliberate sync
       sessions (`task sync`, `task generate-tools`, batch roadmap
       edits) do not produce a warning storm.
-- [ ] **Step 5:** Source rules updated: `language-and-tone`,
+- [-] **Step 5:** Source rules updated: `language-and-tone`,
       `size-enforcement`, `markdown-safe-codeblocks`, `docs-sync`
       get the same "Copilot fallback" treatment.
 
 ### Phase 2 Validation Checkpoint
 
-- [ ] All four concerns reviewed by a maintainer for false-positive
+- [-] All four concerns reviewed by a maintainer for false-positive
       rate on the last 50 PRs (replay against PR-touched files).
-- [ ] Suppression mechanism (A7) verified on `task sync` — zero
+- [-] Suppression mechanism (A7) verified on `task sync` — zero
       warnings emitted during deliberate sync.
 
 #### Phase 2 Kill-switch
@@ -384,12 +421,12 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
 
 ## Phase 3: Tier-3 concerns (advisory)
 
-- [ ] **Step 1:** `artifact-engagement-telemetry` (C8). Replaces
+- [-] **Step 1:** `artifact-engagement-telemetry` (C8). Replaces
       the `./agent-config telemetry:record` manual call by emitting
       the same JSONL line on `stop`, gated by
       `telemetry.artifact_engagement.enabled`. Default-off, opt-in
       per maintainer. Redaction floor honoured.
-- [ ] **Step 2:** `command-suggestion-surface` (C9). On
+- [-] **Step 2:** `command-suggestion-surface` (C9). On
       `user_prompt_submit`, runs the `scripts/command_suggester/`
       engine; if matches found, returns `additional_context` with
       the numbered list. Concern reads
@@ -397,17 +434,17 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
       (per A4) and no-ops when the platform does not honour the
       field — emits a single feedback line ("suggestion surface
       unavailable on <platform>") rather than silent drop.
-- [ ] **Step 3:** `learning-pattern-detector` (C10). On `stop`,
+- [-] **Step 3:** `learning-pattern-detector` (C10). On `stop`,
       reads the last N chat-history entries and applies the
       pattern detector from `learning-to-rule-or-skill`. Warn-only;
       proposes `/capture-learnings` invocation.
 
 ### Phase 3 Validation Checkpoint
 
-- [ ] Telemetry JSONL on `stop` matches the schema produced by the
+- [-] Telemetry JSONL on `stop` matches the schema produced by the
       manual `./agent-config telemetry:record` call (golden file
       under `tests/hooks/concerns/telemetry/`).
-- [ ] Command-suggestion concern verified on Augment + Claude Code;
+- [-] Command-suggestion concern verified on Augment + Claude Code;
       no-op verified on Cursor / Cline / Windsurf / Gemini fixtures.
 
 #### Phase 3 Kill-switch
@@ -419,21 +456,21 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
 
 ## Phase 4: Concern migration
 
-- [ ] **Step 1:** Move `scripts/<name>_hook.py` → `scripts/hooks/
+- [-] **Step 1:** Move `scripts/<name>_hook.py` → `scripts/hooks/
       concerns/<name>.py` for the existing six concerns. Manifest
       `script:` paths flip in lockstep. CI gate
       (`lint_hook_manifest.py`) blocks legacy paths.
-- [ ] **Step 2:** Drop the per-concern `--platform` argv hack in
+- [-] **Step 2:** Drop the per-concern `--platform` argv hack in
       favour of reading `envelope.platform` from stdin only.
-- [ ] **Step 3:** Update `docs/contracts/hook-architecture-v1.md`
+- [-] **Step 3:** Update `docs/contracts/hook-architecture-v1.md`
       to b1 (drop `beta` marker), reflecting the foundation
       hardening from Phase 0 and the migration in this phase.
 
 ### Phase 4 Validation Checkpoint
 
-- [ ] All concerns under `scripts/hooks/concerns/`; legacy
+- [-] All concerns under `scripts/hooks/concerns/`; legacy
       `scripts/<name>_hook.py` paths absent. CI lint enforces it.
-- [ ] No concern script reads `sys.argv` for platform — fixture
+- [-] No concern script reads `sys.argv` for platform — fixture
       replay covers the stdin-only path for all seven platforms.
 
 #### Phase 4 Kill-switch
@@ -444,7 +481,7 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
 
 ## Phase 5: Graduated strict mode (opt-in)
 
-- [ ] **Step 1:** Add `hooks.strict_floor: log | confirm | block`
+- [-] **Step 1:** Add `hooks.strict_floor: log | confirm | block`
       to `.agent-settings.yml` (default `confirm` — current
       behaviour). Semantics:
       - `log`: every protected-ref / bulk-deletion event is
@@ -457,19 +494,19 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
       - `block`: protected-ref / bulk-deletion events return
         `block` outright; user must lift `strict_floor` for the
         operation. `fail_closed: true` semantics.
-- [ ] **Step 2:** Document the three levels in
+- [-] **Step 2:** Document the three levels in
       `non-destructive-by-default` rule body. Migration note:
       a project moving from `confirm` to `block` loses the
       per-turn permission surface — the dispatcher refuses.
-- [ ] **Step 3:** Strict-mode integration tests, one per level:
+- [-] **Step 3:** Strict-mode integration tests, one per level:
       `log` → exit-code 0 + audit line; `confirm` → exit-code 0
       + warn surface; `block` → exit-code 1 + block surface.
 
 ### Phase 5 Validation Checkpoint
 
-- [ ] Switching levels via `.agent-settings.yml` produces the
+- [-] Switching levels via `.agent-settings.yml` produces the
       expected behaviour change in the integration tests above.
-- [ ] Audit log under `log` mode populated with realistic
+- [-] Audit log under `log` mode populated with realistic
       payloads after a 5-session dogfood window.
 
 #### Phase 5 Kill-switch
@@ -481,20 +518,20 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
 
 ## Acceptance Criteria
 
-- [ ] Always-rule budget reduced — at minimum, the 4 rules with
+- [-] Always-rule budget reduced — at minimum, the 4 rules with
       the largest line counts that ship a Tier-1/Tier-2 concern
       drop ≥30% of their always-active body to the concern.
-- [ ] Dispatcher p95 stays ≤ 1.5× the **synthetic** Phase 0
+- [-] Dispatcher p95 stays ≤ 1.5× the **synthetic** Phase 0
       baseline AND ≤ 1.3× the **realistic** Phase 0 baseline
       despite adding 10 concerns. Verified by
       `task hooks-bench` against both fixture sets.
-- [ ] All ten concerns have snapshot tests across seven
+- [-] All ten concerns have snapshot tests across seven
       platforms PLUS at least one composition test per event
       with multiple concerns wired (per A5). CI gate blocks
       merging a concern without them.
-- [ ] `task hooks-doctor` shows enabled concerns + last 50
+- [-] `task hooks-doctor` shows enabled concerns + last 50
       invocations on a freshly cloned project after `task ci`.
-- [ ] All quality gates pass (PyTest, skill linter, marketplace
+- [-] All quality gates pass (PyTest, skill linter, marketplace
       lint, hook-manifest lint).
 
 ## Platform Capabilities Appendix

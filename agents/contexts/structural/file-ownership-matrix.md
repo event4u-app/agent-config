@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **362**
-- Edges (incl. self-WRITE): **937**
+- Files indexed: **364**
+- Edges (incl. self-WRITE): **943**
 
 ## READ_ONLY edges
 
@@ -98,6 +98,10 @@
 | `.agent-src.uncompressed/commands/research.md` | `.agent-src.uncompressed/contexts/contracts/research-schema.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/research.md` | `.agent-src.uncompressed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/research.md` | `.agent-src.uncompressed/skills/deep-reading-analyst/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/research/deep.md` | `.agent-src.uncompressed/commands/research.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/research/deep.md` | `.agent-src.uncompressed/contexts/contracts/research-schema.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/research/report.md` | `.agent-src.uncompressed/commands/research/deep.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/research/report.md` | `.agent-src.uncompressed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/review-changes.md` | `.agent-src.uncompressed/commands/judge.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/review-changes.md` | `.agent-src.uncompressed/commands/prepare-for-review.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/review-changes.md` | `.agent-src.uncompressed/skills/code-review/SKILL.md` | `body_link` | 1 |
@@ -592,7 +596,7 @@
 
 | Kind | Count |
 |---|---:|
-| `command` | 101 |
+| `command` | 103 |
 | `context` | 31 |
 | `persona` | 8 |
 | `rule` | 60 |

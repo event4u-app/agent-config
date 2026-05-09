@@ -213,6 +213,8 @@
         "./.claude/skills/repomix-packer",
         "./.claude/skills/requesting-code-review",
         "./.claude/skills/research",
+        "./.claude/skills/research-deep",
+        "./.claude/skills/research-report",
         "./.claude/skills/review-changes",
         "./.claude/skills/review-routing",
         "./.claude/skills/rice-prioritization",
