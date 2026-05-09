@@ -26,27 +26,17 @@ Personas fix that: one definition, many skills.
 
 ## Schema
 
-Frontmatter (all keys required unless noted):
+Locked in [`../../docs/contracts/persona-schema.md`](../../docs/contracts/persona-schema.md).
+Two-tier hybrid (council iter-1 A-OQ1 verdict (c)):
 
-| Key | Type | Notes |
-|---|---|---|
-| `id` | string | lowercase-hyphenated, must match filename stem |
-| `role` | string | human-readable role name |
-| `description` | string | one sentence, ≤ 160 chars |
-| `tier` | `core` \| `specialist` | Core = always-loaded cast; Specialist = opt-in |
-| `mode` | string (optional) | advisory link to a role-contract workflow mode |
-| `version` | string | semantic version; bump on breaking changes |
-| `source` | string | `package` for personas shipped here |
+- **Core** — 5 sections (Focus · Mindset · Unique Questions · Output
+  Expectations · Anti-Patterns), ≤ 120 lines. Always-loaded cast.
+- **Specialist** — 7 sections (Core-5 + Critical Rules + Workflows),
+  ≤ 100 lines. Opt-in lens.
 
-Required sections (checked by the linter):
-
-1. **Focus** — one paragraph, the lens.
-2. **Mindset** — bullets, default assumptions and skepticism.
-3. **Unique Questions** — ≥ 3 questions no other persona asks.
-4. **Output Expectations** — how findings are phrased.
-5. **Anti-Patterns** — what this persona must refuse to do.
-
-Size budget: **Core ≤ 120 lines, Specialist ≤ 80 lines**.
+Frontmatter is uniform across tiers: `id · role · description · tier
+· mode · version · source`. See the contract for full details and
+the linter check list.
 
 ## The Core-6 (always-loaded cast, v1)
 
@@ -94,10 +84,11 @@ cast (usually Core-6 for review skills, empty for others).
 - Every persona must pass the Unique-Questions heuristic.
 - Project-specific personas live in the consumer repo
   (`.agent-src/personas/` overrides), never in this package.
-- See [`../templates/persona.md`](../templates/persona.md) for the
-  exact template.
+- **Core** template: [`../templates/persona.md`](../templates/persona.md) (5 sections, ≤ 120 lines).
+- **Specialist** template: [`./_template-specialist/persona.md`](./_template-specialist/persona.md) (7 sections, ≤ 100 lines).
 
 ## Related
 
+- [`../../docs/contracts/persona-schema.md`](../../docs/contracts/persona-schema.md) — locked schema (Core / Specialist)
 - [`../../docs/guidelines/agent-infra/role-contracts.md`](../../docs/guidelines/agent-infra/role-contracts.md) — workflow modes personas compose with
 - [`../rules/artifact-drafting-protocol.md`](../rules/artifact-drafting-protocol.md) — mandatory per new persona
