@@ -318,6 +318,45 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.30.0](https://github.com/event4u-app/agent-config/compare/1.29.0...1.30.0) (2026-05-09)
+
+### Features
+
+* consolidate agent-doc commands into frequency-weighted surface ([9ce7476](https://github.com/event4u-app/agent-config/commit/9ce74764edfe2b6474311d3c8f01f3ac8018378c))
+* capability-over-structure for AGENTS.md (anatomy + linter + /optimize:agents-md) ([309042d](https://github.com/event4u-app/agent-config/commit/309042d8d15b3c13e9a70fe160d52208fe33ef98))
+* **release:** inject test-count trend into changelog footer ([3476186](https://github.com/event4u-app/agent-config/commit/347618644a658eda45003271f8da8b1c36097089))
+* **linter:** exempt cluster-head commands from no_steps; recognize ### Step N ([ad66bf0](https://github.com/event4u-app/agent-config/commit/ad66bf0001ef4acd2be662591b673e1e2822e83a))
+
+### Bug Fixes
+
+* **readme:** drop stale deprecation-shim sub-line; trim to 500-line cap ([5f92841](https://github.com/event4u-app/agent-config/commit/5f9284177323585ebb8b5fbca870f853c5c34ee0))
+* **check-portability:** allowlist agents-md-anatomy.md for task-invocation detector ([3301d19](https://github.com/event4u-app/agent-config/commit/3301d193ba55e95cdab47d8e3288a524ce7b8b90))
+* **ci:** sync compression hashes for governance + projection sections ([0fe814d](https://github.com/event4u-app/agent-config/commit/0fe814d7304ce8363b7a19e408fbb005aac67f05))
+* **skills:** close 4 linter warnings on Microck-harvested skills ([dda7a81](https://github.com/event4u-app/agent-config/commit/dda7a8181aee3f20b4ce9910d66e45db51aff9ba))
+
+### Documentation
+
+* **guidelines:** add universal code-clarity guideline (inline single-use values) ([d11b6cb](https://github.com/event4u-app/agent-config/commit/d11b6cbe6f6a31e7ed01e0b224365e6830e4b385))
+* **contributing:** add agent-assisted contribution workflow section ([0daf3b9](https://github.com/event4u-app/agent-config/commit/0daf3b9b89696780cb4c027fff7ce4be4dfa23a5))
+* **roadmap:** decouple roadmaps from merge / commit steps ([40a64a0](https://github.com/event4u-app/agent-config/commit/40a64a0a31b31c05ca7de05a1a7b267634a53c7b))
+* **roadmap:** close road-to-feedback-followups · agent-side complete ([efa4406](https://github.com/event4u-app/agent-config/commit/efa4406d4cc38cbcd3ebdb355c991da53d43a4c7))
+* **skills:** governance-baseline + Claude-skill projection notes ([f9306e1](https://github.com/event4u-app/agent-config/commit/f9306e1f53c1f7ce735ba039ae22a8a0ebcc05b6))
+
+### Refactoring
+
+* **skills:** rename repomix → repomix-packer ([62eec15](https://github.com/event4u-app/agent-config/commit/62eec153f770ebf848f1dcf84b30c036001a63ef))
+
+### Chores
+
+* retire /copilot-agents shim and clean up references ([295e3aa](https://github.com/event4u-app/agent-config/commit/295e3aa6f683263b9f5a8451bb94cb7468bfd00d))
+* canonicalize Known False Positives section in copilot-instructions.md ([c1a20bd](https://github.com/event4u-app/agent-config/commit/c1a20bd474895974f442bc5d2545175d39021e1e))
+* collapse editing-repo pointers in AGENTS.md to reclaim WARN headroom ([934800a](https://github.com/event4u-app/agent-config/commit/934800a6334e88494ffad37a3f5204e05bb60b1c))
+* archive completed road-to-agent-command-consolidation roadmap ([829704b](https://github.com/event4u-app/agent-config/commit/829704b797cd10b79ce0b70cc9d1b14cd3ce5664))
+* thin-root awareness for command-count gate; refresh doc counts ([6040c45](https://github.com/event4u-app/agent-config/commit/6040c4524ff84673adc8a403a2f6ab5e105b0af4))
+* regenerate compressed sources and tool projections ([0e83fb9](https://github.com/event4u-app/agent-config/commit/0e83fb9a008c6d083c8c2d1a53e645abe2b2541c))
+
+Tests: 2471
+
 ## [1.29.0](https://github.com/event4u-app/agent-config/compare/1.28.0...1.29.0) (2026-05-09)
 
 ### Features
