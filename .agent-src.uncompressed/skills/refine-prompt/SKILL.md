@@ -126,6 +126,16 @@ The rubric (5 dimensions × 0–2, sum / 10) and band thresholds
 (`high ≥ 0.8`, `medium 0.5–0.79`, `low < 0.5`) are owned by
 `confidence.py`. Do not re-derive them in prose.
 
+### 6. Self-review (3-scan checklist)
+
+Before emitting the envelope, run these three scans. Each is a fast pass; failure blocks emission.
+
+1. **Spec coverage** — every concrete signal from step 2 (constraints) and step 3 (assumptions) is reflected somewhere in the AC list. Walk the constraint list top-to-bottom; each must anchor at least one AC bullet or appear in the *Assumptions* block.
+2. **Placeholder / TODO scan** — the rendered envelope contains no `<placeholder>`, `TODO`, `FIXME`, `tbd`, `???`, `XXX` strings. The literal angle-bracket placeholders in the template (`<one sentence …>`, `<bullet>`) must be replaced with concrete text before emission.
+3. **Type / shape consistency** — every named file, module, route, or command in the AC matches the project's existing conventions. If the prompt names `auth.service.ts` but the codebase uses `AuthService.php`, surface the mismatch in *Assumptions* rather than adopting the prompt's spelling.
+
+Source: adapted from `obra/superpowers` `writing-plans/SKILL.md` § Self-Review (v5.1.0).
+
 ## Band-action mapping
 
 The `refine` dispatcher step in `directives/backend/refine.py` reads

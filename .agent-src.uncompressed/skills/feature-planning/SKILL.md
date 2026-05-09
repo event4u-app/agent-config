@@ -136,9 +136,45 @@ Maintain a running **decision log** throughout the planning process. For each de
 Include the decision log in the feature plan file under a `## Decisions` section.
 This ensures future developers (and agents) understand the reasoning, not just the outcome.
 
+## Bite-sized task granularity (structural roadmaps only)
+
+When a feature plan's generated roadmap declares `complexity: structural` in its frontmatter, every task bullet must be self-contained and 2–5 minutes of work. Lightweight roadmaps (the default) skip this section — coarse-grained tasks ("Add login endpoint", "Update tests") are correct when the work is well-scoped and low-risk.
+
+Structural roadmap tasks must include:
+
+1. **Exact file path** — `app/Modules/Auth/Services/LoginService.php`, never *"the login service"*.
+2. **Complete code** — every method body, import, and signature ready to paste; no `// existing code` ellipses, no `…`.
+3. **Exact command** — `php artisan migrate --path=database/migrations/2026_05_09_create_logins.php`, never *"run the migration"*.
+4. **Expected output** — what success looks like (`Migrated: 2026_05_09_create_logins`) and the exit code.
+5. **No placeholders** — angle-bracket placeholders, `TODO`, `FIXME`, `tbd`, and `???` are blockers; resolve before the task ships.
+
+The complexity flag lives in the roadmap's YAML frontmatter:
+
+```yaml
+---
+complexity: structural   # triggers bite-sized granularity
+# or
+complexity: lightweight  # default — skips bite-sized granularity
+---
+```
+
+Source: adapted from `obra/superpowers` `writing-plans/SKILL.md` § Task Structure + § No Placeholders (v5.1.0); complexity-gating is our addition (Council Round 1, Q4 — mitigates UX pushback for senior engineers on well-scoped work).
+
+## Self-review (3-scan checklist)
+
+Before presenting any plan, run these three scans in order. Each is a fast pass — not a deep review. Failures block presentation; fix and re-scan.
+
+1. **Spec coverage** — every requirement, AC bullet, or constraint from the input has a corresponding section / AC / scope item in the plan. Walk the input top-to-bottom; tick each requirement against the plan; missing items become open questions or new AC.
+2. **Placeholder / TODO scan** — grep the draft for `<placeholder>`, `TODO`, `FIXME`, `tbd`, `???`, `XXX`. Either resolve them now or surface them in the *Open questions* section. No placeholder ships unflagged.
+3. **Type / shape consistency** — proposed data structures, API shapes, file paths, and module names match existing codebase patterns. Cite at least one existing file per new structure as the convention anchor.
+
+This scan is **separate from** adversarial-review (below). Self-review catches mechanical gaps (missing AC, leftover placeholders, mis-shaped types); adversarial-review challenges the plan's reasoning.
+
+Source: adapted from `obra/superpowers` `writing-plans/SKILL.md` § Self-Review (v5.1.0).
+
 ## Adversarial self-review
 
-After completing a plan, run the **`adversarial-review`** skill before presenting it.
+After the 3-scan self-review passes, run the **`adversarial-review`** skill before presenting.
 Focus on the "Feature plans / Architecture" attack questions. See that skill for the full process.
 
 ## Feature plan format

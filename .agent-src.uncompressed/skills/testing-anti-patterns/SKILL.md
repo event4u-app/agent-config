@@ -8,6 +8,13 @@ source: package
 
 Tests must verify real behavior, not mock behavior. Mocks isolate; they are not the thing under test. This skill is the **prevention** layer; [`judge-test-coverage`](../judge-test-coverage/SKILL.md) catches what slips through afterwards.
 
+For the **process / rationalization** failure modes that fire *before* a
+test is written (the urges to skip TDD, keep code "as reference", patch
+without a regression test), see the sibling reference table in
+[`process-anti-patterns.md`](process-anti-patterns.md). Both layers are
+required — a correctly-mocked test that was written *after* the code is
+still test-after-the-fact.
+
 ## When to use
 
 - About to write a new test that mocks a collaborator.

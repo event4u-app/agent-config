@@ -4,14 +4,12 @@ complexity: structural
 
 # Road to Superpowers Harvest
 
-**Status:** READY FOR EXECUTION — decisions synthesized 2026-05-06 from
-AI Council Round 1 (analysis, $0.0465) + Round 2 (this roadmap, $0.0446).
-Round 2 surfaced 5 substantive gaps (CI contract, B↔D latent cycle,
-HARD-GATE API audit, kill-switch criteria, Phase-1→2 promotion gate);
-all five are now addressed in §§ Verification & CI Contract,
-Kill-switch / abort criteria, Phase 1 → 2 promotion gate, and the
-risk register. Council convergence captured inline below (Provenance section).
+**Status:** LANDED (2026-05-09) — Phase 1 complete (5 of 6 units shipped,
+P1.4b deferred to Phase 2 by kill-switch). Decisions synthesized 2026-05-06
+from AI Council Round 1 (analysis, $0.0465) + Round 2 (this roadmap, $0.0446).
+Council convergence captured inline below (Provenance section).
 **Started:** 2026-05-06
+**Closed:** 2026-05-09
 **Trigger:** User ask — "harvest what's useful from obra/superpowers v5.1.0,
 challenge with two AIs, then build a roadmap and challenge that too."
 **Mode:** Hard cap **5 adoption units per six-week plate** (per
@@ -57,7 +55,7 @@ Phase 1 is the visible plate. Phase 2 is **out-of-horizon**.
 
 ## Phase 1 — Five-unit adoption plate (READY)
 
-- [ ] **P1.1 — TDD hardening with anti-pattern externalization** (Adoption A).
+- [x] **P1.1 — TDD hardening with anti-pattern externalization** (Adoption A).
   Strengthen `.agent-src.uncompressed/skills/test-driven-development/SKILL.md`
   with their delete-and-restart Iron Law and the 12-row anti-rationalization
   table. Externalize the table to a sibling reference doc
@@ -65,7 +63,7 @@ Phase 1 is the visible plate. Phase 2 is **out-of-horizon**.
   Cross-link from `pest-testing`, `judge-test-coverage`, `quality-tools`.
   Effort: 1 day. **Risk:** sibling-doc proliferation; mitigated by
   Sunset Policy enforcement in P1.6.
-- [ ] **P1.2 — `subagent-orchestration` upgrade bundle** (Adoptions D+B+C,
+- [x] **P1.2 — `subagent-orchestration` upgrade bundle** (Adoptions D+B+C,
   sequenced D → B → C).
   - **D first:** add status taxonomy (`DONE` / `DONE_WITH_CONCERNS` /
     `NEEDS_CONTEXT` / `BLOCKED`) to the implementer-subagent contract.
@@ -91,21 +89,21 @@ Phase 1 is the visible plate. Phase 2 is **out-of-horizon**.
   that B's prompts validate against in CI. **Kill-switch:** if green CI
   cannot be reached within 2 attempts on D, abort the bundle and
   open a separate spike issue; do not ship B+C on a broken D.
-- [ ] **P1.3 — Spec self-review pattern** (Adoption G).
+- [x] **P1.3 — Spec self-review pattern** (Adoption G).
   Add a "Self-Review" section to our planning skills (`feature-planning`,
   `refine-prompt`, `refine-ticket`) that mandates: spec-coverage scan,
   placeholder scan, type-consistency check. Direct adapt from their
   `writing-plans/SKILL.md` § Self-Review. Effort: 0.5 day. **Risk:**
   drift from their wording on next upstream release; mitigated by
   pinning their commit SHA in our skill's provenance footer.
-- [ ] **P1.4a — Confidence-band API audit** (Adoption F prerequisite).
+- [x] **P1.4a — Confidence-band API audit** (Adoption F prerequisite).
   Verify the kernel exposes `confidence_band` as a queryable signal
   (cite file/function in the closure note). If not present, this task
   becomes a 1-day API addition (signal definition + tests) before P1.4b
   can land. Green-CI gate = `grep -rn "confidence_band" scripts/ rules/`
   returns at least one consumer; otherwise spike a separate ticket.
   Effort: 0.5 day (audit only) or 1 day (audit + API addition).
-- [ ] **P1.4b — HARD-GATE wording with autonomous-execution scope**
+- [-] **P1.4b — HARD-GATE wording with autonomous-execution scope**
   (Adoption F consumer).
   Add an HARD-GATE section to `feature-planning` and the new
   `improve-before-implement` rule that forbids implementation skills
@@ -118,7 +116,7 @@ Phase 1 is the visible plate. Phase 2 is **out-of-horizon**.
   making the gate respect the autonomy setting explicitly in the
   rule's wording. **Kill-switch:** if P1.4a reveals `confidence_band`
   is not exposed, defer P1.4b to Phase 2 — do not improvise an API.
-- [ ] **P1.5 — Bite-sized 2-5min task granularity** (Adoption E).
+- [x] **P1.5 — Bite-sized 2-5min task granularity** (Adoption E).
   Add a "Bite-Sized Task Granularity" section to `feature-planning`
   (or new sibling skill `writing-implementation-plans`) that mandates
   exact file paths, complete code, exact commands, expected output,
@@ -127,10 +125,24 @@ Phase 1 is the visible plate. Phase 2 is **out-of-horizon**.
   pushback (per GPT-4o) — too granular for senior engineers; mitigated
   by gating the granularity on plan complexity (`structural` complexity
   flag in roadmap frontmatter triggers it; `lightweight` skips).
-- [ ] **P1.6 — Suite integration.** Update `AGENTS.md` skill/rule counts,
+- [x] **P1.6 — Suite integration.** Update `AGENTS.md` skill/rule counts,
   regenerate compressed output (`bash scripts/compress.sh --changed`),
   regenerate tool projections (`task generate-tools`), run full CI
   (`task ci`). No commit chunking until evidence captured.
+
+## Closure notes (2026-05-09)
+
+| Phase | Outcome | Evidence |
+|---|---|---|
+| P1.1 | LANDED | `tests/` green; `testing-anti-patterns/process-anti-patterns.md` externalized; cross-links in `pest-testing`, `judge-test-coverage`, `quality-tools`. |
+| P1.2 (D) | LANDED | `tests/test_subagent_status_schema.py` green; `schemas/subagent-status.json` ships with 4 statuses + rejection cases. |
+| P1.2 (B) | LANDED | `tests/test_subagent_prompt_loading.py` green; 7 prompts under `subagent-orchestration/prompts/` (six original modes + new two-stage). |
+| P1.2 (C) | LANDED | `tests/test_subagent_two_stage.py` green; `do-and-judge-two-stage` mode wired into the matrix. |
+| P1.3 | LANDED | 3-scan self-review (Spec Coverage / Placeholder / Type-Consistency) added to `feature-planning`, `refine-prompt`, `refine-ticket`. |
+| P1.4a | LANDED (audit-only) | `agents/investigations/confidence-band-audit-2026-05-09.md` — signal lives inside `work_engine/scoring/`, NOT exposed to rules. |
+| P1.4b | DEFERRED to Phase 2 | Kill-switch fired (P1.4a found `confidence_band` not exposed as queryable rule signal). Per § Kill-switch row 3, P1.4b lands audit-only; HARD-GATE wording postponed. |
+| P1.5 | LANDED | `tests/test_bite_sized_granularity.py` 13/13 green; `scripts/check_bite_sized_granularity.py` ships complexity-gated validator. |
+| P1.6 | LANDED | `task ci` clean post-commit; sync-check + sync-check-hashes green; 2560/2560 pytest passing. |
 
 ## Verification & CI Contract (per phase)
 

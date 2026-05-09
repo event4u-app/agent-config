@@ -2046,6 +2046,54 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-and-judge-two-stage.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-and-judge.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-competitively.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-parallel.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-steps.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-worktrees.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/subagent-orchestration/prompts/judge-with-debate.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/systematic-debugging/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2083,6 +2131,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -6841,6 +6895,20 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/skills/judge-test-coverage/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/judge-test-coverage/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/laravel-horizon/SKILL.md",
       "target": ".agent-src.uncompressed/skills/jobs-events/SKILL.md",
       "type": "READ_ONLY",
@@ -7198,6 +7266,27 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/skills/pest-testing/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/test-driven-development/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/pest-testing/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/pest-testing/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/php-coder/SKILL.md",
       "target": ".agent-src.uncompressed/skills/php-coder/SKILL.md",
       "type": "WRITE",
@@ -7371,6 +7460,20 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/quality-tools/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/quality-tools/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/react-native-setup/SKILL.md",
@@ -8060,10 +8163,185 @@
     },
     {
       "source": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
       "target": ".agent-src.uncompressed/skills/using-git-worktrees/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-and-judge-two-stage.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-and-judge.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-competitively.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-parallel.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-steps.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-worktrees.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/judge-with-debate.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-and-judge-two-stage.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-and-judge-two-stage.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-and-judge-two-stage.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-and-judge.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-and-judge.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-and-judge.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-competitively.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-competitively.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-competitively.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-parallel.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-parallel.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-parallel.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-steps.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-steps.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-steps.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-worktrees.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-worktrees.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-worktrees.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-worktrees.md",
+      "target": ".agent-src.uncompressed/skills/using-git-worktrees/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/judge-with-debate.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/judge-with-debate.md",
+      "target": ".agent-src.uncompressed/skills/subagent-orchestration/prompts/judge-with-debate.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncompressed/skills/systematic-debugging/SKILL.md",
@@ -8178,6 +8456,20 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/skills/test-driven-development/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/test-driven-development/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/test-performance/SKILL.md",
       "target": ".agent-src.uncompressed/skills/test-performance/SKILL.md",
       "type": "WRITE",
@@ -8222,6 +8514,55 @@
     {
       "source": ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md",
       "target": ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md",
+      "target": ".agent-src.uncompressed/skills/judge-test-coverage/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md",
+      "target": ".agent-src.uncompressed/skills/pest-testing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md",
+      "target": ".agent-src.uncompressed/skills/quality-tools/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md",
+      "target": ".agent-src.uncompressed/skills/test-driven-development/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md",
+      "target": ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md",
+      "target": ".agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0

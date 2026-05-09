@@ -147,6 +147,10 @@ as a follow-up for the implementer — the judge does not execute tools.
   model-pairing rules (`subagents.judge_model` one tier above implementer).
 - [`test-driven-development`](../test-driven-development/SKILL.md) —
   the write-the-test-first workflow that prevents most findings this judge makes.
+- [`testing-anti-patterns`](../testing-anti-patterns/SKILL.md) and its
+  sibling [`process-anti-patterns.md`](../testing-anti-patterns/process-anti-patterns.md) —
+  prevention layer this judge backs up; rationalization-table row numbers
+  are valid review citations.
 - Sibling judges: [`judge-bug-hunter`](../judge-bug-hunter/SKILL.md),
   [`judge-security-auditor`](../judge-security-auditor/SKILL.md),
   [`judge-code-quality`](../judge-code-quality/SKILL.md) — dispatched

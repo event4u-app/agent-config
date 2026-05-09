@@ -1,6 +1,6 @@
 ---
 name: subagent-orchestration
-description: "Use when orchestrating implementer/judge subagents — six modes (do-and-judge, do-in-steps, do-in-parallel, do-competitively, judge-with-debate, do-in-worktrees) — models from .agent-settings.yml."
+description: "Use when orchestrating implementer/judge subagents — seven modes (do-and-judge ±two-stage, do-in-steps/parallel/worktrees, do-competitively, judge-with-debate) — models from .agent-settings.yml."
 source: package
 ---
 
@@ -44,7 +44,7 @@ judge is a fresh pair of eyes. If `.agent-settings.yml` resolves to
 identical implementer and judge models, surface the mismatch before
 running — do not silently continue.
 
-## The six modes
+## The seven modes
 
 Each mode has a decision row: when to use, when not, and the expected
 model pairing. Defaults come from
@@ -60,7 +60,34 @@ back to the user.
 |---|---|---|
 | Single-change task with non-trivial risk | Tiny fix, or spike/exploration | implementer = session; judge = one tier up |
 
-### 2. do-in-steps
+### 2. do-and-judge-two-stage
+
+Implementer produces a diff; **two judges run sequentially** — first a
+spec-compliance reviewer (does the diff satisfy the stated spec /
+acceptance criteria?), then a code-quality reviewer (is the diff well-
+written for the codebase it lands in?). The orchestrator only proceeds
+to stage two if stage one returns `DONE` or `DONE_WITH_CONCERNS`. A
+stage-one `BLOCKED` shortcuts the loop — there is no point quality-
+reviewing a diff that does not satisfy the spec.
+
+| When to use | When not | Model pairing |
+|---|---|---|
+| Spec is contested or AC are detailed; diff size makes one judge prone to missing one axis (correctness vs craft) | Spec is one sentence, or the diff is one line (collapse to mode 1) | implementer = session; spec-judge = one tier up; quality-judge = same tier as spec-judge, fresh context |
+
+**Why two stages, not one judge with both rubrics:** combining the
+rubrics in one prompt reliably regresses one of them — the judge "spends
+attention" on whichever rubric appears last. Splitting the prompts
+forces each judge to commit fully to its rubric.
+
+**Stage-routing rule:**
+- Stage-1 returns `DONE` → run stage-2.
+- Stage-1 returns `DONE_WITH_CONCERNS` → run stage-2; concerns carry
+  forward to the final envelope.
+- Stage-1 returns `NEEDS_CONTEXT` → pause; stage-2 does not run.
+- Stage-1 returns `BLOCKED` → final verdict is `BLOCKED`; stage-2
+  does not run (saves cost).
+
+### 3. do-in-steps
 
 Plan is split into N steps; judge runs **between** steps. A step that
 fails judgment is revised before the next step starts. Used for
@@ -70,7 +97,7 @@ multi-file changes where a mid-plan mistake would cascade.
 |---|---|---|
 | Multi-step plan with ordered dependencies | Single-step change, or when steps are independent (use `do-in-parallel`) | implementer = session; judge = one tier up |
 
-### 3. do-in-parallel
+### 4. do-in-parallel
 
 Independent slices run concurrently. No judge per slice — judge runs
 once on the aggregated result. Parallelism capped by
@@ -80,7 +107,7 @@ once on the aggregated result. Parallelism capped by
 |---|---|---|
 | Independent slices (different files, non-overlapping) | Any slice touches shared state | implementer = session; judge = one tier up, run once |
 
-### 4. do-competitively
+### 5. do-competitively
 
 Multiple implementers produce candidate diffs for the **same** slice.
 Judge picks the winner and rejects the losers. Expensive — use only
@@ -90,7 +117,7 @@ when the solution space is genuinely broad.
 |---|---|---|
 | Broad solution space (algorithm choice, API shape) | Well-defined problem with one good answer | implementers = same tier (≥2 instances); judge = one tier up |
 
-### 5. judge-with-debate
+### 6. judge-with-debate
 
 Two judges each produce a verdict; a meta-judge reconciles
 disagreements. Used for high-stakes changes (security, data
@@ -100,7 +127,7 @@ migration, public API) where a single judge is too easy to fool.
 |---|---|---|
 | Security, data integrity, public API change | Routine internal refactor | judges = same tier (2x); meta-judge = one tier up |
 
-### 6. do-in-worktrees
+### 7. do-in-worktrees
 
 Cross-wing or cross-skill chain executed across isolated git
 worktrees — each handoff in the chain runs in its own worktree, so
@@ -130,7 +157,44 @@ end produces a single integration PR.
 **Anti-pattern:** do not use for fast iteration loops where each
 step is under ~30 minutes. The branch-creation, context-switch, and
 worktree-cleanup cost dominates. Stick with mode 1 (do-and-judge)
-or mode 2 (do-in-steps) for those.
+or mode 3 (do-in-steps) for those.
+
+## Status taxonomy — every subagent return uses one envelope
+
+Every implementer or judge return must conform to
+[`schemas/subagent-status.json`](schemas/subagent-status.json). Four
+statuses, no free-form alternatives:
+
+| Status | Meaning | Required keys (beyond `status`, `summary`) |
+|---|---|---|
+| `DONE` | Work shipped, all gates green. | `evidence[]` |
+| `DONE_WITH_CONCERNS` | Work shipped but caller must act on concerns. | `evidence[]`, `concerns[]` |
+| `NEEDS_CONTEXT` | Paused; caller can unblock by answering. | `blocking_question` |
+| `BLOCKED` | No path forward exists. | `blocking_reason` |
+
+**Why a fixed taxonomy:** orchestrators (`/do-and-judge`, `/do-in-steps`)
+route on status. Free-form "kind of done" returns force the orchestrator
+to interpret prose, which silently regresses the two-revision ceiling and
+the judge-rejected-do-not-apply rule. The schema makes routing mechanical.
+
+**Tests:** `tests/test_subagent_status_schema.py` exercises all four
+statuses plus rejection cases (missing required keys, unknown status,
+extra fields, conditional-key violations).
+
+**Distinguishing `NEEDS_CONTEXT` from `BLOCKED`:** `NEEDS_CONTEXT` means
+*"you, the caller, can fix this by telling me X"*. `BLOCKED` means
+*"no input from you unblocks this — escalate or rescope"*. If a subagent
+is unsure, it picks `BLOCKED` and the caller can downgrade.
+
+## Dispatch prompts — externalized
+
+Each mode's literal dispatch template lives under
+[`prompts/{mode}.md`](prompts/README.md). The orchestrator loads the
+matching prompt at dispatch time and substitutes `{{placeholders}}`.
+Edits to a prompt do not bloat this skill against the 400-line sunset
+trigger; `tests/test_subagent_prompt_loading.py` confirms each of the
+seven modes resolves to a loadable prompt that cites all four taxonomy
+statuses.
 
 ## Procedure
 
@@ -158,9 +222,10 @@ same context, **stop** and report. Do not improvise.
 
 ### 3. Pick the mode
 
-Match task shape to one of the five modes. When two modes could fit,
-prefer the cheaper one (`do-and-judge` < `do-in-steps` < `do-in-parallel`
-< `do-competitively` < `judge-with-debate`).
+Match task shape to one of the seven modes. When two modes could fit,
+prefer the cheaper one (`do-and-judge` < `do-and-judge-two-stage` <
+`do-in-steps` < `do-in-parallel` < `do-competitively` <
+`judge-with-debate` < `do-in-worktrees`).
 
 ### 4. Dispatch
 
@@ -195,7 +260,7 @@ the judge verdict.
 
 ## Output format
 
-1. **Mode chosen** — one of the five, with the one-line reason
+1. **Mode chosen** — one of the seven, with the one-line reason
 2. **Model pairing** — implementer model / judge model (resolved)
 3. **Verdict** — applied / revised / handed back
 4. **Evidence** — diff summary, test output, or judge transcript

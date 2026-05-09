@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **353**
-- Edges (incl. self-WRITE): **896**
+- Files indexed: **362**
+- Edges (incl. self-WRITE): **937**
 
 ## READ_ONLY edges
 
@@ -421,6 +421,8 @@
 | `.agent-src.uncompressed/skills/judge-test-coverage/SKILL.md` | `.agent-src.uncompressed/skills/judge-security-auditor/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/judge-test-coverage/SKILL.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/judge-test-coverage/SKILL.md` | `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/judge-test-coverage/SKILL.md` | `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/judge-test-coverage/SKILL.md` | `.agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/laravel-horizon/SKILL.md` | `.agent-src.uncompressed/skills/jobs-events/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/laravel-mail/SKILL.md` | `.agent-src.uncompressed/skills/laravel-notifications/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/laravel-notifications/SKILL.md` | `.agent-src.uncompressed/skills/laravel-mail/SKILL.md` | `body_link` | 1 |
@@ -442,6 +444,9 @@
 | `.agent-src.uncompressed/skills/persona-writing/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/persona-writing/SKILL.md` | `.agent-src.uncompressed/skills/rule-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/persona-writing/SKILL.md` | `.agent-src.uncompressed/skills/skill-writing/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/pest-testing/SKILL.md` | `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/pest-testing/SKILL.md` | `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/pest-testing/SKILL.md` | `.agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/prompt-engineering-patterns/SKILL.md` | `.agent-src.uncompressed/skills/async-python-patterns/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/prompt-engineering-patterns/SKILL.md` | `.agent-src.uncompressed/skills/mcp-builder/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/prompt-engineering-patterns/SKILL.md` | `.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md` | `body_link` | 1 |
@@ -450,6 +455,8 @@
 | `.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md` | `.agent-src.uncompressed/commands/review-changes.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md` | `.agent-src.uncompressed/skills/description-assist/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md` | `.agent-src.uncompressed/skills/refine-prompt/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/quality-tools/SKILL.md` | `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/quality-tools/SKILL.md` | `.agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/readme-writing-package/SKILL.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/readme-writing/SKILL.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/receiving-code-review/SKILL.md` | `.agent-src.uncompressed/skills/conventional-commits-writing/SKILL.md` | `body_link` | 1 |
@@ -520,7 +527,24 @@
 | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/contexts/subagent-configuration.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/skills/ai-council/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncompressed/skills/using-git-worktrees/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md` | `.agent-src.uncompressed/skills/subagent-orchestration/prompts/do-and-judge-two-stage.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md` | `.agent-src.uncompressed/skills/subagent-orchestration/prompts/do-and-judge.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md` | `.agent-src.uncompressed/skills/subagent-orchestration/prompts/do-competitively.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md` | `.agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-parallel.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md` | `.agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-steps.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md` | `.agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-worktrees.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/prompts/README.md` | `.agent-src.uncompressed/skills/subagent-orchestration/prompts/judge-with-debate.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/prompts/do-and-judge-two-stage.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/prompts/do-and-judge.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/prompts/do-competitively.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-parallel.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-steps.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-worktrees.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-worktrees.md` | `.agent-src.uncompressed/skills/using-git-worktrees/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/subagent-orchestration/prompts/judge-with-debate.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncompressed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncompressed/skills/data-flow-mapper/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncompressed/skills/php-debugging/SKILL.md` | `body_link` | 1 |
@@ -532,11 +556,19 @@
 | `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `.agent-src.uncompressed/skills/pest-testing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `.agent-src.uncompressed/skills/quality-tools/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `.agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `.agent-src.uncompressed/skills/defense-in-depth/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `.agent-src.uncompressed/skills/judge-test-coverage/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `.agent-src.uncompressed/skills/pest-testing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `.agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md` | `.agent-src.uncompressed/skills/judge-test-coverage/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md` | `.agent-src.uncompressed/skills/pest-testing/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md` | `.agent-src.uncompressed/skills/quality-tools/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md` | `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md` | `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `.agent-src.uncompressed/skills/authz-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `.agent-src.uncompressed/skills/judge-security-auditor/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `.agent-src.uncompressed/skills/security-audit/SKILL.md` | `body_link` | 1 |
@@ -564,5 +596,5 @@
 | `context` | 31 |
 | `persona` | 8 |
 | `rule` | 60 |
-| `skill` | 153 |
+| `skill` | 162 |
 
