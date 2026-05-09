@@ -52,6 +52,13 @@ _WS_RE = re.compile(r"\s+")
 SESSION_ID_LEN = 16
 SESSION_ID_UNKNOWN = "<unknown>"
 SESSION_ID_LEGACY = "<legacy>"
+# Sentinel for entries without an ``agent`` field — legacy rows or
+# direct ``append`` calls that bypassed the platform-hook surface.
+# Used by the ``agent`` filter on :func:`read_entries`, the AGENTS
+# column in :func:`list_sessions`, and the ``agents`` aggregation in
+# :func:`status` so cross-agent setups can spot unattributed traffic
+# without a separate query.
+AGENT_UNKNOWN = "<unknown>"
 
 # Per-entry-type text-length caps. 0 = full text, no whitespace collapse,
 # verbatim. N > 0 = collapse whitespace then slice to N chars and append a
@@ -405,14 +412,21 @@ def clear(*, path: Path | None = None) -> None:
 
 def read_entries(last: int | None = None, *,
                  path: Path | None = None,
-                 session: str | None = None) -> list[dict[str, Any]]:
+                 session: str | None = None,
+                 agent: str | None = None) -> list[dict[str, Any]]:
     """Return entries (excluding the header) as a list of dicts.
 
     `last=None` returns all entries; `last=N` returns the trailing N.
     `session=None` keeps legacy "return everything" behaviour; an explicit
     string filters by exact match on each entry's `s` field. The `last`
-    slice is applied **after** the session filter so callers always get
-    the trailing N within the selected session.
+    slice is applied **after** the session/agent filters so callers
+    always get the trailing N within the selected scope.
+
+    `agent=None` returns entries from every agent. An explicit string
+    matches the body row's ``agent`` field; the sentinel ``<unknown>``
+    matches entries without an ``agent`` field (legacy or
+    unattributed). Filtering is exact-match — no glob, no regex.
+
     Malformed lines are skipped silently.
     """
     p = path or file_path()
@@ -434,6 +448,11 @@ def read_entries(last: int | None = None, *,
                 entries.append(obj)
     if session is not None:
         entries = [e for e in entries if e.get("s") == session]
+    if agent is not None:
+        if agent == AGENT_UNKNOWN:
+            entries = [e for e in entries if not e.get("agent")]
+        else:
+            entries = [e for e in entries if e.get("agent") == agent]
     if last is not None and last >= 0:
         entries = entries[-last:]
     return entries
@@ -485,7 +504,7 @@ def list_sessions(path: Path | None = None,
         b = buckets.get(sid)
         if b is None:
             b = {"id": sid, "count": 0, "first_ts": None,
-                 "last_ts": None, "preview": ""}
+                 "last_ts": None, "preview": "", "agents": []}
             if summary:
                 b["_head"] = []
                 b["_tail"] = deque(maxlen=5)
@@ -511,6 +530,10 @@ def list_sessions(path: Path | None = None,
                     sid = SESSION_ID_LEGACY
                 b = _bucket(sid)
                 b["count"] += 1
+                agent = obj.get("agent") if isinstance(obj.get("agent"), str) else None
+                tag = agent if agent else AGENT_UNKNOWN
+                if tag not in b["agents"]:
+                    b["agents"].append(tag)
                 ts = obj.get("ts")
                 if isinstance(ts, str) and ts:
                     if b["first_ts"] is None or ts < b["first_ts"]:
@@ -536,6 +559,7 @@ def list_sessions(path: Path | None = None,
     out: list[dict[str, Any]] = []
     for b in buckets.values():
         b.pop("_preview_from", None)
+        b["agents"] = sorted(b["agents"])
         if summary:
             head = b.pop("_head", [])
             tail = list(b.pop("_tail", ()))
@@ -550,16 +574,38 @@ def status(*, path: Path | None = None) -> dict[str, Any]:
     if not p.is_file():
         return {"exists": False, "path": str(p)}
     header = read_header(p)
-    size = p.stat().st_size
+    entry_count = 0
+    per_agent: dict[str, int] = {}
     with p.open(encoding="utf-8") as fh:
-        entry_count = sum(1 for _ in fh) - (1 if header else 0)
+        for i, line in enumerate(fh):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(obj, dict):
+                continue
+            if i == 0 and obj.get("t") == "header":
+                continue
+            entry_count += 1
+            agent = obj.get("agent") if isinstance(obj.get("agent"), str) else None
+            tag = agent if agent else AGENT_UNKNOWN
+            per_agent[tag] = per_agent.get(tag, 0) + 1
+    size = p.stat().st_size
+    agents = {
+        "total": len(per_agent),
+        "per_agent": dict(sorted(per_agent.items())),
+    }
     return {
         "exists": True,
         "path": str(p),
         "size_bytes": size,
         "size_kb": round(size / 1024, 1),
-        "entries": max(entry_count, 0),
+        "entries": entry_count,
         "header": header,
+        "agents": agents,
     }
 
 
@@ -905,7 +951,8 @@ def hook_append(event: str, *,
                 session_id: str | None = None,
                 payload: dict[str, Any] | None = None,
                 path: Path | None = None,
-                settings_path: Path | None = None) -> dict[str, Any]:
+                settings_path: Path | None = None,
+                dry_run: bool = False) -> dict[str, Any]:
     """Platform-hook entry point — stateless append per session tag.
 
     Designed for ``SessionStart``, ``UserPromptSubmit``, ``PostToolUse``,
@@ -931,6 +978,21 @@ def hook_append(event: str, *,
     Cadence-aware: events that don't match ``chat_history.frequency``
     are silently skipped. ``enabled: false`` short-circuits to a noop.
 
+    Session-rotation guardrail: when an incoming ``session_start`` (or
+    any event) introduces an ``s`` that differs from the most recent
+    body entry's ``s`` on a non-empty file, a one-line warning is
+    written to stderr so cross-agent setups see the rotation intent
+    before it lands. The append still proceeds — the warning is
+    advisory, not a block.
+
+    ``dry_run=True`` resolves cadence + entry shape but skips every
+    file write (header init, append, prune). The returned dict carries
+    ``dry_run: True`` plus a ``would_action`` mirroring what the live
+    invocation would have reported, and (for events that survive the
+    cadence filter) an ``entry_preview`` of the body row that would
+    have been written. Smoke tests use this to verify the resolved
+    chain without rotating the live session.
+
     Returns a structured dict the CLI emits as JSON. Never raises for
     non-fatal control-plane states (cadence skip, disabled,
     unknown-session) — these surface as ``action`` values so hooks
@@ -940,10 +1002,28 @@ def hook_append(event: str, *,
         raise ValueError(f"event must be one of {sorted(VALID_HOOK_EVENTS)}")
     sp = settings_path or Path(DEFAULT_SETTINGS_FILE)
     if not _read_chat_history_enabled(sp):
-        return {"action": "disabled", "event": event}
+        return {"action": "disabled", "event": event,
+                **({"dry_run": True} if dry_run else {})}
     p = path or file_path()
     payload = payload or {}
     s_tag = derive_session_tag(session_id) if session_id else SESSION_ID_UNKNOWN
+
+    # Detect session rotation BEFORE any header init so the warning
+    # fires against the on-disk state the agent actually sees, not the
+    # post-init state. Empty / missing file → no rotation (nothing to
+    # rotate from); unknown s_tag → no rotation (anonymous appends
+    # can't be attributed to a new session).
+    prior_s = _last_body_session_id(p) if p.is_file() else SESSION_ID_UNKNOWN
+    is_new_session = (
+        s_tag != SESSION_ID_UNKNOWN
+        and prior_s != SESSION_ID_UNKNOWN
+        and prior_s != s_tag
+    )
+    if is_new_session:
+        sys.stderr.write(
+            f"chat-history session_rotation event={event} "
+            f"prior_s={prior_s} new_s={s_tag}\n"
+        )
 
     # Lazily initialise the v4 header on first use so callers don't
     # have to invoke `init` separately. Reset is still an explicit
@@ -953,23 +1033,15 @@ def hook_append(event: str, *,
     # this branch, v3 headers parse as non-None and the lazy-init path
     # never fires, leaving the file in a mixed v3-header / v4-body
     # state forever.
-    if not p.is_file() or read_header(p) is None:
-        freq = _read_chat_history_frequency(sp)
-        init(freq=freq, path=p)
-    else:
-        migrate_header(p, freq=_read_chat_history_frequency(sp))
-
-    # Detect session change BEFORE appending so the new entry's `s`
-    # doesn't shadow the previous one. Actual prune fires AFTER the
-    # append so the cap is enforced against the post-append body
-    # (otherwise the effective cap would be max_sessions + 1).
-    is_new_session = (
-        s_tag != SESSION_ID_UNKNOWN
-        and _last_body_session_id(p) != s_tag
-    )
+    if not dry_run:
+        if not p.is_file() or read_header(p) is None:
+            freq = _read_chat_history_frequency(sp)
+            init(freq=freq, path=p)
+        else:
+            migrate_header(p, freq=_read_chat_history_frequency(sp))
 
     def _maybe_prune() -> None:
-        if not is_new_session:
+        if dry_run or not is_new_session:
             return
         max_n = _read_chat_history_max_sessions(sp)
         try:
@@ -979,15 +1051,30 @@ def hook_append(event: str, *,
 
     if event == "session_start":
         _maybe_prune()
-        return {"action": "session_start_noop", "event": event, "s": s_tag}
+        action = "session_start_noop"
+        out = {"action": "dry_run" if dry_run else action,
+               "event": event, "s": s_tag}
+        if dry_run:
+            out["would_action"] = action
+            out["dry_run"] = True
+        return out
     if event == "session_end":
         _maybe_prune()
-        return {"action": "session_end_noop", "event": event, "s": s_tag}
+        action = "session_end_noop"
+        out = {"action": "dry_run" if dry_run else action,
+               "event": event, "s": s_tag}
+        if dry_run:
+            out["would_action"] = action
+            out["dry_run"] = True
+        return out
 
     freq = _read_chat_history_frequency(sp)
     if event not in CADENCE_EVENTS.get(freq, frozenset()):
-        return {"action": "skipped_cadence", "event": event,
-                "frequency": freq}
+        out = {"action": "skipped_cadence", "event": event,
+               "frequency": freq}
+        if dry_run:
+            out["dry_run"] = True
+        return out
 
     entry_type = HOOK_EVENT_ENTRY_TYPE.get(event, "agent")
     limits = _read_text_limits(sp)
@@ -1004,6 +1091,12 @@ def hook_append(event: str, *,
     for k in ("agent", "source", "phase", "decision"):
         if payload.get(k):
             entry[k] = str(payload[k])
+    if dry_run:
+        preview = dict(entry)
+        preview["s"] = s_tag
+        return {"action": "dry_run", "would_action": "appended",
+                "event": event, "type": entry_type, "s": s_tag,
+                "entry_preview": preview, "dry_run": True}
     append(entry, path=p, session=s_tag)
     _maybe_prune()
     return {"action": "appended", "event": event,
@@ -1285,7 +1378,8 @@ def _extract_session_id(payload: dict[str, Any]) -> str:
 def hook_dispatch(platform: str, raw_json: str, *,
                   event_override: str | None = None,
                   path: Path | None = None,
-                  settings_path: Path | None = None) -> dict[str, Any]:
+                  settings_path: Path | None = None,
+                  dry_run: bool = False) -> dict[str, Any]:
     """Read a platform's stdin JSON, translate to our hook vocabulary, dispatch.
 
     Used by ``chat_history.py hook-dispatch --platform <name>`` so
@@ -1300,6 +1394,10 @@ def hook_dispatch(platform: str, raw_json: str, *,
     16-char ``s`` tag carried on every body entry. No sidecar, no
     ownership, no auto-adopt — multi-session coexistence is implicit
     via the ``s`` field.
+
+    ``dry_run=True`` propagates to :func:`hook_append` so the resolved
+    chain (platform → raw_event → mapped event → cadence) is reported
+    without writing the live history file.
     """
     if platform not in PLATFORM_EVENT_MAP:
         raise ValueError(
@@ -1366,10 +1464,12 @@ def hook_dispatch(platform: str, raw_json: str, *,
                 "agent": platform,
             },
             path=path, settings_path=settings_path,
+            dry_run=dry_run,
         )
 
     return hook_append(event, session_id=session_id, payload=hook_payload,
-                       path=path, settings_path=settings_path)
+                       path=path, settings_path=settings_path,
+                       dry_run=dry_run)
 
 
 def _cmd_init(args) -> int:
@@ -1398,6 +1498,7 @@ def _cmd_hook_append(args) -> int:
             session_id=args.session_id,
             payload=payload,
             settings_path=settings_path,
+            dry_run=getattr(args, "dry_run", False),
         )
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -1415,6 +1516,7 @@ def _cmd_hook_dispatch(args) -> int:
             raw,
             event_override=args.event,
             settings_path=settings_path,
+            dry_run=getattr(args, "dry_run", False),
         )
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -1487,10 +1589,17 @@ def _cmd_clear(_args) -> int:
 
 def _cmd_read(args) -> int:
     last = None if args.all else args.last
+    agent = args.agent
     if args.all:
-        entries = read_entries(last=last, session=None)
+        entries = read_entries(last=last, session=None, agent=agent)
     elif args.session is not None:
-        entries = read_entries(last=last, session=args.session)
+        entries = read_entries(last=last, session=args.session, agent=agent)
+    elif agent is not None:
+        # Agent filter without --session implies "across the most recent
+        # session"; honour the current-session scope of the default
+        # `read` semantics so the filter narrows, never widens.
+        sid = _last_body_session_id(file_path())
+        entries = read_entries(last=last, session=sid, agent=agent)
     else:
         entries = read_entries_for_current(last=last)
     print(json.dumps(entries, ensure_ascii=False, indent=2))
@@ -1509,21 +1618,23 @@ def _cmd_sessions(args) -> int:
         print("(no sessions)")
         return 0
     last_col = "SUMMARY" if args.summary else "PREVIEW"
-    rows = [("ID", "COUNT", "LAST_TS", last_col)]
+    rows = [("ID", "COUNT", "AGENTS", "LAST_TS", last_col)]
     for s in sessions:
         last_val = s.get("summary") if args.summary else s.get("preview")
+        agents_val = ",".join(s.get("agents") or []) or "-"
         rows.append((
             s["id"],
             str(s["count"]),
+            agents_val,
             s["last_ts"] or "-",
             last_val or "-",
         ))
-    widths = [max(len(r[i]) for r in rows) for i in range(4)]
+    widths = [max(len(r[i]) for r in rows) for i in range(5)]
     for i, r in enumerate(rows):
-        line = "  ".join(r[j].ljust(widths[j]) for j in range(4))
+        line = "  ".join(r[j].ljust(widths[j]) for j in range(5))
         print(line)
         if i == 0:
-            print("  ".join("-" * widths[j] for j in range(4)))
+            print("  ".join("-" * widths[j] for j in range(5)))
     return 0
 
 
@@ -1596,6 +1707,13 @@ def main(argv: list[str] | None = None) -> int:
               "(16-char sha256(session_id), '<legacy>', or '<unknown>'); "
               "defaults to the most recent session"),
     )
+    p_read.add_argument(
+        "--agent", default=None,
+        help=("filter to entries whose body 'agent' field matches "
+              f"(exact match; use '{AGENT_UNKNOWN}' for unattributed "
+              "entries). When --session is omitted, the filter applies "
+              "to the most recent session."),
+    )
     p_read.set_defaults(func=_cmd_read)
     p_sess = sub.add_parser("sessions")
     p_sess.add_argument("--limit", type=int, default=20,
@@ -1641,6 +1759,12 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help=f"path to agent settings (default: {DEFAULT_SETTINGS_FILE})",
     )
+    p_hook.add_argument(
+        "--dry-run",
+        action="store_true",
+        help=("resolve cadence + entry shape and print the plan; "
+              "skip every file write (header init, append, prune)"),
+    )
     p_hook.set_defaults(func=_cmd_hook_append)
     p_disp = sub.add_parser(
         "hook-dispatch",
@@ -1664,6 +1788,12 @@ def main(argv: list[str] | None = None) -> int:
         "--settings",
         default=None,
         help=f"path to agent settings (default: {DEFAULT_SETTINGS_FILE})",
+    )
+    p_disp.add_argument(
+        "--dry-run",
+        action="store_true",
+        help=("resolve platform → event → cadence chain and print the "
+              "plan; skip every file write (no header, no body row)"),
     )
     p_disp.set_defaults(func=_cmd_hook_dispatch)
     args = ap.parse_args(argv)

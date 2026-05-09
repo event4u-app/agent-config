@@ -497,6 +497,74 @@ def test_list_sessions_legacy_bucket_for_missing_s(hist: Path):
 
 
 # ---------------------------------------------------------------------------
+# multi-agent attribution: read --agent / sessions agents / status agents
+# ---------------------------------------------------------------------------
+
+
+def test_read_entries_agent_filter_exact_match(hist: Path):
+    ch.init(path=hist)
+    ch.append({"t": "user", "text": "a", "agent": "augment"}, path=hist, session="s1")
+    ch.append({"t": "user", "text": "b", "agent": "claude"}, path=hist, session="s1")
+    ch.append({"t": "user", "text": "c", "agent": "augment"}, path=hist, session="s1")
+    out = ch.read_entries(path=hist, agent="augment")
+    assert [e["text"] for e in out] == ["a", "c"]
+
+
+def test_read_entries_agent_unknown_matches_missing_field(hist: Path):
+    ch.init(path=hist)
+    ch.append({"t": "user", "text": "untagged"}, path=hist, session="s1")
+    ch.append({"t": "user", "text": "tagged", "agent": "augment"}, path=hist, session="s1")
+    out = ch.read_entries(path=hist, agent=ch.AGENT_UNKNOWN)
+    assert [e["text"] for e in out] == ["untagged"]
+
+
+def test_read_entries_agent_filter_combines_with_session_and_last(hist: Path):
+    ch.init(path=hist)
+    ch.append({"t": "user", "text": "a1", "agent": "augment"}, path=hist, session="s1")
+    ch.append({"t": "user", "text": "b1", "agent": "claude"}, path=hist, session="s1")
+    ch.append({"t": "user", "text": "a2", "agent": "augment"}, path=hist, session="s2")
+    out = ch.read_entries(path=hist, session="s1", agent="augment", last=1)
+    assert [e["text"] for e in out] == ["a1"]
+
+
+def test_list_sessions_collects_agents_per_bucket(hist: Path):
+    ch.init(path=hist)
+    ch.append({"t": "user", "text": "a", "agent": "augment"}, path=hist, session="s1")
+    ch.append({"t": "agent", "text": "b", "agent": "claude"}, path=hist, session="s1")
+    ch.append({"t": "user", "text": "c", "agent": "augment"}, path=hist, session="s2")
+    sessions = {s["id"]: s for s in ch.list_sessions(path=hist)}
+    assert sessions["s1"]["agents"] == ["augment", "claude"]
+    assert sessions["s2"]["agents"] == ["augment"]
+
+
+def test_list_sessions_unknown_agent_appears_in_bucket(hist: Path):
+    ch.init(path=hist)
+    ch.append({"t": "user", "text": "untagged"}, path=hist, session="s1")
+    ch.append({"t": "user", "text": "tagged", "agent": "augment"}, path=hist, session="s1")
+    sessions = ch.list_sessions(path=hist)
+    assert sessions[0]["agents"] == ["<unknown>", "augment"]
+
+
+def test_status_agents_aggregation(hist: Path):
+    ch.init(path=hist)
+    ch.append({"t": "user", "text": "a", "agent": "augment"}, path=hist, session="s1")
+    ch.append({"t": "user", "text": "b", "agent": "augment"}, path=hist, session="s1")
+    ch.append({"t": "user", "text": "c", "agent": "claude"}, path=hist, session="s2")
+    ch.append({"t": "user", "text": "untagged"}, path=hist, session="s2")
+    s = ch.status(path=hist)
+    assert s["agents"]["total"] == 3
+    assert s["agents"]["per_agent"] == {
+        "<unknown>": 1, "augment": 2, "claude": 1,
+    }
+
+
+def test_status_agents_zero_when_only_header(hist: Path):
+    ch.init(path=hist)
+    s = ch.status(path=hist)
+    assert s["agents"] == {"total": 0, "per_agent": {}}
+
+
+# ---------------------------------------------------------------------------
 # _apply_text_limit / _read_text_limits
 # ---------------------------------------------------------------------------
 
@@ -796,6 +864,141 @@ def test_hook_append_invalid_event_raises(settings_enabled: Path):
         ch.hook_append("nope", session_id="x",
                        settings_path=settings_enabled)
 
+
+# ---------------------------------------------------------------------------
+# hook_append — dry-run + session-rotation guardrail
+# ---------------------------------------------------------------------------
+
+
+def test_hook_append_dry_run_skips_file_write(
+    hist: Path, settings_enabled: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    res = ch.hook_append(
+        "user_prompt", session_id="sess-1",
+        payload={"text": "preview"}, settings_path=settings_enabled,
+        dry_run=True,
+    )
+    assert res["action"] == "dry_run"
+    assert res["would_action"] == "appended"
+    assert res["dry_run"] is True
+    assert res["entry_preview"]["t"] == "user"
+    assert res["entry_preview"]["text"] == "preview"
+    assert res["entry_preview"]["s"] == ch.derive_session_tag("sess-1")
+    assert not hist.is_file()
+
+
+def test_hook_append_dry_run_session_start_skips_init(
+    hist: Path, settings_enabled: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    res = ch.hook_append(
+        "session_start", session_id="sess-1",
+        settings_path=settings_enabled, dry_run=True,
+    )
+    assert res["action"] == "dry_run"
+    assert res["would_action"] == "session_start_noop"
+    assert res["dry_run"] is True
+    assert not hist.is_file()
+
+
+def test_hook_append_dry_run_skipped_cadence_carries_flag(
+    hist: Path, settings_enabled: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    res = ch.hook_append(
+        "agent_response", session_id="sess-1",
+        payload={"text": "x"}, settings_path=settings_enabled,
+        dry_run=True,
+    )
+    assert res["action"] == "skipped_cadence"
+    assert res["dry_run"] is True
+    assert not hist.is_file()
+
+
+def test_hook_append_dry_run_disabled_carries_flag(
+    hist: Path, settings_disabled: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    res = ch.hook_append(
+        "user_prompt", session_id="sess-1",
+        payload={"text": "x"}, settings_path=settings_disabled,
+        dry_run=True,
+    )
+    assert res["action"] == "disabled"
+    assert res["dry_run"] is True
+    assert not hist.is_file()
+
+
+def test_hook_append_session_rotation_warning(
+    hist: Path, settings_enabled: Path,
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    ch.hook_append(
+        "user_prompt", session_id="sess-1",
+        payload={"text": "first"}, settings_path=settings_enabled,
+    )
+    capsys.readouterr()  # drop init noise
+    ch.hook_append(
+        "user_prompt", session_id="sess-2",
+        payload={"text": "second"}, settings_path=settings_enabled,
+    )
+    err = capsys.readouterr().err
+    assert "chat-history session_rotation" in err
+    assert f"prior_s={ch.derive_session_tag('sess-1')}" in err
+    assert f"new_s={ch.derive_session_tag('sess-2')}" in err
+
+
+def test_hook_append_no_rotation_warning_on_first_entry(
+    hist: Path, settings_enabled: Path,
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    ch.hook_append(
+        "user_prompt", session_id="sess-1",
+        payload={"text": "first"}, settings_path=settings_enabled,
+    )
+    err = capsys.readouterr().err
+    assert "session_rotation" not in err
+
+
+def test_hook_append_no_rotation_warning_on_same_session(
+    hist: Path, settings_enabled: Path,
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    for _ in range(2):
+        ch.hook_append(
+            "user_prompt", session_id="sess-1",
+            payload={"text": "x"}, settings_path=settings_enabled,
+        )
+    err = capsys.readouterr().err
+    assert "session_rotation" not in err
+
+
+def test_hook_append_dry_run_emits_rotation_warning(
+    hist: Path, settings_enabled: Path,
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+):
+    monkeypatch.setenv("AGENT_CHAT_HISTORY_FILE", str(hist))
+    ch.hook_append(
+        "user_prompt", session_id="sess-1",
+        payload={"text": "first"}, settings_path=settings_enabled,
+    )
+    capsys.readouterr()
+    res = ch.hook_append(
+        "user_prompt", session_id="sess-2",
+        payload={"text": "preview"}, settings_path=settings_enabled,
+        dry_run=True,
+    )
+    err = capsys.readouterr().err
+    assert res["dry_run"] is True
+    assert "session_rotation" in err
+    # Body unchanged — only the original entry remains.
+    entries = ch.read_entries(path=hist)
+    assert len(entries) == 1
+    assert entries[0]["s"] == ch.derive_session_tag("sess-1")
 
 
 # ---------------------------------------------------------------------------
