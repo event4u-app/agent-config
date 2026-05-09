@@ -1291,12 +1291,19 @@ def lint_command(path: Path, text: str) -> LintResult:
     if not H1_PATTERN.search(text):
         issues.append(Issue("error", "missing_h1", "Command is missing an H1 heading (# Title)"))
 
-    # Must have at least one ## section with steps
+    # Must have at least one ## section with steps. Cluster-head and
+    # router-style commands (frontmatter cluster:/routes_to: or ≥ 3 .md
+    # links) are exempt — they delegate procedure to sub-commands or
+    # skills (road-to-feedback-followups P2.1).
     sections = extract_sections(text)
     has_steps = any(s.lower().startswith("step") for s in sections)
-    has_numbered = bool(re.search(r"^###?\s+\d+\.\s+", text, re.MULTILINE))
+    # Accept both ``## 1.`` / ``### 1.`` numbered headings AND
+    # ``### Step N`` / ``## Step N`` step-prefixed sub-headings.
+    has_numbered = bool(re.search(r"^###?\s+(?:\d+\.|step\s+\d+)\s+", text, re.MULTILINE | re.IGNORECASE))
     if not has_steps and not has_numbered:
-        issues.append(Issue("warning", "no_steps", "Command has no Steps section or numbered sub-headings"))
+        delegated = _command_delegation_signal(text, frontmatter)
+        if not delegated:
+            issues.append(Issue("warning", "no_steps", "Command has no Steps section or numbered sub-headings"))
 
     # --- Size check (docs/contracts/linter-structural-model.md) ---
     # Structural-density gate replaces sub-section + code-block heuristic

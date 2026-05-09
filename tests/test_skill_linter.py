@@ -798,6 +798,95 @@ Modify the code and fix the issues.
     assert not any(issue.code == "missing_analysis_before_action" for issue in result.issues)
 
 
+def test_cluster_head_command_exempt_from_no_steps(tmp_path: Path) -> None:
+    """Cluster-head command (frontmatter cluster:) does NOT fire no_steps
+    even without explicit Step sections — road-to-feedback-followups P2.1."""
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/commands/research.md",
+        """\
+---
+name: research
+cluster: research
+description: "Preliminary research scaffolder."
+---
+
+# /research
+
+Routes to downstream skills for the research workflow.
+
+## Trigger
+
+`/research <topic>`
+
+## Workflow
+
+Free-form prose without numbered step headings.
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(issue.code == "no_steps" for issue in result.issues)
+
+
+def test_non_cluster_command_without_steps_still_warns(tmp_path: Path) -> None:
+    """A command without delegation signal AND without step structure
+    STILL fires no_steps — exemption is narrow (cluster heads only)."""
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/commands/leaf-cmd.md",
+        """\
+---
+name: leaf-cmd
+description: "A standalone command without delegation."
+---
+
+# /leaf-cmd
+
+## Trigger
+
+`/leaf-cmd`
+
+## Notes
+
+Free-form prose without any step structure.
+""",
+    )
+
+    result = lint_file(path)
+    assert any(issue.code == "no_steps" for issue in result.issues)
+
+
+def test_command_with_step_n_subheadings_passes_no_steps(tmp_path: Path) -> None:
+    """Commands using ``### Step N`` sub-headings should NOT fire no_steps —
+    the linter recognizes both ``### N.`` and ``### Step N`` patterns."""
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/commands/has-steps.md",
+        """\
+---
+name: has-steps
+description: "Command with step-prefixed sub-headings."
+---
+
+# /has-steps
+
+## Workflow
+
+### Step 1 — Inspect
+
+Look at the input.
+
+### Step 2 — Act
+
+Apply the change.
+""",
+    )
+
+    result = lint_file(path)
+    assert not any(issue.code == "no_steps" for issue in result.issues)
+
+
 def test_guidelines_excluded_from_execution_checks(tmp_path: Path) -> None:
     """Guidelines should be excluded from execution quality checks."""
     path = write_file(
