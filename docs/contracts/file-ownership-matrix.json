@@ -1332,6 +1332,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/architecture-review-lens/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/artisan-commands/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1459,6 +1465,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/dcf-modeling/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/decision-record/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -1597,6 +1609,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/guideline-writing/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/incident-commander/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -1752,6 +1770,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/migration-architect/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/migration-creator/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1837,6 +1861,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/playwright-testing/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/po-discovery/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -1992,6 +2022,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/risk-officer/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/roadmap-management/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2082,6 +2118,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/stakeholder-tradeoff/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2137,6 +2179,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/systematic-debugging/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/tech-debt-tracker/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -3484,6 +3532,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/review-changes.md",
+      "target": ".agent-src.uncompressed/skills/architecture-review-lens/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/commands/review-changes.md",
@@ -6020,6 +6075,41 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/skills/architecture-review-lens/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/architecture-review-lens/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/architecture-review-lens/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/decision-record/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/architecture-review-lens/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/architecture-review-lens/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/judge-code-quality/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/architecture-review-lens/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/judge-security-auditor/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/artisan-commands/SKILL.md",
       "target": ".agent-src.uncompressed/skills/artisan-commands/SKILL.md",
       "type": "WRITE",
@@ -6410,6 +6500,20 @@
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/decision-record/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/adr-create/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/decision-record/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/decision-record/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncompressed/skills/deep-reading-analyst/SKILL.md",
@@ -6823,6 +6927,27 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/incident-commander/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/incident-commander/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/incident-commander/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/risk-officer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/incident-commander/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/threat-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/jira-integration/SKILL.md",
@@ -7266,6 +7391,34 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/skills/migration-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/data-flow-mapper/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/migration-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/decision-record/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/migration-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/migration-architect/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/migration-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/migration-creator/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/migration-creator/SKILL.md",
       "target": ".agent-src.uncompressed/skills/migration-creator/SKILL.md",
       "type": "WRITE",
@@ -7439,6 +7592,20 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/po-discovery/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/po-discovery/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/po-discovery/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/refine-ticket/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/project-analysis-core/SKILL.md",
@@ -7903,6 +8070,34 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/skills/risk-officer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/blast-radius-analyzer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/risk-officer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/judge-security-auditor/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/risk-officer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/risk-officer/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/risk-officer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/threat-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/roadmap-management/SKILL.md",
       "target": ".agent-src.uncompressed/commands/roadmap/create.md",
       "type": "READ_ONLY",
@@ -8253,6 +8448,27 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/skills/stakeholder-tradeoff/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/decision-record/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/stakeholder-tradeoff/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/risk-officer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/stakeholder-tradeoff/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/stakeholder-tradeoff/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
       "target": ".agent-src.uncompressed/commands/judge.md",
       "type": "READ_ONLY",
@@ -8524,6 +8740,13 @@
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/tech-debt-tracker/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/tech-debt-tracker/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncompressed/skills/technical-specification/SKILL.md",
