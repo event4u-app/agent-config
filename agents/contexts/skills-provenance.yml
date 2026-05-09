@@ -62,18 +62,20 @@ testing-anti-patterns:
     Five Iron Laws + per-anti-pattern gate functions. Cross-linked to pest-testing,
     test-driven-development, judge-test-coverage. Adopted under road-to-microck-harvest § P1.2.
 
-repomix:
+repomix-packer:
   author: yamadashy (yamadashy/repomix maintainers)
   source: https://github.com/yamadashy/repomix
   license: MIT
   license_clean: true
   kind: wrapper
-  last_verified: 2026-05-08
+  last_verified: 2026-05-09
   pinned_to: repomix CLI (peer-side)
   notes: |
     Peer-side CLI wrapper. Skill never installs the binary silently — surfaces npm/brew
     recipes and stops. Wrapper structure adopted from Microck@8f5c831. Adopted under
-    road-to-microck-harvest § P1.3.
+    road-to-microck-harvest § P1.3. Renamed from `repomix` to `repomix-packer`
+    on 2026-05-09 (road-to-feedback-followups § P1.1) to remove `bare_noun_name`
+    linter warning; the underlying CLI tool is still called `repomix`.
 
 mcp-builder:
   author: Microck (Microck/ordinary-claude-skills maintainers)

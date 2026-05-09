@@ -213,7 +213,7 @@
         "./.claude/skills/receiving-code-review",
         "./.claude/skills/refine-prompt",
         "./.claude/skills/refine-ticket",
-        "./.claude/skills/repomix",
+        "./.claude/skills/repomix-packer",
         "./.claude/skills/requesting-code-review",
         "./.claude/skills/research",
         "./.claude/skills/review-changes",

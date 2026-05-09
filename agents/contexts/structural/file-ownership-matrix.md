@@ -437,11 +437,11 @@
 | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `.agent-src.uncompressed/skills/adversarial-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `.agent-src.uncompressed/skills/validate-feature-fit/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/repomix/SKILL.md` | `.agent-src.uncompressed/commands/analyze-reference-repo.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/repomix/SKILL.md` | `.agent-src.uncompressed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/repomix/SKILL.md` | `.agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/repomix/SKILL.md` | `.agent-src.uncompressed/skills/judge-security-auditor/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/repomix/SKILL.md` | `.agent-src.uncompressed/skills/markitdown/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/repomix-packer/SKILL.md` | `.agent-src.uncompressed/commands/analyze-reference-repo.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/repomix-packer/SKILL.md` | `.agent-src.uncompressed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/repomix-packer/SKILL.md` | `.agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/repomix-packer/SKILL.md` | `.agent-src.uncompressed/skills/judge-security-auditor/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/repomix-packer/SKILL.md` | `.agent-src.uncompressed/skills/markitdown/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/requesting-code-review/SKILL.md` | `.agent-src.uncompressed/commands/commit.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/requesting-code-review/SKILL.md` | `.agent-src.uncompressed/commands/create-pr.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/requesting-code-review/SKILL.md` | `.agent-src.uncompressed/commands/create-pr/description-only.md` | `body_link` | 1 |

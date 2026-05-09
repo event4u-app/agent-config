@@ -1938,7 +1938,7 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/skills/repomix/SKILL.md": {
+    ".agent-src.uncompressed/skills/repomix-packer/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -7364,43 +7364,43 @@
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "source": ".agent-src.uncompressed/skills/repomix-packer/SKILL.md",
       "target": ".agent-src.uncompressed/commands/analyze-reference-repo.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "source": ".agent-src.uncompressed/skills/repomix-packer/SKILL.md",
       "target": ".agent-src.uncompressed/skills/blast-radius-analyzer/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "source": ".agent-src.uncompressed/skills/repomix-packer/SKILL.md",
       "target": ".agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "source": ".agent-src.uncompressed/skills/repomix-packer/SKILL.md",
       "target": ".agent-src.uncompressed/skills/judge-security-auditor/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "source": ".agent-src.uncompressed/skills/repomix-packer/SKILL.md",
       "target": ".agent-src.uncompressed/skills/markitdown/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/skills/repomix/SKILL.md",
-      "target": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "source": ".agent-src.uncompressed/skills/repomix-packer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/repomix-packer/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
