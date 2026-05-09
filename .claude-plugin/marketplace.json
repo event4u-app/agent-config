@@ -32,6 +32,7 @@
         "./.claude/skills/api-design",
         "./.claude/skills/api-endpoint",
         "./.claude/skills/api-testing",
+        "./.claude/skills/architecture-review-lens",
         "./.claude/skills/artisan-commands",
         "./.claude/skills/async-python-patterns",
         "./.claude/skills/authz-review",

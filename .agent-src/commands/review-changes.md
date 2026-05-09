@@ -1,7 +1,7 @@
 ---
 name: review-changes
-skills: [code-review, subagent-orchestration, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, git-workflow]
-description: Self-review local changes before creating a PR — dispatches to four specialized judges (bug, security, tests, quality) and consolidates verdicts
+skills: [code-review, subagent-orchestration, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, git-workflow]
+description: Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts
 disable-model-invocation: true
 suggestion:
   eligible: true
@@ -55,7 +55,7 @@ Read `.agent-settings.yml`:
 
 Unknown alias → stop. Never silently fall back.
 
-### 4. Dispatch to the four judges
+### 4. Dispatch to the five judges
 
 Each judge receives **the same diff plus the task context** (ticket,
 PR body, commit messages) and runs independently. The judges are:
@@ -66,16 +66,21 @@ PR body, commit messages) and runs independently. The judges are:
 | [`judge-security-auditor`](../skills/judge-security-auditor/SKILL.md) | AuthZ/AuthN, injection, secrets, unsafe deserialization, SSRF, XSS |
 | [`judge-test-coverage`](../skills/judge-test-coverage/SKILL.md) | Missing assertions, uncovered branches, over-mocking, regression-test gaps |
 | [`judge-code-quality`](../skills/judge-code-quality/SKILL.md) | Naming, SRP, DRY, dead code, consistency with codebase conventions |
+| [`architecture-review-lens`](../skills/architecture-review-lens/SKILL.md) | Layer violations, dependency direction, leaky abstractions, cross-service contract drift |
+
+The five judges weight equally in the consolidated verdict — none
+overrides another.
 
 Pick dispatch mode based on diff size and environment:
 
 - **Sequential** (default, simplest) — run bug-hunter → security-auditor
-  → test-coverage → code-quality, collect each verdict
+  → test-coverage → code-quality → architecture-review-lens, collect
+  each verdict
 - **Parallel** — if `subagents.max_parallel` in `.agent-settings.yml` is
-  ≥ 4 and subagent dispatch is available, run all four concurrently
+  ≥ 5 and subagent dispatch is available, run all five concurrently
   following the `do-in-parallel` pattern in
   [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md);
-  the four judges operate on the same diff but produce independent
+  the five judges operate on the same diff but produce independent
   reports, so no shared-state risk
 
 Each judge returns its own `Judge / Model / Target / Verdict /
@@ -129,7 +134,7 @@ Produce one combined report:
   before proceeding
 - If **any** judge returned `revise` → fix 🔴 findings automatically,
   ask before fixing 🟡 findings, report 🟢 as suggestions
-- If all four returned `apply` → the diff is ready; report and stop
+- If all five returned `apply` → the diff is ready; report and stop
 
 ### 7. Quality tools (verbosity-gated)
 
@@ -163,7 +168,7 @@ Per `verbosity.routine_confirmations` (default `false`):
 ## Use this command when
 
 - Preparing a self-review before opening a PR
-- Stress-testing a local branch with the same four lenses a reviewer
+- Stress-testing a local branch with the same five lenses a reviewer
   would apply
 - Sanity-checking a diff before handing it to `/create-pr`
 
