@@ -92,6 +92,96 @@ task lint-skills      # python3 scripts/skill_linter.py --all
   [`augment-portability`](.agent-src/rules/augment-portability.md) rule and
   `scripts/check_portability.py` enforce this in CI.
 
+## Agent-assisted contribution workflow
+
+The package is **maintenance-assisted** and **learning-supported** — not
+self-maintaining or self-learning. Automation handles structural quality
+and proposes changes; humans own semantic judgment and approve every
+change. The distinction matters: drafting a skill is fast, but
+generalizing it correctly and writing a trigger phrase that actually
+fires for the right intents still takes human review.
+
+### What the agent does for you
+
+Helper skills (`skill-writing`, `rule-writing`, `command-writing`,
+`description-assist`, `skill-reviewer`, `check-refs`,
+`agents-md-thin-root`) cover the mechanical work. You describe the
+intent — *"a skill that validates JWT tokens"*, *"a rule banning
+silent fallbacks"* — and the agent:
+
+- picks the right artefact type (skill vs. rule vs. command vs. guideline);
+- places it in the correct directory under `.agent-src.uncompressed/`;
+- writes frontmatter, trigger phrase (≤ 200 chars, multi-trigger coverage),
+  required sections, and a size budget that fits the linter;
+- runs `task sync` so the compressed and projected copies stay aligned;
+- runs `task lint-skills` and `task ci` and proposes fixes for any
+  failures.
+
+You do not need to memorise the directory layout, the kernel-rule budget,
+the size enforcement table, or the compression-hash registry. You do
+need to know *what* you want, *why* it generalises beyond your project,
+and *when* the agent's draft is wrong.
+
+### What CI catches and what it does not
+
+CI is structural, not semantic. `task ci` enforces frontmatter shape,
+description length, size budgets, compression-hash drift, broken
+cross-references, missing language anchors, kernel-rule prominence, and
+roadmap-dashboard sync. It will reject a malformed skill before review.
+
+CI cannot tell you whether a trigger phrase actually fires when it
+should, whether an example generalises beyond your project, or whether
+a new rule contradicts an existing one in spirit. That judgment is
+yours. Plan on one or two CI feedback rounds on a first contribution —
+this is normal, not a sign the docs lied.
+
+### Learning from real use — what it actually means
+
+The `learning-to-rule-or-skill` skill, the `capture-learnings` rule,
+and the `skill-improvement-pipeline` together let the agent **propose**
+rules or skills based on patterns it observed during a task. They never
+auto-promote anything. Every proposal lands as a draft for you to
+accept, reword, or discard. There is no cross-project training loop —
+each consumer project's learnings stay local unless you explicitly opt
+in to upstream contribution.
+
+Toggle: `pipelines.skill_improvement: true` in `.agent-settings.yml`
+(default true; set false for a silent agent).
+
+### Optional upstream contribution
+
+A consumer project can opt in to feed learnings back as PRs against
+this repository. Set `project.upstream_repo: "event4u-app/agent-config"`
+in `.agent-settings.yml` (empty by default). With it set, the
+`upstream-contribute` skill and `upstream-proposal` rule become active
+and the agent may **propose** an upstream PR when a local learning
+generalises.
+
+The setting flip is the easy part. Before enabling it, confirm:
+
+- **You have the right to contribute.** Check your employment contract
+  and your company's IP / open-source policy. Code and prose written
+  during work hours often belong to your employer.
+- **No proprietary content leaks.** Generalisation must strip internal
+  API names, customer identifiers, secrets, and project-specific
+  domain language. The agent assists; you verify.
+- **MIT license is acceptable.** Contributions ship under the package's
+  [MIT License](LICENSE).
+- **You review every PR before submission.** The skill's Iron Law is
+  *never create a PR without explicit user consent*. Setting the config
+  is not consent — clicking through the proposal is.
+
+### Honest limits
+
+- The agent drafts; you decide. *"It compiled, ship it"* is not a
+  review.
+- A structurally clean skill can still be semantically useless. Read
+  the trigger phrase out loud and ask whether you would actually want
+  the skill to fire on those words.
+- The package improves when contributors push back on the agent's
+  drafts. Silent acceptance is the failure mode that produces noisy,
+  redundant, or misfiring rules.
+
 ## Installer and Python tooling
 
 - Primary installer entry point: `scripts/install` (bash orchestrator).
