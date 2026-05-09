@@ -344,7 +344,6 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 | [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
 
 → [Browse all 101 active commands](.agent-src/commands/)
-&nbsp;&nbsp;&nbsp;&nbsp;<sub>(102 files total — 1 are deprecation shims that redirect to clustered commands)</sub>
 
 ---
 
