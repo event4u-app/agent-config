@@ -1,0 +1,32 @@
+{
+  "_comment": "Block D · D4 eval corpus. 5 blind tasks with human-curated top-1 skill. Pass = D4's #1 suggestion matches the human pick.",
+  "_eval_target": "≥ 3 / 5 match human pick",
+  "_labelled": "before-d4-build",
+  "tasks": [
+    {
+      "id": "B01",
+      "task": "review a livewire component for accessibility and reactive state",
+      "expected_top1": "livewire-architect"
+    },
+    {
+      "id": "B02",
+      "task": "write playwright tests for a checkout flow with page objects",
+      "expected_top1": "playwright-testing"
+    },
+    {
+      "id": "B03",
+      "task": "review agent skill descriptions for trigger quality and pushiness",
+      "expected_top1": "description-assist"
+    },
+    {
+      "id": "B04",
+      "task": "configure grafana with loki logql queries for red metrics",
+      "expected_top1": "grafana"
+    },
+    {
+      "id": "B05",
+      "task": "design a multi-phase migration with dual-write rollout",
+      "expected_top1": "migration-architect"
+    }
+  ]
+}

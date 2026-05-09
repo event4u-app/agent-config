@@ -1,0 +1,39 @@
+{
+  "D2": {
+    "hits": 10,
+    "total": 10,
+    "pct": 1.0,
+    "passed": true,
+    "misses": []
+  },
+  "D3": {
+    "flagged": [
+      "ai-agent",
+      "developer",
+      "eloquent-tamer",
+      "qa",
+      "stakeholder"
+    ],
+    "count": 5,
+    "passed": true
+  },
+  "D4": {
+    "hits": 3,
+    "total": 5,
+    "passed": true,
+    "misses": [
+      {
+        "id": "B01",
+        "expected": "livewire-architect",
+        "got": "livewire"
+      },
+      {
+        "id": "B03",
+        "expected": "description-assist",
+        "got": "estimate-ticket"
+      }
+    ]
+  },
+  "tools_passed": 3,
+  "pilot_passed": true
+}
