@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **378 artefacts** in this package.
+Maintainer-facing index of all **377 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -230,7 +230,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`user-interaction`](../.agent-src.uncompressed/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src.uncompressed/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (102)
+## Commands (101)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -257,7 +257,6 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`context:create`](../.agent-src.uncompressed/commands/context/create.md) | cluster: context | Analyze a codebase area and create a structured context document |
 | command | [`context:refactor`](../.agent-src.uncompressed/commands/context/refactor.md) | cluster: context | Analyze, update, and extend an existing context document |
 | command | [`context`](../.agent-src.uncompressed/commands/context.md) | cluster: context | Context orchestrator — routes to create, refactor |
-| shim | [`copilot-agents`](../.agent-src.uncompressed/commands/copilot-agents.md) | shim → /agents | [DEPRECATED 2026-05-09] Use /agents — routes init/optimize to the new /agents cluster. |
 | command | [`cost-report`](../.agent-src.uncompressed/commands/cost-report.md) |  | Capture token cost from the active Claude Code session, append to the local sessions store, and surface the 50/75/90/100% budget alert ladder with cost-profile suggestions. |
 | command | [`council:default`](../.agent-src.uncompressed/commands/council/default.md) | cluster: council | Default council lens — neutral framing, redacted context, advisory output only. Run `/council default <input>` for prompt/roadmap/diff/files; the cluster shows a menu when invoked bare. |
 | command | [`council:design`](../.agent-src.uncompressed/commands/council/design.md) | cluster: council | Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment. |
