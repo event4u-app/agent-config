@@ -62,5 +62,4 @@ the rationalization, then reject it:
 ## Provenance
 
 - Adapted from `obra/superpowers@v5.1.0` `testing/anti-patterns.md`.
-- Harvested per `agents/roadmaps/archive/road-to-superpowers-harvest.md` § P1.1.
 - Council validation: `agents/council-responses/superpowers-harvest-drift-adapted-plan.md` Q1.
