@@ -101,7 +101,7 @@
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Baseline snapshot (must run before any other phase) | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 1 | PR #64 pre-merge cleanup (immediate, blocks merge) | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 1 | Microck-harvest skill cleanup (immediate) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | Linter precision (false-positive cleanup) | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 3 | Governance hygiene | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 4 | Adoption signal (user-action-deferred · 2026-05-09) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |

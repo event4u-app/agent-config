@@ -43,11 +43,13 @@ later AC.
   commit the file. Records the `216 pass, 108 warn, 0 fail` baseline
   before any Phase-1 / Phase-2 changes.
 
-### Phase 1 — PR #64 pre-merge cleanup (immediate, blocks merge)
+### Phase 1 — Microck-harvest skill cleanup (immediate)
 
-PR #64 ships 5 new linter warnings on adopted Microck skills. Decision
-needed before merge — fix, accept-with-record, or backlog. Tolerating
-silently breaks the no-warning-drift posture held since 1.15.0.
+PR #64 (Microck harvest) introduced 5 new linter warnings on adopted
+skills. Decision needed — fix, accept-with-record, or backlog.
+Tolerating silently breaks the no-warning-drift posture held since
+1.15.0. (Merge timing is a delivery decision and out of scope for
+this roadmap; see `roadmap-writing` § "Do NOT".)
 
 - [x] P1.1 — Renamed `repomix` → `repomix-packer`; marketplace, provenance,
   ownership matrix, cross-refs regenerated in one pass. External-ref
@@ -69,7 +71,7 @@ silently breaks the no-warning-drift posture held since 1.15.0.
 - [x] P1.4 — Re-ran `task lint-skills` (219 pass, 105 warn, 0 fail —
   −3 vs. baseline). Updated PR #64 body with the resolution table
   (warning → skill → action → anchor) under
-  `## Feedback follow-up — Phase 1 pre-merge cleanup`.
+  `## Feedback follow-up — Phase 1 cleanup`.
 
 ### Phase 2 — Linter precision (false-positive cleanup)
 
@@ -171,8 +173,8 @@ not a missed target.
 All AC anchored to the Phase-0 baseline snapshot
 (`agents/analysis/lint-baseline-2026-05-09.txt`).
 
-- **Phase 1:** PR #64 merges with every new warning either fixed or
-  carrying `linter_accept_reason` frontmatter. Net new warnings vs.
+- **Phase 1:** Every new warning introduced by PR #64 is either fixed
+  or carries `linter_accept_reason` frontmatter. Net new warnings vs.
   baseline = 0 after P1.1 / P1.2 / P1.3.
 - **Phase 2:** `task lint-skills` reports baseline-warn − 12 or
   fewer (target: ≤96 warn) AND 0 fail. P2.1 regression tests green

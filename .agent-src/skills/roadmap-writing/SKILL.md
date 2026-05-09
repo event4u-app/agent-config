@@ -131,6 +131,11 @@ to every roadmap you author.
   template rule 13 + [`scope-control`](../../rules/scope-control.md#git-operations--permission-gated).
 * Plan automatic branch switches mid-roadmap (template rule 14).
 * Ship a phase without checkboxes (`roadmap-progress-sync` Iron Law #2).
+* Write merge, push, or commit steps into the roadmap. Roadmaps plan
+  **work**; merge / push / commit are delivery decisions owned by the
+  user (`commit-policy` Iron Law). A roadmap is "implementation-complete"
+  once its checkboxes are ticked and verification has been run — merge
+  timing is tracked outside the roadmap.
 * Use ALL-CAPS Iron-Law fenced blocks — those belong in
   [`kernel-membership`](../../../docs/contracts/kernel-membership.md)-listed
   rules, not roadmaps.
@@ -149,6 +154,10 @@ to every roadmap you author.
 - **Author-during-execution branch switches** — the agent should not
   propose a new branch mid-roadmap; that decision is fenced to
   authoring time.
+- **Merge / commit steps in roadmap body** — checkboxes like
+  "merge PR #X" or "commit phase Y" couple roadmap closure to git
+  operations the user has not authorized. Roadmap completion is
+  decoupled from delivery; ship-the-PR is its own decision.
 
 ## Examples
 
