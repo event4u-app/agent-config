@@ -318,6 +318,30 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.32.0](https://github.com/event4u-app/agent-config/compare/1.31.0...1.32.0) (2026-05-09)
+
+### Features
+
+* **roadmap:** bite-sized task granularity gate for structural roadmaps ([b23683d](https://github.com/event4u-app/agent-config/commit/b23683df15dd43229a25cad33882f6a692d92a97))
+* **skills:** add 3-scan self-review to planning skills ([6784fb8](https://github.com/event4u-app/agent-config/commit/6784fb8ad355ef5b2d7f2cebe5d5e26f114cbe4a))
+* **subagent-orchestration:** status taxonomy + externalized prompts + two-stage mode ([6d846a7](https://github.com/event4u-app/agent-config/commit/6d846a74441196b98cabf8cd1c18ca40db0cec89))
+* **skills:** TDD hardening with externalized anti-pattern catalogue ([db2b1a2](https://github.com/event4u-app/agent-config/commit/db2b1a2a550f10fa51742bef360044b9de1bb7ca))
+
+### Bug Fixes
+
+* **investigation:** inline council convergence (council files gitignored) ([ff93aa7](https://github.com/event4u-app/agent-config/commit/ff93aa7ee6f6cffff062838a644047470e1d462e))
+* **skills:** inline council convergence in anti-patterns provenance ([7d7e663](https://github.com/event4u-app/agent-config/commit/7d7e663f8e619882fd59465dfbfdb268132eeb8d))
+* **skills:** drop roadmap reference from anti-patterns provenance ([a49c010](https://github.com/event4u-app/agent-config/commit/a49c0107971a5b70a1fdf33ed1a19c91d075980a))
+
+### Chores
+
+* **ownership:** regenerate matrix after superpowers-harvest landing ([faf4794](https://github.com/event4u-app/agent-config/commit/faf479470db9c83d17e8332dd3498df1e5f4c34b))
+* **index:** regenerate after superpowers-harvest landing ([946f3cc](https://github.com/event4u-app/agent-config/commit/946f3ccad54da3a3898d0aeb4474be0b87e66800))
+* **roadmap:** remove old roadmap path (already archived) ([18f281b](https://github.com/event4u-app/agent-config/commit/18f281bbeb51e93feef40146af3a3b5e5cb916f2))
+* **roadmap:** close superpowers-harvest — Phase 1 LANDED, P1.4b deferred ([a296106](https://github.com/event4u-app/agent-config/commit/a296106c6a846a54c3fe20728203fb3bbae7fffc))
+
+Tests: 2560 (+74 since 1.31.0)
+
 ## [1.31.0](https://github.com/event4u-app/agent-config/compare/1.29.0...1.31.0) (2026-05-09)
 
 ### Features
