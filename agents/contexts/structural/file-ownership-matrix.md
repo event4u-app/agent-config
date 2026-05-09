@@ -5,13 +5,27 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **355**
-- Edges (incl. self-WRITE): **873**
+- Files indexed: **353**
+- Edges (incl. self-WRITE): **896**
 
 ## READ_ONLY edges
 
 | Source | Target | Via | Depth |
 |---|---|---|---:|
+| `.agent-src.uncompressed/commands/agents.md` | `.agent-src.uncompressed/commands/optimize/agents-dir.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/audit.md` | `.agent-src.uncompressed/commands/agents/optimize.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/audit.md` | `.agent-src.uncompressed/commands/optimize/agents-dir.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/audit.md` | `.agent-src.uncompressed/contexts/contracts/agents-md-anatomy.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/audit.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/audit.md` | `.agent-src.uncompressed/rules/rule-type-governance.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/audit.md` | `.agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/init.md` | `.agent-src.uncompressed/contexts/contracts/agents-md-anatomy.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/optimize.md` | `.agent-src.uncompressed/contexts/contracts/agents-md-anatomy.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/optimize.md` | `.agent-src.uncompressed/contexts/contracts/emergency-triage-block.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/optimize.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/optimize.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/optimize.md` | `.agent-src.uncompressed/rules/verify-before-complete.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/optimize.md` | `.agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/challenge-me.md` | `.agent-src.uncompressed/commands/challenge-me/vision.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/challenge-me.md` | `.agent-src.uncompressed/commands/council/default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/challenge-me.md` | `.agent-src.uncompressed/commands/grill-me.md` | `body_link` | 1 |
@@ -71,6 +85,13 @@
 | `.agent-src.uncompressed/commands/onboard.md` | `.agent-src.uncompressed/rules/onboarding-gate.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/onboard.md` | `.agent-src.uncompressed/skills/rtk-output-filtering/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/optimize-prompt.md` | `.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/optimize.md` | `.agent-src.uncompressed/commands/agents.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/optimize/agents-dir.md` | `.agent-src.uncompressed/commands/agents.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/optimize/agents-dir.md` | `.agent-src.uncompressed/commands/agents/audit.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/optimize/agents-dir.md` | `.agent-src.uncompressed/commands/agents/optimize.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/optimize/agents-dir.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/optimize/agents-dir.md` | `.agent-src.uncompressed/skills/agent-docs-writing/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/optimize/agents-dir.md` | `.agent-src.uncompressed/skills/override-management/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/refine-ticket.md` | `.agent-src.uncompressed/commands/estimate-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/refine-ticket.md` | `.agent-src.uncompressed/commands/jira-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/refine-ticket.md` | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `body_link` | 1 |
@@ -153,6 +174,9 @@
 | `.agent-src.uncompressed/contexts/communication/rules-auto/token-efficiency-mechanics.md` | `.agent-src.uncompressed/rules/token-efficiency.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md` | `.agent-src.uncompressed/rules/language-and-tone.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md` | `.agent-src.uncompressed/rules/user-interaction.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/contracts/agents-md-anatomy.md` | `.agent-src.uncompressed/contexts/contracts/consumer-agents-md-guide.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/contracts/agents-md-anatomy.md` | `.agent-src.uncompressed/contexts/contracts/emergency-triage-block.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/contracts/agents-md-anatomy.md` | `.agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `.agent-src.uncompressed/rules/direct-answers.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `.agent-src.uncompressed/rules/token-efficiency.md` | `body_link` | 1 |
@@ -299,6 +323,7 @@
 | `.agent-src.uncompressed/skills/adr-create/SKILL.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/agent-docs-writing/SKILL.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/agent-docs-writing/SKILL.md` | `.agent-src.uncompressed/skills/adr-create/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md` | `.agent-src.uncompressed/contexts/contracts/agents-md-anatomy.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md` | `.agent-src.uncompressed/rules/size-enforcement.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md` | `.agent-src.uncompressed/skills/agent-docs-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md` | `.agent-src.uncompressed/skills/copilot-agents-optimization/SKILL.md` | `body_link` | 1 |
@@ -535,8 +560,8 @@
 
 | Kind | Count |
 |---|---:|
-| `command` | 104 |
-| `context` | 30 |
+| `command` | 101 |
+| `context` | 31 |
 | `persona` | 8 |
 | `rule` | 60 |
 | `skill` | 153 |

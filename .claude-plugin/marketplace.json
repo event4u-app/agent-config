@@ -64,7 +64,6 @@
         "./.claude/skills/context-document",
         "./.claude/skills/context-refactor",
         "./.claude/skills/conventional-commits-writing",
-        "./.claude/skills/copilot-agents",
         "./.claude/skills/copilot-agents-optimization",
         "./.claude/skills/copilot-config",
         "./.claude/skills/cost-report",

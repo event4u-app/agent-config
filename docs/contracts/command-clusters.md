@@ -157,17 +157,14 @@ short `/agents` namespace; low-use folder ops nest under `/optimize`.
 
 | Old command | New command | Note |
 |---|---|---|
-| `/copilot-agents init` | `/agents init` | tool-name dropped; AGENTS.md is universal |
-| `/copilot-agents optimize` | `/agents optimize` | merged with `/optimize agents-md` |
 | `/optimize agents-md` | `/agents optimize` | Thin-Root refactor folded into `/agents` |
 | `/optimize agents` | `/agents audit` | read-only audit folded into `/agents`; `audit` + `check` collapsed |
 | `/agents prepare` | `/optimize agents-dir` | `--scaffold` flag or wizard mode |
 | `/agents audit` (folder) | `/optimize agents-dir` | `--audit` flag |
 | `/agents cleanup` | `/optimize agents-dir` | `--fix` flag |
 
-Cluster `/copilot-agents` is retired entirely. Deprecation shims
-emit one warning each and forward to the new cluster command for
-one minor cycle, then disappear per the removal cycle above.
+Cluster `/copilot-agents` is retired; the file-family operations now
+live under `/agents` (`init`, `optimize`).
 
 ## Linter behavior
 

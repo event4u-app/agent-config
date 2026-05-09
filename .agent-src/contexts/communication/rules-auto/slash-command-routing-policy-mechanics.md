@@ -4,7 +4,7 @@ Lookup table for the `slash-command-routing-policy` rule. Lists the
 locked clusters and their sub-commands so the rule itself can stay at
 its current LOC while still reflecting the full surface. Source of
 truth for the cluster names is
-[`docs/contracts/command-clusters.md`](../../../../../docs/contracts/command-clusters.md);
+[`docs/contracts/command-clusters.md`](../../../../../../docs/contracts/command-clusters.md);
 this file mirrors that contract for runtime lookup. Linter:
 `scripts/check_cluster_patterns.py` (verifies dispatcher shape).
 
@@ -23,7 +23,6 @@ this file mirrors that contract for runtime lookup. Linter:
 | `/tests` | 2 | `create` · `execute` | `/tests-create` · `/tests-execute`                                                                                                              |
 | `/context` | 2 | `create` · `refactor` | `/context-create` · `/context-refactor`                                                                                                         |
 | `/override` | 2 | `create` · `manage` | `/override-create` · `/override-manage`                                                                                                         |
-| `/copilot-agents` | — | (retired 2026-05-09) | superseded by `/agents`; deprecation shim emits warning and forwards `init` / `optimize` for one minor cycle                                  |
 | `/judge` | 2 | `solo` · `on-diff` · `steps` | `/judge` (legacy standalone) · `/do-and-judge` · `/do-in-steps`                                                                                 |
 | `/commit` | 2 | flag: `--in-chunks` | `/commit:in-chunks`                                                                                                                             |
 | `/create-pr` | 2 | flag: `--description-only` | `/create-pr:description-only`                                                                                                                   |
