@@ -1,0 +1,142 @@
+# Agent Command Consolidation — Reference Inventory
+Generated: 2026-05-09T06:28:08Z
+Roadmap: agents/roadmaps/road-to-agent-command-consolidation.md
+
+## Scope: every reference to 7 commands being retired/moved
+
+
+### Pattern: /copilot-agents
+.agent-src.uncompressed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md:26:| `/copilot-agents` | 2 | `init` · `optimize` | `/copilot-agents-init` · `/copilot-agents-optimize`                                                                                             |
+.agent-src.uncompressed/templates/AGENTS.md:4:  Fill placeholders or run `/copilot-agents-init`, then delete this
+.agent-src.uncompressed/commands/copilot-agents.md:12:# /copilot-agents
+.agent-src.uncompressed/commands/copilot-agents.md:14:Top-level orchestrator for the `/copilot-agents` family. Replaces 2
+.agent-src.uncompressed/commands/copilot-agents.md:21:| `/copilot-agents init` | `commands/copilot-agents/init.md` | Create AGENTS.md and `.github/copilot-instructions.md` from scratch |
+.agent-src.uncompressed/commands/copilot-agents.md:22:| `/copilot-agents optimize` | `commands/copilot-agents/optimize.md` | Refactor existing AGENTS.md and copilot-instructions.md for line budgets |
+.agent-src.uncompressed/commands/copilot-agents.md:29:1. Parse the user's argument: `/copilot-agents <sub-command> [args]`.
+.agent-src.uncompressed/commands/copilot-agents.md:42:- **Do NOT chain sub-commands.** One `/copilot-agents <sub>` per turn.
+.agent-src.uncompressed/commands/copilot-agents.md:43:- If the user invokes `/copilot-agents` with no argument, **show the
+.agent-src.uncompressed/commands/copilot-agents/init.md:13:# /copilot-agents init
+.agent-src.uncompressed/commands/copilot-agents/init.md:21:clean scaffold. For tuning an existing file, use `/copilot-agents-optimize`.
+.agent-src.uncompressed/commands/copilot-agents/init.md:38:| Both exist | Ask confirmation — offer `/copilot-agents-optimize` instead |
+.agent-src.uncompressed/commands/copilot-agents/init.md:135:  3. Run `/copilot-agents-optimize` periodically to deduplicate against .augment/
+.agent-src.uncompressed/commands/copilot-agents/optimize.md:13:# /copilot-agents optimize
+.agent-src.uncompressed/commands/copilot-agents/optimize.md:97:Auto-detect the real stack (same logic as `/copilot-agents-init` step 2):
+.agent-src.uncompressed/commands/copilot-agents/optimize.md:169:`/copilot-agents-init` as an alternative instead of patching in place:
+.agent-src.uncompressed/commands/copilot-agents/optimize.md:175:> 2. Back up current files and run `/copilot-agents-init` for a clean scaffold
+.agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md:135:- [`copilot-agents-optimization`](../copilot-agents-optimization/SKILL.md) — sibling skill for `.github/copilot-instructions.md`; runs alongside Thin-Root in `/optimize/agents`.
+.agent-src.uncompressed/skills/copilot-agents-optimization/SKILL.md:169:`/copilot-agents-init` to scaffold a clean replacement rather than
+.agent-src.uncompressed/skills/copilot-agents-optimization/SKILL.md:192:`/copilot-agents init` and `/copilot-agents optimize`.
+.agent-src.uncompressed/skills/copilot-agents-optimization/SKILL.md:215:- **Command:** `/copilot-agents-optimize`
+docs/contracts/file-ownership-matrix.json:144:    ".agent-src.uncompressed/commands/copilot-agents.md": {
+docs/contracts/file-ownership-matrix.json:150:    ".agent-src.uncompressed/commands/copilot-agents/init.md": {
+docs/contracts/file-ownership-matrix.json:156:    ".agent-src.uncompressed/commands/copilot-agents/optimize.md": {
+docs/contracts/file-ownership-matrix.json:1401:    ".agent-src.uncompressed/skills/copilot-agents-optimization/SKILL.md": {
+docs/contracts/file-ownership-matrix.json:2537:      "source": ".agent-src.uncompressed/commands/copilot-agents.md",
+docs/contracts/file-ownership-matrix.json:2538:      "target": ".agent-src.uncompressed/commands/copilot-agents.md",
+docs/contracts/file-ownership-matrix.json:2544:      "source": ".agent-src.uncompressed/commands/copilot-agents/init.md",
+docs/contracts/file-ownership-matrix.json:2545:      "target": ".agent-src.uncompressed/commands/copilot-agents/init.md",
+docs/contracts/file-ownership-matrix.json:2551:      "source": ".agent-src.uncompressed/commands/copilot-agents/optimize.md",
+docs/contracts/file-ownership-matrix.json:2552:      "target": ".agent-src.uncompressed/commands/copilot-agents/optimize.md",
+docs/contracts/file-ownership-matrix.json:5632:      "target": ".agent-src.uncompressed/skills/copilot-agents-optimization/SKILL.md",
+docs/contracts/file-ownership-matrix.json:5995:      "source": ".agent-src.uncompressed/skills/copilot-agents-optimization/SKILL.md",
+docs/contracts/file-ownership-matrix.json:5996:      "target": ".agent-src.uncompressed/skills/copilot-agents-optimization/SKILL.md",
+docs/catalog.md:40:| skill | [`copilot-agents-optimization`](../.agent-src/skills/copilot-agents-optimization/SKILL.md) |  | Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience. |
+docs/catalog.md:257:| command | [`copilot-agents:init`](../.agent-src/commands/copilot-agents/init.md) | cluster: copilot-agents | Create AGENTS.md and .github/copilot-instructions.md from scratch in the consumer project — interactive, auto-detects stack, never leaks other projects' identifiers. |
+docs/catalog.md:258:| command | [`copilot-agents:optimize`](../.agent-src/commands/copilot-agents/optimize.md) | cluster: copilot-agents | Analyzes and refactors AGENTS.md and copilot-instructions.md — removes duplications, enforces line budgets, and ensures both files are optimized for their audience. |
+docs/catalog.md:259:| command | [`copilot-agents`](../.agent-src/commands/copilot-agents.md) | cluster: copilot-agents | Copilot agents-doc orchestrator — routes to init, optimize |
+docs/skills-catalog.md:34:| [`copilot-agents-optimization`](../.agent-src/skills/copilot-agents-optimization/SKILL.md) | Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience. |
+.claude-plugin/marketplace.json:67:        "./.claude/skills/copilot-agents",
+
+### Pattern: copilot-agents/init
+.agent-src.uncompressed/commands/copilot-agents.md:21:| `/copilot-agents init` | `commands/copilot-agents/init.md` | Create AGENTS.md and `.github/copilot-instructions.md` from scratch |
+docs/contracts/file-ownership-matrix.json:150:    ".agent-src.uncompressed/commands/copilot-agents/init.md": {
+docs/contracts/file-ownership-matrix.json:2544:      "source": ".agent-src.uncompressed/commands/copilot-agents/init.md",
+docs/contracts/file-ownership-matrix.json:2545:      "target": ".agent-src.uncompressed/commands/copilot-agents/init.md",
+docs/catalog.md:257:| command | [`copilot-agents:init`](../.agent-src/commands/copilot-agents/init.md) | cluster: copilot-agents | Create AGENTS.md and .github/copilot-instructions.md from scratch in the consumer project — interactive, auto-detects stack, never leaks other projects' identifiers. |
+
+### Pattern: copilot-agents/optimize
+.agent-src.uncompressed/commands/copilot-agents.md:22:| `/copilot-agents optimize` | `commands/copilot-agents/optimize.md` | Refactor existing AGENTS.md and copilot-instructions.md for line budgets |
+docs/contracts/file-ownership-matrix.json:156:    ".agent-src.uncompressed/commands/copilot-agents/optimize.md": {
+docs/contracts/file-ownership-matrix.json:2551:      "source": ".agent-src.uncompressed/commands/copilot-agents/optimize.md",
+docs/contracts/file-ownership-matrix.json:2552:      "target": ".agent-src.uncompressed/commands/copilot-agents/optimize.md",
+docs/catalog.md:258:| command | [`copilot-agents:optimize`](../.agent-src/commands/copilot-agents/optimize.md) | cluster: copilot-agents | Analyzes and refactors AGENTS.md and copilot-instructions.md — removes duplications, enforces line budgets, and ensures both files are optimized for their audience. |
+
+### Pattern: /optimize agents-md
+.agent-src.uncompressed/commands/optimize/agents-md.md:14:# /optimize agents-md
+.agent-src.uncompressed/commands/optimize.md:23:| `/optimize agents-md` | `commands/optimize/agents-md.md` | Refactor `AGENTS.md` to Thin-Root contract — caps, capability bullets, pointer ratio, emergency triage |
+
+### Pattern: /optimize/agents-md
+.agent-src.uncompressed/commands/optimize.md:23:| `/optimize agents-md` | `commands/optimize/agents-md.md` | Refactor `AGENTS.md` to Thin-Root contract — caps, capability bullets, pointer ratio, emergency triage |
+
+### Pattern: optimize:agents-md
+.agent-src.uncompressed/commands/optimize/agents-md.md:2:name: optimize:agents-md
+
+### Pattern: /optimize agents
+.agent-src.uncompressed/commands/optimize/agents-md.md:14:# /optimize agents-md
+.agent-src.uncompressed/commands/optimize/agents-md.md:145:  triggers, and skill-level findings, route to `/optimize agents`.
+.agent-src.uncompressed/commands/optimize/agents.md:14:# /optimize agents
+.agent-src.uncompressed/commands/optimize.md:22:| `/optimize agents` | `commands/optimize/agents.md` | Audit agent infrastructure — token overhead, rule triggers, AGENTS.md |
+.agent-src.uncompressed/commands/optimize.md:23:| `/optimize agents-md` | `commands/optimize/agents-md.md` | Refactor `AGENTS.md` to Thin-Root contract — caps, capability bullets, pointer ratio, emergency triage |
+docs/migrations/commands-1.15.0.md:24:| `/optimize-agents` | `/optimize agents` | 1.16.0 |
+docs/contracts/command-clusters.md:31:| `optimize` | 1 | `agents` · `agents-md` · `augmentignore` · `rtk` · `skills` | `optimize-agents` · `optimize-augmentignore` · `optimize-rtk-filters` · `optimize-skills` (`agents-md` added 2026-05-09 — focused Thin-Root refactor of `AGENTS.md`, distinct from broader `/optimize agents` audit) |
+
+### Pattern: /optimize/agents
+.agent-src.uncompressed/commands/optimize.md:22:| `/optimize agents` | `commands/optimize/agents.md` | Audit agent infrastructure — token overhead, rule triggers, AGENTS.md |
+.agent-src.uncompressed/commands/optimize.md:23:| `/optimize agents-md` | `commands/optimize/agents-md.md` | Refactor `AGENTS.md` to Thin-Root contract — caps, capability bullets, pointer ratio, emergency triage |
+.agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md:21:- Running `/optimize/agents`.
+.agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md:135:- [`copilot-agents-optimization`](../copilot-agents-optimization/SKILL.md) — sibling skill for `.github/copilot-instructions.md`; runs alongside Thin-Root in `/optimize/agents`.
+docs/contracts/file-ownership-matrix.json:426:    ".agent-src.uncompressed/commands/optimize/agents.md": {
+docs/contracts/file-ownership-matrix.json:3069:      "source": ".agent-src.uncompressed/commands/optimize/agents.md",
+docs/contracts/file-ownership-matrix.json:3070:      "target": ".agent-src.uncompressed/commands/optimize/agents.md",
+docs/catalog.md:302:| command | [`optimize:agents`](../.agent-src/commands/optimize/agents.md) | cluster: optimize | Audits agent infrastructure — measures token overhead, checks rule triggers, verifies AGENTS.md. Suggest only, never auto-apply. |
+
+### Pattern: optimize:agents
+.agent-src.uncompressed/commands/optimize/agents-md.md:2:name: optimize:agents-md
+.agent-src.uncompressed/commands/optimize/agents.md:2:name: optimize:agents
+docs/catalog.md:302:| command | [`optimize:agents`](../.agent-src/commands/optimize/agents.md) | cluster: optimize | Audits agent infrastructure — measures token overhead, checks rule triggers, verifies AGENTS.md. Suggest only, never auto-apply. |
+
+### Pattern: /agents prepare
+.agent-src.uncompressed/commands/agents/prepare.md:13:# /agents prepare
+.agent-src.uncompressed/commands/agents.md:23:| `/agents prepare` | `commands/agents/prepare.md` | Scaffold the `agents/` directory structure |
+
+### Pattern: /agents/prepare
+.agent-src.uncompressed/commands/agents.md:23:| `/agents prepare` | `commands/agents/prepare.md` | Scaffold the `agents/` directory structure |
+docs/contracts/file-ownership-matrix.json:36:    ".agent-src.uncompressed/commands/agents/prepare.md": {
+docs/contracts/file-ownership-matrix.json:2201:      "source": ".agent-src.uncompressed/commands/agents/prepare.md",
+docs/contracts/file-ownership-matrix.json:2202:      "target": ".agent-src.uncompressed/commands/agents/prepare.md",
+docs/catalog.md:238:| command | [`agents:prepare`](../.agent-src/commands/agents/prepare.md) | cluster: agents | Scaffold the agents/ directory structure with all required subdirectories and .gitkeep files |
+
+### Pattern: agents:prepare
+.agent-src.uncompressed/commands/agents/prepare.md:2:name: agents:prepare
+docs/catalog.md:238:| command | [`agents:prepare`](../.agent-src/commands/agents/prepare.md) | cluster: agents | Scaffold the agents/ directory structure with all required subdirectories and .gitkeep files |
+
+### Pattern: /agents cleanup
+.agent-src.uncompressed/commands/agents/cleanup.md:13:# /agents cleanup
+.agent-src.uncompressed/commands/agents.md:22:| `/agents cleanup` | `commands/agents/cleanup.md` | Execute cleanup actions from a prior audit |
+
+### Pattern: /agents/cleanup
+.agent-src.uncompressed/commands/agents.md:22:| `/agents cleanup` | `commands/agents/cleanup.md` | Execute cleanup actions from a prior audit |
+docs/contracts/file-ownership-matrix.json:30:    ".agent-src.uncompressed/commands/agents/cleanup.md": {
+docs/contracts/file-ownership-matrix.json:2194:      "source": ".agent-src.uncompressed/commands/agents/cleanup.md",
+docs/contracts/file-ownership-matrix.json:2195:      "target": ".agent-src.uncompressed/commands/agents/cleanup.md",
+docs/catalog.md:237:| command | [`agents:cleanup`](../.agent-src/commands/agents/cleanup.md) | cluster: agents | Execute cleanup actions from an agents-audit — move, merge, delete, and update agent docs |
+
+### Pattern: agents:cleanup
+.agent-src.uncompressed/commands/agents/cleanup.md:2:name: agents:cleanup
+docs/catalog.md:237:| command | [`agents:cleanup`](../.agent-src/commands/agents/cleanup.md) | cluster: agents | Execute cleanup actions from an agents-audit — move, merge, delete, and update agent docs |
+
+### Pattern: /agents audit
+.agent-src.uncompressed/commands/agents/audit.md:14:# /agents audit
+.agent-src.uncompressed/commands/agents/cleanup.md:18:Check the audit-roadmap path created by `/agents audit`:
+.agent-src.uncompressed/commands/agents.md:21:| `/agents audit` | `commands/agents/audit.md` | Audit `agents/` for outdated docs, duplicates, orphaned overrides |
+
+### Pattern: /agents/audit
+.agent-src.uncompressed/commands/agents.md:21:| `/agents audit` | `commands/agents/audit.md` | Audit `agents/` for outdated docs, duplicates, orphaned overrides |
+docs/contracts/file-ownership-matrix.json:24:    ".agent-src.uncompressed/commands/agents/audit.md": {
+docs/contracts/file-ownership-matrix.json:2187:      "source": ".agent-src.uncompressed/commands/agents/audit.md",
+docs/contracts/file-ownership-matrix.json:2188:      "target": ".agent-src.uncompressed/commands/agents/audit.md",
+docs/catalog.md:236:| command | [`agents:audit`](../.agent-src/commands/agents/audit.md) | cluster: agents | Audits agents/ and module agents/ directories — finds outdated docs, structural issues, duplicates, orphaned overrides, and creates an improvement roadmap. |
+
+### Pattern: agents:audit
+.agent-src.uncompressed/commands/agents/audit.md:2:name: agents:audit
+docs/catalog.md:236:| command | [`agents:audit`](../.agent-src/commands/agents/audit.md) | cluster: agents | Audits agents/ and module agents/ directories — finds outdated docs, structural issues, duplicates, orphaned overrides, and creates an improvement roadmap. |

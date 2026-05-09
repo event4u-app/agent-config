@@ -15,6 +15,7 @@ _Origin: migrated from `.agent-src.uncompressed/rules/php-coding.md` per P4.2 of
 - No one-liner if statements.
 - Single quotes for strings without interpolation. `sprintf()` for complex strings.
 - Variables: `camelCase`. Array keys: `snake_case`. Constants: `UPPER_SNAKE_CASE`.
+- Don't assign single-use values to a variable — pass the expression directly. Carve-outs (side effects, loops, type narrowing) in [`code-clarity.md`](../code-clarity.md).
 - Typed properties, parameters, and return types — always.
 - Constructor property promotion where it makes sense.
 

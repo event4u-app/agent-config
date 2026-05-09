@@ -28,17 +28,16 @@ column 1 of this table.
 | Cluster | Phase | Sub-commands | Replaces |
 |---|:-:|---|---|
 | `fix` | 1 | `ci` · `pr` · `pr-bots` · `pr-developers` · `portability` · `refs` · `seeder` | `fix-ci` · `fix-pr-comments` · `fix-pr-bot-comments` · `fix-pr-developer-comments` · `fix-portability` · `fix-references` · `fix-seeder` |
-| `optimize` | 1 | `agents` · `augmentignore` · `rtk` · `skills` | `optimize-agents` · `optimize-augmentignore` · `optimize-rtk-filters` · `optimize-skills` |
+| `optimize` | 1 | `agents-dir` · `augmentignore` · `rtk` · `skills` | `optimize-augmentignore` · `optimize-rtk-filters` · `optimize-skills` · former `/optimize agents` and `/optimize agents-md` moved to the `/agents` file-family cluster 2026-05-09; `/agents prepare/audit/cleanup` collapsed into the single `/optimize agents-dir` (flags or wizard) per the agent-doc consolidation |
 | `feature` | 1 | `explore` · `plan` · `refactor` · `roadmap` · `dev` | `feature-explore` · `feature-plan` · `feature-refactor` · `feature-roadmap` · `feature-dev` |
 | `chat-history` | 2 | `show` · `import` · `learn` | `chat-history` (legacy status) — `resume` / `clear` / `checkpoint` removed in `road-to-chat-history-hook-only` (auto-adopt + structural hooks); `import` (verbatim cross-session render) and `learn` (project-improving learning extraction) added in the v4 stateless schema |
-| `agents` | 2 | `audit` · `cleanup` · `prepare` | `agents-audit` · `agents-cleanup` · `agents-prepare` |
+| `agents` | 2 | `init` · `optimize` · `audit` | AGENTS.md file family (high-frequency) — repurposed 2026-05-09: `init` (was `/copilot-agents init`) · `optimize` (merger of `/optimize agents-md` + `/copilot-agents optimize`) · `audit` (was `/optimize agents`, collapses old `audit` + `check` verbs); legacy folder ops (`prepare` / `cleanup` / folder-`audit`) moved to `/optimize agents-dir` |
 | `memory` | 2 | `add` · `load` · `promote` · `propose` | `memory-add` · `memory-full` · `memory-promote` · `propose-memory` |
 | `roadmap` | 2 | `create` · `ai-council` · `process-step` · `process-phase` · `process-full` | `roadmap-create` · `roadmap-execute` (replaced — autonomous, no per-step gate; `process-phase` is the default execution scope); `ai-council` added 2026-05-07 — wraps `/council default` with `--input-mode roadmap --depth deep` |
 | `module` | 2 | `create` · `explore` | `module-create` · `module-explore` |
 | `tests` | 2 | `create` · `execute` | `tests-create` · `tests-execute` |
 | `context` | 2 | `create` · `refactor` | `context-create` · `context-refactor` |
 | `override` | 2 | `create` · `manage` | `override-create` · `override-manage` |
-| `copilot-agents` | 2 | `init` · `optimize` | `copilot-agents-init` · `copilot-agents-optimize` |
 | `judge` | 2 | `solo` · `on-diff` · `steps` | `judge` (legacy standalone) · `do-and-judge` · `do-in-steps` |
 | `commit` | 2 | `in-chunks` | `commit-in-chunks` |
 | `create-pr` | 2 | `description-only` | `create-pr-description` |
@@ -148,6 +147,24 @@ release window of warnings; the next-minor release notes call out
 the removal explicitly. The 1.17.0 release ships Phase 2 cluster
 locks **and** drops the seven Phase 1 atomic shims at the end of
 their deprecation cycle.
+
+## Agent-doc consolidation (2026-05-09)
+
+Single-release breaking change folding seven scattered agent-doc
+commands into the `/agents` (file-family) and `/optimize agents-dir`
+surfaces. Frequency-weighted: high-use AGENTS.md operations get the
+short `/agents` namespace; low-use folder ops nest under `/optimize`.
+
+| Old command | New command | Note |
+|---|---|---|
+| `/optimize agents-md` | `/agents optimize` | Thin-Root refactor folded into `/agents` |
+| `/optimize agents` | `/agents audit` | read-only audit folded into `/agents`; `audit` + `check` collapsed |
+| `/agents prepare` | `/optimize agents-dir` | `--scaffold` flag or wizard mode |
+| `/agents audit` (folder) | `/optimize agents-dir` | `--audit` flag |
+| `/agents cleanup` | `/optimize agents-dir` | `--fix` flag |
+
+Cluster `/copilot-agents` is retired; the file-family operations now
+live under `/agents` (`init`, `optimize`).
 
 ## Linter behavior
 

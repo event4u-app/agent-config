@@ -166,7 +166,7 @@ prevent. Fix or remove those BEFORE any dedup/compress work — there's
 no point deduplicating content that is about to be rewritten.
 
 When the drift is severe (whole sections are wrong), recommend
-`/copilot-agents-init` to scaffold a clean replacement rather than
+`/agents init` to scaffold a clean replacement rather than
 patching forever.
 
 ## agent-config Path Conventions — Preserve, Don't "Fix"
@@ -189,7 +189,7 @@ it as "redundant" and never trim its bullets. The patterns it covers:
 If the consumer project's `copilot-instructions.md` is missing the
 section, **add it** during optimization using the canonical block
 from `.augment/templates/copilot-instructions.md`. Surfaces include
-`/copilot-agents init` and `/copilot-agents optimize`.
+`/agents init` and `/agents optimize`.
 
 ## Optimization Checklist
 
@@ -212,7 +212,7 @@ When optimizing either file, check:
 
 ## Related
 
-- **Command:** `/copilot-agents-optimize`
+- **Command:** `/agents optimize`
 - **Skill:** `copilot-config` — Copilot behavior and PR review patterns
 - **Skill:** `agent-docs-writing` — documentation hierarchy
 - **Context:** `augment-infrastructure.md` — full `.augment/` overview

@@ -138,6 +138,56 @@ class TestRenderChangelog:
         assert full.startswith("## 0.1.0 (2026-04-24)")
         assert "compare/" not in full.splitlines()[0]
 
+    def test_trend_line_appended_when_provided(self) -> None:
+        c = _c("feat: x")
+        _, body = rel.render_changelog_entry(
+            "1.2.0", "1.1.0", [c], "2026-04-24",
+            test_trend_line="Tests: 2465 (+12 since 1.1.0)",
+        )
+        assert body.rstrip().endswith("Tests: 2465 (+12 since 1.1.0)")
+
+    def test_trend_line_omitted_when_none(self) -> None:
+        c = _c("feat: x")
+        _, body = rel.render_changelog_entry(
+            "1.2.0", "1.1.0", [c], "2026-04-24", test_trend_line=None,
+        )
+        assert "Tests:" not in body
+
+
+class TestPreviousTestCountFromChangelog:
+    def test_extracts_count_under_matching_tag(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        changelog = tmp_path / "CHANGELOG.md"
+        changelog.write_text(
+            "# Changelog\n\n"
+            "## [1.2.0](url) (2026-04-24)\n\n"
+            "### Features\n\n* feat\n\n"
+            "Tests: 2400 (+5 since 1.1.0)\n\n"
+            "## [1.1.0](url) (2026-04-10)\n\n"
+            "Tests: 2395\n",
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(rel, "CHANGELOG", changelog)
+        assert rel._previous_test_count_from_changelog("1.2.0") == 2400
+        assert rel._previous_test_count_from_changelog("1.1.0") == 2395
+
+    def test_returns_none_when_tag_missing(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        changelog = tmp_path / "CHANGELOG.md"
+        changelog.write_text("# Changelog\n", encoding="utf-8")
+        monkeypatch.setattr(rel, "CHANGELOG", changelog)
+        assert rel._previous_test_count_from_changelog("9.9.9") is None
+
+    def test_returns_none_when_no_tag_given(self) -> None:
+        assert rel._previous_test_count_from_changelog(None) is None
+
+    def test_returns_none_when_no_count_line(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        changelog = tmp_path / "CHANGELOG.md"
+        changelog.write_text(
+            "# Changelog\n\n## [1.0.0](url) (2026-01-01)\n\n* feat\n",
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(rel, "CHANGELOG", changelog)
+        assert rel._previous_test_count_from_changelog("1.0.0") is None
+
 
 # ─── file mutations ───────────────────────────────────────────────────────────
 

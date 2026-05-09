@@ -318,6 +318,7 @@ _TASK_DETECTOR_SKIP = (
     "contexts/communication/rules-auto/augment-portability-mechanics.md",
     "rules/package-ci-checks.md",
     "contexts/communication/rules-auto/package-ci-checks-mechanics.md",
+    "contexts/contracts/agents-md-anatomy.md",
 )
 
 

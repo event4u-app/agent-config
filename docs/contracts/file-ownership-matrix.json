@@ -27,13 +27,13 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/commands/agents/cleanup.md": {
+    ".agent-src.uncompressed/commands/agents/init.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/commands/agents/prepare.md": {
+    ".agent-src.uncompressed/commands/agents/optimize.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
@@ -136,24 +136,6 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/commands/context/refactor.md": {
-      "kind": "command",
-      "rule_type": null,
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/commands/copilot-agents.md": {
-      "kind": "command",
-      "rule_type": null,
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/commands/copilot-agents/init.md": {
-      "kind": "command",
-      "rule_type": null,
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/commands/copilot-agents/optimize.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
@@ -423,7 +405,7 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/commands/optimize/agents.md": {
+    ".agent-src.uncompressed/commands/optimize/agents-dir.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
@@ -694,6 +676,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/contexts/contracts/agents-md-anatomy.md": {
       "kind": "context",
       "rule_type": null,
       "load_context": [],
@@ -1938,7 +1926,7 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/skills/repomix/SKILL.md": {
+    ".agent-src.uncompressed/skills/repomix-packer/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -2184,6 +2172,13 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/commands/agents.md",
+      "target": ".agent-src.uncompressed/commands/optimize/agents-dir.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/commands/agents/audit.md",
       "target": ".agent-src.uncompressed/commands/agents/audit.md",
       "type": "WRITE",
@@ -2191,18 +2186,109 @@
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/commands/agents/cleanup.md",
-      "target": ".agent-src.uncompressed/commands/agents/cleanup.md",
+      "source": ".agent-src.uncompressed/commands/agents/audit.md",
+      "target": ".agent-src.uncompressed/commands/agents/optimize.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/audit.md",
+      "target": ".agent-src.uncompressed/commands/optimize/agents-dir.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/audit.md",
+      "target": ".agent-src.uncompressed/contexts/contracts/agents-md-anatomy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/audit.md",
+      "target": ".agent-src.uncompressed/rules/commit-policy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/audit.md",
+      "target": ".agent-src.uncompressed/rules/rule-type-governance.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/audit.md",
+      "target": ".agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/init.md",
+      "target": ".agent-src.uncompressed/commands/agents/init.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/commands/agents/prepare.md",
-      "target": ".agent-src.uncompressed/commands/agents/prepare.md",
+      "source": ".agent-src.uncompressed/commands/agents/init.md",
+      "target": ".agent-src.uncompressed/contexts/contracts/agents-md-anatomy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/optimize.md",
+      "target": ".agent-src.uncompressed/commands/agents/optimize.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/optimize.md",
+      "target": ".agent-src.uncompressed/contexts/contracts/agents-md-anatomy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/optimize.md",
+      "target": ".agent-src.uncompressed/contexts/contracts/emergency-triage-block.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/optimize.md",
+      "target": ".agent-src.uncompressed/rules/commit-policy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/optimize.md",
+      "target": ".agent-src.uncompressed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/optimize.md",
+      "target": ".agent-src.uncompressed/rules/verify-before-complete.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/optimize.md",
+      "target": ".agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/commands/analyze-reference-repo.md",
@@ -2529,27 +2615,6 @@
     {
       "source": ".agent-src.uncompressed/commands/context/refactor.md",
       "target": ".agent-src.uncompressed/commands/context/refactor.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/commands/copilot-agents.md",
-      "target": ".agent-src.uncompressed/commands/copilot-agents.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/commands/copilot-agents/init.md",
-      "target": ".agent-src.uncompressed/commands/copilot-agents/init.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/commands/copilot-agents/optimize.md",
-      "target": ".agent-src.uncompressed/commands/copilot-agents/optimize.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -3060,17 +3125,66 @@
     },
     {
       "source": ".agent-src.uncompressed/commands/optimize.md",
+      "target": ".agent-src.uncompressed/commands/agents.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/optimize.md",
       "target": ".agent-src.uncompressed/commands/optimize.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/commands/optimize/agents.md",
-      "target": ".agent-src.uncompressed/commands/optimize/agents.md",
+      "source": ".agent-src.uncompressed/commands/optimize/agents-dir.md",
+      "target": ".agent-src.uncompressed/commands/agents.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/optimize/agents-dir.md",
+      "target": ".agent-src.uncompressed/commands/agents/audit.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/optimize/agents-dir.md",
+      "target": ".agent-src.uncompressed/commands/agents/optimize.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/optimize/agents-dir.md",
+      "target": ".agent-src.uncompressed/commands/optimize/agents-dir.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/optimize/agents-dir.md",
+      "target": ".agent-src.uncompressed/rules/commit-policy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/optimize/agents-dir.md",
+      "target": ".agent-src.uncompressed/skills/agent-docs-writing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/optimize/agents-dir.md",
+      "target": ".agent-src.uncompressed/skills/override-management/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/commands/optimize/augmentignore.md",
@@ -3957,6 +4071,34 @@
     {
       "source": ".agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md",
       "target": ".agent-src.uncompressed/rules/user-interaction.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/contracts/agents-md-anatomy.md",
+      "target": ".agent-src.uncompressed/contexts/contracts/agents-md-anatomy.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/contracts/agents-md-anatomy.md",
+      "target": ".agent-src.uncompressed/contexts/contracts/consumer-agents-md-guide.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/contracts/agents-md-anatomy.md",
+      "target": ".agent-src.uncompressed/contexts/contracts/emergency-triage-block.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/contracts/agents-md-anatomy.md",
+      "target": ".agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -5605,6 +5747,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md",
+      "target": ".agent-src.uncompressed/contexts/contracts/agents-md-anatomy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md",
@@ -7364,43 +7513,43 @@
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "source": ".agent-src.uncompressed/skills/repomix-packer/SKILL.md",
       "target": ".agent-src.uncompressed/commands/analyze-reference-repo.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "source": ".agent-src.uncompressed/skills/repomix-packer/SKILL.md",
       "target": ".agent-src.uncompressed/skills/blast-radius-analyzer/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "source": ".agent-src.uncompressed/skills/repomix-packer/SKILL.md",
       "target": ".agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "source": ".agent-src.uncompressed/skills/repomix-packer/SKILL.md",
       "target": ".agent-src.uncompressed/skills/judge-security-auditor/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "source": ".agent-src.uncompressed/skills/repomix-packer/SKILL.md",
       "target": ".agent-src.uncompressed/skills/markitdown/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/skills/repomix/SKILL.md",
-      "target": ".agent-src.uncompressed/skills/repomix/SKILL.md",
+      "source": ".agent-src.uncompressed/skills/repomix-packer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/repomix-packer/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0

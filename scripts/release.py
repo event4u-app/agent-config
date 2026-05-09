@@ -319,8 +319,15 @@ def render_changelog_entry(
     prev: str | None,
     commits: list[Commit],
     today: str,
+    *,
+    test_trend_line: str | None = None,
 ) -> tuple[str, str]:
-    """Return (heading-aware full entry, body-only for GitHub Release notes)."""
+    """Return (heading-aware full entry, body-only for GitHub Release notes).
+
+    ``test_trend_line`` — optional pre-computed ``Tests: N (+M …)`` footer
+    (road-to-feedback-followups P3.2). Computed by the caller so tests
+    don't trigger a recursive pytest collection.
+    """
     if prev:
         heading = (
             f"## [{version}](https://github.com/{REPO_SLUG}/compare/"
@@ -364,6 +371,12 @@ def render_changelog_entry(
         for c in other:
             body_lines.append(_changelog_line(c))
 
+    # Test-count trend footer (road-to-feedback-followups P3.2). Silent
+    # on errors — never a release blocker.
+    if test_trend_line:
+        body_lines.append("")
+        body_lines.append(test_trend_line)
+
     body = "\n".join(body_lines).lstrip("\n")
     full = heading + "\n\n" + body + "\n"
     return full, body
@@ -374,6 +387,65 @@ def _changelog_line(c: Commit) -> str:
     short = c.sha[:7]
     link = f"https://github.com/{REPO_SLUG}/commit/{c.sha}"
     return f"* {scope}{c.subject} ([{short}]({link}))"
+
+
+# ─── test-count trend (road-to-feedback-followups P3.2) ───────────────────────
+
+_TEST_COUNT_LINE_RE = re.compile(r"^Tests:\s+(\d+)", re.MULTILINE)
+_PYTEST_COLLECTED_RE = re.compile(r"^(\d+)\s+tests?\s+collected", re.MULTILINE)
+
+
+def _count_tests_current() -> int | None:
+    """Return the count from `pytest --collect-only -q` on the current
+    tree. Returns None when pytest isn't available or collection fails —
+    the trend line is informational, never a release blocker.
+    """
+    try:
+        result = subprocess.run(
+            ["python3", "-m", "pytest", "--collect-only", "-q"],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode != 0:
+        return None
+    match = _PYTEST_COLLECTED_RE.search(result.stdout)
+    return int(match.group(1)) if match else None
+
+
+def _previous_test_count_from_changelog(prev_tag: str | None) -> int | None:
+    """Read CHANGELOG.md and return the most recent ``Tests: N`` footer
+    under the ``prev_tag`` heading, or None when not found.
+    """
+    if not prev_tag or not CHANGELOG.exists():
+        return None
+    text = CHANGELOG.read_text(encoding="utf-8")
+    heading_re = re.compile(rf"^##\s+\[?{re.escape(prev_tag)}\b", re.MULTILINE)
+    m = heading_re.search(text)
+    if not m:
+        return None
+    next_heading = re.search(r"^##\s+\[?\d+\.\d+\.\d+", text[m.end():], re.MULTILINE)
+    section = text[m.end(): m.end() + (next_heading.start() if next_heading else len(text))]
+    count_match = _TEST_COUNT_LINE_RE.search(section)
+    return int(count_match.group(1)) if count_match else None
+
+
+def _render_test_trend_line(prev_tag: str | None) -> str | None:
+    """Return the ``Tests: N (+M since X.Y.Z)`` footer line, or None when
+    the current count cannot be determined. Silent on collection errors.
+    """
+    current = _count_tests_current()
+    if current is None:
+        return None
+    previous = _previous_test_count_from_changelog(prev_tag)
+    if previous is None or not prev_tag:
+        return f"Tests: {current}"
+    delta = current - previous
+    sign = "+" if delta >= 0 else ""
+    return f"Tests: {current} ({sign}{delta} since {prev_tag})"
 
 
 def prepend_changelog(path: Path, entry: str) -> None:
@@ -787,7 +859,10 @@ def main(argv: list[str] | None = None) -> int:
         preflight(target, resume=args.resume)
 
     today = _date.today().isoformat()
-    full, body = render_changelog_entry(target, prev, commits, today)
+    test_trend_line = _render_test_trend_line(prev)
+    full, body = render_changelog_entry(
+        target, prev, commits, today, test_trend_line=test_trend_line
+    )
     plan = Plan(
         current=current,
         target=target,

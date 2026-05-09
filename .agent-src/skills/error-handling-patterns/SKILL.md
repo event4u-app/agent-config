@@ -80,8 +80,8 @@ Exactly **one** layer translates internal errors to the egress format (HTTP stat
 
 ## Procedure: Apply the framework to a new feature
 
-1. List failure modes (each external call, each invariant, each user input class).
-2. Run Step 1 against each, write the classification next to it.
+1. **Inspect** the feature surface — identify every failure mode (each external call, each invariant, each user input class) and write it down.
+2. Run Step 1 of the decision framework against each entry; write the classification next to it.
 3. Pick reporting mechanism per Step 2; reject combinations the language idiom rejects.
 4. For each external call, run Step 3 and write down the chosen resilience strategy.
 5. Sketch the error payload shape (Step 4) and the single boundary (Step 5).

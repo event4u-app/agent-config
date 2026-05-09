@@ -1,25 +1,24 @@
 # {{project_name}}
 
 <!--
-  AGENTS.md entry point for AI coding agents. Installed by
-  `event4u/agent-config`. Fill placeholders (or run `/copilot-agents-init`)
-  and delete this comment. Keep thin; bulk prose belongs in the linked guide.
+  Fill placeholders or run `/agents init`, then delete this
+  comment. Iron Law — capability bullets, not path lists; paths rot.
+  Tool stubs (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`) link here.
+  Anatomy + recipes: `.augment/contexts/contracts/agents-md-anatomy.md`.
 -->
 
-{{project_description}}
+> {{project_description}}
 
 ## Layers
 
-| Layer | Location | Purpose |
+| Layer | Location | Edits |
 |---|---|---|
-| **Shared package** | `.augment/`, `.agent-src/` | Installed skills / rules / commands — do not hand-edit |
-| **Project overrides** | `agents/overrides/` | Customizations of shared resources |
-| **Project docs** | `agents/` | Architecture, features, roadmaps, sessions, contexts |
-| **Agent settings** | `.agent-settings.yml` | Project-specific config consumed by skills |
+| Installed package | `.augment/`, `.agent-src/` | hands-off — managed by `event4u/agent-config` |
+| Project layer | `agents/`, `agents/overrides/`, `.agent-settings.yml` | your customizations and config |
 
 ## Pointers
 
-- **Filling out this AGENTS.md** — tech-stack / dev-setup / testing / quality / project-structure templates plus `/work` + `/implement-ticket` entry flow and multi-agent matrix: [`.augment/contexts/contracts/consumer-agents-md-guide.md`](.augment/contexts/contracts/consumer-agents-md-guide.md).
+- **Filling out this AGENTS.md** — section templates, capability bullets, multi-agent entry flow, monorepo per-package layout: [`.augment/contexts/contracts/consumer-agents-md-guide.md`](.augment/contexts/contracts/consumer-agents-md-guide.md).
 - **Behavior rules (always active)** — Iron Laws and routed rules that fire automatically while you work in this project: [`.augment/rules/`](.augment/rules/).
 - **Skills (on-demand expertise)** — domain skills surfaced by description; invoked when their trigger fires: [`.augment/skills/`](.augment/skills/).
 - **Commands (workflows)** — slash-commands the agent runs end-to-end (`/work`, `/implement-ticket`, `/commit`, `/create-pr`, …): [`.augment/commands/`](.augment/commands/).

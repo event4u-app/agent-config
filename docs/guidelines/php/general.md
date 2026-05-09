@@ -24,6 +24,14 @@
 - Retrieving: `getUser()`, `fetchUserData()` — not `user()`, `userData()`
 - Actions: `sendEmail()`, `processPayment()` — not `email()`, `payment()`
 
+## Variables
+
+- **Don't assign single-use values to a variable** — pass the expression
+  directly to the call. Universal rule with carve-outs (side effects,
+  loops, debugger, type narrowing) lives in
+  [`code-clarity.md`](../code-clarity.md) § Don't assign single-use
+  values to a variable.
+
 ## Strings
 
 - Single quotes when no interpolation: `$table = 'users';`

@@ -93,14 +93,23 @@ def main() -> int:
     # Shim-specific messaging only applies during a deprecation window.
     # When shims == 0 the clauses are dropped from public docs entirely;
     # re-add these patterns when a new deprecation cycle starts.
+    #
+    # AGENTS.md is Thin-Root (per agents-md-thin-root skill) — it carries
+    # pointers, not an inventory tree. Tree-shaped shim messaging only
+    # applies when AGENTS.md actually contains a `commands/` tree block
+    # (legacy form). README absorbs the deprecation advertisement either way.
     if shims > 0:
         checks.extend([
             (README, r"\((\d+) files total ", total, "browse meta · total files"),
             (README, r"— (\d+) are deprecation shims", shims, "browse meta · shims"),
-            (AGENTS, r"commands/\s+\((\d+) files —", total, "tree · total files"),
-            (AGENTS, r"files — (\d+) active", active, "tree · active"),
-            (AGENTS, r"active \+ (\d+) deprecation shims", shims, "tree · shims"),
         ])
+        agents_text = AGENTS.read_text(encoding="utf-8") if AGENTS.exists() else ""
+        if re.search(r"commands/\s+\(", agents_text):
+            checks.extend([
+                (AGENTS, r"commands/\s+\((\d+) files —", total, "tree · total files"),
+                (AGENTS, r"files — (\d+) active", active, "tree · active"),
+                (AGENTS, r"active \+ (\d+) deprecation shims", shims, "tree · shims"),
+            ])
 
     errors: list[str] = []
     for path, pattern, expected, label in checks:

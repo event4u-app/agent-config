@@ -1,12 +1,12 @@
 ---
-name: repomix
+name: repomix-packer
 description: "Use when packaging a codebase to a single AI-friendly file for LLM analysis — local or remote, XML/Markdown/JSON, token counting, gitignore filtering, peer-side `repomix` CLI."
 source: package
 ---
 
 > **Pinned upstream:** `repomix` CLI (npm: `repomix`, brew: `repomix`). Re-verify per minor bump. Repomix is an **optional dependency** — this skill never installs it silently.
 
-# repomix
+# repomix-packer
 
 Wraps the upstream [`yamadashy/repomix`](https://github.com/yamadashy/repomix) CLI for codebase-snapshot workflows: pack a local or remote repo into a single XML / Markdown / JSON file with token counts and secret detection, then feed it to an LLM for review, audit, or migration scoping.
 
@@ -25,7 +25,7 @@ Do NOT use when:
 
 ## Procedure: Snapshot a repo for LLM review
 
-### Step 0: Verify repomix is installed (peer-side)
+### 1. Inspect: verify `repomix` is installed (peer-side)
 
 ```bash
 repomix --version
@@ -41,7 +41,7 @@ npm install -g repomix
 brew install repomix
 ```
 
-### Step 1: Decide local vs remote
+### 2. Decide local vs remote
 
 ```bash
 # Local: pack the current directory.
@@ -54,7 +54,7 @@ npx repomix --remote owner/repo
 npx repomix --remote https://github.com/owner/repo/commit/<sha>
 ```
 
-### Step 2: Filter the snapshot to the smallest useful slice
+### 3. Filter the snapshot to the smallest useful slice
 
 ```bash
 # Include patterns
@@ -67,7 +67,7 @@ repomix -i "tests/**,*.test.js"
 repomix --remove-comments
 ```
 
-### Step 3: Pick the output format and destination
+### 4. Pick the output format and destination
 
 ```bash
 repomix --style markdown -o snapshot.md   # human-readable
@@ -76,7 +76,7 @@ repomix --style json -o snapshot.json     # programmatic post-processing
 repomix --copy                            # also copy to clipboard
 ```
 
-### Step 4: Verify token budget and secrets
+### 5. Verify token budget and secrets
 
 Repomix prints per-file and total token counts and runs Secretlint on the output. Check the totals against the target LLM context window:
 
@@ -88,7 +88,7 @@ Repomix prints per-file and total token counts and runs Secretlint on the output
 
 If Secretlint flags anything, STOP — sanitize the input or add the offending paths to `.repomixignore` before re-packing. Never use `--no-security-check` on an unfamiliar codebase.
 
-### Step 5: Hand the snapshot to the consumer skill
+### 6. Hand the snapshot to the consumer skill
 
 Most workflows that call this skill pass the snapshot to:
 

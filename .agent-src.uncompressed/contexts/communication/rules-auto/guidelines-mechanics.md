@@ -5,6 +5,12 @@ Full table of available coding guidelines for the
 holds the obligation surface (always check the relevant guideline
 before writing or reviewing code); this file is the catalog.
 
+## Universal (`docs/guidelines/`)
+
+| File | Topic |
+|---|---|
+| `code-clarity.md` | Cross-language clarity rules — inline single-use values, carve-outs (side effects, loops, type narrowing, debugger) |
+
 ## PHP (`docs/guidelines/php/`)
 
 | File | Topic |

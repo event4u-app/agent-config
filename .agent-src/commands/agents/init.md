@@ -1,24 +1,32 @@
 ---
-name: copilot-agents:init
-cluster: copilot-agents
+name: agents:init
+cluster: agents
 sub: init
-description: Create AGENTS.md and .github/copilot-instructions.md from scratch in the consumer project — interactive, auto-detects stack, never leaks other projects' identifiers.
-skills: [copilot-config, copilot-agents-optimization, agent-docs-writing]
+description: Initialize the agent layer for a consumer project — creates AGENTS.md and .github/copilot-instructions.md from package templates, auto-detects stack, never leaks other projects' identifiers.
+skills: [copilot-config, copilot-agents-optimization, agent-docs-writing, agents-md-thin-root]
 disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Project init — only deliberately during onboarding."
 ---
 
-# /copilot-agents init
+# /agents init
+
 Interactive initializer that **creates** `AGENTS.md` and
 `.github/copilot-instructions.md` in the consumer project from the
 package-shipped templates (`.augment/templates/AGENTS.md` and
 `.augment/templates/copilot-instructions.md`), filling in placeholders
 based on auto-detected stack + user answers.
 
+Tool-agnostic by design — AGENTS.md is the universal entry point
+honoured by Claude Code, Cursor, Codex, Copilot, Augment and Gemini.
+The `.github/copilot-instructions.md` companion is generated alongside
+because GitHub Copilot reads its own file path. Other tool stubs
+(`CLAUDE.md`, `GEMINI.md`, `.cursorrules`) follow the symlink-or-stub
+strategy in [`agents-md-anatomy § Multi-tool symlink strategy`](../../contexts/contracts/agents-md-anatomy.md#multi-tool-symlink-strategy).
+
 Use when either file is missing, or the user wants to start over with a
-clean scaffold. For tuning an existing file, use `/copilot-agents-optimize`.
+clean scaffold. For tuning an existing file, use `/agents optimize`.
 
 ## Steps
 
@@ -35,7 +43,7 @@ Outcomes:
 |---|---|
 | Both targets missing | Proceed |
 | One exists, other missing | Ask whether to fill only the missing one |
-| Both exist | Ask confirmation — offer `/copilot-agents-optimize` instead |
+| Both exist | Ask confirmation — offer `/agents optimize` instead |
 | Template missing | Abort with "package not installed" hint |
 
 ### 2. Auto-detect stack
@@ -75,7 +83,7 @@ always with numbered options where applicable:
    directory name.
 2. **One-line description** — used in copilot-instructions.md.
 3. **Architecture style** — e.g. "Controllers thin, logic in services,
-   validation via FormRequests". Offer `/optimize-agents` style presets
+   validation via FormRequests". Offer `/agents optimize` style presets
    based on detected framework.
 4. **User-facing strings strategy** — translation files? hardcoded?
    default per framework.
@@ -132,12 +140,12 @@ Write to `AGENTS.md` and `.github/copilot-instructions.md` (create
 Next steps:
   1. Review both files and refine sections that say "document your …"
   2. Commit them as part of the project's initial agent setup
-  3. Run `/copilot-agents-optimize` periodically to deduplicate against .augment/
+  3. Run `/agents optimize` periodically to deduplicate against .augment/
 ```
 
 ### 7. Follow-ups
 
-If `agents/` directory does not exist, suggest running `/agents-prepare`.
+If `agents/` directory does not exist, suggest running `/optimize agents-dir --scaffold`.
 If `.agent-settings.yml` does not exist, suggest running `scripts/install` (then `/onboard` for first-run setup).
 
 ## Rules

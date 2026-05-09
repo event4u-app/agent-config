@@ -32,6 +32,37 @@ A command is **user-invoked** and carries `disable-model-invocation: true`.
 A skill is model-invoked via description routing. If both audiences apply,
 author as a skill and add a thin command that delegates to it.
 
+## Commands ARE Claude skills (projection reality)
+
+Every command in `.agent-src.uncompressed/commands/{name}.md` is projected
+into `.claude/skills/{slug}/SKILL.md` by `scripts/compress.py`
+(`generate_claude_commands`). Nested commands flatten with `-`
+(`council/default.md` → `council-default`). Skills and commands share the
+**same `.claude/skills/` namespace** — Claude does not distinguish them.
+
+Consequences for authoring:
+
+* The frontmatter `description` is the **routing surface** Claude reads.
+  Polite or generic phrasing causes undertriggering even with
+  `disable-model-invocation: true` set, because the in-host command
+  suggester, fuzzy search, and any tooling that scans `.claude/skills/`
+  rank by description match.
+* `disable-model-invocation: true` blocks **automatic** invocation. It
+  does NOT remove the command from discovery surfaces. A weak description
+  means the command is invisible to the suggester even when the user's
+  intent matches.
+* Trigger phrasing must follow the same Iron Law as skill descriptions:
+  name 2+ trigger classes (domains, symptoms, user phrasing), end with
+  the `... even when the user just says ...` tail, ≤ 200 chars. See
+  `skill-writing` § 1b for the canonical before/after.
+* The `suggestion.trigger_description` and `suggestion.trigger_context`
+  blocks are **separate** from the frontmatter `description` — they
+  drive the in-host suggester (`command-suggestion-policy`), not Claude's
+  skill router. Both matter, both must be precise.
+
+Bottom line: write the command's `description` as if a skill router will
+read it — because one will.
+
 ## Procedure
 
 ### 0. Run the Drafting Protocol
@@ -148,6 +179,27 @@ multi-paragraph explanation, extract it into a skill and call it.
   `.claude/skills/{name}/SKILL.md`.
 * Run the full CI pipeline locally (see `Taskfile.yml` in this repo for
   the script list) — must exit 0 except for tolerated warnings.
+
+### 6. Governance baseline (when introducing a new linter check)
+
+**Advisory, reviewer-checked — no CI gate.** When the same PR adds a
+new check to `scripts/skill_linter.py` (or strengthens an existing
+one) such that previously-clean commands now warn, the PR body MUST
+record the pre-existing violations on `main` in a Markdown table:
+
+```markdown
+### Pre-existing baseline (informational)
+
+| Code | Count on main | Bucket |
+|---|---:|---|
+| {new_code} | N | (a) genuine fix · (b) accept · (c) check too aggressive |
+```
+
+Forward-only: the new check applies to **the file under review** and
+to **future** edits. The baseline table is informational so reviewers
+can spot intent (fix-now vs. backlog) without diffing the full lint
+output. See `agents/analysis/lint-warning-triage.md` for the
+3-bucket reference.
 
 ## Output format
 
