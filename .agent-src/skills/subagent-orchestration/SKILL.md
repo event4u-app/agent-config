@@ -160,6 +160,18 @@ step is under ~30 minutes. The branch-creation, context-switch, and
 worktree-cleanup cost dominates. Stick with mode 1 (do-and-judge)
 or mode 3 (do-in-steps) for those.
 
+**Competitive variant — per-candidate isolation.** Mode 5
+(`do-competitively`) + worktrees: each candidate runs in its own
+worktree (no cross-candidate state leak). Selection rules:
+
+- **No auto-merge.** Orchestrator never merges candidate branches.
+  Hard Floor per [`non-destructive-by-default`](../../rules/non-destructive-by-default.md) —
+  applies even under standing autonomy. ADR-005 records reasoning.
+- **Ranked presentation.** Judge ranks 1..N with one-line
+  justifications; user picks winner.
+- **Loser worktrees stay.** Orchestrator does not auto-delete losing
+  worktrees — user keeps option to harvest a partial idea before cleanup.
+
 ## Status taxonomy — every subagent return uses one envelope
 
 Every implementer or judge return must conform to
