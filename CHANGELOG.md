@@ -318,6 +318,33 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.33.0](https://github.com/event4u-app/agent-config/compare/1.32.0...1.33.0) (2026-05-09)
+
+### Features
+
+* **commands:** port /research:deep + /research:report as cluster sub-commands ([71f8141](https://github.com/event4u-app/agent-config/commit/71f8141a3c553ee5b35f31ffdd7ab33e9cb110e5))
+* **guidelines:** port 5w2h, six-hats, systems-thinking, first-principles, critical-thinking from ginobefun ([40ea866](https://github.com/event4u-app/agent-config/commit/40ea8662f4e7714aa66348aff5456b53a3045350))
+
+### Bug Fixes
+
+* **roadmap:** inline council convergence summary instead of file ref ([1087cab](https://github.com/event4u-app/agent-config/commit/1087cab557c12fb353cb7a3e5ac7ab27a8d19379))
+* **research:** add ## Rules section to cluster head ([044bdab](https://github.com/event4u-app/agent-config/commit/044bdabd82b2b16350277f3f7b5e1b0e50703242))
+* **research:** collapse ADOPT citation paths into repo@sha:path tokens ([54deb0d](https://github.com/event4u-app/agent-config/commit/54deb0ddcf201ecbeecf6a57c1074d904fb2d197))
+
+### Documentation
+
+* **counts:** bump command count 101→103 in README + getting-started ([f2fb002](https://github.com/event4u-app/agent-config/commit/f2fb0026c803819569c0c739fdbad8addd96928a))
+* **roadmap:** refresh counts and progress for deep-research adoption phase 2 ([2c284cd](https://github.com/event4u-app/agent-config/commit/2c284cd431480e9c2ae39ec70132a1f8d5eb6e59))
+
+### Chores
+
+* **roadmap:** close road-to-feedback-followups (P0-P3+P5 done, P4 deferred) ([b07db6c](https://github.com/event4u-app/agent-config/commit/b07db6cae705a1e372ed9b75e47d2b14f8447b18))
+* **roadmap:** cancel road-to-event-driven-discipline (skipped, 0% executed) ([590f27d](https://github.com/event4u-app/agent-config/commit/590f27d8c7239431df92e1b7e003837c6e0be178))
+* **roadmap:** close road-to-deep-research-adoption (P1+P2 done, P3 dropped) ([d2a8808](https://github.com/event4u-app/agent-config/commit/d2a880836d79f13efefe6b3257a2ac869e6c9697))
+* **ownership:** regenerate file-ownership matrix for research cluster ([e90f886](https://github.com/event4u-app/agent-config/commit/e90f8861a356e51dbb7bce8baf5c2d8e53732bd2))
+
+Tests: 2560 (+0 since 1.32.0)
+
 ## [1.32.0](https://github.com/event4u-app/agent-config/compare/1.31.0...1.32.0) (2026-05-09)
 
 ### Features
