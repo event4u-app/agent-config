@@ -250,6 +250,18 @@ open questions surfaced>
 The "Refined ticket" section is wrapped in a **copyable Markdown box**
 so the user can grab it verbatim.
 
+## Self-review (3-scan checklist)
+
+Run these three scans on the rendered output before the close-prompt. Each is a fast pass; failure blocks emission and forces a fix.
+
+1. **Spec coverage** — every AC bullet and constraint from the original ticket (and every parent-AC line surfaced via `fold_parent_context`) is reflected in the rewritten ticket, the Top-5 risks, or the *Open questions* section. Nothing from the input vanishes silently.
+2. **Placeholder / TODO scan** — no `<placeholder>`, `TODO`, `FIXME`, `tbd`, `???`, `XXX` strings remain. The angle-bracket placeholders in the template (`<rewritten title>`, `<risk>`, `<one paragraph>`) must be replaced with concrete prose before the close-prompt fires.
+3. **Type / shape consistency** — every module, file, route, or domain term cited in the rewritten ticket and Top-5 risks matches `repo_context.context_docs` and `recent_branches` vocabulary. Invented terms are flagged in *Open questions* or replaced with the project's actual term.
+
+Self-review is mechanical (gaps, leftovers, naming drift); persona voices and orchestration outputs handle reasoning critique. Both run; neither replaces the other.
+
+Source: adapted from `obra/superpowers` `writing-plans/SKILL.md` § Self-Review (v5.1.0).
+
 ## Close-prompt (mandatory final step)
 
 **Probe write access first (Phase F6).** Before rendering, do a
