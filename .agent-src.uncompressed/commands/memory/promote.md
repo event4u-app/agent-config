@@ -72,6 +72,22 @@ hydrate the full frontmatter:
 - `owner:`, `last_validated: <today>`, `review_after_days:`.
 - Type-specific fields (`rule`, `symptom`, `path`, …).
 
+If the intake signal carries `tags: [<one>, <two>]`, **resolve via tag
+intersection** (do not pick by file extension):
+
+| Tags on signal | Curated target |
+|---|---|
+| `[convention]` | `agents/memory/conventions.yml` |
+| `[invariant]` | `agents/memory/domain-invariants.yml` |
+| `[gotcha]` | `agents/memory/operational-gotchas.yml` |
+| `[pattern]` | `agents/memory/recurring-patterns.yml` |
+| `[gotcha, invariant]` | `domain-invariants` (invariant wins — structural beats operational) |
+| `[pattern, gotcha]` | `recurring-patterns` (pattern wins — repetition beats one-off) |
+| `[convention, invariant]` | `domain-invariants` (invariant wins) |
+
+If the user disagrees with the tag-intersection result, ask which
+schema to write to and record the override in the `source:` block.
+
 Show the YAML draft and ask for confirmation before writing.
 
 ### 4. Write the curated entry (content-addressed)

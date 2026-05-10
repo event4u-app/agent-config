@@ -351,6 +351,31 @@ In `auto` mode, flip to `on` for the rest of the conversation when the user expr
 
 Algorithm and speech-act heuristic: [`contexts/execution/autonomy-detection.md`](../contexts/execution/autonomy-detection.md). Anchor phrases (DE+EN), no-flip patterns, counter-examples, trivial-vs-blocking taxonomy, commit-policy summary, and named failure modes: [`contexts/execution/autonomy-mechanics.md`](../contexts/execution/autonomy-mechanics.md) + [`contexts/execution/autonomy-examples.md`](../contexts/execution/autonomy-examples.md).
 
+## Task-scope — autonomy is bound to the named task
+
+```
+A STANDING AUTONOMY DIRECTIVE TIED TO A NAMED DELIVERABLE
+DOES NOT CARRY OVER TO A DIFFERENT, LATER DELIVERABLE.
+NEW TASK → FRESH CONFIRMATION.
+```
+
+Two distinct autonomy shapes — keep them apart:
+
+| Shape | Trigger | Scope |
+|---|---|---|
+| **Conversation-wide trivial-question suppression** | "stop asking on trivial steps, just work" — no deliverable named. | Sticky for the rest of the conversation. Suppresses trivial workflow questions only; never lifts blocking, Hard Floor, or [`scope-control`](scope-control.md) gates. |
+| **Task-scoped autonomous execution** | "work autonomously on X", "arbeite die Roadmap Y komplett ab", "do PROJ-123 end-to-end" — a deliverable / artifact / ticket is named. | Bound to **that** task. Ends when the task ends. Does **not** authorize starting a new, distinct task autonomously. |
+
+Litmus test: does the directive name (or unambiguously point to) a single concrete deliverable? Yes → task-scoped, scope ends with the deliverable. No → conversation-wide, trivial-question suppression only.
+
+When the user later issues a **new** request — different ticket, different roadmap, different artifact, different feature — treat it as a fresh task. Re-confirm autonomy for the new scope before:
+
+- creating a branch / worktree / PR / tag for the new work,
+- implementing a roadmap whose **authoring** was the prior turn's deliverable (per [`scope-control § authoring vs implementation`](scope-control.md#authoring-vs-implementation--verb-discipline)),
+- expanding scope beyond the new task's literal ask.
+
+In doubt whether the new request inherits or needs fresh confirmation → fresh confirmation. The Hard Floor and [`scope-control`](scope-control.md) gates apply to every task regardless.
+
 ## See also
 
 - [`non-destructive-by-default`](non-destructive-by-default.md) — universal safety floor; never overridden by autonomy
@@ -1961,6 +1986,21 @@ The user decides the git shape. Never improvise. Commit specifics: canonical [`c
 - BEFORE the first commit on related work, **inventory** existing branches and open PRs. Plausible base beyond the current branch → STOP and ask with numbered options — never improvise. Commands + 4-option template + diverging-stack failure mode: [`scope-mechanics § Branch-base inventory`](../contexts/authority/scope-mechanics.md).
 
 "Explicit permission" = user said so **this turn or in a standing instruction not yet revoked**. Earlier permission for a different operation does not carry over.
+
+## Authoring vs. implementation — verb discipline
+
+```
+"CREATE / DRAFT / WRITE A ROADMAP" AUTHORIZES THE ARTIFACT, NEVER ITS EXECUTION.
+A NEW TASK NEVER INHERITS A PRIOR TASK'S AUTONOMY DIRECTIVE.
+```
+
+Authoring verbs — `create`, `draft`, `write`, `author`, `prepare`, `outline`, `entwirf`, `erstelle`, `schreibe`, `vorbereite` — authorize **the artifact only** (roadmap file, plan, ADR, ticket, design doc, brief). They never authorize executing the content the artifact describes.
+
+- "Create the roadmap for X" / "Erstelle die Roadmap für X" → write the roadmap file, stop, hand back. Do **not** start implementing the steps it contains; do **not** create a feature branch for the work the roadmap describes.
+- "Implement / build / ship / setze um / baue / arbeite ab / arbeite die roadmap ab" → execution intent. Then the executing rules apply.
+- Mixed verbs ("create AND implement", "draft and start with phase 1") → ask which scope wins. Default to authoring-only.
+
+When the user names an artifact (roadmap, plan, ADR, ticket, design doc) and uses an authoring verb, the deliverable is the artifact. Stop after it lands; let the user pick the next move. A previous turn's standing autonomy for a **different task** does NOT carry over — see [`autonomous-execution § task-scope`](autonomous-execution.md#task-scope--autonomy-is-bound-to-the-named-task).
 
 ## Production, infrastructure, bulk-destructive — Hard Floor
 

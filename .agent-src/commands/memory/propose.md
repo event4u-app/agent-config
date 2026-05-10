@@ -62,6 +62,11 @@ Ask once, numbered. If the user picks `skip`, proceed without them:
 - `owner` (ownership)
 - `rule` (domain-invariants, product-rules)
 - `severity` — `low` · `medium` · `high`
+- `tags` — zero or more from `{convention, invariant, gotcha, pattern}`.
+  See [`memory-consolidation`](../../skills/memory-consolidation/SKILL.md)
+  § Phase 3 for the schema-routing table. Two tags are allowed; the
+  primary tag picks the intake JSONL file, the promoter resolves the
+  curated target via tag intersection.
 
 ### 4. Emit via the shared helper
 
@@ -71,8 +76,12 @@ Ask once, numbered. If the user picks `skip`, proceed without them:
     --path "<path>" \
     --body "<body>" \
     --origin "propose-memory" \
-    --extra '{"symptom":"...","severity":"medium"}'
+    --extra '{"symptom":"...","severity":"medium","tags":["convention"]}'
 ```
+
+The `tags` array is optional (default `[]`). When present, downstream
+consumers (`/memory promote`, `/memory load` inline review) use the
+schema-routing table to pick the curated target.
 
 The helper deduplicates identical `(type, path, body)` within 7 days
 automatically — re-running the command on the same finding will

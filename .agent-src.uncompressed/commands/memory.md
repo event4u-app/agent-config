@@ -1,6 +1,6 @@
 ---
 name: memory
-description: Memory orchestrator — routes to add, load, promote, propose
+description: Memory orchestrator — routes to add, load, mine-session, promote, propose
 cluster: memory
 disable-model-invocation: true
 suggestion:
@@ -20,6 +20,7 @@ commands with a single entry point + sub-command dispatch.
 |---|---|---|
 | `/memory add` | `commands/memory/add.md` | Interactively add a validated entry to a memory file |
 | `/memory load` | `commands/memory/load.md` | Load ALL curated entries of a given memory type into context |
+| `/memory mine-session` | `commands/memory/mine-session.md` | Mine the active session transcript for memory signals (preview-by-default) |
 | `/memory promote` | `commands/memory/promote.md` | Promote an intake signal to a curated memory entry |
 | `/memory propose` | `commands/memory/propose.md` | Append a provisional signal to the intake stream |
 
@@ -36,8 +37,9 @@ Sub-command names match the locked contract in
 
    > 1. add — write a curated entry interactively
    > 2. load — load ALL entries of a type for deep analysis
-   > 3. promote — promote an intake signal to a curated entry
-   > 4. propose — drop a provisional signal into the intake stream
+   > 3. mine-session — preview signals from the active session transcript
+   > 4. promote — promote an intake signal to a curated entry
+   > 5. propose — drop a provisional signal into the intake stream
 
 ## Rules
 

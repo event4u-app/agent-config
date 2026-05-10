@@ -122,9 +122,23 @@ command: JSONL append-only drop-ins under
 is present, the same payload is accepted by a `propose()` CLI or MCP
 call. File-drop is the always-works path.
 
-Required fields (keep in sync with `/propose-memory` command):
+**Required fields** (keep in sync with `/propose-memory` command):
 `ts`, `type`, `key` (path or logical id), `observation`, `source`
 (`agent` or `human`), `session_id`.
+
+**Optional fields:**
+
+- `tags: string[]` — zero or more schema-routing labels from the
+  controlled vocabulary `{convention, invariant, gotcha, pattern}`.
+  Default `[]`. Producers (`/memory propose`, `/memory mine-session`)
+  emit tags; consumers (`/memory promote`) read **tag intersection**
+  to pick the curated YAML target when a signal carries two tags
+  (e.g. `[gotcha, invariant]` → primary `gotcha` JSONL, promote target
+  resolved by the reviewer at promotion time). See
+  [`memory-consolidation`](../../.agent-src.uncompressed/skills/memory-consolidation/SKILL.md)
+  § Phase 3 for the schema-routing table.
+- `confidence: low | medium | high` — producer-supplied estimate; the
+  inline-review hook in `/memory load` ranks the top-3 by this field.
 
 ## Revisit triggers
 

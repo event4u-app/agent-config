@@ -69,6 +69,19 @@ REDACTION_PATTERNS = [
     (re.compile(r"\b192\.168\.\d{1,3}\.\d{1,3}\b"), "internal ipv4 range"),
 ]
 
+# Date-discipline — relative-date phrases without an ISO YYYY-MM-DD anchor
+# within ±20 chars are rejected. Memory entries that say "yesterday" or
+# "last week" rot the moment the file is re-read on another day; the
+# anchor pins meaning. See `road-to-dream-skill-adoption.md` § A5.
+RELATIVE_DATE_PATTERN = re.compile(
+    r"(?i)\b(yesterday|today|tomorrow|"
+    r"last\s+(?:week|month|year)|"
+    r"next\s+(?:week|month|year)|"
+    r"this\s+(?:week|month|year))\b"
+)
+ISO_DATE_PATTERN = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
+DATE_ANCHOR_WINDOW = 20
+
 
 @dataclass
 class Finding:
@@ -144,12 +157,39 @@ def _check_redaction(path: Path, findings: List[Finding]):
                                         f"possible leak: {label}"))
 
 
+def _check_date_discipline(path: Path, findings: List[Finding]):
+    """Reject relative-date phrases without an ISO YYYY-MM-DD anchor.
+
+    A curated memory entry that says "fixed yesterday" rots silently
+    the moment the file is re-read on a different day. We require an
+    ISO date within ±20 chars of every relative phrase so the meaning
+    survives the calendar.
+    """
+    for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        # Skip comments and the YAML key for `last_validated` itself.
+        stripped = line.lstrip()
+        if stripped.startswith("#") or stripped.startswith("last_validated"):
+            continue
+        for match in RELATIVE_DATE_PATTERN.finditer(line):
+            start = max(0, match.start() - DATE_ANCHOR_WINDOW)
+            end = min(len(line), match.end() + DATE_ANCHOR_WINDOW)
+            window = line[start:end]
+            if ISO_DATE_PATTERN.search(window):
+                continue
+            phrase = match.group(0)
+            findings.append(Finding(
+                str(path), line_no, "error",
+                f"relative date '{phrase}' without an ISO YYYY-MM-DD anchor "
+                f"within ±{DATE_ANCHOR_WINDOW} chars (re-anchor before commit)"))
+
+
 def _validate_file(path: Path, findings: List[Finding]):
     mtype = _memory_type(path)
     if mtype not in KNOWN_TYPES:
         findings.append(Finding(str(path), 0, "warning",
                                 f"unknown memory type '{mtype}'"))
     _check_redaction(path, findings)
+    _check_date_discipline(path, findings)
     try:
         data = _load_yaml(path) or {}
     except Exception as exc:  # yaml.YAMLError or anything else

@@ -96,9 +96,9 @@ fails on any source-side violation, without producing artifacts.
 
 | Layer | Count | Purpose |
 |---|---|---|
-| **Skills** | 173 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
+| **Skills** | 174 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
 | **Rules** | 60 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
-| **Commands** | 103 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/compress`, … |
+| **Commands** | 104 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/compress`, … |
 | **Guidelines** | 69 | Reference material cited by skills — PHP patterns, Eloquent, Playwright, agent-infra, … |
 | **Templates** | 7 | Scaffolds for features, roadmaps, contexts, skills, overrides |
 | **Contexts** | 5 | Shared knowledge about the system itself |
