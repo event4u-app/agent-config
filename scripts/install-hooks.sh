@@ -13,14 +13,31 @@ mkdir -p "$HOOKS_DIR"
 cat > "$HOOKS_DIR/pre-push" << 'EOF'
 #!/usr/bin/env bash
 # Pre-push hook: verify .agent-src/ is in sync with .agent-src.uncompressed/
+# and that the canonical command count matches README + getting-started docs.
+#
+# The command-count gate exists because three consecutive PRs landed
+# post-CI count-drift fixes (e.g. f2fb0026 "bump command count
+# 101→103"). Catching the drift pre-push stops it from flooding remote
+# CI. Runtime ~0.1s.
+
+fail=0
 
 echo "🔍 Checking .agent-src/ sync..."
-python3 scripts/compress.py --check
+if ! python3 scripts/compress.py --check; then
+    echo "❌  .agent-src/ is out of sync. Run 'task sync' and compress changed .md files, then commit."
+    fail=1
+fi
 
-if [ $? -ne 0 ]; then
+echo "🔍 Checking command count messaging..."
+if ! python3 scripts/check_command_count_messaging.py; then
+    echo "❌  Command-count drift in README / AGENTS.md / getting-started. Run 'task counts-update', stage the changes, then re-commit."
+    fail=1
+fi
+
+if [ $fail -ne 0 ]; then
     echo ""
-    echo "❌  Push blocked — .agent-src/ is out of sync."
-    echo "   Run 'task sync' and compress changed .md files, then commit."
+    echo "   Push blocked — fix the failures above and re-push."
+    echo "   Bypass for a WIP push:  git push --no-verify"
     exit 1
 fi
 EOF
