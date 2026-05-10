@@ -411,3 +411,197 @@ def test_server_accepts_loader_callable_for_hot_reload(tmp_path: Path) -> None:
     result2 = asyncio.run(handler(request))
     descriptions2 = [p.description for p in result2.root.prompts]
     assert descriptions2 == ["v2"]
+
+
+# ----------------------------------------------------------------------
+# Phase 3 — Resources (C1–C4): rules, guidelines, contexts
+# ----------------------------------------------------------------------
+
+
+from scripts.mcp_server.resources import (  # noqa: E402
+    MIME_MARKDOWN,
+    Resource,
+    ResourceCache,
+    load_all_resources,
+    scan_contexts,
+    scan_guidelines,
+    scan_rules,
+    to_mcp_resource_meta,
+)
+
+
+def test_resource_loader_discovers_three_kinds() -> None:
+    """C1 — loader returns rules + guidelines + contexts with stable URIs."""
+    resources, errors = load_all_resources()
+    assert errors == []
+    assert len(resources) > 0
+
+    kinds = {r.kind for r in resources}
+    assert kinds == {"rule", "guideline", "context"}
+
+    rules, _ = scan_rules()
+    guidelines, _ = scan_guidelines()
+    contexts, _ = scan_contexts()
+    assert all(r.uri.startswith("rule://") for r in rules)
+    assert all(r.uri.startswith("guideline://") for r in guidelines)
+    assert all(r.uri.startswith("context://") for r in contexts)
+    assert len(rules) + len(guidelines) + len(contexts) == len(resources)
+
+
+def test_resource_uris_are_unique_and_sorted() -> None:
+    resources, _ = load_all_resources()
+    uris = [r.uri for r in resources]
+    assert uris == sorted(uris)
+    assert len(set(uris)) == len(uris)
+
+
+def test_resource_meta_shape_for_mcp() -> None:
+    """to_mcp_resource_meta produces kwargs compatible with mcp.types.Resource."""
+    resources, _ = load_all_resources()
+    sample = resources[0]
+    meta = to_mcp_resource_meta(sample)
+    assert meta["mimeType"] == MIME_MARKDOWN
+    assert meta["uri"] == sample.uri
+    assert meta["name"]
+    assert meta["description"]
+    assert meta["_meta"]["kind"] == sample.kind
+
+
+def test_resource_cache_invalidates_on_mtime(tmp_path: Path) -> None:
+    """C4 — ResourceCache re-scans when a tracked file's mtime moves."""
+    import os
+
+    rules_dir = tmp_path / ".agent-src" / "rules"
+    rules_dir.mkdir(parents=True)
+    rule_md = rules_dir / "demo.md"
+    rule_md.write_text(
+        '---\ndescription: "v1"\n---\n# Demo\n\nbody v1\n',
+        encoding="utf-8",
+    )
+    cache = ResourceCache(root=tmp_path)
+    first, _ = cache.get()
+    assert [r.description for r in first] == ["v1"]
+
+    rule_md.write_text(
+        '---\ndescription: "v2"\n---\n# Demo\n\nbody v2\n',
+        encoding="utf-8",
+    )
+    future = rule_md.stat().st_mtime + 2
+    os.utime(rule_md, (future, future))
+
+    second, _ = cache.get()
+    assert [r.description for r in second] == ["v2"]
+
+
+@requires_mcp
+def test_server_lists_resources_with_pagination() -> None:
+    """C1 + C3 — resources/list returns paginated MCP Resource objects."""
+    import mcp.types as mcp_types
+
+    from scripts.mcp_server.server import build_server
+
+    resources, _ = load_all_resources()
+    server = build_server([], resources=resources, page_size=7)
+    handler = server.request_handlers[mcp_types.ListResourcesRequest]
+
+    seen: list[str] = []
+    cursor: str | None = None
+    pages = 0
+    while True:
+        params = mcp_types.PaginatedRequestParams(cursor=cursor)
+        request = mcp_types.ListResourcesRequest(
+            method="resources/list", params=params
+        )
+        result = asyncio.run(handler(request))
+        page = result.root.resources
+        assert len(page) <= 7
+        for entry in page:
+            assert entry.mimeType == MIME_MARKDOWN
+            seen.append(str(entry.uri))
+        cursor = result.root.nextCursor
+        pages += 1
+        if cursor is None:
+            break
+        assert pages < 1000, "pagination did not terminate"
+    assert pages > 1, "expected multiple pages at page_size=7"
+    assert len(seen) == len(resources)
+    assert len(set(seen)) == len(seen), "pages must not overlap"
+
+
+@requires_mcp
+def test_server_read_resource_returns_body() -> None:
+    """C2 — resources/read returns the verbatim Markdown body."""
+    import mcp.types as mcp_types
+
+    from scripts.mcp_server.server import build_server
+
+    resources, _ = load_all_resources()
+    server = build_server([], resources=resources)
+    handler = server.request_handlers[mcp_types.ReadResourceRequest]
+
+    target = resources[0]
+    request = mcp_types.ReadResourceRequest(
+        method="resources/read",
+        params=mcp_types.ReadResourceRequestParams(uri=target.uri),
+    )
+    result = asyncio.run(handler(request))
+
+    contents = result.root.contents
+    assert len(contents) == 1
+    assert contents[0].mimeType == MIME_MARKDOWN
+    assert contents[0].text == target.body
+
+
+@requires_mcp
+def test_server_read_resource_unknown_uri_errors() -> None:
+    import mcp.types as mcp_types
+
+    from scripts.mcp_server.server import build_server
+
+    server = build_server([], resources=[])
+    handler = server.request_handlers[mcp_types.ReadResourceRequest]
+
+    request = mcp_types.ReadResourceRequest(
+        method="resources/read",
+        params=mcp_types.ReadResourceRequestParams(uri="rule://does-not-exist"),
+    )
+    with pytest.raises(ValueError, match="Unknown resource"):
+        asyncio.run(handler(request))
+
+
+@requires_mcp
+def test_server_resources_handler_accepts_cache_callable() -> None:
+    """C4 — resources arg can be a `() -> (resources, errors)` callable."""
+    import mcp.types as mcp_types
+
+    from scripts.mcp_server.server import build_server
+
+    cache = ResourceCache()
+    server = build_server([], resources=cache.get, page_size=3)
+    handler = server.request_handlers[mcp_types.ListResourcesRequest]
+
+    request = mcp_types.ListResourcesRequest(
+        method="resources/list",
+        params=mcp_types.PaginatedRequestParams(cursor=None),
+    )
+    result = asyncio.run(handler(request))
+    assert len(result.root.resources) == 3
+    assert result.root.nextCursor == "3"
+
+
+def test_no_unsafe_imports_in_resource_loader() -> None:
+    """A0 contract — resources.py must not import subprocess / HTTP clients."""
+    source = (REPO_ROOT / "scripts" / "mcp_server" / "resources.py").read_text()
+    forbidden = [
+        r"\bimport\s+subprocess\b",
+        r"\bfrom\s+subprocess\b",
+        r"\bos\.system\b",
+        r"\bos\.popen\b",
+        r"\bimport\s+requests\b",
+        r"\bimport\s+httpx\b",
+        r"\bimport\s+urllib\.request\b",
+    ]
+    for pattern in forbidden:
+        assert not re.search(pattern, source), (
+            f"Forbidden import in scripts/mcp_server/resources.py: {pattern}"
+        )

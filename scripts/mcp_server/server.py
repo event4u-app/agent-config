@@ -1,8 +1,16 @@
-"""MCP Server — registers `prompts/list` + `prompts/get` over stdio.
+"""MCP Server — registers `prompts/*` + `resources/*` over stdio.
 
-Phase 2 boundary (A0 Hard Contract still holds): read-only. No
-`tools/*`, no `resources/*` (deferred to Phase 3), no filesystem
-writes. New in Phase 2:
+Phase 3 boundary (A0 Hard Contract still holds): read-only. No
+`tools/*`, no filesystem writes. New in Phase 3:
+
+- **C1/C2** `resources/list` + `resources/read` for rules,
+  guidelines, contexts via `ResourceCache`.
+- **C3** cursor-based pagination on `resources/list` (same shape as
+  prompts/list).
+- **C4** hot-reload — `ResourceCache` re-scans on mtime change before
+  each `resources/list` response.
+
+Carried over from Phase 2:
 
 - **B1/B2** full skills + commands coverage via `PromptCache`.
 - **B4** cursor-based pagination on `prompts/list`.
@@ -16,18 +24,25 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from typing import Callable, Union
+from typing import Callable, Iterable, Union
 
 import mcp.types as types
 from mcp.server import NotificationOptions, Server
+from mcp.server.lowlevel.helper_types import ReadResourceContents
 from mcp.server.models import InitializationOptions
 from mcp.server.stdio import stdio_server
+from pydantic import AnyUrl
 
 from . import SERVER_NAME, __version__
 from .prompts import (
     PromptCache,
     SkillPrompt,
     to_mcp_prompt_meta,
+)
+from .resources import (
+    Resource,
+    ResourceCache,
+    to_mcp_resource_meta,
 )
 
 # Page size for cursor-based pagination. Conservative default —
@@ -39,12 +54,26 @@ PromptsSource = Union[
     list[SkillPrompt],
     Callable[[], tuple[list[SkillPrompt], list[str]]],
 ]
+ResourcesSource = Union[
+    list[Resource],
+    Callable[[], tuple[list[Resource], list[str]]],
+]
 
 
 def _make_loader(
     source: PromptsSource,
 ) -> Callable[[], tuple[list[SkillPrompt], list[str]]]:
     """Normalise to a callable returning `(prompts, errors)`."""
+    if callable(source):
+        return source
+    static = list(source)
+    return lambda: (static, [])
+
+
+def _make_resource_loader(
+    source: ResourcesSource,
+) -> Callable[[], tuple[list[Resource], list[str]]]:
+    """Normalise to a callable returning `(resources, errors)`."""
     if callable(source):
         return source
     static = list(source)
@@ -68,19 +97,25 @@ def build_server(
     source: PromptsSource,
     *,
     page_size: int = DEFAULT_PAGE_SIZE,
+    resources: ResourcesSource | None = None,
 ) -> Server:
-    """Construct the MCP Server with the new-style paginated handler.
+    """Construct the MCP Server with the new-style paginated handlers.
 
     Pure factory — no I/O. Tests pass a static list; the stdio
     entrypoint passes a `PromptCache.get` callable for hot-reload.
+    When `resources` is omitted, resources/* handlers are still
+    registered but return an empty list — clients can probe the
+    capability without seeing a protocol error.
     """
     loader = _make_loader(source)
+    resource_loader = _make_resource_loader(resources or [])
     server: Server = Server(
         name=SERVER_NAME,
         version=__version__,
         instructions=(
-            "agent-config MCP server (Phase 2, experimental). Exposes "
-            "all skills + commands as instructional prompts. Read-only."
+            "agent-config MCP server (Phase 3, experimental). Exposes "
+            "all skills + commands as instructional prompts, plus "
+            "rules + guidelines + contexts as read-only resources."
         ),
     )
 
@@ -122,11 +157,37 @@ def build_server(
             ],
         )
 
+    @server.list_resources()
+    async def _list_resources(
+        req: types.ListResourcesRequest,
+    ) -> types.ListResourcesResult:
+        items, _errors = resource_loader()
+        cursor = req.params.cursor if req.params else None
+        start = _decode_cursor(cursor, len(items))
+        end = start + page_size
+        page = items[start:end]
+        next_cursor: str | None = str(end) if end < len(items) else None
+        return types.ListResourcesResult(
+            resources=[types.Resource(**to_mcp_resource_meta(r)) for r in page],
+            nextCursor=next_cursor,
+        )
+
+    @server.read_resource()
+    async def _read_resource(uri: AnyUrl) -> Iterable[ReadResourceContents]:
+        items, _errors = resource_loader()
+        index = {r.uri: r for r in items}
+        resource = index.get(str(uri))
+        if resource is None:
+            raise ValueError(f"Unknown resource: {uri}")
+        return [
+            ReadResourceContents(content=resource.body, mime_type=resource.mime_type),
+        ]
+
     return server
 
 
 async def run_stdio() -> None:
-    """Entrypoint — load prompts via cache, run server over stdio."""
+    """Entrypoint — load prompts + resources via caches, run server over stdio."""
     cache = PromptCache()
     prompts, errors = cache.get()
     for line in errors:
@@ -136,7 +197,16 @@ async def run_stdio() -> None:
         f"({len(errors)} warnings)",
         file=sys.stderr,
     )
-    server = build_server(cache.get)
+    resource_cache = ResourceCache()
+    resources_list, resource_errors = resource_cache.get()
+    for line in resource_errors:
+        print(f"mcp-server: warn: {line}", file=sys.stderr)
+    print(
+        f"mcp-server: loaded {len(resources_list)} resources "
+        f"({len(resource_errors)} warnings)",
+        file=sys.stderr,
+    )
+    server = build_server(cache.get, resources=resource_cache.get)
     init_options = InitializationOptions(
         server_name=SERVER_NAME,
         server_version=__version__,
