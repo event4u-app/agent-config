@@ -35,6 +35,29 @@ COMPLEXITY_PAT = re.compile(
     r"^complexity:\s*(lightweight|structural)\s*$", re.MULTILINE
 )
 
+# Plate / horizon detection — template rule 16 forbids time-boxed plates
+# in roadmaps. Patterns match the authoring devices we are retiring.
+PLATE_PATS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"^##\s+Horizon\b", re.MULTILINE | re.IGNORECASE),
+     "'## Horizon' section header"),
+    (re.compile(r"\b\d+-week\s+(visible\s+)?plate\b", re.IGNORECASE),
+     "'N-week (visible) plate' phrasing"),
+    (re.compile(r"\bvisible\s+plate\b", re.IGNORECASE),
+     "'visible plate' phrasing"),
+    (re.compile(r"\b(in|out)-of-plate\b", re.IGNORECASE),
+     "'in-of-plate' / 'out-of-plate' marker"),
+    (re.compile(r"\bout-of-horizon\b", re.IGNORECASE),
+     "'out-of-horizon' marker"),
+    (re.compile(r"\bIn-plate\??\b"),
+     "'In-plate' / 'In-plate?' label"),
+    (re.compile(r"\bOut-of-plate\b"),
+     "'Out-of-plate' label"),
+    (re.compile(r"inside\s+(the\s+|\d+-week\s+)?plate", re.IGNORECASE),
+     "'inside the plate' phrasing"),
+    (re.compile(r"outside\s+(the\s+|\d+-week\s+)?plate", re.IGNORECASE),
+     "'outside the plate' phrasing"),
+)
+
 
 def _frontmatter(text: str) -> str:
     if not text.startswith("---\n"):
@@ -73,6 +96,19 @@ def _check_lightweight(text: str, line_count: int, problems: list[str]) -> None:
         )
 
 
+def _check_no_plate(text: str, problems: list[str]) -> None:
+    """Detect time-boxed plate / horizon framing forbidden by template rule 16."""
+    for pat, label in PLATE_PATS:
+        m = pat.search(text)
+        if m is None:
+            continue
+        line = text.count("\n", 0, m.start()) + 1
+        problems.append(
+            f"plate/horizon convention detected ({label}) at line {line} — "
+            f"forbidden by templates/roadmaps.md rule 16"
+        )
+
+
 def lint_roadmap(path: Path) -> list[str]:
     text = path.read_text(encoding="utf-8")
     line_count = text.count("\n") + (1 if text and not text.endswith("\n") else 0)
@@ -87,6 +123,7 @@ def lint_roadmap(path: Path) -> list[str]:
         return problems
     if complexity == "lightweight":
         _check_lightweight(text, line_count, problems)
+    _check_no_plate(text, problems)
     return problems
 
 
