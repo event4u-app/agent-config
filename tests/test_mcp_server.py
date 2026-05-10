@@ -904,3 +904,116 @@ def test_no_direct_subprocess_in_tools_module() -> None:
         assert not re.search(pattern, source), (
             f"Forbidden import in scripts/mcp_server/tools.py: {pattern}"
         )
+
+
+# ----------------------------------------------------------------------
+# Phase 6 F1 — Identity metadata (server / package / skill-set signature)
+# ----------------------------------------------------------------------
+
+
+def test_read_package_version_returns_string() -> None:
+    """`package.json::version` is readable and non-empty."""
+    from scripts.mcp_server.metadata import read_package_version
+
+    version = read_package_version(REPO_ROOT)
+    assert version != "unknown"
+    assert re.match(r"^\d+\.\d+\.\d+", version), version
+
+
+def test_read_package_version_missing_returns_unknown(tmp_path: Path) -> None:
+    """Missing or malformed `package.json` falls back to `unknown`."""
+    from scripts.mcp_server.metadata import read_package_version
+
+    assert read_package_version(tmp_path) == "unknown"
+    (tmp_path / "package.json").write_text("not json", encoding="utf-8")
+    assert read_package_version(tmp_path) == "unknown"
+    (tmp_path / "package.json").write_text("{}", encoding="utf-8")
+    assert read_package_version(tmp_path) == "unknown"
+
+
+def test_skill_set_signature_is_deterministic() -> None:
+    """Identical input tuples yield identical hashes (F1 fingerprint)."""
+    from scripts.mcp_server.metadata import compute_skill_set_signature
+
+    sig_a = (("a.md", 1.0), ("b.md", 2.5))
+    sig_b = (("c.md", 3.0),)
+    first = compute_skill_set_signature(sig_a, sig_b)
+    second = compute_skill_set_signature(sig_a, sig_b)
+    assert first == second
+    assert len(first) == 12
+    assert re.match(r"^[0-9a-f]{12}$", first)
+
+
+def test_skill_set_signature_changes_on_mtime() -> None:
+    """Any mtime drift in a tracked file flips the hash."""
+    from scripts.mcp_server.metadata import compute_skill_set_signature
+
+    base = compute_skill_set_signature((("a.md", 1.0),), (("b.md", 2.0),))
+    drifted = compute_skill_set_signature((("a.md", 1.1),), (("b.md", 2.0),))
+    assert base != drifted
+
+
+def test_skill_set_signature_changes_on_path_set() -> None:
+    """Adding or removing a tracked file flips the hash."""
+    from scripts.mcp_server.metadata import compute_skill_set_signature
+
+    base = compute_skill_set_signature((("a.md", 1.0),), (("b.md", 2.0),))
+    added = compute_skill_set_signature(
+        (("a.md", 1.0), ("new.md", 3.0)),
+        (("b.md", 2.0),),
+    )
+    assert base != added
+
+
+def test_skill_set_signature_group_framing_matters() -> None:
+    """Splitting tuples across caches yields a different hash than merging.
+
+    Group separator (`\\x1d`) ensures the prompt and resource caches are
+    not interchangeable — a file moving caches changes the fingerprint.
+    """
+    from scripts.mcp_server.metadata import compute_skill_set_signature
+
+    merged = compute_skill_set_signature((("a.md", 1.0), ("b.md", 2.0)))
+    split = compute_skill_set_signature((("a.md", 1.0),), (("b.md", 2.0),))
+    assert merged != split
+
+
+def test_identity_boot_log_line_shape() -> None:
+    """Boot log line surfaces all three identity values."""
+    from scripts.mcp_server.metadata import boot_log_line
+
+    line = boot_log_line(
+        server_version="0.1.0",
+        package_version="1.36.1",
+        skill_set_signature="abc123def456",
+    )
+    assert "serverVersion=0.1.0" in line
+    assert "packageVersion=1.36.1" in line
+    assert "skillSetSignature=abc123def456" in line
+    assert line.startswith("mcp-server: identity ")
+
+
+def test_prompt_cache_signature_property_exposes_tracked_files() -> None:
+    """`PromptCache.signature` returns the cached `(path, mtime)` tuples."""
+    cache = PromptCache()
+    cache.get()
+    sig = cache.signature
+    assert isinstance(sig, tuple)
+    assert len(sig) > 0
+    for entry in sig:
+        assert len(entry) == 2
+        assert isinstance(entry[0], str)
+        assert isinstance(entry[1], float)
+
+
+def test_resource_cache_signature_property_exposes_tracked_files() -> None:
+    """`ResourceCache.signature` returns the cached `(path, mtime)` tuples."""
+    from scripts.mcp_server.resources import ResourceCache
+
+    cache = ResourceCache()
+    cache.get()
+    sig = cache.signature
+    assert isinstance(sig, tuple)
+    assert len(sig) > 0
+    for entry in sig:
+        assert len(entry) == 2
