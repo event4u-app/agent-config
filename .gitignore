@@ -4,6 +4,8 @@
 # Python virtualenv — used only for the live trigger-eval runner
 # (anthropic SDK). Never commit.
 /.venv/
+# MCP server virtualenv (Python 3.11+, mcp SDK). Never commit.
+/.venv-mcp/
 
 # IDE
 .idea/
