@@ -162,6 +162,6 @@ to every roadmap you author.
 
 ## Examples
 
-Browse `agents/roadmaps/` (active plate) and `agents/roadmaps/archive/`
+Browse `agents/roadmaps/` (active set) and `agents/roadmaps/archive/`
 (closed work) for canonical structural / tactical / structural-with-council
 examples.
