@@ -294,6 +294,11 @@ class PromptCache:
             self._refresh()
         return self._prompts, self._errors
 
+    @property
+    def signature(self) -> tuple[tuple[str, float], ...]:
+        """Cached `(path, mtime)` tuples (Phase-6 F1 input). Call `get()` first."""
+        return self._signature
+
     def lookup(self, wire_name: str) -> SkillPrompt | None:
         """Resolve an MCP wire name to its SkillPrompt, refreshing first."""
         self.get()

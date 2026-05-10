@@ -191,6 +191,11 @@ class ResourceCache:
             self._refresh()
         return self._resources, self._errors
 
+    @property
+    def signature(self) -> tuple[tuple[str, float], ...]:
+        """Cached `(path, mtime)` tuples (Phase-6 F1 input). Call `get()` first."""
+        return self._signature
+
     def lookup(self, uri: str) -> Resource | None:
         self.get()
         return self._index.get(uri)

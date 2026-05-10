@@ -34,9 +34,15 @@ from mcp.server.stdio import stdio_server
 from pydantic import AnyUrl
 
 from . import SERVER_NAME, __version__
+from .metadata import (
+    boot_log_line as identity_boot_log_line,
+    compute_skill_set_signature,
+    read_package_version,
+)
 from .prompts import (
     PromptCache,
     SkillPrompt,
+    _project_root,
     to_mcp_prompt_meta,
 )
 from .resources import (
@@ -228,6 +234,19 @@ async def run_stdio() -> None:
     )
     tool_cache = ToolCache()
     print(tools_boot_log_line(tool_cache), file=sys.stderr)
+    package_version = read_package_version(_project_root())
+    skill_set_signature = compute_skill_set_signature(
+        cache.signature,
+        resource_cache.signature,
+    )
+    print(
+        identity_boot_log_line(
+            server_version=__version__,
+            package_version=package_version,
+            skill_set_signature=skill_set_signature,
+        ),
+        file=sys.stderr,
+    )
     server = build_server(
         cache.get,
         resources=resource_cache.get,
