@@ -108,19 +108,20 @@ For each open step in the working set (scope-bound — see wrapper):
 
 On halt: stop, surface state, do **not** auto-fix outside the failing step.
 
-### Non-halt — horizon markers, gating notes, "optional" tags
+### Non-halt — gating notes, "optional" tags
 
 The following are **authoring annotations**, never halt conditions. Do
 **not** stop execution when the roadmap text contains them:
 
-- `Horizon (N-week visible plate)` section headers
-- `(out-of-horizon, gated on Phase N)` phase-header suffixes
 - `(deferred)` / `(later)` / `(optional)` tags on a step
-- "Gate: Phase 1 ships and …" prose inside an out-of-horizon phase
+- "Gate: Phase 1 ships and …" prose inside a later phase
 
 `process-step` and `process-phase` honor scope by stopping at their
-configured boundary anyway. `process-full` is **defined by** ignoring
-these markers — see [`/roadmap:process-full § Iron Law`](../../commands/roadmap/process-full.md#iron-law--full-is-full).
+configured boundary anyway. `process-full` processes every open step
+regardless of these annotations — see
+[`/roadmap:process-full § Iron Law`](../../commands/roadmap/process-full.md#iron-law--full-is-full).
+Time-boxed plate / horizon framing is forbidden in roadmaps by template
+rule 16; if encountered in legacy text, treat as ordinary prose.
 
 ## 6. Final report and archival
 
@@ -139,10 +140,10 @@ these markers — see [`/roadmap:process-full § Iron Law`](../../commands/roadm
 |---|---|---|
 | `process-step` | Single first open step | One iteration of § 5 |
 | `process-phase` | All open steps in first phase with `count_open > 0` | Phase boundary; per-phase quality if cadence ≠ `end_of_roadmap` |
-| `process-full` | Every open step across every phase, in order — **horizon markers do not narrow this set** | Roadmap fully closed (or halt) |
+| `process-full` | Every open step across every phase, in order | Roadmap fully closed (or halt) |
 
 `process-full` runs the per-phase quality pipeline at every phase
 boundary when cadence is `per_phase` or `per_step`; on red it halts
-before the next phase. It does **not** stop at horizon markers,
-"out-of-horizon" labels, or "gated on Phase N" notes — those are
-archival annotations, not halt conditions.
+before the next phase. Phase-internal `(deferred)` / `(optional)` /
+"gated on Phase N" annotations do not stop the run — those are
+authoring notes, not halt conditions.
