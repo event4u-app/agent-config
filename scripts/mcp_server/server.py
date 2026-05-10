@@ -44,6 +44,11 @@ from .resources import (
     ResourceCache,
     to_mcp_resource_meta,
 )
+from .tools import (
+    ToolCache,
+    boot_log_line as tools_boot_log_line,
+    to_mcp_tool_meta,
+)
 
 # Page size for cursor-based pagination. Conservative default —
 # Claude Desktop and Zed handle larger pages, but small pages keep
@@ -98,6 +103,7 @@ def build_server(
     *,
     page_size: int = DEFAULT_PAGE_SIZE,
     resources: ResourcesSource | None = None,
+    tools: ToolCache | None = None,
 ) -> Server:
     """Construct the MCP Server with the new-style paginated handlers.
 
@@ -183,6 +189,20 @@ def build_server(
             ReadResourceContents(content=resource.body, mime_type=resource.mime_type),
         ]
 
+    if tools is not None:
+        tool_cache = tools
+
+        @server.list_tools()
+        async def _list_tools() -> list[types.Tool]:
+            return [types.Tool(**to_mcp_tool_meta(t)) for t in tool_cache.list()]
+
+        @server.call_tool()
+        async def _call_tool(
+            name: str,
+            arguments: dict[str, object],
+        ) -> dict[str, object]:
+            return await tool_cache.dispatch(name, arguments or {})
+
     return server
 
 
@@ -206,7 +226,13 @@ async def run_stdio() -> None:
         f"({len(resource_errors)} warnings)",
         file=sys.stderr,
     )
-    server = build_server(cache.get, resources=resource_cache.get)
+    tool_cache = ToolCache()
+    print(tools_boot_log_line(tool_cache), file=sys.stderr)
+    server = build_server(
+        cache.get,
+        resources=resource_cache.get,
+        tools=tool_cache,
+    )
     init_options = InitializationOptions(
         server_name=SERVER_NAME,
         server_version=__version__,
