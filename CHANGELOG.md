@@ -318,6 +318,53 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.37.0](https://github.com/event4u-app/agent-config/compare/1.36.1...1.37.0) (2026-05-10)
+
+### Features
+
+* **mcp:** add Phase 6 F3 stdio Docker bundle ([acd5e47](https://github.com/event4u-app/agent-config/commit/acd5e47a56b9fb42f57751771087c6b73759d3d5))
+* **mcp:** add Phase 6 F1 identity metadata ([f4700ff](https://github.com/event4u-app/agent-config/commit/f4700ff1f093611220c08fba75c29d12ed57110c))
+* **mcp:** add Phase 4 tool layer with lint_skills and chat_history_append ([fe02108](https://github.com/event4u-app/agent-config/commit/fe0210817e46f4d1710b0d96b7a176c872fc5545))
+* **cli:** expose mcp:setup + mcp:run via ./agent-config ([bf7ff65](https://github.com/event4u-app/agent-config/commit/bf7ff65ab040b482d5f4e716a78148e95ba3bc7f))
+* **mcp:** expose rules, guidelines, contexts as resources ([21d85c5](https://github.com/event4u-app/agent-config/commit/21d85c5142a35dade1129f835821c72944442ead))
+* **mcp:** full skill + command coverage with pagination + hot-reload ([126c976](https://github.com/event4u-app/agent-config/commit/126c976f30e7bf3b714f8b72131b53fcc3e07878))
+* **mcp:** add experimental stdio MCP server exposing 5 stack-agnostic skills ([8e692cf](https://github.com/event4u-app/agent-config/commit/8e692cfbdc14e67f178b11068773d50dd199b4ab))
+
+### Bug Fixes
+
+* **agents-md:** revert MCP pointer to keep root under 3000-char cap ([02bed8e](https://github.com/event4u-app/agent-config/commit/02bed8edb13fdcae369bac3843a836c01dc04248))
+* **lint:** emit valid JSON when no skill/rule files changed ([caef1cb](https://github.com/event4u-app/agent-config/commit/caef1cb91def6089cad3ba3d2fd7c728b39731d0))
+* **mcp:** relocate Phase 1 smoke transcript out of agents/roadmaps/ ([addd7c2](https://github.com/event4u-app/agent-config/commit/addd7c2ac4aa7a6527fb9e750ed38d02f1cd51bc))
+* **mcp:** drop roadmap link from Phase 1 scope contract ([ca3c2e8](https://github.com/event4u-app/agent-config/commit/ca3c2e89b6c5ebf06cbc6a55883cf3cf1fbd015a))
+
+### Documentation
+
+* **contracts:** amend MCP scope contract for Phase 6 F1 + F3 ([45989c5](https://github.com/event4u-app/agent-config/commit/45989c53d6c9b361ad29b4214984db6cff8f5b5f))
+* **contracts:** amend MCP scope contract for Phase 4 tool allowlist ([87c9622](https://github.com/event4u-app/agent-config/commit/87c9622d165d783a5b1f8c266035791cafbf3ab9))
+* **roadmap:** mark MCP Phase 3 + Phase 5 done ([9ec9494](https://github.com/event4u-app/agent-config/commit/9ec9494be18b6634dcf4383af921b54f283c86ff))
+* **mcp:** canonical MCP server setup guide ([4fd149f](https://github.com/event4u-app/agent-config/commit/4fd149f0b1c6e6b009d2bdd3b4ea80759e31055d))
+* **roadmap:** mark MCP Phase 2 (B1-B5) done + extend scope contract ([5ea1c56](https://github.com/event4u-app/agent-config/commit/5ea1c56d027f432f9c950e8b35805ab91758fd26))
+* **roadmap:** mark MCP Phase 1 (A1–A7) done + record stdio smoke transcript ([aaf8332](https://github.com/event4u-app/agent-config/commit/aaf833292aba530bdeae138fa2255b4576fe699c))
+* **mcp:** add Phase 1 scope contract (experimental, read-only) ([2fa275e](https://github.com/event4u-app/agent-config/commit/2fa275eec70c02741b76abef2b6356c7d0d1c6a7))
+
+### Tests
+
+* **mcp:** cover Phase 6 F1 identity metadata ([d3f79ef](https://github.com/event4u-app/agent-config/commit/d3f79eff30f61914fe09667693b41e2ed8c29855))
+* **mcp:** cover Phase 4 tool layer ([217c4ab](https://github.com/event4u-app/agent-config/commit/217c4ab2ed1041006e1ac3102369b8c1569f3653))
+* **mcp:** cover Phase 2 — full coverage, pagination, hot-reload ([f93c019](https://github.com/event4u-app/agent-config/commit/f93c0199adc558119be614fadd677cf37c8c2d5a))
+* **mcp:** make loader tests run when mcp SDK is absent ([8378621](https://github.com/event4u-app/agent-config/commit/8378621be8ec24ccba59be10c49a4384abdc335f))
+* **mcp:** cover Phase 1 loader + import-surface guard + server handlers ([f4fee8b](https://github.com/event4u-app/agent-config/commit/f4fee8b899b0163ea2bfe7099ffa9221b70bf488))
+
+### Chores
+
+* **roadmap:** close road-to-mcp-server at 100%, defer F4 to distribution ([0127991](https://github.com/event4u-app/agent-config/commit/01279913f3b2a5caa1eb65f8a7b07a2f841d41af))
+* **roadmap:** defer Phase 6 F2 to road-to-mcp-distribution ([b5e0be7](https://github.com/event4u-app/agent-config/commit/b5e0be7473296bfd5381dc1ace9bc99ae79f5090))
+* **roadmap:** mark MCP Phase 4 (D1-D4) complete ([8c342c8](https://github.com/event4u-app/agent-config/commit/8c342c8508f17133d71528b16d727d5c3c56acfd))
+* **mcp:** add task mcp:setup for one-line install ([ae1f6f9](https://github.com/event4u-app/agent-config/commit/ae1f6f9d355dd5a782fdadb5e67929552caab5ed))
+* ignore .venv-mcp/ for MCP server work ([8bd44d4](https://github.com/event4u-app/agent-config/commit/8bd44d49e359021a000a989bfd7ae7f6f48800db))
+
+Tests: 2679 (+58 since 1.36.1)
+
 ## [1.36.1](https://github.com/event4u-app/agent-config/compare/1.36.0...1.36.1) (2026-05-10)
 
 ### Refactoring
