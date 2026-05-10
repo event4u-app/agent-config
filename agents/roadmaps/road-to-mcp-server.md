@@ -4,10 +4,10 @@ complexity: lightweight
 
 # Road to MCP Server
 
-**Status:** Phase 1 + 2 + 3 + 4 + 5 done — Phase 6 capture-only.
+**Status:** Phase 1 + 2 + 3 + 4 + 5 + Phase 6 F1/F3 done — F2 deferred to a successor roadmap, F4 blocked on the upstream identity decision.
 **Started:** 2026-05-01
 **Trigger:** User asked whether agent-config is available as an MCP server. Answer: no — only consumer-side MCP usage docs exist. No server, no JSON-RPC surface.
-**Mode:** Phase 2 (B1–B5) and Phase 3 (C1–C4) executed on `feat/road-to-mcp-server` after Phase 1 GUI smoke confirmed in Claude Desktop 2026-05-10. Adoption-barrier fixes (`task mcp:setup`, Lint-Bot JSON-fallback) shipped alongside Phase 3. Phase 4 (D1–D4) executed 2026-05-10 after AI Council Design Call D1 locked the security boundary. Phase 6 stays capture-only.
+**Mode:** Phase 2 (B1–B5) and Phase 3 (C1–C4) executed on `feat/road-to-mcp-server` after Phase 1 GUI smoke confirmed in Claude Desktop 2026-05-10. Adoption-barrier fixes (`task mcp:setup`, Lint-Bot JSON-fallback) shipped alongside Phase 3. Phase 4 (D1–D4) executed 2026-05-10 after AI Council Design Call D1 locked the security boundary. Phase 6 F1/F3 executed 2026-05-10 after AI Council 3-round convergence on the distribution verdict; F2 deferred to `road-to-mcp-distribution.md`.
 
 ## Purpose
 
@@ -127,17 +127,34 @@ Only runs **after** A1-A7 are green and a real client renders prompts.
 - [x] **E4** — `AGENTS.md` "Multi-agent tool support" row. _Done 2026-05-10 — adapted to AGENTS.md thin-root shape: added an MCP-server clause to the existing "Multi-tool projection" pointer line + link to `docs/mcp-server.md`. No new top-level section (would breach thin-root char ceiling)._
 - [x] **E5** — Highlight in `README.md` positioning. _Done 2026-05-10 — same section as E3 doubles as the positioning highlight (no separate hero edit — the hero already cites "120+ skills"; calling out MCP would dilute the on-disk-skills story)._
 
-## Phase 6 — Distribution polish (deferred)
+## Phase 6 — Distribution polish
 
-- [ ] **F1** — Versioning strategy: server version vs skill-set version vs package version.
-- [ ] **F2** — SSE transport for cloud / remote. Build on the
-  [`mcp-request-signing § Appendix — HTTP-bridge stdio-kernel pattern`](../../docs/guidelines/agent-infra/mcp-request-signing.md#appendix--http-bridge-stdio-kernel-pattern-reference)
-  — supervisor + framing + correlation + verify gate + allowlist +
-  backpressure are mandatory; HMAC verification from the same guideline
-  layers under the **D4** allowlist.
-- [ ] **F3** — Cloud bundle equivalent — running server image (Docker?)
-  for hosted scenarios. Same appendix as F2 applies; the cloud bundle
-  is the deployment target, not a different transport.
+Council verdict 2026-05-10:
+[`agents/council-responses/mcp-phase-6-distribution-verdict.md`](../council-responses/mcp-phase-6-distribution-verdict.md)
+(host-synthesized, not gitignored exception — kept inside
+`agents/` per project convention).
+
+- [x] **F1** — Identity metadata: wire-surface `serverInfo.version`
+  (SemVer in `__version__`) + `_meta.packageVersion` (read from
+  `package.json` at boot) + `_meta.skill_set_signature` (SHA-256/12
+  over the joined `PromptCache` + `ResourceCache` `(uri, mtime)`
+  tuples). Surfaced via stderr boot log; SDK constructs `serverInfo`
+  with a fixed field set, so wire-surface lift waits on SDK support.
+  Implementation: `scripts/mcp_server/metadata.py`.
+- [-] **F2** — SSE transport for cloud / remote — **deferred to
+  [`road-to-mcp-distribution.md`](road-to-mcp-distribution.md)**.
+  Council convergence: no current consumer ask, and F2 is a
+  deployment primitive with its own A0 amendment (not "polish").
+  Trigger to revive: a real consumer needing remote MCP. Locked
+  design when it revives: the HTTP-bridge pattern in
+  [`mcp-request-signing § Appendix`](../../docs/guidelines/agent-infra/mcp-request-signing.md#appendix--http-bridge-stdio-kernel-pattern-reference),
+  not a native SSE server.
+- [x] **F3** — Stdio Docker bundle at `docker/mcp-server/Dockerfile`.
+  Multi-stage Python 3.11-slim image; stdio transport only (no HTTP
+  surface). Operator doc at
+  [`docs/setup/mcp-server-docker.md`](../../docs/setup/mcp-server-docker.md).
+  Smoke-tested: `docker build` + `docker run -i` + initialize
+  round-trip green.
 - [ ] **F4** — Plugin marketplace listing (tied to identity decision in `road-to-better-skills-and-profiles.md`).
 
 ## Risk register

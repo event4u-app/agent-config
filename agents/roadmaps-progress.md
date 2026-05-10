@@ -6,10 +6,10 @@
 
 ## Overall
 
-**24 / 144 steps done · 17%**
+**26 / 143 steps done · 18%**
 
 ```text
-███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   17%
+███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   18%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md) | 1 | 26 | 26 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 4 | 24 | 0 | 1 | █████████░ 86% |
+| 3 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 1 | 26 | 0 | 2 | ██████████ 96% |
 | 4 | [road-to-money-strategy-ops.md](roadmaps/road-to-money-strategy-ops.md) | 1 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-productization.md](roadmaps/road-to-productization.md) | 8 | 27 | 27 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-proof-not-features.md](roadmaps/road-to-proof-not-features.md) | 3 | 19 | 19 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -48,7 +48,7 @@
 
 ### [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md)
 
-**Road to MCP Server** — 24 / 28 done (86%)
+**Road to MCP Server** — 26 / 27 done (96%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -57,7 +57,7 @@
 | 3 | Resources (rules, guidelines, contexts) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 4 | Tools (engine helpers) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | Real setup docs (the deliverable from option 3) | ✅ done | 0 | 4 | 0 | 1 | 100% |
-| 6 | Distribution polish (deferred) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 6 | Distribution polish | 🟡 in progress | 1 | 2 | 0 | 1 | 67% |
 
 ### [road-to-money-strategy-ops.md](roadmaps/road-to-money-strategy-ops.md)
 
