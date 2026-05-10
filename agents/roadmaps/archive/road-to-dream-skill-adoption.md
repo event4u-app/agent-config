@@ -4,17 +4,22 @@ complexity: lightweight
 
 # Road to dream-skill adoption
 
-**Status:** READY — Phase 1 single-host, council-shaped scope.
+**Status:** ARCHIVED — Phase 1 shipped (PR #81), Phase 2 partial
+shipped (PR #82, B2 + B3 + B4), B1 + Phase 3 cancelled-deferred
+behind external evidence gates. New roadmap reactivates the
+deferred work when the gates fire — not before.
 **Started:** 2026-05-10
+**Closed:** 2026-05-10
 **Trigger:** User pointed at `grandamenium/dream-skill` and asked
 for a `coreyhaines31/marketingskills`-depth analysis with autonomous
 roadmap drafting via the AI council. Council consultation
 (`anthropic/claude-sonnet-4-5` + `openai/gpt-4o`, $0.0643 actual,
 2 rounds) shaped the adoption guardrails.
-**Mode:** Phase 1 is the only phase scoped for execution now.
-Phase 2 (generated index, critical-priority tier, second-host
-adapter) is deferred and gated on observable evidence — not on
-calendar pacing.
+**Mode:** Closure shape — `[-]` on B1 and Phase 3 reflects
+gate-deferred-by-design, not abandoned work. The redesign and
+trigger conditions are documented in-line so a future council pass
+can reactivate them under fresh evidence without re-deriving the
+context.
 
 ## Purpose
 
@@ -199,22 +204,35 @@ consumer project, OR `/memory:load` measured latency exceeds 1.5 s.
 This gate originally guarded all of Phase 2; with B2/B3/B4 shipped, it
 now governs only B1.
 
-## Phase 3 — Second TranscriptAdapter implementation (deferred)
+## Phase 3 — Second TranscriptAdapter implementation (cancelled-deferred)
 
-- [ ] **C1 — Pick the second host.** Cursor (JSON chat history) and
+**Status:** Cancelled in this roadmap 2026-05-10. Both gate
+conditions remain unmet (zero consumer issues for non-Claude mining;
+Phase 1 yield is currently unmeasurable since memory lives in a
+sibling package, so the > 5 promoted/cycle signal is not observable
+from this repo). The Phase 2 shipout council pass converged on
+Option A (defer both B1 and Phase 3); marking the items `[-]` here
+matches the council's "gate stays closed by default" framing.
+A future roadmap reactivates this work when either gate fires.
+
+- [-] **C1 — Pick the second host.** Cursor (JSON chat history) and
   Augment (chat-history hook) are the candidates. Pick from
   measured Phase 1 demand; do not speculate.
-- [ ] **C2 — Refactor adapter to interface.** Lift the adapter
+- [-] **C2 — Refactor adapter to interface.** Lift the adapter
   contract from documentation to actual Python (or shell) code with
   one implementation per host. Anthropic's "design from examples"
   rule: at least two implementations exist before the interface is
   extracted, not before.
-- [ ] **C3 — Cross-host smoke test.** Extend the Phase 1 fixture
+- [-] **C3 — Cross-host smoke test.** Extend the Phase 1 fixture
   set with one fixture per supported host, asserting the adapter
   normalises both into the same intake JSONL shape.
 
-**Gate:** ≥ 2 consumer projects file issues requesting non-Claude
-mining, OR Phase 1 measured yield > 5 promoted entries / cycle.
+**Gate (reactivation trigger):** ≥ 2 consumer projects file issues
+requesting non-Claude mining, OR Phase 1 measured yield > 5 promoted
+entries / cycle. When either fires, draft a new roadmap rather than
+re-opening this one — the analysis context (`compare-dream-skill.md`)
+and the `TranscriptAdapter` contract documented in the
+`memory-consolidation` skill remain valid starting points.
 
 ## Decision log
 
@@ -282,6 +300,16 @@ mining, OR Phase 1 measured yield > 5 promoted entries / cycle.
   entries in this repo since memory is in a sibling package), so
   the gate stays closed by default and gets revisited when the
   yield signal is observable.
+- **2026-05-10 — Roadmap closure.** All gate-active scope shipped
+  (Phase 1 via PR #81, Phase 2 partial via PR #82). Remaining items
+  (B1 redesign + Phase 3) are flipped from `[ ]` to `[-]` so the
+  dashboard archives this roadmap rather than carrying it forward
+  with permanently-blocked checkboxes. Reactivation belongs to a
+  new roadmap drafted under fresh evidence — not to a re-opened
+  carcass of this one. Closure decision matches the two prior
+  council convergences and adds no new design surface; no third
+  council pass was run on the closure mechanic itself (would be a
+  cheap re-ask of an already-converged question).
 
 ## Out-of-scope
 
