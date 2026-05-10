@@ -70,5 +70,3 @@ prompts end-to-end without a contract amendment.
 ## See also
 
 - [`STABILITY.md`](STABILITY.md) — stability policy for `docs/contracts/`.
-- [`agents/roadmaps/road-to-mcp-server.md`](../../agents/roadmaps/road-to-mcp-server.md)
-  § "A0 — Execution-safety boundary" — the gating decision row.
