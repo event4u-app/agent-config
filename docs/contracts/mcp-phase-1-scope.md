@@ -8,10 +8,8 @@ stability: experimental
 > Phase 3 (C1–C4) + Phase 4 (D1–D4) + Phase 6 F1/F3 of
 > `road-to-mcp-server.md`. Phase 6 F2 (SSE transport) is owned by
 > [`mcp-cloud-scope.md`](mcp-cloud-scope.md) — the hosted Cloudflare
-> Worker bridge per
-> [`road-to-cloudflare-mcp-hosting.md`](../../agents/roadmaps/road-to-cloudflare-mcp-hosting.md)
-> — and remains out of scope here. This contract retains exclusive
-> ownership of `scripts/mcp_server/` (local stdio).
+> Worker bridge — and remains out of scope here. This contract retains
+> exclusive ownership of `scripts/mcp_server/` (local stdio).
 > **Stability:** experimental — not linked from README, AGENTS.md, or
 > `docs/architecture.md`. Internal index reference only per `STABILITY.md`.
 

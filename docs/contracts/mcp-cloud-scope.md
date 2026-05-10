@@ -5,9 +5,7 @@ stability: experimental
 # MCP Server — Cloud Scope (A0-cloud Hard Contract)
 
 > **Status:** Active · covers `workers/mcp/` (TypeScript Cloudflare
-> Worker bridge) per
-> [`road-to-cloudflare-mcp-hosting.md`](../../agents/roadmaps/road-to-cloudflare-mcp-hosting.md)
-> Phases 1–5 (MVP-1). Extends — does **not** supersede —
+> Worker bridge), MVP-1 surface. Extends — does **not** supersede —
 > [`mcp-phase-1-scope.md`](mcp-phase-1-scope.md), which retains
 > exclusive ownership of `scripts/mcp_server/` (local stdio).
 > **Stability:** experimental — not linked from README, AGENTS.md, or
