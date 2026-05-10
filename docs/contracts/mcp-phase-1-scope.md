@@ -2,10 +2,13 @@
 stability: experimental
 ---
 
-# MCP Server — Phase 1–4 Scope (A0 Hard Contract)
+# MCP Server — Phase 1–6 Scope (A0 Hard Contract)
 
 > **Status:** Active · covers Phase 1 (A1–A7) + Phase 2 (B1–B5) +
-> Phase 3 (C1–C4) + Phase 4 (D1–D4) of `road-to-mcp-server.md`
+> Phase 3 (C1–C4) + Phase 4 (D1–D4) + Phase 6 F1/F3 of
+> `road-to-mcp-server.md`. Phase 6 F2 (SSE transport) is deferred to
+> [`road-to-mcp-distribution.md`](../../agents/roadmaps/road-to-mcp-distribution.md)
+> and remains out of scope here.
 > **Stability:** experimental — not linked from README, AGENTS.md, or
 > `docs/architecture.md`. Internal index reference only per `STABILITY.md`.
 
@@ -114,6 +117,66 @@ Additional tool tests in `tests/test_mcp_server.py`:
 11. `tools/call` against an unknown tool name returns `isError=True`.
 12. `scripts.mcp_server.tools` does not import `subprocess`,
     `os.system`, `os.popen`, or any HTTP client directly.
+
+## Phase 6 amendment — identity metadata + Docker bundle (F1, F3)
+
+Phase 6 adds **observability** and **packaging** without changing the
+A0 wire surface. F2 (SSE transport) is explicitly deferred — see
+status header.
+
+### F1 — Identity metadata
+
+Three values surface at server boot, written to **stderr** in a single
+`mcp-server: identity …` line (the canonical surface — the high-level
+MCP SDK builds `serverInfo` with a fixed field set, so wire-surface
+lift waits on SDK support):
+
+- **`serverVersion`** — hand-maintained SemVer in
+  `scripts/mcp_server/__init__.py::__version__`. Bumps on
+  **wire-surface** changes only: new tool, new resource MIME type,
+  protocol-level break. Does **not** bump for content edits inside
+  `.agent-src/`.
+- **`packageVersion`** — read from `package.json::version` at boot.
+  Bumps on every agent-config bundle release; build-ID semantics, not
+  a stability signal.
+- **`skillSetSignature`** — first 12 hex chars of the SHA-256 over the
+  joined sorted `(path, mtime)` tuples of `PromptCache` and
+  `ResourceCache`. **Not a version** — a content fingerprint. Auto-
+  updates with every `task sync`; intended for cache-key /
+  reproducibility use, never for SemVer-style compatibility claims.
+
+Implementation: `scripts/mcp_server/metadata.py`. The signature is
+deterministic for a given snapshot of the loaded file set; any mtime
+change invalidates it.
+
+### F3 — Stdio Docker bundle
+
+`docker/mcp-server/Dockerfile` ships a stdio-only image. The contract:
+
+- **No HTTP / SSE listener** in the image. Stdio is the only wire.
+- The image embeds `scripts/mcp_server/`, the two tool dependencies
+  (`scripts/skill_linter.py`, `scripts/chat_history.py`),
+  `.agent-src/`, `docs/guidelines/`, and `package.json`. Nothing
+  outside the COPY-listed paths reaches the runtime stage.
+- The image runs as a non-root user (`mcp:mcp`); host volumes mounted
+  for `chat_history_append` writes must be writable by that uid/gid.
+- The A0 contract from Phase 1–4 transfers verbatim — the import-
+  surface guard tests run identically inside and outside the image.
+
+Operator documentation: `docs/setup/mcp-server-docker.md`. The image
+does not introduce a new tool, resource type, or protocol surface.
+
+### What Phase 6 explicitly does **not** add
+
+- **No HTTP/SSE transport**, native or otherwise. F2 is deferred to
+  the successor roadmap; revival is gated on a real consumer ask, and
+  the locked design is the bridge pattern from
+  [`mcp-request-signing § Appendix`](../guidelines/agent-infra/mcp-request-signing.md#appendix--http-bridge-stdio-kernel-pattern-reference)
+  — never a native SSE server inside `scripts/mcp_server/`.
+- **No new tools** beyond the Phase 4 allowlist.
+- **No multi-tenancy** — the Docker image is single-tenant, one
+  process per stdio session. Multi-tenancy lives with the future
+  bridge, not the kernel.
 
 ## Revision policy
 
